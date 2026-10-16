@@ -80,7 +80,7 @@ export const en: Messages = {
     reroll: (n) => `Reroll (${n})`,
     skip: (n) => `Skip (${n})`,
     hintKeys: '↑ ↓ choose · ENTER confirm · 1-3 shortcut',
-    hintTouch: 'Tap to choose',
+    hintTouch: 'Tap to choose · hold to see the move',
   },
 
   difficulty: {
@@ -99,6 +99,18 @@ export const en: Messages = {
     quit: 'Give up',
     settings: 'Settings',
     evoLegend: 'Max-level move + its paired item = evolution on the next Poké Ball or level-up!',
+    cardHintKeys: 'Hover a move to see its card',
+    cardHintTouch: 'Hold a move to see its card',
+  },
+
+  moveCard: {
+    level: (n, max) => `Lv ${n}/${max}`,
+    evolved: '★ EVOLVED',
+    pierce: 'Pierce',
+    status: { burn: 'Burn', poison: 'Poison', paralysis: 'Paralyze', slow: 'Slow', sleep: 'Sleep' },
+    seconds: (s) => `${s}s`,
+    evolves: 'Evolution',
+    evolvedFrom: 'Evolved from',
   },
 
   settings: {

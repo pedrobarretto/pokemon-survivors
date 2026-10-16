@@ -5856,3 +5856,154 @@ a.btn.dex-site {
     font-size: 16px;
   }
 }
+
+/* ---------- Move card (hover a move icon, or hold it on touch: ui/moveCard.ts) ---------- */
+
+.has-card {
+  cursor: help;
+}
+
+/* HUD move slots take the pointer so they can show their card; the rest of the HUD stays click-through. */
+.hud .slot.has-card {
+  pointer-events: auto;
+}
+
+.move-card {
+  width: 280px;
+  max-width: calc(100vw - 16px);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 20px;
+  line-height: 1;
+  text-align: left;
+  text-shadow: none;
+}
+
+.move-card.floating {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 50;
+  pointer-events: none;
+  animation: card-in 0.1s steps(2) both;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-head img {
+  width: 32px;
+  height: 32px;
+  padding: 2px;
+  background: #283048;
+  border-radius: 4px;
+}
+
+.card-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-title b {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: normal;
+}
+
+.card-desc {
+  margin: 0;
+  font-size: 18px;
+  color: #505870;
+}
+
+.card-stats {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding-top: 6px;
+  border-top: 2px solid #d0d4e0;
+}
+
+.card-stats b {
+  font-weight: normal;
+  text-align: right;
+}
+
+.card-stats b.up {
+  color: #208838;
+}
+
+.card-stats s {
+  color: #8890a8;
+}
+
+.card-evo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 2px solid #d0d4e0;
+  font-size: 18px;
+  color: #6878a8;
+}
+
+.card-evo-label {
+  width: 100%;
+  font-family: var(--title);
+  font-size: 8px;
+}
+
+.card-evo-label b {
+  margin-left: 6px;
+  color: #e83838;
+}
+
+.card-req {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px 1px 3px;
+  border-radius: 4px;
+  background: rgba(104, 120, 168, 0.14);
+}
+
+.card-req img {
+  width: 18px;
+  height: 18px;
+}
+
+.card-req.met {
+  color: #206830;
+  background: #c8f0c8;
+}
+
+.card-req.met::after {
+  content: '✓';
+  margin-left: 3px;
+}
+
+.card-req.to {
+  color: #a05800;
+  background: #f8e090;
+}
+
+.card-evo-to {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

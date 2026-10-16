@@ -19,6 +19,23 @@ export type ChangelogEntry = {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-10-16',
+    pr: 70,
+    title: { pt: 'Ficha do golpe', en: 'Move cards', es: 'Ficha del movimiento' },
+    notes: [
+      {
+        pt: 'Passe o mouse sobre um golpe na barra do topo, na pausa ou nas cartas de subida de nível (no celular, segure o dedo) para ver a ficha dele: dano e recarga já com os seus itens e bônus, projéteis, área, duração, perfuração e chance de status quando o golpe usa, o nível e do que ele precisa para evoluir.',
+        en: 'Hover a move in the top bar, the pause menu or the level-up cards (on phones, hold your finger on it) to see its card: damage and cooldown with your items and bonuses applied, projectiles, area, duration, pierce and status chance when the move uses them, its level and what it needs to evolve.',
+        es: 'Pasa el ratón por un movimiento en la barra superior, en la pausa o en las cartas de subida de nivel (en el celular, mantén el dedo encima) para ver su ficha: daño y recarga con tus objetos y bonificaciones, proyectiles, área, duración, perforación y probabilidad de estado cuando el movimiento los usa, su nivel y lo que necesita para evolucionar.',
+      },
+      {
+        pt: 'Nas cartas de subida de nível, a ficha mostra o antes e o depois de cada melhoria. Segurar a carta só abre a ficha: ela nunca escolhe a carta sem querer.',
+        en: 'On level-up cards, the card shows each upgrade before and after. Holding a card only opens its details: it never picks the card by accident.',
+        es: 'En las cartas de subida de nivel, la ficha muestra el antes y el después de cada mejora. Mantener pulsada la carta solo abre la ficha: nunca la elige sin querer.',
+      },
+    ],
+  },
+  {
+    date: '2026-10-16',
     title: { pt: 'Recompensas para quem apoia', en: 'Rewards for supporters', es: 'Recompensas para quien apoya' },
     notes: [
       {

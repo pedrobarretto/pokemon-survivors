@@ -16,6 +16,7 @@ import { h, setStyle, setText } from './dom'
 import { createRiftHud } from './riftHud'
 import { createLungeControls } from './lungeButton'
 import { createMegaControls } from './megaButton'
+import { moveCard, withMoveCard } from './moveCard'
 import { createSpecialControls } from './specialButton'
 
 const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-mid' : 'hp-low')
@@ -23,7 +24,8 @@ const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-
 /**
  * In-run heads-up display. `update` is called every frame and only touches what changed.
  * `onSpecial`, `onMega` and `onLunge` fire when the touch special, Mega and lunge buttons are pressed;
- * `onPause` backs the on-screen pause button (phones have no Esc key). Labels are
+ * `onPause` backs the on-screen pause button (phones have no Esc key). Hovering or
+ * holding a move slot opens its card (`withMoveCard`). Labels are
  * read at creation: rebuild the HUD after a language switch.
  */
 export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onLunge: () => void, onPause: () => void) => {
@@ -125,12 +127,14 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
         const m = p.moves[i]
         const evo = m && evolutionOf(m.id)
         const ready = evo !== undefined && canEvolve(evo, p)
-        return h(
+        const slot = h(
           'div',
           { class: ready ? 'slot evo-ready' : 'slot' },
           m && h('img', { src: moveIcon(m.id), alt: '' }),
           m && h('span', { class: 'slot-level' }, evolvedFrom(m.id) ? '★' : m.level),
         )
+        if (m) withMoveCard(slot, () => moveCard(g, m.id, { level: m.level, describe: true }))
+        return slot
       }),
     )
     itemSlots.replaceChildren(

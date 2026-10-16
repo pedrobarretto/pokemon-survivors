@@ -61,6 +61,9 @@ export const nextLocale = (l: Locale) => LOCALE_IDS[(LOCALE_IDS.indexOf(l) + 1) 
 /** Whole number with the current language's thousands separator (`1.250`, `1,250`). */
 export const formatNumber = (n: number) => Math.round(n).toLocaleString(LOCALES[current].tag)
 
+/** A number with up to `digits` decimals in the current language (`1,25` in pt and es, `1.25` in English). */
+export const formatDecimal = (n: number, digits = 1) => n.toLocaleString(LOCALES[current].tag, { maximumFractionDigits: digits })
+
 /** A `YYYY-MM-DD` day as day and month in the current language (`15/10`, `10/15`). */
 export const formatDay = (day: string) => {
   const [y, m, d] = day.split('-').map(Number)

@@ -20,6 +20,7 @@ import { portraitUrl, sprites } from '../render/sprites'
 import { formatNumber, formatPokeDollars, locale, t, type Messages } from '../i18n'
 import { ROUTES } from '../site/routes'
 import { h, later } from './dom'
+import { moveCard, withMoveCard } from './moveCard'
 
 export type Screen = {
   el: HTMLElement
@@ -136,6 +137,18 @@ const offerView = (g: Game, offer: Offer) => {
   }
 }
 
+/** The move card behind a move or evolution offer: the level it grants, compared with the level the player has. */
+const offerCard = (g: Game, offer: Offer) => {
+  switch (offer.kind) {
+    case 'move':
+      return () => moveCard(g, offer.id, { level: offer.level, from: offer.level > 1 ? offer.level - 1 : undefined })
+    case 'evolution':
+      return () => moveCard(g, offer.to, { level: 1 })
+    default:
+      return null
+  }
+}
+
 /** Poké Mart charges offered under the level-up choices (only shown when owned). */
 type LevelUpExtras = { reroll: () => void; skip: () => void }
 
@@ -145,11 +158,12 @@ export const levelUp = (root: HTMLElement, input: Input, g: Game, onChoose: (off
   const buttons = g.offers.map((offer, i) => {
     const v = offerView(g, offer)
     const recipes = offerRecipes(g, offer)
-    return h(
+    const icon = h('div', { class: 'offer-icon' }, h('img', { src: v.icon, alt: '' }))
+    const button = h(
       'button',
       { class: offer.kind === 'evolution' ? 'offer offer-evo' : 'offer' },
       h('span', { class: 'offer-key' }, i + 1),
-      h('div', { class: 'offer-icon' }, h('img', { src: v.icon, alt: '' })),
+      icon,
       h(
         'div',
         { class: 'offer-body' },
@@ -159,6 +173,9 @@ export const levelUp = (root: HTMLElement, input: Input, g: Game, onChoose: (off
       ),
       v.type && typeBadge(v.type),
     )
+    const card = offerCard(g, offer)
+    if (card) withMoveCard(button, card, icon)
+    return button
   })
 
   const actions = extras
@@ -227,16 +244,18 @@ const loadoutList = (g: Game) =>
   h(
     'div',
     { class: 'loadout-list' },
-    ...g.player.moves.map((m) =>
-      h(
+    ...g.player.moves.map((m) => {
+      const row = h(
         'div',
         { class: 'loadout-row' },
         h('img', { src: moveIcon(m.id), alt: '' }),
         MOVES[m.id].name,
         loadoutHint(g, m.id),
         !evolvedFrom(m.id) && h('span', { class: 'tag' }, t().level(m.level)),
-      ),
-    ),
+      )
+      withMoveCard(row, () => moveCard(g, m.id, { level: m.level, describe: true }))
+      return row
+    }),
     ...g.player.items.map((i) =>
       h('div', { class: 'loadout-row' }, h('img', { src: itemIcon(i.id), alt: '' }), ITEMS[i.id].name, h('span', { class: 'tag' }, t().level(i.level))),
     ),
@@ -292,6 +311,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
           h('div', { class: 'stat-list' }, ...STAT_ROWS.map(([key, fmt]) => h('div', { class: 'stat-row' }, h('span', {}, t().stats[key]), h('b', {}, fmt(s))))),
         ),
         h('p', { class: 'evo-legend' }, m.evoLegend),
+        hint(m.cardHintKeys, m.cardHintTouch),
         h('div', { class: 'buttons' }, resume, settingsButton, quit),
       ),
     )

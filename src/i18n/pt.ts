@@ -16,6 +16,7 @@ import type { UpgradeId } from '../game/meta'
 import type { MOVES, MoveId } from '../game/moves'
 import type { SpecialId } from '../game/special'
 import type { Stance } from '../game/stance'
+import type { StatusKind } from '../game/status'
 
 /** One string per entry of a tuple, so every move upgrade gets exactly one line. */
 type Lines<T extends readonly unknown[]> = { readonly [I in keyof T]: string }
@@ -135,7 +136,7 @@ export const pt = {
     reroll: (n: number) => `Trocar (${n})`,
     skip: (n: number) => `Pular (${n})`,
     hintKeys: '↑ ↓ escolher · ENTER confirmar · 1-3 atalho',
-    hintTouch: 'Toque para escolher',
+    hintTouch: 'Toque para escolher · segure para ver o golpe',
   },
 
   pause: {
@@ -144,6 +145,19 @@ export const pt = {
     quit: 'Desistir',
     settings: 'Ajustes',
     evoLegend: 'Golpe no nível máximo + o item indicado = evolução na próxima Poké Ball ou subida de nível!',
+    cardHintKeys: 'Passe o mouse num golpe para ver a ficha dele',
+    cardHintTouch: 'Segure um golpe para ver a ficha dele',
+  },
+
+  /** The move card: hover a move icon, or hold it on touch (`ui/moveCard.ts`). Stat names come from `stats`. */
+  moveCard: {
+    level: (n: number, max: number) => `Nv ${n}/${max}`,
+    evolved: '★ EVOLUÍDO',
+    pierce: 'Perfura',
+    status: { burn: 'Queimar', poison: 'Envenenar', paralysis: 'Paralisar', slow: 'Lentidão', sleep: 'Sono' } satisfies Record<StatusKind, string>,
+    seconds: (s: string) => `${s}s`,
+    evolves: 'Evolução',
+    evolvedFrom: 'Evoluiu de',
   },
 
   settings: {
