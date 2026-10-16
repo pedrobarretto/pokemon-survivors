@@ -2,6 +2,7 @@ import { chance, range } from '../engine/rng'
 import { dotDamage } from './combat'
 import { burst } from './effects'
 import { DOT_INTERVAL, dotDps, isAfflicted, tickStatus } from './status'
+import { onAnyScreen } from './players'
 import type { Enemy, Game } from './types'
 
 /** Cosmetic per-second particle rates and looks, emitted only for on-screen enemies. */
@@ -29,20 +30,18 @@ const emitParticles = (g: Game, e: Enemy, dt: number) => {
  */
 export const updateStatuses = (g: Game, dt: number) => {
   const margin = 24
-  const left = g.camera.x - margin
-  const right = g.camera.x + g.view.w + margin
-  const top = g.camera.y - margin
-  const bottom = g.camera.y + g.view.h + margin * 2
   for (const e of g.enemies) {
     if (e.dying >= 0 || !isAfflicted(e.status)) continue
     const st = e.status
-    if (e.x > left && e.x < right && e.y > top && e.y < bottom) emitParticles(g, e, dt)
+    if (onAnyScreen(g, e.x, e.y, margin, margin * 2)) emitParticles(g, e, dt)
     const burn = dotDps(st.burn) * DOT_INTERVAL
     const poison = dotDps(st.poison) * DOT_INTERVAL
     const burnMove = st.burn.move
     const poisonMove = st.poison.move
+    const burnBy = st.burn.by
+    const poisonBy = st.poison.by
     if (!tickStatus(st, dt, e.boss, g.rng)) continue
-    if (burn > 0) dotDamage(g, e, burn, burnMove, 'burn')
-    if (poison > 0 && e.dying < 0) dotDamage(g, e, poison, poisonMove, 'poison')
+    if (burn > 0) dotDamage(g, e, burn, burnMove, 'burn', burnBy)
+    if (poison > 0 && e.dying < 0) dotDamage(g, e, poison, poisonMove, 'poison', poisonBy)
   }
 }

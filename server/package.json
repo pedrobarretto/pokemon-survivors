@@ -2,14 +2,16 @@
   "name": "pokemon-survivors-api",
   "private": true,
   "type": "module",
-  "description": "Accounts API for Pokémon Survivors: saves synced per player (Hono + Postgres + Clerk).",
+  "description": "Accounts API and realtime co-op server for Pokémon Survivors (Hono + Postgres + Clerk, ws).",
   "engines": {
     "node": ">=24"
   },
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
-    "build": "esbuild src/index.ts src/verify.ts --bundle --platform=node --format=esm --target=node24 --packages=external --outdir=dist",
+    "dev:play": "PORT=3001 tsx watch --env-file-if-exists=.env src/play.ts",
+    "build": "esbuild src/index.ts src/verify.ts src/play.ts --bundle --platform=node --format=esm --target=node24 --packages=external --outdir=dist",
     "start": "node dist/index.js",
+    "start:play": "node dist/play.js",
     "typecheck": "tsc --noEmit"
   },
   "license": "MIT",
@@ -17,10 +19,12 @@
     "@clerk/backend": "^3.23.2",
     "@hono/node-server": "^2.1.5",
     "hono": "^4.13.13",
-    "postgres": "^3.4.9"
+    "postgres": "^3.4.9",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "@types/ws": "^8.18.2",
     "esbuild": "^0.28.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"

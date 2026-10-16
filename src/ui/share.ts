@@ -72,10 +72,10 @@ const officialPlace = async (place: Promise<ChallengePlace | null>): Promise<Run
  * `place`: a Desafio do dia run's place, as the API answers it at the end of the run.
  */
 export const runShare = (g: Game, dexBase: Pokedex, place: Promise<ChallengePlace | null> | null = null): ShareCard => {
-  const form = PLAYABLE[g.starter].line[g.player.stage]!
+  const form = PLAYABLE[g.player.starter].line[g.player.stage]!
   const trainer = trainerLine(loadSave().title)
   const outcome = g.endless ? 'endless' : g.phase === 'victory' ? 'victory' : 'fainted'
-  const moves = (Object.entries(g.damageByMove) as Array<[DamageSource, number]>)
+  const moves = (Object.entries(g.player.damageByMove) as Array<[DamageSource, number]>)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([id, damage]) => {

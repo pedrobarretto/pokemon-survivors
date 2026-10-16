@@ -26,6 +26,8 @@ const GITHUB_URL = 'https://github.com/pedrobarretto/pokemon-survivors'
 
 export type TitleActions = {
   play: () => void
+  /** Opens co-op (rooms with friends). No action (no play server), no entry. */
+  coop?: () => void
   /** Opens the Desafio do dia. */
   challenge: () => void
   missions: () => void
@@ -129,6 +131,7 @@ export const titleScreen = (root: HTMLElement, input: Input, actions: TitleActio
   const { settings, account, ranking } = actions
   const items = [
     { label: m.play, run: actions.play },
+    ...(actions.coop ? [{ label: m.coop, run: actions.coop }] : []),
     { label: m.challenge, run: actions.challenge },
     { label: m.incubator, run: actions.incubator },
     { label: m.missions, run: actions.missions },

@@ -274,12 +274,13 @@ export const rankingStore = (sql: Sql) => {
           select starter, stage, difficulty, survived, outcome, started_at, verified
           from runs where user_id = ${user.id} and finished_at is not null and verified is not false
           order by started_at desc limit 10`,
-        sql<{ followers: number; following: number; followed: boolean; brought: number }[]>`
+        sql<{ followers: number; following: number; followed: boolean; follows_you: boolean; brought: number }[]>`
           select
             (select count(*)::int from follows where followee_id = ${user.id}) as followers,
             (select count(*)::int from follows where follower_id = ${user.id}) as following,
             (select count(*)::int from users where referred_by = ${user.id} and referral_credited_at is not null) as brought,
-            exists (select 1 from follows where follower_id = ${viewer ?? ''} and followee_id = ${user.id}) as followed`,
+            exists (select 1 from follows where follower_id = ${viewer ?? ''} and followee_id = ${user.id}) as followed,
+            exists (select 1 from follows where follower_id = ${user.id} and followee_id = ${viewer ?? ''}) as follows_you`,
         sql<{ data: unknown }[]>`select data from saves where user_id = ${user.id}`,
         // Ribbons as the server sent them: they show before the game claims them.
         sql<{ tier: string; n: number }[]>`
@@ -297,6 +298,7 @@ export const rankingStore = (sql: Sql) => {
         followers: counts?.followers ?? 0,
         following: counts?.following ?? 0,
         followed: counts?.followed ?? false,
+        followsYou: counts?.follows_you ?? false,
         brought: counts?.brought ?? 0,
         ribbons: Object.fromEntries(RIBBON_TIERS.map((tier) => [tier, ribbons.find((r) => r.tier === tier)?.n ?? 0])) as Record<RibbonTier, number>,
         self: viewer === user.id,

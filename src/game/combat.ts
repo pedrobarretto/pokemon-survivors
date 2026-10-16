@@ -13,7 +13,9 @@ import { awardEgg, dropCoins, dropPickup, dropXp } from './pickups'
 import { applyStatus, STATUS_RULES, type StatusKind } from './status'
 import { countKill } from './tally'
 import { absorb } from './traits'
-import type { Attack, DamageSource, Enemy, Game } from './types'
+import { faint } from './coop'
+import { actAs, inPlay } from './players'
+import type { Attack, DamageSource, Enemy, Game, Player } from './types'
 import { weatherBoost, weatherHere, weatherPower } from './weather'
 
 const TEXT_COLORS = { super: '#ffd830', normal: '#ffffff', weak: '#a8a8b8', warded: '#88b8f8' } as const
@@ -25,7 +27,7 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   const dmg = absorb(e.trait, raw)
   e.hp -= dmg
   e.flash = 0.16
-  g.damageByMove[attack.move] = (g.damageByMove[attack.move] ?? 0) + dmg
+  g.player.damageByMove[attack.move] = (g.player.damageByMove[attack.move] ?? 0) + dmg
 
   // Vines push sideways; everything else pushes away from the hitbox center.
   const p = g.player
@@ -37,7 +39,7 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   const status = attack.status
   if (status && chance(g.rng, status.chance)) {
     const fresh = e.status[status.kind].time <= 0
-    applyStatus(e.status, status, attack.damage, e.boss, attack.move)
+    applyStatus(e.status, status, attack.damage, e.boss, attack.move, g.player.slot)
     if (fresh && status.kind !== 'slow') burst(g, e.x, e.y - e.radius, { colors: [STATUS_RULES[status.kind].color, '#ffffff'], count: 5, speed: 50, ttl: 0.3 })
   }
 
@@ -49,13 +51,14 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   if (e.hp <= 0) killEnemy(g, e, attack.move)
 }
 
-/** Damage-over-time tick: no knockback or hit sound, number in the status color. */
-export const dotDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null, kind: StatusKind) => {
+/** Damage-over-time tick: no knockback or hit sound, number in the status color. Counts for player `by`, who inflicted it. */
+export const dotDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null, kind: StatusKind, by = 0) => {
   const dmg = Math.max(1, Math.round(amount))
+  const owner = g.players[by] ?? g.player
   e.hp -= dmg
-  if (move) g.damageByMove[move] = (g.damageByMove[move] ?? 0) + dmg
+  if (move) owner.damageByMove[move] = (owner.damageByMove[move] ?? 0) + dmg
   damageText(g, e, dmg, STATUS_RULES[kind].color)
-  if (e.hp <= 0) killEnemy(g, e, move)
+  if (e.hp <= 0) actAs(g, owner, () => killEnemy(g, e, move))
 }
 
 /** Faints an enemy. `source` (when known) lets a kill by the special, or any kill mid-chain, feed Power Herb. */
@@ -63,7 +66,7 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   e.dying = 0
   e.hp = 0
   g.kills++
-  if (source === 'special' || g.special.chaining) g.special.kills++
+  if (source === 'special' || g.player.special.chaining) g.player.special.kills++
   countKill(g.tally, e, weatherHere(g), g.biome.id, g.outbreak)
   const big = e.boss || e.shiny
   burst(g, e.x, e.y - e.radius, { colors: ['#ffffff', '#f8f8c8', '#c8d8f8'], count: big ? 60 : 8, speed: big ? 160 : 70, ttl: 0.45 })
@@ -95,12 +98,13 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
 }
 
 /**
- * Damages the player. `from` (a body that touched them) gets shoved back; hazards pass none.
- * `types` is the attack's typing for the weather (a body attacks with its own types).
+ * Damages the acting player (world systems hurt a target through `hurtPlayers`
+ * or `actAs`). `from` (a body that touched them) gets shoved back; hazards pass
+ * none. `types` is the attack's typing for the weather (a body attacks with its own types).
  */
 export const hurtPlayer = (g: Game, amount: number, from?: Enemy, types: readonly PokeType[] = from?.types ?? []) => {
   const p = g.player
-  if (p.iframes > 0 || isRepelled(g) || g.phase !== 'playing') return
+  if (p.iframes > 0 || isRepelled(g) || g.phase !== 'playing' || !inPlay(p)) return
   const dmg = Math.max(1, Math.round(amount * DIFFICULTIES[g.difficulty].enemyDamage * weatherPower(weatherHere(g), types) * p.stats.damageTaken - p.stats.armor))
   p.hp -= dmg
   p.iframes = 0.5
@@ -117,10 +121,16 @@ export const hurtPlayer = (g: Game, amount: number, from?: Enemy, types: readonl
   }
 
   if (p.hp <= 0 && !tryRevive(g)) {
+    if (g.coop) return faint(g, p)
     p.hp = 0
     g.phase = 'gameover'
     g.events.push({ kind: 'gameover' })
   }
+}
+
+/** Hurts every player in play that `hits`, each by `amount(p)` (a share of their own HP, say), acting as them. */
+export const hurtPlayers = (g: Game, hits: (p: Player) => boolean, amount: (p: Player) => number, from?: Enemy, types?: readonly PokeType[]) => {
+  for (const p of g.players) if (inPlay(p) && hits(p)) actAs(g, p, () => hurtPlayer(g, amount(p), from, types))
 }
 
 /** Heals the player by `amount`, cut or not by the difficulty, up to max HP. Returns the HP actually restored. */

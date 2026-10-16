@@ -6,11 +6,12 @@ import { BUFFS, DROP_TABLES, ENEMY_DROP_CHANCE, FLUTE_SLEEP, REPEL_RADIUS, rollD
 import { addBuff, hasBuff, tickBuffs } from './buffs'
 import { healPlayer, killEnemy } from './combat'
 import { burst, damageText, floatText } from './effects'
-import { gainXp, recomputeStats } from './leveling'
+import { gainXp, recomputeTeam } from './leveling'
+import { inPlay } from './players'
 import { dropPickup } from './pickups'
 import { inView, isAlive } from './queries'
 import { applyStatus, type StatusSpec } from './status'
-import type { Enemy, Game } from './types'
+import type { Enemy, Game, Player } from './types'
 import * as dm from '../engine/dmath'
 
 /**
@@ -32,9 +33,10 @@ const heal = (g: Game, amount: number) => {
   burst(g, p.x, p.y - 10, { colors: ['#58e858', '#c8f8c8', '#ffffff'], count: 16, speed: 60, ttl: 0.6, gravity: -40 })
 }
 
+/** A timed buff for the whole team, with a puff around whoever picked it up. */
 const buff = (id: BuffId) => (g: Game) => {
   addBuff(g.buffs, id, BUFFS[id].duration)
-  recomputeStats(g)
+  recomputeTeam(g)
   const colors = id === 'xAttack' ? ['#f85838', '#ffd0a0'] : id === 'xSpeed' ? ['#58a0f8', '#d0e8ff'] : ['#58d878', '#e0ffe0']
   burst(g, g.player.x, g.player.y - 10, { colors, count: 20, speed: 90, ttl: 0.6, gravity: -60 })
 }
@@ -75,7 +77,8 @@ export const CONSUMABLES = {
     name: 'Rare Candy',
     sfx: 'levelUp',
     apply: (g) => {
-      g.player.xp = g.player.xpNext
+      // The team shares one level in co-op, so the candy levels everyone up.
+      for (const p of g.coop ? g.players : [g.player]) if (!p.gone) p.xp = p.xpNext
       gainXp(g, 0)
     },
   },
@@ -133,9 +136,8 @@ export const tryRevive = (g: Game) => {
 
 const neighbors: number[] = []
 
-/** Max Repel: shoves every enemy inside the radius back out. */
-const repel = (g: Game) => {
-  const p = g.player
+/** Max Repel: shoves every enemy inside the radius around each player back out. */
+const repel = (g: Game, p: Player) => {
   for (const i of query(g.grid, p.x, p.y, REPEL_RADIUS + 16, neighbors)) {
     const e = g.enemies[i]
     if (!e || !isAlive(e) || dm.sq(e.x - p.x) + dm.sq(e.y - p.y) > dm.sq(REPEL_RADIUS)) continue
@@ -148,10 +150,10 @@ const repel = (g: Game) => {
 
 /** Per-tick upkeep: buff timers, Max Repel and the screen flash. */
 export const updateConsumables = (g: Game, dt: number) => {
-  if (tickBuffs(g.buffs, dt).length > 0) recomputeStats(g)
-  if (hasBuff(g.buffs, 'maxRepel')) repel(g)
+  if (tickBuffs(g.buffs, dt).length > 0) recomputeTeam(g)
+  if (hasBuff(g.buffs, 'maxRepel')) for (const p of g.players) if (inPlay(p)) repel(g, p)
   g.flash = Math.max(0, g.flash - dt * 2.5)
 }
 
-/** Max Repel makes the player untouchable while it lasts. */
+/** Max Repel makes the team untouchable while it lasts. */
 export const isRepelled = (g: Game) => hasBuff(g.buffs, 'maxRepel')

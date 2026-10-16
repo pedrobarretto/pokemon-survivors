@@ -180,14 +180,14 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     })
 
     const dex = playerDex(g)
-    const megaName = g.mega.active > 0 ? heldMega(g)?.name : undefined
+    const megaName = g.player.mega.active > 0 ? heldMega(g)?.name : undefined
     if (`${dex}${p.shiny}${megaName}` !== portraitKey) {
       portraitKey = `${dex}${p.shiny}${megaName}`
       portrait.setAttribute('src', portraitUrl(dex, p.shiny))
       shinyBadge.classList.toggle('hidden', !p.shiny)
       name.classList.toggle('shiny-name', p.shiny)
       name.classList.toggle('mega-name', megaName !== undefined)
-      setText(name, megaName ?? PLAYABLE[g.starter].line[p.stage]!.name)
+      setText(name, megaName ?? PLAYABLE[g.player.starter].line[p.stage]!.name)
     }
     setText(level, t().levelShort(p.level))
     const ratio = Math.max(0, p.hp / p.stats.maxHp)

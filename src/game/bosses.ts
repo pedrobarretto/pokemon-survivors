@@ -7,6 +7,7 @@ import { hurtPlayer } from './combat'
 import { burst } from './effects'
 import { blastHorde } from './enemies'
 import { isAsleep } from './status'
+import { actAs, inPlay, nearestPlayer } from './players'
 import type { Enemy, Game, Hazard } from './types'
 import { HAZARD_TYPES } from './weather'
 import * as dm from '../engine/dmath'
@@ -21,7 +22,7 @@ const spawnHazard = (g: Game, init: HazardInit) => {
 const STRIKE_WINDOW = 0.15
 
 const fire = (g: Game, boss: Enemy, pattern: BossPattern) => {
-  const p = g.player
+  const p = nearestPlayer(g, boss.x, boss.y)
   switch (pattern.kind) {
     case 'strikes': {
       const center = pattern.target === 'player' ? p : boss
@@ -88,9 +89,9 @@ const FLEE_SPEED = 260
  * of dust and drop nothing; the shell toasts it.
  */
 export const chaseOffBosses = (g: Game, at: number) => {
-  const p = g.player
   for (const e of g.enemies) {
     if (!e.boss || e.dying >= 0 || !fleesFrom(e.kind, at)) continue
+    const p = nearestPlayer(g, e.x, e.y)
     const d = dirTo(p.x, p.y, e.x, e.y)
     e.dying = 0
     e.fled = true
@@ -103,10 +104,12 @@ export const chaseOffBosses = (g: Game, at: number) => {
   }
 }
 
-/** The finale boss arrives: a psychic shockwave from the player blasts the horde back (`FINALE.push`). */
+/** The finale boss arrives: a psychic shockwave from every player blasts the horde back (`FINALE.push`). */
 export const finaleEntrance = (g: Game) => {
   blastHorde(g, FINALE.push)
-  burst(g, g.player.x, g.player.y - 8, { colors: ['#f85888', '#f8b0d0', '#ffffff'], count: 90, speed: 320, ttl: 0.55, size: 2, drag: 2 })
+  for (const p of g.players) {
+    if (inPlay(p)) burst(g, p.x, p.y - 8, { colors: ['#f85888', '#f8b0d0', '#ffffff'], count: 90, speed: 320, ttl: 0.55, size: 2, drag: 2 })
+  }
   g.shake = Math.max(g.shake, 10)
 }
 
@@ -143,7 +146,8 @@ export const updateBosses = (g: Game, dt: number) => {
         if (pt.stance === fight.stance) e.cooldowns[i] = Math.max(e.cooldowns[i]!, BOSS_RAGE.open)
       })
     }
-    const near = dm.hypot(e.x - g.player.x, e.y - g.player.y) < reach
+    const target = nearestPlayer(g, e.x, e.y)
+    const near = dm.hypot(e.x - target.x, e.y - target.y) < reach
     patterns.forEach((pattern, i) => {
       if (fight && !patternLive(pattern, fight.stance)) return
       e.cooldowns[i]! -= dt
@@ -172,9 +176,8 @@ const IMPACT: Partial<Record<HazardVisual, { colors: readonly string[]; event: '
   judgment: { colors: ['#fff0a0', '#f8d030', '#ffffff'], event: 'thunder' },
 }
 
-/** Moves enemy hazards, plays impacts as telegraphs land and hurts the player on contact. */
+/** Moves enemy hazards, plays impacts as telegraphs land and hurts the players they touch. */
 export const updateHazards = (g: Game, dt: number) => {
-  const p = g.player
   for (const h of g.hazards) {
     const before = h.age
     h.age += dt
@@ -189,10 +192,16 @@ export const updateHazards = (g: Game, dt: number) => {
     }
 
     if (h.age < h.armAt || h.age > h.disarmAt) continue
-    const reach = h.r + p.radius * 0.7
-    if (dm.sq(h.x - p.x) + dm.sq(h.y - p.y) >= reach * reach) continue
-    hurtPlayer(g, h.damage, undefined, HAZARD_TYPES[h.visual])
-    if (h.vanishOnHit) h.age = h.ttl
+    for (const p of g.players) {
+      if (!inPlay(p)) continue
+      const reach = h.r + p.radius * 0.7
+      if (dm.sq(h.x - p.x) + dm.sq(h.y - p.y) >= reach * reach) continue
+      actAs(g, p, () => hurtPlayer(g, h.damage, undefined, HAZARD_TYPES[h.visual]))
+      if (h.vanishOnHit) {
+        h.age = h.ttl
+        break
+      }
+    }
   }
   retain(g.hazards, (h) => h.age < h.ttl)
 }

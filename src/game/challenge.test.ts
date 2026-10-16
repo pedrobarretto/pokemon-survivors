@@ -66,9 +66,9 @@ describe('a challenge replay', () => {
     let angle = 0
     while (g.time < 30 && g.phase !== 'gameover') {
       if (g.phase === 'levelup') {
-        const i = Math.floor(bot() * g.offers.length)
+        const i = Math.floor(bot() * g.player.offers.length)
         recordEvent(rec, ['offer', i])
-        chooseOffer(g, g.offers[i]!)
+        chooseOffer(g, g.player.offers[i]!)
         continue
       }
       angle += (bot() - 0.5) * 0.2

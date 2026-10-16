@@ -5,6 +5,7 @@ import { CLIFFS, CLUSTER_SLOTS, LAKES, SOLID_FOOT, TERRAIN, type Ellipse, type F
 import { arenaGround } from './arenaFloor'
 import { burst } from './effects'
 import { isAirborne } from './traits'
+import { nearestPlayer, present } from './players'
 import type { Enemy, Game } from './types'
 
 /**
@@ -191,17 +192,17 @@ export const overTerrain = (e: Enemy) =>
 export const enemyGroundPace = (g: Game, e: Enemy) =>
   overTerrain(e) || e.types.includes('water') || groundAt(g, e.x, e.y) !== 'water' ? 1 : TERRAIN.waterPace
 
-export const playerTypes = (g: Game) => PLAYABLE[g.starter].line[g.player.stage]!.types
+export const playerTypes = (g: Game) => PLAYABLE[g.player.starter].line[g.player.stage]!.types
 
 /** The player's pace in water: Water types swim at full speed. */
 export const playerWaterPace = (g: Game) => (playerTypes(g).includes('water') ? 1 : TERRAIN.waterPace)
 
 /**
- * Nudges an enemy pressed against a solid along its edge, toward the player's
- * side, so one coming straight at it from behind never stalls at its middle.
+ * Nudges an enemy pressed against a solid along its edge, toward the nearest
+ * player's side, so one coming straight at it from behind never stalls at its middle.
  */
 const slide = (g: Game, e: Enemy, wall: Ellipse, dt: number) => {
-  const p = g.player
+  const p = nearestPlayer(g, e.x, e.y)
   const nx = (e.x - wall.x) / ((wall.rx + 1) * (wall.rx + 1))
   const ny = (e.y - wall.y) / ((wall.ry + 1) * (wall.ry + 1))
   const n = Math.sqrt(nx * nx + ny * ny) || 1
@@ -219,20 +220,18 @@ const slide = (g: Game, e: Enemy, wall: Ellipse, dt: number) => {
 
 const SHOT_SPARKS = ['#ffffff', '#d8d0c0', '#a89c90'] as const
 
-/** Keeps walkers out of solids, breaks enemy shots on them and drops cells far behind the player. */
+/** Keeps walkers out of solids, breaks enemy shots on them and drops cells far behind every player. */
 export const updateTerrain = (g: Game, dt: number) => {
-  const p = g.player
   if (!g.rift.arena && Math.floor(g.time) !== Math.floor(g.time - dt)) {
     const C = TERRAIN.cell
-    const pcx = Math.floor(p.x / C)
-    const pcy = Math.floor(p.y / C)
     for (const key of g.terrain.cells.keys()) {
       const cx = Math.floor(key / 65536) - 32768
       const cy = (key % 65536) - 32768
-      if (Math.abs(cx - pcx) > 5 || Math.abs(cy - pcy) > 5) g.terrain.cells.delete(key)
+      const near = g.players.some((p) => present(p) && Math.abs(cx - Math.floor(p.x / C)) <= 5 && Math.abs(cy - Math.floor(p.y / C)) <= 5)
+      if (!near) g.terrain.cells.delete(key)
     }
   }
-  block(g, p, p.radius)
+  for (const p of g.players) if (present(p)) block(g, p, p.radius)
   for (const e of g.enemies) {
     if (e.dying >= 0 || overTerrain(e)) continue
     const wall = block(g, e, e.radius * 0.8)

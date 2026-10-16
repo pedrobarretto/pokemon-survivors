@@ -47,7 +47,7 @@ describe('status conditions', () => {
     expect(tickStatus(st, DOT_INTERVAL / 2, false, rng)).toBe(false)
     expect(tickStatus(st, DOT_INTERVAL / 2, false, rng)).toBe(true)
     tickStatus(st, 5, false, rng)
-    expect(st.burn).toEqual({ time: 0, power: 0, stacks: 0, move: null })
+    expect(st.burn).toMatchObject({ time: 0, power: 0, stacks: 0, move: null })
     expect(statusAttack(st)).toBe(1)
   })
 

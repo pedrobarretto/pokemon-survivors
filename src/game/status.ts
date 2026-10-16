@@ -45,7 +45,8 @@ export const STUTTER_RATE = 1.6
 /** Movement speed while paralyzed between stutters. */
 export const PARALYSIS_PACE = 0.75
 
-export type Affliction = { time: number; power: number; stacks: number; move: DamageSource | null }
+/** `by` is the slot of the player whose move inflicted it (its damage counts as theirs). */
+export type Affliction = { time: number; power: number; stacks: number; move: DamageSource | null; by: number }
 
 export type EnemyStatus = Record<StatusKind, Affliction> & {
   /** Seconds frozen in place (paralysis). */
@@ -54,7 +55,7 @@ export type EnemyStatus = Record<StatusKind, Affliction> & {
   tick: number
 }
 
-const none = (): Affliction => ({ time: 0, power: 0, stacks: 0, move: null })
+const none = (): Affliction => ({ time: 0, power: 0, stacks: 0, move: null, by: 0 })
 
 export const createStatus = (): EnemyStatus => ({ burn: none(), poison: none(), paralysis: none(), slow: none(), sleep: none(), stun: 0, tick: 0 })
 
@@ -66,10 +67,11 @@ const hasDot = (st: EnemyStatus) => st.burn.time > 0 || st.poison.time > 0
 export const dotDps = (a: Affliction) => (a.time > 0 ? a.power * a.stacks : 0)
 
 /**
- * Inflicts `spec` (already rolled) from a hit of `damage`. Re-applying refreshes
- * the duration and keeps the strongest power; poison also adds a stack.
+ * Inflicts `spec` (already rolled) from a hit of `damage` by player `by`.
+ * Re-applying refreshes the duration and keeps the strongest power (and its
+ * source); poison also adds a stack.
  */
-export const applyStatus = (st: EnemyStatus, spec: StatusSpec, damage: number, boss: boolean, move: DamageSource | null) => {
+export const applyStatus = (st: EnemyStatus, spec: StatusSpec, damage: number, boss: boolean, move: DamageSource | null, by = 0) => {
   const rule = STATUS_RULES[spec.kind]
   const a = st[spec.kind]
   const resist = boss ? rule.boss : 1
@@ -79,11 +81,13 @@ export const applyStatus = (st: EnemyStatus, spec: StatusSpec, damage: number, b
     a.stacks = 1
     a.power = power
     a.move = move
+    a.by = by
   } else {
     a.stacks = Math.min(rule.maxStacks, a.stacks + 1)
     if (power >= a.power) {
       a.power = power
       a.move = move
+      a.by = by
     }
   }
   a.time = Math.max(a.time, spec.duration * resist)

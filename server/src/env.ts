@@ -9,11 +9,11 @@ const required = (name: string) => {
   return value
 }
 
-/** Server config, read once at boot. Throws when a required variable is missing. */
-export const loadEnv = () => {
+/** Server config, read once at boot (`defaultPort` when `PORT` isn't set). Throws when a required variable is missing. */
+export const loadEnv = (defaultPort = 3000) => {
   const origins = [...ORIGINS, ...(process.env.CORS_ORIGINS ?? '').split(',').map((o) => o.trim()).filter(Boolean)]
   return {
-    port: Number(process.env.PORT ?? 3000),
+    port: Number(process.env.PORT ?? defaultPort),
     databaseUrl: required('DATABASE_URL'),
     clerkSecretKey: required('CLERK_SECRET_KEY'),
     /** Optional PEM public key: verifies tokens without fetching Clerk's keys. */

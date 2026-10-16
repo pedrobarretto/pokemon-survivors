@@ -170,8 +170,11 @@ const trail = (g: Game, a: Attack) => {
   }
 }
 
+/** Moves, grows and collides every attack, each acting as its owner (so motion follows them and hits count as theirs). */
 export const updateAttacks = (g: Game, dt: number) => {
+  const acting = g.player
   for (const a of g.attacks) {
+    g.player = a.owner
     a.age += dt
     if (a.age < 0) continue
     move(g, a, a.motion, dt)
@@ -181,5 +184,6 @@ export const updateAttacks = (g: Game, dt: number) => {
     if (a.age >= a.activeFrom && a.age <= a.activeUntil && (a.blast === 0 || mineArmed(a.age))) collide(g, a)
     if (a.blast > 0 && a.pierce > 0 && a.age >= a.ttl) detonate(g, a, true)
   }
+  g.player = acting
   retain(g.attacks, (a) => a.age < a.ttl && a.pierce > 0)
 }

@@ -6,6 +6,7 @@ import { WEATHER, WEATHER_CHIP } from '../data/weather'
 import type { HazardVisual } from '../data/bosses'
 import { killEnemy } from './combat'
 import { burst, floatText } from './effects'
+import { inPlay } from './players'
 import type { Game } from './types'
 
 /**
@@ -68,13 +69,11 @@ export const setWeather = (g: Game, id: WeatherId) => {
   if (id !== prev) g.events.push({ kind: 'weather', weather: id, prev })
 }
 
-const playerTypes = (g: Game) => PLAYABLE[g.starter].line[g.player.stage]!.types
-
 /** Sandstorm and snow wear: a slice of max HP every few seconds to everyone who isn't immune. */
 const chip = (g: Game) => {
   const color = WEATHER[g.weather.id].color
-  const p = g.player
-  if (weatherChips(g.weather.id, playerTypes(g))) {
+  for (const p of g.players) {
+    if (!inPlay(p) || !weatherChips(g.weather.id, PLAYABLE[p.starter].line[p.stage]!.types)) continue
     const floor = p.stats.maxHp * WEATHER_CHIP.playerFloor
     const dmg = Math.min(Math.round(p.stats.maxHp * WEATHER_CHIP.player) || 1, Math.floor(p.hp - floor))
     if (dmg > 0) {

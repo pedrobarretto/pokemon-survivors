@@ -146,7 +146,7 @@ const chain = (g: Game, s: CastStats, look: Look, hexBonus = 1) => {
 const mine = (g: Game, s: CastStats, look: Look, blastVisual: Visual) => {
   const p = g.player
   const mines: Attack[] = []
-  for (const a of g.attacks) if (a.move === look.move && a.blast > 0 && a.pierce > 0) mines.push(a)
+  for (const a of g.attacks) if (a.move === look.move && a.owner === p && a.blast > 0 && a.pierce > 0) mines.push(a)
   // Attacks stay in spawn order, so the first ones are the oldest: they expire now.
   const extra = mines.length + s.amount - mineCap(s.amount)
   for (let i = 0; i < extra && i < mines.length; i++) mines[i]!.ttl = mines[i]!.age
@@ -319,7 +319,7 @@ export const MOVES = {
     // Persistent aura: each "cast" refreshes the single live hitbox with current stats.
     fire: (g, s) => {
       const radius = 34 * s.area
-      const aura = g.attacks.find((a) => a.move === 'whirlpool')
+      const aura = g.attacks.find((a) => a.move === 'whirlpool' && a.owner === g.player)
       if (aura) {
         aura.shape = { kind: 'circle', r: radius }
         aura.damage = s.damage

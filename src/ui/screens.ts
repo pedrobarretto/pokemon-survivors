@@ -95,7 +95,7 @@ const offerRecipes = (g: Game, offer: Offer) => {
       return evo ? [evoRecipe(evo, canEvolve(evo, { moves: [{ ...offer, cooldown: 0 }], items: p.items }))] : []
     }
     case 'item': {
-      const learnset: readonly MoveId[] = PLAYABLE[g.starter].learnset
+      const learnset: readonly MoveId[] = PLAYABLE[g.player.starter].learnset
       return EVOLUTIONS.filter((e) => e.item === offer.id && learnset.includes(e.from)).map((e) =>
         evoRecipe(e, canEvolve(e, { moves: p.moves, items: [offer] })),
       )
@@ -126,7 +126,7 @@ const offerView = (g: Game, offer: Offer) => {
       return { icon: itemIcon(offer.id), name: ITEMS[offer.id].name, tag: isNew ? m.new : m.level(offer.level), isNew, desc: m.items[offer.id], type: null }
     }
     case 'berry':
-      return { icon: berryIcon(), name: 'Oran Berry', tag: '', isNew: false, desc: m.levelUp.berry(PLAYABLE[g.starter].name), type: null }
+      return { icon: berryIcon(), name: 'Oran Berry', tag: '', isNew: false, desc: m.levelUp.berry(PLAYABLE[g.player.starter].name), type: null }
     case 'evolution': {
       const to: MoveDef = MOVES[offer.to]
       const desc = m.levelUp.evolves(MOVES[offer.from].name, m.moves[offer.to].description)
@@ -135,13 +135,16 @@ const offerView = (g: Game, offer: Offer) => {
   }
 }
 
-/** Poké Mart charges offered under the level-up choices (only shown when owned). */
-type LevelUpExtras = { reroll: () => void; skip: () => void }
+/**
+ * Poké Mart charges offered under the level-up choices (only shown when owned),
+ * and in co-op the seconds left before the game picks (`countdown`).
+ */
+type LevelUpExtras = { reroll: () => void; skip: () => void; countdown?: () => number }
 
 export const levelUp = (root: HTMLElement, input: Input, g: Game, onChoose: (offer: Offer) => void, extras?: LevelUpExtras): Screen => {
   const m = t().levelUp
-  const name = PLAYABLE[g.starter].line[g.player.stage]!.name
-  const buttons = g.offers.map((offer, i) => {
+  const name = PLAYABLE[g.player.starter].line[g.player.stage]!.name
+  const buttons = g.player.offers.map((offer, i) => {
     const v = offerView(g, offer)
     const recipes = offerRecipes(g, offer)
     return h(
@@ -162,8 +165,8 @@ export const levelUp = (root: HTMLElement, input: Input, g: Game, onChoose: (off
 
   const actions = extras
     ? [
-        g.rerolls > 0 && ([h('button', { class: 'btn' }, m.reroll(g.rerolls)), extras.reroll] as const),
-        g.skips > 0 && ([h('button', { class: 'btn' }, m.skip(g.skips)), extras.skip] as const),
+        g.player.rerolls > 0 && ([h('button', { class: 'btn' }, m.reroll(g.player.rerolls)), extras.reroll] as const),
+        g.player.skips > 0 && ([h('button', { class: 'btn' }, m.skip(g.player.skips)), extras.skip] as const),
       ].filter((a) => a !== false)
     : []
 
@@ -174,25 +177,29 @@ export const levelUp = (root: HTMLElement, input: Input, g: Game, onChoose: (off
     if (done || performance.now() - openedAt < 400) return
     done = true
     playSfx('select')
-    const offer = g.offers[i]
+    const offer = g.player.offers[i]
     if (offer) onChoose(offer)
     else actions[i - buttons.length]?.[1]()
   })
 
+  const countdown = extras?.countdown
+  const timer = countdown ? h('span', { class: 'team-timer' }) : null
+  const tick = () => timer && countdown && (timer.textContent = t().coop.timer(Math.max(0, Math.ceil(countdown()))))
+  tick()
   const el = h(
     'div',
     { class: 'screen dim' },
     h(
       'div',
       { class: 'dialog box pop' },
-      h('div', { class: 'dialog-title' }, m.title(name, g.player.level - g.pendingLevelUps + 1)),
+      h('div', { class: 'dialog-title' }, m.title(name, g.player.level - g.player.pendingLevelUps + 1), timer),
       h('div', { class: 'offers' }, ...buttons),
       actions.length > 0 && h('div', { class: 'buttons' }, ...actions.map(([b]) => b)),
       hint(m.hintKeys, m.hintTouch),
     ),
   )
   root.append(el)
-  return { el, dispose: () => (nav.off(), el.remove()) }
+  return { el, tick, dispose: () => (nav.off(), el.remove()) }
 }
 
 /* ---------------- Pause ---------------- */
@@ -244,9 +251,10 @@ const loadoutList = (g: Game) =>
 /**
  * `settings` opens the settings screen on top (see `openSettings`) and must
  * call `back` once it closes; the pause menu hides meanwhile, then redraws
- * itself, in the new language if it changed.
+ * itself, in the new language if it changed. `coop` turns it into the co-op
+ * menu: the run goes on behind it and quitting leaves the room's run.
  */
-type PauseActions = { resume: () => void; quit: () => void; settings: (back: () => void) => Screen }
+type PauseActions = { resume: () => void; quit: () => void; settings: (back: () => void) => Screen; coop?: boolean }
 
 export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: PauseActions): Screen => {
   const el = h('div', { class: 'screen dim' })
@@ -267,9 +275,10 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
   /** `opening` plays the pop-in; redraws after closing the settings don't. */
   const render = (focus: number, opening: boolean) => {
     const m = t().pause
+    const c = t().coop
     const resume = h('button', { class: 'btn' }, m.resume)
     const settingsButton = h('button', { class: 'btn' }, m.settings)
-    const quit = h('button', { class: 'btn' }, m.quit)
+    const quit = h('button', { class: 'btn' }, actions.coop ? c.quit : m.quit)
     nav?.off()
     nav = menu(input, [resume, settingsButton, quit], (i) => {
       if (i === 0) actions.resume()
@@ -282,8 +291,9 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
       h(
         'div',
         { class: opening ? 'dialog box pop wide' : 'dialog box wide' },
-        h('div', { class: 'dialog-title' }, m.title),
+        h('div', { class: 'dialog-title' }, actions.coop ? c.menu : m.title),
         difficultyTag(g.difficulty),
+        actions.coop && h('p', { class: 'profile-note small' }, c.menuNote),
         h(
           'div',
           { class: 'pause-grid' },
@@ -308,7 +318,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
 /** Icon, name and type for a results-screen damage row (and the run's share card). */
 export const damageSource = (g: Game, id: DamageSource) => {
   if (id !== 'special') return { icon: moveIcon(id), name: MOVES[id].name, type: MOVES[id].type }
-  const r = resolveSpecial(g.starter, g.player.stage)
+  const r = resolveSpecial(g.player.starter, g.player.stage)
   return { icon: specialIcon(r.id), name: r.tier.name, type: r.def.type }
 }
 
@@ -337,6 +347,8 @@ type ResultsExtras = {
   news: DexNews
   ranking: ResultsRanking | null
   share: ResultsShare | null
+  /** Co-op: the buttons read "Back to room" and "Leave", and the team shows under the stats. */
+  coop?: { team: HTMLElement }
 }
 
 const NO_EXTRAS: ResultsExtras = { badge: null, report: null, medals: [], eggs: { refund: 0, ready: 0 }, news: { species: 0, shinies: 0 }, ranking: null, share: null }
@@ -383,15 +395,15 @@ export const results = (
   const e = t().eggs
   const r = t().rifts
   const victory = g.phase === 'victory'
-  const name = PLAYABLE[g.starter].line[g.player.stage]!.name
-  const entries = (Object.entries(g.damageByMove) as Array<[DamageSource, number]>).sort((a, b) => b[1] - a[1])
+  const name = PLAYABLE[g.player.starter].line[g.player.stage]!.name
+  const entries = (Object.entries(g.player.damageByMove) as Array<[DamageSource, number]>).sort((a, b) => b[1] - a[1])
   const top = entries[0]?.[1] ?? 1
   const earned = runEarnings(g)
   const extra = overtime(g.time)
   const reaperDefeats = g.endless?.reaperDefeats ?? 0
   const legends = g.rift.cleared
-  const retry = h('button', { class: 'btn' }, m.retry)
-  const back = h('button', { class: 'btn' }, m.change)
+  const retry = h('button', { class: 'btn' }, extras.coop ? t().coop.backToRoom : m.retry)
+  const back = h('button', { class: 'btn' }, extras.coop ? t().coop.leaveRoom : m.change)
   const goOn = victory && onContinue ? h('button', { class: 'btn' }, r.continue) : null
   const ranking = extras.ranking
   const boards = ranking ? h('button', { class: 'btn' }, t().ranking.open) : null
@@ -450,6 +462,7 @@ export const results = (
         g.eggs.found.length > 0 &&
           h('div', {}, h('span', {}, e.eggs), h('b', { class: 'result-legends' }, ...g.eggs.found.map((egg) => h('img', { src: eggIcon(egg.tier), alt: e.tiers[egg.tier], title: e.tiers[egg.tier] })))),
       ),
+      extras.coop?.team,
       runNews(extras),
       ranking?.panel,
       goOn && h('p', { class: 'endless-hint' }, r.continueHint),

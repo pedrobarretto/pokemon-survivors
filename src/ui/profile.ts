@@ -8,6 +8,7 @@ import { handleProblem, normalizeHandle, parseDisplayName, suggestHandle, type P
 import { RIBBON_TIERS, type RibbonTier } from '../game/ribbons'
 import { pokeballIcon, ribbonIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
+import { send } from '../net/client'
 import { fetchProfile, profileUrl, setFollow } from '../ranking'
 import { pokedex } from '../site/pokedex'
 import { LOCALES, locale, t } from '../i18n'
@@ -128,12 +129,17 @@ export const profileScreen = (root: HTMLElement, input: Input, handle: string, o
     const m = t().profile
     const total = pokedex().length
     const signedIn = accountState().kind === 'signedIn'
+    // Friends are mutual follows: following sends a request (or accepts theirs); following back is the friendship.
+    const friendship = p.followed && p.followsYou ? 'friends' : p.followed ? 'sent' : p.followsYou ? 'incoming' : 'none'
     const follow: Action = {
-      label: p.followed ? m.unfollow : m.follow,
+      label: { none: m.addFriend, sent: m.requestSent, incoming: m.acceptRequest, friends: m.friends }[friendship],
       run: async () => {
-        const next = await setFollow(p.handle, !p.followed)
+        // Unfriending lives in the friends screen; here the friendship just shows.
+        if (friendship === 'friends') return playSfx('select')
+        const next = await setFollow(p.handle, friendship !== 'sent')
         if (!next || closed) return
         playSfx(next.followed ? 'unlock' : 'select')
+        send({ t: 'friends' })
         show({ ...p, followed: next.followed, followers: next.followers })
       },
     }

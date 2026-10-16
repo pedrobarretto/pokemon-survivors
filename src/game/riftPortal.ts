@@ -5,6 +5,7 @@ import { burst } from './effects'
 import { chargePortal, nextRiftAt, pickLegend, riftDue } from './rift'
 import { enterArena } from './riftArena'
 import { clearSpot } from './terrain'
+import { anchorPlayer, playerWithin } from './players'
 import type { Game } from './types'
 import * as dm from '../engine/dmath'
 
@@ -19,7 +20,7 @@ const PORTAL_COLORS = ['#7850c8', '#c8a8f8', '#ffffff'] as const
 
 /** Opens a portal for `legend` at (x, y), or just past the screen edge in a random direction. */
 export const openPortal = (g: Game, legend: RiftLegend = pickLegend(g.rng, g.rift.met), at?: { x: number; y: number }) => {
-  const p = g.player
+  const p = anchorPlayer(g, g.rift.met.length)
   const a = range(g.rng, 0, TAU)
   const d = dm.hypot(g.view.w, g.view.h) / 2 + 60
   const { x, y } = at ?? clearSpot(g, { x: p.x + dm.cos(a) * d, y: p.y + dm.sin(a) * d }, RIFT.portalRadius + 4)
@@ -45,8 +46,8 @@ export const updateRiftPortal = (g: Game, dt: number) => {
     g.events.push({ kind: 'riftClosed' })
     return
   }
-  const p = g.player
-  const inside = dm.sq(p.x - portal.x) + dm.sq(p.y - portal.y) < dm.sq(RIFT.portalRadius)
+  // Anyone standing in it charges it; the whole team goes through together.
+  const inside = playerWithin(g, portal.x, portal.y, RIFT.portalRadius) !== null
   portal.charge = chargePortal(portal.charge, inside, dt)
   // Motes drift up out of the portal; denser while it charges.
   if (g.rng() < (inside ? 0.6 : 0.2)) {

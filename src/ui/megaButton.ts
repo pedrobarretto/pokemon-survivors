@@ -32,11 +32,11 @@ export const createMegaControls = (onPress: () => void) => {
   button.addEventListener('contextmenu', (e) => e.preventDefault())
 
   const update = (g: Game) => {
-    const phase = megaPhase(g.mega, isFinalStage(g.starter, g.player.stage))
-    const line = PLAYABLE[g.starter].line
+    const phase = megaPhase(g.player.mega, isFinalStage(g.player.starter, g.player.stage))
+    const line = PLAYABLE[g.player.starter].line
     const before = line[line.length - 2]
     const tag = phase === 'locked' && before && 'evolveAt' in before ? t().levelShort(before.evolveAt) : phase === 'ready' ? t().mega.button : ''
-    const fill = phase === 'active' ? g.mega.active / MEGA.duration : phase === 'charging' ? 1 - g.mega.charge / MEGA.recharge : 1
+    const fill = phase === 'active' ? g.player.mega.active / MEGA.duration : phase === 'charging' ? 1 - g.player.mega.charge / MEGA.recharge : 1
     for (const el of [badge, button]) {
       el.classList.toggle('hidden', phase === 'none')
       el.classList.toggle('ready', phase === 'ready')

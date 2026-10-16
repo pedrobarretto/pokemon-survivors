@@ -8,6 +8,7 @@ import { blastHorde, spawnEnemy } from './enemies'
 import { dropCoins, dropPickup } from './pickups'
 import { hasTrait } from './roster'
 import { spawnRing, spawnSwarm } from './spawner'
+import { anchorPlayer, nearestPlayer } from './players'
 import type { Enemy, Game } from './types'
 import * as dm from '../engine/dmath'
 
@@ -23,7 +24,7 @@ export const continueEndless = (g: Game) => {
 
 /** Arceus descends just past the top of the screen and blasts the horde away. */
 const summonReaper = (g: Game, s: EndlessState) => {
-  const p = g.player
+  const p = anchorPlayer(g, s.reaperDefeats)
   const reaper = spawnEnemy(g, REAPER, p.x, p.y - g.view.h / 2 - 24)
   reaper.hp = reaper.maxHp = Math.round(reaperHp(s.reaperDefeats) * DIFFICULTIES[g.difficulty].enemyHp)
   s.reaperId = reaper.id
@@ -36,8 +37,8 @@ const summonReaper = (g: Game, s: EndlessState) => {
 }
 
 const reaperDown = (g: Game, s: EndlessState, reaper: Enemy | undefined) => {
-  const x = reaper?.x ?? g.player.x
-  const y = reaper?.y ?? g.player.y
+  const x = reaper?.x ?? nearestPlayer(g, 0, 0).x
+  const y = reaper?.y ?? nearestPlayer(g, 0, 0).y
   dropCoins(g, x, y, REAPER_LOOT.coins)
   for (let i = 0; i < REAPER_LOOT.pokeballs; i++) dropPickup(g, x - 8 + i * 8, y + 4, 'pokeball')
   burst(g, x, y - 20, { colors: ['#fff0a0', '#f8d030', '#ffffff'], count: 80, speed: 200, ttl: 0.9 })
@@ -50,7 +51,7 @@ const reaperDown = (g: Game, s: EndlessState, reaper: Enemy | undefined) => {
 /** Arceus speeds up as it hunts, and never loses track: past the screen it blinks back to the edge. */
 const hunt = (g: Game, s: EndlessState, reaper: Enemy) => {
   reaper.speed = reaperSpeed(ENEMIES[REAPER].speed, g.time - s.reaperSince)
-  const p = g.player
+  const p = nearestPlayer(g, reaper.x, reaper.y)
   const far = dm.hypot(g.view.w, g.view.h) * 0.75
   const dx = reaper.x - p.x
   const dy = reaper.y - p.y

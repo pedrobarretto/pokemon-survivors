@@ -4,12 +4,13 @@ import { query } from '../engine/spatial'
 import { DROP_TABLES, rollDrop, type BuffId } from '../data/consumables'
 import { stageIndexAt } from '../data/waves'
 import { addBuff } from './buffs'
-import { healPlayer, hurtPlayer, killEnemy } from './combat'
+import { healPlayer, hurtPlayers, killEnemy } from './combat'
 import { dropItem } from './consumables'
 import { logDefeat } from './dex'
 import { burst, damageText, floatText } from './effects'
 import { enemyScale, spawnEnemy } from './enemies'
-import { recomputeStats } from './leveling'
+import { recomputeTeam } from './leveling'
+import { actAs, anchorPlayer, inPlay, nearestPlayer, playerWithin, present } from './players'
 import {
   ALTAR, altarDuration, BOMB, CHEST, chestCoins, chestProgress, DIRECTOR, FADE, fleeHeading, FOUNTAIN, fountainSip,
   MEOWTH, MEOWTH_DEX, meowthSpeed, rollAltarBuff, SPIKES, spikePhase, spawnSpot, type SpikePhase,
@@ -115,15 +116,16 @@ const spend = (ev: { gone: number }) => {
   ev.gone = 0
 }
 
-const within = (g: Game, x: number, y: number, r: number) => dm.sq(g.player.x - x) + dm.sq(g.player.y - y) < r * r
+/** Whether any player in play stands within `r` of (x, y) (plus their body radius when `body` is set). */
+const within = (g: Game, x: number, y: number, r: number, body = false) => playerWithin(g, x, y, r, body) !== null
 
 const neighbors: number[] = []
 
 /**
  * Trap damage on everything within `r` of (x, y): wild Pokémon take `damage`
- * (bosses a slice of their max HP) and get shoved out, the player takes `player`.
+ * (bosses a slice of their max HP) and get shoved out, players take `playerShare` of their max HP.
  */
-const trapHit = (g: Game, x: number, y: number, r: number, damage: number, bossShare: number, player: number) => {
+const trapHit = (g: Game, x: number, y: number, r: number, damage: number, bossShare: number, playerShare: number) => {
   for (const i of query(g.grid, x, y, r + 16, neighbors)) {
     const e = g.enemies[i]
     if (!e || !isAlive(e) || dm.sq(e.x - x) + dm.sq(e.y - y) > dm.sq(r + e.radius)) continue
@@ -136,7 +138,7 @@ const trapHit = (g: Game, x: number, y: number, r: number, damage: number, bossS
     damageText(g, e, dmg, '#f8a040')
     if (e.hp <= 0) killEnemy(g, e)
   }
-  if (within(g, x, y, r + g.player.radius)) hurtPlayer(g, player)
+  hurtPlayers(g, (p) => dm.sq(p.x - x) + dm.sq(p.y - y) < dm.sq(r + p.radius), (p) => p.stats.maxHp * playerShare)
 }
 
 /** A ring of wild Pokémon from the current wave closing in on the chest. */
@@ -157,25 +159,27 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
     marker: true,
     create: (g) => ({ buff: rollAltarBuff(g.rng, g.buffs) }),
     update: (g, ev) => {
-      if (!within(g, ev.x, ev.y, ALTAR.radius + g.player.radius)) return
+      if (!within(g, ev.x, ev.y, ALTAR.radius, true)) return
       const { buff } = ev.state
       addBuff(g.buffs, buff, altarDuration(buff))
-      recomputeStats(g)
+      recomputeTeam(g)
       burst(g, ev.x, ev.y - 14, { colors: ['#ffffff', '#f8e8a0', '#c8a8f8'], count: 40, speed: 110, ttl: 0.8, gravity: -80 })
       notify(g, { kind: 'altar', buff })
       spend(ev)
     },
   },
   fountain: {
-    // Shows up more often when the player is hurt.
-    spawn: { from: 60, weight: (g) => 1 + 3 * (1 - g.player.hp / g.player.stats.maxHp), max: 1, lifetime: 60, distance: [150, 260] },
+    // Shows up more often when someone is hurt.
+    spawn: { from: 60, weight: (g) => 1 + 3 * (1 - lowestHealth(g)), max: 1, lifetime: 60, distance: [150, 260] },
     marker: true,
     create: () => ({ charges: FOUNTAIN.charges, timer: 0, visited: false }),
     update: (g, ev, dt) => {
-      const p = g.player
+      // The one drinking: a hurt player at the fountain if any, else whoever stands there.
+      const near = g.players.filter((q) => inPlay(q) && dm.sq(q.x - ev.x) + dm.sq(q.y - ev.y) < dm.sq(FOUNTAIN.radius + q.radius))
+      const p = near.find((q) => q.hp < q.stats.maxHp - 0.5) ?? near[0] ?? g.player
       const s = ev.state
-      if (!fountainSip(s, within(g, ev.x, ev.y, FOUNTAIN.radius + p.radius), p.hp < p.stats.maxHp - 0.5, dt)) return
-      const heal = Math.round(healPlayer(g, p.stats.maxHp * FOUNTAIN.heal))
+      if (!fountainSip(s, near.length > 0, p.hp < p.stats.maxHp - 0.5, dt)) return
+      const heal = Math.round(actAs(g, p, () => healPlayer(g, p.stats.maxHp * FOUNTAIN.heal)))
       floatText(g, p.x, p.y - 30, `+${heal}`, '#58e858')
       burst(g, ev.x, ev.y - 8, { colors: ['#a8d8f8', '#ffffff', '#58a8f0'], count: 10, speed: 50, ttl: 0.6, gravity: -50 })
       notify(g, { kind: s.visited ? 'sip' : 'fountain' })
@@ -222,7 +226,7 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
       const rising = phase === 'up' && ev.state.phase !== 'up'
       ev.state.phase = phase
       if (!rising) return
-      trapHit(g, ev.x, ev.y, SPIKES.radius, SPIKES.damage * enemyScale(g).hp, 0.01, g.player.stats.maxHp * SPIKES.playerDamage)
+      trapHit(g, ev.x, ev.y, SPIKES.radius, SPIKES.damage * enemyScale(g).hp, 0.01, SPIKES.playerDamage)
       if (within(g, ev.x, ev.y, 260)) notify(g, { kind: 'spikes' })
     },
   },
@@ -234,7 +238,7 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
       const s = ev.state
       if (s.fuse < 0) {
         const lit =
-          within(g, ev.x, ev.y, BOMB.trigger + g.player.radius) ||
+          within(g, ev.x, ev.y, BOMB.trigger, true) ||
           query(g.grid, ev.x, ev.y, BOMB.trigger, neighbors).some((i) => {
             const e = g.enemies[i]
             return e !== undefined && isAlive(e) && dm.sq(e.x - ev.x) + dm.sq(e.y - ev.y) < dm.sq(BOMB.trigger)
@@ -247,7 +251,7 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
       }
       s.fuse += dt
       if (s.fuse < BOMB.fuse) return
-      trapHit(g, ev.x, ev.y, BOMB.radius, BOMB.damage * enemyScale(g).hp, BOMB.bossDamage, g.player.stats.maxHp * BOMB.playerDamage)
+      trapHit(g, ev.x, ev.y, BOMB.radius, BOMB.damage * enemyScale(g).hp, BOMB.bossDamage, BOMB.playerDamage)
       burst(g, ev.x, ev.y - 6, { colors: ['#ffffff', '#f8e858', '#f87830', '#e83030', '#484848'], count: 50, speed: 180, ttl: 0.6 })
       g.shake = Math.max(g.shake, 6)
       notify(g, { kind: 'boom' })
@@ -260,7 +264,7 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
     create: (g) => ({ hp: MEOWTH.hp, dir: 0, flash: 0, hitCooldown: 0, seed: range(g.rng, 0, TAU) }),
     enter: (g) => notify(g, { kind: 'meowth' }),
     update: (g, ev, dt) => {
-      const p = g.player
+      const p = nearestPlayer(g, ev.x, ev.y)
       const s = ev.state
       const dist = dm.hypot(ev.x - p.x, ev.y - p.y)
       // Left far behind: it escapes right away (`expire`).
@@ -334,21 +338,28 @@ const direct = (g: Game) => {
   if (choices.length === 0) return
   const kind = weightedPick(g.rng, choices)
   const taken = [...s.list, ...g.props]
-  const spot = spawnSpot(g.rng, g.player.x, g.player.y, MAP_EVENTS[kind].spawn.distance, taken)
+  const p = anchorPlayer(g, Math.floor(g.time))
+  const spot = spawnSpot(g.rng, p.x, p.y, MAP_EVENTS[kind].spawn.distance, taken)
   if (!spot) return
   // Events stand on open ground, never in a lake or against a rock.
   const open = clearSpot(g, spot, 18)
   spawnMapEvent(g, kind, Math.round(open.x), Math.round(open.y))
 }
 
-/** Runs the director, every live event's interaction, and clears faded or far-away events. */
+/** Runs the director, every live event's interaction, and clears faded events and ones far from everyone. */
 export const updateMapEvents = (g: Game, dt: number) => {
   direct(g)
-  const p = g.player
   for (const ev of g.mapEvents.list) {
     ev.age += dt
     if (ev.gone >= 0) ev.gone += dt
     else tick(g, ev, dt)
   }
-  retain(g.mapEvents.list, (ev) => ev.gone < FADE && Math.abs(ev.x - p.x) + Math.abs(ev.y - p.y) < DIRECTOR.despawn)
+  retain(g.mapEvents.list, (ev) => ev.gone < FADE && g.players.some((p) => present(p) && Math.abs(ev.x - p.x) + Math.abs(ev.y - p.y) < DIRECTOR.despawn))
+}
+
+/** The lowest HP share among the players in play (1 when nobody is hurt). */
+const lowestHealth = (g: Game) => {
+  let low = 1
+  for (const p of g.players) if (inPlay(p)) low = Math.min(low, p.hp / p.stats.maxHp)
+  return low
 }

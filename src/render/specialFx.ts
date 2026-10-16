@@ -305,7 +305,7 @@ export const stanceIcon = (stance: Stance) => toIconUrl(`stance:${stance}`, STAN
 
 /** Ground ring in the stance color under Aegislash, so the forme reads at a glance. */
 const drawStanceRing = (ctx: Ctx, g: Game, t: number) => {
-  const stance = g.special.stance
+  const stance = g.player.special.stance
   if (!stance) return
   const p = g.player
   ctx.fillStyle = STANCES[stance].color
@@ -471,7 +471,7 @@ export const drawSpecialAttack = (ctx: Ctx, a: Attack, t: number) => {
 
 /** Ground aura: Aegislash's stance ring, and while charging a shrinking type-colored ring plus, for aimed specials, a dotted aim line. */
 export const drawSpecialAura = (ctx: Ctx, g: Game, t: number) => {
-  const s = g.special
+  const s = g.player.special
   drawStanceRing(ctx, g, t)
   if (s.charge <= 0) return
   const p = g.player

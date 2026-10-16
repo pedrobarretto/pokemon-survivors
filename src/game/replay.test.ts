@@ -24,9 +24,9 @@ const play = (seconds: number, start = START, every = 300, stage: (g: Game) => v
   let angle = 0
   while (g.time < seconds && g.phase !== 'gameover') {
     if (g.phase === 'levelup') {
-      const i = Math.floor(bot() * g.offers.length)
+      const i = Math.floor(bot() * g.player.offers.length)
       recordEvent(rec, ['offer', i])
-      chooseOffer(g, g.offers[i]!)
+      chooseOffer(g, g.player.offers[i]!)
       continue
     }
     if (rec.tick === 600) Object.assign(view, { w: 300, h: 520 })
@@ -94,7 +94,7 @@ describe('replays', () => {
     }
     const start: ReplayStart = { ...START, starter: 'charmander' }
     const { g, replay } = play(40, start, 90, megaReady)
-    expect(g.mega.count).toBe(1)
+    expect(g.player.mega.count).toBe(1)
     const staged = startGame(start)
     megaReady(staged)
     expect(resimulate(parseReplay(JSON.parse(JSON.stringify(replay)))!, staged)).toEqual({ time: g.time, kills: g.kills, level: g.player.level, phase: g.phase, stuck: false })

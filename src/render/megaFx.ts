@@ -61,7 +61,7 @@ export const drawMegaStone = (ctx: Ctx, mega: MegaId, x: number, y: number, t: n
 }
 
 /** Transformation progress, 0 → 1 (0 when none is playing). */
-const introProgress = (g: Game) => (g.mega.intro > 0 ? 1 - g.mega.intro / MEGA.intro : 0)
+const introProgress = (g: Game) => (g.player.mega.intro > 0 ? 1 - g.player.mega.intro / MEGA.intro : 0)
 
 type MegaLook = { form: MegaForm | undefined; flash: number; outline?: string }
 
@@ -74,9 +74,9 @@ type MegaLook = { form: MegaForm | undefined; flash: number; outline?: string }
 export const megaLook = (g: Game): MegaLook => {
   const def = heldMega(g)
   if (!def) return { form: undefined, flash: 0 }
-  if (g.mega.intro <= 0) {
-    if (g.mega.active <= 0) return { form: undefined, flash: 0 }
-    const outline = hasSheets(playerDex(g), def.form) ? undefined : rainbow[Math.floor(g.mega.active * 4) % rainbow.length]
+  if (g.player.mega.intro <= 0) {
+    if (g.player.mega.active <= 0) return { form: undefined, flash: 0 }
+    const outline = hasSheets(playerDex(g), def.form) ? undefined : rainbow[Math.floor(g.player.mega.active * 4) % rainbow.length]
     return { form: def.form, flash: 0, outline }
   }
   const k = introProgress(g)
@@ -96,11 +96,11 @@ export const drawMegaGround = (ctx: Ctx, g: Game, camX: number, camY: number, t:
   const def = heldMega(g)
   if (!def) return
   const p = g.player
-  if (g.mega.intro > 0) {
+  if (g.player.mega.intro > 0) {
     ctx.fillStyle = `rgba(16,8,40,${(0.45 * Math.min(1, introProgress(g) * 4)).toFixed(2)})`
     ctx.fillRect(camX, camY, g.view.w, g.view.h)
   }
-  if (g.mega.active <= 0) return
+  if (g.player.mega.active <= 0) return
   if (def.effect.kind === 'aura') {
     const r = def.effect.radius
     const steps = Math.ceil(r * TAU * 0.25)
@@ -127,7 +127,7 @@ export const drawMegaAir = (ctx: Ctx, g: Game, top: number, t: number) => {
   if (!heldMega(g)) return
   const p = g.player
   const k = introProgress(g)
-  if (g.mega.intro > 0) {
+  if (g.player.mega.intro > 0) {
     const cy = p.y - 12
     for (let i = 0; i < rainbow.length; i++) {
       ctx.fillStyle = rainbow[i]!
@@ -144,7 +144,7 @@ export const drawMegaAir = (ctx: Ctx, g: Game, top: number, t: number) => {
     }
     return
   }
-  const left = g.mega.active
+  const left = g.player.mega.active
   if (left <= 0 || (left < 3 && Math.floor(t * 6) % 2 === 0)) return
   blitCentered(ctx, MEGA_SYMBOL(), p.x, top - 8 + Math.round(Math.sin(t * 3)))
 }

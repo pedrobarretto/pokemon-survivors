@@ -6,13 +6,16 @@ import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { MEGAS } from '../data/megas'
 import { TYPE_COLORS, type PokeType } from '../data/types'
 import { buffDeltas } from './buffs'
+import { actAs } from './players'
 import { healPlayer } from './combat'
 import { burst } from './effects'
 import { rankDeltas } from './meta'
 import { maxMoveLevel, MOVES, type MoveId } from './moves'
 import { stanceStats } from './stance'
 import { applyDeltas, BASE_STATS, type StatDelta } from './stats'
-import type { Game, Offer, OwnedItem, OwnedMove } from './types'
+import { COOP } from '../data/coop'
+import { coopScale } from './coop'
+import type { Game, Offer, OwnedItem, OwnedMove, Player } from './types'
 
 export const MAX_MOVES = 6
 export const MAX_ITEMS = 6
@@ -21,20 +24,29 @@ export const MAX_ITEMS = 6
 export const xpFor = (level: number) =>
   Math.floor(5 + (level - 1) * 9 + Math.max(0, level - 20) * 6 + Math.max(0, level - 40) * 10)
 
+/**
+ * Adds EXP. Solo, times the player's growth. In co-op the team shares one
+ * level: every player gets the same EXP, times the team's average growth and
+ * split by `COOP.xp`, so everyone levels up together.
+ */
 export const gainXp = (g: Game, amount: number) => {
-  const p = g.player
-  p.xp += amount * p.stats.growth
-  while (p.xp >= p.xpNext) {
-    p.xp -= p.xpNext
-    p.level++
-    p.xpNext = xpFor(p.level)
-    g.pendingLevelUps++
+  const team = g.coop ? g.players.filter((p) => !p.gone) : [g.player]
+  const growth = team.reduce((sum, p) => sum + p.stats.growth, 0) / team.length
+  const gained = (amount * growth) / coopScale(g, COOP.xp)
+  for (const p of team) {
+    p.xp += gained
+    while (p.xp >= p.xpNext) {
+      p.xp -= p.xpNext
+      p.level++
+      p.xpNext = xpFor(p.level)
+      p.pendingLevelUps++
+    }
   }
 }
 
 export type Loadout = { starter: PlayableId; moves: readonly OwnedMove[]; items: readonly OwnedItem[] }
 
-export const loadout = (g: Game): Loadout => ({ starter: g.starter, moves: g.player.moves, items: g.player.items })
+export const loadout = (g: Game): Loadout => ({ starter: g.player.starter, moves: g.player.moves, items: g.player.items })
 
 /** Every upgrade the player could pick right now, with selection weights. */
 export const offerPool = ({ starter, moves, items }: Loadout): Array<readonly [Offer, number]> => {
@@ -95,15 +107,20 @@ export const recomputeStats = (g: Game) => {
   const p = g.player
   const before = p.stats.maxHp
   const deltas = applyDeltas(BASE_STATS, [
-    ...starterDeltas(g.starter, p.stage),
-    ...rankDeltas(g.ranks),
+    ...starterDeltas(g.player.starter, p.stage),
+    ...rankDeltas(g.player.ranks),
     ...p.items.flatMap((i) => ITEMS[i.id].levels.slice(0, i.level)),
     ...buffDeltas(g.buffs),
-    ...(g.mega.active > 0 && g.mega.stone ? [MEGAS[g.mega.stone].stats] : []),
+    ...(g.player.mega.active > 0 && g.player.mega.stone ? [MEGAS[g.player.mega.stone].stats] : []),
   ])
-  p.stats = stanceStats(deltas, g.special.stance)
+  p.stats = stanceStats(deltas, g.player.special.stance)
   if (p.stats.maxHp > before) p.hp += p.stats.maxHp - before
   p.hp = Math.min(p.hp, p.stats.maxHp)
+}
+
+/** Rebuilds every player's stats (a team buff started or ran out). */
+export const recomputeTeam = (g: Game) => {
+  for (const p of g.players) actAs(g, p, () => recomputeStats(g))
 }
 
 export const applyOffer = (g: Game, offer: Offer) => {
@@ -141,7 +158,7 @@ const evolveMove = (g: Game, from: MoveId, to: MoveId) => {
   owned.level = 1
   owned.cooldown = 0.3
   // Drop lingering hitboxes of the old move (e.g. Whirlpool's permanent aura).
-  retain(g.attacks, (a) => a.move !== from)
+  retain(g.attacks, (a) => a.move !== from || a.owner !== p)
   const colors = [TYPE_COLORS[MOVES[to].type], '#ffffff', '#ffd830']
   burst(g, p.x, p.y - 10, { colors, count: 70, speed: 170, ttl: 0.9, size: 2, drag: 3 })
   burst(g, p.x, p.y - 10, { colors: ['#ffffff', '#fff8c0'], count: 30, speed: 60, ttl: 1.2, gravity: -50 })
@@ -149,10 +166,10 @@ const evolveMove = (g: Game, from: MoveId, to: MoveId) => {
   g.events.push({ kind: 'moveEvolved', from, to })
 }
 
-/** The next evolution, if the player's level has reached it. */
-export const pendingEvolution = (g: Game) => {
-  const line = PLAYABLE[g.starter].line
-  const stage = line[g.player.stage]
-  const next = line[g.player.stage + 1]
-  return stage && next && 'evolveAt' in stage && g.player.level >= stage.evolveAt ? { from: stage.dex, to: next.dex } : null
+/** A player's next evolution (the acting player's by default), if their level has reached it. */
+export const pendingEvolution = (g: Game, p: Player = g.player) => {
+  const line = PLAYABLE[p.starter].line
+  const stage = line[p.stage]
+  const next = line[p.stage + 1]
+  return stage && next && 'evolveAt' in stage && p.level >= stage.evolveAt ? { from: stage.dex, to: next.dex } : null
 }

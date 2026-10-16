@@ -19,6 +19,28 @@ export type ChangelogEntry = {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-10-16',
+    title: { pt: 'Jogar com amigos: multijogador para até 4', en: 'Play with friends: co-op for up to 4' },
+    notes: [
+      {
+        pt: 'Novo modo Jogar com amigos: crie uma sala e mande o link, ou entre com o código de 5 letras. Até 4 treinadores na mesma partida, cada um com seu Pokémon e suas melhorias do Poké Mart. Não precisa de conta.',
+        en: 'New Play with friends mode: create a room and send the link, or join with its 5-letter code. Up to 4 trainers in the same run, each with their own Pokémon and Poké Mart upgrades. No account needed.',
+      },
+      {
+        pt: 'A experiência é da equipe: todos sobem de nível juntos e cada um escolhe sua carta, com 15 segundos para decidir. A horda cresce e fica mais forte com cada treinador, e os chefes aguentam mais.',
+        en: 'EXP belongs to the team: everyone levels up together and each player picks their own card, with 15 seconds to decide. The horde grows and gets tougher with every trainer, and bosses take more hits.',
+      },
+      {
+        pt: 'Quem desmaia fica no chão até um amigo ficar 3 segundos ao lado para reanimar. A partida só acaba quando ninguém mais está de pé. Setas na borda da tela mostram onde estão os amigos.',
+        en: 'Whoever faints stays down until a friend stands next to them for 3 seconds to revive them. The run only ends when nobody is left standing. Arrows on the screen edge show where your friends are.',
+      },
+      {
+        pt: 'Amigos de verdade: seguir alguém agora é um pedido de amizade, e seguir de volta aceita. Na tela de Amigos você vê quem está online, aceita pedidos, procura pelo nome de usuário e convida para a sua sala.',
+        en: 'Real friends: following someone is now a friend request, and following back accepts it. The Friends screen shows who is online, takes requests, searches by username and invites friends to your room.',
+      },
+    ],
+  },
+  {
+    date: '2026-10-16',
     pr: 61,
     title: { pt: 'Competir: Desafio do dia e fitas', en: 'Compete: the Daily Challenge and ribbons' },
     notes: [

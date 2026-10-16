@@ -59,6 +59,12 @@ export type Ranks = Readonly<Record<UpgradeId, number>>
 
 export const NO_RANKS: Ranks = Object.fromEntries(UPGRADE_IDS.map((id) => [id, 0])) as Record<UpgradeId, number>
 
+/** Ranks from untrusted data, each clamped to its upgrade's max (unknown or missing ones are 0). */
+export const parseRanks = (v: unknown): Ranks => {
+  const ranks = isRecord(v) ? v : {}
+  return Object.fromEntries(UPGRADE_IDS.map((id) => [id, wholeNumber(ranks[id], UPGRADES[id].maxRank)])) as Record<UpgradeId, number>
+}
+
 /* ---------------- Prices ---------------- */
 
 const PRICE_GROWTH = 1.6
@@ -181,13 +187,12 @@ export const parseSave = (raw: string | null): Save => {
 export const parseSaveData = (json: unknown): Save => {
   const data = isRecord(json) ? migrate(json) : null
   if (!data) return EMPTY_SAVE
-  const ranks = isRecord(data.ranks) ? data.ranks : {}
   const achievements = parseAchievements(data.achievements)
   const titles = parseGiftTitles(data.titles)
   return {
     version: SAVE_VERSION,
     wallet: wholeNumber(data.wallet),
-    ranks: Object.fromEntries(UPGRADE_IDS.map((id) => [id, wholeNumber(ranks[id], UPGRADES[id].maxRank)])) as Record<UpgradeId, number>,
+    ranks: parseRanks(data.ranks),
     dex: parseDex(data.dex),
     eggs: parseEggs(data.eggs),
     hatched: parseHatched(data.hatched),

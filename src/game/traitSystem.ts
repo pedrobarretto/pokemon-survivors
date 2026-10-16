@@ -2,7 +2,7 @@ import { dir8, dirTo, lerp, TAU } from '../engine/math'
 import { range } from '../engine/rng'
 import { query } from '../engine/spatial'
 import { isSummoner, SUMMONS, TRAITS } from '../data/traits'
-import { hurtPlayer, killEnemy } from './combat'
+import { hurtPlayers, killEnemy } from './combat'
 import { spawnEnemy } from './enemies'
 import { burst, damageText } from './effects'
 import { inView } from './queries'
@@ -21,6 +21,7 @@ import {
   wardAmount,
   type TraitAct,
 } from './traits'
+import { nearestPlayer } from './players'
 import type { Enemy, Game } from './types'
 import * as dm from '../engine/dmath'
 
@@ -105,8 +106,7 @@ const explode = (g: Game, e: Enemy) => {
   const k = TRAITS.kamikaze
   const r = blastRadius(e.radius)
   const dmg = e.damage * k.damage
-  const p = g.player
-  if (inBlast(e.x, e.y, r, p.x, p.y, p.radius * 0.7)) hurtPlayer(g, dmg)
+  hurtPlayers(g, (p) => inBlast(e.x, e.y, r, p.x, p.y, p.radius * 0.7), () => dmg)
   // Self-destruct: it faints without EXP, but whatever the blast takes down drops as usual.
   e.dying = 0
   e.hp = 0
@@ -121,7 +121,7 @@ const explode = (g: Game, e: Enemy) => {
 
 const fuse = (g: Game, e: Enemy, act: Act<'kamikaze'>, dt: number) => {
   const k = TRAITS.kamikaze
-  const p = g.player
+  const p = nearestPlayer(g, e.x, e.y)
   if (act.fuse < 0) {
     if (dm.hypot(p.x - e.x, p.y - e.y) - e.radius - p.radius > k.trigger) return
     act.fuse = 0
@@ -135,7 +135,7 @@ const fuse = (g: Game, e: Enemy, act: Act<'kamikaze'>, dt: number) => {
 
 const beam = (g: Game, e: Enemy, act: Act<'beam'>, dt: number) => {
   const b = TRAITS.beam
-  const p = g.player
+  const p = nearestPlayer(g, e.x, e.y)
   if (act.phase === 'idle') {
     act.cooldown -= dt
     if (act.cooldown > 0 || dm.sq(p.x - e.x) + dm.sq(p.y - e.y) > dm.sq(b.range) || !onScreen(g, e)) return
@@ -159,7 +159,7 @@ const beam = (g: Game, e: Enemy, act: Act<'beam'>, dt: number) => {
     act.t = 0
     g.events.push({ kind: 'trait', trait: 'beam', phase: 'fire' })
   }
-  if (onBeam(act.ox, act.oy, act.dx, act.dy, b.length, b.width / 2, p.x, p.y - p.radius, p.radius * 0.7)) hurtPlayer(g, e.damage * b.damage)
+  hurtPlayers(g, (q) => onBeam(act.ox, act.oy, act.dx, act.dy, b.length, b.width / 2, q.x, q.y - q.radius, q.radius * 0.7), () => e.damage * b.damage)
   if (act.t >= b.fire) {
     act.phase = 'idle'
     act.cooldown = b.every
@@ -168,8 +168,7 @@ const beam = (g: Game, e: Enemy, act: Act<'beam'>, dt: number) => {
 
 const land = (g: Game, e: Enemy, act: Act<'leaper'>) => {
   const l = TRAITS.leaper
-  const p = g.player
-  if (inBlast(act.toX, act.toY, l.radius, p.x, p.y, p.radius * 0.7)) hurtPlayer(g, e.damage * l.damage, e)
+  hurtPlayers(g, (p) => inBlast(act.toX, act.toY, l.radius, p.x, p.y, p.radius * 0.7), () => e.damage * l.damage, e)
   burst(g, act.toX, act.toY, { colors: ['#c8b080', '#a08858', '#f0e0b8'], count: 16, speed: l.radius * 5, ttl: 0.4, drag: 6 })
   g.shake = Math.max(g.shake, 2)
   act.phase = 'idle'
@@ -179,7 +178,7 @@ const land = (g: Game, e: Enemy, act: Act<'leaper'>) => {
 
 const leap = (g: Game, e: Enemy, act: Act<'leaper'>, dt: number) => {
   const l = TRAITS.leaper
-  const p = g.player
+  const p = nearestPlayer(g, e.x, e.y)
   if (act.phase === 'idle') {
     act.cooldown -= dt
     if (act.cooldown > 0 || !onScreen(g, e)) return

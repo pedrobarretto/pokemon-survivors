@@ -23,6 +23,7 @@ export const spawnAttack = (g: Game, init: AttackInit) => {
     blast: 0,
     blastVisual: init.visual,
     turret: null,
+    owner: g.player,
     ...init,
   }
   g.attacks.push(attack)

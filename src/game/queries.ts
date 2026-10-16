@@ -1,3 +1,4 @@
+import { onAnyScreen } from './players'
 import type { Enemy, Game } from './types'
 import * as dm from '../engine/dmath'
 
@@ -18,10 +19,7 @@ export const nearestEnemy = (g: Game, x: number, y: number, maxDist: number, exc
   return best
 }
 
-export const inView = (g: Game, x: number, y: number, margin = 0) =>
-  x > g.camera.x - margin &&
-  x < g.camera.x + g.view.w + margin &&
-  y > g.camera.y - margin &&
-  y < g.camera.y + g.view.h + margin
+/** Whether (x, y) shows on any player's screen (`onAnyScreen`). */
+export const inView = (g: Game, x: number, y: number, margin = 0) => onAnyScreen(g, x, y, margin)
 
 export const enemiesInView = (g: Game) => g.enemies.filter((e) => isAlive(e) && inView(g, e.x, e.y, -8))

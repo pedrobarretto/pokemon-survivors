@@ -22,21 +22,21 @@ type Size = { w: number; h: number }
 /**
  * A regular enemy that can leave without anyone noticing: alive, chasing (not a
  * flyby swarm), not a boss or shiny, not mid-leap, at least `minAge` old and
- * fully off-screen (`camera` is the screen's top-left corner).
+ * fully off every screen (each `screens` entry is a screen's top-left corner).
  */
-export const isRenewable = (e: Enemy, camera: Rect, view: Size, time: number) => {
+export const isRenewable = (e: Enemy, screens: readonly Rect[], view: Size, time: number) => {
   if (e.dying >= 0 || e.boss || e.shiny || e.behavior.kind !== 'chase' || isAirborne(e)) return false
   if (time - e.bornAt < RENEWAL.minAge) return false
   const m = RENEWAL.margin
-  return e.x < camera.x - m || e.x > camera.x + view.w + m || e.y < camera.y - m || e.y > camera.y + view.h + m
+  return screens.every((s) => e.x < s.x - m || e.x > s.x + view.w + m || e.y < s.y - m || e.y > s.y + view.h + m)
 }
 
-/** Index of the oldest renewable enemy, or -1. One pass, no allocation. */
-export const oldestRenewable = (enemies: readonly Enemy[], camera: Rect, view: Size, time: number) => {
+/** Index of the oldest renewable enemy, or -1. One pass. */
+export const oldestRenewable = (enemies: readonly Enemy[], screens: readonly Rect[], view: Size, time: number) => {
   let oldest = -1
   for (let i = 0; i < enemies.length; i++) {
     const e = enemies[i]!
-    if ((oldest < 0 || e.bornAt < enemies[oldest]!.bornAt) && isRenewable(e, camera, view, time)) oldest = i
+    if ((oldest < 0 || e.bornAt < enemies[oldest]!.bornAt) && isRenewable(e, screens, view, time)) oldest = i
   }
   return oldest
 }

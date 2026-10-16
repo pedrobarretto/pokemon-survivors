@@ -85,18 +85,18 @@ describe('mega evolution', () => {
     for (let t = 0; t < MEGA.intro - DT; t += DT) step(g, { move: { x: 0, y: 0 }, special: false }, DT)
     expect(g.time).toBe(time)
     step(g, { move: { x: 0, y: 0 }, special: false }, DT)
-    expect(g.mega.active).toBe(MEGA.duration)
+    expect(g.player.mega.active).toBe(MEGA.duration)
     expect(g.player.stats.might).toBeCloseTo(might + MEGAS.charizardX.stats.might)
-    g.mega.active = DT / 2
+    g.player.mega.active = DT / 2
     step(g, { move: { x: 0, y: 0 }, special: false }, DT)
     expect(g.player.stats.might).toBeCloseTo(might)
-    expect(g.mega.charge).toBe(MEGA.recharge)
+    expect(g.player.mega.charge).toBe(MEGA.recharge)
   })
 
   it('only takes a stone of its own line', () => {
     const g = createGame('cyndaquil', { w: 480, h: 270 }, 1)
     grantStone(g, 'charizardX')
-    expect(g.mega.stone).toBeNull()
+    expect(g.player.mega.stone).toBeNull()
   })
 
   it('lets a line with two Megas keep the stone it touches; the other crumbles', () => {
@@ -109,7 +109,7 @@ describe('mega evolution', () => {
     expect(stones().every((k) => !k.attracted)).toBe(true)
     g.player.x = stones()[1]!.x
     updatePickups(g, DT)
-    expect(g.mega.stone).toBe('charizardY')
+    expect(g.player.mega.stone).toBe('charizardY')
     expect(stones()).toHaveLength(0)
   })
 })

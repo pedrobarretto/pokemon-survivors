@@ -6,7 +6,9 @@ import { useConsumable } from './consumables'
 import { rollEgg, type EggSource } from './eggs'
 import { applyOffer, gainXp, loadout, rollOffers } from './leveling'
 import { grantStone } from './mega'
-import type { Game, Pickup } from './types'
+import { MEGAS } from '../data/megas'
+import { actAs, inPlay } from './players'
+import type { Game, Pickup, Player } from './types'
 import * as dm from '../engine/dmath'
 
 const MAX_XP_PICKUPS = 260
@@ -90,23 +92,49 @@ const collect = (g: Game, pickup: Pickup) => {
   }
 }
 
-/** Mega Stones on the ground: two or more means the player is choosing one, so the magnet leaves them be. */
-const megaStones = (g: Game) => {
+/** Mega Stones of one line on the ground: two or more means its player is choosing one, so the magnet leaves them be. */
+const megaStones = (g: Game, line: Player['starter']) => {
   let n = 0
-  for (const k of g.pickups) if (k.kind === 'megaStone') n++
+  for (const k of g.pickups) if (k.kind === 'megaStone' && MEGAS[k.mega].line === line) n++
   return n
 }
 
+/** Who may take a pickup: anyone in play, except a Mega Stone, which only goes to a player of its line still without one. */
+const canTake = (p: Player, k: Pickup) => inPlay(p) && (k.kind !== 'megaStone' || (MEGAS[k.mega].line === p.starter && !p.mega.stone))
+
+/** The player a pickup heads for: the nearest one who may take it, or null. */
+const takerOf = (g: Game, k: Pickup) => {
+  let best: Player | null = null
+  let bestD = Infinity
+  for (const p of g.players) {
+    if (!canTake(p, k)) continue
+    const d = dm.sq(k.x - p.x) + dm.sq(k.y - (p.y - 6))
+    if (d < bestD) {
+      bestD = d
+      best = p
+    }
+  }
+  return best
+}
+
+/** Moves every pickup: idle ones settle, ones in a player's magnet hop and fly to them, and touching one collects it (as that player). */
 export const updatePickups = (g: Game, dt: number) => {
-  const p = g.player
-  const magnet2 = dm.sq(p.stats.magnet)
-  const choosing = megaStones(g) > 1
   for (const k of g.pickups) {
     k.age += dt
+    const p = takerOf(g, k)
+    if (!p) {
+      k.vx *= dm.exp(-6 * dt)
+      k.vy *= dm.exp(-6 * dt)
+      k.x += k.vx * dt
+      k.y += k.vy * dt
+      continue
+    }
+    const magnet2 = dm.sq(p.stats.magnet)
+    const choosing = k.kind === 'megaStone' && megaStones(g, p.starter) > 1
     const d2 = dm.sq(k.x - p.x) + dm.sq(k.y - (p.y - 6))
-    if (choosing && k.kind === 'megaStone') {
+    if (choosing) {
       if (d2 < dm.sq(p.radius + 8)) {
-        collect(g, k)
+        actAs(g, p, () => collect(g, k))
         k.age = -1
       }
       continue
@@ -134,7 +162,7 @@ export const updatePickups = (g: Game, dt: number) => {
     k.x += k.vx * dt
     k.y += k.vy * dt
     if (k.attracted && d2 < dm.sq(p.radius + 5)) {
-      collect(g, k)
+      actAs(g, p, () => collect(g, k))
       k.age = -1
     }
   }

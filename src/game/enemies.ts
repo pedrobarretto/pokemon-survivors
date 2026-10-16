@@ -11,6 +11,9 @@ import { leadTime } from './horde'
 import { createStatus, statusAttack, statusPace } from './status'
 import { enemyGroundPace } from './terrain'
 import { createTraitState, isAirborne, traitPace } from './traits'
+import { COOP } from '../data/coop'
+import { coopScale } from './coop'
+import { actAs, inPlay, nearestPlayer } from './players'
 import type { Enemy, EnemyBehavior, Game } from './types'
 import * as dm from '../engine/dmath'
 
@@ -34,7 +37,7 @@ export const spawnEnemy = (g: Game, kind: EnemyId, x: number, y: number, behavio
   const boss = def.boss === true
   const mods = DIFFICULTIES[g.difficulty]
   const scale = boss ? { hp: mods.enemyHp, damage: 1 } : enemyScale(g)
-  const hp = Math.round(def.hp * scale.hp)
+  const hp = Math.round(def.hp * scale.hp * coopScale(g, boss ? COOP.bossHp : COOP.hp))
   const enemy: Enemy = {
     id: g.nextId++,
     kind,
@@ -66,11 +69,11 @@ export const spawnEnemy = (g: Game, kind: EnemyId, x: number, y: number, behavio
   return enemy
 }
 
-/** Knocks every regular enemy away from the player (Arceus descending, Mewtwo arriving). */
+/** Knocks every regular enemy away from the nearest player (Arceus descending, Mewtwo arriving). */
 export const blastHorde = (g: Game, force: number) => {
-  const p = g.player
   for (const e of g.enemies) {
     if (e.boss || e.dying >= 0) continue
+    const p = nearestPlayer(g, e.x, e.y)
     const d = dirTo(p.x, p.y, e.x, e.y)
     e.kx += (d.x * force) / e.mass
     e.ky += (d.y * force) / e.mass
@@ -94,8 +97,8 @@ export const despawnEnemy = (e: Enemy) => {
   e.dying = FAINT_TIME
 }
 
+/** Moves the horde (each enemy after the nearest player), keeps bodies apart and out of the players, and deals contact damage. */
 export const updateEnemies = (g: Game, dt: number) => {
-  const p = g.player
   const recycleDist = dm.hypot(g.view.w, g.view.h) * 0.85
 
   for (const e of g.enemies) {
@@ -107,6 +110,7 @@ export const updateEnemies = (g: Game, dt: number) => {
       }
       continue
     }
+    const p = nearestPlayer(g, e.x, e.y)
     const frozen = e.status.stun > 0
     if (!frozen) e.animTime += dt
     e.flash = Math.max(0, e.flash - dt)
@@ -169,17 +173,19 @@ export const updateEnemies = (g: Game, dt: number) => {
       e.y += dy * push
     }
 
-    // Keep bodies out of the player and deal contact damage.
-    const dx = e.x - p.x
-    const dy = e.y - p.y
-    const reach = e.radius + p.radius
-    const d2 = dx * dx + dy * dy
-    if (d2 < reach * reach) {
+    // Keep bodies out of the players and deal contact damage.
+    for (const p of g.players) {
+      if (!inPlay(p)) continue
+      const dx = e.x - p.x
+      const dy = e.y - p.y
+      const reach = e.radius + p.radius
+      const d2 = dx * dx + dy * dy
+      if (d2 >= reach * reach) continue
       const d = Math.sqrt(d2) || 1
       e.x = p.x + (dx / d) * reach
       e.y = p.y + (dy / d) * reach
       const attack = statusAttack(e.status)
-      if (attack > 0) hurtPlayer(g, e.damage * attack, e)
+      if (attack > 0) actAs(g, p, () => hurtPlayer(g, e.damage * attack, e))
     }
   })
 

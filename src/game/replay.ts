@@ -6,8 +6,8 @@ import type { Vec } from '../engine/math'
 import { isDifficulty, type Difficulty } from './difficulty'
 import { continueEndless } from './endlessSystem'
 import { chooseOffer, createGame, rerollOffers, skipLevelUp, step } from './game'
-import { UPGRADE_IDS, UPGRADES, type Ranks } from './meta'
-import { isRecord, wholeNumber } from './parse'
+import { parseRanks, type Ranks } from './meta'
+import { isRecord } from './parse'
 import { OUTBREAK_SPECIES, withOutbreak } from './outbreak'
 import { biomeWeight, drawRoster } from './roster'
 import type { Game } from './types'
@@ -165,14 +165,13 @@ export const parseReplay = (raw: unknown): Replay | null => {
   if (raw.moves.length % 2 !== 0 || !raw.moves.every((n, i) => isWhole(n) && (i % 2 === 1 ? n > 0 : n < MOVES.length))) return null
   const events = raw.events.map(parseEvent)
   if (events.some((e) => e === null) || events.some((e, i) => i > 0 && e![0] < events[i - 1]![0])) return null
-  const ranks = isRecord(s.ranks) ? s.ranks : {}
   return {
     rules: isWhole(raw.rules) && raw.rules > 0 ? raw.rules : 1,
     start: {
       seed: s.seed,
       starter: s.starter as PlayableId,
       difficulty: s.difficulty,
-      ranks: Object.fromEntries(UPGRADE_IDS.map((id) => [id, wholeNumber(ranks[id], UPGRADES[id].maxRank)])) as Ranks,
+      ranks: parseRanks(s.ranks),
       shiny: s.shiny === true,
       luckyEgg: s.luckyEgg === true,
       outbreak: isOutbreakSpecies(s.outbreak) ? s.outbreak : null,
@@ -209,7 +208,7 @@ const applyEvent = (g: Game, e: ReplayEvent) => {
     case 'lunge':
       return
     case 'offer': {
-      const offer = g.offers[e[2]]
+      const offer = g.player.offers[e[2]]
       if (offer) chooseOffer(g, offer)
       return
     }

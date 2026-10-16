@@ -33,7 +33,7 @@ export const createSpecialControls = (onPress: () => void) => {
 
   const update = (g: Game) => {
     const r = gameSpecial(g)
-    const s = g.special
+    const s = g.player.special
     const look = `${r.tier.name}|${s.stance}`
     if (key !== look) {
       key = look

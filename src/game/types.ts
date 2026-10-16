@@ -33,11 +33,23 @@ import type { EnemyStatus, StatusSpec } from './status'
 import type { WeatherState } from './weather'
 import type { TraitState } from './traits'
 import type { BossFight } from './bossFight'
+import type { CoopState } from './coop'
 
 export type OwnedMove = { id: MoveId; level: number; cooldown: number }
 export type OwnedItem = { id: ItemId; level: number }
 
+/**
+ * One Pokémon in the run. Solo runs have one; co-op runs up to four, one per
+ * room slot. Everything a player owns lives here: their line, moves, items,
+ * special, Mega Stone and level-up picks.
+ */
 export type Player = {
+  /** Index in `Game.players` (the room slot in co-op). */
+  slot: number
+  /** The Pokémon this player plays: a starter or a hatched family. */
+  starter: PlayableId
+  /** Permanent Poké Mart ranks this player started with. */
+  ranks: Ranks
   x: number
   y: number
   /** Last non-zero movement direction (unit vector). Aimed moves use it. */
@@ -67,6 +79,26 @@ export type Player = {
   luckyShiny: boolean
   /** Distance walked this run, in world px. Hatches the incubator's eggs (`eggs.ts`). */
   walked: number
+  special: SpecialState
+  /** Mega Stone, Mega form and its recharge (`mega.ts`). */
+  mega: MegaState
+  /** Level-up rerolls/skips left this run. */
+  rerolls: number
+  skips: number
+  /** Level-ups waiting for a pick, the offers on the table and how many picks were offered so far (`round`, co-op picks quote it). */
+  pendingLevelUps: number
+  offers: Offer[]
+  round: number
+  evolution: Evolution | null
+  damageByMove: Partial<Record<DamageSource, number>>
+  /** Co-op: fainted, with how far a teammate got reviving them (seconds); null while standing. */
+  down: { revive: number } | null
+  /** Co-op: left the room for good. Out of play, kept so slots never shift. */
+  gone: boolean
+  /** Top-left of their screen as of the last step (`followPlayers`): what's on screen and what's safely off it. */
+  screen: { x: number; y: number }
+  /** Co-op: their tab is hidden or their connection dropped (the stick reads still). */
+  away: boolean
 }
 
 export type EnemyBehavior =
@@ -201,6 +233,8 @@ export type Attack = {
   /** Blast visual of a mine. */
   blastVisual: Visual
   turret: Turret | null
+  /** The player whose move or special made it: it follows them, and their hits count as theirs. */
+  owner: Player
 }
 
 /** Enemy-owned hitbox that hurts the player (boss attacks). */
@@ -335,6 +369,16 @@ export type GameEvent =
   | { kind: 'reaperDown'; defeats: number }
   /** A boss, chest or rift left an egg; it goes to the incubator when the run is banked. */
   | { kind: 'egg'; tier: EggTier }
+  /** Co-op: a player fainted and waits for a teammate, got back up, or left the room. */
+  | { kind: 'fainted' }
+  | { kind: 'revived' }
+  | { kind: 'left' }
+
+/**
+ * A `GameEvent` as the run queues it. `slot` names the player it happened to
+ * (stamped by `actAs`); events without one belong to the whole run.
+ */
+export type RunEvent = GameEvent & { slot?: number }
 
 /** A timed player buff (X Attack, X Speed, Max Repel). `left` counts down in seconds. */
 export type Buff = { id: BuffId; left: number; total: number }
@@ -342,15 +386,22 @@ export type Buff = { id: BuffId; left: number; total: number }
 export type Evolution = { from: number; to: number; t: number }
 
 export type Game = {
-  /** The Pokémon this run plays: a starter or a hatched family. */
-  starter: PlayableId
   /** Multipliers this run plays with (`difficulty.ts`). */
   difficulty: Difficulty
   rng: Rng
   time: number
   phase: Phase
   nextId: number
+  /** Everyone in the run, by slot. */
+  players: Player[]
+  /**
+   * The acting player: the one a per-player system is running for (their moves,
+   * special, a pickup they touched). Solo, always the only player. World systems
+   * must not assume it: they go through `players` (see `players.ts`).
+   */
   player: Player
+  /** Co-op rules (`coop.ts`), null in solo runs. */
+  coop: CoopState | null
   enemies: Enemy[]
   attacks: Attack[]
   hazards: Hazard[]
@@ -358,26 +409,16 @@ export type Game = {
   particles: Particle[]
   texts: FloatText[]
   grid: Grid
+  /** World px a screen shows: spawns and despawns are placed just outside it. */
   view: { w: number; h: number }
+  /** Top-left of the screen being drawn. The shell sets it before rendering; the simulation never reads it. */
   camera: { x: number; y: number }
   shake: number
   /** Seconds the simulation stays frozen for impact (hit-stop). */
   hitstop: number
-  special: SpecialState
-  /** Mega Stone, Mega form and its recharge (`mega.ts`). */
-  mega: MegaState
   kills: number
-  /** Permanent Poké Mart ranks this run was started with. */
-  ranks: Ranks
-  /** Poké Dollars collected this run (already multiplied by greed). */
+  /** Poké Dollars collected this run, by the whole team (already multiplied by greed). */
   coins: number
-  /** Level-up rerolls/skips left this run. */
-  rerolls: number
-  skips: number
-  damageByMove: Partial<Record<DamageSource, number>>
-  pendingLevelUps: number
-  offers: Offer[]
-  evolution: Evolution | null
   /** This run's wild cast, drawn at the start (`game/roster.ts`), with the day's outbreak in every stage. */
   roster: Roster
   /** The day's outbreak species, or null (`game/outbreak.ts`): its kills count toward missions (`countKill`). */
@@ -396,7 +437,7 @@ export type Game = {
   buffs: Buff[]
   /** Points of interest placed by the event director (`mapEvents.ts`). */
   mapEvents: MapEventsState
-  /** Revives held (0 or 1). Auto-used on fainting. */
+  /** Revives held (0 or 1), shared by the team. Auto-used on fainting. */
   revives: number
   /** Full-screen white flash strength (Explosion), decays to 0. */
   flash: number
@@ -416,5 +457,5 @@ export type Game = {
   eggs: RunEggs
   /** Counters for missions and achievements (`game/tally.ts`). */
   tally: RunTally
-  events: GameEvent[]
+  events: RunEvent[]
 }

@@ -88,7 +88,7 @@ export const rankable = (r: RunResult) => r.outcome !== 'quit' || r.time >= 60
 
 /** The result a run reports right now. */
 export const runResult = (g: Game, version: string): RunResult => ({
-  starter: g.starter,
+  starter: g.player.starter,
   stage: g.player.stage,
   difficulty: g.difficulty,
   time: g.time,
@@ -217,7 +217,10 @@ export const parseChallengePlace = (v: unknown): ChallengePlace | null => {
 /** A run on a public profile (`verified` as on `BoardEntry`). */
 export type ProfileRun = { starter: PlayableId; stage: number; difficulty: Difficulty; time: number; outcome: RunOutcome; at: string; verified: boolean | null }
 
-/** What `/profiles/:handle` answers. `followed`: the asking player follows them; `self`: it's the asking player. */
+/**
+ * What `/profiles/:handle` answers. `followed`: the asking player follows them;
+ * `followsYou`: they follow the asking player (both: friends); `self`: it's the asking player.
+ */
 export type PublicProfile = ProfileName & {
   title: TitleId | null
   dex: { seen: number; caught: number }
@@ -226,9 +229,34 @@ export type PublicProfile = ProfileName & {
   followers: number
   following: number
   followed: boolean
+  followsYou: boolean
   /** Friends this player brought whose invite counted (`game/referral.ts`). Missing from an older API. */
   brought?: number
   /** Desafio do dia ribbons won, by tier (`game/ribbons.ts`). Missing from an older API. */
   ribbons?: Record<RibbonTier, number>
   self: boolean
+}
+
+/* ---------------- Friends ---------------- */
+
+/**
+ * Friends are mutual follows: following someone sends a request, following
+ * back accepts it. Only players with a handle show.
+ */
+export type Friend = ProfileName & { title: TitleId | null }
+
+/** What `/friends` answers: `incoming` follow me and I don't follow back, `outgoing` the other way round. */
+export type FriendList = { friends: Friend[]; incoming: Friend[]; outgoing: Friend[] }
+
+/** A player found by `/players?q=` (handle prefix search). */
+export type PlayerMatch = ProfileName
+
+/** Shortest query `/players` searches for, and how many players it answers. */
+export const PLAYER_SEARCH = { min: 2, max: 8 } as const
+
+/** A handle prefix to search for from what a player typed, or null when it's too short or can't start a handle. */
+export const parseHandlePrefix = (raw: unknown) => {
+  if (typeof raw !== 'string') return null
+  const prefix = normalizeHandle(raw)
+  return prefix.length >= PLAYER_SEARCH.min && prefix.length <= HANDLE.max && /^[a-z0-9_]+$/.test(prefix) ? prefix : null
 }

@@ -3,6 +3,7 @@ import { createApp } from './app'
 import { clerkVerifier } from './auth'
 import { connect, migrate, saveStore } from './db'
 import { createChecks } from './checks'
+import { friendStore } from './friends'
 import { createRibbons } from './challenge'
 import { giftStore } from './gifts'
 import { rankingStore } from './ranking'
@@ -23,6 +24,7 @@ createRibbons(ranking, gifts).start()
 const app = createApp({
   store: saveStore(sql),
   ranking,
+  friends: friendStore(sql),
   gifts,
   checks,
   verify: clerkVerifier(env),

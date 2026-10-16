@@ -12,7 +12,9 @@ import { xpTier } from '../game/pickups'
 import { isAsleep } from '../game/status'
 import { inSolid, overTerrain, type Solid } from '../game/terrain'
 import { isAirborne, traitPace } from '../game/traits'
-import type { Attack, Enemy, Game, Hazard } from '../game/types'
+import { inPlay } from '../game/players'
+import type { Attack, Enemy, Game, Hazard, Player } from '../game/types'
+import { drawDowned, drawTeamArrows } from './coop'
 import { FX, HAZARD_FX, PICKUPS, SPARKLE } from './art'
 import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawPuff, drawShard } from './evolved'
 import { drawMapEventMarkers, drawMapEvents } from './mapEvents'
@@ -494,27 +496,40 @@ const drawRageEmbers = (ctx: Ctx, x: number, cy: number, size: number, t: number
 
 const hpColor = (ratio: number) => (ratio > 0.5 ? '#48d048' : ratio > 0.2 ? '#f8c830' : '#f04030')
 
-/** Chain dash afterimages: fading type-colored copies of the player along the lunge. */
+/** The same run seen as player `p` (per-player art reads `g.player`). */
+const as = (g: Game, p: Player): Game => (p === g.player ? g : { ...g, player: p })
+
+/** Chain dash afterimages: fading type-colored copies of their owner along the lunge. */
 const drawAfterimages = (ctx: Ctx, g: Game) => {
-  const p = g.player
-  const s = sprites(playerDex(g), p.shiny, megaLook(g).form)
   for (const a of g.attacks) {
     if (a.visual !== 'afterimage' || a.age < 0) continue
+    const p = a.owner
+    const s = sprites(playerDex(g, p), p.shiny, megaLook(as(g, p)).form)
     const k = a.age / a.ttl
     drawPokemon(ctx, s, 'Walk', p.dir, p.animTime, a.x, a.y, { alpha: 0.7 * (1 - k), tint: { color: TYPE_COLORS[a.type], amount: 1 } })
   }
 }
 
-const drawPlayer = (ctx: Ctx, g: Game) => {
+/** A fainted co-op player lies there, faded, until a teammate gets them up. */
+const drawFainted = (ctx: Ctx, g: Game, t: number) => {
   const p = g.player
+  const s = sprites(playerDex(g), p.shiny)
+  drawPokemon(ctx, s, 'Hurt', p.dir, 0.2, p.x, p.y, { alpha: 0.55 })
+  drawDowned(ctx, p, p.y - s.bodyH, t)
+}
+
+/** A player as `g.player` (the lens `as` picks who): sprite, Mega and shiny effects and HP bar; fainted, their Poké Ball. */
+const drawPlayer = (ctx: Ctx, g: Game, t: number) => {
+  const p = g.player
+  if (p.down) return drawFainted(ctx, g, t)
   // A Mega wears its Mega form (flickering white while it transforms); Aegislash its Blade Forme in Blade stance.
   const mega = megaLook(g)
-  const s = sprites(playerDex(g), p.shiny, mega.form ?? (g.special.stance ? STANCE_FORMS[g.special.stance] : undefined))
+  const s = sprites(playerDex(g), p.shiny, mega.form ?? (g.player.special.stance ? STANCE_FORMS[g.player.special.stance] : undefined))
   const anim: AnimName = p.hurt > 0 ? 'Hurt' : p.moving ? 'Walk' : 'Idle'
-  const charging = g.special.charge > 0 && Math.floor(p.animTime * 16) % 2 === 0
-  const blink = p.iframes > 0 && g.special.active <= 0 && Math.floor(p.iframes * 20) % 2 === 0
+  const charging = g.player.special.charge > 0 && Math.floor(p.animTime * 16) % 2 === 0
+  const blink = p.iframes > 0 && g.player.special.active <= 0 && Math.floor(p.iframes * 20) % 2 === 0
   // Aegislash flashes white for a moment as it swaps stance.
-  const swapped = g.special.stance !== null && g.special.total - g.special.cooldown < 0.12
+  const swapped = g.player.special.stance !== null && g.player.special.total - g.player.special.cooldown < 0.12
   const flash = Math.max(mega.flash, p.hurt > 0.2 ? 0.7 : charging || swapped ? 0.6 : 0)
   drawPokemon(ctx, s, anim, p.dir, p.animTime, p.x, p.y, { alpha: blink && mega.flash === 0 ? 0.45 : 1, flash, outline: mega.outline })
   // The shiny entrance plays shortly after the run starts.
@@ -560,7 +575,7 @@ const drawPickups = (ctx: Ctx, g: Game, t: number) => {
 /* ---------------- Evolution scene ---------------- */
 
 const drawEvolution = (ctx: Ctx, g: Game, t: number) => {
-  const evo = g.evolution
+  const evo = g.player.evolution
   if (!evo) return
   const { w, h } = g.view
   const k = evo.t
@@ -603,9 +618,10 @@ const drawEvolution = (ctx: Ctx, g: Game, t: number) => {
 
 /* ---------------- Frame ---------------- */
 
-type Drawable = Enemy | 'player' | Solid
+type Drawable = Enemy | Player | Solid
 const drawables: Drawable[] = []
-const isSolid = (d: Drawable): d is Solid => d !== 'player' && 'foot' in d
+const isSolid = (d: Drawable): d is Solid => 'foot' in d
+const isPlayer = (d: Drawable): d is Player => 'slot' in d
 
 /* ---------------- Biome ---------------- */
 
@@ -624,6 +640,7 @@ const biomeFade = (g: Game) => {
 /** Player preferences from the settings screen. */
 const TEXT_PASSES = [false, true] as const
 
+/** Player preferences. `g.player` is who the screen follows. */
 export type RenderOptions = { damageNumbers: DamageNumbers; screenShake: boolean }
 
 export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
@@ -657,36 +674,40 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   // Map events wait outside with the rest of the world while the player is in an arena.
   if (!g.rift.arena) drawMapEvents(ctx, g, t)
   if (g.rift.portal) drawRiftPortal(ctx, g.rift.portal, t)
-  drawSpecialAura(ctx, g, t)
-  drawMegaGround(ctx, g, camX, camY, t)
+  for (const p of g.players) {
+    if (!inPlay(p)) continue
+    drawSpecialAura(ctx, as(g, p), t)
+    drawMegaGround(ctx, as(g, p), camX, camY, t)
+  }
   drawTraitGround(ctx, g, visible)
   drawPickups(ctx, g, t)
 
   drawables.length = 0
   for (const e of g.enemies) if (visible(e.x, e.y)) drawables.push(e)
-  drawables.push('player')
+  for (const p of g.players) if (!p.gone && visible(p.x, p.y)) drawables.push(p)
   solidsInView(g, camX, camY, w, h, drawables)
   // Mid-jump leapers sort last so they fly over the horde, and so does a flyer over a rock or a mountain.
   const depth = (d: Drawable) =>
-    d === 'player' ? g.player.y : isSolid(d) ? d.y : isAirborne(d) || (overTerrain(d) && inSolid(g, d.x, d.y, 4)) ? d.y + 4096 : d.y
+    isPlayer(d) || isSolid(d) ? d.y : isAirborne(d) || (overTerrain(d) && inSolid(g, d.x, d.y, 4)) ? d.y + 4096 : d.y
   drawables.sort((a, b) => depth(a) - depth(b))
 
   for (const d of drawables) {
-    if (d === 'player') {
-      shadow(ctx, g.player.x, g.player.y, sprites(playerDex(g)).bodyW)
-      drawWading(ctx, g, sprites(playerDex(g)).bodyW, t)
+    if (isPlayer(d)) {
+      const width = sprites(playerDex(g, d)).bodyW
+      shadow(ctx, d.x, d.y, width)
+      drawWading(ctx, as(g, d), width, t)
     }
     else if (!isSolid(d) && d.dying < 0) shadow(ctx, d.x, d.y, d.radius * 3)
   }
   drawAfterimages(ctx, g)
   for (const d of drawables) {
-    if (d === 'player') drawPlayer(ctx, g)
+    if (isPlayer(d)) drawPlayer(ctx, as(g, d), t)
     else if (isSolid(d)) drawSolid(ctx, g, d, look)
     else drawEnemy(ctx, d, g.time, t)
   }
   // Badges only on bosses: on a 300-enemy horde they'd bury the sprites (tint + particles carry it there).
   for (const d of drawables) {
-    if (d !== 'player' && !isSolid(d) && d.boss && d.dying < 0) {
+    if (!isPlayer(d) && !isSolid(d) && d.boss && d.dying < 0) {
       const def: EnemyDef = ENEMIES[d.kind]
       drawStatusBadge(ctx, d.status, d.x, d.y - sprites(def.dex).bodyH * (def.scale ?? 1) - 5)
     }
@@ -723,6 +744,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   ctx.restore()
 
   drawRiftArrow(ctx, g, camX, camY, t)
+  if (g.coop) drawTeamArrows(ctx, g, camX, camY, t)
   if (!g.rift.arena) drawMapEventMarkers(ctx, g, t)
   drawFlash(ctx, g)
   if (g.phase === 'evolving') drawEvolution(ctx, g, t)

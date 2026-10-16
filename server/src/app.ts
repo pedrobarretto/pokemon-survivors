@@ -8,17 +8,19 @@ import { isDayKey } from '../../src/game/day'
 import { isDifficulty } from '../../src/game/difficulty'
 import { parseSaveData } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
-import { isBoardPeriod, isPlayable, parseDisplayName, parseHandle, parseRunResult } from '../../src/game/ranking'
+import { isBoardPeriod, isPlayable, parseDisplayName, parseHandle, parseHandlePrefix, parseRunResult } from '../../src/game/ranking'
 import { parseReplay } from '../../src/game/replay'
 import type { Verify } from './auth'
 import type { Checks } from './checks'
 import type { SaveStore } from './db'
+import type { FriendStore } from './friends'
 import type { GiftStore } from './gifts'
 import type { RankingStore } from './ranking'
 
 export type AppDeps = {
   store: SaveStore
   ranking: RankingStore
+  friends: FriendStore
   gifts: Pick<GiftStore, 'inbox' | 'claim' | 'refer'>
   /** Re-simulates finished runs after the answer went out. */
   checks: Pick<Checks, 'schedule'>
@@ -63,12 +65,17 @@ const FINISH_ERRORS = { unknown: 404, mismatch: 409, clock: 422, challenge: 400 
  * - `GET /challenge/:day?friends=1`: `ChallengeBoard`, the day's official attempts. `friends` needs a token.
  * - `GET /profiles/:handle`: `PublicProfile`, 404 if nobody has that handle.
  * - `PUT|DELETE /follows/:handle` (auth): follows or unfollows. `{ followed, followers }`.
+ *   Following is a friend request; following back accepts it.
+ * - `GET /friends` (auth): `FriendList`, friends and pending requests both ways.
+ * - `DELETE /followers/:handle` (auth): declines their request (drops their follow). `{ ok }`.
+ * - `DELETE /friends/:handle` (auth): unfriends (drops both follows). `{ ok }`.
+ * - `GET /players?q=`: `{ players }`, up to 8 `PlayerMatch` whose handle starts with `q` (2+ characters), without the asker.
  * - `GET /gifts` (auth): `{ gifts }`, the player's unclaimed Mystery Gifts, oldest first.
  * - `POST /gifts/claim` (auth) `{ ids }`: marks those gifts claimed (the game applied them). `{ claimed }`.
  * - `POST /referral` (auth) `{ ref }`: the inviter's handle a new account came with. `{ referred }`:
  *   whether it counted (only a new account, never oneself: `canRefer`).
  */
-export const createApp = ({ store, ranking, gifts, checks, verify, allowedOrigin, ping }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, checks, verify, allowedOrigin, ping }: AppDeps) => {
   const app = new Hono()
 
   app.use(logger())
@@ -180,6 +187,20 @@ export const createApp = ({ store, ranking, gifts, checks, verify, allowedOrigin
       return followed ? c.json(followed) : c.json({ error: 'no such player' }, 404)
     })
   }
+
+  app.get('/friends', auth, async (c) => c.json(await friends.list(c.var.userId)))
+
+  for (const [path, drop] of [['/followers/:handle', friends.decline], ['/friends/:handle', friends.unfriend]] as const) {
+    app.delete(path, auth, async (c) => {
+      const handle = parseHandle(c.req.param('handle'))
+      return handle && (await drop(c.var.userId, handle)) ? c.json({ ok: true }) : c.json({ error: 'no such player' }, 404)
+    })
+  }
+
+  app.get('/players', maybeAuth, async (c) => {
+    const prefix = parseHandlePrefix(c.req.query('q'))
+    return c.json({ players: prefix ? await friends.search(prefix, c.var.userId) : [] })
+  })
 
   app.get('/gifts', auth, async (c) => c.json({ gifts: await gifts.inbox(c.var.userId) }))
 

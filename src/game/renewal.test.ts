@@ -28,10 +28,15 @@ const enemy = (over: Partial<Enemy> = {}): Enemy => ({
 
 describe('horde renewal', () => {
   it('only takes old regular chasers that are fully off-screen', () => {
-    expect(isRenewable(enemy(), camera, view, NOW)).toBe(true)
-    expect(isRenewable(enemy({ x: 150 }), camera, view, NOW)).toBe(false)
-    expect(isRenewable(enemy({ x: 300 + RENEWAL.margin - 1 }), camera, view, NOW)).toBe(false)
-    expect(isRenewable(enemy({ bornAt: NOW - RENEWAL.minAge + 1 }), camera, view, NOW)).toBe(false)
+    expect(isRenewable(enemy(), [camera], view, NOW)).toBe(true)
+    expect(isRenewable(enemy({ x: 150 }), [camera], view, NOW)).toBe(false)
+    expect(isRenewable(enemy({ x: 300 + RENEWAL.margin - 1 }), [camera], view, NOW)).toBe(false)
+    expect(isRenewable(enemy({ bornAt: NOW - RENEWAL.minAge + 1 }), [camera], view, NOW)).toBe(false)
+  })
+
+  it('in co-op, keeps anyone still on a teammate\'s screen', () => {
+    const far = enemy()
+    expect(isRenewable(far, [camera, { x: far.x - 10, y: far.y - 10 }], view, NOW)).toBe(false)
   })
 
   it('never takes bosses, shinies, swarms, the fainting or a leaper mid-air', () => {
@@ -44,13 +49,13 @@ describe('horde renewal', () => {
       { dying: 0 },
       { trait: leaper },
     ] satisfies Partial<Enemy>[]) {
-      expect(isRenewable(enemy(over), camera, view, NOW)).toBe(false)
+      expect(isRenewable(enemy(over), [camera], view, NOW)).toBe(false)
     }
   })
 
   it('picks the oldest renewable one, or -1', () => {
     const horde = [enemy({ bornAt: 30 }), enemy({ bornAt: 5, x: 100 }), enemy({ bornAt: 10, y: -RENEWAL.margin - 1 }), enemy({ bornAt: 1, boss: true })]
-    expect(oldestRenewable(horde, camera, view, NOW)).toBe(2)
-    expect(oldestRenewable([enemy({ x: 10 })], camera, view, NOW)).toBe(-1)
+    expect(oldestRenewable(horde, [camera], view, NOW)).toBe(2)
+    expect(oldestRenewable([enemy({ x: 10 })], [camera], view, NOW)).toBe(-1)
   })
 })

@@ -33,6 +33,7 @@ import { MAP_EVENT_KINDS, MAP_EVENTS, spawnMapEvent, type MapEventKind } from '.
 import { MEOWTH_DEX } from './game/mapEventRules'
 import { chooseOffer, playerDex, rerollOffers, skipLevelUp, step } from './game/game'
 import { recomputeStats } from './game/leveling'
+import type { Difficulty } from './game/difficulty'
 import { dropMegaStones, grantStone, heldMega } from './game/mega'
 import { ENDLESS, REAPER } from './game/endless'
 import { continueEndless } from './game/endlessSystem'
@@ -49,7 +50,7 @@ import { recordEvent, recordStep, runRoster, startGame, startRecording, TICK, ty
 import { gameSpecial } from './game/special'
 import { unlockShinyStarter } from './game/shinyStarters'
 import { MOVES } from './game/moves'
-import type { Game, GameEvent, Phase } from './game/types'
+import type { Game, GameEvent, Phase, RunEvent } from './game/types'
 import { setWeather } from './game/weather'
 import { render } from './render/draw'
 import { drawJoystick } from './render/joystick'
@@ -61,7 +62,7 @@ import { megaStoneIcon } from './render/megaFx'
 import { createTitleScene, drawTitleScene, stepTitleScene } from './render/titleScene'
 import { weatherIcon } from './render/weather'
 import { formatDay, locale, LOCALES, setLocale, t, type Locale } from './i18n'
-import { h, later, rich } from './ui/dom'
+import { h, later, rich, setText } from './ui/dom'
 import { captureRef, flushRuns, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { announceGifts } from './ui/gifts'
@@ -85,6 +86,17 @@ import { martButton, shop } from './ui/shop'
 import { starterSelect } from './ui/starterSelect'
 import { titleButton, titleScreen } from './ui/title'
 import { banner, clearToasts, tickToasts, toast } from './ui/toasts'
+import { backlog, CATCH_UP, createLink, me, predictedOffset, sendEntry, stepCoop, type CoopLink } from './coopRun'
+import { createCoopGame } from './game/game'
+import { connect, coopEnabled, playerName as coopName, reconnect } from './net/client'
+import { onInvite } from './net/presence'
+import { parseRoomCode, ROOM_PARAM, roomView, setupOf, type Member, type TickEntry } from './net/protocol'
+import { backToLobby, createRoom, joinRoom, leaveRoom, loaded, onRoom, room, runOver, savedRoom, sendChoice, sendAway, sendOffer, sendPress, setLoadout, type RunStart } from './net/room'
+import { coopHub, lobbyScreen, teamWait } from './ui/coop'
+import { friendsScreen } from './ui/friends'
+import { createTeamHud, type TeamHud } from './ui/teamHud'
+import { createNameTags, type NameTags } from './ui/nameTags'
+import { slotColor } from './render/coop'
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
 const STEP = TICK
@@ -137,7 +149,7 @@ type Run = {
   hud: Hud
   overlay: Screen | null
   /** Phase + offers snapshot the overlay was built for. */
-  shown: { phase: Phase; offers: Game['offers'] } | null
+  shown: { phase: Phase; offers: Game['player']['offers']; picked: boolean; menu: boolean } | null
   closeText: (() => void) | null
   /** ₽ of this run already in the wallet: a victory banks right away and again if the run goes on endless. */
   paid: number
@@ -168,6 +180,23 @@ type Run = {
    * device keeps (`saveAttempt`). Null for any other run.
    */
   challenge: { day: DayKey; official: boolean; attempt: boolean } | null
+  /** Co-op: this device's side of the shared run (`coopRun.ts`), and the teammates' HUD. Null solo. */
+  coop: CoopLink | null
+  team: TeamHud | null
+  tags: NameTags | null
+  /** Co-op: this player sent their level-up pick and waits for the tick that applies it. */
+  picked: boolean
+}
+
+/** The run as this device's player sees it: in co-op, `player` is this device's slot (the simulation's acting player rests on slot 0). */
+const own = (r: Run): Game => (r.coop ? { ...r.game, player: me(r.game, r.coop) } : r.game)
+
+/** The run's Pokédex log as this player banks it: in co-op only their own line counts as caught (a teammate's forms as seen). */
+const ownLog = (r: Run) => {
+  const log = r.game.dexLog
+  if (!r.coop) return log
+  const line = new Set(playableDex(own(r).player.starter))
+  return { ...log, own: new Map([...log.own].filter(([dex]) => line.has(dex))) }
 }
 
 let screen: Screen | null = null
@@ -192,10 +221,10 @@ const queueMega = () => {
 }
 
 /** The player's name right now: its stage's, or its Mega form's while that lasts. */
-const playerName = (g: Game) => (g.mega.active > 0 && heldMega(g)?.name) || PLAYABLE[g.starter].line[g.player.stage]!.name
+const playerName = (g: Game) => (g.player.mega.active > 0 && heldMega(g)?.name) || PLAYABLE[g.player.starter].line[g.player.stage]!.name
 
 /** The player's cry right now: its Mega form's own while that lasts. */
-const playerCry = (g: Game) => cryUrl(playerDex(g), g.mega.active > 0 ? heldMega(g)?.form : undefined)
+const playerCry = (g: Game) => cryUrl(playerDex(g), g.player.mega.active > 0 ? heldMega(g)?.form : undefined)
 
 const queueSpecial = () => {
   unlockAudio()
@@ -217,6 +246,9 @@ const changeLanguage = (next: Locale) => {
   playSfx('select')
 }
 
+/** Title entries after Play move down one when the co-op entry shows. */
+const TITLE_SHIFT = coopEnabled ? 1 : 0
+
 /** Set by the title's "press start": the music waits for it, even where the browser would autoplay. */
 let pressedStart = false
 
@@ -229,8 +261,9 @@ const showTitle = (opts: { intro?: boolean; focus?: number } = {}) => {
   setScreen(
     titleScreen(ui, input, {
       play: () => (accountsEnabled && !playingAsGuest && accountState().kind === 'guest' ? showPlayGate() : showMenu()),
+      coop: coopEnabled ? () => showCoopHub() : undefined,
       challenge: () => showChallenge(),
-      incubator: () => showIncubator(() => showTitle({ focus: 2 })),
+      incubator: () => showIncubator(() => showTitle({ focus: 2 + TITLE_SHIFT })),
       missions: () => showMissions(),
       // Every label is read at render time, so switching language just rebuilds the screen.
       language: (next) => (changeLanguage(next), showTitle()),
@@ -276,7 +309,7 @@ const showShop = () => setScreen(shop(ui, input, () => showMenu()))
 const showPcBox = (back: () => void) =>
   pcBoxScreen(ui, input, { onClose: back, trainerCard: (close) => sharePreview(ui, input, trainerShare(lastStarter), close) }, loadSave().style.equipped.wallpaper)
 
-const showMissions = () => setScreen(missionsScreen(ui, input, () => showTitle({ focus: 3 })))
+const showMissions = () => setScreen(missionsScreen(ui, input, () => showTitle({ focus: 3 + TITLE_SHIFT })))
 
 /** The Desafio do dia's screen (from the title); its board opens over it and comes back to it. */
 const showChallenge = () => {
@@ -285,7 +318,7 @@ const showChallenge = () => {
     challengeScreen(ui, input, {
       play: (c, official) => setTimeout(() => void startRun(c.starter, { challenge: c, official }), 250),
       board: rankingEnabled ? () => setScreen(rankingScreen(ui, input, () => showChallenge(), { challenge: true })) : undefined,
-      onClose: () => showTitle({ focus: 1 }),
+      onClose: () => showTitle({ focus: 1 + TITLE_SHIFT }),
     }),
   )
 }
@@ -349,7 +382,7 @@ onGifts((arrived, waiting) => {
 
 /** Moves the run's steps and new eggs into the incubator, once each (a victory banks, then endless banks again). */
 const bankHatchery = (r: Run) => {
-  const g = r.game
+  const g = own(r)
   const steps = toSteps(g.player.walked)
   const fresh = g.eggs.found.slice(r.hatchery.eggs).map((e) => ({ tier: e.tier, steps: steps - toSteps(e.at) }))
   if (steps === r.hatchery.steps && fresh.length === 0) return
@@ -363,13 +396,13 @@ const bankHatchery = (r: Run) => {
  * fell (victory or endless). Every species seen or defeated counts either way.
  */
 const bankRun = (r: Run, withBonus: boolean) => {
-  const g = r.game
+  const g = own(r)
   const total = withBonus ? runEarnings(g).total : g.coins
   if (total > r.paid) depositPokeDollars(total - r.paid)
   r.paid = Math.max(r.paid, total)
   bankHatchery(r)
   // Merged into the stored Pokédex, which an account sync may have grown during the run.
-  updateSave((save) => ({ ...save, dex: mergeDex(save.dex, recordRun(r.dexBase, g.dexLog)) }))
+  updateSave((save) => ({ ...save, dex: mergeDex(save.dex, recordRun(r.dexBase, ownLog(r))) }))
 }
 
 /**
@@ -377,7 +410,7 @@ const bankRun = (r: Run, withBonus: boolean) => {
  * then endless mode, then the way out): only what changed since counts.
  */
 const recordProgress = (r: Run) => {
-  const summary = summarizeRun(r.game)
+  const summary = summarizeRun(own(r))
   // Reward eggs share the run's egg cap with the eggs it found.
   const record = recordRunProgress(summary, r.recorded, Math.max(0, EGGS.perRun - r.game.eggs.found.length - r.rewardEggs))
   r.recorded = summary
@@ -394,6 +427,8 @@ const recordProgress = (r: Run) => {
  * Quits in the first minute aren't worth a line on the profile.
  */
 const rankRun = (r: Run) => {
+  // Co-op runs stay off the boards (for now): the ranking compares solo runs.
+  if (r.coop) return
   const result = runResult(r.game, __GAME_VERSION__)
   if (!rankable(result)) return
   if (r.ranked) r.rank = r.ranked.submit(result, r.recorder.replay)
@@ -409,9 +444,9 @@ const rankRun = (r: Run) => {
 const reportRun = (r: Run) => {
   if (r.reported) return
   r.reported = true
-  const g = r.game
+  const g = own(r)
   const outcome = g.endless ? 'endless' : g.phase === 'victory' || g.phase === 'gameover' ? g.phase : 'quit'
-  track('run_end', { starter: g.starter, difficulty: g.difficulty, outcome, minute: Math.floor(g.time / 60), level: g.player.level, kills: g.kills })
+  track('run_end', { starter: g.player.starter, difficulty: g.difficulty, outcome, minute: Math.floor(g.time / 60), level: g.player.level, kills: g.kills, team: g.players.length })
 }
 
 const endRun = () => {
@@ -427,6 +462,9 @@ const endRun = () => {
   run.overlay?.dispose()
   run.closeText?.()
   run.hud.dispose()
+  run.team?.dispose()
+  run.tags?.dispose()
+  coopNotice.classList.add('hidden')
   clearToasts(ui)
   run = null
 }
@@ -458,7 +496,7 @@ const EXTRAS = [
 ]
 
 /** Dex numbers of a cast's first stage, the only enemies a run waits for. */
-const openingDex = (plan: RunPlan) => rosterSchedule(plan.roster).flatMap((s) => (s.at === 0 ? [s.dex] : []))
+const openingDex = (plan: Pick<RunPlan, 'roster'>) => rosterSchedule(plan.roster).flatMap((s) => (s.at === 0 ? [s.dex] : []))
 
 /**
  * Loads the starter's evolution line and the first stage's species, then starts
@@ -506,12 +544,14 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
   if (game.player.luckyShiny) updateSave((s) => ({ ...s, shinyStarters: unlockShinyStarter(s.shinyStarters, starter) }))
   // A shiny run must not start in normal colors.
   if (game.player.shiny) await preloadShinies(playableDex(starter))
+  // A co-op room may have started while the sprites loaded: it wins.
+  if (run) return
   // Alternate forms (Aegislash's Blade Forme) stream in behind; until then the normal form stands in.
   void preloadForms(playableDex(starter), game.player.shiny)
   loading.remove()
   run = {
     game,
-    hud: runHud(game),
+    hud: runHud(),
     overlay: null,
     shown: null,
     closeText: null,
@@ -528,13 +568,27 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
     recorder: startRecording(start),
     ranked,
     rank: null,
+    coop: null,
+    team: null,
+    tags: null,
+    picked: false,
     bestBefore: save.achievements.lifetime.bestTime,
     challenge: daily ? { day: daily.challenge.day, official: daily.official, attempt: false } : null,
   }
-  track('run_start', { starter, difficulty: game.difficulty, ...(daily ? { challenge: daily.official ? 'official' : 'practice' } : {}) })
+  track('run_start', { starter, difficulty: game.difficulty, team: 1, ...(daily ? { challenge: daily.official ? 'official' : 'practice' } : {}) })
   announceRun(start, run.challenge)
   const later = [...rosterSchedule(plan.roster).filter((s) => s.at > 0), ...EXTRAS].sort((a, b) => a.at - b.at)
   void streamSpecies([...later.map((s) => s.dex), ...openingDex(upcoming)], () => run?.game === game)
+}
+
+/** Opens the pause menu: solo it pauses the run; in co-op the run goes on behind the menu. */
+const togglePause = () => {
+  if (!run) return
+  if (run.coop) {
+    run.coop.menu = !run.coop.menu
+    return
+  }
+  if (run.game.phase === 'playing') run.game.phase = 'paused'
 }
 
 /** The run's first toasts: the challenge it plays, the day's outbreak, then each bag item it used. */
@@ -552,8 +606,8 @@ const announceRun = (start: ReplayStart, challenge: Run['challenge']) => {
   }
 }
 
-const runHud = (game: Game) => {
-  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, () => game.phase === 'playing' && (game.phase = 'paused'))
+const runHud = () => {
+  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, togglePause)
   requestAnimationFrame(syncMarkerInsets)
   return hud
 }
@@ -579,24 +633,29 @@ const runSettings = (r: Run, back: () => void) => {
   return openSettings(ui, input, () => {
     if (locale() !== before) {
       r.hud.dispose()
-      r.hud = runHud(r.game)
+      r.hud = runHud()
       dirty = true
     }
     back()
   })
 }
 
-/** Rebuilds the modal overlay whenever the simulation phase (or offer set) changes. */
+/** Rebuilds the modal overlay whenever the simulation phase (or offer set, or the co-op menu) changes. */
 const syncOverlay = (r: Run) => {
-  const g = r.game
-  if (r.shown?.phase === g.phase && r.shown.offers === g.offers) return
+  const g = own(r)
+  const link = r.coop
+  // A new set of offers is a new pick for this player.
+  if (link && r.shown && r.shown.offers !== g.player.offers) r.picked = false
+  const menuOpen = link?.menu === true && g.phase === 'playing'
+  if (r.shown?.phase === g.phase && r.shown.offers === g.player.offers && r.shown.picked === r.picked && r.shown.menu === menuOpen) return
   r.overlay?.dispose()
   r.overlay = null
-  r.shown = { phase: g.phase, offers: g.offers }
-  r.hud.setMenuOpen(g.phase !== 'playing' && g.phase !== 'evolving')
+  r.shown = { phase: g.phase, offers: g.player.offers, picked: r.picked, menu: menuOpen }
+  r.hud.setMenuOpen(menuOpen || (g.phase !== 'playing' && g.phase !== 'evolving'))
+  if (link) return syncCoopOverlay(r, g, link, menuOpen)
   switch (g.phase) {
     case 'levelup':
-      r.overlay = levelUp(ui, input, g, (offer) => (recordEvent(r.recorder, ['offer', g.offers.indexOf(offer)]), chooseOffer(g, offer)), {
+      r.overlay = levelUp(ui, input, g, (offer) => (recordEvent(r.recorder, ['offer', g.player.offers.indexOf(offer)]), chooseOffer(g, offer)), {
         reroll: () => (recordEvent(r.recorder, ['reroll']), rerollOffers(g)),
         skip: () => (recordEvent(r.recorder, ['skip']), skipLevelUp(g)),
       })
@@ -613,20 +672,100 @@ const syncOverlay = (r: Run) => {
         () => afterRun(() => void (r.challenge ? replayChallenge() : startRun(lastStarter))),
         () => afterRun(() => showMenu()),
         () => (recordEvent(r.recorder, ['endless']), continueEndless(g)),
-        {
-          badge: titleBadge(loadSave().title),
-          report: missionReport(r.missionsBefore, r.reward, r.rewardEggs, r.rewardItems),
-          medals: medalChips(r.unlocked),
-          eggs: { refund: r.hatchery.refund, ready: loadSave().eggs.filter(isReady).length },
-          news: dexNews(r.dexBase, g.dexLog),
-          ranking: rankingEnabled
-            ? { panel: rankPanel(r.rank, r.challenge !== null), open: (back) => rankingScreen(ui, input, back, { difficulty: g.difficulty, challenge: r.challenge !== null }) }
-            : null,
-          share: {
-            open: (back) => sharePreview(ui, input, runShare(g, r.dexBase, r.challenge && r.rank ? r.rank.then((o) => (o.kind === 'ranked' ? o.challenge : null)) : null), back),
-            glow: g.player.shiny || g.dexLog.shinies.size > 0 || wonRun(g) || g.time > r.bestBefore,
-          },
+        resultExtras(r),
+      )
+      break
+  }
+}
+
+/** What the results add around the run: title, missions, medals, eggs, Pokédex news, the ranking (solo) and the share card. */
+const resultExtras = (r: Run) => {
+  const g = own(r)
+  return {
+    badge: titleBadge(loadSave().title),
+    report: missionReport(r.missionsBefore, r.reward, r.rewardEggs, r.rewardItems),
+    medals: medalChips(r.unlocked),
+    eggs: { refund: r.hatchery.refund, ready: loadSave().eggs.filter(isReady).length },
+    news: dexNews(r.dexBase, ownLog(r)),
+    ranking:
+      rankingEnabled && !r.coop
+        ? { panel: rankPanel(r.rank, r.challenge !== null), open: (back: () => void) => rankingScreen(ui, input, back, { difficulty: g.difficulty, challenge: r.challenge !== null }) }
+        : null,
+    share: {
+      open: (back: () => void) => sharePreview(ui, input, runShare(g, r.dexBase, r.challenge && r.rank ? r.rank.then((o) => (o.kind === 'ranked' ? o.challenge : null)) : null), back),
+      glow: g.player.shiny || g.dexLog.shinies.size > 0 || wonRun(g) || g.time > r.bestBefore,
+    },
+  }
+}
+
+/** The team under a co-op run's results: each player's final form and name in their slot color. */
+const teamRow = (g: Game, link: CoopLink) =>
+  h(
+    'div',
+    { class: 'result-team' },
+    ...g.players.map((p) =>
+      h(
+        'span',
+        { class: p.gone ? 'result-mate gone' : 'result-mate', style: `--slot:${slotColor(p.slot)}` },
+        h('img', { src: portraitUrl(playerDex(g, p), p.shiny), alt: '' }),
+        link.names[p.slot] ?? `P${p.slot + 1}`,
+      ),
+    ),
+  )
+
+/**
+ * Co-op overlays: this player's level-up (picks travel to the room and apply
+ * when their tick comes back, with the team's timer), the team's wait once
+ * picked, the menu (the run goes on behind it) and the results, where Back to
+ * room returns to the lobby and a victory's Continue takes everyone on.
+ */
+const syncCoopOverlay = (r: Run, g: Game, link: CoopLink, menuOpen: boolean) => {
+  const entry = (e: TickEntry, viaServer: () => void) => sendEntry(link, e, viaServer)
+  switch (g.phase) {
+    case 'levelup': {
+      const p = g.player
+      if (r.picked || p.pendingLevelUps <= 0 || p.offers.length === 0) {
+        r.overlay = teamWait(ui, r.game, link.names)
+        break
+      }
+      const round = p.round
+      r.overlay = levelUp(
+        ui,
+        input,
+        g,
+        (offer) => {
+          const index = p.offers.indexOf(offer)
+          r.picked = true
+          entry([link.slot, 'offer', index, round], () => sendOffer(index, round))
         },
+        {
+          reroll: () => entry([link.slot, 'reroll'], () => sendChoice('reroll')),
+          skip: () => ((r.picked = true), entry([link.slot, 'skip'], () => sendChoice('skip'))),
+          countdown: () => r.game.coop?.pickLeft ?? 0,
+        },
+      )
+      break
+    }
+    case 'playing':
+      if (menuOpen) {
+        r.overlay = pauseMenu(ui, input, g, {
+          coop: true,
+          resume: () => (link.menu = false),
+          quit: () => afterRun(() => (leaveRoom(), showMenu())),
+          settings: (back) => runSettings(r, back),
+        })
+      }
+      break
+    case 'gameover':
+    case 'victory':
+      r.overlay = results(
+        ui,
+        input,
+        g,
+        () => afterRun(() => (link.bots ? showMenu() : (backToLobby(), showLobby()))),
+        () => afterRun(() => (leaveRoom(), showMenu())),
+        () => entry([link.slot, 'endless'], () => sendChoice('endless')),
+        { ...resultExtras(r), coop: { team: teamRow(g, link) } },
       )
       break
   }
@@ -651,9 +790,57 @@ const TRAIT_SFX: Record<TraitId, Record<'warn' | 'fire', Sfx | null>> = {
   leaper: { warn: 'leap', fire: 'quake' },
 }
 
-const handleEvent = (r: Run, e: GameEvent) => {
-  const g = r.game
+/**
+ * A teammate's news in co-op: their fainting, revival, leaving, evolution
+ * and Mega Evolution toast; their item pickups and hits on the horde sound
+ * like the world; the rest (their level-up sounds, hurt, Poké Balls) stays theirs.
+ */
+const handleTeamEvent = (r: Run, e: RunEvent, slot: number): void => {
+  const link = r.coop!
+  const p = r.game.players[slot]
+  const name = link.names[slot] ?? `P${slot + 1}`
+  const c = t().coop
   switch (e.kind) {
+    case 'fainted':
+      playSfx('hurt', 120)
+      return toast(ui, rich(c.fainted(name)), 3200, `fainted-${slot}`)
+    case 'revived':
+      playSfx('heal')
+      return toast(ui, rich(c.revived(name)), 2400, `fainted-${slot}`)
+    case 'left':
+      return toast(ui, c.left(name), 3000)
+    case 'evolve':
+      // The world holds still for everyone while it plays: say why.
+      if (p) toast(ui, rich(c.evolving(name, PLAYABLE[p.starter].line[p.stage]!.name)), 4400, `evolve-${slot}`)
+      return
+    case 'evolved':
+      playSfx('evolve')
+      if (p) toast(ui, rich(c.evolved(name, PLAYABLE[p.starter].line[p.stage]!.name)), 3200, `evolve-${slot}`)
+      return
+    case 'mega':
+      playSfx('megaBurst', 0)
+      return toast(ui, rich(c.mega(name, e.name)), 3000)
+    case 'consumable':
+    case 'kill':
+    case 'hit':
+    case 'propBreak':
+      handleEvent(r, { ...e, slot: link.slot })
+      return
+  }
+}
+
+const handleEvent = (r: Run, e: RunEvent) => {
+  if (r.coop && e.slot !== undefined && e.slot !== r.coop.slot) return handleTeamEvent(r, e, e.slot)
+  const g = own(r)
+  switch (e.kind) {
+    case 'fainted':
+      playSfx('gameOver')
+      return toast(ui, t().coop.youFainted, 4000, 'fainted-me')
+    case 'revived':
+      playSfx('evolve')
+      return toast(ui, t().coop.youRevived, 2400, 'fainted-me')
+    case 'left':
+      return
     case 'hit': return playSfx(e.effective > 1 ? 'superHit' : 'hit', 45)
     case 'kill': return playSfx('kill', 50)
     case 'pickup': return playSfx('pickup', 35)
@@ -671,14 +858,14 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return toast(ui, rich(t().toast.used(playerName(g), e.name)), 1600, 'special')
     }
     case 'megaChoice': {
-      const [a, b] = megasOf(g.starter).map((id) => MEGAS[id].stone)
+      const [a, b] = megasOf(g.player.starter).map((id) => MEGAS[id].stone)
       playSfx('unlock')
       return a && b && toast(ui, rich(t().mega.choose(a, b)), 4200, 'mega')
     }
     case 'megaStone': {
       const def = heldMega(g)
       if (!def) return
-      const line = PLAYABLE[g.starter].line
+      const line = PLAYABLE[g.player.starter].line
       const final = g.player.stage >= line.length - 1
       playSfx('unlock')
       return toast(
@@ -697,7 +884,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'mega': {
       playSfx('megaBurst', 0)
       playCry(playerCry(g), 0.9)
-      return banner(ui, rich(t().mega.evolved(PLAYABLE[g.starter].line[g.player.stage]!.name, e.name)), 2400)
+      return banner(ui, rich(t().mega.evolved(PLAYABLE[g.player.starter].line[g.player.stage]!.name, e.name)), 2400)
     }
     case 'megaEnd':
       playSfx('stance', 0)
@@ -707,7 +894,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return toast(ui, rich(t().mega.ready), 2400, 'mega')
     case 'stance': {
       playSfx('stance', 0)
-      const who = PLAYABLE[g.starter].line[g.player.stage]!.name
+      const who = PLAYABLE[g.player.starter].line[g.player.stage]!.name
       return toast(ui, rich(t().toast.stance(who, t().hud.stances[e.stance])), 1200, 'special')
     }
     case 'boss': {
@@ -747,16 +934,16 @@ const handleEvent = (r: Run, e: GameEvent) => {
     }
     case 'shinyPlayer': {
       playSfx('shiny')
-      return toast(ui, rich(t().toast.shinyPlayer(PLAYABLE[g.starter].name)), 3600)
+      return toast(ui, rich(t().toast.shinyPlayer(PLAYABLE[g.player.starter].name)), 3600)
     }
     case 'evolve': {
       playCry(sprites(e.from).cry)
       r.closeText?.()
-      r.closeText = textBox(ui, t().toast.evolving(PLAYABLE[g.starter].line[g.player.stage]!.name))
+      r.closeText = textBox(ui, t().toast.evolving(PLAYABLE[g.player.starter].line[g.player.stage]!.name))
       return
     }
     case 'evolved': {
-      const line = PLAYABLE[g.starter].line
+      const line = PLAYABLE[g.player.starter].line
       playSfx('evolve')
       playCry(sprites(e.to).cry)
       r.closeText?.()
@@ -886,7 +1073,7 @@ input.onKey((key) => {
   if (key === 'KeyM') toggleMute()
   if (!run) return
   const g = run.game
-  if ((key === 'Escape' || key === 'KeyP') && g.phase === 'playing') g.phase = 'paused'
+  if ((key === 'Escape' || key === 'KeyP') && g.phase === 'playing' && !run.overlay) togglePause()
   if (key === 'Space') queueSpecial()
   if (key === 'KeyE') queueMega()
   if (key === 'ShiftLeft' || key === 'ShiftRight') queueLunge()
@@ -910,7 +1097,12 @@ document.addEventListener(
   { passive: false },
 )
 
+// Solo pauses when the tab hides; co-op can't, so the player's Pokémon stands still (and the run catches up on return).
 document.addEventListener('visibilitychange', () => {
+  if (run?.coop) {
+    if (!run.coop.bots) sendAway(document.hidden)
+    return
+  }
   if (document.hidden && run?.game.phase === 'playing') run.game.phase = 'paused'
 })
 
@@ -926,7 +1118,9 @@ const frame = (now: number) => {
   // Gamepads drive the menus through the same key codes as the keyboard.
   for (const key of padKeys()) input.press(key)
 
-  if (run) {
+  if (run?.coop) {
+    coopFrame(run, run.coop, dt, t, now)
+  } else if (run) {
     const r = run
     const g = r.game
     if (padA()) queueSpecial()
@@ -962,6 +1156,8 @@ const frame = (now: number) => {
       // idles the GPU while a menu is open over a frozen frame.
       if (steps > 0 || dirty) {
         dirty = false
+        g.camera.x = g.player.screen.x
+        g.camera.y = g.player.screen.y
         render(ctx, g, t, settings())
         const stick = input.readStick()
         if (stick && g.phase === 'playing') drawJoystick(ctx, stick, cssScale)
@@ -984,6 +1180,215 @@ const frame = (now: number) => {
   requestAnimationFrame(frame)
 }
 
+/* ---------------- Co-op ---------------- */
+
+/** "Waiting for the other trainers" before the clock starts, "Syncing" while catching up. */
+const coopNotice = h('div', { class: 'coop-notice box hidden' })
+ui.append(coopNotice)
+
+/** The co-op run seen from this device: its player drawn where the stick already took them, the camera on them, this screen's view. */
+const coopLens = (r: Run, link: CoopLink): Game => {
+  const g = r.game
+  const mine = me(g, link)
+  const off = predictedOffset(g, link)
+  const shown = off.x !== 0 || off.y !== 0 ? { ...mine, x: mine.x + off.x, y: mine.y + off.y } : mine
+  const players = shown === mine ? g.players : g.players.map((p) => (p === mine ? shown : p))
+  return { ...g, player: shown, players, view, camera: { x: shown.x - view.w / 2, y: shown.y - 10 - view.h / 2 } }
+}
+
+/**
+ * One frame of a co-op run: presses go to the room (or the local feed),
+ * the lockstep driver simulates the ticks due (`stepCoop`), news plays
+ * (held back while catching up), the overlays follow, and it draws from this
+ * player's side. It always redraws: prediction moves this player between ticks.
+ */
+const coopFrame = (r: Run, link: CoopLink, dt: number, time: number, now: number) => {
+  const g = r.game
+  if (padA()) queueSpecial()
+  if (padY()) queueMega()
+  if (padX()) queueLunge()
+  const press = (flag: boolean, kind: 'special' | 'mega' | 'lunge') => flag && sendEntry(link, [link.slot, kind], () => sendPress(kind))
+  press(specialQueued, 'special')
+  press(megaQueued, 'mega')
+  press(lungeQueued, 'lunge')
+  specialQueued = megaQueued = lungeQueued = false
+  const going = link.bots !== null || room()?.going === true
+  if (going) stepCoop(g, link, dt, input.readMove(), now)
+  const catching = !link.bots && backlog(link) > CATCH_UP
+  setText(coopNotice, !going ? t().coop.waiting : catching ? t().coop.syncing : '')
+  coopNotice.classList.toggle('hidden', going && !catching)
+  if (!link.over && (g.phase === 'gameover' || g.phase === 'victory')) {
+    link.over = true
+    if (!link.bots) runOver()
+  }
+  // Catching up, only the run's outcome matters: the rest is old news.
+  for (const e of g.events.splice(0)) if (!catching || e.kind === 'gameover' || e.kind === 'victory') handleEvent(r, e)
+  if (run !== r) return
+  syncOverlay(r)
+  r.overlay?.tick?.(time)
+  tickToasts(ui, dt, g.phase !== 'playing')
+  const lens = coopLens(r, link)
+  render(ctx, lens, time, settings())
+  r.tags?.update(lens, cssScale)
+  const stick = input.readStick()
+  if (stick && g.phase === 'playing' && !link.menu) drawJoystick(ctx, stick, cssScale)
+  r.hud.update(lens)
+  r.team?.update(g)
+}
+
+/** Loads what a co-op run needs (every player's line, the opening species) and starts it, from the room's `start`. */
+const startCoopRun = async (start: RunStart, slot: number, bots = false) => {
+  setScreen(null)
+  endRun()
+  const setups = start.members.map(setupOf)
+  const names = start.members.map((m) => m.name)
+  const loading = loadingScreen()
+  ui.append(loading)
+  // No outbreak in co-op: the day could differ between players' clocks.
+  const roster = runRoster(start.seed, null)
+  await loadAll([...setups.flatMap((s) => playableDex(s.starter)), ...openingDex({ roster })])
+  const game = createCoopGame({ ...start.view }, start.seed, setups, start.difficulty, roster)
+  for (const p of game.players) {
+    if (p.shiny) await preloadShinies(playableDex(p.starter))
+    void preloadForms(playableDex(p.starter), p.shiny)
+  }
+  loading.remove()
+  if (run) endRun()
+  const save = loadSave()
+  run = {
+    game,
+    hud: runHud(),
+    overlay: null,
+    shown: null,
+    closeText: null,
+    paid: 0,
+    reported: false,
+    missionsBefore: missionStatus(save.missions, today()),
+    recorded: null,
+    unlocked: [],
+    reward: 0,
+    rewardEggs: 0,
+    rewardItems: [],
+    hatchery: { steps: 0, eggs: 0, refund: 0 },
+    dexBase: save.dex,
+    recorder: startRecording({ seed: start.seed, starter: setups[slot]!.starter, difficulty: start.difficulty, ranks: setups[slot]!.ranks, shiny: setups[slot]!.shiny, luckyEgg: false, outbreak: null, lure: false, incense: false, view: start.view }),
+    ranked: null,
+    rank: null,
+    coop: createLink(slot, names, setups.length, bots),
+    team: createTeamHud(ui, names, slot),
+    tags: createNameTags(ui, names),
+    picked: false,
+    bestBefore: save.achievements.lifetime.bestTime,
+    challenge: null,
+  }
+  track('run_start', { starter: setups[slot]!.starter, difficulty: start.difficulty, team: setups.length })
+  if (!bots) loaded()
+  const later = [...rosterSchedule(roster).filter((s) => s.at > 0), ...EXTRAS].sort((a, b) => a.at - b.at)
+  void streamSpecies(later.map((s) => s.dex), () => run?.game === game)
+}
+
+/** What this player brings into a room: the Pokémon picked last, its hatched shininess and the Poké Mart ranks, plus this screen's size. */
+const sendLoadout = () => {
+  const save = loadSave()
+  const shiny = isHatchling(lastStarter) && save.hatched[lastStarter]?.shiny === true
+  setLoadout({ starter: lastStarter, shiny, ranks: save.ranks }, { w: view.w, h: view.h })
+}
+
+/** The co-op hub: create a room, join by code, friends. */
+const showCoopHub = (code?: string) => {
+  endRun()
+  connect()
+  setScreen(
+    coopHub(ui, input, {
+      create: () => createRoom(),
+      join: (c) => joinRoom(c),
+      friends: accountsEnabled ? () => showFriends(() => showCoopHub()) : null,
+      back: () => showTitle({ focus: 1 }),
+    }, code),
+  )
+}
+
+/** The room's lobby (after creating or joining one, and back from a run). */
+const showLobby = () => {
+  endRun()
+  setScreen(
+    lobbyScreen(ui, input, {
+      change: () => showLobbyPicker(),
+      invite: accountsEnabled && accountState().kind === 'signedIn' ? () => showFriends(() => showLobby()) : null,
+      leave: () => (leaveRoom(), showCoopHub()),
+    }),
+  )
+}
+
+/** Picks this player's Pokémon for the room, then back to the lobby. */
+const showLobbyPicker = () => {
+  const select = starterSelect(ui, input, {
+    pick: (id) => {
+      lastStarter = id
+      sendLoadout()
+      setTimeout(() => showLobby(), 250)
+    },
+    incubator: () => showIncubator(() => showLobbyPicker()),
+  }, lastStarter)
+  const closeBack = titleButton(ui, input, () => showLobby())
+  setScreen({ ...select, dispose: () => (closeBack(), select.dispose()) })
+}
+
+/** Friends (signed in) or the nudge to sign in; profiles open over it. */
+const showFriends = (back: () => void) =>
+  setScreen(
+    friendsScreen(ui, input, {
+      profile: (handle, close) => profileScreen(ui, input, handle, close),
+      signIn: () => setScreen(accountScreen(ui, input, () => showFriends(back))),
+      close: back,
+    }),
+  )
+
+// The room drives the screens: joining opens the lobby, a start loads the run (a rejoin too, then fast-forwards), a reset returns to the lobby.
+onRoom((e) => {
+  const r = room()
+  switch (e.t) {
+    case 'room':
+      sendLoadout()
+      if (!run) showLobby()
+      return
+    case 'start':
+      if (r) void startCoopRun(r.run!, r.slot)
+      return
+    case 'lobby':
+      if (e.phase !== 'lobby' || !run?.coop) return
+      // The host took the room back to the lobby mid-run: this run is over.
+      if (run.game.phase !== 'gameover' && run.game.phase !== 'victory') afterRun(() => showLobby())
+      return
+    case 'left':
+      toast(ui, t().coop.refused.kicked, 3200)
+      if (run?.coop) afterRun(() => showMenu())
+      else if (screen?.el.querySelector('.lobby')) showCoopHub()
+      return
+    case 'desync':
+      return toast(ui, t().coop.desync, 6000, 'desync')
+    case 'refused':
+      // A room link that didn't work lands on the hub, which explains why.
+      if (!screen?.el.querySelector('.coop-hub, .lobby')) {
+        showCoopHub()
+        toast(ui, t().coop.refused[e.code], 3600)
+      }
+      return
+  }
+})
+
+// A friend's invite: a toast with a button straight into their room.
+onInvite((from, code) => {
+  playSfx('unlock')
+  const join = h('button', { class: 'btn small confirm', onclick: () => (run?.coop ? undefined : joinRoom(code)) }, t().coop.accept)
+  toast(ui, h('span', { class: 'invite-toast' }, rich(t().coop.invited(from.name)), join), 12_000, `invite-${code}`)
+})
+
+// Signing in or out changes who presence says is online: reconnect with the new credentials.
+onAccountChange((s) => {
+  if (!coopEnabled || s.kind === 'busy') return
+  if (s.kind === 'signedIn' || room()) reconnect()
+})
 /* ---------------- Boot ---------------- */
 
 /**
@@ -1022,14 +1427,23 @@ const boot = () => {
   document.documentElement.lang = LOCALES[locale()].tag
   // Someone's link (`?ref=`, a profile): remember who brought this device, before anything reads the URL.
   captureRef()
-  const shared = rankingEnabled ? parseHandle(new URLSearchParams(location.search).get(PROFILE_PARAM)) : null
-  if (shared) showSharedProfile(shared)
+  const params = new URLSearchParams(location.search)
+  const shared = rankingEnabled ? parseHandle(params.get(PROFILE_PARAM)) : null
+  const code = coopEnabled ? parseRoomCode(params.get(ROOM_PARAM)) : null
+  if (code) {
+    history.replaceState(null, '', location.pathname)
+    // Signed in, straight into the room; a guest first picks the name teammates see.
+    if (accountState().kind === 'signedIn') joinRoom(code)
+    showCoopHub(code)
+  } else if (shared) showSharedProfile(shared)
   // Back from signing in, the player already pressed start before leaving: straight to the menu.
   else showTitle({ intro: !backFromSignIn() })
   requestAnimationFrame(frame)
   void preloadInBackground()
   promptProfile()
   startAccount()
+  // Signed in: online for friends. A reload mid-room takes the slot back (held a while) and fast-forwards.
+  if (coopEnabled && (savedRoom() || accountState().kind === 'signedIn')) connect()
   // Results that didn't reach the ranking last time (offline) go now, once the account is back.
   if (accountState().kind === 'signedIn') setTimeout(() => void flushRuns(), 5000)
 }
@@ -1068,17 +1482,17 @@ const devSpawn = (kind: EnemyId, count = 1, shiny = false) => {
  */
 const devMega = (mode: 'now' | 'ready' | 'stone' = 'now', mega?: MegaId) => {
   const g = run?.game
-  const ids = g ? megasOf(g.starter) : []
+  const ids = g ? megasOf(g.player.starter) : []
   if (!g || !ids[0]) return `Start a run with a Mega line: ${MEGA_LINES.join(', ')}`
   const p = g.player
   if (mode === 'stone') return dropMegaStones(g, p.x + 40, p.y)
-  if (mega && !ids.includes(mega)) return `${PLAYABLE[g.starter].name}'s Megas: ${ids.join(', ')}`
-  p.stage = PLAYABLE[g.starter].line.length - 1
+  if (mega && !ids.includes(mega)) return `${PLAYABLE[g.player.starter].name}'s Megas: ${ids.join(', ')}`
+  p.stage = PLAYABLE[g.player.starter].line.length - 1
   p.radius = Math.max(6, Math.round(bodyOf(playerDex(g)).bodyW * 0.3))
   recomputeStats(g)
-  g.mega.stone = null
+  g.player.mega.stone = null
   grantStone(g, mega ?? ids[0])
-  g.mega.charge = 0
+  g.player.mega.charge = 0
   if (mode === 'now') queueMega()
 }
 
@@ -1181,6 +1595,19 @@ const devTerrain = (g: Game, kind: SolidKind | 'lake' = 'cliff', dy = 70) => {
   return null
 }
 
+/**
+ * Dev: a local co-op run with bot teammates and no server, through the same
+ * lockstep path (`ps.coop(['pichu', 'gible'])`). Bots wander near the player
+ * and pick level-ups at random.
+ */
+const devCoop = (mates: PlayableId[] = ['pichu', 'gible'], starter: PlayableId = lastStarter, difficulty: Difficulty = 'normal') => {
+  const ranks = loadSave().ranks
+  const members: Member[] = [starter, ...mates].slice(0, 4).map((id, slot) => ({
+    slot, name: slot === 0 ? coopName() : `Bot ${slot}`, handle: null, ready: true, online: true, view: { w: view.w, h: view.h }, starter: id, shiny: false, ranks,
+  }))
+  void startCoopRun({ seed: Date.now(), difficulty, view: roomView(members.map((m) => m.view)), members }, 0, true)
+}
+
 // `ps.biome('cave')` and `ps.weather('rain')` stage a run for screenshots (they hold until the next scheduled change).
 if (import.meta.env.DEV) {
   const withRun = (fn: (g: Game) => void) => (run ? fn(run.game) : console.warn('ps: start a run first'))
@@ -1188,6 +1615,7 @@ if (import.meta.env.DEV) {
     ps: {
       run: () => run,
       startRun,
+      coop: devCoop,
       showTitle,
       showMenu,
       theme: currentTheme,

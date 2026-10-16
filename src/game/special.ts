@@ -397,7 +397,7 @@ export const resolveSpecial = (starter: PlayableId, stage: number, mega: MegaId 
 export type ResolvedSpecial = ReturnType<typeof resolveSpecial>
 
 /** The special the player has right now: its stage's, or its Mega form's while that lasts. */
-export const gameSpecial = (g: Game) => resolveSpecial(g.starter, g.player.stage, g.mega.active > 0 ? g.mega.stone : null)
+export const gameSpecial = (g: Game) => resolveSpecial(g.player.starter, g.player.stage, g.player.mega.active > 0 ? g.player.mega.stone : null)
 
 /* ---------------- Timers (pure) ---------------- */
 
@@ -527,7 +527,7 @@ export const rechargeSpecial = (s: RechargeTimers, cut: number) => {
  * (the dash or lunge moves the player) and a little faster while laying a trail.
  */
 export const specialSpeedFactor = (g: Game) => {
-  const s = g.special
+  const s = g.player.special
   if (s.charge > 0) return 0.45
   if (s.active <= 0) return 1
   const kind = gameSpecial(g).def.kind
@@ -625,7 +625,7 @@ const explode = (g: Game, r: ResolvedSpecial, x: number, y: number, radius: numb
 }
 
 const release = (g: Game, r: ResolvedSpecial) => {
-  const s = g.special
+  const s = g.player.special
   const p = g.player
   const area = areaOf(g, r)
   const dmg = power(g, r)
@@ -770,7 +770,7 @@ const releaseRain = (g: Game, r: ResolvedSpecial, area: number, dmg: number) => 
 }
 
 const dashTick = (g: Game, r: ResolvedSpecial, dt: number) => {
-  const s = g.special
+  const s = g.player.special
   const p = g.player
   const area = areaOf(g, r)
   const v = specialReach(g, r) / DASH_TIME
@@ -788,7 +788,7 @@ const dashTick = (g: Game, r: ResolvedSpecial, dt: number) => {
 
 /** Spray along the beam while it fires. */
 const beamTick = (g: Game, r: ResolvedSpecial) => {
-  const s = g.special
+  const s = g.player.special
   const p = g.player
   const len = specialReach(g, r)
   const dir = fromAngle(s.angle)
@@ -805,7 +805,7 @@ const beamTick = (g: Game, r: ResolvedSpecial) => {
 
 /** Drops a hazard patch at the player's feet every TRAIL_EVERY seconds while the trail lasts. */
 const trailTick = (g: Game, r: ResolvedSpecial, dt: number) => {
-  const s = g.special
+  const s = g.player.special
   const p = g.player
   const area = areaOf(g, r)
   s.trail += dt
@@ -868,7 +868,7 @@ const chainTarget = (g: Game, skip: number) => {
  * player passes and share one hit list, so each foe on the path is hit once.
  */
 const startJump = (g: Game, r: ResolvedSpecial) => {
-  const s = g.special
+  const s = g.player.special
   const p = g.player
   const first = !s.chaining
   beginJump(s, r.tier.count)
@@ -900,7 +900,7 @@ const startJump = (g: Game, r: ResolvedSpecial) => {
 
 /** Moves the player `moved` px along the jump, leaving afterimages behind (cosmetic: never active). */
 const lungeTick = (g: Game, r: ResolvedSpecial, moved: number) => {
-  const s = g.special
+  const s = g.player.special
   const p = g.player
   const dir = fromAngle(s.angle)
   p.x += dir.x * moved
@@ -918,7 +918,7 @@ const lungeTick = (g: Game, r: ResolvedSpecial, moved: number) => {
 
 /** The landing: a slash where the jump ends, a screen kick, then the window for the next jump (or the cooldown). */
 const landChain = (g: Game, r: ResolvedSpecial, cooldown: number) => {
-  const s = g.special
+  const s = g.player.special
   const p = g.player
   const hit = s.target >= 0
   const area = areaOf(g, r)
@@ -943,7 +943,7 @@ const landChain = (g: Game, r: ResolvedSpecial, cooldown: number) => {
 const orbBurst = (g: Game, r: ResolvedSpecial, count: number) => {
   const p = g.player
   for (let i = 0; i < count; i++) {
-    const v = fromAngle(g.special.angle + (i / count) * TAU, RING_SPEED)
+    const v = fromAngle(g.player.special.angle + (i / count) * TAU, RING_SPEED)
     spawnAttack(g, {
       move: 'special', type: r.def.type, visual: 'orb', x: p.x, y: p.y - 8,
       shape: { kind: 'circle', r: 6 * areaOf(g, r) }, motion: { kind: 'linear', vx: v.x, vy: v.y },
@@ -957,7 +957,7 @@ const orbBurst = (g: Game, r: ResolvedSpecial, count: number) => {
  * press when ready or inside the window jumps, and the lunge runs its course.
  */
 const updateChain = (g: Game, r: ResolvedSpecial, pressed: boolean, dt: number) => {
-  const s = g.special
+  const s = g.player.special
   const cooldown = specialCooldown(r.def, g.player.stats)
   if (s.active <= 0) tickChain(s, dt, cooldown)
   if (triggerSpecial(s, pressed, dt)) startJump(g, r)
@@ -972,14 +972,14 @@ const updateChain = (g: Game, r: ResolvedSpecial, pressed: boolean, dt: number) 
 
 /** Keeps the stance in step with the special: Shield when Aegislash arrives, none for anyone else. */
 const syncStance = (g: Game, r: ResolvedSpecial) => {
-  const want = r.def.kind === 'stance' ? (g.special.stance ?? FIRST_STANCE) : null
-  if (want === g.special.stance) return
-  g.special.stance = want
+  const want = r.def.kind === 'stance' ? (g.player.special.stance ?? FIRST_STANCE) : null
+  if (want === g.player.special.stance) return
+  g.player.special.stance = want
   recomputeStats(g)
 }
 
 const swapStance = (g: Game) => {
-  const s = g.special
+  const s = g.player.special
   const p = g.player
   const stance = otherStance(s.stance ?? FIRST_STANCE)
   s.stance = stance
@@ -992,7 +992,7 @@ const swapStance = (g: Game) => {
 
 /** Runs the special each tick: trigger → charge → release → active phase. */
 export const updateSpecial = (g: Game, pressed: boolean, dt: number) => {
-  const s = g.special
+  const s = g.player.special
   const r = gameSpecial(g)
   syncStance(g, r)
   rechargeSpecial(s, g.player.stats.specialRecharge)
