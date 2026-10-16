@@ -19,6 +19,23 @@ export type ChangelogEntry = {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-10-16',
+    pr: 68,
+    title: { pt: 'Ficha de status na pausa', en: 'Stat sheet on the pause screen', es: 'Ficha de estadísticas en la pausa' },
+    notes: [
+      {
+        pt: 'A pausa agora mostra a ficha completa da partida: vida máxima, dano, recarga, área, velocidade, regeneração, alcance de coleta e os bônus de tipo, status e dinheiro assim que você os tiver, cada um com quantas cartas de upgrade você já pegou para ele.',
+        en: "The pause screen now shows the run's full stat sheet: max HP, damage, cooldown, area, speed, regen, pickup range and the type, status and money bonuses once you have them, each with how many upgrade cards you've taken for it.",
+        es: 'La pausa ahora muestra la ficha completa de la partida: vida máxima, daño, recarga, área, velocidad, regeneración, alcance de recogida y los bonos de tipo, estado y dinero en cuanto los tengas, cada uno con cuántas cartas de mejora ya tomaste para él.',
+      },
+      {
+        pt: 'Golpes e itens aparecem em listas separadas com o nível de cada um (MAX quando chegam ao topo), e no celular a ficha rola enquanto os botões ficam sempre à mão.',
+        en: 'Moves and held items get their own lists with each level (MAX once they top out), and on phones the sheet scrolls while the buttons stay within reach.',
+        es: 'Los movimientos y los objetos tienen listas propias con el nivel de cada uno (MAX cuando llegan al tope), y en el celular la ficha se desplaza mientras los botones quedan siempre a mano.',
+      },
+    ],
+  },
+  {
+    date: '2026-10-16',
     title: { pt: 'Recompensas para quem apoia', en: 'Rewards for supporters', es: 'Recompensas para quien apoya' },
     notes: [
       {

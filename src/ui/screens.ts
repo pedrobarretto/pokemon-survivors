@@ -13,11 +13,12 @@ import { toSteps } from '../game/eggs'
 import { overtime } from '../game/endless'
 import { runEarnings } from '../game/meta'
 import { resolveSpecial } from '../game/special'
+import { statSheet, type SheetStat } from '../game/statSheet'
 import type { DamageSource, Game, Offer } from '../game/types'
 import { berryIcon, coinIcon, eggIcon, itemIcon, moveIcon, sparkleIcon } from '../render/art'
 import { specialIcon } from '../render/specialFx'
 import { portraitUrl, sprites } from '../render/sprites'
-import { formatNumber, formatPokeDollars, locale, t, type Messages } from '../i18n'
+import { formatNumber, formatPokeDollars, locale, t } from '../i18n'
 import { ROUTES } from '../site/routes'
 import { h, later } from './dom'
 
@@ -198,16 +199,47 @@ export const levelUp = (root: HTMLElement, input: Input, g: Game, onChoose: (off
 
 /* ---------------- Pause ---------------- */
 
-const STAT_ROWS = [
-  ['damage', (s: Game['player']['stats']) => `x${s.might.toFixed(2)}`],
-  ['area', (s) => `x${s.area.toFixed(2)}`],
-  ['cooldown', (s) => `x${s.cooldown.toFixed(2)}`],
-  ['duration', (s) => `x${s.duration.toFixed(2)}`],
-  ['amount', (s) => `+${s.amount}`],
-  ['speed', (s) => `${Math.round(s.speed)}`],
-  ['defense', (s) => `${s.armor}`],
-  ['regen', (s) => `${s.regen.toFixed(1)}/s`],
-] as const satisfies ReadonlyArray<readonly [keyof Messages['stats'], (s: Game['player']['stats']) => string]>
+const mult = (v: number) => `x${v.toFixed(2)}`
+const pct = (v: number) => `${v < 0 ? '' : '+'}${Math.round(v * 100)}%`
+const plus = (v: number) => `+${v}`
+const whole = (v: number) => `${Math.round(v)}`
+
+/** How each stat reads on the pause sheet. */
+const SHEET_FORMAT = {
+  maxHp: whole,
+  might: mult,
+  cooldown: mult,
+  area: mult,
+  duration: mult,
+  amount: plus,
+  speed: whole,
+  armor: (v) => `${Number(v.toFixed(1))}`,
+  regen: (v) => `${v.toFixed(1)}/s`,
+  magnet: whole,
+  growth: mult,
+  greed: mult,
+  projectileSpeed: mult,
+  statusChance: pct,
+  statusDamage: pct,
+  damageTaken: mult,
+  comboMoves: plus,
+  specialRecharge: (v) => `${v.toFixed(2)}s`,
+} satisfies Record<SheetStat, (v: number) => string>
+
+/** The stat table: name, current value and how many upgrade cards fed it. */
+const statTable = (g: Game) => {
+  const m = t().pause
+  return h(
+    'div',
+    { class: 'stat-table' },
+    h('span', { class: 'stat-cards-head', title: m.cardsHint }, m.cards),
+    ...statSheet(g.player.stats, g.player.items).flatMap((r) => [
+      r.stat === 'typeDamage' ? h('span', { class: 'stat-name' }, m.typeDamage, typeBadge(r.type)) : h('span', { class: 'stat-name' }, m.stats[r.stat]),
+      h('b', {}, r.stat === 'typeDamage' ? pct(r.value) : SHEET_FORMAT[r.stat](r.value)),
+      r.cards > 0 ? h('span', { class: 'stat-cards', title: m.cardsHint }, `×${r.cards}`) : h('span', { class: 'stat-cards none' }, '·'),
+    ]),
+  )
+}
 
 /** Paired item hint for a loadout move: shows what it needs and whether it is ready. */
 const loadoutHint = (g: Game, id: MoveId) => {
@@ -223,7 +255,9 @@ const loadoutHint = (g: Game, id: MoveId) => {
   )
 }
 
-const loadoutList = (g: Game) =>
+const levelTag = (level: number, max: number) => h('span', { class: level >= max ? 'tag tag-max' : 'tag' }, level >= max ? t().max : t().level(level))
+
+const moveList = (g: Game) =>
   h(
     'div',
     { class: 'loadout-list' },
@@ -234,13 +268,22 @@ const loadoutList = (g: Game) =>
         h('img', { src: moveIcon(m.id), alt: '' }),
         MOVES[m.id].name,
         loadoutHint(g, m.id),
-        !evolvedFrom(m.id) && h('span', { class: 'tag' }, t().level(m.level)),
+        !evolvedFrom(m.id) && levelTag(m.level, maxMoveLevel(m.id)),
       ),
     ),
-    ...g.player.items.map((i) =>
-      h('div', { class: 'loadout-row' }, h('img', { src: itemIcon(i.id), alt: '' }), ITEMS[i.id].name, h('span', { class: 'tag' }, t().level(i.level))),
-    ),
   )
+
+const itemList = (g: Game) =>
+  h(
+    'div',
+    { class: 'loadout-list' },
+    ...g.player.items.map((i) =>
+      h('div', { class: 'loadout-row' }, h('img', { src: itemIcon(i.id), alt: '' }), ITEMS[i.id].name, levelTag(i.level, ITEMS[i.id].levels.length)),
+    ),
+    g.player.items.length === 0 && h('p', { class: 'loadout-empty' }, t().pause.noItems),
+  )
+
+const pauseSection = (title: string, body: HTMLElement) => h('section', { class: 'pause-section' }, h('h3', { class: 'pause-head' }, title), body)
 
 /**
  * `settings` opens the settings screen on top (see `openSettings`) and must
@@ -250,7 +293,7 @@ const loadoutList = (g: Game) =>
 type PauseActions = { resume: () => void; quit: () => void; settings: (back: () => void) => Screen }
 
 export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: PauseActions): Screen => {
-  const el = h('div', { class: 'screen dim' })
+  const el = h('div', { class: 'screen dim pause-screen' })
   let nav: ReturnType<typeof menu> | null = null
   let settings: Screen | null = null
 
@@ -278,20 +321,23 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
       if (i === 1) later(openSettings)
       if (i === 2) actions.quit()
     }, { initial: focus })
-    const s = g.player.stats
     el.replaceChildren(
       h(
         'div',
-        { class: opening ? 'dialog box pop wide' : 'dialog box wide' },
+        { class: opening ? 'dialog box pop wide pause' : 'dialog box wide pause' },
         h('div', { class: 'dialog-title' }, m.title),
         difficultyTag(g.difficulty),
         h(
           'div',
-          { class: 'pause-grid' },
-          loadoutList(g),
-          h('div', { class: 'stat-list' }, ...STAT_ROWS.map(([key, fmt]) => h('div', { class: 'stat-row' }, h('span', {}, t().stats[key]), h('b', {}, fmt(s))))),
+          { class: 'pause-body' },
+          h(
+            'div',
+            { class: 'pause-grid' },
+            pauseSection(m.statsTitle, statTable(g)),
+            h('div', { class: 'pause-column' }, pauseSection(m.movesTitle, moveList(g)), pauseSection(m.itemsTitle, itemList(g))),
+          ),
+          h('p', { class: 'evo-legend' }, m.evoLegend),
         ),
-        h('p', { class: 'evo-legend' }, m.evoLegend),
         h('div', { class: 'buttons' }, resume, settingsButton, quit),
       ),
     )

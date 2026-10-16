@@ -1036,14 +1036,58 @@ button {
   color: #e83838;
 }
 
+/* The pause sheet: title and buttons stay put, the body scrolls when a phone can't fit it. Tall enough to reach the HUD, so it covers it. */
+.pause-screen {
+  z-index: 4;
+}
+
+.dialog.pause {
+  max-height: 100%;
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+.pause-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .pause-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-.loadout-list,
-.stat-list {
+.pause-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pause-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pause-head {
+  margin: 0;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #c8d0e8;
+  font-family: var(--title);
+  font-size: 9px;
+  font-weight: normal;
+  color: #6878a8;
+}
+
+.loadout-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1066,10 +1110,61 @@ button {
   margin-left: auto;
 }
 
-.stat-row {
-  display: flex;
-  justify-content: space-between;
+.tag-max {
+  color: #e0a020;
+}
+
+.loadout-empty {
+  margin: 0;
+  font-size: 18px;
+  color: #6878a8;
+}
+
+/* Name | value | cards, with the cards header over the last column. */
+.stat-table {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 22px;
   line-height: 1;
+}
+
+.stat-cards-head {
+  grid-column: 3;
+  font-family: var(--title);
+  font-size: 7px;
+  color: #6878a8;
+  text-align: right;
+  white-space: nowrap;
+  margin-top: -4px;
+}
+
+.stat-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.stat-name .type-badge {
+  font-size: 7px;
+  padding: 3px 4px 2px;
+}
+
+.stat-table b {
+  text-align: right;
+}
+
+.stat-cards {
+  justify-self: end;
+  font-family: var(--title);
+  font-size: 8px;
+  color: #e0a020;
+}
+
+.stat-cards.none {
+  color: #c8d0e8;
 }
 
 .result-portrait {
@@ -2638,7 +2733,7 @@ button {
     gap: 10px;
   }
   .loadout-list,
-  .stat-list {
+  .stat-table {
     font-size: 19px;
   }
   .btn {
@@ -2776,8 +2871,9 @@ button {
     font-size: 19px;
   }
   .loadout-list,
-  .stat-list {
+  .stat-table {
     font-size: 18px;
+    gap: 2px 10px;
   }
   .result-portrait {
     display: none;
