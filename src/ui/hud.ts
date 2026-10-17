@@ -16,6 +16,7 @@ import { h, setStyle, setText } from './dom'
 import { createRiftHud } from './riftHud'
 import { createLungeControls } from './lungeButton'
 import { createMegaControls } from './megaButton'
+import { createMovePad } from './movePad'
 import { createSpecialControls } from './specialButton'
 
 const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-mid' : 'hp-low')
@@ -23,10 +24,12 @@ const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-
 /**
  * In-run heads-up display. `update` is called every frame and only touches what changed.
  * `onSpecial`, `onMega` and `onLunge` fire when the touch special, Mega and lunge buttons are pressed;
- * `onPause` backs the on-screen pause button (phones have no Esc key). Labels are
+ * `onPause` backs the on-screen pause button (phones have no Esc key); `isHeld` (the input's)
+ * lights the desktop WASD keys. Labels are
  * read at creation: rebuild the HUD after a language switch.
  */
-export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onLunge: () => void, onPause: () => void) => {
+export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onLunge: () => void, onPause: () => void, isHeld: (code: string) => boolean) => {
+  const movePad = createMovePad(isHeld)
   const special = createSpecialControls(onSpecial)
   const mega = createMegaControls(onMega)
   const lunge = createLungeControls(onLunge)
@@ -92,6 +95,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
         hpText,
       ),
     ),
+    movePad.el,
     special.button,
     mega.button,
     lunge.button,
@@ -156,6 +160,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     }
     setText(kills, String(g.kills))
     setText(coins, formatPokeDollars(g.coins))
+    movePad.update()
     special.update(g)
     mega.update(g)
     lunge.update(g)

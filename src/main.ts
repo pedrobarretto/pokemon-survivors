@@ -101,8 +101,10 @@ const stickAnchor = h('div', { class: 'stick-anchor', 'aria-hidden': 'true' })
 document.body.append(stickAnchor)
 /** The anchor's center, measured once per layout (cleared on resize). */
 let stickCenter: Vec | null = null
+/** Mouse and keyboard: the fixed stick gives its corner to the WASD keys (`ui/movePad.ts`), and a touch on a touchscreen laptop floats. Same query as the CSS. */
+const finePointer = matchMedia('(hover: hover) and (pointer: fine)')
 const fixedStickCenter = (): Vec | null => {
-  if (settings().joystick !== 'fixed') return null
+  if (settings().joystick !== 'fixed' || finePointer.matches) return null
   if (!stickCenter) {
     const r = stickAnchor.getBoundingClientRect()
     stickCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
@@ -577,7 +579,7 @@ const announceRun = (start: ReplayStart, challenge: Run['challenge']) => {
 }
 
 const runHud = (game: Game) => {
-  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, () => game.phase === 'playing' && (game.phase = 'paused'))
+  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, () => game.phase === 'playing' && (game.phase = 'paused'), input.isHeld)
   requestAnimationFrame(syncMarkerInsets)
   return hud
 }

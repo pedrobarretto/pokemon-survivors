@@ -2547,6 +2547,75 @@ button {
   pointer-events: none;
 }
 
+/*
+ * Mouse and keyboard have no stick to place: the fixed mode puts the WASD keys
+ * (ui/movePad.ts) in its corner instead, lit while held. Same query as
+ * `finePointer` in main.ts, which stops the canvas drawing the stick there.
+ */
+.move-pad {
+  display: none;
+  position: absolute;
+  left: var(--stick-left);
+  bottom: var(--stick-bottom);
+  width: var(--stick-size);
+  height: var(--stick-size);
+  grid-template: 1fr 1fr / repeat(3, 1fr);
+  align-content: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-stick='fixed'] .move-pad {
+    display: grid;
+  }
+}
+
+.hud.menu-open .move-pad {
+  display: none;
+}
+
+.move-key {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: rgba(248, 248, 248, 0.85);
+  background: rgba(16, 24, 48, 0.3);
+  border: 2px solid rgba(16, 24, 48, 0.55);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 0 2px rgba(248, 248, 248, 0.35),
+    0 3px 0 rgba(16, 24, 48, 0.45);
+}
+
+.move-key.up {
+  grid-area: 1 / 2;
+}
+
+.move-key.left {
+  grid-area: 2 / 1;
+}
+
+.move-key.down {
+  grid-area: 2 / 2;
+}
+
+.move-key.right {
+  grid-area: 2 / 3;
+}
+
+.move-key.held {
+  color: var(--ink);
+  text-shadow: none;
+  background: rgba(248, 248, 248, 0.85);
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    0 1px 0 rgba(16, 24, 48, 0.45);
+  transform: translateY(2px);
+}
+
 /* Portrait and desktop: the status box goes above the stick. */
 [data-stick='fixed'] .status {
   bottom: calc(var(--stick-bottom) + var(--stick-size) + 16px);

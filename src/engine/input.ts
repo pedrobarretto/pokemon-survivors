@@ -12,6 +12,8 @@ import type { Vec } from './math'
 export type Input = {
   readMove: () => Vec
   readStick: () => Stick | null
+  /** Whether a key or pad direction typing `code` (after the bindings) is held: `KeyW`, `ArrowUp`… */
+  isHeld: (code: string) => boolean
   onKey: (handler: (key: string) => void) => () => void
   /** Delivers a key press that didn't come from the keyboard. */
   press: (key: string) => void
@@ -204,5 +206,7 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
     return center && { origin: center, knob: center, vec: { x: 0, y: 0 } }
   }
 
-  return { readMove, readStick, onKey, press: dispatch, poll, capture }
+  const isHeld = (code: string) => padHeld.includes(code) || [...held.values()].includes(code)
+
+  return { readMove, readStick, isHeld, onKey, press: dispatch, poll, capture }
 }
