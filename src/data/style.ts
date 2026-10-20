@@ -8,9 +8,10 @@ export const STYLE_SHELF = {
   /**
    * The Ambassador frame comes with bringing 3 friends (`game/referral.ts`);
    * the Supporter frame with a donation, its background and wallpaper with
-   * the gold tier (`game/supporters.ts`).
+   * the gold tier (`game/supporters.ts`); the Creator frame from the admin
+   * desk, for content creators (`data/creators.ts`).
    */
-  frame: { classic: 0, poke: 1000, great: 2000, ultra: 3500, master: 5000, ambassador: null, supporter: null },
+  frame: { classic: 0, poke: 1000, great: 2000, ultra: 3500, master: 5000, ambassador: null, supporter: null, creator: null },
   background: { night: 0, meadow: 1500, forest: 1500, cave: 1500, snow: 1500, tower: 2000, supporter: null },
   wallpaper: { classic: 0, forest: 1000, cave: 1000, snow: 1000, tower: 1500, supporter: null },
 } as const satisfies Record<string, Record<string, number | null>>

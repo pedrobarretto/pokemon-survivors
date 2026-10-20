@@ -131,6 +131,11 @@ const LAYOUT = [
         topic: 'Follow us on TikTok (@pokemonsurvivors), post a screenshot that shows it with your in-game @handle, and a Dev sends you a rare egg.',
       },
       {
+        name: 'creators',
+        slowmode: 60,
+        topic: `Stream or make videos of the game? Post your channel here to be featured in the lobby and on ${SITE}/en/creators/. The bot posts here when a creator goes live 🔴`,
+      },
+      {
         name: 'builds-and-strategy',
         type: 'forum',
         topic: 'One post per build or question. Tag the starter type and what it is about.',
@@ -217,6 +222,7 @@ const WELCOME = {
     `📚 **Pokédex:** ${SITE}/en/pokedex/`,
     `🆕 **Changelog:** ${SITE}/en/changelog/`,
     `💛 **Support the game:** ${SITE}/en/support/`,
+    `🎥 **Creators:** ${SITE}/en/creators/`,
     '',
     '**Where to go**',
     '📜 Read <#rules> first',
@@ -224,6 +230,7 @@ const WELCOME = {
     '🗣️ Change your starter, languages and pings in **Channels & Roles** (top of the channel list)',
     '💬 Hang out in <#general>',
     '🎁 Follow us on TikTok for a free rare egg: <#tiktok-reward>',
+    '🎥 Stream or make videos of the game? Get featured: <#creators>',
     '🏆 Post your Daily Challenge time in <#daily-challenge>',
     '🐛 Found a bug? <#bug-reports>',
     '💡 Have an idea? <#suggestions>',

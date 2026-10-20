@@ -5,13 +5,11 @@ import { t } from '../i18n'
 import { HATCHLINGS } from '../data/hatchlings'
 import { DISCORD_GIFT } from '../game/gifts'
 import { discordIcon } from '../render/art'
+import { DISCORD_INVITE } from '../site/routes'
 import { discordStatus } from './discordStatus'
 import { h, later, rich } from './dom'
 import { contentLine } from './gifts'
 import { hint, menu, type Screen } from './screens'
-
-/** The community server's permanent invite (made by the bot, on #welcome). */
-export const DISCORD_INVITE = 'https://discord.gg/Vx3RWFsjaD'
 
 /** Opens the server in a new tab (or the Discord app). */
 export const openDiscordServer = () => window.open(DISCORD_INVITE, '_blank', 'noopener')

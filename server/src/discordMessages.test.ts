@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ChangelogUpdate } from '../../src/site/changelog'
-import { greetMessage, hasWords, introDecision, patchMessage, patchPlan, podiumMessage } from './discordMessages'
+import { CREATOR_IDS, creatorUrl } from '../../src/data/creators'
+import { greetMessage, hasWords, introDecision, liveMessage, patchMessage, patchPlan, podiumMessage } from './discordMessages'
 
 const update = (date: string): ChangelogUpdate => {
   const text = { pt: date, en: date, es: date }
@@ -66,5 +67,14 @@ describe('the podium', () => {
     expect(text).toContain('🥈 **\\*Misty\\*** (@misty) · 10:00')
     expect(text).toContain('12 trainers took part')
     expect(podiumMessage('2026-10-18', [], 0, null)).toBeNull()
+  })
+})
+
+describe('a creator going live', () => {
+  it('links their live page without pinging anyone', () => {
+    const id = CREATOR_IDS[0]!
+    const m = liveMessage(id)
+    expect(m.embeds?.[0]?.url).toBe(creatorUrl(id, true))
+    expect(m.allowed_mentions).toEqual({ parse: [] })
   })
 })

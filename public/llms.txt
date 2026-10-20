@@ -53,6 +53,7 @@ Good fit for people looking for: a Pokémon version of Vampire Survivors, a Pok�
 ## More
 
 - [Community Discord server](https://discord.gg/Vx3RWFsjaD): English-speaking, with rooms for other languages; patch notes, the Daily Challenge podium and the daily outbreak are posted there. Players can link their game account to Discord to join, get their supporter role and a shiny Noibat as a Mystery Gift.
+- [Creators](https://www.pokemonsurvivors.com/en/creators/): streamers and video makers who play Pokémon Survivors (on TikTok and beyond), who is live right now, and how to get featured there and in the game's lobby (a Content Creator title, a creator frame and an "I'm live!" button). Portuguese: [Criadores](https://www.pokemonsurvivors.com/criadores/). Spanish: [Creadores](https://www.pokemonsurvivors.com/es/creadores/)
 - [Official TikTok](https://www.tiktok.com/@pokemonsurvivors): @pokemonsurvivors, short clips of the game (gameplay, Mega Evolutions, new features).
 - [Source code and screenshots (GitHub)](https://github.com/pedrobarretto/pokemon-survivors)
 - [Credits](https://github.com/pedrobarretto/pokemon-survivors/blob/main/CREDITS.md)

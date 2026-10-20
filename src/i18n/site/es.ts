@@ -20,6 +20,7 @@ export const siteEs: SiteMessages = {
     changelog: 'Novedades',
     legal: 'Legal',
     support: 'Apoya',
+    creators: 'Creadores',
     language: 'Idioma',
   },
   footer: {
@@ -698,5 +699,37 @@ export const siteEs: SiteMessages = {
     ],
     issues: 'Abrir un issue en GitHub',
     source: 'Ver el código fuente',
+  },
+
+  creators: {
+    title: 'Creadores de Pokémon Survivors | Directos y videos del juego',
+    description:
+      'Quienes juegan Pokémon Survivors en directo y en video, en TikTok y más allá. Mira quién está en vivo ahora, sigue a tus creadores favoritos y descubre cómo aparecer aquí y en el lobby del juego.',
+    h1: 'Creadores',
+    lead: 'Gente que juega Pokémon Survivors en vivo y en video. Pásate, dales un follow y cuéntales que vienes de aquí.',
+    liveNow: 'EN VIVO AHORA',
+    liveBanner: (name, platform) => `${name} está jugando en vivo en ${platform}.`,
+    watchLive: 'Ver en vivo',
+    visit: (platform) => `Ver en ${platform}`,
+    live: 'EN VIVO',
+    lang: { pt: 'Portugués', en: 'Inglés', es: 'Español' },
+    langLabel: 'Idioma',
+    partner: (name) => `${name}, su Pokémon compañero`,
+    join: {
+      title: '¿Haces directos o videos del juego?',
+      lead: 'Queremos mostrar tu canal aquí y en el lobby del juego, para todos los que juegan. Cualquier plataforma, cualquier idioma y canales de cualquier tamaño.',
+      steps: [
+        { title: 'Juega', text: 'Haz un directo o un video de Pokémon Survivors.' },
+        { title: 'Manda tu canal', text: 'Publica el enlace en #creators en nuestro Discord.' },
+        { title: 'Aparece', text: 'Tu canal sale aquí y en el lobby, con el Pokémon que elijas.' },
+      ],
+      perksTitle: 'Lo que ganas',
+      perks: [
+        'El título Creador(a) de Contenido y el marco de creador en el juego.',
+        'Un botón “¡Estoy en vivo!” en tu Tarjeta de Entrenador: el lobby, esta página y el Discord avisan a todos.',
+        'Un lugar en el lobby, que todos ven al abrir el juego.',
+      ],
+      cta: 'Entrar al Discord',
+    },
   },
 }

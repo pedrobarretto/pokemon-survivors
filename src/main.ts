@@ -13,6 +13,7 @@ import { advancePacer, pacer, resetPacer } from './engine/pacing'
 import { context2d, resetCanvases } from './engine/pixelart'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
+import { CREATOR_IDS, isCreatorId, type CreatorId } from './data/creators'
 import { BIOME_ORDER, BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
 import { MEGA_LINES, MEGAS, megasOf, type MegaId } from './data/megas'
@@ -24,6 +25,7 @@ import type { TraitId } from './data/traits'
 import { REGIONS, STARTERS } from './data/starters'
 import { challengeStart, nextIsOfficial, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, type HatchlingId, type PlayableId } from './data/hatchlings'
+import { stageLive } from './creators'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, stageGifts, startAccount, syncSave } from './account'
 import { identify, startAnalytics, track, type ErrorContext } from './analytics'
 import { BAG_ITEM_IDS, BAG_ITEMS, useArmed, type BagItem } from './game/bag'
@@ -1601,6 +1603,15 @@ const devGifts = {
   invite: (handle = 'ash', name = 'Ash') => {
     stageInvite(handle, name)
     if (screen?.el.classList.contains('title-home')) showTitle()
+  },
+  /**
+   * Stages who is live for the lobby's Criadores card instead of asking the API: `ps.live('birdseyegames')`,
+   * every creator with `ps.live(true)`, the API again with `ps.live(false)`. Returns the creators.
+   */
+  live: (who: CreatorId | boolean = true) => {
+    stageLive(who === false ? null : who === true ? CREATOR_IDS : isCreatorId(who) ? [who] : [])
+    if (screen?.el.classList.contains('title-home')) showTitle()
+    return CREATOR_IDS
   },
 }
 

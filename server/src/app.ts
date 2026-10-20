@@ -6,6 +6,7 @@ import { logger } from 'hono/logger'
 import { parseAdminGift, parseAdminQuery } from '../../src/game/admin'
 import { parseBugReport } from '../../src/game/bugReport'
 import { challengeOpen } from '../../src/game/challenge'
+import { creatorOf, isCreatorId } from '../../src/data/creators'
 import { parseDonation } from '../../src/data/donations'
 import { isPollOption } from '../../src/data/supporters'
 import { isDayKey } from '../../src/game/day'
@@ -20,6 +21,7 @@ import type { AdminStore } from './admin'
 import type { Verify } from './auth'
 import type { BugReports } from './bugReports'
 import type { Checks } from './checks'
+import type { CreatorStore } from './creators'
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report } from './errors'
@@ -48,6 +50,8 @@ export type AppDeps = {
   discord: Pick<DiscordLink, 'link' | 'unlink'>
   /** The gift desk: who is admin (asked of Clerk), finding players and sending them gifts. */
   admin: Pick<AdminStore, 'isAdmin' | 'search' | 'send' | 'recent'>
+  /** Which content creators are live now. */
+  creators: Pick<CreatorStore, 'live' | 'set'>
   /** Webhook secrets: Stripe's signing secret and Payment Link, AbacatePay's URL secret. Unset ones answer 503. */
   webhooks: { stripeSecret?: string; stripePaymentLink: string | null; abacatePaySecret?: string }
   allowedOrigin: (origin: string) => boolean
@@ -144,6 +148,10 @@ const FINISH_ERRORS = { unknown: 404, mismatch: 409, clock: 422, challenge: 400 
  *   to the community server and gives them their supporter role. `{ username, joined }`; 404 when
  *   Clerk has no verified Discord account for them, 503 when Clerk can't answer.
  * - `DELETE /discord/link` (auth): forgets it (the player unlinked Discord). `{ unlinked: true }`.
+ * - `GET /creators/live`: `{ live }` (`CreatorLive[]`), the content creators live now, newest stream first.
+ * - `PUT /creators/:id/live` (auth) `{ live }`: the creator says they're live (for `LIVE_HOURS`) or done.
+ *   Only the creator's own account (`account` in `data/creators.ts`) or an admin. `{ live, until }`;
+ *   404 for an unknown creator, 403 for anyone else.
  * - `/admin…` (admin): the gift desk, 403 for anyone whose verified email isn't in `ADMIN_EMAILS`.
  *   `GET /admin`: `{ admin: true }`. `GET /admin/users?q=`: `{ users }` (`AdminUser[]`) by handle or email.
  *   `POST /admin/gifts` `{ userId, content, request }`: sends a gift (`parseAdminGift`), `{ sent }`
@@ -151,7 +159,7 @@ const FINISH_ERRORS = { unknown: 404, mismatch: 409, clock: 422, challenge: 400 
  *   (`AdminSent[]`), the latest sent by hand. `PUT /admin/suggestions/:id` `{ status }`: marks an idea
  *   `done` (shipped), `open` again or `hidden` (off the board). `{ status }`, 404 for an unknown idea.
  */
-export const createApp = ({ store, ranking, gifts, checks, verify, donate, supporters, suggestions, bugReports, discord, admin, webhooks, allowedOrigin, ping, report }: AppDeps) => {
+export const createApp = ({ store, ranking, gifts, checks, verify, donate, supporters, suggestions, bugReports, discord, admin, creators, webhooks, allowedOrigin, ping, report }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
 
@@ -358,6 +366,24 @@ export const createApp = ({ store, ranking, gifts, checks, verify, donate, suppo
   app.delete('/discord/link', auth, async (c) => {
     await discord.unlink(c.var.userId)
     return c.json({ unlinked: true })
+  })
+
+  app.get('/creators/live', async (c) => {
+    c.header('Cache-Control', 'public, max-age=30')
+    return c.json({ live: await creators.live() })
+  })
+
+  app.put('/creators/:id/live', auth, smallBody, async (c) => {
+    const id = c.req.param('id')
+    const body = await json(c)
+    if (!isRecord(body) || typeof body.live !== 'boolean') return c.json({ error: 'expected { live }' }, 400)
+    if (!isCreatorId(id)) return c.json({ error: 'unknown' }, 404)
+    const { account } = creatorOf(id)
+    const own = account !== null && (await ranking.profileName(c.var.userId))?.handle === account
+    if (!own && !(await admin.isAdmin(c.var.userId))) return c.json({ error: 'forbidden' }, 403)
+    const until = await creators.set(id, body.live)
+    console.log(`${c.var.userId} set ${id} ${until ? 'live' : 'offline'}`)
+    return c.json({ live: until !== null, until })
   })
 
   app.get('/me/supporter', auth, async (c) => c.json(await supporters.mine(c.var.userId)))

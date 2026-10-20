@@ -1,3 +1,4 @@
+import { creatorOf, creatorUrl, PLATFORMS, type CreatorId } from '../../src/data/creators'
 import { ENEMIES, type EnemyId } from '../../src/data/enemies'
 import { HATCHLINGS, PLAYABLE } from '../../src/data/hatchlings'
 import { formatTime } from '../../src/engine/math'
@@ -21,6 +22,7 @@ const CHANGELOG_URL = `${SITE}/en/changelog/`
 const YELLOW = 0xf8d030
 const GOLD = 0xf0b000
 const PURPLE = 0xa040a0
+const LIVE_RED = 0xe8306a
 
 export type Embed = {
   title?: string
@@ -168,6 +170,24 @@ export const podiumMessage = (day: DayKey, places: readonly PodiumPlace[], total
 }
 
 /** The day's outbreak, posted when the day starts. */
+/** A content creator just went live (`data/creators.ts`): their live page, with their partner Pokémon's portrait. */
+export const liveMessage = (id: CreatorId): OutgoingMessage => {
+  const c = creatorOf(id)
+  return {
+    allowed_mentions: { parse: [] },
+    embeds: [
+      {
+        title: `🔴 ${c.name} is live on ${PLATFORMS[c.platform].name}!`,
+        url: creatorUrl(id, true),
+        description: `${c.name} is streaming Pokémon Survivors right now. Drop by, say hi and tell them the server sent you 💛`,
+        color: LIVE_RED,
+        thumbnail: { url: portraitUrl(c.partner.dex) },
+        footer: { text: `@${c.handle}` },
+      },
+    ],
+  }
+}
+
 export const outbreakMessage = (day: DayKey, id: EnemyId): OutgoingMessage => {
   const { name, dex } = ENEMIES[id]
   return {

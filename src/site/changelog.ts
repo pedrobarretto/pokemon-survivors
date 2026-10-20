@@ -27,6 +27,37 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-20',
+    title: { pt: 'Criadores', en: 'Creators', es: 'Creadores' },
+    highlights: [
+      { pt: 'Criadores no lobby: veja quem faz lives e vídeos do jogo e quem está ao vivo agora.', en: 'Creators in the lobby: see who streams and makes videos of the game, and who is live right now.', es: 'Creadores en el lobby: mira quién hace directos y videos del juego, y quién está en vivo ahora.' },
+      { pt: 'Nova página Criadores no site, com um aviso grande quando alguém entra ao vivo.', en: 'A new Creators page on the site, with a big banner when someone goes live.', es: 'Nueva página de Creadores en el sitio, con un aviso grande cuando alguien entra en vivo.' },
+      { pt: 'Faz lives ou vídeos? Mande seu canal no Discord e ganhe o título Criador(a) de Conteúdo e uma moldura nova.', en: 'Do you stream or make videos? Send your channel on Discord and get the Content Creator title and a new frame.', es: '¿Haces directos o videos? Manda tu canal en Discord y gana el título Creador(a) de Contenido y un marco nuevo.' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Criadores', en: 'Creators', es: 'Creadores' },
+        notes: [
+          {
+            pt: 'O lobby ganhou o card Criadores em Hoje: um criador por dia, com o Pokémon parceiro dele andando. Quando alguém está ao vivo, o card fica vermelho, sobe para o topo e leva direto para a live.',
+            en: "The lobby has a new Creators card under Today: one creator a day, with their partner Pokémon walking. When someone is live, the card turns red, moves to the top and takes you straight to the stream.",
+            es: 'El lobby tiene la tarjeta Creadores en Hoy: un creador por día, con su Pokémon compañero caminando. Cuando alguien está en vivo, la tarjeta se pone roja, sube arriba y te lleva directo al directo.',
+          },
+          {
+            pt: 'A página Criadores no site lista todo mundo que faz lives e vídeos do jogo, mostra quem está ao vivo agora e explica como aparecer lá.',
+            en: "The site's Creators page lists everyone who streams and makes videos of the game, shows who is live right now and explains how to get featured.",
+            es: 'La página Creadores del sitio muestra a todos los que hacen directos y videos del juego, quién está en vivo ahora y cómo aparecer allí.',
+          },
+          {
+            pt: 'Criadores ganham o título Criador(a) de Conteúdo, a moldura de criador e um botão “Estou ao vivo!” no Cartão de Treinador, que avisa o lobby, o site e o Discord.',
+            en: 'Creators get the Content Creator title, the creator frame and an “I’m live!” button on their Trainer Card, which tells the lobby, the site and the Discord.',
+            es: 'Los creadores ganan el título Creador(a) de Contenido, el marco de creador y un botón “¡Estoy en vivo!” en su Tarjeta de Entrenador, que avisa al lobby, al sitio y al Discord.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-19',
     title: { pt: 'Modo difícil e convites', en: 'Hard mode and invites', es: 'Modo difícil e invitaciones' },
     highlights: [

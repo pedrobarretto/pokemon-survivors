@@ -2,11 +2,12 @@
  * Progressive enhancement for the static site pages. The HTML is complete
  * without it; this only adds the Pokédex filters, shiny toggles and tap-to-walk,
  * the donation form (with the account's @, the thank-you's code and the
- * supporters' wall), and remembers the language for the game. It must never
+ * supporters' wall), who is live on the creators page, and remembers the language for the game. It must never
  * import game code (plain data like `data/donations` is fine), so the game and
  * the site never load each other's bundles.
  */
 
+import { CREATOR_IDS, parseLive, type CreatorLive } from '../data/creators'
 import { inBrazil, parseDonation } from '../data/donations'
 
 /** Same key as `src/i18n`: picking PT/EN/ES here makes "Play" open the game in that language. */
@@ -23,6 +24,16 @@ for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-lang]'))
     }
   })
 }
+
+/** On phones the nav scrolls sideways: brings the current page's tab into view (once the pixel font sized the tabs). */
+const centerNav = () => {
+  const current = document.querySelector<HTMLElement>('.site-nav [aria-current="page"]')
+  const nav = current?.parentElement
+  if (!current || !nav || nav.scrollWidth <= nav.clientWidth) return
+  const tab = current.getBoundingClientRect()
+  nav.scrollLeft += tab.left - nav.getBoundingClientRect().left - (nav.clientWidth - tab.width) / 2
+}
+void document.fonts.ready.then(centerNav)
 
 /** Lowercase without accents or punctuation, like the cards' `data-search`. */
 const normalize = (text: string) =>
@@ -355,3 +366,44 @@ const support = (ways: HTMLElement) => {
 
 const ways = document.getElementById('donate-ways')
 if (ways) support(ways)
+
+/** Who is live (`GET /creators/live`). In dev, `?live=<id>` (or `?live=all`) stages it without the API. */
+const liveCreators = async (): Promise<CreatorLive[]> => {
+  const staged = import.meta.env.DEV ? new URLSearchParams(location.search).get('live') : null
+  const now = Date.now()
+  if (staged) return parseLive((staged === 'all' ? CREATOR_IDS : [staged]).map((id) => ({ id, until: new Date(now + 3_600_000).toISOString() })), now)
+  const body = await api('/creators/live')
+  return isObject(body) ? parseLive(body.live, now) : []
+}
+
+/**
+ * The creators page: the cards of whoever is live go first, in red, their
+ * button pointing at the live; the banner over the list shows the newest
+ * stream with its creator's partner.
+ */
+const creators = async (grid: HTMLElement) => {
+  const live = await liveCreators()
+  const cards = live.flatMap(({ id }) => grid.querySelector<HTMLElement>(`[data-creator="${id}"]`) ?? [])
+  for (const card of [...cards].reverse()) {
+    card.classList.add('is-live')
+    grid.prepend(card)
+    const watch = card.querySelector<HTMLAnchorElement>('.creator-watch')
+    if (watch) {
+      watch.href = card.dataset.liveUrl ?? watch.href
+      watch.textContent = watch.dataset.watch ?? watch.textContent
+    }
+  }
+  const first = cards[0]
+  const banner = document.getElementById('live-now')
+  if (!first || !banner) return
+  const text = banner.querySelector('p')
+  const watch = banner.querySelector<HTMLAnchorElement>('.live-now-watch')
+  const sprite = first.querySelector('.creator-stage .sp')
+  if (text) text.textContent = (banner.dataset.banner ?? '').replace('{name}', first.querySelector('h2')?.textContent ?? '').replace('{platform}', first.querySelector('.platform-chip')?.textContent ?? '')
+  if (watch) watch.href = first.dataset.liveUrl ?? watch.href
+  if (sprite) banner.querySelector('.live-now-sprite')?.replaceChildren(sprite.cloneNode())
+  banner.hidden = false
+}
+
+const grid = document.getElementById('creator-grid')
+if (grid) void creators(grid)

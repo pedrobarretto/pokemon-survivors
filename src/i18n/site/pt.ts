@@ -39,6 +39,7 @@ export const sitePt = {
     changelog: 'Novidades',
     legal: 'Legal',
     support: 'Apoie',
+    creators: 'Criadores',
     language: 'Idioma',
   },
   footer: {
@@ -719,6 +720,39 @@ export const sitePt = {
     ],
     issues: 'Abrir uma issue no GitHub',
     source: 'Ver o código-fonte',
+  },
+  creators: {
+    title: 'Criadores de Pokémon Survivors | Lives e vídeos do jogo',
+    description:
+      'Quem joga Pokémon Survivors ao vivo e em vídeo, no TikTok e onde mais estiver. Veja quem está ao vivo agora, siga seus criadores favoritos e saiba como aparecer aqui e no lobby do jogo.',
+    h1: 'Criadores',
+    lead: 'Gente que joga Pokémon Survivors ao vivo e em vídeo. Passe lá, deixe um follow e conte que veio daqui!',
+    /** The banner over the list while someone is live (filled by `client.ts`). */
+    liveNow: 'AO VIVO AGORA',
+    liveBanner: (name: string, platform: string) => `${name} está jogando ao vivo no ${platform}.`,
+    watchLive: 'Assistir ao vivo',
+    visit: (platform: string) => `Ver no ${platform}`,
+    live: 'AO VIVO',
+    /** The language they stream in. */
+    lang: { pt: 'Português', en: 'Inglês', es: 'Espanhol' },
+    langLabel: 'Idioma',
+    partner: (name: string) => `${name}, o Pokémon parceiro`,
+    join: {
+      title: 'Faz lives ou vídeos do jogo?',
+      lead: 'A gente quer mostrar seu canal aqui e no lobby do jogo, para todo mundo que joga. Vale qualquer plataforma, qualquer idioma e canal de qualquer tamanho.',
+      steps: [
+        { title: 'Jogue', text: 'Faça uma live ou um vídeo de Pokémon Survivors.' },
+        { title: 'Mande seu canal', text: 'Poste o link no canal #creators do nosso Discord.' },
+        { title: 'Apareça', text: 'Seu canal entra aqui e no lobby, com o Pokémon que você escolher.' },
+      ],
+      perksTitle: 'Quem entra ganha',
+      perks: [
+        'O título Criador(a) de Conteúdo e a moldura de criador no jogo.',
+        'Um botão “Estou ao vivo!” no Cartão de Treinador: o lobby, esta página e o Discord avisam todo mundo.',
+        'Destaque no lobby, que todo jogador vê ao abrir o jogo.',
+      ],
+      cta: 'Entrar no Discord',
+    },
   },
 }
 

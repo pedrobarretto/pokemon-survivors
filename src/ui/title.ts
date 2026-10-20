@@ -5,6 +5,7 @@ import { ACTIONS } from '../engine/bindings'
 import { joystick, type Input, type Stick } from '../engine/input'
 import { formatTime, type Vec } from '../engine/math'
 import { blitCentered, context2d, ellipse } from '../engine/pixelart'
+import { creatorOf, creatorUrl, featuredCreator, PLATFORMS, type CreatorId } from '../data/creators'
 import { ENEMIES } from '../data/enemies'
 import { HATCHLINGS, PLAYABLE } from '../data/hatchlings'
 import { isReady } from '../game/eggs'
@@ -14,7 +15,8 @@ import { dayKey, missionStatus } from '../game/missions'
 import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import type { WallEntry } from '../game/supporters'
 import { formatNumber, locale, t } from '../i18n'
-import { bulbIcon, coinIcon, discordIcon, eggIcon, giftIcon, heartIcon, medalIcon, newsIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon } from '../render/art'
+import { fetchLive } from '../creators'
+import { bulbIcon, coinIcon, discordIcon, eggIcon, giftIcon, heartIcon, medalIcon, newsIcon, platformIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon } from '../render/art'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
 import { inviterName } from '../ranking'
@@ -44,6 +46,7 @@ export type LobbyFocus =
   | 'outbreak'
   | 'challenge'
   | 'missions'
+  | 'creator'
   | 'hall'
   | 'gifts'
   | 'invite'
@@ -211,6 +214,50 @@ const missionsCard = () => {
   )
   el.setAttribute('aria-label', `${m.missions}: ${m.missionsLeft(left)}`)
   return el
+}
+
+/**
+ * Criadores: a content creator (`data/creators.ts`) with their partner
+ * walking, whoever is live (a red AO VIVO, the card jumping to the top of
+ * Hoje), else one a day in turn. `open` sends the player to their live, or
+ * to their channel.
+ */
+const creatorCard = () => {
+  const m = t().home
+  const walker = h('canvas', { class: 'lobby-walker', width: 30, height: 32, 'aria-hidden': 'true' })
+  const icon = h('img', { class: 'lobby-icon lobby-platform', alt: '' })
+  const name = h('b', {})
+  const el = todayCard('creator', m.creators, h('span', { class: 'lobby-live-dot', 'aria-hidden': 'true' }), null, walker, icon, name)
+  const label = el.querySelector('.lobby-card-label span')
+  const day = Math.floor(today().getTime() / 86_400_000)
+  let shown: { id: CreatorId; live: boolean } = { id: featuredCreator(day, []), live: false }
+  const paint = () => {
+    const c = creatorOf(shown.id)
+    const platform = PLATFORMS[c.platform].name
+    void loadSpecies(c.partner.dex, c.partner.shiny).catch(() => {})
+    name.textContent = c.name
+    icon.src = platformIcon(c.platform)
+    if (label) label.textContent = shown.live ? m.live : m.creators
+    el.classList.toggle('live', shown.live)
+    el.setAttribute('aria-label', m.creatorWatch(c.name, platform, shown.live))
+  }
+  paint()
+  void fetchLive().then((live) => {
+    if (!el.isConnected || live.length === 0) return
+    shown = { id: featuredCreator(day, live.map((l) => l.id)), live: true }
+    paint()
+    el.parentElement?.querySelector('.lobby-rail-label')?.after(el)
+  })
+  const tick = (time: number) => {
+    pixelSize(walker, Math.max(1, Math.round(uiDpr() * (layout() === 'wide' ? 1.5 : 1))))
+    const ctx = context2d(walker)
+    ctx.clearRect(0, 0, walker.width, walker.height)
+    const { partner } = creatorOf(shown.id)
+    const s = loadedSprites(partner.dex, partner.shiny)
+    if (s) drawPokemon(ctx, s, 'Walk', 0, time, walker.width / 2, walker.height - 2)
+  }
+  const open = () => window.open(creatorUrl(shown.id, shown.live), '_blank', 'noopener')
+  return { el, tick, open }
 }
 
 /* ---------------- Novidades ---------------- */
@@ -541,7 +588,7 @@ const HOTKEYS: Readonly<Record<string, LobbyFocus>> = { KeyG: 'gifts', KeyN: 'ne
  * Title screen over the live meadow: the pixel logo and a blinking "press
  * start", then the lobby. The top bar holds the Trainer chip, the wallet,
  * Novidades, `?` (how to play) and the gear. Hoje has the day's cards (Surto, Desafio,
- * Missões), the Hall da Fama card sits beside them (Convide amigos, Discord and the official profiles
+ * Missões, Criadores), the Hall da Fama card sits beside them (Convide amigos, Discord and the official profiles
  * under it; on landscape phones Discord and the profiles move to the top bar), the saved partner stands
  * in the middle, and JOGAR goes with the collection dock (Pokédex, Ovos,
  * Loja, Ranking, Ideias). Arrows move between all of them by where they are on
@@ -573,6 +620,7 @@ export const titleScreen = (root: HTMLElement, input: Input, actions: TitleActio
   let lobby: HTMLElement | null = null
   let tickers: ((time: number) => void)[] = []
   let stage: ReturnType<typeof partnerStage> | null = null
+  let creator: ReturnType<typeof creatorCard> | null = null
   /** A press on the meadow: a tap until it travels `TAP_SLOP`, then a joystick. */
   let drag: { id: number; origin: Vec; stick: Stick | null } | null = null
   /** A tap on the meadow, for the next frame to send the partner to. */
@@ -625,6 +673,7 @@ export const titleScreen = (root: HTMLElement, input: Input, actions: TitleActio
     news: () => openOver(actions.news),
     discord: () => openOver(actions.discord),
     outbreak: () => toast(root, rich(`*${ENEMIES[outbreakToday()].name}*: ${t().outbreak.blurb}`), 3600, 'outbreak'),
+    creator: () => creator?.open(),
     challenge: actions.challenge,
     missions: actions.missions,
     gifts: actions.gifts,
@@ -664,10 +713,11 @@ export const titleScreen = (root: HTMLElement, input: Input, actions: TitleActio
     )
 
     const outbreak = outbreakCard()
+    creator = creatorCard()
     stage = partnerStage(press('play'))
     stage.el.append(pressable(giftButton(), 'gifts'))
     actions.meadow.meet(stage.partner)
-    tickers = [outbreak.tick, stage.tick]
+    tickers = [outbreak.tick, creator.tick, stage.tick]
     const hall = navigable(hallCard(() => (select('hall', false), playSfx('select'), track('lobby_press', { entry: 'hall' }), later(() => openOver((focus) => actions.supporters(focus, 'pick'))))), 'hall')
     const side = h(
       'div',
@@ -704,6 +754,7 @@ export const titleScreen = (root: HTMLElement, input: Input, actions: TitleActio
       pressable(outbreak.el, 'outbreak'),
       pressable(challengeCard(), 'challenge'),
       pressable(missionsCard(), 'missions'),
+      pressable(creator.el, 'creator'),
     )
     lobby = h('div', { class: 'lobby' }, h('h1', { class: 'sr-only' }, 'Pokémon Survivors'), h('div', { class: 'lobby-logo' }, logo), todayEl, side, stage.el, bottom)
     intro.replaceWith(lobby)

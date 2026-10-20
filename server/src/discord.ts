@@ -4,10 +4,12 @@ import { outbreakOf } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
 import { CHANGELOG } from '../../src/site/changelog'
 import type { Sql } from './db'
+import type { CreatorId } from '../../src/data/creators'
 import {
   challengeMessage,
   greetMessage,
   introDecision,
+  liveMessage,
   outbreakMessage,
   patchMessage,
   patchPlan,
@@ -26,7 +28,8 @@ import type { RankingStore } from './ranking'
  * - #patch-notes gets each new changelog update when the API boots;
  * - #daily-challenge and #daily-outbreak get the day's challenge and outbreak
  *   when the Brasília day starts, and the challenge's podium once its day
- *   settled (`ribbonsDue`, with the ribbons).
+ *   settled (`ribbonsDue`, with the ribbons);
+ * - #creators hears when a content creator goes live (`live`).
  * Channels and roles are found by name. Every post claims a key in
  * `discord_posts` first, so two instances (a rolling deploy) never post twice.
  */
@@ -48,6 +51,7 @@ const NAMES = {
   patchNotes: 'patch-notes',
   challenge: 'daily-challenge',
   outbreak: 'daily-outbreak',
+  creators: 'creators',
   trainer: 'Trainer',
   patchPing: 'Patch Notes Ping',
   challengePing: 'Daily Challenge Ping',
@@ -179,7 +183,11 @@ const connectGateway = (token: string, onEvent: (type: string, data: unknown) =>
   open()
 }
 
-/** Starts the bot: patch notes now, the daily posts every `EVERY_MS` and the gateway for the gate. Never throws. */
+/**
+ * Starts the bot: patch notes now, the daily posts every `EVERY_MS` and the
+ * gateway for the gate. Never throws. `live` posts a creator's stream in
+ * #creators (once per stream, keyed by its start), once the bot found the channel.
+ */
 export const startDiscord = (config: DiscordConfig, deps: { store: DiscordStore; ranking: Pick<RankingStore, 'podium'> }) => {
   const call = restClient(config.token)
   const { store, ranking } = deps
@@ -198,6 +206,13 @@ export const startDiscord = (config: DiscordConfig, deps: { store: DiscordStore;
     }
   }
 
+  /** #creators, once `run` found it. */
+  let creators: string | null = null
+
+  const live = (id: CreatorId, startedAt: Date) => {
+    if (creators) void post(`live:${id}:${startedAt.toISOString()}`, creators, liveMessage(id)).catch((err) => console.error('discord live post failed', err))
+  }
+
   const run = async () => {
     const channels = idsByName(await call('GET', `${guild}/channels`))
     const roles = idsByName(await call('GET', `${guild}/roles`))
@@ -211,6 +226,7 @@ export const startDiscord = (config: DiscordConfig, deps: { store: DiscordStore;
     const patchNotes = channel(NAMES.patchNotes)
     const challenge = channel(NAMES.challenge)
     const outbreak = channel(NAMES.outbreak)
+    creators = channel(NAMES.creators)
     const trainer = role(NAMES.trainer)
 
     // Patch notes: what the changelog gained since the last boot.
@@ -295,4 +311,5 @@ export const startDiscord = (config: DiscordConfig, deps: { store: DiscordStore;
   }
 
   void run().catch((err) => console.error('discord failed to start', err))
+  return { live }
 }

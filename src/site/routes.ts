@@ -15,6 +15,9 @@ export const SOCIALS = {
 
 export type SocialId = keyof typeof SOCIALS
 
+/** The community Discord's permanent invite (made by the bot, on #welcome). */
+export const DISCORD_INVITE = 'https://discord.gg/Vx3RWFsjaD'
+
 export const SOCIAL_IDS = Object.keys(SOCIALS) as SocialId[]
 
 /**
@@ -37,6 +40,7 @@ export const ROUTES = {
   changelog: { pt: '/novidades/', en: '/en/changelog/', es: '/es/novedades/' },
   legal: { pt: '/legal/', en: '/en/legal/', es: '/es/legal/' },
   support: { pt: '/apoie/', en: '/en/support/', es: '/es/apoya/' },
+  creators: { pt: '/criadores/', en: '/en/creators/', es: '/es/creadores/' },
 } as const satisfies Record<string, Record<Locale, string>>
 
 export type RouteId = keyof typeof ROUTES

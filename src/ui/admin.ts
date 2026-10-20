@@ -1,12 +1,16 @@
 import { accountHandle } from '../account'
 import { findPlayers, sendGift, sentGifts } from '../admin'
+import { GIFT_TITLES, type GiftTitleId } from '../data/achievements'
+import { CREATOR_IDS, creatorOf, type CreatorId } from '../data/creators'
 import { HATCHLING_IDS, HATCHLINGS } from '../data/hatchlings'
+import { styleIds, stylePrice, type FrameId } from '../data/style'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import type { AdminSent, AdminUser } from '../game/admin'
 import { EGG_TIER_IDS, type EggTier } from '../game/eggs'
 import type { GiftContent } from '../game/gifts'
 import { t } from '../i18n'
+import { fetchLive, setLive } from '../creators'
 import { contentLine } from './gifts'
 import { h, later, rich } from './dom'
 import type { Screen } from './screens'
@@ -23,7 +27,10 @@ const SEARCH_MS = 350
 /** A second tap on "Enviar" within this long sends; after it, the button asks again. */
 const CONFIRM_MS = 4000
 
-const KINDS = { egg: 'Ovo', coins: 'Pokédólares (₽)', shinyHatch: 'Shiny de uma família', shinyPick: 'Shiny à escolha (ticket)' } as const
+const KINDS = { egg: 'Ovo', coins: 'Pokédólares (₽)', shinyHatch: 'Shiny de uma família', shinyPick: 'Shiny à escolha (ticket)', title: 'Título', frame: 'Moldura' } as const
+
+/** Frames that are never sold, only given (Ambassador, Supporter, Creator). */
+const GIFT_FRAMES = styleIds('frame').filter((id) => stylePrice('frame', id) === null)
 
 type Kind = keyof typeof KINDS
 
@@ -43,8 +50,10 @@ const giftLine = (content: GiftContent, ...after: (Node | string)[]) => {
 
 /**
  * The desk: search a player by handle or email, pick one, choose a gift
- * (an egg, ₽, a family's shiny or a shiny ticket), see it as the player will
- * and send it with a second tap. Below, the latest gifts sent by hand and
+ * (an egg, ₽, a family's shiny, a shiny ticket, a gift-only title or frame),
+ * see it as the player will and send it with a second tap. Below, the
+ * content creators with their AO VIVO switch (for a creator without an
+ * account, or one who forgot), then the latest gifts sent by hand and
  * whether they were claimed. Back or Esc close it and call `onClose`.
  */
 export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void): Screen => {
@@ -64,6 +73,10 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
   const tier = h('select', { class: 'field-input admin-select' }, ...EGG_TIER_IDS.map((id) => option(id, t().eggs.tiers[id])))
   const amount = h('input', { class: 'field-input', type: 'number', inputmode: 'numeric', min: 1, max: 100000, step: 100, value: 1000 })
   const family = h('select', { class: 'field-input admin-select' }, ...HATCHLING_IDS.map((id) => option(id, HATCHLINGS[id].name)))
+  const title = h('select', { class: 'field-input admin-select' }, ...GIFT_TITLES.map((id) => option(id, t().achievements.titles[id])))
+  const frame = h('select', { class: 'field-input admin-select' }, ...GIFT_FRAMES.map((id) => option(id, t().mart.styles.frame[id])))
+  /** The control under PRESENTE that picks the gift's detail, per kind (none for a shiny ticket). */
+  const controls: Partial<Record<Kind, HTMLElement>> = { egg: tier, coins: amount, shinyHatch: family, title, frame }
   const detail = h('span', { class: 'field-box' })
   const preview = h('div', { class: 'admin-preview box' })
   const message = h('p', { class: 'field-message' })
@@ -79,6 +92,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     message,
     send,
   )
+  const creators = h('div', { class: 'admin-recent admin-creators' })
   const recent = h('div', { class: 'admin-recent' })
   const back = h('button', { class: 'btn', type: 'button' }, 'Voltar')
 
@@ -101,6 +115,10 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
         return { kind: 'shinyHatch', family: HATCHLING_IDS.find((id) => id === family.value) ?? HATCHLING_IDS[0]! }
       case 'shinyPick':
         return { kind: 'shinyPick' }
+      case 'title':
+        return { kind: 'title', title: GIFT_TITLES.find((id): id is GiftTitleId => id === title.value) ?? GIFT_TITLES[0] }
+      case 'frame':
+        return { kind: 'style', style: { slot: 'frame', id: GIFT_FRAMES.find((id): id is FrameId => id === frame.value) ?? GIFT_FRAMES[0]! } }
     }
   }
 
@@ -109,7 +127,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     armed = 0
     send.textContent = 'Enviar presente'
     const k = kind.value
-    const control = k === 'egg' ? tier : k === 'coins' ? amount : k === 'shinyHatch' ? family : null
+    const control = isKind(k) ? (controls[k] ?? null) : null
     detail.replaceChildren(...(control ? [control] : []))
     detail.parentElement?.classList.toggle('hidden', !control)
     const c = content()
@@ -173,6 +191,35 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     )
   }
 
+  /** One creator: who, where, and a button that turns their live on or off (a second tap confirms turning it off). */
+  const creatorLine = (id: CreatorId, until: string | null) => {
+    const c = creatorOf(id)
+    const button = h('button', { class: `btn ${until ? 'admin-live-on' : ''}`, type: 'button' }, until ? '● AO VIVO · encerrar' : 'Marcar ao vivo')
+    button.addEventListener('click', async () => {
+      button.setAttribute('disabled', '')
+      button.textContent = 'Salvando…'
+      const done = await setLive(id, !until)
+      if (closed) return
+      playSfx(done === 'failed' ? 'hurt' : 'select')
+      void loadCreators()
+    })
+    return h(
+      'li',
+      {},
+      h('b', {}, c.name),
+      h('span', {}, `@${c.handle} · ${c.lang.toUpperCase()}${c.account ? ` · conta @${c.account}` : ' · sem conta no jogo'}`),
+      h('small', {}, until ? `ao vivo até ${when(until)}` : 'offline'),
+      button,
+    )
+  }
+
+  const loadCreators = async () => {
+    const live = await fetchLive()
+    if (closed) return
+    const until = (id: CreatorId) => live.find((l) => l.id === id)?.until ?? null
+    creators.replaceChildren(h('span', { class: 'field-label' }, 'CRIADORES · AO VIVO'), h('ul', {}, ...CREATOR_IDS.map((id) => creatorLine(id, until(id)))))
+  }
+
   send.addEventListener('click', async () => {
     const c = content()
     if (!c || !target || busy) return
@@ -199,7 +246,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     }
   })
 
-  for (const el of [kind, tier, amount, family]) el.addEventListener('input', refresh)
+  for (const el of [kind, tier, amount, family, title, frame]) el.addEventListener('input', refresh)
   query.addEventListener('input', () => {
     window.clearTimeout(timer)
     timer = window.setTimeout(() => void search(), SEARCH_MS)
@@ -213,6 +260,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     status,
     results,
     giftPart,
+    creators,
     recent,
     back,
   )
@@ -236,6 +284,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
   const offKeys = input.onKey((key) => key === 'Escape' && close())
 
   refresh()
+  void loadCreators()
   void loadRecent()
   root.append(el)
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) query.focus()

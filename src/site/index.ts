@@ -1,5 +1,6 @@
 import { LOCALE_IDS, type Locale } from '../i18n'
 import { changelogPage } from './pages/changelog'
+import { creatorsPage } from './pages/creators'
 import { guidePage } from './pages/guide'
 import { legalPage } from './pages/legal'
 import { pokedexPage } from './pages/pokedex'
@@ -14,6 +15,7 @@ const RENDER: Record<PageId, (locale: Locale) => string> = {
   changelog: changelogPage,
   legal: legalPage,
   support: supportPage,
+  creators: creatorsPage,
 }
 
 export type SitePage = {

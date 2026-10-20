@@ -3249,6 +3249,49 @@ button {
   color: #389048;
 }
 
+.lobby-card.creator .lobby-card-label {
+  color: #a03070;
+}
+
+/* Criadores while someone is live: a red frame and label, with a pulsing dot before AO VIVO. */
+.lobby-card.creator.live {
+  --frame: #e02848;
+}
+
+.lobby-card.creator.live .lobby-card-label {
+  color: #e02848;
+}
+
+.lobby-live-dot {
+  display: none;
+  flex: none;
+  order: -1;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e02848;
+  box-shadow: 0 0 0 2px #f8b8c8;
+}
+
+.lobby-card.creator.live .lobby-live-dot {
+  display: block;
+  animation: live-pulse 1.2s steps(2, jump-none) infinite;
+}
+
+@keyframes live-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.25;
+  }
+}
+
+.lobby-icon.lobby-platform {
+  width: 18px;
+  height: 18px;
+}
+
 .lobby-card-row {
   display: flex;
   align-items: center;
@@ -4011,8 +4054,20 @@ button {
   }
   .lobby-today {
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 6px;
     padding: 0;
+  }
+  /* Criadores takes a slim row of its own under the day's three cards (on top of them while live). */
+  .lobby-card.creator {
+    flex: 1 1 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 9px;
+  }
+  .lobby-card.creator .lobby-card-row {
+    min-height: 24px;
   }
   .lobby-card {
     flex: 1 1 0;
@@ -5633,6 +5688,11 @@ button {
 
 .trainer-row.out span {
   flex: none;
+}
+
+/* A creator's "I'm live": stream pink until they are. */
+.trainer-row.live {
+  color: #c02060;
 }
 
 /* Wide screens and landscape phones: the card on the left, its rows on the right. */
@@ -9510,6 +9570,15 @@ button.hall-tile:hover {
 
 .admin-recent small.claimed {
   color: #30a050;
+}
+
+.admin-creators .btn {
+  justify-self: start;
+  margin-top: 2px;
+}
+
+.admin-creators .btn.admin-live-on {
+  color: #e8306a;
 }
 
 /* ---------- Ideias: the idea board ---------- */

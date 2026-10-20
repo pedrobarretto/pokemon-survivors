@@ -32,6 +32,12 @@ const HEART: BallArt = [
   { 1: '#301018', 2: '#f05888', 4: '#ffffff' },
 ]
 
+/** The Creator's play button: a rounded hot-pink tile with a white triangle (1 outline, 2 the tile, 4 the triangle). */
+const PLAY: BallArt = [
+  ['.11111.', '1222221', '1242221', '1244221', '1242221', '1222221', '.11111.'],
+  { 1: '#300818', 2: '#e8306a', 4: '#ffffff' },
+]
+
 /** The Supporter's star, for its corners (same palette keys as a ball: 1 outline, 2 the star, 4 its shine). */
 const STAR: BallArt = [
   ['...1...', '..141..', '1112111', '1222221', '.12221.', '.12121.', '.11.11.'],
@@ -49,6 +55,8 @@ export const CARD_FRAMES = {
   ambassador: { edge: '#301018', light: '#f8e098', main: '#e05888', shade: '#581830', accent: '#f8d030', ball: HEART },
   /** A donor's thank-you: emerald and gold, gold stars in the corners. */
   supporter: { edge: '#0c2418', light: '#f8e8a0', main: '#30a070', shade: '#0c3820', accent: '#f8d030', ball: STAR },
+  /** For content creators: stream pink and cyan, play buttons in the corners. */
+  creator: { edge: '#140c28', light: '#c8f8f8', main: '#e8306a', shade: '#3a0820', accent: '#25e8e8', ball: PLAY },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */

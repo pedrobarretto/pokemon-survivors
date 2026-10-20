@@ -1210,3 +1210,309 @@ html:not(.js) #donate-account {
 .footer-links .support-link {
   color: #ff98b8;
 }
+
+/* ---------- Creators page ---------- */
+
+.creators-body {
+  display: grid;
+  gap: 28px;
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+/* While someone is live (`client.ts`): a red banner over the list, with their partner. */
+.live-now {
+  --frame: #e02848;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 18px;
+  padding: 14px 20px;
+}
+
+.live-now h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #e02848;
+}
+
+.live-now p {
+  margin: 0;
+  font-size: 22px;
+}
+
+.live-now-sprite {
+  display: grid;
+  place-items: end center;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: linear-gradient(#c8e8a0, #a8d880);
+  box-shadow: inset 0 0 0 3px #88b860;
+}
+
+.live-now-sprite .sp {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.live-now-watch,
+.creator-card.is-live .creator-watch {
+  background: #e02848;
+  color: #fff !important;
+  box-shadow: 0 4px 0 #801028;
+}
+
+.live-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e02848;
+  box-shadow: 0 0 0 3px #f8c0cc;
+  animation: live-pulse 1.2s steps(2, jump-none) infinite;
+}
+
+@keyframes live-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.25;
+  }
+}
+
+@media (max-width: 600px) {
+  .live-now {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 14px;
+  }
+  .live-now-watch {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+}
+
+.creator-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.creator-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(330px, 100%);
+  padding: 14px 16px 20px;
+  text-align: center;
+  scroll-margin-top: 16px;
+}
+
+.creator-card:target {
+  box-shadow:
+    inset 0 0 0 3px var(--paper),
+    inset 0 0 0 6px var(--yellow),
+    0 0 0 4px var(--yellow);
+}
+
+.creator-card.is-live {
+  --frame: #e02848;
+}
+
+/* A patch of sky and grass where the partner walks. */
+.creator-art {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  width: 100%;
+  height: 176px;
+  padding-bottom: 18px;
+  overflow: hidden;
+  border-radius: 6px;
+  background:
+    linear-gradient(transparent 62%, #a8d880 62%, #a8d880 64%, #c8e8a0 64%, #a8d880),
+    linear-gradient(#78b8f0, #b8e0f8 62%);
+  box-shadow: inset 0 0 0 3px #88b860;
+}
+
+.creator-card.is-live .creator-art {
+  box-shadow: inset 0 0 0 3px #e02848;
+}
+
+.creator-stage .sp {
+  display: block;
+}
+
+.creator-live-badge,
+.platform-chip {
+  position: absolute;
+  top: 10px;
+  font-family: var(--title);
+  font-size: 8px;
+  line-height: 1;
+  padding: 6px 7px 5px;
+  border-radius: 4px;
+  color: #fff;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.creator-live-badge {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  left: 10px;
+  background: #e02848;
+}
+
+.creator-live-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  animation: live-pulse 1.2s steps(2, jump-none) infinite;
+}
+
+.creator-card.is-live .creator-live-badge {
+  display: inline-flex;
+}
+
+.platform-chip {
+  right: 10px;
+  background: #283040;
+}
+
+/* TikTok's black with its cyan and red echoes. */
+.platform-chip.tiktok {
+  background: #161823;
+  text-shadow: -1px 0 0 #25f4ee, 1px 0 0 #fe2c55;
+}
+
+.creator-card h2 {
+  margin: 16px 0 6px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.creator-handle {
+  margin: 0;
+  color: var(--muted);
+}
+
+.creator-lang {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 16px;
+  font-size: 20px;
+}
+
+.creator-lang span {
+  color: var(--muted);
+}
+
+.creator-lang b {
+  font-family: var(--title);
+  font-size: 8px;
+  font-weight: 400;
+  padding: 5px 5px 4px;
+  border-radius: 3px;
+  background: var(--paper-2);
+}
+
+.creator-watch {
+  align-self: stretch;
+  text-align: center;
+}
+
+.creators-join {
+  padding: 20px 22px 22px;
+}
+
+.creators-join h2 {
+  margin: 0 0 10px;
+  font-size: clamp(12px, 2.4vw, 16px);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.creators-join h3 {
+  margin: 20px 0 8px;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.creators-join p {
+  margin: 0;
+}
+
+.creators-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.creators-steps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+  padding: 12px 14px;
+  border: 3px solid #d0d4e4;
+  border-radius: 6px;
+  background: var(--paper-2);
+  counter-increment: step;
+}
+
+.creators-steps li::before {
+  content: counter(step);
+  grid-row: 1 / 3;
+  align-self: center;
+  font-family: var(--title);
+  font-size: 18px;
+  color: #e8306a;
+}
+
+.creators-steps b {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.creators-perks {
+  margin: 0 0 18px;
+  padding-left: 1.3em;
+}
+
+.creators-perks li::marker {
+  content: '★ ';
+  color: #e8306a;
+}
+
+.btn-play.discord {
+  background: #5865f2;
+  color: #fff !important;
+  box-shadow: 0 4px 0 #283070;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot,
+  .creator-live-badge::before {
+    animation: none;
+  }
+}

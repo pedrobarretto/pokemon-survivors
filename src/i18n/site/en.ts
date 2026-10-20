@@ -20,6 +20,7 @@ export const siteEn: SiteMessages = {
     changelog: 'Changelog',
     legal: 'Legal',
     support: 'Support',
+    creators: 'Creators',
     language: 'Language',
   },
   footer: {
@@ -694,5 +695,37 @@ export const siteEn: SiteMessages = {
     ],
     issues: 'Open an issue on GitHub',
     source: 'View the source code',
+  },
+
+  creators: {
+    title: 'Pokémon Survivors creators | Streams and videos of the game',
+    description:
+      'The people who stream and make videos of Pokémon Survivors, on TikTok and beyond. See who is live right now, follow your favorite creators and find out how to get featured here and in the game’s lobby.',
+    h1: 'Creators',
+    lead: 'People who play Pokémon Survivors live and on video. Drop by, give them a follow and tell them we sent you!',
+    liveNow: 'LIVE NOW',
+    liveBanner: (name, platform) => `${name} is playing live on ${platform}.`,
+    watchLive: 'Watch live',
+    visit: (platform) => `See on ${platform}`,
+    live: 'LIVE',
+    lang: { pt: 'Portuguese', en: 'English', es: 'Spanish' },
+    langLabel: 'Language',
+    partner: (name) => `${name}, their partner Pokémon`,
+    join: {
+      title: 'Do you stream or make videos of the game?',
+      lead: 'We want to show your channel here and in the game’s lobby, to everyone who plays. Any platform, any language, any channel size.',
+      steps: [
+        { title: 'Play', text: 'Stream or record a video of Pokémon Survivors.' },
+        { title: 'Send your channel', text: 'Post the link in #creators on our Discord.' },
+        { title: 'Get featured', text: 'Your channel shows up here and in the lobby, with the Pokémon you pick.' },
+      ],
+      perksTitle: 'What you get',
+      perks: [
+        'The Content Creator title and the creator frame in the game.',
+        'An “I’m live!” button on your Trainer Card: the lobby, this page and the Discord tell everyone.',
+        'A spot in the lobby, which every player sees when they open the game.',
+      ],
+      cta: 'Join the Discord',
+    },
   },
 }

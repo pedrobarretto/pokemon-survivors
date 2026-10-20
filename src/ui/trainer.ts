@@ -3,10 +3,12 @@ import { isAdmin } from '../admin'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { MEDALS } from '../data/achievements'
+import { creatorOf, creatorOfAccount, PLATFORMS, type CreatorId } from '../data/creators'
+import { fetchLive, setLive } from '../creators'
 import { RIBBON_TIERS, ribbonCounts } from '../game/ribbons'
 import { savedSupporterTier, trainerAvatar } from '../game/trainer'
 import { formatNumber, LOCALES, locale, t } from '../i18n'
-import { discordIcon, medalIcon, pokeballIcon, ribbonIcon, supporterIcon } from '../render/art'
+import { discordIcon, medalIcon, platformIcon, pokeballIcon, ribbonIcon, supporterIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
 import { fetchSupporterStatus } from '../supporters'
 import { adminScreen } from './admin'
@@ -19,6 +21,7 @@ import { openSettings } from './settings'
 import { sharePreview, trainerShare, trainerTotals } from './share'
 import { hint, menu, type Screen } from './screens'
 import { backButton, gearButton, shellBody, topBar } from './shell'
+import { toast } from './toasts'
 
 /**
  * The trainer's avatar: their Pokémon (`trainerAvatar`) once signed in, a
@@ -70,16 +73,16 @@ export const trainerChip = (input: Input, opts: { onOpen: () => void }) => {
 /** Month and year of a date, in the current language (`10/2026`). */
 const monthYear = (iso: string) => new Date(iso).toLocaleDateString(LOCALES[locale()].tag, { month: '2-digit', year: 'numeric' })
 
-/** One row under the card: a label, maybe an icon (`wide`: Discord's, not square), and what it opens. `tone: 'out'` is the red sign out. */
-type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone?: 'out' }
+/** One row under the card: a label, maybe an icon (`wide`: Discord's, not square), and what it opens. `tone: 'out'` is the red sign out, `'live'` a creator's "I'm live". */
+type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone?: 'out' | 'live' }
 
 /**
  * The Trainer Card (from the Trainer chip): avatar, name, @handle, title,
  * runs, wins, Pokédex and shinies, medals and ribbons, the linked Discord,
  * the sync state (a tap syncs), then rows to edit the profile, see it, share
  * the card image, Discord (link it, or the server once linked), Apoiadores
- * (supporters), missions and achievements, the admin's gift desk and sign
- * out. Guests get the same card from the local save, with "Criar conta /
+ * (supporters), missions and achievements, a content creator's live switch
+ * (`data/creators.ts`), the admin's gift desk and sign out. Guests get the same card from the local save, with "Criar conta /
  * Entrar" and "Entrar com Discord" when accounts are on. It follows the account state.
  *
  * `supporters` opens Apoiadores over it (it can start a run, so the caller
@@ -102,6 +105,8 @@ export const trainerCardScreen = (
   /** When the supporter's first donation came in (asked once, for the Apoiador row). */
   let since: string | null = null
   let askedSince = false
+  /** Whether this account's creator is live now (asked once per card), null until known. */
+  let live: boolean | null = null
   let closed = false
   /** The row highlighted when a screen opened from the card, highlighted again when it comes back. */
   let resume: number | null = null
@@ -122,6 +127,18 @@ export const trainerCardScreen = (
     })
   }
 
+  /** Turns the creator's live on or off, says how it went and redraws the switch. */
+  const toggleLive = async (id: CreatorId) => {
+    const m = t().trainer
+    const until = await setLive(id, !live)
+    if (closed) return
+    if (until === 'failed') return void (playSfx('hurt'), toast(root, m.liveFailed))
+    live = until !== null
+    playSfx(live ? 'unlock' : 'select')
+    toast(root, live ? m.liveOn(PLATFORMS[creatorOf(id).platform].name) : m.liveOff, 4200)
+    build(false)
+  }
+
   const rowsFor = (s: AccountState, tier: ReturnType<typeof savedSupporterTier>): Row[] => {
     const m = t().trainer
     const share: Row = { label: m.share, run: () => openSub((back) => sharePreview(root, input, trainerShare(loadSave().partner), back)) }
@@ -134,6 +151,7 @@ export const trainerCardScreen = (
     }
     if (s.kind !== 'signedIn') return [...(s.kind === 'guest' && accountsEnabled ? [{ label: m.join, run: () => void signIn() }, discord] : []), share, missions]
     const handle = s.handle
+    const creator = creatorOfAccount(handle)
     return [
       { label: handle === null ? m.createProfile : m.editProfile, run: () => openSub((back) => profileEditor(root, input, back)) },
       ...(handle ? [{ label: m.viewProfile, run: () => openSub((back) => profileScreen(root, input, handle, back)) }] : []),
@@ -141,18 +159,26 @@ export const trainerCardScreen = (
       discord,
       ...(tier ? [{ label: since ? m.supporterSince(tier === 'gold', monthYear(since)) : t().supporters.badge(tier), icon: supporterIcon(tier), run: () => openSub(opts.supporters) }] : []),
       missions,
+      ...(creator && live !== null
+        ? [{ label: live ? m.endLive : m.goLive, icon: platformIcon(creatorOf(creator).platform), tone: live ? undefined : ('live' as const), run: () => void toggleLive(creator) }]
+        : []),
       // Admin only, so not translated (see `ui/admin.ts`).
       ...(admin ? [{ label: 'Painel admin', run: () => openSub((back) => adminScreen(root, input, back)) }] : []),
       { label: m.signOut, tone: 'out' as const, run: () => void signOut() },
     ]
   }
 
-  /** Asks the API, once per card, what only it knows: admin, and the supporter's date. Each answer redraws. */
+  /** Asks the API, once per card, what only it knows: admin, the supporter's date and a creator's live. Each answer redraws. */
   const askApi = (s: AccountState, tier: ReturnType<typeof savedSupporterTier>) => {
     if (s.kind !== 'signedIn') return
     if (admin === null) {
       admin = false
       void isAdmin().then((yes) => yes && !closed && ((admin = true), build(false)))
+    }
+    const creator = creatorOfAccount(s.handle)
+    if (creator && live === null) {
+      live = false
+      void fetchLive().then((list) => !closed && ((live = list.some((l) => l.id === creator)), build(false)))
     }
     if (tier && !askedSince) {
       askedSince = true

@@ -14,7 +14,7 @@ export type PageMeta = {
   css?: string
 }
 
-const NAV: readonly RouteId[] = ['play', 'pokedex', 'guide', 'changelog']
+const NAV: readonly RouteId[] = ['play', 'pokedex', 'guide', 'changelog', 'creators']
 
 const others = (locale: Locale) => LOCALE_IDS.filter((l) => l !== locale)
 

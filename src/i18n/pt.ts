@@ -91,6 +91,11 @@ export const pt = {
     challengeOpen: 'Ainda não jogado hoje',
     missions: 'Missões',
     missionsLeft: (n: number) => (n === 1 ? '1 missão de hoje por fazer' : `${n} missões de hoje por fazer`),
+    /** The Criadores card: a content creator, live now or one a day in turn. */
+    creators: 'CRIADORES',
+    live: 'AO VIVO',
+    /** The Criadores card for screen readers: watch them live, or see their channel. */
+    creatorWatch: (name: string, platform: string, live: boolean) => (live ? `${name} está ao vivo no ${platform}: assistir` : `${name} no ${platform}: ver o canal`),
     hall: 'HALL DA FAMA',
     /** The Hall da Fama card's ticker: the newest supporter. */
     hallJoined: (handle: string, today: boolean) => (today ? `@${handle} entrou hoje` : `@${handle} entrou no Hall`),
@@ -133,6 +138,12 @@ export const pt = {
     share: 'Compartilhar cartão',
     supporterSince: (gold: boolean, date: string) => `${gold ? 'Apoiador(a) Ouro' : 'Apoiador(a)'} desde ${date}`,
     missions: 'Missões e conquistas',
+    /** A content creator's switch (`data/creators.ts`): the lobby, the site and the Discord say they're live. */
+    goLive: 'Estou ao vivo!',
+    endLive: 'Encerrar a live',
+    liveOn: (platform: string) => `Pronto! O lobby, o site e o Discord avisam que você está ao vivo no ${platform}.`,
+    liveOff: 'Live encerrada. Valeu por divulgar o jogo!',
+    liveFailed: 'Não deu agora. Tente de novo.',
     join: 'Criar conta / Entrar',
     signOut: 'Sair da conta',
     hintKeys: '↑ ↓ escolher · ENTER abrir · ESC voltar',
@@ -640,7 +651,7 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)' } satisfies Record<FrameId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', creator: 'Criador(a)' } satisfies Record<FrameId, string>,
       background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado' } satisfies Record<BackgroundId, string>,
       wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas' } satisfies Record<WallpaperId, string>,
     },
@@ -1389,7 +1400,7 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', creator: 'Faz lives e vídeos de Pokémon Survivors' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
       firstRun: 'Primeiros passos',
@@ -1468,6 +1479,7 @@ export const pt = {
       alpha100: 'Caçador de Alfas',
       ambassador: 'Embaixador(a)',
       supporter: 'Apoiador(a)',
+      creator: 'Criador(a) de Conteúdo',
     } satisfies Record<TitleId, string>,
     goals: {
       runs: (n: string) => (n === '1' ? 'Jogue uma partida' : `Jogue ${n} partidas`),

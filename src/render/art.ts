@@ -1,5 +1,6 @@
 import { canvasCache, context2d, createCanvas, fromStrings, lazy, type Palette, type PixelSprite } from '../engine/pixelart'
 import type { Medal } from '../data/achievements'
+import type { PlatformId } from '../data/creators'
 import type { ItemId } from '../data/items'
 import type { BagItem } from '../game/bag'
 import type { SupporterTier } from '../game/supporters'
@@ -857,6 +858,11 @@ const SOCIAL_ART = {
 
 /** Each official profile's icon (`SOCIALS` in `site/routes.ts`). */
 export const socialIcon = (id: SocialId) => toIconUrl(`social:${id}`, SOCIAL_ART[id])
+
+const PLATFORM_ART = { tiktok: SOCIAL_ART.tiktok } as const satisfies Record<PlatformId, () => PixelSprite>
+
+/** The icon of a platform content creators stream on (`PLATFORMS` in `data/creators.ts`). */
+export const platformIcon = (id: PlatformId) => toIconUrl(`social:${id}`, PLATFORM_ART[id])
 
 /** iOS's Share: an arrow leaving an open tray, in iOS blue (the install how-to, `ui/install.ts`). 1 outline, 2 blue. */
 const SHARE = [
