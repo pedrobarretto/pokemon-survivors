@@ -1,4 +1,4 @@
-import { canvasCache, context2d, createCanvas, ellipse, lazy, onCanvasReset, type PixelSprite } from '../engine/pixelart'
+import { canvasCache, context2d, createCanvas, drawEllipse, lazy, onCanvasReset, type PixelSprite } from '../engine/pixelart'
 import type { BiomeId } from '../data/biomes'
 import { CLIFF_CRESTS, CLIFFS, LAKES, TERRAIN as RULES, type SolidKind, type Tier } from '../data/terrain'
 import { featuresNear, groundAt, type Solid } from '../game/terrain'
@@ -1016,7 +1016,7 @@ export const drawTerrainGround = (ctx: CanvasRenderingContext2D, g: Game, biome:
           // Painted art is shaded by its own foot, tucked under where it meets the ground.
           const rx = art ? art.foot + 1 : shadowOf(s.kind)
           const ry = Math.round(rx * 0.4)
-          ctx.drawImage(ellipse(rx, ry, SHADOW), Math.round(s.x + 2 - rx), Math.round(art ? s.y + 2 - ry * 2 : s.y - ry))
+          drawEllipse(ctx, rx, ry, SHADOW, Math.round(s.x + 2 - rx), Math.round(art ? s.y + 2 - ry * 2 : s.y - ry))
         }
         if (SKIRTED.has(s.kind)) blit(ctx, skirtOf(biome, (s.x * 7 + s.y * 13) & (SKIRT_LOOKS - 1)), s.x, s.y + 1)
       }

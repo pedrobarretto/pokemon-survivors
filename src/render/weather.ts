@@ -1,4 +1,4 @@
-import { context2d, createCanvas, ellipse, fromStrings, onCanvasReset, type PixelSprite } from '../engine/pixelart'
+import { context2d, createCanvas, drawEllipse, fromStrings, onCanvasReset, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import type { WeatherId } from '../data/biomes'
 import { WEATHER } from '../data/weather'
@@ -199,7 +199,7 @@ const fog = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: numb
     const rx = 18 + Math.floor(hash2(i, 3, 19) * 22)
     const x = mod(hash2(i, 1, 19) * 2048 - camX + t * (6 + hash2(i, 4, 19) * 8), w + rx * 4) - rx * 2
     const y = mod(hash2(i, 2, 19) * 2048 - camY, h + 20) - 10
-    ctx.drawImage(ellipse(rx, Math.max(3, Math.round(rx * 0.22)), '#e8e4f0'), Math.round(x - rx), Math.round(y))
+    drawEllipse(ctx, rx, Math.max(3, Math.round(rx * 0.22)), '#e8e4f0', Math.round(x - rx), Math.round(y))
   }
   ctx.restore()
   ctx.drawImage(fogVeil(w, h, WEATHER.fog.sight ?? 0.42), Math.round(px - w), Math.round(py - h))

@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRotated, textSprite } from '../engine/pixelart'
+import { blitEllipse, blitRotated, blitText } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { TAU } from '../engine/math'
 import { HAMMER_WINDUP, HEAVY_HOP, HEAVY_LIFT, PERISH_TIME } from '../game/eggMove3Rules'
@@ -450,7 +450,7 @@ const drawPerish = (ctx: Ctx, a: Attack, t: number) => {
     const beat = (PERISH_TIME - a.age) % 1
     const pop = beat > 0.85 ? 1 : 0
     ctx.globalAlpha = Math.min(1, a.age / 0.25)
-    blitCentered(ctx, textSprite(String(left), left === 1 ? '#f85868' : '#d0c8e8', '#201828'), a.x, head - pop)
+    blitText(ctx, String(left), left === 1 ? '#f85868' : '#d0c8e8', a.x, head - pop, '#201828')
     note(ctx, a.x + 4, head - 8 + Math.sin(t * 5 + a.id) * 1.5, '#706080')
     ctx.globalAlpha = 1
     return
