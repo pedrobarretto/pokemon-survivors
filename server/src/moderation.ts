@@ -157,7 +157,8 @@ export const moderationStore = (sql: Sql) => ({
           if (!user) return null
           await tx`insert into save_resets (user_id, data, revision, reason) select user_id, data, revision, ${m.reason ?? 'edited save'} from saves where user_id = ${m.userId}`
           await tx`update saves set data = '{"version": 1}', version = 1, revision = revision + 1, updated_at = now() where user_id = ${m.userId}`
-          await tx`update users set save_reset_revision = (select revision from saves where user_id = ${m.userId}) where id = ${m.userId}`
+          // The wiped save's kit doesn't count as earned anymore (`rankedKit.ts`).
+          await tx`update users set save_reset_revision = (select revision from saves where user_id = ${m.userId}), kit_amnesty = 0, kit_amnesty_at = now() where id = ${m.userId}`
           await tx`update runs set verified = false where user_id = ${m.userId} and finished_at is not null`
           break
         }

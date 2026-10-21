@@ -105,9 +105,10 @@ const writeQueue = (queue: Pending[]) => {
  * `outdated` when it played by older rules than the API's: the game was
  * updated while it played), never ranked because its start got no token (`unranked`), or taken but
  * kept off the boards because its replay didn't reach the API in time while
- * it played (`unlisted`: the connection dropped; only with the API's `STREAM_ENFORCE`).
+ * it played (`unlisted`: the connection dropped; only with the API's `STREAM_ENFORCE`), or because the
+ * account's ranked runs don't back its Poké Mart upgrades yet (`unbacked`; only with the API's `KIT_ENFORCE`).
  */
-export type RankOutcome = { kind: 'ranked'; ranks: RunRanks; challenge: ChallengePlace | null } | { kind: 'queued' | 'rejected' | 'outdated' | 'unranked' | 'unlisted' }
+export type RankOutcome = { kind: 'ranked'; ranks: RunRanks; challenge: ChallengePlace | null } | { kind: 'queued' | 'rejected' | 'outdated' | 'unranked' | 'unlisted' | 'unbacked' }
 
 const parseRanks = (body: unknown): RunRanks | null => {
   const ranks = isRecord(body) && isRecord(body.ranks) ? body.ranks : null
@@ -220,7 +221,8 @@ const flushOnce = async () => {
     const listed = !isRecord(body) || body.listed !== false
     const outdated = status === 400 && error === 'outdated'
     if (outdated) rulesBehind()
-    done.set(p.token, outdated ? { kind: 'outdated' } : !ranks ? { kind: 'rejected' } : listed ? { kind: 'ranked', ranks, challenge: isRecord(body) ? parseChallengePlace(body.challenge) : null } : { kind: 'unlisted' })
+    const unlisted = isRecord(body) && body.unlisted === 'kit' ? 'unbacked' : 'unlisted'
+    done.set(p.token, outdated ? { kind: 'outdated' } : !ranks ? { kind: 'rejected' } : listed ? { kind: 'ranked', ranks, challenge: isRecord(body) ? parseChallengePlace(body.challenge) : null } : { kind: unlisted })
     // A newer result of the same run (endless mode) may have queued meanwhile: only this one is done.
     writeQueue(readQueue().filter((q) => q.token !== p.token || q.result.time > p.result.time))
   }

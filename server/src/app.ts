@@ -131,8 +131,9 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   into endless mode), 409 for a replaced token, a `seq` another chunk holds (`committed`) or a chunk
  *   that doesn't start where the stream is (`gap`), 422 when the clock can't fit it.
  * - `PUT /runs/:token` (auth) `RunResult & { replay }`: records how it ended and
- *   returns `{ ranks, challenge, listed }` (`ChallengePlace`, null for any other run; `listed`
- *   false when, with `STREAM_ENFORCE` on, it wasn't streamed in time and stays off the boards); the
+ *   returns `{ ranks, challenge, listed, unlisted }` (`ChallengePlace`, null for any other run; `listed`
+ *   false when, with `STREAM_ENFORCE` on, it wasn't streamed in time, or with `KIT_ENFORCE` on, the account
+ *   doesn't back its start kit, and it stays off the boards: `unlisted` says which, `stream` or `kit`); the
  *   replay may be re-simulated afterwards (`checks.ts`), and the run may make the player's invite count (`gifts.credit`). A challenge run's replay must
  *   be its day's challenge.
  *   400 for an implausible result, a missing replay or a replay of another run,
@@ -295,7 +296,7 @@ export const createApp = ({ store, ranking, gifts, checks, verify, donate, suppo
       ranking.runRanks(c.var.userId, runMode(result.starter), result.difficulty),
       finished.challenge ? ranking.challengePlace(c.var.userId, finished.challenge, finished.official === true) : null,
     ])
-    return c.json({ ranks, challenge, listed: finished.listed })
+    return c.json({ ranks, challenge, listed: finished.listed, unlisted: finished.unlisted })
   })
 
   app.get('/boards/:difficulty', maybeAuth, async (c) => {

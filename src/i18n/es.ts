@@ -339,6 +339,7 @@ export const es: Messages = {
     outdated: 'El juego se actualizó mientras jugabas, así que esta partida no pudo entrar al ranking. La próxima ya es en la versión nueva.',
     unranked: 'Esta partida quedó fuera del ranking: empezó sin conexión o con el juego abierto en otra pestaña o dispositivo.',
     unlisted: 'Esta partida quedó fuera del ranking: la conexión se cayó mientras jugabas. Igual cuenta en tu perfil.',
+    unbacked: 'Esta partida quedó fuera del ranking: las partidas de tu cuenta en el ranking todavía no respaldan tus mejoras del Poké Mart. Sigue jugando con tu cuenta y lo harán. Igual cuenta en tu perfil.',
     guest: 'Entra con una cuenta para aparecer en el ranking.',
     noHandle: 'Crea tu perfil en la pantalla de cuenta para aparecer en el ranking.',
     open: 'Ranking',

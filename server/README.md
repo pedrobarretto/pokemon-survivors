@@ -16,7 +16,7 @@ The merge rules are not here: `mergeSaves` and `applyPush` live in `src/game/syn
 | `POST /runs` | Body `{ challenge? }`. `{ token, seed, outbreak, halloween, rules }` for the player's next run: the start token (the id of a new `runs` row), the seed the run must play, the day's outbreak and whether the day is haunted by the server's clock (`outbreakAt` and `halloweenAt`, the day `outbreakFits` and `halloweenFits` check; a challenge run plays its own), and the `RULES_VERSION` its replay must play by (a game behind it reloads into the newer build before the run, so the run isn't refused as `outdated`). It replaces the player's other unfinished token of the same kind (see [Ranked runs](#ranked-runs)). 429 past 30 tokens in 10 minutes. With `challenge` (a Brasília day, `YYYY-MM-DD`) it's that day's Desafio do dia, with the day's seed; 400 when that challenge isn't open (its day, or 10 minutes past it) |
 | `POST /runs/:token/start` | The run of a token asked for ahead starts now: its clock restarts. 204; 404 unknown or finished token, 409 replaced by a newer one |
 | `PUT /runs/:token/chunks/:seq` | Body `ReplayChunk` (`src/game/replayStream.ts`): the replay's ticks `[from, to)` (15 to 30 s of them) while the run plays, chunk `seq` 0, 1, 2… (see [Replay streaming](#replay-streaming)). `{ lag }`, how many seconds late it came (null for a retry of a chunk already in, which changes nothing). 400 wrong shape or size, 404 unknown token or a run that ended (a victory's goes on, into endless mode), 409 replaced token, a `seq` another chunk holds (`committed`) or a chunk that doesn't start where the stream is (`gap`), 422 more play than the wall clock since the start allows |
-| `PUT /runs/:token` | Body `RunResult & { replay }` (`src/game/ranking.ts`, `src/game/replay.ts`). Records how the run ended and returns `{ ranks: { day, week, all }, challenge, listed }` (`ChallengePlace` for a challenge run, else null; `listed` false when, with `STREAM_ENFORCE` on, its replay wasn't streamed in time and the run stays off the boards). 400 implausible, without a replay, a replay of another run (or of a screen bigger than the game shows, `parseView`), `seed` (a replay of another seed than the token's), `outdated` (a replay of older rules than the API's) or a challenge run whose replay isn't its day's challenge, 404 unknown token, 409 a replaced token, one that contradicts what the run recorded, or `rewrite` (a replay that changes inputs its chunks committed), 422 more play than the wall clock since the token allows, 503 a replay of newer rules (the API isn't deployed yet; the game keeps it and sends it again) |
+| `PUT /runs/:token` | Body `RunResult & { replay }` (`src/game/ranking.ts`, `src/game/replay.ts`). Records how the run ended and returns `{ ranks: { day, week, all }, challenge, listed, unlisted }` (`ChallengePlace` for a challenge run, else null; `listed` false when the run stays off the boards: with `STREAM_ENFORCE` on, its replay wasn't streamed in time, and with `KIT_ENFORCE` on, the account doesn't back its start kit; `unlisted` says which, `stream` or `kit`, see [Ranked kit](#ranked-kit)). 400 implausible, without a replay, a replay of another run (or of a screen bigger than the game shows, `parseView`), `seed` (a replay of another seed than the token's), `outdated` (a replay of older rules than the API's) or a challenge run whose replay isn't its day's challenge, 404 unknown token, 409 a replaced token, one that contradicts what the run recorded, or `rewrite` (a replay that changes inputs its chunks committed), 422 more play than the wall clock since the token allows, 503 a replay of newer rules (the API isn't deployed yet; the game keeps it and sends it again) |
 | `GET /boards/:difficulty` | `?period=day\|week\|all&starter=<id>&friends=1`. `{ entries, me }`: the top 50, each player once with their best run (its id in `run`, to report it), and the asker's own line. Banned players never show |
 | `GET /challenge/:day` | `?friends=1`. `ChallengeBoard`: the day's official attempts (top 50, the asker's line), how many took part and whether the asker made theirs (`attempted`) |
 | `GET /profiles/:handle` | The public profile: name, title, Pokédex counts, records, recent runs, follower counts. 404 if nobody has the handle, or its player is banned |
@@ -106,6 +106,56 @@ order by r.survived desc limit 50;
 
 Requests: one chunk every 15 s of play per player in a ranked run (240 an hour, ~1 to 3 KB each), each one transaction with a row lock, an insert and an update.
 
+### Ranked kit
+
+A replay carries its own start (`ReplayStart`): the Poké Mart ranks and the Bag items the run took. Re-simulation plays them back faithfully, so an edited save (or a tampered game) would play ranked runs with upgrades it never earned, and they would verify. So when a run reports, the API prices its kit and compares it with what the account backs (`src/game/rankedKit.ts`):
+
+- **Kit** (`kitCost`): what the replay's ranks cost at the Poké Mart (`totalSpent`, the Shiny Charm included) plus its Lure and Incense at full counter price. A Desafio do dia run has none (`challengeProblem`).
+- **Backing** (`kitBacking`): the account's amnesty, plus 10,000 ₽ (`KIT.base`, about what a first run's missions and medals pay), plus 5,000 ₽ (`KIT.perMinute`) per minute survived in its other finished runs not taken off (`verified is not false`). Those minutes can't come faster than the wall clock (`clockAllows`), so neither can the backing.
+- **Amnesty** (`users.kit_amnesty`): the kit an account brought in as earned, decided once. The accounts with a save at the deploy get what their ranks cost then, all of them, from [`scripts/kitAmnesty.ts`](#the-amnesty). Any other gets it at its first save push, when a guest save joins it (`importAmnesty`): what that save's ranks cost, or 0 when the save doesn't add up (`selfConsistent`: its fortune, wallet plus ranks plus spending, past 3 times the coins its runs picked up, `lifetime.coins`, plus 30,000 ₽). A reset zeroes it.
+- The run stores both (`runs.kit_cost`, `kit_backing`), and the log notes an unbacked one. **Observe or enforce**, like the stream: with `KIT_ENFORCE` off (the default) nothing else changes. With it on, an unbacked run stays off the public boards for good (`runs.unlisted`) and still counts for the player, and the results screen says the account's ranked runs don't back its upgrades yet (`unlisted: 'kit'`).
+
+What it leaves out: the starter (a hatched family or a legend the save unlocked), the shiny and the lucky egg are taken from the replay as they are. Eggs hatch and legends are captured on the device, which the API never sees, and a shiny only changes colors. A forger who also inflates `lifetime.coins` passes the amnesty check; their kit still shows in `runs.kit_cost`, next to the minutes behind it.
+
+Measured on prod (2026-10-21, read only), before choosing the numbers:
+
+- Maxing every upgrade costs 72,160 ₽ (42,000 of it the Shiny Charm). Of 5,391 saves, 2,813 have a kit and 1,556 all of it.
+- Among the 1,632 accounts that played only ranked runs (`lifetime.runs` no more than their runs here), the kit never passed 1,944 ₽ per minute they played, and no one's passed 10,000 + 5,000 per minute.
+- Of the 1,350 replays still stored (the real start kit of each run, against the minutes before it), 15 runs of 14 players were unbacked without any amnesty: all guest saves that joined a new account the same day, and all of them add up, so an import's amnesty backs them.
+- 4 saves didn't add up (`selfConsistent`), and they were the edited ones.
+
+#### The amnesty
+
+Right after the deploy that adds `users.kit_amnesty` (migration 020), decide every existing account from its stored save, from `server/` with the production `DATABASE_URL`:
+
+```bash
+npx tsx --env-file=.env scripts/kitAmnesty.ts                       # dry run: who gets what, the saves that don't add up
+npx tsx --env-file=.env scripts/kitAmnesty.ts --exclude user_a,user_b # dry run with exclusions (Clerk user ids)
+npx tsx --env-file=.env scripts/kitAmnesty.ts --exclude user_a,user_b --apply
+```
+
+It writes nothing without `--apply`. Every account still undecided (`kit_amnesty is null`) with a save gets the kit its stored save holds, whether the save adds up or not: the dry run lists the ones that don't, for reference, and wiping an edited save is a [reset](#resetting-a-save), before the amnesty. `--exclude` (empty unless given) sets those accounts to 0 whatever they had; an excluded id without a save gets its row, so its first push can't decide one. Running it again only applies exclusions. Accounts that sync after the deploy and before the script stay undecided until it runs (a push only decides an account that had no save).
+
+Before turning `KIT_ENFORCE` on, measure what it would keep off the boards since the amnesty (the hour after the deploy leaves room for running it):
+
+```sql
+select count(*) as runs,
+  count(*) filter (where kit_cost > kit_backing) as unbacked,
+  count(distinct user_id) filter (where kit_cost > kit_backing) as players
+from runs
+where kit_cost is not null
+  and finished_at > (select ran_at from migrations where name = '020_ranked_kit.sql') + interval '1 hour';
+```
+
+And who they are, to see whether they look honest (a new account whose guest save didn't add up, or an edited one):
+
+```sql
+select r.id, u.handle, r.user_id, r.kit_cost, r.kit_backing, u.kit_amnesty, u.created_at, r.survived, r.verified
+from runs r join users u on u.id = r.user_id
+where r.kit_cost > r.kit_backing and r.finished_at > now() - interval '7 days'
+order by r.finished_at desc limit 50;
+```
+
 ### Desafio do dia and ribbons
 
 The day's challenge is pure from the Brasília date (`dailyChallenge` in `src/game/challenge.ts`): the seed, the Pokémon and the difficulty, with no upgrades, Lure, Incense or lucky egg, and the day's outbreak on.
@@ -192,7 +242,7 @@ begin;
 with u as (select id from users where handle = 'HANDLE')
 insert into save_resets (user_id, data, revision, reason) select s.user_id, s.data, s.revision, 'edited save' from saves s join u on u.id = s.user_id;
 update saves set data = '{"version": 1}', version = 1, revision = revision + 1, updated_at = now() where user_id = (select id from users where handle = 'HANDLE');
-update users set save_reset_revision = (select revision from saves where user_id = users.id) where handle = 'HANDLE';
+update users set save_reset_revision = (select revision from saves where user_id = users.id), kit_amnesty = 0, kit_amnesty_at = now() where handle = 'HANDLE';
 update runs set verified = false where user_id = (select id from users where handle = 'HANDLE') and finished_at is not null;
 commit;
 ```
@@ -215,6 +265,7 @@ The player's device still holds the edited save. Its next push comes on top of a
 | `POSTHOG_KEY` | Optional. The game's PostHog project token (`phc_…`, the same as the client's `VITE_POSTHOG_KEY`): 500s, uncaught exceptions and rejections go to its error tracking (`src/errors.ts`), tied to the player's id when the request had one. Without it errors only go to the log |
 | `DISCORD_BUG_FORUM_ID` | Optional. The #bug-reports forum's channel id, where bug reports go. Without it the bot finds the forum by name |
 | `STREAM_ENFORCE` | Optional. `1` keeps ranked runs whose replay wasn't streamed in time off the public boards (see [Replay streaming](#replay-streaming)). Unset, the API only measures and logs the lag |
+| `KIT_ENFORCE` | Optional. `1` keeps ranked runs whose start kit the account doesn't back off the public boards (see [Ranked kit](#ranked-kit)). Unset, the API only stores and logs the verdict |
 | `PORT` | Default `3000` |
 
 ## Database
@@ -239,6 +290,7 @@ Migrations are plain SQL files in `migrations/`, run in name order at boot (each
 - `users.save_reset_revision`, `save_resets`: the revision a reset stored (see [Resetting a save](#resetting-a-save)), and what each reset wiped.
 - `users.banned_at`, `banned_reason`: a ban, since when and why (null for everyone else). `reports`: each report (`reporter_id`, `target_id`, `run_id` when it's about a run, `reason`, `note`), unique per reporter and run (or player, without a run), and how it was resolved (`resolved_at`, `resolved_by`, `resolution`: the `ModerationAction`).
 - `runs.issued_at`: when the token and its seed were dealt (`started_at` moves with `/start`, this doesn't). `runs.stream_seq`, `stream_ticks`, `stream_at`, `stream_lag`: the replay stream so far (the next chunk's `seq` and first tick, when the last commitment came, the worst lag in seconds). `runs.stream_base`, `stream_digest`: the ticks the last report pinned and their sha256. `runs.stream_ok`: whether the last report was streamed in time (null before streaming). `runs.unlisted`: kept off the public boards for its stream (only with `STREAM_ENFORCE`). `run_chunks`: each chunk waiting for its run's report (`seq`, `from_tick`, `to_tick`, `moves`, `events`, `received_at`).
+- `users.kit_amnesty`, `kit_amnesty_at`: the kit (₽) the account brought in as earned and when it was decided, null until then. `runs.kit_cost`, `kit_backing`: the run's start kit and what its account backed when it reported, null before migration 020 (see [Ranked kit](#ranked-kit)).
 - `discord_posts`: what the Discord bot already did, by key (`patch:<date>`, `challenge:<day>`, `podium:<day>`, `outbreak:<day>`, `welcome:<user>`, `short:<message>`), with the message a patch note became so it can be edited.
 
 ## Local development
@@ -289,6 +341,7 @@ New versions roll out with no downtime:
 | `POSTHOG_KEY` | Dokploy (`api`) | PostHog (US cloud) project token, public |
 | `DISCORD_BUG_FORUM_ID` | Dokploy (`api`) | The #bug-reports forum's channel id (optional: found by name without it) |
 | `STREAM_ENFORCE` | Dokploy (`api`) | Unset (observe only) until the lag is measured; `1` to enforce |
+| `KIT_ENFORCE` | Dokploy (`api`) | Unset (observe only) until the unbacked runs are measured; `1` to enforce |
 | `VITE_CLERK_PUBLISHABLE_KEY` | Vercel, production only | `pk_live_…`, which only works on `pokemonsurvivors.com` |
 | `VITE_API_URL` | Vercel, production only | `https://api.pokemonsurvivors.com` |
 | `VITE_POSTHOG_KEY` | Vercel, production only | The same PostHog project token: the game's events and errors (`src/analytics.ts`) |

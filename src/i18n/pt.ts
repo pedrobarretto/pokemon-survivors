@@ -444,6 +444,7 @@ export const pt = {
     outdated: 'O jogo foi atualizado durante esta partida, então ela não pôde entrar no ranking. A próxima já é na versão nova.',
     unranked: 'Esta partida ficou fora do ranking: começou sem conexão ou com o jogo aberto em outra aba ou aparelho.',
     unlisted: 'Esta partida ficou fora do ranking: a conexão caiu enquanto você jogava. Ela conta no seu perfil.',
+    unbacked: 'Esta partida ficou fora do ranking: suas melhorias do Poké Mart ainda não foram confirmadas pelas partidas ranqueadas da conta. Jogue com a conta e elas se confirmam. Ela conta no seu perfil.',
     guest: 'Entre com uma conta para aparecer no ranking.',
     noHandle: 'Crie seu perfil na tela da conta para aparecer no ranking.',
     open: 'Ranking',

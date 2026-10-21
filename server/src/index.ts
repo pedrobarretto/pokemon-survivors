@@ -24,8 +24,9 @@ const sql = connect(env.databaseUrl)
 await migrate(sql, new URL('../migrations/', import.meta.url))
 
 const clerk = createClerkClient({ secretKey: env.clerkSecretKey })
-// With STREAM_ENFORCE on, runs not streamed in time stay off the boards; off, the API only measures (`replayStream.ts`).
-const ranking = rankingStore(sql, { streamEnforce: env.streamEnforce })
+// With STREAM_ENFORCE on, runs not streamed in time stay off the boards; with KIT_ENFORCE, runs whose kit the
+// account doesn't back. Off, the API only measures (`replayStream.ts`, `rankedKit.ts`).
+const ranking = rankingStore(sql, { streamEnforce: env.streamEnforce, kitEnforce: env.kitEnforce })
 // Chunks of runs that never reported, once an hour.
 setInterval(() => void ranking.sweepChunks().catch((err) => console.error('chunk sweep failed', err)), 3600_000).unref()
 // The player's Discord account: linking joins them to the server (with a gift); a donation that raises their tier updates their role.

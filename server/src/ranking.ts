@@ -30,6 +30,7 @@ import type { PlayableId } from '../../src/data/hatchlings'
 import { RIBBON_TIERS, type RibbonTier } from '../../src/game/ribbons'
 import { TICK, type Replay } from '../../src/game/replay'
 import { boardListed, commitLag, sameSegment, settleReport, STREAM, streamedInTime, type ReplayChunk } from '../../src/game/replayStream'
+import { kitBacked, kitBacking, kitCost, kitListed, type KitVerdict } from '../../src/game/rankedKit'
 import { supporterTier } from '../../src/game/supporters'
 import type { Sql } from './db'
 
@@ -45,9 +46,11 @@ export type FinishError = 'unknown' | 'replaced' | 'mismatch' | 'seed' | 'clock'
 
 /**
  * A run's end that went in, with its challenge day and whether it's the official attempt (null for any other run).
- * `listed`: whether it's on the public boards (with `STREAM_ENFORCE` on, only runs streamed in time are).
+ * `listed`: whether it's on the public boards (with `STREAM_ENFORCE` on, only runs streamed in time are; with
+ * `KIT_ENFORCE`, only runs whose kit the account backs). `unlisted` says why one isn't: `kit` when its kit
+ * isn't backed now, else `stream`.
  */
-export type Finished = { ok: true; challenge: DayKey | null; official: boolean | null; listed: boolean }
+export type Finished = { ok: true; challenge: DayKey | null; official: boolean | null; listed: boolean; unlisted: 'stream' | 'kit' | null }
 
 /**
  * Why a chunk was refused. `unknown`: no such run of the player's still playing (a finished one only takes
@@ -106,10 +109,10 @@ const isUniqueViolation = (err: unknown) => typeof err === 'object' && err !== n
  * their best run (ties go to who did it first), and only list players with a
  * handle and never a banned one. A run counts as soon as it's reported: only one whose re-simulation
  * failed (`checks.ts`), or that an admin took off (`moderation.ts`), counts nowhere, and one kept off for its
- * stream (`unlisted`, with `streamEnforce`) only counts for its player. Day and week start at midnight and on Monday in `BOARD_TIME_ZONE`,
+ * stream (`unlisted`, with `streamEnforce`) or its kit (with `kitEnforce`) only counts for its player. Day and week start at midnight and on Monday in `BOARD_TIME_ZONE`,
  * and a run counts for the period it started in.
  */
-export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforce?: boolean } = {}) => {
+export const rankingStore = (sql: Sql, { streamEnforce = false, kitEnforce = false }: { streamEnforce?: boolean; kitEnforce?: boolean } = {}) => {
   const touchUser = (userId: string) => sql`insert into users (id) values (${userId}) on conflict (id) do update set seen_at = now()`
 
   /** Every player's best run on a board, ranked, as a fragment to select from. */
@@ -268,6 +271,9 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
      * (endless mode may go on from it, and a late one counts in `stream_late`); a faint's or a quit's isn't,
      * its tail being capped. Whether the run was streamed in time is stored and logged; with `streamEnforce`
      * a run that wasn't stays off the public boards for good (`unlisted`), and still counts for the player.
+     * So does its kit (`src/game/rankedKit.ts`): what the replay's start kit cost and what the account backs
+     * (its amnesty, the base, and the minutes of its other finished runs not taken off) are stored, and with
+     * `kitEnforce` a run whose kit isn't backed stays off the public boards the same way.
      */
     finishRun: (userId: string, token: string, result: RunResult, replay: Replay): Promise<Finished | { ok: false; error: FinishError }> =>
       sql.begin(async (tx) => {
@@ -314,7 +320,13 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         const lag = fresh && result.outcome === 'victory' ? commitLag({ from: committed, to: settled.total }, run.base, run.arrived, run.last ?? 0) : null
         const stream = { tail: settled.tail, lag: lag === null ? run.lag : Math.max(lag, run.lag ?? lag) }
         const inTime = streamedInTime(stream)
-        const listed = !run.unlisted && boardListed(stream, streamEnforce)
+        const [account] = await tx<{ amnesty: number | null; seconds: number }[]>`
+          select kit_amnesty as amnesty,
+            coalesce((select sum(survived) from runs where user_id = ${userId} and id <> ${token} and finished_at is not null and verified is not false), 0)::float8 as seconds
+          from users where id = ${userId}`
+        const kit: KitVerdict = { cost: kitCost(replay.start), backing: kitBacking(account?.amnesty ?? 0, account?.seconds ?? 0) }
+        const kitOk = kitListed(kit, kitEnforce)
+        const listed = !run.unlisted && boardListed(stream, streamEnforce) && kitOk
         let official = run.official
         if (run.challenge && !run.finished) {
           // The player's row makes two challenge runs finishing at once take turns.
@@ -329,13 +341,15 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
             replay = ${tx.json(replay)}, verified = null, checked_at = null, check_ms = null, official = ${official},
             stream_base = ${settled.pin.ticks}, stream_digest = ${settled.pin.digest}, stream_lag = ${stream.lag}, stream_ok = ${inTime}, unlisted = ${!listed},
             stream_late = stream_late + ${lag !== null && lag > STREAM.lagTolerance ? 1 : 0},
+            kit_cost = ${kit.cost}, kit_backing = ${kit.backing},
             mode = ${runMode(result.starter)}
             ${fresh ? tx`, stream_at = now()` : tx``}
           where id = ${token}`
         await tx`delete from run_chunks where run_id = ${token} and to_tick <= ${settled.total}`
         const late = stream.lag === null ? '-' : `${stream.lag.toFixed(1)} s`
         console.log(`stream ${token}: ${chunks.length} chunks, tail ${settled.tail} ticks, worst lag ${late}${inTime ? '' : streamEnforce ? ', unlisted' : ', not in time (observing)'}`)
-        return { ok: true, challenge: run.challenge, official, listed } as const
+        if (!kitBacked(kit)) console.log(`kit ${token}: ${kit.cost} ₽ past the ${kit.backing} ₽ the account backs${kitEnforce ? ', unlisted' : ' (observing)'}`)
+        return { ok: true, challenge: run.challenge, official, listed, unlisted: listed ? null : kitOk ? 'stream' : 'kit' } as const
       }),
 
     /** A finished run waiting for its re-simulation: what it reported, when it started, and its replay. Null when there's nothing to check. */

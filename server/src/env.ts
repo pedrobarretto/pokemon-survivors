@@ -9,6 +9,9 @@ const required = (name: string) => {
   return value
 }
 
+/** An on/off variable: `1`, `true` or `on` turn it on. */
+const flag = (name: string) => ['1', 'true', 'on'].includes((process.env[name] ?? '').trim().toLowerCase())
+
 /** Server config, read once at boot. Throws when a required variable is missing. */
 export const loadEnv = () => {
   const origins = [...ORIGINS, ...(process.env.CORS_ORIGINS ?? '').split(',').map((o) => o.trim()).filter(Boolean)]
@@ -47,7 +50,12 @@ export const loadEnv = () => {
      * `STREAM_ENFORCE=1`: a ranked run whose replay wasn't streamed in time (`streamedInTime` in
      * `src/game/replayStream.ts`) stays off the public boards. Off (the default), the API only stores and logs the lag.
      */
-    streamEnforce: ['1', 'true', 'on'].includes((process.env.STREAM_ENFORCE ?? '').trim().toLowerCase()),
+    streamEnforce: flag('STREAM_ENFORCE'),
+    /**
+     * `KIT_ENFORCE=1`: a ranked run whose start kit its account doesn't back (`kitBacked` in
+     * `src/game/rankedKit.ts`) stays off the public boards. Off (the default), the API only stores and logs the verdict.
+     */
+    kitEnforce: flag('KIT_ENFORCE'),
     /** Whether the game at `origin` may call the API (CORS) and own its tokens (`azp`). */
     allowedOrigin: (origin: string) => origins.includes(origin) || LOCALHOST.test(origin),
   }

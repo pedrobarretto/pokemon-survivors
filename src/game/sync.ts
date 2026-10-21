@@ -25,7 +25,7 @@ import { mergeCompanions } from './supporters'
  * Everything a save ever got in ₽: the wallet plus what its upgrades cost and
  * what it spent at the counter and on styles. Buying or refunding doesn't change it.
  */
-const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + s.spent
+export const worth =(s: Save) => s.wallet + totalSpent(s.ranks) + s.spent
 
 /**
  * Two saves of the same player in one (a guest save joining an account, or

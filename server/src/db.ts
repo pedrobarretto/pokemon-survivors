@@ -3,6 +3,7 @@ import postgres from 'postgres'
 import { mergeClears, wonClears } from '../../src/game/clears'
 import { keepGiven, parseGiftContent } from '../../src/game/gifts'
 import { parseSaveData } from '../../src/game/meta'
+import { importAmnesty } from '../../src/game/rankedKit'
 import { applyPush, type Push, type Stored } from '../../src/game/sync'
 
 /**
@@ -49,11 +50,14 @@ export const saveStore = (sql: Sql) => ({
    * Gift-only rewards stay only if the player's gifts brought them (`keepGiven`):
    * an edited save can't give itself the Supporter title or a ribbon. After a
    * reset (`users.save_reset_revision`), devices that haven't seen it get the reset save back.
+   * The account's first push, a guest save joining it, decides its ranked kit amnesty when nothing did
+   * (`importAmnesty`): a save that adds up keeps its upgrades backed for ranked runs.
    */
   push: (userId: string, push: Push) =>
     sql.begin(async (tx) => {
-      const [user] = await tx<{ reset: number | null }[]>`
-        insert into users (id) values (${userId}) on conflict (id) do update set seen_at = now() returning save_reset_revision as reset`
+      const [user] = await tx<{ reset: number | null; undecided: boolean }[]>`
+        insert into users (id) values (${userId}) on conflict (id) do update set seen_at = now()
+        returning save_reset_revision as reset, kit_amnesty is null as undecided`
       const stored = toStored((await tx<SaveRow[]>`select data, revision from saves where user_id = ${userId} for update`)[0])
       const applied = applyPush(stored, push, user?.reset ?? null)
       const won = await tx<{ starter: string; difficulty: string }[]>`
@@ -70,6 +74,8 @@ export const saveStore = (sql: Sql) => ({
         values (${userId}, ${next.save.version}, ${next.revision}, ${tx.json(next.save)})
         on conflict (user_id) do update
         set version = excluded.version, revision = excluded.revision, data = excluded.data, updated_at = now()`
+      // Accounts that had a save at the ranked kit's deploy are decided by `scripts/kitAmnesty.ts` instead.
+      if (user?.undecided && !stored) await tx`update users set kit_amnesty = ${importAmnesty(next.save)}, kit_amnesty_at = now() where id = ${userId}`
       return next
     }),
 })

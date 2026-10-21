@@ -339,6 +339,7 @@ export const en: Messages = {
     outdated: "The game was updated while you played, so this run couldn't join the ranking. Your next run plays the new version.",
     unranked: 'This run is off the ranking: it started offline, or with the game open in another tab or device.',
     unlisted: 'This run stayed off the ranking: the connection dropped while you played. It still counts on your profile.',
+    unbacked: "This run stayed off the ranking: your account's ranked runs don't back your Poké Mart upgrades yet. Keep playing signed in and they will. It still counts on your profile.",
     guest: 'Sign in to show up on the ranking.',
     noHandle: 'Create your profile on the account screen to show up on the ranking.',
     open: 'Ranking',
