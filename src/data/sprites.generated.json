@@ -21420,6 +21420,62 @@
         "footY": 7
       }
     },
+    "forms": {
+      "mega": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 56,
+            "frameHeight": 48,
+            "durations": [
+              10,
+              8,
+              10,
+              8
+            ]
+          },
+          "Idle": {
+            "frameWidth": 56,
+            "frameHeight": 48,
+            "durations": [
+              40,
+              30
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 23,
+          "bodyH": 28,
+          "footY": 7
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 56,
+              "frameHeight": 48,
+              "durations": [
+                10,
+                8,
+                10,
+                8
+              ]
+            },
+            "Idle": {
+              "frameWidth": 56,
+              "frameHeight": 48,
+              "durations": [
+                40,
+                30
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 23,
+            "bodyH": 28,
+            "footY": 7
+          }
+        }
+      }
+    },
     "formCries": [
       "mega"
     ]

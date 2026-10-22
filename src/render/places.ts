@@ -85,11 +85,25 @@ const paint = (w: number, h: number, color: (px: number, py: number) => string |
 
 const CAVE_FACE = ['#7a6654', '#6a5848', '#5a4a3e', '#4c3e34', '#40342c', '#362c25', '#2e251f', '#271f1a', '#211a16'] as const
 const FACE = CAVE_FACE.length
+/**
+ * How far a south wall's top reaches over the floor, in px: the walls stand
+ * up toward the camera, so the floor's last px before one are hidden behind
+ * its top. It matches where a body's feet stop (its radius, 6 to 8 px for most),
+ * so walking into a south wall reads as touching it.
+ */
+const SOUTH_LIP = 6
+
+/** The rock of a wall's top at (x, y). */
+const wallTop = (x: number, y: number) => {
+  const n = hash2(Math.floor(x / 6), Math.floor(y / 5), 3) * 0.6 + hash2(x, y, 4) * 0.4
+  return n > 0.62 ? '#241c1a' : n < 0.25 ? '#140f0f' : '#1c1515'
+}
 
 /**
  * A dungeon floor: rock all around, its wall's face showing above each north
- * edge (strata and cracks, lit at the top), and the floor itself, dirt with
- * pebbles and a few pits.
+ * edge (strata and cracks, lit at the top), each south wall's top over the
+ * floor's last px (`SOUTH_LIP`), and the floor itself, dirt with pebbles and a
+ * few pits.
  */
 const bakeCave = (floor: readonly ArenaShape[]): Baked => {
   const r = rasterize(floor, 40)
@@ -99,9 +113,16 @@ const bakeCave = (floor: readonly ArenaShape[]): Baked => {
     if (!r.at(px, py)) {
       // The wall's top, with a lit lip where it drops to the floor.
       if (r.at(px, py + 1)) return '#3a302a'
-      const n = hash2(Math.floor(x / 6), Math.floor(y / 5), 3) * 0.6 + hash2(x, y, 4) * 0.4
-      return n > 0.62 ? '#241c1a' : n < 0.25 ? '#140f0f' : '#1c1515'
+      return wallTop(x, y)
     }
+    // A south wall's top over the floor, lit along its edge, and the floor darkening up to it.
+    let south = 0
+    for (let d = 1; d <= SOUTH_LIP + 2 && !south; d++) if (!r.at(px, py + d)) south = d
+    if (south && south < SOUTH_LIP - 1) return wallTop(x, y)
+    if (south === SOUTH_LIP - 1) return '#3a302a'
+    if (south === SOUTH_LIP) return '#5a4a3e'
+    if (south === SOUTH_LIP + 1) return '#2a221c'
+    if (south === SOUTH_LIP + 2) return '#352c26'
     let k = 0
     for (let d = 1; d <= FACE && !k; d++) if (!r.at(px, py - d)) k = d
     if (k) {

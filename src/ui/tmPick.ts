@@ -1,7 +1,7 @@
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { ENEMIES } from '../data/enemies'
-import { BOSS_TMS } from '../data/tms'
+import { BOSS_TMS, LEGENDARY_TMS } from '../data/tms'
 import { TYPE_COLORS } from '../data/types'
 import { playerForm } from '../game/branch'
 import { isManual, maxMoveLevel, MOVES, type MoveDef, type MoveId } from '../game/moves'
@@ -37,16 +37,23 @@ const tmLine = (id: MoveId, level: number) => {
   return typeof text === 'string' ? text : t().levelUp.forkHint(text.fork[0].name, text.fork[1].name)
 }
 
-/** Who left the disc, for the title: the boss whose TM it is, or the rift legendary just beaten. */
-const titleOf = (g: Game, source: TmSource, move: MoveId) => {
+/** The enemy whose TM in `table` teaches `move`, if any. */
+const ownerOf = (table: Partial<Record<string, MoveId>>, move: MoveId) => {
+  const owner = Object.entries(table).find(([, id]) => id === move)?.[0]
+  return owner && owner in ENEMIES ? ENEMIES[owner as keyof typeof ENEMIES] : undefined
+}
+
+/**
+ * Who left the disc, for the title: the boss or the legendary whose TM it is.
+ * A legendary TM is named after its move, not the last rift cleared: a pair's
+ * rift (Latias and Latios) clears both and leaves Latias's Mist Ball.
+ */
+const titleOf = (source: TmSource, move: MoveId) => {
   const m = t().tm
   if (source === 'tutor') return m.titleTutor
-  if (source === 'legendary') {
-    const legend = g.rift.cleared[g.rift.cleared.length - 1]
-    return legend ? m.titleLegendary(ENEMIES[legend].name) : m.titleFound
-  }
-  const boss = Object.entries(BOSS_TMS).find(([, id]) => id === move)?.[0]
-  return boss && boss in ENEMIES ? m.titleBoss(ENEMIES[boss as keyof typeof ENEMIES].name) : m.titleFound
+  const owner = ownerOf(source === 'legendary' ? LEGENDARY_TMS : BOSS_TMS, move)
+  if (!owner) return m.titleFound
+  return source === 'legendary' ? m.titleLegendary(owner.name) : m.titleBoss(owner.name)
 }
 
 const tmCard = (g: Game, offer: Extract<Offer, { kind: 'tm' }>, i: number) => {
@@ -142,7 +149,7 @@ export const tmPick = (root: HTMLElement, input: Input, g: Game, onChoose: (offe
     : source === 'tutor' ? m.subTutor(tm?.price === 0)
     : source === 'legendary' ? m.subLegendary
     : m.subBoss
-  const title = forgetting && tm ? m.forgetTitle(who, MOVES[tm.id].name) : tm ? titleOf(g, source, tm.id) : m.titleFound
+  const title = forgetting && tm ? m.forgetTitle(who, MOVES[tm.id].name) : tm ? titleOf(source, tm.id) : m.titleFound
 
   const grid = h('div', { class: forgetting ? 'tm-forget' : 'offers tm-offers' }, ...cards)
   const stage = h(

@@ -566,14 +566,16 @@ onCanvasReset(() => {
 
 /**
  * Sprites no wider than `maxW` px of body: a bigger species (Lugia's wings
- * span 79 px) is shrunk once, the pixel-art way, and cached. Smaller ones and
- * the dust puff of a species still downloading come back as they are.
+ * span 79 px) is shrunk once, the pixel-art way, and cached. A wide, flat one
+ * (Moltres's flaming wings) only shrinks down to `minH` px of body height, so
+ * a wingspan doesn't leave it smaller than its peers. Smaller ones and the
+ * dust puff of a species still downloading come back as they are.
  */
-export const fitSprites = (s: SpeciesSprites, maxW: number): SpeciesSprites => {
-  if (s.bodyW <= maxW || standIns.get(s.dex) === s) return s
+export const fitSprites = (s: SpeciesSprites, maxW: number, minH = 0): SpeciesSprites => {
+  const k = Math.min(1, Math.max(maxW / s.bodyW, minH / s.bodyH))
+  if (k >= 1 || standIns.get(s.dex) === s) return s
   let fit = fits.get(s)
   if (!fit) {
-    const k = maxW / s.bodyW
     const { Walk, Idle, Hurt, Fly } = s.anims
     fit = {
       ...s,

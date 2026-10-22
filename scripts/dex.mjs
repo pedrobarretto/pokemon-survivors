@@ -85,6 +85,7 @@ export const FORMS = {
   94: { mega: '0001' },
   229: { mega: '0001' },
   248: { mega: '0001' },
+  254: { mega: '0001' }, // Walk and Idle only so far (no Hurt sheet: it flinches in its Walk)
   282: { mega: '0001' },
   310: { mega: '0001' },
   334: { mega: '0001' },
