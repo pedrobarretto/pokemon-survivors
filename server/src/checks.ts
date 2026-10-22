@@ -1,7 +1,7 @@
 import { Worker } from 'node:worker_threads'
 import { BOARD_SIZE } from '../../src/game/ranking'
 import { parseReplay, RULES_VERSION, rulesStanding } from '../../src/game/replay'
-import type { RankingStore } from './ranking'
+import { sameTime, type RankingStore } from './ranking'
 import { FROZEN_RULES, judge, type Job, type Judged } from './sims'
 
 type Answer = { judged: Judged; ms: number }
@@ -121,7 +121,7 @@ export const createChecks = (ranking: RankingStore) => {
         }
         const r = judged.result
         // A replay that ends on an open level-up (`stuck`) still played the run it reported, when the numbers match.
-        const ok = r.time === reported.time && r.kills === reported.kills && r.level === reported.level
+        const ok = sameTime(r.time, reported.time) && r.kills === reported.kills && r.level === reported.level
         // The branch isn't judged: the replay's own replaces the reported one.
         await ranking.setVerified(id, reported.time, ok ? { ok, branch: r.branch } : { ok }, ms)
         console.log(`check ${id}: ${ok ? 'verified' : 'failed'} in ${ms} ms${under}${r.stuck ? ', ending on an open level-up' : ''}`)

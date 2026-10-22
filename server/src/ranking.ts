@@ -100,6 +100,18 @@ const toEntry = (r: EntryRow): BoardEntry => {
   return { ...toRun(r), rank: r.rank, handle: r.handle, name: r.name, supporter, supporterSince: supporter ? (r.supporter_since?.toISOString() ?? null) : null, run: r.id }
 }
 
+/**
+ * How far apart two run times can be and still be the same report. Through
+ * Supabase's transaction pooler the connection reads float8 with
+ * `extra_float_digits = 0`, so `survived` comes back with 15 digits
+ * (231.2333333334095 reads as 231.233333333409). A tick is 1/60 s, so this
+ * still tells a run that grew apart.
+ */
+export const TIME_EPSILON = 1e-6
+
+/** A replay's time and a stored one are the same report (`TIME_EPSILON`). */
+export const sameTime = (a: number, b: number) => Math.abs(a - b) < TIME_EPSILON
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** Postgres' unique violation. */
@@ -394,7 +406,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
     setVerified: async (id: string, time: number, verdict: { ok: true; branch: BranchId | null } | { ok: false }, ms: number | null) => {
       await sql`
         update runs set verified = ${verdict.ok}, checked_at = now(), check_ms = ${ms}${verdict.ok ? sql`, replay = null, branch = ${verdict.branch}` : sql``}
-        where id = ${id} and survived = ${time} and verified is null`
+        where id = ${id} and abs(survived - ${time}) < ${TIME_EPSILON} and verified is null`
     },
 
     /** Forgets the replay of a run that won't be checked (not on show, or recorded under older rules): it stays unverified, like a run sent without one. */
