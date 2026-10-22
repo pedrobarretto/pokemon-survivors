@@ -203,6 +203,7 @@ export const es: Messages = {
       waitHost: 'Esperando que el anfitrión empiece…',
       getReady: 'Elige tu Pokémon y prepárate.',
       reconnecting: 'Reconectando…',
+      choosing: 'Eligiendo el mejor servidor…',
       playing: 'El equipo está en una partida.',
       rejoin: 'Volver a la partida',
       rules: 'El co-op es el modo normal: sin ranking, Modo Legendario, Brote del día, Noche de Brujas, Mochila ni MT de la tienda.',

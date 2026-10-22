@@ -270,25 +270,29 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
       : h('span', { class: 'coop-difficulty-read' }, difficultyTag(settings.difficulty), h('small', {}, m.hostPicks))
 
     const connecting = st.status.kind === 'connecting'
-    const waiting = connecting
-      ? m.reconnecting
-      : !lobby
-        ? m.playing
-        : host
-          ? room.members.length === 1
-            ? m.alone
-            : ready.all
-              ? m.allReady
-              : m.waitAll(ready.ready, ready.total)
-          : me?.ready
-            ? m.waitHost
-            : m.getReady
+    // The room moving to the relay best for the group (the host's Start): a moment, then the run.
+    const moving = st.moving !== null
+    const waiting = moving
+      ? m.choosing
+      : connecting
+        ? m.reconnecting
+        : !lobby
+          ? m.playing
+          : host
+            ? room.members.length === 1
+              ? m.alone
+              : ready.all
+                ? m.allReady
+                : m.waitAll(ready.ready, ready.total)
+            : me?.ready
+              ? m.waitHost
+              : m.getReady
     const said = notice && notice.until > performance.now() ? notice.text : waiting
 
     const main = !lobby
       ? actions.rejoin && navButton('rejoin', m.rejoin, actions.rejoin, 'btn confirm')
       : host
-        ? h('button', { class: 'btn confirm', type: 'button', 'data-nav': 'start', disabled: !ready.all || connecting, onclick: () => (playSfx('select'), client.start()) }, m.start)
+        ? h('button', { class: 'btn confirm', type: 'button', 'data-nav': 'start', disabled: !ready.all || connecting || moving, onclick: () => (playSfx('select'), client.start()) }, m.start)
         : navButton('ready', me?.ready ? m.unready : m.ready, () => client.setReady(!me?.ready), me?.ready ? 'btn' : 'btn confirm')
 
     el.replaceChildren(
@@ -331,7 +335,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
       notice = { text: t().coop.denied[e.why], until: performance.now() + 4000 }
       setTimeout(render, 4100)
     }
-    if (e.kind === 'room' || e.kind === 'status' || e.kind === 'denied') render()
+    if (e.kind === 'room' || e.kind === 'status' || e.kind === 'denied' || e.kind === 'moving') render()
   })
   root.append(el)
   render()

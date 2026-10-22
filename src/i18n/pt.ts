@@ -308,6 +308,7 @@ export const pt = {
       waitHost: 'Esperando o anfitrião começar…',
       getReady: 'Escolha seu Pokémon e fique pronto.',
       reconnecting: 'Reconectando…',
+      choosing: 'Escolhendo o melhor servidor…',
       /** Back in the room while the others still play (the endless mode). */
       playing: 'A equipe está numa partida.',
       rejoin: 'Voltar para a partida',

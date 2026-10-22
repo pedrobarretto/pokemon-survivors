@@ -1,22 +1,24 @@
 import { describe, expect, it } from 'vitest'
-import type { ClientMessage, Hello, RoomView } from '../net/protocol'
+import type { ClientMessage, Hello, Member, RoomView } from '../net/protocol'
 import type { Store } from './bank'
-import { CONNECT, createCoopClient, type SocketHandlers } from './client'
+import { CONNECT, MOVE, createCoopClient, type CoopDeps, type SocketHandlers } from './client'
 
-/** A client on fake sockets: `sockets` are the ones it opened, `hellos` what each sent first. */
-const harness = () => {
+/** A client on fake sockets: `sockets` are the ones it opened (`urls`: where), `hellos` what each sent first. */
+const harness = (over: Partial<CoopDeps> = {}) => {
   let now = 0
   let tokens = 0
   const kept = new Map<string, string>()
   const store: Store = { get: (k) => kept.get(k) ?? null, set: (k, v) => void kept.set(k, v), remove: (k) => void kept.delete(k), keys: () => [...kept.keys()] }
   const sockets: SocketHandlers[] = []
+  const urls: string[] = []
   const hellos: Hello[] = []
   const sent: ClientMessage[] = []
   const client = createCoopClient({
     url: 'https://relay.test',
     build: 'b1',
-    socket: (_, on) => {
+    socket: (url, on) => {
       sockets.push(on)
+      urls.push(url)
       return {
         send: (d) => {
           const m = JSON.parse(d) as ClientMessage
@@ -34,8 +36,9 @@ const harness = () => {
     name: () => '@ash',
     now: () => now,
     random: () => 0.5,
+    ...over,
   })
-  return { client, sockets, hellos, sent, tick: (ms: number) => (now += ms) }
+  return { client, sockets, urls, hellos, sent, tick: (ms: number) => (now += ms) }
 }
 
 const flush = () => new Promise((r) => setTimeout(r, 0))
@@ -92,5 +95,90 @@ describe('the co-op client', () => {
     h.tick(20)
     h.client.frame(1 / 60)
     expect(h.sent).toHaveLength(1)
+  })
+})
+
+describe('moving the room for the group', () => {
+  const member = (seat: number, over: Partial<Member> = {}): Member => ({ seat, name: `p${seat}`, account: false, host: seat === 0, online: true, away: false, ready: seat !== 0, loadout: { starter: 'pichu' }, ...over })
+  // The lab's room: the host 5 ms from São Paulo, the others 230 ms from it and 100 ms from US east.
+  const lobby = (code: string, members: Member[]): RoomView => ({ code, phase: 'lobby', members, settings: { difficulty: 'hard' }, run: 0 })
+  const far = { sa: 230, us: 100 }
+
+  /** The host of São Paulo room 2ABCD, with US east making rooms (or not, `made`). */
+  const host = async (made: unknown) => {
+    const posts: string[] = []
+    const h = harness({
+      vps: { sa: 'https://sa.test', us: 'https://us.test' },
+      fetch: async (url, init) => {
+        if (init.method === 'POST') posts.push(url)
+        if (made === null && init.method === 'POST') throw new Error('offline')
+        return { json: async () => (init.method === 'POST' ? made : { ok: true }) }
+      },
+    })
+    void h.client.join('2ABCD')
+    await flush()
+    h.sockets[0]?.open()
+    const members = [member(0, { rtt: { sa: 5, us: 140 } }), member(1, { rtt: far }), member(2, { rtt: far })]
+    h.sockets[0]?.message(JSON.stringify({ t: 'welcome', seat: 0, secret: 'secret-0000000000', room: lobby('2ABCD', members), batch: true, moves: true }))
+    h.sent.length = 0
+    return { ...h, posts }
+  }
+
+  it("makes a room on the group's relay, follows the old room's word there with the claim, and starts once everyone is in", async () => {
+    const h = await host({ code: '6QRST', region: 'enam', claim: 'claim-0000000000000' })
+    h.client.start()
+    expect(h.client.state().moving).not.toBeNull()
+    await flush()
+    expect(h.posts).toEqual(['https://us.test/rooms'])
+    expect(h.sent).toEqual([{ t: 'move', code: '6QRST' }])
+    h.sockets[0]?.message(JSON.stringify({ t: 'moved', code: '6QRST' }))
+    await flush()
+    expect(h.urls[1]).toBe('wss://us.test/rooms/6QRST/ws')
+    h.sockets[1]?.open()
+    expect(h.hellos[1]).toMatchObject({ room: '6QRST', claim: 'claim-0000000000000' })
+    h.sent.length = 0
+    h.sockets[1]?.message(JSON.stringify({ t: 'welcome', seat: 1, secret: 'secret-1111111111', room: lobby('6QRST', [member(0, { host: false, loadout: null, ready: false }), member(1, { host: true, loadout: null, ready: false })]), batch: true, moves: true }))
+    expect(h.sent).toEqual([{ t: 'loadout', loadout: { starter: 'pichu' } }, { t: 'settings', settings: { difficulty: 'hard' } }])
+    h.sent.length = 0
+    // One teammate in so far: the run waits for the other.
+    h.client.frame(1 / 60)
+    expect(h.sent.some((m) => m.t === 'start')).toBe(false)
+    h.sockets[1]?.message(JSON.stringify({ t: 'room', room: lobby('6QRST', [member(0, { host: false, ready: true }), member(1, { host: true, ready: false }), member(2)]) }))
+    h.client.frame(1 / 60)
+    expect(h.sent.filter((m) => m.t === 'start')).toHaveLength(1)
+    expect(h.client.state().moving).toBeNull()
+  })
+
+  it('starts where the room is when the relay can\'t make one, or when the old room never says moved', async () => {
+    const down = await host(null)
+    down.client.start()
+    await flush()
+    await flush()
+    expect(down.sent).toEqual([{ t: 'start' }])
+    const silent = await host({ code: '6QRST', region: 'enam', claim: 'claim-0000000000000' })
+    silent.client.start()
+    await flush()
+    silent.sent.length = 0
+    silent.tick(MOVE.echo + 1)
+    silent.client.frame(1 / 60)
+    expect(silent.sent.filter((m) => m.t === 'start')).toHaveLength(1)
+    expect(silent.urls).toHaveLength(1)
+  })
+
+  it("follows an old link's room, bringing a guest's Pokémon and ready", async () => {
+    const h = harness()
+    void h.client.join('2ABCD')
+    await flush()
+    h.sockets[0]?.open()
+    h.sockets[0]?.message(JSON.stringify({ t: 'welcome', seat: 1, secret: 'secret-0000000000', room: lobby('2ABCD', [member(0), member(1)]), batch: true, moves: true }))
+    h.sockets[0]?.message(JSON.stringify({ t: 'moved', code: '6QRST' }))
+    await flush()
+    h.sockets[1]?.open()
+    expect(h.hellos[1]).toMatchObject({ room: '6QRST' })
+    expect(h.hellos[1]).not.toHaveProperty('claim')
+    h.sent.length = 0
+    h.sockets[1]?.message(JSON.stringify({ t: 'welcome', seat: 1, secret: 'secret-1111111111', room: lobby('6QRST', [member(0), member(1, { loadout: null, ready: false })]), batch: true, moves: true }))
+    expect(h.sent).toEqual([{ t: 'loadout', loadout: { starter: 'pichu' } }, { t: 'ready', ready: true }])
+    expect(h.client.state()).toMatchObject({ code: '6QRST', moving: null, movedIn: true })
   })
 })

@@ -203,6 +203,7 @@ export const en: Messages = {
       waitHost: 'Waiting for the host to start…',
       getReady: 'Pick your Pokémon and get ready.',
       reconnecting: 'Reconnecting…',
+      choosing: 'Picking the best server…',
       playing: 'The team is in a run.',
       rejoin: 'Back to the run',
       rules: "Co-op is the standard mode: no ranking, Legend Mode, daily Outbreak, Halloween Night, Bag or shop TMs.",

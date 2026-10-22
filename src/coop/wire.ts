@@ -14,7 +14,7 @@ const isEntry = (v: unknown): v is Entry => Array.isArray(v) && v.length >= 2 &&
 const isTicks = (v: unknown): v is TickEntries[] =>
   Array.isArray(v) && v.every((t) => Array.isArray(t) && t.length === 2 && whole(t[0]) && Array.isArray(t[1]) && t[1].every(isEntry))
 
-const KINDS: ReadonlySet<string> = new Set<ServerMessage['t']>(['welcome', 'refused', 'room', 'start', 'sync', 'snapPart', 'frame', 'heal', 'role', 'ended', 'denied', 'slow', 'pong', 'bye'])
+const KINDS: ReadonlySet<string> = new Set<ServerMessage['t']>(['welcome', 'refused', 'room', 'start', 'sync', 'snapPart', 'frame', 'heal', 'role', 'ended', 'denied', 'slow', 'pong', 'bye', 'moved'])
 
 /**
  * A relay message from its text, or null. Frames are checked down to their

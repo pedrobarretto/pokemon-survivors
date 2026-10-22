@@ -2,14 +2,14 @@ import { worldHeld } from '../game/coop'
 import { moveCode } from '../game/replay'
 import type { Game } from '../game/types'
 import type { Vec } from '../engine/math'
-import { LIMITS, NET_REPORT_MS, PROTOCOL, REGIONS, isRelayHome, type BatchedMessage, type ClientMessage, type CloseReason, type CreateResponse, type NetReport, type Refusal, type Region, type RelayHome, type RoomView, type VpsHome, type RunStart, type ServerMessage } from '../net/protocol'
-import { addSample, createNetStats, noteArrival, noteFrame, quantile, resetArrivalLine, type NetStats, type NetWhere, type ReconnectReason } from './netStats'
+import { LIMITS, NET_REPORT_MS, PROTOCOL, REGIONS, VPS_HOMES, homeOf, isRelayHome, parseRoomCode, type BatchedMessage, type ClientMessage, type CloseReason, type CreateResponse, type Loadout, type NetReport, type Refusal, type Region, type RelayHome, type RoomView, type Rtts, type Settings, type VpsHome, type RunStart, type ServerMessage } from '../net/protocol'
+import { addSample, createNetStats, noteArrival, noteFrame, noteHidden, quantile, resetArrivalLine, type NetStats, type NetWhere, type ReconnectReason } from './netStats'
 import type { Store } from './bank'
 import type { Input } from './entries'
 import { ack, createOutbox, due, onReconnect, onSlow, push, queued, slowed, type Outbox } from './outbox'
 import { advance, backlog, onEnded, onFrame, onSnapPart, onSync, syncProgress, createRunner, type Runner, type RunnerDeps } from './runner'
 import { createStickPace, paceStick, type StickPace } from './stickPace'
-import { measureRtt, pickHome, relayFor, type VpsUrls } from './relays'
+import { groupHome, measureRtt, median, pickHome, relayFor, type VpsUrls } from './relays'
 import { closeReason, parseServerMessage } from './wire'
 import { loadoutOf, settingsOf, type CoopPick, type CoopSettings } from './start'
 
@@ -30,6 +30,12 @@ import { loadoutOf, settingsOf, type CoopPick, type CoopSettings } from './start
  *   a fresh socket after `CONNECT.dead` without one or `CONNECT.uplink` without a pong.
  * - Final closes (`replaced`, `kicked`, `left`, `expired`, a refused build…)
  *   end the client with a typed reason and never reconnect.
+ * - The room runs where it's best for the group: in the lobby every client
+ *   reports its round trips to the relays (`rtt`), and the host's Start
+ *   first moves the room to the relay with the best worst round trip when it
+ *   clearly beats where it is (`groupHome`): the host makes a room there, the
+ *   old one tells everyone `moved`, they follow with their Pokémon and ready,
+ *   and the run starts once they're in (`MOVE`). Any failure starts it where it is.
  * - Few messages up (the relay's Durable Object is billed per message it
  *   receives): at most one a display frame, a `batch` of everything due
  *   (`frame`). Inputs go at once; the hash, the ping and the heartbeat wait to
@@ -67,6 +73,30 @@ export const CONNECT = {
   jump: 1800,
 } as const
 
+/** Moving the room for the group (the host's Start), in ms. */
+export const MOVE = {
+  /** The new room must be made within this long, or the run starts where the room is. */
+  create: 4000,
+  /** The old room must say `moved` within this long of the host's `move`, or the run starts where it is. */
+  echo: 3000,
+  /** The host's Start waits this long at most for everyone to be in the new room and ready, then goes with whoever made it. */
+  gather: 8000,
+} as const
+
+/** Round trips measured in the lobby: socket pings kept, how many make a report, how fast the first ones go, how often a report may go (ms) and the change worth saying (ms). */
+const LOBBY = { pings: 9, enough: 3, probe: 500, every: 2000, change: 15 } as const
+
+/**
+ * The room moving for the group. `host`: this client's Start asked for it (it
+ * then starts the run in the new room); `code`: the new room, null while it
+ * is being made; `claim`: its host's claim; `expect`: the players online when
+ * it moved; `at`: when the current step began (ms).
+ */
+export type Moving = { host: boolean; code: string | null; claim: string | null; expect: number; at: number }
+
+/** What a player brings into the room the group moved to, said again once welcomed there. */
+type Carry = { loadout: Loadout | null; ready: boolean; settings: Settings | null; claim: string | null }
+
 /** Why a client stopped for good. `build`: the room runs another version of the game (update to play together); `signIn`: the relay takes accounts only. */
 export type CloseWhy = CloseReason | Exclude<Refusal, 'unavailable'> | 'unavailable' | 'offline'
 
@@ -78,7 +108,7 @@ export type Status =
   | { kind: 'playing' }
   | { kind: 'closed'; why: CloseWhy }
 
-export type CreateResult = { ok: true; code: string; region: Region; home: RelayHome } | { ok: false; why: Extract<CreateResponse, { error: string }>['error'] | 'offline' }
+export type CreateResult = { ok: true; code: string; region: Region; home: RelayHome; claim: string | null } | { ok: false; why: Extract<CreateResponse, { error: string }>['error'] | 'offline' }
 
 export type JoinResult = { ok: true; seat: number; room: RoomView } | { ok: false; why: CloseWhy }
 
@@ -112,6 +142,10 @@ export type CoopEvent =
   | { kind: 'ended'; run: number; tick: number }
   | { kind: 'denied'; why: 'notHost' | 'notReady' }
   | { kind: 'slow' }
+  /** The room is being moved for the group (`moving` in the state), or not any more. */
+  | { kind: 'moving'; on: boolean }
+  /** The room moved: the client is joining `to` (the shell's link follows). */
+  | { kind: 'moved'; from: string; to: string }
 
 /** What the client hears from its socket. */
 export type SocketHandlers = { open: () => void; message: (data: unknown) => void; close: (code: number) => void }
@@ -210,6 +244,21 @@ export type ClientState = {
   net: NetStats
   /** Where the relay runs and where this client meets Cloudflare (`welcome`). */
   where: NetWhere
+  /** The relay takes `rtt` and `move` (its `welcome` said `moves`). */
+  moves: boolean
+  /** The VPS relays' round trips measured for this room (`vpsFor`: the room they were asked for). */
+  vpsRtts: ReadonlyMap<VpsHome, number | null> | null
+  vpsFor: string | null
+  /** This socket's ping round trips in the lobby (ms, the newest `LOBBY.pings`): a Cloudflare room's own. */
+  lobbyPings: number[]
+  /** The round trips last reported to the room (`rtt`), and when (ms). */
+  reported: Rtts | null
+  reportedAt: number
+  moving: Moving | null
+  /** What to say again once welcomed in the room the group moved to. */
+  carry: Carry | null
+  /** This client reached its room by a move: it never moves it again. */
+  movedIn: boolean
 }
 
 /** The team is held: a pick screen up, or the world waiting on away players. */
@@ -248,6 +297,15 @@ export const createCoopClient = (deps: CoopDeps) => {
     roomBuild: null,
     net: createNetStats(),
     where: { relayColo: null, relayRegion: null, edgeColo: null, edgeRtt: null },
+    moves: false,
+    vpsRtts: null,
+    vpsFor: null,
+    lobbyPings: [],
+    reported: null,
+    reportedAt: -Infinity,
+    moving: null,
+    carry: null,
+    movedIn: false,
   }
   const listeners = new Set<(e: CoopEvent) => void>()
   const emit = (e: CoopEvent) => listeners.forEach((fn) => fn(e))
@@ -328,6 +386,8 @@ export const createCoopClient = (deps: CoopDeps) => {
     s.welcomed = false
     ws?.close()
     if (why === 'left' || why === 'kicked' || why === 'expired') deps.store.remove(secretKey(s.code ?? ''))
+    s.moving = null
+    s.carry = null
     joining?.({ ok: false, why })
     joining = null
     setStatus({ kind: 'closed', why })
@@ -378,6 +438,7 @@ export const createCoopClient = (deps: CoopDeps) => {
           secret: deps.store.get(secretKey(code)),
           name: deps.name(),
           resume: resumeFrom(),
+          ...(s.carry?.claim ? { claim: s.carry.claim } : {}),
         }
         ws.send(JSON.stringify(hello))
       },
@@ -439,14 +500,28 @@ export const createCoopClient = (deps: CoopDeps) => {
         if (s.code) deps.store.set(secretKey(s.code), m.secret)
         onReconnect(s.outbox)
         s.batch = m.batch === true
+        s.moves = m.moves === true
         s.pace = createStickPace()
         s.later = []
+        bringAlong(m.room, m.seat)
         joining?.({ ok: true, seat: m.seat, room: m.room })
         joining = null
         setStatus({ kind: m.room.phase === 'playing' ? 'playing' : 'room' })
         emit({ kind: 'room', room: m.room })
         endedWhileAway(m.room)
         return
+      }
+      case 'moved': {
+        const to = parseRoomCode(m.code)
+        if (!to || to === s.code) return
+        const mv = s.moving
+        const mine = mv?.host === true && mv.code === to
+        const room = s.room?.code === s.code ? s.room : null
+        const me = room?.members.find((x) => x.seat === s.seat)
+        s.carry = { loadout: me?.loadout ?? null, ready: me?.ready ?? false, settings: me?.host && room ? room.settings : null, claim: mine ? mv.claim : null }
+        if (mine) s.moving = { ...mv, at: now }
+        else setMoving({ host: false, code: to, claim: null, expect: 0, at: now })
+        return follow(to)
       }
       case 'refused':
         lastRefusal = m.code
@@ -462,7 +537,7 @@ export const createCoopClient = (deps: CoopDeps) => {
       }
       case 'start': {
         s.uploader = false
-        s.net = createNetStats(m.run.id, now)
+        s.net = createNetStats(m.run.id, now, s.hidden)
         const r = runnerFor(m.run)
         s.runner = r
         setStatus({ kind: 'playing' })
@@ -474,7 +549,7 @@ export const createCoopClient = (deps: CoopDeps) => {
         // The relay may order the same heal again for hashes sent before the first reached us: one restore is enough.
         if (m.reason === 'heal' && before && before.healing && m.base && before.stats.syncs.at(-1)?.base === m.base.tick && before.start.id === m.run.id) return
         const next = onSync(before, m, s.code ?? '', s.seat ?? 0, runnerDeps)
-        if (s.net.run !== m.run.id) s.net = createNetStats(m.run.id, now)
+        if (s.net.run !== m.run.id) s.net = createNetStats(m.run.id, now, s.hidden)
         else resetArrivalLine(s.net)
         if (next === 'rejoin') {
           s.fresh = true
@@ -525,12 +600,25 @@ export const createCoopClient = (deps: CoopDeps) => {
           const rtt = now - m.at
           s.rtt = s.rtt === 0 ? rtt : s.rtt * 0.8 + rtt * 0.2
           addSample(s.net.rtt, rtt)
+          if (s.room?.phase === 'lobby') {
+            s.lobbyPings.push(rtt)
+            if (s.lobbyPings.length > LOBBY.pings) s.lobbyPings.shift()
+          }
         }
         s.pingAt = null
         return
       case 'bye':
         return
     }
+  }
+
+  /** Forgets what this client measured and reported for its last room. */
+  const forgetRoom = () => {
+    s.vpsRtts = null
+    s.vpsFor = null
+    s.lobbyPings = []
+    s.reported = null
+    s.reportedAt = -Infinity
   }
 
   /** Joins room `code` (a link, a typed code): resolves once the relay seats this client or refuses it. */
@@ -543,6 +631,10 @@ export const createCoopClient = (deps: CoopDeps) => {
     s.room = null
     s.fresh = false
     s.roomBuild = null
+    s.moving = null
+    s.carry = null
+    s.movedIn = false
+    forgetRoom()
     lastRefusal = null
     setStatus({ kind: 'connecting', attempt: 0 })
     return new Promise((resolve) => {
@@ -572,13 +664,15 @@ export const createCoopClient = (deps: CoopDeps) => {
     return measured.rtts
   }
 
-  const reserve = async (home: RelayHome, region: Region): Promise<CreateResult> => {
+  const reserve = async (home: RelayHome, region: Region, timeout?: number): Promise<CreateResult> => {
     try {
-      const res = await deps.fetch(`${relayUrl(home)}/rooms`, { method: 'POST', body: JSON.stringify({ v: PROTOCOL, build: deps.build, region }), headers: { 'Content-Type': 'application/json' } })
+      const signal = timeout === undefined ? undefined : AbortSignal.timeout(timeout)
+      const res = await deps.fetch(`${relayUrl(home)}/rooms`, { method: 'POST', body: JSON.stringify({ v: PROTOCOL, build: deps.build, region }), headers: { 'Content-Type': 'application/json' }, signal })
       const body: unknown = await res.json()
       if (typeof body === 'object' && body !== null && 'code' in body && typeof body.code === 'string') {
         const region = REGIONS.find((r) => 'region' in body && r === body.region) ?? 'auto'
-        return { ok: true, code: body.code, region, home }
+        const claim = 'claim' in body && typeof body.claim === 'string' ? body.claim : null
+        return { ok: true, code: body.code, region, home, claim }
       }
       const error = typeof body === 'object' && body !== null && 'error' in body ? body.error : null
       return { ok: false, why: error === 'version' || error === 'rate' || error === 'busy' || error === 'invalid' ? error : 'offline' }
@@ -613,6 +707,151 @@ export const createCoopClient = (deps: CoopDeps) => {
     if (s.welcomed) send({ t: 'leave' })
     if (s.code) deps.store.remove(secretKey(s.code))
     finish('left')
+  }
+
+  /* ---------------- The room's relay, for the group ---------------- */
+
+  /**
+   * The relay the room should move to before its first run, or null: only the
+   * host asks, in a room whose relay takes moves, with company, never twice.
+   */
+  const moveTarget = (): RelayHome | null => {
+    const room = s.room
+    const code = s.code
+    if (!s.moves || s.movedIn || !room || !code || room.code !== code || room.phase !== 'lobby') return null
+    if (!room.members.some((m) => m.seat === s.seat && m.host)) return null
+    const online = room.members.filter((m) => m.online)
+    if (online.length < 2) return null
+    return groupHome(homeOf(code), VPS_HOMES.filter((h) => vps[h]), online.map((m) => m.rtt ?? null))
+  }
+
+  const setMoving = (next: Moving | null) => {
+    const was = s.moving !== null
+    s.moving = next
+    if (was !== (next !== null)) emit({ kind: 'moving', on: next !== null })
+  }
+
+  /** The run starts in the room the client is in now (a move done, or given up). */
+  const startHere = () => {
+    setMoving(null)
+    send({ t: 'start' })
+  }
+
+  /**
+   * The host's Start: the run starts at once, or the room first moves to the
+   * relay best for the group (`moveTarget`): a room is made there and the old
+   * one told to send everyone over. The run starts here if that can't be done.
+   */
+  const start = () => {
+    if (s.moving) return
+    const target = moveTarget()
+    if (!target) return void send({ t: 'start' })
+    const from = s.code
+    setMoving({ host: true, code: null, claim: null, expect: s.room?.members.filter((m) => m.online).length ?? 1, at: deps.now() })
+    void reserve(target, 'auto', MOVE.create).then((made) => {
+      const mv = s.moving
+      if (!mv?.host || mv.code !== null || s.code !== from) return
+      // No claim: a relay from before moves, where the host might not get the crown back.
+      if (!made.ok || !made.claim || !s.welcomed || s.room?.phase !== 'lobby') return startHere()
+      s.moving = { ...mv, code: made.code, claim: made.claim, at: deps.now() }
+      if (!send({ t: 'move', code: made.code })) startHere()
+    })
+  }
+
+  /** Over to room `to` (the old room said `moved`): this socket goes, the new one says the claim and brings the player along. */
+  const follow = (to: string) => {
+    const from = s.code ?? ''
+    const ws = s.socket
+    s.socket = null
+    s.welcomed = false
+    s.pingAt = null
+    ws?.close()
+    s.code = to
+    s.attempt = 0
+    s.fresh = false
+    s.roomBuild = null
+    s.runner = null
+    // Another relay: the round trip starts over.
+    s.rtt = 0
+    s.movedIn = true
+    forgetRoom()
+    lastRefusal = null
+    emit({ kind: 'moved', from, to })
+    setStatus({ kind: 'connecting', attempt: 0 })
+    void open()
+  }
+
+  /** Welcomed in a room the group moved to: this player's Pokémon, ready and (the host's) settings, as they were. */
+  const bringAlong = (room: RoomView, seat: number) => {
+    const carry = s.carry
+    s.carry = null
+    if (s.moving && !s.moving.host) setMoving(null)
+    if (!carry || room.phase === 'playing') return
+    if (carry.loadout) send({ t: 'loadout', loadout: carry.loadout })
+    if (carry.settings && room.members.some((m) => m.seat === seat && m.host)) send({ t: 'settings', settings: carry.settings })
+    if (carry.ready && carry.loadout) send({ t: 'ready', ready: true })
+  }
+
+  /**
+   * The host's move, each frame: given up when the old room never said
+   * `moved` (the run starts there), and in the new room the run starts once
+   * everyone who was online is in and ready, or at `MOVE.gather` with
+   * whoever made it.
+   */
+  const tendMove = (now: number) => {
+    const mv = s.moving
+    if (!mv?.host || mv.code === null) return
+    if (s.code !== mv.code) {
+      if (now - mv.at > MOVE.echo) startHere()
+      return
+    }
+    const room = s.room
+    if (!s.welcomed || room?.code !== mv.code) {
+      // The new room never let the host in: the client keeps trying like any reconnect, without the line.
+      if (now - mv.at > 2 * MOVE.gather) setMoving(null)
+      return
+    }
+    const online = room.members.filter((m) => m.online)
+    const set = online.every((m) => m.loadout !== null && (m.host || m.ready))
+    if ((online.length >= mv.expect && set) || now - mv.at > MOVE.gather) startHere()
+  }
+
+  /** Whether two reports say about the same (within `LOBBY.change` ms): not worth saying again. */
+  const sameReport = (a: Rtts, b: Rtts) =>
+    Object.keys(a).length === Object.keys(b).length &&
+    Object.entries(b).every(([home, ms]) => {
+      const was = isRelayHome(home) ? a[home] : undefined
+      return was === ms || (typeof was === 'number' && typeof ms === 'number' && Math.abs(was - ms) < LOBBY.change)
+    })
+
+  /**
+   * In a lobby whose relay takes moves: measures the VPS relays once and
+   * reports them with the room's own pings (a Cloudflare room's round trip),
+   * again when they change, so the host's Start can pick for everyone.
+   */
+  const reportRtts = (now: number) => {
+    const room = s.room
+    const code = s.code
+    if (!s.moves || s.movedIn || !s.welcomed || !room || !code || room.phase !== 'lobby' || now - s.reportedAt < LOBBY.every) return
+    if (s.vpsFor !== code) {
+      s.vpsFor = code
+      void measureVps().then((rtts) => {
+        if (s.vpsFor === code) s.vpsRtts = rtts
+      })
+    }
+    if (!s.vpsRtts) return
+    const ms: { [H in RelayHome]?: number | null } = {}
+    for (const [home, rtt] of s.vpsRtts) ms[home] = rtt === null ? null : Math.round(rtt)
+    if (homeOf(code) === 'cf') {
+      const cf = s.lobbyPings.length >= LOBBY.enough ? median(s.lobbyPings) : null
+      if (cf === null) return
+      ms.cf = Math.round(cf)
+    }
+    if (s.reported && sameReport(s.reported, ms)) return
+    if (send({ t: 'rtt', ms })) {
+      s.reported = ms
+      s.reportedAt = now
+    }
   }
 
   /** Queues an input of the player's for the run. */
@@ -663,11 +902,13 @@ export const createCoopClient = (deps: CoopDeps) => {
     const silent = now - s.lastSentAt >= CONNECT.heartbeat
     const stale = s.later.length > 0 && now - s.later[0]!.at >= CONNECT.lazy
     const unanchored = playing && s.pace.code !== 0 && now - s.anchoredAt >= CONNECT.anchor
-    if (out.length === 0 && !silent && !stale && !unanchored) return out
+    // A Cloudflare room's lobby: its first pings go quicker, its round trip being one the group's choice reads.
+    const probing = s.moves && !s.movedIn && s.room?.phase === 'lobby' && s.code !== null && homeOf(s.code) === 'cf' && s.lobbyPings.length < LOBBY.pings && now - s.lastPingAt >= LOBBY.probe
+    if (out.length === 0 && !silent && !stale && !unanchored && !probing) return out
     out.push(...s.later.splice(0).map((l) => l.msg))
     if (playing && !out.some((m) => m.t === 'in' && m.k === 'move')) out.push({ t: 'in', k: 'move', d: [s.pace.code, s.sample] })
     if (out.length === 0) out.push({ t: 'hb' })
-    if (now - s.lastPingAt >= CONNECT.ping) {
+    if (now - s.lastPingAt >= CONNECT.ping || probing) {
       s.lastPingAt = now
       s.pingAt ??= now
       out.push({ t: 'ping', at: now })
@@ -680,6 +921,7 @@ export const createCoopClient = (deps: CoopDeps) => {
   const setHidden = (hidden: boolean) => {
     if (s.hidden === hidden) return
     s.hidden = hidden
+    noteHidden(s.net, hidden, deps.now())
     if (hidden) return
     s.lastMessageAt = Math.max(s.lastMessageAt, deps.now() - CONNECT.stalled)
     s.pingAt = null
@@ -712,7 +954,9 @@ export const createCoopClient = (deps: CoopDeps) => {
       // Not while syncing: a client busy catching up answers its own pongs late.
       if (s.welcomed && s.pingAt !== null && now - s.pingAt > CONNECT.uplink && !s.runner?.syncing) return (noteReconnect('uplink'), reconnect(), 0)
       if (s.welcomed) sendAll(outgoing(now))
+      reportRtts(now)
     }
+    tendMove(now)
     const r = s.runner
     if (!r || s.hidden) return 0
     const t0 = deps.now()
@@ -755,8 +999,8 @@ export const createCoopClient = (deps: CoopDeps) => {
     setReady: (ready: boolean) => send({ t: 'ready', ready }),
     setSettings: (settings: CoopSettings) => send({ t: 'settings', settings: settingsOf(settings) }),
     kick: (seat: number) => send({ t: 'kick', seat }),
-    /** The host starts the run (or the next one, after a run: "Jogar de novo"); everyone else must be ready. */
-    start: () => send({ t: 'start' }),
+    /** The host starts the run (or the next one, after a run: "Jogar de novo"); everyone else must be ready. The first may move the room first (`start`). */
+    start,
     input,
     stick,
     setHidden,

@@ -12,7 +12,7 @@ import { coopPayout, playerDexLog } from './game/coop'
 import { mergeDex, recordRun, type Pokedex } from './game/dex'
 import { localPlayer } from './game/players'
 import type { Game, GameEvent } from './game/types'
-import { ROOM_PARAM, parseRoomCode, type VpsHome } from './net/protocol'
+import { ROOM_PARAM, VPS_HOMES, parseRoomCode, type VpsHome } from './net/protocol'
 import { REF_PARAM } from './game/referral'
 import { ROUTES } from './site/routes'
 import { locale } from './i18n'
@@ -366,6 +366,16 @@ const memoryStore = (): Store => {
   return { get: (k) => data.get(k) ?? null, set: (k, v) => void data.set(k, v), remove: (k) => void data.delete(k), keys: () => [...data.keys()] }
 }
 
+/** Dev: the relays the tab's bots reach instead of this tab's (a latency lab puts them elsewhere), or null. */
+let botRelays: { url: string | null; vps: VpsUrls } | null = null
+
+/** Dev: the bots' relays as `cf=URL&sa=URL&us=URL` (any of them; the rest are this tab's), or null for this tab's. */
+export const setBotRelays = (spec: string | null) => {
+  const q = spec ? new URLSearchParams(spec) : null
+  botRelays = q ? { url: q.get('cf'), vps: { ...coopVpsUrls(), ...Object.fromEntries(VPS_HOMES.flatMap((h) => (q.get(h) ? [[h, q.get(h)]] : []))) } } : null
+  return botRelays
+}
+
 /** Dev: `n` bots join room `code` (they set a loadout and get ready; the soak's bots in a tab). */
 export const addBots = async (code: string, n: number) => {
   const url = coopUrl()
@@ -373,7 +383,8 @@ export const addBots = async (code: string, n: number) => {
   const joined: number[] = []
   for (let i = 0; i < n; i++) {
     const k = bots.length
-    const bot = createBot(browserDeps(url, memoryStore(), async () => null, () => `Bot ${k + 1}`), { seed: 7 + k * 31, vote: false })
+    const deps = browserDeps(botRelays?.url ?? url, memoryStore(), async () => null, () => `Bot ${k + 1}`)
+    const bot = createBot(botRelays ? { ...deps, vps: botRelays.vps } : deps, { seed: 7 + k * 31, vote: false })
     bots.push(bot)
     const res = await bot.client.join(code)
     if (!res.ok) continue
@@ -404,7 +415,12 @@ export const removeBots = () => {
   botLoop = null
 }
 
-export const botCount = () => bots.length
+/** Dev: where each of the tab's bots is (its room, status and round trip), for `ps.coop()`. */
+export const botStates = () =>
+  bots.map((b) => {
+    const st = b.client.state()
+    return { code: st.code, status: st.status.kind, seat: st.seat, rtt: Math.round(st.rtt) }
+  })
 
 /** Dev: the tab's bots stop kiting and walk into the horde (staging a faint, a revive, the team's wipe). */
 export const surrenderBots = () => {

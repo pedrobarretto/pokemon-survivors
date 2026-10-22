@@ -161,7 +161,7 @@ import { suggestionsScreen } from './ui/suggestions'
 import { banner, clearToasts, tickToasts, toast } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
-import { addBots, bankCoopRun, botCount, buildRefusal, coopClient, coopEntry, coopEventFor, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, onCoopEntry, refreshCoopEntry, removeBots, reportCoopNet, reportHeal, setCoopBeta, setCoopUrl, setCoopVpsUrl, surrenderBots, type CoopNetOutcome } from './coopShell'
+import { addBots, bankCoopRun, botStates, buildRefusal, coopClient, coopEntry, coopEventFor, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, onCoopEntry, refreshCoopEntry, removeBots, reportCoopNet, reportHeal, setCoopBeta, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
 import { coopAccess, coopStarter, freshInvites } from './coop/lobby'
@@ -2018,6 +2018,10 @@ const watchCoop = (client: CoopClient) => {
         return toast(ui, t().coop.healed, 2200, 'coopHealed')
       case 'slow':
         return toast(ui, t().coop.slow, 2200, 'coopSlow')
+      case 'moved':
+        // The room went to the relay best for the group: the link (a reload, a share) follows it.
+        linkRoom(e.to)
+        return syncPresence()
       case 'room':
         if (c) playAgain(c)
         return
@@ -2042,7 +2046,8 @@ const joinCoop = async (code: string, via: 'code' | 'link' | 'invite' | null) =>
   const res = await client.join(code)
   if (!res.ok) return res
   if (via) track('coop', { step: 'join', via })
-  linkRoom(code)
+  // The room it landed in: an old link's room may have moved (`moved`).
+  linkRoom(res.room.code)
   const save = loadSave()
   const starter = coopStarter(save.partner)
   client.setLoadout({ starter, ranks: save.ranks, shiny: playsShiny(save, starter) })
@@ -2935,7 +2940,7 @@ const devLandmark = (g: Game, id?: LandmarkId, dy = 60) => {
  * failure would, `('fresh')` rejoins as a new tab (the snapshot), `('desync')`
  * nudges this client's state off the team's (the relay heals it), `('pick', id)` another
  * Pokémon for the room, `('url', u)`
- * points at another relay (null: the default), `('relay', home, u)` sets a VPS relay (`sa`: São Paulo, for South American hosts' rooms), `('net')` the connection numbers and the run's `coop_net` so far; `('room')` and
+ * points at another relay (null: the default), `('relay', home, u)` sets a VPS relay (`sa`: São Paulo, for South American hosts' rooms), `('botRelays', 'cf=u&sa=u&us=u')` the relays the next bots reach (a latency lab), `('net')` the connection numbers and the run's `coop_net` so far; `('room')` and
  * `('hub')` open those screens, `('beta', true|false|null)` forces the lobby's tile on this device,
  * `('build')` joins a room made for another build (the "update" refusal) and `('invite', code, name)`
  * stages a friend's invite banner without the API.
@@ -2947,7 +2952,7 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
   const st = client.state()
   switch (cmd) {
     case undefined:
-      return { status: st.status, code: st.code, seat: st.seat, room: st.room, tick: st.runner?.next, known: st.runner?.known, bots: botCount() }
+      return { status: st.status, code: st.code, seat: st.seat, room: st.room, moving: st.moving, rtt: Math.round(st.rtt), tick: st.runner?.next, known: st.runner?.known, bots: botStates() }
     case 'create': {
       const made = await client.create()
       if (!made.ok) return made
@@ -3011,6 +3016,9 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
       setCoopVpsUrl(home, typeof extra === 'string' ? extra : null)
       return 'ps.coop: reload to use it'
     }
+    case 'botRelays':
+      // The relays the tab's next bots reach, for a latency lab: ps.coop('botRelays', 'cf=http://127.0.0.1:8883&sa=…&us=…'); null: this tab's.
+      return setBotRelays(typeof arg === 'string' ? arg : null)
     case 'wall': {
       // Read-only: the nearest solid's foot to this player, and whether the drawn or the confirmed sprite sits in one.
       const c = run?.coop
@@ -3033,7 +3041,7 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
       return { ...client.connection(), queued: client.queued(), stats: r?.stats, tickMs: r?.tickMs, slot: r?.slot, where: st.where, summary, last: lastCoopNet() }
     }
     default:
-      return 'ps.coop(): create, join, bots, surrender, pick, ready, start, leave, drop, fresh, desync, url, relay, net, wall, room, hub, beta, build, invite'
+      return 'ps.coop(): create, join, bots, surrender, pick, ready, start, leave, drop, fresh, desync, url, relay, botRelays, net, wall, room, hub, beta, build, invite'
   }
 }
 
