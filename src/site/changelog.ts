@@ -36,6 +36,21 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     ],
     changes: [
       {
+        title: { pt: 'Passear pela praça no celular', en: 'Walk around the plaza on your phone', es: 'Pasear por la plaza en el celular' },
+        notes: [
+          {
+            pt: 'O novo botão Passear, ao lado do seu Pokémon no lobby, guarda os cartões e deixa só o campo: toque na grama ou arraste o dedo para andar até a praça do Kecleon, e toque em Falar perto do Kecleon, do Meowth, das barracas, da fonte ou da placa. Ao fechar a loja ou o festival, você continua passeando; Voltar (ou Esc) traz o lobby de volta.',
+            en: 'The new Explore button, next to your Pokémon in the lobby, puts the cards away and leaves just the meadow: tap the grass or drag your finger to walk to the Kecleon plaza, and tap Talk near Kecleon, Meowth, the stalls, the fountain or the plaque. Closing the shop or the festival keeps you walking; Back (or Esc) brings the lobby back.',
+            es: 'El nuevo botón Pasear, al lado de tu Pokémon en el lobby, guarda las tarjetas y deja solo el campo: toca el pasto o arrastra el dedo para caminar hasta la plaza de Kecleon, y toca Hablar cerca de Kecleon, Meowth, los puestos, la fuente o la placa. Al cerrar la tienda o el festival, sigues paseando; Volver (o Esc) trae el lobby de vuelta.',
+          },
+          {
+            pt: 'Corrigido: com a loja aberta, tocar na praça acima dela às vezes apertava botões invisíveis do lobby e abria o TikTok, o YouTube, o Instagram ou o Discord.',
+            en: 'Fixed: with the shop open, tapping the plaza above it sometimes pressed invisible lobby buttons and opened TikTok, YouTube, Instagram or Discord.',
+            es: 'Corregido: con la tienda abierta, tocar la plaza encima de ella a veces apretaba botones invisibles del lobby y abría TikTok, YouTube, Instagram o Discord.',
+          },
+        ],
+      },
+      {
         title: { pt: 'Ovo do Kecleon', en: 'Kecleon Egg', es: 'Huevo Kecleon' },
         notes: [
           {

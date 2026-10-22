@@ -3944,6 +3944,42 @@ button {
   display: none;
 }
 
+/* Passear, across the partner from the gift box. */
+.lobby-explore {
+  position: absolute;
+  top: 50%;
+  right: calc(50% + 56px);
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px 6px;
+  border-color: #402818;
+  --frame: #a86838;
+  font: inherit;
+  color: var(--ink);
+  pointer-events: auto;
+}
+
+.lobby-explore img {
+  width: 26px;
+  height: 26px;
+  image-rendering: pixelated;
+}
+
+.lobby-explore b {
+  font-family: var(--title);
+  font-size: 7px;
+  font-weight: 400;
+}
+
+.lobby-explore:hover,
+.lobby-explore.selected {
+  --frame: #f8d030;
+}
+
 .lobby-gift:hover,
 .lobby-gift.selected {
   --frame: #e83838;
@@ -4438,7 +4474,7 @@ button {
 
 /* ---------- The trip to the Kecleon's shop (ui/title.ts) ---------- */
 
-/* Going shopping (`translate`, so the buttons keep `transform` for their press), the lobby's cards slide off the edges (left ones left, right ones right, the dock down) and come back in the same way. */
+/* Going shopping or for a walk (Passear) (`translate`, so the buttons keep `transform` for their press), the lobby's cards slide off the edges (left ones left, right ones right, the dock down) and come back in the same way. */
 .title-home .shell-top,
 .lobby-logo,
 .lobby-today,
@@ -4454,35 +4490,35 @@ button {
   pointer-events: none;
 }
 
-.title-home.visiting .shell-top {
+.title-home:is(.visiting, .exploring) .shell-top {
   translate: 0 calc(-100% - 24px);
 }
 
-.title-home.visiting .lobby-logo {
+.title-home:is(.visiting, .exploring) .lobby-logo {
   translate: 0 -60%;
   opacity: 0;
 }
 
-.title-home.visiting .lobby-today {
+.title-home:is(.visiting, .exploring) .lobby-today {
   translate: calc(-100% - 40px);
 }
 
-.title-home.visiting .lobby-side {
+.title-home:is(.visiting, .exploring) .lobby-side {
   translate: calc(100% + 40px);
 }
 
-.title-home.visiting .lobby-stage {
+.title-home:is(.visiting, .exploring) .lobby-stage {
   opacity: 0;
 }
 
-.title-home.visiting .lobby-bottom {
+.title-home:is(.visiting, .exploring) .lobby-bottom {
   translate: 0 calc(100% + 40px);
 }
 
 /* Portrait phones stack Hoje and the Hall on top: they leave upwards with the bar. */
 @media (max-width: 759px) and (min-height: 501px), (max-width: 759px) and (orientation: portrait) {
-  .title-home.visiting .lobby-today,
-  .title-home.visiting .lobby-side {
+  .title-home:is(.visiting, .exploring) .lobby-today,
+  .title-home:is(.visiting, .exploring) .lobby-side {
     translate: 0 -140%;
     opacity: 0;
   }
@@ -4490,16 +4526,16 @@ button {
 
 /* Landscape phones: Hoje and the Hall are the right column, and the dock's tiles and JOGAR sit straight in the grid. */
 @media (max-height: 500px) and (orientation: landscape) {
-  .title-home.visiting .lobby-today,
-  .title-home.visiting .lobby-side {
+  .title-home:is(.visiting, .exploring) .lobby-today,
+  .title-home:is(.visiting, .exploring) .lobby-side {
     translate: calc(100% + 40px);
   }
   .lobby-tile,
   .lobby-play {
     transition: translate 0.45s cubic-bezier(0.65, 0, 0.35, 1);
   }
-  .title-home.visiting .lobby-tile,
-  .title-home.visiting .lobby-play {
+  .title-home:is(.visiting, .exploring) .lobby-tile,
+  .title-home:is(.visiting, .exploring) .lobby-play {
     translate: 0 calc(100% + 40px);
   }
 }
@@ -4538,6 +4574,84 @@ button {
 
 .plaza-talk .key-hint {
   position: static;
+}
+
+/* On touch the prompt is the way to talk: a bigger target, "Falar" alone. */
+@media (hover: none) {
+  .plaza-talk {
+    min-height: 40px;
+    padding: 8px 16px;
+    font-size: 11px;
+  }
+}
+
+/* While the lobby's cards are away (`setAway` in ui/title.ts makes them inert), none of them takes a tap, whatever its own pointer-events say. */
+.title-home [inert],
+.title-home [inert] * {
+  pointer-events: none;
+}
+
+/* Passear (ui/title.ts): the cards are away; the back button waits in the top-left corner and a hint at the bottom until the first step. */
+.explore-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.title-home:not(.exploring) .explore-hud,
+.title-home.visiting .explore-hud {
+  display: none;
+}
+
+.explore-back {
+  position: absolute;
+  top: max(12px, var(--safe-t));
+  left: max(12px, var(--safe-l));
+  font-family: var(--title);
+  font-size: 9px;
+  pointer-events: auto;
+  animation: pop 0.25s steps(5) both;
+}
+
+.explore-back b {
+  font-weight: 400;
+}
+
+.explore-back .key-hint {
+  position: static;
+}
+
+.explore-hint {
+  position: absolute;
+  left: 50%;
+  bottom: max(24px, calc(var(--safe-b) + 12px));
+  translate: -50%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 14px;
+  font-size: 18px;
+  color: #fff;
+  white-space: nowrap;
+  background: rgba(40, 48, 64, 0.85);
+  border-radius: 12px;
+}
+
+.explore-hint .key-hint {
+  position: static;
+  margin-right: 4px;
+}
+
+/* A gamepad has no words here (both hints step aside): no empty pill. */
+:root[data-input='pad'] .explore-hint {
+  display: none;
+}
+
+.explore-hint b {
+  margin-left: 4px;
+  font-weight: 400;
 }
 
 /* ---------- Dialogue box (ui/dialogue.ts) ---------- */
@@ -6637,6 +6751,7 @@ button {
 
 .banner.out {
   opacity: 0;
+  pointer-events: none;
 }
 
 .banner.dismissible {

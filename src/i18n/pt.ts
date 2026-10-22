@@ -115,6 +115,11 @@ export const pt = {
     /** Over the partner until its first walk: after the movement keys, and on touch screens. */
     stroll: 'passear',
     strollTouch: 'Toque na grama para passear',
+    /** Passear: the button by the partner that puts the lobby's cards away to walk the meadow and the plaza, its label for screen readers, and the hint while walking. */
+    explore: 'Passear',
+    exploreLabel: 'Passear pelo campo e pela praça',
+    exploreTouch: 'Toque ou arraste para andar',
+    exploreKeys: 'andar',
     pokedex: 'Pokédex',
     eggs: 'Ovos',
     eggsReady: (n: number) => (n === 1 ? '1 ovo pronto para chocar' : `${n} ovos prontos para chocar`),

@@ -14,7 +14,7 @@ import { dayKey, missionStatus } from '../game/missions'
 import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import { supporterCount, type WallEntry } from '../game/supporters'
 import { formatNumber, locale, t } from '../i18n'
-import { bulbIcon, coinIcon, coopIcon, discordIcon, eggIcon, giftIcon, heartIcon, medalIcon, newsIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
+import { bulbIcon, coinIcon, coopIcon, discordIcon, eggIcon, giftIcon, heartIcon, medalIcon, newsIcon, pawIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
 import type { Place } from '../render/titleScene'
@@ -67,6 +67,7 @@ export type LobbyFocus =
   | 'ideas'
   | 'coop'
   | 'play'
+  | 'explore'
   | SocialId
 
 /**
@@ -90,6 +91,8 @@ export type Meadow = {
   visit: (to: Place, instant?: boolean) => void
   /** Where the meadow rests, or `moving` during a trip. */
   at: () => Place | 'moving'
+  /** Passear on or off: on, the partner hops into the meadow and stays out, the camera following it; off, it heads back to its stage. */
+  explore: (on: boolean) => void
   /** Above whoever at the plaza the strolling partner stands close enough to talk to (and who), or null. */
   talkSpot: () => (Vec & { who: PlazaNpc }) | null
   /** Who a tap is for: the shop (its shopkeepers, building or the edge marker pointing to it), Meowth, a stall, the festival's fountain or plaque; null for none. */
@@ -369,6 +372,17 @@ const giftButton = () => {
   return el
 }
 
+/** Passear, on the partner's stage across from the gift box: a paw print over its label. */
+const exploreButton = () => {
+  const m = t().home
+  return h(
+    'button',
+    { class: 'lobby-explore box', type: 'button', 'aria-label': m.exploreLabel, title: m.exploreLabel },
+    h('img', { src: pawIcon(), alt: '' }),
+    h('b', {}, m.explore),
+  )
+}
+
 /* ---------------- Hall da Fama ---------------- */
 
 /** Who the Hall card shows first: gold before supporters, then who came first. */
@@ -592,9 +606,12 @@ const TAP_SLOP = 12
 /** Whether a press on `target` lands on the meadow rather than on a button, a card or a link. */
 const onMeadow = (target: EventTarget | null) => target instanceof Element && !target.closest('button, a, input, select, .box')
 
-/** The movement keys held (WASD, or as rebound), normalized. */
-const heldMove = (input: Input): Vec => {
-  const held = (a: 'up' | 'down' | 'left' | 'right') => (input.isHeld(ACTIONS[a].key) ? 1 : 0)
+/** The arrow that walks the same way as each movement key, during Passear (where the arrows have no buttons to move between). */
+const ARROWS = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' } as const
+
+/** The movement keys held (WASD, or as rebound; the arrows too with `arrows`), normalized. */
+const heldMove = (input: Input, arrows: boolean): Vec => {
+  const held = (a: keyof typeof ARROWS) => (input.isHeld(ACTIONS[a].key) || (arrows && input.isHeld(ARROWS[a])) ? 1 : 0)
   const x = held('right') - held('left')
   const y = held('down') - held('up')
   const len = Math.hypot(x, y)
@@ -637,6 +654,9 @@ export type ShopTrip = 'shop' | 'festival' | 'plaque' | 'look'
  * of home (`visitShop`), and `shop` starts on one once the lobby is up
  * (`instant`: already there; `back`: leaving the shop calls it instead of
  * walking home).
+ * Passear (the paw beside the partner) puts the cards away and leaves the
+ * meadow to walk in, with a back button: talks there open their sheets and
+ * come back to it.
  * `intro: false` opens straight on the lobby (coming back from another
  * screen, or after a language switch), highlighting `focus`.
  */
@@ -691,6 +711,26 @@ export const titleScreen = (
   /** The top bar's wallet, refreshed when the shop closes. */
   let wallet: HTMLElement | null = null
   const talkButton = talkPrompt(() => talkTo(talkWho))
+  /** Passear: the lobby's cards are away and the partner walks the meadow and the plaza; only the back button, the hint and the talk prompt stay. */
+  let exploring = false
+  const exploreHint = h(
+    'p',
+    { class: 'explore-hint', 'aria-hidden': 'true' },
+    h('span', { class: 'keys-only' }, ...(['up', 'left', 'down', 'right'] as const).map((a) => h('span', { class: 'key-hint' }, boundKey(a))), h('b', {}, m.exploreKeys)),
+    h('span', { class: 'touch-only' }, m.exploreTouch),
+  )
+  const exploreHud = h(
+    'div',
+    { class: 'explore-hud' },
+    h(
+      'button',
+      { class: 'shell-btn shell-chip box explore-back', type: 'button', onclick: () => leaveExplore() },
+      h('span', { class: 'back-arrow', 'aria-hidden': 'true' }, '◀'),
+      h('b', {}, t().shell.back),
+      h('span', { class: 'key-hint' }, 'ESC'),
+    ),
+    exploreHint,
+  )
 
   /** Everything the arrows reach, wherever the layout puts it. */
   let navs: { el: HTMLElement; key: LobbyFocus }[] = []
@@ -715,6 +755,25 @@ export const titleScreen = (
     const next = shown[nearestInDirection(shown.map((n) => n.el.getBoundingClientRect()), shown.findIndex((n) => n.key === current), dir)]
     if (next) select(next.key)
   }
+
+  /**
+   * The lobby's cards are away (a trip to the shop, or Passear): out of reach
+   * of taps and screen readers until they're back. They only slide off and
+   * fade, still on the page, so without this a tap on the plaza would land on
+   * the invisible buttons under it (the social links, the Hall…).
+   */
+  const setAway = () => {
+    const away = exploring || (visit !== null && visit.phase !== 'back')
+    for (const node of [bar, lobby]) {
+      if (!node) continue
+      node.inert = away
+      if (away) node.setAttribute('aria-hidden', 'true')
+      else node.removeAttribute('aria-hidden')
+    }
+  }
+
+  /** The keys of whatever the lobby is doing when nothing else holds them: Passear's, or the lobby's own. */
+  const restKeys = () => input.onKey(exploring ? exploreKey : lobbyKey)
 
   /** Another screen replaces the title (only the meadow stays): its keys stay off until that one closes and the title is rebuilt. */
   const openOver = (open: (focus: LobbyFocus) => Screen) => {
@@ -748,6 +807,7 @@ export const titleScreen = (
     ideas: () => ideas && openOver(ideas),
     coop: () => coop?.(),
     play: actions.play,
+    explore: () => enterExplore(),
     tiktok: () => openSocial('tiktok'),
     youtube: () => openSocial('youtube'),
     instagram: () => openSocial('instagram'),
@@ -781,7 +841,7 @@ export const titleScreen = (
     const outbreak = outbreakCard()
     const was = stage?.partner
     stage = partnerStage(press('play'))
-    stage.el.append(pressable(giftButton(), 'gifts'))
+    stage.el.append(pressable(exploreButton(), 'explore'), pressable(giftButton(), 'gifts'))
     // Rebuilt with the same partner (`refresh`), a walk it's taking goes on and this lobby keeps its `leave`.
     if (!leave || was?.dex !== stage.partner.dex || was.shiny !== stage.partner.shiny) leave = actions.meadow.meet(stage.partner)
     tickers = [outbreak.tick, stage.tick]
@@ -832,7 +892,8 @@ export const titleScreen = (
     if (logo.width > 1) fitLogo(logo, false)
 
     select(itemOf(current) ? current : 'play', false)
-    offKeys = input.onKey(lobbyKey)
+    offKeys = restKeys()
+    setAway()
   }
 
   function lobbyKey(key: string) {
@@ -860,6 +921,7 @@ export const titleScreen = (
     offKeys?.()
     offKeys = input.onKey(visitKey)
     el.classList.add('visiting')
+    setAway()
     talkButton.classList.add('hidden')
     drag = null
     tap = null
@@ -895,7 +957,7 @@ export const titleScreen = (
           chat?.dispose()
           chat = null
           if (stallGoods(id).length > 0) return visitShop('shop', false, 'stall')
-          offKeys = input.onKey(lobbyKey)
+          offKeys = restKeys()
         }),
     })
   }
@@ -928,25 +990,31 @@ export const titleScreen = (
     })
   }
 
-  /** Back from the shop: the camera pans home, the partner hops back to its stage and the lobby slides in. */
+  /** Back from the shop: the camera pans home, the partner hops back to its stage and the lobby slides in (from Passear, the walk goes on at the plaza instead). */
   function goHome() {
     if (!visit || visit.phase === 'back') return
     overScreen?.dispose()
     overScreen = null
     // Opened from elsewhere (the partner select's wallet): back there instead of home.
     if (opts.back) return later(opts.back)
-    visit.phase = 'back'
     el.classList.remove('visiting')
     const fresh = walletChip(loadSave().wallet)
     wallet?.replaceWith(fresh)
     wallet = fresh
+    if (exploring) {
+      actions.meadow.explore(true)
+      return landed()
+    }
+    visit.phase = 'back'
+    setAway()
     actions.meadow.visit('home')
   }
 
   const landed = () => {
     visit = null
     offKeys?.()
-    offKeys = input.onKey(lobbyKey)
+    offKeys = restKeys()
+    setAway()
     if (stale) {
       stale = false
       refresh()
@@ -962,6 +1030,40 @@ export const titleScreen = (
     const at = meadow.at()
     if (visit.phase === 'going' && at === 'plaza') arrived()
     else if (visit.phase === 'back' && at === 'home') landed()
+  }
+
+  /* ---------------- Passear ---------------- */
+
+  /** Passear: the lobby's cards slide away and the partner hops into the meadow, the camera following it to the plaza and back; the back button (or Esc) brings them back. */
+  function enterExplore() {
+    if (exploring || visit || chat || !stage) return
+    exploring = true
+    el.classList.add('exploring')
+    exploreHint.classList.remove('hidden')
+    actions.meadow.explore(true)
+    offKeys?.()
+    offKeys = restKeys()
+    setAway()
+  }
+
+  /** Leaves Passear (a stall keeper's talk under way ends with it): the cards come back and the partner heads for its stage. */
+  function leaveExplore() {
+    if (!exploring) return
+    exploring = false
+    chat?.dispose()
+    chat = null
+    el.classList.remove('exploring')
+    talkButton.classList.add('hidden')
+    actions.meadow.explore(false)
+    offKeys?.()
+    offKeys = restKeys()
+    setAway()
+  }
+
+  /** Keys during Passear: Esc or Backspace comes back, E (or Enter) talks to whoever the partner stands by; the movement keys and the arrows walk (`stroll`). */
+  function exploreKey(key: string) {
+    if (key === 'Escape' || key === 'Backspace') return leaveExplore()
+    if ((key === 'KeyE' || key === 'Enter' || key === 'Space') && !talkButton.classList.contains('hidden')) talkButton.click()
   }
 
   /** The lobby goes away (another screen over it, or for good): so does the partner, and any press on the meadow. */
@@ -1009,7 +1111,10 @@ export const titleScreen = (
       tap = null
       return talkTo(tapped)
     }
-    meadow.steer(drag?.stick?.vec ?? heldMove(input), tap, stage.feet())
+    const move = drag?.stick?.vec ?? heldMove(input, exploring)
+    // Passear's hint goes once the partner gets its first order.
+    if (exploring && (tap || move.x !== 0 || move.y !== 0)) exploreHint.classList.add('hidden')
+    meadow.steer(move, tap, stage.feet())
     meadow.stick(drag?.stick ?? null)
     tap = null
     stage.setOut(meadow.out())
@@ -1062,7 +1167,7 @@ export const titleScreen = (
     enterLobby()
   }
 
-  el.append(talkButton)
+  el.append(talkButton, exploreHud)
   root.append(el)
   return {
     el,

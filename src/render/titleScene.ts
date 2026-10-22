@@ -144,6 +144,8 @@ export type TitleScene = {
   puffs: { x: number; y: number; at: number }[]
   /** The Noite das Bruxas (set by the shell): night falls, jack-o'-lanterns light the meadow and ghosts roam it. */
   haunted: boolean
+  /** Passear (`exploreMeadow`): the lobby's cards are away, the partner stays out in the meadow however long it idles. */
+  exploring: boolean
 }
 
 /** Every species that may roam: wild Pokémon and the starter lines (evolutions show up once a run has loaded them). */
@@ -175,6 +177,8 @@ const PARTNER_SPEED = 60
 const REST = 12
 /** The camera follows the partner when it gets this close (a fraction of the view) to an edge. */
 const FOLLOW_EDGE = 0.22
+/** During Passear the camera keeps it nearer the middle, clear of the thumb on the stick and of the screen's edges. */
+const EXPLORE_EDGE = 0.36
 /** Feet this close (world px) say hello. */
 const GREET_RANGE = 16
 const GREET_COOLDOWN = 8
@@ -216,12 +220,14 @@ export const createTitleScene = (seed: number): TitleScene => {
     quietUntil: 0,
     puffs: [],
     haunted: false,
+    exploring: false,
   }
 }
 
 /** The lobby's partner takes its place on the stage, with the supporter's companion if one walks along (`null`: the lobby closed, both are gone). */
 export const meetPartner = (s: TitleScene, partner: { dex: Dex; shiny: boolean } | null, companion: CompanionView | null = null) => {
   for (const wd of s.wanderers) wd.followUntil = 0
+  s.exploring = false
   // A new lobby starts at home: any trip it didn't finish is called off.
   if (partner) {
     s.trip = null
@@ -251,6 +257,39 @@ export const steerPartner = (s: TitleScene, move: Vec, tap: Vec | null, home: Ve
   p.move = move
   p.home = home
   if (tap) p.target = tap
+}
+
+/** The partner hops off its stage (or off the counter) into the meadow, a puff of dust where it takes off. */
+const hopOut = (s: TitleScene, p: Partner) => {
+  if (p.state === 'home') {
+    p.x = p.home.x
+    p.y = p.home.y
+  }
+  p.state = 'out'
+  p.idle = 0
+  p.hopAt = s.time
+  p.trail.length = 0
+  s.puffs.push({ x: p.x, y: p.y, at: s.time })
+}
+
+/**
+ * Passear on (`on`) or off for a `w`×`h` view. On, the partner hops into the
+ * meadow (off its stage, or off the counter after a talk) and stays out: the
+ * camera follows it wherever it walks. Off, the view heads home: a walk back
+ * to the stage when close, a trip when it's far (out at the plaza, or at the
+ * counter after a talk).
+ */
+export const exploreMeadow = (s: TitleScene, on: boolean, w: number, h: number) => {
+  s.exploring = on
+  const p = s.partner
+  if (!p || s.trip) return
+  if (on) {
+    if (p.state === 'home' || p.state === 'shop') hopOut(s, p)
+    return
+  }
+  if (Math.hypot(p.x - s.home.x, p.y - s.home.y) > 200) return visitPlaza(s, 'home', w, h)
+  s.rest = 'home'
+  if (p.state === 'out' || p.state === 'shop') p.state = 'back'
 }
 
 /** The camera's top-left resting at `place` for a `w`×`h` view (home sways a little). */
@@ -299,7 +338,8 @@ const arrive = (s: TitleScene, to: Place) => {
   const p = s.partner
   if (p) {
     p.moving = false
-    p.state = to === 'plaza' ? 'shop' : 'home'
+    // Back home during Passear, it walks on instead of taking its stage, which is away with the cards.
+    p.state = to === 'plaza' ? 'shop' : s.exploring ? 'out' : 'home'
     if (to === 'plaza') p.dir = 4
   }
   // A camouflaged Kecleon keeps still and quiet until it's talked to (`revealShopkeeper`).
@@ -461,20 +501,14 @@ const partnerVelocity = (p: Partner, dt: number): Vec => {
   return { x: 0, y: 0 }
 }
 
-/** Walks the partner: off the stage on the first order, back to it after `REST` idle seconds, the camera keeping it in view. */
+/** Walks the partner: off the stage on the first order, back to it after `REST` idle seconds (not during Passear), the camera keeping it in view. */
 const stepPartner = (s: TitleScene, p: Partner, dt: number, w: number, h: number) => {
   const ordered = p.move.x !== 0 || p.move.y !== 0 || p.target !== null
   if (ordered) {
     p.idle = 0
-    if (p.state === 'home') {
-      p.x = p.home.x
-      p.y = p.home.y
-      p.hopAt = s.time
-      p.trail.length = 0
-      s.puffs.push({ x: p.x, y: p.y, at: s.time })
-    }
+    if (p.state === 'home') hopOut(s, p)
     p.state = 'out'
-  } else if ((p.idle += dt) > REST && p.state === 'out') {
+  } else if ((p.idle += dt) > REST && p.state === 'out' && !s.exploring) {
     // Far from home (out at the plaza), it hops back along a trip instead of a long walk.
     if (Math.hypot(p.x - p.home.x, p.y - p.home.y) > 200) return visitPlaza(s, 'home', w, h)
     p.state = 'back'
@@ -505,8 +539,9 @@ const stepPartner = (s: TitleScene, p: Partner, dt: number, w: number, h: number
   }
   // Out in the meadow, the camera eases along whenever the partner nears an edge (on its way back, the stage stays put).
   if (p.state === 'out') {
-    const mx = w * FOLLOW_EDGE
-    const my = h * FOLLOW_EDGE
+    const edge = s.exploring ? EXPLORE_EDGE : FOLLOW_EDGE
+    const mx = w * edge
+    const my = h * edge
     const want = { x: clamp(s.cam.x, p.x - w + mx, p.x - mx), y: clamp(s.cam.y, p.y - h + my, p.y - my) }
     const k = Math.min(1, dt * 6)
     s.cam.x += (want.x - s.cam.x) * k

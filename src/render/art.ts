@@ -1049,6 +1049,24 @@ const BULB = [
 
 export const bulbIcon = () => toIconUrl('bulb', () => art(BULB, { 1: '#303040', 2: '#f8d030', 3: '#fff8c0', 4: '#c89000', 5: '#c8d0e0', 6: '#7880a0' }))
 
+/** Passear (the lobby's free walk): a paw print. 1 outline, 2 pad, 3 shine. */
+const PAW = [
+  '....11.11....',
+  '...1221221...',
+  '.11122122111.',
+  '122111.111221',
+  '1231.....1321',
+  '.11.11111.11.',
+  '...1222221...',
+  '..123222221..',
+  '..122222221..',
+  '..122222221..',
+  '...1222221...',
+  '....11111....',
+]
+
+export const pawIcon = () => toIconUrl('paw', () => art(PAW, { 1: '#402818', 2: '#a86838', 3: '#e0a868' }))
+
 /** Jogar junto (co-op): two Poké Balls side by side, red behind blue. 1 outline, 2 red, 3 white, 4 blue, 5 the button. */
 const COOP_BALLS = [
   '..11111.11111..',
