@@ -1529,8 +1529,8 @@ export const pt = {
     stolen: 'Você roubou o item que ele segurava!',
     armedTm: (name: string, order: number) => `TM armada: *${name}*. A ${order === 0 ? 'primeira' : 'segunda'} TM da partida é ela!`,
     /** Once, as the run after a crash starts (`safeMode.ts`). */
-    safeMode: '*Modo leve* ativado para evitar fechamentos.',
-    safeModeHint: 'Menos efeitos na tela. Dá para mudar em Ajustes.',
+    safeMode: '*Modo leve* ligado: menos efeitos, jogo mais fluido neste aparelho.',
+    safeModeHint: 'Dá para mudar em Ajustes.',
   },
 
   /** Mega Evolution: the button, its toasts, the partner details and what each Mega form does. */

@@ -1339,8 +1339,8 @@ export const es: Messages = {
     maxRevive: '¡El *Max Revive* te levantó con la mitad de los PS!',
     stolen: '¡Robaste el objeto que llevaba!',
     armedTm: (name, order) => `MT preparada: *${name}*. ¡La ${order === 0 ? 'primera' : 'segunda'} MT de la partida es esta!`,
-    safeMode: '*Modo ligero* activado para evitar cierres.',
-    safeModeHint: 'Menos efectos en pantalla. Puedes cambiarlo en Ajustes.',
+    safeMode: '*Modo ligero* activado: menos efectos, juego más fluido en este dispositivo.',
+    safeModeHint: 'Puedes cambiarlo en Ajustes.',
   },
 
   mega: {
