@@ -6,7 +6,7 @@ import type { Input } from '../engine/input'
 import type { Hatch } from '../game/eggs'
 import type { Gift, StyleRef } from '../game/gifts'
 import { companionForm } from '../game/supporters'
-import { formatDay, formatPokeDollars, t } from '../i18n'
+import { formatDay, formatPokeDollars, formatPokeDollarsShort, t } from '../i18n'
 import { bagIcon, coinIcon, eggIcon, giftIcon, medalIcon, ribbonIcon, sparkleIcon } from '../render/art'
 import { styleThumb } from '../render/card'
 import { frameIcon, wallpaperUrl } from '../render/cosmetics'
@@ -85,7 +85,7 @@ export const reasonLine = (gift: Gift) => {
     case 'tycoon':
       return t().gifts.tycoon
     case 'festival':
-      return t().gifts.festival(t().festival.names[r.festival], formatPokeDollars(r.pot))
+      return t().gifts.festival(t().festival.names[r.festival], formatPokeDollarsShort(r.pot))
     case 'patron':
       return t().gifts.patron(t().festival.names[r.festival])
   }

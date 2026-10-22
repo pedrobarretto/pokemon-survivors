@@ -29,6 +29,7 @@ import { fetchWall } from '../supporters'
 import { h, later, rich } from './dom'
 import { boundKey } from './inputLabels'
 import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, today } from './save'
+import { festivalCard, festivalCardShows } from './festival'
 import { halloweenCard, halloweenCardShows } from './halloween'
 import { contentLine } from './gifts'
 import { countedFriends, loadInvites } from './invites'
@@ -51,6 +52,7 @@ export type LobbyFocus =
   | 'help'
   | 'settings'
   | 'halloween'
+  | 'festival'
   | 'outbreak'
   | 'challenge'
   | 'missions'
@@ -126,7 +128,13 @@ export type TitleActions = {
    * talks beside it, `ui/shop.ts`); its Back must call `close`, which pans
    * back home and brings the lobby back in. `shelf`: open on Meowth's caravan or a seasonal stall's shelf (a talk with its keeper).
    */
-  mart: (close: () => void, shelf?: VisitorShelf) => Screen
+  mart: (close: () => void, shelf?: VisitorShelf, festival?: () => void) => Screen
+  /**
+   * Opens the Festival da Praça's sheet over the Kecleon plaza once the camera
+   * got there (`openFestival` in `ui/festival.ts`); `close` goes on from it
+   * (home, or back to the shop it was opened from).
+   */
+  festival: (close: () => void) => Screen
   /** Opens the Trainer Card over the title (the Trainer chip, `C`, the invite banner), like `settings`. */
   trainer: (focus: LobbyFocus) => Screen
   /** Opens the boards over the title, like `settings`. No action (no API), no tile. */
@@ -594,7 +602,7 @@ const heldMove = (input: Input): Vec => {
 }
 
 /** Shortcuts, shown as key hints on what they press (`C` belongs to the Trainer chip; P, E and Space are taken by the run's controls, and E talks to a shopkeeper the partner stands by). */
-const HOTKEYS: Readonly<Record<string, LobbyFocus>> = { KeyJ: 'coop', KeyG: 'gifts', KeyN: 'news', KeyX: 'pokedex', KeyO: 'eggs', KeyL: 'mart', KeyR: 'ranking', KeyI: 'ideas', KeyM: 'missions', KeyH: 'hall' }
+const HOTKEYS: Readonly<Record<string, LobbyFocus>> = { KeyF: 'festival', KeyJ: 'coop', KeyG: 'gifts', KeyN: 'news', KeyX: 'pokedex', KeyO: 'eggs', KeyL: 'mart', KeyR: 'ranking', KeyI: 'ideas', KeyM: 'missions', KeyH: 'hall' }
 
 /** The "Falar · E" bubble over a shopkeeper while the strolling partner stands close (a tap on it talks too). */
 const talkPrompt = (onTalk: () => void) =>
@@ -607,10 +615,11 @@ const talkPrompt = (onTalk: () => void) =>
 
 /**
  * How the lobby goes to the Kecleon's shop: `shop` (the dock's Loja, a talk,
- * `?loja`) greets and opens the shop, `look` (dev, `ps.plaza()`) only goes
- * there, for a look; Esc or Enter brings it back.
+ * `?loja`) greets and opens the shop, `festival` (the festival's Hoje card,
+ * `ps.festival('open')`) opens the Festival da Praça's sheet there, `look`
+ * (dev, `ps.plaza()`) only goes there, for a look; Esc or Enter brings it back.
  */
-export type ShopTrip = 'shop' | 'look'
+export type ShopTrip = 'shop' | 'festival' | 'look'
 
 /**
  * Title screen over the live meadow: the pixel logo and a blinking "press
@@ -723,6 +732,7 @@ export const titleScreen = (
     news: () => openOver(actions.news),
     survey: () => openOver(actions.survey),
     halloween: () => openOver(actions.halloween),
+    festival: () => visitShop('festival'),
     discord: () => openOver(actions.discord),
     outbreak: () => toast(root, rich(`*${ENEMIES[outbreakToday()].name}*: ${t().outbreak.blurb}`), 3600, 'outbreak'),
     challenge: actions.challenge,
@@ -810,6 +820,7 @@ export const titleScreen = (
       { class: 'lobby-today', 'aria-label': m.today },
       h('h2', { class: 'lobby-rail-label' }, m.today),
       ...(halloweenCardShows() ? [pressable(halloweenCard(), 'halloween')] : []),
+      ...(festivalCardShows() ? [pressable(festivalCard(), 'festival')] : []),
       pressable(outbreak.el, 'outbreak'),
       pressable(challengeCard(), 'challenge'),
       pressable(missionsCard(), 'missions'),
@@ -901,7 +912,17 @@ export const titleScreen = (
       return
     }
     visit.phase = 'shop'
-    overScreen = actions.mart(goHome, visit.shelf)
+    if (visit.mode === 'festival') overScreen = actions.festival(goHome)
+    else openShop(visit.shelf)
+  }
+
+  /** The shop over the plaza; its Festival button swaps it for the festival's sheet, whose Back brings the shop again. */
+  function openShop(shelf?: VisitorShelf) {
+    overScreen?.dispose()
+    overScreen = actions.mart(goHome, shelf, () => {
+      overScreen?.dispose()
+      overScreen = actions.festival(() => openShop())
+    })
   }
 
   /** Back from the shop: the camera pans home, the partner hops back to its stage and the lobby slides in. */

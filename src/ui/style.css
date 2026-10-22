@@ -5659,6 +5659,610 @@ button {
   }
 }
 
+/* ---------- Festival da Praça (ui/festival.ts) ---------- */
+/* The sheet is the shop's panel (`.shop-sheet`): the same place, size and touch scrolling. */
+
+.festival-sheet [hidden] {
+  display: none !important;
+}
+
+.shop-sheet > .festival-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 2px;
+}
+
+.festival-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.festival-pot-label {
+  font-size: 19px;
+  line-height: 1;
+  color: #6878a8;
+}
+
+.festival-pot-num {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 4px;
+}
+
+.festival-pot-num b {
+  font-family: var(--title);
+  font-size: 18px;
+  font-weight: 400;
+  color: #283040;
+}
+
+.festival-pot-num span {
+  font-size: 19px;
+  color: #6878a8;
+}
+
+/* A donation that went through: the pot hops. */
+.festival-pot.bump .festival-pot-num b {
+  animation: festival-bump 0.5s steps(4);
+}
+
+@keyframes festival-bump {
+  40% {
+    transform: translateY(-4px);
+    color: #c07810;
+  }
+}
+
+/* The track: the rewards above the bar, the markers on it, the pots under it. */
+.festival-track {
+  position: relative;
+  margin: 6px 14px 0 10px;
+}
+
+.festival-rewards,
+.festival-marks {
+  position: relative;
+}
+
+.festival-rewards {
+  height: 30px;
+}
+
+.festival-rewards img,
+.festival-marks span {
+  position: absolute;
+  translate: -50% 0;
+}
+
+.festival-rewards img.end,
+.festival-marks span.end {
+  translate: -80% 0;
+}
+
+.festival-rewards img {
+  bottom: 2px;
+  width: 26px;
+  height: 26px;
+  image-rendering: pixelated;
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+
+.festival-rewards img.on {
+  opacity: 1;
+  filter: none;
+}
+
+.festival-bar {
+  position: relative;
+  height: 18px;
+  background: #dfe4ef;
+  border: 3px solid #283040;
+  border-radius: 6px;
+}
+
+.festival-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  max-width: 100%;
+  background: repeating-linear-gradient(90deg, #f8c838 0 6px, #f0b020 6px 12px);
+  border-radius: 3px 0 0 3px;
+}
+
+.festival-bar i {
+  position: absolute;
+  top: -6px;
+  bottom: -3px;
+  width: 4px;
+  translate: -2px 0;
+  background: #283040;
+}
+
+.festival-bar i.on {
+  background: #e83838;
+}
+
+.festival-marks {
+  height: 14px;
+  margin-top: 4px;
+  font-family: var(--title);
+  font-size: 7px;
+  color: #6878a8;
+}
+
+.festival-marks span {
+  white-space: nowrap;
+}
+
+.festival-marks span.on {
+  color: #e83838;
+}
+
+/* The next milestone: its reward and what's missing. */
+.festival-next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #fff1c8;
+  border-radius: 8px;
+}
+
+.festival-next-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.festival-next-icon img {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.festival-next-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.festival-next-text small {
+  font-family: var(--title);
+  font-size: 8px;
+  color: #b07818;
+}
+
+.festival-next-text span {
+  color: #6878a8;
+}
+
+.festival-give {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.festival-label {
+  margin-top: 2px;
+  font-family: var(--title);
+  font-size: 9px;
+}
+
+.festival-chips {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.festival-chip {
+  min-height: 40px;
+  padding: 6px 2px;
+  font-family: var(--title);
+  font-size: 10px;
+  color: var(--ink);
+  background: #e8ecf4;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.festival-chip.on {
+  background: #fff;
+  border-color: #e83838;
+}
+
+.festival-chip.off {
+  color: #a8b0c8;
+}
+
+.festival-chip.selected:not(.on) {
+  border-color: #f0a0a0;
+}
+
+/* "Outro…": a number field (the phone's number pad). */
+.festival-field-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  background: #fff;
+  border: 3px solid #283040;
+  border-radius: 8px;
+}
+
+.festival-field-row:focus-within,
+.festival-field-row:has(.selected) {
+  border-color: #e83838;
+}
+
+.festival-field-coin {
+  font-family: var(--title);
+  font-size: 12px;
+}
+
+.festival-field-hint {
+  flex: none;
+  font-size: 16px;
+  color: #6878a8;
+}
+
+.festival-cap {
+  display: flex;
+  flex-direction: column;
+  font-size: 19px;
+  line-height: 1.05;
+}
+
+.festival-cap-today {
+  color: #c03030;
+}
+
+.festival-cap-you {
+  color: #6878a8;
+}
+
+.festival-cap-you em {
+  font-style: normal;
+  color: #38a058;
+}
+
+.festival-about p {
+  margin: 0 0 6px;
+  font-size: 19px;
+  line-height: 1.1;
+  color: #505870;
+}
+
+.festival-about b {
+  font-weight: 400;
+  color: #283040;
+}
+
+/* The strip under the sheet: what Kecleon's shop says (the thanks, a refusal) and the button. */
+.festival-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 10px;
+  color: #f8f8f8;
+  background: #283048;
+  border-radius: 8px;
+}
+
+.festival-foot-text {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.05;
+}
+
+.festival-foot-text.error {
+  color: #ffb0a0;
+}
+
+.festival-foot-text.done {
+  color: #f8d030;
+}
+
+.btn.festival-donate {
+  flex: none;
+  min-height: 40px;
+  padding: 6px 12px;
+  font-size: 9px;
+  color: var(--ink);
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.btn.festival-donate:disabled {
+  opacity: 0.5;
+}
+
+/* The plaque: the top donors, the first three in gold. */
+.festival-plaque-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.festival-plaque-head img {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.festival-plaque-head span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 18px;
+  line-height: 1;
+  color: #6878a8;
+}
+
+.festival-plaque-head b {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: 400;
+  color: #283040;
+}
+
+.festival-donors {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.festival-donors li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+.festival-donors li:nth-child(-n + 3) {
+  background: #fff1c8;
+}
+
+.festival-donors li.me {
+  outline: 2px solid #e83838;
+}
+
+.festival-donors i {
+  width: 22px;
+  font-family: var(--title);
+  font-size: 9px;
+  font-style: normal;
+  color: #b07818;
+}
+
+.festival-donors b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+
+.festival-donors em {
+  font-style: normal;
+  color: #6878a8;
+}
+
+.festival-empty {
+  margin: 8px 0;
+  font-size: 19px;
+  color: #6878a8;
+}
+
+.festival-me {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  padding-top: 8px;
+  font-size: 19px;
+  color: #505870;
+  border-top: 2px dashed #c8d0e0;
+}
+
+.festival-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 10px;
+  font-size: 18px;
+  color: var(--ink);
+  background: #e8ecf4;
+  border: 3px solid transparent;
+  border-radius: 8px;
+}
+
+.festival-switch b {
+  padding: 3px 6px;
+  font-family: var(--title);
+  font-size: 7px;
+  font-weight: 400;
+  color: #fff;
+  background: #38a058;
+  border-radius: 4px;
+}
+
+.festival-switch[aria-checked='false'] b {
+  background: #8890a8;
+}
+
+.festival-switch.selected {
+  border-color: #e83838;
+}
+
+@container shop (max-height: 560px) {
+  .festival-pot-label,
+  .festival-cap,
+  .festival-about p,
+  .festival-next-text {
+    font-size: 17px;
+  }
+  .festival-next-icon {
+    width: 40px;
+    height: 40px;
+  }
+  .festival-next-icon img {
+    width: 32px;
+    height: 32px;
+  }
+  .festival-chip {
+    min-height: 34px;
+    font-size: 9px;
+  }
+  .festival-foot {
+    min-height: 0;
+    padding: 6px 8px;
+  }
+  .festival-foot-text {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 759px) and (orientation: portrait) {
+  .festival-pot-label,
+  .festival-cap,
+  .festival-about p,
+  .festival-next-text,
+  .festival-foot-text {
+    font-size: 17px;
+  }
+  .festival-pot-num b {
+    font-size: 14px;
+  }
+  .festival-chip {
+    min-height: 36px;
+    font-size: 9px;
+  }
+  .festival-donors {
+    font-size: 18px;
+  }
+}
+
+/* The shop's Festival button, after its tabs: lantern red, with the festival's lantern. */
+.shop-tab.festival-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-block: 4px;
+  color: #fff4d8;
+  background: #d84028;
+}
+
+.shop-tab.festival-tab[hidden] {
+  display: none;
+}
+
+.shop-tab.festival-tab img {
+  width: 16px;
+  height: 16px;
+  margin: -2px 0;
+  image-rendering: pixelated;
+}
+
+/* The lobby's Hoje card while a festival runs (`festivalCard`): dusk indigo with a lantern-red frame. */
+.lobby-card.festival {
+  --paper: #1c1438;
+  --frame: #d84028;
+  color: #fff4d8;
+}
+
+.lobby-card.festival:hover,
+.lobby-card.festival.selected {
+  --frame: #f8d030;
+}
+
+.lobby-card.festival .lobby-card-label {
+  color: #ffd890;
+}
+
+.lobby-card.festival .lobby-badge.festival-left {
+  margin-left: auto;
+  font-family: var(--title);
+  font-size: 7px;
+  color: #1c1438;
+  background: #ffd890;
+}
+
+.lobby-card.festival .lobby-card-row b {
+  flex: none;
+  font-size: 18px;
+}
+
+.lobby-lantern {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+  animation: halloween-bob 1.6s steps(2) infinite;
+}
+
+.lobby-progress.festival-pot-bar {
+  background: #0e0a20;
+  border-color: #d84028;
+}
+
+.lobby-progress.festival-pot-bar span {
+  background: repeating-linear-gradient(90deg, #f8c838 0 6px, #f0b020 6px 8px);
+}
+
+/* Phones held upright: like the Noite das Bruxas' card, a row of its own above the day's three. */
+@media (max-width: 759px) and (min-height: 501px), (max-width: 759px) and (orientation: portrait) {
+  .lobby-today:has(.lobby-card.festival) {
+    flex-wrap: wrap;
+  }
+  .lobby-card.festival {
+    flex: 1 1 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+  }
+  .lobby-card.festival .lobby-card-label {
+    flex: none;
+    gap: 8px;
+  }
+  .lobby-card.festival .lobby-card-row {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    min-height: 0;
+  }
+  .lobby-card.festival .lobby-progress {
+    flex: 0 1 110px;
+  }
+  .lobby-lantern {
+    width: 22px;
+    height: 22px;
+  }
+}
+
 /* ---------- Small screens ---------- */
 
 @media (max-width: 720px) {

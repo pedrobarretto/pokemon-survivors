@@ -127,6 +127,32 @@ export const donateFestival = async (amount: number): Promise<FestivalDonation> 
 }
 
 /**
+ * Shows or hides the player's @handle on the plaque (`PUT /festival/public`).
+ * Whether it went through; the plaque follows at the next ask. Never throws.
+ */
+export const setDonorPublic = async (show: boolean): Promise<boolean> => {
+  try {
+    const token = await sessionToken()
+    if (!API_URL || !token) return false
+    const res = await fetch(`${API_URL}/festival/public`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ public: show }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    })
+    if (!res.ok) return false
+    if (status?.me) status = { ...status, me: { ...status.me, public: show } }
+    changed()
+    // The plaque itself changes server side (cached up to 30 s); ask again for it.
+    void loadFestival(true)
+    return true
+  } catch (err) {
+    console.warn('festival plaque setting failed', err)
+    return false
+  }
+}
+
+/**
  * Boot: the festival's gifts join the gift box, the first ask goes out once
  * the game has loaded, and coming back to the game asks again (at most once
  * per `REFRESH_MS`).
@@ -140,7 +166,8 @@ export const startFestival = () => {
 /**
  * Dev: `ps.festival()` prints the state, `('pot', n)` fakes the shown
  * festival's pot (null drops it), `('day', 'YYYY-MM-DD')` fakes the day (null
- * drops it), `('fetch')` asks the API now and `('donate', n)` donates.
+ * drops it), `('fetch')` asks the API now and `('donate', n)` donates. The
+ * shell adds `('open')`, which opens the festival's sheet (`ui/festival.ts`).
  */
 export const devFestival = (cmd?: 'pot' | 'day' | 'fetch' | 'donate', arg?: number | string | null) => {
   if (cmd === 'pot') fake.pot = typeof arg === 'number' ? arg : null

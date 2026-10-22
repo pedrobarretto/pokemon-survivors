@@ -81,3 +81,7 @@ export const formatDay = (day: string) => {
 }
 
 export const formatPokeDollars = (amount: number) => `₽ ${formatNumber(amount)}`
+
+/** Big ₽ in short (`₽ 41,2M`, `₽ 50k`; below 1,000 in full), for the festival's pot and its milestones. */
+export const formatPokeDollarsShort = (amount: number) =>
+  amount >= 1_000_000 ? `₽ ${formatDecimal(Math.floor(amount / 100_000) / 10)}M` : amount >= 1_000 ? `₽ ${formatDecimal(Math.floor(amount / 100) / 10)}k` : formatPokeDollars(amount)

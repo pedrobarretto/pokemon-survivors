@@ -5,6 +5,7 @@ import {
   claimOpen,
   donateFrom,
   donationRefusal,
+  festivalAnnounced,
   festivalGifts,
   festivalGiftsVouched,
   festivalOn,
@@ -37,6 +38,13 @@ describe('festival calendar', () => {
     expect(festivalOn('2026-11-17')).toBeNull()
     expect(latestFestival('2026-11-02')).toBeNull()
     expect(latestFestival('2026-11-20')?.id).toBe('lanternas')
+  })
+
+  it('announces a festival in the shop a week before it opens, and while it runs', () => {
+    expect(festivalAnnounced('2026-10-26')).toBeNull()
+    expect(festivalAnnounced('2026-10-27')?.id).toBe('lanternas')
+    expect(festivalAnnounced('2026-11-16')?.id).toBe('lanternas')
+    expect(festivalAnnounced('2026-11-17')).toBeNull()
   })
 
   it('lets its gifts be opened until 7 days after its last day', () => {
@@ -139,7 +147,7 @@ describe('parseFestivalStatus', () => {
       pots: { lanternas: 41_208_400, nope: 5 },
       top: [{ handle: 'okashiwaya', amount: 2_600_000 }, { handle: '!!', amount: 1 }],
       donors: 312,
-      me: { today: 50_000, given: { lanternas: 50_000 }, held: 0, public: false },
+      me: { today: 50_000, given: { lanternas: 50_000 }, held: 0, public: false, rank: 87 },
     })
     expect(status).toEqual({
       day: '2026-11-05',
@@ -147,8 +155,9 @@ describe('parseFestivalStatus', () => {
       pots: { lanternas: 41_208_400 },
       top: [{ handle: 'okashiwaya', amount: 2_600_000 }],
       donors: 312,
-      me: { today: 50_000, given: { lanternas: 50_000 }, held: 0, public: false },
+      me: { today: 50_000, given: { lanternas: 50_000 }, held: 0, public: false, rank: 87 },
     })
+    expect(parseFestivalStatus({ day: '2026-11-05', me: { rank: 0 } })?.me?.rank).toBeNull()
     expect(parseFestivalStatus({ day: 'soon' })).toBeNull()
     expect(parseFestivalStatus({ day: '2026-11-05', festival: 'other' })?.festival).toBeNull()
   })

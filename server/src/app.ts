@@ -208,7 +208,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `GET /festival`: `FestivalBoard & { me }`, the Festival da Praça the plaza shows (the running one, else the last;
  *   null before the first): its `start` and `end` days, every festival's `pots`, its `pot` and milestones `reached`,
  *   the `top` donors by @handle (counted donations of players who show their name) and how many `donors`; the
- *   public part is cached 30 s. With a token, `me` (`FestivalMine`): ₽ given today (the cap), per festival, held, and the plaque setting.
+ *   public part is cached 30 s. With a token, `me` (`FestivalMine`): ₽ given today (the cap), per festival, held, the plaque setting and the place among the festival's donors (`rank`).
  * - `POST /festival/donate` (auth) `{ amount, base }`: puts `amount` whole ₽ of the stored save in the running festival's
  *   pot, on top of revision `base`. `{ save, revision, held, today }`: the save with the ₽ moved to `spent`, for the device
  *   to keep. 400 invalid amount, 403 `profile` (no @handle) or `runs` (fewer than `FESTIVAL.minRuns` verified runs),

@@ -129,8 +129,18 @@ export const festivalStore = (sql: Sql, now = () => new Date()) => {
     return next
   }
 
+  /** `userId`'s place among the donors of `festival` who gave it `amount` (counted donations, hidden names too). */
+  const rankOf = async (festival: FestivalId, amount: number) => {
+    const [row] = await sql<{ n: number }[]>`
+      select count(*)::int as n from (
+        select sum(amount) as total from festival_donations where festival = ${festival} and not held and not voided group by user_id
+      ) x where total > ${amount}`
+    return (row?.n ?? 0) + 1
+  }
+
   const mine = async (userId: string): Promise<FestivalMine> => {
     const day = brasiliaDay(now())
+    const shown = latestFestival(day)
     const [today, given, [row]] = await Promise.all([
       donatedOn(sql, userId, day),
       sumGiven(sql, userId),
@@ -138,7 +148,9 @@ export const festivalStore = (sql: Sql, now = () => new Date()) => {
         select (select coalesce(sum(amount), 0)::float8 from festival_donations where user_id = ${userId} and held and not voided) as held,
           (select donor_public from users where id = ${userId}) as public`,
     ])
-    return { today, given, held: row?.held ?? 0, public: row?.public ?? true }
+    const gave = shown ? (given[shown.id] ?? 0) : 0
+    const rank = shown && gave > 0 ? await rankOf(shown.id, gave) : null
+    return { today, given, held: row?.held ?? 0, public: row?.public ?? true, rank }
   }
 
   return {

@@ -44,6 +44,8 @@ import {
 } from '../game/shop'
 import { playsShiny } from '../game/shinyPicks'
 import { equipStyle, ownsStyle } from '../game/style'
+import { festivalDay } from '../festival'
+import { festivalAnnounced } from '../game/festival'
 import { coinIcon, eggIcon, incubatorIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
 import { styleThumb } from '../render/card'
@@ -56,6 +58,7 @@ import { buyFromStall, stallBlock, stallGood, stallGoods, type StallBlock } from
 import { caravanDay, caravanOpen, meowthSpeaker, stallDay, stallSelling, stallSpeaker } from './visitors'
 import { dialogue, type Dialogue, type DialogueLine } from './dialogue'
 import { h, later, setText } from './dom'
+import { festivalIcon } from './festival'
 import { emptyCounter, kecleonSpeaker, levelUpLine, pickTrigger, thanks, visitLine, weekdayOf, type VisitContext } from './kecleon'
 import { loadSave, today, vitrineToday, writeSave } from './save'
 import { confirmDialog, hint, type Screen } from './screens'
@@ -1238,8 +1241,11 @@ const DIRECTIONS: Readonly<Record<string, Direction>> = {
  * Opens the shop over the plaza. Kecleon says its line for this visit (or,
  * camouflaged, waits to be talked to and pops out first); the visit counts
  * toward the regulars' streak. `close` goes back (the lobby pans home).
+ * `festival`: while a Festival da Praça runs or is about to
+ * (`festivalAnnounced`), a Festival button after the tabs calls it (the
+ * lobby swaps the shop for the festival's sheet).
  */
-export const shop = (root: HTMLElement, input: Input, opts: { close: () => void; plaza: ShopPlaza; wonLastRun: boolean; shelf?: VisitorShelf }): Screen => {
+export const shop = (root: HTMLElement, input: Input, opts: { close: () => void; plaza: ShopPlaza; wonLastRun: boolean; shelf?: VisitorShelf; festival?: () => void }): Screen => {
   const sh = t().shop
   const before = loadSave()
   let save: Save = { ...before, shop: recordVisit(before.shop, brasiliaDay(today())) }
@@ -1301,6 +1307,9 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
 
     const wallet = h('span')
     const tabs = SHELVES.map((s) => h('button', { class: 'shop-tab', type: 'button', role: 'tab' }, sh.tabs[s.id]))
+    const announced = opts.festival ? festivalAnnounced(festivalDay()) : null
+    const festivalTab = h('button', { class: 'shop-tab festival-tab', type: 'button' }, img(festivalIcon(announced?.id ?? 'lanternas')), t().festival.shopButton)
+    festivalTab.hidden = !announced
     const intro = h('span', { class: 'shop-intro' })
     const clock = h('span', { class: 'shop-clock' })
     const items = h('div', { class: 'shop-items', role: 'list' })
@@ -1317,7 +1326,7 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
       'section',
       { class: 'shop-sheet box', 'aria-label': sh.title },
       h('header', { class: 'shop-head' }, back, h('h2', { class: 'shop-title' }, sh.title), h('span', { class: 'shop-wallet' }, img(coinIcon(0)), wallet)),
-      h('nav', { class: 'shop-tabs', role: 'tablist' }, ...tabs),
+      h('nav', { class: 'shop-tabs', role: 'tablist' }, ...tabs, festivalTab),
       h('div', { class: 'shop-intro-row' }, intro, clock),
       items,
       h('div', { class: 'shop-desc' }, descIcon, h('div', { class: 'shop-desc-body' }, descTitle, descText), h('div', { class: 'shop-desc-buttons' }, wishBtn, buy)),
@@ -1328,7 +1337,7 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
     const openShelves = () => SHELVES.filter((s) => s.open(save))
     const wishable = (card: Card | undefined) => card?.wish !== undefined && SHOP_LEVELS[save.shop.level].wishlist
     /** Everything the arrows reach, in the layout's order. */
-    const navs = () => [...tabs.filter((tab) => !tab.hidden), ...cards.map((c) => c.el), ...(wishable(cards[chosen]) ? [wishBtn] : []), buy, back, ...(shelf.refund ? [refund] : [])]
+    const navs = () => [...tabs.filter((tab) => !tab.hidden), ...(festivalTab.hidden ? [] : [festivalTab]), ...cards.map((c) => c.el), ...(wishable(cards[chosen]) ? [wishBtn] : []), buy, back, ...(shelf.refund ? [refund] : [])]
 
     const refresh = () => {
       setText(wallet, formatPokeDollars(save.wallet))
@@ -1336,7 +1345,7 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
       setText(clock, shelf.countdown ? sh.turnsIn(countdown()) : '')
       for (const c of cards) c.refresh(save)
       cards.forEach((c, i) => c.el.classList.toggle('chosen', i === chosen))
-      for (const n of [...tabs, ...cards.map((c) => c.el), wishBtn, buy, back, refund]) n.classList.toggle('selected', n === focused)
+      for (const n of [...tabs, festivalTab, ...cards.map((c) => c.el), wishBtn, buy, back, refund]) n.classList.toggle('selected', n === focused)
       const card = cards[chosen]
       if (card) {
         const d = card.describe(save)
@@ -1503,6 +1512,14 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
       refresh()
     }
 
+    /** The Festival button: the lobby swaps the shop for the festival's sheet. */
+    function openFestival() {
+      if (closed || !opts.festival) return
+      closed = true
+      playSfx('select')
+      later(opts.festival)
+    }
+
     const toggleWish = () => {
       const card = cards[chosen]
       if (!wishable(card) || card?.wish === undefined) return playSfx('denied')
@@ -1544,6 +1561,7 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
       const tab = tabs.findIndex((b) => b === focused)
       if (tab >= 0) return switchShelf(SHELVES[tab]!)
       if (focused === back) return close()
+      if (focused === festivalTab) return openFestival()
       if (focused === refund) return askRefund()
       if (focused === wishBtn) return toggleWish()
       act()
@@ -1560,6 +1578,8 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
       })
     }
     tabs.forEach((tab, i) => tab.addEventListener('click', () => !confirm && switchShelf(SHELVES[i]!)))
+    festivalTab.addEventListener('click', () => !confirm && openFestival())
+    festivalTab.addEventListener('pointerenter', (e) => !isTouch(e) && focus(festivalTab, false))
     buy.addEventListener('click', () => !confirm && act())
     wishBtn.addEventListener('click', () => !confirm && toggleWish())
     back.addEventListener('click', () => !confirm && close())

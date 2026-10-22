@@ -29,6 +29,12 @@ export const latestFestival = (day: DayKey): Festival | null => FESTIVALS.filter
 /** The next festival to open after `day`, or null when none is planned. */
 export const nextFestival = (day: DayKey): Festival | null => FESTIVALS.find((f) => f.start > day) ?? null
 
+/** The festival the shop points to on `day`: the one running, else the next one if it opens within `FESTIVAL.announceDays`. */
+export const festivalAnnounced = (day: DayKey): Festival | null => {
+  const next = nextFestival(day)
+  return festivalOn(day) ?? (next && day >= addDays(next.start, -FESTIVAL.announceDays) ? next : null)
+}
+
 /** Whether `f`'s milestone gifts can still be opened on `day`: from its start until `FESTIVAL.claimDays` after its last day. */
 export const claimOpen = (f: Festival, day: DayKey) => day >= f.start && day <= addDays(festivalEnd(f), FESTIVAL.claimDays)
 
@@ -128,9 +134,11 @@ export type FestivalDonor = { handle: string; amount: number }
 /**
  * The signed-in player's donations: `today` counts toward the daily cap
  * (held ones too), `given` per festival counts in the pot (for the Mecenas
- * title), `held` waits for an admin, and `public` puts their name on the plaque.
+ * title), `held` waits for an admin, `public` puts their name on the plaque,
+ * and `rank` is their place among the shown festival's donors (hidden names
+ * too; null before they gave to it).
  */
-export type FestivalMine = { today: number; given: Partial<Record<FestivalId, number>>; held: number; public: boolean }
+export type FestivalMine = { today: number; given: Partial<Record<FestivalId, number>>; held: number; public: boolean; rank: number | null }
 
 /**
  * `GET /festival`: the API's Brasília `day`, the `festival` the plaza shows
@@ -149,7 +157,9 @@ const parseDonor = (v: unknown): FestivalDonor | null => {
 }
 
 const parseMine = (v: unknown): FestivalMine | null =>
-  isRecord(v) ? { today: wholeNumber(v.today), given: parseTotals(v.given), held: wholeNumber(v.held), public: v.public !== false } : null
+  isRecord(v)
+    ? { today: wholeNumber(v.today), given: parseTotals(v.given), held: wholeNumber(v.held), public: v.public !== false, rank: typeof v.rank === 'number' && v.rank >= 1 ? wholeNumber(v.rank) : null }
+    : null
 
 /** `GET /festival`'s answer, or null when it isn't one. */
 export const parseFestivalStatus = (v: unknown): FestivalStatus | null => {

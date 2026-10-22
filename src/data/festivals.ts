@@ -58,4 +58,6 @@ export const FESTIVAL = {
   heldWallet: 20_000_000,
   /** Donors on the plaque. */
   top: 10,
+  /** Days before a festival opens that the shop already shows it (its sheet counts down). */
+  announceDays: 7,
 } as const

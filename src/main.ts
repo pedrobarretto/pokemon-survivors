@@ -35,7 +35,8 @@ import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
 import { isLegend } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
-import { devFestival, startFestival } from './festival'
+import { devFestival, festivalView, startFestival } from './festival'
+import { openFestival } from './ui/festival'
 import { identify, startAnalytics, takeOpened, track, type ErrorContext } from './analytics'
 import { BAG_ITEMS, useArmed, type BagItem } from './game/bag'
 import { armedTms, tmLimit } from './game/tmShelf'
@@ -417,14 +418,15 @@ const refreshVisitors = (now: number) => {
   if (next.caravan !== was.caravan || next.stall !== was.stall || next.statue !== was.statue) scene.plaza.visitors = next
 }
 
-/** The shop over the plaza; `close` leaves it (and `?loja` behind); `shelf` opens on Meowth's caravan or a seasonal stall's shelf. */
-const openShop = (close: () => void, shelf?: VisitorShelf) => {
+/** The shop over the plaza; `close` leaves it (and `?loja` behind); `shelf` opens on Meowth's caravan or a seasonal stall's shelf; `festival` swaps it for the festival's sheet. */
+const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void) => {
   const won = wonLastRun
   wonLastRun = false
   return shop(ui, input, {
     plaza: shopPlaza,
     wonLastRun: won,
     shelf,
+    festival,
     close: () => {
       if (new URLSearchParams(location.search).has(SHOP_PARAM)) history.replaceState(null, '', location.pathname)
       close()
@@ -543,6 +545,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       pokedex: (focus) => pokedexScreen(ui, input, () => showTitle({ focus }), showPcBox),
       // Over the Kecleon plaza; closing it leaves `?loja` behind too.
       mart: openShop,
+      festival: (close) => openFestival(ui, input, close),
       // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
       trainer: (focus) =>
         trainerCardScreen(ui, input, { supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null) }, () => showTitle({ focus })),
@@ -1783,7 +1786,8 @@ for (const type of ['pointerdown', 'pointerup', 'touchend'] as const) window.add
 
 // No pinch/double-tap zoom, pull-to-refresh, rubber-banding or long-press menus.
 // CSS `touch-action` covers most browsers; these guards cover iOS Safari quirks.
-// A one-finger drag still scrolls inside a screen or the Kecleon Shop's panel, which lives over the plaza, outside any screen.
+// A one-finger drag still scrolls inside a screen or the Kecleon Shop's panel, which lives over the plaza, outside any screen
+// (the Festival da Praça's sheet is one too: `.shop-sheet.festival-sheet`).
 const blockDefault = (e: Event) => e.preventDefault()
 document.addEventListener('contextmenu', blockDefault)
 document.addEventListener('gesturestart', blockDefault)
@@ -3080,7 +3084,12 @@ if (import.meta.env.DEV) {
       // Sheets loaded and frame silhouettes cached right now (`render/sprites.ts`).
       sprites: () => ({ loaded: loadedCount(), overlays: overlayStats() }),
       coop: devCoop,
-      festival: devFestival,
+      /** `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet. */
+      festival: (cmd?: Parameters<typeof devFestival>[0] | 'open', arg?: number | string | null) => {
+        if (cmd !== 'open') return devFestival(cmd, arg)
+        showTitle({ shop: 'festival' })
+        return festivalView()
+      },
       showTitle,
       showMenu,
       theme: currentTheme,
