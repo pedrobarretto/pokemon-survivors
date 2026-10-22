@@ -1,4 +1,4 @@
-import { blitCentered, context2d, createCanvas, ellipse, fromStrings, lazy, ring, type Palette, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, context2d, createCanvas, fromStrings, lazy, type Palette, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { HYPER_BEAM, type ShopTmMoveId } from '../game/shopTmMoves'
@@ -136,9 +136,9 @@ const drawBubble = (ctx: Ctx, g: Game, a: Attack, t: number) => {
   if (left < 0.25 && Math.floor(t * 20) % 2 === 0) return
   const pop = Math.min(1, a.age / 0.08)
   const rr = Math.max(2, Math.round(r * (0.6 + 0.4 * pop)))
-  blitCentered(ctx, ellipse(rr, rr, 'rgba(120,232,152,0.22)'), a.x, a.y)
-  blitCentered(ctx, ring(rr, 1, '#a8f0b8'), a.x, a.y)
-  blitCentered(ctx, ring(rr + 1, 1, 'rgba(32,104,56,0.8)'), a.x, a.y)
+  blitEllipse(ctx, rr, rr, 'rgba(120,232,152,0.22)', a.x, a.y)
+  blitRing(ctx, rr, 1, '#a8f0b8', a.x, a.y)
+  blitRing(ctx, rr + 1, 1, 'rgba(32,104,56,0.8)', a.x, a.y)
   const guarding = g.player.guard?.move === 'protect'
   // Hexagon facets turning around the shell.
   for (let i = 0; i < 6; i++) {
@@ -160,9 +160,9 @@ const drawCharge = (ctx: Ctx, a: Attack, t: number) => {
     px(ctx, ox + Math.cos(ang) * d, oy + Math.sin(ang) * d, i % 3 === 0 ? '#ffffff' : '#f8c060', 2, 2)
   }
   const r = Math.max(1, Math.round(2 + k * 5))
-  blitCentered(ctx, ellipse(r + 2, r + 2, 'rgba(248,152,48,0.5)'), ox, oy)
-  blitCentered(ctx, ellipse(r, r, '#f8e070'), ox, oy)
-  blitCentered(ctx, ellipse(Math.max(1, r - 2), Math.max(1, r - 2), '#ffffff'), ox, oy)
+  blitEllipse(ctx, r + 2, r + 2, 'rgba(248,152,48,0.5)', ox, oy)
+  blitEllipse(ctx, r, r, '#f8e070', ox, oy)
+  blitEllipse(ctx, Math.max(1, r - 2), Math.max(1, r - 2), '#ffffff', ox, oy)
 }
 
 /** Hyper Beam's segments drawn as one thick beam in three layers, with a flare at its tip. */
@@ -189,8 +189,8 @@ const drawBeam = (ctx: Ctx, g: Game, t: number) => {
       thickLine(ctx, x0, y0, x1, y1, Math.max(1, Math.round(thick)), color)
       if (layer === 2 && a.flip) {
         const f = Math.round(w * 1.6) + 4
-        blitCentered(ctx, ellipse(f, f, 'rgba(248,152,48,0.6)'), a.x, a.y)
-        blitCentered(ctx, ellipse(Math.max(1, f - 3), Math.max(1, f - 3), '#fff8d0'), a.x, a.y)
+        blitEllipse(ctx, f, f, 'rgba(248,152,48,0.6)', a.x, a.y)
+        blitEllipse(ctx, Math.max(1, f - 3), Math.max(1, f - 3), '#fff8d0', a.x, a.y)
         for (let i = 0; i < 8; i++) {
           const ang = (i / 8) * TAU + t * 6
           px(ctx, a.x + Math.cos(ang) * (f + 3), a.y + Math.sin(ang) * (f + 3), '#ffffff', 2, 2)

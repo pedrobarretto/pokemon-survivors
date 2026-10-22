@@ -280,6 +280,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             en: 'The game no longer closes by itself mid-run on phones. The memory it uses now stays flat from start to finish: it loads only the Pokémon of the current and next stage, lets go of the ones already behind you and only downloads a shiny when one shows up.',
             es: 'El juego ya no se cierra solo en medio de la partida en celulares. La memoria que usa ahora se mantiene estable de principio a fin: carga solo los Pokémon de la fase actual y la siguiente, suelta los que ya pasaron y solo descarga un shiny cuando aparece.',
           },
+          {
+            pt: 'As sombras, os anéis e os números de dano também não se acumulam mais ao longo da partida: perto dos 5 minutos eles já somavam mais de mil imagens guardadas, um peso a mais na memória dos celulares Android.',
+            en: 'Shadows, rings and damage numbers no longer pile up over a run either: by minute 5 they added up to over a thousand stored images, extra weight on Android phones\' memory.',
+            es: 'Las sombras, los anillos y los números de daño tampoco se acumulan más a lo largo de la partida: cerca de los 5 minutos ya sumaban más de mil imágenes guardadas, un peso extra en la memoria de los celulares Android.',
+          },
         ],
       },
       {

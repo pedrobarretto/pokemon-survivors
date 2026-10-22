@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRotated, canvasCache, fromStrings, lazy, textSprite, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRotated, canvasCache, fromStrings, lazy, blitText, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
 import { ALPHA } from '../game/alphas'
@@ -91,7 +91,7 @@ export const drawAlphaAir = (ctx: Ctx, g: Game, time: number, visible: Visible) 
     ctx.fillRect(x, top, bw, 2)
     ctx.fillStyle = e.alpha?.enraged && Math.floor(time * 8) % 2 === 0 ? '#f8a020' : CRIMSON
     ctx.fillRect(x, top, Math.max(1, Math.round(bw * k)), 2)
-    blitCentered(ctx, textSprite(t().alphas.tag, CRIMSON, DARK), e.x, top - 5)
+    blitText(ctx, t().alphas.tag, CRIMSON, e.x, top - 5, DARK)
   }
 }
 
