@@ -1,18 +1,26 @@
 import { partnerOf } from '../data/domains'
-import { ENEMIES } from '../data/enemies'
+import { ENEMIES, type EnemyId } from '../data/enemies'
 import { GRAVEYARD } from '../data/places'
 import { isSummoner, SUMMONS } from '../data/traits'
 import { EVENTS, STAGES, stageIndexAt, stageStart } from '../data/waves'
+import { phasesOf } from '../game/bossFight'
 import { ENDLESS, REAPER } from '../game/endless'
+import { playerDex } from '../game/game'
+import { formAfter } from '../game/legend'
+import { heldMega, isFinalStage } from '../game/mega'
 import { placePool } from '../game/place'
+import { actAs } from '../game/players'
 import { bossSummons, type Roster } from '../game/roster'
+import { STANCES } from '../game/stance'
 import type { Game } from '../game/types'
-import type { Dex, KeepSprites } from './sprites'
+import type { Dex, KeepSprites, Variant } from './sprites'
 
 /**
  * Which species' sheets a run holds: the shell streams the ones it needs now
- * and next (`streamSpecies`) and sweeps the rest (`sweepSprites`), so memory
+ * and next (`streamSprites`) and sweeps the rest (`sweepSprites`), so memory
  * stays flat over a run instead of growing with every species it met.
+ * Alternate forms and shiny colors load only once they can show up soon
+ * (`extraSprites`), never a whole family's or a legendary's at once.
  * Presentation only: the simulation never reads any of it.
  */
 
@@ -53,11 +61,11 @@ export const dueNeeds = (needs: readonly SpriteNeed[], time: number): Dex[] => {
   return [...new Set(due.map((n) => n.dex))]
 }
 
-/** The rift's legendary (and its partner) from its omen to the end of its arena: shown in its forms, so every variant is kept. */
-const riftLegends = (g: Game): Dex[] => {
+/** The rift's legendary (and its partner) from its omen to the end of its arena. */
+const riftLegends = (g: Game): EnemyId[] => {
   const legend = g.rift.omen?.legend ?? g.rift.portal?.legend ?? g.rift.arena?.legend
   const partner = legend && partnerOf(legend)
-  return [...(legend ? [ENEMIES[legend].dex] : []), ...(partner ? [ENEMIES[partner].dex] : [])]
+  return [...(legend ? [legend] : []), ...(partner ? [partner] : [])]
 }
 
 /** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, and the reaper as its hunt nears in the endless mode. */
@@ -70,17 +78,60 @@ const visitors = (g: Game): Dex[] => {
   ]
 }
 
+/** Every stance's name: the ones that are a form of the species (Aegislash's Blade, Deoxys's formes) load, the rest (Shield, Normal) are no form. */
+const STANCE_NAMES = Object.keys(STANCES)
+
+/**
+ * The forms each player may wear soon: their Mega once the stone is in hand at
+ * the final stage, a legend's awakened form from its first awakening on, and
+ * every stance of a stance changer (it swaps them at will).
+ */
+export const playerForms = (g: Game): Variant[] =>
+  g.players.flatMap((p) => {
+    const before = actAs(g, p)
+    const dex = playerDex(g)
+    const mega = isFinalStage(p.starter, p.stage) ? heldMega(g) : null
+    actAs(g, before)
+    const legend = p.legend && p.legend.awakened >= 1 ? formAfter(p.legend.id, 2)?.key : undefined
+    const forms = [...(mega ? [mega.form] : []), ...(legend ? [legend] : []), ...(p.special.stance !== null ? STANCE_NAMES : [])]
+    return forms.map((form) => ({ dex, shiny: p.shiny, form }))
+  })
+
+/**
+ * The rift's sheets beyond its legendary's normal colors: from the omen, the form
+ * it starts its battle in; inside, its shiny colors when it is shiny; and in the
+ * battle, the form of every phased boss's phase and of the next one, so a phase's
+ * form is ready when the phase comes instead of all of them at the crossing.
+ */
+export const bossForms = (g: Game): Variant[] => {
+  const shiny = g.rift.arena?.shiny ?? false
+  const rift = riftLegends(g).flatMap((id) => {
+    const dex = ENEMIES[id].dex
+    const form = phasesOf(id)?.[0]?.form
+    return [...(form ? [{ dex, shiny, form }] : []), ...(shiny ? [{ dex, shiny }] : [])]
+  })
+  const fights = g.enemies.flatMap((e) => {
+    const phases = e.fight ? phasesOf(e.kind) : null
+    if (!phases || !e.fight) return []
+    const forms = [phases[e.fight.phase]?.form, phases[e.fight.phase + 1]?.form]
+    return forms.flatMap((form) => (form ? [{ dex: ENEMIES[e.kind].dex, shiny: e.shiny, form }] : []))
+  })
+  return [...rift, ...fights]
+}
+
 /**
  * What a run streams and keeps right now. It streams what the next moments
  * bring outside the cast (`riftLegends`, `visitors`), then this stage's and the
- * next one's cast by when they come. It keeps those, every enemy alive (on
+ * next one's cast by when they come; `extras` are the forms and shiny colors
+ * that can show up soon (`playerForms`, `bossForms`), which all have a stand-in
+ * (the base form, the normal colors). It keeps those, every enemy alive (on
  * screen or not), and with every variant (shiny, forms) `always` (the player's
  * line, the companion, the outbreak), the rift's legendary, shiny enemies and bosses.
  */
-export const runSprites = (g: Game, needs: readonly SpriteNeed[], always: readonly Dex[]): { stream: Dex[]; keep: KeepSprites } => {
-  const legends = riftLegends(g)
-  const stream = [...new Set([...legends, ...visitors(g), ...dueNeeds(needs, g.time)])]
-  const species = new Set(stream)
+export const runSprites = (g: Game, needs: readonly SpriteNeed[], always: readonly Dex[]): { stream: Variant[]; extras: Variant[]; keep: KeepSprites } => {
+  const legends = riftLegends(g).map((id) => ENEMIES[id].dex)
+  const order = [...new Set([...legends, ...visitors(g), ...dueNeeds(needs, g.time)])]
+  const species = new Set(order)
   const variants = new Set([...always, ...legends])
   for (const e of g.enemies) {
     const dex = ENEMIES[e.kind].dex
@@ -92,8 +143,8 @@ export const runSprites = (g: Game, needs: readonly SpriteNeed[], always: readon
       const called = ENEMIES[id].dex
       if (species.has(called)) continue
       species.add(called)
-      stream.push(called)
+      order.push(called)
     }
   }
-  return { stream, keep: { species, variants } }
+  return { stream: order.map((dex) => ({ dex, shiny: false })), extras: [...playerForms(g), ...bossForms(g)], keep: { species, variants } }
 }

@@ -10,7 +10,7 @@ import type { Game } from '../game/types'
 import { art, toIconUrl } from './art'
 import { PLACE_PIECES } from './placePieces'
 import { dashedRing } from './strokes'
-import { sprites } from './sprites'
+import { bodyOf } from '../data/bodies'
 import { ENEMIES, type EnemyDef } from '../data/enemies'
 
 type Ctx = CanvasRenderingContext2D
@@ -511,7 +511,7 @@ export const drawPlaceDark = (ctx: Ctx, g: Game, camX: number, camY: number, t: 
     // A blink now and then.
     if (hash2(e.id, Math.floor(t * 2.5), 5) < 0.12) continue
     const def: EnemyDef = ENEMIES[e.kind]
-    const top = Math.round(e.y - sprites(def.dex).bodyH * 0.62)
+    const top = Math.round(e.y - bodyOf(def.dex).bodyH * 0.62)
     const facing = e.dir === 2 || e.dir === 1 || e.dir === 3 ? 1 : e.dir === 6 || e.dir === 5 || e.dir === 7 ? -1 : 0
     if (e.dir === 4) continue
     ctx.fillStyle = EYES

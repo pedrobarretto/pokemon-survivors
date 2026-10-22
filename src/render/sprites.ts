@@ -77,16 +77,63 @@ const manifestVariant = (dex: Dex, shiny: boolean, form?: FormKey) => {
 const SHINIES = new Set(Object.entries(MANIFEST).flatMap(([dex, entry]) => (entry.shiny ? [Number(dex)] : [])))
 export const hasShiny = (dex: Dex) => SHINIES.has(dex)
 
-/** Loads an image and decodes it off the main thread, so its first draw (mid-run) doesn't stall a frame. */
-const loadImage = (src: string) => {
-  const img = new Image()
-  img.src = src
-  // A browser that can't decode ahead (a rejected `decode` on an image that did load) still gets the image.
-  return img.decode().then(
-    () => img,
-    () => (img.complete && img.naturalWidth > 0 ? img : Promise.reject(new Error(`Failed to load ${src}`))),
-  )
+/**
+ * How soon a sheet is wanted: `now` holds a loading screen, `shown` is on
+ * screen as a stand-in (a puff, the normal colors, the base form) until it
+ * lands, `ahead` is loaded before anything needs it.
+ */
+export type Urgency = 'now' | 'shown' | 'ahead'
+const RANK: Record<Urgency, number> = { now: 0, shown: 1, ahead: 2 }
+
+/**
+ * Images downloading and decoding at most at once. Phones killed the tab on
+ * bursts of them (a rift's legendary in every form at its crossing, a run's
+ * cast while the lobby's was still held), so the rest wait their turn in
+ * `waiting`, the most urgent first, and a burst lands as a trickle.
+ */
+const DECODES = 2
+
+/** An image waiting its turn: the variant it belongs to (`cacheKey`), its rank (`RANK`), how to start it and how to give it up. */
+type Job = { key: Key; rank: number; start: () => void; drop: () => void }
+const waiting: Job[] = []
+let decoding = 0
+
+/** Starts the most urgent waiting images (the oldest among equals) while there's room. */
+const pump = () => {
+  while (decoding < DECODES && waiting.length > 0) {
+    let at = 0
+    for (let i = 1; i < waiting.length; i++) if (waiting[i]!.rank < waiting[at]!.rank) at = i
+    const job = waiting.splice(at, 1)[0]!
+    decoding++
+    job.start()
+  }
 }
+
+/**
+ * Loads an image and decodes it off the main thread, so its first draw (mid-run)
+ * doesn't stall a frame, once its turn comes (`DECODES`).
+ */
+const loadImage = (src: string, key: Key, rank: number) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const start = () => {
+      const img = new Image()
+      img.src = src
+      // A browser that can't decode ahead (a rejected `decode` on an image that did load) still gets the image.
+      img
+        .decode()
+        .then(
+          () => img,
+          () => (img.complete && img.naturalWidth > 0 ? img : Promise.reject(new Error(`Failed to load ${src}`))),
+        )
+        .then(resolve, reject)
+        .finally(() => {
+          decoding--
+          pump()
+        })
+    }
+    waiting.push({ key, rank, start, drop: () => reject(new Error(`Dropped ${src}`)) })
+    pump()
+  })
 
 /* ---------------- Silhouettes ---------------- */
 
@@ -355,28 +402,56 @@ const sheetOf = (img: HTMLImageElement | HTMLCanvasElement, fw: number, fh: numb
 })
 
 const cache = new Map<Key, SpeciesSprites>()
+
+/** Decoded bytes of the loaded sheets (a missing animation shares the walk's image), and the most since `spriteMemory(true)`. */
+let resident = 0
+let peak = 0
+const bytesOf = (s: SpeciesSprites) => {
+  let n = 0
+  for (const sheet of new Set(Object.values(s.anims))) n += sheet.img.width * sheet.img.height * 4
+  return n
+}
+
+/** The loaded sheets' decoded size now and at its peak (MB), for the dev console; `reset` starts a new peak. */
+export const spriteMemory = (reset = false) => {
+  if (reset) peak = resident
+  return { variants: cache.size, MB: +(resident / 1048576).toFixed(1), peakMB: +(peak / 1048576).toFixed(1) }
+}
+
 const pending = new Map<Key, Promise<SpeciesSprites>>()
 /** Variants whose download failed since the last sweep: not asked for again until then (a flaky connection gets retried, a frame loop doesn't). */
 const failed = new Set<Key>()
 
-/** Loads (once) every sheet and the cry URL of a species variant. Concurrent calls share one request. */
-export const loadSpecies = (dex: Dex, shiny = false, form?: FormKey): Promise<SpeciesSprites> => {
+/**
+ * Loads (once) every sheet and the cry URL of a species variant. Concurrent calls share one request;
+ * a more urgent one moves its images up the queue (`Urgency`).
+ */
+export const loadSpecies = (dex: Dex, shiny = false, form?: FormKey, urgency: Urgency = 'shown'): Promise<SpeciesSprites> => {
   const key = cacheKey(dex, shiny, form)
   const cached = cache.get(key)
   if (cached) return Promise.resolve(cached)
-  const inFlight =
-    pending.get(key) ??
-    fetchSpecies(dex, shiny, form)
-      .then(
-        (s) => (cache.set(key, s), s),
-        (error: unknown) => {
-          failed.add(key)
-          throw error
-        },
-      )
-      .finally(() => pending.delete(key))
-  pending.set(key, inFlight)
-  return inFlight
+  const rank = RANK[urgency]
+  const inFlight = pending.get(key)
+  if (inFlight) {
+    for (const job of waiting) if (job.key === key) job.rank = Math.min(job.rank, rank)
+    return inFlight
+  }
+  const fresh = fetchSpecies(dex, shiny, form, key, rank)
+    .then(
+      (s) => {
+        cache.set(key, s)
+        resident += bytesOf(s)
+        peak = Math.max(peak, resident)
+        return s
+      },
+      (error: unknown) => {
+        failed.add(key)
+        throw error
+      },
+    )
+    .finally(() => pending.delete(key))
+  pending.set(key, fresh)
+  return fresh
 }
 
 /** Starts loading a variant in the background unless it's loaded, on its way or just failed. Cheap enough to call every frame. */
@@ -385,25 +460,35 @@ const ask = (dex: Dex, shiny: boolean, form?: FormKey) => {
   if (!cache.has(key) && !pending.has(key) && !failed.has(key)) void loadSpecies(dex, shiny, form).catch(() => {})
 }
 
-const fetchSpecies = async (dex: Dex, shiny: boolean, form?: FormKey): Promise<SpeciesSprites> => {
+/** Frees a dropped image's decoded pixels right away, without waiting for the garbage collector. */
+const freeImage = (img: HTMLImageElement | HTMLCanvasElement) => {
+  if (img instanceof HTMLImageElement) img.removeAttribute('src')
+}
+
+const fetchSpecies = async (dex: Dex, shiny: boolean, form: FormKey | undefined, key: Key, rank: number): Promise<SpeciesSprites> => {
   const variant = manifestVariant(dex, shiny, form)
   const anims = variant?.anims
   const walkMeta = anims?.Walk
   if (!anims || !walkMeta) throw new Error(`Missing ${shiny ? 'shiny ' : ''}${form ?? ''} sprites for #${dex}. Run npm run assets.`)
   const dir = variantBase(dex, shiny, form)
   const loadSheet = async (name: AnimName, meta: { frameWidth: number; frameHeight: number; durations: number[] }) =>
-    sheetOf(await loadImage(`${dir}/${name}.png`), meta.frameWidth, meta.frameHeight, meta.durations)
+    sheetOf(await loadImage(`${dir}/${name}.png`, key, rank), meta.frameWidth, meta.frameHeight, meta.durations)
   // A missing animation plays the walk: the same sheet, not a second copy of its image.
   const walk = loadSheet('Walk', walkMeta)
-  const [Walk, Idle, Hurt, Fly] = await Promise.all([
+  const [Walk, Idle, Hurt, Fly] = await Promise.allSettled([
     walk,
     anims.Idle ? loadSheet('Idle', anims.Idle) : walk,
     anims.Hurt ? loadSheet('Hurt', anims.Hurt) : walk,
     anims.Fly ? loadSheet('Fly', anims.Fly) : null,
   ])
+  if (Walk.status === 'rejected' || Idle.status === 'rejected' || Hurt.status === 'rejected' || Fly.status === 'rejected') {
+    // Half a species is no use: the sheets that did land go too.
+    for (const r of [Walk, Idle, Hurt, Fly]) if (r.status === 'fulfilled' && r.value) freeImage(r.value.img)
+    throw new Error(`Failed to load ${dir}`)
+  }
   return {
     dex,
-    anims: { Walk, Idle, Hurt, ...(Fly && { Fly }) },
+    anims: { Walk: Walk.value, Idle: Idle.value, Hurt: Hurt.value, ...(Fly.value && { Fly: Fly.value }) },
     portrait: portraitUrl(dex, shiny),
     cry: cryUrl(dex, form),
     // A form's own body only places its sheets; hitboxes keep the species' `bodyOf`.
@@ -411,30 +496,50 @@ const fetchSpecies = async (dex: Dex, shiny: boolean, form?: FormKey): Promise<S
   }
 }
 
-export const loadAll = (dexes: readonly Dex[]) => Promise.all(dexes.map((dex) => loadSpecies(dex)))
+/**
+ * A species' sheets a run may want: its normal or shiny colors, in its own look or an
+ * alternate form's (any key: one the manifest lacks loads nothing, `streamSprites`).
+ */
+export type Variant = { dex: Dex; shiny: boolean; form?: string }
+
+/** A variant as it loads: a form the manifest lacks (a Mega SpriteCollab hasn't drawn) as nothing, shiny colors it lacks as the normal ones, as `sprites` would draw it. */
+type Loadable = { dex: Dex; shiny: boolean; form: Form | undefined }
+const loadable = (v: Variant): Loadable[] => {
+  const form = v.form === undefined ? undefined : formOf(v.dex, v.form)
+  if ((v.form !== undefined && !form) || !manifestVariant(v.dex, false, form)) return []
+  return [{ dex: v.dex, shiny: v.shiny && manifestVariant(v.dex, true, form) !== undefined, form }]
+}
+
+/** Loads these variants first in the queue, for a loading screen; one that fails is left to its stand-in (a puff), never holding the run back. */
+export const loadAll = async (variants: readonly Variant[]) => {
+  await Promise.allSettled(variants.flatMap(loadable).map((v) => loadSpecies(v.dex, v.shiny, v.form, 'now')))
+}
 
 /** Loads shiny forms in the background. Until one is ready, `sprites` falls back to the normal form. */
 export const preloadShinies = (dexes: readonly Dex[]) =>
-  Promise.allSettled(dexes.filter(hasShiny).map((dex) => loadSpecies(dex, true)))
+  Promise.allSettled(dexes.filter(hasShiny).map((dex) => loadSpecies(dex, true, undefined, 'ahead')))
 
-/** What the background stream loads next, soonest needed first (`streamSpecies`). */
-let queue: readonly Dex[] = []
+/** What the background stream loads next, soonest needed first (`streamSprites`). */
+let queue: readonly Loadable[] = []
 let streaming = false
 
-const missing = (dex: Dex) => !cache.has(dex * 2) && !failed.has(dex * 2)
+const missing = (v: Loadable) => {
+  const key = cacheKey(v.dex, v.shiny, v.form)
+  return !cache.has(key) && !failed.has(key)
+}
 
 /**
- * Loads these species' normal colors one after another in the background, in
- * this order, so they don't hog the network or decode all at once. A new call
- * replaces the list: the shell hands over what the run needs now and next,
- * every few seconds, and what's no longer needed is never fetched.
+ * Loads these variants one after another in the background, in this order,
+ * so they don't hog the network or decode all at once. A new call replaces
+ * the list: the shell hands over what's needed now and next, every few
+ * seconds, and what's no longer needed is never fetched.
  */
-export const streamSpecies = (dexes: readonly Dex[]) => {
-  queue = dexes
+export const streamSprites = (variants: readonly Variant[]) => {
+  queue = variants.flatMap(loadable)
   if (streaming) return
   streaming = true
   void (async () => {
-    for (let next = queue.find(missing); next !== undefined; next = queue.find(missing)) await loadSpecies(next).catch(() => {})
+    for (let next = queue.find(missing); next !== undefined; next = queue.find(missing)) await loadSpecies(next.dex, next.shiny, next.form, 'ahead').catch(() => {})
     streaming = false
   })()
 }
@@ -453,24 +558,36 @@ export type KeepSprites = { species: ReadonlySet<Dex>; variants: ReadonlySet<Dex
 export const sweepSprites = (keep: KeepSprites, idle: number) => {
   epoch++
   failed.clear()
-  sweepOverlays()
   for (const [key, s] of cache) {
     const variant = typeof key === 'string' || key % 2 === 1
     if (keep.variants.has(s.dex) || (!variant && keep.species.has(s.dex))) continue
     const { Walk, Idle, Hurt, Fly } = s.anims
     if (Math.max(Walk.seen, Idle.seen, Hurt.seen, Fly?.seen ?? GONE) >= epoch - idle) continue
     cache.delete(key)
+    resident -= bytesOf(s)
     for (const sheet of new Set([Walk, Idle, Hurt, Fly])) {
       if (!sheet) continue
       sheet.seen = GONE
       releaseOverlays(sheet)
-      if (sheet.img instanceof HTMLImageElement) sheet.img.removeAttribute('src')
+      freeImage(sheet.img)
     }
   }
+  // After the sheets, so the pages their silhouettes leave empty go now.
+  sweepOverlays()
 }
 
-/** Species variants loaded right now, for the dev console. */
-export const loadedCount = () => cache.size
+/**
+ * Lets go of every sheet but `keep`'s at once and of the loads still waiting
+ * their turn, once the images already decoding land: a run frees the lobby's
+ * art before it loads its own, so a phone never holds both. Whatever asks
+ * again reloads it (back from the run, the lobby streams its own again).
+ */
+export const releaseSprites = async (keep: KeepSprites) => {
+  queue = []
+  for (const job of waiting.splice(0)) job.drop()
+  await Promise.allSettled([...pending.values()])
+  sweepSprites(keep, 0)
+}
 
 /** A puff of dust, drawn in place of a species that hasn't finished downloading. */
 const PUFF = [
@@ -604,17 +721,6 @@ const pendingSprites = (dex: Dex): SpeciesSprites => {
   }
   return s
 }
-
-/** Loads every alternate form (and its shiny, if asked) of these species in the background, so a swap never waits. */
-export const preloadForms = (dexes: readonly Dex[], shiny: boolean) =>
-  Promise.allSettled(
-    dexes.flatMap((dex) =>
-      Object.keys(MANIFEST[String(dex)]?.forms ?? {}).flatMap((form) =>
-        // Keys come from the manifest the `Form` type is inferred from.
-        [loadSpecies(dex, false, form as Form), ...(shiny ? [loadSpecies(dex, true, form as Form)] : [])],
-      ),
-    ),
-  )
 
 /** An alternate form's sprites if loaded; otherwise starts (once) loading them and returns undefined. */
 const formSprites = (dex: Dex, shiny: boolean, form: FormKey) => {

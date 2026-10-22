@@ -33,6 +33,7 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       { pt: 'Ovo do Kecleon sem o limite de um por dia: até 6, e cada um custa o dobro do anterior (₽ 10.000, 20.000, 40.000…). A conta zera à meia-noite.', en: 'The Kecleon Egg is no longer one a day: up to 6, each costing double the last (₽ 10,000, 20,000, 40,000…). The count resets at midnight.', es: 'El Huevo Kecleon ya no es uno por día: hasta 6, y cada uno cuesta el doble del anterior (₽ 10.000, 20.000, 40.000…). La cuenta vuelve a cero a medianoche.' },
       { pt: 'Incubadora maior: a 4ª e a 5ª vaga, suas para sempre, e a Incubadora Rápida, que faz um ovo andar o dobro.', en: 'A bigger incubator: the 4th and 5th slots, yours for good, and the Quick Incubator, which makes an egg walk twice as fast.', es: 'Una incubadora más grande: el 4.º y el 5.º espacio, tuyos para siempre, y la Incubadora Rápida, que hace que un huevo avance el doble.' },
       { pt: 'As partidas pagam cerca de metade do ₽, agora que a loja tem onde gastar. O que você já guardou continua valendo o mesmo.', en: 'Runs pay about half the ₽, now that the shop has somewhere to spend it. What you already saved keeps its full value.', es: 'Las partidas pagan cerca de la mitad de los ₽, ahora que la tienda tiene en qué gastarlos. Lo que ya ahorraste sigue valiendo lo mismo.' },
+      { pt: 'Menos travamentos no celular no começo da partida e ao entrar numa fenda lendária.', en: 'Fewer crashes on phones at the start of a run and when stepping into a legendary rift.', es: 'Menos cierres en el celular al comenzar la partida y al entrar en una grieta legendaria.' },
     ],
     changes: [
       {
@@ -97,6 +98,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Proteções de golpes diferentes não se emendam mais, como um Protect usado duas vezes seguidas nos jogos. Enquanto Protect, Fly, Dig, Iron Head, Burning Bulwark ou Needle Arm protegem você, a proteção dos outros falha, e só volta a funcionar 0,75 s depois que essa acaba. Cada golpe sozinho continua igual. Obrigado, Armonich, por avisar da build que deixava o jogador imortal!',
             en: "Protections from different moves no longer chain, like Protect used twice in a row in the main games. While Protect, Fly, Dig, Iron Head, Burning Bulwark or Needle Arm shields you, the others' protection fails, and it only works again 0.75 s after that one ends. Each move on its own works as before. Thanks, Armonich, for reporting the build that made the player immortal!",
             es: 'Las protecciones de movimientos distintos ya no se encadenan, como un Protect usado dos veces seguidas en los juegos. Mientras Protect, Fly, Dig, Iron Head, Burning Bulwark o Needle Arm te protegen, la protección de los demás falla, y solo vuelve a funcionar 0,75 s después de que esa termina. Cada movimiento por sí solo sigue igual. ¡Gracias, Armonich, por avisar de la build que dejaba al jugador inmortal!',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Menos travamentos no celular', en: 'Fewer crashes on phones', es: 'Menos cierres en el celular' },
+        notes: [
+          {
+            pt: 'O começo da partida e a entrada nas fendas lendárias pesam bem menos no celular: o jogo solta os Pokémon do lobby antes de carregar os da partida, carrega as imagens aos poucos em vez de todas de uma vez, e só baixa uma Mega ou a forma de um lendário quando ela está para aparecer (a Mega da Latias, por exemplo, só na fase anterior à dela).',
+            en: "The start of a run and stepping into a legendary rift weigh much less on phones: the game lets go of the lobby's Pokémon before loading the run's, loads pictures a few at a time instead of all at once, and only downloads a Mega or a legendary's form when it's about to show up (Latias's Mega, for one, only in the phase before it).",
+            es: 'El comienzo de la partida y la entrada a las grietas legendarias pesan mucho menos en el celular: el juego suelta los Pokémon del lobby antes de cargar los de la partida, carga las imágenes de a poco en vez de todas a la vez, y solo descarga una Mega o la forma de un legendario cuando está por aparecer (la Mega de Latias, por ejemplo, solo en la fase anterior a la suya).',
           },
         ],
       },
