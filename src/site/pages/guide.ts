@@ -26,7 +26,8 @@ import { createRng } from '../../engine/rng'
 import { DIFFICULTIES, DIFFICULTY_IDS } from '../../game/difficulty'
 import { ENDLESS, REAPER, reaperHp } from '../../game/endless'
 import { CONSUMABLES } from '../../game/consumables'
-import { EGG_SOURCES, EGG_TIER_IDS, EGG_TIERS, EGGS, hatchPool, type EggSource } from '../../game/eggs'
+import { EGG_SOURCES, EGG_TIER_IDS, EGG_TIERS, EGGS, hatchPool, MAX_SLOTS, type EggSource } from '../../game/eggs'
+import { INCUBATOR } from '../../data/shop'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE } from '../../data/hatchlings'
 import { MAP_EVENTS } from '../../game/mapEvents'
 import { TUTOR } from '../../game/tmRules'
@@ -498,7 +499,16 @@ const eggs = (locale: Locale, m: SiteMessages) => {
     const chance = source === 'mission' ? DIFFICULTY_IDS.map((d) => pct(FIELD_TUNING[d].reward.egg)).join(' / ') : pct(EGG_SOURCES[source].chance)
     return [e.sources[source], chance, rarity]
   })
-  return html`${paragraphs(e.paragraphs(STARTER_IDS.length, HATCHLING_IDS.length, EGGS.slots, EGGS.perRun, EGGS.stepPx, Math.round(1 / EGGS.shinyOdds), EGGS.newWeight))}
+  const shop = LOCALES[locale].messages.shop
+  const upgrades = e.incubator({
+    max: MAX_SLOTS,
+    slots: INCUBATOR.slots.map((s, i) => ({ n: EGGS.slots + i + 1, price: `₽${num(s.price)}`, level: shop.level(shop.levels[s.minLevel], s.minLevel) })),
+    quick: `₽${num(INCUBATOR.quick.price)}`,
+    speed: INCUBATOR.quick.speed,
+  })
+  const texts = e.paragraphs(STARTER_IDS.length, HATCHLING_IDS.length, EGGS.slots, EGGS.perRun, EGGS.stepPx, Math.round(1 / EGGS.shinyOdds), EGGS.newWeight)
+  // The incubator's upgrades right after the paragraph about its slots.
+  return html`${paragraphs([...texts.slice(0, 2), upgrades, ...texts.slice(2)])}
     ${table([e.sourceHead, e.chanceHead, e.oddsHead], sourceRows)}
     ${table([e.tierHead, e.stepsHead, e.refundHead, e.familiesHead], tierRows)}`
 }

@@ -1,6 +1,6 @@
 import { STALL_IDS, STALLS, type StallGoodId, type StallId } from '../data/visitors'
 import { isDayKey, type DayKey } from './day'
-import { EGGS, grantEgg, type EggTier } from './eggs'
+import { grantEgg, incubatorFull, type EggTier } from './eggs'
 import type { Save } from './meta'
 import { isRecord, wholeNumber } from './parse'
 
@@ -45,7 +45,7 @@ export type StallBlock = 'closed' | 'soldOut' | 'full' | 'poor'
 export const stallBlock = (save: Save, good: StallGoodId, day: DayKey): StallBlock | null => {
   if (stallOn(day) !== GOODS[good].stall) return 'closed'
   if (stallStockLeft(save, good, day) <= 0) return 'soldOut'
-  if (save.eggs.length >= EGGS.slots) return 'full'
+  if (incubatorFull(save)) return 'full'
   return save.wallet < GOODS[good].price ? 'poor' : null
 }
 

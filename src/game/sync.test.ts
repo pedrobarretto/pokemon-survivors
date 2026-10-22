@@ -3,8 +3,9 @@ import { NO_ACHIEVEMENTS } from './achievements'
 import { buyUpgrade, EMPTY_SAVE, NO_RANKS, parseSaveData, refundAll, upgradePrice, type Save } from './meta'
 import { keepGiven } from './gifts'
 import { bagCount } from './bag'
-import { buyFromVitrine, buyStyle, claimGift, investInShop, vitrineCards, vitrineOf } from './shop'
+import { buyFromVitrine, buyKecleonEgg, buyStyle, claimGift, investInShop, vitrineCards, vitrineOf } from './shop'
 import { applyPush, mergeSaves } from './sync'
+import { buyQuick, buySlot, useQuick } from './incubator'
 
 const save = (patch: Partial<Save>): Save => ({ ...EMPTY_SAVE, ...patch })
 
@@ -45,6 +46,16 @@ describe('mergeSaves', () => {
     expect(m.shop).toEqual(shopped.shop)
     expect(bagCount(m.bag, v.gift)).toBeGreaterThanOrEqual(1)
     expect(mergeSaves(m, before)).toEqual({ ...m, style: { ...m.style, equipped: before.style.equipped }, bag: { ...m.bag, armed: before.bag.armed } })
+  })
+
+  it('merges two Kecleon Egg ladders climbed apart as the higher one: its count, its ₽ and its eggs', () => {
+    const before = save({ wallet: 100_000 })
+    const v = vitrineOf('2026-10-21')
+    const one = buyKecleonEgg(before, v)!
+    const two = buyKecleonEgg(one, v)!
+    const m = mergeSaves(one, two)
+    expect([m.shop.bought.kecleonEgg, m.wallet, m.eggs.length]).toEqual([2, 100_000 - 30_000, 2])
+    expect(mergeSaves(m, one)).toMatchObject({ wallet: m.wallet, shop: { bought: { kecleonEgg: 2 } } })
   })
 
   it("counts the shop's level in the fortune: an investment on one side is neither paid back nor paid twice", () => {
@@ -105,6 +116,20 @@ describe('mergeSaves', () => {
     expect(m.wallet).toBe(1000 - upgradePrice('protein', 0))
   })
 
+  it("counts the incubator's slots in the fortune and keeps them, with the eggs they hold and a Quick Incubator used on either side", () => {
+    const before = save({ wallet: 200_000, shop: { ...EMPTY_SAVE.shop, level: 2 }, eggs: [{ tier: 'rare', steps: 100 }] })
+    const slotted = buySlot(before)!
+    const filled = { ...slotted, eggs: [...slotted.eggs, ...Array.from({ length: 3 }, () => ({ tier: 'common' as const, steps: 0 }))] }
+    const quick = useQuick(buyQuick(before)!, 0)!
+    const m = mergeSaves(filled, quick)
+    expect(m.incubator).toEqual({ slots: 1, quick: { got: 1, used: 1 } })
+    expect(m.wallet).toBe(200_000 - 150_000 - 8000)
+    expect(m.eggs).toHaveLength(4)
+    expect(m.eggs[0]).toEqual({ tier: 'rare', steps: 100, quick: true })
+    expect(mergeSaves(m, filled)).toEqual(m)
+    expect(parseSaveData(JSON.parse(JSON.stringify(m)))).toEqual(m)
+  })
+
   it('changes nothing when merged again, in either order', () => {
     const m = mergeSaves(account, guest)
     expect(mergeSaves(m, guest)).toEqual(m)
@@ -152,13 +177,13 @@ describe('applyPush', () => {
     const device = save({
       eggs: [{ tier: 'kecleon', steps: 100 }, { tier: 'kecleonShiny', steps: 0 }],
       hatched: { porygon: { shiny: true }, smeargle: { shiny: false } },
-      shop: { ...EMPTY_SAVE.shop, day: '2026-10-21', bought: { kecleonEgg: 1 } },
+      shop: { ...EMPTY_SAVE.shop, day: '2026-10-21', bought: { kecleonEgg: 4 } },
     })
     const pushed = parseSaveData(JSON.parse(JSON.stringify(device)))
     const stored = keepGiven(applyPush({ save: account, revision: 3 }, { save: pushed, base: 2 }).save, [])
     expect(stored.eggs).toEqual(expect.arrayContaining([{ tier: 'kecleon', steps: 100 }, { tier: 'kecleonShiny', steps: 0 }]))
     expect(stored.hatched).toMatchObject({ porygon: { shiny: true }, smeargle: { shiny: false } })
-    expect(stored.shop.bought.kecleonEgg).toBe(1)
+    expect(stored.shop.bought.kecleonEgg).toBe(4)
   })
 
   it("hands a reset save to devices that haven't seen the reset, and takes pushes from those that have", () => {

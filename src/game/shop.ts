@@ -3,7 +3,7 @@ import { BAG_ITEM_IDS, BAG_ITEMS, bagItemLevel, MAX_SHOP_LEVEL, SHOP_BOUGHT_KEYS
 import { styleIds, stylePrice, type StyleId, type StyleSlot } from '../data/style'
 import { addToBag } from './bag'
 import { addDays, dayNumber, isDayKey, type DayKey } from './day'
-import { EGGS, grantEgg } from './eggs'
+import { grantEgg, incubatorFull } from './eggs'
 import type { Save } from './meta'
 import { isRecord, wholeNumber } from './parse'
 import { grantStyle, ownsStyle, type StyleSave } from './style'
@@ -11,9 +11,9 @@ import { grantStyle, ownsStyle, type StyleSave } from './style'
 /**
  * The Kecleon Shop's rules (its catalog is `data/shop.ts`). The Vitrine do
  * dia turns over at midnight in Brasília and is the same for everyone: a free
- * gift (one consumable, once per day per save), the Kecleon Egg's fixed card,
- * a deal at 30% off and the day's cards, drawn from the pool of consumables,
- * the day's egg and the day's style. A higher shop level sees more cards of
+ * gift (one consumable, once per day per save), the Kecleon Egg's fixed card
+ * (several a day, each double the last), a deal at 30% off and the day's
+ * cards, drawn from the pool of consumables, the day's egg and the day's style. A higher shop level sees more cards of
  * the same Vitrine. Each card has a daily stock per save. Buying spends ₽ into the save's `spent`;
  * investing in the shop's next level spends into the level itself, which the
  * sync counts like the upgrades' ranks (`game/sync.ts`) and nothing refunds.
@@ -148,7 +148,7 @@ export const sellsAt = (key: VitrineKey, level: ShopLevel) => key === 'egg' || k
 
 /** How many of a card one save may buy on a day (the Kecleon Egg's fixed card too). */
 export const vitrineStock = (key: ShopBoughtKey) =>
-  key === 'egg' ? VITRINE.eggStock : key === 'style' ? VITRINE.styleStock : key === 'kecleonEgg' ? VITRINE.kecleonEgg.stock : BAG_ITEMS[key].stock
+  key === 'egg' ? VITRINE.eggStock : key === 'style' ? VITRINE.styleStock : key === 'kecleonEgg' ? VITRINE.kecleonEgg.prices.length : BAG_ITEMS[key].stock
 
 /** A card's price today for a save (its style card offers its own style), rounded to ₽10 after the deal; null for a style card with nothing left to offer. */
 export const vitrinePrice = (v: Vitrine, key: VitrineKey, style: StyleSave): number | null => {
@@ -198,8 +198,11 @@ export const recordVisit = (shop: ShopSave, day: DayKey): ShopSave => {
 /** The shop as of `day`: a new day restocks and brings a new gift. */
 const onDay = (shop: ShopSave, day: DayKey): ShopSave => (shop.day === day ? shop : { ...shop, day, bought: {}, gift: false })
 
+/** How many of `key` a save bought on the Vitrine's day. */
+export const boughtToday = (shop: ShopSave, v: Vitrine, key: ShopBoughtKey) => onDay(shop, v.day).bought[key] ?? 0
+
 /** How many of `key` a save can still buy on the Vitrine's day. */
-export const stockLeft = (shop: ShopSave, v: Vitrine, key: ShopBoughtKey) => Math.max(0, vitrineStock(key) - (onDay(shop, v.day).bought[key] ?? 0))
+export const stockLeft = (shop: ShopSave, v: Vitrine, key: ShopBoughtKey) => Math.max(0, vitrineStock(key) - boughtToday(shop, v, key))
 
 export type VitrineBlock = 'locked' | 'soldOut' | 'owned' | 'full' | 'poor'
 
@@ -213,7 +216,7 @@ export const vitrineBlock = (save: Save, v: Vitrine, key: VitrineKey): VitrineBl
   if (stockLeft(save.shop, v, key) === 0) return 'soldOut'
   const price = vitrinePrice(v, key, save.style)
   if (price === null) return 'owned'
-  if (key === 'egg' && save.eggs.length >= EGGS.slots) return 'full'
+  if (key === 'egg' && incubatorFull(save)) return 'full'
   return save.wallet < price ? 'poor' : null
 }
 
@@ -232,19 +235,33 @@ export const buyFromVitrine = (save: Save, v: Vitrine, key: VitrineKey): Save | 
 
 export type KecleonEggBlock = 'soldOut' | 'full' | 'poor'
 
-/** Why the Kecleon Egg can't be bought on the Vitrine's day: today's is sold, the incubator is full or not enough ₽. */
+/**
+ * What the next Kecleon Egg costs after `bought` of them on the same day
+ * (`VITRINE.kecleonEgg.prices`: ₽10k, then each double the last); null once
+ * the day's are sold. The deal never touches it: it's no card of the rotation,
+ * and 30% off the top of the ladder would undo the point of it.
+ */
+export const kecleonEggPrice = (bought: number): number | null => VITRINE.kecleonEgg.prices[bought] ?? null
+
+/**
+ * Why the next Kecleon Egg can't be bought on the Vitrine's day: today's are
+ * sold, the incubator has no free slot (the egg would land as its ₽2.5k refund,
+ * a scam at ₽80k) or not enough ₽.
+ */
 export const kecleonEggBlock = (save: Save, v: Vitrine): KecleonEggBlock | null => {
-  if (stockLeft(save.shop, v, 'kecleonEgg') === 0) return 'soldOut'
-  if (save.eggs.length >= EGGS.slots) return 'full'
-  return save.wallet < VITRINE.kecleonEgg.price ? 'poor' : null
+  const price = kecleonEggPrice(boughtToday(save.shop, v, 'kecleonEgg'))
+  if (price === null) return 'soldOut'
+  if (incubatorFull(save)) return 'full'
+  return save.wallet < price ? 'poor' : null
 }
 
-/** Buys the day's Kecleon Egg into the incubator (₽ into `spent`). Null when blocked (`kecleonEggBlock`). */
+/** Buys the day's next Kecleon Egg into the incubator at its rung of the ladder (₽ into `spent`). Null when blocked (`kecleonEggBlock`). */
 export const buyKecleonEgg = (save: Save, v: Vitrine): Save | null => {
   if (kecleonEggBlock(save, v)) return null
-  const { price } = VITRINE.kecleonEgg
   const shop = onDay(save.shop, v.day)
-  return grantEgg({ ...save, wallet: save.wallet - price, spent: save.spent + price, shop: { ...shop, bought: { ...shop.bought, kecleonEgg: (shop.bought.kecleonEgg ?? 0) + 1 } } }, 'kecleon').save
+  const bought = shop.bought.kecleonEgg ?? 0
+  const price = kecleonEggPrice(bought)!
+  return grantEgg({ ...save, wallet: save.wallet - price, spent: save.spent + price, shop: { ...shop, bought: { ...shop.bought, kecleonEgg: bought + 1 } } }, 'kecleon').save
 }
 
 /** Why the day's free gift can't be taken: it was already. */
@@ -292,9 +309,13 @@ export const buyStyle = <S extends StyleSlot>(save: Save, slot: S, id: StyleId<S
 
 /**
  * Two shops of the same player: the higher level (an investment on either
- * side stands); the most recent day, with the most bought of each card (the
- * Kecleon Egg's fixed card too, so its one a day holds across devices) and
- * the gift taken on either side on the same day; the wishlist is
+ * side stands); the most recent day, with the most bought of each card and
+ * the gift taken on either side on the same day. The Kecleon Egg's count too,
+ * so its ladder holds across devices: the next egg costs the rung after the
+ * larger count. Like every card (and `spent`, the larger side's in
+ * `mergeSaves`), two devices that bought the same rungs apart merge as the
+ * side that bought more, so a rung bought on both is paid once and its egg
+ * kept once (`mergeEggs`, the most of each tier). The wishlist is
  * `incoming`'s, a setting like the difficulty; the loyalty stamps, the larger count.
  */
 export const mergeShop = (base: ShopSave, incoming: ShopSave): ShopSave => {

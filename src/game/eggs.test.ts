@@ -169,7 +169,7 @@ describe('save fields', () => {
   })
 
   it('drop unknown tiers and families, clamp steps and cut the incubator to its slots', () => {
-    const eggs = parseEggs([{ tier: 'common', steps: 99999 }, { tier: 'golden' }, { tier: 'rare', steps: -4 }, { tier: 'rare' }, { tier: 'ultra' }])
+    const eggs = parseEggs([{ tier: 'common', steps: 99999 }, { tier: 'golden' }, { tier: 'rare', steps: -4 }, { tier: 'rare' }, { tier: 'ultra' }], EGGS.slots)
     expect(eggs).toEqual([{ tier: 'common', steps: 2000 }, { tier: 'rare', steps: 0 }, { tier: 'rare', steps: 0 }])
     expect(parseHatched({ eevee: { shiny: true }, missingno: {}, pichu: 3 })).toEqual({ eevee: { shiny: true } })
   })

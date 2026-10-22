@@ -143,11 +143,17 @@ export const VITRINE = {
   styleStock: 1,
   /**
    * The Kecleon Egg's fixed card, beside the day's cards and never one of
-   * them (the rotation and its 7-day guarantee don't see it): its price and
-   * how many one save may buy each Brasília day, at any shop level. Its four
+   * them (the rotation and its 7-day guarantee don't see it, nor the deal):
+   * the price of each egg one save buys on a Brasília day, at any shop level,
+   * each double the last, so the more ₽ a player sits on the more eggs they
+   * take home. Its length is the daily stock (`kecleonEggPrice`). Its four
    * families hatch from no other egg (`EGG_TIERS.kecleon`).
    */
-  kecleonEgg: { price: 10_000, stock: 1 },
+  kecleonEgg: {
+    prices: [10_000, 20_000, 40_000, 80_000, 160_000, 320_000],
+    /** From this price on, the shop asks before selling one (a click buys on desktop). */
+    confirmFrom: 80_000,
+  },
 } as const satisfies { eggs: Record<Exclude<EggTier, 'friend' | 'haunted' | 'kecleon' | 'kecleonShiny'>, { price: number; weight: number }> } & Record<string, unknown>
 
 export type VitrineEgg = keyof typeof VITRINE.eggs
@@ -235,6 +241,23 @@ export const BOTTLE_CAPS = { prices: [2000, 6000, 18_000], boost: 0.03 } as cons
 
 /** The most Bottle Cap levels a Pokémon can have. */
 export const MAX_CAPS = BOTTLE_CAPS.prices.length
+
+/**
+ * The incubator's upgrades, on the shop's Incubadora shelf (`game/incubator.ts`).
+ * `slots`: extra slots past `EGGS.slots`, owned for good, each after the one
+ * before and from its shop level: the 4th from the Tent (Lv 2, so a player
+ * who hoarded ₽ grows the shop first), the 5th from the Kecleon Mart (Lv 4,
+ * the endgame's sink, past most of the ladder). Like the shop's levels, the sync
+ * counts them in the fortune and nothing refunds them. `quick`: the Quick
+ * Incubator, a consumable that makes one egg walk `speed` times as fast until it hatches.
+ */
+export const INCUBATOR = {
+  slots: [
+    { price: 150_000, minLevel: 2 },
+    { price: 500_000, minLevel: 4 },
+  ],
+  quick: { price: 8000, speed: 2 },
+} as const satisfies { slots: readonly { price: number; minLevel: ShopLevel }[]; quick: { price: number; speed: number } }
 
 /** The most TMs any level arms at once: a replay that arms more is malformed (`parseReplay`). */
 export const MAX_ARMED_TMS = Math.max(...SHOP_LEVEL_IDS.map((l) => SHOP_LEVELS[l].armedTms))

@@ -3,7 +3,7 @@ import { CARAVAN } from '../data/visitors'
 import type { PlayableId } from '../data/hatchlings'
 import { canPlay } from './capture'
 import { dayNumber, type DayKey } from './day'
-import { EGGS, grantEgg } from './eggs'
+import { grantEgg, incubatorFull } from './eggs'
 import { capLevel, grantCaps } from './evoItems'
 import { MAX_CAPS } from '../data/shop'
 import type { Save } from './meta'
@@ -96,7 +96,7 @@ export const caravanBlock = (save: Save, key: CaravanKey, day: DayKey): CaravanB
   if (onWeek(save.caravan, day).bought.includes(key)) return 'soldOut'
   if (key === 'frame' && ownsStyle(save.style, 'frame', CARAVAN.frame.id)) return 'owned'
   if (key !== 'egg' && key !== 'goldCap' && key !== 'frame' && save.tms.owned.includes(key)) return 'owned'
-  if (key === 'egg' && save.eggs.length >= EGGS.slots) return 'full'
+  if (key === 'egg' && incubatorFull(save)) return 'full'
   return save.wallet < caravanPrice(save, key, day) ? 'poor' : null
 }
 

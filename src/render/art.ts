@@ -402,6 +402,49 @@ export const eggCrack = (tier: EggTier, stage: number) =>
 
 export const eggIcon = (tier: EggTier) => toIconUrl(`egg:${tier}`, () => eggSprite(tier))
 
+/** An incubator: a glass dome on a red base with an egg inside (the shop's slot cards, a locked slot). */
+const INCUBATOR_ROWS = [
+  '....111111....',
+  '..1132222211..',
+  '.132222222221.',
+  '.132224422221.',
+  '13222444442221',
+  '13224444444221',
+  '12224454444221',
+  '12224444454221',
+  '12224544444221',
+  '12222444442221',
+  '99999999999999',
+  '96666666666669',
+  '96886666666669',
+  '97777777777779',
+  '.999999999999.',
+]
+/** The Quick Incubator: the same dome with a lightning bolt down its glass and a golden base. */
+const QUICK_INCUBATOR_ROWS = [
+  '....111111....',
+  '..1132222a11..',
+  '.13222222aa21.',
+  '.1322244aaa21.',
+  '13222444442aa1',
+  '13224444444a21',
+  '12224454444221',
+  '12224444454221',
+  '12224544444221',
+  '12222444442221',
+  '99999999999999',
+  '96666666666669',
+  '96886666666669',
+  '97777777777779',
+  '.999999999999.',
+]
+const INCUBATOR_PALETTE = { 1: '#5878a0', 2: '#c8e0f8', 3: '#ffffff', 4: '#f8f0d8', 5: '#58b858', 6: '#e04848', 7: '#a02828', 8: '#f88080', 9: '#686878' } as const
+const QUICK_PALETTE = { ...INCUBATOR_PALETTE, 6: '#f0a020', 7: '#b86810', 8: '#f8d878', a: '#f8d030' } as const
+
+/** The incubator's icon (the Quick Incubator's with `quick`), as a data URL. */
+export const incubatorIcon = (quick = false) =>
+  toIconUrl(quick ? 'incubator:quick' : 'incubator', () => (quick ? art(QUICK_INCUBATOR_ROWS, QUICK_PALETTE, '#181818') : art(INCUBATOR_ROWS, INCUBATOR_PALETTE, '#181818')))
+
 /* ---------------- Shiny sparkles ---------------- */
 
 /** Classic shiny twinkle: a four-point star in three sizes (small → big). */

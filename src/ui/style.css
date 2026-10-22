@@ -4956,6 +4956,19 @@ button {
   color: #8890a8;
 }
 
+/* Under the price, the Kecleon Egg's next rung ("depois ₽ 20.000"): it wraps before the price on narrow cards. */
+.shop-next {
+  max-width: 100%;
+  font-size: 13px;
+  line-height: 1;
+  color: #8890a8;
+  text-wrap: balance;
+}
+
+.shop-next:empty {
+  display: none;
+}
+
 .shop-badges {
   position: absolute;
   top: 4px;
@@ -7847,6 +7860,59 @@ button {
 
 .egg-slot.ready .egg-steps {
   color: #c89000;
+}
+
+/* The shop's extra slots (`INCUBATOR.slots`): five side by side, three a row on a phone. */
+.dialog.incubator {
+  width: min(680px, 94 * var(--vw));
+}
+
+.egg-slots.slots-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.egg-slot {
+  position: relative;
+}
+
+/* A slot not bought yet: the incubator greyed out, its price and shop level under it. */
+.egg-slot.locked:not(.selected) {
+  border: 3px dashed #c8c8d4;
+  background: #f0f0f4;
+}
+
+.egg-slot.locked .egg-art {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+.egg-slot.locked b,
+.egg-slot.locked .egg-steps {
+  color: #9898b0;
+}
+
+/* A Quick Incubator's egg: an orange bar and its ×2 tag in the corner. */
+.egg-slot.quick .egg-bar i {
+  background: #f0a020;
+}
+
+.egg-quick {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 2px 3px;
+  font-family: var(--title);
+  font-size: 7px;
+  font-style: normal;
+  color: #fff;
+  background: #e08810;
+  border-radius: 3px;
+}
+
+@media (max-width: 520px) {
+  .egg-slots.slots-5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .hatch {

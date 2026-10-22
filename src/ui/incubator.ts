@@ -2,16 +2,19 @@ import { playCry, playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { blitEllipse, context2d } from '../engine/pixelart'
 import { HATCHLING_IDS, HATCHLINGS } from '../data/hatchlings'
-import { EGG_TIERS, EGGS, isReady, stepsLeft, type Egg, type Hatch } from '../game/eggs'
-import { eggCrack, eggIcon, eggSprite, SPARKLE } from '../render/art'
+import { INCUBATOR } from '../data/shop'
+import { EGG_TIERS, EGGS, incubatorSlots, isReady, MAX_SLOTS, stepsToWalk, type Egg, type Hatch } from '../game/eggs'
+import { quickBlock, quickCount } from '../game/incubator'
+import type { Save } from '../game/meta'
+import { eggCrack, eggIcon, eggSprite, incubatorIcon, SPARKLE } from '../render/art'
 import { cryUrl, drawPokemon, loadedSprites, loadSpecies } from '../render/sprites'
 import { formatNumber, formatPokeDollars, t } from '../i18n'
 import { h, later, rich } from './dom'
 import { loadSave } from './save'
 import { settings } from './settings'
-import { hint, menu, type Screen } from './screens'
+import { confirmDialog, hint, menu, type Screen } from './screens'
 
-/** One incubator slot: the egg, its tier, a progress bar and the steps left (or "Ready!"). */
+/** One incubator slot: the egg, its tier, a progress bar and the steps left to walk (or "Ready!"); a quick one wears its ×2. */
 const slotView = (egg: Egg | undefined) => {
   const m = t().eggs
   if (!egg) return h('button', { class: 'egg-slot empty' }, h('span', { class: 'egg-hole' }), h('b', {}, m.empty))
@@ -19,37 +22,85 @@ const slotView = (egg: Egg | undefined) => {
   const progress = egg.steps / EGG_TIERS[egg.tier].steps
   return h(
     'button',
-    { class: ready ? 'egg-slot ready' : 'egg-slot' },
+    { class: ['egg-slot', ready && 'ready', egg.quick && !ready && 'quick'].filter(Boolean).join(' ') },
+    egg.quick && !ready && h('i', { class: 'egg-quick' }, m.quick.badge),
     h('img', { class: 'egg-art', src: eggIcon(egg.tier), alt: '' }),
     h('b', {}, m.tiers[egg.tier]),
     h('span', { class: 'egg-bar' }, h('i', { style: `width:${Math.round(progress * 100)}%` })),
-    h('span', { class: 'egg-steps' }, ready ? m.ready : m.stepsLeft(formatNumber(stepsLeft(egg)))),
+    h('span', { class: 'egg-steps' }, ready ? m.ready : m.stepsLeft(formatNumber(stepsToWalk(egg)))),
   )
 }
 
+/** A slot the shop sells, not bought yet: the incubator greyed out with its price and shop level. */
+const lockedView = (i: number) => {
+  const def = INCUBATOR.slots[i - EGGS.slots]!
+  return h(
+    'button',
+    { class: 'egg-slot locked' },
+    h('img', { class: 'egg-art', src: incubatorIcon(), alt: '' }),
+    h('b', {}, t().eggs.slotLocked),
+    h('span', { class: 'egg-steps' }, t().eggs.slotPrice(formatPokeDollars(def.price), def.minLevel)),
+  )
+}
+
+/** What tapping the slot at `i` says when it does nothing else: where to buy the slot, or why the egg can't take a Quick Incubator. */
+const slotNote = (save: Save, i: number): string | null => {
+  const m = t().eggs
+  if (i >= incubatorSlots(save)) {
+    const def = INCUBATOR.slots[i - EGGS.slots]!
+    return m.slotWhere(formatPokeDollars(def.price), t().shop.level(t().shop.levels[def.minLevel], def.minLevel))
+  }
+  const block = quickBlock(save, i)
+  return block === 'quick' ? m.quick.already : block === 'none' ? m.quick.none(formatPokeDollars(INCUBATOR.quick.price)) : null
+}
+
 /**
- * The incubator: its slots with the steps each egg still needs, and the
- * collection count. Picking a ready egg calls `onHatch` with its index.
+ * The incubator: its slots with the steps each egg still needs (the shop's
+ * extra slots locked until bought), the Quick Incubators owned and the
+ * collection count. Picking a ready egg calls `onHatch` with its index; a
+ * walking one asks to put a Quick Incubator on it, then calls `onQuick`.
  */
-export const incubator = (root: HTMLElement, input: Input, actions: { onHatch: (index: number) => void; onClose: () => void }): Screen => {
+export const incubator = (root: HTMLElement, input: Input, actions: { onHatch: (index: number) => void; onQuick: (index: number) => void; onClose: () => void }): Screen => {
   const m = t().eggs
   const save = loadSave()
-  const slots = Array.from({ length: EGGS.slots }, (_, i) => slotView(save.eggs[i]))
+  const owned = incubatorSlots(save)
+  const slots = Array.from({ length: MAX_SLOTS }, (_, i) => (i < owned ? slotView(save.eggs[i]) : lockedView(i)))
   const back = h('button', { class: 'btn' }, m.back)
-  const owned = HATCHLING_IDS.filter((id) => save.hatched[id]).length
+  const collection = HATCHLING_IDS.filter((id) => save.hatched[id]).length
+  const note = h('p', { class: 'incubator-note' }, h('b', {}, m.collection(collection, HATCHLING_IDS.length)), ' · ', m.quick.owned(quickCount(save.incubator)), ' · ', m.sources)
   const close = () => later(actions.onClose)
   const first = save.eggs.findIndex(isReady)
+  let confirm: Screen | null = null
 
-  const nav = menu(input, [...slots, back], (i) => {
-    const egg = save.eggs[i]
-    if (i === slots.length) return close()
-    if (egg && isReady(egg)) {
-      playSfx('select')
-      return later(() => actions.onHatch(i))
-    }
-    playSfx('denied')
-  }, { horizontal: true, initial: first >= 0 ? first : slots.length })
-  const offEsc = input.onKey((k) => (k === 'Escape' || k === 'Backspace') && close())
+  /** Asks before using up a Quick Incubator; the slots stop listening meanwhile. */
+  const askQuick = (i: number, egg: Egg) => {
+    nav.off()
+    confirm = confirmDialog(root, input, m.quick.confirm(m.tiers[egg.tier], quickCount(save.incubator)), (yes) => {
+      confirm?.dispose()
+      confirm = null
+      if (yes) return later(() => actions.onQuick(i))
+      nav = bind(i)
+    }, { yes: m.quick.use })
+  }
+
+  const bind = (initial: number) =>
+    menu(input, [...slots, back], (i) => {
+      if (i === slots.length) return close()
+      const egg = save.eggs[i]
+      if (egg && isReady(egg)) {
+        playSfx('select')
+        return later(() => actions.onHatch(i))
+      }
+      if (egg && i < owned && quickBlock(save, i) === null) {
+        playSfx('select')
+        return askQuick(i, egg)
+      }
+      playSfx('denied')
+      const why = slotNote(save, i)
+      if (why) note.replaceChildren(rich(why))
+    }, { horizontal: true, initial })
+  let nav = bind(first >= 0 ? first : slots.length)
+  const offEsc = input.onKey((k) => confirm === null && (k === 'Escape' || k === 'Backspace') && close())
 
   const el = h(
     'div',
@@ -59,14 +110,14 @@ export const incubator = (root: HTMLElement, input: Input, actions: { onHatch: (
       { class: 'dialog box pop incubator' },
       h('div', { class: 'dialog-title' }, m.title),
       h('p', { class: 'incubator-intro' }, m.intro),
-      h('div', { class: 'egg-slots' }, ...slots),
-      h('p', { class: 'incubator-note' }, h('b', {}, m.collection(owned, HATCHLING_IDS.length)), ' · ', m.sources),
+      h('div', { class: `egg-slots slots-${MAX_SLOTS}` }, ...slots),
+      note,
       h('div', { class: 'buttons' }, back),
-      hint(m.hint, ''),
+      hint(m.hint, m.touchHint),
     ),
   )
   root.append(el)
-  return { el, dispose: () => (nav.off(), offEsc(), el.remove()) }
+  return { el, dispose: () => (nav.off(), offEsc(), confirm?.dispose(), el.remove()) }
 }
 
 /* ---------------- Hatching scene ---------------- */

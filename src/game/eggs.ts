@@ -4,6 +4,7 @@ import { HATCHLING_IDS, HATCHLINGS, isHatchling, isStarter, type HatchlingId, ty
 import { RIFT_LEGENDS } from '../data/rifts'
 import { GRAVEYARD } from '../data/places'
 import { MYTHICALS } from '../data/waves'
+import { INCUBATOR } from '../data/shop'
 import { markHatch } from './dex'
 import { REAPER } from './endless'
 import type { Save } from './meta'
@@ -49,7 +50,7 @@ export type EggTier = keyof typeof EGG_TIERS
 export const EGG_TIER_IDS = Object.keys(EGG_TIERS) as EggTier[]
 
 export const EGGS = {
-  /** Incubator slots. An egg that finds them full is paid out in ₽ (its tier's `refund`). */
+  /** Incubator slots every save has (the shop sells more, `INCUBATOR.slots`). An egg that finds them full is paid out in ₽ (its tier's `refund`). */
   slots: 3,
   /** Eggs a single run can drop. */
   perRun: 2,
@@ -109,8 +110,8 @@ export const toSteps = (px: number) => Math.floor(Math.max(0, px) / EGGS.stepPx)
 
 /* ---------------- Incubator ---------------- */
 
-/** An egg in the incubator: its tier and the steps it has walked so far. */
-export type Egg = { tier: EggTier; steps: number }
+/** An egg in the incubator: its tier, the steps it has walked so far and whether a Quick Incubator speeds it up (`game/incubator.ts`). */
+export type Egg = { tier: EggTier; steps: number; quick?: boolean }
 
 /** Families hatched so far. A shiny hatch keeps the family shiny for good. */
 export type Hatched = Partial<Record<HatchlingId, { shiny: boolean }>>
@@ -119,21 +120,37 @@ export const stepsLeft = (egg: Egg) => Math.max(0, EGG_TIERS[egg.tier].steps - e
 
 export const isReady = (egg: Egg) => stepsLeft(egg) === 0
 
-const walk = (egg: Egg, steps: number): Egg => ({ tier: egg.tier, steps: Math.min(EGG_TIERS[egg.tier].steps, egg.steps + steps) })
+/** Steps still to walk in runs before the egg hatches: a quick one needs `INCUBATOR.quick.speed` times fewer. */
+export const stepsToWalk = (egg: Egg) => Math.ceil(stepsLeft(egg) / (egg.quick ? INCUBATOR.quick.speed : 1))
 
-/** Incubator slots still free. */
-export const freeSlots = (eggs: readonly Egg[]) => Math.max(0, EGGS.slots - eggs.length)
+/** The egg after `steps` more, capped at its tier's; a quick one walks them `INCUBATOR.quick.speed` times over. */
+const walk = (egg: Egg, steps: number): Egg => {
+  const walked = Math.min(EGG_TIERS[egg.tier].steps, egg.steps + (egg.quick ? steps * INCUBATOR.quick.speed : steps))
+  return egg.quick ? { tier: egg.tier, steps: walked, quick: true } : { tier: egg.tier, steps: walked }
+}
+
+/** The incubator's slots for a save: the `EGGS.slots` every save has plus the ones bought at the shop. */
+export const incubatorSlots = (save: Pick<Save, 'incubator'>) => EGGS.slots + save.incubator.slots
+
+/** The most slots an incubator can have, every upgrade bought. */
+export const MAX_SLOTS = EGGS.slots + INCUBATOR.slots.length
+
+/** Incubator slots still free out of `slots` (`incubatorSlots`). */
+export const freeSlots = (eggs: readonly Egg[], slots: number) => Math.max(0, slots - eggs.length)
+
+/** Whether a save's incubator has no slot left for another egg. */
+export const incubatorFull = (save: Pick<Save, 'eggs' | 'incubator'>) => freeSlots(save.eggs, incubatorSlots(save)) === 0
 
 /** The ₽ eggs of these tiers are paid out for when they don't fit. */
 export const refundOf = (tiers: readonly EggTier[]) => tiers.reduce((sum, tier) => sum + EGG_TIERS[tier].refund, 0)
 
 /**
- * Banks a run into the incubator: the eggs already in it walk `steps`, then
- * the new ones (with the steps they walked since found) take the free slots.
- * Those that don't fit are paid out in ₽.
+ * Banks a run into the incubator: the eggs already in it walk `steps` (twice
+ * over with a Quick Incubator), then the new ones (with the steps they walked
+ * since found) take the free slots. Those that don't fit are paid out in ₽.
  */
 export const depositEggs = (save: Save, steps: number, found: readonly Egg[]) => {
-  const free = freeSlots(save.eggs)
+  const free = freeSlots(save.eggs, incubatorSlots(save))
   const converted = found.slice(free).map((e) => e.tier)
   const refund = refundOf(converted)
   const eggs = [...save.eggs.map((e) => walk(e, steps)), ...found.slice(0, free).map((e) => walk(e, 0))]
@@ -206,17 +223,21 @@ const ofTier = (list: readonly Egg[], tier: EggTier) => list.filter((e) => e.tie
 /**
  * Both incubators in one. Eggs have no identity, so each tier keeps as many
  * as the side with more of it, pairing the most walked with the most walked
- * (each pair keeps the larger step count). Merging the same incubator again
- * changes nothing. Past the slots, the rarest and most walked stay.
+ * (each pair keeps the larger step count, and a Quick Incubator either side
+ * put on it). Merging the same incubator again changes nothing. Past `slots`
+ * (the merged save's, `incubatorSlots`), the rarest and most walked stay.
  */
-export const mergeEggs = (a: readonly Egg[], b: readonly Egg[]): Egg[] =>
+export const mergeEggs = (a: readonly Egg[], b: readonly Egg[], slots: number): Egg[] =>
   EGG_TIER_IDS.flatMap((tier) => {
     const x = ofTier(a, tier)
     const y = ofTier(b, tier)
-    return Array.from({ length: Math.max(x.length, y.length) }, (_, i) => ({ tier, steps: Math.max(x[i]?.steps ?? 0, y[i]?.steps ?? 0) }))
+    return Array.from({ length: Math.max(x.length, y.length) }, (_, i): Egg => {
+      const steps = Math.max(x[i]?.steps ?? 0, y[i]?.steps ?? 0)
+      return x[i]?.quick || y[i]?.quick ? { tier, steps, quick: true } : { tier, steps }
+    })
   })
     .sort(byValue)
-    .slice(0, EGGS.slots)
+    .slice(0, slots)
 
 /** Every family hatched on either side, shiny if it is shiny on either. */
 export const mergeHatched = (a: Hatched, b: Hatched): Hatched =>
@@ -225,12 +246,16 @@ export const mergeHatched = (a: Hatched, b: Hatched): Hatched =>
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isTier = (v: unknown): v is EggTier => typeof v === 'string' && v in EGG_TIERS
 
-/** The save's `eggs`: unknown tiers are dropped, steps clamped and the list cut to the slots. */
-export const parseEggs = (v: unknown): Egg[] =>
+/** The save's `eggs`: unknown tiers are dropped, steps clamped and the list cut to the save's `slots` (`incubatorSlots`). */
+export const parseEggs = (v: unknown, slots: number): Egg[] =>
   Array.isArray(v)
     ? v
-        .flatMap((e) => (isRecord(e) && isTier(e.tier) ? [walk({ tier: e.tier, steps: 0 }, typeof e.steps === 'number' && e.steps > 0 ? Math.floor(e.steps) : 0)] : []))
-        .slice(0, EGGS.slots)
+        .flatMap((e) => {
+          if (!isRecord(e) || !isTier(e.tier)) return []
+          const steps = Math.min(EGG_TIERS[e.tier].steps, typeof e.steps === 'number' && e.steps > 0 ? Math.floor(e.steps) : 0)
+          return [e.quick === true ? { tier: e.tier, steps, quick: true } : { tier: e.tier, steps }]
+        })
+        .slice(0, slots)
     : []
 
 /** The save's `hatched`: unknown families are dropped. */

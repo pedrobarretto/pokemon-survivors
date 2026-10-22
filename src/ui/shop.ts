@@ -5,16 +5,18 @@ import { HATCHLINGS, PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { BRANCHES, branchesAt } from '../data/branches'
 import type { EvolutionStage } from '../data/starters'
 import { STYLE_SLOTS, styleIds, stylePrice, type StyleId, type StyleSlot } from '../data/style'
-import { BOTTLE_CAPS, EVO_ITEM_IDS, EVO_ITEM_PRICE, EVO_ITEMS, MAX_CAPS, SHOP_LEVEL_IDS, SHOP_LEVELS, VITRINE, type BagItem, type EvoItemId, type ShopLevel, type VitrineEgg, type VitrineKey } from '../data/shop'
+import { BOTTLE_CAPS, EVO_ITEM_IDS, EVO_ITEM_PRICE, EVO_ITEMS, INCUBATOR, MAX_CAPS, SHOP_LEVEL_IDS, SHOP_LEVELS, VITRINE, type BagItem, type EvoItemId, type ShopLevel, type VitrineEgg, type VitrineKey } from '../data/shop'
 import { armBlock, armedItems, armItem, BAG_ITEM_IDS, BAG_ITEMS, bagCount } from '../game/bag'
 import { addDays, brasiliaDay, dayNumber, msToNextDay, type DayKey } from '../game/day'
 import { canPlay } from '../game/capture'
 import { branchNeeds, buyCap, buyEvoItem, capBlock, capLevel, capPrice, evoBlock, evoItemSteps } from '../game/evoItems'
 import { MOVES } from '../game/moves'
 import { armedTms, armTm, buyTm, isRegularTm, nextTmDay, shelfOf, tmBlock, tmLimit, tmListing, tmPrice, type ShelfTm, type TmBlock } from '../game/tmShelf'
-import { EGG_TIERS, EGGS, hatchOdds, type EggTier } from '../game/eggs'
+import { EGG_TIERS, EGGS, hatchOdds, incubatorSlots, MAX_SLOTS, type EggTier } from '../game/eggs'
+import { buyQuick, buySlot, quickCount, slotBlock } from '../game/incubator'
 import { buyUpgrade, refundAll, totalSpent, UPGRADE_IDS, UPGRADES, upgradePrice, type Save } from '../game/meta'
 import {
+  boughtToday,
   buyFromVitrine,
   buyKecleonEgg,
   buyStyle,
@@ -25,6 +27,7 @@ import {
   investInShop,
   isDeal,
   kecleonEggBlock,
+  kecleonEggPrice,
   nextAppearance,
   nextShopLevel,
   onPick,
@@ -41,7 +44,7 @@ import {
 } from '../game/shop'
 import { playsShiny } from '../game/shinyPicks'
 import { equipStyle, ownsStyle } from '../game/style'
-import { coinIcon, eggIcon } from '../render/art'
+import { coinIcon, eggIcon, incubatorIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
 import { styleThumb } from '../render/card'
 import { frameIcon, wallpaperUrl } from '../render/cosmetics'
@@ -197,39 +200,64 @@ const blockText = (block: VitrineBlock | null) => (block === null || block === '
 
 /**
  * The Kecleon Egg's fixed card: beside the day's cards (never one of them),
- * one a day at any level, with the odds of each of its four families for this
- * save. Kecleon has a word for whoever takes one.
+ * several a day at any level, each double the last (`kecleonEggPrice`): the
+ * card shows how many today, this one's price and the next one's, and the
+ * odds of each of its four families for this save. Kecleon has a word for
+ * whoever takes one.
  */
 const kecleonEggCard = (v: Vitrine): Card => {
   const sh = t().shop
   const k = sh.kecleonEgg
-  const { price: cost } = VITRINE.kecleonEgg
+  const max = vitrineStock('kecleonEgg')
   const name = t().eggs.tiers.kecleon
   const { el, badges, sub, price } = shell(shopIcon('kecleonEgg'), name)
+  const next = h('span', { class: 'shop-next' })
+  el.append(next)
   el.classList.add('kecleon-egg')
-  const odds = (save: Save) => hatchOdds('kecleon', save.hatched)
+  const bought = (save: Save) => boughtToday(save.shop, v, 'kecleonEgg')
   const blocked = (save: Save) => {
     const block = kecleonEggBlock(save, v)
     return block === null || block === 'poor' ? null : sh.blocks[block]
+  }
+  /** The line under the price: the egg after this one, or that this is the day's last; nothing while blocked. */
+  const nextLine = (save: Save) => {
+    if (blocked(save)) return ''
+    const after = kecleonEggPrice(bought(save) + 1)
+    // A no-break space keeps ₽ beside its number when the line wraps on a narrow card.
+    return after === null ? k.last : k.next(formatPokeDollars(after).replace(/ /g, ' '))
   }
   return {
     el,
     refresh: (save) => {
       const block = kecleonEggBlock(save, v)
       setBadges(badges, [badge('exclusive', sh.badges.exclusive)])
-      setText(sub, `${odds(save).filter(([id]) => save.hatched[id]).length}/${odds(save).length}`)
-      setText(price, blocked(save) ?? formatPokeDollars(cost))
+      setText(sub, k.today(bought(save), max))
+      setText(price, blocked(save) ?? formatPokeDollars(kecleonEggPrice(bought(save)) ?? 0))
+      setText(next, nextLine(save))
       el.classList.toggle('sold', block === 'soldOut' || block === 'full')
       el.classList.toggle('poor', block === 'poor')
     },
     describe: (save) => ({
       icon: shopIcon('kecleonEgg'),
       title: name,
-      // The odds first: on a phone the strip shows a few lines before it scrolls.
-      text: [eggOdds('kecleon', save), k.text(formatNumber(EGG_TIERS.kecleon.steps)), t().shop.stall.duplicate(formatPokeDollars(EGG_TIERS.kecleon.refund)), sh.stock(stockLeft(save.shop, v, 'kecleonEgg'), vitrineStock('kecleonEgg'))].join(' '),
-      action: blocked(save) ?? t().mart.buy(formatPokeDollars(cost)),
+      // The odds first (a full incubator's hint before them): on a phone the strip shows a few lines before it scrolls.
+      text: [
+        kecleonEggBlock(save, v) === 'full' && k.full,
+        eggOdds('kecleon', save),
+        k.text(formatNumber(EGG_TIERS.kecleon.steps)),
+        k.ladder(max, VITRINE.kecleonEgg.prices.map(formatPokeDollars).join(', ')),
+        t().shop.stall.duplicate(formatPokeDollars(EGG_TIERS.kecleon.refund)),
+        sh.stock(stockLeft(save.shop, v, 'kecleonEgg'), max),
+      ]
+        .filter((l): l is string => typeof l === 'string')
+        .join(' '),
+      action: blocked(save) ?? t().mart.buy(formatPokeDollars(kecleonEggPrice(bought(save)) ?? 0)),
       disabled: kecleonEggBlock(save, v) !== null,
     }),
+    confirm: (save) => {
+      const cost = kecleonEggPrice(bought(save))
+      return cost !== null && cost >= VITRINE.kecleonEgg.confirmFrom && kecleonEggBlock(save, v) === null ? k.confirm(formatPokeDollars(cost)) : null
+    },
     act: (save) => buyKecleonEgg(save, v),
     said: (before, after) => (after.wallet < before.wallet ? { text: t().plaza.lines.kecleonEgg, emotion: 'Inspired' } : null),
   }
@@ -696,6 +724,65 @@ const levelCard = (level: ShopLevel): Card => {
   }
 }
 
+/* ---------------- Incubadora ---------------- */
+
+/** An extra incubator slot (`INCUBATOR.slots[i]`): owned, the next one (for good, so it asks first), or waiting on the slot before it or the shop's level. */
+const slotCard = (i: number): Card => {
+  const m = t().shop.incubator
+  const def = INCUBATOR.slots[i]!
+  const n = EGGS.slots + i + 1
+  const level = t().shop.level(t().shop.levels[def.minLevel], def.minLevel)
+  const { el, badges, sub, price } = shell(img(incubatorIcon(), 'shop-egg'), m.slot(n))
+  const owned = (save: Save) => save.incubator.slots > i
+  const isNext = (save: Save) => save.incubator.slots === i
+  /** Why it waits, when it isn't the next one or the shop is too small for it. */
+  const waits = (save: Save) => (owned(save) ? null : !isNext(save) ? m.before : slotBlock(save) === 'level' ? m.needs(level) : null)
+  return {
+    el,
+    refresh: (save) => {
+      setBadges(badges, [owned(save) && badge('owned', t().shop.badges.owned), !owned(save) && badge('level', t().shop.badges.level(def.minLevel))])
+      setText(sub, waits(save) ?? m.slotText)
+      setText(price, owned(save) ? '✓' : formatPokeDollars(def.price))
+      el.classList.toggle('done', owned(save))
+      el.classList.toggle('locked', waits(save) !== null)
+      el.classList.toggle('poor', isNext(save) && slotBlock(save) === 'poor')
+    },
+    describe: (save) => ({
+      icon: img(incubatorIcon(), 'shop-egg'),
+      title: m.slot(n),
+      text: [m.slotText, owned(save) ? m.owned : (waits(save) ?? m.needs(level))].join(' '),
+      action: owned(save) ? m.owned : m.buy(formatPokeDollars(def.price)),
+      disabled: owned(save) || !isNext(save) || slotBlock(save) !== null,
+    }),
+    act: (save) => (isNext(save) ? buySlot(save) : null),
+    confirm: (save) => (isNext(save) && !slotBlock(save) ? m.confirm(n, formatPokeDollars(def.price)) : null),
+  }
+}
+
+/** The Quick Incubator: bought here (no daily stock), put on an egg from the incubator screen. */
+const quickCard = (): Card => {
+  const m = t().shop.incubator
+  const { price: cost, speed } = INCUBATOR.quick
+  const { el, badges, sub, price } = shell(img(incubatorIcon(true), 'shop-egg'), m.quick)
+  return {
+    el,
+    refresh: (save) => {
+      setBadges(badges, [])
+      setText(sub, `×${quickCount(save.incubator)}`)
+      setText(price, formatPokeDollars(cost))
+      el.classList.toggle('poor', save.wallet < cost)
+    },
+    describe: (save) => ({
+      icon: img(incubatorIcon(true), 'shop-egg'),
+      title: `${m.quick} ×${quickCount(save.incubator)}`,
+      text: [m.quickText(speed), t().shop.have(quickCount(save.incubator))].join(' '),
+      action: save.wallet < cost ? t().shop.blocks.poor : t().mart.buy(formatPokeDollars(cost)),
+      disabled: save.wallet < cost,
+    }),
+    act: buyQuick,
+  }
+}
+
 /* ---------------- Caravana (Meowth, weekends) ---------------- */
 
 /** What a caravan card shows: its name, picture and what it is. */
@@ -1063,6 +1150,14 @@ const SHELVES: readonly Shelf[] = [
     layout: 'list',
     stock: () => [loyaltyCard(), ...LOYALTY.milestones.map(milestoneCard)],
     intro: (save) => t().shop.loyalty.intro(save.shop.stamps),
+  },
+  {
+    id: 'incubator',
+    keeper: 'green',
+    open: () => true,
+    layout: 'list',
+    stock: () => [quickCard(), ...INCUBATOR.slots.map((_, i) => slotCard(i))],
+    intro: (save) => t().shop.incubator.intro(incubatorSlots(save), MAX_SLOTS),
   },
   { id: 'expansion', keeper: 'green', open: () => true, layout: 'list', stock: () => SHOP_LEVEL_IDS.map(levelCard), intro: () => t().shop.expansion.intro },
 ]

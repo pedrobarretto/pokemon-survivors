@@ -43,7 +43,8 @@ import { runEvoItems } from './game/evoGate'
 import { EVO_ITEM_IDS, EVO_ITEMS, SHOP_LEVEL_IDS, SHOP_LEVELS, type EvoItemId } from './data/shop'
 import { shopIcon, tmPicture } from './ui/shopIcons'
 import { CONSUMABLES } from './game/consumables'
-import { depositEggs, EGG_TIERS, EGGS, freeSlots, grantEgg, hatchEgg, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
+import { depositEggs, EGG_TIERS, EGGS, freeSlots, grantEgg, hatchEgg, incubatorSlots, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
+import { useQuick } from './game/incubator'
 import { setBiome } from './game/biomes'
 import { addCandies, HAUNT_DEX, recordHunt } from './game/halloween'
 import { HALLOWEEN, isNightBoss, NIGHT_BOSSES } from './data/halloween'
@@ -619,10 +620,20 @@ const replayChallenge = () => {
   return startRun(c.starter, { challenge: c, official: nextIsOfficial(c.day, loadAttempt(), null) })
 }
 
-/** The incubator; hatching a ready egg plays its scene and comes back here. */
+/** The incubator; hatching a ready egg plays its scene and comes back here, and a Quick Incubator put on an egg redraws it. */
 const showIncubator = (back: () => void) => {
   endRun()
-  setScreen(incubator(ui, input, { onHatch: (i) => hatchAt(i, () => showIncubator(back)), onClose: back }))
+  setScreen(
+    incubator(ui, input, {
+      onHatch: (i) => hatchAt(i, () => showIncubator(back)),
+      onQuick: (i) => {
+        const next = useQuick(loadSave(), i)
+        if (next) (writeSave(next), void syncSave(), playSfx('buy'))
+        showIncubator(back)
+      },
+      onClose: back,
+    }),
+  )
 }
 
 /**
@@ -1696,7 +1707,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'egg': {
       const m = t().eggs
       // The run's eggs bank when it ends: this one fits if the incubator has a slot for it after the ones found before it.
-      const fits = g.eggs.found.length - r.hatchery.eggs <= freeSlots(loadSave().eggs)
+      const save = loadSave()
+      const fits = g.eggs.found.length - r.hatchery.eggs <= freeSlots(save.eggs, incubatorSlots(save))
       const text = fits ? m.found(m.tiers[e.tier]) : m.foundFull(m.tiers[e.tier], formatPokeDollars(EGG_TIERS[e.tier].refund))
       playSfx('unlock')
       return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: eggIcon(e.tier), alt: '' }), rich(text)), 3600)
@@ -3199,6 +3211,7 @@ if (import.meta.env.DEV) {
         if (ui.querySelector('.shop-sheet')) showTitle({ shop: 'shop', instant: true })
         else if (screen?.el.classList.contains('title-home')) showTitle()
         else if (screen?.el.classList.contains('partner-screen')) showMenu()
+        else if (screen?.el.querySelector('.incubator')) devEggs.incubator()
       }),
     },
   })

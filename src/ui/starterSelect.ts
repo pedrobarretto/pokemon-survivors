@@ -7,7 +7,7 @@ import { TYPE_COLORS } from '../data/types'
 import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
-import { EGGS, isReady } from '../game/eggs'
+import { incubatorSlots, isReady } from '../game/eggs'
 import { isLegend, LEGEND_IDS, LEGENDS, type LegendId } from '../data/legends'
 import { ABILITIES } from '../data/abilities'
 import { canPlay, capturedCount, isCaptured, legendSource, winsNeeded } from '../game/capture'
@@ -248,7 +248,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       'button',
       { class: 'incubator-entry box', type: 'button', onclick: openIncubator },
       h('img', { src: eggIcon('common'), alt: '' }),
-      h('span', {}, m.eggs.incubator(save.eggs.length, EGGS.slots)),
+      h('span', {}, m.eggs.incubator(save.eggs.length, incubatorSlots(save))),
       ready > 0 && h('b', { class: 'blink' }, m.eggs.readyBadge(ready)),
       h('span', { class: 'key-hint' }, 'O'),
     ),

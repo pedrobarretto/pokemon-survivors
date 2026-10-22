@@ -12,6 +12,7 @@ import {
   dayStyle,
   investInShop,
   kecleonEggBlock,
+  kecleonEggPrice,
   mergeShop,
   mergeVisit,
   nextAppearance,
@@ -27,6 +28,7 @@ import {
   vitrineOf,
   vitrinePrice,
   type ShopSave,
+  type Vitrine,
 } from './shop'
 import { equipStyle, grantStyle, mergeStyle, NO_STYLES, ownsStyle, parseStyle } from './style'
 
@@ -166,33 +168,52 @@ describe('buying from the Vitrine', () => {
 })
 
 describe('the Kecleon Egg’s fixed card', () => {
-  it('sells one a day at any level, into the incubator, beside the rotation (never one of its cards)', () => {
+  /** Buys the day's Kecleon Eggs one after another, hatching each away so the incubator has room; returns the save and each price paid. */
+  const buyAll = (save: Save, v: Vitrine) => {
+    const paid: number[] = []
+    let s = save
+    for (let next = buyKecleonEgg(s, v); next; next = buyKecleonEgg(s, v)) {
+      paid.push(s.wallet - next.wallet)
+      s = { ...next, eggs: [] }
+    }
+    return { save: s, paid }
+  }
+
+  it('climbs a ladder each day, every egg double the last and 6 at most, beside the rotation', () => {
     expect(VITRINE_POOL).not.toContain('kecleonEgg')
+    expect([0, 1, 2, 3, 4, 5, 6].map(kecleonEggPrice)).toEqual([10_000, 20_000, 40_000, 80_000, 160_000, 320_000, null])
     const v = vitrineOf(DAY)
-    const once = buyKecleonEgg(rich(50_000), v)!
-    expect(once.eggs).toEqual([{ tier: 'kecleon', steps: 0 }])
-    expect([once.wallet, once.spent]).toEqual([50_000 - VITRINE.kecleonEgg.price, VITRINE.kecleonEgg.price])
-    expect(kecleonEggBlock(once, v)).toBe('soldOut')
-    expect(buyKecleonEgg(once, v)).toBeNull()
-    // The next Brasília day brings another.
-    expect(buyKecleonEgg(once, vitrineOf(addDays(DAY, 1)))!.eggs).toHaveLength(2)
+    expect(buyKecleonEgg(rich(50_000), v)!.eggs).toEqual([{ tier: 'kecleon', steps: 0 }])
+    const { save, paid } = buyAll(rich(1_000_000), v)
+    expect(paid).toEqual([10_000, 20_000, 40_000, 80_000, 160_000, 320_000])
+    expect([save.wallet, save.spent, save.shop.bought.kecleonEgg]).toEqual([370_000, 630_000, 6])
+    expect(kecleonEggBlock(save, v)).toBe('soldOut')
+    // The next Brasília day starts the ladder over.
+    expect(save.wallet - buyKecleonEgg(save, vitrineOf(addDays(DAY, 1)))!.wallet).toBe(10_000)
   })
 
-  it('refuses a full incubator and a short wallet', () => {
+  it('refuses a full incubator before taking any ₽, and a wallet short of the next rung', () => {
     const v = vitrineOf(DAY)
-    const full = { ...rich(50_000), eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common', steps: 0 }) as const) }
+    const full = { ...rich(500_000), eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common', steps: 0 }) as const) }
     expect(kecleonEggBlock(full, v)).toBe('full')
-    expect(kecleonEggBlock(rich(VITRINE.kecleonEgg.price - 1), v)).toBe('poor')
+    expect(buyKecleonEgg(full, v)).toBeNull()
+    const twice = buyAll(rich(30_000), v).save
+    expect([twice.wallet, twice.shop.bought.kecleonEgg]).toEqual([0, 2])
+    expect(kecleonEggBlock({ ...twice, wallet: 39_999 }, v)).toBe('poor')
+    expect(kecleonEggBlock({ ...twice, wallet: 40_000 }, v)).toBeNull()
   })
 
-  it('keeps its one a day through the merge and the parse', () => {
+  it('keeps the ladder through the merge and the parse', () => {
     const v = vitrineOf(DAY)
-    const a = buyKecleonEgg(rich(50_000), v)!
-    // Two devices that each saw it unsold can't both sell it once synced.
-    expect(mergeShop(rich(50_000).shop, a.shop).bought.kecleonEgg).toBe(1)
-    expect(mergeShop(a.shop, { ...a.shop, day: addDays(DAY, -1), bought: {} }).bought.kecleonEgg).toBe(1)
-    expect(parseShop({ ...a.shop, bought: { kecleonEgg: 9 } }).bought).toEqual({ kecleonEgg: 1 })
-    expect(stockLeft(parseShop(JSON.parse(JSON.stringify(a.shop))), v, 'kecleonEgg')).toBe(0)
+    const one = buyKecleonEgg(rich(50_000), v)!
+    const two = buyKecleonEgg({ ...one, eggs: [] }, v)!
+    // Two devices that bought apart merge as the one that bought more: the next egg is the rung after it.
+    const merged = mergeShop(one.shop, two.shop)
+    expect(merged.bought.kecleonEgg).toBe(2)
+    expect(kecleonEggPrice(merged.bought.kecleonEgg ?? 0)).toBe(40_000)
+    expect(mergeShop(two.shop, { ...two.shop, day: addDays(DAY, -1), bought: {} }).bought.kecleonEgg).toBe(2)
+    expect(parseShop({ ...two.shop, bought: { kecleonEgg: 9 } }).bought).toEqual({ kecleonEgg: 6 })
+    expect(stockLeft(parseShop(JSON.parse(JSON.stringify(two.shop))), v, 'kecleonEgg')).toBe(4)
   })
 })
 

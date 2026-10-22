@@ -5,7 +5,8 @@ import { NO_ACHIEVEMENTS, parseAchievements, parseGiftTitles, parseTitle, record
 import { addClear, mergeClears, parseClears, pastClears, type Clears } from './clears'
 import { EMPTY_DEX, parseDex, type Pokedex } from './dex'
 import { DEFAULT_DIFFICULTY, parseDifficulty, type Difficulty } from './difficulty'
-import { EGG_TIERS, EGGS, grantEgg, parseEggs, parseHatched, type Egg, type EggTier, type Hatched } from './eggs'
+import { EGG_TIERS, EGGS, grantEgg, incubatorSlots, parseEggs, parseHatched, type Egg, type EggTier, type Hatched } from './eggs'
+import { NO_INCUBATOR, parseIncubator, type IncubatorSave } from './incubator'
 import { ENDLESS, overtime } from './endless'
 import { parseClaimedGifts } from './gifts'
 import { NO_HALLOWEEN, parseHalloween, recordHunt, type HalloweenSave } from './halloween'
@@ -114,8 +115,10 @@ export type Save = {
   ranks: Ranks
   /** Pokédex progress (`game/dex.ts`). */
   dex: Pokedex
-  /** The incubator (`game/eggs.ts`). */
+  /** The incubator (`game/eggs.ts`), up to `incubatorSlots` eggs. */
   eggs: readonly Egg[]
+  /** The incubator's upgrades (`game/incubator.ts`): extra slots bought for good and the Quick Incubators got and used. */
+  incubator: IncubatorSave
   /** Families unlocked from eggs (`game/eggs.ts`). */
   hatched: Hatched
   /** Daily and weekly mission progress (`game/missions.ts`). */
@@ -192,6 +195,7 @@ export const EMPTY_SAVE: Save = {
   ranks: NO_RANKS,
   dex: EMPTY_DEX,
   eggs: [],
+  incubator: NO_INCUBATOR,
   hatched: {},
   missions: NO_MISSIONS,
   achievements: NO_ACHIEVEMENTS,
@@ -256,12 +260,14 @@ export const parseSaveData = (json: unknown): Save => {
   const ranks = isRecord(data.ranks) ? data.ranks : {}
   const achievements = parseAchievements(data.achievements)
   const titles = parseGiftTitles(data.titles)
+  const incubator = parseIncubator(data.incubator)
   return {
     version: SAVE_VERSION,
     wallet: wholeNumber(data.wallet),
     ranks: Object.fromEntries(UPGRADE_IDS.map((id) => [id, wholeNumber(ranks[id], UPGRADES[id].maxRank)])) as Record<UpgradeId, number>,
     dex: parseDex(data.dex),
-    eggs: parseEggs(data.eggs),
+    eggs: parseEggs(data.eggs, incubatorSlots({ incubator })),
+    incubator,
     hatched: parseHatched(data.hatched),
     missions: parseMissions(data.missions),
     achievements,

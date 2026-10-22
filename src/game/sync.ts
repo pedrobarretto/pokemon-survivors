@@ -12,7 +12,8 @@ import { mergeCaravan } from './caravan'
 import { mergeStall } from './stalls'
 import { mergeStyle } from './style'
 import { mergeDex } from './dex'
-import { mergeEggs, mergeHatched } from './eggs'
+import { incubatorSlots, mergeEggs, mergeHatched } from './eggs'
+import { mergeIncubator, slotsInvested } from './incubator'
 import { SAVE_VERSION, totalSpent, UPGRADE_IDS, type Ranks, type Save, type UpgradeId } from './meta'
 import { mergeMissions } from './missions'
 import { mergeRibbons } from './ribbons'
@@ -27,10 +28,11 @@ import { mergeCompanions } from './supporters'
 
 /**
  * Everything a save ever got in ₽: the wallet plus what its upgrades cost,
- * what it invested in the shop's level and what it spent on the Vitrine and
- * on styles. Buying, investing or refunding doesn't change it.
+ * what it invested in the shop's level and the incubator's slots, and what it
+ * spent on the Vitrine, on styles and on Quick Incubators. Buying, investing
+ * or refunding doesn't change it.
  */
-const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.level) + s.spent
+const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.level) + slotsInvested(s.incubator.slots) + s.spent
 
 /**
  * Two saves of the same player in one (a guest save joining an account, or
@@ -39,13 +41,15 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  * nothing:
  *
  * - Collection: the Pokédex, hatched families and unlocked achievements are
- *   unions; the incubator keeps the most eggs of each tier (`mergeEggs`).
+ *   unions; the incubator keeps the most eggs of each tier (`mergeEggs`), up
+ *   to the merged slots. Its upgrades: the most slots bought, and the Quick
+ *   Incubators' got and used counters at the larger side (`mergeIncubator`).
  * - Upgrades, records, counters and mission progress keep the larger value
  *   (missions of an older day or week give way to the current ones).
- * - ₽: the larger fortune (wallet plus upgrades, the shop's level and other
- *   spending, see `worth`) wins, minus what the merged upgrades and shop
- *   level cost and the larger spending, so ₽ spent on one side and kept on
- *   the other isn't counted twice.
+ * - ₽: the larger fortune (wallet plus upgrades, the shop's level, the
+ *   incubator's slots and other spending, see `worth`) wins, minus what the
+ *   merged upgrades, shop level and slots cost and the larger spending, so ₽
+ *   spent on one side and kept on the other isn't counted twice.
  * - The title: `incoming`'s, if it shows one.
  * - The difficulty and the partner picked last: `incoming`'s, settings rather than progress.
  * - Shiny starters: a union; each Normal/Shiny pick (a shiny hatch's too) is
@@ -79,12 +83,14 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
   const ranks: Ranks = Object.fromEntries(UPGRADE_IDS.map((id) => [id, Math.max(base.ranks[id], incoming.ranks[id])])) as Record<UpgradeId, number>
   const spent = Math.max(base.spent, incoming.spent)
   const shop = mergeShop(base.shop, incoming.shop)
+  const incubator = mergeIncubator(base.incubator, incoming.incubator)
   return {
     version: SAVE_VERSION,
-    wallet: Math.max(0, Math.max(worth(base), worth(incoming)) - totalSpent(ranks) - shopInvested(shop.level) - spent),
+    wallet: Math.max(0, Math.max(worth(base), worth(incoming)) - totalSpent(ranks) - shopInvested(shop.level) - slotsInvested(incubator.slots) - spent),
     ranks,
     dex: mergeDex(base.dex, incoming.dex),
-    eggs: mergeEggs(base.eggs, incoming.eggs),
+    eggs: mergeEggs(base.eggs, incoming.eggs, incubatorSlots({ incubator })),
+    incubator,
     hatched: mergeHatched(base.hatched, incoming.hatched),
     missions: mergeMissions(base.missions, incoming.missions),
     achievements: mergeAchievements(base.achievements, incoming.achievements),

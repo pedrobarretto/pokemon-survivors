@@ -5,7 +5,7 @@ import { HATCHLING_IDS, HATCHLINGS, type HatchlingId } from '../data/hatchlings'
 import { STYLE_SLOTS, styleIds, stylePrice, type StyleId, type StyleSlot } from '../data/style'
 import { parseHandle } from './ranking'
 import { markHatch } from './dex'
-import { EGG_TIER_IDS, EGG_TIERS, EGGS, grantEgg, type EggTier, type Hatch } from './eggs'
+import { EGG_TIER_IDS, EGG_TIERS, grantEgg, incubatorFull, type EggTier, type Hatch } from './eggs'
 import type { Save } from './meta'
 import { isRecord, wholeNumber } from './parse'
 import { mergeRibbons, parseRibbon, type Ribbon } from './ribbons'
@@ -210,7 +210,7 @@ const give = (save: Save, content: GiftContent, id: string): { save: Save; hatch
 /** Applies a gift once: its id joins the save's `gifts`, so the same gift again is only `claimed`. */
 export const applyGift = (save: Save, gift: Gift): GiftOutcome => {
   if (save.gifts.includes(gift.id)) return { status: 'claimed' }
-  if (gift.content.kind === 'egg' && save.eggs.length >= EGGS.slots) return { status: 'wait' }
+  if (gift.content.kind === 'egg' && incubatorFull(save)) return { status: 'wait' }
   const given = give(save, gift.content, gift.id)
   return { status: 'applied', save: { ...given.save, gifts: [...given.save.gifts, gift.id] }, hatch: given.hatch }
 }
