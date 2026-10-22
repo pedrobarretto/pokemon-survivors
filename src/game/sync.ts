@@ -29,8 +29,9 @@ import { mergeCompanions } from './supporters'
 /**
  * Everything a save ever got in ₽: the wallet plus what its upgrades cost,
  * what it invested in the shop's level and the incubator's slots, and what it
- * spent on the Vitrine, on styles and on Quick Incubators. Buying, investing
- * or refunding doesn't change it.
+ * spent on the Vitrine, on styles, on Quick Incubators and in the Festival da
+ * Praça's fountain (`donateFrom`). Buying, investing, donating or refunding
+ * doesn't change it.
  */
 const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.level) + slotsInvested(s.incubator.slots) + s.spent
 

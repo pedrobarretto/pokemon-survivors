@@ -68,6 +68,12 @@ const CHARM: BallArt = [
   { 1: '#4a3008', 2: '#f8d030', 3: '#c89028', 4: '#fffbe0', 5: '#a06818' },
 ]
 
+/** A paper lantern, for the Festival das Lanternas frame's corners (1 outline, 2 the paper, 3 its ribs, 4 the flame, 5 the cap). */
+const LANTERN: BallArt = [
+  ['..151..', '.12221.', '1232321', '1224221', '1232321', '.12221.', '..151..'],
+  { 1: '#4a1008', 2: '#f05030', 3: '#a82818', 4: '#fff0a0', 5: '#f8d030' },
+]
+
 export const CARD_FRAMES = {
   /** The game's own dialog box: dark line, paper, blue. */
   classic: { edge: '#283040', light: '#f8f8f8', main: '#6878a8', shade: '#101830', accent: '#ffcb05' },
@@ -89,6 +95,8 @@ export const CARD_FRAMES = {
   kecleon: { edge: '#3a2808', light: '#fff4b0', main: '#d8a020', shade: '#6a4a10', accent: '#e03838', ball: KECLEON_COIN },
   /** Meowth's weekend caravan: cream fur, brown trim and a charm coin in each corner. */
   meowth: { edge: '#2c1c0c', light: '#fff4d8', main: '#e0c890', shade: '#7a5a30', accent: '#f8d030', ball: CHARM },
+  /** The Festival das Lanternas' ₽30M milestone: dusk indigo and lantern red, a paper lantern in each corner. */
+  lantern: { edge: '#140c28', light: '#ffd890', main: '#d84028', shade: '#2a1848', accent: '#f8d030', ball: LANTERN },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */

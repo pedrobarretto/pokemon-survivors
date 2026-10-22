@@ -119,9 +119,10 @@ export type MedalTitleId = { [K in AchievementId]: (typeof ACHIEVEMENTS)[K] exte
  * Titles that only come as a Mystery Gift (`game/gifts.ts`), kept in the save's `titles`:
  * the Ambassador's for bringing friends (`game/referral.ts`), the Supporter's for donating (`game/supporters.ts`),
  * the Pumpkin King's for filling the Noite das Bruxas candy jar and the Exorcist's for its Caça aos Fantasmas (`game/halloween.ts`),
- * the VIP Customer's for 30 loyalty stamps and the Tycoon's for the Department Store (`game/loyalty.ts`).
+ * the VIP Customer's for 30 loyalty stamps and the Tycoon's for the Department Store (`game/loyalty.ts`),
+ * the Patron's (Mecenas) for donating to a Festival da Praça (`game/festival.ts`).
  */
-export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon'] as const
+export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron'] as const
 
 export type GiftTitleId = (typeof GIFT_TITLES)[number]
 

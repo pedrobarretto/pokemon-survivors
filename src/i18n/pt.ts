@@ -23,6 +23,7 @@ import type { VitrineBlock } from '../game/shop'
 import type { CaravanBlock } from '../game/caravan'
 import type { StallBlock } from '../game/stalls'
 import type { StallId } from '../data/visitors'
+import type { FestivalId } from '../data/festivals'
 import type { RibbonTier } from '../game/ribbons'
 import type { SupporterTier } from '../game/supporters'
 import type { BoardColumn } from '../game/suggestions'
@@ -805,7 +806,7 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth' } satisfies Record<FrameId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna' } satisfies Record<FrameId, string>,
       background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas' } satisfies Record<BackgroundId, string>,
       wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada' } satisfies Record<WallpaperId, string>,
     },
@@ -998,6 +999,11 @@ export const pt = {
     hint: 'Ele aparece muito mais hoje, e o shiny também.',
   },
 
+  /** Festival da Praça (`data/festivals.ts`): the community pot at the plaza's fountain. */
+  festival: {
+    names: { lanternas: 'Festival das Lanternas' } satisfies Record<FestivalId, string>,
+  },
+
   /** Noite das Bruxas (Halloween 2026, `game/halloween.ts`): the haunted runs, the candy jar and the lobby's card. */
   halloween: {
     name: 'Noite das Bruxas',
@@ -1181,6 +1187,9 @@ export const pt = {
     ghostHunt: 'Por vencer todos os chefes da Caça aos Fantasmas',
     loyalty: (n: number) => `Por ${n} carimbos no cartão fidelidade do Kecleon`,
     tycoon: 'Por transformar a loja do Kecleon em Loja de Departamento',
+    bag: (n: number, item: string) => `*${n}× ${item}* foram para a Mochila.`,
+    festival: (festival: string, pot: string) => `A praça juntou ${pot} no ${festival}. Obrigado, mecenas!`,
+    patron: (festival: string) => `Por ser Mecenas do ${festival} ♥`,
   },
 
   /**
@@ -2048,7 +2057,7 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
       firstRun: 'Primeiros passos',
@@ -2137,6 +2146,7 @@ export const pt = {
       exorcist: 'Exorcista',
       vipCustomer: 'Freguês VIP',
       tycoon: 'Magnata',
+      patron: 'Mecenas',
     } satisfies Record<TitleId, string>,
     goals: {
       runs: (n: string) => (n === '1' ? 'Jogue uma partida' : `Jogue ${n} partidas`),

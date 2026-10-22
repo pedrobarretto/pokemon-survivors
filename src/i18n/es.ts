@@ -665,7 +665,7 @@ export const es: Messages = {
       wallpaper: 'Fondo de pantalla de la Caja del PC.',
     },
     styles: {
-      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth' },
+      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna' },
       background: { night: 'Noche estrellada', meadow: 'Ruta 1', forest: 'Bosque Verde', cave: 'Mt. Moon', snow: 'Monte Plateado', tower: 'Torre Lavanda', supporter: 'Cielo dorado', halloween: 'Noche de Brujas' },
       wallpaper: { classic: 'Clásico', forest: 'Hojas', cave: 'Piedritas', snow: 'Copos de nieve', tower: 'Fantasmitas', supporter: 'Estrellas doradas', haunted: 'Casa Embrujada' },
     },
@@ -839,6 +839,10 @@ export const es: Messages = {
     hint: 'Aparece mucho más hoy, y su shiny también.',
   },
 
+  festival: {
+    names: { lanternas: 'Festival de las Linternas' },
+  },
+
   halloween: {
     name: 'Noche de Brujas',
     card: 'NOCHE DE BRUJAS',
@@ -1010,6 +1014,9 @@ export const es: Messages = {
     ghostHunt: 'Por vencer a todos los jefes de la Cacería de Fantasmas',
     loyalty: (n) => `Por ${n} sellos en la tarjeta de cliente de Kecleon`,
     tycoon: 'Por convertir la tienda de Kecleon en Gran Almacén',
+    bag: (n, item) => `*${n}× ${item}* fueron a tu Mochila.`,
+    festival: (festival, pot) => `La plaza juntó ${pot} en el ${festival}. ¡Gracias, mecenas!`,
+    patron: (festival) => `Por ser Mecenas del ${festival} ♥`,
   },
 
   supporters: {
@@ -1831,7 +1838,7 @@ export const es: Messages = {
     noTitle: 'ninguno',
     titleTag: 'TÍTULO',
     equipped: 'EN USO',
-    giftTitles: { ambassador: 'Trajo 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén' },
+    giftTitles: { ambassador: 'Trajo 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza' },
     newMedals: 'Nuevas medallas',
     names: {
       firstRun: 'Primeros pasos',
@@ -1920,6 +1927,7 @@ export const es: Messages = {
       exorcist: 'Exorcista',
       vipCustomer: 'Cliente VIP',
       tycoon: 'Magnate',
+      patron: 'Mecenas',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Juega una partida' : `Juega ${n} partidas`),

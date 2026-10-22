@@ -12,9 +12,10 @@ export const STYLE_SHELF = {
    * das Bruxas candy jar, the spectral frame with its Caça aos Fantasmas
    * (`game/halloween.ts`); the Freguês frame with 14 loyalty stamps and the
    * gold Kecleon frame with the Department Store (`game/loyalty.ts`); Meowth's
-   * frame is sold only by its weekend caravan (`game/caravan.ts`).
+   * frame is sold only by its weekend caravan (`game/caravan.ts`); the
+   * Lantern frame is the Festival das Lanternas' ₽30M milestone (`data/festivals.ts`).
    */
-  frame: { classic: 0, poke: 1000, great: 2000, ultra: 3500, master: 5000, ambassador: null, supporter: null, pumpkin: null, spectral: null, regular: null, kecleon: null, meowth: null },
+  frame: { classic: 0, poke: 1000, great: 2000, ultra: 3500, master: 5000, ambassador: null, supporter: null, pumpkin: null, spectral: null, regular: null, kecleon: null, meowth: null, lantern: null },
   background: { night: 0, meadow: 1500, forest: 1500, cave: 1500, snow: 1500, tower: 2000, supporter: null, halloween: null },
   wallpaper: { classic: 0, forest: 1000, cave: 1000, snow: 1000, tower: 1500, supporter: null, haunted: null },
 } as const satisfies Record<string, Record<string, number | null>>

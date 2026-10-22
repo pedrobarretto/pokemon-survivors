@@ -9,6 +9,7 @@ import { createChecks } from './checks'
 import { createRibbons } from './challenge'
 import { discordStore, startDiscord } from './discord'
 import { discordLink } from './discordLink'
+import { festivalStore } from './festival'
 import { abacatePay } from './donations'
 import { friendStore } from './friends'
 import { giftStore } from './gifts'
@@ -55,6 +56,7 @@ const app = createApp({
   verify: clerkVerifier(env),
   donate: env.abacatePayKey ? abacatePay(env.abacatePayKey) : null,
   supporters: supporterStore(sql, { onTierUp: (userId) => void discord.syncRoles(userId) }),
+  festival: festivalStore(sql),
   discord,
   suggestions,
   // Stored always; posted to #bug-reports when the bot is set up.

@@ -3,8 +3,10 @@ import postgres from 'postgres'
 import { mergeClears, wonClears } from '../../src/game/clears'
 import { keepGiven, parseGiftContent } from '../../src/game/gifts'
 import { gameGiftsApplied } from '../../src/game/gameGifts'
+import { isFestivalGift } from '../../src/game/festival'
 import { parseSaveData } from '../../src/game/meta'
 import { applyPush, type Push, type Stored } from '../../src/game/sync'
+import { festivalTotals } from './festival'
 
 /**
  * Production goes through Supabase's transaction pooler, which hands each
@@ -50,7 +52,8 @@ export const saveStore = (sql: Sql) => ({
    * Gift-only rewards stay only if the player's gifts brought them (`keepGiven`):
    * an edited save can't give itself the Supporter title or a ribbon. The
    * game's own gifts it applied and earned (`gameGiftsApplied`: the candy jar's, the
-   * loyalty card's, the Tycoon's) count as given. After a
+   * loyalty card's, the Tycoon's) count as given, and a Festival da Praça's
+   * only as far as the pot this API sums reached them (`festivalTotals`). After a
    * reset (`users.save_reset_revision`), devices that haven't seen it get the reset save back.
    */
   push: (userId: string, push: Push) =>
@@ -67,7 +70,9 @@ export const saveStore = (sql: Sql) => ({
         const content = parseGiftContent(g.payload)
         return content ? [{ id: g.id, content }] : []
       })
-      const next = { ...applied, save: keepGiven({ ...applied.save, clears: mergeClears(applied.save.clears, wonClears(won)) }, [...given, ...gameGiftsApplied(applied.save)]) }
+      // Only a save that opened a festival gift pays for the sums.
+      const festival = applied.save.gifts.some(isFestivalGift) ? await festivalTotals(tx, userId) : undefined
+      const next = { ...applied, save: keepGiven({ ...applied.save, clears: mergeClears(applied.save.clears, wonClears(won)) }, [...given, ...gameGiftsApplied(applied.save, festival)]) }
       await tx`
         insert into saves (user_id, version, revision, data)
         values (${userId}, ${next.save.version}, ${next.revision}, ${tx.json(next.save)})

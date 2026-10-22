@@ -9,6 +9,7 @@ import { isRecord } from './game/parse'
 import type { ProfileName } from './game/ranking'
 import { brasiliaDay } from './game/day'
 import { gameGifts as madeByGame, isGameGift } from './game/gameGifts'
+import { donateFrom } from './game/festival'
 import { loadSave, today, writeSave } from './ui/save'
 
 /**
@@ -19,7 +20,8 @@ import { loadSave, today, writeSave } from './ui/save'
  * boot for a device that already did, so guests never download it.
  *
  * Each sync also lists the Mystery Gifts waiting in the account (`GET /gifts`,
- * opened from the lobby: `openGift`)
+ * opened from the lobby: `openGift`), beside the ones the game makes (its
+ * own, and others' sources such as the Festival da Praça's, `addGameGifts`)
  * and, on a device's first sync, the invite it landed with (`POST /referral`).
  * A Discord account connected to the player's (`linkDiscord`, or signing in
  * with Discord) is reported to the API (`POST /discord/link`), which puts
@@ -493,12 +495,29 @@ let inbox: Gift[] = []
 
 const inboxListeners = new Set<(gifts: readonly Gift[]) => void>()
 
+/** More sources of game-made gifts (`addGameGifts`): the Festival da Praça's (`festival.ts`). */
+const gameGiftSources: Array<() => readonly Gift[]> = []
+
 /**
  * Gifts the game makes itself, for guests too: the Noite das Bruxas candy
  * jar's rewards and the Kecleon Shop's loyalty card and Department Store
- * (`game/gameGifts.ts`), worked out from the save, so they never touch the API.
+ * (`game/gameGifts.ts`), worked out from the save, so they never touch the
+ * API, and those of the sources added with `addGameGifts`.
  */
-const gameGifts = () => madeByGame(loadSave(), brasiliaDay(today()))
+const gameGifts = () => [...madeByGame(loadSave(), brasiliaDay(today())), ...gameGiftSources.flatMap((source) => source())]
+
+/**
+ * Adds a source of game-made gifts (ids `isGameGift` knows, never claimed in
+ * the API) to the gift box. It's asked whenever the box is; call
+ * `refreshInbox` when what it gives changes.
+ */
+export const addGameGifts = (source: () => readonly Gift[]) => {
+  gameGiftSources.push(source)
+  refreshInbox()
+}
+
+/** Tells the gift box's listeners that what waits changed (a game-made source has new gifts). */
+export const refreshInbox = () => setInbox(inbox)
 
 /** The gifts waiting to be opened: the account's, then the game's own. */
 export const giftInbox = (): readonly Gift[] => [...inbox, ...gameGifts()]
@@ -617,6 +636,64 @@ export const syncSave = async () => {
     }
   } while (again)
   syncing = false
+}
+
+/** Resolves once no sync is running, after asking for one (a sync already running only queues another). */
+const synced = async () => {
+  await syncSave()
+  while (syncing) await new Promise((resolve) => setTimeout(resolve, 200))
+}
+
+/**
+ * What a festival donation came to: the API's refusal (`DonateError` in
+ * `server/src/festival.ts`: `closed`, `profile`, `runs`, `cap`, `funds`,
+ * `nosave`, `stale`, or `rate` past its limit), `guest` without an account,
+ * `offline` when it couldn't ask. `held`: it waits for the admin before
+ * counting; `today`: ₽ given today, the cap's count.
+ */
+export type FestivalDonation = { ok: true; held: boolean; today: number } | { ok: false; error: string }
+
+/** One `POST /festival/donate` on top of this device's revision; keeps the save it brings back. */
+const donateOnce = async (amount: number): Promise<FestivalDonation> => {
+  const link = readLink()
+  const token = await sessionToken()
+  if (!link || !token) return { ok: false, error: 'offline' }
+  const before = JSON.stringify(loadSave())
+  const res = await fetch(`${API_URL}/festival/donate`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount, base: link.revision }),
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  })
+  const body: unknown = await res.json().catch(() => null)
+  if (!res.ok) return { ok: false, error: res.status === 429 ? 'rate' : isRecord(body) && typeof body.error === 'string' ? body.error : 'offline' }
+  const done = parsePushed(body)
+  if (!done || !isRecord(body)) return { ok: false, error: 'offline' }
+  // The stored save was this device's as of `base`: kept as is, unless the save changed meanwhile, which then takes the same donation.
+  writeSave(JSON.stringify(loadSave()) === before ? done.save : donateFrom(loadSave(), amount))
+  writeLink({ ...(readLink() ?? link), revision: done.revision })
+  savedListeners.forEach((fn) => fn())
+  return { ok: true, held: body.held === true, today: typeof body.today === 'number' ? body.today : 0 }
+}
+
+/**
+ * Puts `amount` ₽ in the Festival da Praça's pot (`POST /festival/donate`).
+ * Only the API takes ₽, from the save it stores, so this syncs first (₽ that
+ * never synced can't go) and once more if another device pushed in between
+ * (`stale`). The API's answer becomes the local save. Never throws.
+ */
+export const donateToFestival = async (amount: number): Promise<FestivalDonation> => {
+  if (!accountsEnabled || !readLink()) return { ok: false, error: 'guest' }
+  try {
+    await synced()
+    const first = await donateOnce(amount)
+    if (first.ok || first.error !== 'stale') return first
+    await synced()
+    return await donateOnce(amount)
+  } catch (err) {
+    console.warn('festival donation failed', err)
+    return { ok: false, error: 'offline' }
+  }
 }
 
 /* ---------------- Sign in and out ---------------- */

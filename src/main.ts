@@ -35,6 +35,7 @@ import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
 import { isLegend } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
+import { devFestival, startFestival } from './festival'
 import { identify, startAnalytics, takeOpened, track, type ErrorContext } from './analytics'
 import { BAG_ITEMS, useArmed, type BagItem } from './game/bag'
 import { armedTms, tmLimit } from './game/tmShelf'
@@ -2693,6 +2694,8 @@ const boot = () => {
   promptProfile()
   // Coming back to the game syncs again, but not mid-run: a run syncs when it ends.
   startAccount(() => run === null)
+  // The Festival da Praça's pot, in the background (its gifts join the gift box).
+  startFestival()
   // A co-op link (`?sala=K7QF2`, maybe `&ref=` who sent it), beta or not: join that room and show it (signed in first:
   // `enterCoop`); in a run, by snapshot, on the same seat after a reload. Or back from signing in to play co-op.
   const back = takeCoopReturn()
@@ -2852,13 +2855,13 @@ const devGifts = {
    * Puts a Mystery Gift in the lobby's gift box as if a sync listed it: `ps.gift('egg', 'friend')`, `ps.gift('coins', '500')`,
    * `ps.gift('title')`, `ps.gift('style', 'ambassador')` (a frame), `ps.gift('shinyHatch', 'munchlax')`,
    * `ps.gift('ribbon', 'gold')` (yesterday's challenge, #12 of 340), `ps.gift('shinyPick')` (a shiny of one's choice),
-   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion).
+   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item).
    * `why`: an inviter's handle (welcome) or a count of friends brought.
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
-    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' } }[kind]
+    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 } }[kind]
     const content = parseGiftContent({ kind, ...raw })
-    if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id)'
+    if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it)'
     const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : why ? { kind: 'welcome', from: why } : null
     return stageGifts([{ id: `dev-${Date.now()}`, content, reason }])
   },
@@ -3077,6 +3080,7 @@ if (import.meta.env.DEV) {
       // Sheets loaded and frame silhouettes cached right now (`render/sprites.ts`).
       sprites: () => ({ loaded: loadedCount(), overlays: overlayStats() }),
       coop: devCoop,
+      festival: devFestival,
       showTitle,
       showMenu,
       theme: currentTheme,

@@ -9,6 +9,7 @@ import { challengeOpen } from '../../src/game/challenge'
 import { parseDonation } from '../../src/data/donations'
 import { isPollOption } from '../../src/data/supporters'
 import { isDayKey } from '../../src/game/day'
+import { parseDonationAmount } from '../../src/game/festival'
 import { isDifficulty } from '../../src/game/difficulty'
 import { halloweenAt } from '../../src/game/halloween'
 import { parseHandlePrefix, parsePresenceUpdate, parseRoomCode } from '../../src/game/friends'
@@ -29,6 +30,7 @@ import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report } from './errors'
 import type { Donate } from './donations'
+import type { DonateError, FestivalStore } from './festival'
 import type { FriendStore } from './friends'
 import type { GiftStore } from './gifts'
 import type { ModerationStore } from './moderation'
@@ -50,6 +52,8 @@ export type AppDeps = {
   /** Donation checkouts (AbacatePay), null when the server has no key for them. */
   donate: Donate | null
   supporters: SupporterStore
+  /** Festival da Praça: the pot, donations from the stored save and the plaque. */
+  festival: Pick<FestivalStore, 'status' | 'donate' | 'setPublic' | 'takeDonate' | 'takeToggle' | 'held' | 'review'>
   /** The idea board. */
   suggestions: SuggestionStore
   /** Bug reports: stored, then posted to the community Discord's #bug-reports. */
@@ -101,6 +105,9 @@ const REPORT_ERRORS = { self: 400, limit: 429 } as const
 
 /** What inviting a friend answers when it doesn't go, by `Invited`'s error. */
 const INVITE_ERRORS = { notFriend: 404, limit: 429 } as const
+
+/** What a festival donation answers when it's refused, by `DonateError`. */
+const DONATE_ERRORS = { closed: 409, profile: 403, runs: 403, cap: 409, funds: 409, nosave: 409, stale: 409 } as const satisfies Record<DonateError, number>
 
 /** What a run's end answers when it's refused, by `FinishError`. */
 const FINISH_ERRORS = { unknown: 404, replaced: 409, mismatch: 409, seed: 400, clock: 422, challenge: 400, rewrite: 409 } as const
@@ -198,6 +205,16 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /reports` (auth) `{ target, run?, reason, note? }` (`parseReport`): reports a player by handle, or one
  *   of their runs on the boards. 202 `{ received: true }` whatever becomes of it (nothing about the target
  *   comes back). 400 invalid or reporting oneself, 429 past `REPORT.perDay` in 24 hours.
+ * - `GET /festival`: `FestivalBoard & { me }`, the Festival da Praça the plaza shows (the running one, else the last;
+ *   null before the first): its `start` and `end` days, every festival's `pots`, its `pot` and milestones `reached`,
+ *   the `top` donors by @handle (counted donations of players who show their name) and how many `donors`; the
+ *   public part is cached 30 s. With a token, `me` (`FestivalMine`): ₽ given today (the cap), per festival, held, and the plaque setting.
+ * - `POST /festival/donate` (auth) `{ amount, base }`: puts `amount` whole ₽ of the stored save in the running festival's
+ *   pot, on top of revision `base`. `{ save, revision, held, today }`: the save with the ₽ moved to `spent`, for the device
+ *   to keep. 400 invalid amount, 403 `profile` (no @handle) or `runs` (fewer than `FESTIVAL.minRuns` verified runs),
+ *   409 `closed` (no festival running), `cap` (past ₽200k today), `funds` (the stored wallet can't cover it), `nosave`
+ *   or `stale` (sync first), 429 past the rate limit. `held`: the wallet was above `FESTIVAL.heldWallet`, so it counts once the admin approves it.
+ * - `PUT /festival/public` (auth) `{ public }`: shows or hides the player's @handle on the plaque. `{ public }`.
  * - `POST /discord/link` (auth): links the Discord account the player connected in Clerk, joins them
  *   to the community server and gives them their supporter role. `{ username, joined }`; 404 when
  *   Clerk has no verified Discord account for them, 503 when Clerk can't answer.
@@ -212,8 +229,10 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   and how many are open. `POST /admin/moderation` (`parseModeration`) `{ userId, action, run?, reason? }`:
  *   `remove` a run from the boards, `reset` the save, `ban` (with a reason) or `unban`, or `dismiss`,
  *   resolving the reports it answers. `{ resolved }`, 404 for an unknown player or run.
+ *   `GET /admin/festival`: `{ donations }` (`HeldDonation[]`), the festival donations held for review.
+ *   `POST /admin/festival/:id/approve` (it counts in the pot) or `/void` (it never counts; its ₽ stays spent): `{ ok }`, 404 for an unknown or already settled one.
  */
-export const createApp = ({ store, ranking, friends, gifts, checks, verify, donate, supporters, suggestions, bugReports, discord, admin, moderation, webhooks, allowedOrigin, ping, report }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, checks, verify, donate, supporters, festival, suggestions, bugReports, discord, admin, moderation, webhooks, allowedOrigin, ping, report }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
 
@@ -524,6 +543,30 @@ export const createApp = ({ store, ranking, friends, gifts, checks, verify, dona
     return c.json(await supporters.poll())
   })
 
+  app.get('/festival', maybeAuth, async (c) => {
+    if (!c.var.userId) c.header('Cache-Control', 'public, max-age=30')
+    return c.json(await festival.status(c.var.userId))
+  })
+
+  app.post('/festival/donate', auth, smallBody, async (c) => {
+    const body = await json(c)
+    const amount = isRecord(body) ? parseDonationAmount(body.amount) : null
+    if (!isRecord(body) || amount === null) return c.json({ error: 'expected { amount, base }' }, 400)
+    const base = typeof body.base === 'number' && Number.isInteger(body.base) ? body.base : null
+    if (!festival.takeDonate(c.var.userId)) return c.json({ error: 'too many donations' }, 429)
+    const done = await festival.donate(c.var.userId, amount, base)
+    if (!done.ok) return c.json({ error: done.error }, DONATE_ERRORS[done.error])
+    return c.json({ save: done.save, revision: done.revision, held: done.held, today: done.today })
+  })
+
+  app.put('/festival/public', auth, smallBody, async (c) => {
+    const body = await json(c)
+    if (!isRecord(body) || typeof body.public !== 'boolean') return c.json({ error: 'expected { public }' }, 400)
+    if (!festival.takeToggle(c.var.userId)) return c.json({ error: 'too many changes' }, 429)
+    await festival.setPublic(c.var.userId, body.public)
+    return c.json({ public: body.public })
+  })
+
   app.get('/suggestions', maybeAuth, async (c) => {
     const sort = c.req.query('sort') ?? 'top'
     if (!isSuggestionSort(sort)) return c.json({ error: 'unknown sort' }, 400)
@@ -611,6 +654,12 @@ export const createApp = ({ store, ranking, friends, gifts, checks, verify, dona
     const done = await moderation.act(c.var.userId, m)
     return done ? c.json(done) : c.json({ error: 'unknown' }, 404)
   })
+
+  desk.get('/festival', async (c) => c.json({ donations: await festival.held() }))
+
+  for (const action of ['approve', 'void'] as const) {
+    desk.post(`/festival/:id/${action}`, async (c) => ((await festival.review(c.var.userId, c.req.param('id'), action)) ? c.json({ ok: true }) : c.json({ error: 'unknown' }, 404)))
+  }
 
   app.route('/admin', desk)
 

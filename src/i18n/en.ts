@@ -665,7 +665,7 @@ export const en: Messages = {
       wallpaper: 'Wallpaper of the PC Box.',
     },
     styles: {
-      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth' },
+      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth', lantern: 'Lantern' },
       background: { night: 'Starry night', meadow: 'Route 1', forest: 'Viridian Forest', cave: 'Mt. Moon', snow: 'Mt. Silver', tower: 'Lavender Tower', supporter: 'Golden sky', halloween: 'Halloween Night' },
       wallpaper: { classic: 'Classic', forest: 'Leaves', cave: 'Pebbles', snow: 'Snowflakes', tower: 'Little ghosts', supporter: 'Golden stars', haunted: 'Haunted House' },
     },
@@ -839,6 +839,10 @@ export const en: Messages = {
     hint: 'It shows up a lot more today, and so does its shiny.',
   },
 
+  festival: {
+    names: { lanternas: 'Lantern Festival' },
+  },
+
   halloween: {
     name: 'Halloween Night',
     card: 'HALLOWEEN NIGHT',
@@ -1010,6 +1014,9 @@ export const en: Messages = {
     ghostHunt: 'For beating every Ghost Hunt boss',
     loyalty: (n) => `For ${n} stamps on Kecleon's loyalty card`,
     tycoon: "For growing Kecleon's shop into a Department Store",
+    bag: (n, item) => `*${n}× ${item}* went into your Bag.`,
+    festival: (festival, pot) => `The plaza raised ${pot} in the ${festival}. Thank you, patrons!`,
+    patron: (festival) => `For being a Patron of the ${festival} ♥`,
   },
 
   supporters: {
@@ -1830,7 +1837,7 @@ export const en: Messages = {
     noTitle: 'none',
     titleTag: 'TITLE',
     equipped: 'SHOWN',
-    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store" },
+    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival' },
     newMedals: 'New medals',
     names: {
       firstRun: 'First steps',
@@ -1919,6 +1926,7 @@ export const en: Messages = {
       exorcist: 'Exorcist',
       vipCustomer: 'VIP Customer',
       tycoon: 'Tycoon',
+      patron: 'Patron',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Play a run' : `Play ${n} runs`),
