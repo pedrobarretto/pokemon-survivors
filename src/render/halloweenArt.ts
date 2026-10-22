@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, context2d, createCanvas, ellipse, onCanvasReset, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, context2d, createCanvas, glow, onCanvasReset, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import type { SupporterTier } from '../game/supporters'
 import type { Game } from '../game/types'
@@ -109,17 +109,6 @@ export const drawJack = (ctx: Ctx, x: number, y: number, id: number, t: number) 
 }
 
 /* ---------------- The night ---------------- */
-
-/** A soft round light in hard rings, brightest in the middle (pixel art: no gradients). */
-const glow = (radius: number, color: string, alpha: number) => {
-  const canvas = createCanvas(radius * 2 + 1, radius * 2 + 1)
-  const ctx = context2d(canvas)
-  for (const [k, a] of [[1, 0.35], [0.7, 0.6], [0.42, 1]] as const) {
-    ctx.globalAlpha = alpha * a
-    ctx.drawImage(ellipse(Math.round(radius * k), Math.round(radius * k * 0.75), color), Math.round(radius - radius * k), Math.round(radius - radius * k * 0.75))
-  }
-  return canvas
-}
 
 const GLOWS = lazy(() => ({ jack: glow(28, '#ff8020', 0.3), player: glow(50, '#ffe0b0', 0.12) }))
 

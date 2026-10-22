@@ -29,7 +29,7 @@ import { fetchWall } from '../supporters'
 import { h, later, rich } from './dom'
 import { boundKey } from './inputLabels'
 import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, today } from './save'
-import { festivalCard, festivalCardShows } from './festival'
+import { festivalCard, festivalCardShows, type FestivalTab } from './festival'
 import { halloweenCard, halloweenCardShows } from './halloween'
 import { contentLine } from './gifts'
 import { countedFriends, loadInvites } from './invites'
@@ -92,7 +92,7 @@ export type Meadow = {
   at: () => Place | 'moving'
   /** Above whoever at the plaza the strolling partner stands close enough to talk to (and who), or null. */
   talkSpot: () => (Vec & { who: PlazaNpc }) | null
-  /** Who a tap is for: the shop (its shopkeepers, building or the edge marker pointing to it), Meowth or a stall; null for none. */
+  /** Who a tap is for: the shop (its shopkeepers, building or the edge marker pointing to it), Meowth, a stall, the festival's fountain or plaque; null for none. */
   tapsShop: (at: Vec) => PlazaNpc | null
 }
 
@@ -131,10 +131,10 @@ export type TitleActions = {
   mart: (close: () => void, shelf?: VisitorShelf, festival?: () => void) => Screen
   /**
    * Opens the Festival da Praça's sheet over the Kecleon plaza once the camera
-   * got there (`openFestival` in `ui/festival.ts`); `close` goes on from it
-   * (home, or back to the shop it was opened from).
+   * got there (`openFestival` in `ui/festival.ts`), on `tab`; `close` goes on
+   * from it (home, or back to the shop it was opened from).
    */
-  festival: (close: () => void) => Screen
+  festival: (close: () => void, tab?: FestivalTab) => Screen
   /** Opens the Trainer Card over the title (the Trainer chip, `C`, the invite banner), like `settings`. */
   trainer: (focus: LobbyFocus) => Screen
   /** Opens the boards over the title, like `settings`. No action (no API), no tile. */
@@ -616,10 +616,11 @@ const talkPrompt = (onTalk: () => void) =>
 /**
  * How the lobby goes to the Kecleon's shop: `shop` (the dock's Loja, a talk,
  * `?loja`) greets and opens the shop, `festival` (the festival's Hoje card,
- * `ps.festival('open')`) opens the Festival da Praça's sheet there, `look`
- * (dev, `ps.plaza()`) only goes there, for a look; Esc or Enter brings it back.
+ * `ps.festival('open')`, a talk at the fountain) opens the Festival da Praça's
+ * sheet there (`plaque`, a talk at the donors' plaque, on its plaque tab),
+ * `look` (dev, `ps.plaza()`) only goes there, for a look; Esc or Enter brings it back.
  */
-export type ShopTrip = 'shop' | 'festival' | 'look'
+export type ShopTrip = 'shop' | 'festival' | 'plaque' | 'look'
 
 /**
  * Title screen over the live meadow: the pixel logo and a blinking "press
@@ -681,7 +682,7 @@ export const titleScreen = (
   let leave: (() => void) | null = null
   /** A trip to the Kecleon's shop under way: going there, the shop open, or coming back. */
   let visit: { mode: ShopTrip; phase: 'going' | 'here' | 'shop' | 'back'; shelf?: VisitorShelf } | null = null
-  /** Who the talk prompt is over: a shopkeeper, Meowth or a stall's keeper. */
+  /** Who the talk prompt is over: a shopkeeper, Meowth, a stall's keeper, the festival's fountain or plaque. */
   let talkWho: PlazaNpc = 'keeper'
   /** A seasonal stall's keeper talking, over the plaza (the lobby's keys wait). */
   let chat: Dialogue | null = null
@@ -867,9 +868,11 @@ export const titleScreen = (
     actions.meadow.visit('plaza', instant)
   }
 
-  /** A talk at the plaza: the shop with a shopkeeper, the caravan's shelf with Meowth, a few words with a stall's keeper. */
+  /** A talk at the plaza: the shop with a shopkeeper, the caravan's shelf with Meowth, a few words with a stall's keeper, the festival's sheet at the fountain (its plaque tab at the plaque). */
   function talkTo(who: PlazaNpc) {
     if (who === 'stall') return talkToStall()
+    if (who === 'fountain') return visitShop('festival')
+    if (who === 'plaque') return visitShop('plaque')
     visitShop('shop', false, who === 'meowth' ? 'caravan' : undefined)
   }
 
@@ -912,7 +915,7 @@ export const titleScreen = (
       return
     }
     visit.phase = 'shop'
-    if (visit.mode === 'festival') overScreen = actions.festival(goHome)
+    if (visit.mode === 'festival' || visit.mode === 'plaque') overScreen = actions.festival(goHome, visit.mode === 'plaque' ? 'plaque' : 'fountain')
     else openShop(visit.shelf)
   }
 

@@ -12,6 +12,7 @@ import { drawMeadowJacks, drawMeadowNight } from './halloweenArt'
 import {
   celebratePlaza,
   createPlaza,
+  drawPlazaDusk,
   drawPlazaGround,
   drawPlazaMarker,
   drawPlazaParty,
@@ -705,6 +706,7 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
   }
   flush(Infinity)
   drawPlazaParty(ctx, s.plaza, camX, camY, s.time)
+  drawPlazaDusk(ctx, s.plaza, camX, camY, w, h)
   if (s.haunted) drawMeadowNight(ctx, camX, camY, w, h, s.time)
   // Emotes over everyone's heads, bobbing a pixel.
   const bubbles = EMOTES()

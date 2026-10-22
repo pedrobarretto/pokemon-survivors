@@ -1,8 +1,10 @@
 import { clamp, dir8, type Dir8, type Vec } from '../engine/math'
-import { blitCentered, context2d, createCanvas, ellipse, lazy, onCanvasReset } from '../engine/pixelart'
+import { blitCentered, context2d, createCanvas, ellipse, glow, lazy, onCanvasReset } from '../engine/pixelart'
 import { EMOTES, type Emote } from './art'
 import { drawSparkles, shadow } from './draw'
+import { detail } from './quality'
 import { drawPokemon, loadedSprites, loadSpecies, type SpeciesSprites } from './sprites'
+import type { PlazaStage } from '../data/festivals'
 import type { ShopLevel, ShopProp } from '../data/shop'
 import { CARAVAN, STALLS, type StallId } from '../data/visitors'
 
@@ -16,7 +18,10 @@ import { CARAVAN, STALLS, type StallId } from '../data/visitors'
  * buildings). The shopkeepers are Kecleon's own sheets, plus its purple
  * brother from Lv 2, recolored from the same sheets. Visitors come by too
  * (`PlazaVisitors`, set by the shell): Meowth's weekend caravan, a seasonal
- * stall and the golden Kecleon statue. The building and each visitor keep an
+ * stall and the golden Kecleon statue. Around a Festival da Praça
+ * (`PlazaFestival`, set by the shell) the fountain stands in front of the
+ * shop, dressed by the pot's stage: garlands, bunting between the lamps, then
+ * lanterns, the torii and a warm dusk. The building and each visitor keep an
  * invisible footprint walkers go around (`padsOf`). Pure presentation, like
  * the rest of the lobby.
  */
@@ -37,8 +42,19 @@ export type PlazaVisitors = { caravan: boolean; stall: StallId | null; statue: b
 
 export const NO_VISITORS: PlazaVisitors = { caravan: false, stall: null, statue: false }
 
-/** Who talks at the plaza: a shopkeeper (the shop), Meowth (his caravan) or a seasonal stall's keeper. */
-export type PlazaNpc = 'keeper' | 'meowth' | 'stall'
+/**
+ * The Festival da Praça on the plaza (the shell works it out from
+ * `festivalView`): the fountain stands from the week before a festival opens,
+ * dressed by the pot's stage while it runs (`plazaStage`: 0 plain, 1 garlands,
+ * 2 the bunting too, 3 lanterns, the torii and the dusk), and the donors'
+ * plaque stands beside it while it runs.
+ */
+export type PlazaFestival = { fountain: boolean; stage: PlazaStage; plaque: boolean }
+
+export const NO_FESTIVAL: PlazaFestival = { fountain: false, stage: 0, plaque: false }
+
+/** Who talks at the plaza: a shopkeeper (the shop), Meowth (his caravan), a seasonal stall's keeper, or the festival's fountain or plaque (its sheet). */
+export type PlazaNpc = 'keeper' | 'meowth' | 'stall' | 'fountain' | 'plaque'
 
 /** The plaza's PNGs (`public/assets/shop/`), by id. */
 const ART_FILES = {
@@ -55,10 +71,35 @@ const ART_FILES = {
   caravan: 'caravan-meowth',
   'stall-duskull': 'stall-duskull',
   'stall-delibird': 'stall-delibird',
+  'fountain-s0-f0': 'festival-fountain-s0-f0',
+  'fountain-s0-f1': 'festival-fountain-s0-f1',
+  'fountain-s0-f2': 'festival-fountain-s0-f2',
+  'fountain-s1-f0': 'festival-fountain-s1-f0',
+  'fountain-s1-f1': 'festival-fountain-s1-f1',
+  'fountain-s1-f2': 'festival-fountain-s1-f2',
+  'fountain-s3-f0': 'festival-fountain-s3-f0',
+  'fountain-s3-f1': 'festival-fountain-s3-f1',
+  'fountain-s3-f2': 'festival-fountain-s3-f2',
+  bunting: 'festival-bunting',
+  torii: 'festival-torii',
+  plaque: 'festival-plaque',
 } as const satisfies Record<string, string>
 type ArtId = keyof typeof ART_FILES
 const ART_IDS = Object.keys(ART_FILES) as ArtId[]
 const artFile = (id: ArtId) => `${import.meta.env.BASE_URL}assets/shop/${ART_FILES[id]}.png`
+
+/** The fountain's water frames for each stage (stage 2 keeps stage 1's fountain and adds the bunting). */
+const FOUNTAIN_FRAMES = {
+  0: ['fountain-s0-f0', 'fountain-s0-f1', 'fountain-s0-f2'],
+  1: ['fountain-s1-f0', 'fountain-s1-f1', 'fountain-s1-f2'],
+  2: ['fountain-s1-f0', 'fountain-s1-f1', 'fountain-s1-f2'],
+  3: ['fountain-s3-f0', 'fountain-s3-f1', 'fountain-s3-f2'],
+} as const satisfies Record<PlazaStage, readonly ArtId[]>
+
+/** The festival's PNGs, loaded only once a festival shows (`festivalArtReady`); the plaza waits for the rest. */
+const FESTIVAL_ART: ReadonlySet<ArtId> = new Set([...Object.values(FOUNTAIN_FRAMES).flat(), 'bunting', 'torii', 'plaque'])
+const BASE_ART = ART_IDS.filter((id) => !FESTIVAL_ART.has(id))
+const FESTIVAL_IDS = [...FESTIVAL_ART]
 
 /** A loaded PNG and the box of its painted pixels, so pieces stand on their real feet whatever padding the image has. */
 type Art = { img: HTMLImageElement; minX: number; minY: number; maxY: number; w: number; h: number }
@@ -87,12 +128,8 @@ const measure = (img: HTMLImageElement): Art => {
   return { img, minX, minY, maxY, w: maxX - minX + 1, h: maxY - minY + 1 }
 }
 
-/** Starts loading the plaza's PNGs and the shopkeeper's sheets (once). Pieces show up as they arrive. */
-export const loadPlazaArt = () => {
-  if (loading) return
-  loading = true
-  void loadSpecies(KECLEON_DEX).catch(() => {})
-  for (const id of ART_IDS) {
+const loadArt = (ids: Iterable<ArtId>) => {
+  for (const id of ids) {
     const img = new Image()
     img.src = artFile(id)
     void img.decode().then(
@@ -100,6 +137,27 @@ export const loadPlazaArt = () => {
       () => {},
     )
   }
+}
+
+/** Starts loading the plaza's PNGs and the shopkeeper's sheets (once). Pieces show up as they arrive. */
+export const loadPlazaArt = () => {
+  if (loading) return
+  loading = true
+  void loadSpecies(KECLEON_DEX).catch(() => {})
+  loadArt(BASE_ART)
+}
+
+let festivalAsked = false
+let festivalLoaded = false
+/** Whether the festival's PNGs are in; the first ask starts loading them, so only players who see a festival download them. */
+const festivalArtReady = () => {
+  if (festivalLoaded) return true
+  if (!festivalAsked) {
+    festivalAsked = true
+    loadArt(FESTIVAL_IDS)
+  }
+  festivalLoaded = FESTIVAL_IDS.every((id) => arts.has(id))
+  return festivalLoaded
 }
 
 /** Draws `art` with the bottom center of its painted box at (x, y); `fromRow` draws only its rows from there down (a counter's front). */
@@ -182,9 +240,13 @@ type Layout = {
   stall: Placed
   stallKeeper: KeeperSpot
   statue: Placed
+  /** The Festival da Praça's pieces while one shows: the fountain (its stage's water frames), the donors' plaque, the bunting's left tie, the torii. */
+  festival: FestivalLayout | null
   /** What the building, the props and the visitors' pieces cast on the cobblestones. */
   shadows: readonly Shadow[]
 }
+
+type FestivalLayout = { fountain: Placed & { frames: readonly Art[] }; plaque: Placed | null; bunting: Placed | null; torii: Placed | null }
 
 const layouts = new Map<string, Layout>()
 
@@ -194,12 +256,28 @@ const LV3_COUNTER = 122
 /** The visitors' footprints (radii, never drawn), each a little wider than what stands on it. */
 const VISITOR_PADS = { wagon: { rx: 74, ry: 16 }, stall: { rx: 60, ry: 18 }, statue: { rx: 21, ry: 7 } } as const
 
-const layoutOf = (level: ShopLevel, v: PlazaVisitors = NO_VISITORS): Layout | null => {
-  const key = `${level}:${v.caravan}:${v.stall}:${v.statue}`
+/**
+ * Where the festival's pieces stand, relative to the building's feet: the
+ * fountain in front of the shop, right of the statue's spot, flowers `flowers`
+ * px to each side of it and the plaque west of it, all clear of the statue,
+ * the board and Meowth; the torii east, in front of the seasonal stall and
+ * the crates, its pillars `pillar` px off its middle.
+ */
+const FESTIVAL_SPOTS = { fountain: { x: 46, y: 128 }, flowers: 54, plaque: { x: -88, y: 124 }, torii: { x: 214, y: 150 }, pillar: 38 } as const
+/** The bunting's left tie stands on the left lamp's post, this high above its feet. */
+const BUNTING_TIE = 39
+/** The festival's footprints (radii): the fountain's basin, the plaque's posts, each torii pillar. */
+const FESTIVAL_PADS = { fountain: { dy: -20, rx: 44, ry: 20 }, plaque: { rx: 13, ry: 5 }, pillar: { rx: 9, ry: 5 } } as const
+
+/** The plaza's layout with the festival it shows (none until the festival's PNGs are in). */
+const plazaLayout = (plaza: Plaza) => layoutOf(plaza.level, plaza.visitors, plaza.festival.fountain && festivalArtReady() ? plaza.festival : NO_FESTIVAL)
+
+const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout | null => {
+  const key = `${level}:${v.caravan}:${v.stall}:${v.statue}:${f.fountain}:${f.stage}:${f.plaque}`
   const cached = layouts.get(key)
   if (cached) return cached
   const building = arts.get(`lv${level}`)
-  if (!building || ART_IDS.some((id) => !arts.has(id))) return null
+  if (!building || BASE_ART.some((id) => !arts.has(id))) return null
   const half = Math.round(building.w / 2)
   // The 3/4 buildings of Lv 4 and 5 stand on a deep diamond: the footprint and the cobblestones reach back under all of it.
   const depth = level >= 4 ? Math.round(half * 0.45) : 0
@@ -228,7 +306,16 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors = NO_VISITORS): Layout | nu
     ...(v.stall === null ? [{ id: 'crates' as const, x: lamp + 26, y: 30 }] : []),
     ...(level >= 2 ? [{ id: 'board' as const, x: v.caravan ? -lamp - 196 : -lamp - 36, y: v.caravan ? 96 : 58 }] : []),
     ...(level >= 3 ? [{ id: 'flowers' as const, x: -lamp + 2, y: 44 }, { id: 'flowers' as const, x: v.stall ? lamp + 30 : lamp + 16, y: v.stall ? 82 : 66 }] : []),
+    ...(f.fountain ? [-1, 1].map((side) => ({ id: 'flowers' as const, x: FESTIVAL_SPOTS.fountain.x + side * FESTIVAL_SPOTS.flowers, y: FESTIVAL_SPOTS.fountain.y + 2 })) : []),
   ]
+  const festival: FestivalLayout | null = f.fountain
+    ? {
+        fountain: { ...FESTIVAL_SPOTS.fountain, frames: FOUNTAIN_FRAMES[f.stage].map((id) => arts.get(id)!) },
+        plaque: f.plaque ? FESTIVAL_SPOTS.plaque : null,
+        bunting: f.stage >= 2 ? { x: -lamp, y: 14 - BUNTING_TIE } : null,
+        torii: f.stage >= 3 ? FESTIVAL_SPOTS.torii : null,
+      }
+    : null
   const layout: Layout = {
     building,
     pad: { y: -6 - depth, rx: half + 4 + (depth ? 6 : 0), ry: Math.round(building.w / 7) + depth },
@@ -236,12 +323,14 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors = NO_VISITORS): Layout | nu
     counter: level === 3 ? LV3_COUNTER : null,
     props,
     spot: { x: 0, y: 34 },
-    cobbles: { x: 0, y: (wide ? 40 : 36) - Math.round(depth * 0.7), rx: lamp + (wide ? 186 : 66), ry: (wide ? 88 : 78) + Math.round(depth * 1.1) },
+    // The festival's fountain stands in front of the shop: the stones reach further down for it.
+    cobbles: { x: 0, y: (wide ? 40 : 36) - Math.round(depth * 0.7) + (festival ? 14 : 0), rx: lamp + (wide ? 186 : 66), ry: (wide ? 88 : 78) + Math.round(depth * 1.1) + (festival ? 26 : 0) },
     wagon,
     meowth: { x: wagon.x + 84, y: wagon.y + 16, dir: 1 },
     stall,
     stallKeeper: { x: stall.x - 58, y: stall.y + 12, dir: 7 },
     statue,
+    festival,
     shadows: [
       // The deep 3/4 buildings cast a soft ellipse under their footprint; everything else, its own silhouette.
       depth ? { x: 0, y: -Math.round(half * 0.3), rx: half - 10, ry: Math.round(half * 0.32) } : { x: 0, y: 0, art: building },
@@ -249,6 +338,10 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors = NO_VISITORS): Layout | nu
       ...(v.caravan ? [{ ...wagon, art: arts.get('caravan')! }] : []),
       ...(v.stall ? [{ ...stall, art: arts.get(STALLS[v.stall].art)! }] : []),
       ...(v.statue ? [{ ...statue, art: arts.get('pedestal')! }] : []),
+      // The fountain's shadow is always the plain one's, so it doesn't grow when the lanterns and the statue come; the bunting casts none.
+      ...(festival ? [{ ...festival.fountain, art: arts.get('fountain-s0-f0')! }] : []),
+      ...(festival?.plaque ? [{ ...festival.plaque, art: arts.get('plaque')! }] : []),
+      ...(festival?.torii ? [{ ...festival.torii, art: arts.get('torii')! }] : []),
     ],
   }
   layouts.set(key, layout)
@@ -273,10 +366,12 @@ export type Plaza = {
   hidden: boolean
   /** Scene time the shop last grew a level: dust and sparkles around the new building (`celebratePlaza`). */
   party: number
-  /** The shopkeeper the camera leans towards while the shop is open: 0 the green Kecleon, 1 the purple brother, Meowth's caravan or the seasonal stall. */
-  focus: 0 | 1 | 'caravan' | 'stall'
+  /** What the camera leans towards while a sheet is open: 0 the green Kecleon, 1 the purple brother, Meowth's caravan, the seasonal stall or the festival's fountain. */
+  focus: 0 | 1 | 'caravan' | 'stall' | 'fountain'
   /** Who comes by today (set by the shell). */
   visitors: PlazaVisitors
+  /** The Festival da Praça's fountain and plaque (set by the shell). */
+  festival: PlazaFestival
 }
 
 export const createPlaza = (home: Vec): Plaza => {
@@ -294,6 +389,7 @@ export const createPlaza = (home: Vec): Plaza => {
     party: -9,
     focus: 0,
     visitors: NO_VISITORS,
+    festival: NO_FESTIVAL,
   }
 }
 
@@ -336,7 +432,7 @@ export const celebratePlaza = (plaza: Plaza, level: ShopLevel, time: number) => 
 
 /** Turns the shopkeepers in front of the building, and the visitors, towards `partner` when it comes close. */
 export const stepPlaza = (plaza: Plaza, partner: Vec | null) => {
-  const layout = layoutOf(plaza.level, plaza.visitors)
+  const layout = plazaLayout(plaza)
   if (!layout) return
   const facing = (spot: KeeperSpot, free: boolean) => {
     const x = plaza.x + spot.x
@@ -349,7 +445,7 @@ export const stepPlaza = (plaza: Plaza, partner: Vec | null) => {
 
 /** Where the partner stands to shop, world px. */
 export const shopSpot = (plaza: Plaza): Vec => {
-  const spot = layoutOf(plaza.level, plaza.visitors)?.spot ?? { x: 0, y: 34 }
+  const spot = plazaLayout(plaza)?.spot ?? { x: 0, y: 34 }
   return { x: plaza.x + spot.x, y: plaza.y + spot.y }
 }
 
@@ -358,7 +454,7 @@ const TALK_RANGE = 24
 
 /** Above the head of whoever the partner (feet at `p`) can talk to, world px, and who it is; null when out of range. */
 export const talkAnchor = (plaza: Plaza, p: Vec): (Vec & { who: PlazaNpc }) | null => {
-  const layout = layoutOf(plaza.level, plaza.visitors)
+  const layout = plazaLayout(plaza)
   if (!layout) return null
   const atCounter = Math.hypot(p.x - plaza.x - layout.spot.x, p.y - plaza.y - layout.spot.y) < TALK_RANGE
   const candidates = [
@@ -369,7 +465,21 @@ export const talkAnchor = (plaza: Plaza, p: Vec): (Vec & { who: PlazaNpc }) | nu
     return d < TALK_RANGE || c.counter ? [{ ...c, d }] : []
   })
   const best = candidates.reduce<(typeof candidates)[number] | null>((a, c) => (a === null || c.d < a.d ? c : a), null)
-  return best && { x: plaza.x + best.spot.x, y: plaza.y + best.spot.y - 30, who: best.who }
+  return best ? { x: plaza.x + best.spot.x, y: plaza.y + best.spot.y - 30, who: best.who } : festivalTalk(plaza, layout.festival, p)
+}
+
+/** How far (world px) past the fountain's basin the partner may stand to talk to it. */
+const FOUNTAIN_REACH = 20
+
+/** Above the fountain or the plaque when the partner (feet at `p`) stands by it, world px, and which; null otherwise. */
+const festivalTalk = (plaza: Plaza, f: FestivalLayout | null, p: Vec): (Vec & { who: PlazaNpc }) | null => {
+  if (!f) return null
+  const { fountain, plaque } = f
+  if (plaque && Math.hypot(p.x - plaza.x - plaque.x, p.y - plaza.y - plaque.y) < TALK_RANGE) return { x: plaza.x + plaque.x, y: plaza.y + plaque.y - arts.get('plaque')!.h - 4, who: 'plaque' }
+  const pad = FESTIVAL_PADS.fountain
+  const dx = (p.x - plaza.x - fountain.x) / (pad.rx + FOUNTAIN_REACH)
+  const dy = (p.y - plaza.y - fountain.y - pad.dy) / (pad.ry + FOUNTAIN_REACH)
+  return dx * dx + dy * dy < 1 ? { x: plaza.x + fountain.x, y: plaza.y + fountain.y - fountain.frames[0]!.h - 4, who: 'fountain' } : null
 }
 
 /** How close (world px) a walker may come to a shopkeeper's feet. */
@@ -381,7 +491,7 @@ const KEEPER_ROOM = 12
  * if standing on it), so walkers go around the shop (mutates `v`).
  */
 export const pushOut = (plaza: Plaza, v: Vec) => {
-  const layout = layoutOf(plaza.level, plaza.visitors)
+  const layout = plazaLayout(plaza)
   if (!layout) return
   // Nobody stands on a shopkeeper's (or a visitor's) toes.
   for (const k of [...layout.keepers, ...npcsAt(plaza, layout).map((n) => n.spot)]) {
@@ -421,21 +531,38 @@ export const pushOut = (plaza: Plaza, v: Vec) => {
   }
 }
 
-/** The footprints on the plaza, never drawn: the building's, then the visitors' (center relative to the building's feet, radii; `back` stretches the solid part behind a tall piece). */
-const padsOf = (plaza: Plaza, layout: Layout) => {
+type Pad = { x: number; y: number; rx: number; ry: number; back: number }
+
+const padCache = new WeakMap<Layout, readonly Pad[]>()
+
+/**
+ * The footprints on the plaza, never drawn: the building's, the visitors' and
+ * the festival's (center relative to the building's feet, radii; `back`
+ * stretches the solid part behind a tall piece). The torii's are its two
+ * pillars, so walkers pass between them. Built once per layout.
+ */
+const padsOf = (plaza: Plaza, layout: Layout): readonly Pad[] => {
+  const hit = padCache.get(layout)
+  if (hit) return hit
   const v = plaza.visitors
-  return [
+  const f = layout.festival
+  const pads: Pad[] = [
     { x: 0, y: layout.pad.y, rx: layout.pad.rx, ry: layout.pad.ry, back: 1 },
     ...(v.caravan ? [{ x: layout.wagon.x, y: layout.wagon.y - 6, ...VISITOR_PADS.wagon, back: 3 }] : []),
     ...(v.stall ? [{ x: layout.stall.x, y: layout.stall.y - 16, ...VISITOR_PADS.stall, back: 3 }] : []),
     ...(v.statue ? [{ x: layout.statue.x, y: layout.statue.y - 3, ...VISITOR_PADS.statue, back: 2 }] : []),
+    ...(f ? [{ x: f.fountain.x, y: f.fountain.y + FESTIVAL_PADS.fountain.dy, rx: FESTIVAL_PADS.fountain.rx, ry: FESTIVAL_PADS.fountain.ry, back: 1.4 }] : []),
+    ...(f?.plaque ? [{ x: f.plaque.x, y: f.plaque.y - 2, ...FESTIVAL_PADS.plaque, back: 2 }] : []),
+    ...(f?.torii ? [-1, 1].map((side) => ({ x: f.torii!.x + side * FESTIVAL_SPOTS.pillar, y: f.torii!.y - 3, ...FESTIVAL_PADS.pillar, back: 2 })) : []),
   ]
+  padCache.set(layout, pads)
+  return pads
 }
 
-/** Who a tap at `at` (world px) is for: the shop (a shopkeeper, the building or the edge marker), Meowth (him or his wagon), a stall; null for none. */
+/** Who a tap at `at` (world px) is for: the shop (a shopkeeper, the building or the edge marker), Meowth (him or his wagon), a stall, the festival's fountain or plaque; null for none. */
 export const plazaTapped = (plaza: Plaza, at: Vec): PlazaNpc | null => {
   if (plaza.marker.shown && Math.abs(at.x - plaza.marker.x) <= 18 && Math.abs(at.y - plaza.marker.y) <= 15) return 'keeper'
-  const layout = layoutOf(plaza.level, plaza.visitors)
+  const layout = plazaLayout(plaza)
   if (!layout) return null
   const near = (spot: Placed) => Math.abs(at.x - plaza.x - spot.x) <= 12 && at.y <= plaza.y + spot.y + 3 && at.y >= plaza.y + spot.y - 30
   const npc = npcsAt(plaza, layout).find((n) => near(n.spot))
@@ -443,6 +570,9 @@ export const plazaTapped = (plaza: Plaza, at: Vec): PlazaNpc | null => {
   const over = (art: Art | undefined, spot: Placed) => art !== undefined && Math.abs(at.x - plaza.x - spot.x) <= art.w / 2 && at.y <= plaza.y + spot.y + 4 && at.y >= plaza.y + spot.y - art.h
   if (plaza.visitors.caravan && over(arts.get('caravan'), layout.wagon)) return 'meowth'
   if (plaza.visitors.stall && over(arts.get(STALLS[plaza.visitors.stall].art), layout.stall)) return 'stall'
+  const fest = layout.festival
+  if (fest?.plaque && over(arts.get('plaque'), fest.plaque)) return 'plaque'
+  if (fest && over(fest.fountain.frames[0], fest.fountain)) return 'fountain'
   const half = layout.building.w / 2
   if (Math.abs(at.x - plaza.x) <= half && at.y <= plaza.y + 4 && at.y >= plaza.y - layout.building.h) return 'keeper'
   return keepersAt(plaza, layout).some((k) => near({ x: k.x - plaza.x, y: k.y - plaza.y })) ? 'keeper' : null
@@ -455,9 +585,15 @@ export const plazaTapped = (plaza: Plaza, at: Vec): PlazaNpc | null => {
  * on the left, leaving the right side to the shop's panel.
  */
 export const plazaFrame = (plaza: Plaza, w: number, h: number): Vec => {
-  const layout = layoutOf(plaza.level, plaza.visitors)
+  const layout = plazaLayout(plaza)
   const tall = layout?.building.h ?? 140
   const framed = frameAt(plaza, layout, tall, w, h)
+  // The festival's sheet: the fountain comes up into view, above the sheet on portrait screens, left of it elsewhere.
+  const fountain = plaza.focus === 'fountain' ? layout?.festival?.fountain : null
+  if (fountain) {
+    if (h > w * 1.1) return { x: Math.round(plaza.x + fountain.x - w / 2), y: Math.round(plaza.y + fountain.y - h * 0.36) }
+    return { x: framed.x + Math.round(fountain.x * 0.7), y: Math.max(framed.y, plaza.y + fountain.y + 56 - h) }
+  }
   // Meowth's caravan or the seasonal stall: portrait screens center on it, the rest lean well over to it.
   if ((plaza.focus === 'caravan' || plaza.focus === 'stall') && layout) {
     const [from, to] = plaza.focus === 'caravan' ? [layout.wagon, layout.meowth] : [layout.stall, layout.stallKeeper]
@@ -592,7 +728,7 @@ const drawShadow = (ctx: CanvasRenderingContext2D, s: Shadow, x: number, y: numb
 
 /** Draws the plaza's floor (cobblestones, the pieces' shadows) under everyone, when it's in view. */
 export const drawPlazaGround = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, w: number, h: number) => {
-  const layout = layoutOf(plaza.level, plaza.visitors)
+  const layout = plazaLayout(plaza)
   if (!layout) return
   const c = layout.cobbles
   const x = plaza.x + c.x - camX
@@ -678,7 +814,7 @@ const drawStatue = (ctx: CanvasRenderingContext2D, x: number, y: number, time: n
 
 /** The plaza's upright pieces (building, shopkeepers, props, visitors), world y of their feet, built once per layout. */
 export const plazaPieces = (plaza: Plaza): readonly Piece[] => {
-  const layout = layoutOf(plaza.level, plaza.visitors)
+  const layout = plazaLayout(plaza)
   if (!layout) return []
   const cached = pieceCache.get(plaza)
   if (cached?.layout === layout) return cached.pieces
@@ -708,9 +844,94 @@ export const plazaPieces = (plaza: Plaza): readonly Piece[] => {
       ? keepers.map((k): Piece => ({ y: k.y, draw: (ctx, camX, camY, time) => drawKeeper(ctx, k.keeper, k.purple, k.x - camX, k.y - camY, time, true, plaza.hidden && !k.purple) }))
       : []),
     ...visitorPieces(plaza, layout),
+    ...festivalPieces(plaza, layout.festival),
   ]
   pieceCache.set(plaza, { layout, pieces })
   return pieces
+}
+
+/** Frames a second of the fountain's water (f0 → f1 → f2, looping). */
+const WATER_FPS = 7
+
+/**
+ * The festival's pieces: the fountain with its water running, the plaque, the
+ * torii, and the bunting, sorted just behind the lamps it hangs from so the
+ * shopkeepers by them stand in front of it.
+ */
+const festivalPieces = (plaza: Plaza, f: FestivalLayout | null): Piece[] => {
+  if (!f) return []
+  const { fountain, plaque, bunting, torii } = f
+  const fx = plaza.x + fountain.x
+  const fy = plaza.y + fountain.y
+  const art = (id: ArtId, spot: Placed): Piece => {
+    const x = plaza.x + spot.x
+    const y = plaza.y + spot.y
+    return { y, draw: (ctx, camX, camY) => put(ctx, arts.get(id)!, x - camX, y - camY) }
+  }
+  return [
+    { y: fy, draw: (ctx, camX, camY, time) => put(ctx, fountain.frames[Math.floor(time * WATER_FPS) % fountain.frames.length]!, fx - camX, fy - camY) },
+    ...(plaque ? [art('plaque', plaque)] : []),
+    ...(torii ? [art('torii', torii)] : []),
+    ...(bunting
+      ? [
+          {
+            y: plaza.y + bunting.y + BUNTING_TIE - 0.5,
+            // Its left tie is pixel (1, 1) of the PNG.
+            draw: (ctx, camX, camY) => ctx.drawImage(arts.get('bunting')!.img, Math.round(plaza.x + bunting.x - 1 - camX), Math.round(plaza.y + bunting.y - 1 - camY)),
+          } satisfies Piece,
+        ]
+      : []),
+  ]
+}
+
+/* ---------------- The festival's dusk ---------------- */
+
+/** The dusk's warm light, multiplied over the view at full strength (stage 3), in `DUSK_STEPS` flat steps from none. */
+const DUSK_RGB = [232, 190, 162] as const
+const DUSK_STEPS = 6
+const DUSK_FILLS = Array.from({ length: DUSK_STEPS + 1 }, (_, i) => {
+  const k = i / DUSK_STEPS
+  const [r, g, b] = DUSK_RGB.map((c) => Math.round(255 + (c - 255) * k))
+  return `rgb(${r},${g},${b})`
+})
+/** The dusk is full while the view's center is this near the building (world px) and gone this far. */
+const DUSK_NEAR = 240
+const DUSK_FAR = 520
+
+/** The lanterns' soft lights: the lamps', the fountain's and the torii's, in hard rings (`glow`). Built once. */
+const LANTERN_GLOWS = lazy(() => ({ lamp: glow(22, '#ffd678', 0.3), fountain: glow(54, '#ffd678', 0.24), torii: glow(46, '#ffd678', 0.24) }))
+/** Where the glows sit above each piece's feet (world px). */
+const GLOW_RISE = { lamp: 48, fountain: 44, torii: 59 } as const
+
+/**
+ * Stage 3's dusk over the plaza: a warm light multiplied over the view,
+ * fading as the camera leaves the plaza, and soft glows on the lanterns (the
+ * lamps', the fountain's and the torii's). The lean drawing (`detail.lean`)
+ * keeps the tint and skips the glows.
+ */
+export const drawPlazaDusk = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, w: number, h: number) => {
+  const f = plazaLayout(plaza)?.festival
+  if (!f?.torii || !f.bunting) return
+  const { fountain, bunting, torii } = f
+  const away = Math.hypot(camX + w / 2 - plaza.x, camY + h / 2 - plaza.y)
+  const step = Math.round(clamp((DUSK_FAR - away) / (DUSK_FAR - DUSK_NEAR), 0, 1) * DUSK_STEPS)
+  if (step === 0) return
+  ctx.globalCompositeOperation = 'multiply'
+  ctx.fillStyle = DUSK_FILLS[step]!
+  ctx.fillRect(0, 0, w, h)
+  if (detail.lean) return void (ctx.globalCompositeOperation = 'source-over')
+  ctx.globalCompositeOperation = 'lighter'
+  ctx.globalAlpha = step / DUSK_STEPS
+  const g = LANTERN_GLOWS()
+  const at = (sprite: HTMLCanvasElement, x: number, y: number) => blitCentered(ctx, sprite, Math.round(plaza.x + x - camX), Math.round(plaza.y + y - camY))
+  // The bunting hangs from the lamp posts: its tie tells where they stand.
+  const lampFeet = bunting.y + BUNTING_TIE
+  at(g.lamp, bunting.x, lampFeet - GLOW_RISE.lamp)
+  at(g.lamp, -bunting.x, lampFeet - GLOW_RISE.lamp)
+  at(g.fountain, fountain.x, fountain.y - GLOW_RISE.fountain)
+  at(g.torii, torii.x, torii.y - GLOW_RISE.torii)
+  ctx.globalAlpha = 1
+  ctx.globalCompositeOperation = 'source-over'
 }
 
 /** The visitors' pieces: Meowth's wagon and Meowth, a seasonal stall and its keeper, the golden statue. Their sheets load on first sight. */
@@ -748,7 +969,7 @@ const PARTY_TIME = 1.6
 /** The shop's level-up: puffs of dust rolling off the footprint's rim, then sparkles bursting over the new building, for `PARTY_TIME` seconds. */
 export const drawPlazaParty = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, time: number) => {
   const since = time - plaza.party
-  const layout = layoutOf(plaza.level, plaza.visitors)
+  const layout = plazaLayout(plaza)
   if (since < 0 || since >= PARTY_TIME || !layout) return
   const x = plaza.x - camX
   const y = plaza.y + layout.pad.y - camY

@@ -207,6 +207,17 @@ export const ellipse = memo3((rx: number, ry: number, color: string): PixelSprit
   return canvas
 }, SHAPE_BUDGET, canvasWeight)
 
+/** A soft round light in hard rings, brightest in the middle (pixel art: no gradients). */
+export const glow = (radius: number, color: string, alpha: number) => {
+  const canvas = createCanvas(radius * 2 + 1, radius * 2 + 1)
+  const ctx = context2d(canvas)
+  for (const [k, a] of [[1, 0.35], [0.7, 0.6], [0.42, 1]] as const) {
+    ctx.globalAlpha = alpha * a
+    ctx.drawImage(ellipse(Math.round(radius * k), Math.round(radius * k * 0.75), color), Math.round(radius - radius * k), Math.round(radius - radius * k * 0.75))
+  }
+  return canvas
+}
+
 /** Hard-edged ring (circle outline) of a given thickness. Cached and bounded, like `ellipse`. */
 export const ring = memo3((radius: number, thickness: number, color: string): PixelSprite => {
   const r = Math.round(radius)

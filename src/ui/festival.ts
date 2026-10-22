@@ -119,7 +119,8 @@ const potTrack = (f: Festival, pot: number) => {
   )
 }
 
-type Tab = 'fountain' | 'plaque'
+/** The sheet's tabs: the fountain (the pot and giving) and the donors' plaque. */
+export type FestivalTab = 'fountain' | 'plaque'
 
 const isTouch = (e: Event) => e instanceof PointerEvent && e.pointerType !== '' && e.pointerType !== 'mouse'
 
@@ -128,13 +129,14 @@ const DIRECTIONS: Readonly<Record<string, Direction>> = { ArrowUp: 'up', KeyW: '
 /**
  * Opens the festival's sheet over whatever is behind (the plaza, from the
  * lobby's card, the shop's Festival button, or the fountain). `close` runs
- * once it's left (◀, Esc or Backspace). Keyboard: arrows move, Q/E change
- * tab, Enter presses. A donation of `CONFIRM_FROM` or more asks first.
+ * once it's left (◀, Esc or Backspace). It opens on `start` (the plaque from
+ * the plaza's plaque, while the festival shows one). Keyboard: arrows move,
+ * Q/E change tab, Enter presses. A donation of `CONFIRM_FROM` or more asks first.
  */
-export const openFestival = (root: HTMLElement, input: Input, close: () => void): Screen => {
+export const openFestival = (root: HTMLElement, input: Input, close: () => void, start: FestivalTab = 'fountain'): Screen => {
   const m = t().festival
   let view = festivalView()
-  let tab: Tab = 'fountain'
+  let tab: FestivalTab = start
   /** The amount picked: a chip's (₽10k to start), or the custom field's (`custom`). */
   let chip: number | null = CHIPS[1]
   let custom = false
@@ -382,7 +384,7 @@ export const openFestival = (root: HTMLElement, input: Input, close: () => void)
     if (next) focus(next)
   }
 
-  const switchTab = (next: Tab) => {
+  const switchTab = (next: FestivalTab) => {
     if (next === tab || tabs[next].hidden) return
     tab = next
     said = null

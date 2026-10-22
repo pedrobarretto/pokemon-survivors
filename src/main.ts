@@ -36,6 +36,8 @@ import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, ty
 import { isLegend } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devFestival, festivalView, startFestival } from './festival'
+import type { PlazaStage } from './data/festivals'
+import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import { identify, startAnalytics, takeOpened, track, type ErrorContext } from './analytics'
 import { BAG_ITEMS, useArmed, type BagItem } from './game/bag'
@@ -121,7 +123,7 @@ import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from '.
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
 import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, steerPartner, stepTitleScene, talkSpot, tapsPlaza, visitPlaza } from './render/titleScene'
-import { KECLEON_DEX, type ShopLevel } from './render/plaza'
+import { KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
@@ -408,7 +410,22 @@ const shopPlaza: ShopPlaza = {
   lookAt: (keeper) => (scene.plaza.focus = keeper === 'purple' ? 1 : keeper === 'meowth' ? 'caravan' : keeper === 'stall' ? 'stall' : 0),
 }
 
-/** Who comes by the plaza (Meowth's caravan, a seasonal stall, the golden statue), worked out from the save about once a second. */
+/** Dev: the festival's plaza stage (`ps.festival('stage', n)`), shown with the plaque whatever the day. */
+let devPlazaStage: PlazaStage | null = null
+const isPlazaStage = (n: unknown): n is PlazaStage => n === 0 || n === 1 || n === 2 || n === 3
+
+/**
+ * The Festival da Praça on the plaza, from the pot the festival already
+ * fetched (`festivalView`; stage 0 while none is known): the fountain from the
+ * week before a festival (`festivalAnnounced`), the pot's stage and the plaque while it runs.
+ */
+const plazaFestival = (): PlazaFestival => {
+  if (devPlazaStage !== null) return { fountain: true, stage: devPlazaStage, plaque: true }
+  const view = festivalView()
+  return { fountain: festivalAnnounced(view.day) !== null, stage: view.running ? view.stage : 0, plaque: view.running }
+}
+
+/** Who comes by the plaza (Meowth's caravan, a seasonal stall, the golden statue) and the festival's fountain, worked out about once a second. */
 let visitorsAt = -1
 const refreshVisitors = (now: number) => {
   if (now - visitorsAt < 1000 && visitorsAt >= 0) return
@@ -416,6 +433,9 @@ const refreshVisitors = (now: number) => {
   const next = plazaVisitors(loadSave())
   const was = scene.plaza.visitors
   if (next.caravan !== was.caravan || next.stall !== was.stall || next.statue !== was.statue) scene.plaza.visitors = next
+  const fest = plazaFestival()
+  const had = scene.plaza.festival
+  if (fest.fountain !== had.fountain || fest.stage !== had.stage || fest.plaque !== had.plaque) scene.plaza.festival = fest
 }
 
 /** The shop over the plaza; `close` leaves it (and `?loja` behind); `shelf` opens on Meowth's caravan or a seasonal stall's shelf; `festival` swaps it for the festival's sheet. */
@@ -545,7 +565,11 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       pokedex: (focus) => pokedexScreen(ui, input, () => showTitle({ focus }), showPcBox),
       // Over the Kecleon plaza; closing it leaves `?loja` behind too.
       mart: openShop,
-      festival: (close) => openFestival(ui, input, close),
+      // The camera leans to the plaza's fountain while the sheet is open.
+      festival: (close, tab) => {
+        scene.plaza.focus = 'fountain'
+        return openFestival(ui, input, () => ((scene.plaza.focus = 0), close()), tab)
+      },
       // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
       trainer: (focus) =>
         trainerCardScreen(ui, input, { supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null) }, () => showTitle({ focus })),
@@ -3084,8 +3108,16 @@ if (import.meta.env.DEV) {
       // Sheets loaded and frame silhouettes cached right now (`render/sprites.ts`).
       sprites: () => ({ loaded: loadedCount(), overlays: overlayStats() }),
       coop: devCoop,
-      /** `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet. */
-      festival: (cmd?: Parameters<typeof devFestival>[0] | 'open', arg?: number | string | null) => {
+      /**
+       * `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet,
+       * and `('stage', n)`: the plaza shows stage 0 to 3 (the fountain and the plaque whatever the day; null goes back to the pot's).
+       */
+      festival: (cmd?: Parameters<typeof devFestival>[0] | 'open' | 'stage', arg?: number | string | null) => {
+        if (cmd === 'stage') {
+          devPlazaStage = isPlazaStage(arg) ? arg : null
+          visitorsAt = -1
+          return plazaFestival()
+        }
         if (cmd !== 'open') return devFestival(cmd, arg)
         showTitle({ shop: 'festival' })
         return festivalView()
