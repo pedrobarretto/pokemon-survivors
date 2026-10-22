@@ -161,6 +161,8 @@ export const EMOTIONS = {
   52: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
   355: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
   225: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
+  // Lanturn, the Festival da Praça's Lantern Market keeper (render/plaza.ts).
+  171: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
 }
 
 export const pad = (n) => String(n).padStart(4, '0')

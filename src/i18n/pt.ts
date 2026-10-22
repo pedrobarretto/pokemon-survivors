@@ -5019,6 +5019,8 @@ export const pt = {
       halloween: ['Buu... A Noite das Bruxas chegou à praça.', 'Os doces das partidas vão pro pote, lá no lobby. Aqui eu vendo outra coisa...'],
       christmas: ['Deli! A Delibird Presentes chegou à praça!', 'Ainda tô embrulhando tudo. Volta no Natal que o saco vai estar cheio!'],
     } satisfies Record<StallId, readonly string[]>,
+    /** Lanturn at the festival's Lantern Market (`render/plaza.ts`), before the festival's sheet opens. */
+    lanturn: ['Lan-turn! Cada moeda na fonte acende uma lanterna na praça. Vem ver o pote!'],
   },
 
   /** Explainer toast the first time each enemy trait shows up in a run. */

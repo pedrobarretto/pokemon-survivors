@@ -123,7 +123,7 @@ import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from '.
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
 import { celebrateShop, createTitleScene, drawTitleScene, exploreMeadow, meetPartner, revealShopkeeper, sceneAt, steerPartner, stepTitleScene, talkSpot, tapsPlaza, visitPlaza } from './render/titleScene'
-import { KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
+import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
@@ -411,19 +411,19 @@ const shopPlaza: ShopPlaza = {
   lookAt: (keeper) => (scene.plaza.focus = keeper === 'purple' ? 1 : keeper === 'meowth' ? 'caravan' : keeper === 'stall' ? 'stall' : 0),
 }
 
-/** Dev: the festival's plaza stage (`ps.festival('stage', n)`), shown with the plaque whatever the day. */
+/** Dev: the festival's plaza stage (`ps.festival('stage', n)`), shown as if the festival ran whatever the day. */
 let devPlazaStage: PlazaStage | null = null
-const isPlazaStage = (n: unknown): n is PlazaStage => n === 0 || n === 1 || n === 2 || n === 3
+const isPlazaStage = (n: unknown): n is PlazaStage => n === 0 || n === 1 || n === 2 || n === 3 || n === 4
 
 /**
  * The Festival da Praça on the plaza, from the pot the festival already
  * fetched (`festivalView`; stage 0 while none is known): the fountain from the
- * week before a festival (`festivalAnnounced`), the pot's stage and the plaque while it runs.
+ * week before a festival (`festivalAnnounced`), the plaque and the Lantern Festival by the pot's stage while it runs.
  */
 const plazaFestival = (): PlazaFestival => {
-  if (devPlazaStage !== null) return { fountain: true, stage: devPlazaStage, plaque: true }
+  if (devPlazaStage !== null) return { fountain: true, stage: devPlazaStage, running: true }
   const view = festivalView()
-  return { fountain: festivalAnnounced(view.day) !== null, stage: view.running ? view.stage : 0, plaque: view.running }
+  return { fountain: festivalAnnounced(view.day) !== null, stage: view.running ? view.stage : 0, running: view.running }
 }
 
 /** Who comes by the plaza (Meowth's caravan, a seasonal stall, the golden statue) and the festival's fountain, worked out about once a second. */
@@ -436,7 +436,7 @@ const refreshVisitors = (now: number) => {
   if (next.caravan !== was.caravan || next.stall !== was.stall || next.statue !== was.statue) scene.plaza.visitors = next
   const fest = plazaFestival()
   const had = scene.plaza.festival
-  if (fest.fountain !== had.fountain || fest.stage !== had.stage || fest.plaque !== had.plaque) scene.plaza.festival = fest
+  if (fest.fountain !== had.fountain || fest.stage !== had.stage || fest.running !== had.running) scene.plaza.festival = fest
 }
 
 /** The shop over the plaza; `close` leaves it (and `?loja` behind); `shelf` opens on Meowth's caravan or a seasonal stall's shelf; `festival` swaps it for the festival's sheet. */
@@ -927,6 +927,8 @@ const menuSprites = () => [
     // The plaza's visitors today: Meowth at his caravan, a seasonal stall's keeper.
     ...(scene.plaza.visitors.caravan ? [CARAVAN.dex] : []),
     ...(scene.plaza.visitors.stall ? [STALLS[scene.plaza.visitors.stall].dex] : []),
+    // The festival's: Lanturn at its market, Volbeat and Illumise at the tree.
+    ...festivalSprites(scene.plaza.festival),
     ...REGIONS.flatMap((r) => r.starters.map((id) => STARTERS[id].line[0].dex)),
     ...openingDex(upcoming),
   ]),
@@ -3111,7 +3113,7 @@ if (import.meta.env.DEV) {
       coop: devCoop,
       /**
        * `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet,
-       * and `('stage', n)`: the plaza shows stage 0 to 3 (the fountain and the plaque whatever the day; null goes back to the pot's).
+       * and `('stage', n)`: the plaza shows stage 0 to 4 as if the festival ran, whatever the day (null goes back to the pot's).
        */
       festival: (cmd?: Parameters<typeof devFestival>[0] | 'open' | 'stage', arg?: number | string | null) => {
         if (cmd === 'stage') {

@@ -4774,6 +4774,7 @@ export const en: Messages = {
       halloween: ['Boo... Halloween Night has come to the plaza.', 'The candies from your runs go in the jar, back in the lobby. Here I sell something else...'],
       christmas: ['Deli! Delibird Presents has come to the plaza!', "I'm still wrapping everything. Come back at Christmas, the sack will be full!"],
     },
+    lanturn: ['Lan-turn! Every coin in the fountain lights a lantern on the plaza. Come see the pot!'],
 
   },
   traits: {

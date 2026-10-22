@@ -15,6 +15,7 @@ import {
   drawPlazaDusk,
   drawPlazaGround,
   drawPlazaMarker,
+  drawPlazaOverhead,
   drawPlazaParty,
   greetKeepers,
   KECLEON_DEX,
@@ -740,8 +741,9 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
     if (wd.shiny) drawSparkles(ctx, x, y - sprite.bodyH / 2, Math.max(sprite.bodyW, sprite.bodyH), s.time - wd.bornAt, wd.id)
   }
   flush(Infinity)
+  drawPlazaOverhead(ctx, s.plaza, camX, camY)
   drawPlazaParty(ctx, s.plaza, camX, camY, s.time)
-  drawPlazaDusk(ctx, s.plaza, camX, camY, w, h)
+  drawPlazaDusk(ctx, s.plaza, camX, camY, w, h, s.time)
   if (s.haunted) drawMeadowNight(ctx, camX, camY, w, h, s.time)
   // Emotes over everyone's heads, bobbing a pixel.
   const bubbles = EMOTES()
