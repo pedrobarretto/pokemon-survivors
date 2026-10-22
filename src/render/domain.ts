@@ -197,7 +197,11 @@ const FRAME_BUDGET = 2
 type Baked = { canvas: HTMLCanvasElement; x: number; y: number; sky?: HTMLCanvasElement }
 /** Baked transforms; dropped with every other canvas on a GPU reset. */
 let transforms = new WeakMap<ArenaTransform, Baked>()
-onCanvasReset(() => (transforms = new WeakMap()))
+onCanvasReset(
+  () => (transforms = new WeakMap()),
+  // Keyed by the domains' own data, so a domain's baked transforms stay once it's been fought in.
+  () => [...painters.values()].flatMap((p) => p.domain.phases.flatMap((phase) => (phase.arena ?? []).map((t) => transforms.get(t)))),
+)
 
 /** Bakes what a transform turns the arena into: flood water around its islands, lava around its cool spots, or the holes it crumbles. */
 const bakeTransform = (p: Painter, t: ArenaTransform): Baked => {
@@ -505,7 +509,10 @@ const drawSeal = (ctx: Ctx, p: Painter, ox: number, oy: number) => {
 /** A transform's look: hidden, blinking through its warning, or there. */
 /** A canvas reused to cut the sky to a crumbled hole's shape. */
 let scratch: HTMLCanvasElement | null = null
-onCanvasReset(() => (scratch = null))
+onCanvasReset(
+  () => (scratch = null),
+  () => scratch,
+)
 
 /** The open sky seen through a crumbled hole: the sky drawn on a scratch canvas, kept only inside the hole's mask. */
 const drawSkyThrough = (ctx: Ctx, mask: HTMLCanvasElement, sx: number, sy: number, camX: number, camY: number, t: number) => {

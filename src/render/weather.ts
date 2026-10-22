@@ -89,7 +89,10 @@ const sand = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: num
 /** Stepped light shafts from the top-left, built once per view size. */
 const sunRays = (() => {
   let cache: PixelSprite | null = null
-  onCanvasReset(() => (cache = null))
+  onCanvasReset(
+    () => (cache = null),
+    () => cache,
+  )
   return (w: number, h: number) => {
     if (cache && cache.width === w && cache.height === h) return cache
     const c = createCanvas(w, h)
@@ -135,7 +138,10 @@ const FOG_LEVELS = 4
  */
 const fogVeil = (() => {
   let cache: { w: number; h: number; sight: number; canvas: PixelSprite } | null = null
-  onCanvasReset(() => (cache = null))
+  onCanvasReset(
+    () => (cache = null),
+    () => cache,
+  )
   const ready = (w: number, h: number, sight: number) => cache !== null && cache.w === w && cache.h === h && cache.sight === sight
   const veil = (w: number, h: number, sight: number) => {
     if (cache && ready(w, h, sight)) return cache.canvas

@@ -195,7 +195,10 @@ type Sheet = SpeciesSprites['anims']['Idle']
 const purpleSheet = (sheet: Sheet): Sheet => ({ ...sheet, img: purpleize(sheet.img), overlays: null })
 
 let brother: { from: SpeciesSprites; to: SpeciesSprites } | null = null
-onCanvasReset(() => (brother = null))
+onCanvasReset(
+  () => (brother = null),
+  () => brother?.to,
+)
 
 /** The purple brother's sprites, recolored once from the green Kecleon's. */
 const brotherSprites = (green: SpeciesSprites) => {
@@ -635,7 +638,10 @@ const TUFT = [rgb('#6aa850'), rgb('#7cc060')] as const
  */
 const cobbles = (() => {
   const cache = new Map<string, HTMLCanvasElement>()
-  onCanvasReset(() => cache.clear())
+  onCanvasReset(
+    () => cache.clear(),
+    () => cache,
+  )
   return (rx: number, ry: number) => {
     const key = `${rx}x${ry}`
     const hit = cache.get(key)
@@ -704,7 +710,10 @@ const SQUASH = 0.28
 /** A piece's silhouette shadow: its painted rows squashed to `SQUASH` of their height and tinted `SHADOW`. Cached per art. */
 const silhouette = (() => {
   const cache = new Map<Art, HTMLCanvasElement>()
-  onCanvasReset(() => cache.clear())
+  onCanvasReset(
+    () => cache.clear(),
+    () => cache,
+  )
   return (art: Art) => {
     const hit = cache.get(art)
     if (hit) return hit
@@ -787,7 +796,10 @@ const goldize = (src: CanvasImageSource & { width: number; height: number }) => 
 }
 
 let golden: { from: SpeciesSprites; to: SpeciesSprites } | null = null
-onCanvasReset(() => (golden = null))
+onCanvasReset(
+  () => (golden = null),
+  () => golden?.to,
+)
 
 /** The golden Kecleon's sprites, cast once from the green one's. */
 const goldenSprites = (green: SpeciesSprites) => {

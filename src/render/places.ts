@@ -180,7 +180,10 @@ const bakeGraveyard = (floor: readonly ArenaShape[], graves: readonly Pt[], keys
 
 /** The floor of the place the player is in, baked once per floor (a dungeon's next floor is a new layout). */
 let baked: { layout: FloorPlan; floor: Baked; fence: Baked | null } | null = null
-onCanvasReset(() => (baked = null))
+onCanvasReset(
+  () => (baked = null),
+  () => [baked?.floor, baked?.fence],
+)
 
 /** Frees the last place's baked floor (a few MB) once the player is back outside (`warmScenery`). */
 export const dropPlaceFloor = () => {
@@ -230,7 +233,10 @@ const cloud = (seed: number, size: number): PixelSprite => {
 }
 
 let gradient: { w: number; h: number; canvas: HTMLCanvasElement } | null = null
-onCanvasReset(() => (gradient = null))
+onCanvasReset(
+  () => (gradient = null),
+  () => gradient,
+)
 
 /** The sky behind the clouds: deep blue on top to pale at the bottom, in bands dithered into each other. */
 const skyGradient = (w: number, h: number) => {
