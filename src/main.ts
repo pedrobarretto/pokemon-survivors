@@ -114,6 +114,7 @@ import type { Game, GameEvent, Offer, Phase, Player } from './game/types'
 import { setWeather } from './game/weather'
 import { render, warmScenery } from './render/draw'
 import { createGovernor, detail, observeFrame } from './render/quality'
+import { loadSafeMode, noteCleanRun, noteCrash, safeModeOn, setSafeMode, takeSafeNotice, type SafeChoice } from './safeMode'
 import { drawJoystick } from './render/joystick'
 import { cryUrl, loadAll, loadedCount, loadSpecies, overlayStats, portraitUrl, preloadForms, preloadShinies, sprites, streamSpecies, sweepSprites, type Dex } from './render/sprites'
 import { castNeeds, runSprites, type SpriteNeed } from './render/spriteNeeds'
@@ -812,8 +813,11 @@ const reportRun = (r: Run, faint: Extract<GameEvent, { kind: 'gameover' }> | nul
     ...(g.halloween ? { candies: g.candies } : {}),
     rerolls,
     opened: takeOpened(),
+    safeMode: detail.safe,
   }, { beacon: left })
   rerolls = 0
+  // The page dying would have left the run unreported: a long run that got here counts toward safe mode turning off.
+  if (outcome !== 'left') noteCleanRun(g.time / 60)
 }
 
 /** How the device coped with the run: canvas memory at its peak and the frames while playing. */
@@ -988,8 +992,8 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
   if (!c) upcoming = planRun(undefined, undefined, undefined, legend)
   // The whole family, branches included: the evolution scene can land on any of them.
   await loadAll([...familyDex(starter), ...openingDex(plan)])
-  // The outbreak's shiny can show up in the first minute.
-  void preloadShinies([ENEMIES[plan.outbreak].dex])
+  // The outbreak's shiny can show up in the first minute (in safe mode it loads when one does).
+  if (!detail.safe) void preloadShinies([ENEMIES[plan.outbreak].dex])
   // Armed bag items are used up as the run starts, as many as the shop's level lets a run take (the challenge leaves them in the Bag).
   // Honey stays in the Bag for a run without an outbreak (a legend's).
   const before = loadSave()
@@ -1023,8 +1027,8 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
   if (me.luckyShiny) updateSave((s) => ({ ...s, shinyStarters: unlockShinyStarter(s.shinyStarters, starter) }))
   // A shiny run must not start in normal colors.
   if (me.shiny) await preloadShinies(familyDex(starter))
-  // Alternate forms (Aegislash's Blade Forme) stream in behind; until then the normal form stands in.
-  void preloadForms(familyDex(starter), me.shiny)
+  // Alternate forms (Aegislash's Blade Forme, the Megas) stream in behind; until then the normal form stands in. Safe mode loads one when it shows.
+  if (!detail.safe) void preloadForms(familyDex(starter), me.shiny)
   loading.remove()
   run = {
     game,
@@ -1064,8 +1068,9 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
   announceRun(start, run.challenge)
 }
 
-/** The run's first toasts: the challenge it plays, the day's outbreak, then each bag item it used and each TM it armed. */
+/** The run's first toasts: safe mode coming on after a crash, the challenge it plays, the day's outbreak, then each bag item it used and each TM it armed. */
 const announceRun = (start: ReplayStart, challenge: Run['challenge']) => {
+  if (takeSafeNotice()) toast(ui, h('span', { class: 'item-toast' }, h('span', {}, rich(t().toast.safeMode), h('small', {}, t().toast.safeModeHint))), 5200, 'safeMode')
   if (challenge) {
     const m = t().challenge
     toast(ui, h('span', { class: 'item-toast' }, h('img', { src: ribbonIcon('gold'), alt: '' }), h('span', {}, rich(m.started(formatDay(challenge.day))), h('small', {}, challenge.official ? m.startedOfficial : m.startedPractice))), 4200, 'challenge')
@@ -1645,7 +1650,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       // A domain's legendary shows itself later, in its own forms: have them ready.
       if (lines) {
         const partner = partnerOf(e.enemy)
-        void preloadForms(partner ? [def.dex, ENEMIES[partner].dex] : [def.dex], e.shiny)
+        if (!detail.safe) void preloadForms(partner ? [def.dex, ENEMIES[partner].dex] : [def.dex], e.shiny)
         toast(ui, rich(lines.crossing), 3600)
         return banner(ui, rich(t().rifts.enterDomain(lines.place)))
       }
@@ -2441,9 +2446,10 @@ let last = performance.now()
 const pace = pacer()
 /** Watches how the run's frames hold up and turns lean drawing on and off (`render/quality.ts`). */
 const governor = createGovernor((navigator as Navigator & { deviceMemory?: number }).deviceMemory)
-detail.lean = governor.lean
 /** `ps.quality()` pins the governor's choice for screenshots and tests. */
 let qualityPin: 'auto' | 'lean' | 'full' = 'auto'
+/** Lean drawing as the governor says, always in safe mode (`safeMode.ts`), unless `ps.quality` pins it. */
+const drawsLean = () => (qualityPin === 'auto' ? governor.lean || detail.safe : qualityPin === 'lean')
 /** When the last frame that advanced the run was drawn (NaN after one that didn't). */
 let lastDrawn = NaN
 /** Seconds of menu time not drawn yet: the menus' meadow and screens draw at most about 60 times a second. */
@@ -2458,6 +2464,7 @@ const frame = (now: number) => {
   requestAnimationFrame(frame)
   const started = performance.now()
   recordFrame(frames, now - last, run?.game.phase === 'playing')
+  detail.lean = drawsLean()
   const dt = Math.min(0.1, (now - last) / 1000)
   // Co-op's stick and lockstep keep pace with the relay's clock through a long frame (a level-up screen, a GC);
   // the 0.1 s cap is for drawing and solo's steps.
@@ -2523,8 +2530,7 @@ const frame = (now: number) => {
       }
       // Only frames that moved the run tell how the device keeps up.
       if (steps > 0) {
-        const lean = observeFrame(governor, performance.now() - started, now - lastDrawn)
-        detail.lean = qualityPin === 'auto' ? lean : qualityPin === 'lean'
+        observeFrame(governor, performance.now() - started, now - lastDrawn)
         lastDrawn = now
       } else lastDrawn = NaN
     }
@@ -2668,7 +2674,7 @@ const watchDeploys = () => {
 }
 
 /** Counts a run the page died in, once, whether or not the player reports it: rare enough for an event of its own. */
-const reportCrash = (c: BugCrash) =>
+const reportCrash = (c: BugCrash, safeMode: boolean) =>
   track('run_crash', {
     version: c.version,
     sameVersion: c.version === __GAME_VERSION__,
@@ -2688,17 +2694,23 @@ const reportCrash = (c: BugCrash) =>
     frameMs: c.perf?.frameMs ?? null,
     deviceMemory: deviceMemory(),
     error: c.error?.message ?? null,
+    safeMode,
   })
 
 /** The game closed mid-run last time (`takeCrash`): the title asks, once, whether to report it. */
 const askAboutCrash = () => {
   const crash = takeCrash()
-  if (crash) reportCrash(crash)
+  // Whether safe mode was on for the run that died, then on from here (`safeMode.ts`).
+  if (crash) {
+    reportCrash(crash, safeModeOn())
+    noteCrash()
+  }
   if (!crash || !bugReportsEnabled || !screen?.el.classList.contains('title-home')) return
   crashPrompt(screen.el, () => setScreen(bugReportForm(ui, input, () => showTitle(), crash)))
 }
 
 const boot = () => {
+  loadSafeMode()
   startAnalytics(errorContext)
   watchDeploys()
   // Events and errors tie to the account on this device, known from its link before Clerk loads.
@@ -3129,8 +3141,13 @@ if (import.meta.env.DEV) {
       /** `ps.quality('lean')` pins lean drawing (`'full'` full detail, `'auto'` back to the governor); returns the governor's state. */
       quality: (pin?: 'auto' | 'lean' | 'full') => {
         if (pin) qualityPin = pin
-        detail.lean = qualityPin === 'auto' ? governor.lean : qualityPin === 'lean'
-        return { pin: qualityPin, drawing: detail.lean ? 'lean' : 'full', governor: { ...governor } }
+        detail.lean = drawsLean()
+        return { pin: qualityPin, drawing: detail.lean ? 'lean' : 'full', safe: detail.safe, governor: { ...governor } }
+      },
+      /** `ps.safeMode(true)` turns safe mode on as Ajustes would (`false` off, `'auto'` back to the crashes); returns its stored state. */
+      safeMode: (choice?: boolean | SafeChoice) => {
+        if (choice !== undefined) setSafeMode(choice === true ? 'on' : choice === false ? 'off' : choice)
+        return { on: safeModeOn(), ...loadSafeMode() }
       },
       spawn: devSpawn,
       alpha: devAlpha,

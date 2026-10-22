@@ -4,6 +4,7 @@ import type { LegendForm } from '../data/legends'
 import manifest from '../data/sprites.generated.json'
 import { createCanvas, context2d, fromStrings, onCanvasReset } from '../engine/pixelart'
 import type { Dir8 } from '../engine/math'
+import { detail } from './quality'
 
 /**
  * Loader/renderer for PMD SpriteCollab sheets. Each sheet has 8 rows (one per
@@ -141,6 +142,8 @@ const SHELF_SLACK = 6
  * at 12 the redoing showed (about 1.5 ms a frame on a 4× slowed CPU).
  */
 export const OVERLAY_PAGES = 16
+/** Pages kept at most in safe mode (`detail.safe`): half the memory, for some silhouettes redone on a crowded screen. */
+const SAFE_OVERLAY_PAGES = 8
 
 /** Sweeps (`sweepSprites`) a silhouette stays undrawn before it's dropped; a page left empty is freed. */
 const OVERLAY_IDLE = 10
@@ -223,7 +226,7 @@ const spot = (w: number, h: number): { shelf: Shelf; x: number } | null => {
     }
   }
   let page = pages.find((p) => p.top + h <= PAGE)
-  if (!page && pages.length < OVERLAY_PAGES) {
+  if (!page && pages.length < (detail.safe ? SAFE_OVERLAY_PAGES : OVERLAY_PAGES)) {
     const canvas = createCanvas(PAGE, PAGE)
     page = { canvas, ctx: context2d(canvas), shelves: [], top: 0, count: 0 }
     pages.push(page)

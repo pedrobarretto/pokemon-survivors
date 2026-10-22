@@ -33,8 +33,19 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       { pt: 'Ovo do Kecleon sem o limite de um por dia: até 6, e cada um custa o dobro do anterior (₽ 10.000, 20.000, 40.000…). A conta zera à meia-noite.', en: 'The Kecleon Egg is no longer one a day: up to 6, each costing double the last (₽ 10,000, 20,000, 40,000…). The count resets at midnight.', es: 'El Huevo Kecleon ya no es uno por día: hasta 6, y cada uno cuesta el doble del anterior (₽ 10.000, 20.000, 40.000…). La cuenta vuelve a cero a medianoche.' },
       { pt: 'Incubadora maior: a 4ª e a 5ª vaga, suas para sempre, e a Incubadora Rápida, que faz um ovo andar o dobro.', en: 'A bigger incubator: the 4th and 5th slots, yours for good, and the Quick Incubator, which makes an egg walk twice as fast.', es: 'Una incubadora más grande: el 4.º y el 5.º espacio, tuyos para siempre, y la Incubadora Rápida, que hace que un huevo avance el doble.' },
       { pt: 'As partidas pagam cerca de metade do ₽, agora que a loja tem onde gastar. O que você já guardou continua valendo o mesmo.', en: 'Runs pay about half the ₽, now that the shop has somewhere to spend it. What you already saved keeps its full value.', es: 'Las partidas pagan cerca de la mitad de los ₽, ahora que la tienda tiene en qué gastarlos. Lo que ya ahorraste sigue valiendo lo mismo.' },
+      { pt: 'Modo leve: se o jogo fechar sozinho no meio de uma partida, o celular passa a desenhar com menos efeitos para não fechar de novo.', en: 'Lite mode: if the game closes by itself mid-run, your phone switches to drawing fewer effects so it doesn\'t close again.', es: 'Modo ligero: si el juego se cierra solo en medio de una partida, el celular pasa a dibujar con menos efectos para no cerrarse otra vez.' },
     ],
     changes: [
+      {
+        title: { pt: 'Modo leve', en: 'Lite mode', es: 'Modo ligero' },
+        notes: [
+          {
+            pt: 'Se o jogo fechar sozinho no meio de uma partida, o Modo leve liga nesse aparelho: menos partículas, chuva e neve mais ralas, menos sombras e menos memória, para o celular não fechar o jogo de novo. Ele desliga sozinho depois de 3 partidas longas seguidas sem fechar, e dá para ligar ou desligar em Ajustes → Jogo.',
+            en: 'If the game closes by itself mid-run, Lite mode turns on for that device: fewer particles, lighter rain and snow, fewer shadows and less memory, so the phone doesn\'t close the game again. It turns itself off after 3 long runs in a row without a close, and you can switch it on or off in Settings → Game.',
+            es: 'Si el juego se cierra solo en medio de una partida, el Modo ligero se activa en ese dispositivo: menos partículas, lluvia y nieve más ralas, menos sombras y menos memoria, para que el celular no vuelva a cerrar el juego. Se apaga solo después de 3 partidas largas seguidas sin cierres, y puedes activarlo o desactivarlo en Ajustes → Juego.',
+          },
+        ],
+      },
       {
         title: { pt: 'Passear pela praça no celular', en: 'Walk around the plaza on your phone', es: 'Pasear por la plaza en el celular' },
         notes: [

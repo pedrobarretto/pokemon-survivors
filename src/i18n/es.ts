@@ -355,6 +355,7 @@ export const es: Messages = {
     flashModes: { normal: 'Normales', reduced: 'Reducidos' },
     uiScale: 'Tamaño de la interfaz',
     uiScaleAuto: 'Auto',
+    safeMode: 'Modo ligero',
     joystick: 'Joystick',
     joystickModes: { floating: 'Sigue el dedo', fixed: 'Fijo' },
     on: 'ON',
@@ -1338,6 +1339,8 @@ export const es: Messages = {
     maxRevive: '¡El *Max Revive* te levantó con la mitad de los PS!',
     stolen: '¡Robaste el objeto que llevaba!',
     armedTm: (name, order) => `MT preparada: *${name}*. ¡La ${order === 0 ? 'primera' : 'segunda'} MT de la partida es esta!`,
+    safeMode: '*Modo ligero* activado para evitar cierres.',
+    safeModeHint: 'Menos efectos en pantalla. Puedes cambiarlo en Ajustes.',
   },
 
   mega: {

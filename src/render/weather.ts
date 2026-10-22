@@ -6,6 +6,7 @@ import type { Game } from '../game/types'
 import { art, lazy, toIconUrl } from './art'
 import { roomOf } from '../game/room'
 import { localPlayer } from '../game/players'
+import { detail } from './quality'
 
 /**
  * Weather overlays, drawn in screen space over the world. Every particle is a
@@ -22,7 +23,8 @@ const AREA = 480 * 270
 
 const mod = (a: number, n: number) => ((a % n) + n) % n
 
-const count = (w: number, h: number, base: number) => Math.round((base * w * h) / AREA)
+/** Particles for a view; drawing lean (`render/quality.ts`), a quarter of them. */
+const count = (w: number, h: number, base: number) => Math.round((base * w * h * (detail.lean ? 0.25 : 1)) / AREA)
 
 const DROP = lazy(() => fromStrings(['..1', '.1.', '.1.', '1..'], { 1: '#c8dcff' }))
 const SPLASH = lazy(() => [fromStrings(['1.1'], { 1: '#c8dcff' }), fromStrings(['1...1', '.....'], { 1: '#a8c0f0' })])

@@ -355,6 +355,7 @@ export const en: Messages = {
     flashModes: { normal: 'Normal', reduced: 'Reduced' },
     uiScale: 'UI size',
     uiScaleAuto: 'Auto',
+    safeMode: 'Lite mode',
     joystick: 'Joystick',
     joystickModes: { floating: 'Follows finger', fixed: 'Fixed' },
     on: 'ON',
@@ -1337,6 +1338,8 @@ export const en: Messages = {
     maxRevive: 'Your *Max Revive* got you back up with half your HP!',
     stolen: 'You stole the item it was holding!',
     armedTm: (name, order) => `TM armed: *${name}*. The run's ${order === 0 ? 'first' : 'second'} TM is this one!`,
+    safeMode: '*Lite mode* is on to keep the game from closing.',
+    safeModeHint: 'Fewer effects on screen. You can change it in Settings.',
   },
 
   mega: {

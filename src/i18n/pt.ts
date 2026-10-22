@@ -474,6 +474,8 @@ export const pt = {
     flashModes: { normal: 'Normais', reduced: 'Reduzidos' },
     uiScale: 'Tamanho da interface',
     uiScaleAuto: 'Auto',
+    /** Safe mode (`safeMode.ts`): lean drawing, on by itself after the game closed mid-run. */
+    safeMode: 'Modo leve',
     joystick: 'Joystick',
     joystickModes: { floating: 'Segue o dedo', fixed: 'Fixo' },
     on: 'ON',
@@ -1526,6 +1528,9 @@ export const pt = {
     maxRevive: 'O *Max Revive* te pôs de pé com metade do HP!',
     stolen: 'Você roubou o item que ele segurava!',
     armedTm: (name: string, order: number) => `TM armada: *${name}*. A ${order === 0 ? 'primeira' : 'segunda'} TM da partida é ela!`,
+    /** Once, as the run after a crash starts (`safeMode.ts`). */
+    safeMode: '*Modo leve* ativado para evitar fechamentos.',
+    safeModeHint: 'Menos efeitos na tela. Dá para mudar em Ajustes.',
   },
 
   /** Mega Evolution: the button, its toasts, the partner details and what each Mega form does. */
