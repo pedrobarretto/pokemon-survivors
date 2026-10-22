@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addSample, createNetStats, hist, netSummary, noteArrival, noteDraw, noteFrame, quantile } from './netStats'
+import { addSample, createNetStats, hist, netSummary, noteArrival, noteDraw, noteFrame, noteHidden, quantile } from './netStats'
 
 const TICK_MS = 1000 / 60
 const WHERE = { relayColo: 'MIA', relayRegion: 'enam', edgeColo: 'GRU', edgeRtt: 14 }
@@ -52,5 +52,30 @@ describe('net stats', () => {
     expect(s.holdMean).toBeCloseTo(4.5, 0)
     expect(s.holdChangesPerMin).toBe(1)
     expect(s.shakeSecPerMin).toBe(0.5)
+  })
+
+  it('leaves the page hidden, and the catch-up after it, out of stalls, jitter, hold and catch-up, summed apart', () => {
+    const n = createNetStats(1, 0)
+    let now = 0
+    const frame = (catchingUp: boolean, hold = 3) => {
+      now += TICK_MS
+      noteFrame(n, now, { hold, paused: false, catchingUp })
+      noteArrival(n, Math.round(now / TICK_MS), 80 + now, false)
+    }
+    for (let i = 0; i < 1800; i++) frame(false)
+    noteHidden(n, true, now)
+    // 30 s hidden: the socket still delivers, throttled (a burst a second, every one late), and no display frames.
+    for (let s = 1; s <= 30; s++) for (let k = 0; k < 60; k++) noteArrival(n, Math.round((now + s * 1000) / TICK_MS) - k, 80 + now + s * 1000 + 400, false)
+    now += 30_000
+    noteHidden(n, false, now)
+    // Back: two seconds simulating what it missed at a high hold, then the run as before.
+    for (let i = 0; i < 120; i++) frame(true, 10)
+    for (let i = 0; i < 1800; i++) frame(false)
+    const s = netSummary(n, now, RUNNER, WHERE)
+    expect(s).toMatchObject({ hiddenSec: 30, wallSec: 92, catchUpSec: 0, holdMax: 3, stalls: 0, stallsPerMin: 0 })
+    expect(quantile(n.jitter, 0.98)).toBeLessThan(2)
+    // Hidden now: the time so far counts too (the partial report sent as the page hides).
+    noteHidden(n, true, now)
+    expect(netSummary(n, now + 5000, RUNNER, WHERE).hiddenSec).toBe(35)
   })
 })

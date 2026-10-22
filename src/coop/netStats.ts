@@ -7,6 +7,11 @@ import { TICK_HZ } from '../net/protocol'
  * notes the wire (frames, pongs, reconnects, `client.ts`), its own display
  * frames and the lockstep's pace; the shell notes what it draws (render time,
  * prediction errors, shake). Pure: the callers pass the clock.
+ *
+ * Time with the page hidden (`noteHidden`) is the player's, not the link's:
+ * it counts toward none of the stalls, jitter, hold or catch-up, and neither
+ * does the catch-up right after it (the run simulated while away). It is
+ * summed apart (`hiddenSec`), and the rates are per minute of visible time.
  */
 
 /** A linear histogram: `counts[i]` holds samples in `[i, i + 1) * step`, the last bucket everything past it. */
@@ -81,9 +86,13 @@ export type NetStats = {
   reconnects: Record<ReconnectReason, number>
   /** When the last `net` report went to the relay (ms). */
   reportedAt: number
+  /** Seconds the page spent hidden, since when it is hidden now (ms, or null), and whether it is still catching up from it. */
+  hiddenSec: number
+  hiddenAt: number | null
+  recovering: boolean
 }
 
-export const createNetStats = (run = 0, now = 0): NetStats => ({
+export const createNetStats = (run = 0, now = 0, hidden = false): NetStats => ({
   run,
   startedAt: now,
   rtt: hist(2, 500),
@@ -106,6 +115,9 @@ export const createNetStats = (run = 0, now = 0): NetStats => ({
   catchUpSec: 0,
   reconnects: { drop: 0, hello: 0, dead: 0, uplink: 0, gap: 0, jump: 0, snapshot: 0, rejoin: 0, manual: 0 },
   reportedAt: now,
+  hiddenSec: 0,
+  hiddenAt: hidden ? now : null,
+  recovering: false,
 })
 
 /** Forgets where frames used to land (a sync: the run's clock may have paused, which shifts every arrival). */
@@ -117,11 +129,33 @@ export const resetArrivalLine = (n: NetStats) => {
 }
 
 /**
+ * The page went hidden (`true`) or came back at `now` (ms). Back, the arrival
+ * line starts over, and until the run caught up the frames aren't counted.
+ */
+export const noteHidden = (n: NetStats, hidden: boolean, now: number) => {
+  if (hidden) {
+    n.hiddenAt ??= now
+    return
+  }
+  if (n.hiddenAt === null) return
+  n.hiddenSec += Math.max(0, now - n.hiddenAt) / 1000
+  n.hiddenAt = null
+  n.recovering = true
+  n.lastFrameAt = -Infinity
+  resetArrivalLine(n)
+}
+
+/** Seconds hidden by `now`, the time hidden right now included. */
+const hiddenBy = (n: NetStats, now: number) => n.hiddenSec + (n.hiddenAt === null ? 0 : Math.max(0, now - n.hiddenAt) / 1000)
+
+/**
  * A live frame whose last tick is `tick` arrived at `at` (ms). Its delay is
  * how much later than the earliest arrival (on the run's clock) of this
  * window and the last one it came: the jitter, drift-proof over a long run.
  */
 export const noteArrival = (n: NetStats, tick: number, at: number, inputs: boolean) => {
+  // Hidden (the socket still delivers, throttled) or catching up from it: the page's, not the link's.
+  if (n.hiddenAt !== null || n.recovering) return
   const a = n.arrivals
   const gap = at - a.last
   if (gap > GAP_MS) resetArrivalLine(n)
@@ -143,6 +177,10 @@ export const noteArrival = (n: NetStats, tick: number, at: number, inputs: boole
 export const noteFrame = (n: NetStats, now: number, s: { hold: number; paused: boolean; catchingUp: boolean }) => {
   const ms = now - n.lastFrameAt
   n.lastFrameAt = now
+  if (n.hiddenAt !== null) return
+  // Back from hidden: the catch-up is the time away's, and the first frame that isn't one ends it.
+  if (n.recovering && s.catchingUp) return
+  n.recovering = false
   if (!(ms > 0) || ms >= GAP_MS) return
   addSample(n.display, ms)
   if (ms > 50) n.long50++
@@ -179,15 +217,17 @@ export type RunnerNet = { underruns: number; heals: number; syncs: number }
 
 /**
  * One run's numbers, flat (PostHog and Umami take them as they are): rates
- * per minute of wall time, times in ms to a tenth.
+ * per minute of visible wall time (`wallSec` less `hiddenSec`), times in ms to a tenth.
  */
 export const netSummary = (n: NetStats, now: number, runner: RunnerNet, where: NetWhere) => {
   const wallSec = Math.max(0, (now - n.startedAt) / 1000)
-  const perMin = (v: number) => tenths(v / Math.max(1 / 60, wallSec / 60))
+  const hiddenSec = Math.min(wallSec, hiddenBy(n, now))
+  const perMin = (v: number) => tenths(v / Math.max(1 / 60, (wallSec - hiddenSec) / 60))
   const median = quantile(n.display, 0.5)
   const rc = n.reconnects
   return {
     wallSec: Math.round(wallSec),
+    hiddenSec: Math.round(hiddenSec),
     pauseSec: Math.round(n.pauseSec),
     catchUpSec: tenths(n.catchUpSec),
     ...where,
