@@ -11,7 +11,7 @@ export { Vault } from './vault'
  * The relay's Worker: creates rooms, routes each room's sockets to its Durable
  * Object (`idFromName(code)`), and serves `/health` and the admin dumps.
  *
- * - `POST /rooms` `{ v, build, region? }` → `{ code, region }`
+ * - `POST /rooms` `{ v, build, region? }` → `{ code, region, claim }`
  * - `GET /rooms/<code>/ws` → WebSocket (first message: `hello`)
  * - `GET /health`
  * - `GET /admin/dumps`, `GET /admin/dumps/<id>` (gzipped JSON), `Authorization: Bearer <ADMIN_TOKEN>`
@@ -65,7 +65,8 @@ const createRoom = async (request: Request<unknown, IncomingRequestCfProperties>
     // Cloudflare's codes start with a letter: a digit names a VPS relay (`RELAY_HOMES`).
     const code = randomCode('cf')
     const stub = env.ROOMS.get(env.ROOMS.idFromName(code), hint ? { locationHint: hint } : undefined)
-    if (await stub.create({ code, build, region })) return reply({ code, region })
+    const claim = await stub.create({ code, build, region })
+    if (claim !== null) return reply({ code, region, claim })
   }
   return reply({ error: 'busy' }, 503)
 }

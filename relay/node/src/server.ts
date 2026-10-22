@@ -15,7 +15,7 @@ import { createRooms, type Log } from './rooms'
 /**
  * A VPS relay's HTTP server, the Worker's routes (`index.ts`) on Node:
  *
- * - `POST /rooms` `{ v, build, region? }` → `{ code, region }` (codes of this relay's home, `RELAY_HOMES`)
+ * - `POST /rooms` `{ v, build, region? }` → `{ code, region, claim }` (codes of this relay's home, `RELAY_HOMES`)
  * - `GET /rooms/<code>/ws` → WebSocket (first message: `hello`)
  * - `GET /health` → `{ ok, protocol, home, version }`
  * - `GET /admin/dumps`, `GET /admin/dumps/<id>` (gzipped JSON), `Authorization: Bearer <ADMIN_TOKEN>`
@@ -109,8 +109,8 @@ export const startRelay = async (config: Config, log: Log = jsonLog) => {
       const text = await readBody(req)
       const body = text === null ? ({ error: 'invalid', status: 400 } as const) : parseCreate(text)
       if ('error' in body) return reply({ error: body.error }, body.status)
-      const code = rooms.create(body.build)
-      return code ? reply({ code, region: REGION_OF[config.home] }) : reply({ error: 'busy' }, 503)
+      const made = rooms.create(body.build)
+      return made ? reply({ ...made, region: REGION_OF[config.home] }) : reply({ error: 'busy' }, 503)
     }
     if (/^\/rooms\/[^/]+\/ws$/.test(path)) return json(res, { error: 'Expected a WebSocket' }, 426, headers)
     if (path.startsWith('/admin/dumps') && req.method === 'GET') {

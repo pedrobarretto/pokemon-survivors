@@ -11,6 +11,7 @@ import {
   type Phase,
   type Refusal,
   type RoomView,
+  type Rtts,
   type RunStart,
   type ServerMessage,
   type Settings,
@@ -112,6 +113,8 @@ export type Seat = {
   offlineSince: number | null
   /** In a run: the last presence entry stamped for the seat is `away`. */
   away: boolean
+  /** Its round trips to the relays (`rtt`), or null until it reported them. */
+  rtt?: Rtts | null
 }
 
 export type Run = {
@@ -153,6 +156,10 @@ export type Room = {
   run: Run | null
   /** Since when nobody is connected, or null. */
   emptySince: number | null
+  /** Whoever says this in a `hello` becomes the host (`CreateResponse.claim`); null once taken. */
+  claim: string | null
+  /** The room the group moved to (`move`): every `hello` is told it (`moved`) until the room expires. */
+  movedTo: string | null
 }
 
 /** A socket, as the room knows it. Not persisted: sockets don't survive a restart. */
@@ -243,8 +250,12 @@ export const emptyLive = (): Live => ({
  */
 export const loadState = (room: Room | null, gen: Gen, now: number, bound = 0): State => {
   const live = emptyLive()
-  if (room?.run) {
+  if (room) {
     // Rooms saved before these fields existed.
+    room.claim ??= null
+    room.movedTo ??= null
+  }
+  if (room?.run) {
     room.run.agreedBy ??= null
     room.run.demoted ??= []
   }
@@ -293,6 +304,7 @@ export const roomView = (state: State, room: Room): RoomView => ({
     away: s.away,
     ready: s.ready,
     loadout: s.loadout,
+    ...(s.rtt ? { rtt: s.rtt } : {}),
   })),
   settings: room.settings,
   run: room.run?.start.id ?? 0,
@@ -318,9 +330,13 @@ const refuse = (conn: ConnId, code: Refusal, build?: string): Effect[] => [
 
 /* ---------------- Room lifecycle ---------------- */
 
-/** Reserves a fresh room for `code`. False when the code is taken (the caller tries another). */
-export const createRoom = (state: State, init: { code: string; build: string; region: string }, now: number): { ok: boolean; effects: Effect[] } => {
+/**
+ * Reserves a fresh room for `code`. Not ok when the code is taken (the caller tries another). `claim`: the
+ * secret that makes its sayer the host (`CreateResponse`), for the shell to hand the creator.
+ */
+export const createRoom = (state: State, init: { code: string; build: string; region: string }, now: number): { ok: false; effects: Effect[] } | { ok: true; claim: string; effects: Effect[] } => {
   if (state.room) return { ok: false, effects: [] }
+  const claim = state.gen.secret()
   const room: Room = {
     code: init.code,
     build: init.build,
@@ -334,9 +350,11 @@ export const createRoom = (state: State, init: { code: string; build: string; re
     runs: 0,
     run: null,
     emptySince: now,
+    claim,
+    movedTo: null,
   }
   state.room = room
-  return { ok: true, effects: [{ k: 'save' }, event(room, 'room.created', { build: init.build, region: init.region })] }
+  return { ok: true, claim, effects: [{ k: 'save' }, event(room, 'room.created', { build: init.build, region: init.region })] }
 }
 
 /** A new socket (before its `hello`). */
@@ -513,6 +531,8 @@ export const hello = (state: State, connId: ConnId, h: Hello, identity: Identity
   if (h.v !== PROTOCOL) return refuse(connId, 'version')
   if (h.auth.kind === 'guest' && !policy.guests) return refuse(connId, 'signIn')
   if (!room || h.room !== room.code) return refuse(connId, 'unavailable')
+  // A room the group left: an old link or a late player goes where it went (a client before `moved` only hears the refusal).
+  if (room.movedTo) return [send(connId, { t: 'moved', code: room.movedTo }), ...refuse(connId, 'unavailable')]
   if (!identity) return refuse(connId, 'auth')
   if (h.build !== room.build) return refuse(connId, 'build', room.build)
   const out: Effect[] = []
@@ -540,11 +560,17 @@ export const hello = (state: State, connId: ConnId, h: Hello, identity: Identity
   seat.name = h.name
   seat.ua = conn.ua
   room.emptySince = null
+  // The creator of a room the group moved to takes the crown, whoever got here first.
+  if (room.claim !== null && h.claim === room.claim && room.phase === 'lobby') {
+    room.claim = null
+    if (room.host !== seat.seat) out.push(event(room, 'room.host', { seat: seat.seat, why: 'claim' }))
+    room.host = seat.seat
+  }
   state.live.lastSeen.set(seat.seat, now)
   out.push({ k: 'save' })
   const run = room.run
   if (room.phase === 'playing' && run && !run.ended) out.push(...heard(state, room, seat, now), ...settle(state, room, now))
-  out.push(send(connId, { t: 'welcome', seat: seat.seat, secret: seat.secret, room: roomView(state, room), batch: true }))
+  out.push(send(connId, { t: 'welcome', seat: seat.seat, secret: seat.secret, room: roomView(state, room), batch: true, moves: true }))
   out.push(...broadcastRoom(state, room).filter((e) => e.k !== 'send' || e.to !== connId))
   if (room.phase === 'playing' && run && !run.ended && inRun(run, seat.seat)) {
     const s = syncFor(run, h.resume)
@@ -600,7 +626,8 @@ export const message = (state: State, connId: ConnId, msg: ClientMessage | null,
   if (!gate.ok || !msg) return gate.effects
   if (msg.t === 'ping') return [send(connId, { t: 'pong', at: msg.at, tick: room.run?.next ?? 0 })]
   const seat = conn.seat === null ? undefined : room.seats.find((s) => s.seat === conn.seat)
-  if (!seat || msg.t === 'hello') return []
+  // A room the group left takes nothing more (its sockets are closing).
+  if (!seat || msg.t === 'hello' || room.movedTo) return []
   const out = heard(state, room, seat, now)
   const isHost = room.host === seat.seat
   const outside = room.phase !== 'playing'
@@ -637,6 +664,14 @@ export const message = (state: State, connId: ConnId, msg: ClientMessage | null,
         return [...out, send(connId, { t: 'denied', what: 'start', why: 'notReady' })]
       }
       return [...out, ...startRun(state, room, now)]
+    case 'rtt': {
+      if (!outside || sameRtts(seat.rtt ?? null, msg.ms)) return out
+      seat.rtt = msg.ms
+      return [...out, { k: 'save' }, ...broadcastRoom(state, room)]
+    }
+    case 'move':
+      if (room.phase !== 'lobby' || !isHost || msg.code === room.code) return out
+      return [...out, ...moveRoom(state, room, msg.code)]
     case 'in':
       if (live) stamp(state, [seat.seat, msg.k, ...msg.d])
       return out
@@ -670,6 +705,20 @@ export const message = (state: State, connId: ConnId, msg: ClientMessage | null,
       return [...out, ...(state.room ? updateUploader(state, room) : [])]
     }
   }
+}
+
+const sameRtts = (a: Rtts | null, b: Rtts) => a !== null && JSON.stringify(a) === JSON.stringify(b)
+
+/**
+ * The group moves to room `code` on another relay (the host made it, picked
+ * for everyone's round trips): every socket is told and closed, and from now
+ * on every `hello` is told too (`moved`), until the room expires.
+ */
+const moveRoom = (state: State, room: Room, code: string): Effect[] => {
+  room.movedTo = code
+  const out: Effect[] = [{ k: 'save' }, event(room, 'room.moved', { to: code, seats: room.seats.filter((s) => online(state, s)).length })]
+  for (const c of state.live.conns.values()) out.push(send(c.id, { t: 'moved', code }), { k: 'close', to: c.id, reason: 'refused' })
+  return out
 }
 
 /** A socket closed. Its seat is kept; in a run it goes `away` once silent long enough, and the clock stops when nobody in the run is left (`settle`). */
@@ -920,7 +969,8 @@ const emit = (state: State, run: Run, now: number): Effect[] => {
 export const tick = (state: State, now: number): Effect[] => {
   const room = state.room
   if (!room) return []
-  if (room.emptySince !== null && now - room.emptySince >= TIMES.idle) return wipe(state, room, 'idle')
+  // A room the group moved away from keeps answering old links (`moved`) until its maximum age.
+  if (room.emptySince !== null && room.movedTo === null && now - room.emptySince >= TIMES.idle) return wipe(state, room, 'idle')
   if (now - room.createdAt >= TIMES.maxAge) return wipe(state, room, 'age')
   const out: Effect[] = []
   const someoneOnline = room.seats.some((s) => online(state, s))
@@ -967,7 +1017,7 @@ export const deadline = (state: State): number | null => {
   const room = state.room
   if (!room) return null
   const times: number[] = [room.createdAt + TIMES.maxAge]
-  if (room.emptySince !== null) times.push(room.emptySince + TIMES.idle)
+  if (room.emptySince !== null && room.movedTo === null) times.push(room.emptySince + TIMES.idle)
   const someoneOnline = room.seats.some((s) => online(state, s))
   if (someoneOnline) {
     const host = room.seats.find((s) => s.seat === room.host)

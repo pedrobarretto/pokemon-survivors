@@ -133,6 +133,13 @@ export type Auth = { kind: 'clerk'; token: string } | { kind: 'guest'; id: strin
 
 export type Phase = 'lobby' | 'playing' | 'ended'
 
+/**
+ * A player's round trips (ms) to the relays, as its client measured them in the room's lobby: each VPS
+ * relay of its build by its `/health`, and Cloudflare (`cf`) only as the room it is in now (its socket's
+ * pings: a Cloudflare room elsewhere can't be measured). Null: that relay didn't answer.
+ */
+export type Rtts = { readonly [H in RelayHome]?: number | null }
+
 export type Member = {
   seat: number
   name: string
@@ -144,6 +151,8 @@ export type Member = {
   away: boolean
   ready: boolean
   loadout: Loadout | null
+  /** Its round trips to the relays (`rtt`), absent until it reported them (a client before it never does). */
+  rtt?: Rtts
 }
 
 /** The room as everyone sees it, sent on every change. */
@@ -179,9 +188,13 @@ export type RunStart = {
 export const REGIONS = ['auto', 'sam', 'enam', 'wnam', 'weur', 'eeur', 'apac', 'oc'] as const
 export type Region = (typeof REGIONS)[number]
 
-/** `POST /rooms`: reserves a room for the host, who then joins it like anyone (`GET /rooms/<code>/ws`, then `hello`). */
+/**
+ * `POST /rooms`: reserves a room for the host, who then joins it like anyone (`GET /rooms/<code>/ws`, then
+ * `hello`). `claim`: whoever says it in a `hello` is the room's host, whoever joined first (a room the group
+ * moves to, `move`, where the others may land before the host). Relays before it leave it out.
+ */
 export type CreateRequest = { v: number; build: string; region?: Region }
-export type CreateResponse = { code: string; region: Region } | { error: 'version' | 'invalid' | 'rate' | 'busy' }
+export type CreateResponse = { code: string; region: Region; claim?: string } | { error: 'version' | 'invalid' | 'rate' | 'busy' }
 
 /* ---------------- Client → relay ---------------- */
 
@@ -202,6 +215,8 @@ export type Hello = {
   name: string
   /** The run this client has state for, and the tick that state is at (it applied every tick below `from`). */
   resume: { run: number; from: number } | null
+  /** The room's `claim` (`CreateResponse`): the host of a room the group moved to takes it back with this. */
+  claim?: string | null
 }
 
 /** A chunk of the compressed snapshot at `tick` (a multiple of `SNAPSHOT_EVERY`), only from the client told to upload them (`role`). */
@@ -243,6 +258,17 @@ export type BatchedMessage =
   | { t: 'badSnap'; tick: number }
   | { t: 'leave' }
   | { t: 'ping'; at: number }
+  /**
+   * Lobby: this client's round trips to the relays (`Rtts`), kept on its seat and shown to the room, so the
+   * host can pick the relay that is best for the whole group. Only to a relay whose `welcome` said `moves`;
+   * never batched (a relay before it would drop the whole batch).
+   */
+  | { t: 'rtt'; ms: Rtts }
+  /**
+   * Host only, in the lobby before the first run: the group moves to room `code` (made on another relay).
+   * Every seat is told `moved` and the room answers any later `hello` with it. Never batched.
+   */
+  | { t: 'move'; code: string }
   /**
    * How the link looks from this client in a run (every `NET_REPORT_MS`): round trip (ms, median and
    * p95), the hold (ticks), and since the run began, underruns, stalled frames and reconnects. The relay
@@ -289,9 +315,9 @@ export type ServerMessage =
   /**
    * You hold `seat`; keep `secret` (by room code) to take it back from any tab. `batch`: this relay takes `batch`
    * messages (an older one doesn't say it, and gets every message on its own). `net`: where things run (relays
-   * before it leave it out).
+   * before it leave it out). `moves`: this relay takes `rtt` and `move` (an older one doesn't say it).
    */
-  | { t: 'welcome'; seat: number; secret: string; room: RoomView; batch?: boolean; net?: WelcomeNet }
+  | { t: 'welcome'; seat: number; secret: string; room: RoomView; batch?: boolean; net?: WelcomeNet; moves?: boolean }
   /** `build`: with a `build` refusal, the build the room runs (the client tells whether it is older or newer). */
   | { t: 'refused'; code: Refusal; build?: string }
   | { t: 'room'; room: RoomView }
@@ -319,6 +345,12 @@ export type ServerMessage =
   | { t: 'pong'; at: number; tick: number }
   /** Sent right before the relay closes the socket. */
   | { t: 'bye'; reason: CloseReason }
+  /**
+   * The room moved to room `code` (the host's `move`): join that one, bringing your Pokémon and ready. Said to
+   * every seat when it happens, and to any `hello` after it (an old link), then the socket is closed as refused
+   * (`unavailable`, all a client before it understands).
+   */
+  | { t: 'moved'; code: string }
 
 /* ---------------- Parsing ---------------- */
 
@@ -380,7 +412,8 @@ const parseHello = (m: Record<string, unknown>): Hello | null => {
   const auth = parseAuth(m.auth)
   const name = parseName(m.name)
   if (!isWhole(m.v, 1e6) || !build || !room || !auth || !name) return null
-  return { t: 'hello', v: m.v, build, room, auth, secret: parseSecret(m.secret), name, resume: parseResume(m.resume) }
+  const claim = parseSecret(m.claim)
+  return { t: 'hello', v: m.v, build, room, auth, secret: parseSecret(m.secret), name, resume: parseResume(m.resume), ...(claim ? { claim } : {}) }
 }
 
 /** The kind of the message in `raw`, cheaply, to pick its size limit before parsing. */
@@ -395,6 +428,17 @@ const parseSnap = (m: Record<string, unknown>): SnapChunk | null => {
   if (!h || !isWhole(tick, MAX_TICK) || tick % SNAPSHOT_EVERY !== 0 || !isWhole(parts, LIMITS.parts) || parts < 1) return null
   if (!isWhole(part, parts - 1) || typeof data !== 'string' || data.length > LIMITS.chunk || !/^[A-Za-z0-9+/]*={0,2}$/.test(data)) return null
   return { t: 'snap', tick, h, part, parts, data }
+}
+
+/** Round trips by relay (`Rtts`): known homes only, each a whole number of ms up to a minute, or null. */
+export const parseRtts = (v: unknown): Rtts | null => {
+  if (!isRecord(v)) return null
+  const out: { [H in RelayHome]?: number | null } = {}
+  for (const [home, ms] of Object.entries(v)) {
+    if (!isRelayHome(home) || (ms !== null && !isWhole(ms, 60_000))) return null
+    out[home] = ms
+  }
+  return out
 }
 
 /** A message a `batch` may carry, or null. */
@@ -436,6 +480,14 @@ const parseBatched = (m: Record<string, unknown>): BatchedMessage | null => {
       const max = 1e6
       if (!isWhole(rtt, max) || !isWhole(rtt95, max) || !isWhole(hold, max) || !isWhole(underruns, max) || !isWhole(stalls, max) || !isWhole(reconnects, max)) return null
       return { t: 'net', rtt, rtt95, hold, underruns, stalls, reconnects }
+    }
+    case 'rtt': {
+      const ms = parseRtts(m.ms)
+      return ms ? { t: 'rtt', ms } : null
+    }
+    case 'move': {
+      const code = parseRoomCode(m.code)
+      return code ? { t: 'move', code } : null
     }
     case 'start':
     case 'hb':

@@ -252,8 +252,8 @@ export const createRooms = (deps: RoomsDeps) => {
     log('relay.loaded', { rooms: loaded })
   }
 
-  /** Reserves a new room (`POST /rooms`): its code, or null when no free code turned up. */
-  const create = (build: string): string | null => {
+  /** Reserves a new room (`POST /rooms`): its code and its host's claim, or null when no free code turned up. */
+  const create = (build: string): { code: string; claim: string } | null => {
     for (let i = 0; i < CREATE_TRIES; i++) {
       const code = randomCode(deps.home)
       const existing = rooms.get(code)
@@ -265,7 +265,7 @@ export const createRooms = (deps: RoomsDeps) => {
       createSchema(shell.db.store.sql)
       rooms.set(code, shell)
       step(shell, () => r.effects)
-      return code
+      return { code, claim: r.claim }
     }
     return null
   }

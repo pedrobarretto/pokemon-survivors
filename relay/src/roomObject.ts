@@ -135,12 +135,12 @@ export class RoomObject extends DurableObject<Env> {
     })
   }
 
-  /** Reserves the room (the Worker's `POST /rooms`). False when the code is taken. */
-  async create(init: { code: string; build: string; region: string }): Promise<boolean> {
+  /** Reserves the room (the Worker's `POST /rooms`): its host's claim (`CreateResponse`), or null when the code is taken. */
+  async create(init: { code: string; build: string; region: string }): Promise<string | null> {
     const r = createRoom(this.state, init, Date.now())
     if (r.ok) createSchema(this.store.sql)
     this.apply(r.effects)
-    return r.ok
+    return r.ok ? r.claim : null
   }
 
   async fetch(request: Request): Promise<Response> {

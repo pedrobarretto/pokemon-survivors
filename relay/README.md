@@ -39,8 +39,9 @@ node scripts/probe.mjs --bots 3 --secs 40 --desync --rejoin   # bots against a d
 
 ## Endpoints
 
-- `POST /rooms` `{ v, build, region? }` → `{ code, region }`. The room lives near the host
-  (location hint from the request's continent, or `region`).
+- `POST /rooms` `{ v, build, region? }` → `{ code, region, claim }`. The room lives near the host
+  (location hint from the request's continent, or `region`). Whoever says `claim` in its `hello`
+  becomes its host (the room a group moves to, below, where teammates may land first).
 - `GET /rooms/<code>/ws`: the WebSocket. The first message is `hello`. Co-op is for signed-in
   players (a Clerk session token in `hello.auth`): a guest hello is refused with `signIn`, except
   where `ALLOW_GUESTS` is `on` (the dev relay and local `wrangler dev`, for the soak, the in-tab
@@ -96,6 +97,20 @@ Cloudflare has no Durable Objects in South America, so a Brazilian room runs in 
   without a relay's `VITE_COOP_URL_*` sends its codes to Cloudflare. Another relay is one entry in
   `RELAY_HOMES`, one in `RELAY_URLS` (`src/coopShell.ts`), its env var and this image with its
   `RELAY_HOME` (taking characters from a home only after that home's rooms are gone, 6 h).
+- **Moving for the group:** the host picks the relay at create, but the group can be elsewhere
+  (the first 4-player room ran in São Paulo with players in Spain at 230 ms). In the lobby every
+  client reports its round trips (`rtt`: each VPS relay's `/health` median, and a Cloudflare
+  room's own pings), kept on its seat and shown in the room. At the host's Start, `groupHome`
+  (`src/coop/relays.ts`) scores each VPS relay, and the Cloudflare room it's in, by the worst
+  member's round trip, and moves only when one beats the current room by 40 ms and every member
+  reported. The host makes a room there (`POST /rooms`, its `claim`), sends `move`; the old room
+  tells every seat `moved` and closes them, and keeps answering any `hello` (an old link) with
+  `moved` until it expires (6 h from its creation, past the idle limit). Clients follow with their
+  Pokémon, ready and settings; the host's Start completes once everyone is in, or after 8 s with
+  whoever made it. Any failure (the relay down, no claim, no `moved` within 3 s) starts the run
+  where the room is. Only before a room's first run, once. All of it is additive: a relay that
+  doesn't say `moves` in its `welcome` is never asked, a client that doesn't report keeps its room
+  where it is.
 - **One process, every room:** one SQLite file per room (`node:sqlite`, WAL) on the `/data`
   volume, a 60 Hz timer per running room, the Worker's routes, origin checks, Clerk tokens,
   rate limits (by `X-Real-Ip` from Traefik) and the dump vault. An exclusive lock on
