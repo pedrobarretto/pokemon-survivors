@@ -6040,7 +6040,12 @@ button {
   line-height: 1.05;
 }
 
+/* What's left to toss today reads in the sheet's ink; red only once nothing is left. */
 .festival-cap-today {
+  color: #283040;
+}
+
+.festival-cap-today.out {
   color: #c03030;
 }
 

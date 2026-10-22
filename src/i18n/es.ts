@@ -912,7 +912,7 @@ export const es: Messages = {
     },
     plaque: {
       title: 'Mecenas del festival',
-      donors: (festival, n) => `${festival} · ${n === 1 ? '1 donante' : `${n} donantes`}`,
+      donors: (festival, n, count) => `${festival} · ${n === 1 ? '1 donante' : `${count} donantes`}`,
       empty: 'Nadie echó nada todavía. ¡Sé el primero!',
       you: (amount) => `Tú: ${amount}`,
       rank: (n) => `${n}.º`,
@@ -1070,7 +1070,11 @@ export const es: Messages = {
     egg: (egg) => `Un *${egg}* fue a la incubadora.`,
     coins: (coins) => `Ganaste *${coins}*.`,
     newTitle: (title) => `Nuevo título: ¡*${title}*! Ya está en uso.`,
-    style: (name) => `Nuevo estilo: ¡*${name}*! Ya está en uso.`,
+    style: {
+      frame: (name) => `Nuevo marco: ¡*${name}*! Ya está en uso.`,
+      background: (name) => `Nuevo fondo: ¡*${name}*! Ya está en uso.`,
+      wallpaper: (name) => `Nuevo fondo de pantalla: ¡*${name}*! Ya está en uso.`,
+    },
     shinyHatch: (name) => `¡Un *${name}* _shiny_ llegó para ti!`,
     companion: (name) => `¡*${name}* ahora te acompaña en las partidas!`,
     ribbon: (name) => `¡*${name}*! Ya está en tu perfil.`,

@@ -293,7 +293,7 @@ export const openFestival = (root: HTMLElement, input: Input, close: () => void,
     const mine = view.mine
     const given = mine?.given[f.id] ?? 0
     capEl.replaceChildren(
-      h('span', { class: 'festival-cap-today' }, view.capLeft > 0 ? m.todayLeft(formatPokeDollars(view.capLeft)) : m.capReached),
+      view.capLeft > 0 ? h('span', { class: 'festival-cap-today' }, m.todayLeft(formatPokeDollars(view.capLeft))) : h('span', { class: 'festival-cap-today out' }, m.capReached),
       ...(given > 0
         ? [h('span', { class: 'festival-cap-you' }, `${m.given(formatPokeDollars(given))} · `, given >= FESTIVAL.patron ? h('em', {}, m.patron) : m.toPatron(formatPokeDollarsShort(FESTIVAL.patron - given)))]
         : []),
@@ -321,7 +321,7 @@ export const openFestival = (root: HTMLElement, input: Input, close: () => void,
     plaqueSwitch.setAttribute('aria-checked', String(mine?.public !== false))
     plaqueSwitch.replaceChildren(h('span', {}, pl.show), h('b', {}, mine?.public === false ? pl.hidden : pl.shown))
     plaqueEl.replaceChildren(
-      h('div', { class: 'festival-plaque-head' }, img(festivalIcon(f.id)), h('span', {}, h('b', {}, pl.title), h('span', {}, pl.donors(m.names[f.id], view.donors)))),
+      h('div', { class: 'festival-plaque-head' }, img(festivalIcon(f.id)), h('span', {}, h('b', {}, pl.title), h('span', {}, pl.donors(m.names[f.id], view.donors, formatNumber(view.donors))))),
       view.top.length > 0
         ? h(
             'ol',
@@ -334,7 +334,7 @@ export const openFestival = (root: HTMLElement, input: Input, close: () => void,
             h(
               'div',
               { class: 'festival-me' },
-              h('span', {}, given > 0 ? `${pl.you(formatPokeDollars(given))}${mine.rank ? ` · ${pl.rank(mine.rank)}` : ''}` : pl.none),
+              h('span', {}, given > 0 ? `${pl.you(formatPokeDollars(given))}${mine.rank ? ` · ${pl.rank(formatNumber(mine.rank))}` : ''}` : pl.none),
               plaqueSwitch,
             ),
           ]

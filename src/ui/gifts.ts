@@ -40,7 +40,7 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
       return { src: medalIcon('gold'), text: m.newTitle(t().achievements.titles[c.title]) }
     case 'style': {
       const names: Readonly<Record<string, string>> = t().mart.styles[c.style.slot]
-      return { src: styleIcon(c.style), text: m.style(names[c.style.id] ?? c.style.id) }
+      return { src: styleIcon(c.style), text: m.style[c.style.slot](names[c.style.id] ?? c.style.id) }
     }
     case 'shinyHatch':
       return { src: portraitUrl(HATCHLINGS[c.family].line[0].dex, true), text: m.shinyHatch(HATCHLINGS[c.family].name) }

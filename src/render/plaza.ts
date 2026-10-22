@@ -244,7 +244,18 @@ type Layout = {
   festival: FestivalLayout | null
   /** What the building, the props and the visitors' pieces cast on the cobblestones. */
   shadows: readonly Shadow[]
+  /** The box (relative to the building's feet) holding all the plaza draws: the cobblestones, the building and every piece that casts a shadow. */
+  bounds: Box
 }
+
+type Box = { left: number; top: number; right: number; bottom: number }
+
+/** The box `art` covers standing with its feet at `p`, as `put` draws it. */
+const boxOf = (art: Art, p: Placed): Box => ({ left: p.x - art.w / 2, top: p.y - art.h, right: p.x + art.w / 2, bottom: p.y })
+
+/** The smallest box holding all of `boxes` (at least one). */
+const unionOf = ([first, ...rest]: readonly [Box, ...Box[]]): Box =>
+  rest.reduce((a, b) => ({ left: Math.min(a.left, b.left), top: Math.min(a.top, b.top), right: Math.max(a.right, b.right), bottom: Math.max(a.bottom, b.bottom) }), first)
 
 type FestivalLayout = { fountain: Placed & { frames: readonly Art[] }; plaque: Placed | null; bunting: Placed | null; torii: Placed | null }
 
@@ -316,6 +327,19 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
         torii: f.stage >= 3 ? FESTIVAL_SPOTS.torii : null,
       }
     : null
+  const cobbles = { x: 0, y: (wide ? 40 : 36) - Math.round(depth * 0.7) + (festival ? 14 : 0), rx: lamp + (wide ? 186 : 66), ry: (wide ? 88 : 78) + Math.round(depth * 1.1) + (festival ? 26 : 0) }
+  const shadows: readonly Shadow[] = [
+    // The deep 3/4 buildings cast a soft ellipse under their footprint; everything else, its own silhouette.
+    depth ? { x: 0, y: -Math.round(half * 0.3), rx: half - 10, ry: Math.round(half * 0.32) } : { x: 0, y: 0, art: building },
+    ...props.map((p) => ({ x: p.x, y: p.y, art: arts.get(p.id)! })),
+    ...(v.caravan ? [{ ...wagon, art: arts.get('caravan')! }] : []),
+    ...(v.stall ? [{ ...stall, art: arts.get(STALLS[v.stall].art)! }] : []),
+    ...(v.statue ? [{ ...statue, art: arts.get('pedestal')! }] : []),
+    // The fountain's shadow is always the plain one's, so it doesn't grow when the lanterns and the statue come; the bunting casts none.
+    ...(festival ? [{ ...festival.fountain, art: arts.get('fountain-s0-f0')! }] : []),
+    ...(festival?.plaque ? [{ ...festival.plaque, art: arts.get('plaque')! }] : []),
+    ...(festival?.torii ? [{ ...festival.torii, art: arts.get('torii')! }] : []),
+  ]
   const layout: Layout = {
     building,
     pad: { y: -6 - depth, rx: half + 4 + (depth ? 6 : 0), ry: Math.round(building.w / 7) + depth },
@@ -324,25 +348,20 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
     props,
     spot: { x: 0, y: 34 },
     // The festival's fountain stands in front of the shop: the stones reach further down for it.
-    cobbles: { x: 0, y: (wide ? 40 : 36) - Math.round(depth * 0.7) + (festival ? 14 : 0), rx: lamp + (wide ? 186 : 66), ry: (wide ? 88 : 78) + Math.round(depth * 1.1) + (festival ? 26 : 0) },
+    cobbles,
     wagon,
     meowth: { x: wagon.x + 84, y: wagon.y + 16, dir: 1 },
     stall,
     stallKeeper: { x: stall.x - 58, y: stall.y + 12, dir: 7 },
     statue,
     festival,
-    shadows: [
-      // The deep 3/4 buildings cast a soft ellipse under their footprint; everything else, its own silhouette.
-      depth ? { x: 0, y: -Math.round(half * 0.3), rx: half - 10, ry: Math.round(half * 0.32) } : { x: 0, y: 0, art: building },
-      ...props.map((p) => ({ x: p.x, y: p.y, art: arts.get(p.id)! })),
-      ...(v.caravan ? [{ ...wagon, art: arts.get('caravan')! }] : []),
-      ...(v.stall ? [{ ...stall, art: arts.get(STALLS[v.stall].art)! }] : []),
-      ...(v.statue ? [{ ...statue, art: arts.get('pedestal')! }] : []),
-      // The fountain's shadow is always the plain one's, so it doesn't grow when the lanterns and the statue come; the bunting casts none.
-      ...(festival ? [{ ...festival.fountain, art: arts.get('fountain-s0-f0')! }] : []),
-      ...(festival?.plaque ? [{ ...festival.plaque, art: arts.get('plaque')! }] : []),
-      ...(festival?.torii ? [{ ...festival.torii, art: arts.get('torii')! }] : []),
-    ],
+    shadows,
+    // The bunting hangs between the lanterns, inside this box already.
+    bounds: unionOf([
+      { left: cobbles.x - cobbles.rx, top: cobbles.y - cobbles.ry, right: cobbles.x + cobbles.rx, bottom: cobbles.y + cobbles.ry },
+      boxOf(building, { x: 0, y: 0 }),
+      ...shadows.flatMap((s) => ('art' in s ? [boxOf(s.art, s)] : [])),
+    ]),
   }
   layouts.set(key, layout)
   return layout
@@ -1004,15 +1023,24 @@ const markerCard = lazy(() => {
   ctx.drawImage(sheet.img, Math.round(sheet.fw / 2 - 9), top, 18, 14, 3, 3, 18, 14)
   return card
 })
+/** How far (px) the plaza must reach into the view to count as on screen: a sliver at the edge still gets the marker, drawn over it. */
+const MARKER_INSET = 16
+
+/** Whether any of the plaza (`bounds`) reaches `MARKER_INSET` px into the `w`×`h` view. */
+const plazaInView = (plaza: Plaza, b: Box, camX: number, camY: number, w: number, h: number) =>
+  plaza.x + b.right - camX > MARKER_INSET && plaza.x + b.left - camX < w - MARKER_INSET && plaza.y + b.bottom - camY > MARKER_INSET && plaza.y + b.top - camY < h - MARKER_INSET
+
 /**
  * A card with Kecleon's head and an arrow at the edge of the view, pointing
- * at the plaza while it's off screen. It remembers where it was drawn
- * (`plaza.marker`) so a tap on it can lead there.
+ * at the shop while no part of the plaza (its cobblestones, the building, a
+ * visitor, the festival's pieces) is on screen. It remembers where it was
+ * drawn (`plaza.marker`) so a tap on it can lead there.
  */
 export const drawPlazaMarker = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, w: number, h: number, time: number, show: boolean) => {
   plaza.marker.shown = false
+  const layout = plazaLayout(plaza)
+  if (!show || !layout || plazaInView(plaza, layout.bounds, camX, camY, w, h)) return
   const target = { x: plaza.x - camX, y: plaza.y - 30 - camY }
-  if (!show || (target.x > -20 && target.x < w + 20 && target.y > -10 && target.y < h + 40)) return
   const box = markerCard()
   if (!box) return
   const cx = w / 2
