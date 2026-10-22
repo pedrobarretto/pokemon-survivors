@@ -199,6 +199,7 @@ The community Discord (built by `scripts/discord/setup.mjs`) has a bot that runs
 - **Introduction gate:** a gateway connection (Node's own `WebSocket`, intents GUILDS, GUILD_MESSAGES and MESSAGE_CONTENT) watches #introductions. A message with at least 20 letters or digits from a member without **Trainer** gets the role, a 👋 and a welcome (once per player); a shorter one gets a nudge. The setup script's `GATE` makes only Trainers talk elsewhere. When the connection comes back (a deploy, a drop), the bot reads the last 50 introductions and lets in whoever it missed.
 - **Patch notes:** on boot, the changelog's updates (`src/site/changelog.ts`, English) newer than the last one posted go to #patch-notes, pinging **Patch Notes Ping**, and the last one posted is edited to match (an update grows through its day). The very first boot only posts the newest update.
 - **Daily posts:** every 15 minutes it looks for what's due: the day's Desafio do dia in #daily-challenge (pinging **Daily Challenge Ping**) and its outbreak in #daily-outbreak when the Brasília day starts, and yesterday's top 3 in #daily-challenge once the ribbons are due (`ribbonsDue`).
+- **Ideas from the chat:** staff (**Dev**, **Moderator** or the owner) mention the bot replying to a player's suggestion, anywhere but #introductions. An LLM on OpenRouter (`src/ideaWriter.ts`) writes its title and description in English from the player's messages (the one replied to and the ones they sent right before it) and what staff wrote, and it goes straight to the board's Backlog, credited to the player's linked game account, or the staff member's when the player has none (the bot asks to link when neither is). Without a reply, the staff message itself is the idea. The bot answers in the thread with the idea; ⚠️ on the staff message means it failed (see the log). Off without `OPENROUTER_API_KEY`.
 - **Linked accounts** (`src/discordLink.ts`): a player connects Discord to their Clerk account in the game (or signs in with it); `POST /discord/link` reads that account from Clerk, stores its id in `users.discord_id`, adds the player to the server with the OAuth token Clerk keeps (`guilds.join`, a scope of Clerk's Discord connection) and gives **Supporter** or **Gold Supporter** by their tier (Gold replaces Supporter; no tier changes nothing). A donation that raises a linked player's tier updates the role. Linking never grants Trainer.
 
 ### Bug reports
@@ -240,6 +241,7 @@ The player's device still holds the edited save. Its next push comes on top of a
 | `STRIPE_WEBHOOK_SECRET` | Optional. The Stripe webhook endpoint's signing secret (`whsec_…`). Without it the webhook answers 503 |
 | `STRIPE_PAYMENT_LINK` | Optional. The donation Payment Link's id (`plink_…`): set, the webhook ignores other Checkout Sessions of the account |
 | `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID` | Optional. The community Discord bot's token and the server's id. Without both there's no bot |
+| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Optional. OpenRouter, for the ideas staff tag the bot on in the Discord. The model defaults to `anthropic/claude-haiku-5.5`. Without the key, tagging the bot adds nothing |
 | `POSTHOG_KEY` | Optional. The game's PostHog project token (`phc_…`, the same as the client's `VITE_POSTHOG_KEY`): 500s, uncaught exceptions and rejections go to its error tracking (`src/errors.ts`), tied to the player's id when the request had one. Without it errors only go to the log |
 | `DISCORD_BUG_FORUM_ID` | Optional. The #bug-reports forum's channel id, where bug reports go. Without it the bot finds the forum by name |
 | `STREAM_ENFORCE` | Optional. `1` keeps ranked runs whose replay wasn't streamed in time off the public boards (see [Replay streaming](#replay-streaming)). Unset, the API only measures and logs the lag |
@@ -317,6 +319,7 @@ New versions roll out with no downtime:
 | `CLERK_SECRET_KEY` | Dokploy (`api`) | Production instance secret key |
 | `ABACATEPAY_API_KEY` | Dokploy (`api`) | AbacatePay production key, with `CHECKOUT:CREATE`, `PRODUCT:CREATE` and `PRODUCT:READ` |
 | `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID` | Dokploy (`api`) | The "Pokémon Survivors" bot's token and the community server's id |
+| `OPENROUTER_API_KEY` | Dokploy (`api`) | OpenRouter key for the Discord idea intake (optional) |
 | `POSTHOG_KEY` | Dokploy (`api`) | PostHog (US cloud) project token, public |
 | `DISCORD_BUG_FORUM_ID` | Dokploy (`api`) | The #bug-reports forum's channel id (optional: found by name without it) |
 | `STREAM_ENFORCE` | Dokploy (`api`) | Unset (observe only) until the lag is measured; `1` to enforce |

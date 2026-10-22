@@ -225,3 +225,34 @@ export const reviewedNote = (review: Review, by: string | null) =>
 
 /** The review message's color once decided. */
 export const reviewedColor = (review: Review) => (review === 'open' ? GREEN : 0x707890)
+
+/* ---------------- Ideas from the Discord ---------------- */
+
+/** Where the board opens (`?ideias` in `main.ts`). */
+const BOARD_URL = `${PLAY_URL}?ideias`
+
+/** The bot's reply when staff tagged it on a suggestion and it went on the board. */
+export const addedMessage = (idea: Pick<Suggestion, 'title' | 'body' | 'handle'>, messageId: string): OutgoingMessage => ({
+  allowed_mentions: { parse: [] },
+  message_reference: replyTo(messageId),
+  embeds: [
+    {
+      title: `💡 ${idea.title}`.slice(0, 256),
+      url: BOARD_URL,
+      description: [idea.body && escape(idea.body), `Added to the suggestion board's Backlog for @${escape(idea.handle)}. Vote for it in the game!`].filter(Boolean).join('\n\n'),
+      color: GREEN,
+    },
+  ],
+})
+
+/** Why the bot didn't add an idea it was tagged on: no linked game account to credit, or no suggestion in the messages. */
+export type NotAdded = 'unlinked' | 'none'
+
+export const notAddedMessage = (why: NotAdded, messageId: string): OutgoingMessage => ({
+  allowed_mentions: { parse: [] },
+  message_reference: replyTo(messageId),
+  content:
+    why === 'unlinked'
+      ? 'I can’t credit this one: neither of you has a game account with a @handle linked to Discord. Link Discord in the game (its Discord screen) and tag me again.'
+      : 'I couldn’t find a suggestion there. Reply to the message with the idea, or tell me what to add.',
+})

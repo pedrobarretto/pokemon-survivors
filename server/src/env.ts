@@ -37,6 +37,13 @@ export const loadEnv = () => {
       process.env.DISCORD_BOT_TOKEN && process.env.DISCORD_GUILD_ID
         ? { token: process.env.DISCORD_BOT_TOKEN, guildId: process.env.DISCORD_GUILD_ID }
         : null,
+    /**
+     * Optional: OpenRouter, for the ideas staff tag the bot on in the Discord (`src/ideaWriter.ts`). `OPENROUTER_MODEL`
+     * picks the model. Without the key, tagging the bot adds nothing.
+     */
+    openRouter: process.env.OPENROUTER_API_KEY
+      ? { key: process.env.OPENROUTER_API_KEY, model: process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-5.5' }
+      : null,
     /** Optional: the game's PostHog project token (`phc_…`, the client's `VITE_POSTHOG_KEY`). Without it errors only go to the log. */
     posthogKey: process.env.POSTHOG_KEY || undefined,
     /** Optional: the #bug-reports forum's channel id, where the bot posts bug reports. Unset, it's found by name. */

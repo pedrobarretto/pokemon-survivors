@@ -6,9 +6,11 @@ import type { Suggestion } from '../../src/game/suggestions'
 import { CHANGELOG } from '../../src/site/changelog'
 import type { Sql } from './db'
 import {
+  addedMessage,
   challengeMessage,
   greetMessage,
   introDecision,
+  notAddedMessage,
   outbreakMessage,
   patchMessage,
   patchPlan,
@@ -21,6 +23,7 @@ import {
   welcomeMessage,
   type OutgoingMessage,
 } from './discordMessages'
+import { writeIdea, type OpenRouterConfig } from './ideaWriter'
 import type { RankingStore } from './ranking'
 import type { SuggestionStore } from './suggestions'
 
@@ -36,7 +39,11 @@ import type { SuggestionStore } from './suggestions'
  * - #idea-review (staff only) gets each idea posted in the game, with ✅ and
  *   ❌ under it: a staff reaction puts it on the board's Backlog or hides it
  *   (`reviewDecision`). Ideas it missed are posted on the next round of
- *   daily posts, and reactions it missed are read when the gateway connects.
+ *   daily posts, and reactions it missed are read when the gateway connects;
+ * - staff (Dev, Moderator, the owner) mention it replying to a player's
+ *   suggestion, and it goes straight to the board's Backlog: an LLM writes
+ *   it up (`ideaWriter.ts`), credited to the player's linked game account,
+ *   or the staff member's when the player has none. Needs OpenRouter.
  * Channels and roles are found by name, whatever emoji staff put in front. Every post claims a key in
  * `discord_posts` first, so two instances (a rolling deploy) never post twice.
  */
@@ -60,6 +67,7 @@ const NAMES = {
   outbreak: 'daily-outbreak',
   ideaReview: 'idea-review',
   trainer: 'Trainer',
+  staff: ['Dev', 'Moderator'],
   patchPing: 'Patch Notes Ping',
   challengePing: 'Daily Challenge Ping',
 } as const
@@ -196,6 +204,35 @@ const connectGateway = (token: string, onEvent: (type: string, data: unknown) =>
   open()
 }
 
+/** A message as the idea intake reads it. */
+export type ChatMessage = { id: string; userId: string; bot: boolean; content: string; at: number }
+
+export const chatMessage = (m: unknown): ChatMessage | null => {
+  if (!isRecord(m) || !isRecord(m.author)) return null
+  const id = str(m.id)
+  const userId = str(m.author.id)
+  const at = Date.parse(str(m.timestamp) ?? '')
+  if (!id || !userId || Number.isNaN(at)) return null
+  return { id, userId, bot: m.author.bot === true, content: str(m.content) ?? '', at }
+}
+
+/** How close a player's messages follow each other to read as one suggestion, and how many at most. */
+const BURST = { gapMs: 5 * 60_000, max: 6 } as const
+
+/**
+ * The player's suggestion, oldest first: the message staff replied to and
+ * the ones its author sent right before it (`before`, newest first, as
+ * Discord lists history), each within `BURST.gapMs` of the next.
+ */
+export const suggestionBurst = (replied: ChatMessage, before: readonly ChatMessage[]) => {
+  const burst = [replied]
+  for (const m of before) {
+    if (burst.length >= BURST.max || m.userId !== replied.userId || burst[0]!.at - m.at > BURST.gapMs) break
+    burst.unshift(m)
+  }
+  return burst.map((m) => m.content.trim()).filter(Boolean)
+}
+
 /** A reaction from the gateway or a message's reactions: the emoji's name (a custom emoji's name never matches `reviewDecision`). */
 const emojiName = (v: unknown) => (isRecord(v) && isRecord(v.emoji) ? (str(v.emoji.name) ?? '') : '')
 
@@ -207,10 +244,16 @@ const emojiName = (v: unknown) => (isRecord(v) && isRecord(v.emoji) ? (str(v.emo
  */
 export const startDiscord = (
   config: DiscordConfig,
-  deps: { store: DiscordStore; ranking: Pick<RankingStore, 'podium'>; ideas: Pick<SuggestionStore, 'pending' | 'review'> },
+  deps: {
+    store: DiscordStore
+    ranking: Pick<RankingStore, 'podium'>
+    ideas: Pick<SuggestionStore, 'pending' | 'review' | 'accountOf' | 'add'>
+    /** Writes up the ideas staff tag the bot on; null, the bot ignores the tags. */
+    openRouter: OpenRouterConfig | null
+  },
 ) => {
   const call = restClient(config.token)
-  const { store, ranking, ideas } = deps
+  const { store, ranking, ideas, openRouter } = deps
   const guild = `/guilds/${config.guildId}`
   let reviewIdea: ((idea: Suggestion) => Promise<void>) | null = null
 
@@ -243,6 +286,9 @@ export const startDiscord = (
     const outbreak = channel(NAMES.outbreak)
     const review = channel(NAMES.ideaReview)
     const trainer = role(NAMES.trainer)
+    const staffRoles = new Set(NAMES.staff.map(role).filter((id) => id !== null))
+    const guildInfo = await call('GET', guild)
+    const ownerId = isRecord(guildInfo) ? str(guildInfo.owner_id) : null
     let botId: string | null = null
 
     // Patch notes: what the changelog gained since the last boot.
@@ -353,6 +399,43 @@ export const startDiscord = (
       for (const m of latest.values()) await gate(m, false)
     }
 
+    /**
+     * A staff message mentioning the bot: the idea it replies to (or the
+     * message itself, without a reply) goes on the board, once per message.
+     */
+    const takeIdea = async (data: Record<string, unknown>, writer: OpenRouterConfig) => {
+      const tag = chatMessage(data)
+      const channelId = str(data.channel_id)
+      const roles = isRecord(data.member) ? (strings(data.member.roles) ?? []) : []
+      if (!tag || tag.bot || !channelId || !botId || !tag.content.match(new RegExp(`<@!?${botId}>`))) return
+      if (tag.userId !== ownerId && !roles.some((r) => staffRoles.has(r))) return
+      if (!(await store.claim(`take:${tag.id}`))) return
+      const reply = (message: OutgoingMessage) => call('POST', `/channels/${channelId}/messages`, message)
+      try {
+        const replied = chatMessage(data.referenced_message)
+        const player = replied && !replied.bot ? replied : null
+        const account = (player && (await ideas.accountOf(player.userId))) ?? (await ideas.accountOf(tag.userId))
+        if (!account) {
+          await reply(notAddedMessage('unlinked', tag.id))
+          return
+        }
+        await call('POST', `/channels/${channelId}/typing`)
+        const history = player ? await call('GET', `/channels/${channelId}/messages?before=${player.id}&limit=10`) : []
+        const before = (Array.isArray(history) ? history : []).map(chatMessage).filter((m): m is ChatMessage => m !== null)
+        const note = tag.content.replace(new RegExp(`<@!?${botId}>`, 'g'), '').trim()
+        const draft = await writeIdea(writer, { suggestion: player ? suggestionBurst(player, before) : [], note })
+        if (!draft) {
+          await reply(notAddedMessage('none', tag.id))
+          return
+        }
+        const idea = await ideas.add(account.id, draft)
+        await reply(addedMessage(idea, tag.id))
+      } catch (err) {
+        await call('PUT', `/channels/${channelId}/messages/${tag.id}/reactions/${encodeURIComponent('⚠️')}/@me`).catch(() => undefined)
+        throw err
+      }
+    }
+
     connectGateway(config.token, (type, data) => {
       if (type === 'READY') {
         botId = isRecord(data) && isRecord(data.user) ? str(data.user.id) : null
@@ -368,10 +451,14 @@ export const startDiscord = (
         const userId = str(data.user.id)
         if (userId) void post(`greet:${userId}`, intro, greetMessage(userId)).catch((err) => console.error('discord greet failed', err))
       }
+      if (openRouter && type === 'MESSAGE_CREATE' && isRecord(data) && data.guild_id === config.guildId && data.channel_id !== intro) {
+        void takeIdea(data, openRouter).catch((err) => console.error('discord idea intake failed', err))
+      }
       if (!gateOn || type !== 'MESSAGE_CREATE' || !isRecord(data) || data.channel_id !== intro || data.guild_id !== config.guildId) return
       const m = introMessage(data)
       if (m) void gate(m, true).catch((err) => console.error('discord gate failed', err))
     })
+    if (!openRouter) console.warn('discord: no OPENROUTER_API_KEY, so tagging the bot adds no ideas')
     console.log('discord bot on')
   }
 
