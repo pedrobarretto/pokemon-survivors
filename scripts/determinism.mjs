@@ -8,6 +8,7 @@
  *   npm run determinism                         every engine, every run
  *   npm run determinism -- --engines=webkit     some engines (node is the reference, always)
  *   npm run determinism -- --runs=gible --minutes=3
+ *   npm run determinism -- --shard=2/4          a quarter of the runs (CI plays the four side by side)
  *   npm run determinism -- diff a.bin b.bin     diff two saved snapshots
  *   npm run determinism -- bench               snapshot sizes and costs at minutes 5, 10, 15 and 25 (Node; --engines=… for browsers)
  *
@@ -116,6 +117,26 @@ const browserEngine = async (name, code) => {
 const seconds = (ms) => `${(ms / 1000).toFixed(1)} s`
 
 /**
+ * Keeps shard `k` of `n` (`--shard=k/n`, 1-based): the runs go, heaviest first,
+ * to the lightest shard so far (a run weighs its ticks times its players), and
+ * keep their order within a shard.
+ */
+const shardOf = (runs, spec) => {
+  if (spec === undefined) return runs
+  const [k, n] = spec.split('/').map(Number)
+  if (!Number.isInteger(k) || !Number.isInteger(n) || k < 1 || k > n) throw new Error(`bad --shard=${spec}, want k/n with 1 ≤ k ≤ n`)
+  const weight = (run) => run.ticks * ('team' in run.scenario ? run.scenario.team.length : 1)
+  const load = Array.from({ length: n }, () => 0)
+  const shard = new Map()
+  for (const i of [...runs.keys()].sort((a, b) => weight(runs[b]) - weight(runs[a]) || a - b)) {
+    const lightest = load.indexOf(Math.min(...load))
+    load[lightest] += weight(runs[i])
+    shard.set(i, lightest + 1)
+  }
+  return runs.filter((_, i) => shard.get(i) === k)
+}
+
+/**
  * Finds the first tick where `engine` parts from `ref` inside (from, to],
  * saves both snapshots of it and prints where the states differ.
  */
@@ -144,7 +165,10 @@ const check = async () => {
   const H = await loadHarness()
   const only = flag('runs')?.split(',')
   const minutes = flag('minutes') === undefined ? null : Number(flag('minutes'))
-  const runs = H.HARNESS_SCENARIOS.filter((r) => !only || only.some((o) => r.name.includes(o))).map((r) => ({ ...r, ticks: Math.round((minutes ?? r.minutes) * 3600) }))
+  const runs = shardOf(
+    H.HARNESS_SCENARIOS.filter((r) => !only || only.some((o) => r.name.includes(o))).map((r) => ({ ...r, ticks: Math.round((minutes ?? r.minutes) * 3600) })),
+    flag('shard'),
+  )
 
   const ref = nodeEngine()
   const engines = await Promise.all(wanted.map((name) => browserEngine(name, code)))
