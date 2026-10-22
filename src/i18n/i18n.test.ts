@@ -9,6 +9,7 @@ describe('detectLocale', () => {
   it('picks the first supported browser language, any region', () => {
     expect(detectLocale(null, ['pt-PT', 'en-US'])).toBe('pt')
     expect(detectLocale(null, ['es-MX', 'en-US'])).toBe('es')
+    expect(detectLocale(null, ['tr-TR', 'en-US'])).toBe('tr')
     expect(detectLocale(null, ['fr-FR', 'en-GB', 'pt-BR'])).toBe('en')
   })
 

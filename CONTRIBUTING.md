@@ -22,7 +22,7 @@ Thanks for wanting to help! Pokémon Survivors is a hobby project, so the best c
 - **Simulation is separate from presentation.** `src/game/*` must not touch the DOM or audio. Push a `GameEvent` and let `main.ts` handle sounds and UI.
 - **Keep hot loops allocation-light.** The simulation mutates plain state for hundreds of entities at 60 Hz.
 - **Pixel-perfect rendering.** Snap draw positions to whole pixels and use the helpers in `src/engine/pixelart.ts`.
-- **UI text lives in `src/i18n`, in Brazilian Portuguese, English and Spanish.** `pt.ts` is the reference and `en.ts` and `es.ts` must match it (the type checker enforces it). Pokémon, move and item names stay in English (official names).
+- **UI text lives in `src/i18n`, in Brazilian Portuguese, English, Spanish and Turkish.** `pt.ts` is the reference and `en.ts`, `es.ts` and `tr.ts` must match it (the type checker enforces it). Pokémon, move and item names stay in English (official names).
 - **Mobile matters.** Every UI must work with touch and on small portrait and landscape screens.
 - **Tests:** focused vitest tests (`*.test.ts`) for pure rules only. No snapshot or smoke tests.
 - **Comments:** short doc comments above non-obvious functions.

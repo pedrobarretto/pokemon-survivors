@@ -33,12 +33,12 @@ export const STRIPE_DONATION_URL = 'https://donate.stripe.com/5kQ28l1x45My6ci4ib
  * These paths are linked from the game's title screen, so keep them stable.
  */
 export const ROUTES = {
-  play: { pt: '/', en: '/en/', es: '/es/' },
-  pokedex: { pt: '/pokedex/', en: '/en/pokedex/', es: '/es/pokedex/' },
-  guide: { pt: '/guia/', en: '/en/guide/', es: '/es/guia/' },
-  changelog: { pt: '/novidades/', en: '/en/changelog/', es: '/es/novedades/' },
-  legal: { pt: '/legal/', en: '/en/legal/', es: '/es/legal/' },
-  support: { pt: '/apoie/', en: '/en/support/', es: '/es/apoya/' },
+  play: { pt: '/', en: '/en/', es: '/es/', tr: '/tr/' },
+  pokedex: { pt: '/pokedex/', en: '/en/pokedex/', es: '/es/pokedex/', tr: '/tr/pokedex/' },
+  guide: { pt: '/guia/', en: '/en/guide/', es: '/es/guia/', tr: '/tr/rehber/' },
+  changelog: { pt: '/novidades/', en: '/en/changelog/', es: '/es/novedades/', tr: '/tr/yenilikler/' },
+  legal: { pt: '/legal/', en: '/en/legal/', es: '/es/legal/', tr: '/tr/yasal/' },
+  support: { pt: '/apoie/', en: '/en/support/', es: '/es/apoya/', tr: '/tr/destek/' },
 } as const satisfies Record<string, Record<Locale, string>>
 
 export type RouteId = keyof typeof ROUTES
@@ -53,7 +53,7 @@ export type PageId = (typeof PAGE_IDS)[number]
 export const absolute = (path: string) => `${SITE_URL}${path}`
 
 /** hreflang of each language (Spanish for all of Latin America and beyond, not one country). */
-export const HREFLANG = { pt: 'pt-BR', en: 'en', es: 'es' } as const satisfies Record<Locale, string>
+export const HREFLANG = { pt: 'pt-BR', en: 'en', es: 'es', tr: 'tr' } as const satisfies Record<Locale, string>
 
 /** hreflang alternates of a route; English is the default for other languages, like the game pages. */
 export const alternates = (id: RouteId) => [
