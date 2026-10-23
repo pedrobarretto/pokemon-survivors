@@ -96,7 +96,7 @@ import { pokeballPick } from './ui/pokeballPick'
 import { dropPickup } from './game/pickups'
 import { CURSES } from './data/curses'
 import { CAST_SFX } from './ui/castSfx'
-import { clearSpot, featureAt, featuresNear, inSolid } from './game/terrain'
+import { clearSpot, featureAt, featuresNear, footOf, inSolid } from './game/terrain'
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
 import { dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
@@ -3122,7 +3122,7 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
         const dist = Math.hypot(e.x - me.x, e.y - me.y)
         if (!best || dist < best.d) best = { x: e.x, y: e.y, rx: e.rx, ry: e.ry, d: dist }
       }
-      return { me: { x: me.x, y: me.y }, drawn: { ...d }, nearest: best, drawnIn: inSolid(g, d.x, d.y, me.radius - 1), confirmedIn: inSolid(g, me.x, me.y, me.radius - 1) }
+      return { me: { x: me.x, y: me.y }, drawn: { ...d }, nearest: best, drawnIn: inSolid(g, d.x, d.y, footOf(me) - 1), confirmedIn: inSolid(g, me.x, me.y, footOf(me) - 1) }
     }
     case 'net': {
       // The connection now, the runner's stats, the run's `coop_net` so far (as it would go out) and the last one built.

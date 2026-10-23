@@ -8,7 +8,7 @@ import type { PlaceInterior, PlaceInteriorOf, PlaceOutcome, PlaceStates } from '
 import { notifyPlace } from './placeKit'
 import { bringBack, keepOnFloor, setAside } from './room'
 import { buildSky, calmSky, updateSky } from './sky'
-import type { Solid } from './terrain'
+import { footOf, type Solid } from './terrain'
 import { centerScreen, placeTeam } from './players'
 import type { Game } from './types'
 
@@ -119,7 +119,7 @@ export const updatePlaceIntro = (g: Game, dt: number) => {
 const run = <K extends PlaceId>(g: Game, inside: PlaceInteriorOf<K>, dt: number) => {
   const rule: PlaceRule<K> = PLACE_RULES[inside.id]
   const whole = inside.layout.floor
-  for (const p of g.players) keepOnFloor(p, inside, whole, [], p.radius)
+  for (const p of g.players) keepOnFloor(p, inside, whole, [], footOf(p))
   if (rule.walls) for (const e of g.enemies) if (e.dying < 0) keepOnFloor(e, inside, whole, [], e.radius * 0.8)
   // Shots break where the floor ends.
   retain(g.hazards, (h) => onFloor(whole, h.x - inside.x, h.y - inside.y, 4))

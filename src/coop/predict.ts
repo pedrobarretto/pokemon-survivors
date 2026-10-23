@@ -5,7 +5,7 @@ import { lungeStep, rollStep } from '../game/moveRules'
 import { inPlay, localPlayer } from '../game/players'
 import { moveOf, TICK } from '../game/replay'
 import { predictSpecial, type SpecialState } from '../game/special'
-import { keepOut } from '../game/terrain'
+import { footOf, keepOut } from '../game/terrain'
 import type { Game, Player } from '../game/types'
 import * as dm from '../engine/dmath'
 import { HISTORY } from './client'
@@ -270,7 +270,7 @@ const stepGhost = (world: Game, ghost: Player, carried: Carried[], code: number,
     if (c.age < c.ttl) carried[k++] = c
   }
   carried.length = k
-  keepOut(world, ghost, ghost.radius)
+  keepOut(world, ghost, footOf(ghost))
 }
 
 /**
@@ -370,7 +370,7 @@ export const predict = (pr: Prediction, r: Runner, own: OwnInput, frac: number, 
   pr.lastSample = sample
   const drawn = { x: prev.x + (cur.x - prev.x) * frac + pr.err.x, y: prev.y + (cur.y - prev.y) * frac + pr.err.y }
   // The blend never draws the sprite inside a wall.
-  if (walked && pr.world) keepOut(pr.world, drawn, p.radius)
+  if (walked && pr.world) keepOut(pr.world, drawn, footOf(p))
   pr.drawn = drawn
   return drawn
 }

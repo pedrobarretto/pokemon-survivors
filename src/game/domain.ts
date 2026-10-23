@@ -18,7 +18,7 @@ import { riftLoot, riftScale, type RiftArena } from './rift'
 import { exitArena, LAVA_BURN, riftWin } from './riftArena'
 import { keepOnFloor, setAside } from './room'
 import { rollShiny } from './shiny'
-import { groundAt, inSolid, playerTypes, type Solid } from './terrain'
+import { footOf, groundAt, inSolid, playerTypes, type Solid } from './terrain'
 import { actAs, aimScreen, anchorPlayer, centerScreen, placeTeam, standing } from './players'
 import type { Enemy, Game, Player } from './types'
 import * as dm from '../engine/dmath'
@@ -393,7 +393,7 @@ export const updateDomain = (g: Game, arena: RiftArena, d: DomainState, dt: numb
 
 /** Keeps the players on the floor and out of its holes, walkers on the floor (the legendary and the retinue swim the holes), and breaks shots past its edge. */
 const keepInDomain = (g: Game, plan: FloorPlan, arena: RiftArena) => {
-  for (const p of g.players) keepOnFloor(p, arena, plan.floor, plan.holes ?? [], p.radius)
+  for (const p of g.players) keepOnFloor(p, arena, plan.floor, plan.holes ?? [], footOf(p))
   for (const e of g.enemies) if (e.dying < 0 && !offstage(e)) keepOnFloor(e, arena, plan.floor, [], e.boss ? e.radius * 0.5 : e.radius * 0.8)
   retain(g.hazards, (h) => h.kind !== 'shot' || h.phantom > 0 || onFloor(plan.floor, h.x - arena.x, h.y - arena.y, 6))
 }

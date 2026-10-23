@@ -13,7 +13,7 @@ import { dropLegendaryTm } from './tms'
 import { riftLoot, riftScale, type RiftArena } from './rift'
 import { bringBack, keepOnFloor, setAside } from './room'
 import { rollShiny } from './shiny'
-import { groundAt, playerTypes } from './terrain'
+import { footOf, groundAt, playerTypes } from './terrain'
 import { updateDomain } from './domain'
 import { centerScreen, eachPlayer, placeTeam } from './players'
 import { dropForEach } from './coop'
@@ -179,7 +179,7 @@ export const updateArena = (g: Game, dt: number) => {
   const floor = floorAt(layout, stepsAt(layout.crumble, arena.age))
   const holes = holesAt(layout, stepsAt(layout.tide, arena.age))
   // The players keep to what's left of the floor; the legendary flies or swims over the rest.
-  for (const p of g.players) keepOnFloor(p, arena, floor, holes, p.radius)
+  for (const p of g.players) keepOnFloor(p, arena, floor, holes, footOf(p))
   const whole = floorAt(layout, 0)
   for (const e of g.enemies) keepOnFloor(e, arena, whole, [], e.radius)
   // Shots break on the edge.

@@ -33,8 +33,24 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       { pt: 'Ovo do Kecleon sem o limite de um por dia: até 6, e cada um custa o dobro do anterior (₽ 10.000, 20.000, 40.000…). A conta zera à meia-noite.', en: 'The Kecleon Egg is no longer one a day: up to 6, each costing double the last (₽ 10,000, 20,000, 40,000…). The count resets at midnight.', es: 'El Huevo Kecleon ya no es uno por día: hasta 6, y cada uno cuesta el doble del anterior (₽ 10.000, 20.000, 40.000…). La cuenta vuelve a cero a medianoche.' },
       { pt: 'Incubadora maior: a 4ª e a 5ª vaga, suas para sempre, e a Incubadora Rápida, que faz um ovo andar o dobro.', en: 'A bigger incubator: the 4th and 5th slots, yours for good, and the Quick Incubator, which makes an egg walk twice as fast.', es: 'Una incubadora más grande: el 4.º y el 5.º espacio, tuyos para siempre, y la Incubadora Rápida, que hace que un huevo avance el doble.' },
       { pt: 'As partidas pagam cerca de metade do ₽, agora que a loja tem onde gastar. O que você já guardou continua valendo o mesmo.', en: 'Runs pay about half the ₽, now that the shop has somewhere to spend it. What you already saved keeps its full value.', es: 'Las partidas pagan cerca de la mitad de los ₽, ahora que la tienda tiene en qué gastarlos. Lo que ya ahorraste sigue valiendo lo mismo.' },
+      { pt: 'Pokémon grandes (Salamence, Milotic, Hydreigon…) cabem nos labirintos, na casa abandonada e na caverna do Groudon, e ninguém mais fica preso no cenário.', en: 'Big Pokémon (Salamence, Milotic, Hydreigon…) fit through mazes, the abandoned cottage and Groudon\'s cave, and nobody gets stuck in the scenery anymore.', es: 'Los Pokémon grandes (Salamence, Milotic, Hydreigon…) caben en los laberintos, la casa abandonada y la cueva de Groudon, y nadie vuelve a quedar atrapado en el escenario.' },
     ],
     changes: [
+      {
+        title: { pt: 'Ninguém mais fica preso no cenário', en: 'No more getting stuck in the scenery', es: 'Nadie más queda atrapado en el escenario' },
+        notes: [
+          {
+            pt: 'Corrigido: Pokémon grandes, como Salamence, Milotic, Hydreigon, Dragapult e Altaria, não passavam pelos corredores dos labirintos, pela porta da casa abandonada nem por trechos da caverna do Groudon. Agora todo Pokémon passa por todos os caminhos (o tamanho para levar dano continua o mesmo).',
+            en: "Fixed: big Pokémon like Salamence, Milotic, Hydreigon, Dragapult and Altaria couldn't fit through maze corridors, the abandoned cottage's door or parts of Groudon's cave. Now every Pokémon fits every path (the size that takes hits stays the same).",
+            es: 'Corregido: los Pokémon grandes como Salamence, Milotic, Hydreigon, Dragapult y Altaria no pasaban por los pasillos de los laberintos, la puerta de la casa abandonada ni partes de la cueva de Groudon. Ahora todo Pokémon pasa por todos los caminos (el tamaño para recibir daño sigue igual).',
+          },
+          {
+            pt: 'Corrigido: evoluir dentro da casa, ou ser empurrado entre a barraca, a fogueira e a mochila do acampamento, entre cristais da caverna ou contra as paredes de uma fenda, podia te deixar preso sem conseguir andar. Agora quem fica entalado sai para o lugar livre mais perto.',
+            en: 'Fixed: evolving inside the cottage, or getting pushed between the camp\'s tent, campfire and backpack, between cave crystals or against a rift\'s walls, could leave you stuck and unable to move. Now anyone wedged in steps out to the nearest open spot.',
+            es: 'Corregido: evolucionar dentro de la casa, o ser empujado entre la carpa, la fogata y la mochila del campamento, entre cristales de la cueva o contra las paredes de una grieta, podía dejarte atrapado sin poder moverte. Ahora quien queda atascado sale al lugar libre más cercano.',
+          },
+        ],
+      },
       {
         title: { pt: 'Passear pela praça no celular', en: 'Walk around the plaza on your phone', es: 'Pasear por la plaza en el celular' },
         notes: [

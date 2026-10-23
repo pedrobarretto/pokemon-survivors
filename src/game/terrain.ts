@@ -6,7 +6,7 @@ import { CLIFFS, CLUSTER_SLOTS, LAKES, SOLID_FOOT, TERRAIN, type Ellipse, type F
 import type { PlacePiece } from '../data/places'
 import { LANDMARK, LANDMARK_IDS, type LandmarkGround, type LandmarkId, type LandmarkPiece } from '../data/landmarks'
 import { LANDMARK_VARIANTS, landmarkPlan } from './landmarkLayout'
-import { arenaGround } from './arenaFloor'
+import { arenaGround, fits } from './arenaFloor'
 import { burst } from './effects'
 import { roomOf } from './room'
 import { isAirborne } from './traits'
@@ -267,6 +267,62 @@ export const pushOut = (o: Pos, r: number, e: Ellipse) => {
   return true
 }
 
+/**
+ * The widest a player stands against terrain and a room's edges, px. The
+ * narrowest authored ways (a maze's corridors, the cottage's door, the last
+ * chamber of Groudon's tunnel) fit a radius of 10, so with this every playable
+ * walks all of them, however big its sprite; its hitbox (`Player.radius`) stays.
+ */
+export const PLAYER_FOOT = 8
+
+/** The radius a player (or co-op's drawn copy of one) collides with terrain at: its hitbox, capped at `PLAYER_FOOT`. */
+export const footOf = (p: { radius: number }) => Math.min(p.radius, PLAYER_FOOT)
+
+/** Unit vectors around the circle that `nearestOpen` walks out along, built with `dmath` so every engine agrees. */
+const AROUND = Array.from({ length: 24 }, (_, i) => ({ x: dm.cos((i / 24) * Math.PI * 2), y: dm.sin((i / 24) * Math.PI * 2) }))
+
+/** How far, px, `nearestOpen` looks for room, and its step between rings. */
+const UNSTICK = { reach: 72, step: 2 } as const
+
+/**
+ * The nearest spot to (x, y) where `open` holds, searched ring by ring
+ * outward (`UNSTICK`), or null when there's none in reach. Pure and
+ * deterministic: the first open spot of the closest ring, in a fixed order.
+ */
+export const nearestOpen = (x: number, y: number, open: (x: number, y: number) => boolean): Pos | null => {
+  for (let d = UNSTICK.step; d <= UNSTICK.reach; d += UNSTICK.step) {
+    for (const u of AROUND) if (open(x + u.x * d, y + u.y * d)) return { x: x + u.x * d, y: y + u.y * d }
+  }
+  return null
+}
+
+/** Whether a player's foot of radius `r` at (x, y) is clear of solids and, in a room, on its floor and out of its holes. */
+const standable = (g: Game, x: number, y: number, r: number) => {
+  if (inSolid(g, x, y, r)) return false
+  const room = roomOf(g)
+  if (!room) return true
+  const lx = x - room.x
+  const ly = y - room.y
+  return room.layout.floor.some((s) => fits(s, lx, ly, r)) && !(room.layout.holes ?? []).some((h) => dm.sq(lx - h.x) + dm.sq(ly - h.y) < dm.sq(h.r + r))
+}
+
+/**
+ * Keeps a walking player out of the solids; one the pushes can't free (an
+ * evolution grew them into a gap, a dash wedged them between two pieces or
+ * a piece and a room's edge, each push putting them back into the other)
+ * steps to the nearest spot where they stand clear.
+ */
+const settlePlayer = (g: Game, p: Pos & { radius: number }) => {
+  const r = footOf(p)
+  block(g, p, r)
+  // Half a px of slack: a push leaves the circle right on the edge.
+  if (standable(g, p.x, p.y, r - 0.5)) return
+  const spot = nearestOpen(p.x, p.y, (x, y) => standable(g, x, y, r))
+  if (!spot) return
+  p.x = spot.x
+  p.y = spot.y
+}
+
 /** Pushes a circle out of every solid near it. Returns the last ellipse it hit, or null. */
 const block = (g: Game, o: Pos, r: number) => {
   let hit: Ellipse | null = null
@@ -366,7 +422,7 @@ export const updateTerrain = (g: Game, dt: number) => {
     }
   }
   // Under a tunnel's ridge (`landmarks.ts`) a player goes through the rock.
-  for (const p of g.players) if (!p.landmark.transit) block(g, p, p.radius)
+  for (const p of g.players) if (!p.landmark.transit) settlePlayer(g, p)
   for (const e of g.enemies) {
     if (e.dying >= 0 || overTerrain(e)) continue
     const wall = block(g, e, e.radius * 0.8)
