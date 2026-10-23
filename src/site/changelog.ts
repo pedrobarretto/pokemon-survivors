@@ -81,6 +81,18 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          {
+            pt: 'O seu Pokémon parceiro não some mais do lobby depois de deixar o jogo um tempo em outra aba (e o shiny do Surto do dia também não).',
+            en: 'Your partner Pokémon no longer vanishes from the lobby after the game sits in another tab for a while (nor does the Outbreak’s shiny).',
+            es: 'Tu Pokémon compañero ya no desaparece del lobby después de dejar el juego un rato en otra pestaña (ni el shiny de la Horda del día).',
+            fr: 'Ton Pokémon partenaire ne disparaît plus du lobby quand le jeu reste un moment dans un autre onglet (ni le shiny de l’Apparition massive du jour).',
+            zh: '把遊戲放在其他分頁一段時間後，大廳裡的夥伴寶可夢不會再消失了（今日大量出現的異色寶可夢也一樣）。',
+          },
+        ],
+      },
     ],
   },
   {

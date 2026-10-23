@@ -923,12 +923,32 @@ const RUN_IDLE = 2
 const MENU_IDLE = 20
 
 /**
- * What the menus stream and keep: the Noite das Bruxas' ghosts in the meadow first, the plaza's
- * Kecleon (off screen most of the time, and back after a run swept it), every region's starter trio
- * (the partner select), then the next run's first stage.
+ * What the lobby draws from the save, in the colors it shows them: the partner (its first stage),
+ * the supporter's companion and the Surto do dia's pair. The lobby draws them from whatever is
+ * loaded, so a sweep that freed one (the tab in the background for a minute, no frame drawing
+ * them) left the meadow without its partner until the lobby was built again.
  */
-const menuSprites = () => [
-  ...new Set([
+const lobbySprites = (): Variant[] => {
+  const save = loadSave()
+  const c = save.companion
+  const outbreak = ENEMIES[outbreakToday()].dex
+  return [
+    { dex: PLAYABLE[save.partner].line[0].dex, shiny: playsShiny(save, save.partner) },
+    ...(c && isSupporter(save) && canWalkWith(save, c) ? [{ dex: companionForm(c.id).dex, shiny: c.shiny }] : []),
+    { dex: outbreak, shiny: false },
+    { dex: outbreak, shiny: true },
+  ]
+}
+
+/**
+ * What the menus stream and keep: the lobby's own (`lobbySprites`) and the Noite das Bruxas' ghosts
+ * in the meadow first, the plaza's Kecleon (off screen most of the time, and back after a run swept it),
+ * every region's starter trio (the partner select), then the next run's first stage.
+ */
+const menuSprites = (): Variant[] => [
+  ...lobbySprites(),
+  ...[
+    ...new Set([
     ...(halloweenToday() ? HAUNT_DEX : []),
     KECLEON_DEX,
     // The plaza's visitors today: Meowth at his caravan, a seasonal stall's keeper.
@@ -937,8 +957,9 @@ const menuSprites = () => [
     // The festival's: Lanturn at its market, Volbeat and Illumise at the tree.
     ...festivalSprites(scene.plaza.festival),
     ...REGIONS.flatMap((r) => r.starters.map((id) => STARTERS[id].line[0].dex)),
-    ...openingDex(upcoming),
-  ]),
+      ...openingDex(upcoming),
+    ]),
+  ].map((dex) => ({ dex, shiny: false })),
 ]
 
 /**
@@ -960,8 +981,8 @@ const syncSprites = () => {
     return
   }
   const menu = menuSprites()
-  streamSprites(menu.map((dex) => ({ dex, shiny: false })))
-  sweepSprites({ species: new Set(menu), variants: new Set() }, MENU_IDLE)
+  streamSprites(menu)
+  sweepSprites({ species: new Set(menu.map((v) => v.dex)), variants: new Set(menu.flatMap((v) => (v.shiny ? [v.dex] : []))) }, MENU_IDLE)
 }
 
 /** True while a run swaps the lobby's sheets for its own (`loadRunSheets`): the meadow holds still and the menus' stream waits. */
