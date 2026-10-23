@@ -95,8 +95,12 @@ export const pickLegend = (rng: Rng, met: readonly RiftLegend[], self: EnemyId |
   return pick(rng, fresh.length > 0 ? fresh : open)
 }
 
-/** Standing in the portal fills it; stepping out drains it twice as fast. */
-export const chargePortal = (charge: number, inside: boolean, dt: number) => (inside ? charge + dt : Math.max(0, charge - dt * 2))
+/**
+ * Standing in the portal (or a place's door) fills it; stepping out drains it
+ * at a quarter of that pace, so a move that hops the player out and back on
+ * its own (Aqua Step's sway, Zen Headbutt's dash) still lets them in.
+ */
+export const chargePortal = (charge: number, inside: boolean, dt: number) => (inside ? charge + dt : Math.max(0, charge - dt * 0.25))
 
 /**
  * Rift legendaries are tuned for the first rift (4:00) and grow with the run

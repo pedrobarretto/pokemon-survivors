@@ -64,14 +64,23 @@ describe('rift schedule', () => {
 })
 
 describe('rift portal', () => {
-  it('takes standing inside for the enter time; stepping out drains it twice as fast', () => {
+  it('takes standing inside for the enter time; stepping out drains it at a quarter of the pace', () => {
     let charge = 0
     for (let i = 0; i < 30; i++) charge = chargePortal(charge, true, 1 / 60)
     expect(charge).toBeLessThan(RIFT.enterTime)
     for (let i = 0; i < 30; i++) charge = chargePortal(charge, true, 1 / 60)
     expect(charge).toBeCloseTo(RIFT.enterTime)
-    expect(chargePortal(0.5, false, 0.1)).toBeCloseTo(0.3)
+    expect(chargePortal(0.5, false, 0.4)).toBeCloseTo(0.4)
     expect(chargePortal(0.1, false, 1)).toBe(0)
+  })
+
+  it('lets in a player hopped out and back sooner than the enter time (Aqua Step swaying in place)', () => {
+    let charge = 0
+    let t = 0
+    // In for 0.7 s, then out for 1.4 s, over and over.
+    for (; t < 10 && charge < RIFT.enterTime; t += 1 / 60) charge = chargePortal(charge, t % 2.1 < 0.7, 1 / 60)
+    expect(charge).toBeGreaterThanOrEqual(RIFT.enterTime)
+    expect(t).toBeLessThan(3)
   })
 
   it('brings a different legendary each time until all were met', () => {

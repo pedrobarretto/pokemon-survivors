@@ -77,10 +77,12 @@ export const hint = (keys: string, touch: string) =>
  * Arrows move the cursor, Enter/Space activate, digits pick directly.
  * `guard` (ms) makes a menu that opens mid-fight ignore picks at first:
  * taps and clicks for that long, keys and pad buttons until they pause
- * (`pressGuard`). `off` stops it whole, keys and pointer: a screen that binds
+ * (`pressGuard`). `space: false` leaves Space out (Enter, a tap or pad A
+ * still pick): the run's special key never lands on a screen the run opened
+ * on its own. `off` stops it whole, keys and pointer: a screen that binds
  * its buttons again (back from a screen on top) doesn't stack a second click.
  */
-export const menu = (input: Input, buttons: HTMLElement[], activate: (i: number) => void, opts: { horizontal?: boolean; initial?: number; guard?: number } = {}) => {
+export const menu = (input: Input, buttons: HTMLElement[], activate: (i: number) => void, opts: { horizontal?: boolean; initial?: number; guard?: number; space?: boolean } = {}) => {
   let index = opts.initial ?? 0
   const openedAt = performance.now()
   const takes = pressGuard(opts.guard ?? 0)
@@ -101,7 +103,7 @@ export const menu = (input: Input, buttons: HTMLElement[], activate: (i: number)
   const offKeys = input.onKey((key) => {
     if (prev.includes(key)) focus(index - 1)
     else if (next.includes(key)) focus(index + 1)
-    else if (key === 'Enter' || key === 'Space') {
+    else if (key === 'Enter' || (key === 'Space' && opts.space !== false)) {
       if (takes(performance.now() - openedAt)) activate(index)
     } else if (/^Digit[1-9]$/.test(key)) {
       const i = Number(key.slice(5)) - 1
@@ -887,8 +889,10 @@ export const results = (
     boards && (() => openSub(ranking?.open, boards)),
   ].filter((a) => typeof a === 'function')
   // Every button acts after the key dispatch: the screen it opens (Menu's partner select) would take the same press as its own.
-  const bindNav = (initial = 0, guard = 0) => menu(input, buttons, (i) => later(() => actions[i]?.()), { horizontal: true, initial, guard })
-  // The run ends mid-fight: A and Space, still being pressed for the special, would pick the focused button (Retry).
+  // Space is the special: pressed every second or so while it recharges, it picked Retry (or Continue) the moment the run ended,
+  // so the results never showed and the run "restarted". Enter, a tap or pad A pick here.
+  const bindNav = (initial = 0, guard = 0) => menu(input, buttons, (i) => later(() => actions[i]?.()), { horizontal: true, initial, guard, space: false })
+  // The run ends mid-fight: pad A, still being pressed for the special, would pick the focused button (Retry).
   let nav = bindNav(0, RESULTS_GUARD_MS)
 
   const el = h(

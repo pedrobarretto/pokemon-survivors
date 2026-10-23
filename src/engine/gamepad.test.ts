@@ -37,13 +37,28 @@ describe('stickVector', () => {
 })
 
 describe('padChanges', () => {
-  const state = (index: number, id: string, buttons: number[]): PadState => ({ index, id, buttons: new Set(buttons), stick: new Set(), move: { x: 0, y: 0 } })
+  const state = (index: number, id: string, buttons: number[]): PadState => ({ index, id, buttons: new Set(buttons), stick: new Set(), move: { x: 0, y: 0 }, rested: true })
+  /** A pad read with its stick at `axes`, as `readPads` makes it. */
+  const tilted = (axes: number[]): PadState => {
+    const move = stickVector(axes)
+    return { index: 0, id: 'Wheel', buttons: new Set(), stick: stickActions(axes), move, rested: move.x === 0 && move.y === 0 }
+  }
 
   it('sees a press on one pad while another pad holds the same button', () => {
     const virtual = state(1, 'Virtual pad', [0, 3])
     const { fresh, pressed } = padChanges([state(0, 'Xbox', []), virtual], [state(0, 'Xbox', [3]), virtual])
     expect([...fresh]).toEqual([3])
     expect(pressed).toBe('Xbox')
+  })
+
+  it('ignores a stick that never sat at the center, and keeps one that did', () => {
+    const stuck = tilted([0, -1])
+    expect(padChanges([], [stuck])).toMatchObject({ move: { x: 0, y: 0 }, stick: new Set(), freshStick: new Set(), pressed: null })
+    const { pads } = padChanges([stuck], [tilted([0, 0])])
+    const pushed = padChanges(pads, [tilted([0, -1])])
+    expect(pushed.move.y).toBeCloseTo(-1)
+    expect([...pushed.freshStick]).toEqual(['up'])
+    expect(padChanges(pushed.pads, [tilted([0, -1])]).move.y).toBeCloseTo(-1)
   })
 
   it('presses a held button once', () => {

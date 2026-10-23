@@ -178,9 +178,9 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   window.addEventListener('pointerup', release)
   window.addEventListener('pointercancel', release)
 
+  /** Touch wins, then the keys and the D-pad, then the pad's stick: a stick that drifts never locks the keyboard out. */
   const readMove = (): Vec => {
     if (stick) return stick.vec
-    if (padMove.x !== 0 || padMove.y !== 0) return padMove
     let x = 0
     let y = 0
     for (const code of [...held.values(), ...padHeld]) {
@@ -191,7 +191,7 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
       }
     }
     const len = Math.hypot(x, y)
-    return len > 0 ? { x: x / len, y: y / len } : { x: 0, y: 0 }
+    return len > 0 ? { x: x / len, y: y / len } : padMove
   }
 
   const onKey = (handler: (key: string) => void) => {
@@ -202,8 +202,8 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   // Edge-detected per button, not per code: a button held across a run/menu switch doesn't press again.
   const poll = (playing: boolean) => {
     const now = readPads()
-    const { buttons, stick: axes, fresh, freshStick, pressed, move } = padChanges(pads, now)
-    pads = now
+    const { buttons, stick: axes, fresh, freshStick, pressed, move, pads: seen } = padChanges(pads, now)
+    pads = seen
     if (pressed !== null) activePad = pressed
     const pad = bindings().pad
     padHeld = playing ? padActions(pad, buttons, axes, true).map((a) => ACTIONS[a].code) : []
