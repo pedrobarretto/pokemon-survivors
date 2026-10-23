@@ -482,6 +482,9 @@ export const pt = {
     off: 'OFF',
     tabs: { sound: 'SOM', game: 'JOGO', controls: 'CONTROLES', about: 'SOBRE' },
     about: 'Pokémon Survivors é um fan game gratuito e não oficial, sem ligação com a Nintendo, The Pokémon Company, GAME FREAK ou Creatures.',
+    /** Settings → About's translation credits (`data/translators.ts`): each reviewed language (a key per `Locale`), named in this language. */
+    languages: { pt: 'português', en: 'inglês', es: 'espanhol', fr: 'francês', zh: 'chinês' },
+    reviewedBy: (language: string, name: string, handle: string) => `Tradução para o ${language} revisada por ${name} (@${handle})`,
     legal: 'Legal e créditos',
     github: 'Código no GitHub',
     reportBug: 'Reportar bug',

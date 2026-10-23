@@ -2,6 +2,7 @@ import { playSfx, setMix } from '../engine/audio'
 import { STICK_MODES, type Input } from '../engine/input'
 import { clamp } from '../engine/math'
 import { locale, LOCALE_IDS, LOCALES, setLocale, t, type Locale } from '../i18n'
+import { TRANSLATORS } from '../data/translators'
 import { bugReportsEnabled } from '../bugReport'
 import { bugReportForm } from './bugReport'
 import { openControls } from './controls'
@@ -298,7 +299,9 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           h(
             'div',
             { class: 'box settings-rows', role: 'tabpanel' },
-            tab === 'about' ? h('p', { class: 'settings-about' }, m.about, h('small', {}, t().title.credits)) : null,
+            tab === 'about'
+              ? h('p', { class: 'settings-about' }, m.about, h('small', {}, t().title.credits), ...TRANSLATORS.map((tr) => h('small', {}, m.reviewedBy(m.languages[tr.locale], tr.name, tr.handle))))
+              : null,
             ...content.map((r) => r.el),
           ),
           hint(m.hintKeys, m.hintTouch),

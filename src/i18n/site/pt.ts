@@ -904,6 +904,10 @@ export const sitePt = {
       criesText: 'PokéAPI/cries.',
       fonts: 'Fontes',
       fontsText: 'Press Start 2P e VT323, sob a SIL Open Font License (OFL), e Cubic 11 (俐方體11號) para o chinês, de uso livre. Servidas pelo próprio site.',
+      /** Translation credits (`data/translators.ts`): each reviewed language (a key per `Locale`), named in this language. */
+      translation: 'Tradução',
+      languages: { pt: 'português', en: 'inglês', es: 'espanhol', fr: 'francês', zh: 'chinês' },
+      reviewedBy: (language: string, name: string, discord: string) => `Tradução para o ${language} revisada por ${name}, moderadora do nosso Discord (${discord}). Perfil no jogo:`,
       inspiration: 'Inspiração',
       inspirationText: 'Vampire Survivors, da poncle.',
       nonCommercial: 'Como os sprites são CC BY-NC, o jogo como um todo não pode ser usado comercialmente.',

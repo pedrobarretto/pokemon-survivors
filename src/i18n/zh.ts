@@ -362,6 +362,8 @@ export const zh: Messages = {
     off: '關',
     tabs: { sound: '聲音', game: '遊戲', controls: '操作', about: '關於' },
     about: 'Pokémon Survivors 是免費的非官方同人遊戲，與 Nintendo、The Pokémon Company、GAME FREAK 及 Creatures 無關。',
+    languages: { pt: '葡萄牙文', en: '英文', es: '西班牙文', fr: '法文', zh: '中文' },
+    reviewedBy: (language, name, handle) => `${language}翻譯由 ${name}（@${handle}）校對`,
     legal: '法律資訊與製作名單',
     github: 'GitHub 原始碼',
     reportBug: '回報錯誤',

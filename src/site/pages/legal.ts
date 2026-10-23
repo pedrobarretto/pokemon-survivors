@@ -2,7 +2,8 @@ import type { Locale } from '../../i18n'
 import { SITE_MESSAGES } from '../../i18n/site'
 import { html, type Html } from '../html'
 import { layout } from '../layout'
-import { REPO_URL } from '../routes'
+import { TRANSLATORS } from '../../data/translators'
+import { REPO_URL, ROUTES } from '../routes'
 
 const section = (id: string, title: string, body: Html) =>
   html`<section class="box doc-section" id="${id}" aria-labelledby="${id}-title"><h2 id="${id}-title">${title}</h2>${body}</section>`
@@ -19,6 +20,10 @@ export const legalPage = (locale: Locale) => {
       <dt>${l.licenses.sprites}</dt><dd>${l.licenses.spritesText} <a href="https://sprites.pmdcollab.org">PMD SpriteCollab</a> · <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a></dd>
       <dt>${l.licenses.cries}</dt><dd><a href="https://github.com/PokeAPI/cries">${l.licenses.criesText}</a></dd>
       <dt>${l.licenses.fonts}</dt><dd>${l.licenses.fontsText} <a href="https://openfontlicense.org">OFL</a></dd>
+      <dt>${l.licenses.translation}</dt><dd>${TRANSLATORS.map(
+        // `?u=` opens their public profile (`PROFILE_PARAM` in ranking.ts, which the build can't import: it pulls the account shell in).
+        (tr) => html`${l.licenses.reviewedBy(l.licenses.languages[tr.locale], tr.name, tr.discord)} <a href="${ROUTES.play[tr.locale]}?u=${tr.handle}">@${tr.handle}</a>`,
+      )}</dd>
       <dt>${l.licenses.inspiration}</dt><dd><a href="https://poncle.itch.io/vampire-survivors">${l.licenses.inspirationText}</a></dd>
     </dl>
     <p class="note">${l.licenses.nonCommercial}</p>

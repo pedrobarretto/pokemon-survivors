@@ -85,6 +85,11 @@ Loaded Dice, Fairy Feather, Black Augurite, Auspicious Armor and Malicious Armor
 so they were converted to pixel art with [PixelLab](https://www.pixellab.ai).
 Towers, trees, rocks, bushes and other painted scenery were made for this game with [PixelLab](https://www.pixellab.ai).
 
+## Translations
+
+The Spanish translation was reviewed by LauKhaos ([@laukhaos](https://www.pokemonsurvivors.com/es/?u=laukhaos) in the game,
+laukhaos on Discord), a moderator of our Discord. Translators are listed in \`src/data/translators.ts\`.
+
 ## Fonts
 
 [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38 and

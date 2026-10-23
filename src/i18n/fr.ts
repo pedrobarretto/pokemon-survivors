@@ -362,6 +362,8 @@ export const fr: Messages = {
     off: 'NON',
     tabs: { sound: 'SON', game: 'JEU', controls: 'COMMANDES', about: 'INFOS' },
     about: 'Pokémon Survivors est un fan game gratuit et non officiel, sans lien avec Nintendo, The Pokémon Company, GAME FREAK ou Creatures.',
+    languages: { pt: 'portugais', en: 'anglais', es: 'espagnol', fr: 'français', zh: 'chinois' },
+    reviewedBy: (language, name, handle) => `Traduction en ${language} relue par ${name} (@${handle})`,
     legal: 'Mentions légales et crédits',
     github: 'Code source sur GitHub',
     reportBug: 'Signaler un bug',
