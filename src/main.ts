@@ -2,8 +2,8 @@ import '@fontsource/press-start-2p'
 import '@fontsource/vt323'
 import './ui/style.css'
 // First, so its error listeners catch what goes wrong while the rest loads.
-import { bugReportsEnabled, describeWith, deviceMemory, syncRunWatch, takeCrash } from './bugReport'
-import type { BugCrash, BugPerf } from './game/bugReport'
+import { bugReportsEnabled, describeWith, deviceMemory, runMoment, syncRunWatch, takeCrash } from './bugReport'
+import type { BugCrash } from './game/bugReport'
 
 import { playCry, playSfx, unlockAudio, type Sfx } from './engine/audio'
 import { castSound } from './ui/castSounds'
@@ -11,7 +11,7 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { canvasStats, context2d, resetCanvases, resetCanvasPeaks } from './engine/pixelart'
+import { context2d, resetCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
@@ -39,7 +39,9 @@ import { devFestival, festivalView, startFestival } from './festival'
 import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
-import { identify, startAnalytics, takeOpened, track, type ErrorContext } from './analytics'
+import { identify, startAnalytics, takeOpened, track, type ErrorContext, type RunPerf } from './analytics'
+import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
+import type { Crumb, CrumbMoment } from './crumb'
 import { BAG_ITEMS, useArmed, type BagItem } from './game/bag'
 import { armedTms, tmLimit } from './game/tmShelf'
 import { branchNeeds, capLevel } from './game/evoItems'
@@ -123,7 +125,7 @@ import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from '.
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
 import { celebrateShop, createTitleScene, drawTitleScene, exploreMeadow, meetPartner, revealShopkeeper, sceneAt, steerPartner, stepTitleScene, talkSpot, tapsPlaza, visitPlaza } from './render/titleScene'
-import { KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
+import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
@@ -411,19 +413,19 @@ const shopPlaza: ShopPlaza = {
   lookAt: (keeper) => (scene.plaza.focus = keeper === 'purple' ? 1 : keeper === 'meowth' ? 'caravan' : keeper === 'stall' ? 'stall' : 0),
 }
 
-/** Dev: the festival's plaza stage (`ps.festival('stage', n)`), shown with the plaque whatever the day. */
+/** Dev: the festival's plaza stage (`ps.festival('stage', n)`), shown as if the festival ran whatever the day. */
 let devPlazaStage: PlazaStage | null = null
-const isPlazaStage = (n: unknown): n is PlazaStage => n === 0 || n === 1 || n === 2 || n === 3
+const isPlazaStage = (n: unknown): n is PlazaStage => n === 0 || n === 1 || n === 2 || n === 3 || n === 4
 
 /**
  * The Festival da Praça on the plaza, from the pot the festival already
  * fetched (`festivalView`; stage 0 while none is known): the fountain from the
- * week before a festival (`festivalAnnounced`), the pot's stage and the plaque while it runs.
+ * week before a festival (`festivalAnnounced`), the plaque and the Lantern Festival by the pot's stage while it runs.
  */
 const plazaFestival = (): PlazaFestival => {
-  if (devPlazaStage !== null) return { fountain: true, stage: devPlazaStage, plaque: true }
+  if (devPlazaStage !== null) return { fountain: true, stage: devPlazaStage, running: true }
   const view = festivalView()
-  return { fountain: festivalAnnounced(view.day) !== null, stage: view.running ? view.stage : 0, plaque: view.running }
+  return { fountain: festivalAnnounced(view.day) !== null, stage: view.running ? view.stage : 0, running: view.running }
 }
 
 /** Who comes by the plaza (Meowth's caravan, a seasonal stall, the golden statue) and the festival's fountain, worked out about once a second. */
@@ -436,7 +438,7 @@ const refreshVisitors = (now: number) => {
   if (next.caravan !== was.caravan || next.stall !== was.stall || next.statue !== was.statue) scene.plaza.visitors = next
   const fest = plazaFestival()
   const had = scene.plaza.festival
-  if (fest.fountain !== had.fountain || fest.stage !== had.stage || fest.plaque !== had.plaque) scene.plaza.festival = fest
+  if (fest.fountain !== had.fountain || fest.stage !== had.stage || fest.running !== had.running) scene.plaza.festival = fest
 }
 
 /** The shop over the plaza; `close` leaves it (and `?loja` behind); `shelf` opens on Meowth's caravan or a seasonal stall's shelf; `festival` swaps it for the festival's sheet. */
@@ -470,26 +472,18 @@ const SCREEN_CLASSES = new Set(['screen', 'shell', 'dim', 'pop', 'hidden'])
 /** Frame pacing, for the crash watch and the run's summary on `run_end`. */
 const frames = frameStats()
 
-const mb = (bytes: number) => Math.round(bytes / 104_857.6) / 10
-
-/** Canvas memory and frame pace right now (`createCanvas` keeps the counts as it goes). */
-const perfNow = (): BugPerf => ({
-  canvases: canvasStats.live,
-  canvasMb: mb(canvasStats.bytes),
-  peakCanvases: canvasStats.peakLive,
-  peakCanvasMb: mb(canvasStats.peakBytes),
-  frameMs: recentFrameMs(frames),
-})
-
 describeWith(() => {
   const view = [...ui.querySelectorAll(':scope > .screen:not(.bug-screen)')].map((el) => [...el.classList].filter((c) => !SCREEN_CLASSES.has(c)).join('.')).join(' > ')
-  const perf = perfNow()
+  // The canvases the caches hold (`heldCanvases`) stand for the report's canvas memory.
+  const memory = sampleMemory()
+  const perf = { canvases: memory.canvases, canvasMb: memory.canvasMb, peakCanvases: memory.peakCanvases, peakCanvasMb: memory.peakCanvasMb, frameMs: recentFrameMs(frames) }
   const g = run && shownGame(run)
-  if (!g || g.phase === 'gameover' || g.phase === 'victory') return { view, run: null, perf }
+  if (!g || g.phase === 'gameover' || g.phase === 'victory') return { view, run: null, perf, memory }
   const boss = g.bossId === null ? undefined : g.enemies.find((e) => e.id === g.bossId)
   return {
     view,
     perf,
+    memory,
     run: {
       partner: localPlayer(g).starter,
       form: playerName(g),
@@ -818,13 +812,20 @@ const reportRun = (r: Run, faint: Extract<GameEvent, { kind: 'gameover' }> | nul
   rerolls = 0
 }
 
-/** How the device coped with the run: canvas memory at its peak and the frames while playing. */
-const runPerf = () => {
+/** How the device coped with the run (memory now and at its peak, the frames while playing) and which device it was. */
+const runPerf = (): RunPerf => {
   const f = runFrames(frames)
+  const m = sampleMemory()
   return {
-    peakCanvasMb: mb(canvasStats.peakBytes),
-    peakCanvases: canvasStats.peakLive,
+    liveCanvasMb: m.canvasMb,
+    peakLiveCanvasMb: m.peakCanvasMb,
+    liveCanvases: m.canvases,
+    sheetMb: m.sheetMb,
+    peakSheetMb: m.peakSheetMb,
+    sheets: m.sheets,
+    quality: m.quality,
     deviceMemory: deviceMemory(),
+    ...deviceNow(),
     frameAvg: f.avg,
     frameP95: f.p95,
     longFrames: f.long,
@@ -929,6 +930,8 @@ const menuSprites = () => [
     // The plaza's visitors today: Meowth at his caravan, a seasonal stall's keeper.
     ...(scene.plaza.visitors.caravan ? [CARAVAN.dex] : []),
     ...(scene.plaza.visitors.stall ? [STALLS[scene.plaza.visitors.stall].dex] : []),
+    // The festival's: Lanturn at its market, Volbeat and Illumise at the tree.
+    ...festivalSprites(scene.plaza.festival),
     ...REGIONS.flatMap((r) => r.starters.map((id) => STARTERS[id].line[0].dex)),
     ...openingDex(upcoming),
   ]),
@@ -1083,7 +1086,7 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
   // The menus' sheets age out from here; the run's next stage starts streaming.
   syncSprites()
   // The crash watch holds the run from now on (`bugReport.ts`), and the run's own peaks and frames start here.
-  resetCanvasPeaks()
+  resetMemoryPeaks()
   resetRunFrames(frames)
   syncRunWatch()
   announceRun(start, run.challenge)
@@ -1163,7 +1166,10 @@ const syncOverlay = (r: Run) => {
   r.shown = { phase, offers: me.offers }
   r.hud.setMenuOpen(phase !== 'playing' && phase !== 'evolving')
   // A pick: solo it plays on the spot (and goes into the replay); co-op sends it with the screen's round (`ui/teamLayer.ts`).
-  const pick = (offer: Offer) => (c ? c.team.pick(me, offer) : (recordEvent(r.recorder, ['offer', me.offers.indexOf(offer)]), chooseOffer(g, offer)))
+  const pick = (offer: Offer) => {
+    runMoment('pick')
+    return c ? c.team.pick(me, offer) : (recordEvent(r.recorder, ['offer', me.offers.indexOf(offer)]), chooseOffer(g, offer))
+  }
   switch (phase) {
     case 'levelup':
       r.overlay = levelUp(
@@ -1361,9 +1367,24 @@ const TRAIT_SFX: Record<TraitId, Record<'warn' | 'fire', Sfx | null>> = {
   spitter: { warn: null, fire: 'spit' },
 }
 
+/** The simulation events the crash watch marks as key moments (`runMoment`): a phone killing the tab tends to do it right after one. */
+const CRUMB_EVENTS: Partial<Record<GameEvent['kind'], CrumbMoment>> = {
+  boss: 'boss',
+  bossPhase: 'phase',
+  riftOmen: 'omen',
+  riftEnter: 'rift',
+  riftExit: 'riftExit',
+  biome: 'biome',
+  place: 'place',
+  evolved: 'evolve',
+  megaStart: 'mega',
+}
+
 /** The sounds and toasts of a simulation event, read off the game as shown (`shownGame`: this player's cries, form, special and Mega in co-op). */
 const handleEvent = (r: Run, e: GameEvent) => {
   const g = shownGame(r)
+  const moment = CRUMB_EVENTS[e.kind]
+  if (moment) runMoment(moment)
   switch (e.kind) {
     case 'hit': return playSfx(e.effective > 1 ? 'superHit' : 'hit', 45)
     case 'kill': return playSfx('kill', 50)
@@ -2027,7 +2048,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner) => {
     coop: c,
   }
   syncSprites()
-  resetCanvasPeaks()
+  resetMemoryPeaks()
   resetRunFrames(frames)
   syncRunWatch()
   leftRun = null
@@ -2689,8 +2710,12 @@ const watchDeploys = () => {
   onRulesBehind(loadNewerBuild)
 }
 
-/** Counts a run the page died in, once, whether or not the player reports it: rare enough for an event of its own. */
-const reportCrash = (c: BugCrash) =>
+/**
+ * Counts a run the page died in, once, whether or not the player reports it: rare enough for an event of its own.
+ * Waits for the device's Client Hints (2 s at most), which this boot asks for the same phone.
+ */
+const reportCrash = async (c: BugCrash, crumb: Crumb | null) => {
+  const device = await deviceInfo()
   track('run_crash', {
     version: c.version,
     sameVersion: c.version === __GAME_VERSION__,
@@ -2698,25 +2723,37 @@ const reportCrash = (c: BugCrash) =>
     partner: c.run?.partner ?? null,
     phase: c.run?.phase ?? null,
     minute: c.run ? Math.floor(c.run.time / 60) : null,
+    seconds: c.run?.time ?? null,
     enemies: c.run?.enemies ?? null,
     projectiles: c.run?.projectiles ?? null,
     wave: c.run?.wave || null,
     boss: c.run?.boss || null,
     place: c.run?.place || null,
+    biome: c.run?.biome || null,
+    moment: crumb?.moment ?? null,
+    momentAt: crumb?.momentAt ?? null,
     heapMb: c.heapMb,
-    canvases: c.perf?.canvases ?? null,
-    canvasMb: c.perf?.canvasMb ?? null,
-    peakCanvasMb: c.perf?.peakCanvasMb ?? null,
+    liveCanvasMb: crumb?.canvasMb ?? null,
+    peakLiveCanvasMb: crumb?.peakCanvasMb ?? null,
+    liveCanvases: crumb?.canvases ?? null,
+    sheetMb: crumb?.sheetMb ?? null,
+    peakSheetMb: crumb?.peakSheetMb ?? null,
+    sheets: crumb?.sheets ?? null,
+    quality: crumb?.quality ?? null,
     frameMs: c.perf?.frameMs ?? null,
     deviceMemory: deviceMemory(),
+    ...device,
     error: c.error?.message ?? null,
   })
+}
 
 /** The game closed mid-run last time (`takeCrash`): the title asks, once, whether to report it. */
 const askAboutCrash = () => {
-  const crash = takeCrash()
-  if (crash) reportCrash(crash)
-  if (!crash || !bugReportsEnabled || !screen?.el.classList.contains('title-home')) return
+  const found = takeCrash()
+  if (!found) return
+  const { crash, crumb } = found
+  void reportCrash(crash, crumb)
+  if (!bugReportsEnabled || !screen?.el.classList.contains('title-home')) return
   crashPrompt(screen.el, () => setScreen(bugReportForm(ui, input, () => showTitle(), crash)))
 }
 
@@ -3133,7 +3170,7 @@ if (import.meta.env.DEV) {
       coop: devCoop,
       /**
        * `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet,
-       * and `('stage', n)`: the plaza shows stage 0 to 3 (the fountain and the plaque whatever the day; null goes back to the pot's).
+       * and `('stage', n)`: the plaza shows stage 0 to 4 as if the festival ran, whatever the day (null goes back to the pot's).
        */
       festival: (cmd?: Parameters<typeof devFestival>[0] | 'open' | 'stage', arg?: number | string | null) => {
         if (cmd === 'stage') {

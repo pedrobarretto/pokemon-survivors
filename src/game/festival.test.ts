@@ -62,7 +62,7 @@ describe('the pot', () => {
       [2, 2],
       [3, 2],
       [4, 3],
-      [5, 3],
+      [5, 4],
     ])
     expect(plazaStage(null, 1e9)).toBe(0)
   })

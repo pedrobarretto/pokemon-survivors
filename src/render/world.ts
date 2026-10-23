@@ -433,7 +433,10 @@ const masks = lazy(() =>
 )
 
 let scratch: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; patterns: CanvasPattern[] } | null = null
-onCanvasReset(() => (scratch = null))
+onCanvasReset(
+  () => (scratch = null),
+  () => scratch,
+)
 
 const scratchFor = (w: number, h: number) => {
   if (!scratch || scratch.canvas.width !== w || scratch.canvas.height !== h) {

@@ -1032,7 +1032,10 @@ const HOLE = 16
 /** Two checkerboard discs, one per parity, so the dither stays locked to the world grid as the hole moves. */
 const holes = [0, 1].map((parity) => {
   let disc: PixelSprite | null = null
-  onCanvasReset(() => (disc = null))
+  onCanvasReset(
+    () => (disc = null),
+    () => disc,
+  )
   return () => {
     if (disc) return disc
     disc = createCanvas(HOLE * 2 + 1, HOLE * 2 + 1)
@@ -1044,7 +1047,10 @@ const holes = [0, 1].map((parity) => {
 })
 
 let scratch: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } | null = null
-onCanvasReset(() => (scratch = null))
+onCanvasReset(
+  () => (scratch = null),
+  () => scratch,
+)
 
 const TALL: Record<SolidKind, boolean> = { rock: false, tree: true, bush: false, log: false, tower: true, cliff: true }
 

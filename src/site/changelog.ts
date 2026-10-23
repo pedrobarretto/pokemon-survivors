@@ -102,6 +102,31 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         ],
       },
       {
+        title: { pt: 'Correções visuais', en: 'Visual fixes', es: 'Correcciones visuales' },
+        notes: [
+          {
+            pt: 'A fenda de Latias e Latios dá o TM lendário de Latias (Mist Ball), e o título agora diz isso: antes ele dizia "TM lendário de Latios" sobre o golpe dela.',
+            en: 'The Latias and Latios rift gives Latias\'s legendary TM (Mist Ball), and the title now says so: it used to read "Latios\'s legendary TM" over her move.',
+            es: 'La grieta de Latias y Latios da la MT legendaria de Latias (Mist Ball), y el título ahora lo dice: antes decía "MT legendaria de Latios" sobre su movimiento.',
+          },
+          {
+            pt: 'No Modo Lendário, Moltres não fica mais menor que os outros lendários: as asas de fogo largas faziam o jogo encolher demais o sprite. Articuno, Lugia e Kyogre também ficaram um pouco maiores.',
+            en: 'In Legend Mode, Moltres is no longer smaller than the other legendaries: its wide flaming wings made the game shrink its sprite too much. Articuno, Lugia and Kyogre got a little bigger too.',
+            es: 'En el Modo Legendario, Moltres ya no se ve más pequeño que los otros legendarios: sus anchas alas de fuego hacían que el juego encogiera demasiado su sprite. Articuno, Lugia y Kyogre también quedaron un poco más grandes.',
+          },
+          {
+            pt: 'Na caverna, as paredes ao sul agora mostram o topo da rocha por cima do chão, onde os pés do Pokémon param: bater numa parede de baixo parece encostar nela, sem precisar se guiar pela sombra.',
+            en: 'In the cave, the south walls now show the top of the rock over the floor, right where your Pokémon\'s feet stop: walking into a wall below you looks like touching it, no need to go by the shadow.',
+            es: 'En la cueva, las paredes del sur ahora muestran la parte de arriba de la roca sobre el suelo, justo donde se detienen los pies del Pokémon: chocar con una pared de abajo se ve como tocarla, sin tener que guiarse por la sombra.',
+          },
+          {
+            pt: 'Mega Sceptile ganhou o sprite próprio. As Megas sem sprite no PMD SpriteCollab (como Mega Venusaur, Blastoise e Garchomp) seguem com o sprite normal e o contorno de arco-íris até os artistas publicarem os delas.',
+            en: 'Mega Sceptile got its own sprite. Megas with no sprite on PMD SpriteCollab yet (like Mega Venusaur, Blastoise and Garchomp) keep the regular sprite with the rainbow outline until the artists publish theirs.',
+            es: 'Mega Sceptile ganó su propio sprite. Las Megas sin sprite en PMD SpriteCollab (como Mega Venusaur, Blastoise y Garchomp) siguen con el sprite normal y el contorno de arcoíris hasta que los artistas publiquen los suyos.',
+          },
+        ],
+      },
+      {
         title: { pt: 'Menos travamentos no celular', en: 'Fewer crashes on phones', es: 'Menos cierres en el celular' },
         notes: [
           {

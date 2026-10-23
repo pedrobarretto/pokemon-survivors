@@ -12,8 +12,16 @@ import type { GiftContent } from '../game/gifts'
  * (`festival.names`).
  */
 
-/** How the plaza looks for a pot: 0 the plain fountain, 1 flowers, 2 bunting between the lamps, 3 the lit fountain and the festival arch. */
-export type PlazaStage = 0 | 1 | 2 | 3
+/**
+ * How the plaza looks for a pot (`render/plaza.ts`, the Lantern Ring): 0 the
+ * opening (the curbed round square, the fountain on its axis, six lamps with
+ * lantern arms, the bare wishing tree, the unlit gate, Lanturn's Lantern
+ * Market), 1 wish tags, garlands and the bunting, 2 lanterns on the tree and
+ * the gate and the wheel of lantern strings, 3 the dusk,
+ * the golden Kecleon, the Togepi float, Volbeat, Illumise and sky lanterns,
+ * 4 the float turns shiny under more sky lanterns.
+ */
+export type PlazaStage = 0 | 1 | 2 | 3 | 4
 
 /** A milestone: the pot that reaches it, the gift everyone gets and the plaza stage it unlocks. */
 type Milestone = { pot: number; reward: GiftContent; stage: PlazaStage }
@@ -33,7 +41,7 @@ export const FESTIVALS = [
       { pot: 60_000_000, reward: { kind: 'bag', item: 'lure', count: 3 }, stage: 2 },
       { pot: 100_000_000, reward: { kind: 'egg', tier: 'kecleon' }, stage: 3 },
       // The stretch goal.
-      { pot: 150_000_000, reward: { kind: 'shinyHatch', family: 'togepi' }, stage: 3 },
+      { pot: 150_000_000, reward: { kind: 'shinyHatch', family: 'togepi' }, stage: 4 },
     ],
   },
 ] as const satisfies readonly FestivalDef[]

@@ -1077,10 +1077,11 @@ export const pt = {
     },
     plaque: {
       title: 'Mecenas do festival',
-      donors: (festival: string, n: number) => `${festival} · ${n === 1 ? '1 doador' : `${n} doadores`}`,
+      /** `count` is `n` formatted for the locale. */
+      donors: (festival: string, n: number, count: string) => `${festival} · ${n === 1 ? '1 doador' : `${count} doadores`}`,
       empty: 'Ninguém jogou ainda. Seja o primeiro!',
       you: (amount: string) => `Você: ${amount}`,
-      rank: (n: number) => `${n}º`,
+      rank: (n: string) => `${n}º`,
       none: 'Você ainda não jogou nada neste festival.',
       show: 'Meu nome na placa',
       hidden: 'Escondido',
@@ -1248,7 +1249,12 @@ export const pt = {
     egg: (egg: string) => `Um *${egg}* foi para a incubadora.`,
     coins: (coins: string) => `Você ganhou *${coins}*.`,
     newTitle: (title: string) => `Novo título: *${title}*! Já está em uso.`,
-    style: (name: string) => `Novo estilo: *${name}*! Já está em uso.`,
+    /** A frame, background or wallpaper, said as what it is. */
+    style: {
+      frame: (name: string) => `Nova moldura: *${name}*! Já está em uso.`,
+      background: (name: string) => `Novo fundo: *${name}*! Já está em uso.`,
+      wallpaper: (name: string) => `Novo papel de parede: *${name}*! Já está em uso.`,
+    } satisfies Record<StyleSlot, (name: string) => string>,
     shinyHatch: (name: string) => `Um *${name}* _shiny_ veio para você!`,
     companion: (name: string) => `*${name}* agora te acompanha nas partidas!`,
     ribbon: (name: string) => `*${name}*! Já está no seu perfil.`,
@@ -5013,6 +5019,8 @@ export const pt = {
       halloween: ['Buu... A Noite das Bruxas chegou à praça.', 'Os doces das partidas vão pro pote, lá no lobby. Aqui eu vendo outra coisa...'],
       christmas: ['Deli! A Delibird Presentes chegou à praça!', 'Ainda tô embrulhando tudo. Volta no Natal que o saco vai estar cheio!'],
     } satisfies Record<StallId, readonly string[]>,
+    /** Lanturn at the festival's Lantern Market (`render/plaza.ts`), before the festival's sheet opens. */
+    lanturn: ['Lan-turn! Cada moeda na fonte acende uma lanterna na praça. Vem ver o pote!'],
   },
 
   /** Explainer toast the first time each enemy trait shows up in a run. */
