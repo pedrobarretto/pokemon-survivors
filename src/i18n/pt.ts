@@ -2000,6 +2000,14 @@ export const pt = {
         crossing: 'O meteoro está se partindo! Avance antes que o vazio te alcance!',
         phases: ['Deoxys muda para a *Forma Ataque*! Frágil, mas mortal.', 'Deoxys muda para a *Forma Defesa*! Derrube os guardiões para quebrar a barreira.', 'Deoxys muda para a *Forma Velocidade*! Não pare de se mexer.'],
       },
+      darkrai: {
+        place: 'O Pesadelo',
+        epithet: 'Senhor dos Pesadelos',
+        omen: 'A lua some do céu e a noite fica negra…',
+        crossing: 'O sonho está desabando no escuro! Acenda as abóboras e avance!',
+        phases: ['Darkrai lança o *Dark Void*! Desvie das esferas ou você vai dormir.', 'O *pesadelo* toma conta! Só o Darkrai verdadeiro sente os golpes.'],
+        cues: { lunarWing: '*Cresselia* cruza o céu e quebra o pesadelo com a *Lunar Wing*!' },
+      },
     } satisfies Partial<Record<RiftLegend, DomainLines>>,
     /** A pair fighting as one (Latias and Latios), and a boss's barrier (Deoxys's Defense Forme). */
     pairName: (a: string, b: string) => `${a} & ${b}`,

@@ -56,6 +56,8 @@ export type DexEntry = {
     | { kind: 'wild'; id: EnemyId }
     | { kind: 'event' }
     | { kind: 'companion'; id: SpecialCompanionId }
+    /** `cameo`: seen only in a domain's scene (Cresselia breaking Darkrai's nightmare, `LegendDomain.cameo`), never fought. */
+    | { kind: 'cameo'; by: RiftLegend }
 }
 
 /** Last national dex number of each generation, in `REGIONS` order. */
@@ -133,6 +135,13 @@ const companionEntry = (id: SpecialCompanionId): DexEntry => {
   return { ...base(c.dex, c.name, c.types), role: 'event', source: { kind: 'companion', id } }
 }
 
+/** The domains' cameos (`LegendDomain.cameo`), listed as event Pokémon. */
+const cameoEntries = (): DexEntry[] =>
+  (Object.keys(DOMAINS) as RiftLegend[]).flatMap((by) => {
+    const c = DOMAINS[by]?.cameo
+    return c ? [{ ...base(c.dex, c.name, c.types), role: 'event' as const, source: { kind: 'cameo' as const, by } }] : []
+  })
+
 const byDex = (a: DexEntry, b: DexEntry) => a.dex - b.dex
 
 /**
@@ -149,8 +158,8 @@ export const gameDex = (): DexEntry[] => {
   return [...playable, ...wild, eventEntry()].sort(byDex)
 }
 
-/** The site's Pokédex: every species the game loads, `gameDex()` plus the gift-only companions (never seen in a run, so never counted in game). */
-export const pokedex = (): DexEntry[] => [...gameDex(), ...SPECIAL_COMPANION_IDS.map(companionEntry)].sort(byDex)
+/** The site's Pokédex: every species the game loads, `gameDex()` plus the gift-only companions and the domains' cameos (never met in a run, so never counted in game). */
+export const pokedex = (): DexEntry[] => [...gameDex(), ...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries()].sort(byDex)
 
 /* ---------------- When a wild Pokémon shows up ---------------- */
 
@@ -235,6 +244,7 @@ const domainCast = (legend: RiftLegend): readonly EnemyId[] => {
   return [
     ...d.crossing.retinue.members.map((m) => m.id),
     ...patterns.flatMap((p) => (p.kind === 'summon' || p.kind === 'guard' ? p.enemies : [])),
+    ...(d.cast ?? []),
   ]
 }
 

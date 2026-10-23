@@ -4,6 +4,7 @@ import type { ArenaPiece, ArenaShape, Circle, FloorPattern, FloorPlan, Pt } from
 import type { BossPhase } from './bosses'
 import type { EnemyId } from './enemies'
 import type { ThemeId } from './music'
+import type { PokeType } from './types'
 import type { RiftLegend } from './rifts'
 import { KYOGRE_DOMAIN } from './domains/kyogre'
 import { GROUDON_DOMAIN } from './domains/groudon'
@@ -13,6 +14,7 @@ import { HO_OH_DOMAIN } from './domains/hoOh'
 import { DIALGA_DOMAIN } from './domains/dialga'
 import { LATIS_DOMAIN } from './domains/latis'
 import { DEOXYS_DOMAIN } from './domains/deoxys'
+import { DARKRAI_DOMAIN } from './domains/darkrai'
 
 /**
  * EPIC RIFTS: a legendary's domain, as data.
@@ -58,6 +60,8 @@ import { DEOXYS_DOMAIN } from './domains/deoxys'
  *   shots still (`timeStop`), fly over the arena (`pass` steering), speed time
  *   up (`haste`) or come back from a fall (`rebirth`): see `data/bosses.ts`.
  * - Two legendaries at once: give the domain a `partner` (Latias's Latios).
+ * - A rift only an event brings (Darkrai's, `EVENT_RIFTS` in `data/rifts.ts`)
+ *   is a domain like any other; it just never comes in `pickLegend`'s draw.
  * - Mechanics the data can't say (Dialga's time skips in its crossing, the
  *   whirlpools set in Lugia's channels, Ho-Oh's tower raining beams) go in a
  *   hook (`DomainHooks`, `game/domainHooks.ts`).
@@ -66,7 +70,7 @@ import { DEOXYS_DOMAIN } from './domains/deoxys'
  */
 
 /** How a legendary's sky looks over the map in its omen and over its domain (`render/legendSky.ts`). */
-export type LegendSky = 'downpour' | 'harshSun' | 'gale' | 'timeWarp' | 'storm' | 'embers' | 'mist' | 'meteors'
+export type LegendSky = 'downpour' | 'harshSun' | 'gale' | 'timeWarp' | 'storm' | 'embers' | 'mist' | 'meteors' | 'newMoon'
 
 /** How the threat behind the crossing looks (`render/domain.ts`); its rules are the same for every kind. `magma`: lava chasing up a collapsing tunnel; `crumble`: a floor falling away into the sky. */
 export type ThreatKind = 'tide' | 'collapse' | 'fire' | 'void' | 'magma' | 'crumble' | 'storm' | 'time' | 'mist'
@@ -200,6 +204,10 @@ export type LegendDomain = {
   weatherShare?: number
   /** A second legendary fighting alongside (`DomainPartner`). */
   partner?: DomainPartner
+  /** A Pokémon that only shows up in a scene (Cresselia breaking Darkrai's nightmare), never fought: its sheets load with the legendary's (`render/spriteNeeds.ts`) and the site's Pokédex lists it. */
+  cameo?: { dex: number; name: string; types: readonly PokeType[] }
+  /** Who else its hooks bring in (Darkrai's shadow clones), for the Pokédex's list of who a domain brings. */
+  cast?: readonly EnemyId[]
 }
 
 /**
@@ -225,6 +233,7 @@ export const DOMAINS: Partial<Record<RiftLegend, LegendDomain>> = {
   dialga: DIALGA_DOMAIN,
   latias: LATIS_DOMAIN,
   deoxys: DEOXYS_DOMAIN,
+  darkrai: DARKRAI_DOMAIN,
 }
 
 /** The domain behind `legend`'s rift, if it has one. */

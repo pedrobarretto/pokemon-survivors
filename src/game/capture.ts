@@ -1,5 +1,6 @@
 import { isLegend, LEGEND_IDS, LEGENDS, type LegendId, type LegendUnlock } from '../data/legends'
 import { MYTHICALS, TRIO_IDS, TRIOS } from '../data/waves'
+import { isEventRift } from '../data/rifts'
 import type { PlayableId } from '../data/hatchlings'
 import { isUnlocked } from './eggs'
 import type { Save } from './meta'
@@ -20,7 +21,7 @@ export type Captures = Readonly<Partial<Record<LegendId, number>>>
 
 export const NO_CAPTURES: Captures = {}
 
-/** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper. */
+/** Where a legend can be beaten: a rift (an event rift's Darkrai too), the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper. */
 export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless'
 
 const inList = (list: readonly string[], id: LegendId) => list.includes(id)
@@ -42,8 +43,12 @@ export const isCaptured = (captures: Captures, id: LegendId) => (captures[id] ??
 /** How many legends are captured. */
 export const capturedCount = (captures: Captures) => LEGEND_IDS.filter((id) => isCaptured(captures, id)).length
 
-/** Whether every legend that comes before `id` is in (`unlock.last`: Arceus waits for the other 22). */
-const othersCaptured = (captures: Captures, id: LegendId) => LEGEND_IDS.every((other) => other === id || isCaptured(captures, other))
+/**
+ * Whether every legend that comes before `id` is in (`unlock.last`: Arceus
+ * waits for the other 22). An event's legend (Darkrai, `EVENT_RIFTS`) isn't
+ * one of them: once its event is over it can't be caught anymore.
+ */
+const othersCaptured = (captures: Captures, id: LegendId) => LEGEND_IDS.every((other) => other === id || isEventRift(other) || isCaptured(captures, other))
 
 /** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22. */
 export const winCounts = (captures: Captures, id: LegendId, endless: boolean) => {

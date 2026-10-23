@@ -152,7 +152,8 @@ export const drawConsumable = (ctx: Ctx, id: ConsumableId, x: number, y: number,
 
 /* ---------------- Effects ---------------- */
 
-const ZZZ = lazy(() => [
+/** A big and a small "Z", floated over whoever sleeps. */
+export const ZZZ = lazy(() => [
   art(['1111', '..1.', '.1..', '1111'], { 1: '#ffffff' }, '#283868'),
   art(['111', '.1.', '111'], { 1: '#c8d8ff' }, '#283868'),
 ])

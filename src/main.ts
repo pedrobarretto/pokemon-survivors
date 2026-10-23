@@ -1397,6 +1397,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'coin': return playSfx('coin', 60)
     case 'heal': return playSfx('heal')
     case 'hurt': return playSfx('hurt', 120)
+    // Dark Void put this player to sleep: a lullaby (the Poké Flute's) as they drift off.
+    case 'playerSleep': return playSfx('flute', 400)
     case 'shatter': return playSfx('break', 60)
     case 'guard': return playSfx('stance', 0)
     case 'stolen':

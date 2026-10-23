@@ -62,6 +62,7 @@ import { roomOf } from './room'
 import { SKY } from '../data/places'
 import { updateArena, updateArenaFall } from './riftArena'
 import { domainCamera, updateDomainScene } from './domain'
+import { isAsleep, tickSleep } from './playerSleep'
 import { updateLegendScene } from './legendScene'
 import { updateRiftPortal } from './riftPortal'
 import { updateSightings } from './sightings'
@@ -171,6 +172,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     ward: null,
     drain: { left: 0, at: 0 },
     rooted: 0,
+    asleep: 0,
     moveBuffs: [],
     special: createSpecialState(),
     mega: createMegaState(),
@@ -762,13 +764,16 @@ const updateMegaIntros = (g: Game, dt: number) => {
  * cursed items, a legend's presence, the Mega form, the ability and the special.
  */
 const stepPlayer = (g: Game, input: StepInput, dt: number) => {
+  // Asleep (Dark Void): the stick and the buttons do nothing until they wake.
+  const asleep = isAsleep(g.player)
+  tickSleep(g.player, dt)
   // Under a tunnel's ridge the player is carried through instead of walking.
-  if (!updateTunnel(g, dt)) updatePlayer(g, input.move, dt)
+  if (!updateTunnel(g, dt)) updatePlayer(g, asleep ? STILL.move : input.move, dt)
   updateCurses(g)
   if (updateLegend(g)) recomputeStats(g)
-  updateMega(g, input.mega === true, dt)
+  updateMega(g, !asleep && input.mega === true, dt)
   if (updateAbility(g, dt)) recomputeStats(g)
-  updateSpecial(g, input.special, dt)
+  updateSpecial(g, !asleep && input.special, dt)
 }
 
 /** A player's moves: their kit's running state, signatures, shop TMs, legendary move, the casts and duo moves. */
@@ -777,6 +782,8 @@ const stepMoves = (g: Game, input: StepInput, dt: number) => {
   updateSignatures(g, dt)
   updateShopTms(g, dt)
   updateLegendary(g)
+  // Asleep (Dark Void), no move is cast: their cooldowns wait until the player wakes.
+  if (isAsleep(g.player)) return
   updateMoves(g, input.lunge === true, dt)
   updateDuos(g, dt)
 }

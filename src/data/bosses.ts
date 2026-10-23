@@ -131,6 +131,8 @@ export type BossPattern = PatternGate &
   ) & {
     /** Judgment: the attack takes the type (and look) of the biome's plate instead of its `visual` (`JUDGMENT_PLATE`). */
     plate?: true
+    /** Dark Void: what it throws (or its blast) puts a player it hits to sleep for this many seconds (`game/playerSleep.ts`). */
+    sleep?: number
   }
 
 /**
@@ -454,6 +456,12 @@ export const BOSS_PATTERNS: Partial<Record<EnemyId, readonly BossPattern[]>> = {
     { kind: 'ring', every: 3.2, count: 20, speed: 100, radius: 5, damage: 22, visual: 'psychic' },
     { kind: 'strikes', every: 3.6, target: 'player', count: 6, spread: 90, radius: 13, delay: 1.2, damage: 22, visual: 'rock' },
     { kind: 'strikes', every: 6, target: 'self', count: 1, spread: 0, radius: 56, delay: 1.3, damage: 26, visual: 'psychic' },
+  ],
+  /** Darkrai (its old arena, in co-op): Dark Pulse rings, Dark Void orbs that put a player to sleep, and Nightmare strikes on the player. */
+  darkrai: [
+    { kind: 'ring', every: 3.4, count: 14, speed: 72, radius: 5, damage: 20, visual: 'shadow' },
+    { kind: 'volley', every: 4.4, count: 3, arc: 0.6, speed: 86, windup: 1, radius: 7, damage: 10, visual: 'shadow', sleep: 1.1 },
+    { kind: 'strikes', every: 4, target: 'player', count: 4, spread: 60, radius: 15, delay: 1.1, damage: 20, visual: 'shadow' },
   ],
   /** Spiritomb, the graveyard's boss (`data/places.ts`): Shadow Ball rings, Hex on the player and Dark Pulse around itself. */
   spiritomb: [

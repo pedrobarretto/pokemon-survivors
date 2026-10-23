@@ -2,7 +2,7 @@ import { playCry, playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { context2d } from '../engine/pixelart'
 import { ENEMIES, type EnemyDef } from '../data/enemies'
-import { RIFT_LEGENDS } from '../data/rifts'
+import { isRiftLegend } from '../data/rifts'
 import { GRAVEYARD } from '../data/places'
 import { dexStatus, type Pokedex } from '../game/dex'
 import { gameDex, type DexEntry } from '../site/pokedex'
@@ -32,7 +32,7 @@ const shinyCatchable = (e: DexEntry) => {
   if (e.source.kind !== 'wild') return false
   const wild = e.source.id
   const def: EnemyDef = ENEMIES[wild]
-  return def.tier !== undefined || RIFT_LEGENDS.some((id) => id === wild) || wild === GRAVEYARD.boss
+  return def.tier !== undefined || isRiftLegend(wild) || wild === GRAVEYARD.boss
 }
 
 /** Every species the Caixa do PC has room for, in national dex order. */

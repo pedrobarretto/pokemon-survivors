@@ -360,6 +360,35 @@ const meteors: Painter = (ctx, w, h, camX, camY, t) => {
   }
 }
 
+/** Darkrai's new moon: the screen sinks into the night as the omen goes on, a black moon rimmed in cyan rises and eyes open in the dark. */
+const newMoon: Painter = (ctx, w, h, camX, camY, t, g) => {
+  const omen = g.rift.omen
+  // In the domain its own dark does the rest (`render/darkrai.ts`): only the moon and the eyes stay.
+  const inside = g.rift.arena !== null
+  const k = inside ? 1 : omen ? Math.min(1, (1 - omen.left / RIFT.omenTime) * 1.4) : 1
+  ctx.fillStyle = `rgba(6,2,16,${(inside ? 0.06 : 0.18 + 0.4 * k).toFixed(2)})`
+  ctx.fillRect(0, 0, w, h)
+  // The moon, high on the right: a black disc with a thin cyan rim, its halo dithered.
+  const mx = Math.round(w - 46)
+  const my = Math.round(30 + (1 - k) * 18)
+  ctx.globalAlpha = k
+  blitEllipse(ctx, 15, 15, 'rgba(88,232,240,0.12)', mx, my)
+  blitRing(ctx, 12, 1, '#58e8f0', mx, my)
+  blitEllipse(ctx, 11, 11, '#04020a', mx, my)
+  ctx.globalAlpha = 1
+  // Eyes opening in the dark: pairs of cyan pixels that blink on their own cycles.
+  const eyes = Math.round((w * h) / 9000 * k)
+  ctx.fillStyle = '#58e8f0'
+  for (let i = 0; i < eyes; i++) {
+    const period = 2.4 + hash2(i, 1, 91) * 3
+    if (((t + hash2(i, 2, 91) * period) % period) / period > 0.4) continue
+    const x = Math.round(mod(hash2(i, 3, 91) * 4096 - camX * 0.2, w))
+    const y = Math.round(mod(hash2(i, 4, 91) * 4096 - camY * 0.2, h))
+    ctx.fillRect(x, y, 1, 1)
+    ctx.fillRect(x + 3, y, 1, 1)
+  }
+}
+
 const TINTS: Record<LegendSky, string> = {
   downpour: 'rgba(8,18,52,0.42)',
   harshSun: 'rgba(248,152,40,0.18)',
@@ -369,10 +398,11 @@ const TINTS: Record<LegendSky, string> = {
   embers: 'rgba(200,64,24,0.18)',
   mist: 'rgba(232,224,248,0.22)',
   meteors: 'rgba(16,8,40,0.3)',
+  newMoon: 'rgba(6,2,16,0.5)',
 }
 
 /** The skies painted so far; the others get their tint until theirs are written. */
-const PAINTERS: Partial<Record<LegendSky, Painter>> = { downpour, harshSun, gale, storm, embers, timeWarp, mist, meteors }
+const PAINTERS: Partial<Record<LegendSky, Painter>> = { downpour, harshSun, gale, storm, embers, timeWarp, mist, meteors, newMoon }
 
 /** The sky in play: a domain legendary's omen or open portal on the map, or its domain once it has shown itself. */
 export const skyNow = (g: Game): LegendSky | null => {

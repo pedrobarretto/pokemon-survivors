@@ -252,6 +252,7 @@ const WATER_RISE: EntranceLook = { ring: '#c8e8f8', tint: '#1c4878', spray: '#e8
 const ENTRANCE_LOOK: Partial<Record<RiftLegend, EntranceLook>> = {
   groudon: { ring: '#f8a040', tint: '#a02808', spray: '#f8e060' },
   rayquaza: { ring: '#f8f0a0', tint: '#3c9850', spray: '#ffffff' },
+  darkrai: { ring: '#58e8f0', tint: '#140c24', spray: '#58e8f0' },
 }
 
 /**

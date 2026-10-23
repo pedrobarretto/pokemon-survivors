@@ -197,6 +197,7 @@ export const FACES: Record<RiftLegend, Ramp> = {
   latias: ['#3c2c18', '#5c4428', '#7c6038', '#987848'],
   latios: ['#2c2014', '#4a3824', '#685034', '#806444'],
   deoxys: ['#0c0814', '#1c1428', '#2c2038', '#3c3050'],
+  darkrai: ['#040208', '#0c0814', '#181024', '#241a36'],
 }
 
 const SIZE = 380

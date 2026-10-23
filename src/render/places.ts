@@ -451,7 +451,7 @@ const lights = canvasCache<number, PixelSprite>()
  * A light's cut-out: a solid core, then dithered rings that let less and
  * less through, so the dark ends in a hard-edged pixel falloff.
  */
-const lightDisc = (r: number) => {
+export const lightDisc = (r: number) => {
   let c = lights.get(r)
   if (c) return c
   c = createCanvas(r * 2 + 1, r * 2 + 1)
@@ -471,7 +471,8 @@ const lightDisc = (r: number) => {
 
 let dark: { canvas: HTMLCanvasElement; ctx: Ctx } | null = null
 
-const darkLayer = (w: number, h: number) => {
+/** A screen-sized layer to paint a dark on and cut its lights out of (the cave's, Darkrai's nightmare). */
+export const darkLayer = (w: number, h: number) => {
   if (!dark || dark.canvas.width !== w || dark.canvas.height !== h) {
     const canvas = createCanvas(w, h)
     dark = { canvas, ctx: context2d(canvas) }

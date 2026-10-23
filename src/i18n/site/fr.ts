@@ -82,6 +82,7 @@ export const siteFr: SiteMessages = {
     wildStats: { hp: 'PV', damage: 'Dégâts au contact', speed: 'Vitesse', xp: 'Exp.' },
     eventNote: 'Apparaît comme événement sur la carte : il te fuit et lâche des pièces à chaque coup. Mets-le K.O. avant qu’il ne s’échappe pour décrocher le jackpot de Pay Day.',
     companionNote: 'Un compagnon offert : il arrive dans la boîte à cadeaux des soutiens pendant la Nuit des Sorcières et marche à tes côtés pendant les parties, en laissant une traînée de bonbons.',
+    cameoNote: 'Pas un ennemi : il apparaît un instant dans la faille de Darkrai pendant la Nuit des Sorcières et brise le cauchemar avec Lunar Wing.',
     wildNote: 'Valeurs de base. Les ennemis normaux deviennent plus coriaces chaque minute ; pas les boss.',
     appears: 'Quand il apparaît',
     horde: (from: string, until: string) => `Peut rejoindre la horde, de ${from} à ${until}`,

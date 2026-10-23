@@ -16,7 +16,7 @@ export type Poly = { kind: 'poly'; pts: readonly Pt[] }
 export type ArenaShape = Circle | Poly
 
 /** Scenery standing in an arena (cover against the legendary's shots). */
-export type ArenaPiece = 'seaRock' | 'redPillar' | 'bell' | 'stalagmite' | 'basalt' | 'jadeStump' | 'column' | 'marbleStump' | 'palm' | 'meteorCrystal'
+export type ArenaPiece = 'seaRock' | 'redPillar' | 'bell' | 'stalagmite' | 'basalt' | 'jadeStump' | 'column' | 'marbleStump' | 'palm' | 'meteorCrystal' | 'nightSpire'
 
 /** What each piece stands on, around its anchor. */
 export const ARENA_FEET: Record<ArenaPiece, Ellipse> = {
@@ -30,6 +30,7 @@ export const ARENA_FEET: Record<ArenaPiece, Ellipse> = {
   marbleStump: { x: 0, y: -1, rx: 8, ry: 4 },
   palm: { x: 0, y: 0, rx: 7, ry: 4 },
   meteorCrystal: { x: 0, y: -1, rx: 9, ry: 4 },
+  nightSpire: { x: 0, y: -1, rx: 9, ry: 4 },
 }
 
 /** Every few seconds a rule steps the arena (the tide rises, the edge falls), with a warning before. */
@@ -206,6 +207,19 @@ export const ARENA_LAYOUTS: Record<RiftLegend, ArenaLayout> = {
       { piece: 'meteorCrystal', x: 48, y: 18 },
     ],
     pattern: 'craters',
+    boss: [0, -60],
+    player: [0, 50],
+  },
+  /** Darkrai's Nightmare without its domain (co-op): a slab of dark dream adrift, spires of black crystal to hide behind. */
+  darkrai: {
+    floor: [circle(0, 0, R)],
+    solids: [
+      { piece: 'nightSpire', x: -84, y: -44 },
+      { piece: 'nightSpire', x: 86, y: -40 },
+      { piece: 'nightSpire', x: -60, y: 70 },
+      { piece: 'nightSpire', x: 64, y: 72 },
+    ],
+    pattern: 'slabs',
     boss: [0, -60],
     player: [0, 50],
   },

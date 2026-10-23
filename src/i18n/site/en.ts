@@ -81,6 +81,7 @@ export const siteEn: SiteMessages = {
     wildStats: { hp: 'HP', damage: 'Contact damage', speed: 'Speed', xp: 'EXP' },
     eventNote: 'Shows up as a map event: it runs from you and drops coins with every hit. Knock it out before it escapes for the Pay Day jackpot.',
     companionNote: 'A gift companion: it lands in supporters\' gift box during Halloween Night and walks beside you in runs, leaving a trail of candy.',
+    cameoNote: 'Not a foe: it shows up for a moment in Darkrai\'s rift during Halloween Night and breaks the nightmare with Lunar Wing.',
     wildNote: 'Base values. Regular enemies get tougher every minute; bosses don\'t.',
     appears: 'When it shows up',
     horde: (from: string, until: string) => `May join the horde, from ${from} to ${until}`,

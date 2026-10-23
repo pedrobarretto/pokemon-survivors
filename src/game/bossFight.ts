@@ -26,7 +26,8 @@ export type BossMotion =
  * the player unless they stand somewhere `safe` (for `spots`, within `radius`
  * of one of its `spots`).
  */
-export type BossBlast = { left: number; total: number; x: number; y: number; damage: number; safe: BlastSafe; radius: number; visual: HazardVisual; spots: readonly { x: number; y: number }[] }
+/** A charging blast; `sleep`: seconds of sleep it puts whoever it hits into (Dark Void), 0 for the rest. */
+export type BossBlast = { left: number; total: number; x: number; y: number; damage: number; safe: BlastSafe; radius: number; visual: HazardVisual; spots: readonly { x: number; y: number }[]; sleep: number }
 
 /** A time stop (`timeStop` pattern): `wait` s until it takes hold, then the player's shots hold still for `left` of `total` s. */
 export type TimeStop = { wait: number; left: number; total: number }

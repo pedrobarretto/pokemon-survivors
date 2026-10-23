@@ -1,4 +1,4 @@
-import { partnerOf } from '../data/domains'
+import { domainOf, partnerOf } from '../data/domains'
 import { ENEMIES, type EnemyId } from '../data/enemies'
 import { GRAVEYARD } from '../data/places'
 import { isSummoner, SUMMONS } from '../data/traits'
@@ -63,9 +63,18 @@ export const dueNeeds = (needs: readonly SpriteNeed[], time: number): Dex[] => {
 
 /** The rift's legendary (and its partner) from its omen to the end of its arena. */
 const riftLegends = (g: Game): EnemyId[] => {
-  const legend = g.rift.omen?.legend ?? g.rift.portal?.legend ?? g.rift.arena?.legend
+  const legend = riftLegend(g)
   const partner = legend && partnerOf(legend)
   return [...(legend ? [legend] : []), ...(partner ? [partner] : [])]
+}
+
+const riftLegend = (g: Game) => g.rift.omen?.legend ?? g.rift.portal?.legend ?? g.rift.arena?.legend
+
+/** A domain's cameo (Cresselia, breaking Darkrai's nightmare), wanted with its legendary. */
+const riftCameo = (g: Game): Dex[] => {
+  const legend = riftLegend(g)
+  const cameo = legend && domainOf(legend)?.cameo
+  return cameo ? [cameo.dex] : []
 }
 
 /** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, and the reaper as its hunt nears in the endless mode. */
@@ -129,7 +138,7 @@ export const bossForms = (g: Game): Variant[] => {
  * line, the companion, the outbreak), the rift's legendary, shiny enemies and bosses.
  */
 export const runSprites = (g: Game, needs: readonly SpriteNeed[], always: readonly Dex[]): { stream: Variant[]; extras: Variant[]; keep: KeepSprites } => {
-  const legends = riftLegends(g).map((id) => ENEMIES[id].dex)
+  const legends = [...riftLegends(g).map((id) => ENEMIES[id].dex), ...riftCameo(g)]
   const order = [...new Set([...legends, ...visitors(g), ...dueNeeds(needs, g.time)])]
   const species = new Set(order)
   const variants = new Set([...always, ...legends])

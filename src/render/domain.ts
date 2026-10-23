@@ -107,7 +107,7 @@ const lavaHole: HoleLook = (x, y, depth) => {
 }
 
 /** What a domain's holes are, by legendary; null leaves the pixel clear, so the backdrop (Rayquaza's open sky) shows through. */
-const HOLES: Partial<Record<RiftLegend, HoleLook>> = { groudon: lavaHole, rayquaza: () => null }
+const HOLES: Partial<Record<RiftLegend, HoleLook>> = { groudon: lavaHole, rayquaza: () => null, darkrai: () => null }
 
 /** Bakes chunk (cx, cy) of a domain's floor, or null when it holds no floor at all. */
 const bakeChunk = (p: Painter, cx: number, cy: number) => {

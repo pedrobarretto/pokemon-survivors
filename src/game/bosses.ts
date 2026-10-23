@@ -22,19 +22,27 @@ import { actAs, nearestPlayer, standing } from './players'
 import type { Enemy, Game, Hazard, Player } from './types'
 import { HAZARD_TYPES } from './weather'
 import * as dm from '../engine/dmath'
+import { sleepPlayer } from './playerSleep'
 
 type HazardInit = Pick<Hazard, 'kind' | 'visual' | 'x' | 'y' | 'r' | 'damage' | 'ttl'> & Partial<Hazard>
 
 /** Adds an enemy hazard (boss attacks, the horde's spit, an Alpha's shockwave). */
 export const spawnHazard = (g: Game, init: HazardInit) => {
-  g.hazards.push({ id: g.nextId++, vx: 0, vy: 0, age: 0, armAt: 0, disarmAt: Infinity, vanishOnHit: false, leaper: -1, world: false, angle: 0, len: 0, spin: 0, pull: 0, pullReach: 0, cover: 0, phantom: 0, ...init })
+  g.hazards.push({ id: g.nextId++, vx: 0, vy: 0, age: 0, armAt: 0, disarmAt: Infinity, vanishOnHit: false, leaper: -1, world: false, angle: 0, len: 0, spin: 0, pull: 0, pullReach: 0, cover: 0, phantom: 0, sleep: 0, ...init })
 }
 
 /** How long a strike keeps hurting after it lands. */
 const STRIKE_WINDOW = 0.15
 
-/** A boss's attack at player `p`, pressed by its fight's difficulty (`attackCount`, `telegraph`); a rift legendary in the old arena passes no fight. */
+/** A boss's attack at player `p`; what a `sleep` pattern throws puts the player it hits to sleep (Dark Void). */
 const fire = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | null, p: Player) => {
+  const from = g.hazards.length
+  launch(g, boss, written, fight, p)
+  if (written.sleep) for (let i = from; i < g.hazards.length; i++) g.hazards[i]!.sleep = written.sleep
+}
+
+/** Launches a boss's attack at player `p`, pressed by its fight's difficulty (`attackCount`, `telegraph`); a rift legendary in the old arena passes no fight. */
+const launch = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | null, p: Player) => {
   // Judgment takes the biome's plate.
   const pattern = written.plate && 'visual' in written ? { ...written, visual: JUDGMENT_PLATE[g.biome.id] } : written
   switch (pattern.kind) {
@@ -181,7 +189,7 @@ const fire = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | nul
         for (const q of g.players) if (q !== p && standing(g, q) && inBlastReach(g, q, boss.x, boss.y)) spots.push(...shelters(g, pattern.spots ?? 3, q))
       }
       const radius = pattern.radius ?? (pattern.safe === 'spots' ? SHELTER.radius : 90)
-      fight.blast = { left: windup, total: windup, x: boss.x, y: boss.y, damage: pattern.damage, safe: pattern.safe, radius, visual: pattern.visual, spots }
+      fight.blast = { left: windup, total: windup, x: boss.x, y: boss.y, damage: pattern.damage, safe: pattern.safe, radius, visual: pattern.visual, spots, sleep: pattern.sleep ?? 0 }
       return
     }
     case 'cage': {
@@ -576,7 +584,9 @@ const updateBlast = (g: Game, boss: Enemy, fight: BossFight, dt: number) => {
   for (const p of g.players) {
     if (!standing(g, p) || (g.coop !== null && !inBlastReach(g, p, b.x, b.y)) || blastSpares(g, b, p)) continue
     const before = actAs(g, p)
+    const hp = p.hp
     hurtPlayer(g, b.damage, undefined, HAZARD_TYPES[b.visual], 'hazard')
+    if (b.sleep > 0 && p.hp < hp) sleepPlayer(g, p, b.sleep)
     actAs(g, before)
   }
 }
@@ -888,7 +898,10 @@ export const updateHazards = (g: Game, tick: number) => {
       if (!standing(g, p)) continue
       const before = actAs(g, p)
       const hit = hazardHits(g, h, p)
+      const hp = p.hp
       if (hit) hurtPlayer(g, h.damage, undefined, HAZARD_TYPES[h.visual], h.kind === 'shot' ? 'shot' : 'hazard')
+      // Dark Void puts to sleep only what it really hit (not through i-frames, a guard or a burrow).
+      if (hit && h.sleep > 0 && p.hp < hp) sleepPlayer(g, p, h.sleep)
       actAs(g, before)
       if (!hit || !h.vanishOnHit) continue
       h.age = h.ttl

@@ -9,10 +9,28 @@ import type { EnemyId } from './enemies'
  */
 export const RIFT_LEGENDS = ['lugia', 'hoOh', 'kyogre', 'groudon', 'rayquaza', 'dialga', 'latias', 'latios', 'deoxys'] as const satisfies readonly EnemyId[]
 
-export type RiftLegend = (typeof RIFT_LEGENDS)[number]
+/**
+ * Event rifts: legendaries a rift brings only during an event, in place of
+ * the one it drew (`EVENT_RIFT`), kept out of `RIFT_LEGENDS` (the "every
+ * legend" achievement and the Pokédex's rift list count those). Darkrai's
+ * nightmare comes in a haunted run (Noite das Bruxas).
+ */
+export const EVENT_RIFTS = ['darkrai'] as const satisfies readonly EnemyId[]
+
+export type EventRift = (typeof EVENT_RIFTS)[number]
+
+/** Every legendary a rift can lead to: the regular ones and the event ones. */
+export type RiftLegend = (typeof RIFT_LEGENDS)[number] | EventRift
+
+/**
+ * How an event rift takes a rift's place: in a haunted run each omen is
+ * Darkrai's with `odds` (rolled on the run's rng, and only in a haunted run,
+ * so any other run plays as before).
+ */
+export const EVENT_RIFT = { odds: 0.35 } as const
 
 /** The legendaries a rift draws: Latios never comes alone, he fights beside Latias in her domain (`partner`, `data/domains/latis.ts`). */
-export const RIFT_DRAWS = RIFT_LEGENDS.filter((l): l is Exclude<RiftLegend, 'latios'> => l !== 'latios')
+export const RIFT_DRAWS = RIFT_LEGENDS.filter((l): l is Exclude<(typeof RIFT_LEGENDS)[number], 'latios'> => l !== 'latios')
 
 /** How an arena looks: floor tiles (base, alternate, grout), the wall ring (light, dark), the void past it and its floating motes. */
 export type ArenaTheme = {
@@ -41,6 +59,8 @@ export const ARENAS: Record<RiftLegend, ArenaTheme> = {
   latios: { floor: ['#b8a078', '#c4ac84', '#786040'], wall: ['#78c060', '#245c34'], void: '#0c1c40', motes: '#78a8f8' },
   /** A meteorite adrift in space: dark crystal rock, Deoxys's orange core, stars all around. */
   deoxys: { floor: ['#484058', '#544c68', '#201830'], wall: ['#f89850', '#a84020'], void: '#020208', motes: '#f8f8ff' },
+  /** The Nightmare: slabs of a dream gone dark adrift in a black void, cyan eyes and embers glinting all around. */
+  darkrai: { floor: ['#2c2440', '#342a4c', '#140e20'], wall: ['#58e8f0', '#5c3c8c'], void: '#04020a', motes: '#58e8f0' },
 }
 
 /** Timing and size of rifts, in seconds and world px. */
@@ -83,5 +103,8 @@ export const RIFT = {
 /** Items always dropped by a beaten rift legendary, on top of its ₽ and Poké Balls. */
 export const RIFT_ITEMS: readonly Drop[] = ['rareCandy', 'superPotion']
 
-/** Whether a species is one of the rift legendaries. */
-export const isRiftLegend = (id: EnemyId): id is RiftLegend => RIFT_LEGENDS.some((l) => l === id)
+/** Whether a species is one of the rift legendaries (an event rift's included). */
+export const isRiftLegend = (id: EnemyId): id is RiftLegend => RIFT_LEGENDS.some((l) => l === id) || isEventRift(id)
+
+/** Whether a species is an event rift's legendary (`EVENT_RIFTS`). */
+export const isEventRift = (id: EnemyId): id is EventRift => EVENT_RIFTS.some((l) => l === id)

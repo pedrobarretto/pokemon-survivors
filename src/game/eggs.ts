@@ -1,7 +1,7 @@
 import { chance, weightedPick, type Rng } from '../engine/rng'
 import type { EnemyId } from '../data/enemies'
 import { HATCHLING_IDS, HATCHLINGS, isHatchling, isStarter, type HatchlingId, type PlayableId } from '../data/hatchlings'
-import { RIFT_LEGENDS } from '../data/rifts'
+import { isRiftLegend } from '../data/rifts'
 import { GRAVEYARD } from '../data/places'
 import { MYTHICALS } from '../data/waves'
 import { INCUBATOR } from '../data/shop'
@@ -78,11 +78,11 @@ export const EGG_SOURCES = {
 
 export type EggSource = keyof typeof EGG_SOURCES
 
-/** The egg rule of a fainted boss: rift legendaries, Arceus, Mewtwo, the mythicals (Mew, Celebi, Jirachi) and places' bosses have their own. */
+/** The egg rule of a fainted boss: rift legendaries (an event rift's Darkrai too), Arceus, Mewtwo, the mythicals (Mew, Celebi, Jirachi) and places' bosses have their own. */
 export const bossEggSource = (kind: EnemyId): EggSource =>
   kind === REAPER
     ? 'reaper'
-    : RIFT_LEGENDS.some((id) => id === kind)
+    : isRiftLegend(kind)
       ? 'rift'
       : kind === 'mewtwo' || MYTHICALS.some((id) => id === kind)
         ? 'final'

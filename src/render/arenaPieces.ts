@@ -87,10 +87,12 @@ export const ARENA_PIECES: Record<ArenaPiece, (variant: number) => Piece> = {
   palm,
   meteorCrystal: (v) =>
     stalagmites({ stone: ['#100c18', '#201a2c', '#342c44', '#4c4260', '#6a5e80'], outline: '#06040c', crystal: ['#802810', '#d05818', '#f89850', '#fff0c8'] }, v + 1),
+  nightSpire: (v) =>
+    stalagmites({ stone: ['#08060e', '#140e20', '#221834', '#32264a', '#463862'], outline: '#020104', crystal: ['#183c50', '#2c8098', '#58e8f0', '#d8ffff'] }, v + 2),
 }
 
 /** Shadow width of each piece, and which ones are tall enough to go see-through. */
-export const ARENA_SHADOW: Record<ArenaPiece, number> = { seaRock: 10, redPillar: 7, bell: 16, stalagmite: 8, basalt: 10, jadeStump: 8, column: 9, marbleStump: 8, palm: 9, meteorCrystal: 8 }
+export const ARENA_SHADOW: Record<ArenaPiece, number> = { seaRock: 10, redPillar: 7, bell: 16, stalagmite: 8, basalt: 10, jadeStump: 8, column: 9, marbleStump: 8, palm: 9, meteorCrystal: 8, nightSpire: 8 }
 export const ARENA_TALL: Record<ArenaPiece, boolean> = {
   seaRock: false,
   redPillar: true,
@@ -102,4 +104,5 @@ export const ARENA_TALL: Record<ArenaPiece, boolean> = {
   marbleStump: false,
   palm: true,
   meteorCrystal: true,
+  nightSpire: true,
 }

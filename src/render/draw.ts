@@ -2,6 +2,8 @@ import { drawEvoItem } from './evoItemArt'
 import { blitCentered, blitEllipse, blitRing, blitRotated, textSprite } from '../engine/pixelart'
 import { HAZARD_COLORS } from './hazardColors'
 import { drawCapture } from './capture'
+import { drawNightmareAir, drawNightmareDark, drawNightmareGround, shadeAlpha, SLEEP_TINT } from './darkrai'
+import { isAsleep } from '../game/playerSleep'
 import { drawDomainFloor, drawTear, warmDomain } from './domain'
 import { bossForm, drawBeamAir, drawBeamGround, drawBlasts, drawBossGround, drawBossMarker, drawEntrance, drawLegendScene, drawPairDown, drawPhantoms } from './legendFx'
 import { sceneHides } from '../game/legendScene'
@@ -582,7 +584,7 @@ const drawEnemy = (ctx: Ctx, e: Enemy, time: number, t: number, calm: boolean, a
   const hit = e.flash > 0.08
   const tint = traitTint(e) ?? statusTint(e.status, t, e.id) ?? (calm && hit ? HURT_TINT : rage ? RAGE_TINT : clone ? CLONE_TINT : undefined)
   if (look?.alpha === 0) return
-  drawPokemon(ctx, s, anim, e.dir, e.animTime, e.x, y, { flash: Math.max(look?.flash ?? 0, hit && !calm ? 0.85 : 0), tint: look?.tint ?? tint, scale, outline: outlineOf(e, t, calm) ?? (clone ? CLONE_OUTLINE : undefined), alpha: look?.alpha })
+  drawPokemon(ctx, s, anim, e.dir, e.animTime, e.x, y, { flash: Math.max(look?.flash ?? 0, hit && !calm ? 0.85 : 0), tint: look?.tint ?? tint, scale, outline: outlineOf(e, t, calm) ?? (clone ? CLONE_OUTLINE : undefined), alpha: look?.alpha ?? shadeAlpha(e.kind, e.id, t) })
   if (e.shiny) drawSparkles(ctx, e.x, y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), time - e.bornAt, e.id)
   if (rage) drawRageEmbers(ctx, e.x, y - (s.bodyH * scale) / 2, size, t, e.id)
 }
@@ -669,7 +671,8 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // Aegislash flashes white for a moment as it swaps stance.
   const swapped = localPlayer(g).special.stance !== null && localPlayer(g).special.total - localPlayer(g).special.cooldown < 0.12
   const flash = Math.max(mega.flash, calm ? 0 : p.hurt > 0.2 ? 0.7 : charging || swapped ? 0.6 : 0)
-  const tint = calm && p.hurt > 0.2 ? HURT_TINT : undefined
+  // Asleep (Dark Void): the player wears its violet.
+  const tint = calm && p.hurt > 0.2 ? HURT_TINT : isAsleep(p) ? SLEEP_TINT : undefined
   // Burrowed or out of sight (Dig): a faint ghost of the player.
   // Moves can lift the sprite (Body Slam's leap, Heavy Slam's hop, Fly) or hide it under the mound (Dig).
   const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g)
@@ -962,6 +965,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawBossGround(ctx, g, t)
   drawOmenGround(ctx, g)
   drawDomainGround(ctx, g)
+  drawNightmareGround(ctx, g, t)
   // Breakables change outfit halfway through the dissolve.
   drawProps(ctx, g, t, look)
   // Map events wait outside with the rest of the world while the player is in a room.
@@ -1065,6 +1069,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawPairDown(ctx, g, t)
   drawCapture(ctx, g, t)
   drawDomainAir(ctx, g, t)
+  drawNightmareAir(ctx, g, t)
   drawLegendScene(ctx, g, t)
   if (g.coop) drawTeamAir(ctx, g, me, t)
 
@@ -1101,6 +1106,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   if (g.halloween && !g.rift.arena && !g.place.inside) drawHauntedNight(ctx, g, camX, camY, t)
   // The cave's dark and the graveyard's night, then the weather, over the world but under damage numbers.
   drawPlaceDark(ctx, g, camX, camY, t)
+  drawNightmareDark(ctx, g, camX, camY, t)
   drawTunnelDark(ctx, g, camX, camY)
   drawWeather(ctx, g, camX, camY, t)
   drawLegendSky(ctx, g, camX, camY, t)

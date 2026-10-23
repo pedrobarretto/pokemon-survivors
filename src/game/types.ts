@@ -139,6 +139,12 @@ export type Player = {
   drain: { left: number; at: number }
   /** Seconds the player can't walk (Giga Impact's recharge); moves still carry them. */
   rooted: number
+  /**
+   * Dark Void's sleep (`game/playerSleep.ts`): seconds left asleep (> 0: no
+   * walking, moves, special or Mega), or of the drowsy spell after waking (< 0),
+   * when nothing puts them back to sleep; 0 awake.
+   */
+  asleep: number
   /** Moves' timed stat effects on the player (`signatures.ts`). */
   moveBuffs: MoveBuff[]
   special: SpecialState
@@ -521,6 +527,8 @@ export type Hazard = {
   cover: number
   /** A phantom (`swoop`): the dex of the Pokémon whose see-through copy rides this shot, or 0. */
   phantom: number
+  /** Dark Void: seconds of sleep a hit puts the player into (`sleepPlayer`), or 0. */
+  sleep: number
 }
 
 export type Pickup = {
@@ -745,6 +753,8 @@ export type GameEvent =
   | { kind: 'riftCapture'; enemy: RiftLegend; shiny: boolean }
   /** A moment of a domain's own mechanics the shell calls out (Dialga's time skips): `rifts.domains[enemy].cues[cue]` in `src/i18n`. */
   | { kind: 'domainCue'; enemy: RiftLegend; cue: string }
+  /** The acting player fell asleep (Dark Void, `game/playerSleep.ts`). */
+  | { kind: 'playerSleep' }
   /** A boss raised its barrier (`guard`), or its last keeper broke (`up: false`). */
   | { kind: 'bossGuard'; enemy: EnemyId; up: boolean }
   /** A linked pair (`game/domainPair.ts`): `enemy` was knocked out and `partner` fights on enraged, or `enemy` revived `partner`. */

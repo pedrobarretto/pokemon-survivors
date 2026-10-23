@@ -1,6 +1,6 @@
 import { TAU } from '../engine/math'
 import { range } from '../engine/rng'
-import { RIFT, type RiftLegend } from '../data/rifts'
+import { EVENT_RIFT, isEventRift, RIFT, type RiftLegend } from '../data/rifts'
 import { enterDomain } from './domain'
 import { burst } from './effects'
 import { chargePortal, endlessRiftAt, pickLegend, riftAt, riftDomain, riftDue } from './rift'
@@ -36,11 +36,24 @@ export const openPortal = (g: Game, legend: RiftLegend, at?: { x: number; y: num
 }
 
 /**
- * The next rift begins: its legendary is drawn (one not met yet this run, never the team's own legend: `teamLegend`), its
+ * The legendary behind the next rift: one not met yet this run, never the
+ * team's own legend (`teamLegend`). In a haunted run (Noite das Bruxas) Darkrai's
+ * nightmare takes its place with `EVENT_RIFT.odds`; that roll is the only
+ * draw a haunted run adds, so every other run draws as before.
+ */
+export const drawRiftLegend = (g: Game): RiftLegend => {
+  const self = teamLegend(g)?.id
+  const drawn = pickLegend(g.rng, g.rift.met, self)
+  // Playing Darkrai itself (Legend mode), its nightmare never comes.
+  return g.halloween && !(self !== undefined && isEventRift(self)) && g.rng() < EVENT_RIFT.odds ? 'darkrai' : drawn
+}
+
+/**
+ * The next rift begins: its legendary is drawn (`drawRiftLegend`), its
  * weather takes the sky and holds until the rift is over (`setWeather`, with
  * no next change due), and the one after it is scheduled.
  */
-export const startOmen = (g: Game, legend: RiftLegend = pickLegend(g.rng, g.rift.met, teamLegend(g)?.id)) => {
+export const startOmen = (g: Game, legend: RiftLegend = drawRiftLegend(g)) => {
   const rift = g.rift
   rift.omen = { legend, left: RIFT.omenTime }
   rift.met.push(legend)
