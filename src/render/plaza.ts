@@ -21,9 +21,10 @@ import { CARAVAN, STALLS, type StallId } from '../data/visitors'
  * (`PlazaVisitors`, set by the shell): Meowth's weekend caravan, a seasonal
  * stall and the golden Kecleon statue. Around a Festival da Praça
  * (`PlazaFestival`, set by the shell) the fountain stands in front of the
- * shop, and while one runs the square grows into the Lantern Festival: the
- * gate, the wishing tree, Lanturn's Lantern Market, lantern strings and, at
- * the end, the Togepi float and a warm dusk, by the pot's stage. The building
+ * shop, and while one runs the plaza becomes the Lantern Ring (`RING`): a
+ * curbed round square with its own approach, the gate, the wishing tree,
+ * Lanturn's Lantern Market, a wheel of lantern strings and, at the end, the
+ * Togepi float and a warm dusk, by the pot's stage. The building
  * and each visitor keep an invisible footprint walkers go around (`padsOf`).
  * Pure presentation, like the rest of the lobby.
  */
@@ -54,7 +55,7 @@ export type PlazaFestival = { fountain: boolean; stage: PlazaStage; running: boo
 
 export const NO_FESTIVAL: PlazaFestival = { fountain: false, stage: 0, running: false }
 
-/** Lanturn, the Lantern Market's keeper, in the seasonal stall's slot while a festival runs (unless a stall holds it). */
+/** Lanturn, the Lantern Market's keeper, at its stall on the Ring's east side while a festival runs. */
 export const LANTURN = { dex: 171, name: 'Lanturn' } as const
 /** Volbeat and Illumise, who come to the wishing tree at dusk (stage 3). */
 const FIREFLY_DEX = [313, 314] as const
@@ -98,6 +99,7 @@ const ART_FILES = {
   'tree-s1': 'festival-tree-s1',
   'tree-s2': 'festival-tree-s2',
   market: 'festival-market',
+  stall: 'festival-stall',
   float: 'festival-float',
   'float-shiny': 'festival-float-shiny',
 } as const satisfies Record<string, string>
@@ -127,6 +129,7 @@ const FESTIVAL_ART: ReadonlySet<ArtId> = new Set([
   'gate-unlit',
   'gate',
   'market',
+  'stall',
   'float',
   'float-shiny',
 ])
@@ -265,8 +268,10 @@ type Layout = {
   props: readonly (Placed & { id: ArtId; cast?: ArtId })[]
   /** Where the partner stands to shop. */
   spot: Placed
-  /** The cobblestones' ellipse. */
+  /** The cobblestones' ellipse (the Ring's floor during a festival). */
   cobbles: Placed & { rx: number; ry: number }
+  /** Whether the floor is the festival's Lantern Ring (curbed, with its approach) rather than the cobblestones. */
+  ring: boolean
   /** Where the visitors stand, when they come: Meowth's wagon and Meowth, a seasonal stall and its keeper, the golden statue. */
   wagon: Placed
   meowth: KeeperSpot
@@ -277,7 +282,9 @@ type Layout = {
   festival: FestivalLayout | null
   /** What the building, the props and the visitors' pieces cast on the cobblestones. */
   shadows: readonly Shadow[]
-  /** The box (relative to the building's feet) holding all the plaza draws: the cobblestones, the building and every piece that casts a shadow. */
+  /** The boxes (relative to the building's feet) of the building, every piece that casts a shadow and the Ring's approach: with the floor's ellipse, all the plaza draws. */
+  pieces: readonly Box[]
+  /** The box holding all of it, the floor included. */
   bounds: Box
 }
 
@@ -301,12 +308,12 @@ type Light = Placed & { r: number; alpha: number }
 
 /**
  * The festival on the plaza: the fountain (its stage's water frames) from the
- * week before; while it runs, the donors' plaque and the Lantern Festival by
- * stage: the gate, the wishing tree and Lanturn's market (null while a
- * seasonal stall holds its slot) from the opening, the bunting from 1, the
- * lantern strings and the lanterns floating on the fountain from 2, and from
- * 3 the Togepi float, Volbeat and Illumise at the tree, the dusk's `lights`
- * and `sky` lanterns rising.
+ * week before; while it runs, the Lantern Ring (`RING`) by stage: the
+ * plaque, the gate, the wishing tree, the sister stall (null while a seasonal
+ * stall holds its spot) and Lanturn's market from the opening, the bunting
+ * from 1, the wheel of lantern strings and the lanterns floating on the
+ * fountain from 2, and from 3 the Togepi float, Volbeat and Illumise at the
+ * tree, the dusk's `lights` and `sky` lanterns rising.
  */
 type FestivalLayout = {
   stage: PlazaStage
@@ -315,7 +322,9 @@ type FestivalLayout = {
   bunting: Placed | null
   gate: Standing | null
   tree: Standing | null
+  stall: Standing | null
   market: Standing | null
+  lanturn: KeeperSpot | null
   float: Standing | null
   strings: readonly Strung[]
   floaters: boolean
@@ -335,43 +344,72 @@ const VISITOR_PADS = { wagon: { rx: 74, ry: 16 }, stall: { rx: 60, ry: 18 }, sta
 /** Where the lamps' feet stand, below the building's. */
 const LAMP_Y = 14
 
+/** Where the festival's fountain stands the week before it opens, right of the statue's spot, with a flower pot `flowers` px to each side. */
+const FOUNTAIN_BEFORE = { x: 46, y: 128, flowers: 54 } as const
+
 /**
- * Where the festival's pieces stand, relative to the building's feet: the
- * fountain in front of the shop, right of the statue's spot, flowers `flowers`
- * px to each side of it and the plaque west of it, all clear of the statue,
- * the board and Meowth. The gate stands north-west, on the way in from home
- * and just north of Meowth's wagon, its posts `post` px off its middle and
- * their lamp heads `head` px up; the tree and the Togepi float south, inside
- * a phone's view; Volbeat and Illumise by the tree. Lanturn's market takes
- * the seasonal stall's slot (`Layout.stall`).
+ * The Lantern Ring, the square the plaza becomes while a festival runs,
+ * relative to the building's feet: a curbed round `floor` with a cobbled
+ * `approach` running south out of the gate. Down its axis (x 0) stand the
+ * fountain (its strings tie `crown` px up), the Togepi float (two `planters`
+ * hold its spot until it comes) and the gate at the south entrance (posts
+ * `post` px off its middle, their lamp heads `head` px up). Four lamps ring
+ * the fountain with the shop's two; the plaque and the golden statue flank
+ * the fountain. On the east, the sister stall (or a seasonal stall) and
+ * Lanturn's market facing in; on the west, the wishing tree with Volbeat and
+ * Illumise, and the notice board. Meowth's weekend wagon parks on the grass
+ * off the north-west curb, Meowth on the stones beside it.
  */
-const FESTIVAL_SPOTS = {
-  fountain: { x: 46, y: 128 },
-  flowers: 54,
-  plaque: { x: -88, y: 124 },
-  gate: { x: -190, y: -100 },
+const RING = {
+  floor: { x: 0, y: 128, rx: 262, ry: 198 },
+  approach: { half: 30, top: 320, bottom: 420 },
+  fountain: { x: 0, y: 116 },
+  crown: 74,
+  plaque: { x: -66, y: 128 },
+  statue: { x: 66, y: 128 },
+  float: { x: 0, y: 228 },
+  planters: [
+    [-18, 228],
+    [18, 228],
+  ],
+  gate: { x: 0, y: 322 },
   post: 49,
-  head: 80,
-  tree: { x: -70, y: 240 },
-  float: { x: 30, y: 268 },
-  volbeat: { x: -128, y: 248, dir: 1 },
-  illumise: { x: -136, y: 196, dir: 1 },
+  head: 84,
+  lamps: [
+    [-150, 128],
+    [-104, 196],
+    [104, 196],
+    [150, 128],
+  ],
+  stall: { x: 200, y: 44 },
+  market: { x: 214, y: 154 },
+  lanturn: { x: 158, y: 166, dir: 7 },
+  tree: { x: -206, y: 154 },
+  volbeat: { x: -240, y: 198, dir: 1 },
+  illumise: { x: -168, y: 200, dir: 7 },
+  board: { x: -170, y: 34 },
+  flowers: [
+    [-150, 272],
+    [150, 272],
+  ],
+  wagon: { x: -310, y: 20 },
+  spot: { x: -36, y: 36 },
 } as const
 /** The bunting and the lantern strings tie on the lamp's cap, this high above its feet. */
 const LAMP_TIE = 40
-/** The cobblestones while a festival runs: a bigger square around every piece. */
-const FESTIVAL_COBBLES = { x: -40, y: 50, rx: 310, ry: 240 } as const
 /**
  * The festival's footprints (radii, `dy` from the feet): the fountain's basin,
- * the plaque's posts, each gate post, the tree's planter, the market's counter
- * and the float's wheels (walkers pass behind the float's lantern and the market's awning).
+ * the plaque's posts, each gate post and ring lamp, the tree's planter, the
+ * stalls' counters and the float's wheels (walkers pass behind the float's
+ * lantern and the stalls' awnings).
  */
 const FESTIVAL_PADS = {
   fountain: { dy: -20, rx: 44, ry: 20 },
   plaque: { rx: 13, ry: 5 },
   post: { rx: 6, ry: 4 },
+  lamp: { rx: 5, ry: 3 },
   tree: { dy: -14, rx: 34, ry: 13 },
-  market: { dy: -14, rx: 46, ry: 13 },
+  stall: { dy: -14, rx: 46, ry: 13 },
   float: { dy: -10, rx: 40, ry: 10 },
 } as const
 
@@ -384,22 +422,24 @@ const FLOATERS = [
 ] as const
 /** Where the sky lanterns hang at the middle of their rise, relative to the building's feet (high over the shop and the meadow), and whether each is a far one; the last ones join at stage 4. */
 const SKY_LANTERNS = [
-  [-320, -190, 1],
-  [-150, -175, 0],
-  [-95, -132, 1],
-  [130, -182, 0],
-  [178, -130, 1],
-  [250, -168, 0],
-  [62, -196, 1],
-  [-205, -150, 1],
-  [-40, -186, 0],
-  [215, -196, 1],
-  [100, -150, 1],
-  [-270, -170, 0],
-  [12, -160, 1],
-  [270, -120, 1],
+  [-300, -190, 1],
+  [-150, -185, 0],
+  [-95, -140, 1],
+  [130, -186, 0],
+  [178, -140, 1],
+  [250, -175, 0],
+  [62, -200, 1],
+  [-215, -160, 1],
+  [320, -120, 1],
+  [-280, -100, 0],
+  [-40, -196, 0],
+  [215, -200, 1],
+  [100, -160, 1],
+  [-260, -190, 0],
+  [12, -170, 1],
+  [290, -190, 1],
 ] as const
-const SKY_AT = { 3: 8, 4: SKY_LANTERNS.length } as const
+const SKY_AT = { 3: 10, 4: SKY_LANTERNS.length } as const
 /** The fireflies around the wishing tree, from its feet. */
 const FIREFLIES = [
   [-60, -110],
@@ -413,40 +453,68 @@ const FIREFLIES = [
   [-80, -70],
   [70, -80],
 ] as const
-/** The strings' lantern mixes. */
+/** The strings' lantern mixes: the spokes', and the rim's. */
 const MIX: readonly LanternKind[] = ['ball', 'kecleon', 'cream']
+const RIM: readonly LanternKind[] = ['ball', 'kecleon']
+/** How much lower (world px) a desktop's resting view of the plaza sits during a festival, so the float comes into view, as far as the shop's dome still fits. */
+const FESTIVAL_DROP = 40
 
 /** The plaza's layout with the festival it shows (none until the festival's PNGs are in). */
 const plazaLayout = (plaza: Plaza) => layoutOf(plaza.level, plaza.visitors, plaza.festival.fountain && festivalArtReady() ? plaza.festival : NO_FESTIVAL)
 
 /**
  * The festival's pieces on a plaza whose lamps stand `lamp` px off the
- * middle, with Lanturn's market at `stall` when `market` (`FestivalLayout`).
+ * middle (`FestivalLayout`); `sister` when no seasonal stall holds the
+ * Ring's stall spot.
  */
-const festivalLayout = (f: PlazaFestival, lamp: number, stall: Placed, market: boolean): FestivalLayout => {
-  const S = FESTIVAL_SPOTS
+const festivalLayout = (f: PlazaFestival, lamp: number, sister: boolean): FestivalLayout => {
+  const R = RING
   const stage = f.running ? f.stage : 0
-  const fountain = { ...S.fountain, frames: FOUNTAIN_FRAMES[stage].map((id) => arts.get(id)!) }
-  if (!f.running) return { stage, fountain, plaque: null, bunting: null, gate: null, tree: null, market: null, float: null, strings: [], floaters: false, guests: [], lights: [], sky: 0 }
+  const frames = FOUNTAIN_FRAMES[stage].map((id) => arts.get(id)!)
+  if (!f.running)
+    return {
+      stage,
+      fountain: { x: FOUNTAIN_BEFORE.x, y: FOUNTAIN_BEFORE.y, frames },
+      plaque: null,
+      bunting: null,
+      gate: null,
+      tree: null,
+      stall: null,
+      market: null,
+      lanturn: null,
+      float: null,
+      strings: [],
+      floaters: false,
+      guests: [],
+      lights: [],
+      sky: 0,
+    }
   const standing = (id: ArtId, spot: Placed): Standing => ({ x: spot.x, y: spot.y, art: arts.get(id)! })
-  const gate = standing(stage >= 2 ? 'gate' : 'gate-unlit', S.gate)
-  const tree = standing(TREE_ART[stage], S.tree)
-  const stand = market ? standing('market', stall) : null
-  const float = stage >= 3 ? standing(stage >= 4 ? 'float-shiny' : 'float', S.float) : null
-  const left = { x: -lamp, y: LAMP_Y - LAMP_TIE }
-  const right = { x: lamp, y: LAMP_Y - LAMP_TIE }
-  const tie = (from: Placed, to: Placed, sag: number, step: number, start: number, kinds: readonly LanternKind[]): Strung => ({
+  const gate = standing(stage >= 2 ? 'gate' : 'gate-unlit', R.gate)
+  const tree = standing(TREE_ART[stage], R.tree)
+  const stall = sister ? standing('stall', R.stall) : null
+  const market = standing('market', R.market)
+  const float = stage >= 3 ? standing(stage >= 4 ? 'float-shiny' : 'float', R.float) : null
+  const tie = (from: Placed, to: Placed, sag: number, start: number, kinds: readonly LanternKind[]): Strung => ({
     from,
-    line: { dx: to.x - from.x, dy: to.y - from.y, sag, step, start, kinds },
+    line: { dx: to.x - from.x, dy: to.y - from.y, sag, step: 11, start, kinds },
   })
-  // The left lamp to the gate's right head and to the fountain's top (its lanterns start past Kecleon's head), the right lamp to the market's awning, the fountain to the tree.
+  // Every lamp's cap, the shop's two first, then the ring's (west to east).
+  const caps = [{ x: -lamp, y: LAMP_Y }, { x: lamp, y: LAMP_Y }, ...R.lamps.map(([x, y]) => ({ x, y }))].map((p) => ({ x: p.x, y: p.y - LAMP_TIE }))
+  const [shopW, shopE, ringW, ringSW, ringSE, ringE] = caps as [Placed, Placed, Placed, Placed, Placed, Placed]
+  const crown = { x: R.fountain.x, y: R.fountain.y - R.crown }
+  const heads = [-1, 1].map((side) => ({ x: R.gate.x + side * R.post, y: R.gate.y - R.head })) as [Placed, Placed]
+  // The wheel: a spoke from the fountain's crown to every lamp, and a rim from lamp to lamp that opens toward the gate.
   const strings =
     stage >= 2
       ? [
-          tie(left, { x: S.gate.x + S.post, y: S.gate.y - S.head }, 10, 12, 20, MIX),
-          ...(stand ? [tie(right, { x: stall.x - 38, y: stall.y - 66 }, 8, 10, 20, ['ball', 'cream'])] : []),
-          tie(left, { x: S.fountain.x - 6, y: S.fountain.y - 78 }, 12, 12, 36, MIX),
-          tie({ x: S.fountain.x + 6, y: S.fountain.y - 76 }, { x: S.tree.x + 26, y: S.tree.y - 92 }, 10, 11, 11, ['kecleon', 'cream', 'ball']),
+          ...caps.map((cap) => tie(crown, cap, 6, 16, MIX)),
+          tie(shopW, ringW, 6, 18, RIM),
+          tie(ringW, ringSW, 6, 18, RIM),
+          tie(ringSW, heads[0], 6, 18, RIM),
+          tie(heads[1], ringSE, 6, 18, RIM),
+          tie(ringSE, ringE, 6, 18, RIM),
+          tie(ringE, shopE, 6, 18, RIM),
         ]
       : []
   const light = (x: number, y: number, r: number, alpha: number): Light => ({ x, y, r, alpha })
@@ -454,13 +522,12 @@ const festivalLayout = (f: PlazaFestival, lamp: number, stall: Placed, market: b
     stage >= 3
       ? [
           // The lamps' heads and the lanterns on their arms.
-          ...[-lamp, lamp].flatMap((x) => [light(x, LAMP_Y - 48, 22, 0.3), light(x - 10, LAMP_Y - 32, 7, 0.3), light(x + 10, LAMP_Y - 32, 7, 0.3)]),
-          light(S.fountain.x, S.fountain.y - 44, 54, 0.24),
-          ...FLOATERS.map(([x, y]) => light(S.fountain.x + x, S.fountain.y + y, 5, 0.3)),
+          ...caps.flatMap(({ x, y }) => [light(x, y + LAMP_TIE - 48, 22, 0.3), light(x - 10, y + LAMP_TIE - 32, 7, 0.3), light(x + 10, y + LAMP_TIE - 32, 7, 0.3)]),
+          light(R.fountain.x, R.fountain.y - 44, 54, 0.24),
+          ...FLOATERS.map(([x, y]) => light(R.fountain.x + x, R.fountain.y + y, 5, 0.3)),
           light(tree.x, tree.y - 66, 40, 0.22),
-          ...(stand ? [light(stand.x, stand.y - 62, 34, 0.22)] : []),
-          light(gate.x - S.post, gate.y - S.head - 4, 16, 0.3),
-          light(gate.x + S.post, gate.y - S.head - 4, 16, 0.3),
+          ...[stall, market].flatMap((s) => (s ? [light(s.x, s.y - 62, 34, 0.2)] : [])),
+          ...heads.map((h) => light(h.x, h.y, 16, 0.3)),
           light(gate.x, gate.y - 52, 34, 0.24),
           ...(float ? [light(float.x, float.y - 52, 44, 0.28)] : []),
           ...strings.flatMap((s) => stringLanterns(s.line).map((l) => light(s.from.x + l.x, s.from.y + l.y + 5, 6, 0.22))),
@@ -468,20 +535,22 @@ const festivalLayout = (f: PlazaFestival, lamp: number, stall: Placed, market: b
       : []
   return {
     stage,
-    fountain,
-    plaque: S.plaque,
-    bunting: stage >= 1 ? left : null,
+    fountain: { ...R.fountain, frames },
+    plaque: R.plaque,
+    bunting: stage >= 1 ? { x: -lamp, y: LAMP_Y - LAMP_TIE } : null,
     gate,
     tree,
-    market: stand,
+    stall,
+    market,
+    lanturn: R.lanturn,
     float,
     strings,
     floaters: stage >= 2,
     guests:
       stage >= 3
         ? [
-            { dex: FIREFLY_DEX[0], spot: S.volbeat },
-            { dex: FIREFLY_DEX[1], spot: S.illumise },
+            { dex: FIREFLY_DEX[0], spot: R.volbeat },
+            { dex: FIREFLY_DEX[1], spot: R.illumise },
           ]
         : [],
     lights,
@@ -512,26 +581,35 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
             { x: -half + 2, y: 14, dir: 1 },
             { x: half - 2, y: 14, dir: 7 },
           ]
+  // While a festival runs the plaza is the Lantern Ring, with its own spots for the visitors.
+  const ring = f.fountain && f.running
   // The caravan parks west of the shop, a stall stands east of it (where the crates were); the statue keeps the front.
-  const wagon = { x: -lamp - 118, y: 44 }
-  const stall = { x: lamp + 84, y: 40 }
-  const statue = { x: -Math.round(half * 0.5), y: 92 }
-  // While a festival runs, Lanturn's market takes the stall's slot (a seasonal stall keeps it when there's one).
-  const market = f.fountain && f.running && v.stall === null
-  const slotTaken = v.stall !== null || market
-  const wide = v.caravan || slotTaken
-  const props: Layout['props'] = [
-    // The festival hangs arms of Poké Ball lanterns on the lamps; their shadows stay the plain lamps'.
-    ...[-lamp, lamp].map((x) => ({ id: f.fountain && f.running ? ('lamp-arms' as const) : ('lantern' as const), cast: 'lantern' as const, x, y: LAMP_Y })),
-    ...(slotTaken ? [] : [{ id: 'crates' as const, x: lamp + 26, y: 30 }]),
-    ...(level >= 2 ? [{ id: 'board' as const, x: v.caravan ? -lamp - 196 : -lamp - 36, y: v.caravan ? 96 : 58 }] : []),
-    ...(level >= 3 ? [{ id: 'flowers' as const, x: -lamp + 2, y: 44 }, { id: 'flowers' as const, x: slotTaken ? lamp + 30 : lamp + 16, y: slotTaken ? 82 : 66 }] : []),
-    ...(f.fountain ? [-1, 1].map((side) => ({ id: 'flowers' as const, x: FESTIVAL_SPOTS.fountain.x + side * FESTIVAL_SPOTS.flowers, y: FESTIVAL_SPOTS.fountain.y + 2 })) : []),
-  ]
-  const festival = f.fountain ? festivalLayout(f, lamp, stall, market) : null
-  // The festival's fountain stands in front of the shop: the stones reach further down for it, and around every piece while it runs.
-  const cobbles = festival?.plaque
-    ? FESTIVAL_COBBLES
+  const wagon = ring ? RING.wagon : { x: -lamp - 118, y: 44 }
+  const stall = ring ? RING.stall : { x: lamp + 84, y: 40 }
+  const statue = ring ? RING.statue : { x: -Math.round(half * 0.5), y: 92 }
+  const wide = v.caravan || v.stall !== null
+  const flowers = (spots: readonly (readonly [number, number])[]) => spots.map(([x, y]) => ({ id: 'flowers' as const, x, y }))
+  const props: Layout['props'] = ring
+    ? [
+        // The festival hangs arms of Poké Ball lanterns on the lamps (theirs cast the plain lamp's shadow) and rings the fountain with four more.
+        ...[[-lamp, LAMP_Y] as const, [lamp, LAMP_Y] as const, ...RING.lamps].map(([x, y]) => ({ id: 'lamp-arms' as const, cast: 'lantern' as const, x, y })),
+        ...(level >= 2 ? [{ id: 'board' as const, ...RING.board }] : []),
+        ...flowers(RING.flowers),
+        // Until the float comes, planters keep its spot on the axis.
+        ...(f.stage < 3 ? flowers(RING.planters) : []),
+      ]
+    : [
+        { id: 'lantern', x: -lamp, y: LAMP_Y },
+        { id: 'lantern', x: lamp, y: LAMP_Y },
+        ...(v.stall === null ? [{ id: 'crates' as const, x: lamp + 26, y: 30 }] : []),
+        ...(level >= 2 ? [{ id: 'board' as const, x: v.caravan ? -lamp - 196 : -lamp - 36, y: v.caravan ? 96 : 58 }] : []),
+        ...(level >= 3 ? [{ id: 'flowers' as const, x: -lamp + 2, y: 44 }, { id: 'flowers' as const, x: v.stall ? lamp + 30 : lamp + 16, y: v.stall ? 82 : 66 }] : []),
+        ...(f.fountain ? [-1, 1].map((side) => ({ id: 'flowers' as const, x: FOUNTAIN_BEFORE.x + side * FOUNTAIN_BEFORE.flowers, y: FOUNTAIN_BEFORE.y + 2 })) : []),
+      ]
+  const festival = f.fountain ? festivalLayout(f, lamp, v.stall === null) : null
+  // The festival's fountain stands in front of the shop: the stones reach further down for it the week before; the Ring has its own floor.
+  const cobbles = ring
+    ? RING.floor
     : { x: 0, y: (wide ? 40 : 36) - Math.round(depth * 0.7) + (festival ? 14 : 0), rx: lamp + (wide ? 186 : 66), ry: (wide ? 88 : 78) + Math.round(depth * 1.1) + (festival ? 26 : 0) }
   const shadows: readonly Shadow[] = [
     // The deep 3/4 buildings cast a soft ellipse under their footprint; everything else, its own silhouette.
@@ -541,12 +619,19 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
     ...(v.stall ? [{ ...stall, art: arts.get(STALLS[v.stall].art)! }] : []),
     ...(v.statue ? [{ ...statue, art: arts.get('pedestal')! }] : []),
     // A piece that changes by stage keeps its first stage's shadow (the fountain's doesn't grow when the lanterns and the statue come); the bunting and the strings cast none.
-    ...(festival ? [{ ...festival.fountain, art: arts.get('fountain-s0-f0')! }] : []),
+    ...(festival ? [{ x: festival.fountain.x, y: festival.fountain.y, art: arts.get('fountain-s0-f0')! }] : []),
     ...(festival?.plaque ? [{ ...festival.plaque, art: arts.get('plaque')! }] : []),
     ...(festival?.gate ? [{ x: festival.gate.x, y: festival.gate.y, art: arts.get('gate-unlit')! }] : []),
     ...(festival?.tree ? [{ x: festival.tree.x, y: festival.tree.y, art: arts.get('tree-s0')! }] : []),
+    ...(festival?.stall ? [festival.stall] : []),
     ...(festival?.market ? [festival.market] : []),
     ...(festival?.float ? [{ x: festival.float.x, y: festival.float.y, art: arts.get('float')! }] : []),
+  ]
+  const a = RING.approach
+  const pieceBoxes: [Box, ...Box[]] = [
+    boxOf(building, { x: 0, y: 0 }),
+    ...(ring ? [{ left: -a.half, top: a.top, right: a.half, bottom: a.bottom }] : []),
+    ...shadows.flatMap((s) => ('art' in s ? [boxOf(s.art, s)] : [])),
   ]
   const layout: Layout = {
     building,
@@ -554,8 +639,10 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
     keepers,
     counter: level === 3 ? LV3_COUNTER : null,
     props,
-    spot: { x: 0, y: 34 },
+    // On the Ring the fountain stands on the axis: the partner shops from just west of its crown.
+    spot: ring ? RING.spot : { x: 0, y: 34 },
     cobbles,
+    ring,
     wagon,
     meowth: { x: wagon.x + 84, y: wagon.y + 16, dir: 1 },
     stall,
@@ -563,12 +650,9 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
     statue,
     festival,
     shadows,
-    // The bunting and the lantern strings hang between pieces inside this box already (the sky lanterns don't count).
-    bounds: unionOf([
-      { left: cobbles.x - cobbles.rx, top: cobbles.y - cobbles.ry, right: cobbles.x + cobbles.rx, bottom: cobbles.y + cobbles.ry },
-      boxOf(building, { x: 0, y: 0 }),
-      ...shadows.flatMap((s) => ('art' in s ? [boxOf(s.art, s)] : [])),
-    ]),
+    // The bunting and the lantern strings hang between pieces inside these boxes already (the sky lanterns don't count).
+    pieces: pieceBoxes,
+    bounds: unionOf([{ left: cobbles.x - cobbles.rx, top: cobbles.y - cobbles.ry, right: cobbles.x + cobbles.rx, bottom: cobbles.y + cobbles.ry }, ...pieceBoxes]),
   }
   layouts.set(key, layout)
   return layout
@@ -628,7 +712,7 @@ const npcsAt = (plaza: Plaza, layout: Layout): { who: PlazaNpc; dex: number; spo
   return [
     ...(v.caravan ? [{ who: 'meowth' as const, dex: CARAVAN.dex, spot: layout.meowth }] : []),
     ...(v.stall ? [{ who: 'stall' as const, dex: STALLS[v.stall].dex, spot: layout.stallKeeper }] : []),
-    ...(layout.festival?.market ? [{ who: 'lanturn' as const, dex: LANTURN.dex, spot: layout.stallKeeper }] : []),
+    ...(layout.festival?.lanturn ? [{ who: 'lanturn' as const, dex: LANTURN.dex, spot: layout.festival.lanturn }] : []),
   ]
 }
 
@@ -780,11 +864,14 @@ const padsOf = (plaza: Plaza, layout: Layout): readonly Pad[] => {
     ...(v.statue ? [{ x: layout.statue.x, y: layout.statue.y - 3, ...VISITOR_PADS.statue, back: 2 }] : []),
     ...(f ? [{ x: f.fountain.x, y: f.fountain.y + FESTIVAL_PADS.fountain.dy, rx: FESTIVAL_PADS.fountain.rx, ry: FESTIVAL_PADS.fountain.ry, back: 1.4 }] : []),
     ...(f?.plaque ? [{ x: f.plaque.x, y: f.plaque.y - 2, ...FESTIVAL_PADS.plaque, back: 2 }] : []),
-    ...(f?.gate ? [-1, 1].map((side) => ({ x: f.gate!.x + side * FESTIVAL_SPOTS.post, y: f.gate!.y - 2, ...FESTIVAL_PADS.post, back: 2 })) : []),
+    ...(f?.gate ? [-1, 1].map((side) => ({ x: f.gate!.x + side * RING.post, y: f.gate!.y - 2, ...FESTIVAL_PADS.post, back: 2 })) : []),
+    // The Ring's lamp posts (thin: the lanes between them stay open).
+    ...layout.props.flatMap((p) => (p.id === 'lamp-arms' ? [{ x: p.x, y: p.y - 1, ...FESTIVAL_PADS.lamp, back: 1.5 }] : [])),
     ...(
       [
         [f?.tree, FESTIVAL_PADS.tree],
-        [f?.market, FESTIVAL_PADS.market],
+        [f?.stall, FESTIVAL_PADS.stall],
+        [f?.market, FESTIVAL_PADS.stall],
         [f?.float, FESTIVAL_PADS.float],
       ] as const
     ).flatMap(([at, pad]) => (at ? [{ x: at.x, y: at.y + pad.dy, rx: pad.rx, ry: pad.ry, back: 1.4 }] : [])),
@@ -806,6 +893,7 @@ export const plazaTapped = (plaza: Plaza, at: Vec): PlazaNpc | null => {
   if (plaza.visitors.stall && over(arts.get(STALLS[plaza.visitors.stall].art), layout.stall)) return 'stall'
   const fest = layout.festival
   if (fest?.market && over(fest.market.art, fest.market)) return 'lanturn'
+  if (fest?.stall && over(fest.stall.art, fest.stall)) return 'lanturn'
   if (fest?.plaque && over(arts.get('plaque'), fest.plaque)) return 'plaque'
   if (fest && over(fest.fountain.frames[0], fest.fountain)) return 'fountain'
   const half = layout.building.w / 2
@@ -850,7 +938,9 @@ const frameAt = (plaza: Plaza, layout: Layout | null, tall: number, w: number, h
   const lamp = layout ? Math.max(104, Math.round(layout.building.w / 2) + 14) : 110
   const left = Math.round(Math.max(w * 0.32, lamp + 46))
   const feet = Math.round(Math.min(h - 44, Math.max(h * 0.6, tall + 12)))
-  return { x: plaza.x - left, y: plaza.y - feet }
+  // The Lantern Ring reaches far south: the view steps down toward the float, as far as the shop's dome stays in.
+  const drop = layout?.ring ? clamp(feet - tall - 4, 0, FESTIVAL_DROP) : 0
+  return { x: plaza.x - left, y: plaza.y - feet + drop }
 }
 
 /* ---------------- Drawing ---------------- */
@@ -896,9 +986,6 @@ const cobbles = (() => {
       return dx * dx + dy * dy < 1 + wobble
     }
     for (let y = -ry - pad; y <= ry + pad; y++) {
-      const row = Math.floor((y + 600) / 6)
-      const offset = (row % 2) * 5
-      const ly = (y + 600) % 6
       for (let x = -rx - pad; x <= rx + pad; x++) {
         const cx = x + rx + pad
         const cy = y + ry + pad
@@ -909,27 +996,105 @@ const cobbles = (() => {
           if (ex * ex + ey * ey < 1) set(cx, cy, [24, 56, 24], 70)
           continue
         }
-        const lx = (x + 600 + offset) % 10
-        const stone = STONES[(Math.floor((x + 600 + offset) / 10) * 31 + row * 17) % 5]!
-        const c = lx === 0 || ly === 0 ? MORTAR : ly === 1 && lx < 9 ? STONE_HI : ly === 5 || lx === 9 ? STONE_LO : stone
-        set(cx, cy, c)
+        set(cx, cy, stoneAt(x, y))
       }
     }
-    // A few grass tufts between the stones, from a fixed little generator so the patch never changes.
-    let seed = 7
-    const next = () => (seed = (seed * 16807) % 2147483647) / 2147483647
-    for (let i = 0; i < 22; i++) {
-      const x = Math.round(-rx + next() * rx * 2)
-      const y = Math.round(-ry + next() * ry * 2)
-      if (!inside(x, y) || !inside(x + 1, y - 1)) continue
-      set(x + rx + pad, y + ry + pad, TUFT[0])
-      set(x + 1 + rx + pad, y - 1 + ry + pad, TUFT[1])
-    }
+    tufts(-rx, -ry, rx * 2, ry * 2, inside, (x, y, c) => set(x + rx + pad, y + ry + pad, c))
     ctx.putImageData(image, 0, 0)
     cache.set(key, canvas)
     return canvas
   }
 })()
+
+/** The stone pattern's pixel at (x, y) from its origin: staggered 10×6 stones with mortar, a lit top edge and a shaded bottom one. */
+const stoneAt = (x: number, y: number) => {
+  const row = Math.floor((y + 600) / 6)
+  const offset = (row % 2) * 5
+  const ly = (y + 600) % 6
+  const lx = (x + 600 + offset) % 10
+  const stone = STONES[(Math.floor((x + 600 + offset) / 10) * 31 + row * 17) % 5]!
+  return lx === 0 || ly === 0 ? MORTAR : ly === 1 && lx < 9 ? STONE_HI : ly === 5 || lx === 9 ? STONE_LO : stone
+}
+
+/** A few grass tufts between the stones of a `w`×`h` patch from (x0, y0), from a fixed little generator so the patch never changes. */
+const tufts = (x0: number, y0: number, w: number, h: number, inside: (x: number, y: number) => boolean, set: (x: number, y: number, c: readonly number[]) => void) => {
+  let seed = 7
+  const next = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+  for (let i = 0; i < 22; i++) {
+    const x = Math.round(x0 + next() * w)
+    const y = Math.round(y0 + next() * h)
+    if (!inside(x, y) || !inside(x + 1, y - 1)) continue
+    set(x, y, TUFT[0])
+    set(x + 1, y - 1, TUFT[1])
+  }
+}
+
+/** The Ring's curb: a light stone lip (and its second row), a seam, the dark outline, and the stone face below the south edge. */
+const CURB = { lip: rgb('#e3dac3'), lip2: rgb('#d0c8ae'), seam: rgb('#968568'), line: rgb('#5f5446'), face: rgb('#b8a988'), face2: rgb('#968568') }
+/** The curb's shadow on the grass below its face. */
+const CURB_SHADOW = [0, 0, 0] as const
+const CURB_SHADOW_ALPHA = 56
+
+/**
+ * The Lantern Ring's floor (`RING`), built once: the cobblestones in its
+ * curbed round and its approach out of the gate. Inside, a 3 px curb (dark
+ * outline, light lip, seam); outside, on south-facing edges, the curb's
+ * stone face, its outline and a shadow line on the grass, and a dark outline
+ * along the rest. Drawn at (`x`, `y`) from the building's feet.
+ */
+const ringFloor = lazy(() => {
+  const e = RING.floor
+  const a = RING.approach
+  const x0 = e.x - e.rx - 4
+  const y0 = e.y - e.ry - 4
+  const w = e.rx * 2 + 9
+  const h = a.bottom + 6 - y0
+  const shape = (x: number, y: number) => {
+    const dx = (x - e.x) / e.rx
+    const dy = (y - e.y) / e.ry
+    return dx * dx + dy * dy <= 1 || (Math.abs(x) <= a.half && y >= a.top && y <= a.bottom)
+  }
+  const inside = new Uint8Array(w * h)
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) inside[y * w + x] = shape(x + x0, y + y0) ? 1 : 0
+  const at = (x: number, y: number) => x >= 0 && y >= 0 && x < w && y < h && inside[y * w + x] === 1
+  const canvas = createCanvas(w, h)
+  const ctx = context2d(canvas)
+  const image = ctx.createImageData(w, h)
+  const px = image.data
+  const set = (x: number, y: number, c: readonly number[], alpha = 255) => {
+    const i = (y * w + x) * 4
+    px[i] = c[0]!
+    px[i + 1] = c[1]!
+    px[i + 2] = c[2]!
+    px[i + 3] = alpha
+  }
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (at(x, y)) {
+        // How far in from the edge (1 to 3, along the rows and columns): the curb's rows.
+        let dist = 0
+        for (let k = 1; k <= 3 && !dist; k++) if (!at(x - k, y) || !at(x + k, y) || !at(x, y - k) || !at(x, y + k)) dist = k
+        // The south rim's top row is its lip; the face hangs below it.
+        if (dist === 1) set(x, y, at(x, y - 1) && !at(x, y + 1) ? CURB.lip : CURB.line)
+        else if (dist === 2) set(x, y, CURB.lip)
+        else if (dist === 3) set(x, y, CURB.seam)
+        else set(x, y, stoneAt(x + x0 - e.x, y + y0 - e.y))
+        continue
+      }
+      // Below a south-facing edge: the face, its outline, then a shadow on the grass.
+      const up = at(x, y - 1) ? 1 : at(x, y - 2) ? 2 : at(x, y - 3) ? 3 : at(x, y - 4) ? 4 : 0
+      if (up === 1) set(x, y, CURB.face)
+      else if (up === 2) set(x, y, CURB.face2)
+      else if (up === 3) set(x, y, CURB.line)
+      else if (up === 4) set(x, y, CURB_SHADOW, CURB_SHADOW_ALPHA)
+      else if (at(x - 1, y) || at(x + 1, y) || at(x, y + 1)) set(x, y, CURB.line)
+    }
+  }
+  const inner = (x: number, y: number) => at(x - 4, y) && at(x + 4, y) && at(x, y - 4) && at(x, y + 4)
+  tufts(0, 0, w, h, inner, (x, y, c) => set(x, y, c))
+  ctx.putImageData(image, 0, 0)
+  return { canvas, x: x0, y: y0 }
+})
 
 /** The shadows' tint: a dark green that reads on the cobblestones and on the grass. */
 const SHADOW = 'rgba(30,40,30,0.3)'
@@ -965,11 +1130,15 @@ const drawShadow = (ctx: CanvasRenderingContext2D, s: Shadow, x: number, y: numb
 export const drawPlazaGround = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, w: number, h: number) => {
   const layout = plazaLayout(plaza)
   if (!layout) return
-  const c = layout.cobbles
-  const x = plaza.x + c.x - camX
-  const y = plaza.y + c.y - camY
-  if (x + c.rx + 8 < 0 || x - c.rx - 8 > w || y + c.ry + 8 < 0 || y - c.ry - layout.building.h > h) return
-  blitCentered(ctx, cobbles(c.rx, c.ry), x, y)
+  const b = layout.bounds
+  if (plaza.x + b.right + 8 - camX < 0 || plaza.x + b.left - 8 - camX > w || plaza.y + b.bottom + 8 - camY < 0 || plaza.y + b.top - camY > h) return
+  if (layout.ring) {
+    const floor = ringFloor()
+    ctx.drawImage(floor.canvas, Math.round(plaza.x + floor.x - camX), Math.round(plaza.y + floor.y - camY))
+  } else {
+    const c = layout.cobbles
+    blitCentered(ctx, cobbles(c.rx, c.ry), plaza.x + c.x - camX, plaza.y + c.y - camY)
+  }
   for (const s of layout.shadows) drawShadow(ctx, s, plaza.x + s.x - camX, plaza.y + s.y - camY)
 }
 
@@ -1139,6 +1308,7 @@ const festivalPieces = (plaza: Plaza, f: FestivalLayout | null): Piece[] => {
     ...(plaque ? [{ y: plaza.y + plaque.y, draw: (ctx, camX, camY) => put(ctx, arts.get('plaque')!, plaza.x + plaque.x - camX, plaza.y + plaque.y - camY) } satisfies Piece] : []),
     ...standing(f.gate),
     ...standing(f.tree),
+    ...standing(f.stall),
     ...standing(f.market),
     ...standing(f.float),
     ...guests,
@@ -1331,9 +1501,23 @@ const markerCard = lazy(() => {
 /** How far (px) the plaza must reach into the view to count as on screen: a sliver at the edge still gets the marker, drawn over it. */
 const MARKER_INSET = 16
 
-/** Whether any of the plaza (`bounds`) reaches `MARKER_INSET` px into the `w`×`h` view. */
-const plazaInView = (plaza: Plaza, b: Box, camX: number, camY: number, w: number, h: number) =>
-  plaza.x + b.right - camX > MARKER_INSET && plaza.x + b.left - camX < w - MARKER_INSET && plaza.y + b.bottom - camY > MARKER_INSET && plaza.y + b.top - camY < h - MARKER_INSET
+/**
+ * Whether any of the plaza reaches `MARKER_INSET` px into the `w`×`h` view:
+ * a piece's box, or the floor's ellipse itself (not its box, whose corners
+ * hold only grass).
+ */
+const plazaInView = (plaza: Plaza, layout: Layout, camX: number, camY: number, w: number, h: number) => {
+  const left = camX + MARKER_INSET - plaza.x
+  const top = camY + MARKER_INSET - plaza.y
+  const right = camX + w - MARKER_INSET - plaza.x
+  const bottom = camY + h - MARKER_INSET - plaza.y
+  if (layout.pieces.some((b) => b.right > left && b.left < right && b.bottom > top && b.top < bottom)) return true
+  // The view's point nearest the floor's middle is inside the ellipse when they meet.
+  const c = layout.cobbles
+  const dx = (clamp(c.x, left, right) - c.x) / c.rx
+  const dy = (clamp(c.y, top, bottom) - c.y) / c.ry
+  return dx * dx + dy * dy < 1
+}
 
 /**
  * A card with Kecleon's head and an arrow at the edge of the view, pointing
@@ -1344,7 +1528,7 @@ const plazaInView = (plaza: Plaza, b: Box, camX: number, camY: number, w: number
 export const drawPlazaMarker = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, w: number, h: number, time: number, show: boolean) => {
   plaza.marker.shown = false
   const layout = plazaLayout(plaza)
-  if (!show || !layout || plazaInView(plaza, layout.bounds, camX, camY, w, h)) return
+  if (!show || !layout || plazaInView(plaza, layout, camX, camY, w, h)) return
   const target = { x: plaza.x - camX, y: plaza.y - 30 - camY }
   const box = markerCard()
   if (!box) return

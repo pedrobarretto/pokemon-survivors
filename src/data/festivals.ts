@@ -13,10 +13,11 @@ import type { GiftContent } from '../game/gifts'
  */
 
 /**
- * How the plaza looks for a pot (`render/plaza.ts`): 0 the opening (the
- * fountain, lantern arms on the lamps, the bare wishing tree, the unlit gate,
- * Lanturn's Lantern Market), 1 wish tags, garlands and the bunting, 2 lanterns
- * on the tree and the gate and lantern strings across the square, 3 the dusk,
+ * How the plaza looks for a pot (`render/plaza.ts`, the Lantern Ring): 0 the
+ * opening (the curbed round square, the fountain on its axis, six lamps with
+ * lantern arms, the bare wishing tree, the unlit gate, Lanturn's Lantern
+ * Market), 1 wish tags, garlands and the bunting, 2 lanterns on the tree and
+ * the gate and the wheel of lantern strings, 3 the dusk,
  * the golden Kecleon, the Togepi float, Volbeat, Illumise and sky lanterns,
  * 4 the float turns shiny under more sky lanterns.
  */
