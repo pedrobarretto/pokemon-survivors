@@ -865,6 +865,73 @@ const drawMagicalLeaf = (ctx: Ctx, a: Attack, t: number) => {
   blitRotated(ctx, leaf, a.x, a.y, Math.atan2(m.vy, m.vx), 2)
 }
 
+/* ---------------- Darkrai: Dark Void ---------------- */
+
+const VOID_DARK = ['#08040e', '#1c1030', '#3a2468', '#5838a0'] as const
+
+/** A ball of darkness floating to its crowd, wisps of night trailing off it and a cyan glint in its heart (Darkrai's eye). */
+const drawVoidOrb = (ctx: Ctx, a: Attack, t: number) => {
+  if (a.motion.kind === 'linear') {
+    const sp = Math.hypot(a.motion.vx, a.motion.vy) || 1
+    const ux = a.motion.vx / sp
+    const uy = a.motion.vy / sp
+    for (let i = 1; i <= 7; i++) {
+      const d = i * 3 + ((t * 40) % 3)
+      ctx.globalAlpha = 0.7 - i * 0.08
+      px(ctx, a.x - ux * d + Math.sin(t * 11 + i) * 2, a.y - uy * d + Math.cos(t * 9 + i) * 2, VOID_DARK[i % 3 + 1]!, 2, 2)
+    }
+  }
+  const pulse = Math.floor(t * 14 + a.id) % 2
+  ctx.globalAlpha = 0.35
+  blitEllipse(ctx, 9 + pulse, 9 + pulse, '#5838a0', a.x, a.y)
+  ctx.globalAlpha = 1
+  blitEllipse(ctx, 6, 6, '#3a2468', a.x, a.y)
+  blitEllipse(ctx, 5, 5, '#08040e', a.x, a.y)
+  band(ctx, a.x, a.y, 6, 1, '#c83858')
+  px(ctx, a.x - 1, a.y - 1, '#58e8f0', 2, 1)
+  px(ctx, a.x + 1, a.y - 2, '#ffffff')
+}
+
+/** The void opening: a disc of night swelling to its full size, a crimson rim and tendrils lashing out of it. */
+const drawVoidBurst = (ctx: Ctx, a: Attack, t: number) => {
+  const r = radiusOf(a)
+  const full = a.memo || r
+  const k = clamp01(a.age / Math.max(0.01, a.ttl))
+  ctx.globalAlpha = 0.55 * (1 - k * 0.5)
+  blitEllipse(ctx, Math.round(r), Math.round(r * 0.6), '#08040e', a.x, a.y)
+  ctx.globalAlpha = 1 - k * 0.6
+  band(ctx, a.x, a.y, r, 2, '#5838a0', 0.6)
+  band(ctx, a.x, a.y, Math.max(1, r - 3), 1, '#c83858', 0.6)
+  spokes(ctx, a.x, a.y, r * 0.35, Math.min(full * 1.1, r * 1.15), 10, ['#1c1030', '#3a2468', '#5838a0'], a.id + t * 1.5, 0.6)
+  if (a.age < 0.08) blitEllipse(ctx, 6, 4, '#58e8f0', a.x, a.y)
+  ctx.globalAlpha = 1
+}
+
+/** What the void leaves on the ground while its sleep holds: a pool of night, wisps curling up and an eye glinting now and then. */
+const drawVoidPool = (ctx: Ctx, a: Attack, t: number) => {
+  const r = a.memo || radiusOf(a)
+  const k = Math.min(clamp01(a.age / 0.3), fadeOut(a, 0.8))
+  ctx.globalAlpha = 0.45 * k
+  blitEllipse(ctx, Math.round(r), Math.round(r * 0.5), '#2a1850', a.x, a.y)
+  ctx.globalAlpha = 0.55 * k
+  blitEllipse(ctx, Math.round(r * 0.72), Math.round(r * 0.36), '#08040e', a.x, a.y)
+  ctx.globalAlpha = 0.8 * k
+  dashedRing(ctx, a.x, a.y, r, t * 1.2 + a.id, ['#5838a0', '#3a2468'], 0.4, 0.5)
+  const wisps = detail.lean ? 4 : 8
+  for (let i = 0; i < wisps; i++) {
+    const ph = (t * 0.7 + hash2(a.id, i)) % 1
+    const ang = hash2(a.id, i, 1) * TAU
+    const d = r * 0.8 * hash2(a.id, i, 2)
+    ctx.globalAlpha = k * (1 - ph) * 0.8
+    px(ctx, a.x + Math.cos(ang) * d, a.y + Math.sin(ang) * d * 0.5 - ph * 14, VOID_DARK[1 + (i % 3)]!, 2, 2)
+  }
+  if ((Math.floor(t * 3) + a.id) % 4 === 0) {
+    ctx.globalAlpha = k
+    px(ctx, a.x - 2, a.y - 1, '#58e8f0', 2, 1)
+  }
+  ctx.globalAlpha = 1
+}
+
 /* ---------------- Passes ---------------- */
 
 /** Ground layer (under the Pokémon). */
@@ -892,6 +959,9 @@ export const drawLegendaryGround = (ctx: Ctx, g: Game, t: number) => {
         break
       case 'ancientRock':
         drawAncientRock(ctx, g, a, t, true)
+        break
+      case 'voidPool':
+        drawVoidPool(ctx, a, t)
         break
     }
   }
@@ -977,6 +1047,12 @@ export const drawLegendaryAir = (ctx: Ctx, g: Game, t: number, visible: (x: numb
         break
       case 'magicalLeaf':
         drawMagicalLeaf(ctx, a, t)
+        break
+      case 'voidOrb':
+        drawVoidOrb(ctx, a, t)
+        break
+      case 'voidBurst':
+        drawVoidBurst(ctx, a, t)
         break
     }
   }

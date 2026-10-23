@@ -41,6 +41,9 @@ export const halloweenAt = (now: Date) => isHalloweenDay(brasiliaDay(now))
 /** Days from `day` until the event starts: positive while the lobby counts down (from `HALLOWEEN.teaser`), else null. */
 export const daysToHalloween = (day: DayKey) => (day >= HALLOWEEN.teaser && day < HALLOWEEN.from ? dayNumber(HALLOWEEN.from) - dayNumber(day) : null)
 
+/** Where `day` stands to the event: before it, on one of its days, or after it (an event legend's card, `ui/starterSelect.ts`). */
+export const halloweenStanding = (day: DayKey): 'before' | 'on' | 'after' => (day < HALLOWEEN.from ? 'before' : day > HALLOWEEN.to ? 'after' : 'on')
+
 /** Days left in the event from `day` on, today included; null outside it. */
 export const halloweenDaysLeft = (day: DayKey) => (isHalloweenDay(day) ? dayNumber(HALLOWEEN.to) - dayNumber(day) + 1 : null)
 

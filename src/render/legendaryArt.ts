@@ -259,4 +259,15 @@ export const LEGENDARY_ICONS: Record<LegendaryMoveId, () => PixelSprite> = {
   wish: () => medallion(LEGEND_FX.star(), '#182040'),
   ancientPower: () => medallion(LEGEND_FX.rock()[0]!, '#381830'),
   magicalLeaf: () => medallion(LEGEND_FX.leaf()[1]!, '#102810'),
+  darkVoid: () =>
+    medallion(paint(11, 11, (px) => {
+      for (let y = 0; y < 11; y++) for (let x = 0; x < 11; x++) {
+        const d = Math.hypot(x - 5, y - 5)
+        if (d <= 5.5 && d > 4.4) px(x, y, x + y < 9 ? '#8868d0' : '#5838a0')
+        else if (d <= 4.4 && d > 3.4) px(x, y, '#c83858')
+        else if (d <= 3.4) px(x, y, '#08040e')
+      }
+      px(4, 4, '#58e8f0', 2, 1)
+      px(5, 3, '#ffffff')
+    }), '#100818'),
 }

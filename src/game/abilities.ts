@@ -11,7 +11,7 @@ import { burst, damageText, floatText, shakeScreen } from './effects'
 import { dropCoins, dropPickup, dropXp } from './pickups'
 import { isAlive } from './queries'
 import type { StatDelta } from './stats'
-import { applyStatus } from './status'
+import { applyStatus, isAsleep } from './status'
 import type { Enemy, Game } from './types'
 import { setWeather, weatherHere } from './weather'
 import { roomOf } from './room'
@@ -327,6 +327,21 @@ const auraPulse = (g: Game, e: Extract<AbilityEffect, { kind: 'aura' }>) => {
   }
 }
 
+/** Sleeping foes in reach suffer their bad dreams: ability damage, which never wakes them (Bad Dreams). */
+const nightmarePulse = (g: Game, e: Extract<AbilityEffect, { kind: 'nightmare' }>) => {
+  const p = g.player
+  const reach = e.radius * e.radius
+  const power = contactPower(g) * e.damage
+  for (const foe of g.enemies) {
+    if (!isAlive(foe) || !isAsleep(foe.status) || dm.sq(foe.x - p.x) + dm.sq(foe.y - p.y) >= reach) continue
+    burst(g, foe.x, foe.y - foe.radius, { colors: ['#281838', '#5838a0', '#c83858'], count: 3, speed: 30, ttl: 0.45, gravity: -40 })
+    strike(g, foe, power)
+  }
+}
+
+/** Whether a beat of `every` s on the never-paused clock fell in this tick: a pulse without a timer of its own. */
+const beat = (g: Game, dt: number, every: number) => Math.floor(g.now / every) !== Math.floor((g.now - dt) / every)
+
 /**
  * Ticks the ability: pulses, timers, stacks wearing off, a summoned weather.
  * True when its conditions changed, so the caller rebuilds the stats.
@@ -356,6 +371,9 @@ export const updateAbility = (g: Game, dt: number) => {
           s.pulse += e.every
           auraPulse(g, e)
         }
+        break
+      case 'nightmare':
+        if (beat(g, dt, e.every)) nightmarePulse(g, e)
         break
       case 'timer':
         if (s.stacks >= e.max) break

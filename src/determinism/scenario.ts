@@ -1,7 +1,7 @@
 import { createRng, rngFrom, type SeededRng } from '../engine/rng'
 import * as dm from '../engine/dmath'
 import { PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
-import { LEGEND_IDS } from '../data/legends'
+import { REGULAR_LEGENDS } from '../data/legends'
 import { continueEndless } from '../game/endlessSystem'
 import { banishOffer, chooseOffer, rerollOffers, skipLevelUp, step } from '../game/game'
 import { UPGRADE_IDS, UPGRADES, type Ranks } from '../game/meta'
@@ -155,8 +155,12 @@ export const tickScenario = (d: Driver) => {
   return true
 }
 
-/** Every Pokémon a run can play: the starters, the hatched families and the legends (Legend mode). */
-const PLAYS: readonly PlayableId[] = [...PLAYABLE_IDS, ...LEGEND_IDS]
+/**
+ * The Pokémon the scenarios draw from: the starters, the hatched families and
+ * the regular legends (Legend mode). The event legends stay out so the draw
+ * keeps its picks; each plays in the harness's own runs (`harness.ts`).
+ */
+const PLAYS: readonly PlayableId[] = [...PLAYABLE_IDS, ...REGULAR_LEGENDS]
 
 /** What a save brings along, by turns: nothing but the usual Lure and Incense, a full Bag, armed shop TMs and Bottle Caps, evolution items, an Everstone. */
 const SAVES: ReadonlyArray<Partial<Scenario>> = [

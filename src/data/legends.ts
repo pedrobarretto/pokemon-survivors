@@ -16,12 +16,23 @@ import type { PokeType } from './types'
  * legendary as a boss `wins` times.
  */
 
-/** The 23 legendaries with sprites, by their `EnemyId`. */
-export const LEGEND_IDS = [
+/** The 23 regular legendaries, by their `EnemyId`: the ones Arceus waits for and the "every legend" counts. */
+export const REGULAR_LEGENDS = [
   'articuno', 'zapdos', 'moltres', 'raikou', 'entei', 'suicune', 'regirock', 'regice', 'registeel',
   'mew', 'celebi', 'jirachi', 'mewtwo', 'lugia', 'hoOh', 'kyogre', 'groudon', 'rayquaza', 'dialga',
   'latias', 'latios', 'deoxys', 'arceus',
 ] as const satisfies readonly EnemyId[]
+
+/**
+ * Event legends: captured only while their event runs (`LegendUnlock.event`),
+ * then played for good. They stay out of `REGULAR_LEGENDS`: Arceus never
+ * waits for them and no "every legend" count needs them. Darkrai comes from
+ * the Noite das Bruxas' nightmare rift.
+ */
+export const EVENT_LEGENDS = ['darkrai'] as const satisfies readonly EnemyId[]
+
+/** Every playable legend: the regular ones, then the event ones. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -38,12 +49,16 @@ export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed'
  */
 export type Innate = { ability: AbilityId; extra?: readonly AbilityEffect[] }
 
+/** The events a legend can be captured in (their days live in `data/halloween.ts`). */
+export type LegendEvent = 'halloween'
+
 /**
  * How a legend is unlocked: beat it as a boss `wins` times, in any mode.
  * `endless`: the win must come in the endless mode; `last`: only once every
- * other legend is unlocked (Arceus, the final trophy).
+ * regular legend is unlocked (Arceus, the final trophy); `event`: it only
+ * shows up while that event runs (Darkrai, the Noite das Bruxas').
  */
-export type LegendUnlock = { wins: number; endless?: true; last?: true }
+export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent }
 
 export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
   /** One list: every move it can learn is there from Lv 1, its legendary move first. */
@@ -341,9 +356,28 @@ export const LEGENDS = {
     innate: { ability: 'multitype' },
     unlock: { wins: 1, endless: true, last: true },
   },
+
+  /* ---------- The Noite das Bruxas' nightmare ---------- */
+  darkrai: {
+    name: 'Darkrai',
+    color: '#7058a0',
+    stats: { maxHp: 30, might: 0.22, speed: 8, cooldown: -0.04 },
+    signature: LEGENDARY_MOVE_OF.darkrai,
+    learnset: [[LEGENDARY_MOVE_OF.darkrai, 'suckerPunch', 'crunch', 'hex', 'dreamEater', 'psyshock', 'futureSight', 'snarl']],
+    line: stage(491, 'Darkrai', ['dark']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.24, area: 0.1 }],
+    innate: { ability: 'badDreams' },
+    unlock: { wins: 2, event: 'halloween' },
+  },
 } as const satisfies Record<LegendId, LegendDef>
 
 export const isLegend = (id: unknown): id is LegendId => LEGEND_IDS.some((l) => l === id)
+
+/** The event a legend is captured in, or null for a regular one. */
+export const legendEvent = (id: LegendId): LegendEvent | null => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.event ?? null
+}
 
 /** The legendary move a legend opens with, which stays its own (it never fuses into a duo); null for every other starter. */
 export const legendSignature = (starter: string): MoveId | null => (isLegend(starter) ? LEGENDS[starter].signature : null)

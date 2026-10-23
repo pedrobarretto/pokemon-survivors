@@ -95,6 +95,7 @@ export const siteFr: SiteMessages = {
     trio: (at: string, trio: string) => `Boss à ${at} dans les parties qui tirent le trio des ${trio} (1 sur 3)`,
     night: (at: string, percent: number) => `Boss de la Nuit des Sorcières à ${at}, dans les parties hantées de l’événement (${n(percent)}% de chances)`,
     rift: (from: string) => `Dans son domaine, derrière une faille légendaire, à partir de ${from} (facultatif)`,
+    eventRift: (from: string) => `Seulement pendant la Nuit des Sorcières 2026 : lors d’une partie hantée, la faille du Cauchemar peut remplacer une faille, à partir de ${from} (facultatif)`,
     place: (name: string, from: string) => `Vit dans ${name}, à partir de ${from} (lieu facultatif)`,
     placeBoss: (name: string, from: string) => `Jaillit de la Clé de voûte étrange dans ${name}, à partir de ${from}`,
     places: { cave: 'la Grotte Sombre', graveyard: 'le Cimetière Hanté', sky: 'le ciel au-dessus des nuages (types Vol uniquement)' },
@@ -109,6 +110,7 @@ export const siteFr: SiteMessages = {
     legendMode: 'Mode Légendaire',
     capture: (need: number) => (need === 1 ? 'Bats-le une fois en tant que boss, dans n’importe quel mode, et il devient jouable en Mode Légendaire (son propre classement, une horde plus coriace, des éveils au Nv 12 et 28).' : `Bats-le ${need} fois en tant que boss, dans n’importe quel mode, et il devient jouable en Mode Légendaire (son propre classement, une horde plus coriace, des éveils au Nv 12 et 28).`),
     captureLast: 'Le dernier trophée : il ne peut être capturé qu’en mode sans fin, une fois les 22 autres légendaires capturés.',
+    captureEvent: (need: number) => `Légendaire d’événement : bats-le ${need} fois dans la faille du Cauchemar pendant la Nuit des Sorcières 2026 (du 24/10 au 2/11) et il devient jouable en Mode Légendaire pour de bon. Il ne compte pas pour Arceus.`,
     captureShiny: 'En battre un chromatique lors de la victoire qui le capture, ou après, débloque sa forme chromatique.',
     innate: (name: string) => `Inné (toujours actif) : ${name}`,
     opens: (move: string) => `Commence avec ${move}`,
@@ -127,6 +129,7 @@ export const siteFr: SiteMessages = {
       `${name} est l’un des ${count} starters de Pokémon Survivors, de type ${list(types)}, originaire de la région de ${region}.`,
     egg: (name: string, types: readonly string[]) => `${name} est l’une des familles qui éclosent des œufs dans Pokémon Survivors, de type ${list(types)}.`,
     legend: (name: string, types: readonly string[], count: number) => `${name} est l’un des ${count} légendaires de Pokémon Survivors, de type ${list(types)}.`,
+    eventLegend: (name: string, types: readonly string[]) => `${name} est le légendaire de l’événement Nuit des Sorcières 2026 de Pokémon Survivors, de type ${list(types)}.`,
     faq: 'FAQ',
     unlockQ: (name: string) => `Comment débloquer ${name} dans Pokémon Survivors ?`,
     starterA: (name: string) => `${name} est un starter : il est disponible dès ta toute première partie, sans rien à faire.`,
@@ -485,7 +488,9 @@ export const siteFr: SiteMessages = {
       opensHead: 'Capacité légendaire',
       pressureTitle: 'Difficultés en Mode Légendaire',
       pressure: 'La Pression s’ajoute à chaque difficulté : voici les multiplicateurs du Mode Légendaire.',
-      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier' },
+      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier', event: 'Nuit des Sorcières 2026 (événement)' },
+      /** The event legends (`EVENT_LEGENDS`), after the table. */
+      eventNote: 'Pendant la Nuit des Sorcières 2026 (du 24 octobre au 2 novembre), Darkrai arrive comme légendaire d’événement : il n’apparaît que dans la faille du Cauchemar, qui peut remplacer une faille lors d’une partie hantée, et 2 victoires le capturent. Il joue avec Dark Void, qui endort les foules, et l’inné Bad Dreams, qui blesse ceux qui dorment près de lui. Après l’événement, il retourne dans l’ombre, mais qui l’a capturé continue de le jouer. Il ne compte pas pour Arceus.',
     },
     megas: {
       paragraphs: (m) => [

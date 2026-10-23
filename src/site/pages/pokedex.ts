@@ -8,7 +8,7 @@ import { HATCHLINGS, isHatchling, PLAYABLE } from '../../data/hatchlings'
 import { REGIONS, type PlayableDef } from '../../data/starters'
 import { POKE_TYPES, TYPE_COLORS, type PokeType } from '../../data/types'
 import { RUN_LENGTH } from '../../data/waves'
-import { isLegend, LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { EVENT_LEGENDS, isLegend, LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
 import { BRANCHES, branchesAt, branchStage, familyDex } from '../../data/branches'
 import { ABILITIES, isHidden, type AbilitySet } from '../../data/abilities'
 import { abilitySet } from '../../game/abilities'
@@ -161,6 +161,8 @@ export const appearance = (a: Appearance, m: SiteMessages) => {
       return m.pokedex.night(clock(a.at), a.chance * 100)
     case 'rift':
       return m.pokedex.rift(clock(a.from))
+    case 'eventRift':
+      return m.pokedex.eventRift(clock(a.from))
     case 'reaper':
       return m.pokedex.reaper(clock(a.at))
     case 'place':
@@ -270,7 +272,7 @@ const legendSection = (id: LegendId, m: SiteMessages) => {
   const opener = MOVES[def.learnset[0][0]!]
   return html`<h3>${m.pokedex.legendMode}</h3>
     <ul class="list">
-      <li>${unlock.last ? m.pokedex.captureLast : m.pokedex.capture(unlock.wins)}</li>
+      <li>${unlock.event ? m.pokedex.captureEvent(unlock.wins) : unlock.last ? m.pokedex.captureLast : m.pokedex.capture(unlock.wins)}</li>
       <li>${m.pokedex.innate(ABILITIES[def.innate.ability].name)}</li>
       <li>${m.pokedex.opens(opener.name)} ${typeBadge(opener.type, m)}</li>
     </ul>
@@ -303,7 +305,7 @@ const wildBody = (entry: DexEntry & { source: { kind: 'wild' } }, m: SiteMessage
 
 /** How a wild card's shiny shows up: a rift legendary by the rift's odds, the map's bosses never, the horde at the wild odds. */
 const shinyNote = (id: EnemyId, boss: boolean, m: SiteMessages) =>
-  (RIFT_LEGENDS as readonly EnemyId[]).includes(id) ? m.pokedex.riftShinyNote(Math.round(1 / RIFT.shinyOdds)) : boss ? null : m.pokedex.shinyNote
+  ([...RIFT_LEGENDS, ...EVENT_LEGENDS] as readonly EnemyId[]).includes(id) ? m.pokedex.riftShinyNote(Math.round(1 / RIFT.shinyOdds)) : boss ? null : m.pokedex.shinyNote
 
 /** Horde tier of a wild card, for the tier filter. */
 const tierOf = (entry: DexEntry) => {

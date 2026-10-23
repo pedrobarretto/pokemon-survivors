@@ -48,6 +48,12 @@ export type AbilityEffect =
   /** Every `every` s, foes within `radius` px get `status` (Unnerve). */
   | { kind: 'aura'; radius: number; every: number; status: StatusSpec }
   /**
+   * Every `every` s (on the never-paused clock, so it keeps no state), each
+   * sleeping foe within `radius` px takes `damage` × the contact power, and
+   * stays asleep (Darkrai's Bad Dreams).
+   */
+  | { kind: 'nightmare'; radius: number; every: number; damage: number }
+  /**
    * Damage the player takes, ×`factor`, from attacks of these `types`, hits of
    * these `hits` kinds or (`boss`) bosses and elites; `absorb` turns it into healing (Water Absorb).
    */
@@ -242,6 +248,8 @@ export const ABILITIES = {
   airLock: { name: 'Air Lock', effects: [{ kind: 'immune', to: ['chip', 'weather'] }] },
   /** Arceus's type follows the biome (`game/legend.ts`), and its moves of that type hit harder. */
   multitype: { name: 'Multitype', effects: [{ kind: 'ownType', bonus: 0.2 }] },
+  /** Darkrai's: the foes its Dark Void put to sleep (or anything else did) suffer in their dreams. */
+  badDreams: { name: 'Bad Dreams', effects: [{ kind: 'nightmare', radius: 120, every: 0.5, damage: 1 }] },
 } as const satisfies Record<string, AbilityDef>
 
 export type AbilityId = keyof typeof ABILITIES
@@ -379,6 +387,7 @@ export const FAMILY_ABILITIES = {
   latios: ['sniper', 'infiltrator', 'adaptability'],
   deoxys: ['sniper', 'moxie', 'adaptability'],
   arceus: ['moldBreaker', 'magicGuard', 'sturdy'],
+  darkrai: ['insomnia', 'unnerve', 'infiltrator'],
 } as const satisfies Record<PlayableId, AbilitySet>
 
 /** The abilities of a branch picked at the family's first evolution (`data/branches.ts`). */

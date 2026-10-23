@@ -16,7 +16,7 @@ import { MEGA, MEGA_IDS, MEGA_LINES, MEGAS, megasOf, type MegaDef } from '../../
 import { RIFT, RIFT_LEGENDS, type RiftLegend } from '../../data/rifts'
 import { DOMAINS, partnerOf } from '../../data/domains'
 import { ABILITIES } from '../../data/abilities'
-import { AWAKEN_AT, LEGEND_IDS, LEGENDS } from '../../data/legends'
+import { AWAKEN_AT, LEGEND_IDS, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../../data/legends'
 import { legendSource } from '../../game/capture'
 import { legendMods } from '../../game/legend'
 import { CAVE, GRAVEYARD, PLACE, PLACE_IDS, PLACES, SKY, WING_IDS, WINGS } from '../../data/places'
@@ -70,6 +70,12 @@ const dexLink = (locale: Locale, name: string) => `${ROUTES.pokedex[locale]}#${s
 
 const bossName = (locale: Locale, enemy: keyof typeof ENEMIES) =>
   html`<a class="with-mini" href="${dexLink(locale, ENEMIES[enemy].name)}">${portrait(ENEMIES[enemy].dex)}${ENEMIES[enemy].name}</a>`
+
+/** A legend's name and portrait, linked to its Pokédex entry. */
+const legendName = (locale: Locale, id: LegendId) => {
+  const { dex, name } = LEGENDS[id].line[0]
+  return html`<a class="with-mini" href="${dexLink(locale, name)}">${portrait(dex)}${name}</a>`
+}
 
 const controls = (m: SiteMessages) => {
   const c = m.guide.controls
@@ -360,7 +366,7 @@ const rifts = (locale: Locale, m: SiteMessages) => {
 const legends = (locale: Locale, m: SiteMessages) => {
   const g = m.guide.legends
   const rows = LEGEND_IDS.map((id) => [
-    bossName(locale, id),
+    legendName(locale, id),
     g.where[legendSource(id)],
     String(LEGENDS[id].unlock.wins),
     ABILITIES[LEGENDS[id].innate.ability].name,
@@ -372,8 +378,9 @@ const legends = (locale: Locale, m: SiteMessages) => {
     const d = legendMods(id)
     return [names[id], times(d.enemyHp), times(d.enemyDamage), times(d.spawnRate), times(d.enemySpeed), times(d.ramp), times(d.healing)]
   })
-  return html`${paragraphs(g.paragraphs({ count: LEGEND_IDS.length, awaken: AWAKEN_AT }))}
+  return html`${paragraphs(g.paragraphs({ count: REGULAR_LEGENDS.length, awaken: AWAKEN_AT }))}
     ${table([g.legendHead, g.whereHead, g.winsHead, g.innateHead, g.opensHead], rows)}
+    <p>${g.eventNote}</p>
     <h3>${g.pressureTitle}</h3>
     <p>${g.pressure}</p>
     ${table(m.guide.run.difficultyHead, pressure)}`

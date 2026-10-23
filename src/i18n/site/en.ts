@@ -94,6 +94,7 @@ export const siteEn: SiteMessages = {
     trio: (at: string, trio: string) => `Boss at ${at} in runs that draw the ${trio} trio (1 in 3)`,
     night: (at: string, percent: number) => `Halloween Night boss at ${at}, in the event's haunted runs (${n(percent)}% chance)`,
     rift: (from: string) => `In its domain, behind a legendary rift, from ${from} (optional)`,
+    eventRift: (from: string) => `Only on Halloween Night 2026: in a haunted run, the Nightmare rift can take a rift's place, from ${from} (optional)`,
     place: (name: string, from: string) => `Lives in the ${name}, from ${from} (optional place)`,
     placeBoss: (name: string, from: string) => `Breaks out of the Odd Keystone in the ${name}, from ${from}`,
     places: { cave: 'Dark Cave', graveyard: 'Haunted Graveyard', sky: 'sky above the clouds (Flying types only)' },
@@ -108,6 +109,7 @@ export const siteEn: SiteMessages = {
     legendMode: 'Legend Mode',
     capture: (need: number) => (need === 1 ? 'Beat it once as a boss, in any mode, and it becomes playable in Legend Mode (its own ranking, a tougher horde, awakenings at Lv 12 and 28).' : `Beat it ${need} times as a boss, in any mode, and it becomes playable in Legend Mode (its own ranking, a tougher horde, awakenings at Lv 12 and 28).`),
     captureLast: 'The last trophy: it can only be caught in endless mode, once the other 22 legendaries are caught.',
+    captureEvent: (need: number) => `Event legend: beat it ${need} times in the Nightmare rift during Halloween Night 2026 (October 24 to November 2) and it's playable in Legend Mode for good. It doesn't count toward Arceus.`,
     captureShiny: 'Beating a shiny one on the catching win, or after, unlocks its shiny.',
     innate: (name: string) => `Innate (always on): ${name}`,
     opens: (move: string) => `Starts with ${move}`,
@@ -126,6 +128,7 @@ export const siteEn: SiteMessages = {
       `${name} is one of the ${count} starters in Pokémon Survivors, a ${list(types)} type from the ${region} region.`,
     egg: (name: string, types: readonly string[]) => `${name} is one of the families that hatch from eggs in Pokémon Survivors, a ${list(types)} type.`,
     legend: (name: string, types: readonly string[], count: number) => `${name} is one of the ${count} legendaries in Pokémon Survivors, a ${list(types)} type.`,
+    eventLegend: (name: string, types: readonly string[]) => `${name} is the Halloween Night 2026 event legend in Pokémon Survivors, a ${list(types)} type.`,
     faq: 'FAQ',
     unlockQ: (name: string) => `How do you unlock ${name} in Pokémon Survivors?`,
     starterA: (name: string) => `${name} is a starter: it's unlocked from your very first run, nothing needed.`,
@@ -484,7 +487,9 @@ export const siteEn: SiteMessages = {
       opensHead: 'Legendary move',
       pressureTitle: 'Difficulties in Legend Mode',
       pressure: 'Pressure stacks on every difficulty: these are Legend Mode’s multipliers.',
-      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10)', finale: 'Final boss', endless: 'Endless mode, last of all' },
+      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10)', finale: 'Final boss', endless: 'Endless mode, last of all', event: 'Halloween Night 2026 (event)' },
+      /** The event legends (`EVENT_LEGENDS`), after the table. */
+      eventNote: 'On Halloween Night 2026 (October 24 to November 2), Darkrai comes as an event legend: it only shows up in the Nightmare rift, which can take a rift\'s place in a haunted run, and 2 wins catch it. It plays with Dark Void, which puts crowds to sleep, and the innate Bad Dreams, which hurts whoever sleeps near it. After the event it returns to the shadows, but whoever caught it keeps playing it. It doesn\'t count toward Arceus.',
     },
     megas: {
       paragraphs: (m) => [

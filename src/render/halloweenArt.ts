@@ -51,6 +51,20 @@ const PUMPKIN_HEART_COLORS = {
   gold: { 1: '#a86808', 2: '#f0b018', 3: '#fff0a0', 4: '#fffbe0', 5: '#407028' },
 } as const
 
+/** The Noite das Bruxas 2026 badge on an event legend (Darkrai): a jack-o'-lantern under a crescent moon. 1 the ridges, 2 the pumpkin, 4 its glow, 5 the stem, 6 the moon, 7 its shade. */
+const EVENT_BADGE = [
+  '...6667....',
+  '.667.......',
+  '.66........',
+  '667....5...',
+  '667..11511.',
+  '667.1222221',
+  '.66.1242421',
+  '.6671222221',
+  '..661244421',
+  '.....11111.',
+]
+
 export const HALLOWEEN_ART = {
   treats: lazy(() => TREAT_COLORS.map((pal) => art(TREAT, pal, '#181818'))),
   /** Lit, and the candle flickering low. */
@@ -63,6 +77,10 @@ export const treatIcon = () => toIconUrl('halloween:treat', () => HALLOWEEN_ART.
 
 /** The jack-o'-lantern icon (the lobby's card, the event screen). */
 export const jackIcon = () => toIconUrl('halloween:jack', () => HALLOWEEN_ART.jack()[0])
+
+/** The badge of a legend only the Noite das Bruxas brings (`LegendUnlock.event`), on the partner select. */
+export const eventLegendIcon = () =>
+  toIconUrl('halloween:eventLegend', () => art(EVENT_BADGE, { 1: '#b04808', 2: '#f08020', 4: '#ffe070', 5: '#407028', 6: '#f8f0b8', 7: '#c8b870' }, '#181818'))
 
 /** The supporters' jack-o'-lantern badge, golden for the gold tier (`game/halloween.ts`, `pumpkinSupporter`). */
 export const pumpkinHeartIcon = (tier: SupporterTier) =>

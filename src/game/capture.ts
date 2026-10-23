@@ -1,6 +1,5 @@
-import { isLegend, LEGEND_IDS, LEGENDS, type LegendId, type LegendUnlock } from '../data/legends'
+import { isLegend, LEGEND_IDS, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../data/legends'
 import { MYTHICALS, TRIO_IDS, TRIOS } from '../data/waves'
-import { isEventRift } from '../data/rifts'
 import type { PlayableId } from '../data/hatchlings'
 import { isUnlocked } from './eggs'
 import type { Save } from './meta'
@@ -11,7 +10,7 @@ import { unlockShinyStarter } from './shinyStarters'
  * Capturing legends for the Legend mode: beating a legendary as a boss (any
  * mode) counts toward catching it, and once its `unlock.wins` are in, it's
  * playable. Arceus only counts in endless mode, and only once the other 22
- * are captured. A shiny one beaten on its capturing win, or on any win after,
+ * regular legends are captured (an event legend, like Darkrai, never holds it back). A shiny one beaten on its capturing win, or on any win after,
  * also unlocks its shiny (kept in `shinyStarters`, like any owned shiny). Pure:
  * the shell banks each `legendBeaten` event through `recordLegendWin`.
  */
@@ -21,13 +20,14 @@ export type Captures = Readonly<Partial<Record<LegendId, number>>>
 
 export const NO_CAPTURES: Captures = {}
 
-/** Where a legend can be beaten: a rift (an event rift's Darkrai too), the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper. */
-export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless'
+/** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an event's rift. */
+export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event'
 
 const inList = (list: readonly string[], id: LegendId) => list.includes(id)
 
 export const legendSource = (id: LegendId): LegendSource => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
+  if (unlock.event) return 'event'
   if (unlock.endless) return 'endless'
   if (id === 'mewtwo') return 'finale'
   if (inList(MYTHICALS, id)) return 'mythical'
@@ -40,15 +40,11 @@ export const winsNeeded = (id: LegendId) => LEGENDS[id].unlock.wins
 
 export const isCaptured = (captures: Captures, id: LegendId) => (captures[id] ?? 0) >= winsNeeded(id)
 
-/** How many legends are captured. */
-export const capturedCount = (captures: Captures) => LEGEND_IDS.filter((id) => isCaptured(captures, id)).length
+/** How many legends of `ids` are captured (every legend by default; `REGULAR_LEGENDS` for the ones Arceus waits for). */
+export const capturedCount = (captures: Captures, ids: readonly LegendId[] = LEGEND_IDS) => ids.filter((id) => isCaptured(captures, id)).length
 
-/**
- * Whether every legend that comes before `id` is in (`unlock.last`: Arceus
- * waits for the other 22). An event's legend (Darkrai, `EVENT_RIFTS`) isn't
- * one of them: once its event is over it can't be caught anymore.
- */
-const othersCaptured = (captures: Captures, id: LegendId) => LEGEND_IDS.every((other) => other === id || isEventRift(other) || isCaptured(captures, other))
+/** Whether every regular legend but `id` is in (`unlock.last`: Arceus waits for the other 22, never for an event legend). */
+const othersCaptured = (captures: Captures, id: LegendId) => REGULAR_LEGENDS.every((other) => other === id || isCaptured(captures, other))
 
 /** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22. */
 export const winCounts = (captures: Captures, id: LegendId, endless: boolean) => {

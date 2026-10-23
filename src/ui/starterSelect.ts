@@ -8,7 +8,11 @@ import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { incubatorSlots, isReady } from '../game/eggs'
-import { isLegend, LEGEND_IDS, LEGENDS, type LegendId } from '../data/legends'
+import { isLegend, LEGEND_IDS, legendEvent, LEGENDS, type LegendId } from '../data/legends'
+import { HALLOWEEN } from '../data/halloween'
+import { brasiliaDay } from '../game/day'
+import { halloweenStanding } from '../game/halloween'
+import { eventLegendIcon } from '../render/halloweenArt'
 import { ABILITIES } from '../data/abilities'
 import { canPlay, capturedCount, isCaptured, legendSource, winsNeeded } from '../game/capture'
 import { armBlock, armedItems, armItem, BAG_ITEM_IDS, bagCount, type BagItem } from '../game/bag'
@@ -20,9 +24,9 @@ import { ownsShiny, pickShinyForm, playsShiny } from '../game/shinyPicks'
 import { eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
 import { capPips, shopIcon } from './shopIcons'
 import { cryUrl, drawPokemon, loadedSprites, loadSpecies, portraitUrl, walkSheet } from '../render/sprites'
-import { t } from '../i18n'
+import { formatDay, t } from '../i18n'
 import { h, later, rich } from './dom'
-import { loadSave, updateSave } from './save'
+import { loadSave, today, updateSave } from './save'
 import { typeBadge, type Screen } from './screens'
 import { actionBar, backButton, gearButton, segmented, shellScreen, topBar, walletChip } from './shell'
 import { detailsSheet, evoLine, shinyPicker, statBars } from './partnerDetails'
@@ -129,6 +133,17 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     )
   }
   const shinyTag = () => h('img', { class: 'partner-cell-shiny', src: sparkleIcon(), alt: 'Shiny' })
+  /** An event legend's badge (Darkrai's Noite das Bruxas 2026). */
+  const eventTag = () => h('img', { class: 'partner-cell-event', src: eventLegendIcon(), alt: m.legend.event.badge, title: m.legend.event.badge })
+  /** Where an event legend's event stands today: coming, on (until its last day), or over. */
+  const eventStanding = (id: LegendId) => (legendEvent(id) ? halloweenStanding(brasiliaDay(today())) : null)
+  const eventLine = (id: LegendId) => {
+    const standing = eventStanding(id)
+    if (!standing) return null
+    const ev = m.legend.event
+    const text = standing === 'before' ? ev.soon(formatDay(HALLOWEEN.from), formatDay(HALLOWEEN.to)) : standing === 'on' ? ev.live(formatDay(HALLOWEEN.to)) : ev.gone
+    return h('p', { class: 'partner-legend-event' }, h('img', { src: eventLegendIcon(), alt: '' }), h('b', {}, ev.badge), ' · ', rich(text))
+  }
   /** What a family's clear says (`game/clears.ts`): the hardest difficulty it beat Mewtwo on. */
   const clearText = (id: PlayableId) => {
     const level = save.clears[id]
@@ -193,6 +208,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       },
       open ? cellPortrait(id) : cellSilhouette(id),
       !open && h('b', { class: 'partner-cell-count' }, wins),
+      legendEvent(id) && eventTag(),
       shinyOf(id) && shinyTag(),
       clearTag(id),
       capTag(id),
@@ -282,6 +298,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     const pedestal = h('div', { class: 'partner-pedestal' }, sprite)
     if (isLegend(id) && !open) {
       const need = winsNeeded(id)
+      // Once its event is over, an event legend can't be caught: only the line saying it's gone stays.
+      const over = eventStanding(id) === 'after'
       hero.replaceChildren(
         h(
           'div',
@@ -293,10 +311,11 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             h('small', { class: 'partner-dex' }, `#${String(form.dex).padStart(3, '0')}`),
             h('h3', { class: 'partner-name' }, form.name),
             h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
-            h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            !over && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            eventLine(id),
           ),
         ),
-        h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule),
+        ...(over ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
       )
       return
     }
@@ -346,6 +365,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           h('div', { class: 'types' }, ...form.types.map(typeBadge)),
           level && h('p', { class: 'partner-clear' }, h('img', { src: trophyIcon(level), alt: '' }), m.dex.clearedOn(m.difficulty.names[level])),
           isLegend(id) && h('p', { class: 'partner-legend-mode' }, m.legend.mode, ' · ', `${m.legend.innate}: ${ABILITIES[LEGENDS[id].innate.ability].name}`),
+          isLegend(id) && legendEvent(id) && h('p', { class: 'partner-legend-event' }, h('img', { src: eventLegendIcon(), alt: '' }), h('b', {}, m.legend.event.badge)),
           h('p', { class: 'partner-blurb' }, m.blurbs[id]),
           h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true)),
         ),

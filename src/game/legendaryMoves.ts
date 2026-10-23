@@ -65,7 +65,7 @@ export type LegendaryVisual =
   | 'whirlwind' | 'whirlBurst' | 'phoenix' | 'sacredFlame' | 'originRing' | 'originBeam' | 'sandWave' | 'hotSand'
   | 'ascentRise' | 'ascentComet' | 'ascentImpact' | 'timeClock' | 'timeRing' | 'timeSnap' | 'mistBall' | 'mistCloud'
   | 'lusterBeam' | 'boostCore' | 'boostComet' | 'boostBurst' | 'wishStar' | 'wishFall' | 'wishBurst'
-  | 'ancientRock' | 'magicalLeaf'
+  | 'ancientRock' | 'magicalLeaf' | 'voidOrb' | 'voidBurst' | 'voidPool'
 
 /** Whirlwind: the cyclone's pull (px/s) and the gust it ends with (× damage, × area). */
 export const WHIRL = { pull: 150, burst: 2.2, burstR: 46 } as const
@@ -91,6 +91,9 @@ export const WISH = { first: 0.45, gap: 0.08, drain: 0.25 } as const
 export const ANCIENT = { launch: 0.5, odds: 0.3, surgeOdds: 0.6 } as const
 /** Magical Leaf: when the leaves launch (plus a stagger each) and how hard they turn: they never miss. */
 export const LEAF = { launch: 0.3, stagger: 0.025, turn: 10 } as const
+
+/** Dark Void: the orbs' flight, the void's first and full radius (× area), how fast it opens, and how long its sleep lasts. */
+export const VOID = { flight: 0.4, stagger: 0.08, start: 8, r: 44, open: 0.3, sleep: 3 } as const
 
 /** Ancient Power's raise of every stat (the games' Ancient Power), while its buff lasts. */
 export const ANCIENT_BOOST = { might: 0.12, area: 0.08, cooldown: -0.06, speed: 8, armor: 1 } as const
@@ -553,6 +556,51 @@ export const LEGENDARY_MOVES = {
         })
       }
       cast(g, 'magicalLeaf')
+    },
+  },
+
+  /* Darkrai (the Noite das Bruxas' event legend) */
+  darkVoid: {
+    name: 'Dark Void',
+    type: 'dark',
+    legendary: true,
+    base: stats({ damage: 62, cooldown: 3, amount: 2, duration: VOID.sleep, knockback: 0 }),
+    // The foes fall asleep where they stand: no steps, no contact damage, until a hit wakes them (Bad Dreams hurts without waking them).
+    status: { kind: 'sleep', chance: 1, duration: VOID.sleep, power: 0 },
+    upgrades: [
+      { damage: 14 },
+      { area: 0.2 },
+      { fork: [{ stats: { amount: 1 } }, { stats: { damage: 16 }, mods: ['burstOnKill'] }] },
+      { cooldown: -0.5, damage: 14 },
+    ],
+    // Orbs of darkness float to the densest crowds and open into voids that swallow the foes into sleep.
+    fire: (g, s) => {
+      const p = g.player
+      const targets = crowdTargets(g, s.amount, 90, 230)
+      const r = VOID.r * s.area
+      for (let i = 0; i < s.amount; i++) {
+        const t = targets[i]
+        const o = fromAngle(i * 2.4 + 0.8, 70)
+        const at = t ? { x: t.x, y: t.y } : { x: p.x + o.x, y: p.y + o.y * 0.7 }
+        const delay = i * VOID.stagger
+        spawnAttack(g, {
+          ...look('darkVoid', 'dark', 'voidOrb'), x: p.x, y: p.y - 12,
+          shape: { kind: 'circle', r: 6 }, motion: { kind: 'linear', vx: (at.x - p.x) / VOID.flight, vy: (at.y - 4 - (p.y - 12)) / VOID.flight },
+          damage: 0, ttl: VOID.flight, activeFrom: Infinity, age: -delay,
+        })
+        spawnAttack(g, {
+          ...look('darkVoid', 'dark', 'voidPool'), x: at.x, y: at.y,
+          shape: { kind: 'circle', r }, motion: { kind: 'static' },
+          damage: 0, ttl: s.duration, activeFrom: Infinity, age: -VOID.flight - delay, memo: r,
+        })
+        spawnAttack(g, {
+          ...look('darkVoid', 'dark', 'voidBurst'), x: at.x, y: at.y - 4,
+          shape: { kind: 'circle', r: VOID.start }, motion: { kind: 'static' },
+          damage: s.damage, knockback: s.knockback, status: s.status, ttl: VOID.open + 0.1,
+          grow: (r - VOID.start) / VOID.open, age: -VOID.flight - delay, memo: r,
+        })
+      }
+      cast(g, 'darkVoid')
     },
   },
 } as const satisfies Record<string, MoveDef>

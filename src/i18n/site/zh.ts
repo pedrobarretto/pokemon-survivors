@@ -97,6 +97,7 @@ export const siteZh: SiteMessages = {
     trio: (at: string, trio: string) => `${at} 的首領，限抽到${trio}的對局（3 選 1）`,
     night: (at: string, percent: number) => `${at} 的女巫之夜首領，出現在活動期間的鬧鬼對局（機率 ${n(percent)}%）`,
     rift: (from: string) => `在傳說裂縫後方的領域中，從 ${from} 起（可選）`,
+    eventRift: (from: string) => `只在2026女巫之夜：在鬧鬼對局中，夢魘裂縫可能取代一道裂縫，從 ${from} 起（可選）`,
     place: (name: string, from: string) => `住在${name}，從 ${from} 起（可選地點）`,
     placeBoss: (name: string, from: string) => `從${name}的 Odd Keystone 中衝出，從 ${from} 起`,
     places: { cave: '黑暗洞窟', graveyard: '鬧鬼墓地', sky: '雲端之上（限飛行屬性）' },
@@ -114,6 +115,7 @@ export const siteZh: SiteMessages = {
         ? '在任何模式中以首領身分擊敗牠一次，就能在傳說模式中使用牠（獨立排行榜、更強的獸群、Lv 12 與 28 覺醒）。'
         : `在任何模式中以首領身分擊敗牠 ${need} 次，就能在傳說模式中使用牠（獨立排行榜、更強的獸群、Lv 12 與 28 覺醒）。`,
     captureLast: '最後的戰利品：只能在無盡模式中收服，而且要先收服其他 22 隻傳說寶可夢。',
+    captureEvent: (need: number) => `活動傳說：在2026女巫之夜期間（10/24至11/2）於夢魘裂縫擊敗它${need}次，它就會永久在傳說模式中可用。它不計入 Arceus 的條件。`,
     captureShiny: '在收服的那場勝利或之後擊敗異色個體，就能解鎖牠的異色。',
     innate: (name: string) => `固有（永遠生效）：${name}`,
     opens: (move: string) => `以 ${move} 開局`,
@@ -132,6 +134,7 @@ export const siteZh: SiteMessages = {
       `${name} 是 Pokémon Survivors 的 ${count} 隻初始寶可夢之一，${list(types)}屬性，來自${REGION[region] ?? region}地區。`,
     egg: (name: string, types: readonly string[]) => `${name} 是 Pokémon Survivors 中從蛋孵化的家族之一，${list(types)}屬性。`,
     legend: (name: string, types: readonly string[], count: number) => `${name} 是 Pokémon Survivors 的 ${count} 隻傳說寶可夢之一，${list(types)}屬性。`,
+    eventLegend: (name: string, types: readonly string[]) => `${name} 是 Pokémon Survivors 2026女巫之夜的活動傳說，${list(types)}屬性。`,
     faq: '常見問題',
     unlockQ: (name: string) => `如何在 Pokémon Survivors 中解鎖 ${name}？`,
     starterA: (name: string) => `${name} 是初始寶可夢：從第一場對局就已解鎖，不需要任何條件。`,
@@ -491,7 +494,9 @@ export const siteZh: SiteMessages = {
       opensHead: '傳說招式',
       pressureTitle: '傳說模式的難度',
       pressure: '壓迫感會疊加在每種難度上：以下是傳說模式的倍率。',
-      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: 'Mewtwo 身旁（1/10）', finale: '最終首領', endless: '無盡模式，最後一隻' },
+      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: 'Mewtwo 身旁（1/10）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）' },
+      /** The event legends (`EVENT_LEGENDS`), after the table. */
+      eventNote: '在2026年的女巫之夜（10月24日至11月2日），Darkrai 以活動傳說的身分登場：它只出現在夢魘裂縫中，而夢魘裂縫可能在鬧鬼對局中取代一道裂縫，贏得2次即可收服。它使用能讓敵群沉睡的 Dark Void，以及能傷害在它附近睡著的敵人的固有特性 Bad Dreams。活動結束後它會回到黑暗之中，但已收服的玩家仍可繼續使用它。它不計入 Arceus 的條件。',
     },
     megas: {
       paragraphs: (m) => [

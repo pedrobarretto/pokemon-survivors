@@ -1579,6 +1579,7 @@ export const en: Messages = {
     drizzle: 'Calls rain at the start and in every new biome (outside rifts): Water ×1.5.',
     airLock: 'The weather neither boosts foes nor wears you down, and the world’s attacks can’t hit you.',
     multitype: 'Your type changes with the biome, and moves of that type deal +20%.',
+    badDreams: 'Sleeping foes within 120 px suffer nightmares: damage every 0.5 s, without waking up.',
   },
 
   world: {
@@ -4348,6 +4349,16 @@ export const en: Messages = {
         '0.3s faster cooldown and +6 damage',
       ],
     },
+    /* The Noite das Bruxas' event legend (`legendaryMoves.ts`) */
+    darkVoid: {
+      description: 'Darkrai\'s orbs of darkness float to the densest crowds and open into voids that put the foes to sleep where they stand: they neither move nor hurt until a hit wakes them. Bad Dreams hurts them without waking them.',
+      upgrades: [
+        '+14 damage',
+        '+20% area',
+        { fork: [{ name: 'Abyss', desc: '+1 void' }, { name: 'Endless nightmare', desc: 'Fainted foes explode; +16 damage' }] },
+        '0.5s faster cooldown and +14 damage',
+      ],
+    },
     /* Legendary moves, second batch: the trios, Mewtwo and Arceus (`legendaryMoves2.ts`) */
     snowscape: {
       description: "Articuno's wings beat a snowflake of ice crystals out around you. They hang in the air chilling whatever touches them (slowed), then all shatter at once and can freeze (the next hit lands twice as hard).",
@@ -4627,6 +4638,7 @@ export const en: Messages = {
     latios: 'Sharp Eon. Fast and deadly from afar.',
     deoxys: 'Space virus. Its special swaps Formes.',
     arceus: 'The god. Its type changes with every biome.',
+    darkrai: 'Nightmare. Puts crowds to sleep and hurts them in their dreams.',
   },
 
   specials: {
@@ -4835,10 +4847,17 @@ export const en: Messages = {
       mythical: 'Sometimes (1 run in 10) shows up beside *Mewtwo* at the end.',
       finale: 'It’s the final boss: win a run.',
       endless: 'The last trophy: once the other 22 are caught, beat it in _endless mode_.',
+      event: 'Only on _Halloween Night_: beat it in the _Nightmare rift_.',
     },
     rule: (need: number) => (need === 1 ? 'Beat it once as a boss, in any mode, to catch it.' : `Beat it ${need} times as a boss, in any mode, to catch it.`),
     shinyRule: 'Beating a shiny one on the catching win, or after, unlocks its shiny.',
     selectNote: 'Legendaries play *Legend Mode*: their own ranking, a tougher horde, awakenings at Lv 12 and 28.',
+    event: {
+      badge: 'Halloween Night 2026',
+      soon: (from: string, to: string) => `Arrives with _Halloween Night_, from ${from} to ${to}.`,
+      live: (to: string) => `Only until ${to}: then it returns to the shadows.`,
+      gone: 'It returned to the shadows when Halloween Night ended. Whoever caught it keeps playing it.',
+    },
   },
   legends: {
     epithets: {

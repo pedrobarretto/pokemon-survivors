@@ -1578,6 +1578,7 @@ export const zh: Messages = {
     drizzle: '開局時及每進入新區域時（裂縫外）召喚下雨：水屬性×1.5。',
     airLock: '天氣既不會強化敵人也不會削弱你，且世界的攻擊打不到你。',
     multitype: '你的屬性會隨區域改變，該屬性的招式傷害+20%。',
+    badDreams: '120 px 內睡著的敵人會做惡夢：每0.5秒受到傷害，且不會醒來。',
   },
 
   world: {
@@ -4346,6 +4347,16 @@ export const zh: Messages = {
         '冷卻縮短0.3秒，傷害+6',
       ],
     },
+    /* The Noite das Bruxas' event legend (`legendaryMoves.ts`) */
+    darkVoid: {
+      description: 'Darkrai的黑暗球體飄向最密集的敵群，展開成虛空，讓敵人原地睡著：在被攻擊吵醒前既不移動也不造成傷害。Bad Dreams 能傷害它們而不吵醒它們。',
+      upgrades: [
+        '傷害+14',
+        '範圍+20%',
+        { fork: [{ name: '深淵', desc: '虛空+1' }, { name: '無盡惡夢', desc: '被擊倒的敵人會爆炸；傷害+16' }] },
+        '冷卻縮短0.5秒，傷害+14',
+      ],
+    },
     /* Legendary moves, second batch: the trios, Mewtwo and Arceus (`legendaryMoves2.ts`) */
     snowscape: {
       description: 'Articuno振翅，在你周圍拍出一片冰晶雪花。冰晶懸在空中，凍傷碰到的一切（減速），然後同時碎裂，可能造成冰凍（下一擊威力加倍）。',
@@ -4624,6 +4635,7 @@ export const zh: Messages = {
     latios: '銳利的無限。速度快，遠距離致命。',
     deoxys: '太空病毒。必殺技能切換形態。',
     arceus: '神。屬性隨每個區域而改變。',
+    darkrai: '惡夢。讓敵群沉睡，並在夢中傷害它們。',
   },
 
   specials: {
@@ -4832,10 +4844,17 @@ export const zh: Messages = {
       mythical: '偶爾（每10局1次）會在最後與 *Mewtwo* 一同出現。',
       finale: '它是最終首領：贏下一局。',
       endless: '最後的戰利品：收服其他22隻後，在_無盡模式_中擊敗它。',
+      event: '只在_女巫之夜_：在_夢魘裂縫_中擊敗它。',
     },
     rule: (need: number) => (need === 1 ? '在任何模式中以首領身分擊敗它1次，即可收服。' : `在任何模式中以首領身分擊敗它${need}次，即可收服。`),
     shinyRule: '在收服的那場勝利或之後擊敗異色個體，即可解鎖它的異色。',
     selectNote: '傳說寶可夢使用*傳說模式*：獨立的排行榜、更強的獸群，並在 Lv 12 與 28 覺醒。',
+    event: {
+      badge: '女巫之夜 2026',
+      soon: (from: string, to: string) => `隨_女巫之夜_到來，${from}至${to}。`,
+      live: (to: string) => `只到${to}為止：之後便回到黑暗之中。`,
+      gone: '女巫之夜結束後，它回到了黑暗之中。已收服的玩家仍可繼續使用它。',
+    },
   },
   legends: {
     epithets: {

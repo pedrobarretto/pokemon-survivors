@@ -1,6 +1,6 @@
 import { branchesAt, branchesOf, branchStage } from '../../data/branches'
 import { HATCHLINGS, isHatchling, isStarter, PLAYABLE, type PlayableId } from '../../data/hatchlings'
-import { LEGEND_IDS, LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { legendEvent, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
 import { MEGAS, megasOf } from '../../data/megas'
 import { STARTER_IDS, type PlayableDef } from '../../data/starters'
 import { formLine } from '../../game/branch'
@@ -76,7 +76,7 @@ const familyFaq = (id: FamilyId, base: DexEntry, m: SiteMessages, locale: Locale
 const legendFaq = (id: LegendId, entry: DexEntry, m: SiteMessages): Qa[] => {
   const def = LEGENDS[id]
   const rule: LegendUnlock = def.unlock
-  const unlock = rule.last ? m.pokedex.captureLast : m.pokedex.capture(rule.wins)
+  const unlock = rule.event ? m.pokedex.captureEvent(rule.wins) : rule.last ? m.pokedex.captureLast : m.pokedex.capture(rule.wins)
   const form = 'form' in def ? m.dexPage.awakens(def.form.name) : ''
   const where = entry.source.kind === 'wild' ? appearances(entry.source.id).map((a) => appearance(a, m)) : []
   return [
@@ -89,7 +89,10 @@ const legendFaq = (id: LegendId, entry: DexEntry, m: SiteMessages): Qa[] => {
 const intro = (page: DexPage, m: SiteMessages, locale: Locale) => {
   const base = page.entries[0]!
   const blurb = LOCALES[locale].messages.blurbs[page.id]
-  if (page.kind === 'legend') return `${m.dexPage.legend(base.name, typesOf(base, m), LEGEND_IDS.length)} ${blurb}`
+  if (page.kind === 'legend') {
+    const what = legendEvent(page.id) ? m.dexPage.eventLegend(base.name, typesOf(base, m)) : m.dexPage.legend(base.name, typesOf(base, m), REGULAR_LEGENDS.length)
+    return `${what} ${blurb}`
+  }
   const what = isStarter(page.id) ? m.dexPage.starter(base.name, typesOf(base, m), base.region.name, STARTER_IDS.length) : m.dexPage.egg(base.name, typesOf(base, m))
   return `${what} ${blurb}`
 }

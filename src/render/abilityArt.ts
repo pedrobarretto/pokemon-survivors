@@ -24,6 +24,7 @@ const GLYPHS = {
   blade: ['.........11', '........131', '.......1341', '......1341.', '.....1341..', '.1..1341...', '.112341....', '..1221.....', '.112111....', '11211......', '111........'],
   note: ['.....11..', '.....121.', '.....1221', '.....1.21', '.....1..1', '.....1...', '..1111...', '.123321..', '.122221..', '..1111...'],
   star: ['....1....', '...121...', '111232111', '.1233321.', '..12321..', '..12121..', '.121.121.', '.11...11.'],
+  moon: ['...1111..', '..12221..', '.1231....', '1231.....', '1231.....', '1232.....', '12331....', '.123321..', '..12221..', '...1111..'],
 } as const satisfies Record<string, readonly string[]>
 
 type Glyph = keyof typeof GLYPHS
@@ -76,6 +77,8 @@ const look = (e: AbilityEffect | undefined): string | readonly [Glyph, string] =
     case 'aura':
     case 'bossHunter':
       return ['eye', COLORS.presence]
+    case 'nightmare':
+      return ['moon', STATUS_RULES.sleep.color]
     case 'resist':
       return e.types?.[0] ? ['shield', TYPE_COLORS[e.types[0]]] : ['eye', COLORS.presence]
     case 'immune':

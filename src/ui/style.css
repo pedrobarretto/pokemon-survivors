@@ -669,6 +669,38 @@ button {
   text-align: center;
 }
 
+/* An event legend's badge (13×12 px at 2×: Darkrai's Noite das Bruxas 2026), in the bottom left corner. */
+.partner-cell-event {
+  position: absolute;
+  left: 1px;
+  bottom: 1px;
+  width: 26px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+/* The same badge by its name, on the partner panel. */
+.partner-legend-event {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.1;
+  color: #505068;
+}
+
+.partner-legend-event img {
+  width: 26px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.partner-legend-event b {
+  color: #c05818;
+}
+
 /* A legend not captured yet: its wins so far in the corner. */
 .partner-cell-count {
   position: absolute;

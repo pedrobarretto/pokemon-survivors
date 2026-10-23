@@ -13,7 +13,7 @@ import { NIGHT_BOSSES } from '../data/halloween'
 import { ENDLESS, REAPER } from '../game/endless'
 import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
-import { LEGEND_IDS, type LegendId } from '../data/legends'
+import { EVENT_LEGENDS, LEGEND_IDS, type LegendId } from '../data/legends'
 
 /**
  * The site's Pokédex model: every species the game uses, derived from
@@ -177,6 +177,8 @@ export type Appearance =
   | { kind: 'trio'; at: number; trio: TrioId }
   /** Waits behind a legendary rift, which first opens at `from`. */
   | { kind: 'rift'; from: number }
+  /** An event legend (`EVENT_LEGENDS`): its event's rift may take a rift's place in a haunted run, from `from`. */
+  | { kind: 'eventRift'; from: number }
   /** Hunts the player in endless mode from `at`. */
   | { kind: 'reaper'; at: number }
   /** Lives in a place (`data/places.ts`), coming out from `from`; `boss` for the place's own boss. */
@@ -216,7 +218,8 @@ export const appearances = (id: EnemyId): Appearance[] => {
     if (e.tier !== def.tier || (e.kind === 'swarm' && !def.types.includes('flying'))) return []
     return [{ kind: e.kind, at: e.at, count: e.count }]
   })
-  const rift: Appearance[] = isRiftLegend(id) ? [{ kind: 'rift', from: RIFT.slots[0] }] : []
+  const event = EVENT_LEGENDS.some((l) => l === id)
+  const rift: Appearance[] = event ? [{ kind: 'eventRift', from: RIFT.slots[0] }] : isRiftLegend(id) ? [{ kind: 'rift', from: RIFT.slots[0] }] : []
   const reaper: Appearance[] = id === REAPER ? [{ kind: 'reaper', at: ENDLESS.reaperAt }] : []
   // A place's dwellers come out once the run's stage has their tier (never before the first entrance).
   const placed = PLACE_IDS.flatMap((place): Appearance[] => {
