@@ -118,7 +118,7 @@ import { render, warmScenery } from './render/draw'
 import { createGovernor, detail, observeFrame } from './render/quality'
 import { loadSafeMode, noteCleanRun, noteCrash, safeModeOn, setSafeMode, takeSafeNotice, type SafeChoice } from './safeMode'
 import { drawJoystick } from './render/joystick'
-import { cryUrl, loadAll, loadedCount, loadSpecies, overlayStats, portraitUrl, preloadForms, preloadShinies, sprites, streamSpecies, sweepSprites, type Dex } from './render/sprites'
+import { cryUrl, loadAll, loadSpecies, overlayStats, portraitUrl, preloadShinies, releaseSprites, spriteMemory, streamSprites, sweepSprites, type Dex, type Variant } from './render/sprites'
 import { castNeeds, runSprites, type SpriteNeed } from './render/spriteNeeds'
 import { setMarkerInsets } from './render/mapEvents'
 import { consumableIcon } from './render/props'
@@ -531,6 +531,8 @@ let pressedStart = false
  */
 const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip; shelf?: VisitorShelf; instant?: boolean; back?: () => void } = {}) => {
   endRun()
+  // Back from a run, the meadow's and the plaza's sheets start streaming again now, not at the next sync.
+  syncSprites()
   shopLevel = loadSave().shop.level
   // A newer build went live during the run (see `watchDeploys`): back in the lobby, with the run banked, ranked and its crash watch cleared, is the moment to load it
   // (not while a co-op room still holds this player: leaving it comes back here).
@@ -946,25 +948,52 @@ const menuSprites = () => [
  * over the 15 minutes instead of holding every species and shiny the run met.
  */
 const syncSprites = () => {
+  // A run loading its sheets (`loadRunSheets`) has let go of the lobby's: nothing streams them back meanwhile.
+  if (startingRun) return
   if (run) {
-    const { stream, keep } = runSprites(run.game, run.sprites.needs, run.sprites.always)
-    streamSpecies(stream)
+    const { stream, extras, keep } = runSprites(run.game, run.sprites.needs, run.sprites.always)
+    // The forms and shiny colors about to show up first, then the cast by when it comes.
+    streamSprites([...extras, ...stream])
     // The results screen is a menu: its share card loads the run's shinies and legendaries to draw them.
     const over = run.game.phase === 'gameover' || run.game.phase === 'victory'
     sweepSprites(keep, over ? MENU_IDLE : RUN_IDLE)
     return
   }
   const menu = menuSprites()
-  streamSpecies(menu)
+  streamSprites(menu.map((dex) => ({ dex, shiny: false })))
   sweepSprites({ species: new Set(menu), variants: new Set() }, MENU_IDLE)
+}
+
+/** True while a run swaps the lobby's sheets for its own (`loadRunSheets`): the meadow holds still and the menus' stream waits. */
+let startingRun = false
+
+/** A player's whole family (branches included: the evolution scene can land on any of them) in the colors they play, not the normal ones as well. */
+const familySheets = (starter: PlayableId, shiny: boolean): Variant[] => familyDex(starter).map((dex) => ({ dex, shiny }))
+
+/**
+ * Swaps the lobby's sheets for a run's behind its loading screen: lets go of
+ * everything but what the run opens with (the meadow's wanderers, the partner
+ * grid, the plaza's keepers), then loads the players' families and the first
+ * stage's species ahead of anything else, so a phone never holds both sets.
+ * Back in the lobby, the menus' stream (`syncSprites`) brings its own back.
+ */
+const loadRunSheets = async (families: readonly Variant[], opening: readonly Dex[]) => {
+  startingRun = true
+  try {
+    const sheets = [...families, ...opening.map((dex) => ({ dex, shiny: false }))]
+    await releaseSprites({ species: new Set(sheets.map((v) => v.dex)), variants: new Set(families.flatMap((v) => (v.shiny ? [v.dex] : []))) })
+    await loadAll(sheets)
+  } finally {
+    startingRun = false
+  }
 }
 
 /**
  * Loads the starter's evolution line and the first stage's species, then starts
  * a fresh run: a regular one from the save (upgrades, the Bag's armed items),
  * or the Desafio do dia's (`challengeStart`: its seed, nothing from the save
- * but the shiny colors). The rest of the cast (later stages, swarms, bosses) and the
- * `EXTRAS` stream in the background as the run nears them (`syncSprites`).
+ * but the shiny colors). The rest of the cast (later stages, swarms, bosses), the
+ * `EXTRAS` and the forms (a Mega, a stance) stream in the background as the run nears them (`syncSprites`).
  */
 const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) => {
   // Play again on a build that fell behind (`watchDeploys`): the newer one first, back in the lobby.
@@ -993,10 +1022,6 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
       : planRun(seed, outbreak, halloween, legend)
   // The next run likely plays the same mode: its plan draws that horde.
   if (!c) upcoming = planRun(undefined, undefined, undefined, legend)
-  // The whole family, branches included: the evolution scene can land on any of them.
-  await loadAll([...familyDex(starter), ...openingDex(plan)])
-  // The outbreak's shiny can show up in the first minute (in safe mode it loads when one does).
-  if (!detail.safe) void preloadShinies([ENEMIES[plan.outbreak].dex])
   // Armed bag items are used up as the run starts, as many as the shop's level lets a run take (the challenge leaves them in the Bag).
   // Honey stays in the Bag for a run without an outbreak (a legend's).
   const before = loadSave()
@@ -1028,10 +1053,10 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
   const me = localPlayer(game)
   // The 1/64 roll unlocks this Pokémon's shiny for good (Normal/Shiny on the select screen).
   if (me.luckyShiny) updateSave((s) => ({ ...s, shinyStarters: unlockShinyStarter(s.shinyStarters, starter) }))
-  // A shiny run must not start in normal colors.
-  if (me.shiny) await preloadShinies(familyDex(starter))
-  // Alternate forms (Aegislash's Blade Forme, the Megas) stream in behind; until then the normal form stands in. Safe mode loads one when it shows.
-  if (!detail.safe) void preloadForms(familyDex(starter), me.shiny)
+  // A shiny run starts in its own colors (and loads only those).
+  await loadRunSheets(familySheets(starter, me.shiny), openingDex(plan))
+  // The outbreak's shiny can show up in the first minute (in safe mode it loads when one does).
+  if (!detail.safe) void preloadShinies([ENEMIES[plan.outbreak].dex])
   loading.remove()
   run = {
     game,
@@ -1318,7 +1343,7 @@ const alphaEvent = (e: Extract<GameEvent, { kind: 'alpha' }>) => {
   switch (e.moment) {
     case 'spawn':
       playSfx('boss')
-      playCry(sprites(def.dex).cry, 0.8)
+      playCry(cryUrl(def.dex), 0.8)
       return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().alphas.appeared(def.name))), 3600)
     case 'aim':
       return playSfx('growl', 200)
@@ -1328,7 +1353,7 @@ const alphaEvent = (e: Extract<GameEvent, { kind: 'alpha' }>) => {
       return playSfx('quake', 150)
     case 'enrage':
       playSfx('boss')
-      playCry(sprites(def.dex).cry, 0.8)
+      playCry(cryUrl(def.dex), 0.8)
       return flashScreen(ui)
     case 'down':
       playSfx('evolve')
@@ -1414,7 +1439,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'megaStart': {
       const def = heldMega(g)
       playSfx('megaCharge', 0)
-      playCry(sprites(playerDex(g)).cry, 0.6)
+      playCry(cryUrl(playerDex(g)), 0.6)
       return def && toast(ui, rich(t().mega.reacting(def.stone)), 1400, 'mega')
     }
     case 'mega': {
@@ -1439,13 +1464,13 @@ const handleEvent = (r: Run, e: GameEvent) => {
       if (isWaveLegend(e.enemy)) return
       if (def.legendary) {
         playSfx('legendary')
-        playCry(sprites(def.dex).cry, 0.7)
+        playCry(cryUrl(def.dex), 0.7)
         flashScreen(ui)
         // A legend meets its dark Clone (`isClone`), never itself.
         return banner(ui, rich(t().toast.legendary(localPlayer(g).legend?.id === e.enemy ? t().legend.clone(def.name) : def.name)))
       }
       playSfx('boss')
-      playCry(sprites(def.dex).cry, 0.5)
+      playCry(cryUrl(def.dex), 0.5)
       // A night boss comes in the event's colors.
       if (isNightBoss(e.enemy)) return toast(ui, h('span', { class: 'item-toast halloween-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().halloween.nightBoss(def.name))), 3200)
       return toast(ui, rich(t().toast.boss(def.name)), 3200)
@@ -1460,24 +1485,24 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'disguise': {
       const def = ENEMIES[e.enemy]
       playSfx('break')
-      playCry(sprites(def.dex).cry, 0.6)
+      playCry(cryUrl(def.dex), 0.6)
       return toast(ui, rich(t().halloween.disguise(def.name)), 2400)
     }
     case 'bossFled': {
       const def = ENEMIES[e.enemy]
-      playCry(sprites(def.dex).cry, 0.3)
+      playCry(cryUrl(def.dex), 0.3)
       return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().toast.bossFled(def.name))), 3200)
     }
     case 'enrage': {
       // No toast: the cry, the flash and the boss's red outline carry it.
       playSfx('boss')
-      playCry(sprites(ENEMIES[e.enemy].dex).cry, 0.8)
+      playCry(cryUrl(ENEMIES[e.enemy].dex), 0.8)
       return flashScreen(ui)
     }
     case 'shiny': {
       const def = ENEMIES[e.enemy]
       playSfx('shiny')
-      playCry(sprites(def.dex).cry, 0.4)
+      playCry(cryUrl(def.dex), 0.4)
       return toast(ui, rich(t().toast.shiny(def.name)), 3200)
     }
     case 'caught': {
@@ -1519,14 +1544,14 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'legendBeaten':
       return bankCapture(e.legend, e.shiny, g.endless !== null)
     case 'evolve': {
-      playCry(sprites(e.from).cry)
+      playCry(cryUrl(e.from))
       r.closeText?.()
       r.closeText = textBox(ui, t().toast.evolving(playerForm(g).name))
       return
     }
     case 'evolved': {
       playSfx('evolve')
-      playCry(sprites(e.to).cry)
+      playCry(cryUrl(e.to))
       r.closeText?.()
       r.closeText = null
       // The Trainer Card wears the branch this family took last.
@@ -1645,7 +1670,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     }
     case 'traitIntro': {
       const def = ENEMIES[e.enemy]
-      playCry(sprites(def.dex).cry, 0.35)
+      playCry(cryUrl(def.dex), 0.35)
       return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().traits[e.trait](def.name))), 3400)
     }
     case 'hazardIntro':
@@ -1668,24 +1693,22 @@ const handleEvent = (r: Run, e: GameEvent) => {
       playSfx('legendary')
       flashScreen(ui)
       const lines = domainLines(e.enemy)
-      // A domain's legendary shows itself later, in its own forms: have them ready.
+      // A domain's legendary shows itself later, in its own forms: they load phase by phase (`bossForms`).
       if (lines) {
-        const partner = partnerOf(e.enemy)
-        if (!detail.safe) void preloadForms(partner ? [def.dex, ENEMIES[partner].dex] : [def.dex], e.shiny)
         toast(ui, rich(lines.crossing), 3600)
         return banner(ui, rich(t().rifts.enterDomain(lines.place)))
       }
-      playCry(sprites(def.dex).cry, 0.7)
+      playCry(cryUrl(def.dex), 0.7)
       return banner(ui, rich(e.shiny ? t().rifts.enterShiny(def.name) : t().rifts.enter(def.name)))
     }
     case 'riftTitle':
       playSfx('legendary')
-      playCry(sprites(ENEMIES[e.enemy].dex).cry, 0.9)
+      playCry(cryUrl(ENEMIES[e.enemy].dex), 0.9)
       return flashScreen(ui)
     case 'bossPhase': {
       const def = ENEMIES[e.enemy]
       playSfx('quake')
-      playCry(sprites(def.dex).cry, 0.7)
+      playCry(cryUrl(def.dex), 0.7)
       const line = isRiftLegend(e.enemy) ? domainLines(e.enemy)?.phases[e.phase - 1] : isWaveLegend(e.enemy) ? t().legends.phases[e.enemy][e.phase - 1] : undefined
       return line ? toast(ui, rich(line), 3600) : undefined
     }
@@ -1703,7 +1726,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
         return toast(ui, rich(t().rifts.caught(name), { class: 'toast-evo' }), 3600)
       }
       playSfx('break')
-      playCry(sprites(ENEMIES[e.enemy].dex).cry, 0.6)
+      playCry(cryUrl(ENEMIES[e.enemy].dex), 0.6)
       return toast(ui, rich(t().rifts.escaped(name)), 3200)
     }
     case 'domainCue': {
@@ -1712,18 +1735,18 @@ const handleEvent = (r: Run, e: GameEvent) => {
     }
     case 'pairDown':
       playSfx('quake')
-      playCry(sprites(ENEMIES[e.partner].dex).cry, 0.9)
+      playCry(cryUrl(ENEMIES[e.partner].dex), 0.9)
       return toast(ui, rich(t().rifts.pairDown(ENEMIES[e.enemy].name, ENEMIES[e.partner].name)), 3600)
     case 'pairRevive':
       playSfx('evolve')
-      playCry(sprites(ENEMIES[e.partner].dex).cry, 0.8)
+      playCry(cryUrl(ENEMIES[e.partner].dex), 0.8)
       return toast(ui, rich(t().rifts.pairRevive(ENEMIES[e.enemy].name, ENEMIES[e.partner].name)), 3200)
     case 'bossGuard':
       playSfx(e.up ? 'legendary' : 'break')
       return toast(ui, rich(e.up ? t().rifts.guardUp(ENEMIES[e.enemy].name) : t().rifts.guardDown), e.up ? 3400 : 2200)
     case 'legendTitle':
       playSfx('legendary')
-      playCry(sprites(ENEMIES[e.enemy].dex, e.shiny).cry, 0.9)
+      playCry(cryUrl(ENEMIES[e.enemy].dex), 0.9)
       return flashScreen(ui)
     case 'bossCapture': {
       const capture = g.legendScene?.capture
@@ -1734,7 +1757,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
         return toast(ui, rich(t().rifts.caught(name), { class: 'toast-evo' }), 3200)
       }
       playSfx('break')
-      playCry(sprites(ENEMIES[e.enemy].dex).cry, 0.6)
+      playCry(cryUrl(ENEMIES[e.enemy].dex), 0.6)
       return toast(ui, rich(t().rifts.escaped(name)), 2800)
     }
     case 'riftCleared': {
@@ -1759,7 +1782,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return
     case 'reaper':
       playSfx('legendary')
-      playCry(sprites(ENEMIES[REAPER].dex).cry, 0.8)
+      playCry(cryUrl(ENEMIES[REAPER].dex), 0.8)
       flashScreen(ui)
       return banner(ui, rich(e.defeats > 0 ? t().rifts.reaperBack : t().rifts.reaper))
     case 'reaperDown':
@@ -1970,10 +1993,8 @@ const startCoopRun = async (client: CoopClient, runner: Runner) => {
   const loading = loadingScreen()
   ui.append(loading)
   const g = runner.game
-  const families = [...new Set(g.players.flatMap((p) => familyDex(p.starter)))]
   const opening = rosterSchedule(g.roster).flatMap((s) => (s.at === 0 ? [s.dex] : []))
-  await loadAll([...families, ...opening])
-  await Promise.all(g.players.filter((p) => p.shiny).map((p) => preloadShinies(familyDex(p.starter)).catch(() => {})))
+  await loadRunSheets(g.players.flatMap((p) => familySheets(p.starter, p.shiny)), opening)
   loading.remove()
   // Closed for good while loading (kicked, the room gone): the close already went back to the title.
   if (client.state().status.kind === 'closed') return
@@ -2560,7 +2581,8 @@ const frame = (now: number) => {
     menuAcc += dt
   }
   const menuFrame = menuAcc >= STEP * 0.6
-  if (!run && menuFrame) {
+  // While a run loads (`loadRunSheets`) the meadow holds its last frame: its sheets are gone, and drawing would ask for them again.
+  if (!run && menuFrame && !startingRun) {
     const mdt = Math.min(0.1, menuAcc)
     menuAcc = 0
     // Attract mode: wild Pokémon stroll through the meadow behind the menus (haunted on the Noite das Bruxas).
@@ -3153,8 +3175,8 @@ if (import.meta.env.DEV) {
     ps: {
       run: () => run,
       startRun,
-      // Sheets loaded and frame silhouettes cached right now (`render/sprites.ts`).
-      sprites: () => ({ loaded: loadedCount(), overlays: overlayStats() }),
+      // Sheets loaded (their decoded MB now and at peak; `true` starts a new peak) and frame silhouettes cached right now (`render/sprites.ts`).
+      sprites: (resetPeak = false) => ({ ...spriteMemory(resetPeak), overlays: overlayStats() }),
       coop: devCoop,
       /**
        * `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet,

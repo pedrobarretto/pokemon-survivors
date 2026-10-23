@@ -4,8 +4,8 @@ import { detail } from './render/quality'
 /**
  * Safe mode (Modo leve): after a run the phone killed (the crash watch,
  * `takeCrash` in `bugReport.ts`), this device draws lean for good
- * (`render/quality.ts`), keeps fewer silhouettes and loads alternate forms and
- * shinies only when they show, until a few long runs in a row end cleanly.
+ * (`render/quality.ts`), keeps fewer silhouettes and loads the outbreak's shiny
+ * only when one shows, until a few long runs in a row end cleanly.
  * The player can turn it on or off in Ajustes. Presentation only: the
  * simulation never reads it, so replays and the ranking are untouched.
  */

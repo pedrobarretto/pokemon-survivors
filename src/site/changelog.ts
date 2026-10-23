@@ -33,7 +33,7 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       { pt: 'Ovo do Kecleon sem o limite de um por dia: até 6, e cada um custa o dobro do anterior (₽ 10.000, 20.000, 40.000…). A conta zera à meia-noite.', en: 'The Kecleon Egg is no longer one a day: up to 6, each costing double the last (₽ 10,000, 20,000, 40,000…). The count resets at midnight.', es: 'El Huevo Kecleon ya no es uno por día: hasta 6, y cada uno cuesta el doble del anterior (₽ 10.000, 20.000, 40.000…). La cuenta vuelve a cero a medianoche.' },
       { pt: 'Incubadora maior: a 4ª e a 5ª vaga, suas para sempre, e a Incubadora Rápida, que faz um ovo andar o dobro.', en: 'A bigger incubator: the 4th and 5th slots, yours for good, and the Quick Incubator, which makes an egg walk twice as fast.', es: 'Una incubadora más grande: el 4.º y el 5.º espacio, tuyos para siempre, y la Incubadora Rápida, que hace que un huevo avance el doble.' },
       { pt: 'As partidas pagam cerca de metade do ₽, agora que a loja tem onde gastar. O que você já guardou continua valendo o mesmo.', en: 'Runs pay about half the ₽, now that the shop has somewhere to spend it. What you already saved keeps its full value.', es: 'Las partidas pagan cerca de la mitad de los ₽, ahora que la tienda tiene en qué gastarlos. Lo que ya ahorraste sigue valiendo lo mismo.' },
-      { pt: 'Modo leve: menos efeitos e menos memória para o jogo rodar liso em celulares mais simples.', en: 'Lite mode: fewer effects and less memory so the game runs smoothly on simpler phones.', es: 'Modo ligero: menos efectos y menos memoria para que el juego corra fluido en celulares más sencillos.' },
+      { pt: 'Menos travamentos no celular: o começo da partida e as fendas lendárias pesam menos, e o novo Modo leve liga sozinho nos aparelhos que precisam.', en: 'Fewer crashes on phones: the start of a run and the legendary rifts weigh less, and the new Lite mode turns on by itself on devices that need it.', es: 'Menos cierres en el celular: el comienzo de la partida y las grietas legendarias pesan menos, y el nuevo Modo ligero se activa solo en los dispositivos que lo necesitan.' },
     ],
     changes: [
       {
@@ -133,6 +133,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Mega Sceptile ganhou o sprite próprio. As Megas sem sprite no PMD SpriteCollab (como Mega Venusaur, Blastoise e Garchomp) seguem com o sprite normal e o contorno de arco-íris até os artistas publicarem os delas.',
             en: 'Mega Sceptile got its own sprite. Megas with no sprite on PMD SpriteCollab yet (like Mega Venusaur, Blastoise and Garchomp) keep the regular sprite with the rainbow outline until the artists publish theirs.',
             es: 'Mega Sceptile ganó su propio sprite. Las Megas sin sprite en PMD SpriteCollab (como Mega Venusaur, Blastoise y Garchomp) siguen con el sprite normal y el contorno de arcoíris hasta que los artistas publiquen los suyos.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Menos travamentos no celular', en: 'Fewer crashes on phones', es: 'Menos cierres en el celular' },
+        notes: [
+          {
+            pt: 'O começo da partida e a entrada nas fendas lendárias pesam bem menos no celular: o jogo solta os Pokémon do lobby antes de carregar os da partida, carrega as imagens aos poucos em vez de todas de uma vez, e só baixa uma Mega ou a forma de um lendário quando ela está para aparecer (a Mega da Latias, por exemplo, só na fase anterior à dela).',
+            en: "The start of a run and stepping into a legendary rift weigh much less on phones: the game lets go of the lobby's Pokémon before loading the run's, loads pictures a few at a time instead of all at once, and only downloads a Mega or a legendary's form when it's about to show up (Latias's Mega, for one, only in the phase before it).",
+            es: 'El comienzo de la partida y la entrada a las grietas legendarias pesan mucho menos en el celular: el juego suelta los Pokémon del lobby antes de cargar los de la partida, carga las imágenes de a poco en vez de todas a la vez, y solo descarga una Mega o la forma de un legendario cuando está por aparecer (la Mega de Latias, por ejemplo, solo en la fase anterior a la suya).',
           },
         ],
       },

@@ -5,7 +5,7 @@ import { HAMMER_WINDUP, HEAVY_HOP, HEAVY_LIFT, PERISH_TIME } from '../game/eggMo
 import { playerDex } from '../game/game'
 import type { Attack, Game } from '../game/types'
 import { EGG3_FX } from './eggMove3Art'
-import { sprites } from './sprites'
+import { bodyOf } from '../data/bodies'
 import { dashedRing } from './strokes'
 import { localPlayer } from '../game/players'
 
@@ -505,7 +505,7 @@ export const drawEgg3Player = (ctx: Ctx, g: Game, t: number) => {
   const frenzy = p.moves.find((m) => m.id === 'furySwipes')?.stacks ?? 0
   const payback = (p.moves.find((m) => m.id === 'avalanche')?.stacks ?? 0) > 0
   if (!boosted && frenzy < 2 && !payback) return
-  const bodyH = sprites(playerDex(g)).bodyH
+  const bodyH = bodyOf(playerDex(g)).bodyH
   if (boosted) {
     for (let k = 0; k < 3; k++) {
       const phase = (t * 1.6 + k / 3) % 1
