@@ -7,7 +7,7 @@ import { formLine } from './branch'
 import { killEnemy } from './combat'
 import { spawnEnemy } from './enemies'
 import { chooseOffer, step } from './game'
-import { MAX_MOVES } from './leveling'
+import { applyOffer, loadout, MAX_MOVES, offerPool } from './leveling'
 import { NO_RANKS } from './meta'
 import { MOVES, maxMoveLevel, type MoveId } from './moves'
 import { recordEvent, recordStep, resimulate, startGame, startRecording, TICK, type ReplayStart } from './replay'
@@ -181,6 +181,20 @@ describe('TMs in a run', () => {
     dropLegendaryTm(g, 'mew', 0, 0)
     expect(g.pickups.some((k) => k.kind === 'tm')).toBe(false)
     expect(g.pickups.some((k) => k.kind === 'consumable' && k.item === 'rareCandy')).toBe(true)
+  })
+
+  it('teach again a move a duo fusion spent, and it grows again (Suicune’s Aurora Beam after Freeze-Dry)', () => {
+    const g = run()
+    g.player.moves = [owned('auroraBeam', maxMoveLevel('auroraBeam')), owned('waterGun', maxMoveLevel('waterGun'))]
+    applyOffer(g, { kind: 'duo', from: ['auroraBeam', 'waterGun'], to: 'freezeDry' })
+    expect(g.player.banished.has('auroraBeam')).toBe(true)
+    killEnemy(g, spawnEnemy(g, 'suicune', 40, 0))
+    collectTm(g, g.pickups.find((k) => k.kind === 'tm')! as Extract<Game['pickups'][number], { kind: 'tm' }>)
+    chooseOffer(g, g.player.offers.find((o) => o.kind === 'tm' && o.id === 'auroraBeam')!)
+    expect(g.player.moves.find((m) => m.id === 'auroraBeam')?.level).toBe(1)
+    expect(offerPool(loadout(g)).some(([o]) => o.kind === 'move' && o.id === 'auroraBeam' && o.level === 2)).toBe(true)
+    // The fused partner stays spent.
+    expect(g.player.banished.has('waterGun')).toBe(true)
   })
 
   it('charge a tutor lesson from the run’s ₽, and ignore one the player can’t pay', () => {

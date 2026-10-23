@@ -117,12 +117,19 @@ export const forgetMove = (g: Game, id: MoveId) => {
   }
 }
 
-/** Learns (or raises) a TM card's move, paying a tutor's lesson, and celebrates. */
+/**
+ * Learns (or raises) a TM card's move, paying a tutor's lesson, and celebrates.
+ * A move learned anew grows like any other, even one a duo fusion spent or
+ * Esquecer forgot earlier in the run: the disc takes it off `banished`.
+ */
 const learn = (g: Game, tm: TmOffer, forgot: MoveId | null) => {
   const p = g.player
   const owned = p.moves.find((m) => m.id === tm.id)
   if (owned) owned.level = tm.level
-  else p.moves.push({ id: tm.id, level: 1, cooldown: 0.3, path: 0 })
+  else {
+    p.moves.push({ id: tm.id, level: 1, cooldown: 0.3, path: 0 })
+    p.banished.delete(tm.id)
+  }
   pay(g, tm)
   if (!g.tally.tms.includes(tm.id)) g.tally.tms.push(tm.id)
   // Co-op: each player's own, for their summary (`coopPayout`).

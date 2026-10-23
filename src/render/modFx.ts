@@ -3,7 +3,7 @@ import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import type { PokeType } from '../data/types'
 import type { ModId } from '../game/mods'
-import type { Attack } from '../game/types'
+import type { Attack, Motion } from '../game/types'
 import { art, toIconUrl } from './art'
 import { dashedRing } from './strokes'
 
@@ -38,6 +38,26 @@ const PALETTES: Record<PokeType, readonly [string, string, string]> = {
 }
 
 const palette = (type: PokeType) => PALETTES[type]
+
+/**
+ * The way a flying hitbox points, whatever motion a fork's mod gave it
+ * (Seek homes, Boomerang curves back, Halo puts it in orbit: along the ring),
+ * or null when it doesn't fly. A move's art that turns along its flight reads
+ * this instead of checking for `linear`, so a branch never makes it vanish.
+ */
+export const flightAngle = (m: Motion): number | null => {
+  switch (m.kind) {
+    case 'linear':
+    case 'homing':
+    case 'boomerang':
+    case 'drift':
+      return Math.atan2(m.vy, m.vx)
+    case 'orbit':
+      return m.angle + (m.spin < 0 ? -Math.PI / 2 : Math.PI / 2)
+    default:
+      return null
+  }
+}
 
 /** Patches of Trail ground, per type, variant and radius: a ragged, dithered blob with a darker rim. */
 const patches = canvasCache<string, HTMLCanvasElement>()

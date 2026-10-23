@@ -26,7 +26,7 @@ import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
 import { drawScale } from '../game/alphas'
 import { drawMegaAir, drawMegaAttack, drawMegaGround, drawMegaStone, megaLook } from './megaFx'
-import { drawModAttack, drawModGround } from './modFx'
+import { drawModAttack, drawModGround, flightAngle } from './modFx'
 import { drawMoveFxAttack, drawMoveFxGround } from './moveFx'
 import { drawConsumable, drawFlash, drawProps, drawSleep } from './props'
 import { drawSpecialAttack, drawSpecialAura, drawSpecialGround } from './specialFx'
@@ -267,7 +267,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       return
     }
     case 'arrow':
-      return blitRotated(ctx, FX.arrow(), a.x, a.y, m.kind === 'linear' ? Math.atan2(m.vy, m.vx) : 0)
+      return blitRotated(ctx, FX.arrow(), a.x, a.y, flightAngle(m) ?? 0)
     case 'shuriken':
       // Water Shuriken swells as it cuts (`signatures.ts`).
       return blitRotated(ctx, FX.shuriken(), a.x, a.y, a.age * 22, a.shape.kind === 'circle' && a.shape.r > 6 ? 2 : 1)

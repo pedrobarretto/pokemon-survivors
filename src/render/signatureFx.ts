@@ -9,6 +9,7 @@ import { FX } from './art'
 import { SIG_FX } from './signatureArt'
 import { sprites } from './sprites'
 import { dashedRing } from './strokes'
+import { flightAngle } from './modFx'
 import { localPlayer } from '../game/players'
 
 /**
@@ -282,9 +283,9 @@ export const drawSignatureAttack = (ctx: Ctx, a: Attack, t: number) => {
       return
     }
     case 'mudWave': {
-      if (m.kind !== 'linear') return
+      const dir = flightAngle(m)
+      if (dir === null) return
       const r = radiusOf(a, 9)
-      const dir = Math.atan2(m.vy, m.vx)
       ctx.globalAlpha = fadeOut(a, 0.2)
       // A crest of mud facing its way, darker behind, with clods flying off the top.
       const base = ctx.globalAlpha
@@ -326,8 +327,8 @@ export const drawSignatureAttack = (ctx: Ctx, a: Attack, t: number) => {
       return
     }
     case 'drill': {
-      if (m.kind !== 'linear') return
-      const angle = Math.atan2(m.vy, m.vx)
+      const angle = flightAngle(m)
+      if (angle === null) return
       const scale = Math.max(1, Math.round(radiusOf(a, 6) / 6))
       blitRotated(ctx, SIG_FX.drill()[Math.floor(a.age * 30) % 2]!, a.x, a.y, angle, scale)
       // Spin lines behind, and sparks while it grinds through a foe.
@@ -337,8 +338,8 @@ export const drawSignatureAttack = (ctx: Ctx, a: Attack, t: number) => {
         const d = 8 + i * 4 + ((a.age * 40) % 4)
         px(ctx, a.x - ux * d - uy * (i - 1) * 3, a.y - uy * d + ux * (i - 1) * 3, '#ffffff', 2, 1)
       }
-      const speed = Math.hypot(m.vx, m.vy)
-      if (speed < a.memo * 0.6) {
+      // Only a straight drill slows down to grind (`signatures.ts`).
+      if (m.kind === 'linear' && Math.hypot(m.vx, m.vy) < a.memo * 0.6) {
         for (let i = 0; i < 4; i++) {
           const s = hash2(a.id, Math.floor(t * 30) + i)
           px(ctx, a.x + ux * 6 + (s - 0.5) * 12, a.y + uy * 6 + (hash2(i, Math.floor(t * 30)) - 0.5) * 12, i % 2 ? '#fff0a0' : '#ffffff')
@@ -422,9 +423,9 @@ export const drawSignatureAttack = (ctx: Ctx, a: Attack, t: number) => {
       return
     }
     case 'psybeam': {
-      if (m.kind !== 'linear') return
+      const dir = flightAngle(m)
+      if (dir === null) return
       const r = radiusOf(a, 5)
-      const dir = Math.atan2(m.vy, m.vx)
       const wobble = Math.sin(a.age * 18 + a.memo * 1.3) * 3
       const x = a.x - Math.sin(dir) * wobble
       const y = a.y + Math.cos(dir) * wobble
