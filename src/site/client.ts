@@ -1,6 +1,6 @@
 /**
  * Progressive enhancement for the static site pages. The HTML is complete
- * without it; this only adds the Pokédex filters, shiny toggles and tap-to-walk,
+ * without it; this only adds the Pokédex filters, the cards' shiny toggles and tap-to-walk,
  * the donation form (with the account's @, the thank-you's code and the
  * supporters' wall), and remembers the language for the game. It must never
  * import game code (plain data like `data/donations` is fine), so the game and
@@ -121,14 +121,15 @@ const pokedex = (form: HTMLFormElement) => {
   }
   if (shinyAll instanceof HTMLInputElement) shinyAll.addEventListener('change', syncShinyAll)
 
-  for (const card of cards) {
-    card.querySelector('.shiny-btn')?.addEventListener('click', () => setShiny(card, !card.classList.contains('is-shiny')))
-    // Touch screens have no hover: tapping the sprite toggles the walk cycle.
-    card.querySelector('.stage')?.addEventListener('click', () => card.classList.toggle('walking'))
-  }
-
   apply()
   reveal()
+}
+
+// Every card, in the Pokédex and on a Pokémon's own page: ★ toggles the shiny, and touch screens
+// (no hover) tap the sprite to toggle the walk cycle.
+for (const card of document.querySelectorAll<HTMLElement>('.dex-card')) {
+  card.querySelector('.shiny-btn')?.addEventListener('click', () => setShiny(card, !card.classList.contains('is-shiny')))
+  card.querySelector('.stage')?.addEventListener('click', () => card.classList.toggle('walking'))
 }
 
 const form = document.querySelector<HTMLFormElement>('#dex-filters')

@@ -13,6 +13,7 @@ import { NIGHT_BOSSES } from '../data/halloween'
 import { ENDLESS, REAPER } from '../game/endless'
 import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
+import { LEGEND_IDS, type LegendId } from '../data/legends'
 
 /**
  * The site's Pokédex model: every species the game uses, derived from
@@ -239,3 +240,37 @@ const domainCast = (legend: RiftLegend): readonly EnemyId[] => {
 
 /** `m:ss` run clock, as shown on the HUD. */
 export const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}`
+
+/* ---------------- Pokémon pages ---------------- */
+
+/**
+ * A Pokémon with a page of its own (`/pokedex/<slug>/`): each playable family,
+ * its stages and branches together, and each legend. One big Pokédex can't rank
+ * for one Pokémon ("garchomp pokemon survivors") or be quoted by an AI chat; these can.
+ */
+export type DexPage =
+  | { kind: 'family'; id: PlayableId; slug: string; entries: readonly DexEntry[] }
+  | { kind: 'legend'; id: LegendId; slug: string; entries: readonly DexEntry[] }
+
+let pages: readonly DexPage[] | null = null
+
+/** Every Pokémon page: the starters, then the egg families, then the legends, in the game's order. */
+export const dexPages = (): readonly DexPage[] => {
+  if (pages) return pages
+  const entries = pokedex()
+  const families = [...STARTER_IDS, ...HATCHLING_IDS].map((id): DexPage => {
+    const own = entries.filter((e) => e.source.kind === 'starter' && e.source.id === id)
+    const stage = (e: DexEntry) => (e.source.kind === 'starter' ? e.source.stage : 0)
+    return { kind: 'family', id, slug: slugOf(PLAYABLE[id].line[0].name), entries: own.sort((a, b) => stage(a) - stage(b) || a.dex - b.dex) }
+  })
+  const legends = LEGEND_IDS.map((id): DexPage => {
+    const entry = entries.find((e) => e.source.kind === 'wild' && e.source.id === id)
+    if (!entry) throw new Error(`No Pokédex entry for legend ${id}`)
+    return { kind: 'legend', id, slug: entry.slug, entries: [entry] }
+  })
+  return (pages = [...families, ...legends])
+}
+
+/** The page a Pokédex entry belongs to, by species: its family's or its own (a legend). */
+export const pageOf = (entry: DexEntry): DexPage | undefined =>
+  dexPages().find((p) => p.entries.some((e) => e.dex === entry.dex))

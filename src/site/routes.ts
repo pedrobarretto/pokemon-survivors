@@ -55,20 +55,32 @@ export const absolute = (path: string) => `${SITE_URL}${path}`
 /** hreflang of each language (Spanish for all of Latin America and beyond, not one country). */
 export const HREFLANG = { pt: 'pt-BR', en: 'en', es: 'es' } as const satisfies Record<Locale, string>
 
-/** hreflang alternates of a route; English is the default for other languages, like the game pages. */
-export const alternates = (id: RouteId) => [
-  ...LOCALE_IDS.map((l) => ({ hreflang: HREFLANG[l], href: absolute(ROUTES[id][l]) })),
-  { hreflang: 'x-default', href: absolute(ROUTES[id].en) },
+/** One page's path in every language. */
+export type Paths = Readonly<Record<Locale, string>>
+
+/** hreflang alternates of a page; English is the default for other languages, like the game pages. */
+export const alternatesOf = (paths: Paths) => [
+  ...LOCALE_IDS.map((l) => ({ hreflang: HREFLANG[l], href: absolute(paths[l]) })),
+  { hreflang: 'x-default', href: absolute(paths.en) },
 ]
 
-/** sitemap.xml with every URL in every language, each listing its alternates. */
-export const sitemap = () => {
-  const urls = ROUTE_IDS.flatMap((id) =>
-    LOCALE_IDS.map((l) => ROUTES[id][l]).map((path) =>
+export const alternates = (id: RouteId) => alternatesOf(ROUTES[id])
+
+/** A Pokémon's own page, below the Pokédex: `/pokedex/charmander/`, `/en/pokedex/charmander/`. */
+export const dexPaths = (slug: string): Paths => ({
+  pt: `${ROUTES.pokedex.pt}${slug}/`,
+  en: `${ROUTES.pokedex.en}${slug}/`,
+  es: `${ROUTES.pokedex.es}${slug}/`,
+})
+
+/** sitemap.xml with every route and every `extra` page (the Pokémon pages) in every language, each listing its alternates. */
+export const sitemap = (extra: readonly Paths[] = []) => {
+  const urls = [...ROUTE_IDS.map((id) => ROUTES[id]), ...extra].flatMap((paths) =>
+    LOCALE_IDS.map((l) =>
       [
         '  <url>',
-        `    <loc>${absolute(path)}</loc>`,
-        ...alternates(id).map((a) => `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${a.href}" />`),
+        `    <loc>${absolute(paths[l])}</loc>`,
+        ...alternatesOf(paths).map((a) => `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${a.href}" />`),
         '  </url>',
       ].join('\n'),
     ),

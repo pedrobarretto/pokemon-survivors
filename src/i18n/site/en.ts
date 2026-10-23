@@ -110,6 +110,45 @@ export const siteEn: SiteMessages = {
     opens: (move: string) => `Starts with ${move}`,
   },
 
+  dexPage: {
+    title: (names: readonly string[]) => `${list(names)} in Pokémon Survivors: moves, evolution and abilities`,
+    legendTitle: (name: string) => `${name} in Pokémon Survivors: how to catch it, attacks and Legend Mode`,
+    description: (name: string, signature: string) =>
+      `${name} in Pokémon Survivors, the free Vampire Survivors-style Pokémon game: stats, evolution line, its starting move ${signature}, special attack, learnset and Abilities.`,
+    legendDescription: (name: string) =>
+      `${name} in Pokémon Survivors, the free Vampire Survivors-style Pokémon game: when it shows up, its boss attacks and how to catch it to play as it in Legend Mode.`,
+    h1: (names: readonly string[]) => `${list(names)} in Pokémon Survivors`,
+    family: (name: string) => `${name} and its evolutions`,
+    starter: (name: string, types: readonly string[], region: string, count: number) =>
+      `${name} is one of the ${count} starters in Pokémon Survivors, a ${list(types)} type from the ${region} region.`,
+    egg: (name: string, types: readonly string[]) => `${name} is one of the families that hatch from eggs in Pokémon Survivors, a ${list(types)} type.`,
+    legend: (name: string, types: readonly string[], count: number) => `${name} is one of the ${count} legendaries in Pokémon Survivors, a ${list(types)} type.`,
+    faq: 'FAQ',
+    unlockQ: (name: string) => `How do you unlock ${name} in Pokémon Survivors?`,
+    starterA: (name: string) => `${name} is a starter: it's unlocked from your very first run, nothing needed.`,
+    eggA: (name: string, egg: string) =>
+      `By hatching a ${egg}. Bosses, locked chests and rifts sometimes drop eggs, which hatch in the incubator with the steps you walk in runs; once ${name} hatches, it's yours to play for good.`,
+    evolveQ: (name: string) => `How does ${name} evolve?`,
+    evolveA: (steps: readonly string[]) => `Mid-run, as it levels up: ${list(steps)}.`,
+    step: (names: readonly string[], level: number) => `into ${either(names)} at Lv ${level}`,
+    evolveItem: 'Some forms need an evolution item, bought in the Kecleon Shop or found on bosses.',
+    signatureQ: (name: string) => `What is ${name}'s starting move?`,
+    signatureA: (name: string, move: string) => `${name} starts every run with ${move}, the family's signature move. The other moves come from level-ups as the line evolves.`,
+    megaQ: (name: string) => `Can ${name} Mega Evolve?`,
+    megaA: (megas: readonly string[]) =>
+      `Yes: at its final stage, into ${either(megas)}. The Mega Stone drops from the first rift legendary you beat in the run, and the Mega Evolution lasts 20 seconds.`,
+    catchQ: (name: string) => `How do you catch ${name} in Pokémon Survivors?`,
+    whereQ: (name: string) => `Where does ${name} show up?`,
+    awakens: (form: string) => `In Legend Mode, its second awakening (Lv 28) turns it into ${form}.`,
+    mega: 'Mega Evolution',
+    megaLine: (stone: string, ability: string) => `${stone} · Ability ${ability}`,
+    play: (name: string) => `Play as ${name}`,
+    others: 'Other playable Pokémon',
+    groups: { starter: 'Starters', egg: 'Eggs', legendary: 'Legendaries' },
+    back: 'See the full Pokédex',
+    page: (name: string) => `${name}'s page`,
+  },
+
   traits: {
     names: {
       healer: 'Healer',

@@ -134,6 +134,48 @@ export const sitePt = {
     opens: (move: string) => `Começa com ${move}`,
   },
 
+  /** A Pokémon's own page (`/pokedex/charmander/`): a family's stages together, or a legend. Names stay in English. */
+  dexPage: {
+    title: (names: readonly string[]) => `${list(names)} no Pokémon Survivors: golpes, evolução e habilidades`,
+    legendTitle: (name: string) => `${name} no Pokémon Survivors: como capturar, ataques e Modo Lendário`,
+    description: (name: string, signature: string) =>
+      `${name} no Pokémon Survivors, o jogo grátis estilo Vampire Survivors com Pokémon: status, linha evolutiva, o golpe inicial ${signature}, ataque especial, golpes que aprende e Habilidades.`,
+    legendDescription: (name: string) =>
+      `${name} no Pokémon Survivors, o jogo grátis estilo Vampire Survivors com Pokémon: quando aparece, seus ataques de chefe e como capturá-lo para jogar com ele no Modo Lendário.`,
+    h1: (names: readonly string[]) => `${list(names)} no Pokémon Survivors`,
+    /** A long family (Eevee and its eight) is named by its first stage. */
+    family: (name: string) => `${name} e suas evoluções`,
+    starter: (name: string, types: readonly string[], region: string, count: number) =>
+      `${name} é um dos ${count} iniciais do Pokémon Survivors, do tipo ${list(types)}, da região de ${region}.`,
+    egg: (name: string, types: readonly string[]) => `${name} é uma das famílias que saem dos ovos no Pokémon Survivors, do tipo ${list(types)}.`,
+    legend: (name: string, types: readonly string[], count: number) => `${name} é um dos ${count} lendários do Pokémon Survivors, do tipo ${list(types)}.`,
+    faq: 'Perguntas frequentes',
+    unlockQ: (name: string) => `Como liberar ${name} no Pokémon Survivors?`,
+    starterA: (name: string) => `${name} é um inicial: está liberado desde a primeira partida, sem precisar de nada.`,
+    eggA: (name: string, egg: string) =>
+      `Chocando um ${egg}. Chefes, baús trancados e fendas às vezes deixam ovos, que chocam na incubadora com os passos dados nas partidas; quando ${name} sai do ovo, fica jogável para sempre.`,
+    evolveQ: (name: string) => `Como ${name} evolui?`,
+    evolveA: (steps: readonly string[]) => `No meio da partida, ao subir de nível: ${list(steps)}.`,
+    /** One evolution step: the forms it can go to (a branching one names all of them) and the level. */
+    step: (names: readonly string[], level: number) => `em ${either(names)} no Nv ${level}`,
+    evolveItem: 'Algumas formas pedem um item de evolução, que você compra na Loja do Kecleon ou acha com os chefes.',
+    signatureQ: (name: string) => `Qual é o golpe inicial de ${name}?`,
+    signatureA: (name: string, move: string) => `${name} começa toda partida com ${move}, o golpe assinatura da família. Os outros golpes vêm dos level-ups, conforme a linha evolui.`,
+    megaQ: (name: string) => `${name} tem Mega Evolução?`,
+    megaA: (megas: readonly string[]) =>
+      `Sim: na evolução final, ${either(megas)}. A Mega Stone cai do primeiro lendário de fenda que você vence na partida, e a Mega Evolução dura 20 segundos.`,
+    catchQ: (name: string) => `Como capturar ${name} no Pokémon Survivors?`,
+    whereQ: (name: string) => `Onde ${name} aparece?`,
+    awakens: (form: string) => `No Modo Lendário, o segundo despertar (Nv 28) o transforma em ${form}.`,
+    mega: 'Mega Evolução',
+    megaLine: (stone: string, ability: string) => `${stone} · Habilidade ${ability}`,
+    play: (name: string) => `Jogar com ${name}`,
+    others: 'Outros Pokémon jogáveis',
+    groups: { starter: 'Iniciais', egg: 'Ovos', legendary: 'Lendários' },
+    back: 'Ver a Pokédex completa',
+    page: (name: string) => `Página de ${name}`,
+  },
+
   /** Enemy traits, built from `data/traits.ts`. */
   traits: {
     names: {

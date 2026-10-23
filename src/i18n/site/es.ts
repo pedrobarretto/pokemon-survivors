@@ -110,6 +110,45 @@ export const siteEs: SiteMessages = {
     opens: (move: string) => `Empieza con ${move}`,
   },
 
+  dexPage: {
+    title: (names: readonly string[]) => `${list(names)} en Pokémon Survivors: movimientos, evolución y habilidades`,
+    legendTitle: (name: string) => `${name} en Pokémon Survivors: cómo capturarlo, ataques y Modo Legendario`,
+    description: (name: string, signature: string) =>
+      `${name} en Pokémon Survivors, el juego de Pokémon gratis estilo Vampire Survivors: estadísticas, línea evolutiva, su movimiento inicial ${signature}, ataque especial, movimientos que aprende y Habilidades.`,
+    legendDescription: (name: string) =>
+      `${name} en Pokémon Survivors, el juego de Pokémon gratis estilo Vampire Survivors: cuándo aparece, sus ataques de jefe y cómo capturarlo para jugar con él en el Modo Legendario.`,
+    h1: (names: readonly string[]) => `${list(names)} en Pokémon Survivors`,
+    family: (name: string) => `${name} y sus evoluciones`,
+    starter: (name: string, types: readonly string[], region: string, count: number) =>
+      `${name} es uno de los ${count} iniciales de Pokémon Survivors, de tipo ${list(types)}, de la región de ${region}.`,
+    egg: (name: string, types: readonly string[]) => `${name} es una de las familias que salen de huevos en Pokémon Survivors, de tipo ${list(types)}.`,
+    legend: (name: string, types: readonly string[], count: number) => `${name} es uno de los ${count} legendarios de Pokémon Survivors, de tipo ${list(types)}.`,
+    faq: 'Preguntas frecuentes',
+    unlockQ: (name: string) => `¿Cómo desbloquear a ${name} en Pokémon Survivors?`,
+    starterA: (name: string) => `${name} es un inicial: está desbloqueado desde la primera partida, sin necesitar nada.`,
+    eggA: (name: string, egg: string) =>
+      `Eclosionando un ${egg}. Los jefes, los cofres cerrados y las grietas a veces sueltan huevos, que eclosionan en la incubadora con los pasos que das en las partidas; cuando ${name} sale del huevo, queda jugable para siempre.`,
+    evolveQ: (name: string) => `¿Cómo evoluciona ${name}?`,
+    evolveA: (steps: readonly string[]) => `En plena partida, al subir de nivel: ${list(steps)}.`,
+    step: (names: readonly string[], level: number) => `a ${either(names)} en el Nv ${level}`,
+    evolveItem: 'Algunas formas piden un objeto evolutivo, que se compra en la Tienda de Kecleon o se encuentra con los jefes.',
+    signatureQ: (name: string) => `¿Cuál es el movimiento inicial de ${name}?`,
+    signatureA: (name: string, move: string) => `${name} empieza cada partida con ${move}, el movimiento distintivo de la familia. Los demás movimientos llegan con los niveles, a medida que la línea evoluciona.`,
+    megaQ: (name: string) => `¿${name} tiene Megaevolución?`,
+    megaA: (megas: readonly string[]) =>
+      `Sí: en su evolución final, a ${either(megas)}. La Megapiedra la suelta el primer legendario de grieta que vences en la partida, y la Megaevolución dura 20 segundos.`,
+    catchQ: (name: string) => `¿Cómo capturar a ${name} en Pokémon Survivors?`,
+    whereQ: (name: string) => `¿Dónde aparece ${name}?`,
+    awakens: (form: string) => `En el Modo Legendario, su segundo despertar (Nv 28) lo transforma en ${form}.`,
+    mega: 'Megaevolución',
+    megaLine: (stone: string, ability: string) => `${stone} · Habilidad ${ability}`,
+    play: (name: string) => `Jugar con ${name}`,
+    others: 'Otros Pokémon jugables',
+    groups: { starter: 'Iniciales', egg: 'Huevos', legendary: 'Legendarios' },
+    back: 'Ver la Pokédex completa',
+    page: (name: string) => `Página de ${name}`,
+  },
+
   /** Enemy traits, built from `data/traits.ts`. */
   traits: {
     names: {

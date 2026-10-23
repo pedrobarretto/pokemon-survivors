@@ -1,7 +1,7 @@
 import { LOCALE_IDS, type Locale } from '../i18n'
 import { SITE_MESSAGES } from '../i18n/site'
 import { html, jsonLd, raw, type Html } from './html'
-import { absolute, alternates, HREFLANG, REPO_URL, ROUTES, SOCIAL_IDS, SOCIALS, type PageId, type RouteId } from './routes'
+import { absolute, alternatesOf, HREFLANG, REPO_URL, ROUTES, SOCIAL_IDS, SOCIALS, type PageId, type Paths, type RouteId } from './routes'
 
 export type PageMeta = {
   id: PageId
@@ -12,15 +12,21 @@ export type PageMeta = {
   schema?: readonly Record<string, unknown>[]
   /** Page-specific CSS generated from data (the Pokédex sprite sheets), inlined as is. */
   css?: string
+  /** A page below the section `id` (a Pokémon's page under the Pokédex): its name in the breadcrumbs and its paths. */
+  sub?: { name: string; paths: Paths }
 }
+
+const pathsOf = ({ id, sub }: Pick<PageMeta, 'id' | 'sub'>): Paths => sub?.paths ?? ROUTES[id]
 
 const NAV: readonly RouteId[] = ['play', 'pokedex', 'guide', 'changelog']
 
 const others = (locale: Locale) => LOCALE_IDS.filter((l) => l !== locale)
 
-const head = ({ id, locale, title, description, schema = [], css }: PageMeta) => {
+const head = ({ id, locale, title, description, schema = [], css, sub }: PageMeta) => {
   const m = SITE_MESSAGES[locale]
-  const url = absolute(ROUTES[id][locale])
+  const paths = pathsOf({ id, sub })
+  const url = absolute(paths[locale])
+  const section = absolute(ROUTES[id][locale])
   const graph = [
     {
       '@type': 'WebPage',
@@ -38,7 +44,8 @@ const head = ({ id, locale, title, description, schema = [], css }: PageMeta) =>
       '@id': `${url}#breadcrumb`,
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Pokémon Survivors', item: absolute(ROUTES.play[locale]) },
-        { '@type': 'ListItem', position: 2, name: m.nav[id], item: url },
+        { '@type': 'ListItem', position: 2, name: m.nav[id], item: section },
+        ...(sub ? [{ '@type': 'ListItem', position: 3, name: sub.name, item: url }] : []),
       ],
     },
     ...schema,
@@ -51,7 +58,7 @@ const head = ({ id, locale, title, description, schema = [], css }: PageMeta) =>
     <title>${title}</title>
     <meta name="description" content="${description}" />
     <link rel="canonical" href="${url}" />
-    ${alternates(id).map((a) => html`<link rel="alternate" hreflang="${a.hreflang}" href="${a.href}" />\n    `)}<meta property="og:type" content="website" />
+    ${alternatesOf(paths).map((a) => html`<link rel="alternate" hreflang="${a.hreflang}" href="${a.href}" />\n    `)}<meta property="og:type" content="website" />
     <meta property="og:site_name" content="Pokémon Survivors" />
     <meta property="og:url" content="${url}" />
     <meta property="og:title" content="${title}" />
@@ -72,20 +79,22 @@ const head = ({ id, locale, title, description, schema = [], css }: PageMeta) =>
   </head>`
 }
 
-const header = (id: PageId, locale: Locale) => {
+const header = (meta: PageMeta) => {
+  const { id, locale } = meta
   const m = SITE_MESSAGES[locale]
+  const paths = pathsOf(meta)
   return html`<a class="skip" href="#content">${m.skip}</a>
   <header class="site-header">
     <a class="brand" href="${ROUTES.play[locale]}"><img src="/assets/pokemon/4/portrait.png" width="40" height="40" alt="" /><span>Pokémon<br />Survivors</span></a>
     <nav class="site-nav" aria-label="${m.nav.label}">
       ${NAV.map(
-        (r) => html`<a href="${ROUTES[r][locale]}" class="${r === 'play' ? 'nav-play' : ''}"${r === id ? html` aria-current="page"` : ''}>${m.nav[r]}</a>`,
+        (r) => html`<a href="${ROUTES[r][locale]}" class="${r === 'play' ? 'nav-play' : ''}"${r === id && !meta.sub ? html` aria-current="page"` : ''}>${m.nav[r]}</a>`,
       )}
     </nav>
     <nav class="lang" aria-label="${m.nav.language}">
       ${LOCALE_IDS.map(
         (l) =>
-          html`<a href="${ROUTES[id][l]}" hreflang="${HREFLANG[l]}" lang="${SITE_MESSAGES[l].lang.tag}" data-lang="${l}"${l === locale ? html` aria-current="true"` : html` title="${SITE_MESSAGES[l].lang.switchTo}"`}>${SITE_MESSAGES[l].lang.short}</a>`,
+          html`<a href="${paths[l]}" hreflang="${HREFLANG[l]}" lang="${SITE_MESSAGES[l].lang.tag}" data-lang="${l}"${l === locale ? html` aria-current="true"` : html` title="${SITE_MESSAGES[l].lang.switchTo}"`}>${SITE_MESSAGES[l].lang.short}</a>`,
       )}
     </nav>
   </header>`
@@ -112,7 +121,7 @@ export const layout = (meta: PageMeta, main: Html) => {
 <html lang="${m.lang.tag}">
   ${head(meta).__html}
   <body>
-  ${header(meta.id, meta.locale).__html}
+  ${header(meta).__html}
   <main id="content" class="site-main">
 ${main.__html}
   </main>

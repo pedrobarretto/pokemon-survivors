@@ -27,6 +27,37 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-23',
+    title: { pt: 'Uma página para cada Pokémon', en: 'A page for every Pokémon', es: 'Una página para cada Pokémon' },
+    highlights: [
+      { pt: 'Cada Pokémon jogável ganhou sua página na Pokédex do site: os 27 iniciais, as 63 famílias dos ovos e os 23 lendários.', en: 'Every playable Pokémon has its own page in the site’s Pokédex: the 27 starters, the 63 egg families and the 23 legendaries.', es: 'Cada Pokémon jugable tiene su propia página en la Pokédex del sitio: los 27 iniciales, las 63 familias de los huevos y los 23 legendarios.' },
+      { pt: 'Cada página responde o que mais se pergunta: como liberar, como evolui, qual o golpe inicial e se tem Mega Evolução, ou como capturar um lendário.', en: 'Each page answers what people ask most: how to unlock it, how it evolves, its starting move and whether it Mega Evolves, or how to catch a legendary.', es: 'Cada página responde lo que más se pregunta: cómo desbloquearlo, cómo evoluciona, su movimiento inicial y si tiene Megaevolución, o cómo capturar a un legendario.' },
+      { pt: 'Quem abre o jogo pela primeira vez no endereço em inglês agora começa no idioma do navegador (português ou espanhol), não mais em inglês.', en: 'Opening the game for the first time at the English address now starts in your browser’s language (Portuguese or Spanish) instead of always English.', es: 'Quien abre el juego por primera vez en la dirección en inglés ahora empieza en el idioma de su navegador (español o portugués), ya no siempre en inglés.' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Páginas dos Pokémon', en: 'Pokémon pages', es: 'Páginas de los Pokémon' },
+        notes: [
+          {
+            pt: 'Na Pokédex, o nome de cada Pokémon jogável leva à página da família: os cards de cada estágio e ramificação, com status, linha evolutiva, golpes, especial e Habilidades, as Megas da linha e perguntas frequentes. Os lendários têm a sua, com quando aparecem, os ataques de chefe e como capturá-los para o Modo Lendário.',
+            en: 'In the Pokédex, every playable Pokémon’s name leads to its family’s page: the cards of each stage and branch, with stats, evolution line, moves, special and Abilities, the line’s Megas and a FAQ. Legendaries get their own, with when they show up, their boss attacks and how to catch them for Legend Mode.',
+            es: 'En la Pokédex, el nombre de cada Pokémon jugable lleva a la página de su familia: las cartas de cada etapa y rama, con estadísticas, línea evolutiva, movimientos, especial y Habilidades, las Megas de la línea y preguntas frecuentes. Los legendarios tienen la suya, con cuándo aparecen, sus ataques de jefe y cómo capturarlos para el Modo Legendario.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Idioma', en: 'Language', es: 'Idioma' },
+        notes: [
+          {
+            pt: 'O endereço em inglês (/en/) passou a seguir o idioma do navegador na primeira visita, como o principal; o idioma que você escolhe nos Ajustes continua valendo sempre.',
+            en: 'The English address (/en/) now follows your browser’s language on a first visit, like the main one; the language you pick in Settings still always wins.',
+            es: 'La dirección en inglés (/en/) ahora sigue el idioma de tu navegador en la primera visita, como la principal; el idioma que eliges en Ajustes sigue valiendo siempre.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-22',
     title: { pt: 'A economia ganhou sentido', en: 'The economy gets a purpose', es: 'La economía cobra sentido' },
     highlights: [

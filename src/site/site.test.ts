@@ -3,14 +3,15 @@ import { CHANGELOG } from './changelog'
 import { SITE_PAGES, sitemap } from '.'
 import { LOCALE_IDS } from '../i18n'
 import { absolute, HREFLANG, ROUTE_IDS, ROUTES } from './routes'
+import { dexPages } from './pokedex'
+import { LEGEND_IDS } from '../data/legends'
 
 describe('site pages', () => {
   it('render with their own canonical and hreflang links to every language', () => {
     for (const page of SITE_PAGES) {
       const doc = page.render()
-      const id = ROUTE_IDS.find((r) => LOCALE_IDS.some((l) => ROUTES[r][l] === page.path))!
       expect(doc).toContain(`<link rel="canonical" href="${absolute(page.path)}" />`)
-      for (const l of LOCALE_IDS) expect(doc).toContain(`hreflang="${HREFLANG[l]}" href="${absolute(ROUTES[id][l])}"`)
+      for (const l of LOCALE_IDS) expect(doc).toContain(`hreflang="${HREFLANG[l]}" href="${absolute(page.paths[l])}"`)
       expect(doc.match(/<h1>/g)).toHaveLength(1)
     }
   })
@@ -18,6 +19,14 @@ describe('site pages', () => {
   it('are all in the sitemap, along with the game pages', () => {
     const xml = sitemap()
     for (const id of ROUTE_IDS) for (const path of Object.values(ROUTES[id])) expect(xml).toContain(`<loc>${absolute(path)}</loc>`)
+    for (const page of SITE_PAGES) expect(xml).toContain(`<loc>${absolute(page.path)}</loc>`)
+  })
+
+  it('give every playable family and every legend a page of its own, under its own path', () => {
+    const pages = dexPages()
+    expect(pages.filter((p) => p.kind === 'legend')).toHaveLength(LEGEND_IDS.length)
+    expect(new Set(pages.map((p) => p.slug)).size).toBe(pages.length)
+    for (const p of pages) expect(p.entries.length, p.slug).toBeGreaterThan(0)
   })
 })
 

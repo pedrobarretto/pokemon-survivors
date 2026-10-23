@@ -31,7 +31,10 @@ const readSaved = () => {
   }
 }
 
-/** A localized page (`/en/` and `/es/` set `data-locale`) beats the browser language: search visitors play in the language they searched in. */
+/**
+ * A localized page (`/es/` sets `data-locale`) beats the browser language: search visitors play in the language they searched in.
+ * `/en/` doesn't set it: it's the x-default page, which search shows a Spanish browser when `/es/` doesn't rank, so the browser decides there.
+ */
 const preferredLanguages = (): readonly string[] => {
   const page = globalThis.document?.documentElement.dataset.locale
   return page ? [page] : (globalThis.navigator?.languages ?? [])
