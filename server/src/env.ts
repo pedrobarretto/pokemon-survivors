@@ -38,8 +38,8 @@ export const loadEnv = () => {
         ? { token: process.env.DISCORD_BOT_TOKEN, guildId: process.env.DISCORD_GUILD_ID }
         : null,
     /**
-     * Optional: OpenRouter, for the ideas staff tag the bot on in the Discord (`src/ideaWriter.ts`). `OPENROUTER_MODEL`
-     * picks the model. Without the key, tagging the bot adds nothing.
+     * Optional: OpenRouter, for the Discord staff's bot (`src/staffAgent.ts`, `src/ideaWriter.ts`). `OPENROUTER_MODEL`
+     * picks the model (one with tool calls). Without the key, tagging the bot does nothing and `/ask` and `/idea` say so.
      */
     openRouter: process.env.OPENROUTER_API_KEY
       ? { key: process.env.OPENROUTER_API_KEY, model: process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-5.5' }

@@ -15,6 +15,7 @@ import { friendStore } from './friends'
 import { giftStore } from './gifts'
 import { moderationStore } from './moderation'
 import { rankingStore } from './ranking'
+import { staffDesk } from './staffDesk'
 import { supporterStore } from './supporters'
 import { suggestionStore } from './suggestions'
 import { loadEnv } from './env'
@@ -41,11 +42,19 @@ void checks.resume()
 void gifts.settle().catch((err) => console.error('invites settle failed', err))
 // The Desafio do dia's ribbons, once a day closes (safe on every instance: each gift has a key per day).
 createRibbons(ranking, gifts).start()
-// The community Discord's bot: introduction gate, patch notes, daily posts, the idea review and staff's tagged ideas (only with its env).
+// Stored always; posted to #bug-reports when the bot is set up.
+const bugReports = createBugReports({
+  store: bugReportStore(sql),
+  forum: env.discord ? discordBugForum({ ...env.discord, forumId: env.discordBugForumId }) : null,
+  handleOf: async (userId) => (await ranking.profileName(userId))?.handle ?? null,
+})
+// The community Discord's bot: introduction gate, patch notes, daily posts, the idea review and the staff's tools (only with its env).
 // New ideas wait for staff to approve them in #idea-review; without the bot they wait for the admin.
 let bot: ReturnType<typeof startDiscord> | null = null
 const suggestions = suggestionStore(sql, { onPosted: (idea) => bot?.reviewIdea(idea) })
-if (env.discord) bot = startDiscord(env.discord, { store: discordStore(sql), ranking, ideas: suggestions, openRouter: env.openRouter })
+if (env.discord) {
+  bot = startDiscord(env.discord, { store: discordStore(sql), ranking, ideas: suggestions, desk: staffDesk(sql), bugs: bugReports, openRouter: env.openRouter })
+}
 
 const app = createApp({
   store: saveStore(sql),
@@ -59,12 +68,7 @@ const app = createApp({
   festival: festivalStore(sql),
   discord,
   suggestions,
-  // Stored always; posted to #bug-reports when the bot is set up.
-  bugReports: createBugReports({
-    store: bugReportStore(sql),
-    forum: env.discord ? discordBugForum({ ...env.discord, forumId: env.discordBugForumId }) : null,
-    handleOf: async (userId) => (await ranking.profileName(userId))?.handle ?? null,
-  }),
+  bugReports,
   admin: adminStore(sql, clerk, env.adminEmails),
   moderation: moderationStore(sql),
   webhooks: { stripeSecret: env.stripeWebhookSecret, stripePaymentLink: env.stripePaymentLink, abacatePaySecret: env.abacatePayWebhookSecret },

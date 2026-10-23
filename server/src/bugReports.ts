@@ -207,6 +207,22 @@ export const createBugReports = (deps: {
       }
       return { ok: true, id }
     },
+
+    /**
+     * A report staff filed from the Discord (`staffAgent.ts`, `/bug`): no
+     * rate limit and no technical info, credited to `userId` (the staff's
+     * linked account, if any), signed `from`. Waits for the forum so the bot
+     * can link the thread: its id, or null without a forum.
+     */
+    fileFromDiscord: async (text: string, from: string, userId: string | null) => {
+      const report: BugReport = { text: clip(text, BUG_REPORT.text.max), tech: null }
+      const id = await deps.store.save(report, userId)
+      console.log(`bug report ${id} filed from discord by ${from}`)
+      if (!deps.forum) return { id, threadId: null }
+      const threadId = await deps.forum.post(bugThread(report, from))
+      await deps.store.posted(id, threadId)
+      return { id, threadId }
+    },
   }
 }
 

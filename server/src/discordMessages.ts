@@ -7,7 +7,10 @@ import { DISCORD_GIFT } from '../../src/game/gifts'
 import type { Difficulty } from '../../src/game/difficulty'
 import { isHalloweenDay } from '../../src/game/halloween'
 import type { Suggestion } from '../../src/game/suggestions'
+import { en } from '../../src/i18n/en'
 import type { ChangelogUpdate } from '../../src/site/changelog'
+import type { PlayerProfile } from './staffDesk'
+import { STAFF_GIFTS, type GiftRefusal, type SentToday, type StaffGift } from './staffGifts'
 import type { Review } from './suggestions'
 
 /**
@@ -231,28 +234,86 @@ export const reviewedColor = (review: Review) => (review === 'open' ? GREEN : 0x
 /** Where the board opens (`?ideias` in `main.ts`). */
 const BOARD_URL = `${PLAY_URL}?ideias`
 
-/** The bot's reply when staff tagged it on a suggestion and it went on the board. */
-export const addedMessage = (idea: Pick<Suggestion, 'title' | 'body' | 'handle'>, messageId: string): OutgoingMessage => ({
-  allowed_mentions: { parse: [] },
-  message_reference: replyTo(messageId),
-  embeds: [
-    {
-      title: `💡 ${idea.title}`.slice(0, 256),
-      url: BOARD_URL,
-      description: [idea.body && escape(idea.body), `Added to the suggestion board's Backlog for @${escape(idea.handle)}. Vote for it in the game!`].filter(Boolean).join('\n\n'),
-      color: GREEN,
-    },
-  ],
+/** An idea staff put on the board from the Discord, as the bot's reply shows it. */
+export const ideaEmbed = (idea: Pick<Suggestion, 'title' | 'body' | 'handle'>): Embed => ({
+  title: `💡 ${idea.title}`.slice(0, 256),
+  url: BOARD_URL,
+  description: [idea.body && escape(idea.body), `Added to the suggestion board's Backlog for @${escape(idea.handle)}. Vote for it in the game!`].filter(Boolean).join('\n\n'),
+  color: GREEN,
 })
 
-/** Why the bot didn't add an idea it was tagged on: no linked game account to credit, or no suggestion in the messages. */
+/** Why an idea didn't go on the board: no linked game account to credit, or no suggestion in the messages. */
 export type NotAdded = 'unlinked' | 'none'
 
-export const notAddedMessage = (why: NotAdded, messageId: string): OutgoingMessage => ({
+export const NOT_ADDED = {
+  unlinked: 'I can’t credit this one: neither of you has a game account with a @handle linked to Discord. Link Discord in the game (its Discord screen) and try again.',
+  none: 'I couldn’t find a suggestion there. Reply to the message with the idea, or tell me what to add.',
+} as const satisfies Record<NotAdded, string>
+
+/* ---------------- The staff's bot ---------------- */
+
+/** A staff gift in words: `a Rare Egg`, `₽1,500`. */
+export const giftLabel = (gift: StaffGift) => (gift.kind === 'egg' ? `a ${en.eggs.tiers[gift.tier]}` : `₽${gift.amount.toLocaleString('en-US')}`)
+
+/** Who a player is in a staff message: their @handle, and their Discord account when linked. */
+export const playerName = (p: Pick<PlayerProfile, 'handle' | 'name' | 'discordId'>) =>
+  `${p.handle ? `@${escape(p.handle)}` : escape(p.name ?? 'a player without a handle')}${p.discordId ? ` (<@${p.discordId}>)` : ''}`
+
+/** What the bot says it sent: always the exact gift and player, whatever the LLM wrote. */
+export const giftReceipt = (gift: StaffGift, to: PlayerProfile, sent: boolean) =>
+  sent ? `🎁 Sent ${giftLabel(gift)} to ${playerName(to)}: it waits in their gift box in the game.` : `🎁 ${giftLabel(gift)} for ${playerName(to)} went out from this message already.`
+
+/** Why a staff gift didn't go (`left`: what's left of today's allowance, null for the owner). */
+export const giftRefusalText = (why: GiftRefusal | 'unknown' | 'who' | 'kind', gift: StaffGift | null, left: SentToday | null) => {
+  const allowance = left ? ` Left for you today: ${left.eggs} egg${left.eggs === 1 ? '' : 's'} and ₽${left.coins.toLocaleString('en-US')}.` : ''
+  switch (why) {
+    case 'who':
+      return 'Tell me who: a Discord mention or a game @handle.'
+    case 'unknown':
+      return 'I found no game account for that player (by @handle, or linked to that Discord account).'
+    case 'kind':
+      return 'I can send a common, rare or ultra egg, or ₽ with an amount.'
+    case 'tier':
+      return `${gift ? giftLabel(gift) : 'That egg'} is past what staff can send (${STAFF_GIFTS.tiers.staff.map((t) => en.eggs.tiers[t]).join(' or ')}).`
+    case 'amount':
+      return `One gift carries ₽1 to ₽${STAFF_GIFTS.coinsPerGift.staff.toLocaleString('en-US')}.`
+    case 'eggs':
+    case 'coins':
+      return `That's past your daily allowance (it resets at midnight, Brasília time).${allowance}`
+  }
+}
+
+/** The staff log's line for a gift sent from the Discord. */
+export const giftLogMessage = (o: { staffId: string; gift: StaffGift; to: PlayerProfile; link: string | null }): OutgoingMessage => ({
   allowed_mentions: { parse: [] },
-  message_reference: replyTo(messageId),
-  content:
-    why === 'unlinked'
-      ? 'I can’t credit this one: neither of you has a game account with a @handle linked to Discord. Link Discord in the game (its Discord screen) and tag me again.'
-      : 'I couldn’t find a suggestion there. Reply to the message with the idea, or tell me what to add.',
+  content: `🎁 <@${o.staffId}> sent ${giftLabel(o.gift)} to ${playerName(o.to)}${o.link ? ` · ${o.link}` : ''}`,
+})
+
+const daysAgo = (iso: string, now: number) => {
+  const days = Math.floor((now - Date.parse(iso)) / 86_400_000)
+  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`
+}
+
+const difficultyName = (d: string) => {
+  const names: Partial<Record<string, string>> = DIFFICULTY_NAMES
+  return names[d] ?? d
+}
+
+/** A player's profile, for staff (`/player`, and what the LLM reads). */
+export const playerLines = (p: PlayerProfile, now = Date.now()) =>
+  [
+    `**${playerName(p)}**${p.name && p.handle ? ` · ${escape(p.name)}` : ''}`,
+    `Joined ${p.joined.slice(0, 10)} · last seen ${daysAgo(p.seen, now)}${p.discordId ? '' : ' · Discord not linked'}`,
+    p.supporter ? (p.supporter === 'gold' ? 'Gold Supporter' : 'Supporter') : 'Not a supporter',
+    p.banned ? `⛔ Banned ${p.banned.at.slice(0, 10)}${p.banned.reason ? `: ${escape(p.banned.reason)}` : ''}` : '',
+    p.runs.length ? `Runs: ${p.runs.map((r) => `${difficultyName(r.difficulty)} ${r.runs} (${r.wins} won, best ${formatTime(r.best)})`).join(' · ')}` : 'No finished runs',
+    p.handle ? `${PLAY_URL}?u=${p.handle}` : '',
+  ].filter(Boolean)
+
+/** A reply to staff: the text (clipped to Discord's limit) and embeds, never pinging anyone. */
+export const staffReply = (text: string, opts: { replyTo?: string; embeds?: readonly Embed[] } = {}): OutgoingMessage => ({
+  allowed_mentions: { parse: [] },
+  content: text.length > 1990 ? `${text.slice(0, 1989)}…` : text,
+  ...(opts.embeds?.length ? { embeds: opts.embeds.slice(0, 10) } : {}),
+  ...(opts.replyTo ? { message_reference: replyTo(opts.replyTo) } : {}),
 })
