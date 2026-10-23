@@ -416,7 +416,7 @@ export const sacredSword = (g: Game, s: CastStats) => {
   for (let i = 0; i < s.amount; i++) {
     const dir = i % 2 === 0 ? 1 : -1
     const first = g.attacks.length
-    sweep(g, s, look('sacredSword', 'fighting', 'sacredSword'), { from: aim - (dir * SWORD_ARC) / 2, arc: dir * SWORD_ARC, time: SWORD_TIME, length: 46 * s.area, segments: 5, r: 7 * s.area, inner: 10 })
+    sweep(g, s, look('sacredSword', 'fighting', 'sacredSword'), { from: aim - (dir * SWORD_ARC) / 2, arc: dir * SWORD_ARC, time: SWORD_TIME, length: 46 * s.area, segments: 5, r: 7, inner: 10 })
     const last = g.attacks.length - 1
     for (let k = first; k <= last; k++) {
       const a = g.attacks[k]!

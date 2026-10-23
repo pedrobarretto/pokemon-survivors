@@ -137,7 +137,7 @@ const yawn = (g: Game, s: CastStats) => {
 const iceBeam = (g: Game, s: CastStats) => {
   const l = look('iceBeam', 'ice', 'iceBeam')
   for (const angle of fan(aimAngle(g, 240), s.amount, ICE_BEAM.spread)) {
-    sweep(g, s, l, { from: angle, arc: 0, time: s.duration, length: ICE_BEAM.length * s.area, segments: ICE_BEAM.segments, r: ICE_BEAM.r * s.area })
+    sweep(g, s, l, { from: angle, arc: 0, time: s.duration, length: ICE_BEAM.length * s.area, segments: ICE_BEAM.segments, r: ICE_BEAM.r })
     g.attacks[g.attacks.length - 1]!.flip = true
   }
   cast(g, 'iceBeam')
@@ -224,7 +224,7 @@ const auroraBeam = (g: Game, s: CastStats) => {
   const l = look('auroraBeam', 'ice', 'auroraBeam')
   for (let i = 0; i < s.amount; i++) {
     const from = center + (i / s.amount) * TAU - AURORA.arc / 2
-    sweep(g, s, l, { from, arc: AURORA.arc, time: s.duration, length: AURORA.length * s.area, segments: AURORA.segments, r: AURORA.r * s.area })
+    sweep(g, s, l, { from, arc: AURORA.arc, time: s.duration, length: AURORA.length * s.area, segments: AURORA.segments, r: AURORA.r })
     g.attacks[g.attacks.length - 1]!.flip = true
   }
   cast(g, 'auroraBeam')

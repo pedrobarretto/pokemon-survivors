@@ -214,7 +214,7 @@ export const EGG_MOVES_3 = {
       for (let i = 0; i < s.amount; i++) {
         const dir = i % 2 === 0 ? 1 : -1
         const first = g.attacks.length
-        sweep(g, s, look('bitterBlade', 'fire', 'bitterBlade'), { from: aim - (dir * BITTER_ARC) / 2, arc: dir * BITTER_ARC, time: BITTER_TIME, length: 44 * s.area, segments: 5, r: 7 * s.area, inner: 10 })
+        sweep(g, s, look('bitterBlade', 'fire', 'bitterBlade'), { from: aim - (dir * BITTER_ARC) / 2, arc: dir * BITTER_ARC, time: BITTER_TIME, length: 44 * s.area, segments: 5, r: 7, inner: 10 })
         const last = g.attacks.length - 1
         for (let k = first; k <= last; k++) {
           const a = g.attacks[k]!
@@ -455,7 +455,7 @@ export const EGG_MOVES_3 = {
     fire: (g, s) => {
       for (const angle of fan(aimAngle(g, 160), s.amount, 0.35)) {
         const first = g.attacks.length
-        sweep(g, s, look('chargeBeam', 'electric', 'chargeBeam'), { from: angle, arc: 0, time: s.duration, length: 120 * s.area, segments: 9, r: 6 * s.area, inner: 10 })
+        sweep(g, s, look('chargeBeam', 'electric', 'chargeBeam'), { from: angle, arc: 0, time: s.duration, length: 120 * s.area, segments: 9, r: 6, inner: 10 })
         const last = g.attacks.length - 1
         for (let k = first; k < last; k++) g.attacks[k]!.visual = 'hitbox'
       }

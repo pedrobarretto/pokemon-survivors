@@ -246,10 +246,29 @@ const drawYawnBubble = (ctx: Ctx, a: Attack, t: number) => {
   ctx.globalAlpha = 1
 }
 
+/** Whether `b` is another slice of `a`'s beam: cast together, on the same line. */
+const sameBeam = (a: Attack, b: Attack | undefined) =>
+  b !== undefined && b.visual === a.visual && b.owner === a.owner && b.age === a.age && b.motion.kind === 'orbit' && a.motion.kind === 'orbit' && b.motion.angle === a.motion.angle
+
+/**
+ * Half the gap from slice `i` to its neighbor on the beam, +1 px so they join:
+ * the slices are spawned one after the other, and the twin ring spaces its
+ * copy wider than the cast (`MOD.twin`). `fallback` for a lone slice.
+ */
+const sliceHalf = (attacks: readonly Attack[], i: number, fallback: number) => {
+  const a = attacks[i]!
+  const m = a.motion
+  if (m.kind !== 'orbit') return fallback
+  const before = attacks[i - 1]
+  const n = sameBeam(a, before) ? before : sameBeam(a, attacks[i + 1]) ? attacks[i + 1] : undefined
+  return n && n.motion.kind === 'orbit' ? Math.max(5, Math.abs(m.radius - n.motion.radius) / 2 + 1) : fallback
+}
+
 /** Beams made of orbit slices (Ice Beam, Aurora Beam), layer by layer over every slice so they join into one. */
 const drawBeams = (ctx: Ctx, g: Game, t: number) => {
   for (let layer = 0; layer < 3; layer++) {
-    for (const a of g.attacks) {
+    for (let i = 0; i < g.attacks.length; i++) {
+      const a = g.attacks[i]!
       const m = a.motion
       if ((a.visual !== 'iceBeam' && a.visual !== 'auroraBeam') || a.age < 0 || m.kind !== 'orbit') continue
       const ice = a.visual === 'iceBeam'
@@ -259,7 +278,7 @@ const drawBeams = (ctx: Ctx, g: Game, t: number) => {
       const w = r * Math.min(1, a.age / 0.05) * Math.min(1, (1 - k) / 0.3 + 0.15)
       const length = (ice ? ICE_BEAM.length : AURORA.length) * (r / (ice ? ICE_BEAM.r : AURORA.r))
       const segments = ice ? ICE_BEAM.segments : AURORA.segments
-      const half = Math.max(5, (length - 12) / (segments - 1) / 2 + 1)
+      const half = sliceHalf(g.attacks, i, Math.max(5, (length - 12) / (segments - 1) / 2 + 1))
       const cx = Math.cos(m.angle)
       const cy = Math.sin(m.angle)
       const x0 = p.x + cx * (m.radius - half)
@@ -267,9 +286,9 @@ const drawBeams = (ctx: Ctx, g: Game, t: number) => {
       const x1 = p.x + cx * (m.radius + half)
       const y1 = p.y - 8 + cy * (m.radius + half)
       if (!ice) {
-        // Aurora: six bands running along the beam, a white core over them.
+        // Aurora: six bands running along the beam, as wide as its hitbox, a white core over them.
         if (layer === 0) {
-          const band = Math.max(1, Math.round(w / 2.4))
+          const band = Math.max(1, Math.round(w / 3))
           RAINBOW.forEach((c, i) => {
             const off = (i - 2.5) * band
             thickLine(ctx, x0 - cy * off, y0 + cx * off, x1 - cy * off, y1 + cx * off, band + 1, c)

@@ -94,7 +94,7 @@ export const solarBeam: Cast = (g, s) => {
       })
     }
     const first = g.attacks.length
-    sweep(g, s, look, { from, arc: SOLAR.arc, time: s.duration, length: SOLAR.length * s.area, segments: SOLAR.segments, r: SOLAR.r * s.area })
+    sweep(g, s, look, { from, arc: SOLAR.arc, time: s.duration, length: SOLAR.length * s.area, segments: SOLAR.segments, r: SOLAR.r })
     // The beam waits out the charge; its tip is flagged so the art can flare it.
     for (let k = first; k < g.attacks.length; k++) g.attacks[k]!.age = -charge
     g.attacks[g.attacks.length - 1]!.flip = true

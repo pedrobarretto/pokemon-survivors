@@ -548,7 +548,7 @@ const drawTimeSnap = (ctx: Ctx, a: Attack) => {
 }
 
 /** Foes Roar of Time froze carry a little stopped clock over their heads. */
-const drawStoppedFoes = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
+export const drawStoppedFoes = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
   const clock = LEGEND_FX.tinyClock()
   for (const e of g.enemies) {
     const f = e.status.freeze
@@ -969,9 +969,8 @@ export const drawLegendaryGround = (ctx: Ctx, g: Game, t: number) => {
 
 /** Air layer (over the Pokémon). */
 export const drawLegendaryAir = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
-  // The veil goes first, so the clock and the rings shine over it.
+  // The veil goes first, so the clock and the rings shine over it (and the stopped foes' clocks, `drawStoppedFoes`).
   for (const a of g.attacks) if (a.age >= 0 && a.visual === 'timeClock') drawTimeVeil(ctx, g, a)
-  drawStoppedFoes(ctx, g, t, visible)
   for (const a of g.attacks) {
     if (a.age < 0) continue
     // Rings and beams span the screen: they draw even when their center is off it.

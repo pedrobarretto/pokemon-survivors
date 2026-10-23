@@ -149,7 +149,7 @@ const seedFlare: Cast = (g, s) => {
   })
   for (let i = 0; i < n; i++) {
     const first = g.attacks.length
-    sweep(g, s, fx, { from: start + (i / n) * TAU, arc: ((sun ? 2 : 1) * TAU) / n, time: s.duration, length, segments: SEED_FLARE.segments, r: SEED_FLARE.r * s.area })
+    sweep(g, s, fx, { from: start + (i / n) * TAU, arc: ((sun ? 2 : 1) * TAU) / n, time: s.duration, length, segments: SEED_FLARE.segments, r: SEED_FLARE.r })
     for (let k = first; k < g.attacks.length; k++) g.attacks[k]!.age = -SEED_FLARE.charge
     g.attacks[g.attacks.length - 1]!.flip = true
   }

@@ -1,4 +1,4 @@
-import { blitCentered, blitRotated, context2d, createCanvas, ellipse, onCanvasReset, ring, textSprite } from '../engine/pixelart'
+import { blitCentered, blitRotated, ellipse, ring, textSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { COOP } from '../data/coop'
 import { formAt } from '../game/branch'
@@ -299,43 +299,4 @@ export const drawTeamMarkers = (ctx: Ctx, g: Game, me: Player, camX: number, cam
     blitCentered(ctx, tag, tx, ty)
     if (down) blitCentered(ctx, textSprite(dist, '#ffffff'), tx, ty + (sin > 0.5 ? -7 : 7))
   }
-}
-
-/* ---------------- Teammates' hitboxes ---------------- */
-
-/** How opaque teammates' hitboxes draw: there, but quieter than your own. */
-const TEAM_ATTACK_ALPHA = 0.6
-
-let layer: HTMLCanvasElement | null = null
-let layerCtx: Ctx | null = null
-onCanvasReset(
-  () => {
-    layer = null
-    layerCtx = null
-  },
-  () => layer,
-)
-
-/**
- * A cleared view-sized layer in world coordinates (top-left at the camera)
- * that teammates' hitboxes draw into, then `flushTeamAttacks` lays it over the
- * world see-through. One canvas, reused every frame.
- */
-export const teamAttackLayer = (w: number, h: number, camX: number, camY: number): Ctx => {
-  if (!layer || !layerCtx || layer.width !== w || layer.height !== h) {
-    layer = createCanvas(w, h)
-    layerCtx = context2d(layer)
-  }
-  layerCtx.setTransform(1, 0, 0, 1, 0, 0)
-  layerCtx.clearRect(0, 0, w, h)
-  layerCtx.setTransform(1, 0, 0, 1, -camX, -camY)
-  return layerCtx
-}
-
-/** Draws the teammates' layer onto the world (`ctx` translated to the camera). */
-export const flushTeamAttacks = (ctx: Ctx, camX: number, camY: number) => {
-  if (!layer) return
-  ctx.globalAlpha = TEAM_ATTACK_ALPHA
-  ctx.drawImage(layer, camX, camY)
-  ctx.globalAlpha = 1
 }

@@ -80,7 +80,8 @@ export const returnShot = (g: Game, s: CastStats, look: Look, angle: number, rea
 /**
  * Sweep: a beam of `segments` circles from `inner` to `length` px off the
  * player, rotating from `from` through `arc` radians (negative turns the
- * other way) in `time` seconds. The segments share one hit list, so a foe is
+ * other way) in `time` seconds. `r` is the circles' base radius: the sweep
+ * scales it by area itself (pass `length` already scaled). The segments share one hit list, so a foe is
  * hit once per `hitInterval` by the whole beam however many segments cross it.
  */
 export const sweep = (

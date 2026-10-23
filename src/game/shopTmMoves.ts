@@ -177,7 +177,7 @@ const hyperBeam = (g: Game, s: CastStats) => {
   })
   for (const a of fan(angle, s.amount, HYPER_BEAM.spread)) {
     const from = g.attacks.length
-    sweep(g, s, l, { from: a, arc: 0, time: s.duration, length: HYPER_BEAM.length * s.area, segments: HYPER_BEAM.segments, r: HYPER_BEAM.r * s.area, hitInterval: HYPER_BEAM.hitInterval })
+    sweep(g, s, l, { from: a, arc: 0, time: s.duration, length: HYPER_BEAM.length * s.area, segments: HYPER_BEAM.segments, r: HYPER_BEAM.r, hitInterval: HYPER_BEAM.hitInterval })
     for (let i = from; i < g.attacks.length; i++) g.attacks[i]!.age = -HYPER_BEAM.charge
     // The beam's tip carries the impact flare.
     g.attacks[g.attacks.length - 1]!.flip = true

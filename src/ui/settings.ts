@@ -9,7 +9,8 @@ import { openControls } from './controls'
 import { h, later } from './dom'
 import { DAMAGE_NUMBERS } from '../render/damageNumbers'
 import { FLASH_MODES } from '../render/flashes'
-import { loadSettings, writeSettings, type Settings } from './save'
+import { loadSettings, MIN_ATTACK_OPACITY, writeSettings, type Settings } from './save'
+import { coopEntry } from '../coopShell'
 import { hint, menu, type Screen } from './screens'
 import { backButton, shellBody, tabStrip, topBar, segmented } from './shell'
 import { REPO_URL, ROUTES, SOCIAL_IDS, SOCIALS } from '../site/routes'
@@ -62,14 +63,17 @@ type Row = { el: HTMLElement; adjust: (dir: -1 | 1) => void; activate: () => voi
 
 const SLIDER_STEPS = 10
 
-/** Volume bar of growing pixel cells. Tap a cell or drag across it; ← → step by 10%. */
-const slider = (label: string, key: 'musicVolume' | 'sfxVolume', preview?: () => void): Row => {
+/** The settings a slider sets: fractions from 0 to 1. */
+type SliderKey = 'musicVolume' | 'sfxVolume' | 'attackOpacity' | 'teamAttackOpacity'
+
+/** A bar of growing pixel cells (volumes, opacities). Tap a cell or drag across it; ← → step by 10%, never under `min` cells. */
+const slider = (label: string, key: SliderKey, preview?: () => void, min = 0): Row => {
   const cells = Array.from({ length: SLIDER_STEPS }, (_, i) => h('span', { class: 'slider-cell', style: `--h:${40 + i * 6}%` }))
   const value = h('b', { class: 'setting-value' })
   const bar = h('div', { class: 'slider', role: 'slider', 'aria-label': label, 'aria-valuemin': 0, 'aria-valuemax': 100 }, ...cells)
   const level = () => Math.round(current[key] * SLIDER_STEPS)
   const set = (next: number) => {
-    const steps = clamp(next, 0, SLIDER_STEPS)
+    const steps = clamp(next, min, SLIDER_STEPS)
     if (steps === level()) return
     const patch: Partial<Settings> = {}
     patch[key] = steps / SLIDER_STEPS
@@ -204,7 +208,7 @@ let lastTab: Tab = 'sound'
 
 /**
  * Settings in four tabs: Som (music and effects volume, mute), Jogo
- * (language, damage numbers, screen shake, flashes, UI size, safe mode), Controles (touch joystick and the
+ * (language, damage numbers, screen shake, flashes, move opacity, UI size, safe mode), Controles (touch joystick and the
  * remap screen) and Sobre (installing the app, what the game is, legal and
  * credits, GitHub, the official profiles, and the bug report form when there's an API to send it to).
  * Changes apply and persist immediately.
@@ -260,6 +264,9 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           choiceRow(m.damageNumbers, 'damageNumbers', DAMAGE_NUMBERS, (mode) => m.damageModes[mode]),
           toggle(m.screenShake, (s) => s.screenShake, (on) => ({ screenShake: on })),
           choiceRow(m.flashes, 'flashes', FLASH_MODES, (mode) => m.flashModes[mode]),
+          slider(m.attackOpacity, 'attackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS),
+          // Teammates' moves only matter to whoever plays co-op (a beta behind the lobby's gate).
+          ...(coopEntry() ? [slider(m.teamAttackOpacity, 'teamAttackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS)] : []),
           ...uiScaleRows(m.uiScale, m.uiScaleAuto),
           // Safe mode is the device's, not a setting (`safeMode.ts`): a crash turns it on by itself.
           switchRow(m.safeMode, safeModeOn, (on) => setSafeMode(on ? 'on' : 'off')),

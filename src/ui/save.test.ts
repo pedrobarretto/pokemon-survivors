@@ -33,6 +33,11 @@ describe('parseSettings', () => {
     expect(parseSettings(JSON.stringify({ musicVolume: 4, sfxVolume: -1 }))).toMatchObject({ musicVolume: 1, sfxVolume: 0 })
   })
 
+  it('clamps move opacities to 0.1..1, so a move never vanishes outright', () => {
+    expect(parseSettings(JSON.stringify({ attackOpacity: 0, teamAttackOpacity: 3 }))).toMatchObject({ attackOpacity: 0.1, teamAttackOpacity: 1 })
+    expect(parseSettings(JSON.stringify({ attackOpacity: 'faint' })).attackOpacity).toBe(1)
+  })
+
   it('falls back to the given defaults (the legacy mute flag)', () => {
     expect(parseSettings(null, { ...DEFAULT_SETTINGS, muted: true }).muted).toBe(true)
     expect(parseSettings(JSON.stringify({ muted: false }), { ...DEFAULT_SETTINGS, muted: true }).muted).toBe(false)

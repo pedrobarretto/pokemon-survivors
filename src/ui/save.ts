@@ -171,6 +171,10 @@ export type Settings = {
   screenShake: boolean
   /** `reduced` drops white screen flashes, white hit flashes and fast flicker (`render/flashes.ts`). */
   flashes: Flashes
+  /** How opaque your moves draw, 0.1 to 1 (`render/attackLayers.ts`): lower to see the foes and their attacks through a full build. */
+  attackOpacity: number
+  /** The same for teammates' moves in co-op. */
+  teamAttackOpacity: number
   /** Remapped keys and gamepad buttons. Per device, so they stay out of the synced save. */
   controls: Bindings
   /** Touch joystick: follows the thumb (the default) or waits in the bottom-left corner. */
@@ -186,12 +190,17 @@ export const DEFAULT_SETTINGS: Settings = {
   damageNumbers: 'reduced',
   screenShake: true,
   flashes: 'normal',
+  attackOpacity: 1,
+  teamAttackOpacity: 0.6,
   controls: DEFAULT_BINDINGS,
   joystick: 'floating',
   uiScale: 'auto',
 }
 
 const volume = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback)
+/** The lowest move opacity: a move never vanishes outright, or a player could lose track of their own build. */
+export const MIN_ATTACK_OPACITY = 0.1
+const opacity = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(MIN_ATTACK_OPACITY, v)) : fallback)
 const flag = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback)
 /** The old on/off flag maps to `reduced` (on was the default, never a choice) or `off`. */
 const damageMode = (v: unknown, fallback: DamageNumbers): DamageNumbers =>
@@ -213,6 +222,8 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     damageNumbers: damageMode(data.damageNumbers, defaults.damageNumbers),
     screenShake: flag(data.screenShake, defaults.screenShake),
     flashes: FLASH_MODES.find((m) => m === data.flashes) ?? defaults.flashes,
+    attackOpacity: opacity(data.attackOpacity, defaults.attackOpacity),
+    teamAttackOpacity: opacity(data.teamAttackOpacity, defaults.teamAttackOpacity),
     controls: parseBindings(data.controls),
     joystick: STICK_MODES.find((m) => m === data.joystick) ?? defaults.joystick,
     uiScale: UI_SCALES.find((s) => s === data.uiScale) ?? defaults.uiScale,

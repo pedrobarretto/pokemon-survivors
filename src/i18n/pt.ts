@@ -472,6 +472,9 @@ export const pt = {
     screenShake: 'Tremor de tela',
     flashes: 'Clarões',
     flashModes: { normal: 'Normais', reduced: 'Reduzidos' },
+    /** How opaque your moves draw (and, in co-op, your teammates'): `render/attackLayers.ts`. */
+    attackOpacity: 'Opacidade dos golpes',
+    teamAttackOpacity: 'Opacidade do time',
     uiScale: 'Tamanho da interface',
     uiScaleAuto: 'Auto',
     /** Safe mode (`safeMode.ts`): lean drawing, on by itself after the game closed mid-run. */
