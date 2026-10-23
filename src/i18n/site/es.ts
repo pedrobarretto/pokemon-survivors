@@ -86,8 +86,8 @@ export const siteEs: SiteMessages = {
     horde: (from: string, until: string) => `Puede entrar en la horda, de ${from} a ${until}`,
     hordeEnd: (from: string) => `Puede entrar en la horda, de ${from} hasta el final`,
     swarm: (at: string, count: number) => `Puede liderar la bandada de ${count} a las ${at}`,
-    ring: (at: string, count: number) => `Puede formar el cerco de ${count} a las ${at}`,
-    ringFixed: (at: string, count: number) => `Forma el cerco de ${count} a las ${at}`,
+    ring: (at: string, count: number) => `Puede formar un anillo de ${count} a las ${at}`,
+    ringFixed: (at: string, count: number) => `Forma un anillo de ${count} a las ${at}`,
     boss: (at: string) => `Jefe a las ${at}`,
     bossChance: (at: string, percent: number) => `Jefe a las ${at} (${n(percent)}% de probabilidad)`,
     trio: (at: string, trio: string) => `Jefe a las ${at} en las partidas que sortean el trío ${trio} (1 de cada 3)`,
@@ -267,7 +267,7 @@ export const siteEs: SiteMessages = {
 
   /** The legendary trios a run draws from (`TRIOS`), and `either` to name who may come. */
   trios: {
-    names: { birds: 'Aves de Kanto', beasts: 'Bestias de Johto', regis: 'Regis de Hoenn' },
+    names: { birds: 'Pájaros de Kanto', beasts: 'Bestias de Johto', regis: 'Regis de Hoenn' },
     either,
   },
 
@@ -305,7 +305,7 @@ export const siteEs: SiteMessages = {
   guide: {
     title: 'Cómo jugar Pokémon Survivors: guía completa',
     description:
-      'Guía de Pokémon Survivors: controles en teclado, control y celular, cómo funciona la partida, niveles, movimientos, evolución de movimientos con objetos, ataque especial, tipos y estados, jefes, shinies, objetos y eventos del mapa y la Tienda Kecleon.',
+      'Guía de Pokémon Survivors: controles en teclado, mando y móvil, cómo funciona la partida, niveles, movimientos, evolución de movimientos con objetos, ataque especial, tipos y estados, jefes, shinies, objetos y eventos del mapa y la Tienda Kecleon.',
     h1: 'Cómo jugar',
     intro:
       'Pokémon Survivors es un roguelite tipo Vampire Survivors: tú solo te mueves y tu Pokémon ataca solo. Esta guía explica todo lo que pasa en una partida, con los números del juego.',
@@ -335,7 +335,7 @@ export const siteEs: SiteMessages = {
       settings: 'Ajustes y música',
     },
     controls: {
-      head: { action: 'Acción', keyboard: 'Teclado', gamepad: 'Control', touch: 'Táctil' },
+      head: { action: 'Acción', keyboard: 'Teclado', gamepad: 'Mando', touch: 'Táctil' },
       rows: [
         ['Moverse', 'WASD o flechas', 'D-pad o stick izquierdo', 'Arrastra en cualquier parte de la pantalla (joystick flotante)'],
         ['Ataque especial', 'Espacio', 'A (Xbox) o ✕ (PlayStation)', 'Botón redondo abajo a la derecha'],
@@ -350,9 +350,9 @@ export const siteEs: SiteMessages = {
         ['Idioma', 'I en la pantalla de título, o Ajustes', 'Ajustes', 'PT | EN | ES en la pantalla de título, o Ajustes'],
       ],
       notes: [
-        'Con control, el D-pad y el stick izquierdo mueven al Pokémon y navegan por todos los menús, A confirma, B vuelve y Start pausa. Durante la partida, A usa el ataque especial.',
-        'En Ajustes → Controles → Teclado y control, puedes cambiar la tecla y el botón del control de cada acción (moverse, especial, Mega, embestida, pausa, confirmar y volver). Las flechas y Esc siempre funcionan.',
-        'En el celular puedes instalar el juego como app a pantalla completa: abre el menú del navegador y elige "Agregar a la pantalla de inicio".',
+        'Con mando, el D-pad y el stick izquierdo mueven al Pokémon y navegan por todos los menús, A confirma, B vuelve y Start pausa. Durante la partida, A usa el ataque especial.',
+        'En Ajustes → Controles → Teclado y mando, puedes cambiar la tecla y el botón del mando de cada acción (moverse, especial, Mega, embestida, pausa, confirmar y volver). Las flechas y Esc siempre funcionan.',
+        'En el móvil puedes instalar el juego como app a pantalla completa: abre el menú del navegador y elige "Agregar a la pantalla de inicio".',
       ],
     },
     run: {
@@ -441,7 +441,7 @@ export const siteEs: SiteMessages = {
     },
     special: {
       paragraphs: (min: number) => [
-        'Además de los movimientos automáticos, todo Pokémon tiene un ataque especial manual: presiona Espacio, el botón A / ✕ del control o el botón redondo en la pantalla. Se carga por un instante (te mueves más lento) y luego se dispara: algunos apuntan hacia donde caminas, otros golpean todo a tu alrededor o caen del cielo sobre los enemigos más cercanos. Quick Attack y Extreme Speed también son manuales, porque te mueven: presiona Shift, X / □ o el botón de embestida para lanzarte contra el enemigo de enfrente.',
+        'Además de los movimientos automáticos, todo Pokémon tiene un ataque especial manual: presiona Espacio, el botón A / ✕ del mando o el botón redondo en la pantalla. Se carga por un instante (te mueves más lento) y luego se dispara: algunos apuntan hacia donde caminas, otros golpean todo a tu alrededor o caen del cielo sobre los enemigos más cercanos. Quick Attack y Extreme Speed también son manuales, porque te mueven: presiona Shift, X / □ o el botón de embestida para lanzarte contra el enemigo de enfrente.',
         `Cada uno de los 18 tipos tiene su especial, y tu Pokémon usa el de su primer tipo. La recarga baja con la estadística Recarga, hasta un mínimo de ${min}s. En la evolución final se vuelve la versión más fuerte, con más daño y área.`,
         'Algunas líneas ágiles cambian el especial de tipo por una embestida en cadena: el Pokémon avanza cortando hasta el enemigo más cercano y, si acierta, tiene medio segundo para presionar otra vez y saltar al siguiente, hasta su límite de saltos. La recarga solo empieza cuando termina la cadena. Aegislash cambia el especial por Cambio Táctico: alterna entre la Forma Escudo, que recibe menos daño, y la Forma Filo, que pega más fuerte.',
       ],
@@ -468,7 +468,7 @@ export const siteEs: SiteMessages = {
         freeze: (shatter: number, boss: number) => `Congela al enemigo en su lugar. El siguiente golpe hace ${shatter}x de daño y rompe el hielo. En jefes dura el ${n(boss * 100)}% del tiempo.`,
         mark: (stacks: number) => `El enemigo marcado recibe más daño de cada golpe, acumulando hasta ${stacks}x.`,
         confuse: () => 'El enemigo deambula sin rumbo y lastima a los enemigos con los que choca. Los jefes son inmunes.',
-        seed: (heal: number, jumps: number) => `Daño por segundo que te cura un ${n(heal * 100)}% del daño. Cuando el enemigo cae, la semilla salta a ${jumps} vecinos.`,
+        seed: (heal: number, jumps: number) => `Daño por segundo que te cura un ${n(heal * 100)}% del daño. Cuando el enemigo es derrotado, la semilla salta a otros ${jumps}.`,
         weaken: (boss: number) => `Barro en los ojos: el enemigo hace menos daño de contacto. En jefes dura un ${n(boss * 100)}% del tiempo.`,
       },
       flute: 'Poké Flute (objeto del mapa)',
@@ -477,7 +477,7 @@ export const siteEs: SiteMessages = {
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
         `Los ${m.count} legendarios del juego se pueden capturar y jugar en el Modo Legendario. Para capturar uno, véncelo como jefe, en cualquier modo: en cada victoria antes de la captura se escapa de la Poké Ball y el juego lleva la cuenta (Kyogre se escapó… 2/3); en la victoria que la completa, queda capturado y aparece en la pestaña Legendarios de la selección de compañero. Vencer a uno shiny en la victoria de la captura, o en cualquier victoria después, desbloquea su forma shiny.`,
-        `En el Modo Legendario el legendario no evoluciona: despierta en el Nv ${m.awaken[0]} y en el Nv ${m.awaken[1]} (Habilidad, fuerza y una carga de Olvidar; Kyogre y Groudon se vuelven Primigenios, Rayquaza se vuelve Mega), empieza con su movimiento legendario y una habilidad innata siempre activa, y la horda viene más dura (Presión), solo de Pokémon evolucionados, sin formas básicas ni el brote del día. Latias, Latios y Mewtwo megaevolucionan con la Mega Stone y el botón MEGA, como los demás, y el especial de Deoxys cambia su Forma (Normal, Ataque, Defensa, Velocidad). La partida dura lo mismo de siempre, las tres dificultades siguen valiendo y el modo tiene su propio ranking, separado por dificultad: en el ranking, la fila Estándar | Legendario cambia de tabla.`,
+        `En el Modo Legendario el legendario no evoluciona: despierta en el Nv ${m.awaken[0]} y en el Nv ${m.awaken[1]} (Habilidad, fuerza y una carga de Olvidar; Kyogre y Groudon se vuelven Primigenios, Rayquaza se vuelve Mega), empieza con su movimiento legendario y una habilidad innata siempre activa, y la horda viene más dura (Presión), solo de Pokémon evolucionados, sin formas básicas ni la horda del día. Latias, Latios y Mewtwo megaevolucionan con la Mega Stone y el botón MEGA, como los demás, y el especial de Deoxys cambia su Forma (Normal, Ataque, Defensa, Velocidad). La partida dura lo mismo de siempre, las tres dificultades siguen valiendo y el modo tiene su propio ranking, separado por dificultad: en el ranking, la fila Estándar | Legendario cambia de tabla.`,
         'Los legendarios del mapa (el trío de la partida, el mítico raro junto a Mewtwo, Mewtwo al final y Arceus en el modo infinito) llegan con una entrada y una tarjeta de título y pelean en tres fases, hasta un golpe supremo con un lugar seguro marcado. Cuando caen, la captura sucede ahí mismo, en una escena rápida; los de las grietas, al final de su dominio. Un legendario nunca se enfrenta a sí mismo: las grietas, el trío y el mítico se saltan al que juegas, y un Mewtwo se mide con el Mewtwo Clon al final.',
       ],
       legendHead: 'Legendario',
@@ -516,7 +516,7 @@ export const siteEs: SiteMessages = {
       endlessTitle: 'Modo infinito',
       endless: (e) => [
         'Después de derrotar a Mewtwo, la pantalla de victoria te ofrece seguir en el modo infinito. Si no quieres, sales con la victoria normal, y la bonificación se paga en el acto.',
-        `La horda no deja de crecer: aparecen más enemigos, sube el límite en pantalla y los cercos y bandadas llegan cada ${e.every} segundos. Las grietas se siguen abriendo.`,
+        `La horda no deja de crecer: aparecen más enemigos, sube el límite en pantalla y los anillos y bandadas llegan cada ${e.every} segundos. Las grietas se siguen abriendo.`,
         `A las ${e.reaper}, Arceus desciende para cazarte. Se vuelve más rápido cuanto más tiempo caza, hasta que nadie puede escapar, y nunca te pierde: si te alejas, reaparece en el borde de la pantalla. Se le puede derrotar, pero tiene ${e.hp} de HP; si cae, vuelve ${e.returns} minutos después, más fuerte.`,
         `El tiempo sobrevivido es la métrica principal: cada minuto después de las 15:00 paga ₽${n(e.perMinute)} en la bonificación, y cada Arceus derrotado, ₽${e.reaperBonus} más.`,
       ],
@@ -620,7 +620,7 @@ export const siteEs: SiteMessages = {
         `Los jefes, los cofres con candado y las grietas a veces dejan un huevo, como máximo ${perRun} por partida. Va a la incubadora, que tiene ${slots} espacios. Cada ${stepPx} px recorridos en una partida cuentan como un paso, y todos los huevos de la incubadora avanzan juntos. El huevo encontrado a mitad de partida ya cuenta los pasos dados después de encontrarlo.`,
         `Cuando un huevo está listo, eclosiona al salir de la partida o en la incubadora (en el menú principal y en la pestaña Huevos de la selección de compañero). Las familias que todavía no tienes salen ${weight}x más. La cría tiene 1 probabilidad entre ${shiny} de ser shiny, y entonces es shiny en todas las partidas.`,
         'Un repetido, o un huevo encontrado con la incubadora llena, se convierte en Poké Dollars. El jugador que nunca tuvo un huevo recibe el primero con seguridad.',
-        'El Huevo de la Amistad no cae en las partidas: llega como Regalo Misterioso cuando creas tu cuenta con la invitación de alguien, y cuando un amigo al que invitaste termina 3 partidas. Solo sale Munchlax de él. Con 3 amigos ganas el título Embajador(a) y un marco exclusivo, con 5, un Huevo ultra raro, y con 10, un Dratini shiny. Tu link y el progreso de cada amigo están en la tarjeta Invita amigos, en la pantalla de inicio.',
+        'El Huevo de la Amistad no cae en las partidas: llega como Regalo Misterioso cuando creas tu cuenta con la invitación de alguien, y cuando un amigo al que invitaste termina 3 partidas. Solo sale Munchlax de él. Con 3 amigos ganas el título Embajador(a) y un marco exclusivo, con 5, un Huevo Ultrarraro, y con 10, un Dratini shiny. Tu link y el progreso de cada amigo están en la tarjeta Invita amigos, en la pantalla de inicio.',
         'El Huevo Embrujado tampoco cae en las partidas: solo lo vende el puesto de Duskull, en la plaza, durante la Noche de Brujas (24/10 al 2/11), uno por día. De él solo salen Litwick, Phantump, Drifloon y Sandygast, 25% cada uno, los tengas o no. Después del evento, vuelve el año que viene.',
         'El Huevo Kecleon tampoco cae en las partidas: es una carta fija en la Vitrina de la tienda: el primero del día cuesta ₽ 10.000 y cada uno después cuesta el doble del anterior, hasta 6 por día (₽ 320.000 el sexto). De él solo salen Porygon, Exeggcute, Scraggy y Smeargle, 25% cada uno. Porygon2 pide el Up-Grade, Porygon-Z el Dubious Disc y Exeggutor la Leaf Stone; Smeargle no evoluciona, pero su Sketch copia el movimiento del enemigo más cercano. Con 100 sellos en la tarjeta de cliente llega un Huevo Kecleon con shiny garantizado.',
       ],
@@ -759,7 +759,7 @@ export const siteEs: SiteMessages = {
   changelog: {
     title: 'Novedades de Pokémon Survivors: historial de actualizaciones',
     description:
-      'Todo lo que cambió en Pokémon Survivors, actualización por actualización: iniciales, jefes legendarios, shinies, evolución de movimientos, la Tienda Kecleon, versión para celular y más.',
+      'Todo lo que cambia en Pokémon Survivors, actualización por actualización: iniciales, jefes legendarios, shinies, evolución de movimientos, la Tienda Kecleon, versión para móvil y más.',
     h1: 'Novedades',
     intro: 'Todo lo que cambió en el juego, actualización por actualización, de la más nueva a la más antigua. Cada una empieza con sus destacados.',
     changes: (n: number) => `Todos los cambios (${n})`,
