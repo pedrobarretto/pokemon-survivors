@@ -31,6 +31,7 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Uma página para cada Pokémon', en: 'A page for every Pokémon', es: 'Una página para cada Pokémon' },
     highlights: [
       { pt: 'Cada Pokémon jogável ganhou sua página na Pokédex do site: os 27 iniciais, as 63 famílias dos ovos e os 23 lendários.', en: 'Every playable Pokémon has its own page in the site’s Pokédex: the 27 starters, the 63 egg families and the 23 legendaries.', es: 'Cada Pokémon jugable tiene su propia página en la Pokédex del sitio: los 27 iniciales, las 63 familias de los huevos y los 23 legendarios.' },
+      { pt: 'Nova tier list no site, feita com as partidas de vocês: os iniciais e as famílias dos ovos de S a D pelas vitórias contra o Mewtwo. Na estreia, Chespin, Spheal e Larvitar lideram.', en: 'A new tier list on the site, built from your runs: the starters and egg families from S to D by their wins against Mewtwo. At launch, Chespin, Spheal and Larvitar lead.', es: 'Nueva tier list en el sitio, hecha con sus partidas: los iniciales y las familias de los huevos de S a D según sus victorias contra Mewtwo. En el estreno, Chespin, Spheal y Larvitar van a la cabeza.' },
       { pt: 'Cada página responde o que mais se pergunta: como liberar, como evolui, qual o golpe inicial e se tem Mega Evolução, ou como capturar um lendário.', en: 'Each page answers what people ask most: how to unlock it, how it evolves, its starting move and whether it Mega Evolves, or how to catch a legendary.', es: 'Cada página responde lo que más se pregunta: cómo desbloquearlo, cómo evoluciona, su movimiento inicial y si tiene Megaevolución, o cómo capturar a un legendario.' },
       { pt: 'Quem abre o jogo pela primeira vez no endereço em inglês agora começa no idioma do navegador (português ou espanhol), não mais em inglês.', en: 'Opening the game for the first time at the English address now starts in your browser’s language (Portuguese or Spanish) instead of always English.', es: 'Quien abre el juego por primera vez en la dirección en inglés ahora empieza en el idioma de su navegador (español o portugués), ya no siempre en inglés.' },
     ],
@@ -42,6 +43,21 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Na Pokédex, o nome de cada Pokémon jogável leva à página da família: os cards de cada estágio e ramificação, com status, linha evolutiva, golpes, especial e Habilidades, as Megas da linha e perguntas frequentes. Os lendários têm a sua, com quando aparecem, os ataques de chefe e como capturá-los para o Modo Lendário.',
             en: 'In the Pokédex, every playable Pokémon’s name leads to its family’s page: the cards of each stage and branch, with stats, evolution line, moves, special and Abilities, the line’s Megas and a FAQ. Legendaries get their own, with when they show up, their boss attacks and how to catch them for Legend Mode.',
             es: 'En la Pokédex, el nombre de cada Pokémon jugable lleva a la página de su familia: las cartas de cada etapa y rama, con estadísticas, línea evolutiva, movimientos, especial y Habilidades, las Megas de la línea y preguntas frecuentes. Los legendarios tienen la suya, con cuándo aparecen, sus ataques de jefe y cómo capturarlos para el Modo Legendario.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Tier list', en: 'Tier list', es: 'Tier list' },
+        notes: [
+          {
+            pt: 'A nova página Tier list (no menu do site) ordena os 90 Pokémon jogáveis de S a D pelas partidas dos últimos 30 dias no Normal, no Difícil e no Pesadelo, com a taxa de vitória e o minuto médio de cada um. Ela explica como a nota é feita e o que ela não diz: quem começa agora costuma jogar com os iniciais mais famosos, e isso pesa nos números.',
+            en: 'The new Tier list page (in the site’s menu) ranks the 90 playable Pokémon from S to D using the last 30 days of runs on Normal, Hard and Nightmare, with each one’s win rate and average minute. It explains how the score works and what it doesn’t say: new players tend to pick the famous starters, and that weighs on the numbers.',
+            es: 'La nueva página Tier list (en el menú del sitio) ordena los 90 Pokémon jugables de S a D con las partidas de los últimos 30 días en Normal, Difícil y Pesadilla, con el porcentaje de victorias y el minuto promedio de cada uno. Explica cómo se calcula la nota y lo que no dice: quien recién empieza suele elegir los iniciales más famosos, y eso pesa en los números.',
+          },
+          {
+            pt: 'A página de cada Pokémon mostra o tier dele e a taxa de vitória no Normal, com um link para a tier list.',
+            en: 'Each Pokémon’s page shows its tier and its win rate on Normal, with a link to the tier list.',
+            es: 'La página de cada Pokémon muestra su tier y su porcentaje de victorias en Normal, con un enlace a la tier list.',
           },
         ],
       },

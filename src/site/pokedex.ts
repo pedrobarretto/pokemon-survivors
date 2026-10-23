@@ -1,8 +1,8 @@
 import manifest from '../data/sprites.generated.json'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BRANCHES, branchesOf, branchStage, type BranchId } from '../data/branches'
-import { HATCHLING_IDS, PLAYABLE, type PlayableId } from '../data/hatchlings'
-import { REGIONS, STARTER_IDS, type Region } from '../data/starters'
+import { HATCHLING_IDS, PLAYABLE, type HatchlingId, type PlayableId } from '../data/hatchlings'
+import { REGIONS, STARTER_IDS, type Region, type StarterId } from '../data/starters'
 import type { PokeType } from '../data/types'
 import { isRiftLegend, RIFT, type RiftLegend } from '../data/rifts'
 import { DOMAINS } from '../data/domains'
@@ -249,7 +249,7 @@ export const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(
  * for one Pokémon ("garchomp pokemon survivors") or be quoted by an AI chat; these can.
  */
 export type DexPage =
-  | { kind: 'family'; id: PlayableId; slug: string; entries: readonly DexEntry[] }
+  | { kind: 'family'; id: StarterId | HatchlingId; slug: string; entries: readonly DexEntry[] }
   | { kind: 'legend'; id: LegendId; slug: string; entries: readonly DexEntry[] }
 
 let pages: readonly DexPage[] | null = null

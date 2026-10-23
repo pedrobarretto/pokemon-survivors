@@ -372,6 +372,7 @@ export const pokedexPage = (locale: Locale) => {
   const main: Html = html`<div class="page-head">
     <h1>${m.pokedex.h1}</h1>
     <p class="lead">${m.pokedex.intro(entries.length)}</p>
+    <p class="lead-link"><a href="${ROUTES.tierList[locale]}">★ ${m.pokedex.tierLink} →</a></p>
   </div>
   ${filters(entries, m)}
   <div class="dex-grid">${cards}</div>`

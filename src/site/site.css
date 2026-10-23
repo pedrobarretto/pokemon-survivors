@@ -135,13 +135,14 @@ h3 {
   text-shadow: 2px 2px 0 var(--blue);
 }
 
+/* On phones the nav takes its own row and wraps to a second one rather than hiding links off-screen. */
 .site-nav {
   order: 3;
   flex: 1 0 100%;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
 .site-nav a,
@@ -1176,6 +1177,179 @@ html:not(.js) #donate-account {
 
 .donate-wall-names li.gold {
   color: #a87808;
+}
+
+/* ---------- Tier list ---------- */
+
+/* Classic tier colours, shared by the board's labels and the chips (table, Pokémon pages). */
+.tier-S {
+  --tier: #ff7f7f;
+}
+
+.tier-A {
+  --tier: #ffbf7f;
+}
+
+.tier-B {
+  --tier: #ffdf7f;
+}
+
+.tier-C {
+  --tier: #bfef7f;
+}
+
+.tier-D {
+  --tier: #7fbfff;
+}
+
+.tier-none {
+  --tier: #a8b0d0;
+}
+
+.page-head .lead + .lead {
+  margin-top: 12px;
+}
+
+.tier-updated {
+  margin: 12px 0 0;
+  color: var(--text-dim);
+  font-size: 19px;
+}
+
+.lead-link {
+  margin: 12px 0 0;
+  font-size: 22px;
+}
+
+.tier-board {
+  display: grid;
+  gap: 6px;
+  width: min(1100px, 100%);
+  margin: 0 auto 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.tier-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  background: var(--bg-2);
+  border: 3px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tier-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  background: var(--tier);
+  color: var(--ink);
+  font-family: var(--title);
+  font-size: 24px;
+}
+
+.tier-mons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+}
+
+.tier-mons a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 4px;
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tier-mons a:hover,
+.tier-mons a:focus-visible {
+  background: #283048;
+  color: var(--yellow);
+}
+
+.tier-mons img {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper-2);
+}
+
+.tier-none-note {
+  margin: 0 10px 8px;
+  color: var(--text-dim);
+  font-size: 18px;
+}
+
+.tier-chip {
+  display: inline-block;
+  min-width: 2em;
+  padding: 4px 5px 3px;
+  border-radius: 3px;
+  background: var(--tier);
+  color: var(--ink);
+  font-family: var(--title);
+  font-size: 10px;
+  text-align: center;
+}
+
+.tier-table :is(td, th) {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.tier-table tbody th img {
+  width: 32px;
+  height: 32px;
+}
+
+.tier-caveats li {
+  margin-bottom: 8px;
+}
+
+.dex-tier {
+  margin: -8px 0 20px;
+  text-align: center;
+}
+
+.dex-tier a {
+  text-decoration: none;
+}
+
+.dex-tier a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .tier-row {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+  .tier-label {
+    font-size: 18px;
+  }
+  .tier-mons a {
+    min-width: 52px;
+    padding: 3px 2px;
+    font-size: 16px;
+  }
+  .tier-mons img {
+    width: 40px;
+    height: 40px;
+  }
 }
 
 /* ---------- Footer ---------- */

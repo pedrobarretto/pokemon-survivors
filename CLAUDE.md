@@ -35,6 +35,7 @@ npm run credits    # regenerate CREDITS.md (SpriteCollab artists) after adding s
 npm run bodies     # re-measure sprite bodies (hitboxes) into sprites.generated.json; `npm run assets` does it too
 node --env-file=.env.local scripts/discord/pull.mjs    # snapshot the community Discord into scripts/discord/snapshot.json (read-only; commit it before and after any setup run)
 node --env-file=.env.local scripts/discord/setup.mjs <step...> [--apply]   # pointed changes to the Discord (roles, channels, topics, community, messages, welcome, emojis, onboarding, automod); dry run by default. Staff edit names, order and looks by hand: the script only owns permissions and behavior, and finds things by id (ids.json). DISCORD_BOT_TOKEN, DISCORD_GUILD_ID
+node --env-file=.env.local scripts/tierlist.mjs   # refresh the site's tier list snapshot (src/data/tierRuns.ts) from PostHog's run_end, last 30 days; POSTHOG_PERSONAL_API_KEY (or pass a CSV export of the same query). The build never queries PostHog
 npm run typecheck --prefix server   # the accounts API (server/), typechecked with the shared game code
 npm run determinism  # the same bot runs in Node, Chromium, Firefox and WebKit must hash the same (needs `npx playwright install`)
 ```

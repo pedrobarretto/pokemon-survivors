@@ -5,11 +5,13 @@ import { guidePage } from './pages/guide'
 import { legalPage } from './pages/legal'
 import { pokedexPage } from './pages/pokedex'
 import { supportPage } from './pages/support'
+import { tierListPage } from './pages/tierList'
 import { dexPages } from './pokedex'
 import { dexPaths, PAGE_IDS, ROUTES, sitemap as routesSitemap, type PageId, type Paths } from './routes'
 
 const RENDER: Record<PageId, (locale: Locale) => string> = {
   pokedex: pokedexPage,
+  tierList: tierListPage,
   guide: guidePage,
   changelog: changelogPage,
   legal: legalPage,

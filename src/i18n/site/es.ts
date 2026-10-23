@@ -1,5 +1,5 @@
 import type { BlastSafe } from '../../data/bosses'
-import type { SiteMessages } from './pt'
+import type { SiteMessages, TierMethod } from './pt'
 
 /** Number in Latin American Spanish format (`1,250`, `0.75`). */
 const n = (v: number) => v.toLocaleString('es-419', { maximumFractionDigits: 2 })
@@ -19,6 +19,7 @@ export const siteEs: SiteMessages = {
     pokedex: 'Pokédex',
     guide: 'Guía',
     changelog: 'Novedades',
+    tierList: 'Tier list',
     legal: 'Legal',
     support: 'Apoya',
     language: 'Idioma',
@@ -60,6 +61,7 @@ export const siteEs: SiteMessages = {
     results: (count: number) => `${count} ${s(count, 'Pokémon encontrado', 'Pokémon encontrados')}`,
     empty: 'Ningún Pokémon con esos filtros.',
     clear: 'Limpiar filtros',
+    tierLink: '¿Cuál es el mejor Pokémon? Mira la tier list, hecha con las partidas de los jugadores',
     roles: { starter: 'Inicial', egg: 'Huevo', enemy: 'Salvaje', boss: 'Jefe', legendary: 'Legendario', event: 'Evento' },
     roleFilter: { starter: 'Iniciales', egg: 'Huevos', enemy: 'Salvajes', boss: 'Jefes', legendary: 'Legendarios', event: 'Eventos' },
     link: (name: string) => `Enlace a ${name}`,
@@ -147,6 +149,46 @@ export const siteEs: SiteMessages = {
     groups: { starter: 'Iniciales', egg: 'Huevos', legendary: 'Legendarios' },
     back: 'Ver la Pokédex completa',
     page: (name: string) => `Página de ${name}`,
+    tierQ: (name: string) => `¿${name} es bueno en Pokémon Survivors?`,
+    tierA: (name: string, tier: string, rate: number, runs: number, days: number) =>
+      `En la tier list, hecha con las partidas de los jugadores, ${name} está en el tier ${tier}: venció a Mewtwo en el ${rate}% de sus ${n(runs)} partidas en Normal de los últimos ${days} días.`,
+    tierNoneA: (name: string) => `${name} todavía no tiene suficientes partidas para recibir un tier en la tier list. Se actualiza con el tiempo.`,
+    tierLine: (tier: string, rate: number) => `Tier ${tier} en la tier list · ${rate}% de victorias en Normal`,
+    tierLineNone: 'Todavía sin tier en la tier list: pocas partidas',
+  },
+
+  tierList: {
+    title: 'Tier list de Pokémon Survivors: los mejores Pokémon, con datos reales',
+    description:
+      'Tier list de Pokémon Survivors hecha con las partidas reales de los jugadores: los mejores Pokémon para vencer a Mewtwo, de S a D, con el porcentaje de victorias de cada inicial y familia de huevo en Normal, Difícil y Pesadilla.',
+    h1: 'Tier list de Pokémon Survivors',
+    best: (names: readonly string[], runs: number, days: number) =>
+      `¿Cuál es el mejor Pokémon de Pokémon Survivors? Según ${n(runs)} partidas de los últimos ${days} días, hoy son ${list(names)}: con ellos, los jugadores vencen a Mewtwo más veces que con cualquier otro.`,
+    intro: 'Los iniciales y las familias de los huevos, de S a D, según cuántas veces vencen a Mewtwo en las tres dificultades. Toca un Pokémon para abrir su página; los números de cada uno y el método están justo abajo.',
+    updated: (date: string, days: number) => `Partidas de los ${days} días hasta el ${date}. La tier list se actualiza con el tiempo.`,
+    tiers: 'Tiers, del mejor al peor',
+    tier: (tier: string) => `Tier ${tier}`,
+    noData: 'Sin datos',
+    noDataNote: (min: number) => `Menos de ${min} partidas hasta ahora: todavía sin tier.`,
+    tableTitle: 'Los números de cada Pokémon',
+    tableNote:
+      'En cada dificultad, el porcentaje de partidas que vencieron a Mewtwo (el modo infinito cuenta como victoria) y, entre paréntesis, cuántas partidas. La nota compara las probabilidades de ganar con las del promedio: 1× es el promedio.',
+    head: { rank: '#', pokemon: 'Pokémon', tier: 'Tier', score: 'Nota', minute: 'Minuto promedio' },
+    methodTitle: 'Cómo se hace la tier list',
+    method: (r: TierMethod) => [
+      `Sale de las ${n(r.runs)} partidas terminadas en los últimos ${r.days} días en el modo normal (sin el Desafío del día ni el Modo Legendario), contadas de forma anónima por el juego. Una victoria es una partida que venció a Mewtwo.`,
+      `Cada dificultad cuenta por separado. Para que un Pokémon con pocas partidas no suba a la cima por suerte, su porcentaje de victorias en cada una se acerca al promedio de esa dificultad, como si hubiera jugado ${r.prior} partidas más en el promedio: con 20 partidas, el resultado se acerca bastante al promedio; con 500, casi no cambia.`,
+      `Después, la nota compara las probabilidades de ganar de cada Pokémon con las del promedio en cada dificultad y junta las tres: Difícil vale ${r.weights.hard}%, Normal ${r.weights.normal}% y Pesadilla ${r.weights.nightmare}%. Difícil pesa más porque tiene muchas partidas y la juega sobre todo gente que ya conoce el juego, sea cual sea su Pokémon. Normal es la más jugada, pero es donde se juntan los principiantes, y Pesadilla es la prueba más dura, pero tiene pocas victorias, así que varía más. Comparar probabilidades, y no porcentajes, hace que pasar de 5% a 10% en Pesadilla valga lo mismo que pasar de 55% a 70% en Normal.`,
+      `Los tiers salen de la nota: S desde ${n(r.cuts.S)}× (casi el doble de probabilidades que el promedio), A desde ${n(r.cuts.A)}×, B desde ${n(r.cuts.B)}× (en el promedio o arriba), C desde ${n(r.cuts.C)}× y D por debajo. Quien tiene menos de ${r.minRuns} partidas, sumando las tres dificultades, queda en "Sin datos" hasta que se juegue más.`,
+    ],
+    caveatsTitle: 'Lo que la tier list no dice',
+    caveats: (popular: string, runs: number) => [
+      `Quién elige importa. Quien está empezando suele elegir los iniciales más famosos (solo ${popular} tiene ${n(runs)} partidas en Normal), mientras que las familias de los huevos quedan en manos de quien ya jugó lo suficiente para eclosionarlas. Por eso el porcentaje de victorias de los huevos sale más lindo y el de los iniciales populares, más bajo, sin que el Pokémon sea tanto mejor o peor.`,
+      'La Tienda Kecleon también pesa: quien compró más mejoras gana más, con cualquier Pokémon.',
+      'El juego cambia. Movimientos, jefes y dificultades se ajustan seguido, y las partidas de antes de un ajuste siguen contando hasta que salen de la ventana.',
+      'Aun acercadas al promedio, pocas partidas dan números inciertos: un tier de diferencia entre dos Pokémon de la mitad de la lista casi no significa nada.',
+      'Al final, el mejor Pokémon es el que tú juegas bien. Cualquiera de ellos puede vencer a Mewtwo.',
+    ],
   },
 
   /** Enemy traits, built from `data/traits.ts`. */

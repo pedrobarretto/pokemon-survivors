@@ -1,5 +1,5 @@
 import type { BlastSafe } from '../../data/bosses'
-import type { SiteMessages } from './pt'
+import type { SiteMessages, TierMethod } from './pt'
 
 /** Number in English format (`1,250`, `0.75`). */
 const n = (v: number) => v.toLocaleString('en-US', { maximumFractionDigits: 2 })
@@ -19,6 +19,7 @@ export const siteEn: SiteMessages = {
     pokedex: 'Pokédex',
     guide: 'Guide',
     changelog: 'Changelog',
+    tierList: 'Tier list',
     legal: 'Legal',
     support: 'Support',
     language: 'Language',
@@ -60,6 +61,7 @@ export const siteEn: SiteMessages = {
     results: (count: number) => `${count} Pokémon found`,
     empty: 'No Pokémon match these filters.',
     clear: 'Clear filters',
+    tierLink: 'Which Pokémon is best? See the tier list, built from players’ runs',
     roles: { starter: 'Starter', egg: 'Egg', enemy: 'Wild', boss: 'Boss', legendary: 'Legendary', event: 'Event' },
     roleFilter: { starter: 'Starters', egg: 'Eggs', enemy: 'Wild', boss: 'Bosses', legendary: 'Legendaries', event: 'Events' },
     link: (name: string) => `Link to ${name}`,
@@ -147,6 +149,46 @@ export const siteEn: SiteMessages = {
     groups: { starter: 'Starters', egg: 'Eggs', legendary: 'Legendaries' },
     back: 'See the full Pokédex',
     page: (name: string) => `${name}'s page`,
+    tierQ: (name: string) => `Is ${name} good in Pokémon Survivors?`,
+    tierA: (name: string, tier: string, rate: number, runs: number, days: number) =>
+      `On the tier list, built from players’ runs, ${name} is ${tier} tier: it beat Mewtwo in ${rate}% of its ${n(runs)} runs on Normal over the last ${days} days.`,
+    tierNoneA: (name: string) => `${name} doesn’t have enough runs yet to get a tier on the tier list. It’s updated over time.`,
+    tierLine: (tier: string, rate: number) => `${tier} tier on the tier list · ${rate}% wins on Normal`,
+    tierLineNone: 'No tier yet on the tier list: too few runs',
+  },
+
+  tierList: {
+    title: 'Pokémon Survivors tier list: the best Pokémon, from real runs',
+    description:
+      'A Pokémon Survivors tier list built from players’ real runs: the best Pokémon for beating Mewtwo, from S to D, with every starter’s and egg family’s win rate on Normal, Hard and Nightmare.',
+    h1: 'Pokémon Survivors tier list',
+    best: (names: readonly string[], runs: number, days: number) =>
+      `What is the best Pokémon in Pokémon Survivors? Going by ${n(runs)} runs over the last ${days} days, right now it’s ${list(names)}: players beat Mewtwo with them more often than with anything else.`,
+    intro: 'The starters and egg families from S to D, by how often they beat Mewtwo across the three difficulties. Tap a Pokémon to open its page; everyone’s numbers and the method are right below.',
+    updated: (date: string, days: number) => `Runs from the ${days} days up to ${date}. The tier list is updated over time.`,
+    tiers: 'Tiers, best to worst',
+    tier: (tier: string) => `${tier} tier`,
+    noData: 'No data',
+    noDataNote: (min: number) => `Fewer than ${min} runs so far: no tier yet.`,
+    tableTitle: 'Every Pokémon’s numbers',
+    tableNote:
+      'On each difficulty, the share of runs that beat Mewtwo (endless mode counts as a win) and, in brackets, how many runs. The score compares the odds of winning with the average’s: 1× is average.',
+    head: { rank: '#', pokemon: 'Pokémon', tier: 'Tier', score: 'Score', minute: 'Avg. minute' },
+    methodTitle: 'How the tier list is made',
+    method: (r: TierMethod) => [
+      `It comes from the ${n(r.runs)} runs finished over the last ${r.days} days in the regular mode (no Daily Challenge, no Legend Mode), counted anonymously by the game. A win is a run that beat Mewtwo.`,
+      `Each difficulty counts on its own. So a Pokémon with few runs can’t luck its way to the top, its win rate on each is pulled toward that difficulty’s average, as if it had played ${r.prior} more runs at the average: with 20 runs, the result moves a good way toward the average; with 500, it barely changes.`,
+      `Then the score compares each Pokémon’s odds of winning with the average’s on each difficulty and blends the three: Hard counts ${r.weights.hard}%, Normal ${r.weights.normal}% and Nightmare ${r.weights.nightmare}%. Hard counts most because it has plenty of runs and is played mostly by people who already know the game, whatever their Pokémon. Normal is the most played, but it’s where beginners gather, and Nightmare is the toughest test but has few wins, so it swings more. Comparing odds instead of percentages makes going from 5% to 10% on Nightmare worth as much as going from 55% to 70% on Normal.`,
+      `The tiers come from the score: S from ${n(r.cuts.S)}× (nearly double the average’s odds), A from ${n(r.cuts.A)}×, B from ${n(r.cuts.B)}× (average or better), C from ${n(r.cuts.C)}× and D below that. Anyone with fewer than ${r.minRuns} runs, all three difficulties together, stays under “No data” until it’s played more.`,
+    ],
+    caveatsTitle: 'What the tier list doesn’t tell you',
+    caveats: (popular: string, runs: number) => [
+      `Who picks matters. New players tend to go for the famous starters (${popular} alone has ${n(runs)} runs on Normal), while the egg families are in the hands of people who have played enough to hatch them. That flatters the eggs’ win rates and drags down the popular starters’, without the Pokémon being that much better or worse.`,
+      'The Kecleon Shop matters too: players with more upgrades bought win more, with any Pokémon.',
+      'The game changes. Moves, bosses and difficulties get tuned often, and runs from before a change still count until they leave the window.',
+      'Even pulled toward the average, few runs make for shaky numbers: one tier between two Pokémon in the middle of the list means very little.',
+      'In the end, the best Pokémon is the one you play well. Any of them can beat Mewtwo.',
+    ],
   },
 
   traits: {

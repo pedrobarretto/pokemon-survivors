@@ -35,6 +35,7 @@ export const STRIPE_DONATION_URL = 'https://donate.stripe.com/5kQ28l1x45My6ci4ib
 export const ROUTES = {
   play: { pt: '/', en: '/en/', es: '/es/' },
   pokedex: { pt: '/pokedex/', en: '/en/pokedex/', es: '/es/pokedex/' },
+  tierList: { pt: '/tier-list/', en: '/en/tier-list/', es: '/es/tier-list/' },
   guide: { pt: '/guia/', en: '/en/guide/', es: '/es/guia/' },
   changelog: { pt: '/novidades/', en: '/en/changelog/', es: '/es/novedades/' },
   legal: { pt: '/legal/', en: '/en/legal/', es: '/es/legal/' },

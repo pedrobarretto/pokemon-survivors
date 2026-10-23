@@ -13,6 +13,8 @@ import { layout } from '../layout'
 import { appearances, dexPages, type DexEntry, type DexPage } from '../pokedex'
 import { dexPaths, ROUTES } from '../routes'
 import { createSpriteCss } from '../spriteCss'
+import { TIER_SNAPSHOT } from '../../data/tierRuns'
+import { currentTierList, winPercent, type FamilyId } from '../tierList'
 import { appearance, card } from './pokedex'
 
 /** A question and its answer, shown on the page and repeated in its `FAQPage` JSON-LD. */
@@ -36,7 +38,26 @@ const evolutionSteps = (id: PlayableId, m: SiteMessages) => {
   })
 }
 
-const familyFaq = (id: PlayableId, base: DexEntry, m: SiteMessages, locale: Locale): Qa[] => {
+/** A family's place on the tier list (`site/tierList.ts`), or null while it's short of runs. */
+const rankOf = (id: FamilyId) => currentTierList().ranked.find((f) => f.id === id) ?? null
+
+/** The family's tier and Normal win rate under the play button, linking to the tier list. */
+const tierLine = (id: FamilyId, m: SiteMessages, locale: Locale) => {
+  const rank = rankOf(id)
+  return html`<p class="dex-tier"><a href="${ROUTES.tierList[locale]}">${rank
+    ? html`<span class="tier-chip tier-${rank.tier}">${rank.tier}</span> ${m.dexPage.tierLine(rank.tier, winPercent(rank.cells.normal))}`
+    : m.dexPage.tierLineNone} →</a></p>`
+}
+
+const tierQa = (id: FamilyId, name: string, m: SiteMessages): Qa => {
+  const rank = rankOf(id)
+  return {
+    q: m.dexPage.tierQ(name),
+    a: rank ? m.dexPage.tierA(name, rank.tier, winPercent(rank.cells.normal), rank.cells.normal.runs, TIER_SNAPSHOT.days) : m.dexPage.tierNoneA(name),
+  }
+}
+
+const familyFaq = (id: FamilyId, base: DexEntry, m: SiteMessages, locale: Locale): Qa[] => {
   const name = base.name
   const game = LOCALES[locale].messages
   const steps = evolutionSteps(id, m)
@@ -48,6 +69,7 @@ const familyFaq = (id: PlayableId, base: DexEntry, m: SiteMessages, locale: Loca
     ...(steps.length > 0 ? [{ q: m.dexPage.evolveQ(name), a: `${m.dexPage.evolveA(steps)}${needsItem ? ` ${m.dexPage.evolveItem}` : ''}` }] : []),
     { q: m.dexPage.signatureQ(name), a: m.dexPage.signatureA(name, MOVES[PLAYABLE[id].signature].name) },
     ...(megas.length > 0 ? [{ q: m.dexPage.megaQ(name), a: m.dexPage.megaA(megas) }] : []),
+    tierQa(id, name, m),
   ]
 }
 
@@ -110,6 +132,7 @@ export const dexPage = (page: DexPage, locale: Locale) => {
     <p class="lead">${intro(page, m, locale)}</p>
   </div>
   <p class="cta"><a class="btn-play" href="${ROUTES.play[locale]}">▶ ${play}</a></p>
+  ${page.kind === 'family' && tierLine(page.id, m, locale)}
   <div class="dex-grid">${page.entries.map((e) => card(e, locale, css))}</div>
   <div class="doc-body narrow dex-page">
     ${page.kind === 'family' && megaSection(page.id, m)}
