@@ -308,10 +308,13 @@ const TEAM_ATTACK_ALPHA = 0.6
 
 let layer: HTMLCanvasElement | null = null
 let layerCtx: Ctx | null = null
-onCanvasReset(() => {
-  layer = null
-  layerCtx = null
-})
+onCanvasReset(
+  () => {
+    layer = null
+    layerCtx = null
+  },
+  () => layer,
+)
 
 /**
  * A cleared view-sized layer in world coordinates (top-left at the camera)

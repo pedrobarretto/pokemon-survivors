@@ -913,7 +913,7 @@ export const en: Messages = {
     },
     plaque: {
       title: 'Festival patrons',
-      donors: (festival, n) => `${festival} · ${n === 1 ? '1 donor' : `${n} donors`}`,
+      donors: (festival, n, count) => `${festival} · ${n === 1 ? '1 donor' : `${count} donors`}`,
       empty: 'Nobody has tossed anything yet. Be the first!',
       you: (amount) => `You: ${amount}`,
       rank: (n) => `#${n}`,
@@ -1071,7 +1071,11 @@ export const en: Messages = {
     egg: (egg) => `A *${egg}* went to the incubator.`,
     coins: (coins) => `You got *${coins}*.`,
     newTitle: (title) => `New title: *${title}*! It's on already.`,
-    style: (name) => `New style: *${name}*! It's on already.`,
+    style: {
+      frame: (name) => `New frame: *${name}*! It's on already.`,
+      background: (name) => `New background: *${name}*! It's on already.`,
+      wallpaper: (name) => `New wallpaper: *${name}*! It's on already.`,
+    },
     shinyHatch: (name) => `A _shiny_ *${name}* came for you!`,
     companion: (name) => `*${name}* walks with you in your runs now!`,
     ribbon: (name) => `*${name}*! It's on your profile already.`,
@@ -4773,6 +4777,7 @@ export const en: Messages = {
       halloween: ['Boo... Halloween Night has come to the plaza.', 'The candies from your runs go in the jar, back in the lobby. Here I sell something else...'],
       christmas: ['Deli! Delibird Presents has come to the plaza!', "I'm still wrapping everything. Come back at Christmas, the sack will be full!"],
     },
+    lanturn: ['Lan-turn! Every coin in the fountain lights a lantern on the plaza. Come see the pot!'],
 
   },
   traits: {

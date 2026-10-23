@@ -10,25 +10,32 @@ import { fitSprites, sprites, type FormKey, type SpeciesSprites } from './sprite
 /**
  * How the Legend mode looks (`game/legend.ts`): a legend wears its form and
  * an aura in its color, is drawn no wider than `LEGEND_BODY` (Lugia's wings
- * would cover a phone's screen), and a boss of its own species is its dark Clone.
+ * would cover a phone's screen) unless that leaves it shorter than
+ * `LEGEND_MIN_HEIGHT`, and a boss of its own species is its dark Clone.
  */
 
 type Ctx = CanvasRenderingContext2D
 
 /** The widest body a legend is drawn with, in world px (a Charizard's is 27). */
 export const LEGEND_BODY = 48
+/**
+ * The shortest body a legend is shrunk to, in world px: a wingspan isn't size,
+ * so the birds keep their height (Moltres's flames span 79 px over a 36 px body,
+ * and fitting that width alone left it the smallest legend).
+ */
+export const LEGEND_MIN_HEIGHT = 30
 
 /**
  * The acting player's sprites (the shell's own between ticks): a Mega's form,
  * else a legend's (Primal Kyogre, Deoxys's forme), else a stance's
- * (Aegislash's Blade); a legend's fitted to `LEGEND_BODY`.
+ * (Aegislash's Blade); a legend's fitted to `LEGEND_BODY` and `LEGEND_MIN_HEIGHT`.
  */
 export const playerSprites = (g: Game, megaForm?: FormKey): SpeciesSprites => {
   const p = g.player
   const stance = p.special.stance
   const form = megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined)
   const s = sprites(playerDex(g), p.shiny, form)
-  return p.legend ? fitSprites(s, LEGEND_BODY) : s
+  return p.legend ? fitSprites(s, LEGEND_BODY, LEGEND_MIN_HEIGHT) : s
 }
 
 /** A boss of the player's own species (`isClone`): a dark violet cast and outline. */

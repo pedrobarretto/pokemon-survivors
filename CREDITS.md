@@ -54,6 +54,8 @@ CHUNSOFT are original *Pokémon Mystery Dungeon* sprites. This file is generated
 | 253 | Grovyle (shiny) | YoukaiMinori, [Morei](https://bsky.app/profile/murpia57.bsky.social), [Deeshura](https://bsky.app/profile/deeshura.bsky.social) | SuperFabbioGuy, [silverfox88](https://twitter.com/realsilverfox88), [Deeshura](https://bsky.app/profile/deeshura.bsky.social) |
 | 254 | Sceptile | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [0palite](https://zeropalart.tumblr.com/), baronessfaron |
 | 254 | Sceptile (shiny) | Lovi, [Emmuffin](https://twitter.com/Ernmuffin) | [Deeshura](https://bsky.app/profile/deeshura.bsky.social) |
+| 254 | Sceptile (Mega) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 254 | Sceptile (Mega, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
 | 255 | Torchic | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/) |
 | 255 | Torchic (shiny) | [Moo](https://twitter.com/MoonMoonMemes) | [Moo](https://twitter.com/MoonMoonMemes), [Morei](https://bsky.app/profile/murpia57.bsky.social) |
 | 256 | Combusken | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain, [Blanky](https://www.tumblr.com/theblankest123) |

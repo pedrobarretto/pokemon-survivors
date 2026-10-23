@@ -2,6 +2,7 @@ import { accountState, API_URL } from './account'
 import { apiCall } from './api'
 import { BUG_REPORT, clip, parseBugCrash, type BugCrash, type BugError, type BugPerf, type BugReport, type BugRun, type BugTech } from './game/bugReport'
 import { isRecord } from './game/parse'
+import { parseCrumb, type Crumb, type CrumbMoment, type Memory } from './crumb'
 import { locale } from './i18n'
 
 /**
@@ -13,6 +14,8 @@ import { locale } from './i18n'
  *   what it looks like (refreshed every few seconds) and the session's last
  *   error. A run that ends, or a page closed on purpose, clears it; a page the
  *   phone killed mid-run leaves it, and the next boot finds it (`takeCrash`).
+ *   Its breadcrumb (`crumb.ts`) adds the memory held and the run's last key
+ *   moment (`runMoment`), which writes the watch at once.
  */
 
 /** Whether reports can go anywhere: they need the API. */
@@ -23,15 +26,18 @@ const WATCH_KEY = 'ps:runWatch'
 /** How often the crash watch rewrites the run's state. */
 const WATCH_MS = 5000
 
+/** The least time between two writes for key moments (a chain of level-up picks writes once). */
+const MOMENT_GAP_MS = 1000
+
 const errors: BugError[] = []
 
 /** What the shell has on screen and how the device copes, set by `main.ts` (`describeWith`). */
-type Context = { view: string; run: BugRun | null; perf: BugPerf | null }
+type Context = { view: string; run: BugRun | null; perf: BugPerf | null; memory: Memory | null }
 
-let describe = (): Context => ({ view: '', run: null, perf: null })
+let describe = (): Context => ({ view: '', run: null, perf: null, memory: null })
 
-/** The crash watch as stored: the run, the session's last error, and whether the page was in the background. */
-type Watch = BugCrash & { hidden: boolean }
+/** The crash watch as stored: the run, the session's last error, whether the page was in the background, and the breadcrumb. */
+type Watch = BugCrash & { hidden: boolean; crumb: Crumb | null }
 
 let watch: Watch | null = null
 
@@ -39,7 +45,7 @@ const readWatch = (): Watch | null => {
   try {
     const v: unknown = JSON.parse(localStorage.getItem(WATCH_KEY) ?? 'null')
     const crash = parseBugCrash(v)
-    return crash && isRecord(v) ? { ...crash, hidden: v.hidden === true } : null
+    return crash && isRecord(v) ? { ...crash, hidden: v.hidden === true, crumb: parseCrumb(v.crumb) } : null
   } catch {
     return null
   }
@@ -66,15 +72,45 @@ const numberOf = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? 
 /** `navigator.deviceMemory` (GB, rounded down by the browser), where it says (Chromium only). */
 export const deviceMemory = () => numberOf(Reflect.get(navigator, 'deviceMemory'))
 
+/** The run's last key moment and its second, the one waiting for the next write, and when the watch last wrote (`performance.now()`). */
+let moment: { kind: CrumbMoment; at: number } | null = null
+let pendingMoment: CrumbMoment | null = null
+let momentTimer: ReturnType<typeof setTimeout> | null = null
+let wroteAt = 0
+
 /**
  * Brings the crash watch up to date with the run on screen (`describeWith`):
  * written while one is on, cleared once it's over. `main.ts` calls it as a
  * run starts and ends; a timer keeps it fresh in between.
  */
 export const syncRunWatch = () => {
-  const { run, perf } = describe()
-  if (!run) return watch && writeWatch(null)
-  writeWatch({ at: new Date().toISOString(), version: __GAME_VERSION__, run, heapMb: heapMb(), perf, error: watch?.error ?? null, hidden: document.hidden })
+  const { run, perf, memory } = describe()
+  if (!run) {
+    moment = null
+    return watch && writeWatch(null)
+  }
+  if (pendingMoment) moment = { kind: pendingMoment, at: run.time }
+  pendingMoment = null
+  wroteAt = performance.now()
+  const crumb = memory && { ...memory, moment: moment?.kind ?? null, momentAt: moment?.at ?? null }
+  writeWatch({ at: new Date().toISOString(), version: __GAME_VERSION__, run, heapMb: heapMb(), perf, error: watch?.error ?? null, hidden: document.hidden, crumb })
+}
+
+/**
+ * A key moment of the run (a boss arriving, a rift entered, a pick): the watch writes it
+ * on the next task, or a second after its last write, so a crash right after says what
+ * just happened. Cheap enough for the event loop: the write itself waits.
+ */
+export const runMoment = (kind: CrumbMoment) => {
+  pendingMoment = kind
+  if (momentTimer !== null || !watch) return
+  momentTimer = setTimeout(
+    () => {
+      momentTimer = null
+      syncRunWatch()
+    },
+    Math.max(0, wroteAt + MOMENT_GAP_MS - performance.now()),
+  )
 }
 
 const record = (e: BugError) => {
@@ -117,16 +153,16 @@ window.addEventListener('pageshow', (e) => e.persisted && syncRunWatch())
 setInterval(syncRunWatch, WATCH_MS)
 
 /**
- * The run the page died in last time, once: the watch is cleared as it's
- * read. Null when the last session ended cleanly, or the page was in the
- * background without an error (the phone freeing memory).
+ * The run the page died in last time and its breadcrumb, once: the watch is
+ * cleared as it's read. Null when the last session ended cleanly, or the page
+ * was in the background without an error (the phone freeing memory).
  */
-export const takeCrash = (): BugCrash | null => {
+export const takeCrash = (): { crash: BugCrash; crumb: Crumb | null } | null => {
   const found = readWatch()
   if (!found) return null
   writeWatch(null)
-  const { hidden, ...crash } = found
-  return hidden && !crash.error ? null : crash
+  const { hidden, crumb, ...crash } = found
+  return hidden && !crash.error ? null : { crash, crumb }
 }
 
 /** Tells the reports what's on screen: `main.ts` hands in the run (plain numbers and ids), the top screen's name and the device's load. */

@@ -220,7 +220,10 @@ const sparkles = () => SPARKLE()
 
 /** Sparkles outlined for light backgrounds (cells, chips). */
 let darkSparkles: PixelSprite[] | null = null
-onCanvasReset(() => (darkSparkles = null))
+onCanvasReset(
+  () => (darkSparkles = null),
+  () => darkSparkles,
+)
 const outlinedSparkles = () => (darkSparkles ??= SPARKLE().map((s) => outlined(s, '#584010')))
 
 const blit = (ctx: CanvasRenderingContext2D, sprite: PixelSprite, cx: number, cy: number) =>

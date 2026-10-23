@@ -12,6 +12,8 @@ import type { RelayHome } from './net/protocol'
 import { isRecord } from './game/parse'
 import type { LobbyFocus } from './ui/title'
 import type { NetSummary } from './coop/netStats'
+import type { CrumbMoment, Quality } from './crumb'
+import type { DeviceInfo } from './telemetry'
 
 /**
  * Analytics and error reports. Events go to PostHog (product analytics and
@@ -21,15 +23,26 @@ import type { NetSummary } from './coop/netStats'
  * Only production domains report (or a device with `ps:analytics` set to `on`, for testing).
  */
 
-/** How the device coped with a run: canvas memory at its peak (MB, `createCanvas`), `navigator.deviceMemory` (GB), and the frames while playing (ms; long: past 50 ms). */
+/**
+ * How the device coped with a run, and which device it was (`telemetry.ts`). Memory in MB (w×h×4),
+ * at the end and at its peak (sampled every 5 s and at key moments): the canvases the game's caches
+ * hold (`heldCanvases`, not every canvas made: those include garbage not yet collected) and the
+ * downloaded sprite sheets' decoded pixels (`sheetStats`). Then the quality the governor drew at
+ * by the end, `navigator.deviceMemory` (GB), and the frames while playing (ms; long: past 50 ms).
+ */
 export type RunPerf = {
-  peakCanvasMb: number
-  peakCanvases: number
+  liveCanvasMb: number
+  peakLiveCanvasMb: number
+  liveCanvases: number
+  sheetMb: number
+  peakSheetMb: number
+  sheets: number
+  quality: Quality
   deviceMemory: number | null
   frameAvg: number | null
   frameP95: number | null
   longFrames: number
-}
+} & DeviceInfo
 
 /** Custom events, with their payloads. Keep this list short: every event counts against the free tier. */
 type AnalyticsEvents = {
@@ -77,31 +90,43 @@ type AnalyticsEvents = {
   /**
    * The page died mid-run last time (the crash watch, `takeCrash` in `bugReport.ts`), sent once
    * by the next boot whether or not the player files a report. Rare, so it fits the budget.
+   * The memory fields are the breadcrumb's (`crumb.ts`, as `RunPerf` has them), null from a
+   * build before it; the device is this boot's (the same phone).
    */
   run_crash: {
     version: string
     sameVersion: boolean
-    /** When the watch last wrote (ISO): the crash came within 5 s of it. */
+    /** When the watch last wrote (ISO): the crash came within 5 s of it (1 s after a key moment). */
     at: string
     partner: string | null
     phase: string | null
     minute: number | null
+    /** Seconds into the run when the watch last wrote. */
+    seconds: number | null
     enemies: number | null
     projectiles: number | null
     wave: string | null
     boss: string | null
     place: string | null
+    biome: string | null
+    /** The run's last key moment before the crash (a boss, a rift, a pick…) and the run's second it came at. */
+    moment: CrumbMoment | null
+    momentAt: number | null
     heapMb: number | null
-    canvases: number | null
-    canvasMb: number | null
-    peakCanvasMb: number | null
+    liveCanvasMb: number | null
+    peakLiveCanvasMb: number | null
+    liveCanvases: number | null
+    sheetMb: number | null
+    peakSheetMb: number | null
+    sheets: number | null
+    quality: Quality | null
     frameMs: number | null
     deviceMemory: number | null
     /** The session's last error, if one came first. */
     error: string | null
     /** Whether safe mode was on for the run that died (`safeMode.ts`). */
     safeMode: boolean
-  }
+  } & DeviceInfo
   /** A share card left the game (the run's or the Trainer Card), or the invite link, through the share sheet, the clipboard or a download. */
   share: { kind: 'run' | 'trainer' | 'invite'; method: 'share' | 'copy' | 'download' }
   /** The game opened from a link carrying a handle this device didn't hold (`?ref=` or a profile's `?u=`); `first`: the device had no inviter yet. */
@@ -192,10 +217,11 @@ const giveUp = () => {
 const flat = (data: object) => Object.fromEntries(Object.entries(data).filter((e): e is [string, string | number] => typeof e[1] === 'string' || typeof e[1] === 'number'))
 
 /**
- * Sends a custom event. Silently does nothing where analytics don't run.
+ * Sends a custom event. Silently does nothing where analytics don't run. Dev builds log it to the console.
  * `beacon`: the page may be going away (`pagehide`, hidden), so PostHog sends it at once by `sendBeacon`.
  */
 export const track = <E extends keyof AnalyticsEvents>(event: E, data: AnalyticsEvents[E], opts: { beacon?: boolean } = {}) => {
+  if (import.meta.env.DEV) console.debug('[analytics]', event, data)
   window.umami?.track(event, flat(data))
   withPosthog((ph) => ph.capture(event, data, opts.beacon ? { transport: 'sendBeacon', send_instantly: true } : undefined))
 }

@@ -21,8 +21,8 @@ import type { Place } from '../render/titleScene'
 import type { PlazaNpc } from '../render/plaza'
 import { stallGoods } from '../game/stalls'
 import type { VisitorShelf } from './shop'
-import { dialogue, type Dialogue } from './dialogue'
-import { stallSpeaker, stallToday } from './visitors'
+import { dialogue, type Dialogue, type Speaker } from './dialogue'
+import { lanturnSpeaker, stallSpeaker, stallToday } from './visitors'
 import { inviterName } from '../ranking'
 import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
 import { fetchWall } from '../supporters'
@@ -930,34 +930,40 @@ export const titleScreen = (
     actions.meadow.visit('plaza', instant)
   }
 
-  /** A talk at the plaza: the shop with a shopkeeper, the caravan's shelf with Meowth, a few words with a stall's keeper, the festival's sheet at the fountain (its plaque tab at the plaque). */
+  /** A talk at the plaza: the shop with a shopkeeper, the caravan's shelf with Meowth, a few words with a stall's keeper or Lanturn, the festival's sheet at the fountain (its plaque tab at the plaque). */
   function talkTo(who: PlazaNpc) {
     if (who === 'stall') return talkToStall()
+    if (who === 'lanturn') return chatThen(lanturnSpeaker(), t().plaza.lanturn, () => visitShop('festival'))
     if (who === 'fountain') return visitShop('festival')
     if (who === 'plaque') return visitShop('plaque')
     visitShop('shop', false, who === 'meowth' ? 'caravan' : undefined)
   }
 
-  /**
-   * The seasonal stall's keeper says its lines over the plaza; the lobby's
-   * keys wait. Its shelf in the shop follows when it sells something (Duskull's Haunted Egg).
-   */
+  /** The seasonal stall's keeper has a few words; its shelf in the shop follows when it sells something (Duskull's Haunted Egg). */
   function talkToStall() {
     const id = stallToday()
-    if (!id || chat || visit || !stage) return
+    if (id) chatThen(stallSpeaker(id), t().plaza.stalls[id], () => (stallGoods(id).length > 0 ? visitShop('shop', false, 'stall') : undefined))
+  }
+
+  /**
+   * A visitor says its `lines` over the plaza while the lobby's keys wait,
+   * then `next` runs (a trip that takes the keys); without one, the lobby's keys come back.
+   */
+  function chatThen(speaker: Speaker, lines: readonly string[], next: () => void) {
+    if (chat || visit || !stage) return
     offKeys?.()
     offKeys = null
     talkButton.classList.add('hidden')
     playSfx('select')
     chat = dialogue(root, input, {
-      speaker: stallSpeaker(id),
-      lines: t().plaza.stalls[id].map((text, i) => ({ text, emotion: i === 0 ? 'Happy' : 'Joyous' })),
+      speaker,
+      lines: lines.map((text, i) => ({ text, emotion: i === 0 ? 'Happy' : 'Joyous' })),
       onDone: () =>
         later(() => {
           chat?.dispose()
           chat = null
-          if (stallGoods(id).length > 0) return visitShop('shop', false, 'stall')
-          offKeys = restKeys()
+          next()
+          if (!visit) offKeys = restKeys()
         }),
     })
   }

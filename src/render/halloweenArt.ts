@@ -135,7 +135,10 @@ type Dusk = keyof typeof DUSKS
  */
 const duskVeil = (() => {
   const cache = new Map<Dusk, { w: number; h: number; canvas: PixelSprite }>()
-  onCanvasReset(() => cache.clear())
+  onCanvasReset(
+    () => cache.clear(),
+    () => cache,
+  )
   return (kind: Dusk, w: number, h: number) => {
     const hit = cache.get(kind)
     if (hit && hit.w === w && hit.h === h) return hit.canvas

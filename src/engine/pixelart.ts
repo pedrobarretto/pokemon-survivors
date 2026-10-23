@@ -5,38 +5,10 @@
 export type Palette = Readonly<Record<string, string>>
 export type PixelSprite = HTMLCanvasElement
 
-/**
- * Canvases `createCanvas` made that are still alive (as far as the garbage
- * collector has said) and their pixels in bytes (w×h×4), with the peaks since
- * `resetCanvasPeaks`: the crash watch and `run_end` read them. A canvas resized
- * after it's made counts at its first size.
- */
-export const canvasStats = { live: 0, bytes: 0, peakLive: 0, peakBytes: 0 }
-
-const collected =
-  typeof FinalizationRegistry === 'function'
-    ? new FinalizationRegistry<number>((bytes) => {
-        canvasStats.live--
-        canvasStats.bytes -= bytes
-      })
-    : null
-
-/** Starts the peaks over from what's alive now (a run starting). */
-export const resetCanvasPeaks = () => {
-  canvasStats.peakLive = canvasStats.live
-  canvasStats.peakBytes = canvasStats.bytes
-}
-
 export const createCanvas = (w: number, h: number) => {
   const c = document.createElement('canvas')
   c.width = Math.max(1, Math.ceil(w))
   c.height = Math.max(1, Math.ceil(h))
-  const bytes = c.width * c.height * 4
-  canvasStats.live++
-  canvasStats.bytes += bytes
-  if (canvasStats.live > canvasStats.peakLive) canvasStats.peakLive = canvasStats.live
-  if (canvasStats.bytes > canvasStats.peakBytes) canvasStats.peakBytes = canvasStats.bytes
-  collected?.register(c, bytes)
   return c
 }
 
@@ -77,14 +49,18 @@ export const recolor = (rows: readonly string[], palette: Palette) => fromString
 /* ---------- GPU resets ---------- */
 
 const resets: Array<() => void> = []
+const holders: Array<() => unknown> = []
 
 /**
  * Registers how to drop a cache of drawn canvases. When the browser loses its GPU context
  * (memory pressure on phones, a driver reset), every 2D canvas comes back blank, so a cache
  * kept past that would silently draw nothing: no ground under the horde, which then smears.
+ * `holds` returns what the cache keeps right now (a canvas, or Maps, arrays and plain objects
+ * of them), so `heldCanvases` can weigh it.
  */
-export const onCanvasReset = (reset: () => void) => {
+export const onCanvasReset = (reset: () => void, holds?: () => unknown) => {
   resets.push(reset)
+  if (holds) holders.push(holds)
 }
 
 /** Drops every registered cache so it redraws. Called when the game canvas gets its context back. */
@@ -92,17 +68,66 @@ export const resetCanvases = () => {
   for (const reset of resets) reset()
 }
 
+/** Canvases (anything with `getContext` and a size), told apart from the images and patterns caches also keep. */
+type Sized = { width: number; height: number; getContext: unknown }
+const isCanvas = (v: object): v is Sized => 'getContext' in v && 'width' in v && typeof v.width === 'number' && 'height' in v && typeof v.height === 'number'
+
+/** How deep `weighCanvases` looks: `memo3`'s three Maps, then a value holding sheets holding canvases. */
+const WEIGH_DEPTH = 6
+
+/**
+ * The distinct canvases reachable from `roots` (through Maps, Sets, arrays, plain objects and 2D
+ * contexts, `WEIGH_DEPTH` deep) and their pixels in bytes (w×h×4). A canvas freed by sizing it to
+ * 0×0 weighs nothing and doesn't count.
+ */
+export const weighCanvases = (roots: Iterable<unknown>) => {
+  const seen = new Set<object>()
+  const out = { canvases: 0, bytes: 0 }
+  const visit = (v: unknown, depth: number): void => {
+    if (typeof v !== 'object' || v === null || seen.has(v)) return
+    seen.add(v)
+    if (isCanvas(v)) {
+      const bytes = v.width * v.height * 4
+      if (bytes > 0) {
+        out.canvases++
+        out.bytes += bytes
+      }
+      return
+    }
+    if (depth === 0) return
+    if ('canvas' in v && 'drawImage' in v) return visit(v.canvas, depth)
+    if (v instanceof Map) for (const x of v.values()) visit(x, depth - 1)
+    else if (Array.isArray(v) || v instanceof Set) for (const x of v) visit(x, depth - 1)
+    else if (Object.getPrototypeOf(v) === Object.prototype) for (const x of Object.values(v)) visit(x, depth - 1)
+  }
+  for (const root of roots) visit(root, WEIGH_DEPTH)
+  return out
+}
+
+/**
+ * The canvases the game's caches hold right now (`onCanvasReset`'s `holds`) and their pixels in bytes:
+ * what the page keeps for good, unlike a count of canvases made, which includes the garbage
+ * the collector hasn't got to yet. Walks every cache, so it's for a sample every few seconds, not a frame.
+ */
+export const heldCanvases = () => weighCanvases(holders.map((holds) => holds()))
+
 /** A Map holding drawn canvases, emptied on a GPU reset. */
 export const canvasCache = <K, V>() => {
   const cache = new Map<K, V>()
-  onCanvasReset(() => cache.clear())
+  onCanvasReset(
+    () => cache.clear(),
+    () => cache,
+  )
   return cache
 }
 
 /** Builds a value holding canvases on first use, and again after a GPU reset. */
 export const lazy = <T>(build: () => T) => {
   let value: T | undefined
-  onCanvasReset(() => (value = undefined))
+  onCanvasReset(
+    () => (value = undefined),
+    () => value,
+  )
   return () => (value ??= build())
 }
 
@@ -119,11 +144,14 @@ export const memo3 = <A, B, C, R>(fn: (a: A, b: B, c: C) => R, max = Infinity, c
   let fresh: Memo3<A, B, C, R> = new Map()
   let old: Memo3<A, B, C, R> = new Map()
   let size = 0
-  onCanvasReset(() => {
-    fresh = new Map()
-    old = new Map()
-    size = 0
-  })
+  onCanvasReset(
+    () => {
+      fresh = new Map()
+      old = new Map()
+      size = 0
+    },
+    () => [fresh, old],
+  )
   const store = (a: A, b: B, c: C, v: R) => {
     let byB = fresh.get(a)
     if (!byB) fresh.set(a, (byB = new Map()))
@@ -230,7 +258,10 @@ export const ring = memo3((radius: number, thickness: number, color: string): Pi
 const BIG_SHAPE = 64 * 64
 
 let stage: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } | null = null
-onCanvasReset(() => (stage = null))
+onCanvasReset(
+  () => (stage = null),
+  () => stage,
+)
 
 /**
  * Paints a `w`×`h` shape on a shared staging canvas and draws it centered at (x, y) the way

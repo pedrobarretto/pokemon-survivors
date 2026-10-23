@@ -475,6 +475,26 @@ export const sweepSprites = (keep: KeepSprites, idle: number) => {
 /** Species variants loaded right now, for the dev console. */
 export const loadedCount = () => cache.size
 
+/** The images (or shrunk canvases) behind a species' sheets. */
+const sheetImages = (s: SpeciesSprites | undefined) => (s ? Object.values(s.anims).map((sheet) => sheet?.img) : [])
+
+/**
+ * The downloaded sheets held right now (each image once: a missing animation shares the walk's)
+ * and their decoded pixels in bytes (w×h×4), for the crash watch and `run_end`.
+ */
+export const sheetStats = () => {
+  const seen = new Set<HTMLImageElement>()
+  let bytes = 0
+  for (const s of cache.values()) {
+    for (const img of sheetImages(s)) {
+      if (!(img instanceof HTMLImageElement) || seen.has(img)) continue
+      seen.add(img)
+      bytes += img.naturalWidth * img.naturalHeight * 4
+    }
+  }
+  return { sheets: seen.size, bytes }
+}
+
 /** A puff of dust, drawn in place of a species that hasn't finished downloading. */
 const PUFF = [
   '...1111.....',
@@ -492,12 +512,15 @@ const standIns = new Map<Dex, SpeciesSprites>()
 
 // A GPU reset blanks the silhouettes and the puff, all canvases. The sheets are images and
 // survive, so the silhouettes are made again from them when next drawn.
-onCanvasReset(() => {
-  for (const page of [...pages]) freePage(page)
-  for (const o of toPack) evict(o)
-  puff = null
-  standIns.clear()
-})
+onCanvasReset(
+  () => {
+    for (const page of [...pages]) freePage(page)
+    for (const o of toPack) evict(o)
+    puff = null
+    standIns.clear()
+  },
+  () => [pages.map((p) => p.canvas), toPack.map((o) => o.loose), puff?.img],
+)
 
 /* ---------------- Fitting big sprites ---------------- */
 
@@ -563,20 +586,25 @@ const shrinkSheet = (sheet: Sheet, k: number): Sheet => {
 }
 
 let fits = new WeakMap<SpeciesSprites, SpeciesSprites>()
-onCanvasReset(() => {
-  fits = new WeakMap()
-})
+onCanvasReset(
+  () => {
+    fits = new WeakMap()
+  },
+  () => [...cache.values()].map((s) => sheetImages(fits.get(s))),
+)
 
 /**
  * Sprites no wider than `maxW` px of body: a bigger species (Lugia's wings
- * span 79 px) is shrunk once, the pixel-art way, and cached. Smaller ones and
- * the dust puff of a species still downloading come back as they are.
+ * span 79 px) is shrunk once, the pixel-art way, and cached. A wide, flat one
+ * (Moltres's flaming wings) only shrinks down to `minH` px of body height, so
+ * a wingspan doesn't leave it smaller than its peers. Smaller ones and the
+ * dust puff of a species still downloading come back as they are.
  */
-export const fitSprites = (s: SpeciesSprites, maxW: number): SpeciesSprites => {
-  if (s.bodyW <= maxW || standIns.get(s.dex) === s) return s
+export const fitSprites = (s: SpeciesSprites, maxW: number, minH = 0): SpeciesSprites => {
+  const k = Math.min(1, Math.max(maxW / s.bodyW, minH / s.bodyH))
+  if (k >= 1 || standIns.get(s.dex) === s) return s
   let fit = fits.get(s)
   if (!fit) {
-    const k = maxW / s.bodyW
     const { Walk, Idle, Hurt, Fly } = s.anims
     fit = {
       ...s,
