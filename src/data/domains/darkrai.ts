@@ -34,7 +34,7 @@ const SPIRES = [
   [118, -58],
   [-130, 70],
   [130, 70],
-  [0, 148],
+  [0, -150],
 ] as const
 
 /** Jack-o'-lanterns (domain px, the arena's around `arena.at`): passing one lights it, and its light and the player's grow for a while (`NIGHTMARE.lantern`). */
