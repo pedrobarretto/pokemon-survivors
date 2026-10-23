@@ -7,7 +7,7 @@ import { AQUA_STEP_MAX } from '../game/signatureRules'
 import type { Attack, Game } from '../game/types'
 import { FX } from './art'
 import { SIG_FX } from './signatureArt'
-import { sprites } from './sprites'
+import { bodyOf } from '../data/bodies'
 import { dashedRing } from './strokes'
 import { flightAngle } from './modFx'
 import { localPlayer } from '../game/players'
@@ -564,7 +564,7 @@ const STAR = ['#f8e030', '#fff8a0'] as const
 export const drawSignaturePlayer = (ctx: Ctx, g: Game, t: number) => {
   const p = localPlayer(g)
   if (p.moveBuffs.length === 0) return
-  const head = p.y - sprites(playerDex(g)).bodyH - 3
+  const head = p.y - bodyOf(playerDex(g)).bodyH - 3
   for (const b of p.moveBuffs) {
     switch (b.move) {
       case 'petalDance':

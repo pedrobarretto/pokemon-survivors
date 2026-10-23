@@ -84,6 +84,8 @@ type AnalyticsEvents = {
     rerolls: number
     /** The lobby entries opened since the last report (`lobbyPress`), each once. */
     opened: LobbyFocus[]
+    /** Whether the device played it in safe mode (`safeMode.ts`, on after a crash). */
+    safeMode: boolean
   } & RunPerf
   /**
    * The page died mid-run last time (the crash watch, `takeCrash` in `bugReport.ts`), sent once
@@ -122,6 +124,8 @@ type AnalyticsEvents = {
     deviceMemory: number | null
     /** The session's last error, if one came first. */
     error: string | null
+    /** Whether safe mode was on for the run that died (`safeMode.ts`). */
+    safeMode: boolean
   } & DeviceInfo
   /** A share card left the game (the run's or the Trainer Card), or the invite link, through the share sheet, the clipboard or a download. */
   share: { kind: 'run' | 'trainer' | 'invite'; method: 'share' | 'copy' | 'download' }

@@ -33,21 +33,17 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       { pt: 'Ovo do Kecleon sem o limite de um por dia: até 6, e cada um custa o dobro do anterior (₽ 10.000, 20.000, 40.000…). A conta zera à meia-noite.', en: 'The Kecleon Egg is no longer one a day: up to 6, each costing double the last (₽ 10,000, 20,000, 40,000…). The count resets at midnight.', es: 'El Huevo Kecleon ya no es uno por día: hasta 6, y cada uno cuesta el doble del anterior (₽ 10.000, 20.000, 40.000…). La cuenta vuelve a cero a medianoche.' },
       { pt: 'Incubadora maior: a 4ª e a 5ª vaga, suas para sempre, e a Incubadora Rápida, que faz um ovo andar o dobro.', en: 'A bigger incubator: the 4th and 5th slots, yours for good, and the Quick Incubator, which makes an egg walk twice as fast.', es: 'Una incubadora más grande: el 4.º y el 5.º espacio, tuyos para siempre, y la Incubadora Rápida, que hace que un huevo avance el doble.' },
       { pt: 'As partidas pagam cerca de metade do ₽, agora que a loja tem onde gastar. O que você já guardou continua valendo o mesmo.', en: 'Runs pay about half the ₽, now that the shop has somewhere to spend it. What you already saved keeps its full value.', es: 'Las partidas pagan cerca de la mitad de los ₽, ahora que la tienda tiene en qué gastarlos. Lo que ya ahorraste sigue valiendo lo mismo.' },
-      { pt: 'Pokémon grandes (Salamence, Milotic, Hydreigon…) cabem nos labirintos, na casa abandonada e na caverna do Groudon, e ninguém mais fica preso no cenário.', en: 'Big Pokémon (Salamence, Milotic, Hydreigon…) fit through mazes, the abandoned cottage and Groudon\'s cave, and nobody gets stuck in the scenery anymore.', es: 'Los Pokémon grandes (Salamence, Milotic, Hydreigon…) caben en los laberintos, la casa abandonada y la cueva de Groudon, y nadie vuelve a quedar atrapado en el escenario.' },
+      { pt: 'Menos travamentos no celular: o começo da partida e as fendas lendárias pesam menos, e o novo Modo leve liga sozinho nos aparelhos que precisam.', en: 'Fewer crashes on phones: the start of a run and the legendary rifts weigh less, and the new Lite mode turns on by itself on devices that need it.', es: 'Menos cierres en el celular: el comienzo de la partida y las grietas legendarias pesan menos, y el nuevo Modo ligero se activa solo en los dispositivos que lo necesitan.' },
+      { pt: 'Correções dos relatos de vocês: Groudon e Rayquaza não travam mais numa fase, Pokémon grandes cabem nos labirintos e ninguém mais fica preso no cenário.', en: 'Fixes from your reports: Groudon and Rayquaza no longer get stuck on a phase, big Pokémon fit through mazes and nobody gets stuck in the scenery anymore.', es: 'Correcciones de sus reportes: Groudon y Rayquaza ya no se traban en una fase, los Pokémon grandes caben en los laberintos y nadie más queda atrapado en el escenario.' },
     ],
     changes: [
       {
-        title: { pt: 'Ninguém mais fica preso no cenário', en: 'No more getting stuck in the scenery', es: 'Nadie más queda atrapado en el escenario' },
+        title: { pt: 'Modo leve', en: 'Lite mode', es: 'Modo ligero' },
         notes: [
           {
-            pt: 'Corrigido: Pokémon grandes, como Salamence, Milotic, Hydreigon, Dragapult e Altaria, não passavam pelos corredores dos labirintos, pela porta da casa abandonada nem por trechos da caverna do Groudon. Agora todo Pokémon passa por todos os caminhos (o tamanho para levar dano continua o mesmo).',
-            en: "Fixed: big Pokémon like Salamence, Milotic, Hydreigon, Dragapult and Altaria couldn't fit through maze corridors, the abandoned cottage's door or parts of Groudon's cave. Now every Pokémon fits every path (the size that takes hits stays the same).",
-            es: 'Corregido: los Pokémon grandes como Salamence, Milotic, Hydreigon, Dragapult y Altaria no pasaban por los pasillos de los laberintos, la puerta de la casa abandonada ni partes de la cueva de Groudon. Ahora todo Pokémon pasa por todos los caminos (el tamaño para recibir daño sigue igual).',
-          },
-          {
-            pt: 'Corrigido: evoluir dentro da casa, ou ser empurrado entre a barraca, a fogueira e a mochila do acampamento, entre cristais da caverna ou contra as paredes de uma fenda, podia te deixar preso sem conseguir andar. Agora quem fica entalado sai para o lugar livre mais perto.',
-            en: 'Fixed: evolving inside the cottage, or getting pushed between the camp\'s tent, campfire and backpack, between cave crystals or against a rift\'s walls, could leave you stuck and unable to move. Now anyone wedged in steps out to the nearest open spot.',
-            es: 'Corregido: evolucionar dentro de la casa, o ser empujado entre la carpa, la fogata y la mochila del campamento, entre cristales de la cueva o contra las paredes de una grieta, podía dejarte atrapado sin poder moverte. Ahora quien queda atascado sale al lugar libre más cercano.',
+            pt: 'Novo Modo leve: menos partículas, chuva e neve mais ralas, menos sombras e menos memória, para o jogo rodar liso em celulares mais simples. Ele liga sozinho no aparelho que precisa e desliga quando as partidas voltam a rodar bem, e dá para ligar ou desligar em Ajustes → Jogo.',
+            en: 'New Lite mode: fewer particles, lighter rain and snow, fewer shadows and less memory, so the game runs smoothly on simpler phones. It turns on by itself on a device that needs it and off once runs play well again, and you can switch it on or off in Settings → Game.',
+            es: 'Nuevo Modo ligero: menos partículas, lluvia y nieve más ralas, menos sombras y menos memoria, para que el juego corra fluido en celulares más sencillos. Se activa solo en el dispositivo que lo necesita y se apaga cuando las partidas vuelven a ir bien, y puedes activarlo o desactivarlo en Ajustes → Juego.',
           },
         ],
       },
@@ -138,6 +134,86 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Mega Sceptile ganhou o sprite próprio. As Megas sem sprite no PMD SpriteCollab (como Mega Venusaur, Blastoise e Garchomp) seguem com o sprite normal e o contorno de arco-íris até os artistas publicarem os delas.',
             en: 'Mega Sceptile got its own sprite. Megas with no sprite on PMD SpriteCollab yet (like Mega Venusaur, Blastoise and Garchomp) keep the regular sprite with the rainbow outline until the artists publish theirs.',
             es: 'Mega Sceptile ganó su propio sprite. Las Megas sin sprite en PMD SpriteCollab (como Mega Venusaur, Blastoise y Garchomp) siguen con el sprite normal y el contorno de arcoíris hasta que los artistas publiquen los suyos.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Menos travamentos no celular', en: 'Fewer crashes on phones', es: 'Menos cierres en el celular' },
+        notes: [
+          {
+            pt: 'O começo da partida e a entrada nas fendas lendárias pesam bem menos no celular: o jogo solta os Pokémon do lobby antes de carregar os da partida, carrega as imagens aos poucos em vez de todas de uma vez, e só baixa uma Mega ou a forma de um lendário quando ela está para aparecer (a Mega da Latias, por exemplo, só na fase anterior à dela).',
+            en: "The start of a run and stepping into a legendary rift weigh much less on phones: the game lets go of the lobby's Pokémon before loading the run's, loads pictures a few at a time instead of all at once, and only downloads a Mega or a legendary's form when it's about to show up (Latias's Mega, for one, only in the phase before it).",
+            es: 'El comienzo de la partida y la entrada a las grietas legendarias pesan mucho menos en el celular: el juego suelta los Pokémon del lobby antes de cargar los de la partida, carga las imágenes de a poco en vez de todas a la vez, y solo descarga una Mega o la forma de un legendario cuando está por aparecer (la Mega de Latias, por ejemplo, solo en la fase anterior a la suya).',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Fendas lendárias', en: 'Legendary rifts', es: 'Grietas legendarias' },
+        notes: [
+          {
+            pt: 'Corrigido: Groudon e Rayquaza podiam travar no limite de uma fase para sempre quando ficavam paralisados, congelados ou dormindo sem parar. Agora o golpe final da fase (Precipice Blades, Hyper Beam, Dragon Ascent…) sai mesmo com o lendário sob efeito de status, e a luta segue.',
+            en: "Fixed: Groudon and Rayquaza could get stuck at a phase's limit forever while kept paralyzed, frozen or asleep. Now the phase's signature attack (Precipice Blades, Hyper Beam, Dragon Ascent…) goes off even through a status condition, and the fight moves on.",
+            es: 'Corregido: Groudon y Rayquaza podían quedarse trabados en el límite de una fase para siempre cuando los mantenían paralizados, congelados o dormidos. Ahora el ataque final de la fase (Precipice Blades, Hyper Beam, Dragon Ascent…) sale aunque el legendario tenga un estado, y la pelea sigue.',
+          },
+          {
+            pt: 'Quando você leva um deles até o limite da fase, ele solta o golpe final na hora, em vez de seguir lutando com a vida parada no limite (ou zerada, na última fase).',
+            en: "When you bring one of them down to a phase's limit, it unleashes its signature attack right away, instead of fighting on with its HP stuck at the limit (or at zero, in the last phase).",
+            es: 'Cuando llevas a uno de ellos hasta el límite de la fase, suelta el ataque final al instante, en vez de seguir peleando con la vida detenida en el límite (o en cero, en la última fase).',
+          },
+          {
+            pt: 'Corrigido: um lendário derrotado no meio de um mergulho ou de uma passada para fora da arena (como o Rayquaza) era capturado longe e deixava a recompensa fora do alcance. Agora ele cai no seu lugar na arena.',
+            en: 'Fixed: a legendary defeated mid-dive or while out on a pass off the arena (like Rayquaza) was captured far away and left its loot out of reach. Now it falls back at its spot in the arena.',
+            es: 'Corregido: un legendario derrotado en medio de una zambullida o de una pasada fuera de la arena (como Rayquaza) era capturado lejos y dejaba la recompensa fuera de alcance. Ahora cae en su lugar en la arena.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Golpes que travavam ou sumiam', en: 'Moves that got stuck or vanished', es: 'Movimientos que se trababan o desaparecían' },
+        notes: [
+          {
+            pt: 'Corrigido: um golpe gasto num golpe duplo e aprendido de novo por uma TM (como o Aurora Beam do Suicune depois do Freeze-Dry) ficava preso no Nv. 1, e os níveis só davam Oran Berry. Agora ele sobe de nível como qualquer outro.',
+            en: "Fixed: a move spent on a duo move and learned again from a TM (like Suicune's Aurora Beam after Freeze-Dry) got stuck at Lv 1, and level-ups only gave Oran Berries. Now it levels up like any other.",
+            es: 'Corregido: un movimiento gastado en un movimiento dúo y aprendido de nuevo con una MT (como el Aurora Beam de Suicune después de Freeze-Dry) se quedaba trabado en el Nv. 1, y los niveles solo daban Oran Berry. Ahora sube de nivel como cualquier otro.',
+          },
+          {
+            pt: 'Corrigido: o Drill Peck do Piplup no ramo que persegue os inimigos (Nv. 4), o Mud Shot no ramo bumerangue e o Psybeam no ramo que gira em volta de você (Nv. 7) continuavam acertando, mas ficavam invisíveis. Agora aparecem.',
+            en: "Fixed: Piplup's Drill Peck on its foe-seeking branch (Lv 4), Mud Shot on its boomerang branch and Psybeam on its ring branch (Lv 7) still hit, but were invisible. Now they show.",
+            es: 'Corregido: el Drill Peck de Piplup en la rama que persigue a los enemigos (Nv. 4), el Mud Shot en la rama bumerán y el Psybeam en la rama que gira a tu alrededor (Nv. 7) seguían golpeando, pero eran invisibles. Ahora se ven.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Controles e portais', en: 'Controls and portals', es: 'Controles y portales' },
+        notes: [
+          {
+            pt: 'Corrigido: a partida recomeçava sozinha quando você apertava Espaço logo depois de desmaiar, sem mostrar o resultado. Espaço é o especial e não escolhe mais nada na tela de resultado: use Enter, o toque ou o A do controle.',
+            en: 'Fixed: the run restarted on its own when you pressed Space right after fainting, without showing the results. Space is the special and no longer picks anything on the results screen: use Enter, a tap or the controller\'s A.',
+            es: 'Corregido: la partida volvía a empezar sola cuando apretabas Espacio justo después de desmayarte, sin mostrar el resultado. Espacio es el especial y ya no elige nada en la pantalla de resultado: usa Enter, el toque o la A del control.',
+          },
+          {
+            pt: 'Corrigido: um controle conectado com o analógico fora do centro (ou um volante, um pedal) fazia o Pokémon andar sozinho e travava o teclado. Agora o teclado sempre manda, e um analógico só conta depois de passar pelo centro.',
+            en: "Fixed: a connected controller with its stick off center (or a wheel, a pedal) made the Pokémon walk on its own and locked out the keyboard. The keyboard now always wins, and a stick only counts once it has been centered.",
+            es: 'Corregido: un control conectado con el stick fuera del centro (o un volante, un pedal) hacía que el Pokémon caminara solo y bloqueaba el teclado. Ahora el teclado siempre manda, y un stick solo cuenta después de pasar por el centro.',
+          },
+          {
+            pt: 'Portais das fendas e entradas dos lugares: sair de dentro esvazia a carga bem mais devagar, então golpes que te tiram do lugar sozinhos, como o Aqua Step, não impedem mais de entrar.',
+            en: 'Rift portals and place entrances: stepping out drains the charge much more slowly, so moves that hop you around on their own, like Aqua Step, no longer keep you from getting in.',
+            es: 'Portales de las grietas y entradas de los lugares: salir de adentro vacía la carga mucho más despacio, así que los movimientos que te sacan del lugar solos, como Aqua Step, ya no impiden entrar.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ninguém mais fica preso no cenário', en: 'No more getting stuck in the scenery', es: 'Nadie más queda atrapado en el escenario' },
+        notes: [
+          {
+            pt: 'Corrigido: Pokémon grandes, como Salamence, Milotic, Hydreigon, Dragapult e Altaria, não passavam pelos corredores dos labirintos, pela porta da casa abandonada nem por trechos da caverna do Groudon. Agora todo Pokémon passa por todos os caminhos (o tamanho para levar dano continua o mesmo).',
+            en: "Fixed: big Pokémon like Salamence, Milotic, Hydreigon, Dragapult and Altaria couldn't fit through maze corridors, the abandoned cottage's door or parts of Groudon's cave. Now every Pokémon fits every path (the size that takes hits stays the same).",
+            es: 'Corregido: los Pokémon grandes como Salamence, Milotic, Hydreigon, Dragapult y Altaria no pasaban por los pasillos de los laberintos, la puerta de la casa abandonada ni partes de la cueva de Groudon. Ahora todo Pokémon pasa por todos los caminos (el tamaño para recibir daño sigue igual).',
+          },
+          {
+            pt: 'Corrigido: evoluir dentro da casa, ou ser empurrado entre a barraca, a fogueira e a mochila do acampamento, entre cristais da caverna ou contra as paredes de uma fenda, podia te deixar preso sem conseguir andar. Agora quem fica entalado sai para o lugar livre mais perto.',
+            en: 'Fixed: evolving inside the cottage, or getting pushed between the camp\'s tent, campfire and backpack, between cave crystals or against a rift\'s walls, could leave you stuck and unable to move. Now anyone wedged in steps out to the nearest open spot.',
+            es: 'Corregido: evolucionar dentro de la casa, o ser empujado entre la carpa, la fogata y la mochila del campamento, entre cristales de la cueva o contra las paredes de una grieta, podía dejarte atrapado sin poder moverte. Ahora quien queda atascado sale al lugar libre más cercano.',
           },
         ],
       },

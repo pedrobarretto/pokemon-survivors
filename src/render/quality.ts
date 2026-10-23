@@ -2,13 +2,17 @@
  * The quality governor. When a phone struggles (frames running long or missing
  * vsync, or a device with very little memory), the renderer goes lean and sheds
  * cosmetic work: particles are capped, the regular horde drops its shadows,
- * damage numbers show reduced and the biggest legendary effects draw thinner.
+ * damage numbers show reduced, weather draws a quarter of its particles and
+ * the biggest legendary effects draw thinner.
  * Full detail comes back once frames stay calm for a while. Presentation only:
  * the simulation never reads it, so replays and the ranking are untouched.
  */
 
-/** What the renderers read each frame. */
-export const detail = { lean: false }
+/**
+ * What the renderers read each frame. `safe`: the device's safe mode
+ * (`safeMode.ts`, after a crash), which pins lean and keeps fewer silhouettes.
+ */
+export const detail = { lean: false, safe: false }
 
 export type Governor = {
   /** Share of recent frames that struggled (an average over about a second). */

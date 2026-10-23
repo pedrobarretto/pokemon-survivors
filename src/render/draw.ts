@@ -37,6 +37,7 @@ import { drawEntranceAir, drawEntranceGround, drawPlaceArrow, drawPlaceDark, dra
 import { roomOf } from '../game/room'
 import { drawLandmarkAir, drawTunnelDark, playerUnderground } from './landmarks'
 import { drawPokemon, sprites, type AnimName, type SpeciesSprites } from './sprites'
+import { bodyOf } from '../data/bodies'
 import { drawDrainVines, drawTypeEvolvedAttack, drawTypeEvolvedGround } from './typeEvolved'
 import { drawCompanion, type CompanionView } from './companion'
 import { drawStatusBadge, statusTint } from './status'
@@ -1021,7 +1022,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
         drawLegendAura(ctx, g, t, calm)
       }
     }
-    else if (d === 'companion') companion && shadow(ctx, companion.x, companion.y, sprites(companion.dex).bodyW)
+    else if (d === 'companion') companion && shadow(ctx, companion.x, companion.y, bodyOf(companion.dex).bodyW)
     // Drawing lean, the regular horde goes without: a shadow each is a draw call each.
     else if (isMate(d)) {
       const m = localPlayer(d.mate)
@@ -1046,7 +1047,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   for (const d of inDepth) {
     if (d !== 'player' && d !== 'companion' && !isMate(d) && !isSolid(d) && d.boss && d.dying < 0) {
       const def: EnemyDef = ENEMIES[d.kind]
-      drawStatusBadge(ctx, d.status, d.x, d.y - sprites(def.dex).bodyH * drawScale(d) - (d.alpha ? 14 : 5))
+      drawStatusBadge(ctx, d.status, d.x, d.y - bodyOf(def.dex).bodyH * drawScale(d) - (d.alpha ? 14 : 5))
     }
   }
   drawEntranceAir(ctx, g, t)

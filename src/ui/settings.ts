@@ -13,6 +13,7 @@ import { hint, menu, type Screen } from './screens'
 import { backButton, shellBody, tabStrip, topBar, segmented } from './shell'
 import { REPO_URL, ROUTES, SOCIAL_IDS, SOCIALS } from '../site/routes'
 import { applyUiScale, maxUiZoom, UI_SCALES, uiZoom, type UiScale } from './uiScale'
+import { safeModeOn, setSafeMode } from '../safeMode'
 import { currentInstallOffer, installHelpScreen, onInstallChange, promptInstall } from './install'
 
 /* ---------------- Live settings ---------------- */
@@ -94,25 +95,27 @@ const slider = (label: string, key: 'musicVolume' | 'sfxVolume', preview?: () =>
   }
 }
 
-const toggle = (label: string, read: (s: Settings) => boolean, write: (on: boolean) => Partial<Settings>): Row => {
+/** An ON/OFF switch over any boolean: Enter, a tap or ← → flips it. */
+const switchRow = (label: string, read: () => boolean, set: (on: boolean) => void): Row => {
   const pill = h('b', { class: 'setting-pill' })
   const el = h('button', { class: 'setting-row', role: 'switch' }, h('span', { class: 'setting-label' }, label), pill)
   const flip = () => {
-    updateSettings(write(!read(current)))
+    set(!read())
     playSfx('select')
+    sync()
   }
-  return {
-    el,
-    adjust: flip,
-    activate: flip,
-    sync: () => {
-      const on = read(current)
-      pill.textContent = on ? t().settings.on : t().settings.off
-      pill.classList.toggle('off', !on)
-      el.setAttribute('aria-checked', String(on))
-    },
+  const sync = () => {
+    const on = read()
+    pill.textContent = on ? t().settings.on : t().settings.off
+    pill.classList.toggle('off', !on)
+    el.setAttribute('aria-checked', String(on))
   }
+  return { el, adjust: flip, activate: flip, sync }
 }
+
+/** A switch over one of the settings. */
+const toggle = (label: string, read: (s: Settings) => boolean, write: (on: boolean) => Partial<Settings>): Row =>
+  switchRow(label, () => read(current), (on) => updateSettings(write(on)))
 
 /** `◀ Reduced ▶`: ← → step through `options`, Enter or a tap goes to the next one (wrapping). */
 const choiceRow = <K extends keyof Settings>(label: string, key: K, options: readonly Settings[K][], name: (v: Settings[K]) => string): Row => {
@@ -200,7 +203,7 @@ let lastTab: Tab = 'sound'
 
 /**
  * Settings in four tabs: Som (music and effects volume, mute), Jogo
- * (language, damage numbers, screen shake, flashes, UI size), Controles (touch joystick and the
+ * (language, damage numbers, screen shake, flashes, UI size, safe mode), Controles (touch joystick and the
  * remap screen) and Sobre (installing the app, what the game is, legal and
  * credits, GitHub, the official profiles, and the bug report form when there's an API to send it to).
  * Changes apply and persist immediately.
@@ -257,6 +260,8 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           toggle(m.screenShake, (s) => s.screenShake, (on) => ({ screenShake: on })),
           choiceRow(m.flashes, 'flashes', FLASH_MODES, (mode) => m.flashModes[mode]),
           ...uiScaleRows(m.uiScale, m.uiScaleAuto),
+          // Safe mode is the device's, not a setting (`safeMode.ts`): a crash turns it on by itself.
+          switchRow(m.safeMode, safeModeOn, (on) => setSafeMode(on ? 'on' : 'off')),
         ]
       case 'controls':
         return [choiceRow(m.joystick, 'joystick', STICK_MODES, (mode) => m.joystickModes[mode]), openRow(t().controls.open, () => showSub(openControls))]

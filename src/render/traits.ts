@@ -6,7 +6,7 @@ import { flavorOf } from '../game/spitters'
 import { blastRadius, HEALED_TIME, leapHeight, traitPace } from '../game/traits'
 import type { Enemy, Game } from '../game/types'
 import { TRAIT_FX } from './art'
-import { sprites } from './sprites'
+import { bodyOf } from '../data/bodies'
 import { localPlayer } from '../game/players'
 
 /**
@@ -142,7 +142,7 @@ export const drawTraitAir = (ctx: Ctx, g: Game, visible: Visible) => {
       ctx.globalAlpha = 1
     }
     if (act && traitPace(e) === 0 && !(act.kind === 'beam' && act.phase === 'fire') && !(act.kind === 'leaper' && act.phase === 'air')) {
-      const top = e.y - sprites(ENEMIES[e.kind].dex).bodyH - 6
+      const top = e.y - bodyOf(ENEMIES[e.kind].dex).bodyH - 6
       blitCentered(ctx, alert, e.x, top + (Math.floor(g.now * 8) % 2))
     }
   }
@@ -156,7 +156,7 @@ const spitGlow = (ctx: Ctx, g: Game, e: Enemy, t: number, k: number) => {
   const p = localPlayer(g)
   const d = Math.hypot(p.x - e.x, p.y - e.y) || 1
   const x = e.x + ((p.x - e.x) / d) * e.radius * 0.7
-  const y = e.y - sprites(ENEMIES[e.kind].dex).bodyH * 0.5 + ((p.y - e.y) / d) * e.radius * 0.4
+  const y = e.y - bodyOf(ENEMIES[e.kind].dex).bodyH * 0.5 + ((p.y - e.y) / d) * e.radius * 0.4
   const color = TYPE_COLORS[e.types[0] ?? 'normal']
   const r = Math.max(1, Math.round(1 + k * 3))
   blitEllipse(ctx, r + 2, r + 2, 'rgba(255,255,255,0.35)', x, y)
