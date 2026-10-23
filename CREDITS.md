@@ -1252,4 +1252,6 @@ Towers, trees, rocks, bushes and other painted scenery were made for this game w
 
 [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38 and
 [VT323](https://fonts.google.com/specimen/VT323) by Peter Hull, both under the SIL Open Font License,
-via [Fontsource](https://fontsource.org).
+via [Fontsource](https://fontsource.org). The Traditional Chinese text uses
+[Cubic 11](https://github.com/ACh-K/Cubic-11) (俐方體11號) by ACh-K, free to use and share (its license is in
+`public/fonts/cubic-11/OFL.txt`).

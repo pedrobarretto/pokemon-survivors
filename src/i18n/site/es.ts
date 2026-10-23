@@ -857,7 +857,7 @@ export const siteEs: SiteMessages = {
       cries: 'Cries (sonidos de los Pokémon)',
       criesText: 'PokéAPI/cries.',
       fonts: 'Fuentes',
-      fontsText: 'Press Start 2P y VT323, bajo la SIL Open Font License (OFL). Servidas por el propio sitio.',
+      fontsText: 'Press Start 2P y VT323, bajo la SIL Open Font License (OFL), y Cubic 11 (俐方體11號) para el chino, de uso libre. Servidas por el propio sitio.',
       inspiration: 'Inspiración',
       inspirationText: 'Vampire Survivors, de poncle.',
       nonCommercial: 'Como los sprites son CC BY-NC, el juego en su conjunto no se puede usar con fines comerciales.',

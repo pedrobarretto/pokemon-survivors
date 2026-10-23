@@ -1,7 +1,4 @@
-import type { Locale } from '../i18n'
-
-/** The same text in every language: the type makes a missing translation a compile error. */
-type Localized = Readonly<Record<Locale, string>>
+import type { Localized } from './localized'
 
 /** One change inside an update: a headline and its details, a sentence or two each. */
 export type ChangelogChange = {
@@ -28,46 +25,52 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-10-23',
-    title: { pt: 'Uma página para cada Pokémon', en: 'A page for every Pokémon', es: 'Una página para cada Pokémon' },
+    title: { pt: 'Francês, chinês e uma página para cada Pokémon', en: 'French, Chinese and a page for every Pokémon', es: 'Francés, chino y una página para cada Pokémon', fr: 'Français, chinois et une page pour chaque Pokémon', zh: '法文、繁體中文，還有每隻寶可夢的專屬頁面' },
     highlights: [
-      { pt: 'Cada Pokémon jogável ganhou sua página na Pokédex do site: os 27 iniciais, as 63 famílias dos ovos e os 23 lendários.', en: 'Every playable Pokémon has its own page in the site’s Pokédex: the 27 starters, the 63 egg families and the 23 legendaries.', es: 'Cada Pokémon jugable tiene su propia página en la Pokédex del sitio: los 27 iniciales, las 63 familias de los huevos y los 23 legendarios.' },
-      { pt: 'Nova tier list no site, feita com as partidas de vocês: os iniciais e as famílias dos ovos de S a D pelas vitórias contra o Mewtwo. Na estreia, Chespin, Spheal e Larvitar lideram.', en: 'A new tier list on the site, built from your runs: the starters and egg families from S to D by their wins against Mewtwo. At launch, Chespin, Spheal and Larvitar lead.', es: 'Nueva tier list en el sitio, hecha con sus partidas: los iniciales y las familias de los huevos de S a D según sus victorias contra Mewtwo. En el estreno, Chespin, Spheal y Larvitar van a la cabeza.' },
-      { pt: 'Cada página responde o que mais se pergunta: como liberar, como evolui, qual o golpe inicial e se tem Mega Evolução, ou como capturar um lendário.', en: 'Each page answers what people ask most: how to unlock it, how it evolves, its starting move and whether it Mega Evolves, or how to catch a legendary.', es: 'Cada página responde lo que más se pregunta: cómo desbloquearlo, cómo evoluciona, su movimiento inicial y si tiene Megaevolución, o cómo capturar a un legendario.' },
-      { pt: 'Quem abre o jogo pela primeira vez no endereço em inglês agora começa no idioma do navegador (português ou espanhol), não mais em inglês.', en: 'Opening the game for the first time at the English address now starts in your browser’s language (Portuguese or Spanish) instead of always English.', es: 'Quien abre el juego por primera vez en la dirección en inglés ahora empieza en el idioma de su navegador (español o portugués), ya no siempre en inglés.' },
+      { pt: 'O jogo agora fala francês e chinês tradicional (繁體中文): escolha em Ajustes ou deixe o navegador escolher. O site, a Pokédex e o guia também foram traduzidos.', en: 'The game now speaks French and Traditional Chinese (繁體中文): pick one in Settings or let your browser choose. The site, the Pokédex and the guide are translated too.', es: 'El juego ahora habla francés y chino tradicional (繁體中文): elígelo en Ajustes o deja que lo elija tu navegador. El sitio, la Pokédex y la guía también están traducidos.', fr: 'Le jeu parle maintenant français et chinois traditionnel (繁體中文) : choisis dans les Réglages ou laisse ton navigateur décider. Le site, le Pokédex et le guide sont traduits aussi.', zh: '遊戲現在支援法文和繁體中文：可以在設定裡選擇，或讓瀏覽器自動決定。網站、寶可夢圖鑑和攻略也都翻譯好了。' },
+      { pt: 'Cada Pokémon jogável ganhou sua página na Pokédex do site: os 27 iniciais, as 63 famílias dos ovos e os 23 lendários.', en: 'Every playable Pokémon has its own page in the site’s Pokédex: the 27 starters, the 63 egg families and the 23 legendaries.', es: 'Cada Pokémon jugable tiene su propia página en la Pokédex del sitio: los 27 iniciales, las 63 familias de los huevos y los 23 legendarios.', fr: 'Chaque Pokémon jouable a sa propre page dans le Pokédex du site : les 27 starters, les 63 familles des œufs et les 23 légendaires.', zh: '每隻可使用的寶可夢都在網站的寶可夢圖鑑中有了自己的頁面：27 隻初始寶可夢、63 個蛋家族與 23 隻傳說寶可夢。' },
+      { pt: 'Nova tier list no site, feita com as partidas de vocês: os iniciais e as famílias dos ovos de S a D pelas vitórias contra o Mewtwo. Na estreia, Chespin, Spheal e Larvitar lideram.', en: 'A new tier list on the site, built from your runs: the starters and egg families from S to D by their wins against Mewtwo. At launch, Chespin, Spheal and Larvitar lead.', es: 'Nueva tier list en el sitio, hecha con sus partidas: los iniciales y las familias de los huevos de S a D según sus victorias contra Mewtwo. En el estreno, Chespin, Spheal y Larvitar van a la cabeza.', fr: 'Une nouvelle tier list sur le site, faite à partir de vos parties : les starters et les familles d’œufs de S à D selon leurs victoires contre Mewtwo. Au lancement, Chespin, Spheal et Larvitar sont en tête.', zh: '網站新增強度排行（Tier list），根據大家的對局整理：初始寶可夢和蛋系列依打倒 Mewtwo 的勝場從 S 排到 D。上線時，Chespin、Spheal 和 Larvitar 名列前茅。' },
+      { pt: 'Cada página responde o que mais se pergunta: como liberar, como evolui, qual o golpe inicial e se tem Mega Evolução, ou como capturar um lendário.', en: 'Each page answers what people ask most: how to unlock it, how it evolves, its starting move and whether it Mega Evolves, or how to catch a legendary.', es: 'Cada página responde lo que más se pregunta: cómo desbloquearlo, cómo evoluciona, su movimiento inicial y si tiene Megaevolución, o cómo capturar a un legendario.', fr: 'Chaque page répond aux questions les plus fréquentes : comment le débloquer, comment il évolue, sa capacité de départ et s’il peut méga-évoluer, ou comment capturer un légendaire.', zh: '每個頁面都回答大家最常問的問題：怎麼解鎖、怎麼進化、初始招式是什麼、能不能超級進化，或是怎麼收服傳說寶可夢。' },
+      { pt: 'Quem abre o jogo pela primeira vez no endereço em inglês agora começa no idioma do navegador (português ou espanhol), não mais em inglês.', en: 'Opening the game for the first time at the English address now starts in your browser’s language (Portuguese or Spanish) instead of always English.', es: 'Quien abre el juego por primera vez en la dirección en inglés ahora empieza en el idioma de su navegador (español o portugués), ya no siempre en inglés.', fr: 'Ouvrir le jeu pour la première fois à l’adresse en anglais démarre désormais dans la langue de ton navigateur (portugais ou espagnol) au lieu de toujours l’anglais.', zh: '第一次從英文網址打開遊戲時，現在會以你瀏覽器的語言（葡萄牙文或西班牙文）開始，不再一律是英文。' },
     ],
     changes: [
       {
-        title: { pt: 'Páginas dos Pokémon', en: 'Pokémon pages', es: 'Páginas de los Pokémon' },
+        title: { pt: 'Páginas dos Pokémon', en: 'Pokémon pages', es: 'Páginas de los Pokémon', fr: 'Pages des Pokémon', zh: '寶可夢頁面' },
         notes: [
           {
             pt: 'Na Pokédex, o nome de cada Pokémon jogável leva à página da família: os cards de cada estágio e ramificação, com status, linha evolutiva, golpes, especial e Habilidades, as Megas da linha e perguntas frequentes. Os lendários têm a sua, com quando aparecem, os ataques de chefe e como capturá-los para o Modo Lendário.',
             en: 'In the Pokédex, every playable Pokémon’s name leads to its family’s page: the cards of each stage and branch, with stats, evolution line, moves, special and Abilities, the line’s Megas and a FAQ. Legendaries get their own, with when they show up, their boss attacks and how to catch them for Legend Mode.',
-            es: 'En la Pokédex, el nombre de cada Pokémon jugable lleva a la página de su familia: las cartas de cada etapa y rama, con estadísticas, línea evolutiva, movimientos, especial y Habilidades, las Megas de la línea y preguntas frecuentes. Los legendarios tienen la suya, con cuándo aparecen, sus ataques de jefe y cómo capturarlos para el Modo Legendario.',
+            es: 'En la Pokédex, el nombre de cada Pokémon jugable lleva a la página de su familia: las cartas de cada etapa y rama, con estadísticas, línea evolutiva, movimientos, especial y Habilidades, las Megas de la línea y preguntas frecuentes. Los legendarios tienen la suya, con cuándo aparecen, sus ataques de jefe y cómo capturarlos para el Modo Legendario.', fr: 'Dans le Pokédex, le nom de chaque Pokémon jouable mène à la page de sa famille : les cartes de chaque stade et de chaque embranchement, avec stats, lignée d’évolution, capacités, attaque spéciale et Talents, les Méga de la lignée et une FAQ. Les légendaires ont la leur, avec quand ils apparaissent, leurs attaques de boss et comment les capturer pour le Mode Légendaire.', zh: '在寶可夢圖鑑中，每隻可使用的寶可夢名稱都會連到牠家族的頁面：每個階段與分支的卡片，附上能力值、進化路線、招式、必殺技與特性，還有該家族的超級進化與常見問題。傳說寶可夢也有自己的頁面，說明牠們的出現時機、首領攻擊，以及如何收服牠們來用於傳說模式。',
           },
         ],
       },
       {
-        title: { pt: 'Tier list', en: 'Tier list', es: 'Tier list' },
+        title: { pt: 'Tier list', en: 'Tier list', es: 'Tier list', fr: 'Tier list', zh: '強度排行' },
         notes: [
           {
             pt: 'A nova página Tier list (no menu do site) ordena os 90 Pokémon jogáveis de S a D pelas partidas dos últimos 30 dias no Normal, no Difícil e no Pesadelo, com a taxa de vitória e o minuto médio de cada um. Ela explica como a nota é feita e o que ela não diz: quem começa agora costuma jogar com os iniciais mais famosos, e isso pesa nos números.',
             en: 'The new Tier list page (in the site’s menu) ranks the 90 playable Pokémon from S to D using the last 30 days of runs on Normal, Hard and Nightmare, with each one’s win rate and average minute. It explains how the score works and what it doesn’t say: new players tend to pick the famous starters, and that weighs on the numbers.',
-            es: 'La nueva página Tier list (en el menú del sitio) ordena los 90 Pokémon jugables de S a D con las partidas de los últimos 30 días en Normal, Difícil y Pesadilla, con el porcentaje de victorias y el minuto promedio de cada uno. Explica cómo se calcula la nota y lo que no dice: quien recién empieza suele elegir los iniciales más famosos, y eso pesa en los números.',
+            es: 'La nueva página Tier list (en el menú del sitio) ordena los 90 Pokémon jugables de S a D con las partidas de los últimos 30 días en Normal, Difícil y Pesadilla, con el porcentaje de victorias y el minuto promedio de cada uno. Explica cómo se calcula la nota y lo que no dice: quien recién empieza suele elegir los iniciales más famosos, y eso pesa en los números.', fr: 'La nouvelle page Tier list (dans le menu du site) classe les 90 Pokémon jouables de S à D à partir des 30 derniers jours de parties en Normal, Difficile et Cauchemar, avec le taux de victoire et la minute moyenne de chacun. Elle explique comment le score est calculé et ce qu’il ne dit pas : les nouveaux joueurs choisissent surtout les starters célèbres, et ça pèse sur les chiffres.', zh: '新的強度排行頁面（在網站選單中）根據最近 30 天普通、困難、惡夢難度的對局，把 90 隻可操控的寶可夢從 S 排到 D，並列出每隻的勝率和平均分鐘數。頁面也說明分數怎麼算，以及它沒告訴你的事：新玩家多半選有名的初始寶可夢，這會影響數據。',
           },
           {
             pt: 'A página de cada Pokémon mostra o tier dele e a taxa de vitória no Normal, com um link para a tier list.',
             en: 'Each Pokémon’s page shows its tier and its win rate on Normal, with a link to the tier list.',
-            es: 'La página de cada Pokémon muestra su tier y su porcentaje de victorias en Normal, con un enlace a la tier list.',
+            es: 'La página de cada Pokémon muestra su tier y su porcentaje de victorias en Normal, con un enlace a la tier list.', fr: 'La page de chaque Pokémon affiche son rang et son taux de victoire en Normal, avec un lien vers la tier list.', zh: '每隻寶可夢的頁面都會顯示牠的等級和普通難度勝率，並連到強度排行。',
           },
         ],
       },
       {
-        title: { pt: 'Idioma', en: 'Language', es: 'Idioma' },
+        title: { pt: 'Idioma', en: 'Language', es: 'Idioma', fr: 'Langue', zh: '語言' },
         notes: [
+          {
+            pt: 'Dois idiomas novos, no jogo inteiro e no site: francês (/fr/) e chinês tradicional (/zh-tw/), com uma fonte pixel própria para o chinês. Nomes de Pokémon, golpes e itens continuam em inglês, como nos outros idiomas.',
+            en: 'Two new languages, across the whole game and the site: French (/fr/) and Traditional Chinese (/zh-tw/), with a pixel font of its own for Chinese. Pokémon, move and item names stay in English, as in the other languages.',
+            es: 'Dos idiomas nuevos, en todo el juego y el sitio: francés (/fr/) y chino tradicional (/zh-tw/), con una fuente pixel propia para el chino. Los nombres de Pokémon, movimientos y objetos siguen en inglés, como en los demás idiomas.', fr: 'Deux nouvelles langues, dans tout le jeu et sur le site : le français (/fr/) et le chinois traditionnel (/zh-tw/), avec une police pixel dédiée au chinois. Les noms des Pokémon, des capacités et des objets restent en anglais, comme dans les autres langues.', zh: '兩種新語言，遍及整個遊戲和網站：法文（/fr/）和繁體中文（/zh-tw/），中文還有專屬的像素字型。寶可夢、招式和道具名稱和其他語言一樣維持英文。',
+          },
           {
             pt: 'O endereço em inglês (/en/) passou a seguir o idioma do navegador na primeira visita, como o principal; o idioma que você escolhe nos Ajustes continua valendo sempre.',
             en: 'The English address (/en/) now follows your browser’s language on a first visit, like the main one; the language you pick in Settings still always wins.',
-            es: 'La dirección en inglés (/en/) ahora sigue el idioma de tu navegador en la primera visita, como la principal; el idioma que eliges en Ajustes sigue valiendo siempre.',
+            es: 'La dirección en inglés (/en/) ahora sigue el idioma de tu navegador en la primera visita, como la principal; el idioma que eliges en Ajustes sigue valiendo siempre.', fr: 'L’adresse en anglais (/en/) suit désormais la langue de ton navigateur lors d’une première visite, comme l’adresse principale ; la langue que tu choisis dans les Réglages a toujours le dernier mot.', zh: '英文網址（/en/）在第一次造訪時，現在會和主網址一樣跟隨你瀏覽器的語言；你在設定中選擇的語言仍然永遠優先。',
           },
         ],
       },
@@ -75,192 +78,192 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
   },
   {
     date: '2026-10-22',
-    title: { pt: 'A economia ganhou sentido', en: 'The economy gets a purpose', es: 'La economía cobra sentido' },
+    title: { pt: 'A economia ganhou sentido', en: 'The economy gets a purpose', es: 'La economía cobra sentido', fr: 'L’économie prend tout son sens', zh: '經濟有了意義' },
     highlights: [
-      { pt: 'Ovo do Kecleon sem o limite de um por dia: até 6, e cada um custa o dobro do anterior (₽ 10.000, 20.000, 40.000…). A conta zera à meia-noite.', en: 'The Kecleon Egg is no longer one a day: up to 6, each costing double the last (₽ 10,000, 20,000, 40,000…). The count resets at midnight.', es: 'El Huevo Kecleon ya no es uno por día: hasta 6, y cada uno cuesta el doble del anterior (₽ 10.000, 20.000, 40.000…). La cuenta vuelve a cero a medianoche.' },
-      { pt: 'Incubadora maior: a 4ª e a 5ª vaga, suas para sempre, e a Incubadora Rápida, que faz um ovo andar o dobro.', en: 'A bigger incubator: the 4th and 5th slots, yours for good, and the Quick Incubator, which makes an egg walk twice as fast.', es: 'Una incubadora más grande: el 4.º y el 5.º espacio, tuyos para siempre, y la Incubadora Rápida, que hace que un huevo avance el doble.' },
-      { pt: 'As partidas pagam cerca de metade do ₽, agora que a loja tem onde gastar. O que você já guardou continua valendo o mesmo.', en: 'Runs pay about half the ₽, now that the shop has somewhere to spend it. What you already saved keeps its full value.', es: 'Las partidas pagan cerca de la mitad de los ₽, ahora que la tienda tiene en qué gastarlos. Lo que ya ahorraste sigue valiendo lo mismo.' },
-      { pt: 'Menos travamentos no celular: o começo da partida e as fendas lendárias pesam menos, e o novo Modo leve liga sozinho nos aparelhos que precisam.', en: 'Fewer crashes on phones: the start of a run and the legendary rifts weigh less, and the new Lite mode turns on by itself on devices that need it.', es: 'Menos cierres en el celular: el comienzo de la partida y las grietas legendarias pesan menos, y el nuevo Modo ligero se activa solo en los dispositivos que lo necesitan.' },
-      { pt: 'Correções dos relatos de vocês: Groudon e Rayquaza não travam mais numa fase, Pokémon grandes cabem nos labirintos e ninguém mais fica preso no cenário.', en: 'Fixes from your reports: Groudon and Rayquaza no longer get stuck on a phase, big Pokémon fit through mazes and nobody gets stuck in the scenery anymore.', es: 'Correcciones de sus reportes: Groudon y Rayquaza ya no se traban en una fase, los Pokémon grandes caben en los laberintos y nadie más queda atrapado en el escenario.' },
+      { pt: 'Ovo do Kecleon sem o limite de um por dia: até 6, e cada um custa o dobro do anterior (₽ 10.000, 20.000, 40.000…). A conta zera à meia-noite.', en: 'The Kecleon Egg is no longer one a day: up to 6, each costing double the last (₽ 10,000, 20,000, 40,000…). The count resets at midnight.', es: 'El Huevo Kecleon ya no es uno por día: hasta 6, y cada uno cuesta el doble del anterior (₽ 10.000, 20.000, 40.000…). La cuenta vuelve a cero a medianoche.', fr: 'L’Œuf de Kecleon n’est plus limité à un par jour : jusqu’à 6, chacun au double du précédent (₽ 10 000, 20 000, 40 000…). Le compteur repart à zéro à minuit.', zh: 'Kecleon蛋不再是每天一顆：最多 6 顆，每顆是前一顆的兩倍價（₽ 10,000、20,000、40,000…）。數量在午夜重置。' },
+      { pt: 'Incubadora maior: a 4ª e a 5ª vaga, suas para sempre, e a Incubadora Rápida, que faz um ovo andar o dobro.', en: 'A bigger incubator: the 4th and 5th slots, yours for good, and the Quick Incubator, which makes an egg walk twice as fast.', es: 'Una incubadora más grande: el 4.º y el 5.º espacio, tuyos para siempre, y la Incubadora Rápida, que hace que un huevo avance el doble.', fr: 'Un incubateur plus grand : les 4e et 5e emplacements, à toi pour de bon, et l’Incubateur rapide, qui fait marcher un œuf deux fois plus vite.', zh: '更大的孵化器：第 4 與第 5 個欄位，永遠屬於你，還有快速孵化器，能讓一顆蛋的步數累積速度加倍。' },
+      { pt: 'As partidas pagam cerca de metade do ₽, agora que a loja tem onde gastar. O que você já guardou continua valendo o mesmo.', en: 'Runs pay about half the ₽, now that the shop has somewhere to spend it. What you already saved keeps its full value.', es: 'Las partidas pagan cerca de la mitad de los ₽, ahora que la tienda tiene en qué gastarlos. Lo que ya ahorraste sigue valiendo lo mismo.', fr: 'Les parties rapportent environ moitié moins de ₽, maintenant que la boutique a de quoi les dépenser. Ce que tu as déjà économisé garde toute sa valeur.', zh: '既然商店有地方花錢了，對局給的 ₽ 大約減半。你已經存下的錢價值不變。' },
+      { pt: 'Menos travamentos no celular: o começo da partida e as fendas lendárias pesam menos, e o novo Modo leve liga sozinho nos aparelhos que precisam.', en: 'Fewer crashes on phones: the start of a run and the legendary rifts weigh less, and the new Lite mode turns on by itself on devices that need it.', es: 'Menos cierres en el celular: el comienzo de la partida y las grietas legendarias pesan menos, y el nuevo Modo ligero se activa solo en los dispositivos que lo necesitan.', fr: 'Moins de plantages sur mobile : le début d’une partie et les failles légendaires sont plus légers, et le nouveau Mode léger s’active tout seul sur les appareils qui en ont besoin.', zh: '手機上更少閃退：對局開始與傳說裂縫的負擔變輕了，新的輕量模式也會在需要的裝置上自動開啟。' },
+      { pt: 'Correções dos relatos de vocês: Groudon e Rayquaza não travam mais numa fase, Pokémon grandes cabem nos labirintos e ninguém mais fica preso no cenário.', en: 'Fixes from your reports: Groudon and Rayquaza no longer get stuck on a phase, big Pokémon fit through mazes and nobody gets stuck in the scenery anymore.', es: 'Correcciones de sus reportes: Groudon y Rayquaza ya no se traban en una fase, los Pokémon grandes caben en los laberintos y nadie más queda atrapado en el escenario.', fr: 'Corrections issues de vos signalements : Groudon et Rayquaza ne restent plus bloqués sur une phase, les grands Pokémon passent dans les labyrinthes et plus personne ne reste coincé dans le décor.', zh: '根據大家的回報修正：Groudon 與 Rayquaza 不會再卡在某個階段，大型寶可夢能通過迷宮，也不會再有人卡在場景裡。' },
     ],
     changes: [
       {
-        title: { pt: 'Modo leve', en: 'Lite mode', es: 'Modo ligero' },
+        title: { pt: 'Modo leve', en: 'Lite mode', es: 'Modo ligero', fr: 'Mode léger', zh: '輕量模式' },
         notes: [
           {
             pt: 'Novo Modo leve: menos partículas, chuva e neve mais ralas, menos sombras e menos memória, para o jogo rodar liso em celulares mais simples. Ele liga sozinho no aparelho que precisa e desliga quando as partidas voltam a rodar bem, e dá para ligar ou desligar em Ajustes → Jogo.',
             en: 'New Lite mode: fewer particles, lighter rain and snow, fewer shadows and less memory, so the game runs smoothly on simpler phones. It turns on by itself on a device that needs it and off once runs play well again, and you can switch it on or off in Settings → Game.',
-            es: 'Nuevo Modo ligero: menos partículas, lluvia y nieve más ralas, menos sombras y menos memoria, para que el juego corra fluido en celulares más sencillos. Se activa solo en el dispositivo que lo necesita y se apaga cuando las partidas vuelven a ir bien, y puedes activarlo o desactivarlo en Ajustes → Juego.',
+            es: 'Nuevo Modo ligero: menos partículas, lluvia y nieve más ralas, menos sombras y menos memoria, para que el juego corra fluido en celulares más sencillos. Se activa solo en el dispositivo que lo necesita y se apaga cuando las partidas vuelven a ir bien, y puedes activarlo o desactivarlo en Ajustes → Juego.', fr: 'Nouveau Mode léger : moins de particules, une pluie et une neige plus légères, moins d’ombres et moins de mémoire, pour que le jeu tourne bien sur les téléphones plus modestes. Il s’active tout seul sur un appareil qui en a besoin et se désactive dès que les parties tournent bien à nouveau, et tu peux l’activer ou le désactiver dans Réglages → Jeu.', zh: '新的輕量模式：更少的粒子、更稀疏的雨和雪、更少的陰影、更少的記憶體用量，讓遊戲在較入門的手機上也能流暢執行。它會在需要的裝置上自動開啟，對局恢復順暢後自動關閉，你也可以在 設定 → 遊戲 中手動開關。',
           },
         ],
       },
       {
-        title: { pt: 'Passear pela praça no celular', en: 'Walk around the plaza on your phone', es: 'Pasear por la plaza en el celular' },
+        title: { pt: 'Passear pela praça no celular', en: 'Walk around the plaza on your phone', es: 'Pasear por la plaza en el celular', fr: 'Se promener sur la place depuis ton téléphone', zh: '用手機在廣場散步' },
         notes: [
           {
             pt: 'O novo botão Passear, ao lado do seu Pokémon no lobby, guarda os cartões e deixa só o campo: toque na grama ou arraste o dedo para andar até a praça do Kecleon, e toque em Falar perto do Kecleon, do Meowth, das barracas, da fonte ou da placa. Ao fechar a loja ou o festival, você continua passeando; Voltar (ou Esc) traz o lobby de volta.',
             en: 'The new Explore button, next to your Pokémon in the lobby, puts the cards away and leaves just the meadow: tap the grass or drag your finger to walk to the Kecleon plaza, and tap Talk near Kecleon, Meowth, the stalls, the fountain or the plaque. Closing the shop or the festival keeps you walking; Back (or Esc) brings the lobby back.',
-            es: 'El nuevo botón Pasear, al lado de tu Pokémon en el lobby, guarda las tarjetas y deja solo el campo: toca el pasto o arrastra el dedo para caminar hasta la plaza de Kecleon, y toca Hablar cerca de Kecleon, Meowth, los puestos, la fuente o la placa. Al cerrar la tienda o el festival, sigues paseando; Volver (o Esc) trae el lobby de vuelta.',
+            es: 'El nuevo botón Pasear, al lado de tu Pokémon en el lobby, guarda las tarjetas y deja solo el campo: toca el pasto o arrastra el dedo para caminar hasta la plaza de Kecleon, y toca Hablar cerca de Kecleon, Meowth, los puestos, la fuente o la placa. Al cerrar la tienda o el festival, sigues paseando; Volver (o Esc) trae el lobby de vuelta.', fr: 'Le nouveau bouton Se promener, à côté de ton Pokémon à l’accueil, range les cartes et ne laisse que la prairie : touche l’herbe ou fais glisser ton doigt pour marcher jusqu’à la place de Kecleon, et touche Parler près de Kecleon, Meowth, des stands, de la fontaine ou de la plaque. Fermer la boutique ou le festival te laisse en promenade ; Retour (ou Échap) ramène l’accueil.', zh: '大廳裡你的寶可夢旁邊新增了「散步」按鈕，會把卡片收起來，只留下草地：點一下草地或拖曳手指，就能走到 Kecleon 廣場；靠近 Kecleon、Meowth、攤位、泉水或紀念牌時，點「交談」即可。關閉商店或祭典後，你會繼續散步；「返回」（或 Esc）會回到大廳。',
           },
           {
             pt: 'Corrigido: com a loja aberta, tocar na praça acima dela às vezes apertava botões invisíveis do lobby e abria o TikTok, o YouTube, o Instagram ou o Discord.',
             en: 'Fixed: with the shop open, tapping the plaza above it sometimes pressed invisible lobby buttons and opened TikTok, YouTube, Instagram or Discord.',
-            es: 'Corregido: con la tienda abierta, tocar la plaza encima de ella a veces apretaba botones invisibles del lobby y abría TikTok, YouTube, Instagram o Discord.',
+            es: 'Corregido: con la tienda abierta, tocar la plaza encima de ella a veces apretaba botones invisibles del lobby y abría TikTok, YouTube, Instagram o Discord.', fr: 'Corrigé : avec la boutique ouverte, toucher la place au-dessus appuyait parfois sur des boutons invisibles de l’accueil et ouvrait TikTok, YouTube, Instagram ou Discord.', zh: '修正：商店開啟時，點擊商店上方的廣場有時會按到大廳中看不見的按鈕，打開 TikTok、YouTube、Instagram 或 Discord。',
           },
         ],
       },
       {
-        title: { pt: 'Ovo do Kecleon', en: 'Kecleon Egg', es: 'Huevo Kecleon' },
+        title: { pt: 'Ovo do Kecleon', en: 'Kecleon Egg', es: 'Huevo Kecleon', fr: 'Œuf de Kecleon', zh: 'Kecleon蛋' },
         notes: [
           {
             pt: 'O Ovo do Kecleon deixou de ser um por dia. O primeiro do dia custa ₽ 10.000, e cada um depois custa o dobro do anterior (₽ 20.000, 40.000, 80.000, 160.000 e 320.000), até 6 por dia; a conta volta a ₽ 10.000 à meia-noite de Brasília. O card mostra quantos você levou hoje e quanto custa o próximo. Ele choca em 4.000 passos, e um repetido vira ₽ 2.500.',
             en: "The Kecleon Egg is no longer one a day. The day's first costs ₽ 10,000, and each one after costs double the last (₽ 20,000, 40,000, 80,000, 160,000 and 320,000), up to 6 a day; the count goes back to ₽ 10,000 at midnight Brasília time. The card shows how many you took today and what the next one costs. It hatches in 4,000 steps, and a duplicate turns into ₽ 2,500.",
-            es: 'El Huevo Kecleon ya no es uno por día. El primero del día cuesta ₽ 10.000, y cada uno después cuesta el doble del anterior (₽ 20.000, 40.000, 80.000, 160.000 y 320.000), hasta 6 por día; la cuenta vuelve a ₽ 10.000 a la medianoche de Brasilia. La carta muestra cuántos llevaste hoy y cuánto cuesta el siguiente. Eclosiona en 4.000 pasos, y uno repetido se convierte en ₽ 2.500.',
+            es: 'El Huevo Kecleon ya no es uno por día. El primero del día cuesta ₽ 10.000, y cada uno después cuesta el doble del anterior (₽ 20.000, 40.000, 80.000, 160.000 y 320.000), hasta 6 por día; la cuenta vuelve a ₽ 10.000 a la medianoche de Brasilia. La carta muestra cuántos llevaste hoy y cuánto cuesta el siguiente. Eclosiona en 4.000 pasos, y uno repetido se convierte en ₽ 2.500.', fr: 'L’Œuf de Kecleon n’est plus limité à un par jour. Le premier du jour coûte ₽ 10 000, et chacun des suivants coûte le double du précédent (₽ 20 000, 40 000, 80 000, 160 000 et 320 000), jusqu’à 6 par jour ; le compteur revient à ₽ 10 000 à minuit, heure de Brasília. La carte indique combien tu en as pris aujourd’hui et le prix du suivant. Il éclot en 4 000 pas, et un doublon se transforme en ₽ 2 500.', zh: 'Kecleon蛋不再是每天一顆。當天第一顆 ₽ 10,000，之後每顆是前一顆的兩倍（₽ 20,000、40,000、80,000、160,000 與 320,000），每天最多 6 顆；巴西利亞時間午夜時，價格會回到 ₽ 10,000。卡片會顯示你今天買了幾顆，以及下一顆的價格。它需要 4,000 步孵化，重複的會變成 ₽ 2,500。',
           },
           {
             pt: 'Com a incubadora cheia, o Kecleon não vende: choque um ovo para abrir espaço e comprar o próximo, sem ver um ovo caro virar só ₽ 2.500.',
             en: "With the incubator full, Kecleon won't sell: hatch an egg to make room for the next one, instead of watching a pricey egg turn into just ₽ 2,500.",
-            es: 'Con la incubadora llena, Kecleon no vende: eclosiona un huevo para hacer espacio y comprar el siguiente, sin ver un huevo caro convertirse en solo ₽ 2.500.',
+            es: 'Con la incubadora llena, Kecleon no vende: eclosiona un huevo para hacer espacio y comprar el siguiente, sin ver un huevo caro convertirse en solo ₽ 2.500.', fr: 'Avec l’incubateur plein, Kecleon refuse de vendre : fais éclore un œuf pour faire de la place au suivant, plutôt que de voir un œuf hors de prix se transformer en simples ₽ 2 500.', zh: '孵化器滿了的時候，Kecleon 不會賣蛋給你：先孵化一顆蛋騰出空間再買下一顆，免得昂貴的蛋只變成 ₽ 2,500。',
           },
         ],
       },
       {
-        title: { pt: 'Incubadora', en: 'Incubator', es: 'Incubadora' },
+        title: { pt: 'Incubadora', en: 'Incubator', es: 'Incubadora', fr: 'Incubateur', zh: '孵化器' },
         notes: [
           {
             pt: 'A nova aba da loja vende mais vagas para a incubadora, suas para sempre: a 4ª por ₽ 150 mil (a partir da Tenda) e a 5ª por ₽ 500 mil (a partir do Kecleon Mart). E a Incubadora Rápida (₽ 8 mil): toque num ovo na incubadora para usar, e ele anda o dobro até chocar.',
             en: 'The shop\'s new tab sells more incubator slots, yours for good: the 4th for ₽150k (from the Tent) and the 5th for ₽500k (from the Kecleon Mart). And the Quick Incubator (₽8k): tap an egg in the incubator to use it, and that egg walks twice as fast until it hatches.',
-            es: 'La nueva pestaña de la tienda vende más espacios para la incubadora, tuyos para siempre: el 4.º por ₽ 150 mil (desde la Tienda de campaña) y el 5.º por ₽ 500 mil (desde el Kecleon Mart). Y la Incubadora Rápida (₽ 8 mil): toca un huevo en la incubadora para usarla, y ese huevo avanza el doble hasta eclosionar.',
+            es: 'La nueva pestaña de la tienda vende más espacios para la incubadora, tuyos para siempre: el 4.º por ₽ 150 mil (desde la Tienda de campaña) y el 5.º por ₽ 500 mil (desde el Kecleon Mart). Y la Incubadora Rápida (₽ 8 mil): toca un huevo en la incubadora para usarla, y ese huevo avanza el doble hasta eclosionar.', fr: 'Le nouvel onglet de la boutique vend des emplacements d’incubateur en plus, à toi pour de bon : le 4e pour ₽150k (dès la Tente) et le 5e pour ₽500k (dès le Kecleon Mart). Et l’Incubateur rapide (₽8k) : touche un œuf dans l’incubateur pour l’utiliser, et cet œuf marche deux fois plus vite jusqu’à son éclosion.', zh: '商店的新分頁販售更多孵化器欄位，永遠屬於你：第 4 欄 ₽150k（從帳篷等級起），第 5 欄 ₽500k（從 Kecleon超市等級起）。還有快速孵化器（₽8k）：在孵化器中點一下蛋即可使用，該顆蛋的步數會以兩倍速累積，直到孵化。',
           },
         ],
       },
       {
-        title: { pt: 'Economia', en: 'Economy', es: 'Economía' },
+        title: { pt: 'Economia', en: 'Economy', es: 'Economía', fr: 'Économie', zh: '經濟' },
         notes: [
           {
             pt: 'As partidas pagam menos ₽ agora que a Loja do Kecleon tem onde gastar: os inimigos soltam metade das moedas, chefes, Alfas, shinies e lendários das fendas incluídos, e os baús e o Meowth fujão pagam metade.',
             en: 'Runs pay fewer ₽ now that the Kecleon Shop has somewhere to spend them: foes drop half the coins, bosses, Alphas, shinies and rift legendaries included, and chests and the fleeing Meowth pay half.',
-            es: 'Las partidas pagan menos ₽ ahora que la Tienda Kecleon tiene en qué gastarlos: los enemigos sueltan la mitad de las monedas, jefes, Alfas, shinies y legendarios de las grietas incluidos, y los cofres y el Meowth que huye pagan la mitad.',
+            es: 'Las partidas pagan menos ₽ ahora que la Tienda Kecleon tiene en qué gastarlos: los enemigos sueltan la mitad de las monedas, jefes, Alfas, shinies y legendarios de las grietas incluidos, y los cofres y el Meowth que huye pagan la mitad.', fr: 'Les parties rapportent moins de ₽ maintenant que la Boutique de Kecleon a de quoi les dépenser : les ennemis lâchent moitié moins de pièces, boss, Alphas, chromatiques et légendaires de faille compris, et les coffres et le Meowth en fuite paient moitié moins.', zh: '既然 Kecleon商店有地方花錢了，對局給的 ₽ 變少了：敵人掉落的硬幣減半，包括首領、頭目、異色寶可夢與裂縫傳說寶可夢，寶箱與逃跑的 Meowth 給的也減半。',
           },
           {
             pt: 'No modo infinito, os inimigos comuns soltam moedas com metade da frequência de novo, cada minuto depois de 15:00 paga ₽60 no bônus (eram ₽90), e cada Arceus derrotado paga ₽2.500 no bônus (eram ₽5.000) e solta metade dos sacos de ₽.',
             en: 'In endless mode, regular foes drop coins half as often again, every minute past 15:00 pays ₽60 in the bonus (it was ₽90), and every defeated Arceus pays ₽2,500 in the bonus (it was ₽5,000) and drops half the bags of ₽.',
-            es: 'En el modo infinito, los enemigos comunes sueltan monedas con la mitad de frecuencia otra vez, cada minuto después de las 15:00 paga ₽60 en la bonificación (eran ₽90), y cada Arceus derrotado paga ₽2.500 en la bonificación (eran ₽5.000) y suelta la mitad de las bolsas de ₽.',
+            es: 'En el modo infinito, los enemigos comunes sueltan monedas con la mitad de frecuencia otra vez, cada minuto después de las 15:00 paga ₽60 en la bonificación (eran ₽90), y cada Arceus derrotado paga ₽2.500 en la bonificación (eran ₽5.000) y suelta la mitad de las bolsas de ₽.', fr: 'En mode sans fin, les ennemis normaux lâchent encore deux fois moins souvent des pièces, chaque minute au-delà de 15:00 rapporte ₽60 au bonus (au lieu de ₽90), et chaque Arceus vaincu rapporte ₽2 500 au bonus (au lieu de ₽5 000) et lâche moitié moins de sacs de ₽.', zh: '在無盡模式中，一般敵人掉落硬幣的頻率再減半，超過 15:00 後每分鐘在獎金中給 ₽60（原本是 ₽90），每擊敗一次 Arceus 在獎金中給 ₽2,500（原本是 ₽5,000），掉落的 ₽ 袋也減半。',
           },
         ],
       },
       {
-        title: { pt: 'Proteções', en: 'Protections', es: 'Protecciones' },
+        title: { pt: 'Proteções', en: 'Protections', es: 'Protecciones', fr: 'Protections', zh: '防護' },
         notes: [
           {
             pt: 'Proteções de golpes diferentes não se emendam mais, como um Protect usado duas vezes seguidas nos jogos. Enquanto Protect, Fly, Dig, Iron Head, Burning Bulwark ou Needle Arm protegem você, a proteção dos outros falha, e só volta a funcionar 0,75 s depois que essa acaba. Cada golpe sozinho continua igual. Obrigado, Armonich, por avisar da build que deixava o jogador imortal!',
             en: "Protections from different moves no longer chain, like Protect used twice in a row in the main games. While Protect, Fly, Dig, Iron Head, Burning Bulwark or Needle Arm shields you, the others' protection fails, and it only works again 0.75 s after that one ends. Each move on its own works as before. Thanks, Armonich, for reporting the build that made the player immortal!",
-            es: 'Las protecciones de movimientos distintos ya no se encadenan, como un Protect usado dos veces seguidas en los juegos. Mientras Protect, Fly, Dig, Iron Head, Burning Bulwark o Needle Arm te protegen, la protección de los demás falla, y solo vuelve a funcionar 0,75 s después de que esa termina. Cada movimiento por sí solo sigue igual. ¡Gracias, Armonich, por avisar de la build que dejaba al jugador inmortal!',
+            es: 'Las protecciones de movimientos distintos ya no se encadenan, como un Protect usado dos veces seguidas en los juegos. Mientras Protect, Fly, Dig, Iron Head, Burning Bulwark o Needle Arm te protegen, la protección de los demás falla, y solo vuelve a funcionar 0,75 s después de que esa termina. Cada movimiento por sí solo sigue igual. ¡Gracias, Armonich, por avisar de la build que dejaba al jugador inmortal!', fr: 'Les protections de capacités différentes ne s’enchaînent plus, comme Protect utilisé deux fois de suite dans les jeux principaux. Tant que Protect, Fly, Dig, Iron Head, Burning Bulwark ou Needle Arm te protège, la protection des autres échoue, et elle ne remarche que 0,75 s après la fin de celle-ci. Chaque capacité seule fonctionne comme avant. Merci à Armonich d’avoir signalé le build qui rendait le joueur immortel !', zh: '不同招式的防護不再能連續銜接，就像正傳遊戲中連續使用兩次 Protect 一樣。當 Protect、Fly、Dig、Iron Head、Burning Bulwark 或 Needle Arm 正在保護你時，其他招式的防護會失敗，並在該防護結束 0.75 秒後才會再次生效。每個招式單獨使用時效果不變。感謝 Armonich 回報那個讓玩家無敵的配置！',
           },
         ],
       },
       {
-        title: { pt: 'Correções visuais', en: 'Visual fixes', es: 'Correcciones visuales' },
+        title: { pt: 'Correções visuais', en: 'Visual fixes', es: 'Correcciones visuales', fr: 'Corrections visuelles', zh: '畫面修正' },
         notes: [
           {
             pt: 'A fenda de Latias e Latios dá o TM lendário de Latias (Mist Ball), e o título agora diz isso: antes ele dizia "TM lendário de Latios" sobre o golpe dela.',
             en: 'The Latias and Latios rift gives Latias\'s legendary TM (Mist Ball), and the title now says so: it used to read "Latios\'s legendary TM" over her move.',
-            es: 'La grieta de Latias y Latios da la MT legendaria de Latias (Mist Ball), y el título ahora lo dice: antes decía "MT legendaria de Latios" sobre su movimiento.',
+            es: 'La grieta de Latias y Latios da la MT legendaria de Latias (Mist Ball), y el título ahora lo dice: antes decía "MT legendaria de Latios" sobre su movimiento.', fr: 'La faille de Latias et Latios donne la CT légendaire de Latias (Mist Ball), et le titre le dit désormais : il affichait « CT légendaire de Latios » au-dessus de sa capacité à elle.', zh: 'Latias 與 Latios 的裂縫給的是 Latias 的傳說 TM（Mist Ball），現在標題也正確顯示了：之前她的招式上方寫的是「Latios 的傳說 TM」。',
           },
           {
             pt: 'No Modo Lendário, Moltres não fica mais menor que os outros lendários: as asas de fogo largas faziam o jogo encolher demais o sprite. Articuno, Lugia e Kyogre também ficaram um pouco maiores.',
             en: 'In Legend Mode, Moltres is no longer smaller than the other legendaries: its wide flaming wings made the game shrink its sprite too much. Articuno, Lugia and Kyogre got a little bigger too.',
-            es: 'En el Modo Legendario, Moltres ya no se ve más pequeño que los otros legendarios: sus anchas alas de fuego hacían que el juego encogiera demasiado su sprite. Articuno, Lugia y Kyogre también quedaron un poco más grandes.',
+            es: 'En el Modo Legendario, Moltres ya no se ve más pequeño que los otros legendarios: sus anchas alas de fuego hacían que el juego encogiera demasiado su sprite. Articuno, Lugia y Kyogre también quedaron un poco más grandes.', fr: 'En Mode Légendaire, Moltres n’est plus rapetissé par rapport aux autres légendaires : le jeu réduisait trop son sprite à cause de ses larges ailes enflammées. Articuno, Lugia et Kyogre ont aussi un peu grandi.', zh: '在傳說模式中，Moltres 不再比其他傳說寶可夢小：牠寬大的火焰翅膀讓遊戲把圖像縮得太小。Articuno、Lugia 與 Kyogre 也變大了一點。',
           },
           {
             pt: 'Na caverna, as paredes ao sul agora mostram o topo da rocha por cima do chão, onde os pés do Pokémon param: bater numa parede de baixo parece encostar nela, sem precisar se guiar pela sombra.',
             en: 'In the cave, the south walls now show the top of the rock over the floor, right where your Pokémon\'s feet stop: walking into a wall below you looks like touching it, no need to go by the shadow.',
-            es: 'En la cueva, las paredes del sur ahora muestran la parte de arriba de la roca sobre el suelo, justo donde se detienen los pies del Pokémon: chocar con una pared de abajo se ve como tocarla, sin tener que guiarse por la sombra.',
+            es: 'En la cueva, las paredes del sur ahora muestran la parte de arriba de la roca sobre el suelo, justo donde se detienen los pies del Pokémon: chocar con una pared de abajo se ve como tocarla, sin tener que guiarse por la sombra.', fr: 'Dans la grotte, les murs sud montrent maintenant le haut de la roche au-dessus du sol, pile là où s’arrêtent les pieds de ton Pokémon : marcher contre un mur en dessous de toi donne l’impression de le toucher, plus besoin de te fier à l’ombre.', zh: '在洞窟裡，南側的牆壁現在會在地面上方顯示岩石頂端，正好在你的寶可夢腳步停下的地方：往下方走進牆壁時看起來就像碰到牆，不必再靠影子判斷。',
           },
           {
             pt: 'Mega Sceptile ganhou o sprite próprio. As Megas sem sprite no PMD SpriteCollab (como Mega Venusaur, Blastoise e Garchomp) seguem com o sprite normal e o contorno de arco-íris até os artistas publicarem os delas.',
             en: 'Mega Sceptile got its own sprite. Megas with no sprite on PMD SpriteCollab yet (like Mega Venusaur, Blastoise and Garchomp) keep the regular sprite with the rainbow outline until the artists publish theirs.',
-            es: 'Mega Sceptile ganó su propio sprite. Las Megas sin sprite en PMD SpriteCollab (como Mega Venusaur, Blastoise y Garchomp) siguen con el sprite normal y el contorno de arcoíris hasta que los artistas publiquen los suyos.',
+            es: 'Mega Sceptile ganó su propio sprite. Las Megas sin sprite en PMD SpriteCollab (como Mega Venusaur, Blastoise y Garchomp) siguen con el sprite normal y el contorno de arcoíris hasta que los artistas publiquen los suyos.', fr: 'Méga-Sceptile a son propre sprite. Les Méga qui n’ont pas encore de sprite sur PMD SpriteCollab (comme Méga-Venusaur, Blastoise et Garchomp) gardent le sprite normal avec le contour arc-en-ciel jusqu’à ce que les artistes publient le leur.', zh: '超級 Sceptile 有了專屬圖像。在 PMD SpriteCollab 上還沒有圖像的超級進化（例如超級 Venusaur、超級 Blastoise 與超級 Garchomp）會維持一般圖像加上彩虹外框，直到畫師們發布。',
           },
         ],
       },
       {
-        title: { pt: 'Menos travamentos no celular', en: 'Fewer crashes on phones', es: 'Menos cierres en el celular' },
+        title: { pt: 'Menos travamentos no celular', en: 'Fewer crashes on phones', es: 'Menos cierres en el celular', fr: 'Moins de plantages sur mobile', zh: '手機上更少閃退' },
         notes: [
           {
             pt: 'O começo da partida e a entrada nas fendas lendárias pesam bem menos no celular: o jogo solta os Pokémon do lobby antes de carregar os da partida, carrega as imagens aos poucos em vez de todas de uma vez, e só baixa uma Mega ou a forma de um lendário quando ela está para aparecer (a Mega da Latias, por exemplo, só na fase anterior à dela).',
             en: "The start of a run and stepping into a legendary rift weigh much less on phones: the game lets go of the lobby's Pokémon before loading the run's, loads pictures a few at a time instead of all at once, and only downloads a Mega or a legendary's form when it's about to show up (Latias's Mega, for one, only in the phase before it).",
-            es: 'El comienzo de la partida y la entrada a las grietas legendarias pesan mucho menos en el celular: el juego suelta los Pokémon del lobby antes de cargar los de la partida, carga las imágenes de a poco en vez de todas a la vez, y solo descarga una Mega o la forma de un legendario cuando está por aparecer (la Mega de Latias, por ejemplo, solo en la fase anterior a la suya).',
+            es: 'El comienzo de la partida y la entrada a las grietas legendarias pesan mucho menos en el celular: el juego suelta los Pokémon del lobby antes de cargar los de la partida, carga las imágenes de a poco en vez de todas a la vez, y solo descarga una Mega o la forma de un legendario cuando está por aparecer (la Mega de Latias, por ejemplo, solo en la fase anterior a la suya).', fr: 'Le début d’une partie et l’entrée dans une faille légendaire pèsent beaucoup moins sur les téléphones : le jeu libère les Pokémon de l’accueil avant de charger ceux de la partie, charge les images quelques-unes à la fois au lieu de toutes d’un coup, et ne télécharge une Méga ou la forme d’un légendaire que quand elle va apparaître (la Méga de Latias, par exemple, seulement à la phase d’avant).', zh: '在手機上，對局開始與進入傳說裂縫的負擔大幅減輕：遊戲會先釋放大廳的寶可夢，再載入對局的寶可夢；圖片一次只載入幾張，而不是全部一起載入；超級進化或傳說寶可夢的型態只會在快要出現時才下載（例如 Latias 的超級進化，只會在它出現的前一個階段下載）。',
           },
         ],
       },
       {
-        title: { pt: 'Fendas lendárias', en: 'Legendary rifts', es: 'Grietas legendarias' },
+        title: { pt: 'Fendas lendárias', en: 'Legendary rifts', es: 'Grietas legendarias', fr: 'Failles légendaires', zh: '傳說裂縫' },
         notes: [
           {
             pt: 'Corrigido: Groudon e Rayquaza podiam travar no limite de uma fase para sempre quando ficavam paralisados, congelados ou dormindo sem parar. Agora o golpe final da fase (Precipice Blades, Hyper Beam, Dragon Ascent…) sai mesmo com o lendário sob efeito de status, e a luta segue.',
             en: "Fixed: Groudon and Rayquaza could get stuck at a phase's limit forever while kept paralyzed, frozen or asleep. Now the phase's signature attack (Precipice Blades, Hyper Beam, Dragon Ascent…) goes off even through a status condition, and the fight moves on.",
-            es: 'Corregido: Groudon y Rayquaza podían quedarse trabados en el límite de una fase para siempre cuando los mantenían paralizados, congelados o dormidos. Ahora el ataque final de la fase (Precipice Blades, Hyper Beam, Dragon Ascent…) sale aunque el legendario tenga un estado, y la pelea sigue.',
+            es: 'Corregido: Groudon y Rayquaza podían quedarse trabados en el límite de una fase para siempre cuando los mantenían paralizados, congelados o dormidos. Ahora el ataque final de la fase (Precipice Blades, Hyper Beam, Dragon Ascent…) sale aunque el legendario tenga un estado, y la pelea sigue.', fr: 'Corrigé : Groudon et Rayquaza pouvaient rester bloqués pour toujours à la limite d’une phase s’ils étaient maintenus paralysés, gelés ou endormis. Désormais, l’attaque signature de la phase (Precipice Blades, Hyper Beam, Dragon Ascent…) part même à travers une altération de statut, et le combat avance.', zh: '修正：Groudon 與 Rayquaza 在持續被麻痺、冰凍或睡眠時，可能會永遠卡在階段的界限上。現在該階段的招牌攻擊（Precipice Blades、Hyper Beam、Dragon Ascent…）即使處於異常狀態也會發動，戰鬥會繼續進行。',
           },
           {
             pt: 'Quando você leva um deles até o limite da fase, ele solta o golpe final na hora, em vez de seguir lutando com a vida parada no limite (ou zerada, na última fase).',
             en: "When you bring one of them down to a phase's limit, it unleashes its signature attack right away, instead of fighting on with its HP stuck at the limit (or at zero, in the last phase).",
-            es: 'Cuando llevas a uno de ellos hasta el límite de la fase, suelta el ataque final al instante, en vez de seguir peleando con la vida detenida en el límite (o en cero, en la última fase).',
+            es: 'Cuando llevas a uno de ellos hasta el límite de la fase, suelta el ataque final al instante, en vez de seguir peleando con la vida detenida en el límite (o en cero, en la última fase).', fr: 'Quand tu en amènes un à la limite d’une phase, il déchaîne aussitôt son attaque signature, au lieu de continuer à se battre avec ses PV bloqués à la limite (ou à zéro, dans la dernière phase).', zh: '當你把牠們之中的任一隻打到階段界限時，牠會立刻放出招牌攻擊，而不是 HP 卡在界限上（或最後階段卡在零）繼續戰鬥。',
           },
           {
             pt: 'Corrigido: um lendário derrotado no meio de um mergulho ou de uma passada para fora da arena (como o Rayquaza) era capturado longe e deixava a recompensa fora do alcance. Agora ele cai no seu lugar na arena.',
             en: 'Fixed: a legendary defeated mid-dive or while out on a pass off the arena (like Rayquaza) was captured far away and left its loot out of reach. Now it falls back at its spot in the arena.',
-            es: 'Corregido: un legendario derrotado en medio de una zambullida o de una pasada fuera de la arena (como Rayquaza) era capturado lejos y dejaba la recompensa fuera de alcance. Ahora cae en su lugar en la arena.',
+            es: 'Corregido: un legendario derrotado en medio de una zambullida o de una pasada fuera de la arena (como Rayquaza) era capturado lejos y dejaba la recompensa fuera de alcance. Ahora cae en su lugar en la arena.', fr: 'Corrigé : un légendaire vaincu en plein piqué ou pendant un passage hors de l’arène (comme Rayquaza) était capturé au loin et laissait son butin hors de portée. Désormais, il retombe à sa place dans l’arène.', zh: '修正：在俯衝途中或飛出競技場外（例如 Rayquaza）時被擊敗的傳說寶可夢，會在遠處被收服，戰利品也落在拿不到的地方。現在牠會落回競技場中的位置。',
           },
         ],
       },
       {
-        title: { pt: 'Golpes que travavam ou sumiam', en: 'Moves that got stuck or vanished', es: 'Movimientos que se trababan o desaparecían' },
+        title: { pt: 'Golpes que travavam ou sumiam', en: 'Moves that got stuck or vanished', es: 'Movimientos que se trababan o desaparecían', fr: 'Capacités bloquées ou invisibles', zh: '卡住或消失的招式' },
         notes: [
           {
             pt: 'Corrigido: um golpe gasto num golpe duplo e aprendido de novo por uma TM (como o Aurora Beam do Suicune depois do Freeze-Dry) ficava preso no Nv. 1, e os níveis só davam Oran Berry. Agora ele sobe de nível como qualquer outro.',
             en: "Fixed: a move spent on a duo move and learned again from a TM (like Suicune's Aurora Beam after Freeze-Dry) got stuck at Lv 1, and level-ups only gave Oran Berries. Now it levels up like any other.",
-            es: 'Corregido: un movimiento gastado en un movimiento dúo y aprendido de nuevo con una MT (como el Aurora Beam de Suicune después de Freeze-Dry) se quedaba trabado en el Nv. 1, y los niveles solo daban Oran Berry. Ahora sube de nivel como cualquier otro.',
+            es: 'Corregido: un movimiento gastado en un movimiento dúo y aprendido de nuevo con una MT (como el Aurora Beam de Suicune después de Freeze-Dry) se quedaba trabado en el Nv. 1, y los niveles solo daban Oran Berry. Ahora sube de nivel como cualquier otro.', fr: 'Corrigé : une capacité utilisée pour une capacité duo puis réapprise par une CT (comme l’Aurora Beam de Suicune après Freeze-Dry) restait bloquée au Nv 1, et les montées de niveau ne donnaient que des Oran Berries. Désormais, elle monte de niveau comme les autres.', zh: '修正：用來合成合體招式、之後又從 TM 重新學會的招式（例如 Suicune 在 Freeze-Dry 之後的 Aurora Beam）會卡在 Lv 1，升級時只會給 Oran Berry。現在它會像其他招式一樣升級。',
           },
           {
             pt: 'Corrigido: o Drill Peck do Piplup no ramo que persegue os inimigos (Nv. 4), o Mud Shot no ramo bumerangue e o Psybeam no ramo que gira em volta de você (Nv. 7) continuavam acertando, mas ficavam invisíveis. Agora aparecem.',
             en: "Fixed: Piplup's Drill Peck on its foe-seeking branch (Lv 4), Mud Shot on its boomerang branch and Psybeam on its ring branch (Lv 7) still hit, but were invisible. Now they show.",
-            es: 'Corregido: el Drill Peck de Piplup en la rama que persigue a los enemigos (Nv. 4), el Mud Shot en la rama bumerán y el Psybeam en la rama que gira a tu alrededor (Nv. 7) seguían golpeando, pero eran invisibles. Ahora se ven.',
+            es: 'Corregido: el Drill Peck de Piplup en la rama que persigue a los enemigos (Nv. 4), el Mud Shot en la rama bumerán y el Psybeam en la rama que gira a tu alrededor (Nv. 7) seguían golpeando, pero eran invisibles. Ahora se ven.', fr: 'Corrigé : le Drill Peck de Piplup sur son embranchement à tête chercheuse (Nv 4), Mud Shot sur son embranchement boomerang et Psybeam sur son embranchement en anneau (Nv 7) touchaient toujours, mais étaient invisibles. Désormais, ils s’affichent.', zh: '修正：Piplup 的 Drill Peck 在追蹤敵人的分支（Lv 4）、Mud Shot 在迴力鏢分支，以及 Psybeam 在環狀分支（Lv 7）時仍會命中，但看不見。現在會正常顯示。',
           },
         ],
       },
       {
-        title: { pt: 'Controles e portais', en: 'Controls and portals', es: 'Controles y portales' },
+        title: { pt: 'Controles e portais', en: 'Controls and portals', es: 'Controles y portales', fr: 'Commandes et portails', zh: '操作與傳送門' },
         notes: [
           {
             pt: 'Corrigido: a partida recomeçava sozinha quando você apertava Espaço logo depois de desmaiar, sem mostrar o resultado. Espaço é o especial e não escolhe mais nada na tela de resultado: use Enter, o toque ou o A do controle.',
             en: 'Fixed: the run restarted on its own when you pressed Space right after fainting, without showing the results. Space is the special and no longer picks anything on the results screen: use Enter, a tap or the controller\'s A.',
-            es: 'Corregido: la partida volvía a empezar sola cuando apretabas Espacio justo después de desmayarte, sin mostrar el resultado. Espacio es el especial y ya no elige nada en la pantalla de resultado: usa Enter, el toque o la A del control.',
+            es: 'Corregido: la partida volvía a empezar sola cuando apretabas Espacio justo después de desmayarte, sin mostrar el resultado. Espacio es el especial y ya no elige nada en la pantalla de resultado: usa Enter, el toque o la A del control.', fr: 'Corrigé : la partie redémarrait toute seule quand tu appuyais sur Espace juste après avoir été K.O., sans afficher les résultats. Espace est l’attaque spéciale et ne choisit plus rien sur l’écran des résultats : utilise Entrée, un toucher ou le A de la manette.', zh: '修正：倒下後立刻按空白鍵，對局會在沒有顯示結果的情況下自行重新開始。空白鍵是必殺技，在結果畫面上不再選取任何東西：請使用 Enter、點擊或手把的 A。',
           },
           {
             pt: 'Corrigido: um controle conectado com o analógico fora do centro (ou um volante, um pedal) fazia o Pokémon andar sozinho e travava o teclado. Agora o teclado sempre manda, e um analógico só conta depois de passar pelo centro.',
             en: "Fixed: a connected controller with its stick off center (or a wheel, a pedal) made the Pokémon walk on its own and locked out the keyboard. The keyboard now always wins, and a stick only counts once it has been centered.",
-            es: 'Corregido: un control conectado con el stick fuera del centro (o un volante, un pedal) hacía que el Pokémon caminara solo y bloqueaba el teclado. Ahora el teclado siempre manda, y un stick solo cuenta después de pasar por el centro.',
+            es: 'Corregido: un control conectado con el stick fuera del centro (o un volante, un pedal) hacía que el Pokémon caminara solo y bloqueaba el teclado. Ahora el teclado siempre manda, y un stick solo cuenta después de pasar por el centro.', fr: 'Corrigé : une manette branchée avec son stick décentré (ou un volant, un pédalier) faisait marcher le Pokémon tout seul et bloquait le clavier. Le clavier a désormais toujours la priorité, et un stick ne compte qu’une fois recentré.', zh: '修正：連接的手把如果搖桿沒有置中（或是方向盤、踏板），會讓寶可夢自己走動並鎖住鍵盤。現在鍵盤永遠優先，搖桿只有在置中過一次之後才會生效。',
           },
           {
             pt: 'Portais das fendas e entradas dos lugares: sair de dentro esvazia a carga bem mais devagar, então golpes que te tiram do lugar sozinhos, como o Aqua Step, não impedem mais de entrar.',
             en: 'Rift portals and place entrances: stepping out drains the charge much more slowly, so moves that hop you around on their own, like Aqua Step, no longer keep you from getting in.',
-            es: 'Portales de las grietas y entradas de los lugares: salir de adentro vacía la carga mucho más despacio, así que los movimientos que te sacan del lugar solos, como Aqua Step, ya no impiden entrar.',
+            es: 'Portales de las grietas y entradas de los lugares: salir de adentro vacía la carga mucho más despacio, así que los movimientos que te sacan del lugar solos, como Aqua Step, ya no impiden entrar.', fr: 'Portails des failles et entrées des lieux : en sortir vide la jauge beaucoup plus lentement, donc les capacités qui te font bondir toutes seules, comme Aqua Step, ne t’empêchent plus d’entrer.', zh: '裂縫傳送門與地點入口：走出範圍時充能流失的速度慢了很多，所以像 Aqua Step 這種會讓你自己跳來跳去的招式，不會再妨礙你進入。',
           },
         ],
       },
       {
-        title: { pt: 'Ninguém mais fica preso no cenário', en: 'No more getting stuck in the scenery', es: 'Nadie más queda atrapado en el escenario' },
+        title: { pt: 'Ninguém mais fica preso no cenário', en: 'No more getting stuck in the scenery', es: 'Nadie más queda atrapado en el escenario', fr: 'Plus personne coincé dans le décor', zh: '不會再卡在場景裡' },
         notes: [
           {
             pt: 'Corrigido: Pokémon grandes, como Salamence, Milotic, Hydreigon, Dragapult e Altaria, não passavam pelos corredores dos labirintos, pela porta da casa abandonada nem por trechos da caverna do Groudon. Agora todo Pokémon passa por todos os caminhos (o tamanho para levar dano continua o mesmo).',
             en: "Fixed: big Pokémon like Salamence, Milotic, Hydreigon, Dragapult and Altaria couldn't fit through maze corridors, the abandoned cottage's door or parts of Groudon's cave. Now every Pokémon fits every path (the size that takes hits stays the same).",
-            es: 'Corregido: los Pokémon grandes como Salamence, Milotic, Hydreigon, Dragapult y Altaria no pasaban por los pasillos de los laberintos, la puerta de la casa abandonada ni partes de la cueva de Groudon. Ahora todo Pokémon pasa por todos los caminos (el tamaño para recibir daño sigue igual).',
+            es: 'Corregido: los Pokémon grandes como Salamence, Milotic, Hydreigon, Dragapult y Altaria no pasaban por los pasillos de los laberintos, la puerta de la casa abandonada ni partes de la cueva de Groudon. Ahora todo Pokémon pasa por todos los caminos (el tamaño para recibir daño sigue igual).', fr: 'Corrigé : les grands Pokémon comme Salamence, Milotic, Hydreigon, Dragapult et Altaria ne passaient pas dans les couloirs des labyrinthes, par la porte de la maisonnette abandonnée ou dans certaines parties de la grotte de Groudon. Désormais, chaque Pokémon passe partout (la taille qui encaisse les coups reste la même).', zh: '修正：Salamence、Milotic、Hydreigon、Dragapult 與 Altaria 等大型寶可夢無法通過迷宮的走道、廢棄小屋的門，或 Groudon 洞窟的部分區域。現在每隻寶可夢都能通過每條路（受擊判定的大小維持不變）。',
           },
           {
             pt: 'Corrigido: evoluir dentro da casa, ou ser empurrado entre a barraca, a fogueira e a mochila do acampamento, entre cristais da caverna ou contra as paredes de uma fenda, podia te deixar preso sem conseguir andar. Agora quem fica entalado sai para o lugar livre mais perto.',
             en: 'Fixed: evolving inside the cottage, or getting pushed between the camp\'s tent, campfire and backpack, between cave crystals or against a rift\'s walls, could leave you stuck and unable to move. Now anyone wedged in steps out to the nearest open spot.',
-            es: 'Corregido: evolucionar dentro de la casa, o ser empujado entre la carpa, la fogata y la mochila del campamento, entre cristales de la cueva o contra las paredes de una grieta, podía dejarte atrapado sin poder moverte. Ahora quien queda atascado sale al lugar libre más cercano.',
+            es: 'Corregido: evolucionar dentro de la casa, o ser empujado entre la carpa, la fogata y la mochila del campamento, entre cristales de la cueva o contra las paredes de una grieta, podía dejarte atrapado sin poder moverte. Ahora quien queda atascado sale al lugar libre más cercano.', fr: 'Corrigé : évoluer dans la maisonnette, ou se faire pousser entre la tente, le feu de camp et le sac à dos du campement, entre les cristaux de la grotte ou contre les murs d’une faille, pouvait te laisser coincé sans pouvoir bouger. Désormais, quiconque est coincé est replacé à l’endroit libre le plus proche.', zh: '修正：在小屋裡進化，或被擠在營地的帳篷、營火與背包之間、洞窟水晶之間，或裂縫的牆邊時，可能會卡住無法移動。現在被卡住的寶可夢會移到最近的空地。',
           },
         ],
       },

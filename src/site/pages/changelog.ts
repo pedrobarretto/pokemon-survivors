@@ -1,6 +1,7 @@
 import type { Locale } from '../../i18n'
 import { SITE_MESSAGES } from '../../i18n/site'
 import { CHANGELOG } from '../changelog'
+import { localized } from '../localized'
 import { html } from '../html'
 import { layout } from '../layout'
 
@@ -22,14 +23,14 @@ export const changelogPage = (locale: Locale) => {
     ${CHANGELOG.map(
       (update, i) => html`<article class="box doc-section changelog-update" id="${update.date}">
       <p class="changelog-date"><time datetime="${update.date}">${longDate(update.date)}</time></p>
-      <h2>${update.title[locale]}</h2>
-      <ul class="changelog-highlights">${update.highlights.map((line) => html`<li>${line[locale]}</li>`)}</ul>
+      <h2>${localized(update.title, locale)}</h2>
+      <ul class="changelog-highlights">${update.highlights.map((line) => html`<li>${localized(line, locale)}</li>`)}</ul>
       <details${i === 0 && html` open`}>
         <summary>${m.changelog.changes(update.changes.length)}</summary>
         ${update.changes.map(
           (change) => html`<section class="changelog-change">
-          <h3>${change.title[locale]}</h3>
-          <ul>${change.notes.map((note) => html`<li>${note[locale]}</li>`)}</ul>
+          <h3>${localized(change.title, locale)}</h3>
+          <ul>${change.notes.map((note) => html`<li>${localized(note, locale)}</li>`)}</ul>
         </section>`,
         )}
       </details>

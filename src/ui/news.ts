@@ -2,6 +2,7 @@ import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { formatDay, locale, t } from '../i18n'
 import type { ChangelogUpdate } from '../site/changelog'
+import { localized } from '../site/localized'
 import { ROUTES } from '../site/routes'
 import { h, later } from './dom'
 import { hint, menu, type Screen } from './screens'
@@ -61,8 +62,8 @@ export const newsScreen = (root: HTMLElement, input: Input, onClose: () => void)
         'div',
         { class: 'dialog box pop news' },
         h('div', { class: 'dialog-title' }, m.title),
-        h('p', { class: 'news-head' }, h('small', {}, m.update(formatDay(update.date))), h('b', {}, update.title[lang])),
-        h('ul', { class: 'news-list' }, ...update.highlights.map((line) => h('li', {}, line[lang]))),
+        h('p', { class: 'news-head' }, h('small', {}, m.update(formatDay(update.date))), h('b', {}, localized(update.title, lang))),
+        h('ul', { class: 'news-list' }, ...update.highlights.map((line) => h('li', {}, localized(line, lang)))),
         h('div', { class: 'buttons' }, ...buttons),
         hint(m.hintKeys, m.hintTouch),
       ),

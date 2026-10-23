@@ -1,3 +1,15 @@
+/*
+ * Traditional Chinese: Cubic 11 (俐方體11號, public/fonts/cubic-11, free license in its OFL.txt), a pixel font that
+ * sits beside Press Start 2P and VT323, which have no CJK glyphs. The unicode-range keeps it off the network until
+ * a page shows CJK text.
+ */
+@font-face {
+  font-family: 'Cubic 11';
+  src: url('/fonts/cubic-11/Cubic_11.woff2') format('woff2');
+  font-display: swap;
+  unicode-range: U+2E80-2FDF, U+3000-303F, U+3100-312F, U+31A0-31BF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF;
+}
+
 :root {
   /* UI size (Settings → Jogo, ui/uiScale.ts): #ui is drawn zoomed by this. */
   --ui-zoom: 1;
@@ -10,8 +22,8 @@
   --ink: #303040;
   --paper: #f8f8f8;
   --frame: #6878a8;
-  --title: 'Press Start 2P', monospace;
-  --body: 'VT323', monospace;
+  --title: 'Press Start 2P', 'Cubic 11', monospace;
+  --body: 'VT323', 'Cubic 11', monospace;
   /* Notch / home-indicator insets (needs viewport-fit=cover). */
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-r: env(safe-area-inset-right, 0px);

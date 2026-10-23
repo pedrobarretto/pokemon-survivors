@@ -3,6 +3,18 @@
 @import '@fontsource/press-start-2p/index.css';
 @import '@fontsource/vt323/index.css';
 
+/*
+ * Traditional Chinese: Cubic 11 (俐方體11號, public/fonts/cubic-11, free license in its OFL.txt), a pixel font that
+ * sits beside Press Start 2P and VT323, which have no CJK glyphs. The unicode-range keeps it off the network until
+ * a page shows CJK text.
+ */
+@font-face {
+  font-family: 'Cubic 11';
+  src: url('/fonts/cubic-11/Cubic_11.woff2') format('woff2');
+  font-display: swap;
+  unicode-range: U+2E80-2FDF, U+3000-303F, U+3100-312F, U+31A0-31BF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF;
+}
+
 :root {
   --bg: #101820;
   --bg-2: #182234;
@@ -17,8 +29,8 @@
   --yellow: #ffcb05;
   --blue: #2a5aa8;
   --red: #e83838;
-  --title: 'Press Start 2P', monospace;
-  --body: 'VT323', monospace;
+  --title: 'Press Start 2P', 'Cubic 11', monospace;
+  --body: 'VT323', 'Cubic 11', monospace;
   color-scheme: dark;
 }
 

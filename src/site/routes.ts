@@ -33,13 +33,13 @@ export const STRIPE_DONATION_URL = 'https://donate.stripe.com/5kQ28l1x45My6ci4ib
  * These paths are linked from the game's title screen, so keep them stable.
  */
 export const ROUTES = {
-  play: { pt: '/', en: '/en/', es: '/es/' },
-  pokedex: { pt: '/pokedex/', en: '/en/pokedex/', es: '/es/pokedex/' },
-  tierList: { pt: '/tier-list/', en: '/en/tier-list/', es: '/es/tier-list/' },
-  guide: { pt: '/guia/', en: '/en/guide/', es: '/es/guia/' },
-  changelog: { pt: '/novidades/', en: '/en/changelog/', es: '/es/novedades/' },
-  legal: { pt: '/legal/', en: '/en/legal/', es: '/es/legal/' },
-  support: { pt: '/apoie/', en: '/en/support/', es: '/es/apoya/' },
+  play: { pt: '/', en: '/en/', es: '/es/', fr: '/fr/', zh: '/zh-tw/' },
+  pokedex: { pt: '/pokedex/', en: '/en/pokedex/', es: '/es/pokedex/', fr: '/fr/pokedex/', zh: '/zh-tw/pokedex/' },
+  tierList: { pt: '/tier-list/', en: '/en/tier-list/', es: '/es/tier-list/', fr: '/fr/tier-list/', zh: '/zh-tw/tier-list/' },
+  guide: { pt: '/guia/', en: '/en/guide/', es: '/es/guia/', fr: '/fr/guide/', zh: '/zh-tw/guide/' },
+  changelog: { pt: '/novidades/', en: '/en/changelog/', es: '/es/novedades/', fr: '/fr/nouveautes/', zh: '/zh-tw/changelog/' },
+  legal: { pt: '/legal/', en: '/en/legal/', es: '/es/legal/', fr: '/fr/legal/', zh: '/zh-tw/legal/' },
+  support: { pt: '/apoie/', en: '/en/support/', es: '/es/apoya/', fr: '/fr/soutenir/', zh: '/zh-tw/support/' },
 } as const satisfies Record<string, Record<Locale, string>>
 
 export type RouteId = keyof typeof ROUTES
@@ -53,8 +53,8 @@ export type PageId = (typeof PAGE_IDS)[number]
 
 export const absolute = (path: string) => `${SITE_URL}${path}`
 
-/** hreflang of each language (Spanish for all of Latin America and beyond, not one country). */
-export const HREFLANG = { pt: 'pt-BR', en: 'en', es: 'es' } as const satisfies Record<Locale, string>
+/** hreflang of each language (Spanish for all of Latin America and beyond, not one country; Traditional Chinese for Taiwan and Hong Kong). */
+export const HREFLANG = { pt: 'pt-BR', en: 'en', es: 'es', fr: 'fr', zh: 'zh-Hant' } as const satisfies Record<Locale, string>
 
 /** One page's path in every language. */
 export type Paths = Readonly<Record<Locale, string>>
@@ -72,6 +72,8 @@ export const dexPaths = (slug: string): Paths => ({
   pt: `${ROUTES.pokedex.pt}${slug}/`,
   en: `${ROUTES.pokedex.en}${slug}/`,
   es: `${ROUTES.pokedex.es}${slug}/`,
+  fr: `${ROUTES.pokedex.fr}${slug}/`,
+  zh: `${ROUTES.pokedex.zh}${slug}/`,
 })
 
 /** sitemap.xml with every route and every `extra` page (the Pokémon pages) in every language, each listing its alternates. */

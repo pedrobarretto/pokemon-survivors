@@ -1,6 +1,8 @@
 import { en } from './en'
 import { es } from './es'
+import { fr } from './fr'
 import { pt, type Messages } from './pt'
+import { zh } from './zh'
 
 export type { Messages }
 
@@ -9,6 +11,8 @@ export const LOCALES = {
   pt: { name: 'Português', short: 'PT', tag: 'pt-BR', messages: pt },
   en: { name: 'English', short: 'EN', tag: 'en-US', messages: en },
   es: { name: 'Español', short: 'ES', tag: 'es-419', messages: es },
+  fr: { name: 'Français', short: 'FR', tag: 'fr-FR', messages: fr },
+  zh: { name: '繁體中文', short: '中文', tag: 'zh-TW', messages: zh },
 } as const satisfies Record<string, { name: string; short: string; tag: string; messages: Messages }>
 
 export type Locale = keyof typeof LOCALES
@@ -19,7 +23,7 @@ const KEY = 'ps:lang'
 
 const isLocale = (v: unknown): v is Locale => typeof v === 'string' && v in LOCALES
 
-/** Saved choice first, then the first browser language we support (`pt-PT` → pt, `es-MX` → es), else English. */
+/** Saved choice first, then the first browser language we support (`pt-PT` → pt, `es-MX` → es, any Chinese → zh, Traditional), else English. */
 export const detectLocale = (saved: string | null, languages: readonly string[]): Locale =>
   isLocale(saved) ? saved : (languages.map((l) => l.slice(0, 2).toLowerCase()).find(isLocale) ?? 'en')
 

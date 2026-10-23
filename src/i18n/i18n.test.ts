@@ -9,7 +9,9 @@ describe('detectLocale', () => {
   it('picks the first supported browser language, any region', () => {
     expect(detectLocale(null, ['pt-PT', 'en-US'])).toBe('pt')
     expect(detectLocale(null, ['es-MX', 'en-US'])).toBe('es')
-    expect(detectLocale(null, ['fr-FR', 'en-GB', 'pt-BR'])).toBe('en')
+    expect(detectLocale(null, ['fr-CA', 'en-US'])).toBe('fr')
+    expect(detectLocale(null, ['zh-HK', 'en-US'])).toBe('zh')
+    expect(detectLocale(null, ['de-DE', 'en-GB', 'pt-BR'])).toBe('en')
   })
 
   it('falls back to English for unknown saves and languages', () => {

@@ -99,10 +99,11 @@ const OUTCOME_COLORS = { victory: '#3878e8', fainted: '#d04848', endless: '#7048
 
 type Font = 'title' | 'body'
 
-const FAMILY = { title: '"Press Start 2P"', body: 'VT323' } as const satisfies Record<Font, string>
+/** Cubic 11 draws the Chinese text the Latin pixel fonts have no glyphs for (see `ui/style.css`). */
+const FAMILY = { title: '"Press Start 2P", "Cubic 11"', body: 'VT323, "Cubic 11"' } as const satisfies Record<Font, string>
 
-/** Waits for the game fonts: a card drawn before them would fall back to a smooth system font. */
-const fontsReady = () => Promise.all([document.fonts.load(`8px ${FAMILY.title}`), document.fonts.load(`16px ${FAMILY.body}`)])
+/** Waits for the game fonts: a card drawn before them would fall back to a smooth system font. A line of the current language as the sample loads Cubic 11 only when the card is in Chinese. */
+const fontsReady = () => Promise.all([document.fonts.load(`8px ${FAMILY.title}`, t().loading), document.fonts.load(`16px ${FAMILY.body}`, t().loading)])
 
 type Mask = { canvas: HTMLCanvasElement; width: number; baseline: number }
 
