@@ -353,6 +353,8 @@ export const fr: Messages = {
     screenShake: 'Tremblement d’écran',
     flashes: 'Flashs',
     flashModes: { normal: 'Normaux', reduced: 'Réduits' },
+    attackOpacity: 'Opacité des attaques',
+    teamAttackOpacity: 'Opacité de l’équipe',
     uiScale: 'Taille de l’interface',
     uiScaleAuto: 'Auto',
     safeMode: 'Mode léger',
