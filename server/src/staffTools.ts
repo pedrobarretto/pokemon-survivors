@@ -143,7 +143,7 @@ export const staffTools = (actions: StaffActions): Tool[] => {
       name: 'report_bug',
       description: "Files a bug report in the Discord's #bug-reports forum. Use it when staff ask to report or file a bug.",
       parameters: object(
-        { text: { type: 'string', description: 'In English: the first line a short title, then what happens, where in the game, the device and how to make it happen, as far as the messages say.' } },
+        { text: { type: 'string', description: 'In English: the first line a short title, then what happens, where in the game, the device and how to make it happen, only as far as the messages say: never guess the missing parts.' } },
         ['text'],
       ),
       run: async (args) => actions.reportBug(text(args.text)),
