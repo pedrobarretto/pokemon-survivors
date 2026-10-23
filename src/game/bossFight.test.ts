@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
 import { BOSS_DIFFICULTY, BOSS_PATTERNS, BOSS_PHASES, BOSS_RAGE, bossKit, MIN_TELEGRAPH, STANCES, type BossPattern } from '../data/bosses'
 import { WAVE_LEGENDS } from '../data/legendBosses'
-import { attackCount, attackWait, chainTarget, createFight, fightPace, fightsInStances, holdsOn, patternLive, phaseAt, phaseTaken, pooledShare, shouldEnrage, steerBoss, telegraph, tickStance, ultimateLength, type Steering } from './bossFight'
+import { attackCount, attackWait, chainTarget, createFight, fightPace, fightsInStances, GATE_WAIT, holdFloor, holdsOn, patternLive, phaseAt, phaseTaken, pooledShare, shouldEnrage, statusStops, steerBoss, telegraph, tickStance, ultimateDue, ultimateLength, type Steering } from './bossFight'
 
 describe('boss fights', () => {
   it('only wave bosses fight in stances', () => {
@@ -127,6 +127,33 @@ describe('bosses with phases', () => {
     const ultimate = phases[2]!.ultimate!
     const last = ultimate.steps.at(-1)!
     expect(ultimateLength(ultimate.steps)).toBeGreaterThan(last.at)
+  })
+})
+
+describe('a phase that holds on for its ultimate (Groudon, Rayquaza)', () => {
+  const phases = BOSS_PHASES.groudon!
+  const maxHp = 1000
+
+  it("can't be kept at its gate by a stun, sleep or freeze", () => {
+    const fight = createFight(createRng(1), 'normal')
+    expect(phases[0]!.hold).toBe(true)
+    expect(statusStops(phases, fight, true)).toBe(false)
+    fight.ultDone = true
+    expect(statusStops(phases, fight, true)).toBe(true)
+    fight.ult = { t: 0, step: 0 }
+    expect(statusStops(phases, fight, true)).toBe(false)
+    expect(statusStops(null, null, true)).toBe(true)
+    expect(statusStops(phases, fight, false)).toBe(false)
+  })
+
+  it('plays its ultimate at once when hit down to the gate', () => {
+    const fight = createFight(createRng(1), 'normal')
+    fight.ultLeft = 6
+    const gate = holdFloor(phases, fight, maxHp)
+    expect(ultimateDue(phases, fight, gate + 50, maxHp)).toBe(6)
+    expect(ultimateDue(phases, fight, gate, maxHp)).toBe(GATE_WAIT)
+    fight.ultDone = true
+    expect(ultimateDue(phases, fight, gate, maxHp)).toBe(6)
   })
 })
 

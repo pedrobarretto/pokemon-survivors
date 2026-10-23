@@ -309,6 +309,25 @@ export const holdFloor = (phases: readonly BossPhase[], fight: BossFight, maxHp:
   return next ? Math.ceil(next.below * maxHp) + 1 : 1
 }
 
+/** The most seconds a boss hit down to its `hold` gate still waits for its ultimate: there, it plays it at once. */
+export const GATE_WAIT = 1
+
+/**
+ * When a boss's ultimate comes due: on its clock, or within `GATE_WAIT` once
+ * its `hold` phase pins it at the gate (`holdFloor`), so a fast fight never
+ * stands around waiting on it.
+ */
+export const ultimateDue = (phases: readonly BossPhase[], fight: BossFight, hp: number, maxHp: number) =>
+  waitsOnUltimate(phases, fight) && hp <= holdFloor(phases, fight, maxHp) ? Math.min(fight.ultLeft, GATE_WAIT) : fight.ultLeft
+
+/**
+ * Whether a stun, sleep or freeze (`held`) stops a boss's script now. Not
+ * while it owes its `hold` phase the ultimate, nor while one plays: those go
+ * through, so no condition can pin a boss at its gate forever.
+ */
+export const statusStops = (phases: readonly BossPhase[] | null, fight: BossFight | null, held: boolean) =>
+  held && !(fight !== null && (fight.ult !== null || (phases !== null && waitsOnUltimate(phases, fight))))
+
 /** How much more (or less) damage a boss with phases takes in the phase it's in (`BossPhase.taken`). */
 export const phaseTaken = (e: { kind: EnemyId; fight: BossFight | null }) => (e.fight ? (phasesOf(e.kind)?.[e.fight.phase]?.taken ?? 1) : 1)
 

@@ -307,10 +307,14 @@ export const updateDomainScene = (g: Game, dt: number) => {
   return true
 }
 
-/** The legendary fell for good: its adds go, and the capture scene plays where it knelt. */
+/**
+ * The legendary fell for good: its adds go, and the capture scene plays where
+ * it knelt (and the loot drops there). One that fell off the floor on its
+ * script (hidden on a dive, out on a swoop's pass) kneels at its spot instead.
+ */
 const startCapture = (g: Game, arena: RiftArena, d: DomainState, boss: Enemy | undefined) => {
-  const x = boss?.x ?? arenaPoint(arena, d, defOf(d).arena.boss).x
-  const y = boss?.y ?? arenaPoint(arena, d, defOf(d).arena.boss).y
+  const spot = boss && !offstage(boss) ? boss : arenaPoint(arena, d, defOf(d).arena.boss)
+  const { x, y } = spot
   const mate = d.pair ? g.enemies.find((e) => e.id === d.pair!.partnerId) : undefined
   const partner = mate ? { kind: mate.kind, x: mate.x, y: mate.y, shiny: mate.shiny } : null
   d.capture = { kind: d.legend, x, y, shiny: arena.shiny, settled: false, partner }

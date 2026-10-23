@@ -7,7 +7,7 @@ import type { EnemyId } from '../data/enemies'
 import { FINALE, fleesFrom } from '../data/waves'
 import {
   attackCount, attackWait, bossAway, chainChance, chainTarget, createFight, fightsInStances, hasteOf, holdFloor, leadTime, nextPhase, patternLive, patternsOf, phasesOf,
-  pooledShare, shouldEnrage, telegraph, tickStance, ultimateLength, waitsOnUltimate, type BossBlast, type BossFight,
+  pooledShare, shouldEnrage, statusStops, telegraph, tickStance, ultimateDue, ultimateLength, waitsOnUltimate, type BossBlast, type BossFight,
 } from './bossFight'
 import { ENEMIES } from '../data/enemies'
 import { hurtPlayer } from './combat'
@@ -711,8 +711,11 @@ export const updateBosses = (g: Game, tick: number) => {
       if (phases?.[0]?.ultimate) e.fight.ultLeft = phases[0].ultimate.first
     }
     const fight = e.fight
-    // A `hold` phase doesn't give way before its ultimate has played.
-    if (phases && fight && waitsOnUltimate(phases, fight)) e.hp = Math.max(e.hp, Math.min(e.maxHp, holdFloor(phases, fight, e.maxHp)))
+    // A `hold` phase doesn't give way before its ultimate has played; pinned at its gate, it plays it at once.
+    if (phases && fight && waitsOnUltimate(phases, fight)) {
+      e.hp = Math.max(e.hp, Math.min(e.maxHp, holdFloor(phases, fight, e.maxHp)))
+      fight.ultLeft = ultimateDue(phases, fight, e.hp, e.maxHp)
+    }
     // A hasted phase (`BossPhase.haste`) runs the boss's whole script faster.
     const dt = tick * hasteOf(e.kind, fight)
     if (fight) fight.share = fight.link >= 0 ? pooledShare(e, g.enemies.find((k) => k.id === fight.link)) : e.hp / e.maxHp
@@ -745,12 +748,15 @@ export const updateBosses = (g: Game, tick: number) => {
       }
     }
     // Stunned, asleep or frozen bosses hold their attacks (paralysis and the Poké Flute pay off here); so does one mid-script.
-    if (e.status.stun > 0 || isHeld(e.status) || bossAway(fight)) continue
+    // One that owes its `hold` phase the ultimate (or is playing one) shrugs the condition off for it (`statusStops`).
+    const held = e.status.stun > 0 || isHeld(e.status)
+    if (statusStops(phases, fight, held) || bossAway(fight)) continue
     const target = nearestPlayer(g, e.x, e.y)
     const dist = dm.hypot(e.x - target.x, e.y - target.y)
     const near = dist < reach
     // An ultimate only comes due while the boss is close enough to be seen (always, in an arena).
     if (fight && phases && (near || fight.ult) && updateUltimate(g, e, fight, dt, target)) continue
+    if (held) continue
     if (fight?.motion || fight?.blast) continue
     if (e.cooldowns.length !== patterns.length) e.cooldowns = patterns.map((pt) => pt.every * 0.5)
     if (fight && tickStance(fight, dt, g.rng)) {
