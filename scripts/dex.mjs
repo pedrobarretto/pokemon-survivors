@@ -79,7 +79,8 @@ export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, .
 export const FORMS = {
   681: { blade: '0001' }, // Aegislash's Blade Forme (Stance Change)
   // Mega Evolutions (src/data/megas.ts). Only these Megas have sprites on SpriteCollab so far; the
-  // others wear their final stage's sprite until theirs land there (then add the form id here).
+  // others wear their final stage's sprite (or sheets drawn for the game, `LOCAL_FORMS`) until
+  // theirs land there (then add the form id here).
   6: { megaX: '0001' },
   65: { mega: '0001' },
   94: { mega: '0001' },
@@ -100,6 +101,27 @@ export const FORMS = {
   383: { primal: '0001' },
   384: { mega: '0001' },
   386: { attack: '0001', defense: '0002', speed: '0003' },
+}
+
+/**
+ * Forms whose sheets were made for this game because SpriteCollab has none yet, by key, with the
+ * tool that made them (credited in CREDITS.md) and their anims (PMD layout: a row per direction,
+ * S first, clockwise; durations in 1/60 s). The PNGs are committed in
+ * `public/assets/pokemon/<dex>/<key>/` (the shiny under `shiny/`, same anims): `npm run assets`
+ * downloads nothing over them, it only indexes them under `forms.<key>` in the manifest. Once
+ * SpriteCollab has the form, drop its entry here and its sheets, and add its id to `FORMS`.
+ */
+export const LOCAL_FORMS = {
+  3: {
+    mega: {
+      madeWith: '[PixelLab](https://www.pixellab.ai) (AI)',
+      anims: {
+        Walk: { frameWidth: 48, frameHeight: 48, durations: [8, 16, 8, 16] },
+        Idle: { frameWidth: 48, frameHeight: 48, durations: [30, 16, 12, 16] },
+        Hurt: { frameWidth: 64, frameHeight: 64, durations: [2, 8] },
+      },
+    },
+  },
 }
 
 /**

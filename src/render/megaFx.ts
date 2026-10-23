@@ -71,7 +71,8 @@ type MegaLook = { form: MegaForm | undefined; flash: number; outline?: string }
  * Which sheets the player wears and how white it flashes: the Mega form while
  * it lasts; during the transformation a white silhouette that flickers between
  * the two forms faster and faster, then fades into the Mega's colors. A Mega
- * SpriteCollab hasn't drawn yet wears its final stage with a rainbow outline.
+ * without sheets (SpriteCollab's or drawn for the game, `LOCAL_FORMS` in
+ * scripts/dex.mjs) wears its final stage with a rainbow outline.
  * `calm` (Flashes: reduced) keeps the swap slow and the silhouette half white.
  */
 export const megaLook = (g: Game, calm: boolean): MegaLook => {

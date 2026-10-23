@@ -1,10 +1,11 @@
 // Downloads Pokémon sprites (PMD SpriteCollab), portraits and cries (PokeAPI)
-// into public/assets, and writes a typed-friendly manifest to src/data.
+// into public/assets, and writes a typed-friendly manifest to src/data. Forms
+// drawn for the game (`LOCAL_FORMS`) are already in public/: they're only indexed.
 // Usage: npm run assets
 import { mkdir, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { measureBody } from './body.mjs'
-import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORMS, SHINY, pad } from './dex.mjs'
+import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORMS, LOCAL_FORMS, SHINY, pad } from './dex.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const OUT = join(ROOT, 'public/assets/pokemon')
@@ -111,6 +112,17 @@ const fetchForm = async (dex, key, id, dir) => {
   return [key, { ...form, ...(shiny && { shiny }) }]
 }
 
+/**
+ * A form drawn for this game (`LOCAL_FORMS`): its sheets are already in `dir`, so nothing is
+ * downloaded or overwritten; only its body is measured. Its shiny counts when `shiny/Walk.png` exists.
+ */
+const localForm = async (key, { anims }, dir) => {
+  const measure = async (at) => ({ anims, body: await measureBody(join(at, 'Walk.png'), anims.Walk.frameWidth, anims.Walk.frameHeight) })
+  if (!(await exists(join(dir, key, 'Walk.png')))) throw new Error(`local form ${key}: missing ${join(dir, key, 'Walk.png')}`)
+  const shiny = (await exists(join(dir, key, 'shiny', 'Walk.png'))) ? await measure(join(dir, key, 'shiny')) : null
+  return [key, { ...(await measure(join(dir, key))), ...(shiny && { shiny }) }]
+}
+
 /** The forms of a species with a cry of their own (`FORM_CRIES`), sheets or not: the keys that got one. */
 const fetchFormCries = async (dex, dir) => {
   const got = await Promise.all(Object.entries(FORM_CRIES[dex] ?? {}).map(async ([key, name]) => {
@@ -138,7 +150,11 @@ const fetchSpecies = async (dex) => {
     mkdir(dir, { recursive: true }).then(() => download(`${CRIES}/${dex}.ogg`, join(dir, 'cry.ogg'))),
   ])
   if (!normal) throw new Error(`#${dex}: missing AnimData.xml`)
-  const forms = FORMS[dex] && Object.fromEntries(await Promise.all(Object.entries(FORMS[dex]).map(([key, id]) => fetchForm(dex, key, id, dir))))
+  const formEntries = await Promise.all([
+    ...Object.entries(FORMS[dex] ?? {}).map(([key, id]) => fetchForm(dex, key, id, dir)),
+    ...Object.entries(LOCAL_FORMS[dex] ?? {}).map(([key, local]) => localForm(key, local, dir)),
+  ])
+  const forms = formEntries.length > 0 ? Object.fromEntries(formEntries) : undefined
   const formCries = await fetchFormCries(dex, dir)
   const emotions = await fetchEmotions(dex, dir)
 

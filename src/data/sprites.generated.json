@@ -231,6 +231,82 @@
         "footY": 9
       }
     },
+    "forms": {
+      "mega": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 48,
+            "frameHeight": 48,
+            "durations": [
+              8,
+              16,
+              8,
+              16
+            ]
+          },
+          "Idle": {
+            "frameWidth": 48,
+            "frameHeight": 48,
+            "durations": [
+              30,
+              16,
+              12,
+              16
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 64,
+            "frameHeight": 64,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 36,
+          "bodyH": 36,
+          "footY": 14
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 48,
+              "frameHeight": 48,
+              "durations": [
+                8,
+                16,
+                8,
+                16
+              ]
+            },
+            "Idle": {
+              "frameWidth": 48,
+              "frameHeight": 48,
+              "durations": [
+                30,
+                16,
+                12,
+                16
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 64,
+              "frameHeight": 64,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 36,
+            "bodyH": 36,
+            "footY": 14
+          }
+        }
+      }
+    },
     "formCries": [
       "mega"
     ]

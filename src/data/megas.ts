@@ -33,8 +33,9 @@ export type MegaDef = {
   stone: string
   /**
    * Where the form's assets live (`<dex>/<form>/`): its sheets once SpriteCollab
-   * has them (`FORMS` in scripts/dex.mjs; until then the final stage wears a
-   * rainbow outline) and its cry (`FORM_CRIES`).
+   * has them (`FORMS` in scripts/dex.mjs) or once drawn for the game
+   * (`LOCAL_FORMS`; until then the final stage wears a rainbow outline) and its
+   * cry (`FORM_CRIES`).
    */
   form: MegaForm
   /** The stone's look: shell, shine and the helix inside. */
@@ -47,7 +48,7 @@ export type MegaDef = {
   special: SpecialId
 }
 
-/** Mega Evolutions by id, in Pokédex order. To add one: its entry here, its cry (and sprite, once SpriteCollab has it) in `scripts/dex.mjs`, its special and i18n lines. */
+/** Mega Evolutions by id, in Pokédex order. To add one: its entry here, its cry (and sprite, once SpriteCollab has it or one is drawn for the game) in `scripts/dex.mjs`, its special and i18n lines. */
 export const MEGAS = {
   venusaur: {
     line: 'bulbasaur',
