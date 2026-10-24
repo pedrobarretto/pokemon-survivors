@@ -29,7 +29,8 @@ type Hint = Exclude<Region, 'auto'>
  * The location hint nearest a request (its continent, and longitude in North
  * America). No Durable Object runs in South America (`sam` lands anywhere from
  * Miami to Chicago): from São Paulo the US east coast answers first (EWR
- * 116 ms, MIA 131 ms).
+ * 116 ms, MIA 131 ms). Africa gets western Europe's: a room without a hint
+ * shares the `auto` shards, which live wherever their first room was made.
  */
 export const hintFor = (cf: { continent?: string; longitude?: string } | undefined): Hint | null => {
   switch (cf?.continent) {
@@ -38,6 +39,7 @@ export const hintFor = (cf: { continent?: string; longitude?: string } | undefin
     case 'NA':
       return Number(cf.longitude) < -100 ? 'wnam' : 'enam'
     case 'EU':
+    case 'AF':
       return 'weur'
     case 'AS':
       return 'apac'
