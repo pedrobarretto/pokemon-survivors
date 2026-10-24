@@ -4,6 +4,7 @@ import { adminStore } from './admin'
 import { createApp } from './app'
 import { bugReportStore, createBugReports, discordBugForum } from './bugReports'
 import { clerkVerifier } from './auth'
+import { coopBeta } from './coopBeta'
 import { connect, migrate, saveStore } from './db'
 import { retrying } from './retrying'
 import { createChecks } from './checks'
@@ -54,7 +55,15 @@ const bugReports = createBugReports({
 let bot: ReturnType<typeof startDiscord> | null = null
 const suggestions = suggestionStore(sql, { onPosted: (idea) => bot?.reviewIdea(idea) })
 if (env.discord) {
-  bot = startDiscord(env.discord, { store: discordStore(sql), ranking, ideas: suggestions, desk: staffDesk(sql), bugs: bugReports, openRouter: env.openRouter })
+  bot = startDiscord(env.discord, {
+    store: discordStore(sql),
+    ranking,
+    ideas: suggestions,
+    desk: staffDesk(sql),
+    bugs: bugReports,
+    beta: env.posthogPersonalKey ? coopBeta(env.posthogPersonalKey) : null,
+    openRouter: env.openRouter,
+  })
 }
 
 const app = createApp({

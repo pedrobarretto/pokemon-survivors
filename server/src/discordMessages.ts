@@ -289,6 +289,35 @@ export const giftLogMessage = (o: { staffId: string; gift: StaffGift; to: Player
   content: `🎁 <@${o.staffId}> sent ${giftLabel(o.gift)} to ${playerName(o.to)}${o.link ? ` · ${o.link}` : ''}`,
 })
 
+/** What the bot says a co-op beta change came to (`changed` false: the list already said so). */
+export const betaReceipt = (handle: string, on: boolean, changed: boolean, count: number) => {
+  const who = `@${escape(handle)}`
+  if (!changed) return on ? `🧪 ${who} is in the co-op beta already.` : `🧪 ${who} isn't in the co-op beta.`
+  return on
+    ? `🧪 Added ${who} to the co-op beta (${count} players). Co-op shows in their lobby once they reload the game, signed in.`
+    : `🧪 Took ${who} out of the co-op beta (${count} players). Links to a room still let them join.`
+}
+
+/** Why a co-op beta change didn't go. */
+export const BETA_REFUSAL = {
+  off: 'Editing the co-op beta needs a PostHog personal API key. Ask Pedro to set `POSTHOG_PERSONAL_API_KEY`.',
+  shape: 'The `coop-beta` flag on PostHog no longer holds a list of handles, so I won’t touch it. Ask Pedro.',
+  noHandle: 'That player has no @handle yet, and co-op needs one: they pick it in the game first.',
+  action: 'I can add a player to the co-op beta, take one out, or list who’s in it.',
+} as const
+
+/** The co-op beta's players, for `/coop-beta list`. */
+export const betaListText = (handles: readonly string[]) => {
+  const all = handles.map((h) => `@${escape(h)}`).join(', ')
+  return `🧪 Co-op beta: ${handles.length} players\n${all.length > 1800 ? `${all.slice(0, 1800)}…` : all}`
+}
+
+/** The staff log's line for a co-op beta change from the Discord. */
+export const betaLogMessage = (o: { staffId: string; handle: string; on: boolean; link: string | null }): OutgoingMessage => ({
+  allowed_mentions: { parse: [] },
+  content: `🧪 <@${o.staffId}> ${o.on ? 'added' : 'took'} @${escape(o.handle)} ${o.on ? 'to' : 'out of'} the co-op beta${o.link ? ` · ${o.link}` : ''}`,
+})
+
 const daysAgo = (iso: string, now: number) => {
   const days = Math.floor((now - Date.parse(iso)) / 86_400_000)
   return days <= 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`

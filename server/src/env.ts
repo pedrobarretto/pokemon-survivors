@@ -46,6 +46,11 @@ export const loadEnv = () => {
       : null,
     /** Optional: the game's PostHog project token (`phc_…`, the client's `VITE_POSTHOG_KEY`). Without it errors only go to the log. */
     posthogKey: process.env.POSTHOG_KEY || undefined,
+    /**
+     * Optional: a PostHog personal API key (`phx_…`, scope `feature_flag:write` on the game's project), for the Discord
+     * staff's `/coop-beta` (`src/coopBeta.ts`), which edits the `coop-beta` flag's handles. Without it `/coop-beta` says so.
+     */
+    posthogPersonalKey: process.env.POSTHOG_PERSONAL_API_KEY || null,
     /** Optional: the #bug-reports forum's channel id, where the bot posts bug reports. Unset, it's found by name. */
     discordBugForumId: process.env.DISCORD_BUG_FORUM_ID || null,
     /** Emails (comma separated, `ADMIN_EMAILS`) whose verified owners run the gift desk (`admin.ts`). Empty: nobody is admin. */

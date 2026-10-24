@@ -32,6 +32,7 @@ import type { RankingStore } from './ranking'
 import { agentPrompt, agentSystem, runAgent } from './staffAgent'
 import { parseWho, type StaffDesk } from './staffDesk'
 import type { StaffRank } from './staffGifts'
+import type { CoopBeta } from './coopBeta'
 import { messageLink, readTools, staffActions, staffTools, type Outcome, type Staff, type StaffTurn } from './staffTools'
 import type { SuggestionStore } from './suggestions'
 
@@ -276,12 +277,14 @@ export const startDiscord = (
     /** The staff's desk: players and gifts (`staffDesk.ts`). */
     desk: StaffDesk
     bugs: Pick<BugReports, 'fileFromDiscord'>
+    /** The co-op beta's list on PostHog (`coopBeta.ts`); null without a personal API key, and `/coop-beta` says so. */
+    beta: CoopBeta | null
     /** The staff's LLM; null, the bot ignores tags and `/ask` and `/idea` say so. */
     openRouter: OpenRouterConfig | null
   },
 ) => {
   const call = restClient(config.token)
-  const { store, ranking, ideas, desk, bugs, openRouter } = deps
+  const { store, ranking, ideas, desk, bugs, beta, openRouter } = deps
   const guild = `/guilds/${config.guildId}`
   let reviewIdea: ((idea: Suggestion) => Promise<void>) | null = null
 
@@ -440,6 +443,7 @@ export const startDiscord = (
           desk,
           ideas,
           bugs,
+          beta,
           log: async (message) => {
             if (staffLog) await call('POST', `/channels/${staffLog}/messages`, message)
           },
@@ -525,6 +529,8 @@ export const startDiscord = (
           const amount = options.get('amount')
           return outcomeReply(await actionsFor(turn).sendGift(opt('player'), opt('kind'), typeof amount === 'number' ? amount : null))
         }
+        case 'coop-beta':
+          return outcomeReply(await actionsFor(turn).coopBeta(opt('subcommand'), opt('player')))
         default:
           return staffReply('I don’t know that command.')
       }
