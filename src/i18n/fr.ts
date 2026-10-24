@@ -165,6 +165,7 @@ export const fr: Messages = {
       invalid: 'Impossible de créer le salon.',
       rate: 'Trop de salons créés en ce moment. Attends un peu et réessaie.',
       busy: 'Le serveur coop est plein. Réessaie dans un instant.',
+      full: 'Le serveur coop est plein. Réessaie dans un instant.',
       offline: 'Impossible de joindre le serveur coop.',
     },
     denied: { notHost: 'Seul l’hôte peut lancer.', notReady: 'Attends que tout le monde soit prêt.' },

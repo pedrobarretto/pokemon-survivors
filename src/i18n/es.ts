@@ -165,6 +165,7 @@ export const es: Messages = {
       invalid: 'No se pudo crear la sala.',
       rate: 'Demasiadas salas creadas ahora. Espera un poco e inténtalo de nuevo.',
       busy: 'El servidor del co-op está lleno. Inténtalo en un momento.',
+      full: 'El servidor del co-op está lleno. Inténtalo en un momento.',
       offline: 'Sin conexión con el servidor del co-op.',
     },
     denied: { notHost: 'Solo el anfitrión puede empezar.', notReady: 'Espera a que todos estén listos.' },

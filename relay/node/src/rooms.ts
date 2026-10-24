@@ -317,16 +317,25 @@ export const createRooms = (deps: RoomsDeps) => {
     }, HELLO_TIMEOUT_MS).unref()
   }
 
+  /**
+   * The relay's rooms: `rooms` open ones, `playing` with a run's clock
+   * running, `sockets`, and `live`, what its capacity counts (`capacity.ts`):
+   * every room holding a lobby or a run, but not one the group moved away
+   * from (a husk answering `moved`). A lobby costs nothing yet but is about to
+   * play, and an empty room leaves within the idle limit (10 minutes).
+   */
   const counts = () => {
     let open = 0
+    let live = 0
     let playing = 0
     let sockets = 0
     for (const s of rooms.values()) {
       if (s.state.room) open++
+      if (s.state.room && s.state.room.movedTo === null) live++
       if (running(s.state)) playing++
       sockets += s.sockets.size
     }
-    return { rooms: open, playing, sockets }
+    return { rooms: open, live, playing, sockets }
   }
 
   /**

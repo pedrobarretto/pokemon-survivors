@@ -165,6 +165,7 @@ export const en: Messages = {
       invalid: "Couldn't create the room.",
       rate: 'Too many rooms created right now. Wait a bit and try again.',
       busy: 'The co-op server is full. Try again in a moment.',
+      full: 'The co-op server is full. Try again in a moment.',
       offline: "Can't reach the co-op server.",
     },
     denied: { notHost: 'Only the host can start.', notReady: 'Wait for everyone to be ready.' },

@@ -8,7 +8,7 @@ import type { BagItem } from './data/shop'
 import type { SurveyAnswer } from './data/survey'
 import type { Difficulty } from './game/difficulty'
 import type { RunMode } from './game/ranking'
-import type { RelayHome } from './net/protocol'
+import type { RelayHome, VpsHome } from './net/protocol'
 import { timeoutSignal } from './net/timeout'
 import { isRecord } from './game/parse'
 import type { LobbyFocus } from './ui/title'
@@ -175,7 +175,8 @@ type AnalyticsEvents = {
    */
   coop:
     | { step: 'gate'; via: 'tile' | 'link' }
-    | { step: 'create'; relay: RelayHome }
+    /** `overflow`: the near VPS relay was full, so the room went to Cloudflare. */
+    | { step: 'create'; relay: RelayHome; overflow?: VpsHome }
     | { step: 'join'; via: 'code' | 'link' | 'invite' }
     | { step: 'start'; players: number; difficulty: Difficulty }
     | { step: 'end'; players: number; minute: number; outcome: 'victory' | 'wipe' | 'endless' | 'left'; difficulty: Difficulty }

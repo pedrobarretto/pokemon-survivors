@@ -88,12 +88,12 @@ Cloudflare has no Durable Objects in South America, so a Brazilian room runs in 
 | Relay | Home (`RELAY_HOME`) | Codes start with | Where | Address | Game env |
 |---|---|---|---|---|---|
 | São Paulo | `sa` | 2–5 | the main VPS (72.60.58.225, next to the API, ~9 ms from a Brazilian player) | `coop-sa.pokemonsurvivors.com` | `VITE_COOP_URL_SA` |
-| US east | `us` | 6–9 | Hostinger Boston (2.25.92.11), a Dokploy remote server | `coop-us.pokemonsurvivors.com` | `VITE_COOP_URL_US` |
+| US east (being retired, below) | `us` | 6–9 | Hostinger Boston (2.25.92.11), a Dokploy remote server | `coop-us.pokemonsurvivors.com` | `VITE_COOP_URL_US` |
 
 - **Routing:** a room's code says its relay (`RELAY_HOMES` in the protocol). Cloudflare makes
   codes starting with a letter, each VPS relay with its own digits. The game (`src/coop/relays.ts`)
   measures every VPS relay it has a URL for and creates on the one with the lowest round trip
-  within 70 ms, else on Cloudflare (also the fallback when that relay can't take it). A build
+  within 70 ms that isn't full, else on Cloudflare (also the fallback when that relay can't take it). A build
   without a relay's `VITE_COOP_URL_*` sends its codes to Cloudflare. Another relay is one entry in
   `RELAY_HOMES`, one in `RELAY_URLS` (`src/coopShell.ts`), its env var and this image with its
   `RELAY_HOME` (taking characters from a home only after that home's rooms are gone, 6 h).
@@ -111,6 +111,21 @@ Cloudflare has no Durable Objects in South America, so a Brazilian room runs in 
   where the room is. Only before a room's first run, once. All of it is additive: a relay that
   doesn't say `moves` in its `welcome` is never asked, a client that doesn't report keeps its room
   where it is.
+- **Capacity: a VPS relay never caps the game.** Past its capacity it takes no new room and
+  Cloudflare, which scales on its own, gets it: the worst case is a Brazilian player with a higher
+  ping, never a failed create or a laggy room. The rule is `fullWhy` (`node/src/capacity.ts`):
+  full at `MAX_ROOMS` rooms (default 40; it counts every room holding a lobby or a run, not one the
+  group moved away from; an empty room leaves within 10 minutes) or while the last minute starved
+  it (event-loop p99 over 30 ms, or the whole machine's CPU busy over 90%; read once a minute with
+  `relay.stats`, so it doesn't flap). A running 2-player room costs ~1.1% of a core and the relay is
+  one event loop, so 40 keeps it near half a core; on 2026-10-22 the São Paulo VPS starved it to a
+  ~75 ms p99 with no room at all, the case the guard routes around. `/health` adds `rooms` and
+  `full`; a full relay answers `POST /rooms` with `{ error: 'full' }` (503) and logs `room.refused`
+  (`why`: `rooms`, `loop` or `host`). The game skips a relay whose `/health` said full, creates on
+  Cloudflare when one refuses (the `coop` event's `create` step says `overflow: '<home>'` in
+  PostHog), and never moves a room to one; a move refused starts the run where the room is.
+  Joining or resuming a room already there is never refused for capacity. `MAX_ROOMS=0` drains a
+  relay (no new rooms; the ones in play finish). A relay before this answers no `full`: not full.
 - **One process, every room:** one SQLite file per room (`node:sqlite`, WAL) on the `/data`
   volume, a 60 Hz timer per running room, the Worker's routes, origin checks, Clerk tokens,
   rate limits (by `X-Real-Ip` from Traefik) and the dump vault. An exclusive lock on
@@ -139,7 +154,7 @@ docker build -f relay/node/Dockerfile -t ps-relay .   # from the repository root
 
 ### One-time setup (Pedro)
 
-The same steps for each relay, with its row of the table above (`<home>`: `sa` or `us`).
+The same steps for each relay, with its row of the table above (`<home>`: `sa`; `us` is being retired, below).
 
 1. **DNS** (GoDaddy, `ns23`/`ns24.domaincontrol.com`): an `A` record per relay, TTL 600:
    `coop-sa` → `72.60.58.225` (the main VPS, like `api`) and `coop-us` → `2.25.92.11` (Boston).
@@ -189,6 +204,22 @@ No Clerk change is needed: the issuer is the same, and a token's `azp` is checke
   (then `/admin/dumps/<id> | gunzip > dump.json`).
 - **Costs:** São Paulo shares the main VPS (nothing extra); US east is the Boston VPS's own plan. A 4-player room takes ~1–1.5% of a core and
   ~1 MB of memory past the process's ~80 MB.
+
+### Retiring US east (Boston)
+
+Pedro decided to retire the Boston relay: Cloudflare serves North America, with Durable Objects on
+both US coasts, and scales on its own. The `us` home stays in `RELAY_HOMES` (old codes and builds).
+
+1. Vercel, Production: remove `VITE_COOP_URL_US` and redeploy the site. Builds from then on never
+   measure Boston nor create there; a 6–9 code they meet (an old link) goes to Cloudflare, which has no
+   such room and refuses the `hello` (`unavailable`): the player reads "This room isn't available
+   (full, already started or gone)" and stays in the co-op hub, nothing breaks.
+2. Wait 6 h (a room's longest life, and time for open tabs of the old build to reload), then stop
+   `coop-us` in Dokploy. An old tab still holding the URL then finds Boston down at its `/health` and
+   creates on Cloudflare (the same fallback as a down relay); one in a Boston room reconnects until it
+   gives up.
+3. Later, at leisure: delete the `coop-us` app and its volume, the Boston remote server and the
+   `coop-us` DNS record.
 
 ## Limits and costs
 

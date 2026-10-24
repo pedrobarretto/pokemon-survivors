@@ -2407,7 +2407,7 @@ const showCoopHub = (code: string | null = null) => {
           return null
         }
         if (!res.ok) return closedText(res.why)
-        track('coop', { step: 'create', relay: made.home })
+        track('coop', { step: 'create', relay: made.home, ...(made.overflow ? { overflow: made.overflow } : {}) })
         client.setSettings({ difficulty: loadSave().difficulty })
         showRoom()
         return null

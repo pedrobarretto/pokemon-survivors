@@ -191,10 +191,11 @@ export type Region = (typeof REGIONS)[number]
 /**
  * `POST /rooms`: reserves a room for the host, who then joins it like anyone (`GET /rooms/<code>/ws`, then
  * `hello`). `claim`: whoever says it in a `hello` is the room's host, whoever joined first (a room the group
- * moves to, `move`, where the others may land before the host). Relays before it leave it out.
+ * moves to, `move`, where the others may land before the host). Relays before it leave it out. `full`: a VPS
+ * relay at capacity takes no new room (joining one never is refused for it); the game creates on Cloudflare.
  */
 export type CreateRequest = { v: number; build: string; region?: Region }
-export type CreateResponse = { code: string; region: Region; claim?: string } | { error: 'version' | 'invalid' | 'rate' | 'busy' }
+export type CreateResponse = { code: string; region: Region; claim?: string } | { error: 'version' | 'invalid' | 'rate' | 'busy' | 'full' }
 
 /* ---------------- Client → relay ---------------- */
 

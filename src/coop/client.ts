@@ -9,7 +9,7 @@ import type { Input } from './entries'
 import { ack, createOutbox, due, onReconnect, onSlow, push, queued, slowed, type Outbox } from './outbox'
 import { advance, backlog, onEnded, onFrame, onSnapPart, onSync, syncProgress, createRunner, type Runner, type RunnerDeps } from './runner'
 import { createStickPace, paceStick, type StickPace } from './stickPace'
-import { groupHome, measureRtt, median, pickHome, relayFor, type VpsUrls } from './relays'
+import { groupHome, measureRelay, median, pickHome, relayFor, type RelayProbe, type VpsUrls } from './relays'
 import { closeReason, parseServerMessage } from './wire'
 import { loadoutOf, settingsOf, type CoopPick, type CoopSettings } from './start'
 import { timeoutSignal } from '../net/timeout'
@@ -109,7 +109,8 @@ export type Status =
   | { kind: 'playing' }
   | { kind: 'closed'; why: CloseWhy }
 
-export type CreateResult = { ok: true; code: string; region: Region; home: RelayHome; claim: string | null } | { ok: false; why: Extract<CreateResponse, { error: string }>['error'] | 'offline' }
+/** A room reserved, or why not. `overflow`: the near VPS relay that was full (its `/health` or its refusal), so the room went to Cloudflare. */
+export type CreateResult = { ok: true; code: string; region: Region; home: RelayHome; claim: string | null; overflow?: VpsHome } | { ok: false; why: Extract<CreateResponse, { error: string }>['error'] | 'offline' }
 
 export type JoinResult = { ok: true; seat: number; room: RoomView } | { ok: false; why: CloseWhy }
 
@@ -247,8 +248,8 @@ export type ClientState = {
   where: NetWhere
   /** The relay takes `rtt` and `move` (its `welcome` said `moves`). */
   moves: boolean
-  /** The VPS relays' round trips measured for this room (`vpsFor`: the room they were asked for). */
-  vpsRtts: ReadonlyMap<VpsHome, number | null> | null
+  /** The VPS relays as measured for this room (`vpsFor`: the room they were asked for): round trips and fullness. */
+  vpsRtts: ReadonlyMap<VpsHome, RelayProbe | null> | null
   vpsFor: string | null
   /** This socket's ping round trips in the lobby (ms, the newest `LOBBY.pings`): a Cloudflare room's own. */
   lobbyPings: number[]
@@ -647,20 +648,21 @@ export const createCoopClient = (deps: CoopDeps) => {
 
   /** How long measured round trips hold (ms): a lobby visit, not a whole session (the player may move networks). */
   const RTT_FRESH_MS = 5 * 60_000
-  let measured: { at: number; rtts: Promise<Map<VpsHome, number | null>> } | null = null
+  let measured: { at: number; rtts: Promise<Map<VpsHome, RelayProbe | null>> } | null = null
 
   /**
-   * The VPS relays' round trips, measured once in a while (`warm` starts it
-   * as the co-op screen opens, so creating a room never waits on it). Null
-   * for one that doesn't answer within 3 s; empty in a build without them.
+   * The VPS relays' round trips and fullness, measured once in a while
+   * (`warm` starts it as the co-op screen opens, so creating a room never
+   * waits on it). Null for one that doesn't answer within 3 s; empty in a
+   * build without them.
    */
   const measureVps = () => {
     if (!measured || deps.now() - measured.at > RTT_FRESH_MS) {
-      const get = (u: string) => deps.fetch(u, { method: 'GET', signal: timeoutSignal(3000) })
+      const get = (u: string) => deps.fetch(u, { method: 'GET', signal: timeoutSignal(3000) }).then((r) => r.json())
       const relays = Object.entries(vps).flatMap(([home, url]) => (isRelayHome(home) && home !== 'cf' && url ? [{ home, url: base(url) }] : []))
       measured = {
         at: deps.now(),
-        rtts: Promise.all(relays.map(async (r) => [r.home, await measureRtt(r.url, get, deps.now)] as const)).then((pairs) => new Map(pairs)),
+        rtts: Promise.all(relays.map(async (r) => [r.home, await measureRelay(r.url, get, deps.now)] as const)).then((pairs) => new Map(pairs)),
       }
     }
     return measured.rtts
@@ -677,7 +679,7 @@ export const createCoopClient = (deps: CoopDeps) => {
         return { ok: true, code: body.code, region, home, claim }
       }
       const error = typeof body === 'object' && body !== null && 'error' in body ? body.error : null
-      return { ok: false, why: error === 'version' || error === 'rate' || error === 'busy' || error === 'invalid' ? error : 'offline' }
+      return { ok: false, why: error === 'version' || error === 'rate' || error === 'busy' || error === 'full' || error === 'invalid' ? error : 'offline' }
     } catch {
       return { ok: false, why: 'offline' }
     }
@@ -685,16 +687,20 @@ export const createCoopClient = (deps: CoopDeps) => {
 
   /**
    * Reserves a room near this player: on the nearest VPS relay that answers
-   * near (`pickHome`), else on Cloudflare (in `region`, if given), and on
-   * Cloudflare too when that relay can't take it now.
+   * near and isn't full (`pickHome`), else on Cloudflare (in `region`, if
+   * given), and on Cloudflare too when that relay can't take it now (down,
+   * busy or full: a VPS relay never caps the game).
    */
   const create = async (region: Region = 'auto'): Promise<CreateResult> => {
-    const home = region === 'auto' ? pickHome(await measureVps()) : 'cf'
-    if (home !== 'cf') {
-      const made = await reserve(home, region)
-      if (made.ok || (made.why !== 'offline' && made.why !== 'busy')) return made
+    const pick = region === 'auto' ? pickHome(await measureVps()) : { home: 'cf' as const, passed: null }
+    let overflow = pick.passed
+    if (pick.home !== 'cf') {
+      const made = await reserve(pick.home, region)
+      if (made.ok || (made.why !== 'offline' && made.why !== 'busy' && made.why !== 'full')) return made
+      if (made.why === 'full') overflow = pick.home
     }
-    return reserve('cf', region)
+    const made = await reserve('cf', region)
+    return made.ok && overflow ? { ...made, overflow } : made
   }
 
   const leaveQuietly = () => {
@@ -724,7 +730,8 @@ export const createCoopClient = (deps: CoopDeps) => {
     if (!room.members.some((m) => m.seat === s.seat && m.host)) return null
     const online = room.members.filter((m) => m.online)
     if (online.length < 2) return null
-    return groupHome(homeOf(code), VPS_HOMES.filter((h) => vps[h]), online.map((m) => m.rtt ?? null))
+    const full = new Set(VPS_HOMES.filter((h) => s.vpsRtts?.get(h)?.full))
+    return groupHome(homeOf(code), VPS_HOMES.filter((h) => vps[h]), online.map((m) => m.rtt ?? null), full)
   }
 
   const setMoving = (next: Moving | null) => {
@@ -843,7 +850,7 @@ export const createCoopClient = (deps: CoopDeps) => {
     }
     if (!s.vpsRtts) return
     const ms: { [H in RelayHome]?: number | null } = {}
-    for (const [home, rtt] of s.vpsRtts) ms[home] = rtt === null ? null : Math.round(rtt)
+    for (const [home, p] of s.vpsRtts) ms[home] = p === null ? null : Math.round(p.rtt)
     if (homeOf(code) === 'cf') {
       const cf = s.lobbyPings.length >= LOBBY.enough ? median(s.lobbyPings) : null
       if (cf === null) return

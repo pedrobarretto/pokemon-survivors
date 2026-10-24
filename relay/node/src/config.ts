@@ -1,4 +1,5 @@
 import { VPS_HOMES, type VpsHome } from '../../../src/net/protocol'
+import { DEFAULT_MAX_ROOMS } from './capacity'
 
 /** A VPS relay's settings, from its environment (the Dokploy app's env vars; defaults in the Dockerfile). */
 export type Config = {
@@ -20,6 +21,13 @@ export type Config = {
   ipHeader: string | null
   /** The build, shown by `/health` (a deploy is done when it changes). */
   version: string
+  /** Rooms held (`counts().live`) past which new rooms go to Cloudflare (`capacity.ts`); 0 takes none (a drain). */
+  maxRooms: number
+}
+
+const maxRoomsOf = (v: string | undefined) => {
+  const n = Number(v)
+  return v !== undefined && v !== '' && Number.isInteger(n) && n >= 0 ? n : DEFAULT_MAX_ROOMS
 }
 
 export const configFrom = (env: Record<string, string | undefined>): Config => ({
@@ -33,4 +41,5 @@ export const configFrom = (env: Record<string, string | undefined>): Config => (
   adminToken: env.ADMIN_TOKEN || null,
   ipHeader: env.IP_HEADER?.toLowerCase() || null,
   version: env.RELAY_VERSION ?? 'dev',
+  maxRooms: maxRoomsOf(env.MAX_ROOMS),
 })

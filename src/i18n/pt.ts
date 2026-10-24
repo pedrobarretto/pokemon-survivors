@@ -269,6 +269,7 @@ export const pt = {
       invalid: 'Não deu para criar a sala.',
       rate: 'Muitas salas criadas agora. Espere um pouco e tente de novo.',
       busy: 'O servidor do co-op está cheio. Tente de novo em instantes.',
+      full: 'O servidor do co-op está cheio. Tente de novo em instantes.',
       offline: 'Sem conexão com o servidor do co-op.',
     },
     denied: { notHost: 'Só o anfitrião pode começar.', notReady: 'Espere todos ficarem prontos.' },

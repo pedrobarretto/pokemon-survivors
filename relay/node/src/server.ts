@@ -7,6 +7,7 @@ import { jwksKeys, verifyClerkToken } from '../../src/auth'
 import { parseCreate } from '../../src/codes'
 import { allowedOrigin } from '../../src/origins'
 import { RETENTION } from '../../src/store'
+import { fullWhy, type Load } from './capacity'
 import type { Config } from './config'
 import { lockDataDir, openVault } from './db'
 import { LIMITS, clientIp, createLimiter } from './limits'
@@ -15,9 +16,10 @@ import { createRooms, type Log } from './rooms'
 /**
  * A VPS relay's HTTP server, the Worker's routes (`index.ts`) on Node:
  *
- * - `POST /rooms` `{ v, build, region? }` → `{ code, region, claim }` (codes of this relay's home, `RELAY_HOMES`)
+ * - `POST /rooms` `{ v, build, region? }` → `{ code, region, claim }` (codes of this relay's home, `RELAY_HOMES`),
+ *   or `{ error: 'full' }` (503) past its capacity (`capacity.ts`): the game then creates on Cloudflare
  * - `GET /rooms/<code>/ws` → WebSocket (first message: `hello`)
- * - `GET /health` → `{ ok, protocol, home, version }`
+ * - `GET /health` → `{ ok, protocol, home, version, rooms, full }` (`rooms`: those its capacity counts; `full`: it takes no new one)
  * - `GET /admin/dumps`, `GET /admin/dumps/<id>` (gzipped JSON), `Authorization: Bearer <ADMIN_TOKEN>`
  */
 
@@ -82,6 +84,9 @@ export const startRelay = async (config: Config, log: Log = jsonLog) => {
     },
   })
   rooms.boot()
+  // The last minute's load (`setLoad`, from `main.ts`'s stats): none known yet is no starvation.
+  let load: Load = { loopP99Ms: null, hostBusyPct: null }
+  const full = () => fullWhy(rooms.counts().live, config.maxRooms, load)
 
   const createLimit = createLimiter(LIMITS.create.limit, LIMITS.create.periodMs)
   const connectLimit = createLimiter(LIMITS.connect.limit, LIMITS.connect.periodMs)
@@ -102,13 +107,18 @@ export const startRelay = async (config: Config, log: Log = jsonLog) => {
       res.writeHead(204, headers)
       return res.end()
     }
-    if (path === '/health' && req.method === 'GET') return json(res, { ok: true, protocol: PROTOCOL, home: config.home, version: config.version }, 200, headers)
+    if (path === '/health' && req.method === 'GET') return json(res, { ok: true, protocol: PROTOCOL, home: config.home, version: config.version, rooms: rooms.counts().live, full: full() !== null }, 200, headers)
     if (path === '/rooms' && req.method === 'POST') {
       const reply = (body: CreateResponse, status = 200) => json(res, body, status, headers)
       if (!createLimit.hit(ipOf(req), Date.now())) return reply({ error: 'rate' }, 429)
       const text = await readBody(req)
       const body = text === null ? ({ error: 'invalid', status: 400 } as const) : parseCreate(text)
       if ('error' in body) return reply({ error: body.error }, body.status)
+      const why = full()
+      if (why) {
+        log('room.refused', { why, rooms: rooms.counts().live, maxRooms: config.maxRooms, ...load })
+        return reply({ error: 'full' }, 503)
+      }
       const made = rooms.create(body.build)
       return made ? reply({ ...made, region: REGION_OF[config.home] }) : reply({ error: 'busy' }, 503)
     }
@@ -177,7 +187,12 @@ export const startRelay = async (config: Config, log: Log = jsonLog) => {
     log('relay.stopped', counts)
   }
 
-  return { port, close, counts: rooms.counts }
+  /** The last minute's load, for the starvation guard (`main.ts` sets it with each `relay.stats`). */
+  const setLoad = (next: Load) => {
+    load = next
+  }
+
+  return { port, close, counts: rooms.counts, setLoad, full }
 }
 
 export type Relay = Awaited<ReturnType<typeof startRelay>>

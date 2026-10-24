@@ -165,6 +165,7 @@ export const zh: Messages = {
       invalid: '無法建立房間。',
       rate: '目前建立的房間太多了。請稍候再試。',
       busy: '合作模式伺服器已滿。請稍後再試。',
+      full: '合作模式伺服器已滿。請稍後再試。',
       offline: '無法連上合作模式伺服器。',
     },
     denied: { notHost: '只有房主可以開始。', notReady: '請等所有人準備好。' },

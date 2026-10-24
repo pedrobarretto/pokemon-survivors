@@ -37,10 +37,14 @@ const stats = setInterval(() => {
   const was = host
   host = readHost()
   const machine = was && host ? cpuBetween(was, host) : null
+  const loopP99Ms = +(loop.percentile(99) / 1e6).toFixed(2)
+  // This minute's load decides whether the relay takes new rooms until the next one (`capacity.ts`).
+  relay.setLoad({ loopP99Ms, hostBusyPct: machine?.busyPct ?? null })
   jsonLog('relay.stats', {
     ...relay.counts(),
+    full: relay.full(),
     loopP50Ms: +(loop.percentile(50) / 1e6).toFixed(2),
-    loopP99Ms: +(loop.percentile(99) / 1e6).toFixed(2),
+    loopP99Ms,
     loopMaxMs: +(loop.max / 1e6).toFixed(2),
     cpuPct: +(((used.user + used.system) / 1000 / STATS_MS) * 100).toFixed(1),
     rssMb: Math.round(process.memoryUsage().rss / 1e6),
