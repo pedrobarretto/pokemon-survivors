@@ -56,7 +56,29 @@ export type Report = Omit<NetReport, 't'>
 /** Timer lateness by whole ms; the last bucket holds everything past it. */
 const LATE_BUCKETS = 256
 
-export type RunTally = {
+/** How late the frame timer fired: a fixed histogram (whole ms), how many and the worst. */
+export type Lateness = { late: Uint32Array; lateN: number; lateMax: number }
+
+export const createLateness = (): Lateness => ({ late: new Uint32Array(LATE_BUCKETS), lateN: 0, lateMax: 0 })
+
+/** Notes a timer that fired `ms` after its deadline. */
+export const addLateness = (h: Lateness, ms: number) => {
+  if (!(ms >= 0)) return
+  h.late[Math.min(LATE_BUCKETS - 1, Math.floor(ms))]!++
+  h.lateN++
+  h.lateMax = Math.max(h.lateMax, ms)
+}
+
+/** The `q` quantile of `h` (whole ms; the worst past the last bucket), null when empty. */
+export const lateQuantile = (h: Lateness, q: number) => {
+  if (h.lateN === 0) return null
+  const target = Math.max(1, Math.ceil(h.lateN * q))
+  let seen = 0
+  for (let i = 0; i < LATE_BUCKETS - 1; i++) if ((seen += h.late[i]!) >= target) return i
+  return h.lateMax
+}
+
+export type RunTally = Lateness & {
   run: number
   startedAt: number
   /** Begun mid-run (the object restarted): the counts cover only the run's last part. */
@@ -64,9 +86,6 @@ export type RunTally = {
   /** Live frames sent, and those carrying more than one tick (the timer ran late by a tick or more). */
   frames: number
   multiTick: number
-  late: Uint32Array
-  lateN: number
-  lateMax: number
   inbound: Record<string, number>
   /** Stick inputs taken, stick entries sent in frames (the difference was coalesced), and messages the rate limit dropped. */
   moveIn: number
@@ -112,9 +131,7 @@ const emptyTally = (run: number, now: number, restarted: boolean): RunTally => (
   restarted,
   frames: 0,
   multiTick: 0,
-  late: new Uint32Array(LATE_BUCKETS),
-  lateN: 0,
-  lateMax: 0,
+  ...createLateness(),
   inbound: {},
   moveIn: 0,
   moveOut: 0,
@@ -176,19 +193,7 @@ export const noteSent = (t: Telemetry, seat: number | null, bytes: number) => {
 
 /** The frame timer fired `ms` after its deadline. */
 export const noteLateness = (t: Telemetry, ms: number) => {
-  const r = t.run
-  if (!r || !(ms >= 0)) return
-  r.late[Math.min(LATE_BUCKETS - 1, Math.floor(ms))]!++
-  r.lateN++
-  r.lateMax = Math.max(r.lateMax, ms)
-}
-
-const lateQuantile = (r: RunTally, q: number) => {
-  if (r.lateN === 0) return null
-  const target = Math.max(1, Math.ceil(r.lateN * q))
-  let seen = 0
-  for (let i = 0; i < LATE_BUCKETS - 1; i++) if ((seen += r.late[i]!) >= target) return i
-  return r.lateMax
+  if (t.run) addLateness(t.run, ms)
 }
 
 const closeSnap = (r: RunTally) => {

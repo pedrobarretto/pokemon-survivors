@@ -2,7 +2,7 @@
   "name": "pokemon-survivors-relay",
   "private": true,
   "type": "module",
-  "description": "Co-op room relay for Pokémon Survivors: a Cloudflare Worker with one Durable Object per room.",
+  "description": "Co-op room relay for Pokémon Survivors: a Cloudflare Worker packing many rooms per Durable Object.",
   "scripts": {
     "dev": "wrangler dev --port 8791",
     "deploy": "wrangler deploy",

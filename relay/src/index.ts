@@ -1,24 +1,27 @@
 import { PROTOCOL, parseRoomCode, type CreateResponse, type Region } from '../../src/net/protocol'
-import { parseCreate, randomCode } from './codes'
+import { parseCreate } from './codes'
 import type { Env } from './env'
 import { allowedOrigin } from './origins'
+import { log } from './shell'
+import { NO_ROOM_HEADER, SHARD_INDEXES, SHARD_REGIONS, shardName, shardOf, type Shard } from './shards'
 import { EDGE_HEADER, edgeOf } from './telemetry'
 
 export { RoomObject } from './roomObject'
+export { ShardObject } from './shardObject'
 export { Vault } from './vault'
 
 /**
- * The relay's Worker: creates rooms, routes each room's sockets to its Durable
- * Object (`idFromName(code)`), and serves `/health` and the admin dumps.
+ * The relay's Worker: creates rooms in shards (`shards.ts`: many rooms per
+ * Durable Object), routes each room's sockets to the shard its code names (a
+ * code made before shards to its own object, `idFromName(code)`), and serves
+ * `/health` and the admin dumps.
  *
  * - `POST /rooms` `{ v, build, region? }` → `{ code, region, claim }`
  * - `GET /rooms/<code>/ws` → WebSocket (first message: `hello`)
  * - `GET /health`
- * - `GET /admin/dumps`, `GET /admin/dumps/<id>` (gzipped JSON), `Authorization: Bearer <ADMIN_TOKEN>`
+ * - `GET /admin/dumps`, `GET /admin/dumps/<id>` (gzipped JSON), `GET /admin/shards/<region>:<index>` (its rooms and
+ *   frame timer lateness), `Authorization: Bearer <ADMIN_TOKEN>`
  */
-
-/** Room codes tried before giving up (a collision in 28.6 million codes is rare already). */
-const CREATE_TRIES = 8
 
 type Hint = Exclude<Region, 'auto'>
 
@@ -53,6 +56,9 @@ const cors = (origin: string | null): Record<string, string> =>
 
 const ipOf = (request: Request) => request.headers.get('CF-Connecting-IP') ?? 'unknown'
 
+/** A shard's object, created (the first time only: an object stays where it was made) near its region. */
+const shardStub = (env: Env, s: Shard) => env.SHARDS.getByName(shardName(s), s.region === 'auto' ? undefined : { locationHint: s.region })
+
 const createRoom = async (request: Request<unknown, IncomingRequestCfProperties>, env: Env, headers: Record<string, string>): Promise<Response> => {
   const reply = (body: CreateResponse, status = 200) => json(body, status, headers)
   if (!(await env.CREATE_LIMIT.limit({ key: ipOf(request) })).success) return reply({ error: 'rate' }, 429)
@@ -61,12 +67,16 @@ const createRoom = async (request: Request<unknown, IncomingRequestCfProperties>
   const { build, region: asked } = body
   const hint = asked === 'auto' ? hintFor(request.cf) : asked
   const region: Region = hint ?? 'auto'
-  for (let i = 0; i < CREATE_TRIES; i++) {
-    // Cloudflare's codes start with a letter: a digit names a VPS relay (`RELAY_HOMES`).
-    const code = randomCode('cf')
-    const stub = env.ROOMS.get(env.ROOMS.idFromName(code), hint ? { locationHint: hint } : undefined)
-    const claim = await stub.create({ code, build, region })
-    if (claim !== null) return reply({ code, region, claim })
+  // The region's shards fill in order (packing only pays when rooms share an object): a full one says no, the next is asked.
+  for (let index = 0; index < SHARD_INDEXES; index++) {
+    const shard: Shard = { region, index }
+    const made = await shardStub(env, shard)
+      .create({ shard, build })
+      .catch((err: unknown) => {
+        log({ ev: 'shard.createFailed', shard: shardName(shard), error: String(err) })
+        return null
+      })
+    if (made) return reply({ code: made.code, region, claim: made.claim })
   }
   return reply({ error: 'busy' }, 503)
 }
@@ -82,6 +92,13 @@ const isAdmin = async (request: Request, env: Env) => {
 
 const admin = async (request: Request, env: Env, path: string): Promise<Response> => {
   if (!(await isAdmin(request, env))) return new Response('Not found', { status: 404 })
+  const shard = /^\/admin\/shards\/(\w+):(\d{1,2})$/.exec(path)
+  if (shard) {
+    const region = SHARD_REGIONS.find((r) => r === shard[1])
+    const index = Number(shard[2])
+    if (!region || index >= SHARD_INDEXES) return new Response('Not found', { status: 404 })
+    return json(await shardStub(env, { region, index }).stats())
+  }
   const vault = env.VAULT.getByName('dumps')
   if (path === '/admin/dumps') return json(await vault.list(100))
   const id = decodeURIComponent(path.slice('/admin/dumps/'.length))
@@ -111,9 +128,15 @@ export default {
       // Where this socket meets Cloudflare, for the room's telemetry (set here, so a client can't say it).
       const headers = new Headers(request.headers)
       headers.set(EDGE_HEADER, JSON.stringify(edgeOf(request.cf)))
+      const shard = shardOf(code)
+      if (shard) {
+        const res = await shardStub(env, shard).fetch(new Request(request, { headers }))
+        if (!res.headers.has(NO_ROOM_HEADER)) return res
+      }
+      // A room made before shards: 1 in 31 of their codes looks like a shard's, which says it has no such room.
       return env.ROOMS.getByName(code).fetch(new Request(request, { headers }))
     }
-    if (path.startsWith('/admin/dumps') && request.method === 'GET') return admin(request, env, path)
+    if ((path.startsWith('/admin/dumps') || path.startsWith('/admin/shards/')) && request.method === 'GET') return admin(request, env, path)
     return new Response('Not found', { status: 404, headers })
   },
 } satisfies ExportedHandler<Env>

@@ -2,10 +2,11 @@ import type { Phase, ServerMessage, TickEntries } from '../../src/net/protocol'
 import type { Effect, Room } from './room'
 
 /**
- * A room's storage, the same for both relay shells: each room has its own
- * SQLite (the Durable Object's, or one file per room on a VPS relay) behind
- * this small adapter, so what the room's effects write, the keys they use and
- * how a restart, a sync or a dump reads them back are written once.
+ * A room's storage, the same for every relay shell: each room has its own
+ * SQLite (a one-room Durable Object's, or one file per room on a VPS relay)
+ * or its own key prefix in a shard's (`ShardObject`) behind this small
+ * adapter, so what the room's effects write, the keys they use and how a
+ * restart, a sync or a dump reads them back are written once.
  *
  * Two ways to write, as the room asks (the doc block atop `room.ts`):
  * - Durable: the room (rare: seats, run start and end, the agreed snapshot,
@@ -18,6 +19,9 @@ import type { Effect, Room } from './room'
  *   writes them as KV keys with `allowUnconfirmed`; a VPS relay as rows of
  *   `kv` in the same transaction as the rest (a local commit takes
  *   microseconds), so only losing the machine loses any.
+ * A shard writes the room lazily too (`saveRoom`): the output gate is the
+ * whole object's, and one room's save must not hold the others' frames (the
+ * crash window this opens: `shardObject.ts`).
  * After a restart a shell loads the room with the `bound` of its run's newest
  * log batch (`readBound`): the clock resumes past every tick sent.
  *
@@ -47,7 +51,13 @@ export type Lazy = {
   list: (prefix: string, opts?: { start?: string; reverse?: boolean; limit?: number }) => [string, Stored][]
 }
 
-export type Store = { sql: Sql; lazy: Lazy }
+/**
+ * `saveRoom`: where the room is saved instead of the row `room` of `kv`. A
+ * shard (`ShardObject`, many rooms in one Durable Object) keeps each room as a
+ * lazy key of its own: `sql.exec` takes the output gate, which would hold every
+ * room's messages behind one room's save.
+ */
+export type Store = { sql: Sql; lazy: Lazy; saveRoom?: (json: string) => void }
 
 export const SCHEMA = 'CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)'
 
@@ -84,13 +94,17 @@ export const createSchema = (sql: Sql) => sql.run(SCHEMA)
 
 const hasTable = (sql: Sql, name: string) => sql.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", name).length > 0
 
+/** A room saved as JSON, or null when it isn't one. */
+export const parseRoom = (json: string): Room | null => {
+  const v: unknown = JSON.parse(json)
+  return isRoom(v) ? v : null
+}
+
 /** The room this storage holds, or null (none made yet, or wiped). */
 export const readRoom = (sql: Sql): Room | null => {
   if (!hasTable(sql, 'kv')) return null
   const row = sql.all("SELECT v FROM kv WHERE k = 'room'")[0]
-  if (!row) return null
-  const v: unknown = JSON.parse(text(row, 'v'))
-  return isRoom(v) ? v : null
+  return row ? parseRoom(text(row, 'v')) : null
 }
 
 /** The clock bound of the run's newest log batch (0 without one), for `loadState`. */
@@ -130,7 +144,7 @@ const readChunks = (store: Store, run: number, tick: number): string[] => {
 
 const keys = (store: Store, prefix: string) => store.lazy.list(prefix).map(([k]) => k)
 
-/** Writes what `effects` ask of storage: the lazy writes as they come, then the room once if any asked for a `save`. */
+/** Writes what `effects` ask of storage: the lazy writes as they come, then the room once if any asked for a `save` (`saveRoom`, else its row). */
 export const persist = (store: Store, effects: readonly Effect[], room: Room | null) => {
   let save = false
   for (const e of effects) {
@@ -141,7 +155,9 @@ export const persist = (store: Store, effects: readonly Effect[], room: Room | n
     else if (e.k === 'dropSnapshot') store.lazy.delete(keys(store, snapPrefix(e.run, e.tick)))
     else if (e.k === 'dropRun') store.lazy.delete([...keys(store, logPrefix(e.run)), ...keys(store, snapPrefix(e.run))])
   }
-  if (save && room) store.sql.run("INSERT OR REPLACE INTO kv (k, v) VALUES ('room', ?)", JSON.stringify(room))
+  if (!save || !room) return
+  if (store.saveRoom) store.saveRoom(JSON.stringify(room))
+  else store.sql.run("INSERT OR REPLACE INTO kv (k, v) VALUES ('room', ?)", JSON.stringify(room))
 }
 
 /** A sync's messages, in order: the `sync`, the base snapshot's chunks, then the log from `from` to `to` in frames. */

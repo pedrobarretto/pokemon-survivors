@@ -1,10 +1,9 @@
 import { DurableObject } from 'cloudflare:workers'
-import { CLOSE_CODES, LIMITS, parseClientMessage, type Auth, type ServerMessage } from '../../src/net/protocol'
-import { jwksKeys, verifyClerkToken } from './auth'
+import { CLOSE_CODES, LIMITS, parseClientMessage, type ServerMessage } from '../../src/net/protocol'
 import type { Env } from './env'
 import { gen, randomToken } from './codes'
 import { gzip } from './gzip'
-import { allowedOrigin } from './origins'
+import { DELETE_MAX, HELLO_TIMEOUT_MS, LAZY, WHERE_WAIT_MS, identify, isRecord, log, whereOnce } from './shell'
 import {
   EDGE_HEADER,
   connClosed,
@@ -15,11 +14,8 @@ import {
   noteLateness,
   noteSent,
   parseEdge,
-  parseTrace,
   welcomeNet,
   type LabRun,
-  type LogLine,
-  type Where,
 } from './telemetry'
 import {
   connect,
@@ -35,7 +31,6 @@ import {
   tick,
   type ConnId,
   type Effect,
-  type Identity,
   type Room,
   type State,
 } from './room'
@@ -43,15 +38,6 @@ import { createSchema, dumpJson, persist, readBound, readRoom, syncTexts, type D
 
 /** A socket's attachment: survives WebSocket hibernation, so the room finds its sockets again. */
 type Attachment = { id: ConnId; ua: string; seat: number | null }
-
-/** A socket not seated within this long is closed: no valid `hello`, or one whose auth is still being checked. */
-const HELLO_TIMEOUT_MS = 10_000
-
-/** Lazy writes (`store.ts`): never held by the output gate. */
-const LAZY = { allowUnconfirmed: true } as const
-
-/** Keys a delete takes at most. */
-const DELETE_MAX = 128
 
 /**
  * The Durable Object's storage as the shared storage code sees it
@@ -75,31 +61,16 @@ const storeOf = (storage: DurableObjectStorage): Store => ({
   },
 })
 
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
-
 const isAttachment = (v: unknown): v is Attachment =>
   isRecord(v) && typeof v.id === 'string' && typeof v.ua === 'string' && (v.seat === null || typeof v.seat === 'number')
 
-/** One JWKS cache per isolate, shared by the rooms it runs. */
-let jwks: ReturnType<typeof jwksKeys> | null = null
-
-/** Where this isolate runs (Cloudflare's trace from inside it), asked once per isolate. */
-let where: Promise<Where> | null = null
-const whereOnce = () =>
-  (where ??= fetch('https://www.cloudflare.com/cdn-cgi/trace')
-    .then((res) => res.text())
-    .then(parseTrace)
-    .catch(() => ({ colo: null })))
-
-/** Waits for `where` at most this long before a welcome goes out without it. */
-const WHERE_WAIT_MS = 500
-
-const log = (line: LogLine) => console.log(JSON.stringify(line))
-
 /**
- * One co-op room. A class only because the Durable Object runtime asks for
- * one: it is a thin shell over the pure room (`room.ts`), doing the storage,
- * the sockets and the timers the room's effects ask for.
+ * One co-op room per object, as rooms were made before shards (`ShardObject`,
+ * which new codes name). Kept, with its migration, for the rooms made before
+ * the shards' deploy: it can go once that deploy is older than a room's
+ * longest life (6 h). A class only because the Durable Object runtime asks
+ * for one: it is a thin shell over the pure room (`room.ts`), doing the
+ * storage, the sockets and the timers the room's effects ask for.
  */
 export class RoomObject extends DurableObject<Env> {
   private state: State = loadState(null, gen, 0)
@@ -178,7 +149,7 @@ export class RoomObject extends DurableObject<Env> {
       this.authing.add(a.id)
       // The welcome says where this room runs: the trace asked at boot is nearly always back by now.
       const wait = new Promise((resolve) => setTimeout(resolve, WHERE_WAIT_MS))
-      const [identity] = await Promise.all([this.identify(msg.auth).catch(() => null), Promise.race([whereOnce(), wait])])
+      const [identity] = await Promise.all([identify(this.env, msg.auth).catch(() => null), Promise.race([whereOnce(), wait])])
       this.authing.delete(a.id)
       this.apply(hello(this.state, a.id, msg, identity, Date.now(), { guests: this.env.ALLOW_GUESTS === 'on' }))
       return
@@ -211,18 +182,6 @@ export class RoomObject extends DurableObject<Env> {
     this.sockets.delete(a.id)
     this.attached.delete(a.id)
     this.apply(disconnect(this.state, a.id, Date.now()))
-  }
-
-  private async identify(auth: Auth): Promise<Identity | null> {
-    if (auth.kind === 'guest') return { id: `g:${auth.id}`, account: false }
-    jwks ??= jwksKeys(`${this.env.CLERK_ISSUER}/.well-known/jwks.json`)
-    const sub = await verifyClerkToken(auth.token, {
-      keys: jwks,
-      issuer: this.env.CLERK_ISSUER,
-      allowedParty: (origin) => allowedOrigin(this.env, origin),
-      now: Date.now(),
-    })
-    return sub ? { id: `u:${sub}`, account: true } : null
   }
 
   private send(id: ConnId, text: string) {

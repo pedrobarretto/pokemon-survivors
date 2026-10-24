@@ -1,35 +1,91 @@
 # Co-op relay
 
-The room relay for co-op: a Cloudflare Worker with one Durable Object per room
-(`idFromName(code)`, SQLite storage). It owns the run's clock (60 Hz, ticks
-derived from elapsed time), stamps inputs into the next unsent tick, broadcasts
-frames without waiting on storage, writes the input log once a second,
-compares the players' state hashes, keeps the latest snapshot a majority agreed
-on, heals a diverged client and records a desync dump. It runs no game code: it
-imports only `../src/net/protocol.ts`, which imports nothing (a test checks it).
+The room relay for co-op: a Cloudflare Worker that packs many rooms into each
+Durable Object (a **shard**, `ShardObject`, SQLite storage). Each room owns its
+run's clock (60 Hz, ticks derived from elapsed time), stamps inputs into the
+next unsent tick, broadcasts frames without waiting on storage, writes the
+input log once a second, compares the players' state hashes, keeps the latest
+snapshot a majority agreed on, heals a diverged client and records a desync
+dump. It runs no game code: it imports only `../src/net/protocol.ts`, which
+imports nothing (a test checks it).
 
-Storage comes two ways (the doc block atop `src/room.ts`; `src/store.ts` writes
-and reads it for both shells). Rare state (seats, run start and end, the agreed
-snapshot, pauses) is a durable room save: the output gate holds every message
-until it commits. The input log, decided hashes, clock bound and snapshot
-chunks are written with `allowUnconfirmed` (KV keys; `sql.exec` always takes
-the gate), so frames and pongs never wait on a commit. A crash can lose the newest second of log: the clock bound, written
-3 s ahead with every batch (never under 2 s, so a lost batch is covered while
-its commit takes under 2 s; the worst measured took 1.1 s), keeps the
-restarted room from sending a tick twice, the clients resume from their own
-state, and the hash check heals anyone who rebuilt without it. The cost: after
-a restart the clock resumes at the bound, so the players get 2 to 3 s of ticks
-without their input.
+**Why shards.** Cloudflare bills a Durable Object's wall-clock time at 128 MB,
+whatever it uses, and a room never sleeps (the relay owns its clock): one room
+per object cost ~US$0.0058 a room-hour. A room uses ~1.1% of a core (130 s of
+CPU over 11.9k s active, production, 2026-10-23) and sends ~6 messages a second,
+so one object carries a couple of dozen (Limits and costs, below).
+
+**Shards and codes** (`src/shards.ts`). A shard is named `<region>:<index>`: the
+location hint of the room's host (`hintFor`, or the `region` a `POST /rooms` asks
+for, as a group move does), `auto` without one, and an index from 0 to 30. Its
+object is created with that `locationHint` (an object stays where it was first
+made; an empty one is evicted and costs nothing). A room's code names its shard,
+so `GET /rooms/<code>/ws` goes straight there with no lookup: 5 characters of
+`ROOM_CODE_ALPHABET`, the first a letter of `RELAY_HOMES.cf` whose position
+mod 8 is the region, the second the index, two random ones and a check
+character over the other four. The game sees an ordinary Cloudflare code
+(nothing changed under `src/`).
+
+**Filling.** `POST /rooms` asks the region's shards in order, 0 first: a shard
+refuses a create past `ROOMS_PER_SHARD` rooms (24 by default; a room the group
+moved away from doesn't count) or while it takes more than 600 messages a
+second (`INBOUND_BUDGET`, measured over 10 s), and the Worker asks the next. So
+rooms fill a few shards rather than spreading (packing only pays when rooms
+share an object), and no central object sits on the create or connect path; a
+create costs one round trip to the shard per full shard before it.
+
+**One room never takes the others down.** A room's step that throws restarts
+only that room from its storage (its sockets closed with 1012, the clients
+reconnect and resume), as on the VPS relays.
+
+**Storage.** Each room keeps its keys in its shard: `room:<code>` (the room's
+JSON) and `r:<code>:log:…`/`r:<code>:snap:…` (the log batches and snapshot
+chunks of `src/store.ts`, shared with the other shells). A shard restart loads
+every `room:` key back; a room that expires (idle, or 6 h old) has all its keys
+deleted. The output gate is the whole object's, so a write that took it would
+hold every room's frames until it committed (19–33 ms p50, up to 1.1 s
+measured): every write in a shard, the room saves and the alarm included, goes
+with `allowUnconfirmed`. As on the VPS relays, a step's writes are all issued
+before anything it sends, in one synchronous turn, which the runtime commits as
+one atomic batch, batches in order. The window this opens: a crash may lose a
+room's newest steps that its clients already heard (a commit's time of them),
+not only its newest second of log: a seat (it rejoins), a run's start (the room
+is back in its lobby) or end, an agreed snapshot (the one before it stays, its
+chunks deleted in the same batch or not at all). The clock bound still covers
+it: written 3 s ahead with every batch (never under 2 s, so a lost batch is
+covered while its commit takes under 2 s; the worst measured took 1.1 s), only
+growing, and carried by every save too, so the restarted room never sends a
+tick twice; the clients resume from their own state, and the hash check heals
+anyone who rebuilt without it. The cost: after a restart the clock resumes at
+the bound, so the players get 2 to 3 s of ticks without their input.
+
+**Timers.** One frame timer per running room (each room's clock has its own
+phase, so one shard-wide loop would make every room late by up to a frame), and
+one alarm per shard: the earliest of its rooms' deadlines, which wakes only the
+rooms whose own came.
+
+**Rooms made before shards** live one per `RoomObject` (`idFromName(code)`) and
+keep working until they expire (6 h at most): a code without the check
+character goes there, and so does the 1 in 31 of them that passes it by chance
+(the shard answers `X-PS-No-Room` and the Worker tries the old object). The old
+class and its `v1` migration stay; `ShardObject` came with `v2`. **After the
+shards' deploy is 6 h old**, a later PR removes `RoomObject` (a `deleted_classes`
+migration), the fallback in `src/index.ts`, and the legacy SQL reads in
+`src/store.ts`; a shard then answers an unknown code itself (a socket that
+refuses it, as `RoomObject` does today).
 
 - `src/room.ts`: the room as a pure state machine (all the rules, tested in `test/room.test.ts`).
-- `src/roomObject.ts`: the Durable Object, a thin shell doing the storage, sockets and timers the room asks for.
+- `src/shardObject.ts`: the Durable Object, a thin shell doing each of its rooms' storage, sockets and timers.
+- `src/shards.ts`: shard codes, the fill rule and the alarm's scheduling (pure, tested in `test/shards.test.ts`).
+- `src/roomObject.ts`: the one-room Durable Object of the rooms made before shards (goes after 6 h, above).
+- `src/shell.ts`: what both Durable Object shells share (auth, where the isolate runs, timeouts).
 - `src/vault.ts`: one Durable Object keeping desync dumps after their room is gone (30 days, the newest 500, pruned by its alarm), and the lab's kept runs (below).
 - `src/telemetry.ts`: what makes every run diagnosable (below), kept out of the room's rules.
 - `src/index.ts`: the Worker routes; `src/auth.ts`: Clerk session tokens (RS256 against the JWKS).
 
 ```bash
 npm install
-npm test             # vitest in the Workers runtime (pure rules + a restart test)
+npm test             # vitest in the Workers runtime (pure rules, restarts of one room and of a shard of them)
 npm run typecheck    # wrangler types + tsc
 npm run dev          # wrangler dev on :8791
 npm run deploy       # ps-coop-dev on workers.dev (also allows Vercel previews)
@@ -49,6 +105,8 @@ node scripts/probe.mjs --bots 3 --secs 40 --desync --rejoin   # bots against a d
 - `GET /health`: the Worker answering (no Durable Object is touched).
 - `GET /admin/dumps` (the last 100) and `GET /admin/dumps/<id>` (gzipped JSON), with
   `Authorization: Bearer <ADMIN_TOKEN>`. Without the token they answer 404.
+- `GET /admin/shards/<region>:<index>` (e.g. `enam:0`), same token: the shard's rooms (phase,
+  sockets, running), its sockets and inbound rate, and its last minute's `shard.stats`.
 
 ## Secrets
 
@@ -71,7 +129,10 @@ Re-simulating `meta.run` with `log` reproduces the run.
 
 JSON lines in Workers Logs (observability is on), one per event:
 
-- `do.boot`: a room's object started (`colo`: where it runs, from Cloudflare's trace asked once per isolate; the run and tick it resumes at).
+Every line from a shard carries its name (`shard`, e.g. `enam:0`).
+
+- `shard.boot`: a shard started (`colo`, how many rooms and sockets it brought back); `do.boot`: each of its rooms (or a one-room object) started (`colo`: where it runs, from Cloudflare's trace asked once per isolate; the run and tick it resumes at).
+- `shard.stats`: once a minute while a run's clock runs, the shard's rooms, running rooms, sockets, inbound messages a second, frames sent and the frame timers' lateness (p50, p99, max ms) all rooms together. `room.error`: a room's step threw and the room started over (`fatal`: it failed again and left memory).
 - `conn.open` / `conn.close`: a socket, with where it meets Cloudflare (`colo`, `country`, `asn`, `rtt`: the edge's TCP round trip, set by the Worker in `X-PS-Edge`), and at close its code or the relay's reason and how long it lived.
 - `run.summary`: at a run's end or when its room goes (`why`, `final`), and also when everyone left it (`why: 'left'`, `final: false`: an idle room's object is usually evicted before it expires, and its counts with it): frames sent and those carrying more than a tick, the frame timer's lateness (p50, p99, max ms), messages in by kind (a `batch` once, and each message it carries by its own kind), stick inputs coalesced and messages dropped, bytes per seat, storage writes by kind (log batches, room saves, snapshot chunks, deletes), snapshot sizes, pauses, and per seat its edge, how many times it joined, and its own link report (`net`: round trip, hold, underruns, stalls, reconnects, sent every 15 s).
 
@@ -192,8 +253,34 @@ No Clerk change is needed: the issuer is the same, and a token's `azp` is checke
 
 ## Limits and costs
 
-Storage writes per run: one log batch a second (the ticks with inputs, the hashes
-decided and the clock bound), the snapshot chunks every 10 s (and the old ones'
-deletes), and a room save for each rare change. A 20-minute run writes a couple of
-thousand rows (it was about 75k with a row per input tick). The Workers Free plan
-allows 100k rows written a day.
+**Per shard** (`ROOMS_PER_SHARD`, 24 by default). By production numbers a room
+takes ~1.1% of a core and ~6 inbound messages a second: 24 rooms are ~26% of a
+core and ~150 messages a second, against a Durable Object's soft limit of about
+1 000 requests a second. The headroom is for 4-player rooms, catch-up syncs and
+snapshot uploads, and it keeps a shard restart (a deploy) to 24 rooms at most.
+The message rate is the real limit, not CPU: on the dev relay 24 probe rooms at
+`--hz 30` (two bots each sending 30 stick inputs a second, ~10× a real room,
+~1 500 messages a second into one object) had their shard reset about once a
+minute at only ~19% of a core, while 12 of them (~750 a second) never were.
+Hence the inbound budget (600 a second) on top of the count. Memory: a room
+holds ~1 MB, well inside an isolate's 128 MB.
+
+**Cost per room-hour** (Workers Paid: duration US$12.50 per million GB-s, billed
+at 128 MB per active object; requests US$0.15 per million, incoming WebSocket
+messages counted 20:1):
+
+| | Duration | Requests (6 msg/s) | Total |
+|---|---|---|---|
+| One room per object (before) | US$0.0056 | US$0.00016 | ~US$0.0058 |
+| A shard of *n* rooms | US$0.0056 / *n* | US$0.00016 | n = 24: ~US$0.0004 |
+
+So a full shard is ~14× cheaper a room-hour, and any two rooms that share one
+halve their duration. Shards fill in order, so only a region's last shard is
+partly full.
+
+**Storage writes per run**: one log batch a second (the ticks with inputs, the
+hashes decided and the clock bound), the snapshot chunks every 10 s (and the
+old ones' deletes), and a room save for each rare change. A 20-minute run writes
+a couple of thousand rows (it was about 75k with a row per input tick). The
+Workers Free plan allows 100k rows written a day. An expired room's keys are
+deleted with it, so a shard's storage holds only its live rooms.

@@ -6,23 +6,31 @@
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "observability": { "enabled": true },
+  // ShardObject: many rooms per object, every room made since shards. RoomObject: one room per object, the rooms
+  // made before (drop it with a `deleted_classes` migration once the shards' deploy is 6 h old).
   "durable_objects": {
     "bindings": [
       { "name": "ROOMS", "class_name": "RoomObject" },
+      { "name": "SHARDS", "class_name": "ShardObject" },
       { "name": "VAULT", "class_name": "Vault" }
     ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RoomObject", "Vault"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["RoomObject", "Vault"] },
+    { "tag": "v2", "new_sqlite_classes": ["ShardObject"] }
+  ],
   // Per IP, per Cloudflare location. Generous: a whole carrier NAT can sit behind one IP.
   "ratelimits": [
     { "name": "CREATE_LIMIT", "namespace_id": "4101", "simple": { "limit": 30, "period": 60 } },
     { "name": "CONNECT_LIMIT", "namespace_id": "4102", "simple": { "limit": 300, "period": 60 } }
   ],
   // ALLOW_GUESTS: the dev relay and local `wrangler dev` seat guests (the soak, in-tab bots, dev builds); production doesn't.
+  // ROOMS_PER_SHARD: the rooms one ShardObject holds at most (README, "Limits and costs").
   "vars": {
     "CLERK_ISSUER": "https://clerk.pokemonsurvivors.com",
     "ALLOWED_ORIGINS": "https://www.pokemonsurvivors.com,https://pokemonsurvivors.com,https://*.vercel.app",
-    "ALLOW_GUESTS": "on"
+    "ALLOW_GUESTS": "on",
+    "ROOMS_PER_SHARD": "24"
   },
   // Bindings, rate limits and vars don't inherit into an environment, so they repeat here.
   // Production serves only the live site; Vercel previews use the dev relay.
@@ -34,10 +42,14 @@
       "durable_objects": {
         "bindings": [
           { "name": "ROOMS", "class_name": "RoomObject" },
+          { "name": "SHARDS", "class_name": "ShardObject" },
           { "name": "VAULT", "class_name": "Vault" }
         ]
       },
-      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RoomObject", "Vault"] }],
+      "migrations": [
+        { "tag": "v1", "new_sqlite_classes": ["RoomObject", "Vault"] },
+        { "tag": "v2", "new_sqlite_classes": ["ShardObject"] }
+      ],
       "ratelimits": [
         { "name": "CREATE_LIMIT", "namespace_id": "4201", "simple": { "limit": 30, "period": 60 } },
         { "name": "CONNECT_LIMIT", "namespace_id": "4202", "simple": { "limit": 300, "period": 60 } }
@@ -45,7 +57,8 @@
       "vars": {
         "CLERK_ISSUER": "https://clerk.pokemonsurvivors.com",
         "ALLOWED_ORIGINS": "https://www.pokemonsurvivors.com,https://pokemonsurvivors.com",
-        "ALLOW_GUESTS": "off"
+        "ALLOW_GUESTS": "off",
+        "ROOMS_PER_SHARD": "24"
       }
     }
   }
