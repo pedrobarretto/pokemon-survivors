@@ -1,5 +1,5 @@
 import { clamp, dir8, type Dir8, type Vec } from '../engine/math'
-import { blitCentered, canvasCache, context2d, createCanvas, ellipse, glow, lazy, onCanvasReset } from '../engine/pixelart'
+import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, ellipse, glow, lazy, onCanvasReset } from '../engine/pixelart'
 import { EMOTES, type Emote } from './art'
 import { drawSparkles, shadow } from './draw'
 import { LANTERN_ART, lanternString, stringLanterns, type LanternKind, type LanternString } from './lanterns'
@@ -1130,7 +1130,7 @@ const silhouette = (() => {
 
 /** Draws a shadow on the ground at (x, y), screen px: a silhouette bottom-aligned to the feet and nudged 2 px down-right, or an ellipse centered there. */
 const drawShadow = (ctx: CanvasRenderingContext2D, s: Shadow, x: number, y: number) => {
-  if ('rx' in s) return blitCentered(ctx, ellipse(s.rx, s.ry, SHADOW), x, y)
+  if ('rx' in s) return blitPacked(ctx, ellipse(s.rx, s.ry, SHADOW), x, y)
   const mask = silhouette(s.art)
   ctx.drawImage(mask, Math.round(x - (s.art.minX + s.art.w / 2)) + 2, Math.round(y - mask.height) + 2)
 }
@@ -1484,7 +1484,7 @@ export const drawPlazaParty = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX
   for (let i = 0; i < 10; i++) {
     const a = (i / 10) * Math.PI * 2
     const r = 1 + k * 0.35
-    blitCentered(ctx, ellipse(4, 3, '#f0ead8'), Math.round(x + Math.cos(a) * layout.pad.rx * r), Math.round(y + Math.sin(a) * layout.pad.ry * r - k * 4))
+    blitPacked(ctx, ellipse(4, 3, '#f0ead8'), Math.round(x + Math.cos(a) * layout.pad.rx * r), Math.round(y + Math.sin(a) * layout.pad.ry * r - k * 4))
   }
   ctx.globalAlpha = 1
   drawSparkles(ctx, x, y - layout.building.h / 2, layout.building.w * 0.8, since - 0.15, 7)

@@ -1,5 +1,5 @@
 import { formatTime } from '../engine/math'
-import { canvasCache, context2d, createCanvas, ellipse, fromStrings, onCanvasReset, type PixelSprite } from '../engine/pixelart'
+import { blitPacked, canvasCache, context2d, createCanvas, ellipse, fromStrings, onCanvasReset, type PixelSprite } from '../engine/pixelart'
 import { MEDALS, type Medal } from '../data/achievements'
 import type { BackgroundId, FrameId } from '../data/style'
 import type { Difficulty } from '../game/difficulty'
@@ -332,11 +332,11 @@ const heroScale = (s: SpeciesSprites, maxW: number, maxH: number) => Math.max(1,
 
 /** A battle platform: a rim, its face and a lighter ring, like the stages of the games. */
 const platform = (ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number, colors: { rim: string; face: string; ring: string }) => {
-  blit(ctx, ellipse(rx + 1, ry + 1, SHADOW), cx, cy + 4)
-  blit(ctx, ellipse(rx, ry, colors.rim), cx, cy + 3)
-  blit(ctx, ellipse(rx, ry, colors.face), cx, cy)
-  blit(ctx, ellipse(rx - 5, ry - 2, colors.ring), cx, cy)
-  blit(ctx, ellipse(rx - 7, ry - 3, colors.face), cx, cy + 1)
+  blitPacked(ctx, ellipse(rx + 1, ry + 1, SHADOW), cx, cy + 4)
+  blitPacked(ctx, ellipse(rx, ry, colors.rim), cx, cy + 3)
+  blitPacked(ctx, ellipse(rx, ry, colors.face), cx, cy)
+  blitPacked(ctx, ellipse(rx - 5, ry - 2, colors.ring), cx, cy)
+  blitPacked(ctx, ellipse(rx - 7, ry - 3, colors.face), cx, cy + 1)
 }
 
 const NIGHT_PLATFORM = { rim: '#1c2648', face: '#3a5288', ring: '#5070b0' }

@@ -1,4 +1,4 @@
-import { blitCentered, blitRotated, ellipse, ring, textSprite } from '../engine/pixelart'
+import { blitCentered, blitPacked, blitRotated, ellipse, ring, textSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { COOP } from '../data/coop'
 import { formAt } from '../game/branch'
@@ -138,7 +138,7 @@ export const drawTeammate = (ctx: Ctx, g: Game, p: Player, t: number, calm: bool
 
 /** The see-through bubble a wrapped-up player sits in: nothing reaches them, and nothing of theirs reaches the horde. */
 const drawWrap = (ctx: Ctx, x: number, cy: number, r: number, t: number) => {
-  blitCentered(ctx, ellipse(r, r, 'rgba(184,224,255,0.22)'), x, cy)
+  blitPacked(ctx, ellipse(r, r, 'rgba(184,224,255,0.22)'), x, cy)
   dashedRing(ctx, x, cy, r, t * 2, ['#ffffff', '#a8d8f8'], 0.7)
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(Math.round(x - r * 0.55), Math.round(cy - r * 0.6), 2, 1)
@@ -151,7 +151,7 @@ const drawBall = (ctx: Ctx, p: Player, t: number) => {
   // A wobble every 1.6 s (faster while a teammate is at it): -1, 1, -1, 0 px.
   const beat = (t * (reviving ? 2.4 : 1) + p.slot * 0.37) % 1.6
   const wobble = beat < 0.36 ? (Math.floor(beat / 0.12) % 2 === 0 ? -1 : 1) : 0
-  blitCentered(ctx, ellipse(6, 2, 'rgba(16,24,16,0.35)'), p.x, p.y + 1)
+  blitPacked(ctx, ellipse(6, 2, 'rgba(16,24,16,0.35)'), p.x, p.y + 1)
   const lit = reviving && Math.floor(t * 8) % 2 === 0
   blitCentered(ctx, lit ? TEAM_FX.ballLit() : TEAM_FX.ball(), p.x + wobble, p.y - 5)
 }
@@ -218,11 +218,11 @@ export const drawTeamAir = (ctx: Ctx, g: Game, me: Player, t: number) => {
     const down = fainted(p)
     const top = down ? p.y - 12 : p.y - mateSprites(g, p).bodyH
     const tag = textSprite(tagOf(g, p.slot), slotColor(p.slot))
-    blitCentered(ctx, tag, p.x, top - 5)
+    blitPacked(ctx, tag, p.x, top - 5)
     if (down) continue
     // Standing and here, `drawPlayer` drew their HP bar already.
     if (!showsPlain(p)) drawMateHp(ctx, p)
-    const side = Math.round(p.x + tag.width / 2 + 7)
+    const side = Math.round(p.x + tag.w / 2 + 7)
     if (p.away) {
       blitCentered(ctx, TEAM_FX.zz(), side, top - 8 - (Math.floor(t * 2) % 2))
       continue
@@ -285,18 +285,18 @@ export const drawTeamMarkers = (ctx: Ctx, g: Game, me: Player, camX: number, cam
     const r = down ? 9 + (Math.floor(t * 4) % 2) : 8
     const cos = Math.cos(spot.angle)
     const sin = Math.sin(spot.angle)
-    blitCentered(ctx, ellipse(r, r, 'rgba(16,24,48,0.78)'), spot.x, spot.y)
-    blitCentered(ctx, ring(r, 1, urgent ? '#f84838' : color), spot.x, spot.y)
+    blitPacked(ctx, ellipse(r, r, 'rgba(16,24,48,0.78)'), spot.x, spot.y)
+    blitPacked(ctx, ring(r, 1, urgent ? '#f84838' : color), spot.x, spot.y)
     const dist = distanceText(Math.hypot(p.x - me.x, p.y - me.y))
     if (down) blitCentered(ctx, TEAM_FX.ball(), spot.x, spot.y)
-    else blitCentered(ctx, textSprite(dist, color), spot.x, spot.y)
+    else blitPacked(ctx, textSprite(dist, color), spot.x, spot.y)
     const bob = Math.round(Math.sin(t * 6 + p.slot) * 1.5)
     blitRotated(ctx, teamArrow(urgent ? '#f84838' : color), spot.x + cos * (r + 5 + bob), spot.y + sin * (r + 5 + bob), spot.angle)
     // The tag sits on the screen's side of the disc, so it never runs off the edge.
     const tag = textSprite(tagOf(g, p.slot), down ? (urgent ? '#f84838' : '#ffffff') : color)
     const ty = sin > 0.5 ? spot.y - r - 6 : spot.y + r + 6
-    const tx = Math.min(w - tag.width / 2 - 2, Math.max(tag.width / 2 + 2, spot.x - cos * 4))
-    blitCentered(ctx, tag, tx, ty)
-    if (down) blitCentered(ctx, textSprite(dist, '#ffffff'), tx, ty + (sin > 0.5 ? -7 : 7))
+    const tx = Math.min(w - tag.w / 2 - 2, Math.max(tag.w / 2 + 2, spot.x - cos * 4))
+    blitPacked(ctx, tag, tx, ty)
+    if (down) blitPacked(ctx, textSprite(dist, '#ffffff'), tx, ty + (sin > 0.5 ? -7 : 7))
   }
 }

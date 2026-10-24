@@ -1,5 +1,5 @@
 import { drawEvoItem } from './evoItemArt'
-import { blitCentered, blitEllipse, blitRing, blitRotated, textSprite } from '../engine/pixelart'
+import { blitCentered, blitPacked, blitEllipse, blitRing, blitRotated, textSprite } from '../engine/pixelart'
 import { HAZARD_COLORS } from './hazardColors'
 import { drawCapture } from './capture'
 import { drawNightmareAir, drawNightmareDark, drawNightmareGround, shadeAlpha, SLEEP_TINT } from './darkrai'
@@ -1153,7 +1153,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     for (const text of g.texts) {
       if (text.text.endsWith('!') !== bang || !showsText(text, mode, g.bossId, budget)) continue
       ctx.globalAlpha = textAlpha(text, mode)
-      blitCentered(ctx, textSprite(text.text, text.color), text.x, text.y)
+      blitPacked(ctx, textSprite(text.text, text.color), text.x, text.y)
     }
   }
   ctx.globalAlpha = 1

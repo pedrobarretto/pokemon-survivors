@@ -2,7 +2,7 @@ import { BIOMES, type BiomeId } from '../data/biomes'
 import type { LandmarkPiece } from '../data/landmarks'
 import type { PlacePiece } from '../data/places'
 import type { SolidKind } from '../data/terrain'
-import { canvasCache, context2d, createCanvas, type PixelSprite } from '../engine/pixelart'
+import { canvasCache, context2d, createCanvas, dropKept, keepPacked, type Packed } from '../engine/pixelart'
 
 /**
  * Painted scenery (made with PixelLab) standing in for pieces sculpted in
@@ -13,8 +13,11 @@ import { canvasCache, context2d, createCanvas, type PixelSprite } from '../engin
  * the look: hitboxes and the simulation never read them.
  */
 
-/** A drawn piece: the pixel on the world anchor and the half-width of its foot, for its shadow. */
-export type ArtPiece = { sprite: PixelSprite; ax: number; ay: number; foot: number }
+/**
+ * A drawn piece: its picture packed on its biome's atlas pages (`keepPacked`; shared pictures
+ * on their own), the pixel on the world anchor and the half-width of its foot, for its shadow.
+ */
+export type ArtPiece = { packed: Packed; ax: number; ay: number; foot: number }
 
 /** A kind's files: one per variant (cycled), and the woken ones for a looted treasure. */
 type Looks = { files: readonly string[]; open?: readonly string[] }
@@ -71,7 +74,7 @@ const FOOT_ROWS = 6
  * rows cover. The anchor is the foot's middle on the bottom row, so a lopsided
  * tree stands on its trunk and its shadow sits under the part touching the ground.
  */
-const toPiece = (img: HTMLImageElement): ArtPiece => {
+const toPiece = (img: HTMLImageElement, group: string): ArtPiece => {
   const sprite = createCanvas(img.naturalWidth, img.naturalHeight)
   const ctx = context2d(sprite)
   ctx.drawImage(img, 0, 0)
@@ -88,8 +91,13 @@ const toPiece = (img: HTMLImageElement): ArtPiece => {
     }
   }
   if (x1 < 0) [x0, x1] = [0, w - 1]
-  return { sprite, ax: Math.round((x0 + x1) / 2), ay: h - 2, foot: Math.max(3, Math.round((x1 - x0) / 2)) }
+  return { packed: keepPacked(group, sprite), ax: Math.round((x0 + x1) / 2), ay: h - 2, foot: Math.max(3, Math.round((x1 - x0) / 2)) }
 }
+
+const BIOME_IDS = Object.keys(BIOMES) as BiomeId[]
+
+/** The atlas group of a biome's pictures (by their file's prefix), or of the shared ones. */
+const groupOf = (file: string) => `scenery:${BIOME_IDS.find((b) => file.startsWith(`${b}-`)) ?? 'shared'}`
 
 /** A picture by file, or null while it loads. */
 const pieceOfFile = (file: string) => {
@@ -97,7 +105,7 @@ const pieceOfFile = (file: string) => {
   if (piece) return piece
   const img = image(file)
   if (!img.complete || !img.naturalWidth) return null
-  pieces.set(file, (piece = toPiece(img)))
+  pieces.set(file, (piece = toPiece(img, groupOf(file))))
   return piece
 }
 
@@ -114,10 +122,11 @@ export const sceneryArt = (file: (typeof ONE_OFFS)[number]) => pieceOfFile(file)
 
 /** Lets go of the pictures of every biome not in `keep` (shared ones stay): a run never walks back. */
 export const keepScenery = (keep: readonly BiomeId[]) => {
-  const gone = (Object.keys(BIOMES) as BiomeId[]).filter((b) => !keep.includes(b)).map((b) => `${b}-`)
+  const gone = BIOME_IDS.filter((b) => !keep.includes(b))
   for (const file of [...images.keys()]) {
-    if (!gone.some((prefix) => file.startsWith(prefix))) continue
+    if (!gone.some((b) => file.startsWith(`${b}-`))) continue
     images.delete(file)
     pieces.delete(file)
   }
+  for (const b of gone) dropKept(`scenery:${b}`)
 }
