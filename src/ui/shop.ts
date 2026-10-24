@@ -1312,6 +1312,8 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
     festivalTab.hidden = !announced
     const intro = h('span', { class: 'shop-intro' })
     const clock = h('span', { class: 'shop-clock' })
+    // The shelf's line rides at the top of its list and scrolls away with it, leaving the cards the room on a phone.
+    const introRow = h('div', { class: 'shop-intro-row' }, intro, clock)
     const items = h('div', { class: 'shop-items', role: 'list' })
     const descIcon = h('div', { class: 'shop-desc-icon' })
     const descTitle = h('div', { class: 'shop-desc-title' })
@@ -1327,7 +1329,6 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
       { class: 'shop-sheet box', 'aria-label': sh.title },
       h('header', { class: 'shop-head' }, back, h('h2', { class: 'shop-title' }, sh.title), h('span', { class: 'shop-wallet' }, img(coinIcon(0)), wallet)),
       h('nav', { class: 'shop-tabs', role: 'tablist' }, ...tabs, festivalTab),
-      h('div', { class: 'shop-intro-row' }, intro, clock),
       items,
       h('div', { class: 'shop-desc' }, descIcon, h('div', { class: 'shop-desc-body' }, descTitle, descText), h('div', { class: 'shop-desc-buttons' }, wishBtn, buy)),
       h('footer', { class: 'shop-foot' }, refund, hint(sh.hint, sh.hintTouch)),
@@ -1373,10 +1374,12 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
         tab.classList.toggle('on', s === shelf)
         tab.setAttribute('aria-selected', String(s === shelf))
       })
+      // A phone swipes the tabs sideways: the open shelf's comes into view (a talk may open the shop on any).
+      tabs[SHELVES.indexOf(shelf)]?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
       items.className = `shop-items ${shelf.layout}`
       const stock = shelf.stock(save, { capsFor, pickCaps, pickGoldCap })
       cards = stock.filter((c): c is Card => typeof c !== 'string')
-      items.replaceChildren(...stock.map((c) => (typeof c === 'string' ? h('div', { class: 'shop-group' }, c) : c.el)))
+      items.replaceChildren(introRow, ...stock.map((c) => (typeof c === 'string' ? h('div', { class: 'shop-group' }, c) : c.el)))
       cards.forEach((c, i) => wire(c.el, i))
       chosen = Math.min(chosen, Math.max(0, cards.length - 1))
       items.scrollTop = 0

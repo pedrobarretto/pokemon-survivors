@@ -1531,13 +1531,19 @@ const plazaInView = (plaza: Plaza, layout: Layout, camX: number, camY: number, w
   return dx * dx + dy * dy < 1
 }
 
+/** A box on screen, view px. */
+export type ViewBox = { left: number; top: number; right: number; bottom: number }
+
 /**
  * A card with Kecleon's head and an arrow at the edge of the view, pointing
  * at the shop while no part of the plaza (its cobblestones, the building, a
  * visitor, the festival's pieces) is on screen. It remembers where it was
- * drawn (`plaza.marker`) so a tap on it can lead there.
+ * drawn (`plaza.marker`) so a tap on it can lead there. `inside` (a phone's
+ * lobby, its cards up) is the open meadow around the partner: the edges of
+ * the view are under the cards there, so the marker sits at that box's lower
+ * corner on the plaza's side instead, where it shows whole and takes taps.
  */
-export const drawPlazaMarker = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, w: number, h: number, time: number, show: boolean) => {
+export const drawPlazaMarker = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, w: number, h: number, time: number, show: boolean, inside: ViewBox | null) => {
   plaza.marker.shown = false
   const layout = plazaLayout(plaza)
   if (!show || !layout || plazaInView(plaza, layout, camX, camY, w, h)) return
@@ -1552,10 +1558,13 @@ export const drawPlazaMarker = (ctx: CanvasRenderingContext2D, plaza: Plaza, cam
   const ex = w / 2 - 20
   const ey = h / 2 - 17
   const t = Math.min(ex / Math.max(1e-6, Math.abs(dx)), ey / Math.max(1e-6, Math.abs(dy)))
-  const sideways = Math.abs(dx) * ey >= Math.abs(dy) * ex
+  const sideways = inside !== null || Math.abs(dx) * ey >= Math.abs(dy) * ex
   const bob = Math.floor(time * 3) % 2
-  const x = Math.round(clamp(cx + dx * t, 20, w - 20)) + (sideways ? Math.sign(dx) * bob : 0)
-  const y = Math.round(clamp(cy + dy * t, h * 0.16, h * 0.84)) + (sideways ? 0 : Math.sign(dy) * bob)
+  const edge = inside
+    ? { x: clamp(dx >= 0 ? inside.right - 18 : inside.left + 18, 18, w - 18), y: clamp(inside.bottom - 11, 11, h - 11) }
+    : { x: clamp(cx + dx * t, 20, w - 20), y: clamp(cy + dy * t, h * 0.16, h * 0.84) }
+  const x = Math.round(edge.x) + (sideways ? Math.sign(dx) * bob : 0)
+  const y = Math.round(edge.y) + (sideways ? 0 : Math.sign(dy) * bob)
   ctx.drawImage(box, x - 12, y - 9)
   // The arrow, on the side facing the plaza: a dark triangle around a green one.
   const dir = sideways ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) }

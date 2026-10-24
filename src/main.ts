@@ -388,6 +388,8 @@ const meadow: Meadow = {
     return at && { ...meadowToScreen(at), who: at.who }
   },
   tapsShop: (at) => tapsPlaza(scene, meadowAt(at)),
+  // The canvas sits at the viewport's corner: CSS px over the scale are view px.
+  stageBox: (box) => (scene.stageBox = box && { left: box.left / cssScale, top: box.top / cssScale, right: box.right / cssScale, bottom: box.bottom / cssScale }),
 }
 
 /** Dev: the plaza's building level (`ps.plaza(n)`), over the shop's own. */
@@ -1930,6 +1932,8 @@ let watchingCoop = false
 const bankCoop = (r: Run, c: CoopRun, withBonus: boolean) => {
   const g = c.runner.game
   bankCoopRun(g, c.runner.room, c.runner.start.id, c.runner.slot, withBonus, r.dexBase)
+  // The eggs found so far are in the incubator now: an egg found after (endless) counts the slots from here, as solo's toast does.
+  r.hatchery = { ...r.hatchery, eggs: g.eggs.found.length }
   void syncSave()
 }
 
