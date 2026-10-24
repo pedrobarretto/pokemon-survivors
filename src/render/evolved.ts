@@ -1,5 +1,5 @@
 import { TAU } from '../engine/math'
-import { blitCentered, blitEllipse, blitRing, blitRotated, canvasCache, context2d, createCanvas, ellipse, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitPacked, blitRing, blitRotated, canvasCache, context2d, createCanvas, ellipse, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { flying } from '../game/attacks'
 import { BEAM_STEP, ICICLE_FALL, LASH_TIME, LOB, lobPoint, WAVE_BOW, WAVE_WIDTH } from '../game/evolvedMoves'
@@ -324,8 +324,7 @@ const stormCloud = (lit: boolean) => {
   const puffs = [[9, 11, 8, 6], [19, 8, 10, 7], [30, 9, 9, 6], [36, 12, 6, 5], [15, 13, 9, 5], [26, 13, 10, 5]] as const
   const layer = (grow: number, dy: number, color: string) => {
     for (const [x, y, rx, ry] of puffs) {
-      const e = ellipse(rx + grow, ry + grow, color)
-      ctx.drawImage(e, Math.round(x - e.width / 2), Math.round(y + dy - e.height / 2))
+      blitPacked(ctx, ellipse(rx + grow, ry + grow, color), x, y + dy)
     }
   }
   layer(1, 0, '#101020')

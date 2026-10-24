@@ -30,6 +30,7 @@ import {
   type Piece,
   type Plaza,
   type PlazaNpc,
+  type ViewBox,
 } from './plaza'
 
 /**
@@ -147,6 +148,8 @@ export type TitleScene = {
   haunted: boolean
   /** Passear (`exploreMeadow`): the lobby's cards are away, the partner stays out in the meadow however long it idles. */
   exploring: boolean
+  /** A phone's lobby, its cards up: the partner's stage on screen (view px), where the shop's marker keeps to (`drawPlazaMarker`); null otherwise. */
+  stageBox: ViewBox | null
 }
 
 /** Every species that may roam: wild Pokémon and the starter lines (evolutions show up once a run has loaded them). */
@@ -220,6 +223,7 @@ export const createTitleScene = (seed: number): TitleScene => {
     puffs: [],
     haunted: false,
     exploring: false,
+    stageBox: null,
   }
 }
 
@@ -755,5 +759,5 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
     blitCentered(ctx, bubbles[REACTIONS[wd.greet.kind].emote], Math.round(wd.x) - camX, top - 8 - bob)
   }
   // While the lobby rests at home (or the partner strolls), a card at the edge points the way to the shop.
-  drawPlazaMarker(ctx, s.plaza, camX, camY, w, h, s.time, s.partner !== null && !s.trip && s.rest === 'home')
+  drawPlazaMarker(ctx, s.plaza, camX, camY, w, h, s.time, s.partner !== null && !s.trip && s.rest === 'home', s.stageBox)
 }

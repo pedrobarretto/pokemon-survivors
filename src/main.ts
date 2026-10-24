@@ -11,7 +11,7 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { canvasRestored, context2d, onCanvasReset } from './engine/pixelart'
+import { canvasRestored, context2d, onCanvasReset, sweepArt } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
@@ -389,6 +389,8 @@ const meadow: Meadow = {
     return at && { ...meadowToScreen(at), who: at.who }
   },
   tapsShop: (at) => tapsPlaza(scene, meadowAt(at)),
+  // The canvas sits at the viewport's corner: CSS px over the scale are view px.
+  stageBox: (box) => (scene.stageBox = box && { left: box.left / cssScale, top: box.top / cssScale, right: box.right / cssScale, bottom: box.bottom / cssScale }),
 }
 
 /** Dev: the plaza's building level (`ps.plaza(n)`), over the shop's own. */
@@ -922,6 +924,8 @@ const SPRITE_SYNC = 3000
  */
 const RUN_IDLE = 2
 const MENU_IDLE = 20
+/** Syncs code-drawn art (`lazy`) survives unasked for before it's let go (`sweepArt`): two minutes. */
+const ART_IDLE = 40
 
 /**
  * What the lobby draws from the save, in the colors it shows them: the partner (its first stage),
@@ -972,6 +976,7 @@ const menuSprites = (): Variant[] => [
 const syncSprites = () => {
   // A run loading its sheets (`loadRunSheets`) has let go of the lobby's: nothing streams them back meanwhile.
   if (startingRun) return
+  sweepArt(ART_IDLE)
   if (run) {
     const { stream, extras, keep } = runSprites(run.game, run.sprites.needs, run.sprites.always)
     // The forms and shiny colors about to show up first, then the cast by when it comes.
@@ -1933,6 +1938,8 @@ let watchingCoop = false
 const bankCoop = (r: Run, c: CoopRun, withBonus: boolean) => {
   const g = c.runner.game
   bankCoopRun(g, c.runner.room, c.runner.start.id, c.runner.slot, withBonus, r.dexBase)
+  // The eggs found so far are in the incubator now: an egg found after (endless) counts the slots from here, as solo's toast does.
+  r.hatchery = { ...r.hatchery, eggs: g.eggs.found.length }
   void syncSave()
 }
 

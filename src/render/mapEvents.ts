@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRing, blitRotated, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, blitRotated, drawPacked, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import type { BuffId } from '../data/consumables'
 import { MAP_EVENTS, type MapEvent, type MapEventKind, type MapEventOf } from '../game/mapEvents'
@@ -77,11 +77,15 @@ const progressArc = (ctx: Ctx, x: number, y: number, r: number, k: number, color
 const groundShadow = (ctx: Ctx, x: number, y: number, rx: number) => blitEllipse(ctx, rx, Math.max(1, Math.round(rx * 0.35)), 'rgba(16,40,16,0.3)', x, y)
 
 const drawAltar = (ctx: Ctx, ev: MapEventOf<'altar'>, t: number) => {
-  const pedestal = sceneryArt('pedestal')?.sprite ?? ART().pedestal
+  const painted = sceneryArt('pedestal')?.packed
+  const sculpted = ART().pedestal
+  const pw = painted ? painted.w : sculpted.width
+  const ph = painted ? painted.h : sculpted.height
   const color = BUFF_COLORS[ev.state.buff]
   groundShadow(ctx, ev.x, ev.y, 8)
-  ctx.drawImage(pedestal, Math.round(ev.x - pedestal.width / 2), Math.round(ev.y - pedestal.height + 1))
-  const top = ev.y - pedestal.height - 2
+  if (painted) drawPacked(ctx, painted, Math.round(ev.x - pw / 2), Math.round(ev.y - ph + 1))
+  else ctx.drawImage(sculpted, Math.round(ev.x - pw / 2), Math.round(ev.y - ph + 1))
+  const top = ev.y - ph - 2
   const pulse = Math.sin(t * 4 + ev.id) > 0
   blitEllipse(ctx, 4, 4, color, ev.x, top)
   blitEllipse(ctx, 2, 2, pulse ? '#ffffff' : '#f8f0d0', ev.x - 1, top - 1)

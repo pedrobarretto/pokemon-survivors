@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canvasCache, canvasRestored, heldCanvases, lazy, onCanvasReset, resetCanvases, weighCanvases } from './pixelart'
+import { canvasCache, canvasRestored, heldCanvases, lazy, onCanvasReset, resetCanvases, sweepArt, weighCanvases } from './pixelart'
 
 describe('resetCanvases', () => {
   it('drops cached art so it is drawn again after a GPU reset', () => {
@@ -25,6 +25,27 @@ describe('resetCanvases', () => {
     expect(drops).toBe(0)
     await Promise.resolve()
     expect(drops).toBe(1)
+  })
+})
+
+describe('sweepArt', () => {
+  it('lets go of lazy art not asked for in the last sweeps, and keeps what is in use', () => {
+    let idleBuilds = 0
+    let busyBuilds = 0
+    const idle = lazy(() => ++idleBuilds)
+    const busy = lazy(() => ++busyBuilds)
+    idle()
+    busy()
+    sweepArt(3)
+    sweepArt(3)
+    // Asked for within the last 3 sweeps: still there.
+    expect(idle()).toBe(1)
+    for (let i = 0; i < 4; i++) {
+      busy()
+      sweepArt(3)
+    }
+    expect(idle()).toBe(2)
+    expect(busy()).toBe(1)
   })
 })
 

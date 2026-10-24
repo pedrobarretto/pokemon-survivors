@@ -4,7 +4,7 @@ import { playSfx } from '../engine/audio'
 import { ACTIONS } from '../engine/bindings'
 import { joystick, type Input, type Stick } from '../engine/input'
 import { formatTime, type Vec } from '../engine/math'
-import { blitCentered, context2d, ellipse } from '../engine/pixelart'
+import { blitPacked, context2d, ellipse } from '../engine/pixelart'
 import { ENEMIES } from '../data/enemies'
 import { HATCHLINGS, PLAYABLE } from '../data/hatchlings'
 import { isReady } from '../game/eggs'
@@ -97,6 +97,8 @@ export type Meadow = {
   talkSpot: () => (Vec & { who: PlazaNpc }) | null
   /** Who a tap is for: the shop (its shopkeepers, building or the edge marker pointing to it), Meowth, a stall (or its edge marker), the festival's fountain or plaque; null for none. */
   tapsShop: (at: Vec) => PlazaNpc | null
+  /** On a phone with the lobby's cards up, the partner's stage (CSS px): the shop's edge marker keeps to it, since the cards cover the view's edges; null otherwise. */
+  stageBox: (box: DOMRect | null) => void
 }
 
 export type TitleActions = {
@@ -530,7 +532,6 @@ const partnerStage = (onPlay: () => void) => {
   const hint = hasStrolled() ? null : strollHint()
   const partner = h('button', { class: 'lobby-partner', type: 'button', 'aria-label': `${form.name} · ${t().home.change}`, onclick: onPlay }, hint, canvas, hit, plate)
   const el = h('div', { class: 'lobby-stage' }, partner)
-  const shadow = ellipse(13, 3, 'rgba(16, 24, 16, 0.3)')
   const tick = (time: number) => {
     const dpr = uiDpr()
     const s = loadedSprites(form.dex, shiny)
@@ -544,7 +545,7 @@ const partnerStage = (onPlay: () => void) => {
     pixelSize(canvas, k)
     const ctx = context2d(canvas)
     ctx.clearRect(0, 0, sw, sh)
-    blitCentered(ctx, shadow, sw / 2, feet)
+    blitPacked(ctx, ellipse(13, 3, 'rgba(16, 24, 16, 0.3)'), sw / 2, feet)
     if (!s) return
     drawPokemon(ctx, s, 'Idle', 0, time, sw / 2, feet)
     // The tappable body: the sprite's, a few art px wider, over the canvas.
@@ -1077,6 +1078,7 @@ export const titleScreen = (
     leave?.()
     leave = null
     actions.meadow.stick(null)
+    actions.meadow.stageBox(null)
     stage = null
     drag = null
     tap = null
@@ -1121,6 +1123,7 @@ export const titleScreen = (
     // Passear's hint goes once the partner gets its first order.
     if (exploring && (tap || move.x !== 0 || move.y !== 0)) exploreHint.classList.add('hidden')
     meadow.steer(move, tap, stage.feet())
+    meadow.stageBox(!exploring && layout() !== 'wide' ? stage.el.getBoundingClientRect() : null)
     meadow.stick(drag?.stick ?? null)
     tap = null
     stage.setOut(meadow.out())

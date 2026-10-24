@@ -1,5 +1,5 @@
 import { hash2 } from '../engine/rng'
-import { blitEllipse, blitRing, canvasCache, context2d, createCanvas, ring } from '../engine/pixelart'
+import { blitEllipse, blitRing, canvasCache, context2d, createCanvas, ring, drawPacked } from '../engine/pixelart'
 import { domainOf, type LegendSky } from '../data/domains'
 import { RIFT } from '../data/rifts'
 import { REVEAL_AT } from '../game/domainRules'
@@ -253,7 +253,7 @@ const timeWarp: Painter = (ctx, w, h, _camX, _camY, t) => {
   const cy = Math.round(h / 2)
   const R = Math.round(Math.min(w, h) * 0.42)
   ctx.globalAlpha = 0.22
-  ctx.drawImage(ring(R, 2, '#a8f0f8'), cx - R, cy - R)
+  drawPacked(ctx, ring(R, 2, '#a8f0f8'), cx - R, cy - R)
   ctx.fillStyle = '#a8f0f8'
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2

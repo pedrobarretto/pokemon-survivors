@@ -71,4 +71,9 @@ describe('viewport', () => {
     expect(fitView(844, 390, 3).h).toBe(portrait.w)
     expect(Number.isInteger(deviceScale(412, 915, 2.625))).toBe(true)
   })
+
+  it('never sizes a side below 1 px, whatever a laying-out webview reports', () => {
+    expect(fitView(390, 0, 3)).toMatchObject({ h: 1 })
+    expect(fitView(-20, Number.NaN, 2)).toMatchObject({ w: 1, h: 1 })
+  })
 })
