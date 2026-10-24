@@ -1,4 +1,5 @@
 import { API_URL, sessionToken } from './account'
+import { timeoutSignal } from './net/timeout'
 
 const TIMEOUT_MS = 10_000
 
@@ -15,7 +16,7 @@ export const apiCall = async (path: string, init: { method?: string; body?: unkn
       method: init.method ?? 'GET',
       headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.body ? { 'Content-Type': 'application/json' } : {}) },
       body: init.body ? JSON.stringify(init.body) : undefined,
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: timeoutSignal(TIMEOUT_MS),
     })
     return { status: res.status, body: (await res.json().catch(() => null)) as unknown }
   } catch {

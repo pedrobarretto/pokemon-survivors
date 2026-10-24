@@ -396,7 +396,7 @@ export const talkSpot = (s: TitleScene): (Vec & { who: PlazaNpc }) | null => {
   return p && p.state === 'out' && !s.trip ? talkAnchor(s.plaza, p) : null
 }
 
-/** Who a tap (world px) on the plaza is for: the shop (its shopkeepers, building or edge marker), Meowth or a stall; null for none. */
+/** Who a tap (world px) on the plaza is for: the shop (its shopkeepers, building or edge marker), Meowth or a stall (or its edge marker); null for none. */
 export const tapsPlaza = (s: TitleScene, at: Vec) => plazaTapped(s.plaza, at)
 
 /** Starts a stroll along one of the 8 sprite directions (towards `target` if given) or a short rest. */

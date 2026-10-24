@@ -9,6 +9,8 @@ export const createCanvas = (w: number, h: number) => {
   const c = document.createElement('canvas')
   c.width = Math.max(1, Math.ceil(w))
   c.height = Math.max(1, Math.ceil(h))
+  // A cache's canvas may come back blank on its own (a GPU reset need not reach the game's canvas): it redraws them all.
+  c.addEventListener('contextrestored', canvasRestored)
   return c
 }
 
@@ -89,9 +91,24 @@ export const onCanvasReset = (reset: () => void, holds?: () => unknown) => {
   if (holds) holders.push(holds)
 }
 
-/** Drops every registered cache so it redraws. Called when the game canvas gets its context back. */
+/** Drops every registered cache so it redraws. Called when a canvas gets its context back (`canvasRestored`). */
 export const resetCanvases = () => {
   for (const reset of resets) reset()
+}
+
+let resetQueued = false
+
+/**
+ * The `contextrestored` listener of every canvas the game draws on (`createCanvas`'s, and the
+ * game canvas'). One GPU reset restores them all in a burst: the caches drop once for it.
+ */
+export const canvasRestored = () => {
+  if (resetQueued) return
+  resetQueued = true
+  queueMicrotask(() => {
+    resetQueued = false
+    resetCanvases()
+  })
 }
 
 /** Canvases (anything with `getContext` and a size), told apart from the images and patterns caches also keep. */

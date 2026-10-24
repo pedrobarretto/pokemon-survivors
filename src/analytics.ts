@@ -9,6 +9,7 @@ import type { SurveyAnswer } from './data/survey'
 import type { Difficulty } from './game/difficulty'
 import type { RunMode } from './game/ranking'
 import type { RelayHome } from './net/protocol'
+import { timeoutSignal } from './net/timeout'
 import { isRecord } from './game/parse'
 import type { LobbyFocus } from './ui/title'
 import type { NetSummary } from './coop/netStats'
@@ -278,7 +279,7 @@ export const featureFlag = (key: string): Promise<boolean | null> =>
     withPosthog(
       (ph) => {
         const body = { token: POSTHOG_KEY, distinct_id: ph.get_distinct_id(), person_properties: identity?.handle ? { handle: identity.handle } : {}, flag_keys: [key] }
-        fetch('/ingest/flags/?v=2', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(8000) })
+        fetch('/ingest/flags/?v=2', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: timeoutSignal(8000) })
           .then((res) => (res.ok ? res.json() : null))
           .then((json: unknown) => resolve(flagIn(json, key)))
           .catch(() => resolve(null))
@@ -308,9 +309,12 @@ const stackUrl = (stack: string) => /(?:https?|[a-z-]+-extension):\/\/[^\s)]+?(?
  * browsers inject their own scripts into the page (the Google app and Chrome
  * on iOS throw "Maximum call stack size exceeded." and "La" from theirs), and
  * WebKit names the page itself as their file; extensions throw from theirs.
- * None of that is ours to fix. With nothing to go on, it counts as ours.
+ * None of that is ours to fix. Those scripts may run in a JavaScript world
+ * of their own, whose errors aren't this page's `Error`s (no `instanceof`)
+ * though they are errors: the game's never are. With nothing to go on, it counts as ours.
  */
 export const isOwnError = (error: unknown, filename: string | undefined, origin: string) => {
+  if (!(error instanceof Error) && Object.prototype.toString.call(error) === '[object Error]') return false
   const stack = error instanceof Error ? error.stack : undefined
   const url = filename || (stack ? stackUrl(stack) : null)
   if (!url) return true
@@ -332,9 +336,28 @@ const reported = new Set<string>()
 export const isStaleChunk = (error: unknown) =>
   error instanceof Error && /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS/.test(error.message)
 
-/** Reports an error once per message and place, up to `MAX_ERRORS` per page load; never a stale chunk. */
+/**
+ * Clerk couldn't load its UI script from its CDN (`loadClerkUIScript`, a
+ * blocker or a dropped connection). Clerk keeps the failed load in promises
+ * of its own nobody awaits, so it surfaces as unhandled rejections; accounts
+ * are optional and only Clerk's own modals need it (`loadClerkUI` in `account.ts`).
+ */
+const isClerkLoadFailure = (error: unknown) => error instanceof Error && 'code' in error && error.code === 'failed_to_load_clerk_ui'
+
+/**
+ * A request the network dropped or that timed out, in each browser's words,
+ * left unhandled somewhere: the game never waits on the network, so it's noise, not a bug report.
+ */
+const isNetworkFailure = (error: unknown) =>
+  (error instanceof TypeError && /^(Load failed|Failed to fetch|NetworkError when attempting to fetch resource\.?)$/.test(error.message)) ||
+  (error instanceof DOMException && (error.name === 'TimeoutError' || error.name === 'AbortError'))
+
+/** Failures the game expects and recovers from on its own, which never go out as error reports. */
+export const isExpectedFailure = (error: unknown) => isStaleChunk(error) || isClerkLoadFailure(error) || isNetworkFailure(error)
+
+/** Reports an error once per message and place, up to `MAX_ERRORS` per page load; never an expected failure. */
 const reportError = (error: unknown, context: () => ErrorContext) => {
-  if (isStaleChunk(error)) return
+  if (isExpectedFailure(error)) return
   const key = error instanceof Error ? `${error.message}\n${error.stack?.split('\n')[1] ?? ''}` : String(error)
   if (reported.has(key) || reported.size >= MAX_ERRORS) return
   reported.add(key)

@@ -100,6 +100,33 @@ export const fixedJoystick = (center: Vec, pointer: Vec): Stick => {
   return { origin: center, knob: { x: center.x + dx * k, y: center.y + dy * k }, vec: stickVec(dx * k, dy * k, len * k) }
 }
 
+/** The pointer that owns the stick: its id, the fixed center it grabbed (null: floating) and the stick. */
+export type Grip = { id: number; anchor: Vec | null; stick: Stick }
+
+/** A pointer going down on the canvas. `primary` is the browser's `isPrimary`: no other pointer of its kind is down. */
+export type PointerDown = { id: number; at: Vec; primary: boolean }
+
+/**
+ * Who owns the stick after a pointer goes down. The first finger takes it and
+ * later fingers leave it alone, unless the new one is primary: then no other
+ * finger is down, so the grip held is stale (its pointerup or pointercancel got
+ * lost: a system gesture, the app switcher) and the new touch replaces it
+ * instead of being ignored while the player walks on. A fixed stick only
+ * answers touches within its reach (`fixed`: its center, null when floating).
+ */
+export const gripDown = (grip: Grip | null, down: PointerDown, fixed: Vec | null): Grip | null => {
+  if (grip && !down.primary) return grip
+  if (fixed && Math.hypot(down.at.x - fixed.x, down.at.y - fixed.y) > FIXED_STICK_REACH) return null
+  return { id: down.id, anchor: fixed, stick: fixed ? fixedJoystick(fixed, down.at) : joystick(down.at, down.at) }
+}
+
+/** The owning pointer moved; any other pointer's move changes nothing. */
+export const gripMove = (grip: Grip | null, id: number, at: Vec): Grip | null =>
+  grip && grip.id === id ? { ...grip, stick: grip.anchor ? fixedJoystick(grip.anchor, at) : joystick(grip.stick.origin, at) } : grip
+
+/** A pointer ended (up, cancel, lost capture): the stick lets go only if it was the owner. */
+export const gripUp = (grip: Grip | null, id: number): Grip | null => (grip && grip.id === id ? null : grip)
+
 /**
  * `bindings` is read on every press, so a remap applies at once. `fixedStick`
  * returns the fixed joystick's center (CSS px) while that mode is on, or null
@@ -112,8 +139,8 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   const handlers = new Set<(key: string) => void>()
   const dispatch = (key: string) => handlers.forEach((h) => h(key))
   let capturing: ((press: RawPress) => void) | null = null
-  let pointerId: number | null = null
-  let stick: Stick | null = null
+  /** The pointer holding the stick, or null (`gripDown`). */
+  let grip: Grip | null = null
   /** Last frame's pads, for edge detection. */
   let pads: PadState[] = []
   let activePad: string | null = null
@@ -121,8 +148,6 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   let padHeld: string[] = []
   /** The pad's left stick in a run, analog (`stickVector`); zero at rest or in a menu. */
   let padMove: Vec = { x: 0, y: 0 }
-  /** The fixed center the current touch grabbed (null: it's floating). */
-  let anchor: Vec | null = null
 
   window.addEventListener('keydown', (e) => {
     // Typing in a text field (the profile editor) or a Clerk modal (reverification) is not playing: they keep their keys.
@@ -146,8 +171,7 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   const releaseKeys = () => held.clear()
   const releaseAll = () => {
     held.clear()
-    pointerId = null
-    stick = null
+    grip = null
   }
   window.addEventListener('resize', releaseKeys)
   document.addEventListener('fullscreenchange', releaseKeys)
@@ -155,32 +179,28 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   window.addEventListener('pagehide', releaseAll)
   document.addEventListener('visibilitychange', () => document.hidden && releaseAll())
 
-  // The first finger on the canvas owns the stick; extra fingers are ignored.
-  // A fixed stick only answers touches within its reach.
+  // The first finger on the canvas owns the stick (`gripDown`); extra fingers are ignored.
+  // Capturing the pointer keeps its pointerup coming when a mouse lets go outside the window
+  // (touch is captured anyway), and every way a pointer can end lets go of the stick.
   target.addEventListener('pointerdown', (e) => {
-    if (pointerId !== null || (e.pointerType === 'mouse' && e.button !== 0)) return
-    const at = { x: e.clientX, y: e.clientY }
-    anchor = fixedStick()
-    if (anchor && Math.hypot(at.x - anchor.x, at.y - anchor.y) > FIXED_STICK_REACH) return
-    pointerId = e.pointerId
-    stick = anchor ? fixedJoystick(anchor, at) : joystick(at, at)
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    grip = gripDown(grip, { id: e.pointerId, at: { x: e.clientX, y: e.clientY }, primary: e.isPrimary }, fixedStick())
+    if (grip?.id !== e.pointerId) return
+    try {
+      target.setPointerCapture(e.pointerId)
+    } catch {
+      // Not an active pointer (a synthetic event): the window's listeners still hear its end.
+    }
   })
-  window.addEventListener('pointermove', (e) => {
-    if (!stick || e.pointerId !== pointerId) return
-    const at = { x: e.clientX, y: e.clientY }
-    stick = anchor ? fixedJoystick(anchor, at) : joystick(stick.origin, at)
-  })
-  const release = (e: PointerEvent) => {
-    if (e.pointerId !== pointerId) return
-    pointerId = null
-    stick = null
-  }
+  window.addEventListener('pointermove', (e) => (grip = gripMove(grip, e.pointerId, { x: e.clientX, y: e.clientY })))
+  const release = (e: PointerEvent) => (grip = gripUp(grip, e.pointerId))
   window.addEventListener('pointerup', release)
   window.addEventListener('pointercancel', release)
+  target.addEventListener('lostpointercapture', release)
 
   /** Touch wins, then the keys and the D-pad, then the pad's stick: a stick that drifts never locks the keyboard out. */
   const readMove = (): Vec => {
-    if (stick) return stick.vec
+    if (grip) return grip.stick.vec
     let x = 0
     let y = 0
     for (const code of [...held.values(), ...padHeld]) {
@@ -220,7 +240,7 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
 
   /** A fixed stick shows its base even when nobody is touching it. */
   const readStick = (): Stick | null => {
-    if (stick) return stick
+    if (grip) return grip.stick
     const center = fixedStick()
     return center && { origin: center, knob: center, vec: { x: 0, y: 0 } }
   }
