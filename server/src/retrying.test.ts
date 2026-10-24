@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { retrying } from './db'
+import { retrying } from './retrying'
 
 describe('retrying', () => {
   it('tries again after a failure and returns what the task finally gave', async () => {
