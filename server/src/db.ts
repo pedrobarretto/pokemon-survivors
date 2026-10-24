@@ -18,8 +18,27 @@ export const connect = (url: string) => postgres(url, { max: 10, prepare: false,
 export type Sql = ReturnType<typeof connect>
 
 /**
- * Runs the `.sql` files in `dir` that haven't run yet, in name order, each in
- * its own transaction. An advisory lock keeps two booting instances from racing.
+ * Runs `task` up to `attempts` times, `delayMs` apart, logging each failure: a
+ * boot step that hits a passing database error (the pooler handing over a
+ * backend whose statement timer a dead client left running) tries again
+ * instead of crashing the instance, which would cut its own connections and
+ * leave more such backends behind.
+ */
+export const retrying = async <T>(what: string, task: () => Promise<T>, attempts = 5, delayMs = 3000): Promise<T> => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await task()
+    } catch (err) {
+      if (attempt >= attempts) throw err
+      console.error(`${what} failed (attempt ${attempt} of ${attempts}), trying again`, err)
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+    }
+  }
+}
+
+/**
+ * Runs the `.sql` files in `dir` that haven't run yet, in name order, all in
+ * one transaction. An advisory lock keeps two booting instances from racing.
  */
 export const migrate = async (sql: Sql, dir: URL) => {
   const files = (await readdir(dir)).filter((f) => f.endsWith('.sql')).sort()
