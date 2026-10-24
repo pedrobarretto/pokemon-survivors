@@ -8,6 +8,7 @@ import { NO_RANKS } from './meta'
 import { withBranch } from './moves'
 import { OUTBREAK_SPECIES } from './outbreak'
 import { moveOf, recordEvent, recordStep, resimulate, RULES_VERSION, startGame, startRecording, TICK, type Replay, type ReplayStart } from './replay'
+import { enterPlace } from './placeInterior'
 import { enterArena } from './riftArena'
 import { spawnWaveBoss } from './spawner'
 import { EVENTS } from '../data/waves'
@@ -216,6 +217,19 @@ const SCENARIOS = {
       Object.assign(boss, { x: g.player.x + 90, y: g.player.y })
     },
   },
+  /** Down in the cave with Protect's echo fork (its bubbles overlap): walking the rooms through the corridor mouths (`MOUTH` in `dungeon.ts`). */
+  cave: {
+    start: { ...START, starter: 'charmander' },
+    seconds: 30,
+    stage: (g) => {
+      g.time = 240
+      g.nextEvent = 99
+      g.player.revives = 2
+      gainXp(g, 600)
+      g.player.moves.push({ id: 'protect', level: 4, cooldown: 0, path: withBranch(0, 4, 1) })
+      enterPlace(g, 'cave', g.player.x, g.player.y)
+    },
+  },
 } as const satisfies Record<string, Scenario>
 
 type ScenarioId = keyof typeof SCENARIOS
@@ -226,7 +240,7 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
-  37: {
+  38: {
     levelUps: '2998·50·13·8c971102',
     mega: '1900·33·2·1fa9caeb',
     riftFall: '711·0·1·74733b0f',
@@ -240,6 +254,7 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
     sketch: '1210·20·2·e776249d',
     legend: '1100·51·14·cdbdb688',
     waveLegend: '1998·14·17·1fa0f40a',
+    cave: '2204·14·12·a14b60da',
   },
 }
 

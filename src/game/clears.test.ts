@@ -42,6 +42,13 @@ describe('clears', () => {
     expect(parseSave(JSON.stringify({ version: 1, achievements, clears })).clears).toEqual({ beldum: 'hard', mudkip: 'hard' })
   })
 
+  it('keeps a legend clear (Legend mode) through a reload, a merge and the won runs the API reads', () => {
+    const clears = addClear({}, { starter: 'kyogre', difficulty: 'hard', victory: true })
+    expect(parseSave(JSON.stringify({ ...EMPTY_SAVE, clears })).clears).toEqual({ kyogre: 'hard' })
+    expect(mergeClears({ gible: 'normal' }, clears)).toEqual({ gible: 'normal', kyogre: 'hard' })
+    expect(wonClears([{ starter: 'lugia', difficulty: 'normal' }])).toEqual({ lugia: 'normal' })
+  })
+
   it('reads clears from won runs at the hardest difficulty, skipping unknown rows', () => {
     const runs = [
       { starter: 'fuecoco', difficulty: 'normal' },

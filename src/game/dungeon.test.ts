@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
-import { fits } from './arenaFloor'
+import { fits, keepOn } from './arenaFloor'
 import { dungeonNav, floorShapes, generateFloor, roomAt, roomDistances, type DungeonFloor } from './dungeon'
 
 const floors = (index: number) => Array.from({ length: 40 }, (_, seed) => generateFloor(createRng(seed + 1), index))
@@ -25,6 +25,27 @@ describe('generateFloor', () => {
     for (const f of floors(1)) {
       for (const link of f.links) {
         for (const [x, y] of link.path) expect(onFloor(f, [x, y], 12)).toBe(true)
+      }
+    }
+  })
+
+  it('funnels a body a few px off a corridor line into it, instead of catching it on the corner', () => {
+    for (const f of floors(1)) {
+      const shapes = floorShapes(f)
+      for (const link of f.links) {
+        const room = f.rooms[link.a]!
+        const [cx, cy] = link.path[0]!
+        const across = link.path[1]![0] !== cx
+        // A body as wide as `PLAYER_FOOT` 16 px off the line (7 past where it fits the corridor), walking straight out of the room.
+        for (const off of [-16, 16]) {
+          const o = across ? { x: room.x + room.w - 24, y: cy + off } : { x: cx + off, y: room.y + room.h - 24 }
+          for (let i = 0; i < 40; i++) {
+            if (across) o.x += 1.5
+            else o.y += 1.5
+            keepOn(shapes, [], o, 8)
+          }
+          expect(across ? o.x : o.y).toBeGreaterThan((across ? room.x + room.w : room.y + room.h) + 20)
+        }
       }
     }
   })

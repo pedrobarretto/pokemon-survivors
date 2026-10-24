@@ -236,9 +236,39 @@ export const dungeonNav = (floor: DungeonFloor, px: number, py: number) => {
   }
 }
 
-/** The floor's shapes for `game/arenaFloor.ts`: every room and corridor stretch as a convex polygon. */
-export const floorShapes = (floor: Pick<DungeonFloor, 'rooms' | 'links'>): Poly[] =>
-  [...floor.rooms, ...floor.links.flatMap((l) => l.rects)].map((r) => ({
-    kind: 'poly',
-    pts: [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]],
-  }))
+/**
+ * A corridor's mouth, in px: a funnel reaching `into` the room and `out` along
+ * the corridor, `flare` wider than the corridor on each side at the wall's
+ * room end and `narrow` narrower at its corridor end, so a body a little off
+ * the corridor's line slides along it into the corridor instead of catching
+ * on the wall's corner. Where it crosses the wall it shaves the corners off
+ * (8 px deep), which the cave's art shows (`render/places.ts`).
+ */
+export const MOUTH = { into: 16, out: 24, flare: 16, narrow: 4 } as const
+
+/** The funnel where the corridor from `room`'s center toward `to` (straight out of it) leaves through its wall. */
+const mouth = (room: Rect, [cx, cy]: Pt, [tx, ty]: Pt): Poly => {
+  const across = tx !== cx
+  const sign = Math.sign(across ? tx - cx : ty - cy)
+  const wall = across ? (sign > 0 ? room.x + room.w : room.x) : sign > 0 ? room.y + room.h : room.y
+  const half = DUNGEON.corridor / 2
+  // (along, aside): px out from the wall, px off the corridor's line.
+  const at = (along: number, aside: number): Pt => (across ? [wall + along * sign, cy + aside] : [cx + aside, wall + along * sign])
+  const wide = half + MOUTH.flare
+  const tight = half - MOUTH.narrow
+  return { kind: 'poly', pts: [at(-MOUTH.into, -wide), at(MOUTH.out, -tight), at(MOUTH.out, tight), at(-MOUTH.into, wide)] }
+}
+
+const rectPoly = (r: Rect): Poly => ({ kind: 'poly', pts: [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]] })
+
+/**
+ * The floor's shapes for `game/arenaFloor.ts`: every room and corridor stretch
+ * as a convex polygon, and a funnel at each end of every corridor (`MOUTH`).
+ */
+export const floorShapes = (floor: Pick<DungeonFloor, 'rooms' | 'links'>): Poly[] => [
+  ...[...floor.rooms, ...floor.links.flatMap((l) => l.rects)].map(rectPoly),
+  ...floor.links.flatMap((l) => {
+    const n = l.path.length
+    return [mouth(floor.rooms[l.a]!, l.path[0]!, l.path[1]!), mouth(floor.rooms[l.b]!, l.path[n - 1]!, l.path[n - 2]!)]
+  }),
+]

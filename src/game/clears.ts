@@ -1,4 +1,5 @@
 import { PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
+import { LEGEND_IDS } from '../data/legends'
 import { REGIONS, STARTERS } from '../data/starters'
 import { DIFFICULTY_IDS, isDifficulty, type Difficulty } from './difficulty'
 import type { Lifetime } from './achievements'
@@ -9,9 +10,12 @@ import type { RunSummary } from './tally'
 /**
  * Clears: the Pokémon that beat Mewtwo, each with the hardest difficulty it
  * did it on. The Pokédex and the partner select badge them, so players can
- * chase a clear with every partner.
+ * chase a clear with every partner, the Legend mode's legends too.
  */
 export type Clears = Partial<Record<PlayableId, Difficulty>>
+
+/** Every Pokémon that can hold a clear: the regular cast and the legends. */
+export const CLEARABLE: readonly PlayableId[] = [...PLAYABLE_IDS, ...LEGEND_IDS]
 
 const rank = (d: Difficulty) => DIFFICULTY_IDS.indexOf(d)
 
@@ -26,7 +30,7 @@ export const addClear = (clears: Clears, s: Pick<RunSummary, 'starter' | 'diffic
 
 /** Two saves' clears in one: every Pokémon cleared on either side, at the harder difficulty. */
 export const mergeClears = (a: Clears, b: Clears): Clears =>
-  PLAYABLE_IDS.reduce((acc, id) => {
+  CLEARABLE.reduce((acc, id) => {
     const d = b[id]
     return d ? withClear(acc, id, d) : acc
   }, a)
@@ -35,7 +39,7 @@ export const mergeClears = (a: Clears, b: Clears): Clears =>
 export const parseClears = (raw: unknown): Clears =>
   isRecord(raw)
     ? Object.fromEntries(
-        PLAYABLE_IDS.flatMap((id) => {
+        CLEARABLE.flatMap((id) => {
           const d = raw[id]
           return isDifficulty(d) ? [[id, d] as const] : []
         }),

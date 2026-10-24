@@ -156,10 +156,17 @@ const protect = (g: Game, s: CastStats) => {
   cast(g, 'protect')
 }
 
-/** The bubble took a hit: it holds, the guard stays up for what's left of it. */
+/**
+ * The bubble took a hit: it holds, the guard stays up for what's left of it.
+ * Bubbles may overlap (the echo fork, a recast): the guard follows the one
+ * that lasts longest, so no drawn bubble ever stands unguarded.
+ */
 const protectHolds = (g: Game) => {
-  const bubble = g.attacks.find((a) => ownAttack(g, a) && a.move === 'protect' && a.visual === 'protect' && a.age < a.ttl)
-  if (bubble) guard(g, 'protect', bubble.ttl - bubble.age)
+  let left = 0
+  for (const a of g.attacks) {
+    if (a.move === 'protect' && a.visual === 'protect' && ownAttack(g, a)) left = Math.max(left, a.ttl - a.age)
+  }
+  if (left > 0) guard(g, 'protect', left)
 }
 
 /**

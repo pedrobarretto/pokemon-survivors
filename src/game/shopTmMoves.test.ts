@@ -3,7 +3,7 @@ import { hurtPlayer } from './combat'
 import { spawnEnemy } from './enemies'
 import { chooseOffer, step } from './game'
 import { NO_RANKS } from './meta'
-import { MOVES, moveStats, type MoveDef } from './moves'
+import { MOVES, moveStats, withBranch, type MoveDef } from './moves'
 import { startGame, TICK, type ReplayStart } from './replay'
 import { PAY_DAY, SHOP_TM_MOVES } from './shopTmMoves'
 import { spawnAttack } from './spawn'
@@ -75,6 +75,24 @@ describe('the shop-exclusive TMs', () => {
     g.player.guard = null
     hurtPlayer(g, 10)
     expect(g.player.hp).toBeLessThan(hp)
+  })
+
+  it('Protect holds to the newest bubble when its echo overlaps the first', () => {
+    const g = run()
+    // Lv 4 with the echo fork: a second bubble 0.3 s after the first, outlasting it.
+    g.player.moves = [{ id: 'protect', level: 4, cooldown: 0, path: withBranch(0, 4, 1) }]
+    const idle = { move: { x: 0, y: 0 }, special: false }
+    const bubbles = () => g.attacks.filter((a) => a.move === 'protect' && a.visual === 'protect' && a.age < a.ttl)
+    while (bubbles().length < 2) step(g, idle, TICK)
+    const hp = g.player.hp
+    // A guarded hit while both stand: the guard must follow the later bubble.
+    g.player.iframes = 0
+    hurtPlayer(g, 10)
+    while (bubbles().length > 1) step(g, idle, TICK)
+    expect(bubbles()).toHaveLength(1)
+    g.player.iframes = 0
+    hurtPlayer(g, 10)
+    expect(g.player.hp).toBe(hp)
   })
 
   it('Hyper Beam charges, then holds the player still through the recharge', () => {

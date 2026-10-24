@@ -27,11 +27,13 @@ const tunnelNear = (g: Game) => {
 
 /**
  * Arrays a run shares with module tables, harmlessly: a foe's `types` (its
- * species'), a hitbox's `bonus` (`NO_BONUS`, a move's table, a mod's entries). The original
- * shares them with hitboxes and foes made after a snapshot; a copy restored in
- * another module graph shares its own. Nothing reads them by identity.
+ * species'), a hitbox's `bonus` (`NO_BONUS`, a move's table, a mod's entries),
+ * a domain transform's `spare` circles (`data/domains`, where two phases'
+ * transforms may share them). The original shares them with hitboxes, foes and
+ * transforms made after a snapshot; a copy restored in another module graph
+ * shares its own. Nothing reads them by identity.
  */
-const TABLE_ALIASES: ReadonlySet<string> = new Set(['types', 'bonus'])
+const TABLE_ALIASES: ReadonlySet<string> = new Set(['types', 'bonus', 'spare'])
 
 /** A game's snapshot bytes with `TABLE_ALIASES` unshared (each its own array of its own entries), so two runs compare byte for byte otherwise. */
 const unsharedBytes = (g: Game) => {
@@ -116,7 +118,7 @@ describe('snapshot and restore', () => {
   it('restore a run that plays on exactly like the uninterrupted one', () => {
     const covered = new Set<string>()
     let checkpoints = 0
-    for (const s of scenarios(3, 25)) {
+    for (const s of scenarios(4, 45)) {
       const r = proveRestores(s, 60 * 60 * 7, 1500)
       checkpoints += r.checkpoints
       for (const m of r.covered) covered.add(m)

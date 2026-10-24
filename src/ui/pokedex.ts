@@ -1,9 +1,9 @@
 import { blitCentered, context2d } from '../engine/pixelart'
 import { playCry, playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
-import { clearCount } from '../game/clears'
+import { CLEARABLE, clearCount } from '../game/clears'
 import { dexCounts, dexStatus, type DexStatus } from '../game/dex'
-import { PLAYABLE_IDS } from '../data/hatchlings'
+import { isLegend } from '../data/legends'
 import { gameDex, type DexEntry } from '../site/pokedex'
 import { PICKUPS, pokeballIcon, sparkleIcon, trophyIcon } from '../render/art'
 import { cryUrl, drawPokemon, hasShiny, loadedSprites, loadSpecies, portraitUrl } from '../render/sprites'
@@ -48,8 +48,8 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
   const status = entries.map((e) => dexStatus(save, e.dex))
   const wild = entries.filter(defeatable)
   const counts = dexCounts(save, entries.map((e) => e.dex))
-  /** The hardest difficulty the entry's family beat Mewtwo on, if it did. */
-  const clearOf = (e: DexEntry) => (e.source.kind === 'starter' ? clears[e.source.id] : undefined)
+  /** The hardest difficulty the entry's family (or legend, in the Legend mode) beat Mewtwo on, if it did. */
+  const clearOf = (e: DexEntry) => (e.source.kind === 'starter' ? clears[e.source.id] : e.source.kind === 'wild' && isLegend(e.source.id) ? clears[e.source.id] : undefined)
 
   let filter: DexFilter = 'all'
   let zone: Zone = 'grid'
@@ -68,7 +68,7 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
       [m.seen, counts.seen, entries.length],
       [m.defeated, counts.defeated, wild.length],
       [m.caught, counts.caught, entries.length],
-      [m.cleared, clearCount(clears), PLAYABLE_IDS.length],
+      [m.cleared, clearCount(clears), CLEARABLE.length],
     ].map(([label, n, total]) => h('span', {}, label, h('b', {}, `${n}/${total}`))),
   )
 

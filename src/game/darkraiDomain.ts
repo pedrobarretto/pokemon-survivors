@@ -34,6 +34,11 @@ const CLONE_PHASE = 2
 
 const memoOf = (d: DomainState, slot: number) => d.memo[slot] ?? 0
 
+/** Fills every `memo` slot (0, as unset reads), so lighting a later lantern first never leaves a hole the snapshots can't hold (`game/snapshot.ts`). */
+const allSlots = (d: DomainState) => {
+  while (d.memo.length <= DREAMS) d.memo.push(0)
+}
+
 /** Lantern `i`'s spot in world px: the crossing's are domain px, the arena's arena px. */
 export const lanternAt = (arena: RiftArena, d: DomainState, i: number) => {
   const crossing = NIGHTMARE.lanterns.crossing[i]
@@ -121,14 +126,19 @@ const clones = (g: Game, d: DomainState, boss: Enemy) => {
 }
 
 export const DARKRAI_HOOKS: DomainHooks = {
-  crossing: (g, d) => lightLanterns(g, d),
+  crossing: (g, d) => {
+    allSlots(d)
+    lightLanterns(g, d)
+  },
   battle: (g, d, boss, dt) => {
+    allSlots(d)
     lightLanterns(g, d)
     badDreams(g, d, dt)
     clones(g, d, boss)
   },
   // The full Nightmare's first clones walk out as its opening ends.
   phase: (g, d, boss, phase) => {
+    allSlots(d)
     if (phase === CLONE_PHASE) d.memo[CLONES_AT] = g.now + (boss.fight?.shift ?? 0)
   },
   // Cresselia comes to break the nightmare (a scene, `render/darkrai.ts`) and wakes whoever sleeps; the capture plays as always.
