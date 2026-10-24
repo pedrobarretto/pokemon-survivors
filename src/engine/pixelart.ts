@@ -168,13 +168,13 @@ type AtlasEntry = { packed: Packed; loose: HTMLCanvasElement | null; forget: () 
 type AtlasPage = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; shelves: Shelves; entries: AtlasEntry[]; loose: number }
 
 /**
- * The atlas' pages: 512 px squares (1 MB each), made as shapes need them, `ATLAS_PAGES` at most.
+ * The atlas' pages: 256 px squares (256 KB each), made as shapes need them, `ATLAS_PAGES` at most.
  * Once the last fills, the oldest is wiped and filled again: what's still drawn is made again on
  * its next use, the rest goes. The pages stand for the thousand-odd small canvases (every
  * shadow, ring and damage number of a crowded fight) that killed phones' tabs mid-run.
  */
-const ATLAS_PAGE = 512
-const ATLAS_PAGES = 4
+const ATLAS_PAGE = 256
+const ATLAS_PAGES = 12
 /** Shapes too big for a page keep a canvas of their own, a few per page, and go with it. */
 const LOOSE_PER_PAGE = 8
 
@@ -328,7 +328,7 @@ const packKept = () => {
       evictPacked(e)
       continue
     }
-    if (loose.width * loose.height >= KEPT_OWN) {
+    if (loose.width * loose.height >= KEPT_OWN || loose.width > ATLAS_PAGE || loose.height > ATLAS_PAGE) {
       group.loose.push(e)
       continue
     }
