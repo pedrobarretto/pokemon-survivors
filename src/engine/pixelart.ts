@@ -174,7 +174,7 @@ type AtlasPage = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; she
  * shadow, ring and damage number of a crowded fight) that killed phones' tabs mid-run.
  */
 const ATLAS_PAGE = 512
-const ATLAS_PAGES = 6
+const ATLAS_PAGES = 4
 /** Shapes too big for a page keep a canvas of their own, a few per page, and go with it. */
 const LOOSE_PER_PAGE = 8
 
@@ -286,9 +286,15 @@ onCanvasReset(
 const noop = () => {}
 
 /**
+ * Pixels from which a kept sprite stays a canvas of its own: the few big ones (a ridge, a lake,
+ * a cottage) would leave pages half empty, and the count that hurts is the small ones'.
+ */
+const KEPT_OWN = 128 * 128
+
+/**
  * Hands `sprite` (a canvas no one else draws to or keeps) over to `group`: it's drawn from the
  * returned `Packed`, which keeps pointing at it until the task after the frame copies it onto
- * the group's pages and frees it. Too big for a page, it stays as it is, freed with the group.
+ * the group's pages and frees it. A big one (`KEPT_OWN`) stays as it is, freed with the group.
  */
 export const keepPacked = (group: string, sprite: HTMLCanvasElement): Packed => {
   let g = keptGroups.get(group)
@@ -322,7 +328,7 @@ const packKept = () => {
       evictPacked(e)
       continue
     }
-    if (loose.width > ATLAS_PAGE || loose.height > ATLAS_PAGE) {
+    if (loose.width * loose.height >= KEPT_OWN) {
       group.loose.push(e)
       continue
     }
