@@ -1,4 +1,5 @@
 import { evolvedFrom } from '../data/evolutions'
+import type { ItemId } from '../data/items'
 import type { PokeType } from '../data/types'
 import type { DuoMoveId } from './duoMoves'
 import { maxMoveLevel, MOVES, moveStats, type MoveDef, type MoveId } from './moves'
@@ -59,11 +60,13 @@ export type ReadyDuo = { from: readonly [MoveId, MoveId]; to: DuoMoveId }
 
 /**
  * Fusions the loadout can make right now, in recipe order: none once it holds
- * a duo move. `keep` never goes in (a legend's own legendary move, `legendSignature`).
+ * a duo move. `keep` never goes in (a legend's own legendary move, `legendSignature`);
+ * recipes whose duo was forgotten (`banished`, Esquecer) are gone for the run.
  */
-export const readyDuos = (moves: readonly OwnedMove[], keep: MoveId | null = null): ReadyDuo[] => {
+export const readyDuos = (moves: readonly OwnedMove[], keep: MoveId | null = null, banished: ReadonlySet<MoveId | ItemId> = new Set()): ReadyDuo[] => {
   if (moves.some((m) => isDuo(m.id))) return []
   return DUO_RECIPES.flatMap((recipe: DuoRecipe): ReadyDuo[] => {
+    if (banished.has(recipe.to)) return []
     const a = ingredient(moves, recipe.types[0], keep)
     const b = ingredient(moves, recipe.types[1], keep)
     if (!a || !b) return []

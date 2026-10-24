@@ -167,7 +167,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
   const renderSlots = (g: Game) => {
     const p = localPlayer(g)
     // Moves a fusion on the table would use blink in the duo's colors.
-    const fusing = new Set(readyDuos(p.moves, legendSignature(p.starter)).flatMap((d) => d.from))
+    const fusing = new Set(readyDuos(p.moves, legendSignature(p.starter), p.banished).flatMap((d) => d.from))
     moveSlots.replaceChildren(
       ...Array.from({ length: MAX_MOVES }, (_, i) => {
         const m = p.moves[i]

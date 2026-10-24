@@ -451,7 +451,7 @@ export const sitePt = {
         'A partida começa com um draft: com o relógio parado, você escolhe o 2º golpe entre 3 da lista do seu Pokémon.',
         'Todo golpe base se divide em dois caminhos no Nv 4 e no Nv 7: o card mostra "2 caminhos" e, ao ser escolhido, se abre nos dois. Cada caminho muda como o golpe joga (ricochetear, explodir, deixar rastro, ecoar…), não só os números.',
         `Cada card sorteia a raridade: o raro (${n(rarePercent)}% de chance, moldura azul) sobe 2 níveis de uma vez, e o shiny (1 em ${shinyOneIn}, o dobro com o Shiny Charm) é uma escolha grátis, seguida de outra.`,
-        'Esquecer tira uma oferta da partida: o card sai voando, o espaço é sorteado de novo e aquele golpe ou item não volta mais. As cargas vêm do Escape Rope da Loja do Kecleon, de cada chefe derrotado e de cada evolução.',
+        'Esquecer tira uma oferta da partida: o card sai voando, o espaço é sorteado de novo e aquele golpe, item ou golpe em dupla não volta mais. As cargas vêm do Escape Rope da Loja do Kecleon, de cada chefe derrotado e de cada evolução.',
         'A lista de golpes cresce com o Pokémon: cada evolução libera golpes novos (um aviso mostra quais), que aparecem com mais frequência nas 3 subidas de nível seguintes. São mais golpes do que espaços, então cada partida deixa alguns de fora.',
         'Chefes derrotados deixam um TM com um golpe de fora do repertório, o Tutor de Golpes ensina golpes que combinam com o seu tipo, e vencer uma fenda oferece o golpe lendário do próprio lendário (um por partida). Com os espaços cheios, aprender pede para esquecer um golpe.',
       ],
@@ -475,7 +475,7 @@ export const sitePt = {
       neverEvolves: 'Golpes assinatura, de TM, lendários e em dupla não evoluem: eles já são o golpe final e crescem pelos próprios caminhos.',
       duoTitle: 'Golpes em dupla',
       duoParagraphs: [
-        'Leve dois golpes ao nível máximo (ou evolua-os) e, se os tipos deles formarem uma das receitas abaixo, um card dourado oferece uni-los num golpe em dupla: ele toma o espaço do primeiro, libera o do segundo e sobe até o Nv 5. Os dois golpes usados não voltam mais.',
+        'Leve dois golpes ao nível máximo (ou evolua-os) e, se os tipos deles formarem uma das receitas abaixo, um card dourado oferece uni-los num golpe em dupla: ele toma o espaço do primeiro, libera o do segundo e sobe até o Nv 5. Os dois golpes usados não voltam mais. Não quer a união? Esquecer tira o card, e aquela receita não volta mais na partida.',
         'As receitas vão por tipo, então funcionam com qualquer Pokémon. Só cabe 1 golpe em dupla por partida, e a Poké Ball nunca une golpes sozinha.',
       ],
       duoTypesHead: 'Tipos',

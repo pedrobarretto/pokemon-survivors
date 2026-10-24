@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
-import { createGame } from './game'
+import { banishOffer, createGame } from './game'
 import { DUO_RECIPES, fusable, isDuo, readyDuos } from './duoRules'
 import { applyOffer, loadout, offerPool, rollOffers } from './leveling'
 import { maxMoveLevel, MOVE_IDS, MOVES, type MoveId } from './moves'
+import { setPhase } from './players'
 import type { OwnedMove } from './types'
 
 const maxed = (id: MoveId): OwnedMove => ({ id, level: maxMoveLevel(id), cooldown: 0 })
@@ -82,5 +83,20 @@ describe('duo offers', () => {
     g.player.moves = [at('flamethrower', 2), maxed('vineWhip')]
     applyOffer(g, { kind: 'duo', from: ['flamethrower', 'vineWhip'], to: 'firePledge' })
     expect([...g.player.banished].sort()).toEqual(['ember', 'flamethrower', 'vineWhip'])
+  })
+
+  it('can be forgotten: the card is drawn again and the recipe, either outcome, never comes back', () => {
+    const g = createGame('charmander', { w: 400, h: 240 }, 5)
+    g.player.moves = [at('flamethrower', 5), maxed('shockWave')]
+    setPhase(g, 'levelup')
+    g.player.banishes = 1
+    g.player.offers = rollOffers(loadout(g), g.rng, 3)
+    expect(g.player.offers[0]).toMatchObject({ kind: 'duo', to: 'fusionFlare' })
+    banishOffer(g, 0)
+    expect(g.player.banishes).toBe(0)
+    expect(g.player.offers.some((o) => o.kind === 'duo')).toBe(false)
+    g.player.moves = [maxed('ember'), at('wildboltStorm', 5)]
+    expect(readyDuos(g.player.moves, null, g.player.banished)).toEqual([])
+    expect(readyDuos([maxed('ember'), maxed('razorLeaf')], null, g.player.banished).map((d) => d.to)).toEqual(['firePledge'])
   })
 })

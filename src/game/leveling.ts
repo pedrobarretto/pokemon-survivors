@@ -179,7 +179,7 @@ export const openPrizeLevelUp = (g: Game, source: PrizeSource, shinyFirst = fals
 export const rollOffers = (loadout: Loadout, rng: Rng, count = 3, opts: RollOptions = {}): Offer[] => {
   const shown = opts.shown ?? []
   const taken = new Set(shown.map((o) => (o.kind === 'evolution' ? o.to : offerSubject(o))))
-  const duos: Offer[] = opts.duos === false ? [] : readyDuos(loadout.moves, legendSignature(loadout.starter)).filter(({ to }) => !taken.has(to)).map(({ from, to }) => ({ kind: 'duo', from, to }))
+  const duos: Offer[] = opts.duos === false ? [] : readyDuos(loadout.moves, legendSignature(loadout.starter), loadout.banished).filter(({ to }) => !taken.has(to)).map(({ from, to }) => ({ kind: 'duo', from, to }))
   const pool = offerPool(loadout).filter(([o]) => !taken.has(offerSubject(o)) && (opts.forks !== false || o.kind !== 'move' || !forkAt(o.id, o.level)))
   const evolutions: Offer[] = readyEvolutions(loadout)
     .filter(({ to }) => !taken.has(to))

@@ -35,6 +35,7 @@ import { createMapEvents, updateMapEvents } from './mapEvents'
 import { createCurseState } from './curses'
 import { curseCast, decideCurse, updateCurses } from './curseSystem'
 import { updateDuos } from './duoMoves'
+import { recipeOf } from './duoRules'
 import { createMegaState, updateMega, updateMegaIntro } from './mega'
 import { NO_RANKS, runCharges, type Ranks } from './meta'
 import { afterCast as afterModCast, echoStats, hasMod, MOD } from './mods'
@@ -687,12 +688,12 @@ export const rerollOffers = (g: Game, p: Player = g.player) => {
   actAs(g, before)
 }
 
-/** Whether a card can be forgotten: moves and items can, berries, evolutions and fork branches can't. */
-export const canBanish = (offer: Offer) => offer.kind === 'move' || offer.kind === 'item'
+/** Whether a card can be forgotten: moves, items and duo fusions can, berries, evolutions and fork branches can't. */
+export const canBanish = (offer: Offer) => offer.kind === 'move' || offer.kind === 'item' || offer.kind === 'duo'
 
 /**
- * Spends a player's Esquecer charge on their card at `index`: its move or
- * item never comes back to them this run, and that slot alone is drawn again
+ * Spends a player's Esquecer charge on their card at `index`: its move, item
+ * or duo recipe (both its outcomes) never comes back to them this run, and that slot alone is drawn again
  * (from the learnset's new moves during the opening draft). The slot changes
  * in place, so the shell keeps the screen and redraws just that card.
  */
@@ -704,6 +705,8 @@ export const banishOffer = (g: Game, index: number, p: Player = g.player) => {
   const before = actAs(g, p)
   p.banishes--
   p.banished.add(id)
+  const recipe = offer.kind === 'duo' ? recipeOf(offer.to) : undefined
+  if (recipe) p.banished.add(recipe.to)
   const shown = p.offers.filter((_, i) => i !== index)
   const ids = new Set(shown.map(offerSubject))
   const fresh = drafting(g)

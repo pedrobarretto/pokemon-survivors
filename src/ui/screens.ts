@@ -171,7 +171,7 @@ const offerRecipes = (g: Game, offer: Offer) => {
       // Reaching max level makes it a duo ingredient: the fusions it would open show up.
       if (offer.level < maxMoveLevel(offer.id) || isDuo(offer.id)) return evos
       const moves = [...p.moves.filter((o) => o.id !== offer.id), { id: offer.id, level: offer.level, cooldown: 0 }]
-      const duos = readyDuos(moves, legendSignature(localPlayer(g).starter)).filter((d) => d.from.includes(offer.id) && !readyDuos(p.moves, legendSignature(localPlayer(g).starter)).some((r) => r.to === d.to))
+      const duos = readyDuos(moves, legendSignature(p.starter), p.banished).filter((d) => d.from.includes(offer.id) && !readyDuos(p.moves, legendSignature(p.starter), p.banished).some((r) => r.to === d.to))
       return [...evos, ...duos.map((d) => duoChip(d.from, d.to))]
     }
     case 'duo':
@@ -585,7 +585,7 @@ const duoPanel = (g: Game) => {
   const p = localPlayer(g)
   const owned = p.moves.find((o) => isDuo(o.id))
   const types = new Set<PokeType>([...runLearnset(localPlayer(g).starter, localPlayer(g).branch), ...p.moves.map((o) => o.id)].map((id) => MOVES[id].type))
-  const ready = readyDuos(p.moves, legendSignature(localPlayer(g).starter))
+  const ready = readyDuos(p.moves, legendSignature(p.starter), p.banished)
   const recipes = reachableDuos(types)
   if (recipes.length === 0 && !owned) return null
   const chips = owned

@@ -403,7 +403,7 @@ export const siteEn: SiteMessages = {
         'A run starts with a draft: with the clock stopped, you pick your 2nd move out of 3 from your Pokémon’s list.',
         'Every base move splits into two paths at Lv 4 and Lv 7: the card says "2 paths" and, once picked, opens into both. Each path changes how the move plays (bouncing, exploding, leaving a trail, echoing…), not just its numbers.',
         `Every card rolls a rarity: a rare one (${n(rarePercent)}% chance, blue frame) gives 2 levels at once, and a shiny one (1 in ${shinyOneIn}, twice as often with the Shiny Charm) is a free pick, followed by another.`,
-        'Forget takes an offer out of the run: the card flies off, the slot is rerolled and that move or item never comes back. Charges come from the Kecleon Shop’s Escape Rope, every boss beaten and every evolution.',
+        'Forget takes an offer out of the run: the card flies off, the slot is rerolled and that move, item or duo move never comes back. Charges come from the Kecleon Shop’s Escape Rope, every boss beaten and every evolution.',
         'The move list grows with your Pokémon: each evolution unlocks new moves (a toast shows which), and they show up more often for the next 3 level ups. There are more moves than slots, so every run leaves some out.',
         'Beaten bosses drop a TM with a move from outside the learnset, the Move Tutor teaches moves that suit your type, and clearing a rift offers the legendary’s own move (one per run). With every slot full, learning one asks you to forget a move.',
       ],
@@ -427,7 +427,7 @@ export const siteEn: SiteMessages = {
       neverEvolves: 'Signature, TM, legendary and duo moves don’t evolve: they are already a final move and grow along their own paths.',
       duoTitle: 'Duo moves',
       duoParagraphs: [
-        'Take two moves to max level (or evolve them) and, if their types make one of the recipes below, a golden card offers to fuse them into a duo move: it takes the first one’s slot, frees the second’s and grows up to Lv 5. The two moves it used never come back.',
+        'Take two moves to max level (or evolve them) and, if their types make one of the recipes below, a golden card offers to fuse them into a duo move: it takes the first one’s slot, frees the second’s and grows up to Lv 5. The two moves it used never come back. Don’t want the fusion? Forget takes the card away, and that recipe won’t come back this run.',
         'Recipes go by type, so they work with any Pokémon. A run fits only 1 duo move, and the Poké Ball never fuses moves on its own.',
       ],
       duoTypesHead: 'Types',
