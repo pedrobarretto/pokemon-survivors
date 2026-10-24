@@ -6,10 +6,10 @@ import { halloweenGifts } from './halloween'
 import { EMPTY_SAVE, type Save } from './meta'
 
 /** A save that filled the jar, finished the hunt and opened every gift the game made. */
-const opened = halloweenGifts({ ...EMPTY_SAVE, halloween: { candies: 800, hunted: NIGHT_BOSSES } }, HALLOWEEN.from).reduce<Save>((s, g) => {
+const opened = halloweenGifts({ ...EMPTY_SAVE, halloween: { candies: 800, spent: 0, hunted: NIGHT_BOSSES } }, HALLOWEEN.from).reduce<Save>((s, g) => {
   const out = applyGift(s, g)
   return out.status === 'applied' ? out.save : s
-}, { ...EMPTY_SAVE, halloween: { candies: 800, hunted: NIGHT_BOSSES } })
+}, { ...EMPTY_SAVE, halloween: { candies: 800, spent: 0, hunted: NIGHT_BOSSES } })
 
 const sync = (save: Save) => keepGiven(save, gameGiftsApplied(save))
 
@@ -21,7 +21,7 @@ describe('gameGiftsApplied', () => {
   })
 
   it('drops a reward the save holds no evidence for', () => {
-    const edited: Save = { ...opened, halloween: { candies: 10, hunted: [] } }
+    const edited: Save = { ...opened, halloween: { candies: 10, spent: 0, hunted: [] } }
     const kept = sync(edited)
     expect(kept.titles).toEqual([])
     expect(kept.style.owned).toMatchObject({ frame: ['pumpkin'], background: [], wallpaper: [] })

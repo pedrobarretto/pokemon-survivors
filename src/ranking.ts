@@ -6,7 +6,7 @@ import type { Difficulty } from './game/difficulty'
 import { isRecord } from './game/parse'
 import type { DayKey } from './game/day'
 import { isOutbreakSpecies } from './game/outbreak'
-import { isPlayable, parseChallengePlace, parseRunResult, type Board, type BoardPeriod, type ChallengeBoard, type ChallengePlace, type ProfileRun, type PublicProfile, type RunMode, type RunRanks, type RunResult } from './game/ranking'
+import { isPlayable, parseChallengePlace, parseRunResult, rankable, type Board, type BoardPeriod, type ChallengeBoard, type ChallengePlace, type ProfileRun, type PublicProfile, type RunMode, type RunRanks, type RunResult } from './game/ranking'
 import { firstTouch, landingRef, parseInvites, REF_PARAM } from './game/referral'
 import { RULES_VERSION, type Recorder, type Replay } from './game/replay'
 import { cutReplay, STREAM, STREAM_START, type ReplayChunk } from './game/replayStream'
@@ -82,16 +82,22 @@ const readQueue = (): Pending[] => {
   }
 }
 
-/** Keeps the newest results: when storage is full (long endless replays), the oldest give way until the rest fit. */
-const writeQueue = (queue: Pending[]) => {
+/** Stores the newest results: when storage is full (long endless replays), the oldest give way until the rest fit. False when none fit (storage left as it was). */
+const storeQueue = (queue: Pending[]) => {
   for (let kept = queue.slice(-MAX_PENDING); kept.length > 0; kept = kept.slice(1)) {
     try {
       localStorage.setItem(QUEUE_KEY, JSON.stringify(kept))
-      return
+      return true
     } catch {
       // Full: try again without the oldest.
     }
   }
+  return false
+}
+
+/** Keeps the newest results (`storeQueue`), or none when not even the newest fits. */
+const writeQueue = (queue: Pending[]) => {
+  if (storeQueue(queue)) return
   try {
     localStorage.removeItem(QUEUE_KEY)
   } catch {
@@ -276,7 +282,7 @@ type TicketKind = 'regular' | 'challenge'
 
 const kindOf = (day: DayKey | null): TicketKind => (day ? 'challenge' : 'regular')
 
-/** The tickets in hand, one per kind: the API keeps only the newest of each kind live. */
+/** The tickets in hand, one per kind: the API keeps only the newest of each kind live (besides runs already streaming). */
 const held: Record<TicketKind, Ticket | null> = { regular: null, challenge: null }
 
 /** Asks in flight, one per kind. */
@@ -335,12 +341,22 @@ export const prefetchRanked = async (day: DayKey | null = null): Promise<TicketP
  * sends a longer run (a victory that went on into endless mode), else it
  * answers what it did last.
  */
-export type RankedRun = { stream: (rec: Recorder) => void; submit: (result: RunResult, replay: Replay) => Promise<RankOutcome> }
+export type RankedRun = {
+  stream: (rec: Recorder) => void
+  submit: (result: RunResult, replay: Replay) => Promise<RankOutcome>
+  checkpoint: (time: number, result: () => RunResult, replay: Replay) => void
+}
 
 /** A run that starts signed in: the seed, outbreak and haunting it must play (null: the game's own) and its ranking. */
 export type RankedStart = TicketPlan & { ranked: RankedRun }
 
-const unranked: RankedRun = { stream: () => {}, submit: () => Promise.resolve({ kind: 'unranked' }) }
+const unranked: RankedRun = { stream: () => {}, submit: () => Promise.resolve({ kind: 'unranked' }), checkpoint: () => {} }
+
+/** Seconds of play between two checkpoints of a run going on past its report (endless mode). */
+const CHECKPOINT_S = 60
+
+/** Whether a run at `time` is due a checkpoint: it reported at `sent` (-1: not yet) and was last kept at `kept`. */
+const checkpointDue = (time: number, sent: number, kept: number) => sent >= 0 && time >= Math.max(sent, kept) + CHECKPOINT_S
 
 /**
  * Takes the ticket in hand for a run that begins now (`challenge`: the day of
@@ -358,9 +374,12 @@ export const startRanked = (challenge: DayKey | null = null): RankedStart | null
   const { token } = ticket
   // 409: another tab or device got a newer token since, so this one can't report.
   const live = sessionToken().then(async (session) => (session ? (await read(`/runs/${token}/start`, session, { method: 'POST' })).status !== 409 : true))
+  let alive = true
+  void live.then((ok) => (alive = ok))
   const stream = createStream(token, live)
   streaming = stream
   let sent = -1
+  let kept = -1
   let last: Promise<RankOutcome> = Promise.resolve({ kind: 'unranked' })
   return {
     ...planOf(ticket),
@@ -378,6 +397,16 @@ export const startRanked = (challenge: DayKey | null = null): RankedStart | null
         })
         reporting = Promise.all([reporting, last])
         return last
+      },
+      // Past its report (endless mode), the run's latest result waits in the queue unsent: if the page dies
+      // (a crash, a closed tab), the next boot sends it, and the end's own report replaces it otherwise.
+      checkpoint: (time, report, replay) => {
+        if (!alive || !checkpointDue(time, sent, kept)) return
+        const result = report()
+        if (!rankable(result)) return
+        kept = result.time
+        // Storage too full even for this one leaves the queue as it was (its last checkpoint).
+        storeQueue([...readQueue().filter((q) => q.token !== token), { userId, token, result, replay }])
       },
     },
   }

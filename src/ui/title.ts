@@ -30,7 +30,7 @@ import { h, later, rich } from './dom'
 import { boundKey } from './inputLabels'
 import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, today } from './save'
 import { festivalCard, festivalCardShows, festivalTile, type FestivalTab } from './festival'
-import { halloweenCard, halloweenCardShows, halloweenTile } from './halloween'
+import { fillHalloweenCard, halloweenCard, halloweenCardShows, halloweenTile } from './halloween'
 import { contentLine } from './gifts'
 import { countedFriends, loadInvites } from './invites'
 import { isUnread, latestUpdate } from './news'
@@ -800,6 +800,8 @@ export const titleScreen = (
   let stale = false
   /** The top bar's wallet, refreshed when the shop closes. */
   let wallet: HTMLElement | null = null
+  /** The Noite das Bruxas card (not the rail's tile), refreshed when the shop closes: the stall spends candies. */
+  let candyCard: HTMLElement | null = null
   const talkButton = talkPrompt(() => talkTo(talkWho))
   /** Passear: the lobby's cards are away and the partner walks the meadow and the plaza; only the back button, the hint and the talk prompt stay. */
   let exploring = false
@@ -978,7 +980,7 @@ export const titleScreen = (
       'section',
       { class: 'lobby-today', 'aria-label': m.today },
       h('h2', { class: 'lobby-rail-label' }, m.today),
-      ...(halloweenCardShows() ? [pressable(rails ? halloweenTile() : halloweenCard(), 'halloween')] : []),
+      ...(halloweenCardShows() ? [pressable(rails ? halloweenTile() : (candyCard = halloweenCard()), 'halloween')] : []),
       ...(festivalCardShows() ? [pressable(rails ? festivalTile() : festivalCard(), 'festival')] : []),
       pressable(outbreak.el, 'outbreak'),
       pressable(rails ? challengeTile() : challengeCard(), 'challenge'),
@@ -1116,6 +1118,7 @@ export const titleScreen = (
     const fresh = walletChip(loadSave().wallet)
     wallet?.replaceWith(fresh)
     wallet = fresh
+    if (candyCard) fillHalloweenCard(candyCard)
     if (exploring) {
       actions.meadow.explore(true)
       return landed()

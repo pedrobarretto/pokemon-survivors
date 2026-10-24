@@ -27,6 +27,7 @@ ${IDEA_RULES}
 - report_bug when staff ask to report or file a bug: write it in English from what the messages say. Leave out what they don't say (where, when, the device); never fill gaps with guesses.
 - Questions about the game: answer from the overview below and game_lookup. If neither says it, say you don't know. Never invent mechanics, numbers, dates or plans. Keep Pokémon, move and item names in English.
 - Questions about a player: lookup_player.
+- coop_beta when staff ask to add a player to the co-op beta, take one out, or who's in it. Never guess the player; the bot shows the exact result below your text.
 
 What you know about the game:
 ${knowledge}`

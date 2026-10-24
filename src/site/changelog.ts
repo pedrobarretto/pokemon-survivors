@@ -29,11 +29,43 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     highlights: [
       { pt: 'No celular em pé, o lobby ficou mais limpo: seu Pokémon parceiro volta para o centro da tela, com o JOGAR logo abaixo.', en: 'On a phone held upright, the lobby is cleaner: your partner Pokémon is back in the middle of the screen, with PLAY right under it.', es: 'En el celular en vertical, el lobby quedó más limpio: tu Pokémon compañero vuelve al centro de la pantalla, con JUGAR justo debajo.', fr: 'Sur un téléphone tenu droit, le lobby est plus clair : ton Pokémon partenaire revient au centre de l’écran, avec JOUER juste en dessous.', zh: '直拿手機時，大廳變得更清爽了：你的夥伴寶可夢回到畫面中央，下方就是開始遊戲。' },
       { pt: 'O evento, o Surto, o Desafio e as Missões viraram ícones à esquerda; o Presente, o Hall da Fama, Convidar, o Discord e Passear, à direita. Os selos mostram o que está esperando por você.', en: 'The event, the Outbreak, the Challenge and Missions are now icons on the left; the Gift, the Hall of Fame, Invite, Discord and Explore are on the right. Badges show what’s waiting for you.', es: 'El evento, la Horda, el Desafío y las Misiones ahora son íconos a la izquierda; el Regalo, el Salón de la Fama, Invitar, Discord y Pasear, a la derecha. Las insignias muestran lo que te espera.', fr: 'L’événement, l’Essaim, le Défi et les Missions sont maintenant des icônes à gauche ; le Cadeau, le Panthéon, Inviter, Discord et Se promener sont à droite. Les pastilles montrent ce qui t’attend.', zh: '活動、大量出現、挑戰和任務變成左側的圖示；禮物、名人堂、邀請、Discord 和散步在右側。小標記會告訴你有什麼在等你。' },
-      { pt: 'Ember, Water Gun, Fire Spin e Dragon Breath foram redesenhados: as bolas de fogo e os jatos d’água apontam para onde voam, com cauda que tremula, faíscas e gotas pelo caminho.', en: 'Ember, Water Gun, Fire Spin and Dragon Breath were redrawn: fireballs and water jets point where they fly, with flickering tails, sparks and droplets along the way.', es: 'Ember, Water Gun, Fire Spin y Dragon Breath fueron redibujados: las bolas de fuego y los chorros de agua apuntan hacia donde vuelan, con colas que titilan, chispas y gotas por el camino.', fr: 'Ember, Water Gun, Fire Spin et Dragon Breath ont été redessinés : les boules de feu et les jets d’eau pointent là où ils volent, avec une traînée qui vacille, des étincelles et des gouttes en chemin.', zh: 'Ember、Water Gun、Fire Spin 和 Dragon Breath 重新繪製：火球和水柱會朝飛行方向前進，拖著閃爍的尾巴，一路灑下火花和水滴。' },
-      { pt: 'Thunder agora cai como um raio de verdade: grosso, ramificado, com clarão, faíscas e chão chamuscado.', en: 'Thunder now falls like real lightning: thick and forked, with a flash, sparks and scorched ground.', es: 'Thunder ahora cae como un rayo de verdad: grueso, ramificado, con destello, chispas y suelo chamuscado.', fr: 'Thunder tombe maintenant comme un vrai éclair : épais et ramifié, avec un flash, des étincelles et un sol brûlé.', zh: 'Thunder 現在像真正的閃電一樣落下：又粗又分岔，伴隨閃光、火花和燒焦的地面。' },
-      { pt: 'Os projéteis estouram ao acertar: Ember explode em chamas, Water Gun espirra e Swift se desfaz em estrelinhas.', en: 'Shots burst when they hit: Ember erupts in flame, Water Gun splashes and Swift shatters into twinkles.', es: 'Los proyectiles estallan al acertar: Ember explota en llamas, Water Gun salpica y Swift se deshace en estrellitas.', fr: 'Les projectiles éclatent à l’impact : Ember explose en flammes, Water Gun éclabousse et Swift se brise en étincelles.', zh: '投射物命中時會爆開：Ember 炸成火焰，Water Gun 濺起水花，Swift 碎成點點星光。' },
+      { pt: 'Os golpes ganharam animações novas: bolas de fogo e jatos d’água apontam para onde voam, Thunder cai como um raio de verdade e os projéteis estouram ao acertar.', en: 'Moves got new animations: fireballs and water jets point where they fly, Thunder falls like real lightning and shots burst when they hit.', es: 'Los ataques tienen animaciones nuevas: las bolas de fuego y los chorros de agua apuntan hacia donde vuelan, Thunder cae como un rayo de verdad y los proyectiles estallan al acertar.', fr: 'Les attaques ont de nouvelles animations : les boules de feu et les jets d’eau pointent là où ils volent, Thunder tombe comme un vrai éclair et les projectiles éclatent à l’impact.', zh: '招式有了新動畫：火球和水柱會朝飛行方向前進，Thunder 像真正的閃電一樣落下，投射物命中時會爆開。' },
+      { pt: 'Partidas longas no modo infinito voltam a contar no ranking, mesmo passando do nível 999 ou se o jogo fechar no meio.', en: 'Long endless runs count on the ranking again, even past level 999 or if the game closes midway.', es: 'Las partidas largas en el modo infinito vuelven a contar en el ranking, aunque pasen del nivel 999 o el juego se cierre a mitad.', fr: 'Les longues parties en mode infini comptent de nouveau au classement, même au-delà du niveau 999 ou si le jeu se ferme en cours de route.', zh: '無盡模式的長時間對局重新計入排行榜，即使超過 999 級或遊戲中途關閉也一樣。' },
+      {
+        pt: 'Ovo Assombrado sem limite: o Duskull agora vende quantos couberem na incubadora, por ₽ 6.000 ou por 1.000 doces. O pote continua contando todos os doces para os prêmios.',
+        en: 'No more Haunted Egg limit: Duskull now sells as many as your incubator holds, for ₽6,000 or 1,000 candies. The jar still counts every candy for its prizes.',
+        es: 'Huevo Embrujado sin límite: Duskull ahora vende todos los que quepan en tu incubadora, por ₽6.000 o 1.000 dulces. El frasco sigue contando todos los dulces para los premios.',
+        fr: 'Plus de limite pour l’Œuf Hanté : Duskull en vend autant que ton incubateur en contient, pour 6 000 ₽ ou 1 000 bonbons. Le bocal compte toujours chaque bonbon pour ses prix.',
+        zh: '鬧鬼蛋不再限量：Duskull 現在孵化器放得下多少就賣多少，₽6,000 或 1,000 顆糖果一顆。糖果罐仍會把每顆糖果算進獎勵。',
+      },
     ],
     changes: [
+      {
+        title: { pt: 'Ovo Assombrado por doces', en: 'Haunted Eggs for candies', es: 'Huevos Embrujados por dulces', fr: 'Œufs Hantés contre des bonbons', zh: '用糖果買鬧鬼蛋' },
+        notes: [
+          {
+            pt: 'A barraca do Duskull não tem mais limite de um ovo por dia: compre quantos Ovos Assombrados couberem na incubadora, até o fim da Noite das Bruxas, para ir atrás de todos os fantasmas e dos shinies deles.',
+            en: "Duskull's stall no longer stops at one egg a day: buy as many Haunted Eggs as your incubator holds, until Halloween Night ends, to chase every ghost and their shinies.",
+            es: 'El puesto de Duskull ya no se limita a un huevo por día: compra todos los Huevos Embrujados que quepan en tu incubadora, hasta que termine la Noche de Brujas, para ir por todos los fantasmas y sus shinies.',
+            fr: 'Le stand de Duskull ne s’arrête plus à un œuf par jour : achète autant d’Œufs Hantés que ton incubateur en contient, jusqu’à la fin de la Nuit des Sorcières, pour attraper tous les fantômes et leurs shinies.',
+            zh: 'Duskull 的攤位不再限一天一顆：在女巫之夜結束前，孵化器放得下多少鬧鬼蛋就能買多少，把所有幽靈和牠們的異色都收集起來。',
+          },
+          {
+            pt: 'Cada ovo sai por ₽ 6.000 ou por 1.000 doces. Gastar doces não esvazia o pote: os prêmios continuam contando tudo o que você já juntou.',
+            en: 'Each egg costs ₽6,000 or 1,000 candies. Spending candies doesn’t empty the jar: its prizes still count everything you’ve collected.',
+            es: 'Cada huevo cuesta ₽6.000 o 1.000 dulces. Gastar dulces no vacía el frasco: los premios siguen contando todo lo que ya juntaste.',
+            fr: 'Chaque œuf coûte 6 000 ₽ ou 1 000 bonbons. Dépenser des bonbons ne vide pas le bocal : ses prix comptent toujours tout ce que tu as récolté.',
+            zh: '每顆蛋 ₽6,000 或 1,000 顆糖果。花掉糖果不會清空糖果罐：獎勵仍會計算你收集過的所有糖果。',
+          },
+          {
+            pt: 'Os doces que sobram para gastar aparecem ao lado do ₽ na barraca, no card da Noite das Bruxas (depois que o pote dá todos os prêmios) e na tela do evento.',
+            en: 'The candies you have left to spend show next to your ₽ at the stall, on the Halloween Night card (once the jar has paid every prize) and on the event screen.',
+            es: 'Los dulces que te quedan para gastar aparecen junto a los ₽ en el puesto, en la tarjeta de la Noche de Brujas (cuando el frasco ya dio todos los premios) y en la pantalla del evento.',
+            fr: 'Les bonbons qu’il te reste à dépenser s’affichent à côté de tes ₽ au stand, sur la carte de la Nuit des Sorcières (une fois que le bocal a donné tous ses prix) et sur l’écran de l’événement.',
+            zh: '剩下可花用的糖果會顯示在攤位的₽旁邊、女巫之夜卡片上（糖果罐的獎勵全部領完後）以及活動畫面中。',
+          },
+        ],
+      },
       {
         title: { pt: 'Lobby no celular', en: 'Lobby on phones', es: 'Lobby en el celular', fr: 'Lobby sur mobile', zh: '手機大廳' },
         notes: [
@@ -87,6 +119,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Só visual: dano, alcance e velocidade dos golpes continuam iguais. No modo leve (celulares com dificuldade) os detalhes extras são desligados.',
             en: 'Looks only: the moves’ damage, reach and speed are unchanged. In lean mode (phones that struggle) the extra details are turned off.',
             es: 'Solo visual: el daño, el alcance y la velocidad de los ataques siguen iguales. En el modo ligero (celulares con dificultades) los detalles extra se apagan.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ranking do modo infinito', en: 'Endless mode on the ranking', es: 'Ranking del modo infinito', fr: 'Le mode infini au classement', zh: '無盡模式的排行榜' },
+        notes: [
+          {
+            pt: 'Partidas que passavam do nível 999 no modo infinito eram recusadas pelo ranking e ficavam com o tempo da vitória. Agora contam com o tempo todo.',
+            en: 'Endless runs that went past level 999 were refused by the ranking and kept the victory’s time. They now count with their whole time.',
+            es: 'Las partidas que pasaban del nivel 999 en el modo infinito eran rechazadas por el ranking y se quedaban con el tiempo de la victoria. Ahora cuentan con todo su tiempo.',
+            fr: 'Les parties en mode infini qui dépassaient le niveau 999 étaient refusées par le classement et gardaient le temps de la victoire. Elles comptent maintenant avec tout leur temps.',
+            zh: '無盡模式中超過 999 級的對局會被排行榜拒絕，只留下勝利時的時間。現在會以完整時間計入。',
+          },
+          {
+            pt: 'Se o jogo fechar no meio do modo infinito (um travamento, a aba fechada), o tempo jogado até o último minuto entra no ranking quando você abrir o jogo de novo.',
+            en: 'If the game closes in the middle of endless mode (a crash, a closed tab), the time played up to the last minute goes on the ranking when you open the game again.',
+            es: 'Si el juego se cierra en medio del modo infinito (un cuelgue, la pestaña cerrada), el tiempo jugado hasta el último minuto entra en el ranking cuando vuelvas a abrir el juego.',
+            fr: 'Si le jeu se ferme en plein mode infini (un plantage, l’onglet fermé), le temps joué jusqu’à la dernière minute entre au classement quand tu rouvres le jeu.',
+            zh: '如果遊戲在無盡模式中途關閉（當機、分頁被關閉），重新打開遊戲時，玩到最後一分鐘的時間會計入排行榜。',
           },
         ],
       },

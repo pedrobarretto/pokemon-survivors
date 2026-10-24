@@ -2578,8 +2578,11 @@ const frame = (now: number) => {
         pace.acc -= STEP
         steps++
       }
-      // A ranked run's replay goes to the API in chunks as it plays.
-      if (steps > 0) r.ranked?.stream(r.recorder)
+      // A ranked run's replay goes to the API in chunks as it plays; past its victory (endless), its result is kept now and then in case the page dies.
+      if (steps > 0 && r.ranked) {
+        r.ranked.stream(r.recorder)
+        if (g.endless) r.ranked.checkpoint(g.time, () => runResult(g, __GAME_VERSION__), r.recorder.replay)
+      }
     } else {
       resetPacer(pace)
       specialQueued = false

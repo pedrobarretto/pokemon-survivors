@@ -35,6 +35,8 @@ describe('parseRunResult', () => {
   it('lets long endless runs faint far more per second', () => {
     // A real 2-hour endless run: 342,655 faints in 7,335 s (~47/s).
     expect(parseRunResult(run({ outcome: 'victory', time: 7335, level: 430, kills: 342_655 }))).not.toBeNull()
+    // A Legend run in Nightmare: Mewtwo, 629,648 faints in 69:03 (~152/s).
+    expect(parseRunResult(run({ starter: 'mewtwo', stage: 0, difficulty: 'nightmare', outcome: 'victory', time: 4143, level: 491, kills: 629_648 }))).not.toBeNull()
   })
 })
 

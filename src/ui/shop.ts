@@ -47,6 +47,7 @@ import { equipStyle, ownsStyle } from '../game/style'
 import { festivalDay } from '../festival'
 import { festivalAnnounced } from '../game/festival'
 import { coinIcon, eggIcon, incubatorIcon } from '../render/art'
+import { treatIcon } from '../render/halloweenArt'
 import { portraitUrl } from '../render/sprites'
 import { styleThumb } from '../render/card'
 import { frameIcon, wallpaperUrl } from '../render/cosmetics'
@@ -55,6 +56,7 @@ import { CARAVAN, LOYALTY, STALLS, type StallGoodId } from '../data/visitors'
 import { buyFromCaravan, caravanBlock, caravanPrice, caravanStock, goldCapFits, haggle, haggled, isoWeek, listPrice, type CaravanBlock, type CaravanKey } from '../game/caravan'
 import { isGiftReward, milestoneState, nextMilestone, reachedNow, type Milestone } from '../game/loyalty'
 import { buyFromStall, stallBlock, stallGood, stallGoods, type StallBlock } from '../game/stalls'
+import { candiesLeft } from '../game/halloween'
 import { caravanDay, caravanOpen, meowthSpeaker, stallDay, stallSelling, stallSpeaker } from './visitors'
 import { dialogue, type Dialogue, type DialogueLine } from './dialogue'
 import { h, later, setText } from './dom'
@@ -903,25 +905,27 @@ const eggOdds = (egg: EggTier, save: Save) => {
 const stallBlockText = (block: StallBlock | null) => (block === null || block === 'poor' ? null : t().shop.stall.blocks[block])
 
 /**
- * One of a stall's goods: an egg only it sells, `perDay` per day, with the
- * odds of each family that can come out (for this save, as `hatchEgg` draws them).
+ * One of a stall's goods: an egg only it sells, for ₽ or for candies, with the
+ * odds of each family that can come out (for this save, as `hatchEgg` draws
+ * them). No stock: it sells while the incubator has room.
  */
 const stallCard = (good: StallGoodId): Card => {
   const s = t().shop.stall
-  const { egg, price: cost } = stallGood(good)
+  const { egg, price: cost, pay } = stallGood(good)
   const name = t().eggs.tiers[egg]
   const picture = () => img(eggIcon(egg), 'shop-egg')
   const { el, badges, sub, price } = shell(picture(), name)
   const day = stallDay()
   const odds = (save: Save) => hatchOdds(egg, save.hatched)
+  const cost$ = pay === 'candies' ? t().halloween.at(formatNumber(cost)) : formatPokeDollars(cost)
   return {
     el,
     refresh: (save) => {
       const block = stallBlock(save, good, day)
       setBadges(badges, [badge('exclusive', t().shop.badges.exclusive)])
       setText(sub, `${odds(save).filter(([id]) => save.hatched[id]).length}/${odds(save).length}`)
-      setText(price, stallBlockText(block) ?? formatPokeDollars(cost))
-      el.classList.toggle('sold', block === 'soldOut' || block === 'full')
+      setText(price, stallBlockText(block) ?? cost$)
+      el.classList.toggle('sold', block === 'full')
       el.classList.toggle('poor', block === 'poor')
     },
     describe: (save) => {
@@ -929,13 +933,18 @@ const stallCard = (good: StallGoodId): Card => {
         icon: picture(),
         title: name,
         // The odds first: on a phone the strip shows a few lines before it scrolls.
-        text: [eggOdds(egg, save), s.egg(formatNumber(EGG_TIERS[egg].steps)), s.duplicate(formatPokeDollars(EGG_TIERS[egg].refund)), s.stock].join(' '),
-        action: stallBlockText(stallBlock(save, good, day)) ?? t().mart.buy(formatPokeDollars(cost)),
+        text: [
+          eggOdds(egg, save),
+          s.egg(formatNumber(EGG_TIERS[egg].steps)),
+          s.duplicate(formatPokeDollars(EGG_TIERS[egg].refund)),
+          pay === 'candies' ? s.candies(formatNumber(candiesLeft(save.halloween))) : s.stock,
+        ].join(' '),
+        action: stallBlockText(stallBlock(save, good, day)) ?? t().mart.buy(cost$),
         disabled: stallBlock(save, good, day) !== null,
       }
     },
     act: (save) => buyFromStall(save, good, day),
-    said: (before, after) => (after.wallet < before.wallet ? 'thanks' : null),
+    said: (before, after) => (after.eggs.length > before.eggs.length ? 'thanks' : null),
   }
 }
 
@@ -1058,6 +1067,8 @@ type Shelf = {
   countdown?: boolean
   /** The Treino's Refund button. */
   refund?: boolean
+  /** Beside the ₽ in the header, the Noite das Bruxas candies left to spend (Duskull's stall takes them). */
+  candies?: boolean
   hello?: () => DialogueLine
 }
 
@@ -1110,6 +1121,7 @@ const SHELVES: readonly Shelf[] = [
     },
     intro: () => t().shop.stall.intro(formatDay(STALLS[stallSelling() ?? 'halloween'].to)),
     hello: () => stallHello(),
+    candies: true,
   },
   {
     id: 'bag',
@@ -1306,6 +1318,8 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
     let capsFor: PlayableId = save.partner
 
     const wallet = h('span')
+    const candyCount = h('span')
+    const candyWallet = h('span', { class: 'shop-wallet candies' }, img(treatIcon()), candyCount)
     const tabs = SHELVES.map((s) => h('button', { class: 'shop-tab', type: 'button', role: 'tab' }, sh.tabs[s.id]))
     const announced = opts.festival ? festivalAnnounced(festivalDay()) : null
     const festivalTab = h('button', { class: 'shop-tab festival-tab', type: 'button' }, img(festivalIcon(announced?.id ?? 'lanternas')), t().festival.shopButton)
@@ -1327,7 +1341,7 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
     const sheet = h(
       'section',
       { class: 'shop-sheet box', 'aria-label': sh.title },
-      h('header', { class: 'shop-head' }, back, h('h2', { class: 'shop-title' }, sh.title), h('span', { class: 'shop-wallet' }, img(coinIcon(0)), wallet)),
+      h('header', { class: 'shop-head' }, back, h('h2', { class: 'shop-title' }, sh.title), candyWallet, h('span', { class: 'shop-wallet' }, img(coinIcon(0)), wallet)),
       h('nav', { class: 'shop-tabs', role: 'tablist' }, ...tabs, festivalTab),
       items,
       h('div', { class: 'shop-desc' }, descIcon, h('div', { class: 'shop-desc-body' }, descTitle, descText), h('div', { class: 'shop-desc-buttons' }, wishBtn, buy)),
@@ -1342,6 +1356,9 @@ export const shop = (root: HTMLElement, input: Input, opts: { close: () => void;
 
     const refresh = () => {
       setText(wallet, formatPokeDollars(save.wallet))
+      setText(candyCount, formatNumber(candiesLeft(save.halloween)))
+      candyWallet.classList.toggle('hidden', !shelf.candies)
+      candyWallet.setAttribute('aria-label', t().halloween.toSpend(formatNumber(candiesLeft(save.halloween))).replaceAll('*', ''))
       setText(intro, shelf.intro(save))
       setText(clock, shelf.countdown ? sh.turnsIn(countdown()) : '')
       for (const c of cards) c.refresh(save)

@@ -829,8 +829,9 @@ export const en: Messages = {
       even: (names, pct) => `${names}: ${pct}% each`,
       odds: (list, shiny) => `${list}. Shiny 1 in ${shiny}.`,
       duplicate: (coins) => `Duplicate: ${coins}.`,
-      stock: 'One a day, only on Halloween Night (back next year).',
-      blocks: { closed: 'Closed', soldOut: 'Back tomorrow', full: 'Incubator full', poor: 'Need ₽' },
+      stock: 'Only on Halloween Night (back next year). Take as many as your incubator holds.',
+      candies: (n) => `You have ${n} candies to spend: the jar still counts them all for its prizes.`,
+      blocks: { closed: 'Closed', full: 'Incubator full', poor: 'Need ₽' },
     },
     loyalty: {
       intro: (n) => `Loyalty card: ${n} ${n === 1 ? 'stamp' : 'stamps'} · one per day you visit`,
@@ -956,9 +957,10 @@ export const en: Messages = {
     howGhosts: '*Ghost*-type Pokémon drop candies',
     howBosses: '*Bosses* and *Alphas* always bring 10 candies',
     howPumpkins: 'Smash the *jack-o\'-lanterns*: trick or treat?',
-    howEgg: 'At the plaza, *Duskull* sells one *Haunted Egg* a day',
+    howEgg: 'At the plaza, *Duskull* sells the *Haunted Egg* for ₽ or *candies*',
     jarCount: (n) => `Candy jar: *${n}*`,
     jarNext: (n) => `${n} more for the next prize`,
+    toSpend: (n) => `*${n}* candies to spend at Duskull's stall`,
     received: 'received',
     inGiftBox: 'in Gift box!',
     forJoining: 'for joining in',
@@ -4806,7 +4808,7 @@ export const en: Messages = {
       thanks: ["Meowhaha! It's a deal!", 'Paid and done! No refunds!', 'That shines brighter than the coin on my head!'],
     },
     duskull: {
-      hello: ['One Haunted Egg a night. What comes out? Ghosts that show up in no other egg.', "Boo... These eggs don't hatch from warmth. They hatch from fear. Want one?", 'Four ghosts, one egg. Which one will it be? Not even I know... hehehe.'],
+      hello: ['Haunted Eggs, for ₽ or for candies. What comes out? Ghosts that show up in no other egg.', "Boo... These eggs don't hatch from warmth. They hatch from fear. Want one?", 'Four ghosts, one egg. Which one will it be? Not even I know... hehehe.'],
       thanks: ['Boo... Good choice. Watch it at midnight.', "Hehehe... It's already looking at you.", 'Come back tomorrow. If you dare.'],
     },
     stalls: {

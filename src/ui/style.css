@@ -5155,6 +5155,10 @@ button {
   height: 18px;
 }
 
+.shop-wallet.candies {
+  color: #f8a048;
+}
+
 .btn.shop-back {
   min-height: 32px;
   padding: 6px 10px;
@@ -15384,6 +15388,21 @@ button.hall-tile:hover {
   margin-left: auto;
   font-size: 17px;
   color: #706080;
+}
+
+.halloween-spend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 17px;
+  color: #706080;
+}
+
+.halloween-spend img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
 }
 
 .halloween-jar-box .lobby-progress {

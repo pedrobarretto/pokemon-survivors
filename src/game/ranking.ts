@@ -56,14 +56,17 @@ export const RANKED = {
   slack: 30,
   /** Longer than any endless run Arceus allows. */
   maxTime: 4 * 3600,
-  maxLevel: 999,
+  /** A sanity bound, not a game rule: long endless runs pass Lv 1000 (Lv 1045 at 169 min), so a cap at 999 refused them as implausible. */
+  maxLevel: 9999,
   /**
    * Faints per second at the start, far above anything played. The horde grows
    * with the clock, so the cap rises by `killRateGrowth` every minute (`maxKills`):
-   * endless runs average ~47/s by two hours.
+   * endless runs average ~47/s by two hours, but a Legend run in Nightmare
+   * reached ~152/s by 69 minutes (1.4× the old 40 + 1/min cap, 2026-10-24), so
+   * the cap sits at twice that. The re-simulation is what checks the number.
    */
-  maxKillRate: 40,
-  killRateGrowth: 1,
+  maxKillRate: 80,
+  killRateGrowth: 2,
   /** Run starts one player may ask for per `window` seconds. */
   startsPerWindow: 30,
   window: 10 * 60,

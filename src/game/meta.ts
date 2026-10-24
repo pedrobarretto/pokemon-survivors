@@ -16,7 +16,6 @@ import { NO_SHOP, parseShop, type ShopSave } from './shop'
 import { learnTms, NO_TMS, parseTms, type TmCase } from './tmShelf'
 import { parseCaps, parseEvoItems, type Caps } from './evoItems'
 import { parseCaravan, type CaravanSave } from './caravan'
-import { parseStall, type StallSave } from './stalls'
 import type { EvoItemId } from '../data/shop'
 import { isRecord, wholeNumber } from './parse'
 import { parseRibbons, type Ribbon } from './ribbons'
@@ -169,8 +168,6 @@ export type Save = {
   caps: Caps
   /** Meowth's weekend caravan (`game/caravan.ts`): the weekend last traded on, what was bought then and whether Meowth haggled. */
   caravan: CaravanSave
-  /** The seasonal stalls (`game/stalls.ts`): the Brasília day last bought on and how many of each good then (Duskull's Haunted Egg, one a day). */
-  stall: StallSave
   /** The last official Desafio do dia attempt finished (`game/attempt.ts`): synced, so every device of the account shows practice after it. */
   attempt: Attempt | null
 }
@@ -220,9 +217,8 @@ export const EMPTY_SAVE: Save = {
   tms: NO_TMS,
   evo: [],
   caps: {},
-  // Spelled out (not `NO_CARAVAN`, `NO_STALL`): `game/caravan.ts` and `game/stalls.ts` reach this module back through the save's helpers.
+  // Spelled out (not `NO_CARAVAN`): `game/caravan.ts` reaches this module back through the save's helpers.
   caravan: { week: '', bought: [], haggled: false },
-  stall: { day: '', bought: {} },
   attempt: null,
 }
 
@@ -295,7 +291,6 @@ export const parseSaveData = (json: unknown): Save => {
     evo: parseEvoItems(data.evo),
     caps: parseCaps(data.caps),
     caravan: parseCaravan(data.caravan),
-    stall: parseStall(data.stall),
     attempt: parseAttempt(data.attempt),
   }
 }

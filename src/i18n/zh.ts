@@ -828,8 +828,9 @@ export const zh: Messages = {
       even: (names, pct) => `${names}：各${pct}%`,
       odds: (list, shiny) => `${list}。異色機率1/${shiny}。`,
       duplicate: (coins) => `重複時：${coins}。`,
-      stock: '每天一個，只在女巫之夜販售（明年再見）。',
-      blocks: { closed: '已關閉', soldOut: '明天再來', full: '孵化器已滿', poor: '₽不足' },
+      stock: '只在女巫之夜販售（明年再見）。孵化器放得下多少就能買多少。',
+      candies: (n) => `你有${n}顆糖果可以花：糖果罐仍會把每一顆算進獎勵。`,
+      blocks: { closed: '已關閉', full: '孵化器已滿', poor: '₽不足' },
     },
     loyalty: {
       intro: (n) => `集點卡：${n}個印章 · 每天來訪可得一個`,
@@ -955,9 +956,10 @@ export const zh: Messages = {
     howGhosts: '*幽靈*屬性寶可夢會掉落糖果',
     howBosses: '*首領*和*頭目*一定會帶來10顆糖果',
     howPumpkins: '打碎*南瓜燈*：不給糖就搗蛋？',
-    howEgg: '在廣場上，*Duskull* 每天販售一顆*鬧鬼蛋*',
+    howEgg: '在廣場上，*Duskull* 用₽或*糖果*販售*鬧鬼蛋*',
     jarCount: (n) => `糖果罐：*${n}*`,
     jarNext: (n) => `再${n}顆就能拿到下一個獎勵`,
+    toSpend: (n) => `可在 Duskull 的攤位花用 *${n}* 顆糖果`,
     received: '已領取',
     inGiftBox: '在禮物箱！',
     forJoining: '參加獎',
@@ -4802,7 +4804,7 @@ export const zh: Messages = {
       thanks: ['喵哈哈！成交！', '付清了！恕不退貨！', '那比我頭上的金幣還閃亮！'],
     },
     duskull: {
-      hello: ['一晚一顆鬧鬼蛋。會孵出什麼？其他蛋裡都不會出現的幽靈。', '噗……這些蛋不是靠溫暖孵化的，是靠恐懼。要來一顆嗎？', '四隻幽靈，一顆蛋。會是哪一隻呢？連我都不知道……嘿嘿嘿。'],
+      hello: ['鬧鬼蛋，用₽或糖果都能買。會孵出什麼？其他蛋裡都不會出現的幽靈。', '噗……這些蛋不是靠溫暖孵化的，是靠恐懼。要來一顆嗎？', '四隻幽靈，一顆蛋。會是哪一隻呢？連我都不知道……嘿嘿嘿。'],
       thanks: ['噗……好選擇。午夜時好好看著它。', '嘿嘿嘿……它已經在看著你了。', '明天再來吧。如果你敢的話。'],
     },
     stalls: {

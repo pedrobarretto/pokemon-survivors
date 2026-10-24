@@ -2,7 +2,8 @@ import { brasiliaDay } from '../../src/game/day'
 import { isRecord } from '../../src/game/parse'
 import { parseSuggestionDraft } from '../../src/game/suggestions'
 import type { BugReports } from './bugReports'
-import { giftLabel, giftLogMessage, giftReceipt, giftRefusalText, ideaEmbed, NOT_ADDED, playerLines, type Embed, type OutgoingMessage } from './discordMessages'
+import type { CoopBeta } from './coopBeta'
+import { BETA_REFUSAL, betaListText, betaLogMessage, betaReceipt, giftLabel, giftLogMessage, giftReceipt, giftRefusalText, ideaEmbed, NOT_ADDED, playerLines, type Embed, type OutgoingMessage } from './discordMessages'
 import { gameLookup } from './gameKnowledge'
 import { IDEA_RULES } from './ideaWriter'
 import { parseWho, type StaffDesk } from './staffDesk'
@@ -12,9 +13,9 @@ import type { SuggestionStore } from './suggestions'
 /**
  * What Discord staff can do through the bot, shared by the slash commands
  * (`discord.ts`) and the LLM's tools (`staffAgent.ts`): look a player up, send
- * a gift within the allowance, put an idea on the board and file a bug
- * report. Each action gives back the text the LLM reads and, for what changed
- * something, a receipt the bot shows as it is (the LLM never words a gift).
+ * a gift within the allowance, put an idea on the board, file a bug report and
+ * edit the co-op beta's list. Each action gives back the text the LLM reads
+ * and, for what changed something, a receipt the bot shows as it is (the LLM never words a gift).
  */
 
 /** A game account with a @handle. */
@@ -36,6 +37,8 @@ export type StaffDeps = {
   desk: StaffDesk
   ideas: Pick<SuggestionStore, 'add'>
   bugs: Pick<BugReports, 'fileFromDiscord'>
+  /** The co-op beta's list (`coopBeta.ts`); null without a PostHog personal API key. */
+  beta: Pick<CoopBeta, 'list' | 'add' | 'remove'> | null
   /** Posts in the staff log channel (#mod-chat). */
   log: (message: OutgoingMessage) => Promise<void>
 }
@@ -45,6 +48,10 @@ export type Outcome = { text: string; receipt?: string; embed?: Embed }
 
 const DISCORD = 'https://discord.com/channels'
 
+/** No account by that handle or Discord account, with the handles that start like it. */
+const unknownPlayer = (similar: readonly string[]) =>
+  `${giftRefusalText('unknown', null, null)}${similar.length ? ` Similar handles: ${similar.map((h) => `@${h}`).join(', ')}.` : ''}`
+
 /** A jump link to a message. */
 export const messageLink = (guildId: string, channelId: string, messageId: string) => `${DISCORD}/${guildId}/${channelId}/${messageId}`
 
@@ -53,8 +60,7 @@ export const staffActions = (deps: StaffDeps, turn: StaffTurn) => ({
     const parsed = parseWho(who)
     if (!parsed) return { text: giftRefusalText('who', null, null) }
     const found = await deps.desk.find(parsed)
-    if (found.ok) return { text: playerLines(found.player).join('\n') }
-    return { text: `${giftRefusalText('unknown', null, null)}${found.similar.length ? ` Similar handles: ${found.similar.map((h) => `@${h}`).join(', ')}.` : ''}` }
+    return { text: found.ok ? playerLines(found.player).join('\n') : unknownPlayer(found.similar) }
   },
 
   sendGift: async (who: string, kind: string, amount: number | null, n = 0): Promise<Outcome> => {
@@ -90,6 +96,29 @@ export const staffActions = (deps: StaffDeps, turn: StaffTurn) => ({
     const filed = await deps.bugs.fileFromDiscord(turn.link ? `${body}\n\nFrom Discord: ${turn.link}` : body, `${turn.staff.name} (staff, from Discord${about})`, turn.staff.account?.id ?? null)
     const where = filed.threadId ? ` <#${filed.threadId}>` : ' (stored; #bug-reports is off)'
     return { text: `Filed the bug report.${where}`, receipt: `🐞 Filed in #bug-reports:${where}` }
+  },
+
+  /** Lets a player into the co-op beta (`add`), takes one out (`remove`) or lists who's in it (`list`): the `coop-beta` flag's handles (`coopBeta.ts`). */
+  coopBeta: async (action: string, who: string): Promise<Outcome> => {
+    if (!deps.beta) return { text: BETA_REFUSAL.off }
+    if (action === 'list') {
+      const handles = await deps.beta.list()
+      return { text: handles ? betaListText(handles) : BETA_REFUSAL.shape }
+    }
+    if (action !== 'add' && action !== 'remove') return { text: BETA_REFUSAL.action }
+    const on = action === 'add'
+    const parsed = parseWho(who)
+    if (!parsed) return { text: giftRefusalText('who', null, null) }
+    // Letting in needs an account with that handle (a typo lets nobody in); taking out goes by the handle as listed.
+    const found = parsed.by === 'handle' && !on ? null : await deps.desk.find(parsed)
+    if (found && !found.ok) return { text: unknownPlayer(found.similar) }
+    const handle = found ? found.player.handle : parsed.by === 'handle' ? parsed.handle : null
+    if (!handle) return { text: BETA_REFUSAL.noHandle }
+    const changed = on ? await deps.beta.add(handle) : await deps.beta.remove(handle)
+    if (!changed.ok) return { text: BETA_REFUSAL.shape }
+    const receipt = betaReceipt(handle, on, changed.changed, changed.count)
+    if (changed.changed) await deps.log(betaLogMessage({ staffId: turn.staff.discordId, handle, on, link: turn.link })).catch((err) => console.error('discord beta log failed', err))
+    return { text: receipt, receipt }
   },
 
   gameLookup: (query: string): Outcome => {
@@ -160,6 +189,18 @@ export const staffTools = (actions: StaffActions): Tool[] => {
         ['who', 'kind'],
       ),
       run: async (args) => actions.sendGift(text(args.who), text(args.kind), int(args.amount), gifts++),
+    },
+    {
+      name: 'coop_beta',
+      description: "The co-op beta (co-op is a Discord-only beta for now): lets a player in (their lobby shows Co-op once they reload the game), takes one out, or lists who's in it. Only when staff clearly asked; never guess the player.",
+      parameters: object(
+        {
+          action: { type: 'string', enum: ['add', 'remove', 'list'] },
+          who: { type: 'string', description: 'For add and remove: a Discord mention like <@123>, a Discord user id, or a game @handle.' },
+        },
+        ['action'],
+      ),
+      run: async (args) => actions.coopBeta(text(args.action), text(args.who)),
     },
   ]
 }

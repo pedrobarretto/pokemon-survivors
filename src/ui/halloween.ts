@@ -8,7 +8,7 @@ import { HATCHLINGS } from '../data/hatchlings'
 import type { GiftContent } from '../game/gifts'
 import { brasiliaDay } from '../game/day'
 import {
-  daysToHalloween, HALLOWEEN_CALENDAR, HALLOWEEN_REWARDS, halloweenDaysLeft, halloweenGiftId, huntDone, huntGiftId, HUNT_REWARDS, isHalloweenGift, nextHalloweenReward, pumpkinOfferOpen,
+  candiesLeft, daysToHalloween, HALLOWEEN_CALENDAR, HALLOWEEN_REWARDS, halloweenDaysLeft, halloweenGiftId, huntDone, huntGiftId, HUNT_REWARDS, isHalloweenGift, nextHalloweenReward, pumpkinOfferOpen,
 } from '../game/halloween'
 import { savedSupporterTier } from '../game/trainer'
 import { formatDay, formatNumber, t } from '../i18n'
@@ -53,11 +53,16 @@ const jarFill = (candies: number) => {
 /**
  * The Hoje card: a jack-o'-lantern over the candies in the jar and how far
  * the next reward is, with the days left; before the night, the countdown.
+ * Once the jar paid every reward, the candies left to spend at Duskull's stall.
  */
-export const halloweenCard = () => {
+export const halloweenCard = () => fillHalloweenCard(h('button', { class: 'lobby-card box halloween', type: 'button' }))
+
+/** Lays the Hoje card out again from the save, in place (the lobby keeps the same button: buying at the stall changes what it shows). */
+export const fillHalloweenCard = (el: HTMLElement) => {
   const m = t().halloween
   const s = standing()
-  const candies = loadSave().halloween.candies
+  const jar = loadSave().halloween
+  const candies = jar.candies
   const next = nextHalloweenReward(candies)
   const label = h('small', { class: 'lobby-card-label' }, h('span', {}, m.card), s.left !== null && h('em', { class: 'lobby-badge halloween-left' }, m.daysLeftShort(s.left)))
   const row =
@@ -68,11 +73,12 @@ export const halloweenCard = () => {
           { class: 'lobby-card-row' },
           h('img', { class: 'lobby-jack', src: jackIcon(), alt: '' }),
           h('span', { class: 'lobby-progress halloween-jar' }, h('span', { style: `width:${Math.round(jarFill(candies) * 100)}%` })),
-          h('b', {}, next ? `${formatNumber(candies)}/${formatNumber(next.candies)}` : formatNumber(candies)),
+          h('b', {}, next ? `${formatNumber(candies)}/${formatNumber(next.candies)}` : formatNumber(candiesLeft(jar))),
           h('img', { class: 'lobby-treat', src: treatIcon(), alt: '' }),
         )
-  const el = h('button', { class: 'lobby-card box halloween', type: 'button' }, label, row)
-  el.setAttribute('aria-label', `${m.name}: ${s.countdown !== null ? m.countdown(s.countdown) : m.jarCount(formatNumber(candies))}`)
+  el.replaceChildren(label, row)
+  const count = next ? m.jarCount(formatNumber(candies)) : m.toSpend(formatNumber(candiesLeft(jar)))
+  el.setAttribute('aria-label', `${m.name}: ${s.countdown !== null ? m.countdown(s.countdown) : count.replaceAll('*', '')}`)
   return el
 }
 
@@ -233,6 +239,7 @@ export const halloweenScreen = (root: HTMLElement, input: Input, actions: Hallow
           next && h('small', {}, m.jarNext(formatNumber(next.candies - candies))),
         ),
         h('span', { class: 'lobby-progress halloween-jar' }, h('span', { style: `width:${Math.round(jarFill(candies) * 100)}%` })),
+        candies > 0 && h('p', { class: 'halloween-spend' }, h('img', { src: eggIcon('haunted'), alt: '' }), rich(m.toSpend(formatNumber(candiesLeft(save.halloween))))),
         h('ul', { class: 'halloween-rewards' }, ...HALLOWEEN_REWARDS.map((_, i) => jarTile(i, waiting, save.gifts))),
       ),
       huntBox(save, waiting),

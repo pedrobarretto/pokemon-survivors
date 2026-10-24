@@ -828,8 +828,9 @@ export const fr: Messages = {
       even: (names, pct) => `${names} : ${pct}% chacun`,
       odds: (list, shiny) => `${list}. Chromatique : 1 sur ${shiny}.`,
       duplicate: (coins) => `Doublon : ${coins}.`,
-      stock: 'Un par jour, seulement pendant la Nuit des Sorcières (de retour l’an prochain).',
-      blocks: { closed: 'Fermé', soldOut: 'Demain', full: 'Incubateur plein', poor: 'Manque de ₽' },
+      stock: 'Seulement pendant la Nuit des Sorcières (de retour l’an prochain). Prends-en autant que ton incubateur en contient.',
+      candies: (n) => `Tu as ${n} bonbons à dépenser : le bocal continue de tous les compter pour ses prix.`,
+      blocks: { closed: 'Fermé', full: 'Incubateur plein', poor: 'Manque de ₽' },
     },
     loyalty: {
       intro: (n) => `Carte de fidélité : ${n} ${n <= 1 ? 'tampon' : 'tampons'} · un par jour de visite`,
@@ -955,9 +956,10 @@ export const fr: Messages = {
     howGhosts: 'Les Pokémon de type *Spectre* lâchent des bonbons',
     howBosses: 'Les *boss* et les *Alphas* rapportent toujours 10 bonbons',
     howPumpkins: 'Casse les *citrouilles* : farce ou friandise ?',
-    howEgg: 'Sur la place, *Duskull* vend un *Œuf Hanté* par jour',
+    howEgg: 'Sur la place, *Duskull* vend l’*Œuf Hanté* contre des ₽ ou des *bonbons*',
     jarCount: (n) => `Bocal à bonbons : *${n}*`,
     jarNext: (n) => `Encore ${n} pour le prochain prix`,
+    toSpend: (n) => `*${n}* bonbons à dépenser au stand de Duskull`,
     received: 'reçu',
     inGiftBox: 'dans la boîte à cadeaux !',
     forJoining: 'pour ta participation',
@@ -4802,7 +4804,7 @@ export const fr: Messages = {
       thanks: ['Miaouhaha ! Marché conclu !', 'Payé et c’est fini ! Pas de remboursement !', 'Ça brille plus que la pièce sur ma tête !'],
     },
     duskull: {
-      hello: ['Un Œuf Hanté par nuit. Qu’est-ce qui en sort ? Des fantômes qu’aucun autre œuf ne donne.', 'Bouh... Ces œufs n’éclosent pas à la chaleur. Ils éclosent de peur. Tu en veux un ?', 'Quatre fantômes, un œuf. Lequel sera-ce ? Même moi, je ne sais pas... héhéhé.'],
+      hello: ['Des Œufs Hantés, contre des ₽ ou des bonbons. Qu’est-ce qui en sort ? Des fantômes qu’aucun autre œuf ne donne.', 'Bouh... Ces œufs n’éclosent pas à la chaleur. Ils éclosent de peur. Tu en veux un ?', 'Quatre fantômes, un œuf. Lequel sera-ce ? Même moi, je ne sais pas... héhéhé.'],
       thanks: ['Bouh... Bon choix. Surveille-le à minuit.', 'Héhéhé... Il te regarde déjà.', 'Reviens demain. Si tu l’oses.'],
     },
     stalls: {

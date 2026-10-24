@@ -9,7 +9,6 @@ import { mergeShop, shopInvested } from './shop'
 import { mergeTms } from './tmShelf'
 import { mergeCaps, mergeEvoItems } from './evoItems'
 import { mergeCaravan } from './caravan'
-import { mergeStall } from './stalls'
 import { mergeStyle } from './style'
 import { mergeDex } from './dex'
 import { incubatorSlots, mergeEggs, mergeHatched } from './eggs'
@@ -68,7 +67,8 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  * - The companion: `incoming`'s, if it has one (like the title); gift-only companions: a union.
  * - Branches taken: per family, `incoming`'s when it has one (like the partner).
  * - Clears: a union, each Pokémon at the harder difficulty of the two.
- * - The Noite das Bruxas candy jar: the fuller one (its rewards are gifts, kept above); its Caça aos Fantasmas: a union.
+ * - The Noite das Bruxas candy jar: the fuller one (its rewards are gifts, kept above) and the larger
+ *   spending at Duskull's stall; its Caça aos Fantasmas: a union.
  * - Legend captures: each legend's win count at the larger side (a shiny
  *   captured is a `shinyStarters` key, a union like the rest).
  * - The TM case: TMs owned and TMs runs taught are unions; the armed picks
@@ -76,8 +76,6 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  *   each Pokémon at the higher level (`mergeCaps`). What they cost is in `spent`.
  * - Meowth's caravan: the later weekend's; on the same weekend, what either
  *   side bought (a union) and the haggle made on either (`mergeCaravan`).
- * - The seasonal stalls: the later day's purchases; on the same day, the most
- *   of each good either side bought (`mergeStall`), so the daily stock holds.
  * - The Desafio do dia attempt: the later day (`base`'s on the same day).
  */
 export const mergeSaves = (base: Save, incoming: Save): Save => {
@@ -117,7 +115,6 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     evo: mergeEvoItems(base.evo, incoming.evo),
     caps: mergeCaps(base.caps, incoming.caps),
     caravan: mergeCaravan(base.caravan, incoming.caravan),
-    stall: mergeStall(base.stall, incoming.stall),
     attempt: mergeAttempts(base.attempt, incoming.attempt),
   }
 }

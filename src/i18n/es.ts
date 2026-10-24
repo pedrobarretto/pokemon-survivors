@@ -829,8 +829,9 @@ export const es: Messages = {
       even: (names, pct) => `${names}: ${pct}% cada uno`,
       odds: (list, shiny) => `${list}. Shiny 1 de cada ${shiny}.`,
       duplicate: (coins) => `Repetido: ${coins}.`,
-      stock: 'Uno por día, solo en la Noche de Brujas (vuelve el año que viene).',
-      blocks: { closed: 'Cerrado', soldOut: 'Vuelve mañana', full: 'Incubadora llena', poor: 'Faltan ₽' },
+      stock: 'Solo en la Noche de Brujas (vuelve el año que viene). Llévate todos los que quepan en la incubadora.',
+      candies: (n) => `Tienes ${n} dulces para gastar: el frasco sigue contándolos todos para los premios.`,
+      blocks: { closed: 'Cerrado', full: 'Incubadora llena', poor: 'Faltan ₽' },
     },
     loyalty: {
       intro: (n) => `Tarjeta de cliente: ${n} ${n === 1 ? 'sello' : 'sellos'} · uno por día de visita`,
@@ -956,9 +957,10 @@ export const es: Messages = {
     howGhosts: 'Los Pokémon de tipo *Fantasma* sueltan dulces',
     howBosses: 'Los *jefes* y los *Alfas* siempre traen 10 dulces',
     howPumpkins: 'Rompe las *calabazas*: ¿dulce o truco?',
-    howEgg: 'En la plaza, *Duskull* vende un *Huevo Embrujado* por día',
+    howEgg: 'En la plaza, *Duskull* vende el *Huevo Embrujado* por ₽ o por *dulces*',
     jarCount: (n) => `Frasco de dulces: *${n}*`,
     jarNext: (n) => `${n} más para el próximo premio`,
+    toSpend: (n) => `*${n}* dulces para gastar en el puesto de Duskull`,
     received: 'recibido',
     inGiftBox: '¡en Regalo!',
     forJoining: 'por participar',
@@ -4807,7 +4809,7 @@ export const es: Messages = {
       thanks: ['¡Miaujaja! ¡Trato hecho!', '¡Pagado y listo! ¡Sin devoluciones!', '¡Brilla más que la moneda de mi frente!'],
     },
     duskull: {
-      hello: ['Un Huevo Embrujado por noche. ¿Qué sale de él? Fantasmas que no aparecen en ningún otro huevo.', 'Buu... Estos huevos no eclosionan con calor. Eclosionan con miedo. ¿Te llevas uno?', 'Cuatro fantasmas, un huevo. ¿Cuál saldrá? Ni yo lo sé... jejeje.'],
+      hello: ['Huevos Embrujados, por ₽ o por dulces. ¿Qué sale de ellos? Fantasmas que no aparecen en ningún otro huevo.', 'Buu... Estos huevos no eclosionan con calor. Eclosionan con miedo. ¿Te llevas uno?', 'Cuatro fantasmas, un huevo. ¿Cuál saldrá? Ni yo lo sé... jejeje.'],
       thanks: ['Buu... Buena elección. Cuidado con él a medianoche.', 'Jejeje... Ya te está mirando.', 'Vuelve mañana. Si te atreves.'],
     },
     stalls: {

@@ -73,8 +73,12 @@ export const TYCOON_REWARDS = [
   { kind: 'style', style: { slot: 'frame', id: 'kecleon' } },
 ] as const satisfies readonly GiftContent[]
 
-/** What a stall sells, by key: an egg of `egg`'s tier at `price`, `perDay` per save each Brasília day. */
-type StallGoods = Readonly<Record<string, { egg: EggTier; price: number; perDay: number }>>
+/**
+ * What a stall sells, by key: an egg of `egg`'s tier at `price`, paid in ₽
+ * (`coins`) or in the Noite das Bruxas' candies (`candies`, from the jar's
+ * spendable side, `candiesLeft`). No stock: as many as the incubator takes.
+ */
+type StallGoods = Readonly<Record<string, { egg: EggTier; price: number; pay: 'coins' | 'candies' }>>
 
 /**
  * Seasonal stalls: during an event's Brasília days (`from` to `to`, both
@@ -85,10 +89,19 @@ type StallGoods = Readonly<Record<string, { egg: EggTier; price: number; perDay:
  */
 export const STALLS = {
   /**
-   * Noite das Bruxas: Duskull sells the Haunted Egg, one a day, the only way
-   * to its four ghosts (`HATCHLINGS` with `egg: 'haunted'`). It's back next year.
+   * Noite das Bruxas: Duskull sells the Haunted Egg, the only way to its four
+   * ghosts (`HATCHLINGS` with `egg: 'haunted'`), for ₽ or for candies (a run
+   * brings about 200, but the keenest players banked tens of thousands), as
+   * many as the incubator takes. It's back next year.
    */
-  halloween: { from: HALLOWEEN.from, to: HALLOWEEN.to, dex: 355, name: 'Duskull', art: 'stall-duskull', goods: { hauntedEgg: { egg: 'haunted', price: 6_000, perDay: 1 } } },
+  halloween: {
+    from: HALLOWEEN.from,
+    to: HALLOWEEN.to,
+    dex: 355,
+    name: 'Duskull',
+    art: 'stall-duskull',
+    goods: { hauntedEgg: { egg: 'haunted', price: 6_000, pay: 'coins' }, hauntedEggCandies: { egg: 'haunted', price: 1_000, pay: 'candies' } },
+  },
   /** Christmas: Delibird Presentes (a talk for now, no shop). */
   christmas: { from: '2026-12-15', to: '2026-12-31', dex: 225, name: 'Delibird', art: 'stall-delibird', goods: {} },
 } as const satisfies Record<string, { from: string; to: string; dex: number; name: string; art: string; goods: StallGoods }>

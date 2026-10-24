@@ -163,14 +163,14 @@ describe('applyPush', () => {
     expect(out).toEqual({ save: mergeSaves(account, guest), revision: 5, merged: true })
   })
 
-  it('keeps the Haunted Egg, its families and the stall’s day through the API’s parse, merge and gift check', () => {
-    const device = save({ eggs: [{ tier: 'haunted', steps: 100 }], hatched: { litwick: { shiny: true }, sandygast: { shiny: false } }, stall: { day: '2026-10-24', bought: { hauntedEgg: 1 } } })
+  it('keeps the Haunted Egg, its families and the candies spent through the API’s parse, merge and gift check', () => {
+    const device = save({ eggs: [{ tier: 'haunted', steps: 100 }], hatched: { litwick: { shiny: true }, sandygast: { shiny: false } }, halloween: { candies: 900, spent: 300, hunted: [] } })
     // As `server/src/app.ts` and `db.ts` do: parse the body, apply the push, then keep only what gifts brought.
     const pushed = parseSaveData(JSON.parse(JSON.stringify(device)))
     const stored = keepGiven(applyPush({ save: account, revision: 3 }, { save: pushed, base: 2 }).save, [])
     expect(stored.eggs).toContainEqual({ tier: 'haunted', steps: 100 })
     expect(stored.hatched).toMatchObject({ litwick: { shiny: true }, sandygast: { shiny: false } })
-    expect(stored.stall).toEqual(device.stall)
+    expect(stored.halloween).toEqual(device.halloween)
   })
 
   it('keeps the Kecleon Eggs, their families and the day’s purchase through the API’s parse, merge and gift check', () => {

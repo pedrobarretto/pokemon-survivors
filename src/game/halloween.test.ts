@@ -7,6 +7,7 @@ import { challengeProblem, challengeStart, dailyChallenge } from './challenge'
 import { applyGift } from './gifts'
 import {
   addCandies,
+  candiesLeft,
   candiesOf,
   daysToHalloween,
   drawNightBosses,
@@ -24,6 +25,7 @@ import {
   pumpkinRow,
   pumpkinSupporter,
   recordHunt,
+  spendCandies,
   withHaunts,
 } from './halloween'
 import { EMPTY_SAVE, type Save } from './meta'
@@ -31,7 +33,7 @@ import { OUTBREAK_SPECIES, outbreakOf } from './outbreak'
 import { drawRoster } from './roster'
 import { canWalkWith, mergeCompanions } from './supporters'
 
-const withCandies = (candies: number, gifts: string[] = []): Save => ({ ...EMPTY_SAVE, halloween: { candies, hunted: [] }, gifts })
+const withCandies = (candies: number, gifts: string[] = []): Save => ({ ...EMPTY_SAVE, halloween: { candies, spent: 0, hunted: [] }, gifts })
 
 describe('the Noite das Bruxas calendar', () => {
   it('runs from its first day to its last, both included, counting down from the teaser', () => {
@@ -134,11 +136,20 @@ describe('the candy jar', () => {
   it('banks candies, keeps the fuller jar when two saves merge and parses junk to empty', () => {
     expect(addCandies(withCandies(10), 5).halloween.candies).toBe(15)
     expect(addCandies(withCandies(10), 0).halloween.candies).toBe(10)
-    expect(mergeHalloween({ candies: 40, hunted: [] }, { candies: 90, hunted: [] })).toEqual({ candies: 90, hunted: [] })
-    expect(parseHalloween({ candies: -3 })).toEqual({ candies: 0, hunted: [] })
-    expect(parseHalloween('nope')).toEqual({ candies: 0, hunted: [] })
+    expect(mergeHalloween({ candies: 40, spent: 0, hunted: [] }, { candies: 90, spent: 0, hunted: [] })).toEqual({ candies: 90, spent: 0, hunted: [] })
+    expect(parseHalloween({ candies: -3 })).toEqual({ candies: 0, spent: 0, hunted: [] })
+    expect(parseHalloween('nope')).toEqual({ candies: 0, spent: 0, hunted: [] })
     expect(nextHalloweenReward(0)).toBe(HALLOWEEN_REWARDS[1])
     expect(nextHalloweenReward(10_000)).toBeNull()
+  })
+
+  it('spends candies without taking them out of the jar its rewards count', () => {
+    const spent = spendCandies(withCandies(900), 300)
+    expect([spent.halloween.candies, candiesLeft(spent.halloween)]).toEqual([900, 600])
+    expect(halloweenGifts(spent, HALLOWEEN.from)).toHaveLength(HALLOWEEN_REWARDS.length)
+    // Two devices: the fuller jar and the larger spending; a parse never spends more than the jar got.
+    expect(mergeHalloween({ candies: 900, spent: 300, hunted: [] }, { candies: 1000, spent: 150, hunted: [] })).toEqual({ candies: 1000, spent: 300, hunted: [] })
+    expect(parseHalloween({ candies: 100, spent: 400 })).toEqual({ candies: 100, spent: 100, hunted: [] })
   })
 })
 
@@ -182,16 +193,16 @@ describe('the Caça aos Fantasmas', () => {
   const beaten = (n: number) => NIGHT_BOSSES.slice(0, n)
 
   it('ticks off each night boss once, paying candies the first time only', () => {
-    const once = recordHunt({ candies: 10, hunted: [] }, [NIGHT_BOSSES[2]!, NIGHT_BOSSES[0]!, NIGHT_BOSSES[2]!])
-    expect(once).toEqual({ candies: 10 + 2 * HALLOWEEN.hunt.candies, hunted: [NIGHT_BOSSES[0], NIGHT_BOSSES[2]] })
+    const once = recordHunt({ candies: 10, spent: 0, hunted: [] }, [NIGHT_BOSSES[2]!, NIGHT_BOSSES[0]!, NIGHT_BOSSES[2]!])
+    expect(once).toEqual({ candies: 10 + 2 * HALLOWEEN.hunt.candies, spent: 0, hunted: [NIGHT_BOSSES[0], NIGHT_BOSSES[2]] })
     expect(recordHunt(once, [NIGHT_BOSSES[0]!])).toBe(once)
     expect(recordHunt(once, ['onix'])).toBe(once)
   })
 
   it('pays its title and frame once every night boss fell, once', () => {
-    const almost: Save = { ...EMPTY_SAVE, halloween: { candies: 0, hunted: beaten(NIGHT_BOSSES.length - 1) } }
+    const almost: Save = { ...EMPTY_SAVE, halloween: { candies: 0, spent: 0, hunted: beaten(NIGHT_BOSSES.length - 1) } }
     expect(halloweenGifts(almost, '2026-11-10').filter((g) => g.reason?.kind === 'ghostHunt')).toEqual([])
-    const done: Save = { ...almost, halloween: { candies: 0, hunted: beaten(NIGHT_BOSSES.length) } }
+    const done: Save = { ...almost, halloween: { candies: 0, spent: 0, hunted: beaten(NIGHT_BOSSES.length) } }
     const gifts = halloweenGifts(done, '2026-11-10').filter((g) => g.reason?.kind === 'ghostHunt')
     expect(gifts.map((g) => g.content)).toEqual([...HUNT_REWARDS])
     const out = applyGift(done, gifts[0]!)
@@ -202,8 +213,8 @@ describe('the Caça aos Fantasmas', () => {
   })
 
   it('keeps what either device hunted when two saves merge, and drops junk', () => {
-    expect(mergeHalloween({ candies: 5, hunted: beaten(1) }, { candies: 3, hunted: [NIGHT_BOSSES[3]!] })).toEqual({ candies: 5, hunted: [NIGHT_BOSSES[0], NIGHT_BOSSES[3]] })
-    expect(parseHalloween({ candies: 4, hunted: [NIGHT_BOSSES[1], 'onix', 7, NIGHT_BOSSES[1]] })).toEqual({ candies: 4, hunted: [NIGHT_BOSSES[1]] })
+    expect(mergeHalloween({ candies: 5, spent: 0, hunted: beaten(1) }, { candies: 3, spent: 0, hunted: [NIGHT_BOSSES[3]!] })).toEqual({ candies: 5, spent: 0, hunted: [NIGHT_BOSSES[0], NIGHT_BOSSES[3]] })
+    expect(parseHalloween({ candies: 4, spent: 0, hunted: [NIGHT_BOSSES[1], 'onix', 7, NIGHT_BOSSES[1]] })).toEqual({ candies: 4, spent: 0, hunted: [NIGHT_BOSSES[1]] })
   })
 })
 

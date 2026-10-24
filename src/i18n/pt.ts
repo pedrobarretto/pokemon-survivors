@@ -992,8 +992,10 @@ export const pt = {
       even: (names: string, pct: number) => `${names}: ${pct}% cada`,
       odds: (list: string, shiny: number) => `${list}. Shiny 1 em ${shiny}.`,
       duplicate: (coins: string) => `Repetido: ${coins}.`,
-      stock: 'Um por dia, só na Noite das Bruxas (volta no ano que vem).',
-      blocks: { closed: 'Fechada', soldOut: 'Volta amanhã', full: 'Incubadora cheia', poor: 'Faltam ₽' } satisfies Record<StallBlock, string>,
+      stock: 'Só na Noite das Bruxas (volta no ano que vem). Leve quantos couberem na incubadora.',
+      /** The candies card: what's left to spend (the jar keeps counting every candy for its prizes). */
+      candies: (n: string) => `Você tem ${n} doces para gastar: o pote continua contando todos para os prêmios.`,
+      blocks: { closed: 'Fechada', full: 'Incubadora cheia', poor: 'Faltam ₽' } satisfies Record<StallBlock, string>,
     },
     /** The loyalty card (`game/loyalty.ts`). */
     loyalty: {
@@ -1127,9 +1129,11 @@ export const pt = {
     howGhosts: 'Pokémon do tipo *Fantasma* deixam cair doces',
     howBosses: '*Chefes* e *Alfas* sempre trazem 10 doces',
     howPumpkins: 'Quebre as *abóboras*: doces ou travessuras?',
-    howEgg: 'Na praça, o *Duskull* vende um *Ovo Assombrado* por dia',
+    howEgg: 'Na praça, o *Duskull* vende o *Ovo Assombrado* por ₽ ou por *doces*',
     jarCount: (n: string) => `Pote de doces: *${n}*`,
     jarNext: (n: string) => `mais ${n} para o próximo prêmio`,
+    /** The candies left to spend at Duskull's stall (the jar keeps counting every one for its prizes). */
+    toSpend: (n: string) => `*${n}* doces para gastar na barraca do Duskull`,
     received: 'recebido',
     inGiftBox: 'no Presente!',
     forJoining: 'por participar',
@@ -5054,7 +5058,7 @@ export const pt = {
     },
     /** Duskull at its stall's shelf (`game/stalls.ts`): its hello, by the day, and its thanks in turn. */
     duskull: {
-      hello: ['Um Ovo Assombrado por noite. O que sai dele? Fantasmas que não aparecem em nenhum outro ovo.', 'Buu... Esses ovos não chocam no calor. Chocam no medo. Leva um?', 'Quatro fantasmas, um ovo. Qual vai sair? Nem eu sei... hehehe.'],
+      hello: ['Ovos Assombrados, por ₽ ou por doces. O que sai deles? Fantasmas que não aparecem em nenhum outro ovo.', 'Buu... Esses ovos não chocam no calor. Chocam no medo. Leva um?', 'Quatro fantasmas, um ovo. Qual vai sair? Nem eu sei... hehehe.'],
       thanks: ['Buu... Boa escolha. Cuidado com ele à meia-noite.', 'Hehehe... Ele já está olhando pra você.', 'Volte amanhã. Se tiver coragem.'],
     },
     /** The seasonal stalls' keepers (`STALLS` in data/visitors.ts), line by line. */

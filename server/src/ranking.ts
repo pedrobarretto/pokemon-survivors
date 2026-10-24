@@ -191,7 +191,11 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
      * Null when the player started too many runs lately. The player's other
      * unfinished tokens of the same kind (regular or challenge) are replaced,
      * so nobody holds two seeds to pick from; replaced rows still count for the
-     * rate limit. Old tokens that never finished are dropped on the way.
+     * rate limit. A regular token whose run already streamed chunks is being
+     * played and stays: its seed is spent, and another tab or device asking
+     * ahead (its lobby prefetching) must not kill a run in play. Challenge
+     * tokens are always replaced (one attempt at a time: the first to finish is
+     * the official one). Old tokens that never finished are dropped on the way.
      * The token is pinned to this API's `RULES_VERSION` (`runs.rules`), so the
      * next API can take its run on these rules if it straddles a deploy (`rulesGrace.ts`).
      */
@@ -206,7 +210,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         await tx`delete from runs where user_id = ${userId} and finished_at is null and started_at < now() - make_interval(days => ${RANKED.tokenDays})`
         await tx`
           update runs set replaced_at = now()
-          where user_id = ${userId} and finished_at is null and replaced_at is null and (challenge is null) = ${challenge === null}`
+          where user_id = ${userId} and finished_at is null and replaced_at is null and (challenge is not null or stream_seq = 0) and (challenge is null) = ${challenge === null}`
         const seed = challenge ? dailyChallenge(challenge).seed : randomInt(0, RANKED.seedSpan)
         const [row] = await tx<{ id: string }[]>`
           insert into runs (user_id, challenge, seed, rules) values (${userId}, ${challenge}::date, ${seed}, ${RULES_VERSION}) returning id`
