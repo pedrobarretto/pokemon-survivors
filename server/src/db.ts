@@ -18,8 +18,8 @@ export const connect = (url: string) => postgres(url, { max: 10, prepare: false,
 export type Sql = ReturnType<typeof connect>
 
 /**
- * Runs the `.sql` files in `dir` that haven't run yet, in name order, each in
- * its own transaction. An advisory lock keeps two booting instances from racing.
+ * Runs the `.sql` files in `dir` that haven't run yet, in name order, all in
+ * one transaction. An advisory lock keeps two booting instances from racing.
  */
 export const migrate = async (sql: Sql, dir: URL) => {
   const files = (await readdir(dir)).filter((f) => f.endsWith('.sql')).sort()

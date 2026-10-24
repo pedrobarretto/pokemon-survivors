@@ -7914,6 +7914,11 @@ button {
   display: none;
 }
 
+/* Paused on the card (Esc, or the tab hidden: alt-tab, another app) it steps aside: over the pause menu it left the screen black with no way back on a phone. */
+.hud.menu-open .floor-card {
+  display: none;
+}
+
 .floor-card b {
   font-size: clamp(14px, 3.4vw, 26px);
 }

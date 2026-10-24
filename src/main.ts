@@ -11,7 +11,7 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { context2d, resetCanvases } from './engine/pixelart'
+import { canvasRestored, context2d, onCanvasReset } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
@@ -251,9 +251,10 @@ window.addEventListener('resize', scheduleResize)
 window.addEventListener('orientationchange', scheduleResize)
 window.visualViewport?.addEventListener('resize', scheduleResize)
 resize()
-// After a GPU reset every canvas comes back blank, cached art included: redraw it all, settings too.
-canvas.addEventListener('contextrestored', () => {
-  resetCanvases()
+// After a GPU reset every canvas comes back blank, cached art included: redraw it all, settings too
+// (the frame held behind a menu as well: a paused run draws only when `dirty`).
+canvas.addEventListener('contextrestored', canvasRestored)
+onCanvasReset(() => {
   context2d(canvas)
   dirty = true
 })
@@ -1904,6 +1905,8 @@ document.addEventListener('visibilitychange', () => {
   // A phone may never come back to it: the run's link numbers so far go out now (once; the end sends the final ones).
   if (document.hidden && run?.coop) reportNet(run.coop, 'hidden')
   if (document.hidden && !run?.coop && run?.game.phase === 'playing') run.game.phase = 'paused'
+  // Back: the paused frame is drawn again, in case the browser dropped the canvas' pixels while hidden.
+  if (!document.hidden) dirty = true
 })
 
 /**

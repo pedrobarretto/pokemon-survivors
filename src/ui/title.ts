@@ -95,7 +95,7 @@ export type Meadow = {
   explore: (on: boolean) => void
   /** Above whoever at the plaza the strolling partner stands close enough to talk to (and who), or null. */
   talkSpot: () => (Vec & { who: PlazaNpc }) | null
-  /** Who a tap is for: the shop (its shopkeepers, building or the edge marker pointing to it), Meowth, a stall, the festival's fountain or plaque; null for none. */
+  /** Who a tap is for: the shop (its shopkeepers, building or the edge marker pointing to it), Meowth, a stall (or its edge marker), the festival's fountain or plaque; null for none. */
   tapsShop: (at: Vec) => PlazaNpc | null
 }
 

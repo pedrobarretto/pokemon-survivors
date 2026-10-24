@@ -311,6 +311,8 @@ New versions roll out with no downtime:
 
 - The new container starts before the old one stops (start-first).
 - If its `HEALTHCHECK` (`/health`) doesn't pass within 30 s, Swarm rolls back to the previous version on its own. That includes a migration that breaks the boot.
+- A boot step that fails on the database (the migrations, picking up the pending checks) tries again a few times before giving up (`retrying` in `src/db.ts`), so a passing pooler error doesn't crash the new container.
+- The old container gets SIGTERM and is killed 10 s later. Its shutdown (`src/index.ts`) fits in that window: it drops idle keep-alive connections, gives requests in flight 4 s, then ends the Postgres pool so every query already sent finishes. Without `prepare`, postgres.js sends a query with parameters in two steps, and a connection killed between them leaves its pooler backend mid-statement: 2 minutes later, that statement's timeout cancels whatever query the backend is serving then (the `statement timeout` errors of 2026-10-22 and 23).
 
 ### Migrations
 
