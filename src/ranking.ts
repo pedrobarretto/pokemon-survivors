@@ -6,12 +6,13 @@ import type { Difficulty } from './game/difficulty'
 import { isRecord } from './game/parse'
 import type { DayKey } from './game/day'
 import { isOutbreakSpecies } from './game/outbreak'
-import { parseChallengePlace, parseRunResult, type Board, type BoardPeriod, type ChallengeBoard, type ChallengePlace, type PublicProfile, type RunMode, type RunRanks, type RunResult } from './game/ranking'
+import { isPlayable, parseChallengePlace, parseRunResult, type Board, type BoardPeriod, type ChallengeBoard, type ChallengePlace, type ProfileRun, type PublicProfile, type RunMode, type RunRanks, type RunResult } from './game/ranking'
 import { firstTouch, landingRef, parseInvites, REF_PARAM } from './game/referral'
 import { RULES_VERSION, type Recorder, type Replay } from './game/replay'
 import { cutReplay, STREAM, STREAM_START, type ReplayChunk } from './game/replayStream'
 import { ROUTES, SITE_URL } from './site/routes'
 import { locale } from './i18n'
+import { timeoutSignal } from './net/timeout'
 
 /**
  * Ranked runs and the public side of accounts (boards, profiles, follows),
@@ -32,7 +33,7 @@ const call = (path: string, token: string | null, init: RequestInit = {}) =>
   fetch(`${API_URL}${path}`, {
     ...init,
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.body ? { 'Content-Type': 'application/json' } : {}) },
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: timeoutSignal(TIMEOUT_MS),
   })
 
 /** A JSON body, or null when the call failed or answered an error; for an error, the API's `{ error }` when it said one. */
@@ -387,25 +388,46 @@ export const startRanked = (challenge: DayKey | null = null): RankedStart | null
 /** Which board to show (see `BoardQuery` on the server): the regular runs' or the Legend mode's (`mode`), by difficulty. */
 export type BoardFilter = { mode: RunMode; difficulty: Difficulty; period: BoardPeriod; starter: PlayableId | null; friends: boolean }
 
+/**
+ * Whether this build knows a run's Pokémon. The API may already rank one a
+ * newer build added (a tab left open across a deploy), and the screens draw
+ * every run from `PLAYABLE`: such runs are left out until the page reloads.
+ */
+const knownRun = (run: { starter: unknown }) => isPlayable(run.starter)
+
+/** A board (or the challenge's) without the runs this build can't draw (`knownRun`). */
+const knownBoard = <B extends Board>(board: B): B => ({ ...board, entries: board.entries.filter(knownRun), me: board.me && knownRun(board.me) ? board.me : null })
+
+const knownRecords = (records: Partial<Record<Difficulty, ProfileRun>>): Partial<Record<Difficulty, ProfileRun>> =>
+  Object.fromEntries(Object.entries(records).filter(([, run]) => run !== undefined && knownRun(run)))
+
+/** A profile without the runs this build can't draw (`knownRun`). */
+const knownProfile = (p: PublicProfile): PublicProfile => ({
+  ...p,
+  records: knownRecords(p.records ?? {}),
+  ...(p.legendRecords ? { legendRecords: knownRecords(p.legendRecords) } : {}),
+  recent: p.recent.filter(knownRun),
+})
+
 /** A board, or null when the API can't be reached. Friends boards need an account. */
 export const fetchBoard = async (f: BoardFilter): Promise<Board | null> => {
   const params = new URLSearchParams({ period: f.period, ...(f.mode === 'legend' ? { mode: f.mode } : {}), ...(f.starter ? { starter: f.starter } : {}), ...(f.friends ? { friends: '1' } : {}) })
   const { body } = await read(`/boards/${f.difficulty}?${params}`, await sessionToken())
-  // Our own API: a quick look at the shape is enough, the screens only show text.
-  return isRecord(body) && Array.isArray(body.entries) ? (body as Board) : null
+  // Our own API: a quick look at the shape is enough, past the Pokémon the screens draw.
+  return isRecord(body) && Array.isArray(body.entries) ? knownBoard(body as Board) : null
 }
 
 /** A day's challenge board (friends only: who the player follows), or null when the API can't be reached. */
 export const fetchChallengeBoard = async (day: DayKey, friends = false): Promise<ChallengeBoard | null> => {
   const { body } = await read(`/challenge/${day}${friends ? '?friends=1' : ''}`, await sessionToken())
-  return isRecord(body) && Array.isArray(body.entries) && typeof body.total === 'number' ? (body as ChallengeBoard) : null
+  return isRecord(body) && Array.isArray(body.entries) && typeof body.total === 'number' ? knownBoard(body as ChallengeBoard) : null
 }
 
 /** A public profile, `missing` when nobody has that handle, null when the API can't be reached. */
 export const fetchProfile = async (handle: string): Promise<PublicProfile | 'missing' | null> => {
   const { status, body } = await read(`/profiles/${encodeURIComponent(handle)}`, await sessionToken())
   if (status === 404 || status === 400) return 'missing'
-  return isRecord(body) && typeof body.handle === 'string' && Array.isArray(body.recent) ? (body as PublicProfile) : null
+  return isRecord(body) && typeof body.handle === 'string' && Array.isArray(body.recent) ? knownProfile(body as PublicProfile) : null
 }
 
 /** Follows or unfollows `handle`. Their follower count after it, or null when it didn't go through. */

@@ -13,6 +13,7 @@ import { mergeDex, recordRun, type Pokedex } from './game/dex'
 import { localPlayer } from './game/players'
 import type { Game, GameEvent } from './game/types'
 import { ROOM_PARAM, VPS_HOMES, parseRoomCode, type VpsHome } from './net/protocol'
+import { timeoutSignal } from './net/timeout'
 import { REF_PARAM } from './game/referral'
 import { ROUTES } from './site/routes'
 import { locale } from './i18n'
@@ -224,7 +225,7 @@ const RELOADED_KEY = 'ps:coopReloadedFor'
 
 /** The simulation build the site serves now (`/sim-build.json`, written by the build), or null when it can't tell. */
 const latestSimBuild = (): Promise<string | null> =>
-  fetch('/sim-build.json', { cache: 'no-store', signal: AbortSignal.timeout(4000) })
+  fetch('/sim-build.json', { cache: 'no-store', signal: timeoutSignal(4000) })
     .then((res) => (res.ok ? res.json() : null))
     .then((v: unknown) => (typeof v === 'object' && v !== null && 'build' in v && typeof v.build === 'string' ? v.build : null))
     .catch(() => null)

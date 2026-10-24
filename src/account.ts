@@ -11,6 +11,7 @@ import { brasiliaDay } from './game/day'
 import { gameGifts as madeByGame, isGameGift } from './game/gameGifts'
 import { donateFrom } from './game/festival'
 import { loadSave, today, writeSave } from './ui/save'
+import { timeoutSignal } from './net/timeout'
 
 /**
  * Optional player accounts (Google or Discord through Clerk). Playing as a guest stays
@@ -191,10 +192,16 @@ declare global {
 /**
  * Clerk's prebuilt UI, from Clerk's CDN like their React SDK does. The game
  * draws its own screens; it's here for the modals Clerk opens itself, such as
- * the reverification before linking Discord. It loads beside Clerk, never blocking it.
+ * the reverification before linking Discord. It loads beside Clerk, never
+ * blocking it, and a failed load (a blocker, a dropped connection) is tried
+ * once more: Clerk takes this promise once, so a later retry couldn't reach
+ * it. If both fail, only Clerk's modals are out (`isClerkLoadFailure` in
+ * `analytics.ts` keeps it out of the error reports).
  */
-const loadClerkUI = (): Promise<ClerkUIConstructor> =>
-  loadClerkUIScript({ publishableKey: PUBLISHABLE_KEY! }).then(() => window.__internal_ClerkUICtor ?? Promise.reject(new Error('no Clerk UI')))
+const loadClerkUI = (): Promise<ClerkUIConstructor> => {
+  const once = () => loadClerkUIScript({ publishableKey: PUBLISHABLE_KEY! }).then(() => window.__internal_ClerkUICtor ?? Promise.reject(new Error('no Clerk UI')))
+  return once().catch(once)
+}
 
 /** Clerk, loaded on first use (its own chunk). A failed load can be retried. */
 const loadClerk = () =>
@@ -277,7 +284,7 @@ const push = async (c: Clerk, link: Link) => {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ save: JSON.parse(sent), base: link.revision }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: timeoutSignal(TIMEOUT_MS),
   })
   const pushed = res.ok ? parsePushed(await res.json()) : null
   if (!pushed) throw new Error(`push failed: ${res.status}`)
@@ -310,7 +317,7 @@ const setProfile = (profile: ProfileName | null) => {
 const loadProfile = async (token: string) => {
   if (readLink()?.handle !== undefined) return
   try {
-    const res = await fetch(`${API_URL}/me`, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(TIMEOUT_MS) })
+    const res = await fetch(`${API_URL}/me`, { headers: { Authorization: `Bearer ${token}` }, signal: timeoutSignal(TIMEOUT_MS) })
     const body: unknown = res.ok ? await res.json() : null
     if (!isRecord(body)) throw new Error(`profile failed: ${res.status}`)
     const p = body.profile
@@ -332,7 +339,7 @@ export const saveProfile = async (profile: ProfileName): Promise<ProfileSaved> =
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(profile),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: timeoutSignal(TIMEOUT_MS),
     })
     const body: unknown = await res.json().catch(() => null)
     if (res.status === 409) return { ok: false, reason: 'taken', suggestion: isRecord(body) && typeof body.suggestion === 'string' ? body.suggestion : null }
@@ -375,7 +382,7 @@ const sendReferral = async (token: string) => {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ ref }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: timeoutSignal(TIMEOUT_MS),
     })
     const body: unknown = res.ok ? await res.json() : null
     if (isRecord(body) && body.referred === true) track('ref_signup', { ref })
@@ -411,7 +418,7 @@ const syncDiscord = async (c: Clerk, token: string) => {
   if ((account?.id ?? null) === known) return
   if (!account && known === undefined) return setDiscord(null, null)
   try {
-    const res = await fetch(`${API_URL}/discord/link`, { method: account ? 'POST' : 'DELETE', headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(TIMEOUT_MS) })
+    const res = await fetch(`${API_URL}/discord/link`, { method: account ? 'POST' : 'DELETE', headers: { Authorization: `Bearer ${token}` }, signal: timeoutSignal(TIMEOUT_MS) })
     if (!res.ok) throw new Error(`discord link failed: ${res.status}`)
     const body: unknown = await res.json()
     const username = isRecord(body) && typeof body.username === 'string' && body.username ? body.username : account ? account.username || 'Discord' : null
@@ -545,7 +552,7 @@ const claimGifts = async (ids: readonly string[], token?: string | null) => {
     method: 'POST',
     headers: { Authorization: `Bearer ${auth}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: timeoutSignal(TIMEOUT_MS),
   }).catch(() => {})
 }
 
@@ -578,7 +585,7 @@ export const stageGifts = (gifts: readonly Gift[]) => setInbox([...inbox.filter(
  */
 const fetchGifts = async (token: string) => {
   try {
-    const res = await fetch(`${API_URL}/gifts`, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(TIMEOUT_MS) })
+    const res = await fetch(`${API_URL}/gifts`, { headers: { Authorization: `Bearer ${token}` }, signal: timeoutSignal(TIMEOUT_MS) })
     const body: unknown = res.ok ? await res.json() : null
     if (!isRecord(body) || !Array.isArray(body.gifts)) return
     const gifts = body.gifts.flatMap((g: unknown) => parseGift(g) ?? [])
@@ -663,7 +670,7 @@ const donateOnce = async (amount: number): Promise<FestivalDonation> => {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount, base: link.revision }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: timeoutSignal(TIMEOUT_MS),
   })
   const body: unknown = await res.json().catch(() => null)
   if (!res.ok) return { ok: false, error: res.status === 429 ? 'rate' : isRecord(body) && typeof body.error === 'string' ? body.error : 'offline' }
