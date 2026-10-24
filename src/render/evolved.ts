@@ -39,8 +39,8 @@ export const drawShard = (ctx: Ctx, a: Attack, shard: PixelSprite, icicles: Pixe
   ctx.globalAlpha = 1
 }
 
-/** A breath puff: a growing ball of fire in `colors` (rim to core), flickering (Dragon Breath, Outrage). */
-export const drawPuff = (ctx: Ctx, a: Attack, t: number, colors: readonly [string, string, string, string]) => {
+/** A breath puff: a growing ball of fire in `colors` (rim to core), flickering (Outrage). */
+const drawPuff = (ctx: Ctx, a: Attack, t: number, colors: readonly [string, string, string, string]) => {
   if (a.shape.kind !== 'circle') return
   const r = a.shape.r
   const flick = Math.floor((t + a.id) * 20) % 2

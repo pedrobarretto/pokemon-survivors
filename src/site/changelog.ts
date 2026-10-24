@@ -25,11 +25,13 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-10-24',
-    title: { pt: 'Um lobby novo no celular', en: 'A new lobby on phones', es: 'Un lobby nuevo en el celular', fr: 'Un nouveau lobby sur mobile', zh: '手機上的全新大廳' },
+    title: { pt: 'Um lobby novo no celular e golpes mais vivos', en: 'A new lobby on phones and livelier moves', es: 'Un lobby nuevo en el celular y ataques con más vida', fr: 'Un nouveau lobby sur mobile et des attaques plus vivantes', zh: '手機上的全新大廳與更生動的招式' },
     highlights: [
       { pt: 'No celular em pé, o lobby ficou mais limpo: seu Pokémon parceiro volta para o centro da tela, com o JOGAR logo abaixo.', en: 'On a phone held upright, the lobby is cleaner: your partner Pokémon is back in the middle of the screen, with PLAY right under it.', es: 'En el celular en vertical, el lobby quedó más limpio: tu Pokémon compañero vuelve al centro de la pantalla, con JUGAR justo debajo.', fr: 'Sur un téléphone tenu droit, le lobby est plus clair : ton Pokémon partenaire revient au centre de l’écran, avec JOUER juste en dessous.', zh: '直拿手機時，大廳變得更清爽了：你的夥伴寶可夢回到畫面中央，下方就是開始遊戲。' },
       { pt: 'O evento, o Surto, o Desafio e as Missões viraram ícones à esquerda; o Presente, o Hall da Fama, Convidar, o Discord e Passear, à direita. Os selos mostram o que está esperando por você.', en: 'The event, the Outbreak, the Challenge and Missions are now icons on the left; the Gift, the Hall of Fame, Invite, Discord and Explore are on the right. Badges show what’s waiting for you.', es: 'El evento, la Horda, el Desafío y las Misiones ahora son íconos a la izquierda; el Regalo, el Salón de la Fama, Invitar, Discord y Pasear, a la derecha. Las insignias muestran lo que te espera.', fr: 'L’événement, l’Essaim, le Défi et les Missions sont maintenant des icônes à gauche ; le Cadeau, le Panthéon, Inviter, Discord et Se promener sont à droite. Les pastilles montrent ce qui t’attend.', zh: '活動、大量出現、挑戰和任務變成左側的圖示；禮物、名人堂、邀請、Discord 和散步在右側。小標記會告訴你有什麼在等你。' },
-      { pt: 'TikTok, YouTube e Instagram agora ficam na janela do Discord (e em Ajustes → Sobre).', en: 'TikTok, YouTube and Instagram now live in the Discord window (and in Settings → About).', es: 'TikTok, YouTube e Instagram ahora están en la ventana de Discord (y en Ajustes → Acerca de).', fr: 'TikTok, YouTube et Instagram sont maintenant dans la fenêtre Discord (et dans Réglages → À propos).', zh: 'TikTok、YouTube 和 Instagram 現在放在 Discord 視窗裡（以及設定 → 關於）。' },
+      { pt: 'Ember, Water Gun, Fire Spin e Dragon Breath foram redesenhados: as bolas de fogo e os jatos d’água apontam para onde voam, com cauda que tremula, faíscas e gotas pelo caminho.', en: 'Ember, Water Gun, Fire Spin and Dragon Breath were redrawn: fireballs and water jets point where they fly, with flickering tails, sparks and droplets along the way.', es: 'Ember, Water Gun, Fire Spin y Dragon Breath fueron redibujados: las bolas de fuego y los chorros de agua apuntan hacia donde vuelan, con colas que titilan, chispas y gotas por el camino.', fr: 'Ember, Water Gun, Fire Spin et Dragon Breath ont été redessinés : les boules de feu et les jets d’eau pointent là où ils volent, avec une traînée qui vacille, des étincelles et des gouttes en chemin.', zh: 'Ember、Water Gun、Fire Spin 和 Dragon Breath 重新繪製：火球和水柱會朝飛行方向前進，拖著閃爍的尾巴，一路灑下火花和水滴。' },
+      { pt: 'Thunder agora cai como um raio de verdade: grosso, ramificado, com clarão, faíscas e chão chamuscado.', en: 'Thunder now falls like real lightning: thick and forked, with a flash, sparks and scorched ground.', es: 'Thunder ahora cae como un rayo de verdad: grueso, ramificado, con destello, chispas y suelo chamuscado.', fr: 'Thunder tombe maintenant comme un vrai éclair : épais et ramifié, avec un flash, des étincelles et un sol brûlé.', zh: 'Thunder 現在像真正的閃電一樣落下：又粗又分岔，伴隨閃光、火花和燒焦的地面。' },
+      { pt: 'Os projéteis estouram ao acertar: Ember explode em chamas, Water Gun espirra e Swift se desfaz em estrelinhas.', en: 'Shots burst when they hit: Ember erupts in flame, Water Gun splashes and Swift shatters into twinkles.', es: 'Los proyectiles estallan al acertar: Ember explota en llamas, Water Gun salpica y Swift se deshace en estrellitas.', fr: 'Les projectiles éclatent à l’impact : Ember explose en flammes, Water Gun éclabousse et Swift se brise en étincelles.', zh: '投射物命中時會爆開：Ember 炸成火焰，Water Gun 濺起水花，Swift 碎成點點星光。' },
     ],
     changes: [
       {
@@ -48,6 +50,43 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Girar el celular cambia el lobby al diseño correcto al instante, sin recargar.',
             fr: 'Tourner ton téléphone passe le lobby à la bonne disposition tout de suite, sans recharger.',
             zh: '旋轉手機時，大廳會立刻切換成正確的版面，不必重新整理。',
+          },
+          {
+            pt: 'TikTok, YouTube e Instagram agora ficam na janela do Discord (e em Ajustes → Sobre).',
+            en: 'TikTok, YouTube and Instagram now live in the Discord window (and in Settings → About).',
+            es: 'TikTok, YouTube e Instagram ahora están en la ventana de Discord (y en Ajustes → Acerca de).',
+            fr: 'TikTok, YouTube et Instagram sont maintenant dans la fenêtre Discord (et dans Réglages → À propos).',
+            zh: 'TikTok、YouTube 和 Instagram 現在放在 Discord 視窗裡（以及設定 → 關於）。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Animações dos golpes', en: 'Move animations', es: 'Animaciones de los ataques' },
+        notes: [
+          {
+            pt: 'Fogo: Ember é um cometa de fogo com cauda tremulando e faíscas soltas; Fire Spin inclina as chamas contra o giro e deixa uma fita de fogo atrás; Pyro Ball voa em chamas e explode numa cúpula de fogo que esfria até virar brasa e fumaça; Dragon Breath sopra línguas de fogo violeta que viram fumaça.',
+            en: 'Fire: Ember is a fiery comet with a flickering tail and loose sparks; Fire Spin leans its flames against the spin and leaves a ribbon of fire behind; Pyro Ball flies ablaze and erupts in a dome of fire that cools to embers and smoke; Dragon Breath blows tongues of violet fire that burn down to smoke.',
+            es: 'Fuego: Ember es un cometa de fuego con cola que titila y chispas sueltas; Fire Spin inclina las llamas contra el giro y deja una cinta de fuego detrás; Pyro Ball vuela en llamas y estalla en una cúpula de fuego que se enfría hasta brasas y humo; Dragon Breath sopla lenguas de fuego violeta que se vuelven humo.',
+          },
+          {
+            pt: 'Água: Water Gun é uma bala d’água que balança e solta gotas, com respingo na saída e ao acertar; Whirlpool virou um redemoinho com braços em espiral, espuma na borda e bolhas.',
+            en: 'Water: Water Gun is a wobbling water bullet shedding droplets, with a splash at the muzzle and on impact; Whirlpool is now a vortex with spiral arms, foam on its rim and bubbles.',
+            es: 'Agua: Water Gun es una bala de agua que se bambolea y suelta gotas, con salpicadura al salir y al acertar; Whirlpool ahora es un remolino con brazos en espiral, espuma en el borde y burbujas.',
+          },
+          {
+            pt: 'Thunder: um aviso que pisca mais rápido antes de cair, um raio grosso e ramificado que tremula ao reacender, clarão, faíscas e marca de queimado no chão.',
+            en: 'Thunder: a warning that blinks faster before it falls, a thick forked bolt that flickers as it re-strikes, a flash, sparks and a scorch mark on the ground.',
+            es: 'Thunder: un aviso que parpadea más rápido antes de caer, un rayo grueso y ramificado que titila al volver a golpear, destello, chispas y una marca chamuscada en el suelo.',
+          },
+          {
+            pt: 'E mais: Sludge Bomb balança no ar, espirra ao cair e forma uma poça com bolhas que estouram; Earthquake levanta uma onda de terra com rachaduras, pedras e poeira; Swift deixa um rastro de estrelinhas; Razor Leaf corta com rastro; Vine Whip estala na ponta e recolhe; Gust gira em rajadas; Psyshock é uma esfera com espiral e anel; Flash Cannon brilha; Pin Missile solta propulsão; Crunch abre antes de morder; Rock Tomb levanta pedrinhas e poeira.',
+            en: 'And more: Sludge Bomb wobbles in the air, splashes as it lands and leaves a pool of popping bubbles; Earthquake heaves a wave of earth with cracks, rocks and dust; Swift trails twinkles; Razor Leaf slices with a trail; Vine Whip cracks at the tip and snaps back; Gust whirls in gusts; Psyshock is an orb with a spiral and a ring; Flash Cannon gleams; Pin Missile flies on exhaust; Crunch opens wide before it bites; Rock Tomb throws up chips and dust.',
+            es: 'Y más: Sludge Bomb se bambolea en el aire, salpica al caer y deja un charco con burbujas que revientan; Earthquake levanta una ola de tierra con grietas, piedras y polvo; Swift deja un rastro de estrellitas; Razor Leaf corta con estela; Vine Whip chasquea en la punta y se recoge; Gust gira en ráfagas; Psyshock es una esfera con espiral y anillo; Flash Cannon brilla; Pin Missile vuela con propulsión; Crunch abre bien antes de morder; Rock Tomb levanta piedritas y polvo.',
+          },
+          {
+            pt: 'Só visual: dano, alcance e velocidade dos golpes continuam iguais. No modo leve (celulares com dificuldade) os detalhes extras são desligados.',
+            en: 'Looks only: the moves’ damage, reach and speed are unchanged. In lean mode (phones that struggle) the extra details are turned off.',
+            es: 'Solo visual: el daño, el alcance y la velocidad de los ataques siguen iguales. En el modo ligero (celulares con dificultades) los detalles extra se apagan.',
           },
         ],
       },

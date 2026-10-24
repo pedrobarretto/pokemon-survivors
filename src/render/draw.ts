@@ -23,7 +23,7 @@ import { inSolid, overTerrain, type Solid } from '../game/terrain'
 import { isAirborne, traitPace } from '../game/traits'
 import type { Attack, Enemy, Game, Hazard } from '../game/types'
 import { FX, HAZARD_FX, hostile, PICKUPS, SPARKLE, SPIT_FX } from './art'
-import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawPuff, drawShard } from './evolved'
+import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawShard } from './evolved'
 import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
 import { drawScale } from '../game/alphas'
@@ -69,6 +69,8 @@ import { localPlayer } from '../game/players'
 import { riftDomain } from '../game/rift'
 import { drawTeamAir, drawTeamGround, drawTeammate, drawTeamMarkers, showsPlain, showsStanding } from './team'
 import { paintAttacks, type AttackSide } from './attackLayers'
+import { drawImpacts, watchImpacts } from './impacts'
+import { drawCrunch, drawDragonBreath, drawEarthquake, drawEmber, drawPinMissile, drawFireSpin, drawWhirlpool, drawFlashCannon, drawPsyshock, drawPyroBall, drawGust, drawRazorLeaf, drawRockTombLanding, drawSludge, drawSludgeGround, drawSwift, drawThunder, drawThunderGround, drawVineWhip, drawWaterGun } from './baseMoveFx'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -85,42 +87,14 @@ const drawGroundAttack = (ctx: Ctx, a: Attack, t: number) => {
   switch (a.visual) {
     case 'telegraph':
       return drawTelegraph(ctx, a)
-    case 'whirlpool': {
-      blitEllipse(ctx, Math.round(r), Math.round(r), 'rgba(80,140,240,0.16)', a.x, a.y - 4)
-      dashedRing(ctx, a.x, a.y - 4, r, t * 5, ['#a8d0f8', '#ffffff', '#6890f0'], 0.45)
-      dashedRing(ctx, a.x, a.y - 4, r * 0.68, -t * 7, ['#6890f0', '#a8d0f8'], 0.35)
-      dashedRing(ctx, a.x, a.y - 4, r * 0.38, t * 9, ['#ffffff'], 0.3)
-      return
-    }
-    case 'sludge': {
-      if (a.age < a.activeFrom) return
-      const fade = Math.min(1, (a.ttl - a.age) / 0.3)
-      const grow = Math.min(1, (a.age - a.activeFrom) / 0.12)
-      ctx.globalAlpha = fade
-      blitEllipse(ctx, Math.round(r * grow), Math.round(r * 0.72 * grow), 'rgba(96,32,112,0.55)', a.x, a.y)
-      blitEllipse(ctx, Math.round(r * 0.7 * grow), Math.round(r * 0.48 * grow), 'rgba(176,80,184,0.55)', a.x, a.y - 1)
-      ctx.globalAlpha = 1
-      return
-    }
-    case 'thunder': {
-      if (a.age < a.activeFrom && Math.floor(a.age * 30) % 2 === 0) blitRing(ctx, Math.round(r), 1, '#f8e030', a.x, a.y)
-      return
-    }
-    case 'quake': {
-      ctx.globalAlpha = Math.max(0, 1 - a.age / a.ttl)
-      dashedRing(ctx, a.x, a.y, r, 0, ['#704820', '#a07840', '#e0c068'], 0.85)
-      dashedRing(ctx, a.x, a.y, r - 2, 1.3, ['#503010', '#906838'], 0.5)
-      ctx.fillStyle = '#503010'
-      for (let i = 0; i < 7; i++) {
-        const angle = (i / 7) * TAU + a.id
-        for (let d = 4; d < r - 3; d += 1.5) {
-          const jag = Math.sin(d * 0.7 + i) * 1.5
-          ctx.fillRect(Math.round(a.x + Math.cos(angle) * d - Math.sin(angle) * jag), Math.round(a.y + Math.sin(angle) * d + Math.cos(angle) * jag), 1, 1)
-        }
-      }
-      ctx.globalAlpha = 1
-      return
-    }
+    case 'whirlpool':
+      return drawWhirlpool(ctx, a, t)
+    case 'sludge':
+      return drawSludgeGround(ctx, a)
+    case 'thunder':
+      return drawThunderGround(ctx, a)
+    case 'quake':
+      return drawEarthquake(ctx, a)
     case 'drumRoots': {
       ctx.globalAlpha = Math.max(0, 1 - a.age / a.ttl)
       dashedRing(ctx, a.x, a.y - 4, r, a.age * 4, ['#78c850', '#a87840', '#58a838'], 0.75)
@@ -152,7 +126,7 @@ const drawGroundAttack = (ctx: Ctx, a: Attack, t: number) => {
       ctx.globalAlpha = Math.max(0, 1 - e)
       dashedRing(ctx, a.x, a.y, r * (0.7 + e * 0.6), a.id, ['#685028', '#a08048', '#d8c080'], 0.7, 0.5)
       ctx.globalAlpha = 1
-      return
+      return drawRockTombLanding(ctx, a)
     }
     default:
       drawEvolvedGround(ctx, a, t)
@@ -197,66 +171,23 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
   const m = a.motion
   switch (a.visual) {
     case 'ember':
-      return blitCentered(ctx, FX.ember()[Math.floor(t * 12) % 2]!, a.x, a.y)
+      return drawEmber(ctx, a, t)
     case 'flame':
-      return blitCentered(ctx, FX.flame()[Math.floor((t + a.id) * 10) % 2]!, a.x, a.y - 2)
-    case 'water': {
-      // Seeking and returning jets (fork mods) point their way too.
-      const angle = m.kind === 'linear' || m.kind === 'homing' || m.kind === 'boomerang' ? Math.atan2(m.vy, m.vx) : 0
-      return blitRotated(ctx, FX.water(), a.x, a.y, angle)
-    }
-    case 'leaf': {
-      const scale = a.shape.kind === 'circle' ? Math.max(1, Math.round(a.shape.r / 6)) : 1
-      return blitRotated(ctx, FX.leaf(), a.x, a.y, a.age * 16, scale)
-    }
+      return drawFireSpin(ctx, a, t)
+    case 'water':
+      return drawWaterGun(ctx, a, t)
+    case 'leaf':
+      return drawRazorLeaf(ctx, a)
     case 'star':
-      return blitRotated(ctx, FX.star(), a.x, a.y, a.age * 9)
-    case 'sludge': {
-      if (a.age >= a.activeFrom) return
-      const k = a.age / a.activeFrom
-      const x = a.from.x + (a.x - a.from.x) * k
-      const y = a.from.y + (a.y - a.from.y) * k - Math.sin(k * Math.PI) * 40
-      blitEllipse(ctx, 3, 3, '#502060', x, y)
-      return blitEllipse(ctx, 2, 2, '#c060d0', x - 1, y - 1)
-    }
-    case 'thunder': {
-      if (a.age < a.activeFrom) return
-      const fade = 1 - (a.age - a.activeFrom) / (a.ttl - a.activeFrom)
-      ctx.globalAlpha = Math.max(0, fade)
-      bolt(ctx, a.x, a.y, 180)
-      if (a.shape.kind === 'circle') blitEllipse(ctx, Math.round(a.shape.r), Math.round(a.shape.r * 0.5), 'rgba(255,248,160,0.7)', a.x, a.y)
-      ctx.globalAlpha = 1
-      return
-    }
-    case 'gust': {
-      if (a.shape.kind !== 'circle') return
-      ctx.globalAlpha = 1 - a.age / a.ttl
-      dashedRing(ctx, a.x, a.y, a.shape.r, a.age * 20, ['#ffffff', '#e0e8f8', '#c8d0e8'], 0.7)
-      dashedRing(ctx, a.x, a.y, a.shape.r * 0.8, -a.age * 25, ['#ffffff'], 0.25)
-      ctx.globalAlpha = 1
-      return
-    }
-    case 'vine': {
-      if (a.shape.kind !== 'rect') return
-      const dir = a.flip ? -1 : 1
-      const reach = a.shape.w * Math.min(1, a.age / 0.07)
-      const startX = a.x - (dir * a.shape.w) / 2
-      ctx.globalAlpha = Math.min(1, (a.ttl - a.age) / 0.08)
-      for (let i = 0; i < reach; i++) {
-        const x = Math.round(startX + dir * i)
-        const y = Math.round(a.y + Math.sin(i * 0.25 - a.age * 40) * 2)
-        ctx.fillStyle = '#204818'
-        ctx.fillRect(x, y - 2, 1, 4)
-        ctx.fillStyle = i % 9 < 2 ? '#a8e870' : '#58a838'
-        ctx.fillRect(x, y - 1, 1, 2)
-        if (i % 14 === 7) {
-          ctx.fillStyle = '#78c850'
-          ctx.fillRect(x, y - 4, 2, 2)
-        }
-      }
-      ctx.globalAlpha = 1
-      return
-    }
+      return drawSwift(ctx, a, t)
+    case 'sludge':
+      return drawSludge(ctx, a, t)
+    case 'thunder':
+      return drawThunder(ctx, a)
+    case 'gust':
+      return drawGust(ctx, a)
+    case 'vine':
+      return drawVineWhip(ctx, a)
     case 'fist': {
       if (m.kind !== 'follow') return
       const angle = Math.atan2(m.oy + 8, m.ox)
@@ -264,51 +195,19 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       if (a.age > a.ttl * 0.5) spark(ctx, a.x + Math.cos(angle) * 6, a.y + Math.sin(angle) * 6, 5)
       return
     }
-    case 'steel': {
-      const r = a.shape.kind === 'circle' ? a.shape.r : 8
-      blitRotated(ctx, FX.steel(), a.x, a.y, 0, Math.max(1, Math.round(r / 4)))
-      if (Math.floor((t + a.id) * 12) % 3 === 0) spark(ctx, a.x, a.y, Math.round(r * 0.8))
-      return
-    }
+    case 'steel':
+      return drawFlashCannon(ctx, a, t)
     case 'arrow':
       return blitRotated(ctx, FX.arrow(), a.x, a.y, flightAngle(m) ?? 0)
     case 'shuriken':
       // Water Shuriken swells as it cuts (`signatures.ts`).
       return blitRotated(ctx, FX.shuriken(), a.x, a.y, a.age * 22, a.shape.kind === 'circle' && a.shape.r > 6 ? 2 : 1)
-    case 'jaws': {
-      const r = a.shape.kind === 'circle' ? a.shape.r : 10
-      const scale = Math.max(1, Math.round(r / 7))
-      const { top, bottom } = FX.jaws()
-      const gap = Math.round((1 - Math.min(1, a.age / a.activeFrom)) * r * 0.9)
-      const half = (top.height * scale) / 2
-      ctx.globalAlpha = a.age > a.activeUntil ? Math.max(0, 1 - (a.age - a.activeUntil) / (a.ttl - a.activeUntil)) : 1
-      blitRotated(ctx, top, a.x, a.y - gap - half, 0, scale)
-      blitRotated(ctx, bottom, a.x, a.y + gap + half, 0, scale)
-      if (a.age >= a.activeFrom) spark(ctx, a.x, a.y, Math.round(r * 0.9))
-      ctx.globalAlpha = 1
-      return
-    }
-    case 'pyro': {
-      if (a.age < a.activeFrom) {
-        const k = a.age / a.activeFrom
-        const x = a.from.x + (a.x - a.from.x) * k
-        const y = a.from.y + (a.y - a.from.y) * k - Math.sin(k * Math.PI) * 50
-        return blitRotated(ctx, FX.pyro(), x, y, a.age * 14)
-      }
-      if (a.shape.kind !== 'circle') return
-      const e = (a.age - a.activeFrom) / (a.ttl - a.activeFrom)
-      const r = Math.round(a.shape.r * (0.5 + 0.5 * e))
-      ctx.globalAlpha = Math.max(0, 1 - e)
-      blitEllipse(ctx, r, Math.round(r * 0.75), 'rgba(240,112,32,0.6)', a.x, a.y)
-      blitEllipse(ctx, Math.round(r * 0.55), Math.round(r * 0.4), '#f8d860', a.x, a.y - 1)
-      blitRing(ctx, r, 1, '#fff0a0', a.x, a.y)
-      ctx.globalAlpha = 1
-      return
-    }
-    case 'psy': {
-      const r = a.shape.kind === 'circle' ? a.shape.r : 6
-      return blitRotated(ctx, FX.psy()[Math.floor((t + a.id) * 10) % 2]!, a.x, a.y, 0, Math.max(1, Math.round((r * 2) / 7)))
-    }
+    case 'jaws':
+      return drawCrunch(ctx, a, (x, y, size) => spark(ctx, x, y, size))
+    case 'pyro':
+      return drawPyroBall(ctx, a, t)
+    case 'psy':
+      return drawPsyshock(ctx, a, t)
     case 'heart':
       return blitCentered(ctx, FX.heart(), a.x, a.y + Math.round(Math.sin(a.age * 14) * 1.5))
     case 'note': {
@@ -343,9 +242,9 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       return
     }
     case 'pin':
-      return blitRotated(ctx, FX.pin(), a.x, a.y, m.kind === 'homing' ? Math.atan2(m.vy, m.vx) : 0)
+      return drawPinMissile(ctx, a, t)
     case 'dragonBreath':
-      return drawPuff(ctx, a, t, ['rgba(72,32,168,0.55)', 'rgba(112,56,248,0.8)', '#a070f8', '#f0e0ff'])
+      return drawDragonBreath(ctx, a, t)
     case 'whirlpool':
     case 'quake':
     case 'drumRoots':
@@ -970,6 +869,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
 
   drawTerrainGround(ctx, g, look, camX, camY)
   const me = localPlayer(g)
+  watchImpacts(g)
   // The moves go through see-through layers at the player's chosen opacity, your own first (`paintAttacks`).
   const sides = attackSides(g, me.slot, opts)
   for (const side of sides) {
@@ -1104,6 +1004,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     paintAttacks(ctx, side.side, side.alpha, g.view, camX, camY, (into) => {
       const v = side.game
       for (const a of v.attacks) if (a.age >= 0 && visible(a.x, a.y, 200)) drawAttack(into, a, t)
+      drawImpacts(into, g.now, (owner) => g.coop === null || (side.side === 'own') === (owner === me.slot))
       drawVerbAir(into, v, t, visible)
       drawTmAir(into, v, t, visible)
       drawShopTmAir(into, v, t, visible)
