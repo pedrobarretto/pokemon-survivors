@@ -131,7 +131,8 @@ export const createRooms = (deps: RoomsDeps) => {
     let wiped = false
     for (const e of effects) {
       if (e.k === 'send') {
-        const text = texts.get(e.msg) ?? JSON.stringify(e.msg)
+        // A welcome says where the room runs (`WelcomeNet`), as the Durable Object's does: this VPS, no Cloudflare edge.
+        const text = e.msg.t === 'welcome' ? JSON.stringify({ ...e.msg, net: { colo: `vps:${deps.home}`, region: shell.state.room?.region ?? null, edge: null, edgeRtt: null } }) : (texts.get(e.msg) ?? JSON.stringify(e.msg))
         texts.set(e.msg, text)
         send(shell, e.to, text)
       } else if (e.k === 'sync') {

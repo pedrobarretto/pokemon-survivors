@@ -3,7 +3,7 @@ import { moveCode } from '../game/replay'
 import type { Game } from '../game/types'
 import type { Vec } from '../engine/math'
 import { LIMITS, NET_REPORT_MS, PROTOCOL, REGIONS, VPS_HOMES, homeOf, isRelayHome, parseRoomCode, type BatchedMessage, type ClientMessage, type CloseReason, type CreateResponse, type Loadout, type NetReport, type Refusal, type Region, type RelayHome, type RoomView, type Rtts, type Settings, type VpsHome, type RunStart, type ServerMessage } from '../net/protocol'
-import { addSample, createNetStats, noteArrival, noteFrame, noteHidden, quantile, resetArrivalLine, type NetStats, type NetWhere, type ReconnectReason } from './netStats'
+import { addSample, createNetStats, noteArrival, noteFrame, noteHidden, quantile, resetArrivalLine, NO_WHERE, type NetStats, type NetWhere, type ReconnectReason } from './netStats'
 import type { Store } from './bank'
 import type { Input } from './entries'
 import { ack, createOutbox, due, onReconnect, onSlow, push, queued, slowed, type Outbox } from './outbox'
@@ -297,7 +297,7 @@ export const createCoopClient = (deps: CoopDeps) => {
     overAt: -Infinity,
     roomBuild: null,
     net: createNetStats(),
-    where: { relayColo: null, relayRegion: null, edgeColo: null, edgeRtt: null },
+    where: NO_WHERE,
     moves: false,
     vpsRtts: null,
     vpsFor: null,
@@ -494,7 +494,8 @@ export const createCoopClient = (deps: CoopDeps) => {
       case 'welcome': {
         s.welcomed = true
         s.seat = m.seat
-        if (m.net) s.where = { relayColo: m.net.colo, relayRegion: m.net.region, edgeColo: m.net.edge, edgeRtt: m.net.edgeRtt }
+        // Every welcome says where again: a room the group moved to runs elsewhere, and an older relay says nothing.
+        s.where = m.net ? { relayColo: m.net.colo, relayRegion: m.net.region, edgeColo: m.net.edge, edgeRtt: m.net.edgeRtt } : NO_WHERE
         s.room = m.room
         s.attempt = 0
         s.fresh = false

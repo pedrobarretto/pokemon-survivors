@@ -212,6 +212,9 @@ export const noteDraw = (n: NetStats, d: { renderMs: number; dt: number; shake: 
 /** Where the relay runs and where this client meets Cloudflare, from `welcome` (null on an older relay). */
 export type NetWhere = { relayColo: string | null; relayRegion: string | null; edgeColo: string | null; edgeRtt: number | null }
 
+/** Where nothing is known yet (before a welcome, or from a relay that doesn't say). */
+export const NO_WHERE: NetWhere = { relayColo: null, relayRegion: null, edgeColo: null, edgeRtt: null }
+
 /** What the runner knows that goes into the summary. */
 export type RunnerNet = { underruns: number; heals: number; syncs: number }
 

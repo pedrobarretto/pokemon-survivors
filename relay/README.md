@@ -124,8 +124,10 @@ Cloudflare has no Durable Objects in South America, so a Brazilian room runs in 
   volume. A crash may lose the newest second of log, covered as on Cloudflare. A room whose
   step throws starts over from its file without touching the others. Logs are the room's
   events as on the Workers, plus `relay.stats` a minute (rooms, sockets, event-loop lag, CPU,
-  memory); the telemetry (`run.summary`, `conn.*`, `welcome`'s `net`, kept runs) is
-  Cloudflare's only for now.
+  memory, and the whole VPS's: `hostBusyPct`, `hostStealPct`, `hostIowaitPct`, `load1`, since
+  the relay shares its cores with other apps). `welcome`'s `net` says `colo: vps:<home>` and the
+  room's region, with no edge; the rest of the telemetry (`run.summary`, `conn.*`, kept runs)
+  is Cloudflare's only for now.
 
 ```bash
 cd node && npm ci

@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs'
+import { loadavg } from 'node:os'
 import { monitorEventLoopDelay } from 'node:perf_hooks'
 import { configFrom } from './config'
+import { cpuBetween, parseProcStat } from './hostCpu'
 import { jsonLog, startRelay } from './server'
 
 /**
@@ -18,10 +21,22 @@ const relay = await startRelay(configFrom(process.env))
 // The event loop's lateness is the frame timers' lateness: the number to watch on a shared VPS.
 const loop = monitorEventLoopDelay({ resolution: 5 })
 loop.enable()
+const readHost = () => {
+  try {
+    return parseProcStat(readFileSync('/proc/stat', 'utf8'))
+  } catch {
+    return null
+  }
+}
+
 let cpu = process.cpuUsage()
+let host = readHost()
 const stats = setInterval(() => {
   const used = process.cpuUsage(cpu)
   cpu = process.cpuUsage()
+  const was = host
+  host = readHost()
+  const machine = was && host ? cpuBetween(was, host) : null
   jsonLog('relay.stats', {
     ...relay.counts(),
     loopP50Ms: +(loop.percentile(50) / 1e6).toFixed(2),
@@ -29,6 +44,11 @@ const stats = setInterval(() => {
     loopMaxMs: +(loop.max / 1e6).toFixed(2),
     cpuPct: +(((used.user + used.system) / 1000 / STATS_MS) * 100).toFixed(1),
     rssMb: Math.round(process.memoryUsage().rss / 1e6),
+    // The whole VPS (every core, other apps too): the frame timers starve when it's full.
+    hostBusyPct: machine?.busyPct ?? null,
+    hostStealPct: machine?.stealPct ?? null,
+    hostIowaitPct: machine?.iowaitPct ?? null,
+    load1: +loadavg()[0]!.toFixed(2),
   })
   loop.reset()
 }, STATS_MS)
