@@ -124,6 +124,20 @@ export const suggestionStore = (sql: Sql, opts: { onPosted?: (s: Suggestion) => 
         return { ok: true, score: after!.score, vote } as const
       }),
 
+    /** The game account with a handle linked to a Discord user, or null. */
+    accountOf: async (discordId: string) =>
+      (await sql<{ id: string; handle: string }[]>`select id, handle from users where discord_id = ${discordId} and handle is not null and banned_at is null`)[0] ?? null,
+
+    /** An idea staff took from the Discord (`ideaWriter.ts`), credited to `userId` with their up vote: straight to the Backlog, past the review and the daily limit. */
+    add: (userId: string, draft: SuggestionDraft): Promise<Suggestion> =>
+      sql.begin(async (tx) => {
+        const [row] = await tx<{ id: string }[]>`insert into suggestions (user_id, title, body, status, score) values (${userId}, ${draft.title}, ${draft.body}, 'open', 1) returning id`
+        await tx`insert into suggestion_votes (suggestion_id, user_id, value) values (${row!.id}, ${userId}, 1)`
+        const [added] = await tx<Row[]>`${select(userId)} where s.id = ${row!.id}`
+        console.log(`suggestion ${row!.id} added from discord for ${userId}`)
+        return toSuggestion(added!)
+      }),
+
     /** Ideas still waiting for review, oldest first: the bot posts the ones it hasn't yet. */
     pending: async (): Promise<Suggestion[]> => {
       const rows = await sql<Row[]>`${select(null)} where s.status = 'pending' and u.handle is not null and u.banned_at is null order by s.created_at limit ${SUGGESTION.list}`

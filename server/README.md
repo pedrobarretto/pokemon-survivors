@@ -199,6 +199,14 @@ The community Discord (built by `scripts/discord/setup.mjs`) has a bot that runs
 - **Introduction gate:** a gateway connection (Node's own `WebSocket`, intents GUILDS, GUILD_MESSAGES and MESSAGE_CONTENT) watches #introductions. A message with at least 20 letters or digits from a member without **Trainer** gets the role, a 👋 and a welcome (once per player); a shorter one gets a nudge. The setup script's `GATE` makes only Trainers talk elsewhere. When the connection comes back (a deploy, a drop), the bot reads the last 50 introductions and lets in whoever it missed.
 - **Patch notes:** on boot, the changelog's updates (`src/site/changelog.ts`, English) newer than the last one posted go to #patch-notes, pinging **Patch Notes Ping**, and the last one posted is edited to match (an update grows through its day). The very first boot only posts the newest update.
 - **Daily posts:** every 15 minutes it looks for what's due: the day's Desafio do dia in #daily-challenge (pinging **Daily Challenge Ping**) and its outbreak in #daily-outbreak when the Brasília day starts, and yesterday's top 3 in #daily-challenge once the ribbons are due (`ribbonsDue`).
+- **The staff's bot:** staff (**Dev**, **Moderator** or the server's owner) tag the bot in any channel but #introductions, often replying to a player, and an LLM on OpenRouter does what they ask (`src/staffAgent.ts`, a tool loop of at most 5 rounds over `src/staffTools.ts`), answering in the language they wrote in. It reads the staff message, the one it replies to and that player's messages right before it (up to 5 minutes apart). Its tools:
+  - `game_lookup`: the game's own data on a Pokémon, move, held item, Ability or Mega (`src/gameKnowledge.ts`). The system prompt also carries `public/llms.txt` (copied next to the bundle in the image) and the newest 3 changelog updates, read once at boot. It's told to say it doesn't know rather than invent.
+  - `lookup_player`: a player by Discord mention/id (`users.discord_id`) or @handle: when they joined and last played, Discord linked, supporter tier, ban, finished runs per difficulty.
+  - `add_idea`: the idea straight to the board's Backlog with the author's vote, past the review and the daily limit, credited to the replied player's linked game account, or the staff member's (it asks to link when neither has one).
+  - `report_bug`: a thread in #bug-reports (stored in `bug_reports` like the game's, no technical info, signed by the staff member, with a link back to the message).
+  - `send_gift`: an egg or ₽ as a Mystery Gift from the staff member's @handle (`src/staffDesk.ts`), within `STAFF_GIFTS` (`src/staffGifts.ts`): staff send common and rare eggs, up to ₽2,000 a gift and 5 eggs and ₽5,000 per Brasília day each; the owner any of common, rare and ultra, with no daily cap. Each gift's key (`dstaff:<staff>:<day>:<message>:<n>`) counts the allowance and keeps a retry from sending twice, and each one is logged in #mod-chat.
+  The reply is the LLM's text, then what the tools did as the bot words it (the gift sent and to whom, the bug's thread, the idea's card). ⚠️ on the staff message means it failed (see the log). Tags from anyone else are ignored. Off without `OPENROUTER_API_KEY`.
+- **Slash commands** (`src/discordCommands.ts`), registered on the server on boot: `/ask` (the LLM with the read-only tools, answered in the channel), `/idea text [player]` (the LLM writes it up, `src/ideaWriter.ts`), `/bug text`, `/player who` (only the asker sees it) and `/gift player kind [amount]`. Only members with Manage Messages see them (the staff roles), and the bot checks the roles again on each use. They come through the gateway (no interactions endpoint in the Developer Portal), and `slash:<id>` in `discord_posts` keeps two instances from answering the same one.
 - **Linked accounts** (`src/discordLink.ts`): a player connects Discord to their Clerk account in the game (or signs in with it); `POST /discord/link` reads that account from Clerk, stores its id in `users.discord_id`, adds the player to the server with the OAuth token Clerk keeps (`guilds.join`, a scope of Clerk's Discord connection) and gives **Supporter** or **Gold Supporter** by their tier (Gold replaces Supporter; no tier changes nothing). A donation that raises a linked player's tier updates the role. Linking never grants Trainer.
 
 ### Bug reports
@@ -240,6 +248,7 @@ The player's device still holds the edited save. Its next push comes on top of a
 | `STRIPE_WEBHOOK_SECRET` | Optional. The Stripe webhook endpoint's signing secret (`whsec_…`). Without it the webhook answers 503 |
 | `STRIPE_PAYMENT_LINK` | Optional. The donation Payment Link's id (`plink_…`): set, the webhook ignores other Checkout Sessions of the account |
 | `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID` | Optional. The community Discord bot's token and the server's id. Without both there's no bot |
+| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Optional. OpenRouter, for the staff's bot in the Discord (tags, `/ask`, `/idea`). The model (it must support tool calls) defaults to `anthropic/claude-haiku-5.5`. Without the key, tagging the bot does nothing and `/ask` and `/idea` say so; `/bug`, `/player` and `/gift` still work |
 | `POSTHOG_KEY` | Optional. The game's PostHog project token (`phc_…`, the same as the client's `VITE_POSTHOG_KEY`): 500s, uncaught exceptions and rejections go to its error tracking (`src/errors.ts`), tied to the player's id when the request had one. Without it errors only go to the log |
 | `DISCORD_BUG_FORUM_ID` | Optional. The #bug-reports forum's channel id, where bug reports go. Without it the bot finds the forum by name |
 | `STREAM_ENFORCE` | Optional. `1` keeps ranked runs whose replay wasn't streamed in time off the public boards (see [Replay streaming](#replay-streaming)). Unset, the API only measures and logs the lag |
@@ -270,7 +279,7 @@ Migrations are plain SQL files in `migrations/`, run in name order at boot (each
 - `users.banned_at`, `banned_reason`: a ban, since when and why (null for everyone else). `reports`: each report (`reporter_id`, `target_id`, `run_id` when it's about a run, `reason`, `note`), unique per reporter and run (or player, without a run), and how it was resolved (`resolved_at`, `resolved_by`, `resolution`: the `ModerationAction`).
 - `runs.issued_at`: when the token and its seed were dealt (`started_at` moves with `/start`, this doesn't). `runs.stream_seq`, `stream_ticks`, `stream_at`, `stream_lag`: the replay stream so far (the next chunk's `seq` and first tick, when the last commitment came, the worst lag in seconds). `runs.stream_base`, `stream_digest`: the ticks the last report pinned and their sha256. `runs.stream_ok`: whether the last report was streamed in time (null before streaming). `runs.unlisted`: kept off the public boards for its stream (only with `STREAM_ENFORCE`). `run_chunks`: each chunk waiting for its run's report (`seq`, `from_tick`, `to_tick`, `moves`, `events`, `received_at`).
 - `festival_donations`: each Festival da Praça donation (`festival`, `user_id`, `amount`, the Brasília `day`, `held` until the admin approves it, `voided`). `users.donor_public`: the plaque shows the player's @handle.
-- `discord_posts`: what the Discord bot already did, by key (`patch:<date>`, `challenge:<day>`, `podium:<day>`, `outbreak:<day>`, `welcome:<user>`, `short:<message>`), with the message a patch note became so it can be edited.
+- `discord_posts`: what the Discord bot already did, by key (`patch:<date>`, `challenge:<day>`, `podium:<day>`, `outbreak:<day>`, `welcome:<user>`, `short:<message>`, `take:<message>` for a staff tag, `slash:<interaction>`), with the message a patch note became so it can be edited.
 
 ## Local development
 
@@ -294,7 +303,7 @@ In the game, set `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_API_URL=http://localhost
 
 ### When it deploys
 
-A push to `main` deploys the API automatically, but only when it touches `server/**`, `src/game/**`, `src/data/**`, `src/engine/**` or `src/site/**` (the Discord bot posts the changelog). Those are the folders the API bundle imports. **If the bundle starts importing another folder of `src/`, add it to this list in Dokploy** (and here). Otherwise a change there ships to the site but not to the API, and the two drift apart.
+A push to `main` deploys the API automatically, but only when it touches `server/**`, `src/game/**`, `src/data/**`, `src/engine/**`, `src/site/**` (the Discord bot posts the changelog), `src/i18n/**` (the staff bot reads the English texts) or `public/llms.txt` (what the staff bot knows). Those are the folders the API bundle imports. **If the bundle starts importing another folder of `src/`, add it to this list in Dokploy** (and here). Otherwise a change there ships to the site but not to the API, and the two drift apart.
 
 ### Rollout
 
@@ -317,6 +326,7 @@ New versions roll out with no downtime:
 | `CLERK_SECRET_KEY` | Dokploy (`api`) | Production instance secret key |
 | `ABACATEPAY_API_KEY` | Dokploy (`api`) | AbacatePay production key, with `CHECKOUT:CREATE`, `PRODUCT:CREATE` and `PRODUCT:READ` |
 | `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID` | Dokploy (`api`) | The "Pokémon Survivors" bot's token and the community server's id |
+| `OPENROUTER_API_KEY` | Dokploy (`api`) | OpenRouter key for the Discord idea intake (optional) |
 | `POSTHOG_KEY` | Dokploy (`api`) | PostHog (US cloud) project token, public |
 | `DISCORD_BUG_FORUM_ID` | Dokploy (`api`) | The #bug-reports forum's channel id (optional: found by name without it) |
 | `STREAM_ENFORCE` | Dokploy (`api`) | Unset (observe only) until the lag is measured; `1` to enforce |

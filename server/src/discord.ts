@@ -5,10 +5,14 @@ import { isRecord } from '../../src/game/parse'
 import type { Suggestion } from '../../src/game/suggestions'
 import { CHANGELOG } from '../../src/site/changelog'
 import type { Sql } from './db'
+import type { BugReports } from './bugReports'
+import { commandOf, STAFF_COMMANDS } from './discordCommands'
 import {
   challengeMessage,
+  giftRefusalText,
   greetMessage,
   introDecision,
+  NOT_ADDED,
   outbreakMessage,
   patchMessage,
   patchPlan,
@@ -18,10 +22,17 @@ import {
   reviewedColor,
   reviewedNote,
   reviewMessage,
+  staffReply,
   welcomeMessage,
   type OutgoingMessage,
 } from './discordMessages'
+import { loadKnowledge } from './gameKnowledge'
+import { writeIdea, type OpenRouterConfig } from './ideaWriter'
 import type { RankingStore } from './ranking'
+import { agentPrompt, agentSystem, runAgent } from './staffAgent'
+import { parseWho, type StaffDesk } from './staffDesk'
+import type { StaffRank } from './staffGifts'
+import { messageLink, readTools, staffActions, staffTools, type Outcome, type Staff, type StaffTurn } from './staffTools'
 import type { SuggestionStore } from './suggestions'
 
 /**
@@ -36,7 +47,16 @@ import type { SuggestionStore } from './suggestions'
  * - #idea-review (staff only) gets each idea posted in the game, with ✅ and
  *   ❌ under it: a staff reaction puts it on the board's Backlog or hides it
  *   (`reviewDecision`). Ideas it missed are posted on the next round of
- *   daily posts, and reactions it missed are read when the gateway connects.
+ *   daily posts, and reactions it missed are read when the gateway connects;
+ * - staff (Dev, Moderator, the owner) tag it in any channel, often replying
+ *   to a player, and an LLM on OpenRouter does what they ask with the tools
+ *   in `staffTools.ts` (`staffAgent.ts`): answer about the game or a player,
+ *   put an idea on the board's Backlog (credited to the player's linked
+ *   game account, or the staff member's), file a bug report, send a gift
+ *   within the staff's allowance (`staffGifts.ts`, logged in #mod-chat);
+ * - the same as slash commands for staff (`discordCommands.ts`): `/ask`,
+ *   `/idea`, `/bug`, `/player` and `/gift`, registered on the server at
+ *   boot. Anyone else is refused (tags from them are ignored).
  * Channels and roles are found by name, whatever emoji staff put in front. Every post claims a key in
  * `discord_posts` first, so two instances (a rolling deploy) never post twice.
  */
@@ -50,6 +70,10 @@ const INTENTS = (1 << 0) | (1 << 1) | (1 << 9) | (1 << 10) | (1 << 15)
 /** Close codes that retrying won't fix: a bad token, a bad intent. */
 const FATAL_CLOSES = new Set([4004, 4010, 4011, 4012, 4013, 4014])
 
+/** An interaction's type for a slash command, and the flag that shows an answer only to who asked. */
+const APPLICATION_COMMAND = 2
+const EPHEMERAL = 1 << 6
+
 /** How often the daily posts are looked for. */
 const EVERY_MS = 15 * 60_000
 
@@ -59,7 +83,9 @@ const NAMES = {
   challenge: 'daily-challenge',
   outbreak: 'daily-outbreak',
   ideaReview: 'idea-review',
+  staffLog: 'mod-chat',
   trainer: 'Trainer',
+  staff: ['Dev', 'Moderator'],
   patchPing: 'Patch Notes Ping',
   challengePing: 'Daily Challenge Ping',
 } as const
@@ -196,6 +222,42 @@ const connectGateway = (token: string, onEvent: (type: string, data: unknown) =>
   open()
 }
 
+/** A message as the idea intake reads it. */
+export type ChatMessage = { id: string; userId: string; bot: boolean; content: string; at: number }
+
+export const chatMessage = (m: unknown): ChatMessage | null => {
+  if (!isRecord(m) || !isRecord(m.author)) return null
+  const id = str(m.id)
+  const userId = str(m.author.id)
+  const at = Date.parse(str(m.timestamp) ?? '')
+  if (!id || !userId || Number.isNaN(at)) return null
+  return { id, userId, bot: m.author.bot === true, content: str(m.content) ?? '', at }
+}
+
+/** How close a player's messages follow each other to read as one suggestion, and how many at most. */
+const BURST = { gapMs: 5 * 60_000, max: 6 } as const
+
+/**
+ * The player's suggestion, oldest first: the message staff replied to and
+ * the ones its author sent right before it (`before`, newest first, as
+ * Discord lists history), each within `BURST.gapMs` of the next.
+ */
+export const suggestionBurst = (replied: ChatMessage, before: readonly ChatMessage[]) => {
+  const burst = [replied]
+  for (const m of before) {
+    if (burst.length >= BURST.max || m.userId !== replied.userId || burst[0]!.at - m.at > BURST.gapMs) break
+    burst.unshift(m)
+  }
+  return burst.map((m) => m.content.trim()).filter(Boolean)
+}
+
+/** How a message's author shows on the server: their nickname there, else their Discord display name. */
+export const displayName = (m: unknown) => {
+  const member = isRecord(m) && isRecord(m.member) ? m.member : null
+  const user = isRecord(m) && isRecord(m.author) ? m.author : member && isRecord(member.user) ? member.user : null
+  return (member && str(member.nick)) ?? (user && (str(user.global_name) ?? str(user.username))) ?? 'someone'
+}
+
 /** A reaction from the gateway or a message's reactions: the emoji's name (a custom emoji's name never matches `reviewDecision`). */
 const emojiName = (v: unknown) => (isRecord(v) && isRecord(v.emoji) ? (str(v.emoji.name) ?? '') : '')
 
@@ -207,10 +269,19 @@ const emojiName = (v: unknown) => (isRecord(v) && isRecord(v.emoji) ? (str(v.emo
  */
 export const startDiscord = (
   config: DiscordConfig,
-  deps: { store: DiscordStore; ranking: Pick<RankingStore, 'podium'>; ideas: Pick<SuggestionStore, 'pending' | 'review'> },
+  deps: {
+    store: DiscordStore
+    ranking: Pick<RankingStore, 'podium'>
+    ideas: Pick<SuggestionStore, 'pending' | 'review' | 'accountOf' | 'add'>
+    /** The staff's desk: players and gifts (`staffDesk.ts`). */
+    desk: StaffDesk
+    bugs: Pick<BugReports, 'fileFromDiscord'>
+    /** The staff's LLM; null, the bot ignores tags and `/ask` and `/idea` say so. */
+    openRouter: OpenRouterConfig | null
+  },
 ) => {
   const call = restClient(config.token)
-  const { store, ranking, ideas } = deps
+  const { store, ranking, ideas, desk, bugs, openRouter } = deps
   const guild = `/guilds/${config.guildId}`
   let reviewIdea: ((idea: Suggestion) => Promise<void>) | null = null
 
@@ -242,7 +313,11 @@ export const startDiscord = (
     const challenge = channel(NAMES.challenge)
     const outbreak = channel(NAMES.outbreak)
     const review = channel(NAMES.ideaReview)
+    const staffLog = channel(NAMES.staffLog)
     const trainer = role(NAMES.trainer)
+    const staffRoles = new Set(NAMES.staff.map(role).filter((id) => id !== null))
+    const guildInfo = await call('GET', guild)
+    const ownerId = isRecord(guildInfo) ? str(guildInfo.owner_id) : null
     let botId: string | null = null
 
     // Patch notes: what the changelog gained since the last boot.
@@ -353,11 +428,150 @@ export const startDiscord = (
       for (const m of latest.values()) await gate(m, false)
     }
 
+    /** The owner (Pedro), staff (Dev, Moderator), or null for anyone else. */
+    const rankOf = (userId: string, roles: readonly string[]): StaffRank | null =>
+      userId === ownerId ? 'owner' : roles.some((r) => staffRoles.has(r)) ? 'staff' : null
+
+    const staffOf = async (userId: string, name: string, rank: StaffRank): Promise<Staff> => ({ discordId: userId, name, rank, account: await ideas.accountOf(userId) })
+
+    const actionsFor = (turn: StaffTurn) =>
+      staffActions(
+        {
+          desk,
+          ideas,
+          bugs,
+          log: async (message) => {
+            if (staffLog) await call('POST', `/channels/${staffLog}/messages`, message)
+          },
+        },
+        turn,
+      )
+
+    /**
+     * A staff message tagging the bot, in any channel: the LLM answers with
+     * every tool (`staffAgent.ts`), reading the message it replies to and
+     * that player's messages just before it. Once per message.
+     */
+    const answerMention = async (data: Record<string, unknown>, writer: OpenRouterConfig) => {
+      const tag = chatMessage(data)
+      const channelId = str(data.channel_id)
+      const roles = isRecord(data.member) ? (strings(data.member.roles) ?? []) : []
+      if (!tag || tag.bot || !channelId || !botId || !tag.content.match(new RegExp(`<@!?${botId}>`))) return
+      const rank = rankOf(tag.userId, roles)
+      if (!rank || !(await store.claim(`take:${tag.id}`))) return
+      try {
+        await call('POST', `/channels/${channelId}/typing`)
+        const replied = chatMessage(data.referenced_message)
+        const player = replied && !replied.bot && replied.userId !== tag.userId ? replied : null
+        const history = player ? await call('GET', `/channels/${channelId}/messages?before=${player.id}&limit=10`) : []
+        const before = (Array.isArray(history) ? history : []).map(chatMessage).filter((m): m is ChatMessage => m !== null)
+        const turn: StaffTurn = {
+          staff: await staffOf(tag.userId, displayName(data), rank),
+          ref: tag.id,
+          link: messageLink(config.guildId, channelId, tag.id),
+          player: player && {
+            discordId: player.userId,
+            name: displayName(data.referenced_message),
+            account: await ideas.accountOf(player.userId),
+            messages: suggestionBurst(player, before),
+          },
+        }
+        const said = tag.content.replace(new RegExp(`<@!?${botId}>`, 'g'), '').trim()
+        const earlier = replied?.userId === botId ? replied.content : null
+        const out = await runAgent(writer, { system: agentSystem(knowledge), prompt: agentPrompt(turn, said, earlier), tools: staffTools(actionsFor(turn)) })
+        const text = [out.text, ...out.receipts].filter(Boolean).join('\n\n')
+        await call('POST', `/channels/${channelId}/messages`, staffReply(text || (out.embeds.length ? '' : 'Done.'), { replyTo: tag.id, embeds: out.embeds }))
+      } catch (err) {
+        await call('PUT', `/channels/${channelId}/messages/${tag.id}/reactions/${encodeURIComponent('⚠️')}/@me`).catch(() => undefined)
+        throw err
+      }
+    }
+
+    /** What a command or an action came to, as its reply: an idea's embed, a receipt as it is, or the text. */
+    const outcomeReply = (out: Outcome) => staffReply(out.embed ? '' : (out.receipt ?? out.text), { embeds: out.embed ? [out.embed] : [] })
+
+    /** A slash command's answer (`STAFF_COMMANDS`). */
+    const runCommand = async (name: string, options: Map<string, string | number>, staff: Staff, ref: string, writer: OpenRouterConfig | null) => {
+      const opt = (key: string) => {
+        const v = options.get(key)
+        return typeof v === 'string' ? v : v === undefined ? '' : String(v)
+      }
+      const turn: StaffTurn = { staff, ref, link: null, player: null }
+      const noLlm = staffReply('The bot has no OpenRouter key yet, so it can’t write or answer. Ask Pedro to set `OPENROUTER_API_KEY`.')
+      switch (name) {
+        case 'ask': {
+          if (!writer) return noLlm
+          const out = await runAgent(writer, { system: agentSystem(knowledge), prompt: agentPrompt(turn, opt('question')), tools: readTools(actionsFor(turn)) })
+          return staffReply(`> ${opt('question').slice(0, 300)}\n\n${out.text || 'I have no answer.'}`)
+        }
+        case 'idea': {
+          if (!writer) return noLlm
+          const who = opt('player') ? parseWho(opt('player')) : null
+          const found = who ? await desk.find(who) : null
+          if (found && !found.ok) return staffReply(giftRefusalText('unknown', null, null))
+          // Credited to the player named (with a handle), else to the staff member.
+          const player = found?.ok ? found.player : null
+          const forTurn: StaffTurn = player?.handle
+            ? { ...turn, player: { discordId: player.discordId ?? '', name: `@${player.handle}`, account: { id: player.id, handle: player.handle }, messages: [] } }
+            : turn
+          const draft = await writeIdea(writer, { suggestion: [], note: opt('text') })
+          return draft ? outcomeReply(await actionsFor(forTurn).addIdea(draft)) : staffReply(NOT_ADDED.none)
+        }
+        case 'bug':
+          return outcomeReply(await actionsFor(turn).reportBug(opt('text')))
+        case 'player':
+          return outcomeReply(await actionsFor(turn).lookupPlayer(opt('who')))
+        case 'gift': {
+          const amount = options.get('amount')
+          return outcomeReply(await actionsFor(turn).sendGift(opt('player'), opt('kind'), typeof amount === 'number' ? amount : null))
+        }
+        default:
+          return staffReply('I don’t know that command.')
+      }
+    }
+
+    /** Answers a slash command: refuses anyone but staff (only they see it), defers (the LLM is slow), then edits the answer in. Once per interaction. */
+    const answerCommand = async (data: Record<string, unknown>, writer: OpenRouterConfig | null) => {
+      const id = str(data.id)
+      const token = str(data.token)
+      const appId = str(data.application_id)
+      const command = commandOf(data.data)
+      const member = isRecord(data.member) ? data.member : null
+      const userId = member && isRecord(member.user) ? str(member.user.id) : null
+      if (!id || !token || !appId || !command || !userId || !member) return
+      if (!(await store.claim(`slash:${id}`))) return
+      const callback = (body: unknown) => call('POST', `/interactions/${id}/${token}/callback`, body)
+      const rank = rankOf(userId, strings(member.roles) ?? [])
+      if (!rank) return void (await callback({ type: 4, data: { content: 'Only staff can use this.', flags: EPHEMERAL } }))
+      await callback({ type: 5, data: { flags: command.name === 'player' ? EPHEMERAL : 0 } })
+      const edit = (message: OutgoingMessage) => call('PATCH', `/webhooks/${appId}/${token}/messages/@original`, message)
+      try {
+        await edit(await runCommand(command.name, command.options, await staffOf(userId, displayName(data), rank), id, writer))
+      } catch (err) {
+        await edit(staffReply('⚠️ Something went wrong; the details are in the API log.')).catch(() => undefined)
+        throw err
+      }
+    }
+
+    const knowledge = loadKnowledge()
+    let commandsSet = false
+
     connectGateway(config.token, (type, data) => {
       if (type === 'READY') {
         botId = isRecord(data) && isRecord(data.user) ? str(data.user.id) : null
+        const appId = isRecord(data) && isRecord(data.application) ? str(data.application.id) : null
         if (gateOn) void sweep().catch((err) => console.error('discord sweep failed', err))
         void sweepReviews().catch((err) => console.error('discord review sweep failed', err))
+        if (appId && !commandsSet) {
+          commandsSet = true
+          void call('PUT', `/applications/${appId}/guilds/${config.guildId}/commands`, STAFF_COMMANDS).catch((err) => {
+            commandsSet = false
+            console.error('discord commands failed', err)
+          })
+        }
+      }
+      if (type === 'INTERACTION_CREATE' && isRecord(data) && data.guild_id === config.guildId && data.type === APPLICATION_COMMAND) {
+        void answerCommand(data, openRouter).catch((err) => console.error('discord command failed', err))
       }
       if (type === 'MESSAGE_REACTION_ADD' && isRecord(data) && data.channel_id === review && data.guild_id === config.guildId) {
         const messageId = str(data.message_id)
@@ -368,10 +582,14 @@ export const startDiscord = (
         const userId = str(data.user.id)
         if (userId) void post(`greet:${userId}`, intro, greetMessage(userId)).catch((err) => console.error('discord greet failed', err))
       }
+      if (openRouter && type === 'MESSAGE_CREATE' && isRecord(data) && data.guild_id === config.guildId && data.channel_id !== intro) {
+        void answerMention(data, openRouter).catch((err) => console.error('discord staff mention failed', err))
+      }
       if (!gateOn || type !== 'MESSAGE_CREATE' || !isRecord(data) || data.channel_id !== intro || data.guild_id !== config.guildId) return
       const m = introMessage(data)
       if (m) void gate(m, true).catch((err) => console.error('discord gate failed', err))
     })
+    if (!openRouter) console.warn('discord: no OPENROUTER_API_KEY, so tagging the bot does nothing and /ask and /idea say so')
     console.log('discord bot on')
   }
 

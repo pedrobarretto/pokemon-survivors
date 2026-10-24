@@ -3,4 +3,6 @@
 **/.env
 .git
 public
+# The Discord staff bot reads it (server/Dockerfile).
+!public/llms.txt
 docs
