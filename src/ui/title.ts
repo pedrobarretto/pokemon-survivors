@@ -95,8 +95,10 @@ export type Meadow = {
   explore: (on: boolean) => void
   /** Above whoever at the plaza the strolling partner stands close enough to talk to (and who), or null. */
   talkSpot: () => (Vec & { who: PlazaNpc }) | null
-  /** Who a tap is for: the shop (its shopkeepers, building or the edge marker pointing to it), Meowth, a stall, the festival's fountain or plaque; null for none. */
+  /** Who a tap is for: the shop (its shopkeepers, building or the edge marker pointing to it), Meowth, a stall (or its edge marker), the festival's fountain or plaque; null for none. */
   tapsShop: (at: Vec) => PlazaNpc | null
+  /** On a phone with the lobby's cards up, the partner's stage (CSS px): the shop's edge marker keeps to it, since the cards cover the view's edges; null otherwise. */
+  stageBox: (box: DOMRect | null) => void
 }
 
 export type TitleActions = {
@@ -1076,6 +1078,7 @@ export const titleScreen = (
     leave?.()
     leave = null
     actions.meadow.stick(null)
+    actions.meadow.stageBox(null)
     stage = null
     drag = null
     tap = null
@@ -1120,6 +1123,7 @@ export const titleScreen = (
     // Passear's hint goes once the partner gets its first order.
     if (exploring && (tap || move.x !== 0 || move.y !== 0)) exploreHint.classList.add('hidden')
     meadow.steer(move, tap, stage.feet())
+    meadow.stageBox(!exploring && layout() !== 'wide' ? stage.el.getBoundingClientRect() : null)
     meadow.stick(drag?.stick ?? null)
     tap = null
     stage.setOut(meadow.out())

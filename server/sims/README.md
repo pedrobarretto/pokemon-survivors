@@ -14,7 +14,7 @@ Only one previous version is kept. Two bumps deployed within the grace window st
 ## When you bump `RULES_VERSION`
 
 1. Bump it in `src/game/replay.ts` and pin the new digests `rulesGuard.test.ts` prints.
-2. Run `npm run rules:freeze`. It finds the code at N-1 (HEAD if the bump isn't committed, else `origin/main` when your branch sits on it, else the parent of the commit where N landed on HEAD's first-parent history), bundles it from a temporary `git worktree` with esbuild, writes `server/sims/rules-<N-1>.mjs` and deletes the previous one.
+2. Run `npm run rules:freeze`. It finds the code at N-1 (HEAD if the bump isn't committed, else `origin/main` when your branch sits on it, else the parent of the commit where N landed on HEAD's first-parent history), bundles it from a temporary `git worktree` with esbuild, writes `server/sims/rules-<N-1>.mjs` and deletes the previous one. The bundle's entry imports the game's modules in the order `server/src/sims.ts` does, since `src/game` has import cycles and the load order decides how they resolve; before writing, it checks the bundle's `MOVES` holds every move (a bundle that started from `replay.ts` lost the shop's TMs, and every replay with one armed threw in the worker).
 3. Commit the new bundle with the bump. `server/src/sims.test.ts` fails until the bundle in this folder is exactly `RULES_VERSION - 1`.
 
 Run it again after rebasing onto a newer `main`, so the bundle is built from the rules production actually plays.

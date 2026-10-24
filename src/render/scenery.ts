@@ -2,7 +2,7 @@ import { BIOMES, type BiomeId } from '../data/biomes'
 import type { LandmarkPiece } from '../data/landmarks'
 import type { PlacePiece } from '../data/places'
 import type { SolidKind } from '../data/terrain'
-import { canvasCache, context2d, createCanvas, dropKept, keepPacked, type Packed } from '../engine/pixelart'
+import { canvasCache, context2d, createCanvas, drawable, dropKept, keepPacked, type Packed } from '../engine/pixelart'
 
 /**
  * Painted scenery (made with PixelLab) standing in for pieces sculpted in
@@ -104,7 +104,7 @@ const pieceOfFile = (file: string) => {
   let piece = pieces.get(file)
   if (piece) return piece
   const img = image(file)
-  if (!img.complete || !img.naturalWidth) return null
+  if (!drawable(img)) return null
   pieces.set(file, (piece = toPiece(img, groupOf(file))))
   return piece
 }

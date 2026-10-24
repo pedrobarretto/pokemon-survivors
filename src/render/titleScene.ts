@@ -30,11 +30,12 @@ import {
   type Piece,
   type Plaza,
   type PlazaNpc,
+  type ViewBox,
 } from './plaza'
 
 /**
  * Attract-mode backdrop behind the menus: the meadow around the partner's
- * home, under a gently swaying camera, with wild Pokémon strolling around
+ * home, under a camera that stands still, with wild Pokémon strolling around
  * (and, rarely, a shiny). East of home stands the Kecleon plaza
  * (`render/plaza.ts`), the shop as a place. On the lobby the partner can hop
  * off its stage and take a walk among them (`meetPartner`, `steerPartner`):
@@ -147,6 +148,8 @@ export type TitleScene = {
   haunted: boolean
   /** Passear (`exploreMeadow`): the lobby's cards are away, the partner stays out in the meadow however long it idles. */
   exploring: boolean
+  /** A phone's lobby, its cards up: the partner's stage on screen (view px), where the shop's marker keeps to (`drawPlazaMarker`); null otherwise. */
+  stageBox: ViewBox | null
 }
 
 /** Every species that may roam: wild Pokémon and the starter lines (evolutions show up once a run has loaded them). */
@@ -161,8 +164,6 @@ const GHOSTS: readonly Dex[] = Object.values(ENEMIES).flatMap((e) => (!('boss' i
 /** Share of a haunted meadow's newcomers that are ghosts, when any is loaded. */
 const HAUNTED_SHARE = 0.65
 
-/** The camera's idle sway around its rest, world px. */
-const SWAY = { x: 5, y: 3 }
 /** Off-screen band (world px) where wanderers enter; past it they're recycled. */
 const MARGIN = 40
 /** How far outside the view (world px) newcomers appear. */
@@ -222,6 +223,7 @@ export const createTitleScene = (seed: number): TitleScene => {
     puffs: [],
     haunted: false,
     exploring: false,
+    stageBox: null,
   }
 }
 
@@ -293,11 +295,13 @@ export const exploreMeadow = (s: TitleScene, on: boolean, w: number, h: number) 
   if (p.state === 'out' || p.state === 'shop') p.state = 'back'
 }
 
-/** The camera's top-left resting at `place` for a `w`×`h` view (home sways a little). */
+/**
+ * The camera's top-left resting at `place` for a `w`×`h` view, on whole
+ * world pixels: a rest that drifts below a pixel shows on the pixel-art
+ * meadow as the whole scene ticking a pixel at a time.
+ */
 const restCam = (s: TitleScene, place: Place, w: number, h: number): Vec =>
-  place === 'plaza'
-    ? plazaFrame(s.plaza, w, h)
-    : { x: s.home.x - w / 2 + Math.sin(s.time * 0.21) * SWAY.x, y: s.home.y - h / 2 + Math.sin(s.time * 0.13) * SWAY.y }
+  place === 'plaza' ? plazaFrame(s.plaza, w, h) : { x: Math.round(s.home.x - w / 2), y: Math.round(s.home.y - h / 2) }
 
 const easeInOut = (k: number) => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2)
 
@@ -396,7 +400,7 @@ export const talkSpot = (s: TitleScene): (Vec & { who: PlazaNpc }) | null => {
   return p && p.state === 'out' && !s.trip ? talkAnchor(s.plaza, p) : null
 }
 
-/** Who a tap (world px) on the plaza is for: the shop (its shopkeepers, building or edge marker), Meowth or a stall; null for none. */
+/** Who a tap (world px) on the plaza is for: the shop (its shopkeepers, building or edge marker), Meowth or a stall (or its edge marker); null for none. */
 export const tapsPlaza = (s: TitleScene, at: Vec) => plazaTapped(s.plaza, at)
 
 /** Starts a stroll along one of the 8 sprite directions (towards `target` if given) or a short rest. */
@@ -630,7 +634,7 @@ export const stepTitleScene = (s: TitleScene, dt: number, w: number, h: number) 
     Object.assign(s.cam, restCam(s, s.rest, w, h))
   }
   if (p && p.state !== 'trip') stepPartner(s, p, dt, w, h)
-  // On a trip the camera eases there; else it rests (swaying a little) unless the partner is out in the meadow, where it follows.
+  // On a trip the camera eases there; else it rests unless the partner is out in the meadow, where it follows.
   if (s.trip) stepTrip(s, s.trip, dt, w, h)
   else if (!p || (p.state !== 'out' && p.state !== 'back')) {
     const rest = restCam(s, s.rest, w, h)
@@ -755,5 +759,5 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
     blitCentered(ctx, bubbles[REACTIONS[wd.greet.kind].emote], Math.round(wd.x) - camX, top - 8 - bob)
   }
   // While the lobby rests at home (or the partner strolls), a card at the edge points the way to the shop.
-  drawPlazaMarker(ctx, s.plaza, camX, camY, w, h, s.time, s.partner !== null && !s.trip && s.rest === 'home')
+  drawPlazaMarker(ctx, s.plaza, camX, camY, w, h, s.time, s.partner !== null && !s.trip && s.rest === 'home', s.stageBox)
 }

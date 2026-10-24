@@ -11,6 +11,8 @@ export const createCanvas = (w: number, h: number) => {
   const c = document.createElement('canvas')
   c.width = Math.max(1, Math.ceil(w))
   c.height = Math.max(1, Math.ceil(h))
+  // A cache's canvas may come back blank on its own (a GPU reset need not reach the game's canvas): it redraws them all.
+  c.addEventListener('contextrestored', canvasRestored)
   return c
 }
 
@@ -28,6 +30,32 @@ export const context2d = (canvas: HTMLCanvasElement) => {
   if (!ctx) throw new Error('No 2D canvas context')
   ctx.imageSmoothingEnabled = false
   return ctx
+}
+
+let probe: CanvasRenderingContext2D | null = null
+const checked = new WeakMap<HTMLImageElement, boolean>()
+
+/**
+ * Whether a loaded image can be drawn (and read). A download cut short or
+ * corrupt can end `complete` with its size known from the header yet throw on
+ * every `drawImage` ("broken"), and some browsers settle `decode()` with a 0×0
+ * image; both draw nothing instead. Tried once per image, on a 1×1 canvas.
+ */
+export const drawable = (img: HTMLImageElement) => {
+  if (!img.complete) return false
+  let ok = checked.get(img)
+  if (ok === undefined) {
+    ok = img.naturalWidth > 0 && img.naturalHeight > 0
+    if (ok) {
+      try {
+        ;(probe ??= context2d(createCanvas(1, 1))).drawImage(img, 0, 0, 1, 1)
+      } catch {
+        ok = false
+      }
+    }
+    checked.set(img, ok)
+  }
+  return ok
 }
 
 export const fromStrings = (rows: readonly string[], palette: Palette, opts: { mirror?: boolean } = {}): PixelSprite => {
@@ -65,9 +93,24 @@ export const onCanvasReset = (reset: () => void, holds?: () => unknown) => {
   if (holds) holders.push(holds)
 }
 
-/** Drops every registered cache so it redraws. Called when the game canvas gets its context back. */
+/** Drops every registered cache so it redraws. Called when a canvas gets its context back (`canvasRestored`). */
 export const resetCanvases = () => {
   for (const reset of resets) reset()
+}
+
+let resetQueued = false
+
+/**
+ * The `contextrestored` listener of every canvas the game draws on (`createCanvas`'s, and the
+ * game canvas'). One GPU reset restores them all in a burst: the caches drop once for it.
+ */
+export const canvasRestored = () => {
+  if (resetQueued) return
+  resetQueued = true
+  queueMicrotask(() => {
+    resetQueued = false
+    resetCanvases()
+  })
 }
 
 /** Canvases (anything with `getContext` and a size), told apart from the images and patterns caches also keep. */

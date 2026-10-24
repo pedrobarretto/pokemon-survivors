@@ -1,3 +1,4 @@
+// `scripts/freeze-rules.mjs` bundles the frozen simulator with these imports in this order (src/game's import cycles resolve by load order): keep the two in step.
 import type { EnemyId } from '../../src/data/enemies'
 import { halloweenFits } from '../../src/game/halloween'
 import { outbreakFits } from '../../src/game/outbreak'

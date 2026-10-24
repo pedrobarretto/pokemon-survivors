@@ -3,6 +3,7 @@ import type { Festival, PlazaStage } from './data/festivals'
 import { brasiliaDay, type DayKey } from './game/day'
 import { capLeft, festivalGifts, festivalOn, latestFestival, parseFestivalStatus, plazaStage, type FestivalStatus, type FestivalTotals } from './game/festival'
 import { loadSave, today } from './ui/save'
+import { timeoutSignal } from './net/timeout'
 
 /**
  * Festival da Praça on the device: asks the API for the pot (`GET /festival`)
@@ -100,7 +101,7 @@ export const loadFestival = (force = false): Promise<FestivalStatus | null> => {
   asking = (async () => {
     try {
       const token = await sessionToken()
-      const res = await fetch(`${API_URL}/festival`, { headers: token ? { Authorization: `Bearer ${token}` } : {}, signal: AbortSignal.timeout(TIMEOUT_MS) })
+      const res = await fetch(`${API_URL}/festival`, { headers: token ? { Authorization: `Bearer ${token}` } : {}, signal: timeoutSignal(TIMEOUT_MS) })
       const next = res.ok ? parseFestivalStatus(await res.json()) : null
       if (next) {
         status = next
@@ -138,7 +139,7 @@ export const setDonorPublic = async (show: boolean): Promise<boolean> => {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ public: show }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: timeoutSignal(TIMEOUT_MS),
     })
     if (!res.ok) return false
     if (status?.me) status = { ...status, me: { ...status.me, public: show } }

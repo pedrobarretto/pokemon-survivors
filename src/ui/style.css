@@ -5210,8 +5210,9 @@ button {
   border-radius: 5px;
 }
 
-/* Headings span the whole grid (the TM shelf's groups). */
-.shop-items.grid .shop-group {
+/* Headings span the whole grid (the TM shelf's groups), and so does the shelf's line on top. */
+.shop-items.grid .shop-group,
+.shop-items.grid > .shop-intro-row {
   grid-column: 1 / -1;
 }
 
@@ -5355,7 +5356,7 @@ button {
   color: #6878a8;
 }
 
-.shop-group:first-child {
+.shop-intro-row + .shop-group {
   margin-top: 0;
 }
 
@@ -5556,11 +5557,11 @@ button {
   }
 }
 
-/* Portrait phones: a bottom sheet over the lower half, the plaza and Kecleon's box above it.
-   On a short phone half the screen leaves the cards less than a row, so the sheet grows up to 420 px (at most 62% of the screen). */
+/* Portrait phones: a bottom sheet over most of the screen, the plaza and Kecleon's box above it.
+   The cards need the room more than the plaza does: the sheet takes 72% of the screen, up to 560 px on a tall phone. */
 @media (max-width: 759px) and (orientation: portrait) {
   :root {
-    --shop-sheet-h: max(calc(47 * var(--dvh)), min(420px, calc(62 * var(--dvh))));
+    --shop-sheet-h: max(calc(47 * var(--dvh)), min(560px, calc(72 * var(--dvh))));
   }
   .shop-sheet {
     top: auto;
@@ -5596,15 +5597,14 @@ button {
   }
   .shop-tabs {
     flex-wrap: nowrap;
+    gap: 4px;
     overflow-x: auto;
     scrollbar-width: none;
   }
-  .shop-tabs {
-    gap: 4px;
-  }
   .shop-tab {
     flex: none;
-    padding: 6px 6px;
+    min-height: 34px;
+    padding: 6px 8px;
     font-size: 7px;
   }
   .shop-intro-row {
@@ -5717,8 +5717,16 @@ button {
     padding: 4px 8px;
     font-size: 8px;
   }
+  /* One row of shelves, swiped sideways like on a portrait phone: wrapped, they took three rows off the cards. */
+  .shop-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
   .shop-tab {
-    padding: 4px 7px;
+    flex: none;
+    min-height: 30px;
+    padding: 4px 8px;
     font-size: 8px;
   }
   .shop-intro-row {
@@ -7911,6 +7919,11 @@ button {
 }
 
 .floor-card.hidden {
+  display: none;
+}
+
+/* Paused on the card (Esc, or the tab hidden: alt-tab, another app) it steps aside: over the pause menu it left the screen black with no way back on a phone. */
+.hud.menu-open .floor-card {
   display: none;
 }
 
@@ -15489,6 +15502,7 @@ button.hall-tile:hover {
   height: 120px;
 }
 
+.shop-items.grid > .shop-intro-row,
 .shop-items.grid > .shop-card,
 .shop-items.grid > .shop-group {
   scroll-snap-align: start;

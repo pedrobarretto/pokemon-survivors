@@ -2,7 +2,7 @@ import { bodyOf, type Body } from '../data/bodies'
 import type { MegaForm } from '../data/megas'
 import type { LegendForm } from '../data/legends'
 import manifest from '../data/sprites.generated.json'
-import { createCanvas, context2d, fromStrings, onCanvasReset } from '../engine/pixelart'
+import { createCanvas, context2d, drawable, fromStrings, onCanvasReset } from '../engine/pixelart'
 import type { Dir8 } from '../engine/math'
 import { detail } from './quality'
 
@@ -119,12 +119,14 @@ const loadImage = (src: string, key: Key, rank: number) =>
     const start = () => {
       const img = new Image()
       img.src = src
-      // A browser that can't decode ahead (a rejected `decode` on an image that did load) still gets the image.
+      // A browser that can't decode ahead (a rejected `decode` on an image that did load) still gets the image,
+      // but never a broken or empty one, which would throw on every frame that draws it (`drawable`).
+      const fail = () => Promise.reject(new Error(`Failed to load ${src}`))
       img
         .decode()
         .then(
-          () => img,
-          () => (img.complete && img.naturalWidth > 0 ? img : Promise.reject(new Error(`Failed to load ${src}`))),
+          () => (img.naturalWidth > 0 && img.naturalHeight > 0 ? img : fail()),
+          () => (drawable(img) ? img : fail()),
         )
         .then(resolve, reject)
         .finally(() => {
@@ -288,7 +290,9 @@ const spot = (w: number, h: number): { shelf: Shelf; x: number } | null => {
 /**
  * A spot for a `w`×`h` silhouette, freeing the least recently drawn ones that
  * could give theirs (a few hundred looked at, at most); failing that, the
- * least recently drawn page whole.
+ * least recently drawn pages whole, as many as it takes: safe mode turning on
+ * mid-session lowers the cap below the pages already made. Null only for a
+ * frame no page can hold.
  */
 const claim = (w: number, h: number) => {
   const free = spot(w, h)
@@ -303,9 +307,12 @@ const claim = (w: number, h: number) => {
       return { shelf, x }
     }
   }
-  const page = oldest?.shelf?.page ?? pages[0]!
-  freePage(page)
-  return spot(w, h)!
+  while (pages.length > 0) {
+    freePage(oldest?.shelf?.page ?? pages[0]!)
+    const freed = spot(w, h)
+    if (freed) return freed
+  }
+  return spot(w, h)
 }
 
 /** Packs the silhouettes made since the last task into pages, which no frame is drawing from now, and frees their loose canvases. */
@@ -315,9 +322,12 @@ const pack = () => {
     const loose = o.loose
     if (!loose) continue
     o.loose = null
-    if (o.sheet.overlays?.get(o.key) === o) {
-      const { fw, fh } = o.sheet
-      const { shelf, x } = claim(fw, fh)
+    const { fw, fh } = o.sheet
+    const place = o.sheet.overlays?.get(o.key) === o && claim(fw, fh)
+    // Left unpacked, it's forgotten and made again when next drawn.
+    if (place === null) evict(o)
+    else if (place) {
+      const { shelf, x } = place
       shelf.page.ctx.clearRect(x, shelf.y, fw, shelf.h)
       shelf.page.ctx.drawImage(loose, x, shelf.y)
       o.shelf = shelf
@@ -580,6 +590,26 @@ export const sweepSprites = (keep: KeepSprites, idle: number) => {
 }
 
 /**
+ * Drops the variant a sheet that threw on drawing belongs to, as a sweep would, so it draws its stand-in
+ * (a puff, the normal colors) instead of throwing every frame, and is asked for again after the next sweep.
+ */
+const forgetBroken = (broken: Sheet) => {
+  broken.seen = GONE
+  for (const [key, s] of cache) {
+    const sheets = new Set(Object.values(s.anims))
+    if (!sheets.has(broken)) continue
+    cache.delete(key)
+    failed.add(key)
+    resident -= bytesOf(s)
+    for (const sheet of sheets) {
+      sheet.seen = GONE
+      releaseOverlays(sheet)
+      freeImage(sheet.img)
+    }
+  }
+}
+
+/**
  * Lets go of every sheet but `keep`'s at once and of the loads still waiting
  * their turn, once the images already decoding land: a run frees the lobby's
  * art before it loads its own, so a phone never holds both. Whatever asks
@@ -830,7 +860,8 @@ const WHITE = '#fff'
 
 /**
  * Draws a species at its feet position (x, y). Its flash, tint and outline are
- * the frame's silhouettes (`overlay`). Sprites dropped by a sweep draw nothing.
+ * the frame's silhouettes (`overlay`). Sprites dropped by a sweep draw nothing, and a
+ * sheet that throws (a broken image) drops its variant for its stand-in (`forgetBroken`).
  */
 export const drawPokemon = (
   ctx: CanvasRenderingContext2D,
@@ -855,22 +886,26 @@ export const drawPokemon = (
   const flash = opts.flash ?? 0
   if (alpha !== 1) ctx.globalAlpha = alpha
   const { fw, fh } = sheet
-  if (opts.outline) {
-    const edge = overlay(sheet, frame, dir, opts.outline)
-    blit(ctx, edge, fw, fh, dx - 1, dy, dw, dh)
-    blit(ctx, edge, fw, fh, dx + 1, dy, dw, dh)
-    blit(ctx, edge, fw, fh, dx, dy - 1, dw, dh)
-    blit(ctx, edge, fw, fh, dx, dy + 1, dw, dh)
-  }
-  if (flash < 1) ctx.drawImage(sheet.img, frame * fw, dir * fh, fw, fh, dx, dy, dw, dh)
-  const tint = opts.tint
-  if (tint && tint.amount > 0 && flash < 1) {
-    ctx.globalAlpha = alpha * Math.min(1, tint.amount)
-    blit(ctx, overlay(sheet, frame, dir, tint.color), fw, fh, dx, dy, dw, dh)
-  }
-  if (flash > 0) {
-    ctx.globalAlpha = alpha * Math.min(1, flash)
-    blit(ctx, overlay(sheet, frame, dir, WHITE), fw, fh, dx, dy, dw, dh)
+  try {
+    if (opts.outline) {
+      const edge = overlay(sheet, frame, dir, opts.outline)
+      blit(ctx, edge, fw, fh, dx - 1, dy, dw, dh)
+      blit(ctx, edge, fw, fh, dx + 1, dy, dw, dh)
+      blit(ctx, edge, fw, fh, dx, dy - 1, dw, dh)
+      blit(ctx, edge, fw, fh, dx, dy + 1, dw, dh)
+    }
+    if (flash < 1) ctx.drawImage(sheet.img, frame * fw, dir * fh, fw, fh, dx, dy, dw, dh)
+    const tint = opts.tint
+    if (tint && tint.amount > 0 && flash < 1) {
+      ctx.globalAlpha = alpha * Math.min(1, tint.amount)
+      blit(ctx, overlay(sheet, frame, dir, tint.color), fw, fh, dx, dy, dw, dh)
+    }
+    if (flash > 0) {
+      ctx.globalAlpha = alpha * Math.min(1, flash)
+      blit(ctx, overlay(sheet, frame, dir, WHITE), fw, fh, dx, dy, dw, dh)
+    }
+  } catch {
+    forgetBroken(sheet)
   }
   ctx.globalAlpha = 1
 }

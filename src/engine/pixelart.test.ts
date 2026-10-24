@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canvasCache, heldCanvases, lazy, resetCanvases, sweepArt, weighCanvases } from './pixelart'
+import { canvasCache, canvasRestored, heldCanvases, lazy, onCanvasReset, resetCanvases, sweepArt, weighCanvases } from './pixelart'
 
 describe('resetCanvases', () => {
   it('drops cached art so it is drawn again after a GPU reset', () => {
@@ -14,6 +14,17 @@ describe('resetCanvases', () => {
 
     expect(cache.size).toBe(0)
     expect(art()).toBe(2)
+  })
+
+  it('drops the caches once for a burst of canvases restored by the same reset', async () => {
+    let drops = 0
+    onCanvasReset(() => drops++)
+    canvasRestored()
+    canvasRestored()
+    canvasRestored()
+    expect(drops).toBe(0)
+    await Promise.resolve()
+    expect(drops).toBe(1)
   })
 })
 

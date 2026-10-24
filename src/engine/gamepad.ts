@@ -47,9 +47,27 @@ export const padActions = (pad: Table<number>, buttons: ReadonlySet<number>, sti
  */
 export type PadState = { index: number; id: string; buttons: ReadonlySet<number>; stick: ReadonlySet<Action>; move: Vec; rested: boolean }
 
+/** Set once the browser refused the gamepad API, so the frame loop stops asking. */
+let padsBlocked = false
+
+/**
+ * The pads the browser lists, as an array. A page embedded in an iframe
+ * whose permissions policy leaves out `gamepad` throws a SecurityError on
+ * every ask (no pads there, then), and older Chromes answer a `GamepadList`, not an array.
+ */
+const browserPads = (): readonly (Gamepad | null)[] => {
+  if (padsBlocked) return []
+  try {
+    return Array.from(navigator.getGamepads?.() ?? [])
+  } catch {
+    padsBlocked = true
+    return []
+  }
+}
+
 /** Every connected pad, read now. A pad the browser still lists after unplugging it (`connected: false`) is gone. */
 export const readPads = (): PadState[] =>
-  (navigator.getGamepads?.() ?? []).flatMap((pad) => {
+  browserPads().flatMap((pad) => {
     if (!pad?.connected) return []
     const move = stickVector(pad.axes)
     return [{ index: pad.index, id: pad.id, buttons: new Set(pad.buttons.flatMap((b, i) => (b.pressed ? [i] : []))), stick: stickActions(pad.axes), move, rested: move.x === 0 && move.y === 0 }]

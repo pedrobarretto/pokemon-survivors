@@ -30,9 +30,35 @@ const applyMix = () => {
   graph.music.gain.setTargetAtTime(loudness(mix.musicVolume) * MUSIC_HEADROOM, t, 0.02)
 }
 
+declare global {
+  interface Window {
+    /** Safari before 14.1 names the constructor this way. */
+    webkitAudioContext?: typeof AudioContext
+  }
+}
+
+/** Set when this browser has no WebAudio (iOS Lockdown Mode turns it off) or refused a context: the game plays silent. */
+let silent = false
+
+/** A fresh AudioContext, or null where the browser has none to give. */
+const createContext = () => {
+  const Ctor = window.AudioContext ?? window.webkitAudioContext
+  if (!Ctor) return null
+  try {
+    return new Ctor()
+  } catch {
+    return null
+  }
+}
+
+/** The sfx bus and its context, made on the first call; null where WebAudio is missing (sounds just don't play). */
 const audio = () => {
   if (!graph) {
-    const ctx = new AudioContext()
+    const ctx = silent ? null : createContext()
+    if (!ctx) {
+      silent = true
+      return null
+    }
     const master = ctx.createGain()
     const sfx = ctx.createGain()
     const music = ctx.createGain()
@@ -69,7 +95,9 @@ export const onAudioRunning = (fn: () => void) => {
 }
 
 const tone = (freq: number, endFreq: number, duration: number, wave: Wave, volume = 0.3, delay = 0) => {
-  const { ctx, sfx } = audio()
+  const out = audio()
+  if (!out) return
+  const { ctx, sfx } = out
   const t = ctx.currentTime + delay
   const osc = ctx.createOscillator()
   const gain = ctx.createGain()
@@ -84,7 +112,9 @@ const tone = (freq: number, endFreq: number, duration: number, wave: Wave, volum
 }
 
 const noise = (duration: number, volume = 0.2, delay = 0) => {
-  const { ctx, sfx } = audio()
+  const out = audio()
+  if (!out) return
+  const { ctx, sfx } = out
   const t = ctx.currentTime + delay
   const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate)
   const data = buffer.getChannelData(0)
@@ -742,13 +772,13 @@ export const playSfx = (name: Sfx, minGapMs = 40) => {
 
 const cries = new Map<string, Promise<AudioBuffer | null>>()
 
-/** Decodes a cry once. `null` means this browser can't decode it in WebAudio (old Safari + .ogg). */
+/** Decodes a cry once. `null` means this browser can't decode it in WebAudio (old Safari + .ogg) or has no WebAudio. */
 const loadCry = (url: string) => {
   let buffer = cries.get(url)
   if (!buffer) {
     buffer = fetch(url)
       .then((r) => r.arrayBuffer())
-      .then((data) => audio().ctx.decodeAudioData(data))
+      .then((data) => audio()?.ctx.decodeAudioData(data) ?? null)
       .catch(() => null)
     cries.set(url, buffer)
   }
@@ -767,7 +797,9 @@ export const playCry = (url: string, volume = 0.35) => {
       el.volume = volume * loudness(mix.sfxVolume)
       return void el.play().catch(() => {})
     }
-    const { ctx, sfx } = audio()
+    const out = audio()
+    if (!out) return
+    const { ctx, sfx } = out
     const src = ctx.createBufferSource()
     const gain = ctx.createGain()
     src.buffer = buffer
@@ -784,7 +816,8 @@ export const playCry = (url: string, volume = 0.35) => {
  * buffer, which older iOS needs before WebAudio makes any sound.
  */
 export const unlockAudio = () => {
-  const { ctx } = audio()
+  const ctx = audio()?.ctx
+  if (!ctx) return
   if (ctx.state === 'running') return
   const src = ctx.createBufferSource()
   src.buffer = ctx.createBuffer(1, 1, 22050)

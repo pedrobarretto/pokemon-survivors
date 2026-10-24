@@ -12,6 +12,7 @@ import { createStickPace, paceStick, type StickPace } from './stickPace'
 import { groupHome, measureRtt, median, pickHome, relayFor, type VpsUrls } from './relays'
 import { closeReason, parseServerMessage } from './wire'
 import { loadoutOf, settingsOf, type CoopPick, type CoopSettings } from './start'
+import { timeoutSignal } from '../net/timeout'
 
 /**
  * The co-op client: one room, its socket and the run's lockstep, as plain
@@ -654,7 +655,7 @@ export const createCoopClient = (deps: CoopDeps) => {
    */
   const measureVps = () => {
     if (!measured || deps.now() - measured.at > RTT_FRESH_MS) {
-      const get = (u: string) => deps.fetch(u, { method: 'GET', signal: AbortSignal.timeout(3000) })
+      const get = (u: string) => deps.fetch(u, { method: 'GET', signal: timeoutSignal(3000) })
       const relays = Object.entries(vps).flatMap(([home, url]) => (isRelayHome(home) && home !== 'cf' && url ? [{ home, url: base(url) }] : []))
       measured = {
         at: deps.now(),
@@ -666,7 +667,7 @@ export const createCoopClient = (deps: CoopDeps) => {
 
   const reserve = async (home: RelayHome, region: Region, timeout?: number): Promise<CreateResult> => {
     try {
-      const signal = timeout === undefined ? undefined : AbortSignal.timeout(timeout)
+      const signal = timeout === undefined ? undefined : timeoutSignal(timeout)
       const res = await deps.fetch(`${relayUrl(home)}/rooms`, { method: 'POST', body: JSON.stringify({ v: PROTOCOL, build: deps.build, region }), headers: { 'Content-Type': 'application/json' }, signal })
       const body: unknown = await res.json()
       if (typeof body === 'object' && body !== null && 'code' in body && typeof body.code === 'string') {

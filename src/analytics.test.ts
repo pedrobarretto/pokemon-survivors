@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { flagIn, isOwnError } from './analytics'
+import { flagIn, isExpectedFailure, isOwnError } from './analytics'
 
 const origin = 'https://www.pokemonsurvivors.com'
 const errorWithStack = (stack: string) => Object.assign(new Error('x'), { stack })
@@ -25,9 +25,31 @@ describe('isOwnError', () => {
     expect(isOwnError(errorWithStack(`TypeError: x\n    at lG (${origin}/assets/main-a.js:27:1035830)`), undefined, origin)).toBe(true)
   })
 
+  it('drops errors from another JavaScript world (an in-app browser injection)', () => {
+    // An error from another world: an error to `Object.prototype.toString`, not one of this page's `Error`s.
+    const foreign = (message: string) => ({ message, stack: '', [Symbol.toStringTag]: 'Error' })
+    expect(isOwnError(foreign('La'), undefined, origin)).toBe(false)
+    expect(isOwnError(foreign('Maximum call stack size exceeded.'), undefined, origin)).toBe(false)
+  })
+
   it('keeps what it cannot place', () => {
     expect(isOwnError('boom', undefined, origin)).toBe(true)
     expect(isOwnError(errorWithStack('no urls here'), '', origin)).toBe(true)
+  })
+})
+
+describe('isExpectedFailure', () => {
+  it('expects stale chunks, Clerk UI loads and dropped requests', () => {
+    expect(isExpectedFailure(new TypeError('Failed to fetch dynamically imported module: https://x/assets/changelog-a.js'))).toBe(true)
+    expect(isExpectedFailure(Object.assign(new Error('Clerk: Failed to load Clerk UI'), { code: 'failed_to_load_clerk_ui' }))).toBe(true)
+    expect(isExpectedFailure(new TypeError('Load failed'))).toBe(true)
+    expect(isExpectedFailure(new DOMException('signal timed out', 'TimeoutError'))).toBe(true)
+  })
+
+  it('reports the rest', () => {
+    expect(isExpectedFailure(new TypeError("Cannot read properties of undefined (reading 'line')"))).toBe(false)
+    expect(isExpectedFailure(new DOMException('Access to the feature "gamepad" is disallowed', 'SecurityError'))).toBe(false)
+    expect(isExpectedFailure('boom')).toBe(false)
   })
 })
 

@@ -1,5 +1,5 @@
 import { clamp, dir8, type Dir8, type Vec } from '../engine/math'
-import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, ellipse, glow, lazy, onCanvasReset } from '../engine/pixelart'
+import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, drawable, ellipse, glow, lazy, onCanvasReset } from '../engine/pixelart'
 import { EMOTES, type Emote } from './art'
 import { drawSparkles, shadow } from './draw'
 import { LANTERN_ART, lanternString, stringLanterns, type LanternKind, type LanternString } from './lanterns'
@@ -163,14 +163,19 @@ const measure = (img: HTMLImageElement): Art => {
   return { img, minX, minY, maxY, w: maxX - minX + 1, h: maxY - minY + 1 }
 }
 
-const loadArt = (ids: Iterable<ArtId>) => {
+/** Tries left after a PNG fails to load (or loads empty or broken), and the wait before the next try. */
+const ART_TRIES = 3
+const ART_RETRY_MS = 5000
+
+const loadArt = (ids: Iterable<ArtId>, tries = ART_TRIES) => {
   for (const id of ids) {
     const img = new Image()
     img.src = artFile(id)
-    void img.decode().then(
-      () => arts.set(id, measure(img)),
-      () => {},
-    )
+    const landed = () => {
+      if (drawable(img)) arts.set(id, measure(img))
+      else if (tries > 1) setTimeout(() => loadArt([id], tries - 1), ART_RETRY_MS)
+    }
+    void img.decode().then(landed, landed)
   }
 }
 
@@ -673,8 +678,8 @@ export type Plaza = {
   /** The shop's level (set by the shell: the save's, or the dev override). */
   level: ShopLevel
   keepers: [Keeper, Keeper]
-  /** The edge marker as last drawn (world px), for taps. */
-  marker: { x: number; y: number; shown: boolean }
+  /** The edge markers as last drawn (world px), for taps: the shop's and a seasonal stall's. */
+  markers: Record<MarkerWho, { x: number; y: number; shown: boolean }>
   /** The green Kecleon blends into the counter (the 1-in-20 easter egg) until it pops out (`revealKeeper`). */
   hidden: boolean
   /** Scene time the shop last grew a level: dust and sparkles around the new building (`celebratePlaza`). */
@@ -697,7 +702,7 @@ export const createPlaza = (home: Vec): Plaza => {
       { hopAt: -9, emote: 'note', dir: 0 },
       { hopAt: -9, emote: 'sparkle', dir: 0 },
     ],
-    marker: { x: 0, y: 0, shown: false },
+    markers: { keeper: { x: 0, y: 0, shown: false }, stall: { x: 0, y: 0, shown: false } },
     hidden: false,
     party: -9,
     focus: 0,
@@ -883,9 +888,17 @@ const padsOf = (plaza: Plaza, layout: Layout): readonly Pad[] => {
   return pads
 }
 
-/** Who a tap at `at` (world px) is for: the shop (a shopkeeper, the building or the edge marker), Meowth (him or his wagon), a stall, Lanturn (it or its market), the festival's fountain or plaque; null for none. */
+/** Who a tap at `at` (world px) is for: the shop (a shopkeeper, the building or its edge marker), Meowth (him or his wagon), a stall (or its edge marker), Lanturn (it or its market), the festival's fountain or plaque; null for none. */
 export const plazaTapped = (plaza: Plaza, at: Vec): PlazaNpc | null => {
-  if (plaza.marker.shown && Math.abs(at.x - plaza.marker.x) <= 18 && Math.abs(at.y - plaza.marker.y) <= 15) return 'keeper'
+  // A finger's reach around a marker; side by side, the nearer one.
+  const reach = (who: MarkerWho) => {
+    const m = plaza.markers[who]
+    const dx = Math.abs(at.x - m.x)
+    const dy = Math.abs(at.y - m.y)
+    return m.shown && dx <= 18 && dy <= 15 ? dx + dy : Infinity
+  }
+  const marked = reach('stall') < reach('keeper') ? 'stall' : 'keeper'
+  if (reach(marked) < Infinity) return marked
   const layout = plazaLayout(plaza)
   if (!layout) return null
   const near = (spot: Placed) => Math.abs(at.x - plaza.x - spot.x) <= 12 && at.y <= plaza.y + spot.y + 3 && at.y >= plaza.y + spot.y - 30
@@ -1491,9 +1504,28 @@ export const drawPlazaParty = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX
   drawSparkles(ctx, x, y - layout.building.h * 0.7, layout.building.w * 0.5, since - 0.45, 11)
 }
 
-/** The edge marker's box: Kecleon's head on a white card. Null until Kecleon's sheets are in (`lazy` tries again then). */
-const markerCard = lazy(() => {
-  const s = loadedSprites(KECLEON_DEX)
+/** Who an edge marker leads to: the shop (Kecleon's card) or a seasonal stall (its keeper's). */
+export type MarkerWho = 'keeper' | 'stall'
+
+/** A card's inner colour, its arrow's and how far (px) below the sprite's top its head shows, for the shop and each seasonal stall. */
+type MarkerLook = { card: string; arrow: string; headDy: number }
+const SHOP_MARKER: MarkerLook = { card: '#e0f0d0', arrow: '#5cb048', headDy: 0 }
+const STALL_MARKERS = {
+  // Duskull's top is its hood: the card shows the skull under it.
+  halloween: { card: '#e8dcf4', arrow: '#f08830', headDy: 8 },
+  christmas: { card: '#f8e0e0', arrow: '#d84838', headDy: 0 },
+} as const satisfies Record<StallId, MarkerLook>
+
+const markerCards = canvasCache<string, HTMLCanvasElement>()
+/** Stall keepers whose sheets were asked for, so the marker asks once. */
+const markerAsked = new Set<number>()
+
+/** An edge marker's box: a Pokémon's head (`dex`) on a white card. Null until its sheets are in. */
+const markerCard = (dex: number, look: MarkerLook) => {
+  const key = `${dex}:${look.card}`
+  const cached = markerCards.get(key)
+  if (cached) return cached
+  const s = loadedSprites(dex)
   if (!s) return null
   const sheet = s.anims.Idle
   const card = createCanvas(24, 19)
@@ -1503,47 +1535,42 @@ const markerCard = lazy(() => {
   ctx.fillRect(0, 1, 24, 17)
   ctx.fillStyle = '#f8f8f8'
   ctx.fillRect(1, 1, 22, 17)
-  ctx.fillStyle = '#e0f0d0'
+  ctx.fillStyle = look.card
   ctx.fillRect(2, 2, 20, 15)
-  // The head: the top of the first idle frame, facing the player.
-  const top = Math.max(0, Math.round(sheet.fh / 2 + s.footY - s.bodyH))
+  // The head: the top of the first idle frame (`headDy` lower), facing the player.
+  const top = Math.max(0, Math.round(sheet.fh / 2 + s.footY - s.bodyH) + look.headDy)
   ctx.drawImage(sheet.img, Math.round(sheet.fw / 2 - 9), top, 18, 14, 3, 3, 18, 14)
+  markerCards.set(key, card)
   return card
-})
+}
 /** How far (px) the plaza must reach into the view to count as on screen: a sliver at the edge still gets the marker, drawn over it. */
 const MARKER_INSET = 16
 
 /**
- * Whether any of the plaza reaches `MARKER_INSET` px into the `w`×`h` view:
- * a piece's box, or the floor's ellipse itself (not its box, whose corners
- * hold only grass).
+ * Whether a piece of the plaza (the building, a prop, a visitor, a festival
+ * piece) reaches `MARKER_INSET` px into the `w`×`h` view. The floor doesn't
+ * count: a caravan or a stall widens it into the corner of home's view, where
+ * a few cobblestones (often under the lobby's buttons) don't say where the shop is.
  */
 const plazaInView = (plaza: Plaza, layout: Layout, camX: number, camY: number, w: number, h: number) => {
   const left = camX + MARKER_INSET - plaza.x
   const top = camY + MARKER_INSET - plaza.y
   const right = camX + w - MARKER_INSET - plaza.x
   const bottom = camY + h - MARKER_INSET - plaza.y
-  if (layout.pieces.some((b) => b.right > left && b.left < right && b.bottom > top && b.top < bottom)) return true
-  // The view's point nearest the floor's middle is inside the ellipse when they meet.
-  const c = layout.cobbles
-  const dx = (clamp(c.x, left, right) - c.x) / c.rx
-  const dy = (clamp(c.y, top, bottom) - c.y) / c.ry
-  return dx * dx + dy * dy < 1
+  return layout.pieces.some((b) => b.right > left && b.left < right && b.bottom > top && b.top < bottom)
 }
 
+/** A box on screen, view px. */
+export type ViewBox = { left: number; top: number; right: number; bottom: number }
+
 /**
- * A card with Kecleon's head and an arrow at the edge of the view, pointing
- * at the shop while no part of the plaza (its cobblestones, the building, a
- * visitor, the festival's pieces) is on screen. It remembers where it was
- * drawn (`plaza.marker`) so a tap on it can lead there.
+ * Where an edge marker for the view point `target` stands (its card's middle)
+ * and which way its arrow points. `inside` (a phone's lobby, its cards up) is
+ * the open meadow around the partner: the view's edges are under the cards
+ * there, so the marker sits at that box's lower corner on the target's side,
+ * where it shows whole and takes taps.
  */
-export const drawPlazaMarker = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, w: number, h: number, time: number, show: boolean) => {
-  plaza.marker.shown = false
-  const layout = plazaLayout(plaza)
-  if (!show || !layout || plazaInView(plaza, layout, camX, camY, w, h)) return
-  const target = { x: plaza.x - camX, y: plaza.y - 30 - camY }
-  const box = markerCard()
-  if (!box) return
+const edgeSpot = (target: Vec, w: number, h: number, bob: number, inside: ViewBox | null) => {
   const cx = w / 2
   const cy = h / 2
   const dx = target.x - cx
@@ -1552,18 +1579,28 @@ export const drawPlazaMarker = (ctx: CanvasRenderingContext2D, plaza: Plaza, cam
   const ex = w / 2 - 20
   const ey = h / 2 - 17
   const t = Math.min(ex / Math.max(1e-6, Math.abs(dx)), ey / Math.max(1e-6, Math.abs(dy)))
-  const sideways = Math.abs(dx) * ey >= Math.abs(dy) * ex
-  const bob = Math.floor(time * 3) % 2
-  const x = Math.round(clamp(cx + dx * t, 20, w - 20)) + (sideways ? Math.sign(dx) * bob : 0)
-  const y = Math.round(clamp(cy + dy * t, h * 0.16, h * 0.84)) + (sideways ? 0 : Math.sign(dy) * bob)
+  const sideways = inside !== null || Math.abs(dx) * ey >= Math.abs(dy) * ex
+  const edge = inside
+    ? { x: clamp(dx >= 0 ? inside.right - 18 : inside.left + 18, 18, w - 18), y: clamp(inside.bottom - 11, 11, h - 11) }
+    : { x: clamp(cx + dx * t, 20, w - 20), y: clamp(cy + dy * t, h * 0.16, h * 0.84) }
+  return {
+    x: Math.round(edge.x) + (sideways ? Math.sign(dx) * bob : 0),
+    y: Math.round(edge.y) + (sideways ? 0 : Math.sign(dy) * bob),
+    dir: sideways ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) },
+  }
+}
+
+type EdgeSpot = ReturnType<typeof edgeSpot>
+
+/** Draws a marker's card at `at` and its arrow on the side facing its target: a dark triangle around a coloured one. */
+const drawMarker = (ctx: CanvasRenderingContext2D, box: HTMLCanvasElement, at: EdgeSpot, arrow: string) => {
+  const { x, y, dir } = at
   ctx.drawImage(box, x - 12, y - 9)
-  // The arrow, on the side facing the plaza: a dark triangle around a green one.
-  const dir = sideways ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) }
   const baseX = dir.x > 0 ? x + 12 : dir.x < 0 ? x - 13 : x
   const baseY = dir.y > 0 ? y + 10 : dir.y < 0 ? y - 10 : y
   for (let i = 0; i < 5; i++) {
     const len = 9 - i * 2
-    ctx.fillStyle = i < 4 && i > 0 ? '#5cb048' : '#283040'
+    ctx.fillStyle = i < 4 && i > 0 ? arrow : '#283040'
     if (dir.x !== 0) ctx.fillRect(baseX + dir.x * i, baseY - Math.floor(len / 2), 1, len)
     else ctx.fillRect(baseX - Math.floor(len / 2), baseY + dir.y * i, len, 1)
     if (i > 0 && i < 4) {
@@ -1577,7 +1614,55 @@ export const drawPlazaMarker = (ctx: CanvasRenderingContext2D, plaza: Plaza, cam
       }
     }
   }
-  plaza.marker.x = x + camX
-  plaza.marker.y = y + camY
-  plaza.marker.shown = true
+}
+
+/**
+ * Moves the stall's marker `b` off the shop's `a` when they'd overlap (both
+ * point east from home): along the edge, to the side the stall lies on, or
+ * the other one when the view's edge is too close.
+ */
+const besideMarker = (a: EdgeSpot, b: EdgeSpot, w: number, h: number): EdgeSpot => {
+  if (Math.abs(a.x - b.x) >= 26 || Math.abs(a.y - b.y) >= 21) return b
+  if (b.dir.x !== 0) {
+    const side = b.y >= a.y ? 1 : -1
+    const y = a.y + side * 21
+    return { ...b, y: y >= h * 0.16 && y <= h * 0.84 ? y : a.y - side * 21 }
+  }
+  const side = b.x >= a.x ? 1 : -1
+  const x = a.x + side * 26
+  return { ...b, x: x >= 20 && x <= w - 20 ? x : a.x - side * 26 }
+}
+
+/**
+ * Cards at the edge of the view with an arrow, pointing at the shop
+ * (Kecleon's head) and at a seasonal stall (its keeper's) while no piece of
+ * the plaza (the building, a visitor, the festival's pieces) is on screen.
+ * They remember where they were drawn (`plaza.markers`) so a tap on one can
+ * lead there. On a phone's lobby they keep to `inside` (see `edgeSpot`).
+ */
+export const drawPlazaMarker = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX: number, camY: number, w: number, h: number, time: number, show: boolean, inside: ViewBox | null) => {
+  plaza.markers.keeper.shown = false
+  plaza.markers.stall.shown = false
+  const layout = plazaLayout(plaza)
+  if (!show || !layout || plazaInView(plaza, layout, camX, camY, w, h)) return
+  const bob = Math.floor(time * 3) % 2
+  const shop = edgeSpot({ x: plaza.x - camX, y: plaza.y - 30 - camY }, w, h, bob, inside)
+  const stallId = plaza.visitors.stall
+  if (stallId) {
+    const { dex } = STALLS[stallId]
+    if (!markerAsked.has(dex)) {
+      markerAsked.add(dex)
+      void loadSpecies(dex).catch(() => {})
+    }
+    const box = markerCard(dex, STALL_MARKERS[stallId])
+    if (box) {
+      const at = besideMarker(shop, edgeSpot({ x: plaza.x + layout.stall.x - camX, y: plaza.y + layout.stall.y - 30 - camY }, w, h, bob, inside), w, h)
+      drawMarker(ctx, box, at, STALL_MARKERS[stallId].arrow)
+      Object.assign(plaza.markers.stall, { x: at.x + camX, y: at.y + camY, shown: true })
+    }
+  }
+  const box = markerCard(KECLEON_DEX, SHOP_MARKER)
+  if (!box) return
+  drawMarker(ctx, box, shop, SHOP_MARKER.arrow)
+  Object.assign(plaza.markers.keeper, { x: shop.x + camX, y: shop.y + camY, shown: true })
 }

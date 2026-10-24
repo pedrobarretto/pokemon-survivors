@@ -128,6 +128,20 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             fr: 'Ton Pokémon partenaire ne disparaît plus du lobby quand le jeu reste un moment dans un autre onglet (ni le shiny de l’Apparition massive du jour).',
             zh: '把遊戲放在其他分頁一段時間後，大廳裡的夥伴寶可夢不會再消失了（今日大量出現的異色寶可夢也一樣）。',
           },
+          {
+            pt: 'O campo do lobby fica parado de novo: o cenário não anda mais um pixel de cada vez, para os lados, para cima e para baixo.',
+            en: 'The lobby’s meadow stands still again: the scenery no longer creeps a pixel at a time, sideways, up and down.',
+            es: 'El prado del lobby vuelve a quedarse quieto: el escenario ya no se mueve de a un píxel, hacia los lados, arriba y abajo.',
+            fr: 'La prairie du lobby reste immobile à nouveau : le décor ne bouge plus pixel par pixel, sur les côtés, en haut et en bas.',
+            zh: '大廳的草原恢復靜止了：場景不會再一格一格地左右、上下移動。',
+          },
+          {
+            pt: 'A plaquinha do Kecleon que aponta para a loja voltou ao lobby em telas grandes: com a barraca da Noite das Bruxas (ou a caravana do Meowth) na praça, um cantinho do calçamento entrava na tela e escondia a plaquinha. E o Duskull ganhou a dele, apontando para a barraca: toque nela para falar com ele.',
+            en: 'Kecleon’s little sign pointing to the shop is back in the lobby on big screens: with the Halloween Night stall (or Meowth’s caravan) on the plaza, a corner of its cobblestones crept into view and hid the sign. And Duskull got one too, pointing to his stall: tap it to talk to him.',
+            es: 'El cartelito de Kecleon que señala la tienda volvió al lobby en pantallas grandes: con el puesto de la Noche de Brujas (o la caravana de Meowth) en la plaza, una esquina del empedrado entraba en pantalla y ocultaba el cartelito. Y Duskull ganó el suyo, señalando su puesto: tócalo para hablar con él.',
+            fr: 'Le petit panneau de Kecleon qui indique la boutique est de retour dans le lobby sur les grands écrans : avec l’échoppe de la Nuit des Sorcières (ou la caravane de Meowth) sur la place, un coin des pavés entrait à l’écran et cachait le panneau. Et Duskull a maintenant le sien, qui indique son échoppe : touche-le pour lui parler.',
+            zh: '在大螢幕上，大廳裡指向商店的 Kecleon 小招牌回來了：當女巫之夜的攤位（或 Meowth 的商隊）在廣場上時，石板路的一角會進入畫面，把招牌藏起來。Duskull 也有了自己的小招牌，指向牠的攤位：點一下就能和牠說話。',
+          },
         ],
       },
       {
