@@ -67,7 +67,7 @@ export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
   /** Stats each awakening adds, on top of `stats`. */
   awakenings: readonly [StatDelta, StatDelta]
   innate: Innate
-  /** The form the second awakening lands in, for good (Primal Kyogre, Mega Rayquaza). */
+  /** The form the second awakening lands in, for good (Primal Kyogre, Mega Rayquaza, Mega Darkrai). */
   form?: { key: LegendForm; name: string; types?: readonly PokeType[] }
   unlock: LegendUnlock
 }
@@ -367,6 +367,7 @@ export const LEGENDS = {
     line: stage(491, 'Darkrai', ['dark']),
     awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.24, area: 0.1 }],
     innate: { ability: 'badDreams' },
+    form: { key: 'mega', name: 'Mega Darkrai' },
     unlock: { wins: 2, event: 'halloween' },
   },
 } as const satisfies Record<LegendId, LegendDef>

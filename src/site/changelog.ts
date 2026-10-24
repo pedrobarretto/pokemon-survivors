@@ -25,10 +25,10 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-10-24',
-    title: { pt: 'Um lobby novo no celular e golpes mais vivos', en: 'A new lobby on phones and livelier moves', es: 'Un lobby nuevo en el celular y ataques con más vida', fr: 'Un nouveau lobby sur mobile et des attaques plus vivantes', zh: '手機上的全新大廳與更生動的招式' },
+    title: { pt: 'Mega Darkrai, um lobby novo no celular e golpes mais vivos', en: 'Mega Darkrai, a new lobby on phones and livelier moves', es: 'Mega Darkrai, un lobby nuevo en el celular y ataques con más vida', fr: 'Méga-Darkrai, un nouveau lobby sur mobile et des attaques plus vivantes', zh: '超級 Darkrai、手機上的全新大廳與更生動的招式' },
     highlights: [
+      { pt: 'Darkrai agora tem Mega Evolução: no Modo Lendário, o segundo despertar (Nv 28) o transforma em Mega Darkrai, e na fenda do Pesadelo ele vira Mega Darkrai na última fase da batalha.', en: 'Darkrai now has a Mega Evolution: in Legend Mode its second awakening (Lv 28) turns it into Mega Darkrai, and in the Nightmare rift it goes Mega for the battle’s last phase.', es: 'Darkrai ahora tiene Megaevolución: en el Modo Legendario, el segundo despertar (Nv 28) lo convierte en Mega Darkrai, y en la grieta de la Pesadilla se vuelve Mega Darkrai en la última fase de la batalla.', fr: 'Darkrai a maintenant une Méga-Évolution : en Mode Légendaire, son second éveil (Nv 28) le change en Méga-Darkrai, et dans la faille du Cauchemar il devient Méga-Darkrai pour la dernière phase du combat.', zh: 'Darkrai 現在有超級進化了：在傳說模式中，第二次覺醒（Lv 28）會讓牠變成超級 Darkrai；在夢魘裂縫裡，牠會在戰鬥的最後階段變成超級 Darkrai。' },
       { pt: 'No celular em pé, o lobby ficou mais limpo: seu Pokémon parceiro volta para o centro da tela, com o JOGAR logo abaixo.', en: 'On a phone held upright, the lobby is cleaner: your partner Pokémon is back in the middle of the screen, with PLAY right under it.', es: 'En el celular en vertical, el lobby quedó más limpio: tu Pokémon compañero vuelve al centro de la pantalla, con JUGAR justo debajo.', fr: 'Sur un téléphone tenu droit, le lobby est plus clair : ton Pokémon partenaire revient au centre de l’écran, avec JOUER juste en dessous.', zh: '直拿手機時，大廳變得更清爽了：你的夥伴寶可夢回到畫面中央，下方就是開始遊戲。' },
-      { pt: 'O evento, o Surto, o Desafio e as Missões viraram ícones à esquerda; o Presente, o Hall da Fama, Convidar, o Discord e Passear, à direita. Os selos mostram o que está esperando por você.', en: 'The event, the Outbreak, the Challenge and Missions are now icons on the left; the Gift, the Hall of Fame, Invite, Discord and Explore are on the right. Badges show what’s waiting for you.', es: 'El evento, la Horda, el Desafío y las Misiones ahora son íconos a la izquierda; el Regalo, el Salón de la Fama, Invitar, Discord y Pasear, a la derecha. Las insignias muestran lo que te espera.', fr: 'L’événement, l’Essaim, le Défi et les Missions sont maintenant des icônes à gauche ; le Cadeau, le Panthéon, Inviter, Discord et Se promener sont à droite. Les pastilles montrent ce qui t’attend.', zh: '活動、大量出現、挑戰和任務變成左側的圖示；禮物、名人堂、邀請、Discord 和散步在右側。小標記會告訴你有什麼在等你。' },
       { pt: 'Os golpes ganharam animações novas: bolas de fogo e jatos d’água apontam para onde voam, Thunder cai como um raio de verdade e os projéteis estouram ao acertar.', en: 'Moves got new animations: fireballs and water jets point where they fly, Thunder falls like real lightning and shots burst when they hit.', es: 'Los ataques tienen animaciones nuevas: las bolas de fuego y los chorros de agua apuntan hacia donde vuelan, Thunder cae como un rayo de verdad y los proyectiles estallan al acertar.', fr: 'Les attaques ont de nouvelles animations : les boules de feu et les jets d’eau pointent là où ils volent, Thunder tombe comme un vrai éclair et les projectiles éclatent à l’impact.', zh: '招式有了新動畫：火球和水柱會朝飛行方向前進，Thunder 像真正的閃電一樣落下，投射物命中時會爆開。' },
       { pt: 'Partidas longas no modo infinito voltam a contar no ranking, mesmo passando do nível 999 ou se o jogo fechar no meio.', en: 'Long endless runs count on the ranking again, even past level 999 or if the game closes midway.', es: 'Las partidas largas en el modo infinito vuelven a contar en el ranking, aunque pasen del nivel 999 o el juego se cierre a mitad.', fr: 'Les longues parties en mode infini comptent de nouveau au classement, même au-delà du niveau 999 ou si le jeu se ferme en cours de route.', zh: '無盡模式的長時間對局重新計入排行榜，即使超過 999 級或遊戲中途關閉也一樣。' },
       {
@@ -40,6 +40,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
     ],
     changes: [
+      {
+        title: { pt: 'Mega Darkrai', en: 'Mega Darkrai', es: 'Mega Darkrai', fr: 'Méga-Darkrai', zh: '超級 Darkrai' },
+        notes: [
+          {
+            pt: 'No Modo Lendário, o Darkrai desperta como Mega Darkrai no Nv 28, como o Rayquaza vira Mega Rayquaza, e fica nessa forma até o fim da partida.',
+            en: 'In Legend Mode, Darkrai awakens as Mega Darkrai at Lv 28, the way Rayquaza becomes Mega Rayquaza, and keeps that form for the rest of the run.',
+            es: 'En el Modo Legendario, Darkrai despierta como Mega Darkrai en el Nv 28, como Rayquaza se vuelve Mega Rayquaza, y mantiene esa forma hasta el final de la partida.',
+            fr: 'En Mode Légendaire, Darkrai s’éveille en Méga-Darkrai au Nv 28, comme Rayquaza devient Méga-Rayquaza, et garde cette forme jusqu’à la fin de la partie.',
+            zh: '在傳說模式中，Darkrai 會在 Lv 28 覺醒為超級 Darkrai，就像 Rayquaza 變成超級 Rayquaza 一樣，並一直維持這個形態到對局結束。',
+          },
+          {
+            pt: 'Na fenda do Pesadelo, o Darkrai assume a forma Mega quando entra na última fase da batalha, a do Dark Void na arena inteira.',
+            en: 'In the Nightmare rift, Darkrai takes its Mega form as it enters the battle’s last phase, the one with Dark Void over the whole arena.',
+            es: 'En la grieta de la Pesadilla, Darkrai toma su forma Mega al entrar en la última fase de la batalla, la del Dark Void en toda la arena.',
+            fr: 'Dans la faille du Cauchemar, Darkrai prend sa forme Méga en entrant dans la dernière phase du combat, celle du Dark Void sur toute l’arène.',
+            zh: '在夢魘裂縫中，Darkrai 進入戰鬥最後階段（Dark Void 覆蓋整個競技場的那一段）時會變成超級形態。',
+          },
+        ],
+      },
       {
         title: { pt: 'Ovo Assombrado por doces', en: 'Haunted Eggs for candies', es: 'Huevos Embrujados por dulces', fr: 'Œufs Hantés contre des bonbons', zh: '用糖果買鬧鬼蛋' },
         notes: [

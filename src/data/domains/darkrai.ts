@@ -199,6 +199,7 @@ export const DARKRAI_DOMAIN: LegendDomain = {
     {
       below: 0.33,
       shift: 2.6,
+      form: 'mega',
       steer: { kind: 'hold', range: 110, pace: 0.8 },
       patterns: [
         pin('shadow', 11, PIN_EVERY),

@@ -38412,7 +38412,58 @@
         "bodyH": 32,
         "footY": -6
       }
-    }
+    },
+    "forms": {
+      "mega": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 96,
+            "frameHeight": 96,
+            "durations": [
+              10,
+              10,
+              10,
+              10,
+              10,
+              10
+            ]
+          },
+          "Idle": {
+            "frameWidth": 96,
+            "frameHeight": 96,
+            "durations": [
+              10,
+              5,
+              10,
+              5,
+              10,
+              5,
+              10,
+              5,
+              10,
+              5,
+              15
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 88,
+            "frameHeight": 104,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 79,
+          "bodyH": 42,
+          "footY": 2
+        }
+      }
+    },
+    "formCries": [
+      "mega"
+    ]
   },
   "493": {
     "anims": {

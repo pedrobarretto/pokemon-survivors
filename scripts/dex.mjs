@@ -97,7 +97,7 @@ export const FORMS = {
   362: { mega: '0001' },
   448: { mega: '0001' },
   475: { mega: '0001' },
-  // Legend mode's forms: Primal Reversion, Mega Rayquaza, the Latis' and Mewtwo Y's Megas, Deoxys' formes.
+  // Legend mode's forms: Primal Reversion, Mega Rayquaza, the Latis', Mewtwo Y's and Darkrai's Megas, Deoxys' formes.
   150: { megaY: '0002' },
   380: { mega: '0001' },
   381: { mega: '0001' },
@@ -105,6 +105,7 @@ export const FORMS = {
   383: { primal: '0001' },
   384: { mega: '0001' },
   386: { attack: '0001', defense: '0002', speed: '0003' },
+  491: { mega: '0002' }, // 0001 is a cutscene sprite
 }
 
 /**
@@ -150,6 +151,7 @@ export const FORM_CRIES = {
   383: { primal: 'groudon-primal' },
   384: { mega: 'rayquaza-mega' },
   386: { attack: 'deoxys-attack', defense: 'deoxys-defense', speed: 'deoxys-speed' },
+  491: { mega: 'darkrai-mega' },
   500: { mega: 'emboar-mega' },
   652: { mega: 'chesnaught-mega' },
   655: { mega: 'delphox-mega' },
