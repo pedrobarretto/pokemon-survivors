@@ -16,12 +16,15 @@ export const deviceScale = (cssW: number, cssH: number, dpr: number) => {
   return Math.max(2, Math.round(Math.max(2, Math.round(short / WORLD_SHORT)) * dpr))
 }
 
+/** A side of the internal canvas: at least 1 px, as webviews can report a 0 (or negative) viewport while they lay out. */
+const side = (px: number) => (px >= 1 ? Math.ceil(px) : 1)
+
 /** Internal canvas size (world px) and the CSS px per world px for a viewport. */
 export const fitView = (cssW: number, cssH: number, dpr: number) => {
   const scale = deviceScale(cssW, cssH, dpr)
   return {
-    w: Math.ceil((cssW * dpr) / scale),
-    h: Math.ceil((cssH * dpr) / scale),
+    w: side((cssW * dpr) / scale),
+    h: side((cssH * dpr) / scale),
     cssScale: scale / dpr,
   }
 }

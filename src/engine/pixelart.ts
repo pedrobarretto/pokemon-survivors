@@ -28,6 +28,32 @@ export const context2d = (canvas: HTMLCanvasElement) => {
   return ctx
 }
 
+let probe: CanvasRenderingContext2D | null = null
+const checked = new WeakMap<HTMLImageElement, boolean>()
+
+/**
+ * Whether a loaded image can be drawn (and read). A download cut short or
+ * corrupt can end `complete` with its size known from the header yet throw on
+ * every `drawImage` ("broken"), and some browsers settle `decode()` with a 0×0
+ * image; both draw nothing instead. Tried once per image, on a 1×1 canvas.
+ */
+export const drawable = (img: HTMLImageElement) => {
+  if (!img.complete) return false
+  let ok = checked.get(img)
+  if (ok === undefined) {
+    ok = img.naturalWidth > 0 && img.naturalHeight > 0
+    if (ok) {
+      try {
+        ;(probe ??= context2d(createCanvas(1, 1))).drawImage(img, 0, 0, 1, 1)
+      } catch {
+        ok = false
+      }
+    }
+    checked.set(img, ok)
+  }
+  return ok
+}
+
 export const fromStrings = (rows: readonly string[], palette: Palette, opts: { mirror?: boolean } = {}): PixelSprite => {
   const width = Math.max(...rows.map((r) => r.length))
   const canvas = createCanvas(width, rows.length)

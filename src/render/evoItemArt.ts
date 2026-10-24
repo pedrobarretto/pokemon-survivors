@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, canvasCache, context2d, createCanvas, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, canvasCache, context2d, createCanvas, drawable, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import type { EvoItemId } from '../data/shop'
 import type { Pickup } from '../game/types'
@@ -23,7 +23,7 @@ const groundSprite = (id: EvoItemId): PixelSprite | null => {
     img.src = itemArt(id)
     images.set(id, img)
   }
-  if (!img.complete || img.naturalWidth === 0) return null
+  if (!drawable(img)) return null
   const sprite = createCanvas(img.naturalWidth, img.naturalHeight)
   context2d(sprite).drawImage(img, 0, 0)
   sprites.set(id, sprite)

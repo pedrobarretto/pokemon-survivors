@@ -1,5 +1,5 @@
 import { clamp, dir8, type Dir8, type Vec } from '../engine/math'
-import { blitCentered, canvasCache, context2d, createCanvas, ellipse, glow, lazy, onCanvasReset } from '../engine/pixelart'
+import { blitCentered, canvasCache, context2d, createCanvas, drawable, ellipse, glow, lazy, onCanvasReset } from '../engine/pixelart'
 import { EMOTES, type Emote } from './art'
 import { drawSparkles, shadow } from './draw'
 import { LANTERN_ART, lanternString, stringLanterns, type LanternKind, type LanternString } from './lanterns'
@@ -163,14 +163,19 @@ const measure = (img: HTMLImageElement): Art => {
   return { img, minX, minY, maxY, w: maxX - minX + 1, h: maxY - minY + 1 }
 }
 
-const loadArt = (ids: Iterable<ArtId>) => {
+/** Tries left after a PNG fails to load (or loads empty or broken), and the wait before the next try. */
+const ART_TRIES = 3
+const ART_RETRY_MS = 5000
+
+const loadArt = (ids: Iterable<ArtId>, tries = ART_TRIES) => {
   for (const id of ids) {
     const img = new Image()
     img.src = artFile(id)
-    void img.decode().then(
-      () => arts.set(id, measure(img)),
-      () => {},
-    )
+    const landed = () => {
+      if (drawable(img)) arts.set(id, measure(img))
+      else if (tries > 1) setTimeout(() => loadArt([id], tries - 1), ART_RETRY_MS)
+    }
+    void img.decode().then(landed, landed)
   }
 }
 
