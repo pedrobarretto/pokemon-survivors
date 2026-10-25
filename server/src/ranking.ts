@@ -470,6 +470,11 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         where id = ${id} and abs(survived - ${time}) < ${TIME_EPSILON} and verified is null`
     },
 
+    /** Takes back the attempt a claim counted (`claimCheck`), for a check that couldn't start through no fault of the run's (a replay of newer rules than the verifier's). */
+    giveBackAttempt: async (id: string) => {
+      await sql`update runs set check_attempts = greatest(check_attempts - 1, 0) where id = ${id}`
+    },
+
     /** Forgets the replay of a run that won't be checked (not on show, or recorded under older rules): it stays unverified, like a run sent without one. */
     dropReplay: async (id: string) => {
       await sql`update runs set replay = null where id = ${id} and verified is null`

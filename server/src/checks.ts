@@ -52,8 +52,10 @@ const inlineRunner = (): Runner => (job) =>
  * The verifier's pace. A claim (`claimCheck`) holds a run for `leaseSeconds`,
  * longer than any re-simulation, so only a verifier that died (or a rollout's
  * second one) ever sees one run out; a run whose check couldn't finish (the
- * machinery failed, a replay of newer rules) is tried again once it does, up
- * to `attempts` times, and then loses its replay unchecked. With nothing
+ * machinery failed) is tried again once it does, up to `attempts` times, and
+ * then loses its replay unchecked. A replay of newer rules than the
+ * verifier's gives its attempt back: it waits for the updated verifier
+ * however long its deploy takes. With nothing
  * pending the loop asks again after `idleMs`, after a database error after `errorMs`.
  */
 export const CHECK_LOOP = { leaseSeconds: 30 * 60, attempts: 3, idleMs: 5000, errorMs: 15_000 } as const
@@ -82,7 +84,8 @@ type Claimed = NonNullable<Awaited<ReturnType<RankingStore['claimCheck']>>>
  * a rules deploy, `rulesGrace.ts`, or one still pending from before it) with
  * the frozen one (`sims.ts`). An older one loses its replay and stays
  * unverified, like a run from a game that sent none (so does a replay its
- * simulator can't read); a newer one waits for this verifier to be updated.
+ * simulator can't read); a newer one waits for this verifier to be updated,
+ * without spending its attempts.
  * `paused` (`CHECKS=off`) claims nothing: runs stay pending, replays kept,
  * until a start without it. `stop` ends the loop after the check in hand.
  */
@@ -101,6 +104,14 @@ export const startChecks = (ranking: RankingStore, { paused = false } = {}) => {
 
   const check = async (claimed: Claimed) => {
     const { id } = claimed
+    const rules = parseReplay(claimed.replay)?.rules ?? RULES_VERSION
+    const standing = rulesStanding(rules)
+    // Rules bump almost daily: a verifier whose deploy lags behind the API's mustn't wear out the top runs' attempts.
+    if (standing === 'newer') {
+      await ranking.giveBackAttempt(id)
+      console.log(`check ${id}: replay under newer rules (${rules}), waiting for a verifier of them`)
+      return
+    }
     if (claimed.attempt > CHECK_LOOP.attempts) {
       await ranking.dropReplay(id)
       console.log(`check ${id}: gave up after ${CHECK_LOOP.attempts} attempts, left unverified`)
@@ -111,11 +122,9 @@ export const startChecks = (ranking: RankingStore, { paused = false } = {}) => {
       await ranking.dropReplay(id)
       return
     }
-    const rules = parseReplay(claimed.replay)?.rules ?? RULES_VERSION
-    const standing = rulesStanding(rules)
-    if (standing === 'newer' || (standing === 'older' && rules !== FROZEN_RULES)) {
-      if (standing === 'older') await ranking.dropReplay(id)
-      console.log(`check ${id}: replay under ${standing} rules (${rules}), left unverified`)
+    if (standing === 'older' && rules !== FROZEN_RULES) {
+      await ranking.dropReplay(id)
+      console.log(`check ${id}: replay under older rules (${rules}), left unverified`)
       return
     }
     const answer = await run({ id, replay: claimed.replay, rules, startedAt: claimed.startedAt.getTime() })
