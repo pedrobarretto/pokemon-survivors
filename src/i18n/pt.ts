@@ -1770,7 +1770,7 @@ export const pt = {
     lightningRod: 'Ataques Elétricos te curam em vez de ferir, e golpes Elétricos +15%.',
     bulletproof: 'Projéteis de chefes e explosões causam 60% menos dano.',
     levitate: 'Você flutua: lava, armadilhas, água e gelo não te afetam.',
-    magicGuard: 'Só golpes diretos te ferem: nada de lava, armadilhas, explosões ou desgaste do clima.',
+    magicGuard: 'Só golpes diretos te ferem: nada de lava, armadilhas, explosões, poças no chão, desgaste do clima ou mordidas de itens amaldiçoados.',
     magicBounce: 'A cada 12 s bloqueia um golpe e o devolve em dobro a quem encostou.',
     illusion: 'A cada 10 s bloqueia um golpe por completo.',
     damp: 'Explosões não te ferem, e golpes de Água +10%.',

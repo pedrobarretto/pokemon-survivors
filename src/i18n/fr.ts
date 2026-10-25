@@ -1557,7 +1557,7 @@ export const fr: Messages = {
     lightningRod: 'Les attaques Électrik te soignent au lieu de te blesser, et capacités Électrik +15%.',
     bulletproof: 'Les projectiles et explosions des boss font 60% de dégâts en moins.',
     levitate: 'Tu flottes : lave, pièges, eau et glace ne t’affectent pas.',
-    magicGuard: 'Seuls les coups directs te blessent : ni lave, ni pièges, ni explosions, ni usure de la météo.',
+    magicGuard: 'Seuls les coups directs te blessent : ni lave, ni pièges, ni explosions, ni flaques au sol, ni usure de la météo, ni morsures des objets maudits.',
     magicBounce: 'Toutes les 12 s, bloque un coup et le renvoie, doublé, à celui qui t’a touché.',
     illusion: 'Toutes les 10 s, bloque complètement un coup.',
     damp: 'Les explosions ne te blessent pas, et capacités Eau +10%.',

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
+import { grantAbility } from './abilities'
 import { pickAlpha, spawnAlpha } from './alphas'
+import { spawnHazard } from './bosses'
 import { chooseOffer, step } from './game'
 import { gainXp, recomputeStats } from './leveling'
 import { grantStone } from './mega'
@@ -230,6 +232,24 @@ const SCENARIOS = {
       enterPlace(g, 'cave', g.player.x, g.player.y)
     },
   },
+  /** Alakazam's Magic Guard on Nightmare at 6:00 with a Life Orb: poison puddles under it and the world's next attack due, only direct hits counting. */
+  magicGuard: {
+    start: { ...START, difficulty: 'nightmare', starter: 'abra' },
+    seconds: 15,
+    stage: (g) => {
+      g.time = 360
+      g.nextEvent = 99
+      g.worldHazards.charge = 0.99
+      g.player.revives = 2
+      gainXp(g, 1500)
+      grantAbility(g, 'magicGuard')
+      g.player.curses.held.push('lifeOrb')
+      recomputeStats(g)
+      for (let i = 0; i < 3; i++) {
+        spawnHazard(g, { kind: 'zone', visual: 'sludge', x: g.player.x + 20 * i, y: g.player.y, r: 11, damage: 6, ttl: 10 })
+      }
+    },
+  },
 } as const satisfies Record<string, Scenario>
 
 type ScenarioId = keyof typeof SCENARIOS
@@ -255,6 +275,7 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
     legend: '1100·51·14·cdbdb688',
     waveLegend: '1998·14·17·1fa0f40a',
     cave: '2188·16·12·d2d47594',
+    magicGuard: '1188·29·19·fddbed17',
   },
 }
 

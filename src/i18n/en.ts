@@ -1559,7 +1559,7 @@ export const en: Messages = {
     lightningRod: 'Electric attacks heal you instead of hurting, and Electric moves +15%.',
     bulletproof: 'Boss projectiles and blasts deal 60% less damage.',
     levitate: 'You float: lava, traps, water and ice don’t affect you.',
-    magicGuard: 'Only direct hits hurt you: no lava, traps, blasts or weather wear.',
+    magicGuard: 'Only direct hits hurt you: no lava, traps, blasts, puddles on the ground, weather wear or cursed items’ bites.',
     magicBounce: 'Every 12 s it blocks a hit and bounces it back, doubled, at whoever touched you.',
     illusion: 'Every 10 s it blocks a hit completely.',
     damp: 'Blasts don’t hurt you, and Water moves +10%.',

@@ -195,9 +195,9 @@ export const abilityLit = (g: Game) =>
 /* ---------------- Hits taken ---------------- */
 
 /** Hits that count as a boss's: its strikes and shots, and the bodies of bosses and elites. */
-const bossHit = (hit: HitKind, from?: Enemy) => hit === 'hazard' || hit === 'shot' || (hit === 'body' && from !== undefined && (from.boss || from.elite))
+const bossHit = (hit: HitKind, from?: Enemy) => hit === 'hazard' || hit === 'zone' || hit === 'shot' || (hit === 'body' && from !== undefined && (from.boss || from.elite))
 
-const IMMUNE_TO: Partial<Record<HitKind, Immunity>> = { lava: 'lava', trap: 'trap', blast: 'blast' }
+const IMMUNE_TO: Partial<Record<HitKind, Immunity>> = { lava: 'lava', trap: 'trap', blast: 'blast', zone: 'zone' }
 
 /** Whether the ability spares the player a kind of harm (the weather's wear, slow terrain, wards…). */
 export const abilityImmune = (g: Game, what: Immunity) => effectsOf(g).some((e) => e.kind === 'immune' && e.to.includes(what))

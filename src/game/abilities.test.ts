@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { ABILITIES, ABILITY, ABILITY_IDS, BRANCH_ABILITIES, FAMILY_ABILITIES } from '../data/abilities'
 import { PLAYABLE_IDS } from '../data/hatchlings'
 import { abilityKey, grantAbility, updateAbility } from './abilities'
+import { hazardHit } from './bosses'
 import { hurtPlayer } from './combat'
+import { curseCast, updateCurses } from './curseSystem'
 import { createGame } from './game'
 import { recomputeStats } from './leveling'
 import type { Game } from './types'
@@ -105,5 +107,30 @@ describe('hits taken', () => {
     expect(p.hp).toBe(full)
     hurtPlayer(g, 30, undefined, [], 'hazard')
     expect(p.hp).toBeLessThan(full)
+  })
+
+  it('Magic Guard takes only direct hits: no lingering patch, no cursed item bite', () => {
+    const g = withAbility('magicGuard', 'abra')
+    const p = g.player
+    const full = p.hp
+    hurtPlayer(g, 30, undefined, ['poison'], hazardHit({ kind: 'zone' }))
+    g.player.curses.held.push('lifeOrb', 'flameOrb')
+    curseCast(g)
+    updateCurses(g)
+    expect(p.hp).toBe(full)
+    hurtPlayer(g, 30, undefined, [], hazardHit({ kind: 'strike' }))
+    expect(p.hp).toBeLessThan(full)
+  })
+
+  it('without Magic Guard, a lingering patch and a cursed item still hurt', () => {
+    const g = withAbility('synchronize', 'abra')
+    const p = g.player
+    const full = p.hp
+    hurtPlayer(g, 30, undefined, ['poison'], hazardHit({ kind: 'zone' }))
+    expect(p.hp).toBeLessThan(full)
+    const hurt = p.hp
+    g.player.curses.held.push('lifeOrb')
+    curseCast(g)
+    expect(p.hp).toBeLessThan(hurt)
   })
 })
