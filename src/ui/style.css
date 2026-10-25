@@ -404,6 +404,38 @@ button {
   margin-left: 4px;
 }
 
+/* Random: selects an unlocked Pokémon of the shown tab, at the tabs row's far end. */
+.partner-random {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  margin-left: auto;
+  padding: 0 12px;
+  font-family: var(--title);
+  font-size: 10px;
+  color: #283040;
+  white-space: nowrap;
+  background: #fff8f0;
+  border: 2px solid #c8c0d8;
+  border-radius: 6px;
+}
+
+.partner-random img {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.partner-random:hover:not(:disabled) {
+  border-color: #283040;
+}
+
+.partner-random:disabled {
+  opacity: 0.45;
+}
+
 .partner-pane,
 .partner-eggs {
   flex: 1 1 0;
@@ -1281,6 +1313,16 @@ button {
     background: var(--paper);
     border-color: var(--paper);
   }
+  /* Random keeps only its die beside the three tabs. */
+  .partner-random {
+    min-height: 0;
+    align-self: stretch;
+    padding: 0 8px;
+    border-color: transparent;
+  }
+  .partner-random-label {
+    display: none;
+  }
   /* Three tabs on a narrow phone: label and count closer together. */
   .partner-tab {
     gap: 5px;
@@ -1476,6 +1518,13 @@ button {
   }
   .partner-pane {
     overflow-y: auto;
+  }
+  .partner-random {
+    min-height: 32px;
+    padding: 0 8px;
+  }
+  .partner-random-label {
+    display: none;
   }
   .partner-grid {
     grid-template-columns: 8px repeat(9, minmax(0, 52px));
@@ -2205,6 +2254,41 @@ button {
   font-size: 9px;
 }
 
+/* The pause sheet's list adds each move's DPS in a last column. */
+.damage-list.with-dps .damage-row {
+  grid-template-columns: 24px 120px 1fr 80px 56px;
+}
+
+.damage-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.damage-dps {
+  text-align: right;
+  font-size: 18px;
+  color: #6878a8;
+}
+
+.pause-damage {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.damage-total {
+  margin: 0;
+  font-family: var(--title);
+  font-size: 9px;
+}
+
+.damage-note {
+  margin: 0;
+  font-size: 16px;
+  color: #6878a8;
+}
+
 .damage-bar {
   height: 8px;
   background: #d8d8e0;
@@ -2858,14 +2942,37 @@ button {
 
 /*
  * Where the fixed touch joystick sits (Settings → Controls): bottom-left, clear
- * of the safe area and the screen edge. The canvas draws the stick centered on
- * `.stick-anchor`, so its size is the base's diameter (2 × STICK_RADIUS in
- * engine/input.ts). The status box steps aside while the mode is on.
+ * of the safe area and the screen edge, raised (`--stick-up`) and moved in
+ * (`--stick-in`) by the stick's height and edge steps. With the buttons on the
+ * left (`data-hand`, below) it takes the bottom-right instead, and
+ * `--stick-left` measures from the right edge. The canvas draws the stick
+ * centered on `.stick-anchor`, so its size is the base's diameter
+ * (2 × STICK_RADIUS in engine/input.ts). The status box steps aside while the
+ * mode is on.
  */
 :root {
   --stick-size: 104px;
-  --stick-left: max(28px, calc(var(--safe-l) + 12px));
-  --stick-bottom: max(32px, calc(var(--safe-b) + 16px));
+  --stick-in: 0px;
+  --stick-up: 0px;
+  --stick-side-safe: var(--safe-l);
+  --stick-left: calc(max(28px, calc(var(--stick-side-safe) + 12px)) + var(--stick-in));
+  --stick-bottom: calc(max(32px, calc(var(--safe-b) + 16px)) + var(--stick-up));
+}
+
+[data-stick-height='mid'] {
+  --stick-up: 64px;
+}
+
+[data-stick-height='high'] {
+  --stick-up: 128px;
+}
+
+[data-stick-edge='mid'] {
+  --stick-in: 36px;
+}
+
+[data-stick-edge='far'] {
+  --stick-in: 72px;
 }
 
 .stick-anchor {
@@ -2957,6 +3064,60 @@ button {
   [data-stick='fixed'] .status {
     left: calc(var(--stick-left) + var(--stick-size) + 20px);
     bottom: max(8px, var(--safe-b));
+  }
+}
+
+/*
+ * Buttons on the left (Settings → Controls, touch only): the bottom of the HUD
+ * mirrors. The special, lunge and Mega buttons take the bottom-left, the
+ * status box and the fixed stick the bottom-right.
+ */
+@media (pointer: coarse) {
+  [data-hand='left'] {
+    --stick-side-safe: var(--safe-r);
+  }
+  [data-hand='left'] .stick-anchor {
+    left: auto;
+    right: var(--stick-left);
+  }
+  [data-hand='left'] .special-button {
+    right: auto;
+    left: max(18px, env(safe-area-inset-left));
+  }
+  [data-hand='left'] .mega-button {
+    right: auto;
+    left: calc(max(18px, env(safe-area-inset-left)) + 10px);
+  }
+  [data-hand='left'] .lunge-button {
+    right: auto;
+    left: calc(max(18px, env(safe-area-inset-left)) + 90px);
+  }
+  [data-hand='left'] .status {
+    left: auto;
+    right: 12px;
+    transform-origin: bottom right;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 600px) {
+  [data-hand='left'] .status {
+    right: 8px;
+  }
+}
+
+@media (pointer: coarse) and (max-height: 500px) {
+  [data-hand='left'][data-stick='fixed'] .status {
+    left: auto;
+    right: calc(var(--stick-left) + var(--stick-size) + 20px);
+  }
+  /* Co-op: the teammates' column comes down the left edge, so the Mega button joins the bottom row, past the lunge's. */
+  [data-hand='left'] .hud.with-team .mega-button {
+    left: calc(max(18px, env(safe-area-inset-left)) + 160px);
+    bottom: calc(max(18px, env(safe-area-inset-bottom)) + 10px);
+  }
+  /* The toasts' column on the right stops above the fixed stick, however high it sits. */
+  [data-hand='left'][data-stick='fixed'] .toasts {
+    max-height: calc(100% - 80px - var(--safe-t) - var(--stick-bottom) - var(--stick-size) - 8px);
   }
 }
 
@@ -6720,6 +6881,12 @@ button {
   .damage-row b {
     font-size: 8px;
   }
+  .damage-list.with-dps .damage-row {
+    grid-template-columns: 20px 84px 1fr 52px 40px;
+  }
+  .damage-dps {
+    font-size: 15px;
+  }
   .xp {
     height: 14px;
   }
@@ -6924,14 +7091,54 @@ button {
   margin-top: 2px;
 }
 
+/*
+ * Phones held upright: compact toasts, two at a time (`toasts.ts`), in a
+ * short column under the HUD, so the news never covers the middle of the
+ * screen where the fight is.
+ */
 @media (max-width: 720px) and (min-height: 501px) {
   .toasts {
-    max-width: calc(90 * var(--vw));
+    gap: 4px;
+    max-width: calc(80 * var(--vw));
+    max-height: calc(34% - 132px - var(--safe-t));
   }
   .toast {
-    font-size: 18px;
+    padding: 4px 10px;
+    font-size: 15px;
+    line-height: 1.1;
     white-space: normal;
+    border-width: 2px;
+    box-shadow:
+      inset 0 0 0 2px var(--paper),
+      inset 0 0 0 4px var(--frame),
+      0 2px 0 rgba(0, 0, 0, 0.35);
   }
+  .toast .item-toast {
+    gap: 6px;
+  }
+  .toast .item-toast img {
+    width: 20px;
+    height: 20px;
+  }
+  .toast .item-toast img.shop-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .toast .item-toast small {
+    margin-top: 0;
+  }
+}
+
+/* A shiny's news in gold, apart from the white toasts. */
+.toast.toast-shiny {
+  --paper: #fff2b8;
+  --frame: #e8a820;
+  border-color: #5a3c00;
+  color: #4a3000;
+}
+
+.toast.toast-shiny b {
+  color: #b05800;
 }
 
 /* ---------- Shiny & legendary ---------- */
@@ -17426,5 +17633,41 @@ button.hall-tile:hover {
   }
   .coop-invite-buttons .btn {
     flex: 1;
+  }
+}
+
+/* ---------- Mini map (ui/minimap.ts) ---------- */
+
+/* Top-right, under the counters; JS sets its top (under co-op's cards on a phone held upright) and its pixel-exact size. */
+.minimap {
+  position: absolute;
+  right: 8px;
+  top: 64px;
+  line-height: 0;
+  filter: drop-shadow(0 calc(var(--px) * 2) 0 rgba(0, 0, 0, 0.35));
+}
+
+.minimap.hidden {
+  display: none;
+}
+
+.minimap canvas {
+  image-rendering: pixelated;
+}
+
+/* Phones held upright: the boss bar moves left of the map instead of running under it. */
+@media (max-width: 600px) {
+  .hud.has-minimap .boss {
+    left: 8px;
+    transform: none;
+    width: calc(100% - var(--minimap-w, 88px) - 24px);
+  }
+}
+
+/* Phones in landscape: the toasts' column on the right starts under the map. */
+@media (max-height: 500px) {
+  :root[data-minimap='on'] .toasts {
+    top: calc(var(--minimap-bottom, 160px) + 8px + var(--safe-t));
+    max-height: calc(100% - var(--minimap-bottom, 160px) - 8px - var(--safe-t) - 110px);
   }
 }

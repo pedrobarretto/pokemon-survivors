@@ -2,7 +2,7 @@ import '@fontsource/press-start-2p'
 import '@fontsource/vt323'
 import './ui/style.css'
 // First, so its error listeners catch what goes wrong while the rest loads.
-import { bugReportsEnabled, describeWith, deviceMemory, runMoment, syncRunWatch, takeCrash } from './bugReport'
+import { bugReportsEnabled, describeWith, deviceMemory, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
 import type { BugCrash } from './game/bugReport'
 
 import { playCry, playSfx, unlockAudio, type Sfx } from './engine/audio'
@@ -139,7 +139,7 @@ import { coopGate, playGate } from './ui/account'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
-import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave } from './ui/save'
+import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
@@ -167,7 +167,7 @@ import { invitesScreen } from './ui/invites'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
 import { creditsLine, supportersScreen } from './ui/supporters'
 import { suggestionsScreen } from './ui/suggestions'
-import { banner, clearToasts, tickToasts, toast } from './ui/toasts'
+import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
 import { addBots, bankCoopRun, botStates, buildRefusal, coopClient, coopEntry, coopEventFor, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, onCoopEntry, refreshCoopEntry, removeBots, reportCoopNet, reportHeal, setCoopBeta, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
@@ -201,19 +201,22 @@ const ctx = context2d(canvas)
 /** Invisible box CSS puts where the fixed joystick sits (corner, safe area); the stick is centered on it. */
 const stickAnchor = h('div', { class: 'stick-anchor', 'aria-hidden': 'true' })
 document.body.append(stickAnchor)
-/** The anchor's center, measured once per layout (cleared on resize). */
+/** The anchor's center, measured once per layout (cleared on resize) and per settings (the buttons' side and the stick's place move it). */
 let stickCenter: Vec | null = null
+let stickSettings: Settings | null = null
 /** Mouse and keyboard: the fixed stick gives its corner to the WASD keys (`ui/movePad.ts`), and a touch on a touchscreen laptop floats. Same query as the CSS. */
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)')
 const fixedStickCenter = (): Vec | null => {
   if (settings().joystick !== 'fixed' || finePointer.matches) return null
-  if (!stickCenter) {
+  if (!stickCenter || stickSettings !== settings()) {
+    stickSettings = settings()
     const r = stickAnchor.getBoundingClientRect()
     stickCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
   }
   return stickCenter
 }
 const input = createInput(canvas, () => settings().controls, fixedStickCenter)
+readRunToasts(() => settings().runToasts)
 /** Internal canvas size in world px. Shared by reference with the running game. */
 const view = { w: 480, h: 270 }
 /** CSS px per world px (integer in device px, see `fitView`). */
@@ -224,7 +227,9 @@ let dirty = true
 /**
  * Sizes the low-res canvas to the visible viewport. Runs on resize, rotation
  * and iOS toolbar changes (visualViewport), and only touches the canvas when
- * the result actually changed, because resizing clears it.
+ * it isn't that size already, because resizing clears it. Compared with the
+ * canvas itself, not `view`: a page that loads at 1920x1080 @1x fits the
+ * starting `view` exactly, and the canvas stayed at the HTML default (300x150, top left).
  */
 const resize = () => {
   stickCenter = null
@@ -233,7 +238,7 @@ const resize = () => {
   const width = window.visualViewport?.width ?? window.innerWidth
   const height = window.visualViewport?.height ?? window.innerHeight
   const fit = fitView(width, height, window.devicePixelRatio || 1)
-  if (fit.w === view.w && fit.h === view.h && fit.cssScale === cssScale) return
+  if (fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale) return
   view.w = fit.w
   view.h = fit.h
   cssScale = fit.cssScale
@@ -1016,14 +1021,29 @@ const loadRunSheets = async (families: readonly Variant[], opening: readonly Dex
   }
 }
 
+/** Set while `startRun` loads a run. */
+let launching = false
+
 /**
  * Loads the starter's evolution line and the first stage's species, then starts
  * a fresh run: a regular one from the save (upgrades, the Bag's armed items),
  * or the Desafio do dia's (`challengeStart`: its seed, nothing from the save
  * but the shiny colors). The rest of the cast (later stages, swarms, bosses), the
  * `EXTRAS` and the forms (a Mega, a stance) stream in the background as the run nears them (`syncSprites`).
+ * Once per Play: a second call while one loads is dropped, or both runs would load and the
+ * first would stay behind the second, its HUD and pick screen frozen over the game.
  */
 const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) => {
+  if (launching) return
+  launching = true
+  try {
+    await launchRun(starter, daily)
+  } finally {
+    launching = false
+  }
+}
+
+const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // Play again on a build that fell behind (`watchDeploys`): the newer one first, back in the lobby.
   if (reloadForDeploy) return location.reload()
   setScreen(null)
@@ -1124,25 +1144,30 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
   announceRun(start, run.challenge)
 }
 
+/** A run's news that warns or asks for something (a boss, a rift's omen, a hazard): it shows unless the "Avisos na partida" setting says Nenhum. */
+const news = (content: HTMLElement | string, ms?: number, key: string | null = null) => runToast(ui, 'important', content, ms, key)
+/** A run's minor news (a drop, a berry, a shiny spotted, a milestone the screen already shows): only at Todos. */
+const aside = (content: HTMLElement | string, ms?: number, key: string | null = null, tone: ToastTone | null = null) => runToast(ui, 'minor', content, ms, key, tone)
+
 /** The run's first toasts: safe mode coming on after a crash, the challenge it plays, the day's outbreak, then each bag item it used and each TM it armed. */
 const announceRun = (start: ReplayStart, challenge: Run['challenge']) => {
-  if (takeSafeNotice()) toast(ui, h('span', { class: 'item-toast' }, h('span', {}, rich(t().toast.safeMode), h('small', {}, t().toast.safeModeHint))), 5200, 'safeMode')
+  if (takeSafeNotice()) news(h('span', { class: 'item-toast' }, h('span', {}, rich(t().toast.safeMode), h('small', {}, t().toast.safeModeHint))), 5200, 'safeMode')
   if (challenge) {
     const m = t().challenge
-    toast(ui, h('span', { class: 'item-toast' }, h('img', { src: ribbonIcon('gold'), alt: '' }), h('span', {}, rich(m.started(formatDay(challenge.day))), h('small', {}, challenge.official ? m.startedOfficial : m.startedPractice))), 4200, 'challenge')
+    news(h('span', { class: 'item-toast' }, h('img', { src: ribbonIcon('gold'), alt: '' }), h('span', {}, rich(m.started(formatDay(challenge.day))), h('small', {}, challenge.official ? m.startedOfficial : m.startedPractice))), 4200, 'challenge')
   }
   if (start.halloween) {
     const m = t().halloween
-    toast(ui, h('span', { class: 'item-toast halloween-toast' }, h('img', { src: jackIcon(), alt: '' }), h('span', {}, rich(m.started), h('small', {}, m.startedHint))), 4600, 'halloween')
+    aside(h('span', { class: 'item-toast halloween-toast' }, h('img', { src: jackIcon(), alt: '' }), h('span', {}, rich(m.started), h('small', {}, m.startedHint))), 4600, 'halloween')
   }
   // A legend's horde has no outbreak (`runRoster`).
   if (start.outbreak && !isLegend(start.starter)) {
     const def = ENEMIES[start.outbreak]
-    toast(ui, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), h('span', {}, rich(t().outbreak.started(def.name)), h('small', {}, t().outbreak.hint))), 4200, 'outbreak')
+    aside(h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), h('span', {}, rich(t().outbreak.started(def.name)), h('small', {}, t().outbreak.hint))), 4200, 'outbreak')
   }
-  for (const id of start.bag) toast(ui, h('span', { class: 'item-toast' }, shopIcon(id), h('b', {}, BAG_ITEMS[id].name), t().bag.active[id]), 3200, id)
+  for (const id of start.bag) aside(h('span', { class: 'item-toast' }, shopIcon(id), h('b', {}, BAG_ITEMS[id].name), t().bag.active[id]), 3200, id)
   // Each armed TM says which of the run's TM drops it is: the first, then the second.
-  for (const [i, id] of (start.tms ?? []).entries()) toast(ui, h('span', { class: 'item-toast' }, tmPicture(id), rich(t().toast.armedTm(MOVES[id].name, i))), 3200, `tm-${id}`)
+  for (const [i, id] of (start.tms ?? []).entries()) aside(h('span', { class: 'item-toast' }, tmPicture(id), rich(t().toast.armedTm(MOVES[id].name, i))), 3200, `tm-${id}`)
 }
 
 /** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
@@ -1269,6 +1294,8 @@ const syncOverlay = (r: Run) => {
         g,
         () => afterRun(() => void (r.challenge ? replayChallenge() : startRun(loadSave().partner))),
         () => afterRun(() => showMenu()),
+        // Lobby: banked, ranked and hatched by `afterRun` like the others, then home as the select's Back goes.
+        () => afterRun(() => showTitle({ focus: 'play' })),
         () => (recordEvent(r.recorder, ['endless']), continueEndless(g)),
         {
           badge: titleBadge(loadSave().title),
@@ -1294,11 +1321,11 @@ const syncOverlay = (r: Run) => {
 
 /** Level-ups that took the Oran Berry on their own (`takeBerryLevelUps`): the level reached and how many at once. */
 const berryToast = (g: Game, count: number) =>
-  toast(ui, h('span', { class: 'item-toast' }, h('img', { src: berryIcon(), alt: '' }), rich(t().levelUp.autoBerry(localPlayer(g).level, count))), 2200, 'autoBerry')
+  aside(h('span', { class: 'item-toast' }, h('img', { src: berryIcon(), alt: '' }), rich(t().levelUp.autoBerry(localPlayer(g).level, count))), 2200, 'autoBerry')
 
-/** An evolution item's toast: its icon, a line and a hint under it. */
-const evoItemToast = (items: readonly EvoItemId[], line: string, hint: string, key: string) =>
-  toast(ui, h('span', { class: 'item-toast evo-item-toast' }, ...items.map((id) => shopIcon(id, EVO_ITEMS[id].name)), h('span', {}, rich(line), h('small', {}, hint))), 4200, key)
+/** An evolution item's toast: its icon, a line and a hint under it. One found is minor; one missing (`evoHeld`) explains a held evolution. */
+const evoItemToast = (items: readonly EvoItemId[], line: string, hint: string, key: string, show: typeof news) =>
+  show(h('span', { class: 'item-toast evo-item-toast' }, ...items.map((id) => shopIcon(id, EVO_ITEMS[id].name)), h('span', {}, rich(line), h('small', {}, hint))), 4200, key)
 
 /** After a branching evolution: the paths it left closed for lack of an item, with their items' icons (none: no toast). */
 const closedPathsToast = (g: Game) => {
@@ -1312,7 +1339,7 @@ const closedPathsToast = (g: Game) => {
   })
   if (missing.length === 0) return
   const items = EVO_ITEM_IDS.filter((id) => missing.includes(id))
-  toast(ui, h('span', { class: 'item-toast evo-item-toast' }, ...items.map((id) => shopIcon(id, EVO_ITEMS[id].name)), h('span', {}, t().branch.others)), 4200, 'evoClosed')
+  aside(h('span', { class: 'item-toast evo-item-toast' }, ...items.map((id) => shopIcon(id, EVO_ITEMS[id].name)), h('span', {}, t().branch.others)), 4200, 'evoClosed')
 }
 
 /** After an evolution: what the new form can learn now (`unlockedAt`), each move with its icon. */
@@ -1321,7 +1348,7 @@ const learnsToast = (g: Game) => {
   const moves = unlockedAt(me.starter, me.branch, me.stage)
   if (moves.length === 0) return
   const chips = moves.map((id) => h('span', { class: 'learn-move', style: `--type:${TYPE_COLORS[MOVES[id].type]}` }, h('img', { src: moveIcon(id), alt: '' }), MOVES[id].name))
-  toast(ui, h('span', { class: 'learn-toast' }, h('span', {}, t().toast.learns(playerForm(g).name)), h('span', { class: 'learn-moves' }, ...chips)), 5000, 'learns')
+  aside(h('span', { class: 'learn-toast' }, h('span', {}, t().toast.learns(playerForm(g).name)), h('span', { class: 'learn-moves' }, ...chips)), 5000, 'learns')
 }
 
 /** The ability's word: the pick, and the moments worth a toast (Sturdy holding, a weather called, a milestone, Moody's draw). */
@@ -1331,24 +1358,24 @@ const abilityFeedback = (g: Game, id: AbilityId, moment: 'picked' | 'proc') => {
   const icon = (text: string) => h('span', { class: 'item-toast ability-toast' }, h('img', { src: abilityIcon(id), alt: '' }), rich(text))
   if (moment === 'picked') {
     playSfx('unlock')
-    return toast(ui, icon(m.picked(playerForm(g).name, name)), 3200, 'ability')
+    return aside(icon(m.picked(playerForm(g).name, name)), 3200, 'ability')
   }
   const effects: readonly AbilityEffect[] = ABILITIES[id].effects
   const kind = effects.find((e) => e.kind !== 'immune' && e.kind !== 'stats')?.kind
   if (kind === 'sturdy') {
     playSfx('stance', 0)
     flashScreen(ui)
-    return toast(ui, icon(m.sturdy(name)), 2600, 'ability')
+    return news(icon(m.sturdy(name)), 2600, 'ability')
   }
   if (kind === 'guard') return playSfx('stance', 0)
-  if (kind === 'summon') return toast(ui, icon(m.summon(name)), 2200, 'ability')
+  if (kind === 'summon') return aside(icon(m.summon(name)), 2200, 'ability')
   if (kind === 'onKill') {
     playSfx('shiny')
-    return toast(ui, icon(m.stack(name, abilityStacks(g))), 2200, 'ability')
+    return aside(icon(m.stack(name, abilityStacks(g))), 2200, 'ability')
   }
   if (kind === 'moody') {
     const mood = m.moods[localPlayer(g).ability.mood]
-    return mood && toast(ui, icon(m.mood(name, mood)), 1800, 'ability')
+    return mood && aside(icon(m.mood(name, mood)), 1800, 'ability')
   }
   if (kind === 'timer') playSfx('item')
 }
@@ -1372,7 +1399,7 @@ const alphaEvent = (e: Extract<GameEvent, { kind: 'alpha' }>) => {
     case 'spawn':
       playSfx('boss')
       playCry(cryUrl(def.dex), 0.8)
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().alphas.appeared(def.name))), 3600)
+      return news(h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().alphas.appeared(def.name))), 3600)
     case 'aim':
       return playSfx('growl', 200)
     case 'charge':
@@ -1385,7 +1412,7 @@ const alphaEvent = (e: Extract<GameEvent, { kind: 'alpha' }>) => {
       return flashScreen(ui)
     case 'down':
       playSfx('evolve')
-      return toast(ui, rich(t().alphas.defeated(def.name)), 3200)
+      return aside(rich(t().alphas.defeated(def.name)), 3200)
   }
 }
 
@@ -1431,7 +1458,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'guard': return playSfx('stance', 0)
     case 'stolen':
       playSfx('buy')
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: moveIcon('thief'), alt: '' }), rich(t().toast.stolen)), 2600, 'stolen')
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: moveIcon('thief'), alt: '' }), rich(t().toast.stolen)), 2600, 'stolen')
     case 'cast': {
       const sound = castSound(e.move) ?? CAST_SFX[e.move]
       return sound && playSfx(sound[0], sound[1])
@@ -1445,12 +1472,12 @@ const handleEvent = (r: Run, e: GameEvent) => {
       if (e.phase === 'release') return playSfx(gameSpecial(g).def.kind === 'chain' ? 'slash' : 'specialBlast', 0)
       playSfx('specialCharge', 0)
       playCry(playerCry(g), 0.5)
-      return toast(ui, rich(t().toast.used(playerName(g), e.name)), 1600, 'special')
+      return aside(rich(t().toast.used(playerName(g), e.name)), 1600, 'special')
     }
     case 'megaChoice': {
       const [a, b] = megasOf(localPlayer(g).starter).map((id) => MEGAS[id].stone)
       playSfx('unlock')
-      return a && b && toast(ui, rich(t().mega.choose(a, b)), 4200, 'mega')
+      return a && b && news(rich(t().mega.choose(a, b)), 4200, 'mega')
     }
     case 'megaStone': {
       const def = heldMega(g)
@@ -1459,8 +1486,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const line = PLAYABLE[me.starter].line
       const final = me.stage >= line.length - 1
       playSfx('unlock')
-      return toast(
-        ui,
+      return news(
         h('span', { class: 'item-toast mega-toast' }, h('img', { src: megaStoneIcon(def), alt: '' }), h('span', {}, rich(t().mega.stone(def.stone)), h('small', {}, rich(final ? t().mega.stoneReady : t().mega.stoneLocked(megaBaseName(g)))))),
         4200,
         'mega',
@@ -1470,7 +1496,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const def = heldMega(g)
       playSfx('megaCharge', 0)
       playCry(cryUrl(playerDex(g)), 0.6)
-      return def && toast(ui, rich(t().mega.reacting(def.stone)), 1400, 'mega')
+      return def && aside(rich(t().mega.reacting(def.stone)), 1400, 'mega')
     }
     case 'mega': {
       playSfx('megaBurst', 0)
@@ -1479,14 +1505,14 @@ const handleEvent = (r: Run, e: GameEvent) => {
     }
     case 'megaEnd':
       playSfx('stance', 0)
-      return toast(ui, t().mega.ended(playerName(g)), 1800, 'mega')
+      return aside(t().mega.ended(playerName(g)), 1800, 'mega')
     case 'megaReady':
       playSfx('shiny')
-      return toast(ui, rich(t().mega.ready), 2400, 'mega')
+      return news(rich(t().mega.ready), 2400, 'mega')
     case 'stance': {
       playSfx('stance', 0)
       const who = playerForm(g).name
-      return toast(ui, rich(t().toast.stance(who, t().hud.stances[e.stance])), 1200, 'special')
+      return aside(rich(t().toast.stance(who, t().hud.stances[e.stance])), 1200, 'special')
     }
     case 'boss': {
       const def: EnemyDef = ENEMIES[e.enemy]
@@ -1502,26 +1528,26 @@ const handleEvent = (r: Run, e: GameEvent) => {
       playSfx('boss')
       playCry(cryUrl(def.dex), 0.5)
       // A night boss comes in the event's colors.
-      if (isNightBoss(e.enemy)) return toast(ui, h('span', { class: 'item-toast halloween-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().halloween.nightBoss(def.name))), 3200)
-      return toast(ui, rich(t().toast.boss(def.name)), 3200)
+      if (isNightBoss(e.enemy)) return news(h('span', { class: 'item-toast halloween-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().halloween.nightBoss(def.name))), 3200)
+      return news(rich(t().toast.boss(def.name)), 3200)
     }
     case 'nightBoss': {
       // Its first defeat ticks the Caça aos Fantasmas off (from the run's results, `recordHunt`): the toast says so now.
       const before = loadSave().halloween
       if (before.hunted.includes(e.enemy)) return
       const ticked = recordHunt(before, g.tally.nightBosses).hunted.length
-      return toast(ui, h('span', { class: 'item-toast halloween-toast' }, h('img', { src: treatIcon(), alt: '' }), rich(t().halloween.hunted(ENEMIES[e.enemy].name, HALLOWEEN.hunt.candies, ticked, NIGHT_BOSSES.length))), 3600, 'nightBoss')
+      return aside(h('span', { class: 'item-toast halloween-toast' }, h('img', { src: treatIcon(), alt: '' }), rich(t().halloween.hunted(ENEMIES[e.enemy].name, HALLOWEEN.hunt.candies, ticked, NIGHT_BOSSES.length))), 3600, 'nightBoss')
     }
     case 'disguise': {
       const def = ENEMIES[e.enemy]
       playSfx('break')
       playCry(cryUrl(def.dex), 0.6)
-      return toast(ui, rich(t().halloween.disguise(def.name)), 2400)
+      return news(rich(t().halloween.disguise(def.name)), 2400)
     }
     case 'bossFled': {
       const def = ENEMIES[e.enemy]
       playCry(cryUrl(def.dex), 0.3)
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().toast.bossFled(def.name))), 3200)
+      return news(h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().toast.bossFled(def.name))), 3200)
     }
     case 'enrage': {
       // No toast: the cry, the flash and the boss's red outline carry it.
@@ -1533,27 +1559,27 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const def = ENEMIES[e.enemy]
       playSfx('shiny')
       playCry(cryUrl(def.dex), 0.4)
-      return toast(ui, rich(t().toast.shiny(def.name)), 3200)
+      return aside(rich(t().toast.shiny(def.name)), 3200, null, 'shiny')
     }
     case 'caught': {
       const def = ENEMIES[e.enemy]
       if (dexStatus(r.dexBase, def.dex).shiny) return
       playSfx('shiny')
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex, true), alt: '' }), rich(t().toast.caught(def.name))), 3600)
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex, true), alt: '' }), rich(t().toast.caught(def.name))), 3600, null, 'shiny')
     }
     case 'shinyPlayer': {
       playSfx('shiny')
-      return toast(ui, rich(t().toast.shinyPlayer(PLAYABLE[localPlayer(g).starter].name)), 3600)
+      return aside(rich(t().toast.shinyPlayer(PLAYABLE[localPlayer(g).starter].name)), 3600, null, 'shiny')
     }
     case 'branchChoice':
       playCry(playerCry(g), 0.6)
       return
     case 'evoItem':
       playSfx('unlock')
-      return evoItemToast([e.item], t().branch.found(EVO_ITEMS[e.item].name), t().branch.foundHint, 'evoItem')
+      return evoItemToast([e.item], t().branch.found(EVO_ITEMS[e.item].name), t().branch.foundHint, 'evoItem', aside)
     case 'evoHeld':
       playCry(playerCry(g), 0.6)
-      return evoItemToast(e.items, t().branch.held(playerForm(g).name, e.items.map((id) => `*${EVO_ITEMS[id].name}*`).join(t().branch.or)), t().branch.heldHint, 'evoHeld')
+      return evoItemToast(e.items, t().branch.held(playerForm(g).name, e.items.map((id) => `*${EVO_ITEMS[id].name}*`).join(t().branch.or)), t().branch.heldHint, 'evoHeld', news)
     case 'ability':
       return abilityFeedback(g, e.id, e.moment)
     case 'awaken': {
@@ -1570,7 +1596,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const name = PLAYABLE[localPlayer(g).starter].name
       // A form still behind the community goal keeps the legend's name (`legendStage`): then it just awakened.
       const form = playerForm(g).name
-      return toast(ui, rich(e.form && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
+      return aside(rich(e.form && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
     }
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
@@ -1590,19 +1616,18 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const me = localPlayer(g)
       const branch = me.branch
       if (branch) updateSave((s) => ({ ...s, branches: { ...s.branches, [me.starter]: branch } }))
-      toast(ui, t().toast.evolved(formAt(me.starter, me.branch, me.stage - 1).name, playerForm(g).name), 3500)
+      aside(t().toast.evolved(formAt(me.starter, me.branch, me.stage - 1).name, playerForm(g).name), 3500)
       learnsToast(g)
       return closedPathsToast(g)
     }
     case 'moveEvolved':
       playSfx('evolve')
       playCry(playerCry(g), 0.3)
-      return toast(ui, rich(t().toast.moveEvolved(MOVES[e.from].name, MOVES[e.to].name), { class: 'toast-evo' }), 3500)
+      return aside(rich(t().toast.moveEvolved(MOVES[e.from].name, MOVES[e.to].name), { class: 'toast-evo' }), 3500)
     case 'duoFused':
       playSfx('duoFuse')
       playCry(playerCry(g), 0.3)
-      return toast(
-        ui,
+      return aside(
         h('span', { class: 'item-toast toast-duo' }, h('img', { src: moveIcon(e.to), alt: '' }), rich(t().duo.fused(MOVES[e.from[0]].name, MOVES[e.from[1]].name, MOVES[e.to].name))),
         3800,
       )
@@ -1610,17 +1635,17 @@ const handleEvent = (r: Run, e: GameEvent) => {
       // The chest's choice has its own screen; Life Orb and Flame Orb bite quietly (the purple number says it).
       if (e.moment === 'found' || e.moment === 'recoil') return
       const line = e.moment === 'taken' ? t().curse.taken(CURSES[e.id].name) : t().curse.left(CURSES[e.id].name)
-      return toast(ui, h('span', { class: 'item-toast toast-curse' }, h('img', { src: curseIcon(e.id), alt: '' }), rich(line)), 3000)
+      return aside(h('span', { class: 'item-toast toast-curse' }, h('img', { src: curseIcon(e.id), alt: '' }), rich(line)), 3000)
     }
     case 'pokeball':
       // A new move or item opens its own screen; taking it already sounded there.
       if (e.moment === 'found') return playSfx('pokeballOpen')
-      if (e.moment === 'left') return e.offer && toast(ui, rich(t().pokeballPick.left(offerName(e.offer))), 2200)
+      if (e.moment === 'left') return e.offer && aside(rich(t().pokeballPick.left(offerName(e.offer))), 2200)
       if (e.moment === 'auto') {
         playSfx('pokeballOpen')
         playSfx('levelUp')
       }
-      return toast(ui, t().toast.pokeball(offerLabel(e.offer)))
+      return aside(t().toast.pokeball(offerLabel(e.offer)))
     case 'shinyOffer':
       // The fresh cards on screen say the rest.
       return playSfx('shiny')
@@ -1632,18 +1657,18 @@ const handleEvent = (r: Run, e: GameEvent) => {
       playSfx('levelUp')
       playCry(playerCry(g), 0.35)
       const text = e.forgot ? m.learnedInstead(MOVES[e.forgot].name, name) : e.level > 1 ? m.raised(name, e.level) : m.learned(name)
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: moveIcon(e.move), alt: '' }), rich(text)), 3200, 'tm')
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: moveIcon(e.move), alt: '' }), rich(text)), 3200, 'tm')
     }
     case 'tmMastered':
       playSfx('coin')
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: moveIcon(e.move), alt: '' }), rich(t().tm.mastered(MOVES[e.move].name, formatPokeDollars(e.coins)))), 3000)
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: moveIcon(e.move), alt: '' }), rich(t().tm.mastered(MOVES[e.move].name, formatPokeDollars(e.coins)))), 3000)
     case 'banish':
       // The level-up screen plays the toss itself.
       return
     case 'consumable': {
       const def = CONSUMABLES[e.item]
       playSfx(def.sfx)
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: consumableIcon(e.item), alt: '' }), h('b', {}, def.name), t().consumables[e.item]), 2200, e.item)
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: consumableIcon(e.item), alt: '' }), h('b', {}, def.name), t().consumables[e.item]), 2200, e.item)
     }
     case 'propBreak':
       return playSfx('break', 60)
@@ -1653,11 +1678,11 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const m = t().halloween
       if (!e.ghost) {
         playSfx('heal')
-        return toast(ui, h('span', { class: 'item-toast halloween-toast' }, h('img', { src: treatIcon(), alt: '' }), rich(m.treat)), 2200, 'trickOrTreat')
+        return aside(h('span', { class: 'item-toast halloween-toast' }, h('img', { src: treatIcon(), alt: '' }), rich(m.treat)), 2200, 'trickOrTreat')
       }
       playSfx('trick')
       playCry(cryUrl(ENEMIES[e.ghost].dex), 0.5)
-      return toast(ui, h('span', { class: 'item-toast halloween-toast' }, h('img', { src: portraitUrl(ENEMIES[e.ghost].dex), alt: '' }), rich(m.trick(ENEMIES[e.ghost].name))), 2600, 'trickOrTreat')
+      return news(h('span', { class: 'item-toast halloween-toast' }, h('img', { src: portraitUrl(ENEMIES[e.ghost].dex), alt: '' }), rich(m.trick(ENEMIES[e.ghost].name))), 2600, 'trickOrTreat')
     }
     case 'mapEvent':
       return mapEventFeedback(ui, e.notice)
@@ -1667,10 +1692,10 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return landmarkFeedback(ui, e.landmark, e.moment)
     case 'revive':
       playSfx('evolve')
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: consumableIcon('revive'), alt: '' }), rich(t().toast.revive)), 3000)
+      return news(h('span', { class: 'item-toast' }, h('img', { src: consumableIcon('revive'), alt: '' }), rich(t().toast.revive)), 3000)
     case 'maxRevive':
       playSfx('evolve')
-      return toast(ui, h('span', { class: 'item-toast' }, shopIcon('maxRevive'), rich(t().toast.maxRevive)), 3400)
+      return news(h('span', { class: 'item-toast' }, shopIcon('maxRevive'), rich(t().toast.maxRevive)), 3400)
     case 'gameover':
       bankRun(r, true)
       recordProgress(r)
@@ -1703,22 +1728,22 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'traitIntro': {
       const def = ENEMIES[e.enemy]
       playCry(cryUrl(def.dex), 0.35)
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().traits[e.trait](def.name))), 3400)
+      return news(h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(def.dex), alt: '' }), rich(t().traits[e.trait](def.name))), 3400)
     }
     case 'hazardIntro':
-      return toast(ui, rich(t().hazards.intro), 3400)
+      return news(rich(t().hazards.intro), 3400)
     case 'riftOpen':
       playSfx('shiny')
-      return toast(ui, rich(t().rifts.open), 3200)
+      return news(rich(t().rifts.open), 3200)
     case 'riftClosed':
-      return toast(ui, t().rifts.closed, 2000)
+      return aside(t().rifts.closed, 2000)
     case 'riftOmen': {
       const lines = domainLines(e.enemy)
       playSfx('thunder')
       // Rayquaza's Air Lock ends what Kyogre or Groudon stirred up earlier in the run.
       const calmed = e.enemy === 'rayquaza' ? g.rift.met.find((l) => l === 'kyogre' || l === 'groudon') : undefined
       const nod = calmed ? ` ${t().rifts.calms(ENEMIES[calmed].name)}` : ''
-      return toast(ui, rich(lines ? `${lines.omen}${nod} ${t().rifts.omen(ENEMIES[e.enemy].name)}` : t().rifts.omenFaint), 4200)
+      return news(rich(lines ? `${lines.omen}${nod} ${t().rifts.omen(ENEMIES[e.enemy].name)}` : t().rifts.omenFaint), 4200)
     }
     case 'riftEnter': {
       const def = ENEMIES[e.enemy]
@@ -1727,7 +1752,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const lines = domainLines(e.enemy)
       // A domain's legendary shows itself later, in its own forms: they load phase by phase (`bossForms`).
       if (lines) {
-        toast(ui, rich(lines.crossing), 3600)
+        aside(rich(lines.crossing), 3600)
         return banner(ui, rich(t().rifts.enterDomain(lines.place)))
       }
       playCry(cryUrl(def.dex), 0.7)
@@ -1742,11 +1767,11 @@ const handleEvent = (r: Run, e: GameEvent) => {
       playSfx('quake')
       playCry(cryUrl(def.dex), 0.7)
       const line = isRiftLegend(e.enemy) ? domainLines(e.enemy)?.phases[e.phase - 1] : isWaveLegend(e.enemy) ? t().legends.phases[e.enemy][e.phase - 1] : undefined
-      return line ? toast(ui, rich(line), 3600) : undefined
+      return line ? news(rich(line), 3600) : undefined
     }
     case 'bossUltimate':
       playSfx('legendary')
-      return toast(ui, h('span', { class: 'toast-ultimate' }, `${e.move}!`), 2400, 'ultimate')
+      return news(h('span', { class: 'toast-ultimate' }, `${e.move}!`), 2400, 'ultimate')
     case 'riftCapture': {
       // A pair's capture throws a ball at each: the toast follows the one this event is for.
       const both = g.rift.arena?.domain?.capture
@@ -1755,31 +1780,31 @@ const handleEvent = (r: Run, e: GameEvent) => {
       if (showCapture(ui, e.enemy)) return
       if (capture && captureOutcome(capture) === 'caught') {
         playSfx('unlock')
-        return toast(ui, rich(t().rifts.caught(name), { class: 'toast-evo' }), 3600)
+        return aside(rich(t().rifts.caught(name), { class: 'toast-evo' }), 3600)
       }
       playSfx('break')
       playCry(cryUrl(ENEMIES[e.enemy].dex), 0.6)
-      return toast(ui, rich(t().rifts.escaped(name)), 3200)
+      return aside(rich(t().rifts.escaped(name)), 3200)
     }
     case 'domainCue': {
       const line = domainLines(e.enemy)?.cues?.[e.cue]
-      return line ? toast(ui, rich(line), 1600) : undefined
+      return line ? news(rich(line), 1600) : undefined
     }
     case 'pairDown':
       playSfx('quake')
       playCry(cryUrl(ENEMIES[e.partner].dex), 0.9)
-      return toast(ui, rich(t().rifts.pairDown(ENEMIES[e.enemy].name, ENEMIES[e.partner].name)), 3600)
+      return news(rich(t().rifts.pairDown(ENEMIES[e.enemy].name, ENEMIES[e.partner].name)), 3600)
     case 'pairRevive':
       playSfx('evolve')
       playCry(cryUrl(ENEMIES[e.partner].dex), 0.8)
-      return toast(ui, rich(t().rifts.pairRevive(ENEMIES[e.enemy].name, ENEMIES[e.partner].name)), 3200)
+      return news(rich(t().rifts.pairRevive(ENEMIES[e.enemy].name, ENEMIES[e.partner].name)), 3200)
     case 'bossGuard':
       playSfx(e.up ? 'legendary' : 'break')
-      return toast(ui, rich(e.up ? t().rifts.guardUp(ENEMIES[e.enemy].name) : t().rifts.guardDown), e.up ? 3400 : 2200)
+      return news(rich(e.up ? t().rifts.guardUp(ENEMIES[e.enemy].name) : t().rifts.guardDown), e.up ? 3400 : 2200)
     case 'legendTitle':
       playSfx(e.shiny ? 'shiny' : 'legendary')
       playCry(cryUrl(ENEMIES[e.enemy].dex), 0.9)
-      if (e.shiny) toast(ui, rich(t().toast.shiny(ENEMIES[e.enemy].name)), 3200)
+      if (e.shiny) aside(rich(t().toast.shiny(ENEMIES[e.enemy].name)), 3200, null, 'shiny')
       return flashScreen(ui)
     case 'bossCapture': {
       const capture = g.legendScene?.capture
@@ -1787,30 +1812,30 @@ const handleEvent = (r: Run, e: GameEvent) => {
       if (showCapture(ui, e.enemy)) return
       if (capture && captureOutcome(capture) === 'caught') {
         playSfx('unlock')
-        return toast(ui, rich(t().rifts.caught(name), { class: 'toast-evo' }), 3200)
+        return aside(rich(t().rifts.caught(name), { class: 'toast-evo' }), 3200)
       }
       playSfx('break')
       playCry(cryUrl(ENEMIES[e.enemy].dex), 0.6)
-      return toast(ui, rich(t().rifts.escaped(name)), 2800)
+      return aside(rich(t().rifts.escaped(name)), 2800)
     }
     case 'riftCleared': {
       playSfx('evolve')
       const partner = partnerOf(e.enemy)
       const text = partner ? t().rifts.pairCleared(ENEMIES[e.enemy].name, ENEMIES[partner].name) : t().rifts.cleared(ENEMIES[e.enemy].name)
-      return toast(ui, rich(text, { class: 'toast-evo' }), 3500)
+      return aside(rich(text, { class: 'toast-evo' }), 3500)
     }
     case 'riftFall':
       playSfx('riftFall')
       playCry(playerCry(g))
-      return toast(ui, rich(t().rifts.fall(ENEMIES[e.enemy].name)), 2800)
+      return news(rich(t().rifts.fall(ENEMIES[e.enemy].name)), 2800)
     case 'riftExit':
       if (e.outcome === 'collapse') {
         playSfx('quake')
-        return toast(ui, t().rifts.collapse, 3000)
+        return news(t().rifts.collapse, 3000)
       }
       if (e.outcome === 'fallen') {
         flashScreen(ui)
-        return toast(ui, rich(t().rifts.fallen), 3200)
+        return news(rich(t().rifts.fallen), 3200)
       }
       return
     case 'reaper':
@@ -1825,7 +1850,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'alpha':
       return alphaEvent(e)
     case 'alphaPrize':
-      return toast(ui, rich(t().alphas.prize), 2600)
+      return aside(rich(t().alphas.prize), 2600)
     case 'egg': {
       const m = t().eggs
       // The run's eggs bank when it ends: this one fits if the incubator has a slot for it after the ones found before it.
@@ -1833,7 +1858,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const fits = g.eggs.found.length - r.hatchery.eggs <= freeSlots(save.eggs, incubatorSlots(save))
       const text = fits ? m.found(m.tiers[e.tier]) : m.foundFull(m.tiers[e.tier], formatPokeDollars(EGG_TIERS[e.tier].refund))
       playSfx('unlock')
-      return toast(ui, h('span', { class: 'item-toast' }, h('img', { src: eggIcon(e.tier), alt: '' }), rich(text)), 3600)
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: eggIcon(e.tier), alt: '' }), rich(text)), 3600)
     }
   }
 }
@@ -1842,12 +1867,11 @@ const handleEvent = (r: Run, e: GameEvent) => {
 const weatherToast = (next: WeatherId, prev: WeatherId) => {
   const w = t().world
   if (next === 'clear') {
-    if (prev !== 'clear') toast(ui, h('span', { class: 'item-toast' }, h('img', { src: weatherIcon(prev), alt: '' }), w.weatherEnd[prev]), 2600, 'weather')
+    if (prev !== 'clear') aside(h('span', { class: 'item-toast' }, h('img', { src: weatherIcon(prev), alt: '' }), w.weatherEnd[prev]), 2600, 'weather')
     return
   }
   playSfx('select')
-  toast(
-    ui,
+  aside(
     h('span', { class: 'item-toast weather-toast' }, h('img', { src: weatherIcon(next), alt: '' }), h('span', {}, rich(w.weatherStart[next]), h('small', {}, w.weatherHint[next]))),
     3400,
     'weather',
@@ -2794,10 +2818,29 @@ const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeMode: boolean) 
   })
 }
 
-/** The game closed mid-run last time (`takeCrash`): the title asks, once, whether to report it. */
+/**
+ * Counts a run whose page went away while the player was elsewhere (`takeCrash`'s `away`): an app
+ * swiped away in Recents, a tab the phone closed in the background. Not a crash.
+ */
+const reportClosed = async (c: BugCrash, away: NonNullable<Away>) => {
+  const device = await deviceInfo()
+  track('run_closed', {
+    version: c.version,
+    away,
+    partner: c.run?.partner ?? null,
+    phase: c.run?.phase ?? null,
+    minute: c.run ? Math.floor(c.run.time / 60) : null,
+    seconds: c.run?.time ?? null,
+    deviceMemory: deviceMemory(),
+    ...device,
+  })
+}
+
+/** The game closed mid-run last time (`takeCrash`): the title asks, once, whether to report it. A page the player had left isn't a crash. */
 const askAboutCrash = () => {
   const found = takeCrash()
   if (!found) return
+  if (found.away) return void reportClosed(found.crash, found.away)
   const { crash, crumb } = found
   // Whether safe mode was on for the run that died, then on from here (`safeMode.ts`).
   void reportCrash(crash, crumb, safeModeOn())

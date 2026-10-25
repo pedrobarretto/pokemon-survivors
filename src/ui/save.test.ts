@@ -24,9 +24,26 @@ describe('parseSettings', () => {
     expect(parseSettings(JSON.stringify({ joystick: 'left' })).joystick).toBe('floating')
   })
 
+  it('reads the buttons side and the fixed stick place, falling back step by step', () => {
+    const stored = JSON.stringify({ buttonSide: 'left', stickHeight: 'high', stickEdge: 'corner' })
+    expect(parseSettings(stored)).toMatchObject({ buttonSide: 'left', stickHeight: 'high', stickEdge: 'near' })
+    expect(parseSettings(JSON.stringify({ buttonSide: true })).buttonSide).toBe('right')
+  })
+
   it('reads the flashes mode, normal unless it says reduced', () => {
     expect(parseSettings(JSON.stringify({ flashes: 'reduced' })).flashes).toBe('reduced')
     expect(parseSettings(JSON.stringify({ flashes: false })).flashes).toBe('normal')
+  })
+
+  it('reads the run toasts level, all unless it says important or none', () => {
+    expect(parseSettings(JSON.stringify({ runToasts: 'important' })).runToasts).toBe('important')
+    expect(parseSettings(JSON.stringify({ runToasts: 'few' })).runToasts).toBe('all')
+  })
+
+  it('reads the mini map mode, square unless it says round or off', () => {
+    expect(parseSettings(JSON.stringify({ minimap: 'round' })).minimap).toBe('round')
+    expect(parseSettings(JSON.stringify({ minimap: 'off' })).minimap).toBe('off')
+    expect(parseSettings(JSON.stringify({ minimap: true })).minimap).toBe('square')
   })
 
   it('clamps volumes to 0..1', () => {
