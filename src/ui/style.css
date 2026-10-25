@@ -2205,6 +2205,41 @@ button {
   font-size: 9px;
 }
 
+/* The pause sheet's list adds each move's DPS in a last column. */
+.damage-list.with-dps .damage-row {
+  grid-template-columns: 24px 120px 1fr 80px 56px;
+}
+
+.damage-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.damage-dps {
+  text-align: right;
+  font-size: 18px;
+  color: #6878a8;
+}
+
+.pause-damage {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.damage-total {
+  margin: 0;
+  font-family: var(--title);
+  font-size: 9px;
+}
+
+.damage-note {
+  margin: 0;
+  font-size: 16px;
+  color: #6878a8;
+}
+
 .damage-bar {
   height: 8px;
   background: #d8d8e0;
@@ -6720,6 +6755,12 @@ button {
   .damage-row b {
     font-size: 8px;
   }
+  .damage-list.with-dps .damage-row {
+    grid-template-columns: 20px 84px 1fr 52px 40px;
+  }
+  .damage-dps {
+    font-size: 15px;
+  }
   .xp {
     height: 14px;
   }
@@ -6924,14 +6965,54 @@ button {
   margin-top: 2px;
 }
 
+/*
+ * Phones held upright: compact toasts, two at a time (`toasts.ts`), in a
+ * short column under the HUD, so the news never covers the middle of the
+ * screen where the fight is.
+ */
 @media (max-width: 720px) and (min-height: 501px) {
   .toasts {
-    max-width: calc(90 * var(--vw));
+    gap: 4px;
+    max-width: calc(80 * var(--vw));
+    max-height: calc(34% - 132px - var(--safe-t));
   }
   .toast {
-    font-size: 18px;
+    padding: 4px 10px;
+    font-size: 15px;
+    line-height: 1.1;
     white-space: normal;
+    border-width: 2px;
+    box-shadow:
+      inset 0 0 0 2px var(--paper),
+      inset 0 0 0 4px var(--frame),
+      0 2px 0 rgba(0, 0, 0, 0.35);
   }
+  .toast .item-toast {
+    gap: 6px;
+  }
+  .toast .item-toast img {
+    width: 20px;
+    height: 20px;
+  }
+  .toast .item-toast img.shop-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .toast .item-toast small {
+    margin-top: 0;
+  }
+}
+
+/* A shiny's news in gold, apart from the white toasts. */
+.toast.toast-shiny {
+  --paper: #fff2b8;
+  --frame: #e8a820;
+  border-color: #5a3c00;
+  color: #4a3000;
+}
+
+.toast.toast-shiny b {
+  color: #b05800;
 }
 
 /* ---------- Shiny & legendary ---------- */

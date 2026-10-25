@@ -428,6 +428,10 @@ export const pt = {
     cards: 'Cartas',
     cardsHint: 'Cartas de upgrade pegas para este status',
     noItems: 'Nenhum item ainda',
+    damageTitle: 'Dano por golpe',
+    damageTotal: (total: string, dps: string) => `Total: ${total} · ${dps} DPS`,
+    damageNote: (time: string) => `DPS = dano ÷ tempo jogado (${time})`,
+    damageEmpty: 'Nenhum dano ainda',
     typeDamage: 'Dano',
     stats: {
       maxHp: 'Vida máx.',
@@ -485,6 +489,8 @@ export const pt = {
     screenShake: 'Tremor de tela',
     flashes: 'Clarões',
     flashModes: { normal: 'Normais', reduced: 'Reduzidos' },
+    runToasts: 'Avisos na partida',
+    runToastModes: { all: 'Todos', important: 'Só importantes', none: 'Nenhum' },
     /** How opaque your moves draw (and, in co-op, your teammates'): `render/attackLayers.ts`. */
     attackOpacity: 'Opacidade dos golpes',
     teamAttackOpacity: 'Opacidade do time',

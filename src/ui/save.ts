@@ -12,6 +12,7 @@ import type { RunSummary } from '../game/tally'
 import { STICK_MODES, type StickMode } from '../engine/input'
 import { DAMAGE_NUMBERS, type DamageNumbers } from '../render/damageNumbers'
 import { FLASH_MODES, type Flashes } from '../render/flashes'
+import { RUN_TOASTS, type RunToasts } from './toastQueue'
 import { DEFAULT_BINDINGS, parseBindings, type Bindings } from '../engine/bindings'
 import { UI_SCALES, type UiScale } from './uiScale'
 
@@ -175,6 +176,8 @@ export type Settings = {
   attackOpacity: number
   /** The same for teammates' moves in co-op. */
   teamAttackOpacity: number
+  /** Which toasts a run shows (`toastQueue.ts`): all, the important ones, or none. Per device: a phone may want fewer than the PC. */
+  runToasts: RunToasts
   /** Remapped keys and gamepad buttons. Per device, so they stay out of the synced save. */
   controls: Bindings
   /** Touch joystick: follows the thumb (the default) or waits in the bottom-left corner. */
@@ -192,6 +195,7 @@ export const DEFAULT_SETTINGS: Settings = {
   flashes: 'normal',
   attackOpacity: 1,
   teamAttackOpacity: 0.6,
+  runToasts: 'all',
   controls: DEFAULT_BINDINGS,
   joystick: 'floating',
   uiScale: 'auto',
@@ -224,6 +228,7 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     flashes: FLASH_MODES.find((m) => m === data.flashes) ?? defaults.flashes,
     attackOpacity: opacity(data.attackOpacity, defaults.attackOpacity),
     teamAttackOpacity: opacity(data.teamAttackOpacity, defaults.teamAttackOpacity),
+    runToasts: RUN_TOASTS.find((m) => m === data.runToasts) ?? defaults.runToasts,
     controls: parseBindings(data.controls),
     joystick: STICK_MODES.find((m) => m === data.joystick) ?? defaults.joystick,
     uiScale: UI_SCALES.find((s) => s === data.uiScale) ?? defaults.uiScale,

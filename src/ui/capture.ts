@@ -22,7 +22,7 @@ const captureToast = (root: HTMLElement, r: CaptureResult): boolean => {
   const name = legendName(r.legend)
   const dex = LEGENDS[r.legend].line[0].dex
   const say = (text: string, hint: string | null, shiny = false) => {
-    toast(root, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(dex, shiny), alt: '' }), h('span', {}, rich(text), hint && h('small', {}, hint))), 4600, `capture-${r.legend}`)
+    toast(root, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(dex, shiny), alt: '' }), h('span', {}, rich(text), hint && h('small', {}, hint))), 4600, `capture-${r.legend}`, shiny ? 'shiny' : null)
     return true
   }
   if (r.outcome === 'escaped') {

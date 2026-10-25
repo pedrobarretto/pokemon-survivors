@@ -4,7 +4,7 @@ import type { LandmarkMoment } from '../game/landmarks'
 import { t } from '../i18n'
 import { pokeballIcon } from '../render/art'
 import { h, setText } from './dom'
-import { toast } from './toasts'
+import { runToast } from './toasts'
 
 /**
  * The shell's side of landmarks (`game/landmarks.ts`): a wooden sign slides
@@ -42,11 +42,11 @@ export const landmarkFeedback = (root: HTMLElement, id: LandmarkId, moment: Land
     case 'loot':
       playSfx(id === 'ruins' ? 'ancientBoost' : 'unlock')
       if (id === 'tunnel') return
-      return toast(root, h('span', { class: 'item-toast' }, h('img', { src: pokeballIcon(), alt: '' }), m.loot[id]), 2800, 'landmark')
+      return runToast(root, 'minor', h('span', { class: 'item-toast' }, h('img', { src: pokeballIcon(), alt: '' }), m.loot[id]), 2800, 'landmark')
     case 'tunnelIn':
       return playSfx('dig')
     case 'tunnelOut':
       playSfx('whoosh')
-      return toast(root, m.tunnelOut, 2200, 'landmark')
+      return runToast(root, 'minor', m.tunnelOut, 2200, 'landmark')
   }
 }

@@ -29,6 +29,11 @@ describe('parseSettings', () => {
     expect(parseSettings(JSON.stringify({ flashes: false })).flashes).toBe('normal')
   })
 
+  it('reads the run toasts level, all unless it says important or none', () => {
+    expect(parseSettings(JSON.stringify({ runToasts: 'important' })).runToasts).toBe('important')
+    expect(parseSettings(JSON.stringify({ runToasts: 'few' })).runToasts).toBe('all')
+  })
+
   it('clamps volumes to 0..1', () => {
     expect(parseSettings(JSON.stringify({ musicVolume: 4, sfxVolume: -1 }))).toMatchObject({ musicVolume: 1, sfxVolume: 0 })
   })

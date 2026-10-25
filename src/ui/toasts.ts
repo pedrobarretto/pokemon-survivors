@@ -1,5 +1,5 @@
 import { h } from './dom'
-import { pushToast, stepToasts, type QueuedToast } from './toastQueue'
+import { pushToast, runToastShows, stepToasts, type QueuedToast, type RunToasts } from './toastQueue'
 
 /**
  * The run's news: toasts in one column under the HUD and big banners for
@@ -11,6 +11,9 @@ import { pushToast, stepToasts, type QueuedToast } from './toastQueue'
 type Stack = { host: HTMLElement; toasts: QueuedToast<HTMLElement>[]; banners: QueuedToast<HTMLElement>[] }
 
 const MAX_TOASTS = 3
+/** Phones held upright get the compact toasts (style.css, same query) and two at a time, so the news never covers the middle of the screen. */
+const COMPACT = typeof matchMedia === 'function' ? matchMedia('(max-width: 720px) and (min-height: 501px)') : null
+const COMPACT_MAX_TOASTS = 2
 
 const stacks = new WeakMap<HTMLElement, Stack>()
 
@@ -36,15 +39,41 @@ const hasRoom = (host: HTMLElement) => {
   return Number.isNaN(max) || host.scrollHeight + parseFloat(style.rowGap) + last.offsetHeight <= max
 }
 
+/** A toast's own look: `shiny` stands out in gold from the white ones. */
+export type ToastTone = 'shiny'
+
 /**
  * Lines up a toast for `ms` on screen. Toasts sharing a `key` replace each
  * other, so news that supersedes older news (the weather) says it once.
  */
-export const toast = (root: HTMLElement, content: HTMLElement | string, ms = 2600, key: string | null = null) => {
+export const toast = (root: HTMLElement, content: HTMLElement | string, ms = 2600, key: string | null = null, tone: ToastTone | null = null) => {
   const stack = stackOf(root)
-  const el = h('div', { class: 'toast box' }, content)
+  const el = h('div', { class: tone ? `toast box toast-${tone}` : 'toast box' }, content)
   const old = pushToast(stack.toasts, el, ms / 1000, key)
   if (old?.shown) old.item.replaceWith(el)
+}
+
+/** The "Avisos na partida" setting, read as each run toast comes; the shell points it at the settings (`readRunToasts`). */
+let runToastLevel = (): RunToasts => 'all'
+export const readRunToasts = (read: () => RunToasts) => {
+  runToastLevel = read
+}
+
+/**
+ * A run's toast, shown as the setting allows (`runToastShows`). `important`
+ * news warns or asks for something (a boss, a rift's omen, a hazard, Meowth
+ * to catch); the rest (drops, berries, a shiny spotted, a milestone the
+ * screen already shows) is minor. Toasts outside a run go through `toast`.
+ */
+export const runToast = (
+  root: HTMLElement,
+  importance: 'important' | 'minor',
+  content: HTMLElement | string,
+  ms?: number,
+  key: string | null = null,
+  tone: ToastTone | null = null,
+) => {
+  if (runToastShows(runToastLevel(), importance === 'important')) toast(root, content, ms, key, tone)
 }
 
 /**
@@ -92,7 +121,8 @@ export const tickToasts = (root: HTMLElement, dt: number, held: boolean, banners
   // One newcomer per frame at most, so each one is measured against the room left.
   const onScreen = stack.toasts.filter((q) => q.shown).length
   const waiting = onScreen < stack.toasts.length
-  advance(stack.toasts, dt, waiting && hasRoom(stack.host) ? Math.min(MAX_TOASTS, onScreen + 1) : 0, stack.host)
+  const max = COMPACT?.matches ? COMPACT_MAX_TOASTS : MAX_TOASTS
+  advance(stack.toasts, dt, waiting && hasRoom(stack.host) ? Math.min(max, onScreen + 1) : 0, stack.host)
 }
 
 /** Drops all news, on screen or waiting (the run is over). */

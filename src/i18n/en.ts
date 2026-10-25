@@ -320,6 +320,10 @@ export const en: Messages = {
     cards: 'Cards',
     cardsHint: 'Upgrade cards taken for this stat',
     noItems: 'No items yet',
+    damageTitle: 'Damage by move',
+    damageTotal: (total: string, dps: string) => `Total: ${total} · ${dps} DPS`,
+    damageNote: (time: string) => `DPS = damage ÷ time played (${time})`,
+    damageEmpty: 'No damage yet',
     typeDamage: 'Damage',
     stats: {
       maxHp: 'Max HP',
@@ -365,6 +369,8 @@ export const en: Messages = {
     screenShake: 'Screen shake',
     flashes: 'Flashes',
     flashModes: { normal: 'Normal', reduced: 'Reduced' },
+    runToasts: 'Run alerts',
+    runToastModes: { all: 'All', important: 'Important only', none: 'None' },
     /** How opaque your moves draw (and, in co-op, your teammates'): `render/attackLayers.ts`. */
     attackOpacity: 'Move opacity',
     teamAttackOpacity: 'Team move opacity',

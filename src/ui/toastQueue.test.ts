@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pushToast, stepToasts, type QueuedToast } from './toastQueue'
+import { pushToast, runToastShows, stepToasts, type QueuedToast } from './toastQueue'
 
 describe('toast queue', () => {
   it('shows at most `max` at once and lets the rest in, in order, as time runs out', () => {
@@ -27,5 +27,13 @@ describe('toast queue', () => {
     expect(q).toEqual([{ item: 'snow started', key: 'weather', left: 2, shown: true }])
     expect(pushToast(q, 'candy', 2)).toBeNull()
     expect(q).toHaveLength(2)
+  })
+})
+
+describe('run toasts setting', () => {
+  it('shows every toast at all, the important ones at important, none at none', () => {
+    expect([runToastShows('all', true), runToastShows('all', false)]).toEqual([true, true])
+    expect([runToastShows('important', true), runToastShows('important', false)]).toEqual([true, false])
+    expect([runToastShows('none', true), runToastShows('none', false)]).toEqual([false, false])
   })
 })

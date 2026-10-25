@@ -320,6 +320,10 @@ export const es: Messages = {
     cards: 'Cartas',
     cardsHint: 'Cartas de mejora conseguidas para esta estadística',
     noItems: 'Sin objetos aún',
+    damageTitle: 'Daño por movimiento',
+    damageTotal: (total: string, dps: string) => `Total: ${total} · ${dps} DPS`,
+    damageNote: (time: string) => `DPS = daño ÷ tiempo jugado (${time})`,
+    damageEmpty: 'Sin daño aún',
     typeDamage: 'Daño',
     stats: {
       maxHp: 'Vida máx.',
@@ -365,6 +369,8 @@ export const es: Messages = {
     screenShake: 'Temblor de pantalla',
     flashes: 'Destellos',
     flashModes: { normal: 'Normales', reduced: 'Reducidos' },
+    runToasts: 'Avisos en partida',
+    runToastModes: { all: 'Todos', important: 'Solo importantes', none: 'Ninguno' },
     /** How opaque your moves draw (and, in co-op, your teammates'): `render/attackLayers.ts`. */
     attackOpacity: 'Opacidad de ataques',
     teamAttackOpacity: 'Opacidad del equipo',

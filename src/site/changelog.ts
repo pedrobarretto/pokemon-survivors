@@ -24,6 +24,43 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-25',
+    title: { pt: 'Menos avisos na tela e o dano de cada golpe na pausa', en: 'Fewer alerts on screen and each move’s damage in the pause menu', es: 'Menos avisos en pantalla y el daño de cada ataque en la pausa', fr: 'Moins d’alertes à l’écran et les dégâts de chaque attaque dans la pause', zh: '畫面上的提示更少，暫停選單可看各招式傷害' },
+    highlights: [
+      { pt: 'Novo ajuste "Avisos na partida": Todos, Só importantes (chefes, fendas, perigos e o que pede ação) ou Nenhum.', en: 'New "Run alerts" setting: All, Important only (bosses, rifts, dangers and anything that needs you) or None.', es: 'Nuevo ajuste "Avisos en partida": Todos, Solo importantes (jefes, grietas, peligros y lo que pide acción) o Ninguno.', fr: 'Nouveau réglage « Alertes en partie » : Toutes, Importantes (boss, failles, dangers et ce qui demande une action) ou Aucune.', zh: '新設定「戰鬥中提示」：全部、僅重要（首領、裂縫、危險和需要你行動的事）或關閉。' },
+      { pt: 'No celular em pé, os avisos ficaram menores e aparecem no máximo dois por vez, longe do centro da tela.', en: 'On a phone held upright, alerts are smaller and show at most two at a time, away from the middle of the screen.', es: 'En el celular en vertical, los avisos son más pequeños y aparecen como máximo dos a la vez, lejos del centro de la pantalla.', fr: 'Sur un téléphone tenu droit, les alertes sont plus petites et s’affichent deux au plus à la fois, loin du centre de l’écran.', zh: '直拿手機時，提示變得更小，一次最多顯示兩則，不再擋住畫面中央。' },
+      { pt: 'Avisos de shiny agora são dourados, para não se perderem entre os brancos.', en: 'Shiny alerts are now gold, so they stand out from the white ones.', es: 'Los avisos de shiny ahora son dorados, para que no se pierdan entre los blancos.', fr: 'Les alertes de shiny sont désormais dorées, pour ressortir parmi les blanches.', zh: '異色提示現在是金色的，不會淹沒在白色提示裡。' },
+      { pt: 'A pausa mostra o dano de cada golpe na partida, do maior para o menor, com o DPS médio.', en: 'The pause menu shows each move’s damage this run, highest first, with its average DPS.', es: 'La pausa muestra el daño de cada ataque en la partida, de mayor a menor, con su DPS promedio.', fr: 'La pause affiche les dégâts de chaque attaque de la partie, du plus fort au plus faible, avec leur DPS moyen.', zh: '暫停選單會顯示本局各招式的傷害，由高到低排列，並附上平均 DPS。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Avisos na partida', en: 'Run alerts', es: 'Avisos en partida', fr: 'Alertes en partie' },
+        notes: [
+          {
+            pt: 'Em Ajustes > Jogo, escolha quais avisos aparecem durante a partida. Só importantes mantém chefes chegando, fendas, perigos e eventos que pedem ação (Meowth, o Tutor, missões, a Mega pronta) e esconde drops, berries, shinies avistados e afins. Nenhum esconde todos.',
+            en: 'In Settings > Game, pick which alerts show during a run. Important only keeps incoming bosses, rifts, dangers and events that need you (Meowth, the Move Tutor, missions, a Mega ready) and hides drops, berries, shinies spotted and the like. None hides them all.',
+            es: 'En Ajustes > Juego, elige qué avisos aparecen durante la partida. Solo importantes mantiene los jefes que llegan, las grietas, los peligros y los eventos que piden acción (Meowth, el Tutor, misiones, la Mega lista) y oculta drops, bayas, shinies avistados y similares. Ninguno los oculta todos.',
+          },
+          {
+            pt: 'No celular em pé, os avisos ficaram mais compactos, no máximo dois por vez logo abaixo do HUD, e os de shiny ganharam uma caixa dourada. Pedidos de jogadores no Discord.',
+            en: 'On a phone held upright, alerts are more compact, at most two at a time right under the HUD, and shiny ones got a gold box. Requested by players on Discord.',
+            es: 'En el celular en vertical, los avisos son más compactos, como máximo dos a la vez justo debajo del HUD, y los de shiny tienen una caja dorada. Pedidos de jugadores en Discord.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Dano por golpe na pausa', en: 'Damage by move in the pause menu', es: 'Daño por ataque en la pausa' },
+        notes: [
+          {
+            pt: 'A tela de pausa mostra o dano total da partida e o de cada golpe, em ordem, com o DPS médio de cada um (dano dividido pelo tempo jogado até agora).',
+            en: 'The pause screen shows the run’s total damage and each move’s, in order, with each one’s average DPS (damage divided by the time played so far).',
+            es: 'La pantalla de pausa muestra el daño total de la partida y el de cada ataque, en orden, con el DPS promedio de cada uno (daño dividido por el tiempo jugado hasta ahora).',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-24',
     title: { pt: 'Mega Darkrai, um lobby novo no celular e golpes mais vivos', en: 'Mega Darkrai, a new lobby on phones and livelier moves', es: 'Mega Darkrai, un lobby nuevo en el celular y ataques con más vida', fr: 'Méga-Darkrai, un nouveau lobby sur mobile et des attaques plus vivantes', zh: '超級 Darkrai、手機上的全新大廳與更生動的招式' },
     highlights: [
