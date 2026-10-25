@@ -1,9 +1,9 @@
 import {
+  beatMsFor,
   FRIENDS,
   INVITE,
   likePrefix,
   presenceOnline,
-  PRESENCE,
   relationOf,
   splitFollows,
   type Activity,
@@ -59,8 +59,8 @@ export const friendStore = (sql: Sql, now: () => number = Date.now) => {
     )[0]?.id ?? null
 
   /** The presence of every mutual friend, then the invites waiting from them (live, not dismissed). */
-  const view = async (userId: string, activity: Activity | null): Promise<PresenceView> => {
-    const [rows, waiting, [me]] = await Promise.all([
+  const view = async (userId: string): Promise<Pick<PresenceView, 'friends' | 'invites'>> => {
+    const [rows, waiting] = await Promise.all([
       sql<PresenceRow[]>`
         select u.handle, coalesce(u.name, u.handle) as name, u.appear_offline, p.activity, p.room,
           (extract(epoch from (now() - p.seen_at)) * 1000)::float8 as ago
@@ -77,13 +77,10 @@ export const friendStore = (sql: Sql, now: () => number = Date.now) => {
           and exists (select 1 from follows where follower_id = ${userId} and followee_id = i.from_id)
           and exists (select 1 from follows where follower_id = i.from_id and followee_id = ${userId})
         order by i.created_at desc limit ${INVITE.shown}`,
-      sql<{ appear_offline: boolean }[]>`select appear_offline from users where id = ${userId}`,
     ])
     return {
       friends: rows.map(toFriendPresence),
       invites: waiting.map((r): CoopInvite => ({ id: r.id, from: { handle: r.handle, name: r.name }, room: r.room, at: r.at.toISOString(), expiresAt: r.expires_at.toISOString() })),
-      appearOffline: me?.appear_offline ?? false,
-      beatMs: PRESENCE.beatMs[activity ?? 'lobby'],
     }
   }
 
@@ -143,13 +140,23 @@ export const friendStore = (sql: Sql, now: () => number = Date.now) => {
       return true
     },
 
-    /** A heartbeat: stores what the player is doing and answers the friends' presence and the invites waiting. */
+    /**
+     * A heartbeat: stores what the player is doing and answers the friends' presence and the invites waiting.
+     * One round trip writes and asks whether the player follows anyone; one who doesn't has no friends nor
+     * invites (both need a follow each way), so their answer skips the reads and asks for a slower beat (`beatMsFor`).
+     */
     beat: async (userId: string, update: PresenceUpdate): Promise<PresenceView> => {
-      await sql`insert into users (id) values (${userId}) on conflict (id) do nothing`
-      await sql`
-        insert into presence (user_id, activity, room, seen_at) values (${userId}, ${update.activity}, ${update.room}, now())
-        on conflict (user_id) do update set activity = excluded.activity, room = excluded.room, seen_at = now()`
-      return view(userId, update.activity)
+      // The `users` row a first beat inserts isn't in this statement's snapshot: its `appear_offline` is the default, false.
+      const [me] = await sql<{ appear_offline: boolean; follows: boolean }[]>`
+        with joined as (insert into users (id) values (${userId}) on conflict (id) do nothing),
+        seen as (
+          insert into presence (user_id, activity, room, seen_at) values (${userId}, ${update.activity}, ${update.room}, now())
+          on conflict (user_id) do update set activity = excluded.activity, room = excluded.room, seen_at = now())
+        select coalesce((select appear_offline from users where id = ${userId}), false) as appear_offline,
+          exists (select 1 from follows where follower_id = ${userId}) as follows`
+      const follows = me?.follows ?? false
+      const { friends, invites } = follows ? await view(userId) : { friends: [], invites: [] }
+      return { friends, invites, appearOffline: me?.appear_offline ?? false, beatMs: beatMsFor(update.activity, follows) }
     },
 
     /** The player left (closed the panel, signed out): offline at once instead of when the window runs out. */

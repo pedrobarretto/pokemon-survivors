@@ -22,12 +22,23 @@ export type Activity = (typeof ACTIVITIES)[number]
 
 /**
  * Heartbeat cadence per activity (a run beats rarely: only "in a run" needs
- * keeping), and the slack past two missed beats before a player reads offline.
+ * keeping), the slack past two missed beats before a player reads offline, and
+ * the slowest pace, for a player who follows nobody (`beatMsFor`).
  */
-export const PRESENCE = { beatMs: { lobby: 20_000, room: 20_000, run: 180_000 }, graceMs: 10_000 } as const satisfies {
+export const PRESENCE = { beatMs: { lobby: 20_000, room: 20_000, run: 180_000 }, graceMs: 10_000, aloneMs: 180_000 } as const satisfies {
   beatMs: Record<Activity, number>
   graceMs: number
+  aloneMs: number
 }
+
+/**
+ * When the API asks for the next heartbeat. A player who follows nobody has no
+ * friend to see them nor to invite them (both need a follow each way), and
+ * only their own follow can change that (`follow` beats at once), so they beat
+ * at `PRESENCE.aloneMs` wherever they are.
+ */
+export const beatMsFor = (activity: Activity, followsSomeone: boolean) =>
+  followsSomeone ? PRESENCE.beatMs[activity] : Math.max(PRESENCE.beatMs[activity], PRESENCE.aloneMs)
 
 /** How long an invite stays up, and how many a player sees at once. */
 export const INVITE = { ttlMs: 10 * 60_000, shown: 20 } as const
