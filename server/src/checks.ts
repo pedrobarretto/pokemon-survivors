@@ -77,9 +77,11 @@ export const CHECKED = { top: { global: BOARD_SIZE, starter: 3 }, sample: 0.05 }
  * simulator can't read); a newer one waits for this server to be updated
  * (a deploy restarts it, and `resume` picks it up).
  * `schedule` queues a run (again, if it grew in endless mode); `resume`
- * queues whatever was pending when the server last stopped.
+ * queues whatever was pending when the server last stopped. `paused`
+ * (`CHECKS=off`) queues nothing: runs stay pending, replays kept, for the
+ * next start without it.
  */
-export const createChecks = (ranking: RankingStore) => {
+export const createChecks = (ranking: RankingStore, { paused = false } = {}) => {
   const run: Runner = import.meta.url.endsWith('.ts') ? inlineRunner() : workerRunner()
   const queue: string[] = []
   let busy = false
@@ -134,10 +136,12 @@ export const createChecks = (ranking: RankingStore) => {
 
   return {
     schedule: (id: string) => {
+      if (paused) return
       if (!queue.includes(id)) queue.push(id)
       void drain()
     },
     resume: async () => {
+      if (paused) return
       queue.push(...(await ranking.uncheckedRuns()).filter((id) => !queue.includes(id)))
       void drain()
     },

@@ -253,6 +253,7 @@ The player's device still holds the edited save. Its next push comes on top of a
 | `POSTHOG_KEY` | Optional. The game's PostHog project token (`phc_…`, the same as the client's `VITE_POSTHOG_KEY`): 500s, uncaught exceptions and rejections go to its error tracking (`src/errors.ts`), tied to the player's id when the request had one. Without it errors only go to the log |
 | `POSTHOG_PERSONAL_API_KEY` | Optional. A PostHog personal API key (`phx_…`) with only the `feature_flag:write` scope, limited to the game's project: the Discord staff's `/coop-beta` edits the `coop-beta` flag's handles with it (`src/coopBeta.ts`). Without it `/coop-beta` asks staff to have Pedro set it |
 | `DISCORD_BUG_FORUM_ID` | Optional. The #bug-reports forum's channel id, where bug reports go. Without it the bot finds the forum by name |
+| `CHECKS` | Optional. `off` pauses the re-simulation of ranked runs: they stay pending with their replays until a start without it (relief when the VPS is short of CPU) |
 | `STREAM_ENFORCE` | Optional. `1` keeps ranked runs whose replay wasn't streamed in time off the public boards (see [Replay streaming](#replay-streaming)). Unset, the API only measures and logs the lag |
 | `PORT` | Default `3000` |
 

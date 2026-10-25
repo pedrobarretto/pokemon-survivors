@@ -38,7 +38,8 @@ setInterval(() => void ranking.sweepChunks().catch((err) => console.error('chunk
 const discord = discordLink(sql, clerk, env.discord)
 void discord.settle().catch((err) => console.error('discord gifts settle failed', err))
 const gifts = giftStore(sql)
-const checks = createChecks(ranking)
+// CHECKS=off pauses the re-simulations: the API's CPU goes to the requests.
+const checks = createChecks(ranking, { paused: env.checksPaused })
 // Runs that were waiting for a check when the last instance stopped.
 void retrying('checks resume', checks.resume).catch((err) => console.error('checks resume failed', err))
 // Invites that came due, and milestones reached, while no instance was counting.

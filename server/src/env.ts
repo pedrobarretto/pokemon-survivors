@@ -60,6 +60,8 @@ export const loadEnv = () => {
      * `src/game/replayStream.ts`) stays off the public boards. Off (the default), the API only stores and logs the lag.
      */
     streamEnforce: ['1', 'true', 'on'].includes((process.env.STREAM_ENFORCE ?? '').trim().toLowerCase()),
+    /** `CHECKS=off` pauses the re-simulation of ranked runs (`checks.ts`): runs stay pending, replays kept, until it's back on. */
+    checksPaused: (process.env.CHECKS ?? '').trim().toLowerCase() === 'off',
     /** Whether the game at `origin` may call the API (CORS) and own its tokens (`azp`). */
     allowedOrigin: (origin: string) => origins.includes(origin) || LOCALHOST.test(origin),
   }
