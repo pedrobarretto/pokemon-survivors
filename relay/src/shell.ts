@@ -1,11 +1,11 @@
-import type { Auth } from '../../src/net/protocol'
+import { CLOSE_CODES, type Auth, type ServerMessage } from '../../src/net/protocol'
 import { jwksKeys, verifyClerkToken } from './auth'
 import type { Env } from './env'
 import { allowedOrigin } from './origins'
 import type { Identity } from './room'
 import { parseTrace, type LogLine, type Where } from './telemetry'
 
-/** What both Durable Object shells (the one-room `RoomObject` and the many-room `ShardObject`) do the same way. */
+/** What the Worker and the shards (`ShardObject`) share: timeouts, logging, sign-in. */
 
 /** A socket not seated within this long is closed: no valid `hello`, or one whose auth is still being checked. */
 export const HELLO_TIMEOUT_MS = 10_000
@@ -45,4 +45,17 @@ export const identify = async (env: Env, auth: Auth): Promise<Identity | null> =
     now: Date.now(),
   })
   return sub ? { id: `u:${sub}`, account: true } : null
+}
+
+/**
+ * The answer to a socket for a room that isn't here (expired, or never made):
+ * `refused` (`unavailable`) and the final close, as a room's own refusal goes.
+ * No Durable Object holds it: the socket is the Worker's or the shard's own.
+ */
+export const noSuchRoom = (): Response => {
+  const [client, server] = Object.values(new WebSocketPair()) as [WebSocket, WebSocket]
+  server.accept()
+  server.send(JSON.stringify({ t: 'refused', code: 'unavailable' } satisfies ServerMessage))
+  server.close(CLOSE_CODES.refused, 'refused')
+  return new Response(null, { status: 101, webSocket: client })
 }

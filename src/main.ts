@@ -3149,7 +3149,7 @@ const devLandmark = (g: Game, id?: LandmarkId, dy = 60) => {
  * failure would, `('fresh')` rejoins as a new tab (the snapshot), `('desync')`
  * nudges this client's state off the team's (the relay heals it), `('pick', id)` another
  * Pokémon for the room, `('url', u)`
- * points at another relay (null: the default), `('relay', home, u)` sets a VPS relay (`sa`: São Paulo, for South American hosts' rooms), `('botRelays', 'cf=u&sa=u&us=u')` the relays the next bots reach (a latency lab), `('net')` the connection numbers and the run's `coop_net` so far; `('room')` and
+ * points at another relay (null: the default), `('relay', home, u)` sets a VPS relay (`sa`: São Paulo, for South American hosts' rooms), `('botRelays', 'cf=u&sa=u')` the relays the next bots reach (a latency lab), `('net')` the connection numbers and the run's `coop_net` so far; `('room')` and
  * `('hub')` open those screens, `('beta', true|false|null)` forces the lobby's tile on this device,
  * `('build')` joins a room made for another build (the "update" refusal) and `('invite', code, name)`
  * stages a friend's invite banner without the API.
@@ -3226,7 +3226,7 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
       return 'ps.coop: reload to use it'
     }
     case 'botRelays':
-      // The relays the tab's next bots reach, for a latency lab: ps.coop('botRelays', 'cf=http://127.0.0.1:8883&sa=…&us=…'); null: this tab's.
+      // The relays the tab's next bots reach, for a latency lab: ps.coop('botRelays', 'cf=http://127.0.0.1:8883&sa=…'); null: this tab's.
       return setBotRelays(typeof arg === 'string' ? arg : null)
     case 'wall': {
       // Read-only: the nearest solid's foot to this player, and whether the drawn or the confirmed sprite sits in one.

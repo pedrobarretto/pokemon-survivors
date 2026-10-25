@@ -39,14 +39,13 @@ export const ROOM_CODE_LENGTH = 5
  *
  * - `cf`: Cloudflare (a letter, 23 × 31^4 ≈ 21 million codes), the default.
  * - `sa`: the São Paulo VPS relay (`relay/node`), 2 to 5 (4 × 31^4 ≈ 3.7 million).
- * - `us`: the US east VPS relay (Boston), 6 to 9 (another 3.7 million).
  *
- * Another VPS relay takes characters from one of these (a letter from
- * Cloudflare's, say) after its old codes' rooms are gone (6 h): one entry
- * here, one in the game's `RELAY_URLS` (`coopShell.ts`) and its
- * `VITE_COOP_URL_*`. A code of a home this build has no URL for is Cloudflare's.
+ * 6 to 9 are free (the retired US east relay's until 2026-10-25): another VPS
+ * relay takes them, one entry here, one in the game's `RELAY_URLS`
+ * (`coopShell.ts`) and its `VITE_COOP_URL_*`. A code of no home, or of a home
+ * this build has no URL for, is Cloudflare's.
  */
-export const RELAY_HOMES = { cf: 'ABCDEFGHJKMNPQRSTUVWXYZ', sa: '2345', us: '6789' } as const satisfies Record<string, string>
+export const RELAY_HOMES = { cf: 'ABCDEFGHJKMNPQRSTUVWXYZ', sa: '2345' } as const satisfies Record<string, string>
 export type RelayHome = keyof typeof RELAY_HOMES
 
 /** The relays that aren't Cloudflare (each a `relay/node` server). */
@@ -431,13 +430,17 @@ const parseSnap = (m: Record<string, unknown>): SnapChunk | null => {
   return { t: 'snap', tick, h, part, parts, data }
 }
 
-/** Round trips by relay (`Rtts`): known homes only, each a whole number of ms up to a minute, or null. */
+/**
+ * Round trips by relay (`Rtts`): each a whole number of ms up to a minute, or
+ * null. A home this side doesn't know (a build with a relay since retired, or
+ * one added later) is left out, not refused.
+ */
 export const parseRtts = (v: unknown): Rtts | null => {
   if (!isRecord(v)) return null
   const out: { [H in RelayHome]?: number | null } = {}
   for (const [home, ms] of Object.entries(v)) {
-    if (!isRelayHome(home) || (ms !== null && !isWhole(ms, 60_000))) return null
-    out[home] = ms
+    if (ms !== null && !isWhole(ms, 60_000)) return null
+    if (isRelayHome(home)) out[home] = ms
   }
   return out
 }

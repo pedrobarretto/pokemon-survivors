@@ -36,7 +36,7 @@ create costs one round trip to the shard per full shard before it.
 
 **One room never takes the others down.** A room's step that throws restarts
 only that room from its storage (its sockets closed with 1012, the clients
-reconnect and resume), as on the VPS relays.
+reconnect and resume), as on the VPS relay.
 
 **Storage.** Each room keeps its keys in its shard: `room:<code>` (the room's
 JSON) and `r:<code>:log:…`/`r:<code>:snap:…` (the log batches and snapshot
@@ -45,7 +45,7 @@ every `room:` key back; a room that expires (idle, or 6 h old) has all its keys
 deleted. The output gate is the whole object's, so a write that took it would
 hold every room's frames until it committed (19–33 ms p50, up to 1.1 s
 measured): every write in a shard, the room saves and the alarm included, goes
-with `allowUnconfirmed`. As on the VPS relays, a step's writes are all issued
+with `allowUnconfirmed`. As on the VPS relay, a step's writes are all issued
 before anything it sends, in one synchronous turn, which the runtime commits as
 one atomic batch, batches in order. The window this opens: a crash may lose a
 room's newest steps that its clients already heard (a commit's time of them),
@@ -64,21 +64,16 @@ phase, so one shard-wide loop would make every room late by up to a frame), and
 one alarm per shard: the earliest of its rooms' deadlines, which wakes only the
 rooms whose own came.
 
-**Rooms made before shards** live one per `RoomObject` (`idFromName(code)`) and
-keep working until they expire (6 h at most): a code without the check
-character goes there, and so does the 1 in 31 of them that passes it by chance
-(the shard answers `X-PS-No-Room` and the Worker tries the old object). The old
-class and its `v1` migration stay; `ShardObject` came with `v2`. **After the
-shards' deploy is 6 h old**, a later PR removes `RoomObject` (a `deleted_classes`
-migration), the fallback in `src/index.ts`, and the legacy SQL reads in
-`src/store.ts`; a shard then answers an unknown code itself (a socket that
-refuses it, as `RoomObject` does today).
+**A code with no room** (expired, mistyped, or naming no shard: a VPS relay's)
+gets a socket that says `refused` (`unavailable`) and closes, from the shard or
+straight from the Worker (`noSuchRoom` in `src/shell.ts`), as a room's own
+refusal does. The one-room `RoomObject` of the rooms made before shards is gone
+(`v3` deletes its class; `ShardObject` came with `v2`).
 
 - `src/room.ts`: the room as a pure state machine (all the rules, tested in `test/room.test.ts`).
 - `src/shardObject.ts`: the Durable Object, a thin shell doing each of its rooms' storage, sockets and timers.
 - `src/shards.ts`: shard codes, the fill rule and the alarm's scheduling (pure, tested in `test/shards.test.ts`).
-- `src/roomObject.ts`: the one-room Durable Object of the rooms made before shards (goes after 6 h, above).
-- `src/shell.ts`: what both Durable Object shells share (auth, where the isolate runs, timeouts).
+- `src/shell.ts`: what the Worker and the shards share (auth, where the isolate runs, timeouts, the answer for a code with no room).
 - `src/vault.ts`: one Durable Object keeping desync dumps after their room is gone (30 days, the newest 500, pruned by its alarm), and the lab's kept runs (below).
 - `src/telemetry.ts`: what makes every run diagnosable (below), kept out of the room's rules.
 - `src/index.ts`: the Worker routes; `src/auth.ts`: Clerk session tokens (RS256 against the JWKS).
@@ -131,7 +126,7 @@ JSON lines in Workers Logs (observability is on), one per event:
 
 Every line from a shard carries its name (`shard`, e.g. `enam:0`).
 
-- `shard.boot`: a shard started (`colo`, how many rooms and sockets it brought back); `do.boot`: each of its rooms (or a one-room object) started (`colo`: where it runs, from Cloudflare's trace asked once per isolate; the run and tick it resumes at).
+- `shard.boot`: a shard started (`colo`, how many rooms and sockets it brought back); `do.boot`: each of its rooms started (`colo`: where it runs, from Cloudflare's trace asked once per isolate; the run and tick it resumes at).
 - `shard.stats`: once a minute while a run's clock runs, the shard's rooms, running rooms, sockets, inbound messages a second, frames sent and the frame timers' lateness (p50, p99, max ms) all rooms together. `room.error`: a room's step threw and the room started over (`fatal`: it failed again and left memory).
 - `conn.open` / `conn.close`: a socket, with where it meets Cloudflare (`colo`, `country`, `asn`, `rtt`: the edge's TCP round trip, set by the Worker in `X-PS-Edge`), and at close its code or the relay's reason and how long it lived.
 - `run.summary`: at a run's end or when its room goes (`why`, `final`), and also when everyone left it (`why: 'left'`, `final: false`: an idle room's object is usually evicted before it expires, and its counts with it): frames sent and those carrying more than a tick, the frame timer's lateness (p50, p99, max ms), messages in by kind (a `batch` once, and each message it carries by its own kind), stick inputs coalesced and messages dropped, bytes per seat, storage writes by kind (log batches, room saves, snapshot chunks, deletes), snapshot sizes, pauses, and per seat its edge, how many times it joined, and its own link report (`net`: round trip, hold, underruns, stalls, reconnects, sent every 15 s).
@@ -140,24 +135,23 @@ Every line from a shard carries its name (`shard`, e.g. `enam:0`).
 
 **Kept runs.** A run that lasted a minute or more is offered to the vault when it is summed up (above): its input log, as a dump (`kind: 'run'`, `meta.why`, `meta.net` per seat, `score`; one id per run, so an offer made when everyone left is replaced if the run goes on), so a laggy run can be replayed in the lab. At most 20 a UTC day, the laggiest win (`score`: the worst seat's round trip p95, plus 20 per underrun and 50 per reconnect), kept 14 days. `/admin/dumps` lists them with the rest (`kind`, `score`).
 
-## VPS relays: São Paulo and US east (`node/`)
+## VPS relay: São Paulo (`node/`)
 
 Cloudflare has no Durable Objects in South America, so a Brazilian room runs in the US
 (116–140 ms away). `node/` runs the same room (`src/room.ts`, `src/store.ts`, `src/auth.ts`,
-`src/codes.ts`) on Node 24 as a Docker image, on Pedro's VPSes through Dokploy:
+`src/codes.ts`) on Node 24 as a Docker image, on Pedro's VPS through Dokploy:
 
 | Relay | Home (`RELAY_HOME`) | Codes start with | Where | Address | Game env |
 |---|---|---|---|---|---|
 | São Paulo | `sa` | 2–5 | the main VPS (72.60.58.225, next to the API, ~9 ms from a Brazilian player) | `coop-sa.pokemonsurvivors.com` | `VITE_COOP_URL_SA` |
-| US east (being retired, below) | `us` | 6–9 | Hostinger Boston (2.25.92.11), a Dokploy remote server | `coop-us.pokemonsurvivors.com` | `VITE_COOP_URL_US` |
 
 - **Routing:** a room's code says its relay (`RELAY_HOMES` in the protocol). Cloudflare makes
   codes starting with a letter, each VPS relay with its own digits. The game (`src/coop/relays.ts`)
   measures every VPS relay it has a URL for and creates on the one with the lowest round trip
   within 70 ms that isn't full, else on Cloudflare (also the fallback when that relay can't take it). A build
   without a relay's `VITE_COOP_URL_*` sends its codes to Cloudflare. Another relay is one entry in
-  `RELAY_HOMES`, one in `RELAY_URLS` (`src/coopShell.ts`), its env var and this image with its
-  `RELAY_HOME` (taking characters from a home only after that home's rooms are gone, 6 h).
+  `RELAY_HOMES` (6–9 are free: US east's until it was retired, 2026-10-25), one in `RELAY_URLS`
+  (`src/coopShell.ts`), its env var and this image with its `RELAY_HOME`.
 - **Moving for the group:** the host picks the relay at create, but the group can be elsewhere
   (the first 4-player room ran in São Paulo with players in Spain at 230 ms). In the lobby every
   client reports its round trips (`rtt`: each VPS relay's `/health` median, and a Cloudflare
@@ -215,14 +209,14 @@ docker build -f relay/node/Dockerfile -t ps-relay .   # from the repository root
 
 ### One-time setup (Pedro)
 
-The same steps for each relay, with its row of the table above (`<home>`: `sa`; `us` is being retired, below).
+The same steps for each relay, with its row of the table above (`<home>`: `sa`).
 
 1. **DNS** (GoDaddy, `ns23`/`ns24.domaincontrol.com`): an `A` record per relay, TTL 600:
-   `coop-sa` → `72.60.58.225` (the main VPS, like `api`) and `coop-us` → `2.25.92.11` (Boston).
+   `coop-sa` → `72.60.58.225` (the main VPS, like `api`).
    Check: `dig +short coop-<home>.pokemonsurvivors.com`.
-2. **Dokploy** (US east: first add the Boston VPS as a **remote server** in Dokploy, Settings →
-   Remote Servers, and set it up so it runs Traefik; its app then deploys there), project
-   **Pokémon Survivors**, a new application `coop-<home>` (`coop-us` on the Boston server):
+2. **Dokploy** (a relay on another machine: first add it as a **remote server** in Dokploy,
+   Settings → Remote Servers, and set it up so it runs Traefik; its app then deploys there), project
+   **Pokémon Survivors**, a new application `coop-<home>`:
    - Source: this GitHub repository, branch `main`. Build type **Dockerfile**, Dockerfile
      `relay/node/Dockerfile`, build context `.` (the repository root).
    - Auto deploy on, with watch paths `relay/src/**`, `relay/node/**` and `src/net/protocol.ts`
@@ -249,8 +243,7 @@ The same steps for each relay, with its row of the table above (`<home>`: `sa`; 
    a minute (Traefik's timeouts) and end with every check green.
 4. Ship the Cloudflare relay's code change (`npm run deploy:prod` here: its codes now always start
    with a letter) and wait 6 h, a room's longest life, so no live Cloudflare room has a digit code.
-5. Vercel, Production: `VITE_COOP_URL_SA=https://coop-sa.pokemonsurvivors.com` and
-   `VITE_COOP_URL_US=https://coop-us.pokemonsurvivors.com` (either alone works), then redeploy the site.
+5. Vercel, Production: `VITE_COOP_URL_SA=https://coop-sa.pokemonsurvivors.com`, then redeploy the site.
 
 No Clerk change is needed: the issuer is the same, and a token's `azp` is checked against `ALLOWED_ORIGINS`.
 
@@ -263,24 +256,16 @@ No Clerk change is needed: the issuer is the same, and a token's `azp` is checke
 - **Logs:** the app's Logs tab in Dokploy (JSON lines: `run.*`, `seat.*`, `room.*`, `relay.stats`).
 - **Dumps:** `curl -s -H "Authorization: Bearer $(cat ~/.config/ps-coop/<home>-admin-token)" https://coop-<home>.pokemonsurvivors.com/admin/dumps`
   (then `/admin/dumps/<id> | gunzip > dump.json`).
-- **Costs:** São Paulo shares the main VPS (nothing extra); US east is the Boston VPS's own plan. A 4-player room takes ~1–1.5% of a core and
+- **Costs:** São Paulo shares the main VPS (nothing extra). A 4-player room takes ~1–1.5% of a core and
   ~1 MB of memory past the process's ~80 MB.
 
-### Retiring US east (Boston)
+### US east (retired)
 
-Pedro decided to retire the Boston relay: Cloudflare serves North America, with Durable Objects on
-both US coasts, and scales on its own. The `us` home stays in `RELAY_HOMES` (old codes and builds).
-
-1. Vercel, Production: remove `VITE_COOP_URL_US` and redeploy the site. Builds from then on never
-   measure Boston nor create there; a 6–9 code they meet (an old link) goes to Cloudflare, which has no
-   such room and refuses the `hello` (`unavailable`): the player reads "This room isn't available
-   (full, already started or gone)" and stays in the co-op hub, nothing breaks.
-2. Wait 6 h (a room's longest life, and time for open tabs of the old build to reload), then stop
-   `coop-us` in Dokploy. An old tab still holding the URL then finds Boston down at its `/health` and
-   creates on Cloudflare (the same fallback as a down relay); one in a Boston room reconnects until it
-   gives up.
-3. Later, at leisure: delete the `coop-us` app and its volume, the Boston remote server and the
-   `coop-us` DNS record.
+A US east relay ran in Boston (`us`, codes 6–9) until 2026-10-25: Cloudflare serves North America,
+with Durable Objects on both US coasts, and scales on its own. Its home is gone from the code; a
+6–9 code (an old link) goes to Cloudflare, which refuses it (`unavailable`). Left to clean up at
+leisure: the stopped `coop-us` app and its volume, the Boston remote server in Dokploy, the
+`coop-us` DNS record and the Hostinger plan.
 
 ## Limits and costs
 

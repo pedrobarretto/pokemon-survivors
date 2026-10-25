@@ -1,12 +1,9 @@
-import type { RoomObject } from './roomObject'
 import type { ShardObject } from './shardObject'
 import type { Vault } from './vault'
 
 /** The relay's bindings (`wrangler.jsonc`), plus `ADMIN_TOKEN` from `wrangler secret put`. */
 export type Env = {
-  /** One room per object: the rooms made before shards (their codes have no check character), until they expire. */
-  ROOMS: DurableObjectNamespace<RoomObject>
-  /** Many rooms per object (`shards.ts`): every room made since. */
+  /** The co-op rooms, many per object (`shards.ts`). */
   SHARDS: DurableObjectNamespace<ShardObject>
   /** The rooms a shard holds at most (`capOf`; default `DEFAULT_ROOMS_PER_SHARD`). */
   ROOMS_PER_SHARD?: string

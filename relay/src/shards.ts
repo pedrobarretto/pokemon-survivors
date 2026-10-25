@@ -17,10 +17,9 @@ import type { Room } from './room'
  *   two for `oc`).
  * - `b`: the shard's index (`SHARD_INDEXES` of them per region).
  * - `c`, `d`: random.
- * - `e`: a check character over the other four (`check`). It is the marker:
- *   codes made before shards (one room per object) are uniformly random, so
- *   only 1 in 31 of them passes it, and the Worker sends that one to its old
- *   object when the shard says it has no such room (`NO_ROOM`).
+ * - `e`: a check character over the other four (`check`), so a mistyped code
+ *   names no shard (it once also told these codes from the uniformly random
+ *   ones made before shards; it stays as it is, since live codes carry it).
  * That leaves 2 883 codes per shard (2 for `oc`: 1 922), plenty for its cap.
  */
 
@@ -68,7 +67,7 @@ export const shardCode = (s: Shard, random: (n: number) => Uint8Array): string =
   return LETTERS.charAt(a) + at(s.index) + at(c) + at(d) + at(check(a, s.index, c, d))
 }
 
-/** The shard a (parsed) room code names, or null: a VPS relay's code, or one made before shards (no check character). */
+/** The shard a (parsed) room code names, or null: a VPS relay's code, or one failing the check character. */
 export const shardOf = (code: string): Shard | null => {
   if (code.length !== ROOM_CODE_LENGTH) return null
   const a = LETTERS.indexOf(code.charAt(0))
@@ -78,9 +77,6 @@ export const shardOf = (code: string): Shard | null => {
   const region = SHARD_REGIONS[a % SHARD_REGIONS.length]
   return region ? { region, index: b } : null
 }
-
-/** The header a shard answers a socket for a room it doesn't hold with: the Worker then tries the code's one-room object. */
-export const NO_ROOM_HEADER = 'X-PS-No-Room'
 
 /** The rooms a shard holds by default (`ROOMS_PER_SHARD`): the README's "Limits and costs" says why. */
 export const DEFAULT_ROOMS_PER_SHARD = 24

@@ -24,7 +24,7 @@ import { createRooms, type Log } from './rooms'
  */
 
 /** The region each VPS relay answers `POST /rooms` with (the protocol's location names). */
-const REGION_OF = { sa: 'sam', us: 'enam' } as const satisfies Record<VpsHome, Region>
+const REGION_OF = { sa: 'sam' } as const satisfies Record<VpsHome, Region>
 
 /** A `POST /rooms` body past this is refused unread. */
 const MAX_BODY = 2048

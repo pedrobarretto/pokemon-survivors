@@ -2,40 +2,28 @@ import type { Phase, ServerMessage, TickEntries } from '../../src/net/protocol'
 import type { Effect, Room } from './room'
 
 /**
- * A room's storage, the same for every relay shell: each room has its own
- * SQLite (a one-room Durable Object's, or one file per room on a VPS relay)
- * or its own key prefix in a shard's (`ShardObject`) behind this small
- * adapter, so what the room's effects write, the keys they use and how a
- * restart, a sync or a dump reads them back are written once.
+ * A room's storage, the same for every relay shell: each room has its own key
+ * prefix in a shard (`ShardObject`) or its own SQLite file on a VPS relay
+ * behind this small adapter, so what the room's effects write, the keys they
+ * use and how a restart, a sync or a dump reads them back are written once.
  *
- * Two ways to write, as the room asks (the doc block atop `room.ts`):
- * - Durable: the room (rare: seats, run start and end, the agreed snapshot,
- *   pauses), a row of the SQL table `kv`. Nothing that follows it goes out
- *   before it is on disk: the Durable Object's output gate holds the messages
- *   until `sql.exec` commits; a VPS relay commits before it sends.
- * - Lazy (`Lazy`): the run's log batches (once a second, with the clock
- *   bound) and snapshot chunks, as keys. They never hold a message back; they
- *   land in order, before any durable write that follows. The Durable Object
- *   writes them as KV keys with `allowUnconfirmed`; a VPS relay as rows of
- *   `kv` in the same transaction as the rest (a local commit takes
- *   microseconds), so only losing the machine loses any.
- * A shard writes the room lazily too (`saveRoom`): the output gate is the
- * whole object's, and one room's save must not hold the others' frames (the
- * crash window this opens: `shardObject.ts`).
+ * What the room asks to write (the doc block atop `room.ts`):
+ * - The room itself (`saveRoom`; rare: seats, run start and end, the agreed
+ *   snapshot, pauses).
+ * - The run's log batches (once a second, with the clock bound) and snapshot
+ *   chunks, as keys (`Lazy`).
+ * A shard writes all of it as KV keys with `allowUnconfirmed` (the output gate
+ * is the whole object's, and one room's save must not hold the others'
+ * frames; the crash window this opens: `shardObject.ts`); a VPS relay as rows
+ * of its `kv` table in one transaction, committed before it sends (a local
+ * commit takes microseconds), so only losing the machine loses any. Either way
+ * the writes land in order.
  * After a restart a shell loads the room with the `bound` of its run's newest
  * log batch (`readBound`): the clock resumes past every tick sent.
  *
  * - `log:<run>:<at>:<n>` → `LogBatch` (numbers zero-padded, so keys sort as the batches do)
  * - `snap:<run>:<tick>:<part>` → the chunk's base64
  */
-
-export type Bind = string | number | null
-
-/** One room's SQLite: `run` for writes, `all` for reads (rows as the driver gives them). */
-export type Sql = {
-  run: (query: string, ...args: Bind[]) => void
-  all: (query: string, ...args: Bind[]) => Record<string, unknown>[]
-}
 
 /** A log batch as stored: the clock bound, the ticks with entries, the hashes decided. */
 export type LogBatch = { b: number; l: TickEntries[]; h: [number, Record<number, string>][] }
@@ -51,15 +39,8 @@ export type Lazy = {
   list: (prefix: string, opts?: { start?: string; reverse?: boolean; limit?: number }) => [string, Stored][]
 }
 
-/**
- * `saveRoom`: where the room is saved instead of the row `room` of `kv`. A
- * shard (`ShardObject`, many rooms in one Durable Object) keeps each room as a
- * lazy key of its own: `sql.exec` takes the output gate, which would hold every
- * room's messages behind one room's save.
- */
-export type Store = { sql: Sql; lazy: Lazy; saveRoom?: (json: string) => void }
-
-export const SCHEMA = 'CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)'
+/** A room's storage: its keys, and where the room's own JSON goes (`saveRoom`). */
+export type Store = { lazy: Lazy; saveRoom: (json: string) => void }
 
 /** Ticks of the log per catch-up frame. */
 export const TAIL_FRAME_TICKS = 600
@@ -71,9 +52,6 @@ const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'obj
 /** The room as saved (its own JSON), checked for the fields everything else relies on. */
 export const isRoom = (v: unknown): v is Room =>
   isRecord(v) && typeof v.code === 'string' && typeof v.build === 'string' && PHASES.some((p) => p === v.phase) && Array.isArray(v.seats) && Array.isArray(v.banned)
-
-const text = (row: Record<string, unknown> | undefined, k: string) => (typeof row?.[k] === 'string' ? row[k] : '')
-const whole = (row: Record<string, unknown> | undefined, k: string) => (typeof row?.[k] === 'number' ? row[k] : 0)
 
 const pad = (n: number, width = 10) => String(n).padStart(width, '0')
 export const logPrefix = (run: number) => `log:${run}:`
@@ -90,21 +68,10 @@ export const parseStored = (json: string): Stored | null => {
   return isRecord(v) && typeof v.b === 'number' && Array.isArray(v.l) && Array.isArray(v.h) ? { b: v.b, l: v.l, h: v.h } : null
 }
 
-export const createSchema = (sql: Sql) => sql.run(SCHEMA)
-
-const hasTable = (sql: Sql, name: string) => sql.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", name).length > 0
-
 /** A room saved as JSON, or null when it isn't one. */
 export const parseRoom = (json: string): Room | null => {
   const v: unknown = JSON.parse(json)
   return isRoom(v) ? v : null
-}
-
-/** The room this storage holds, or null (none made yet, or wiped). */
-export const readRoom = (sql: Sql): Room | null => {
-  if (!hasTable(sql, 'kv')) return null
-  const row = sql.all("SELECT v FROM kv WHERE k = 'room'")[0]
-  return row ? parseRoom(text(row, 'v')) : null
 }
 
 /** The clock bound of the run's newest log batch (0 without one), for `loadState`. */
@@ -117,34 +84,19 @@ export const readBound = (store: Store, run: number): number => {
 const batches = (store: Store, run: number, from = -1): LogBatch[] =>
   store.lazy.list(logPrefix(run), { start: logKey(run, from + 1, 0) }).flatMap(([, v]) => batchOf(v) ?? [])
 
-/**
- * Rows of the SQL tables (`log`, `hashes`, `snaps`) a Durable Object room
- * created before the log moved to keys still holds, as `[tick, JSON or data]`
- * in order (none on a VPS relay). Rooms live 6 hours at most: this goes once
- * that deploy is older than that.
- */
-const legacy = (sql: Sql, table: 'log' | 'hashes' | 'snaps', run: number): [number, string][] => {
-  if (!hasTable(sql, table)) return []
-  const q = { log: 'SELECT tick, e AS v FROM log', hashes: 'SELECT tick, v FROM hashes', snaps: 'SELECT tick, data AS v FROM snaps' }[table]
-  return sql.all(`${q} WHERE run = ? ORDER BY tick${table === 'snaps' ? ', part' : ''}`, run).map((r) => [whole(r, 'tick'), text(r, 'v')])
-}
-
 /** The ticks with entries in `[from, to)`, each with its entries as JSON, in order. */
 const readLog = (store: Store, run: number, from: number, to: number): [number, string][] => {
-  const rows = legacy(store.sql, 'log', run).filter(([tick]) => tick >= from && tick < to)
+  const rows: [number, string][] = []
   for (const b of batches(store, run, from)) for (const [tick, entries] of b.l) if (tick >= from && tick < to) rows.push([tick, JSON.stringify(entries)])
   return rows
 }
 
 /** The chunks of the snapshot of `run` at `tick`, in order. */
-const readChunks = (store: Store, run: number, tick: number): string[] => {
-  const chunks = store.lazy.list(snapPrefix(run, tick)).flatMap(([, v]) => chunkOf(v) ?? [])
-  return chunks.length > 0 ? chunks : legacy(store.sql, 'snaps', run).filter(([t]) => t === tick).map(([, data]) => data)
-}
+const readChunks = (store: Store, run: number, tick: number): string[] => store.lazy.list(snapPrefix(run, tick)).flatMap(([, v]) => chunkOf(v) ?? [])
 
 const keys = (store: Store, prefix: string) => store.lazy.list(prefix).map(([k]) => k)
 
-/** Writes what `effects` ask of storage: the lazy writes as they come, then the room once if any asked for a `save` (`saveRoom`, else its row). */
+/** Writes what `effects` ask of storage: the lazy writes as they come, then the room once if any asked for a `save`. */
 export const persist = (store: Store, effects: readonly Effect[], room: Room | null) => {
   let save = false
   for (const e of effects) {
@@ -155,10 +107,9 @@ export const persist = (store: Store, effects: readonly Effect[], room: Room | n
     else if (e.k === 'dropSnapshot') store.lazy.delete(keys(store, snapPrefix(e.run, e.tick)))
     else if (e.k === 'dropRun') store.lazy.delete([...keys(store, logPrefix(e.run)), ...keys(store, snapPrefix(e.run))])
   }
-  if (!save || !room) return
-  if (store.saveRoom) store.saveRoom(JSON.stringify(room))
-  else store.sql.run("INSERT OR REPLACE INTO kv (k, v) VALUES ('room', ?)", JSON.stringify(room))
+  if (save && room) store.saveRoom(JSON.stringify(room))
 }
+
 
 /** A sync's messages, in order: the `sync`, the base snapshot's chunks, then the log from `from` to `to` in frames. */
 export const syncTexts = (store: Store, e: Extract<Effect, { k: 'sync' }>): string[] => {
@@ -202,8 +153,8 @@ export const RETENTION = { days: 30, max: 500 } as const
 export const dumpJson = (store: Store, room: Room, e: DumpRequest, at: number, extra: Record<string, unknown> = {}): { body: string; logTicks: number } | null => {
   if (!room.run) return null
   const all = batches(store, e.run)
-  const log = [...legacy(store.sql, 'log', e.run), ...all.flatMap((b) => b.l.map(([tick, entries]): [number, string] => [tick, JSON.stringify(entries)]))]
-  const hashes = [...legacy(store.sql, 'hashes', e.run), ...all.flatMap((b) => b.h.map(([tick, bySeat]): [number, string] => [tick, JSON.stringify(bySeat)]))]
+  const log = all.flatMap((b) => b.l.map(([tick, entries]): [number, string] => [tick, JSON.stringify(entries)]))
+  const hashes = all.flatMap((b) => b.h.map(([tick, bySeat]): [number, string] => [tick, JSON.stringify(bySeat)]))
   const meta = {
     code: room.code,
     build: room.build,

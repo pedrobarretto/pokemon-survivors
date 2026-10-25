@@ -440,42 +440,42 @@ describe('moving the room', () => {
 
   it("keeps each seat's round trips and shows them to the room, saving only a change", () => {
     const state = lobby(2)
-    const out = say(state, 'c1', { t: 'rtt', ms: { sa: 230, us: 100 } }, T0)
-    expect(of(sent(out, 'c0'), 'room')[0]?.room.members[1]?.rtt).toEqual({ sa: 230, us: 100 })
+    const out = say(state, 'c1', { t: 'rtt', ms: { cf: 100, sa: 230 } }, T0)
+    expect(of(sent(out, 'c0'), 'room')[0]?.room.members[1]?.rtt).toEqual({ cf: 100, sa: 230 })
     expect(of(sent(out, 'c0'), 'room')[0]?.room.members[0]).not.toHaveProperty('rtt')
-    expect(say(state, 'c1', { t: 'rtt', ms: { sa: 230, us: 100 } }, T0 + 1)).toEqual([])
+    expect(say(state, 'c1', { t: 'rtt', ms: { cf: 100, sa: 230 } }, T0 + 1)).toEqual([])
   })
 
   it("tells every seat where the room went and closes them, on the host's word only, in the lobby only", () => {
     const state = lobby()
-    expect(say(state, 'c1', { t: 'move', code: '6QRST' }, T0)).toEqual([])
+    expect(say(state, 'c1', { t: 'move', code: '3QRST' }, T0)).toEqual([])
     expect(roomOf(state).movedTo).toBeNull()
-    const out = say(state, 'c0', { t: 'move', code: '6QRST' }, T0)
+    const out = say(state, 'c0', { t: 'move', code: '3QRST' }, T0)
     for (const c of ['c0', 'c1', 'c2']) {
-      expect(of(sent(out, c), 'moved')).toEqual([{ t: 'moved', code: '6QRST' }])
+      expect(of(sent(out, c), 'moved')).toEqual([{ t: 'moved', code: '3QRST' }])
       expect(out).toContainEqual({ k: 'close', to: c, reason: 'refused' })
     }
     expect(out[0]).toEqual({ k: 'save' })
     // Nothing more is taken there: not a start, not another move.
     expect(say(state, 'c0', { t: 'start' }, T0 + 1)).toEqual([])
     expect(say(state, 'c0', { t: 'move', code: '2ABCD' }, T0 + 1)).toEqual([])
-    expect(roomOf(state).movedTo).toBe('6QRST')
+    expect(roomOf(state).movedTo).toBe('3QRST')
   })
 
   it('never moves a room once a run was played in it', () => {
     const { state, t0 } = playing()
-    expect(say(state, 'c0', { t: 'move', code: '6QRST' }, t0)).toEqual([])
+    expect(say(state, 'c0', { t: 'move', code: '3QRST' }, t0)).toEqual([])
     expect(roomOf(state).movedTo).toBeNull()
   })
 
   it('answers an old link with the new room until the room expires, past the idle limit', () => {
     const state = lobby()
-    say(state, 'c0', { t: 'move', code: '6QRST' }, T0)
+    say(state, 'c0', { t: 'move', code: '3QRST' }, T0)
     for (const c of ['c0', 'c1', 'c2']) disconnect(state, c, T0 + 10)
     tick(state, T0 + 10 + TIMES.idle)
     expect(state.room).not.toBeNull()
     const late = join(state, 'late', 'guest-9-xxxxxxxxxxxx', T0 + 10 + TIMES.idle)
-    expect(sent(late, 'late')).toEqual([{ t: 'moved', code: '6QRST' }, { t: 'refused', code: 'unavailable' }])
+    expect(sent(late, 'late')).toEqual([{ t: 'moved', code: '3QRST' }, { t: 'refused', code: 'unavailable' }])
     expect(late).toContainEqual({ k: 'close', to: 'late', reason: 'refused' })
     expect(deadline(state)).toBe(T0 + TIMES.maxAge)
     expect(tick(state, T0 + TIMES.maxAge)).toContainEqual({ k: 'wipe' })
@@ -483,9 +483,9 @@ describe('moving the room', () => {
 
   it("makes whoever says the room's claim its host, even after someone else got there first", () => {
     const state = loadState(null, { secret: () => 'claim-0000000000000', seed: () => 1 }, T0)
-    const made = createRoom(state, { code: '6QRST', build: 'b1', region: 'vps:us' }, T0)
+    const made = createRoom(state, { code: '3QRST', build: 'b1', region: 'vps:sa' }, T0)
     expect(made.ok && made.claim).toBe('claim-0000000000000')
-    const room = { room: '6QRST' }
+    const room = { room: '3QRST' }
     join(state, 'bot', 'guest-1-xxxxxxxxxxxx', T0, room)
     expect(roomOf(state).host).toBe(0)
     const wrong = join(state, 'x', 'guest-2-xxxxxxxxxxxx', T0, { ...room, claim: 'claim-1111111111111' })

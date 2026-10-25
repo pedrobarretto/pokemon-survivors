@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { randomCode } from '../src/codes'
 import { LOG_BATCH, TIMES } from '../src/room'
 import type { ShardObject } from '../src/shardObject'
-import { shardName, shardOf } from '../src/shards'
-import { PROTOCOL, type ClientMessage, type CreateResponse, type Hello, type ServerMessage } from '../../src/net/protocol'
+import { shardCode, shardName, shardOf } from '../src/shards'
+import { CLOSE_CODES, PROTOCOL, type ClientMessage, type CreateResponse, type Hello, type ServerMessage } from '../../src/net/protocol'
 
 type Client = { ws: WebSocket; inbox: ServerMessage[]; closed: Promise<number>; closedWith: number | null }
 
@@ -230,18 +230,12 @@ describe('relay', () => {
     expect(left.rooms).not.toContain(gone)
   })
 
-  it('routes a code made before shards to its own one-room object, a code that only looks like a shard\'s too', async () => {
-    const draw = (named: boolean) => {
-      for (;;) {
-        const code = randomCode('cf')
-        if ((shardOf(code) !== null) === named) return code
-      }
-    }
-    for (const code of [draw(false), draw(true)]) {
-      await env.ROOMS.getByName(code).create({ code, build: 'b1', region: 'auto' })
+  it('refuses a code with no room, one naming a shard and one naming none', async () => {
+    const named = shardCode({ region: 'auto', index: 0 }, (n) => crypto.getRandomValues(new Uint8Array(n)))
+    for (const code of [named, randomCode('sa')]) {
       const c = await open(code)
-      say(c, hello(code, A))
-      expect(await waitFor(c, (m) => (m.t === 'welcome' ? m.seat : null))).toBe(0)
+      expect(await waitFor(c, (m) => (m.t === 'refused' ? m.code : null))).toBe('unavailable')
+      expect(await c.closed).toBe(CLOSE_CODES.refused)
     }
   })
 })
