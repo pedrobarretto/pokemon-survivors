@@ -15528,6 +15528,43 @@ button.hall-tile:hover {
   opacity: 0.45;
 }
 
+/* The Meta da comunidade: every account's jar toward Mega Darkrai, its portrait dimmed until the goal. */
+.halloween-goal-box {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  background: #2c1440;
+  border: 2px solid #f07818;
+  border-radius: 4px;
+}
+
+.halloween-goal-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.halloween-goal-mega {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  border: 2px solid #4a2860;
+  border-radius: 4px;
+  background: #1a0a26;
+  filter: grayscale(1) brightness(0.45);
+}
+
+.halloween-goal-box.reached .halloween-goal-mega {
+  filter: none;
+  border-color: #ffd060;
+}
+
+.halloween-goal-box .lobby-progress {
+  flex: none;
+  height: 14px;
+}
+
 /* The Caça aos Fantasmas: the night bosses, silhouettes until beaten, and its two rewards. */
 .halloween-hunt-box {
   display: grid;

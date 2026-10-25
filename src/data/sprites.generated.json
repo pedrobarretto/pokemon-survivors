@@ -38454,6 +38454,7 @@
             ]
           }
         },
+        "portrait": true,
         "body": {
           "bodyW": 79,
           "bodyH": 42,

@@ -993,6 +993,13 @@ export const es: Messages = {
     nightBoss: (name) => `¡Jefe de la noche: *${name}*!`,
     hunted: (name, candies, n, total) => `¡*${name}* cazado! +${candies} dulces · ${n}/${total}`,
     disguise: (name) => `¡El *Disguise* de ${name} se deshizo!`,
+    goal: 'META DE LA COMUNIDAD',
+    goalCount: (n, goal) => `*${n}* / ${goal}`,
+    goalWaiting: 'Contando los dulces de la comunidad…',
+    goalBlurb: (goal, cap) =>
+      `Todos los entrenadores con cuenta llenan este frasco juntos. Con *${goal} dulces*, Darkrai obtiene su *Megaevolución* para todos: despierta como Mega Darkrai en el Nv 28 del Modo Legendario y se vuelve Mega en la grieta de la Pesadilla. Cada entrenador cuenta hasta ${cap} dulces.`,
+    goalDone: '¡La comunidad lo logró! *Mega Darkrai* está desbloqueado para todos: en el Modo Legendario, Darkrai despierta como Mega Darkrai en el Nv 28.',
+    goalOpened: '*¡Mega Darkrai desbloqueado!* La comunidad juntó los dulces: ahora Darkrai despierta como Mega Darkrai en el Modo Legendario.',
   },
 
   challenge: {

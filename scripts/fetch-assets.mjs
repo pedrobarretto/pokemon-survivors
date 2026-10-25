@@ -4,7 +4,7 @@
 import { mkdir, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { measureBody } from './body.mjs'
-import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORMS, SHINY, pad } from './dex.mjs'
+import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, SHINY, pad } from './dex.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const OUT = join(ROOT, 'public/assets/pokemon')
@@ -64,7 +64,7 @@ const resolveAnim = (anims, name) => {
 /**
  * Downloads one sprite variant (normal, shiny `/0000/0001` or an alternate form like `/0001`) into `dir`.
  * Returns the anims found plus whether a portrait exists, or null when the variant is missing.
- * Alternate forms skip the portrait (`withPortrait`): menus only show the normal form.
+ * Alternate forms skip the portrait (`withPortrait`) unless `FORM_PORTRAITS` names them: menus mostly show the normal form.
  */
 const fetchVariant = async (dex, form, dir, withPortrait = true) => {
   const res = await fetch(`${SPRITES}/${pad(dex)}${form}/AnimData.xml`)
@@ -101,10 +101,10 @@ const fetchFormCry = async (name, dest) => {
   return Boolean(url) && download(url, dest)
 }
 
-/** An alternate form (`FORMS`) and, for species that can roll shiny, its shiny under `<id>/0001`. */
+/** An alternate form (`FORMS`), with its portrait where `FORM_PORTRAITS` asks, and, for species that can roll shiny, its shiny under `<id>/0001`. */
 const fetchForm = async (dex, key, id, dir) => {
   const [form, shiny] = await Promise.all([
-    fetchVariant(dex, `/${id}`, join(dir, key), false),
+    fetchVariant(dex, `/${id}`, join(dir, key), FORM_PORTRAITS[dex]?.includes(key) ?? false),
     SHINY.has(dex) ? fetchVariant(dex, `/${id}/0001`, join(dir, key, 'shiny'), false) : null,
   ])
   if (!form) throw new Error(`#${dex} form ${key}: missing AnimData.xml`)

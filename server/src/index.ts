@@ -11,6 +11,7 @@ import { createChecks } from './checks'
 import { createRibbons } from './challenge'
 import { discordStore, startDiscord } from './discord'
 import { discordLink } from './discordLink'
+import { candyGoalStore } from './candyGoal'
 import { festivalStore } from './festival'
 import { abacatePay } from './donations'
 import { friendStore } from './friends'
@@ -76,6 +77,7 @@ const app = createApp({
   donate: env.abacatePayKey ? abacatePay(env.abacatePayKey) : null,
   supporters: supporterStore(sql, { onTierUp: (userId) => void discord.syncRoles(userId) }),
   festival: festivalStore(sql),
+  candyGoal: candyGoalStore(sql),
   discord,
   suggestions,
   bugReports,

@@ -993,6 +993,13 @@ export const en: Messages = {
     nightBoss: (name) => `Night boss: *${name}*!`,
     hunted: (name, candies, n, total) => `*${name}* hunted! +${candies} candies · ${n}/${total}`,
     disguise: (name) => `${name}'s *Disguise* was busted!`,
+    goal: 'COMMUNITY GOAL',
+    goalCount: (n, goal) => `*${n}* / ${goal}`,
+    goalWaiting: 'Counting the community’s candies…',
+    goalBlurb: (goal, cap) =>
+      `Every trainer with an account fills this jar together. At *${goal} candies*, Darkrai gets its *Mega Evolution* for everyone: it awakens as Mega Darkrai at Lv 28 in Legend Mode and goes Mega in the Nightmare rift. Each trainer counts up to ${cap} candies.`,
+    goalDone: 'The community did it! *Mega Darkrai* is unlocked for everyone: in Legend Mode, Darkrai awakens as Mega Darkrai at Lv 28.',
+    goalOpened: '*Mega Darkrai unlocked!* The community gathered the candies: Darkrai now awakens as Mega Darkrai in Legend Mode.',
   },
 
   challenge: {

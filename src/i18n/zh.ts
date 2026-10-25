@@ -992,6 +992,13 @@ export const zh: Messages = {
     nightBoss: (name) => `夜之首領：*${name}*！`,
     hunted: (name, candies, n, total) => `獵捕了*${name}*！+${candies}顆糖果 · ${n}/${total}`,
     disguise: (name) => `${name} 的 *Disguise* 被拆穿了！`,
+    goal: '社群目標',
+    goalCount: (n, goal) => `*${n}* / ${goal}`,
+    goalWaiting: '正在統計社群的糖果…',
+    goalBlurb: (goal, cap) =>
+      `所有擁有帳號的訓練家一起裝滿這個糖果罐。達到 *${goal} 顆糖果* 時，Darkrai 將為所有人解鎖 *超級進化*：在傳說模式 Lv 28 覺醒為 Mega Darkrai，並在夢魘裂縫中變成超級形態。每位訓練家最多計入 ${cap} 顆糖果。`,
+    goalDone: '社群成功了！*Mega Darkrai* 已為所有人解鎖：在傳說模式中，Darkrai 會在 Lv 28 覺醒為 Mega Darkrai。',
+    goalOpened: '*Mega Darkrai 解鎖了！* 社群收集到了足夠的糖果：現在 Darkrai 在傳說模式中會覺醒為 Mega Darkrai。',
   },
 
   challenge: {

@@ -3,6 +3,7 @@ import type { MegaForm } from '../data/megas'
 import type { LegendForm } from '../data/legends'
 import manifest from '../data/sprites.generated.json'
 import { createCanvas, context2d, drawable, fromStrings, onCanvasReset } from '../engine/pixelart'
+import { sheetsLocked } from '../game/communityGoal'
 import type { Dir8 } from '../engine/math'
 import { detail } from './quality'
 
@@ -69,7 +70,9 @@ const variantBase = (dex: Dex, shiny: boolean, form?: FormKey) => `${base(dex)}$
 type Key = number | string
 const cacheKey = (dex: Dex, shiny: boolean, form?: FormKey): Key => (form ? `${dex}:${form}${shiny ? 's' : ''}` : dex * 2 + (shiny ? 1 : 0))
 
+/** A variant's manifest entry, or undefined when it has none. A form still behind the community goal (`sheetsLocked`) has none yet: it draws as the species' own. */
 const manifestVariant = (dex: Dex, shiny: boolean, form?: FormKey) => {
+  if (form && sheetsLocked(dex, form)) return undefined
   const entry = MANIFEST[String(dex)]
   const variant = form ? entry?.forms?.[form] : entry
   return shiny ? variant?.shiny : variant
@@ -816,6 +819,12 @@ export const sprites = (dex: Dex, shiny = false, form?: FormKey) => {
 export const portraitUrl = (dex: Dex, shiny = false) =>
   `${variantBase(dex, shiny && MANIFEST[String(dex)]?.shiny?.portrait === true)}/portrait.png`
 
+/** A form's own portrait (`FORM_PORTRAITS` in `scripts/dex.mjs`), else the species'. Shown whether or not the form is open: screens tease a locked one. */
+export const formPortraitUrl = (dex: Dex, form: FormKey) => {
+  const v = MANIFEST[String(dex)]?.forms?.[form]
+  return v && 'portrait' in v && v.portrait === true ? `${variantBase(dex, false, form)}/portrait.png` : portraitUrl(dex)
+}
+
 /** A species' Walk sheet and frame size, for DOM art drawn from its first frame (facing down). */
 export const walkSheet = (dex: Dex) => {
   const walk = MANIFEST[String(dex)]?.anims.Walk
@@ -827,7 +836,7 @@ export const loadedSprites = (dex: Dex, shiny = false): SpeciesSprites | undefin
 
 /** A species' cry, or its form's own (Megas) when PokeAPI has one. */
 export const cryUrl = (dex: Dex, form?: FormKey) =>
-  form && MANIFEST[String(dex)]?.formCries?.includes(form) ? `${base(dex)}/${form}/cry.ogg` : `${base(dex)}/cry.ogg`
+  form && !sheetsLocked(dex, form) && MANIFEST[String(dex)]?.formCries?.includes(form) ? `${base(dex)}/${form}/cry.ogg` : `${base(dex)}/cry.ogg`
 
 /** True when a form has sheets of its own; without them `sprites` draws the normal form. */
 export const hasSheets = (dex: Dex, form: FormKey) => manifestVariant(dex, false, form) !== undefined

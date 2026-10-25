@@ -109,6 +109,14 @@ export const FORMS = {
 }
 
 /**
+ * Forms that ship their portrait too (`<dex>/<key>/portrait.png`, `portrait` in the manifest's form), for the
+ * screens that show one: Mega Darkrai, the Noite das Bruxas' Meta da comunidade (`ui/halloween.ts`).
+ */
+export const FORM_PORTRAITS = {
+  491: ['mega'],
+}
+
+/**
  * Forms with a cry of their own, by key, mapped to their PokeAPI Pokémon name, with or without
  * sheets in `FORMS`. The cry lands in `public/assets/pokemon/<dex>/<key>/cry.ogg` and the key in
  * the species' `formCries` in the manifest.

@@ -30,6 +30,7 @@ import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report } from './errors'
 import type { Donate } from './donations'
+import type { CandyGoalStore } from './candyGoal'
 import type { DonateError, FestivalStore } from './festival'
 import type { FriendStore } from './friends'
 import type { GiftStore } from './gifts'
@@ -54,6 +55,8 @@ export type AppDeps = {
   supporters: SupporterStore
   /** Festival da Praça: the pot, donations from the stored save and the plaque. */
   festival: Pick<FestivalStore, 'status' | 'donate' | 'setPublic' | 'takeDonate' | 'takeToggle' | 'held' | 'review'>
+  /** Meta da comunidade: every account's candy jar summed, toward the goal that opens Mega Darkrai. */
+  candyGoal: Pick<CandyGoalStore, 'status'>
   /** The idea board. */
   suggestions: SuggestionStore
   /** Bug reports: stored, then posted to the community Discord's #bug-reports. */
@@ -215,6 +218,8 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   409 `closed` (no festival running), `cap` (past ₽200k today), `funds` (the stored wallet can't cover it), `nosave`
  *   or `stale` (sync first), 429 past the rate limit. `held`: the wallet was above `FESTIVAL.heldWallet`, so it counts once the admin approves it.
  * - `PUT /festival/public` (auth) `{ public }`: shows or hides the player's @handle on the plaque. `{ public }`.
+ * - `GET /candy-goal`: `CandyGoal`, the Meta da comunidade: every account's candy jar summed (each up to
+ *   `HALLOWEEN.community.cap`), the goal and whether they reached it. Public, cached 2 min.
  * - `POST /discord/link` (auth): links the Discord account the player connected in Clerk, joins them
  *   to the community server and gives them their supporter role. `{ username, joined }`; 404 when
  *   Clerk has no verified Discord account for them, 503 when Clerk can't answer.
@@ -232,7 +237,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   `GET /admin/festival`: `{ donations }` (`HeldDonation[]`), the festival donations held for review.
  *   `POST /admin/festival/:id/approve` (it counts in the pot) or `/void` (it never counts; its ₽ stays spent): `{ ok }`, 404 for an unknown or already settled one.
  */
-export const createApp = ({ store, ranking, friends, gifts, checks, verify, donate, supporters, festival, suggestions, bugReports, discord, admin, moderation, webhooks, allowedOrigin, ping, report }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, checks, verify, donate, supporters, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, webhooks, allowedOrigin, ping, report }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
 
@@ -546,6 +551,11 @@ export const createApp = ({ store, ranking, friends, gifts, checks, verify, dona
   app.get('/festival', maybeAuth, async (c) => {
     if (!c.var.userId) c.header('Cache-Control', 'public, max-age=30')
     return c.json(await festival.status(c.var.userId))
+  })
+
+  app.get('/candy-goal', async (c) => {
+    c.header('Cache-Control', 'public, max-age=60')
+    return c.json(await candyGoal.status())
   })
 
   app.post('/festival/donate', auth, smallBody, async (c) => {

@@ -35,6 +35,7 @@ import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
 import { isLegend } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
+import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
 import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
@@ -1567,7 +1568,9 @@ const handleEvent = (r: Run, e: GameEvent) => {
       r.closeText?.()
       r.closeText = null
       const name = PLAYABLE[localPlayer(g).starter].name
-      return toast(ui, rich(e.form ? t().legend.awakenedForm(name, playerForm(g).name) : t().legend.awakened(name)), 3500)
+      // A form still behind the community goal keeps the legend's name (`legendStage`): then it just awakened.
+      const form = playerForm(g).name
+      return toast(ui, rich(e.form && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
     }
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
@@ -2831,6 +2834,9 @@ const boot = () => {
   startAccount(() => run === null)
   // The Festival da Praça's pot, in the background (its gifts join the gift box).
   startFestival()
+  // The Meta da comunidade's candies, in the background: reaching the goal opens Mega Darkrai, with a banner the first time.
+  startCandyGoal()
+  onCandyGoal((_, opened) => opened && banner(ui, rich(t().halloween.goalOpened), 5000))
   // A co-op link (`?sala=K7QF2`, maybe `&ref=` who sent it), beta or not: join that room and show it (signed in first:
   // `enterCoop`); in a run, by snapshot, on the same seat after a reload. Or back from signing in to play co-op.
   const back = takeCoopReturn()
@@ -3215,6 +3221,7 @@ if (import.meta.env.DEV) {
       // Sheets loaded (their decoded MB now and at peak; `true` starts a new peak) and frame silhouettes cached right now (`render/sprites.ts`).
       sprites: (resetPeak = false) => ({ ...spriteMemory(resetPeak), overlays: overlayStats() }),
       coop: devCoop,
+      candyGoal: devCandyGoal,
       /**
        * `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet,
        * and `('stage', n)`: the plaza shows stage 0 to 4 as if the festival ran, whatever the day (null goes back to the pot's).

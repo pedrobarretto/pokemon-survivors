@@ -1,10 +1,13 @@
 import { accountState, giftInbox } from '../account'
+import { candyGoal, loadCandyGoal, onCandyGoal } from '../candyGoal'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { SPECIAL_COMPANIONS } from '../data/companions'
 import { HALLOWEEN, NIGHT_BOSSES } from '../data/halloween'
 import { ENEMIES } from '../data/enemies'
 import { HATCHLINGS } from '../data/hatchlings'
+import { LEGENDS } from '../data/legends'
+import type { CandyGoal } from '../game/communityGoal'
 import type { GiftContent } from '../game/gifts'
 import { brasiliaDay } from '../game/day'
 import {
@@ -14,7 +17,7 @@ import { savedSupporterTier } from '../game/trainer'
 import { formatDay, formatNumber, t } from '../i18n'
 import { jackIcon, pumpkinHeartIcon, treatIcon } from '../render/halloweenArt'
 import { eggIcon } from '../render/art'
-import { portraitUrl } from '../render/sprites'
+import { formPortraitUrl, portraitUrl } from '../render/sprites'
 import { h, later, rich } from './dom'
 import { contentLine } from './gifts'
 import { loadSave, today } from './save'
@@ -24,7 +27,7 @@ import { railTile } from './shell'
 /**
  * Noite das Bruxas in the lobby (`game/halloween.ts`): the Hoje card, from
  * the countdown (`HALLOWEEN.teaser`) to the event's last day, and the event
- * screen it opens: the candy jar and its rewards, the Caça aos Fantasmas
+ * screen it opens: the Meta da comunidade, the candy jar and its rewards, the Caça aos Fantasmas
  * checklist, the haunted outbreaks' calendar and how to fill the jar.
  */
 
@@ -153,6 +156,36 @@ const huntBox = (save: ReturnType<typeof loadSave>, waiting: readonly string[]) 
   )
 }
 
+/**
+ * The Meta da comunidade (`game/communityGoal.ts`): every account's jar
+ * summed toward the goal that opens Mega Darkrai, its portrait dimmed
+ * until then. Fills in (and asks the API) as the screen opens, and follows
+ * each answer while it's up.
+ */
+const goalBox = () => {
+  const m = t().halloween
+  const { goal: total, cap } = HALLOWEEN.community
+  const el = h('section', { class: 'halloween-goal-box' })
+  const paint = (goal: CandyGoal | null) => {
+    const fill = goal ? Math.min(1, goal.candies / total) : 0
+    el.classList.toggle('reached', goal?.reached === true)
+    el.replaceChildren(
+      h('div', { class: 'halloween-hunt-head' }, h('small', { class: 'halloween-section' }, m.goal), h('b', {}, goal ? rich(m.goalCount(formatNumber(goal.candies), formatNumber(total))) : m.goalWaiting)),
+      h(
+        'div',
+        { class: 'halloween-goal-body' },
+        h('img', { class: 'halloween-goal-mega', src: formPortraitUrl(LEGENDS.darkrai.line[0].dex, 'mega'), alt: 'Mega Darkrai' }),
+        h('p', { class: 'halloween-hunt-blurb' }, rich(goal?.reached ? m.goalDone : m.goalBlurb(formatNumber(total), formatNumber(cap)))),
+      ),
+      h('span', { class: 'lobby-progress halloween-jar' }, h('span', { style: `width:${Math.round(fill * 1000) / 10}%` })),
+    )
+  }
+  paint(candyGoal())
+  const off = onCandyGoal((goal) => (el.isConnected ? paint(goal) : off()))
+  void loadCandyGoal()
+  return el
+}
+
 export type HalloweenScreenActions = {
   /** Opens the gift box (the jar's rewards wait there). */
   gifts: () => void
@@ -164,7 +197,7 @@ export type HalloweenScreenActions = {
 
 /**
  * The event screen, over the lobby: dates and days left (or the countdown),
- * what the night does to runs, the candy jar with its rewards, the Caça aos
+ * what the night does to runs, the Meta da comunidade (from the night's first day), the candy jar with its rewards, the Caça aos
  * Fantasmas, the haunted outbreaks day by day, and the supporters' jack-o'-lantern badge
  * and Pumpkaboo while becoming one still earns them. Abrir presentes goes to the gift box
  * when a reward waits there; Apoiar to the Hall da Fama. Esc or Backspace
@@ -228,6 +261,7 @@ export const halloweenScreen = (root: HTMLElement, input: Input, actions: Hallow
       h('p', { class: 'halloween-dates' }, h('small', {}, m.dates(formatDay(HALLOWEEN.from), formatDay(HALLOWEEN.to))), h('b', {}, status)),
       h('p', { class: 'halloween-blurb' }, m.blurb),
       h('ul', { class: 'halloween-how' }, ...how.map(([src, text]) => h('li', {}, h('img', { src, alt: '' }), rich(text)))),
+      s.countdown === null && goalBox(),
       h(
         'section',
         { class: 'halloween-jar-box' },
