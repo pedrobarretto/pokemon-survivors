@@ -367,6 +367,8 @@ export const fr: Messages = {
     screenShake: 'Tremblement d’écran',
     flashes: 'Flashs',
     flashModes: { normal: 'Normaux', reduced: 'Réduits' },
+    minimap: 'Mini-carte',
+    minimapModes: { square: 'Carrée', round: 'Ronde', off: 'OFF' },
     attackOpacity: 'Opacité des attaques',
     teamAttackOpacity: 'Opacité de l’équipe',
     uiScale: 'Taille de l’interface',

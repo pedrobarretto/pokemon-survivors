@@ -161,6 +161,10 @@ const SETTINGS_KEY = 'ps:settings'
 /** Mute flag from before the settings screen existed. */
 const LEGACY_MUTE_KEY = 'ps:muted'
 
+/** The HUD's mini map (`render/minimap.ts`): its shape, or off. */
+export const MINIMAP_MODES = ['square', 'round', 'off'] as const
+export type MinimapMode = (typeof MINIMAP_MODES)[number]
+
 /** Player preferences. Language lives in `i18n` (`ps:lang`). Volumes go from 0 to 1. */
 export type Settings = {
   musicVolume: number
@@ -181,6 +185,8 @@ export type Settings = {
   joystick: StickMode
   /** Menus and HUD size (`ui/uiScale.ts`). Per device, like the controls. */
   uiScale: UiScale
+  /** The HUD's mini map (`render/minimap.ts`): square, round or off. */
+  minimap: MinimapMode
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -195,6 +201,7 @@ export const DEFAULT_SETTINGS: Settings = {
   controls: DEFAULT_BINDINGS,
   joystick: 'floating',
   uiScale: 'auto',
+  minimap: 'square',
 }
 
 const volume = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback)
@@ -227,6 +234,7 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     controls: parseBindings(data.controls),
     joystick: STICK_MODES.find((m) => m === data.joystick) ?? defaults.joystick,
     uiScale: UI_SCALES.find((s) => s === data.uiScale) ?? defaults.uiScale,
+    minimap: MINIMAP_MODES.find((m) => m === data.minimap) ?? defaults.minimap,
   }
 }
 

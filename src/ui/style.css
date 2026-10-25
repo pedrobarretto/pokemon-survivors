@@ -17477,3 +17477,39 @@ button.hall-tile:hover {
     flex: 1;
   }
 }
+
+/* ---------- Mini map (ui/minimap.ts) ---------- */
+
+/* Top-right, under the counters; JS sets its top (under co-op's cards on a phone held upright) and its pixel-exact size. */
+.minimap {
+  position: absolute;
+  right: 8px;
+  top: 64px;
+  line-height: 0;
+  filter: drop-shadow(0 calc(var(--px) * 2) 0 rgba(0, 0, 0, 0.35));
+}
+
+.minimap.hidden {
+  display: none;
+}
+
+.minimap canvas {
+  image-rendering: pixelated;
+}
+
+/* Phones held upright: the boss bar moves left of the map instead of running under it. */
+@media (max-width: 600px) {
+  .hud.has-minimap .boss {
+    left: 8px;
+    transform: none;
+    width: calc(100% - var(--minimap-w, 88px) - 24px);
+  }
+}
+
+/* Phones in landscape: the toasts' column on the right starts under the map. */
+@media (max-height: 500px) {
+  :root[data-minimap='on'] .toasts {
+    top: calc(var(--minimap-bottom, 160px) + 8px + var(--safe-t));
+    max-height: calc(100% - var(--minimap-bottom, 160px) - 8px - var(--safe-t) - 110px);
+  }
+}

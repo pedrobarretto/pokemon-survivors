@@ -1,4 +1,5 @@
 import { accountState, API_URL } from './account'
+import { isExpectedFailure, isOwnError } from './analytics'
 import { apiCall } from './api'
 import { BUG_REPORT, clip, parseBugCrash, type BugCrash, type BugError, type BugPerf, type BugReport, type BugRun, type BugTech } from './game/bugReport'
 import { isRecord } from './game/parse'
@@ -12,10 +13,13 @@ import { locale } from './i18n'
  * - the last few uncaught errors and unhandled rejections, in memory;
  * - a crash watch: while a run is on, `ps:runWatch` in localStorage holds
  *   what it looks like (refreshed every few seconds) and the session's last
- *   error. A run that ends, or a page closed on purpose, clears it; a page the
+ *   error of the game's own. A run that ends, or a page closed on purpose, clears it; a page the
  *   phone killed mid-run leaves it, and the next boot finds it (`takeCrash`).
  *   Its breadcrumb (`crumb.ts`) adds the memory held and the run's last key
  *   moment (`runMoment`), which writes the watch at once.
+ *   A page that went away while the player was away from it (in the background,
+ *   or the window out of focus) isn't a crash: Android's Recents swipe kills
+ *   Chrome with only a `blur` before it, no `visibilitychange` nor `pagehide`.
  */
 
 /** Whether reports can go anywhere: they need the API. */
@@ -36,16 +40,26 @@ type Context = { view: string; run: BugRun | null; perf: BugPerf | null; memory:
 
 let describe = (): Context => ({ view: '', run: null, perf: null, memory: null })
 
-/** The crash watch as stored: the run, the session's last error, whether the page was in the background, and the breadcrumb. */
-type Watch = BugCrash & { hidden: boolean; crumb: Crumb | null }
+/**
+ * The crash watch as stored: the run, the session's last error, whether the page was in the
+ * background or the window had lost focus (`blurred`), and the breadcrumb.
+ */
+type Watch = BugCrash & { hidden: boolean; blurred: boolean; crumb: Crumb | null }
 
 let watch: Watch | null = null
+
+/**
+ * Whether the window lost focus and the player hasn't come back to it: set by `blur`, cleared by
+ * `focus` or any press in the page. From events, not `document.hasFocus()`, which a page framed by
+ * a portal may never have.
+ */
+let blurred = false
 
 const readWatch = (): Watch | null => {
   try {
     const v: unknown = JSON.parse(localStorage.getItem(WATCH_KEY) ?? 'null')
     const crash = parseBugCrash(v)
-    return crash && isRecord(v) ? { ...crash, hidden: v.hidden === true, crumb: parseCrumb(v.crumb) } : null
+    return crash && isRecord(v) ? { ...crash, hidden: v.hidden === true, blurred: v.blurred === true, crumb: parseCrumb(v.crumb) } : null
   } catch {
     return null
   }
@@ -93,7 +107,7 @@ export const syncRunWatch = () => {
   pendingMoment = null
   wroteAt = performance.now()
   const crumb = memory && { ...memory, moment: moment?.kind ?? null, momentAt: moment?.at ?? null }
-  writeWatch({ at: new Date().toISOString(), version: __GAME_VERSION__, run, heapMb: heapMb(), perf, error: watch?.error ?? null, hidden: document.hidden, crumb })
+  writeWatch({ at: new Date().toISOString(), version: __GAME_VERSION__, run, heapMb: heapMb(), perf, error: watch?.error ?? null, hidden: document.hidden, blurred, crumb })
 }
 
 /**
@@ -113,36 +127,62 @@ export const runMoment = (kind: CrumbMoment) => {
   )
 }
 
-const record = (e: BugError) => {
+/**
+ * Keeps an error for the reports and, when it's the game's own (`ours`), in the crash watch: a page
+ * closed after one counts as a crash (a frozen game reloaded). An in-app browser's script failing
+ * (Instagram's `iabjs://` "Java object is gone"), a blocked Clerk or a dropped request can't freeze the game.
+ */
+const record = (e: BugError, ours: boolean) => {
   errors.push(e)
   if (errors.length > BUG_REPORT.errors) errors.shift()
-  if (watch) writeWatch({ ...watch, error: e })
+  if (watch && ours) writeWatch({ ...watch, error: e })
 }
 
 window.addEventListener('error', (e) => {
   const error: unknown = e.error
-  record({
-    kind: 'error',
-    message: clip(e.message || String(error), BUG_REPORT.message),
-    source: e.filename ? `${e.filename}:${e.lineno}:${e.colno}` : '',
-    stack: error instanceof Error ? clip(error.stack ?? '', BUG_REPORT.stack) : '',
-    at: new Date().toISOString(),
-  })
+  record(
+    {
+      kind: 'error',
+      message: clip(e.message || String(error), BUG_REPORT.message),
+      source: e.filename ? `${e.filename}:${e.lineno}:${e.colno}` : '',
+      stack: error instanceof Error ? clip(error.stack ?? '', BUG_REPORT.stack) : '',
+      at: new Date().toISOString(),
+    },
+    // "Script error." (another origin, no error object) has nothing of the game's in it.
+    error != null && isOwnError(error, e.filename, location.origin) && !isExpectedFailure(error),
+  )
 })
 
 window.addEventListener('unhandledrejection', (e) => {
   const reason: unknown = e.reason
-  record({
-    kind: 'rejection',
-    message: clip(reason instanceof Error ? reason.message : String(reason), BUG_REPORT.message),
-    source: '',
-    stack: reason instanceof Error ? clip(reason.stack ?? '', BUG_REPORT.stack) : '',
-    at: new Date().toISOString(),
-  })
+  record(
+    {
+      kind: 'rejection',
+      message: clip(reason instanceof Error ? reason.message : String(reason), BUG_REPORT.message),
+      source: '',
+      stack: reason instanceof Error ? clip(reason.stack ?? '', BUG_REPORT.stack) : '',
+      at: new Date().toISOString(),
+    },
+    isOwnError(reason, undefined, location.origin) && !isExpectedFailure(reason),
+  )
 })
 
 // The game pauses in the background, where the phone may close the tab to free memory: that's not a crash.
 document.addEventListener('visibilitychange', syncRunWatch)
+
+/** Writes `blurred` into the watch when it changes. */
+const setBlurred = (next: boolean) => {
+  if (blurred === next) return
+  blurred = next
+  syncRunWatch()
+}
+
+// Out of focus, the player is elsewhere: on Android, swiping Chrome away in Recents fires only this before the kill.
+window.addEventListener('blur', () => setBlurred(true))
+// Back: the focus, or a press if the browser left the focus event out.
+window.addEventListener('focus', () => setBlurred(false))
+window.addEventListener('pointerdown', () => setBlurred(false), { capture: true, passive: true })
+window.addEventListener('keydown', () => setBlurred(false), { capture: true, passive: true })
 
 // Closing or reloading on purpose isn't a crash either, unless an error came first (a frozen game reloaded).
 window.addEventListener('pagehide', () => watch && !watch.error && writeWatch(null))
@@ -153,16 +193,24 @@ window.addEventListener('pageshow', (e) => e.persisted && syncRunWatch())
 setInterval(syncRunWatch, WATCH_MS)
 
 /**
- * The run the page died in last time and its breadcrumb, once: the watch is
- * cleared as it's read. Null when the last session ended cleanly, or the page
- * was in the background without an error (the phone freeing memory).
+ * Where the player was when a page went away mid-run without an error of the game's: elsewhere
+ * (`hidden`: another tab or app, where the phone may close it to free memory) or out of the window
+ * (`blur`: Recents, where a swipe closes the browser). Null: looking at the game, so a crash.
  */
-export const takeCrash = (): { crash: BugCrash; crumb: Crumb | null } | null => {
+export type Away = 'hidden' | 'blur' | null
+
+/**
+ * The run the page went away in last time and its breadcrumb, once: the watch is
+ * cleared as it's read. Null when the last session ended cleanly. `away` tells a
+ * crash (null) from a page the player had left, which isn't one; an error of the game's first makes it a crash anyway.
+ */
+export const takeCrash = (): { crash: BugCrash; crumb: Crumb | null; away: Away } | null => {
   const found = readWatch()
   if (!found) return null
   writeWatch(null)
-  const { hidden, crumb, ...crash } = found
-  return hidden && !crash.error ? null : { crash, crumb }
+  const { hidden, blurred, crumb, ...crash } = found
+  const away: Away = crash.error ? null : hidden ? 'hidden' : blurred ? 'blur' : null
+  return { crash, crumb, away }
 }
 
 /** Tells the reports what's on screen: `main.ts` hands in the run (plain numbers and ids), the top screen's name and the device's load. */

@@ -367,6 +367,8 @@ export const zh: Messages = {
     screenShake: '畫面震動',
     flashes: '閃光',
     flashModes: { normal: '一般', reduced: '減少' },
+    minimap: '小地圖',
+    minimapModes: { square: '方形', round: '圓形', off: '關' },
     attackOpacity: '招式透明度',
     teamAttackOpacity: '隊伍招式透明度',
     uiScale: '介面大小',

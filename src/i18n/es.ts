@@ -367,6 +367,8 @@ export const es: Messages = {
     screenShake: 'Temblor de pantalla',
     flashes: 'Destellos',
     flashModes: { normal: 'Normales', reduced: 'Reducidos' },
+    minimap: 'Minimapa',
+    minimapModes: { square: 'Cuadrado', round: 'Redondo', off: 'OFF' },
     /** How opaque your moves draw (and, in co-op, your teammates'): `render/attackLayers.ts`. */
     attackOpacity: 'Opacidad de ataques',
     teamAttackOpacity: 'Opacidad del equipo',
