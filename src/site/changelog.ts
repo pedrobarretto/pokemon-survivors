@@ -24,6 +24,37 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-25',
+    title: { pt: 'Golpes em sequência sem travadas', en: 'Back-to-back hits without the stutter', es: 'Golpes en serie sin trabones', fr: 'Des coups en série sans saccades', zh: '連續命中不再卡頓' },
+    highlights: [
+      { pt: 'Uma sequência de impactos congela a tela uma vez só: os punhos do Sky Uppercut, o Focus Punch e as aterrissagens em cadeia não deixam mais o jogo aos soluços.', en: 'A string of impacts freezes the screen just once: Sky Uppercut’s fists, Focus Punch and chain landings no longer make the game stutter.', es: 'Una serie de impactos congela la pantalla una sola vez: los puños de Sky Uppercut, Focus Punch y los aterrizajes en cadena ya no hacen que el juego se trabe.', fr: 'Une série d’impacts ne fige l’écran qu’une fois : les poings de Sky Uppercut, Focus Punch et les atterrissages en chaîne ne font plus saccader le jeu.', zh: '一連串的衝擊只會讓畫面停頓一次：Sky Uppercut 的拳頭、Focus Punch 和連鎖落地不再讓遊戲卡頓。' },
+      { pt: 'Power Herb respeita o mínimo de 4 s entre usos do especial (Espaço), como prometido: com muitos abates, ele voltava em 0,3 s e cada uso congelava a tela.', en: 'Power Herb keeps the 4 s minimum between uses of the special (Space), as promised: with enough defeats it came back in 0.3 s, and every use froze the screen.', es: 'Power Herb respeta el mínimo de 4 s entre usos del especial (Espacio), como se prometió: con muchos derribos volvía en 0,3 s y cada uso congelaba la pantalla.', fr: 'Power Herb respecte le minimum de 4 s entre deux utilisations de l’attaque spéciale (Espace), comme prévu : avec assez d’ennemis vaincus, elle revenait en 0,3 s et chaque utilisation figeait l’écran.', zh: 'Power Herb 會遵守特殊招式（空白鍵）兩次使用之間至少 4 秒的規則：以前擊倒夠多敵人時，0.3 秒就能再次使用，而且每次使用都會讓畫面停頓。' },
+      { pt: 'Com Power Herb, o anel do botão do especial mostra quanto falta de verdade.', en: 'With Power Herb, the special button’s ring shows the real time left.', es: 'Con Power Herb, el anillo del botón del especial muestra cuánto falta de verdad.', fr: 'Avec Power Herb, l’anneau du bouton de l’attaque spéciale montre le vrai temps restant.', zh: '裝備 Power Herb 時，特殊招式按鈕的圓環會顯示真正剩下的時間。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Menos travadas de impacto', en: 'Less hit-stop', es: 'Menos congelamiento por impacto', fr: 'Moins de gel à l’impact', zh: '減少命中停頓' },
+        notes: [
+          {
+            pt: 'Alguns golpes congelam a tela por um instante para dar peso ao impacto. Agora, depois de um congelamento, os impactos do segundo seguinte só tremem a tela: uma saraivada de punhos do Sky Uppercut congelava até quatro vezes seguidas, e o jogo parecia rodar aos trancos.',
+            en: 'Some moves freeze the screen for an instant to give the impact weight. Now, after one freeze, impacts in the next second only shake the screen: a volley of Sky Uppercut fists used to freeze up to four times in a row, and the game felt choppy.',
+            es: 'Algunos ataques congelan la pantalla un instante para darle peso al impacto. Ahora, después de un congelamiento, los impactos del segundo siguiente solo sacuden la pantalla: una ráfaga de puños de Sky Uppercut congelaba hasta cuatro veces seguidas y el juego se sentía entrecortado.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Power Herb com o mínimo de 4 s', en: 'Power Herb keeps its 4 s minimum', es: 'Power Herb con el mínimo de 4 s', fr: 'Power Herb garde son minimum de 4 s', zh: 'Power Herb 的 4 秒下限' },
+        notes: [
+          {
+            pt: 'A recarga do especial nunca devia ficar abaixo de 4 s, mas só o primeiro lote de abates respeitava o limite: o seguinte zerava a recarga, e o especial voltava a cada 0,3 s. Agora todo abate conta até o mínimo, e o anel do botão mostra a espera de verdade.',
+            en: 'The special’s cooldown was never meant to go under 4 s, but only the first batch of defeats kept to it: the next one emptied the cooldown, and the special came back every 0.3 s. Now every defeat counts down to the minimum, and the button’s ring shows the real wait.',
+            es: 'La recarga del especial nunca debía bajar de 4 s, pero solo el primer lote de derribos respetaba el límite: el siguiente vaciaba la recarga y el especial volvía cada 0,3 s. Ahora cada derribo cuenta hasta el mínimo y el anillo del botón muestra la espera real.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-24',
     title: { pt: 'Mega Darkrai, um lobby novo no celular e golpes mais vivos', en: 'Mega Darkrai, a new lobby on phones and livelier moves', es: 'Mega Darkrai, un lobby nuevo en el celular y ataques con más vida', fr: 'Méga-Darkrai, un nouveau lobby sur mobile et des attaques plus vivantes', zh: '超級 Darkrai、手機上的全新大廳與更生動的招式' },
     highlights: [

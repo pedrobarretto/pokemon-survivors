@@ -6,7 +6,7 @@ import { hurtPlayer } from './combat'
 import { alphaDown } from './alphas'
 import { awayHold, coopPayout, coopStats, playerDexLog } from './coop'
 import { spawnEnemy } from './enemies'
-import { createCoopGame, createGame, step, type CoopLoadout } from './game'
+import { createCoopGame, createGame, HITSTOP_REST, step, type CoopLoadout } from './game'
 import { parseTickEntry, stepTick, type TickEntry } from './lockstep'
 import { spawnMapEvent } from './mapEvents'
 import { NO_RANKS } from './meta'
@@ -364,6 +364,27 @@ describe('co-op lockstep', () => {
     expect(solo.time).toBe(before.time)
     expect(solo.player.x).toBe(before.x)
     expect(solo.hitstop).toBeCloseTo(0.07 - 3 * TICK)
+  })
+
+  it('a hitstop right after another one plays through: back-to-back impacts freeze once', () => {
+    const solo = createGame('charmander', { w: 480, h: 270 }, 42)
+    solo.phase = 'playing'
+    const held = (seconds: number) => {
+      let n = 0
+      for (let t = 0; t < Math.round(seconds / TICK); t++) {
+        const before = solo.time
+        step(solo, { move: { x: 0, y: 0 }, special: false }, TICK)
+        if (solo.time === before) n++
+      }
+      return n
+    }
+    solo.hitstop = 0.06
+    expect(held(0.2)).toBe(4)
+    solo.hitstop = 0.06
+    expect(held(0.2)).toBe(0)
+    held(HITSTOP_REST)
+    solo.hitstop = 0.06
+    expect(held(0.2)).toBe(4)
   })
 
   it('keeps two clients fed the same entries identical, bit for bit', () => {

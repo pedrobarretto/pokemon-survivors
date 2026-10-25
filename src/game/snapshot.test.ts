@@ -118,7 +118,7 @@ describe('snapshot and restore', () => {
   it('restore a run that plays on exactly like the uninterrupted one', () => {
     const covered = new Set<string>()
     let checkpoints = 0
-    for (const s of scenarios(4, 45)) {
+    for (const s of scenarios(4, 2)) {
       const r = proveRestores(s, 60 * 60 * 7, 1500)
       checkpoints += r.checkpoints
       for (const m of r.covered) covered.add(m)

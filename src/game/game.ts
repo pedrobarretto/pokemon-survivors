@@ -243,6 +243,7 @@ const createRun = (view: Game['view'], seed: number, setups: readonly PlayerSetu
     camera: { x: -view.w / 2, y: -view.h / 2 },
     shake: 0,
     hitstop: 0,
+    hitstopRest: 0,
     kills: 0,
     coins: 0,
     // A legend never meets itself among the bosses (`avoidLegend`), nor the outbreak's basic in its horde (`LEGEND_HORDE`).
@@ -792,15 +793,30 @@ const stepMoves = (g: Game, input: StepInput, dt: number) => {
 }
 
 /**
+ * World seconds after a hitstop ends in which a new one is dropped: a volley
+ * of impacts (Sky Uppercut's fists, a chain of landings, a special cast again
+ * and again) freezes the screen once instead of in a stutter. The hits keep
+ * their shake and dust.
+ */
+export const HITSTOP_REST = 1
+
+/**
  * A hitstop running counts down and says whether it holds the tick there:
  * in solo it freezes the whole world; in co-op never, since it would hold
  * every teammate for one player's hit (and pull their predicted sprites
  * back), so it only counts down while the team plays on. Co-op's prediction
  * ghost (`coop/predict.ts`) asks the same, so it plays through one too.
+ * One that starts within `HITSTOP_REST` of the last one's end never holds.
  */
 export const hitstopHolds = (g: Game, dt: number) => {
+  if (g.hitstopRest > 0) {
+    g.hitstopRest = Math.max(0, g.hitstopRest - dt)
+    g.hitstop = 0
+    return false
+  }
   if (g.hitstop <= 0) return false
   g.hitstop -= dt
+  if (g.hitstop <= 0) g.hitstopRest = HITSTOP_REST
   return g.coop === null
 }
 

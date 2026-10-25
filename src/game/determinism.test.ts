@@ -117,7 +117,7 @@ describe('golden runs', () => {
   it('Charmander evolves and picks its Ability', () => {
     const { live, replayed, branch } = golden('charmander', 42, 240)
     expect(replayed).toBe(live)
-    expect([live, branch]).toEqual(['playing@240s L15 S1 570k 6aa527ed', null])
+    expect([live, branch]).toEqual(['playing@240s L14 S1 537k 5fb4523d', null])
   }, SLOW)
 
   it('Honedge switches stances', () => {

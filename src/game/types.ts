@@ -806,6 +806,8 @@ export type Game = {
   shake: number
   /** Seconds the simulation stays frozen for impact (hit-stop). Solo only: in co-op it counts down without freezing. */
   hitstop: number
+  /** World seconds left in which a new hitstop is dropped (`HITSTOP_REST`): back-to-back impacts freeze once. */
+  hitstopRest: number
   kills: number
   /** Poké Dollars collected this run (already multiplied by greed). */
   coins: number
