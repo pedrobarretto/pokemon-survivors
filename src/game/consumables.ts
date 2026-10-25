@@ -29,7 +29,7 @@ export type ConsumableDef = {
 
 const heal = (g: Game, amount: number) => {
   const p = g.player
-  const healed = Math.round(healPlayer(g, amount))
+  const healed = dm.round(healPlayer(g, amount))
   floatText(g, p.x, p.y - 30, `+${healed}`, '#58e858')
   burst(g, p.x, p.y - 10, { colors: ['#58e858', '#c8f8c8', '#ffffff'], count: 16, speed: 60, ttl: 0.6, gravity: -40 })
 }
@@ -57,7 +57,7 @@ const sleepOnScreen = (g: Game) => {
 const explode = (g: Game) => {
   for (const e of g.enemies) {
     if (!isAlive(e) || !inSight(g, e.x, e.y, 16)) continue
-    const dmg = e.boss ? Math.round(e.maxHp * 0.1) : Math.ceil(e.hp)
+    const dmg = e.boss ? dm.round(e.maxHp * 0.1) : Math.ceil(e.hp)
     e.hp -= dmg
     e.flash = 0.3
     damageText(g, e, dmg, '#ffd830', true)
@@ -133,7 +133,7 @@ export const tryRevive = (g: Game) => {
   if (g.player.revives <= 0) return false
   const p = g.player
   g.player.revives--
-  p.hp = Math.round(p.stats.maxHp * 0.5)
+  p.hp = dm.round(p.stats.maxHp * 0.5)
   p.iframes = 2
   burst(g, p.x, p.y - 10, { colors: ['#f8d830', '#fff8c0', '#ffffff'], count: 40, speed: 120, ttl: 0.8, gravity: -40 })
   g.events.push({ kind: 'revive' })
@@ -145,7 +145,7 @@ export const tryMaxRevive = (g: Game) => {
   if (!g.player.maxRevive) return false
   const p = g.player
   g.player.maxRevive = false
-  p.hp = Math.round(p.stats.maxHp * BAG_ITEMS.maxRevive.effect.revive)
+  p.hp = dm.round(p.stats.maxHp * BAG_ITEMS.maxRevive.effect.revive)
   p.iframes = 2
   burst(g, p.x, p.y - 10, { colors: ['#f8d830', '#fff8c0', '#88d8ff', '#ffffff'], count: 56, speed: 140, ttl: 0.9, gravity: -40 })
   g.events.push({ kind: 'maxRevive' })

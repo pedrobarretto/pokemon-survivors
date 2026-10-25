@@ -61,7 +61,7 @@ export const snipeScale = (flown: number) => 1 + Math.min(SNIPE_MAX, Math.max(0,
 
 /** Wood Hammer's recoil: this share of max HP when the swing connects, never taking the last HP. */
 export const HAMMER_RECOIL = 0.04
-export const recoilFor = (hp: number, maxHp: number) => Math.max(0, Math.min(hp - 1, Math.round(maxHp * HAMMER_RECOIL)))
+export const recoilFor = (hp: number, maxHp: number) => Math.max(0, Math.min(hp - 1, dm.round(maxHp * HAMMER_RECOIL)))
 
 /** Rhythm moves (Leaf Blade's crit, Drum Beating's downbeat): the beat after `count` casts, and whether it's the strong one. */
 export const beatOf = (count: number, bar: number) => ({ next: (count + 1) % bar, strong: count % bar === bar - 1 })

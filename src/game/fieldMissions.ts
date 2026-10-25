@@ -286,5 +286,5 @@ export const directMissions = (g: Game, place: (g: Game, kind: FieldMissionKind,
   const open = clearSpot(g, spot, 20)
   s.done.push(kind)
   s.next = nextMissionAt(g.time, g.rng())
-  place(g, kind, Math.round(open.x), Math.round(open.y))
+  place(g, kind, dm.round(open.x), dm.round(open.y))
 }

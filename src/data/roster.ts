@@ -44,7 +44,7 @@ export const TIER_STATS = {
 } as const satisfies Record<Tier, { hp: number; damage: number; speed: number }>
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
-const round1 = (v: number) => Math.round(v * 10) / 10
+const round1 = (v: number) => dm.round(v * 10) / 10
 
 /**
  * Game stats from base stats (Spe, Atk… are base stats, total = base stat total):
@@ -63,15 +63,15 @@ export const deriveEnemy = (s: RosterSpecies): EnemyDef => {
   const flying = s.types.includes('flying')
   const light = flying || s.types.includes('ghost')
   const stats = TIER_STATS[tier]
-  const hp = Math.max(4, Math.round(stats.hp * bulk))
+  const hp = Math.max(4, dm.round(stats.hp * bulk))
   return {
     dex: s.dex,
     name: s.name,
     types: s.types,
     hp,
-    speed: Math.round((8 + (60 * st.speed) / (st.speed + 45)) * stats.speed * (flying ? 1.12 : 1)),
-    damage: Math.max(3, Math.round(stats.damage * dm.pow(offense, 0.7))),
-    xp: Math.max(1, Math.round(hp / 13)),
+    speed: dm.round((8 + (60 * st.speed) / (st.speed + 45)) * stats.speed * (flying ? 1.12 : 1)),
+    damage: Math.max(3, dm.round(stats.damage * dm.pow(offense, 0.7))),
+    xp: Math.max(1, dm.round(hp / 13)),
     mass: round1(clamp(((st.hp + st.defense) / 65) * (light ? 0.65 : 1), 0.5, 3)),
     tier,
   }

@@ -65,8 +65,8 @@ const cottage = (variant: number): LandmarkPlan => {
       { kind: 'wallN', x: 0, y: -D, variant: 0, foot: wallFoot(-W, -D, W, -D, T) },
       { kind: 'wallW', x: -W, y: 0, variant: 0, foot: wallFoot(-W, -D, -W, 0, T) },
       { kind: 'wallE', x: W, y: 0, variant: 0, foot: wallFoot(W, -D, W, 0, T) },
-      { kind: 'wallS', x: -Math.round((W + door) / 2), y: 0, variant: 0, foot: wallFoot(-W, 0, -door, 0, T) },
-      { kind: 'wallS', x: Math.round((W + door) / 2), y: 0, variant: 1, foot: wallFoot(door, 0, W, 0, T) },
+      { kind: 'wallS', x: -dm.round((W + door) / 2), y: 0, variant: 0, foot: wallFoot(-W, 0, -door, 0, T) },
+      { kind: 'wallS', x: dm.round((W + door) / 2), y: 0, variant: 1, foot: wallFoot(door, 0, W, 0, T) },
       { ...single('crate', crate.x, crate.y, 8, 4), loot: true },
       single('bed', -34 * side, -D + 18, 12, 6),
       single('table', -8 * side, -30, 9, 4),
@@ -210,7 +210,7 @@ const ruins = (variant: number): LandmarkPlan => {
   const span = Math.PI * 2 - gap
   const ring = Array.from({ length: stones }, (_, i) => {
     const a = Math.PI / 2 + gap / 2 + (span * i) / (stones - 1)
-    return { ...single('menhir', Math.round(dm.cos(a) * rx), Math.round(dm.sin(a) * ry), 6, 3.5, (i + variant * 3) % 8), loot: true as const }
+    return { ...single('menhir', dm.round(dm.cos(a) * rx), dm.round(dm.sin(a) * ry), 6, 3.5, (i + variant * 3) % 8), loot: true as const }
   })
   const side = variant % 2 === 0 ? 1 : -1
   const altar = { x: 0, y: -8 }

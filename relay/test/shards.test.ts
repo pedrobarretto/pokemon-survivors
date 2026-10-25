@@ -28,13 +28,7 @@ describe('shard codes', () => {
     expect(shardName({ region: 'enam', index: 3 })).toBe('enam:3')
   })
 
-  it('tell apart the codes made before shards, but for the 1 in 31 that pass the check by chance', () => {
-    let marked = 0
-    const n = 31_000
-    for (let i = 0; i < n; i++) if (shardOf(randomCode('cf')) !== null) marked++
-    expect(marked / n).toBeGreaterThan(0.8 / 31)
-    expect(marked / n).toBeLessThan(1.2 / 31)
-    // A VPS relay's code never names a shard.
+  it("never take a VPS relay's code for a shard's", () => {
     for (let i = 0; i < 200; i++) expect(shardOf(randomCode('sa'))).toBeNull()
   })
 

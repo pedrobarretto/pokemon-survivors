@@ -31,6 +31,7 @@ import type { PlayableId } from '../data/hatchlings'
 import type { StatDelta } from './stats'
 import type { RunSummary } from './tally'
 import type { Game } from './types'
+import * as dm from '../engine/dmath'
 
 /**
  * Meta progression: Poké Dollars (₽) earned across runs and the Poké Mart's
@@ -81,7 +82,7 @@ const PRICE_GROWTH = 1.6
 /** Price of the next rank when `rank` ranks are already owned. Rounded to ₽10. */
 export const upgradePrice = (id: UpgradeId, rank: number) => {
   const def: UpgradeDef = UPGRADES[id]
-  return Math.round((def.basePrice * (def.growth ?? PRICE_GROWTH) ** rank) / 10) * 10
+  return dm.round((def.basePrice * dm.powInt(def.growth ?? PRICE_GROWTH, rank)) / 10) * 10
 }
 
 /** Everything spent on the given ranks, i.e. what a full refund gives back. */
@@ -352,7 +353,7 @@ export const runBonus = (run: { time: number; kills: number; victory: boolean; g
   const endlessMinutes = run.victory ? overtime(run.time) / 60 : 0
   const reaper = (run.reaperDefeats ?? 0) * ENDLESS.reaperBonus
   const minutes = (run.time / 60) * BONUS_PER_MINUTE.run + endlessMinutes * BONUS_PER_MINUTE.endless
-  return Math.round((minutes + run.kills * 0.25 + (run.victory ? 1000 : 0) + reaper) * run.greed)
+  return dm.round((minutes + run.kills * 0.25 + (run.victory ? 1000 : 0) + reaper) * run.greed)
 }
 
 /** Mewtwo fell this run: on the victory screen, or still going in endless mode. */

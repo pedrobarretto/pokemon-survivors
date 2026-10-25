@@ -207,7 +207,7 @@ export const contactPower = (g: Game) => ABILITY.contactPower * g.player.stats.m
 
 /** Ability damage on a foe: a number, the results' "ability" row, and the kill. */
 const strike = (g: Game, e: Enemy, amount: number) => {
-  const dmg = Math.max(1, Math.round(amount))
+  const dmg = Math.max(1, dm.round(amount))
   e.hp -= dmg
   e.flash = 0.12
   g.player.damageByMove.ability = (g.player.damageByMove.ability ?? 0) + dmg
@@ -234,7 +234,7 @@ export const abilityTakes = (g: Game, amount: number, types: readonly PokeType[]
         continue
       }
       const healed = healPlayer(g, amount * ABILITY.absorbHeal)
-      if (healed >= 1) floatText(g, p.x, p.y - 28, `+${Math.round(healed)}`, '#58d878')
+      if (healed >= 1) floatText(g, p.x, p.y - 28, `+${dm.round(healed)}`, '#58d878')
       p.iframes = Math.max(p.iframes, ABILITY.guardIframes)
       return null
     }
@@ -389,7 +389,7 @@ export const updateAbility = (g: Game, dt: number) => {
         if (s.clock >= e.every) {
           s.clock -= e.every
           const healed = healPlayer(g, g.player.stats.maxHp * e.heal)
-          if (healed >= 1) floatText(g, g.player.x, g.player.y - 28, `+${Math.round(healed)}`, '#58d878')
+          if (healed >= 1) floatText(g, g.player.x, g.player.y - 28, `+${dm.round(healed)}`, '#58d878')
         }
         break
       case 'onHurt':

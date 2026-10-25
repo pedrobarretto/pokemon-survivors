@@ -4,45 +4,33 @@ import { MOVE_MARGIN_MS, NEAR_RTT_MS, groupHome, measureRelay, pickHome, relayFo
 
 const CF = 'https://cf.test'
 const SA = 'https://sa.test'
-const US = 'https://us.test'
 
 describe('relays', () => {
   it('finds a room on the relay its code names, and on Cloudflare when this build lacks that relay', () => {
-    const both = { sa: SA, us: US }
-    expect(relayFor('3K7QF', CF, both)).toBe(SA)
-    expect(relayFor('7K7QF', CF, both)).toBe(US)
-    expect(relayFor('K7QF2', CF, both)).toBe(CF)
-    // A build without the US relay sends its codes to Cloudflare.
+    expect(relayFor('3K7QF', CF, { sa: SA })).toBe(SA)
+    expect(relayFor('K7QF2', CF, { sa: SA })).toBe(CF)
+    // A build without São Paulo sends its codes to Cloudflare, and so does a code of no home (6 to 9, US east's once).
+    expect(relayFor('3K7QF', CF, {})).toBe(CF)
     expect(relayFor('7K7QF', CF, { sa: SA })).toBe(CF)
   })
 
-  it("puts a host's room on the nearest VPS relay within the cap, else on Cloudflare", () => {
-    const probe = (rtt: number | null): RelayProbe | null => (rtt === null ? null : { rtt, full: false })
-    const home = (sa: number | null, us: number | null) => pickHome(new Map([['sa', probe(sa)], ['us', probe(us)]] as const)).home
-    // São Paulo (São Paulo 8 ms, Boston ~120), Buenos Aires (35 / 150).
-    expect(home(8, 120)).toBe('sa')
-    expect(home(35, 150)).toBe('sa')
-    // New York (120 / 8), Chicago (140 / 25), Los Angeles (180 / 65).
-    expect(home(120, 8)).toBe('us')
-    expect(home(140, 25)).toBe('us')
-    expect(home(180, 65)).toBe('us')
-    // Lisbon (200 / 85), Tokyo (260 / 170), a relay down, none in the build.
-    expect(home(200, 85)).toBe('cf')
-    expect(home(260, 170)).toBe('cf')
-    expect(home(NEAR_RTT_MS + 1, null)).toBe('cf')
-    expect(home(null, 12)).toBe('us')
+  it("puts a host's room on São Paulo within the cap, else on Cloudflare", () => {
+    const home = (rtt: number | null) => pickHome(new Map([['sa', rtt === null ? null : { rtt, full: false }]] as const)).home
+    // São Paulo (8 ms), Buenos Aires (35), right at the cap.
+    expect(home(8)).toBe('sa')
+    expect(home(35)).toBe('sa')
+    expect(home(NEAR_RTT_MS)).toBe('sa')
+    // Lisbon (200), past the cap, São Paulo down, none in the build.
+    expect(home(200)).toBe('cf')
+    expect(home(NEAR_RTT_MS + 1)).toBe('cf')
+    expect(home(null)).toBe('cf')
     expect(pickHome(new Map()).home).toBe('cf')
   })
 
-  it('never puts a new room on a full VPS relay, and says which one it passed', () => {
-    const probes = (sa: RelayProbe | null, us: RelayProbe | null) => pickHome(new Map([['sa', sa], ['us', us]] as const))
-    // São Paulo full: a Brazilian host's room goes to Cloudflare.
-    expect(probes({ rtt: 8, full: true }, { rtt: 120, full: false })).toEqual({ home: 'cf', passed: 'sa' })
-    // The next near one takes it; one full but farther than the pick isn't "passed".
-    expect(probes({ rtt: 8, full: true }, { rtt: 50, full: false })).toEqual({ home: 'us', passed: 'sa' })
-    expect(probes({ rtt: 60, full: true }, { rtt: 20, full: false })).toEqual({ home: 'us', passed: null })
-    // A full relay out of reach was never a candidate.
-    expect(probes({ rtt: 150, full: true }, null)).toEqual({ home: 'cf', passed: null })
+  it('never puts a new room on a full VPS relay, and says it passed it only when it was near', () => {
+    const probes = (sa: RelayProbe | null) => pickHome(new Map([['sa', sa]] as const))
+    expect(probes({ rtt: 8, full: true })).toEqual({ home: 'cf', passed: 'sa' })
+    expect(probes({ rtt: 150, full: true })).toEqual({ home: 'cf', passed: null })
   })
 
   it('measures the median round trip after the one that opens the connection, and its fullness, null when unreachable', async () => {
@@ -55,43 +43,34 @@ describe('relays', () => {
     expect(await measureRelay(SA, () => Promise.reject(new Error('offline')), () => now)).toBeNull()
   })
 
-  it("moves a room to the relay best for the group's worst round trip, only by a clear margin", () => {
-    const homes = ['sa', 'us'] as const
-    // The first 4-player room (278P4): its host in São Paulo, two players in Spain, one in Mississippi.
-    const room278 = [{ sa: 7, us: 140 }, { sa: 227, us: 100 }, { sa: 239, us: 100 }, { sa: 175, us: 40 }]
-    expect(groupHome('sa', homes, room278)).toBe('us')
-    // All in Brazil: São Paulo it stays.
-    expect(groupHome('sa', homes, [{ sa: 8, us: 130 }, { sa: 30, us: 150 }])).toBeNull()
+  it("moves a Cloudflare room to São Paulo when it is best for the group's worst round trip, only by a clear margin", () => {
+    const homes = ['sa'] as const
+    // A Brazilian group in a Cloudflare room (in the US).
+    expect(groupHome('cf', homes, [{ cf: 140, sa: 8 }, { cf: 150, sa: 30 }])).toBe('sa')
     // Short of the margin: not worth the hop.
-    expect(groupHome('sa', homes, [{ sa: 10, us: 120 }, { sa: 150, us: 120 - 1 + MOVE_MARGIN_MS }])).toBeNull()
-    expect(groupHome('sa', homes, [{ sa: 10, us: 110 }, { sa: 150, us: 110 }])).toBe('us')
-    // A Cloudflare room is measured as itself; a Cloudflare room elsewhere never is.
-    const lab = [{ cf: 120, sa: 5, us: 140 }, { cf: 30, sa: 230, us: 100 }, { cf: 30, sa: 230, us: 100 }]
-    expect(groupHome('cf', homes, lab)).toBeNull()
-    expect(groupHome('cf', homes, [{ cf: 140, sa: 8, us: 130 }, { cf: 150, sa: 30, us: 150 }])).toBe('sa')
-    expect(groupHome('sa', homes, [{ cf: 5, sa: 200, us: 200 }])).toBeNull()
+    expect(groupHome('cf', homes, [{ cf: 140, sa: 8 }, { cf: 150, sa: 150 - MOVE_MARGIN_MS + 1 }])).toBeNull()
+    expect(groupHome('cf', homes, [{ cf: 140, sa: 8 }, { cf: 150, sa: 150 - MOVE_MARGIN_MS }])).toBe('sa')
+    // Someone far from São Paulo (the lab: one host in Brazil, two in Spain): it stays.
+    expect(groupHome('cf', homes, [{ cf: 120, sa: 5 }, { cf: 30, sa: 230 }, { cf: 30, sa: 230 }])).toBeNull()
+    // A São Paulo room has nowhere better: a Cloudflare room elsewhere can't be measured.
+    expect(groupHome('sa', homes, [{ cf: 5, sa: 200 }])).toBeNull()
   })
 
   it("stays put when anyone's round trips are missing or a relay didn't answer them", () => {
-    const homes = ['sa', 'us'] as const
+    const homes = ['sa'] as const
     // A client before the reports (null), and nobody at all.
-    expect(groupHome('sa', homes, [{ sa: 5, us: 140 }, null])).toBeNull()
-    expect(groupHome('sa', homes, [])).toBeNull()
-    // US east down for one of them: no candidate left.
-    expect(groupHome('sa', homes, [{ sa: 5, us: 40 }, { sa: 230, us: null }])).toBeNull()
+    expect(groupHome('cf', homes, [{ cf: 140, sa: 8 }, null])).toBeNull()
+    expect(groupHome('cf', homes, [])).toBeNull()
+    // São Paulo down for one of them.
+    expect(groupHome('cf', homes, [{ cf: 140, sa: 8 }, { cf: 150, sa: null }])).toBeNull()
     // Not measured to the room it is in (the Cloudflare pings not in yet): it can't compare.
-    expect(groupHome('cf', homes, [{ sa: 5, us: 40 }, { cf: 200, sa: 200, us: 40 }])).toBeNull()
+    expect(groupHome('cf', homes, [{ sa: 8 }, { cf: 150, sa: 30 }])).toBeNull()
     // A relay this build lacks is never a candidate.
-    expect(groupHome('sa', ['sa'], [{ sa: 5, us: 40 }, { sa: 230, us: 40 }])).toBeNull()
+    expect(groupHome('cf', [], [{ cf: 140, sa: 8 }, { cf: 150, sa: 30 }])).toBeNull()
   })
 
   it('never moves a room to a full relay', () => {
-    const homes = ['sa', 'us'] as const
-    const room278 = [{ sa: 7, us: 140 }, { sa: 227, us: 100 }, { sa: 239, us: 100 }, { sa: 175, us: 40 }]
-    expect(groupHome('sa', homes, room278, new Set(['us']))).toBeNull()
-    expect(groupHome('cf', homes, [{ cf: 140, sa: 8, us: 130 }, { cf: 150, sa: 30, us: 150 }], new Set(['sa']))).toBeNull()
-    // The room's own relay being full keeps it where it is (it's already there).
-    expect(groupHome('sa', homes, room278, new Set(['sa']))).toBe('us')
+    expect(groupHome('cf', ['sa'], [{ cf: 140, sa: 8 }, { cf: 150, sa: 30 }], new Set(['sa']))).toBeNull()
   })
 
   it('creates on São Paulo when near, and on Cloudflare when São Paulo is down', async () => {

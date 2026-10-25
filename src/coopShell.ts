@@ -23,7 +23,7 @@ import { bankEggs, depositPokeDollars, recordRunProgress, updateSave } from './u
  * The browser's side of co-op that isn't drawing: the one client of this tab
  * (relay URL, Clerk token or guest id, localStorage), joining by link, the
  * banking of a run (exactly once, `coop/bank.ts`), which events of the
- * simulation are this player's, the beta's gate, and the dev console's bots.
+ * simulation are this player's, and the dev console's bots.
  */
 
 /** The dev relay on workers.dev: dev builds use it unless `VITE_COOP_URL` (or `ps.coop('url', …)`) says otherwise. */
@@ -80,7 +80,7 @@ export const setCoopUrl = (url: string | null) => (url ? local.set(URL_KEY, url)
  * name (`RELAY_HOMES`): one entry and one `VITE_COOP_URL_*` per relay. An
  * unset one is off, and its rooms' codes go to Cloudflare.
  */
-const RELAY_URLS = { sa: import.meta.env.VITE_COOP_URL_SA, us: import.meta.env.VITE_COOP_URL_US } as const satisfies Record<VpsHome, string | undefined>
+const RELAY_URLS = { sa: import.meta.env.VITE_COOP_URL_SA } as const satisfies Record<VpsHome, string | undefined>
 
 /** The VPS relays' URLs, with a dev build's overrides (`ps.coop('relay', home, url)`). */
 export const coopVpsUrls = (): VpsUrls =>

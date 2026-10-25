@@ -2,19 +2,17 @@ import { PROTOCOL, parseRoomCode, type CreateResponse, type Region } from '../..
 import { parseCreate } from './codes'
 import type { Env } from './env'
 import { allowedOrigin } from './origins'
-import { log } from './shell'
-import { NO_ROOM_HEADER, SHARD_INDEXES, SHARD_REGIONS, shardName, shardOf, type Shard } from './shards'
+import { log, noSuchRoom } from './shell'
+import { SHARD_INDEXES, SHARD_REGIONS, shardName, shardOf, type Shard } from './shards'
 import { EDGE_HEADER, edgeOf } from './telemetry'
 
-export { RoomObject } from './roomObject'
 export { ShardObject } from './shardObject'
 export { Vault } from './vault'
 
 /**
  * The relay's Worker: creates rooms in shards (`shards.ts`: many rooms per
- * Durable Object), routes each room's sockets to the shard its code names (a
- * code made before shards to its own object, `idFromName(code)`), and serves
- * `/health` and the admin dumps.
+ * Durable Object), routes each room's sockets to the shard its code names, and
+ * serves `/health` and the admin dumps.
  *
  * - `POST /rooms` `{ v, build, region? }` → `{ code, region, claim }`
  * - `GET /rooms/<code>/ws` → WebSocket (first message: `hello`)
@@ -131,12 +129,8 @@ export default {
       const headers = new Headers(request.headers)
       headers.set(EDGE_HEADER, JSON.stringify(edgeOf(request.cf)))
       const shard = shardOf(code)
-      if (shard) {
-        const res = await shardStub(env, shard).fetch(new Request(request, { headers }))
-        if (!res.headers.has(NO_ROOM_HEADER)) return res
-      }
-      // A room made before shards: 1 in 31 of their codes looks like a shard's, which says it has no such room.
-      return env.ROOMS.getByName(code).fetch(new Request(request, { headers }))
+      // A code naming no shard (a VPS relay's, or none of ours) has no room here.
+      return shard ? shardStub(env, shard).fetch(new Request(request, { headers })) : noSuchRoom()
     }
     if ((path.startsWith('/admin/dumps') || path.startsWith('/admin/shards/')) && request.method === 'GET') return admin(request, env, path)
     return new Response('Not found', { status: 404, headers })

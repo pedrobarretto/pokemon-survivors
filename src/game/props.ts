@@ -43,8 +43,8 @@ export const propAt = (cx: number, cy: number, haunted = false): { kind: PropKin
   const span = PROP_CELL - MARGIN * 2
   return {
     kind,
-    x: Math.round(cx * PROP_CELL + MARGIN + hash2(cx, cy, SEED + 2) * span),
-    y: Math.round(cy * PROP_CELL + MARGIN + hash2(cx, cy, SEED + 3) * span),
+    x: dm.round(cx * PROP_CELL + MARGIN + hash2(cx, cy, SEED + 2) * span),
+    y: dm.round(cy * PROP_CELL + MARGIN + hash2(cx, cy, SEED + 3) * span),
   }
 }
 

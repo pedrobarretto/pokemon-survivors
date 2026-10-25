@@ -11,6 +11,7 @@ import { buildSky, calmSky, updateSky } from './sky'
 import { footOf, type Solid } from './terrain'
 import { centerScreen, placeTeam } from './players'
 import type { Game } from './types'
+import * as dm from '../engine/dmath'
 
 /**
  * The inside of a place: a room (`room.ts`) laid out by the place's rules,
@@ -101,7 +102,7 @@ export const updatePlaceFall = (g: Game, dt: number) => {
   for (const p of g.players) {
     // Solo the one player is the one who fell.
     if (g.players.length > 1 && p.hp > 0) continue
-    p.hp = Math.max(1, Math.round(p.stats.maxHp * PLACE.fallHp))
+    p.hp = Math.max(1, dm.round(p.stats.maxHp * PLACE.fallHp))
     p.hurt = 0
   }
   exitPlace(g, 'fallen')

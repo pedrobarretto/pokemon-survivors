@@ -10,6 +10,7 @@ import { killEnemy } from './combat'
 import { burst, floatText } from './effects'
 import type { Game } from './types'
 import { roomOf } from './room'
+import * as dm from '../engine/dmath'
 
 /**
  * Weather in play. `since` is the game time it started (`prev` fades out meanwhile);
@@ -138,7 +139,7 @@ const chipPlayer = (g: Game, color: string) => {
   const p = g.player
   if (!weatherChips(g.weather.id, playerForm(g).types) || abilityImmune(g, 'chip')) return
   const floor = p.stats.maxHp * WEATHER_CHIP.playerFloor
-  const dmg = Math.min(Math.round(p.stats.maxHp * WEATHER_CHIP.player) || 1, Math.floor(p.hp - floor))
+  const dmg = Math.min(dm.round(p.stats.maxHp * WEATHER_CHIP.player) || 1, Math.floor(p.hp - floor))
   if (dmg > 0) {
     p.hp -= dmg
     floatText(g, p.x, p.y - 28, String(dmg), color, true)
@@ -158,7 +159,7 @@ const chip = (g: Game) => {
     if (e.dying >= 0 || !weatherChips(g.weather.id, e.types)) continue
     // No damage numbers: on a full horde they'd bury the screen. A puff of weather says it instead.
     burst(g, e.x, e.y - e.radius, { colors: [color, '#ffffff'], count: 1, speed: 30, ttl: 0.3 })
-    e.hp -= Math.max(1, Math.round(e.maxHp * (e.boss ? WEATHER_CHIP.boss : WEATHER_CHIP.enemy)))
+    e.hp -= Math.max(1, dm.round(e.maxHp * (e.boss ? WEATHER_CHIP.boss : WEATHER_CHIP.enemy)))
     if (e.hp <= 0) killEnemy(g, e)
   }
 }

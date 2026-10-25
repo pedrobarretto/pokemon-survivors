@@ -122,9 +122,9 @@ const MOVES: readonly Vec[] = [
  * records is exactly what its simulation got.
  */
 export const moveCode = (v: Vec) => {
-  const level = Math.min(LEVELS, Math.round(dm.hypot(v.x, v.y) * LEVELS))
+  const level = Math.min(LEVELS, dm.round(dm.hypot(v.x, v.y) * LEVELS))
   if (level === 0) return 0
-  const dir = ((Math.round((dm.atan2(v.y, v.x) / (Math.PI * 2)) * DIRECTIONS) % DIRECTIONS) + DIRECTIONS) % DIRECTIONS
+  const dir = ((dm.round((dm.atan2(v.y, v.x) / (Math.PI * 2)) * DIRECTIONS) % DIRECTIONS) + DIRECTIONS) % DIRECTIONS
   return 1 + (level - 1) * DIRECTIONS + dir
 }
 

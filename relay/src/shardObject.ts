@@ -20,9 +20,9 @@ import {
   type Room,
   type State,
 } from './room'
-import { DELETE_MAX, HELLO_TIMEOUT_MS, LAZY, WHERE_WAIT_MS, identify, isRecord, log, whereOnce } from './shell'
-import { NO_ROOM_HEADER, admits, capOf, createMeter, due, earliest, shardCode, shardName, shardOf, tally, weighs, type Shard } from './shards'
-import { dumpJson, parseRoom, persist, readBound, syncTexts, type DumpRequest, type Sql, type Store, type Stored } from './store'
+import { DELETE_MAX, HELLO_TIMEOUT_MS, LAZY, WHERE_WAIT_MS, identify, isRecord, log, noSuchRoom, whereOnce } from './shell'
+import { admits, capOf, createMeter, due, earliest, shardCode, shardName, shardOf, tally, weighs, type Shard } from './shards'
+import { dumpJson, parseRoom, persist, readBound, syncTexts, type DumpRequest, type Store, type Stored } from './store'
 import {
   EDGE_HEADER,
   addLateness,
@@ -44,12 +44,11 @@ import {
 } from './telemetry'
 
 /**
- * Many co-op rooms in one Durable Object (a shard, `shards.ts`): what
- * `RoomObject` does for one room, done here for each room the shard holds,
- * as the VPS relay does for its rooms (`relay/node/src/rooms.ts`). Each room
- * is the same pure state machine (`room.ts`) with its own keys, sockets
- * (tagged with its code), telemetry and 60 Hz frame timer; the shard's one
- * alarm is the earliest of its rooms' deadlines.
+ * Many co-op rooms in one Durable Object (a shard, `shards.ts`), as the VPS
+ * relay holds its rooms (`relay/node/src/rooms.ts`). Each room is the same
+ * pure state machine (`room.ts`) with its own keys, sockets (tagged with its
+ * code), telemetry and 60 Hz frame timer; the shard's one alarm is the
+ * earliest of its rooms' deadlines.
  *
  * Storage: a room is the key `room:<code>` (its JSON) and its log batches and
  * snapshot chunks are `r:<code>:<key>` (`store.ts`'s keys). A shard restart
@@ -89,14 +88,6 @@ const CODE_TRIES = 8
 /** How often the shard logs `shard.stats` while a frame timer runs. */
 const STATS_MS = 60_000
 
-/** A shard's room has no SQL: everything of it is a lazy key (no `sql.exec`, which takes the output gate). */
-const NO_SQL: Sql = {
-  run: () => {
-    throw new Error('a shard room has no SQL')
-  },
-  all: () => [],
-}
-
 const randomBytes = (n: number) => crypto.getRandomValues(new Uint8Array(n))
 
 const isAttachment = (v: unknown): v is Attachment =>
@@ -125,7 +116,6 @@ type Shell = {
 const storeOf = (storage: DurableObjectStorage, code: string): Store => {
   const p = roomPrefix(code)
   return {
-    sql: NO_SQL,
     lazy: {
       put: (key, value) => void storage.put(p + key, value, LAZY),
       delete: (keys) => {
@@ -230,8 +220,7 @@ export class ShardObject extends DurableObject<Env> {
     if (request.headers.get('Upgrade') !== 'websocket') return new Response('Expected a WebSocket', { status: 426 })
     const code = parseRoomCode(/^\/rooms\/([^/]+)\/ws$/.exec(new URL(request.url).pathname)?.[1])
     const shell = code ? this.rooms.get(code) : undefined
-    // The Worker then tries the code's old one-room object (a room made before shards).
-    if (!code || !shell) return new Response('No such room', { status: 404, headers: { [NO_ROOM_HEADER]: '1' } })
+    if (!code || !shell) return noSuchRoom()
     const [client, server] = Object.values(new WebSocketPair()) as [WebSocket, WebSocket]
     const id = crypto.randomUUID()
     const ua = (request.headers.get('User-Agent') ?? '').slice(0, 200)
@@ -502,7 +491,7 @@ export class ShardObject extends DurableObject<Env> {
 
   /**
    * Records a dump (a desync, a bad snapshot, or a finished run kept for the
-   * lab) in the vault, as `RoomObject` does: the log is read at once, before
+   * lab) in the vault: the log is read at once, before
    * anything awaits (a wipe right after deletes the room's keys).
    */
   private async dump(shell: Shell, e: DumpRequest, room: Room | null, lab: Pick<LabRun, 'score' | 'why' | 'seats'> | null = null) {

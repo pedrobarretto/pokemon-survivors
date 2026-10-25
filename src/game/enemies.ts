@@ -25,7 +25,7 @@ import * as dm from '../engine/dmath'
 const neighbors: number[] = []
 
 /** Body radius derived from the sprite so big Pokémon take up more space. */
-export const radiusFor = (dex: number) => Math.max(5, Math.round(bodyOf(dex).bodyW * 0.32))
+export const radiusFor = (dex: number) => Math.max(5, dm.round(bodyOf(dex).bodyW * 0.32))
 
 /**
  * How much tougher than its base stats a regular enemy spawning now is: the
@@ -46,7 +46,7 @@ export const spawnEnemy = (g: Game, kind: EnemyId, x: number, y: number, behavio
   const mods = runMods(g)
   const scale = boss ? { hp: mods.enemyHp, damage: 1, xp: 1 } : enemyScale(g)
   // Co-op: the whole team hits it (`coopScale`; exactly 1 solo).
-  const hp = Math.round(def.hp * scale.hp * coopScale(g, boss ? COOP.scale.bossHp : COOP.scale.hp))
+  const hp = dm.round(def.hp * scale.hp * coopScale(g, boss ? COOP.scale.bossHp : COOP.scale.hp))
   const enemy: Enemy = {
     id: g.nextId++,
     kind,

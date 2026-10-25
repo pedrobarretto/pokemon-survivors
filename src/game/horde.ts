@@ -1,6 +1,7 @@
 import { ELITE, RUN_LENGTH, RUNNER } from '../data/waves'
 import type { Difficulty } from './difficulty'
 import type { Enemy } from './types'
+import * as dm from '../engine/dmath'
 
 /** New regular spawns are elites once `regular` enemies fill `ELITE.fill` of the effective `cap`, while `elites` stay under `ELITE.share` of it. */
 export const eliteSpawn = (regular: number, elites: number, cap: number) => regular >= cap * ELITE.fill && elites < cap * ELITE.share
@@ -8,7 +9,7 @@ export const eliteSpawn = (regular: number, elites: number, cap: number) => regu
 /** Promotes a fresh regular spawn to an elite (`ELITE`). */
 export const makeElite = (e: Pick<Enemy, 'elite' | 'hp' | 'maxHp' | 'xp' | 'damage' | 'radius'>) => {
   e.elite = true
-  e.hp = e.maxHp = Math.round(e.maxHp * ELITE.hp)
+  e.hp = e.maxHp = dm.round(e.maxHp * ELITE.hp)
   e.xp *= ELITE.xp
   e.damage *= ELITE.damage
   e.radius *= ELITE.size
@@ -18,7 +19,7 @@ export const makeElite = (e: Pick<Enemy, 'elite' | 'hp' | 'maxHp' | 'xp' | 'dama
 export const makeRunner = (e: Pick<Enemy, 'runner' | 'hp' | 'maxHp' | 'speed'>) => {
   e.runner = true
   e.speed = Math.min(e.speed * RUNNER.speed, RUNNER.maxSpeed)
-  e.hp = e.maxHp = Math.max(1, Math.round(e.maxHp * RUNNER.hp))
+  e.hp = e.maxHp = Math.max(1, dm.round(e.maxHp * RUNNER.hp))
 }
 
 /**

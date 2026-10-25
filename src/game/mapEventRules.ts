@@ -43,8 +43,8 @@ export const spawnSpot = (
   for (let i = 0; i < 10; i++) {
     const a = range(rng, 0, TAU)
     const d = range(rng, distance[0], distance[1])
-    const x = Math.round(px + dm.cos(a) * d)
-    const y = Math.round(py + dm.sin(a) * d)
+    const x = dm.round(px + dm.cos(a) * d)
+    const y = dm.round(py + dm.sin(a) * d)
     if (taken.every((o) => dm.sq(o.x - x) + dm.sq(o.y - y) >= spacing * spacing)) return { x, y }
   }
   return null

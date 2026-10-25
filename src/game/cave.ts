@@ -59,7 +59,7 @@ const layFloor = (g: Game, x: number, y: number, index: number): Floor => {
   if (index >= CAVE.floors) {
     const lights = Array.from({ length: CHAMBER.crystals }, (_, i): Pt => {
       const a = -Math.PI / 2 + ((i + 0.5) / CHAMBER.crystals) * TAU
-      return [Math.round(dm.cos(a) * (CHAMBER.r - 16)), Math.round(dm.sin(a) * (CHAMBER.r - 16) * 0.9)]
+      return [dm.round(dm.cos(a) * (CHAMBER.r - 16)), dm.round(dm.sin(a) * (CHAMBER.r - 16) * 0.9)]
     }).filter(([lx, ly]) => ly < CHAMBER.r - 40 || Math.abs(lx) > 30)
     const floor: Circle = { kind: 'circle', x: 0, y: 0, r: CHAMBER.r }
     return {

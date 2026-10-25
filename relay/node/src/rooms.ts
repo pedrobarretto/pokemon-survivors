@@ -22,7 +22,7 @@ import {
   type Room,
   type State,
 } from '../../src/room'
-import { createSchema, dumpJson, persist, readBound, readRoom, syncTexts, type Store } from '../../src/store'
+import { dumpJson, persist, readBound, syncTexts, type Store } from '../../src/store'
 import { openRoomDb, roomCodes, type RoomDb, type Vault } from './db'
 
 /**
@@ -166,7 +166,7 @@ export const createRooms = (deps: RoomsDeps) => {
     for (const ws of shell.sockets.values()) ws.close(RESTART_CLOSE, 'restart')
     shell.sockets.clear()
     shell.authing.clear()
-    const room = shell.db ? readRoom(shell.db.store.sql) : null
+    const room = shell.db?.readRoom() ?? null
     shell.state = loadState(room, gen, now(), shell.db ? boundOf(shell.db.store, room) : 0)
     if (!room) {
       shell.db?.remove()
@@ -240,7 +240,7 @@ export const createRooms = (deps: RoomsDeps) => {
     let loaded = 0
     for (const code of roomCodes(deps.dataDir)) {
       const db = openRoomDb(deps.dataDir, code)
-      const room = readRoom(db.store.sql)
+      const room = db.readRoom()
       if (!room) {
         db.remove()
         continue
@@ -263,7 +263,6 @@ export const createRooms = (deps: RoomsDeps) => {
       const r = createRoom(shell.state, { code, build, region: `vps:${deps.home}` }, now())
       if (!r.ok) continue
       shell.db = openRoomDb(deps.dataDir, code)
-      createSchema(shell.db.store.sql)
       rooms.set(code, shell)
       step(shell, () => r.effects)
       return { code, claim: r.claim }

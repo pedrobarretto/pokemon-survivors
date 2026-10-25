@@ -57,7 +57,7 @@ export const hazardDamage = (difficulty: Difficulty, time: number) =>
 export const hazardFlavor = (weather: WeatherId, biome: BiomeId): HazardFlavor => WEATHER_FLAVOR[weather] ?? BIOME_FLAVOR[biome]
 
 /** How many hazards a pattern drops at `time`, ramping with the pace. */
-const countAt = (g: Game, counts: readonly [number, number]) => Math.round(lerp(counts[0], counts[1], rampAt(g.difficulty, g.time)))
+const countAt = (g: Game, counts: readonly [number, number]) => dm.round(lerp(counts[0], counts[1], rampAt(g.difficulty, g.time)))
 
 /**
  * Pace multiplier right now: 0 inside a room (rift arena, place), before the start, during a

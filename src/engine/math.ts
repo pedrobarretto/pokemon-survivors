@@ -26,7 +26,7 @@ export const fromAngle = (angle: number, length = 1): Vec => ({ x: dm.cos(angle)
 export type Dir8 = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 export const dir8 = (x: number, y: number): Dir8 => {
-  const octant = (Math.round(dm.atan2(y, x) / (Math.PI / 4)) + 8) % 8
+  const octant = (dm.round(dm.atan2(y, x) / (Math.PI / 4)) + 8) % 8
   return ((2 - octant + 8) % 8) as Dir8
 }
 

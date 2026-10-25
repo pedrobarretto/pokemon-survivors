@@ -122,4 +122,4 @@ export const tensionMods = (level: number, peak: TensionPeak, endless: boolean) 
 })
 
 /** Size of a surge at tension `level`. */
-export const surgeSize = (level: number) => TENSION.surgeBase + Math.round(TENSION.surgeExtra * level)
+export const surgeSize = (level: number) => TENSION.surgeBase + dm.round(TENSION.surgeExtra * level)

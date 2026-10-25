@@ -1,7 +1,8 @@
 import { mkdirSync, readdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync, type StatementSync } from 'node:sqlite'
-import { parseStored, type DumpInfo, type Lazy, type Sql, type Store } from '../../src/store'
+import type { Room } from '../../src/room'
+import { parseRoom, parseStored, type DumpInfo, type Lazy, type Store } from '../../src/store'
 
 /**
  * SQLite on the `/data` volume, through `node:sqlite` (synchronous: a write
@@ -14,7 +15,16 @@ import { parseStored, type DumpInfo, type Lazy, type Sql, type Store } from '../
  * covers.
  */
 
-export type RoomDb = { store: Store; tx: (fn: () => void) => void; close: () => void; remove: () => void }
+/** A room's database: its storage, the room it holds (`readRoom`, null for none), transactions, close and delete. */
+export type RoomDb = { store: Store; readRoom: () => Room | null; tx: (fn: () => void) => void; close: () => void; remove: () => void }
+
+type Bind = string | number | null
+
+/** One SQLite file: `run` for writes, `all` for reads (rows as the driver gives them). */
+type Sql = {
+  run: (query: string, ...args: Bind[]) => void
+  all: (query: string, ...args: Bind[]) => Record<string, unknown>[]
+}
 
 const open = (path: string) => {
   const db = new DatabaseSync(path)
@@ -86,18 +96,23 @@ export const roomCodes = (dataDir: string) => {
   return readdirSync(roomsDir(dataDir)).flatMap((f) => (/^[A-Z0-9]+\.db$/.test(f) ? [f.slice(0, -3)] : []))
 }
 
-/** Room `code`'s database (made if missing). */
+/** Room `code`'s database (made if missing): one table, `kv`, the room as its row `room`. */
 export const openRoomDb = (dataDir: string, code: string): RoomDb => {
   mkdirSync(roomsDir(dataDir), { recursive: true })
   const path = join(roomsDir(dataDir), `${code}.db`)
   const { db, sql } = open(path)
+  db.exec('CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)')
   let closed = false
   const close = () => {
     if (!closed) db.close()
     closed = true
   }
   return {
-    store: { sql, lazy: lazyOf(sql) },
+    store: { lazy: lazyOf(sql), saveRoom: (json) => sql.run("INSERT OR REPLACE INTO kv (k, v) VALUES ('room', ?)", json) },
+    readRoom: () => {
+      const v = sql.all("SELECT v FROM kv WHERE k = 'room'")[0]?.v
+      return typeof v === 'string' ? parseRoom(v) : null
+    },
     tx: (fn) => {
       db.exec('BEGIN')
       try {

@@ -15,11 +15,6 @@ interface ImportMetaEnv {
    * hosts' rooms (`coop/relays.ts`). Unset: every room is Cloudflare's, as before.
    */
   readonly VITE_COOP_URL_SA?: string
-  /**
-   * The US east co-op relay (`relay/node` on the Boston VPS, `https://coop-us.pokemonsurvivors.com`), for US hosts'
-   * rooms when it answers nearer than Cloudflare's 70 ms cap. Unset: those rooms are Cloudflare's.
-   */
-  readonly VITE_COOP_URL_US?: string
 }
 
 /** The build that's playing (the commit, or `dev`): ranked runs report it. Set in `vite.config.ts`. */

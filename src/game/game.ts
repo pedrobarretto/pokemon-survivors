@@ -91,7 +91,7 @@ export const LEGEND_RADIUS = 8
 
 /** The player's hitbox from its sprite's body (data, so every device agrees); a legend's is capped (`LEGEND_RADIUS`). */
 const playerRadius = (dex: number, legend: boolean) => {
-  const r = Math.max(6, Math.round(bodyOf(dex).bodyW * 0.3))
+  const r = Math.max(6, dm.round(bodyOf(dex).bodyW * 0.3))
   return legend ? Math.min(LEGEND_RADIUS, r) : r
 }
 

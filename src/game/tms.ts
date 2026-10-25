@@ -12,6 +12,7 @@ import { forkAt, MOVES, type MoveId } from './moves'
 import { forgetChoice, needsForget, TM_REFUND, tmChoice, TUTOR, tutorPicks, tutorPool, tutorPrice, type TmSource } from './tmRules'
 import { ownAttack, setPhase } from './players'
 import type { Enemy, Game, Offer, Pickup, TmOffer } from './types'
+import * as dm from '../engine/dmath'
 
 /**
  * TMs in a run: the discs bosses and rift legendaries leave, the Move Tutor's
@@ -86,7 +87,7 @@ export const openTm = (g: Game, ids: readonly MoveId[], source: TmSource, price 
 export const collectTm = (g: Game, pickup: Extract<Pickup, { kind: 'tm' }>) => {
   if (openTm(g, [pickup.move], pickup.source)) return
   const p = g.player
-  const coins = Math.round(TM_REFUND * p.stats.greed)
+  const coins = dm.round(TM_REFUND * p.stats.greed)
   g.coins += coins
   floatText(g, p.x, p.y - 30, `₽${coins}`, '#f8d030')
   g.events.push({ kind: 'tmMastered', move: pickup.move, coins })

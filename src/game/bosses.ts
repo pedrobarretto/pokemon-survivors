@@ -287,7 +287,7 @@ const raiseGuard = (g: Game, boss: Enemy, pattern: Extract<BossPattern, { kind: 
     const x = fight.home.x + dm.cos(a) * pattern.radius
     const y = fight.home.y + dm.sin(a) * pattern.radius * 0.8
     const keeper = spawnEnemy(g, pattern.enemies[i % pattern.enemies.length]!, x, y, { kind: 'raid', mission: -1, x, y, aggro: 0 })
-    keeper.hp = keeper.maxHp = Math.round(keeper.maxHp * pattern.hp)
+    keeper.hp = keeper.maxHp = dm.round(keeper.maxHp * pattern.hp)
     keeper.xp = 0
     fight.guards.push(keeper.id)
     burst(g, x, y - 6, { colors: ['#ffffff', '#f8b070', '#c8e0f8'], count: 18, speed: 90, ttl: 0.45 })
@@ -632,7 +632,7 @@ const enterPhase = (g: Game, e: Enemy, fight: BossFight, next: number) => {
   fight.blast = null
   fight.timeStop = null
   // Reborn (`BossPhase.rebirth`): it comes back from its last HP with a share of it.
-  if (phase.rebirth !== undefined) e.hp = Math.round(e.maxHp * phase.rebirth)
+  if (phase.rebirth !== undefined) e.hp = dm.round(e.maxHp * phase.rebirth)
   e.cooldowns = phase.patterns.map((pt) => pt.every * (phase.open ?? 0.5) + fight.shift)
   // The last phase's attacks go with it.
   retain(g.hazards, (h) => h.world)
@@ -898,7 +898,7 @@ export const updateHazards = (g: Game, tick: number) => {
 
     const impact = IMPACT[h.visual]
     if (impact && h.kind === 'strike' && before < h.armAt && h.age >= h.armAt) {
-      burst(g, h.x, h.y, { colors: impact.colors, count: Math.round(h.r * 0.8), speed: h.r * 5, ttl: 0.4 })
+      burst(g, h.x, h.y, { colors: impact.colors, count: dm.round(h.r * 0.8), speed: h.r * 5, ttl: 0.4 })
       shakeScreen(g, 2, h)
       g.events.push({ kind: impact.event })
     }

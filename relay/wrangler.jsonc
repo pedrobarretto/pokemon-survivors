@@ -6,18 +6,18 @@
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "observability": { "enabled": true },
-  // ShardObject: many rooms per object, every room made since shards. RoomObject: one room per object, the rooms
-  // made before (drop it with a `deleted_classes` migration once the shards' deploy is 6 h old).
+  // ShardObject: the rooms, many per object. v3 deleted RoomObject, the one room per object of the rooms made before
+  // shards (all expired by then). Migrations only ever append.
   "durable_objects": {
     "bindings": [
-      { "name": "ROOMS", "class_name": "RoomObject" },
       { "name": "SHARDS", "class_name": "ShardObject" },
       { "name": "VAULT", "class_name": "Vault" }
     ]
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["RoomObject", "Vault"] },
-    { "tag": "v2", "new_sqlite_classes": ["ShardObject"] }
+    { "tag": "v2", "new_sqlite_classes": ["ShardObject"] },
+    { "tag": "v3", "deleted_classes": ["RoomObject"] }
   ],
   // Per IP, per Cloudflare location. Generous: a whole carrier NAT can sit behind one IP.
   "ratelimits": [
@@ -41,14 +41,14 @@
       "observability": { "enabled": true },
       "durable_objects": {
         "bindings": [
-          { "name": "ROOMS", "class_name": "RoomObject" },
           { "name": "SHARDS", "class_name": "ShardObject" },
           { "name": "VAULT", "class_name": "Vault" }
         ]
       },
       "migrations": [
         { "tag": "v1", "new_sqlite_classes": ["RoomObject", "Vault"] },
-        { "tag": "v2", "new_sqlite_classes": ["ShardObject"] }
+        { "tag": "v2", "new_sqlite_classes": ["ShardObject"] },
+        { "tag": "v3", "deleted_classes": ["RoomObject"] }
       ],
       "ratelimits": [
         { "name": "CREATE_LIMIT", "namespace_id": "4201", "simple": { "limit": 30, "period": 60 } },

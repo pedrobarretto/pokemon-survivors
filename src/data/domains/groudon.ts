@@ -29,13 +29,13 @@ const LAKE: Pt = [0, -40]
 /** A lava channel from the lake out past the chamber's edge at `deg` degrees (0 east, 90 south). */
 const spoke = (deg: number, w = 20) => {
   const a = (deg * Math.PI) / 180
-  return lane(LAKE, [LAKE[0] + Math.round(dm.cos(a) * 260), LAKE[1] + Math.round(dm.sin(a) * 260)], w)
+  return lane(LAKE, [LAKE[0] + dm.round(dm.cos(a) * 260), LAKE[1] + dm.round(dm.sin(a) * 260)], w)
 }
 
 /** Cool stones across a channel at `deg`, at each distance from the lake: where it's crossed without burning. */
 const stones = (deg: number, at: readonly number[]): Circle[] => {
   const a = (deg * Math.PI) / 180
-  return at.map((d) => circle(LAKE[0] + Math.round(dm.cos(a) * d), LAKE[1] + Math.round(dm.sin(a) * d), 15))
+  return at.map((d) => circle(LAKE[0] + dm.round(dm.cos(a) * d), LAKE[1] + dm.round(dm.sin(a) * d), 15))
 }
 
 /** Phase 2: three channels (south, north-west, north-east) and the lake spreading around Groudon. */

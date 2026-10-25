@@ -83,7 +83,7 @@ const badDreams = (g: Game, d: DomainState, dt: number) => {
   for (const p of g.players) {
     g.player = p
     if (!isAsleep(p) || !standing(g, p) || abilityImmune(g, 'drain')) continue
-    const lost = Math.min(p.hp - 1, Math.round(p.stats.maxHp * share * every * harm))
+    const lost = Math.min(p.hp - 1, dm.round(p.stats.maxHp * share * every * harm))
     if (lost <= 0) continue
     p.hp -= lost
     p.record.taken += lost
