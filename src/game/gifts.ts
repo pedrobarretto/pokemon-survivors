@@ -1,11 +1,13 @@
 import { GIFT_TITLES, type GiftTitleId } from '../data/achievements'
 import { isSpecialCompanion, type SpecialCompanionId } from '../data/companions'
 import { FESTIVALS, type FestivalId } from '../data/festivals'
+import { isLegend, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
 import { parseTitle } from './achievements'
 import { HATCHLING_IDS, HATCHLINGS, type HatchlingId } from '../data/hatchlings'
 import { STYLE_SLOTS, styleIds, stylePrice, type StyleId, type StyleSlot } from '../data/style'
 import { parseHandle } from './ranking'
 import { addToBag, BAG_ITEM_IDS, type BagItem } from './bag'
+import { captureByGift, type Captures } from './capture'
 import { markHatch } from './dex'
 import { EGG_TIER_IDS, EGG_TIERS, grantEgg, incubatorFull, type EggTier, type Hatch } from './eggs'
 import type { Save } from './meta'
@@ -42,6 +44,8 @@ export type GiftContent =
   | { kind: 'companion'; id: SpecialCompanionId }
   /** `count` of a Bag item (`data/shop.ts`), straight into the Bag. */
   | { kind: 'bag'; item: BagItem; count: number }
+  /** A legend captured for the Legend mode (a festival's last prize, Cresselia). */
+  | { kind: 'legend'; legend: LegendId }
 
 export type GiftKind = GiftContent['kind']
 
@@ -136,6 +140,8 @@ export const parseGiftContent = (v: unknown): GiftContent | null => {
       const count = wholeNumber(v.count, MAX_BAG)
       return isOneOf(v.item, BAG_ITEM_IDS) && count > 0 ? { kind: 'bag', item: v.item, count } : null
     }
+    case 'legend':
+      return isLegend(v.legend) ? { kind: 'legend', legend: v.legend } : null
     default:
       return null
   }
@@ -226,6 +232,8 @@ const give = (save: Save, content: GiftContent, id: string): { save: Save; hatch
       }
     case 'bag':
       return { save: { ...save, bag: addToBag(save.bag, content.item, content.count) }, hatch: null }
+    case 'legend':
+      return { save: { ...save, legends: captureByGift(save.legends, content.legend) }, hatch: null }
   }
 }
 
@@ -260,10 +268,11 @@ export const mergeClaimedGifts = (a: readonly string[], b: readonly string[]): s
 /**
  * `save` with only the gift-only rewards the API really sent: `given` is
  * every gift of the player (claimed or not). Gift titles, ribbons, shiny
- * tickets and the styles never sold (a `null` price) can't be earned on the
- * device, so whatever else a save lists came from editing it. The equipped
- * title and styles fall back when they go, and so does the companion with the
- * Supporter title. The API runs it on every push.
+ * tickets, the styles never sold (a `null` price) and the festival legends
+ * (Cresselia) can't be earned on the device, so whatever else a save lists
+ * came from editing it. The equipped title and styles fall back when they go,
+ * and so does the companion with the Supporter title. The API runs it on
+ * every push.
  */
 export const keepGiven = (save: Save, given: readonly Pick<Gift, 'id' | 'content'>[]): Save => {
   const contents = given.map((g) => g.content)
@@ -274,8 +283,11 @@ export const keepGiven = (save: Save, given: readonly Pick<Gift, 'id' | 'content
   const kept = <S extends StyleSlot>(slot: S, ids: readonly StyleId<S>[]) =>
     ids.filter((id) => stylePrice(slot, id) !== null || styles.some((s) => s.slot === slot && s.id === id))
   const owned = { frame: kept('frame', save.style.owned.frame), background: kept('background', save.style.owned.background), wallpaper: kept('wallpaper', save.style.owned.wallpaper) }
+  const vouched = (id: LegendId) => !legendFestival(id) || contents.some((c) => c.kind === 'legend' && c.legend === id)
+  const legends: Captures = Object.fromEntries(LEGEND_IDS.flatMap((id) => (save.legends[id] !== undefined && vouched(id) ? [[id, save.legends[id]]] : [])))
   return {
     ...save,
+    legends,
     titles,
     title: parseTitle(save.title, save.achievements.unlocked, titles),
     ribbons,

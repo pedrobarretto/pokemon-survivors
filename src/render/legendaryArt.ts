@@ -270,4 +270,15 @@ export const LEGENDARY_ICONS: Record<LegendaryMoveId, () => PixelSprite> = {
       px(4, 4, '#58e8f0', 2, 1)
       px(5, 3, '#ffffff')
     }), '#100818'),
+  lunarBlessing: () =>
+    medallion(paint(11, 11, (px) => {
+      // A crescent moon, its horns to the right, in Cresselia's gold and pink.
+      for (let y = 0; y < 11; y++) for (let x = 0; x < 11; x++) {
+        const d = Math.hypot(x - 5, y - 5)
+        if (d > 5.4 || Math.hypot(x - 7.6, y - 4) < 4.4) continue
+        px(x, y, d > 4.4 ? '#f0a0d0' : x + y < 9 ? '#fff8d0' : '#f8e078')
+      }
+      px(9, 8, '#ffffff')
+      px(8, 1, '#f0a0d0')
+    }), '#281838'),
 }

@@ -107,4 +107,4 @@ export const RIFT_ITEMS: readonly Drop[] = ['rareCandy', 'superPotion']
 export const isRiftLegend = (id: EnemyId): id is RiftLegend => RIFT_LEGENDS.some((l) => l === id) || isEventRift(id)
 
 /** Whether a species is an event rift's legendary (`EVENT_RIFTS`). */
-export const isEventRift = (id: EnemyId): id is EventRift => EVENT_RIFTS.some((l) => l === id)
+export const isEventRift = (id: string): id is EventRift => EVENT_RIFTS.some((l) => l === id)

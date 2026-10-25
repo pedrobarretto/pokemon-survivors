@@ -3,10 +3,10 @@ import { runLearnset } from './learnsets'
 import { EVOLUTIONS } from '../data/evolutions'
 import { PLAYABLE_IDS } from '../data/hatchlings'
 import { LEGENDARY_MOVE_OF } from '../data/legendaryMoves'
-import { EVENT_LEGENDS } from '../data/legends'
+import { EVENT_LEGENDS, FESTIVAL_LEGENDS } from '../data/legends'
 import { RIFT_LEGENDS } from '../data/rifts'
 import { MYTHICALS, TRIOS } from '../data/waves'
-import { LEGENDARY_MOVES } from './legendaryMoves'
+import { LEGENDARY_MOVES, lunarPhase } from './legendaryMoves'
 import { LEGENDARY_MOVES_2 } from './legendaryMoves2'
 import { forkAt, isLegendary, maxMoveLevel, MOVE_IDS, MOVES, type MoveId } from './moves'
 import { SPECIALS } from './special'
@@ -14,8 +14,8 @@ import { SPECIALS } from './special'
 const LEGENDARY = Object.keys({ ...LEGENDARY_MOVES, ...LEGENDARY_MOVES_2 }) as MoveId[]
 
 describe('legendary moves', () => {
-  it('are taught one each by every legendary: rift, trio, Mewtwo, mythical, Arceus and the event ones', () => {
-    const legends = [...RIFT_LEGENDS, ...Object.values(TRIOS).flat(), 'mewtwo', ...MYTHICALS, 'arceus', ...EVENT_LEGENDS]
+  it('are taught one each by every legendary: rift, trio, Mewtwo, mythical, Arceus, the event and the festival ones', () => {
+    const legends = [...RIFT_LEGENDS, ...Object.values(TRIOS).flat(), 'mewtwo', ...MYTHICALS, 'arceus', ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS]
     expect(Object.keys(LEGENDARY_MOVE_OF).sort()).toEqual(legends.sort())
     expect([...new Set(Object.values(LEGENDARY_MOVE_OF))].sort()).toEqual([...LEGENDARY].sort())
   })
@@ -37,5 +37,23 @@ describe('legendary moves', () => {
       ...Object.values(SPECIALS).flatMap((s) => [s.base.name, s.final.name]),
     ]
     for (const id of LEGENDARY) expect([id, others.includes(MOVES[id].name)]).toEqual([id, false])
+  })
+})
+
+describe('Lunar Blessing', () => {
+  /** Whether each of `casts` casts brings the full moon, the moon's phase carried on the move's stacks. */
+  const fullMoons = (level: number, path: number, casts: number) => {
+    const owned = { id: 'lunarBlessing' as const, level, cooldown: 0, path, stacks: 0 }
+    return Array.from({ length: casts }, () => {
+      const phase = lunarPhase(owned)
+      owned.stacks = phase.next
+      return phase.full
+    })
+  }
+
+  it('brings the full moon every third cast, every other one with the Lua cheia branch', () => {
+    expect(fullMoons(3, 0, 6)).toEqual([false, false, true, false, false, true])
+    expect(fullMoons(4, 0, 4)).toEqual([false, true, false, true])
+    expect(fullMoons(4, 1 << 2, 3)).toEqual([false, false, true])
   })
 })

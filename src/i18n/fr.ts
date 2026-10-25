@@ -1131,6 +1131,7 @@ export const fr: Messages = {
     },
     shinyHatch: (name) => `Un *${name}* _chromatique_ est arrivé pour toi !`,
     companion: (name) => `*${name}* marche maintenant avec toi pendant tes parties !`,
+    legend: (name) => `*${name}* est arrivée pour toi ! Jouable en _Mode Légendaire_.`,
     ribbon: (name) => `*${name}* ! Il est déjà sur ton profil.`,
     ribbonWhy: (date, rank, total) => `Défi du ${date} : #${rank} sur ${total}`,
     button: 'Cadeau !',
@@ -4409,6 +4410,16 @@ export const fr: Messages = {
         'Recharge −0.5s et +14 dégâts',
       ],
     },
+    /* The Lantern Festival's prize (`legendaryMoves.ts`) */
+    lunarBlessing: {
+      description: 'La lune croît au-dessus de Cresselia : des lames en croissant s’envolent en anneau autour d’elle et reviennent, frappant à l’aller et au retour. Tous les 3 lancers vient la pleine lune : une vague de clair de lune éclate autour d’elle et la bénit de 6 % de ses PV.',
+      upgrades: [
+        '+2 lames',
+        '+10 dégâts',
+        { fork: [{ name: 'Pleine lune', desc: 'La pleine lune vient tous les 2 lancers ; +15% de zone' }, { name: 'Danse lunaire', desc: '+2 lames qui drainent des PV ; +4 dégâts' }] },
+        'Recharge −0.4s et +10 dégâts',
+      ],
+    },
     /* Legendary moves, second batch: the trios, Mewtwo and Arceus (`legendaryMoves2.ts`) */
     snowscape: {
       description: 'Les ailes d’Articuno projettent autour de toi un flocon de cristaux de glace. Ils restent suspendus dans l’air et glacent ce qui les touche (ralenti), puis volent tous en éclats d’un coup et peuvent geler (le coup suivant frappe deux fois plus fort).',
@@ -4688,6 +4699,7 @@ export const fr: Messages = {
     deoxys: 'Virus spatial. Son attaque spéciale change de Forme.',
     arceus: 'Le dieu. Son type change à chaque biome.',
     darkrai: 'Cauchemar. Endort les foules et les blesse en rêve.',
+    cresselia: 'Croissant de lune. Des lames qui reviennent et une pleine lune qui soigne.',
   },
 
   specials: {
@@ -4897,6 +4909,7 @@ export const fr: Messages = {
       finale: 'C’est le boss final : gagne une partie.',
       endless: 'Le dernier trophée : une fois les 22 autres capturés, bats-le en _mode sans fin_.',
       event: 'Seulement pendant la _Nuit des Sorcières_ : bats-le dans la _faille du Cauchemar_.',
+      festival: 'Prix du _Festival de la Place_ : arrive en Cadeau Mystère, jamais affrontée.',
     },
     rule: (need: number) => (need === 1 ? 'Bats-le une fois comme boss, dans n’importe quel mode, pour le capturer.' : `Bats-le ${need} fois comme boss, dans n’importe quel mode, pour le capturer.`),
     shinyRule: 'Battre un chromatique lors de la victoire de capture, ou après, débloque son chromatique.',
@@ -4906,6 +4919,10 @@ export const fr: Messages = {
       soon: (from: string, to: string) => `Arrive avec la _Nuit des Sorcières_, du ${from} au ${to}.`,
       live: (to: string) => `Seulement jusqu’au ${to} : ensuite, il retourne dans l’ombre.`,
       gone: 'Il est retourné dans l’ombre à la fin de la Nuit des Sorcières. Qui l’a capturé continue de le jouer.',
+    },
+    festival: {
+      prize: (festival, pot, from, to) => `Dernier prix du _${festival}_ (du ${from} au ${to}) : quand la cagnotte de la fontaine de la place atteindra *${pot}*, elle arrivera pour tout le monde en Cadeau Mystère.`,
+      gone: (festival) => `Le _${festival}_ est terminé. Qui l’a reçue continue de la jouer.`,
     },
   },
   legends: {

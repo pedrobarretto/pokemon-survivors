@@ -2,6 +2,7 @@ import type { MoveId } from '../game/moves'
 import type { StatDelta } from '../game/stats'
 import type { AbilityEffect, AbilityId } from './abilities'
 import type { EnemyId } from './enemies'
+import type { FestivalId } from './festivals'
 import { LEGENDARY_MOVE_OF } from './legendaryMoves'
 import type { EvolutionStage, PlayableDef } from './starters'
 import type { PokeType } from './types'
@@ -31,8 +32,15 @@ export const REGULAR_LEGENDS = [
  */
 export const EVENT_LEGENDS = ['darkrai'] as const satisfies readonly EnemyId[]
 
-/** Every playable legend: the regular ones, then the event ones. */
-export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS] as const
+/**
+ * Festival legends: never fought, a Festival da Praça's milestone gift brings
+ * them (`LegendUnlock.festival`, the gift in `data/festivals.ts`). Out of
+ * `REGULAR_LEGENDS` too. Cresselia is the Festival das Lanternas' last prize.
+ */
+export const FESTIVAL_LEGENDS = ['cresselia'] as const
+
+/** Every playable legend: the regular ones, then the event ones, then the festival ones. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -56,9 +64,11 @@ export type LegendEvent = 'halloween'
  * How a legend is unlocked: beat it as a boss `wins` times, in any mode.
  * `endless`: the win must come in the endless mode; `last`: only once every
  * regular legend is unlocked (Arceus, the final trophy); `event`: it only
- * shows up while that event runs (Darkrai, the Noite das Bruxas').
+ * shows up while that event runs (Darkrai, the Noite das Bruxas');
+ * `festival`: no win ever counts, that festival's milestone gift captures it
+ * (Cresselia, the Festival das Lanternas').
  */
-export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent }
+export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId }
 
 export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
   /** One list: every move it can learn is there from Lv 1, its legendary move first. */
@@ -374,6 +384,19 @@ export const LEGENDS = {
     form: { key: 'mega', name: 'Mega Darkrai', community: true },
     unlock: { wins: 2, event: 'halloween' },
   },
+
+  /* ---------- The Festival das Lanternas' moon ---------- */
+  cresselia: {
+    name: 'Cresselia',
+    color: '#e8a0d0',
+    stats: { maxHp: 50, armor: 1, might: 0.15, regen: 0.3 },
+    signature: LEGENDARY_MOVE_OF.cresselia,
+    learnset: [[LEGENDARY_MOVE_OF.cresselia, 'moonblast', 'psyshock', 'futureSight', 'psybeam', 'iceShard', 'disarmingVoice', 'swift']],
+    line: stage(488, 'Cresselia', ['psychic']),
+    awakenings: [{ maxHp: 30, might: 0.12, regen: 0.2 }, { maxHp: 40, might: 0.22, area: 0.1 }],
+    innate: { ability: 'levitate' },
+    unlock: { wins: 1, festival: 'lanternas' },
+  },
 } as const satisfies Record<LegendId, LegendDef>
 
 export const isLegend = (id: unknown): id is LegendId => LEGEND_IDS.some((l) => l === id)
@@ -382,6 +405,12 @@ export const isLegend = (id: unknown): id is LegendId => LEGEND_IDS.some((l) => 
 export const legendEvent = (id: LegendId): LegendEvent | null => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
   return unlock.event ?? null
+}
+
+/** The festival whose milestone gift captures a legend, or null for one caught by winning. */
+export const legendFestival = (id: LegendId): FestivalId | null => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.festival ?? null
 }
 
 /** The legendary move a legend opens with, which stays its own (it never fuses into a duo); null for every other starter. */

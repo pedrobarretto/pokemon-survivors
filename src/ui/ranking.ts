@@ -3,8 +3,8 @@ import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { formatTime } from '../engine/math'
 import { HATCHLING_IDS, PLAYABLE, type PlayableId } from '../data/hatchlings'
-import { LEGEND_IDS } from '../data/legends'
 import { REGIONS } from '../data/starters'
+import { shownLegends } from '../game/festival'
 import { dailyChallenge } from '../game/challenge'
 import { brasiliaDay, previousDay, type DayKey } from '../game/day'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
@@ -68,7 +68,7 @@ const pokemonSelect = (mode: RunMode, value: PlayableId | null, onPick: (id: Pla
   const option = (id: PlayableId) => h('option', { value: id, selected: id === value }, PLAYABLE[id].name)
   const groups =
     mode === 'legend'
-      ? [h('optgroup', { label: m.legendGroup }, ...LEGEND_IDS.map(option))]
+      ? [h('optgroup', { label: m.legendGroup }, ...shownLegends(brasiliaDay(today())).map(option))]
       : [...REGIONS.map((r) => h('optgroup', { label: r.name }, ...r.starters.map(option))), h('optgroup', { label: m.eggGroup }, ...HATCHLING_IDS.map(option))]
   const select = h('select', { class: 'rank-select', 'aria-label': m.pokemon }, h('option', { value: '' }, m.allPokemon), ...groups)
   select.addEventListener('change', () => {

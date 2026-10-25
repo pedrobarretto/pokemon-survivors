@@ -4,7 +4,7 @@ import { SITE_PAGES, sitemap } from '.'
 import { LOCALE_IDS } from '../i18n'
 import { absolute, HREFLANG, ROUTE_IDS, ROUTES } from './routes'
 import { dexPages } from './pokedex'
-import { LEGEND_IDS } from '../data/legends'
+import { FESTIVAL_LEGENDS, LEGEND_IDS } from '../data/legends'
 
 describe('site pages', () => {
   it('render with their own canonical and hreflang links to every language', () => {
@@ -22,9 +22,9 @@ describe('site pages', () => {
     for (const page of SITE_PAGES) expect(xml).toContain(`<loc>${absolute(page.path)}</loc>`)
   })
 
-  it('give every playable family and every legend a page of its own, under its own path', () => {
+  it('give every playable family and every legend a page of its own (the festival ones once revealed), under its own path', () => {
     const pages = dexPages()
-    expect(pages.filter((p) => p.kind === 'legend')).toHaveLength(LEGEND_IDS.length)
+    expect(pages.filter((p) => p.kind === 'legend')).toHaveLength(LEGEND_IDS.length - FESTIVAL_LEGENDS.length)
     expect(new Set(pages.map((p) => p.slug)).size).toBe(pages.length)
     for (const p of pages) expect(p.entries.length, p.slug).toBeGreaterThan(0)
   })

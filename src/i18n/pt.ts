@@ -1332,6 +1332,7 @@ export const pt = {
     } satisfies Record<StyleSlot, (name: string) => string>,
     shinyHatch: (name: string) => `Um *${name}* _shiny_ veio para você!`,
     companion: (name: string) => `*${name}* agora te acompanha nas partidas!`,
+    legend: (name: string) => `*${name}* chegou para você! Jogável no _Modo Lendário_.`,
     ribbon: (name: string) => `*${name}*! Já está no seu perfil.`,
     ribbonWhy: (date: string, rank: number, total: number) => `Desafio de ${date}: #${rank} de ${total}`,
     button: 'Presente!',
@@ -4659,6 +4660,16 @@ export const pt = {
         'Recarga 0.5s mais rápida e +14 de dano',
       ],
     },
+    /* The Festival das Lanternas' prize (`legendaryMoves.ts`) */
+    lunarBlessing: {
+      description: 'A lua cresce sobre Cresselia: lâminas crescentes voam num anel ao seu redor e voltam, ferindo na ida e na volta. A cada 3º lançamento vem a lua cheia: uma onda de luar explode em volta dela e a abençoa com 6% da vida.',
+      upgrades: [
+        '+2 lâminas',
+        '+10 de dano',
+        { fork: [{ name: 'Lua cheia', desc: 'A lua cheia vem a cada 2 lançamentos; +15% de área' }, { name: 'Dança lunar', desc: '+2 lâminas que drenam vida; +4 de dano' }] },
+        'Recarga 0.4s mais rápida e +10 de dano',
+      ],
+    },
     /* Legendary moves, second batch: the trios, Mewtwo and Arceus (`legendaryMoves2.ts`) */
     snowscape: {
       description: 'As asas de Articuno lançam um floco de neve de cristais de gelo ao seu redor. Eles ficam pairando e gelam quem encosta (fica lento), depois estilhaçam todos juntos e podem congelar (o próximo acerto dói em dobro).',
@@ -4939,6 +4950,7 @@ export const pt = {
     deoxys: 'Vírus do espaço. O especial troca de Forma.',
     arceus: 'O deus. Seu tipo muda com cada bioma.',
     darkrai: 'Pesadelo. Adormece multidões e as fere em sonho.',
+    cresselia: 'Lua crescente. Lâminas que voltam e uma lua cheia que cura.',
   },
 
   specials: {
@@ -5177,6 +5189,7 @@ export const pt = {
       finale: 'É o chefe final: vença uma partida.',
       endless: 'O último troféu: depois de capturar os outros 22, vença-o no _modo sem fim_.',
       event: 'Só na _Noite das Bruxas_: vença-o na _fenda do Pesadelo_.',
+      festival: 'Prêmio do _Festival da Praça_: chega como Presente Misterioso, nunca é enfrentada.',
     },
     rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, em qualquer modo.' : `Para capturar, vença este lendário ${need} vezes como chefe, em qualquer modo.`),
     shinyRule: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
@@ -5187,6 +5200,11 @@ export const pt = {
       soon: (from: string, to: string) => `Chega com a _Noite das Bruxas_, de ${from} a ${to}.`,
       live: (to: string) => `Só até ${to}: depois volta para as sombras.`,
       gone: 'Voltou para as sombras com o fim da Noite das Bruxas. Quem o capturou segue jogando com ele.',
+    },
+    /** A festival legend (`LegendUnlock.festival`): its locked card, while its festival's gifts can still come (`prize`, the milestone's pot and the festival's days) and after. */
+    festival: {
+      prize: (festival: string, pot: string, from: string, to: string) => `Último prêmio do _${festival}_ (${from} a ${to}): quando o pote da fonte da praça chegar a *${pot}*, ela vem para todos como Presente Misterioso.`,
+      gone: (festival: string) => `O _${festival}_ acabou. Quem a recebeu segue jogando com ela.`,
     },
   },
   /** Wave legendaries on the map (`data/legendBosses.ts`): the epithet on each one's title card, and a line per phase after the first. */

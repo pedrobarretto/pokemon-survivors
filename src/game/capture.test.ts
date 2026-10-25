@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { REGULAR_LEGENDS } from '../data/legends'
-import { canPlay, captureOutcome, isCaptured, legendSource, mergeCaptures, parseCaptures, recordLegendWin, type LegendWin } from './capture'
+import { canPlay, captureByGift, captureOutcome, isCaptured, legendSource, mergeCaptures, parseCaptures, recordLegendWin, type LegendWin } from './capture'
 import { EMPTY_SAVE, parseSaveData, type Save } from './meta'
 import { mergeSaves } from './sync'
 
@@ -86,6 +86,11 @@ describe('saves', () => {
   })
 
   it('tells where each legend is met', () => {
-    expect([legendSource('kyogre'), legendSource('zapdos'), legendSource('celebi'), legendSource('mewtwo'), legendSource('arceus')]).toEqual(['rift', 'trio', 'mythical', 'finale', 'endless'])
+    expect([legendSource('kyogre'), legendSource('zapdos'), legendSource('celebi'), legendSource('mewtwo'), legendSource('arceus'), legendSource('cresselia')]).toEqual(['rift', 'trio', 'mythical', 'finale', 'endless', 'festival'])
+  })
+
+  it('never counts a win toward a festival legend: only its gift captures it', () => {
+    expect(recordLegendWin(EMPTY_SAVE, win('cresselia')).result).toMatchObject({ outcome: 'escaped', counted: false })
+    expect(isCaptured(captureByGift({}, 'cresselia'), 'cresselia')).toBe(true)
   })
 })

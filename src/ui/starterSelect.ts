@@ -8,10 +8,12 @@ import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { incubatorSlots, isReady } from '../game/eggs'
-import { isLegend, LEGEND_IDS, legendEvent, LEGENDS, type LegendId } from '../data/legends'
+import { isLegend, legendEvent, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
 import { HALLOWEEN } from '../data/halloween'
 import { brasiliaDay } from '../game/day'
+import { claimOpen, festivalById, festivalEnd, shownLegends } from '../game/festival'
 import { halloweenStanding } from '../game/halloween'
+import { festivalIcon } from './festival'
 import { eventLegendIcon } from '../render/halloweenArt'
 import { ABILITIES } from '../data/abilities'
 import { canPlay, capturedCount, isCaptured, legendSource, winsNeeded } from '../game/capture'
@@ -24,7 +26,7 @@ import { ownsShiny, pickShinyForm, playsShiny } from '../game/shinyPicks'
 import { dieIcon, eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
 import { capPips, shopIcon } from './shopIcons'
 import { cryUrl, drawPokemon, loadedSprites, loadSpecies, portraitUrl, walkSheet } from '../render/sprites'
-import { formatDay, t } from '../i18n'
+import { formatDay, formatPokeDollarsShort, t } from '../i18n'
 import { h, later, rich } from './dom'
 import { loadSave, today, updateSave } from './save'
 import { typeBadge, type Screen } from './screens'
@@ -100,7 +102,9 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   let tab: Tab = tabs.includes(tabOf(initial)) ? tabOf(initial) : 'starters'
   /** Each tab remembers its own cursor, so switching back lands where it was. */
   const firstHatched = HATCHLING_IDS.find((id) => save.hatched[id]) ?? HATCHLING_IDS[0]!
-  const firstCaptured = LEGEND_IDS.find((id) => isCaptured(save.legends, id)) ?? LEGEND_IDS[0]
+  // A festival legend stays out of the tab until its festival is announced (`legendShown`).
+  const legendIds = shownLegends(brasiliaDay(today()))
+  const firstCaptured = legendIds.find((id) => isCaptured(save.legends, id)) ?? REGULAR_LEGENDS[0]
   const cursor: { starters: StarterId; eggs: HatchlingId; legends: LegendId } = {
     starters: isStarter(initial) ? initial : 'charmander',
     eggs: isHatchling(initial) ? initial : firstHatched,
@@ -133,16 +137,42 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     )
   }
   const shinyTag = () => h('img', { class: 'partner-cell-shiny', src: sparkleIcon(), alt: 'Shiny' })
-  /** An event legend's badge (Darkrai's Noite das Bruxas 2026). */
-  const eventTag = () => h('img', { class: 'partner-cell-event', src: eventLegendIcon(), alt: m.legend.event.badge, title: m.legend.event.badge })
-  /** Where an event legend's event stands today: coming, on (until its last day), or over. */
-  const eventStanding = (id: LegendId) => (legendEvent(id) ? halloweenStanding(brasiliaDay(today())) : null)
-  const eventLine = (id: LegendId) => {
-    const standing = eventStanding(id)
-    if (!standing) return null
+  /** A legend's event badge: Darkrai's Noite das Bruxas 2026, Cresselia's Festival das Lanternas 2026; null for a regular one. */
+  const legendBadge = (id: LegendId) => {
+    const f = festivalById(legendFestival(id) ?? '')
+    if (f) return { src: festivalIcon(f.id), text: `${m.festival.names[f.id]} ${f.start.slice(0, 4)}` }
+    return legendEvent(id) ? { src: eventLegendIcon(), text: m.legend.event.badge } : null
+  }
+  const eventTag = (id: LegendId) => {
+    const badge = legendBadge(id)
+    return badge && h('img', { class: 'partner-cell-event', src: badge.src, alt: badge.text, title: badge.text })
+  }
+  /**
+   * Where a legend's event stands today: coming, on (until its last day), or
+   * over. A festival legend's is on until its milestone gifts can no longer be opened.
+   */
+  const eventStanding = (id: LegendId) => {
+    const day = brasiliaDay(today())
+    const f = festivalById(legendFestival(id) ?? '')
+    if (f) return day < f.start ? 'before' : claimOpen(f, day) ? 'on' : 'after'
+    return legendEvent(id) ? halloweenStanding(day) : null
+  }
+  /** What the locked card says of the legend's event: Darkrai's dates, or the festival pot that brings Cresselia. */
+  const eventText = (id: LegendId, standing: 'before' | 'on' | 'after') => {
+    const f = festivalById(legendFestival(id) ?? '')
+    const milestone = f?.milestones.find((ms) => ms.reward.kind === 'legend' && ms.reward.legend === id)
+    if (f && milestone) {
+      const name = m.festival.names[f.id]
+      return standing === 'after' ? m.legend.festival.gone(name) : m.legend.festival.prize(name, formatPokeDollarsShort(milestone.pot), formatDay(f.start), formatDay(festivalEnd(f)))
+    }
     const ev = m.legend.event
-    const text = standing === 'before' ? ev.soon(formatDay(HALLOWEEN.from), formatDay(HALLOWEEN.to)) : standing === 'on' ? ev.live(formatDay(HALLOWEEN.to)) : ev.gone
-    return h('p', { class: 'partner-legend-event' }, h('img', { src: eventLegendIcon(), alt: '' }), h('b', {}, ev.badge), ' · ', rich(text))
+    return standing === 'before' ? ev.soon(formatDay(HALLOWEEN.from), formatDay(HALLOWEEN.to)) : standing === 'on' ? ev.live(formatDay(HALLOWEEN.to)) : ev.gone
+  }
+  const eventLine = (id: LegendId, withText: boolean) => {
+    const badge = legendBadge(id)
+    const standing = eventStanding(id)
+    if (!badge || !standing) return null
+    return h('p', { class: 'partner-legend-event' }, h('img', { src: badge.src, alt: '' }), h('b', {}, badge.text), ...(withText ? [' · ', rich(eventText(id, standing))] : []))
   }
   /** What a family's clear says (`game/clears.ts`): the hardest difficulty it beat Mewtwo on. */
   const clearText = (id: PlayableId) => {
@@ -202,13 +232,13 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       {
         class: open ? 'partner-cell legend' : 'partner-cell legend locked',
         type: 'button',
-        title: open ? cellTitle(id, name) : `${name} · ${m.legend.wins(wins)}`,
+        title: open ? cellTitle(id, name) : legendFestival(id) ? name : `${name} · ${m.legend.wins(wins)}`,
         style: `--t:${open ? PLAYABLE[id].color : '#8890b0'}`,
         onclick: () => select(id),
       },
       open ? cellPortrait(id) : cellSilhouette(id),
-      !open && h('b', { class: 'partner-cell-count' }, wins),
-      legendEvent(id) && eventTag(),
+      !open && !legendFestival(id) && h('b', { class: 'partner-cell-count' }, wins),
+      eventTag(id),
       shinyOf(id) && shinyTag(),
       clearTag(id),
       capTag(id),
@@ -221,7 +251,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const tabButtons = {
     starters: h('button', { class: 'partner-tab', type: 'button', role: 'tab', onclick: () => setTab('starters') }, m.partner.starters, h('small', {}, `${STARTER_IDS.length}`)),
     eggs: h('button', { class: 'partner-tab', type: 'button', role: 'tab', onclick: () => setTab('eggs') }, m.eggs.tab, h('small', {}, `${owned.length}/${HATCHLING_IDS.length}`)),
-    legends: h('button', { class: 'partner-tab', type: 'button', role: 'tab', onclick: () => setTab('legends') }, m.legend.tab, h('small', {}, `${capturedCount(save.legends)}/${LEGEND_IDS.length}`)),
+    legends: h('button', { class: 'partner-tab', type: 'button', role: 'tab', onclick: () => setTab('legends') }, m.legend.tab, h('small', {}, `${capturedCount(save.legends, legendIds)}/${legendIds.length}`)),
   } satisfies Record<Tab, HTMLElement>
 
   const starterGrid = h(
@@ -271,7 +301,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   )
 
   /** Lendários: every legend, captured or not, and what the mode is about. ↑ ↓ read the column count from the grid. */
-  const legendGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...LEGEND_IDS.map(legendCell))
+  const legendGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...legendIds.map(legendCell))
   const legendsPane = h('div', { class: 'partner-legends' }, legendGrid, h('p', { class: 'partner-legend-note' }, rich(m.legend.selectNote)))
 
   const randomButton = h(
@@ -308,6 +338,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const need = winsNeeded(id)
       // Once its event is over, an event legend can't be caught: only the line saying it's gone stays.
       const over = eventStanding(id) === 'after'
+      // A festival legend is never fought: no wins to count, only its festival's line.
+      const gift = legendFestival(id) !== null
       hero.replaceChildren(
         h(
           'div',
@@ -318,12 +350,12 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             { class: 'partner-id' },
             h('small', { class: 'partner-dex' }, `#${String(form.dex).padStart(3, '0')}`),
             h('h3', { class: 'partner-name' }, form.name),
-            h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
-            !over && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
-            eventLine(id),
+            !gift && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
+            !over && !gift && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            eventLine(id, true),
           ),
         ),
-        ...(over ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
+        ...(over || gift ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
       )
       return
     }
@@ -373,7 +405,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           h('div', { class: 'types' }, ...form.types.map(typeBadge)),
           level && h('p', { class: 'partner-clear' }, h('img', { src: trophyIcon(level), alt: '' }), m.dex.clearedOn(m.difficulty.names[level])),
           isLegend(id) && h('p', { class: 'partner-legend-mode' }, m.legend.mode, ' · ', `${m.legend.innate}: ${ABILITIES[LEGENDS[id].innate.ability].name}`),
-          isLegend(id) && legendEvent(id) && h('p', { class: 'partner-legend-event' }, h('img', { src: eventLegendIcon(), alt: '' }), h('b', {}, m.legend.event.badge)),
+          isLegend(id) && eventLine(id, false),
           h('p', { class: 'partner-blurb' }, m.blurbs[id]),
           h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true)),
         ),
@@ -548,7 +580,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
 
   /** The unlocked Pokémon of the shown tab, but the selected one: what Random draws from. */
   const randomPool = (): readonly PlayableId[] => {
-    const shown: readonly PlayableId[] = tab === 'eggs' ? HATCHLING_IDS : tab === 'legends' ? LEGEND_IDS : STARTER_IDS
+    const shown: readonly PlayableId[] = tab === 'eggs' ? HATCHLING_IDS : tab === 'legends' ? legendIds : STARTER_IDS
     return shown.filter((id) => id !== current() && unlocked(id))
   }
 
@@ -592,9 +624,9 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     }
     if (tab === 'legends') {
       const cols = getComputedStyle(legendGrid).gridTemplateColumns.split(' ').length || 1
-      const next = stepGrid(LEGEND_IDS.indexOf(cursor.legends), dir, cols, LEGEND_IDS.length)
+      const next = stepGrid(legendIds.indexOf(cursor.legends), dir, cols, legendIds.length)
       if (next === 'above') return setTab('eggs')
-      if (next !== 'below') select(LEGEND_IDS[next]!)
+      if (next !== 'below') select(legendIds[next]!)
       return
     }
     const i = STARTER_IDS.indexOf(cursor.starters)

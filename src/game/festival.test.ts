@@ -11,11 +11,13 @@ import {
   festivalOn,
   isHeld,
   latestFestival,
+  legendShown,
   parseDonationAmount,
   parseFestivalStatus,
   plazaStage,
   reachedMilestones,
 } from './festival'
+import { isCaptured } from './capture'
 import { gameGiftsApplied } from './gameGifts'
 import { applyGift, keepGiven, type Gift } from './gifts'
 import { EMPTY_SAVE, type Save } from './meta'
@@ -40,9 +42,9 @@ describe('festival calendar', () => {
     expect(latestFestival('2026-11-20')?.id).toBe('lanternas')
   })
 
-  it('announces a festival in the shop a week before it opens, and while it runs', () => {
-    expect(festivalAnnounced('2026-10-26')).toBeNull()
-    expect(festivalAnnounced('2026-10-27')?.id).toBe('lanternas')
+  it('announces a festival in the shop the day before it opens, and while it runs', () => {
+    expect(festivalAnnounced('2026-11-01')).toBeNull()
+    expect(festivalAnnounced('2026-11-02')?.id).toBe('lanternas')
     expect(festivalAnnounced('2026-11-16')?.id).toBe('lanternas')
     expect(festivalAnnounced('2026-11-17')).toBeNull()
   })
@@ -56,13 +58,14 @@ describe('festival calendar', () => {
 
 describe('the pot', () => {
   it('reaches milestones and plaza stages as it grows', () => {
-    expect([0, 10_000_000, 41_000_000, 60_000_000, 100_000_000, 150_000_000].map((pot) => [reachedMilestones(lanternas, pot), plazaStage(lanternas, pot)])).toEqual([
+    expect([0, 10_000_000, 41_000_000, 60_000_000, 100_000_000, 150_000_000, 200_000_000].map((pot) => [reachedMilestones(lanternas, pot), plazaStage(lanternas, pot)])).toEqual([
       [0, 0],
       [1, 1],
       [2, 2],
       [3, 2],
       [4, 3],
       [5, 4],
+      [6, 4],
     ])
     expect(plazaStage(null, 1e9)).toBe(0)
   })
@@ -89,6 +92,22 @@ describe('festivalGifts', () => {
     expect(bagCount(save.bag, 'lure')).toBe(3)
     expect(save.hatched.togepi).toEqual({ shiny: true })
     expect(save.eggs.map((e) => e.tier)).toEqual(['rare', 'kecleon'])
+  })
+})
+
+describe('Cresselia, the last prize', () => {
+  const totals = { pots: { lanternas: 200_000_000 }, given: {} }
+  const opened = openAll(EMPTY_SAVE, festivalGifts(EMPTY_SAVE, totals, '2026-11-16'))
+
+  it('is captured for the Legend mode by the last milestone, and only kept when the API sums the pot back', () => {
+    expect(isCaptured(opened.legends, 'cresselia')).toBe(true)
+    expect(isCaptured(keepGiven(opened, gameGiftsApplied(opened, totals)).legends, 'cresselia')).toBe(true)
+    expect(keepGiven(opened, gameGiftsApplied(opened, { pots: { lanternas: 199_999_999 }, given: {} })).legends.cresselia).toBeUndefined()
+  })
+
+  it('stays hidden until the festival is announced, the day before it opens', () => {
+    expect(['2026-11-01', '2026-11-02', '2026-11-20'].map((day) => legendShown('cresselia', day))).toEqual([false, true, true])
+    expect(legendShown('darkrai', '2026-10-01')).toBe(true)
   })
 })
 

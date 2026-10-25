@@ -90,7 +90,7 @@ export const clockRuns = (g: Pick<Game, 'rift'>) => g.rift.arena === null
  * brings Latios along (`RIFT_DRAWS`). Never `self`, the legend the player plays
  * (Legend mode), nor a domain fighting alongside it (no Eon duo for a Latios).
  */
-export const pickLegend = (rng: Rng, met: readonly RiftLegend[], self: EnemyId | null = null): RiftLegend => {
+export const pickLegend = (rng: Rng, met: readonly RiftLegend[], self: string | null = null): RiftLegend => {
   const open = RIFT_DRAWS.filter((l) => l !== self && domainOf(l)?.partner?.id !== self)
   const fresh = open.filter((l) => !met.includes(l))
   return pick(rng, fresh.length > 0 ? fresh : open)

@@ -1,4 +1,5 @@
 import { HATCHLINGS } from '../data/hatchlings'
+import { LEGENDS } from '../data/legends'
 import { BAG_ITEMS } from '../data/shop'
 import { giftInbox, nextGift, openGift } from '../account'
 import { playSfx } from '../engine/audio'
@@ -54,6 +55,8 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
     }
     case 'bag':
       return { src: bagIcon(c.item), text: m.bag(c.count, BAG_ITEMS[c.item].name) }
+    case 'legend':
+      return { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
   }
 }
 

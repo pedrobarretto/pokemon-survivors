@@ -17,7 +17,7 @@ import { RIFT, RIFT_LEGENDS, type RiftLegend } from '../../data/rifts'
 import { DOMAINS, partnerOf } from '../../data/domains'
 import { ABILITIES } from '../../data/abilities'
 import { COOP } from '../../data/coop'
-import { AWAKEN_AT, LEGEND_IDS, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../../data/legends'
+import { AWAKEN_AT, LEGEND_IDS, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../../data/legends'
 import { legendSource } from '../../game/capture'
 import { legendMods } from '../../game/legend'
 import { CAVE, GRAVEYARD, PLACE, PLACE_IDS, PLACES, SKY, WING_IDS, WINGS } from '../../data/places'
@@ -366,7 +366,8 @@ const rifts = (locale: Locale, m: SiteMessages) => {
 /** The Legend mode: how each legend is captured (`game/capture.ts`) and what it plays with. */
 const legends = (locale: Locale, m: SiteMessages) => {
   const g = m.guide.legends
-  const rows = LEGEND_IDS.map((id) => [
+  // A festival legend (Cresselia) is a surprise for now: its row comes with its festival's announcement.
+  const rows = LEGEND_IDS.filter((id) => !legendFestival(id)).map((id) => [
     legendName(locale, id),
     g.where[legendSource(id)],
     String(LEGENDS[id].unlock.wins),

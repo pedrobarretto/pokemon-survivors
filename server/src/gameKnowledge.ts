@@ -5,7 +5,9 @@ import { ENEMIES, type EnemyDef, type EnemyId } from '../../src/data/enemies'
 import { evolutionOf, evolvedFrom, neverEvolves } from '../../src/data/evolutions'
 import { HATCHLINGS, isHatchling, isStarter, PLAYABLE, type PlayableId } from '../../src/data/hatchlings'
 import { ITEMS, type ItemId } from '../../src/data/items'
-import { isLegend, LEGENDS, type LegendUnlock } from '../../src/data/legends'
+import { isLegend, LEGEND_IDS, LEGENDS, type LegendUnlock } from '../../src/data/legends'
+import { legendShown } from '../../src/game/festival'
+import { brasiliaDay } from '../../src/game/day'
 import { MEGAS, type MegaId } from '../../src/data/megas'
 import { EVO_ITEMS } from '../../src/data/shop'
 import { MOVES, type MoveDef, type MoveId } from '../../src/game/moves'
@@ -31,12 +33,19 @@ const stat = (o: object) =>
     .map(([k, v]) => `${k} ${typeof v === 'number' && v > 0 ? '+' : ''}${String(v)}`)
     .join(', ') || 'none'
 
+/** Whether the bot may talk about playable `id` today: a festival legend is a surprise until its festival is announced (`legendShown`). */
+const shownNow = (id: PlayableId) => !isLegend(id) || legendShown(id, brasiliaDay(new Date()))
+
+/** The legendary moves of the legends still hidden today: the bot keeps those quiet too. */
+const hiddenMoves = (): ReadonlySet<MoveId> => new Set(LEGEND_IDS.filter((id) => !shownNow(id)).map((id) => LEGENDS[id].signature))
+
 /** How a player gets to play `id`. */
 const howToGet = (id: PlayableId) => {
   if (isStarter(id)) return 'a starter, open from the start'
   if (isHatchling(id)) return `hatches from the ${en.eggs.tiers[HATCHLINGS[id].egg]}`
   if (isLegend(id)) {
     const u: LegendUnlock = LEGENDS[id].unlock
+    if (u.festival) return `a legend for Legend Mode, the last milestone gift of the ${u.festival} festival's community pot (never fought)`
     return `a legend for Legend Mode, caught after ${u.wins} win${u.wins === 1 ? '' : 's'} against it as a boss${u.endless ? ' in endless mode' : ''}${u.event ? ` (only during the ${u.event} event)` : ''}`
   }
   return 'unknown'
@@ -73,7 +82,7 @@ const moveFacts = (id: MoveId) => {
   const text = en.moves[id]
   const into = evolutionOf(id)
   const from = evolvedFrom(id)
-  const learners = keys(PLAYABLE).filter((p) => PLAYABLE[p].learnset.some((list) => list.some((x) => x === id)))
+  const learners = keys(PLAYABLE).filter((p) => shownNow(p) && PLAYABLE[p].learnset.some((list) => list.some((x) => x === id)))
   const def: MoveDef = m
   const kind = def.duo ? 'a duo move (fused from two maxed moves)' : def.legendary ? 'a legendary move' : from ? `the evolution of ${moveName(from.from)} (+ ${ITEMS[from.item].name})` : 'a regular move'
   return [
@@ -102,10 +111,10 @@ const megaFacts = (id: MegaId) => {
   return [`${m.name}: Mega Evolution of ${PLAYABLE[m.line].name}'s line at its final stage, with ${m.stone}. Ability: ${m.ability}.`]
 }
 
-/** Every entry the lookup can find: the names it answers to and its facts. */
-const ENTRIES: readonly { names: string[]; facts: () => string[] }[] = [
-  ...keys(PLAYABLE).map((id) => ({ names: [id, ...PLAYABLE[id].line.map((s) => s.name)], facts: () => playableFacts(id) })),
-  ...keys(MOVES).map((id) => ({ names: [id, MOVES[id].name], facts: () => moveFacts(id) })),
+/** Every entry the lookup can find: the names it answers to, its facts, and whether it may come up today (true when absent). */
+const ENTRIES: readonly { names: string[]; facts: () => string[]; shown?: () => boolean }[] = [
+  ...keys(PLAYABLE).map((id) => ({ names: [id, ...PLAYABLE[id].line.map((s) => s.name)], facts: () => playableFacts(id), shown: () => shownNow(id) })),
+  ...keys(MOVES).map((id) => ({ names: [id, MOVES[id].name], facts: () => moveFacts(id), shown: () => !hiddenMoves().has(id) })),
   ...keys(ITEMS).map((id) => ({ names: [id, ITEMS[id].name], facts: () => itemFacts(id) })),
   ...keys(ABILITIES).map((id) => ({ names: [id, ABILITIES[id].name], facts: () => abilityFacts(id) })),
   ...keys(MEGAS).map((id) => ({ names: [id, MEGAS[id].name], facts: () => megaFacts(id) })),
@@ -123,8 +132,9 @@ const LOOKUP_MAX = 4
 export const gameLookup = (query: string): string[] => {
   const q = norm(query)
   if (q.length < 2) return []
-  const exact = ENTRIES.filter((e) => e.names.includes(q))
-  const partial = ENTRIES.filter((e) => !exact.includes(e) && e.names.some((n) => n.includes(q)))
+  const entries = ENTRIES.filter((e) => e.shown?.() ?? true)
+  const exact = entries.filter((e) => e.names.includes(q))
+  const partial = entries.filter((e) => !exact.includes(e) && e.names.some((n) => n.includes(q)))
   return [...exact, ...partial].slice(0, LOOKUP_MAX).flatMap((e) => [...e.facts(), ''])
 }
 

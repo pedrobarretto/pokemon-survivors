@@ -932,6 +932,103 @@ const drawVoidPool = (ctx: Ctx, a: Attack, t: number) => {
   ctx.globalAlpha = 1
 }
 
+/* ---------------- Cresselia: Lunar Blessing ---------------- */
+
+/** Cresselia's moonlight: pale gold at the heart, her pink at the rim, a lilac shade. */
+const MOON = { core: '#fff8d0', gold: '#f8e078', pink: '#f0a0d0', shade: '#3c2c58' } as const
+
+/**
+ * A crescent `r` px across its disc, its horns pointing along `dir`: the disc
+ * minus a smaller one shifted toward the horns, in whole pixels.
+ */
+const crescent = (ctx: Ctx, x: number, y: number, r: number, dir: number) => {
+  const cx = Math.round(x)
+  const cy = Math.round(y)
+  const ox = Math.cos(dir) * r * 0.55
+  const oy = Math.sin(dir) * r * 0.55
+  const cut = (r * 0.85) ** 2
+  const ri = Math.ceil(r)
+  for (let j = -ri; j <= ri; j++)
+    for (let i = -ri; i <= ri; i++) {
+      const d = Math.hypot(i, j)
+      if (d > r || (i - ox) ** 2 + (j - oy) ** 2 < cut) continue
+      const color = d > r - 1 ? MOON.pink : (i - ox) ** 2 + (j - oy) ** 2 < cut * 1.6 ? MOON.core : MOON.gold
+      px(ctx, cx + i, cy + j, color)
+    }
+}
+
+/** A crescent blade spinning out and back, a few motes of moonlight trailing it. */
+const drawLunarCrescent = (ctx: Ctx, a: Attack, t: number) => {
+  const r = Math.max(4, radiusOf(a) + 1)
+  if (a.motion.kind === 'return') {
+    const sp = Math.hypot(a.motion.vx, a.motion.vy) || 1
+    const motes = detail.lean ? 2 : 4
+    for (let i = 1; i <= motes; i++) {
+      ctx.globalAlpha = 0.6 - i * 0.12
+      px(ctx, a.x - (a.motion.vx / sp) * i * 5 + Math.sin(t * 13 + i + a.id) * 2, a.y - (a.motion.vy / sp) * i * 5, i % 2 ? MOON.pink : MOON.core, 2, 2)
+    }
+    ctx.globalAlpha = 1
+  }
+  crescent(ctx, a.x, a.y, r, (a.flip ? -1 : 1) * t * 11 + a.id)
+}
+
+/** The moon over Cresselia's head, lit as far as its phase (`memo`, 1 the full moon, which rises and glows). */
+const drawLunarMoon = (ctx: Ctx, g: Game, a: Attack, t: number) => {
+  const full = a.memo >= 1
+  const k = Math.min(clamp01(a.age / 0.2), fadeOut(a, 0.25))
+  const r = full ? 7 : 6
+  const x = Math.round(a.x)
+  // Over the caster's head, whatever its height.
+  const p = ownerOf(g, a.owner)
+  const before = actAs(g, p)
+  const top = p.y - bodyOf(playerForm(g).dex).bodyH - r - 4
+  actAs(g, before)
+  const y = Math.round(top - (full ? clamp01(a.age / 0.35) * 8 : Math.sin(t * 2.4 + a.id) * 1.5))
+  if (full) {
+    ctx.globalAlpha = 0.35 * k
+    blitEllipse(ctx, r + 4 + (Math.floor(t * 12) % 2), r + 4, MOON.gold, x, y)
+  }
+  // Waxing from the right: lit where the pixel is past the terminator.
+  const edge = r * (1 - 2 * a.memo)
+  for (let j = -r; j <= r; j++)
+    for (let i = -r; i <= r; i++) {
+      const d = Math.hypot(i, j)
+      if (d > r) continue
+      const lit = full || i > edge * Math.sqrt(Math.max(0, 1 - (j * j) / (r * r)))
+      ctx.globalAlpha = k * (lit ? 1 : 0.7)
+      px(ctx, x + i, y + j, !lit ? MOON.shade : d > r - 1 ? MOON.pink : i + j < -2 ? MOON.core : MOON.gold)
+    }
+  if (full && !detail.lean) {
+    ctx.globalAlpha = k
+    twinkle(ctx, x - r - 3, y - 3, 1, MOON.core)
+    twinkle(ctx, x + r + 2, y + 2, 1, MOON.pink)
+  }
+  ctx.globalAlpha = 1
+}
+
+/** The full moon's wave: a ring of moonlight swelling to its size, rays and motes of pink and gold. */
+const drawLunarBurst = (ctx: Ctx, a: Attack, t: number) => {
+  const r = radiusOf(a)
+  const k = clamp01(a.age / Math.max(0.01, a.ttl))
+  if (a.age < 0.06) {
+    ctx.globalAlpha = 0.5
+    blitEllipse(ctx, Math.round(r), Math.round(r * 0.75), MOON.core, a.x, a.y)
+  }
+  ctx.globalAlpha = 0.25 * (1 - k)
+  blitEllipse(ctx, Math.round(r), Math.round(r * 0.75), MOON.gold, a.x, a.y)
+  ctx.globalAlpha = 1 - k * 0.7
+  band(ctx, a.x, a.y, r, 3, MOON.gold, 0.75)
+  band(ctx, a.x, a.y, Math.max(1, r - 3), 1, MOON.pink, 0.75)
+  spokes(ctx, a.x, a.y, r * 0.3, r * 0.95, 12, [MOON.core, MOON.gold, MOON.pink], a.id + t * 0.8, 0.75)
+  const motes = detail.lean ? 5 : 10
+  for (let i = 0; i < motes; i++) {
+    const ang = hash2(a.id, i) * TAU
+    const d = r * (0.7 + 0.3 * hash2(a.id, i, 1))
+    twinkle(ctx, a.x + Math.cos(ang) * d, a.y + Math.sin(ang) * d * 0.75 - k * 10, 1, i % 2 ? MOON.pink : MOON.core)
+  }
+  ctx.globalAlpha = 1
+}
+
 /* ---------------- Passes ---------------- */
 
 /** Ground layer (under the Pokémon). */
@@ -1052,6 +1149,15 @@ export const drawLegendaryAir = (ctx: Ctx, g: Game, t: number, visible: (x: numb
         break
       case 'voidBurst':
         drawVoidBurst(ctx, a, t)
+        break
+      case 'lunarCrescent':
+        drawLunarCrescent(ctx, a, t)
+        break
+      case 'lunarMoon':
+        drawLunarMoon(ctx, g, a, t)
+        break
+      case 'lunarBurst':
+        drawLunarBurst(ctx, a, t)
         break
     }
   }

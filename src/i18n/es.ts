@@ -1133,6 +1133,7 @@ export const es: Messages = {
     },
     shinyHatch: (name) => `¡Un *${name}* _shiny_ llegó para ti!`,
     companion: (name) => `¡*${name}* ahora te acompaña en las partidas!`,
+    legend: (name) => `¡*${name}* llegó para ti! Jugable en el _Modo Legendario_.`,
     ribbon: (name) => `¡*${name}*! Ya está en tu perfil.`,
     ribbonWhy: (date, rank, total) => `Desafío del ${date}: #${rank} de ${total}`,
     button: '¡Regalo!',
@@ -4413,6 +4414,16 @@ export const es: Messages = {
         'Recarga 0.5s más rápida y +14 de daño',
       ],
     },
+    /* The Lantern Festival's prize (`legendaryMoves.ts`) */
+    lunarBlessing: {
+      description: 'La luna crece sobre Cresselia: cuchillas crecientes vuelan en un anillo a su alrededor y vuelven, hiriendo a la ida y a la vuelta. Cada 3.er lanzamiento llega la luna llena: una ola de luz de luna estalla a su alrededor y la bendice con el 6% de su vida.',
+      upgrades: [
+        '+2 cuchillas',
+        '+10 de daño',
+        { fork: [{ name: 'Luna llena', desc: 'La luna llena llega cada 2 lanzamientos; +15% de área' }, { name: 'Danza lunar', desc: '+2 cuchillas que drenan vida; +4 de daño' }] },
+        'Recarga 0.4s más rápida y +10 de daño',
+      ],
+    },
     /* Legendary moves, second batch: the trios, Mewtwo and Arceus (`legendaryMoves2.ts`) */
     snowscape: {
       description: 'Las alas de Articuno lanzan un copo de nieve de cristales de hielo a tu alrededor. Quedan flotando y enfrían a quien los toca (lo ralentizan), luego estallan todos juntos y pueden congelar (el siguiente golpe duele el doble).',
@@ -4693,6 +4704,7 @@ export const es: Messages = {
     deoxys: 'Virus del espacio. Su especial cambia de Forma.',
     arceus: 'El dios. Su tipo cambia con cada bioma.',
     darkrai: 'Pesadilla. Duerme a las multitudes y las hiere en sueños.',
+    cresselia: 'Luna creciente. Cuchillas que vuelven y una luna llena que cura.',
   },
 
   specials: {
@@ -4902,6 +4914,7 @@ export const es: Messages = {
       finale: 'Es el jefe final: gana una partida.',
       endless: 'El último trofeo: después de capturar a los otros 22, véncelo en el _modo infinito_.',
       event: 'Solo en la _Noche de Brujas_: véncelo en la _grieta de la Pesadilla_.',
+      festival: 'Premio del _Festival de la Plaza_: llega como Regalo Misterioso, nunca se enfrenta.',
     },
     rule: (need: number) => (need === 1 ? 'Para capturarlo, vence a este legendario 1 vez como jefe, en cualquier modo.' : `Para capturarlo, vence a este legendario ${need} veces como jefe, en cualquier modo.`),
     shinyRule: 'Vencer a uno shiny en la victoria de la captura, o después, desbloquea su forma shiny.',
@@ -4911,6 +4924,10 @@ export const es: Messages = {
       soon: (from: string, to: string) => `Llega con la _Noche de Brujas_, del ${from} al ${to}.`,
       live: (to: string) => `Solo hasta el ${to}: después vuelve a las sombras.`,
       gone: 'Volvió a las sombras al terminar la Noche de Brujas. Quien lo capturó sigue jugando con él.',
+    },
+    festival: {
+      prize: (festival, pot, from, to) => `Último premio del _${festival}_ (del ${from} al ${to}): cuando el bote de la fuente de la plaza llegue a *${pot}*, llega para todos como Regalo Misterioso.`,
+      gone: (festival) => `El _${festival}_ terminó. Quien la recibió sigue jugando con ella.`,
     },
   },
   legends: {

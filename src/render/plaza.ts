@@ -47,7 +47,7 @@ export const NO_VISITORS: PlazaVisitors = { caravan: false, stall: null, statue:
 
 /**
  * The Festival da Praça on the plaza (the shell works it out from
- * `festivalView`): the fountain stands from the week before a festival opens;
+ * `festivalView`): the fountain stands from the day before a festival opens;
  * while it `running`, the donors' plaque, the Lantern Festival's pieces and
  * the grown cobblestones stand too, dressed by the pot's stage (`PlazaStage`).
  */
@@ -316,7 +316,7 @@ type Light = Placed & { r: number; alpha: number }
 
 /**
  * The festival on the plaza: the fountain (its stage's water frames) from the
- * week before; while it runs, the Lantern Ring (`RING`) by stage: the
+ * day before; while it runs, the Lantern Ring (`RING`) by stage: the
  * plaque, the gate, the wishing tree, the sister stall (null while a seasonal
  * stall holds its spot) and Lanturn's market from the opening, the bunting
  * from 1, the wheel of lantern strings and the lanterns floating on the
@@ -352,7 +352,7 @@ const VISITOR_PADS = { wagon: { rx: 74, ry: 16 }, stall: { rx: 60, ry: 18 }, sta
 /** Where the lamps' feet stand, below the building's. */
 const LAMP_Y = 14
 
-/** Where the festival's fountain stands the week before it opens, right of the statue's spot, with a flower pot `flowers` px to each side. */
+/** Where the festival's fountain stands the day before it opens, right of the statue's spot, with a flower pot `flowers` px to each side. */
 const FOUNTAIN_BEFORE = { x: 46, y: 128, flowers: 54 } as const
 
 /**
@@ -615,7 +615,7 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
         ...(f.fountain ? [-1, 1].map((side) => ({ id: 'flowers' as const, x: FOUNTAIN_BEFORE.x + side * FOUNTAIN_BEFORE.flowers, y: FOUNTAIN_BEFORE.y + 2 })) : []),
       ]
   const festival = f.fountain ? festivalLayout(f, lamp, v.stall === null) : null
-  // The festival's fountain stands in front of the shop: the stones reach further down for it the week before; the Ring has its own floor.
+  // The festival's fountain stands in front of the shop: the stones reach further down for it the day before; the Ring has its own floor.
   const cobbles = ring
     ? RING.floor
     : { x: 0, y: (wide ? 40 : 36) - Math.round(depth * 0.7) + (festival ? 14 : 0), rx: lamp + (wide ? 186 : 66), ry: (wide ? 88 : 78) + Math.round(depth * 1.1) + (festival ? 26 : 0) }

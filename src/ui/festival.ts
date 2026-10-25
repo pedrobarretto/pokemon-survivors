@@ -3,6 +3,7 @@ import { FESTIVAL, type Festival, type FestivalId } from '../data/festivals'
 import { BAG_ITEMS } from '../data/shop'
 import type { FrameId } from '../data/style'
 import { HATCHLINGS } from '../data/hatchlings'
+import { LEGENDS } from '../data/legends'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { donateFestival, festivalView, loadFestival, onFestival, setDonorPublic, type FestivalView } from '../festival'
@@ -47,7 +48,7 @@ const ICONS = { lanternas: 'lantern' } as const satisfies Record<FestivalId, Fra
 /** A festival's icon (the lobby's card, the plaque). */
 export const festivalIcon = (id: FestivalId) => frameIcon(ICONS[id])
 
-/** A milestone's reward in a few words ("Ovo raro", "3× Lure", "Togepi shiny"). */
+/** A milestone's reward in a few words ("Ovo raro", "3× Lure", "Togepi shiny", "Cresselia"). */
 const rewardName = (c: GiftContent): string => {
   const m = t().festival
   switch (c.kind) {
@@ -62,6 +63,8 @@ const rewardName = (c: GiftContent): string => {
       return `${c.count}× ${BAG_ITEMS[c.item].name}`
     case 'shinyHatch':
       return m.shiny(HATCHLINGS[c.family].name)
+    case 'legend':
+      return LEGENDS[c.legend].name
     case 'title':
       return t().achievements.titles[c.title]
     case 'coins':

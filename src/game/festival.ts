@@ -1,4 +1,5 @@
 import { FESTIVAL, FESTIVALS, type Festival, type FestivalId, type PlazaStage } from '../data/festivals'
+import { LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
 import { addDays, isDayKey, type DayKey } from './day'
 import type { Gift, GiftContent } from './gifts'
 import type { Save } from './meta'
@@ -39,6 +40,22 @@ export const festivalAnnounced = (day: DayKey): Festival | null => {
 export const claimOpen = (f: Festival, day: DayKey) => day >= f.start && day <= addDays(festivalEnd(f), FESTIVAL.claimDays)
 
 export const festivalById = (id: string): Festival | null => FESTIVALS.find((f) => f.id === id) ?? null
+
+/* ---------------- Its legend ---------------- */
+
+/**
+ * Whether the game shows legend `id` on Brasília `day` (the partner select,
+ * the boards, the staff bot): a festival legend is a surprise until its
+ * festival is announced (`FESTIVAL.announceDays` before it opens), then stays.
+ * Every other legend always shows. It only hides: the rules know it all along.
+ */
+export const legendShown = (id: LegendId, day: DayKey) => {
+  const f = festivalById(legendFestival(id) ?? '')
+  return !f || day >= addDays(f.start, -FESTIVAL.announceDays)
+}
+
+/** The legends the game shows on `day` (`legendShown`), in `LEGEND_IDS` order. */
+export const shownLegends = (day: DayKey): readonly LegendId[] => LEGEND_IDS.filter((id) => legendShown(id, day))
 
 /* ---------------- The pot ---------------- */
 

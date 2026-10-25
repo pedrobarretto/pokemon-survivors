@@ -1131,6 +1131,7 @@ export const zh: Messages = {
     },
     shinyHatch: (name) => `一隻_異色_*${name}*來找你了！`,
     companion: (name) => `*${name}* 現在會在對局中陪你同行！`,
+    legend: (name) => `*${name}* 來找你了！可在_傳說模式_中使用。`,
     ribbon: (name) => `*${name}*！已經放到你的個人檔案上了。`,
     ribbonWhy: (date, rank, total) => `${date} 的挑戰：第 ${rank} 名／共 ${total} 人`,
     button: '禮物！',
@@ -4409,6 +4410,16 @@ export const zh: Messages = {
         '冷卻縮短0.5秒，傷害+14',
       ],
     },
+    /* The Lantern Festival's prize (`legendaryMoves.ts`) */
+    lunarBlessing: {
+      description: '月亮在 Cresselia 上方漸盈：新月之刃在牠周圍呈環狀飛出再飛回，去程與回程都會造成傷害。每第3次施放迎來滿月：月光之波在牠周圍爆發，為牠恢復6%的HP。',
+      upgrades: [
+        '月刃+2',
+        '傷害+10',
+        { fork: [{ name: '滿月', desc: '每2次施放就迎來滿月；範圍+15%' }, { name: '月之舞', desc: '月刃+2，月刃會吸取HP；傷害+4' }] },
+        '冷卻縮短0.4秒，傷害+10',
+      ],
+    },
     /* Legendary moves, second batch: the trios, Mewtwo and Arceus (`legendaryMoves2.ts`) */
     snowscape: {
       description: 'Articuno振翅，在你周圍拍出一片冰晶雪花。冰晶懸在空中，凍傷碰到的一切（減速），然後同時碎裂，可能造成冰凍（下一擊威力加倍）。',
@@ -4688,6 +4699,7 @@ export const zh: Messages = {
     deoxys: '太空病毒。必殺技能切換形態。',
     arceus: '神。屬性隨每個區域而改變。',
     darkrai: '惡夢。讓敵群沉睡，並在夢中傷害它們。',
+    cresselia: '新月。會飛回的月刃與治癒的滿月。',
   },
 
   specials: {
@@ -4897,6 +4909,7 @@ export const zh: Messages = {
       finale: '它是最終首領：贏下一局。',
       endless: '最後的戰利品：收服其他22隻後，在_無盡模式_中擊敗它。',
       event: '只在_女巫之夜_：在_夢魘裂縫_中擊敗它。',
+      festival: '_廣場祭典_的獎勵：以神秘禮物送達，從不需要對戰。',
     },
     rule: (need: number) => (need === 1 ? '在任何模式中以首領身分擊敗它1次，即可收服。' : `在任何模式中以首領身分擊敗它${need}次，即可收服。`),
     shinyRule: '在收服的那場勝利或之後擊敗異色個體，即可解鎖它的異色。',
@@ -4906,6 +4919,10 @@ export const zh: Messages = {
       soon: (from: string, to: string) => `隨_女巫之夜_到來，${from}至${to}。`,
       live: (to: string) => `只到${to}為止：之後便回到黑暗之中。`,
       gone: '女巫之夜結束後，它回到了黑暗之中。已收服的玩家仍可繼續使用它。',
+    },
+    festival: {
+      prize: (festival, pot, from, to) => `_${festival}_的最後獎勵（${from}至${to}）：當廣場噴泉的獎金池達到 *${pot}*，牠會以神秘禮物送給所有人。`,
+      gone: (festival) => `_${festival}_已經結束。已收到的玩家仍可繼續使用牠。`,
     },
   },
   legends: {

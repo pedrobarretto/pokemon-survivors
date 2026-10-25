@@ -38321,7 +38321,52 @@
       "bodyH": 31,
       "footY": 1
     },
-    "cry": true
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 48,
+          "frameHeight": 72,
+          "durations": [
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4
+          ]
+        },
+        "Idle": {
+          "frameWidth": 48,
+          "frameHeight": 64,
+          "durations": [
+            12,
+            6,
+            4,
+            12,
+            6,
+            4
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 31,
+        "bodyH": 31,
+        "footY": 1
+      }
+    }
   },
   "491": {
     "anims": {

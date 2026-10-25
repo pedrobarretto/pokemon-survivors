@@ -5,7 +5,7 @@ import type { LegendId } from './legends'
 import type { PokeType } from './types'
 
 /**
- * The capstone move each legendary (`LEGEND_IDS`, the event's Darkrai too) teaches
+ * The capstone move each legendary (`LEGEND_IDS`, the event's Darkrai and the festival's Cresselia too) teaches
  * (`game/legendaryMoves.ts`, the trios', Mewtwo's and Arceus's in
  * `game/legendaryMoves2.ts`): its official signature where it's free; where
  * the name already belongs to a special tier (Aeroblast, Doom Desire), a
@@ -39,6 +39,7 @@ export const LEGENDARY_MOVE_OF = {
   mewtwo: 'telekinesis',
   arceus: 'judgment',
   darkrai: 'darkVoid',
+  cresselia: 'lunarBlessing',
 } as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id>
 
 export type LegendaryId = keyof typeof LEGENDARY_MOVE_OF

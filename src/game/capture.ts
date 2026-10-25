@@ -10,9 +10,12 @@ import { unlockShinyStarter } from './shinyStarters'
  * Capturing legends for the Legend mode: beating a legendary as a boss (any
  * mode) counts toward catching it, and once its `unlock.wins` are in, it's
  * playable. Arceus only counts in endless mode, and only once the other 22
- * regular legends are captured (an event legend, like Darkrai, never holds it back). A shiny one beaten on its capturing win, or on any win after,
- * also unlocks its shiny (kept in `shinyStarters`, like any owned shiny). Pure:
- * the shell banks each `legendBeaten` event through `recordLegendWin`.
+ * regular legends are captured (an event legend, like Darkrai, never holds it
+ * back). A festival legend (Cresselia) is never fought: its festival's
+ * milestone gift captures it (`captureByGift`). A shiny one beaten on its
+ * capturing win, or on any win after, also unlocks its shiny (kept in
+ * `shinyStarters`, like any owned shiny). Pure: the shell banks each
+ * `legendBeaten` event through `recordLegendWin`.
  */
 
 /** Wins banked toward capturing each legend (a legend at its `unlock.wins` is captured). */
@@ -20,13 +23,14 @@ export type Captures = Readonly<Partial<Record<LegendId, number>>>
 
 export const NO_CAPTURES: Captures = {}
 
-/** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an event's rift. */
-export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event'
+/** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an event's rift; or the festival gift that brings it. */
+export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival'
 
 const inList = (list: readonly string[], id: LegendId) => list.includes(id)
 
 export const legendSource = (id: LegendId): LegendSource => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
+  if (unlock.festival) return 'festival'
   if (unlock.event) return 'event'
   if (unlock.endless) return 'endless'
   if (id === 'mewtwo') return 'finale'
@@ -46,11 +50,14 @@ export const capturedCount = (captures: Captures, ids: readonly LegendId[] = LEG
 /** Whether every regular legend but `id` is in (`unlock.last`: Arceus waits for the other 22, never for an event legend). */
 const othersCaptured = (captures: Captures, id: LegendId) => REGULAR_LEGENDS.every((other) => other === id || isCaptured(captures, other))
 
-/** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22. */
+/** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22; a festival legend's never. */
 export const winCounts = (captures: Captures, id: LegendId, endless: boolean) => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
-  return (!unlock.endless || endless) && (!unlock.last || othersCaptured(captures, id))
+  return !unlock.festival && (!unlock.endless || endless) && (!unlock.last || othersCaptured(captures, id))
 }
+
+/** The captures with `id` captured, as a gift brings it (a festival legend's milestone gift). */
+export const captureByGift = (captures: Captures, id: LegendId): Captures => ({ ...captures, [id]: Math.max(captures[id] ?? 0, winsNeeded(id)) })
 
 /** One legendary boss beaten (`GameEvent` `legendBeaten`), and whether the run was in endless mode then. */
 export type LegendWin = { legend: LegendId; shiny: boolean; endless: boolean }

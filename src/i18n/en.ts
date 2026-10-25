@@ -1133,6 +1133,7 @@ export const en: Messages = {
     },
     shinyHatch: (name) => `A _shiny_ *${name}* came for you!`,
     companion: (name) => `*${name}* walks with you in your runs now!`,
+    legend: (name) => `*${name}* came for you! Playable in _Legend Mode_.`,
     ribbon: (name) => `*${name}*! It's on your profile already.`,
     ribbonWhy: (date, rank, total) => `Challenge of ${date}: #${rank} of ${total}`,
     button: 'Gift!',
@@ -4412,6 +4413,16 @@ export const en: Messages = {
         '0.5s faster cooldown and +14 damage',
       ],
     },
+    /* The Lantern Festival's prize (`legendaryMoves.ts`) */
+    lunarBlessing: {
+      description: 'The moon waxes over Cresselia: crescent blades fly out in a ring around her and come back, cutting on the way out and on the way back. Every 3rd cast brings the full moon: a wave of moonlight bursts around her and blesses her with 6% of her HP.',
+      upgrades: [
+        '+2 blades',
+        '+10 damage',
+        { fork: [{ name: 'Full moon', desc: 'The full moon comes every 2 casts; +15% area' }, { name: 'Lunar dance', desc: '+2 blades that drain HP; +4 damage' }] },
+        '0.4s faster cooldown and +10 damage',
+      ],
+    },
     /* Legendary moves, second batch: the trios, Mewtwo and Arceus (`legendaryMoves2.ts`) */
     snowscape: {
       description: "Articuno's wings beat a snowflake of ice crystals out around you. They hang in the air chilling whatever touches them (slowed), then all shatter at once and can freeze (the next hit lands twice as hard).",
@@ -4692,6 +4703,7 @@ export const en: Messages = {
     deoxys: 'Space virus. Its special swaps Formes.',
     arceus: 'The god. Its type changes with every biome.',
     darkrai: 'Nightmare. Puts crowds to sleep and hurts them in their dreams.',
+    cresselia: 'Crescent moon. Returning blades and a healing full moon.',
   },
 
   specials: {
@@ -4901,6 +4913,7 @@ export const en: Messages = {
       finale: 'It’s the final boss: win a run.',
       endless: 'The last trophy: once the other 22 are caught, beat it in _endless mode_.',
       event: 'Only on _Halloween Night_: beat it in the _Nightmare rift_.',
+      festival: 'A _Plaza Festival_ prize: comes as a Mystery Gift, never fought.',
     },
     rule: (need: number) => (need === 1 ? 'Beat it once as a boss, in any mode, to catch it.' : `Beat it ${need} times as a boss, in any mode, to catch it.`),
     shinyRule: 'Beating a shiny one on the catching win, or after, unlocks its shiny.',
@@ -4910,6 +4923,10 @@ export const en: Messages = {
       soon: (from: string, to: string) => `Arrives with _Halloween Night_, from ${from} to ${to}.`,
       live: (to: string) => `Only until ${to}: then it returns to the shadows.`,
       gone: 'It returned to the shadows when Halloween Night ended. Whoever caught it keeps playing it.',
+    },
+    festival: {
+      prize: (festival, pot, from, to) => `The _${festival}_'s last prize (${from} to ${to}): when the plaza fountain's pot reaches *${pot}*, she comes to everyone as a Mystery Gift.`,
+      gone: (festival) => `The _${festival}_ is over. Whoever received her keeps playing her.`,
     },
   },
   legends: {
