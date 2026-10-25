@@ -25,14 +25,67 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-10-25',
-    title: { pt: 'Menos avisos na tela e o dano de cada golpe na pausa', en: 'Fewer alerts on screen and each move’s damage in the pause menu', es: 'Menos avisos en pantalla y el daño de cada ataque en la pausa', fr: 'Moins d’alertes à l’écran et les dégâts de chaque attaque dans la pause', zh: '畫面上的提示更少，暫停選單可看各招式傷害' },
+    title: { pt: 'Mini mapa', en: 'Mini map', es: 'Minimapa', fr: 'Mini-carte', zh: '小地圖' },
     highlights: [
-      { pt: 'Novo ajuste "Avisos na partida": Todos, Só importantes (chefes, fendas, perigos e o que pede ação) ou Nenhum.', en: 'New "Run alerts" setting: All, Important only (bosses, rifts, dangers and anything that needs you) or None.', es: 'Nuevo ajuste "Avisos en partida": Todos, Solo importantes (jefes, grietas, peligros y lo que pide acción) o Ninguno.', fr: 'Nouveau réglage « Alertes en partie » : Toutes, Importantes (boss, failles, dangers et ce qui demande une action) ou Aucune.', zh: '新設定「戰鬥中提示」：全部、僅重要（首領、裂縫、危險和需要你行動的事）或關閉。' },
-      { pt: 'No celular em pé, os avisos ficaram menores e aparecem no máximo dois por vez, longe do centro da tela.', en: 'On a phone held upright, alerts are smaller and show at most two at a time, away from the middle of the screen.', es: 'En el celular en vertical, los avisos son más pequeños y aparecen como máximo dos a la vez, lejos del centro de la pantalla.', fr: 'Sur un téléphone tenu droit, les alertes sont plus petites et s’affichent deux au plus à la fois, loin du centre de l’écran.', zh: '直拿手機時，提示變得更小，一次最多顯示兩則，不再擋住畫面中央。' },
-      { pt: 'Avisos de shiny agora são dourados, para não se perderem entre os brancos.', en: 'Shiny alerts are now gold, so they stand out from the white ones.', es: 'Los avisos de shiny ahora son dorados, para que no se pierdan entre los blancos.', fr: 'Les alertes de shiny sont désormais dorées, pour ressortir parmi les blanches.', zh: '異色提示現在是金色的，不會淹沒在白色提示裡。' },
-      { pt: 'A pausa mostra o dano de cada golpe na partida, do maior para o menor, com o DPS médio.', en: 'The pause menu shows each move’s damage this run, highest first, with its average DPS.', es: 'La pausa muestra el daño de cada ataque en la partida, de mayor a menor, con su DPS promedio.', fr: 'La pause affiche les dégâts de chaque attaque de la partie, du plus fort au plus faible, avec leur DPS moyen.', zh: '暫停選單會顯示本局各招式的傷害，由高到低排列，並附上平均 DPS。' },
+      { pt: 'Mini mapa no canto da tela: lagos, penhascos, bosques, construções e eventos ao seu redor, com o norte para cima.', en: 'A mini map in the corner of the screen: lakes, cliffs, groves, landmarks and events around you, north up.', es: 'Un minimapa en la esquina de la pantalla: lagos, acantilados, bosques, construcciones y eventos a tu alrededor, con el norte arriba.', fr: 'Une mini-carte dans le coin de l’écran : lacs, falaises, bosquets, constructions et événements autour de toi, nord en haut.', zh: '畫面角落的小地圖：你周圍的湖泊、懸崖、樹林、建築和事件，北方朝上。' },
+      { pt: 'Chefes, Alfas, fendas lendárias e entradas de lugares ficam presos na borda do mapa quando estão longe, apontando o caminho.', en: 'Bosses, Alphas, legendary rifts and place entrances stay pinned to the map’s rim when they’re far, pointing the way.', es: 'Jefes, Alfas, grietas legendarias y entradas de lugares quedan fijos en el borde del mapa cuando están lejos, marcando el camino.', fr: 'Boss, Alphas, failles légendaires et entrées de lieux restent épinglés au bord de la carte quand ils sont loin, pour montrer le chemin.', zh: '頭目、Alpha、傳說裂縫和地點入口在遠處時會固定在地圖邊緣，為你指路。' },
+      { pt: 'Quadrado, redondo ou desligado: escolha em Ajustes → Jogo. Funciona no celular em pé, deitado e no computador.', en: 'Square, round or off: pick it in Settings → Game. It works on phones held either way and on computers.', es: 'Cuadrado, redondo o apagado: elígelo en Ajustes → Juego. Funciona en el celular en vertical, en horizontal y en la computadora.', fr: 'Carrée, ronde ou désactivée : choisis dans Réglages → Jeu. Elle marche sur mobile dans les deux sens et sur ordinateur.', zh: '方形、圓形或關閉：在設定 → 遊戲中選擇。直拿、橫拿手機和電腦上都能用。' },
     ],
     changes: [
+      {
+        title: { pt: 'Mini mapa', en: 'Mini map', es: 'Minimapa', fr: 'Mini-carte', zh: '小地圖' },
+        notes: [
+          {
+            pt: 'O mapa mostra o terreno do bioma, a área da tela, os eventos (altares, fontes, baús, Meowth, o Tutor de Golpes, as missões), as construções, as Poké Balls, TMs e Mega Pedras no chão e os seus companheiros de time. A horda selvagem fica de fora.',
+            en: 'The map shows the biome’s terrain, the area on screen, events (altars, fountains, chests, Meowth, the Move Tutor, missions), landmarks, Poké Balls, TMs and Mega Stones on the ground, and your teammates. The wild horde stays off it.',
+            es: 'El mapa muestra el terreno del bioma, el área en pantalla, los eventos (altares, fuentes, cofres, Meowth, el Tutor de Movimientos, las misiones), las construcciones, las Poké Balls, MTs y Megapiedras en el suelo y a tus compañeros de equipo. La horda salvaje queda fuera.',
+            fr: 'La carte montre le terrain du biome, la zone à l’écran, les événements (autels, fontaines, coffres, Meowth, le Maître des capacités, les missions), les constructions, les Poké Balls, CT et Méga-Gemmes au sol et tes coéquipiers. La horde sauvage n’y figure pas.',
+            zh: '地圖會顯示生態區的地形、畫面範圍、事件（祭壇、泉水、寶箱、Meowth、招式教學、任務）、建築、地上的精靈球、招式學習器和超級石，以及你的隊友。野生群體不會顯示。',
+          },
+          {
+            pt: 'Dentro de uma fenda, da caverna ou do cemitério, o mapa mostra o lugar de perto: o chão da arena, os corredores e a escada da caverna, a Pedra Peculiar do cemitério.',
+            en: 'Inside a rift, the cave or the graveyard, the map shows the place up close: the arena’s floor, the cave’s corridors and stairs, the graveyard’s keystone.',
+            es: 'Dentro de una grieta, la cueva o el cementerio, el mapa muestra el lugar de cerca: el suelo de la arena, los pasillos y la escalera de la cueva, la Piedra Espíritu del cementerio.',
+            fr: 'Dans une faille, la grotte ou le cimetière, la carte montre le lieu de près : le sol de l’arène, les couloirs et l’escalier de la grotte, la Clé de Voûte du cimetière.',
+            zh: '在裂縫、洞窟或墓地裡，地圖會近距離顯示該地點：競技場的地面、洞窟的通道和樓梯、墓地的 Odd Keystone。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          {
+            pt: 'Quem abria o jogo com a janela em exatamente 1920×1080 (tela cheia num monitor 1080p) via o mapa num quadradinho no canto de cima, no lobby e na partida. Agora ele ocupa a tela toda desde o começo.',
+            en: 'Opening the game in a window of exactly 1920×1080 (fullscreen on a 1080p monitor) showed the map in a small box in the top corner, in the lobby and in runs. It now fills the screen from the start.',
+            es: 'Quien abría el juego con la ventana en exactamente 1920×1080 (pantalla completa en un monitor 1080p) veía el mapa en un cuadrito en la esquina de arriba, en el lobby y en la partida. Ahora ocupa toda la pantalla desde el principio.',
+          },
+          {
+            pt: 'Com o mouse e o teclado juntos, um Enter num botão já clicado contava duas vezes: o Jogar começava duas partidas e a escolha de golpe da primeira ficava congelada na frente; no lobby, duas telas abriam e a de baixo ficava presa atrás. Agora cada aperto conta uma vez.',
+            en: 'With mouse and keyboard together, Enter on a button you had clicked counted twice: Play started two runs and the first one’s move pick stayed frozen on top; in the lobby, two screens opened and the one below got stuck behind. Each press now counts once.',
+            es: 'Con el mouse y el teclado juntos, un Enter en un botón ya clicado contaba dos veces: Jugar empezaba dos partidas y la elección de ataque de la primera se quedaba congelada encima; en el lobby, se abrían dos pantallas y la de abajo quedaba atrapada detrás. Ahora cada pulsación cuenta una vez.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Escolha de parceiro e fim da partida', en: 'Partner select and the end of a run', es: 'Elección de compañero y fin de la partida' },
+        notes: [
+          {
+            pt: 'Aleatório: o novo botão ao lado das abas (ou a tecla R) escolhe ao acaso um Pokémon desbloqueado da aba aberta (Iniciais, Ovos ou Lendários), nunca o que já está selecionado. Ele só seleciona: confira o painel e aperte Começar quando quiser.',
+            en: 'Random: the new button beside the tabs (or the R key) picks an unlocked Pokémon from the open tab (Starters, Eggs or Legendaries) at random, never the one already selected. It only selects: check its panel and press Start when you’re ready.',
+            es: 'Aleatorio: el nuevo botón junto a las pestañas (o la tecla R) elige al azar un Pokémon desbloqueado de la pestaña abierta (Iniciales, Huevos o Legendarios), nunca el que ya está seleccionado. Solo selecciona: revisa su panel y presiona Empezar cuando quieras.',
+          },
+          {
+            pt: 'Tocar num Pokémon só seleciona, mesmo tocando de novo: a partida começa no botão Começar (ou Enter). O escolhido vira seu parceiro na hora, com a cor Normal ou Shiny que você deixou, então Voltar mostra ele no lobby.',
+            en: 'Tapping a Pokémon only selects it, even on a second tap: the run starts from the Start button (or Enter). Your pick becomes your partner right away, in the Normal or Shiny colors you set, so Back shows it in the lobby.',
+            es: 'Tocar un Pokémon solo lo selecciona, aunque lo toques de nuevo: la partida empieza con el botón Empezar (o Enter). El elegido se vuelve tu compañero al instante, con el color Normal o Shiny que dejaste, así que Volver lo muestra en el lobby.',
+          },
+          {
+            pt: 'A tela de resultado ganhou o botão Lobby, ao lado de Tentar de novo e Trocar Pokémon. Os ₽, os ovos e o ranking da partida contam do mesmo jeito.',
+            en: 'The results screen got a Lobby button, next to Try again and Change Pokémon. The run’s ₽, eggs and ranking count just the same.',
+            es: 'La pantalla de resultados tiene un botón Lobby, junto a Reintentar y Cambiar Pokémon. Los ₽, los huevos y el ranking de la partida cuentan igual.',
+          },
+        ],
+      },
       {
         title: { pt: 'Avisos na partida', en: 'Run alerts', es: 'Avisos en partida', fr: 'Alertes en partie' },
         notes: [

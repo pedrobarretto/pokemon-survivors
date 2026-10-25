@@ -10,7 +10,7 @@ import { h, later } from './dom'
 import { DAMAGE_NUMBERS } from '../render/damageNumbers'
 import { FLASH_MODES } from '../render/flashes'
 import { RUN_TOASTS } from './toastQueue'
-import { loadSettings, MIN_ATTACK_OPACITY, writeSettings, type Settings } from './save'
+import { loadSettings, MIN_ATTACK_OPACITY, MINIMAP_MODES, writeSettings, type Settings } from './save'
 import { coopEntry } from '../coopShell'
 import { hint, menu, type Screen } from './screens'
 import { backButton, shellBody, tabStrip, topBar, segmented } from './shell'
@@ -209,7 +209,7 @@ let lastTab: Tab = 'sound'
 
 /**
  * Settings in four tabs: Som (music and effects volume, mute), Jogo
- * (language, damage numbers, screen shake, flashes, move opacity, UI size, safe mode), Controles (touch joystick and the
+ * (language, damage numbers, screen shake, flashes, the mini map, move opacity, UI size, safe mode), Controles (touch joystick and the
  * remap screen) and Sobre (installing the app, what the game is, legal and
  * credits, GitHub, the official profiles, and the bug report form when there's an API to send it to).
  * Changes apply and persist immediately.
@@ -266,6 +266,7 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           toggle(m.screenShake, (s) => s.screenShake, (on) => ({ screenShake: on })),
           choiceRow(m.flashes, 'flashes', FLASH_MODES, (mode) => m.flashModes[mode]),
           choiceRow(m.runToasts, 'runToasts', RUN_TOASTS, (mode) => m.runToastModes[mode]),
+          choiceRow(m.minimap, 'minimap', MINIMAP_MODES, (mode) => m.minimapModes[mode]),
           slider(m.attackOpacity, 'attackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS),
           // Teammates' moves only matter to whoever plays co-op (a beta behind the lobby's gate).
           ...(coopEntry() ? [slider(m.teamAttackOpacity, 'teamAttackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS)] : []),

@@ -58,6 +58,8 @@ export const difficultyTag = (d: Difficulty) => h('span', { class: `difficulty-t
 
 /** Taps this soon after a menu opens are ignored: a thumb still steering the joystick shouldn't pick an upgrade. */
 const TAP_GUARD_MS = 350
+/** How long after Enter or Space a keyboard-made click (Space clicks on keyup) still counts as that same press. */
+const KEY_CLICK_MS = 1000
 
 /**
  * Hint that swaps between keyboard, gamepad and touch wording (see `.keys-only`,
@@ -94,14 +96,23 @@ export const menu = (input: Input, buttons: HTMLElement[], activate: (i: number)
     if (sound) playSfx('move')
   }
   const pointer = new AbortController()
+  // A button that holds the page's focus (clicked during the tap guard, say) also takes the browser's own click
+  // for Enter or Space: one press would pick twice (two runs started at once, a pick screen left behind).
+  // The keys are this menu's to handle, so the click they make (`detail` 0) is dropped.
+  let keyedAt = -Infinity
   buttons.forEach((b, i) => {
     b.addEventListener('pointerenter', () => i !== index && focus(i), { signal: pointer.signal })
-    b.addEventListener('click', () => performance.now() - openedAt > tapGuard && activate(i), { signal: pointer.signal })
+    b.addEventListener(
+      'click',
+      (e) => (e.detail > 0 || performance.now() - keyedAt > KEY_CLICK_MS) && performance.now() - openedAt > tapGuard && activate(i),
+      { signal: pointer.signal },
+    )
   })
   focus(index, false)
   const prev = opts.horizontal ? ['ArrowLeft', 'KeyA'] : ['ArrowUp', 'KeyW']
   const next = opts.horizontal ? ['ArrowRight', 'KeyD'] : ['ArrowDown', 'KeyS']
   const offKeys = input.onKey((key) => {
+    if (key === 'Enter' || key === 'Space') keyedAt = performance.now()
     if (prev.includes(key)) focus(index - 1)
     else if (next.includes(key)) focus(index + 1)
     else if (key === 'Enter' || (key === 'Space' && opts.space !== false)) {
@@ -886,6 +897,7 @@ const runNews = ({ eggs, news, medals }: ResultsExtras) => {
  * The steps walked and eggs found feed the incubator (`extras.eggs`), and
  * `extras.news` adds a one-line Pokédex summary when the run found something new.
  * A victory also links the support page, under the buttons (only then, so it never nags).
+ * `onLobby` goes straight home (Trocar Pokémon opens the partner select instead).
  */
 export const results = (
   root: HTMLElement,
@@ -893,6 +905,7 @@ export const results = (
   g: Game,
   onRetry: () => void,
   onMenu: () => void,
+  onLobby: () => void,
   onContinue?: () => void,
   extras: ResultsExtras = NO_EXTRAS,
 ): Screen => {
@@ -907,6 +920,7 @@ export const results = (
   const legends = g.rift.cleared
   const retry = h('button', { class: 'btn' }, m.retry)
   const back = h('button', { class: 'btn' }, m.change)
+  const lobby = h('button', { class: 'btn' }, m.lobby)
   const goOn = victory && onContinue ? h('button', { class: 'btn' }, r.continue) : null
   const ranking = extras.ranking
   const boards = ranking ? h('button', { class: 'btn' }, t().ranking.open) : null
@@ -930,11 +944,12 @@ export const results = (
       nav = bindNav(buttons.indexOf(button))
     })
   }
-  const buttons = [goOn, retry, back, share, boards].filter((b) => b !== null)
+  const buttons = [goOn, retry, back, lobby, share, boards].filter((b) => b !== null)
   const actions = [
     goOn && onContinue,
     onRetry,
     onMenu,
+    onLobby,
     share && (() => openSub(extras.share?.open, share)),
     boards && (() => openSub(ranking?.open, boards)),
   ].filter((a) => typeof a === 'function')

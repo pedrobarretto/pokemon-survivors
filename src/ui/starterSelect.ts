@@ -21,7 +21,7 @@ import { capLevel } from '../game/evoItems'
 import { MOVES } from '../game/moves'
 import { armedTms, armTm, tmLimit, type ShelfTm } from '../game/tmShelf'
 import { ownsShiny, pickShinyForm, playsShiny } from '../game/shinyPicks'
-import { eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
+import { dieIcon, eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
 import { capPips, shopIcon } from './shopIcons'
 import { cryUrl, drawPokemon, loadedSprites, loadSpecies, portraitUrl, walkSheet } from '../render/sprites'
 import { formatDay, t } from '../i18n'
@@ -76,9 +76,11 @@ type SelectActions = {
  * (Bag, difficulty, Start, colored by the difficulty).
  *
  * Keyboard: arrows move in the grid (↓ past the starters' last row reaches the eggs, then the legends), Tab/E and Q switch tabs,
- * 1-9 jump to a region, I opens the details, Z flips Normal/Shiny, X cycles the difficulty, C and V arm a
- * Lure and an Incense, O opens the incubator, L the Poké Mart, Enter starts, Esc/Backspace go back.
- * Pointer: a tap selects, a tap on the selected cell (or Start) starts.
+ * 1-9 jump to a region, R picks a random unlocked Pokémon from the shown tab, I opens the details, Z flips Normal/Shiny,
+ * X cycles the difficulty, C and V arm a Lure and an Incense, O opens the incubator, L the Poké Mart, Enter starts,
+ * Esc/Backspace go back.
+ * Pointer: a tap selects; only Start starts (a second tap on the selected cell started runs players only meant to pick).
+ * Selecting an unlocked Pokémon makes it the lobby's partner (`save.partner`) right away, so Back shows it there.
  * `selected` reads the selected Pokémon, so a rebuilt screen (language switch, back from a sub-screen) keeps it.
  * `coop`: picking the Pokémon for a co-op room, which plays the normal mode (`COOP_LOCKS`): no
  * Lendários tab, no Bag, TMs or Bottle Caps, no Poké Mart, and the host sets the difficulty, so the
@@ -114,8 +116,6 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
 
   /* ---------- Roster ---------- */
 
-  /** Taps a cell: selects it, or starts if it was already selected. */
-  const tapCell = (id: PlayableId) => (id === current() ? confirm() : select(id))
 
   const cellPortrait = (id: PlayableId) => h('img', { class: 'partner-cell-portrait', src: portraitUrl(PLAYABLE[id].line[0].dex, shinyOf(id)), alt: '' })
   /** A family still in its egg (a legend not captured yet): its first stage's silhouette at 2× (a big legend's at 1×), centered on the body (`bodyOf`) and cropped by the cell like a portrait. */
@@ -162,7 +162,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const starterCell = (id: StarterId) => {
     const el = h(
       'button',
-      { class: 'partner-cell', type: 'button', title: cellTitle(id, PLAYABLE[id].name), style: `--t:${PLAYABLE[id].color}`, onclick: () => tapCell(id) },
+      { class: 'partner-cell', type: 'button', title: cellTitle(id, PLAYABLE[id].name), style: `--t:${PLAYABLE[id].color}`, onclick: () => select(id) },
       cellPortrait(id),
       h('span', { class: 'partner-cell-name' }, PLAYABLE[id].name),
       shinyOf(id) && shinyTag(),
@@ -181,7 +181,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
         type: 'button',
         title: cellTitle(id, open ? PLAYABLE[id].name : m.eggs.locked),
         style: `--t:${open ? PLAYABLE[id].color : '#8890b0'}`,
-        onclick: () => tapCell(id),
+        onclick: () => select(id),
       },
       open ? cellPortrait(id) : cellSilhouette(id),
       shinyOf(id) && shinyTag(),
@@ -204,7 +204,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
         type: 'button',
         title: open ? cellTitle(id, name) : `${name} · ${m.legend.wins(wins)}`,
         style: `--t:${open ? PLAYABLE[id].color : '#8890b0'}`,
-        onclick: () => tapCell(id),
+        onclick: () => select(id),
       },
       open ? cellPortrait(id) : cellSilhouette(id),
       !open && h('b', { class: 'partner-cell-count' }, wins),
@@ -274,10 +274,18 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const legendGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...LEGEND_IDS.map(legendCell))
   const legendsPane = h('div', { class: 'partner-legends' }, legendGrid, h('p', { class: 'partner-legend-note' }, rich(m.legend.selectNote)))
 
+  const randomButton = h(
+    'button',
+    { class: 'partner-random', type: 'button', title: m.partner.randomHint, 'aria-label': m.partner.randomHint, onclick: () => pickRandom() },
+    h('img', { src: dieIcon(), alt: '' }),
+    h('span', { class: 'partner-random-label' }, m.partner.random),
+    h('span', { class: 'key-hint' }, 'R'),
+  )
+
   const roster = h(
     'section',
     { class: 'partner-roster box' },
-    h('div', { class: 'partner-tabs', role: 'tablist' }, ...tabs.map((k) => tabButtons[k]), h('span', { class: 'key-hint' }, 'TAB')),
+    h('div', { class: 'partner-tabs', role: 'tablist' }, ...tabs.map((k) => tabButtons[k]), h('span', { class: 'key-hint' }, 'TAB'), randomButton),
     h('div', { class: 'partner-pane starters' }, starterGrid, teaser),
     eggsPane,
     !opts.coop && legendsPane,
@@ -513,6 +521,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     roster.classList.toggle('eggs', tab === 'eggs')
     roster.classList.toggle('legends', tab === 'legends')
     cells.forEach((c, id) => c.classList.toggle('selected', id === current()))
+    randomButton.disabled = randomPool().length === 0
     renderHero()
     renderGo()
   }
@@ -528,12 +537,26 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     else cursor.starters = id
     tab = tabOf(id)
     stage = 0
+    if (!opts.coop && unlocked(id)) updateSave((s) => ({ ...s, partner: id }))
     render()
     reveal()
     playSfx('move')
     clearTimeout(cryTimer)
     if (!unlocked(id)) return
     cryTimer = window.setTimeout(() => playCry(cryUrl(PLAYABLE[id].line[0].dex), 0.25), 260)
+  }
+
+  /** The unlocked Pokémon of the shown tab, but the selected one: what Random draws from. */
+  const randomPool = (): readonly PlayableId[] => {
+    const shown: readonly PlayableId[] = tab === 'eggs' ? HATCHLING_IDS : tab === 'legends' ? LEGEND_IDS : STARTER_IDS
+    return shown.filter((id) => id !== current() && unlocked(id))
+  }
+
+  /** Random: selects one of the tab's unlocked Pokémon (never the one already selected); it doesn't start the run. */
+  const pickRandom = () => {
+    const pool = randomPool()
+    if (pool.length === 0) return playSfx('denied')
+    select(pool[Math.floor(Math.random() * pool.length)]!)
   }
 
   const setTab = (next: Tab) => {
@@ -636,6 +659,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     else if (key === 'Tab' || key === 'KeyE' || key === 'PageDown') setTab(tabs[(tabs.indexOf(tab) + 1) % tabs.length]!)
     else if (key === 'KeyQ' || key === 'PageUp') setTab(tabs[(tabs.indexOf(tab) + tabs.length - 1) % tabs.length]!)
     else if (/^Digit[1-9]$/.test(key)) select(STARTER_IDS[(Number(key.slice(5)) - 1) * 3 + (STARTER_IDS.indexOf(cursor.starters) % 3)]!)
+    else if (key === 'KeyR') pickRandom()
     else if (key === 'KeyI') openDetails()
     else if (key === 'KeyO') openIncubator()
     else if (key === 'KeyL' && mart) leave(mart)

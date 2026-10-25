@@ -2,7 +2,7 @@ import '@fontsource/press-start-2p'
 import '@fontsource/vt323'
 import './ui/style.css'
 // First, so its error listeners catch what goes wrong while the rest loads.
-import { bugReportsEnabled, describeWith, deviceMemory, runMoment, syncRunWatch, takeCrash } from './bugReport'
+import { bugReportsEnabled, describeWith, deviceMemory, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
 import type { BugCrash } from './game/bugReport'
 
 import { playCry, playSfx, unlockAudio, type Sfx } from './engine/audio'
@@ -225,7 +225,9 @@ let dirty = true
 /**
  * Sizes the low-res canvas to the visible viewport. Runs on resize, rotation
  * and iOS toolbar changes (visualViewport), and only touches the canvas when
- * the result actually changed, because resizing clears it.
+ * it isn't that size already, because resizing clears it. Compared with the
+ * canvas itself, not `view`: a page that loads at 1920x1080 @1x fits the
+ * starting `view` exactly, and the canvas stayed at the HTML default (300x150, top left).
  */
 const resize = () => {
   stickCenter = null
@@ -234,7 +236,7 @@ const resize = () => {
   const width = window.visualViewport?.width ?? window.innerWidth
   const height = window.visualViewport?.height ?? window.innerHeight
   const fit = fitView(width, height, window.devicePixelRatio || 1)
-  if (fit.w === view.w && fit.h === view.h && fit.cssScale === cssScale) return
+  if (fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale) return
   view.w = fit.w
   view.h = fit.h
   cssScale = fit.cssScale
@@ -1017,14 +1019,29 @@ const loadRunSheets = async (families: readonly Variant[], opening: readonly Dex
   }
 }
 
+/** Set while `startRun` loads a run. */
+let launching = false
+
 /**
  * Loads the starter's evolution line and the first stage's species, then starts
  * a fresh run: a regular one from the save (upgrades, the Bag's armed items),
  * or the Desafio do dia's (`challengeStart`: its seed, nothing from the save
  * but the shiny colors). The rest of the cast (later stages, swarms, bosses), the
  * `EXTRAS` and the forms (a Mega, a stance) stream in the background as the run nears them (`syncSprites`).
+ * Once per Play: a second call while one loads is dropped, or both runs would load and the
+ * first would stay behind the second, its HUD and pick screen frozen over the game.
  */
 const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) => {
+  if (launching) return
+  launching = true
+  try {
+    await launchRun(starter, daily)
+  } finally {
+    launching = false
+  }
+}
+
+const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // Play again on a build that fell behind (`watchDeploys`): the newer one first, back in the lobby.
   if (reloadForDeploy) return location.reload()
   setScreen(null)
@@ -1275,6 +1292,8 @@ const syncOverlay = (r: Run) => {
         g,
         () => afterRun(() => void (r.challenge ? replayChallenge() : startRun(loadSave().partner))),
         () => afterRun(() => showMenu()),
+        // Lobby: banked, ranked and hatched by `afterRun` like the others, then home as the select's Back goes.
+        () => afterRun(() => showTitle({ focus: 'play' })),
         () => (recordEvent(r.recorder, ['endless']), continueEndless(g)),
         {
           badge: titleBadge(loadSave().title),
@@ -2797,10 +2816,29 @@ const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeMode: boolean) 
   })
 }
 
-/** The game closed mid-run last time (`takeCrash`): the title asks, once, whether to report it. */
+/**
+ * Counts a run whose page went away while the player was elsewhere (`takeCrash`'s `away`): an app
+ * swiped away in Recents, a tab the phone closed in the background. Not a crash.
+ */
+const reportClosed = async (c: BugCrash, away: NonNullable<Away>) => {
+  const device = await deviceInfo()
+  track('run_closed', {
+    version: c.version,
+    away,
+    partner: c.run?.partner ?? null,
+    phase: c.run?.phase ?? null,
+    minute: c.run ? Math.floor(c.run.time / 60) : null,
+    seconds: c.run?.time ?? null,
+    deviceMemory: deviceMemory(),
+    ...device,
+  })
+}
+
+/** The game closed mid-run last time (`takeCrash`): the title asks, once, whether to report it. A page the player had left isn't a crash. */
 const askAboutCrash = () => {
   const found = takeCrash()
   if (!found) return
+  if (found.away) return void reportClosed(found.crash, found.away)
   const { crash, crumb } = found
   // Whether safe mode was on for the run that died, then on from here (`safeMode.ts`).
   void reportCrash(crash, crumb, safeModeOn())

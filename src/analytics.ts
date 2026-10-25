@@ -128,6 +128,21 @@ type AnalyticsEvents = {
     /** Whether safe mode was on for the run that died (`safeMode.ts`). */
     safeMode: boolean
   } & DeviceInfo
+  /**
+   * The page went away mid-run last time while the player was elsewhere (`takeCrash`'s `away`):
+   * `hidden`, another tab or app (where the phone may close it to free memory); `blur`, out of the
+   * window (Android's Recents, where a swipe closes the browser). Not a crash: no safe mode, no prompt.
+   * At most one per run, and only for runs that ended that way.
+   */
+  run_closed: {
+    version: string
+    away: 'hidden' | 'blur'
+    partner: string | null
+    phase: string | null
+    minute: number | null
+    seconds: number | null
+    deviceMemory: number | null
+  } & DeviceInfo
   /** A share card left the game (the run's or the Trainer Card), or the invite link, through the share sheet, the clipboard or a download. */
   share: { kind: 'run' | 'trainer' | 'invite'; method: 'share' | 'copy' | 'download' }
   /** The game opened from a link carrying a handle this device didn't hold (`?ref=` or a profile's `?u=`); `first`: the device had no inviter yet. */
