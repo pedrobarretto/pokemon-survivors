@@ -20,7 +20,7 @@ import { h, later, rich, setStyle, setText } from './dom'
 import { difficultyTag, menu, type Screen } from './screens'
 import { teamAwards } from './teamAwards'
 import { seatName } from './teamHud'
-import { toast } from './toasts'
+import { runToast } from './toasts'
 
 /**
  * Co-op screens and banners: the team's wait while a teammate picks a
@@ -392,17 +392,17 @@ export const teamFeedback = (root: HTMLElement, g: Game, me: Player, e: Extract<
     case 'fainted':
       if (e.slot === me.slot) return playSfx('gameOver')
       playSfx('hurt')
-      return toast(root, rich(m.fainted(seatName(g, e.slot))), 3200, `fainted${e.slot}`)
+      return runToast(root, 'important', rich(m.fainted(seatName(g, e.slot))), 3200, `fainted${e.slot}`)
     case 'revived':
       playSfx('heal')
       playSfx('unlock')
-      return toast(root, rich(e.slot === me.slot ? m.revivedYou(seatName(g, e.by)) : e.by === me.slot ? m.youRevived(seatName(g, e.slot)) : m.revived(seatName(g, e.slot), seatName(g, e.by))), 2600, `fainted${e.slot}`)
+      return runToast(root, 'important', rich(e.slot === me.slot ? m.revivedYou(seatName(g, e.by)) : e.by === me.slot ? m.youRevived(seatName(g, e.slot)) : m.revived(seatName(g, e.slot), seatName(g, e.by))), 2600, `fainted${e.slot}`)
     case 'left':
       playSfx('escaped')
-      return toast(root, rich(m.left(seatName(g, e.slot))), 3000)
+      return runToast(root, 'minor', rich(m.left(seatName(g, e.slot))), 3000)
     case 'away':
       if (e.slot === me.slot) return
-      return toast(root, rich(e.away ? m.away(seatName(g, e.slot)) : m.back(seatName(g, e.slot))), 2400, `away${e.slot}`)
+      return runToast(root, 'minor', rich(e.away ? m.away(seatName(g, e.slot)) : m.back(seatName(g, e.slot))), 2400, `away${e.slot}`)
     case 'vote':
       return playSfx('select')
     case 'voted':
@@ -420,7 +420,7 @@ export const teamMoment = (root: HTMLElement, g: Game, slot: number, e: GameEven
   if (!p || p.slot === localPlayer(g).slot) return
   const m = t().team.toast
   const name = seatName(g, slot)
-  const say = (text: string) => toast(root, h('span', { class: 'item-toast team-moment' }, face(p), rich(text)), 3000)
+  const say = (text: string) => runToast(root, 'minor', h('span', { class: 'item-toast team-moment' }, face(p), rich(text)), 3000)
   switch (e.kind) {
     case 'evolved':
       return say(m.evolved(name, formAt(p.starter, p.branch, p.stage - 1).name, formAt(p.starter, p.branch, p.stage).name))

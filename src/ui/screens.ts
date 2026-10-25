@@ -58,6 +58,8 @@ export const difficultyTag = (d: Difficulty) => h('span', { class: `difficulty-t
 
 /** Taps this soon after a menu opens are ignored: a thumb still steering the joystick shouldn't pick an upgrade. */
 const TAP_GUARD_MS = 350
+/** How long after Enter or Space a keyboard-made click (Space clicks on keyup) still counts as that same press. */
+const KEY_CLICK_MS = 1000
 
 /**
  * Hint that swaps between keyboard, gamepad and touch wording (see `.keys-only`,
@@ -94,14 +96,23 @@ export const menu = (input: Input, buttons: HTMLElement[], activate: (i: number)
     if (sound) playSfx('move')
   }
   const pointer = new AbortController()
+  // A button that holds the page's focus (clicked during the tap guard, say) also takes the browser's own click
+  // for Enter or Space: one press would pick twice (two runs started at once, a pick screen left behind).
+  // The keys are this menu's to handle, so the click they make (`detail` 0) is dropped.
+  let keyedAt = -Infinity
   buttons.forEach((b, i) => {
     b.addEventListener('pointerenter', () => i !== index && focus(i), { signal: pointer.signal })
-    b.addEventListener('click', () => performance.now() - openedAt > tapGuard && activate(i), { signal: pointer.signal })
+    b.addEventListener(
+      'click',
+      (e) => (e.detail > 0 || performance.now() - keyedAt > KEY_CLICK_MS) && performance.now() - openedAt > tapGuard && activate(i),
+      { signal: pointer.signal },
+    )
   })
   focus(index, false)
   const prev = opts.horizontal ? ['ArrowLeft', 'KeyA'] : ['ArrowUp', 'KeyW']
   const next = opts.horizontal ? ['ArrowRight', 'KeyD'] : ['ArrowDown', 'KeyS']
   const offKeys = input.onKey((key) => {
+    if (key === 'Enter' || key === 'Space') keyedAt = performance.now()
     if (prev.includes(key)) focus(index - 1)
     else if (next.includes(key)) focus(index + 1)
     else if (key === 'Enter' || (key === 'Space' && opts.space !== false)) {
@@ -738,6 +749,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
             pauseSection(m.statsTitle, statTable(g)),
             h('div', { class: 'pause-column' }, pauseSection(m.movesTitle, moveList(g)), pauseSection(m.itemsTitle, itemList(g))),
           ),
+          pauseSection(m.damageTitle, damagePanel(g)),
           builds && pauseSection(cm.builds, builds),
           duoPanel(g),
           h('p', { class: 'evo-legend' }, m.evoLegend),
@@ -770,6 +782,53 @@ export const damageSource = (g: Game, id: DamageSource) => {
   if (id !== 'special') return { icon: moveIcon(id), name: MOVES[id].name, type: MOVES[id].type }
   const r = resolveSpecial(localPlayer(g).starter, localPlayer(g).stage, null, localPlayer(g).branch)
   return { icon: specialIcon(r.id), name: r.tier.name, type: r.def.type }
+}
+
+/** The player's damage by move, most first. */
+const damageEntries = (g: Game) => (Object.entries(localPlayer(g).damageByMove) as Array<[DamageSource, number]>).sort((a, b) => b[1] - a[1])
+
+/**
+ * The run's damage by move, most first, each with a bar against the top one
+ * (results, pause). `seconds` adds each move's average DPS over that long.
+ */
+const damageList = (g: Game, seconds: number | null = null) => {
+  const entries = damageEntries(g)
+  const top = entries[0]?.[1] ?? 1
+  return h(
+    'div',
+    { class: seconds === null ? 'damage-list' : 'damage-list with-dps' },
+    ...entries.map(([id, dmg]) => {
+      const src = damageSource(g, id)
+      return h(
+        'div',
+        { class: 'damage-row' },
+        h('img', { src: src.icon, alt: '' }),
+        h('span', { class: 'damage-name' }, src.name),
+        h('div', { class: 'damage-bar' }, h('div', { style: `width:${(dmg / top) * 100}%;--type:${TYPE_COLORS[src.type]}` })),
+        h('b', {}, formatNumber(dmg)),
+        seconds !== null && h('span', { class: 'damage-dps' }, `${formatNumber(Math.round(dmg / seconds))}/s`),
+      )
+    }),
+  )
+}
+
+/**
+ * The run so far on the pause sheet: the total, the damage by move and each
+ * one's DPS. The state has no time a move was learned, so the DPS is over the
+ * time played (`g.now`, rifts included), and the note says so.
+ */
+const damagePanel = (g: Game) => {
+  const m = t().pause
+  const total = damageEntries(g).reduce((sum, [, dmg]) => sum + dmg, 0)
+  if (total === 0) return h('p', { class: 'loadout-empty' }, m.damageEmpty)
+  const seconds = Math.max(1, g.now)
+  return h(
+    'div',
+    { class: 'pause-damage' },
+    h('p', { class: 'damage-total' }, m.damageTotal(formatNumber(total), formatNumber(Math.round(total / seconds)))),
+    damageList(g, seconds),
+    h('p', { class: 'damage-note' }, m.damageNote(formatTime(seconds))),
+  )
 }
 
 /** What the incubator made of the run: eggs paid in ₽ because they didn't fit (found or rewards), and eggs now ready to hatch. */
@@ -838,6 +897,7 @@ const runNews = ({ eggs, news, medals }: ResultsExtras) => {
  * The steps walked and eggs found feed the incubator (`extras.eggs`), and
  * `extras.news` adds a one-line Pokédex summary when the run found something new.
  * A victory also links the support page, under the buttons (only then, so it never nags).
+ * `onLobby` goes straight home (Trocar Pokémon opens the partner select instead).
  */
 export const results = (
   root: HTMLElement,
@@ -845,6 +905,7 @@ export const results = (
   g: Game,
   onRetry: () => void,
   onMenu: () => void,
+  onLobby: () => void,
   onContinue?: () => void,
   extras: ResultsExtras = NO_EXTRAS,
 ): Screen => {
@@ -853,14 +914,13 @@ export const results = (
   const r = t().rifts
   const victory = g.phase === 'victory'
   const name = playerForm(g).name
-  const entries = (Object.entries(localPlayer(g).damageByMove) as Array<[DamageSource, number]>).sort((a, b) => b[1] - a[1])
-  const top = entries[0]?.[1] ?? 1
   const earned = runEarnings(g)
   const extra = overtime(g.time)
   const reaperDefeats = g.endless?.reaperDefeats ?? 0
   const legends = g.rift.cleared
   const retry = h('button', { class: 'btn' }, m.retry)
   const back = h('button', { class: 'btn' }, m.change)
+  const lobby = h('button', { class: 'btn' }, m.lobby)
   const goOn = victory && onContinue ? h('button', { class: 'btn' }, r.continue) : null
   const ranking = extras.ranking
   const boards = ranking ? h('button', { class: 'btn' }, t().ranking.open) : null
@@ -884,11 +944,12 @@ export const results = (
       nav = bindNav(buttons.indexOf(button))
     })
   }
-  const buttons = [goOn, retry, back, share, boards].filter((b) => b !== null)
+  const buttons = [goOn, retry, back, lobby, share, boards].filter((b) => b !== null)
   const actions = [
     goOn && onContinue,
     onRetry,
     onMenu,
+    onLobby,
     share && (() => openSub(extras.share?.open, share)),
     boards && (() => openSub(ranking?.open, boards)),
   ].filter((a) => typeof a === 'function')
@@ -943,21 +1004,7 @@ export const results = (
         h('span', {}, m.earnings(formatPokeDollars(earned.coins), formatPokeDollars(earned.bonus))),
       ),
       extras.report,
-      h(
-        'div',
-        { class: 'damage-list' },
-        ...entries.map(([id, dmg]) => {
-          const src = damageSource(g, id)
-          return h(
-            'div',
-            { class: 'damage-row' },
-            h('img', { src: src.icon, alt: '' }),
-            h('span', { class: 'damage-name' }, src.name),
-            h('div', { class: 'damage-bar' }, h('div', { style: `width:${(dmg / top) * 100}%;--type:${TYPE_COLORS[src.type]}` })),
-            h('b', {}, formatNumber(dmg)),
-          )
-        }),
-      ),
+      damageList(g),
       h('div', { class: 'buttons result-buttons' }, ...buttons),
       victory && extras.credits,
       victory && h('a', { class: 'support-link result-support', href: ROUTES.support[locale()], target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),

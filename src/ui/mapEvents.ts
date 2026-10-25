@@ -10,12 +10,12 @@ import { TOGEPI_DEX, type FieldMissionKind } from '../game/fieldMissionRules'
 import { consumableIcon } from '../render/props'
 import { cryUrl, portraitUrl } from '../render/sprites'
 import { h, rich } from './dom'
-import { toast } from './toasts'
+import { runToast } from './toasts'
 import { tmDiscIcon } from './tmPick'
 
-/** Toast with a small icon on the left, like the item pickups. */
-const iconToast = (root: HTMLElement, icon: string, text: string, ms = 2600) =>
-  toast(root, h('span', { class: 'item-toast' }, h('img', { src: icon, alt: '' }), rich(text)), ms)
+/** Toast with a small icon on the left, like the item pickups; `important` when it warns or asks for something (`runToast`). */
+const iconToast = (root: HTMLElement, icon: string, text: string, ms = 2600, importance: 'important' | 'minor' = 'minor') =>
+  runToast(root, importance, h('span', { class: 'item-toast' }, h('img', { src: icon, alt: '' }), rich(text)), ms)
 
 /** A field mission's toast icon: the egg, a Poké Ball or Togepi. */
 const missionIcon = (kind: FieldMissionKind) => (kind === 'defense' ? eggIcon() : kind === 'collect' ? pokeballIcon() : portraitUrl(TOGEPI_DEX))
@@ -34,7 +34,7 @@ export const mapEventFeedback = (root: HTMLElement, notice: MapEventNotice) => {
       return playSfx('sip', 120)
     case 'chestAmbush':
       playSfx('ambush')
-      return toast(root, rich(m.chestAmbush), 2800)
+      return runToast(root, 'important', rich(m.chestAmbush), 2800)
     case 'chestTick':
       return playSfx('tick', 60)
     case 'chestOpen':
@@ -48,7 +48,7 @@ export const mapEventFeedback = (root: HTMLElement, notice: MapEventNotice) => {
       return playSfx('explosion', 120)
     case 'meowth':
       playCry(cryUrl(MEOWTH_DEX), 0.4)
-      return iconToast(root, portraitUrl(MEOWTH_DEX), m.meowth, 3000)
+      return iconToast(root, portraitUrl(MEOWTH_DEX), m.meowth, 3000, 'important')
     case 'meowthHit':
       return playSfx('coin', 60)
     case 'payDay':
@@ -60,7 +60,7 @@ export const mapEventFeedback = (root: HTMLElement, notice: MapEventNotice) => {
       return iconToast(root, portraitUrl(MEOWTH_DEX), m.meowthEscaped, 2000)
     case 'tutor':
       playSfx('altar')
-      return iconToast(root, tmDiscIcon('#78c0f8'), m.tutor, 3600)
+      return iconToast(root, tmDiscIcon('#78c0f8'), m.tutor, 3600, 'important')
     case 'tutorEmpty':
       return iconToast(root, tmDiscIcon('#78c0f8'), m.tutorEmpty, 2600)
     case 'tutorLeft':
@@ -70,11 +70,11 @@ export const mapEventFeedback = (root: HTMLElement, notice: MapEventNotice) => {
       playSfx('altar')
       if (notice.mission === 'escort') playCry(cryUrl(TOGEPI_DEX), 0.4)
       const text = notice.mission === 'defense' ? f.defense : notice.mission === 'collect' ? f.collect(notice.balls) : f.escort
-      return iconToast(root, missionIcon(notice.mission), text, 4000)
+      return iconToast(root, missionIcon(notice.mission), text, 4000, 'important')
     }
     case 'nestRaid':
       playSfx('ambush')
-      return iconToast(root, eggIcon(), m.field.nestRaid, 3200)
+      return iconToast(root, eggIcon(), m.field.nestRaid, 3200, 'important')
     case 'ballFound':
       playSfx('pickup')
       return iconToast(root, pokeballIcon(), m.field.ballFound(notice.got, notice.of), 1400)

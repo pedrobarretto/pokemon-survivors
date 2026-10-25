@@ -48,3 +48,10 @@ export const stepToasts = <T>(queue: QueuedToast<T>[], dt: number, max: number) 
   }
   return { shown, done }
 }
+
+/** The "Avisos na partida" setting: every toast in a run, only those that warn or ask for something, or none. */
+export const RUN_TOASTS = ['all', 'important', 'none'] as const
+export type RunToasts = (typeof RUN_TOASTS)[number]
+
+/** Whether a run's toast shows under `setting`: an `important` one at Todos and Só importantes, a minor one (a drop, a shiny spotted) at Todos alone. */
+export const runToastShows = (setting: RunToasts, important: boolean) => setting === 'all' || (setting === 'important' && important)

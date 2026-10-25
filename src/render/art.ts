@@ -1030,6 +1030,24 @@ const GIFT = [
 
 export const giftIcon = () => toIconUrl('gift', () => art(GIFT, { 1: '#301018', 2: '#f8d030', 3: '#e83850', 4: '#a82038', 5: '#c89000' }))
 
+/** The partner select's Random button: a die showing five. 1 outline, 2 face, 3 shade, 4 pips. */
+const DIE = [
+  '.1111111111.',
+  '122222222221',
+  '124422224421',
+  '124422224421',
+  '122222222221',
+  '122224422221',
+  '122224422221',
+  '122222222221',
+  '124422224421',
+  '124422224421',
+  '133333333331',
+  '.1111111111.',
+]
+
+export const dieIcon = () => toIconUrl('die', () => art(DIE, { 1: '#283040', 2: '#fff8f0', 3: '#c8c0d8', 4: '#e83850' }))
+
 /** Ideias (the idea board): a lit bulb. 1 outline, 2 glass, 3 shine, 4 shade, 5-6 the screw base. */
 const BULB = [
   '...11111...',
