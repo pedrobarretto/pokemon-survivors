@@ -309,7 +309,7 @@ export const siteEs: SiteMessages = {
   guide: {
     title: 'Cómo jugar Pokémon Survivors: guía completa',
     description:
-      'Guía de Pokémon Survivors: controles en teclado, mando y móvil, cómo funciona la partida, niveles, movimientos, evolución de movimientos con objetos, ataque especial, tipos y estados, jefes, shinies, objetos y eventos del mapa y la Tienda Kecleon.',
+      'Guía de Pokémon Survivors: controles en teclado, mando y móvil, cómo funciona la partida, niveles, movimientos, evolución de movimientos con objetos, ataque especial, tipos y estados, jefes, shinies, objetos y eventos del mapa, la Tienda Kecleon y el co-op en línea.',
     h1: 'Cómo jugar',
     intro:
       'Pokémon Survivors es un roguelite tipo Vampire Survivors: tú solo te mueves y tu Pokémon ataca solo. Esta guía explica todo lo que pasa en una partida, con los números del juego.',
@@ -330,6 +330,7 @@ export const siteEs: SiteMessages = {
       landmarks: 'Puntos de interés del mapa',
       megas: 'Megaevolución',
       legends: 'Modo Legendario',
+      coop: 'Co-op en línea',
       shinies: 'Shinies',
       eggs: 'Huevos e incubadora',
       items: 'Objetos en el mapa',
@@ -477,6 +478,18 @@ export const siteEs: SiteMessages = {
       },
       flute: 'Poké Flute (objeto del mapa)',
       itemsNote: 'King\'s Rock aumenta la probabilidad de estado, Toxic Orb aumenta el daño de quemadura y veneno, y Light Clay hace que los estados duren más.',
+    },
+    coop: {
+      paragraphs: (m) => [
+        `En el lobby, Co-op abre el juego en equipo: hasta ${m.players} entrenadores en la misma partida, cada uno con su Pokémon. Crea una sala e invita a tus amigos con el enlace (quien lo abre entra directo a la sala), el código de 5 caracteres o tu lista de Amigos, que muestra quién está en línea, en una sala o jugando, y manda la invitación al instante. Cada uno elige su Pokémon y se pone listo, y el anfitrión elige la dificultad y empieza. El co-op usa tu cuenta: el equipo ve tu @nombre, y los ₽ que ganas se guardan en ella.`,
+        `La EXP es del equipo: cada Exp. Candy llega a todos, así que todos suben de nivel juntos y eligen al mismo tiempo (si pasas de ${m.pick}s, el juego elige por ti). La evolución, la Habilidad, la MT o la Poké Ball de un jugador no detienen la partida de los demás, y los jefes y las grietas dejan a cada uno su propia MT, Poké Ball, premio de Alfa y Megapiedra.`,
+        `Quien se debilita se vuelve una Poké Ball en el suelo: un compañero parado a su lado durante ${m.revive}s lo reanima con el ${m.reviveHp}% de los PS. La partida termina cuando nadie más puede seguir; después de Mewtwo, el equipo tiene ${m.vote}s para votar si sigue en el modo sin fin. Si se cae la conexión, el juego se reconecta y vuelves donde estabas. Al final, los ₽ del equipo se reparten entre los jugadores que empezaron la partida.`,
+        'Por ahora el co-op es el modo normal: los lugares (la cueva, el cementerio y el cielo) no se abren, las construcciones del mapa son solo decorado, los legendarios de las grietas pelean en la arena antigua, sin dominio, y quedan fuera el Modo Legendario, la Mochila, las MT, los objetos de evolución y las Chapas de la tienda, la Horda del día, la Noche de Brujas, el Desafío del día y el ranking.',
+      ],
+      scaleTitle: 'La horda crece con el equipo',
+      whatHead: 'Qué',
+      perHead: 'Por jugador extra',
+      scale: { spawn: 'Ritmo de la horda', cap: 'Tamaño máximo de la horda', hp: 'PS de los enemigos', bossHp: 'PS de jefes, Alfas y legendarios', coins: 'Poké Dollars recogidos' },
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [

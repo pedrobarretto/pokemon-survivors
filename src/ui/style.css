@@ -17113,8 +17113,8 @@ button.hall-tile:hover {
 
 /* ---------- Co-op outside a run (ui/coopRoom.ts, ui/friends.ts) ---------- */
 
-/* The lobby's Co-op tile wears a BETA tag; on phones it's the tab bar's last tile. */
-.lobby-beta {
+/* The lobby's Co-op tile wears a NOVO tag until first opened; on phones it's the tab bar's last tile. */
+.lobby-new {
   position: absolute;
   top: -8px;
   right: -6px;
@@ -17170,15 +17170,6 @@ button.hall-tile:hover {
   width: 30px;
   height: 18px;
   flex: none;
-}
-
-.coop-beta {
-  padding: 3px 5px 2px;
-  font-size: 7px;
-  font-style: normal;
-  color: #fff;
-  background: #4898e8;
-  border-radius: 4px;
 }
 
 .dialog.coop-hub {

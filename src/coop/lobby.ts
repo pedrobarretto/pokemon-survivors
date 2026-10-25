@@ -5,8 +5,8 @@ import type { Member, RoomView } from '../net/protocol'
 /**
  * The co-op room's rules as the lobby screens read them (`ui/coopRoom.ts`):
  * what a member's card says, who the host's start waits on (the relay's
- * own check, `relay/src/room.ts`), which invites to show, and whether the
- * beta's entry shows. DOM-free and not part of the simulation's build id.
+ * own check, `relay/src/room.ts`) and which invites to show. DOM-free and
+ * not part of the simulation's build id.
  */
 
 /** What a member's card says, most pressing first: gone quiet, away in a run, the host, ready, still choosing. */
@@ -20,13 +20,6 @@ export const readiness = (room: RoomView) => {
   const ready = online.filter((m) => (m.host || m.ready) && m.loadout !== null).length
   return { ready, total: online.length, all: ready === online.length }
 }
-
-/**
- * Whether the lobby shows the co-op entry: a device override (`ps:coopBeta`,
- * `on` or `off`) wins, then dev builds show it, then the PostHog flag
- * (`null` while it hasn't answered: hidden).
- */
-export const betaOn = (o: { dev: boolean; override: string | null; flag: boolean | null }) => (o.override === 'on' ? true : o.override === 'off' ? false : o.dev || o.flag === true)
 
 /**
  * What a `build` refusal means for this page: the room runs `room` (null: a

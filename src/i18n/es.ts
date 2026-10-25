@@ -158,7 +158,7 @@ export const es: Messages = {
       offline: 'Sin conexión con el servidor del co-op.',
     },
     entry: 'Co-op',
-    beta: 'BETA',
+    fresh: 'NUEVO',
     off: 'El co-op no está disponible en esta versión del juego.',
     update: { title: 'Actualiza el juego para jugar juntos: la sala usa otra versión.', yes: 'Actualizar', no: 'Ahora no' },
     oldRoom: 'Esta sala usa una versión antigua del juego. Pide al anfitrión que cree una sala nueva.',

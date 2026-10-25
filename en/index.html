@@ -15,7 +15,7 @@
     <meta name="apple-mobile-web-app-title" content="Survivors" />
     <meta name="format-detection" content="telephone=no" />
     <title>Pokémon Survivors – Free Pokémon roguelite like Vampire Survivors</title>
-    <meta name="description" content="Play free in your browser or on your phone, no download: a Vampire Survivors-style Pokémon roguelite. Pick one of 27 starters from every region (plus 63 Pokémon that hatch from eggs), evolve mid-run, take down Mewtwo and catch the legendaries to play as them." />
+    <meta name="description" content="Play free in your browser or on your phone, no download: a Vampire Survivors-style Pokémon roguelite. Pick one of 27 starters from every region (plus 63 Pokémon that hatch from eggs), evolve mid-run, take down Mewtwo and catch the legendaries to play as them. Play solo or in online co-op with up to 3 friends." />
     <link rel="canonical" href="https://www.pokemonsurvivors.com/en/" />
     <link rel="alternate" hreflang="pt-BR" href="https://www.pokemonsurvivors.com/" />
     <link rel="alternate" hreflang="en" href="https://www.pokemonsurvivors.com/en/" />
@@ -58,13 +58,14 @@
             "name": "Pokémon Survivors",
             "alternateName": ["Pokemon Survivors", "Pokémon Survival", "Pokémon Vampire Survivors"],
             "url": "https://www.pokemonsurvivors.com/en/",
-            "description": "A free, unofficial Vampire Survivors-style Pokémon fan game. Pick one of 27 starters or hatch eggs to unlock 63 more Pokémon, survive 15 minutes of wild hordes from every generation, build your kit from 207 moves, evolve and take down Mewtwo. Beat the legendaries to catch them and play as them in Legend Mode. Runs in the browser and on phones, no download.",
+            "description": "A free, unofficial Vampire Survivors-style Pokémon fan game. Pick one of 27 starters or hatch eggs to unlock 63 more Pokémon, survive 15 minutes of wild hordes from every generation, build your kit from 207 moves, evolve and take down Mewtwo. Beat the legendaries to catch them and play as them in Legend Mode. Runs in the browser and on phones, no download. Play solo or in online co-op with up to 3 friends.",
             "image": "https://www.pokemonsurvivors.com/og.png",
             "genre": ["Roguelite", "Roguelike", "Bullet heaven", "Survivors-like", "Action"],
             "gamePlatform": ["Web browser", "Android", "iOS", "PC"],
             "applicationCategory": "GameApplication",
             "operatingSystem": "Any (web browser)",
-            "playMode": "SinglePlayer",
+            "playMode": ["SinglePlayer", "CoOp", "MultiPlayer"],
+            "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 4 },
             "inLanguage": ["en", "pt-BR", "es", "fr", "zh-Hant"],
             "isAccessibleForFree": true,
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -97,6 +98,11 @@
               },
               {
                 "@type": "Question",
+                "name": "Can I play with friends?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. Online co-op puts up to 4 trainers in the same run, each with their own Pokémon: create a room and invite friends with the link, the code or your friends list. EXP is shared by the team, the ₽ is split among everyone and a teammate can revive whoever faints. You need an account with a @name. For now co-op plays the standard mode: Legend Mode, places, shop items, events and the ranking stay in solo runs." }
+              },
+              {
+                "@type": "Question",
                 "name": "Is it an official Pokémon game?",
                 "acceptedAnswer": { "@type": "Answer", "text": "No. It is an unofficial, non-commercial fan game, not affiliated with Nintendo, The Pokémon Company, GAME FREAK or Creatures." }
               }
@@ -124,10 +130,12 @@
         hordes, collect experience, learn moves, equip held items and evolve mid-run. At the end, face Mewtwo. Then keep
         going in endless mode until Arceus comes hunting. Beat the legendaries as bosses to catch them, then play as them
         in Legend Mode.
+        Or create a room and play online co-op with up to 3 friends.
       </p>
       <h2>Features</h2>
       <ul>
         <li>27 starters from every region, Kanto to Paldea (Charmander, Squirtle, Bulbasaur, Piplup, Froakie, Fuecoco, Sprigatito and more), each with its full evolution line.</li>
+        <li>Online co-op for up to 4 players: create a room and invite friends with the link, the 5-character code or your friends list, which shows who’s online. Everyone plays their own Pokémon, EXP is shared (the whole team levels up together), the horde and bosses grow with the team, the ₽ is split among everyone, and whoever faints turns into a Poké Ball until a teammate comes close to revive them. It needs an account with a @name; for now co-op plays the standard mode, without Legend Mode, places, shop items, Halloween Night or the ranking.</li>
         <li>Eggs that hatch with the steps you take in runs: bosses, chests and rifts leave eggs that unlock 54 more playable Pokémon from every type and generation (Pikachu, Eevee, Gastly, Magikarp, Riolu, Gible, Bagon, Deino, Dreepy and more), with a 1% chance to hatch shiny. And Munchlax, which evolves into Snorlax, only hatches from the Friendship Egg, and four ghosts (Litwick, Phantump, Drifloon and Sandygast) only from the Haunted Egg Duskull sells on Halloween Night, and Porygon, Exeggcute, Scraggy and Smeargle (which copies foes' moves with Sketch) only from the Kecleon Egg, up to 6 a day in the Showcase: 90 playable Pokémon in all.</li>
         <li>Invite friends with your link: whoever signs up through it gets a Friendship Egg, and you get Mystery Gifts for every friend who really plays: another Friendship Egg, the Ambassador title with an exclusive card frame, an Ultra rare egg at 5 friends and, at 10, a shiny Dratini.</li>
         <li>207 moves and 32 held items: every family has a signature move and learns new moves at each evolution, with more moves than slots, so every run builds a different team. Max out a regular move with the right item and it evolves (Ember + Charcoal becomes Flamethrower), and evolved moves keep leveling up.</li>
@@ -166,6 +174,8 @@
       <p>No. It runs right in the browser, on PC or on your phone.</p>
       <h3>Can you play as legendary Pokémon?</h3>
       <p>Yes, in Legend Mode. Beat a legendary as a boss to catch it (3 times for most, 5 for Mewtwo, once for the mythicals) and it becomes playable, with awakenings at Lv 12 and 28 and a ranking just for legendaries. On Halloween Night 2026, Darkrai too: beat it twice in the Nightmare rift.</p>
+      <h3>Can I play with friends?</h3>
+      <p>Yes. Online co-op puts up to 4 trainers in the same run, each with their own Pokémon: create a room and invite friends with the link, the code or your friends list. EXP is shared by the team, the ₽ is split among everyone and a teammate can revive whoever faints. You need an account with a @name. For now co-op plays the standard mode: Legend Mode, places, shop items, events and the ranking stay in solo runs.</p>
       <h3>Is it an official Pokémon game?</h3>
       <p>
         No. It is an unofficial, non-commercial fan game, not affiliated with Nintendo, The Pokémon Company, GAME FREAK

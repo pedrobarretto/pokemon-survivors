@@ -9,8 +9,6 @@ import type { SurveyAnswer } from './data/survey'
 import type { Difficulty } from './game/difficulty'
 import type { RunMode } from './game/ranking'
 import type { RelayHome, VpsHome } from './net/protocol'
-import { timeoutSignal } from './net/timeout'
-import { isRecord } from './game/parse'
 import type { LobbyFocus } from './ui/title'
 import type { NetSummary } from './coop/netStats'
 import type { CrumbMoment, Quality } from './crumb'
@@ -267,39 +265,6 @@ export const identify = (userId: string | null, handle: string | null) => {
   })
 }
 
-/**
- * Evaluates one feature flag for this device's person, or null where PostHog
- * doesn't run (the promise waits for it to load, and gets null if it never
- * does). PostHog's own flags stay off (`advanced_disable_flags`: they'd fetch
- * the remote config, whose `/array/<key>/config` gets Vercel's trailing-slash
- * 308 and a 404, and could turn on features from the dashboard), so this asks
- * `/flags/` itself, a path that already ends in a slash, for the one key. The
- * handle goes along so a flag can target players before PostHog has ingested
- * their person.
- */
-export const featureFlag = (key: string): Promise<boolean | null> =>
-  new Promise((resolve) => {
-    withPosthog(
-      (ph) => {
-        const body = { token: POSTHOG_KEY, distinct_id: ph.get_distinct_id(), person_properties: identity?.handle ? { handle: identity.handle } : {}, flag_keys: [key] }
-        fetch('/ingest/flags/?v=2', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: timeoutSignal(8000) })
-          .then((res) => (res.ok ? res.json() : null))
-          .then((json: unknown) => resolve(flagIn(json, key)))
-          .catch(() => resolve(null))
-      },
-      () => resolve(null),
-    )
-  })
-
-/** A flag's answer in a `/flags/?v=2` response (`flags[key].enabled`, or the older `featureFlags[key]`), or null. */
-export const flagIn = (json: unknown, key: string): boolean | null => {
-  if (!isRecord(json)) return null
-  const flag = isRecord(json.flags) ? json.flags[key] : undefined
-  if (isRecord(flag) && 'enabled' in flag) return flag.enabled === true
-  const legacy = isRecord(json.featureFlags) ? json.featureFlags[key] : undefined
-  return legacy === undefined ? null : Boolean(legacy)
-}
-
 /** What an error report carries besides the error: where the player was, and the run's replay (see `game/replay.ts`). */
 export type ErrorContext = { [key: string]: string | number | boolean | null }
 
@@ -408,7 +373,7 @@ export const startAnalytics = (context: () => ErrorContext) => {
           capture_performance: false,
           disable_session_recording: true,
           disable_surveys: true,
-          // No feature flags, and so no remote config: its `/array/<key>/config` would get Vercel's trailing slash and a 404. The co-op beta's one flag goes through `featureFlag`.
+          // No feature flags, and so no remote config: its `/array/<key>/config` would get Vercel's trailing slash and a 404.
           advanced_disable_flags: true,
           // Our listeners above report errors, with the run's context.
           capture_exceptions: false,

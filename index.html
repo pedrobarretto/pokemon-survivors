@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-title" content="Survivors" />
     <meta name="format-detection" content="telephone=no" />
     <title>Pokémon Survivors – Jogo grátis estilo Vampire Survivors com Pokémon</title>
-    <meta name="description" content="Jogue grátis no navegador ou no celular, sem baixar nada: um roguelite estilo Vampire Survivors com Pokémon. Escolha entre 27 iniciais de todas as regiões (e mais 63 Pokémon que saem de ovos), evolua, derrote Mewtwo e capture os lendários para jogar com eles." />
+    <meta name="description" content="Jogue grátis no navegador ou no celular, sem baixar nada: um roguelite estilo Vampire Survivors com Pokémon. Escolha entre 27 iniciais de todas as regiões (e mais 63 Pokémon que saem de ovos), evolua, derrote Mewtwo e capture os lendários para jogar com eles. Jogue sozinho ou em co-op online com até 3 amigos." />
     <link rel="canonical" href="https://www.pokemonsurvivors.com/" />
     <link rel="alternate" hreflang="pt-BR" href="https://www.pokemonsurvivors.com/" />
     <link rel="alternate" hreflang="en" href="https://www.pokemonsurvivors.com/en/" />
@@ -57,13 +57,14 @@
             "name": "Pokémon Survivors",
             "alternateName": ["Pokemon Survivors", "Pokémon Survival", "Vampire Survivors com Pokémon"],
             "url": "https://www.pokemonsurvivors.com/",
-            "description": "Fan game gratuito e não oficial estilo Vampire Survivors com Pokémon. Escolha um dos 27 iniciais ou choque ovos para liberar mais 63 Pokémon, sobreviva 15 minutos de hordas selvagens de todas as gerações, monte sua build entre 207 golpes, evolua e derrote Mewtwo. Vença os lendários para capturá-los e jogar com eles no Modo Lendário. Roda no navegador e no celular, sem download.",
+            "description": "Fan game gratuito e não oficial estilo Vampire Survivors com Pokémon. Escolha um dos 27 iniciais ou choque ovos para liberar mais 63 Pokémon, sobreviva 15 minutos de hordas selvagens de todas as gerações, monte sua build entre 207 golpes, evolua e derrote Mewtwo. Vença os lendários para capturá-los e jogar com eles no Modo Lendário. Roda no navegador e no celular, sem download. Jogue sozinho ou em co-op online com até 3 amigos.",
             "image": "https://www.pokemonsurvivors.com/og.png",
             "genre": ["Roguelite", "Roguelike", "Bullet heaven", "Survivors-like", "Ação"],
             "gamePlatform": ["Navegador", "Android", "iOS", "PC"],
             "applicationCategory": "GameApplication",
             "operatingSystem": "Qualquer (navegador)",
-            "playMode": "SinglePlayer",
+            "playMode": ["SinglePlayer", "CoOp", "MultiPlayer"],
+            "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 4 },
             "inLanguage": ["pt-BR", "en", "es", "fr", "zh-Hant"],
             "isAccessibleForFree": true,
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" },
@@ -96,6 +97,11 @@
               },
               {
                 "@type": "Question",
+                "name": "Dá para jogar com amigos?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Sim. O co-op online junta até 4 treinadores na mesma partida, cada um com o seu Pokémon: crie uma sala e chame os amigos pelo link, pelo código ou pela lista de amigos. A EXP é da equipe, o ₽ é dividido entre todos e quem desmaia pode ser reanimado por um colega. É preciso uma conta com @nome. Por enquanto o co-op é o modo normal: Modo Lendário, lugares, itens da loja, eventos e ranking ficam nas partidas solo." }
+              },
+              {
+                "@type": "Question",
                 "name": "É um jogo oficial da Pokémon?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Não. É um fan game não oficial e sem fins lucrativos, sem ligação com Nintendo, The Pokémon Company, GAME FREAK ou Creatures." }
               }
@@ -123,10 +129,12 @@
         Pokémon selvagens, colete experiência, aprenda golpes, equipe itens e evolua no meio da partida. No fim, enfrente
         Mewtwo. Depois, continue no modo sem fim até Arceus vir caçar você. Vença os lendários como chefes para capturá-los
         e jogue com eles no Modo Lendário.
+        Ou crie uma sala e jogue em co-op online com até 3 amigos.
       </p>
       <h2>Recursos</h2>
       <ul>
         <li>27 iniciais de todas as regiões, de Kanto a Paldea (Charmander, Squirtle, Bulbasaur, Piplup, Froakie, Fuecoco, Sprigatito e mais), cada um com sua linha evolutiva completa.</li>
+        <li>Co-op online para até 4 jogadores: crie uma sala e chame os amigos pelo link, pelo código de 5 letras ou pela lista de amigos, que mostra quem está online. Cada um joga com o seu Pokémon, a EXP é da equipe (todo mundo sobe de nível junto), a horda e os chefes crescem com o time, o ₽ é dividido entre todos e quem desmaia vira uma Poké Ball até um colega chegar perto para reanimar. Precisa de uma conta com @nome; por enquanto o co-op joga o modo normal, sem Modo Lendário, lugares, itens da loja, Noite das Bruxas e ranking.</li>
         <li>Ovos que chocam com os passos dados nas partidas: chefes, baús e fendas deixam ovos que liberam mais 54 Pokémon jogáveis de todos os tipos e gerações (Pikachu, Eevee, Gastly, Magikarp, Riolu, Gible, Bagon, Deino, Dreepy e mais), com 1% de chance de sair shiny. E Munchlax, que evolui em Snorlax, só sai do Ovo da Amizade, e quatro fantasmas (Litwick, Phantump, Drifloon e Sandygast) só saem do Ovo Assombrado, que o Duskull vende na Noite das Bruxas, e Porygon, Exeggcute, Scraggy e Smeargle (que copia o golpe dos inimigos com o Sketch) só saem do Ovo do Kecleon, até 6 por dia na Vitrine: 90 Pokémon jogáveis no total.</li>
         <li>Convide amigos com o seu link: quem cria uma conta pelo convite ganha um Ovo da Amizade, e quem convida ganha presentes (Presente Misterioso) a cada amigo que joga de verdade: outro Ovo da Amizade, o título Embaixador(a) com uma moldura exclusiva, um Ovo ultra raro com 5 amigos e, com 10, um Dratini shiny.</li>
         <li>207 golpes e 32 itens: cada família tem um golpe assinatura e aprende golpes novos a cada evolução, com mais golpes do que espaços, então cada partida monta um time diferente. Maximize um golpe comum com o item certo e ele evolui (Ember + Charcoal vira Flamethrower), e os evoluídos continuam subindo de nível.</li>
@@ -165,6 +173,8 @@
       <p>Não. Roda direto no navegador, no PC ou no celular.</p>
       <h3>Dá para jogar com Pokémon lendários?</h3>
       <p>Sim, no Modo Lendário. Vença um lendário como chefe para capturá-lo (3 vezes para a maioria, 5 para Mewtwo, 1 para os míticos) e ele fica jogável, com despertares no Nv 12 e 28 e um ranking só dos lendários. Na Noite das Bruxas de 2026, o Darkrai também: vença-o 2 vezes na fenda do Pesadelo.</p>
+      <h3>Dá para jogar com amigos?</h3>
+      <p>Sim. O co-op online junta até 4 treinadores na mesma partida, cada um com o seu Pokémon: crie uma sala e chame os amigos pelo link, pelo código ou pela lista de amigos. A EXP é da equipe, o ₽ é dividido entre todos e quem desmaia pode ser reanimado por um colega. É preciso uma conta com @nome. Por enquanto o co-op é o modo normal: Modo Lendário, lugares, itens da loja, eventos e ranking ficam nas partidas solo.</p>
       <h3>É um jogo oficial da Pokémon?</h3>
       <p>
         Não. É um fan game não oficial e sem fins lucrativos, sem ligação com Nintendo, The Pokémon Company, GAME FREAK ou

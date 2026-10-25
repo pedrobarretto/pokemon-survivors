@@ -15,7 +15,7 @@
     <meta name="apple-mobile-web-app-title" content="Survivors" />
     <meta name="format-detection" content="telephone=no" />
     <title>Pokémon Survivors（寶可夢倖存者）– 免費寶可夢割草遊戲</title>
-    <meta name="description" content="免費、免下載，用瀏覽器或手機就能玩的寶可夢割草遊戲：Vampire Survivors 風格的寶可夢肉鴿。從各地區 27 隻初始寶可夢中選一隻（另有 63 隻寶可夢從蛋中孵化），在對局中進化、打倒 Mewtwo，收服傳說寶可夢並親自操控牠們。" />
+    <meta name="description" content="免費、免下載，用瀏覽器或手機就能玩的寶可夢割草遊戲：Vampire Survivors 風格的寶可夢肉鴿。從各地區 27 隻初始寶可夢中選一隻（另有 63 隻寶可夢從蛋中孵化），在對局中進化、打倒 Mewtwo，收服傳說寶可夢並親自操控牠們。可以單人遊玩，也能和最多 3 位好友線上合作。" />
     <link rel="canonical" href="https://www.pokemonsurvivors.com/zh-tw/" />
     <link rel="alternate" hreflang="pt-BR" href="https://www.pokemonsurvivors.com/" />
     <link rel="alternate" hreflang="en" href="https://www.pokemonsurvivors.com/en/" />
@@ -58,13 +58,14 @@
             "name": "Pokémon Survivors",
             "alternateName": ["Pokemon Survivors", "Pokémon Survival", "Pokémon Vampire Survivors", "寶可夢倖存者", "寶可夢 Vampire Survivors", "寶可夢割草遊戲"],
             "url": "https://www.pokemonsurvivors.com/zh-tw/",
-            "description": "免費、非官方的寶可夢粉絲遊戲，Vampire Survivors 風格的割草肉鴿。從 27 隻初始寶可夢中選一隻，或孵化蛋解鎖另外 63 隻寶可夢，在來自所有世代的野生獸群中存活 15 分鐘，從 207 個招式中組出你的配置，進化並打倒 Mewtwo。擊敗傳說寶可夢就能收服牠們，並在傳說模式中使用。可在瀏覽器與手機上執行，免下載。",
+            "description": "免費、非官方的寶可夢粉絲遊戲，Vampire Survivors 風格的割草肉鴿。從 27 隻初始寶可夢中選一隻，或孵化蛋解鎖另外 63 隻寶可夢，在來自所有世代的野生獸群中存活 15 分鐘，從 207 個招式中組出你的配置，進化並打倒 Mewtwo。擊敗傳說寶可夢就能收服牠們，並在傳說模式中使用。可在瀏覽器與手機上執行，免下載。可以單人遊玩，也能和最多 3 位好友線上合作。",
             "image": "https://www.pokemonsurvivors.com/og.png",
             "genre": ["Roguelite", "Roguelike", "肉鴿", "割草遊戲", "彈幕天堂（Bullet heaven）", "Survivors-like", "動作"],
             "gamePlatform": ["網頁瀏覽器", "Android", "iOS", "PC"],
             "applicationCategory": "GameApplication",
             "operatingSystem": "任何系統（網頁瀏覽器）",
-            "playMode": "SinglePlayer",
+            "playMode": ["SinglePlayer", "CoOp", "MultiPlayer"],
+            "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 4 },
             "inLanguage": ["en", "pt-BR", "es", "fr", "zh-Hant"],
             "isAccessibleForFree": true,
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TWD" },
@@ -97,6 +98,11 @@
               },
               {
                 "@type": "Question",
+                "name": "可以和朋友一起玩嗎？",
+                "acceptedAnswer": { "@type": "Answer", "text": "可以。線上合作模式最多讓 4 位訓練家同場對局，每人帶著自己的寶可夢：建立房間後，用連結、房間代碼或好友名單邀請朋友。經驗值由全隊共享，₽ 由所有人平分，倒下的隊友也能被救起。需要一個有 @名稱 的帳號。目前合作模式為標準模式：傳說模式、特殊地點、商店道具、活動和排行榜仍只在單人對局中。" }
+              },
+              {
+                "@type": "Question",
                 "name": "這是官方的寶可夢遊戲嗎？",
                 "acceptedAnswer": { "@type": "Answer", "text": "不是。這是一款非官方、非商業的粉絲遊戲，與 Nintendo、The Pokémon Company、GAME FREAK 或 Creatures 無關。" }
               }
@@ -123,10 +129,12 @@
         選好你的初始寶可夢，在地圖上四處走動，讓牠自動攻擊。在一波波野生寶可夢獸群中存活 15 分鐘，收集經驗值、學習招式、
         裝備攜帶道具，並在對局中進化。最後迎戰 Mewtwo，接著在無盡模式中繼續挑戰，直到 Arceus 前來獵殺你。
         以首領身分擊敗傳說寶可夢就能收服牠們，之後在傳說模式中親自操控牠們。
+        也可以建立房間，和最多 3 位好友線上合作。
       </p>
       <h2>遊戲特色</h2>
       <ul>
         <li>來自各地區的 27 隻初始寶可夢，從關都到帕底亞（Charmander、Squirtle、Bulbasaur、Piplup、Froakie、Fuecoco、Sprigatito 等），每隻都有完整的進化路線。</li>
+        <li>最多 4 人的線上合作模式：建立房間，用連結、5 碼房間代碼或會顯示誰在線上的好友名單邀請朋友。每人操控自己的寶可夢，經驗值由全隊共享（全隊一起升級），獸群和首領會隨隊伍變強，₽ 由所有人平分，倒下的人會變成精靈球，等隊友靠近就能復活。需要一個有 @名稱 的帳號；目前合作模式為標準模式，沒有傳說模式、特殊地點、商店道具、女巫之夜和排行榜。</li>
         <li>靠你在對局中走的步數孵化的蛋：首領、寶箱與裂縫會留下蛋，解鎖另外 54 隻來自所有屬性與世代的可用寶可夢（Pikachu、Eevee、Gastly、Magikarp、Riolu、Gible、Bagon、Deino、Dreepy 等），孵出異色的機率是 1%。此外，會進化成 Snorlax 的 Munchlax 只會從友情蛋孵化；四隻幽靈（Litwick、Phantump、Drifloon 與 Sandygast）只會從女巫之夜期間 Duskull 販售的鬧鬼蛋孵化；Porygon、Exeggcute、Scraggy 與 Smeargle（會用 Sketch 複製敵人的招式）則只會從 Kecleon蛋孵化，今日櫥窗每天最多可買 6 顆：總共 90 隻可用的寶可夢。</li>
         <li>用你的連結邀請好友：透過連結註冊的人會獲得一顆友情蛋，而每位真的有在玩的好友都會讓你獲得神秘禮物：再一顆友情蛋、大使稱號與專屬卡片外框、5 位好友時的超稀有蛋，以及 10 位好友時的異色 Dratini。</li>
         <li>207 個招式與 32 種攜帶道具：每個家族都有招牌招式，每次進化都會學到新招式，而且招式比欄位多，所以每場對局都會組出不同的配置。把一般招式升到滿級並搭配對的道具，就會進化（Ember + Charcoal 變成 Flamethrower），進化後的招式還能繼續升級。</li>
@@ -165,6 +173,8 @@
       <p>不需要。直接在瀏覽器中就能玩，電腦或手機都可以。</p>
       <h3>可以操控傳說寶可夢嗎？</h3>
       <p>可以，在傳說模式中。以首領身分擊敗傳說寶可夢就能收服牠（大多數需要 3 次，Mewtwo 需要 5 次，幻之寶可夢只需 1 次），收服後即可使用，會在 Lv 12 與 28 覺醒，還有傳說寶可夢專屬的排行榜。2026 女巫之夜期間，Darkrai 也可以：在夢魘裂縫中擊敗它 2 次。</p>
+      <h3>可以和朋友一起玩嗎？</h3>
+      <p>可以。線上合作模式最多讓 4 位訓練家同場對局，每人帶著自己的寶可夢：建立房間後，用連結、房間代碼或好友名單邀請朋友。經驗值由全隊共享，₽ 由所有人平分，倒下的隊友也能被救起。需要一個有 @名稱 的帳號。目前合作模式為標準模式：傳說模式、特殊地點、商店道具、活動和排行榜仍只在單人對局中。</p>
       <h3>這是官方的寶可夢遊戲嗎？</h3>
       <p>
         不是。這是一款非官方、非商業的粉絲遊戲，與 Nintendo、The Pokémon Company、GAME FREAK 或 Creatures 無關。

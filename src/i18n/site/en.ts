@@ -305,7 +305,7 @@ export const siteEn: SiteMessages = {
   guide: {
     title: 'How to play Pokémon Survivors: complete guide',
     description:
-      'Pokémon Survivors guide: keyboard, gamepad and phone controls, how a run works, levels, moves, move evolutions with held items, the special attack, types and status, bosses, shinies, map items, map events and the Kecleon Shop.',
+      'Pokémon Survivors guide: keyboard, gamepad and phone controls, how a run works, levels, moves, move evolutions with held items, the special attack, types and status, bosses, shinies, map items, map events, the Kecleon Shop and online co-op.',
     h1: 'How to play',
     intro:
       'Pokémon Survivors is a Vampire Survivors-style roguelite: you only move, and your Pokémon attacks on its own. This guide explains everything that happens in a run, with the game\'s numbers.',
@@ -326,6 +326,7 @@ export const siteEn: SiteMessages = {
       landmarks: 'Landmarks on the map',
       megas: 'Mega Evolution',
       legends: 'Legend Mode',
+      coop: 'Online co-op',
       shinies: 'Shinies',
       eggs: 'Eggs and the incubator',
       items: 'Map items',
@@ -473,6 +474,18 @@ export const siteEn: SiteMessages = {
       },
       flute: 'Poké Flute (map item)',
       itemsNote: 'King\'s Rock raises the status chance, Toxic Orb raises burn and poison damage, and Light Clay makes statuses last longer.',
+    },
+    coop: {
+      paragraphs: (m) => [
+        `In the lobby, Co-op opens team play: up to ${m.players} trainers in the same run, each with their own Pokémon. Create a room and bring your friends with the link (opening it goes straight into the room), the 5-character code or your Friends list, which shows who's online, in a room or playing, and sends the invite right away. Everyone picks their Pokémon and gets ready, and the host picks the difficulty and starts. Co-op uses your account: the team sees your @name, and the ₽ you earn is saved to it.`,
+        `EXP belongs to the team: every Exp. Candy reaches everyone, so the whole team levels up together and picks at the same time (past ${m.pick}s, the game picks for you). One player's evolution, Ability, TM or Poké Ball doesn't stop the others' run, and bosses and rifts drop each player their own TM, Poké Ball, Alpha prize and Mega Stone.`,
+        `Whoever faints turns into a Poké Ball on the ground: a teammate standing next to it for ${m.revive}s revives them with ${m.reviveHp}% HP. The run ends when nobody can carry on; after Mewtwo, the team has ${m.vote}s to vote on going into endless mode. If your connection drops, the game reconnects and you pick up where you left off. At the end, the team's ₽ is split among the players who started the run.`,
+        'For now co-op plays the standard mode: places (the cave, the graveyard and the sky) don\'t open, landmarks are scenery only, rift legendaries fight in the old arena instead of their domain, and Legend Mode, the Bag, the shop\'s TMs, evolution items and Bottle Caps, the daily Outbreak, Halloween Night, the Daily Challenge and the ranking stay out.',
+      ],
+      scaleTitle: 'The horde grows with the team',
+      whatHead: 'What',
+      perHead: 'Per extra player',
+      scale: { spawn: 'Horde spawn rate', cap: 'Horde size cap', hp: 'Enemy HP', bossHp: 'Boss, Alpha and legendary HP', coins: 'Poké Dollars collected' },
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [

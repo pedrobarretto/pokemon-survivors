@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { PLAYABLE_IDS } from '../data/hatchlings'
 import type { CoopInvite } from '../game/friends'
 import type { Member, RoomView } from '../net/protocol'
-import { betaOn, buildAdvice, coopAccess, coopStarter, freshInvites, memberState, readiness } from './lobby'
+import { buildAdvice, coopAccess, coopStarter, freshInvites, memberState, readiness } from './lobby'
 
 const member = (seat: number, o: Partial<Member> = {}): Member => ({
   seat,
@@ -44,19 +44,6 @@ describe('readiness', () => {
 
   it('a host alone can start', () => {
     expect(readiness(room([member(0)])).all).toBe(true)
-  })
-})
-
-describe('betaOn', () => {
-  it('lets the device override win both ways', () => {
-    expect(betaOn({ dev: true, override: 'off', flag: true })).toBe(false)
-    expect(betaOn({ dev: false, override: 'on', flag: false })).toBe(true)
-  })
-
-  it('shows in dev builds, else only when the flag says so', () => {
-    expect(betaOn({ dev: true, override: null, flag: null })).toBe(true)
-    expect(betaOn({ dev: false, override: null, flag: null })).toBe(false)
-    expect(betaOn({ dev: false, override: null, flag: true })).toBe(true)
   })
 })
 

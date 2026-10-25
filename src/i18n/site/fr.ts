@@ -306,7 +306,7 @@ export const siteFr: SiteMessages = {
   guide: {
     title: 'Comment jouer à Pokémon Survivors : le guide complet',
     description:
-      'Guide de Pokémon Survivors : commandes au clavier, à la manette et sur téléphone, déroulement d’une partie, niveaux, capacités, évolutions de capacités avec les objets tenus, attaque spéciale, types et statuts, boss, chromatiques, objets de la carte, événements et Boutique de Kecleon.',
+      'Guide de Pokémon Survivors : commandes au clavier, à la manette et sur téléphone, déroulement d’une partie, niveaux, capacités, évolutions de capacités avec les objets tenus, attaque spéciale, types et statuts, boss, chromatiques, objets de la carte, événements, Boutique de Kecleon et coop en ligne.',
     h1: 'Comment jouer',
     intro:
       'Pokémon Survivors est un roguelite façon Vampire Survivors : tu te contentes de bouger, et ton Pokémon attaque tout seul. Ce guide explique tout ce qui se passe pendant une partie, avec les chiffres du jeu.',
@@ -327,6 +327,7 @@ export const siteFr: SiteMessages = {
       landmarks: 'Points de repère sur la carte',
       megas: 'Méga-Évolution',
       legends: 'Mode Légendaire',
+      coop: 'Coop en ligne',
       shinies: 'Chromatiques',
       eggs: 'Œufs et incubateur',
       items: 'Objets de la carte',
@@ -474,6 +475,18 @@ export const siteFr: SiteMessages = {
       },
       flute: 'Poké Flute (objet de la carte)',
       itemsNote: 'La King’s Rock augmente les chances de statut, le Toxic Orb augmente les dégâts de brûlure et de poison, et la Light Clay fait durer les statuts plus longtemps.',
+    },
+    coop: {
+      paragraphs: (m) => [
+        `Dans le lobby, Coop ouvre le jeu en équipe : jusqu’à ${m.players} dresseurs dans la même partie, chacun avec son Pokémon. Crée un salon et invite tes amis avec le lien (l’ouvrir mène directement au salon), le code à 5 caractères ou ta liste d’amis, qui montre qui est en ligne, dans un salon ou en partie, et envoie l’invitation tout de suite. Chacun choisit son Pokémon et se met prêt, puis l’hôte choisit la difficulté et lance la partie. La coop utilise ton compte : l’équipe voit ton @nom, et les ₽ que tu gagnes y sont enregistrés.`,
+        `L’EXP appartient à l’équipe : chaque Exp. Candy arrive à tout le monde, donc toute l’équipe monte de niveau ensemble et choisit en même temps (au-delà de ${m.pick}s, le jeu choisit pour toi). L’évolution, le Talent, la CT ou la Poké Ball d’un joueur n’arrêtent pas la partie des autres, et les boss et les failles laissent à chacun sa propre CT, Poké Ball, prix d’Alpha et Méga-Gemme.`,
+        `Celui qui est K.O. devient une Poké Ball au sol : un coéquipier qui reste à côté pendant ${m.revive}s le ranime avec ${m.reviveHp}% de ses PV. La partie se termine quand plus personne ne peut continuer ; après Mewtwo, l’équipe a ${m.vote}s pour voter la suite en mode sans fin. Si la connexion coupe, le jeu se reconnecte et tu reprends là où tu en étais. À la fin, les ₽ de l’équipe sont partagés entre les joueurs qui ont commencé la partie.`,
+        'Pour l’instant, la coop se joue en mode standard : les lieux (la grotte, le cimetière et le ciel) ne s’ouvrent pas, les constructions de la carte ne sont qu’un décor, les légendaires des failles combattent dans l’ancienne arène, sans domaine, et le Mode Légendaire, le Sac, les CT, les objets d’évolution et les Bottle Caps de la boutique, l’Apparition massive du jour, la Nuit des Sorcières, le Défi du jour et le classement restent à l’écart.',
+      ],
+      scaleTitle: 'La horde grandit avec l’équipe',
+      whatHead: 'Quoi',
+      perHead: 'Par joueur en plus',
+      scale: { spawn: 'Rythme de la horde', cap: 'Taille maximale de la horde', hp: 'PV des ennemis', bossHp: 'PV des boss, Alphas et légendaires', coins: 'Poké Dollars ramassés' },
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [

@@ -158,7 +158,7 @@ export const en: Messages = {
       offline: "Can't reach the co-op server.",
     },
     entry: 'Co-op',
-    beta: 'BETA',
+    fresh: 'NEW',
     off: "Co-op isn't available in this version of the game.",
     update: { title: 'Update the game to play together: the room runs another version.', yes: 'Update', no: 'Not now' },
     oldRoom: 'This room runs an older version of the game. Ask the host to create a new room.',

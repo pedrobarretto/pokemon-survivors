@@ -158,7 +158,7 @@ export const fr: Messages = {
       offline: 'Impossible de joindre le serveur coop.',
     },
     entry: 'Coop',
-    beta: 'BETA',
+    fresh: 'NOUVEAU',
     off: 'La coop n’est pas disponible dans cette version du jeu.',
     update: { title: 'Mets le jeu à jour pour jouer ensemble : le salon tourne sur une autre version.', yes: 'Mettre à jour', no: 'Plus tard' },
     oldRoom: 'Ce salon tourne sur une ancienne version du jeu. Demande à l’hôte de créer un nouveau salon.',

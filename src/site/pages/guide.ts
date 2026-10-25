@@ -16,6 +16,7 @@ import { MEGA, MEGA_IDS, MEGA_LINES, MEGAS, megasOf, type MegaDef } from '../../
 import { RIFT, RIFT_LEGENDS, type RiftLegend } from '../../data/rifts'
 import { DOMAINS, partnerOf } from '../../data/domains'
 import { ABILITIES } from '../../data/abilities'
+import { COOP } from '../../data/coop'
 import { AWAKEN_AT, LEGEND_IDS, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../../data/legends'
 import { legendSource } from '../../game/capture'
 import { legendMods } from '../../game/legend'
@@ -386,6 +387,17 @@ const legends = (locale: Locale, m: SiteMessages) => {
     ${table(m.guide.run.difficultyHead, pressure)}`
 }
 
+/** The co-op scalings the guide's table lists, in its order (`COOP.scale`; the EXP split is in the prose). */
+const COOP_SCALES = ['spawn', 'cap', 'hp', 'bossHp', 'coins'] as const satisfies readonly (keyof typeof COOP.scale)[]
+
+const coop = (m: SiteMessages) => {
+  const c = m.guide.coop
+  const rows = COOP_SCALES.map((k) => [c.scale[k], `+${Math.round(COOP.scale[k] * 100)}%`])
+  return html`${paragraphs(c.paragraphs({ players: COOP.maxPlayers, revive: COOP.revive.time, reviveHp: Math.round(COOP.revive.hp * 100), pick: COOP.pick.time, vote: COOP.voteTime }))}
+    <h3>${c.scaleTitle}</h3>
+    ${table([c.whatHead, c.perHead], rows)}`
+}
+
 const places = (locale: Locale, m: SiteMessages) => {
   const p = m.guide.places
   const num = (v: number) => v.toLocaleString(m.lang.tag)
@@ -611,6 +623,7 @@ const SECTIONS: Record<Section, (locale: Locale, m: SiteMessages) => Html> = {
   traits,
   rifts,
   legends,
+  coop: (_, m) => coop(m),
   places,
   landmarks,
   megas,

@@ -15,7 +15,7 @@
     <meta name="apple-mobile-web-app-title" content="Survivors" />
     <meta name="format-detection" content="telephone=no" />
     <title>Pokémon Survivors – Jeu Pokémon gratuit façon Vampire Survivors</title>
-    <meta name="description" content="Joue gratuitement dans ton navigateur ou sur mobile, sans téléchargement : un roguelite Pokémon façon Vampire Survivors. Choisis l’un des 27 starters de toutes les régions (plus 63 Pokémon qui éclosent des œufs), évolue en pleine partie, bats Mewtwo et capture les légendaires pour jouer avec eux." />
+    <meta name="description" content="Joue gratuitement dans ton navigateur ou sur mobile, sans téléchargement : un roguelite Pokémon façon Vampire Survivors. Choisis l’un des 27 starters de toutes les régions (plus 63 Pokémon qui éclosent des œufs), évolue en pleine partie, bats Mewtwo et capture les légendaires pour jouer avec eux. Joue en solo ou en coop en ligne avec jusqu’à 3 amis." />
     <link rel="canonical" href="https://www.pokemonsurvivors.com/fr/" />
     <link rel="alternate" hreflang="pt-BR" href="https://www.pokemonsurvivors.com/" />
     <link rel="alternate" hreflang="en" href="https://www.pokemonsurvivors.com/en/" />
@@ -58,13 +58,14 @@
             "name": "Pokémon Survivors",
             "alternateName": ["Pokemon Survivors", "Pokémon Survival", "Pokémon Vampire Survivors", "Pokémon Survivants", "Jeu Pokémon façon Vampire Survivors"],
             "url": "https://www.pokemonsurvivors.com/fr/",
-            "description": "Un fan game Pokémon gratuit et non officiel façon Vampire Survivors. Choisis l’un des 27 starters ou fais éclore des œufs pour débloquer 63 Pokémon de plus, survis 15 minutes face à des hordes sauvages de toutes les générations, construis ton build parmi 207 capacités, évolue et bats Mewtwo. Bats les légendaires pour les capturer et jouer avec eux en Mode Légendaire. Se joue dans le navigateur et sur mobile, sans téléchargement.",
+            "description": "Un fan game Pokémon gratuit et non officiel façon Vampire Survivors. Choisis l’un des 27 starters ou fais éclore des œufs pour débloquer 63 Pokémon de plus, survis 15 minutes face à des hordes sauvages de toutes les générations, construis ton build parmi 207 capacités, évolue et bats Mewtwo. Bats les légendaires pour les capturer et jouer avec eux en Mode Légendaire. Se joue dans le navigateur et sur mobile, sans téléchargement. Joue en solo ou en coop en ligne avec jusqu’à 3 amis.",
             "image": "https://www.pokemonsurvivors.com/og.png",
             "genre": ["Roguelite", "Roguelike", "Bullet heaven", "Survivors-like", "Action"],
             "gamePlatform": ["Navigateur web", "Android", "iOS", "PC"],
             "applicationCategory": "GameApplication",
             "operatingSystem": "Tous (navigateur web)",
-            "playMode": "SinglePlayer",
+            "playMode": ["SinglePlayer", "CoOp", "MultiPlayer"],
+            "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 4 },
             "inLanguage": ["en", "pt-BR", "es", "fr", "zh-Hant"],
             "isAccessibleForFree": true,
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
@@ -97,6 +98,11 @@
               },
               {
                 "@type": "Question",
+                "name": "Peut-on jouer avec des amis ?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Oui. La coop en ligne réunit jusqu’à 4 dresseurs dans la même partie, chacun avec son Pokémon : crée un salon et invite tes amis avec le lien, le code ou ta liste d’amis. L’EXP est partagée par l’équipe, les ₽ sont partagés entre tous et un coéquipier peut ranimer celui qui est K.O. Il faut un compte avec un @nom. Pour l’instant, la coop se joue en mode standard : le Mode Légendaire, les lieux, les objets de la boutique, les événements et le classement restent en solo." }
+              },
+              {
+                "@type": "Question",
                 "name": "Est-ce un jeu Pokémon officiel ?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Non. C’est un fan game non officiel et non commercial, sans lien avec Nintendo, The Pokémon Company, GAME FREAK ou Creatures." }
               }
@@ -125,10 +131,12 @@
         des hordes de Pokémon sauvages, ramasse de l’expérience, apprends des capacités, équipe des objets tenus et évolue
         en pleine partie. À la fin, affronte Mewtwo. Ensuite, continue en mode sans fin jusqu’à ce qu’Arceus vienne te
         chasser. Bats les légendaires en tant que boss pour les capturer, puis joue avec eux en Mode Légendaire.
+        Ou crée un salon et joue en coop en ligne avec jusqu’à 3 amis.
       </p>
       <h2>Fonctionnalités</h2>
       <ul>
         <li>27 starters de toutes les régions, de Kanto à Paldea (Charmander, Squirtle, Bulbasaur, Piplup, Froakie, Fuecoco, Sprigatito et d’autres), chacun avec sa lignée d’évolution complète.</li>
+        <li>Coop en ligne jusqu’à 4 joueurs : crée un salon et invite tes amis avec le lien, le code à 5 caractères ou ta liste d’amis, qui montre qui est en ligne. Chacun joue son Pokémon, l’EXP est partagée (toute l’équipe monte de niveau ensemble), la horde et les boss grandissent avec l’équipe, les ₽ sont partagés entre tous, et celui qui est K.O. devient une Poké Ball jusqu’à ce qu’un coéquipier s’approche pour le ranimer. Il faut un compte avec un @nom ; pour l’instant, la coop se joue en mode standard, sans Mode Légendaire, lieux, objets de la boutique, Nuit des Sorcières ni classement.</li>
         <li>Des œufs qui éclosent avec les pas que tu fais en partie : les boss, les coffres et les failles laissent des œufs qui débloquent 54 Pokémon jouables de plus, de tous les types et de toutes les générations (Pikachu, Eevee, Gastly, Magikarp, Riolu, Gible, Bagon, Deino, Dreepy et d’autres), avec 1% de chances d’éclore en chromatique. Munchlax, qui évolue en Snorlax, n’éclot que de l’Œuf de l’Amitié, quatre spectres (Litwick, Phantump, Drifloon et Sandygast) que de l’Œuf Hanté vendu par Duskull pendant la Nuit des Sorcières, et Porygon, Exeggcute, Scraggy et Smeargle (qui copie les capacités des ennemis avec Sketch) que de l’Œuf de Kecleon, jusqu’à 6 par jour dans la Vitrine : 90 Pokémon jouables en tout.</li>
         <li>Invite tes amis avec ton lien : quiconque s’inscrit grâce à lui reçoit un Œuf de l’Amitié, et toi des Cadeaux Mystère pour chaque ami qui joue vraiment : un autre Œuf de l’Amitié, le titre Ambassadeur avec un cadre de carte exclusif, un Œuf ultra rare à 5 amis et, à 10, un Dratini chromatique.</li>
         <li>207 capacités et 32 objets tenus : chaque famille a une capacité signature et apprend de nouvelles capacités à chaque évolution, avec plus de capacités que d’emplacements, donc chaque partie construit une équipe différente. Monte une capacité normale au maximum avec le bon objet et elle évolue (Ember + Charcoal devient Flamethrower), et les capacités évoluées continuent de monter de niveau.</li>
@@ -167,6 +175,8 @@
       <p>Non. Il se joue directement dans le navigateur, sur PC ou sur mobile.</p>
       <h3>Peut-on jouer avec des Pokémon légendaires ?</h3>
       <p>Oui, en Mode Légendaire. Bats un légendaire en tant que boss pour le capturer (3 fois pour la plupart, 5 pour Mewtwo, une fois pour les fabuleux) et il devient jouable, avec des éveils au Nv 12 et 28 et un classement réservé aux légendaires. Pendant la Nuit des Sorcières 2026, Darkrai aussi : bats-le 2 fois dans la faille du Cauchemar.</p>
+      <h3>Peut-on jouer avec des amis ?</h3>
+      <p>Oui. La coop en ligne réunit jusqu’à 4 dresseurs dans la même partie, chacun avec son Pokémon : crée un salon et invite tes amis avec le lien, le code ou ta liste d’amis. L’EXP est partagée par l’équipe, les ₽ sont partagés entre tous et un coéquipier peut ranimer celui qui est K.O. Il faut un compte avec un @nom. Pour l’instant, la coop se joue en mode standard : le Mode Légendaire, les lieux, les objets de la boutique, les événements et le classement restent en solo.</p>
       <h3>Est-ce un jeu Pokémon officiel ?</h3>
       <p>
         Non. C’est un fan game non officiel et non commercial, sans lien avec Nintendo, The Pokémon Company, GAME FREAK

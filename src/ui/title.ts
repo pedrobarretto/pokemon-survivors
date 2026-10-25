@@ -150,7 +150,7 @@ export type TitleActions = {
   supporters: (focus: LobbyFocus, open: 'pick' | null) => Screen
   /** Opens Convide amigos over the title (its card under the Hall), like `settings`. */
   invites: (focus: LobbyFocus) => Screen
-  /** Jogar junto (co-op): the hub. No action (no relay, or the beta's gate closed), no tile. */
+  /** Jogar junto (co-op): the hub. No action (no relay in this build), no tile. */
   coop?: () => void
   meadow: Meadow
 }
@@ -676,10 +676,29 @@ const dockTile = (key: LobbyFocus, icon: string, label: string, hotkey: string, 
     h('span', { class: 'key-hint' }, hotkey),
   )
 
-/** Jogar junto's tile, tagged as a beta. */
+/** Set once the player opens Co-op on this device: the tile's NOVO tag goes for good. */
+const COOP_SEEN = 'ps:coopSeen'
+
+const coopSeen = () => {
+  try {
+    return localStorage.getItem(COOP_SEEN) !== null
+  } catch {
+    return true
+  }
+}
+
+const markCoopSeen = () => {
+  try {
+    localStorage.setItem(COOP_SEEN, '1')
+  } catch {
+    // Private modes may refuse: the tag just shows again next time.
+  }
+}
+
+/** Jogar junto's tile, tagged NOVO until the player first opens it. */
 const coopTile = () => {
   const el = dockTile('coop', coopIcon(), t().coop.entry, 'J')
-  el.append(h('em', { class: 'lobby-beta' }, t().coop.beta))
+  if (!coopSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
   return el
 }
 
@@ -736,7 +755,7 @@ export type ShopTrip = 'shop' | 'festival' | 'plaque' | 'look'
  * every card shrinks to a tile on the side rails, the gift box and Passear join them and the profiles
  * move to the Discord screen), the saved partner stands
  * in the middle, and JOGAR goes with the collection dock (Pokédex, Ovos,
- * Loja, Ranking, Ideias, and Co-op where the beta lets it in). Arrows move between all of them by where they are on
+ * Loja, Ranking, Ideias, and Co-op where the build has it). Arrows move between all of them by where they are on
  * screen; Enter presses the highlighted one, JOGAR at first. The movement
  * keys, a tap on the grass or a drag (a joystick) send the partner off its
  * stage for a walk in the meadow (`Meadow`), where it greets the wild Pokémon.
@@ -899,7 +918,7 @@ export const titleScreen = (
     mart: () => visitShop('shop'),
     ranking: () => ranking && openOver(ranking),
     ideas: () => ideas && openOver(ideas),
-    coop: () => coop?.(),
+    coop: () => (markCoopSeen(), coop?.()),
     play: actions.play,
     explore: () => enterExplore(),
     tiktok: () => openSocial('tiktok'),

@@ -11,7 +11,7 @@ import { DAMAGE_NUMBERS } from '../render/damageNumbers'
 import { FLASH_MODES } from '../render/flashes'
 import { RUN_TOASTS } from './toastQueue'
 import { loadSettings, MIN_ATTACK_OPACITY, MINIMAP_MODES, writeSettings, type Settings } from './save'
-import { coopEntry } from '../coopShell'
+import { coopUrl } from '../coopShell'
 import { hint, menu, type Screen } from './screens'
 import { backButton, shellBody, tabStrip, topBar, segmented } from './shell'
 import { REPO_URL, ROUTES, SOCIAL_IDS, SOCIALS } from '../site/routes'
@@ -279,8 +279,8 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           choiceRow(m.runToasts, 'runToasts', RUN_TOASTS, (mode) => m.runToastModes[mode]),
           choiceRow(m.minimap, 'minimap', MINIMAP_MODES, (mode) => m.minimapModes[mode]),
           slider(m.attackOpacity, 'attackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS),
-          // Teammates' moves only matter to whoever plays co-op (a beta behind the lobby's gate).
-          ...(coopEntry() ? [slider(m.teamAttackOpacity, 'teamAttackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS)] : []),
+          // Teammates' moves only matter in a build with co-op.
+          ...(coopUrl() ? [slider(m.teamAttackOpacity, 'teamAttackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS)] : []),
           ...uiScaleRows(m.uiScale, m.uiScaleAuto),
           // Safe mode is the device's, not a setting (`safeMode.ts`): a crash turns it on by itself.
           switchRow(m.safeMode, safeModeOn, (on) => setSafeMode(on ? 'on' : 'off')),

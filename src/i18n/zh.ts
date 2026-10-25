@@ -158,7 +158,7 @@ export const zh: Messages = {
       offline: '無法連上合作模式伺服器。',
     },
     entry: '合作模式',
-    beta: 'BETA',
+    fresh: '新',
     off: '這個版本的遊戲無法使用合作模式。',
     update: { title: '請更新遊戲才能一起玩：這個房間使用其他版本。', yes: '更新', no: '稍後' },
     oldRoom: '這個房間使用較舊版本的遊戲。請房主建立新房間。',

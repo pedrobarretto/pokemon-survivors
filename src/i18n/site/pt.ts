@@ -353,7 +353,7 @@ export const sitePt = {
   guide: {
     title: 'Como jogar Pokémon Survivors: guia completo',
     description:
-      'Guia do Pokémon Survivors: controles no teclado, controle e celular, como funciona a partida, níveis, golpes, evolução de golpes com itens, ataque especial, tipos e status, chefes, shinies, itens e eventos do mapa e Loja do Kecleon.',
+      'Guia do Pokémon Survivors: controles no teclado, controle e celular, como funciona a partida, níveis, golpes, evolução de golpes com itens, ataque especial, tipos e status, chefes, shinies, itens e eventos do mapa, Loja do Kecleon e co-op online.',
     h1: 'Como jogar',
     intro:
       'Pokémon Survivors é um roguelite estilo Vampire Survivors: você só anda, e o seu Pokémon ataca sozinho. Este guia explica tudo o que acontece numa partida, com os números do jogo.',
@@ -374,6 +374,7 @@ export const sitePt = {
       landmarks: 'Pontos de interesse do mapa',
       megas: 'Mega Evolução',
       legends: 'Modo Lendário',
+      coop: 'Co-op online',
       shinies: 'Shinies',
       eggs: 'Ovos e incubadora',
       items: 'Itens no mapa',
@@ -523,6 +524,19 @@ export const sitePt = {
       itemsNote: 'King\'s Rock aumenta a chance de status, Toxic Orb aumenta o dano de queimadura e veneno, e Light Clay faz os status durarem mais.',
     },
     /** The Legend mode: capturing legends and playing them (`game/capture.ts`, `game/legend.ts`). */
+    /** Co-op: rooms, the team's rules and what it leaves out (`COOP`, `COOP_LOCKS` in `data/coop.ts`). */
+    coop: {
+      paragraphs: (m: { players: number; revive: number; reviveHp: number; pick: number; vote: number }) => [
+        `No lobby, Co-op abre o jogo em equipe: até ${m.players} treinadores na mesma partida, cada um com o seu Pokémon. Crie uma sala e chame os amigos pelo link (quem abre entra direto na sala), pelo código de 5 letras e números ou pela lista de Amigos, que mostra quem está online, numa sala ou jogando, e manda o convite na hora. Cada um escolhe o seu Pokémon e fica pronto, e o anfitrião escolhe a dificuldade e começa. O co-op usa a sua conta: a equipe vê o seu @nome, e o ₽ que você ganha fica salvo nela.`,
+        `A EXP é da equipe: todo Exp. Candy chega para todos, então todo mundo sobe de nível junto e escolhe ao mesmo tempo (quem passa de ${m.pick}s tem a escolha feita pelo jogo). A evolução, a Habilidade, a TM ou a Poké Ball de um jogador não param a partida dos outros, e chefes e fendas deixam para cada um a própria TM, Poké Ball, prêmio de Alfa e Mega Stone.`,
+        `Quem desmaia vira uma Poké Ball no chão: um colega parado ao lado por ${m.revive}s o reanima com ${m.reviveHp}% do HP. A partida acaba quando ninguém mais consegue jogar; depois do Mewtwo, a equipe tem ${m.vote}s para votar se segue no modo sem fim. Se a conexão cair, o jogo reconecta e você volta de onde parou. No fim, o ₽ da equipe é dividido entre os jogadores que começaram a partida.`,
+        'Por enquanto o co-op é o modo normal: os lugares (caverna, cemitério e céu) não abrem, os pontos de interesse ficam só de enfeite, os lendários das fendas lutam na arena antiga, sem domínio, e ficam de fora o Modo Lendário, a Mochila, as TMs, os itens de evolução e as Tampinhas da loja, o Surto do dia, a Noite das Bruxas, o Desafio do dia e o ranking.',
+      ],
+      scaleTitle: 'A horda cresce com a equipe',
+      whatHead: 'O quê',
+      perHead: 'Por jogador a mais',
+      scale: { spawn: 'Ritmo da horda', cap: 'Tamanho máximo da horda', hp: 'HP dos inimigos', bossHp: 'HP de chefes, Alfas e lendários', coins: 'Poké Dollars coletados' },
+    },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
         `Os ${m.count} lendários do jogo podem ser capturados e jogados no Modo Lendário. Para capturar um, vença-o como chefe, em qualquer modo: a cada vitória antes da captura ele escapa da Poké Ball e o jogo conta (Kyogre escapou… 2/3); na vitória que fecha a conta, ele é capturado e aparece na aba Lendários da seleção de parceiro. Vencer um shiny na vitória da captura, ou em qualquer vitória depois, libera a forma shiny.`,

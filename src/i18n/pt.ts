@@ -258,9 +258,9 @@ export const pt = {
       abuse: 'Conexão encerrada por excesso de mensagens.',
       offline: 'Sem conexão com o servidor do co-op.',
     },
-    /** The lobby's dock tile, and the tag the co-op screens wear while it's a beta. */
+    /** The lobby's dock tile, and its tag until the player first opens it. */
     entry: 'Co-op',
-    beta: 'BETA',
+    fresh: 'NOVO',
     /** The game has no co-op server in this build (a room link opened anyway). */
     off: 'O co-op não está disponível nesta versão do jogo.',
     /** A room that runs another version: reloading brings the new one. */

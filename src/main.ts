@@ -170,7 +170,7 @@ import { suggestionsScreen } from './ui/suggestions'
 import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
-import { addBots, bankCoopRun, botStates, buildRefusal, coopClient, coopEntry, coopEventFor, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, onCoopEntry, refreshCoopEntry, removeBots, reportCoopNet, reportHeal, setCoopBeta, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
+import { addBots, bankCoopRun, botStates, buildRefusal, coopClient, coopEventFor, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
 import { coopAccess, coopStarter, freshInvites } from './coop/lobby'
@@ -584,7 +584,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       ideas: rankingEnabled ? (focus) => suggestionsScreen(ui, input, () => showTitle({ focus })) : undefined,
       supporters: (focus, open) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: () => showTitle({ focus }) }, open),
       invites: (focus) => invitesScreen(ui, input, () => showTitle({ focus })),
-      coop: coopEntry() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
+      coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
       meadow,
     }, opts),
   )
@@ -2196,7 +2196,7 @@ const watchCoop = (client: CoopClient) => {
 /**
  * Joins a co-op room (the hub, a link, an invite, `ps.coop('join', code)`):
  * sets this player's loadout, ready unless hosting. `via` says how, for the
- * beta's numbers (null: the room this player just created).
+ * analytics (null: the room this player just created).
  */
 const joinCoop = async (code: string, via: 'code' | 'link' | 'invite' | null) => {
   const client = coopClient()
@@ -2510,15 +2510,14 @@ const showCoopPartner = () => {
 const showFriends = (back: () => void) => setScreen(friendsScreen(ui, input, { room: coopRoomCode, onClose: back }))
 
 /**
- * Tells friends what this player is doing, while co-op is on for them (the
- * beta's entry, or a room they came into by link): signed-in players only,
- * and the heartbeats stop with the page hidden (`net/friends.ts`). A run
- * hides a waiting invite.
+ * Tells friends what this player is doing: signed-in players only, in a
+ * build with co-op, and the heartbeats stop with the page hidden
+ * (`net/friends.ts`). A run hides a waiting invite.
  */
 const syncPresence = () => {
   const code = coopRoomCode()
   if (run) invite?.dispose()
-  if (!signedIn() || (!coopEntry() && code === null)) return setActivity(null)
+  if (!signedIn() || !coopUrl()) return setActivity(null)
   setActivity(run ? 'run' : code ? 'room' : 'lobby', code)
 }
 
@@ -2880,7 +2879,7 @@ const boot = () => {
   // The Meta da comunidade's candies, in the background: reaching the goal opens Mega Darkrai, with a banner the first time.
   startCandyGoal()
   onCandyGoal((_, opened) => opened && banner(ui, rich(t().halloween.goalOpened), 5000))
-  // A co-op link (`?sala=K7QF2`, maybe `&ref=` who sent it), beta or not: join that room and show it (signed in first:
+  // A co-op link (`?sala=K7QF2`, maybe `&ref=` who sent it): join that room and show it (signed in first:
   // `enterCoop`); in a run, by snapshot, on the same seat after a reload. Or back from signing in to play co-op.
   const back = takeCoopReturn()
   const room = linkedRoom()
@@ -2889,13 +2888,7 @@ const boot = () => {
     linkRoom(null)
     later(() => toast(ui, t().coop.off, 5000, 'coopOff'))
   } else if (dest) enterCoop(dest)
-  // The beta's flag: the lobby's tile shows (or goes) once it answers, and again for the account signed in.
-  refreshCoopEntry()
-  onCoopEntry(() => {
-    syncPresence()
-    if (screen?.el.querySelector('.lobby')) showTitle()
-  })
-  onAccountChange(() => (refreshCoopEntry(), syncPresence()))
+  onAccountChange(() => syncPresence())
   onPresence((v) => offerInvites(v.invites))
   // Results that didn't reach the ranking last time (offline) go now, once the account is back.
   if (accountState().kind === 'signedIn') setTimeout(() => void flushRuns(), 5000)
@@ -3150,7 +3143,7 @@ const devLandmark = (g: Game, id?: LandmarkId, dy = 60) => {
  * nudges this client's state off the team's (the relay heals it), `('pick', id)` another
  * Pokémon for the room, `('url', u)`
  * points at another relay (null: the default), `('relay', home, u)` sets a VPS relay (`sa`: São Paulo, for South American hosts' rooms), `('botRelays', 'cf=u&sa=u&us=u')` the relays the next bots reach (a latency lab), `('net')` the connection numbers and the run's `coop_net` so far; `('room')` and
- * `('hub')` open those screens, `('beta', true|false|null)` forces the lobby's tile on this device,
+ * `('hub')` open those screens,
  * `('build')` joins a room made for another build (the "update" refusal) and `('invite', code, name)`
  * stages a friend's invite banner without the API.
  */
@@ -3175,8 +3168,6 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
       return showRoom()
     case 'hub':
       return showCoopHub(typeof arg === 'string' ? arg : null)
-    case 'beta':
-      return setCoopBeta(arg === null || arg === undefined ? null : arg !== 0 && arg !== 'off' && arg !== 'false')
     case 'build': {
       // A room reserved for another simulation build: joining it is refused with 'build'.
       const res = await fetch(`${coopUrl()}/rooms`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ v: PROTOCOL, build: 'sim-0000000000000000' }) })
@@ -3250,7 +3241,7 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
       return { ...client.connection(), queued: client.queued(), stats: r?.stats, tickMs: r?.tickMs, slot: r?.slot, where: st.where, summary, last: lastCoopNet() }
     }
     default:
-      return 'ps.coop(): create, join, bots, surrender, pick, ready, start, leave, drop, fresh, desync, url, relay, botRelays, net, wall, room, hub, beta, build, invite'
+      return 'ps.coop(): create, join, bots, surrender, pick, ready, start, leave, drop, fresh, desync, url, relay, botRelays, net, wall, room, hub, build, invite'
   }
 }
 

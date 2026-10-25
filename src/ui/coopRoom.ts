@@ -66,8 +66,8 @@ const navButton = (key: string, label: string, run: () => void, cls = 'btn') =>
 
 const field = (label: string, control: HTMLElement) => h('label', { class: 'field' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-box' }, control))
 
-/** The beta's tag beside a co-op screen's title. */
-const betaTitle = (text: string) => h('div', { class: 'dialog-title coop-title' }, h('img', { src: coopIcon(), alt: '' }), h('span', {}, text), h('em', { class: 'coop-beta' }, t().coop.beta))
+/** A co-op screen's title, with the co-op icon. */
+const coopTitle = (text: string) => h('div', { class: 'dialog-title coop-title' }, h('img', { src: coopIcon(), alt: '' }), h('span', {}, text))
 
 /* ---------------- The hub ---------------- */
 
@@ -130,7 +130,7 @@ export const coopHub = (root: HTMLElement, input: Input, actions: HubActions, co
     h(
       'div',
       { class: 'dialog box pop profile coop-hub' },
-      betaTitle(m.title),
+      coopTitle(m.title),
       h(
         'div',
         { class: 'invite-body coop-body' },
@@ -235,7 +235,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
     const st = client.state()
     const room = st.room
     if (!room) {
-      el.replaceChildren(h('div', { class: 'dialog box profile coop-room' }, betaTitle(t().coop.hub.title), h('p', { class: 'invite-note blink' }, t().coop.hub.joining)))
+      el.replaceChildren(h('div', { class: 'dialog box profile coop-room' }, coopTitle(t().coop.hub.title), h('p', { class: 'invite-note blink' }, t().coop.hub.joining)))
       return nav.paint()
     }
     const me = room.members.find((x) => x.seat === st.seat) ?? null
@@ -299,7 +299,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
       h(
         'div',
         { class: 'dialog box profile coop-room' },
-        betaTitle(t().coop.hub.title),
+        coopTitle(t().coop.hub.title),
         h(
           'div',
           { class: 'invite-body coop-body' },

@@ -311,7 +311,7 @@ export const siteZh: SiteMessages = {
   guide: {
     title: 'Pokémon Survivors 怎麼玩：完整攻略',
     description:
-      'Pokémon Survivors 攻略：鍵盤、手把與手機操作，對局流程、等級、招式、搭配攜帶道具的招式進化、必殺技、屬性與異常狀態、首領、異色寶可夢、地圖道具、地圖事件與 Kecleon商店。',
+      'Pokémon Survivors 攻略：鍵盤、手把與手機操作，對局流程、等級、招式、搭配攜帶道具的招式進化、必殺技、屬性與異常狀態、首領、異色寶可夢、地圖道具、地圖事件、Kecleon商店與線上合作。',
     h1: '遊戲玩法',
     intro:
       'Pokémon Survivors 是 Vampire Survivors 風格的肉鴿割草遊戲（roguelite）：你只需要移動，寶可夢會自動攻擊。這份攻略用遊戲裡的實際數字，說明對局中發生的一切。',
@@ -332,6 +332,7 @@ export const siteZh: SiteMessages = {
       landmarks: '地圖上的地標',
       megas: '超級進化',
       legends: '傳說模式',
+      coop: '線上合作',
       shinies: '異色寶可夢',
       eggs: '蛋與孵化器',
       items: '地圖道具',
@@ -480,6 +481,18 @@ export const siteZh: SiteMessages = {
       },
       flute: 'Poké Flute（地圖道具）',
       itemsNote: "King's Rock 提高異常狀態的機率，Toxic Orb 提高灼傷與中毒的傷害，Light Clay 讓異常狀態持續更久。",
+    },
+    coop: {
+      paragraphs: (m) => [
+        `在大廳選擇「合作模式」即可組隊遊玩：最多 ${m.players} 位訓練家同場對局，每人帶著自己的寶可夢。建立房間後，用連結（打開就會直接進入房間）、5 碼房間代碼或好友名單邀請朋友；好友名單會顯示誰在線上、在房間裡或正在遊戲，並能立即送出邀請。每個人選好寶可夢並準備，房主選擇難度後開始。合作模式會使用你的帳號：隊友看到的是你的 @名稱，你賺到的 ₽ 也會存進帳號。`,
+        `經驗值屬於全隊：每顆 Exp. Candy 都會送到每個人手上，所以全隊一起升級、同時選擇（超過 ${m.pick} 秒，遊戲會替你選）。某位玩家的進化、特性、招式學習器或精靈球不會打斷其他人的對局；首領和裂縫會替每位玩家各掉落自己的招式學習器、精靈球、頭目獎勵和超級石。`,
+        `倒下的人會變成地上的精靈球：隊友在旁邊站 ${m.revive} 秒，就能讓他以 ${m.reviveHp}% 的 HP 復活。沒有人能繼續時對局才會結束；打倒 Mewtwo 後，全隊有 ${m.vote} 秒投票決定是否進入無盡模式。連線中斷時，遊戲會自動重連，讓你從中斷處繼續。結束時，隊伍的 ₽ 會由開局時的玩家平分。`,
+        '目前合作模式為標準模式：特殊地點（洞窟、墓地和天空）不會開啟，地圖建築只是裝飾，裂縫的傳說寶可夢在舊競技場戰鬥、沒有領域；傳說模式、背包、商店的招式學習器、進化道具和 Bottle Caps、今日大量出現、女巫之夜、每日挑戰和排行榜也不在其中。',
+      ],
+      scaleTitle: '獸群會隨隊伍變強',
+      whatHead: '項目',
+      perHead: '每多一位玩家',
+      scale: { spawn: '獸群出現速度', cap: '獸群數量上限', hp: '敵人 HP', bossHp: '首領、頭目與傳說寶可夢 HP', coins: '收集到的寶可夢幣' },
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
