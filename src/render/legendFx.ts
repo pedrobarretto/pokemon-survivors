@@ -1,7 +1,7 @@
 import { blitCentered, blitEllipse, blitRing, blitRotated } from '../engine/pixelart'
 import { dir8, TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
-import { ENEMIES } from '../data/enemies'
+import { ENEMIES, type EnemyDef } from '../data/enemies'
 import { domainOf } from '../data/domains'
 import { onFloor } from '../game/arenaFloor'
 import { parked, safeAt } from '../game/bosses'
@@ -210,14 +210,21 @@ export const drawBlasts = (ctx: Ctx, g: Game, camX: number, camY: number, t: num
   }
 }
 
-const ARROW = lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#f8d0d0', 2: '#d02838' }, '#300810'))
+const ARROW_ROWS = ['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....']
+const ARROW = lazy(() => art(ARROW_ROWS, { 1: '#f8d0d0', 2: '#d02838' }, '#300810'))
+/** A regular wave boss's, in the gold of its outline (`bossOutline` in `render/draw.ts`). */
+const BOSS_ARROW = lazy(() => art(ARROW_ROWS, { 1: '#f8f088', 2: '#e0a010' }, '#382000'))
 
-/** In a domain's battle or a wave legendary's fight on the map, an arrow on the screen's edge toward the legendary while it's off screen (or its wake, while it dives). */
+/**
+ * In a domain's battle or a wave boss's fight on the map, an arrow on the
+ * screen's edge toward the boss while it's off screen (or its wake, while it
+ * dives): red for a legendary, gold for the rest.
+ */
 export const drawBossMarker = (ctx: Ctx, g: Game, camX: number, camY: number, t: number) => {
   const here = domainHere(g)
   if (here && here.d.act !== 'battle') return
-  // On the map: the wave legendary on the HP bar, outside its scenes.
-  const boss = here ? pairFighter(g, here.d.pair, here.d.bossId) : g.enemies.find((e) => e.id === (g.legendScene ? -1 : g.bossId) && e.dying < 0 && isWaveLegend(e.kind))
+  // On the map: the wave boss on the HP bar, outside a legendary's scenes.
+  const boss = here ? pairFighter(g, here.d.pair, here.d.bossId) : g.enemies.find((e) => e.id === (g.legendScene ? -1 : g.bossId) && e.dying < 0)
   if (!boss) return
   const m = boss.fight?.motion
   const tx = m?.kind === 'dive' ? m.x : boss.x
@@ -234,7 +241,8 @@ export const drawBossMarker = (ctx: Ctx, g: Game, camX: number, camY: number, t:
   const dy = Math.sin(angle)
   const k = Math.min(dx > 0 ? (w - 14 - cx) / dx : dx < 0 ? (14 - cx) / dx : Infinity, dy > 0 ? (h - 40 - cy) / dy : dy < 0 ? (90 - cy) / dy : Infinity)
   const bob = Math.sin(t * 8) * 2
-  blitRotated(ctx, ARROW(), cx + dx * (k + bob), cy + dy * (k + bob), angle, 2)
+  const def: EnemyDef = ENEMIES[boss.kind]
+  blitRotated(ctx, here || def.legendary ? ARROW() : BOSS_ARROW(), cx + dx * (k + bob), cy + dy * (k + bob), angle, 2)
 }
 
 /** The sprite form a boss wears in its phase (`BossPhase.form`), if its species has it. */

@@ -1072,6 +1072,18 @@ const TALL: Record<SolidKind, boolean> = { rock: false, tree: true, bush: false,
 const tallOf = (kind: AnyPiece) =>
   isArenaPiece(kind) ? ARENA_TALL[kind] : isPlacePiece(kind) ? PLACE_TALL[kind] : isLandmarkPiece(kind) ? LANDMARK_TALL[kind] : kind !== 'lake' && TALL[kind]
 
+/**
+ * Whether solid `s` stands in front of a body `w`×`h` px with its feet at (x, y),
+ * its art reaching over it: a player there stays in the depth sort (`render/draw.ts`).
+ */
+export const solidCovers = (g: Game, s: Solid, biome: BiomeId, x: number, y: number, w: number, h: number) => {
+  if (y >= s.y) return false
+  const piece = pieceOf(biome, s.kind, s.variant, s.loot !== undefined && g.landmarks.looted.has(s.loot))
+  const left = s.x - piece.ax
+  const top = s.y - piece.ay
+  return x + w / 2 > left && x - w / 2 < left + piece.packed.w && y > top && y - h < top + piece.packed.h
+}
+
 /** Draws one solid; a tall one goes see-through around the player when they walk behind it. A looted landmark treasure shows open. */
 export const drawSolid = (ctx: CanvasRenderingContext2D, g: Game, s: Solid, biome: BiomeId) => {
   const piece = pieceOf(biome, s.kind, s.variant, s.loot !== undefined && g.landmarks.looted.has(s.loot))

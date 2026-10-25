@@ -60,7 +60,7 @@ import { drawTraitAir, drawTraitGround, traitLift, traitTint } from './traits'
 import { bolt, dashedRing } from './strokes'
 import { dropFog, drawWeather, warmFog } from './weather'
 import { drawHauntedNight, drawTreat } from './halloweenArt'
-import { drawSolid, drawTerrainGround, drawWading, keepTerrain, solidsInView, warmTerrain } from './terrain'
+import { drawSolid, drawTerrainGround, drawWading, keepTerrain, solidCovers, solidsInView, warmTerrain } from './terrain'
 import { drawGround, GROUND_LOOKAHEAD, warmGround } from './world'
 import { damageBudget, showsText, textAlpha, type DamageNumbers } from './damageNumbers'
 import { CALM_PERIOD, HURT_TINT, type Flashes } from './flashes'
@@ -456,9 +456,9 @@ const enemyAnim = (e: Enemy, s: SpeciesSprites, aloft: boolean): AnimName =>
 /**
  * `time` is game time (shiny entrance), `t` wall time (status tint). `calm`
  * (Flashes: reduced) swaps the white hit flash for a dim red tint; `aloft`
- * flies the species that can.
+ * flies the species that can; `ringed` gives bosses their gold outline (out of a rift's arena).
  */
-const drawEnemy = (ctx: Ctx, e: Enemy, time: number, t: number, calm: boolean, aloft: boolean, clone: boolean) => {
+const drawEnemy = (ctx: Ctx, e: Enemy, time: number, t: number, calm: boolean, aloft: boolean, clone: boolean, ringed: boolean) => {
   const def: EnemyDef = ENEMIES[e.kind]
   const s = sprites(def.dex, e.shiny, bossForm(e))
   const scale = drawScale(e)
@@ -484,7 +484,7 @@ const drawEnemy = (ctx: Ctx, e: Enemy, time: number, t: number, calm: boolean, a
   const hit = e.flash > 0.08
   const tint = traitTint(e) ?? statusTint(e.status, t, e.id) ?? (calm && hit ? HURT_TINT : rage ? RAGE_TINT : clone ? CLONE_TINT : undefined)
   if (look?.alpha === 0) return
-  drawPokemon(ctx, s, anim, e.dir, e.animTime, e.x, y, { flash: Math.max(look?.flash ?? 0, hit && !calm ? 0.85 : 0), tint: look?.tint ?? tint, scale, outline: outlineOf(e, t, calm) ?? (clone ? CLONE_OUTLINE : undefined), alpha: look?.alpha ?? shadeAlpha(e.kind, e.id, t) })
+  drawPokemon(ctx, s, anim, e.dir, e.animTime, e.x, y, { flash: Math.max(look?.flash ?? 0, hit && !calm ? 0.85 : 0), tint: look?.tint ?? tint, scale, outline: outlineOf(e, t, calm) ?? (clone ? CLONE_OUTLINE : ringed && e.boss ? bossOutline(e, t, calm) : undefined), alpha: look?.alpha ?? shadeAlpha(e.kind, e.id, t) })
   if (e.shiny) drawSparkles(ctx, e.x, y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), time - e.bornAt, e.id)
   if (rage) drawRageEmbers(ctx, e.x, y - (s.bodyH * scale) / 2, size, t, e.id)
 }
@@ -505,6 +505,12 @@ const outlineOf = (e: Enemy, t: number, calm: boolean) => {
   if (e.elite) return Math.floor(t * 2.5 + e.id * 0.37) % 2 === 0 ? '#e02838' : '#f86858'
   return undefined
 }
+
+/**
+ * The gold a boss wears on the map so it stands out of the horde (an Alpha's
+ * is crimson, an enraged boss's flickers red), pulsing slowly; steady when `calm`.
+ */
+const bossOutline = (e: Enemy, t: number, calm: boolean) => (calm || Math.floor(t * 1.5 + e.id * 0.37) % 2 === 0 ? '#f8c818' : '#f8f088')
 
 /** Unit steps per `Dir8` (0 Down, 1 DownRight, 2 Right, 3 UpRight, 4 Up, 5 UpLeft, 6 Left, 7 DownLeft). */
 const DIR_STEP: readonly (readonly [number, number])[] = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]
@@ -829,6 +835,28 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawIronDefense(ctx, g, t)
 }
 
+/** The teammates drawn over the moves this frame (`liftsOver`), kept from frame to frame. */
+const lifted: Game[] = []
+
+/**
+ * Whether a player standing plain at `at` in `inDepth` draws after the moves
+ * instead of in the depth pass, so a screen full of them never buries their
+ * sprite and HP bar (the horde's sprites included: the player shows over them
+ * too). Not while a solid in front reaches over them (a tall one already goes
+ * see-through around this screen's player), behind the graveyard's fence or
+ * in a fall's look.
+ */
+const liftsOver = (g: Game, at: number, look: BiomeId) => {
+  if (g.place.inside?.id === 'graveyard' || riftFallLook(g) || placeFallLook(g)) return false
+  const p = localPlayer(g)
+  const s = playerSprites(g)
+  for (let i = at + 1; i < inDepth.length; i++) {
+    const d = inDepth[i]!
+    if (isSolid(d) && solidCovers(g, d, look, p.x, p.y, s.bodyW, s.bodyH)) return false
+  }
+  return true
+}
+
 /** Particles a lean frame draws at most (`render/quality.ts`). */
 const LEAN_PARTICLES = 120
 
@@ -941,6 +969,14 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   // Nothing casts a shadow up in the sky; under a tunnel's ridge the player isn't seen at all.
   const aloft = inSky(g)
   const hidden = playerUnderground(g)
+  // The players drawn over the moves (`liftsOver`): this screen's one last, on top of all.
+  let liftMe = false
+  lifted.length = 0
+  for (let i = 0; i < n; i++) {
+    const d = inDepth[i]!
+    if (d === 'player') liftMe = !hidden && (!g.coop || showsStanding(me)) && liftsOver(g, i, look)
+    else if (isMate(d) && showsPlain(localPlayer(d.mate)) && liftsOver(d.mate, i, look)) lifted.push(d.mate)
+  }
   for (const d of inDepth) {
     if (aloft) break
     // A fainted co-op player's Poké Ball casts its own.
@@ -968,11 +1004,11 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   for (const mate of mates) drawAfterimages(ctx, mate, calm)
   for (const d of inDepth) {
     // Co-op: a player fainted, away or wrapped up in a moment of their own draws its own way (`render/team.ts`); this one only when fainted (their screen says the rest).
-    if (d === 'player') !hidden && (g.coop && !showsStanding(me) ? drawTeammate(ctx, g, me, t, calm) : drawPlayer(ctx, g, calm))
+    if (d === 'player') !hidden && !liftMe && (g.coop && !showsStanding(me) ? drawTeammate(ctx, g, me, t, calm) : drawPlayer(ctx, g, calm))
     else if (d === 'companion') companion && drawCompanion(ctx, companion, t)
-    else if (isMate(d)) showsPlain(localPlayer(d.mate)) ? drawPlayer(ctx, d.mate, calm) : drawTeammate(ctx, d.mate, localPlayer(d.mate), t, calm)
+    else if (isMate(d)) !lifted.includes(d.mate) && (showsPlain(localPlayer(d.mate)) ? drawPlayer(ctx, d.mate, calm) : drawTeammate(ctx, d.mate, localPlayer(d.mate), t, calm))
     else if (isSolid(d)) drawSolid(ctx, g, d, look)
-    else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d))
+    else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d), !g.rift.arena)
   }
   // Badges only on bosses: on a 300-enemy horde they'd bury the sprites (tint + particles carry it there).
   for (const d of inDepth) {
@@ -987,8 +1023,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawPlaceOver(ctx, g, camX, camY)
   drawSleep(ctx, g, t)
   drawKitStatus(ctx, g, t, visible)
-  drawPlayerAir(ctx, g, t)
-  for (const mate of mates) if (shown(mate)) drawPlayerAir(ctx, mate, t)
+  if (!liftMe) drawPlayerAir(ctx, g, t)
+  for (const mate of mates) if (shown(mate) && !lifted.includes(mate)) drawPlayerAir(ctx, mate, t)
   drawTraitAir(ctx, g, visible)
   drawAlphaAir(ctx, g, t, visible)
   drawRiftFallAir(ctx, g, t)
@@ -998,7 +1034,6 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawDomainAir(ctx, g, t)
   drawNightmareAir(ctx, g, t)
   drawLegendScene(ctx, g, t)
-  if (g.coop) drawTeamAir(ctx, g, me, t)
 
   for (const side of sides) {
     paintAttacks(ctx, side.side, side.alpha, g.view, camX, camY, (into) => {
@@ -1016,6 +1051,17 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawDrainVines(into, v, t)
     })
   }
+  // Over the moves (at any opacity), under the foes' attacks: the players lifted out of the depth pass, with what they wear above.
+  for (const mate of lifted) {
+    drawPlayer(ctx, mate, calm)
+    drawPlayerAir(ctx, mate, t)
+  }
+  if (liftMe) {
+    drawPlayer(ctx, g, calm)
+    drawPlayerAir(ctx, g, t)
+  }
+  // Teammates' name tags and bubbles, over everyone.
+  if (g.coop) drawTeamAir(ctx, g, me, t)
   // Roar of Time's clocks over the foes it stopped: a mark on them, not a move, so it stays opaque.
   drawStoppedFoes(ctx, g, t, visible)
   for (const hz of g.hazards) if (hz.kind === 'beam') drawBeamAir(ctx, hz, t, g)

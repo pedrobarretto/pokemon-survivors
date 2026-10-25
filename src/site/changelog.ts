@@ -24,6 +24,36 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-25',
+    title: { pt: 'Chefes fáceis de achar e seu Pokémon sempre à vista', en: 'Bosses easy to find and your Pokémon always in sight', es: 'Jefes fáciles de encontrar y tu Pokémon siempre a la vista', fr: 'Des boss faciles à repérer et ton Pokémon toujours visible', zh: '頭目一眼就找到，你的寶可夢永遠看得見' },
+    highlights: [
+      { pt: 'Os chefes do mapa, os da Noite das Bruxas também, agora têm um contorno dourado que pisca devagar, fácil de achar no meio da horda. Furioso, o contorno continua vermelho.', en: 'Bosses on the map, Halloween Night’s too, now wear a slowly pulsing gold outline, easy to spot in the horde. Enraged, the outline still turns red.', es: 'Los jefes del mapa, también los de la Noche de Brujas, ahora tienen un contorno dorado que late despacio, fácil de ver en medio de la horda. Furioso, el contorno sigue rojo.', fr: 'Les boss de la carte, ceux de la Nuit des Sorcières aussi, ont maintenant un contour doré qui pulse doucement, facile à repérer dans la horde. Enragé, le contour reste rouge.', zh: '地圖上的頭目（包括女巫之夜的）現在有緩緩閃爍的金色外框，在怪群中一眼就能看到。暴怒時外框仍是紅色。' },
+      { pt: 'Chefe fora da tela? Uma seta dourada na borda aponta para onde ele está.', en: 'Boss off screen? A gold arrow on the edge points to where it is.', es: '¿Jefe fuera de la pantalla? Una flecha dorada en el borde señala dónde está.', fr: 'Boss hors de l’écran ? Une flèche dorée sur le bord indique où il se trouve.', zh: '頭目在畫面外？邊緣的金色箭頭會指出牠的位置。' },
+      { pt: 'Seu Pokémon e a barra de vida dele agora aparecem por cima dos golpes e da horda, para você nunca se perder no meio da confusão.', en: 'Your Pokémon and its HP bar now show over the moves and the horde, so you never lose yourself in the chaos.', es: 'Tu Pokémon y su barra de vida ahora aparecen por encima de los ataques y de la horda, para que nunca te pierdas en medio del caos.', fr: 'Ton Pokémon et sa barre de PV s’affichent maintenant par-dessus les attaques et la horde, pour ne jamais te perdre dans la mêlée.', zh: '你的寶可夢和牠的 HP 條現在會顯示在招式和怪群之上，混戰中再也不會找不到自己。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Visibilidade na partida', en: 'Visibility in a run', es: 'Visibilidad en la partida', fr: 'Visibilité en partie', zh: '對局中的辨識度' },
+        notes: [
+          {
+            pt: 'Todo chefe que aparece no mapa ganha um contorno dourado, como o vermelho dos Alfas, e uma seta dourada na borda da tela enquanto está fora de vista. Os lendários continuam com a seta vermelha, e um chefe furioso troca o dourado pelo vermelho piscando.',
+            en: 'Every boss that shows up on the map gets a gold outline, like the Alphas’ red one, and a gold arrow on the screen’s edge while it’s out of view. Legendaries keep their red arrow, and an enraged boss swaps the gold for the flickering red.',
+            es: 'Todo jefe que aparece en el mapa recibe un contorno dorado, como el rojo de los Alfa, y una flecha dorada en el borde de la pantalla mientras está fuera de vista. Los legendarios mantienen la flecha roja, y un jefe furioso cambia el dorado por el rojo parpadeante.',
+            fr: 'Chaque boss qui apparaît sur la carte reçoit un contour doré, comme le rouge des Alphas, et une flèche dorée sur le bord de l’écran tant qu’il est hors de vue. Les légendaires gardent leur flèche rouge, et un boss enragé remplace le doré par le rouge clignotant.',
+            zh: '每個出現在地圖上的頭目都會有金色外框，就像頭目寶可夢的紅框一樣，離開畫面時邊緣還會有金色箭頭。傳說寶可夢仍是紅色箭頭，暴怒的頭目則會把金色換成閃爍的紅色。',
+          },
+          {
+            pt: 'Seu Pokémon e a barra de vida são desenhados depois dos golpes, em qualquer opacidade escolhida nos ajustes, e por cima da horda. Atrás de uma árvore ou de um penhasco ele continua atrás, como antes.',
+            en: 'Your Pokémon and its HP bar are drawn after the moves, at whatever opacity you picked in the settings, and over the horde. Behind a tree or a cliff it stays behind, as before.',
+            es: 'Tu Pokémon y su barra de vida se dibujan después de los ataques, con la opacidad que elegiste en los ajustes, y por encima de la horda. Detrás de un árbol o de un acantilado sigue detrás, como antes.',
+            fr: 'Ton Pokémon et sa barre de PV sont dessinés après les attaques, quelle que soit l’opacité choisie dans les réglages, et par-dessus la horde. Derrière un arbre ou une falaise, il reste derrière, comme avant.',
+            zh: '你的寶可夢和 HP 條會在招式之後繪製（不論你在設定中選了多少不透明度），也在怪群之上。站在樹或懸崖後方時仍會被擋住，和以前一樣。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-24',
     title: { pt: 'Mega Darkrai, um lobby novo no celular e golpes mais vivos', en: 'Mega Darkrai, a new lobby on phones and livelier moves', es: 'Mega Darkrai, un lobby nuevo en el celular y ataques con más vida', fr: 'Méga-Darkrai, un nouveau lobby sur mobile et des attaques plus vivantes', zh: '超級 Darkrai、手機上的全新大廳與更生動的招式' },
     highlights: [
