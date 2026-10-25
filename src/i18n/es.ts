@@ -1543,7 +1543,7 @@ export const es: Messages = {
     lightningRod: 'Los ataques Eléctricos te curan en vez de herirte, y movimientos Eléctricos +15%.',
     bulletproof: 'Los proyectiles de jefes y las explosiones hacen 60% menos de daño.',
     levitate: 'Flotas: la lava, las trampas, el agua y el hielo no te afectan.',
-    magicGuard: 'Solo los golpes directos te hieren: nada de lava, trampas, explosiones ni desgaste del clima.',
+    magicGuard: 'Solo los golpes directos te hieren: nada de lava, trampas, explosiones, charcos en el suelo, desgaste del clima ni mordidas de objetos malditos.',
     magicBounce: 'Cada 12 s bloquea un golpe y se lo devuelve al doble de daño a quien te tocó.',
     illusion: 'Cada 10 s bloquea un golpe por completo.',
     damp: 'Las explosiones no te hieren, y movimientos de Agua +10%.',

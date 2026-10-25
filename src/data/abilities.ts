@@ -15,15 +15,20 @@ import type { PokeType } from './types'
  * replaces the family's.
  */
 
-/** What hurt the player (`hurtPlayer`): a body, a boss strike or shot, a blast, a beam, lava or a trap. */
-export type HitKind = 'body' | 'hazard' | 'shot' | 'blast' | 'beam' | 'lava' | 'trap'
+/**
+ * What hurt the player (`hurtPlayer`): a body, a boss strike or shot, a blast,
+ * a beam, lava, a trap or a lingering patch on the ground (`zone`: a spitter's
+ * puddle, the world's Stealth Rock, a boss's field).
+ */
+export type HitKind = 'body' | 'hazard' | 'shot' | 'blast' | 'beam' | 'lava' | 'trap' | 'zone'
 
 /**
- * Harm an ability shrugs off: hits of a kind (lava, traps, blasts), the
- * weather's wear (`chip`), terrain that slows (water, ice) and the wards
- * allies put on wild Pokémon (`wards`, which hits go through).
+ * Harm an ability shrugs off: hits of a kind (lava, traps, blasts, lingering
+ * patches), the weather's wear (`chip`), HP lost to no hit at all (`drain`:
+ * a cursed item's bite, Bad Dreams), terrain that slows (water, ice) and the
+ * wards allies put on wild Pokémon (`wards`, which hits go through).
  */
-export type Immunity = 'lava' | 'trap' | 'blast' | 'chip' | 'terrain' | 'wards'
+export type Immunity = 'lava' | 'trap' | 'blast' | 'zone' | 'chip' | 'drain' | 'terrain' | 'wards'
   /** The weather's boost to foes' hits and the world's attacks (`game/hazards.ts`): Air Lock. */
   | 'weather'
 
@@ -171,7 +176,7 @@ export const ABILITIES = {
   lightningRod: { name: 'Lightning Rod', effects: [absorb('electric'), stats({ typeDamage: { electric: 0.15 } })] },
   bulletproof: { name: 'Bulletproof', effects: [{ kind: 'resist', hits: ['shot', 'blast'], factor: 0.4 }] },
   levitate: { name: 'Levitate', effects: [{ kind: 'immune', to: ['lava', 'trap', 'terrain'] }] },
-  magicGuard: { name: 'Magic Guard', effects: [{ kind: 'immune', to: ['lava', 'trap', 'blast', 'chip'] }] },
+  magicGuard: { name: 'Magic Guard', effects: [{ kind: 'immune', to: ['lava', 'trap', 'blast', 'zone', 'chip', 'drain'] }] },
   magicBounce: { name: 'Magic Bounce', effects: [{ kind: 'guard', every: 12, reflect: true }] },
   illusion: { name: 'Illusion', effects: [{ kind: 'guard', every: 10 }] },
   damp: { name: 'Damp', effects: [{ kind: 'immune', to: ['blast'] }, stats({ typeDamage: { water: 0.1 } })] },

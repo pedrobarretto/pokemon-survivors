@@ -12,6 +12,7 @@ import {
 import { ENEMIES } from '../data/enemies'
 import { hurtPlayer } from './combat'
 import { abilityImmune } from './abilities'
+import type { HitKind } from '../data/abilities'
 import { burst, shakeScreen } from './effects'
 import { blastHorde, spawnEnemy } from './enemies'
 import { makeElite, makeRunner } from './horde'
@@ -835,6 +836,9 @@ export const beamDistance = (h: Pick<Hazard, 'x' | 'y' | 'angle' | 'len'>, x: nu
   return dm.hypot(x - (h.x + dx * along), y - (h.y + dy * along))
 }
 
+/** What kind of harm a hazard deals, for the abilities (`abilityTakes`): a shot, a lingering patch (Magic Guard's), else a strike. */
+export const hazardHit = (h: Pick<Hazard, 'kind'>): HitKind => (h.kind === 'shot' ? 'shot' : h.kind === 'zone' ? 'zone' : 'hazard')
+
 /** Whether an armed hazard touches the acting player (`p`); Air Lock keeps the world's attacks (the weather's and the biome's) off them. */
 const hazardHits = (g: Game, h: Hazard, p: Player) => {
   if (h.world && abilityImmune(g, 'weather')) return false
@@ -899,7 +903,7 @@ export const updateHazards = (g: Game, tick: number) => {
       const before = actAs(g, p)
       const hit = hazardHits(g, h, p)
       const hp = p.hp
-      if (hit) hurtPlayer(g, h.damage, undefined, HAZARD_TYPES[h.visual], h.kind === 'shot' ? 'shot' : 'hazard')
+      if (hit) hurtPlayer(g, h.damage, undefined, HAZARD_TYPES[h.visual], hazardHit(h))
       // Dark Void puts to sleep only what it really hit (not through i-frames, a guard or a burrow).
       if (hit && h.sleep > 0 && p.hp < hp) sleepPlayer(g, p, h.sleep)
       actAs(g, before)

@@ -160,6 +160,18 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          {
+            pt: 'Magic Guard (Alakazam, Armarouge e lendários) deixava passar as poças de veneno dos cuspidores, as pedras que o mundo espalha pelo chão e as áreas que os chefes deixam no chão, além do custo do Life Orb, da queimadura do Flame Orb e do Bad Dreams do Darkrai. Agora só golpes diretos ferem, como a descrição promete.',
+            en: 'Magic Guard (Alakazam, Armarouge and legendaries) let through spitters’ poison puddles, the rocks the world scatters on the ground and the patches bosses leave behind, plus Life Orb’s cost, Flame Orb’s burn and Darkrai’s Bad Dreams. Now only direct hits hurt, as its description promises.',
+            es: 'Magic Guard (Alakazam, Armarouge y legendarios) dejaba pasar los charcos de veneno de los escupidores, las rocas que el mundo esparce por el suelo y las zonas que dejan los jefes, además del costo del Life Orb, la quemadura del Flame Orb y el Bad Dreams de Darkrai. Ahora solo los golpes directos hieren, como promete su descripción.',
+            fr: 'Magic Guard (Alakazam, Armarouge et légendaires) laissait passer les flaques de poison des cracheurs, les rochers que le monde sème au sol et les zones laissées par les boss, ainsi que le coût du Life Orb, la brûlure du Flame Orb et le Bad Dreams de Darkrai. Désormais, seuls les coups directs blessent, comme le promet sa description.',
+            zh: 'Magic Guard（Alakazam、Armarouge 與傳說寶可夢）之前擋不住吐射者的毒池、世界散落在地上的岩石與頭目留下的區域，也擋不住 Life Orb 的代價、Flame Orb 的灼傷和 Darkrai 的 Bad Dreams。現在只有直接攻擊會造成傷害，正如說明所寫。',
+          },
+        ],
+      },
     ],
   },
   {

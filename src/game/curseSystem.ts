@@ -1,4 +1,5 @@
 import type { CurseId } from '../data/curses'
+import { abilityImmune } from './abilities'
 import { chestCurse, CURSE, curseDrain } from './curses'
 import { burst, floatText, shakeScreen } from './effects'
 import { recomputeStats } from './leveling'
@@ -34,8 +35,9 @@ export const decideCurse = (g: Game, id: CurseId, take: boolean) => {
   g.events.push({ kind: 'curse', id, moment: take ? 'taken' : 'left' })
 }
 
-/** A cursed item takes `share` of max HP: a purple number over the player, never fainting them. */
+/** A cursed item takes `share` of max HP: a purple number over the player, never fainting them. Magic Guard (`drain`) spares them. */
 const bite = (g: Game, id: CurseId, share: number) => {
+  if (abilityImmune(g, 'drain')) return
   const p = g.player
   const before = p.hp
   p.hp = curseDrain(p.hp, p.stats.maxHp, share)

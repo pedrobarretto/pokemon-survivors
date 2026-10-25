@@ -3,6 +3,7 @@ import { range } from '../engine/rng'
 import { DOMAIN_PRESS } from '../data/domains'
 import { NIGHTMARE } from '../data/domains/darkrai'
 import type { DomainHooks } from './domainHooks'
+import { abilityImmune } from './abilities'
 import { arenaPoint, type DomainState } from './domain'
 import { burst, floatText } from './effects'
 import { spawnEnemy } from './enemies'
@@ -71,15 +72,17 @@ const lightLanterns = (g: Game, d: DomainState) => {
   }
 }
 
-/** Bad Dreams: every `every` s, each sleeping player loses a chunk of their max HP (never the last of it). */
+/** Bad Dreams: every `every` s, each sleeping player loses a chunk of their max HP (never the last of it); Magic Guard (`drain`) spares them. */
 const badDreams = (g: Game, d: DomainState, dt: number) => {
   const { share, every } = NIGHTMARE.badDreams
   d.memo[DREAMS] = memoOf(d, DREAMS) + dt
   if (memoOf(d, DREAMS) < every) return
   d.memo[DREAMS] = memoOf(d, DREAMS) - every
   const harm = DOMAIN_PRESS[g.difficulty].harm
+  const before = g.player
   for (const p of g.players) {
-    if (!isAsleep(p) || !standing(g, p)) continue
+    g.player = p
+    if (!isAsleep(p) || !standing(g, p) || abilityImmune(g, 'drain')) continue
     const lost = Math.min(p.hp - 1, Math.round(p.stats.maxHp * share * every * harm))
     if (lost <= 0) continue
     p.hp -= lost
@@ -87,6 +90,7 @@ const badDreams = (g: Game, d: DomainState, dt: number) => {
     floatText(g, p.x, p.y - 30, String(lost), '#b080f8', true)
     burst(g, p.x, p.y - 14, { colors: ['#7850c8', '#b8a0f8'], count: 4, speed: 30, ttl: 0.4, gravity: -30 })
   }
+  g.player = before
 }
 
 const isShade = (e: Enemy) => e.kind === NIGHTMARE.clones.id
