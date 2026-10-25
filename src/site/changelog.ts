@@ -24,6 +24,37 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-25',
+    title: { pt: 'Escolha de parceiro mais fácil', en: 'Easier partner picking', es: 'Elegir compañero es más fácil', fr: 'Choisir son partenaire, plus simple', zh: '更輕鬆地選擇夥伴' },
+    highlights: [
+      { pt: 'Botão Aleatório na escolha de parceiro: ele sorteia um Pokémon desbloqueado da aba aberta, para você jogar com quem nunca escolhe.', en: 'A Random button on the partner select: it draws an unlocked Pokémon from the open tab, so you play with the ones you never pick.', es: 'Botón Aleatorio en la elección de compañero: sortea un Pokémon desbloqueado de la pestaña abierta, para jugar con los que nunca eliges.', fr: 'Un bouton Hasard sur le choix du partenaire : il tire un Pokémon débloqué de l’onglet ouvert, pour jouer avec ceux que tu ne choisis jamais.', zh: '選擇夥伴畫面新增隨機按鈕：從目前分頁抽一隻已解鎖的寶可夢，讓你玩玩平常不選的夥伴。' },
+      { pt: 'Escolher um Pokémon não começa mais a partida: ele vira seu parceiro no lobby, e a partida só começa no botão Começar.', en: 'Picking a Pokémon no longer starts a run: it becomes your partner in the lobby, and the run only starts from the Start button.', es: 'Elegir un Pokémon ya no empieza la partida: se vuelve tu compañero en el lobby, y la partida solo empieza con el botón Empezar.', fr: 'Choisir un Pokémon ne lance plus la partie : il devient ton partenaire dans le lobby, et la partie ne commence qu’avec le bouton Commencer.', zh: '選擇寶可夢不會再直接開始對局：牠會成為你在大廳的夥伴，只有按下開始按鈕才會開始。' },
+      { pt: 'No fim da partida, o botão Lobby leva direto para casa.', en: 'At the end of a run, the Lobby button takes you straight home.', es: 'Al final de la partida, el botón Lobby te lleva directo a casa.', fr: 'En fin de partie, le bouton Accueil te ramène directement au lobby.', zh: '對局結束時，大廳按鈕可以直接帶你回家。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Escolha de parceiro e fim da partida', en: 'Partner select and the end of a run', es: 'Elección de compañero y fin de la partida' },
+        notes: [
+          {
+            pt: 'Aleatório: o novo botão ao lado das abas (ou a tecla R) escolhe ao acaso um Pokémon desbloqueado da aba aberta (Iniciais, Ovos ou Lendários), nunca o que já está selecionado. Ele só seleciona: confira o painel e aperte Começar quando quiser.',
+            en: 'Random: the new button beside the tabs (or the R key) picks an unlocked Pokémon from the open tab (Starters, Eggs or Legendaries) at random, never the one already selected. It only selects: check its panel and press Start when you’re ready.',
+            es: 'Aleatorio: el nuevo botón junto a las pestañas (o la tecla R) elige al azar un Pokémon desbloqueado de la pestaña abierta (Iniciales, Huevos o Legendarios), nunca el que ya está seleccionado. Solo selecciona: revisa su panel y presiona Empezar cuando quieras.',
+          },
+          {
+            pt: 'Tocar num Pokémon só seleciona, mesmo tocando de novo: a partida começa no botão Começar (ou Enter). O escolhido vira seu parceiro na hora, com a cor Normal ou Shiny que você deixou, então Voltar mostra ele no lobby.',
+            en: 'Tapping a Pokémon only selects it, even on a second tap: the run starts from the Start button (or Enter). Your pick becomes your partner right away, in the Normal or Shiny colors you set, so Back shows it in the lobby.',
+            es: 'Tocar un Pokémon solo lo selecciona, aunque lo toques de nuevo: la partida empieza con el botón Empezar (o Enter). El elegido se vuelve tu compañero al instante, con el color Normal o Shiny que dejaste, así que Volver lo muestra en el lobby.',
+          },
+          {
+            pt: 'A tela de resultado ganhou o botão Lobby, ao lado de Tentar de novo e Trocar Pokémon. Os ₽, os ovos e o ranking da partida contam do mesmo jeito.',
+            en: 'The results screen got a Lobby button, next to Try again and Change Pokémon. The run’s ₽, eggs and ranking count just the same.',
+            es: 'La pantalla de resultados tiene un botón Lobby, junto a Reintentar y Cambiar Pokémon. Los ₽, los huevos y el ranking de la partida cuentan igual.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-24',
     title: { pt: 'Mega Darkrai, um lobby novo no celular e golpes mais vivos', en: 'Mega Darkrai, a new lobby on phones and livelier moves', es: 'Mega Darkrai, un lobby nuevo en el celular y ataques con más vida', fr: 'Méga-Darkrai, un nouveau lobby sur mobile et des attaques plus vivantes', zh: '超級 Darkrai、手機上的全新大廳與更生動的招式' },
     highlights: [

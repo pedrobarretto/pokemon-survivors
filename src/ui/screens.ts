@@ -838,6 +838,7 @@ const runNews = ({ eggs, news, medals }: ResultsExtras) => {
  * The steps walked and eggs found feed the incubator (`extras.eggs`), and
  * `extras.news` adds a one-line Pokédex summary when the run found something new.
  * A victory also links the support page, under the buttons (only then, so it never nags).
+ * `onLobby` goes straight home (Trocar Pokémon opens the partner select instead).
  */
 export const results = (
   root: HTMLElement,
@@ -845,6 +846,7 @@ export const results = (
   g: Game,
   onRetry: () => void,
   onMenu: () => void,
+  onLobby: () => void,
   onContinue?: () => void,
   extras: ResultsExtras = NO_EXTRAS,
 ): Screen => {
@@ -861,6 +863,7 @@ export const results = (
   const legends = g.rift.cleared
   const retry = h('button', { class: 'btn' }, m.retry)
   const back = h('button', { class: 'btn' }, m.change)
+  const lobby = h('button', { class: 'btn' }, m.lobby)
   const goOn = victory && onContinue ? h('button', { class: 'btn' }, r.continue) : null
   const ranking = extras.ranking
   const boards = ranking ? h('button', { class: 'btn' }, t().ranking.open) : null
@@ -884,11 +887,12 @@ export const results = (
       nav = bindNav(buttons.indexOf(button))
     })
   }
-  const buttons = [goOn, retry, back, share, boards].filter((b) => b !== null)
+  const buttons = [goOn, retry, back, lobby, share, boards].filter((b) => b !== null)
   const actions = [
     goOn && onContinue,
     onRetry,
     onMenu,
+    onLobby,
     share && (() => openSub(extras.share?.open, share)),
     boards && (() => openSub(ranking?.open, boards)),
   ].filter((a) => typeof a === 'function')

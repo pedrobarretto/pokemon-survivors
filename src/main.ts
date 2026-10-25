@@ -1269,6 +1269,8 @@ const syncOverlay = (r: Run) => {
         g,
         () => afterRun(() => void (r.challenge ? replayChallenge() : startRun(loadSave().partner))),
         () => afterRun(() => showMenu()),
+        // Lobby: banked, ranked and hatched by `afterRun` like the others, then home as the select's Back goes.
+        () => afterRun(() => showTitle({ focus: 'play' })),
         () => (recordEvent(r.recorder, ['endless']), continueEndless(g)),
         {
           badge: titleBadge(loadSave().title),

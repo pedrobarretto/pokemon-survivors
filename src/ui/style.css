@@ -404,6 +404,38 @@ button {
   margin-left: 4px;
 }
 
+/* Random: selects an unlocked Pokémon of the shown tab, at the tabs row's far end. */
+.partner-random {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  margin-left: auto;
+  padding: 0 12px;
+  font-family: var(--title);
+  font-size: 10px;
+  color: #283040;
+  white-space: nowrap;
+  background: #fff8f0;
+  border: 2px solid #c8c0d8;
+  border-radius: 6px;
+}
+
+.partner-random img {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.partner-random:hover:not(:disabled) {
+  border-color: #283040;
+}
+
+.partner-random:disabled {
+  opacity: 0.45;
+}
+
 .partner-pane,
 .partner-eggs {
   flex: 1 1 0;
@@ -1281,6 +1313,16 @@ button {
     background: var(--paper);
     border-color: var(--paper);
   }
+  /* Random keeps only its die beside the three tabs. */
+  .partner-random {
+    min-height: 0;
+    align-self: stretch;
+    padding: 0 8px;
+    border-color: transparent;
+  }
+  .partner-random-label {
+    display: none;
+  }
   /* Three tabs on a narrow phone: label and count closer together. */
   .partner-tab {
     gap: 5px;
@@ -1476,6 +1518,13 @@ button {
   }
   .partner-pane {
     overflow-y: auto;
+  }
+  .partner-random {
+    min-height: 32px;
+    padding: 0 8px;
+  }
+  .partner-random-label {
+    display: none;
   }
   .partner-grid {
     grid-template-columns: 8px repeat(9, minmax(0, 52px));

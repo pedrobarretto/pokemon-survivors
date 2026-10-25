@@ -198,6 +198,9 @@ export const pt = {
     tabs: { status: 'STATUS', moves: 'GOLPES', mega: 'MEGA' },
     start: 'Começar',
     startWith: (name: string) => `Começar com ${name}`,
+    /** Random: the roster's button (tabs row) and its tooltip. It only selects; Start still starts. */
+    random: 'ALEATÓRIO',
+    randomHint: 'Escolher um Pokémon desbloqueado ao acaso',
     close: 'Fechar',
     /** The details sheet's moves tab, stage by stage: what it starts with, then what each evolution unlocks. */
     learnStart: 'No início',
@@ -711,6 +714,8 @@ export const pt = {
     earnings: (coins: string, bonus: string) => `Moedas ${coins} · Bônus ${bonus}`,
     retry: 'Tentar de novo',
     change: 'Trocar Pokémon',
+    /** Straight back to the lobby, the run banked like the other buttons. */
+    lobby: 'Lobby',
     /** End-of-run Pokédex news, e.g. "+3 espécies novas · 1 shiny capturado". */
     dexSpecies: (n: number) => (n === 1 ? '+1 espécie nova' : `+${n} espécies novas`),
     dexShinies: (n: number) => (n === 1 ? '1 shiny capturado' : `${n} shinies capturados`),
