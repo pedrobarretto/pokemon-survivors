@@ -346,8 +346,8 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
      * Then, on every report, the run's replay is kept for its check only when it's on show or drawn for the
      * sample (`checkRank`, stored in `check_rank`, where the verifier finds it: `claimCheck`), and dropped
      * otherwise: off the boards now, it can't climb on later in the same period. The replay is still written
-     * first, since `settleReport` pinned its ticks. A new report frees any claim on the run, so the verifier
-     * takes the grown run again.
+     * first, since `settleReport` pinned its ticks. A new report frees any claim on the run and its count of
+     * attempts, so the verifier takes the grown run again.
      */
     finishRun: (userId: string, token: string, result: RunResult, replay: Replay): Promise<Finished | { ok: false; error: FinishError }> =>
       sql.begin(async (tx) => {
@@ -406,7 +406,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         await tx`
           update runs set finished_at = now(), starter = ${result.starter}, stage = ${result.stage}, branch = ${result.branch}, difficulty = ${result.difficulty},
             survived = ${result.time}, outcome = ${result.outcome}, level = ${result.level}, kills = ${result.kills}, version = ${result.version},
-            replay = ${tx.json(replay)}, verified = null, checked_at = null, check_ms = null, check_claimed_at = null, official = ${official}, bag = ${tx.array([...replay.start.bag])}::text[],
+            replay = ${tx.json(replay)}, verified = null, checked_at = null, check_ms = null, check_claimed_at = null, check_attempts = 0, official = ${official}, bag = ${tx.array([...replay.start.bag])}::text[],
             stream_base = ${settled.pin.ticks}, stream_digest = ${settled.pin.digest}, stream_lag = ${stream.lag}, stream_ok = ${inTime}, unlisted = ${!listed},
             stream_late = stream_late + ${lag !== null && lag > STREAM.lagTolerance ? 1 : 0},
             mode = ${runMode(result.starter)}
@@ -430,12 +430,15 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
      * Claims the next finished run waiting for its re-simulation, in check order (`check_rank`: official
      * attempts, then the best places, then the samples, then runs from before it, oldest first), for
      * `leaseSeconds`: another verifier skips it until then (`for update skip locked` keeps two from taking
-     * the same one), and a claim whose verifier died runs out. Returns what it reported, when it started,
-     * its replay and whether it's a determinism sample; null when nothing waits.
+     * the same one), and a claim whose verifier died runs out. Each claim counts an attempt (`check_attempts`).
+     * Returns what it reported, when it started, its replay, whether it's a determinism sample and which
+     * attempt this is; null when nothing waits.
      */
     claimCheck: async (leaseSeconds: number) => {
-      const [row] = await sql<{ id: string; survived: number; kills: number; level: number; started_at: Date; replay: unknown; check_rank: number | null }[]>`
-        update runs set check_claimed_at = now()
+      const [row] = await sql<
+        { id: string; survived: number; kills: number; level: number; started_at: Date; replay: unknown; check_rank: number | null; check_attempts: number }[]
+      >`
+        update runs set check_claimed_at = now(), check_attempts = check_attempts + 1
         where id = (
           select id from runs
           where verified is null and replay is not null and finished_at is not null
@@ -443,9 +446,9 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
           order by check_rank, finished_at
           limit 1 for update skip locked
         )
-        returning id, survived, kills, level, started_at, replay, check_rank`
+        returning id, survived, kills, level, started_at, replay, check_rank, check_attempts`
       return row
-        ? { id: row.id, time: row.survived, kills: row.kills, level: row.level, startedAt: row.started_at, replay: row.replay, sample: row.check_rank === CHECKED.sampleRank }
+        ? { id: row.id, time: row.survived, kills: row.kills, level: row.level, startedAt: row.started_at, replay: row.replay, sample: row.check_rank === CHECKED.sampleRank, attempt: row.check_attempts }
         : null
     },
 

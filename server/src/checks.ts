@@ -52,11 +52,11 @@ const inlineRunner = (): Runner => (job) =>
  * The verifier's pace. A claim (`claimCheck`) holds a run for `leaseSeconds`,
  * longer than any re-simulation, so only a verifier that died (or a rollout's
  * second one) ever sees one run out; a run whose check couldn't finish (the
- * machinery failed, a replay of newer rules) is tried again once it does.
- * With nothing pending the loop asks again after `idleMs`, after a database
- * error after `errorMs`.
+ * machinery failed, a replay of newer rules) is tried again once it does, up
+ * to `attempts` times, and then loses its replay unchecked. With nothing
+ * pending the loop asks again after `idleMs`, after a database error after `errorMs`.
  */
-export const CHECK_LOOP = { leaseSeconds: 30 * 60, idleMs: 5000, errorMs: 15_000 } as const
+export const CHECK_LOOP = { leaseSeconds: 30 * 60, attempts: 3, idleMs: 5000, errorMs: 15_000 } as const
 
 type Claimed = NonNullable<Awaited<ReturnType<RankingStore['claimCheck']>>>
 
@@ -74,7 +74,9 @@ type Claimed = NonNullable<Awaited<ReturnType<RankingStore['claimCheck']>>>
  * boards. A replay that played another day's outbreak (`outbreakFits`), or a
  * haunted run outside the Noite das Bruxas (`halloweenFits`), fails without
  * re-simulating. When the machinery fails instead, the run stays pending and
- * is tried again once its claim runs out.
+ * is tried again once its claim runs out, `CHECK_LOOP.attempts` times at most
+ * (a replay that crashes the worker would cost a crash every time): then its
+ * replay is dropped and it stays unverified.
  * Replays of this build's rules (`RULES_VERSION`) are judged with this
  * build's simulation, and those of the previous rules (a run that straddled
  * a rules deploy, `rulesGrace.ts`, or one still pending from before it) with
@@ -99,6 +101,11 @@ export const startChecks = (ranking: RankingStore, { paused = false } = {}) => {
 
   const check = async (claimed: Claimed) => {
     const { id } = claimed
+    if (claimed.attempt > CHECK_LOOP.attempts) {
+      await ranking.dropReplay(id)
+      console.log(`check ${id}: gave up after ${CHECK_LOOP.attempts} attempts, left unverified`)
+      return
+    }
     // Whether it's still on show is judged when its turn comes, against the boards as they are then.
     if (!claimed.sample && !(await ranking.shown(id))) {
       await ranking.dropReplay(id)
