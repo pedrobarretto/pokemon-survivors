@@ -4,6 +4,7 @@
  * server can check a run against the day it started. (Missions keep the
  * player's local day.) Pure; shared with the API.
  */
+import * as dm from '../engine/dmath'
 
 export const DAY_TIME_ZONE = 'America/Sao_Paulo'
 
@@ -31,7 +32,7 @@ export const isDayKey = (v: unknown): v is DayKey => {
 /** Days since 1970-01-01 of a `YYYY-MM-DD` key, for draws that walk through the days. */
 export const dayNumber = (day: DayKey) => {
   const [y, m, d] = day.split('-').map(Number)
-  return Math.round(Date.UTC(y!, m! - 1, d!) / 86_400_000)
+  return dm.round(Date.UTC(y!, m! - 1, d!) / 86_400_000)
 }
 
 /** The day before `day` (calendar arithmetic, no time zone involved). */

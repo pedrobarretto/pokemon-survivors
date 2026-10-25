@@ -30,7 +30,7 @@ export const continueEndless = (g: Game) => {
 const summonReaper = (g: Game, s: EndlessState) => {
   const p = anchorPlayer(g)
   const reaper = spawnEnemy(g, REAPER, p.x, p.y - g.view.h / 2 - 24)
-  reaper.hp = reaper.maxHp = Math.round(reaperHp(s.reaperDefeats) * runMods(g).enemyHp * coopScale(g, COOP.scale.bossHp))
+  reaper.hp = reaper.maxHp = dm.round(reaperHp(s.reaperDefeats) * runMods(g).enemyHp * coopScale(g, COOP.scale.bossHp))
   s.reaperId = reaper.id
   s.reaperSince = g.time
   g.bossId = reaper.id

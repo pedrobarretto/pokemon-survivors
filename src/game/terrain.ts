@@ -150,8 +150,8 @@ const scatter = (h: (salt: number) => number, ox: number, oy: number, feet: read
   const out: Solid[] = []
   const count = Math.floor(h(80) * (max + 1))
   for (let i = 0; i < count; i++) {
-    const x = Math.round(ox + edge + h(81 + i * 4) * (C - 2 * edge))
-    const y = Math.round(oy + edge + h(82 + i * 4) * (C - 2 * edge))
+    const x = dm.round(ox + edge + h(81 + i * 4) * (C - 2 * edge))
+    const y = dm.round(oy + edge + h(82 + i * 4) * (C - 2 * edge))
     if (feet.some((e) => depth(e, x, y, clear) < 1) || out.some((s) => dm.sq(s.x - x) + dm.sq(s.y - y) < spacing * spacing)) continue
     const kind = weightedPick(() => h(83 + i * 4), SCATTER_KINDS)
     out.push({ kind, x, y, variant: Math.floor(h(84 + i * 4) * SCATTER_VARIANTS[kind]), foot: [at(SOLID_FOOT[kind], x, y)] })
@@ -182,8 +182,8 @@ export const featureAt = (seed: number, cx: number, cy: number): Feature | null 
   const minY = Math.min(...feet.map((e) => e.y - e.ry))
   const maxY = Math.max(...feet.map((e) => e.y + e.ry))
   const m = TERRAIN.margin
-  const ax = Math.round(ox + m - minX + h(1) * Math.max(0, C - 2 * m - (maxX - minX)))
-  const ay = Math.round(oy + m - minY + h(2) * Math.max(0, C - 2 * m - (maxY - minY)))
+  const ax = dm.round(ox + m - minX + h(1) * Math.max(0, C - 2 * m - (maxX - minX)))
+  const ay = dm.round(oy + m - minY + h(2) * Math.max(0, C - 2 * m - (maxY - minY)))
   const cell = cellKey(cx, cy)
   const shift = (p: Pos) => ({ x: ax + p.x, y: ay + p.y })
   const plan = mark && landmarkPlan(mark.id, mark.variant)

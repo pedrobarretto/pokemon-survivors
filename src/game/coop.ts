@@ -102,7 +102,7 @@ export const faint = (g: Game, foe: EnemyId | null, hit: HitKind) => {
 }
 
 /** Ticks an away player still standing holds the world before counting as down (`COOP.away.hold`). */
-const awayHoldTicks = () => Math.round(COOP.away.hold / TICK)
+const awayHoldTicks = () => dm.round(COOP.away.hold / TICK)
 
 /** An away player who stands and still holds the world for the team: away for less than `COOP.away.hold`. */
 const holdsWorld = (g: Game, p: Player) => p.away && !p.gone && p.hp > 0 && (g.coop?.awayTicks[p.slot] ?? 0) < awayHoldTicks()
@@ -171,7 +171,7 @@ export const updateRevives = (g: Game, dt: number) => {
     p.revive = helper ? p.revive + dt : Math.max(0, p.revive - dt * r.decay)
     if (!helper || p.revive < r.time) continue
     p.revive = 0
-    p.hp = Math.max(1, Math.round(p.stats.maxHp * r.hp))
+    p.hp = Math.max(1, dm.round(p.stats.maxHp * r.hp))
     p.iframes = r.iframes
     p.hurt = 0
     helper.record.revives++
@@ -252,7 +252,7 @@ export const dropForEach = (g: Game, drop: () => void) => {
 export const reviveAll = (g: Game) => {
   for (const p of g.players) {
     if (!fainted(p)) continue
-    p.hp = Math.max(1, Math.round(p.stats.maxHp * COOP.revive.hp))
+    p.hp = Math.max(1, dm.round(p.stats.maxHp * COOP.revive.hp))
     p.revive = 0
     p.iframes = COOP.revive.iframes
   }
@@ -347,7 +347,7 @@ export type TeamStats = { players: PlayerStats[]; total: { damage: number; kills
 const sumDamage = (byMove: Player['damageByMove']) => {
   let sum = 0
   for (const v of Object.values(byMove)) sum += v ?? 0
-  return Math.round(sum)
+  return dm.round(sum)
 }
 
 /** The end screen's numbers: each player's line and the team's totals. Pure. */
@@ -360,7 +360,7 @@ export const coopStats = (g: Game): TeamStats => {
     damage: sumDamage(p.damageByMove),
     damageByMove: { ...p.damageByMove },
     kills: p.record.kills,
-    taken: Math.round(p.record.taken),
+    taken: dm.round(p.record.taken),
     revives: p.record.revives,
     faints: p.record.faints,
     moves: p.moves.map((m) => ({ id: m.id, level: m.level })),

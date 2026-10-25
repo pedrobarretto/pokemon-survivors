@@ -18,8 +18,8 @@ import { isRecord } from '../game/parse'
  *
  * Presence is short polling, never a socket. Nothing runs until the shell says
  * what the player is doing (`setActivity`): from then on a heartbeat goes out
- * every `beatMs` the API answers (20 s in the lobby or a room, 3 min in a run)
- * while the page is visible, and every answer reaches `onPresence`.
+ * every `beatMs` the API answers (20 s in the lobby or a room, 3 min in a run
+ * or for a player who follows nobody) while the page is visible, and every answer reaches `onPresence`.
  * `setActivity(null)` stops it and tells the API the player left.
  */
 
@@ -39,10 +39,17 @@ export const fetchFriends = async (): Promise<FriendList | null> => {
 /** What following someone came to: `friend` when they already followed back (a request accepted). */
 export type Followed = { ok: true; friend: boolean } | { ok: false; reason: 'unknown' | 'limit' | 'offline' }
 
-/** Follows `handle`: sends a friend request, or accepts theirs. */
+/**
+ * Follows `handle`: sends a friend request, or accepts theirs. A heartbeat goes
+ * out at once: a player who followed nobody was beating slowly (`beatMsFor`),
+ * and a new friend's invite should show within a lobby beat.
+ */
 export const follow = async (handle: string): Promise<Followed> => {
   const { status, body } = await apiCall(`/follows/${encodeURIComponent(handle)}`, { method: 'PUT', auth: true })
-  if (status === 200) return { ok: true, friend: isRecord(body) && body.friend === true }
+  if (status === 200) {
+    if (activity) void beat()
+    return { ok: true, friend: isRecord(body) && body.friend === true }
+  }
   return { ok: false, reason: status === 404 ? 'unknown' : status === 429 ? 'limit' : 'offline' }
 }
 

@@ -79,7 +79,7 @@ const releaseWing = (g: Game, inside: SkyInside) => {
 const takeWing = (g: Game, inside: SkyInside, w: Wing) => {
   const p = g.player
   if (w.wing === 'prettyWing') {
-    const coins = Math.round(PRETTY_WING_COINS * p.stats.greed)
+    const coins = dm.round(PRETTY_WING_COINS * p.stats.greed)
     g.coins += coins
     floatText(g, p.x, p.y - 30, `₽${coins}`, '#f8d030')
   } else {

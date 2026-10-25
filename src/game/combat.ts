@@ -43,7 +43,7 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   const eff = attack.sure ? Math.max(1, effectiveness(attack.type, e.types)) : effectiveness(attack.type, e.types)
   // Conditional bonuses (Hex), a mark and a freeze multiply the hit; without them it's exactly ×1.
   const base = attack.damage * (bonusMult(attack.bonus, e) * hitTakenMult(e.status) * phaseTaken(e))
-  const raw = Math.max(1, Math.round(base * eff * playerWeatherBoost(g, attack.type) * strikeBonus(g, e) * range(g.rng, 0.9, 1.1)))
+  const raw = Math.max(1, dm.round(base * eff * playerWeatherBoost(g, attack.type) * strikeBonus(g, e) * range(g.rng, 0.9, 1.1)))
   // A Bronzong ward soaks the hit first, unless the move or the ability (Infiltrator) goes through wards.
   const dmg = attack.sure || attack.ignoreWards || abilityImmune(g, 'wards') ? raw : absorb(e.trait, raw)
   // Mimikyu's Disguise takes the first big hit whole.
@@ -114,7 +114,7 @@ export const drainHeal = (g: Game, damage: number, fraction: number) => {
  * one bumping a neighbor): flash, white number, a hit sound, kill credit to `move`.
  */
 export const bumpDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null) => {
-  const dmg = Math.max(1, Math.round(amount))
+  const dmg = Math.max(1, dm.round(amount))
   e.hp -= dmg
   e.flash = 0.16
   if (move) g.player.damageByMove[move] = (g.player.damageByMove[move] ?? 0) + dmg
@@ -140,7 +140,7 @@ const spreadSeed = (g: Game, e: Enemy) => {
 
 /** Damage-over-time tick: no knockback or hit sound, number in the status color. */
 export const dotDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null, kind: StatusKind) => {
-  const dmg = Math.max(1, Math.round(amount))
+  const dmg = Math.max(1, dm.round(amount))
   e.hp -= dmg
   if (move) g.player.damageByMove[move] = (g.player.damageByMove[move] ?? 0) + dmg
   damageText(g, e, dmg, STATUS_RULES[kind].color)
@@ -218,7 +218,7 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
 export const ARMOR_CAP = 0.5
 
 /** A `raw` hit on the player after `armor`: each point takes 1 off (a negative one adds 1), up to `ARMOR_CAP` of the hit. At least 1. */
-export const armored = (raw: number, armor: number) => Math.max(1, Math.round(raw - Math.min(armor, raw * ARMOR_CAP)))
+export const armored = (raw: number, armor: number) => Math.max(1, dm.round(raw - Math.min(armor, raw * ARMOR_CAP)))
 
 /**
  * Damages the player. `from` (a body that touched them) gets shoved back; hazards pass none.

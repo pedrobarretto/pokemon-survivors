@@ -8,6 +8,7 @@ import type { FloorPlan } from '../data/arenas'
 import type { DomainState } from './domain'
 import type { Room, Stash } from './room'
 import type { Game } from './types'
+import * as dm from '../engine/dmath'
 
 /**
  * Pure rules and state of the legendary rifts. The map side (a portal opens,
@@ -132,7 +133,7 @@ export const domainHarm = (g: Game, body: boolean) => {
 export const riftLoot = (time: number, shiny: boolean) => {
   const coins = [250, 50, 50, 50, 50]
   return {
-    xp: Math.round(150 + (time / 60) * 40),
+    xp: dm.round(150 + (time / 60) * 40),
     coins: shiny ? [...coins, ...coins] : coins,
     pokeballs: shiny ? 2 : 1,
     items: RIFT_ITEMS,

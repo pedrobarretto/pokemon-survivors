@@ -57,7 +57,7 @@ export const overtime = (time: number) => Math.max(0, time - RUN_LENGTH)
 /** Arceus arrives when its time comes and none is hunting yet. */
 export const reaperDue = (s: Pick<EndlessState, 'reaperAt' | 'reaperId'>, time: number) => s.reaperId === null && time >= s.reaperAt
 
-export const reaperHp = (defeats: number) => Math.round(ENDLESS.reaperHp * dm.powInt(ENDLESS.reaperHpGrowth, defeats))
+export const reaperHp = (defeats: number) => dm.round(ENDLESS.reaperHp * dm.powInt(ENDLESS.reaperHpGrowth, defeats))
 
 /** The longer Arceus hunts, the faster it gets, until nobody can outrun it. */
 export const reaperSpeed = (base: number, hunting: number) => base * Math.min(ENDLESS.reaperMaxSpeed, 1 + hunting / ENDLESS.reaperRamp)
@@ -73,4 +73,4 @@ export const endlessPressure = (time: number) => {
 }
 
 /** Size of the n-th endless horde event: rings and swarms that grow every minute. */
-export const endlessEventSize = (time: number) => 30 + Math.round((overtime(time) / 60) * 4)
+export const endlessEventSize = (time: number) => 30 + dm.round((overtime(time) / 60) * 4)

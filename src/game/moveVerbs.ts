@@ -223,7 +223,7 @@ export const roost: Cast = (g, s, owned) => {
     g.particles.push({ x: p.x + range(g.rng, -9, 9), y: p.y - range(g.rng, 2, 14), vx: 0, vy: -18, life: 0, ttl: 0.6, color: chance(g.rng, 0.5) ? '#78f878' : '#d8f8c8', size: 1, gravity: -10, drag: 1 })
   }
   // One "+N" a second while it heals.
-  if (Math.floor(p.still) > Math.floor(p.still - s.cooldown)) floatText(g, p.x, p.y - 30, `+${Math.max(1, Math.round(perSecond))}`, '#78f878')
+  if (Math.floor(p.still) > Math.floor(p.still - s.cooldown)) floatText(g, p.x, p.y - 30, `+${Math.max(1, dm.round(perSecond))}`, '#78f878')
 }
 
 /* ---------------- Focus Punch ---------------- */

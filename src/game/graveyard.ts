@@ -52,8 +52,8 @@ export const buildGraveyard = (g: Game, x: number, y: number) => {
   const graves: Pt[] = []
   for (const gy of FIELD.rows) {
     for (const gx of FIELD.cols) {
-      const jx = gx + Math.round((hash2(gx, gy, salt) - 0.5) * 10)
-      const jy = gy + Math.round((hash2(gy, gx, salt) - 0.5) * 6)
+      const jx = gx + dm.round((hash2(gx, gy, salt) - 0.5) * 10)
+      const jy = gy + dm.round((hash2(gy, gx, salt) - 0.5) * 6)
       if (jx * jx + jy * jy > (FIELD.r - 22) * (FIELD.r - 22) || hash2(gx, gy, salt + 1) < 0.18) continue
       graves.push([jx, jy])
     }
@@ -102,9 +102,9 @@ const wake = (g: Game, inside: GraveInside) => {
   const y = inside.y + s.keystone[1] + 10
   const boss = spawnEnemy(g, GRAVEYARD.boss, x, y)
   const scale = placeBossScale(g.time)
-  boss.hp = boss.maxHp = Math.round(boss.maxHp * scale.hp)
+  boss.hp = boss.maxHp = dm.round(boss.maxHp * scale.hp)
   boss.damage *= scale.damage
-  boss.xp = Math.round(60 + (g.time / 60) * 20)
+  boss.xp = dm.round(60 + (g.time / 60) * 20)
   boss.shiny = rollShiny(g.rng, GRAVEYARD.shinyOdds)
   s.bossId = boss.id
   s.shiny = boss.shiny
@@ -132,7 +132,7 @@ const win = (g: Game, inside: GraveInside, boss: Enemy | undefined) => {
   PLACE_LOOT.graveyard.forEach((item, i) => dropItem(g, x + 10 + i * 6, y, item))
   for (const p of g.players) {
     const before = actAs(g, p)
-    const heal = Math.round(healPlayer(g, p.stats.maxHp * 0.3))
+    const heal = dm.round(healPlayer(g, p.stats.maxHp * 0.3))
     if (heal > 0) floatText(g, p.x, p.y - 30, `+${heal}`, '#58e858')
     actAs(g, before)
   }

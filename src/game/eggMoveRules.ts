@@ -224,7 +224,7 @@ export const echoMult = (stacks: number) => 1 + 0.25 * Math.min(ECHO_MAX, stacks
 export const CURSE_COST = 0.15
 /** Curse waits while the player's HP is under this share of max HP. */
 export const CURSE_FLOOR = 0.25
-export const curseCost = (hp: number) => Math.max(0, Math.min(Math.ceil(hp) - 1, Math.round(hp * CURSE_COST)))
+export const curseCost = (hp: number) => Math.max(0, Math.min(Math.ceil(hp) - 1, dm.round(hp * CURSE_COST)))
 /** Seconds between a curse's ticks, and the max HP above which it stops counting (Arceus stays a reaper). */
 export const CURSE_EVERY = 0.5
 export const CURSE_HP_CAP = 40000

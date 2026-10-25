@@ -5,6 +5,7 @@ import { burst, floatText, shakeScreen } from './effects'
 import { recomputeStats } from './leveling'
 import { setPhase } from './players'
 import type { Game } from './types'
+import * as dm from '../engine/dmath'
 
 /** Purple of everything cursed: the frame, the sparks, the HP it takes. */
 export const CURSE_COLORS = ['#a050e0', '#e0b0ff', '#401060'] as const
@@ -43,7 +44,7 @@ const bite = (g: Game, id: CurseId, share: number) => {
   p.hp = curseDrain(p.hp, p.stats.maxHp, share)
   const lost = before - p.hp
   if (lost <= 0) return
-  if (lost >= 1) floatText(g, p.x + 6, p.y - 26, String(Math.round(lost)), CURSE_COLORS[1], true)
+  if (lost >= 1) floatText(g, p.x + 6, p.y - 26, String(dm.round(lost)), CURSE_COLORS[1], true)
   g.events.push({ kind: 'curse', id, moment: 'recoil' })
 }
 

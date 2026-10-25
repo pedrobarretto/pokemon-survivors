@@ -7,7 +7,11 @@
  * operations, these give the same bits everywhere, so a replay re-simulated on
  * the server ends where it ended on the player's phone. Accurate to ~1e-15.
  *
- * `src/game` uses these instead of `Math.*` (and `x * x` instead of `x ** 2`).
+ * `Math.round` is exact by the spec, but JavaScriptCore's optimizing JITs got
+ * it wrong until 2026 (`round` below), so it is banned too.
+ *
+ * `src/game` uses these instead of `Math.*` (and `x * x` instead of `x ** 2`);
+ * `src/engine/dmathGuard.test.ts` fails on any banned call in the simulation.
  */
 
 const PI = Math.PI
@@ -15,6 +19,22 @@ const HALF_PI = PI / 2
 // π/2 split in two (Cody–Waite), so `x - n·π/2` keeps its low bits.
 const HALF_PI_HI = 1.5707963267341256
 const HALF_PI_LO = 6.077100506506192e-11
+
+/**
+ * `Math.round`, bit for bit (−0 included), on every engine. JavaScriptCore's
+ * DFG and FTL JITs (Safari, every iOS browser) compiled a hot `Math.round(x)`
+ * whose result is used as an integer to `floor(x + 0.5)`, which gives 1 for
+ * 0.49999999999999994 (the double just under ½: `x + 0.5` rounds up to 1);
+ * fixed in WebKit only in May 2026 (bug 312687). That value is what
+ * `atan2(…)/(π/4)` gives for a stick at 22.5° (`dir8`), and a co-op iPhone
+ * faced another way than its teammates. Floor and an exact subtraction
+ * (`x - floor(x)` loses no bits) can't be miscompiled that way.
+ */
+export const round = (x: number) => {
+  const f = Math.floor(x)
+  const r = x - f >= 0.5 ? f + 1 : f
+  return r === 0 && x < 0 ? -0 : r
+}
 
 /** sin on [-π/4, π/4] (Taylor to x¹⁵). */
 const sinKernel = (x: number) => {
@@ -30,7 +50,7 @@ const cosKernel = (x: number) => {
 
 /** `x` as `n·π/2 + r` with |r| ≤ π/4, and n's quadrant (0..3). */
 const reduce = (x: number) => {
-  const n = Math.round(x / HALF_PI)
+  const n = round(x / HALF_PI)
   const r = x - n * HALF_PI_HI - n * HALF_PI_LO
   return { r, quadrant: ((n % 4) + 4) % 4 }
 }
@@ -82,7 +102,7 @@ const LN2 = 0.6931471805599453
 export const exp = (x: number) => {
   if (x > 700) return Infinity
   if (x < -700) return 0
-  const k = Math.round(x / LN2)
+  const k = round(x / LN2)
   const r = x - k * LN2
   let sum = 1
   for (let n = 14; n >= 1; n--) sum = 1 + (sum * r) / n

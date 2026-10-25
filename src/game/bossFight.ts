@@ -194,7 +194,7 @@ export const attackWait = (p: BossPattern, fight: BossFight | null) => {
 }
 
 /** How many projectiles or circles a pattern fires in this fight: a single one stays single, several grow with the difficulty. */
-export const attackCount = (count: number, fight: BossFight | null) => (fight && count > 1 ? Math.round(count * BOSS_DIFFICULTY[fight.difficulty].more) : count)
+export const attackCount = (count: number, fight: BossFight | null) => (fight && count > 1 ? dm.round(count * BOSS_DIFFICULTY[fight.difficulty].more) : count)
 
 /** A warning's length in this fight: shortened by the difficulty, never under `MIN_TELEGRAPH` (nor lengthened when written shorter). */
 export const telegraph = (seconds: number, fight: BossFight | null) =>

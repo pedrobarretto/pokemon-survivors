@@ -781,7 +781,7 @@ const release = (g: Game, r: ResolvedSpecial) => {
     case 'roots': {
       for (let k = 0; k < r.tier.count; k++) {
         const radius = (26 + k * 24) * area
-        const count = Math.round((TAU * radius) / 16)
+        const count = dm.round((TAU * radius) / 16)
         for (let j = 0; j < count; j++) {
           const a = (j / count) * TAU + k * 0.4
           spawnAttack(g, {

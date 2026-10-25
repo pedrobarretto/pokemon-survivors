@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { likePrefix, parseHandlePrefix, parsePresenceUpdate, parsePresenceView, parseRoomCode, presenceOnline, PRESENCE, splitFollows } from './friends'
+import { beatMsFor, likePrefix, parseHandlePrefix, parsePresenceUpdate, parsePresenceView, parseRoomCode, presenceOnline, PRESENCE, splitFollows } from './friends'
 
 describe('splitFollows', () => {
   it('makes friends of mutual follows and requests of one-way ones, each way', () => {
@@ -55,6 +55,15 @@ describe('presenceOnline', () => {
     expect(presenceOnline('lobby', lobby + 1)).toBe(false)
     // A run beats rarely, so it stays online much longer than the lobby.
     expect(presenceOnline('run', lobby + 1)).toBe(true)
+  })
+})
+
+describe('beatMsFor', () => {
+  it('keeps each activity\'s pace for a player who follows someone, and slows the rest down', () => {
+    expect(beatMsFor('lobby', true)).toBe(PRESENCE.beatMs.lobby)
+    expect(beatMsFor('room', true)).toBe(PRESENCE.beatMs.room)
+    expect(beatMsFor('lobby', false)).toBe(PRESENCE.aloneMs)
+    expect(beatMsFor('run', false)).toBe(Math.max(PRESENCE.beatMs.run, PRESENCE.aloneMs))
   })
 })
 
