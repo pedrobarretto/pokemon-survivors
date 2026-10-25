@@ -183,6 +183,18 @@ describe('Power Herb', () => {
     expect(late.cooldown).toBeCloseTo(0.5)
   })
 
+  it('holds the floor through every later batch of kills, not just the first', () => {
+    const s = { ...createSpecialState(), cooldown: 8.3, total: 8.6, kills: 20 }
+    rechargeSpecial(s, 0.75)
+    expect(s.cooldown).toBeCloseTo(MIN_SPECIAL_COOLDOWN - 0.3)
+    // The next tick's kills: still 3.7 s to go, as 0.3 s went by.
+    triggerSpecial(s, false, DT)
+    s.kills = 20
+    rechargeSpecial(s, 0.75)
+    expect(s.cooldown).toBeCloseTo(MIN_SPECIAL_COOLDOWN - 0.3 - DT)
+    expect(s.total - s.cooldown).toBeCloseTo(0.3 + DT)
+  })
+
   it('wastes kills while the special is ready', () => {
     const s = { ...createSpecialState(), kills: 3 }
     rechargeSpecial(s, 0.5)

@@ -585,7 +585,9 @@ type RechargeTimers = Pick<SpecialState, 'cooldown' | 'total' | 'chaining' | 'ki
  * Kills made mid-chain wait until the chain ends and the cooldown starts. The
  * cut never brings the time from the start of the cooldown to ready below the
  * floor (`MIN_SPECIAL_COOLDOWN`, or a shorter cooldown like Stance Change's);
- * kills while the special is ready go to waste.
+ * kills while the special is ready go to waste. The total shrinks with the
+ * cut, so `total - cooldown` stays the time since the use and every later
+ * batch of kills meets the same floor.
  */
 export const rechargeSpecial = (s: RechargeTimers, cut: number) => {
   if (s.chaining || s.kills === 0) return
@@ -594,7 +596,9 @@ export const rechargeSpecial = (s: RechargeTimers, cut: number) => {
   if (s.cooldown <= 0 || cut <= 0) return
   const elapsed = s.total - s.cooldown
   const floor = Math.max(0, Math.min(s.total, MIN_SPECIAL_COOLDOWN) - elapsed)
-  s.cooldown = Math.max(floor, s.cooldown - kills * cut)
+  const left = Math.max(floor, s.cooldown - kills * cut)
+  s.total = elapsed + left
+  s.cooldown = left
 }
 
 /**

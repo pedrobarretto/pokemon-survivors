@@ -156,6 +156,26 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Menos travadas de impacto', en: 'Less hit-stop', es: 'Menos congelamiento por impacto', fr: 'Moins de gel à l’impact', zh: '減少命中停頓' },
+        notes: [
+          {
+            pt: 'Alguns golpes congelam a tela por um instante para dar peso ao impacto. Agora, depois de um congelamento, os impactos do segundo seguinte só tremem a tela: uma saraivada de punhos do Sky Uppercut congelava até quatro vezes seguidas, e o jogo parecia rodar aos trancos.',
+            en: 'Some moves freeze the screen for an instant to give the impact weight. Now, after one freeze, impacts in the next second only shake the screen: a volley of Sky Uppercut fists used to freeze up to four times in a row, and the game felt choppy.',
+            es: 'Algunos ataques congelan la pantalla un instante para darle peso al impacto. Ahora, después de un congelamiento, los impactos del segundo siguiente solo sacuden la pantalla: una ráfaga de puños de Sky Uppercut congelaba hasta cuatro veces seguidas y el juego se sentía entrecortado.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Power Herb com o mínimo de 4 s', en: 'Power Herb keeps its 4 s minimum', es: 'Power Herb con el mínimo de 4 s', fr: 'Power Herb garde son minimum de 4 s', zh: 'Power Herb 的 4 秒下限' },
+        notes: [
+          {
+            pt: 'A recarga do especial nunca devia ficar abaixo de 4 s, mas só o primeiro lote de abates respeitava o limite: o seguinte zerava a recarga, e o especial voltava a cada 0,3 s. Agora todo abate conta até o mínimo, e o anel do botão mostra a espera de verdade.',
+            en: 'The special’s cooldown was never meant to go under 4 s, but only the first batch of defeats kept to it: the next one emptied the cooldown, and the special came back every 0.3 s. Now every defeat counts down to the minimum, and the button’s ring shows the real wait.',
+            es: 'La recarga del especial nunca debía bajar de 4 s, pero solo el primer lote de derribos respetaba el límite: el siguiente vaciaba la recarga y el especial volvía cada 0,3 s. Ahora cada derribo cuenta hasta el mínimo y el anillo del botón muestra la espera real.',
+          },
+        ],
+      },
     ],
   },
   {
