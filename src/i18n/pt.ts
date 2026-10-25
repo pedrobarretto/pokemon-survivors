@@ -485,6 +485,9 @@ export const pt = {
     screenShake: 'Tremor de tela',
     flashes: 'Clarões',
     flashModes: { normal: 'Normais', reduced: 'Reduzidos' },
+    /** The HUD's mini map (`render/minimap.ts`): its shape, or off. */
+    minimap: 'Mini mapa',
+    minimapModes: { square: 'Quadrado', round: 'Redondo', off: 'OFF' },
     /** How opaque your moves draw (and, in co-op, your teammates'): `render/attackLayers.ts`. */
     attackOpacity: 'Opacidade dos golpes',
     teamAttackOpacity: 'Opacidade do time',

@@ -2,7 +2,7 @@ import '@fontsource/press-start-2p'
 import '@fontsource/vt323'
 import './ui/style.css'
 // First, so its error listeners catch what goes wrong while the rest loads.
-import { bugReportsEnabled, describeWith, deviceMemory, runMoment, syncRunWatch, takeCrash } from './bugReport'
+import { bugReportsEnabled, describeWith, deviceMemory, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
 import type { BugCrash } from './game/bugReport'
 
 import { playCry, playSfx, unlockAudio, type Sfx } from './engine/audio'
@@ -2811,10 +2811,29 @@ const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeMode: boolean) 
   })
 }
 
-/** The game closed mid-run last time (`takeCrash`): the title asks, once, whether to report it. */
+/**
+ * Counts a run whose page went away while the player was elsewhere (`takeCrash`'s `away`): an app
+ * swiped away in Recents, a tab the phone closed in the background. Not a crash.
+ */
+const reportClosed = async (c: BugCrash, away: NonNullable<Away>) => {
+  const device = await deviceInfo()
+  track('run_closed', {
+    version: c.version,
+    away,
+    partner: c.run?.partner ?? null,
+    phase: c.run?.phase ?? null,
+    minute: c.run ? Math.floor(c.run.time / 60) : null,
+    seconds: c.run?.time ?? null,
+    deviceMemory: deviceMemory(),
+    ...device,
+  })
+}
+
+/** The game closed mid-run last time (`takeCrash`): the title asks, once, whether to report it. A page the player had left isn't a crash. */
 const askAboutCrash = () => {
   const found = takeCrash()
   if (!found) return
+  if (found.away) return void reportClosed(found.crash, found.away)
   const { crash, crumb } = found
   // Whether safe mode was on for the run that died, then on from here (`safeMode.ts`).
   void reportCrash(crash, crumb, safeModeOn())

@@ -29,6 +29,12 @@ describe('parseSettings', () => {
     expect(parseSettings(JSON.stringify({ flashes: false })).flashes).toBe('normal')
   })
 
+  it('reads the mini map mode, square unless it says round or off', () => {
+    expect(parseSettings(JSON.stringify({ minimap: 'round' })).minimap).toBe('round')
+    expect(parseSettings(JSON.stringify({ minimap: 'off' })).minimap).toBe('off')
+    expect(parseSettings(JSON.stringify({ minimap: true })).minimap).toBe('square')
+  })
+
   it('clamps volumes to 0..1', () => {
     expect(parseSettings(JSON.stringify({ musicVolume: 4, sfxVolume: -1 }))).toMatchObject({ musicVolume: 1, sfxVolume: 0 })
   })

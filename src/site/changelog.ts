@@ -25,13 +25,32 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-10-25',
-    title: { pt: 'Correções na tela e nos menus', en: 'Screen and menu fixes', es: 'Correcciones en la pantalla y los menús', fr: 'Corrections de l’écran et des menus', zh: '畫面與選單修正' },
+    title: { pt: 'Mini mapa', en: 'Mini map', es: 'Minimapa', fr: 'Mini-carte', zh: '小地圖' },
     highlights: [
-      { pt: 'Em tela cheia num monitor 1080p, o jogo não fica mais pequenininho no canto de cima da tela.', en: 'In fullscreen on a 1080p monitor, the game no longer plays tiny in the top-left corner.', es: 'En pantalla completa en un monitor 1080p, el juego ya no queda diminuto en la esquina de arriba.', fr: 'En plein écran sur un moniteur 1080p, le jeu ne s’affiche plus en tout petit dans le coin en haut à gauche.', zh: '在 1080p 螢幕全螢幕遊玩時，遊戲不會再縮在左上角的小框裡。' },
-      { pt: 'A escolha de golpe não fica mais congelada na frente da partida depois de apertar Enter num botão que já tinha sido clicado.', en: 'The move pick no longer stays frozen over the run after pressing Enter on a button you had clicked.', es: 'La elección de ataque ya no se queda congelada encima de la partida al presionar Enter en un botón que ya habías clicado.', fr: 'Le choix d’attaque ne reste plus figé devant la partie après avoir appuyé sur Entrée sur un bouton déjà cliqué.', zh: '在點過的按鈕上按 Enter 後，招式選擇畫面不會再凍結擋在對局前面。' },
-      { pt: 'A Pokédex não fica mais presa atrás do lobby com o botão Voltar sem funcionar.', en: 'The Pokédex no longer gets stuck behind the lobby with a Back button that does nothing.', es: 'La Pokédex ya no se queda atrapada detrás del lobby con el botón Volver sin funcionar.', fr: 'Le Pokédex ne reste plus coincé derrière le lobby avec un bouton Retour qui ne fait rien.', zh: '圖鑑不會再卡在大廳後面、返回鍵也按不動。' },
+      { pt: 'Mini mapa no canto da tela: lagos, penhascos, bosques, construções e eventos ao seu redor, com o norte para cima.', en: 'A mini map in the corner of the screen: lakes, cliffs, groves, landmarks and events around you, north up.', es: 'Un minimapa en la esquina de la pantalla: lagos, acantilados, bosques, construcciones y eventos a tu alrededor, con el norte arriba.', fr: 'Une mini-carte dans le coin de l’écran : lacs, falaises, bosquets, constructions et événements autour de toi, nord en haut.', zh: '畫面角落的小地圖：你周圍的湖泊、懸崖、樹林、建築和事件，北方朝上。' },
+      { pt: 'Chefes, Alfas, fendas lendárias e entradas de lugares ficam presos na borda do mapa quando estão longe, apontando o caminho.', en: 'Bosses, Alphas, legendary rifts and place entrances stay pinned to the map’s rim when they’re far, pointing the way.', es: 'Jefes, Alfas, grietas legendarias y entradas de lugares quedan fijos en el borde del mapa cuando están lejos, marcando el camino.', fr: 'Boss, Alphas, failles légendaires et entrées de lieux restent épinglés au bord de la carte quand ils sont loin, pour montrer le chemin.', zh: '頭目、Alpha、傳說裂縫和地點入口在遠處時會固定在地圖邊緣，為你指路。' },
+      { pt: 'Quadrado, redondo ou desligado: escolha em Ajustes → Jogo. Funciona no celular em pé, deitado e no computador.', en: 'Square, round or off: pick it in Settings → Game. It works on phones held either way and on computers.', es: 'Cuadrado, redondo o apagado: elígelo en Ajustes → Juego. Funciona en el celular en vertical, en horizontal y en la computadora.', fr: 'Carrée, ronde ou désactivée : choisis dans Réglages → Jeu. Elle marche sur mobile dans les deux sens et sur ordinateur.', zh: '方形、圓形或關閉：在設定 → 遊戲中選擇。直拿、橫拿手機和電腦上都能用。' },
     ],
     changes: [
+      {
+        title: { pt: 'Mini mapa', en: 'Mini map', es: 'Minimapa', fr: 'Mini-carte', zh: '小地圖' },
+        notes: [
+          {
+            pt: 'O mapa mostra o terreno do bioma, a área da tela, os eventos (altares, fontes, baús, Meowth, o Tutor de Golpes, as missões), as construções, as Poké Balls, TMs e Mega Pedras no chão e os seus companheiros de time. A horda selvagem fica de fora.',
+            en: 'The map shows the biome’s terrain, the area on screen, events (altars, fountains, chests, Meowth, the Move Tutor, missions), landmarks, Poké Balls, TMs and Mega Stones on the ground, and your teammates. The wild horde stays off it.',
+            es: 'El mapa muestra el terreno del bioma, el área en pantalla, los eventos (altares, fuentes, cofres, Meowth, el Tutor de Movimientos, las misiones), las construcciones, las Poké Balls, MTs y Megapiedras en el suelo y a tus compañeros de equipo. La horda salvaje queda fuera.',
+            fr: 'La carte montre le terrain du biome, la zone à l’écran, les événements (autels, fontaines, coffres, Meowth, le Maître des capacités, les missions), les constructions, les Poké Balls, CT et Méga-Gemmes au sol et tes coéquipiers. La horde sauvage n’y figure pas.',
+            zh: '地圖會顯示生態區的地形、畫面範圍、事件（祭壇、泉水、寶箱、Meowth、招式教學、任務）、建築、地上的精靈球、招式學習器和超級石，以及你的隊友。野生群體不會顯示。',
+          },
+          {
+            pt: 'Dentro de uma fenda, da caverna ou do cemitério, o mapa mostra o lugar de perto: o chão da arena, os corredores e a escada da caverna, a Pedra Peculiar do cemitério.',
+            en: 'Inside a rift, the cave or the graveyard, the map shows the place up close: the arena’s floor, the cave’s corridors and stairs, the graveyard’s keystone.',
+            es: 'Dentro de una grieta, la cueva o el cementerio, el mapa muestra el lugar de cerca: el suelo de la arena, los pasillos y la escalera de la cueva, la Piedra Espíritu del cementerio.',
+            fr: 'Dans une faille, la grotte ou le cimetière, la carte montre le lieu de près : le sol de l’arène, les couloirs et l’escalier de la grotte, la Clé de Voûte du cimetière.',
+            zh: '在裂縫、洞窟或墓地裡，地圖會近距離顯示該地點：競技場的地面、洞窟的通道和樓梯、墓地的 Odd Keystone。',
+          },
+        ],
+      },
       {
         title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
         notes: [
