@@ -224,7 +224,9 @@ let dirty = true
 /**
  * Sizes the low-res canvas to the visible viewport. Runs on resize, rotation
  * and iOS toolbar changes (visualViewport), and only touches the canvas when
- * the result actually changed, because resizing clears it.
+ * it isn't that size already, because resizing clears it. Compared with the
+ * canvas itself, not `view`: a page that loads at 1920x1080 @1x fits the
+ * starting `view` exactly, and the canvas stayed at the HTML default (300x150, top left).
  */
 const resize = () => {
   stickCenter = null
@@ -233,7 +235,7 @@ const resize = () => {
   const width = window.visualViewport?.width ?? window.innerWidth
   const height = window.visualViewport?.height ?? window.innerHeight
   const fit = fitView(width, height, window.devicePixelRatio || 1)
-  if (fit.w === view.w && fit.h === view.h && fit.cssScale === cssScale) return
+  if (fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale) return
   view.w = fit.w
   view.h = fit.h
   cssScale = fit.cssScale
@@ -1016,14 +1018,29 @@ const loadRunSheets = async (families: readonly Variant[], opening: readonly Dex
   }
 }
 
+/** Set while `startRun` loads a run. */
+let launching = false
+
 /**
  * Loads the starter's evolution line and the first stage's species, then starts
  * a fresh run: a regular one from the save (upgrades, the Bag's armed items),
  * or the Desafio do dia's (`challengeStart`: its seed, nothing from the save
  * but the shiny colors). The rest of the cast (later stages, swarms, bosses), the
  * `EXTRAS` and the forms (a Mega, a stance) stream in the background as the run nears them (`syncSprites`).
+ * Once per Play: a second call while one loads is dropped, or both runs would load and the
+ * first would stay behind the second, its HUD and pick screen frozen over the game.
  */
 const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) => {
+  if (launching) return
+  launching = true
+  try {
+    await launchRun(starter, daily)
+  } finally {
+    launching = false
+  }
+}
+
+const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // Play again on a build that fell behind (`watchDeploys`): the newer one first, back in the lobby.
   if (reloadForDeploy) return location.reload()
   setScreen(null)

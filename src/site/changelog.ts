@@ -24,6 +24,32 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-25',
+    title: { pt: 'Correções na tela e nos menus', en: 'Screen and menu fixes', es: 'Correcciones en la pantalla y los menús', fr: 'Corrections de l’écran et des menus', zh: '畫面與選單修正' },
+    highlights: [
+      { pt: 'Em tela cheia num monitor 1080p, o jogo não fica mais pequenininho no canto de cima da tela.', en: 'In fullscreen on a 1080p monitor, the game no longer plays tiny in the top-left corner.', es: 'En pantalla completa en un monitor 1080p, el juego ya no queda diminuto en la esquina de arriba.', fr: 'En plein écran sur un moniteur 1080p, le jeu ne s’affiche plus en tout petit dans le coin en haut à gauche.', zh: '在 1080p 螢幕全螢幕遊玩時，遊戲不會再縮在左上角的小框裡。' },
+      { pt: 'A escolha de golpe não fica mais congelada na frente da partida depois de apertar Enter num botão que já tinha sido clicado.', en: 'The move pick no longer stays frozen over the run after pressing Enter on a button you had clicked.', es: 'La elección de ataque ya no se queda congelada encima de la partida al presionar Enter en un botón que ya habías clicado.', fr: 'Le choix d’attaque ne reste plus figé devant la partie après avoir appuyé sur Entrée sur un bouton déjà cliqué.', zh: '在點過的按鈕上按 Enter 後，招式選擇畫面不會再凍結擋在對局前面。' },
+      { pt: 'A Pokédex não fica mais presa atrás do lobby com o botão Voltar sem funcionar.', en: 'The Pokédex no longer gets stuck behind the lobby with a Back button that does nothing.', es: 'La Pokédex ya no se queda atrapada detrás del lobby con el botón Volver sin funcionar.', fr: 'Le Pokédex ne reste plus coincé derrière le lobby avec un bouton Retour qui ne fait rien.', zh: '圖鑑不會再卡在大廳後面、返回鍵也按不動。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          {
+            pt: 'Quem abria o jogo com a janela em exatamente 1920×1080 (tela cheia num monitor 1080p) via o mapa num quadradinho no canto de cima, no lobby e na partida. Agora ele ocupa a tela toda desde o começo.',
+            en: 'Opening the game in a window of exactly 1920×1080 (fullscreen on a 1080p monitor) showed the map in a small box in the top corner, in the lobby and in runs. It now fills the screen from the start.',
+            es: 'Quien abría el juego con la ventana en exactamente 1920×1080 (pantalla completa en un monitor 1080p) veía el mapa en un cuadrito en la esquina de arriba, en el lobby y en la partida. Ahora ocupa toda la pantalla desde el principio.',
+          },
+          {
+            pt: 'Com o mouse e o teclado juntos, um Enter num botão já clicado contava duas vezes: o Jogar começava duas partidas e a escolha de golpe da primeira ficava congelada na frente; no lobby, duas telas abriam e a de baixo ficava presa atrás. Agora cada aperto conta uma vez.',
+            en: 'With mouse and keyboard together, Enter on a button you had clicked counted twice: Play started two runs and the first one’s move pick stayed frozen on top; in the lobby, two screens opened and the one below got stuck behind. Each press now counts once.',
+            es: 'Con el mouse y el teclado juntos, un Enter en un botón ya clicado contaba dos veces: Jugar empezaba dos partidas y la elección de ataque de la primera se quedaba congelada encima; en el lobby, se abrían dos pantallas y la de abajo quedaba atrapada detrás. Ahora cada pulsación cuenta una vez.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-24',
     title: { pt: 'Mega Darkrai, um lobby novo no celular e golpes mais vivos', en: 'Mega Darkrai, a new lobby on phones and livelier moves', es: 'Mega Darkrai, un lobby nuevo en el celular y ataques con más vida', fr: 'Méga-Darkrai, un nouveau lobby sur mobile et des attaques plus vivantes', zh: '超級 Darkrai、手機上的全新大廳與更生動的招式' },
     highlights: [

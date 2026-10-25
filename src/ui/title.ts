@@ -874,6 +874,8 @@ export const titleScreen = (
     offKeys = closeChip = null
     el.classList.add('hidden')
     leaveMeadow()
+    // One screen over the title at a time: one left open under the new one would outlive the title (nothing would close it).
+    overScreen?.dispose()
     overScreen = open(current)
   }
 
@@ -904,9 +906,24 @@ export const titleScreen = (
     youtube: () => openSocial('youtube'),
     instagram: () => openSocial('instagram'),
   }
-  /** A press on `key`: the select sound, then its action after this dispatch (or the next screen would get the same press). */
+  /**
+   * A press on `key`: the select sound, then its action after this dispatch (or the next screen would get the same press).
+   * One per dispatch: Enter clicks the selected item and, when another lobby button holds the page's focus, the browser
+   * clicks that one too; both opened a screen, and the first stayed behind the title for good (its Back did nothing).
+   */
   // JOGAR isn't counted: the run's `run_end` already says it, and it's a third of the lobby's presses.
-  const press = (key: keyof typeof runs) => () => (select(key, false), playSfx('select'), key !== 'play' && lobbyPress(key), later(runs[key]))
+  let pressing = false
+  const press = (key: keyof typeof runs) => () => {
+    if (pressing) return
+    pressing = true
+    select(key, false)
+    playSfx('select')
+    if (key !== 'play') lobbyPress(key)
+    later(() => {
+      pressing = false
+      runs[key]()
+    })
+  }
   const pressable = <T extends HTMLElement>(node: T, key: keyof typeof runs) => (node.addEventListener('click', press(key)), navigable(node, key))
 
   const buildLobby = () => {
