@@ -1,5 +1,6 @@
 import { range, type Rng } from '../engine/rng'
 import type { Poly, Pt } from '../data/arenas'
+import * as dm from '../engine/dmath'
 
 /**
  * Mystery Dungeon floors (the cave, `cave.ts`): rooms on a grid joined by
@@ -45,18 +46,18 @@ export const DUNGEON = {
   items: 2,
 } as const
 
-const center = (r: Rect): Pt => [Math.round(r.x + r.w / 2), Math.round(r.y + r.h / 2)]
+const center = (r: Rect): Pt => [dm.round(r.x + r.w / 2), dm.round(r.y + r.h / 2)]
 
 const inRect = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h
 
 /** A spot inside room `r`, `inset` px from its walls. */
-const spotIn = (rng: Rng, r: Rect, inset: number): Pt => [Math.round(range(rng, r.x + inset, r.x + r.w - inset)), Math.round(range(rng, r.y + inset, r.y + r.h - inset))]
+const spotIn = (rng: Rng, r: Rect, inset: number): Pt => [dm.round(range(rng, r.x + inset, r.x + r.w - inset)), dm.round(range(rng, r.y + inset, r.y + r.h - inset))]
 
 /** A spot in one of room `r`'s corners, clear of the corridors that come in at the middle of its walls. */
 const cornerIn = (rng: Rng, r: Rect): Pt => {
   const x = rng() < 0.5 ? r.x + range(rng, 12, 26) : r.x + r.w - range(rng, 12, 26)
   const y = rng() < 0.5 ? r.y + range(rng, 12, 22) : r.y + r.h - range(rng, 8, 16)
-  return [Math.round(x), Math.round(y)]
+  return [dm.round(x), dm.round(y)]
 }
 
 const far2 = ([ax, ay]: Pt, [bx, by]: Pt) => (ax - bx) * (ax - bx) + (ay - by) * (ay - by)
@@ -75,11 +76,11 @@ const corridor = (rooms: readonly Rect[], a: number, b: number, across: boolean)
   const [bx, by] = center(rb)
   const path: Pt[] = across
     ? (() => {
-        const mx = Math.round((ra.x + ra.w + rb.x) / 2)
+        const mx = dm.round((ra.x + ra.w + rb.x) / 2)
         return [[ax, ay], [mx, ay], [mx, by], [bx, by]]
       })()
     : (() => {
-        const my = Math.round((ra.y + ra.h + rb.y) / 2)
+        const my = dm.round((ra.y + ra.h + rb.y) / 2)
         return [[ax, ay], [ax, my], [bx, my], [bx, by]]
       })()
   return { a, b, path, rects: path.slice(1).map((p, i) => stretch(path[i]!, p, DUNGEON.corridor)) }
@@ -113,9 +114,9 @@ export const generateFloor = (rng: Rng, index: number): DungeonFloor => {
     for (let c = 0; c < grid.cols; c++) {
       const ox = (c - (grid.cols - 1) / 2) * CW - CW / 2
       const oy = (r - (grid.rows - 1) / 2) * CH - CH / 2
-      const w = Math.round(range(rng, DUNGEON.room.minW, CW - gap * 2))
-      const h = Math.round(range(rng, DUNGEON.room.minH, CH - gap * 2))
-      rooms.push({ x: Math.round(ox + gap + rng() * (CW - gap * 2 - w)), y: Math.round(oy + gap + rng() * (CH - gap * 2 - h)), w, h })
+      const w = dm.round(range(rng, DUNGEON.room.minW, CW - gap * 2))
+      const h = dm.round(range(rng, DUNGEON.room.minH, CH - gap * 2))
+      rooms.push({ x: dm.round(ox + gap + rng() * (CW - gap * 2 - w)), y: dm.round(oy + gap + rng() * (CH - gap * 2 - h)), w, h })
     }
   }
   const at = (c: number, r: number) => r * grid.cols + c

@@ -75,7 +75,7 @@ export const circle = (x: number, y: number, r: number): Circle => ({ kind: 'cir
 export const poly = (...pts: Pt[]): Poly => ({ kind: 'poly', pts })
 /** `n` points evenly around a circle of radius `r`, starting `turn` rad round. */
 export const around = (n: number, r: number, turn = 0) =>
-  Array.from({ length: n }, (_, i): Pt => [Math.round(dm.cos(turn + (i / n) * Math.PI * 2) * r), Math.round(dm.sin(turn + (i / n) * Math.PI * 2) * r)])
+  Array.from({ length: n }, (_, i): Pt => [dm.round(dm.cos(turn + (i / n) * Math.PI * 2) * r), dm.round(dm.sin(turn + (i / n) * Math.PI * 2) * r)])
 
 /** A straight stretch of floor `w` px wide from `a` to `b` (a convex quad), for corridors between rooms. */
 export const lane = ([ax, ay]: Pt, [bx, by]: Pt, w: number): Poly => {
@@ -85,7 +85,7 @@ export const lane = ([ax, ay]: Pt, [bx, by]: Pt, w: number): Poly => {
   return poly([ax + nx, ay + ny], [bx + nx, by + ny], [bx - nx, by - ny], [ax - nx, ay - ny])
 }
 
-const LUGIA_ISLANDS = around(6, 104, 0.5).map(([x, y]) => circle(x, Math.round(y * 0.96), 28))
+const LUGIA_ISLANDS = around(6, 104, 0.5).map(([x, y]) => circle(x, dm.round(y * 0.96), 28))
 
 /** Southern Island: a sandy island with palms for cover, ringed by surf that slows whoever wades. Latias and Latios share it. */
 const SOUTHERN_ISLAND: ArenaLayout = {

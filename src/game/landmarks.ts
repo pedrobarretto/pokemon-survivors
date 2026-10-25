@@ -66,7 +66,7 @@ const openTreasure = (g: Game, lm: Landmark & { id: TreasureLandmark }, x: numbe
   if ('berries' in loot) for (let i = 0; i < loot.berries; i++) dropPickup(g, x - 6 + i * 12, y + 6, 'berry')
   if ('xp' in loot) {
     // About `xp` of a level, in a handful of candies.
-    const total = Math.max(5, Math.round(g.player.xpNext * loot.xp))
+    const total = Math.max(5, dm.round(g.player.xpNext * loot.xp))
     for (let i = 0; i < 6; i++) dropXp(g, x, y - 6, Math.ceil(total / 6))
   }
   if ('egg' in loot) awardEgg(g, 'chest', x, y)

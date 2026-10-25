@@ -246,7 +246,7 @@ const reveal = (g: Game, arena: RiftArena, d: DomainState, def: LegendDomain) =>
   const boss = spawnEnemy(g, d.legend, at.x, at.y)
   const scale = riftScale(g.time)
   // The difficulty presses a legendary with its patterns (pace, telegraphs, damage) and with `DOMAIN_PRESS`.
-  boss.hp = boss.maxHp = Math.round(ENEMIES[d.legend].hp * scale.hp * def.hp * DOMAIN_PRESS[g.difficulty].hp)
+  boss.hp = boss.maxHp = dm.round(ENEMIES[d.legend].hp * scale.hp * def.hp * DOMAIN_PRESS[g.difficulty].hp)
   boss.damage *= scale.damage * (def.touch ?? 1)
   boss.xp = riftLoot(g.time, arena.shiny).xp
   boss.shiny = arena.shiny

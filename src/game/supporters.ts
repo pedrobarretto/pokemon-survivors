@@ -9,6 +9,7 @@ import type { Save } from './meta'
 import { isRecord, wholeNumber } from './parse'
 import { isPlayable } from './ranking'
 import { ownsShiny } from './shinyPicks'
+import * as dm from '../engine/dmath'
 
 /**
  * Apoiadores: a donation linked to an account (by its handle, or with a code
@@ -27,7 +28,7 @@ export const isSupporterTier = (v: unknown): v is SupporterTier => SUPPORTER_TIE
 /** Points of a donation of `cents` in `currency` (ISO code, any case): one per centavo, five per US cent. */
 export const donationPoints = (cents: number, currency: string) => {
   const rate = currency.toLowerCase() === 'brl' ? SUPPORTER.perCent.brl : SUPPORTER.perCent.usd
-  return Math.max(0, Math.round(cents)) * rate
+  return Math.max(0, dm.round(cents)) * rate
 }
 
 /** The tier of a total, or null before any donation. */

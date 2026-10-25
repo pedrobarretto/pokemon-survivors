@@ -145,7 +145,7 @@ const trapHit = (g: Game, x: number, y: number, r: number, damage: number, bossS
   for (const i of query(g.grid, x, y, r + 16, neighbors)) {
     const e = g.enemies[i]
     if (!e || !isAlive(e) || dm.sq(e.x - x) + dm.sq(e.y - y) > dm.sq(r + e.radius)) continue
-    const dmg = Math.max(1, Math.round(e.boss ? e.maxHp * bossShare : damage))
+    const dmg = Math.max(1, dm.round(e.boss ? e.maxHp * bossShare : damage))
     e.hp -= dmg
     e.flash = 0.2
     const away = dirTo(x, y, e.x, e.y)
@@ -207,7 +207,7 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
       const s = ev.state
       if (!fountainSip(s, dm.sq(p.x - ev.x) + dm.sq(p.y - ev.y) < dm.sq(FOUNTAIN.radius + p.radius), p.hp < p.stats.maxHp - 0.5, dt)) return
       const before = actAs(g, p)
-      const heal = Math.round(healPlayer(g, p.stats.maxHp * FOUNTAIN.heal))
+      const heal = dm.round(healPlayer(g, p.stats.maxHp * FOUNTAIN.heal))
       actAs(g, before)
       floatText(g, p.x, p.y - 30, `+${heal}`, '#58e858')
       burst(g, ev.x, ev.y - 8, { colors: ['#a8d8f8', '#ffffff', '#58a8f0'], count: 10, speed: 50, ttl: 0.6, gravity: -50 })
@@ -407,7 +407,7 @@ const direct = (g: Game) => {
   if (!spot) return
   // Events stand on open ground, never in a lake or against a rock.
   const open = clearSpot(g, spot, 18)
-  spawnMapEvent(g, kind, Math.round(open.x), Math.round(open.y))
+  spawnMapEvent(g, kind, dm.round(open.x), dm.round(open.y))
 }
 
 /** Whether some player is within `DIRECTOR.despawn` px (Manhattan) of (x, y). */

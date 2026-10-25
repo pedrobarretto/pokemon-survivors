@@ -6,6 +6,7 @@ import { killEnemy } from './combat'
 import { burst, shakeScreen } from './effects'
 import { spawnEnemy } from './enemies'
 import type { Enemy, Game } from './types'
+import * as dm from '../engine/dmath'
 
 /**
  * Two legendaries fighting as one in a domain (`LegendDomain.partner`, Latias
@@ -39,7 +40,7 @@ export const revealPartner = (g: Game, def: LegendDomain, lead: Enemy, x: number
   const partner = def.partner
   if (!partner) return null
   const e = spawnEnemy(g, partner.id, x, y)
-  e.hp = e.maxHp = Math.round(ENEMIES[partner.id].hp * (lead.maxHp / ENEMIES[lead.kind].hp))
+  e.hp = e.maxHp = dm.round(ENEMIES[partner.id].hp * (lead.maxHp / ENEMIES[lead.kind].hp))
   e.damage = ENEMIES[partner.id].damage * (lead.damage / ENEMIES[lead.kind].damage)
   e.speed = lead.speed
   e.shiny = lead.shiny
@@ -79,7 +80,7 @@ const revive = (g: Game, pair: PairState, def: LegendDomain, downed: Enemy, surv
   f.down = false
   downed.x = pair.x
   downed.y = pair.y
-  downed.hp = Math.max(downed.hp, Math.round(downed.maxHp * rule.hp))
+  downed.hp = Math.max(downed.hp, dm.round(downed.maxHp * rule.hp))
   // One phase back, so it steps into the survivor's own with its opening.
   f.phase = survivor.fight!.phase - 1
   survivor.fight!.enraged = false

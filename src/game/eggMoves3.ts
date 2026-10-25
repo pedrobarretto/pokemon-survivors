@@ -359,7 +359,7 @@ export const EGG_MOVES_3 = {
         ...look('heavySlam', 'steel', 'heavyQuake'), x: p.x, y: p.y,
         shape: { kind: 'circle', r: 10 }, motion: { kind: 'follow', ox: 0, oy: 0 },
         damage: s.damage * mult, knockback: s.knockback, ttl: 0.5, grow: (HEAVY_R * s.area - 10) / 0.18, activeUntil: 0.18, age: -HEAVY_HOP,
-        tier: Math.round((mult - 1) * 10),
+        tier: dm.round((mult - 1) * 10),
       })
     },
     onHit: (g, a) => {

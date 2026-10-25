@@ -142,14 +142,14 @@ const collect = (g: Game, pickup: Pickup) => {
       break
     case 'coin': {
       // Co-op ₽ are worth a bit more: the team's total is split at the end (`coopPayout`).
-      const amount = Math.round(pickup.value * p.stats.greed * coopScale(g, COOP.scale.coins))
+      const amount = dm.round(pickup.value * p.stats.greed * coopScale(g, COOP.scale.coins))
       g.coins += amount
       floatText(g, p.x, p.y - 30, `₽${amount}`, '#f8d030')
       g.events.push({ kind: 'coin' })
       break
     }
     case 'berry': {
-      const heal = Math.round(healPlayer(g, p.stats.maxHp * 0.3))
+      const heal = dm.round(healPlayer(g, p.stats.maxHp * 0.3))
       floatText(g, p.x, p.y - 30, `+${heal}`, '#58e858')
       burst(g, p.x, p.y - 10, { colors: ['#58e858', '#c8f8c8'], count: 12, speed: 60, ttl: 0.5, gravity: -40 })
       g.events.push({ kind: 'heal' })

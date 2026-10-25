@@ -53,7 +53,7 @@ export const bestLine = <T extends Foe>(foes: readonly T[], from: Point, reach: 
  * max HP for the whole cast (`paid` so far), and never the last HP point.
  */
 export const recoilCost = (maxHp: number, hp: number, paid: number, share: number, cap: number) =>
-  Math.max(0, Math.min(Math.round(maxHp * share), Math.round(maxHp * cap) - paid, Math.floor(hp) - 1))
+  Math.max(0, Math.min(dm.round(maxHp * share), dm.round(maxHp * cap) - paid, Math.floor(hp) - 1))
 
 /* ---------------- Brave Bird ---------------- */
 

@@ -45,7 +45,7 @@ const onScreen = (g: Game, e: Enemy) => inView(g, e.x, e.y, -8)
 
 /** Damage from a trait (blast), after wards. Fainting through here still drops EXP and items. */
 const hurtEnemy = (g: Game, e: Enemy, amount: number, from: Enemy) => {
-  const dmg = Math.round(absorb(e.trait, amount))
+  const dmg = dm.round(absorb(e.trait, amount))
   const away = dirTo(from.x, from.y, e.x, e.y)
   e.kx += (away.x * 140) / e.mass
   e.ky += (away.y * 140) / e.mass

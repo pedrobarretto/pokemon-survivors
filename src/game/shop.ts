@@ -7,6 +7,7 @@ import { grantEgg, incubatorFull } from './eggs'
 import type { Save } from './meta'
 import { isRecord, wholeNumber } from './parse'
 import { grantStyle, ownsStyle, type StyleSave } from './style'
+import * as dm from '../engine/dmath'
 
 /**
  * The Kecleon Shop's rules (its catalog is `data/shop.ts`). The Vitrine do
@@ -155,7 +156,7 @@ export const vitrinePrice = (v: Vitrine, key: VitrineKey, style: StyleSave): num
   const pick = key === 'style' ? dayStyle(v, style) : null
   const full = key === 'egg' ? VITRINE.eggs[v.egg].price : key === 'style' ? pick && onPick(pick, stylePrice) : BAG_ITEMS[key].price
   if (full === null) return null
-  return Math.round((full * (isDeal(v, key) ? 1 - VITRINE.deal : 1)) / 10) * 10
+  return dm.round((full * (isDeal(v, key) ? 1 - VITRINE.deal : 1)) / 10) * 10
 }
 
 /* ---------------- The save's shop ---------------- */

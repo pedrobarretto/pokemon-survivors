@@ -7,6 +7,7 @@ import { centerScreen } from './players'
 import { rollShiny } from './shiny'
 import { winRun } from './coop'
 import type { Enemy, Game } from './types'
+import * as dm from '../engine/dmath'
 
 /**
  * The wave legendaries' moments on the map (`data/legendBosses.ts`), played
@@ -66,7 +67,7 @@ export const entranceBeat = (t: number) => {
 /** A wave legendary just came into play: it takes its HP (`WAVE_LEGEND_HP`), may be shiny (`WAVE_LEGEND_SHINY`) and its entrance plays now, or after the one playing. */
 export const legendEntrance = (g: Game, boss: Enemy) => {
   if (!isWaveLegend(boss.kind)) return
-  boss.hp = boss.maxHp = Math.round(boss.maxHp * WAVE_LEGEND_HP)
+  boss.hp = boss.maxHp = dm.round(boss.maxHp * WAVE_LEGEND_HP)
   boss.shiny = rollShiny(g.rng, WAVE_LEGEND_SHINY)
   const s = g.legendScene
   if (s) {

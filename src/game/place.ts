@@ -9,6 +9,7 @@ import type { Room, Stash } from './room'
 import type { SkyState } from './sky'
 import type { StatDelta } from './stats'
 import type { Feature } from './terrain'
+import * as dm from '../engine/dmath'
 
 /**
  * Pure rules and state of places (`data/places.ts`): when an entrance opens
@@ -154,7 +155,7 @@ export const rollWing = (rng: Rng): WingId => weightedPick(rng, WING_IDS.map((id
 /** The number a wing's line shows (its stat, a percent for damage, or the Pretty Wing's ₽). */
 export const wingAmount = (id: WingId) => {
   const s: { maxHp?: number; might?: number; armor?: number; speed?: number } = WINGS[id].stats
-  return id === 'prettyWing' ? PRETTY_WING_COINS : (s.maxHp ?? s.armor ?? s.speed ?? Math.round((s.might ?? 0) * 100))
+  return id === 'prettyWing' ? PRETTY_WING_COINS : (s.maxHp ?? s.armor ?? s.speed ?? dm.round((s.might ?? 0) * 100))
 }
 
 /** What the wings picked up this run add to the player's stats. */

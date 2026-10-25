@@ -31,8 +31,8 @@ const entranceSpot = (g: Game) => {
   const d = dm.hypot(g.view.w, g.view.h) / 2 + 70
   for (let i = 0; i < 12; i++) {
     const a = range(g.rng, 0, TAU)
-    const x = Math.round(p.x + dm.cos(a) * d)
-    const y = Math.round(p.y + dm.sin(a) * d)
+    const x = dm.round(p.x + dm.cos(a) * d)
+    const y = dm.round(p.y + dm.sin(a) * d)
     if (!isOpen(g, x, y - 16, CLEARANCE)) continue
     const crowded = [...g.mapEvents.list, ...(g.rift.portal ? [g.rift.portal] : [])].some((o) => dm.sq(o.x - x) + dm.sq(o.y - y) < dm.sq(DIRECTOR.spacing))
     if (!crowded) return { x, y }

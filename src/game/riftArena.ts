@@ -18,6 +18,7 @@ import { updateDomain } from './domain'
 import { centerScreen, eachPlayer, placeTeam } from './players'
 import { dropForEach } from './coop'
 import type { Game } from './types'
+import * as dm from '../engine/dmath'
 
 /**
  * The arena behind a rift: a room (`room.ts`) with its own shape, scenery and
@@ -40,7 +41,7 @@ export const enterArena = (g: Game, legend: RiftLegend, x: number, y: number) =>
   const spawn = at(layout.boss)
   const boss = spawnEnemy(g, legend, spawn.x, spawn.y)
   const scale = riftScale(g.time)
-  boss.hp = boss.maxHp = Math.round(boss.maxHp * scale.hp)
+  boss.hp = boss.maxHp = dm.round(boss.maxHp * scale.hp)
   boss.damage *= scale.damage
   boss.xp = riftLoot(g.time, shiny).xp
   boss.shiny = shiny
@@ -108,7 +109,7 @@ export const updateArenaFall = (g: Game, dt: number) => {
   for (const p of g.players) {
     // Solo the one player is the one who fell.
     if (g.players.length > 1 && (p.hp > 0 || p.gone)) continue
-    p.hp = Math.max(1, Math.round(p.stats.maxHp * RIFT.fallHp))
+    p.hp = Math.max(1, dm.round(p.stats.maxHp * RIFT.fallHp))
     p.revive = 0
     p.hurt = 0
   }
@@ -140,7 +141,7 @@ export const riftWin = (g: Game, arena: RiftArena, x: number, y: number) => {
   dropForEach(g, () => dropLegendaryTm(g, arena.legend, x + 14, y - 6))
   for (const p of g.players) {
     g.player = p
-    const heal = Math.round(healPlayer(g, p.stats.maxHp * loot.heal))
+    const heal = dm.round(healPlayer(g, p.stats.maxHp * loot.heal))
     floatText(g, p.x, p.y - 30, `+${heal}`, '#58e858')
   }
   g.player = before

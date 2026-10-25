@@ -10,6 +10,8 @@
  * - Drums: `k` kick, `s` snare, `h` closed hat, `o` open hat.
  * - `r` is a rest, `-` ties onto the previous note (also across bars).
  */
+import * as dm from './dmath'
+
 export const STEPS_PER_BAR = 16
 
 export const DRUMS = ['k', 's', 'h', 'o'] as const
@@ -46,7 +48,7 @@ export const noteToMidi = (sym: string) => {
   return 12 * (Number(m[3]) + 1) + SEMITONES[m[1]!]! + accidental
 }
 
-export const midiToFreq = (midi: number) => 440 * 2 ** ((midi - 69) / 12)
+export const midiToFreq = (midi: number) => 440 * dm.pow(2, (midi - 69) / 12)
 
 export const isDrum = (sym: string): sym is Drum => (DRUMS as readonly string[]).includes(sym)
 
