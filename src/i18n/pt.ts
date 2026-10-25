@@ -494,6 +494,14 @@ export const pt = {
     safeMode: 'Modo leve',
     joystick: 'Joystick',
     joystickModes: { floating: 'Segue o dedo', fixed: 'Fixo' },
+    /** Touch only: the side of the special, lunge and Mega buttons (the fixed stick takes the other one). */
+    buttonSide: 'Lado dos botões',
+    buttonSides: { right: 'Direita', left: 'Esquerda' },
+    /** Fixed stick only: how high it sits and how far from the side edge. */
+    stickHeight: 'Altura do joystick',
+    stickHeights: { low: 'Baixa', mid: 'Média', high: 'Alta' },
+    stickEdge: 'Distância da borda',
+    stickEdges: { near: 'Perto', mid: 'Média', far: 'Longe' },
     on: 'ON',
     off: 'OFF',
     tabs: { sound: 'SOM', game: 'JOGO', controls: 'CONTROLES', about: 'SOBRE' },

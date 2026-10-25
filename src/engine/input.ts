@@ -41,6 +41,16 @@ export type Stick = { origin: Vec; knob: Vec; vec: Vec }
 export const STICK_MODES = ['floating', 'fixed'] as const
 export type StickMode = (typeof STICK_MODES)[number]
 
+/** Which side the touch action buttons sit on (Settings → Controls); the fixed stick takes the other one. `left` mirrors the bottom of the HUD. */
+export const BUTTON_SIDES = ['right', 'left'] as const
+export type ButtonSide = (typeof BUTTON_SIDES)[number]
+
+/** How high the fixed stick sits, and how far from the side edge: steps of the CSS in `ui/style.css` (`data-stick-height`, `data-stick-edge`). */
+export const STICK_HEIGHTS = ['low', 'mid', 'high'] as const
+export type StickHeight = (typeof STICK_HEIGHTS)[number]
+export const STICK_EDGES = ['near', 'mid', 'far'] as const
+export type StickEdge = (typeof STICK_EDGES)[number]
+
 const MOVE_KEYS: Record<string, Vec> = {
   KeyW: { x: 0, y: -1 },
   ArrowUp: { x: 0, y: -1 },

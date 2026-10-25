@@ -32,8 +32,24 @@ const hasRoom = (host: HTMLElement) => {
   const last = host.lastElementChild
   if (!(last instanceof HTMLElement)) return true
   const style = getComputedStyle(host)
-  const max = parseFloat(style.maxHeight)
-  return Number.isNaN(max) || host.scrollHeight + parseFloat(style.rowGap) + last.offsetHeight <= max
+  const max = maxHeightOf(host, style.maxHeight)
+  return host.scrollHeight + parseFloat(style.rowGap) + last.offsetHeight <= max
+}
+
+/**
+ * The column's `max-height` in CSS px. The computed style keeps its percentage
+ * (`calc(50% - …)`), so a hidden probe beside it, in the same containing
+ * block, takes it as its height and measures it.
+ */
+const maxHeightOf = (host: HTMLElement, maxHeight: string) => {
+  const parent = host.parentElement
+  if (maxHeight === 'none' || !parent) return Infinity
+  const probe = h('div', { 'aria-hidden': 'true' })
+  probe.style.cssText = `position:absolute;visibility:hidden;pointer-events:none;height:${maxHeight}`
+  parent.append(probe)
+  const px = probe.offsetHeight
+  probe.remove()
+  return px
 }
 
 /**

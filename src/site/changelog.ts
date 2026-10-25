@@ -24,6 +24,61 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-25',
+    title: { pt: 'Controles de toque para canhotos', en: 'Left-handed touch controls', es: 'Controles táctiles para zurdos', fr: 'Commandes tactiles pour gauchers', zh: '左手觸控操作' },
+    highlights: [
+      {
+        pt: 'No celular, os botões de ataque especial, bote e Mega podem ir para a esquerda, com o joystick fixo à direita: Ajustes → Controles → Lado dos botões.',
+        en: 'On phones, the special attack, lunge and Mega buttons can move to the left, with the fixed joystick on the right: Settings → Controls → Button side.',
+        es: 'En el celular, los botones de ataque especial, embestida y Mega pueden ir a la izquierda, con el joystick fijo a la derecha: Ajustes → Controles → Lado de los botones.',
+        fr: 'Sur mobile, les boutons d’attaque spéciale, de ruée et de Méga peuvent passer à gauche, avec le joystick fixe à droite : Réglages → Commandes → Côté des boutons.',
+        zh: '在手機上，特殊攻擊、突進和超級進化按鈕可以移到左側，固定搖桿則移到右側：設定 → 操作 → 按鈕位置。',
+      },
+      {
+        pt: 'O joystick fixo agora pode subir e se afastar da borda, em três degraus cada, para caber melhor na sua mão e no seu celular.',
+        en: 'The fixed joystick can now sit higher and farther from the edge, three steps each, to fit your hand and your phone better.',
+        es: 'El joystick fijo ahora puede subir y alejarse del borde, en tres pasos cada uno, para adaptarse mejor a tu mano y a tu celular.',
+        fr: 'Le joystick fixe peut maintenant monter et s’éloigner du bord, en trois crans chacun, pour mieux s’adapter à ta main et à ton téléphone.',
+        zh: '固定搖桿現在可以調高、離邊緣更遠，各有三段，更貼合你的手和手機。',
+      },
+      {
+        pt: 'Os avisos da partida não se empilham mais por cima dos botões e do joystick: quando a coluna enche, o próximo espera a sua vez.',
+        en: 'In-run notices no longer pile up over the buttons and the joystick: when the column is full, the next one waits its turn.',
+        es: 'Los avisos de la partida ya no se apilan encima de los botones y del joystick: cuando la columna se llena, el siguiente espera su turno.',
+        fr: 'Les annonces de la partie ne s’empilent plus sur les boutons et le joystick : quand la colonne est pleine, la suivante attend son tour.',
+        zh: '對局中的提示不會再疊到按鈕和搖桿上：欄位滿了時，下一則會等輪到它再出現。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Botões à esquerda e joystick fixo ajustável', en: 'Buttons on the left and an adjustable fixed joystick', es: 'Botones a la izquierda y joystick fijo ajustable', fr: 'Boutons à gauche et joystick fixe réglable', zh: '按鈕移到左側，固定搖桿可調整' },
+        notes: [
+          {
+            pt: 'Em Ajustes → Controles, o novo “Lado dos botões” espelha a parte de baixo da tela no celular: especial, bote e Mega vão para a esquerda, e o quadro de HP e o joystick fixo para a direita. Pedido de quem joga movendo com a mão direita.',
+            en: 'In Settings → Controls, the new “Button side” mirrors the bottom of the screen on phones: special, lunge and Mega go to the left, the HP box and the fixed joystick to the right. Asked for by players who move with their right hand.',
+            es: 'En Ajustes → Controles, el nuevo “Lado de los botones” refleja la parte de abajo de la pantalla en el celular: especial, embestida y Mega van a la izquierda, y el cuadro de PS y el joystick fijo a la derecha. Lo pidieron quienes se mueven con la mano derecha.',
+            fr: 'Dans Réglages → Commandes, le nouveau « Côté des boutons » inverse le bas de l’écran sur mobile : spéciale, ruée et Méga passent à gauche, l’encadré des PV et le joystick fixe à droite. Demandé par ceux qui se déplacent de la main droite.',
+            zh: '在設定 → 操作中，新的「按鈕位置」會在手機上把畫面下方左右對調：特殊攻擊、突進和超級進化移到左側，HP 框和固定搖桿移到右側。這是用右手移動的玩家提出的建議。',
+          },
+          {
+            pt: 'Com o joystick fixo, “Altura do joystick” e “Distância da borda” tiram ele do canto, em três degraus cada, para celulares de todos os tamanhos.',
+            en: 'With the fixed joystick, “Joystick height” and “Distance from edge” take it out of the corner, three steps each, for phones of every size.',
+            es: 'Con el joystick fijo, “Altura del joystick” y “Distancia del borde” lo sacan de la esquina, en tres pasos cada uno, para celulares de todos los tamaños.',
+            fr: 'Avec le joystick fixe, « Hauteur du joystick » et « Distance du bord » le sortent du coin, en trois crans chacun, pour les téléphones de toutes les tailles.',
+            zh: '使用固定搖桿時，「搖桿高度」和「與邊緣距離」可以把它移出角落，各有三段，適合各種尺寸的手機。',
+          },
+          {
+            pt: 'Os avisos da partida (evento, surto, Mega Stone…) respeitam o espaço da coluna deles: no celular deitado, um de cada vez quando falta altura, em vez de cobrir os botões.',
+            en: 'In-run notices (event, outbreak, Mega Stone…) keep to their column’s room: on a phone held sideways, one at a time when there’s no height to spare, instead of covering the buttons.',
+            es: 'Los avisos de la partida (evento, brote, Mega Stone…) respetan el espacio de su columna: en el celular en horizontal, uno a la vez cuando falta altura, en vez de tapar los botones.',
+            fr: 'Les annonces de la partie (événement, apparition massive, Mega Stone…) restent dans leur colonne : sur un téléphone à l’horizontale, une à la fois quand la hauteur manque, au lieu de couvrir les boutons.',
+            zh: '對局中的提示（活動、大量出現、Mega Stone……）會守在自己的欄位裡：手機橫拿、高度不夠時一次只顯示一則，不再蓋住按鈕。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-24',
     title: { pt: 'Mega Darkrai, um lobby novo no celular e golpes mais vivos', en: 'Mega Darkrai, a new lobby on phones and livelier moves', es: 'Mega Darkrai, un lobby nuevo en el celular y ataques con más vida', fr: 'Méga-Darkrai, un nouveau lobby sur mobile et des attaques plus vivantes', zh: '超級 Darkrai、手機上的全新大廳與更生動的招式' },
     highlights: [

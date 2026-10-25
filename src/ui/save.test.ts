@@ -24,6 +24,12 @@ describe('parseSettings', () => {
     expect(parseSettings(JSON.stringify({ joystick: 'left' })).joystick).toBe('floating')
   })
 
+  it('reads the buttons side and the fixed stick place, falling back step by step', () => {
+    const stored = JSON.stringify({ buttonSide: 'left', stickHeight: 'high', stickEdge: 'corner' })
+    expect(parseSettings(stored)).toMatchObject({ buttonSide: 'left', stickHeight: 'high', stickEdge: 'near' })
+    expect(parseSettings(JSON.stringify({ buttonSide: true })).buttonSide).toBe('right')
+  })
+
   it('reads the flashes mode, normal unless it says reduced', () => {
     expect(parseSettings(JSON.stringify({ flashes: 'reduced' })).flashes).toBe('reduced')
     expect(parseSettings(JSON.stringify({ flashes: false })).flashes).toBe('normal')

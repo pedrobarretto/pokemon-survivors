@@ -2858,14 +2858,37 @@ button {
 
 /*
  * Where the fixed touch joystick sits (Settings → Controls): bottom-left, clear
- * of the safe area and the screen edge. The canvas draws the stick centered on
- * `.stick-anchor`, so its size is the base's diameter (2 × STICK_RADIUS in
- * engine/input.ts). The status box steps aside while the mode is on.
+ * of the safe area and the screen edge, raised (`--stick-up`) and moved in
+ * (`--stick-in`) by the stick's height and edge steps. With the buttons on the
+ * left (`data-hand`, below) it takes the bottom-right instead, and
+ * `--stick-left` measures from the right edge. The canvas draws the stick
+ * centered on `.stick-anchor`, so its size is the base's diameter
+ * (2 × STICK_RADIUS in engine/input.ts). The status box steps aside while the
+ * mode is on.
  */
 :root {
   --stick-size: 104px;
-  --stick-left: max(28px, calc(var(--safe-l) + 12px));
-  --stick-bottom: max(32px, calc(var(--safe-b) + 16px));
+  --stick-in: 0px;
+  --stick-up: 0px;
+  --stick-side-safe: var(--safe-l);
+  --stick-left: calc(max(28px, calc(var(--stick-side-safe) + 12px)) + var(--stick-in));
+  --stick-bottom: calc(max(32px, calc(var(--safe-b) + 16px)) + var(--stick-up));
+}
+
+[data-stick-height='mid'] {
+  --stick-up: 64px;
+}
+
+[data-stick-height='high'] {
+  --stick-up: 128px;
+}
+
+[data-stick-edge='mid'] {
+  --stick-in: 36px;
+}
+
+[data-stick-edge='far'] {
+  --stick-in: 72px;
 }
 
 .stick-anchor {
@@ -2957,6 +2980,60 @@ button {
   [data-stick='fixed'] .status {
     left: calc(var(--stick-left) + var(--stick-size) + 20px);
     bottom: max(8px, var(--safe-b));
+  }
+}
+
+/*
+ * Buttons on the left (Settings → Controls, touch only): the bottom of the HUD
+ * mirrors. The special, lunge and Mega buttons take the bottom-left, the
+ * status box and the fixed stick the bottom-right.
+ */
+@media (pointer: coarse) {
+  [data-hand='left'] {
+    --stick-side-safe: var(--safe-r);
+  }
+  [data-hand='left'] .stick-anchor {
+    left: auto;
+    right: var(--stick-left);
+  }
+  [data-hand='left'] .special-button {
+    right: auto;
+    left: max(18px, env(safe-area-inset-left));
+  }
+  [data-hand='left'] .mega-button {
+    right: auto;
+    left: calc(max(18px, env(safe-area-inset-left)) + 10px);
+  }
+  [data-hand='left'] .lunge-button {
+    right: auto;
+    left: calc(max(18px, env(safe-area-inset-left)) + 90px);
+  }
+  [data-hand='left'] .status {
+    left: auto;
+    right: 12px;
+    transform-origin: bottom right;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 600px) {
+  [data-hand='left'] .status {
+    right: 8px;
+  }
+}
+
+@media (pointer: coarse) and (max-height: 500px) {
+  [data-hand='left'][data-stick='fixed'] .status {
+    left: auto;
+    right: calc(var(--stick-left) + var(--stick-size) + 20px);
+  }
+  /* Co-op: the teammates' column comes down the left edge, so the Mega button joins the bottom row, past the lunge's. */
+  [data-hand='left'] .hud.with-team .mega-button {
+    left: calc(max(18px, env(safe-area-inset-left)) + 160px);
+    bottom: calc(max(18px, env(safe-area-inset-bottom)) + 10px);
+  }
+  /* The toasts' column on the right stops above the fixed stick, however high it sits. */
+  [data-hand='left'][data-stick='fixed'] .toasts {
+    max-height: calc(100% - 80px - var(--safe-t) - var(--stick-bottom) - var(--stick-size) - 8px);
   }
 }
 

@@ -1,5 +1,5 @@
 import { playSfx, setMix } from '../engine/audio'
-import { STICK_MODES, type Input } from '../engine/input'
+import { BUTTON_SIDES, STICK_EDGES, STICK_HEIGHTS, STICK_MODES, type Input } from '../engine/input'
 import { clamp } from '../engine/math'
 import { locale, LOCALE_IDS, LOCALES, setLocale, t, type Locale } from '../i18n'
 import { TRANSLATORS } from '../data/translators'
@@ -22,13 +22,19 @@ import { currentInstallOffer, installHelpScreen, onInstallChange, promptInstall 
 
 /**
  * Pushes settings out to where they act: the audio mix, `data-stick` for the
- * HUD's CSS (the status box moves off the fixed stick) and `data-flashes`
- * (reduced hides the shell's white screen flash), and the UI size.
+ * HUD's CSS (the status box moves off the fixed stick), `data-hand`,
+ * `data-stick-height` and `data-stick-edge` (the touch buttons' side and the
+ * fixed stick's place), `data-flashes` (reduced hides the shell's white screen
+ * flash), and the UI size.
  */
 const apply = (s: Settings) => {
   setMix(s)
-  document.documentElement.dataset.stick = s.joystick
-  document.documentElement.dataset.flashes = s.flashes
+  const root = document.documentElement.dataset
+  root.stick = s.joystick
+  root.hand = s.buttonSide
+  root.stickHeight = s.stickHeight
+  root.stickEdge = s.stickEdge
+  root.flashes = s.flashes
   applyUiScale(s.uiScale)
 }
 
@@ -122,8 +128,8 @@ const switchRow = (label: string, read: () => boolean, set: (on: boolean) => voi
 const toggle = (label: string, read: (s: Settings) => boolean, write: (on: boolean) => Partial<Settings>): Row =>
   switchRow(label, () => read(current), (on) => updateSettings(write(on)))
 
-/** `◀ Reduced ▶`: ← → step through `options`, Enter or a tap goes to the next one (wrapping). */
-const choiceRow = <K extends keyof Settings>(label: string, key: K, options: readonly Settings[K][], name: (v: Settings[K]) => string): Row => {
+/** `◀ Reduced ▶`: ← → step through `options`, Enter or a tap goes to the next one (wrapping). `changed` runs after each step. */
+const choiceRow = <K extends keyof Settings>(label: string, key: K, options: readonly Settings[K][], name: (v: Settings[K]) => string, changed?: () => void): Row => {
   const value = h('b', { class: 'setting-choice' })
   const el = h('button', { class: 'setting-row' }, h('span', { class: 'setting-label' }, label), value)
   const step = (dir: -1 | 1) => {
@@ -132,6 +138,7 @@ const choiceRow = <K extends keyof Settings>(label: string, key: K, options: rea
     patch[key] = options[(options.indexOf(current[key]) + dir + n) % n]
     updateSettings(patch)
     playSfx('select')
+    changed?.()
   }
   return {
     el,
@@ -199,6 +206,9 @@ const installRows = (label: string, openHelp: () => void): Row[] => {
   return [{ el, adjust: (dir) => dir > 0 && go(), activate: go, sync: () => {} }]
 }
 
+/** A touchscreen without a mouse: the on-screen buttons and the stick show. Same query as `finePointer` in main.ts. */
+const touchControls = () => !matchMedia('(hover: hover) and (pointer: fine)').matches
+
 const TABS = ['sound', 'game', 'controls', 'about'] as const
 
 type Tab = (typeof TABS)[number]
@@ -208,8 +218,8 @@ let lastTab: Tab = 'sound'
 
 /**
  * Settings in four tabs: Som (music and effects volume, mute), Jogo
- * (language, damage numbers, screen shake, flashes, move opacity, UI size, safe mode), Controles (touch joystick and the
- * remap screen) and Sobre (installing the app, what the game is, legal and
+ * (language, damage numbers, screen shake, flashes, move opacity, UI size, safe mode), Controles (touch joystick, the
+ * buttons' side and the fixed stick's place on touchscreens, and the remap screen) and Sobre (installing the app, what the game is, legal and
  * credits, GitHub, the official profiles, and the bug report form when there's an API to send it to).
  * Changes apply and persist immediately.
  *
@@ -272,7 +282,22 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           switchRow(m.safeMode, safeModeOn, (on) => setSafeMode(on ? 'on' : 'off')),
         ]
       case 'controls':
-        return [choiceRow(m.joystick, 'joystick', STICK_MODES, (mode) => m.joystickModes[mode]), openRow(t().controls.open, () => showSub(openControls))]
+        return [
+          // The joystick mode shows or hides the fixed stick's place: rebuild after this key dispatch.
+          choiceRow(m.joystick, 'joystick', STICK_MODES, (mode) => m.joystickModes[mode], () => later(() => build(nav?.index ?? 0, false))),
+          ...(touchControls()
+            ? [
+                choiceRow(m.buttonSide, 'buttonSide', BUTTON_SIDES, (side) => m.buttonSides[side]),
+                ...(current.joystick === 'fixed'
+                  ? [
+                      choiceRow(m.stickHeight, 'stickHeight', STICK_HEIGHTS, (step) => m.stickHeights[step]),
+                      choiceRow(m.stickEdge, 'stickEdge', STICK_EDGES, (step) => m.stickEdges[step]),
+                    ]
+                  : []),
+              ]
+            : []),
+          openRow(t().controls.open, () => showSub(openControls)),
+        ]
       case 'about':
         return [
           ...(bugReportsEnabled ? [openRow(m.reportBug, () => showSub(bugReportForm))] : []),

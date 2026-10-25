@@ -139,7 +139,7 @@ import { coopGate, playGate } from './ui/account'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
-import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave } from './ui/save'
+import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
@@ -201,13 +201,15 @@ const ctx = context2d(canvas)
 /** Invisible box CSS puts where the fixed joystick sits (corner, safe area); the stick is centered on it. */
 const stickAnchor = h('div', { class: 'stick-anchor', 'aria-hidden': 'true' })
 document.body.append(stickAnchor)
-/** The anchor's center, measured once per layout (cleared on resize). */
+/** The anchor's center, measured once per layout (cleared on resize) and per settings (the buttons' side and the stick's place move it). */
 let stickCenter: Vec | null = null
+let stickSettings: Settings | null = null
 /** Mouse and keyboard: the fixed stick gives its corner to the WASD keys (`ui/movePad.ts`), and a touch on a touchscreen laptop floats. Same query as the CSS. */
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)')
 const fixedStickCenter = (): Vec | null => {
   if (settings().joystick !== 'fixed' || finePointer.matches) return null
-  if (!stickCenter) {
+  if (!stickCenter || stickSettings !== settings()) {
+    stickSettings = settings()
     const r = stickAnchor.getBoundingClientRect()
     stickCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
   }
