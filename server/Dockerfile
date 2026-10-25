@@ -22,4 +22,5 @@ COPY server/sims/*.mjs sims/
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://127.0.0.1:3000/health || exit 1
+# The API, or with ROLE=checks the verifier alone (src/index.ts); both answer /health on PORT.
 CMD ["node", "dist/index.js"]

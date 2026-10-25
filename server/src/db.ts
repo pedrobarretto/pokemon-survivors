@@ -12,8 +12,9 @@ import { festivalTotals } from './festival'
  * Production goes through Supabase's transaction pooler, which hands each
  * transaction to any server connection, so named prepared statements are off.
  * Everything that needs one connection stays inside `sql.begin` (locks are `_xact_`).
+ * `max` caps the pool's connections (the verifier needs few).
  */
-export const connect = (url: string) => postgres(url, { max: 10, prepare: false, onnotice: () => {} })
+export const connect = (url: string, max = 10) => postgres(url, { max, prepare: false, onnotice: () => {} })
 
 export type Sql = ReturnType<typeof connect>
 

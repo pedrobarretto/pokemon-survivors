@@ -51,9 +51,9 @@ export type FinishError = 'unknown' | 'replaced' | 'mismatch' | 'seed' | 'clock'
  * A run's end that went in, with its challenge day and whether it's the official attempt (null for any other run).
  * `listed`: whether it's on the public boards (with `STREAM_ENFORCE` on, only runs streamed in time are).
  * `ranks`: where the player stands on the day, week and total boards of its mode and difficulty (null off them,
- * and before they pick a handle). `kept`: whether its replay was kept for a check (`checkRank`).
+ * and before they pick a handle).
  */
-export type Finished = { ok: true; challenge: DayKey | null; official: boolean | null; listed: boolean; ranks: RunRanks; kept: boolean }
+export type Finished = { ok: true; challenge: DayKey | null; official: boolean | null; listed: boolean; ranks: RunRanks }
 
 /** A query of the pool, or of a transaction. */
 type Q = Sql | TransactionSql
@@ -344,8 +344,10 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
      * its tail being capped. Whether the run was streamed in time is stored and logged; with `streamEnforce`
      * a run that wasn't stays off the public boards for good (`unlisted`), and still counts for the player.
      * Then, on every report, the run's replay is kept for its check only when it's on show or drawn for the
-     * sample (`checkRank`, stored in `check_rank`), and dropped otherwise: off the boards now, it can't climb
-     * on later in the same period. The replay is still written first, since `settleReport` pinned its ticks.
+     * sample (`checkRank`, stored in `check_rank`, where the verifier finds it: `claimCheck`), and dropped
+     * otherwise: off the boards now, it can't climb on later in the same period. The replay is still written
+     * first, since `settleReport` pinned its ticks. A new report frees any claim on the run, so the verifier
+     * takes the grown run again.
      */
     finishRun: (userId: string, token: string, result: RunResult, replay: Replay): Promise<Finished | { ok: false; error: FinishError }> =>
       sql.begin(async (tx) => {
@@ -404,7 +406,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         await tx`
           update runs set finished_at = now(), starter = ${result.starter}, stage = ${result.stage}, branch = ${result.branch}, difficulty = ${result.difficulty},
             survived = ${result.time}, outcome = ${result.outcome}, level = ${result.level}, kills = ${result.kills}, version = ${result.version},
-            replay = ${tx.json(replay)}, verified = null, checked_at = null, check_ms = null, official = ${official}, bag = ${tx.array([...replay.start.bag])}::text[],
+            replay = ${tx.json(replay)}, verified = null, checked_at = null, check_ms = null, check_claimed_at = null, official = ${official}, bag = ${tx.array([...replay.start.bag])}::text[],
             stream_base = ${settled.pin.ticks}, stream_digest = ${settled.pin.digest}, stream_lag = ${stream.lag}, stream_ok = ${inTime}, unlisted = ${!listed},
             stream_late = stream_late + ${lag !== null && lag > STREAM.lagTolerance ? 1 : 0},
             mode = ${runMode(result.starter)}
@@ -421,18 +423,29 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         const late = stream.lag === null ? '-' : `${stream.lag.toFixed(1)} s`
         const kept = rank === null ? '' : `, replay kept for its check (rank ${rank})`
         console.log(`stream ${token}: ${chunks.length} chunks, tail ${settled.tail} ticks, worst lag ${late}${inTime ? '' : streamEnforce ? ', unlisted' : ', not in time (observing)'}${kept}`)
-        return { ok: true, challenge: run.challenge, official, listed, ranks, kept: rank !== null } as const
+        return { ok: true, challenge: run.challenge, official, listed, ranks } as const
       }),
 
     /**
-     * A finished run waiting for its re-simulation: what it reported, when it started, its replay, and whether it
-     * was kept for the determinism sample (`CHECKED.sampleRank`). Null when there's nothing to check.
+     * Claims the next finished run waiting for its re-simulation, in check order (`check_rank`: official
+     * attempts, then the best places, then the samples, then runs from before it, oldest first), for
+     * `leaseSeconds`: another verifier skips it until then (`for update skip locked` keeps two from taking
+     * the same one), and a claim whose verifier died runs out. Returns what it reported, when it started,
+     * its replay and whether it's a determinism sample; null when nothing waits.
      */
-    runToCheck: async (id: string) => {
-      const [row] = await sql<{ user_id: string; survived: number; kills: number; level: number; started_at: Date; replay: unknown; check_rank: number | null }[]>`
-        select user_id, survived, kills, level, started_at, replay, check_rank from runs where id = ${id} and finished_at is not null and replay is not null and verified is null`
+    claimCheck: async (leaseSeconds: number) => {
+      const [row] = await sql<{ id: string; survived: number; kills: number; level: number; started_at: Date; replay: unknown; check_rank: number | null }[]>`
+        update runs set check_claimed_at = now()
+        where id = (
+          select id from runs
+          where verified is null and replay is not null and finished_at is not null
+            and (check_claimed_at is null or check_claimed_at < now() - make_interval(secs => ${leaseSeconds}))
+          order by check_rank, finished_at
+          limit 1 for update skip locked
+        )
+        returning id, survived, kills, level, started_at, replay, check_rank`
       return row
-        ? { userId: row.user_id, time: row.survived, kills: row.kills, level: row.level, startedAt: row.started_at, replay: row.replay, sample: row.check_rank === CHECKED.sampleRank }
+        ? { id: row.id, time: row.survived, kills: row.kills, level: row.level, startedAt: row.started_at, replay: row.replay, sample: row.check_rank === CHECKED.sampleRank }
         : null
     },
 
@@ -458,10 +471,6 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
     dropReplay: async (id: string) => {
       await sql`update runs set replay = null where id = ${id} and verified is null`
     },
-
-    /** Runs still waiting for a check (after a restart), in check order: by `check_rank`, then oldest first; runs from before it last. */
-    uncheckedRuns: async () =>
-      (await sql<{ id: string }[]>`select id from runs where verified is null and replay is not null and finished_at is not null order by check_rank, finished_at`).map((r) => r.id),
 
     /**
      * Where the player stands on `day`'s challenge board after a challenge
