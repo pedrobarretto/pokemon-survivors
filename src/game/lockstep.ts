@@ -224,7 +224,7 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
     case 'leave':
       return leaveRun(g, p)
     case 'pause':
-      if (g.phase !== 'gameover' && g.phase !== 'victory') coop.manualPause = true
+      if (g.phase !== 'victory') coop.manualPause = true
       return
     case 'resume':
       coop.manualPause = false
