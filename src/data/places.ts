@@ -153,14 +153,16 @@ export const hiddenCast = (id: PlaceId): EnemyId[] => {
 }
 
 /**
- * Hidden zones' timing, odds and payouts, in seconds and world px. Tuned so
- * that about a third of runs see one (the roll, then a clear moment to open).
+ * Hidden zones' timing, odds and payouts, in seconds and world px.
  */
 export const HIDDEN = {
-  /** Share of runs that roll a hidden zone (from the seed). */
+  /**
+   * Share of runs that roll a hidden zone (from the seed). In 40 bot runs that
+   * lived to 11:30, every roll found its clear moment (opening from 3:00 to
+   * 9:00, most around 5:00 to 8:30); runs that end earlier see fewer, so about
+   * a third of all runs see one.
+   */
   odds: 0.45,
-  /** Share of runs that see one open, measured with bot runs (some rolls never find a clear moment, some runs end first): the guide's number. */
-  seen: 0.33,
   /** It's due at a time drawn in [from, until), then waits for a clear moment, but never opens past `last`. */
   from: 170,
   until: 560,

@@ -441,7 +441,7 @@ const places = (locale: Locale, m: SiteMessages) => {
     ${paragraphs(p.sky({ time: PLACES.sky.time, tailwind: pct(SKY.tailwind - 1), every: SKY.wings.every, flock: SKY.flock.every }))}
     ${table([p.wingHead, p.effectHead], WING_IDS.map((id) => [WINGS[id].name, p.wings[id](wingAmount(id))]))}
     <h3>${p.hiddenTitle}</h3>
-    ${paragraphs(p.hidden({ odds: pct(HIDDEN.seen), open: HIDDEN.openTime }))}`
+    ${paragraphs(p.hidden({ odds: pct(HIDDEN.odds), open: HIDDEN.openTime }))}`
 }
 
 /** The map's landmarks: how often they stand, what each one is and what its treasure holds (`data/landmarks.ts`). */
