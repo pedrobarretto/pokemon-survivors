@@ -122,6 +122,67 @@ const SKINS: Record<BiomeId, Skin> = {
     glow: '#c890f8',
     ore: '#b070c8',
   },
+  beach: {
+    stone: ['#6c6050', '#8c806c', '#aca088', '#ccc0a4', '#e8dcc4'],
+    mortar: '#4c4438',
+    outline: '#201c14',
+    wood: ['#4c4034', '#6c5c4c', '#8c7c68', '#aca088', '#c8bca8'],
+    plank: ['#6c5c4c', '#8c7c68', '#aca088', '#c8bca8'],
+    dirt: ['#d8c088', '#e4cc98', '#f0dca8'],
+    gravel: ['#c8b08c', '#e0ccac', '#f8ecd8'],
+    vine: ['#2c6a50', '#3c8a64', '#58a878'],
+    hedge: ['#2c5c20', '#4c8a38', '#7cb858', '#a8d478'],
+    hedgeTop: ['#7cb858', '#a8d478', '#c8e898'],
+    bloom: ['#f84868', '#f8a8c8', '#ffffff'],
+    canvas: [['#882020', '#c83838', '#f05050', '#f8f0e8'], ['#1c4c88', '#2c70b8', '#58a0e0', '#f8f8f8']],
+    glow: '#f8d878',
+    ore: '#f8c8d8',
+  },
+  plant: {
+    stone: ['#3c4048', '#545a64', '#6c7480', '#8890a0', '#a4acb8'],
+    mortar: '#2c3038',
+    outline: '#14161c',
+    wood: ['#3c2c24', '#5c4434', '#7c5c44', '#9c7454', '#b88c64'],
+    plank: ['#4c525c', '#5c636e', '#6c7480', '#7c8490'],
+    dirt: ['#6c7078', '#7c8088', '#8c9098'],
+    gravel: ['#5c6068', '#747880', '#8c9098'],
+    web: '#a8b0bc',
+    hedge: ['#30343c', '#4c525c', '#6c7480', '#8c96a2'],
+    hedgeTop: ['#6c7480', '#8c96a2', '#b0b8c4'],
+    canvas: [['#8c5c08', '#c88810', '#f0b828', '#f8d860'], ['#a83810', '#d85018', '#f07830', '#f8a058']],
+    glow: '#f8f048',
+    ore: '#f8d030',
+  },
+  desert: {
+    stone: ['#6c4428', '#94603a', '#b8804c', '#d4a064', '#ecc488'],
+    mortar: '#4c2c18',
+    outline: '#24140c',
+    wood: ['#6c5c48', '#8c7c64', '#ac9c80', '#c8b89c', '#e0d4bc'],
+    plank: ['#8c7c64', '#ac9c80', '#c8b89c', '#e0d4bc'],
+    dirt: ['#c49460', '#d4a870', '#e4bc80'],
+    gravel: ['#b08860', '#c8a078', '#e0bc94'],
+    hedge: ['#1c3c1c', '#2c5c28', '#3c7834', '#58a040'],
+    hedgeTop: ['#3c7834', '#58a040', '#80c058'],
+    bloom: ['#f878a0', '#f8d030'],
+    canvas: [['#8c5c30', '#b8844c', '#dcac70', '#f0d098'], ['#842c1c', '#ac4028', '#d0603c', '#e88858']],
+    glow: '#f8c058',
+    ore: '#e8c870',
+  },
+  volcano: {
+    stone: ['#1c1416', '#2e2426', '#423436', '#584848', '#6e5e5c'],
+    mortar: '#100a0a',
+    outline: '#0c0808',
+    wood: ['#1c1414', '#2c2020', '#3c2c2c', '#4c3c38', '#5c4c48'],
+    plank: ['#2c2020', '#3c2c2c', '#4c3c38', '#5c4c48'],
+    dirt: ['#5c5454', '#6a6262', '#787070'],
+    gravel: ['#4c4444', '#645c5c', '#7c7474'],
+    hedge: ['#1c1416', '#2e2426', '#423436', '#584848'],
+    hedgeTop: ['#584848', '#6e5e5c', '#887874'],
+    bloom: ['#f86818', '#f8b040'],
+    canvas: [['#601c14', '#882c1c', '#b0402c', '#d0604c'], ['#3c3c44', '#54545c', '#6c6c74', '#8c8c94']],
+    glow: '#f88030',
+    ore: '#f86818',
+  },
 }
 
 const piece = (g: Grid, ax: number, ay: number): Piece => ({ sprite: toSprite(g), ax: Math.round(ax), ay: Math.round(ay) })
@@ -632,13 +693,17 @@ export const logPiece = (skin: LogSkin, length: number, r: number, seed: number)
   return piece(g, x0 + length / 2, ground)
 }
 
-/** Each biome's logs: mossy, snowy, purple in the graveyard, mushroom-capped in the forest. */
+/** Each biome's logs: mossy, snowy, purple in the graveyard, mushroom-capped in the forest, driftwood, a fallen pipe, sun-bleached, still smoldering. */
 export const LOG_SKINS: Record<BiomeId, LogSkin> = {
   meadow: { bark: ['#3c2414', '#5c3c20', '#7c5430', '#9c6c40'], ring: ['#a07040', '#c89860', '#e0b880'], outline: '#1c1008', moss: ['#3a7a30', '#58a040', '#80c058'] },
   forest: { bark: ['#24160c', '#3c2814', '#583c20', '#74522c'], ring: ['#7c5c34', '#a07848', '#c0985c'], outline: '#0c0804', moss: ['#24582a', '#3c7c38', '#5c9c48'], cap: ['#902820', '#e04838'] },
   cave: { bark: ['#2c2426', '#4a3e40', '#6c5e5e', '#8c7e7c'], ring: ['#6c5e5e', '#8c7e7c', '#b0a4a0'], outline: '#140e10', cap: ['#286078', '#68c8e8'] },
   snow: { bark: ['#2c1c14', '#4a3020', '#6a4630', '#866044'], ring: ['#866044', '#a88060', '#c8a07c'], outline: '#0c1422', snow: ['#b8cce4', '#dce8f6', '#f4f8ff', '#ffffff'] },
   tower: { bark: ['#1c1424', '#342840', '#4c3c5c', '#6a5878'], ring: ['#4c3c5c', '#6a5878', '#8a789a'], outline: '#0c0814', cap: ['#582878', '#b070c8'] },
+  beach: { bark: ['#5c4c3c', '#7c6c58', '#a09078', '#c0b49c'], ring: ['#a09078', '#c0b49c', '#e0d4bc'], outline: '#201c14', moss: ['#2c6a50', '#3c8a64', '#58a878'] },
+  plant: { bark: ['#30343c', '#4c525c', '#6c7480', '#8c96a2'], ring: ['#14161c', '#20242c', '#30343c'], outline: '#14161c' },
+  desert: { bark: ['#8c7c64', '#ac9c80', '#c8b89c', '#e0d4bc'], ring: ['#c8b89c', '#e0d4bc', '#f4ecdc'], outline: '#2c2014' },
+  volcano: { bark: ['#1c1414', '#2c2020', '#3c2c2c', '#4c3c38'], ring: ['#a83010', '#f86818', '#f8b040'], outline: '#0c0808' },
 }
 
 const PACK = ['...1111...', '..122221..', '.12333321.', '1233333321', '1244444421', '1245555421', '1244444421', '1233333321', '1233333321', '.11111111.']

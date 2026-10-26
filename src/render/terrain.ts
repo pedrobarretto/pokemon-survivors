@@ -11,6 +11,7 @@ import { LANDMARK_GROUNDS, LANDMARK_PIECES, LANDMARK_SHADOW, LANDMARK_TALL, LAND
 import type { LandmarkGround, LandmarkPiece } from '../data/landmarks'
 import type { Game } from '../game/types'
 import { hasScenery, keepScenery, sceneryPiece } from './scenery'
+import { barrels, BASALT, cinderCone, EMBER, lighthouse, machine, mirageTower, palm, PALM_LEAVES, pylon, saguaro, smokestack } from './biomePieces'
 import { localPlayer } from '../game/players'
 import {
   cone,
@@ -51,9 +52,9 @@ const piece = (g: Grid, ax: number, ay: number): Piece => ({ sprite: toSprite(g)
 
 /* ---------------- Rocks ---------------- */
 
-export type RockSkin = { stone: Ramp; outline: string; moss?: Ramp; snow?: Ramp; crystal?: Ramp }
+export type RockSkin = { stone: Ramp; outline: string; moss?: Ramp; snow?: Ramp; crystal?: Ramp; ember?: Ramp }
 
-/** A pile of two or three chiseled stones, with moss or snow on the faces that look up. */
+/** A pile of two or three chiseled stones, with moss or snow on the faces that look up (embers glowing in the cracks on Mt. Chimney). */
 export const boulder = (skin: RockSkin, size: number, seed: number): Piece => {
   const w = Math.ceil(size * 1.9) + 4
   const h = Math.ceil(size * 1.3) + 4
@@ -74,6 +75,8 @@ export const boulder = (skin: RockSkin, size: number, seed: number): Piece => {
     paint: (x, y, n, light) => {
       if (skin.snow && n.y < -0.25) return shade(skin.snow, light + 0.2, x, y)
       if (skin.moss && n.y < -0.35 && noise(x, y, seed + 3) < 0.75) return shade(skin.moss, light, x, y)
+      // Lava glowing through cracks on the faces that look away from the light.
+      if (skin.ember && n.y > -0.1 && Math.abs(noise(x >> 1, y, seed + 5) - 0.5) < 0.05) return shade(skin.ember, 0.6 + noise(x, y, seed) * 0.4, x, y)
       return null
     },
   })
@@ -682,8 +685,25 @@ const SNOW_PINE: TreeSkin = {
 const TOWER_STONE: RockSkin = { stone: ['#2c2638', '#4a4258', '#6a6280', '#8e86a4', '#b0a8c4'], outline: '#120c18' }
 export const TOWER_TREE: TreeSkin = { leaves: [], trunk: ['#1c1424', '#342840', '#4c3c5c', '#6a5878'], outline: '#0c0814', fruit: '#b070c8' }
 
+const BEACH_ROCK: RockSkin = { stone: ['#5c5048', '#80746a', '#a89c8c', '#c8bca8', '#e4dccc'], outline: '#201c18', moss: ['#2c6a50', '#3c8a64', '#58a878'] }
+const PLANT_STEEL: RockSkin = { stone: ['#30343c', '#4c525c', '#6c7480', '#8c96a2', '#b0b8c4'], outline: '#14161c' }
+const DESERT_ROCK: RockSkin = { stone: ['#6c4428', '#9c6438', '#c48450', '#dca468', '#f0c488'], outline: '#28160c' }
+const VOLCANO_ROCK: RockSkin = { stone: BASALT, outline: '#0c0808', ember: EMBER }
+const VOLCANO_TREE: TreeSkin = { leaves: [], trunk: ['#1c1414', '#2c2020', '#3c2c2c', '#4c3c38'], outline: '#0c0808', fruit: '#f86818' }
+const DRY_LEAVES: Ramp = ['#4c4c20', '#6c6c30', '#8c8c44', '#acac60']
+
 /** Each biome's stone, for scenery that borrows it (landmarks' columns). */
-export const ROCK_SKINS: Record<BiomeId, RockSkin> = { meadow: MEADOW_ROCK, forest: FOREST_ROCK, cave: CAVE_ROCK, snow: SNOW_ROCK, tower: TOWER_STONE }
+export const ROCK_SKINS: Record<BiomeId, RockSkin> = {
+  meadow: MEADOW_ROCK,
+  forest: FOREST_ROCK,
+  cave: CAVE_ROCK,
+  snow: SNOW_ROCK,
+  tower: TOWER_STONE,
+  beach: BEACH_ROCK,
+  plant: PLANT_STEEL,
+  desert: DESERT_ROCK,
+  volcano: VOLCANO_ROCK,
+}
 
 const SKINS: Record<BiomeId, () => TerrainSet> = {
   meadow: () => ({
@@ -756,6 +776,63 @@ const SKINS: Record<BiomeId, () => TerrainSet> = {
         for (const [x, y] of [[-20, 2], [8, -4], [24, 6], [-6, 9]] as const) place(g, at(x, y), BUBBLE, { 1: '#8a68b0' })
       }),
     tower: ghostTower,
+  }),
+  beach: () => ({
+    rock: (seed) => boulder(BEACH_ROCK, 14, seed),
+    tree: (seed) => palm(34 + (seed % 3) * 4, seed),
+    bush: (v) => bush({ leaves: PALM_LEAVES, outline: '#102010', bloom: ['#f84868', '#f8a8c8'] }, v),
+    log: (v) => logPiece(LOG_SKINS.beach, 34 + v * 4, 4.5, 3 + v),
+    crest: (seed) => palm(22, seed),
+    cliff: (tiers, seed) =>
+      cliff(tiers, { face: ['#7c5c38', '#a07c50', '#c09c68', '#d8b884', '#ecd0a0'], top: ['#7cb858', '#94c868', '#a8d878', '#c0e490'], lip: '#e8f8b8', outline: '#2c1c0c', strata: 5 }, seed),
+    lake: (foot, seed) =>
+      lake(foot, { deep: '#1c8cc0', mid: '#30a8d8', edge: '#68d0f0', bank: ['#a08458', '#c0a474'], shore: ['#e0c890', '#ecd8a4', '#f8ecc0'], sparkle: '#ffffff' }, seed, (g, at) => {
+        for (const [x, y] of [[-30, 2], [26, -4]] as const) place(g, at(x, y), ['.11.', '1221', '.11.'], { 1: '#5c5048', 2: '#a89c8c' })
+        place(g, at(10, 6), ['..1..', '11211', '.121.', '1...1'], { 1: '#e86830', 2: '#f8b058' })
+      }),
+    tower: lighthouse,
+  }),
+  plant: () => ({
+    rock: (seed) => machine(seed - 1),
+    tree: (seed) => pylon(seed),
+    bush: (v) => barrels(v),
+    log: (v) => logPiece(LOG_SKINS.plant, 34 + v * 4, 4.5, 3 + v),
+    crest: (seed) => machine(seed + 1),
+    cliff: (tiers, seed) =>
+      cliff(tiers, { face: ['#3c4048', '#545a64', '#6c7480', '#8890a0', '#a4acb8'], top: ['#5c6470', '#687080', '#747c8c', '#808898'], lip: '#c0c8d4', outline: '#14161c', mortar: '#2c3038' }, seed),
+    lake: (foot, seed) =>
+      lake(foot, { deep: '#0c5c58', mid: '#148078', edge: '#30b0a0', bank: ['#3c4048', '#5c6068'], shore: ['#6c7078', '#80848c', '#9498a0'], sparkle: '#a0fff0' }, seed, (g, at) => {
+        for (const [x, y] of [[-20, 2], [8, -4], [24, 6]] as const) place(g, at(x, y), ['1.1', '.1.', '1.1'], { 1: '#f8f070' })
+      }),
+    tower: smokestack,
+  }),
+  desert: () => ({
+    rock: (seed) => boulder(DESERT_ROCK, 14, seed),
+    tree: (seed) => saguaro(seed),
+    bush: (v) => bush({ leaves: DRY_LEAVES, outline: '#201c08', bloom: ['#f8d030', '#f878a0'] }, v),
+    log: (v) => logPiece(LOG_SKINS.desert, 34 + v * 4, 4.5, 3 + v),
+    crest: (seed) => boulder(DESERT_ROCK, 8, seed),
+    cliff: (tiers, seed) =>
+      cliff(tiers, { face: ['#6c3418', '#94482c', '#b8643c', '#d08454', '#e4a46c'], top: ['#c89458', '#d4a064', '#dcac70', '#e8bc80'], lip: '#f8dca8', outline: '#24100a', strata: 4 }, seed),
+    lake: (foot, seed) =>
+      lake(foot, { deep: '#1c78a8', mid: '#2c94c4', edge: '#58b8e0', bank: ['#8c6c3c', '#a8844c'], shore: ['#5c8c38', '#78a848', '#98c060'], sparkle: '#e8ffff' }, seed, (g, at) => {
+        for (const [x, y] of [[-34, -6], [26, -8], [36, 2]] as const) place(g, at(x, y), REEDS, { 1: '#3c7c34', 2: '#a07840' })
+      }),
+    tower: mirageTower,
+  }),
+  volcano: () => ({
+    rock: (seed) => boulder(VOLCANO_ROCK, 14, seed),
+    tree: () => deadTree(VOLCANO_TREE),
+    bush: (v) => thornBush(VOLCANO_TREE, v),
+    log: (v) => logPiece(LOG_SKINS.volcano, 34 + v * 4, 4.5, 3 + v),
+    crest: (seed) => boulder({ ...VOLCANO_ROCK, ember: undefined }, 8, seed),
+    cliff: (tiers, seed) =>
+      cliff(tiers, { face: BASALT, top: ['#5c5454', '#6a6262', '#787070', '#888080'], lip: '#a89c98', outline: '#0c0808', strata: 5, roots: '#f86818' }, seed),
+    lake: (foot, seed) =>
+      lake(foot, { deep: '#2c8c9c', mid: '#48a8b4', edge: '#88d0d4', bank: ['#3c2c2c', '#5c4440'], shore: ['#a8642c', '#c8844c', '#e0a868'], sparkle: '#ffffff' }, seed, (g, at) => {
+        for (const [x, y] of [[-20, 2], [8, -4], [24, 6], [-6, 9]] as const) place(g, at(x, y), BUBBLE, { 1: '#e8f8f8' })
+      }),
+    tower: cinderCone,
   }),
 }
 
@@ -889,7 +966,7 @@ export const warmTerrain = (biome: BiomeId) => {
   for (const kind of Object.keys(VARIANTS) as PieceKind[]) {
     for (let v = 0; v < VARIANTS[kind]; v++) {
       // Painted pieces only start loading; the sculpted one is built only if a picture is late.
-      if (hasScenery(kind)) {
+      if (hasScenery(kind, biome)) {
         sceneryPiece(biome, kind, v)
         continue
       }
@@ -900,7 +977,7 @@ export const warmTerrain = (biome: BiomeId) => {
   }
   // Landmarks' big pieces (the ridge, walls, hedges) take longer than a frame to sculpt.
   for (const [kind, v] of LANDMARK_WARM) {
-    if (hasScenery(kind)) {
+    if (hasScenery(kind, biome)) {
       sceneryPiece(biome, kind, v)
       continue
     }
@@ -947,7 +1024,7 @@ export const solidsInView = (g: Game, camX: number, camY: number, w: number, h: 
 
 type Tuft = { rows: readonly string[]; palette: Readonly<Record<string, string>> }
 
-/** What grows at the foot of scenery in each biome: grass and flowers, ferns and mushrooms, pebbles, drifts, dead tufts. */
+/** What grows at the foot of scenery in each biome: grass and flowers, ferns and mushrooms, pebbles, drifts, dead tufts, shells, bolts, embers. */
 const SKIRT_TUFTS: Record<BiomeId, readonly Tuft[]> = {
   meadow: [
     { rows: ['1.1.1', '12121'], palette: { 1: '#2f7a3a', 2: '#4f9e48' } },
@@ -975,6 +1052,26 @@ const SKIRT_TUFTS: Record<BiomeId, readonly Tuft[]> = {
     { rows: ['1...1', '.1.1.', '.121.'], palette: { 1: '#4c4060', 2: '#6c6080' } },
     { rows: ['1.1', '.2.', '1.1'], palette: { 1: '#b070c8', 2: '#f0d0ff' } },
     { rows: ['1..', '..2', '.1.'], palette: { 1: '#3c3448', 2: '#8a80a0' } },
+  ],
+  beach: [
+    { rows: ['1...1', '.1.1.', '.121.'], palette: { 1: '#6a9a40', 2: '#a8c868' } },
+    { rows: ['.1.1.', '12121'], palette: { 1: '#c86878', 2: '#f8c8c8' } },
+    { rows: ['1..', '..2', '.1.'], palette: { 1: '#b8a07c', 2: '#fff8e8' } },
+  ],
+  plant: [
+    { rows: ['1...1'], palette: { 1: '#5c6068' } },
+    { rows: ['11..', '.111'], palette: { 1: '#2c2c34' } },
+    { rows: ['.11.', '1221'], palette: { 1: '#3c4048', 2: '#1c1e28' } },
+  ],
+  desert: [
+    { rows: ['1.1.1', '.121.'], palette: { 1: '#a88848', 2: '#c8a860' } },
+    { rows: ['1..', '..2', '.1.'], palette: { 1: '#a07848', 2: '#f0d8a8' } },
+    { rows: ['.1.', '11.', '.11', '.1.'], palette: { 1: '#4c8838' } },
+  ],
+  volcano: [
+    { rows: ['1..', '.2.', '..1'], palette: { 1: '#802010', 2: '#f86818' } },
+    { rows: ['1.1', '.2.'], palette: { 1: '#6c6464', 2: '#9c9494' } },
+    { rows: ['.1.', '121'], palette: { 1: '#141018', 2: '#4c3c68' } },
   ],
 }
 
