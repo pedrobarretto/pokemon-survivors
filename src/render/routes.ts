@@ -168,6 +168,9 @@ const arrowOf = (id: BiomeId) => {
   return s
 }
 
+/** A gate's arrow as an image URL, pointing right: the HUD's fork card turns it toward the gate. */
+export const routeArrowIcon = (id: BiomeId) => toIconUrl(`routeArrow:${id}`, () => arrowOf(id))
+
 /** Screen-space arrows on the edges pointing at an open fork's gates off screen, each with its biome's emblem. */
 export const drawRouteArrows = (ctx: Ctx, g: Game, camX: number, camY: number, t: number) => {
   const fork = g.route.fork

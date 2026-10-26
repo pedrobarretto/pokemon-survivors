@@ -63,9 +63,16 @@ const SPOTS: readonly (readonly [number, number])[] = [
   [120, 20], [120, -25], [120, 60], [80, 75], [165, 10], [150, -60], [150, 85], [210, -20], [210, 40], [60, 110], [60, -110], [260, 0],
 ]
 
+/**
+ * The first pair of `SPOTS` with clear ground around the anchor player. On a
+ * screen held upright (a phone in portrait) the pair turns a quarter, one gate
+ * above the team and one below, so both fit on its narrow view.
+ */
 const gateSpots = (g: Game): readonly [{ x: number; y: number }, { x: number; y: number }] => {
   const p = anchorPlayer(g)
-  const at = ([dx, dy]: readonly [number, number], side: number) => ({ x: dm.round(p.x + dx * side), y: dm.round(p.y + dy) })
+  const upright = g.view.h > g.view.w
+  const at = ([dx, dy]: readonly [number, number], side: number) =>
+    upright ? { x: dm.round(p.x + dy * 0.6), y: dm.round(p.y + dx * side * 0.6) } : { x: dm.round(p.x + dx * side), y: dm.round(p.y + dy) }
   for (const spot of SPOTS) {
     const left = at(spot, -1)
     const right = at(spot, 1)

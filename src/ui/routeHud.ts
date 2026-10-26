@@ -3,7 +3,7 @@ import { areaAt, AREAS, areaStart, BIOMES, FORK, WEATHER_IDS, type BiomeId, type
 import { localPlayer } from '../game/players'
 import type { Game } from '../game/types'
 import { t } from '../i18n'
-import { biomeIcon, ROUTE_COLORS } from '../render/routes'
+import { biomeIcon, ROUTE_COLORS, routeArrowIcon } from '../render/routes'
 import { weatherIcon } from '../render/weather'
 import { h, setStyle, setText } from './dom'
 import { typeBadge } from './screens'
@@ -18,7 +18,7 @@ const likelyWeather = (id: BiomeId) => {
 
 /** One option of the fork card: an arrow toward its gate, the biome's emblem and name, the types that live there and its likely weather. */
 const optionRow = (id: BiomeId) => {
-  const dir = h('span', { class: 'route-dir' })
+  const dir = h('img', { class: 'route-dir', src: routeArrowIcon(id), alt: '' })
   const row = h(
     'div',
     { class: 'route-option', style: `--route:${ROUTE_COLORS[id]}` },
@@ -94,7 +94,7 @@ export const createRouteHud = () => {
       if (clock) setText(clock, formatTime(Math.max(0, Math.ceil(areaStart(fork.area) - FORK.close - g.time))))
       const p = localPlayer(g)
       fork.gates.forEach((gate, i) => {
-        const a = Math.round((Math.atan2(gate.y - p.y, gate.x - p.x) * 180) / Math.PI / 15) * 15
+        const a = Math.round((Math.atan2(gate.y - p.y, gate.x - p.x) * 180) / Math.PI / 45) * 45
         if (angles[i] === a) return
         angles[i] = a
         const dir = dirs[i]
