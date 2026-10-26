@@ -427,6 +427,7 @@ export const coopPayout = (g: Game, slot: number): CoopPayout => {
     places: [],
     placeClears: 0,
     landmarks: 0,
+    mews: 0,
     legendWins: {},
     nightBosses: [],
     tms: [...t.tms],

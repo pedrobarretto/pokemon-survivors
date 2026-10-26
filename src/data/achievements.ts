@@ -26,7 +26,7 @@ export type AchievementStat =
   | 'rifts' | 'legends' | 'overtimeMinutes' | 'reaperDefeats'
   | 'bossKills' | 'chests' | 'meowths' | 'altars' | 'coins' | 'moveEvolutions' | 'missions'
   | 'dexSeen' | 'starterLines' | 'hatches' | 'shinyHatches' | 'megas' | 'alphaKills'
-  | 'placeClears' | 'places' | 'landmarks'
+  | 'placeClears' | 'places' | 'landmarks' | 'mews'
 
 export type AchievementDef = {
   medal: Medal
@@ -80,6 +80,8 @@ export const ACHIEVEMENTS = {
   /** Treasures of the map's landmarks: the cottage's crate, the maze's chest, the ruins' altar, the camp's backpack. */
   landmark1: { medal: 'bronze', stat: 'landmarks', target: 1 },
   landmark50: { medal: 'silver', stat: 'landmarks', target: 50 },
+  /** The truck by the pier's rumor, confirmed: Mew showed up from under it (a secret landmark, and then only now and then). */
+  mewTruck: { medal: 'silver', stat: 'mews', target: 1, title: true },
   mega1: { medal: 'bronze', stat: 'megas', target: 1 },
   mega25: { medal: 'silver', stat: 'megas', target: 25 },
   alpha1: { medal: 'bronze', stat: 'alphaKills', target: 1 },

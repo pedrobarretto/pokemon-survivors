@@ -122,6 +122,8 @@ export type RunSummary = {
   placeClears: number
   /** Landmark treasures opened (`landmarks.ts`). */
   landmarks: number
+  /** Times Mew showed up from under the truck by the pier (`sightMew`). */
+  mews: number
   reaperDefeats: number
   /** Moves evolved with their paired held item. */
   moveEvolutions: number
@@ -169,6 +171,7 @@ export const summarizeRun = (g: Game): RunSummary => {
     places: [...g.place.cleared],
     placeClears: g.place.cleared.length,
     landmarks: g.landmarks.opened,
+    mews: g.landmarks.mew.size,
     reaperDefeats: g.endless?.reaperDefeats ?? 0,
     moveEvolutions: g.player.moves.filter((m) => evolvedFrom(m.id)).length,
     megas: g.player.mega.count,

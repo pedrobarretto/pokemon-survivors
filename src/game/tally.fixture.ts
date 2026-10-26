@@ -23,6 +23,7 @@ export const summary = (over: Partial<RunSummary> = {}): RunSummary => ({
   places: [],
   placeClears: 0,
   landmarks: 0,
+  mews: 0,
   reaperDefeats: 0,
   moveEvolutions: 0,
   megas: 0,
