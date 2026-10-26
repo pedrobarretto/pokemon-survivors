@@ -100,6 +100,8 @@ export const rebuildGrid = (g: Game) => {
 
 /** Pace of a foe that lost track of the player. */
 const LOST_PACE = 0.55
+/** A shy one bolts from a player this close (px) and ambles otherwise. */
+const SHY_FEAR = 110
 /** A thrown foe stops hurting others once its knockback drops under this speed (px/s). */
 const THROWN_MIN = 90
 
@@ -237,6 +239,25 @@ export const updateEnemies = (g: Game, dt: number) => {
       const d = dirTo(e.x, e.y, tx, ty)
       vx = atEgg ? 0 : d.x * pace
       vy = atEgg ? 0 : d.y * pace
+    } else if (e.behavior.kind === 'shy') {
+      // A shy one runs from the nearest player, weaving, but keeps to its leash (a Diglett stays in its hole).
+      const b = e.behavior
+      const home = dm.hypot(b.x - e.x, b.y - e.y)
+      const away = dirTo(p.x, p.y, e.x, e.y)
+      const weave = dm.sin(g.now * 1.7 + e.id) * 0.8
+      const c = dm.cos(weave)
+      const s = dm.sin(weave)
+      let dx = away.x * c - away.y * s
+      let dy = away.x * s + away.y * c
+      const near = dm.sq(p.x - e.x) + dm.sq(p.y - e.y) < SHY_FEAR * SHY_FEAR
+      if (b.leash <= 0 || home > b.leash) {
+        const back = dirTo(e.x, e.y, b.x, b.y)
+        dx = back.x
+        dy = back.y
+      }
+      const speed = b.leash <= 0 && home < 2 ? 0 : near || home > b.leash ? pace : pace * 0.45
+      vx = frozen ? 0 : dx * speed
+      vy = frozen ? 0 : dy * speed
     } else {
       vx = frozen ? 0 : e.behavior.vx
       vy = frozen ? 0 : e.behavior.vy
@@ -298,7 +319,7 @@ export const updateEnemies = (g: Game, dt: number) => {
       const d = Math.sqrt(d2) || 1
       e.x = p.x + (dx / d) * reach
       e.y = p.y + (dy / d) * reach
-      const attack = statusAttack(e.status)
+      const attack = e.behavior.kind === 'shy' ? 0 : statusAttack(e.status)
       if (attack <= 0) continue
       const before = actAs(g, p)
       hurtPlayer(g, e.damage * attack, e)

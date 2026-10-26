@@ -55,14 +55,15 @@ export const stepOpen = (g: Game) => {
 }
 
 /**
- * A boss down: with `EVO_FIND.chance` it drops one of the items the acting
- * player lacks (never one already lying on the ground for them). Co-op runs
- * it as each player (`dropForEach`), so each drop is that player's own (`Pickup.owner`).
+ * A boss down: with `odds` (`EVO_FIND.chance`) it drops one of the items the
+ * acting player lacks (never one already lying on the ground for them); the
+ * Underground's glints dig one up for sure. Co-op runs it as each player
+ * (`dropForEach`), so each drop is that player's own (`Pickup.owner`).
  */
-export const dropEvoItem = (g: Game, x: number, y: number) => {
+export const dropEvoItem = (g: Game, x: number, y: number, odds: number = EVO_FIND.chance) => {
   const mine = (k: Pickup) => g.coop === null || k.owner === g.player.slot
   const missing = missingEvoItems(g).filter((id) => !g.pickups.some((k) => k.kind === 'evoItem' && k.item === id && mine(k)))
-  if (missing.length === 0 || !chance(g.rng, EVO_FIND.chance)) return
+  if (missing.length === 0 || !chance(g.rng, odds)) return
   g.pickups.push({ id: g.nextId++, x, y, vx: range(g.rng, -20, 20), vy: range(g.rng, -40, -20), attracted: false, age: 0, kind: 'evoItem', item: pick(g.rng, missing) })
 }
 

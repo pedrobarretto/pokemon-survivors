@@ -5,13 +5,14 @@ import type { ArenaShape, FloorPlan, Pt } from '../data/arenas'
 import { CAVE, GRAVEYARD, PLACE, PLACES, SKY, type PlaceId, type WingId } from '../data/places'
 import { fits } from '../game/arenaFloor'
 import { caveLight } from '../game/cave'
-import type { PlaceEntrance, PlaceInterior, PlaceInteriorOf } from '../game/place'
+import { entranceShown, type PlaceEntrance, type PlaceInterior, type PlaceInteriorOf } from '../game/place'
 import type { Game } from '../game/types'
 import { art, toIconUrl } from './art'
 import { PLACE_PIECES } from './placePieces'
 import { dashedRing } from './strokes'
 import { bodyOf } from '../data/bodies'
 import { ENEMIES, type EnemyDef } from '../data/enemies'
+import { drawFoundMark, drawHiddenEntrance, drawHiddenGround, hiddenIconSprite } from './hiddenZones'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -93,11 +94,19 @@ const FACE = CAVE_FACE.length
  */
 const SOUTH_LIP = 6
 
+/** The rock's period (room px): its pattern repeats, so `ROCK_TILE` lays it seamlessly past a floor's bake. */
+const ROCK = 90
+
 /** The rock of a wall's top at (x, y). */
 const wallTop = (x: number, y: number) => {
-  const n = hash2(Math.floor(x / 6), Math.floor(y / 5), 3) * 0.6 + hash2(x, y, 4) * 0.4
+  const wx = ((x % ROCK) + ROCK) % ROCK
+  const wy = ((y % ROCK) + ROCK) % ROCK
+  const n = hash2(Math.floor(wx / 6), Math.floor(wy / 5), 3) * 0.6 + hash2(wx, wy, 4) * 0.4
   return n > 0.62 ? '#241c1a' : n < 0.25 ? '#140f0f' : '#1c1515'
 }
+
+/** One tile of solid rock, laid all over the screen around a dungeon's or the Underground's floor. */
+const ROCK_TILE = lazy(() => paint(ROCK, ROCK, wallTop))
 
 /**
  * A dungeon floor: rock all around, its wall's face showing above each north
@@ -199,6 +208,74 @@ const bakeGraveyard = (floor: readonly ArenaShape[], graves: readonly Pt[], keys
   return { floor: { canvas, x: r.x0, y: r.y0 }, fence: { canvas: fenceAt(true), x: r.x0, y: r.y0 } }
 }
 
+const CANOPY = ['#0a1c0c', '#12301a', '#1c4a22', '#2a6a2c', '#3c8a36'] as const
+const GRASS = ['#3c8a2c', '#4a9c34', '#58ac3c', '#68bc48'] as const
+const BLOOMS = ['#f8a0c8', '#fff8c0', '#f8f8f8', '#f8d050'] as const
+
+/** Px between leaf clumps, and clumps across the canopy's tile (it repeats every `CLUMP * CLUMPS` px). */
+const CLUMP = 13
+const CLUMPS = 8
+
+/** The thicket's treetops seen from above at (x, y): the nearest jittered clump among the cells around, shaded as a dome lit from the upper left. Repeats every `CLUMP * CLUMPS` px. */
+const canopyAt = (x: number, y: number) => {
+  const wrap = (c: number) => ((c % CLUMPS) + CLUMPS) % CLUMPS
+  const cx0 = Math.floor(x / CLUMP)
+  const cy0 = Math.floor(y / CLUMP)
+  let best = Infinity
+  let lx = 0
+  let ly = 0
+  for (let j = -1; j <= 1; j++) {
+    for (let i = -1; i <= 1; i++) {
+      const hx = wrap(cx0 + i)
+      const hy = wrap(cy0 + j)
+      const ccx = (cx0 + i) * CLUMP + hash2(hx, hy, 21) * CLUMP
+      const ccy = (cy0 + j) * CLUMP + hash2(hx, hy, 22) * CLUMP
+      const rr = 8 + hash2(hx, hy, 23) * 4
+      const d = Math.hypot(x - ccx, y - ccy) / rr
+      if (d < best) {
+        best = d
+        lx = (x - ccx) / rr
+        ly = (y - ccy) / rr
+      }
+    }
+  }
+  if (best > 1) return CANOPY[0]
+  const light = 0.55 - (lx + ly) * 0.35 + (hash2(wrap(x), wrap(y), 24) - 0.5) * 0.15
+  const v = Math.min(CANOPY.length - 1, Math.max(1, Math.floor(light * (CANOPY.length - 1) + 0.5 + (bayer(x, y) - 0.5) * 0.7)))
+  return CANOPY[v]!
+}
+
+/** One seamless tile of the canopy, laid all over the screen under the grotto's clearing. */
+const CANOPY_TILE = lazy(() => paint(CLUMP * CLUMPS, CLUMP * CLUMPS, canopyAt))
+
+/**
+ * The Hidden Grotto: a grassy clearing with flowers and a trodden path from
+ * the way in, its edge in the canopy's shade (the treetops around it are the
+ * tiled `CANOPY_TILE`).
+ */
+const bakeGrotto = (floor: readonly ArenaShape[]): Baked => {
+  const r = rasterize(floor, 4)
+  const near = (px: number, py: number, d: number) => !r.at(px - d, py) || !r.at(px + d, py) || !r.at(px, py - d) || !r.at(px, py + d)
+  const canvas = paint(r.w, r.h, (px, py) => {
+    const x = px + r.x0
+    const y = py + r.y0
+    if (!r.at(px, py)) return null
+    // The canopy's shade along the edge.
+    if (near(px, py, 1)) return '#1c3a16'
+    if (near(px, py, 3)) return bayer(px, py) < 0.6 ? '#24481c' : '#2c5a22'
+    if (near(px, py, 6)) return bayer(px, py) < 0.4 ? '#2c5a22' : GRASS[0]
+    // The path trodden from the way in.
+    const path = y > 18 && Math.abs(x - 6 - Math.sin(y / 11) * 3) < 6 + (y > 70 ? 3 : 0)
+    if (path) return hash2(x, y, 5) < 0.08 ? '#9a8058' : hash2(Math.floor(x / 3), Math.floor(y / 2), 6) < 0.5 ? '#b8a070' : '#a89064'
+    const h = hash2(x, y, 7)
+    if (h > 0.994) return BLOOMS[Math.floor(hash2(x, y, 8) * BLOOMS.length)]!
+    if (hash2(x, Math.floor(y / 2), 9) < 0.07) return '#2e7424'
+    const n = hash2(Math.floor((x + 400) / 8), Math.floor((y + 400) / 6), 1) * 0.6 + hash2(Math.floor((x + 400) / 3), Math.floor((y + 400) / 3), 2) * 0.4
+    return GRASS[n > 0.66 ? 3 : n > 0.45 ? 2 : n > 0.28 ? 1 : 0]!
+  })
+  return { canvas, x: r.x0, y: r.y0 }
+}
+
 /** The floor of the place the player is in, baked once per floor (a dungeon's next floor is a new layout). */
 let baked: { layout: FloorPlan; floor: Baked; fence: Baked | null } | null = null
 onCanvasReset(
@@ -218,6 +295,8 @@ const bakedFloor = (inside: PlaceInterior) => {
   if (inside.id === 'graveyard') {
     const both = bakeGraveyard(inside.layout.floor, inside.state.graves, inside.state.keystone)
     baked = { layout: inside.layout, floor: both.floor, fence: both.fence }
+  } else if (inside.id === 'grotto') {
+    baked = { layout: inside.layout, floor: bakeGrotto(inside.layout.floor), fence: null }
   } else {
     baked = { layout: inside.layout, floor: bakeCave(inside.layout.floor), fence: null }
   }
@@ -315,8 +394,20 @@ const drawCloudWall = (ctx: Ctx, inside: PlaceInterior, camX: number, camY: numb
 /** The ground under a place: the sky, or the baked floor over its surroundings. Replaces the map while inside. */
 export const drawPlaceFloor = (ctx: Ctx, inside: PlaceInterior, camX: number, camY: number, w: number, h: number, t: number) => {
   if (inside.id === 'sky') return drawSky(ctx, inside, camX, camY, w, h, t)
-  ctx.fillStyle = inside.id === 'graveyard' ? '#17121f' : '#1c1515'
-  ctx.fillRect(0, 0, w, h)
+  if (inside.id === 'grotto') {
+    const tile = CANOPY_TILE()
+    const size = tile.width
+    for (let y = -(((camY % size) + size) % size); y < h; y += size) for (let x = -(((camX % size) + size) % size); x < w; x += size) ctx.drawImage(tile, x, y)
+  } else if (inside.id === 'graveyard') {
+    ctx.fillStyle = '#17121f'
+    ctx.fillRect(0, 0, w, h)
+  } else {
+    // Rock all around, lined up with the bake's (room coordinates).
+    const tile = ROCK_TILE()
+    const ox = (((inside.x - camX) % ROCK) + ROCK) % ROCK
+    const oy = (((inside.y - camY) % ROCK) + ROCK) % ROCK
+    for (let y = oy - ROCK; y < h; y += ROCK) for (let x = ox - ROCK; x < w; x += ROCK) ctx.drawImage(tile, Math.round(x), Math.round(y))
+  }
   const b = bakedFloor(inside).floor
   ctx.drawImage(b.canvas, Math.round(inside.x + b.x - camX), Math.round(inside.y + b.y - camY))
 }
@@ -366,7 +457,8 @@ export const drawPlaceGround = (ctx: Ctx, g: Game, t: number) => {
     if (c && !c.open && c.progress > 0) chargeArc(ctx, inside.x + c.x, inside.y + c.y, 24, c.progress)
     return
   }
-  if (inside.id === 'graveyard') drawKeystoneAura(ctx, inside, t)
+  if (inside.id === 'graveyard') return drawKeystoneAura(ctx, inside, t)
+  drawHiddenGround(ctx, g, t, chargeArc)
 }
 
 const SPIRITS = ['#e0d0ff', '#a890e8', '#ffffff'] as const
@@ -490,7 +582,8 @@ const EYES = '#f8f0a0'
  */
 export const drawPlaceDark = (ctx: Ctx, g: Game, camX: number, camY: number, t: number) => {
   const inside = g.place.inside
-  if (!inside || inside.id === 'sky') return
+  // Only the cave and the graveyard are dark (the hidden zones are lit).
+  if (!inside || (inside.id !== 'cave' && inside.id !== 'graveyard')) return
   const { w, h } = g.view
   const layer = darkLayer(w, h)
   const d = layer.ctx
@@ -585,7 +678,8 @@ export const drawEntranceGround = (ctx: Ctx, g: Game, t: number) => {
   const ent = g.place.entrance
   if (!ent || g.place.inside) return
   if (ent.id === 'sky') blitCentered(ctx, WIND_DISC(), ent.x, ent.y)
-  if (ent.open) {
+  // A hidden one's door shows nothing until it's found.
+  if (ent.open && entranceShown(ent)) {
     const door = PLACES[ent.id].door
     dashedRing(ctx, ent.x, ent.y, door + 3, t * 4, ENTRANCE_COLORS[ent.id], 0.35, 0.4)
     if (ent.charge > 0) chargeArc(ctx, ent.x, ent.y, door + 5, ent.charge / PLACE.enterTime)
@@ -596,6 +690,8 @@ const ENTRANCE_COLORS: Record<PlaceId, readonly string[]> = {
   cave: ['#f8d878', '#c89848', '#ffffff'],
   graveyard: ['#c8a8f8', '#7860a8', '#ffffff'],
   sky: ['#d8f0f8', '#78c8f0', '#ffffff'],
+  grotto: ['#c8f0a0', '#58b048', '#ffffff'],
+  underground: ['#f8e0a0', '#b89470', '#ffffff'],
 }
 
 /** Rocks heaped in the cave's mouth once it closes. */
@@ -617,6 +713,11 @@ export const drawEntranceAir = (ctx: Ctx, g: Game, t: number) => {
   if (!ent || g.place.inside) return
   if (ent.id === 'cave') return drawCaveMouth(ctx, ent, t)
   if (ent.id === 'graveyard') return drawGateFog(ctx, ent, t)
+  if (ent.id === 'grotto' || ent.id === 'underground') {
+    drawHiddenEntrance(ctx, ent, t)
+    if (!ent.open && ent.id === 'underground') blitCentered(ctx, ROCKFALL(), Math.round(ent.x), Math.round(ent.y - 8))
+    return drawFoundMark(ctx, g)
+  }
   drawUpdraft(ctx, ent, t)
 }
 
@@ -689,9 +790,12 @@ const drawUpdraft = (ctx: Ctx, ent: PlaceEntrance, t: number) => {
   ctx.globalAlpha = 1
 }
 
-/** A place's icon for the DOM (the results, its toasts): the stairs, the Odd Keystone, a wing. */
+/** A place's icon for the DOM (the results, its toasts): the stairs, the Odd Keystone, a wing, a tuft of tall grass, a Prism Sphere. */
 export const placeIcon = (id: PlaceId) =>
-  toIconUrl(`place:${id}`, () => (id === 'cave' ? STAIRS() : id === 'graveyard' ? PLACE_PIECES.keystone(0, 'tower').sprite : wingSprite('swiftWing')))
+  toIconUrl(`place:${id}`, () => {
+    if (id === 'grotto' || id === 'underground') return hiddenIconSprite(id)
+    return id === 'cave' ? STAIRS() : id === 'graveyard' ? PLACE_PIECES.keystone(0, 'tower').sprite : wingSprite('swiftWing')
+  })
 
 /* ---------------- Fainting inside ---------------- */
 
@@ -725,12 +829,14 @@ const ARROWS = {
   cave: lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#f8d878', 2: '#a86c30' }, '#281408')),
   graveyard: lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#d8c8f8', 2: '#6c4ca8' }, '#180c30')),
   sky: lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#e8f8ff', 2: '#4898d8' }, '#0c2040')),
+  grotto: lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#c8f0a0', 2: '#3c8c2c' }, '#0c2008')),
+  underground: lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#f8e0a0', 2: '#8a6a48' }, '#281808')),
 } satisfies Record<PlaceId, () => PixelSprite>
 
 /** Screen-space arrow on the edge pointing at an open entrance off screen. */
 export const drawPlaceArrow = (ctx: Ctx, g: Game, camX: number, camY: number, t: number) => {
   const ent = g.place.entrance
-  if (!ent?.open || g.place.inside) return
+  if (!ent?.open || g.place.inside || !entranceShown(ent)) return
   const { w, h } = g.view
   const sx = ent.x - camX
   const sy = ent.y - camY

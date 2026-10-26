@@ -1,10 +1,13 @@
 import { range, weightedPick, type Rng } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
-import { PLACE, PLACE_IDS, PLACES, PRETTY_WING_COINS, WINGS, WING_IDS, type PlaceDef, type PlaceId, type WingId } from '../data/places'
+import { PLACE, PLACES, PRETTY_WING_COINS, REGULAR_PLACE_IDS, WINGS, WING_IDS, type DigFind, type PlaceDef, type PlaceId, type WingId } from '../data/places'
 import { RUN_LENGTH, STAGES, stageIndexAt } from '../data/waves'
 import type { CaveState } from './cave'
 import type { GraveyardState } from './graveyard'
+import type { GrottoState } from './grotto'
+import { rollHidden } from './hiddenRules'
+import type { UndergroundState } from './underground'
 import type { Room, Stash } from './room'
 import type { SkyState } from './sky'
 import type { StatDelta } from './stats'
@@ -46,14 +49,35 @@ export type PlaceNotice =
   | { kind: 'landed'; wings: number }
   /** The player fainted inside: a rescue brings them back out (the world waits meanwhile). */
   | { kind: 'fall' }
+  /** A player walked up to a hidden zone's entrance: found (its "!", its name). */
+  | { kind: 'found' }
+  /** A hidden zone's grass shakes or hole rumbles: something's about to pop out. */
+  | { kind: 'rustle' }
+  /** A lucky one popped out of its spot. */
+  | { kind: 'lucky'; enemy: EnemyId }
+  /** The rare dweller showed up, ran off unbeaten, or fell. */
+  | { kind: 'dweller'; enemy: EnemyId; shiny: boolean }
+  | { kind: 'dwellerFled'; enemy: EnemyId }
+  | { kind: 'dwellerDown'; enemy: EnemyId; shiny: boolean }
+  /** A pick at a glint, then what it gave. */
+  | { kind: 'digTick' }
+  | { kind: 'dug'; find: DigFind }
   /** Back on the map: `done` after the goal (or the sky's calm), `timeout` thrown out, `fallen` rescued. */
   | { kind: 'exit'; outcome: PlaceOutcome }
 
-/** An entrance on the map: open until `left` runs out, `charge` counts the seconds the player has stood in its door. */
-export type PlaceEntrance = { id: PlaceId; x: number; y: number; left: number; charge: number; open: boolean; terrain: Feature }
+/**
+ * An entrance on the map: open until `left` runs out, `charge` counts the
+ * seconds the player has stood in its door. A hidden zone's (`hidden`) is
+ * `foundAt` the `g.now` a player first came close (null until then: no
+ * arrow, no pill, nothing on the minimap).
+ */
+export type PlaceEntrance = { id: PlaceId; x: number; y: number; left: number; charge: number; open: boolean; terrain: Feature; hidden: boolean; foundAt: number | null }
+
+/** Whether an entrance shows itself (the arrow, the pill, the minimap): any regular one, a hidden one once found. */
+export const entranceShown = (ent: PlaceEntrance) => !ent.hidden || ent.foundAt !== null
 
 /** Each place's own state inside. */
-export type PlaceStates = { cave: CaveState; graveyard: GraveyardState; sky: SkyState }
+export type PlaceStates = { cave: CaveState; graveyard: GraveyardState; sky: SkyState; grotto: GrottoState; underground: UndergroundState }
 
 export type PlaceInteriorOf<K extends PlaceId> = Room & {
   id: K
@@ -84,12 +108,22 @@ export type PlaceState = {
   offered: PlaceId[]
   visited: PlaceId[]
   cleared: PlaceId[]
+  /** Run time the run's hidden zone is due (`rollHidden`); null once it opened, or for a run without one. */
+  hiddenAt: number | null
 }
 
-export const createPlaceState = (): PlaceState => ({ nextAt: PLACE.firstAt, entrance: null, inside: null, offered: [], visited: [], cleared: [] })
+export const createPlaceState = (seed: number): PlaceState => ({
+  nextAt: PLACE.firstAt,
+  entrance: null,
+  inside: null,
+  offered: [],
+  visited: [],
+  cleared: [],
+  hiddenAt: rollHidden(seed),
+})
 
-/** The longest a place keeps the player inside. */
-const LONGEST = Math.max(...PLACE_IDS.map((id) => PLACES[id].time))
+/** The longest a place on the schedule keeps the player inside. */
+const LONGEST = Math.max(...REGULAR_PLACE_IDS.map((id) => PLACES[id].time))
 
 /**
  * When the entrance after the one due at `slot` (opening at `time`) is due:
@@ -112,10 +146,11 @@ export const placeDue = (s: { time: number; nextAt: number; busy: boolean; bossA
 
 /**
  * Which place opens: one not offered yet this run if any (else any), weighted
- * by the biome the run is in. The sky only for a Flying type.
+ * by the biome the run is in. The sky only for a Flying type; hidden zones
+ * never (`hidden.ts` opens those).
  */
 export const pickPlace = (rng: Rng, s: { offered: readonly PlaceId[]; biome: BiomeId; flyer: boolean }): PlaceId => {
-  const open = PLACE_IDS.filter((id) => {
+  const open = REGULAR_PLACE_IDS.filter((id) => {
     const def: PlaceDef = PLACES[id]
     return !def.flyers || s.flyer
   })
