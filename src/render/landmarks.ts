@@ -34,10 +34,18 @@ const LIFT: Partial<Record<LandmarkId, number>> = { snorlax: 26, truck: 12, glit
 /** Treasures without a glint: the Snorlax snores instead, and the truck keeps its secret. */
 const NO_GLINT: Partial<Record<LandmarkId, true>> = { snorlax: true, truck: true }
 
-const Z_ROWS = { small: ['1111', '..1.', '.1..', '1111'], big: ['11111', '...1.', '..1..', '.1...', '11111'] } as const
-const zOf = (rows: readonly string[]) => lazy(() => ({ light: fromStrings(rows, { 1: '#f0f8ff' }), dark: fromStrings(rows, { 1: '#1c2c3c' }) }))
-const Z_SMALL = zOf(Z_ROWS.small)
-const Z_BIG = zOf(Z_ROWS.big)
+/** A glyph's rows framed in a 1 px dark outline (`2`), so a white letter reads on any ground. */
+const outlined = (rows: readonly string[]) => {
+  const w = rows[0]!.length + 2
+  const at = (x: number, y: number) => rows[y - 1]?.[x - 1] === '1'
+  return Array.from({ length: rows.length + 2 }, (_, y) =>
+    Array.from({ length: w }, (_, x) => (at(x, y) ? '1' : at(x - 1, y) || at(x + 1, y) || at(x, y - 1) || at(x, y + 1) || at(x - 1, y - 1) || at(x + 1, y + 1) ? '2' : '.')).join(''),
+  )
+}
+const zOf = (rows: readonly string[]) => lazy(() => fromStrings(outlined(rows), { 1: '#f4faff', 2: '#1c2c3c' }))
+const Z_SMALL = zOf(['111', '.1.', '111'])
+const Z_MID = zOf(['1111', '..1.', '.1..', '1111'])
+const Z_BIG = zOf(['11111', '...1.', '..1..', '.1...', '11111'])
 const VEIN = lazy(() => fromStrings(['.1.1.', '11.11', '.....', '11.11', '.1.1.'], { 1: '#f03030' }))
 const TWINKLE = lazy(() => fromStrings(['...1...', '...1...', '..121..', '1122211', '..121..', '...1...', '...1...'], { 1: '#fff8c0', 2: '#ffffff' }))
 
@@ -145,11 +153,8 @@ const drawSnore = (ctx: Ctx, x: number, y: number, t: number, k: number) => {
   for (let i = 0; i < 3; i++) {
     const ph = (t * (k > 0 ? 0.9 : 0.4) + i / 3) % 1
     ctx.globalAlpha = Math.min(1, Math.sin(ph * Math.PI) * 1.6)
-    const z = ph > 0.5 ? Z_BIG() : Z_SMALL()
-    const zx = Math.round(hx + ph * 16 + Math.sin(t * 2 + i) * 2)
-    const zy = Math.round(hy - ph * 24)
-    ctx.drawImage(z.dark, zx + 1, zy + 1)
-    ctx.drawImage(z.light, zx, zy)
+    const z = ph > 0.66 ? Z_BIG() : ph > 0.33 ? Z_MID() : Z_SMALL()
+    ctx.drawImage(z, Math.round(hx + ph * 16 + Math.sin(t * 2 + i) * 2), Math.round(hy - ph * 24))
   }
   ctx.globalAlpha = 1
   if (k > 0.3) ctx.drawImage(VEIN(), Math.round(x - 12 + (Math.floor(t * 12) % 2)), Math.round(y - 46))
