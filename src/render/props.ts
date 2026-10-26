@@ -70,6 +70,16 @@ const MUSHROOM = [
   '....145541....', '....145541....', '....145541....', '...11455411...',
 ]
 
+/** Power Plant stand-ins: a wooden crate instead of tall grass, Lt. Surge's trash can instead of a berry tree. */
+const CRATE = ['11111111111', '12222222221', '12111111121', '12131113121', '12113131121', '12111311121', '12222222221', '11111111111']
+const CRATE_SHAKE = CRATE.map((row) => `.${row}`)
+const TRASH_CAN = [
+  '...11111...', '.112222211.', '12233333221', '11111111111', '.145555541.', '.145656541.', '.145555541.',
+  '.145656541.', '.145555541.', '.145656541.', '.145555541.', '.144444441.', '..1111111..',
+]
+/** The desert's berry tree: a tall cactus in bloom. */
+const BIG_CACTUS = ['....131....', '....121....', '.1..121....', '121.121..1.', '121.121.121', '12111211121', '.122222221.', '....121....', '....121....', '....121....', '...11211...']
+
 type PropSkin = { berryTree: PixelSprite; grass: readonly [PixelSprite, PixelSprite] }
 
 const grass = (pal: Palette, outline: string) => [art(GRASS_REST, pal, outline), art(GRASS_RUSTLE, pal, outline)] as const
@@ -91,6 +101,22 @@ const PROP_SKINS = lazy((): Record<BiomeId, PropSkin> => ({
   tower: {
     berryTree: tree('#2c2038', '#584870', '#8070a0', '#160f1e', '#3c2c28', '#6c5048'),
     grass: grass({ 1: '#3c3448', 2: '#6c6080', 3: '#9890a8' }, '#1e1a28'),
+  },
+  beach: { berryTree: tree('#2c6c30', '#58a040', '#a8d068', '#1c3c18', '#8c6c40', '#c8a070'), grass: grass({ 1: '#4c8a38', 2: '#7cb858', 3: '#b8d888' }, '#2c5420') },
+  plant: {
+    berryTree: art(TRASH_CAN, { 1: '#30343c', 2: '#d8dce4', 3: '#a0a8b4', 4: '#6c7480', 5: '#a8b0bc', 6: '#f8d030' }, '#181a20'),
+    grass: [art(CRATE, { 1: '#5c3c20', 2: '#c8a060', 3: '#a07840' }, '#2c1c10'), art(CRATE_SHAKE, { 1: '#5c3c20', 2: '#c8a060', 3: '#a07840' }, '#2c1c10')],
+  },
+  desert: {
+    berryTree: art(BIG_CACTUS, { 1: '#2c5c28', 2: '#58a040', 3: '#f878a0' }, '#183018'),
+    grass: grass({ 1: '#8c6c38', 2: '#b89858', 3: '#d8c080' }, '#5c4424'),
+  },
+  volcano: {
+    berryTree: tree('#3c3438', '#6c6064', '#9c9094', '#1c1618', '#3c2820', '#6c4838'),
+    grass: [
+      art(SMASH_ROCK, { 1: '#241c1e', 2: '#5c4c4c', 3: '#8c7c78', 4: '#f86818' }, '#100808'),
+      art(SMASH_ROCK_SHAKE, { 1: '#241c1e', 2: '#5c4c4c', 3: '#8c7c78', 4: '#f86818' }, '#100808'),
+    ],
   },
 }))
 

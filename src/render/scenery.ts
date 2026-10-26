@@ -40,18 +40,27 @@ const SCENERY: Partial<Record<SceneryKind, (biome: BiomeId) => Looks>> = {
   keystone: () => ({ files: ['keystone', 'keystone-broken'] }),
 }
 
+/** Kinds whose pictures are shared by every biome. */
+const SHARED: ReadonlySet<SceneryKind> = new Set(['tombstone', 'windStone', 'keystone'])
+
+/**
+ * Biomes with painted pictures. The route's newer ones (the beach, the Power
+ * Plant, the desert, Mt. Chimney) wear their sculpted pieces throughout.
+ */
+const PAINTED: ReadonlySet<BiomeId> = new Set(['meadow', 'forest', 'cave', 'snow', 'tower'])
+
 /** Pictures drawn on their own, outside the biome table: the altar event's pedestal. */
 const ONE_OFFS = ['pedestal'] as const
 
 /** Every scenery file, for the test that checks they all exist. */
 export const sceneryFiles = () => {
-  const biomes = Object.keys(BIOMES) as BiomeId[]
+  const biomes = [...PAINTED]
   const looks = Object.values(SCENERY).flatMap((of) => biomes.map(of))
   return [...new Set([...looks.flatMap((l) => [...l.files, ...(l.open ?? [])]), ...ONE_OFFS])]
 }
 
-/** Whether `kind` has painted art (then it isn't sculpted ahead of time). */
-export const hasScenery = (kind: string): kind is SceneryKind => kind in SCENERY
+/** Whether `kind` has painted art (in `biome`, when given): then it isn't sculpted ahead of time. */
+export const hasScenery = (kind: string, biome?: BiomeId): kind is SceneryKind => kind in SCENERY && (biome === undefined || PAINTED.has(biome) || SHARED.has(kind as SceneryKind))
 
 const images = new Map<string, HTMLImageElement>()
 const pieces = canvasCache<string, ArtPiece>()
@@ -111,7 +120,7 @@ const pieceOfFile = (file: string) => {
 
 /** The painted look of a piece, or null when it has none or its picture is still on the way (it starts loading). */
 export const sceneryPiece = (biome: BiomeId, kind: string, variant: number, open = false): ArtPiece | null => {
-  if (!hasScenery(kind)) return null
+  if (!hasScenery(kind, biome)) return null
   const looks = SCENERY[kind]!(biome)
   const files = open && looks.open ? looks.open : looks.files
   return pieceOfFile(files[variant % files.length]!)

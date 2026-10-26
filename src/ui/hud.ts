@@ -27,6 +27,7 @@ import { createPlaceCard } from './placeCard'
 import { createRiftTitle } from './riftTitle'
 import { phasesOf, pooledShare } from '../game/bossFight'
 import { createFieldMissionHud } from './fieldMissionHud'
+import { createRouteHud } from './routeHud'
 import { createLungeControls } from './lungeButton'
 import { createMegaControls } from './megaButton'
 import { moveCard, withMoveCard } from './moveCard'
@@ -53,11 +54,12 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
   const card = createPlaceCard()
   const title = createRiftTitle()
   const mission = createFieldMissionHud()
+  const route = createRouteHud()
   const xpFill = h('div', { class: 'xp-fill' })
   const xpLabel = h('div', { class: 'xp-label' })
   const clock = h('span')
   const weather = h('img', { class: 'weather-icon hidden', alt: '' })
-  const timer = h('div', { class: 'timer' }, weather, clock)
+  const timer = h('div', { class: 'timer' }, h('div', { class: 'timer-clock' }, weather, clock), route.strip)
   const kills = h('span')
   const coins = h('span')
   const candies = h('span')
@@ -123,6 +125,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     card.el,
     title.el,
     mission.el,
+    route.card,
     h(
       'div',
       { class: 'status box' },
@@ -222,7 +225,9 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     rift.update(g)
     card.update(g)
     title.update(g)
-    mission.update(g, !rift.el.classList.contains('hidden'))
+    const riftShown = !rift.el.classList.contains('hidden')
+    mission.update(g, riftShown)
+    route.update(g, Number(riftShown) + Number(!mission.el.classList.contains('hidden')))
     minimap.update(g)
 
     const key = [...p.moves.map((m) => `${m.id}${m.level}`), ...p.items.map((i) => `${i.id}${i.level}`)].join()

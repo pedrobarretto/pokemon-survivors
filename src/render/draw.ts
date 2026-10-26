@@ -11,7 +11,9 @@ import { drawLegendSky, drawOmenGround } from './legendSky'
 import { bossLook, drawDomainAir, drawDomainGround, drawDomainScreen, drawVortexAir, drawVortexGround } from './domainLooks'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
-import { BIOME_ORDER, BIOMES, biomeAt, type BiomeId } from '../data/biomes'
+import { BIOMES, ROUTE, type BiomeId } from '../data/biomes'
+import { biomesAhead, biomeSoon } from '../game/route'
+import { drawRouteArrows, drawRouteGates } from './routes'
 import { ENEMIES, type EnemyDef } from '../data/enemies'
 import { TYPE_COLORS } from '../data/types'
 import { FLEE_TIME } from '../game/enemies'
@@ -769,7 +771,7 @@ export const warmScenery = (g: Game | null, calm: boolean) => {
     const { w, h } = g.view
     const { x, y } = g.camera
     const here = g.biome.id
-    const upcoming = biomeAt(g.time + BIOME_WARMUP)
+    const upcoming = biomeSoon(g, BIOME_WARMUP)
     if (warmGround(here, x, y, w, h, GROUND_LOOKAHEAD) || warmTerrain(here)) return true
     if (upcoming !== here && (warmGround(upcoming, x, y, w, h) || warmTerrain(upcoming))) return true
     if ('fog' in BIOMES[here].weather || 'fog' in BIOMES[upcoming].weather) {
@@ -780,15 +782,15 @@ export const warmScenery = (g: Game | null, calm: boolean) => {
 }
 
 /**
- * The biomes whose terrain stays sculpted: the one here, the one dissolving out and the next
- * in order (a run only moves forward); before a run, the first. The rest is dropped (`keepTerrain`).
+ * The biomes whose terrain stays sculpted: the one here, the one dissolving out and the ones
+ * the route may take next (`biomesAhead`: an open fork's two); before a run, the first. The
+ * rest is dropped (`keepTerrain`).
  */
 const terrainBiomes = (g: Game | null): BiomeId[] => {
-  if (!g) return [BIOME_ORDER[0]]
+  if (!g) return [ROUTE.start]
   const here = g.biome.id
-  const next = BIOME_ORDER[BIOME_ORDER.indexOf(here) + 1]
   const fading = biomeFade(g)?.from
-  return [here, ...(next ? [next] : []), ...(fading && fading !== here ? [fading] : [])]
+  return [...new Set([here, ...biomesAhead(g), ...(fading ? [fading] : [])])]
 }
 
 /** The ground dissolve in progress, if any. */
@@ -909,7 +911,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   else if (g.rift.arena) drawArena(ctx, g.rift.arena, camX, camY, w, h, t)
   else if (inside) drawPlaceFloor(ctx, inside, camX, camY, w, h, t)
   else drawGround(ctx, camX, camY, w, h, g.biome.id, fade)
-  const upcoming = biomeAt(g.time + BIOME_WARMUP)
+  const upcoming = biomeSoon(g, BIOME_WARMUP)
   // Scenery warms in idle time (`warmScenery`); in case that never comes, one of the next biome's chunks per frame.
   if (upcoming !== g.biome.id) warmGround(upcoming, camX, camY, w, h)
   if (g.rift.arena && !g.rift.arena.domain) warmArena(g.rift.arena)
@@ -958,6 +960,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   if (!indoors) drawMapEvents(ctx, g, t, calm)
   if (g.rift.portal && !indoors) (riftDomain(g, g.rift.portal.legend) ? drawTear : drawRiftPortal)(ctx, g.rift.portal, t)
   drawEntranceGround(ctx, g, t)
+  if (!indoors) drawRouteGates(ctx, g, t)
   drawPlaceGround(ctx, g, t)
   drawPlayerGround(ctx, g, camX, camY, t, true)
   for (const mate of mates) if (shown(mate)) drawPlayerGround(ctx, mate, camX, camY, t, false)
@@ -1139,6 +1142,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
 
   if (!inside) drawRiftArrow(ctx, g, camX, camY, t)
   drawPlaceArrow(ctx, g, camX, camY, t)
+  if (!indoors) drawRouteArrows(ctx, g, camX, camY, t)
   if (!indoors) drawMapEventMarkers(ctx, g, t)
   drawAlphaMarkers(ctx, g, t, markerInsets())
   drawBossMarker(ctx, g, camX, camY, t)

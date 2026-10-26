@@ -129,7 +129,7 @@ describe('golden runs', () => {
   it('Kyogre in the Legend mode on a haunted night: Pressure, its innate, an awakening, candies and jack-o\'-lanterns', () => {
     const { live, replayed, branch } = golden('kyogre', 44, 240, { halloween: true })
     expect(replayed).toBe(live)
-    expect([live, branch]).toEqual(['playing@240s L14 S0 737k 199ebdc8', null])
+    expect([live, branch]).toEqual(['playing@240s L13 S0 722k fa009941', null])
   }, SLOW)
 
   it('Bulbasaur with Bag items, armed shop TMs and Bottle Caps', () => {

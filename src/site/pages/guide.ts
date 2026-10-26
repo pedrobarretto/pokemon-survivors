@@ -1,6 +1,6 @@
 import { ACHIEVEMENT_IDS, ACHIEVEMENTS, MEDAL_EGG, MEDAL_REWARD, MEDALS, TITLE_IDS, type AchievementDef, type AchievementId } from '../../data/achievements'
 import { DAILY_POOL, MISSION_SLOTS, WEEKLY_POOL, type MissionTemplate } from '../../data/missions'
-import { BIOME_LENGTH, BIOME_ORDER, BIOMES, WEATHER_IDS, type WeatherId } from '../../data/biomes'
+import { AREAS, areaStart, BIOME_IDS, BIOME_LENGTH, BIOMES, ROUTE, WEATHER_IDS, type BiomeId, type WeatherId } from '../../data/biomes'
 import { BOSS_DIFFICULTY, BOSS_PATTERNS, BOSS_RAGE } from '../../data/bosses'
 import { DROP_TABLES, ENEMY_BERRY_CHANCE, ENEMY_DROP_CHANCE, FLUTE_SLEEP, PROPS, type Drop, type DropSource } from '../../data/consumables'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../../data/enemies'
@@ -39,7 +39,7 @@ import { MAX_ITEMS, MAX_MOVES, OFFER_RARITY } from '../../game/leveling'
 import { COIN_VALUES, runBonus, UPGRADE_IDS, UPGRADES, upgradePrice } from '../../game/meta'
 import { maxMoveLevel, MOVE_IDS, MOVES, type MoveDef, type MoveId } from '../../game/moves'
 import { SHINY_BUFF, SHINY_ODDS } from '../../game/shiny'
-import { AFFINITY_ODDS, biomeWeight, drawRoster, TRAIT_ALIVE, TRAIT_CAP, TRAIT_FROM } from '../../game/roster'
+import { AFFINITY_ODDS, drawRoster, seedWeight, TRAIT_ALIVE, TRAIT_CAP, TRAIT_FROM } from '../../game/roster'
 import { MIN_SPECIAL_COOLDOWN, resolveSpecial, SPECIAL_IDS, specialOfType, SPECIALS } from '../../game/special'
 import { riftScale } from '../../game/rift'
 import { placeBossScale, wingAmount } from '../../game/place'
@@ -120,11 +120,16 @@ const world = (locale: Locale, m: SiteMessages) => {
   const w = m.guide.world
   const game = LOCALES[locale].messages.world
   const pct = (v: number) => Math.round(v * 1000) / 10
-  const biomes = BIOME_ORDER.map((id, i) => {
-    const odds: Partial<Record<WeatherId, number>> = BIOMES[id].weather
-    const likely = WEATHER_IDS.filter((wid) => (odds[wid] ?? 0) > 0).sort((a, b) => odds[b]! - odds[a]!)
-    return [clock(i * BIOME_LENGTH), game.biomes[id], html`${BIOMES[id].affinity.map((type) => typeBadge(type, m))}`, likely.map((wid) => game.weather[wid]).join(', ')]
-  })
+  // One row per biome an area can be: Route 1, then the two of each fork's tier.
+  const areas: readonly (readonly BiomeId[])[] = [[ROUTE.start], ...ROUTE.tiers]
+  const biomes = areas.flatMap((ids, i) =>
+    ids.map((id) => {
+      const odds: Partial<Record<WeatherId, number>> = BIOMES[id].weather
+      const likely = WEATHER_IDS.filter((wid) => (odds[wid] ?? 0) > 0).sort((a, b) => odds[b]! - odds[a]!)
+      return [clock(areaStart(i)), game.biomes[id], html`${BIOMES[id].affinity.map((type) => typeBadge(type, m))}`, likely.map((wid) => game.weather[wid]).join(', ')]
+    }),
+  )
+  const routes = ROUTE.tiers.reduce((n, tier) => n * tier.length, 1)
   // Every effect is read from the weather rules, so the guide follows any rebalance.
   const effect = (id: Exclude<WeatherId, 'clear'>) => {
     const def = WEATHER[id]
@@ -141,7 +146,7 @@ const world = (locale: Locale, m: SiteMessages) => {
     return parts.join('; ')
   }
   const weather = WEATHER_IDS.flatMap((id) => (id === 'clear' ? [] : [[game.weather[id], effect(id)]]))
-  return html`${paragraphs(w.paragraphs(BIOME_ORDER.length, BIOME_LENGTH / 60, AFFINITY_ODDS))}
+  return html`${paragraphs(w.paragraphs(AREAS, BIOME_LENGTH / 60, AFFINITY_ODDS, BIOME_IDS.length, routes))}
     ${table([w.timeHead, w.biomeHead, w.hordeHead, w.weatherHead], biomes)}
     <h3>${w.weatherTitle}</h3>
     ${table([w.weatherCol, w.effectHead], weather)}`
@@ -160,7 +165,7 @@ const spread = <T>(items: readonly T[], count: number) =>
 
 const horde = (locale: Locale, m: SiteMessages) => {
   const r = m.roster
-  const perRun = new Set(drawRoster(createRng(1), { weight: biomeWeight }).stages.flatMap((pool) => pool.map(([id]) => id))).size
+  const perRun = new Set(drawRoster(createRng(1), { weight: seedWeight(1) }).stages.flatMap((pool) => pool.map(([id]) => id))).size
   const tiers = TIERS.map((tier, i) => [
     r.tierOf(tier),
     r.total(TIER_FLOORS[i - 1] ?? 0, TIER_FLOORS[i] === undefined ? null : TIER_FLOORS[i] - 1),

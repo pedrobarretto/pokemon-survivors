@@ -86,12 +86,16 @@ const PROP_COLORS: Record<PropKind, readonly string[]> = {
   pumpkin: ['#f88820', '#ffc040', '#583010'],
 }
 
-/** Debris where a biome dresses a breakable differently (see `render/props.ts`): rock chips in the cave, snow on Mt. Silver… */
+/** Debris where a biome dresses a breakable differently (see `render/props.ts`): rock chips in the cave, snow on Mt. Silver, splinters in the Power Plant… */
 const BIOME_COLORS: Partial<Record<BiomeId, Partial<Record<PropKind, readonly string[]>>>> = {
   forest: { berryTree: ['#2f7a30', '#58a040', '#3870d8', '#a06838'], tallGrass: ['#3a7a38', '#5aa048', '#1c4c24'] },
   cave: { berryTree: ['#c04830', '#f8e8d0', '#e8d8c0'], tallGrass: ['#988870', '#c8b8a0', '#4a3e34'] },
   snow: { berryTree: ['#2f6a50', '#f0f8ff', '#3870d8'], tallGrass: ['#98b8d0', '#ffffff', '#587890'] },
   tower: { berryTree: ['#584870', '#8070a0', '#3870d8'], tallGrass: ['#6c6080', '#9890a8', '#3c3448'] },
+  beach: { berryTree: ['#58a040', '#a8d068', '#3870d8', '#c8a070'], tallGrass: ['#7cb858', '#b8d888', '#4c8a38'] },
+  plant: { berryTree: ['#a0a8b4', '#d8dce4', '#f8d030'], tallGrass: ['#c8a060', '#a07840', '#5c3c20'] },
+  desert: { berryTree: ['#58a040', '#2c5c28', '#f878a0'], tallGrass: ['#b89858', '#d8c080', '#8c6c38'] },
+  volcano: { berryTree: ['#6c6064', '#9c9094', '#3870d8'], tallGrass: ['#5c4c4c', '#8c7c78', '#f86818'] },
 }
 
 const hitProp = (g: Game, prop: Prop) => {

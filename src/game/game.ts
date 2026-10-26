@@ -17,6 +17,7 @@ import { branchContext, evolutionOffers, playerForm } from './branch'
 import { createAlphaClock, updateAlphas } from './alphas'
 import { updateAttacks } from './attacks'
 import { createBiome, updateBiome } from './biomes'
+import { createRoute, updateRoute } from './route'
 import { healPlayer } from './combat'
 import { createDexLog } from './dex'
 import { FRESH_LEVELUPS } from './learnsets'
@@ -265,6 +266,7 @@ const createRun = (view: Game['view'], seed: number, setups: readonly PlayerSetu
     mapEvents: createMapEvents(),
     flash: 0,
     biome: createBiome(),
+    route: createRoute(seed),
     weather: createWeather(),
     traits: { seen: new Set(), nextIntro: 0 },
     rift: createRiftState(),
@@ -858,6 +860,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   // no regular spawns, props, map events, weather or biome changes. A biome
   // change that came due meanwhile plays on the way out.
   const inArena = roomOf(g) !== null
+  updateRoute(g, dt)
   if (!inArena) {
     updateBiome(g)
     updateWeather(g, dt)

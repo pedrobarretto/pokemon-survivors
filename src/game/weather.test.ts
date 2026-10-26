@@ -1,20 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
-import { BIOME_LENGTH, BIOME_ORDER, BIOMES, biomeAt } from '../data/biomes'
-import { RUN_LENGTH } from '../data/waves'
+import { BIOME_IDS, BIOMES } from '../data/biomes'
 import { rollWeather, weatherBoost, weatherChips, weatherFits, weatherPower } from './weather'
-
-describe('biomeAt', () => {
-  it('walks every biome in order, one equal slice of the run each', () => {
-    expect(BIOME_ORDER.map((_, i) => biomeAt(i * BIOME_LENGTH))).toEqual([...BIOME_ORDER])
-    expect(biomeAt(BIOME_LENGTH - 0.01)).toBe(BIOME_ORDER[0])
-  })
-
-  it('stays in the last biome for the finale and after it', () => {
-    expect(biomeAt(RUN_LENGTH)).toBe(BIOME_ORDER.at(-1))
-    expect(biomeAt(RUN_LENGTH * 3)).toBe(BIOME_ORDER.at(-1))
-  })
-})
 
 describe('weather damage multiplier', () => {
   it('sun boosts Fire and weakens Water; rain does the opposite', () => {
@@ -57,7 +44,7 @@ describe('weatherChips', () => {
 describe('rollWeather', () => {
   it('only rolls weather the biome allows, and never the current one', () => {
     const rng = createRng(7)
-    for (const biome of BIOME_ORDER) {
+    for (const biome of BIOME_IDS) {
       for (let i = 0; i < 200; i++) {
         const next = rollWeather(rng, biome, 'clear')
         expect(next).not.toBe('clear')

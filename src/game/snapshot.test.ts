@@ -61,7 +61,8 @@ const AFTER = 240
 /**
  * The moments worth a checkpoint besides random ticks: a pick waiting, an
  * evolution (a legend's awakening), a rift (a domain's act), a place, a
- * tunnel, a wave legendary's scene, a boss, a Mega, a called sky, endless mode.
+ * tunnel, a route's fork on the map, a wave legendary's scene, a boss, a Mega,
+ * a called sky, endless mode.
  */
 const moments = (g: Game): string[] => [
   ...(g.phase !== 'playing' ? [g.phase] : []),
@@ -69,6 +70,7 @@ const moments = (g: Game): string[] => [
   ...(g.rift.arena ? [g.rift.arena.domain ? `domain:${g.rift.arena.domain.act}` : 'arena'] : []),
   ...(g.place.inside ? [`place:${g.place.inside.id}`] : []),
   ...(g.player.landmark.transit ? ['tunnel'] : []),
+  ...(g.route.fork ? [g.route.fork.chosen < 0 ? 'fork' : 'forkTaken'] : []),
   ...(g.legendScene ? [`legendScene:${g.legendScene.kind}`] : []),
   ...(g.bossId !== null ? ['boss'] : []),
   ...(g.player.mega.active > 0 ? ['mega'] : []),
@@ -124,8 +126,8 @@ describe('snapshot and restore', () => {
       for (const m of r.covered) covered.add(m)
     }
     expect(checkpoints).toBeGreaterThan(20)
-    // A legend's awakening, a whole domain, the places and a tunnel come up along the way (`moments`).
-    expect([...covered].sort()).toEqual(expect.arrayContaining(['awakening', 'boss', 'domain:battle', 'domain:capture', 'domain:crossing', 'evolving', 'levelup', 'place:cave', 'place:graveyard', 'tunnel']))
+    // A legend's awakening, a whole domain, the places and a route's fork come up along the way (`moments`); a tunnel has its own case below.
+    expect([...covered].sort()).toEqual(expect.arrayContaining(['awakening', 'boss', 'domain:battle', 'domain:capture', 'domain:crossing', 'evolving', 'fork', 'levelup', 'place:cave', 'place:graveyard']))
   }, 120_000)
 
   it.each([

@@ -47,8 +47,10 @@ type GroundStyle = {
   path: Shades
   /** Fine noise peaks: sun dapples in the forest, drifts in the snow. */
   spots?: Shades
-  /** Paths become staggered stone tiles (graveyard walkways). */
+  /** Paths become staggered stone tiles (graveyard walkways, the Power Plant's catwalks). */
   tiles?: boolean
+  /** The lines between those tiles (dark purple mortar unless told). */
+  mortar?: string
   /** Noise level above which tiles are `dense` (thickets); lower means more of them. */
   thicket?: number
   /** Builds the biome's decor sprites once and returns how to dress a tile. */
@@ -207,6 +209,138 @@ const towerDecor = () => {
   }
 }
 
+/* ---------------- Beach (Route 109) ---------------- */
+
+const SHELL = ['.1.1.', '12121', '12221', '.111.']
+const STARFISH = ['..1..', '11211', '.121.', '1...1']
+const DUNE_GRASS = ['1...1.', '.1.1.1', '1.1.1.', '.1211.', '..11..']
+const DRIFTWOOD = ['.11111.', '1222221', '.13311.']
+const SAND_PEBBLES = ['1..', '..2', '.1.']
+
+const beachDecor = () => {
+  const shells = [sprite(SHELL, { 1: '#c86878', 2: '#f8c8c8' }), sprite(SHELL, { 1: '#a87848', 2: '#f8e8d0' })]
+  const star = sprite(STARFISH, { 1: '#e86830', 2: '#f8b058' })
+  const grass = sprite(DUNE_GRASS, { 1: '#6a9a40', 2: '#a8c868' })
+  const wood = sprite(DRIFTWOOD, { 1: '#6c5c48', 2: '#b0a088', 3: '#8c7c64' })
+  const pebbles = sprite(SAND_PEBBLES, { 1: '#b8a07c', 2: '#fff8e8' })
+  return (ctx: CanvasRenderingContext2D, s: Spot) => {
+    if (s.dense) {
+      // Dune grass on the high sand, low enough to walk through. Palms are real trees (`render/terrain.ts`).
+      ctx.drawImage(grass, s.x + (s.jx >> 1), s.y + (s.jy >> 1))
+      if (s.roll < 0.35) ctx.drawImage(grass, s.x + 8, s.y + 9)
+    } else if (s.roll < 0.04) {
+      ctx.drawImage(shells[s.jx % 2]!, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.055) {
+      ctx.drawImage(star, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.15) {
+      ctx.drawImage(pebbles, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.162) {
+      ctx.drawImage(wood, s.x + s.jx, s.y + s.jy)
+    }
+  }
+}
+
+/* ---------------- Power Plant (Kanto) ---------------- */
+
+const RIVETS = ['1.....1', '.......', '1.....1']
+const GRATE = ['1111111', '1.1.1.1', '1111111', '1.1.1.1', '1111111']
+const CABLE = ['11.....', '.11....', '..11111', '......1']
+const PIPE = ['1111111111111111', '2222222222222222', '3333333333333333', '4444444444444444', '1111111111111111']
+const OIL = ['.1111.', '123221', '122221', '.1111.']
+const SPARK = ['1.1', '.2.', '1.1']
+
+const plantDecor = () => {
+  const rivets = sprite(RIVETS, { 1: '#5c6068' })
+  const grate = sprite(GRATE, { 1: '#4c5058' })
+  const cables = [sprite(CABLE, { 1: '#2c2c34' }), sprite(CABLE, { 1: '#a82c20' })]
+  const pipe = sprite(PIPE, { 1: '#3c4048', 2: '#a8acb4', 3: '#888c94', 4: '#646870' })
+  const oil = sprite(OIL, { 1: '#3c4048', 2: '#1c1e28', 3: '#8870b8' })
+  const spark = sprite(SPARK, { 1: '#f8d030', 2: '#ffffff' })
+  return (ctx: CanvasRenderingContext2D, s: Spot) => {
+    if (s.dense) {
+      // Pipes run along the floor in bundles, tile to tile, low enough to step over. Generators stand as real rocks (`render/terrain.ts`).
+      ctx.drawImage(pipe, s.x, s.y + 4)
+      ctx.drawImage(pipe, s.x, s.y + 10)
+    } else if (s.roll < 0.03) {
+      ctx.drawImage(grate, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.1) {
+      ctx.drawImage(rivets, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.14) {
+      ctx.drawImage(cables[s.jy % 2]!, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.155) {
+      ctx.drawImage(oil, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.162) {
+      ctx.drawImage(spark, s.x + s.jx, s.y + s.jy)
+    }
+  }
+}
+
+/* ---------------- Desert (Route 111) ---------------- */
+
+const CACTUS = ['..1..', '1.1..', '1.1.1', '111.1', '..111', '..1..', '.111.']
+const BONES = ['1...1', '.111.', '1...1']
+const RIPPLE = ['11....', '..1111']
+const DRY_TUFT = ['1.1.1', '.1.1.', '.121.']
+
+const desertDecor = () => {
+  const cactus = sprite(CACTUS, { 1: '#4c8838' })
+  const bones = sprite(BONES, { 1: '#f8f0e0' })
+  const ripple = sprite(RIPPLE, { 1: '#c49058' })
+  const light = sprite(RIPPLE, { 1: '#f8dca8' })
+  const tuft = sprite(DRY_TUFT, { 1: '#a88848', 2: '#c8a860' })
+  const pebbles = sprite(SAND_PEBBLES, { 1: '#a07848', 2: '#f0d8a8' })
+  return (ctx: CanvasRenderingContext2D, s: Spot) => {
+    if (s.dense) {
+      // Dunes: wind ripples in rows, lit on one side.
+      ctx.drawImage(ripple, s.x + (s.jx >> 1), s.y + 3)
+      ctx.drawImage(light, s.x + (s.jx >> 1) + 1, s.y + 2)
+      ctx.drawImage(ripple, s.x + ((s.jx + 5) % 10), s.y + 10)
+      ctx.drawImage(light, s.x + ((s.jx + 5) % 10) + 1, s.y + 9)
+    } else if (s.roll < 0.02) {
+      ctx.drawImage(cactus, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.028) {
+      ctx.drawImage(bones, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.1) {
+      ctx.drawImage(pebbles, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.16) {
+      ctx.drawImage(tuft, s.x + s.jx, s.y + s.jy)
+    }
+  }
+}
+
+/* ---------------- Volcano (Mt. Chimney) ---------------- */
+
+const LAVA_CRACK = ['1......', '.2.....', '.22....', '...2...', '...221.', '......1']
+const VENT = ['.111.', '12321', '.111.']
+const OBSIDIAN = ['..1..', '.121.', '12231', '.111.']
+const ASH = ['1.1', '.2.']
+
+const volcanoDecor = () => {
+  const crack = sprite(LAVA_CRACK, { 1: '#802010', 2: '#f86818' })
+  const vent = sprite(VENT, { 1: '#241c1e', 2: '#a83818', 3: '#f8a030' })
+  const obsidian = sprite(OBSIDIAN, { 1: '#141018', 2: '#4c3c68', 3: '#9888c8' })
+  const ash = sprite(ASH, { 1: '#6c6464', 2: '#9c9494' })
+  const pebbles = sprite(SAND_PEBBLES, { 1: '#2c2224', 2: '#7c6c6c' })
+  return (ctx: CanvasRenderingContext2D, s: Spot) => {
+    if (s.dense) {
+      // Cracked crust: lava glowing through a seam here and there, rubble on top. Hot springs are the lakes (`render/terrain.ts`).
+      if (s.roll < 0.3) ctx.drawImage(crack, s.x + (s.jx >> 1), s.y + (s.jy >> 1))
+      ctx.drawImage(pebbles, s.x + ((s.jx + 6) % 12), s.y + ((s.jy + 5) % 12))
+      if (s.roll > 0.6) ctx.drawImage(ash, s.x + (s.jx >> 1), s.y + 10)
+    } else if (s.roll < 0.02) {
+      ctx.drawImage(vent, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.03) {
+      ctx.drawImage(obsidian, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.05) {
+      ctx.drawImage(crack, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.14) {
+      ctx.drawImage(ash, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.2) {
+      ctx.drawImage(pebbles, s.x + s.jx, s.y + s.jy)
+    }
+  }
+}
+
 /* ---------------- Styles ---------------- */
 
 const STYLES: Record<BiomeId, GroundStyle> = {
@@ -247,6 +381,39 @@ const STYLES: Record<BiomeId, GroundStyle> = {
     thicket: 0.64,
     decor: towerDecor,
   },
+  beach: {
+    base: shades('#f0dca8', '#f6e4b4', '#e8d29c'),
+    alt: shades('#dcc48c', '#e2ca94', '#d4bc84'),
+    path: shades('#c8ac78', '#d0b480', '#c0a470'),
+    spots: shades('#fff0c8', '#fff6d8', '#f8e8bc'),
+    thicket: 0.66,
+    decor: beachDecor,
+  },
+  plant: {
+    base: shades('#8c9098', '#949aa2', '#848890'),
+    alt: shades('#70747e', '#787c86', '#6a6e78'),
+    path: shades('#c8b048', '#d4bc50', '#bca440'),
+    tiles: true,
+    mortar: '#4c4430',
+    thicket: 0.72,
+    decor: plantDecor,
+  },
+  desert: {
+    base: shades('#e4bc7c', '#ecc488', '#dcb474'),
+    alt: shades('#d4a868', '#dcb070', '#cca060'),
+    path: shades('#c49460', '#cc9c68', '#bc8c58'),
+    spots: shades('#f4d498', '#f8dca4', '#ecca8c'),
+    thicket: 0.62,
+    decor: desertDecor,
+  },
+  volcano: {
+    base: shades('#4c4044', '#544648', '#463a3e'),
+    alt: shades('#3a3034', '#40363a', '#342c30'),
+    path: shades('#80746c', '#887c74', '#786c64'),
+    spots: shades('#584446', '#5e4848', '#524042'),
+    thicket: 0.62,
+    decor: volcanoDecor,
+  },
 }
 
 const decorCache = canvasCache<BiomeId, (ctx: CanvasRenderingContext2D, s: Spot) => void>()
@@ -257,7 +424,7 @@ const decorFor = (biome: BiomeId) => {
   return decorate
 }
 
-const MORTAR = hex('#4c4458')
+const MORTAR = '#4c4458'
 
 /** Graveyard walkway: 12x8 stones in staggered rows, split by dark mortar lines. */
 const isMortar = (wx: number, wy: number) => {
@@ -315,6 +482,7 @@ const buildChunk = (biome: BiomeId, cx: number, cy: number, canvas: HTMLCanvasEl
 
   // The ground's shades flattened once (base, alt, path, spots; 3 shades of RGB each), out of the pixel loop.
   const { tiles, spots } = style
+  const mortar = hex(style.mortar ?? MORTAR)
   const rgb = [style.base, style.alt, style.path, spots ?? style.base].flatMap((shades) => shades.flat())
   for (let y = 0; y < CHUNK; y++) {
     const wy = oy + y
@@ -329,9 +497,9 @@ const buildChunk = (biome: BiomeId, cx: number, cy: number, canvas: HTMLCanvasEl
       // Ordered-ish dither: mostly the base shade with sparse lighter/darker pixels.
       const i = (y * CHUNK + x) * 4
       if (path && tiles && isMortar(wx, wy)) {
-        data[i] = MORTAR[0]
-        data[i + 1] = MORTAR[1]
-        data[i + 2] = MORTAR[2]
+        data[i] = mortar[0]
+        data[i + 1] = mortar[1]
+        data[i + 2] = mortar[2]
       } else {
         const c = palette * 9 + (r < 0.7 ? 0 : r < 0.9 ? 3 : 6)
         data[i] = rgb[c]!

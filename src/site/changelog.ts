@@ -24,6 +24,70 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-26',
+    title: { pt: 'Rotas que se bifurcam e quatro biomas novos', en: 'Branching routes and four new biomes', es: 'Rutas que se bifurcan y cuatro biomas nuevos', fr: 'Des routes qui bifurquent et quatre nouveaux biomes', zh: '分岔路線與四個新地區' },
+    highlights: [
+      { pt: 'A rota agora se bifurca: perto do fim de cada área, dois portões aparecem no mapa e você escolhe para onde a partida vai.', en: 'The route now forks: near the end of each area, two gates go up on the map and you choose where the run goes next.', es: 'La ruta ahora se bifurca: cerca del final de cada área aparecen dos portales en el mapa y tú eliges adónde va la partida.', fr: 'La route bifurque désormais : vers la fin de chaque zone, deux portails apparaissent sur la carte et tu choisis où va la partie.', zh: '路線現在會分岔：每個區域快結束時，地圖上會出現兩座閘門，由你決定對局的去向。' },
+      { pt: 'Quatro biomas novos: a praia da Rota 109, a Usina Elétrica, o deserto da Rota 111 e o Monte Chaminé, cada um com seus Pokémon, clima e música.', en: 'Four new biomes: the Route 109 beach, the Power Plant, the Route 111 Desert and Mt. Chimney, each with its own Pokémon, weather and music.', es: 'Cuatro biomas nuevos: la playa de la Ruta 109, la Central Energía, el desierto de la Ruta 111 y el Monte Cenizo, cada uno con sus Pokémon, clima y música.', fr: 'Quatre nouveaux biomes : la plage de la Route 109, la Centrale, le désert de la Route 111 et le Mont Chimnée, chacun avec ses Pokémon, sa météo et sa musique.', zh: '四個新地區：109號水路的海灘、無人發電廠、111號道路沙漠與煙囪山，各有自己的寶可夢、天氣與音樂。' },
+      { pt: 'Monte a rota pela sua build: um time de Fogo vai para o sol do Monte Chaminé, um de Água para a chuva da praia.', en: 'Build your route around your build: a Fire team heads for Mt. Chimney’s sun, a Water team for the beach’s rain.', es: 'Arma tu ruta según tu build: un equipo de Fuego va al sol del Monte Cenizo, uno de Agua a la lluvia de la playa.', fr: 'Choisis ta route selon ton build : une équipe Feu file vers le soleil du Mont Chimnée, une équipe Eau vers la pluie de la plage.', zh: '依照配招安排路線：火屬性隊伍前往煙囪山的大晴天，水屬性隊伍前往海灘的雨。' },
+      { pt: 'No modo infinito, uma nova encruzilhada a cada 5 minutos leva a partida para outro bioma.', en: 'In endless mode, a new crossroads every 5 minutes takes the run to another biome.', es: 'En el modo infinito, una nueva encrucijada cada 5 minutos lleva la partida a otro bioma.', fr: 'En mode infini, un nouveau carrefour toutes les 5 minutes emmène la partie vers un autre biome.', zh: '無盡模式中，每 5 分鐘會出現新的岔路口，把對局帶往另一個地區。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Rotas que se bifurcam', en: 'Branching routes', es: 'Rutas que se bifurcan', fr: 'Des routes qui bifurquent', zh: '分岔路線' },
+        notes: [
+          {
+            pt: 'Um minuto antes de cada nova área, dois portões de rota aparecem perto de você. O cartão sob o relógio mostra para onde cada um leva: o nome do bioma, os tipos de Pokémon que vivem lá e o clima mais provável, com uma seta apontando para cada portão.',
+            en: 'A minute before each new area, two route gates go up near you. The card under the clock shows where each leads: the biome’s name, the Pokémon types that live there and its likely weather, with an arrow pointing at each gate.',
+            es: 'Un minuto antes de cada nueva área, aparecen dos portales de ruta cerca de ti. La tarjeta bajo el reloj muestra adónde lleva cada uno: el nombre del bioma, los tipos de Pokémon que viven allí y su clima probable, con una flecha hacia cada portal.',
+            fr: 'Une minute avant chaque nouvelle zone, deux portails de route apparaissent près de toi. La carte sous le chrono montre où mène chacun : le nom du biome, les types de Pokémon qui y vivent et sa météo probable, avec une flèche vers chaque portail.',
+            zh: '每個新區域開始前一分鐘，你附近會出現兩座路線閘門。時鐘下方的卡片會顯示各自通往哪裡：地區名稱、棲息的寶可夢屬性與常見天氣，並有箭頭指向每座閘門。',
+          },
+          {
+            pt: 'Pare num portão por um segundo para escolher. Se ninguém escolher, a rota segue um caminho sorteado, o mesmo para todo mundo no Desafio do dia. No co-op, vale o primeiro portão em que alguém da equipe parar.',
+            en: 'Stand in a gate for a second to choose. If nobody picks, the route follows a drawn default, the same for everyone in the Daily Challenge. In co-op, the first gate anyone on the team stands in decides.',
+            es: 'Párate en un portal un segundo para elegir. Si nadie elige, la ruta sigue un camino sorteado, el mismo para todos en el Desafío del día. En co-op, decide el primer portal en el que se pare alguien del equipo.',
+            fr: 'Place-toi sous un portail une seconde pour choisir. Si personne ne choisit, la route suit un chemin tiré au sort, le même pour tout le monde dans le Défi du jour. En coop, c’est le premier portail où se place un membre de l’équipe qui compte.',
+            zh: '在閘門裡站一秒即可選擇。沒有人選擇時，路線會走抽出的預設路徑，每日挑戰中所有人都一樣。合作模式中，以隊伍中第一個站進的閘門為準。',
+          },
+          {
+            pt: 'A horda segue a rota: as espécies novas de cada área puxam para os tipos do bioma escolhido. A faixa sob o relógio mostra a rota feita até aqui.',
+            en: 'The horde follows the route: each area’s new species lean towards the types of the biome you picked. The strip under the clock shows the route so far.',
+            es: 'La horda sigue la ruta: las especies nuevas de cada área tiran hacia los tipos del bioma elegido. La franja bajo el reloj muestra la ruta hecha hasta ahora.',
+            fr: 'La horde suit la route : les nouvelles espèces de chaque zone penchent vers les types du biome choisi. La bande sous le chrono montre la route parcourue.',
+            zh: '獸群會跟著路線變化：每個區域的新種類會偏向所選地區的屬性。時鐘下方的路線條會顯示目前走過的路線。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Quatro biomas novos', en: 'Four new biomes', es: 'Cuatro biomas nuevos', fr: 'Quatre nouveaux biomes', zh: '四個新地區' },
+        notes: [
+          {
+            pt: 'Rota 109 (Água e Voador, sol e chuva), com palmeiras, piscinas de maré e um farol; Usina Elétrica (Elétrico e Aço), com geradores, postes e a lata de lixo do Lt. Surge no lugar da árvore de frutas.',
+            en: 'Route 109 (Water and Flying, sun and rain), with palms, tide pools and a lighthouse; the Power Plant (Electric and Steel), with generators, power poles and Lt. Surge’s trash can in place of the berry tree.',
+            es: 'Ruta 109 (Agua y Volador, sol y lluvia), con palmeras, pozas de marea y un faro; la Central Energía (Eléctrico y Acero), con generadores, postes y el bote de basura de Lt. Surge en lugar del árbol de bayas.',
+            fr: 'Route 109 (Eau et Vol, soleil et pluie), avec des palmiers, des mares et un phare ; la Centrale (Électrik et Acier), avec des générateurs, des poteaux et la poubelle de Lt. Surge à la place de l’arbre à baies.',
+            zh: '109號水路（水與飛行屬性，晴天與下雨），有棕櫚樹、潮池與燈塔；無人發電廠（電與鋼屬性），有發電機、電線桿，還有 Lt. Surge 的垃圾桶取代樹果樹。',
+          },
+          {
+            pt: 'Deserto da Rota 111 (Terra, Pedra e Dragão, tempestade de areia quase sem parar), com saguaros, mesas, oásis e a Mirage Tower; Monte Chaminé (Fogo, Pedra e Terra, sol forte), com basalto rachado, lava escorrendo, fontes termais e um cone fumegante.',
+            en: 'The Route 111 Desert (Ground, Rock and Dragon, a sandstorm that hardly stops), with saguaros, mesas, oases and the Mirage Tower; Mt. Chimney (Fire, Rock and Ground, harsh sun), with cracked basalt, dripping lava, hot springs and a smoking cone.',
+            es: 'El desierto de la Ruta 111 (Tierra, Roca y Dragón, una tormenta de arena que casi no para), con saguaros, mesetas, oasis y la Torre Espejismo; el Monte Cenizo (Fuego, Roca y Tierra, sol intenso), con basalto agrietado, lava, aguas termales y un cono humeante.',
+            fr: 'Le désert de la Route 111 (Sol, Roche et Dragon, une tempête de sable presque sans fin), avec des saguaros, des mesas, des oasis et la Tour Mirage ; le Mont Chimnée (Feu, Roche et Sol, soleil intense), avec du basalte fendu, de la lave, des sources chaudes et un cône fumant.',
+            zh: '111號道路沙漠（地面、岩石與龍屬性，幾乎不停的沙暴），有巨柱仙人掌、台地、綠洲與幻影之塔；煙囪山（火、岩石與地面屬性，大晴天），有龜裂的玄武岩、流淌的岩漿、溫泉與冒煙的火山錐。',
+          },
+          {
+            pt: 'Cada bioma novo tem sua música chiptune. O Monte Chaminé é um final alternativo à Torre de Lavender, e o Judgment de Arceus troca de placa em cada um. Eevee tende a virar Vaporeon na praia, Jolteon na usina e Flareon no vulcão.',
+            en: 'Each new biome has its own chiptune theme. Mt. Chimney is an alternative finale to Lavender Tower, and Arceus’s Judgment switches plates in each. Eevee leans towards Vaporeon on the beach, Jolteon in the Power Plant and Flareon on the volcano.',
+            es: 'Cada bioma nuevo tiene su propia música chiptune. El Monte Cenizo es un final alternativo a la Torre Lavanda, y el Judgment de Arceus cambia de tabla en cada uno. Eevee tiende a volverse Vaporeon en la playa, Jolteon en la central y Flareon en el volcán.',
+            fr: 'Chaque nouveau biome a sa musique chiptune. Le Mont Chimnée est une finale alternative à la Tour Pokémon de Lavanville, et le Judgment d’Arceus change de plaque dans chacun. Eevee tend vers Vaporeon sur la plage, Jolteon à la Centrale et Flareon sur le volcan.',
+            zh: '每個新地區都有自己的晶片音樂。煙囪山是紫苑鎮寶可夢塔之外的另一個終點，Arceus 的 Judgment 在每個地區都會換石板。Eevee 在海灘較容易進化成 Vaporeon，在發電廠是 Jolteon，在火山是 Flareon。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-25',
     title: { pt: 'Co-op online, mini mapa e controles para canhotos', en: 'Online co-op, mini map and left-handed controls', es: 'Co-op en línea, minimapa y controles para zurdos', fr: 'Coop en ligne, mini-carte et commandes pour gauchers', zh: '線上合作、小地圖與左手操作' },
     highlights: [

@@ -1,6 +1,7 @@
 import { context2d, createCanvas, fromStrings, lazy, blitPacked, textSprite, type Palette, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
-import type { BiomeId } from '../data/biomes'
+import { BIOME_IDS, type BiomeId } from '../data/biomes'
+import { ROUTE_COLORS } from './routes'
 import type { ArenaShape, FloorPlan } from '../data/arenas'
 import type { LandmarkId } from '../data/landmarks'
 import type { PlaceId } from '../data/places'
@@ -52,6 +53,10 @@ const LOOKS: Record<BiomeId, Look> = {
   cave: { ground: '#5a4c4e', dither: '#625456', bush: '#504446', tree: '#3e3436', rock: '#9a8e8a', cliff: '#3a2e2e', cliffTop: '#7a6a62', water: '#3a6aa0', shore: '#7aa0c8' },
   snow: { ground: '#a8b8cc', dither: '#b4c4d6', bush: '#8aa0b4', tree: '#4a6a62', rock: '#6a7480', cliff: '#5a6474', cliffTop: '#8a96a6', water: '#5a90d0', shore: '#c8e8f8' },
   tower: { ground: '#4c4460', dither: '#544c68', bush: '#423a56', tree: '#2e2840', rock: '#8a84a0', cliff: '#2a2438', cliffTop: '#6a6284', water: '#40508c', shore: '#8a98d0' },
+  beach: { ground: '#c8b07c', dither: '#d4bc88', bush: '#7ca050', tree: '#3c7c34', rock: '#a09080', cliff: '#9c7850', cliffTop: '#8cb860', water: '#2c90c8', shore: '#88d8f0' },
+  plant: { ground: '#6c7078', dither: '#747880', bush: '#a08848', tree: '#4c5058', rock: '#9ca4b0', cliff: '#3c4048', cliffTop: '#7c8490', water: '#18807a', shore: '#60d0c0' },
+  desert: { ground: '#c49460', dither: '#cc9c68', bush: '#7c7c38', tree: '#3c7834', rock: '#a87c50', cliff: '#8c4c2c', cliffTop: '#c89458', water: '#2c8cc0', shore: '#78c8e8' },
+  volcano: { ground: '#3c3234', dither: '#443a3c', bush: '#2c2224', tree: '#1c1416', rock: '#7c6c6c', cliff: '#2a2022', cliffTop: '#6a6262', water: '#3c9cac', shore: '#e0a868' },
 }
 
 const ROOM_LOOK = { void: '#141020', floor: '#5a5270', dither: '#625a7a', edge: '#8a82a8', water: '#2c4c90', shallow: '#4a74b8', lava: '#e05020' } as const
@@ -78,6 +83,8 @@ const DIAMOND = ['..c..', '.cwc.', 'cwwwc', '.cwc.', '..c..']
 const PORTAL = ['.ppp.', 'plllp', 'plwlp', 'plllp', '.ppp.']
 const DOOR = ['.ccc.', 'ckkkc', 'ckkkc', 'ckkkc']
 const DOT = ['ccc', 'cwc', 'ccc']
+/** A route gate (`game/route.ts`): two posts and a beam, in its biome's color. */
+const GATE = ['ccccc', 'c...c', 'c...c']
 const DROP = ['..b..', '.bbb.', 'bbwbb', 'bbbbb', '.bbb.']
 const COIN = ['.yyy.', 'yyoyy', 'yoyoy', 'yyoyy', '.yyy.']
 const CHEST = ['bbbbb', 'kkykk', 'bbbbb', 'bbbbb']
@@ -96,6 +103,7 @@ const GLYPHS = lazy(() => ({
   boss: [glyph(SKULL, { w: '#f8f0e0', k: DARK }), glyph(SKULL, { w: '#f86858', k: DARK })],
   alpha: [glyph(DIAMOND, { c: '#e02838', w: '#f8e0b0' }), glyph(DIAMOND, { c: '#f8a020', w: '#f8f0d0' })],
   portal: [glyph(PORTAL, { p: '#7850c8', l: '#c8a8f8', w: '#ffffff' }), glyph(PORTAL, { p: '#c8a8f8', l: '#7850c8', w: '#ffffff' })],
+  gate: Object.fromEntries(BIOME_IDS.map((id) => [id, glyph(GATE, { c: ROUTE_COLORS[id] })])) as Record<BiomeId, PixelSprite>,
   place: {
     cave: glyph(DOOR, { c: '#a87848', k: '#281810' }),
     graveyard: glyph(DOOR, { c: '#9888b0', k: '#201830' }),
@@ -465,6 +473,8 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     if (door?.open) marker(ctx, v, shape, art.place[door.id], door.x, door.y, true)
     const portal = g.rift.portal
     if (portal) marker(ctx, v, shape, art.portal[blink]!, portal.x, portal.y, true)
+    const fork = g.route.fork
+    if (fork && fork.chosen < 0) for (const gate of fork.gates) marker(ctx, v, shape, art.gate[gate.biome], gate.x, gate.y, true)
   }
 
   for (const p of g.pickups) {
