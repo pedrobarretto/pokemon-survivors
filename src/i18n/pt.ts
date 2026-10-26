@@ -2,6 +2,8 @@ import type { AchievementId, AchievementStat, GiftTitleId, TitleId } from '../da
 import type { BiomeId } from '../data/biomes'
 import type { PlaceId, WingId } from '../data/places'
 import type { LandmarkId, TreasureLandmark } from '../data/landmarks'
+import type { MapArchetypeId } from '../data/mapArchetypes'
+import type { Crossing } from '../game/terrain'
 import type { PokeType } from '../data/types'
 import type { HitKind } from '../data/abilities'
 import type { RiftLegend } from '../data/rifts'
@@ -2108,6 +2110,38 @@ export const pt = {
       camp: 'Você abriu a mochila esquecida!',
     } satisfies Record<TreasureLandmark, string>,
     tunnelOut: 'Você saiu do outro lado do túnel!',
+  },
+  /** The run's map archetype (`data/mapArchetypes.ts`): the sign at the start, the pause menu and the Desafio do dia. */
+  maps: {
+    names: { route: 'Rota Clássica', plains: 'Planície Aberta', archipelago: 'Arquipélago', canyon: 'Cânion', forest: 'Mata Fechada', ruins: 'Campo de Ruínas' } satisfies Record<MapArchetypeId, string>,
+    /** A line under the name: the places from the games it looks like. */
+    flavor: {
+      route: 'Um pouco de tudo, como a Rota 101.',
+      plains: 'Campo aberto, como a Rota 1 e a Zona Safári.',
+      archipelago: 'Lagos por toda parte, como as Ilhas Sevii.',
+      canyon: 'Paredões e passagens estreitas, como a Estrada Vitória.',
+      forest: 'Trilhas entre as árvores, como a Floresta de Viridian.',
+      ruins: 'Colunas antigas, como as Ruínas de Alph.',
+    } satisfies Record<MapArchetypeId, string>,
+    /** What the map rewards, after "Bom para". */
+    tips: {
+      route: 'Qualquer Pokémon se vira aqui.',
+      plains: 'A horda vem de todo lado: golpes em área e velocidade brilham.',
+      archipelago: 'Água surfa, Voador plana e Gelo patina no gelo. A horda atravessa a nado, devagar.',
+      canyon: 'Golpes que atravessam e em área varrem os corredores estreitos.',
+      forest: 'Fantasmas atravessam o mato; a horda se espreme nas trilhas.',
+      ruins: 'Colunas barram tiros inimigos, e Fantasmas passam por elas.',
+    } satisfies Record<MapArchetypeId, string>,
+    goodFor: 'Bom para',
+    label: 'Mapa',
+    /** How the player's types cross the terrain (`TRAVERSAL` in `game/terrain.ts`), in the pause menu. */
+    crossings: {
+      surf: 'Surfa nos lagos, mais rápido que a pé.',
+      hover: 'Plana sobre a água e o gelo, sem atolar nem escorregar.',
+      skate: 'Patina no gelo, mais rápido e sem escorregar.',
+      phase: 'Atravessa árvores, arbustos, pedras e colunas.',
+    } satisfies Record<Crossing, string>,
+    noCrossing: 'Anda devagar nos lagos e escorrega no gelo.',
   },
   places: {
     names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens' } satisfies Record<PlaceId, string>,

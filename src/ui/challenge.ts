@@ -9,6 +9,7 @@ import { nextIsOfficial } from '../game/attempt'
 import type { Challenge } from '../game/challenge'
 import { msToNextDay } from '../game/day'
 import { isUnlocked } from '../game/eggs'
+import { runArchetype } from '../game/terrain'
 import { playsShiny } from '../game/shinyPicks'
 import type { ChallengeBoard } from '../game/ranking'
 import { formatDay, t } from '../i18n'
@@ -90,6 +91,8 @@ export const challengeScreen = (root: HTMLElement, input: Input, actions: Challe
             h('b', { class: 'challenge-name' }, PLAYABLE[c.starter].name, shiny && h('img', { src: sparkleIcon(), alt: 'Shiny' })),
             h('div', { class: 'types' }, ...form.types.map(typeBadge), difficultyTag(c.difficulty)),
             h('small', { class: 'challenge-outbreak' }, m.outbreak(ENEMIES[c.outbreak].name)),
+            // The day's seed draws everyone the same map (`data/mapArchetypes.ts`).
+            h('small', { class: 'challenge-map' }, `${t().maps.label}: ${t().maps.names[runArchetype(c.seed)]}`),
           ),
         ),
         h(

@@ -13100,6 +13100,41 @@ button.hall-tile:hover {
   background: #f8f8f8;
 }
 
+/* The run's map in the pause menu (`mapPanel`): its name, what it's good for and how the player crosses it. */
+.pause-map {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #e8f0e0;
+  border-radius: 6px;
+}
+
+.pause-map b {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: normal;
+}
+
+.pause-map b small {
+  font-size: 7px;
+  color: #5a7848;
+}
+
+.pause-map .map-good-tip,
+.pause-map-ways {
+  font-size: 17px;
+  line-height: 1;
+  color: #505068;
+}
+
+.pause-map-ways {
+  color: #2c6c8c;
+}
+
 /* The partner details: the abilities, and a branching evolution in the line. */
 .ability-row {
   grid-template-columns: 24px minmax(0, 1fr);
@@ -15044,6 +15079,48 @@ button.hall-tile:hover {
 
   .landmark-sign small {
     font-size: 16px;
+  }
+}
+
+/*
+ * The run's map (`ui/mapSign.ts`): the landmark's sign at the start of a run,
+ * held longer, with the types the map is good for and a line.
+ */
+.map-sign {
+  max-width: min(360px, calc(100 * var(--vw) - 24px));
+  animation-duration: 6.5s;
+}
+
+.map-good {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.map-good-label {
+  font-family: var(--title);
+  font-size: 8px;
+  color: #7c5430;
+}
+
+.map-good-tip {
+  flex-basis: 100%;
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1;
+  color: #3c2414;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-sign {
+    animation-duration: 6.5s;
+  }
+}
+
+@media (max-width: 600px) {
+  .map-good-tip {
+    font-size: 14px;
   }
 }
 
