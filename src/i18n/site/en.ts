@@ -539,10 +539,11 @@ export const siteEn: SiteMessages = {
     landmarks: {
       paragraphs: (p) => [
         `The map has landmarks, placed from the run's seed like mountains and lakes: at most one per ${p.block}×${p.block} stretch of the map (${p.odds}% of them have one), always dressed for the biome the run is in. As you come close, a wooden sign names it in the corner of the screen.`,
-        `Four of them keep a treasure: stand next to it for ${p.open}s to open it. Each opens once per run, and a glint marks the ones still closed. The tunnel has no treasure but it's a shortcut: stand in one of its mouths for ${p.tunnel}s and you come out of the other, on the far side of the ridge, while the horde loses track of you.`,
+        `Most of them keep a treasure: stand next to it to open it (${p.open}s, a little longer at some). Each opens once per run, and a glint marks the ones still closed. The tunnel has no treasure but it's a shortcut: stand in one of its mouths for ${p.tunnel}s and you come out of the other, on the far side of the ridge, while the horde loses track of you.`,
+        `Some are nods to the games: a Snorlax asleep across the path (keep poking it until it wakes, and it fights as an Alpha), a Pokémon Center that heals you to full once, Team Rocket's hideout with the Meowth balloon, and two rare secrets the mini map only shows once you've found them: an abandoned truck by the pier and a coast where the pixels don't look right.`,
         `Between them, bushes, fallen logs and lone rocks and trees. All of it blocks whoever walks (the horde too), but flying Pokémon, ghosts and bosses go over it.`,
       ],
-      names: { cottage: 'Abandoned Cottage', tunnel: 'Mine Tunnel', maze: 'Hedge Maze', ruins: 'Unown Ruins', camp: 'Abandoned Camp' },
+      names: { cottage: 'Abandoned Cottage', tunnel: 'Mine Tunnel', maze: 'Hedge Maze', ruins: 'Unown Ruins', camp: 'Abandoned Camp', snorlax: 'Sleeping Snorlax', center: 'Pokémon Center', rocket: 'Team Rocket Hideout', truck: 'The Truck by the Pier', glitch: 'Coast ???' },
       placeHead: 'Landmark',
       whatHead: "What's there",
       lootHead: 'Treasure',
@@ -552,6 +553,18 @@ export const siteEn: SiteMessages = {
         maze: 'Tall hedges with a single way to the chest at the heart. Walkers get lost in the dead ends; you don’t have to.',
         ruins: 'Standing stones carved with Unown glyphs in a ring, an altar in the middle and fallen columns.',
         camp: 'A tent, logs around a fire still burning and a forgotten backpack.',
+        snorlax: 'A dirt road between two rows of trees and a huge Snorlax asleep across it. Nobody gets through.',
+        center: 'A red roof, the Poké Ball over the glass doors, Nurse Joy inside and Chansey at the door.',
+        rocket: 'A black tent with the red R, crates of loot and the Meowth balloon tied to a stake.',
+        truck: 'A wooden quay, the S.S. Anne moored, and an old truck nobody ever moved.',
+        glitch: 'A little bay whose shore tiles came out scrambled, and something L-shaped standing on them.',
+      },
+      /** What a landmark does besides (or instead of) its loot, in the loot column. */
+      extra: {
+        snorlax: 'wakes up and fights as an Alpha: beat it for the Alpha’s prize',
+        center: 'heals you to full, once',
+        truck: 'almost always nothing. Almost.',
+        glitch: 'the item comes out twice',
       },
       noLoot: 'Shortcut: in one mouth, out the other',
       loot: (l) =>

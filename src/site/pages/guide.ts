@@ -447,13 +447,12 @@ const landmarks = (_locale: Locale, m: SiteMessages) => {
   const coins = (n: number) => `₽${(n * COIN_VALUES[1]).toLocaleString(m.lang.tag)}+`
   const rows = LANDMARK_IDS.map((id) => {
     const loot: LandmarkLoot | null = id in LANDMARK_LOOT ? LANDMARK_LOOT[id as TreasureLandmark] : null
-    return [
-      html`<b>${l.names[id]}</b>`,
-      l.what[id],
-      loot
-        ? l.loot({ coins: coins(loot.coins), items: loot.drops.length, berries: loot.berries ?? 0, xp: Math.round((loot.xp ?? 0) * 100), egg: loot.egg ? Math.round(EGG_SOURCES.chest.chance * 100) : 0 })
-        : l.noLoot,
-    ]
+    const items = loot ? loot.drops.length * (loot.copies ?? 1) : 0
+    const extra: string | undefined = id in l.extra ? l.extra[id as keyof typeof l.extra] : undefined
+    const pays = loot
+      ? l.loot({ coins: loot.coins > 0 ? coins(loot.coins) : '', items, berries: loot.berries ?? 0, xp: Math.round((loot.xp ?? 0) * 100), egg: loot.egg ? Math.round(EGG_SOURCES.chest.chance * 100) : 0 })
+      : l.noLoot
+    return [html`<b>${l.names[id]}</b>`, l.what[id], [pays, extra].filter(Boolean).join('; ')]
   })
   return html`${paragraphs(l.paragraphs({ block: LANDMARK.block, odds: Math.round(LANDMARK.odds * 100), open: LANDMARK.openTime.toLocaleString(m.lang.tag), tunnel: TUNNEL.enterTime.toLocaleString(m.lang.tag) }))}
     ${table([l.placeHead, l.whatHead, l.lootHead], rows)}`

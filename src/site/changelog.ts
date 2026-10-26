@@ -24,6 +24,47 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-26',
+    title: { pt: 'Segredos no mapa: Snorlax, Centro Pokémon e um boato antigo', en: 'Map secrets: Snorlax, a Pokémon Center and an old rumor', es: 'Secretos en el mapa: Snorlax, un Centro Pokémon y un viejo rumor', fr: 'Secrets sur la carte : Snorlax, un Centre Pokémon et une vieille rumeur', zh: '地圖上的秘密：Snorlax、寶可夢中心與一個古老傳說' },
+    highlights: [
+      { pt: 'Um Snorlax dormindo bloqueia caminhos pelo mapa: fique cutucando até ele acordar… e prepare-se para lutar.', en: 'A sleeping Snorlax blocks paths around the map: keep poking it until it wakes… and get ready to fight.', es: 'Un Snorlax dormido bloquea caminos por el mapa: tócalo hasta que despierte… y prepárate para pelear.', fr: 'Un Snorlax endormi bloque des chemins sur la carte : titille-le jusqu’à ce qu’il se réveille… et prépare-toi à te battre.', zh: '一隻沉睡的 Snorlax 擋住了地圖上的道路：一直戳到牠醒來……然後準備開打。' },
+      { pt: 'Centros Pokémon curam todo o seu HP uma vez, e o esconderijo da Equipe Rocket deixa o Pay Day para trás quando o balão do Meowth decola.', en: 'Pokémon Centers heal you to full once, and Team Rocket’s hideout leaves Pay Day behind when the Meowth balloon blasts off.', es: 'Los Centros Pokémon te curan todo el HP una vez, y el escondite del Team Rocket deja su Pay Day cuando el globo de Meowth despega.', fr: 'Les Centres Pokémon te soignent complètement une fois, et la planque de la Team Rocket laisse son Pay Day quand la montgolfière de Meowth s’envole.', zh: '寶可夢中心能幫你回復全部 HP 一次；Meowth 熱氣球升空時，火箭隊藏身處會留下 Pay Day 的金幣。' },
+      { pt: 'Dois segredos raros que nem o mini mapa mostra: um caminhão velho no cais (dizem que tem algo debaixo dele…) e uma costa onde os pixels não parecem certos.', en: 'Two rare secrets not even the mini map shows: an old truck by the pier (they say there’s something under it…) and a coast where the pixels don’t look right.', es: 'Dos secretos raros que ni el minimapa muestra: un camión viejo en el muelle (dicen que hay algo debajo…) y una costa donde los píxeles no se ven bien.', fr: 'Deux secrets rares que même la mini-carte ne montre pas : un vieux camion sur le quai (on dit qu’il y a quelque chose dessous…) et une côte où les pixels ont l’air bizarres.', zh: '兩個連小地圖都不會顯示的罕見秘密：碼頭邊的舊卡車（傳說它底下藏著什麼……）和一段像素怪怪的海岸。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Novos pontos de interesse, com cara de jogo antigo', en: 'New landmarks, straight out of the old games', es: 'Nuevos puntos de interés, con cara de juego clásico', fr: 'Nouveaux points de repère, tout droit sortis des anciens jeux', zh: '新地標，彷彿出自經典遊戲' },
+        notes: [
+          {
+            pt: 'Snorlax Adormecido: um Snorlax enorme dorme atravessado numa estrada entre sebes. Fique 3 segundos ao lado dele e ele acorda de mau humor, larga as Oran Berries que guardava e luta como um Alfa (com o prêmio do Alfa). O caminho fica livre.',
+            en: 'Sleeping Snorlax: a huge Snorlax sleeps across a road between hedgerows. Stand by it for 3 seconds and it wakes up grumpy, drops the Oran Berries it was hoarding and fights as an Alpha (Alpha’s prize included). The way stays open.',
+            es: 'Snorlax Dormido: un Snorlax enorme duerme atravesado en un camino entre setos. Quédate 3 segundos a su lado y despierta de mal humor, suelta las Oran Berries que guardaba y pelea como un Alfa (con el premio del Alfa). El camino queda libre.',
+          },
+          {
+            pt: 'Centro Pokémon: telhado vermelho, a Enfermeira Joy e a Chansey. Fique na porta por um segundo para curar todo o HP, com o jingle de sempre. Uma vez por Centro.',
+            en: 'Pokémon Center: red roof, Nurse Joy and Chansey. Stand at the door for a second to heal to full, with the familiar jingle. Once per Center.',
+            es: 'Centro Pokémon: techo rojo, la Enfermera Joy y Chansey. Quédate en la puerta un segundo para curar todo el HP, con el jingle de siempre. Una vez por Centro.',
+          },
+          {
+            pt: 'Esconderijo da Equipe Rocket: uma barraca preta com o R e o balão do Meowth amarrado numa estaca. Solte o balão: ele decola de novo e deixa ₽ e um item para trás.',
+            en: 'Team Rocket Hideout: a black tent with the R and the Meowth balloon tied to a stake. Let it go: it blasts off again, leaving ₽ and an item behind.',
+            es: 'Escondite del Team Rocket: una carpa negra con la R y el globo de Meowth atado a una estaca. Suéltalo: sale volando otra vez y deja ₽ y un objeto.',
+          },
+          {
+            pt: 'E dois segredos raros, que o mini mapa só mostra depois que você os encontra: o caminhão do cais, com o S.S. Anne ancorado, e uma costa onde os pixels não parecem certos. O que eles fazem fica para você descobrir.',
+            en: 'And two rare secrets the mini map only shows once you’ve found them: the truck by the pier, with the S.S. Anne moored, and a coast where the pixels don’t look right. What they do is yours to find out.',
+            es: 'Y dos secretos raros que el minimapa solo muestra cuando los encuentras: el camión del muelle, con el S.S. Anne anclado, y una costa donde los píxeles no se ven bien. Lo que hacen te toca descubrirlo.',
+          },
+          {
+            pt: 'Nova conquista: Era verdade! (com o título Caçador de boatos).',
+            en: 'New achievement: It Was True! (with the Rumor Hunter title).',
+            es: 'Nuevo logro: ¡Era verdad! (con el título Cazarrumores).',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-25',
     title: { pt: 'Co-op online, mini mapa e controles para canhotos', en: 'Online co-op, mini map and left-handed controls', es: 'Co-op en línea, minimapa y controles para zurdos', fr: 'Coop en ligne, mini-carte et commandes pour gauchers', zh: '線上合作、小地圖與左手操作' },
     highlights: [
