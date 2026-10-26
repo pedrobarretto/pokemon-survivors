@@ -26,16 +26,17 @@ const tunnelNear = (g: Game) => {
 }
 
 /**
- * Arrays a run shares with module tables, harmlessly: a foe's `types` (its
+ * Values a run shares with module tables, harmlessly: a foe's `types` (its
  * species'), a hitbox's `bonus` (`NO_BONUS`, a move's table, a mod's entries),
  * a domain transform's `spare` circles (`data/domains`, where two phases'
- * transforms may share them). The original shares them with hitboxes, foes and
+ * transforms may share them), a hazard's `by` (`WORLD_HARM`, a domain's own
+ * `HarmBy`). The original shares them with hitboxes, foes, hazards and
  * transforms made after a snapshot; a copy restored in another module graph
  * shares its own. Nothing reads them by identity.
  */
-const TABLE_ALIASES: ReadonlySet<string> = new Set(['types', 'bonus', 'spare'])
+const TABLE_ALIASES: ReadonlySet<string> = new Set(['types', 'bonus', 'spare', 'by'])
 
-/** A game's snapshot bytes with `TABLE_ALIASES` unshared (each its own array of its own entries), so two runs compare byte for byte otherwise. */
+/** A game's snapshot bytes with `TABLE_ALIASES` unshared (each its own copy, arrays of their own entries), so two runs compare byte for byte otherwise. */
 const unsharedBytes = (g: Game) => {
   const clone: unknown = restore(snapshot(g))
   const seen = new Set<object>()
@@ -47,7 +48,9 @@ const unsharedBytes = (g: Game) => {
     if (Array.isArray(v)) return v.forEach(walk)
     const o = v as Record<string, unknown>
     for (const k of Object.keys(o)) {
-      if (TABLE_ALIASES.has(k) && Array.isArray(o[k])) o[k] = (o[k] as unknown[]).map((x) => (typeof x === 'object' && x !== null ? { ...x } : x))
+      const x = o[k]
+      if (TABLE_ALIASES.has(k) && Array.isArray(x)) o[k] = (x as unknown[]).map((y) => (typeof y === 'object' && y !== null ? { ...y } : y))
+      else if (TABLE_ALIASES.has(k) && typeof x === 'object' && x !== null && !(x instanceof Map) && !(x instanceof Set)) o[k] = { ...x }
       walk(o[k])
     }
   }
@@ -124,8 +127,8 @@ describe('snapshot and restore', () => {
       for (const m of r.covered) covered.add(m)
     }
     expect(checkpoints).toBeGreaterThan(20)
-    // A legend's awakening, a whole domain, the places and a tunnel come up along the way (`moments`).
-    expect([...covered].sort()).toEqual(expect.arrayContaining(['awakening', 'boss', 'domain:battle', 'domain:capture', 'domain:crossing', 'evolving', 'levelup', 'place:cave', 'place:graveyard', 'tunnel']))
+    // A legend's awakening, a whole domain and the places come up along the way (`moments`); a tunnel, rare on the bots' maps, has its own case below.
+    expect([...covered].sort()).toEqual(expect.arrayContaining(['awakening', 'boss', 'domain:battle', 'domain:capture', 'domain:crossing', 'evolving', 'levelup', 'place:cave', 'place:graveyard']))
   }, 120_000)
 
   it.each([
