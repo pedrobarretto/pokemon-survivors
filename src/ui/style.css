@@ -8423,10 +8423,164 @@ button {
 
 /* ---------- Biomes & weather ---------- */
 
-.timer {
+.timer,
+.timer-clock {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* The route so far (`ui/routeHud.ts`): each area's emblem in a strip under the clock, `?` for the ones ahead. */
+.route-strip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.route-dot {
+  width: 12px;
+  height: 12px;
+  image-rendering: pixelated;
+  opacity: 0.55;
+}
+
+.route-dot.ahead {
+  opacity: 0.85;
+}
+
+.route-dot.here {
+  width: 16px;
+  height: 16px;
+  opacity: 1;
+  filter: drop-shadow(0 0 2px #fff8c0);
+}
+
+.route-dot.unknown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  font-size: 6px;
+  color: #e8e0f8;
+}
+
+/* The fork's card under the timer: its two biomes, an arrow to each gate, their types and weather. */
+.route-card {
+  position: absolute;
+  top: calc(98px + var(--stack, 0) * 26px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  font-size: 8px;
+  white-space: nowrap;
+  text-shadow: none;
+}
+
+.route-card.hidden {
+  display: none;
+}
+
+.route-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #6030b8;
+}
+
+.route-clock {
+  color: #a02868;
+}
+
+.route-hint {
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1;
+  text-align: center;
+  color: #605878;
+}
+
+.route-option {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 4px;
+  border-left: 3px solid var(--route);
+}
+
+.route-option .types {
+  display: flex;
+  gap: 2px;
+}
+
+.route-option .type-badge {
+  font-size: 6px;
+  padding: 2px 3px 1px;
+}
+
+.route-emblem {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+.route-weather {
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+.route-dir {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 7px solid var(--route);
+}
+
+@media (max-width: 600px) {
+  .route-card {
+    top: calc(108px + var(--stack, 0) * 20px);
+    padding: 4px 6px;
+    font-size: 7px;
+  }
+  .route-option .type-badge {
+    font-size: 5px;
+  }
+  .route-hint {
+    font-size: 11px;
+  }
+  .route-emblem {
+    width: 12px;
+    height: 12px;
+  }
+  .route-weather {
+    width: 10px;
+    height: 10px;
+  }
+  .route-strip {
+    gap: 2px;
+  }
+  .route-dot {
+    width: 9px;
+    height: 9px;
+  }
+  .route-dot.here {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 /* A full outline, so the clock and counters stay readable over snow and sun glare. */
@@ -8481,7 +8635,7 @@ button {
   color: #6070a0;
 }
 
-/* Phones in portrait: the HUD row is full, so the icon hangs under the clock. */
+/* Phones in portrait: the HUD row is full, so the icon hangs under the clock (and the route's strip). */
 @media (max-width: 600px) {
   .timer {
     position: relative;
@@ -8490,7 +8644,7 @@ button {
   }
   .weather-icon {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 18px);
     left: 50%;
     transform: translateX(-50%);
     width: 20px;

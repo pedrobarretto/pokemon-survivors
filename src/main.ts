@@ -15,7 +15,7 @@ import { canvasRestored, context2d, onCanvasReset, sweepArt } from './engine/pix
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
-import { BIOME_ORDER, BIOMES, type BiomeId, type WeatherId } from './data/biomes'
+import { AREAS, BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
 import { MEGA_LINES, MEGAS, megasOf, type MegaId } from './data/megas'
 import { isRiftLegend } from './data/rifts'
@@ -170,6 +170,9 @@ import { suggestionsScreen } from './ui/suggestions'
 import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
+import { biomeIcon } from './render/routes'
+import { seatName } from './ui/teamHud'
+import { devRoute } from './ui/routeDev'
 import { addBots, bankCoopRun, botStates, buildRefusal, coopClient, coopEventFor, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
@@ -309,8 +312,8 @@ type Run = {
   challenge: { day: DayKey; official: boolean; attempt: boolean } | null
   /** The supporter's companion walking along, drawn only (`render/companion.ts`). */
   companion: CompanionView | null
-  /** Which sheets the run streams and keeps (`syncSprites`): its cast's windows, and what it keeps in every variant. */
-  sprites: { needs: SpriteNeed[]; always: Dex[] }
+  /** Which sheets the run streams and keeps (`syncSprites`): its cast's windows (worked out from `roster`), and what it keeps in every variant. */
+  sprites: { needs: SpriteNeed[]; always: Dex[]; roster: Roster }
   /** A co-op run: the client stepping it and what draws it (null solo). */
   coop: CoopRun | null
 }
@@ -984,6 +987,8 @@ const syncSprites = () => {
   if (startingRun) return
   sweepArt(ART_IDLE)
   if (run) {
+    // A route off the default draws the horde ahead again (`game/route.ts`): its windows follow.
+    if (run.sprites.roster !== run.game.roster) run.sprites = { ...run.sprites, needs: castNeeds(run.game.roster, EXTRAS), roster: run.game.roster }
     const { stream, extras, keep } = runSprites(run.game, run.sprites.needs, run.sprites.always)
     // The forms and shiny colors about to show up first, then the cast by when it comes.
     streamSprites([...extras, ...stream])
@@ -1131,7 +1136,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     challenge: daily ? { day: daily.challenge.day, official: daily.official, attempt: false } : null,
     companion: runCompanion(me),
     // The run's own roster: a legend's (`avoidLegend`) may have swapped a boss.
-    sprites: { needs: castNeeds(game.roster, EXTRAS), always: [...familyDex(starter), playerDex(game), ENEMIES[plan.outbreak].dex] },
+    sprites: { needs: castNeeds(game.roster, EXTRAS), always: [...familyDex(starter), playerDex(game), ENEMIES[plan.outbreak].dex], roster: game.roster },
     coop: null,
   }
   if (run.companion) run.sprites.always.push(run.companion.dex)
@@ -1712,11 +1717,18 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'biome': {
       const w = t().world
       playSfx('item')
-      return banner(
-        ui,
-        h('span', { class: 'biome-banner' }, h('small', {}, w.area(BIOME_ORDER.indexOf(e.biome) + 1, BIOME_ORDER.length)), h('b', {}, w.biomes[e.biome])),
-        2800,
-      )
+      const area = e.area < AREAS ? w.area(e.area + 1, AREAS) : w.route.endless
+      return banner(ui, h('span', { class: 'biome-banner' }, h('small', {}, area), h('b', {}, w.biomes[e.biome])), 2800)
+    }
+    // The HUD's fork card says the rest (`ui/routeHud.ts`).
+    case 'fork':
+      return playSfx('talk')
+    case 'route': {
+      const w = t().world
+      const name = w.biomes[e.biome]
+      const text = e.by < 0 ? w.route.toastDefault(name) : e.by === localPlayer(g).slot ? w.route.toastChosen(name) : w.route.toastMate(seatName(g, e.by), name)
+      if (e.by >= 0) playSfx('evolve')
+      return news(h('span', { class: 'item-toast' }, h('img', { src: biomeIcon(e.biome), alt: '' }), rich(text)), 3000, 'route')
     }
     case 'weather':
       return weatherToast(e.weather, e.prev)
@@ -2110,7 +2122,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner) => {
     challenge: null,
     companion: null,
     // Every teammate's family stays loaded; the cast streams in like a solo run's.
-    sprites: { needs: castNeeds(live.game.roster, EXTRAS), always: [...new Set(live.game.players.flatMap((p) => familyDex(p.starter)))] },
+    sprites: { needs: castNeeds(live.game.roster, EXTRAS), always: [...new Set(live.game.players.flatMap((p) => familyDex(p.starter)))], roster: live.game.roster },
     coop: c,
   }
   syncSprites()
@@ -3384,6 +3396,8 @@ if (import.meta.env.DEV) {
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
       card: (partner: PlayableId = loadSave().partner) => (endRun(), setScreen(sharePreview(ui, input, trainerShare(partner), () => showTitle()))),
       biome: (id: BiomeId) => withRun((g) => setBiome(g, id)),
+      /** `ps.route()` prints the route; `'fork'` puts the next fork's gates up now, `'take', i` takes gate i (0 the default), `'next'` jumps to just before the next fork (`ui/routeDev.ts`). */
+      route: (cmd?: 'fork' | 'take' | 'next', i?: number) => (run ? devRoute(run.game, cmd, i) : console.warn('ps: start a run first')),
       terrain: (kind?: SolidKind | 'lake', dy?: number) => (run ? devTerrain(run.game, kind, dy) : console.warn('ps: start a run first')),
       /** `ps.landmark('maze')` walks you to the nearest maze (`cottage`, `tunnel`, `ruins`, `camp`; any without an argument), 60 px south of it. */
       landmark: (id?: LandmarkId, dy?: number) => (run ? devLandmark(run.game, id, dy) : console.warn('ps: start a run first')),

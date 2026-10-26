@@ -377,8 +377,8 @@ export const siteFr: SiteMessages = {
       bossTrio: (names: string) => `Boss : le trio légendaire de la partie (${names})`,
     },
     world: {
-      paragraphs: (count, minutes, odds) => [
-        `Une partie traverse ${count} biomes, ${n(minutes)} minutes chacun, sans écran de chargement : le sol se fond dans le lieu suivant et chaque biome a sa propre musique. Les éléments destructibles changent aussi d’aspect (dans la grotte, les hautes herbes deviennent un rocher et l’arbre à baies un champignon géant).`,
+      paragraphs: (count, minutes, odds, total, routes) => [
+        `Une partie traverse ${count} zones, ${n(minutes)} minutes chacune, sans écran de chargement : le sol se fond dans le lieu suivant et chaque biome a sa propre musique. La route bifurque : vers la fin de chaque zone, deux portails de route apparaissent sur la carte, chacun montrant le biome où il mène (son nom, les types qui y vivent et sa météo probable), et le premier portail où quelqu’un se place décide du chemin. Si personne ne choisit, la route suit un chemin tiré de la graine, le même pour tout le monde dans le Défi du jour. Il y a ${total} biomes en tout, ${routes} routes possibles, avec la Tour Pokémon de Lavanville et le Mont Chimnée en finale. Les éléments destructibles changent aussi d’aspect (dans la grotte, les hautes herbes deviennent un rocher et l’arbre à baies un champignon géant).`,
         `Chaque biome attire la horde vers ses types : les nouvelles espèces d’une étape ont ${n(odds)}x plus de chances d’avoir un type local (plus de Plante et d’Insecte dans la forêt, plus de Roche et de Sol dans la grotte), sans exclure les autres.`,
         'La météo change quelques fois par partie et s’applique à tout le monde : tes capacités comme les attaques ennemies. Chaque biome a ses météos probables, et l’icône de la météo s’affiche à côté du chrono.',
       ],

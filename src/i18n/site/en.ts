@@ -376,8 +376,8 @@ export const siteEn: SiteMessages = {
       bossTrio: (names: string) => `Boss: the run's legendary trio (${names})`,
     },
     world: {
-      paragraphs: (count, minutes, odds) => [
-        `A run walks through ${count} biomes, ${n(minutes)} minutes each, with no loading screen: the ground dissolves into the next place and every biome has its own music. Breakables change their look too (in the cave, tall grass becomes a rock and the berry tree a giant mushroom).`,
+      paragraphs: (count, minutes, odds, total, routes) => [
+        `A run walks through ${count} areas, ${n(minutes)} minutes each, with no loading screen: the ground dissolves into the next place and every biome has its own music. The route forks: near the end of each area two route gates go up on the map, each showing the biome it leads to (its name, the types that live there and its likely weather), and the first gate someone stands in decides the way. If nobody picks, the route follows a default drawn from the seed, the same for everyone in the Daily Challenge. There are ${total} biomes in all, ${routes} possible routes, with Lavender Tower and Mt. Chimney as the finales. Breakables change their look too (in the cave, tall grass becomes a rock and the berry tree a giant mushroom).`,
         `Each biome pulls the horde towards its types: a stage's new species are ${n(odds)}x likelier to have a local type (more Grass and Bug in the forest, more Rock and Ground in the cave), without leaving the others out.`,
         'The weather changes a few times per run and applies to everyone: your moves and the enemies\' attacks alike. Each biome has its own likely weather, and the weather icon shows next to the clock.',
       ],

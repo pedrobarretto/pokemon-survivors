@@ -424,8 +424,8 @@ export const sitePt = {
       bossTrio: (names: string) => `Chefe: o trio lendário da partida (${names})`,
     },
     world: {
-      paragraphs: (count: number, minutes: number, odds: number) => [
-        `A partida atravessa ${count} biomas, ${n(minutes)} minutos em cada um, sem tela de carregamento: o chão se dissolve no cenário seguinte e cada bioma tem a sua música. Os itens quebráveis também mudam de cara (na caverna, a grama alta vira uma rocha e a árvore de frutas vira um cogumelo gigante).`,
+      paragraphs: (count: number, minutes: number, odds: number, total: number, routes: number) => [
+        `A partida atravessa ${count} áreas, ${n(minutes)} minutos em cada uma, sem tela de carregamento: o chão se dissolve no cenário seguinte e cada bioma tem a sua música. A rota se bifurca: perto do fim de cada área, dois portões de rota aparecem no mapa, cada um mostrando o bioma para onde leva (o nome, os tipos que vivem lá e o clima provável), e o primeiro portão em que alguém parar decide o caminho. Se ninguém escolher, a rota segue um padrão sorteado pela semente, igual para todo mundo no Desafio do dia. São ${total} biomas ao todo, ${routes} rotas possíveis, com a Torre de Lavender e o Monte Chaminé como finais. Os itens quebráveis também mudam de cara (na caverna, a grama alta vira uma rocha e a árvore de frutas vira um cogumelo gigante).`,
         `Cada bioma puxa a horda para os seus tipos: as espécies novas de cada fase têm ${n(odds)}x mais chance de ser de um tipo da casa (mais Planta e Inseto na floresta, mais Pedra e Terra na caverna), sem deixar de lado os outros.`,
         'O clima muda algumas vezes por partida e vale para todo mundo: para os seus golpes e para os ataques dos inimigos. Cada bioma tem os seus climas mais prováveis, e o ícone do clima aparece ao lado do relógio.',
       ],

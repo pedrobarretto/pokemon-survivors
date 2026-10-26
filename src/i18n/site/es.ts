@@ -380,8 +380,8 @@ export const siteEs: SiteMessages = {
       bossTrio: (names: string) => `Jefe: el trío legendario de la partida (${names})`,
     },
     world: {
-      paragraphs: (count, minutes, odds) => [
-        `La partida atraviesa ${count} biomas, ${n(minutes)} minutos en cada uno, sin pantalla de carga: el suelo se disuelve en el escenario siguiente y cada bioma tiene su propia música. Los objetos rompibles también cambian de aspecto (en la cueva, la hierba alta se vuelve una roca y el árbol de bayas, un hongo gigante).`,
+      paragraphs: (count, minutes, odds, total, routes) => [
+        `La partida atraviesa ${count} áreas, ${n(minutes)} minutos en cada una, sin pantalla de carga: el suelo se disuelve en el escenario siguiente y cada bioma tiene su propia música. La ruta se bifurca: cerca del final de cada área aparecen dos portales de ruta en el mapa, cada uno mostrando el bioma al que lleva (su nombre, los tipos que viven allí y su clima probable), y el primer portal en el que alguien se pare decide el camino. Si nadie elige, la ruta sigue un camino sorteado por la semilla, igual para todos en el Desafío del día. Hay ${total} biomas en total, ${routes} rutas posibles, con la Torre Lavanda y el Monte Cenizo como finales. Los objetos rompibles también cambian de aspecto (en la cueva, la hierba alta se vuelve una roca y el árbol de bayas, un hongo gigante).`,
         `Cada bioma inclina la horda hacia sus tipos: las especies nuevas de cada fase tienen ${n(odds)}x más probabilidad de ser de un tipo local (más Planta y Bicho en el bosque, más Roca y Tierra en la cueva), sin dejar de lado a los demás.`,
         'El clima cambia algunas veces por partida y afecta a todos: a tus movimientos y a los ataques de los enemigos. Cada bioma tiene sus climas más probables, y el ícono del clima aparece junto al reloj.',
       ],
