@@ -1226,6 +1226,12 @@ CHUNSOFT are original *Pokémon Mystery Dungeon* sprites. This file is generated
 | 493 | Arceus (shiny) | baronessfaron | baronessfaron |
 | 442 | Spiritomb | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), baronessfaron |
 | 442 | Spiritomb (shiny) | Anonymous | baronessfaron |
+| 531 | Audino | baronessfaron, [Emmuffin](https://twitter.com/Ernmuffin) | baronessfaron |
+| 531 | Audino (shiny) | [Caitemis](https://caitemis-art.tumblr.com/), [Emmuffin](https://twitter.com/Ernmuffin) | baronessfaron |
+| 492 | Shaymin | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain | [CHUNSOFT](https://www.spike-chunsoft.com/), Mojo |
+| 492 | Shaymin (shiny) | [Audino](https://github.com/audinowho), [Emmuffin](https://twitter.com/Ernmuffin) | Tacocoa, [Noo](https://artfight.net/~NooNoo_Skidoo) |
+| 719 | Diancie | [Emmuffin](https://twitter.com/Ernmuffin) | baronessfaron |
+| 719 | Diancie (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 710 | Pumpkaboo | baronessfaron | baronessfaron, [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
 | 710 | Pumpkaboo (shiny) | Emboarger | ◥θ┴θ◤, [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
 | 429 | Mismagius | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), baronessfaron |
