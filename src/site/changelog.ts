@@ -24,6 +24,48 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-26',
+    title: { pt: 'Um mapa diferente a cada partida', en: 'A different map every run', es: 'Un mapa distinto en cada partida', fr: 'Une carte différente à chaque partie', zh: '每局都是不同的地圖' },
+    highlights: [
+      { pt: 'Cada partida sorteia um tipo de mapa: Arquipélago, Cânion, Mata Fechada, Campo de Ruínas, Planície Aberta ou a Rota Clássica. Uma placa mostra qual é logo no começo.', en: 'Every run draws a kind of map: Archipelago, Canyon, Deep Forest, Ruins Field, Open Plains or the Classic Route. A sign shows which one right at the start.', es: 'Cada partida sortea un tipo de mapa: Archipiélago, Cañón, Bosque Cerrado, Campo de Ruinas, Llanura Abierta o la Ruta Clásica. Un cartel te dice cuál al empezar.', fr: 'Chaque partie tire un type de carte : Archipel, Canyon, Forêt dense, Champ de ruines, Plaine ouverte ou la Route classique. Un panneau l’annonce dès le début.', zh: '每局都會抽出一種地圖：群島、峽谷、茂密森林、遺跡原野、開闊平原或經典道路。開場時會有告示牌告訴你是哪一種。' },
+      { pt: 'O terreno combina com o seu Pokémon: Água surfa nos lagos, Voador plana sobre a água e o gelo, Gelo patina sem escorregar e Fantasma atravessa árvores, pedras e colunas.', en: 'The terrain suits your Pokémon: Water surfs the lakes, Flying glides over water and ice, Ice skates without sliding and Ghost slips through trees, rocks and columns.', es: 'El terreno combina con tu Pokémon: Agua surfea en los lagos, Volador planea sobre el agua y el hielo, Hielo patina sin resbalar y Fantasma atraviesa árboles, rocas y columnas.', fr: 'Le terrain va avec ton Pokémon : Eau surfe sur les lacs, Vol plane au-dessus de l’eau et de la glace, Glace patine sans glisser et Spectre traverse arbres, rochers et colonnes.', zh: '地形會配合你的寶可夢：水屬性在湖上衝浪，飛行屬性滑翔越過水面和冰面，冰屬性溜冰不打滑，幽靈屬性能穿過樹木、岩石和石柱。' },
+      { pt: 'O Desafio do dia mostra o mapa do dia, o mesmo para todo mundo.', en: 'The Daily Challenge shows the day’s map, the same for everyone.', es: 'El Desafío del día muestra el mapa del día, el mismo para todos.', fr: 'Le Défi du jour montre la carte du jour, la même pour tout le monde.', zh: '每日挑戰會顯示當天的地圖，所有人都一樣。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Tipos de mapa', en: 'Kinds of map', es: 'Tipos de mapa', fr: 'Types de carte', zh: '地圖類型' },
+        notes: [
+          {
+            pt: 'Arquipélago (como as Ilhas Sevii): lagos e canais por toda parte, ligados por faixas estreitas de terra. Cânion (como a Estrada Vitória): paredões e desfiladeiros com passagens apertadas. Mata Fechada (como a Floresta de Viridian): paredes de árvores formando trilhas. Campo de Ruínas (como as Ruínas de Alph): colunas antigas que barram os tiros inimigos. Planície Aberta: campo livre, com a horda vindo de todo lado.',
+            en: 'Archipelago (like the Sevii Islands): lakes and channels everywhere, joined by narrow strips of land. Canyon (like Victory Road): rock walls and gorges with tight passes. Deep Forest (like Viridian Forest): walls of trees forming trails. Ruins Field (like the Ruins of Alph): ancient columns that block enemy shots. Open Plains: open country, with the horde coming from every side.',
+            es: 'Archipiélago (como las Islas Sete): lagos y canales por todas partes, unidos por franjas estrechas de tierra. Cañón (como la Calle Victoria): paredes de roca y desfiladeros con pasos estrechos. Bosque Cerrado (como el Bosque Verde): muros de árboles que forman senderos. Campo de Ruinas (como las Ruinas Alfa): columnas antiguas que frenan los disparos enemigos. Llanura Abierta: campo libre, con la horda llegando por todos lados.',
+            fr: 'Archipel (comme les Îles Sevii) : des lacs et des canaux partout, reliés par d’étroites bandes de terre. Canyon (comme la Route Victoire) : parois rocheuses et gorges aux passages serrés. Forêt dense (comme la Forêt de Jade) : des murs d’arbres qui forment des sentiers. Champ de ruines (comme les Ruines d’Alpha) : des colonnes anciennes qui arrêtent les tirs ennemis. Plaine ouverte : grand air, la horde arrive de partout.',
+            zh: '群島（就像七島）：到處都是湖泊和水道，由狹窄的陸地相連。峽谷（就像冠軍之路）：岩壁與峽道，通道狹窄。茂密森林（就像常磐森林）：樹牆圍出一條條小徑。遺跡原野（就像阿爾夫遺跡）：古老的石柱能擋下敵人的射擊。開闊平原：一望無際，敵群從四面八方湧來。',
+          },
+          {
+            pt: 'A placa do começo diz para quais tipos o mapa é bom, e a pausa mostra o mapa e como o seu Pokémon atravessa o terreno.',
+            en: 'The sign at the start says which types the map is good for, and the pause menu shows the map and how your Pokémon crosses the terrain.',
+            es: 'El cartel del inicio dice para qué tipos es bueno el mapa, y la pausa muestra el mapa y cómo tu Pokémon cruza el terreno.',
+            fr: 'Le panneau du début dit pour quels types la carte est idéale, et la pause montre la carte et comment ton Pokémon traverse le terrain.',
+            zh: '開場的告示牌會說明這張地圖適合哪些屬性，暫停選單則會顯示地圖，以及你的寶可夢如何穿越地形。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Terreno e tipos', en: 'Terrain and types', es: 'Terreno y tipos', fr: 'Terrain et types', zh: '地形與屬性' },
+        notes: [
+          {
+            pt: 'Pokémon do tipo Água agora surfam nos lagos mais rápido do que andam, deixando uma esteira. Voador (e quem tem Levitação) não atola na água nem escorrega no gelo. Gelo patina no gelo, mais rápido e sem escorregar. Fantasma atravessa árvores, arbustos, pedras, troncos, colunas e sebes; montanhas, paredões, torres e muros ainda barram. Em co-op, cada um atravessa do seu jeito.',
+            en: 'Water-type Pokémon now surf the lakes faster than they walk, leaving a wake. Flying (and Levitate) never gets slowed in water nor slides on ice. Ice skates on ice, faster and without sliding. Ghost slips through trees, bushes, rocks, logs, columns and hedges; mountains, rock walls, towers and walls still stop it. In co-op, each player crosses their own way.',
+            es: 'Los Pokémon de tipo Agua ahora surfean en los lagos más rápido de lo que caminan, dejando una estela. Volador (y quien tiene Levitación) no se frena en el agua ni resbala en el hielo. Hielo patina sobre el hielo, más rápido y sin resbalar. Fantasma atraviesa árboles, arbustos, rocas, troncos, columnas y setos; las montañas, paredes de roca, torres y muros todavía lo frenan. En co-op, cada uno cruza a su manera.',
+            fr: 'Les Pokémon de type Eau surfent maintenant sur les lacs plus vite qu’ils ne marchent, en laissant un sillage. Vol (et Lévitation) ne ralentit plus dans l’eau et ne glisse plus sur la glace. Glace patine sur la glace, plus vite et sans glisser. Spectre traverse arbres, buissons, rochers, troncs, colonnes et haies ; montagnes, parois, tours et murs l’arrêtent toujours. En coop, chacun traverse à sa façon.',
+            zh: '水屬性寶可夢現在在湖上衝浪比步行更快，還會留下水痕。飛行屬性（以及有飄浮特性的寶可夢）在水中不會減速，在冰上也不會打滑。冰屬性在冰上溜冰，更快且不打滑。幽靈屬性能穿過樹木、灌木、岩石、樹幹、石柱和樹籬；山、岩壁、塔和牆仍然擋得住。合作模式中，每位玩家都用自己的方式穿越。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-25',
     title: { pt: 'Co-op online, mini mapa e controles para canhotos', en: 'Online co-op, mini map and left-handed controls', es: 'Co-op en línea, minimapa y controles para zurdos', fr: 'Coop en ligne, mini-carte et commandes pour gauchers', zh: '線上合作、小地圖與左手操作' },
     highlights: [
