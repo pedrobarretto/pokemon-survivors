@@ -20,6 +20,7 @@ import type { LandmarkId } from '../data/landmarks'
 import type { LandmarkMoment, LandmarkState, PlayerLandmarks } from './landmarks'
 import type { BranchFavor } from './branch'
 import type { BiomeState } from './biomes'
+import type { RouteState } from './route'
 import type { Ranks } from './meta'
 import type { ConsumableId } from './consumables'
 import type { DexLog } from './dex'
@@ -697,8 +698,12 @@ export type GameEvent =
   /** The Bag's Max Revive got the player back up. */
   | { kind: 'maxRevive' }
   | { kind: 'victory' }
-  /** The run walked into another biome. */
-  | { kind: 'biome'; biome: BiomeId }
+  /** The run walked into another biome, area `area` of its route (from 0). */
+  | { kind: 'biome'; biome: BiomeId; area: number }
+  /** A fork's route gates went up on the map (`game/route.ts`), into area `area`. */
+  | { kind: 'fork'; area: number }
+  /** The fork into area `area` was decided: player `by` stood in a gate, or nobody did (-1) and the run took its default. */
+  | { kind: 'route'; biome: BiomeId; area: number; by: number }
   | { kind: 'weather'; weather: WeatherId; prev: WeatherId }
   /** An enemy trait warned (fuse lit, beam aimed, leap started) or went off. */
   | { kind: 'trait'; trait: TraitId; phase: 'warn' | 'fire' }
@@ -843,6 +848,8 @@ export type Game = {
   flash: number
   /** Biome the run is in (`game/biomes.ts`). */
   biome: BiomeState
+  /** The route the run took and the fork standing on the map (`game/route.ts`). */
+  route: RouteState
   /** Weather in play (`game/weather.ts`). */
   weather: WeatherState
   /** Enemy traits already introduced this run (each gets one explainer toast), and the game time the next one may show. */

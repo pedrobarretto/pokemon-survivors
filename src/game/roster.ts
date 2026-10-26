@@ -1,12 +1,12 @@
 import { pick, weightedPick, type Rng } from '../engine/rng'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
-import { biomeAt, BIOMES, type BiomeId } from '../data/biomes'
+import { areaAt, BIOMES, plannedRoute, ROUTE, type BiomeId } from '../data/biomes'
 import type { Tier } from '../data/roster'
 import { isSummoner, SUMMONS } from '../data/traits'
 import { bossKit } from '../data/bosses'
 import type { PokeType } from '../data/types'
 import { hasFlavor, SPIT_FROM } from './spitters'
-import { bossOf, EVENTS, MYTHICALS, RUN_LENGTH, RUNNER, STAGES, stageIndexAt, stageStart, TRIO_IDS, TRIOS, type TrioId, type WaveEvent, type WaveStage } from '../data/waves'
+import { bossOf, EVENTS, MYTHICALS, RUNNER, STAGES, stageIndexAt, stageStart, TRIO_IDS, TRIOS, type TrioId, type WaveEvent, type WaveStage } from '../data/waves'
 
 /** Weighted spawn pool of one stage, as `weightedPick` takes it. */
 export type StagePool = ReadonlyArray<readonly [EnemyId, number]>
@@ -223,18 +223,24 @@ export const byTypes =
 /** Draw odds of a species with a type its stage's biome favors (`BIOMES[id].affinity`). */
 export const AFFINITY_ODDS = 3
 
-/** Biome a stage mostly plays in: the one at the middle of its time window. */
-export const stageBiome = (stage: number): BiomeId => {
-  const start = stageStart(stage)
-  return biomeAt((start + Math.min(STAGES[stage]?.until ?? RUN_LENGTH, RUN_LENGTH)) / 2)
-}
+/** The area a stage draws for: the one it starts in (`areaAt`), so a fork is always decided before the stages it weighs start. */
+export const stageArea = (stage: number) => areaAt(stageStart(stage), false)
 
 const AFFINITY = Object.fromEntries(
   Object.entries(BIOMES).map(([id, biome]) => [id, byTypes(Object.fromEntries(biome.affinity.map((type) => [type, AFFINITY_ODDS])))]),
 ) as Record<BiomeId, SpeciesWeight>
 
-/** The run's draw bias: each stage pulls its new species towards the types of the biome it plays in. */
-export const biomeWeight: SpeciesWeight = (def, stage) => AFFINITY[stageBiome(stage)](def, stage)
+/**
+ * The run's draw bias along a planned route (one biome per area, `plannedRoute`):
+ * each stage pulls its new species towards the types of the biome of its area.
+ */
+export const routeWeight =
+  (route: readonly BiomeId[]): SpeciesWeight =>
+  (def, stage) =>
+    AFFINITY[route[stageArea(stage)] ?? ROUTE.start](def, stage)
+
+/** The draw bias of a seed's default route, the one the run is drawn for before any fork is taken. */
+export const seedWeight = (seed: number) => routeWeight(plannedRoute(seed))
 
 /**
  * Every species a run needs (horde, swarms, rings, bosses, what its summoners and bosses call in) with the run time

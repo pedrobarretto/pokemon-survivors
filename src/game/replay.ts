@@ -16,7 +16,7 @@ import { LEGEND_HORDE } from './legend'
 import { isRecord, wholeNumber } from './parse'
 import { isOutbreakSpecies, withOutbreak } from './outbreak'
 import { withHaunts } from './halloween'
-import { biomeWeight, drawRoster } from './roster'
+import { drawRoster, seedWeight } from './roster'
 import type { Game, Player } from './types'
 
 /**
@@ -42,7 +42,7 @@ import { TICK } from './tick'
  * and run `npm run rules:freeze` so the API keeps the previous rules' simulator
  * for the runs that straddle the deploy (`server/sims/README.md`).
  */
-export const RULES_VERSION = 40
+export const RULES_VERSION = 41
 
 /**
  * How this build stands to a replay's rules: it can judge the `same`; a
@@ -251,8 +251,8 @@ export const parseReplay = (raw: unknown): Replay | null => {
  */
 export const runRoster = (seed: number, outbreak: EnemyId | null, halloween: boolean, legend = false) =>
   legend
-    ? withHaunts(drawRoster(createRng(seed), { weight: biomeWeight, ...LEGEND_HORDE }), halloween, seed, true)
-    : withOutbreak(withHaunts(drawRoster(createRng(seed), { weight: biomeWeight }), halloween, seed), outbreak)
+    ? withHaunts(drawRoster(createRng(seed), { weight: seedWeight(seed), ...LEGEND_HORDE }), halloween, seed, true)
+    : withOutbreak(withHaunts(drawRoster(createRng(seed), { weight: seedWeight(seed) }), halloween, seed), outbreak)
 
 /** A fresh run from a replay's start, exactly as the shell creates it: it opens on the opening draft. */
 export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.view }) =>

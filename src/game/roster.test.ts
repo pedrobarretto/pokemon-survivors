@@ -4,7 +4,7 @@ import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BIOMES } from '../data/biomes'
 import { bossCandidates, EVENTS, MYTHICALS, RUNNER, STAGES, stageIndexAt, stageStart, TRIO_IDS, TRIOS } from '../data/waves'
 import { SPIT_FROM } from './spitters'
-import { biomeWeight, byTypes, drawRoster, pickSpawn, rosterSchedule, stageBiome, TRAIT_ALIVE, TRAIT_CAP, TRAIT_FROM, withTrio, type SpeciesWeight } from './roster'
+import { byTypes, drawRoster, pickSpawn, rosterSchedule, routeWeight, seedWeight, stageArea, TRAIT_ALIVE, TRAIT_CAP, TRAIT_FROM, withTrio, type SpeciesWeight } from './roster'
 
 const def = (id: EnemyId): EnemyDef => ENEMIES[id]
 const ids = (pool: ReadonlyArray<readonly [EnemyId, number]>) => pool.map(([id]) => id)
@@ -84,28 +84,29 @@ describe('drawRoster', () => {
   })
 })
 
-describe('biomeWeight', () => {
+describe('routeWeight', () => {
   const seeds = Array.from({ length: 60 }, (_, i) => i + 1)
+  const route = ['meadow', 'beach', 'plant', 'desert', 'volcano'] as const
 
-  it('plays each stage in the biome at its middle', () => {
-    expect(STAGES.map((_, i) => stageBiome(i))).toEqual(['meadow', 'meadow', 'meadow', 'forest', 'cave', 'cave', 'snow', 'tower'])
+  it('weighs each stage for the area it starts in, so a fork is decided before its stages begin', () => {
+    expect(STAGES.map((_, i) => stageArea(i))).toEqual([0, 0, 0, 1, 1, 2, 3, 4])
   })
 
-  it('pulls new species towards the biome types without filling the stage with them', () => {
-    const forest = STAGES.findIndex((_, i) => stageBiome(i) === 'forest')
-    const affinity: readonly string[] = BIOMES.forest.affinity
+  it('pulls new species towards the route biome types without filling the stage with them', () => {
+    const beach = STAGES.findIndex((_, i) => stageArea(i) === 1)
+    const affinity: readonly string[] = BIOMES.beach.affinity
     const fits = (weight?: SpeciesWeight) =>
-      seeds.flatMap((seed) => ids(drawRoster(createRng(seed), { weight }).stages[forest]!)).map((id) => def(id).types.some((t) => affinity.includes(t)))
+      seeds.flatMap((seed) => ids(drawRoster(createRng(seed), { weight }).stages[beach]!)).map((id) => def(id).types.some((t) => affinity.includes(t)))
     const share = (list: boolean[]) => list.filter(Boolean).length / list.length
-    expect(share(fits(biomeWeight))).toBeGreaterThan(share(fits()) * 1.4)
-    expect(share(fits(biomeWeight))).toBeLessThan(0.8)
+    expect(share(fits(routeWeight(route)))).toBeGreaterThan(share(fits()) * 1.3)
+    expect(share(fits(routeWeight(route)))).toBeLessThan(0.85)
   })
 })
 
 describe('trait species', () => {
   it('appear at most once per stage, never in the first minute, and spawn less than the rest', () => {
     for (let seed = 1; seed <= 200; seed++) {
-      const { stages } = drawRoster(createRng(seed), { weight: biomeWeight })
+      const { stages } = drawRoster(createRng(seed), { weight: seedWeight(seed) })
       stages.forEach((pool, i) => {
         const traited = pool.filter(([id]) => def(id).trait)
         expect(traited.length).toBeLessThanOrEqual(i < TRAIT_FROM ? 0 : TRAIT_CAP)
@@ -140,7 +141,7 @@ describe('the legendary trio and the rare mythical', () => {
   it('draws one trio per run, the same for the same seed, and puts its members in the slots in order', () => {
     expect(drawRoster(createRng(42)).trio).toBe(drawRoster(createRng(42)).trio)
     for (let seed = 1; seed <= 30; seed++) {
-      const r = drawRoster(createRng(seed), { weight: biomeWeight })
+      const r = drawRoster(createRng(seed), { weight: seedWeight(seed) })
       expect(trioBosses(r.events)).toEqual(TRIOS[r.trio])
     }
   })

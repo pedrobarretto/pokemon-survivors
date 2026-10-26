@@ -32,7 +32,7 @@ export const isWaveLegend = (id: EnemyId): id is WaveLegend => (WAVE_LEGENDS as 
 /**
  * Judgment's plate in each biome, as the look (and type) its attacks take:
  * `JUDGMENT_PLATES` (`data/legendaryMoves.ts`) in hazard looks. Hazards have no
- * bug or ghost look, so the Insect Plate shows as grass and the Spooky Plate as shadow.
+ * bug, ghost or ground look, so the Insect Plate shows as grass, the Spooky Plate as shadow and the Earth Plate as rock.
  */
 export const JUDGMENT_PLATE = {
   meadow: 'grass',
@@ -40,6 +40,10 @@ export const JUDGMENT_PLATE = {
   cave: 'rock',
   snow: 'ice',
   tower: 'shadow',
+  beach: 'water',
+  plant: 'thunder',
+  desert: 'rock',
+  volcano: 'fire',
 } as const satisfies Record<BiomeId, HazardVisual>
 
 /**

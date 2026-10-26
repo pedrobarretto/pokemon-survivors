@@ -45,19 +45,19 @@ export const BRANCHES = {
     line: 'eevee', stage: 1, free: true, name: 'Vaporeon', dex: 134, types: ['water'],
     bonus: { maxHp: 90, regen: 0.4, armor: 1, might: 0.12 },
     moves: ['waterGun', 'whirlpool', 'brine', 'iceShard'],
-    favors: { weather: ['rain'] },
+    favors: { weather: ['rain'], biome: ['beach'] },
   },
   jolteon: {
     line: 'eevee', stage: 1, free: true, name: 'Jolteon', dex: 135, types: ['electric'],
     bonus: { maxHp: 40, speed: 10, cooldown: -0.08, might: 0.18 },
     moves: ['thunder', 'shockWave', 'electroBall', 'pinMissile'],
-    favors: { weather: ['clear'] },
+    favors: { weather: ['clear'], biome: ['plant'] },
   },
   flareon: {
     line: 'eevee', stage: 1, free: true, name: 'Flareon', dex: 136, types: ['fire'],
     bonus: { maxHp: 50, might: 0.3, statusDamage: 0.15 },
     moves: ['ember', 'fireSpin', 'willOWisp'],
-    favors: { weather: ['sun'] },
+    favors: { weather: ['sun'], biome: ['volcano'] },
   },
   espeon: {
     line: 'eevee', stage: 1, name: 'Espeon', dex: 196, types: ['psychic'],
