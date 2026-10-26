@@ -371,6 +371,8 @@ export const es: Messages = {
     screenShake: 'Temblor de pantalla',
     flashes: 'Destellos',
     flashModes: { normal: 'Normales', reduced: 'Reducidos' },
+    fog: 'Niebla',
+    fogModes: { normal: 'Normal', light: 'Ligera', off: 'OFF' },
     runToasts: 'Avisos en partida',
     runToastModes: { all: 'Todos', important: 'Solo importantes', none: 'Ninguno' },
     minimap: 'Minimapa',

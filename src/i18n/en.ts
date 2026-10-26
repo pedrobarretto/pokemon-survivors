@@ -371,6 +371,8 @@ export const en: Messages = {
     screenShake: 'Screen shake',
     flashes: 'Flashes',
     flashModes: { normal: 'Normal', reduced: 'Reduced' },
+    fog: 'Fog',
+    fogModes: { normal: 'Normal', light: 'Light', off: 'OFF' },
     runToasts: 'Run alerts',
     runToastModes: { all: 'All', important: 'Important only', none: 'None' },
     minimap: 'Mini map',

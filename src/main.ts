@@ -2693,7 +2693,7 @@ const hasIdle = 'requestIdleCallback' in window
 const pumpWarmUp = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => {
   // Menus and level-ups are calm (an evolution isn't: it plays on the canvas): what no frame waits on yet (other biomes) is built there.
   const calm = !run || (run.game.phase !== 'playing' && run.game.phase !== 'evolving')
-  const warm = () => warmScenery(run?.game ?? null, calm) || warmIcon()
+  const warm = () => warmScenery(run?.game ?? null, calm, settings().fog) || warmIcon()
   let made = false
   // A build that throws (reported as any error) must not stop the warm-up for the rest of the session.
   try {

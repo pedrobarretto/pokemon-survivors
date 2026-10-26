@@ -12,6 +12,7 @@ import type { RunSummary } from '../game/tally'
 import { BUTTON_SIDES, STICK_EDGES, STICK_HEIGHTS, STICK_MODES, type ButtonSide, type StickEdge, type StickHeight, type StickMode } from '../engine/input'
 import { DAMAGE_NUMBERS, type DamageNumbers } from '../render/damageNumbers'
 import { FLASH_MODES, type Flashes } from '../render/flashes'
+import { FOG_MODES, type FogMode } from '../render/weather'
 import { RUN_TOASTS, type RunToasts } from './toastQueue'
 import { DEFAULT_BINDINGS, parseBindings, type Bindings } from '../engine/bindings'
 import { UI_SCALES, type UiScale } from './uiScale'
@@ -176,6 +177,8 @@ export type Settings = {
   screenShake: boolean
   /** `reduced` drops white screen flashes, white hit flashes and fast flicker (`render/flashes.ts`). */
   flashes: Flashes
+  /** How thick the fog weather draws (`render/weather.ts`): as designed, light (a wider clear circle, a thinner veil) or off (just a haze). */
+  fog: FogMode
   /** How opaque your moves draw, 0.1 to 1 (`render/attackLayers.ts`): lower to see the foes and their attacks through a full build. */
   attackOpacity: number
   /** The same for teammates' moves in co-op. */
@@ -204,6 +207,7 @@ export const DEFAULT_SETTINGS: Settings = {
   damageNumbers: 'reduced',
   screenShake: true,
   flashes: 'normal',
+  fog: 'light',
   attackOpacity: 1,
   teamAttackOpacity: 0.6,
   runToasts: 'all',
@@ -241,6 +245,7 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     damageNumbers: damageMode(data.damageNumbers, defaults.damageNumbers),
     screenShake: flag(data.screenShake, defaults.screenShake),
     flashes: FLASH_MODES.find((m) => m === data.flashes) ?? defaults.flashes,
+    fog: FOG_MODES.find((m) => m === data.fog) ?? defaults.fog,
     attackOpacity: opacity(data.attackOpacity, defaults.attackOpacity),
     teamAttackOpacity: opacity(data.teamAttackOpacity, defaults.teamAttackOpacity),
     runToasts: RUN_TOASTS.find((m) => m === data.runToasts) ?? defaults.runToasts,

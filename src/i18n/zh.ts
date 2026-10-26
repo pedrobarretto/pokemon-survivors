@@ -371,6 +371,8 @@ export const zh: Messages = {
     screenShake: '畫面震動',
     flashes: '閃光',
     flashModes: { normal: '一般', reduced: '減少' },
+    fog: '霧',
+    fogModes: { normal: '一般', light: '輕微', off: '關' },
     runToasts: '戰鬥中提示',
     runToastModes: { all: '全部', important: '僅重要', none: '關閉' },
     minimap: '小地圖',

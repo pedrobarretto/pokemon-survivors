@@ -371,6 +371,8 @@ export const fr: Messages = {
     screenShake: 'Tremblement d’écran',
     flashes: 'Flashs',
     flashModes: { normal: 'Normaux', reduced: 'Réduits' },
+    fog: 'Brouillard',
+    fogModes: { normal: 'Normal', light: 'Léger', off: 'OFF' },
     runToasts: 'Alertes en partie',
     runToastModes: { all: 'Toutes', important: 'Importantes', none: 'Aucune' },
     minimap: 'Mini-carte',

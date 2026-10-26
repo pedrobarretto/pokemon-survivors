@@ -493,6 +493,9 @@ export const pt = {
     screenShake: 'Tremor de tela',
     flashes: 'Clarões',
     flashModes: { normal: 'Normais', reduced: 'Reduzidos' },
+    /** The fog weather's veil (`render/weather.ts`): as designed, light or off. */
+    fog: 'Névoa',
+    fogModes: { normal: 'Normal', light: 'Leve', off: 'OFF' },
     runToasts: 'Avisos na partida',
     runToastModes: { all: 'Todos', important: 'Só importantes', none: 'Nenhum' },
     /** The HUD's mini map (`render/minimap.ts`): its shape, or off. */
