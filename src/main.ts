@@ -82,6 +82,8 @@ import { riftDevTools } from './game/riftDev'
 import { placeDevTools } from './game/placeDev'
 import { placeFeedback } from './ui/places'
 import { landmarkFeedback } from './ui/landmarks'
+import { announceMap } from './ui/mapSign'
+import { MAP_ARCHETYPE_IDS, type MapArchetypeId } from './data/mapArchetypes'
 import { PLACES } from './data/places'
 import { kitDevTools } from './game/kitDev'
 import { eggMoveDevTools } from './game/eggMovesDev'
@@ -97,7 +99,7 @@ import { pokeballPick } from './ui/pokeballPick'
 import { dropPickup } from './game/pickups'
 import { CURSES } from './data/curses'
 import { CAST_SFX } from './ui/castSfx'
-import { clearSpot, featureAt, featuresNear, footOf, inSolid } from './game/terrain'
+import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype } from './game/terrain'
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
 import { dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
@@ -1102,6 +1104,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
   const game = startGame(start, view)
+  if (devMap) setDevMap(game, devMap)
   const me = localPlayer(game)
   // The 1/64 roll unlocks this Pokémon's shiny for good (Normal/Shiny on the select screen).
   if (me.luckyShiny) updateSave((s) => ({ ...s, shinyStarters: unlockShinyStarter(s.shinyStarters, starter) }))
@@ -2262,6 +2265,7 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   }
   syncOverlay(r)
   tickToasts(ui, dt, false)
+  if (!quiet && phaseOf(g, me) === 'playing') announceMap(ui, r, g)
   // The team's cards, the connection, the waits, and the camera: this player's, or a teammate's while fainted (`render/teamCamera.ts`).
   c.team.frame(shown, localPlayer(shown), dt, view, conn, runner.pending !== null)
   // This screen's own shake, its offset rolled once a tick (the draw would roll one every refresh).
@@ -2625,6 +2629,8 @@ const frame = (now: number) => {
     const berries = takeBerryLevelUps(g, (i) => recordEvent(r.recorder, ['offer', i]))
     for (const e of g.events.splice(0)) handleEvent(r, e)
     if (berries > 0) berryToast(g, berries)
+    // The map's sign, once the run is under way (past the opening draft).
+    if (run === r && g.phase === 'playing') announceMap(ui, r, g)
     if (run === r) {
       syncOverlay(r)
       // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped.
@@ -3096,9 +3102,9 @@ const devOtherDevice = (coins = 1000, time = 754) => {
 
 /**
  * Dev: walks the player to the nearest piece of terrain of a kind (`rock`,
- * `tree`, `cliff`, `tower` or `lake`), standing `dy` px south of it, e.g. `ps.terrain('cliff')`.
+ * `tree`, `cliff` (a mountain or a ridge), `tower`, `column`, `menhir` or `lake`), standing `dy` px south of it, e.g. `ps.terrain('cliff')`.
  */
-const devTerrain = (g: Game, kind: SolidKind | 'lake' = 'cliff', dy = 70) => {
+const devTerrain = (g: Game, kind: SolidKind | 'column' | 'menhir' | 'lake' = 'cliff', dy = 70) => {
   const C = TERRAIN.cell
   const pcx = Math.floor(localPlayer(g).x / C)
   const pcy = Math.floor(localPlayer(g).y / C)
@@ -3106,7 +3112,7 @@ const devTerrain = (g: Game, kind: SolidKind | 'lake' = 'cliff', dy = 70) => {
     for (let cy = pcy - r; cy <= pcy + r; cy++) {
       for (let cx = pcx - r; cx <= pcx + r; cx++) {
         if (Math.max(Math.abs(cx - pcx), Math.abs(cy - pcy)) !== r) continue
-        const f = featureAt(g.terrain.seed, cx, cy)
+        const f = featureAt(g.terrain.seed, cx, cy, g.terrain.archetype)
         const spot = kind === 'lake' ? f?.lake : f?.solids.find((s) => s.kind === kind)
         if (!spot) continue
         const at = clearSpot(g, { x: spot.x, y: spot.y + dy }, localPlayer(g).radius + 2)
@@ -3128,7 +3134,7 @@ const devLandmark = (g: Game, id?: LandmarkId, dy = 60) => {
     for (let cy = pcy - r; cy <= pcy + r; cy++) {
       for (let cx = pcx - r; cx <= pcx + r; cx++) {
         if (Math.max(Math.abs(cx - pcx), Math.abs(cy - pcy)) !== r) continue
-        const lm = featureAt(g.terrain.seed, cx, cy)?.landmark
+        const lm = featureAt(g.terrain.seed, cx, cy, g.terrain.archetype)?.landmark
         if (!lm || (id && lm.id !== id)) continue
         const at = clearSpot(g, { x: lm.x, y: lm.y + dy }, g.player.radius + 2)
         g.player.x = at.x
@@ -3252,6 +3258,16 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
 }
 
 // `ps.biome('cave')` and `ps.weather('rain')` stage a run for screenshots (they hold until the next scheduled change).
+/** Dev only (`ps.map`): the map archetype held for the runs started until a reload. */
+let devMap: MapArchetypeId | null = null
+
+/** Dev only: rebuilds a run's map as archetype `id` (its cells, and the breakables, placed again around the new terrain). */
+const setDevMap = (g: Game, id: MapArchetypeId) => {
+  g.terrain.archetype = id
+  g.terrain.cells.clear()
+  g.props.length = 0
+}
+
 if (import.meta.env.DEV) {
   const withRun = (fn: (g: Game) => void) => (run ? fn(run.game) : console.warn('ps: start a run first'))
   Object.assign(window, {
@@ -3390,7 +3406,20 @@ if (import.meta.env.DEV) {
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
       card: (partner: PlayableId = loadSave().partner) => (endRun(), setScreen(sharePreview(ui, input, trainerShare(partner), () => showTitle()))),
       biome: (id: BiomeId) => withRun((g) => setBiome(g, id)),
-      terrain: (kind?: SolidKind | 'lake', dy?: number) => (run ? devTerrain(run.game, kind, dy) : console.warn('ps: start a run first')),
+      terrain: (kind?: SolidKind | 'column' | 'menhir' | 'lake', dy?: number) => (run ? devTerrain(run.game, kind, dy) : console.warn('ps: start a run first')),
+      /**
+       * `ps.map('archipelago')` rebuilds the running map as that archetype (and its sign shows again) and holds it
+       * for the runs started until a reload; `ps.map(null)` lets the seed draw again; `ps.map()` prints the run's and the next run's.
+       */
+      map: (id?: MapArchetypeId | null) => {
+        if (id === undefined) return { run: run?.game.terrain.archetype ?? null, next: runArchetype(upcoming.seed), held: devMap, all: MAP_ARCHETYPE_IDS }
+        devMap = id
+        if (id && run) {
+          setDevMap(run.game, id)
+          announceMap(ui, {}, run.game)
+        }
+        return id
+      },
       /** `ps.landmark('maze')` walks you to the nearest maze (`cottage`, `tunnel`, `ruins`, `camp`; any without an argument), 60 px south of it. */
       landmark: (id?: LandmarkId, dy?: number) => (run ? devLandmark(run.game, id, dy) : console.warn('ps: start a run first')),
       weather: (id: WeatherId) => withRun((g) => setWeather(g, id)),

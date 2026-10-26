@@ -40,7 +40,9 @@ import { h, later } from './dom'
 import { boundPadHint, glyphText } from './inputLabels'
 import { pressGuard } from './pressGuard'
 import { holdMoveCard, hoverMoveCard, moveCard, withMoveCard } from './moveCard'
-import { localPlayer } from '../game/players'
+import { actAs, localPlayer } from '../game/players'
+import { crossings } from '../game/terrain'
+import { MAP_ARCHETYPES, type MapArchetypeId } from '../data/mapArchetypes'
 import { deathCause } from './deathCause'
 import { teamBuilds } from './teamHud'
 
@@ -617,6 +619,34 @@ const duoPanel = (g: Game) => {
 }
 
 /** The ability in play for the pause menu: the one picked (its Hidden tag too), the Mega's while that lasts, or when it comes. */
+/** What a map archetype is good for: the types its terrain rewards ("Bom para", when it has any) and a line (the run's sign, the pause menu). */
+export const mapGoodFor = (id: MapArchetypeId) => {
+  const types = MAP_ARCHETYPES[id].goodFor
+  return h(
+    'div',
+    { class: 'map-good' },
+    types.length > 0 && h('span', { class: 'map-good-label' }, t().maps.goodFor),
+    ...types.map(typeBadge),
+    h('span', { class: 'map-good-tip' }, t().maps.tips[id]),
+  )
+}
+
+/** The pause menu's map row: the run's map archetype, what it's good for and how the local player's types cross it. */
+const mapPanel = (g: Game) => {
+  const m = t().maps
+  const id = g.terrain.archetype
+  const before = actAs(g, localPlayer(g))
+  const ways = crossings(g)
+  actAs(g, before)
+  return h(
+    'div',
+    { class: 'pause-map' },
+    h('b', {}, h('small', {}, m.label), m.names[id]),
+    mapGoodFor(id),
+    h('span', { class: 'pause-map-ways' }, ways.length > 0 ? ways.map((w) => m.crossings[w]).join(' ') : m.noCrossing),
+  )
+}
+
 const abilityPanel = (g: Game) => {
   const m = t().ability
   const mega = localPlayer(g).mega.active > 0 ? heldMega(g) : null
@@ -741,6 +771,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
         coop && h('p', { class: 'pause-note' }, cm.note),
         difficultyTag(g.difficulty),
         abilityPanel(g),
+        mapPanel(g),
         h(
           'div',
           { class: 'pause-body' },
