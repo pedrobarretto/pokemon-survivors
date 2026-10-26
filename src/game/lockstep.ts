@@ -42,11 +42,16 @@ export type TickEntry =
   | { slot: number; kind: 'stone'; mega: MegaId }
   /** The tab went to the background or the connection dropped (`away`), came back (`back`), or the player left for good. */
   | { slot: number; kind: 'away' | 'back' | 'leave' }
+  /** The player opened or closed the pause menu for the whole team. */
+  | { slot: number; kind: 'pause' | 'resume' }
   /** A vote on the victory's endless offer. */
   | { slot: number; kind: 'endless'; vote: boolean }
 
 const MAX_CODE = 224
 const SCREENS: ReadonlySet<string> = new Set<PickScreen>(['levelup', 'branch', 'ability', 'curse', 'tm', 'pokeball'])
+const PAUSE_ALLOWED: ReadonlySet<TickEntry['kind']> = new Set([
+  'move', 'pick', 'reroll', 'skip', 'banish', 'stone', 'pause', 'resume', 'away', 'back', 'leave',
+])
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isIndex = (v: unknown, max: number): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= max
@@ -68,6 +73,8 @@ export const parseTickEntry = (raw: unknown): TickEntry | null => {
     case 'away':
     case 'back':
     case 'leave':
+    case 'pause':
+    case 'resume':
       return { slot, kind }
     case 'pick': {
       const { screen, round, index } = raw
@@ -216,6 +223,12 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
       return setAway(g, p, e.kind === 'away')
     case 'leave':
       return leaveRun(g, p)
+    case 'pause':
+      if (g.phase !== 'gameover' && g.phase !== 'victory') coop.manualPause = true
+      return
+    case 'resume':
+      coop.manualPause = false
+      return
     case 'endless':
       return castVote(g, p, e.vote)
   }
@@ -226,11 +239,13 @@ const inputsOf = (g: Game): StepInput[] => g.players.map(() => ({ move: moveOf(0
 
 /**
  * One co-op tick: applies `entries` in order (malformed or stale ones are
- * ignored), then plays the tick. Evolutions play for everyone, the world held
- * or not; while anyone has a pick screen open the world waits and the screens'
- * timers run; while nobody active stands (everyone left standing is away) the
- * world waits for them, up to `COOP.away.hold`; otherwise the team steps. At the victory the endless
- * vote runs instead. A no-op on a solo game.
+ * ignored), then plays the tick. A shared pause holds everything until a
+ * resume entry; already-sent screen actions, away/back and leave still apply
+ * while held. Evolutions play for everyone, the world held or not; while anyone
+ * has a pick screen open the world waits and the screens' timers run; while
+ * nobody active stands (everyone left standing is away) the world waits for
+ * them, up to `COOP.away.hold`; otherwise the team steps. At the victory the
+ * endless vote runs instead. A no-op on a solo game.
  */
 export const stepTick = (g: Game, entries: readonly TickEntry[]) => {
   const coop = g.coop
@@ -238,11 +253,17 @@ export const stepTick = (g: Game, entries: readonly TickEntry[]) => {
   const inputs = inputsOf(g)
   for (const raw of entries) {
     const e = parseTickEntry(raw)
-    if (e) applyEntry(g, e, inputs)
+    if (!e) continue
+    if (coop.manualPause && !PAUSE_ALLOWED.has(e.kind)) continue
+    applyEntry(g, e, inputs)
+  }
+  if (g.phase === 'gameover') return
+  if (coop.manualPause) {
+    coop.paused += TICK
+    return
   }
   // `move` entries land in `held`; the step reads them this tick.
   for (const p of g.players) inputs[p.slot]!.move = moveOf(p.away || p.gone ? 0 : coop.held[p.slot] ?? 0)
-  if (g.phase === 'gameover') return
   countAway(g)
   if (g.phase === 'victory') {
     if (updateVote(g, TICK)) continueEndless(g)

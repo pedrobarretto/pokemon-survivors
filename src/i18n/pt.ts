@@ -5273,10 +5273,10 @@ export const pt = {
     watching: (name: string) => `Assistindo *${name}*`,
     nextKeys: 'Tab: trocar',
     nextTouch: 'Toque para trocar',
-    /** Co-op's menu (the HUD's button): the run goes on behind it. */
+    /** Co-op's shared pause menu (opened with the HUD button or Escape). */
     menu: {
       title: 'MENU',
-      note: 'A partida continua enquanto o menu está aberto.',
+      note: 'A partida fica pausada para todos enquanto o menu está aberto.',
       sound: (on: boolean) => `Som: ${on ? 'ligado' : 'desligado'}`,
       leave: 'Sair da partida',
       confirm: 'Sair da partida? Seu Pokémon deixa o campo e você leva sua parte do ₽ até agora.',

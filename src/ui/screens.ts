@@ -658,9 +658,8 @@ export const confirmDialog = (
 }
 
 /**
- * What the pause menu does. `coop`: it's co-op's menu instead, over a run
- * that goes on: no pause in its title, a sound switch (`sound` toggles it and
- * says whether it's on now), and leaving asks first.
+ * What the pause menu does. `coop`: it's co-op's shared pause menu, with a
+ * sound switch (`sound` toggles it and says whether it's on now), and leaving asks first.
  */
 type PauseActions = {
   resume: () => void
@@ -717,7 +716,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
     const reportButton = report && h('button', { class: 'btn' }, m.reportBug)
     const quit = h('button', { class: 'btn' }, coop ? cm.leave : m.quit)
     const buttons = [resume, ...(sound ? [sound] : []), settingsButton, ...(reportButton ? [reportButton] : []), quit]
-    // Co-op: the teammates' builds, to read and coordinate while the run goes on.
+    // Co-op: the teammates' builds, to read and coordinate while paused.
     const builds = coop && teamBuilds(g, localPlayer(g))
     nav?.off()
     nav = menu(input, buttons, (i) => {
@@ -762,8 +761,8 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
   }
 
   render(0, true)
-  // Esc inside the settings (or the report) only closes them.
-  const offEsc = input.onKey((k) => k === 'Escape' && !sub && actions.resume())
+  // Escape or Backspace inside settings (or the report) only closes them.
+  const offEsc = input.onKey((k) => (k === 'Escape' || k === 'Backspace') && !sub && actions.resume())
   root.append(el)
   return { el, dispose: () => (sub?.dispose(), nav?.off(), offEsc(), el.remove()) }
 }

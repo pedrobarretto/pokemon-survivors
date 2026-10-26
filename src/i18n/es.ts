@@ -4986,7 +4986,7 @@ export const es: Messages = {
     nextTouch: 'Toca para cambiar',
     menu: {
       title: 'MENÚ',
-      note: 'La partida sigue mientras el menú está abierto.',
+      note: 'La partida se pausa para todos mientras este menú está abierto.',
       sound: (on) => `Sonido: ${on ? 'activado' : 'desactivado'}`,
       leave: 'Dejar la partida',
       confirm: '¿Dejar la partida? Tu Pokémon deja el campo y te llevas tu parte de ₽ hasta ahora.',
