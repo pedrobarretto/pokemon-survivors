@@ -58,6 +58,7 @@ import type { AlphaClock, AlphaState } from './alphas'
 import type { LegendForm, LegendId } from '../data/legends'
 import type { LegendState } from './legend'
 import type { CoopState } from './coop'
+import type { Training } from './training'
 import type { Harm, HarmBy } from './harm'
 
 export type OwnedMove = {
@@ -877,6 +878,8 @@ export type Game = {
   legendScene: LegendScene | null
   /** Co-op rules state (`coop.ts`): held sticks, the endless vote, pause time. Null solo. */
   coop: CoopState | null
+  /** The Dojo (`training.ts`): the run is a training session, with dummies instead of a horde. Null in every other run. */
+  training: Training | null
 }
 
 /** Where a prize level-up came from: an Alpha's gem or a field mission. */

@@ -86,6 +86,18 @@ type AnalyticsEvents = {
     safeMode: boolean
   } & RunPerf
   /**
+   * A Dojo session ended (`game/training.ts`), one per visit: who trained, for how long, and the
+   * loadout it left with (`id:level`, as `run_end`), saved as a build or not. Says which builds
+   * players plan, next to the ones `run_end` shows them playing.
+   */
+  dojo_end: {
+    starter: PlayableId
+    seconds: number
+    saved: boolean
+    moves: string[]
+    items: string[]
+  }
+  /**
    * The page died mid-run last time (the crash watch, `takeCrash` in `bugReport.ts`), sent once
    * by the next boot whether or not the player files a report. Rare, so it fits the budget.
    * The memory fields are the breadcrumb's (`crumb.ts`, as `RunPerf` has them), null from a

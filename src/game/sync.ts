@@ -116,6 +116,8 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     caps: mergeCaps(base.caps, incoming.caps),
     caravan: mergeCaravan(base.caravan, incoming.caravan),
     attempt: mergeAttempts(base.attempt, incoming.attempt),
+    // A build saved again on another device replaces this one's for its family.
+    builds: { ...base.builds, ...incoming.builds },
   }
 }
 

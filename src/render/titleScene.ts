@@ -32,12 +32,14 @@ import {
   type PlazaNpc,
   type ViewBox,
 } from './plaza'
+import { createDojo, dojoFrame, dojoPieces, dojoTapped, drawDojoGround, drawDojoMarker, greetSensei, pushOutDojo, SENSEI, senseiSpot, senseiTalk, stepDojo, type Dojo } from './dojo'
 
 /**
  * Attract-mode backdrop behind the menus: the meadow around the partner's
  * home, under a camera that stands still, with wild Pokémon strolling around
  * (and, rarely, a shiny). East of home stands the Kecleon plaza
- * (`render/plaza.ts`), the shop as a place. On the lobby the partner can hop
+ * (`render/plaza.ts`), the shop as a place, and west of it the Dojo
+ * (`render/dojo.ts`), Machoke's training hall. On the lobby the partner can hop
  * off its stage and take a walk among them (`meetPartner`, `steerPartner`):
  * bumping into one makes it react, and some tag along for a while. A trip
  * (`visitPlaza`) pans the camera to the plaza or back home, the partner
@@ -111,8 +113,11 @@ export type Partner = {
   trail: Vec[]
 }
 
-/** Where the camera rests when nobody strolls: the partner's home or the Kecleon plaza. */
-export type Place = 'home' | 'plaza'
+/** Where the camera rests when nobody strolls: the partner's home, the Kecleon plaza or the Dojo. */
+export type Place = 'home' | 'plaza' | 'dojo'
+
+/** Who the partner can talk to in the meadow: the plaza's keepers and visitors, or Machoke at the Dojo. */
+export type LobbyNpc = PlazaNpc | 'sensei'
 
 /** A camera trip to a place, eased over `time` seconds, the partner hopping from `from` to its spot there. */
 type Trip = { to: Place; t: number; time: number; cam: Vec; from: Vec }
@@ -130,6 +135,8 @@ export type TitleScene = {
   placed: boolean
   /** The Kecleon plaza, east of home. */
   plaza: Plaza
+  /** The Dojo, west of home. */
+  dojo: Dojo
   wanderers: Wanderer[]
   nextSpawn: number
   /** Species whose shiny form is loading for the next shiny roll. */
@@ -212,6 +219,7 @@ export const createTitleScene = (seed: number): TitleScene => {
     trip: null,
     placed: false,
     plaza: createPlaza(home),
+    dojo: createDojo(home),
     wanderers: [],
     nextSpawn: 0,
     nextShiny: null,
@@ -301,12 +309,12 @@ export const exploreMeadow = (s: TitleScene, on: boolean, w: number, h: number) 
  * meadow as the whole scene ticking a pixel at a time.
  */
 const restCam = (s: TitleScene, place: Place, w: number, h: number): Vec =>
-  place === 'plaza' ? plazaFrame(s.plaza, w, h) : { x: Math.round(s.home.x - w / 2), y: Math.round(s.home.y - h / 2) }
+  place === 'plaza' ? plazaFrame(s.plaza, w, h) : place === 'dojo' ? dojoFrame(s.dojo, w, h) : { x: Math.round(s.home.x - w / 2), y: Math.round(s.home.y - h / 2) }
 
 const easeInOut = (k: number) => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2)
 
-/** Where the partner ends a trip to `place`: the shop's counter, or its stage. */
-const tripGoal = (s: TitleScene, p: Partner, place: Place) => (place === 'plaza' ? shopSpot(s.plaza) : p.home)
+/** Where the partner ends a trip to `place`: the shop's counter, before Machoke, or its stage. */
+const tripGoal = (s: TitleScene, p: Partner, place: Place) => (place === 'plaza' ? shopSpot(s.plaza) : place === 'dojo' ? senseiSpot(s.dojo) : p.home)
 
 /**
  * Starts a trip of the camera to `to` (the Kecleon plaza or home), eased
@@ -344,8 +352,12 @@ const arrive = (s: TitleScene, to: Place) => {
   if (p) {
     p.moving = false
     // Back home during Passear, it walks on instead of taking its stage, which is away with the cards.
-    p.state = to === 'plaza' ? 'shop' : s.exploring ? 'out' : 'home'
-    if (to === 'plaza') p.dir = 4
+    p.state = to !== 'home' ? 'shop' : s.exploring ? 'out' : 'home'
+    if (to !== 'home') p.dir = 4
+  }
+  if (to === 'dojo') {
+    greetSensei(s.dojo, s.time)
+    cry(s, SENSEI.dex)
   }
   // A camouflaged Kecleon keeps still and quiet until it's talked to (`revealShopkeeper`).
   if (to === 'plaza' && !s.plaza.hidden) {
@@ -394,14 +406,16 @@ const stepTrip = (s: TitleScene, trip: Trip, dt: number, w: number, h: number) =
   if (trip.t >= trip.time) arrive(s, trip.to)
 }
 
-/** Above the head of whoever at the plaza the strolling partner stands close enough to talk to (world px, and who), or null. */
-export const talkSpot = (s: TitleScene): (Vec & { who: PlazaNpc }) | null => {
+/** Above the head of whoever at the plaza or the Dojo the strolling partner stands close enough to talk to (world px, and who), or null. */
+export const talkSpot = (s: TitleScene): (Vec & { who: LobbyNpc }) | null => {
   const p = s.partner
-  return p && p.state === 'out' && !s.trip ? talkAnchor(s.plaza, p) : null
+  if (!p || p.state !== 'out' || s.trip) return null
+  const sensei = senseiTalk(s.dojo, p)
+  return sensei ? { ...sensei, who: 'sensei' } : talkAnchor(s.plaza, p)
 }
 
-/** Who a tap (world px) on the plaza is for: the shop (its shopkeepers, building or edge marker), Meowth or a stall (or its edge marker); null for none. */
-export const tapsPlaza = (s: TitleScene, at: Vec) => plazaTapped(s.plaza, at)
+/** Who a tap (world px) is for: the shop (its shopkeepers, building or edge marker), Meowth or a stall (or its edge marker), the Dojo (Machoke, the hall or its marker); null for none. */
+export const tapsPlaza = (s: TitleScene, at: Vec): LobbyNpc | null => (dojoTapped(s.dojo, at) ? 'sensei' : plazaTapped(s.plaza, at))
 
 /** Starts a stroll along one of the 8 sprite directions (towards `target` if given) or a short rest. */
 const nextLeg = (rng: Rng, w: Wanderer, target?: Vec) => {
@@ -535,6 +549,7 @@ const stepPartner = (s: TitleScene, p: Partner, dt: number, w: number, h: number
     p.x += v.x * dt
     p.y += v.y * dt
     pushOut(s.plaza, p)
+    pushOutDojo(s.dojo, p)
     p.dir = dir8(v.x, v.y)
     const last = p.trail.at(-1)
     if (!last || Math.hypot(p.x - last.x, p.y - last.y) >= TRAIL_STEP) {
@@ -643,6 +658,7 @@ export const stepTitleScene = (s: TitleScene, dt: number, w: number, h: number) 
     s.cam.y += (rest.y - s.cam.y) * k
   }
   stepPlaza(s.plaza, p && p.state !== 'home' ? p : null)
+  stepDojo(s.dojo, p && p.state !== 'home' ? p : null)
   // The companion waits behind the stage while the partner stands on it, and follows it out.
   const c = s.companion
   if (c && p && p.state === 'home') Object.assign(c, createCompanion(c.dex, c.shiny, p, c.sparkles))
@@ -660,6 +676,7 @@ export const stepTitleScene = (s: TitleScene, dt: number, w: number, h: number) 
     wd.x += wd.vx * dt
     wd.y += wd.vy * dt
     pushOut(s.plaza, wd)
+    pushOutDojo(s.dojo, wd)
     if (roaming && !wd.greet && !following(s, wd) && s.time >= wd.calmAt && s.time - wd.bornAt > FADE_IN && Math.hypot(wd.x - roaming.x, wd.y - roaming.y) < GREET_RANGE) {
       greet(s, roaming, wd)
     }
@@ -700,6 +717,7 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
   const camY = Math.round(s.cam.y)
   drawGround(ctx, camX, camY, w, h)
   drawPlazaGround(ctx, s.plaza, camX, camY, w, h)
+  drawDojoGround(ctx, s.dojo, camX, camY, w, h)
   if (s.haunted) drawMeadowJacks(ctx, camX, camY, w, h, s.time)
   drawPuffs(ctx, s, camX, camY)
   const p = s.partner?.state === 'home' ? null : s.partner
@@ -726,6 +744,7 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
   if (p) pending.push({ y: p.y, draw: drawPartner })
   if (c) pending.push({ y: c.y, draw: drawFollower })
   for (const piece of plazaPieces(s.plaza)) pending.push(piece)
+  for (const piece of dojoPieces(s.dojo)) pending.push(piece)
   pending.sort(byFeet)
   let next = 0
   const flush = (y: number) => {
@@ -759,5 +778,7 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
     blitCentered(ctx, bubbles[REACTIONS[wd.greet.kind].emote], Math.round(wd.x) - camX, top - 8 - bob)
   }
   // While the lobby rests at home (or the partner strolls), a card at the edge points the way to the shop.
-  drawPlazaMarker(ctx, s.plaza, camX, camY, w, h, s.time, s.partner !== null && !s.trip && s.rest === 'home', s.stageBox)
+  const home = s.partner !== null && !s.trip && s.rest === 'home'
+  drawPlazaMarker(ctx, s.plaza, camX, camY, w, h, s.time, home, s.stageBox)
+  drawDojoMarker(ctx, s.dojo, camX, camY, w, h, s.time, home, s.stageBox)
 }

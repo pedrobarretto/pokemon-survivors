@@ -1508,7 +1508,7 @@ export const drawPlazaParty = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX
 export type MarkerWho = 'keeper' | 'stall'
 
 /** A card's inner colour, its arrow's and how far (px) below the sprite's top its head shows, for the shop and each seasonal stall. */
-type MarkerLook = { card: string; arrow: string; headDy: number }
+export type MarkerLook = { card: string; arrow: string; headDy: number }
 const SHOP_MARKER: MarkerLook = { card: '#e0f0d0', arrow: '#5cb048', headDy: 0 }
 const STALL_MARKERS = {
   // Duskull's top is its hood: the card shows the skull under it.
@@ -1521,7 +1521,7 @@ const markerCards = canvasCache<string, HTMLCanvasElement>()
 const markerAsked = new Set<number>()
 
 /** An edge marker's box: a Pokémon's head (`dex`) on a white card. Null until its sheets are in. */
-const markerCard = (dex: number, look: MarkerLook) => {
+export const markerCard = (dex: number, look: MarkerLook) => {
   const key = `${dex}:${look.card}`
   const cached = markerCards.get(key)
   if (cached) return cached
@@ -1570,7 +1570,7 @@ export type ViewBox = { left: number; top: number; right: number; bottom: number
  * there, so the marker sits at that box's lower corner on the target's side,
  * where it shows whole and takes taps.
  */
-const edgeSpot = (target: Vec, w: number, h: number, bob: number, inside: ViewBox | null) => {
+export const edgeSpot = (target: Vec, w: number, h: number, bob: number, inside: ViewBox | null) => {
   const cx = w / 2
   const cy = h / 2
   const dx = target.x - cx
@@ -1593,7 +1593,7 @@ const edgeSpot = (target: Vec, w: number, h: number, bob: number, inside: ViewBo
 type EdgeSpot = ReturnType<typeof edgeSpot>
 
 /** Draws a marker's card at `at` and its arrow on the side facing its target: a dark triangle around a coloured one. */
-const drawMarker = (ctx: CanvasRenderingContext2D, box: HTMLCanvasElement, at: EdgeSpot, arrow: string) => {
+export const drawMarker = (ctx: CanvasRenderingContext2D, box: HTMLCanvasElement, at: EdgeSpot, arrow: string) => {
   const { x, y, dir } = at
   ctx.drawImage(box, x - 12, y - 9)
   const baseX = dir.x > 0 ? x + 12 : dir.x < 0 ? x - 13 : x

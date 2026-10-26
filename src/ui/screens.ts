@@ -37,6 +37,7 @@ import { formatNumber, formatPokeDollars, locale, t } from '../i18n'
 import { ROUTES } from '../site/routes'
 import { treatIcon } from '../render/halloweenArt'
 import { h, later } from './dom'
+import { buildTag, followsBuild } from './buildMark'
 import { boundPadHint, glyphText } from './inputLabels'
 import { pressGuard } from './pressGuard'
 import { holdMoveCard, hoverMoveCard, moveCard, withMoveCard } from './moveCard'
@@ -313,6 +314,7 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
   const v = offerView(g, offer)
   const recipes = offerRecipes(g, offer)
   const rarity = rarityOf(offer)
+  const build = followsBuild(g, offer)
   // A move the evolution just unlocked, while it still comes up more often: tagged with the form that learns it.
   const fresh =
     offer.kind === 'move' && localPlayer(g).freshMoves > 0 && !localPlayer(g).moves.some((m) => m.id === offer.id) && unlockedAt(localPlayer(g).starter, localPlayer(g).branch, localPlayer(g).stage).includes(offer.id)
@@ -327,6 +329,7 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
     rarity && `offer-${rarity}`,
     !canBanish(offer) && 'offer-keep',
     fresh && 'offer-fresh',
+    build && 'offer-build',
   ]
   button.className = classes.filter(Boolean).join(' ')
   button.style.setProperty('--i', String(i))
@@ -361,6 +364,7 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
         v.fork && h('span', { class: 'tag tag-fork' }, m.forkTag),
         fresh && h('span', { class: 'tag tag-fresh' }, m.freshTag(playerForm(g).name)),
         rarity && h('span', { class: `tag tag-${rarity}` }, rarity === 'rare' ? m.rare : m.shiny),
+        build && buildTag(),
       ),
       h('div', { class: 'offer-desc' }, v.desc),
       rarity === 'shiny' && h('div', { class: 'offer-note' }, m.shinyNote),

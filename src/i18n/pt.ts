@@ -125,6 +125,10 @@ export const pt = {
     eggs: 'Ovos',
     eggsReady: (n: number) => (n === 1 ? '1 ovo pronto para chocar' : `${n} ovos prontos para chocar`),
     mart: 'Loja',
+    /** The lobby's Dojo tile (`ui/training.ts`): Machoke's training hall, west of home. */
+    dojo: 'Dojo',
+    /** Its label for screen readers and the rail tile's long name. */
+    dojoLabel: 'Dojo: treine golpes e monte builds',
     ranking: 'Ranking',
     ideas: 'Ideias',
     /** Support chip (donations page), and the Hall da Fama card before it has names. */
@@ -5143,6 +5147,53 @@ export const pt = {
     } satisfies Record<StallId, readonly string[]>,
     /** Lanturn at the festival's Lantern Market (`render/plaza.ts`), before the festival's sheet opens. */
     lanturn: ['Lan-turn! Cada moeda na fonte acende uma lanterna na praça. Vem ver o pote!'],
+  },
+
+  /** The Dojo (`game/training.ts`, `ui/training.ts`): the training run's panel, the builds, and Machoke, its sensei in the lobby. */
+  training: {
+    title: 'Dojo',
+    /** The partner select's button when picking who trains. */
+    pickGo: 'Treinar',
+    tabs: { moves: 'Golpes', items: 'Itens', form: 'Forma', targets: 'Alvos' },
+    dps: 'DPS',
+    dpsHint: (s: number) => `dano por segundo nos últimos ${s} s`,
+    average: 'Média',
+    total: 'Total',
+    noDamage: 'Chegue perto dos alvos: cada golpe que acerta aparece aqui.',
+    ability: 'Habilidade',
+    slots: (n: number, max: number) => `${n}/${max} espaços`,
+    level: (n: number) => `Nv ${n}`,
+    learn: 'Aprender',
+    forget: 'Esquecer',
+    hold: 'Equipar',
+    remove: 'Tirar',
+    /** A fork's row under its move: the level it's at. */
+    forkAt: (n: number) => `Nv ${n}`,
+    evolvedFrom: (base: string, item: string) => `Evolução de ${base}: na partida, ${base} no nível máximo com ${item}.`,
+    movesFull: 'Sem espaço',
+    itemsFull: 'Sem espaço',
+    form: 'Forma',
+    abilityLater: 'A habilidade chega na primeira evolução.',
+    noAbility: 'Nenhuma',
+    count: 'Quantos alvos',
+    countOf: (n: number) => `${n}`,
+    target: 'Alvo',
+    boss: 'chefe',
+    reset: 'Zerar',
+    save: 'Salvar build',
+    clear: 'Apagar build',
+    leave: 'Sair',
+    hide: 'Esconder',
+    show: 'Mostrar',
+    saved: (name: string) => `Build de *${name}* salva! Nas partidas, as cartas dela ganham ★ BUILD.`,
+    loaded: (name: string) => `A build salva de *${name}* já está equipada.`,
+    cleared: (name: string) => `Build de *${name}* apagada.`,
+    /** The tag on a level-up card that follows the build (Press Start 2P: keep it short). */
+    buildTag: 'BUILD',
+    buildHint: 'Faz parte da build que você montou no Dojo',
+    /** Machoke, the Dojo's sensei, before the partner select opens: the first visit, then one of these in turn. */
+    first: ['Bem-vindo ao Dojo! Aqui ninguém desmaia: escolha um Pokémon e teste golpes, itens e formas à vontade.', 'Gostou de uma combinação? Salve a build. Nas partidas, as cartas dela vão ter uma ★.'],
+    hello: ['Pronto pra treinar? Os alvos não revidam!', 'Um bom treinador conhece o próprio DPS.', 'O Wobbuffet aguenta tudo. Pode caprichar!', 'Fogo contra Água? Troque o alvo e veja a diferença.'],
   },
 
   /** Explainer toast the first time each enemy trait shows up in a run. */

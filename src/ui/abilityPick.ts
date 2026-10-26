@@ -20,6 +20,7 @@ import { h } from './dom'
 import { shopIcon } from './shopIcons'
 import { hint, menu, typeBadge, type Screen } from './screens'
 import { localPlayer } from '../game/players'
+import { buildTag, followsBuild } from './buildMark'
 
 /**
  * The two picks evolutions bring (`game/game.ts`): where a branching
@@ -105,7 +106,7 @@ const branchCard = (g: Game, offer: Extract<Offer, { kind: 'form' }>, i: number)
     favor && h('span', { class: 'evo-card-favor' }, h('img', { src: sparkleIcon(), alt: '' }), m.branch.favored(favor)),
     item && h('span', { class: 'evo-card-favor item' }, shopIcon(item), m.branch.unlocked(EVO_ITEMS[item].name)),
     h('div', { class: 'evo-card-art' }, h('img', { class: 'evo-card-portrait', src: portraitUrl(def.dex, localPlayer(g).shiny), alt: '' })),
-    h('div', { class: 'evo-card-name' }, def.name),
+    h('div', { class: 'evo-card-name' }, def.name, followsBuild(g, offer) && buildTag()),
     h('div', { class: 'types' }, ...def.types.map(typeBadge)),
     h('div', { class: 'evo-card-stats' }, ...statLines(def.bonus).map((line) => h('span', {}, line))),
     h(
@@ -143,7 +144,7 @@ export const branchPick = (root: HTMLElement, input: Input, g: Game, onChoose: (
 
 /* ---------------- Ability ---------------- */
 
-const abilityCard = (id: AbilityId, hidden: boolean, i: number) => {
+const abilityCard = (id: AbilityId, hidden: boolean, i: number, build: boolean) => {
   const m = t()
   return h(
     'button',
@@ -151,14 +152,14 @@ const abilityCard = (id: AbilityId, hidden: boolean, i: number) => {
     h('span', { class: 'offer-key' }, i + 1),
     hidden && h('span', { class: 'ability-card-ribbon' }, h('img', { src: sparkleIcon(), alt: '' }), m.ability.hiddenLong),
     h('div', { class: 'ability-card-icon' }, h('img', { src: abilityIcon(id), alt: '' })),
-    h('div', { class: 'ability-card-text' }, h('div', { class: 'ability-card-name' }, ABILITIES[id].name), h('p', { class: 'ability-card-desc' }, m.abilities[id])),
+    h('div', { class: 'ability-card-text' }, h('div', { class: 'ability-card-name' }, ABILITIES[id].name, build && buildTag()), h('p', { class: 'ability-card-desc' }, m.abilities[id])),
   )
 }
 
 /** The ability the first evolution awakens: three cards, the Hidden one in its own frame. */
 export const abilityPick = (root: HTMLElement, input: Input, g: Game, onChoose: (offer: Offer) => void): Screen => {
   const m = t()
-  const cards = localPlayer(g).offers.map((offer, i) => (offer.kind === 'ability' ? abilityCard(offer.id, offer.hidden, i) : h('span')))
+  const cards = localPlayer(g).offers.map((offer, i) => (offer.kind === 'ability' ? abilityCard(offer.id, offer.hidden, i, followsBuild(g, offer)) : h('span')))
   const off = pickNav(input, cards, (i) => {
     const offer = localPlayer(g).offers[i]
     if (offer) onChoose(offer)

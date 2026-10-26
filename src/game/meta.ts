@@ -16,6 +16,7 @@ import { NO_SHOP, parseShop, type ShopSave } from './shop'
 import { learnTms, NO_TMS, parseTms, type TmCase } from './tmShelf'
 import { parseCaps, parseEvoItems, type Caps } from './evoItems'
 import { parseCaravan, type CaravanSave } from './caravan'
+import { parseBuilds, type Builds } from './builds'
 import type { EvoItemId } from '../data/shop'
 import { isRecord, wholeNumber } from './parse'
 import { parseRibbons, type Ribbon } from './ribbons'
@@ -171,6 +172,8 @@ export type Save = {
   caravan: CaravanSave
   /** The last official Desafio do dia attempt finished (`game/attempt.ts`): synced, so every device of the account shows practice after it. */
   attempt: Attempt | null
+  /** Builds planned at the Dojo (`game/builds.ts`), one per family: the level-up screen marks the cards that follow one. */
+  builds: Builds
 }
 
 /** The branch each branching family took in its latest run that got there. */
@@ -221,6 +224,7 @@ export const EMPTY_SAVE: Save = {
   // Spelled out (not `NO_CARAVAN`): `game/caravan.ts` reaches this module back through the save's helpers.
   caravan: { week: '', bought: [], haggled: false },
   attempt: null,
+  builds: {},
 }
 
 /** Brings any older save shape up to the current version. Add a case per schema bump. */
@@ -293,6 +297,7 @@ export const parseSaveData = (json: unknown): Save => {
     caps: parseCaps(data.caps),
     caravan: parseCaravan(data.caravan),
     attempt: parseAttempt(data.attempt),
+    builds: parseBuilds(data.builds),
   }
 }
 

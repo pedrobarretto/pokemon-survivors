@@ -69,8 +69,9 @@ ${rows.join('\n')}
 
 The Kecleon shop's buildings, props, its own icons (the daily gift, the expansion, the wishlist, the loyalty
 stamp and the Kecleon Egg), Meowth's caravan and the seasonal stalls in the lobby
-(\`public/assets/shop/\`) were generated for this project with [PixelLab](https://www.pixellab.ai). The emotion
-portraits in the dialogue box (Kecleon, Meowth, Duskull and Delibird) are SpriteCollab portraits,
+(\`public/assets/shop/\`), and the Dojo's hall, training posts and banners (\`public/assets/dojo/\`), were
+generated for this project with [PixelLab](https://www.pixellab.ai). The emotion portraits in the dialogue
+box (Kecleon, Meowth, Duskull, Delibird, Lanturn and Machoke) are SpriteCollab portraits,
 credited in their rows above.
 
 ## Cries

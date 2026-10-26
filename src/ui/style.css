@@ -17900,3 +17900,507 @@ button.hall-tile:hover {
     max-height: calc(100% - var(--minimap-bottom, 160px) - 8px - var(--safe-t) - 110px);
   }
 }
+
+/* ---------- The Dojo (ui/training.ts) ---------- */
+
+/* A card that follows the build planned at the Dojo: a gold ★ tag, and a gold corner on the level-up card. */
+.tag-build {
+  color: #5a3c00;
+  background: #f8d030;
+  padding: 3px 4px 2px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.levelup .offer-build {
+  box-shadow: inset 0 0 0 2px #f0c020;
+}
+
+/* The training panel: right of the field, over the run. */
+.dojo-panel {
+  position: absolute;
+  top: max(12px, var(--safe-t));
+  right: max(12px, var(--safe-r));
+  bottom: max(12px, var(--safe-b));
+  z-index: 2;
+  width: min(380px, calc(40 * var(--vw)));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  pointer-events: auto;
+  animation: shop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dojo-panel > :not(.dojo-body) {
+  flex-shrink: 0;
+}
+
+/* Folded: only the head and the meter stay. */
+.dojo-panel.folded {
+  bottom: auto;
+}
+
+.dojo-panel.folded > :is(.dojo-tabs, .dojo-body, .dojo-actions),
+.dojo-panel.folded .dojo-sources {
+  display: none;
+}
+
+.dojo-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dojo-who {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 6px;
+  align-items: center;
+}
+
+.dojo-who img {
+  grid-row: span 2;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  border-radius: 4px;
+  background: #dce0ec;
+}
+
+.dojo-who b {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dojo-who small {
+  font-size: 16px;
+  line-height: 1;
+  color: #6878a8;
+}
+
+.btn.dojo-reset,
+.btn.dojo-fold {
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 8px;
+}
+
+.dojo-meter {
+  padding: 8px 10px;
+  color: #f8f8f8;
+  background: #283048;
+  border-radius: 6px;
+}
+
+.dojo-dps {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 8px;
+}
+
+.dojo-dps-label {
+  font-family: var(--title);
+  font-size: 9px;
+  color: #f8d030;
+}
+
+.dojo-dps-value {
+  font-family: var(--title);
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.dojo-dps small {
+  flex-basis: 100%;
+  font-size: 15px;
+  line-height: 1;
+  color: #a8b0d0;
+}
+
+.dojo-meter-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 17px;
+  line-height: 1;
+  color: #d0d8f0;
+}
+
+.dojo-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+}
+
+/* A move's share of the window's damage, as a bar behind its row. */
+.dojo-source {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 4px;
+  font-size: 17px;
+  line-height: 1;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(248, 208, 48, 0.32) calc(var(--share) * 100%), transparent 0);
+}
+
+.dojo-source img {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+}
+
+.dojo-source-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dojo-source-dps {
+  font-family: var(--title);
+  font-size: 9px;
+}
+
+.dojo-empty {
+  margin: 4px 0 0;
+  font-size: 17px;
+  line-height: 1.05;
+  color: #a8b0d0;
+}
+
+.dojo-body .dojo-empty {
+  color: #6878a8;
+}
+
+.dojo-tabs {
+  flex-wrap: nowrap;
+}
+
+.dojo-tabs .shop-tab {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dojo-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 2px;
+}
+
+.dojo-slots {
+  margin: 0;
+  font-family: var(--title);
+  font-size: 8px;
+  color: #6878a8;
+}
+
+.dojo-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  background: #eef0f6;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+
+.dojo-row.on {
+  background: #fff;
+  border-color: #6878a8;
+}
+
+.dojo-row.evolved {
+  margin-left: 14px;
+}
+
+.dojo-row-icon {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+.dojo-row-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dojo-row-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.dojo-row-name .type-badge {
+  font-size: 6px;
+  padding: 3px 4px 2px;
+}
+
+.dojo-row-note {
+  font-size: 15px;
+  line-height: 1;
+  color: #6878a8;
+}
+
+.dojo-row-full {
+  max-width: 70px;
+  font-size: 15px;
+  line-height: 1;
+  text-align: right;
+  color: #a8a8b8;
+}
+
+.dojo-learn {
+  min-height: 32px;
+  padding: 4px 8px;
+  font-family: var(--title);
+  font-size: 8px;
+  color: #fff;
+  background: #6878a8;
+  border: 0;
+  border-radius: 5px;
+}
+
+.dojo-step {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.dojo-step-btn {
+  width: 30px;
+  height: 30px;
+  font-family: var(--title);
+  font-size: 12px;
+  color: var(--ink);
+  background: #dce0ec;
+  border: 0;
+  border-radius: 5px;
+}
+
+.dojo-step-btn:disabled {
+  opacity: 0.35;
+}
+
+.dojo-step-level {
+  min-width: 42px;
+  font-family: var(--title);
+  font-size: 8px;
+  text-align: center;
+}
+
+.dojo-fork {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 3px;
+}
+
+.dojo-fork .dojo-chip {
+  min-height: 24px;
+  padding: 2px 4px;
+  font-size: 15px;
+}
+
+.dojo-fork-at {
+  align-self: center;
+  font-family: var(--title);
+  font-size: 7px;
+  color: #6878a8;
+}
+
+.dojo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dojo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 3px 7px;
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1;
+  color: var(--ink);
+  background: #dce0ec;
+  border: 2px solid transparent;
+  border-radius: 5px;
+}
+
+.dojo-chip.on {
+  color: #f8d030;
+  background: #283048;
+}
+
+.dojo-chip img {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+}
+
+.dojo-label {
+  margin: 6px 0 2px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-weight: 400;
+  color: #6878a8;
+}
+
+.dojo-forms,
+.dojo-targets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 4px;
+}
+
+.dojo-form,
+.dojo-target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 4px;
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1;
+  color: var(--ink);
+  background: #eef0f6;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+
+.dojo-form.on,
+.dojo-target.on {
+  background: #fff;
+  border-color: #e83838;
+}
+
+.dojo-form img,
+.dojo-target img {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.dojo-target-name em {
+  display: block;
+  font-style: normal;
+  font-size: 14px;
+  color: #c04830;
+}
+
+.dojo-target .types {
+  display: flex;
+  gap: 2px;
+}
+
+.dojo-target .type-badge {
+  font-size: 5px;
+  padding: 2px 3px 1px;
+}
+
+.dojo-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.dojo-actions .btn {
+  flex: 1;
+  min-height: 36px;
+  padding: 6px 6px;
+  font-size: 8px;
+}
+
+.btn.dojo-save {
+  color: #283048;
+  background: #f8d030;
+}
+
+.btn.dojo-clear[hidden] {
+  display: none;
+}
+
+/* A phone held upright: the panel rises from the bottom, leaving the field above it. */
+@media (orientation: portrait) and (max-width: 700px) {
+  .dojo-panel {
+    top: auto;
+    left: max(8px, var(--safe-l));
+    right: max(8px, var(--safe-r));
+    bottom: max(8px, var(--safe-b));
+    width: auto;
+    height: min(52%, calc(56 * var(--dvh)));
+    animation-name: shop-up;
+  }
+  /* Folded, it keeps to the top (over the moves' HUD, which the meter repeats), leaving the stick and the special their corners. */
+  .dojo-panel.folded {
+    top: max(8px, var(--safe-t));
+    bottom: auto;
+    height: auto;
+  }
+  .dojo-sources {
+    max-height: 64px;
+    overflow: hidden;
+  }
+}
+
+/* Phones on their side: a narrower panel, the meter's rows tighter. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .dojo-panel {
+    top: max(6px, var(--safe-t));
+    bottom: max(6px, var(--safe-b));
+    right: max(6px, var(--safe-r));
+    width: min(330px, calc(44 * var(--vw)));
+    padding: 8px;
+    gap: 5px;
+  }
+  .dojo-sources {
+    max-height: 48px;
+    overflow: hidden;
+  }
+}
+
+/* The lobby's dock with the Dojo: phones on their side give it its own column, after the Poké Mart. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .lobby-tile.dojo {
+    grid-area: auto;
+    grid-row: 4;
+  }
+  .lobby.dock7 {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) minmax(0, 7fr);
+    grid-template-areas:
+      'logo logo logo logo logo logo logo today'
+      'stage stage stage stage stage stage stage today'
+      'stage stage stage stage stage stage stage side'
+      'd1 d2 d3 d4 d5 d6 d7 play';
+  }
+  .lobby.dock7 .lobby-tile > span:not(.key-hint) {
+    font-size: 6px;
+  }
+}

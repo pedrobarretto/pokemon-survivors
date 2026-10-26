@@ -64,7 +64,12 @@ import { makeShiny } from './game/shiny'
 import { MAP_EVENT_KINDS, MAP_EVENTS, spawnMapEvent, type MapEventKind } from './game/mapEvents'
 import { MEOWTH_DEX } from './game/mapEventRules'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
-import { advancePhase, banishOffer, chooseOffer, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
+import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
+import { applyBuild, setDummies, startTraining } from './game/training'
+import { buildOf } from './game/builds'
+import { TRAINING } from './data/training'
+import { DOJO_DEX } from './render/dojo'
+import { trainingPanel } from './ui/training'
 import { formAt, playerForm } from './game/branch'
 import { unlockedAt } from './game/learnsets'
 import { ABILITIES, type AbilityEffect, type AbilityId } from './data/abilities'
@@ -315,7 +320,12 @@ type Run = {
   sprites: { needs: SpriteNeed[]; always: Dex[] }
   /** A co-op run: the client stepping it and what draws it (null solo). */
   coop: CoopRun | null
+  /** A Dojo session (`game/training.ts`): never banked, ranked nor reported as a run (null otherwise). */
+  training: DojoRun | null
 }
+
+/** The shell's side of a Dojo session: its panel, when it began and whether a build was saved, for its `dojo_end`. */
+type DojoRun = { panel: ReturnType<typeof trainingPanel>; startedAt: number; saved: boolean }
 
 /**
  * The shell's side of a co-op run. `r.game` is the runner's (confirmed) game;
@@ -587,6 +597,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       supporters: (focus, open) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: () => showTitle({ focus }) }, open),
       invites: (focus) => invitesScreen(ui, input, () => showTitle({ focus })),
       coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
+      dojo: () => showDojo(),
       meadow,
     }, opts),
   )
@@ -865,6 +876,7 @@ const errorContext = (): ErrorContext => {
 const endRun = () => {
   if (!run) return
   if (run.coop) return endCoopRun(run, run.coop)
+  if (run.training) return endDojo(run, run.training)
   bankRun(run, wonRun(run.game))
   reportRun(run)
   rankRun(run)
@@ -968,6 +980,8 @@ const menuSprites = (): Variant[] => [
     ...new Set([
     ...(halloweenToday() ? HAUNT_DEX : []),
     KECLEON_DEX,
+    // The Dojo's Machoke and Wobbuffet, west of home.
+    ...DOJO_DEX,
     // The plaza's visitors today: Meowth at his caravan, a seasonal stall's keeper.
     ...(scene.plaza.visitors.caravan ? [CARAVAN.dex] : []),
     ...(scene.plaza.visitors.stall ? [STALLS[scene.plaza.visitors.stall].dex] : []),
@@ -1139,6 +1153,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     // The run's own roster: a legend's (`avoidLegend`) may have swapped a boss.
     sprites: { needs: castNeeds(game.roster, EXTRAS), always: [...familyDex(starter), playerDex(game), ENEMIES[plan.outbreak].dex] },
     coop: null,
+    training: null,
   }
   if (run.companion) run.sprites.always.push(run.companion.dex)
   // The menus' sheets age out from here; the run's next stage starts streaming.
@@ -1174,6 +1189,158 @@ const announceRun = (start: ReplayStart, challenge: Run['challenge']) => {
   for (const id of start.bag) aside(h('span', { class: 'item-toast' }, shopIcon(id), h('b', {}, BAG_ITEMS[id].name), t().bag.active[id]), 3200, id)
   // Each armed TM says which of the run's TM drops it is: the first, then the second.
   for (const [i, id] of (start.tms ?? []).entries()) aside(h('span', { class: 'item-toast' }, tmPicture(id), rich(t().toast.armedTm(MOVES[id].name, i))), 3200, `tm-${id}`)
+}
+
+/* ---------------- The Dojo ---------------- */
+
+/** Who trains at the Dojo: the partner select with a plain Treinar bar; Back goes home. */
+const showDojo = (initial: PlayableId = loadSave().partner) => {
+  endRun()
+  const select = starterSelect(
+    ui,
+    input,
+    {
+      pick: (id) => setTimeout(() => void startDojo(id), 250),
+      back: () => showTitle({ focus: 'dojo' }),
+      settings: () => setScreen(openSettings(ui, input, () => showDojo(select.selected()))),
+      incubator: () => showIncubator(() => showDojo(select.selected())),
+    },
+    initial,
+    { dojo: true },
+  )
+  setScreen(select)
+}
+
+/**
+ * A Dojo session (`game/training.ts`): a run with the save's upgrades, Bottle
+ * Caps and colors but no Bag, TMs or luck of its own, turned into the Dojo, in
+ * the family's saved build when it has one, with its panel over it
+ * (`ui/training.ts`). Nothing of it is banked, ranked or recorded.
+ */
+const startDojo = async (starter: PlayableId) => {
+  if (launching) return
+  launching = true
+  try {
+    setScreen(null)
+    endRun()
+    const loading = loadingScreen()
+    ui.append(loading)
+    const save = loadSave()
+    const shiny = playsShiny(save, starter)
+    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter) })
+    // The 1/64 roll is a run's luck: nothing unlocks at the Dojo, and it plays in the colors picked.
+    const me = localPlayer(game)
+    me.shiny = shiny
+    me.luckyShiny = false
+    // The dummies stand where the panel leaves the field open: above the player on a phone held upright (the panel rises from the bottom), left of it elsewhere.
+    const upright = view.h > view.w
+    startTraining(game, TRAINING.target, TRAINING.counts[0], upright ? { x: 0, y: -1, reach: Math.round(view.h * 0.2) } : { x: -1, y: 0, reach: Math.min(TRAINING.reach, Math.round(view.w * 0.26)) })
+    const build = save.builds[starter]
+    if (build) applyBuild(game, build)
+    // Opens quietly: no news of the build's ability being picked.
+    game.events.length = 0
+    await loadRunSheets(familySheets(starter, shiny), [ENEMIES[TRAINING.target].dex])
+    loading.remove()
+    const start: ReplayStart = { seed: 0, starter, difficulty: save.difficulty, ranks: save.ranks, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...view } }
+    const r: Run = {
+      game,
+      hud: runHud(game),
+      overlay: null,
+      shown: null,
+      closeText: null,
+      paid: 0,
+      candies: 0,
+      reported: true,
+      missionsBefore: [],
+      recorded: null,
+      unlocked: [],
+      reward: 0,
+      rewardEggs: 0,
+      rewardItems: [],
+      hatchery: { steps: 0, eggs: 0 },
+      convertedEggs: { full: [], cap: [] },
+      dexBase: save.dex,
+      recorder: startRecording(start),
+      ranked: null,
+      rank: null,
+      bestBefore: 0,
+      challenge: null,
+      companion: runCompanion(me),
+      sprites: { needs: [], always: [...familyDex(starter), ENEMIES[TRAINING.target].dex] },
+      coop: null,
+      training: null,
+    }
+    if (r.companion) r.sprites.always.push(r.companion.dex)
+    const name = PLAYABLE[starter].name
+    const forget = () =>
+      loadSave().builds[starter]
+        ? () => {
+            updateSave((s) => ({ ...s, builds: Object.fromEntries(Object.entries(s.builds).filter(([id]) => id !== starter)) }))
+            void syncSave()
+            aside(rich(t().training.cleared(name)), 2600, 'dojo')
+            panel.refresh(null)
+          }
+        : null
+    const panel = trainingPanel(ui, game, {
+      // A species' sheets load before its dummies stand (and it stays loaded while the session lasts).
+      dummies: (target, count) => {
+        const dex = ENEMIES[target].dex
+        void loadSpecies(dex)
+          .catch(() => {})
+          .then(() => {
+            if (run !== r) return
+            if (!r.sprites.always.includes(dex)) r.sprites.always.push(dex)
+            setDummies(game, target, count)
+            panel.refresh(forget())
+          })
+      },
+      save: () => {
+        updateSave((s) => ({ ...s, builds: { ...s.builds, [starter]: buildOf(localPlayer(game)) } }))
+        void syncSave()
+        dojo.saved = true
+        playSfx('buy')
+        news(rich(t().training.saved(name)), 3600, 'dojo')
+        panel.refresh(forget())
+      },
+      clear: forget(),
+      leave: () => leaveDojo(),
+    })
+    const dojo: DojoRun = { panel, startedAt: performance.now(), saved: false }
+    r.training = dojo
+    run = r
+    syncSprites()
+    resetMemoryPeaks()
+    resetRunFrames(frames)
+    syncRunWatch()
+    if (build) aside(rich(t().training.loaded(name)), 3000, 'dojo')
+  } finally {
+    launching = false
+  }
+}
+
+/** Leaves the Dojo for the lobby (the panel's Sair, the pause menu's quit). */
+const leaveDojo = () => {
+  endRun()
+  showTitle({ focus: 'dojo' })
+}
+
+/** Ends a Dojo session: one `dojo_end` line, then the run goes without banking, ranking or missions. */
+const endDojo = (r: Run, dojo: DojoRun) => {
+  const p = localPlayer(r.game)
+  track('dojo_end', {
+    starter: p.starter,
+    seconds: Math.round((performance.now() - dojo.startedAt) / 1000),
+    saved: dojo.saved,
+    moves: p.moves.map((m) => `${m.id}:${m.level}`),
+    items: p.items.map((i) => `${i.id}:${i.level}`),
+  })
+  dojo.panel.dispose()
+  r.overlay?.dispose()
+  r.closeText?.()
+  r.hud.dispose()
+  clearToasts(ui)
+  run = null
+  syncRunWatch()
 }
 
 /** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
@@ -1281,7 +1448,7 @@ const syncOverlay = (r: Run) => {
       r.overlay = pauseMenu(ui, input, g, {
         // Only from the pause: a late press must never flip a level-up to playing (unrecorded) or end the run under it.
         resume: () => g.phase === 'paused' && (g.phase = 'playing'),
-        quit: () => g.phase === 'paused' && afterRun(() => showMenu()),
+        quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : afterRun(() => showMenu())),
         settings: (back) => runSettings(r, back),
         report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
       })
@@ -1931,7 +2098,7 @@ document.addEventListener('gesturestart', blockDefault)
 document.addEventListener(
   'touchmove',
   (e) => {
-    const inScrollable = e.target instanceof Element && e.target.closest('.screen, .shop-sheet')
+    const inScrollable = e.target instanceof Element && e.target.closest('.screen, .shop-sheet, .dojo-panel')
     if (e.touches.length > 1 || !inScrollable) e.preventDefault()
   },
   { passive: false },
@@ -2118,6 +2285,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner) => {
     // Every teammate's family stays loaded; the cast streams in like a solo run's.
     sprites: { needs: castNeeds(live.game.roster, EXTRAS), always: [...new Set(live.game.players.flatMap((p) => familyDex(p.starter)))] },
     coop: c,
+    training: null,
   }
   syncSprites()
   resetMemoryPeaks()
@@ -2629,6 +2797,7 @@ const frame = (now: number) => {
     if (berries > 0) berryToast(g, berries)
     if (run === r) {
       syncOverlay(r)
+      r.training?.panel.tick?.(t)
       // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped.
       tickToasts(ui, dt, g.phase !== 'playing')
       // Redraw only when the simulation advanced: halves the work on 120 Hz phones and
@@ -3336,6 +3505,14 @@ if (import.meta.env.DEV) {
       },
       /** The lobby's meadow: its wanderers, the partner and the camera, to stage greetings (`ps.meadow().partner`). */
       meadow: () => scene,
+      /**
+       * The Dojo: `ps.dojo('charmander')` starts a training session with that Pokémon at once (its saved build on), and
+       * `ps.dojo()` walks the lobby there, Machoke's hello and the partner select included (`ps:dojoSeen` gone: the first visit's).
+       */
+      dojo: (id?: PlayableId) => {
+        if (id) return void startDojo(id)
+        showTitle({ shop: 'dojo' })
+      },
       /**
        * The Kecleon plaza: `ps.plaza(3)` shows the shop's building at that level (1 to 5, until the next reload; `ps.plaza(0)`
        * goes back to the save's) and the lobby pans there for a look, cards out; Esc or Enter comes back.

@@ -72,6 +72,7 @@ import { createTension } from './tension'
 import { updateStatuses } from './statusSystem'
 import { createTally } from './tally'
 import { updateShopTms } from './shopTmSystem'
+import { updateTraining } from './training'
 import { createWeather, updateWeather } from './weather'
 import { updateTraits } from './traitSystem'
 import { BASE_STATS } from './stats'
@@ -289,6 +290,7 @@ const createRun = (view: Game['view'], seed: number, setups: readonly PlayerSetu
     now: 0,
     legendScene: null,
     coop: coop ? createCoopState(players.length) : null,
+    training: null,
   }
   for (const p of players) {
     g.player = p
@@ -852,6 +854,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   if (updateLegendScene(g, dt)) return
   if (updatePlaceFall(g, dt)) return
   if (hitstopHolds(g, dt)) return
+  if (g.training !== null) return stepTraining(g, inputs, dt)
 
   // The run clock stops inside a rift (`clockRuns`); `now` never does.
   g.now += dt
@@ -919,6 +922,37 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
     if (p.pendingLevelUps > 0 || evolutionFreed(g)) advancePhase(g)
   }
   g.player = actor
+}
+
+/**
+ * The Dojo's tick (`training.ts`): only the players, their moves and the
+ * dummies. The run clock, the horde, bosses, hazards, the map and the weather
+ * wait, and nothing levels up.
+ */
+const stepTraining = (g: Game, inputs: readonly StepInput[], dt: number) => {
+  g.now += dt
+  const actor = g.player
+  for (const p of g.players) {
+    g.player = p
+    stepPlayer(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  rebuildGrid(g)
+  updateEnemies(g, dt)
+  updateHazards(g, dt)
+  updateStatuses(g, dt)
+  rebuildGrid(g)
+  for (const p of g.players) {
+    g.player = p
+    stepMoves(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  updateAttacks(g, dt)
+  updateVerbEvolved(g, dt)
+  updateTerrain(g, dt)
+  updateEffects(g, dt)
+  updateTraining(g, dt)
+  followPlayers(g, dt, domainCamera)
 }
 
 /**

@@ -235,7 +235,8 @@ export const hurtPlayer = (
   by: HarmBy | null = null,
 ) => {
   const p = g.player
-  if (p.iframes > 0 || p.hidden || isRepelled(g) || g.phase !== 'playing') return
+  // The Dojo never hurts (`training.ts`).
+  if (p.iframes > 0 || p.hidden || isRepelled(g) || g.phase !== 'playing' || g.training !== null) return
   // Co-op: fainted, away, gone or mid-evolution players can't be hurt.
   if (g.coop !== null && !inPlay(p)) return
   if (p.guard) return guardHit(g, p.guard, from)
