@@ -6,7 +6,7 @@ import { REGIONS, STARTER_IDS, type Region, type StarterId } from '../data/start
 import type { PokeType } from '../data/types'
 import { isRiftLegend, RIFT, type RiftLegend } from '../data/rifts'
 import { DOMAINS } from '../data/domains'
-import { GRAVEYARD, PLACE, PLACE_IDS, PLACES, type PlaceId } from '../data/places'
+import { GRAVEYARD, HIDDEN, hiddenOf, PLACE, PLACE_IDS, PLACES, type PlaceId } from '../data/places'
 import { SUMMONS } from '../data/traits'
 import { bossCandidates, EVENTS, nightCandidates, RUN_LENGTH, STAGES, TRIO_IDS, TRIOS, type TrioId } from '../data/waves'
 import { NIGHT_BOSSES } from '../data/halloween'
@@ -183,6 +183,8 @@ export type Appearance =
   | { kind: 'reaper'; at: number }
   /** Lives in a place (`data/places.ts`), coming out from `from`; `boss` for the place's own boss. */
   | { kind: 'place'; place: PlaceId; from: number; boss: boolean }
+  /** Pops out of a hidden zone's spots (`lucky`) or is its rare dweller (`rare`), from `from`. */
+  | { kind: 'hidden'; place: PlaceId; from: number; rare: boolean }
   /** Called in by a summoner (Nidoqueen's Nidoran). */
   | { kind: 'summoned'; by: EnemyId }
   /** Comes at the player in a legendary's domain (`by`'s rift): its crossing's retinue, adds it calls in or keepers of its barrier. */
@@ -221,13 +223,18 @@ export const appearances = (id: EnemyId): Appearance[] => {
   const event = EVENT_LEGENDS.some((l) => l === id)
   const rift: Appearance[] = event ? [{ kind: 'eventRift', from: RIFT.slots[0] }] : isRiftLegend(id) ? [{ kind: 'rift', from: RIFT.slots[0] }] : []
   const reaper: Appearance[] = id === REAPER ? [{ kind: 'reaper', at: ENDLESS.reaperAt }] : []
-  // A place's dwellers come out once the run's stage has their tier (never before the first entrance).
+  // A place's dwellers come out once the run's stage has their tier (never before the first entrance; a hidden zone's, never before it can open).
   const placed = PLACE_IDS.flatMap((place): Appearance[] => {
     if (place === 'graveyard' && id === GRAVEYARD.boss) return [{ kind: 'place', place, from: PLACE.firstAt, boss: true }]
+    const hidden = hiddenOf(place)
+    const first = hidden ? HIDDEN.from : PLACE.firstAt
+    const own: Appearance[] = hidden
+      ? [...(hidden.rare === id ? [true] : []), ...(hidden.lucky.some(([e]) => e === id) ? [false] : [])].map((rare) => ({ kind: 'hidden', place, from: first, rare }))
+      : []
     const species: readonly EnemyId[] = PLACES[place].species
-    if (!species.includes(id)) return []
+    if (!species.includes(id)) return own
     const stage = STAGES.findIndex((s) => s.cast.includes(def.tier ?? 1))
-    return [{ kind: 'place', place, from: Math.max(PLACE.firstAt, STAGES[stage - 1]?.until ?? 0), boss: false }]
+    return [...own, { kind: 'place', place, from: Math.max(first, STAGES[stage - 1]?.until ?? 0), boss: false }]
   })
   const summoned = (Object.keys(SUMMONS) as Array<keyof typeof SUMMONS>)
     .filter((by) => SUMMONS[by].includes(id))

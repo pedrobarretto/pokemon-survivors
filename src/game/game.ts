@@ -268,7 +268,7 @@ const createRun = (view: Game['view'], seed: number, setups: readonly PlayerSetu
     weather: createWeather(),
     traits: { seen: new Set(), nextIntro: 0 },
     rift: createRiftState(),
-    place: createPlaceState(),
+    place: createPlaceState(seed),
     landmarks: createLandmarkState(),
     tutors: 0,
     endless: null,

@@ -1,5 +1,5 @@
 import { ACHIEVEMENT_IDS, ACHIEVEMENTS, GIFT_TITLES, TITLE_IDS, type AchievementDef, type AchievementId, type AchievementStat, type GiftTitleId, type TitleId } from '../data/achievements'
-import { PLACE_IDS, type PlaceId } from '../data/places'
+import { isHiddenPlace, PLACE_IDS, type PlaceId } from '../data/places'
 import { isStarter } from '../data/hatchlings'
 import { RIFT_LEGENDS, type RiftLegend } from '../data/rifts'
 import { REGIONS, STARTER_IDS, STARTERS, type StarterId } from '../data/starters'
@@ -24,7 +24,7 @@ type Counter = (typeof COUNTERS)[number]
 export type Lifetime = Readonly<Record<Counter, number>> & {
   /** Rift legendaries ever beaten. */
   legends: readonly RiftLegend[]
-  /** Places ever cleared. */
+  /** Places ever cleared (a hidden zone counts once found and entered). */
   places: readonly PlaceId[]
   /** Generations (regions) whose starter beat Mewtwo. */
   winGens: readonly number[]
@@ -88,7 +88,8 @@ const statValue = (l: Lifetime, stat: AchievementStat, dex: Pokedex): number => 
     case 'bestMinutes': return Math.floor(l.bestTime / 60)
     case 'overtimeMinutes': return Math.floor(l.bestOvertime / 60)
     case 'legends': return l.legends.length
-    case 'places': return l.places.length
+    case 'places': return l.places.filter((id) => !isHiddenPlace(id)).length
+    case 'hiddenZones': return l.places.filter(isHiddenPlace).length
     case 'regions': return l.winGens.length
     case 'starters': return l.starters.length
     case 'trio': return l.winTypes.filter((t) => t === 'grass' || t === 'fire' || t === 'water').length

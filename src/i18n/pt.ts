@@ -1,6 +1,6 @@
 import type { AchievementId, AchievementStat, GiftTitleId, TitleId } from '../data/achievements'
 import type { BiomeId } from '../data/biomes'
-import type { PlaceId, WingId } from '../data/places'
+import type { DigFind, HiddenPlaceId, PlaceId, WingId } from '../data/places'
 import type { LandmarkId, TreasureLandmark } from '../data/landmarks'
 import type { PokeType } from '../data/types'
 import type { HitKind } from '../data/abilities'
@@ -2110,18 +2110,22 @@ export const pt = {
     tunnelOut: 'Você saiu do outro lado do túnel!',
   },
   places: {
-    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens' } satisfies Record<PlaceId, string>,
+    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
     /** Short names for the HUD's pill while an entrance is open. */
-    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente' } satisfies Record<PlaceId, string>,
+    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente', grotto: 'Gruta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
     open: {
       cave: 'A entrada de uma *caverna* apareceu! Siga a seta.',
       graveyard: 'Um *cemitério* surgiu na névoa! Siga a seta.',
       sky: 'Uma *corrente de ar* sobe para o céu! Siga a seta e voe.',
+      grotto: 'Você achou uma *Gruta Oculta* escondida no mato!',
+      underground: 'Uma rachadura na pedra leva ao *Subterrâneo*!',
     } satisfies Record<PlaceId, string>,
     sealed: {
       cave: 'Pedras desabaram na entrada da caverna.',
       graveyard: 'O portão do cemitério se fechou.',
       sky: 'A corrente de ar se desfez.',
+      grotto: 'As folhas cobriram a entrada da gruta.',
+      underground: 'A rachadura na pedra desmoronou.',
     } satisfies Record<PlaceId, string>,
     blocked: 'Só um Pokémon do tipo *Voador* consegue subir nessa corrente de ar.',
     /** What to do, shown on the way in. */
@@ -2129,6 +2133,8 @@ export const pt = {
       cave: 'Ache as escadas no escuro e desça até o *tesouro*!',
       graveyard: 'Cada fantasma derrotado desperta a *Pedra Peculiar*…',
       sky: 'Pegue as *asas* que o vento traz antes que ele acalme!',
+      grotto: 'Derrote os *Audino* que saem da grama balançando!',
+      underground: 'Fique nos *brilhos* das paredes para cavar e acerte os *Diglett*!',
     } satisfies Record<PlaceId, string>,
     /** A dungeon floor, as Mystery Dungeon names them (B1F). */
     floor: (n: number) => `B${n}F`,
@@ -2162,6 +2168,30 @@ export const pt = {
     /** Fainting inside: a rescue brings the player back out instead of ending the run. */
     fall: 'Você desmaiou! Uma *equipe de resgate* está a caminho…',
     rescued: 'Você foi resgatado e voltou ao mapa. A corrida continua!',
+    /** Hidden zones (`game/hidden.ts`): the title card's line under the name. */
+    hiddenTag: 'Zona oculta',
+    grottoSoon: 'A luz da gruta está sumindo…',
+    wallSoon: 'As paredes estão rachando!',
+    grottoOut: 'A luz se apagou e você saiu da gruta.',
+    collapse: 'As paredes desabaram! Você escapou por um triz.',
+    /** The rare dweller shows up (its name), runs off, or falls. */
+    dweller: {
+      grotto: (name: string) => `*${name}* apareceu entre as flores Gracidea! Rápido, antes que fuja!`,
+      underground: (name: string) => `*${name}* brilha no fundo da escavação! Rápido, antes que fuja!`,
+    } satisfies Record<HiddenPlaceId, (name: string) => string>,
+    dwellerShiny: (name: string) => `Um *${name}* _shiny_ apareceu! Rápido, antes que fuja!`,
+    dwellerFled: (name: string) => `${name} fugiu…`,
+    dwellerDown: (name: string) => `*${name}* derrotado! Deixou uma Poké Ball e um presente.`,
+    /** What a glint in the Underground's walls gave. */
+    finds: {
+      expCandy: 'Você desenterrou um *Exp. Candy* enorme!',
+      sphere: 'Você desenterrou uma *Prism Sphere*! Vale ₽.',
+      rareCandy: 'Você desenterrou um *Rare Candy*!',
+      stone: 'Você desenterrou uma *pedra de evolução*!',
+      fossil: 'Você desenterrou *Old Amber*! Tinha um ovo dentro!',
+    } satisfies Record<DigFind, string>,
+    hudGrotto: (n: number, time: string) => `Audino ${n} · ${time}`,
+    hudDig: (n: number, time: string) => `Achados ${n} · parede ${time}`,
   },
 
   types: {
@@ -2290,6 +2320,7 @@ export const pt = {
       legends: 'Domador de Lendas',
       shinyLegend: 'Lenda brilhante',
       explorer: 'Explorador',
+      secrets: 'Segredos da Trilha',
       champion: 'Campeão',
       wins10: 'Dinastia',
       trio: 'Trio inicial',
@@ -2319,6 +2350,7 @@ export const pt = {
       shinyHatch: 'Criador de Shinies',
       legends: 'Domador de Lendas',
       explorer: 'Explorador(a)',
+      secrets: 'Caçador(a) de Segredos',
       champion: 'Campeão',
       regions: 'Mestre das Regiões',
       reaperDown: 'Lenda Viva',
@@ -2364,6 +2396,7 @@ export const pt = {
       placeClears: (n: string) => (n === '1' ? 'Conclua um lugar: o tesouro da caverna, Spiritomb ou um voo com asas' : `Conclua ${n} lugares`),
       landmarks: (n: string) => (n === '1' ? 'Abra um tesouro escondido no mapa: na casa abandonada, no labirinto, nas ruínas ou no acampamento' : `Abra ${n} tesouros escondidos no mapa`),
       places: (n: string) => `Conclua os ${n} lugares: o tesouro da caverna, Spiritomb no cemitério e um voo acima das nuvens`,
+      hiddenZones: (n: string) => `Encontre as ${n} zonas ocultas (raras, sem aviso: fique de olho no mapa)`,
     } satisfies Record<AchievementStat, (n: string) => string>,
     region: (name: string) => `Vença o Mewtwo com um inicial de ${name}`,
   },

@@ -3,7 +3,7 @@ import type { BiomeId } from '../data/biomes'
 import { PLACE_FEET, type PlacePiece } from '../data/places'
 import type { Tier } from '../data/terrain'
 import { cylinder, grid, lathe, limb, noise, outline, put, sculpt, shade, shard, stamp, toSprite, type Grid, type Ramp } from './sculpt'
-import { cliffOf, deadTree, stalagmites, TOWER_TREE, type Piece } from './terrain'
+import { cliffOf, deadTree, ROCK_SKINS, stalagmites, TOWER_TREE, type Piece } from './terrain'
 
 /**
  * Places' scenery (`data/places.ts`), sculpted in code like the map's
@@ -282,6 +282,105 @@ const keystone = (variant: number): Piece => {
   return piece(g, cx, ground)
 }
 
+/** Leaves and earth of the grotto's hollow in each biome, so it hides among the biome's own thickets. */
+const HOLLOW: Record<BiomeId, { leaves: Ramp; earth: Ramp; outline: string; snow?: Ramp; bloom?: string }> = {
+  meadow: { leaves: ['#1a4c20', '#2c7030', '#45983a', '#69b84c', '#94d468'], earth: ['#2c1c10', '#4a3220', '#6a4a2c', '#8a6638'], outline: '#122a12', bloom: '#f8a0c8' },
+  forest: { leaves: ['#0c2812', '#163e1c', '#24582a', '#387838', '#56984a'], earth: ['#1c120a', '#30200f', '#4a3218', '#644626'], outline: '#081408', bloom: '#f8e0d0' },
+  cave: { leaves: ['#20283a', '#2e4a44', '#3e6a52', '#5a8a62', '#7aa872'], earth: ['#1c1416', '#342a2c', '#4e4244', '#6a5c5c'], outline: '#100a0c' },
+  snow: { leaves: ['#0c2420', '#163a34', '#245a4c', '#367a62'], earth: ['#1a2436', '#2e3e56', '#465a78', '#627a9a'], outline: '#0a1820', snow: ['#9cb4d4', '#d0e0f4', '#f0f6ff', '#ffffff'] },
+  tower: { leaves: ['#1c1424', '#2c2438', '#3c3450', '#4c4466', '#5c5478'], earth: ['#1c1424', '#2c2438', '#3c3450', '#4c4466'], outline: '#0c0814', bloom: '#b070c8' },
+}
+
+/**
+ * The Hidden Grotto's way in (Black 2 and White 2): a low mound of earth and
+ * roots under clumps of leaves in the biome's own skin, a dark hollow going
+ * down at its front with roots hanging over it, a few flowers. From afar it
+ * reads as one more thicket. Anchored at the hollow's foot.
+ */
+const grottoHollow = (biome: BiomeId): Piece => {
+  const skin = HOLLOW[biome]
+  const g = grid(50, 36)
+  const cx = 25
+  const ground = 32
+  sculpt(g, [{ x: cx - 13, y: ground - 6, rx: 10, ry: 7 }, { x: cx + 13, y: ground - 6, rx: 10, ry: 7 }, { x: cx, y: ground - 10, rx: 15, ry: 9 }], skin.earth, { facets: 2, seed: 7, rough: 0.15 })
+  // The hollow: a dark mouth fading into the earth, and roots hanging across its top.
+  for (let y = ground - 14; y <= ground; y++) {
+    for (let x = cx - 9; x <= cx + 9; x++) {
+      const dx = (x + 0.5 - cx) / 9
+      const dy = (y + 0.5 - ground) / 14
+      if (dx * dx + dy * dy > 1) continue
+      const edge = 1 - Math.sqrt(dx * dx + dy * dy)
+      put(g, x, y, edge < 0.12 ? skin.earth[0]! : edge < 0.3 ? '#0c0806' : '#030202')
+    }
+  }
+  for (const [x, len] of [[cx - 5, 5], [cx - 1, 3], [cx + 3, 6], [cx + 6, 3]] as const) for (let k = 0; k < len; k++) put(g, x + (k % 3 === 2 ? 1 : 0), ground - 13 + k, skin.earth[2]!)
+  // The leaves over it, clumped like a bush, snow on top in the snow.
+  sculpt(
+    g,
+    [
+      { x: cx - 16, y: ground - 13, rx: 8, ry: 6 },
+      { x: cx + 16, y: ground - 12, rx: 8, ry: 6 },
+      { x: cx - 7, y: ground - 20, rx: 10, ry: 7 },
+      { x: cx + 8, y: ground - 21, rx: 10, ry: 7 },
+      { x: cx, y: ground - 26, rx: 8, ry: 5 },
+    ],
+    skin.leaves,
+    { tag: 10, seed: 3, rough: 0.2, paint: skin.snow ? (x, y, n, light) => (n.y < -0.45 ? shade(skin.snow!, light + 0.15, x, y) : null) : undefined },
+  )
+  if (skin.bloom) for (const [x, y] of [[cx - 19, ground - 13], [cx + 13, ground - 18], [cx - 4, ground - 24], [cx + 19, ground - 11]] as const) put(g, x, y, skin.bloom)
+  outline(g, skin.outline)
+  return piece(g, cx, ground)
+}
+
+/**
+ * The Underground's way down (Diamond and Pearl): a boulder in the biome's
+ * stone with a jagged crack splitting its foot, dark inside, gravel spilled
+ * in front. The glint on it is drawn live (`render/places.ts`). Anchored at
+ * the crack's foot.
+ */
+const crackedRock = (biome: BiomeId): Piece => {
+  const skin = ROCK_SKINS[biome]
+  const g = grid(48, 34)
+  const cx = 24
+  const ground = 30
+  sculpt(
+    g,
+    [
+      { x: cx - 9, y: ground - 12, rx: 13, ry: 11 },
+      { x: cx + 9, y: ground - 13, rx: 12, ry: 12 },
+      { x: cx + 1, y: ground - 20, rx: 12, ry: 9 },
+    ],
+    skin.stone,
+    {
+      facets: 2.5,
+      seed: 11,
+      rough: 0.12,
+      paint: (x, y, n, light) => {
+        if (skin.snow && n.y < -0.3) return shade(skin.snow, light + 0.2, x, y)
+        if (skin.moss && n.y < -0.4 && noise(x, y, 5) < 0.7) return shade(skin.moss, light, x, y)
+        return null
+      },
+    },
+  )
+  // The crack: a zigzag widening to a dark gap at the foot.
+  const zig = [[0, -27], [-2, -23], [1, -19], [-1, -15], [2, -11], [0, -7], [0, 0]] as const
+  for (let i = 0; i < zig.length - 1; i++) {
+    const [x0, y0] = zig[i]!
+    const [x1, y1] = zig[i + 1]!
+    const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))
+    for (let k = 0; k <= steps; k++) {
+      const x = Math.round(cx + x0 + ((x1 - x0) * k) / steps)
+      const y = Math.round(ground + y0 + ((y1 - y0) * k) / steps)
+      const half = Math.max(0, Math.round((y - (ground - 12)) / 3))
+      for (let dx = -half; dx <= half + 1; dx++) put(g, x + dx, y, dx === -half || dx === half + 1 ? skin.stone[0]! : '#050404')
+    }
+  }
+  // Gravel spilled out in front.
+  for (const [x, y] of [[cx - 7, ground + 1], [cx - 4, ground + 2], [cx + 5, ground + 1], [cx + 8, ground + 2], [cx + 2, ground + 2]] as const) put(g, x, y, skin.stone[2]!)
+  outline(g, skin.outline)
+  return piece(g, cx, ground)
+}
+
 /** Every piece by kind: `variant` picks a look, and the cave's mouth wears the biome it stands in. */
 export const PLACE_PIECES: Record<PlacePiece, (variant: number, biome: BiomeId) => Piece> = {
   caveMouth: (_v, biome) => caveMouth(biome),
@@ -294,6 +393,8 @@ export const PLACE_PIECES: Record<PlacePiece, (variant: number, biome: BiomeId) 
   graveCross,
   deadTree: () => deadTree(TOWER_TREE),
   keystone,
+  grottoHollow: (_v, biome) => grottoHollow(biome),
+  crackedRock: (_v, biome) => crackedRock(biome),
 }
 
 /** Shadow width of each piece, and which ones are tall enough to go see-through. */
@@ -308,6 +409,8 @@ export const PLACE_SHADOW: Record<PlacePiece, number> = {
   graveCross: 5,
   deadTree: 9,
   keystone: 12,
+  grottoHollow: 0,
+  crackedRock: 20,
 }
 
 export const PLACE_TALL: Record<PlacePiece, boolean> = {
@@ -321,4 +424,6 @@ export const PLACE_TALL: Record<PlacePiece, boolean> = {
   graveCross: false,
   deadTree: true,
   keystone: false,
+  grottoHollow: false,
+  crackedRock: false,
 }

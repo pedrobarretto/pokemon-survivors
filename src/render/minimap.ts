@@ -7,6 +7,7 @@ import type { PlaceId } from '../data/places'
 import { TERRAIN } from '../data/terrain'
 import { isMission } from '../game/fieldMissions'
 import { MAP_EVENTS, type MapEventKind } from '../game/mapEvents'
+import { entranceShown } from '../game/place'
 import { localPlayer } from '../game/players'
 import { roomOf, type Room } from '../game/room'
 import { featureAt, type Feature } from '../game/terrain'
@@ -100,6 +101,8 @@ const GLYPHS = lazy(() => ({
     cave: glyph(DOOR, { c: '#a87848', k: '#281810' }),
     graveyard: glyph(DOOR, { c: '#9888b0', k: '#201830' }),
     sky: glyph(DOOR, { c: '#a8d8f8', k: '#f8f8f8' }),
+    grotto: glyph(DOOR, { c: '#68b048', k: '#102808' }),
+    underground: glyph(DOOR, { c: '#b89470', k: '#281808' }),
   } satisfies Record<PlaceId, PixelSprite>,
   landmark: {
     cottage: glyph(HOUSE, { r: '#d05838', w: '#f0e0b8', k: '#583018' }),
@@ -430,6 +433,7 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     if (inside?.id === 'cave' && inside.state.stairs) marker(ctx, v, shape, art.stairs, inside.x + inside.state.stairs[0], inside.y + inside.state.stairs[1], true)
     if (inside?.id === 'cave' && inside.state.chest && !inside.state.chest.open) marker(ctx, v, shape, art.events.chest, inside.x + inside.state.chest.x, inside.y + inside.state.chest.y, true)
     if (inside?.id === 'graveyard') marker(ctx, v, shape, art.keystone, inside.x + inside.state.keystone[0], inside.y + inside.state.keystone[1], true)
+    if (inside?.id === 'underground') for (const gl of inside.state.glints) if (!gl.dug) marker(ctx, v, shape, art.events.altar, inside.x + gl.x, inside.y + gl.y, false)
   } else {
     const look = LOOKS[g.biome.id]
     drawGround(ctx, v, look.ground, look.dither, g.terrain.seed)
@@ -447,7 +451,8 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
         if (f.landmark) marks.push(f)
       }
     }
-    if (g.place.entrance) drawFeature(ctx, v, g.place.entrance.terrain, look)
+    // A hidden zone's entrance stays off the map until found: its trees and rocks would give it away.
+    if (g.place.entrance && entranceShown(g.place.entrance)) drawFeature(ctx, v, g.place.entrance.terrain, look)
     drawViewBox(ctx, v, g)
     for (const f of marks) {
       const lm = f.landmark!
@@ -462,7 +467,7 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
       marker(ctx, v, shape, art.events[ev.kind], at.x, at.y, MAP_EVENTS[ev.kind].marker)
     }
     const door = g.place.entrance
-    if (door?.open) marker(ctx, v, shape, art.place[door.id], door.x, door.y, true)
+    if (door?.open && entranceShown(door)) marker(ctx, v, shape, art.place[door.id], door.x, door.y, true)
     const portal = g.rift.portal
     if (portal) marker(ctx, v, shape, art.portal[blink]!, portal.x, portal.y, true)
   }

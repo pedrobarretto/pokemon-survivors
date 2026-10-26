@@ -232,6 +232,36 @@ const SCENARIOS = {
       enterPlace(g, 'cave', g.player.x, g.player.y)
     },
   },
+  /** The Hidden Grotto at 5:00 (`hidden.ts`, `grotto.ts`): Shaymin out early, Audino popping out of the shaking grass, the item in the grass. */
+  grotto: {
+    start: { ...START, starter: 'charmander' },
+    seconds: 40,
+    stage: (g) => {
+      g.time = 300
+      g.nextEvent = 99
+      g.player.revives = 2
+      gainXp(g, 1200)
+      enterPlace(g, 'grotto', g.player.x, g.player.y)
+      if (g.place.inside?.id === 'grotto') g.place.inside.state.dwellers.rare.at = 3
+    },
+  },
+  /** The Underground at 8:00 (`underground.ts`): a glint under the player's feet dug up, the walls cracking, Diglett in their holes and Diancie early. */
+  underground: {
+    start: { ...START, starter: 'geodude' },
+    seconds: 40,
+    stage: (g) => {
+      g.time = 480
+      g.nextEvent = 99
+      g.player.revives = 2
+      gainXp(g, 2000)
+      enterPlace(g, 'underground', g.player.x, g.player.y)
+      const inside = g.place.inside
+      if (inside?.id !== 'underground') return
+      inside.state.dwellers.rare.at = 4
+      const glint = inside.state.glints[0]!
+      Object.assign(g.player, { x: inside.x + glint.x, y: inside.y + glint.y })
+    },
+  },
   /** Alakazam's Magic Guard on Nightmare at 6:00 with a Life Orb: poison puddles under it and the world's next attack due, only direct hits counting. */
   magicGuard: {
     start: { ...START, difficulty: 'nightmare', starter: 'abra' },
@@ -260,7 +290,7 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
-  40: {
+  41: {
     levelUps: '2998·50·13·8c971102',
     mega: '1892·30·2·c69736f1',
     riftFall: '675·0·1·b7486277',
@@ -275,6 +305,8 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
     legend: '1100·51·14·cdbdb688',
     waveLegend: '1998·14·17·1fa0f40a',
     cave: '2188·16·12·d2d47594',
+    grotto: '2782·22·18·bca1fc3c',
+    underground: '2799·21·23·0aa0e181',
     magicGuard: '1188·29·19·fddbed17',
   },
 }

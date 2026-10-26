@@ -167,6 +167,8 @@ export const appearance = (a: Appearance, m: SiteMessages) => {
       return m.pokedex.reaper(clock(a.at))
     case 'place':
       return a.boss ? m.pokedex.placeBoss(m.pokedex.places[a.place], clock(a.from)) : m.pokedex.place(m.pokedex.places[a.place], clock(a.from))
+    case 'hidden':
+      return a.rare ? m.pokedex.rare(m.pokedex.places[a.place], clock(a.from)) : m.pokedex.lucky(m.pokedex.places[a.place], clock(a.from))
     case 'summoned':
       return m.pokedex.summoned(ENEMIES[a.by].name)
     case 'retinue':

@@ -1,6 +1,6 @@
 import { domainOf, partnerOf } from '../data/domains'
 import { ENEMIES, type EnemyId } from '../data/enemies'
-import { GRAVEYARD } from '../data/places'
+import { GRAVEYARD, hiddenCast } from '../data/places'
 import { isSummoner, SUMMONS } from '../data/traits'
 import { EVENTS, STAGES, stageIndexAt, stageStart } from '../data/waves'
 import { phasesOf } from '../game/bossFight'
@@ -77,12 +77,14 @@ const riftCameo = (g: Game): Dex[] => {
   return cameo ? [cameo.dex] : []
 }
 
-/** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, and the reaper as its hunt nears in the endless mode. */
+/** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, a hidden zone's own, and the reaper as its hunt nears in the endless mode. */
 const visitors = (g: Game): Dex[] => {
   const place = g.place.inside?.id ?? g.place.entrance?.id
   return [
     ...(place ? placePool(place, g.time).map(([id]) => ENEMIES[id].dex) : []),
     ...(place === 'graveyard' ? [ENEMIES[GRAVEYARD.boss].dex] : []),
+    // A hidden zone's lucky ones and rare dweller, from its entrance on (found or not: loading shows nothing).
+    ...(place ? hiddenCast(place).map((id) => ENEMIES[id].dex) : []),
     ...(g.endless && g.time >= ENDLESS.reaperAt - REAPER_LEAD ? [ENEMIES[REAPER].dex] : []),
   ]
 }
