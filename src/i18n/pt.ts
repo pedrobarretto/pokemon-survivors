@@ -2092,7 +2092,7 @@ export const pt = {
   /** Places: the cave, the graveyard and the sky (`data/places.ts`), their entrances on the map and what goes on inside. */
   landmarks: {
     /** The sign that slides in when a landmark comes close, as the games name a place. */
-    names: { cottage: 'Casa Abandonada', tunnel: 'Túnel da Mina', maze: 'Labirinto de Sebes', ruins: 'Ruínas Unown', camp: 'Acampamento Abandonado' } satisfies Record<LandmarkId, string>,
+    names: { cottage: 'Casa Abandonada', tunnel: 'Túnel da Mina', maze: 'Labirinto de Sebes', ruins: 'Ruínas Unown', camp: 'Acampamento Abandonado', snorlax: 'Snorlax Adormecido', center: 'Centro Pokémon', rocket: 'Esconderijo da Equipe Rocket', truck: 'Caminhão do Cais', glitch: 'Costa ???' } satisfies Record<LandmarkId, string>,
     /** A line under the name: what's there to do. */
     hints: {
       cottage: 'Alguém deixou um caixote lá dentro…',
@@ -2100,14 +2100,26 @@ export const pt = {
       maze: 'Há um baú no coração do labirinto.',
       ruins: 'O altar espera em silêncio.',
       camp: 'Uma mochila esquecida perto da fogueira.',
+      snorlax: 'Um Pokémon enorme dorme no meio do caminho.',
+      center: 'Bem-vindo ao Centro Pokémon!',
+      rocket: 'Prepare-se para encrenca…',
+      truck: 'Dizem que tem algo debaixo dele…',
+      glitch: 'Os pixels daqui não parecem certos…',
     } satisfies Record<LandmarkId, string>,
     loot: {
       cottage: 'Você vasculhou o caixote velho!',
       maze: 'Você chegou ao coração do labirinto!',
       ruins: 'Os glifos Unown brilham!',
       camp: 'Você abriu a mochila esquecida!',
+      snorlax: 'Snorlax acordou… e está de mau humor!',
+      center: 'Seu Pokémon está totalmente curado. Esperamos ver você de novo!',
+      rocket: 'A Equipe Rocket decolou de novo! O Pay Day ficou para trás.',
+      truck: 'Nada debaixo do caminhão… só um boato?',
+      glitch: 'MissingNo. apareceu! O item saiu em dobro…',
     } satisfies Record<TreasureLandmark, string>,
     tunnelOut: 'Você saiu do outro lado do túnel!',
+    /** Mew, seen under the truck (`LANDMARK_LOOT.truck.rumor`). */
+    mew: 'Um brilho rosa saiu de baixo do caminhão… era Mew?!',
   },
   places: {
     names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens' } satisfies Record<PlaceId, string>,
@@ -2282,6 +2294,7 @@ export const pt = {
       place25: 'Aventureiro',
       landmark1: 'Bisbilhoteiro',
       landmark50: 'Caçador de tesouros',
+      mewTruck: 'Era verdade!',
       mega1: 'Laço Mega',
       mega25: 'Mestre Mega',
       alpha1: 'Primeiro Alfa',
@@ -2323,6 +2336,7 @@ export const pt = {
       regions: 'Mestre das Regiões',
       reaperDown: 'Lenda Viva',
       alpha100: 'Caçador de Alfas',
+      mewTruck: 'Caçador de boatos',
       ambassador: 'Embaixador(a)',
       supporter: 'Apoiador(a)',
       pumpkinKing: 'Rei das Abóboras',
@@ -2363,6 +2377,7 @@ export const pt = {
       alphaKills: (n: string) => (n === '1' ? 'Derrote um Pokémon Alfa' : `Derrote ${n} Pokémon Alfa`),
       placeClears: (n: string) => (n === '1' ? 'Conclua um lugar: o tesouro da caverna, Spiritomb ou um voo com asas' : `Conclua ${n} lugares`),
       landmarks: (n: string) => (n === '1' ? 'Abra um tesouro escondido no mapa: na casa abandonada, no labirinto, nas ruínas ou no acampamento' : `Abra ${n} tesouros escondidos no mapa`),
+      mews: (_n: string) => 'Confirme o boato do caminhão do cais',
       places: (n: string) => `Conclua os ${n} lugares: o tesouro da caverna, Spiritomb no cemitério e um voo acima das nuvens`,
     } satisfies Record<AchievementStat, (n: string) => string>,
     region: (name: string) => `Vença o Mewtwo com um inicial de ${name}`,

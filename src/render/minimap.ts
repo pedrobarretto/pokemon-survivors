@@ -2,7 +2,7 @@ import { context2d, createCanvas, fromStrings, lazy, blitPacked, textSprite, typ
 import { hash2 } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
 import type { ArenaShape, FloorPlan } from '../data/arenas'
-import type { LandmarkId } from '../data/landmarks'
+import { LANDMARK, type LandmarkId } from '../data/landmarks'
 import type { PlaceId } from '../data/places'
 import { TERRAIN } from '../data/terrain'
 import { isMission } from '../game/fieldMissions'
@@ -91,6 +91,11 @@ const TUNNEL = ['.sss.', 'sssss', 'skkks', 'skkks']
 const MAZE = ['mmmmm', 'm...m', 'm.m.m', 'm.m..', 'mmmmm']
 const RUINS = ['sssss', '.s.s.', '.s.s.', 'sssss']
 const TENT = ['..o..', '.ooo.', 'oo.oo', 'oo.oo']
+const SLEEPER = ['.bbb.', 'bcccb', 'bcccb', '.c.c.']
+const CENTER = ['..r..', '.rrr.', 'rrrrr', 'wwbww', 'wwbww']
+const LETTER_R = ['rrr.', 'r..r', 'rrr.', 'r.r.', 'r..r']
+const TRUCK = ['bbwwww', 'bbwwww', '.k..k.']
+const GLITCH = ['mwk', 'kwm', 'wkw']
 
 const GLYPHS = lazy(() => ({
   boss: [glyph(SKULL, { w: '#f8f0e0', k: DARK }), glyph(SKULL, { w: '#f86858', k: DARK })],
@@ -107,6 +112,11 @@ const GLYPHS = lazy(() => ({
     maze: glyph(MAZE, { m: '#c8b078' }),
     ruins: glyph(RUINS, { s: '#d8d0c0' }),
     camp: glyph(TENT, { o: '#e89838' }),
+    snorlax: glyph(SLEEPER, { b: '#3c8890', c: '#f0e4c0' }),
+    center: glyph(CENTER, { r: '#e84038', w: '#f8f8f0', b: '#88c8f0' }),
+    rocket: glyph(LETTER_R, { r: '#f03030' }),
+    truck: glyph(TRUCK, { b: '#4878d0', w: '#e8e8e0', k: '#a0a0a8' }),
+    glitch: glyph(GLITCH, { m: '#f838a8', w: '#f8f8f8', k: '#585858' }),
   } satisfies Record<LandmarkId, PixelSprite>,
   events: {
     altar: glyph(GEM, { y: '#f8d048', e: '#ffffff' }),
@@ -451,6 +461,8 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     drawViewBox(ctx, v, g)
     for (const f of marks) {
       const lm = f.landmark!
+      // A secret (the truck, the glitched coast) stays off the map until it's named.
+      if (lm.id in LANDMARK.secret && !g.landmarks.seen.has(lm.cell)) continue
       const spent = lm.treasure !== null && g.landmarks.looted.has(lm.cell)
       ctx.globalAlpha = spent ? 0.5 : 1
       marker(ctx, v, shape, art.landmark[lm.id], lm.x, lm.y, false)

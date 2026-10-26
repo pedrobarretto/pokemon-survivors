@@ -98,6 +98,7 @@ import { dropPickup } from './game/pickups'
 import { CURSES } from './data/curses'
 import { CAST_SFX } from './ui/castSfx'
 import { clearSpot, featureAt, featuresNear, footOf, inSolid } from './game/terrain'
+import { mewUnder, openTimeOf } from './game/landmarks'
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
 import { dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
@@ -3141,6 +3142,31 @@ const devLandmark = (g: Game, id?: LandmarkId, dy = 60) => {
 }
 
 /**
+ * Dev: walks the player to the nearest truck by the pier that Mew hides under
+ * (`mewUnder`: one in twenty, so it may be a long way off) and stands them
+ * at it a moment before the search ends, so Mew shows up as it would.
+ */
+const devMew = (g: Game) => {
+  const C = TERRAIN.cell
+  const pcx = Math.floor(g.player.x / C)
+  const pcy = Math.floor(g.player.y / C)
+  for (let r = 0; r < 160; r++) {
+    for (let cy = pcy - r; cy <= pcy + r; cy++) {
+      for (let cx = pcx - r; cx <= pcx + r; cx++) {
+        if (Math.max(Math.abs(cx - pcx), Math.abs(cy - pcy)) !== r) continue
+        const lm = featureAt(g.terrain.seed, cx, cy)?.landmark
+        if (lm?.id !== 'truck' || !lm.treasure || !mewUnder(g, lm) || g.landmarks.looted.has(lm.cell)) continue
+        g.player.x = lm.treasure.x
+        g.player.y = lm.treasure.y + 16
+        g.player.landmark.opening = { cell: lm.cell, t: openTimeOf('truck') - 0.05 }
+        return lm
+      }
+    }
+  }
+  return null
+}
+
+/**
  * Dev: co-op from the console. `ps.coop()` shows the client's state;
  * `ps.coop('create', 2)` makes a room, joins it, adds two bots (same tab,
  * each a full client) and shows the room; `ps.coop('join', 'K7QF2')`, `('bots', n)`, `('ready')`,
@@ -3393,6 +3419,7 @@ if (import.meta.env.DEV) {
       terrain: (kind?: SolidKind | 'lake', dy?: number) => (run ? devTerrain(run.game, kind, dy) : console.warn('ps: start a run first')),
       /** `ps.landmark('maze')` walks you to the nearest maze (`cottage`, `tunnel`, `ruins`, `camp`; any without an argument), 60 px south of it. */
       landmark: (id?: LandmarkId, dy?: number) => (run ? devLandmark(run.game, id, dy) : console.warn('ps: start a run first')),
+      mew: () => (run ? devMew(run.game) : console.warn('ps: start a run first')),
       weather: (id: WeatherId) => withRun((g) => setWeather(g, id)),
       /** `ps.ball(3)` drops Poké Balls 20 px to the right of the player (inside the magnet), side by side. */
       ball: (n = 1) => withRun((g) => Array.from({ length: n }, (_, i) => dropPickup(g, localPlayer(g).x + 20 + i * 6, localPlayer(g).y, 'pokeball'))),

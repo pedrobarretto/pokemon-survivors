@@ -28,9 +28,11 @@ import * as dm from '../engine/dmath'
 
 /**
  * Something that blocks, with its footprint in world px. A landmark's
- * treasure (and what wakes with it) carries its cell (`loot`), so it shows open once looted.
+ * treasure (and what wakes with it) carries its cell (`loot`), so it shows
+ * open once looted; one that leaves then (`gone`, the Snorlax) is left out of
+ * the cell from then on (`cell`).
  */
-export type Solid = { kind: SolidKind | ArenaPiece | PlacePiece | LandmarkPiece; x: number; y: number; variant: number; foot: readonly Ellipse[]; loot?: number }
+export type Solid = { kind: SolidKind | ArenaPiece | PlacePiece | LandmarkPiece; x: number; y: number; variant: number; foot: readonly Ellipse[]; loot?: number; gone?: true }
 export type Lake = { x: number; y: number; variant: number; foot: readonly Ellipse[] }
 
 type Pos = { x: number; y: number }
@@ -135,7 +137,12 @@ const draftLandmark = (h: (salt: number) => number): Draft & { id: LandmarkId; v
   const id = weightedPick(() => h(50), LANDMARK_KINDS)
   const variant = Math.floor(h(51) * LANDMARK_VARIANTS[id])
   const plan = landmarkPlan(id, variant)
-  return { id, variant, lake: null, solids: plan.pieces.map((p) => ({ kind: p.kind, x: p.x, y: p.y, variant: p.variant, foot: p.foot, loot: p.loot })) }
+  return {
+    id,
+    variant,
+    lake: plan.lake === undefined ? null : { variant: plan.lake, foot: LAKES[plan.lake]! },
+    solids: plan.pieces.map((p) => ({ kind: p.kind, x: p.x, y: p.y, variant: p.variant, foot: p.foot, loot: p.loot, ...(p.gone ? { gone: p.gone } : {}) })),
+  }
 }
 
 /**
@@ -187,7 +194,7 @@ export const featureAt = (seed: number, cx: number, cy: number): Feature | null 
   const cell = cellKey(cx, cy)
   const shift = (p: Pos) => ({ x: ax + p.x, y: ay + p.y })
   const plan = mark && landmarkPlan(mark.id, mark.variant)
-  const solids: Solid[] = d.solids.map((s) => ({ kind: s.kind, x: ax + s.x, y: ay + s.y, variant: s.variant, foot: s.foot.map((e) => at(e, ax, ay)), ...(s.loot ? { loot: cell } : {}) }))
+  const solids: Solid[] = d.solids.map((s) => ({ kind: s.kind, x: ax + s.x, y: ay + s.y, variant: s.variant, foot: s.foot.map((e) => at(e, ax, ay)), ...(s.loot ? { loot: cell } : {}), ...(s.gone ? { gone: s.gone } : {}) }))
   const placed = [...solids.flatMap((s) => s.foot), ...(d.lake?.foot.map((e) => at(e, ax, ay)) ?? [])]
   return {
     solids: mark ? solids : [...solids, ...scatter(h, ox, oy, placed)],
@@ -211,12 +218,19 @@ export const featureAt = (seed: number, cx: number, cy: number): Feature | null 
 /** The signed 15-bit cell coordinate stored in the low bits of `v`. */
 const unwrap = (v: number) => ((v & 0x7fff) << 17) >> 17
 
+/** A cell's feature as it stands now: without a landmark's `gone` pieces once its treasure was taken (the Snorlax, woken). */
+const settled = (g: Game, f: Feature | null): Feature | null =>
+  f?.landmark && g.landmarks.looted.has(f.landmark.cell) && f.solids.some((s) => s.gone) ? { ...f, solids: f.solids.filter((s) => !s.gone) } : f
+
 const cell = (g: Game, cx: number, cy: number) => {
   const key = cellKey(cx, cy)
   let f = g.terrain.cells.get(key)
-  if (f === undefined) g.terrain.cells.set(key, (f = featureAt(g.terrain.seed, cx, cy)))
+  if (f === undefined) g.terrain.cells.set(key, (f = settled(g, featureAt(g.terrain.seed, cx, cy))))
   return f
 }
+
+/** Builds a landmark's cell (its `Landmark.cell`) again on next sight, now that what it holds changed (a `gone` piece left). */
+export const rebuildCell = (g: Game, key: number) => g.terrain.cells.delete(key)
 
 const NEAR: Feature[] = []
 

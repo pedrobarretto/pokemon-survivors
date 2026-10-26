@@ -1,16 +1,19 @@
-import { playSfx } from '../engine/audio'
-import type { LandmarkId } from '../data/landmarks'
+import { playCry, playSfx, type Sfx } from '../engine/audio'
+import { ENEMIES } from '../data/enemies'
+import type { LandmarkId, TreasureLandmark } from '../data/landmarks'
 import type { LandmarkMoment } from '../game/landmarks'
 import { t } from '../i18n'
 import { pokeballIcon } from '../render/art'
+import { cryUrl, portraitUrl } from '../render/sprites'
 import { h, setText } from './dom'
 import { runToast } from './toasts'
 
 /**
  * The shell's side of landmarks (`game/landmarks.ts`): a wooden sign slides
  * in at the corner with the place's name as the player comes close (the way
- * the games name a route), a toast and a jingle for a treasure, sounds for
- * the way into and out of a tunnel.
+ * the games name a route), a toast and a jingle for a treasure (the Pokémon
+ * Center's own, MissingNo.'s static, Pay Day's coins), sounds for the way
+ * into and out of a tunnel, the Snorlax's yawn and Mew's cry.
  */
 
 /** The sign: one element, re-shown for each landmark named. */
@@ -33,6 +36,22 @@ const showSign = (root: HTMLElement, id: LandmarkId) => {
   sign.classList.remove('hidden')
 }
 
+/** The sound of each treasure opening. */
+const LOOT_SFX: Record<TreasureLandmark, Sfx> = {
+  cottage: 'unlock',
+  maze: 'unlock',
+  ruins: 'ancientBoost',
+  camp: 'unlock',
+  snorlax: 'yawn',
+  center: 'center',
+  rocket: 'payDay',
+  truck: 'denied',
+  glitch: 'glitch',
+}
+
+const toast = (root: HTMLElement, text: string, icon: string = pokeballIcon()) =>
+  runToast(root, 'minor', h('span', { class: 'item-toast' }, h('img', { src: icon, alt: '' }), text), 2800, 'landmark')
+
 export const landmarkFeedback = (root: HTMLElement, id: LandmarkId, moment: LandmarkMoment) => {
   const m = t().landmarks
   switch (moment) {
@@ -40,9 +59,14 @@ export const landmarkFeedback = (root: HTMLElement, id: LandmarkId, moment: Land
       playSfx('select')
       return showSign(root, id)
     case 'loot':
-      playSfx(id === 'ruins' ? 'ancientBoost' : 'unlock')
+    case 'wake':
       if (id === 'tunnel') return
-      return runToast(root, 'minor', h('span', { class: 'item-toast' }, h('img', { src: pokeballIcon(), alt: '' }), m.loot[id]), 2800, 'landmark')
+      playSfx(LOOT_SFX[id])
+      return toast(root, m.loot[id], id === 'snorlax' ? portraitUrl(ENEMIES.snorlax.dex) : undefined)
+    case 'mew':
+      playSfx('shiny')
+      playCry(cryUrl(ENEMIES.mew.dex), 0.6)
+      return toast(root, m.mew, portraitUrl(ENEMIES.mew.dex))
     case 'tunnelIn':
       return playSfx('dig')
     case 'tunnelOut':

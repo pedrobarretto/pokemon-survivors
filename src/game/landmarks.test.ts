@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { LANDMARK, LANDMARK_IDS, MAZE, TUNNEL } from '../data/landmarks'
+import { ENEMIES } from '../data/enemies'
+import { LANDMARK, LANDMARK_IDS, LANDMARK_LOOT, MAZE, TUNNEL } from '../data/landmarks'
 import { TERRAIN } from '../data/terrain'
 import { spawnEnemy, updateEnemies } from './enemies'
 import { createGame, step } from './game'
 import { carveMaze, MAZE_PATTERNS } from './landmarkLayout'
-import { updateLandmarks, updateTunnel } from './landmarks'
-import { createTerrain, featureAt, type Landmark } from './terrain'
+import { mewUnder, openTimeOf, updateLandmarks, updateTunnel, wokenHp } from './landmarks'
+import { createTerrain, featureAt, inSolid, type Landmark } from './terrain'
 import type { Game } from './types'
 
 const TICK = 1 / 60
@@ -70,7 +71,8 @@ describe('landmark layouts', () => {
   it('keeps landmarks inside their cells, clear of the edges', () => {
     const C = TERRAIN.cell
     for (const { cx, cy } of landmarks(SEED, 20)) {
-      for (const e of featureAt(SEED, cx, cy)!.solids.flatMap((s) => s.foot)) {
+      const f = featureAt(SEED, cx, cy)!
+      for (const e of [...f.solids.flatMap((s) => s.foot), ...(f.lake?.foot ?? [])]) {
         expect(e.x - e.rx).toBeGreaterThanOrEqual(cx * C + TERRAIN.margin - 1)
         expect(e.x + e.rx).toBeLessThanOrEqual((cx + 1) * C - TERRAIN.margin + 1)
         expect(e.y - e.ry).toBeGreaterThanOrEqual(cy * C + TERRAIN.margin - 1)
@@ -137,5 +139,82 @@ describe('landmarks at play', () => {
       t += TICK
     }
     expect(g.player.x).toBeCloseTo(lm.mouths[1]!.x, 0)
+  })
+})
+
+describe("the games' nods", () => {
+  /** The first landmark of a kind found in a wide square around the origin. */
+  const find = (g: Game, id: Landmark['id']) => landmarks(g.terrain.seed, 40).find(({ lm }) => lm.id === id)!.lm
+  const stand = (g: Game, at: { x: number; y: number }, seconds: number) => {
+    Object.assign(g.player, at)
+    for (let t = 0; t < seconds; t += TICK) updateLandmarks(g, TICK)
+  }
+  const moments = (g: Game) => g.events.flatMap((e) => (e.kind === 'landmark' ? [e.moment] : []))
+
+  it('wakes the Snorlax across the path: it fights as an Alpha with a share of the boss’s HP, and the way stays open', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1234)
+    const lm = find(g, 'snorlax')
+    const belly = { x: lm.treasure!.x, y: lm.treasure!.y + 16 }
+    expect(inSolid(g, lm.x, lm.y, 4)).toBe(true)
+    stand(g, belly, openTimeOf('snorlax') - 0.2)
+    expect(g.enemies.some((e) => e.kind === 'snorlax')).toBe(false)
+    stand(g, belly, 0.3)
+    const snorlax = g.enemies.find((e) => e.kind === 'snorlax')!
+    expect(snorlax.alpha).not.toBeNull()
+    expect(snorlax.maxHp).toBe(Math.round(ENEMIES.snorlax.hp * wokenHp(g.time)))
+    expect(moments(g)).toEqual(['spot', 'wake'])
+    expect(inSolid(g, lm.x, lm.y, 4)).toBe(false)
+    g.terrain.cells.clear()
+    expect(inSolid(g, lm.x, lm.y, 4)).toBe(false)
+    expect(wokenHp(0)).toBeLessThan(wokenHp(600))
+  })
+
+  it('heals at the Pokémon Center, once', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1234)
+    const lm = find(g, 'center')
+    g.player.hp = 10
+    stand(g, lm.treasure!, openTimeOf('center') + 0.05)
+    expect(g.player.hp).toBe(g.player.stats.maxHp)
+    g.player.hp = 10
+    stand(g, lm.treasure!, 3)
+    expect(g.player.hp).toBe(10)
+  })
+
+  it('keeps the truck’s rumor: Mew under about one truck in twenty, the same truck always telling the same story', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1234)
+    const lm = find(g, 'truck')
+    const trucks = Array.from({ length: 4000 }, (_, i) => mewUnder(g, { ...lm, cell: i }))
+    const share = trucks.filter(Boolean).length / trucks.length
+    expect(share).toBeGreaterThan(LANDMARK_LOOT.truck.rumor * 0.7)
+    expect(share).toBeLessThan(LANDMARK_LOOT.truck.rumor * 1.3)
+    expect(mewUnder(g, lm)).toBe(mewUnder(g, { ...lm }))
+  })
+
+  it('turns up Mew (and a Rare Candy) under the truck that hides it, and nothing under the others', () => {
+    /** A run (by seed) whose nearest truck does or doesn't hide Mew. */
+    const runWith = (mew: boolean) => {
+      for (let seed = 1; seed < 400; seed++) {
+        const g = createGame('charmander', { w: 480, h: 270 }, seed)
+        const lm = landmarks(g.terrain.seed, 14).find((c) => c.lm.id === 'truck')?.lm
+        if (lm && mewUnder(g, lm) === mew) return { g, lm }
+      }
+      throw new Error('no such truck')
+    }
+    for (const mew of [true, false]) {
+      const { g, lm } = runWith(mew)
+      stand(g, { x: lm.treasure!.x, y: lm.treasure!.y + 16 }, openTimeOf('truck') + 0.05)
+      expect(moments(g)).toEqual(['spot', mew ? 'mew' : 'loot'])
+      expect(g.landmarks.mew.has(lm.cell)).toBe(mew)
+      expect(g.pickups.filter((k) => k.kind === 'consumable' && k.item === 'rareCandy').length).toBe(mew ? 1 : 0)
+    }
+  })
+
+  it('has MissingNo. give its item twice', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1234)
+    const lm = find(g, 'glitch')
+    stand(g, lm.treasure!, openTimeOf('glitch') + 0.05)
+    const items = g.pickups.flatMap((k) => (k.kind === 'consumable' ? [k.item] : []))
+    expect(items.length).toBe(2)
+    expect(items[0]).toBe(items[1])
   })
 })

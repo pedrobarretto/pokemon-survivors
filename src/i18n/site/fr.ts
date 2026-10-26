@@ -540,10 +540,11 @@ export const siteFr: SiteMessages = {
     landmarks: {
       paragraphs: (p) => [
         `La carte a des points de repère, placés à partir de la graine de la partie comme les montagnes et les lacs : au plus un par zone de ${p.block}×${p.block} (${p.odds}% d’entre elles en ont un), toujours habillés pour le biome de la partie. Quand tu t’approches, un panneau en bois affiche son nom dans le coin de l’écran.`,
-        `Quatre d’entre eux gardent un trésor : reste à côté pendant ${p.open}s pour l’ouvrir. Chacun s’ouvre une fois par partie, et un reflet marque ceux encore fermés. Le tunnel n’a pas de trésor, mais c’est un raccourci : reste dans l’une de ses entrées pendant ${p.tunnel}s et tu ressors par l’autre, de l’autre côté de la crête, pendant que la horde perd ta trace.`,
+        `La plupart gardent un trésor : reste à côté pour l’ouvrir (${p.open}s, un peu plus pour certains). Chacun s’ouvre une fois par partie, et un reflet marque ceux encore fermés. Le tunnel n’a pas de trésor, mais c’est un raccourci : reste dans l’une de ses entrées pendant ${p.tunnel}s et tu ressors par l’autre, de l’autre côté de la crête, pendant que la horde perd ta trace.`,
+        `Certains sont des clins d’œil aux jeux : un Snorlax endormi en travers du chemin (titille-le jusqu’à ce qu’il se réveille, et il se bat comme un Alpha), un Centre Pokémon qui te soigne complètement une fois, la planque de la Team Rocket avec la montgolfière de Meowth, et deux secrets rares que la mini-carte ne montre qu’une fois trouvés : un camion abandonné sur le quai et une côte où les pixels ont l’air bizarres.`,
         `Entre eux, des buissons, des troncs tombés, des rochers et des arbres isolés. Tout cela bloque ceux qui marchent (la horde aussi), mais les Pokémon volants, les spectres et les boss passent par-dessus.`,
       ],
-      names: { cottage: 'Maisonnette abandonnée', tunnel: 'Tunnel de mine', maze: 'Labyrinthe de haies', ruins: 'Ruines Zarbi', camp: 'Campement abandonné' },
+      names: { cottage: 'Maisonnette abandonnée', tunnel: 'Tunnel de mine', maze: 'Labyrinthe de haies', ruins: 'Ruines Zarbi', camp: 'Campement abandonné', snorlax: 'Snorlax endormi', center: 'Centre Pokémon', rocket: 'Planque de la Team Rocket', truck: 'Le camion du quai', glitch: 'Côte ???' },
       placeHead: 'Point de repère',
       whatHead: 'Ce qu’on y trouve',
       lootHead: 'Trésor',
@@ -553,6 +554,18 @@ export const siteFr: SiteMessages = {
         maze: 'De hautes haies avec un seul chemin jusqu’au coffre au centre. Les marcheurs se perdent dans les impasses ; toi, pas forcément.',
         ruins: 'Des pierres dressées gravées de glyphes Zarbi en cercle, un autel au milieu et des colonnes tombées.',
         camp: 'Une tente, des rondins autour d’un feu qui brûle encore et un sac à dos oublié.',
+        snorlax: 'Un chemin de terre entre deux rangées d’arbres et un énorme Snorlax endormi en travers. Personne ne passe.',
+        center: 'Un toit rouge, la Poké Ball au-dessus des portes vitrées, l’Infirmière Joëlle à l’intérieur et Chansey à la porte.',
+        rocket: 'Une tente noire avec le R rouge, des caisses de butin et la montgolfière de Meowth attachée à un piquet.',
+        truck: 'Un quai en bois, le S.S. Anne amarré et un vieux camion que personne n’a jamais déplacé.',
+        glitch: 'Une petite baie dont les tuiles du rivage sont toutes mélangées, et quelque chose en forme de L posé dessus.',
+      },
+      /** What a landmark does besides (or instead of) its loot, in the loot column. */
+      extra: {
+        snorlax: 'se réveille et se bat comme un Alpha : bats-le pour le prix de l’Alpha',
+        center: 'te soigne complètement, une fois',
+        truck: 'presque toujours rien. Presque.',
+        glitch: 'l’objet sort en double',
       },
       noLoot: 'Raccourci : on entre par une bouche, on sort par l’autre',
       loot: (l) =>

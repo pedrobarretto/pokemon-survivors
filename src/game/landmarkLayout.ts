@@ -1,6 +1,6 @@
 import { createRng } from '../engine/rng'
 import { MAZE, type LandmarkGround, type LandmarkId, type LandmarkPiece } from '../data/landmarks'
-import type { Ellipse } from '../data/terrain'
+import { SOLID_FOOT, type Ellipse, type SolidKind } from '../data/terrain'
 import * as dm from '../engine/dmath'
 
 /**
@@ -11,8 +11,14 @@ import * as dm from '../engine/dmath'
 
 type Pos = { x: number; y: number }
 
-/** A piece of a landmark: what it is, where its art stands and what it blocks. `loot` marks the ones that change once the treasure is taken (the treasure itself, the ruins' glyphs). */
-export type PiecePlan = { kind: LandmarkPiece; x: number; y: number; variant: number; foot: readonly Ellipse[]; loot?: true }
+/**
+ * A piece of a landmark: what it is (its own art, or the map's trees and
+ * bushes), where its art stands and what it blocks. `loot` marks the ones that
+ * change once the treasure is taken (the treasure itself, the ruins' glyphs);
+ * `gone` the ones that leave then (the Snorlax, woken), `game/terrain.ts`
+ * building the cell without them.
+ */
+export type PiecePlan = { kind: LandmarkPiece | SolidKind; x: number; y: number; variant: number; foot: readonly Ellipse[]; loot?: true; gone?: true }
 
 export type LandmarkPlan = {
   pieces: readonly PiecePlan[]
@@ -22,10 +28,12 @@ export type LandmarkPlan = {
   treasure: Pos | null
   /** The tunnel's mouths, west then east: the spot in front of each one. */
   mouths: readonly Pos[]
+  /** Water at the anchor, one of the map's lakes (`LAKES`): the pier's, the glitched coast's. */
+  lake?: number
 }
 
 /** Looks of each landmark (`landmarkPlan`'s `variant`). */
-export const LANDMARK_VARIANTS: Record<LandmarkId, number> = { cottage: 2, tunnel: 1, maze: MAZE.patterns, ruins: 2, camp: 2 }
+export const LANDMARK_VARIANTS: Record<LandmarkId, number> = { cottage: 2, tunnel: 1, maze: MAZE.patterns, ruins: 2, camp: 2, snorlax: 2, center: 2, rocket: 2, truck: 2, glitch: 2 }
 
 /** A straight wall from (x0, y0) to (x1, y1), along x or along y, as a chain of ellipses `half` px thick. */
 export const wallFoot = (x0: number, y0: number, x1: number, y1: number, half: number): Ellipse[] => {
@@ -247,6 +255,137 @@ const camp = (variant: number): LandmarkPlan => {
   }
 }
 
+/* ---------------- The games' nods ---------------- */
+
+/** One of the map's own trees, bushes or rocks standing in a landmark. */
+const scenery = (kind: 'tree' | 'bush' | 'rock', x: number, y: number, variant: number): PiecePlan => ({
+  kind,
+  x,
+  y,
+  variant: variant % 3,
+  foot: [{ ...SOLID_FOOT[kind], x: SOLID_FOOT[kind].x + x, y: SOLID_FOOT[kind].y + y }],
+})
+
+/** The Snorlax: how far its body reaches on the ground. */
+export const SNORLAX_FOOT = { rx: 24, ry: 10 } as const
+
+/**
+ * A Snorlax asleep across a path (Routes 12 and 16): a dirt road between two
+ * hedgerows, their bushes set close enough that nobody slips between them,
+ * trees at the corners, and the Snorlax lying across its middle. Its belly
+ * is the treasure: stand by it long enough and it wakes (`SNORLAX`), leaving
+ * the way open.
+ */
+const snorlax = (variant: number): LandmarkPlan => {
+  const rows = [-56, -40, -24, -8, 8, 24, 40]
+  const sway = (i: number, side: number) => [0, 2, -1, 1, -2, 1, 0][(i + (side > 0 ? 3 : 0) + variant) % 7]!
+  const s = variant % 2 === 0 ? 1 : -1
+  return {
+    pieces: [
+      { kind: 'snorlax', x: 0, y: 0, variant, foot: [{ x: 0, y: -2, ...SNORLAX_FOOT }], loot: true, gone: true },
+      ...[-1, 1].flatMap((side) => rows.map((y, i) => scenery('bush', side * (37 + sway(i, side)), y, i + variant + (side > 0 ? 1 : 0)))),
+      scenery('tree', -64 * s, -76, variant),
+      scenery('tree', 62 * s, -70, variant + 1),
+      scenery('tree', 66 * s, 56, variant + 2),
+    ],
+    ground: { kind: 'route', variant, x: 0, y: 0 },
+    treasure: { x: 0, y: -2 },
+    mouths: [],
+  }
+}
+
+/** The Pokémon Center's size: half its width, its depth and half its door. */
+export const CENTER = { half: 40, depth: 34, door: 8 } as const
+
+/**
+ * A Pokémon Center: red roof, white walls, the Poké Ball over the sliding
+ * door and Chansey by it. Standing at the door heals the Pokémon back to
+ * full, once (`LANDMARK_LOOT.center`). Anchored at the door's foot.
+ */
+const center = (variant: number): LandmarkPlan => {
+  const side = variant % 2 === 0 ? 1 : -1
+  const { half: W, depth: D } = CENTER
+  return {
+    pieces: [
+      { kind: 'center', x: 0, y: 0, variant: 0, foot: wallFoot(-W + 8, -D / 2, W - 8, -D / 2, D / 2), loot: true },
+      scenery('bush', -(W + 16) * side, -6, variant),
+      scenery('bush', (W + 14) * side, -10, variant + 1),
+      scenery('tree', (W + 30) * side, -34, variant + 2),
+    ],
+    ground: { kind: 'court', variant, x: 0, y: 0 },
+    treasure: { x: 0, y: 8 },
+    mouths: [],
+  }
+}
+
+/**
+ * Team Rocket's hideout: a dark tent with the red R, crates of loot and the
+ * Meowth balloon tied to a stake, ready to blast off again. Taking the
+ * balloon's stake (the treasure) lets it go, Pay Day spilling behind it.
+ */
+const rocket = (variant: number): LandmarkPlan => {
+  const s = variant % 2 === 0 ? 1 : -1
+  const stake = { x: 38 * s, y: 4 }
+  return {
+    pieces: [
+      single('rocketTent', -22 * s, -12, 22, 9),
+      { ...single('balloon', stake.x, stake.y, 4, 3), loot: true },
+      single('crate', -60 * s, 14, 8, 4),
+      single('crate', -46 * s, 22, 8, 4),
+      single('log', 8 * s, 26, 13, 4),
+    ],
+    ground: { kind: 'hideout', variant, x: 0, y: 0 },
+    treasure: stake,
+    mouths: [],
+  }
+}
+
+/**
+ * The truck by the pier (the S.S. Anne's, in Vermilion City): a quay on the
+ * shore of a long stretch of water, the ship moored in it and an old truck
+ * nobody ever moved. Searching by it (the treasure) is the rumor: once in a
+ * long while Mew shows (`LANDMARK_LOOT.truck.rumor`), and nothing otherwise.
+ * Anchored at the water's middle.
+ */
+const truck = (variant: number): LandmarkPlan => {
+  const s = variant % 2 === 0 ? 1 : -1
+  const at = { x: 38 * s, y: 50 }
+  return {
+    pieces: [
+      { kind: 'ship', x: -18 * s, y: 4, variant, foot: [{ x: -18 * s, y: 0, rx: 30, ry: 6 }] },
+      { kind: 'truck', x: at.x, y: at.y, variant, foot: [{ x: at.x, y: at.y - 2, rx: 20, ry: 8 }] },
+      single('bollard', -44 * s, 26, 3, 2),
+      single('bollard', 2 * s, 28, 3, 2, 1),
+      single('crate', 72 * s, 34, 8, 4),
+    ],
+    ground: { kind: 'pier', variant, x: 0, y: 0 },
+    treasure: { x: at.x, y: at.y - 2 },
+    mouths: [],
+    lake: 2,
+  }
+}
+
+/**
+ * MissingNo.'s coast (Cinnabar's east shore): a little bay whose shore tiles
+ * came out garbled, and on them a backwards L of scrambled pixels. Standing
+ * by it, the item it gives comes out twice (`LANDMARK_LOOT.glitch.copies`).
+ * Anchored at the water's middle.
+ */
+const glitch = (variant: number): LandmarkPlan => {
+  const s = variant % 2 === 0 ? 1 : -1
+  const at = { x: -12 * s, y: 46 }
+  return {
+    pieces: [
+      { ...single('missingno', at.x, at.y, 7, 3), loot: true },
+      scenery('rock', 52 * s, 40, variant),
+    ],
+    ground: { kind: 'glitch', variant, x: 0, y: 0 },
+    treasure: at,
+    mouths: [],
+    lake: 1,
+  }
+}
+
 /** Every landmark's layout around its anchor. */
 export const landmarkPlan = (id: LandmarkId, variant: number): LandmarkPlan => {
   switch (id) {
@@ -260,5 +399,15 @@ export const landmarkPlan = (id: LandmarkId, variant: number): LandmarkPlan => {
       return ruins(variant)
     case 'camp':
       return camp(variant)
+    case 'snorlax':
+      return snorlax(variant)
+    case 'center':
+      return center(variant)
+    case 'rocket':
+      return rocket(variant)
+    case 'truck':
+      return truck(variant)
+    case 'glitch':
+      return glitch(variant)
   }
 }

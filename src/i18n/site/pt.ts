@@ -589,10 +589,11 @@ export const sitePt = {
     landmarks: {
       paragraphs: (p: { block: number; odds: number; open: string; tunnel: string }) => [
         `O mapa tem pontos de interesse fixos, colocados pela semente da partida como as montanhas e os lagos: no máximo um a cada ${p.block}×${p.block} trechos do mapa (${p.odds}% deles têm um), sempre com a cara do bioma em que a partida está. Ao chegar perto, uma placa de madeira mostra o nome do lugar no canto da tela.`,
-        `Quatro deles guardam um tesouro: fique ${p.open}s perto dele para abrir. Cada tesouro abre uma vez só por partida, e um brilho mostra os que ainda estão fechados. O túnel não tem tesouro, mas é um atalho: fique ${p.tunnel}s numa das bocas e você sai pela outra, do outro lado da montanha, enquanto a horda perde o seu rastro.`,
+        `A maioria guarda um tesouro: fique perto dele para abrir (${p.open}s, um pouco mais em alguns). Cada tesouro abre uma vez só por partida, e um brilho mostra os que ainda estão fechados. O túnel não tem tesouro, mas é um atalho: fique ${p.tunnel}s numa das bocas e você sai pela outra, do outro lado da montanha, enquanto a horda perde o seu rastro.`,
+        `Alguns acenam para os jogos: um Snorlax dormindo atravessado no caminho (fique cutucando até ele acordar, e ele luta como um Alfa), um Centro Pokémon que cura todo o HP uma vez, o esconderijo da Equipe Rocket com o balão do Meowth, e dois segredos raros que o mini mapa só mostra depois que você os encontra: um caminhão abandonado no cais e uma costa onde os pixels não parecem certos.`,
         `Entre eles, moitas, troncos caídos e pedras e árvores soltas. Tudo isso bloqueia quem anda (inclusive a horda), mas Pokémon voadores, fantasmas e chefes passam por cima.`,
       ],
-      names: { cottage: 'Casa Abandonada', tunnel: 'Túnel da Mina', maze: 'Labirinto de Sebes', ruins: 'Ruínas Unown', camp: 'Acampamento Abandonado' } satisfies Record<LandmarkId, string>,
+      names: { cottage: 'Casa Abandonada', tunnel: 'Túnel da Mina', maze: 'Labirinto de Sebes', ruins: 'Ruínas Unown', camp: 'Acampamento Abandonado', snorlax: 'Snorlax Adormecido', center: 'Centro Pokémon', rocket: 'Esconderijo da Equipe Rocket', truck: 'Caminhão do Cais', glitch: 'Costa ???' } satisfies Record<LandmarkId, string>,
       placeHead: 'Lugar',
       whatHead: 'O que tem',
       lootHead: 'Tesouro',
@@ -602,7 +603,19 @@ export const sitePt = {
         maze: 'Sebes altas com um único caminho até o baú no centro. Quem anda se perde nos becos; você não precisa.',
         ruins: 'Pedras com glifos Unown em roda, um altar no meio e colunas caídas.',
         camp: 'Uma barraca, troncos em volta da fogueira ainda acesa e uma mochila esquecida.',
+        snorlax: 'Uma estrada de terra entre duas fileiras de árvores e um Snorlax enorme dormindo atravessado nela. Ninguém passa.',
+        center: 'Telhado vermelho, a Poké Ball sobre as portas de vidro, a Enfermeira Joy lá dentro e a Chansey na porta.',
+        rocket: 'Uma barraca preta com o R vermelho, caixotes de saque e o balão do Meowth amarrado numa estaca.',
+        truck: 'Um cais de madeira, o S.S. Anne ancorado e um caminhão velho que ninguém nunca tirou dali.',
+        glitch: 'Uma prainha onde os tiles da costa saíram embaralhados, e algo em forma de L parado neles.',
       } satisfies Record<LandmarkId, string>,
+      /** What a landmark does besides (or instead of) its loot, in the loot column. */
+      extra: {
+        snorlax: 'acorda e luta como Alfa: derrote-o pelo prêmio do Alfa',
+        center: 'cura todo o HP, uma vez',
+        truck: 'quase sempre nada. Quase.',
+        glitch: 'o item sai em dobro',
+      } satisfies Partial<Record<LandmarkId, string>>,
       noLoot: 'Atalho: entre por uma boca, saia pela outra',
       loot: (l: { coins: string; items: number; berries: number; xp: number; egg: number }) =>
         [l.coins, l.items > 0 ? `${l.items === 1 ? 'um item' : `${l.items} itens`}` : '', l.berries > 0 ? `${l.berries} Oran Berries` : '', l.xp > 0 ? `Exp. Candy (cerca de ${l.xp}% de um nível)` : '', l.egg > 0 ? `${l.egg}% de chance de um ovo` : '']

@@ -543,10 +543,11 @@ export const siteEs: SiteMessages = {
     landmarks: {
       paragraphs: (p) => [
         `El mapa tiene puntos de interés fijos, colocados por la semilla de la partida como las montañas y los lagos: como máximo uno cada ${p.block}×${p.block} tramos del mapa (${p.odds}% de ellos tienen uno), siempre con el aspecto del bioma en que está la partida. Al acercarte, un cartel de madera muestra el nombre del lugar en la esquina de la pantalla.`,
-        `Cuatro de ellos guardan un tesoro: quédate ${p.open}s junto a él para abrirlo. Cada tesoro se abre una sola vez por partida, y un destello marca los que siguen cerrados. El túnel no tiene tesoro, pero es un atajo: quédate ${p.tunnel}s en una de sus bocas y sales por la otra, del otro lado de la montaña, mientras la horda te pierde el rastro.`,
+        `La mayoría guarda un tesoro: quédate junto a él para abrirlo (${p.open}s, un poco más en algunos). Cada tesoro se abre una sola vez por partida, y un destello marca los que siguen cerrados. El túnel no tiene tesoro, pero es un atajo: quédate ${p.tunnel}s en una de sus bocas y sales por la otra, del otro lado de la montaña, mientras la horda te pierde el rastro.`,
+        `Algunos son guiños a los juegos: un Snorlax dormido atravesado en el camino (tócalo hasta que despierte, y pelea como un Alfa), un Centro Pokémon que te cura todo el HP una vez, el escondite del Team Rocket con el globo de Meowth, y dos secretos raros que el minimapa solo muestra después de encontrarlos: un camión abandonado en el muelle y una costa donde los píxeles no se ven bien.`,
         `Entre ellos, arbustos, troncos caídos y rocas y árboles sueltos. Todo eso bloquea a quien camina (también a la horda), pero los Pokémon voladores, los fantasmas y los jefes pasan por encima.`,
       ],
-      names: { cottage: 'Casa Abandonada', tunnel: 'Túnel de la Mina', maze: 'Laberinto de Setos', ruins: 'Ruinas Unown', camp: 'Campamento Abandonado' },
+      names: { cottage: 'Casa Abandonada', tunnel: 'Túnel de la Mina', maze: 'Laberinto de Setos', ruins: 'Ruinas Unown', camp: 'Campamento Abandonado', snorlax: 'Snorlax Dormido', center: 'Centro Pokémon', rocket: 'Escondite del Team Rocket', truck: 'El Camión del Muelle', glitch: 'Costa ???' },
       placeHead: 'Lugar',
       whatHead: 'Qué hay',
       lootHead: 'Tesoro',
@@ -556,6 +557,18 @@ export const siteEs: SiteMessages = {
         maze: 'Setos altos con un único camino hasta el cofre del centro. Quien camina se pierde en los callejones; tú no tienes por qué.',
         ruins: 'Piedras con glifos Unown en ronda, un altar en el medio y columnas caídas.',
         camp: 'Una carpa, troncos alrededor de la fogata todavía encendida y una mochila olvidada.',
+        snorlax: 'Un camino de tierra entre dos filas de árboles y un Snorlax enorme dormido atravesado. Nadie pasa.',
+        center: 'Techo rojo, la Poké Ball sobre las puertas de vidrio, la Enfermera Joy adentro y Chansey en la puerta.',
+        rocket: 'Una carpa negra con la R roja, cajas de botín y el globo de Meowth atado a una estaca.',
+        truck: 'Un muelle de madera, el S.S. Anne anclado y un camión viejo que nadie movió nunca.',
+        glitch: 'Una pequeña bahía cuyas baldosas de la costa salieron revueltas, y algo con forma de L parado encima.',
+      },
+      /** What a landmark does besides (or instead of) its loot, in the loot column. */
+      extra: {
+        snorlax: 'despierta y pelea como Alfa: derrótalo por el premio del Alfa',
+        center: 'te cura todo el HP, una vez',
+        truck: 'casi siempre nada. Casi.',
+        glitch: 'el objeto sale dos veces',
       },
       noLoot: 'Atajo: entra por una boca, sal por la otra',
       loot: (l) =>
