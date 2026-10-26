@@ -181,6 +181,21 @@ const SFX = {
   item: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, f, 0.1, 'square', 0.12, i * 0.06)),
   /** Poké Flute: a short lullaby. */
   flute: () => [523, 659, 784, 659, 523, 392].forEach((f, i) => tone(f, f * 1.01, 0.22, 'triangle', 0.2, i * 0.16)),
+  /** The Pokémon Center's healing jingle, in its spirit: three short dings, then two long ones. */
+  center: () =>
+    [
+      [1047, 0, 0.1],
+      [1047, 0.13, 0.1],
+      [1047, 0.26, 0.1],
+      [880, 0.39, 0.12],
+      [1397, 0.55, 0.22],
+      [1319, 0.8, 0.4],
+    ].forEach(([f, at, d]) => tone(f!, f!, d!, 'triangle', 0.16, at)),
+  /** MissingNo.: bleeps from all over the range and a burst of static. */
+  glitch: () => {
+    noise(0.25, 0.08)
+    ;[1800, 220, 3100, 90, 1240, 640, 2480, 150].forEach((f, i) => tone(f, f * (i % 2 === 0 ? 0.5 : 2), 0.035, 'square', 0.06, 0.03 + i * 0.035))
+  },
   explosion: () => {
     noise(0.7, 0.35)
     tone(180, 30, 0.6, 'sawtooth', 0.22)
