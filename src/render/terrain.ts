@@ -1,7 +1,7 @@
 import { canvasCache, context2d, createCanvas, dropKept, drawPacked, ellipse, keepPacked, lazy, onCanvasReset, type Packed, type PixelSprite } from '../engine/pixelart'
 import { BIOMES, type BiomeId } from '../data/biomes'
 import { CLIFF_CRESTS, CLIFFS, LAKES, TERRAIN as RULES, type SolidKind, type Tier } from '../data/terrain'
-import { featuresNear, groundAt, type Solid } from '../game/terrain'
+import { featuresNear, groundAt, typesOf, type Solid } from '../game/terrain'
 import { roomOf } from '../game/room'
 import type { ArenaPiece } from '../data/arenas'
 import { ARENA_PIECES, ARENA_SHADOW, ARENA_TALL } from './arenaPieces'
@@ -1123,7 +1123,27 @@ const ripple = (rx: number, ry: number) => {
   return sprite
 }
 
-/** Rings spreading from the player's feet while they wade. */
+const WAKE = ['#ffffff', '#d8f0ff'] as const
+
+/**
+ * A surfer's wake (a Water type crossing a lake, `TRAVERSAL` in
+ * `game/terrain.ts`): two trails of foam spreading back from its feet.
+ */
+const drawWake = (ctx: CanvasRenderingContext2D, x: number, y: number, facing: { x: number; y: number }, width: number, t: number) => {
+  const bx = -facing.x
+  const by = -facing.y
+  const drift = (t * 24) % 4
+  for (let i = 0; i < 9; i++) {
+    const d = width * 0.45 + i * 4 + drift
+    const spread = 3 + i * 2
+    ctx.globalAlpha = 0.95 - i * 0.09
+    ctx.fillStyle = WAKE[i & 1]!
+    for (const side of [-1, 1]) ctx.fillRect(Math.round(x + bx * d - by * spread * side), Math.round(y + (by * d + bx * spread * side) * 0.5), 3 - (i >> 2), 1)
+  }
+  ctx.globalAlpha = 1
+}
+
+/** Rings spreading from the player's feet while they wade; a Water type surfing leaves a wake as it goes. */
 export const drawWading = (ctx: CanvasRenderingContext2D, g: Game, width: number, t: number) => {
   const p = localPlayer(g)
   if (roomOf(g) || groundAt(g, p.x, p.y) !== 'water') return
@@ -1134,4 +1154,5 @@ export const drawWading = (ctx: CanvasRenderingContext2D, g: Game, width: number
     ctx.drawImage(ripple(rx, Math.max(1, Math.round(rx * 0.4))), Math.round(p.x - rx), Math.round(p.y - rx * 0.4))
   }
   ctx.globalAlpha = 1
+  if (p.moving && typesOf(g, p).includes('water')) drawWake(ctx, p.x, p.y, p.facing, width, t)
 }

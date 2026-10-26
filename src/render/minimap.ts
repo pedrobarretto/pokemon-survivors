@@ -216,15 +216,17 @@ const FRAMES = lazy(() => {
 /** Terrain cells built for the map, apart from the simulation's own cache (`featureAt` is pure). */
 const cells = new Map<number, Feature | null>()
 let cellsSeed = -1
+let cellsArchetype = ''
 
-const featureFor = (seed: number, cx: number, cy: number) => {
-  if (seed !== cellsSeed || cells.size > 900) {
+const featureFor = (terrain: Game['terrain'], cx: number, cy: number) => {
+  if (terrain.seed !== cellsSeed || terrain.archetype !== cellsArchetype || cells.size > 900) {
     cells.clear()
-    cellsSeed = seed
+    cellsSeed = terrain.seed
+    cellsArchetype = terrain.archetype
   }
   const key = (cx & 0xffff) * 0x10000 + (cy & 0xffff)
   let f = cells.get(key)
-  if (f === undefined) cells.set(key, (f = featureAt(seed, cx, cy)))
+  if (f === undefined) cells.set(key, (f = featureAt(terrain.seed, cx, cy, terrain.archetype)))
   return f
 }
 
@@ -276,6 +278,8 @@ const drawFeature = (ctx: Ctx, v: View, f: Feature, look: Look) => {
         break
       case 'rock':
       case 'tower':
+      case 'column':
+      case 'menhir':
         ctx.fillStyle = look.rock
         ctx.fillRect(mapX(v, s.x), mapY(v, s.y), s.kind === 'tower' ? 2 : 1, s.kind === 'tower' ? 2 : 1)
         break
@@ -441,7 +445,7 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     const marks: Feature[] = []
     for (let cy = y0; cy <= y1; cy++) {
       for (let cx = x0; cx <= x1; cx++) {
-        const f = featureFor(g.terrain.seed, cx, cy)
+        const f = featureFor(g.terrain, cx, cy)
         if (!f) continue
         drawFeature(ctx, v, f, look)
         if (f.landmark) marks.push(f)
