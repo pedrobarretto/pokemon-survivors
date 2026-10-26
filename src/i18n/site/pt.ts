@@ -131,7 +131,9 @@ export const sitePt = {
     /** `name` comes with its preposition (`places`). */
     place: (name: string, from: string) => `Vive ${name}, a partir de ${from} (lugar opcional)`,
     placeBoss: (name: string, from: string) => `Desperta da Pedra Peculiar ${name}, a partir de ${from}`,
-    places: { cave: 'na Caverna Escura', graveyard: 'no Cemitério Assombrado', sky: 'no céu, acima das nuvens (só para quem voa)' } satisfies Record<PlaceId, string>,
+    lucky: (name: string, from: string) => `Sai da grama ou da toca ${name}, a partir de ${from}: tímido, foge rápido e vale muita EXP`,
+    rare: (name: string, from: string) => `Morador raro ${name}: às vezes aparece por alguns segundos, a partir de ${from}, e deixa uma Poké Ball`,
+    places: { cave: 'na Caverna Escura', graveyard: 'no Cemitério Assombrado', sky: 'no céu, acima das nuvens (só para quem voa)', grotto: 'na Gruta Oculta, uma zona oculta rara', underground: 'no Subterrâneo, uma zona oculta rara' } satisfies Record<PlaceId, string>,
     reaper: (at: string) => `Ceifador do modo sem fim, a partir de ${at}`,
     attacks: 'Ataques',
     nightAttacks: 'Ataques como chefe da Noite das Bruxas',
@@ -614,7 +616,7 @@ export const sitePt = {
         `A partir de ${p.first}, mais ou menos a cada ${n(p.every)} minutos, a entrada de um lugar aparece fora da tela, com uma seta na borda apontando para ela: a boca de uma caverna num morro, o portão de um cemitério ou uma corrente de ar entre pedras. Ela fica aberta por ${p.open}s e, se um chefe estiver vivo, espera ele cair por até ${p.bossWait}s. A partida mostra lugares diferentes antes de repetir algum.`,
         `Entrar é opcional: fique ${p.enter}s na porta. Lá dentro o mundo espera, como numa fenda: a horda fica congelada e nada novo nasce, mas o relógio da partida continua. Cada lugar tem seus próprios Pokémon, que ficam mais fortes conforme a partida avança, e um limite de tempo; quando ele acaba, você sai pela porta por onde entrou. Se desmaiar lá dentro, a partida não acaba: uma equipe de resgate leva você de volta à porta com ${p.rescue}% do HP, sem a recompensa e com o Revive guardado.`,
       ],
-      names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens' } satisfies Record<PlaceId, string>,
+      names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
       placeHead: 'Lugar',
       timeHead: 'Tempo',
       speciesHead: 'Quem vive lá',
@@ -631,6 +633,12 @@ export const sitePt = {
       sky: (s: { time: number; tailwind: number; every: number; flock: number }) => [
         `Acima das Nuvens: só um Pokémon do tipo Voador consegue subir pela corrente de ar, e ela nem aparece para quem não voa. Lá em cima você voa com o vento a favor (+${s.tailwind}% de velocidade), só Pokémon voadores aparecem e um bando atravessa o céu a cada ${s.flock}s.`,
         `A cada ${s.every}s uma asa chega com o vento e atravessa o céu: pegue antes que ela passe. Cada asa melhora um atributo até o fim da partida. Aos ${s.time}s o vento acalma e você plana de volta.`,
+      ],
+      /** The hidden zones' teaser: rare, unannounced, a tell to look for (`HIDDEN` in `data/places.ts`). */
+      hiddenTitle: 'Zonas ocultas',
+      hidden: (h: { odds: number; open: number }) => [
+        `Nem todo lugar aparece com seta. Em mais ou menos ${h.odds}% das partidas, a entrada de uma zona oculta surge sem aviso, logo à frente de onde você está indo, disfarçada de cenário: um vão num matagal onde as folhas se mexem, ou uma pedra rachada que brilha de vez em quando. Ela fica lá por ${h.open}s e não aparece no minimapa até alguém chegar perto.`,
+        'Lá dentro vivem Pokémon que não aparecem em nenhum outro lugar e outros que valem muito mais EXP do que a horda. O resto é com você.',
       ],
       wingHead: 'Asa',
       effectHead: 'Efeito',
@@ -702,6 +710,7 @@ export const sitePt = {
         chest: 'Baú trancado',
         rift: 'Lendário de uma fenda',
         place: 'Baú da caverna e Spiritomb, no cemitério',
+        fossil: 'Old Amber, desenterrado num lugar escondido',
         final: 'Mewtwo e o mítico raro (Mew, Celebi ou Jirachi)',
         reaper: 'Arceus, no modo sem fim',
         mission: 'Missão de campo: o ninho defendido (Normal / Difícil / Pesadelo)',

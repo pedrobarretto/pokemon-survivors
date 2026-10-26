@@ -24,6 +24,68 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-26',
+    title: { pt: 'Zonas ocultas', en: 'Hidden zones', es: 'Zonas ocultas', fr: 'Zones cachées', zh: '隱藏區域' },
+    highlights: [
+      {
+        pt: 'Zonas ocultas: em algumas partidas, uma entrada secreta aparece no mapa sem seta e sem aviso. Fique de olho em folhas que se mexem e pedras que brilham.',
+        en: 'Hidden zones: in some runs, a secret way in shows up on the map with no arrow and no warning. Keep an eye out for rustling leaves and glinting rocks.',
+        es: 'Zonas ocultas: en algunas partidas, una entrada secreta aparece en el mapa sin flecha y sin aviso. Atento a las hojas que se mueven y a las rocas que brillan.',
+        fr: 'Zones cachées : dans certaines parties, une entrée secrète apparaît sur la carte sans flèche ni annonce. Guette les feuilles qui bougent et les rochers qui scintillent.',
+        zh: '隱藏區域：在某些對局中，地圖上會出現沒有箭頭、也沒有提示的秘密入口。留意晃動的樹葉和閃光的岩石。',
+      },
+      {
+        pt: 'A Gruta Oculta e o Subterrâneo: Audino saindo da grama, Diglett nas tocas e tesouros nas paredes, valendo muito mais EXP que a horda.',
+        en: 'The Hidden Grotto and the Underground: Audino popping out of the grass, Diglett in their holes and treasure in the walls, worth far more EXP than the horde.',
+        es: 'La Gruta Oculta y el Subsuelo: Audino saliendo de la hierba, Diglett en sus hoyos y tesoros en las paredes, que valen mucha más EXP que la horda.',
+        fr: 'La Grotte Cachée et le Souterrain : des Audino qui sortent des herbes, des Diglett dans leurs trous et des trésors dans les parois, bien plus riches en EXP que la horde.',
+        zh: '隱藏洞穴與地下通道：從草叢冒出的 Audino、洞裡的 Diglett 和牆裡的寶藏，經驗值遠高於怪群。',
+      },
+      {
+        pt: 'Cada zona tem um morador raro que não aparece em nenhum outro lugar. Seja rápido: ele não fica muito tempo.',
+        en: 'Each zone has a rare dweller found nowhere else. Be quick: it doesn’t stay long.',
+        es: 'Cada zona tiene un habitante raro que no aparece en ningún otro lugar. Sé rápido: no se queda mucho tiempo.',
+        fr: 'Chaque zone a un habitant rare qu’on ne voit nulle part ailleurs. Fais vite : il ne reste pas longtemps.',
+        zh: '每個區域都有在別處見不到的稀有居民。動作要快：牠不會久留。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Zonas ocultas', en: 'Hidden zones', es: 'Zonas ocultas', fr: 'Zones cachées', zh: '隱藏區域' },
+        notes: [
+          {
+            pt: 'Em mais ou menos uma partida a cada três, a entrada de uma zona oculta aparece logo à frente de onde você está indo, disfarçada de cenário. Não tem seta, aviso nem marca no minimapa: chegue perto para encontrá-la e fique na entrada para entrar.',
+            en: 'In about one run in three, the way into a hidden zone shows up just ahead of where you’re heading, dressed as scenery. There’s no arrow, no warning and no mark on the minimap: walk up to it to find it, and stand in its way in to enter.',
+            es: 'En más o menos una de cada tres partidas, la entrada a una zona oculta aparece justo delante de hacia donde vas, disfrazada de paisaje. No hay flecha, aviso ni marca en el minimapa: acércate para encontrarla y quédate en la entrada para entrar.',
+            fr: 'Dans environ une partie sur trois, l’entrée d’une zone cachée apparaît juste devant là où tu vas, déguisée en décor. Pas de flèche, pas d’annonce ni de marque sur la mini-carte : approche-toi pour la trouver, et reste dans l’entrée pour y aller.',
+            zh: '大約每三局就有一局，隱藏區域的入口會出現在你前進方向的前方，偽裝成風景。沒有箭頭、沒有提示，小地圖上也沒有標記：走近才能發現，站在入口就能進去。',
+          },
+          {
+            pt: 'Na Gruta Oculta, a grama balança e um Audino (às vezes um Chansey ou um Blissey) sai dela, tímido e fugindo: derrote antes que ele volte para o mato. Um item espera no fundo da clareira.',
+            en: 'In the Hidden Grotto, the grass shakes and an Audino (sometimes a Chansey or a Blissey) pops out, shy and running: defeat it before it dives back in. An item waits at the back of the clearing.',
+            es: 'En la Gruta Oculta, la hierba se mueve y sale un Audino (a veces un Chansey o un Blissey), tímido y huyendo: derrótalo antes de que vuelva a la maleza. Un objeto espera al fondo del claro.',
+            fr: 'Dans la Grotte Cachée, les herbes bougent et un Audino (parfois un Chansey ou un Blissey) en sort, timide et en fuite : bats-le avant qu’il n’y retourne. Un objet attend au fond de la clairière.',
+            zh: '在隱藏洞穴裡，草叢晃動後會跑出 Audino（有時是 Chansey 或 Blissey），牠們很膽小、會逃跑：在牠躲回草叢前打倒牠。空地深處還有一個道具在等著你。',
+          },
+          {
+            pt: 'No Subterrâneo, fique nos brilhos das paredes para cavar: Exp. Candy, Prism Sphere, Rare Candy, a pedra de evolução que falta ao seu Pokémon ou Old Amber com um ovo dentro. Cada escavação racha as paredes, e os Diglett só ficam um instante fora da toca.',
+            en: 'In the Underground, stand at the glints in the walls to dig: Exp. Candy, a Prism Sphere, a Rare Candy, the evolution stone your Pokémon is missing or Old Amber with an egg inside. Every dig cracks the walls, and the Diglett only peek out of their holes for a moment.',
+            es: 'En el Subsuelo, quédate en los destellos de las paredes para excavar: Exp. Candy, Prism Sphere, Rare Candy, la piedra evolutiva que le falta a tu Pokémon u Old Amber con un huevo dentro. Cada excavación agrieta las paredes, y los Diglett solo asoman un instante.',
+            fr: 'Dans le Souterrain, reste sur les éclats des parois pour creuser : Exp. Candy, Prism Sphere, Rare Candy, la pierre d’évolution qui manque à ton Pokémon ou de l’Old Amber avec un œuf dedans. Chaque fouille fissure les parois, et les Diglett ne sortent de leur trou qu’un instant.',
+            zh: '在地下通道裡，站在牆上的閃光處挖掘：Exp. Candy、Prism Sphere、Rare Candy、你的寶可夢缺少的進化石，或藏著蛋的 Old Amber。每挖一次牆壁就會龜裂，而 Diglett 只會探出洞口一下子。',
+          },
+          {
+            pt: 'Nova medalha de ouro e título para quem encontrar todas as zonas ocultas.',
+            en: 'A new gold medal and title for finding every hidden zone.',
+            es: 'Nueva medalla de oro y título para quien encuentre todas las zonas ocultas.',
+            fr: 'Une nouvelle médaille d’or et un titre pour qui trouve toutes les zones cachées.',
+            zh: '找到所有隱藏區域可獲得新的金牌與稱號。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-25',
     title: { pt: 'Co-op online, mini mapa e controles para canhotos', en: 'Online co-op, mini map and left-handed controls', es: 'Co-op en línea, minimapa y controles para zurdos', fr: 'Coop en ligne, mini-carte et commandes pour gauchers', zh: '線上合作、小地圖與左手操作' },
     highlights: [
