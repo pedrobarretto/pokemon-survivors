@@ -12,7 +12,7 @@ import { spawnEnemy } from './enemies'
 import { runLearnset } from './learnsets'
 import { MAX_ITEMS, MAX_MOVES, recomputeStats } from './leveling'
 import { LEGENDARY_MOVE_OF } from '../data/legendaryMoves'
-import type { LegendId } from '../data/legends'
+import { AWAKEN_AT, isLegend, legendSignature, type LegendId } from '../data/legends'
 import { learnable } from './kitRules'
 import { forkAt, isLegendary, isManual, maxMoveLevel, withBranch, type MoveId } from './moves'
 import { aimScreen, ownAttack } from './players'
@@ -176,7 +176,7 @@ const twinOf = (g: Game, id: MoveId) => {
 /**
  * Why a move the player doesn't carry can't be learned now, as in a run: every
  * slot taken, a second manual move (`learnable`) or a second legendary one (a
- * run teaches one legendary TM). Null when it can.
+ * run teaches one legendary TM; a legend's own move doesn't count). Null when it can.
  */
 export const moveBlock = (g: Game, id: MoveId): 'full' | 'manual' | 'legendary' | null => {
   const p = g.player
@@ -185,7 +185,8 @@ export const moveBlock = (g: Game, id: MoveId): 'full' | 'manual' | 'legendary' 
   const others = p.moves.filter((m) => m !== slot).map((m) => m.id)
   if (!slot && others.length >= MAX_MOVES) return 'full'
   if (!learnable(others, id, isManual)) return 'manual'
-  if (isLegendary(id) && others.some(isLegendary)) return 'legendary'
+  const own = legendSignature(p.starter)
+  if (isLegendary(id) && id !== own && others.some((m) => isLegendary(m) && m !== own)) return 'legendary'
   return null
 }
 
@@ -245,22 +246,33 @@ export const setItem = (g: Game, id: ItemId, level: number) => {
   return true
 }
 
-/** The forms the Dojo offers a family: each stage of its line, the stages that branch as one form per branch. */
-export type TrainingForm = { stage: number; branch: BranchId | null }
+/**
+ * The forms the Dojo offers a family: each stage of its line, the stages that
+ * branch as one form per branch. A legend has one stage and awakens instead
+ * (`game/legend.ts`): its forms are its awakenings, 0 to 2.
+ */
+export type TrainingForm = { stage: number; branch: BranchId | null; awakened: number }
 
 export const trainingForms = (starter: PlayableId): TrainingForm[] =>
-  PLAYABLE[starter].line.flatMap((_, stage): TrainingForm[] => {
-    const branches = branchesAt(starter, stage)
-    return branches.length > 0 ? branches.map((branch) => ({ stage, branch })) : [{ stage, branch: null }]
-  })
+  isLegend(starter)
+    ? Array.from({ length: AWAKEN_AT.length + 1 }, (_, awakened) => ({ stage: 0, branch: null, awakened }))
+    : PLAYABLE[starter].line.flatMap((_, stage): TrainingForm[] => {
+        const branches = branchesAt(starter, stage)
+        return branches.length > 0 ? branches.map((branch) => ({ stage, branch, awakened: 0 })) : [{ stage, branch: null, awakened: 0 }]
+      })
 
-/** Evolves (or devolves) the player into a form at once; an ability the new form can't have goes. */
-export const setForm = (g: Game, stage: number, branch: BranchId | null) => {
+/**
+ * Evolves (or devolves) the player into a form at once, a legend into its
+ * awakening; an ability the new form can't have goes, and so does a legend's
+ * before its first awakening (where a run grants it).
+ */
+export const setForm = (g: Game, stage: number, branch: BranchId | null, awakened = 0) => {
   const p = g.player
   p.stage = stage
   p.branch = branch && BRANCHES[branch].line === p.starter && BRANCHES[branch].stage <= stage ? branch : null
+  if (p.legend) p.legend.awakened = Math.max(0, Math.min(AWAKEN_AT.length, awakened))
   const id = p.ability.id
-  if (id && !abilitySet(p.starter, p.branch).includes(id)) p.ability = createAbilityState()
+  if (id && (!abilitySet(p.starter, p.branch).includes(id) || p.legend?.awakened === 0)) p.ability = createAbilityState()
   recomputeStats(g)
 }
 
@@ -275,7 +287,7 @@ export const setAbility = (g: Game, id: AbilityId | null) => {
 /** Puts a saved build on the player: its form first (the learnset follows it), then the moves and items it fits. */
 export const applyBuild = (g: Game, b: Build) => {
   const p = g.player
-  setForm(g, Math.min(b.stage, PLAYABLE[p.starter].line.length - 1), b.branch)
+  setForm(g, Math.min(b.stage, PLAYABLE[p.starter].line.length - 1), b.branch, b.awakened)
   for (const m of [...p.moves]) dropMove(g, m.id)
   p.items.length = 0
   for (const m of b.moves) {

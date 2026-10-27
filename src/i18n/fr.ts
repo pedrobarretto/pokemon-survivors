@@ -4910,6 +4910,8 @@ export const fr: Messages = {
       legendary: 'En partie, un légendaire vaincu laisse le disque doré de sa capacité : un seul par partie.',
     },
     form: 'Forme',
+    abilityAwaken: 'Le talent arrive au premier éveil.',
+    legendNote: 'Les légendaires capturés s’entraînent ici aussi, avec leurs *éveils* des Nv 12 et 28 dans l’onglet Forme.',
     abilityLater: 'Le talent arrive avec la première évolution.',
     noAbility: 'Aucun',
     count: 'Combien de cibles',

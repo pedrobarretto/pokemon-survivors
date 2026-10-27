@@ -3,6 +3,7 @@ import { BRANCHES, isBranch, type BranchId } from '../data/branches'
 import { evolvedFrom } from '../data/evolutions'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { ITEMS, type ItemId } from '../data/items'
+import { AWAKEN_AT, isLegend } from '../data/legends'
 import { MAX_ITEMS, MAX_MOVES } from './leveling'
 import { branchAt, maxMoveLevel, MOVES, type MoveId } from './moves'
 import { isRecord, wholeNumber } from './parse'
@@ -26,6 +27,8 @@ export type Build = {
   /** The stage the build was tried at, and the branch when the family branches there. */
   stage: number
   branch: BranchId | null
+  /** A legend's awakenings (0 to 2; a legend has one stage): 0 for everyone else. */
+  awakened: number
 }
 
 /** The save's builds, one per family. Synced whole, the newer device's winning per family (`mergeSaves`). */
@@ -38,6 +41,7 @@ export const buildOf = (p: Player): Build => ({
   ability: p.ability.id,
   stage: p.stage,
   branch: p.branch,
+  awakened: p.legend?.awakened ?? 0,
 })
 
 /** Whether a build holds nothing worth marking. */
@@ -110,7 +114,8 @@ const parseBuild = (family: PlayableId, raw: unknown): Build | null => {
   if (!isRecord(raw)) return null
   const ability = ABILITY_IDS.find((id) => id === raw.ability) ?? null
   const branch = isBranch(raw.branch) && BRANCHES[raw.branch].line === family ? raw.branch : null
-  return { moves: parseMoves(raw.moves), items: parseItems(raw.items), ability, stage: wholeNumber(raw.stage, PLAYABLE[family].line.length - 1), branch }
+  const awakened = isLegend(family) ? wholeNumber(raw.awakened, AWAKEN_AT.length) : 0
+  return { moves: parseMoves(raw.moves), items: parseItems(raw.items), ability, stage: wholeNumber(raw.stage, PLAYABLE[family].line.length - 1), branch, awakened }
 }
 
 /** Saved builds, keeping only real families and what parses. */

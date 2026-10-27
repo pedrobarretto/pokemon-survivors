@@ -2,7 +2,7 @@ import { playSfx } from '../engine/audio'
 import { ABILITIES } from '../data/abilities'
 import { ENEMIES } from '../data/enemies'
 import { evolutionOf, evolvedFrom } from '../data/evolutions'
-import { PLAYABLE } from '../data/hatchlings'
+import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { ITEM_IDS, ITEMS, type ItemDef, type ItemId } from '../data/items'
 import { TRAINING, TRAINING_TARGETS, type TrainingTarget } from '../data/training'
 import type { PokeType } from '../data/types'
@@ -30,12 +30,16 @@ import {
   trainingForms,
   type DpsMeter,
   type MoveShelf,
+  type TrainingForm,
 } from '../game/training'
+import { formAfter, innateAbility } from '../game/legend'
+import { formLocked } from '../game/communityGoal'
+import { AWAKEN_AT, isLegend, LEGENDS } from '../data/legends'
 import type { DamageSource, Game } from '../game/types'
 import { formatNumber, t } from '../i18n'
 import { abilityIcon } from '../render/abilityArt'
 import { itemIcon, moveIcon } from '../render/art'
-import { portraitUrl } from '../render/sprites'
+import { formPortraitUrl, portraitUrl } from '../render/sprites'
 import { specialIcon } from '../render/specialFx'
 import { h, setText } from './dom'
 import { today } from './save'
@@ -84,6 +88,17 @@ const sourceView = (g: Game, source: DamageSource) => {
 }
 
 const whole = (n: number) => formatNumber(Math.round(n))
+
+/** A form's portrait and name: a legend's awakened form where it has one (and the community goal opened it), else the line's stage. */
+const lookOf = (starter: PlayableId, shiny: boolean, f: TrainingForm) => {
+  if (isLegend(starter)) {
+    const own = LEGENDS[starter].line[0]
+    const form = formAfter(starter, f.awakened)
+    return form && !formLocked(form) ? { src: formPortraitUrl(own.dex, form.key), name: form.name } : { src: portraitUrl(own.dex, shiny), name: own.name }
+  }
+  const form = formAt(starter, f.branch, f.stage)
+  return { src: portraitUrl(form.dex, shiny), name: form.name }
+}
 
 /** A − n + stepper: `set` gets the next level (0 forgets), the label says where it stands. */
 const stepper = (level: number, max: number, set: (level: number) => void, labelOf: (level: number) => string) =>
@@ -255,18 +270,23 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
   const formTab = (): Part[] => {
     const p = me()
     const forms = trainingForms(p.starter).map((f) => {
-      const form = formAt(p.starter, f.branch, f.stage)
-      const on = p.stage === f.stage && (f.branch === null || p.branch === f.branch)
+      const look = lookOf(p.starter, p.shiny, f)
+      const on = p.stage === f.stage && (f.branch === null || p.branch === f.branch) && (p.legend?.awakened ?? 0) === f.awakened
       return h(
         'button',
-        { class: on ? 'dojo-form on' : 'dojo-form', type: 'button', onclick: () => (setForm(g, f.stage, f.branch), changed()) },
-        h('img', { src: portraitUrl(form.dex, p.shiny), alt: '' }),
-        h('span', {}, form.name),
+        { class: on ? 'dojo-form on' : 'dojo-form', type: 'button', onclick: () => (setForm(g, f.stage, f.branch, f.awakened), changed()) },
+        h('img', { src: look.src, alt: '' }),
+        h('span', {}, look.name),
+        // A legend's awakenings look alike until the last: each says the level a run reaches it at.
+        p.legend && h('small', { class: 'dojo-form-at' }, m().level(f.awakened === 0 ? 1 : AWAKEN_AT[f.awakened - 1]!)),
       )
     })
     const set = abilitySet(p.starter, p.branch)
+    const innate = innateAbility(p.starter)
     const abilities =
-      p.stage === 0 && PLAYABLE[p.starter].line.length > 1
+      p.legend?.awakened === 0
+        ? [h('p', { class: 'dojo-empty' }, m().abilityAwaken)]
+        : p.stage === 0 && PLAYABLE[p.starter].line.length > 1
         ? [h('p', { class: 'dojo-empty' }, m().abilityLater)]
         : [
             h('button', { class: p.ability.id === null ? 'dojo-chip on' : 'dojo-chip', type: 'button', onclick: () => (setAbility(g, null), changed()) }, m().noAbility),
@@ -284,6 +304,8 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
       h('h3', { class: 'dojo-label' }, m().form),
       h('div', { class: 'dojo-forms' }, ...forms),
       h('h3', { class: 'dojo-label' }, m().ability),
+      // A legend's innate is always on, besides the ability picked.
+      innate && h('p', { class: 'dojo-innate' }, h('img', { src: abilityIcon(innate), alt: '' }), `${t().legend.innate}: ${ABILITIES[innate].name}`),
       h('div', { class: 'dojo-chips' }, ...abilities),
       ability && h('p', { class: 'dojo-row-note' }, t().abilities[ability]),
     ]
@@ -347,8 +369,8 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
   /** Rebuilds the panel around what the player carries now (the meter keeps going). */
   function render() {
     const p = me()
-    const form = formAt(p.starter, p.branch, p.stage)
-    head.replaceChildren(h('img', { src: portraitUrl(form.dex, p.shiny), alt: '' }), h('b', {}, form.name), h('small', {}, m().title))
+    const look = lookOf(p.starter, p.shiny, { stage: p.stage, branch: p.branch, awakened: p.legend?.awakened ?? 0 })
+    head.replaceChildren(h('img', { src: look.src, alt: '' }), h('b', {}, look.name), h('small', {}, m().title))
     TABS.forEach((k, i) => tabButtons[i]!.classList.toggle('on', k === tab))
     const scroll = body.scrollTop
     body.replaceChildren(...TAB_VIEWS[tab]().filter((n) => n instanceof Node))

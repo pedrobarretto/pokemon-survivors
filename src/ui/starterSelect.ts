@@ -86,7 +86,8 @@ type SelectActions = {
  * `selected` reads the selected Pokémon, so a rebuilt screen (language switch, back from a sub-screen) keeps it.
  * `coop`: picking the Pokémon for a co-op room, which plays the normal mode (`COOP_LOCKS`): no
  * Lendários tab, no Bag, TMs or Bottle Caps, no Poké Mart, and the host sets the difficulty, so the
- * bar is just "Escolher". `dojo`: picking who trains at the Dojo, the same plain bar ("Treinar").
+ * bar is just "Escolher". `dojo`: picking who trains at the Dojo, the same plain bar ("Treinar"),
+ * the captured legends included (they train with their awakenings).
  */
 export const starterSelect = (root: HTMLElement, input: Input, actions: SelectActions, initial: PlayableId = 'charmander', opts: { coop?: boolean; dojo?: boolean } = {}): Screen & { selected: () => PlayableId } => {
   const m = t()
@@ -101,7 +102,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const shinyOf = (id: PlayableId) => playsShiny(forms, id)
 
   /** Co-op leaves the Legend mode home: no Lendários tab, and a legend partner opens on the starters. */
-  const tabs: readonly Tab[] = plain ? TABS.filter((k) => k !== 'legends') : TABS
+  const tabs: readonly Tab[] = opts.coop ? TABS.filter((k) => k !== 'legends') : TABS
   let tab: Tab = tabs.includes(tabOf(initial)) ? tabOf(initial) : 'starters'
   /** Each tab remembers its own cursor, so switching back lands where it was. */
   const firstHatched = HATCHLING_IDS.find((id) => save.hatched[id]) ?? HATCHLING_IDS[0]!
@@ -305,7 +306,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
 
   /** Lendários: every legend, captured or not, and what the mode is about. ↑ ↓ read the column count from the grid. */
   const legendGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...legendIds.map(legendCell))
-  const legendsPane = h('div', { class: 'partner-legends' }, legendGrid, h('p', { class: 'partner-legend-note' }, rich(m.legend.selectNote)))
+  const legendsPane = h('div', { class: 'partner-legends' }, legendGrid, h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)))
 
   const randomButton = h(
     'button',
@@ -321,7 +322,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     h('div', { class: 'partner-tabs', role: 'tablist' }, ...tabs.map((k) => tabButtons[k]), h('span', { class: 'key-hint' }, 'TAB'), randomButton),
     h('div', { class: 'partner-pane starters' }, starterGrid, teaser),
     eggsPane,
-    !plain && legendsPane,
+    !opts.coop && legendsPane,
   )
 
   /* ---------- Partner panel ---------- */

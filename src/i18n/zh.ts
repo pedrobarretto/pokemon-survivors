@@ -4910,6 +4910,8 @@ export const zh: Messages = {
       legendary: '對局中，被打倒的傳說寶可夢會留下牠招式的金色光碟：每局只能一個。',
     },
     form: '型態',
+    abilityAwaken: '特性在第一次覺醒時獲得。',
+    legendNote: '捕捉到的傳說寶可夢也能在這裡修行，在「型態」分頁可切換 Lv 12 和 28 的*覺醒*。',
     abilityLater: '特性會在第一次進化時獲得。',
     noAbility: '無',
     count: '靶子數量',

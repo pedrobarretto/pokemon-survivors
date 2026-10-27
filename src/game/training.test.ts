@@ -5,7 +5,7 @@ import { createGame, step } from './game'
 import { MAX_MOVES } from './leveling'
 import { TICK } from './replay'
 import { isLegendary, isManual } from './moves'
-import { applyBuild, createMeter, moveBlock, readMeter, sampleMeter, setDummies, setForm, setItem, setMove, shelfMoves, startTraining, trainingMoves } from './training'
+import { applyBuild, createMeter, moveBlock, setAbility, trainingForms, readMeter, sampleMeter, setDummies, setForm, setItem, setMove, shelfMoves, startTraining, trainingMoves } from './training'
 
 const STILL = { move: { x: 0, y: 0 }, special: false }
 
@@ -78,6 +78,27 @@ describe('the Dojo', () => {
     expect(g.player.moves.filter((m) => isLegendary(m.id))).toHaveLength(1)
   })
 
+  it('trains a legend through its awakenings, its own legendary move not counting against a TM one', () => {
+    const g = createGame('kyogre', { w: 480, h: 270 }, 7)
+    startTraining(g)
+    const base = g.player.stats.maxHp
+    expect(trainingForms('kyogre').map((f) => f.awakened)).toEqual([0, 1, 2])
+    setForm(g, 0, null, 2)
+    expect(g.player.legend!.awakened).toBe(2)
+    expect(g.player.stats.maxHp).toBeGreaterThan(base)
+    expect(moveBlock(g, 'sacredFire')).toBe(null)
+    setAbility(g, 'swiftSwim')
+    const build = buildOf(g.player)
+    expect(build.awakened).toBe(2)
+    const h = createGame('kyogre', { w: 480, h: 270 }, 7)
+    startTraining(h)
+    applyBuild(h, build)
+    expect(buildOf(h.player)).toEqual(build)
+    // Back before the first awakening, the ability goes: a run grants it there.
+    setForm(h, 0, null, 0)
+    expect(h.player.ability.id).toBe(null)
+  })
+
   it('puts a saved build back on: form, moves with their forks, items and ability', () => {
     const g = dojo()
     setForm(g, 2, null)
@@ -93,7 +114,7 @@ describe('the Dojo', () => {
 })
 
 describe('builds', () => {
-  const build: Build = { moves: [{ id: 'fireSpin', level: 7, path: 0b100000 }, { id: 'flamethrower', level: 1, path: 0 }], items: [{ id: 'charcoal', level: 2 }], ability: 'blaze', stage: 2, branch: null }
+  const build: Build = { moves: [{ id: 'fireSpin', level: 7, path: 0b100000 }, { id: 'flamethrower', level: 1, path: 0 }], items: [{ id: 'charcoal', level: 2 }], ability: 'blaze', stage: 2, branch: null, awakened: 0 }
 
   it('marks the cards that follow the plan', () => {
     expect(planned(build, { kind: 'move', id: 'fireSpin', level: 3 })).toBe(true)

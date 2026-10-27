@@ -4915,6 +4915,8 @@ export const es: Messages = {
       legendary: 'En las partidas, un legendario vencido deja el disco dorado de su movimiento: solo uno por partida.',
     },
     form: 'Forma',
+    abilityAwaken: 'La habilidad llega con el primer despertar.',
+    legendNote: 'Los legendarios capturados también entrenan aquí, con los *despertares* del Nv 12 y 28 en la pestaña Forma.',
     abilityLater: 'La habilidad llega con la primera evolución.',
     noAbility: 'Ninguna',
     count: 'Cuántos blancos',

@@ -5196,6 +5196,9 @@ export const pt = {
     },
     form: 'Forma',
     abilityLater: 'A habilidade chega na primeira evolução.',
+    abilityAwaken: 'A habilidade chega no primeiro despertar.',
+    /** The Lendários tab of the Dojo's partner select. */
+    legendNote: 'Os lendários capturados também treinam aqui, com os *despertares* do Nv 12 e 28 na aba Forma.',
     noAbility: 'Nenhuma',
     count: 'Quantos alvos',
     countOf: (n: number) => `${n}`,

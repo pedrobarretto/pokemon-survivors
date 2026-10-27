@@ -4914,6 +4914,8 @@ export const en: Messages = {
       legendary: 'In runs, a beaten legendary leaves its move’s golden disc: only one per run.',
     },
     form: 'Form',
+    abilityAwaken: 'The ability comes with the first awakening.',
+    legendNote: 'Captured legends train here too, with their Lv 12 and 28 *awakenings* on the Form tab.',
     abilityLater: 'The ability comes with the first evolution.',
     noAbility: 'None',
     count: 'How many targets',
