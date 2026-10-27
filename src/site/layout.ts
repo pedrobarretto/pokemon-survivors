@@ -22,6 +22,13 @@ const NAV: readonly RouteId[] = ['play', 'pokedex', 'tierList', 'guide', 'change
 
 const others = (locale: Locale) => LOCALE_IDS.filter((l) => l !== locale)
 
+/**
+ * Paints the game's theme (Settings → Jogo → Tema, in `ps:settings`) on <html> before the page draws, by
+ * `ui/theme.ts`'s rule: `dark`, `light`, or the system's for `system` and no choice yet. Inline, so the cards
+ * never flash light, and standalone, since the site never loads game code.
+ */
+const THEME_SCRIPT = `try{var t=JSON.parse(localStorage.getItem('ps:settings')||'{}').theme;document.documentElement.dataset.theme=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}catch(e){}`
+
 const head = ({ id, locale, title, description, schema = [], css, sub }: PageMeta) => {
   const m = SITE_MESSAGES[locale]
   const paths = pathsOf({ id, sub })
@@ -70,11 +77,11 @@ const head = ({ id, locale, title, description, schema = [], css, sub }: PageMet
     ${others(locale).map((l) => html`<meta property="og:locale:alternate" content="${SITE_MESSAGES[l].lang.og}" />\n    `)}    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/assets/pokemon/4/portrait.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <script>${raw(THEME_SCRIPT)}</script>
     <link rel="stylesheet" href="/src/site/site.css" />
     ${css && html`<style>${raw(css)}</style>`}
     <script type="application/ld+json">${jsonLd({ '@context': 'https://schema.org', '@graph': graph })}</script>
     <script type="module" src="/src/site/client.ts"></script>
-    <script defer vite-ignore src="/_vercel/insights/script.js"></script>
   </head>`
 }
 

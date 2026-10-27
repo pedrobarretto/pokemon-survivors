@@ -497,11 +497,17 @@ export const pt = {
     screenShake: 'Tremor de tela',
     flashes: 'Clarões',
     flashModes: { normal: 'Normais', reduced: 'Reduzidos' },
+    /** The fog weather's veil (`render/weather.ts`): as designed, light or off. */
+    fog: 'Névoa',
+    fogModes: { normal: 'Normal', light: 'Leve', off: 'OFF' },
     runToasts: 'Avisos na partida',
     runToastModes: { all: 'Todos', important: 'Só importantes', none: 'Nenhum' },
     /** The HUD's mini map (`render/minimap.ts`): its shape, or off. */
     minimap: 'Mini mapa',
     minimapModes: { square: 'Quadrado', round: 'Redondo', off: 'OFF' },
+    /** Menus' and HUD's colors (`ui/theme.ts`): light, dark or the system's. */
+    theme: 'Tema',
+    themes: { system: 'Sistema', light: 'Claro', dark: 'Escuro' },
     /** How opaque your moves draw (and, in co-op, your teammates'): `render/attackLayers.ts`. */
     attackOpacity: 'Opacidade dos golpes',
     teamAttackOpacity: 'Opacidade do time',
@@ -1931,6 +1937,12 @@ export const pt = {
       use: 'Usar',
       already: 'Este ovo já está numa Incubadora Rápida: anda o dobro até chocar.',
       none: (price: string) => `Sem Incubadora Rápida. A loja do Kecleon vende por ${price} (aba *Incubadora*).`,
+    },
+    /** The egg pity (`EGGS.pity` in `game/eggs.ts`): the incubator's line and the hatching scene's note. */
+    pity: {
+      rule: (n: number) => `Garantia: depois de ${n} ovos do mesmo tipo sem Pokémon novo, o próximo traz um.`,
+      count: (egg: string, n: number, max: number) => (n >= max ? `${egg}: *novo garantido!*` : `${egg} ${n}/${max}`),
+      hatched: (n: number) => `Garantia de ovo: depois de ${n} sem novidade, este veio novo!`,
     },
     hatching: 'Hã? O ovo está se mexendo!',
     hatched: (name: string) => `Saiu um *${name}*!`,

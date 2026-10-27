@@ -127,10 +127,24 @@ const sun = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: numb
 
 /* ---------------- Fog ---------------- */
 
+/**
+ * The Fog setting (Settings → Game). `normal` draws the fog as designed; `light`
+ * widens the clear circle and thins the veil, for eyes that tire of squinting
+ * through it; `off` drops the veil and keeps only the faint haze and wisps.
+ * Pure presentation: the simulation never reads it.
+ */
+export const FOG_MODES = ['normal', 'light', 'off'] as const
+
+export type FogMode = (typeof FOG_MODES)[number]
+
+/** The veil per mode: its clear circle (a fraction of the view's shorter side) and its opacity at the edge of the view. */
+const FOG_VEIL = {
+  normal: { sight: WEATHER.fog.sight ?? 0.42, max: 0.86 },
+  light: { sight: 0.62, max: 0.5 },
+} as const satisfies Record<Exclude<FogMode, 'off'>, { sight: number; max: number }>
+
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 const FOG_RGB = [200, 194, 216] as const
-/** Fog opacity at the edge of the view: the horde is still there, just hard to read. */
-const FOG_MAX = 0.86
 const FOG_LEVELS = 4
 
 /**
@@ -139,14 +153,15 @@ const FOG_LEVELS = 4
  * the GBA way to do a soft gradient. Built once per view size.
  */
 const fogVeil = (() => {
-  let cache: { w: number; h: number; sight: number; canvas: PixelSprite } | null = null
+  let cache: { w: number; h: number; mode: FogMode; canvas: PixelSprite } | null = null
   onCanvasReset(
     () => (cache = null),
     () => cache,
   )
-  const ready = (w: number, h: number, sight: number) => cache !== null && cache.w === w && cache.h === h && cache.sight === sight
-  const veil = (w: number, h: number, sight: number) => {
-    if (cache && ready(w, h, sight)) return cache.canvas
+  const ready = (w: number, h: number, mode: Exclude<FogMode, 'off'>) => cache !== null && cache.w === w && cache.h === h && cache.mode === mode
+  const veil = (w: number, h: number, mode: Exclude<FogMode, 'off'>) => {
+    if (cache && ready(w, h, mode)) return cache.canvas
+    const { sight, max } = FOG_VEIL[mode]
     const cw = w * 2
     const ch = h * 2
     const canvas = createCanvas(cw, ch)
@@ -157,7 +172,7 @@ const fogVeil = (() => {
     const dist = new Float64Array((w + 1) * (h + 1))
     for (let dy = 0; dy <= h; dy++) for (let dx = 0; dx <= w; dx++) dist[dy * (w + 1) + dx] = Math.hypot(dx, dy * 1.25) / radius
     // Each band's opacity, worked out once.
-    const alphas = Array.from({ length: FOG_LEVELS + 2 }, (_, band) => Math.round((Math.min(band, FOG_LEVELS) / FOG_LEVELS) * FOG_MAX * 255))
+    const alphas = Array.from({ length: FOG_LEVELS + 2 }, (_, band) => Math.round((Math.min(band, FOG_LEVELS) / FOG_LEVELS) * max * 255))
     const data = img.data
     const [r, gr, b] = FOG_RGB
     for (let y = 0; y < ch; y++) {
@@ -176,7 +191,7 @@ const fogVeil = (() => {
       }
     }
     vctx.putImageData(img, 0, 0)
-    return (cache = { w, h, sight, canvas }).canvas
+    return (cache = { w, h, mode, canvas }).canvas
   }
   /** Lets the veil go (2 MB on a phone) until fog can roll in again. */
   const drop = () => {
@@ -189,15 +204,18 @@ const fogVeil = (() => {
 /** Frees the fog veil when no fog is in the air nor can come (`warmScenery`); the next fog builds it again. */
 export const dropFog = fogVeil.drop
 
-/** Builds the fog veil for a view ahead of time (it takes longer than a frame). True if it built it. */
-export const warmFog = (w: number, h: number) => {
-  const sight = WEATHER.fog.sight ?? 0.42
-  if (fogVeil.ready(w, h, sight)) return false
-  fogVeil(w, h, sight)
+/** Builds the fog veil for a view and mode ahead of time (it takes longer than a frame). True if it built it. */
+export const warmFog = (w: number, h: number, mode: FogMode) => {
+  if (mode === 'off') {
+    dropFog()
+    return false
+  }
+  if (fogVeil.ready(w, h, mode)) return false
+  fogVeil(w, h, mode)
   return true
 }
 
-const fog = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: number, px: number, py: number) => {
+const fog = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: number, px: number, py: number, mode: FogMode) => {
   ctx.fillStyle = 'rgba(184,176,208,0.12)'
   ctx.fillRect(0, 0, w, h)
   // Wisps drifting across the clearing.
@@ -211,27 +229,27 @@ const fog = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: numb
     drawPacked(ctx, ellipse(rx, Math.max(3, Math.round(rx * 0.22)), '#e8e4f0'), Math.round(x - rx), Math.round(y))
   }
   ctx.restore()
-  ctx.drawImage(fogVeil(w, h, WEATHER.fog.sight ?? 0.42), Math.round(px - w), Math.round(py - h))
+  if (mode !== 'off') ctx.drawImage(fogVeil(w, h, mode), Math.round(px - w), Math.round(py - h))
 }
 
 const DRAW: Record<Exclude<WeatherId, 'clear' | 'fog'>, typeof rain> = { rain, snow, sand, sun }
 
-const drawOne = (ctx: Ctx, id: WeatherId, alpha: number, g: Game, camX: number, camY: number, t: number) => {
+const drawOne = (ctx: Ctx, id: WeatherId, alpha: number, g: Game, camX: number, camY: number, t: number, fogMode: FogMode) => {
   if (id === 'clear' || alpha <= 0) return
   const { w, h } = g.view
   ctx.save()
   ctx.globalAlpha = alpha
-  if (id === 'fog') fog(ctx, w, h, camX, camY, t, localPlayer(g).x - camX, localPlayer(g).y - 10 - camY)
+  if (id === 'fog') fog(ctx, w, h, camX, camY, t, localPlayer(g).x - camX, localPlayer(g).y - 10 - camY, fogMode)
   else DRAW[id](ctx, w, h, camX, camY, t)
   ctx.restore()
 }
 
 /** Weather overlay for the frame, in screen space. The outgoing weather fades as the new one rolls in. */
-export const drawWeather = (ctx: Ctx, g: Game, camX: number, camY: number, t: number) => {
+export const drawWeather = (ctx: Ctx, g: Game, camX: number, camY: number, t: number, fogMode: FogMode) => {
   if (roomOf(g)) return
   const k = Math.min(1, (g.time - g.weather.since) / FADE)
-  drawOne(ctx, g.weather.prev, 1 - k, g, camX, camY, t)
-  drawOne(ctx, g.weather.id, k, g, camX, camY, t)
+  drawOne(ctx, g.weather.prev, 1 - k, g, camX, camY, t, fogMode)
+  drawOne(ctx, g.weather.id, k, g, camX, camY, t, fogMode)
 }
 
 /* ---------------- Icons ---------------- */

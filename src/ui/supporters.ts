@@ -197,7 +197,7 @@ const shinyPicker = (root: HTMLElement, input: Input, actions: { play: (id: Play
     if (!isHatchling(id)) return reveal(id)
     // An egg family hatches for it, shiny, like the Mystery Gift's shiny hatch. The picker goes away (keys included) while it plays.
     o.dispose()
-    sub = hatchScene(root, input, { id, tier: HATCHLINGS[id].egg, shiny: true, duplicate: false, refund: 0 }, { play: () => (sub?.dispose(), actions.play(id)), done: () => (sub?.dispose(), later(back)) })
+    sub = hatchScene(root, input, { id, tier: HATCHLINGS[id].egg, shiny: true, duplicate: false, refund: 0, guaranteed: false }, { play: () => (sub?.dispose(), actions.play(id)), done: () => (sub?.dispose(), later(back)) })
   }
 
   const draw = (initial = 0) => {

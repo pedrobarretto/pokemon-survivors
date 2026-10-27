@@ -6,6 +6,7 @@ import { GRAVEYARD } from '../data/places'
 import { MYTHICALS } from '../data/waves'
 import { INCUBATOR } from '../data/shop'
 import { markHatch } from './dex'
+import { wholeNumber } from './parse'
 import { REAPER } from './endless'
 import type { Save } from './meta'
 
@@ -59,6 +60,8 @@ export const EGGS = {
   shinyOdds: 1 / 100,
   /** Families not hatched yet are this many times likelier to come out. */
   newWeight: 3,
+  /** Eggs of a kind in a row without a new family, after which the next one of that kind is sure to bring one (`guaranteedNew`). */
+  pity: 5,
 } as const
 
 type DropRule = { chance: number; odds: Partial<Record<EggTier, number>> }
@@ -116,6 +119,9 @@ export type Egg = { tier: EggTier; steps: number; quick?: boolean }
 /** Families hatched so far. A shiny hatch keeps the family shiny for good. */
 export type Hatched = Partial<Record<HatchlingId, { shiny: boolean }>>
 
+/** The egg pity: per family pool (`poolOf`), the eggs hatched in a row that brought no new family, up to `EGGS.pity`. */
+export type EggPity = Partial<Record<EggTier, number>>
+
 export const stepsLeft = (egg: Egg) => Math.max(0, EGG_TIERS[egg.tier].steps - egg.steps)
 
 export const isReady = (egg: Egg) => stepsLeft(egg) === 0
@@ -162,13 +168,44 @@ export const grantEgg = (save: Save, tier: EggTier) => depositEggs(save, 0, [{ t
 
 /* ---------------- Hatching ---------------- */
 
-export type Hatch = { id: HatchlingId; tier: EggTier; shiny: boolean; duplicate: boolean; refund: number }
+/** A hatch: `guaranteed` when the egg pity made it a new family (`guaranteedNew`). */
+export type Hatch = { id: HatchlingId; tier: EggTier; shiny: boolean; duplicate: boolean; refund: number; guaranteed: boolean }
 
-/** Who can come out of an egg of `tier` (its `families`' when it borrows them), weighted towards families not hatched yet (all alike for an `even` tier). */
-export const hatchPool = (tier: EggTier, hatched: Hatched) => {
+/** The tier whose families an egg of `tier` hatches (its `families` when it borrows them): the pool the egg pity counts by. */
+export const poolOf = (tier: EggTier): EggTier => {
   const rule: EggTierRule = EGG_TIERS[tier]
-  const from = rule.families ?? tier
-  return HATCHLING_IDS.filter((id) => HATCHLINGS[id].egg === from).map((id) => [id, hatched[id] || rule.even ? 1 : EGGS.newWeight] as const)
+  return isTier(rule.families) ? rule.families : tier
+}
+
+/** Whether an egg of `tier` could still bring a family this save hasn't hatched. */
+const hasNew = (tier: EggTier, hatched: Hatched) => HATCHLING_IDS.some((id) => HATCHLINGS[id].egg === poolOf(tier) && !hatched[id])
+
+/** Whether the next egg of `tier` is sure to bring a new family: the last `EGGS.pity` of its pool brought none, and one is left to bring. */
+export const guaranteedNew = (tier: EggTier, hatched: Hatched, pity: EggPity) => (pity[poolOf(tier)] ?? 0) >= EGGS.pity && hasNew(tier, hatched)
+
+/**
+ * Who can come out of an egg of `tier` (its `families`' when it borrows them),
+ * weighted towards families not hatched yet (all alike for an `even` tier).
+ * Only the new ones once the egg pity guarantees one (`guaranteedNew`).
+ */
+export const hatchPool = (tier: EggTier, hatched: Hatched, pity: EggPity = {}) => {
+  const rule: EggTierRule = EGG_TIERS[tier]
+  const pool = HATCHLING_IDS.filter((id) => HATCHLINGS[id].egg === poolOf(tier)).map((id) => [id, hatched[id] || rule.even ? 1 : EGGS.newWeight] as const)
+  return guaranteedNew(tier, hatched, pity) ? pool.filter(([id]) => !hatched[id]) : pool
+}
+
+/** The egg pity the incubator shows: each pool with a drought going and a new family left to bring, with its count. */
+export const pityShown = (save: Pick<Save, 'hatched' | 'eggPity'>) =>
+  EGG_TIER_IDS.flatMap((tier) => {
+    const n = save.eggPity[tier] ?? 0
+    return n > 0 && hasNew(tier, save.hatched) ? [[tier, n] as const] : []
+  })
+
+/** The egg pity after an egg of `tier` hatched: back to 0 on a new family, one more otherwise (while its pool has a new one to give). */
+const afterHatch = (pity: EggPity, tier: EggTier, hatched: Hatched, isNew: boolean): EggPity => {
+  const pool = poolOf(tier)
+  if (isNew) return { ...pity, [pool]: 0 }
+  return hasNew(tier, hatched) ? { ...pity, [pool]: Math.min(EGGS.pity, (pity[pool] ?? 0) + 1) } : pity
 }
 
 /** Whether an egg of `tier` always hatches shiny (the loyalty card's Kecleon Egg). */
@@ -178,8 +215,8 @@ export const hatchesShiny = (tier: EggTier) => {
 }
 
 /** Each family's share of an egg of `tier` for this save (what the shop shows): the weights of `hatchPool`, summing to 1. */
-export const hatchOdds = (tier: EggTier, hatched: Hatched) => {
-  const pool = hatchPool(tier, hatched)
+export const hatchOdds = (tier: EggTier, hatched: Hatched, pity: EggPity = {}) => {
+  const pool = hatchPool(tier, hatched, pity)
   const total = pool.reduce((sum, [, w]) => sum + w, 0)
   return pool.map(([id, w]) => [id, w / total] as const)
 }
@@ -187,13 +224,15 @@ export const hatchOdds = (tier: EggTier, hatched: Hatched) => {
 /**
  * Hatches the ready egg at `index`. A new family, or the shiny form of one
  * owned in normal colors, unlocks it; anything else is a duplicate worth its
- * tier's ₽. Either way the Pokédex catches what came out (`markHatch`). Null
- * when there is no ready egg there.
+ * tier's ₽. Either way the Pokédex catches what came out (`markHatch`), and
+ * the egg pity counts it (a shiny of an owned family isn't new). Null when
+ * there is no ready egg there.
  */
 export const hatchEgg = (save: Save, index: number, rng: Rng): { save: Save; hatch: Hatch } | null => {
   const egg = save.eggs[index]
   if (!egg || !isReady(egg)) return null
-  const id = weightedPick(rng, hatchPool(egg.tier, save.hatched))
+  const guaranteed = guaranteedNew(egg.tier, save.hatched, save.eggPity)
+  const id = weightedPick(rng, hatchPool(egg.tier, save.hatched, save.eggPity))
   const shiny = chance(rng, EGGS.shinyOdds) || hatchesShiny(egg.tier)
   const owned = save.hatched[id]
   const duplicate = owned !== undefined && (owned.shiny || !shiny)
@@ -203,10 +242,11 @@ export const hatchEgg = (save: Save, index: number, rng: Rng): { save: Save; hat
       ...save,
       eggs: save.eggs.filter((_, i) => i !== index),
       hatched: duplicate ? save.hatched : { ...save.hatched, [id]: { shiny } },
+      eggPity: afterHatch(save.eggPity, egg.tier, save.hatched, owned === undefined),
       wallet: save.wallet + refund,
       dex: markHatch(save.dex, HATCHLINGS[id].line.map((stage) => stage.dex), shiny),
     },
-    hatch: { id, tier: egg.tier, shiny, duplicate, refund },
+    hatch: { id, tier: egg.tier, shiny, duplicate, refund, guaranteed },
   }
 }
 
@@ -243,6 +283,10 @@ export const mergeEggs = (a: readonly Egg[], b: readonly Egg[], slots: number): 
 export const mergeHatched = (a: Hatched, b: Hatched): Hatched =>
   Object.fromEntries(HATCHLING_IDS.flatMap((id) => (a[id] || b[id] ? [[id, { shiny: a[id]?.shiny === true || b[id]?.shiny === true }]] : [])))
 
+/** Each pool's egg pity at the longer drought of the two (two devices that hatched apart may both have counted). */
+export const mergeEggPity = (a: EggPity, b: EggPity): EggPity =>
+  Object.fromEntries(EGG_TIER_IDS.flatMap((tier) => { const n = Math.max(a[tier] ?? 0, b[tier] ?? 0); return n > 0 ? [[tier, n]] : [] }))
+
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isTier = (v: unknown): v is EggTier => typeof v === 'string' && v in EGG_TIERS
 
@@ -261,3 +305,7 @@ export const parseEggs = (v: unknown, slots: number): Egg[] =>
 /** The save's `hatched`: unknown families are dropped. */
 export const parseHatched = (v: unknown): Hatched =>
   isRecord(v) ? Object.fromEntries(HATCHLING_IDS.flatMap((id) => { const h = v[id]; return isRecord(h) ? [[id, { shiny: h.shiny === true }]] : [] })) : {}
+
+/** The save's `eggPity`: unknown pools are dropped, counts clamped to whole numbers up to `EGGS.pity`. */
+export const parseEggPity = (v: unknown): EggPity =>
+  isRecord(v) ? Object.fromEntries(EGG_TIER_IDS.flatMap((tier) => { const n = wholeNumber(v[tier], EGGS.pity); return n > 0 ? [[tier, n]] : [] })) : {}

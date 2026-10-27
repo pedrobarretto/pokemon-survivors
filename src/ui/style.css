@@ -32,6 +32,40 @@
   color-scheme: dark;
 }
 
+/*
+ * Dark theme (Settings → Jogo → Tema, ui/theme.ts sets data-theme). The light look is written as plain colors; a
+ * color that must change in the dark carries its dark role with the light color as the fallback, and the roles
+ * exist only here, so the light theme is exactly the plain colors:
+ *   paper surfaces, lightest to darkest  var(--dk-surface-0, #fff) … var(--dk-surface-3, #d8dce8)
+ *   hairlines on paper                   var(--dk-line, #c8d0e0)
+ *   pastel washes (by hue)               var(--dk-wash-gold, #fff8d8)  (red, gold, green, cyan, blue, purple)
+ *   gold highlights (ready, shiny)       var(--dk-glow-gold, #f8e090)
+ *   dark text on paper (by weight)       var(--dk-ink, #303040)  var(--dk-ink-2, #505870)  var(--dk-ink-3, #707088)
+ *   colored text on paper                color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff)
+ * The surfaces invert: white goes darkest and the greys drawn over it go lighter, so every edge the light theme
+ * draws still shows. Colors over the world, accents and fills with their own text stay as they are.
+ */
+:root[data-theme='dark'] {
+  --dk-surface-0: #1d2133;
+  --dk-surface-1: #232840;
+  --dk-surface-2: #2d334f;
+  --dk-surface-3: #383f60;
+  --dk-line: #4a5276;
+  --dk-wash-red: #47283a;
+  --dk-wash-gold: #3e3624;
+  --dk-glow-gold: #5a4a22;
+  --dk-wash-green: #233e33;
+  --dk-wash-cyan: #1f3c4a;
+  --dk-wash-blue: #243458;
+  --dk-wash-purple: #352a58;
+  --dk-ink: #eceef8;
+  --dk-ink-2: #b8bed6;
+  --dk-ink-3: #8e95b4;
+  --dk-lift: 58%;
+  --paper: var(--dk-surface-1);
+  --ink: var(--dk-ink);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -230,7 +264,7 @@ button {
 }
 
 .dialog .hint {
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
   text-shadow: none;
 }
 
@@ -284,7 +318,7 @@ button {
 }
 
 .region-tab.selected small {
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 .types {
@@ -376,9 +410,9 @@ button {
   padding: 0 14px;
   font-family: var(--title);
   font-size: 10px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   white-space: nowrap;
-  background: #e3e7f2;
+  background: var(--dk-surface-2, #e3e7f2);
   border: 2px solid transparent;
   border-radius: 6px;
 }
@@ -415,10 +449,10 @@ button {
   padding: 0 12px;
   font-family: var(--title);
   font-size: 10px;
-  color: #283040;
+  color: var(--dk-ink, #283040);
   white-space: nowrap;
-  background: #fff8f0;
-  border: 2px solid #c8c0d8;
+  background: var(--dk-surface-1, #fff8f0);
+  border: 2px solid var(--dk-line, #c8c0d8);
   border-radius: 6px;
 }
 
@@ -481,7 +515,7 @@ button {
   font-family: var(--title);
   font-size: 7px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   text-align: center;
   text-transform: uppercase;
   white-space: nowrap;
@@ -501,8 +535,8 @@ button {
   aspect-ratio: 1;
   padding: 0;
   color: var(--ink);
-  background: color-mix(in srgb, var(--t) 22%, #fff);
-  border: 2px solid color-mix(in srgb, var(--t) 55%, #fff);
+  background: color-mix(in srgb, var(--t) 22%, var(--dk-surface-0, #fff));
+  border: 2px solid color-mix(in srgb, var(--t) 55%, var(--dk-surface-0, #fff));
   border-radius: 8px;
 }
 
@@ -545,7 +579,7 @@ button {
   margin: 0;
   font-size: 17px;
   line-height: 1;
-  color: #505068;
+  color: var(--dk-ink-2, #505068);
 }
 
 .partner-clear img {
@@ -557,7 +591,7 @@ button {
   z-index: 1;
   border: 3px solid #e83030;
   box-shadow:
-    0 0 0 2px #fff,
+    0 0 0 2px var(--dk-surface-0, #fff),
     0 0 0 4px #e83030;
 }
 
@@ -577,8 +611,8 @@ button {
 
 /* Families still in their egg: their silhouette on grey (the egg if the sprite is missing). */
 .partner-cell.locked {
-  background: #d4d8e4;
-  border-color: #b8bed0;
+  background: var(--dk-surface-3, #d4d8e4);
+  border-color: var(--dk-line, #b8bed0);
 }
 
 .partner-cell-silhouette {
@@ -597,6 +631,12 @@ button {
   image-rendering: pixelated;
 }
 
+/* Silhouettes in the dark: grey, not black on a dark cell. */
+[data-theme='dark'] .partner-cell-silhouette i,
+[data-theme='dark'] .dex-detail.unseen .dex-sprite {
+  filter: brightness(0) invert(0.55);
+}
+
 .partner-cell-egg {
   width: 28px;
   height: 32px;
@@ -612,7 +652,7 @@ button {
   margin-top: auto;
   padding-top: 10px;
   overflow: hidden;
-  border-top: 2px dashed #d0d6e6;
+  border-top: 2px dashed var(--dk-line, #d0d6e6);
 }
 
 .partner-teaser-label {
@@ -620,7 +660,7 @@ button {
   margin-right: 6px;
   font-family: var(--title);
   font-size: 8px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .partner-teaser-cell {
@@ -646,7 +686,7 @@ button {
   min-width: 0;
   font-size: 18px;
   line-height: 1;
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
 }
 
 .partner-teaser-more {
@@ -656,7 +696,7 @@ button {
   padding: 0 8px;
   font-family: var(--title);
   font-size: 9px;
-  color: #3868c0;
+  color: color-mix(in srgb, #3868c0 var(--dk-lift, 100%), #fff);
   background: none;
   border: 0;
 }
@@ -697,7 +737,7 @@ button {
   margin: 0;
   font-size: 17px;
   line-height: 1.1;
-  color: #505068;
+  color: var(--dk-ink-2, #505068);
   text-align: center;
 }
 
@@ -720,7 +760,7 @@ button {
   margin: 0;
   font-size: 17px;
   line-height: 1.1;
-  color: #505068;
+  color: var(--dk-ink-2, #505068);
 }
 
 .partner-legend-event img {
@@ -730,7 +770,7 @@ button {
 }
 
 .partner-legend-event b {
-  color: #c05818;
+  color: color-mix(in srgb, #c05818 var(--dk-lift, 100%), #fff);
 }
 
 /* A legend not captured yet: its wins so far in the corner. */
@@ -753,12 +793,12 @@ button {
   margin: 0;
   font-size: 17px;
   line-height: 1;
-  color: #505068;
+  color: var(--dk-ink-2, #505068);
 }
 
 .partner-legend-wins {
   font-size: 20px;
-  color: #283040;
+  color: var(--dk-ink, #283040);
 }
 
 /* The partner: Idle sprite on a pedestal tinted by its type, role, stats and evolution line. */
@@ -789,8 +829,8 @@ button {
   padding-bottom: 6px;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 34% 9% at 50% 88%, color-mix(in srgb, var(--accent) 60%, #fff) 0 98%, transparent 100%),
-    linear-gradient(color-mix(in srgb, var(--accent) 12%, #fff), color-mix(in srgb, var(--accent) 34%, #fff));
+    radial-gradient(ellipse 34% 9% at 50% 88%, color-mix(in srgb, var(--accent) 60%, var(--dk-surface-0, #fff)) 0 98%, transparent 100%),
+    linear-gradient(color-mix(in srgb, var(--accent) 12%, var(--dk-surface-0, #fff)), color-mix(in srgb, var(--accent) 34%, var(--dk-surface-0, #fff)));
   border-radius: 10px;
 }
 
@@ -816,7 +856,7 @@ button {
 .partner-dex {
   font-family: var(--title);
   font-size: 8px;
-  color: #8890a8;
+  color: var(--dk-ink-3, #8890a8);
 }
 
 .partner-name {
@@ -835,7 +875,7 @@ button {
 }
 
 .partner-intro {
-  color: #505068;
+  color: var(--dk-ink-2, #505068);
 }
 
 .partner-hero-actions {
@@ -866,9 +906,9 @@ button {
   font-family: var(--title);
   font-size: 9px;
   line-height: 1.4;
-  color: #3868c0;
-  background: #eef2fc;
-  border: 2px solid #c8d4f0;
+  color: color-mix(in srgb, #3868c0 var(--dk-lift, 100%), #fff);
+  background: var(--dk-surface-1, #eef2fc);
+  border: 2px solid var(--dk-wash-blue, #c8d4f0);
   border-radius: 6px;
 }
 
@@ -1188,11 +1228,11 @@ button {
 
 .partner-sheet-tabs.shell-tabs {
   flex: none;
-  background: #e3e7f2;
+  background: var(--dk-surface-2, #e3e7f2);
 }
 
 .partner-sheet-tabs .shell-tab {
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .partner-sheet-tabs .shell-tab.on {
@@ -1309,7 +1349,7 @@ button {
     border-color: transparent;
   }
   .partner-tab.on {
-    color: #283040;
+    color: var(--dk-ink, #283040);
     background: var(--paper);
     border-color: var(--paper);
   }
@@ -1473,7 +1513,7 @@ button {
     align-self: center;
     width: 44px;
     height: 5px;
-    background: #c0c6d8;
+    background: var(--dk-line, #c0c6d8);
     border-radius: 3px;
   }
   .partner-sheet .stat-bar {
@@ -1693,7 +1733,7 @@ button {
 .inspect-name small {
   display: block;
   font-size: 8px;
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
   margin-bottom: 4px;
 }
 
@@ -1708,8 +1748,8 @@ button {
   font-size: 9px;
   /* Long headers ("Habilidades (vienen de la evolución elegida)") wrap on a phone. */
   line-height: 1.4;
-  color: #6878a8;
-  border-bottom: 2px solid #d8d8e8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+  border-bottom: 2px solid var(--dk-line, #d8d8e8);
 }
 
 .legend {
@@ -1718,7 +1758,7 @@ button {
   gap: 4px;
   font-family: var(--body);
   font-size: 16px;
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
 }
 
 .legend i {
@@ -1734,7 +1774,7 @@ button {
 
 .legend-final,
 .bar-final {
-  background: color-mix(in srgb, var(--accent) 35%, #fff);
+  background: color-mix(in srgb, var(--accent) 35%, var(--dk-surface-0, #fff));
 }
 
 .stat-bars {
@@ -1759,9 +1799,9 @@ button {
 .bar {
   position: relative;
   height: 8px;
-  background: #e0e0ea;
+  background: var(--dk-surface-2, #e0e0ea);
   border-radius: 2px;
-  box-shadow: inset 0 0 0 1px #b8b8c8;
+  box-shadow: inset 0 0 0 1px var(--dk-line, #b8b8c8);
 }
 
 .bar div {
@@ -1796,13 +1836,13 @@ button {
 .evo-stage img {
   width: 48px;
   height: 48px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 2px solid #283040;
   border-radius: 4px;
 }
 
 .evo-stage.selected {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: var(--accent);
 }
 
@@ -1827,7 +1867,7 @@ button {
   font-family: var(--title);
   font-size: 7px;
   line-height: 1.6;
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
   text-align: center;
 }
 
@@ -1843,12 +1883,12 @@ button {
   align-items: center;
   gap: 6px;
   padding: 4px 6px;
-  background: #eeeef4;
+  background: var(--dk-surface-1, #eeeef4);
   border-radius: 4px;
 }
 
 .move-row.signature {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
@@ -1868,7 +1908,7 @@ button {
 .move-desc {
   font-size: 15px;
   line-height: 1;
-  color: #606078;
+  color: var(--dk-ink-2, #606078);
 }
 
 .move-row .type-badge {
@@ -1970,15 +2010,15 @@ button {
   gap: 12px;
   padding: 10px 12px;
   text-align: left;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 3px solid transparent;
   border-radius: 6px;
 }
 
 .offer.selected {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
-  box-shadow: 0 0 0 2px #fff, 0 4px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 4px 0 rgba(0, 0, 0, 0.15);
 }
 
 .offer.selected .offer-key {
@@ -2037,11 +2077,11 @@ button {
 .tag {
   font-family: var(--title);
   font-size: 8px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .tag-new {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .buttons {
@@ -2056,19 +2096,19 @@ button {
   font-size: 10px;
   min-height: 44px;
   padding: 10px 14px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 3px solid transparent;
   border-radius: 6px;
 }
 
 .btn.selected {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
 }
 
 .btn.selected::before {
   content: '▶ ';
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 /* The pause sheet: title and buttons stay put, the body scrolls when a phone can't fit it. Tall enough to reach the HUD, so it covers it. */
@@ -2115,11 +2155,11 @@ button {
 .pause-head {
   margin: 0;
   padding-bottom: 4px;
-  border-bottom: 2px solid #c8d0e8;
+  border-bottom: 2px solid var(--dk-wash-blue, #c8d0e8);
   font-family: var(--title);
   font-size: 9px;
   font-weight: normal;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .loadout-list {
@@ -2152,7 +2192,7 @@ button {
 .loadout-empty {
   margin: 0;
   font-size: 18px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 /* Name | value | cards, with the cards header over the last column. */
@@ -2169,7 +2209,7 @@ button {
   grid-column: 3;
   font-family: var(--title);
   font-size: 7px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   text-align: right;
   white-space: nowrap;
   margin-top: -4px;
@@ -2268,7 +2308,7 @@ button {
 .damage-dps {
   text-align: right;
   font-size: 18px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .pause-damage {
@@ -2286,12 +2326,12 @@ button {
 .damage-note {
   margin: 0;
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .damage-bar {
   height: 8px;
-  background: #d8d8e0;
+  background: var(--dk-surface-3, #d8d8e0);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -2548,19 +2588,19 @@ button {
 /* ---------- Move evolutions ---------- */
 
 .offer-evo {
-  background: linear-gradient(180deg, #fff8d0, #f8e090);
+  background: linear-gradient(180deg, var(--dk-wash-gold, #fff8d0), var(--dk-glow-gold, #f8e090));
   border-color: #e0a020;
   animation: evo-glow 0.8s steps(2) infinite;
 }
 
 .offer-evo.selected {
-  background: linear-gradient(180deg, #fffbe0, #f8e8a8);
+  background: linear-gradient(180deg, var(--dk-wash-gold, #fffbe0), var(--dk-glow-gold, #f8e8a8));
   border-color: #e83838;
 }
 
 /* A level-up for an evolved move: gold like an evolution, without the blinking. */
 .offer-star {
-  background: linear-gradient(180deg, #fffbe8, #f8ecc0);
+  background: linear-gradient(180deg, var(--dk-surface-1, #fffbe8), var(--dk-wash-gold, #f8ecc0));
   border-color: #e0a020;
 }
 
@@ -2593,7 +2633,7 @@ button {
   padding: 1px 6px 1px 3px;
   font-size: 18px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   background: rgba(104, 120, 168, 0.14);
   border-radius: 4px;
 }
@@ -2604,15 +2644,15 @@ button {
 }
 
 .evo-recipe.ready {
-  color: #a05800;
-  background: #f8e090;
+  color: color-mix(in srgb, #a05800 var(--dk-lift, 100%), #fff);
+  background: var(--dk-glow-gold, #f8e090);
 }
 
 .evo-recipe b {
   margin-left: 4px;
   font-family: var(--title);
   font-size: 7px;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .evo-pair {
@@ -2624,7 +2664,7 @@ button {
   opacity: 0.55;
   font-family: var(--title);
   font-size: 8px;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .loadout-row .evo-pair img {
@@ -2634,7 +2674,7 @@ button {
 
 .evo-pair.ready {
   opacity: 1;
-  background: #f8e090;
+  background: var(--dk-glow-gold, #f8e090);
   box-shadow: 0 0 0 2px #e0a020;
 }
 
@@ -2647,7 +2687,7 @@ button {
   font-size: 18px;
   line-height: 1;
   text-align: center;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 /* A phone on its side: the evolution legend makes way for the loadout (the body already scrolls, the buttons stay put). */
@@ -2670,7 +2710,7 @@ button {
 }
 
 .toast-evo b {
-  color: #e07000;
+  color: color-mix(in srgb, #e07000 var(--dk-lift, 100%), #fff);
 }
 
 /* ---------- Special attack (HUD badge + touch button) ---------- */
@@ -2935,7 +2975,7 @@ button {
 .mega-name {
   align-self: center;
   font-size: 8px;
-  color: #8850e0;
+  color: color-mix(in srgb, #8850e0 var(--dk-lift, 100%), #fff);
 }
 
 /* ---------- Fixed joystick ---------- */
@@ -3047,9 +3087,9 @@ button {
 .move-key.held {
   color: var(--ink);
   text-shadow: none;
-  background: rgba(248, 248, 248, 0.85);
+  background: var(--dk-surface-3, rgba(248, 248, 248, 0.85));
   box-shadow:
-    inset 0 0 0 2px #fff,
+    inset 0 0 0 2px var(--dk-surface-0, #fff),
     0 1px 0 rgba(16, 24, 48, 0.45);
   transform: translateY(2px);
 }
@@ -3212,7 +3252,7 @@ button {
   column-gap: 10px;
   row-gap: 2px;
   padding: 8px 12px;
-  background: #fff8d8;
+  background: var(--dk-wash-gold, #fff8d8);
   border: 3px solid #e8c050;
   border-radius: 6px;
 }
@@ -3226,7 +3266,7 @@ button {
 .earnings b {
   font-family: var(--title);
   font-size: 14px;
-  color: #a86000;
+  color: color-mix(in srgb, #a86000 var(--dk-lift, 100%), #fff);
 }
 
 .earnings span {
@@ -3271,13 +3311,13 @@ button {
 }
 
 .account-line b {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 /* The co-op gate's lead: who sent the room's link (or its code). */
 .account-lead {
   font-weight: bold;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 /* The Discord screen: the logo in the title, and Discord's blurple on its main button. */
@@ -3294,7 +3334,7 @@ button {
 }
 
 .discord-linked b {
-  color: #389048;
+  color: color-mix(in srgb, #389048 var(--dk-lift, 100%), #fff);
 }
 
 /* The gift linking brings: its portrait beside the line, on a blurple tint. */
@@ -3304,7 +3344,7 @@ button {
   gap: 12px;
   padding: 8px 12px;
   text-align: left;
-  background: #e8eafe;
+  background: var(--dk-surface-1, #e8eafe);
   border: 2px solid #5865f2;
 }
 
@@ -3360,7 +3400,7 @@ button {
 
 .account-note {
   font-size: 17px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 /* The iOS install how-to (Settings → About): numbered steps, each led by Safari's icon at 3x. */
@@ -3388,7 +3428,7 @@ button {
   flex: none;
   font-family: var(--title);
   font-size: 12px;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .install-step img {
@@ -3398,11 +3438,11 @@ button {
 }
 
 .install-step b {
-  color: #3878f0;
+  color: color-mix(in srgb, #3878f0 var(--dk-lift, 100%), #fff);
 }
 
 .account-error {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .key-hint {
@@ -3575,15 +3615,15 @@ button {
 }
 
 .lobby-card.outbreak .lobby-card-label {
-  color: #c03878;
+  color: color-mix(in srgb, #c03878 var(--dk-lift, 100%), #fff);
 }
 
 .lobby-card.challenge .lobby-card-label {
-  color: #3868c0;
+  color: color-mix(in srgb, #3868c0 var(--dk-lift, 100%), #fff);
 }
 
 .lobby-card.missions .lobby-card-label {
-  color: #389048;
+  color: color-mix(in srgb, #389048 var(--dk-lift, 100%), #fff);
 }
 
 .lobby-card-row {
@@ -3628,7 +3668,7 @@ button {
   min-width: 24px;
   height: 12px;
   overflow: hidden;
-  background: #d8dce8;
+  background: var(--dk-surface-3, #d8dce8);
   border: 2px solid #283040;
   border-radius: 3px;
 }
@@ -3961,7 +4001,7 @@ button {
   font-family: var(--title);
   font-size: 9px;
   font-weight: normal;
-  color: #c04890;
+  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
 }
 
 .lobby-invites-row {
@@ -4004,7 +4044,7 @@ button {
 }
 
 .lobby-discord-card .lobby-invites-text b {
-  color: #5865f2;
+  color: color-mix(in srgb, #5865f2 var(--dk-lift, 100%), #fff);
 }
 
 .lobby-discord-icon {
@@ -4039,7 +4079,7 @@ button {
 }
 
 .lobby-social.tiktok .lobby-invites-text b {
-  color: #161823;
+  color: var(--dk-ink, #161823);
   text-transform: uppercase;
   text-shadow: -1px -1px 0 #25f4ee, 1px 1px 0 #fe2c55;
 }
@@ -4050,13 +4090,18 @@ button {
   --frame: #282828;
 }
 
+/* YouTube's dark look: a light frame where the black one would vanish. */
+[data-theme='dark'] .lobby-social.youtube {
+  --frame: #e8e8e8;
+}
+
 .lobby-social.youtube:hover,
 .lobby-social.youtube.selected {
   --frame: #e83838;
 }
 
 .lobby-social.youtube .lobby-invites-text b {
-  color: #ff0033;
+  color: color-mix(in srgb, #ff0033 var(--dk-lift, 100%), #fff);
   text-transform: uppercase;
 }
 
@@ -4072,7 +4117,7 @@ button {
 }
 
 .lobby-social.instagram .lobby-invites-text b {
-  color: #c13584;
+  color: color-mix(in srgb, #c13584 var(--dk-lift, 100%), #fff);
   text-transform: uppercase;
   text-shadow: 1px 1px 0 #fcaf45;
 }
@@ -4233,7 +4278,7 @@ button {
   font-family: var(--title);
   font-size: 8px;
   font-weight: normal;
-  color: #c02838;
+  color: color-mix(in srgb, #c02838 var(--dk-lift, 100%), #fff);
 }
 
 .lobby-gift .lobby-badge {
@@ -4509,15 +4554,15 @@ button {
 }
 
 .rail-outbreak .rail-label {
-  color: #c03878;
+  color: color-mix(in srgb, #c03878 var(--dk-lift, 100%), #fff);
 }
 
 .rail-challenge .rail-label {
-  color: #3868c0;
+  color: color-mix(in srgb, #3868c0 var(--dk-lift, 100%), #fff);
 }
 
 .rail-missions .rail-label {
-  color: #389048;
+  color: color-mix(in srgb, #389048 var(--dk-lift, 100%), #fff);
 }
 
 .rail-invites {
@@ -4525,7 +4570,7 @@ button {
 }
 
 .rail-invites .rail-label {
-  color: #c04890;
+  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
 }
 
 .rail-discord {
@@ -4533,7 +4578,7 @@ button {
 }
 
 .rail-discord .rail-label {
-  color: #5865f2;
+  color: color-mix(in srgb, #5865f2 var(--dk-lift, 100%), #fff);
 }
 
 /* The Hall's tile: the card's gold frame and turning rays, small. */
@@ -4581,7 +4626,7 @@ button {
 }
 
 .rail-festival .rail-label {
-  color: #c03820;
+  color: color-mix(in srgb, #c03820 var(--dk-lift, 100%), #fff);
 }
 
 .lobby-rail-tile .rail-days {
@@ -5157,7 +5202,7 @@ button {
   bottom: 8px;
   font-family: var(--title);
   font-size: 9px;
-  color: #8890a8;
+  color: var(--dk-ink-3, #8890a8);
 }
 
 @media (max-width: 759px), (max-height: 500px) and (orientation: landscape) {
@@ -5182,18 +5227,18 @@ button {
   font-size: 20px;
   line-height: 1;
   text-align: center;
-  color: #c03060;
+  color: color-mix(in srgb, #c03060 var(--dk-lift, 100%), #fff);
   text-underline-offset: 3px;
 }
 
 .result-support:hover,
 .result-support:focus-visible {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 /* The shell's ◀ (backButton). */
 .back-arrow {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .mart-screen {
@@ -5215,7 +5260,7 @@ button {
 .pip {
   width: 10px;
   height: 6px;
-  background: #c8c8d8;
+  background: var(--dk-line, #c8c8d8);
   border: 1px solid #8888a0;
 }
 
@@ -5337,8 +5382,8 @@ button {
   padding: 7px 6px;
   font-family: var(--title);
   font-size: 8px;
-  color: #6878a8;
-  background: #dce0ec;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+  background: var(--dk-surface-2, #dce0ec);
   border: 3px solid transparent;
   border-radius: 6px;
 }
@@ -5359,12 +5404,12 @@ button {
   gap: 8px;
   font-size: 19px;
   line-height: 1;
-  color: #505870;
+  color: var(--dk-ink-2, #505870);
 }
 
 .shop-clock {
   flex: none;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .shop-items {
@@ -5401,27 +5446,27 @@ button {
   padding: 18px 6px 8px;
   text-align: center;
   color: var(--ink);
-  background: #e8ecf4;
+  background: var(--dk-surface-2, #e8ecf4);
   border: 3px solid transparent;
   border-radius: 8px;
 }
 
 .shop-card.chosen {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
 }
 
 .shop-card.gift {
-  background: #fff1c8;
+  background: var(--dk-wash-gold, #fff1c8);
 }
 
 .shop-card.deal {
-  background: #ffe6de;
+  background: var(--dk-wash-red, #ffe6de);
 }
 
 .shop-card.chosen.gift,
 .shop-card.chosen.deal {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
 }
 
 .shop-card.sold .shop-pic,
@@ -5431,15 +5476,15 @@ button {
 
 .shop-card.sold .shop-price,
 .shop-card.done .shop-price {
-  color: #3e8a3a;
+  color: color-mix(in srgb, #3e8a3a var(--dk-lift, 100%), #fff);
 }
 
 .shop-card.poor .shop-price {
-  color: #c83030;
+  color: color-mix(in srgb, #c83030 var(--dk-lift, 100%), #fff);
 }
 
 .shop-card.locked {
-  background: repeating-linear-gradient(135deg, #e0e4ee 0 6px, #d6dae6 6px 12px);
+  background: repeating-linear-gradient(135deg, var(--dk-surface-2, #e0e4ee) 0 6px, var(--dk-surface-3, #d6dae6) 6px 12px);
 }
 
 .shop-card.locked .shop-pic {
@@ -5448,11 +5493,11 @@ button {
 }
 
 .shop-card.armed {
-  background: #e2f3dc;
+  background: var(--dk-surface-2, #e2f3dc);
 }
 
 .shop-card.chosen.armed {
-  background: #f2fbef;
+  background: var(--dk-surface-1, #f2fbef);
 }
 
 .shop-pic {
@@ -5487,7 +5532,7 @@ button {
 .shop-sub {
   font-size: 18px;
   line-height: 1;
-  color: #606880;
+  color: var(--dk-ink-2, #606880);
 }
 
 .shop-sub:empty {
@@ -5503,7 +5548,7 @@ button {
 
 .shop-price s {
   font-size: 7px;
-  color: #8890a8;
+  color: var(--dk-ink-3, #8890a8);
 }
 
 /* Under the price, the Kecleon Egg's next rung ("depois ₽ 20.000"): it wraps before the price on narrow cards. */
@@ -5511,7 +5556,7 @@ button {
   max-width: 100%;
   font-size: 13px;
   line-height: 1;
-  color: #8890a8;
+  color: var(--dk-ink-3, #8890a8);
   text-wrap: balance;
 }
 
@@ -5597,7 +5642,7 @@ button {
   width: 46%;
   height: 46%;
   image-rendering: pixelated;
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border: 2px solid #283048;
   border-radius: 5px;
 }
@@ -5662,7 +5707,7 @@ button {
   align-items: center;
   gap: 3px;
   padding: 4px 2px 5px;
-  background: #e8ecf4;
+  background: var(--dk-surface-2, #e8ecf4);
   border: 3px solid transparent;
   border-radius: 8px;
 }
@@ -5674,13 +5719,13 @@ button {
 }
 
 .caps-pick-cell.on {
-  background: #fff1c8;
+  background: var(--dk-wash-gold, #fff1c8);
 }
 
 .caps-pick-cell.selected,
 .caps-pick-cell:hover {
   border-color: #e83838;
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
 }
 
 /* Lists (Treino, Estilo, Expansão): picture, name over a line, price on the right, badges on the top edge. */
@@ -5745,7 +5790,7 @@ button {
   margin-top: 4px;
   font-family: var(--title);
   font-size: 8px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .shop-intro-row + .shop-group {
@@ -5784,7 +5829,7 @@ button {
   place-items: center;
   width: 72px;
   height: 72px;
-  background: #f8f8f8;
+  background: var(--dk-surface-1, #f8f8f8);
   border-radius: 6px;
 }
 
@@ -5854,7 +5899,7 @@ button {
 }
 
 .btn.shop-wish.on {
-  background: #ffe0ec;
+  background: var(--dk-wash-red, #ffe0ec);
 }
 
 .shop-foot {
@@ -5867,7 +5912,7 @@ button {
   flex: 1;
   margin: 0;
   font-size: 7px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   text-align: right;
   text-shadow: none;
 }
@@ -6242,7 +6287,7 @@ button {
 .festival-pot-label {
   font-size: 19px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .festival-pot-num {
@@ -6257,12 +6302,12 @@ button {
   font-family: var(--title);
   font-size: 18px;
   font-weight: 400;
-  color: #283040;
+  color: var(--dk-ink, #283040);
 }
 
 .festival-pot-num span {
   font-size: 19px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 /* A donation that went through: the pot hops. */
@@ -6320,7 +6365,7 @@ button {
 .festival-bar {
   position: relative;
   height: 18px;
-  background: #dfe4ef;
+  background: var(--dk-surface-2, #dfe4ef);
   border: 3px solid #283040;
   border-radius: 6px;
 }
@@ -6351,7 +6396,7 @@ button {
   margin-top: 4px;
   font-family: var(--title);
   font-size: 7px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .festival-marks span {
@@ -6359,7 +6404,7 @@ button {
 }
 
 .festival-marks span.on {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 /* The next milestone: its reward and what's missing. */
@@ -6368,7 +6413,7 @@ button {
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  background: #fff1c8;
+  background: var(--dk-wash-gold, #fff1c8);
   border-radius: 8px;
 }
 
@@ -6378,7 +6423,7 @@ button {
   place-items: center;
   width: 48px;
   height: 48px;
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-radius: 6px;
 }
 
@@ -6400,11 +6445,11 @@ button {
 .festival-next-text small {
   font-family: var(--title);
   font-size: 8px;
-  color: #b07818;
+  color: color-mix(in srgb, #b07818 var(--dk-lift, 100%), #fff);
 }
 
 .festival-next-text span {
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .festival-give {
@@ -6431,14 +6476,14 @@ button {
   font-family: var(--title);
   font-size: 10px;
   color: var(--ink);
-  background: #e8ecf4;
+  background: var(--dk-surface-2, #e8ecf4);
   border: 3px solid transparent;
   border-radius: 8px;
   white-space: nowrap;
 }
 
 .festival-chip.on {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
 }
 
@@ -6456,7 +6501,7 @@ button {
   align-items: center;
   gap: 6px;
   padding: 0 10px;
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border: 3px solid #283040;
   border-radius: 8px;
 }
@@ -6474,7 +6519,7 @@ button {
 .festival-field-hint {
   flex: none;
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .festival-cap {
@@ -6486,32 +6531,32 @@ button {
 
 /* What's left to toss today reads in the sheet's ink; red only once nothing is left. */
 .festival-cap-today {
-  color: #283040;
+  color: var(--dk-ink, #283040);
 }
 
 .festival-cap-today.out {
-  color: #c03030;
+  color: color-mix(in srgb, #c03030 var(--dk-lift, 100%), #fff);
 }
 
 .festival-cap-you {
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .festival-cap-you em {
   font-style: normal;
-  color: #38a058;
+  color: color-mix(in srgb, #38a058 var(--dk-lift, 100%), #fff);
 }
 
 .festival-about p {
   margin: 0 0 6px;
   font-size: 19px;
   line-height: 1.1;
-  color: #505870;
+  color: var(--dk-ink-2, #505870);
 }
 
 .festival-about b {
   font-weight: 400;
-  color: #283040;
+  color: var(--dk-ink, #283040);
 }
 
 /* The strip under the sheet: what Kecleon's shop says (the thanks, a refusal) and the button. */
@@ -6574,14 +6619,14 @@ button {
   gap: 4px;
   font-size: 18px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .festival-plaque-head b {
   font-family: var(--title);
   font-size: 10px;
   font-weight: 400;
-  color: #283040;
+  color: var(--dk-ink, #283040);
 }
 
 .festival-donors {
@@ -6604,7 +6649,7 @@ button {
 }
 
 .festival-donors li:nth-child(-n + 3) {
-  background: #fff1c8;
+  background: var(--dk-wash-gold, #fff1c8);
 }
 
 .festival-donors li.me {
@@ -6616,7 +6661,7 @@ button {
   font-family: var(--title);
   font-size: 9px;
   font-style: normal;
-  color: #b07818;
+  color: color-mix(in srgb, #b07818 var(--dk-lift, 100%), #fff);
 }
 
 .festival-donors b {
@@ -6629,13 +6674,13 @@ button {
 
 .festival-donors em {
   font-style: normal;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .festival-empty {
   margin: 8px 0;
   font-size: 19px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .festival-me {
@@ -6646,8 +6691,8 @@ button {
   gap: 6px 10px;
   padding-top: 8px;
   font-size: 19px;
-  color: #505870;
-  border-top: 2px dashed #c8d0e0;
+  color: var(--dk-ink-2, #505870);
+  border-top: 2px dashed var(--dk-line, #c8d0e0);
 }
 
 .festival-switch {
@@ -6658,7 +6703,7 @@ button {
   padding: 4px 10px;
   font-size: 18px;
   color: var(--ink);
-  background: #e8ecf4;
+  background: var(--dk-surface-2, #e8ecf4);
   border: 3px solid transparent;
   border-radius: 8px;
 }
@@ -7131,14 +7176,14 @@ button {
 
 /* A shiny's news in gold, apart from the white toasts. */
 .toast.toast-shiny {
-  --paper: #fff2b8;
+  --paper: var(--dk-glow-gold, #fff2b8);
   --frame: #e8a820;
   border-color: #5a3c00;
-  color: #4a3000;
+  color: color-mix(in srgb, #4a3000 var(--dk-lift, 100%), #fff);
 }
 
 .toast.toast-shiny b {
-  color: #b05800;
+  color: color-mix(in srgb, #b05800 var(--dk-lift, 100%), #fff);
 }
 
 /* ---------- Shiny & legendary ---------- */
@@ -7163,12 +7208,12 @@ button {
 }
 
 .shiny-name {
-  color: #c89000;
+  color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
 }
 
 .tag-shiny {
   align-self: center;
-  color: #c89000;
+  color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
 }
 
 .screen-flash {
@@ -7226,11 +7271,11 @@ button {
 }
 
 .banner b {
-  color: #c02838;
+  color: color-mix(in srgb, #c02838 var(--dk-lift, 100%), #fff);
 }
 
 .banner em {
-  color: #c89000;
+  color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
   font-style: normal;
 }
 
@@ -7248,7 +7293,7 @@ button {
   font-family: var(--body);
   font-size: 18px;
   line-height: 1.2;
-  color: #c04890;
+  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
 }
 
 .gift-note {
@@ -7261,7 +7306,7 @@ button {
 .gift-more {
   font-family: var(--body);
   font-size: 16px;
-  color: #7880a0;
+  color: var(--dk-ink-3, #7880a0);
 }
 
 .gift-big {
@@ -7483,6 +7528,11 @@ button {
   height: 24px;
 }
 
+/* A one-color ink icon (the gear, the `?`) turns to light ink in the dark. */
+[data-theme='dark'] .ink-icon {
+  filter: brightness(0) invert(0.93);
+}
+
 .shell-chip {
   gap: 8px;
   padding: 4px 12px 4px 8px;
@@ -7549,7 +7599,7 @@ button {
 }
 
 .shell-tab.on {
-  color: #283040;
+  color: var(--dk-ink, #283040);
   background: var(--paper);
 }
 
@@ -7563,7 +7613,7 @@ button {
 .shell-seg {
   display: flex;
   overflow: hidden;
-  background: #e3e7f2;
+  background: var(--dk-surface-2, #e3e7f2);
   border: 2px solid #283040;
   border-radius: 8px;
 }
@@ -7573,7 +7623,7 @@ button {
   min-height: 44px;
   font-family: var(--title);
   font-size: 10px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   background: transparent;
   border: 0;
 }
@@ -7610,7 +7660,7 @@ button {
   width: 36px;
   height: 36px;
   overflow: hidden;
-  background: #dfe6f5;
+  background: var(--dk-surface-2, #dfe6f5);
   border: 2px solid #283040;
   border-radius: 50%;
 }
@@ -7671,7 +7721,7 @@ button {
   gap: 3px;
   min-width: 0;
   font-size: 17px;
-  color: #806010;
+  color: color-mix(in srgb, #806010 var(--dk-lift, 100%), #fff);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7699,7 +7749,7 @@ button {
   font-family: var(--title);
   font-size: 8px;
   line-height: 1.4;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .trainer-chip .sync-dot {
@@ -7935,21 +7985,21 @@ button {
 .trainer-row i {
   font-style: normal;
   font-size: 12px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .trainer-row.selected {
   --frame: #e83838;
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
 }
 
 .trainer-row.selected i {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .trainer-row.out {
   justify-content: center;
-  color: #a03030;
+  color: color-mix(in srgb, #a03030 var(--dk-lift, 100%), #fff);
 }
 
 .trainer-row.out span {
@@ -8020,7 +8070,7 @@ button {
   text-decoration: none;
   background: transparent;
   border: 0;
-  border-bottom: 2px solid #e3e7f2;
+  border-bottom: 2px solid var(--dk-surface-2, #e3e7f2);
   border-radius: 0;
 }
 
@@ -8029,7 +8079,7 @@ button {
 }
 
 .setting-row.selected {
-  background: #e4e8f4;
+  background: var(--dk-surface-2, #e4e8f4);
   border-radius: 6px;
   box-shadow: inset 4px 0 0 #e83838;
 }
@@ -8056,7 +8106,7 @@ button {
   font-family: var(--title);
   font-size: 9px;
   text-align: right;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 /* Volume bar: cells grow taller to the right, like a handheld's volume meter. */
@@ -8075,7 +8125,7 @@ button {
 .slider-cell {
   flex: 1;
   height: var(--h);
-  background: #d8dce8;
+  background: var(--dk-surface-3, #d8dce8);
   border-radius: 2px;
   box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.1);
 }
@@ -8101,18 +8151,18 @@ button {
 }
 
 .setting-pill.off {
-  color: #6878a8;
-  background: #d8dce8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+  background: var(--dk-surface-3, #d8dce8);
 }
 
 .setting-choice {
   font-family: var(--title);
   font-size: 9px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .setting-row.selected .setting-choice {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .settings-about {
@@ -8125,7 +8175,7 @@ button {
   display: block;
   margin-top: 8px;
   font-size: 17px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 @media (max-height: 500px) {
@@ -8168,13 +8218,13 @@ button {
   font-size: 9px;
   line-height: 1.4;
   color: var(--ink);
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 3px solid transparent;
   border-radius: 6px;
 }
 
 .control-row.selected {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
 }
 
@@ -8182,7 +8232,7 @@ button {
   min-height: 0;
   padding-block: 0;
   font-size: 8px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   text-align: center;
   background: none;
 }
@@ -8193,15 +8243,15 @@ button {
   font-family: var(--title);
   font-size: 9px;
   color: var(--ink);
-  background: #fff;
-  border: 2px solid #c8c8d8;
+  background: var(--dk-surface-0, #fff);
+  border: 2px solid var(--dk-line, #c8c8d8);
   border-radius: 4px;
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
 }
 
 .control-cell.focus {
   border-color: #e83838;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 /* Waiting for the new key or button. */
@@ -8216,14 +8266,14 @@ button {
   margin: 8px 0 0;
   font-size: 18px;
   line-height: 1.2;
-  color: #4a5478;
+  color: var(--dk-ink-2, #4a5478);
 }
 
 .controls-note {
   margin: 0 0 8px;
   font-size: 18px;
   line-height: 1.2;
-  color: #4a5478;
+  color: var(--dk-ink-2, #4a5478);
 }
 
 /* The gamepads the browser shows the game, or how to make one appear. */
@@ -8231,11 +8281,11 @@ button {
   margin: 0 0 8px;
   font-size: 18px;
   line-height: 1.2;
-  color: #2f8a4a;
+  color: color-mix(in srgb, #2f8a4a var(--dk-lift, 100%), #fff);
 }
 
 .controls-pad.missing {
-  color: #b8562a;
+  color: color-mix(in srgb, #b8562a var(--dk-lift, 100%), #fff);
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -8299,20 +8349,20 @@ button {
   font-size: 9px;
   white-space: nowrap;
   text-shadow: none;
-  color: #6030b8;
+  color: color-mix(in srgb, #6030b8 var(--dk-lift, 100%), #fff);
 }
 
 .rift-pill.rift-arena {
-  color: #b82838;
+  color: color-mix(in srgb, #b82838 var(--dk-lift, 100%), #fff);
 }
 
 .rift-pill.rift-endless,
 .rift-pill.rift-reaper {
-  color: #986800;
+  color: color-mix(in srgb, #986800 var(--dk-lift, 100%), #fff);
 }
 
 .rift-pill.rift-place {
-  color: #1c6c78;
+  color: color-mix(in srgb, #1c6c78 var(--dk-lift, 100%), #fff);
 }
 
 /* Mystery Dungeon's floor card: black, the dungeon's name and its floor. */
@@ -8373,7 +8423,7 @@ button {
   font-family: var(--body);
   font-size: 20px;
   line-height: 1.1;
-  color: #8a5a00;
+  color: color-mix(in srgb, #8a5a00 var(--dk-lift, 100%), #fff);
   text-align: center;
 }
 
@@ -8387,7 +8437,7 @@ button {
   font-size: 9px;
   white-space: nowrap;
   text-shadow: none;
-  color: #a02868;
+  color: color-mix(in srgb, #a02868 var(--dk-lift, 100%), #fff);
 }
 
 .mission-pill.stacked {
@@ -8484,7 +8534,7 @@ button {
 .weather-toast small,
 .mega-toast small {
   font-size: 0.8em;
-  color: #6070a0;
+  color: color-mix(in srgb, #6070a0 var(--dk-lift, 100%), #fff);
 }
 
 /* Phones in portrait: the HUD row is full, so the icon hangs under the clock. */
@@ -8521,8 +8571,8 @@ button {
   padding: 8px;
   font-family: var(--title);
   font-size: 10px;
-  color: #6878a8;
-  background: #dce0ec;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+  background: var(--dk-surface-2, #dce0ec);
   border: 3px solid transparent;
   border-radius: 6px;
 }
@@ -8558,7 +8608,7 @@ button {
 .missions-head span {
   font-family: var(--body);
   font-size: 18px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .mission-row {
@@ -8570,13 +8620,13 @@ button {
   font-size: 20px;
   line-height: 1;
   text-align: left;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 3px solid transparent;
   border-radius: 6px;
 }
 
 .mission-row.done {
-  background: #ddf0d4;
+  background: var(--dk-wash-green, #ddf0d4);
 }
 
 .mission-row.selected {
@@ -8584,7 +8634,7 @@ button {
 }
 
 .mission-row.fresh {
-  background: #fff8d8;
+  background: var(--dk-wash-gold, #fff8d8);
   border-color: #e8c050;
 }
 
@@ -8594,7 +8644,7 @@ button {
   gap: 4px;
   font-family: var(--title);
   font-size: 9px;
-  color: #a86000;
+  color: color-mix(in srgb, #a86000 var(--dk-lift, 100%), #fff);
 }
 
 .mission-reward img {
@@ -8604,7 +8654,7 @@ button {
 
 .mission-row.done .mission-reward {
   font-size: 14px;
-  color: #38a038;
+  color: color-mix(in srgb, #38a038 var(--dk-lift, 100%), #fff);
 }
 
 .mission-progress {
@@ -8613,13 +8663,13 @@ button {
   align-items: center;
   gap: 8px;
   font-size: 18px;
-  color: #585870;
+  color: var(--dk-ink-2, #585870);
 }
 
 .progress {
   flex: 1;
   height: 8px;
-  background: #c8c8d8;
+  background: var(--dk-line, #c8c8d8);
   border: 1px solid #8888a0;
 }
 
@@ -8632,7 +8682,7 @@ button {
 .mission-gain {
   font-family: var(--title);
   font-size: 8px;
-  color: #2878d8;
+  color: color-mix(in srgb, #2878d8 var(--dk-lift, 100%), #fff);
 }
 
 .ach-summary {
@@ -8679,7 +8729,7 @@ button {
   padding: 5px 10px;
   text-align: left;
   color: var(--ink);
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 3px solid transparent;
   border-radius: 6px;
 }
@@ -8697,12 +8747,12 @@ button {
 }
 
 .ach-row.selected {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
 }
 
 .ach-row.locked {
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
 }
 
 .ach-info {
@@ -8724,7 +8774,7 @@ button {
   align-self: center;
   font-family: var(--title);
   font-size: 9px;
-  color: #c89000;
+  color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
 }
 
 /* A guest who came by a friend's link: who invited them and what signing up brings. */
@@ -8764,13 +8814,13 @@ button {
 
 .invite-head b {
   font-weight: normal;
-  color: #c04890;
+  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
 }
 
 .invite-blurb {
   font-size: 17px;
   line-height: 1;
-  color: #505870;
+  color: var(--dk-ink-2, #505870);
 }
 
 .mission-report {
@@ -8796,7 +8846,7 @@ button {
   gap: 4px;
   font-family: var(--body);
   font-size: 18px;
-  color: #a86000;
+  color: color-mix(in srgb, #a86000 var(--dk-lift, 100%), #fff);
 }
 
 .mission-report-reward img {
@@ -8816,7 +8866,7 @@ button {
   gap: 6px 12px;
   padding: 6px 8px;
   font-size: 18px;
-  background: #fff8d8;
+  background: var(--dk-wash-gold, #fff8d8);
   border: 3px solid #e8c050;
   border-radius: 6px;
 }
@@ -8847,7 +8897,7 @@ button {
   font-size: 19px;
   line-height: 1.1;
   text-align: center;
-  background: #fbe8e4;
+  background: var(--dk-surface-2, #fbe8e4);
   border: 2px solid #e09080;
   border-radius: 6px;
 }
@@ -8855,7 +8905,7 @@ button {
 .death-cause small {
   flex-basis: 100%;
   font-size: 15px;
-  color: #8a5048;
+  color: color-mix(in srgb, #8a5048 var(--dk-lift, 100%), #fff);
 }
 
 .death-cause b {
@@ -8863,7 +8913,7 @@ button {
 }
 
 .death-dmg {
-  color: #d83828;
+  color: color-mix(in srgb, #d83828 var(--dk-lift, 100%), #fff);
 }
 
 @media (max-width: 600px) {
@@ -8894,7 +8944,7 @@ button {
   padding: 3px 8px;
   font-size: 18px;
   line-height: 1;
-  background: #fff8d8;
+  background: var(--dk-wash-gold, #fff8d8);
   border: 2px solid #e8c050;
   border-radius: 6px;
 }
@@ -8905,7 +8955,7 @@ button {
 }
 
 .news-chip.egg-ready {
-  background: #e0f4d8;
+  background: var(--dk-wash-green, #e0f4d8);
   border-color: #58b858;
 }
 
@@ -8917,7 +8967,7 @@ button {
   padding: 3px 8px;
   font-size: 18px;
   line-height: 1;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 2px solid transparent;
   border-radius: 6px;
 }
@@ -8928,18 +8978,18 @@ button {
 }
 
 .report-row.fresh {
-  background: #fff8d8;
+  background: var(--dk-wash-gold, #fff8d8);
   border-color: #e8c050;
 }
 
 .report-count {
   display: flex;
   gap: 6px;
-  color: #585870;
+  color: var(--dk-ink-2, #585870);
 }
 
 .report-row.done .report-count {
-  color: #38a038;
+  color: color-mix(in srgb, #38a038 var(--dk-lift, 100%), #fff);
 }
 
 /* The way on stays in reach while a long result scrolls under it. */
@@ -8985,7 +9035,7 @@ button {
 }
 
 .incubator-entry b {
-  color: #c89000;
+  color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
 }
 
 .incubator-entry:hover,
@@ -9016,7 +9066,7 @@ button {
 
 .incubator-note {
   font-size: 18px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .incubator-note b {
@@ -9037,7 +9087,7 @@ button {
   gap: 6px;
   min-width: 0;
   padding: 10px 6px 12px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 3px solid transparent;
   border-radius: 8px;
 }
@@ -9050,12 +9100,12 @@ button {
 }
 
 .egg-slot.selected {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
 }
 
 .egg-slot.empty b {
-  color: #9898b0;
+  color: var(--dk-ink-3, #9898b0);
 }
 
 .egg-art {
@@ -9068,7 +9118,7 @@ button {
 .egg-hole {
   width: 40px;
   height: 48px;
-  border: 3px dashed #b8b8c8;
+  border: 3px dashed var(--dk-line, #b8b8c8);
   border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%;
 }
 
@@ -9087,9 +9137,9 @@ button {
   position: relative;
   width: 100%;
   height: 8px;
-  background: #d0d0dc;
+  background: var(--dk-surface-3, #d0d0dc);
   border-radius: 2px;
-  box-shadow: inset 0 0 0 1px #b8b8c8;
+  box-shadow: inset 0 0 0 1px var(--dk-line, #b8b8c8);
 }
 
 .egg-bar i {
@@ -9107,7 +9157,7 @@ button {
 }
 
 .egg-slot.ready .egg-steps {
-  color: #c89000;
+  color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
 }
 
 /* The shop's extra slots (`INCUBATOR.slots`): five side by side, three a row on a phone. */
@@ -9125,8 +9175,8 @@ button {
 
 /* A slot not bought yet: the incubator greyed out, its price and shop level under it. */
 .egg-slot.locked:not(.selected) {
-  border: 3px dashed #c8c8d4;
-  background: #f0f0f4;
+  border: 3px dashed var(--dk-line, #c8c8d4);
+  background: var(--dk-surface-1, #f0f0f4);
 }
 
 .egg-slot.locked .egg-art {
@@ -9136,7 +9186,7 @@ button {
 
 .egg-slot.locked b,
 .egg-slot.locked .egg-steps {
-  color: #9898b0;
+  color: var(--dk-ink-3, #9898b0);
 }
 
 /* A Quick Incubator's egg: an orange bar and its ×2 tag in the corner. */
@@ -9157,6 +9207,24 @@ button {
   border-radius: 3px;
 }
 
+/* An egg the egg pity makes sure to bring a new family: its NEW! tag in the other corner. */
+.egg-new {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  padding: 2px 3px;
+  font-family: var(--title);
+  font-size: 7px;
+  font-style: normal;
+  color: #fff;
+  background: #30a050;
+  border-radius: 3px;
+}
+
+.incubator-pity {
+  font-size: 16px;
+}
+
 @media (max-width: 520px) {
   .egg-slots.slots-5 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -9172,7 +9240,7 @@ button {
 .hatch-canvas {
   width: 336px;
   height: 288px;
-  background: radial-gradient(ellipse 34% 30% at 50% 66%, #dcebd0 0 99%, transparent 100%);
+  background: radial-gradient(ellipse 34% 30% at 50% 66%, var(--dk-wash-green, #dcebd0) 0 99%, transparent 100%);
 }
 
 /* The Haunted Egg hatches at night: a dusk-violet glow instead of the meadow's. */
@@ -9192,7 +9260,7 @@ button {
   display: block;
   margin-top: 6px;
   font-size: 18px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 @media (max-width: 520px) {
@@ -9340,7 +9408,7 @@ button {
 .dex-unknown {
   font-family: var(--title);
   font-size: 14px;
-  color: #48527a;
+  color: color-mix(in srgb, #48527a var(--dk-lift, 100%), #fff);
 }
 
 .dex-mark {
@@ -9368,7 +9436,7 @@ button {
 }
 
 .dex-cell.selected {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
 }
 
@@ -9395,7 +9463,7 @@ button {
   gap: 8px;
   padding: 10px;
   overflow-y: auto;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border-radius: 6px;
   --accent: #6878a8;
 }
@@ -9440,7 +9508,7 @@ button {
   margin: 0;
   font-size: 20px;
   line-height: 1;
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
 }
 
 .dex-detail .tag-shiny {
@@ -9474,7 +9542,7 @@ a.btn.dex-site {
 .dex-news b {
   font-family: var(--title);
   font-size: 8px;
-  color: #c83030;
+  color: color-mix(in srgb, #c83030 var(--dk-lift, 100%), #fff);
 }
 
 .dex-news img {
@@ -9571,7 +9639,7 @@ a.btn.dex-site {
   margin: 0 0 6px;
   font-family: var(--title);
   font-size: 9px;
-  color: #c04890;
+  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
 }
 
 .invite-link {
@@ -9584,7 +9652,7 @@ a.btn.dex-site {
   font-size: 20px;
   color: var(--ink);
   text-align: left;
-  background: #fff4f8;
+  background: var(--dk-surface-1, #fff4f8);
   border: 2px dashed #e05888;
   border-radius: 6px;
   cursor: pointer;
@@ -9629,11 +9697,11 @@ a.btn.dex-site {
   gap: 10px;
   padding: 4px 8px;
   border-radius: 6px;
-  background: #eef0f8;
+  background: var(--dk-surface-1, #eef0f8);
 }
 
 .invite-step.reached {
-  background: #fde8f0;
+  background: var(--dk-surface-1, #fde8f0);
 }
 
 .invite-step img {
@@ -9657,20 +9725,20 @@ a.btn.dex-site {
   font-size: 7px;
   font-weight: normal;
   line-height: 1.6;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .invite-step em,
 .invite-friend em {
   font-style: normal;
   font-size: 18px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   white-space: nowrap;
 }
 
 .invite-step.reached em,
 .invite-friend.counted em {
-  color: #c04890;
+  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
 }
 
 .invite-how {
@@ -9686,7 +9754,7 @@ a.btn.dex-site {
 
 .invite-how li::before {
   content: counter(step) '. ';
-  color: #c04890;
+  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
 }
 
 .invite-tip,
@@ -9694,7 +9762,7 @@ a.btn.dex-site {
   margin: 6px 0 0;
   font-size: 16px;
   line-height: 1.15;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .invite-friend {
@@ -9715,7 +9783,7 @@ a.btn.dex-site {
 
 .invite-friend-name small {
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 /* Fixed height so the board scrolls inside the dialog, like the Pokédex. */
@@ -9935,7 +10003,7 @@ a.btn.dex-site {
   font-size: 16px;
   line-height: 1.1;
   text-align: center;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 /* Results screen: where the run put the player. */
@@ -9949,7 +10017,7 @@ a.btn.dex-site {
   font-size: 19px;
   line-height: 1.1;
   text-align: center;
-  background: #e8f0ff;
+  background: var(--dk-surface-1, #e8f0ff);
   border: 2px solid #6878a8;
   border-radius: 6px;
 }
@@ -9957,7 +10025,7 @@ a.btn.dex-site {
 .rank-panel-title {
   font-family: var(--title);
   font-size: 8px;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 .rank-places {
@@ -9970,7 +10038,7 @@ a.btn.dex-site {
 .rank-place b {
   font-family: var(--title);
   font-size: 10px;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 /* ---------- Profile ---------- */
@@ -10016,7 +10084,7 @@ a.btn.dex-site {
 .profile-handle {
   font-size: 20px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .profile-id .player-title {
@@ -10033,14 +10101,14 @@ a.btn.dex-site {
 
 .profile-note.small {
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .profile-section h3 {
   margin: 0 0 6px;
   font-family: var(--title);
   font-size: 9px;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 .profile-records {
@@ -10055,7 +10123,7 @@ a.btn.dex-site {
   align-items: center;
   gap: 4px;
   padding: 6px 4px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border-radius: 6px;
 }
 
@@ -10098,7 +10166,7 @@ a.btn.dex-site {
   align-items: center;
   column-gap: 8px;
   padding: 3px 8px;
-  background: #f0f0f6;
+  background: var(--dk-surface-1, #f0f0f6);
   border-radius: 6px;
 }
 
@@ -10128,11 +10196,11 @@ a.btn.dex-site {
   grid-area: when;
   font-size: 15px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .profile-run.victory b {
-  color: #c89000;
+  color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
 }
 
 /* Editor: the only text fields in the game, so they get back selection and taps. */
@@ -10149,13 +10217,13 @@ a.btn.dex-site {
 .field-label {
   font-family: var(--title);
   font-size: 9px;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 .field-box {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border: 3px solid #6878a8;
   border-radius: 6px;
 }
@@ -10167,7 +10235,7 @@ a.btn.dex-site {
 .field-prefix {
   padding-left: 10px;
   font-size: 22px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .field-input {
@@ -10191,11 +10259,11 @@ a.btn.dex-site {
   margin: 0;
   font-size: 17px;
   line-height: 1.15;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .field-message.error {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .profile .buttons .btn {
@@ -10269,8 +10337,8 @@ a.btn.dex-site {
   padding: 4px 10px;
   font-family: var(--title);
   font-size: 8px;
-  color: #505068;
-  background: #e8e8f0;
+  color: var(--dk-ink-2, #505068);
+  background: var(--dk-surface-2, #e8e8f0);
   border: 2px solid transparent;
   border-radius: 4px;
 }
@@ -10320,7 +10388,7 @@ a.btn.dex-site {
 
 /* A run worth showing off: the button twinkles in gold. */
 .share-button.glow {
-  background: #fff4c0;
+  background: var(--dk-wash-gold, #fff4c0);
   border-color: #f0b800;
   animation: share-glow 1.4s steps(2, start) infinite;
 }
@@ -10382,11 +10450,11 @@ a.btn.dex-site {
   font-size: 20px;
   line-height: 1;
   text-align: center;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 .share-status.error {
-  color: #c83030;
+  color: color-mix(in srgb, #c83030 var(--dk-lift, 100%), #fff);
 }
 
 .btn[disabled] {
@@ -10538,18 +10606,18 @@ a.btn.dex-site {
 }
 
 .pc-slot.filled {
-  background: #f8f8f8;
+  background: var(--dk-surface-1, #f8f8f8);
   border-color: #283040;
   box-shadow: inset 0 0 0 2px #e0a828, 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 
 .pc-slot.selected {
   border-color: #e83838;
-  box-shadow: 0 0 0 2px #fff, 0 3px 0 #2a5aa8;
+  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 3px 0 #2a5aa8;
 }
 
 .pc-slot.filled.selected {
-  box-shadow: inset 0 0 0 2px #e0a828, 0 0 0 2px #fff, 0 3px 0 #2a5aa8;
+  box-shadow: inset 0 0 0 2px #e0a828, 0 0 0 2px var(--dk-surface-0, #fff), 0 3px 0 #2a5aa8;
 }
 
 .pc-grid:not(.focused) .pc-slot.selected {
@@ -10576,7 +10644,7 @@ a.btn.dex-site {
   gap: 8px;
   min-height: 40px;
   padding: 6px 10px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border-radius: 6px;
 }
 
@@ -10591,7 +10659,7 @@ a.btn.dex-site {
 .pc-name small {
   font-family: var(--body);
   font-size: 18px;
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
 }
 
 .pc-name img {
@@ -10603,7 +10671,7 @@ a.btn.dex-site {
   font-family: var(--body);
   font-size: 20px;
   line-height: 1;
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
 }
 
 .dex-pc {
@@ -10706,7 +10774,7 @@ a.btn.dex-site {
 .news-head small {
   font-family: var(--title);
   font-size: 8px;
-  color: #606078;
+  color: var(--dk-ink-2, #606078);
 }
 
 .news-head b {
@@ -10725,7 +10793,7 @@ a.btn.dex-site {
   list-style: none;
   font-size: 20px;
   line-height: 1.1;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border-left: 4px solid #f8d030;
 }
 
@@ -10790,7 +10858,7 @@ a.btn.dex-site {
   display: grid;
   gap: 6px;
   padding: 6px 8px 8px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border-left: 4px solid transparent;
 }
 
@@ -10853,7 +10921,7 @@ a.btn.dex-site {
   align-items: center;
   gap: 12px;
   padding: 8px;
-  background: #e8ecf6;
+  background: var(--dk-surface-2, #e8ecf6);
   border-left: 4px solid var(--accent, #6878a8);
   border-radius: 6px;
 }
@@ -10876,7 +10944,7 @@ a.btn.dex-site {
 .challenge-id small {
   font-size: 18px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .challenge-name {
@@ -10907,7 +10975,7 @@ a.btn.dex-site {
   font-size: 18px;
   line-height: 1.15;
   text-align: center;
-  background: #eceef4;
+  background: var(--dk-surface-2, #eceef4);
   border: 2px solid #a0a8c0;
   border-radius: 6px;
 }
@@ -10915,21 +10983,21 @@ a.btn.dex-site {
 .challenge-status b {
   font-family: var(--title);
   font-size: 10px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .challenge-status.official {
-  background: #fff6d8;
+  background: var(--dk-wash-gold, #fff6d8);
   border-color: #e0a828;
 }
 
 .challenge-status.official b {
-  color: #b07010;
+  color: color-mix(in srgb, #b07010 var(--dk-lift, 100%), #fff);
 }
 
 .challenge-attempt {
   font-weight: bold;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 .challenge-rules,
@@ -10946,7 +11014,7 @@ a.btn.dex-site {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  color: #505870;
+  color: var(--dk-ink-2, #505870);
 }
 
 .challenge-note img {
@@ -10958,7 +11026,7 @@ a.btn.dex-site {
 .challenge-clock b {
   font-family: var(--title);
   font-size: 10px;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .challenge .buttons .btn {
@@ -10993,7 +11061,7 @@ a.btn.dex-site {
 .rank-challenge-place b {
   font-family: var(--title);
   font-size: 10px;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .profile-ribbons {
@@ -11008,7 +11076,7 @@ a.btn.dex-site {
   justify-content: center;
   gap: 8px;
   padding: 6px 4px;
-  background: #fff6d8;
+  background: var(--dk-wash-gold, #fff6d8);
   border-radius: 6px;
 }
 
@@ -11023,7 +11091,7 @@ a.btn.dex-site {
 }
 
 .profile-ribbon.empty {
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
 }
 
 .profile-ribbon.empty img {
@@ -11071,7 +11139,7 @@ a.btn.dex-site {
   margin: 4px 0 0;
   font-family: var(--title);
   font-size: 9px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .pick-label:empty {
@@ -11128,7 +11196,7 @@ a.btn.dex-site {
 }
 
 .pick-cell.picked {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #ffcb05;
 }
 
@@ -11243,7 +11311,7 @@ a.btn.dex-site {
 
 .profile-supporter {
   font-size: 16px;
-  color: #c04890;
+  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
 }
 
 /* The victory screen's thanks. */
@@ -11257,7 +11325,7 @@ a.btn.dex-site {
   font-size: 17px;
   line-height: 1.15;
   text-align: center;
-  color: #505870;
+  color: var(--dk-ink-2, #505870);
 }
 
 .supporter-credits img {
@@ -11268,7 +11336,7 @@ a.btn.dex-site {
 .supporter-credits small {
   font-family: var(--title);
   font-size: 8px;
-  color: #a02858;
+  color: color-mix(in srgb, #a02858 var(--dk-lift, 100%), #fff);
 }
 
 .supporter-credits span {
@@ -11310,8 +11378,8 @@ a.btn.dex-site {
   z-index: -1;
   /* Hard 2 px stars: the top-left quadrant of each tile's conic gradient, two offset grids. */
   background:
-    conic-gradient(from 270deg at 2px 2px, #fff 90deg, transparent 0) 11px 7px / 46px 46px,
-    conic-gradient(from 270deg at 2px 2px, #fff 90deg, transparent 0) 34px 30px / 62px 62px;
+    conic-gradient(from 270deg at 2px 2px, var(--dk-surface-0, #fff) 90deg, transparent 0) 11px 7px / 46px 46px,
+    conic-gradient(from 270deg at 2px 2px, var(--dk-surface-0, #fff) 90deg, transparent 0) 34px 30px / 62px 62px;
   opacity: 0.2;
   pointer-events: none;
 }
@@ -11352,15 +11420,15 @@ a.btn.dex-site {
   padding: 4px 14px 4px 10px;
   font-family: var(--title);
   font-size: 8px;
-  color: #a02860;
-  background: #ffe0ef;
+  color: color-mix(in srgb, #a02860 var(--dk-lift, 100%), #fff);
+  background: var(--dk-wash-red, #ffe0ef);
   border: 2px solid #f0a0c8;
   border-radius: 22px;
 }
 
 .hall-you.gold {
-  color: #6a4008;
-  background: #fff4c0;
+  color: color-mix(in srgb, #6a4008 var(--dk-lift, 100%), #fff);
+  background: var(--dk-wash-gold, #fff4c0);
   border-color: #f8d030;
 }
 
@@ -11676,7 +11744,7 @@ a.btn.dex-site {
   overflow: hidden;
   border-radius: 50%;
   background: #3a2878;
-  border: 2px solid #ffb0d8;
+  border: 2px solid var(--dk-wash-purple, #ffb0d8);
 }
 
 .fan-avatar img {
@@ -11757,8 +11825,8 @@ a.btn.dex-site {
   align-items: stretch;
   gap: 8px;
   padding: 8px 10px 10px;
-  color: #4a1030;
-  background: linear-gradient(#ffe8f3, #ffd0e6);
+  color: color-mix(in srgb, #4a1030 var(--dk-lift, 100%), #fff);
+  background: linear-gradient(var(--dk-surface-1, #ffe8f3), var(--dk-wash-red, #ffd0e6));
   border: 3px solid #283040;
   border-radius: 12px;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4);
@@ -11798,7 +11866,7 @@ a.btn.dex-site {
 }
 
 .hall-cta b {
-  color: #c02870;
+  color: color-mix(in srgb, #c02870 var(--dk-lift, 100%), #fff);
 }
 
 .hall-tiles {
@@ -11823,7 +11891,7 @@ a.btn.dex-site {
 
 button.hall-tile {
   min-height: 52px;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--dk-surface-0, rgba(255, 255, 255, 0.6));
   border-color: #f0a0c8;
   cursor: pointer;
 }
@@ -11834,7 +11902,7 @@ button.hall-tile:hover {
 }
 
 .hall-tile.glow {
-  background: #fff4c0;
+  background: var(--dk-wash-gold, #fff4c0);
   border-color: #f0b800;
   animation: share-glow 1.4s steps(2, start) infinite;
 }
@@ -11865,8 +11933,8 @@ button.hall-tile:hover {
   padding: 2px 12px;
   font-family: var(--body);
   font-size: 17px;
-  color: #a02860;
-  background: rgba(255, 255, 255, 0.5);
+  color: color-mix(in srgb, #a02860 var(--dk-lift, 100%), #fff);
+  background: var(--dk-surface-0, rgba(255, 255, 255, 0.5));
   border: 2px solid #f0a0c8;
   border-radius: 16px;
   cursor: pointer;
@@ -12052,8 +12120,8 @@ button.hall-tile:hover {
 }
 
 .hall-you.diamond {
-  color: #0c3060;
-  background: #e0f8ff;
+  color: color-mix(in srgb, #0c3060 var(--dk-lift, 100%), #fff);
+  background: var(--dk-wash-cyan, #e0f8ff);
   border-color: #78d0f8;
 }
 
@@ -12101,7 +12169,7 @@ button.hall-tile:hover {
 }
 
 .legend-card.diamond .legend-pedestal {
-  background: linear-gradient(#e0f8ff, #3890d8);
+  background: linear-gradient(var(--dk-wash-cyan, #e0f8ff), #3890d8);
   border-color: #0c2448;
 }
 
@@ -12166,8 +12234,8 @@ button.hall-tile:hover {
   padding: 4px 10px;
   font-family: var(--title);
   font-size: 8px;
-  color: #4a3008;
-  background: #fff4c0;
+  color: color-mix(in srgb, #4a3008 var(--dk-lift, 100%), #fff);
+  background: var(--dk-wash-gold, #fff4c0);
   border: 2px solid #f8d030;
   border-radius: 16px;
   cursor: pointer;
@@ -12249,7 +12317,7 @@ button.hall-tile:hover {
 
 .admin-user small {
   flex-basis: 100%;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   overflow-wrap: anywhere;
 }
 
@@ -12282,7 +12350,7 @@ button.hall-tile:hover {
 .admin-preview small,
 .admin-recent small {
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .admin-recent ul {
@@ -12303,7 +12371,7 @@ button.hall-tile:hover {
 }
 
 .admin-recent small.claimed {
-  color: #30a050;
+  color: color-mix(in srgb, #30a050 var(--dk-lift, 100%), #fff);
 }
 
 /* ---------- Ideias: the idea board ---------- */
@@ -12478,21 +12546,21 @@ button.hall-tile:hover {
 }
 
 .idea-vote.up.on {
-  color: #30a050;
+  color: color-mix(in srgb, #30a050 var(--dk-lift, 100%), #fff);
 }
 
 .idea-vote.down.on {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .idea-vote.selected {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
 }
 
 @media (hover: hover) {
   .idea-vote:hover {
-    background: #fff;
+    background: var(--dk-surface-0, #fff);
   }
 }
 
@@ -12503,7 +12571,7 @@ button.hall-tile:hover {
 }
 
 .idea.done .idea-score {
-  color: #30a050;
+  color: color-mix(in srgb, #30a050 var(--dk-lift, 100%), #fff);
 }
 
 .idea-main {
@@ -12532,7 +12600,7 @@ button.hall-tile:hover {
   overflow: hidden;
   font-size: 19px;
   line-height: 1.05;
-  color: #485070;
+  color: var(--dk-ink-2, #485070);
   white-space: pre-line;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
@@ -12551,7 +12619,7 @@ button.hall-tile:hover {
   align-items: center;
   gap: 6px;
   font-size: 17px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .idea-you,
@@ -12579,11 +12647,11 @@ button.hall-tile:hover {
   gap: 6px;
   margin: 0;
   font-size: 17px;
-  color: #308048;
+  color: color-mix(in srgb, #308048 var(--dk-lift, 100%), #fff);
 }
 
 .idea-done.pending {
-  color: #b85820;
+  color: color-mix(in srgb, #b85820 var(--dk-lift, 100%), #fff);
 }
 
 .idea-admin {
@@ -12633,7 +12701,7 @@ button.hall-tile:hover {
 .field-count {
   align-self: flex-end;
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 /* ---------- Bug reports (ui/bugReport.ts) ---------- */
@@ -12676,18 +12744,18 @@ button.hall-tile:hover {
   font-family: var(--title);
   font-size: 9px;
   line-height: 1.6;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 .bug-include small {
   font-size: 16px;
   line-height: 1.1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .bug-details summary {
   font-size: 18px;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
   cursor: pointer;
 }
 
@@ -12700,8 +12768,8 @@ button.hall-tile:hover {
   line-height: 1.2;
   white-space: pre-wrap;
   word-break: break-all;
-  background: #fff;
-  border: 2px solid #c8d0e0;
+  background: var(--dk-surface-0, #fff);
+  border: 2px solid var(--dk-line, #c8d0e0);
   border-radius: 4px;
   -webkit-user-select: text;
   user-select: text;
@@ -12777,9 +12845,9 @@ button.hall-tile:hover {
   width: 56px;
   height: 56px;
   flex-shrink: 0;
-  border: 3px solid #f8f8f8;
+  border: 3px solid var(--dk-surface-1, #f8f8f8);
   border-radius: 6px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   box-shadow: 0 0 0 3px #283040, 0 0 18px rgba(248, 216, 96, 0.6);
 }
 
@@ -12810,9 +12878,9 @@ button.hall-tile:hover {
 }
 
 .evo-card {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--type) 34%, #fff), #fff 58%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--type) 34%, var(--dk-surface-0, #fff)), var(--dk-surface-0, #fff) 58%);
   box-shadow:
-    inset 0 0 0 3px #fff,
+    inset 0 0 0 3px var(--dk-surface-0, #fff),
     inset 0 0 0 5px color-mix(in srgb, var(--type) 75%, #283040),
     0 6px 0 rgba(0, 0, 0, 0.35);
   animation: card-land 0.36s steps(6) both;
@@ -12834,7 +12902,7 @@ button.hall-tile:hover {
 
 .evo-card.selected {
   box-shadow:
-    inset 0 0 0 3px #fff,
+    inset 0 0 0 3px var(--dk-surface-0, #fff),
     inset 0 0 0 5px var(--type),
     0 10px 0 rgba(0, 0, 0, 0.3),
     0 0 22px color-mix(in srgb, var(--type) 80%, transparent);
@@ -12883,7 +12951,7 @@ button.hall-tile:hover {
   border-radius: 50%;
   position: relative;
   isolation: isolate;
-  background: radial-gradient(circle, color-mix(in srgb, var(--type) 45%, #fff) 0 44%, color-mix(in srgb, var(--type2) 70%, #283040) 45% 50%, transparent 51%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--type) 45%, var(--dk-surface-0, #fff)) 0 44%, color-mix(in srgb, var(--type2) 70%, #283040) 45% 50%, transparent 51%);
 }
 
 /* Slow light rays turning behind the portrait. */
@@ -12903,7 +12971,7 @@ button.hall-tile:hover {
   height: 80px;
   border: 3px solid #283040;
   border-radius: 6px;
-  background: #f8f8f8;
+  background: var(--dk-surface-1, #f8f8f8);
   animation: silhouette 1s steps(5) both;
   animation-delay: calc(var(--i, 0) * 0.15s + 0.45s);
 }
@@ -12986,7 +13054,7 @@ button.hall-tile:hover {
   gap: 0 8px;
   font-size: 18px;
   line-height: 1;
-  color: #405070;
+  color: var(--dk-ink-2, #405070);
 }
 
 .evo-card-facts {
@@ -13000,7 +13068,7 @@ button.hall-tile:hover {
 .evo-card-facts dt {
   font-family: var(--title);
   font-size: 6px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   text-transform: uppercase;
 }
 
@@ -13032,7 +13100,7 @@ button.hall-tile:hover {
   padding: 1px 4px 1px 2px;
   font-size: 15px;
   line-height: 1;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border-radius: 3px;
 }
 
@@ -13043,7 +13111,7 @@ button.hall-tile:hover {
 
 .ability-chip.hidden-ability {
   color: #503800;
-  background: linear-gradient(#fff0b0, #f8d870);
+  background: linear-gradient(var(--dk-wash-gold, #fff0b0), #f8d870);
   box-shadow: inset 0 0 0 1px #c89020;
 }
 
@@ -13051,9 +13119,9 @@ button.hall-tile:hover {
 .ability-card {
   gap: 8px;
   padding: 24px 12px 14px;
-  background: linear-gradient(180deg, #ffffff, #e8ecf8);
+  background: linear-gradient(180deg, var(--dk-surface-0, #ffffff), var(--dk-surface-2, #e8ecf8));
   box-shadow:
-    inset 0 0 0 3px #fff,
+    inset 0 0 0 3px var(--dk-surface-0, #fff),
     inset 0 0 0 5px var(--frame),
     0 6px 0 rgba(0, 0, 0, 0.35);
   animation: card-flip 0.5s steps(8) both;
@@ -13112,9 +13180,9 @@ button.hall-tile:hover {
 /* The Hidden Ability: a golden frame, a ribbon and a shine running across it. */
 .ability-card.hidden-ability {
   overflow: hidden;
-  background: linear-gradient(180deg, #fff8d8, #f8e0a0);
+  background: linear-gradient(180deg, var(--dk-wash-gold, #fff8d8), var(--dk-glow-gold, #f8e0a0));
   box-shadow:
-    inset 0 0 0 3px #fff8e0,
+    inset 0 0 0 3px var(--dk-wash-gold, #fff8e0),
     inset 0 0 0 5px #c89020,
     0 6px 0 rgba(0, 0, 0, 0.35),
     0 0 20px rgba(248, 208, 48, 0.55);
@@ -13166,12 +13234,12 @@ button.hall-tile:hover {
 }
 
 .tag-hidden {
-  color: #a07000;
+  color: color-mix(in srgb, #a07000 var(--dk-lift, 100%), #fff);
 }
 
 /* A legendary's move in the pause loadout. */
 .tag-legendary {
-  color: #c88a10;
+  color: color-mix(in srgb, #c88a10 var(--dk-lift, 100%), #fff);
 }
 
 /* In-run toasts and the HUD chip. */
@@ -13197,8 +13265,8 @@ button.hall-tile:hover {
   font-family: var(--title);
   font-size: 6px;
   white-space: nowrap;
-  color: #404858;
-  background: #e0e4f0;
+  color: var(--dk-ink-2, #404858);
+  background: var(--dk-surface-2, #e0e4f0);
   border-radius: 3px;
 }
 
@@ -13214,7 +13282,7 @@ button.hall-tile:hover {
 }
 
 .ability-tag-count {
-  color: #c83838;
+  color: color-mix(in srgb, #c83838 var(--dk-lift, 100%), #fff);
 }
 
 .ability-tag.lit {
@@ -13241,7 +13309,7 @@ button.hall-tile:hover {
   align-items: center;
   gap: 10px;
   padding: 6px 10px;
-  background: #eeeef4;
+  background: var(--dk-surface-1, #eeeef4);
   border-radius: 6px;
 }
 
@@ -13266,7 +13334,7 @@ button.hall-tile:hover {
 
 .pause-ability b small {
   font-size: 7px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .pause-ability > div > span {
@@ -13274,16 +13342,16 @@ button.hall-tile:hover {
   margin-top: 3px;
   font-size: 18px;
   line-height: 1;
-  color: #505068;
+  color: var(--dk-ink-2, #505068);
 }
 
 .pause-ability.hidden-ability {
-  background: linear-gradient(90deg, #fff4c8, #f8f0e0);
+  background: linear-gradient(90deg, var(--dk-wash-gold, #fff4c8), var(--dk-surface-2, #f8f0e0));
   box-shadow: inset 0 0 0 2px #c89020;
 }
 
 .pause-ability.mega > img {
-  background: #f8f8f8;
+  background: var(--dk-surface-1, #f8f8f8);
 }
 
 /* The partner details: the abilities, and a branching evolution in the line. */
@@ -13292,7 +13360,7 @@ button.hall-tile:hover {
 }
 
 .ability-row.hidden-ability {
-  background: linear-gradient(90deg, #fff4c8, #fff);
+  background: linear-gradient(90deg, var(--dk-wash-gold, #fff4c8), var(--dk-surface-0, #fff));
   box-shadow: inset 0 0 0 2px #e0b040;
 }
 
@@ -13303,7 +13371,7 @@ button.hall-tile:hover {
   gap: 6px;
   grid-column: 1 / -1;
   padding: 3px 6px;
-  background: #eeeef4;
+  background: var(--dk-surface-1, #eeeef4);
   border-radius: 4px;
   font-size: 18px;
 }
@@ -13323,7 +13391,7 @@ button.hall-tile:hover {
   margin: 0;
   font-size: 16px;
   line-height: 1;
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
 }
 
 .evo-branch-grid {
@@ -13555,14 +13623,14 @@ button.hall-tile:hover {
 
 /* Rare cards: a blue frame and a shine that sweeps across now and then. */
 .offer-rare {
-  background: linear-gradient(180deg, #e8f0ff, #c8d8f8);
+  background: linear-gradient(180deg, var(--dk-surface-1, #e8f0ff), var(--dk-wash-blue, #c8d8f8));
   border-color: #4878e0;
   box-shadow: 0 0 0 2px #a8c8f8;
 }
 
 .offer-rare.selected {
-  background: linear-gradient(180deg, #f4f8ff, #dce8ff);
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #4878e0, 0 4px 0 rgba(0, 0, 0, 0.15);
+  background: linear-gradient(180deg, var(--dk-surface-1, #f4f8ff), var(--dk-wash-blue, #dce8ff));
+  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 0 0 4px #4878e0, 0 4px 0 rgba(0, 0, 0, 0.15);
 }
 
 .tag-rare {
@@ -13574,7 +13642,7 @@ button.hall-tile:hover {
 
 /* Shiny cards: a gold frame that pulses, twinkles all over and the same shine, warmer. */
 .levelup .offer-shiny {
-  background: linear-gradient(180deg, #fffbe0, #f8e8a0);
+  background: linear-gradient(180deg, var(--dk-wash-gold, #fffbe0), var(--dk-glow-gold, #f8e8a0));
   border-color: #e0a020;
   animation:
     offer-in 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.25) both,
@@ -13583,7 +13651,7 @@ button.hall-tile:hover {
 }
 
 .levelup .offer-shiny.selected {
-  background: linear-gradient(180deg, #fffdf0, #fbefc0);
+  background: linear-gradient(180deg, var(--dk-surface-1, #fffdf0), var(--dk-wash-gold, #fbefc0));
 }
 
 @keyframes shiny-frame {
@@ -13603,7 +13671,7 @@ button.hall-tile:hover {
   font-family: var(--title);
   font-size: 7px;
   line-height: 1.4;
-  color: #a06800;
+  color: color-mix(in srgb, #a06800 var(--dk-lift, 100%), #fff);
   margin-top: 4px;
 }
 
@@ -13672,14 +13740,14 @@ button.hall-tile:hover {
   height: 22px;
   image-rendering: pixelated;
   background: #8048d0;
-  border: 2px solid #fff;
+  border: 2px solid var(--dk-surface-0, #fff);
   border-radius: 4px;
   padding: 1px;
 }
 
 /* The fork screen: the two branches split apart from where the move card was. */
 .levelup.fork .dialog-title {
-  color: #6038b0;
+  color: color-mix(in srgb, #6038b0 var(--dk-lift, 100%), #fff);
 }
 
 .offers.branches {
@@ -13724,7 +13792,7 @@ button.hall-tile:hover {
   gap: 10px;
   padding: 14px 12px 12px;
   border-color: #b8a0e8;
-  background: linear-gradient(180deg, #f4f0ff, #e4dcf8);
+  background: linear-gradient(180deg, var(--dk-surface-1, #f4f0ff), var(--dk-wash-purple, #e4dcf8));
   animation: branch-in-a 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
 }
 
@@ -13733,7 +13801,7 @@ button.hall-tile:hover {
 }
 
 .levelup .offer-branch.selected {
-  background: linear-gradient(180deg, #fff, #f0eaff);
+  background: linear-gradient(180deg, var(--dk-surface-0, #fff), var(--dk-surface-1, #f0eaff));
   border-color: #e83838;
 }
 
@@ -13745,7 +13813,7 @@ button.hall-tile:hover {
 
 .offer-branch .offer-name {
   justify-content: center;
-  color: #4a2890;
+  color: color-mix(in srgb, #4a2890 var(--dk-lift, 100%), #fff);
 }
 
 .offer-branch .type-badge {
@@ -13786,7 +13854,7 @@ button.hall-tile:hover {
 
 /* Esquecer: the cards turn red and the next pick forgets one, which flies off. */
 .btn-banish {
-  color: #b02020;
+  color: color-mix(in srgb, #b02020 var(--dk-lift, 100%), #fff);
 }
 
 .btn-banish.active {
@@ -13795,14 +13863,14 @@ button.hall-tile:hover {
 }
 
 .levelup .offers.banishing .offer {
-  background: linear-gradient(180deg, #ffe8e4, #f8c8c0);
+  background: linear-gradient(180deg, var(--dk-wash-red, #ffe8e4), var(--dk-wash-red, #f8c8c0));
   border-color: #e05040;
 }
 
 .levelup .offers.banishing .offer.selected {
-  background: linear-gradient(180deg, #fff0ee, #ffd8d0);
+  background: linear-gradient(180deg, var(--dk-surface-1, #fff0ee), var(--dk-wash-red, #ffd8d0));
   border-color: #b01818;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #e83838;
+  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 0 0 4px #e83838;
 }
 
 .offers.banishing .offer::after {
@@ -13835,7 +13903,7 @@ button.hall-tile:hover {
   margin: 0;
   z-index: 2;
   pointer-events: none;
-  background: linear-gradient(180deg, #ffe8e4, #f8c0b8);
+  background: linear-gradient(180deg, var(--dk-wash-red, #ffe8e4), var(--dk-wash-red, #f8c0b8));
   border-color: #e05040;
   animation: offer-toss 0.55s cubic-bezier(0.5, 0, 0.9, 0.6) forwards;
 }
@@ -14036,7 +14104,7 @@ button.hall-tile:hover {
 .levelup .offer.offer-duo {
   background:
     linear-gradient(90deg, var(--duo-a, #f8d030) 0 50%, var(--duo-b, #f8d030) 50%) top / 100% 4px no-repeat,
-    linear-gradient(180deg, #fffbe0, #f8e0a0);
+    linear-gradient(180deg, var(--dk-wash-gold, #fffbe0), var(--dk-glow-gold, #f8e0a0));
   border-color: #e0a020;
   animation:
     offer-in 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.25) both,
@@ -14047,7 +14115,7 @@ button.hall-tile:hover {
 .levelup .offer.offer-duo.selected {
   background:
     linear-gradient(90deg, var(--duo-a, #f8d030) 0 50%, var(--duo-b, #f8d030) 50%) top / 100% 4px no-repeat,
-    linear-gradient(180deg, #fffdf0, #fbecc0);
+    linear-gradient(180deg, var(--dk-surface-1, #fffdf0), var(--dk-wash-gold, #fbecc0));
   border-color: #e83838;
 }
 
@@ -14078,12 +14146,12 @@ button.hall-tile:hover {
 }
 
 .duo-note {
-  color: #a05800;
+  color: color-mix(in srgb, #a05800 var(--dk-lift, 100%), #fff);
 }
 
 .evo-recipe.duo-recipe.ready {
-  color: #a05800;
-  background: linear-gradient(90deg, #f8e090, #fff4c0, #f8e090);
+  color: color-mix(in srgb, #a05800 var(--dk-lift, 100%), #fff);
+  background: linear-gradient(90deg, var(--dk-glow-gold, #f8e090), var(--dk-wash-gold, #fff4c0), var(--dk-glow-gold, #f8e090));
 }
 
 .tag.tag-duo {
@@ -14123,7 +14191,7 @@ button.hall-tile:hover {
   gap: 4px;
   font-family: var(--title);
   font-size: 8px;
-  color: #a05800;
+  color: color-mix(in srgb, #a05800 var(--dk-lift, 100%), #fff);
 }
 
 .duo-panel-title img {
@@ -14146,7 +14214,7 @@ button.hall-tile:hover {
   padding: 2px 6px 2px 3px;
   font-size: 16px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   background: rgba(104, 120, 168, 0.12);
   border-radius: 4px;
   opacity: 0.75;
@@ -14170,15 +14238,15 @@ button.hall-tile:hover {
 .duo-type-recipe b {
   font-family: var(--title);
   font-size: 7px;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
   margin-left: 2px;
 }
 
 .duo-type-recipe.ready,
 .duo-type-recipe.done {
   opacity: 1;
-  color: #a05800;
-  background: #f8e090;
+  color: color-mix(in srgb, #a05800 var(--dk-lift, 100%), #fff);
+  background: var(--dk-glow-gold, #f8e090);
   box-shadow: 0 0 0 2px #e0a020;
 }
 
@@ -14191,15 +14259,15 @@ button.hall-tile:hover {
   font-size: 15px;
   line-height: 1;
   text-align: center;
-  color: #8890b0;
+  color: var(--dk-ink-3, #8890b0);
 }
 
 .duo-legend.near {
-  color: #a05800;
+  color: color-mix(in srgb, #a05800 var(--dk-lift, 100%), #fff);
 }
 
 .toast-duo b {
-  color: #e07000;
+  color: color-mix(in srgb, #e07000 var(--dk-lift, 100%), #fff);
 }
 
 /* ---------- Cursed items (data/curses.ts) ---------- */
@@ -14217,7 +14285,7 @@ button.hall-tile:hover {
 }
 
 .loadout-row.cursed {
-  color: #7030a0;
+  color: color-mix(in srgb, #7030a0 var(--dk-lift, 100%), #fff);
 }
 
 .tag.tag-curse {
@@ -14229,7 +14297,7 @@ button.hall-tile:hover {
 }
 
 .toast-curse b {
-  color: #b060f0;
+  color: color-mix(in srgb, #b060f0 var(--dk-lift, 100%), #fff);
 }
 
 .toast-curse em,
@@ -14241,7 +14309,7 @@ button.hall-tile:hover {
 .curse-pick .curse-box {
   max-width: min(360px, 92 * var(--vw));
   text-align: center;
-  background: linear-gradient(180deg, #f4ecfa, #e4d4f2);
+  background: linear-gradient(180deg, var(--dk-surface-1, #f4ecfa), var(--dk-wash-purple, #e4d4f2));
   border-color: #7030b0;
   box-shadow: 0 0 0 2px #2a0840, 0 0 24px rgba(160, 80, 224, 0.55);
 }
@@ -14258,14 +14326,14 @@ button.hall-tile:hover {
 }
 
 .curse-box .dialog-title {
-  color: #501880;
+  color: color-mix(in srgb, #501880 var(--dk-lift, 100%), #fff);
 }
 
 .curse-sub {
   margin: 0;
   font-size: 18px;
   line-height: 1.05;
-  color: #604878;
+  color: var(--dk-ink-2, #604878);
 }
 
 .curse-art {
@@ -14308,7 +14376,7 @@ button.hall-tile:hover {
 .curse-name {
   font-family: var(--title);
   font-size: 12px;
-  color: #2a0840;
+  color: color-mix(in srgb, #2a0840 var(--dk-lift, 100%), #fff);
 }
 
 .curse-line {
@@ -14328,17 +14396,17 @@ button.hall-tile:hover {
 }
 
 .curse-line.up {
-  color: #207830;
+  color: color-mix(in srgb, #207830 var(--dk-lift, 100%), #fff);
 }
 
 .curse-line.down {
-  color: #b02838;
+  color: color-mix(in srgb, #b02838 var(--dk-lift, 100%), #fff);
 }
 
 .curse-note {
   margin: 0;
   font-size: 16px;
-  color: #806898;
+  color: var(--dk-ink-3, #806898);
 }
 
 .curse-pick .btn.curse-take {
@@ -14348,7 +14416,7 @@ button.hall-tile:hover {
 }
 
 .curse-pick .btn.curse-take.selected {
-  box-shadow: 0 0 0 2px #fff, 0 0 12px #c070f8;
+  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 0 12px #c070f8;
 }
 
 .curse-pick .btn.picked {
@@ -14485,7 +14553,7 @@ button.hall-tile:hover {
 .ball-card .offer {
   position: relative;
   overflow: hidden;
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
   animation: ball-prize 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.35) both;
 }
@@ -14506,12 +14574,12 @@ button.hall-tile:hover {
   margin: 0;
   font-size: 18px;
   line-height: 1.05;
-  color: #505870;
+  color: var(--dk-ink-2, #505870);
 }
 
 .ball-note {
   font-size: 16px;
-  color: #808898;
+  color: var(--dk-ink-3, #808898);
 }
 
 .ball-pick .btn.ball-take {
@@ -14521,7 +14589,7 @@ button.hall-tile:hover {
 }
 
 .ball-pick .btn.ball-take.selected {
-  box-shadow: 0 0 0 2px #fff, 0 0 12px #f86060;
+  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 0 12px #f86060;
 }
 
 .ball-pick .btn.picked {
@@ -14570,7 +14638,7 @@ button.hall-tile:hover {
   margin: 2px 0 0;
   font-size: 16px;
   line-height: 1;
-  color: #707088;
+  color: var(--dk-ink-3, #707088);
 }
 
 .learn-stage {
@@ -14579,7 +14647,7 @@ button.hall-tile:hover {
   gap: 6px;
   margin-top: 8px;
   padding: 2px 4px 2px 2px;
-  background: #e2e2ee;
+  background: var(--dk-surface-2, #e2e2ee);
   border-radius: 4px;
   box-shadow: inset 4px 0 0 var(--accent, #6878a8);
 }
@@ -14587,7 +14655,7 @@ button.hall-tile:hover {
 .learn-stage b {
   font-family: var(--title);
   font-size: 8px;
-  color: #404058;
+  color: var(--dk-ink, #404058);
 }
 
 .learn-when {
@@ -14667,7 +14735,7 @@ button.hall-tile:hover {
   gap: 4px;
   padding: 1px 6px 1px 2px;
   font-size: 20px;
-  background: #eeeef4;
+  background: var(--dk-surface-1, #eeeef4);
   border-left: 4px solid var(--type);
   border-radius: 2px;
   animation: learn-pop 0.3s steps(3) both;
@@ -14707,7 +14775,7 @@ button.hall-tile:hover {
 
 .tm-pick.tm-legendary {
   --type: #f8d030;
-  background: linear-gradient(180deg, #fffbe8, #f8f0d0);
+  background: linear-gradient(180deg, var(--dk-surface-1, #fffbe8), var(--dk-wash-gold, #f8f0d0));
   box-shadow: 0 0 0 3px #3a2600, 0 0 0 6px #f8d030, 0 0 24px 6px rgba(248, 208, 48, 0.45);
 }
 
@@ -14765,7 +14833,7 @@ button.hall-tile:hover {
   margin: -4px 0 0;
   font-size: 20px;
   text-align: right;
-  color: #806010;
+  color: color-mix(in srgb, #806010 var(--dk-lift, 100%), #fff);
 }
 
 .tm-card {
@@ -14780,7 +14848,7 @@ button.hall-tile:hover {
 }
 
 .tm-card.tm-gold {
-  background: linear-gradient(180deg, #fff8d0, #f8e090);
+  background: linear-gradient(180deg, var(--dk-wash-gold, #fff8d0), var(--dk-glow-gold, #f8e090));
   border-color: #e0a020;
   border-left-color: #f8d030;
 }
@@ -14827,7 +14895,7 @@ button.hall-tile:hover {
   min-height: 48px;
   padding: 6px 8px;
   text-align: left;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 3px solid transparent;
   border-left: 5px solid var(--type);
   border-radius: 6px;
@@ -14836,9 +14904,9 @@ button.hall-tile:hover {
 }
 
 .tm-forget-move.selected {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border-color: #e83838;
-  box-shadow: 0 0 0 2px #fff, 0 4px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 4px 0 rgba(0, 0, 0, 0.15);
 }
 
 .tm-forget-move.selected .offer-key {
@@ -14863,7 +14931,7 @@ button.hall-tile:hover {
   display: block;
   font-family: var(--body);
   font-size: 18px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .tm-pass {
@@ -14894,7 +14962,7 @@ button.hall-tile:hover {
   padding: 10px 14px;
   font-family: var(--title);
   font-size: 11px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 3px solid #303040;
   border-radius: 6px;
 }
@@ -14909,7 +14977,7 @@ button.hall-tile:hover {
 }
 
 .tm-poof-chip.learned {
-  background: #fff8d0;
+  background: var(--dk-wash-gold, #fff8d0);
   border-color: #e0a020;
   animation: tm-learned 0.4s steps(4);
 }
@@ -14940,7 +15008,7 @@ button.hall-tile:hover {
   width: 9px;
   height: 9px;
   margin: -4px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   box-shadow: 0 0 0 3px #a8a8c0;
   opacity: 0;
 }
@@ -15075,7 +15143,7 @@ button.hall-tile:hover {
 .card-desc {
   margin: 0;
   font-size: 18px;
-  color: #505870;
+  color: var(--dk-ink-2, #505870);
 }
 
 .card-stats {
@@ -15083,7 +15151,7 @@ button.hall-tile:hover {
   grid-template-columns: 1fr auto;
   gap: 2px 12px;
   padding-top: 6px;
-  border-top: 2px solid #d0d4e0;
+  border-top: 2px solid var(--dk-line, #d0d4e0);
 }
 
 .card-stats b {
@@ -15092,11 +15160,11 @@ button.hall-tile:hover {
 }
 
 .card-stats b.up {
-  color: #208838;
+  color: color-mix(in srgb, #208838 var(--dk-lift, 100%), #fff);
 }
 
 .card-stats s {
-  color: #8890a8;
+  color: var(--dk-ink-3, #8890a8);
 }
 
 .card-evo {
@@ -15105,9 +15173,9 @@ button.hall-tile:hover {
   align-items: center;
   gap: 4px;
   padding-top: 6px;
-  border-top: 2px solid #d0d4e0;
+  border-top: 2px solid var(--dk-line, #d0d4e0);
   font-size: 18px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .card-evo-label {
@@ -15118,7 +15186,7 @@ button.hall-tile:hover {
 
 .card-evo-label b {
   margin-left: 6px;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .card-req {
@@ -15136,8 +15204,8 @@ button.hall-tile:hover {
 }
 
 .card-req.met {
-  color: #206830;
-  background: #c8f0c8;
+  color: color-mix(in srgb, #206830 var(--dk-lift, 100%), #fff);
+  background: var(--dk-wash-green, #c8f0c8);
 }
 
 .card-req.met::after {
@@ -15146,8 +15214,8 @@ button.hall-tile:hover {
 }
 
 .card-req.to {
-  color: #a05800;
-  background: #f8e090;
+  color: color-mix(in srgb, #a05800 var(--dk-lift, 100%), #fff);
+  background: var(--dk-glow-gold, #f8e090);
 }
 
 .card-evo-to {
@@ -15170,10 +15238,10 @@ button.hall-tile:hover {
   gap: 6px;
   max-width: min(320px, calc(100 * var(--vw) - 24px));
   padding: 9px 14px 8px;
-  background: #f8f0d8;
+  background: var(--dk-wash-gold, #f8f0d8);
   border: 3px solid #5c3c20;
   box-shadow: inset 0 0 0 2px #b88850, 0 3px 0 #2c1c10;
-  color: #3c2414;
+  color: var(--dk-ink, #3c2414);
   pointer-events: none;
   animation: landmark-sign 3.4s steps(1) both;
 }
@@ -15192,7 +15260,7 @@ button.hall-tile:hover {
   font-family: var(--body);
   font-size: 18px;
   line-height: 1;
-  color: #7c5430;
+  color: color-mix(in srgb, #7c5430 var(--dk-lift, 100%), #fff);
 }
 
 @keyframes landmark-sign {
@@ -15246,7 +15314,7 @@ button.hall-tile:hover {
   bottom: -3px;
   width: 3px;
   margin-left: -1px;
-  background: #f8f0c8;
+  background: var(--dk-wash-gold, #f8f0c8);
   box-shadow: 0 0 0 1px #101018;
 }
 
@@ -15298,7 +15366,7 @@ button.hall-tile:hover {
 .toast-ultimate {
   font-family: var(--title);
   font-size: 14px;
-  color: #c82810;
+  color: color-mix(in srgb, #c82810 var(--dk-lift, 100%), #fff);
   letter-spacing: 0.06em;
 }
 
@@ -15360,7 +15428,7 @@ button.hall-tile:hover {
 
 .report-lead small {
   font-size: 17px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .report-reasons {
@@ -15382,7 +15450,7 @@ button.hall-tile:hover {
   gap: 10px;
   min-height: 44px;
   padding: 4px 8px;
-  border: 2px solid #c8d0e0;
+  border: 2px solid var(--dk-line, #c8d0e0);
   border-radius: 6px;
   cursor: pointer;
 }
@@ -15402,6 +15470,10 @@ button.hall-tile:hover {
   color-scheme: light;
 }
 
+[data-theme='dark'] .report-reason input {
+  color-scheme: dark;
+}
+
 .report-reason span {
   display: flex;
   flex-direction: column;
@@ -15413,12 +15485,12 @@ button.hall-tile:hover {
   font-family: var(--title);
   font-size: 9px;
   line-height: 1.6;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 .report-reason small {
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .report-form .field-area {
@@ -15564,13 +15636,13 @@ button.hall-tile:hover {
 
 .admin-report-head small {
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .admin-report-count {
   font-family: var(--title);
   font-size: 11px !important;
-  color: #c83030;
+  color: color-mix(in srgb, #c83030 var(--dk-lift, 100%), #fff);
 }
 
 .admin-report-line {
@@ -15583,16 +15655,16 @@ button.hall-tile:hover {
   list-style: none;
   display: grid;
   gap: 2px;
-  border-left: 3px solid #c8d0e0;
+  border-left: 3px solid var(--dk-line, #c8d0e0);
 }
 
 .admin-report-notes small {
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .admin-report-link {
   align-self: flex-start;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 /* ---------- Noite das Bruxas (ui/halloween.ts) ---------- */
@@ -15694,7 +15766,7 @@ button.hall-tile:hover {
 
 /* The event screen. */
 .dialog.halloween-dialog {
-  --paper: #fff6ea;
+  --paper: var(--dk-wash-gold, #fff6ea);
   --frame: #f07818;
   width: min(600px, 100%);
   max-height: 100%;
@@ -15717,7 +15789,7 @@ button.hall-tile:hover {
 }
 
 .halloween-head .dialog-title {
-  color: #5a1c70;
+  color: color-mix(in srgb, #5a1c70 var(--dk-lift, 100%), #fff);
 }
 
 .halloween-dates {
@@ -15732,13 +15804,13 @@ button.hall-tile:hover {
 .halloween-dates small {
   font-family: var(--title);
   font-size: 8px;
-  color: #706080;
+  color: var(--dk-ink-2, #706080);
 }
 
 .halloween-dates b {
   font-family: var(--title);
   font-size: 9px;
-  color: #c04808;
+  color: color-mix(in srgb, #c04808 var(--dk-lift, 100%), #fff);
 }
 
 .halloween-blurb {
@@ -15832,7 +15904,7 @@ button.hall-tile:hover {
 .halloween-jar-head small {
   margin-left: auto;
   font-size: 17px;
-  color: #706080;
+  color: var(--dk-ink-2, #706080);
 }
 
 .halloween-spend {
@@ -15841,7 +15913,7 @@ button.hall-tile:hover {
   gap: 8px;
   margin: 0;
   font-size: 17px;
-  color: #706080;
+  color: var(--dk-ink-2, #706080);
 }
 
 .halloween-spend img {
@@ -15873,7 +15945,7 @@ button.hall-tile:hover {
   padding: 6px;
   font-size: 16px;
   line-height: 1;
-  background: #f0e2f8;
+  background: var(--dk-surface-2, #f0e2f8);
   border: 2px solid #c8b0dc;
   border-radius: 4px;
 }
@@ -15889,26 +15961,26 @@ button.hall-tile:hover {
 .halloween-reward-at {
   font-family: var(--title);
   font-size: 7px;
-  color: #706080;
+  color: var(--dk-ink-2, #706080);
 }
 
 .halloween-reward.ready {
-  background: #fff0d0;
+  background: var(--dk-wash-gold, #fff0d0);
   border-color: #f08020;
   animation: halloween-glow 1.2s steps(2) infinite;
 }
 
 .halloween-reward.ready .halloween-reward-at {
-  color: #c04808;
+  color: color-mix(in srgb, #c04808 var(--dk-lift, 100%), #fff);
 }
 
 .halloween-reward.done {
-  background: #e4f4e0;
+  background: var(--dk-surface-2, #e4f4e0);
   border-color: #78b868;
 }
 
 .halloween-reward.done .halloween-reward-at {
-  color: #388030;
+  color: color-mix(in srgb, #388030 var(--dk-lift, 100%), #fff);
 }
 
 .halloween-reward.locked img {
@@ -15924,7 +15996,7 @@ button.hall-tile:hover {
 .halloween-section {
   font-family: var(--title);
   font-size: 8px;
-  color: #5a1c70;
+  color: color-mix(in srgb, #5a1c70 var(--dk-lift, 100%), #fff);
 }
 
 .halloween-calendar {
@@ -16083,7 +16155,7 @@ button.hall-tile:hover {
   place-items: center;
   font-family: var(--title);
   font-size: 12px;
-  color: #a080c8;
+  color: color-mix(in srgb, #a080c8 var(--dk-lift, 100%), #fff);
 }
 
 .halloween-ghost.hunted {
@@ -16139,7 +16211,7 @@ button.hall-tile:hover {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: #c04808;
+  color: color-mix(in srgb, #c04808 var(--dk-lift, 100%), #fff);
 }
 
 .result-treats b img {
@@ -16186,11 +16258,11 @@ button.hall-tile:hover {
     'pic pic'
     'sub sub';
   padding: 10px 12px;
-  background: #fff8e8;
+  background: var(--dk-surface-1, #fff8e8);
 }
 
 .shop-items.list .shop-card.loyalty.chosen {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
 }
 
 .shop-items.list .shop-card.loyalty .shop-pic {
@@ -16223,19 +16295,19 @@ button.hall-tile:hover {
   min-width: 0;
   font-family: var(--title);
   font-size: 7px;
-  color: #b0a080;
-  background: #f0e6cc;
+  color: var(--dk-ink-3, #b0a080);
+  background: var(--dk-wash-gold, #f0e6cc);
   border: 2px dashed #d8c8a0;
   border-radius: 50%;
 }
 
 .loyalty-cell.mark {
-  color: #c83030;
+  color: color-mix(in srgb, #c83030 var(--dk-lift, 100%), #fff);
   border-color: #e08070;
 }
 
 .loyalty-cell.on {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border: 2px solid #e8b0a0;
 }
 
@@ -16459,7 +16531,7 @@ button.hall-tile:hover {
 }
 
 .team-card.fainted .team-state {
-  color: #f87060;
+  color: color-mix(in srgb, #f87060 var(--dk-lift, 100%), #fff);
   animation: blink 0.9s steps(2, start) infinite;
 }
 
@@ -16578,7 +16650,7 @@ button.hall-tile:hover {
   flex-direction: column;
   gap: 6px;
   padding: 5px 6px 6px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 2px solid var(--slot);
   border-radius: 4px;
 }
@@ -16603,7 +16675,7 @@ button.hall-tile:hover {
 }
 
 .team-build-head .team-level {
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .team-build.big {
@@ -16670,7 +16742,7 @@ button.hall-tile:hover {
   align-items: center;
   gap: 4px;
   padding: 2px 6px 2px 2px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 2px solid var(--slot);
   border-radius: 4px;
   font-family: var(--title);
@@ -16694,16 +16766,16 @@ button.hall-tile:hover {
 }
 
 .team-chip-state {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .team-chip.done .team-chip-state,
 .team-chip.yes .team-chip-state {
-  color: #30a050;
+  color: color-mix(in srgb, #30a050 var(--dk-lift, 100%), #fff);
 }
 
 .team-chip.done {
-  background: #f8f8f8;
+  background: var(--dk-surface-1, #f8f8f8);
 }
 
 .team-bar {
@@ -16783,7 +16855,7 @@ button.hall-tile:hover {
   flex: none;
   font-size: 20px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .pick-clock-label b {
@@ -16791,7 +16863,7 @@ button.hall-tile:hover {
 }
 
 .pick-clock.urgent .pick-clock-label b {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .pick-clock.urgent .team-bar-fill {
@@ -16829,14 +16901,14 @@ button.hall-tile:hover {
 .spectate-text b {
   font-family: var(--title);
   font-size: 10px;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .spectate-text small {
   white-space: nowrap;
   font-size: 18px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .spectate-watch {
@@ -16878,12 +16950,12 @@ button.hall-tile:hover {
 }
 
 .team-chip.no .team-chip-state {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .btn.picked {
   border-color: #30a050;
-  background: #e8f8e8;
+  background: var(--dk-surface-2, #e8f8e8);
 }
 
 /* The co-op end screen: the team's numbers and a card per player. */
@@ -16911,7 +16983,7 @@ button.hall-tile:hover {
 .team-summary small {
   font-size: 17px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .team-summary b {
@@ -16944,7 +17016,7 @@ button.hall-tile:hover {
   flex-direction: column;
   gap: 6px;
   padding-bottom: 8px;
-  background: #e8e8f0;
+  background: var(--dk-surface-2, #e8e8f0);
   border: 3px solid var(--slot);
   border-radius: 6px;
   overflow: hidden;
@@ -16952,7 +17024,7 @@ button.hall-tile:hover {
 }
 
 .team-result.mine {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
 }
 
@@ -16965,7 +17037,7 @@ button.hall-tile:hover {
   background: var(--slot);
   font-family: var(--title);
   font-size: 7px;
-  color: #181820;
+  color: var(--dk-ink, #181820);
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -17023,7 +17095,7 @@ button.hall-tile:hover {
   flex: none;
   font-family: var(--title);
   font-size: 7px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .team-result-name {
@@ -17038,7 +17110,7 @@ button.hall-tile:hover {
 .team-share {
   height: 4px;
   margin: 0 8px;
-  background: #c8c8d8;
+  background: var(--dk-line, #c8c8d8);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -17065,7 +17137,7 @@ button.hall-tile:hover {
 }
 
 .team-stat span {
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .team-stat b {
@@ -17095,7 +17167,7 @@ button.hall-tile:hover {
 
 .team-move-bar {
   height: 5px;
-  background: #c8c8d8;
+  background: var(--dk-line, #c8c8d8);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -17127,14 +17199,14 @@ button.hall-tile:hover {
   white-space: nowrap;
   font-family: var(--title);
   font-size: 8px;
-  color: #a06800;
+  color: color-mix(in srgb, #a06800 var(--dk-lift, 100%), #fff);
 }
 
 .team-pay small {
   margin-right: auto;
   font-size: 16px;
   line-height: 1;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   white-space: nowrap;
 }
 
@@ -17154,7 +17226,7 @@ button.hall-tile:hover {
   align-items: center;
   gap: 6px;
   font-size: 18px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .team-split img {
@@ -17274,7 +17346,7 @@ button.hall-tile:hover {
 .pause-note {
   margin: -4px 0 0;
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   text-align: center;
 }
 
@@ -17282,7 +17354,7 @@ button.hall-tile:hover {
 .team-again {
   margin: 0;
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
   text-align: center;
 }
 
@@ -17310,7 +17382,7 @@ button.hall-tile:hover {
   font-style: normal;
   color: #fff;
   background: #4898e8;
-  border: 2px solid #fff;
+  border: 2px solid var(--dk-surface-0, #fff);
   border-radius: 6px;
 }
 
@@ -17389,7 +17461,7 @@ button.hall-tile:hover {
   margin: 0;
   text-align: center;
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .coop-join {
@@ -17464,13 +17536,13 @@ button.hall-tile:hover {
   gap: 8px;
   min-height: 60px;
   padding: 6px 8px;
-  background: #f0f0f8;
-  border: 3px solid var(--slot, #c8cce0);
+  background: var(--dk-surface-1, #f0f0f8);
+  border: 3px solid var(--slot, var(--dk-line, #c8cce0));
   border-radius: 6px;
 }
 
 .coop-seat.me {
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
 }
 
@@ -17483,13 +17555,13 @@ button.hall-tile:hover {
   justify-content: center;
   gap: 10px;
   border-style: dashed;
-  border-color: #c8cce0;
+  border-color: var(--dk-line, #c8cce0);
   background: transparent;
 }
 
 .coop-seat-empty {
   font-size: 18px;
-  color: #8890b0;
+  color: var(--dk-ink-3, #8890b0);
 }
 
 .coop-seat-portrait {
@@ -17545,26 +17617,26 @@ button.hall-tile:hover {
   font-family: var(--title);
   font-size: 7px;
   font-style: normal;
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .coop-seat-state {
   font-family: var(--title);
   font-size: 7px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .coop-seat-state.ready {
-  color: #289048;
+  color: color-mix(in srgb, #289048 var(--dk-lift, 100%), #fff);
 }
 
 .coop-seat-state.host {
-  color: #b07800;
+  color: color-mix(in srgb, #b07800 var(--dk-lift, 100%), #fff);
 }
 
 .coop-seat-state.offline,
 .coop-seat-state.away {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .coop-kick {
@@ -17597,7 +17669,7 @@ button.hall-tile:hover {
   align-items: center;
   gap: 8px;
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .coop-rules {
@@ -17609,11 +17681,11 @@ button.hall-tile:hover {
   text-align: center;
   font-size: 18px;
   line-height: 1.1;
-  color: #2a5aa8;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
 }
 
 .coop-wait.error {
-  color: #e83838;
+  color: color-mix(in srgb, #e83838 var(--dk-lift, 100%), #fff);
 }
 
 .coop-buttons .btn {
@@ -17733,7 +17805,7 @@ button.hall-tile:hover {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 8px;
-  background: #f0f0f8;
+  background: var(--dk-surface-1, #f0f0f8);
   border-radius: 6px;
 }
 
@@ -17757,7 +17829,7 @@ button.hall-tile:hover {
 
 .friend-handle {
   font-size: 16px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .friend-actions {
@@ -17769,7 +17841,7 @@ button.hall-tile:hover {
 .friend-presence {
   font-family: var(--title);
   font-size: 7px;
-  color: #6878a8;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
 .friend-presence::before {
@@ -17783,15 +17855,15 @@ button.hall-tile:hover {
 }
 
 .friend-presence.lobby {
-  color: #289048;
+  color: color-mix(in srgb, #289048 var(--dk-lift, 100%), #fff);
 }
 
 .friend-presence.room {
-  color: #2a7ad8;
+  color: color-mix(in srgb, #2a7ad8 var(--dk-lift, 100%), #fff);
 }
 
 .friend-presence.run {
-  color: #c07800;
+  color: color-mix(in srgb, #c07800 var(--dk-lift, 100%), #fff);
 }
 
 .friend-presence.offline {
@@ -17808,7 +17880,7 @@ button.hall-tile:hover {
   margin: 8px 0 0;
   font-family: var(--title);
   font-size: 8px;
-  color: #c04890;
+  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
 }
 
 /* A friend's invite: top center, over the menus (never over a run). */

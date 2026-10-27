@@ -60,20 +60,23 @@ export const backButton = (onBack: () => void) =>
     h('span', { class: 'key-hint' }, 'ESC'),
   )
 
-/** Square 44 px button with a pixel icon (`gearIcon`, `helpIcon`…) and an optional key hint. */
-export const iconButton = (icon: string, label: string, onClick: () => void, key?: string) =>
+/**
+ * Square 44 px button with a pixel icon (`gearIcon`, `newsIcon`…) and an optional key hint. `ink` marks a
+ * one-color ink icon (the gear, the `?`), which the dark theme draws light.
+ */
+export const iconButton = (icon: string, label: string, onClick: () => void, key?: string, ink = false) =>
   h(
     'button',
     { class: 'shell-btn shell-icon box', type: 'button', 'aria-label': label, title: label, onclick: onClick },
-    h('img', { src: icon, alt: '' }),
+    h('img', { src: icon, alt: '', class: ink ? 'ink-icon' : undefined }),
     key ? h('span', { class: 'key-hint' }, key) : null,
   )
 
 /** The gear: opens Settings. */
-export const gearButton = (onClick: () => void, key?: string) => iconButton(gearIcon(), t().shell.settings, onClick, key)
+export const gearButton = (onClick: () => void, key?: string) => iconButton(gearIcon(), t().shell.settings, onClick, key, true)
 
 /** The `?`: opens how to play (or a screen's own help). */
-export const helpButton = (onClick: () => void) => iconButton(helpIcon(), t().shell.help, onClick)
+export const helpButton = (onClick: () => void) => iconButton(helpIcon(), t().shell.help, onClick, undefined, true)
 
 /**
  * The ₽ chip: the save's wallet. Display only, unless `open` makes it a

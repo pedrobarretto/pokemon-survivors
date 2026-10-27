@@ -3,7 +3,7 @@ import type { Input } from '../engine/input'
 import { blitEllipse, context2d } from '../engine/pixelart'
 import { HATCHLING_IDS, HATCHLINGS } from '../data/hatchlings'
 import { INCUBATOR } from '../data/shop'
-import { EGG_TIERS, EGGS, incubatorSlots, isReady, MAX_SLOTS, stepsToWalk, type Egg, type Hatch } from '../game/eggs'
+import { EGG_TIERS, EGGS, guaranteedNew, incubatorSlots, isReady, MAX_SLOTS, pityShown, stepsToWalk, type Egg, type Hatch } from '../game/eggs'
 import { quickBlock, quickCount } from '../game/incubator'
 import type { Save } from '../game/meta'
 import { eggCrack, eggIcon, eggSprite, incubatorIcon, SPARKLE } from '../render/art'
@@ -14,8 +14,12 @@ import { loadSave } from './save'
 import { settings } from './settings'
 import { confirmDialog, hint, menu, type Screen } from './screens'
 
-/** One incubator slot: the egg, its tier, a progress bar and the steps left to walk (or "Ready!"); a quick one wears its ×2. */
-const slotView = (egg: Egg | undefined) => {
+/**
+ * One incubator slot: the egg, its tier, a progress bar and the steps left to
+ * walk (or "Ready!"); a quick one wears its ×2, and one the egg pity makes
+ * sure to bring a new family its NEW!.
+ */
+const slotView = (egg: Egg | undefined, save: Save) => {
   const m = t().eggs
   if (!egg) return h('button', { class: 'egg-slot empty' }, h('span', { class: 'egg-hole' }), h('b', {}, m.empty))
   const ready = isReady(egg)
@@ -24,6 +28,7 @@ const slotView = (egg: Egg | undefined) => {
     'button',
     { class: ['egg-slot', ready && 'ready', egg.quick && !ready && 'quick'].filter(Boolean).join(' ') },
     egg.quick && !ready && h('i', { class: 'egg-quick' }, m.quick.badge),
+    guaranteedNew(egg.tier, save.hatched, save.eggPity) && h('i', { class: 'egg-new' }, t().new),
     h('img', { class: 'egg-art', src: eggIcon(egg.tier), alt: '' }),
     h('b', {}, m.tiers[egg.tier]),
     h('span', { class: 'egg-bar' }, h('i', { style: `width:${Math.round(progress * 100)}%` })),
@@ -56,18 +61,19 @@ const slotNote = (save: Save, i: number): string | null => {
 
 /**
  * The incubator: its slots with the steps each egg still needs (the shop's
- * extra slots locked until bought), the Quick Incubators owned and the
- * collection count. Picking a ready egg calls `onHatch` with its index; a
+ * extra slots locked until bought), the Quick Incubators owned, the
+ * collection count and the egg pity's rule and counts. Picking a ready egg calls `onHatch` with its index; a
  * walking one asks to put a Quick Incubator on it, then calls `onQuick`.
  */
 export const incubator = (root: HTMLElement, input: Input, actions: { onHatch: (index: number) => void; onQuick: (index: number) => void; onClose: () => void }): Screen => {
   const m = t().eggs
   const save = loadSave()
   const owned = incubatorSlots(save)
-  const slots = Array.from({ length: MAX_SLOTS }, (_, i) => (i < owned ? slotView(save.eggs[i]) : lockedView(i)))
+  const slots = Array.from({ length: MAX_SLOTS }, (_, i) => (i < owned ? slotView(save.eggs[i], save) : lockedView(i)))
   const back = h('button', { class: 'btn' }, m.back)
   const collection = HATCHLING_IDS.filter((id) => save.hatched[id]).length
   const note = h('p', { class: 'incubator-note' }, h('b', {}, m.collection(collection, HATCHLING_IDS.length)), ' · ', m.quick.owned(quickCount(save.incubator)), ' · ', m.sources)
+  const pity = [m.pity.rule(EGGS.pity), ...pityShown(save).map(([tier, n]) => m.pity.count(m.tiers[tier], n, EGGS.pity))].join(' · ')
   const close = () => later(actions.onClose)
   const first = save.eggs.findIndex(isReady)
   let confirm: Screen | null = null
@@ -112,6 +118,7 @@ export const incubator = (root: HTMLElement, input: Input, actions: { onHatch: (
       h('p', { class: 'incubator-intro' }, m.intro),
       h('div', { class: `egg-slots slots-${MAX_SLOTS}` }, ...slots),
       note,
+      h('p', { class: 'incubator-note incubator-pity' }, rich(pity)),
       h('div', { class: 'buttons' }, back),
       hint(m.hint, m.touchHint),
     ),
@@ -175,7 +182,8 @@ export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, action
     start = Math.min(start, performance.now() / 1000 - HATCH.reveal)
     playSfx(hatch.shiny ? 'shiny' : 'evolve')
     playCry(cryUrl(dex), 0.5)
-    const note = hatch.duplicate ? m.duplicate(name, formatPokeDollars(hatch.refund)) : hatch.shiny ? m.shinyUnlocked : m.unlocked
+    const unlocked = hatch.duplicate ? m.duplicate(name, formatPokeDollars(hatch.refund)) : hatch.shiny ? m.shinyUnlocked : m.unlocked
+    const note = hatch.guaranteed ? `${m.pity.hatched(EGGS.pity)} ${unlocked}` : unlocked
     text.replaceChildren(rich(hatch.shiny ? m.hatchedShiny(name) : m.hatched(name)), h('small', {}, note))
     const play = h('button', { class: 'btn' }, m.play(name))
     const ok = h('button', { class: 'btn' }, m.ok)

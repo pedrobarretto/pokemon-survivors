@@ -5,7 +5,7 @@ import { NO_ACHIEVEMENTS, parseAchievements, parseGiftTitles, parseTitle, record
 import { addClear, mergeClears, parseClears, pastClears, type Clears } from './clears'
 import { EMPTY_DEX, parseDex, type Pokedex } from './dex'
 import { DEFAULT_DIFFICULTY, parseDifficulty, type Difficulty } from './difficulty'
-import { EGG_TIERS, EGGS, grantEgg, incubatorSlots, parseEggs, parseHatched, type Egg, type EggTier, type Hatched } from './eggs'
+import { EGG_TIERS, EGGS, grantEgg, incubatorSlots, parseEggPity, parseEggs, parseHatched, type Egg, type EggPity, type EggTier, type Hatched } from './eggs'
 import { NO_INCUBATOR, parseIncubator, type IncubatorSave } from './incubator'
 import { ENDLESS, overtime } from './endless'
 import { parseClaimedGifts } from './gifts'
@@ -122,6 +122,8 @@ export type Save = {
   incubator: IncubatorSave
   /** Families unlocked from eggs (`game/eggs.ts`). */
   hatched: Hatched
+  /** The egg pity (`game/eggs.ts`): eggs of each kind hatched in a row with no new family. */
+  eggPity: EggPity
   /** Daily and weekly mission progress (`game/missions.ts`). */
   missions: MissionsSave
   /** Unlocked achievements and lifetime records (`game/achievements.ts`). */
@@ -198,6 +200,7 @@ export const EMPTY_SAVE: Save = {
   eggs: [],
   incubator: NO_INCUBATOR,
   hatched: {},
+  eggPity: {},
   missions: NO_MISSIONS,
   achievements: NO_ACHIEVEMENTS,
   title: null,
@@ -270,6 +273,7 @@ export const parseSaveData = (json: unknown): Save => {
     eggs: parseEggs(data.eggs, incubatorSlots({ incubator })),
     incubator,
     hatched: parseHatched(data.hatched),
+    eggPity: parseEggPity(data.eggPity),
     missions: parseMissions(data.missions),
     achievements,
     title: parseTitle(data.title, achievements.unlocked, titles),

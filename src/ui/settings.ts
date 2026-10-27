@@ -9,6 +9,7 @@ import { openControls } from './controls'
 import { h, later } from './dom'
 import { DAMAGE_NUMBERS } from '../render/damageNumbers'
 import { FLASH_MODES } from '../render/flashes'
+import { FOG_MODES } from '../render/weather'
 import { RUN_TOASTS } from './toastQueue'
 import { loadSettings, MIN_ATTACK_OPACITY, MINIMAP_MODES, writeSettings, type Settings } from './save'
 import { coopUrl } from '../coopShell'
@@ -16,6 +17,7 @@ import { hint, menu, type Screen } from './screens'
 import { backButton, shellBody, tabStrip, topBar, segmented } from './shell'
 import { REPO_URL, ROUTES, SOCIAL_IDS, SOCIALS } from '../site/routes'
 import { applyUiScale, maxUiZoom, UI_SCALES, uiZoom, type UiScale } from './uiScale'
+import { applyTheme, THEMES } from './theme'
 import { safeModeOn, setSafeMode } from '../safeMode'
 import { currentInstallOffer, installHelpScreen, onInstallChange, promptInstall } from './install'
 
@@ -26,7 +28,7 @@ import { currentInstallOffer, installHelpScreen, onInstallChange, promptInstall 
  * HUD's CSS (the status box moves off the fixed stick), `data-hand`,
  * `data-stick-height` and `data-stick-edge` (the touch buttons' side and the
  * fixed stick's place), `data-flashes` (reduced hides the shell's white screen
- * flash), and the UI size.
+ * flash), the theme (`data-theme`) and the UI size.
  */
 const apply = (s: Settings) => {
   setMix(s)
@@ -36,6 +38,7 @@ const apply = (s: Settings) => {
   root.stickHeight = s.stickHeight
   root.stickEdge = s.stickEdge
   root.flashes = s.flashes
+  applyTheme(s.theme)
   applyUiScale(s.uiScale)
 }
 
@@ -219,7 +222,7 @@ let lastTab: Tab = 'sound'
 
 /**
  * Settings in four tabs: Som (music and effects volume, mute), Jogo
- * (language, damage numbers, screen shake, flashes, run alerts, the mini map, move opacity, UI size, safe mode), Controles
+ * (language, theme, damage numbers, screen shake, flashes, fog, run alerts, the mini map, move opacity, UI size, safe mode), Controles
  * (touch joystick, the buttons' side and the fixed stick's place on touchscreens, and the remap screen) and Sobre
  * (installing the app, what the game is, legal and
  * credits, GitHub, the official profiles, and the bug report form when there's an API to send it to).
@@ -273,9 +276,11 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
       case 'game':
         return [
           languageRow(pickLanguage),
+          choiceRow(m.theme, 'theme', THEMES, (mode) => m.themes[mode]),
           choiceRow(m.damageNumbers, 'damageNumbers', DAMAGE_NUMBERS, (mode) => m.damageModes[mode]),
           toggle(m.screenShake, (s) => s.screenShake, (on) => ({ screenShake: on })),
           choiceRow(m.flashes, 'flashes', FLASH_MODES, (mode) => m.flashModes[mode]),
+          choiceRow(m.fog, 'fog', FOG_MODES, (mode) => m.fogModes[mode]),
           choiceRow(m.runToasts, 'runToasts', RUN_TOASTS, (mode) => m.runToastModes[mode]),
           choiceRow(m.minimap, 'minimap', MINIMAP_MODES, (mode) => m.minimapModes[mode]),
           slider(m.attackOpacity, 'attackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS),

@@ -11,7 +11,7 @@ import { mergeCaps, mergeEvoItems } from './evoItems'
 import { mergeCaravan } from './caravan'
 import { mergeStyle } from './style'
 import { mergeDex } from './dex'
-import { incubatorSlots, mergeEggs, mergeHatched } from './eggs'
+import { incubatorSlots, mergeEggPity, mergeEggs, mergeHatched } from './eggs'
 import { mergeIncubator, slotsInvested } from './incubator'
 import { SAVE_VERSION, totalSpent, UPGRADE_IDS, type Ranks, type Save, type UpgradeId } from './meta'
 import { mergeMissions } from './missions'
@@ -44,6 +44,7 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  *   unions; the incubator keeps the most eggs of each tier (`mergeEggs`), up
  *   to the merged slots. Its upgrades: the most slots bought, and the Quick
  *   Incubators' got and used counters at the larger side (`mergeIncubator`).
+ *   The egg pity: each kind's count at the larger side (`mergeEggPity`).
  * - Upgrades, records, counters and mission progress keep the larger value
  *   (missions of an older day or week give way to the current ones).
  * - ₽: the larger fortune (wallet plus upgrades, the shop's level, the
@@ -91,6 +92,7 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     eggs: mergeEggs(base.eggs, incoming.eggs, incubatorSlots({ incubator })),
     incubator,
     hatched: mergeHatched(base.hatched, incoming.hatched),
+    eggPity: mergeEggPity(base.eggPity, incoming.eggPity),
     missions: mergeMissions(base.missions, incoming.missions),
     achievements: mergeAchievements(base.achievements, incoming.achievements),
     title: incoming.title ?? base.title,

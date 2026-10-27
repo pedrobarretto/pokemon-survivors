@@ -197,7 +197,7 @@ const shinyHatch = (save: Save, id: HatchlingId): { save: Save; hatch: Hatch } =
       wallet: save.wallet + refund,
       dex: markHatch(save.dex, HATCHLINGS[id].line.map((stage) => stage.dex), true),
     },
-    hatch: { id, tier, shiny: true, duplicate, refund },
+    hatch: { id, tier, shiny: true, duplicate, refund, guaranteed: false },
   }
 }
 

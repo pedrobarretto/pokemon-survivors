@@ -12,8 +12,10 @@ import type { RunSummary } from '../game/tally'
 import { BUTTON_SIDES, STICK_EDGES, STICK_HEIGHTS, STICK_MODES, type ButtonSide, type StickEdge, type StickHeight, type StickMode } from '../engine/input'
 import { DAMAGE_NUMBERS, type DamageNumbers } from '../render/damageNumbers'
 import { FLASH_MODES, type Flashes } from '../render/flashes'
+import { FOG_MODES, type FogMode } from '../render/weather'
 import { RUN_TOASTS, type RunToasts } from './toastQueue'
 import { DEFAULT_BINDINGS, parseBindings, type Bindings } from '../engine/bindings'
+import { THEMES, type Theme } from './theme'
 import { UI_SCALES, type UiScale } from './uiScale'
 
 const KEY = 'ps:save'
@@ -176,6 +178,8 @@ export type Settings = {
   screenShake: boolean
   /** `reduced` drops white screen flashes, white hit flashes and fast flicker (`render/flashes.ts`). */
   flashes: Flashes
+  /** How thick the fog weather draws (`render/weather.ts`): as designed, light (a wider clear circle, a thinner veil) or off (just a haze). */
+  fog: FogMode
   /** How opaque your moves draw, 0.1 to 1 (`render/attackLayers.ts`): lower to see the foes and their attacks through a full build. */
   attackOpacity: number
   /** The same for teammates' moves in co-op. */
@@ -195,6 +199,8 @@ export type Settings = {
   uiScale: UiScale
   /** The HUD's mini map (`render/minimap.ts`): square, round or off. */
   minimap: MinimapMode
+  /** Menus and HUD colors (`ui/theme.ts`). Per device: a phone may follow its own dark mode. */
+  theme: Theme
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -204,6 +210,7 @@ export const DEFAULT_SETTINGS: Settings = {
   damageNumbers: 'reduced',
   screenShake: true,
   flashes: 'normal',
+  fog: 'light',
   attackOpacity: 1,
   teamAttackOpacity: 0.6,
   runToasts: 'all',
@@ -214,6 +221,7 @@ export const DEFAULT_SETTINGS: Settings = {
   stickEdge: 'near',
   uiScale: 'auto',
   minimap: 'square',
+  theme: 'system',
 }
 
 const volume = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback)
@@ -241,6 +249,7 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     damageNumbers: damageMode(data.damageNumbers, defaults.damageNumbers),
     screenShake: flag(data.screenShake, defaults.screenShake),
     flashes: FLASH_MODES.find((m) => m === data.flashes) ?? defaults.flashes,
+    fog: FOG_MODES.find((m) => m === data.fog) ?? defaults.fog,
     attackOpacity: opacity(data.attackOpacity, defaults.attackOpacity),
     teamAttackOpacity: opacity(data.teamAttackOpacity, defaults.teamAttackOpacity),
     runToasts: RUN_TOASTS.find((m) => m === data.runToasts) ?? defaults.runToasts,
@@ -251,6 +260,7 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     stickEdge: STICK_EDGES.find((m) => m === data.stickEdge) ?? defaults.stickEdge,
     uiScale: UI_SCALES.find((s) => s === data.uiScale) ?? defaults.uiScale,
     minimap: MINIMAP_MODES.find((m) => m === data.minimap) ?? defaults.minimap,
+    theme: THEMES.find((m) => m === data.theme) ?? defaults.theme,
   }
 }
 

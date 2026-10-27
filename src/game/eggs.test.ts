@@ -13,10 +13,13 @@ import {
   EGG_TIERS,
   EGGS,
   grantEgg,
+  guaranteedNew,
   hatchEgg,
   hatchOdds,
   hatchPool,
   isUnlocked,
+  mergeEggPity,
+  parseEggPity,
   parseEggs,
   parseHatched,
   rollEgg,
@@ -127,6 +130,38 @@ describe('hatching', () => {
     expect(pool.find(([id]) => id === 'eevee')?.[1]).toBe(EGGS.newWeight)
   })
 
+  describe('egg pity', () => {
+    const common = HATCHLING_IDS.filter((id) => HATCHLINGS[id].egg === 'common')
+    const [last, ...rest] = common
+    const allBut = Object.fromEntries(rest.map((id) => [id, { shiny: false }]))
+
+    it('makes the egg after EGGS.pity of a kind with no new family a new one', () => {
+      expect(guaranteedNew('common', allBut, { common: EGGS.pity - 1 })).toBe(false)
+      expect(hatchPool('common', allBut, { common: EGGS.pity })).toEqual([[last, EGGS.newWeight]])
+      for (let seed = 0; seed < 50; seed++) {
+        const { save, hatch } = hatchEgg(withEggs([ready('common')], { hatched: allBut, eggPity: { common: EGGS.pity } }), 0, createRng(seed))!
+        expect(hatch).toMatchObject({ id: last, duplicate: false, guaranteed: true })
+        expect(save.eggPity.common).toBe(0)
+      }
+    })
+
+    it('counts duplicates by pool, back to 0 on a new family, only while one is left', () => {
+      const pity = new Set(
+        Array.from({ length: 100 }, (_, seed) => {
+          const { save, hatch } = hatchEgg(withEggs([ready('common')], { hatched: allBut, eggPity: { common: 2 } }), 0, createRng(seed))!
+          return `${hatch.id === last} ${save.eggPity.common}`
+        }),
+      )
+      expect(pity).toEqual(new Set(['true 0', 'false 3']))
+      // Every common family owned: nothing new to guarantee, so no count.
+      const owned = Object.fromEntries(common.map((id) => [id, { shiny: true }]))
+      expect(hatchEgg(withEggs([ready('common')], { hatched: owned, eggPity: { common: 2 } }), 0, createRng(1))!.save.eggPity.common).toBe(2)
+      // The Kecleon Egg's shiny twin counts in the Kecleon pool.
+      const kecleon = HATCHLING_IDS.filter((id) => HATCHLINGS[id].egg === 'kecleon')
+      expect(guaranteedNew('kecleonShiny', Object.fromEntries(kecleon.slice(1).map((id) => [id, { shiny: false }])), { kecleon: EGGS.pity })).toBe(true)
+    })
+  })
+
   it('hatches the Haunted Egg’s four ghosts at even odds, owned or not, and only from it', () => {
     const haunted = HATCHLING_IDS.filter((id) => HATCHLINGS[id].egg === 'haunted')
     expect(haunted).toEqual(['litwick', 'phantump', 'drifloon', 'sandygast'])
@@ -172,6 +207,12 @@ describe('save fields', () => {
     const eggs = parseEggs([{ tier: 'common', steps: 99999 }, { tier: 'golden' }, { tier: 'rare', steps: -4 }, { tier: 'rare' }, { tier: 'ultra' }], EGGS.slots)
     expect(eggs).toEqual([{ tier: 'common', steps: 2000 }, { tier: 'rare', steps: 0 }, { tier: 'rare', steps: 0 }])
     expect(parseHatched({ eevee: { shiny: true }, missingno: {}, pichu: 3 })).toEqual({ eevee: { shiny: true } })
+  })
+
+  it('merge the egg pity at the longer drought and parse it to whole counts up to EGGS.pity', () => {
+    expect(mergeEggPity({ common: 2, rare: 4 }, { common: 3 })).toEqual({ common: 3, rare: 4 })
+    expect(parseEggPity({ common: 99, rare: -1, ultra: 2.7, golden: 3 })).toEqual({ common: EGGS.pity, ultra: 2 })
+    expect(parseEggPity('nope')).toEqual({})
   })
 })
 

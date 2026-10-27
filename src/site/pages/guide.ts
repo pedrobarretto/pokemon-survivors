@@ -526,7 +526,7 @@ const eggs = (locale: Locale, m: SiteMessages) => {
     quick: `₽${num(INCUBATOR.quick.price)}`,
     speed: INCUBATOR.quick.speed,
   })
-  const texts = e.paragraphs(STARTER_IDS.length, HATCHLING_IDS.length, EGGS.slots, EGGS.perRun, EGGS.stepPx, Math.round(1 / EGGS.shinyOdds), EGGS.newWeight)
+  const texts = e.paragraphs(STARTER_IDS.length, HATCHLING_IDS.length, EGGS.slots, EGGS.perRun, EGGS.stepPx, Math.round(1 / EGGS.shinyOdds), EGGS.newWeight, EGGS.pity)
   // The incubator's upgrades right after the paragraph about its slots.
   return html`${paragraphs([...texts.slice(0, 2), upgrades, ...texts.slice(2)])}
     ${table([e.sourceHead, e.chanceHead, e.oddsHead], sourceRows)}

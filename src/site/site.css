@@ -34,6 +34,26 @@
   color-scheme: dark;
 }
 
+/*
+ * Dark theme: the game's (Settings → Jogo → Tema, saved in ps:settings), set on <html> by the head's script
+ * (site/layout.ts). The page is dark already; the paper cards turn dark too. Same roles as the game's style.css
+ * (see its dark theme note): a color that changes carries its dark role with the light color as the fallback.
+ */
+:root[data-theme='dark'] {
+  --dk-surface-0: #1d2133;
+  --dk-surface-1: #232840;
+  --dk-surface-2: #2d334f;
+  --dk-line: #4a5276;
+  --dk-wash-red: #47283a;
+  --dk-wash-gold: #3e3624;
+  --dk-wash-blue: #243458;
+  --dk-lift: 58%;
+  --paper: #232840;
+  --paper-2: #2d334f;
+  --ink: #eceef8;
+  --muted: #b8bed6;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -67,7 +87,7 @@ a {
 }
 
 .box a {
-  color: var(--blue);
+  color: color-mix(in srgb, var(--blue) var(--dk-lift, 100%), #fff);
 }
 
 a:focus-visible,
@@ -381,7 +401,7 @@ h3 {
 }
 
 .shiny-all input:checked + span {
-  background: #fff4b0;
+  background: var(--dk-wash-gold, #fff4b0);
   border-color: #e0a800;
 }
 
@@ -490,8 +510,8 @@ h3 {
 }
 
 .role-boss .role {
-  background: #f8d0c8;
-  color: #902818;
+  background: var(--dk-wash-red, #f8d0c8);
+  color: color-mix(in srgb, #902818 var(--dk-lift, 100%), #fff);
 }
 
 .role-legendary .role {
@@ -521,7 +541,7 @@ h3 {
 
 .role-boss .card-art,
 .role-legendary .card-art {
-  background: linear-gradient(#c8d0f0, #a8b0e0);
+  background: linear-gradient(var(--dk-wash-blue, #c8d0f0), #a8b0e0);
   box-shadow: inset 0 0 0 3px #7880c0;
 }
 
@@ -592,7 +612,7 @@ h3 {
 }
 
 .shiny-btn[aria-pressed='true'] {
-  background: #fff4b0;
+  background: var(--dk-wash-gold, #fff4b0);
   border-color: #e0a800;
   color: #e0a800;
 }
@@ -615,9 +635,9 @@ h3 {
 .dex-card h3 {
   margin: 14px 0 6px;
   padding-bottom: 4px;
-  border-bottom: 2px solid #d8d8e8;
+  border-bottom: 2px solid var(--dk-line, #d8d8e8);
   font-size: 9px;
-  color: var(--frame);
+  color: color-mix(in srgb, var(--frame) var(--dk-lift, 100%), #fff);
 }
 
 .dex-card p {
@@ -649,8 +669,8 @@ h3 {
 
 .bar {
   height: 10px;
-  background: #e0e0ea;
-  box-shadow: inset 0 0 0 1px #b8b8c8;
+  background: var(--dk-surface-2, #e0e0ea);
+  box-shadow: inset 0 0 0 1px var(--dk-line, #b8b8c8);
 }
 
 .bar i {
@@ -672,7 +692,7 @@ h3 {
   justify-content: space-between;
   gap: 6px;
   padding: 2px 6px;
-  background: #eeeef4;
+  background: var(--dk-surface-1, #eeeef4);
 }
 
 .facts dd {
@@ -707,7 +727,7 @@ h3 {
 }
 
 .evo a[aria-current='true'] {
-  background: #fff4b0;
+  background: var(--dk-wash-gold, #fff4b0);
 }
 
 /* "Lv 12" over "▶", like the game's inspect panel. */
@@ -735,7 +755,7 @@ h3 {
 .chips li {
   padding: 1px 6px;
   border-left: 5px solid var(--type);
-  background: #eeeef4;
+  background: var(--dk-surface-1, #eeeef4);
   font-size: 19px;
 }
 
@@ -830,7 +850,7 @@ h3 {
 .doc-section h3 {
   margin: 18px 0 8px;
   font-size: 10px;
-  color: var(--frame);
+  color: color-mix(in srgb, var(--frame) var(--dk-lift, 100%), #fff);
 }
 
 .doc-section p {
@@ -873,7 +893,7 @@ thead th {
 }
 
 tbody tr:nth-child(even) {
-  background: #eeeef4;
+  background: var(--dk-surface-1, #eeeef4);
 }
 
 tbody th {
@@ -946,7 +966,7 @@ td small {
   width: fit-content;
   font-family: var(--title);
   font-size: 10px;
-  color: var(--blue);
+  color: color-mix(in srgb, var(--blue) var(--dk-lift, 100%), #fff);
   cursor: pointer;
 }
 
@@ -1014,7 +1034,7 @@ td small {
   display: none;
   font-family: var(--title);
   font-size: 8px;
-  color: var(--blue);
+  color: color-mix(in srgb, var(--blue) var(--dk-lift, 100%), #fff);
 }
 
 .donate-way.is-guess .donate-guess {
@@ -1046,7 +1066,7 @@ td small {
   padding: 4px 8px;
   border: 3px solid var(--line);
   border-radius: 6px;
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   color: var(--ink);
   font-family: var(--body);
   font-size: 22px;
@@ -1093,7 +1113,7 @@ html:not(.js) #donate-account {
   font-size: clamp(13px, 3vw, 18px);
   letter-spacing: 2px;
   color: var(--ink);
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border: 3px solid var(--line);
   border-radius: 6px;
 }
@@ -1132,7 +1152,7 @@ html:not(.js) #donate-account {
   align-items: center;
   gap: 4px;
   padding: 0 8px;
-  background: #fff;
+  background: var(--dk-surface-0, #fff);
   border: 3px solid var(--line);
   border-radius: 6px;
 }
@@ -1158,7 +1178,7 @@ html:not(.js) #donate-account {
 .donate-handle-status {
   min-height: 1.2em;
   margin: 8px 0;
-  color: var(--blue);
+  color: color-mix(in srgb, var(--blue) var(--dk-lift, 100%), #fff);
 }
 
 .donate-handle-status.error {
@@ -1184,15 +1204,15 @@ html:not(.js) #donate-account {
 }
 
 .donate-wall-names li {
-  color: #a02858;
+  color: color-mix(in srgb, #a02858 var(--dk-lift, 100%), #fff);
 }
 
 .donate-wall-names li.gold {
-  color: #a87808;
+  color: color-mix(in srgb, #a87808 var(--dk-lift, 100%), #fff);
 }
 
 .donate-wall-names li.diamond {
-  color: #2870c0;
+  color: color-mix(in srgb, #2870c0 var(--dk-lift, 100%), #fff);
 }
 
 /* ---------- Tier list ---------- */
@@ -1599,7 +1619,7 @@ html:not(.js) #donate-account {
 
 .nf-mean b {
   font-weight: normal;
-  color: var(--blue);
+  color: color-mix(in srgb, var(--blue) var(--dk-lift, 100%), #fff);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -1635,7 +1655,7 @@ html:not(.js) #donate-account {
   margin-bottom: 6px;
   font-family: var(--title);
   font-size: 10px;
-  color: var(--blue);
+  color: color-mix(in srgb, var(--blue) var(--dk-lift, 100%), #fff);
 }
 
 @media (max-width: 600px) {

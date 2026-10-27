@@ -2862,7 +2862,7 @@ const hasIdle = 'requestIdleCallback' in window
 const pumpWarmUp = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => {
   // Menus and level-ups are calm (an evolution isn't: it plays on the canvas): what no frame waits on yet (other biomes) is built there.
   const calm = !run || (run.game.phase !== 'playing' && run.game.phase !== 'evolving')
-  const warm = () => warmScenery(run?.game ?? null, calm) || warmIcon()
+  const warm = () => warmScenery(run?.game ?? null, calm, settings().fog) || warmIcon()
   let made = false
   // A build that throws (reported as any error) must not stop the warm-up for the rest of the session.
   try {
@@ -3203,9 +3203,16 @@ const devEggs = {
     const save = loadSave()
     writeSave({ ...save, hatched: { ...save.hatched, [id]: { shiny } } })
     endRun()
-    showHatch({ id, tier: HATCHLINGS[id].egg, shiny, duplicate: false, refund: 0 }, () => showMenu(id), holdAt)
+    showHatch({ id, tier: HATCHLINGS[id].egg, shiny, duplicate: false, refund: 0, guaranteed: false }, () => showMenu(id), holdAt)
   },
   incubator: () => showIncubator(() => showMenu()),
+  /** Sets the egg pity of a kind of egg, one short of the guarantee by default (at `EGGS.pity`, its next hatch is a new family). */
+  pity: (tier: EggTier = 'common', n = EGGS.pity - 1) => {
+    const save = loadSave()
+    const eggPity = { ...save.eggPity, [tier]: n }
+    writeSave({ ...save, eggPity })
+    return eggPity
+  },
   /** Unlocks the shiny of a Pokémon (every one without an argument), as if its 1/64 roll hit. */
   unlockShiny: (id?: PlayableId) => {
     const save = loadSave()

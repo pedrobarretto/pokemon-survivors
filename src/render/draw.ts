@@ -58,7 +58,7 @@ import { drawHeatAura, drawIronDefense, drawLegendary2Air, drawLegendary2Ground 
 import { drawSignatureAttack, drawSignatureGround, drawSignaturePlayer } from './signatureFx'
 import { drawTraitAir, drawTraitGround, traitLift, traitTint } from './traits'
 import { bolt, dashedRing } from './strokes'
-import { dropFog, drawWeather, warmFog } from './weather'
+import { dropFog, drawWeather, warmFog, type FogMode } from './weather'
 import { drawHauntedNight, drawTreat } from './halloweenArt'
 import { drawSolid, drawTerrainGround, drawWading, keepTerrain, solidCovers, solidsInView, warmTerrain } from './terrain'
 import { drawGround, GROUND_LOOKAHEAD, warmGround } from './world'
@@ -754,12 +754,12 @@ const BIOME_WARMUP = 10
 /**
  * Builds at most one piece of scenery not built yet, most needed first: the
  * ground about to scroll in, this biome's terrain sprites, the next biome's
- * ground and terrain, the fog veil where fog can roll in; and while `calm` (no
+ * ground and terrain, the fog veil (in the `fog` setting's mode) where fog can roll in; and while `calm` (no
  * run, or a menu over it), every biome's terrain. True if it built one. The
  * shell calls it in idle time: a mountain or the veil takes longer than a frame
  * lasts, so building one the first time it shows would stall that frame.
  */
-export const warmScenery = (g: Game | null, calm: boolean) => {
+export const warmScenery = (g: Game | null, calm: boolean, fog: FogMode) => {
   const keep = terrainBiomes(g)
   keepTerrain(keep)
   if (!g?.rift.arena || g.rift.arena.domain) dropArenas()
@@ -773,7 +773,7 @@ export const warmScenery = (g: Game | null, calm: boolean) => {
     if (warmGround(here, x, y, w, h, GROUND_LOOKAHEAD) || warmTerrain(here)) return true
     if (upcoming !== here && (warmGround(upcoming, x, y, w, h) || warmTerrain(upcoming))) return true
     if ('fog' in BIOMES[here].weather || 'fog' in BIOMES[upcoming].weather) {
-      if (warmFog(w, h)) return true
+      if (warmFog(w, h, fog)) return true
     } else if (g.weather.id !== 'fog' && g.weather.prev !== 'fog') dropFog()
   }
   return calm && keep.some((b) => warmTerrain(b))
@@ -809,6 +809,7 @@ export type RenderOptions = {
   damageNumbers: DamageNumbers
   screenShake: boolean
   flashes: Flashes
+  fog: FogMode
   /** How opaque the moves draw, 0..1: this screen's player's, and in co-op the teammates' (`render/attackLayers.ts`). */
   attackOpacity: number
   teamAttackOpacity: number
@@ -1118,7 +1119,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawPlaceDark(ctx, g, camX, camY, t)
   drawNightmareDark(ctx, g, camX, camY, t)
   drawTunnelDark(ctx, g, camX, camY)
-  drawWeather(ctx, g, camX, camY, t)
+  drawWeather(ctx, g, camX, camY, t, opts.fog)
   drawLegendSky(ctx, g, camX, camY, t)
   drawBlasts(ctx, g, camX, camY, t)
   drawDomainScreen(ctx, g, camX, camY, t)

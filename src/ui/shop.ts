@@ -893,7 +893,7 @@ const haggleCard = (): Card => {
  */
 const eggOdds = (egg: EggTier, save: Save) => {
   const s = t().shop.stall
-  const shares = hatchOdds(egg, save.hatched)
+  const shares = hatchOdds(egg, save.hatched, save.eggPity)
   const family = ([id]: (typeof shares)[number]) => `${HATCHLINGS[id].name}${save.hatched[id] ? ' ✓' : ''}`
   const list = shares.every(([, share]) => share === shares[0]?.[1])
     ? s.even(shares.map(family).join(', '), Math.round((shares[0]?.[1] ?? 0) * 100))

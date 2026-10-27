@@ -1130,20 +1130,29 @@ export const titleScreen = (
     actions.meadow.visit(visit.mode === 'dojo' ? 'dojo' : 'plaza', instant)
   }
 
-  /** A talk at the plaza: the shop with a shopkeeper, the caravan's shelf with Meowth, a few words with a stall's keeper or Lanturn, the festival's sheet at the fountain (its plaque tab at the plaque). */
-  function talkTo(who: LobbyNpc) {
+  /**
+   * A talk at the plaza or the Dojo: the shop with a shopkeeper, the caravan's shelf with Meowth, a few words with a stall's keeper or Lanturn, the festival's sheet at the fountain (its plaque tab at the plaque), the Dojo with its sensei.
+   * `beside`: the partner stands by `who`; from afar (a tap on the stall's edge marker), the stall skips its keeper's words.
+   */
+  function talkTo(who: LobbyNpc, beside = true) {
     if (who === 'sensei') return visitShop('dojo')
-    if (who === 'stall') return talkToStall()
+    if (who === 'stall') return talkToStall(beside)
     if (who === 'lanturn') return chatThen(lanturnSpeaker(), t().plaza.lanturn, () => visitShop('festival'))
     if (who === 'fountain') return visitShop('festival')
     if (who === 'plaque') return visitShop('plaque')
     visitShop('shop', false, who === 'meowth' ? 'caravan' : undefined)
   }
 
-  /** The seasonal stall's keeper has a few words; its shelf in the shop follows when it sells something (Duskull's Haunted Egg). */
-  function talkToStall() {
+  /**
+   * The seasonal stall's keeper has a few words; its shelf in the shop follows when it sells something (Duskull's Haunted Egg).
+   * Not `beside` it, the shelf opens straight away: the words would float over the lobby, far from the keeper.
+   */
+  function talkToStall(beside: boolean) {
     const id = stallToday()
-    if (id) chatThen(stallSpeaker(id), t().plaza.stalls[id], () => (stallGoods(id).length > 0 ? visitShop('shop', false, 'stall') : undefined))
+    if (!id) return
+    const sells = stallGoods(id).length > 0
+    if (!beside && sells) return visitShop('shop', false, 'stall')
+    chatThen(stallSpeaker(id), t().plaza.stalls[id], () => (sells ? visitShop('shop', false, 'stall') : undefined))
   }
 
   /**
@@ -1333,11 +1342,11 @@ export const titleScreen = (
   const stroll = () => {
     if (!stage) return
     const { meadow } = actions
-    // A tap on a shopkeeper, the shop or the marker pointing to it goes shopping (Meowth's caravan, or a stall's keeper talks).
+    // A tap on a shopkeeper, the shop or the marker pointing to it goes shopping (Meowth's caravan; a stall's keeper talks only with the partner beside it).
     const tapped = tap && meadow.tapsShop(tap)
     if (tapped) {
       tap = null
-      return talkTo(tapped)
+      return talkTo(tapped, meadow.talkSpot()?.who === tapped)
     }
     const move = drag?.stick?.vec ?? heldMove(input, exploring)
     // Passear's hint goes once the partner gets its first order.
