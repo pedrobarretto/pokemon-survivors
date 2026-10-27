@@ -65,7 +65,7 @@ import { MAP_EVENT_KINDS, MAP_EVENTS, spawnMapEvent, type MapEventKind } from '.
 import { MEOWTH_DEX } from './game/mapEventRules'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
-import { applyBuild, setDummies, startTraining } from './game/training'
+import { applyBuild, setDummies, setLens, startTraining } from './game/training'
 import { buildOf } from './game/builds'
 import { TRAINING } from './data/training'
 import { DOJO_DEX } from './render/dojo'
@@ -1232,9 +1232,8 @@ const startDojo = async (starter: PlayableId) => {
     const me = localPlayer(game)
     me.shiny = shiny
     me.luckyShiny = false
-    // The dummies stand where the panel leaves the field open: above the player on a phone held upright (the panel rises from the bottom), left of it elsewhere.
-    const upright = view.h > view.w
-    startTraining(game, TRAINING.target, TRAINING.counts[0], upright ? { x: 0, y: -1, reach: Math.round(view.h * 0.2) } : { x: -1, y: 0, reach: Math.min(TRAINING.reach, Math.round(view.w * 0.26)) })
+    // The dummies stand left of the player, near enough to share the field the panel leaves open (the camera centers the player there: the panel's `lens`).
+    startTraining(game, TRAINING.target, TRAINING.counts[0], { x: -1, y: 0, reach: Math.min(TRAINING.reach, Math.round(view.w * 0.28)) })
     const build = save.builds[starter]
     if (build) applyBuild(game, build)
     // Opens quietly: no news of the build's ability being picked.
@@ -1304,6 +1303,7 @@ const startDojo = async (starter: PlayableId) => {
       },
       clear: forget(),
       leave: () => leaveDojo(),
+      lens: (x, y) => setLens(game, x / cssScale, y / cssScale),
     })
     const dojo: DojoRun = { panel, startedAt: performance.now(), saved: false }
     r.training = dojo

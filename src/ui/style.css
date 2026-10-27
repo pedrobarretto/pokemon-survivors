@@ -18159,8 +18159,9 @@ button.hall-tile:hover {
   flex-wrap: nowrap;
 }
 
+/* The tabs share the row by their labels' length, so a long one (Movimientos) still fits. */
 .dojo-tabs .shop-tab {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -18176,6 +18177,34 @@ button.hall-tile:hover {
   flex-direction: column;
   gap: 4px;
   padding-right: 2px;
+}
+
+.dojo-shelves {
+  display: flex;
+  gap: 4px;
+}
+
+.dojo-shelves .dojo-chip {
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.dojo-shelves .dojo-slots {
+  flex: none;
+  align-self: center;
+  margin-left: 2px;
+  white-space: nowrap;
+}
+
+.dojo-shelf-note {
+  margin: 0 0 2px;
+  font-size: 15px;
+  line-height: 1.05;
+  color: #6878a8;
 }
 
 .dojo-slots {
@@ -18419,7 +18448,130 @@ button.hall-tile:hover {
   display: none;
 }
 
-/* A phone held upright: the panel rises from the bottom, leaving the field above it. */
+/*
+ * Phones: everything around the list shrinks so the list keeps the room. The head and the meter
+ * share a line each (no subtitle, no hint, the average and total beside the DPS), the per-move
+ * bars show the top two, and rows, steppers, forms and targets tighten.
+ */
+@media (orientation: portrait) and (max-width: 700px), (max-height: 500px) and (orientation: landscape) {
+  .dojo-panel {
+    gap: 5px;
+    padding: 8px;
+  }
+  .dojo-who img {
+    grid-row: auto;
+    width: 26px;
+    height: 26px;
+  }
+  .dojo-who small,
+  .dojo-dps small {
+    display: none;
+  }
+  .btn.dojo-reset,
+  .btn.dojo-fold {
+    min-height: 28px;
+    padding: 4px 7px;
+    font-size: 7px;
+  }
+  .dojo-meter {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    column-gap: 10px;
+    padding: 5px 8px;
+  }
+  .dojo-dps-value {
+    font-size: 16px;
+  }
+  .dojo-meter-row {
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 0;
+    font-size: 15px;
+  }
+  .dojo-sources {
+    grid-column: 1 / -1;
+    gap: 2px;
+    margin-top: 4px;
+    max-height: 38px;
+    overflow: hidden;
+  }
+  .dojo-source {
+    font-size: 15px;
+  }
+  .dojo-empty {
+    font-size: 15px;
+  }
+  .dojo-tabs .shop-tab {
+    min-height: 30px;
+    padding: 4px 2px;
+    font-size: 7px;
+  }
+  .dojo-row {
+    grid-template-columns: 24px 1fr auto;
+    gap: 6px;
+    padding: 4px 5px;
+  }
+  .dojo-row.evolved {
+    margin-left: 8px;
+  }
+  .dojo-row-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .dojo-row-name {
+    font-size: 17px;
+  }
+  /* The long notes (an evolution's recipe, an item's text) keep to two lines: holding the row shows the whole card. */
+  .dojo-row-note {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  .dojo-step-btn {
+    width: 28px;
+    height: 28px;
+  }
+  .dojo-step-level {
+    min-width: 34px;
+    font-size: 7px;
+  }
+  .dojo-learn {
+    min-height: 28px;
+    padding: 4px 7px;
+    font-size: 7px;
+  }
+  .dojo-chip {
+    min-height: 28px;
+    font-size: 15px;
+  }
+  .dojo-label {
+    margin-top: 4px;
+  }
+  .dojo-forms,
+  .dojo-targets {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  }
+  .dojo-form,
+  .dojo-target {
+    padding: 4px 2px;
+    font-size: 15px;
+  }
+  .dojo-form img,
+  .dojo-target img {
+    width: 32px;
+    height: 32px;
+  }
+  .dojo-actions .btn {
+    min-height: 32px;
+    padding: 4px;
+    font-size: 7px;
+  }
+}
+
+/* A phone held upright: the panel rises from the bottom, leaving the field above it (the camera keeps the player there). */
 @media (orientation: portrait) and (max-width: 700px) {
   .dojo-panel {
     top: auto;
@@ -18427,7 +18579,7 @@ button.hall-tile:hover {
     right: max(8px, var(--safe-r));
     bottom: max(8px, var(--safe-b));
     width: auto;
-    height: min(52%, calc(56 * var(--dvh)));
+    height: min(60%, calc(62 * var(--dvh)));
     animation-name: shop-up;
   }
   /* Folded, it keeps to the top (over the moves' HUD, which the meter repeats), leaving the stick and the special their corners. */
@@ -18436,25 +18588,24 @@ button.hall-tile:hover {
     bottom: auto;
     height: auto;
   }
-  .dojo-sources {
-    max-height: 64px;
-    overflow: hidden;
-  }
 }
 
-/* Phones on their side: a narrower panel, the meter's rows tighter. */
+/* Phones on their side: the panel down the right side, the field left of it. */
 @media (max-height: 500px) and (orientation: landscape) {
   .dojo-panel {
     top: max(6px, var(--safe-t));
     bottom: max(6px, var(--safe-b));
     right: max(6px, var(--safe-r));
-    width: min(330px, calc(44 * var(--vw)));
-    padding: 8px;
-    gap: 5px;
+    width: min(350px, calc(46 * var(--vw)));
   }
   .dojo-sources {
-    max-height: 48px;
-    overflow: hidden;
+    max-height: 18px;
+  }
+  .dojo-tabs .shop-tab {
+    min-height: 28px;
+  }
+  .dojo-shelves .dojo-chip {
+    min-height: 26px;
   }
 }
 

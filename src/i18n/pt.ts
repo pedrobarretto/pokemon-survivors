@@ -5184,6 +5184,16 @@ export const pt = {
     evolvedFrom: (base: string, item: string) => `Evolução de ${base}: na partida, ${base} no nível máximo com ${item}.`,
     movesFull: 'Sem espaço',
     itemsFull: 'Sem espaço',
+    /** A new move a run wouldn't teach next to the ones carried: a second manual one, a second legendary one. */
+    manualFull: 'Já tem um manual',
+    legendaryFull: 'Já tem um lendário',
+    /** The moves tab's shelves: the family's own moves, every TM and the legendaries' capstones. */
+    shelves: { family: 'Família', tms: 'TMs', legendary: 'Lendários' },
+    /** Under a shelf's chips: where its moves come from in a run. */
+    shelfNote: {
+      tms: 'Nas partidas, as TMs caem dos chefes, vêm dos Tutores de Golpes e da prateleira da loja.',
+      legendary: 'Nas partidas, um lendário vencido deixa o disco dourado do seu golpe: só um por partida.',
+    },
     form: 'Forma',
     abilityLater: 'A habilidade chega na primeira evolução.',
     noAbility: 'Nenhuma',

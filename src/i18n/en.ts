@@ -4906,6 +4906,13 @@ export const en: Messages = {
     evolvedFrom: (base, item) => `Evolves from ${base}: in a run, ${base} at max level with ${item}.`,
     movesFull: 'No slot left',
     itemsFull: 'No slot left',
+    manualFull: 'Has a manual one',
+    legendaryFull: 'Has a legendary one',
+    shelves: { family: 'Family', tms: 'TMs', legendary: 'Legendary' },
+    shelfNote: {
+      tms: 'In runs, TMs drop from bosses and come from Move Tutors and the shop’s shelf.',
+      legendary: 'In runs, a beaten legendary leaves its move’s golden disc: only one per run.',
+    },
     form: 'Form',
     abilityLater: 'The ability comes with the first evolution.',
     noAbility: 'None',

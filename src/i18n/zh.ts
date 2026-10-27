@@ -4902,6 +4902,13 @@ export const zh: Messages = {
     evolvedFrom: (base, item) => `由 ${base} 進化：對局中，${base} 達到最高等級並攜帶 ${item}。`,
     movesFull: '沒有空格',
     itemsFull: '沒有空格',
+    manualFull: '已有手動招式',
+    legendaryFull: '已有傳說招式',
+    shelves: { family: '家族', tms: '招式學習器', legendary: '傳說' },
+    shelfNote: {
+      tms: '對局中，招式學習器由頭目掉落，也能從招式教學和商店的貨架取得。',
+      legendary: '對局中，被打倒的傳說寶可夢會留下牠招式的金色光碟：每局只能一個。',
+    },
     form: '型態',
     abilityLater: '特性會在第一次進化時獲得。',
     noAbility: '無',

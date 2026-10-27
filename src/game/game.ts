@@ -72,7 +72,7 @@ import { createTension } from './tension'
 import { updateStatuses } from './statusSystem'
 import { createTally } from './tally'
 import { updateShopTms } from './shopTmSystem'
-import { updateTraining } from './training'
+import { trainingCamera, updateTraining } from './training'
 import { createWeather, updateWeather } from './weather'
 import { updateTraits } from './traitSystem'
 import { BASE_STATS } from './stats'
@@ -952,7 +952,7 @@ const stepTraining = (g: Game, inputs: readonly StepInput[], dt: number) => {
   updateTerrain(g, dt)
   updateEffects(g, dt)
   updateTraining(g, dt)
-  followPlayers(g, dt, domainCamera)
+  followPlayers(g, dt, trainingCamera)
 }
 
 /**

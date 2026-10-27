@@ -11,8 +11,12 @@ import type { Build } from './builds'
 import { spawnEnemy } from './enemies'
 import { runLearnset } from './learnsets'
 import { MAX_ITEMS, MAX_MOVES, recomputeStats } from './leveling'
-import { forkAt, maxMoveLevel, withBranch, type MoveId } from './moves'
-import { ownAttack } from './players'
+import { LEGENDARY_MOVE_OF } from '../data/legendaryMoves'
+import type { LegendId } from '../data/legends'
+import { learnable } from './kitRules'
+import { forkAt, isLegendary, isManual, maxMoveLevel, withBranch, type MoveId } from './moves'
+import { aimScreen, ownAttack } from './players'
+import { shelfTms } from './tmShelf'
 import { createTraitState } from './traits'
 import type { DamageSource, Enemy, Game } from './types'
 
@@ -37,6 +41,10 @@ export type Training = {
   home: Vec
   /** Where the dummies stand from it: a unit direction and how far (world px), so the shell keeps them clear of its panel. */
   aim: Aim
+  /** Where the player stands on screen, from its center (world px): the middle of the field the shell's panel leaves open (`setLens`). */
+  lens: Vec
+  /** The lens the camera shows now, easing to `lens` (`trainingCamera`). */
+  shown: Vec
 }
 
 /** Which way from the player's start the dummies stand, and how far. */
@@ -74,8 +82,31 @@ const spawnDummy = (g: Game, target: TrainingTarget, at: Vec): Enemy => {
 /** Turns the run into the Dojo, with `count` dummies of `target` around the player, along `aim`. */
 export const startTraining = (g: Game, target: TrainingTarget = TRAINING.target, count: number = TRAINING.counts[0], aim: Aim = AHEAD) => {
   const p = g.player
-  g.training = { target, posts: [], home: { x: p.x, y: p.y }, aim }
+  g.training = { target, posts: [], home: { x: p.x, y: p.y }, aim, lens: { x: 0, y: 0 }, shown: { x: 0, y: 0 } }
   setDummies(g, target, count)
+}
+
+/** Sets where the player stands on screen, from its center (world px): the shell keeps them clear of its panel. */
+export const setLens = (g: Game, x: number, y: number) => {
+  const t = g.training
+  if (!t) return
+  t.lens.x = x
+  t.lens.y = y
+}
+
+/** How fast (per second) the camera eases to a new lens: quick enough to follow the panel folding. */
+const LENS_EASE = 10
+
+/** The Dojo's camera (`followPlayers`' frame): each player centered on the lens instead of the screen. */
+export const trainingCamera = (g: Game, dt: number) => {
+  const t = g.training
+  if (!t) return false
+  const k = Math.min(1, LENS_EASE * dt)
+  t.shown.x += (t.lens.x - t.shown.x) * k
+  t.shown.y += (t.lens.y - t.shown.y) * k
+  const p = g.player
+  aimScreen(g, p, p.x - g.view.w / 2 - t.shown.x, p.y - 10 - g.view.h / 2 - t.shown.y)
+  return true
 }
 
 /** Sends the dummies away and stands `count` of `target` at their posts. */
@@ -125,6 +156,39 @@ export const trainingMoves = (starter: PlayableId, branch: BranchId | null): Mov
   return out
 }
 
+/** The Dojo's shelves of moves: the family's own, every TM (the shop's too) and the legendaries' capstones. */
+export const MOVE_SHELVES = ['family', 'tms', 'legendary'] as const
+export type MoveShelf = (typeof MOVE_SHELVES)[number]
+
+/** The moves on a shelf; `legends`: the legends the game shows today (`shownLegends`), so a festival's stays secret until announced. */
+export const shelfMoves = (shelf: MoveShelf, starter: PlayableId, branch: BranchId | null, legends: readonly LegendId[]): MoveId[] => {
+  if (shelf === 'family') return trainingMoves(starter, branch)
+  if (shelf === 'tms') return [...shelfTms()]
+  return legends.map((id) => LEGENDARY_MOVE_OF[id])
+}
+
+/** The move a new one would take the slot of: its base or its evolution, when owned. */
+const twinOf = (g: Game, id: MoveId) => {
+  const twin = evolutionOf(id)?.to ?? evolvedFrom(id)?.from
+  return twin ? g.player.moves.find((m) => m.id === twin) : undefined
+}
+
+/**
+ * Why a move the player doesn't carry can't be learned now, as in a run: every
+ * slot taken, a second manual move (`learnable`) or a second legendary one (a
+ * run teaches one legendary TM). Null when it can.
+ */
+export const moveBlock = (g: Game, id: MoveId): 'full' | 'manual' | 'legendary' | null => {
+  const p = g.player
+  if (p.moves.some((m) => m.id === id)) return null
+  const slot = twinOf(g, id)
+  const others = p.moves.filter((m) => m !== slot).map((m) => m.id)
+  if (!slot && others.length >= MAX_MOVES) return 'full'
+  if (!learnable(others, id, isManual)) return 'manual'
+  if (isLegendary(id) && others.some(isLegendary)) return 'legendary'
+  return null
+}
+
 /** Drops a move and whatever it left in play (hitboxes, timed effects, a guard). */
 const dropMove = (g: Game, id: MoveId) => {
   const p = g.player
@@ -137,7 +201,7 @@ const dropMove = (g: Game, id: MoveId) => {
 /**
  * Sets a move to `level` (0 drops it), taking a free slot when it's new.
  * A move and its evolution share a slot: setting one swaps the other out.
- * Returns false when every slot is taken.
+ * Returns false when a new move can't be learned (`moveBlock`).
  */
 export const setMove = (g: Game, id: MoveId, level: number) => {
   const p = g.player
@@ -152,9 +216,8 @@ export const setMove = (g: Game, id: MoveId, level: number) => {
     owned.level = lv
     return true
   }
-  const twin = evolutionOf(id)?.to ?? evolvedFrom(id)?.from
-  const slot = twin ? p.moves.find((m) => m.id === twin) : undefined
-  if (!slot && p.moves.length >= MAX_MOVES) return false
+  if (moveBlock(g, id)) return false
+  const slot = twinOf(g, id)
   if (slot) dropMove(g, slot.id)
   p.moves.push({ id, level: lv, cooldown: 0.2, path: 0 })
   return true

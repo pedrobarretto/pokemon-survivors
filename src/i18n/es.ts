@@ -4907,6 +4907,13 @@ export const es: Messages = {
     evolvedFrom: (base, item) => `Evoluciona de ${base}: en la partida, ${base} al nivel máximo con ${item}.`,
     movesFull: 'Sin espacio',
     itemsFull: 'Sin espacio',
+    manualFull: 'Ya tiene uno manual',
+    legendaryFull: 'Ya tiene uno legendario',
+    shelves: { family: 'Familia', tms: 'MTs', legendary: 'Legendarios' },
+    shelfNote: {
+      tms: 'En las partidas, las MTs caen de los jefes y vienen de los Tutores de Movimientos y del estante de la tienda.',
+      legendary: 'En las partidas, un legendario vencido deja el disco dorado de su movimiento: solo uno por partida.',
+    },
     form: 'Forma',
     abilityLater: 'La habilidad llega con la primera evolución.',
     noAbility: 'Ninguna',

@@ -4,7 +4,8 @@ import { buildOf, parseBuilds, planned, type Build } from './builds'
 import { createGame, step } from './game'
 import { MAX_MOVES } from './leveling'
 import { TICK } from './replay'
-import { applyBuild, createMeter, readMeter, sampleMeter, setDummies, setForm, setItem, setMove, startTraining, trainingMoves } from './training'
+import { isLegendary, isManual } from './moves'
+import { applyBuild, createMeter, moveBlock, readMeter, sampleMeter, setDummies, setForm, setItem, setMove, shelfMoves, startTraining, trainingMoves } from './training'
 
 const STILL = { move: { x: 0, y: 0 }, special: false }
 
@@ -61,6 +62,20 @@ describe('the Dojo', () => {
     expect(g.player.moves.some((m) => m.id === 'ember')).toBe(false)
     expect(setItem(g, 'charcoal', 9)).toBe(true)
     expect(g.player.items).toEqual([{ id: 'charcoal', level: 3 }])
+  })
+
+  it('lends every TM and the shown legends’ moves, one manual and one legendary at a time, as a run would', () => {
+    const g = dojo()
+    const tms = shelfMoves('tms', 'charmander', null, [])
+    expect(tms).toContain('rockSlide')
+    expect(shelfMoves('legendary', 'charmander', null, ['kyogre', 'groudon'])).toEqual(['originPulse', 'scorchingSands'])
+    expect(setMove(g, 'originPulse', 1)).toBe(true)
+    expect(moveBlock(g, 'scorchingSands')).toBe('legendary')
+    expect(setMove(g, 'scorchingSands', 1)).toBe(false)
+    expect(isManual('selfDestruct') && isManual('uTurn')).toBe(true)
+    expect(setMove(g, 'selfDestruct', 1)).toBe(true)
+    expect(moveBlock(g, 'uTurn')).toBe('manual')
+    expect(g.player.moves.filter((m) => isLegendary(m.id))).toHaveLength(1)
   })
 
   it('puts a saved build back on: form, moves with their forks, items and ability', () => {

@@ -4902,6 +4902,13 @@ export const fr: Messages = {
     evolvedFrom: (base, item) => `Évolution de ${base} : en partie, ${base} au niveau max avec ${item}.`,
     movesFull: 'Plus de place',
     itemsFull: 'Plus de place',
+    manualFull: 'Déjà une manuelle',
+    legendaryFull: 'Déjà une légendaire',
+    shelves: { family: 'Famille', tms: 'CT', legendary: 'Légendaires' },
+    shelfNote: {
+      tms: 'En partie, les CT tombent des boss et viennent des Maîtres des capacités et du rayon de la boutique.',
+      legendary: 'En partie, un légendaire vaincu laisse le disque doré de sa capacité : un seul par partie.',
+    },
     form: 'Forme',
     abilityLater: 'Le talent arrive avec la première évolution.',
     noAbility: 'Aucun',
