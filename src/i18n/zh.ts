@@ -4991,7 +4991,7 @@ export const zh: Messages = {
     nextTouch: '點擊切換',
     menu: {
       title: '選單',
-      note: '開啟選單時對局仍會繼續。',
+      note: '選單開啟時，所有人的對局都會暫停。',
       sound: (on) => `音效：${on ? '開' : '關'}`,
       leave: '離開對局',
       confirm: '要離開對局嗎？你的寶可夢會離開戰場，你會保留目前為止分得的₽。',

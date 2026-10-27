@@ -263,8 +263,9 @@ export type ClientState = {
   movedIn: boolean
 }
 
-/** The team is held: a pick screen up, or the world waiting on away players. */
-const teamPaused = (g: Game) => (g.phase !== 'playing' && g.phase !== 'paused' && g.phase !== 'gameover' && g.phase !== 'victory') || worldHeld(g)
+/** The team is held: a shared pause, a pick screen, or the world waiting on away players. */
+const teamPaused = (g: Game) =>
+  g.coop?.manualPause === true || (g.phase !== 'playing' && g.phase !== 'paused' && g.phase !== 'gameover' && g.phase !== 'victory') || worldHeld(g)
 
 export const createCoopClient = (deps: CoopDeps) => {
   const s: ClientState = {

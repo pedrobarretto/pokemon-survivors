@@ -4995,7 +4995,7 @@ export const en: Messages = {
     nextTouch: 'Tap to switch',
     menu: {
       title: 'MENU',
-      note: 'The run goes on while the menu is open.',
+      note: 'The run is paused for everyone while this menu is open.',
       sound: (on) => `Sound: ${on ? 'on' : 'off'}`,
       leave: 'Leave the run',
       confirm: 'Leave the run? Your Pokémon leaves the field and you keep your share of ₽ so far.',

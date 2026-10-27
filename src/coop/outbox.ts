@@ -4,12 +4,12 @@ import { inputValues, isReliable, type Input, type ReliableInput } from './entri
 /**
  * What the client still has to send of the player's inputs. The stick is
  * coalesced: only its latest value waits (`stickPace.ts` decides when one is
- * worth sending, slower after the relay said `slow`). Picks and the other screen
- * inputs are reliable: each carries a nonce and is sent again until it comes
- * back stamped in a frame, after a timeout or a reconnect (the relay can lose
- * what it hadn't stamped yet when it restarts). A duplicate is harmless: it
- * quotes the screen's round, which the first one already moved on. Everything
- * is bounded, and a reconnect drops the stale stick. Pure: the caller passes
+ * worth sending, slower after the relay said `slow`). Picks, pause changes and
+ * other screen inputs are reliable: each carries a nonce and is sent again
+ * until it comes back stamped in a frame, after a timeout or a reconnect (the
+ * relay can lose what it hadn't stamped yet when it restarts). A duplicate is
+ * harmless: picks quote the screen's round, which the first one already moved
+ * on. Everything is bounded, and a reconnect drops the stale stick. Pure: the caller passes
  * the clock and sends what `due` returns.
  */
 

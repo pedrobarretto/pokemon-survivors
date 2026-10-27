@@ -40,8 +40,10 @@ export type CoopState = {
   joined: number
   /** The names the team sees, by slot. */
   names: string[]
-  /** Seconds the world held still for the team's picks (a stat for tuning and the end screen). */
+  /** Seconds the world held still for picks or the shared pause menu (a stat for tuning and the end screen). */
   paused: number
+  /** The whole run is held by a player's pause menu. */
+  manualPause: boolean
   /** Set at the victory while the team votes on the endless mode. */
   vote: EndlessVote | null
   /** Ticks each slot has been away in a row (0 while here), counted by `stepTick`. */
@@ -55,6 +57,7 @@ export const createCoopState = (players: number): CoopState => ({
   joined: players,
   names: Array.from({ length: players }, () => ''),
   paused: 0,
+  manualPause: false,
   vote: null,
   awayTicks: Array.from({ length: players }, () => 0),
   own: Array.from({ length: players }, () => new Map<number, boolean>()),

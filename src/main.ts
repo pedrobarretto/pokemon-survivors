@@ -331,8 +331,6 @@ type CoopRun = {
   driver: CoopDriver
   /** Everything co-op shows over the run: the team's cards, the connection, the spectator camera, the end (`ui/teamLayer.ts`). */
   team: TeamLayer
-  /** The co-op menu is open (the run goes on; the stick reads still). */
-  menu: boolean
   /** Banked at the victory and at the end (deltas; `coop/bank.ts` keeps it to once). */
   banked: { victory: boolean; over: boolean }
   /** "Jogar de novo" was pressed: the host starts the next run as soon as everyone online is ready. */
@@ -1176,7 +1174,7 @@ const announceRun = (start: ReplayStart, challenge: Run['challenge']) => {
   for (const [i, id] of (start.tms ?? []).entries()) aside(h('span', { class: 'item-toast' }, tmPicture(id), rich(t().toast.armedTm(MOVES[id].name, i))), 3200, `tm-${id}`)
 }
 
-/** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
+/** The run's HUD; co-op's pause button sends a shared pause input. */
 const runHud = (game: Game, onPause: () => void = () => game.phase === 'playing' && (game.phase = 'paused'), menu = false) => {
   const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, input.isHeld, menu)
   requestAnimationFrame(syncMarkerInsets)
@@ -1221,9 +1219,10 @@ const syncOverlay = (r: Run) => {
   // Co-op shows its copy of the game: this player as "the player" (`coop/view.ts`).
   const g = c ? c.view.game : r.game
   const me = localPlayer(g)
-  // This player's own pick screen while the world waits on picks; the world's phase otherwise.
-  // Co-op: a pick sent closes its screen while it travels; the co-op menu is the client's own.
-  const phase: Phase = c?.menu && !coopOver(g) && g.phase !== 'victory' ? 'paused' : c?.team.holding(me) ? 'playing' : phaseOf(g, me)
+  // A co-op pause is shared simulation state, so every client opens the same menu on the same tick.
+  // Otherwise show this player's pick screen while the world waits on picks, or the world's phase.
+  const sharedPause = c !== null && g.coop?.manualPause === true && !coopOver(g) && g.phase !== 'victory'
+  const phase: Phase = sharedPause ? 'paused' : c?.team.holding(me) ? 'playing' : phaseOf(g, me)
   if (r.shown?.phase === phase && r.shown.offers === me.offers) return
   r.overlay?.dispose()
   r.overlay = null
@@ -1268,9 +1267,9 @@ const syncOverlay = (r: Run) => {
       break
     case 'paused':
       if (c) {
-        // The co-op menu: the run goes on behind it; leaving asks first.
+        // This menu is shared by the team; resume goes through the lockstep like pause.
         r.overlay = pauseMenu(ui, input, g, {
-          resume: () => (c.menu = false),
+          resume: () => c.driver.send({ kind: 'resume' }),
           quit: () => leaveCoopRun(),
           settings: (back) => runSettings(r, back),
           report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
@@ -1909,9 +1908,12 @@ input.onKey((key) => {
   if (key === 'KeyM') toggleMute()
   if (!run) return
   const g = run.game
-  // Co-op never pauses the world: the menu opens over it.
-  if ((key === 'Escape' || key === 'KeyP') && run.coop) run.coop.menu = true
-  else if ((key === 'Escape' || key === 'KeyP') && g.phase === 'playing') g.phase = 'paused'
+  if (key === 'Escape' || key === 'KeyP') {
+    if (run.coop) {
+      // The pause is reliable lockstep input; the shared menu handles Escape to resume.
+      if (!g.coop?.manualPause) run.coop.driver.send({ kind: 'pause' })
+    } else if (g.phase === 'playing') g.phase = 'paused'
+  }
   if (key === 'Space') queueSpecial()
   if (key === 'KeyE') queueMega()
   if (key === 'ShiftLeft' || key === 'ShiftRight') queueLunge()
@@ -2021,8 +2023,8 @@ const backToRoom = () => {
   showRoom()
 }
 
-/** The run's HUD in co-op: drawn from the draw copy, and its pause button opens the co-op menu (the run goes on). */
-const coopRunHud = (c: CoopRun) => runHud(c.view.game, () => (c.menu = true), true)
+/** The run's HUD in co-op: opening its menu pauses the team through the lockstep. */
+const coopRunHud = (c: CoopRun) => runHud(c.view.game, () => c.driver.send({ kind: 'pause' }), true)
 
 /** Where "Jogar de novo" stands, for the end screen: who asked, and how many of the room online are ready (the host counts). */
 const againState = (c: CoopRun) => {
@@ -2083,7 +2085,6 @@ const startCoopRun = async (client: CoopClient, runner: Runner) => {
       lobby: () => backToRoom(),
       again: () => againState(c),
     }),
-    menu: false,
     banked: { victory: false, over: false },
     shake: createScreenShake(),
     again: false,
@@ -2233,13 +2234,22 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   const g = c.runner.game
   r.game = g
   const me = localPlayer(g)
-  // The stick reads still while a menu or a screen is up.
-  const still = c.menu || phaseOf(g, me) !== 'playing'
-  c.driver.advance(g, realDt, { move: still ? { x: 0, y: 0 } : input.readMove(), special: specialQueued, mega: megaQueued, lunge: lungeQueued })
+  // The stick reads still while the shared pause or a screen is up.
+  const wasPaused = g.coop?.manualPause === true
+  const still = wasPaused || phaseOf(g, me) !== 'playing'
+  c.driver.advance(g, realDt, {
+    move: still ? { x: 0, y: 0 } : input.readMove(),
+    special: !wasPaused && specialQueued,
+    mega: !wasPaused && megaQueued,
+    lunge: !wasPaused && lungeQueued,
+  })
   specialQueued = megaQueued = lungeQueued = false
   const runner = c.runner
   const st = client.state()
-  const drawn = predict(c.prediction, runner, st, c.driver.frac(), dt)
+  const paused = runner.game.coop?.manualPause === true
+  const own = runner.game.players[runner.slot]!
+  const drawn = paused ? { x: own.x, y: own.y } : predict(c.prediction, runner, st, c.driver.frac(), dt)
+  if (paused) c.prediction.look = null
   const shown = updateDrawView(c.view, runner, drawn, view, runner.acc / STEP, c.prediction.look)
   const conn = client.connection()
   // Sounds and toasts wait out a sync (the run is replaying, not happening now).
@@ -2263,12 +2273,12 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
     bankCoop(r, c, true)
   }
   syncOverlay(r)
-  tickToasts(ui, dt, false)
+  tickToasts(ui, dt, paused)
   // The team's cards, the connection, the waits, and the camera: this player's, or a teammate's while fainted (`render/teamCamera.ts`).
-  c.team.frame(shown, localPlayer(shown), dt, view, conn, runner.pending !== null)
+  c.team.frame(shown, localPlayer(shown), paused ? 0 : dt, view, conn, runner.pending !== null)
   // This screen's own shake, its offset rolled once a tick (the draw would roll one every refresh).
   for (const e of shakes) feelShake(c.shake, e, runner.slot, shown.camera, shown.view)
-  settleShake(c.shake, dt, runner.next, Math.random)
+  if (!paused) settleShake(c.shake, dt, runner.next, Math.random)
   shown.shake = c.shake.amount
   const drawAt = performance.now()
   render(ctx, shown, t, { ...settings(), companion: null, mates: c.view.mates, shakeOffset: c.shake })
@@ -2573,7 +2583,7 @@ let menuAcc = 0
 const frame = (now: number) => {
   requestAnimationFrame(frame)
   const started = performance.now()
-  recordFrame(frames, now - last, run?.game.phase === 'playing')
+  recordFrame(frames, now - last, run?.game.phase === 'playing' && run.game.coop?.manualPause !== true)
   detail.lean = drawsLean()
   const dt = Math.min(0.1, (now - last) / 1000)
   // Co-op's stick and lockstep keep pace with the relay's clock through a long frame (a level-up screen, a GC);
@@ -2582,7 +2592,7 @@ const frame = (now: number) => {
   last = now
   const t = now / 1000
   // Gamepads type the keyboard's codes: menus get confirm/back, a run its special, Mega and lunge.
-  input.poll(run?.game.phase === 'playing')
+  input.poll(!!run && run.game.phase === 'playing' && run.game.coop?.manualPause !== true)
   setActivePad(input.activePad())
 
   // Co-op keeps its socket and lockstep going behind menus and loading screens too (not once it closed for good).
@@ -2674,7 +2684,7 @@ const frame = (now: number) => {
   if (run || menuFrame) screen?.tick?.(t)
   playTheme(themeFor(run))
   // Ducked under the pause menu, but at full level while the player tunes the volume.
-  duckMusic(run?.game.phase === 'paused' && !isSettingsOpen())
+  duckMusic((run?.game.phase === 'paused' || run?.game.coop?.manualPause === true) && !isSettingsOpen())
 }
 
 /* ---------------- Idle warm-up ---------------- */

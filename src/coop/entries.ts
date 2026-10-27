@@ -21,13 +21,14 @@ export type Input =
   | { k: 'reroll' | 'skip'; round: number }
   | { k: 'banish'; round: number; index: number }
   | { k: 'stone'; mega: MegaId }
+  | { k: 'pause' | 'resume' }
   | { k: 'endless'; vote: boolean }
 
-/** Inputs that must get through (resent until seen in a frame): picks, the screen buttons, a stone, a vote. */
-export type ReliableInput = Extract<Input, { k: 'pick' | 'reroll' | 'skip' | 'banish' | 'stone' | 'endless' }>
+/** Inputs that must get through (resent until seen in a frame): picks, pause changes, and other screen actions. */
+export type ReliableInput = Extract<Input, { k: 'pick' | 'reroll' | 'skip' | 'banish' | 'stone' | 'pause' | 'resume' | 'endless' }>
 
 export const isReliable = (i: Input): i is ReliableInput =>
-  i.k === 'pick' || i.k === 'reroll' || i.k === 'skip' || i.k === 'banish' || i.k === 'stone' || i.k === 'endless'
+  i.k === 'pick' || i.k === 'reroll' || i.k === 'skip' || i.k === 'banish' || i.k === 'stone' || i.k === 'pause' || i.k === 'resume' || i.k === 'endless'
 
 /** The values of an input on the wire, a nonce last for the reliable ones (the simulation never reads it). */
 export const inputValues = (i: Input, nonce = 0): Scalar[] => {
@@ -48,6 +49,9 @@ export const inputValues = (i: Input, nonce = 0): Scalar[] => {
       return [i.round, i.index, nonce]
     case 'stone':
       return [i.mega, nonce]
+    case 'pause':
+    case 'resume':
+      return [nonce]
     case 'endless':
       return [i.vote, nonce]
   }
@@ -81,6 +85,9 @@ export const toTickEntry = (e: Entry, slots: ReadonlyMap<number, number>): TickE
       break
     case 'stone':
       raw.mega = a
+      break
+    case 'pause':
+    case 'resume':
       break
     case 'endless':
       raw.vote = a
