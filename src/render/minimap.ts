@@ -3,7 +3,8 @@ import { hash2 } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
 import type { ArenaShape, FloorPlan } from '../data/arenas'
 import type { LandmarkId } from '../data/landmarks'
-import { CAVE, type PlaceId } from '../data/places'
+import type { PlaceId } from '../data/places'
+import { caveLight } from '../game/cave'
 import { TERRAIN } from '../data/terrain'
 import { isMission } from '../game/fieldMissions'
 import type { DungeonFloor } from '../game/dungeon'
@@ -370,12 +371,12 @@ const fogKey = (mx: number, my: number) => (mx & 0xffff) * 0x10000 + (my & 0xfff
 
 /**
  * The map px of the cave floor `plan` the team has seen: grows each draw by the
- * light around every player (`CAVE.light`), kept here so the simulation never knows.
+ * light around every player (`caveLight`, as the screen draws it), kept here so the simulation never knows.
  */
 const caveFog = (g: Game, plan: DungeonFloor, scale: number) => {
   let seen = caveSeen.get(plan)
   if (!seen) caveSeen.set(plan, (seen = new Set()))
-  const r = Math.ceil(CAVE.light / scale)
+  const r = Math.ceil(caveLight(g) / scale)
   for (const p of g.players) {
     if (p.gone) continue
     const px = Math.floor(p.x / scale)
