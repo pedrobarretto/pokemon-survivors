@@ -8,19 +8,22 @@ import { pushToast, runToastShows, stepToasts, type QueuedToast, type RunToasts 
  * while it's up, since it sits where the column grows.
  */
 
-type Stack = { host: HTMLElement; toasts: QueuedToast<HTMLElement>[]; banners: QueuedToast<HTMLElement>[] }
+/** `wait`: seconds before the column is measured again after it had no room (`hasRoom`). */
+type Stack = { host: HTMLElement; toasts: QueuedToast<HTMLElement>[]; banners: QueuedToast<HTMLElement>[]; wait: number }
 
 const MAX_TOASTS = 3
 /** Phones held upright get the compact toasts (style.css, same query) and two at a time, so the news never covers the middle of the screen. */
 const COMPACT = typeof matchMedia === 'function' ? matchMedia('(max-width: 720px) and (min-height: 501px)') : null
 const COMPACT_MAX_TOASTS = 2
+/** Seconds a full column waits before it's measured again: each measure forces a layout, too much for a weak phone every frame. */
+const RECHECK = 0.25
 
 const stacks = new WeakMap<HTMLElement, Stack>()
 
 const stackOf = (root: HTMLElement) => {
   const known = stacks.get(root)
   if (known?.host.isConnected) return known
-  const stack: Stack = { host: h('div', { class: 'toasts' }), toasts: [], banners: [] }
+  const stack: Stack = { host: h('div', { class: 'toasts' }), toasts: [], banners: [], wait: 0 }
   root.append(stack.host)
   stacks.set(root, stack)
   return stack
@@ -138,7 +141,15 @@ export const tickToasts = (root: HTMLElement, dt: number, held: boolean, banners
   const onScreen = stack.toasts.filter((q) => q.shown).length
   const waiting = onScreen < stack.toasts.length
   const max = COMPACT?.matches ? COMPACT_MAX_TOASTS : MAX_TOASTS
-  advance(stack.toasts, dt, waiting && hasRoom(stack.host) ? Math.min(max, onScreen + 1) : 0, stack.host)
+  let fits = false
+  if (waiting && onScreen < max) {
+    stack.wait -= dt
+    if (stack.wait <= 0) {
+      fits = hasRoom(stack.host)
+      if (!fits) stack.wait = RECHECK
+    }
+  }
+  advance(stack.toasts, dt, fits ? onScreen + 1 : 0, stack.host)
 }
 
 /** Drops all news, on screen or waiting (the run is over). */

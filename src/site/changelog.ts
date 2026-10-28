@@ -43,6 +43,12 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'Salvar build guarda a combinação para aquele Pokémon (e sincroniza com a sua conta). Ela nunca muda a partida: nas telas de nível, evolução e habilidade, as cartas que seguem a build ganham a marca ★ BUILD, para você não ter que pensar na hora.', en: 'Save build keeps the combo for that Pokémon (and syncs with your account). It never changes a run: on the level-up, evolution and ability screens, the cards that follow the build get the ★ BUILD mark, so you don’t have to think on the fly.', es: 'Guardar build guarda la combinación para ese Pokémon (y se sincroniza con tu cuenta). Nunca cambia la partida: en las pantallas de nivel, evolución y habilidad, las cartas que siguen la build llevan la marca ★ BUILD, para que no tengas que pensar sobre la marcha.', fr: 'Sauver le build garde la combinaison pour ce Pokémon (et se synchronise avec ton compte). Il ne change jamais la partie : sur les écrans de niveau, d’évolution et de talent, les cartes qui suivent le build portent la marque ★ BUILD, pour ne pas avoir à réfléchir dans le feu de l’action.', zh: '「儲存配置」會為那隻寶可夢記下這個組合（並同步到你的帳號）。它絕不會改變對局：在升級、進化和特性畫面中，符合配置的卡片會標上 ★ BUILD，讓你不必臨場思考。' },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          { pt: 'O Pesadelo do Darkrai não engasga mais em celulares mais simples ao chegar nele, na troca de fase e na captura: as luzes no escuro ficaram bem mais leves de desenhar. O minimapa e os avisos na tela também pesam menos durante a partida.', en: 'Darkrai’s Nightmare no longer stutters on simpler phones as you reach it, between phases and at the capture: the lights in the dark are much lighter to draw now. The minimap and the on-screen news cost less during a run too.', es: 'La Pesadilla de Darkrai ya no se traba en celulares más sencillos al llegar a él, al cambiar de fase y en la captura: las luces en la oscuridad ahora son mucho más livianas de dibujar. El minimapa y los avisos en pantalla también pesan menos durante la partida.' },
+        ],
+      },
     ],
   },
   {
