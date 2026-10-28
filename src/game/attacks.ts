@@ -7,6 +7,7 @@ import { evolvedImpact, evolvedTick } from './evolvedMoves'
 import { inheritMods, modHit, modTick } from './mods'
 import { lungeStep, mineArmed, mineBlast, rollStep, TURRET_RANGE } from './moveRules'
 import { nearestEnemy } from './queries'
+import { inDoorway } from './rift'
 import { spawnAttack } from './spawn'
 import { typeEvolvedTrail } from './typeEvolutions'
 import { ownerOf } from './players'
@@ -55,6 +56,8 @@ const move = (g: Game, a: Attack, m: Motion, dt: number) => {
     case 'static':
       break
     case 'lunge': {
+      // A portal or a place's door being stepped into holds the player: the lunge ends there.
+      if (inDoorway(g, p)) m.left = 0
       const step = lungeStep(m, dt)
       m.left = step.left
       p.x += step.dx

@@ -4,10 +4,11 @@ import { RUN_LENGTH } from '../data/waves'
 import type { EnemyId } from '../data/enemies'
 import { domainOf, DOMAIN_PRESS } from '../data/domains'
 import { coopLocked } from '../data/coop'
+import { PLACES } from '../data/places'
 import type { FloorPlan } from '../data/arenas'
 import type { DomainState } from './domain'
 import type { Room, Stash } from './room'
-import type { Game } from './types'
+import type { Game, Player } from './types'
 import * as dm from '../engine/dmath'
 
 /**
@@ -102,6 +103,23 @@ export const pickLegend = (rng: Rng, met: readonly RiftLegend[], self: string | 
  * its own (Aqua Step's sway, Zen Headbutt's dash) still lets them in.
  */
 export const chargePortal = (charge: number, inside: boolean, dt: number) => (inside ? charge + dt : Math.max(0, charge - dt * 0.25))
+
+/** How far a portal's step-in reaches: a domain's huge tear takes the player in from farther. */
+export const portalReach = (g: Pick<Game, 'coop'>, legend: RiftLegend) => (riftDomain(g, legend) ? RIFT.tearRadius : RIFT.portalRadius)
+
+/**
+ * Whether `p` stands where a portal or an open place's door is filling: a
+ * lunge stops there (`attacks.ts`), so a move that keeps carrying the player
+ * (Flame Charge's leaps, Aqua Step's dance) can't hop them out every time.
+ * The same reaches `riftPortal.ts` and `placeEntrance.ts` step the team in by.
+ */
+export const inDoorway = (g: Pick<Game, 'coop' | 'rift' | 'place'>, p: Pick<Player, 'x' | 'y' | 'radius'>) => {
+  const portal = g.rift.portal
+  if (portal && dm.sq(p.x - portal.x) + dm.sq(p.y - portal.y) < dm.sq(portalReach(g, portal.legend))) return true
+  const ent = g.place.entrance
+  if (!ent?.open || g.place.inside || g.rift.arena) return false
+  return dm.sq(p.x - ent.x) + dm.sq(p.y - ent.y) < dm.sq(PLACES[ent.id].door + p.radius * 0.5)
+}
 
 /**
  * Rift legendaries are tuned for the first rift (4:00) and grow with the run

@@ -1,4 +1,5 @@
 import * as dm from '../engine/dmath'
+import { LUNGE_CONE } from './moveRules'
 
 /**
  * Pure rules of the starter signature moves (`signatureMoves.ts`): who a leap
@@ -6,16 +7,27 @@ import * as dm from '../engine/dmath'
  * stacking speed and Snipe Shot's range bonus. Tested in `signatureRules.test.ts`.
  */
 
-type Foe = { id: number; x: number; y: number; dying: number }
+type Point = { x: number; y: number }
+type Foe = Point & { id: number; dying: number }
 
 /**
  * The foe at the heart of the biggest cluster: among the living foes within
  * `range` of (x, y), the one with the most neighbors within `radius`. Ties go
  * to the nearer one, then the lower id, so every engine picks the same.
+ * `ahead` (the stick, while the player walks) keeps only the foes roughly
+ * ahead of it (`LUNGE_CONE`), so a leap never yanks the player against the joystick.
  */
-export const densestFoe = <T extends Foe>(foes: readonly T[], x: number, y: number, range: number, radius: number): T | null => {
+export const densestFoe = <T extends Foe>(foes: readonly T[], x: number, y: number, range: number, radius: number, ahead: Point | null = null): T | null => {
   const near: T[] = []
-  for (const e of foes) if (e.dying < 0 && dm.sq(e.x - x) + dm.sq(e.y - y) <= range * range) near.push(e)
+  for (const e of foes) {
+    if (e.dying >= 0) continue
+    const dx = e.x - x
+    const dy = e.y - y
+    const d = dm.sq(dx) + dm.sq(dy)
+    if (d > range * range) continue
+    if (ahead && d > 0 && dx * ahead.x + dy * ahead.y < LUNGE_CONE * dm.hypot(dx, dy)) continue
+    near.push(e)
+  }
   let best: T | null = null
   let bestCount = -1
   let bestD = Infinity

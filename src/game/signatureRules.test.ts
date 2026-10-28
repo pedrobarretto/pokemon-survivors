@@ -23,6 +23,14 @@ describe('densestFoe', () => {
     expect(densestFoe([foe(7, 50, 0), foe(3, 20, 0)], 0, 0, 150, 10)?.id).toBe(3)
     expect(densestFoe([foe(7, 0, 20), foe(3, 20, 0)], 0, 0, 150, 10)?.id).toBe(3)
   })
+
+  it('while walking, only counts the crowds ahead of the stick', () => {
+    const behind = [foe(1, -60, 0), foe(2, -62, 4), foe(3, -58, -4)]
+    const ahead = foe(4, 0, 80)
+    expect(densestFoe([...behind, ahead], 0, 0, 150, 30)?.id).not.toBe(4)
+    expect(densestFoe([...behind, ahead], 0, 0, 150, 30, { x: 0, y: 1 })?.id).toBe(4)
+    expect(densestFoe(behind, 0, 0, 150, 30, { x: 1, y: 0 })).toBeNull()
+  })
 })
 
 describe('HP scaling', () => {
