@@ -1809,7 +1809,7 @@ export const pt = {
     voltAbsorb: 'Ataques Elétricos te curam em vez de ferir.',
     lightningRod: 'Ataques Elétricos te curam em vez de ferir, e golpes Elétricos +15%.',
     bulletproof: 'Projéteis de chefes e explosões causam 60% menos dano.',
-    levitate: 'Você flutua: lava, armadilhas, água e gelo não te afetam.',
+    levitate: 'Você flutua: lava, armadilhas, poças e chamas no chão, água e gelo não te afetam.',
     magicGuard: 'Só golpes diretos te ferem: nada de lava, armadilhas, explosões, poças no chão, desgaste do clima ou mordidas de itens amaldiçoados.',
     magicBounce: 'A cada 12 s bloqueia um golpe e o devolve em dobro a quem encostou.',
     illusion: 'A cada 10 s bloqueia um golpe por completo.',
@@ -5279,7 +5279,7 @@ export const pt = {
       event: 'Só na _Noite das Bruxas_: vença-o na _fenda do Pesadelo_.',
       festival: 'Prêmio do _Festival da Praça_: chega como Presente Misterioso, nunca é enfrentada.',
     },
-    rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, em qualquer modo.' : `Para capturar, vença este lendário ${need} vezes como chefe, em qualquer modo.`),
+    rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.' : `Para capturar, vença este lendário ${need} vezes como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.`),
     shinyRule: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
     selectNote: 'Lendários jogam o *Modo Lendário*: ranking próprio, horda mais forte, despertares no Nv 12 e 28.',
     /** An event legend (`LegendUnlock.event`): its badge on the partner select, and its card before, during and after the event (dates as `formatDay`). */

@@ -1580,7 +1580,7 @@ export const fr: Messages = {
     voltAbsorb: 'Les attaques Électrik te soignent au lieu de te blesser.',
     lightningRod: 'Les attaques Électrik te soignent au lieu de te blesser, et capacités Électrik +15%.',
     bulletproof: 'Les projectiles et explosions des boss font 60% de dégâts en moins.',
-    levitate: 'Tu flottes : lave, pièges, eau et glace ne t’affectent pas.',
+    levitate: 'Tu flottes : lave, pièges, flaques et flammes au sol, eau et glace ne t’affectent pas.',
     magicGuard: 'Seuls les coups directs te blessent : ni lave, ni pièges, ni explosions, ni flaques au sol, ni usure de la météo, ni morsures des objets maudits.',
     magicBounce: 'Toutes les 12 s, bloque un coup et le renvoie, doublé, à celui qui t’a touché.',
     illusion: 'Toutes les 10 s, bloque complètement un coup.',
@@ -4980,7 +4980,7 @@ export const fr: Messages = {
       event: 'Seulement pendant la _Nuit des Sorcières_ : bats-le dans la _faille du Cauchemar_.',
       festival: 'Prix du _Festival de la Place_ : arrive en Cadeau Mystère, jamais affrontée.',
     },
-    rule: (need: number) => (need === 1 ? 'Bats-le une fois comme boss, dans n’importe quel mode, pour le capturer.' : `Bats-le ${need} fois comme boss, dans n’importe quel mode, pour le capturer.`),
+    rule: (need: number) => (need === 1 ? 'Bats-le une fois comme boss en partie solo, quel que soit le mode, pour le capturer. Les victoires en coop ne comptent pas.' : `Bats-le ${need} fois comme boss en partie solo, quel que soit le mode, pour le capturer. Les victoires en coop ne comptent pas.`),
     shinyRule: 'Battre un chromatique lors de la victoire de capture, ou après, débloque son chromatique.',
     selectNote: 'Les légendaires jouent en *Mode Légendaire* : leur propre classement, une horde plus coriace, des éveils au Nv 12 et 28.',
     event: {
