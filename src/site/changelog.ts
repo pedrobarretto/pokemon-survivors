@@ -60,6 +60,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'Salvar build guarda a combinação para aquele Pokémon (e sincroniza com a sua conta). Ela nunca muda a partida: nas telas de nível, evolução e habilidade, as cartas que seguem a build ganham a marca ★ BUILD, para você não ter que pensar na hora.', en: 'Save build keeps the combo for that Pokémon (and syncs with your account). It never changes a run: on the level-up, evolution and ability screens, the cards that follow the build get the ★ BUILD mark, so you don’t have to think on the fly.', es: 'Guardar build guarda la combinación para ese Pokémon (y se sincroniza con tu cuenta). Nunca cambia la partida: en las pantallas de nivel, evolución y habilidad, las cartas que siguen la build llevan la marca ★ BUILD, para que no tengas que pensar sobre la marcha.', fr: 'Sauver le build garde la combinaison pour ce Pokémon (et se synchronise avec ton compte). Il ne change jamais la partie : sur les écrans de niveau, d’évolution et de talent, les cartes qui suivent le build portent la marque ★ BUILD, pour ne pas avoir à réfléchir dans le feu de l’action.', zh: '「儲存配置」會為那隻寶可夢記下這個組合（並同步到你的帳號）。它絕不會改變對局：在升級、進化和特性畫面中，符合配置的卡片會標上 ★ BUILD，讓你不必臨場思考。' },
         ],
       },
+      {
+        title: { pt: 'Co-op', en: 'Co-op', es: 'Co-op' },
+        notes: [
+          { pt: 'Celulares mais lentos não ficam mais presos em "Sincronizando…" no fim da partida: quem fica para trás volta a alcançar o time.', en: 'Slower phones no longer get stuck on "Syncing…" late in a run: a player who falls behind catches up with the team again.', es: 'Los celulares más lentos ya no se quedan atascados en "Sincronizando…" al final de la partida: quien se queda atrás vuelve a alcanzar al equipo.' },
+          { pt: 'O co-op agora funciona em iPhones e navegadores mais antigos, que não conseguiam acompanhar a partida do time.', en: 'Co-op now works on older iPhones and browsers, which couldn’t keep up with the team’s run.', es: 'El co-op ahora funciona en iPhones y navegadores más antiguos, que no lograban seguir la partida del equipo.' },
+        ],
+      },
     ],
   },
   {
