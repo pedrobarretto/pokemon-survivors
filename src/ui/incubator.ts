@@ -142,6 +142,9 @@ const HATCH = {
   reveal: 3.35,
 } as const
 
+/** Ms after the reveal before its buttons take a pick (keys and pad buttons also wait for a pause, `pressGuard`). */
+const REVEAL_GUARD_MS = 600
+
 /** Canvas size in pixels; CSS scales it by a whole number (see `.hatch-canvas`). */
 const W = 112
 const H = 96
@@ -154,7 +157,7 @@ const WISP = { flame: '#78f0a8', core: '#e0fff0', tail: 'rgba(120,240,168,0.5)',
 /**
  * "Oh? The Egg is hatching!": the egg wobbles and cracks, bursts in a white
  * flash and the Pokémon appears (shiny sparkles included) with its cry. A tap
- * or key skips to the reveal; then `play` starts a run with it and `done` moves on.
+ * or key skips to the reveal; then `done` (OK, the default) moves on and `play` starts a run with it.
  * The Haunted Egg hatches at night: a dusk backdrop, will-o'-wisps circling
  * and a violet burst. `holdAt` freezes the animation at that second (dev screenshots).
  */
@@ -190,7 +193,9 @@ export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, action
     buttons.replaceChildren(play, ok)
     buttons.classList.remove('hidden')
     skipHint.remove()
-    nav = menu(input, [play, ok], (i) => later(i === 0 ? actions.play : actions.done), { horizontal: true })
+    // OK is the default and the first picks wait (`REVEAL_GUARD_MS`): the key that skipped the hatch, held or
+    // repeating, must not land on "Play with" and start a run nobody asked for.
+    nav = menu(input, [play, ok], (i) => later(i === 0 ? actions.play : actions.done), { horizontal: true, initial: 1, guard: REVEAL_GUARD_MS })
   }
 
   // Before the reveal, any key or tap skips the animation.

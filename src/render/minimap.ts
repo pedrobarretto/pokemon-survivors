@@ -4,8 +4,10 @@ import type { BiomeId } from '../data/biomes'
 import type { ArenaShape, FloorPlan } from '../data/arenas'
 import type { LandmarkId } from '../data/landmarks'
 import type { PlaceId } from '../data/places'
+import { caveLight } from '../game/cave'
 import { TERRAIN } from '../data/terrain'
 import { isMission } from '../game/fieldMissions'
+import type { DungeonFloor } from '../game/dungeon'
 import { MAP_EVENTS, type MapEventKind } from '../game/mapEvents'
 import { localPlayer } from '../game/players'
 import { roomOf, type Room } from '../game/room'
@@ -21,7 +23,8 @@ import { slotColor } from './team'
  * a place's entrance, a rift's portal, the important drops, the teammates,
  * the Alphas and the boss; the ones worth walking to stay pinned to the rim
  * when they're out of range. In a room (a rift's arena, a place's inside) it
- * shows the room's floor up close. The wild horde never shows. Presentation
+ * shows the room's floor up close; a cave's floors only as far as the team
+ * has lit them, stairs included (`caveFog`). The wild horde never shows. Presentation
  * only: it reads the game and builds terrain with the pure `featureAt`, so the
  * simulation's caches stay untouched.
  */
@@ -359,6 +362,43 @@ const drawRoom = (ctx: Ctx, v: View, room: Room) => {
   for (const river of plan.lava ?? []) for (const [x, y] of river.pts) fillEllipse(ctx, v, room.x + x, room.y + y, river.w / 2, river.w / 2)
 }
 
+/* ---------------- Cave fog ---------------- */
+
+/** Map px each cave floor's team has lit so far, by the floor's layout (a new floor starts dark). */
+const caveSeen = new WeakMap<DungeonFloor, Set<number>>()
+
+const fogKey = (mx: number, my: number) => (mx & 0xffff) * 0x10000 + (my & 0xffff)
+
+/**
+ * The map px of the cave floor `plan` the team has seen: grows each draw by the
+ * light around every player (`caveLight`, as the screen draws it), kept here so the simulation never knows.
+ */
+const caveFog = (g: Game, plan: DungeonFloor, scale: number) => {
+  let seen = caveSeen.get(plan)
+  if (!seen) caveSeen.set(plan, (seen = new Set()))
+  const r = Math.ceil(caveLight(g) / scale)
+  for (const p of g.players) {
+    if (p.gone) continue
+    const px = Math.floor(p.x / scale)
+    const py = Math.floor(p.y / scale)
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (dx * dx + dy * dy <= r * r) seen.add(fogKey(px + dx, py + dy))
+  }
+  return seen
+}
+
+/** Covers every map px the team hasn't seen with the dark around the room. */
+const drawFog = (ctx: Ctx, v: View, seen: Set<number>) => {
+  ctx.fillStyle = ROOM_LOOK.void
+  for (let y = 0; y < S; y++) {
+    let from = -1
+    for (let x = 0; x <= S; x++) {
+      const dark = x < S && !seen.has(fogKey(x + v.ox, y + v.oy))
+      if (dark && from < 0) from = x
+      else if (!dark && from >= 0) (ctx.fillRect(from, y, x - from, 1), (from = -1))
+    }
+  }
+}
+
 /* ---------------- Markers ---------------- */
 
 /**
@@ -427,7 +467,15 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
   if (room) {
     drawRoom(ctx, v, room)
     const inside = g.place.inside
-    if (inside?.id === 'cave' && inside.state.stairs) marker(ctx, v, shape, art.stairs, inside.x + inside.state.stairs[0], inside.y + inside.state.stairs[1], true)
+    // A cave floor is a maze to find the way through: only what the team has lit shows, the stairs once seen.
+    const seen = inside?.id === 'cave' && inside.state.plan ? caveFog(g, inside.state.plan, scale) : null
+    if (seen) drawFog(ctx, v, seen)
+    const stairs = inside?.id === 'cave' ? inside.state.stairs : null
+    if (inside && stairs) {
+      const sx = inside.x + stairs[0]
+      const sy = inside.y + stairs[1]
+      if (!seen || seen.has(fogKey(Math.floor(sx / scale), Math.floor(sy / scale)))) marker(ctx, v, shape, art.stairs, sx, sy, true)
+    }
     if (inside?.id === 'cave' && inside.state.chest && !inside.state.chest.open) marker(ctx, v, shape, art.events.chest, inside.x + inside.state.chest.x, inside.y + inside.state.chest.y, true)
     if (inside?.id === 'graveyard') marker(ctx, v, shape, art.keystone, inside.x + inside.state.keystone[0], inside.y + inside.state.keystone[1], true)
   } else {
