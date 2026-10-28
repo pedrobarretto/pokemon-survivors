@@ -296,27 +296,37 @@ const drawFeature = (ctx: Ctx, v: View, f: Feature, look: Look) => {
 
 /* ---------------- Ground ---------------- */
 
-let groundBuffer: ImageData | null = null
+/** The ground drawn last and where (`key`): painted again only when the map scrolls a pixel or the biome changes, since `putImageData` is slow on phones. */
+const GROUND = lazy(() => {
+  const canvas = createCanvas(S, S)
+  const ctx = context2d(canvas)
+  return { canvas, ctx, img: ctx.createImageData(S, S), key: '' }
+})
 
 const rgb = (hex: string) => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)] as const
 
 /** The ground, a sparse dither fixed to the world so it scrolls with the player. */
 const drawGround = (ctx: Ctx, v: View, base: string, dither: string, seed: number) => {
-  groundBuffer ??= ctx.createImageData(S, S)
-  const data = groundBuffer.data
-  const a = rgb(base)
-  const b = rgb(dither)
-  for (let y = 0; y < S; y++) {
-    for (let x = 0; x < S; x++) {
-      const c = hash2(x + v.ox, y + v.oy, seed) < 0.12 ? b : a
-      const i = (y * S + x) * 4
-      data[i] = c[0]
-      data[i + 1] = c[1]
-      data[i + 2] = c[2]
-      data[i + 3] = 255
+  const ground = GROUND()
+  const key = `${v.ox},${v.oy},${base},${dither},${seed}`
+  if (ground.key !== key) {
+    ground.key = key
+    const data = ground.img.data
+    const a = rgb(base)
+    const b = rgb(dither)
+    for (let y = 0; y < S; y++) {
+      for (let x = 0; x < S; x++) {
+        const c = hash2(x + v.ox, y + v.oy, seed) < 0.12 ? b : a
+        const i = (y * S + x) * 4
+        data[i] = c[0]
+        data[i + 1] = c[1]
+        data[i + 2] = c[2]
+        data[i + 3] = 255
+      }
     }
+    ground.ctx.putImageData(ground.img, 0, 0)
   }
-  ctx.putImageData(groundBuffer, 0, 0)
+  ctx.drawImage(ground.canvas, 0, 0)
 }
 
 /* ---------------- Rooms ---------------- */
