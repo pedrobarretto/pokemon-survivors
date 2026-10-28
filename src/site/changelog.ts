@@ -43,6 +43,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'Salvar build guarda a combinação para aquele Pokémon (e sincroniza com a sua conta). Ela nunca muda a partida: nas telas de nível, evolução e habilidade, as cartas que seguem a build ganham a marca ★ BUILD, para você não ter que pensar na hora.', en: 'Save build keeps the combo for that Pokémon (and syncs with your account). It never changes a run: on the level-up, evolution and ability screens, the cards that follow the build get the ★ BUILD mark, so you don’t have to think on the fly.', es: 'Guardar build guarda la combinación para ese Pokémon (y se sincroniza con tu cuenta). Nunca cambia la partida: en las pantallas de nivel, evolución y habilidad, las cartas que siguen la build llevan la marca ★ BUILD, para que no tengas que pensar sobre la marcha.', fr: 'Sauver le build garde la combinaison pour ce Pokémon (et se synchronise avec ton compte). Il ne change jamais la partie : sur les écrans de niveau, d’évolution et de talent, les cartes qui suivent le build portent la marque ★ BUILD, pour ne pas avoir à réfléchir dans le feu de l’action.', zh: '「儲存配置」會為那隻寶可夢記下這個組合（並同步到你的帳號）。它絕不會改變對局：在升級、進化和特性畫面中，符合配置的卡片會標上 ★ BUILD，讓你不必臨場思考。' },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones' },
+        notes: [
+          { pt: 'Levitate agora flutua também sobre o que fica no chão: rastros de fogo, gelo e raios dos chefes, as chamas que se espalham na torre do Ho-Oh, poças dos cuspidores e as pedras do mundo.', en: 'Levitate now also floats over what lingers on the ground: bosses’ trails of fire, ice and lightning, the flames spreading through Ho-Oh’s tower, spitters’ puddles and the world’s rocks.', es: 'Levitate ahora también flota sobre lo que queda en el suelo: los rastros de fuego, hielo y rayos de los jefes, las llamas que se extienden por la torre de Ho-Oh, los charcos de los escupidores y las rocas del mundo.' },
+          { pt: 'A ficha de um lendário na seleção agora diz que só vitórias em partidas solo contam para capturá-lo (as do co-op não contam).', en: 'A legend’s card in the select now says only solo wins count toward catching it (co-op wins don’t).', es: 'La ficha de un legendario en la selección ahora dice que solo las victorias en partidas solo cuentan para capturarlo (las del cooperativo no).' },
+        ],
+      },
     ],
   },
   {

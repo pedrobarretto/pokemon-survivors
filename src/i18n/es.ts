@@ -1583,7 +1583,7 @@ export const es: Messages = {
     voltAbsorb: 'Los ataques Eléctricos te curan en vez de herirte.',
     lightningRod: 'Los ataques Eléctricos te curan en vez de herirte, y movimientos Eléctricos +15%.',
     bulletproof: 'Los proyectiles de jefes y las explosiones hacen 60% menos de daño.',
-    levitate: 'Flotas: la lava, las trampas, el agua y el hielo no te afectan.',
+    levitate: 'Flotas: la lava, las trampas, los charcos y las llamas en el suelo, el agua y el hielo no te afectan.',
     magicGuard: 'Solo los golpes directos te hieren: nada de lava, trampas, explosiones, charcos en el suelo, desgaste del clima ni mordidas de objetos malditos.',
     magicBounce: 'Cada 12 s bloquea un golpe y se lo devuelve al doble de daño a quien te tocó.',
     illusion: 'Cada 10 s bloquea un golpe por completo.',
@@ -4985,7 +4985,7 @@ export const es: Messages = {
       event: 'Solo en la _Noche de Brujas_: véncelo en la _grieta de la Pesadilla_.',
       festival: 'Premio del _Festival de la Plaza_: llega como Regalo Misterioso, nunca se enfrenta.',
     },
-    rule: (need: number) => (need === 1 ? 'Para capturarlo, vence a este legendario 1 vez como jefe, en cualquier modo.' : `Para capturarlo, vence a este legendario ${need} veces como jefe, en cualquier modo.`),
+    rule: (need: number) => (need === 1 ? 'Para capturarlo, vence a este legendario 1 vez como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.' : `Para capturarlo, vence a este legendario ${need} veces como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.`),
     shinyRule: 'Vencer a uno shiny en la victoria de la captura, o después, desbloquea su forma shiny.',
     selectNote: 'Los legendarios juegan el *Modo Legendario*: ranking propio, horda más dura, despertares en el Nv 12 y 28.',
     event: {

@@ -1582,7 +1582,7 @@ export const en: Messages = {
     voltAbsorb: 'Electric attacks heal you instead of hurting.',
     lightningRod: 'Electric attacks heal you instead of hurting, and Electric moves +15%.',
     bulletproof: 'Boss projectiles and blasts deal 60% less damage.',
-    levitate: 'You float: lava, traps, water and ice don’t affect you.',
+    levitate: 'You float: lava, traps, puddles and flames on the ground, water and ice don’t affect you.',
     magicGuard: 'Only direct hits hurt you: no lava, traps, blasts, puddles on the ground, weather wear or cursed items’ bites.',
     magicBounce: 'Every 12 s it blocks a hit and bounces it back, doubled, at whoever touched you.',
     illusion: 'Every 10 s it blocks a hit completely.',
@@ -4984,7 +4984,7 @@ export const en: Messages = {
       event: 'Only on _Halloween Night_: beat it in the _Nightmare rift_.',
       festival: 'A _Plaza Festival_ prize: comes as a Mystery Gift, never fought.',
     },
-    rule: (need: number) => (need === 1 ? 'Beat it once as a boss, in any mode, to catch it.' : `Beat it ${need} times as a boss, in any mode, to catch it.`),
+    rule: (need: number) => (need === 1 ? 'Beat it once as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.' : `Beat it ${need} times as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.`),
     shinyRule: 'Beating a shiny one on the catching win, or after, unlocks its shiny.',
     selectNote: 'Legendaries play *Legend Mode*: their own ranking, a tougher horde, awakenings at Lv 12 and 28.',
     event: {
