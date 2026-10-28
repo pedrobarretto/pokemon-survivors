@@ -3,6 +3,7 @@ import { worldHeld } from '../game/coop'
 import { hitstopHolds, walkPlayer } from '../game/game'
 import { lungeStep, rollStep } from '../game/moveRules'
 import { inPlay, localPlayer } from '../game/players'
+import { inDoorway } from '../game/rift'
 import { moveOf, TICK } from '../game/replay'
 import { predictSpecial, type SpecialState } from '../game/special'
 import { footOf, keepOut } from '../game/terrain'
@@ -23,7 +24,8 @@ import type { Runner } from './runner'
  *   starts it on the ghost when its copy of the timers says it's ready, so
  *   the charge, a dash or a chain's jumps show at once;
  * - the lunges and rolls already carrying the player (`lungeStep`,
- *   `rollStep`, the same functions the simulation moves it by);
+ *   `rollStep`, the same functions the simulation moves it by), a lunge
+ *   ending in a portal as the simulation's does (`inDoorway`);
  * - the hitstops (`hitstopHolds`), which co-op plays through: they count
  *   down and never hold the ghost, as they never hold the team;
  * - the terrain (`keepOut`: rocks, cliffs, lake shores, an arena's walls), so
@@ -260,6 +262,7 @@ const stepGhost = (world: Game, ghost: Player, carried: Carried[], code: number,
         ghost.x += step.dx
         ghost.y += step.dy
       } else {
+        if (inDoorway(world, ghost)) c.left = 0
         const step = lungeStep(c, TICK)
         c.left = step.left
         ghost.x += step.dx

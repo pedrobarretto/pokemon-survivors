@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
 import { RIFT, RIFT_DRAWS, type RiftLegend } from '../data/rifts'
 import { EVENTS, RUN_LENGTH } from '../data/waves'
-import { chargePortal, createRiftState, endlessRiftAt, pickLegend, riftAt, riftDue, riftLoot, riftScale } from './rift'
+import { chargePortal, createRiftState, endlessRiftAt, inDoorway, pickLegend, riftAt, riftDue, riftLoot, riftScale } from './rift'
+import { createGame } from './game'
+import { openPortal } from './riftPortal'
+import { openEntrance } from './placeEntrance'
 
 const due = { time: 300, nextAt: 210, busy: false, bossAlive: false, endless: false }
 
@@ -72,6 +75,19 @@ describe('rift portal', () => {
     expect(charge).toBeCloseTo(RIFT.enterTime)
     expect(chargePortal(0.5, false, 0.4)).toBeCloseTo(0.4)
     expect(chargePortal(0.1, false, 1)).toBe(0)
+  })
+
+  it('a portal or an open place door holds a lunge where the step-in fills (inDoorway)', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1)
+    const at = (x: number, y: number) => ({ x, y, radius: g.player.radius })
+    expect(inDoorway(g, at(0, 0))).toBe(false)
+    openPortal(g, 'kyogre', { x: 200, y: 0 })
+    expect(inDoorway(g, at(200, 4))).toBe(true)
+    expect(inDoorway(g, at(320, 0))).toBe(false)
+    const door = openEntrance(g, 'cave', { x: -200, y: 0 })
+    expect(inDoorway(g, at(-200, 4))).toBe(true)
+    if (door) door.open = false
+    expect(inDoorway(g, at(-200, 4))).toBe(false)
   })
 
   it('lets in a player hopped out and back sooner than the enter time (Aqua Step swaying in place)', () => {
