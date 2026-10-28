@@ -40,8 +40,15 @@ const playbackRate = (excess: number) => {
   return excess < -SLOW_DOWN.under ? -SLOW_DOWN.rate : 0
 }
 
-/** CPU per display frame for simulation (ms): live, and while syncing. A tick that costs more still runs (one at least). */
+/** CPU per display frame for simulation (ms): live, and while syncing. Past it, up to `BUDGET_FLOOR` ticks still run. */
 export const BUDGET = { live: 8, sync: 14 } as const
+
+/**
+ * Ticks a display frame runs when due, past the budget: live, real time's own
+ * (a few); syncing, as many, so a device whose ticks cost more than the budget
+ * (a phone late in a run) still syncs faster than the run goes on.
+ */
+const BUDGET_FLOOR = 4
 
 export type Pending = {
   reason: 'join' | 'resume' | 'heal'
@@ -430,10 +437,9 @@ export const advance = (r: Runner, dt: number, deps: RunnerDeps): number => {
   const budget = r.syncing ? BUDGET.sync : BUDGET.live
   const t0 = deps.now()
   let ran = 0
-  // Real time's own ticks always run (a few at most); the catch-up and the sync only within the budget.
-  const floor = r.syncing ? 1 : Math.min(due, 4)
+  // Real time's own ticks always run (a few at most); the catch-up and the sync past those only within the budget.
   for (; ran < run; ran++) {
-    if (ran >= floor && deps.now() - t0 + r.tickMs > budget) break
+    if (ran >= BUDGET_FLOOR && deps.now() - t0 + r.tickMs > budget) break
     if (!r.syncing) rememberPositions(r)
     stepOne(r, deps)
     if (r.pending) {
