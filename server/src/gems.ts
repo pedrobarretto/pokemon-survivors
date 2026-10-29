@@ -1,7 +1,7 @@
 import type { TransactionSql } from 'postgres'
 import type { ArenaLook, CosmeticId } from '../../src/data/arenaCosmetics'
 import type { GemCurrency, GemPackId } from '../../src/data/gems'
-import { knownOwned, playGems, refundedGems, wearableLook, type GemBuyResponse, type GemLedgerEntry, type GemReason, type GemsStatus } from '../../src/game/gems'
+import { knownOwned, playGems, purchaseStatus, refundedGems, wearableLook, type GemBuyResponse, type GemLedgerEntry, type GemPurchaseResponse, type GemReason, type GemsStatus, type PurchaseState } from '../../src/game/gems'
 import type { DayKey } from '../../src/game/day'
 import type { Sql } from './db'
 import { rateLimiter } from './rateLimit'
@@ -83,12 +83,14 @@ export type GemProvider = 'stripe' | 'abacatepay'
 
 /**
  * What a payment webhook says about a gem pack (`stripeGems`, `abacateGems`
- * in `webhooks.ts`): paid; refunded (`refunded` cents of `amount` back so
- * far); disputed; or a dispute won back. `key` is the event's ledger ref.
+ * in `webhooks.ts`): paid (`amount` cents of `currency` charged, null when
+ * the payload didn't say); refunded (`share`: `refunded` cents of `amount`
+ * back so far, or `all` of it); disputed; or a dispute won back. `key` is
+ * the event's ledger ref.
  */
 export type GemEvent =
-  | { kind: 'paid'; provider: GemProvider; ref: string; session: string | null; payment: string | null }
-  | { kind: 'refund'; provider: GemProvider; purchase: PurchaseKey; refunded: number; amount: number; key: string }
+  | { kind: 'paid'; provider: GemProvider; ref: string; session: string | null; payment: string | null; amount: number | null; currency: string | null }
+  | { kind: 'refund'; provider: GemProvider; purchase: PurchaseKey; share: { refunded: number; amount: number } | 'all'; key: string }
   | { kind: 'dispute'; provider: GemProvider; purchase: PurchaseKey; key: string }
   | { kind: 'disputeWon'; provider: GemProvider; purchase: PurchaseKey; dispute: string; key: string }
 
@@ -103,7 +105,8 @@ const LEDGER_PAGE = 50
 /** Brakes for a script: checkouts per 10 minutes (each opens a session at the provider), buys and look changes per minute. */
 const LIMITS = { checkout: { n: 6, ms: 600_000 }, buy: { n: 30, ms: 60_000 }, look: { n: 30, ms: 60_000 } } as const
 
-type PurchaseRow = { ref: string; user_id: string; gems: number; provider: string; taken_back: number }
+/** A purchase as the webhooks read it: `user_id` null once its account was deleted (the row stays, for the payment's trail). */
+type PurchaseRow = { ref: string; user_id: string | null; gems: number; provider: string; currency: string; amount: number; taken_back: number; state: PurchaseState }
 
 export const gemStore = (sql: Sql) => {
   const limits = {
@@ -115,16 +118,24 @@ export const gemStore = (sql: Sql) => {
   /** The purchase `key` names, of `provider`, locked for the rest of the transaction. */
   const lockPurchase = async (tx: TransactionSql, provider: GemProvider, key: PurchaseKey) => {
     const [p] = await tx<PurchaseRow[]>`
-      select ref, user_id, gems, provider, taken_back from gem_purchases
+      select ref, user_id, gems, provider, currency, amount, taken_back, state from gem_purchases
       where provider = ${provider} and ${'ref' in key ? tx`ref = ${key.ref}::uuid` : tx`payment = ${key.payment}`}
       for update`
     return p ?? null
   }
 
-  /** Takes up to `target` gems back from purchase `p` in all (what earlier refunds and disputes took counts), under `ref`. */
+  /**
+   * Takes up to `target` gems back from purchase `p` in all (what earlier
+   * refunds and disputes took counts), under `ref`, and marks it refunded or
+   * disputed. Only from a pack that was credited (`pack:<ref>`): one held
+   * for its amount, or whose account is gone, has nothing to take.
+   */
   const takeBack = async (tx: TransactionSql, p: PurchaseRow, target: number, reason: 'refund' | 'dispute', ref: string) => {
+    const state = reason === 'refund' ? 'refunded' : 'disputed'
+    await tx`update gem_purchases set state = ${state} where ref = ${p.ref}::uuid`
+    const [credited] = await tx`select 1 from gem_ledger where ref = ${`pack:${p.ref}`}`
     const n = Math.min(p.gems, target) - p.taken_back
-    if (n <= 0 || !(await moveGems(tx, p.user_id, -n, reason, ref))) return
+    if (!credited || !p.user_id || n <= 0 || !(await moveGems(tx, p.user_id, -n, reason, ref))) return
     await tx`update gem_purchases set taken_back = taken_back + ${n} where ref = ${p.ref}::uuid`
     console.log(`gems: ${reason} took ${n} back from ${p.user_id} (purchase ${p.ref})`)
   }
@@ -132,6 +143,22 @@ export const gemStore = (sql: Sql) => {
   return {
     /** `GET /gems`. */
     status: async (userId: string): Promise<GemsStatus> => toStatus((await statusRows(sql, [userId]))[0]),
+
+    /**
+     * `GET /gems/purchase/:ref`: where the account's own pack `ref` stands
+     * (`purchaseStatus`), the gems it brings and the balance now; null for a
+     * ref that isn't a uuid, or isn't this account's.
+     */
+    purchase: async (userId: string, ref: string): Promise<GemPurchaseResponse | null> => {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(ref)) return null
+      const [p] = await sql<{ gems: number; state: PurchaseState; balance: number }[]>`
+        select p.gems, p.state, u.gems as balance from gem_purchases p join users u on u.id = p.user_id
+        where p.ref = ${ref}::uuid and p.user_id = ${userId}`
+      return p ? { status: purchaseStatus(p.state), gems: p.gems, balance: p.balance } : null
+    },
+
+    /** The looks a friends' Arena room's accounts may wear (`vouchedLooks`), for `POST /arena/looks`. */
+    looks: (userIds: readonly string[]) => vouchedLooks(sql, userIds),
 
     /** `GET /gems/ledger`: the account's latest lines, newest first. */
     ledger: async (userId: string): Promise<GemLedgerEntry[]> => {
@@ -186,10 +213,13 @@ export const gemStore = (sql: Sql) => {
 
     /**
      * A payment webhook's word on a pack (`GemEvent`): paid credits the pack
-     * (`pack:<ref>`); a refund takes back its share of the gems
-     * (`refundedGems`), a dispute the whole pack, each counting what earlier
-     * ones took; a dispute won gives back what that dispute took. Events about
-     * payments that aren't gem packs (a donation's refund) change nothing.
+     * (`pack:<ref>`) when it charged exactly the pack's price, else holds it
+     * (`state` `mismatch`, logged, for support); a refund takes back its share
+     * of the gems (`refundedGems`, all of them for `all`), a dispute the whole
+     * pack, each counting what earlier ones took; a dispute won gives back
+     * what that dispute took. Events about payments that aren't gem packs (a
+     * donation's refund) change nothing, nor does anything about a pack whose
+     * account was deleted but its row's state.
      */
     event: (e: GemEvent) =>
       sql.begin(async (tx) => {
@@ -199,20 +229,27 @@ export const gemStore = (sql: Sql) => {
           return
         }
         if (e.kind === 'paid') {
+          const exact = e.amount === p.amount && e.currency === p.currency
+          // A pack already settled (a retried webhook, or one refunded since) keeps its state.
+          const state = p.state !== 'open' ? p.state : exact ? 'paid' : 'mismatch'
           await tx`
-            update gem_purchases set paid_at = coalesce(paid_at, now()), session = coalesce(session, ${e.session}), payment = coalesce(payment, ${e.payment})
+            update gem_purchases set paid_at = coalesce(paid_at, now()), session = coalesce(session, ${e.session}), payment = coalesce(payment, ${e.payment}),
+              paid_amount = coalesce(paid_amount, ${e.amount}), paid_currency = coalesce(paid_currency, ${e.currency}), state = ${state}
             where ref = ${p.ref}::uuid`
+          if (!exact) return console.warn(`gems: ${e.provider} purchase ${p.ref} charged ${e.amount ?? '?'} ${e.currency ?? '?'}, not ${p.amount} ${p.currency}: held`)
+          // Refunded or disputed before this word came: nothing to credit.
+          if (state !== 'paid') return
+          if (!p.user_id) return console.warn(`gems: purchase ${p.ref} paid for a deleted account`)
           if (await moveGems(tx, p.user_id, p.gems, 'pack', `pack:${p.ref}`)) console.log(`gems: pack ${p.ref} paid, ${p.gems} to ${p.user_id}`)
         } else if (e.kind === 'refund') {
-          await takeBack(tx, p, refundedGems(p.gems, e.amount, e.refunded), 'refund', e.key)
+          await takeBack(tx, p, e.share === 'all' ? p.gems : refundedGems(p.gems, e.share.amount, e.share.refunded), 'refund', e.key)
         } else if (e.kind === 'dispute') {
           await takeBack(tx, p, p.gems, 'dispute', e.key)
         } else {
           const [taken] = await tx<{ amount: number }[]>`select amount from gem_ledger where ref = ${e.dispute}`
           const n = taken ? -taken.amount : 0
-          if (n > 0 && (await moveGems(tx, p.user_id, n, 'disputeWon', e.key))) {
-            await tx`update gem_purchases set taken_back = taken_back - ${n} where ref = ${p.ref}::uuid`
-          }
+          if (!p.user_id || n <= 0 || !(await moveGems(tx, p.user_id, n, 'disputeWon', e.key))) return
+          await tx`update gem_purchases set taken_back = taken_back - ${n}, state = 'paid' where ref = ${p.ref}::uuid`
         }
       }),
 

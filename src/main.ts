@@ -213,7 +213,8 @@ import { arenaResult } from './game/arenaRank'
 import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
-import { lookOf, setArenaLooks, setLocalLook } from './render/arenaLooks'
+import { lookOf, setArenaLooks, setArenaMatch, setLocalLook } from './render/arenaLooks'
+import { freeWearables } from './render/wearables'
 import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, type ArenaLook, type CosmeticSlot } from './data/arenaCosmetics'
 import { effectIn } from './data/arenaEffects'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
@@ -2233,6 +2234,8 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   c.versus?.controls.dispose()
   resetArenaFx()
   setArenaLooks([])
+  setArenaMatch(null)
+  freeWearables()
   clearToasts(ui)
   run = null
   syncRunWatch()
@@ -2378,9 +2381,10 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
         }
       : null,
   }
-  // Each seat's Arena look, as the room's loadouts carry them (shell state: the simulation never sees it).
-  setArenaLooks(live.game.versus ? live.start.players.map((p) => parseLook(p.loadout.look)) : [])
   const me = localPlayer(live.game)
+  // Each seat's Arena look, as the relay vouched for it; this player's own previews what it equipped (shell state: the simulation never sees it).
+  setArenaLooks(live.game.versus ? live.start.players.map((p, i) => parseLook(i === me.slot ? equippedLook() : p.loadout.look)) : [])
+  setArenaMatch(live.game.versus ? `${live.room}:${live.start.id}` : null)
   run = {
     game: live.game,
     hud: coopRunHud(c),
@@ -2945,7 +2949,7 @@ const showArena = () => {
  * history or rules. The Arena screen opens it, and so do the lobby's Stadium
  * boards; Voltar goes back to the Arena screen.
  */
-const showArenaHub = (tab: ArenaHubTab = 'profile', checkout = false) => {
+const showArenaHub = (tab: ArenaHubTab = 'profile', checkout?: string) => {
   endRun()
   reportArenaOpen('hub')
   setScreen(
@@ -2954,7 +2958,7 @@ const showArenaHub = (tab: ArenaHubTab = 'profile', checkout = false) => {
       signIn: accountsEnabled ? () => setScreen(arenaGate(ui, input, { play: () => showArenaHub(tab), back: () => showArenaHub(tab) })) : null,
       pick: arenaStart(),
       keepPick: keepArenaPick,
-      checkout,
+      ...(checkout !== undefined && { checkout }),
     }),
   )
 }
@@ -3609,13 +3613,14 @@ const boot = () => {
   // Someone's link (`?ref=`, a profile): remember who brought this device, before anything reads the URL.
   captureRef()
   const shared = rankingEnabled ? parseHandle(new URLSearchParams(location.search).get(PROFILE_PARAM)) : null
+  const checkoutRef = takeCheckoutReturn()
   const poll = accountsEnabled ? linkedPoll() : null
   if (shared) showSharedProfile(shared)
   else if (rankingEnabled && new URLSearchParams(location.search).has(IDEAS_PARAM)) showIdeasLink()
   else if (new URLSearchParams(location.search).has(SHOP_PARAM)) showTitle({ shop: 'shop', instant: true })
   else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
-  // Back from a gem pack's checkout (`?gems=<ref>`): the Arena's Loja, waiting for the gems.
-  else if (takeCheckoutReturn() !== null) showArenaHub('shop', true)
+  // Back from a gem pack's checkout (`?gems=<ref>`): the Arena's Loja, waiting for that pack.
+  else if (checkoutRef !== null) showArenaHub('shop', checkoutRef)
   else if (poll) showPollLink(poll)
   // Back from signing in, the player already pressed start before leaving: straight to the menu.
   else showTitle({ intro: !backFromSignIn() })
@@ -4199,8 +4204,7 @@ const devGems = (cmd?: string, arg?: string | number) => {
     if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
     stageGems({ own: arg === undefined ? 'all' : [arg] })
   } else if (cmd === 'return') {
-    stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag')
-    showArenaHub('shop', true)
+    showArenaHub('shop', stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
   } else if (cmd === 'shop' || cmd === 'locker') showArenaHub(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
   else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('shop') · ('locker') · ('fetch')"

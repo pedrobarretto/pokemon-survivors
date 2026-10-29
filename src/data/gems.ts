@@ -6,7 +6,7 @@
  * - `GEM_PACKS`: bought with money. Card, Apple Pay and Google Pay through
  *   Stripe Checkout, in reais in Brazil and dollars elsewhere; Pix through
  *   AbacatePay. A refund or a dispute takes the pack's gems back.
- * - `GEM_PATREON`: every paid Patreon charge, by the pledge's active tier.
+ * - `GEM_PATREON`: a member's first paid Patreon charge each Brasília month, by that pledge's active tier.
  * - `GEM_PLAY`: Arena matches the relay reported, capped per day.
  */
 

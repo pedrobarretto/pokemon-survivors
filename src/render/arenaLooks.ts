@@ -12,6 +12,20 @@ export const setArenaLooks = (bySeat: readonly ArenaLook[]) => {
   looks = bySeat
 }
 
+/**
+ * The running match, as the shell names it (room and run), or null: the
+ * effects (`render/arenaFx.ts`) take up a new match when it changes, so a
+ * snapshot heal or a rejoin of the same match (new state objects) doesn't
+ * play the openings again.
+ */
+let match: string | null = null
+
+export const setArenaMatch = (key: string | null) => {
+  match = key
+}
+
+export const arenaMatchKey = (): string | null => match
+
 const NONE: ArenaLook = {}
 
 export const lookOf = (seat: number): ArenaLook => looks[seat] ?? NONE

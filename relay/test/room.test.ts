@@ -12,6 +12,7 @@ import {
   disconnect,
   hello,
   loadState,
+  looked,
   majority,
   message,
   reattach,
@@ -528,21 +529,59 @@ describe('arena rooms', () => {
 
   const result = (winner: 0 | 1) => JSON.stringify({ v: 1, score: [10, 3], winner, seconds: 600, objective: null, seats: [] })
 
-  it('keeps a well-shaped look, and in a matched room plays the one the API vouched for', () => {
+  it('plays only the looks the API vouched for in a matched room, never a claim', () => {
     const state = matched(2)
     roomOf(state).lock!.players[0]!.look = { head: 'strawHat' }
     join(state, 'c0', guest(0))
     join(state, 'c1', guest(1))
     say(state, 'c0', { t: 'loadout', loadout: { starter: 'pikachu', look: { head: 'crown', trail: 'sparkTrail' } } }, T0)
+    // No vouched look (the lookup failed, an older API): bare, whatever it claims.
     say(state, 'c1', { t: 'loadout', loadout: { starter: 'pikachu', look: { trail: 'sparkTrail' } } }, T0)
-    const seats = roomOf(state).seats
-    expect(seats[0]?.loadout).toEqual({ starter: 'pikachu', team: 0, look: { head: 'strawHat' } })
-    expect(seats[1]?.loadout).toEqual({ starter: 'pikachu', team: 1, look: { trail: 'sparkTrail' } })
-    // A friends' room keeps the client's look when it has a look's shape, and drops it otherwise (an old client sends none).
-    const room = newState()
-    join(room, 'c0', guest(0))
-    say(room, 'c0', { t: 'loadout', loadout: { starter: 'pikachu', look: { head: '<img>' } } }, T0)
-    expect(roomOf(room).seats[0]?.loadout).toEqual({ starter: 'pikachu' })
+    expect(roomOf(state).run?.start.players.map((p) => p.loadout)).toEqual([
+      { starter: 'pikachu', team: 0, look: { head: 'strawHat' } },
+      { starter: 'pikachu', team: 1 },
+    ])
+  })
+
+  it("starts a friends' Arena room with the looks the API vouches for its accounts, and none else", () => {
+    const state = newState()
+    const account = (conn: string, user: string) => {
+      connect(state, conn, 'ua', T0)
+      hello(state, conn, helloMsg('x'.repeat(16), { auth: { kind: 'clerk', token: 'jwt' }, name: `@${user}` }), { id: `u:${user}`, account: true }, T0, { guests: false })
+    }
+    account('a', 'ash')
+    account('b', 'brock')
+    join(state, 'c', guest(2))
+    say(state, 'a', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus' } }, T0)
+    for (const conn of ['a', 'b', 'c']) say(state, conn, { t: 'loadout', loadout: { starter: 'pikachu', look: { head: 'crown' } } }, T0)
+    // Claims never reach the room.
+    expect(roomOf(state).seats.map((s) => s.loadout?.look)).toEqual([undefined, undefined, undefined])
+    for (const conn of ['b', 'c']) say(state, conn, { t: 'ready', ready: true }, T0)
+    const asked = say(state, 'a', { t: 'start' }, T0).flatMap((e) => (e.k === 'looks' ? [e] : []))
+    expect(asked).toEqual([{ k: 'looks', ask: 1, ids: ['u:ash', 'u:brock'] }])
+    // While the API answers, a second press asks nothing more and nothing starts.
+    expect(say(state, 'a', { t: 'start' }, T0).some((e) => e.k === 'looks')).toBe(false)
+    expect(roomOf(state).phase).toBe('lobby')
+    // An answer to an ask that's gone changes nothing.
+    expect(looked(state, 7, {}, T0)).toEqual([])
+    const started = of(sent(looked(state, 1, { 'u:ash': { head: 'strawHat' } }, T0 + 200), 'b'), 'start')[0]
+    expect(started?.run.players.map((p) => p.loadout.look)).toEqual([{ head: 'strawHat' }, undefined, undefined])
+  })
+
+  it("starts a friends' Arena room bare when the API can't vouch, and a co-op room or one of guests at once", () => {
+    const state = newState()
+    connect(state, 'a', 'ua', T0)
+    hello(state, 'a', helloMsg('x'.repeat(16), { auth: { kind: 'clerk', token: 'jwt' }, name: '@ash' }), { id: 'u:ash', account: true }, T0, { guests: false })
+    say(state, 'a', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus' } }, T0)
+    say(state, 'a', { t: 'loadout', loadout: { starter: 'pikachu', look: { head: 'crown' } } }, T0)
+    say(state, 'a', { t: 'start' }, T0)
+    expect(of(sent(looked(state, 1, {}, T0), 'a'), 'start')[0]?.run.players[0]?.loadout).toEqual({ starter: 'pikachu' })
+
+    const guests = newState()
+    join(guests, 'c0', guest(0))
+    say(guests, 'c0', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus' } }, T0)
+    say(guests, 'c0', { t: 'loadout', loadout: { starter: 'pikachu', look: { head: 'crown' } } }, T0)
+    expect(of(sent(say(guests, 'c0', { t: 'start' }, T0), 'c0'), 'start')[0]?.run.players[0]?.loadout).toEqual({ starter: 'pikachu' })
   })
 
   it('seats two teams in an Arena room and a party of four elsewhere', () => {
@@ -722,6 +761,7 @@ describe('arena rooms', () => {
     say(state, 'b', { t: 'loadout', loadout: { starter: 'eevee' } }, T0)
     say(state, 'b', { t: 'ready', ready: true }, T0)
     say(state, 'a', { t: 'start' }, T0)
+    looked(state, 1, {}, T0)
     say(state, 'a', { t: 'over', tick: 900, h: 'end', result: result(1) }, T0 + 9000)
     const [report] = reports(say(state, 'b', { t: 'over', tick: 900, h: 'end', result: result(1) }, T0 + 9000))
     expect(report?.kind).toBe('room')

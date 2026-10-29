@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ArenaReport } from '../../src/net/arena'
-import { RETRY_MS, SIGNATURE_HEADER, createOutbox, outcomeOf, sign, type Fetcher, type Outgoing } from '../src/report'
+import { RETRY_MS, SIGNATURE_HEADER, createOutbox, lookUpLooks, outcomeOf, sign, type Fetcher, type Outgoing } from '../src/report'
 
 const report = (run = 1): ArenaReport => ({ v: 1, room: 'ABCDE', run, kind: 'ranked', region: 'enam', endedAt: 5000, seats: [{ slot: 0, userId: 'user_ash', handle: 'ash', left: false }], result: { v: 1 } })
 
@@ -84,5 +84,26 @@ describe('arena reports', () => {
     await off.add(report())
     expect(none.posts).toHaveLength(0)
     expect(logs).toEqual(['arena.report.noApi'])
+  })
+})
+
+describe('looks for a friends\' Arena room', () => {
+  const API = { url: 'https://api.test', secret: 's3cret' }
+
+  it("asks for the accounts' looks, signed, and keeps only well-shaped ones by identity", async () => {
+    const posts: { url: string; body: string; signature: string | null }[] = []
+    const fetcher: Fetcher = async (url, init) => {
+      const body = typeof init.body === 'string' ? init.body : ''
+      posts.push({ url, body, signature: new Headers(init.headers).get(SIGNATURE_HEADER) })
+      return Response.json({ looks: { user_ash: { head: 'strawHat' }, user_brock: { head: 7 } } })
+    }
+    expect(await lookUpLooks(API, ['u:user_ash', 'u:user_brock', 'g:guest'], fetcher)).toEqual({ 'u:user_ash': { head: 'strawHat' } })
+    expect(posts).toEqual([{ url: 'https://api.test/arena/looks', body: '{"userIds":["user_ash","user_brock"]}', signature: await sign('s3cret', '{"userIds":["user_ash","user_brock"]}') }])
+  })
+
+  it('vouches for nothing when the API fails, is older or is unset', async () => {
+    expect(await lookUpLooks(API, ['u:user_ash'], async () => new Response(null, { status: 404 }))).toEqual({})
+    expect(await lookUpLooks(API, ['u:user_ash'], async () => Promise.reject(new Error('down')))).toEqual({})
+    expect(await lookUpLooks(null, ['u:user_ash'])).toEqual({})
   })
 })

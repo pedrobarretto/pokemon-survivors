@@ -9,7 +9,7 @@ import type { Sql } from './db'
 import { GEM_PATREON } from '../../src/data/gems'
 import { moveGems } from './gems'
 import { sendGift } from './gifts'
-import { patreonAmount, type PaidDonation, type PatreonCharge, type PatreonMember } from './webhooks'
+import { patreonAmount, patreonGemsRef, type PaidDonation, type PatreonCharge, type PatreonMember } from './webhooks'
 
 /** Names on the wall at most. */
 const WALL_SIZE = 500
@@ -29,8 +29,8 @@ export const tierOfRow = (r: StandingRow) => effectiveTier(standingOf(r))
  * Supporter, never more). A Patreon member's tier follows their active
  * pledge (`patreonPledge`, from every member webhook; `patreon_members` keeps
  * it for a patron who links later); their charges are recorded, never
- * added up, and each brings the pledge tier's gems (`GEM_PATREON`, ledger
- * ref the charge's own) once it has an account. Whenever the account's tier (`effectiveTier`) rises, each tier it
+ * added up, and the first of each Brasília month brings the pledge tier's
+ * gems (`GEM_PATREON`, ledger ref `patreonGemsRef`) once it has an account. Whenever the account's tier (`effectiveTier`) rises, each tier it
  * reaches sends its thank-you as Mystery Gifts (`TIER_GIFTS`, `key`
  * `support:<tier>:<i>`, so nothing lands twice, however often a pledge comes
  * and goes). Every OG account gets the OG Supporter title once too
@@ -137,8 +137,10 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
      * pledge. Each charge's amount is what the member's lifetime total grew
      * past the others (`patreonAmount`), one member at a time; a charge that
      * adds nothing records nothing. Its gems (`GEM_PATREON` by the pledge's
-     * tier) go to the linked account under the charge's ref, or wait on the
-     * row (`donations.gems`) until the patron links.
+     * tier) go to the linked account under the month's ref (`patreonGemsRef`:
+     * a later charge that month brings none), or wait on the row
+     * (`donations.gems`) until the patron links. A yearly pledge's charge
+     * brings one month's gems.
      */
     patreonCharge: async (c: PatreonCharge) => {
       await sql.begin(async (tx) => {
@@ -155,7 +157,8 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
           insert into donations (provider, ref, patreon_id, user_id, amount, currency, points, paid_at, credited_at, gems)
           values ('patreon', ${c.ref}, ${c.patron}, ${user?.id ?? null}, ${amount}, ${c.currency}, ${donationPoints(amount, c.currency)}, now(), ${user ? new Date() : null}, ${gems})
           on conflict (ref) do nothing`
-        if (user && gems) await moveGems(tx, user.id, gems, 'patreon', c.ref)
+        const ref = patreonGemsRef(c.ref)
+        if (user && gems && ref) await moveGems(tx, user.id, gems, 'patreon', ref)
       })
     },
 
@@ -180,7 +183,11 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
           update donations set user_id = ${userId}, credited_at = coalesce(credited_at, now())
           where provider = 'patreon' and patreon_id = ${patronId} and user_id is null returning ref, gems`
         if (waiting.length > 0) console.log(`patreon ${patronId} linked to ${userId}: ${waiting.length} waiting charges`)
-        for (const w of waiting) if (w.gems) await moveGems(tx, userId, w.gems, 'patreon', w.ref)
+        // Oldest first (the refs end in the charge's date): each month's first charge brings its gems.
+        for (const w of waiting.sort((a, b) => a.ref.localeCompare(b.ref))) {
+          const ref = patreonGemsRef(w.ref)
+          if (w.gems && ref) await moveGems(tx, userId, w.gems, 'patreon', ref)
+        }
         const [member] = await tx<{ tier: string | null }[]>`select tier from patreon_members where patreon_id = ${patronId}`
         return [...dropped, await applyPatreon(tx, userId, parseTier(member?.tier))]
       })

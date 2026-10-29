@@ -57,34 +57,67 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
   const balance = async (user: string) => (await sql<{ gems: number }[]>`select gems from users where id = ${user}`)[0]?.gems
   const ledgerSum = async (user: string) => (await sql<{ n: number }[]>`select coalesce(sum(amount), 0)::int as n from gem_ledger where user_id = ${user}`)[0]?.n
 
+  const paid = { kind: 'paid', provider: 'stripe', ref: REF, session: 'cs_test_1', payment: 'pi_test_1', amount: 2490, currency: 'brl' } as const
+
+  const opened = () => gems.open({ ref: REF, userId: 'u_a', pack: 'bag', gems: packGems('bag'), provider: 'stripe', currency: 'brl', amount: 2490 })
+
   const bought = async () => {
-    await gems.open({ ref: REF, userId: 'u_a', pack: 'bag', gems: packGems('bag'), provider: 'stripe', currency: 'brl', amount: 2490 })
-    await gems.event({ kind: 'paid', provider: 'stripe', ref: REF, session: 'cs_test_1', payment: 'pi_test_1' })
+    await opened()
+    await gems.event(paid)
   }
 
   it('credits a paid pack once, however often the webhook comes', async () => {
-    await bought()
-    await gems.event({ kind: 'paid', provider: 'stripe', ref: REF, session: 'cs_test_1', payment: 'pi_test_1' })
+    await opened()
+    expect(await gems.purchase('u_a', REF)).toEqual({ status: 'pending', gems: packGems('bag'), balance: 0 })
+    await gems.event(paid)
+    await gems.event(paid)
     expect(await balance('u_a')).toBe(packGems('bag'))
     expect(await ledgerSum('u_a')).toBe(packGems('bag'))
     // Another provider can't pay it.
-    await gems.event({ kind: 'paid', provider: 'abacatepay', ref: REF, session: 'bill_1', payment: 'bill_1' })
+    await gems.event({ ...paid, provider: 'abacatepay', session: 'bill_1', payment: 'bill_1' })
     expect(await balance('u_a')).toBe(packGems('bag'))
+    // Its buyer sees it land; nobody else sees it at all.
+    expect(await gems.purchase('u_a', REF)).toEqual({ status: 'paid', gems: packGems('bag'), balance: packGems('bag') })
+    expect(await gems.purchase('u_b', REF)).toBeNull()
+    expect(await gems.purchase('u_a', 'not-a-uuid')).toBeNull()
+  })
+
+  it('holds a pack charged another amount or currency, uncredited, for support', async () => {
+    await opened()
+    await gems.event({ ...paid, amount: 99, currency: 'usd' })
+    expect(await balance('u_a')).toBe(0)
+    expect(await sql`select state, paid_amount, paid_currency from gem_purchases where ref = ${REF}::uuid`).toEqual([{ state: 'mismatch', paid_amount: 99, paid_currency: 'usd' }])
+    expect((await gems.purchase('u_a', REF))?.status).toBe('pending')
+    // A refund of it has nothing to take back.
+    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_test_1' }, share: { refunded: 99, amount: 99 }, key: 'refund:stripe:ch_1:99' })
+    expect(await balance('u_a')).toBe(0)
+    expect((await gems.purchase('u_a', REF))?.status).toBe('refunded')
+  })
+
+  it("keeps a deleted account's purchases and ledger", async () => {
+    await bought()
+    await sql`delete from users where id = 'u_a'`
+    expect(await sql`select user_id, state from gem_purchases`).toEqual([{ user_id: null, state: 'paid' }])
+    expect(await sql`select user_id, ref from gem_ledger`).toEqual([{ user_id: null, ref: `pack:${REF}` }])
+    // Its webhooks still find the row, and move no gems.
+    await gems.event({ kind: 'dispute', provider: 'stripe', purchase: { payment: 'pi_test_1' }, key: 'dispute:stripe:du_1' })
+    expect(await sql`select state from gem_purchases`).toEqual([{ state: 'disputed' }])
   })
 
   it('takes refunds and disputes back without counting a gem twice', async () => {
     await bought()
     const full = packGems('bag')
-    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_test_1' }, refunded: 1245, amount: 2490, key: 'refund:stripe:ch_1:1245' })
-    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_test_1' }, refunded: 1245, amount: 2490, key: 'refund:stripe:ch_1:1245' })
+    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_test_1' }, share: { refunded: 1245, amount: 2490 }, key: 'refund:stripe:ch_1:1245' })
+    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_test_1' }, share: { refunded: 1245, amount: 2490 }, key: 'refund:stripe:ch_1:1245' })
     expect(await balance('u_a')).toBe(full - full / 2)
     await gems.event({ kind: 'dispute', provider: 'stripe', purchase: { payment: 'pi_test_1' }, key: 'dispute:stripe:du_1' })
     expect(await balance('u_a')).toBe(0)
     await gems.event({ kind: 'disputeWon', provider: 'stripe', purchase: { payment: 'pi_test_1' }, dispute: 'dispute:stripe:du_1', key: 'dispute-won:stripe:du_1' })
     expect(await balance('u_a')).toBe(full / 2)
     expect(await ledgerSum('u_a')).toBe(full / 2)
+    expect((await gems.purchase('u_a', REF))?.status).toBe('paid')
     // A donation's refund finds no pack.
-    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_other' }, refunded: 500, amount: 500, key: 'refund:stripe:ch_2:500' })
+    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_other' }, share: { refunded: 500, amount: 500 }, key: 'refund:stripe:ch_2:500' })
     expect(await ledgerSum('u_a')).toBe(full / 2)
   })
 
@@ -100,7 +133,7 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
   it('blocks buying once a refund of spent gems leaves the balance negative', async () => {
     await bought()
     await gems.buy('u_a', 'strawHat', 150)
-    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_test_1' }, refunded: 2490, amount: 2490, key: 'refund:stripe:ch_1:2490' })
+    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_test_1' }, share: 'all', key: 'refund:stripe:ch_1:2490' })
     expect(await balance('u_a')).toBe(-150)
     expect(await gems.buy('u_a', 'sparkTrail', 150)).toEqual({ ok: false, error: 'gems' })
   })
@@ -113,6 +146,8 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
     const tickets = await arenaStore(sql).tickets(['u_a', 'u_z'])
     expect(tickets.ratings.u_a?.look).toEqual({ head: 'strawHat' })
     expect(tickets.ratings.u_z?.look).toEqual({})
+    // A friends' room asks the same, at its start.
+    expect(Object.fromEntries(await gems.looks(['u_a', 'u_z']))).toEqual({ u_a: { head: 'strawHat' } })
   })
 
   it("credits play gems for confirmed reports, up to the day's cap", async () => {
@@ -133,12 +168,26 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
 
   it("credits a Patreon charge's gems once, waiting for the patron to link", async () => {
     const supporters = supporterStore(sql)
-    const charge = { ref: 'patreon:m1:2026-11-01T00:00:00.000Z', member: 'm1', patron: '42', lifetime: 1000, entitled: 1000, currency: 'usd', tier: 'gold' as const }
+    const charge = { ref: 'patreon:m1:2026-11-01T12:00:00.000Z', member: 'm1', patron: '42', lifetime: 1000, entitled: 1000, currency: 'usd', tier: 'gold' as const }
     await supporters.patreonCharge(charge)
     await supporters.linkPatreon('u_a', '42')
     await supporters.patreonCharge(charge)
     expect(await balance('u_a')).toBe(GEM_PATREON.gold)
-    await supporters.patreonCharge({ ...charge, ref: 'patreon:m1:2026-12-01T00:00:00.000Z', lifetime: 2000 })
+    await supporters.patreonCharge({ ...charge, ref: 'patreon:m1:2026-12-01T12:00:00.000Z', lifetime: 2000 })
     expect(await balance('u_a')).toBe(2 * GEM_PATREON.gold)
+  })
+
+  it('credits Patreon gems at most once a month, at its first charge’s tier', async () => {
+    const supporters = supporterStore(sql)
+    await supporters.linkPatreon('u_a', '42')
+    const charge = { ref: 'patreon:m1:2026-11-03T12:00:00.000Z', member: 'm1', patron: '42', lifetime: 500, entitled: 500, currency: 'usd', tier: 'supporter' as const }
+    await supporters.patreonCharge(charge)
+    // Dropped to nothing and pledged again at Gold the same month: a new charge, no more gems.
+    await supporters.patreonCharge({ ...charge, ref: 'patreon:m1:2026-11-20T12:00:00.000Z', lifetime: 2500, entitled: 2000, tier: 'gold' })
+    expect(await balance('u_a')).toBe(GEM_PATREON.supporter)
+    expect(await sql`select ref from gem_ledger`).toEqual([{ ref: 'patreon-gems:m1:2026-11' }])
+    // Next month's charge brings the month's gems.
+    await supporters.patreonCharge({ ...charge, ref: 'patreon:m1:2026-12-03T12:00:00.000Z', lifetime: 4500, entitled: 2000, tier: 'gold' })
+    expect(await balance('u_a')).toBe(GEM_PATREON.supporter + GEM_PATREON.gold)
   })
 })

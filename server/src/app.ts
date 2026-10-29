@@ -20,6 +20,7 @@ import { parseHandlePrefix, parsePresenceUpdate, parseRoomCode } from '../../src
 import { parseSaveData } from '../../src/game/meta'
 import { outbreakAt } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
+import type { ArenaLooksResponse } from '../../src/net/arena'
 import { isBoardPeriod, isPlayable, isRunMode, parseDisplayName, parseHandle, parseRunResult } from '../../src/game/ranking'
 import { parseReplay, RULES_VERSION, rulesStanding } from '../../src/game/replay'
 import { parseChunk } from '../../src/game/replayStream'
@@ -59,7 +60,7 @@ export type AppDeps = {
   donate: Donate | null
   supporters: SupporterStore
   /** Gems: the ledger, packs bought with money, cosmetics bought with gems and the equipped Arena look. */
-  gems: Pick<GemStore, 'status' | 'ledger' | 'buy' | 'setLook' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
+  gems: Pick<GemStore, 'status' | 'ledger' | 'purchase' | 'buy' | 'setLook' | 'looks' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
   /** Gem pack checkouts: `card` Stripe Checkout, `pix` AbacatePay; null when the server has no key for one (it answers 503). */
   gemCheckout: { card: StripeCheckout | null; pix: GemPix | null }
   /** Festival da Praça: the pot, donations from the stored save and the plaque. */
@@ -228,6 +229,8 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   and files their waiting charges, then redirects to the game with `?patreon=linked` (or `failed`). `DELETE /patreon/link` (auth):
  *   forgets it, `{ unlinked: true }`. 503 without the Patreon client.
  * - `GET /gems` (auth): `GemsStatus` `{ balance, owned, look }`. `GET /gems/ledger` (auth): the latest 50 `GemLedgerEntry`, newest first.
+ * - `GET /gems/purchase/:ref` (auth): `GemPurchaseResponse` `{ status, gems, balance }`, where the account's own pack `ref` (the
+ *   checkout's `?gems=<ref>`) stands; 404 for anyone else's or an unknown one.
  * - `POST /gems/checkout` (auth) `{ pack, method, currency }`: `{ url }`, a checkout for a gem pack: `card` Stripe Checkout in
  *   `currency`, `pix` AbacatePay in reais (whatever `currency` says). Paid, it comes back to the game with `?gems=<ref>`, and
  *   the webhook credits the pack. 400 invalid, 429 past the checkout limit, 503 without the method's key.
@@ -281,6 +284,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /arena/report` (relay, signed: `x-arena-signature`) `ArenaReport`: a finished match, once per (room, run); an abandoned one (`abandoned: true`) only moves Fair Play.
  *   `ArenaReportResponse`; a retry gets the stored match with `duplicate`. 400 invalid, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
  * - `POST /arena/tickets` (relay, signed) `{ userIds }`: `ArenaTicketsResponse`, each player's current-season MMR, RP and games, and their Fair Play.
+ * - `POST /arena/looks` (relay, signed) `{ userIds }`: `ArenaLooksResponse`, each account's vouched Arena look (a friends' room asks as its run starts).
  * - `POST /arena/practice` (auth) `ArenaPracticeRequest`: a quick match against bots, for history and totals only.
  *   201 `{ match }` (200 `{ duplicate: true }` for a retried `key`), 400 invalid or a bot's slot, 429 past the hourly limit.
  * - `GET /arena/me` (auth): `ArenaProfile`. `GET /arena/history?before=<ms>&limit=` (auth): `ArenaHistoryEntry[]`, newest first.
@@ -529,6 +533,11 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
   app.get('/gems', auth, async (c) => c.json(await gems.status(c.var.userId)))
 
   app.get('/gems/ledger', auth, async (c) => c.json(await gems.ledger(c.var.userId)))
+
+  app.get('/gems/purchase/:ref', auth, async (c) => {
+    const p = await gems.purchase(c.var.userId, c.req.param('ref'))
+    return p ? c.json(p) : c.json({ error: 'no such purchase' }, 404)
+  })
 
   app.post('/gems/checkout', auth, smallBody, async (c) => {
     const body = await json(c)
@@ -799,6 +808,15 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const ids = isRecord(signed.body) && Array.isArray(signed.body.userIds) ? signed.body.userIds : null
     if (!ids || ids.length > 64 || !ids.every((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 64)) return c.json({ error: 'expected { userIds }' }, 400)
     return c.json(await arena.tickets(ids))
+  })
+
+  app.post('/arena/looks', smallBody, async (c) => {
+    const signed = await relayBody(c)
+    if ('error' in signed) return signed.error
+    const ids = isRecord(signed.body) && Array.isArray(signed.body.userIds) ? signed.body.userIds : null
+    if (!ids || ids.length > 64 || !ids.every((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 64)) return c.json({ error: 'expected { userIds }' }, 400)
+    const looks = await gems.looks(ids)
+    return c.json({ looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])) } satisfies ArenaLooksResponse)
   })
 
   app.post('/arena/practice', auth, bodyLimit({ maxSize: 16 * 1024 }), async (c) => {

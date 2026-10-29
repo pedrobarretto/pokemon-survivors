@@ -3,8 +3,8 @@ import { track } from './analytics'
 import { apiCall } from './api'
 import { equip, ownedOnly, sameLook } from './arena/gemShop'
 import { ARENA_COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, slotOf, type ArenaLook, type CosmeticId } from './data/arenaCosmetics'
-import { isGemPackId, packGems, type GemCurrency, type GemMethod, type GemPackId } from './data/gems'
-import { isGemReason, type GemBuyResponse, type GemCheckoutRequest, type GemLedgerEntry, type GemsStatus } from './game/gems'
+import { packGems, type GemCurrency, type GemMethod, type GemPackId } from './data/gems'
+import { isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus } from './game/gems'
 import { isRecord } from './game/parse'
 import { setLocalLook } from './render/arenaLooks'
 import type { WireLook } from './net/protocol'
@@ -12,7 +12,8 @@ import type { WireLook } from './net/protocol'
 /**
  * The Arena's gem shop through the API (`server/`): the balance, what the
  * account owns and its equipped look (`GET /gems`), a pack's checkout
- * (`POST /gems/checkout`, then Stripe or AbacatePay, back on `/?gems=<ref>`),
+ * (`POST /gems/checkout`, then Stripe or AbacatePay, back on `/?gems=<ref>`,
+ * which polls `GET /gems/purchase/<ref>`),
  * a cosmetic bought (`POST /gems/buy`), the look saved (`PUT /gems/look`)
  * and the receipts (`GET /gems/ledger`). The shop needs an account; nothing
  * here ever blocks a guest's game: every call fails soft.
@@ -32,7 +33,8 @@ export const gemsEnabled = Boolean(API_URL)
 
 /* ---------------- Fakes ---------------- */
 
-type Fake = { status: GemsStatus; landing: { gems: number; at: number } | 'never' | null; ledger: GemLedgerEntry[] }
+/** `landing`: the staged checkout's pack, landing at `at` (null: never) and whether it did. */
+type Fake = { status: GemsStatus; landing: { ref: string; gems: number; at: number | null; landed: boolean } | null; ledger: GemLedgerEntry[] }
 
 let fake: Fake | null = null
 
@@ -65,9 +67,18 @@ export const stageGems = (patch: { balance?: number; own?: readonly CosmeticId[]
  */
 export const stageCheckout = (pack: GemPackId | 'never') => {
   if (!fake) fakeGems(true)
-  fake!.landing = pack === 'never' ? 'never' : { gems: packGems(pack), at: Date.now() + 2500 }
-  keepPending({ pack: pack === 'never' ? 'pouch' : pack, before: fake!.status.balance })
-  return `dev-${pack}`
+  const ref = `dev-${pack}`
+  fake!.landing = { ref, gems: packGems(pack === 'never' ? 'pouch' : pack), at: pack === 'never' ? null : Date.now() + 2500, landed: false }
+  return ref
+}
+
+/** Faking: the staged pack lands once its time came (as the webhook would). */
+const landFake = (f: Fake) => {
+  const land = f.landing
+  if (!land || land.landed || land.at === null || Date.now() < land.at) return
+  land.landed = true
+  f.status = { ...f.status, balance: f.status.balance + land.gems }
+  f.ledger.unshift({ amount: land.gems, reason: 'pack', ref: 'dev', at: Date.now() })
 }
 
 /* ---------------- The device's mirror ---------------- */
@@ -145,8 +156,9 @@ export const ownedSet = (s: GemsStatus | null): ReadonlySet<CosmeticId> => new S
 
 /**
  * The look this player brings into an Arena match (its loadout's `look`):
- * the account's, owned items only; nothing for a guest. The relay plays the
- * API's in a queue match, and the shell draws whichever comes back.
+ * the account's, owned items only; nothing for a guest. Only this screen
+ * draws it: everyone else sees the look the API vouched for (the relay asks
+ * it), or none.
  */
 export const equippedLook = (): WireLook => {
   const s = knownGems()
@@ -165,12 +177,7 @@ export const equippedLook = (): WireLook => {
 /** `GET /gems`: the account's gems now (and a look changed offline goes up), or null when they can't be read. */
 export const fetchGems = async (): Promise<GemsStatus | null> => {
   if (fake) {
-    const land = fake.landing
-    if (land && land !== 'never' && Date.now() >= land.at) {
-      fake.status = { ...fake.status, balance: fake.status.balance + land.gems }
-      fake.ledger.unshift({ amount: land.gems, reason: 'pack', ref: 'dev', at: Date.now() })
-      fake.landing = null
-    }
+    landFake(fake)
     notify()
     return fake.status
   }
@@ -186,37 +193,8 @@ export const fetchGems = async (): Promise<GemsStatus | null> => {
   return knownGems()
 }
 
-export type CheckoutOpened = { ok: true; url: string } | { ok: false; why: 'busy' | 'banned' | 'offline' }
-
-const PENDING_KEY = 'ps:gemsCheckout'
-
-/** The checkout this device opened last: its pack and the balance before, so the return can tell the gems landed. */
-type PendingCheckout = { pack: GemPackId; before: number; at: number }
-
-const keepPending = (p: Omit<PendingCheckout, 'at'>) => {
-  try {
-    localStorage.setItem(PENDING_KEY, JSON.stringify({ ...p, at: Date.now() }))
-  } catch {
-    // Storage blocked: the return compares with the mirror's balance.
-  }
-}
-
-const dropPending = () => {
-  try {
-    localStorage.removeItem(PENDING_KEY)
-  } catch {
-    // Storage blocked: nothing was kept.
-  }
-}
-
-const readPending = (): PendingCheckout | null => {
-  try {
-    const raw: unknown = JSON.parse(localStorage.getItem(PENDING_KEY) ?? 'null')
-    return isRecord(raw) && typeof raw.before === 'number' && isGemPackId(raw.pack) && typeof raw.at === 'number' ? { pack: raw.pack, before: raw.before, at: raw.at } : null
-  } catch {
-    return null
-  }
-}
+/** `staged`: faking, the checkout's ref, back at once in the page (null for a real one, which leaves for `url`). */
+export type CheckoutOpened = { ok: true; url: string; staged: string | null } | { ok: false; why: 'busy' | 'banned' | 'offline' }
 
 /**
  * `POST /gems/checkout`: opens a pack's checkout and says where to send the
@@ -224,10 +202,10 @@ const readPending = (): PendingCheckout | null => {
  * checkout "comes back" at once in the page (`?gems=dev-<pack>`).
  */
 export const openCheckout = async (pack: GemPackId, method: GemMethod, currency: GemCurrency): Promise<CheckoutOpened> => {
-  const before = knownGems()?.balance ?? 0
   if (fake) {
     track('gems_checkout', { pack, method, currency })
-    return { ok: true, url: `?gems=${stageCheckout(pack)}` }
+    const ref = stageCheckout(pack)
+    return { ok: true, url: `?gems=${ref}`, staged: ref }
   }
   const body: GemCheckoutRequest = { pack, method, currency }
   const res = await apiCall('/gems/checkout', { method: 'POST', body, auth: true })
@@ -235,9 +213,8 @@ export const openCheckout = async (pack: GemPackId, method: GemMethod, currency:
   if (res.status === 403) return { ok: false, why: 'banned' }
   const url = isRecord(res.body) && typeof res.body.url === 'string' ? res.body.url : null
   if (res.status !== 200 || !url) return { ok: false, why: 'offline' }
-  keepPending({ pack, before })
   track('gems_checkout', { pack, method, currency })
-  return { ok: true, url }
+  return { ok: true, url, staged: null }
 }
 
 export type Bought = { ok: true; status: GemsStatus } | { ok: false; why: 'gems' | 'owned' | 'unsold' | 'busy' | 'banned' | 'offline' }
@@ -338,26 +315,44 @@ export type CheckoutLanded = { outcome: 'ok'; gems: number; balance: number } | 
 
 const wait = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
+const parsePurchase = (v: unknown): GemPurchaseResponse | null =>
+  isRecord(v) && isGemPurchaseStatus(v.status) && typeof v.gems === 'number' && typeof v.balance === 'number' ? { status: v.status, gems: v.gems, balance: v.balance } : null
+
+/** `GET /gems/purchase/<ref>`: where this account's pack stands; `gone` for a ref that isn't its own (or doesn't exist), null when it can't be read now. */
+const fetchPurchase = async (ref: string): Promise<GemPurchaseResponse | 'gone' | null> => {
+  if (fake) {
+    landFake(fake)
+    const land = fake.landing
+    return land?.ref === ref ? { status: land.landed ? 'paid' : 'pending', gems: land.gems, balance: fake.status.balance } : 'gone'
+  }
+  if (!gemsSignedIn()) return null
+  const res = await apiCall(`/gems/purchase/${encodeURIComponent(ref)}`, { auth: true })
+  if (res.status === 404) return 'gone'
+  return res.status === 200 ? parsePurchase(res.body) : null
+}
+
 /**
- * After a checkout came back: asks `GET /gems` (backing off) until the
- * balance grows past the one before it (the pending checkout's, else the
- * mirror's, else the first answer), or the wait runs out. `alive` false
- * stops it (the screen went).
+ * After the checkout of pack `ref` came back: asks `GET /gems/purchase/<ref>`
+ * (backing off) until that pack is paid, then celebrates exactly its gems
+ * (other gems landing meanwhile, Patreon's or a match's, don't count). A ref
+ * that isn't this account's, a pack refunded or disputed meanwhile, or the
+ * wait running out say they're on their way. `alive` false stops it (the
+ * screen went).
  */
-export const awaitCheckout = async (alive: () => boolean): Promise<CheckoutLanded> => {
+export const awaitCheckout = async (ref: string, alive: () => boolean): Promise<CheckoutLanded> => {
   const started = Date.now()
-  const pending = readPending()
   const limit = started + (fake ? RETURN_WAIT.fakeMs : RETURN_WAIT.ms)
-  let before = pending && started - pending.at < 86_400_000 ? pending.before : (knownGems()?.balance ?? null)
   const report = (landed: CheckoutLanded) => {
     track('gems_return', { outcome: landed.outcome, gems: landed.outcome === 'ok' ? landed.gems : 0, seconds: Math.round((Date.now() - started) / 1000) })
-    if (landed.outcome === 'ok') dropPending()
     return landed
   }
   for (let step = 0; Date.now() < limit && alive(); step++) {
-    const s = await fetchGems()
-    if (s && before === null) before = s.balance
-    else if (s && before !== null && s.balance > before) return report({ outcome: 'ok', gems: s.balance - before, balance: s.balance })
+    const p = await fetchPurchase(ref)
+    if (p === 'gone' || p?.status === 'refunded' || p?.status === 'disputed') break
+    if (p?.status === 'paid') {
+      void fetchGems()
+      return report({ outcome: 'ok', gems: p.gems, balance: p.balance })
+    }
     await wait(Math.min(1200 + step * 600, 5000))
   }
   return report({ outcome: 'timeout' })

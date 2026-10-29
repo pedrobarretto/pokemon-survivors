@@ -138,8 +138,8 @@ describe.skipIf(!url)('arena store (Postgres)', () => {
     const [a] = await arena.history('u_a', LATER, 5)
     expect(a).toMatchObject({ format: 'quick', outcome: 'loss', protected: false, rp: null })
     expect((await arena.tickets(['u_a', 'u_b'])).ratings).toMatchObject({ u_a: { fairPlay: 50 + finish }, u_b: { fairPlay: 50 + finish } })
-    // A 4v4 says no format.
-    await arena.report(report({ run: 2, kind: 'casual', seats }))
+    // A 4v4 says no format (a minute later, so it heads the history).
+    await arena.report(report({ run: 2, kind: 'casual', seats, endedAt: seasonById(1).startMs + 120_000 }))
     expect((await arena.history('u_a', LATER, 5))[0]).not.toHaveProperty('format')
   })
 

@@ -32,7 +32,7 @@ export type Ticket = {
   holdUntil: number
   /** The Durable Object location hint nearest the player (`hintFor`), or null. */
   hint: string | null
-  /** The Arena look the API vouches for (`ArenaTicketRating.look`), which the matched room plays over the client's; absent: the client's stands. */
+  /** The Arena look the API vouches for (`ArenaTicketRating.look`), the only one the matched room shows; absent (no answer, an older API): none. */
   look?: WireLook
 }
 
@@ -96,7 +96,7 @@ export const parseTickets = (v: unknown): ArenaTicketsResponse['ratings'] => {
     if (!isRecord(r) || typeof r.mmr !== 'number' || !Number.isFinite(r.mmr)) continue
     // An API from before Fair Play sends none: a full score.
     const fairPlay = typeof r.fairPlay === 'number' && Number.isFinite(r.fairPlay) ? r.fairPlay : ARENA_RANKED.fairPlay.max
-    // An API from before the gem shop sends no look: the client's stands.
+    // An API from before the gem shop sends no look: the seat plays bare.
     const look = parseWireLook(r.look)
     out[id] = { mmr: r.mmr, rp: typeof r.rp === 'number' ? r.rp : 0, games: typeof r.games === 'number' ? r.games : 0, fairPlay, ...(look && { look }) }
   }

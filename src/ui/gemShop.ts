@@ -264,9 +264,9 @@ const sheet = (root: HTMLElement, input: Input, cls: string, closable: () => boo
 /**
  * A pack's checkout sheet: what it gives and costs in `currency`, and a
  * button per way to pay; one opens the checkout and leaves for it. Faking
- * (`ps.gems('fake')`), the checkout comes back at once: `returned`.
+ * (`ps.gems('fake')`), the checkout comes back at once: `returned`, with its ref.
  */
-const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currency: GemCurrency, returned: () => void, onClose: () => void) => {
+const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currency: GemCurrency, returned: (ref: string) => void, onClose: () => void) => {
   const m = t().gems
   const def = GEM_PACKS[pack]
   let busy = false
@@ -280,10 +280,10 @@ const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currenc
     status.classList.add('blink')
     buttons.forEach((b) => (b.disabled = true))
     void openCheckout(pack, method, currency).then((res) => {
-      if (res.ok && gemsFaked()) {
+      if (res.ok && res.staged !== null) {
         busy = false
         s.close()
-        return returned()
+        return returned(res.staged)
       }
       if (res.ok) return location.assign(res.url)
       busy = false
@@ -311,14 +311,14 @@ const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currenc
   later(() => buttons[0]?.focus())
 }
 
-/** Back from a checkout: waits for the gems (`awaitCheckout`), then celebrates them, or says they're on their way. */
-const returnSheet = (root: HTMLElement, input: Input, onClose: () => void) => {
+/** Back from the checkout of pack `ref`: waits for that pack (`awaitCheckout`), then celebrates its gems, or says they're on their way. */
+const returnSheet = (root: HTMLElement, input: Input, ref: string, onClose: () => void) => {
   const m = t().gems.checkout
   let waiting = true
   const s = sheet(root, input, 'gem-return', () => !waiting, onClose)
   const ok = h('button', { class: 'btn confirm', type: 'button', onclick: () => (playSfx('select'), s.close()) }, m.ok)
   s.box.append(h('img', { class: 'gem-return-icon wobble', src: gemIconUrl(), alt: '' }), h('b', { class: 'gem-return-title blink' }, m.processing), h('p', {}, m.processingNote))
-  void awaitCheckout(() => s.box.isConnected).then((landed) => {
+  void awaitCheckout(ref, () => s.box.isConnected).then((landed) => {
     if (!s.box.isConnected) return
     waiting = false
     if (landed.outcome === 'ok') {
@@ -386,8 +386,8 @@ const signInCard = (ctx: GemTabsContext) => {
 /** A receipt's moment, short. */
 const when = (ms: number) => new Date(ms).toLocaleString(tag(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
-/** The Loja. `checkout`: the page came back from a checkout (`?gems=`), so it opens on the return sheet. */
-export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
+/** The Loja. `checkout`: the ref the page came back from a checkout with (`?gems=<ref>`), so it opens on its return sheet; null otherwise. */
+export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab => {
   let status = knownGems()
   let currency: GemCurrency = savedCurrency() ?? currencyFor(tag(), Intl.DateTimeFormat().resolvedOptions().timeZone)
   let filter: CosmeticSlot | null = null
@@ -418,9 +418,9 @@ export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
     checkoutSheet(ctx.root, ctx.input, pack, currency, openReturn, () => (modal = false))
   }
 
-  const openReturn = () => {
+  const openReturn = (ref: string) => {
     modal = true
-    returnSheet(ctx.root, ctx.input, () => (modal = false))
+    returnSheet(ctx.root, ctx.input, ref, () => (modal = false))
   }
 
   const buy = (id: CosmeticId) => {
@@ -636,9 +636,9 @@ export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
       // The cards draw the wearables themselves once their engine is in.
       if (icons.size === 0) void loadWearables().then(() => el.isConnected && paint(), () => undefined)
       if (signedIn()) void fetchGems()
-      if (returning) {
-        returning = false
-        openReturn()
+      if (returning !== null) {
+        openReturn(returning)
+        returning = null
       }
     },
     busy: () => modal || dialog !== null,

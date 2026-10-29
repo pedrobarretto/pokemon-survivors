@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { isRecord } from '../../src/game/parse'
 import { parseHandle } from '../../src/game/ranking'
 import { PATREON_TIER_IDS } from '../../src/data/supporters'
+import { brasiliaDay } from '../../src/game/day'
 import { highestTier, pledgeTier, type SupporterTier } from '../../src/game/supporters'
 import type { GemEvent } from './gems'
 
@@ -16,6 +17,9 @@ export type PaidDonation = { provider: 'stripe' | 'abacatepay'; ref: string; amo
 
 /** Prefix of our AbacatePay checkouts' `externalId` (the account is shared with other products). */
 export const ABACATE_REF = 'pokemon-survivors-donation:'
+
+/** A count of cents (or reais' centavos), or null. */
+const cents = (v: unknown) => (typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? v : null)
 
 /** Events older than this are refused, so a captured one can't be replayed later (Stripe's default). */
 const STRIPE_TOLERANCE = 300
@@ -75,10 +79,13 @@ const stripeId = (v: unknown) => (typeof v === 'string' && STRIPE_ID.test(v) ? v
  * other event:
  * - a paid Checkout Session whose metadata says `kind: gems`
  *   (`checkout.session.completed`, or `async_payment_succeeded` for slower
- *   methods): `paid`, with its session and PaymentIntent;
+ *   methods): `paid`, with its session, PaymentIntent and what it charged
+ *   (in the pack's own currency when Adaptive Pricing converted it);
  * - `charge.refunded`: how much of the charge went back so far
  *   (`amount_refunded`, cumulative), keyed by that total so each refund lands once;
- * - `charge.dispute.created`: a dispute (a chargeback), the whole pack;
+ * - `charge.dispute.created`: a dispute (a chargeback), the whole pack. An
+ *   inquiry (`warning_*`: no money withdrawn yet) takes nothing; if it
+ *   escalates, Stripe opens a real dispute, which does;
  * - `charge.dispute.closed` as `won`: the dispute's gems come back.
  * Refunds and disputes name the PaymentIntent; one that isn't a pack's
  * (a donation's) finds no purchase and changes nothing.
@@ -91,7 +98,10 @@ export const stripeGems = (event: unknown): GemEvent | null => {
     case 'checkout.session.async_payment_succeeded': {
       const meta = isRecord(o.metadata) ? o.metadata : null
       if (meta?.kind !== 'gems' || o.payment_status !== 'paid' || typeof meta.ref !== 'string' || !PURCHASE_REF.test(meta.ref)) return null
-      return { kind: 'paid', provider: 'stripe', ref: meta.ref, session: stripeId(o.id), payment: stripeId(o.payment_intent) }
+      const conversion = isRecord(o.currency_conversion) ? o.currency_conversion : null
+      const amount = cents(conversion ? conversion.amount_total : o.amount_total)
+      const currency = conversion ? conversion.source_currency : o.currency
+      return { kind: 'paid', provider: 'stripe', ref: meta.ref, session: stripeId(o.id), payment: stripeId(o.payment_intent), amount, currency: typeof currency === 'string' ? currency.toLowerCase() : null }
     }
     case 'charge.refunded': {
       const payment = stripeId(o.payment_intent)
@@ -99,14 +109,16 @@ export const stripeGems = (event: unknown): GemEvent | null => {
       const amount = typeof o.amount === 'number' && Number.isSafeInteger(o.amount) ? o.amount : null
       const refunded = typeof o.amount_refunded === 'number' && Number.isSafeInteger(o.amount_refunded) ? o.amount_refunded : null
       if (!payment || !id || amount === null || refunded === null || refunded <= 0) return null
-      return { kind: 'refund', provider: 'stripe', purchase: { payment }, refunded, amount, key: `refund:stripe:${id}:${refunded}` }
+      return { kind: 'refund', provider: 'stripe', purchase: { payment }, share: { refunded, amount }, key: `refund:stripe:${id}:${refunded}` }
     }
     case 'charge.dispute.created':
     case 'charge.dispute.closed': {
       const payment = stripeId(o.payment_intent)
       const id = stripeId(o.id)
       if (!payment || !id) return null
-      if (event.type === 'charge.dispute.created') return { kind: 'dispute', provider: 'stripe', purchase: { payment }, key: `dispute:stripe:${id}` }
+      if (event.type === 'charge.dispute.created') {
+        return typeof o.status === 'string' && o.status.startsWith('warning_') ? null : { kind: 'dispute', provider: 'stripe', purchase: { payment }, key: `dispute:stripe:${id}` }
+      }
       return o.status === 'won' ? { kind: 'disputeWon', provider: 'stripe', purchase: { payment }, dispute: `dispute:stripe:${id}`, key: `dispute-won:stripe:${id}` } : null
     }
     default:
@@ -159,11 +171,12 @@ export const ABACATE_GEMS_REF = 'pokemon-survivors-gems:'
 /**
  * What an AbacatePay event says about a gem pack (`GemEvent`), or null: the
  * checkout's `externalId` names the purchase. `checkout.completed` and
- * `PAID`: paid. `checkout.refunded`: refunded (AbacatePay refunds only in
- * full). `checkout.disputed` (a dispute or a Pix MED opened) and
- * `checkout.lost` (lost): the whole pack, once per checkout. Their payloads
- * still say `PAID`, so the event's name decides. AbacatePay sends nothing
- * when a dispute is won: support gives those gems back by hand.
+ * `PAID`: paid, with what it charged (`paidAmount`, reais). `checkout.refunded`:
+ * the whole pack, whatever the payload's amounts say (AbacatePay refunds only
+ * in full). `checkout.disputed` (a dispute or a Pix MED opened): the whole
+ * pack, once per checkout. Their payloads still say `PAID`, so the event's
+ * name decides. AbacatePay sends nothing when a dispute is won: support
+ * gives those gems back by hand.
  */
 export const abacateGems = (event: unknown): GemEvent | null => {
   if (!isRecord(event) || !isRecord(event.data) || !isRecord(event.data.checkout)) return null
@@ -171,14 +184,12 @@ export const abacateGems = (event: unknown): GemEvent | null => {
   const ext = typeof c.externalId === 'string' && c.externalId.startsWith(ABACATE_GEMS_REF) ? c.externalId.slice(ABACATE_GEMS_REF.length) : null
   const id = typeof c.id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(c.id) ? c.id : null
   if (!ext || !PURCHASE_REF.test(ext) || !id) return null
-  const amount = typeof c.paidAmount === 'number' ? c.paidAmount : typeof c.amount === 'number' ? c.amount : null
   switch (event.event) {
     case 'checkout.completed':
-      return c.status === 'PAID' ? { kind: 'paid', provider: 'abacatepay', ref: ext, session: id, payment: id } : null
+      return c.status === 'PAID' ? { kind: 'paid', provider: 'abacatepay', ref: ext, session: id, payment: id, amount: cents(c.paidAmount) ?? cents(c.amount), currency: 'brl' } : null
     case 'checkout.refunded':
-      return amount === null ? null : { kind: 'refund', provider: 'abacatepay', purchase: { ref: ext }, refunded: amount, amount, key: `refund:abacatepay:${id}:${amount}` }
+      return { kind: 'refund', provider: 'abacatepay', purchase: { ref: ext }, share: 'all', key: `refund:abacatepay:${id}` }
     case 'checkout.disputed':
-    case 'checkout.lost':
       return { kind: 'dispute', provider: 'abacatepay', purchase: { ref: ext }, key: `dispute:abacatepay:${id}` }
     default:
       return null
@@ -206,8 +217,6 @@ export type PatreonCharge = { ref: string; member: string; patron: string; lifet
 
 /** Patreon's ids (members are uuids, users numbers): nothing else goes into a ref. */
 const PATREON_ID = /^[A-Za-z0-9-]{1,64}$/
-
-const cents = (v: unknown) => (typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? v : null)
 
 /** The member a Patreon `members:` event is about: its id, attributes and Patreon user id (`patron`), or null. */
 const memberOf = (event: string | undefined, body: unknown) => {
@@ -258,6 +267,21 @@ export const patreonCharge = (event: string | undefined, body: unknown, fallback
   const currency = isRecord(campaign) && isRecord(campaign.attributes) && typeof campaign.attributes.currency === 'string' ? campaign.attributes.currency : fallbackCurrency
   const tier = entitledTier(m.relationships, body.included)
   return { ref: `patreon:${m.id}:${date.toISOString()}`, member: m.id, patron: m.patron, lifetime, entitled, currency: currency.toLowerCase(), tier }
+}
+
+/**
+ * The ledger ref of the gems a Patreon charge (`PatreonCharge.ref`,
+ * `patreon:<member>:<charge date>`) brings: one per member and Brasília
+ * month (`patreon-gems:<member>:<YYYY-MM>`), so the month's first paid charge
+ * credits its tier's gems and any later one that month (an upgrade's
+ * prorated charge, a pledge dropped and made again) none. Null for a ref of
+ * another shape.
+ */
+export const patreonGemsRef = (chargeRef: string): string | null => {
+  const [kind, member, ...rest] = chargeRef.split(':')
+  const date = new Date(rest.join(':'))
+  if (kind !== 'patreon' || !member || Number.isNaN(date.getTime())) return null
+  return `patreon-gems:${member}:${brasiliaDay(date).slice(0, 7)}`
 }
 
 /** A patron's tier now, as a Patreon member event tells it: `patron` their Patreon user id, `tier` null once the pledge ended. */

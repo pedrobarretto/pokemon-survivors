@@ -113,5 +113,11 @@ export type ArenaTicketsRequest = { userIds: string[] }
  */
 export type ArenaTicketRating = { mmr: number; rp: number; games: number; fairPlay: number; look?: Partial<Record<string, string>> }
 
+/** `POST /arena/looks` (relay → API), signed like `ArenaReport`: the accounts in a friends' Arena room about to start. */
+export type ArenaLooksRequest = { userIds: string[] }
+
+/** What `POST /arena/looks` answers: each asked account's vouched look (`ArenaTicketRating.look`, `{}` for none), by user id. */
+export type ArenaLooksResponse = { looks: Record<string, Partial<Record<string, string>>> }
+
 /** What `POST /arena/tickets` answers: the season it read (the first one before it starts) and each asked player's rating, by user id. */
 export type ArenaTicketsResponse = { season: number; ratings: Record<string, ArenaTicketRating> }

@@ -228,7 +228,8 @@ export class Matchmaker extends DurableObject<Env> {
    * Asks the API for the MMR and Fair Play of the accounts waiting without an
    * MMR (one request at a time), and applies Fair Play (`fairPlayGate`: a
    * Ranqueada refused, a ticket held). No answer: they match at the start,
-   * their Fair Play unchecked (the API that would take it is down too).
+   * their Fair Play unchecked (the API that would take it is down too), and
+   * bare: a look only the API vouched for is ever shown (`withLook`).
    */
   private lookUpMmr() {
     const asking = [...this.tickets.values()].filter((t) => t.mmr === null)

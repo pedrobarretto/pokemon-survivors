@@ -10,7 +10,7 @@ import { formAt } from '../game/branch'
 import { localPlayer } from '../game/players'
 import type { Game, GameEvent, Player } from '../game/types'
 import type { VersusState } from '../game/versus'
-import { lookOf } from './arenaLooks'
+import { arenaMatchKey, lookOf } from './arenaLooks'
 import { createCompanion, drawCompanion, stepCompanion, type CompanionView } from './companion'
 import { detail } from './quality'
 import { drawPokemon, freeSheet, loadSheet, sprites, type Sheet } from './sprites'
@@ -626,6 +626,9 @@ const emoteUrl = (dex: number, anim: EmoteAnim) => `${import.meta.env.BASE_URL}a
 /** Emote sheets by `dex:anim`: loaded, on their way (null) or failed (false). Freed when the match ends. */
 const sheets = new Map<string, Sheet | null | false>()
 
+/** Bumped by every `resetArenaFx`: a load asked before it lands into nothing (its sheet is freed), however soon the same sheet is asked again. */
+let sheetsGen = 0
+
 /** The emote sheet of `dex`, loading it the first time it's asked for; null until it lands. */
 const emoteSheet = (dex: number, anim: EmoteAnim): Sheet | null => {
   const key = `${dex}:${anim}`
@@ -637,9 +640,10 @@ const emoteSheet = (dex: number, anim: EmoteAnim): Sheet | null => {
     return null
   }
   sheets.set(key, null)
+  const gen = sheetsGen
   loadSheet(emoteUrl(dex, anim), meta).then(
-    (sheet) => (sheets.has(key) ? sheets.set(key, sheet) : freeSheet(sheet)),
-    () => sheets.set(key, false),
+    (sheet) => (gen === sheetsGen && sheets.get(key) === null ? sheets.set(key, sheet) : freeSheet(sheet)),
+    () => gen === sheetsGen && sheets.set(key, false),
   )
   return null
 }
@@ -651,8 +655,14 @@ type FollowerSeat = { id: string; view: CompanionView; float: boolean; legendary
 /** A follower to sort among the drawables (`render/draw.ts`), by its feet. */
 export type FollowerDrawable = { follower: FollowerSeat }
 
-/** The match the effects belong to (its state object: a new match is a new one), and what they hold for it. */
-let match: VersusState | null = null
+/**
+ * The match the effects belong to (`matchOf`: the shell's key for it, else
+ * its state object), and what they hold for it.
+ */
+let match: string | VersusState | null = null
+
+/** What names `s`'s match: the shell's room and run (`setArenaMatch`), which a snapshot heal or a rejoin keeps; else the state object (a new match is a new one). */
+const matchOf = (s: VersusState): string | VersusState => arenaMatchKey() ?? s
 let last = -1
 const followers: (FollowerDrawable | null)[] = []
 const trailIn: number[] = []
@@ -672,6 +682,7 @@ export const resetArenaFx = () => {
   followers.length = trailIn.length = trailAt.length = trailN.length = flourishIn.length = cut.length = readied.length = 0
   for (const sheet of sheets.values()) if (sheet) freeSheet(sheet)
   sheets.clear()
+  sheetsGen++
 }
 
 const headOf = (p: Player) => p.y - bodyOf(formAt(p.starter, p.branch, p.stage).dex).bodyH
@@ -753,7 +764,7 @@ const readyEmote = (p: Player) => {
 /** Takes up a new match: its followers and the opening spawn effects. */
 const begin = (g: Game, s: VersusState) => {
   resetArenaFx()
-  match = s
+  match = matchOf(s)
   for (const p of g.players) {
     syncFollower(p)
     readyEmote(p)
@@ -784,7 +795,7 @@ const goalNear = (s: VersusState, x: number, y: number) => {
 export const arenaFxEvent = (g: Game, e: GameEvent) => {
   const s = g.versus
   if (!s) return
-  if (match !== s) begin(g, s)
+  if (match !== matchOf(s)) begin(g, s)
   switch (e.kind) {
     case 'versusBack': {
       const p = g.players[e.slot]
@@ -821,7 +832,7 @@ export const stepArenaFx = (g: Game, t: number) => {
     if (match) resetArenaFx()
     return
   }
-  if (match !== s) begin(g, s)
+  if (match !== matchOf(s)) begin(g, s)
   const dt = last < 0 ? 0 : Math.max(0, Math.min(0.1, t - last))
   last = t
   if (dt === 0) return
@@ -877,7 +888,7 @@ export const stepArenaFx = (g: Game, t: number) => {
 
 /** The followers of the seats this screen sees, for the depth pass. */
 export const arenaFollowers = (g: Game, out: { push: (d: FollowerDrawable) => unknown }) => {
-  if (!g.versus || match !== g.versus) return
+  if (!g.versus || match !== matchOf(g.versus)) return
   const viewer = localPlayer(g)
   for (const f of followers) if (f && shows(viewer, g.players[f.follower.slot])) out.push(f)
 }
@@ -900,7 +911,7 @@ const particleShows = (g: Game, viewer: Player, i: number, visible: (x: number, 
 
 /** Under the Pokémon: the trails' particles, the bursts' rings and an emote's aura. */
 export const drawArenaFxGround = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
-  if (!g.versus || match !== g.versus) return
+  if (!g.versus || match !== matchOf(g.versus)) return
   const viewer = localPlayer(g)
   for (const b of bursts) if (b.on && visible(b.x, b.y, 60)) drawBurstGround(ctx, b)
   for (const p of g.players) {
@@ -918,7 +929,7 @@ export const drawArenaFxGround = (ctx: Ctx, g: Game, t: number, visible: (x: num
 
 /** Over the Pokémon: the bursts and the flourishes. */
 export const drawArenaFxAir = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
-  if (!g.versus || match !== g.versus) return
+  if (!g.versus || match !== matchOf(g.versus)) return
   const viewer = localPlayer(g)
   for (const b of bursts) if (b.on && visible(b.x, b.y, 120)) drawBurstAir(ctx, b, t)
   for (let i = 0; i < count; i++) if (P.air[i] === 1 && particleShows(g, viewer, i, visible)) drawParticle(ctx, i, t)

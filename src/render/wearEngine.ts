@@ -287,6 +287,12 @@ export const wearableIcon = (id: WearableId): HTMLCanvasElement => {
   return icon
 }
 
+/** Lets go of the rendered art (a match ended: the next one renders what its looks wear), so a long session doesn't keep every look it ever saw. */
+export const freeWearArt = () => {
+  arts.clear()
+  jobs.clear()
+}
+
 /** Drops the cached wearers and art (the fitting tool changes `WEAR_FITS` live). */
 export const refit = () => {
   wearers.clear()

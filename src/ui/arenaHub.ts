@@ -121,10 +121,10 @@ const meter = (value: number, max: number, level: 'good' | 'warn' | 'bad' | 'gol
 
 /**
  * `signIn`: the way to an account (null in a build without accounts: the hub shows the device's history alone).
- * `pick`: the Arena's Pokémon, the gem tabs' preview (Visual changes it with `keepPick`). `checkout`: the page came
- * back from a gem pack's checkout (`?gems=`), so the Loja opens on its return.
+ * `pick`: the Arena's Pokémon, the gem tabs' preview (Visual changes it with `keepPick`). `checkout`: the ref the page came
+ * back from a gem pack's checkout with (`?gems=<ref>`), so the Loja opens on that pack's return.
  */
-export type ArenaHubActions = { back: () => void; signIn: (() => void) | null; pick: VersusPick; keepPick: (id: VersusPick) => void; checkout?: boolean }
+export type ArenaHubActions = { back: () => void; signIn: (() => void) | null; pick: VersusPick; keepPick: (id: VersusPick) => void; checkout?: string }
 
 export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, actions: ArenaHubActions): Screen => {
   const m = t().versus.hub
@@ -158,7 +158,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
     goTab: (id) => switchTab(id),
   }
   const gemTabs: { shop?: GemTab; locker?: GemTab } = {}
-  const gemTab = (id: 'shop' | 'locker') => (gemTabs[id] ??= id === 'shop' ? shopTab(gemCtx, actions.checkout === true) : lockerTab(gemCtx))
+  const gemTab = (id: 'shop' | 'locker') => (gemTabs[id] ??= id === 'shop' ? shopTab(gemCtx, actions.checkout ?? null) : lockerTab(gemCtx))
   const chip = gemChip(() => switchTab('shop'))
 
   /** The button Enter presses on the tab shown (sign in, load more), if any. */

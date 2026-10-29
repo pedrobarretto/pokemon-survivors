@@ -1,13 +1,13 @@
 -- Gems: the Arena shop's currency (src/gems.ts, rules in ../src/game/gems.ts). Only adds, so the previous API keeps working during a rollout.
 
 -- Every move of an account's gems, append-only. `ref` is unique across the whole ledger, so a webhook, a
--- report or a click that comes twice lands once: `pack:<purchase ref>`, `patreon:<member>:<charge date>`,
--- `play:<room>:<run>:<user>`, `buy:<user>:<cosmetic>`, `refund:<provider>:<payment>:<refunded cents>`,
+-- report or a click that comes twice lands once: `pack:<purchase ref>`, `patreon-gems:<member>:<YYYY-MM>` (Brasília),
+-- `play:<room>:<run>:<user>`, `buy:<user>:<cosmetic>`, `refund:stripe:<charge>:<refunded cents>`, `refund:abacatepay:<checkout>`,
 -- `dispute:<provider>:<id>`, `dispute-won:<provider>:<id>`. `day`: the Brasília day of a play credit (the
--- daily cap counts by it).
+-- daily cap counts by it). `user_id` goes null when the account is deleted: the payments' trail stays.
 create table gem_ledger (
   id bigserial primary key,
-  user_id text not null references users (id) on delete cascade,
+  user_id text references users (id) on delete set null,
   amount integer not null check (amount <> 0),
   reason text not null check (reason in ('pack', 'patreon', 'play', 'buy', 'refund', 'dispute', 'disputeWon', 'grant')),
   ref text not null unique,
@@ -27,10 +27,13 @@ alter table users add column arena_look jsonb not null default '{}';
 
 -- Gem packs bought with money: opened at checkout (`ref`, the game's `?gems=<ref>`), paid by the webhook.
 -- `payment`: what refunds and disputes name (Stripe's PaymentIntent, AbacatePay's checkout `bill_…`).
--- `taken_back`: gems refunds and disputes took from this pack so far.
+-- `taken_back`: gems refunds and disputes took from this pack so far. `state`: `open` until paid, `paid` (credited),
+-- `mismatch` (the provider charged another amount or currency than `amount`/`currency`: held, never credited, for
+-- support), `refunded`, `disputed`; `paid_amount`/`paid_currency`: what the provider said it charged. `user_id` goes
+-- null when the account is deleted: the payment's record stays.
 create table gem_purchases (
   ref uuid primary key,
-  user_id text not null references users (id) on delete cascade,
+  user_id text references users (id) on delete set null,
   pack text not null,
   gems integer not null check (gems > 0),
   provider text not null check (provider in ('stripe', 'abacatepay')),
@@ -39,6 +42,9 @@ create table gem_purchases (
   session text unique,
   payment text unique,
   taken_back integer not null default 0,
+  state text not null default 'open' check (state in ('open', 'paid', 'mismatch', 'refunded', 'disputed')),
+  paid_amount integer,
+  paid_currency text,
   created_at timestamptz not null default now(),
   paid_at timestamptz
 );

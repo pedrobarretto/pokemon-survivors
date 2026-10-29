@@ -76,5 +76,8 @@ export const wearableIcon = (id: WearableId): HTMLCanvasElement | null => engine
 /** Dev: forgets the engine's fits and art after `WEAR_FITS` changes (the fitting gallery, `ui/wearFitting.ts`). */
 export const refitWearables = () => engine?.refit()
 
+/** A match ended: the engine lets go of its rendered art (`freeWearArt`). */
+export const freeWearables = () => engine?.freeWearArt()
+
 /** Dev: how many draws since the last ask found their art still rendering (`ui/wearFitting.ts`'s contact sheets wait for none). */
 export const wearMisses = () => engine?.takeMisses() ?? 0

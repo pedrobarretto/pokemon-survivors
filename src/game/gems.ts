@@ -26,6 +26,24 @@ export type GemCheckoutRequest = { pack: GemPackId; method: GemMethod; currency:
 /** `POST /gems/buy`'s answer. */
 export type GemBuyResponse = { balance: number; owned: readonly CosmeticId[] }
 
+/**
+ * A pack's row on the API (`gem_purchases.state`): `open` until paid; `paid`
+ * credited; `mismatch` paid a different amount or currency than the pack's
+ * price, so held for support, never credited; `refunded` or `disputed` taken
+ * back (a won dispute makes it `paid` again).
+ */
+export type PurchaseState = 'open' | 'paid' | 'mismatch' | 'refunded' | 'disputed'
+
+/** Where a checkout's pack stands for its buyer: a held one (`mismatch`) still waits, as support settles it. */
+export type GemPurchaseStatus = 'pending' | 'paid' | 'refunded' | 'disputed'
+
+export const purchaseStatus = (state: PurchaseState): GemPurchaseStatus => (state === 'open' || state === 'mismatch' ? 'pending' : state)
+
+export const isGemPurchaseStatus = (v: unknown): v is GemPurchaseStatus => v === 'pending' || v === 'paid' || v === 'refunded' || v === 'disputed'
+
+/** `GET /gems/purchase/:ref`'s answer: where the account's pack stands, the gems it brings and the balance now. */
+export type GemPurchaseResponse = { status: GemPurchaseStatus; gems: number; balance: number }
+
 /** Whether a cosmetic is free: price 0 counts as owned by every account. */
 export const isFree = (id: CosmeticId) => cosmeticPrice(id) === 0
 
