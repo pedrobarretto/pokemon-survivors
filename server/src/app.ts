@@ -7,10 +7,13 @@ import { parseAdminGift, parseAdminQuery } from '../../src/game/admin'
 import { parseArenaResult } from '../../src/game/arenaRank'
 import { parseBugReport } from '../../src/game/bugReport'
 import { challengeOpen } from '../../src/game/challenge'
+import { cosmeticPrice, isCosmeticId } from '../../src/data/arenaCosmetics'
 import { parseDonation } from '../../src/data/donations'
+import { GEM_PACKS, isGemPackId, packGems, type GemCurrency } from '../../src/data/gems'
 import { isPollOptionOf, type PollKind } from '../../src/data/supporters'
-import { isDayKey } from '../../src/game/day'
+import { brasiliaDay, isDayKey } from '../../src/game/day'
 import { parseDonationAmount } from '../../src/game/festival'
+import { isFree, onSale } from '../../src/game/gems'
 import { isDifficulty } from '../../src/game/difficulty'
 import { halloweenAt } from '../../src/game/halloween'
 import { parseHandlePrefix, parsePresenceUpdate, parseRoomCode } from '../../src/game/friends'
@@ -30,18 +33,20 @@ import type { BugReports } from './bugReports'
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report } from './errors'
-import type { Donate } from './donations'
+import type { Donate, GemPix } from './donations'
 import type { CandyGoalStore } from './candyGoal'
 import type { DonateError, FestivalStore } from './festival'
 import type { FriendStore } from './friends'
+import type { GemStore } from './gems'
 import type { GiftStore } from './gifts'
 import type { ModerationStore } from './moderation'
 import type { PatreonOAuth } from './patreon'
 import type { RankingStore } from './ranking'
+import type { StripeCheckout } from './stripe'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
 import { SUGGESTION_ID, type SuggestionStore } from './suggestions'
-import { abacateDonation, ABACATE_REF, patreonCharge, patreonMember, stripeDonation, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
+import { abacateDonation, abacateGems, ABACATE_GEMS_REF, ABACATE_REF, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
 
 export type AppDeps = {
   store: SaveStore
@@ -53,6 +58,10 @@ export type AppDeps = {
   /** Donation checkouts (AbacatePay), null when the server has no key for them. */
   donate: Donate | null
   supporters: SupporterStore
+  /** Gems: the ledger, packs bought with money, cosmetics bought with gems and the equipped Arena look. */
+  gems: Pick<GemStore, 'status' | 'ledger' | 'buy' | 'setLook' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
+  /** Gem pack checkouts: `card` Stripe Checkout, `pix` AbacatePay; null when the server has no key for one (it answers 503). */
+  gemCheckout: { card: StripeCheckout | null; pix: GemPix | null }
   /** Festival da Praça: the pot, donations from the stored save and the plaque. */
   festival: Pick<FestivalStore, 'status' | 'donate' | 'setPublic' | 'takeDonate' | 'takeToggle' | 'held' | 'review'>
   /** Meta da comunidade: every account's candy jar summed, toward the goal that opens Mega Darkrai. */
@@ -208,7 +217,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `GET /donations/:ref`: `DonationStatus`, for the thank-you page (404 until the payment is known).
  * - `POST /donations/redeem` (auth) `{ code }`: credits a donation's code to the player. `{ tier }`;
  *   404 for an unknown code, 409 for one already used.
- * - `POST /webhooks/stripe`, `POST /webhooks/abacatepay`: the payment providers say a donation is paid
+ * - `POST /webhooks/stripe`, `POST /webhooks/abacatepay`: the payment providers say a donation or a gem pack is paid (or a pack refunded or disputed)
  *   (signed: `webhooks.ts`; AbacatePay's the Standard Webhooks way, or with `?webhookSecret=` for an
  *   older webhook). 401 for a bad signature, 503 without the secret.
  * - `POST /webhooks/patreon`: a patron's `members:` event (signed with the webhook's secret: `verifyPatreon`): their
@@ -218,6 +227,13 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   game's origin. `GET /patreon/callback` (Patreon sends the player there) links the account, gives it the patron's tier
  *   and files their waiting charges, then redirects to the game with `?patreon=linked` (or `failed`). `DELETE /patreon/link` (auth):
  *   forgets it, `{ unlinked: true }`. 503 without the Patreon client.
+ * - `GET /gems` (auth): `GemsStatus` `{ balance, owned, look }`. `GET /gems/ledger` (auth): the latest 50 `GemLedgerEntry`, newest first.
+ * - `POST /gems/checkout` (auth) `{ pack, method, currency }`: `{ url }`, a checkout for a gem pack: `card` Stripe Checkout in
+ *   `currency`, `pix` AbacatePay in reais (whatever `currency` says). Paid, it comes back to the game with `?gems=<ref>`, and
+ *   the webhook credits the pack. 400 invalid, 429 past the checkout limit, 503 without the method's key.
+ * - `POST /gems/buy` (auth) `{ id }`: buys a cosmetic. `{ balance, owned }`; 402 `{ error: 'gems' }` short (or negative),
+ *   409 owned already (a free one too), 404 unknown or not on sale. The debit and the ownership land together, once.
+ * - `PUT /gems/look` (auth) `{ look }`: stores the equipped look, keeping only what the account owns or what's free. `{ look }`.
  * - `GET /me/supporter` (auth): `SupporterStatus` (`patreon` null when the server has no Patreon client). `PUT /me/supporter` (auth) `{ public }`: shows or hides the badge and name.
  * - `GET /supporters`: `{ supporters, hidden }`, the wall (`WallEntry[]`, with each one's title and Hall da Fama Pokémon) and how many supporters per tier stay off it.
  * - `GET /poll`: `Poll`. `PUT /poll` (auth) `{ choice }`: a supporter's vote, 403 for anyone else. `GET /poll/diamond`,
@@ -270,7 +286,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `GET /arena/me` (auth): `ArenaProfile`. `GET /arena/history?before=<ms>&limit=` (auth): `ArenaHistoryEntry[]`, newest first.
  * - `GET /arena/leaderboard?season=N&limit=`: `ArenaLeaderboard`, the season's top rows, with a token the asker's own.
  */
-export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
 
@@ -510,6 +526,52 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     return c.json({ tier: redeemed.tier })
   })
 
+  app.get('/gems', auth, async (c) => c.json(await gems.status(c.var.userId)))
+
+  app.get('/gems/ledger', auth, async (c) => c.json(await gems.ledger(c.var.userId)))
+
+  app.post('/gems/checkout', auth, smallBody, async (c) => {
+    const body = await json(c)
+    const pack = isRecord(body) && isGemPackId(body.pack) ? body.pack : null
+    const method = isRecord(body) && (body.method === 'card' || body.method === 'pix') ? body.method : null
+    const asked: GemCurrency | null = isRecord(body) && (body.currency === 'brl' || body.currency === 'usd') ? body.currency : null
+    if (!pack || !method || !asked) return c.json({ error: 'expected { pack, method, currency }' }, 400)
+    // Pix is reais only.
+    const currency = method === 'pix' ? 'brl' : asked
+    const card = method === 'card' ? gemCheckout.card : null
+    const pix = method === 'pix' ? gemCheckout.pix : null
+    if (!card && !pix) return c.json({ error: `${method} is off` }, 503)
+    if (!gems.takeCheckout(c.var.userId)) return c.json({ error: 'too many checkouts' }, 429)
+    const origin = c.req.header('Origin')
+    const base = origin && allowedOrigin(origin) ? origin : SITE
+    const ref = crypto.randomUUID()
+    const back = `${base}/?gems=${ref}`
+    await gems.open({ ref, userId: c.var.userId, pack, gems: packGems(pack), provider: card ? 'stripe' : 'abacatepay', currency, amount: GEM_PACKS[pack][currency] })
+    if (pix) return c.json({ url: await pix(pack, { completionUrl: back, returnUrl: `${base}/` }, `${ABACATE_GEMS_REF}${ref}`) })
+    const opened = await card!({ ref, userId: c.var.userId, pack, currency, successUrl: back, cancelUrl: `${base}/` })
+    await gems.opened(ref, opened.session)
+    return c.json({ url: opened.url })
+  })
+
+  app.post('/gems/buy', auth, smallBody, async (c) => {
+    const body = await json(c)
+    const id = isRecord(body) && isCosmeticId(body.id) ? body.id : null
+    const price = id ? cosmeticPrice(id) : null
+    if (id && isFree(id)) return c.json({ error: 'owned' }, 409)
+    if (!id || price === null || !onSale(id, brasiliaDay(new Date()))) return c.json({ error: 'not sold' }, 404)
+    if (!gems.takeBuy(c.var.userId)) return c.json({ error: 'too many buys' }, 429)
+    const bought = await gems.buy(c.var.userId, id, price)
+    if (!bought.ok) return bought.error === 'gems' ? c.json({ error: 'gems' }, 402) : c.json({ error: 'owned' }, 409)
+    return c.json({ balance: bought.balance, owned: bought.owned })
+  })
+
+  app.put('/gems/look', auth, smallBody, async (c) => {
+    const body = await json(c)
+    if (!isRecord(body) || !isRecord(body.look)) return c.json({ error: 'expected { look }' }, 400)
+    if (!gems.takeLook(c.var.userId)) return c.json({ error: 'too many changes' }, 429)
+    return c.json({ look: await gems.setLook(c.var.userId, body.look) })
+  })
+
   const hookBody = bodyLimit({ maxSize: 64 * 1024 })
 
   app.post('/webhooks/stripe', hookBody, async (c) => {
@@ -517,6 +579,12 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const raw = await c.req.text()
     if (!verifyStripe(raw, c.req.header('Stripe-Signature'), webhooks.stripeSecret, Date.now() / 1000)) return c.json({ error: 'bad signature' }, 401)
     const event: unknown = JSON.parse(raw)
+    // A gem pack's payment, refund or dispute; anything else may be a donation.
+    const gem = stripeGems(event)
+    if (gem) {
+      await gems.event(gem)
+      return c.json({ received: true })
+    }
     const paid = stripeDonation(event, webhooks.stripePaymentLink)
     if (paid) await supporters.paid(paid)
     // A paid session dropped only for its link is usually a mistyped STRIPE_PAYMENT_LINK (ids are case-sensitive).
@@ -535,7 +603,10 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
       ? verifyStandard(raw, standard, secret, Date.now() / 1000)
       : c.req.query('webhookSecret') === secret && verifyAbacate(raw, c.req.header('X-Webhook-Signature'))
     if (!ok) return c.json({ error: 'bad signature' }, 401)
-    const paid = abacateDonation(JSON.parse(raw))
+    const event: unknown = JSON.parse(raw)
+    const gem = abacateGems(event)
+    if (gem) await gems.event(gem)
+    const paid = abacateDonation(event)
     if (paid) await supporters.paid(paid)
     return c.json({ received: true })
   })

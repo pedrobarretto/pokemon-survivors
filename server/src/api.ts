@@ -19,6 +19,8 @@ import { discordLink } from './discordLink'
 import { candyGoalStore } from './candyGoal'
 import { festivalStore } from './festival'
 import { abacatePay } from './donations'
+import { gemStore } from './gems'
+import { stripeCheckout } from './stripe'
 import { friendStore } from './friends'
 import { giftStore } from './gifts'
 import { moderationStore } from './moderation'
@@ -79,13 +81,17 @@ void discord.settleOg().catch((err) => console.error('discord OG roles failed', 
 const arena = arenaStore(sql)
 createArenaRewards(arena).start()
 
+const abacate = env.abacatePayKey ? abacatePay(env.abacatePayKey) : null
+
 const app = createApp({
   store: saveStore(sql),
   ranking,
   friends: friendStore(sql),
   gifts,
   verify: clerkVerifier(env),
-  donate: env.abacatePayKey ? abacatePay(env.abacatePayKey) : null,
+  donate: abacate?.donate ?? null,
+  gems: gemStore(sql),
+  gemCheckout: { card: env.stripeSecretKey ? stripeCheckout(env.stripeSecretKey) : null, pix: abacate?.gems ?? null },
   supporters,
   festival: festivalStore(sql),
   candyGoal: candyGoalStore(sql),

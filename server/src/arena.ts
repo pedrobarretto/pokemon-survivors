@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
+import type { ArenaLook } from '../../src/data/arenaCosmetics'
 import { ARENA_RANKED, type Conduct, type MatchKind } from '../../src/data/arenaRanked'
 import { isVersusPick, type Team, type VersusPick } from '../../src/data/versus'
 import {
@@ -26,16 +27,18 @@ import {
   type Season,
 } from '../../src/game/arenaRank'
 import { ARENA_REWARDS, seasonReward } from '../../src/game/arenaRewards'
+import { brasiliaDay } from '../../src/game/day'
 import { isRecord } from '../../src/game/parse'
 import type { ArenaReport, ArenaReportResponse, ArenaTicketsResponse } from '../../src/net/arena'
 import type { Sql } from './db'
+import { creditPlay, vouchedLooks, type PlaySeat } from './gems'
 import { sendGift } from './gifts'
 import { rateLimiter } from './rateLimit'
 
 /**
  * The Arena's competitive layer: match reports from the relay, ratings per
- * season, Fair Play, history, the season's board and its end-of-season
- * titles. The rules (seasons, MMR, RP, tiers, Fair Play, the protection
+ * season, Fair Play, play gems, history, the season's board and its
+ * end-of-season titles. The rules (seasons, MMR, RP, tiers, Fair Play, the protection
  * meter) are `game/arenaRank.ts`; this file stores what they decide, from
  * the relay's reports only. The relay signs what it sends
  * (`verifyArenaSignature`).
@@ -179,6 +182,9 @@ export const planMatch = (result: ArenaResult, seats: readonly ReportSeat[], rat
     return [{ userId: h.userId, slot, team, starter, form, kos, deaths, scored, damage, left: h.left, outcome: outcomeOf(team, result.winner, h.left), conduct: conducts[i] ?? 'finished', change }]
   })
 }
+
+/** The seats a match's play gems go to: every human who played it out (`finished`: not a leaver, not idle), winners marked. */
+export const playSeats = (lines: readonly ArenaLine[]): PlaySeat[] => lines.flatMap((l) => (l.conduct === 'finished' ? [{ userId: l.userId, won: l.outcome === 'win' }] : []))
 
 /** The humans of a report (accounts on its seats, leavers included), each once, in id order. */
 export const reportUsers = (r: Pick<ParsedReport, 'seats'>) => [...new Set(r.seats.flatMap((s) => (s.userId ? [s.userId] : [])))].sort()
@@ -340,7 +346,8 @@ export const arenaStore = (sql: Sql) => {
      * Stores a relay's report once per (room, run): a retry gets the stored
      * match back (`duplicate`). Rated when `ratingSeason` says so (only the
      * leavers when unconfirmed), in one transaction that locks the players'
-     * season rows first. Lines are stored for history either way.
+     * season rows first. Lines are stored for history either way. A
+     * confirmed result credits play gems (`creditPlay`, `playSeats`).
      */
     report: (r: ParsedReport): Promise<ArenaReportResponse> =>
       sql.begin(async (tx) => {
@@ -364,6 +371,8 @@ export const arenaStore = (sql: Sql) => {
         const lines = planMatch(r.result, r.seats, ratings, r.confirmed)
         await writeLines(tx, match.id, r.kind, season?.id ?? null, at, lines)
         if (r.kind !== 'room' && fairPlayCounts(r.kind, users.length)) await writeConduct(tx, r.room, r.run, r.kind, at, new Map(lines.map((l) => [l.userId, l.conduct])))
+        // Play gems only for a result the clients agreed on, to the seats that played it out.
+        if (r.confirmed) await creditPlay(tx, playSeats(lines), r.room, r.run, brasiliaDay(at))
         return { match: match.id, rated, duplicate: false }
       }),
 
@@ -410,13 +419,20 @@ export const arenaStore = (sql: Sql) => {
       })
     },
 
-    /** Each player's current-season numbers and Fair Play, for the matchmaker (fresh and full for anyone without a row yet). */
+    /**
+     * Each player's current-season numbers, Fair Play and vouched Arena look
+     * (`vouchedLooks`), for the matchmaker (fresh, full and bare for anyone
+     * without a row yet). An older relay ignores `look`.
+     */
     tickets: async (userIds: readonly string[], now = Date.now()): Promise<ArenaTicketsResponse> => {
       const season = shownSeason(now)
-      const [ratings, fair] = userIds.length > 0 ? await Promise.all([ratingsOf(sql, userIds, season.id), fairPlayOf(sql, userIds)]) : [new Map<string, Rating>(), new Map<string, number>()]
+      const [ratings, fair, looks] =
+        userIds.length > 0
+          ? await Promise.all([ratingsOf(sql, userIds, season.id), fairPlayOf(sql, userIds), vouchedLooks(sql, userIds)])
+          : [new Map<string, Rating>(), new Map<string, number>(), new Map<string, ArenaLook>()]
       return {
         season: season.id,
-        ratings: Object.fromEntries([...ratings].map(([id, r]) => [id, { mmr: r.mmr, rp: r.rp, games: r.games, fairPlay: fair.get(id) ?? ARENA_RANKED.fairPlay.max }])),
+        ratings: Object.fromEntries([...ratings].map(([id, r]) => [id, { mmr: r.mmr, rp: r.rp, games: r.games, fairPlay: fair.get(id) ?? ARENA_RANKED.fairPlay.max, look: looks.get(id) ?? {} }])),
       }
     },
 
