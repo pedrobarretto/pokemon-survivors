@@ -4128,6 +4128,11 @@ if (import.meta.env.DEV) {
       coop: devCoop,
       versus: devVersus,
       arena: devArena,
+      /** The Arena's wearables (`ui/wearFitting.ts`, loaded on demand): `ps.wear('topHat')` on your Pokémon in a match, `ps.wear('fit', 'topHat')` the fitting gallery. */
+      wear: (cmd?: string, arg?: unknown, more?: unknown, extra?: unknown) =>
+        import('./ui/wearFitting').then((m) =>
+          m.devWear({ seat: () => (run?.coop?.runner.game.versus ? run.coop.runner.slot : null), seats: () => run?.coop?.runner.game.players.length ?? 0 }, cmd, arg, more, extra),
+        ),
       candyGoal: devCandyGoal,
       /**
        * `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet,

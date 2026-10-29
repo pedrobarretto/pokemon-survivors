@@ -14,6 +14,11 @@ export const STARTERS = [
   810, 811, 812, 813, 814, 815, 816, 817, 818, // Galar
   906, 907, 908, 909, 910, 911, 912, 913, 914, // Paldea
 ]
+/**
+ * The Arena's roster (`VERSUS_ROSTER` in src/data/versus.ts: the 27 starters) with every stage
+ * a match evolves them to: the species whose wearables `npm run anchors` fits (`render/wearFit.test.ts` keeps them in sync).
+ */
+export const ARENA = STARTERS
 /** Families that hatch from eggs (src/data/hatchlings.ts), whole lines. Some also roam the horde. */
 export const HATCHLINGS = [
   172, 25, 26, 66, 67, 68, 133, 197, 175, 176, 468, 363, 364, 365, 396, 397, 398, 406, 315, 407, 744, 745, 736, 737, 738, // common
