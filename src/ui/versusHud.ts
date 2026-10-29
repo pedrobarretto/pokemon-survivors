@@ -44,15 +44,19 @@ let koBy = ''
 const COUNTDOWN = 3
 const GO = 0.8
 
-/** A team's three goals as the score bar lists them: north lane, base, south lane (indices into `VersusState.goals`). */
-const goalOrder = (s: VersusState, team: Team) => {
+type GoalPos = 'top' | 'base' | 'bottom'
+
+/**
+ * A team's goals as the score bar (and the end screen) list them: north
+ * lane, base, south lane, each with its index into `VersusState.goals`. A
+ * map without a base goal (the Clareira) has just its two lanes'.
+ */
+export const goalOrder = (s: VersusState, team: Team): { i: number; pos: GoalPos }[] => {
   const mine = s.goals.flatMap((goal, i) => (goal.team === team ? [i] : []))
   const lane = (north: boolean) => mine.find((i) => !s.goals[i]!.base && s.goals[i]!.y < 0 === north)
   const base = mine.find((i) => s.goals[i]!.base)
-  return [lane(true), base, lane(false)].filter((i): i is number => i !== undefined)
+  return ([['top', lane(true)], ['base', base], ['bottom', lane(false)]] as const).flatMap(([pos, i]) => (i === undefined ? [] : [{ i, pos }]))
 }
-
-const GOAL_POS = ['top', 'base', 'bottom'] as const
 
 /**
  * `local`: a match against bots on the in-page relay (no connection to show).
@@ -65,18 +69,10 @@ export const createVersusHud = (root: HTMLElement, local: boolean, goAt: number 
   const red = h('b', { class: 'vs-points' })
   const clock = h('span', { class: 'vs-clock' })
   const double = h('em', { class: 'vs-double hidden' }, m.hud.double)
-  /** Each team's goals under its score: open with their points left, locked, or broken. */
+  /** Each team's goals under its score, one pip per goal of the map (`goalOrder`, made at the first update): open with their points left, locked, or broken. */
   const pips: [HTMLElement[], HTMLElement[]] = [[], []]
-  const goalRow = (team: Team) =>
-    h(
-      'span',
-      { class: `vs-goals ${team === 0 ? 'blue' : 'red'}`, style: `--team:${teamColor(team)}` },
-      ...GOAL_POS.map((pos) => {
-        const pip = h('i', { class: `vs-goal ${pos}`, title: m.hud.goals[pos] })
-        pips[team].push(pip)
-        return pip
-      }),
-    )
+  const rows = ([0, 1] as const).map((team) => h('span', { class: `vs-goals ${team === 0 ? 'blue' : 'red'}`, style: `--team:${teamColor(team)}` }))
+  const goalRow = (team: Team) => rows[team]!
   const bar = h(
     'div',
     { class: 'vs-score' },
@@ -144,12 +140,17 @@ export const createVersusHud = (root: HTMLElement, local: boolean, goAt: number 
     if (goalsKey !== goalsShown) {
       goalsShown = goalsKey
       for (const team of [0, 1] as const) {
-        goalOrder(s, team).forEach((i, k) => {
+        const order = goalOrder(s, team)
+        if (pips[team].length !== order.length) {
+          pips[team] = order.map(({ pos }) => h('i', { class: `vs-goal ${pos}`, title: m.hud.goals[pos] }))
+          rows[team]!.replaceChildren(...pips[team])
+        }
+        order.forEach(({ i, pos }, k) => {
           const goal = s.goals[i]!
           const pip = pips[team][k]
           if (!pip) return
           const state = goal.broken ? 'broken' : goalOpen(s, goal) ? 'open' : 'locked'
-          pip.className = `vs-goal ${GOAL_POS[k]} ${state}`
+          pip.className = `vs-goal ${pos} ${state}`
           setText(pip, goal.broken ? '' : String(Math.max(0, Math.round(goal.left))))
         })
       }

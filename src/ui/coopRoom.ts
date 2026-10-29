@@ -15,7 +15,8 @@ import { h, later } from './dom'
 import { confirmDialog, difficultyTag, hint, type Screen } from './screens'
 import { toast } from './toasts'
 import { roleChip, teamColor } from './arena'
-import { isVersusPick, VERSUS, VERSUS_ROSTER, type Team } from '../data/versus'
+import { isVersusPick, VERSUS_ROSTER, type Team } from '../data/versus'
+import { ARENA_FORMAT_IDS, ARENA_FORMATS } from '../data/arenaFormats'
 
 /**
  * Co-op outside a run: the hub (create a room, or join one by code) and the
@@ -277,7 +278,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
           ...(['run', 'versus'] as const).map((id) =>
             h(
               'button',
-              { class: `shell-seg-option${(id === 'versus') === arena ? ' on' : ''}`, type: 'button', 'data-nav': `mode:${id}`, 'aria-pressed': String((id === 'versus') === arena), onclick: () => (id === 'versus') !== arena && (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, mode: id })) },
+              { class: `shell-seg-option${(id === 'versus') === arena ? ' on' : ''}`, type: 'button', 'data-nav': `mode:${id}`, 'aria-pressed': String((id === 'versus') === arena), onclick: () => (id === 'versus') !== arena && (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, mode: id, format: settings.format })) },
               v.room.modes[id],
             ),
           ),
@@ -285,8 +286,36 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
       : h('span', { class: 'coop-difficulty-read' }, v.room.modes[arena ? 'versus' : 'run'], h('small', {}, m.hostPicks))
 
     /**
+     * An Arena room's format, the host's switch: 4v4 on the Vale or 3v3 on
+     * the Clareira (the relay keeps a room of more trainers than the 3v3
+     * seats on the 4v4).
+     */
+    const format = settings.format ?? 'standard'
+    const formatPick = host && lobby
+      ? h(
+          'div',
+          { class: 'shell-seg coop-format', role: 'radiogroup', 'aria-label': v.room.format },
+          ...ARENA_FORMAT_IDS.map((id) =>
+            h(
+              'button',
+              {
+                class: `shell-seg-option${id === format ? ' on' : ''}`,
+                type: 'button',
+                'data-nav': `format:${id}`,
+                'aria-pressed': String(id === format),
+                disabled: id !== format && room.members.length > ARENA_FORMATS[id].teamSize * 2,
+                onclick: () => id !== format && (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, mode: 'versus', format: id })),
+              },
+              `${v.formats[id].size} ${v.formats[id].name}`,
+            ),
+          ),
+        )
+      : h('span', { class: 'coop-difficulty-read' }, `${v.formats[format].size} ${v.formats[format].name}`, h('small', {}, m.hostPicks))
+    const teamSize = ARENA_FORMATS[format].teamSize
+
+    /**
      * Arena: the seats in two columns, Azul and Vermelho, each with its
-     * players and, for the rest of its 4, the bots that will take them (the
+     * players and, for the rest of the format's team, the bots that will take them (the
      * first one on your side invites, when there are friends to ask). Your
      * column's head switches you to the other side (a full side sends the
      * rest to the other when the match starts).
@@ -295,7 +324,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
     const columns = arena
       ? ([0, 1] as const).map((team) => {
           const members = room.members.filter((member) => teamOf(member) === team)
-          const open = Math.max(0, VERSUS.teamSize - members.length)
+          const open = Math.max(0, teamSize - members.length)
           const other: Team = team === 0 ? 1 : 0
           const switcher = lobby && mine && team === myTeam
             ? h('button', { class: 'btn small arena-switch', type: 'button', style: `--team:${teamColor(other)}`, 'data-nav': 'team', onclick: () => (playSfx('move'), client.setLoadout({ ...mine, team: other })) }, v.room.switchTo(v.teams[other]!))
@@ -303,7 +332,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
           return h(
             'div',
             { class: `arena-room-team team${team}${team === myTeam ? ' mine' : ''}`, style: `--team:${teamColor(team)}` },
-            h('div', { class: 'arena-room-head' }, h('b', {}, v.teams[team]), h('span', {}, `${members.length}/${VERSUS.teamSize}`), switcher),
+            h('div', { class: 'arena-room-head' }, h('b', {}, v.teams[team]), h('span', {}, `${members.length}/${teamSize}`), switcher),
             ...members.map((member) => seatCard(member, room.members.indexOf(member), member.seat === st.seat, kickOf(member), team)),
             ...Array.from({ length: open }, (_, i) =>
               h(
@@ -362,7 +391,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
       h(
         'div',
         { class: 'dialog box profile coop-room' },
-        coopTitle(arena ? `${v.title} · ${v.tagline}` : t().coop.hub.title, arena),
+        coopTitle(arena ? `${v.title} · ${v.formats[format].size} ${v.formats[format].name}` : t().coop.hub.title, arena),
         h(
           'div',
           { class: 'invite-body coop-body' },
@@ -375,6 +404,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
           ),
           columns ? h('div', { class: 'arena-room-teams' }, columns[0]!, h('span', { class: 'arena-vs' }, 'VS'), columns[1]!) : h('div', { class: 'coop-seats' }, ...seats),
           h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.mode), mode),
+          arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.format), formatPick),
           !arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, m.difficulty), difficulty),
           arena
             ? h('ol', { class: 'arena-room-steps' }, ...v.room.steps.map((step, i) => h('li', {}, h('span', { class: 'arena-step-n' }, String(i + 1)), h('span', {}, step))))

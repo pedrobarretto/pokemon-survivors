@@ -5,6 +5,7 @@ import { STARTERS } from '../data/starters'
 import { isVersusPick, ROLES, VERSUS_PICKS, VERSUS_ROSTER, type Role, type VersusPick } from '../data/versus'
 import { t } from '../i18n'
 import type { QueueKind } from '../data/arenaRanked'
+import { ARENA_FORMAT_IDS, ARENA_FORMATS, parseArenaFormat, type ArenaFormat } from '../data/arenaFormats'
 import { arenaIcon, coopIcon } from '../render/art'
 import { arenaIconUrl, loadValeArt, ROLE_ICONS, tierBallUrl } from '../render/arenaArt'
 import { portraitUrl } from '../render/sprites'
@@ -17,10 +18,12 @@ import { hint, type Screen } from './screens'
  * an Arena room, the same picker to change the room's Pokémon (`choose`).
  * The selected Pokémon stands in a hero panel (its role, what the role does,
  * the role's numbers as bars, its evolution line) beside the roster of the
- * 27 starters, which role chips filter; below, the Como jogar strip and the
- * four ways to play, each saying what it is (Partida rápida against bots,
- * the public queue's Casual and Ranqueada, Com amigos), and the way to the
- * Arena's hub (Ranking). The pick is kept on the device (`ps:arenaPick`).
+ * 27 starters, which role chips filter; below, the Como jogar strip, the
+ * format (4v4 Padrão on the Vale, 3v3 Rápida on the Clareira) and the four
+ * ways to play it, each saying what it is (Treino against bots, the public
+ * queue's Casual and Ranqueada, Com amigos), and the way to the Arena's hub
+ * (Ranking). The pick and the format are kept on the device (`ps:arenaPick`,
+ * `ps:arenaFormat`).
  */
 
 /** Each team's color, the world's (`render/vale.ts`): the HUD, the room and the end screen use the same. */
@@ -64,6 +67,25 @@ export const keepArenaPick = (id: VersusPick) => {
   }
 }
 
+const FORMAT_KEY = 'ps:arenaFormat'
+
+/** The format this device last picked on the Arena screen (the standard 4v4 the first time). */
+export const arenaFormat = (): ArenaFormat => {
+  try {
+    return parseArenaFormat(localStorage.getItem(FORMAT_KEY))
+  } catch {
+    return 'standard'
+  }
+}
+
+const keepArenaFormat = (format: ArenaFormat) => {
+  try {
+    localStorage.setItem(FORMAT_KEY, format)
+  } catch {
+    // Storage blocked: the format lasts this page.
+  }
+}
+
 /** A starter's first form: its portrait's dex and its name. */
 export const firstForm = (id: VersusPick) => STARTERS[id].line[0]!
 
@@ -102,12 +124,12 @@ export const statPips = (role: Role, stat: Stat) => {
 /* ---------------- The screen ---------------- */
 
 export type ArenaActions = {
-  /** Partida rápida: a match against bots on the in-page relay. */
-  bots?: (id: VersusPick) => void
-  /** Casual and Ranqueada: the public queue (null: no relay in this build). */
-  queue?: ((id: VersusPick, kind: QueueKind) => void) | null
-  /** Com amigos: an Arena room (null: no relay in this build). */
-  friends?: ((id: VersusPick) => void) | null
+  /** Treino: a match of the picked format against bots on the in-page relay. */
+  bots?: (id: VersusPick, format: ArenaFormat) => void
+  /** Casual and Ranqueada: the public queue (null: no relay in this build). Ranqueada only in a ranked format (`ARENA_FORMATS`). */
+  queue?: ((id: VersusPick, kind: QueueKind, format: ArenaFormat) => void) | null
+  /** Com amigos: an Arena room of the picked format (null: no relay in this build). */
+  friends?: ((id: VersusPick, format: ArenaFormat) => void) | null
   /** The queue and Com amigos need an account with a @handle this player doesn't have yet: the cards say so (a tap leads to sign in). */
   needsAccount?: boolean
   /** The Arena's hub: profile, season, ranking, history and rules. */
@@ -143,8 +165,8 @@ const howToPlay = () => {
 
 /**
  * The Arena screen. `pick` is the Pokémon selected first. The arrows walk
- * the roster and, past its last row, the buttons below; Enter plays the
- * Partida rápida from the roster (or chooses, from a room) and presses a
+ * the roster and, past its last row, the format and the buttons below; Enter
+ * plays the Treino from the roster (or chooses, from a room) and presses a
  * button; Esc goes back.
  */
 export const arenaScreen = (root: HTMLElement, input: Input, pick: VersusPick, actions: ArenaActions): Screen => {
@@ -223,13 +245,15 @@ export const arenaScreen = (root: HTMLElement, input: Input, pick: VersusPick, a
     if (scroll) tiles[i]!.scrollIntoView({ block: 'nearest' })
   }
 
+  let format = arenaFormat()
   let busy = false
-  const go = (run: ((id: VersusPick) => void) | undefined | null) => () => {
+  const go = (run: ((id: VersusPick, format: ArenaFormat) => void) | undefined | null) => () => {
     if (!run || busy) return
     busy = true
     playSfx('select')
     keepArenaPick(chosen())
-    later(() => run(chosen()))
+    keepArenaFormat(format)
+    later(() => run(chosen(), format))
   }
   const choose = actions.choose
   const primary = go(choose ?? actions.bots)
@@ -248,19 +272,64 @@ export const arenaScreen = (root: HTMLElement, input: Input, pick: VersusPick, a
   const lockNote = (open: boolean) => (!open ? l.offline : actions.needsAccount ? l.room.account : null)
   const queue = actions.queue
   const queueCard = (kind: QueueKind) =>
-    modeCard(kind, arenaIconUrl(kind === 'ranked' ? 'queueRanked' : 'queueCasual'), l[kind].title, l[kind].text, lockNote(Boolean(queue)), queue ? go((id) => queue(id, kind)) : null)
+    modeCard(kind, arenaIconUrl(kind === 'ranked' ? 'queueRanked' : 'queueCasual'), l[kind].title, l[kind].text, lockNote(Boolean(queue)), queue ? go((id, f) => queue(id, kind, f)) : null)
+  const ranked = choose ? null : queueCard('ranked')
   const buttons: HTMLButtonElement[] = choose
     ? [h('button', { class: 'btn confirm', type: 'button', onclick: primary }, m.room.pick)]
     : [
         modeCard('quick', arenaIcon(), l.quick.title, l.quick.text, null, primary),
         queueCard('casual'),
-        queueCard('ranked'),
+        ranked!,
         modeCard('friends', coopIcon(), l.room.title, l.room.text, lockNote(Boolean(actions.friends)), actions.friends ? go(actions.friends) : null),
       ]
+
+  /**
+   * The format the ways below play: 4v4 Padrão or 3v3 Rápida, each with its
+   * clock and map. Ranqueada is only in a ranked format: off in the other,
+   * saying so where its note goes.
+   */
+  const formatButtons = choose
+    ? []
+    : ARENA_FORMAT_IDS.map((id) => {
+        const f = m.formats[id]
+        return h(
+          'button',
+          { class: `arena-format ${id}`, type: 'button', 'aria-pressed': 'false', onclick: () => setFormat(id) },
+          h('b', { class: 'arena-format-size' }, f.size),
+          h('span', { class: 'arena-format-text' }, h('b', {}, f.name), h('small', {}, `${f.clock} · ${f.text}`)),
+        )
+      })
+  const rankedNote = ranked?.querySelector('em') ?? null
+  const rankedText = rankedNote?.textContent ?? null
+  const paintFormat = () => {
+    formatButtons.forEach((b, k) => {
+      const on = ARENA_FORMAT_IDS[k] === format
+      b.classList.toggle('on', on)
+      b.setAttribute('aria-pressed', String(on))
+    })
+    if (!ranked) return
+    const open = ARENA_FORMATS[format].ranked && Boolean(queue)
+    ranked.disabled = !open
+    const note = !ARENA_FORMATS[format].ranked ? l.rankedOnly : rankedText
+    let em = ranked.querySelector('em')
+    if (note && !em) ranked.querySelector('.arena-mode-text')?.append((em = h('em', {}, note)))
+    if (em) em.textContent = note ?? ''
+    em?.classList.toggle('hidden', !note)
+  }
+  const setFormat = (id: ArenaFormat) => {
+    if (id === format) return
+    playSfx('move')
+    format = id
+    keepArenaFormat(id)
+    paintFormat()
+  }
+  const formatRow = choose
+    ? null
+    : h('div', { class: 'arena-formats', role: 'radiogroup', 'aria-label': l.format }, h('span', { class: 'field-label' }, l.format), h('div', { class: 'arena-format-options' }, ...formatButtons))
   const hub = actions.hub
   const hubButton = hub && !choose ? h('button', { class: 'btn small arena-hub-open', type: 'button', onclick: () => (playSfx('select'), later(hub)) }, h('img', { src: tierBallUrl('ultra'), alt: '' }), l.hub) : null
   const backButton = h('button', { class: 'btn small arena-back', type: 'button', onclick: back }, m.back)
-  const below = [...buttons, ...(hubButton ? [hubButton] : []), backButton]
+  const below = [...formatButtons, ...buttons, ...(hubButton ? [hubButton] : []), backButton]
 
   const paint = () => {
     const visible = new Set(shown())
@@ -315,6 +384,7 @@ export const arenaScreen = (root: HTMLElement, input: Input, pick: VersusPick, a
         h('div', { class: 'arena-roster' }, h('div', { class: 'arena-pick-head' }, h('span', { class: 'field-label' }, m.pick), h('small', {}, m.free)), chips, grid),
       ),
       choose ? null : howToPlay(),
+      formatRow,
       h('div', { class: `arena-modes${choose ? ' choose' : ''}` }, ...buttons),
       h('div', { class: 'arena-foot' }, h('div', { class: 'arena-foot-buttons' }, backButton, hubButton), hint(m.hintKeys, m.hintTouch)),
     ),
@@ -362,8 +432,9 @@ export const arenaScreen = (root: HTMLElement, input: Input, pick: VersusPick, a
     } else if (key === 'Escape' || key === 'Backspace') back()
   })
   root.append(el)
-  // The Vale's pictures start loading here, so a match opens with them.
+  // The maps' pictures start loading here, so a match opens with them.
   loadValeArt()
+  paintFormat()
   select(selected, false)
   later(() => tiles[selected]?.scrollIntoView({ block: 'nearest' }))
   return { el, dim: 0.5, dispose: () => (off(), el.remove()) }

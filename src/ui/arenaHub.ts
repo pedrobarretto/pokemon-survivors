@@ -226,7 +226,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
       h(
         'span',
         { class: 'arena-hub-match-text' },
-        h('span', { class: 'arena-hub-match-top' }, h('em', { class: `arena-hub-kind ${e.kind}` }, m.history.kinds[e.kind]), h('b', {}, m.history.outcomes[e.outcome])),
+        h('span', { class: 'arena-hub-match-top' }, h('em', { class: `arena-hub-kind ${e.kind}` }, m.history.kinds[e.kind]), e.format === 'quick' ? h('em', { class: 'arena-hub-kind quick' }, t().versus.formats.quick.size) : null, h('b', {}, m.history.outcomes[e.outcome])),
         h('small', {}, `${when(e.at)} · ${m.history.line(e.kos, e.scored)}`),
       ),
       h(

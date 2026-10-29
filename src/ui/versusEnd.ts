@@ -9,7 +9,8 @@ import { portraitUrl } from '../render/sprites'
 import { teamColor } from './arena'
 import { h, later } from './dom'
 import { menu, type Screen } from './screens'
-import { versusName } from './versusHud'
+import { goalOrder, versusName } from './versusHud'
+import { formatChip } from './arenaQueue'
 import { countArenaMatch } from './versusCoach'
 import type { MatchKind } from '../data/arenaRanked'
 import type { RpChange } from '../arenaApi'
@@ -92,6 +93,21 @@ const mvpCard = (g: Game, me: Player, p: Player) => {
   )
 }
 
+/** A team's goals as they ended (`goalOrder`: the map's layout): standing with their points left, or broken. */
+const goalPips = (g: Game, team: Team) => {
+  const s = g.versus
+  if (!s) return null
+  const m = t().versus.hud.goals
+  return h(
+    'span',
+    { class: 'vs-goals', style: `--team:${teamColor(team)}` },
+    ...goalOrder(s, team).map(({ i, pos }) => {
+      const goal = s.goals[i]!
+      return h('i', { class: `vs-goal ${pos} ${goal.broken ? 'broken' : 'open'}`, title: m[pos] }, goal.broken ? '' : String(Math.max(0, Math.round(goal.left))))
+    }),
+  )
+}
+
 /** One team's table, best scorer first, each row with its medals. */
 const teamTable = (g: Game, me: Player, team: Team, medals: ReadonlyMap<Player, readonly Medal[]>) => {
   const m = t().versus.end
@@ -118,7 +134,7 @@ const teamTable = (g: Game, me: Player, team: Team, medals: ReadonlyMap<Player, 
   return h(
     'div',
     { class: `vs-end-team team${team}`, style: `--team:${teamColor(team)}` },
-    h('div', { class: 'vs-end-team-head' }, h('b', {}, t().versus.teams[team]), h('span', {}, String(g.versus?.score[team] ?? 0))),
+    h('div', { class: 'vs-end-team-head' }, h('b', {}, t().versus.teams[team]), goalPips(g, team), h('span', {}, String(g.versus?.score[team] ?? 0))),
     h(
       'table',
       {},
@@ -170,6 +186,7 @@ export const versusEnd = (root: HTMLElement, input: Input, g: Game, me: Player, 
         h('span', {}, ':'),
         h('b', { style: `color:${teamColor(1)}` }, String(s?.score[1] ?? 0)),
       ),
+      s ? h('div', { class: 'vs-end-format' }, formatChip(s.format), h('span', { class: 'arena-format-chip map' }, t().versus.maps[s.map])) : null,
       rank && rankLine(rank),
       mvp && mvpCard(g, me, mvp),
       h('div', { class: 'vs-end-tables' }, ...teams.map((team) => teamTable(g, me, team, medals))),

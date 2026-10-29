@@ -21547,6 +21547,10 @@ span.arena-hub-face {
   background: #2a7ab8;
 }
 
+.arena-hub-kind.quick {
+  background: #8a5a10;
+}
+
 .arena-hub-score {
   font-family: var(--title);
   font-size: 10px;
@@ -21696,4 +21700,156 @@ span.arena-hub-face {
     min-height: 0;
     font-size: 16px;
   }
+}
+
+/* ---------- Arena formats (ui/arena.ts, ui/coopRoom.ts, ui/arenaQueue.ts, ui/versusEnd.ts): 4v4 Padrão and 3v3 Rápida ---------- */
+
+/* The format the ways to play play: a label and two big toggles, each its size, name, clock and map. */
+.arena-formats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.arena-format-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  flex: 1;
+}
+
+.arena-format {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 5px 10px;
+  text-align: left;
+  color: var(--dk-ink, #283040);
+  background: var(--dk-surface-2, #e8e8f0);
+  border: 3px solid transparent;
+  border-radius: 8px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
+}
+
+.arena-format-size {
+  flex: none;
+  padding: 5px 6px 4px;
+  font-family: var(--title);
+  font-size: 11px;
+  color: #fff;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+  background: linear-gradient(100deg, #4890f0 0 50%, #f05858 50% 100%);
+  border: 2px solid #283040;
+  border-radius: 6px;
+}
+
+.arena-format-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.arena-format-text b {
+  font-family: var(--title);
+  font-size: 9px;
+}
+
+.arena-format-text small {
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 0.95;
+  color: var(--dk-ink-2, #505870);
+}
+
+.arena-format.on {
+  background: var(--dk-wash-gold, #fff8d8);
+  border-color: #283040;
+}
+
+.arena-format.on .arena-format-size {
+  box-shadow: 0 0 0 2px #f8d030;
+}
+
+.arena-format.selected,
+.arena-format:hover {
+  border-color: #e83838;
+}
+
+/* A format as a small chip: the queue screens and the end screen wear it. */
+.arena-format-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1;
+  color: #fff;
+  background: #283040;
+  border-radius: 99px;
+}
+
+.arena-format-chip b {
+  font-family: var(--title);
+  font-size: 8px;
+}
+
+.arena-format-chip.quick {
+  background: #8a5a10;
+}
+
+/* The end screen: the map and format under the score, and each team's goals beside its total. */
+.vs-end-format {
+  display: flex;
+  justify-content: center;
+  margin: -4px 0 0;
+}
+
+.vs-end-team-head .vs-goals {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+/* Phones held upright: the label over the toggles, a shorter line. */
+@media (max-width: 640px) {
+  .arena-formats {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .arena-format {
+    gap: 6px;
+    padding: 4px 6px;
+  }
+  .arena-format-size {
+    font-size: 9px;
+    padding: 4px;
+  }
+  .arena-format-text b {
+    font-size: 8px;
+  }
+  .arena-format-text small {
+    font-size: 13px;
+  }
+}
+
+/* Phones on their side: no line, just the size and name. */
+@media (max-height: 500px) {
+  .arena-format {
+    min-height: 34px;
+  }
+  .arena-format-text small {
+    display: none;
+  }
+}
+
+.vs-end-team-head .vs-goal {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.coop-format .shell-seg-option {
+  white-space: nowrap;
 }

@@ -1,6 +1,7 @@
 import { formatTime } from '../engine/math'
 import { playSfx } from '../engine/audio'
-import { isVersusPick, VERSUS, type Team } from '../data/versus'
+import { isVersusPick, type Team } from '../data/versus'
+import { rulesOf } from '../game/versusRules'
 import { formAt } from '../game/branch'
 import type { Game } from '../game/types'
 import { t } from '../i18n'
@@ -12,7 +13,7 @@ import { h, setStyle } from './dom'
 /**
  * A match's opening splash, while its sprites load (`startCoopRun`): both
  * lineups face each other (portraits, names, a bot's "CPU", roles, this
- * player lit), "Vale · 7:00", a gameplay tip that changes every few seconds
+ * player lit), the map, format and clock ("Vale · 4v4 · 7:00"), a gameplay tip that changes every few seconds
  * and a bar that follows the real loading. It stays `HOLD` at least so it
  * reads; then the match's own countdown takes over. `note`: a line the match
  * needs said before it starts (a ranked ticket that plays as Casual), since
@@ -61,7 +62,7 @@ export const versusSplash = (root: HTMLElement, g: Game, mySlot: number, note: s
     h(
       'div',
       { class: 'arena-splash-box' },
-      h('div', { class: 'arena-splash-head' }, h('img', { src: arenaIcon(), alt: '' }), h('b', {}, m.title), h('span', {}, `${m.map} · ${formatTime(VERSUS.length)}`)),
+      h('div', { class: 'arena-splash-head' }, h('img', { src: arenaIcon(), alt: '' }), h('b', {}, m.title), h('span', {}, g.versus ? `${m.maps[g.versus.map]} · ${m.formats[g.versus.format].size} · ${formatTime(rulesOf(g.versus).length)}` : '')),
       // Your team on the left.
       h('div', { class: 'arena-lineups splash' }, lineup(mine), h('span', { class: 'arena-vs' }, 'VS'), lineup(mine === 0 ? 1 : 0)),
       note ? h('p', { class: 'arena-splash-note' }, note) : null,

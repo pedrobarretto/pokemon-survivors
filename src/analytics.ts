@@ -14,6 +14,7 @@ import type { NetSummary } from './coop/netStats'
 import type { MatchKind } from './data/arenaRanked'
 import type { CrumbMoment, Quality } from './crumb'
 import type { DeviceInfo } from './telemetry'
+import type { ArenaFormat } from './data/arenaFormats'
 
 /**
  * Analytics and error reports. Events go to PostHog (product analytics and
@@ -190,6 +191,8 @@ type AnalyticsEvents = {
     level: number
     starter: string
     humans: number
+    /** The match's format (`data/arenaFormats.ts`): 4v4 on the Vale (`standard`) or 3v3 on the Clareira (`quick`). */
+    format: ArenaFormat
   }
   /**
    * How a co-op run's link and pacing went for this player (`coop/netStats.ts`), one per player per run,
