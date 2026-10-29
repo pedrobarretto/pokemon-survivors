@@ -5368,13 +5368,17 @@ export const es: Messages = {
     clone: (name: string) => `${name} Clon`,
     escaped: (name: string, wins: number, need: number) => `*${name}* se escapó… _${wins}/${need}_`,
     escapedHint: (left: number) => (left === 1 ? 'Falta 1 victoria para la captura.' : `Faltan ${left} victorias para la captura.`),
-    arceusHint: (left: number) => (left > 0 ? `Solo se deja capturar en el modo infinito, después de los otros legendarios (faltan ${left}).` : 'Solo se deja capturar en el modo infinito.'),
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? 'Solo se deja capturar en el modo infinito.'
+        : missing.length <= 3 ? `Solo se deja capturar en el modo infinito, después de todos los otros legendarios. Falta capturar: ${missing.join(', ')}.`
+        : `Solo se deja capturar en el modo infinito, después de todos los otros legendarios (faltan ${missing.length}: mira la pestaña Legendarios).`,
     caught: (name: string) => `¡*${name}* capturado! Jugable en el _Modo Legendario_.`,
     caughtShiny: (name: string) => `¡*${name}* _shiny_ capturado! Jugable en el _Modo Legendario_.`,
     shinyUnlocked: (name: string) => `¡*${name}* _shiny_ desbloqueado en el _Modo Legendario_!`,
     caughtHint: 'Elígelo en la pestaña Legendarios de la selección de compañero.',
     tab: 'LEGENDARIOS',
     wins: (n: string) => `Victorias: ${n}`,
+    stillMissing: (missing: readonly string[]) => `Falta capturar (${missing.length}): ${missing.join(', ')}.`,
     lockedButton: 'No capturado',
     where: {
       rift: 'Espera en una _grieta legendaria_: entra al portal y véncelo allí.',

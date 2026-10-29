@@ -5725,14 +5725,19 @@ export const pt = {
     /* Capturing legends (`game/capture.ts`, `ui/capture.ts`): the toasts as one falls, and the partner select's Lendários tab. */
     escaped: (name: string, wins: number, need: number) => `*${name}* escapou… _${wins}/${need}_`,
     escapedHint: (left: number) => (left === 1 ? 'Falta 1 vitória para a captura.' : `Faltam ${left} vitórias para a captura.`),
-    /** Arceus before it can count: the endless mode, after the other legends (`left` still to capture). */
-    arceusHint: (left: number) => (left > 0 ? `Só se deixa capturar no modo sem fim, depois dos outros lendários (faltam ${left}).` : 'Só se deixa capturar no modo sem fim.'),
+    /** Arceus before it can count: the endless mode, after the other legends (`missing`: the names still to capture). */
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? 'Só se deixa capturar no modo sem fim.'
+        : missing.length <= 3 ? `Só se deixa capturar no modo sem fim, depois de todos os outros lendários. Falta capturar: ${missing.join(', ')}.`
+        : `Só se deixa capturar no modo sem fim, depois de todos os outros lendários (faltam ${missing.length}: veja a aba Lendários).`,
     caught: (name: string) => `*${name}* capturado! Jogável no _Modo Lendário_.`,
     caughtShiny: (name: string) => `*${name}* _shiny_ capturado! Jogável no _Modo Lendário_.`,
     shinyUnlocked: (name: string) => `*${name}* _shiny_ liberado no _Modo Lendário_!`,
     caughtHint: 'Escolha-o na aba Lendários da seleção de parceiro.',
     tab: 'LENDÁRIOS',
     wins: (n: string) => `Vitórias: ${n}`,
+    /** Arceus' locked card: the regular legends still to capture before it counts. */
+    stillMissing: (missing: readonly string[]) => `Falta capturar (${missing.length}): ${missing.join(', ')}.`,
     lockedButton: 'Não capturado',
     /** Where each legend is beaten (`LegendSource`). */
     where: {

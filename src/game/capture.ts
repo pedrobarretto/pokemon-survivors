@@ -47,8 +47,10 @@ export const isCaptured = (captures: Captures, id: LegendId) => (captures[id] ??
 /** How many legends of `ids` are captured (every legend by default; `REGULAR_LEGENDS` for the ones Arceus waits for). */
 export const capturedCount = (captures: Captures, ids: readonly LegendId[] = LEGEND_IDS) => ids.filter((id) => isCaptured(captures, id)).length
 
-/** Whether every regular legend but `id` is in (`unlock.last`: Arceus waits for the other 22, never for an event legend). */
-const othersCaptured = (captures: Captures, id: LegendId) => REGULAR_LEGENDS.every((other) => other === id || isCaptured(captures, other))
+/** The regular legends but `id` still to capture (`unlock.last`: Arceus waits for the other 22, never for an event legend), in `REGULAR_LEGENDS` order. */
+export const stillMissing = (captures: Captures, id: LegendId): LegendId[] => REGULAR_LEGENDS.filter((other) => other !== id && !isCaptured(captures, other))
+
+const othersCaptured = (captures: Captures, id: LegendId) => stillMissing(captures, id).length === 0
 
 /** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22; a festival legend's never. */
 export const winCounts = (captures: Captures, id: LegendId, endless: boolean) => {
