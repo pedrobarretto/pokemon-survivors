@@ -5,6 +5,7 @@ import { createBot, botPick, type Bot } from './coop/bot'
 import { coopGuestId, createCoopClient, webSocket, type CoopClient, type CoopDeps } from './coop/client'
 import { measureRelay, type VpsUrls } from './coop/relays'
 import type { QueueDeps } from './arena/queue'
+import type { PingKind, QuickChat } from './game/versusSocial'
 import { createLocalRelay, LOCAL_RELAY_URL, type LocalRelay } from './coop/localRelay'
 import { buildAdvice } from './coop/lobby'
 import { netSummary, type NetStats } from './coop/netStats'
@@ -424,6 +425,17 @@ export const addBots = async (code: string, n: number) => {
     }, 16)
   }
   return joined
+}
+
+/** Dev: in an Arena match, each of the tab's bots says quick chat line `msg` and pings `ping` where it stands, to see both from a teammate's screen. */
+export const botsTalk = (msg: QuickChat, ping: PingKind) => {
+  for (const b of bots) {
+    const r = b.client.state().runner
+    const me = r?.game.players[r.slot]
+    b.client.input({ k: 'chat', msg })
+    if (me) b.client.input({ k: 'ping', ping, x: Math.round(me.x), y: Math.round(me.y) })
+  }
+  return bots.length
 }
 
 export const removeBots = () => {

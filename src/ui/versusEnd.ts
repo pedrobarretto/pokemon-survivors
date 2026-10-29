@@ -14,16 +14,28 @@ import { countArenaMatch } from './versusCoach'
 import type { MatchKind } from '../data/arenaRanked'
 import type { RpChange } from '../arenaApi'
 import { tierBadge, tierName } from './arenaHub'
+import { boardTables } from './versusBoard'
+import { ARENA_RANKED } from '../data/arenaRanked'
 
 /**
- * A Versus match's end: Vitória, Derrota or Empate from this player's team,
- * the final score, the match's MVP, and a table per team (each Pokémon, its
- * KOs, falls, points and damage, best scorer first, with the match's medals). "Jogar de novo" starts the next
- * match (the shell's: a new one against bots, or the room's next run) and
- * says so while it gets ready; "Voltar ao lobby" leaves.
+ * A Versus match's end: Vitória, Derrota or Empate from this player's team
+ * (and who surrendered, when a team did), the final score, the match's MVP,
+ * and the scoreboard (`versusBoard.ts`), best scorer first, with the match's
+ * medals. "Jogar de novo" starts the next match (the shell's: a new one
+ * against bots, or the room's next run: "Revanche", with how many of the room
+ * are ready) and says so while it gets ready; a public queue's match adds
+ * "Revanche com o time" (back to the queue as a party with the teammates who
+ * press it too); "Voltar ao lobby" leaves.
  */
 
-export type VersusEndActions = { again: () => void; lobby: () => void }
+export type VersusEndActions = {
+  again: () => void
+  lobby: () => void
+  /** A friends' room: "Revanche", and how many of the room online are ready for it (the host counts). */
+  ready?: () => { ready: number; total: number }
+  /** A public queue's match: requeue as a party with the teammates who also press it. */
+  team?: () => void
+}
 
 /**
  * What the match did to the ranking: a quick match against bots is practice,
@@ -53,6 +65,9 @@ const rankLine = (rank: EndRank) => {
   return el
 }
 
+/** How long (ms) a room's "Revanche" count refreshes while the screen shows. */
+const READY_EVERY = 500
+
 /** Damage a player dealt in the match (the wild's and the rivals'). */
 const damageOf = (p: Player) => Math.round(Object.values(p.damageByMove).reduce((a, b) => a + (b ?? 0), 0))
 
@@ -75,10 +90,18 @@ const medalsOf = (g: Game) => {
 
 const MEDAL_ICONS = { points: 'medalPoints', kos: 'medalKos', damage: 'medalDamage' } as const satisfies Record<Medal, ArenaIcon>
 
-const medalChip = (medal: Medal) => h('em', { class: `vs-medal ${medal}` }, h('img', { src: arenaIconUrl(MEDAL_ICONS[medal]), alt: '' }), t().versus.end.medals[medal])
+const medalChip = (medal: Medal): HTMLElement => h('em', { class: `vs-medal ${medal}` }, h('img', { src: arenaIconUrl(MEDAL_ICONS[medal]), alt: '' }), t().versus.end.medals[medal])
 
 /** A seat's name on this screen, "(Você)" after this player's own. */
 const endName = (g: Game, me: Player, p: Player) => (p === me && versusName(g, p.slot) !== t().versus.you ? `${versusName(g, p.slot)} (${t().versus.you})` : versusName(g, p.slot))
+
+/** The line under the title when a team surrendered, from this player's side. */
+const surrenderLine = (g: Game, mine: Team) => {
+  const gave = g.versus?.result?.surrender
+  if (gave === null || gave === undefined) return null
+  const m = t().versus.end
+  return h('p', { class: 'vs-end-surrender' }, gave === mine ? m.surrendered : m.theySurrendered)
+}
 
 /** The match's best player: big portrait in their team's color, name and line. */
 const mvpCard = (g: Game, me: Player, p: Player) => {
@@ -92,42 +115,6 @@ const mvpCard = (g: Game, me: Player, p: Player) => {
   )
 }
 
-/** One team's table, best scorer first, each row with its medals. */
-const teamTable = (g: Game, me: Player, team: Team, medals: ReadonlyMap<Player, readonly Medal[]>) => {
-  const m = t().versus.end
-  const rows = g.players
-    .filter((p) => p.versus?.team === team)
-    .sort(better)
-    .map((p) => {
-      const v = p.versus!
-      return h(
-        'tr',
-        { class: p === me ? 'me' : '' },
-        h(
-          'td',
-          { class: 'vs-end-who' },
-          h('img', { src: portraitUrl(formAt(p.starter, p.branch, p.stage).dex), alt: '' }),
-          h('span', { class: 'vs-end-name' }, h('span', {}, endName(g, me, p)), ...(medals.get(p) ?? []).map(medalChip)),
-        ),
-        h('td', {}, String(v.kos)),
-        h('td', {}, String(v.deaths)),
-        h('td', { class: 'vs-end-points' }, String(v.scored)),
-        h('td', {}, String(damageOf(p))),
-      )
-    })
-  return h(
-    'div',
-    { class: `vs-end-team team${team}`, style: `--team:${teamColor(team)}` },
-    h('div', { class: 'vs-end-team-head' }, h('b', {}, t().versus.teams[team]), h('span', {}, String(g.versus?.score[team] ?? 0))),
-    h(
-      'table',
-      {},
-      h('thead', {}, h('tr', {}, h('th', {}, m.pokemon), h('th', {}, m.kos), h('th', {}, m.deaths), h('th', {}, m.points), h('th', {}, m.damage))),
-      h('tbody', {}, ...rows),
-    ),
-  )
-}
-
 export const versusEnd = (root: HTMLElement, input: Input, g: Game, me: Player, actions: VersusEndActions, rank: EndRank | null = null): Screen => {
   const m = t().versus.end
   const s = g.versus
@@ -135,25 +122,38 @@ export const versusEnd = (root: HTMLElement, input: Input, g: Game, me: Player, 
   const winner = s?.result?.winner ?? null
   const outcome = winner === null ? 'draw' : winner === mine ? 'victory' : 'defeat'
   const status = h('p', { class: 'vs-end-status', role: 'status' })
-  const again = h('button', { class: 'btn confirm', type: 'button' }, m.playAgain)
+  const room = actions.ready
+  const again = h('button', { class: 'btn confirm', type: 'button' }, room ? m.rematch : m.playAgain)
+  const team = actions.team && h('button', { class: 'btn', type: 'button' }, m.rematchTeam)
   const lobby = h('button', { class: 'btn', type: 'button' }, m.lobby)
+  const buttons = [again, ...(team ? [team] : []), lobby]
   let asked = false
+  /** A room's "Revanche": who's ready, refreshed while the screen shows. */
+  const readyLine = () => {
+    const r = room?.()
+    if (r && r.total > 1) status.textContent = `${asked ? `${m.again} · ` : ''}${m.readyCount(r.ready, r.total)}`
+  }
+  const timer = room ? setInterval(readyLine, READY_EVERY) : null
   const nav = menu(
     input,
-    [again, lobby],
+    buttons,
     (i) => {
       playSfx('select')
-      if (i === 1) return later(actions.lobby)
+      const pressed = buttons[i]
+      if (pressed === lobby) return later(actions.lobby)
       if (asked) return
       asked = true
-      again.disabled = true
+      for (const b of buttons) if (b !== lobby) b.disabled = true
+      if (pressed === team && actions.team) {
+        status.textContent = m.rematchNote(ARENA_RANKED.queue.partyGrace)
+        return later(actions.team)
+      }
       status.textContent = m.again
+      readyLine()
       later(actions.again)
     },
     { horizontal: true, guard: 900 },
   )
-  // Your team's table first.
-  const teams = mine === 0 ? ([0, 1] as const) : ([1, 0] as const)
   const { mvp, medals } = medalsOf(g)
   countArenaMatch()
   const el = h(
@@ -163,6 +163,7 @@ export const versusEnd = (root: HTMLElement, input: Input, g: Game, me: Player, 
       'div',
       { class: `dialog box pop vs-end-box ${outcome}`, style: `--team:${teamColor(mine)}` },
       h('div', { class: 'vs-end-title' }, m[outcome]),
+      surrenderLine(g, mine),
       h(
         'div',
         { class: 'vs-end-score' },
@@ -172,11 +173,12 @@ export const versusEnd = (root: HTMLElement, input: Input, g: Game, me: Player, 
       ),
       rank && rankLine(rank),
       mvp && mvpCard(g, me, mvp),
-      h('div', { class: 'vs-end-tables' }, ...teams.map((team) => teamTable(g, me, team, medals))),
+      boardTables(g, me, { order: better, chips: (p) => (medals.get(p) ?? []).map(medalChip) }),
       status,
-      h('div', { class: 'buttons' }, again, lobby),
+      h('div', { class: 'buttons' }, ...buttons),
     ),
   )
   root.append(el)
-  return { el, dim: 0.6, dispose: () => (nav.off(), el.remove()) }
+  readyLine()
+  return { el, dim: 0.6, dispose: () => (nav.off(), timer !== null && clearInterval(timer), el.remove()) }
 }

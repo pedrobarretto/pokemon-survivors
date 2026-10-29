@@ -15,6 +15,7 @@ import { cryUrl, portraitUrl } from '../render/sprites'
 import { energyIcon, teamColor } from './arena'
 import { h, rich, setStyle, setText } from './dom'
 import { banner, runToast } from './toasts'
+import { settings } from './settings'
 
 /**
  * A Versus match's own HUD, over the run's (`ui/hud.ts`, whose clock and
@@ -222,7 +223,9 @@ const teamToast = (team: Team, ...children: (HTMLElement | false | undefined | n
 /**
  * The match's moments as sounds and toasts, from this player's side: a score
  * (big, in the scorer's team color), a goal breaking, knockouts this player's
- * team took part in, the objectives arriving and falling, the stretch and the end.
+ * team took part in, the objectives arriving and falling, the stretch and the
+ * end; a teammate's quick chat line (unless muted) or ping as a chirp, and the
+ * team's surrender vote opening or failing (the vote's prompt is `versusTalk.ts`'s).
  */
 export const versusFeedback = (root: HTMLElement, g: Game, e: GameEvent) => {
   const me = localPlayer(g)
@@ -276,6 +279,28 @@ export const versusFeedback = (root: HTMLElement, g: Game, e: GameEvent) => {
       const ours = e.team === mine
       playSfx(ours ? 'evolve' : 'denied', 0)
       return runToast(root, 'important', teamToast(e.team, h('img', { class: 'vs-toast-face', src: portraitUrl(def.dex), alt: '' }), rich(ours ? m.fellUs(def.name) : m.fellThem(def.name))), 3600, 'versusObjective')
+    }
+    case 'versusTalk': {
+      const speaker = g.players[e.slot]
+      if (e.slot === me.slot || !settings().quickChat) return
+      if (e.msg !== 'gg' && speaker?.versus?.team !== mine) return
+      return playSfx('chat', 120)
+    }
+    case 'versusPing':
+      if (g.players[e.slot]?.versus?.team !== mine) return
+      return playSfx('ping', 150)
+    case 'versusSurrender': {
+      if (e.team !== mine) return
+      if (e.state === 'open') {
+        if (e.slot === me.slot) return
+        playSfx('select', 0)
+        return runToast(root, 'important', teamToast(mine, face(g.players[e.slot]), rich(m.surrenderOpen(versusName(g, e.slot)))), 3000, 'versusSurrender')
+      }
+      if (e.state === 'failed') {
+        playSfx('denied', 0)
+        return runToast(root, 'important', teamToast(mine, h('span', {}, t().versus.surrender.failed)), 3000, 'versusSurrender')
+      }
+      return
     }
     case 'versusEnd': {
       const won = e.winner === mine

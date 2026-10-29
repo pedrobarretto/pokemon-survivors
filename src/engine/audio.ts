@@ -155,6 +155,12 @@ const SFX = {
   move: () => tone(440, 440, 0.04, 'square', 0.06),
   /** A dialogue box's text blip, a letter or two at a time. */
   talk: () => tone(740, 740, 0.025, 'square', 0.035),
+  /** Arena: a teammate's ping on the map (two bright blips) and a quick chat line (a soft rising chirp). */
+  ping: () => {
+    tone(1320, 1320, 0.05, 'square', 0.07)
+    tone(1760, 1760, 0.07, 'square', 0.07, 0.07)
+  },
+  chat: () => tone(880, 1180, 0.06, 'triangle', 0.12),
   boss: () => [196, 185, 175, 165].forEach((f, i) => tone(f, f * 0.98, 0.35, 'sawtooth', 0.16, i * 0.3)),
   evolve: () => [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, f, 0.2, 'triangle', 0.18, i * 0.11)),
   thunder: () => {

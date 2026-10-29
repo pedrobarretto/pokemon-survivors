@@ -29,8 +29,11 @@ export type QueueDeps = {
   rtts?: () => Promise<Record<string, number>>
 }
 
-/** What a player queues with: the kind, their Pokémon, and a party's code and the size it expects (a rematch's team), or null. */
-export type Ticket = { kind: QueueKind; starter: string; party: { code: string; size: number } | null }
+/** A party in the queue: its code and how many it expects (a rematch's team). */
+export type QueueParty = { code: string; size: number }
+
+/** What a player queues with: the kind, their Pokémon, and their party, or null. */
+export type Ticket = { kind: QueueKind; starter: string; party: QueueParty | null }
 
 /** The matchmaker's WebSocket URL from the relay's: same origin, `ws(s)`, path `/arena/queue`. */
 export const queueUrl = (relay: string) => `${relay.replace(/^http/, 'ws').replace(/\/+$/, '')}/arena/queue`

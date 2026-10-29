@@ -178,7 +178,8 @@ import { suggestionsScreen } from './ui/suggestions'
 import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
-import { activeCoopClient, addBots, arenaClient, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
+import { activeCoopClient, addBots, arenaClient, botsTalk, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
+import { isQuickChat } from './game/versusSocial'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
 import { arenaLoadout, arenaSeat, coopAccess, coopStarter, freshInvites } from './coop/lobby'
@@ -202,12 +203,13 @@ import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
 import { arenaHub, isArenaHubTab, type ArenaHubTab } from './ui/arenaHub'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
 import { historyEntry } from './arena/history'
-import { joinQueue, type QueueHandle } from './arena/queue'
+import { joinQueue, type QueueHandle, type QueueParty } from './arena/queue'
 import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked'
 import { arenaResult } from './game/arenaRank'
 import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
+import { createVersusTalk, type VersusTalk } from './ui/versusTalk'
 import { versusEnd } from './ui/versusEnd'
 import { VALE, VERSUS, VERSUS_PICKS, isVersusPick, type Team, type VersusPick } from './data/versus'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
@@ -367,11 +369,11 @@ type CoopRun = {
   /** The run's link and pacing numbers (the client's, kept from the run's start: the next run's `start` makes new ones). */
   net: NetStats
   /**
-   * A Versus match: its HUD and pick tray, whether it plays on the in-page relay (against bots), whether its end went to
+   * A Versus match: its HUD, pick tray and social layer (quick chat, pings, the vote, the scoreboard), whether it plays on the in-page relay (against bots), whether its end went to
    * analytics, where it came from (`kind`: practice against bots, a public queue's, a friends' room) and, for a ranked one,
    * the RP its end moved once the API rated it. Null in a co-op run.
    */
-  versus: { hud: VersusHud; tray: VersusTray; local: boolean; reported: boolean; kind: MatchKind; rp: Promise<RpChange | null> | null } | null
+  versus: { hud: VersusHud; tray: VersusTray; talk: VersusTalk; local: boolean; reported: boolean; kind: MatchKind; rp: Promise<RpChange | null> | null } | null
 }
 
 let screen: Screen | null = null
@@ -1477,6 +1479,7 @@ const syncOverlay = (r: Run) => {
           settings: (back) => runSettings(r, back),
           report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
           coop: { sound: () => (toggleMute(), !settings().muted), soundOn: !settings().muted },
+          surrender: g.versus ? () => c.driver.send({ kind: 'surrender', vote: true }) : undefined,
         })
         break
       }
@@ -1493,7 +1496,9 @@ const syncOverlay = (r: Run) => {
       if (c?.versus) {
         // The match's last toasts would sit over the results.
         clearToasts(ui)
-        r.overlay = versusEnd(ui, input, g, me, queueMatchEnd(c, me) ?? { again: () => ((c.again = true), playAgain(c)), lobby: () => backToRoom() }, { kind: c.versus.kind, rp: c.versus.rp })
+        // Against bots, "Jogar de novo"; a friends' room's "Revanche" shows who's ready; a public queue's adds "Revanche com o time".
+        const room = c.versus.local ? {} : { ready: () => againState(c) }
+        r.overlay = versusEnd(ui, input, g, me, queueMatchEnd(c, me) ?? { again: () => ((c.again = true), playAgain(c)), lobby: () => backToRoom(), ...room }, { kind: c.versus.kind, rp: c.versus.rp })
         break
       }
       if (c) {
@@ -2200,6 +2205,7 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   c.team.dispose()
   c.versus?.hud.dispose()
   c.versus?.tray.dispose()
+  c.versus?.talk.dispose()
   clearToasts(ui)
   run = null
   syncRunWatch()
@@ -2307,6 +2313,15 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   const save = loadSave()
   const view = createDrawView(live.game)
   const driver = coopDriver(client, () => backToRoom())
+  // A match's social layer maps the field through the drawn camera (`view.camera`, refreshed in place every frame).
+  const talk = live.game.versus
+    ? createVersusTalk(ui, input, {
+        send: (e) => driver.send(e),
+        toScreen: (x, y) => ({ x: (x - Math.round(view.camera.x)) * cssScale, y: (y - Math.round(view.camera.y)) * cssScale }),
+        toWorld: (x, y) => ({ x: Math.round(view.camera.x) + x / cssScale, y: Math.round(view.camera.y) + y / cssScale }),
+        canvas,
+      })
+    : null
   const c: CoopRun = {
     client,
     runner: live,
@@ -2326,7 +2341,8 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     versus: live.game.versus
       ? {
           hud: createVersusHud(ui, client === arenaClient(), goAt),
-          tray: createVersusTray(ui, input, (offer) => c.team.pick(localPlayer(c.view.game), offer)),
+          tray: createVersusTray(ui, input, (offer) => c.team.pick(localPlayer(c.view.game), offer), () => talk?.busy() ?? false),
+          talk: talk!,
           local: client === arenaClient(),
           reported: false,
           kind: matchKindOf(client, live.room),
@@ -2570,6 +2586,7 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
     const self = localPlayer(shown)
     c.versus.hud.update(shown, self)
     c.versus.tray.update(shown, self, c.team.holding(self) || c.menu)
+    c.versus.talk.update(shown, self, c.menu)
   }
 }
 
@@ -2892,7 +2909,9 @@ let queueMatch: { room: string; kind: QueueKind; asked: QueueKind } | null = nul
 /**
  * A public queue's match ends for good (the matchmaker's room has no next
  * match): "Jogar de novo" queues again for the same kind with the same
- * Pokémon, "Voltar ao lobby" goes back to the Arena. Null for any other match.
+ * Pokémon, "Revanche com o time" queues as a party with the teammates who
+ * press it too (`rematchParty`; only with teammates still in the match),
+ * "Voltar ao lobby" goes back to the Arena. Null for any other match.
  */
 const queueMatchEnd = (c: CoopRun, me: Player) => {
   const kind = c.versus?.kind
@@ -2903,10 +2922,25 @@ const queueMatchEnd = (c: CoopRun, me: Player) => {
     coopClient()?.leave()
     linkRoom(null)
   }
+  const requeue = (party: QueueParty | null) => (leave(), isVersusPick(me.starter) ? playArenaQueue(me.starter, asked, party) : showArena())
+  const party = rematchParty(c.runner.game, c.runner.room, c.runner.start.id, me)
   return {
-    again: () => (leave(), isVersusPick(me.starter) ? playArenaQueue(me.starter, asked) : showArena()),
+    again: () => requeue(null),
     lobby: () => (leave(), showArena()),
+    ...(party.size > 1 && { team: () => requeue(party) }),
   }
+}
+
+/**
+ * The party a public match's team queues as for its rematch: a code every
+ * teammate's screen builds alike from the match (its room, run and team: the
+ * matchmaker keeps one code's tickets on one team) and the humans still on
+ * the team at the end, so the matchmaker waits a moment for all of them
+ * (`ARENA_RANKED.queue.partyGrace`).
+ */
+const rematchParty = (g: Game, room: string, run: number, me: Player): QueueParty => {
+  const team = me.versus?.team ?? 0
+  return { code: `rm-${room}-${run}-${team}`.slice(0, 32), size: g.players.filter((p) => p.versus?.team === team && !p.versus.bot && !p.gone).length }
 }
 
 /** Where a match came from: against bots (practice), the public queue's (as matched, or as its room says), or a friends' room. */
@@ -2946,7 +2980,7 @@ const MATCH_START_MS = (ARENA_RANKED.queue.joinTimeout + 15) * 1000
  * player's Pokémon on the side it was given, ready; the relay starts the
  * match by itself and its `run` event brings it in (`startCoopRun`).
  */
-const playArenaQueue = (id: VersusPick, kind: QueueKind) => {
+const playArenaQueue = (id: VersusPick, kind: QueueKind, party: QueueParty | null = null) => {
   const client = coopClient()
   const deps = arenaQueueDeps()
   if (!client || !deps) return toast(ui, t().coop.off, 4000, 'coopOff')
@@ -2965,7 +2999,7 @@ const playArenaQueue = (id: VersusPick, kind: QueueKind) => {
   }
   const waiting = arenaQueueLive(ui, input, { name: arenaName(), pick: id }, kind, () => back(null))
   setScreen(waiting)
-  const ticket = joinQueue(deps, { kind, starter: id, party: null }, (e) => {
+  const ticket = joinQueue(deps, { kind, starter: id, party }, (e) => {
     if (queueTicket !== ticket) return
     const q = t().versus.queue
     if (e.t === 'queued') return waiting.update(e)
@@ -3782,7 +3816,8 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
       const made = await client.create()
       if (!made.ok) return made
       const joined = await joinCoop(made.code, null)
-      if (joined.ok) client.setSettings({ difficulty: loadSave().difficulty })
+      // ps.coop('create', 3, 'arena'): an Arena room (the bots take seats on Blue).
+      if (joined.ok) client.setSettings({ difficulty: loadSave().difficulty, ...(extra === 'arena' && { mode: 'versus' }) })
       if (joined.ok && Number(arg ?? 0) > 0) await addBots(made.code, Number(arg))
       if (joined.ok && !run) showRoom()
       return { ...made, joined }
@@ -3816,6 +3851,9 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
     }
     case 'surrender':
       return surrenderBots()
+    case 'say':
+      // An Arena match: the tab's bots say a quick chat line (`help` without one) and ping where they stand.
+      return botsTalk(isQuickChat(arg) ? arg : 'help', 'danger')
     case 'ready':
       return client.setReady(arg !== 0 && arg !== 'no')
     case 'start':
@@ -3864,7 +3902,7 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
       return { ...client.connection(), queued: client.queued(), stats: r?.stats, tickMs: r?.tickMs, slot: r?.slot, where: st.where, summary, last: lastCoopNet() }
     }
     default:
-      return 'ps.coop(): create, join, bots, surrender, pick, ready, start, leave, drop, fresh, desync, url, relay, botRelays, net, wall, room, hub, build, invite'
+      return 'ps.coop(): create, join, bots, surrender, say, pick, ready, start, leave, drop, fresh, desync, url, relay, botRelays, net, wall, room, hub, build, invite'
   }
 }
 

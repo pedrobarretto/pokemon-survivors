@@ -2,7 +2,9 @@ import { accountHandle } from '../account'
 import { arenaSignedIn, deviceArenaHistory, fetchArenaBoard, fetchArenaHistory, fetchArenaMe } from '../arenaApi'
 import { divisionProgress, ladder, mergeHistory, record, timeLeft } from '../arena/history'
 import { ARENA_RANKED, type TierId } from '../data/arenaRanked'
+import { VERSUS } from '../data/versus'
 import { playSfx } from '../engine/audio'
+import { formatTime } from '../engine/math'
 import type { Input } from '../engine/input'
 import { seasonAt, seasonById, tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile, type Season, type TierView } from '../game/arenaRank'
 import { formatNumber, locale, LOCALES, t } from '../i18n'
@@ -254,7 +256,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
 
   const rulesTab = () => {
     const r = ARENA_RANKED
-    const items = m.rules.items({ win: r.rp.win, loss: r.rp.loss, perf: r.rp.perfMax, casual: r.queue.botsAfter.casual, ranked: r.queue.botsAfter.ranked, humans: r.queue.minHumansRanked, days: r.season.days })
+    const items = m.rules.items({ win: r.rp.win, loss: r.rp.loss, perf: r.rp.perfMax, casual: r.queue.botsAfter.casual, ranked: r.queue.botsAfter.ranked, humans: r.queue.minHumansRanked, days: r.season.days, surrender: formatTime(VERSUS.length - VERSUS.surrender.from) })
     return [h('b', { class: 'arena-hub-rules-title' }, m.rules.title), h('ol', { class: 'arena-hub-rules' }, ...items.map((text) => h('li', {}, text)))]
   }
 

@@ -27,6 +27,10 @@ export type PingKind = (typeof PING_KINDS)[number]
 export const isQuickChat = (v: unknown): v is QuickChat => typeof v === 'string' && (QUICK_CHAT as readonly string[]).includes(v)
 export const isPingKind = (v: unknown): v is PingKind => typeof v === 'string' && (PING_KINDS as readonly string[]).includes(v)
 
+/** The scoreboard's stats, in its columns' order: each a number on `VersusSeat` (and on the match's result, `ArenaSeatResult`). */
+export const BOARD_STATS = ['kos', 'assists', 'deaths', 'scored', 'dealt', 'taken', 'healed', 'interrupts'] as const
+export type BoardStat = (typeof BOARD_STATS)[number]
+
 /* ---------------- Rate limits ---------------- */
 
 /** A token bucket: tokens left and when (s) they were last counted. */
@@ -73,6 +77,22 @@ export type SurrenderVote = { by: number; ends: number; yes: number[]; no: numbe
 
 /** The humans who vote for `team` now: on it, not a bot, not gone and not away (bots never vote). */
 export const voters = (g: Game, team: Team) => g.players.filter((p) => p.versus?.team === team && !p.versus.bot && !p.gone && !p.away)
+
+/**
+ * Whether `p` can propose their team's surrender now (`ready`), and if not
+ * why: too early in the match, the team's cooldown after a failed vote (both
+ * until the match second `until`), a vote already running, or they don't vote
+ * (a bot, gone, away, the match over). Read by the shell's menu button.
+ */
+export const surrenderGate = (g: Game, p: Player): { state: 'ready' | 'early' | 'cooldown' | 'running' | 'no'; until: number } => {
+  const s = g.versus
+  const v = p.versus
+  if (!s || !v || s.result || v.bot || p.gone || p.away) return { state: 'no', until: 0 }
+  if (s.surrender[v.team]) return { state: 'running', until: 0 }
+  if (g.time < VERSUS.surrender.from) return { state: 'early', until: VERSUS.surrender.from }
+  if (g.time < s.surrenderAt[v.team]) return { state: 'cooldown', until: s.surrenderAt[v.team] }
+  return { state: 'ready', until: 0 }
+}
 
 /* ---------------- On the match ---------------- */
 
