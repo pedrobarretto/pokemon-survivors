@@ -194,3 +194,28 @@ export type VersusPick = keyof typeof VERSUS_ROSTER
 export const VERSUS_PICKS = Object.keys(VERSUS_ROSTER) as VersusPick[]
 
 export const isVersusPick = (id: string): id is VersusPick => Object.hasOwn(VERSUS_ROSTER, id)
+
+/**
+ * The Arena's kit, Unite style (`game/versusKit.ts`): a basic attack that
+ * fires on its own (the Pokémon's signature, `signature` in
+ * `data/starters.ts`, the move every run opens with), Move 1 and Move 2 cast
+ * by the player, aimed, and the Unite Move (the type's special). Move 1 comes
+ * from the opening draft, Move 2 at `secondMove`; each evolution then offers
+ * the new form's moves to upgrade one of them (the first Move 1, the second
+ * Move 2), the way Unite's Charmander picks Flamethrower or Fire Spin.
+ */
+export const VERSUS_KIT = {
+  /** Moves a Pokémon carries in the Arena: the basic attack, Move 1 and Move 2. */
+  moves: 3,
+  /** The level Move 2 is learned at (its level-up offers new moves only). */
+  secondMove: 3,
+  /** Arena-only evolution levels (Unite's Charmander curve): a run's Lv 12 and 28 would come at ~5:00 and never in 7 minutes. */
+  evolveAt: [5, 9],
+  /** How far (px) the auto basic attack and the aim assist look for a target, and the farthest a skill's aim reaches. */
+  reach: 220,
+  /** A manual aim's point takes the foe standing within this many px of it as its target. */
+  snap: 28,
+  /** Seconds a cast keeps the Pokémon turned to its aim, so the Unite Move releases that way after its charge. */
+  hold: 0.7,
+} as const
+

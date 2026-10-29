@@ -1,12 +1,19 @@
 import { onAnyScreen } from './players'
 import type { Enemy, Game } from './types'
 import { unseen } from './versusRules'
+import { focusedEnemy } from './versusKit'
 import * as dm from '../engine/dmath'
 
 export const isAlive = (e: Enemy) => e.dying < 0
 
-/** Nearest living enemy within `maxDist`, optionally skipping ids already targeted (and, in Versus, the acting player's own team and the rivals hidden in grass). */
+/**
+ * Nearest living enemy within `maxDist`, optionally skipping ids already
+ * targeted (and, in Versus, the acting player's own team and the rivals hidden
+ * in grass). An Arena cast aims it (`focusedEnemy`): its target, or nobody.
+ */
 export const nearestEnemy = (g: Game, x: number, y: number, maxDist: number, exclude?: ReadonlySet<number>) => {
+  const focused = g.player.versus?.focus ? focusedEnemy(g, x, y, maxDist, exclude) : undefined
+  if (focused !== undefined) return focused
   let best: Enemy | null = null
   let bestD = maxDist * maxDist
   for (const e of g.enemies) {

@@ -796,6 +796,8 @@ export type GameEvent =
   | { kind: 'versusKo'; slot: number; by: number }
   | { kind: 'versusBack'; slot: number }
   | { kind: 'versusStretch' }
+  /** The acting player cast Move 1 (0) or Move 2 (1) of their Arena kit (`versusKit.ts`). */
+  | { kind: 'versusCast'; skill: 0 | 1 | 2 }
   | { kind: 'versusObjective'; enemy: EnemyId; team: Team | -1 }
   | { kind: 'versusEnd'; winner: Team | null; surrender: Team | null }
   /** Versus (`versusSocial.ts`): a quick chat line, a ping on the map, and a team's surrender vote opening, passing or failing. */

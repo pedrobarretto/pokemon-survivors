@@ -9,6 +9,7 @@ import { recomputeStats } from './leveling'
 import { MOVES, moveStats, type MoveDef } from './moves'
 import { enemiesInView, inSight, isAlive } from './queries'
 import { unseen } from './versusRules'
+import { aimableById } from './versusKit'
 import { spawnAttack } from './spawn'
 import { firstStance, nextStance, STANCES, STANCE_CYCLES, type Stance, type StanceSpecial } from './stance'
 import type { StatusSpec } from './status'
@@ -964,6 +965,10 @@ const arrivalCombo = (g: Game, casts = g.player.stats.comboMoves) => {
 /** Nearest living foe on screen within reach of a jump, skipping the one the last jump went for (in Versus, its own team and the rivals hidden in grass too). */
 const chainTarget = (g: Game, skip: number) => {
   const p = g.player
+  // An Arena cast jumps at its target while it's in reach (`versusKit.ts`).
+  const f = p.versus?.focus
+  const aimed = f && f.id !== skip ? aimableById(g, p, f.id, CHAIN_RANGE) : null
+  if (aimed) return aimed
   let best: Enemy | null = null
   let bestD = dm.sq(CHAIN_RANGE)
   for (const e of g.enemies) {

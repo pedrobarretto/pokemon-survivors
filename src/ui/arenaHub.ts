@@ -13,6 +13,7 @@ import { arenaIconUrl, tierBallUrl, type ArenaIcon } from '../render/arenaArt'
 import { portraitUrl } from '../render/sprites'
 import { firstForm, teamColor } from './arena'
 import { h, later } from './dom'
+import { boundKey } from './inputLabels'
 import { hint, type Screen } from './screens'
 
 /**
@@ -374,7 +375,13 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
       season1: season1Date(),
       surrender: { standard: surrenderClock('standard'), quick: surrenderClock('quick') },
     })
-    return [h('b', { class: 'arena-hub-rules-title' }, m.rules.title), h('ol', { class: 'arena-hub-rules' }, ...items.map((text) => h('li', {}, text)))]
+    const keys = { move1: boundKey('move1'), move2: boundKey('move2'), unite: boundKey('unite'), target: boundKey('target') }
+    return [
+      h('b', { class: 'arena-hub-rules-title' }, m.controls.title),
+      h('ol', { class: 'arena-hub-rules' }, ...m.controls.items(keys).map((text) => h('li', {}, text))),
+      h('b', { class: 'arena-hub-rules-title' }, m.rules.title),
+      h('ol', { class: 'arena-hub-rules' }, ...items.map((text) => h('li', {}, text))),
+    ]
   }
 
   const paint = () => {

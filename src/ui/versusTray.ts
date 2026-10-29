@@ -52,7 +52,15 @@ export const createVersusTray = (root: HTMLElement, input: Input, pick: (offer: 
   const build = (g: Game, me: Player) => {
     const m = t().versus.tray
     offers = me.offers
-    title.textContent = me.phase === 'branch' ? m.branch : me.phase === 'ability' ? m.ability : me.level <= 1 ? m.first : m.levelup(me.level)
+    // The kit's own screens (`game/versusPacing.ts`): Move 2, then a move of the new form taking Move 1's or Move 2's place.
+    const learn = me.phase === 'levelup' ? (me.versus?.learn ?? 0) : 0
+    title.textContent =
+      me.phase === 'branch' ? m.branch
+      : me.phase === 'ability' ? m.ability
+      : learn > 0 && me.moves.length <= learn ? m.second
+      : learn > 0 ? m.upgrade(learn)
+      : me.level <= 1 ? m.first
+      : m.levelup(me.level)
     cards.replaceChildren(
       ...me.offers.map((offer, i) => {
         const v = offerView(g, offer)

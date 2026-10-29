@@ -31,7 +31,7 @@ type Pending = { nonce: number; input: ReliableInput; queuedAt: number; sentAt: 
 export type Outbox = {
   /** The stick waiting to go out, or null. */
   move: Extract<Input, { k: 'move' }> | null
-  /** Presses (special, Mega, lunge, an Arena chat line or ping) waiting: a press lost in a crash window is fine, so they're sent once. */
+  /** Presses (special, Mega, lunge, an Arena cast, chat line or ping) waiting: a press lost in a crash window is fine, so they're sent once. */
   presses: Exclude<Input, ReliableInput | { k: 'move' }>[]
   reliable: Pending[]
   nonce: number
@@ -61,7 +61,8 @@ export const push = (o: Outbox, input: Input, now: number): number => {
     return 0
   }
   if (!isReliable(input)) {
-    if (!o.presses.some((p) => p.k === input.k)) o.presses.push(input)
+    // One of each press waits (one cast per skill).
+    if (!o.presses.some((p) => p.k === input.k && (p.k !== 'cast' || input.k !== 'cast' || p.skill === input.skill))) o.presses.push(input)
     track(o)
     return 0
   }

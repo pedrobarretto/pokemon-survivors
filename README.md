@@ -143,6 +143,8 @@ The game is in Brazilian Portuguese 🇧🇷, English 🇺🇸, Spanish 🌎, Fr
 | Move | WASD / arrows / D-pad / left stick | Drag anywhere (floating joystick), or the fixed joystick in the bottom-left corner (Settings → Controls) |
 | Special attack | `Space` / A (✕) | Round button, bottom right |
 | Mega Evolution | `E` / Y (△) | MEGA button, above the special |
+| Arena: Move 1, Move 2, Unite Move | `Q`, `E`, `R` / RB, RT, LT (aimed by the Aim setting; the basic attack is automatic) | The right-thumb cluster: tap to cast with assisted aim, drag to aim, slide back onto the button to cancel |
+| Arena: lock or switch target | Click a Pokémon (the ground lets go), `Tab` / right stick (flick or click) | Tap a Pokémon, or the basic attack button |
 | Pause | `Esc` / `P` / Start | Pause button, top right |
 | Pick an upgrade | `1`–`3` | Tap it |
 | Mute | `M` | Settings, on the title screen or in the pause menu |

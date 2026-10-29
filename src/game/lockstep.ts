@@ -12,6 +12,7 @@ import { grantStone } from './mega'
 import { inPlay, setPhase } from './players'
 import { moveOf, TICK } from './replay'
 import type { Game, Offer, Player, PlayerPhase } from './types'
+import { AIM_DIRS, MAX_REACH, PRIORITIES, SKILLS, type Cast, type Skill } from './versusKit'
 
 /**
  * Co-op lockstep: every client applies the same tick entries (stamped into
@@ -52,14 +53,26 @@ export type TickEntry =
   | { slot: number; kind: 'chat'; msg: QuickChat }
   | { slot: number; kind: 'ping'; ping: PingKind; x: number; y: number }
   | { slot: number; kind: 'surrender'; vote: boolean }
+  /**
+   * The Arena kit (`versusKit.ts`), ignored outside a match: a cast of Move 1,
+   * Move 2 or the Unite Move (`skill` 0..2) aimed on the client, a direction
+   * code (`dir`, 0..127), a reach in px (0..255) and the enemy it picked
+   * (`target`, -1 none); the enemy the player locked (-1 lets go); how the
+   * player ranks targets (`prio`, a `PRIORITIES` index).
+   */
+  | { slot: number; kind: 'cast'; skill: Skill; dir: number; reach: number; target: number }
+  | { slot: number; kind: 'lock'; target: number }
+  | { slot: number; kind: 'prio'; prio: number }
 
 const MAX_CODE = 224
 const SCREENS: ReadonlySet<string> = new Set<PickScreen>(['levelup', 'branch', 'ability', 'curse', 'tm', 'pokeball'])
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isIndex = (v: unknown, max: number): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= max
-/** A ping's map coordinate: whole px, well past the Vale's edges either way (the simulation holds it to the map). */
+/** A ping's map coordinate: whole px, well past any Arena map's edges either way (the simulation holds it to the map). */
 const isCoord = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && Math.abs(v) <= 4096
+/** An enemy id, or -1 for none. */
+const isTarget = (v: unknown): v is number => v === -1 || isIndex(v, Number.MAX_SAFE_INTEGER)
 
 /**
  * Reads a tick entry from untrusted JSON for a run of `players` slots (a
@@ -99,6 +112,15 @@ export const parseTickEntry = (raw: unknown, players: number): TickEntry | null 
       return isQuickChat(raw.msg) ? { slot, kind, msg: raw.msg } : null
     case 'ping':
       return isPingKind(raw.ping) && isCoord(raw.x) && isCoord(raw.y) ? { slot, kind, ping: raw.ping, x: raw.x, y: raw.y } : null
+    case 'cast': {
+      const { skill, dir, reach, target } = raw
+      if (!isIndex(skill, SKILLS.length - 1) || !isIndex(dir, AIM_DIRS - 1) || !isIndex(reach, MAX_REACH) || !isTarget(target)) return null
+      return { slot, kind, skill: skill as Skill, dir, reach, target }
+    }
+    case 'lock':
+      return isTarget(raw.target) ? { slot, kind, target: raw.target } : null
+    case 'prio':
+      return isIndex(raw.prio, PRIORITIES.length - 1) ? { slot, kind, prio: raw.prio } : null
     default:
       return null
   }
@@ -240,6 +262,23 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
       return pingAt(g, p, e.ping, e.x, e.y)
     case 'surrender':
       return voteSurrender(g, p, e.vote)
+    case 'cast': {
+      if (p.away || !p.versus) return
+      // One cast per skill a tick (the latest); the Unite Move's presses the special too.
+      const casts = (input.casts ??= [])
+      const cast: Cast = { skill: e.skill, dir: e.dir, reach: e.reach, target: e.target }
+      const i = casts.findIndex((c) => c.skill === e.skill)
+      if (i >= 0) casts[i] = cast
+      else casts.push(cast)
+      if (e.skill === 2) input.special = true
+      return
+    }
+    case 'lock':
+      if (p.versus) p.versus.lock = e.target
+      return
+    case 'prio':
+      if (p.versus) p.versus.prio = e.prio
+      return
   }
 }
 

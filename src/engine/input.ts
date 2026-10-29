@@ -1,4 +1,4 @@
-import { ACTIONS, keyCode, type Bindings } from './bindings'
+import { ACTIONS, keyCode, type Bindings, type Context } from './bindings'
 import { padActions, padChanges, readPads, type PadState } from './gamepad'
 import type { Vec } from './math'
 
@@ -18,8 +18,10 @@ export type Input = {
   onKey: (handler: (key: string) => void) => () => void
   /** Delivers a key press that didn't come from the keyboard. */
   press: (key: string) => void
-  /** Reads the gamepads. Call once per frame; `playing` (a run, not a menu) picks what the buttons mean. */
-  poll: (playing: boolean) => void
+  /** Reads the gamepads. Call once per frame; the context (a menu, a run, an Arena match) picks what the keys and buttons mean. */
+  poll: (context: Context) => void
+  /** The pad's right stick, tilted (length ≤ 1), or null at rest: the Arena aims and switches targets with it. */
+  readAim: () => Vec | null
   /** The `Gamepad.id` of the pad the player pressed last, or null since a key was pressed (or before any pad was). */
   activePad: () => string | null
   /** The ids of the gamepads the browser shows the game. A pad only appears after its first press. */
@@ -158,6 +160,10 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   let padHeld: string[] = []
   /** The pad's left stick in a run, analog (`stickVector`); zero at rest or in a menu. */
   let padMove: Vec = { x: 0, y: 0 }
+  /** The pad's right stick in a run, null at rest. */
+  let padAim: Vec | null = null
+  /** The context of the last poll: keys type by it too. */
+  let context: Context = 'menu'
 
   window.addEventListener('keydown', (e) => {
     // Typing in a text field (the profile editor) or a Clerk modal (reverification) is not playing: they keep their keys.
@@ -168,9 +174,10 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
       if (!e.repeat && e.code) capturing({ device: 'key', code: e.code })
       return
     }
-    const code = keyCode(bindings().key, e.code)
+    const code = keyCode(bindings().key, e.code, context)
     if (code === null) return
-    if (code in MOVE_KEYS || code !== e.code) e.preventDefault()
+    // Tab switches targets in a match, not the browser's focus.
+    if (code in MOVE_KEYS || code !== e.code || (code === 'Tab' && context === 'arena')) e.preventDefault()
     held.set(e.code, code)
     if (!e.repeat) dispatch(code)
   })
@@ -230,16 +237,18 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   }
 
   // Edge-detected per button, not per code: a button held across a run/menu switch doesn't press again.
-  const poll = (playing: boolean) => {
-    const now = readPads()
-    const { buttons, stick: axes, fresh, freshStick, pressed, move, pads: seen } = padChanges(pads, now)
+  const poll = (now: Context) => {
+    context = now
+    const playing = now !== 'menu'
+    const { buttons, stick: axes, fresh, freshStick, pressed, move, aim, pads: seen } = padChanges(pads, readPads())
     pads = seen
     if (pressed !== null) activePad = pressed
     const pad = bindings().pad
-    padHeld = playing ? padActions(pad, buttons, axes, true).map((a) => ACTIONS[a].code) : []
+    padHeld = playing ? padActions(pad, buttons, axes, now).map((a) => ACTIONS[a].code) : []
     padMove = playing ? move : { x: 0, y: 0 }
+    padAim = playing && (aim.x !== 0 || aim.y !== 0) ? aim : null
     if (capturing) return fresh.forEach((button) => capturing?.({ device: 'pad', button }))
-    padActions(pad, fresh, freshStick, playing).forEach((a) => dispatch(ACTIONS[a].code))
+    padActions(pad, fresh, freshStick, now).forEach((a) => dispatch(ACTIONS[a].code))
   }
 
   const capture = (take: (press: RawPress) => void) => {
@@ -264,6 +273,7 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
     onKey,
     press: dispatch,
     poll,
+    readAim: () => padAim,
     activePad: () => activePad,
     pads: () => pads.map((p) => p.id),
     capture,

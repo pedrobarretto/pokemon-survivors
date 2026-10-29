@@ -1,4 +1,4 @@
-import { ACTION_IDS, inScope, type Action, type Table } from './bindings'
+import { ACTION_IDS, inScope, type Action, type Context, type Table } from './bindings'
 import type { Vec } from './math'
 
 /** Left stick deflection that counts as a D-pad press. */
@@ -33,11 +33,11 @@ export const stickVector = (axes: readonly number[]): Vec => {
 }
 
 /**
- * Actions a pad state triggers in this context (`playing`: a run, not a menu):
- * the bound buttons in `buttons` plus the stick directions in `stick`.
+ * Actions a pad state triggers in this context: the bound buttons in
+ * `buttons` plus the stick directions in `stick`.
  */
-export const padActions = (pad: Table<number>, buttons: ReadonlySet<number>, stick: ReadonlySet<Action>, playing: boolean) =>
-  ACTION_IDS.filter((a) => inScope(a, playing) && (stick.has(a) || (pad[a] !== null && buttons.has(pad[a]))))
+export const padActions = (pad: Table<number>, buttons: ReadonlySet<number>, stick: ReadonlySet<Action>, context: Context) =>
+  ACTION_IDS.filter((a) => inScope(a, context) && (stick.has(a) || (pad[a] !== null && buttons.has(pad[a]))))
 
 /**
  * One connected pad: its `Gamepad.index` and `id`, the standard-mapping
@@ -45,7 +45,7 @@ export const padActions = (pad: Table<number>, buttons: ReadonlySet<number>, sti
  * move vector (`move`). `rested`: the stick has sat inside its dead zone at
  * least once since the pad showed up (`padChanges` carries it frame to frame).
  */
-export type PadState = { index: number; id: string; buttons: ReadonlySet<number>; stick: ReadonlySet<Action>; move: Vec; rested: boolean }
+export type PadState = { index: number; id: string; buttons: ReadonlySet<number>; stick: ReadonlySet<Action>; move: Vec; aim: Vec; rested: boolean }
 
 /** Set once the browser refused the gamepad API, so the frame loop stops asking. */
 let padsBlocked = false
@@ -70,14 +70,17 @@ export const readPads = (): PadState[] =>
   browserPads().flatMap((pad) => {
     if (!pad?.connected) return []
     const move = stickVector(pad.axes)
-    return [{ index: pad.index, id: pad.id, buttons: new Set(pad.buttons.flatMap((b, i) => (b.pressed ? [i] : []))), stick: stickActions(pad.axes), move, rested: move.x === 0 && move.y === 0 }]
+    // The right stick (axes 2 and 3 in the standard mapping), read like the left.
+    const aim = stickVector(pad.axes.slice(2, 4))
+    return [{ index: pad.index, id: pad.id, buttons: new Set(pad.buttons.flatMap((b, i) => (b.pressed ? [i] : []))), stick: stickActions(pad.axes), move, aim, rested: move.x === 0 && move.y === 0 }]
   })
 
 /**
  * What the pads did since the last frame: the buttons and stick directions
  * held on any pad, the ones just pressed, the id of a pad that pressed
- * something (null if none did) and the first tilted left stick as a move
- * vector (`move`, zero when every stick rests). Presses are edge-detected pad by pad, so a
+ * something (null if none did), the first tilted left stick as a move
+ * vector (`move`, zero when every stick rests) and the first tilted right
+ * stick (`aim`, the same way). Presses are edge-detected pad by pad, so a
  * pad that keeps a button down (a second controller, a virtual one) doesn't
  * swallow the same button on the pad the player is using.
  * A stick counts only once it has rested (`PadState.rested`): a device whose
@@ -92,6 +95,7 @@ export const padChanges = (before: readonly PadState[], now: readonly PadState[]
   const freshStick = new Set<Action>()
   let pressed: string | null = null
   let move: Vec = { x: 0, y: 0 }
+  let aim: Vec = { x: 0, y: 0 }
   const pads: PadState[] = []
   for (const read of now) {
     const last = before.find((p) => p.index === read.index && p.id === read.id)
@@ -105,6 +109,7 @@ export const padChanges = (before: readonly PadState[], now: readonly PadState[]
     }
     if (!pad.rested) continue
     if (move.x === 0 && move.y === 0) move = pad.move
+    if (aim.x === 0 && aim.y === 0) aim = pad.aim
     for (const a of pad.stick) {
       stick.add(a)
       if (last?.stick.has(a)) continue
@@ -112,7 +117,7 @@ export const padChanges = (before: readonly PadState[], now: readonly PadState[]
       pressed = pad.id
     }
   }
-  return { buttons, stick, fresh, freshStick, pressed, move, pads }
+  return { buttons, stick, fresh, freshStick, pressed, move, aim, pads }
 }
 
 /** Controller layouts, by the names printed on their buttons. Anything unknown reads as Xbox, the most common layout on PC. */
