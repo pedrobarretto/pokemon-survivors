@@ -126,6 +126,23 @@ describe.skipIf(!url)('arena store (Postgres)', () => {
     expect((await arena.tickets(['u_a'])).ratings.u_a?.fairPlay).toBe(max + left)
   })
 
+  it('keeps a 3v3 that one team gave up: its format in the history, unrated, a finish for Fair Play on both sides', async () => {
+    const { finish } = ARENA_RANKED.fairPlay
+    await sql`insert into users (id) values ('u_a'), ('u_b')`
+    await sql`insert into arena_fair_play (user_id, score) values ('u_a', 50), ('u_b', 50)`
+    // Blue (u_a) surrendered 3v3 Rápida: six seats, Red wins.
+    const seats6 = [0, 1, 2, 3, 4, 5].map((slot) => seat(slot, slot < 3 ? 0 : 1))
+    const given: ArenaResult = { ...result, winner: 1, surrender: 0, seconds: 120, format: 'quick', seats: seats6 }
+    const seats = [{ slot: 0, userId: 'u_a', handle: null, left: false }, { slot: 3, userId: 'u_b', handle: null, left: false }]
+    expect(await arena.report(report({ kind: 'casual', seats, result: given }))).toMatchObject({ rated: false })
+    const [a] = await arena.history('u_a', LATER, 5)
+    expect(a).toMatchObject({ format: 'quick', outcome: 'loss', protected: false, rp: null })
+    expect((await arena.tickets(['u_a', 'u_b'])).ratings).toMatchObject({ u_a: { fairPlay: 50 + finish }, u_b: { fairPlay: 50 + finish } })
+    // A 4v4 says no format.
+    await arena.report(report({ run: 2, kind: 'casual', seats }))
+    expect((await arena.history('u_a', LATER, 5))[0]).not.toHaveProperty('format')
+  })
+
   it('costs everyone in an abandoned match Fair Play once, rating nothing', async () => {
     const abandoned = { room: 'Z9', run: 1, kind: 'ranked' as const, endedAt: seasonById(1).startMs + 60_000, users: ['u_a', 'u_b'] }
     expect(await arena.abandoned(abandoned)).toMatchObject({ rated: false, duplicate: false })
