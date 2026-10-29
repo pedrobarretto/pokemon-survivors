@@ -20,6 +20,9 @@ import type { Role } from '../data/versus'
 import type { MapId } from '../data/versusMaps'
 import type { WearableId } from '../data/wearables'
 import type { ArenaEffectId } from '../data/arenaEffects'
+import type { CosmeticSlot, Rarity } from '../data/arenaCosmetics'
+import type { GemPackId } from '../data/gems'
+import type { ReceiptReason } from '../arena/gemShop'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
 import type { Priority } from '../game/versusKit'
@@ -522,7 +525,7 @@ export const pt = {
     /** The Arena's hub (`ui/arenaHub.ts`): profile, season, board, history and rules. */
     hub: {
       title: 'Arena ranqueada',
-      tabs: { profile: 'Perfil', season: 'Temporada', ranking: 'Ranking', history: 'Histórico', rules: 'Regras' },
+      tabs: { profile: 'Perfil', shop: 'Loja', locker: 'Visual', season: 'Temporada', ranking: 'Ranking', history: 'Histórico', rules: 'Regras' },
       loading: 'Carregando…',
       offline: 'O ranking está fora de alcance agora. Tente de novo em instantes.',
       rp: (n: number) => `${n} RP`,
@@ -674,6 +677,72 @@ export const pt = {
   wearables: { strawHat: 'Chapéu de palha' } satisfies Record<WearableId, string>,
   /** The Arena's other cosmetics (`data/arenaEffects.ts`), by id. */
   arenaEffects: { sparkTrail: 'Rastro de faíscas' } satisfies Record<ArenaEffectId, string>,
+  /** The Arena's gem shop (`ui/gemShop.ts`): the gem chip, the hub's Loja and Visual tabs, a pack's checkout and its return. */
+  gems: {
+    /** The gem chip's label, for screen readers and its tooltip. */
+    chip: (n: string) => `${n} gemas`,
+    gems: (n: string) => `${n} gemas`,
+    slots: { head: 'Cabeça', face: 'Rosto', neck: 'Pescoço', back: 'Costas', follower: 'Companheiro', trail: 'Rastro', spawn: 'Entrada', ko: 'Nocaute', goal: 'Gol', emote: 'Emote', title: 'Título', plate: 'Placa' } satisfies Record<CosmeticSlot, string>,
+    rarities: { common: 'Comum', rare: 'Raro', epic: 'Épico', legendary: 'Lendário' } satisfies Record<Rarity, string>,
+    /** The packs' names (`GEM_PACKS` in `data/gems.ts`). */
+    packs: { pouch: 'Punhado', bag: 'Bolsa', chest: 'Baú', hoard: 'Tesouro', vault: 'Cofre' } satisfies Record<GemPackId, string>,
+    shop: {
+      pitch: 'Visuais para o seu Pokémon na Arena: todo mundo na partida vê, e nenhum dá poder.',
+      balance: 'Seu saldo',
+      currency: 'Moeda',
+      packs: 'Pacotes de gemas',
+      bonus: (n: string) => `+${n} bônus`,
+      catalog: 'Visuais',
+      all: 'Tudo',
+      owned: 'Seu',
+      equipped: 'Usando',
+      unsold: 'Indisponível',
+      /** A wearable that doesn't sit right on the previewed Pokémon. */
+      misfit: (name: string) => `Não fica bem no ${name}`,
+      effect: 'Aparece durante a partida.',
+      buy: 'Comprar',
+      equip: 'Usar',
+      unequip: 'Tirar',
+      confirm: (name: string, price: string) => `Comprar ${name} por ${price} gemas?`,
+      bought: (name: string) => `${name} é seu, e você já está usando!`,
+      short: (n: string) => `Faltam ${n} gemas. Que tal um pacote?`,
+      busy: 'Calma! Muitas compras seguidas. Tente de novo em um minuto.',
+      offline: 'A loja está fora de alcance agora. Tente de novo em instantes.',
+      receipts: 'Recibos',
+      receiptsEmpty: 'Nenhuma movimentação ainda.',
+      reasons: { pack: 'Pacote de gemas', patreon: 'Patreon', play: 'Partida na Arena', buy: 'Compra', refund: 'Reembolso', dispute: 'Contestação', disputeWon: 'Contestação revertida', grant: 'Presente da equipe' } satisfies Record<ReceiptReason, string>,
+      signIn: { title: 'Entre para usar a Loja', text: 'As gemas e os visuais ficam na sua conta, em qualquer aparelho.', button: 'Entrar' },
+      unavailable: 'A Loja não está disponível nesta versão do jogo.',
+      onlyLooks: 'Gemas compram só visuais da Arena.',
+    },
+    checkout: {
+      split: (gems: string, bonus: string) => `${gems} + ${bonus} bônus`,
+      pay: 'Pagar com',
+      card: 'Cartão, Apple Pay ou Google Pay',
+      pix: 'Pix',
+      cancel: 'Cancelar',
+      opening: 'Abrindo o pagamento…',
+      failed: 'Não deu para abrir o pagamento. Tente de novo.',
+      processing: 'Confirmando seu pagamento…',
+      processingNote: 'Leva alguns segundos. Pode deixar esta tela aberta.',
+      done: (n: string) => `+${n} gemas!`,
+      doneNote: (balance: string) => `Seu saldo agora é de ${balance} gemas. Obrigado por apoiar o jogo!`,
+      timeout: 'Pagamento a caminho',
+      timeoutNote: 'Ainda estamos confirmando o pagamento. As gemas chegam à sua conta em alguns minutos (um Pix pode demorar um pouco mais), e você pode continuar jogando.',
+      ok: 'Continuar',
+    },
+    locker: {
+      pick: 'Pokémon da prévia',
+      none: 'Nenhum',
+      empty: 'Você ainda não tem visuais. Que tal dar uma olhada na Loja?',
+      slotEmpty: 'Nada aqui ainda',
+      toShop: 'Ver na Loja',
+      saving: 'Salvando…',
+      saved: 'Salvo na sua conta.',
+      local: 'Salvo neste aparelho: vai para a conta quando a conexão voltar.',
+      note: 'Todo mundo nas partidas da Arena vê o seu visual.',
+    },
+  },
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: 'Reconectando…',

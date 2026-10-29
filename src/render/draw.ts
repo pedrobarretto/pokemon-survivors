@@ -69,6 +69,8 @@ import { localPlayer } from '../game/players'
 import { riftDomain } from '../game/rift'
 import { drawTeamAir, drawTeamGround, drawTeammate, drawTeamMarkers, showsPlain, showsStanding } from './team'
 import { drawVersusGuide } from './versusGuide'
+import { lookOf } from './arenaLooks'
+import { drawWearables } from './wearables'
 import { mapOf } from '../game/versusRules'
 import { drawArenaAim, type ArenaOverlay } from './arenaAim'
 import { drawValeAir, drawValeFloor, drawValeGround, drawValeZones, dropVale, TEAM_COLORS, warmVale } from './vale'
@@ -622,7 +624,11 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const faded = calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink
   // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`).
   const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : 1) * grassAlpha(g, viewer, p)
+  // Versus: the seat's Arena look (`render/arenaLooks.ts`, shell state), worn behind and in front of the sprite.
+  const worn = g.versus ? lookOf(p.slot) : null
+  if (alpha > 0 && worn) drawWearables(ctx, s, worn, anim, p.dir, p.animTime, p.x, p.y - (egg?.lift ?? 0), 'behind', { alpha })
   if (alpha > 0) drawPokemon(ctx, s, anim, p.dir, p.animTime, p.x, p.y - (egg?.lift ?? 0), { alpha, flash, tint, outline: mega.outline })
+  if (alpha > 0 && worn) drawWearables(ctx, s, worn, anim, p.dir, p.animTime, p.x, p.y - (egg?.lift ?? 0), 'front', { alpha })
   if (p.versus && g.versus) drawGrassFront(ctx, mapOf(g.versus).grass, p.x, p.y, s.bodyW, g.now, p.moving, p.slot)
   // The shiny entrance plays shortly after the run starts.
   if (p.shiny) drawSparkles(ctx, p.x, p.y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), g.now - 0.3, 0)

@@ -13,6 +13,7 @@ import {
   type Entry,
   type Hello,
   type Loadout,
+  parseWireLook,
   type Phase,
   type Refusal,
   type RoomView,
@@ -22,6 +23,7 @@ import {
   type Settings,
   type SnapshotRef,
   type TickEntries,
+  type WireLook,
 } from '../../src/net/protocol'
 
 /**
@@ -164,8 +166,11 @@ export type ArenaLock = {
   format?: MatchedSettings['format']
   /** Rated: the matchmaker matched enough humans (`minHumansRanked`); still checked against who played. */
   ranked: boolean
-  /** The matched identities (`u:<clerk id>`, or `g:<guest id>` on a dev relay) and their teams. */
-  players: { id: string; team: 0 | 1 }[]
+  /**
+   * The matched identities (`u:<clerk id>`, or `g:<guest id>` on a dev relay), their teams and the Arena look the API vouches
+   * for (`ArenaTicketRating.look`; absent: the client's own stands).
+   */
+  players: { id: string; team: 0 | 1; look?: WireLook }[]
   /** Relay clock (ms) at which the run starts with whoever joined. */
   startBy: number
 }
@@ -692,9 +697,9 @@ export const message = (state: State, connId: ConnId, msg: ClientMessage | null,
   switch (msg.t) {
     case 'loadout': {
       if (!outside) return out
-      // A matched player plays on the team the matchmaker gave them, whatever the loadout asks.
-      const team = room.lock?.players.find((p) => p.id === seat.identity)?.team
-      seat.loadout = team === undefined ? msg.loadout : { ...msg.loadout, team }
+      // A matched player plays on the team the matchmaker gave them, whatever the loadout asks, and wears the look the API vouched for.
+      const matched = room.lock?.players.find((p) => p.id === seat.identity)
+      seat.loadout = withLook(matched ? { ...msg.loadout, team: matched.team } : msg.loadout, matched?.look)
       return [...out, { k: 'save' }, ...broadcastRoom(state, room), ...autoStart(state, room, now)]
     }
     case 'ready':
@@ -780,6 +785,17 @@ const moveRoom = (state: State, room: Room, code: string): Effect[] => {
   const out: Effect[] = [{ k: 'save' }, event(room, 'room.moved', { to: code, seats: room.seats.filter((s) => online(state, s)).length })]
   for (const c of state.live.conns.values()) out.push(send(c.id, { t: 'moved', code }), { k: 'close', to: c.id, reason: 'refused' })
   return out
+}
+
+/**
+ * A loadout with its Arena look checked: the one the API `vouched` for when
+ * there is one, else the client's if it has a look's shape (`parseWireLook`),
+ * else none. Every other field stays as the client sent it.
+ */
+export const withLook = (loadout: Loadout, vouched?: WireLook): Loadout => {
+  const { look: claimed, ...rest } = loadout
+  const look = vouched ?? parseWireLook(claimed)
+  return look ? { ...rest, look } : rest
 }
 
 /** A socket closed. Its seat is kept; in a run it goes `away` once silent long enough, and the clock stops when nobody in the run is left (`settle`). */

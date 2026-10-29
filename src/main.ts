@@ -198,7 +198,11 @@ import type { Runner } from './coop/runner'
 import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
-import { arenaFormat, arenaPick, arenaScreen } from './ui/arena'
+import { arenaFormat, arenaPick, arenaScreen, keepArenaPick } from './ui/arena'
+import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, stageCheckout, stageGems, takeCheckoutReturn } from './gems'
+import { lookOf, setArenaLooks } from './render/arenaLooks'
+import { COSMETIC_IDS, isCosmeticId, parseLook } from './data/arenaCosmetics'
+import { isGemPackId } from './data/gems'
 import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
 import { arenaHub, isArenaHubTab, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaHub'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
@@ -2225,6 +2229,7 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   c.versus?.tray.dispose()
   c.versus?.talk.dispose()
   c.versus?.controls.dispose()
+  setArenaLooks([])
   clearToasts(ui)
   run = null
   syncRunWatch()
@@ -2370,6 +2375,8 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
         }
       : null,
   }
+  // Each seat's Arena look, as the room's loadouts carry them (shell state: the simulation never sees it).
+  setArenaLooks(live.game.versus ? live.start.players.map((p) => parseLook(p.loadout.look)) : [])
   const me = localPlayer(live.game)
   run = {
     game: live.game,
@@ -2541,7 +2548,7 @@ const joinCoop = async (code: string, via: 'code' | 'link' | 'invite' | null, pi
   if (via) track('coop', { step: 'join', via })
   // The room it landed in: an old link's room may have moved (`moved`).
   linkRoom(res.room.code)
-  client.setLoadout(pick ?? (parseSettings(res.room.settings).mode === 'versus' ? arenaLoadout(arenaStart(), 0) : coopLoadout()))
+  client.setLoadout(pick ?? (parseSettings(res.room.settings).mode === 'versus' ? arenaLoadout(arenaStart(), 0, equippedLook()) : coopLoadout()))
   const me = res.room.members.find((m) => m.seat === res.seat)
   if (me && !me.host) client.setReady(true)
   return res
@@ -2920,6 +2927,7 @@ const showArena = () => {
       friends: relay ? (id, format) => void openArenaRoom(id, format) : null,
       needsAccount: coopAccess(accountsEnabled, accountState()) !== 'open',
       hub: () => showArenaHub('profile'),
+      shop: () => showArenaHub('shop'),
       back: () => showTitle({ focus: 'arena' }),
     }),
   )
@@ -2930,13 +2938,16 @@ const showArena = () => {
  * history or rules. The Arena screen opens it, and so do the lobby's Stadium
  * boards; Voltar goes back to the Arena screen.
  */
-const showArenaHub = (tab: ArenaHubTab = 'profile') => {
+const showArenaHub = (tab: ArenaHubTab = 'profile', checkout = false) => {
   endRun()
   reportArenaOpen('hub')
   setScreen(
     arenaHub(ui, input, tab, {
       back: () => showArena(),
       signIn: accountsEnabled ? () => setScreen(arenaGate(ui, input, { play: () => showArenaHub(tab), back: () => showArenaHub(tab) })) : null,
+      pick: arenaStart(),
+      keepPick: keepArenaPick,
+      checkout,
     }),
   )
 }
@@ -3090,7 +3101,7 @@ const joinQueueMatch = async (client: CoopClient, room: string, id: VersusPick, 
     return showArena()
   }
   linkRoom(res.room.code)
-  client.setLoadout(arenaLoadout(id, team))
+  client.setLoadout(arenaLoadout(id, team, equippedLook()))
   client.setReady(true)
   setTimeout(() => screen === waiting && run?.coop?.runner.room !== room && showRoom(), MATCH_START_MS)
 }
@@ -3129,7 +3140,7 @@ const playArenaBots = async (id: VersusPick, format: ArenaFormat) => {
   if (arenaClient() !== client) return
   if (!res.ok) return failed()
   client.setSettings({ difficulty: 'normal', mode: 'versus', format })
-  client.setLoadout(arenaLoadout(id, 0))
+  client.setLoadout(arenaLoadout(id, 0, equippedLook()))
   await queue.filled()
   if (arenaClient() !== client) return
   await queue.found()
@@ -3155,7 +3166,7 @@ const openArenaRoom = async (id: VersusPick, format: ArenaFormat) => {
     return showArena()
   }
   // The seat takes the Arena pick as it joins, before the room turns Arena: a co-op loadout there would be swapped by `syncArenaLoadout`.
-  const res = await joinCoop(made.code, null, arenaLoadout(id, 0))
+  const res = await joinCoop(made.code, null, arenaLoadout(id, 0, equippedLook()))
   if (!res.ok) {
     toast(ui, closedText(res.why), 4000, 'arenaFailed')
     return showArena()
@@ -3174,7 +3185,7 @@ const showArenaRoomPick = () => {
   setScreen(
     arenaScreen(ui, input, arenaStart(), {
       choose: (id) => {
-        client?.setLoadout(arenaLoadout(id, team))
+        client?.setLoadout(arenaLoadout(id, team, equippedLook()))
         setTimeout(showRoom, 150)
       },
       back: () => showRoom(),
@@ -3191,7 +3202,7 @@ const syncArenaLoadout = (client: CoopClient, room: RoomView) => {
   if (parseSettings(room.settings).mode !== 'versus') return
   const me = room.members.find((m) => m.seat === client.state().seat)
   if (!me?.loadout) return
-  const next = arenaSeat(parseLoadout(me.loadout), arenaStart())
+  const next = arenaSeat(parseLoadout(me.loadout), arenaStart(), equippedLook())
   if (next) client.setLoadout(next)
 }
 
@@ -3596,6 +3607,8 @@ const boot = () => {
   else if (rankingEnabled && new URLSearchParams(location.search).has(IDEAS_PARAM)) showIdeasLink()
   else if (new URLSearchParams(location.search).has(SHOP_PARAM)) showTitle({ shop: 'shop', instant: true })
   else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
+  // Back from a gem pack's checkout (`?gems=<ref>`): the Arena's Loja, waiting for the gems.
+  else if (takeCheckoutReturn() !== null) showArenaHub('shop', true)
   else if (poll) showPollLink(poll)
   // Back from signing in, the player already pressed start before leaving: straight to the menu.
   else showTitle({ intro: !backFromSignIn() })
@@ -4116,6 +4129,35 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
   return "ps.arena('hub', tab) · ('fake', scenario?) · ('queue', 'ranked' | 'casual', 'match' | 'downgrade' | 'hold' | 'blocked') · ('end', kind) · ('season', 'pre' | 'on')"
 }
 
+/**
+ * Dev: the Arena's gem shop from the console (`gems.ts`, `ui/gemShop.ts`).
+ * `ps.gems()` prints what the shop knows (and the look a match would carry);
+ * `ps.gems('fake', 1250)` makes every call answer made-up data from that
+ * balance, a third of the catalog owned, and the shop act as signed in
+ * (`'off'` back to the API); `('balance', n)` sets the balance, `('own', id)`
+ * owns a cosmetic (all without one); `('return', 'chest')` comes back from a
+ * checkout of that pack (`'never'`: the gems never land and the wait runs
+ * out); `('shop')` and `('locker')` open the hub's tabs; `('fetch')` asks the API now.
+ */
+const devGems = (cmd?: string, arg?: string | number) => {
+  if (cmd === 'fake') {
+    fakeGems(arg !== 'off', typeof arg === 'number' ? arg : undefined)
+    return arg === 'off' ? 'Gems: the API again' : `Gems: fake (${knownGems()?.balance ?? 0})`
+  }
+  if (cmd === 'balance') stageGems({ balance: Number(arg ?? 0) })
+  else if (cmd === 'own') {
+    if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
+    stageGems({ own: arg === undefined ? 'all' : [arg] })
+  } else if (cmd === 'return') {
+    stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag')
+    showArenaHub('shop', true)
+  } else if (cmd === 'shop' || cmd === 'locker') showArenaHub(cmd)
+  else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
+  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('shop') · ('locker') · ('fetch')"
+  // In a match, each seat's look as the shell draws it.
+  return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run?.game.versus ? run.game.players.map((p) => lookOf(p.slot)) : null }
+}
+
 // `ps.biome('cave')` and `ps.weather('rain')` stage a run for screenshots (they hold until the next scheduled change).
 if (import.meta.env.DEV) {
   const withRun = (fn: (g: Game) => void) => (run ? fn(run.game) : console.warn('ps: start a run first'))
@@ -4128,6 +4170,7 @@ if (import.meta.env.DEV) {
       coop: devCoop,
       versus: devVersus,
       arena: devArena,
+      gems: devGems,
       candyGoal: devCandyGoal,
       /**
        * `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet,

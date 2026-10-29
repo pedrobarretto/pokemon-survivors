@@ -103,6 +103,9 @@ export const LIMITS = {
   result: 2048,
   /** A Clerk session token. */
   token: 4096,
+  /** An Arena look (`WireLook`): its slots, and the characters of a slot's name or a cosmetic's id. */
+  lookSlots: 16,
+  lookId: 32,
 } as const
 
 /* ---------------- Shared shapes ---------------- */
@@ -401,6 +404,31 @@ export const parseName = (v: unknown): string | null => {
   if (typeof v !== 'string') return null
   const name = [...v.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2066-\u2069]/g, '').replace(/\s+/g, ' ').trim()]
   return name.length > 0 ? name.slice(0, LIMITS.name).join('') : null
+}
+
+/**
+ * An Arena look on the wire, in a loadout's `look` (`ArenaLook` in
+ * `data/arenaCosmetics.ts`): slot to cosmetic id. Shell side only: the
+ * simulation never reads it, the relay only checks its shape.
+ */
+export type WireLook = { readonly [slot: string]: string }
+
+const LOOK_KEY = /^[a-zA-Z0-9]+$/
+
+/**
+ * A look's shape, or null: a plain object of at most `LIMITS.lookSlots`
+ * short alphanumeric names to short alphanumeric ids. The relay drops
+ * anything else; which ids exist and who owns them are the game's and the
+ * API's to say (`parseLook`, `PUT /gems/look`).
+ */
+export const parseWireLook = (v: unknown): WireLook | null => {
+  if (!isRecord(v)) return null
+  const entries = Object.entries(v)
+  if (entries.length > LIMITS.lookSlots) return null
+  for (const [slot, id] of entries) {
+    if (slot.length > LIMITS.lookId || !LOOK_KEY.test(slot) || typeof id !== 'string' || id.length > LIMITS.lookId || !LOOK_KEY.test(id)) return null
+  }
+  return v as WireLook
 }
 
 const parseBuild = (v: unknown) => (typeof v === 'string' && /^[\w.-]{1,40}$/.test(v) ? v : null)

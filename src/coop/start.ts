@@ -5,7 +5,7 @@ import { createCoopGame, type CoopLoadout } from '../game/game'
 import { NO_RANKS, UPGRADE_IDS, UPGRADES, type Ranks, type UpgradeId } from '../game/meta'
 import { isRecord } from '../game/parse'
 import type { Game } from '../game/types'
-import type { Loadout, RunStart, Settings } from '../net/protocol'
+import { parseWireLook, type Loadout, type RunStart, type Settings, type WireLook } from '../net/protocol'
 import { isVersusPick, VERSUS_PICKS, type Team } from '../data/versus'
 import { parseArenaFormat, type ArenaFormat } from '../data/arenaFormats'
 import { createVersusGame } from '../game/versus'
@@ -19,9 +19,11 @@ import { createVersusGame } from '../game/versus'
 /**
  * What a player sends as their loadout: their Pokémon (a starter or a hatched
  * family, `PLAYABLE_IDS`: the Legend mode stays solo, `COOP_LOCKS`), Poké Mart
- * ranks, whether it plays shiny and, in a Versus room, the team they asked for.
+ * ranks, whether it plays shiny and, in a Versus room, the team they asked for
+ * and the Arena look they wear (`look`: shape only here, the shell reads it
+ * with `parseLook`; never the simulation's, so `startGame` leaves it out).
  */
-export type CoopPick = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks; shiny: boolean; team?: Team }
+export type CoopPick = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks; shiny: boolean; team?: Team; look?: WireLook }
 
 /**
  * What a room plays: a co-op run against the horde, or a Versus match (`game/versus.ts`):
@@ -32,7 +34,13 @@ export type RoomMode = 'run' | 'versus'
 /** The room's settings as the host sets them; `format` only matters in a Versus room (`data/arenaFormats.ts`, the standard 4v4 when left out). */
 export type CoopSettings = { difficulty: Difficulty; mode?: RoomMode; format?: ArenaFormat }
 
-export const loadoutOf = (pick: CoopPick): Loadout => ({ starter: pick.starter, ranks: { ...pick.ranks }, shiny: pick.shiny, ...(pick.team !== undefined && { team: pick.team }) })
+export const loadoutOf = (pick: CoopPick): Loadout => ({
+  starter: pick.starter,
+  ranks: { ...pick.ranks },
+  shiny: pick.shiny,
+  ...(pick.team !== undefined && { team: pick.team }),
+  ...(pick.look && Object.keys(pick.look).length > 0 && { look: { ...pick.look } }),
+})
 
 /** The settings on the wire: a Versus room says its format only when it isn't the standard (so a standard room's are what they always were). */
 export const settingsOf = (s: CoopSettings): Settings => ({
@@ -50,13 +58,18 @@ export const parseLoadout = (raw: Loadout): CoopPick => {
   const ranks: Record<UpgradeId, number> = { ...NO_RANKS }
   if (isRecord(r)) for (const id of UPGRADE_IDS) ranks[id] = rankOf(r[id], UPGRADES[id].maxRank)
   const team = raw.team === 0 || raw.team === 1 ? raw.team : undefined
-  return { starter, ranks, shiny: raw.shiny === true, ...(team !== undefined && { team }) }
+  const look = parseWireLook(raw.look)
+  return { starter, ranks, shiny: raw.shiny === true, ...(team !== undefined && { team }), ...(look && { look }) }
 }
 
 export const parseSettings = (raw: Settings): CoopSettings => ({ difficulty: parseDifficulty(raw.difficulty), mode: raw.mode === 'versus' ? 'versus' : 'run', format: parseArenaFormat(raw.format) })
 
 /** The loadouts of a run, by slot (`RunStart.players` order), with each player's name. */
-export const runLoadouts = (start: RunStart): CoopLoadout[] => start.players.map((p) => ({ ...parseLoadout(p.loadout), name: p.name }))
+export const runLoadouts = (start: RunStart): CoopLoadout[] =>
+  start.players.map((p) => {
+    const { starter, ranks, shiny } = parseLoadout(p.loadout)
+    return { starter, ranks, shiny, name: p.name }
+  })
 
 /**
  * The run's game at tick 0: every client builds the same one. A Versus room
