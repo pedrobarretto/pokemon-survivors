@@ -757,6 +757,7 @@ export const en: Messages = {
     teamAttackOpacity: 'Team move opacity',
     uiScale: 'UI size',
     uiScaleAuto: 'Auto',
+    fullscreen: 'Fullscreen',
     safeMode: 'Lite mode',
     joystick: 'Joystick',
     joystickModes: { floating: 'Follows finger', fixed: 'Fixed' },

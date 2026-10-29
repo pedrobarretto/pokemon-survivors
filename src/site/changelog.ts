@@ -72,6 +72,14 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'Pré-temporada: até 2 de novembro, as Ranqueadas ficam no seu histórico sem RP, e as telas da fila, do fim da partida e do Perfil avisam. O ranking começa com a Temporada 1.', en: 'Pre-season: until November 2, Ranked matches go to your history with no RP, and the queue, end-of-match and Profile screens say so. The ranking starts with Season 1.', es: 'Pretemporada: hasta el 2 de noviembre, las Clasificatorias quedan en tu historial sin RP, y las pantallas de la cola, del final de la partida y del Perfil lo avisan. El ranking empieza con la Temporada 1.', fr: 'Pré-saison : jusqu’au 2 novembre, les matchs Classés restent dans ton historique sans RP, et les écrans de la file, de fin de match et du Profil le disent. Le classement commence avec la Saison 1.', zh: '季前賽：11 月 2 日之前，排位賽會留在你的紀錄中但不計 RP，排隊、比賽結束和個人資料畫面都會說明。排行榜從第 1 賽季開始。' },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          { pt: 'No computador, um clique no fundo do lobby não faz mais o seu Pokémon sair andando: com o mouse, ele passeia pelo Passear (ou pelas teclas de movimento). No celular, tocar na grama continua levando ele para passear.', en: 'On a computer, clicking the lobby’s background no longer sends your Pokémon walking off: with the mouse, it walks in Explore (or with the movement keys). On phones, tapping the grass still takes it for a walk.', es: 'En la computadora, un clic en el fondo del lobby ya no hace que tu Pokémon salga caminando: con el mouse, pasea con Pasear (o con las teclas de movimiento). En el celular, tocar el pasto sigue llevándolo a pasear.' },
+          { pt: 'O baú do labirinto agora aparece aberto depois de pego (continuava fechado). No co-op, os tesouros do labirinto, do acampamento, da casa e das ruínas já aparecem abertos: lá eles são só cenário e nunca abriam.', en: 'The maze’s chest now shows open once taken (it stayed closed). In co-op, the treasures of the maze, the camp, the cottage and the ruins already show open: there they’re just scenery and never opened.', es: 'El cofre del laberinto ahora aparece abierto después de tomarlo (seguía cerrado). En el co-op, los tesoros del laberinto, del campamento, de la casa y de las ruinas ya aparecen abiertos: allí son solo decorado y nunca se abrían.' },
+          { pt: 'Tela cheia em Configurações → Jogo, no Android e no computador (no iPhone, instale o jogo pela tela de início).', en: 'Fullscreen in Settings → Game, on Android and computers (on iPhone, install the game to your Home Screen).', es: 'Pantalla completa en Ajustes → Juego, en Android y en la computadora (en iPhone, instala el juego en la pantalla de inicio).' },
+        ],
+      },
     ],
   },
   {

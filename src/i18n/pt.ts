@@ -947,6 +947,7 @@ export const pt = {
     uiScale: 'Tamanho da interface',
     uiScaleAuto: 'Auto',
     /** Safe mode (`safeMode.ts`): lean drawing, on by itself after the game closed mid-run. */
+    fullscreen: 'Tela cheia',
     safeMode: 'Modo leve',
     joystick: 'Joystick',
     joystickModes: { floating: 'Segue o dedo', fixed: 'Fixo' },

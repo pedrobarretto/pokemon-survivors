@@ -12,6 +12,7 @@ import { MAP_EVENTS, type MapEventKind } from '../game/mapEvents'
 import { localPlayer } from '../game/players'
 import { roomOf, type Room } from '../game/room'
 import { featureAt, type Feature } from '../game/terrain'
+import { treasureOpen } from '../game/landmarks'
 import type { Game, Pickup } from '../game/types'
 import { missionSpot } from './fieldMissions'
 import { slotColor } from './team'
@@ -519,7 +520,7 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     drawViewBox(ctx, v, g)
     for (const f of marks) {
       const lm = f.landmark!
-      const spent = lm.treasure !== null && g.landmarks.looted.has(lm.cell)
+      const spent = lm.treasure !== null && treasureOpen(g, lm.cell)
       ctx.globalAlpha = spent ? 0.5 : 1
       marker(ctx, v, shape, art.landmark[lm.id], lm.x, lm.y, false)
     }

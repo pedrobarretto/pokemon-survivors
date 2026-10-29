@@ -756,6 +756,7 @@ export const zh: Messages = {
     teamAttackOpacity: '隊伍招式透明度',
     uiScale: '介面大小',
     uiScaleAuto: '自動',
+    fullscreen: '全螢幕',
     safeMode: '輕量模式',
     joystick: '搖桿',
     joystickModes: { floating: '跟隨手指', fixed: '固定' },
