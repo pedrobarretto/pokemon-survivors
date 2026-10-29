@@ -13,6 +13,13 @@ describe('versusReport', () => {
     expect(versusReport(g, 0, 'casual', false, 'left')).toMatchObject({ outcome: 'end', winner: 'red', result: 'loss' })
     expect(versusReport(g, 99, 'casual', false, 'quit')).toBeNull()
   })
+
+  it('says the format and, when one did, which team surrendered (still an `end`)', () => {
+    const g = createVersusGame(3, [], 'quick')
+    expect(versusReport(g, 0, 'casual', false, 'quit')).toMatchObject({ format: 'quick', surrender: null })
+    g.versus!.result = { winner: 1, surrender: 0 }
+    expect(versusReport(g, 0, 'casual', false, 'left')).toMatchObject({ outcome: 'end', winner: 'red', result: 'loss', surrender: 'blue', format: 'quick' })
+  })
 })
 
 describe('parseHeldVersus', () => {

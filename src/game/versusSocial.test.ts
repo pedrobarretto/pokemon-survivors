@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { VERSUS } from '../data/versus'
+import { VERSUS, VERSUS_FORMATS, VERSUS_PICKS } from '../data/versus'
+import { formAt } from './branch'
 import { LIMITS } from '../net/protocol'
 import { arenaResult } from './arenaRank'
 import { parseTickEntry, stepTick, type TickEntry } from './lockstep'
@@ -141,13 +142,21 @@ describe('the scoreboard', () => {
     expect(a!.versus!.assists).toBe(0)
   })
 
-  it('fits the busiest result the relay carries', () => {
-    const g = createVersusGame(3, [])
-    for (const p of g.players) {
-      Object.assign(p.versus!, { kos: 99, deaths: 99, scored: 9999, assists: 99, dealt: 9_999_999, taken: 9_999_999, healed: 9_999_999, interrupts: 999 })
-      p.damageByMove = { ember: 9_999_999 }
+  it('fits the busiest result the relay carries: eight seats of the longest names, every stat maxed', () => {
+    // The pick whose id and final form spell the longest seat line.
+    const longest = [...VERSUS_PICKS].sort((a, b) => b.length + formAt(b, null, 2).name.length - (a.length + formAt(a, null, 2).name.length))[0]!
+    for (const format of ['standard', 'quick'] as const) {
+      const g = createVersusGame(3, [], format)
+      for (const p of g.players) {
+        p.starter = longest
+        p.stage = 2
+        // `afk` at most a whole match.
+        Object.assign(p.versus!, { kos: 99, deaths: 99, scored: 9999, assists: 99, dealt: 9_999_999, taken: 9_999_999, healed: 9_999_999, interrupts: 999, afk: VERSUS_FORMATS.standard.length })
+        p.damageByMove = { ember: 9_999_999 }
+      }
+      g.versus!.result = { winner: 1, surrender: 0 }
+      g.time = VERSUS_FORMATS[format].length
+      expect(JSON.stringify(arenaResult(g, 1)).length).toBeLessThan(LIMITS.result)
     }
-    g.versus!.result = { winner: 1, surrender: 0 }
-    expect(JSON.stringify(arenaResult(g, 1)).length).toBeLessThan(LIMITS.result)
   })
 })
