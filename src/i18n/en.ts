@@ -5366,13 +5366,17 @@ export const en: Messages = {
     clone: (name: string) => `${name} Clone`,
     escaped: (name: string, wins: number, need: number) => `*${name}* broke free… _${wins}/${need}_`,
     escapedHint: (left: number) => (left === 1 ? 'Beat it 1 more time to catch it.' : `Beat it ${left} more times to catch it.`),
-    arceusHint: (left: number) => (left > 0 ? `It can only be caught in endless mode, after the other legendaries (${left} to go).` : 'It can only be caught in endless mode.'),
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? 'It can only be caught in endless mode.'
+        : missing.length <= 3 ? `It can only be caught in endless mode, once every other legendary is caught. Still to catch: ${missing.join(', ')}.`
+        : `It can only be caught in endless mode, once every other legendary is caught (${missing.length} to go: see the Legends tab).`,
     caught: (name: string) => `*${name}* caught! Playable in _Legend Mode_.`,
     caughtShiny: (name: string) => `_Shiny_ *${name}* caught! Playable in _Legend Mode_.`,
     shinyUnlocked: (name: string) => `_Shiny_ *${name}* unlocked in _Legend Mode_!`,
     caughtHint: 'Pick it in the Legendaries tab of the partner select.',
     tab: 'LEGENDARIES',
     wins: (n: string) => `Wins: ${n}`,
+    stillMissing: (missing: readonly string[]) => `Still to catch (${missing.length}): ${missing.join(', ')}.`,
     lockedButton: 'Not caught',
     where: {
       rift: 'Waits inside a _legendary rift_: step through the portal and beat it there.',

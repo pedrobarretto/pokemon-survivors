@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { REGULAR_LEGENDS } from '../data/legends'
-import { canPlay, captureByGift, captureOutcome, isCaptured, legendSource, mergeCaptures, parseCaptures, recordLegendWin, type LegendWin } from './capture'
+import { canPlay, captureByGift, captureOutcome, isCaptured, legendSource, mergeCaptures, parseCaptures, recordLegendWin, stillMissing, type LegendWin } from './capture'
 import { EMPTY_SAVE, parseSaveData, type Save } from './meta'
 import { mergeSaves } from './sync'
 
@@ -36,6 +36,12 @@ describe('recordLegendWin', () => {
     const caught = recordLegendWin(all22(), win('arceus', { endless: true }))
     expect(caught.result.outcome).toBe('caught')
     expect(canPlay(caught.save, 'arceus')).toBe(true)
+  })
+
+  it('names the regular legends Arceus still waits for: a short one, never an event legend or itself', () => {
+    const { jirachi: _, ...noJirachi } = all22().legends
+    expect(stillMissing({ ...noJirachi, darkrai: 2, celebi: 1 }, 'arceus')).toEqual(['jirachi'])
+    expect(stillMissing(all22().legends, 'arceus')).toEqual([])
   })
 
   it('never makes Arceus wait for an event legend: Darkrai, caught in two wins of its own', () => {

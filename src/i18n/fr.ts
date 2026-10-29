@@ -5362,13 +5362,17 @@ export const fr: Messages = {
     clone: (name: string) => `Clone de ${name}`,
     escaped: (name: string, wins: number, need: number) => `*${name}* s’est libéré… _${wins}/${need}_`,
     escapedHint: (left: number) => `Bats-le encore ${left} fois pour le capturer.`,
-    arceusHint: (left: number) => (left > 0 ? `Il ne se capture qu’en mode sans fin, après les autres légendaires (encore ${left}).` : 'Il ne se capture qu’en mode sans fin.'),
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? 'Il ne se capture qu’en mode sans fin.'
+        : missing.length <= 3 ? `Il ne se capture qu’en mode sans fin, une fois tous les autres légendaires capturés. Encore à capturer : ${missing.join(', ')}.`
+        : `Il ne se capture qu’en mode sans fin, une fois tous les autres légendaires capturés (encore ${missing.length} : voir l’onglet Légendaires).`,
     caught: (name: string) => `*${name}* capturé ! Jouable en _Mode Légendaire_.`,
     caughtShiny: (name: string) => `*${name}* _chromatique_ capturé ! Jouable en _Mode Légendaire_.`,
     shinyUnlocked: (name: string) => `*${name}* _chromatique_ débloqué en _Mode Légendaire_ !`,
     caughtHint: 'Choisis-le dans l’onglet Légendaires du choix du partenaire.',
     tab: 'LEGENDAIRES',
     wins: (n: string) => `Victoires : ${n}`,
+    stillMissing: (missing: readonly string[]) => `Encore à capturer (${missing.length}) : ${missing.join(', ')}.`,
     lockedButton: 'Pas capturé',
     where: {
       rift: 'Attend dans une _faille légendaire_ : franchis le portail et bats-le là-bas.',

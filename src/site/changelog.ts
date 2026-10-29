@@ -72,6 +72,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'Pré-temporada: até 2 de novembro, as Ranqueadas ficam no seu histórico sem RP, e as telas da fila, do fim da partida e do Perfil avisam. O ranking começa com a Temporada 1.', en: 'Pre-season: until November 2, Ranked matches go to your history with no RP, and the queue, end-of-match and Profile screens say so. The ranking starts with Season 1.', es: 'Pretemporada: hasta el 2 de noviembre, las Clasificatorias quedan en tu historial sin RP, y las pantallas de la cola, del final de la partida y del Perfil lo avisan. El ranking empieza con la Temporada 1.', fr: 'Pré-saison : jusqu’au 2 novembre, les matchs Classés restent dans ton historique sans RP, et les écrans de la file, de fin de match et du Profil le disent. Le classement commence avec la Saison 1.', zh: '季前賽：11 月 2 日之前，排位賽會留在你的紀錄中但不計 RP，排隊、比賽結束和個人資料畫面都會說明。排行榜從第 1 賽季開始。' },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          { pt: 'Quando o Arceus escapa porque ainda falta lendário, o aviso agora diz quais faltam (e o card dele na aba Lendários lista todos), em vez de só quantos.', en: 'When Arceus breaks free because legendaries are still missing, the notice now names which ones (and its card on the Legends tab lists them all), instead of only how many.', es: 'Cuando Arceus escapa porque aún faltan legendarios, el aviso ahora dice cuáles faltan (y su tarjeta en la pestaña Legendarios los lista todos), en vez de solo cuántos.' },
+          { pt: 'O Pyro Ball ganhou arte própria: uma bola de fogo maior, girando com as manchas queimadas, com rastro de brasas e sombra no chão, para não se confundir com o Ember.', en: 'Pyro Ball has its own look now: a bigger fireball spinning with its charred patches, trailing embers over its shadow on the ground, so it no longer looks like Ember.', es: 'Pyro Ball tiene su propio aspecto: una bola de fuego más grande que gira con sus manchas quemadas, con un rastro de brasas y su sombra en el suelo, para no confundirse con Ember.' },
+        ],
+      },
     ],
   },
   {

@@ -5362,13 +5362,17 @@ export const zh: Messages = {
     clone: (name: string) => `${name} 複製體`,
     escaped: (name: string, wins: number, need: number) => `*${name}* 掙脫了……_${wins}/${need}_`,
     escapedHint: (left: number) => `再擊敗它${left}次就能收服。`,
-    arceusHint: (left: number) => (left > 0 ? `只能在無盡模式中收服，且要先收服其他傳說寶可夢（還差${left}隻）。` : '只能在無盡模式中收服。'),
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? '只能在無盡模式中收服。'
+        : missing.length <= 3 ? `只能在無盡模式中收服，且要先收服其他所有傳說寶可夢。還沒收服：${missing.join('、')}。`
+        : `只能在無盡模式中收服，且要先收服其他所有傳說寶可夢（還差${missing.length}隻，請看「傳說」分頁）。`,
     caught: (name: string) => `收服了 *${name}*！可在_傳說模式_中使用。`,
     caughtShiny: (name: string) => `收服了_異色_ *${name}*！可在_傳說模式_中使用。`,
     shinyUnlocked: (name: string) => `已在_傳說模式_中解鎖_異色_ *${name}*！`,
     caughtHint: '在夥伴選擇畫面的「傳說」分頁中選擇它。',
     tab: '傳說',
     wins: (n: string) => `勝場：${n}`,
+    stillMissing: (missing: readonly string[]) => `還沒收服（${missing.length}）：${missing.join('、')}。`,
     lockedButton: '尚未收服',
     where: {
       rift: '在_傳說裂縫_中等待：穿過傳送門，在那裡擊敗它。',

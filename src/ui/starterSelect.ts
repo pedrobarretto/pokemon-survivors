@@ -16,7 +16,7 @@ import { halloweenStanding } from '../game/halloween'
 import { festivalIcon } from './festival'
 import { eventLegendIcon } from '../render/halloweenArt'
 import { ABILITIES } from '../data/abilities'
-import { canPlay, capturedCount, isCaptured, legendSource, winsNeeded } from '../game/capture'
+import { canPlay, capturedCount, isCaptured, legendSource, stillMissing, winsNeeded } from '../game/capture'
 import { armBlock, armedItems, armItem, BAG_ITEM_IDS, bagCount, type BagItem } from '../game/bag'
 import { SHOP_LEVELS } from '../data/shop'
 import { capLevel } from '../game/evoItems'
@@ -344,6 +344,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const over = eventStanding(id) === 'after'
       // A festival legend is never fought: no wins to count, only its festival's line.
       const gift = legendFestival(id) !== null
+      // The last legend (Arceus) names the regular ones it still waits for.
+      const missing = legendSource(id) === 'endless' ? stillMissing(save.legends, id) : []
       hero.replaceChildren(
         h(
           'div',
@@ -356,6 +358,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             h('h3', { class: 'partner-name' }, form.name),
             !gift && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
             !over && !gift && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            missing.length > 0 && h('p', { class: 'partner-blurb locked-blurb' }, m.legend.stillMissing(missing.map((other) => LEGENDS[other].line[0].name))),
             eventLine(id, true),
           ),
         ),
