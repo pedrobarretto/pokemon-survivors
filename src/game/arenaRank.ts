@@ -1,5 +1,6 @@
 import { ARENA_RANKED, TIER_IDS, type MatchKind, type TierId } from '../data/arenaRanked'
 import { isVersusPick, type Team, type VersusPick } from '../data/versus'
+import { parseArenaFormat, type ArenaFormat } from '../data/arenaFormats'
 import * as dm from '../engine/dmath'
 import { formAt } from './branch'
 import { isRecord } from './parse'
@@ -133,11 +134,12 @@ export type ArenaSeatResult = { slot: number; team: Team; starter: VersusPick; f
 
 /**
  * What a finished match reports: the final score, the winner (null: a draw),
- * how long it ran and every seat's line. Every client builds the same one
- * from the same game, so the relay can count matching reports (opaque to it)
- * and pass the agreed one to the API with its seats' accounts.
+ * how long it ran, every seat's line and, when it isn't the standard 4v4,
+ * its format. Every client builds the same one from the same game, so the
+ * relay can count matching reports (opaque to it) and pass the agreed one to
+ * the API with its seats' accounts.
  */
-export type ArenaResult = { v: 1; score: [number, number]; winner: Team | null; seconds: number; objective: Team | null; seats: ArenaSeatResult[] }
+export type ArenaResult = { v: 1; score: [number, number]; winner: Team | null; seconds: number; objective: Team | null; seats: ArenaSeatResult[]; format?: ArenaFormat }
 
 /** The result of a match that has ended (`g.versus.result` set), else null. `objective`: the team that brought Zapdos down, if one did. */
 export const arenaResult = (g: Game, objective: Team | null = null): ArenaResult | null => {
@@ -149,6 +151,7 @@ export const arenaResult = (g: Game, objective: Team | null = null): ArenaResult
     winner: s.result.winner,
     seconds: Math.round(g.time),
     objective,
+    ...(s.format !== 'standard' && { format: s.format }),
     seats: g.players.flatMap((p) => {
       const v = p.versus
       if (!v || !isVersusPick(p.starter)) return []
@@ -190,7 +193,8 @@ export const parseArenaResult = (raw: unknown): ArenaResult | null => {
     seats.push({ slot, team: side, starter: s.starter, form: s.form.slice(0, 24), bot: s.bot, kos: nums[0]!, deaths: nums[1]!, scored: nums[2]!, damage: nums[3]! })
   }
   if (seats.length === 0 || seats.length > ARENA_RANKED.queue.players) return null
-  return { v: 1, score: [score[0]!, score[1]!], winner: raw.winner === null ? null : (raw.winner as Team), seconds, objective: raw.objective === null ? null : (raw.objective as Team), seats }
+  const format = parseArenaFormat(raw.format)
+  return { v: 1, score: [score[0]!, score[1]!], winner: raw.winner === null ? null : (raw.winner as Team), seconds, objective: raw.objective === null ? null : (raw.objective as Team), seats, ...(format !== 'standard' && { format }) }
 }
 
 /* ---------------- What the API serves ---------------- */
@@ -222,6 +226,8 @@ export type ArenaHistoryEntry = {
   damage: number
   /** RP this match moved (null when it wasn't rated). */
   rp: number | null
+  /** The match's format (absent: the standard 4v4, as every match before formats). */
+  format?: ArenaFormat
 }
 
 /** A row of `GET /arena/leaderboard?season=N`. */

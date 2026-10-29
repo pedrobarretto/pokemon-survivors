@@ -1,4 +1,5 @@
 import { ARENA_RANKED, type QueueKind } from '../../src/data/arenaRanked'
+import { ARENA_FORMATS, arenaPlayers, parseArenaFormat, type ArenaFormat } from '../../src/data/arenaFormats'
 import type { ArenaTicketsResponse, QueueClientMessage } from '../../src/net/arena'
 import { botsAfter, mmrWindow, splitTeams } from '../../src/net/arenaQueue'
 import { LIMITS, parseAuth } from '../../src/net/protocol'
@@ -16,7 +17,9 @@ export type Ticket = {
   /** Its identity (`u:<clerk id>`, or `g:<guest id>` on a dev relay): one ticket each. */
   user: string
   kind: QueueKind
-  /** Its friends' party (tickets with the same code, kind and build play on one team), or null. */
+  /** The match format it queues for: tickets of different formats never meet. */
+  format: ArenaFormat
+  /** Its friends' party (tickets with the same code, kind, format and build play on one team), or null. */
   party: string | null
   build: string
   /** When it queued (ms). */
@@ -27,15 +30,19 @@ export type Ticket = {
   hint: string | null
 }
 
-/** A match made: its queue, whether it's rated, the build its room runs, where it should run and each player's team. */
-export type Match = { kind: QueueKind; ranked: boolean; build: string; hint: string | null; players: { conn: string; user: string; team: 0 | 1 }[] }
+/** A match made: its queue and format, whether it's rated, the build its room runs, where it should run and each player's team. */
+export type Match = { kind: QueueKind; format: ArenaFormat; ranked: boolean; build: string; hint: string | null; players: { conn: string; user: string; team: 0 | 1 }[] }
 
 /** A ticket still waiting, as `queued` tells it: seconds waited, humans its forming match has, seconds until bots fill it. */
 export type Waiting = { conn: string; kind: QueueKind; waited: number; found: number; botsIn: number }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
-/** A queue message from an untrusted string, or null. */
+/**
+ * A queue message from an untrusted string, or null. A `queue` without a
+ * format is for the standard 4v4 (every client before formats); one for
+ * Ranqueada in a format without a ranked queue is refused (null).
+ */
 export const parseQueueMessage = (raw: string): QueueClientMessage | null => {
   if (raw.length > LIMITS.message) return null
   let m: unknown
@@ -52,8 +59,10 @@ export const parseQueueMessage = (raw: string): QueueClientMessage | null => {
       const party = m.party === null || m.party === undefined ? null : typeof m.party === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(m.party) ? m.party : undefined
       const build = typeof m.build === 'string' && /^[\w.-]{1,40}$/.test(m.build) ? m.build : null
       const starter = typeof m.starter === 'string' && /^[A-Za-z0-9_-]{1,24}$/.test(m.starter) ? m.starter : null
-      if (!auth || !kind || party === undefined || !build || !starter) return null
-      return { t: 'queue', kind, starter, party, build, auth }
+      const format = m.format === undefined ? 'standard' : parseArenaFormat(m.format) === m.format ? parseArenaFormat(m.format) : null
+      if (!auth || !kind || party === undefined || !build || !starter || !format) return null
+      if (kind === 'ranked' && !ARENA_FORMATS[format].ranked) return null
+      return { t: 'queue', kind, ...(format !== 'standard' && { format }), starter, party, build, auth }
     }
     case 'cancel':
       return { t: 'cancel' }
@@ -87,9 +96,8 @@ type Party = { tickets: Ticket[]; mmrs: number[]; mean: number; since: number }
 
 const mean = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length)
 
-/** The tickets of one pool (same kind and build) as parties: a party's tickets together (at most a team's worth each), a solo ticket alone; oldest first. */
-const partiesOf = (tickets: readonly Ticket[]): Party[] => {
-  const half = ARENA_RANKED.queue.players / 2
+/** The tickets of one pool (same kind, format and build) as parties: a party's tickets together (at most a team of `half`'s worth each), a solo ticket alone; oldest first. */
+const partiesOf = (tickets: readonly Ticket[], half: number): Party[] => {
   const byKey = new Map<string, Ticket[]>()
   for (const t of tickets) {
     const key = t.party === null ? `t:${t.conn}` : `p:${t.party}`
@@ -116,17 +124,18 @@ const hintOf = (tickets: readonly Ticket[]): string | null => {
 }
 
 /**
- * One second of matchmaking. Tickets wait in pools by kind and build. The
- * oldest party of a pool anchors a match and takes the nearest parties by
- * MMR within its window (`mmrWindow` of how long it waited) while the teams
- * still split (`splitTeams`); the match goes once it has `queue.players`
- * humans, or once the anchor waited `botsAfter` (bots fill the rest). A
+ * One second of matchmaking. Tickets wait in pools by kind, format and
+ * build. The oldest party of a pool anchors a match and takes the nearest
+ * parties by MMR within its window (`mmrWindow` of how long it waited) while
+ * the teams still split (`splitTeams`); the match goes once it has its
+ * format's seats in humans (`arenaPlayers`: 8 in the 4v4, 6 in the 3v3), or
+ * once the anchor waited `botsAfter` (bots fill the rest). A
  * ranked match of fewer than `minHumansRanked` humans plays unrated. Every
  * other ticket is told how its match is forming. Tickets without an MMR yet
  * only wait.
  */
 export const formMatches = (tickets: readonly Ticket[], now: number): { matches: Match[]; waiting: Waiting[] } => {
-  const { players: size, minHumansRanked } = ARENA_RANKED.queue
+  const { minHumansRanked } = ARENA_RANKED.queue
   const seconds = (since: number) => Math.max(0, (now - since) / 1000)
   const matches: Match[] = []
   const waiting: Waiting[] = []
@@ -138,11 +147,14 @@ export const formMatches = (tickets: readonly Ticket[], now: number): { matches:
       wait(t, 1, t.since)
       continue
     }
-    const key = `${t.kind}|${t.build}`
+    const key = `${t.kind}|${t.format}|${t.build}`
     pools.set(key, [...(pools.get(key) ?? []), t])
   }
   for (const pool of pools.values()) {
-    const parties = partiesOf(pool)
+    const format = pool[0]!.format
+    const size = arenaPlayers(format)
+    const half = size / 2
+    const parties = partiesOf(pool, half)
     const used = new Set<Party>()
     for (const anchor of parties) {
       if (used.has(anchor)) continue
@@ -154,14 +166,14 @@ export const formMatches = (tickets: readonly Ticket[], now: number): { matches:
       let humans = anchor.tickets.length
       for (const p of near) {
         if (humans + p.tickets.length > size) continue
-        if (!splitTeams([...group, p].map((g, i) => ({ id: String(i), mmrs: g.mmrs })))) continue
+        if (!splitTeams([...group, p].map((g, i) => ({ id: String(i), mmrs: g.mmrs })), half)) continue
         group.push(p)
         humans += p.tickets.length
         if (humans === size) break
       }
       for (const p of group) used.add(p)
       const kind = anchor.tickets[0]!.kind
-      const split = splitTeams(group.map((g, i) => ({ id: String(i), mmrs: g.mmrs })))
+      const split = splitTeams(group.map((g, i) => ({ id: String(i), mmrs: g.mmrs })), half)
       if (!split || (humans < size && seconds(anchor.since) < botsAfter(kind))) {
         for (const p of group) for (const t of p.tickets) wait(t, humans, anchor.since)
         continue
@@ -169,7 +181,8 @@ export const formMatches = (tickets: readonly Ticket[], now: number): { matches:
       const all = group.flatMap((p) => p.tickets)
       matches.push({
         kind,
-        ranked: kind === 'ranked' && humans >= minHumansRanked,
+        format,
+        ranked: kind === 'ranked' && ARENA_FORMATS[format].ranked && humans >= minHumansRanked,
         build: anchor.tickets[0]!.build,
         hint: hintOf(all),
         players: group.flatMap((p, i) => p.tickets.map((t) => ({ conn: t.conn, user: t.user, team: split.teams[i]! }))),

@@ -1,4 +1,5 @@
 import { ARENA_RANKED } from '../../src/data/arenaRanked'
+import { arenaPlayers, parseArenaFormat } from '../../src/data/arenaFormats'
 import type { ArenaReport, MatchedSettings } from '../../src/net/arena'
 import { countsForRank } from '../../src/net/arenaQueue'
 import {
@@ -159,6 +160,8 @@ export type Over = { tick: number; h: string; result?: string }
  */
 export type ArenaLock = {
   queue: MatchedSettings['queue']
+  /** The match's format when it isn't the standard 4v4 (the room's settings carry it). */
+  format?: MatchedSettings['format']
   /** Rated: the matchmaker matched enough humans (`minHumansRanked`); still checked against who played. */
   ranked: boolean
   /** The matched identities (`u:<clerk id>`, or `g:<guest id>` on a dev relay) and their teams. */
@@ -375,7 +378,9 @@ export const createRoom = (
   if (state.room) return { ok: false, effects: [] }
   const claim = state.gen.secret()
   const lock: ArenaLock | null = init.lock ? { ...init.lock, startBy: now + ARENA_RANKED.queue.joinTimeout * 1000 } : null
-  const settings: Settings = lock ? ({ difficulty: 'normal', mode: 'versus', queue: lock.queue, locked: true } satisfies MatchedSettings) : {}
+  const settings: Settings = lock
+    ? ({ difficulty: 'normal', mode: 'versus', queue: lock.queue, locked: true, ...(lock.format && lock.format !== 'standard' && { format: lock.format }) } satisfies MatchedSettings)
+    : {}
   const room: Room = {
     code: init.code,
     build: init.build,
@@ -400,8 +405,11 @@ export const createRoom = (
 /** An Arena room: its settings say `mode: 'versus'` (a friends' room, or a matchmade one). */
 const isArena = (room: Room) => room.settings.mode === 'versus'
 
-/** The most seats the room takes: the matched players in a locked room, two teams in an Arena room, else a co-op party. */
-export const seatCap = (room: Room) => (room.lock ? room.lock.players.length : isArena(room) ? MAX_ARENA_PLAYERS : MAX_PLAYERS)
+/** Seats in an Arena room with `settings`: both teams of its format (`settings.format`, the standard 4v4 when absent). */
+const arenaSeats = (settings: Settings) => Math.min(MAX_ARENA_PLAYERS, arenaPlayers(parseArenaFormat(settings.format)))
+
+/** The most seats the room takes: the matched players in a locked room, two teams of its format in an Arena room, else a co-op party. */
+export const seatCap = (room: Room) => (room.lock ? room.lock.players.length : isArena(room) ? arenaSeats(room.settings) : MAX_PLAYERS)
 
 /** A new socket (before its `hello`). */
 export const connect = (state: State, id: ConnId, ua: string, now: number): Conn => {
@@ -693,8 +701,8 @@ export const message = (state: State, connId: ConnId, msg: ClientMessage | null,
       seat.ready = msg.ready && seat.loadout !== null
       return [...out, { k: 'save' }, ...broadcastRoom(state, room)]
     case 'settings':
-      // A matched room's settings are the match's; a full Arena room can't turn into a co-op one.
-      if (!outside || !isHost || room.lock || (room.seats.length > MAX_PLAYERS && msg.settings.mode !== 'versus')) return out
+      // A matched room's settings are the match's; a room can't shrink below who's in it (a full Arena room into a co-op one, a 4v4 one of 7 into a 3v3).
+      if (!outside || !isHost || room.lock || room.seats.length > (msg.settings.mode === 'versus' ? arenaSeats(msg.settings) : MAX_PLAYERS)) return out
       room.settings = msg.settings
       return [...out, { k: 'save' }, ...broadcastRoom(state, room)]
     case 'kick': {
@@ -859,7 +867,8 @@ export const arenaReport = (room: Room, run: Run, agreed: { result: string; vote
   } catch {
     return null
   }
-  const { minHumansRanked, players: size } = ARENA_RANKED.queue
+  const { minHumansRanked } = ARENA_RANKED.queue
+  const size = arenaSeats(room.settings)
   const humans = run.start.players.length
   const ranked = room.lock?.ranked === true && countsForRank('ranked', humans)
   const kind: ArenaReport['kind'] = room.lock ? (ranked ? 'ranked' : 'casual') : 'room'

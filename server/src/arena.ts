@@ -157,10 +157,10 @@ export const reportUsers = (r: Pick<ParsedReport, 'seats'>) => [...new Set(r.sea
  * ended before the first season, or is unconfirmed with no account that left
  * (then nobody moves).
  */
-export const ratingSeason = (r: Pick<ParsedReport, 'seats' | 'kind' | 'endedAt' | 'confirmed'>) => {
+export const ratingSeason = (r: Pick<ParsedReport, 'seats' | 'kind' | 'endedAt' | 'confirmed' | 'result'>) => {
   const season = seasonAt(r.endedAt)
   const anyone = r.confirmed || r.seats.some((s) => s.left && s.userId !== null)
-  return season && anyone && countsForRank(r.kind, reportUsers(r).length) ? season : null
+  return season && anyone && countsForRank(r.kind, reportUsers(r).length, r.result.format) ? season : null
 }
 
 /** A player's starting rating in a season: reset from the previous season's when they had one, else fresh. */
@@ -288,9 +288,9 @@ export const arenaStore = (sql: Sql) => {
         const rated = rating !== null
         const at = new Date(r.endedAt)
         const [match] = await tx<{ id: string }[]>`
-          insert into arena_matches (room, run, kind, region, season, rated, ended_at, score_blue, score_red, winner, seconds, result)
+          insert into arena_matches (room, run, kind, region, season, rated, ended_at, score_blue, score_red, winner, seconds, result, format)
           values (${r.room}, ${r.run}, ${r.kind}, ${r.region}, ${season?.id ?? null}, ${rated}, ${at}, ${r.result.score[0]}, ${r.result.score[1]},
-            ${r.result.winner}, ${r.result.seconds}, ${tx.json(r.result)})
+            ${r.result.winner}, ${r.result.seconds}, ${tx.json(r.result)}, ${r.result.format ?? 'standard'})
           on conflict (room, run) do nothing
           returning id`
         if (!match) {
@@ -318,9 +318,9 @@ export const arenaStore = (sql: Sql) => {
         const season = seasonAt(now)
         const at = new Date(now)
         const [match] = await tx<{ id: string }[]>`
-          insert into arena_matches (room, run, kind, region, season, rated, ended_at, score_blue, score_red, winner, seconds, result)
+          insert into arena_matches (room, run, kind, region, season, rated, ended_at, score_blue, score_red, winner, seconds, result, format)
           values (${key ? `practice:${userId}:${key}` : null}, 0, 'practice', 'device', ${season?.id ?? null}, false, ${at},
-            ${result.score[0]}, ${result.score[1]}, ${result.winner}, ${result.seconds}, ${tx.json(result)})
+            ${result.score[0]}, ${result.score[1]}, ${result.winner}, ${result.seconds}, ${tx.json(result)}, ${result.format ?? 'standard'})
           on conflict (room, run) do nothing
           returning id`
         if (!match) return { match: null, duplicate: true }
@@ -367,16 +367,16 @@ export const arenaStore = (sql: Sql) => {
     /** `GET /arena/history`: the player's own matches ended before `before` (ms), newest first. */
     history: async (userId: string, before: number, limit: number): Promise<ArenaHistoryEntry[]> => {
       const rows = await sql<
-        { id: string; at: Date; kind: MatchKind; team: number; outcome: Outcome; score_blue: number; score_red: number; starter: string; kos: number; deaths: number; scored: number; damage: number; rp_change: number | null }[]
+        { id: string; at: Date; kind: MatchKind; team: number; outcome: Outcome; score_blue: number; score_red: number; starter: string; kos: number; deaths: number; scored: number; damage: number; rp_change: number | null; format: string }[]
       >`
-        select l.match_id as id, l.at, l.kind, l.team, l.outcome, m.score_blue, m.score_red, l.starter, l.kos, l.deaths, l.scored, l.damage, l.rp_change
+        select l.match_id as id, l.at, l.kind, l.team, l.outcome, m.score_blue, m.score_red, l.starter, l.kos, l.deaths, l.scored, l.damage, l.rp_change, m.format
         from arena_lines l join arena_matches m on m.id = l.match_id
         where l.user_id = ${userId} and l.at < ${new Date(before)}
         order by l.at desc, l.match_id desc
         limit ${Math.min(Math.max(1, limit), HISTORY.max)}`
       return rows.flatMap((r) =>
         isVersusPick(r.starter)
-          ? [{ id: r.id, at: r.at.getTime(), kind: r.kind, team: r.team === 1 ? 1 : 0, outcome: r.outcome, score: [r.score_blue, r.score_red], starter: r.starter, kos: r.kos, deaths: r.deaths, scored: r.scored, damage: r.damage, rp: r.rp_change }]
+          ? [{ id: r.id, at: r.at.getTime(), kind: r.kind, team: r.team === 1 ? 1 : 0, outcome: r.outcome, score: [r.score_blue, r.score_red], starter: r.starter, kos: r.kos, deaths: r.deaths, scored: r.scored, damage: r.damage, rp: r.rp_change, ...(r.format === 'quick' && { format: 'quick' as const }) }]
           : [],
       )
     },

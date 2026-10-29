@@ -8,7 +8,7 @@ const { players: SIZE, botsAfter } = ARENA_RANKED.queue
 let n = 0
 const ticket = (over: Partial<Ticket> = {}): Ticket => {
   n++
-  return { conn: `c${n}`, user: `u:user_${n}`, kind: 'casual', party: null, build: 'b1', since: T0, mmr: 1000, hint: 'enam', ...over }
+  return { conn: `c${n}`, user: `u:user_${n}`, kind: 'casual', format: 'standard', party: null, build: 'b1', since: T0, mmr: 1000, hint: 'enam', ...over }
 }
 const many = (count: number, over: Partial<Ticket> = {}) => Array.from({ length: count }, () => ticket(over))
 
@@ -19,7 +19,7 @@ describe('matchmaking', () => {
     const [m] = matches
     expect(m?.players).toHaveLength(SIZE)
     expect(m?.players.filter((p) => p.team === 0)).toHaveLength(SIZE / 2)
-    expect(m).toMatchObject({ kind: 'casual', ranked: false, build: 'b1', hint: 'enam' })
+    expect(m).toMatchObject({ kind: 'casual', format: 'standard', ranked: false, build: 'b1', hint: 'enam' })
     expect(waiting).toEqual([expect.objectContaining({ found: 1 })])
   })
 
@@ -55,6 +55,21 @@ describe('matchmaking', () => {
     expect(waitingForMmr.matches).toHaveLength(0)
   })
 
+  it('makes a 3v3 of six, three a side, and never mixes formats', () => {
+    const quick = many(6, { format: 'quick' })
+    const { matches } = formMatches([...quick, ...many(2)], T0)
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({ format: 'quick', ranked: false })
+    expect(matches[0]?.players.filter((p) => p.team === 0)).toHaveLength(3)
+    expect(matches[0]?.players.filter((p) => p.team === 1)).toHaveLength(3)
+    // Four of each format: neither pool is full.
+    expect(formMatches([...many(4, { format: 'quick' }), ...many(4)], T0).matches).toHaveLength(0)
+    // A party of four can't fit a team of three: it splits into a party of three and one more, still on one side each.
+    const party = many(4, { party: 'BIG', format: 'quick' })
+    const big = formMatches([...party, ...many(2, { format: 'quick' })], T0).matches[0]
+    expect(big?.players).toHaveLength(6)
+  })
+
   it('reads only well-formed queue messages and ratings', () => {
     const auth = { kind: 'guest', id: 'guest-aaaaaaaaaaaaaaaa' }
     const queue = { t: 'queue', kind: 'ranked', starter: 'pikachu', party: null, build: 'b1', auth }
@@ -63,6 +78,11 @@ describe('matchmaking', () => {
     expect(parseQueueMessage(JSON.stringify({ ...queue, auth: undefined }))).toBeNull()
     expect(parseQueueMessage(JSON.stringify({ ...queue, party: 'a b' }))).toBeNull()
     expect(parseQueueMessage('{"t":"cancel"}')).toEqual({ t: 'cancel' })
+    // A 3v3 ticket says so; a ticket without a format (any client before formats) is a 4v4 one, and the 3v3 has no ranked queue.
+    expect(parseQueueMessage(JSON.stringify({ ...queue, kind: 'casual', format: 'quick' }))).toEqual({ ...queue, kind: 'casual', format: 'quick' })
+    expect(parseQueueMessage(JSON.stringify({ ...queue, format: 'standard' }))).toEqual(queue)
+    expect(parseQueueMessage(JSON.stringify({ ...queue, format: 'quick' }))).toBeNull()
+    expect(parseQueueMessage(JSON.stringify({ ...queue, kind: 'casual', format: 'blitz' }))).toBeNull()
     expect(parseTickets({ season: 1, ratings: { user_1: { mmr: 1200, rp: 30, games: 2 }, user_2: { mmr: 'x' } } })).toEqual({ user_1: { mmr: 1200, rp: 30, games: 2 } })
   })
 })

@@ -107,8 +107,9 @@ export class Matchmaker extends DurableObject<Env> {
     const now = Date.now()
     // Guests (a dev relay) have no rating: they match at the start.
     const mmr = identity.account ? null : ARENA_RANKED.mmr.start
-    this.tickets.set(a.id, { conn: a.id, user: identity.id, kind: msg.kind, party: msg.party, build: msg.build, since: now, mmr, hint: a.hint })
-    log({ ev: 'queue.joined', kind: msg.kind, party: msg.party !== null, account: identity.account, tickets: this.tickets.size })
+    const format = msg.format ?? 'standard'
+    this.tickets.set(a.id, { conn: a.id, user: identity.id, kind: msg.kind, format, party: msg.party, build: msg.build, since: now, mmr, hint: a.hint })
+    log({ ev: 'queue.joined', kind: msg.kind, format, party: msg.party !== null, account: identity.account, tickets: this.tickets.size })
     this.send(a.id, { t: 'queued', kind: msg.kind, waited: 0, found: 1, botsIn: ARENA_RANKED.queue.botsAfter[msg.kind] })
     this.schedule()
   }
@@ -257,7 +258,7 @@ export class Matchmaker extends DurableObject<Env> {
     const conns = m.players.map((p) => p.conn)
     for (const c of conns) this.placing.add(c)
     const region = regionOf(m.hint)
-    const lock = { queue: m.kind, ranked: m.ranked, players: m.players.map((p) => ({ id: p.user, team: p.team })) }
+    const lock = { queue: m.kind, ...(m.format !== 'standard' && { format: m.format }), ranked: m.ranked, players: m.players.map((p) => ({ id: p.user, team: p.team })) }
     let code: string | null = null
     for (let index = 0; index < SHARD_INDEXES && code === null; index++) {
       const shard: Shard = { region, index }
@@ -271,9 +272,9 @@ export class Matchmaker extends DurableObject<Env> {
     }
     const here = conns.filter((c) => this.placing.has(c) && this.tickets.has(c))
     for (const c of conns) this.placing.delete(c)
-    if (code === null) return log({ ev: 'queue.placeFailed', kind: m.kind, humans: m.players.length })
+    if (code === null) return log({ ev: 'queue.placeFailed', kind: m.kind, format: m.format, humans: m.players.length })
     const oldest = Math.min(...here.map((c) => this.tickets.get(c)?.since ?? Date.now()))
-    log({ ev: 'queue.matched', code, kind: m.kind, ranked: m.ranked, humans: m.players.length, region, waited: Math.round((Date.now() - oldest) / 1000) })
+    log({ ev: 'queue.matched', code, kind: m.kind, format: m.format, ranked: m.ranked, humans: m.players.length, region, waited: Math.round((Date.now() - oldest) / 1000) })
     for (const p of m.players) {
       if (!here.includes(p.conn)) continue
       this.send(p.conn, { t: 'matched', room: code, team: p.team, ranked: m.ranked, humans: m.players.length })

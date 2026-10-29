@@ -55,7 +55,7 @@ export const ARENA_RANKED = {
     humanSplitPenalty: 400,
     /** Seconds the matched players have to join the room; who's missing plays as a bot. */
     joinTimeout: 20,
-    /** Most humans in one match (the Arena's room size). */
+    /** Most humans in one match: the biggest format's room (`arenaPlayers` in `arenaFormats.ts` has each format's). */
     players: 8,
   },
 } as const

@@ -125,13 +125,16 @@ Re-simulating `meta.run` with `log` reproduces the run.
 
 ## Arena
 
-The Arena (a 4v4 match, `src/game/versus.ts`) rides the co-op pipeline: a room whose settings say
+The Arena (a 4v4 or 3v3 match, `src/game/versus.ts`) rides the co-op pipeline: a room whose settings say
 `mode: 'versus'` and a deterministic match in which the seats nobody takes are bots. The relay adds
 four things, all additive (no `PROTOCOL` bump: a client or relay before them works as it did):
 
-- **Rooms of 8.** An Arena room seats `MAX_ARENA_PLAYERS` (8, `ARENA_RANKED.queue.players`); a co-op
-  room stays at 4, and a room of more than 4 can't switch back to co-op (`seatCap` in `src/room.ts`).
-- **Locked rooms.** The matchmaker makes a room with an `ArenaLock` (the queue, whether it's rated,
+- **Rooms of a format's size.** An Arena room seats both teams of its format (`settings.format`,
+  `src/data/arenaFormats.ts`: 8 for the standard 4v4, the default when absent, 6 for the `quick`
+  3v3; at most `MAX_ARENA_PLAYERS`); a co-op room stays at 4, and the host can't switch a room to
+  anything that seats fewer than it holds (back to co-op, a 4v4 of 7 to the 3v3: `seatCap` in
+  `src/room.ts`). A report's seats follow the format too (6 slots for a 3v3).
+- **Locked rooms.** The matchmaker makes a room with an `ArenaLock` (the queue, its format when not the standard, whether it's rated,
   the matched identities and their teams): only those players sit down, each loadout's `team` is
   forced to theirs, the settings are the match's (`MatchedSettings`) for good, the host can't kick,
   move or start, and the run starts by itself once every matched player has a loadout in, or
@@ -152,7 +155,9 @@ four things, all additive (no `PROTOCOL` bump: a client or relay before them wor
   id (`<room>-<run>-<endedAt>`) is the API's to deduplicate a retry that had landed.
 - **The matchmaker** (`GET /arena/queue`, one `Matchmaker` Durable Object for everyone, created on
   the US east coast): the first message is `queue` (`QueueClientMessage` in `src/net/arena.ts`)
-  with its auth, checked like a room's hello (a guest only where `ALLOW_GUESTS` is `on`). One ticket
+  with its auth, checked like a room's hello (a guest only where `ALLOW_GUESTS` is `on`), and its
+  `format` (absent: the standard 4v4, as every client before formats; Ranked only in a format that
+  has it, else the message is dropped). Tickets pool by queue, format and build. One ticket
   per account (`refused: duplicate`); a build other than the site's (`SIM_BUILD_URL`, its
   `/sim-build.json`, read at most once a minute) is refused (`build`), and so are tickets waiting
   on one after a deploy (not on the dev relay, which has no `SIM_BUILD_URL`: Vercel previews share

@@ -5,7 +5,8 @@
  *
  * The flow: a signed-in client opens a WebSocket to the matchmaker
  * (`/arena/queue` on the relay) and sends `queue`; the matchmaker (one
- * Durable Object, on Cloudflare) groups tickets by MMR (the API's,
+ * Durable Object, on Cloudflare) pools tickets by queue, format and build,
+ * groups them by MMR (the API's,
  * `POST /arena/tickets`) and wait, splits teams (`splitTeams` in
  * `net/arenaQueue.ts`), makes a locked Arena room
  * on the relay with every seat's team set, and sends each ticket `matched`.
@@ -24,11 +25,19 @@ export const ARENA_PROTOCOL = 1
 export type QueueAuth = { kind: 'clerk'; token: string } | { kind: 'guest'; id: string }
 
 /**
+ * The match formats (`ArenaFormat` in `data/arenaFormats.ts`), spelled out since this file imports nothing:
+ * 4v4 (`standard`) and 3v3 (`quick`).
+ */
+export type QueueFormat = 'standard' | 'quick'
+
+/**
  * What a client in the queue sends. `party`: the code of the friends' party it queues with (all of it
- * joins the same team). `build`: the co-op build id (`__SIM_BUILD__`), the matched room's.
+ * joins the same team). `build`: the co-op build id (`__SIM_BUILD__`), the matched room's. `format`:
+ * the match format it queues for, absent for the standard 4v4 (a client before formats sends none);
+ * `ranked` only in a format that has a ranked queue.
  */
 export type QueueClientMessage =
-  | { t: 'queue'; kind: 'casual' | 'ranked'; starter: string; party: string | null; build: string; auth: QueueAuth }
+  | { t: 'queue'; kind: 'casual' | 'ranked'; format?: QueueFormat; starter: string; party: string | null; build: string; auth: QueueAuth }
   | { t: 'cancel' }
   /** The client's round trip to each relay home, so the match lands where it plays best. */
   | { t: 'rtt'; homes: Record<string, number> }
@@ -42,8 +51,11 @@ export type QueueServerMessage =
   /** Refused: not signed in, already queued in another tab, an old build, or the queue is closed. */
   | { t: 'refused'; why: 'auth' | 'duplicate' | 'build' | 'closed' }
 
-/** The room settings a matchmade Arena room carries (the relay's room sets them with its lock; `coop/start.ts` reads them). */
-export type MatchedSettings = { difficulty: 'normal'; mode: 'versus'; queue: 'casual' | 'ranked'; locked: true }
+/**
+ * The room settings a matchmade Arena room carries (the relay's room sets them with its lock; `coop/start.ts` reads them).
+ * `format` only when it isn't the standard 4v4, as a friends' room's settings say it.
+ */
+export type MatchedSettings = { difficulty: 'normal'; mode: 'versus'; queue: 'casual' | 'ranked'; locked: true; format?: QueueFormat }
 
 /**
  * `POST /arena/report` (relay → API), with header `x-arena-signature`: hex

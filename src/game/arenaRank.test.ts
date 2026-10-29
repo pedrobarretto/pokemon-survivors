@@ -88,6 +88,14 @@ describe('the queue', () => {
     expect(splitTeams(solos(700, 1300))!.teams).toEqual([0, 1])
   })
 
+  it('splits six humans three a side for a 3v3, and refuses a party bigger than its team', () => {
+    const six = solos(1000, 1100, 1200, 1300, 1400, 1500)
+    const split = splitTeams(six, 3)!
+    expect(split.teams.filter((t) => t === 0)).toHaveLength(3)
+    expect(split.gap).toBeLessThanOrEqual(100)
+    expect(splitTeams([{ id: 'p', mmrs: [1000, 1000, 1000, 1000] }], 3)).toBeNull()
+  })
+
   it('never separates a party, even to spread its humans', () => {
     expect(splitTeams([{ id: 'p', mmrs: [1000, 1000] }])!.teams).toEqual([0])
     expect(sides([{ id: 'p', mmrs: [1000, 1000] }, ...solos(1000)])).toEqual([2, 1])
@@ -106,6 +114,7 @@ describe('the queue', () => {
   it('rates only ranked matches with enough humans', () => {
     expect(countsForRank('ranked', 2)).toBe(true)
     expect(countsForRank('ranked', 1)).toBe(false)
+    expect(countsForRank('ranked', 6, 'quick')).toBe(false)
     expect(countsForRank('casual', 8)).toBe(false)
   })
 })
