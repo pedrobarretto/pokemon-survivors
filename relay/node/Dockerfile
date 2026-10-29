@@ -6,7 +6,7 @@ WORKDIR /repo
 COPY relay/node/package.json relay/node/package-lock.json relay/node/
 RUN npm ci --prefix relay/node
 COPY src/net/protocol.ts src/net/arena.ts src/net/arenaQueue.ts src/net/
-COPY src/data/arenaRanked.ts src/data/arenaRanked.ts
+COPY src/data/arenaRanked.ts src/data/arenaFormats.ts src/data/
 COPY relay/src relay/src
 COPY relay/node relay/node
 # One file (ws included, node:sqlite is built in), and its hash: /health shows it as `version`.
