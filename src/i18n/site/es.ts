@@ -888,7 +888,7 @@ export const siteEs: SiteMessages = {
     gems: [
       'Las gemas son un ítem virtual de la Arena: solo compran ítems cosméticos (como sombreros, estelas y títulos), nunca nada que cambie una partida o el ranking. No tienen valor en dinero, no se pueden cambiar por dinero ni pasar a otra cuenta y quedan ligadas a tu cuenta del juego.',
       'Ganas gemas jugando la Arena (con un límite diario), apoyando en Patreon o comprando un paquete. Los paquetes se pagan en Stripe (tarjeta, Apple Pay y Google Pay) o en AbacatePay (Pix), y tus datos de pago van directo a ellos: el juego nunca ve tu tarjeta.',
-      'Derecho de arrepentimiento: hasta 7 días después de comprar un paquete, puedes pedir el reembolso de las gemas de ese paquete que aún no gastaste (Código de Defensa del Consumidor de Brasil, art. 49). Pídelo al equipo en el Discord del juego, con la referencia de la compra. Las gemas ya gastadas y los ítems cosméticos comprados con ellas no son reembolsables.',
+      'Derecho de arrepentimiento: hasta 7 días después de comprar un paquete, puedes pedir el reembolso de las gemas de ese paquete que aún no gastaste (Código de Defensa del Consumidor de Brasil, art. 49). Pídelo por correo a pedro@wavyia.com.br, con la referencia de la compra. Las gemas ya gastadas y los ítems cosméticos comprados con ellas no son reembolsables.',
       'Un contracargo o disputa del pago (chargeback) quita de la cuenta las gemas de ese paquete, incluso las ya gastadas. El saldo puede quedar negativo y, mientras lo esté, no se puede comprar nada con gemas.',
     ],
     licenses: {

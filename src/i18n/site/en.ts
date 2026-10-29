@@ -884,7 +884,7 @@ export const siteEn: SiteMessages = {
     gems: [
       'Gems are a virtual item of the Arena: they buy cosmetic items only (such as hats, trails and titles), never anything that changes a match or the ranking. They have no cash value, can\'t be exchanged for money or moved to another account, and stay tied to your game account.',
       'You get gems by playing the Arena (up to a daily limit), by supporting on Patreon or by buying a pack. Packs are paid on Stripe (card, Apple Pay and Google Pay) or AbacatePay (Pix), and your payment details go straight to them: the game never sees your card.',
-      'Right of withdrawal: within 7 days of buying a pack, you can ask for a refund of its gems you haven\'t spent yet (Brazilian Consumer Protection Code, art. 49). Ask the team on the game\'s Discord, with the purchase reference. Gems already spent and the cosmetic items bought with them are not refundable.',
+      'Right of withdrawal: within 7 days of buying a pack, you can ask for a refund of its gems you haven\'t spent yet (Brazilian Consumer Protection Code, art. 49). Email pedro@wavyia.com.br with the purchase reference. Gems already spent and the cosmetic items bought with them are not refundable.',
       'A chargeback or payment dispute removes that pack\'s gems from the account, even spent ones. The balance can go negative, and while it is, nothing can be bought with gems.',
     ],
     licenses: {

@@ -27,12 +27,13 @@ const donationProduct = (amount: number): Product => ({
 })
 
 /**
- * A gem pack's product. Its id doesn't carry the price: a price change in
- * `GEM_PACKS` needs the product's price changed in AbacatePay too (the
- * checkout refuses to open while they differ, `productFor`).
+ * A gem pack's product. Its id carries the price, like a donation's, so a
+ * price change in `GEM_PACKS` makes a new product instead of meeting an old
+ * one at another price (the checkout refuses to open while they differ,
+ * `productFor`).
  */
 const gemProduct = (pack: GemPackId): Product => ({
-  externalId: `pokemon-survivors-gems-${pack}`,
+  externalId: `pokemon-survivors-gems-${pack}-${GEM_PACKS[pack].brl}`,
   name: `Pokémon Survivors: ${packGems(pack)} gemas`,
   description: 'Gemas da Arena do Pokémon Survivors: só para itens cosméticos, sem valor em dinheiro.',
   price: GEM_PACKS[pack].brl,

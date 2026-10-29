@@ -14,7 +14,7 @@
 export type GemPack = { gems: number; bonus: number; brl: number; usd: number }
 
 export const GEM_PACKS = {
-  pouch: { gems: 100, bonus: 0, brl: 490, usd: 99 },
+  pouch: { gems: 200, bonus: 0, brl: 990, usd: 199 },
   bag: { gems: 500, bonus: 50, brl: 2490, usd: 499 },
   chest: { gems: 1000, bonus: 200, brl: 4990, usd: 999 },
   hoard: { gems: 2000, bonus: 600, brl: 9990, usd: 1999 },

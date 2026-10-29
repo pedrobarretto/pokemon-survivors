@@ -885,7 +885,7 @@ export const siteFr: SiteMessages = {
     gems: [
       'Les gemmes sont un objet virtuel de l\'Arène : elles n\'achètent que des objets cosmétiques (chapeaux, traînées, titres…), jamais rien qui change une partie ou le classement. Elles n\'ont aucune valeur monétaire, ne peuvent être ni échangées contre de l\'argent ni transférées à un autre compte, et restent liées à votre compte de jeu.',
       'Vous gagnez des gemmes en jouant à l\'Arène (dans une limite par jour), en soutenant le jeu sur Patreon ou en achetant un pack. Les packs se paient sur Stripe (carte, Apple Pay et Google Pay) ou AbacatePay (Pix), et vos données de paiement vont directement chez eux : le jeu ne voit jamais votre carte.',
-      'Droit de rétractation : dans les 7 jours suivant l\'achat d\'un pack, vous pouvez demander le remboursement de ses gemmes que vous n\'avez pas encore dépensées (Code de défense du consommateur brésilien, art. 49). Demandez-le à l\'équipe sur le Discord du jeu, avec la référence de l\'achat. Les gemmes déjà dépensées et les objets cosmétiques achetés avec elles ne sont pas remboursables.',
+      'Droit de rétractation : dans les 7 jours suivant l\'achat d\'un pack, vous pouvez demander le remboursement de ses gemmes que vous n\'avez pas encore dépensées (Code de défense du consommateur brésilien, art. 49). Demandez-le par e-mail à pedro@wavyia.com.br, avec la référence de l\'achat. Les gemmes déjà dépensées et les objets cosmétiques achetés avec elles ne sont pas remboursables.',
       'Une rétrofacturation ou une contestation du paiement (chargeback) retire du compte les gemmes de ce pack, même celles déjà dépensées. Le solde peut devenir négatif et, tant qu\'il l\'est, rien ne peut être acheté avec des gemmes.',
     ],
     licenses: {
