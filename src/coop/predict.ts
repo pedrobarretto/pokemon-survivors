@@ -7,6 +7,8 @@ import { inDoorway } from '../game/rift'
 import { moveOf, TICK } from '../game/replay'
 import { predictSpecial, type SpecialState } from '../game/special'
 import { footOf, keepOut } from '../game/terrain'
+import { aimVec } from '../game/versusKit'
+import { VERSUS_KIT } from '../data/versus'
 import type { Game, Player } from '../game/types'
 import * as dm from '../engine/dmath'
 import { HISTORY } from './client'
@@ -46,6 +48,9 @@ import type { Runner } from './runner'
  * to the confirmed spot the same way.
  */
 
+/** Ticks an Arena cast holds the Pokémon turned to its aim. */
+const HOLD_TICKS = Math.round(VERSUS_KIT.hold / TICK)
+
 /** Samples predicted ahead at most (~0.75 s): a worse link just shows its lag. */
 export const MAX_AHEAD = 45
 
@@ -73,7 +78,7 @@ type Carried = { roll: boolean; vx: number; vy: number; left: number; speed: num
 export type GhostLook = Pick<Player, 'dir' | 'facing' | 'moving'> & { special: SpecialState }
 
 /** What this client's input gives prediction: the stick's samples (`history`, the latest `sample`) and the samples its special presses went out at. */
-export type OwnInput = { history: Uint8Array; sample: number; specials: readonly number[] }
+export type OwnInput = { history: Uint8Array; sample: number; specials: readonly number[]; aims?: readonly number[] }
 
 export type Prediction = {
   /** The drawn spot of this player, this frame. */
@@ -244,10 +249,10 @@ const carriedFrom = (g: Game, p: Player, out: Carried[]) => {
  * rolls (`updateAttacks`), the terrain (`updateTerrain`). `world` is the
  * ghost's copy of the game: its hitstop counts down there.
  */
-const stepGhost = (world: Game, ghost: Player, carried: Carried[], code: number, pressed: boolean) => {
+const stepGhost = (world: Game, ghost: Player, carried: Carried[], code: number, pressed: boolean, turn = true) => {
   if (hitstopHolds(world, TICK)) return
   const move = moveOf(code)
-  if (walkPlayer(world, move, TICK)) {
+  if (walkPlayer(world, move, TICK) && turn) {
     const len = dm.hypot(move.x, move.y)
     ghost.facing = { x: move.x / len, y: move.y / len }
     ghost.dir = dir8(move.x, move.y)
@@ -282,7 +287,7 @@ const stepGhost = (world: Game, ghost: Player, carried: Carried[], code: number,
  * at or before `from` presses on the first). Returns the positions at
  * `sample - 1`, `sample` and `at` (the start for `at <= from`, null past `sample`).
  */
-const walkAhead = (pr: Prediction, g: Game, p: Player, history: Uint8Array, presses: readonly number[], from: number, sample: number, at: number) => {
+const walkAhead = (pr: Prediction, g: Game, p: Player, history: Uint8Array, presses: readonly number[], from: number, sample: number, at: number, aims?: ReadonlyMap<number, number>) => {
   const ghost = Object.assign((pr.ghost ??= { ...p }), p)
   ghost.special = Object.assign((pr.special ??= { ...p.special }), p.special)
   if (pr.terrain.seed !== g.terrain.seed) pr.terrain = { seed: g.terrain.seed, cells: new Map() }
@@ -293,14 +298,23 @@ const walkAhead = (pr: Prediction, g: Game, p: Player, history: Uint8Array, pres
   let next = 0
   let prev = { x: ghost.x, y: ghost.y }
   let atPos: Pos | null = at <= from ? { x: ghost.x, y: ghost.y } : null
+  /** Ticks the ghost stays turned to an Arena Unite Move's aim (`VERSUS_KIT.hold`), as the simulation holds it. */
+  let hold = p.versus ? Math.round(p.versus.hold / TICK) : 0
   for (let s = from + 1; s <= sample; s++) {
     if (s === sample) prev = { x: ghost.x, y: ghost.y }
     let pressed = false
     while (next < presses.length && presses[next]! <= s) {
       pressed = true
+      const aim = aims?.get(presses[next]!) ?? -1
+      if (aim >= 0) {
+        ghost.facing = aimVec(aim)
+        ghost.dir = dir8(ghost.facing.x, ghost.facing.y)
+        hold = HOLD_TICKS
+      }
       next++
     }
-    stepGhost(world, ghost, pr.carried, history[s % HISTORY]!, pressed)
+    stepGhost(world, ghost, pr.carried, history[s % HISTORY]!, pressed, hold <= 0)
+    hold--
     if (s === at) atPos = { x: ghost.x, y: ghost.y }
   }
   return { prev, cur: { x: ghost.x, y: ghost.y }, at: atPos }
@@ -337,7 +351,8 @@ export const predict = (pr: Prediction, r: Runner, own: OwnInput, frac: number, 
     if (pr.predictedAt[k] === simSample && pr.errors.length < 100_000) pr.errors.push(Math.hypot(pr.predicted[k * 2]! - p.x, pr.predicted[k * 2 + 1]! - p.y))
     const from = Math.min(simSample, sample)
     const ahead = Math.max(0, Math.min(MAX_AHEAD, sample - from))
-    const w = walkAhead(pr, g, p, own.history, pendingPresses(own.specials, r.pressed, simSample), from, from + ahead, pr.lastSample)
+    const aims = own.aims && own.aims.length === own.specials.length ? new Map(own.specials.map((s, i) => [s, own.aims![i]!])) : undefined
+    const w = walkAhead(pr, g, p, own.history, pendingPresses(own.specials, r.pressed, simSample), from, from + ahead, pr.lastSample, aims)
     cur = w.cur
     prev = ahead > 0 ? w.prev : cur
     atLast = w.at

@@ -366,6 +366,8 @@ export const stepOne = (r: Runner, deps: RunnerDeps) => {
       if (e[0] !== r.seat) continue
       if (e[1] === 'move' && typeof e[3] === 'number') r.anchor = { tick, sample: e[3] }
       else if (e[1] === 'special' && typeof e[2] === 'number') r.pressed = Math.max(r.pressed, e[2])
+      // An Arena Unite Move's cast carries its sample last (`inputValues`).
+      else if (e[1] === 'cast' && e[2] === 2 && typeof e[6] === 'number') r.pressed = Math.max(r.pressed, e[6])
     }
     stepTick(g, toTickEntries(entries, r.slots))
   } else stepTick(g, [])

@@ -238,6 +238,8 @@ export type ClientState = {
   history: Uint8Array
   /** The samples the last special presses went out at (`SPECIALS_KEPT` of them, oldest first), for prediction to press them before the run does. */
   specials: number[]
+  /** The aim of each of those presses (an Arena Unite Move's direction code, -1 a plain press), for the ghost to turn that way. */
+  aims: number[]
   pace: StickPace
   anchoredAt: number
   /** Messages waiting to ride along with the next ones (the state hashes), and when each was queued (ms). */
@@ -299,6 +301,7 @@ export const createCoopClient = (deps: CoopDeps) => {
     sample: 0,
     history: new Uint8Array(HISTORY),
     specials: [],
+    aims: [],
     pace: createStickPace(),
     anchoredAt: -Infinity,
     later: [],
@@ -868,9 +871,14 @@ export const createCoopClient = (deps: CoopDeps) => {
   /** Queues an input of the player's for the run. */
   const input = (i: Input) => {
     if (s.status.kind !== 'playing' || s.hidden) return 0
-    if (i.k === 'special') {
+    // The Arena's Unite Move presses the special too, aimed.
+    if (i.k === 'special' || (i.k === 'cast' && i.skill === 2)) {
       s.specials.push(i.sample)
-      if (s.specials.length > SPECIALS_KEPT) s.specials.shift()
+      s.aims.push(i.k === 'cast' ? i.dir : -1)
+      if (s.specials.length > SPECIALS_KEPT) {
+        s.specials.shift()
+        s.aims.shift()
+      }
     }
     return push(s.outbox, i, deps.now())
   }
