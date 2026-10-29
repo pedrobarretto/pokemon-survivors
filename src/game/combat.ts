@@ -30,7 +30,7 @@ import { alphaDown } from './alphas'
 import { disguiseTakes, holdsOn, phaseTaken } from './bossFight'
 import { legendFell } from './legendScene'
 import { hordeGrit } from './horde'
-import type { Attack, DamageSource, Enemy, Game } from './types'
+import type { Attack, DamageSource, Enemy, Game, Player } from './types'
 import { playerWeatherBoost, weatherHere, weatherPower } from './weather'
 import { dropForEach, faint, winRun } from './coop'
 import { inPlay } from './players'
@@ -317,12 +317,15 @@ const BLIND_IFRAMES = 0.4
 /**
  * Heals the player by `amount`, cut or not by the difficulty, up to max HP.
  * Returns the HP actually restored. A fainted co-op player takes no heal: only
- * a teammate gets them back up (`coop.ts`).
+ * a teammate gets them back up (`coop.ts`). In the Arena the heal goes on
+ * `credit`'s scoreboard (`VersusSeat.healed`): the healed player's own by
+ * default, the Supporter's for its aura, nobody's for the map's (null).
  */
-export const healPlayer = (g: Game, amount: number) => {
+export const healPlayer = (g: Game, amount: number, credit: Player | null = g.player) => {
   const p = g.player
   if (g.coop !== null && p.hp <= 0) return 0
   const healed = Math.max(0, Math.min(amount * runMods(g).healing, p.stats.maxHp - p.hp))
   p.hp += healed
+  if (credit?.versus) credit.versus.healed += healed
   return healed
 }

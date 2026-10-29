@@ -73,6 +73,7 @@ import { mapOf } from '../game/versusRules'
 import { drawValeAir, drawValeFloor, drawValeGround, drawValeZones, dropVale, TEAM_COLORS, warmVale } from './vale'
 import { concealed, drawGrassFront, drawGrassPatches, grassAlpha } from './valeGrass'
 import { drawValeProp, valePropCovers, valePropsInView, type ValeProp } from './valeProps'
+import { drawValePings } from './valePings'
 import { paintAttacks, type AttackSide } from './attackLayers'
 import { drawImpacts, watchImpacts } from './impacts'
 import { drawCrunch, drawDragonBreath, drawEarthquake, drawEmber, drawPinMissile, drawFireSpin, drawWhirlpool, drawFlashCannon, drawPsyshock, drawPyroBall, drawGust, drawRazorLeaf, drawRockTombLanding, drawSludge, drawSludgeGround, drawSwift, drawThunder, drawThunderGround, drawVineWhip, drawWaterGun } from './baseMoveFx'
@@ -1127,7 +1128,10 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     drawPlayerAir(ctx, g, t)
   }
   // Teammates' name tags and bubbles, over everyone (in Versus, the goals' points left under them).
-  if (g.versus) drawValeAir(ctx, g)
+  if (g.versus) {
+    drawValeAir(ctx, g)
+    drawValePings(ctx, g, t)
+  }
   if (g.coop) drawTeamAir(ctx, g, me, t)
   // Roar of Time's clocks over the foes it stopped: a mark on them, not a move, so it stays opaque.
   drawStoppedFoes(ctx, g, t, visible)

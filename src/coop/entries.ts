@@ -1,6 +1,7 @@
 import type { Entry, RunStart, Scalar } from '../net/protocol'
 import { parseTickEntry, type PickScreen, type TickEntry } from '../game/lockstep'
 import type { MegaId } from '../data/megas'
+import type { PingKind, QuickChat } from '../game/versusSocial'
 
 /**
  * Inputs on the wire. The relay stamps them as `[seat, kind, ...values]` and
@@ -22,12 +23,20 @@ export type Input =
   | { k: 'banish'; round: number; index: number }
   | { k: 'stone'; mega: MegaId }
   | { k: 'endless'; vote: boolean }
+  /** Arena: a quick chat line, a ping, a surrender vote (`game/versusSocial.ts`). */
+  | { k: 'chat'; msg: QuickChat }
+  | { k: 'ping'; ping: PingKind; x: number; y: number }
+  | { k: 'surrender'; vote: boolean }
 
-/** Inputs that must get through (resent until seen in a frame): picks, the screen buttons, a stone, a vote. */
-export type ReliableInput = Extract<Input, { k: 'pick' | 'reroll' | 'skip' | 'banish' | 'stone' | 'endless' }>
+/**
+ * Inputs that must get through (resent until seen in a frame): picks, the
+ * screen buttons, a stone, a vote (a surrender's too; a resent one counts
+ * once). A chat line or a ping lost on a dropped link is just gone.
+ */
+export type ReliableInput = Extract<Input, { k: 'pick' | 'reroll' | 'skip' | 'banish' | 'stone' | 'endless' | 'surrender' }>
 
 export const isReliable = (i: Input): i is ReliableInput =>
-  i.k === 'pick' || i.k === 'reroll' || i.k === 'skip' || i.k === 'banish' || i.k === 'stone' || i.k === 'endless'
+  i.k === 'pick' || i.k === 'reroll' || i.k === 'skip' || i.k === 'banish' || i.k === 'stone' || i.k === 'endless' || i.k === 'surrender'
 
 /** The values of an input on the wire, a nonce last for the reliable ones (the simulation never reads it). */
 export const inputValues = (i: Input, nonce = 0): Scalar[] => {
@@ -49,7 +58,12 @@ export const inputValues = (i: Input, nonce = 0): Scalar[] => {
     case 'stone':
       return [i.mega, nonce]
     case 'endless':
+    case 'surrender':
       return [i.vote, nonce]
+    case 'chat':
+      return [i.msg]
+    case 'ping':
+      return [i.ping, i.x, i.y]
   }
 }
 
@@ -83,7 +97,16 @@ export const toTickEntry = (e: Entry, slots: ReadonlyMap<number, number>): TickE
       raw.mega = a
       break
     case 'endless':
+    case 'surrender':
       raw.vote = a
+      break
+    case 'chat':
+      raw.msg = a
+      break
+    case 'ping':
+      raw.ping = a
+      raw.x = b
+      raw.y = c
       break
   }
   return parseTickEntry(raw, slots.size)

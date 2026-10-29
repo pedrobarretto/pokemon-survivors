@@ -199,6 +199,8 @@ export type Settings = {
   uiScale: UiScale
   /** The HUD's mini map (`render/minimap.ts`): square, round or off. */
   minimap: MinimapMode
+  /** The Arena's quick chat (`ui/versusTalk.ts`): off hides the other players' lines; pings still show. */
+  quickChat: boolean
   /** Menus and HUD colors (`ui/theme.ts`). Per device: a phone may follow its own dark mode. */
   theme: Theme
 }
@@ -221,6 +223,7 @@ export const DEFAULT_SETTINGS: Settings = {
   stickEdge: 'near',
   uiScale: 'auto',
   minimap: 'square',
+  quickChat: true,
   theme: 'system',
 }
 
@@ -260,6 +263,7 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     stickEdge: STICK_EDGES.find((m) => m === data.stickEdge) ?? defaults.stickEdge,
     uiScale: UI_SCALES.find((s) => s === data.uiScale) ?? defaults.uiScale,
     minimap: MINIMAP_MODES.find((m) => m === data.minimap) ?? defaults.minimap,
+    quickChat: flag(data.quickChat, defaults.quickChat),
     theme: THEMES.find((m) => m === data.theme) ?? defaults.theme,
   }
 }

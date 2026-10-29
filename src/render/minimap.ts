@@ -16,8 +16,11 @@ import type { Game, Pickup } from '../game/types'
 import { missionSpot } from './fieldMissions'
 import { slotColor } from './team'
 import { goalOpen, mapOf } from '../game/versusRules'
+import type { VersusState } from '../game/versus'
 import { TEAM_COLORS } from './vale'
 import { concealed } from './valeGrass'
+import { PING_COLORS, seesPing } from './valePings'
+import { PING_KINDS, type PingKind } from '../game/versusSocial'
 
 /**
  * The HUD's mini map (`ui/minimap.ts`): a pixel-art map around the local
@@ -620,6 +623,24 @@ const drawValeMap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) => {
     marker(ctx, v, shape, teammate(TEAM_COLORS[p.versus.team]), p.x, p.y, true)
   }
   if (me.hp > 0) ctx.drawImage(ARROWS()[heading(me.facing.x, me.facing.y)]!, mapX(v, me.x) - 4, mapY(v, me.y) - 4)
+  // The team's pings over everything, blinking as they land.
+  for (const ping of s.pings) {
+    if (!seesPing(g, ping) || (g.now - ping.at < 1.5 && Math.floor(t * 6) % 2 === 1)) continue
+    marker(ctx, v, shape, pingGlyph(ping.kind), ping.x, ping.y, true)
+  }
+}
+
+const PING_GLYPHS = lazy(() => Object.fromEntries(PING_KINDS.map((kind) => [kind, glyph(['.c.', 'cwc', 'cwc', '.c.'], { c: PING_COLORS[kind], w: '#ffffff' })])) as Record<PingKind, PixelSprite>)
+const pingGlyph = (kind: PingKind) => PING_GLYPHS()[kind]
+
+/**
+ * The world spot under a point of the Arena's mini map (map px, 0 to
+ * `MINIMAP.size`) for match `s`: the middle of the map pixel's patch of its
+ * map (`look.minimap` world px each). The shell pings there (`ui/versusTalk.ts`).
+ */
+export const arenaMapAt = (s: VersusState, mx: number, my: number) => {
+  const scale = mapOf(s).look.minimap
+  return { x: (Math.floor(mx) - C) * scale + scale / 2, y: (Math.floor(my) - C) * scale + scale / 2 }
 }
 
 const teammates = new Map<string, PixelSprite>()

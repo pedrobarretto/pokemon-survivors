@@ -9,7 +9,7 @@ describe('versusReport', () => {
     g.versus!.score = [12, 30]
     const left = versusReport(g, 0, 'casual', false, 'quit')!
     expect(left).toMatchObject({ outcome: 'quit', second: 185, winner: null, result: null, team: 'blue', blue: 12, red: 30 })
-    g.versus!.result = { winner: 1 }
+    g.versus!.result = { winner: 1, surrender: null }
     expect(versusReport(g, 0, 'casual', false, 'left')).toMatchObject({ outcome: 'end', winner: 'red', result: 'loss' })
     expect(versusReport(g, 99, 'casual', false, 'quit')).toBeNull()
   })

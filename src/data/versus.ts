@@ -78,6 +78,24 @@ export const VERSUS = {
    * after it hits or is hit by a rival, or uses its special.
    */
   grass: { near: 40, reveal: 1.5 },
+  /** A rival's hit counts toward an assist when the Pokémon it landed on is knocked out within this many seconds (`assistsOf`). */
+  assist: 8,
+  /**
+   * Quick chat and pings (`game/versusSocial.ts`): each player's lines and
+   * pings come out of a bucket of `burst` that refills one every `every`
+   * seconds (the simulation drops the rest, so every client shows the same);
+   * a line shows `keep` seconds, a ping `keep` seconds.
+   */
+  talk: { burst: 3, every: 4, keep: 6 },
+  ping: { burst: 3, every: 2.5, keep: 5 },
+  /**
+   * Surrender (`game/versusSocial.ts`): a team's human proposes it from
+   * `from` of the format's clock on (half-time: 3:30 left in a 4v4, 1:30 in
+   * a 3v3; `surrenderFrom`); the team's humans vote for `window` seconds and
+   * it passes with two thirds of them (one human alone decides). A vote that
+   * fails waits `cooldown` seconds before the team's next.
+   */
+  surrender: { from: 0.5, window: 20, cooldown: 60 },
 } as const
 
 /** What a format plays like (`ARENA_FORMATS` has what the relay needs of it). */

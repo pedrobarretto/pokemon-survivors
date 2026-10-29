@@ -2,7 +2,10 @@ import { accountHandle } from '../account'
 import { arenaSignedIn, deviceArenaHistory, fetchArenaBoard, fetchArenaHistory, fetchArenaMe } from '../arenaApi'
 import { divisionProgress, ladder, mergeHistory, record, timeLeft } from '../arena/history'
 import { ARENA_RANKED, type TierId } from '../data/arenaRanked'
+import { VERSUS, VERSUS_FORMATS } from '../data/versus'
+import type { ArenaFormat } from '../data/arenaFormats'
 import { playSfx } from '../engine/audio'
+import { formatTime } from '../engine/math'
 import type { Input } from '../engine/input'
 import { matchesToRanked, mayQueue, queueHold, seasonAt, seasonById, tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile, type FairPlayView, type Season, type TierView } from '../game/arenaRank'
 import { formatNumber, locale, LOCALES, t } from '../i18n'
@@ -358,6 +361,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
   const rulesTab = () => {
     const r = ARENA_RANKED
     const F = r.fairPlay
+    const surrenderClock = (f: ArenaFormat) => formatTime(VERSUS_FORMATS[f].length * (1 - VERSUS.surrender.from))
     const items = m.rules.items({
       win: r.rp.win,
       loss: r.rp.loss,
@@ -368,6 +372,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
       days: r.season.days,
       fair: { max: F.max, left: -F.left, afk: -F.afk, afkAfter: F.afkAfter, finish: F.finish, rankedMin: F.rankedMin, holdBelow: F.holdBelow },
       season1: season1Date(),
+      surrender: { standard: surrenderClock('standard'), quick: surrenderClock('quick') },
     })
     return [h('b', { class: 'arena-hub-rules-title' }, m.rules.title), h('ol', { class: 'arena-hub-rules' }, ...items.map((text) => h('li', {}, text)))]
   }

@@ -187,18 +187,40 @@ export { botsAfter, countsForRank, humansOnBothSides, mayQueue, mmrWindow, queue
 
 /**
  * One seat's line in a match's result (by slot, the game's player order).
- * `afk`: a human's longest stretch without acting, whole seconds (`VersusSeat.afk`).
+ * `damage` is all it dealt (the wild's too); `dealt`, `taken`, `healed`,
+ * `assists` and `interrupts` are the scoreboard's (`VersusSeat`), against and
+ * from rival Pokémon. `afk`: a human's longest stretch without acting, whole
+ * seconds (`VersusSeat.afk`, Fair Play's).
  */
-export type ArenaSeatResult = { slot: number; team: Team; starter: VersusPick; form: string; bot: boolean; kos: number; deaths: number; scored: number; damage: number; afk: number }
+export type ArenaSeatResult = {
+  slot: number
+  team: Team
+  starter: VersusPick
+  form: string
+  bot: boolean
+  kos: number
+  deaths: number
+  scored: number
+  damage: number
+  assists: number
+  dealt: number
+  taken: number
+  healed: number
+  interrupts: number
+  afk: number
+}
 
 /**
  * What a finished match reports: the final score, the winner (null: a draw),
- * how long it ran, every seat's line and, when it isn't the standard 4v4,
- * its format. Every client builds the same one from the same game, so the
- * relay can count matching reports (opaque to it) and pass the agreed one to
- * the API with its seats' accounts.
+ * how long it ran, the team that surrendered (null: the clock ran out; its
+ * rival is the winner, an ordinary win and loss), every seat's line and, when
+ * it isn't the standard 4v4, its format. Every client builds the same one
+ * from the same game, so the relay can count matching reports (opaque to it)
+ * and pass the agreed one to the API with its seats' accounts. Still `v: 1`:
+ * `surrender`, `format` and the seats' scoreboard stats and `afk` came later
+ * and read as null, the 4v4 and 0 when absent.
  */
-export type ArenaResult = { v: 1; score: [number, number]; winner: Team | null; seconds: number; objective: Team | null; seats: ArenaSeatResult[]; format?: ArenaFormat }
+export type ArenaResult = { v: 1; score: [number, number]; winner: Team | null; seconds: number; objective: Team | null; surrender: Team | null; seats: ArenaSeatResult[]; format?: ArenaFormat }
 
 /** The result of a match that has ended (`g.versus.result` set), else null. `objective`: the team that brought Zapdos down, if one did. */
 export const arenaResult = (g: Game, objective: Team | null = null): ArenaResult | null => {
@@ -211,6 +233,7 @@ export const arenaResult = (g: Game, objective: Team | null = null): ArenaResult
     seconds: Math.round(g.time),
     objective,
     ...(s.format !== 'standard' && { format: s.format }),
+    surrender: s.result.surrender,
     seats: g.players.flatMap((p) => {
       const v = p.versus
       if (!v || !isVersusPick(p.starter)) return []
@@ -225,6 +248,11 @@ export const arenaResult = (g: Game, objective: Team | null = null): ArenaResult
           deaths: v.deaths,
           scored: v.scored,
           damage: Math.round(Object.values(p.damageByMove).reduce((a, b) => a + (b ?? 0), 0)),
+          assists: v.assists,
+          dealt: Math.round(v.dealt),
+          taken: Math.round(v.taken),
+          healed: Math.round(v.healed),
+          interrupts: v.interrupts,
           afk: Math.floor(v.afk),
         },
       ]
@@ -234,6 +262,8 @@ export const arenaResult = (g: Game, objective: Team | null = null): ArenaResult
 
 const count = (x: unknown) => (typeof x === 'number' && Number.isInteger(x) && x >= 0 && x < 1e9 ? x : null)
 const team = (x: unknown): Team | null => (x === 0 || x === 1 ? x : null)
+/** A field a later build added: 0 when absent (an older client's report), null when malformed. */
+const later = (x: unknown) => (x === undefined ? 0 : count(x))
 
 /** A result from the wire (the relay's report), checked field by field; null when anything is off. */
 export const parseArenaResult = (raw: unknown): ArenaResult | null => {
@@ -243,19 +273,40 @@ export const parseArenaResult = (raw: unknown): ArenaResult | null => {
   if (score.length !== 2 || score.some((x) => x === null) || seconds === null) return null
   if (raw.winner !== null && team(raw.winner) === null) return null
   if (raw.objective !== null && team(raw.objective) === null) return null
+  const surrender = raw.surrender === undefined || raw.surrender === null ? null : team(raw.surrender)
+  if (surrender === null && raw.surrender !== undefined && raw.surrender !== null) return null
   const seats: ArenaSeatResult[] = []
   for (const s of raw.seats) {
     if (!isRecord(s)) return null
     const slot = count(s.slot)
     const side = team(s.team)
-    // `afk` came with Fair Play: a result from an older build reads as none.
-    const nums = [s.kos, s.deaths, s.scored, s.damage, s.afk ?? 0].map(count)
-    if (slot === null || side === null || typeof s.starter !== 'string' || !isVersusPick(s.starter) || typeof s.form !== 'string' || typeof s.bot !== 'boolean' || nums.some((x) => x === null)) return null
-    seats.push({ slot, team: side, starter: s.starter, form: s.form.slice(0, 24), bot: s.bot, kos: nums[0]!, deaths: nums[1]!, scored: nums[2]!, damage: nums[3]!, afk: nums[4]! })
+    const nums = [s.kos, s.deaths, s.scored, s.damage].map(count)
+    // Fair Play's `afk` and the scoreboard's stats came later: a result from an older build reads them as 0.
+    const extra = [s.assists, s.dealt, s.taken, s.healed, s.interrupts, s.afk].map(later)
+    if (slot === null || side === null || typeof s.starter !== 'string' || !isVersusPick(s.starter) || typeof s.form !== 'string' || typeof s.bot !== 'boolean' || nums.some((x) => x === null) || extra.some((x) => x === null)) return null
+    seats.push({
+      slot,
+      team: side,
+      starter: s.starter,
+      form: s.form.slice(0, 24),
+      bot: s.bot,
+      kos: nums[0]!,
+      deaths: nums[1]!,
+      scored: nums[2]!,
+      damage: nums[3]!,
+      assists: extra[0]!,
+      dealt: extra[1]!,
+      taken: extra[2]!,
+      healed: extra[3]!,
+      interrupts: extra[4]!,
+      afk: extra[5]!,
+    })
   }
   if (seats.length === 0 || seats.length > ARENA_RANKED.queue.players) return null
+  // A surrender's winner is always the other team.
+  if (surrender !== null && raw.winner !== (surrender === 0 ? 1 : 0)) return null
   const format = parseArenaFormat(raw.format)
-  return { v: 1, score: [score[0]!, score[1]!], winner: raw.winner === null ? null : (raw.winner as Team), seconds, objective: raw.objective === null ? null : (raw.objective as Team), seats, ...(format !== 'standard' && { format }) }
+  return { v: 1, score: [score[0]!, score[1]!], winner: raw.winner === null ? null : (raw.winner as Team), seconds, objective: raw.objective === null ? null : (raw.objective as Team), surrender, seats, ...(format !== 'standard' && { format }) }
 }
 
 /* ---------------- What the API serves ---------------- */

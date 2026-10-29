@@ -21,6 +21,8 @@ export type Ticket = {
   format: ArenaFormat
   /** Its friends' party (tickets with the same code, kind, format and build play on one team), or null. */
   party: string | null
+  /** How many its party expects (a rematch's team), or null: a party short of it waits `partyGrace` for the rest. */
+  size: number | null
   build: string
   /** When it queued (ms). */
   since: number
@@ -62,9 +64,11 @@ export const parseQueueMessage = (raw: string): QueueClientMessage | null => {
       const build = typeof m.build === 'string' && /^[\w.-]{1,40}$/.test(m.build) ? m.build : null
       const starter = typeof m.starter === 'string' && /^[A-Za-z0-9_-]{1,24}$/.test(m.starter) ? m.starter : null
       const format = m.format === undefined ? 'standard' : parseArenaFormat(m.format) === m.format ? parseArenaFormat(m.format) : null
-      if (!auth || !kind || party === undefined || !build || !starter || !format) return null
+      // A rematch party says how many it waits for: at most a team of its format.
+      const size = m.size === undefined || m.size === null ? null : typeof m.size === 'number' && Number.isInteger(m.size) && m.size >= 1 && m.size <= arenaPlayers(format ?? 'standard') / 2 ? m.size : undefined
+      if (!auth || !kind || party === undefined || size === undefined || !build || !starter || !format) return null
       if (kind === 'ranked' && !ARENA_FORMATS[format].ranked) return null
-      return { t: 'queue', kind, ...(format !== 'standard' && { format }), starter, party, build, auth }
+      return { t: 'queue', kind, ...(format !== 'standard' && { format }), starter, party, ...(size !== null && party !== null && { size }), build, auth }
     }
     case 'cancel':
       return { t: 'cancel' }
@@ -106,6 +110,16 @@ export const fairPlayGate = (kind: QueueKind, fairPlay: number, now: number): { 
 /* ---------------- Matching ---------------- */
 
 type Party = { tickets: Ticket[]; mmrs: number[]; mean: number; since: number }
+
+/**
+ * Whether a party is still waiting for the rest of it at `seconds` past its
+ * first ticket (past its Fair Play hold, if any): short of the size it said
+ * (at most a team, `half`), within `partyGrace`.
+ */
+export const forming = (p: Pick<Party, 'tickets'>, seconds: number, half: number) => {
+  const size = Math.max(...p.tickets.map((t) => (t.party === null ? 0 : (t.size ?? 0))))
+  return p.tickets.length < Math.min(size, half) && seconds < ARENA_RANKED.queue.partyGrace
+}
 
 const mean = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length)
 
@@ -185,6 +199,12 @@ export const formMatches = (tickets: readonly Ticket[], now: number): { matches:
     const half = size / 2
     const parties = partiesOf(pool, half)
     const used = new Set<Party>()
+    // A party waiting for the rest of it neither anchors nor joins a match yet.
+    for (const p of parties) {
+      if (!forming(p, seconds(p.since), half)) continue
+      used.add(p)
+      for (const t of p.tickets) wait(t, p.tickets.length, p.since)
+    }
     for (const anchor of parties) {
       if (used.has(anchor)) continue
       const window = mmrWindow(seconds(anchor.since))

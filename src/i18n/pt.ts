@@ -19,6 +19,7 @@ import type { Difficulty } from '../game/difficulty'
 import type { Role } from '../data/versus'
 import type { MapId } from '../data/versusMaps'
 import type { ArenaFormat } from '../data/arenaFormats'
+import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
 import type { MatchKind, TierId } from '../data/arenaRanked'
 import type { SurveyAnswer } from '../data/survey'
 import type { BackgroundId, FrameId, StyleSlot, WallpaperId } from '../data/style'
@@ -391,6 +392,7 @@ export const pt = {
       fellThem: (name: string) => `Os rivais derrotaram *${name}*`,
       stretch: 'Reta final! Pontos em dobro',
       back: 'De volta à luta!',
+      surrenderOpen: (name: string) => `*${name}* propôs a rendição: vote!`,
     },
     tray: {
       first: 'Escolha um golpe',
@@ -398,6 +400,54 @@ export const pt = {
       branch: 'Evoluir para',
       ability: 'Habilidade',
       auto: 'escolha automática',
+    },
+    /** Quick chat (`game/versusSocial.ts`): each line by id, as each screen reads it. "Bom jogo!" reaches both teams; the rest only the sender's. */
+    chat: {
+      title: 'Chat rápido',
+      lines: { go: 'Vamos!', retreat: 'Recuar!', help: 'Ajuda!', objective: 'Peguem o objetivo!', defend: 'Defendam o gol!', jungle: 'Cuidado: mato alto!', thanks: 'Obrigado!', gg: 'Bom jogo!' } satisfies Record<QuickChat, string>,
+      /** Tag on a line both teams hear. */
+      all: 'TODOS',
+      wait: 'Espere um pouco para mandar outra',
+      muted: 'Chat rápido silenciado (Configurações)',
+    },
+    /** Pings on the map: what each says. */
+    ping: {
+      title: 'Marcar no mapa',
+      kinds: { attack: 'Atacar aqui', danger: 'Perigo!', omw: 'Estou indo', objective: 'Objetivo' } satisfies Record<PingKind, string>,
+      hint: 'Segure o minimapa ou escolha um ponto para marcar',
+    },
+    /** The surrender vote (`game/versusSocial.ts`): from the match's half on, two thirds of the team's humans. */
+    surrender: {
+      button: 'Render-se',
+      locked: (time: string) => `Render-se (com ${time} no relógio)`,
+      cooldown: (s: number) => `Render-se (em ${s} s)`,
+      running: 'Votação em andamento',
+      confirmSolo: 'Desistir da partida? Ela conta como derrota.',
+      confirmTeam: 'Propor ao time desistir? Se 2/3 aceitarem, a partida acaba em derrota.',
+      title: (name: string) => `${name} quer se render`,
+      mine: 'Você propôs a rendição',
+      tally: (yes: number, need: number) => `${yes}/${need} votos`,
+      yes: 'Render',
+      no: 'Continuar',
+      voted: 'Voto enviado',
+      failed: 'A rendição não passou: a partida continua',
+    },
+    /** The scoreboard (hold its key or tap the score) and the end screen's tables. */
+    board: {
+      title: 'Placar',
+      cols: { kos: 'KO', assists: 'AS', deaths: 'Q', scored: 'PTS', dealt: 'DANO', taken: 'SOFR', healed: 'CURA', interrupts: 'INT' } satisfies Record<BoardStat, string>,
+      full: {
+        kos: 'Nocautes',
+        assists: 'Assistências (acertou um rival nocauteado em até 8 s)',
+        deaths: 'Quedas',
+        scored: 'Pontos marcados',
+        dealt: 'Dano em Pokémon rivais',
+        taken: 'Dano sofrido de rivais',
+        healed: 'Cura (golpes, Habilidade e aura)',
+        interrupts: 'Marcações rivais interrompidas',
+      } satisfies Record<BoardStat, string>,
+      hintKeys: (key: string) => `Segure ${key} para ver o placar`,
+      down: (s: number) => `volta em ${s}`,
     },
     end: {
       victory: 'Vitória!',
@@ -411,6 +461,12 @@ export const pt = {
       playAgain: 'Jogar de novo',
       lobby: 'Voltar ao lobby',
       again: 'Preparando a próxima…',
+      surrendered: 'Seu time se rendeu',
+      theySurrendered: 'Os rivais se renderam',
+      rematch: 'Revanche',
+      rematchTeam: 'Revanche com o time',
+      rematchNote: (s: number) => `Volta à fila com quem do time apertar em até ${s} s`,
+      readyCount: (ready: number, total: number) => `${ready}/${total} prontos para a revanche`,
       mvp: 'MVP',
       mvpLine: (points: number, kos: number, damage: number) => `${points} pontos · ${kos} KOs · ${damage} de dano`,
       medals: { points: 'Artilheiro', kos: 'Caçador', damage: 'Mais dano' },
@@ -522,6 +578,8 @@ export const pt = {
           fair: { max: number; left: number; afk: number; afkAfter: number; finish: number; rankedMin: number; holdBelow: number }
           /** When season 1 starts, in the player's time. */
           season1: string
+          /** The clock when a team may vote to surrender (half-time), in the 4v4 and the 3v3. */
+          surrender: { standard: string; quick: string }
         }) => [
           'Dois formatos: 4v4 Padrão no Vale (7 min, Casual e Ranqueada) e 3v3 Rápida na Clareira (3 min, só Casual, sem RP).',
           `MMR e RP: o MMR é escondido e decide com quem você joga. O RP aparece no ranking: vitória +${r.win}, derrota ${r.loss}, e até +${r.perf} pelo seu desempenho.`,
@@ -533,6 +591,9 @@ export const pt = {
           `Fair Play: todo mundo começa com ${r.fair.max}. Sair antes do fim custa ${r.fair.left}, ficar ${r.fair.afkAfter} s parado ou ausente custa ${r.fair.afk} e cada partida terminada devolve ${r.fair.finish}. Abaixo de ${r.fair.rankedMin}, sem Ranqueada; abaixo de ${r.fair.holdBelow}, a fila espera mais.`,
           `Proteção: boas partidas na Ranqueada enchem a barra. Cheia, a próxima derrota não custa RP (o MMR ainda se move) e a barra zera.`,
           `Pré-temporada: até ${r.season1}, as Ranqueadas ficam no Histórico sem RP. O ranking começa com a Temporada 1.`,
+          'Chat rápido e marcações: frases prontas (T) e marcações no mapa (G, Alt+clique ou segurar o minimapa) chegam só ao seu time; "Bom jogo!" chega a todos. Dá para silenciar o chat em Configurações.',
+          `Render-se: da metade da partida em diante (${r.surrender.standard} no relógio no 4v4, ${r.surrender.quick} no 3v3), o time pode votar pela rendição. Passa com 2/3 dos treinadores do time (sozinho com bots, você decide) e conta como derrota normal, não como abandono.`,
+          'Revanche: entre amigos, a sala joga de novo com o mesmo time. Na fila pública, "Revanche com o time" volta à fila em grupo com quem do time também apertar.',
         ],
       },
       hintKeys: '← → abas · ↑ ↓ rolar · ESC voltar',
@@ -822,6 +883,8 @@ export const pt = {
     /** The HUD's mini map (`render/minimap.ts`): its shape, or off. */
     minimap: 'Mini mapa',
     minimapModes: { square: 'Quadrado', round: 'Redondo', off: 'OFF' },
+    /** The Arena's quick chat (`ui/versusTalk.ts`): off hides the other players' lines (pings still show). */
+    quickChat: 'Chat rápido da Arena',
     /** Menus' and HUD's colors (`ui/theme.ts`): light, dark or the system's. */
     theme: 'Tema',
     themes: { system: 'Sistema', light: 'Claro', dark: 'Escuro' },
@@ -875,6 +938,9 @@ export const pt = {
       pause: 'Pausar',
       confirm: 'Confirmar',
       back: 'Voltar',
+      chat: 'Chat rápido (Arena)',
+      ping: 'Marcar no mapa (Arena)',
+      board: 'Placar (Arena)',
     } satisfies Record<Action, string>,
     press: (action: string) => `*${action}*: pressione uma tecla ou um botão do controle… (ESC cancela)`,
     reserved: 'As setas e o ESC são fixos. Escolha outra tecla.',

@@ -213,6 +213,8 @@ type AnalyticsEvents = {
     humans: number
     /** The match's format (`data/arenaFormats.ts`): 4v4 on the Vale (`standard`) or 3v3 on the Clareira (`quick`). */
     format: ArenaFormat
+    /** The team that surrendered (the vote passed: an ordinary loss for it, `outcome` still `end`); null when none did or the match didn't end. */
+    surrender: 'blue' | 'red' | null
   }
   /**
    * One public queue attempt (Casual, Ranqueada; practice against bots has no queue), sent once as it

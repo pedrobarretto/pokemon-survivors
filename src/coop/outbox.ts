@@ -31,8 +31,8 @@ type Pending = { nonce: number; input: ReliableInput; queuedAt: number; sentAt: 
 export type Outbox = {
   /** The stick waiting to go out, or null. */
   move: Extract<Input, { k: 'move' }> | null
-  /** Presses (special, Mega, lunge) waiting: a press lost in a crash window is fine, so they're sent once. */
-  presses: Extract<Input, { k: 'special' | 'mega' | 'lunge' }>[]
+  /** Presses (special, Mega, lunge, an Arena chat line or ping) waiting: a press lost in a crash window is fine, so they're sent once. */
+  presses: Exclude<Input, ReliableInput | { k: 'move' }>[]
   reliable: Pending[]
   nonce: number
   slowUntil: number

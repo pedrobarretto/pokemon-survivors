@@ -42,6 +42,8 @@ import { boundPadHint, glyphText } from './inputLabels'
 import { pressGuard } from './pressGuard'
 import { holdMoveCard, hoverMoveCard, moveCard, withMoveCard } from './moveCard'
 import { localPlayer } from '../game/players'
+import { surrenderGate, voters } from '../game/versusSocial'
+import { rulesOf } from '../game/versusRules'
 import { deathCause } from './deathCause'
 import { teamBuilds } from './teamHud'
 
@@ -662,6 +664,27 @@ export const confirmDialog = (
   return { el, dispose: () => (nav.off(), offEsc(), el.remove()) }
 }
 
+/** The Arena menu's "Render-se": live with the match (too early, the team's cooldown, a vote running), usable only when ready. */
+const surrenderButton = (g: Game) => {
+  const button = h('button', { class: 'btn' })
+  const sync = () => {
+    const m = t().versus.surrender
+    const gate = surrenderGate(g, localPlayer(g))
+    const text =
+      gate.state === 'early' ? m.locked(formatTime(rulesOf(g.versus!).length - gate.until))
+      : gate.state === 'cooldown' ? m.cooldown(Math.ceil(gate.until - g.time))
+      : gate.state === 'running' ? m.running
+      : m.button
+    if (button.textContent !== text) button.textContent = text
+    button.classList.toggle('off', gate.state !== 'ready')
+    button.setAttribute('aria-disabled', String(gate.state !== 'ready'))
+  }
+  sync()
+  // The match runs behind the menu: the label follows it until the menu goes.
+  const timer = setInterval(() => (button.isConnected ? sync() : clearInterval(timer)), 500)
+  return button
+}
+
 /**
  * What the pause menu does. `coop`: it's co-op's menu instead, over a run
  * that goes on: no pause in its title, a sound switch (`sound` toggles it and
@@ -673,6 +696,8 @@ type PauseActions = {
   settings: (back: () => void) => Screen
   report: ((back: () => void) => Screen) | null
   coop?: { sound: () => boolean; soundOn: boolean }
+  /** An Arena match: proposes the team's surrender (or gives up, alone with bots), once confirmed. */
+  surrender?: () => void
 }
 
 export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: PauseActions): Screen => {
@@ -711,6 +736,21 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
     }, focus)
   }
 
+  /** Arena: "Render-se?" first (alone with bots, giving up; with teammates, a vote); yes sends it and closes the menu, so the vote shows. */
+  const confirmSurrender = (focus: number) => {
+    const m = t().versus.surrender
+    const alone = voters(g, localPlayer(g).versus?.team ?? 0).length <= 1
+    openSub((back) => {
+      const dialog = confirmDialog(root, input, alone ? m.confirmSolo : m.confirmTeam, (yes) => {
+        dialog.dispose()
+        if (!yes) return back()
+        actions.surrender?.()
+        actions.resume()
+      }, { yes: m.yes, no: m.no })
+      return dialog
+    }, focus)
+  }
+
   /** `opening` plays the pop-in; redraws after closing the settings don't. */
   const render = (focus: number, opening: boolean) => {
     const m = t().pause
@@ -721,7 +761,8 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
     const report = actions.report
     const reportButton = report && h('button', { class: 'btn' }, m.reportBug)
     const quit = h('button', { class: 'btn' }, g.versus ? t().versus.menu.leave : coop ? cm.leave : m.quit)
-    const buttons = [resume, ...(sound ? [sound] : []), settingsButton, ...(reportButton ? [reportButton] : []), quit]
+    const giveUp = g.versus && actions.surrender ? surrenderButton(g) : null
+    const buttons = [resume, ...(sound ? [sound] : []), settingsButton, ...(reportButton ? [reportButton] : []), ...(giveUp ? [giveUp] : []), quit]
     // Co-op: the teammates' builds, to read and coordinate while the run goes on.
     const builds = coop && teamBuilds(g, localPlayer(g))
     nav?.off()
@@ -737,6 +778,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
       if (pressed === reportButton && report) later(() => openSub(report, i))
       // Quitting opens the partner select, which would take that same press as its pick and start the run again.
       if (pressed === quit) later(coop ? () => confirmLeave(i) : actions.quit)
+      if (pressed === giveUp && surrenderGate(g, localPlayer(g)).state === 'ready') later(() => confirmSurrender(i))
     }, { initial: focus })
     el.replaceChildren(
       h(

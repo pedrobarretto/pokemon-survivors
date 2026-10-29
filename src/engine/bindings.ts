@@ -23,7 +23,11 @@ export const ACTIONS = {
   pause: { key: 'KeyP', pad: 9, code: 'Escape', scope: 'both' },
   confirm: { key: 'Enter', pad: 0, code: 'Enter', scope: 'menu' },
   back: { key: 'Backspace', pad: 1, code: 'Backspace', scope: 'menu' },
-} as const satisfies Record<string, { key: string; pad: number; code: string; scope: Scope }>
+  /** The Arena's quick chat, ping and scoreboard (`ui/versusTalk.ts`): a pad has no pointer to aim a ping or pick a line with, so only the scoreboard has a button by default. */
+  chat: { key: 'KeyT', pad: null, code: 'KeyT', scope: 'run' },
+  ping: { key: 'KeyG', pad: null, code: 'KeyG', scope: 'run' },
+  board: { key: 'Backquote', pad: 8, code: 'Backquote', scope: 'run' },
+} as const satisfies Record<string, { key: string; pad: number | null; code: string; scope: Scope }>
 
 export type Action = keyof typeof ACTIONS
 export const ACTION_IDS = Object.keys(ACTIONS) as Action[]

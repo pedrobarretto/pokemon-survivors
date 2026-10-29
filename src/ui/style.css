@@ -22069,3 +22069,649 @@ span.arena-hub-face {
 .coop-format .shell-seg-option {
   white-space: nowrap;
 }
+
+/* ---------- A match's social layer (ui/versusTalk.ts): the buttons, quick chat, the ping wheel, the feed, the bubbles, the vote; the scoreboard (ui/versusBoard.ts) ---------- */
+
+/* Laid out in viewport px (the bubbles and the wheel follow the field): the safe areas go on each piece. */
+.vs-talk {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--body);
+  color: #fff;
+}
+
+/* A menu or the end covers the match: the buttons step aside. */
+.vs-talk.off .vs-social,
+.vs-talk.off .vs-wheel {
+  display: none;
+}
+
+/* Under the mini map, at the right edge: chat, ping, scoreboard. */
+.vs-social {
+  position: absolute;
+  right: calc(8px + var(--safe-r));
+  top: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vs-social-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  background: rgba(24, 32, 48, 0.82);
+  border: 2px solid #101020;
+  border-radius: 8px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.vs-social-btn img {
+  width: 22px;
+  height: 22px;
+  image-rendering: pixelated;
+}
+
+.vs-social-btn:active {
+  transform: translateY(2px);
+}
+
+.vs-social-key {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  font-family: var(--title);
+  font-size: 6px;
+  color: #f8f8f8;
+  text-shadow: 1px 1px 0 #101020;
+}
+
+@media (pointer: coarse) {
+  .vs-social-btn {
+    width: 42px;
+    height: 42px;
+  }
+  .vs-social-btn img {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (pointer: coarse) and (max-height: 500px) {
+  .vs-social {
+    gap: 4px;
+  }
+  .vs-social-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Quick chat: a list of ready-made lines, left of its button. */
+.vs-chat,
+.vs-vote,
+.vs-board {
+  color: var(--ink);
+  text-shadow: none;
+}
+
+.vs-chat {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: max-content;
+  max-width: min(240px, 60 * var(--vw));
+  max-height: calc(100 * var(--vh) - 24px);
+  overflow-y: auto;
+  padding: 6px;
+  pointer-events: auto;
+  animation: vs-pop 0.12s ease-out;
+}
+
+.vs-chat.hidden {
+  display: none;
+}
+
+.vs-chat-title {
+  padding: 0 2px 2px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-weight: normal;
+}
+
+.vs-chat-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px 3px;
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1;
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.vs-chat-line:hover,
+.vs-chat-line:focus-visible {
+  background: var(--dk-wash-gold, #fff8d8);
+  border-color: #f8d030;
+}
+
+.vs-chat-num {
+  font-family: var(--title);
+  font-size: 7px;
+  font-style: normal;
+  color: var(--dk-ink-3, #707088);
+}
+
+.vs-chat-all {
+  margin-left: auto;
+  padding: 1px 3px 0;
+  font-family: var(--title);
+  font-size: 6px;
+  font-style: normal;
+  color: #181010;
+  background: #f8d030;
+  border-radius: 2px;
+}
+
+.vs-chat-note {
+  max-width: 200px;
+  font-size: 15px;
+  color: #d04848;
+}
+
+.vs-chat-note:empty {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .vs-chat-line {
+    padding: 4px 8px 5px;
+    font-size: 19px;
+  }
+}
+
+@media (max-height: 500px) {
+  .vs-chat-line {
+    padding: 1px 6px 2px;
+    font-size: 16px;
+  }
+}
+
+@keyframes vs-pop {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
+/* The ping wheel: four signs around the spot it pings, a × in the middle. */
+.vs-wheel {
+  position: absolute;
+  width: 0;
+  height: 0;
+  animation: vs-pop 0.12s ease-out;
+}
+
+.vs-wheel.hidden {
+  display: none;
+}
+
+.vs-wheel-sign {
+  position: absolute;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  pointer-events: auto;
+  touch-action: none;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.vs-wheel-sign img {
+  width: 22px;
+  height: 28px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.4));
+}
+
+.vs-wheel-sign span {
+  padding: 1px 5px 2px;
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow: 1px 1px 0 #101020;
+  background: rgba(16, 16, 32, 0.85);
+  border: 2px solid var(--ping);
+  border-radius: 6px;
+}
+
+.vs-wheel-sign span i {
+  font-family: var(--title);
+  font-size: 7px;
+  font-style: normal;
+  color: #f8d030;
+}
+
+.vs-wheel-sign:hover span,
+.vs-wheel-sign:active span {
+  background: var(--ping);
+  color: #101020;
+  text-shadow: none;
+}
+
+.vs-wheel-sign.attack {
+  top: -50px;
+}
+
+.vs-wheel-sign.danger {
+  left: 62px;
+}
+
+.vs-wheel-sign.omw {
+  top: 50px;
+}
+
+.vs-wheel-sign.objective {
+  left: -62px;
+}
+
+.vs-wheel-close {
+  position: absolute;
+  translate: -50% -50%;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-family: var(--title);
+  font-size: 12px;
+  color: #fff;
+  pointer-events: auto;
+  touch-action: none;
+  background: rgba(16, 16, 32, 0.85);
+  border: 2px solid #f8f8f8;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.vs-wheel-hint {
+  position: absolute;
+  top: 84px;
+  translate: -50% 0;
+  width: max-content;
+  max-width: 220px;
+  padding: 1px 5px 2px;
+  font-size: 14px;
+  text-align: center;
+  text-shadow: 1px 1px 0 #101020;
+  background: rgba(16, 16, 32, 0.7);
+  border-radius: 4px;
+}
+
+/* The mini map takes clicks in a match (a ping there). */
+.hud.versus .minimap {
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* The score bar opens the scoreboard. */
+.versus-hud .vs-score {
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* Under the score: the vote, then the feed. */
+.vs-talk-stack {
+  position: absolute;
+  top: 130px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  max-width: min(380px, 92 * var(--vw));
+}
+
+.vs-feed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.vs-feed-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 1px 7px 2px 5px;
+  font-size: 17px;
+  line-height: 1;
+  text-shadow: 1px 1px 0 #101020;
+  background: rgba(16, 16, 32, 0.72);
+  border-left: 4px solid var(--team);
+  border-radius: 3px;
+  animation: vs-feed-in 0.18s ease-out;
+}
+
+.vs-feed-line b {
+  flex: none;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: normal;
+  color: var(--team);
+  filter: brightness(1.35);
+}
+
+.vs-feed-line b::after {
+  content: ':';
+  color: #f8f8f8;
+}
+
+.vs-feed-line span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vs-feed-line.ping span {
+  color: var(--ping);
+}
+
+.vs-feed-line img {
+  width: 11px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+.vs-feed-line em {
+  padding: 1px 3px 0;
+  font-family: var(--title);
+  font-size: 6px;
+  font-style: normal;
+  color: #181010;
+  background: #f8d030;
+  border-radius: 2px;
+}
+
+@keyframes vs-feed-in {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+
+/* Over the speakers' heads, in the world (positioned every frame). */
+.vs-bubbles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.vs-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -100%;
+  padding: 1px 6px 2px;
+  font-size: 16px;
+  line-height: 1;
+  white-space: nowrap;
+  color: #101020;
+  background: #f8f8f8;
+  border: 2px solid #101020;
+  border-top: 3px solid var(--team);
+  border-radius: 6px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  animation: vs-pop 0.15s ease-out;
+  transition: opacity 0.6s;
+}
+
+.vs-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  translate: -50% 0;
+  border: 4px solid transparent;
+  border-top-color: #101020;
+  border-bottom: 0;
+}
+
+.vs-bubble.fading {
+  opacity: 0;
+}
+
+.vs-bubble.hidden {
+  display: none;
+}
+
+/* The team's surrender vote. */
+.vs-vote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 220px;
+  padding: 6px 10px 8px;
+  pointer-events: auto;
+  border-color: #d04848;
+  animation: vs-pop 0.15s ease-out;
+}
+
+.vs-vote.hidden {
+  display: none;
+}
+
+.vs-vote-title {
+  font-family: var(--title);
+  font-size: 9px;
+  font-weight: normal;
+  text-align: center;
+}
+
+.vs-vote-tally {
+  font-size: 17px;
+}
+
+.vs-vote-bar {
+  width: 100%;
+  height: 4px;
+  background: #c8d0e0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vs-vote-fill {
+  display: block;
+  height: 100%;
+  background: #d04848;
+}
+
+.vs-vote-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.vs-vote-buttons.hidden,
+.vs-vote-done.hidden {
+  display: none;
+}
+
+.vs-vote-buttons .btn i {
+  font-style: normal;
+  opacity: 0.7;
+}
+
+.vs-vote-done {
+  font-size: 15px;
+  color: var(--dk-ink-3, #707088);
+}
+
+/* The menu's "Render-se" before it may be used. */
+.pause .btn.off {
+  opacity: 0.55;
+}
+
+/* The live scoreboard: over the middle of the field. */
+.vs-board {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(900px, 96 * var(--vw));
+  max-height: calc(100 * var(--vh) - 24px);
+  overflow-y: auto;
+  padding: 8px;
+  pointer-events: auto;
+}
+
+.vs-board.hidden {
+  display: none;
+}
+
+.vs-board-title {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: normal;
+  text-align: center;
+}
+
+.vs-board-scroll {
+  overflow-x: auto;
+}
+
+.vs-board-level {
+  font-size: 14px;
+  color: var(--dk-ink-3, #707088);
+}
+
+.vs-end-team tr.down td {
+  opacity: 0.5;
+}
+
+/* The scoreboard's numbers: a size down, the points bold in the team's color. */
+.vs-end-team td.vs-stat {
+  padding: 2px 2px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.vs-end-team .vs-stat.scored {
+  font-weight: bold;
+  color: var(--team);
+}
+
+.vs-end-team th.vs-stat {
+  padding: 4px 2px;
+  cursor: help;
+}
+
+.vs-end-box {
+  width: min(960px, 96 * var(--vw));
+}
+
+.vs-end-surrender {
+  margin: -6px 0 0;
+  font-size: 18px;
+  text-align: center;
+  color: var(--dk-ink-3, #707088);
+}
+
+/* Both tables side by side only where nine columns fit. */
+@media (max-width: 900px) {
+  .vs-end-tables {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .vs-end-who img {
+    width: 18px;
+    height: 18px;
+  }
+  .vs-end-who {
+    max-width: 112px;
+  }
+  .vs-end-team td.vs-stat {
+    font-size: 14px;
+    padding: 2px 1px;
+  }
+  .vs-end-team th.vs-stat {
+    font-size: 6px;
+    padding: 4px 1px;
+  }
+}
+
+/* Over the match's HUD (the Energy box, the special button): the open menus and the scoreboard, which close under a menu or the end. */
+.vs-chat,
+.vs-wheel,
+.vs-board {
+  z-index: 4;
+}
+
+/* A phone held sideways: quick chat in two columns, so it fits above the bottom. */
+@media (max-height: 500px) {
+  .vs-chat {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-width: min(340px, 70 * var(--vw));
+  }
+  .vs-chat-title,
+  .vs-chat-note {
+    grid-column: 1 / -1;
+  }
+}
+
+/* A phone held upright: the vote and the feed down the left, clear of the mini map on the right; the vote over the toasts. */
+.vs-vote {
+  position: relative;
+  z-index: 4;
+}
+
+@media (orientation: portrait) and (max-width: 600px) {
+  .vs-talk-stack {
+    left: calc(8px + var(--safe-l));
+    translate: none;
+    align-items: flex-start;
+    max-width: calc(100 * var(--vw) - 140px);
+  }
+  .vs-feed {
+    align-items: flex-start;
+  }
+  .vs-vote {
+    min-width: 0;
+    width: 100%;
+  }
+}

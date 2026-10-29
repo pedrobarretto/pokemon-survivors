@@ -30,8 +30,11 @@ export type QueueDeps = {
   rtts?: () => Promise<Record<string, number>>
 }
 
-/** A ticket: its queue, the format it plays and its Pokémon. */
-export type Ticket = { kind: QueueKind; format: ArenaFormat; starter: string; party: string | null }
+/** A party in the queue: its code and how many it expects (a rematch's team). */
+export type QueueParty = { code: string; size: number }
+
+/** What a player queues with: the kind, the format it plays, their Pokémon, and their party, or null. */
+export type Ticket = { kind: QueueKind; format: ArenaFormat; starter: string; party: QueueParty | null }
 
 /** The matchmaker's WebSocket URL from the relay's: same origin, `ws(s)`, path `/arena/queue`. */
 export const queueUrl = (relay: string) => `${relay.replace(/^http/, 'ws').replace(/\/+$/, '')}/arena/queue`
@@ -87,8 +90,9 @@ export const joinQueue = (deps: QueueDeps, ticket: Ticket, on: (e: QueueEvent) =
     if (over) return
     ws = deps.socket(queueUrl(deps.relay), {
       open: () => {
+        const party = ticket.party
         // The standard 4v4 goes without a format, as every ticket before formats did.
-        send({ t: 'queue', kind: ticket.kind, ...(ticket.format !== 'standard' && { format: ticket.format }), starter: ticket.starter, party: ticket.party, build: deps.build, auth })
+        send({ t: 'queue', kind: ticket.kind, ...(ticket.format !== 'standard' && { format: ticket.format }), starter: ticket.starter, party: party?.code ?? null, ...(party && { size: party.size }), build: deps.build, auth })
         void deps.rtts?.().then((homes) => !over && Object.keys(homes).length > 0 && send({ t: 'rtt', homes }))
       },
       message: (data) => {

@@ -13,12 +13,17 @@ const seat = (slot: number, team: 0 | 1, bot = false, extra: Partial<ArenaSeatRe
   deaths: 1,
   scored: 10,
   damage: 500,
+  assists: 1,
+  dealt: 300,
+  taken: 250,
+  healed: 0,
+  interrupts: 0,
   afk: 0,
   ...extra,
 })
 
 /** Blue (slots 0, 1) beats Red (slots 2, 3), 2v2. */
-const result: ArenaResult = { v: 1, score: [40, 20], winner: 0, seconds: 420, objective: 0, seats: [seat(0, 0), seat(1, 0), seat(2, 1), seat(3, 1)] }
+const result: ArenaResult = { v: 1, score: [40, 20], winner: 0, seconds: 420, objective: 0, surrender: null, seats: [seat(0, 0), seat(1, 0), seat(2, 1), seat(3, 1)] }
 
 const humans = (...ids: (string | null)[]): ReportSeat[] => ids.map((userId, slot) => ({ slot, userId, left: false }))
 
@@ -136,6 +141,26 @@ describe('planMatch', () => {
     const [, left] = planMatch({ ...result, winner: null }, seats, ratings)
     expect(left?.outcome).toBe('loss')
     expect(left?.change?.mmr).toBeLessThan(0)
+  })
+
+  it('rates a surrender as an ordinary win and loss, whatever the score, nobody a leaver', () => {
+    // Blue led 40–20 and gave up: Red won.
+    const given: ArenaResult = { ...result, winner: 1, surrender: 0 }
+    const parsed = parseArenaReport(report({ result: given }))
+    expect(parsed?.result).toMatchObject({ winner: 1, surrender: 0 })
+    const [a, c] = planMatch(given, humans('a', null, 'c', null), ratings)
+    expect([a?.outcome, a?.left, c?.outcome, c?.left]).toEqual(['loss', false, 'win', false])
+    expect(a?.change?.mmr).toBeLessThan(0)
+    expect(c?.change?.mmr).toBeGreaterThan(0)
+    // A surrender the winner doesn't match is junk.
+    expect(parseArenaReport(report({ result: { ...result, surrender: 0 } }))).toBeNull()
+  })
+
+  it('reads an older report without the surrender or the scoreboard stats', () => {
+    const old = { ...result, surrender: undefined, seats: result.seats.map(({ assists: _a, dealt: _d, taken: _t, healed: _h, interrupts: _i, ...rest }) => rest) }
+    const parsed = parseArenaReport(report({ result: JSON.parse(JSON.stringify(old)) }))
+    expect(parsed?.result.surrender).toBeNull()
+    expect(parsed?.result.seats[0]).toMatchObject({ kos: 2, assists: 0, dealt: 0, interrupts: 0 })
   })
 
   it('rates only the leavers of an unconfirmed match, each as a loss, the stayers unrated', () => {

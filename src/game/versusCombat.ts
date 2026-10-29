@@ -11,6 +11,7 @@ import { playerTypes } from './terrain'
 import { gainXp } from './leveling'
 import { isAlly, mapOf, pvpDamage, respawnTime, rulesOf } from './versusRules'
 import { reveal } from './versusGrass'
+import { assistsOf } from './versusSocial'
 import type { Attack, DamageSource, Enemy, Game, Player } from './types'
 import type { Objective } from './versus'
 import * as dm from '../engine/dmath'
@@ -38,9 +39,10 @@ export const avatarPlayer = (g: Game, e: Enemy): Player | null => (e.behavior.ki
 /**
  * `amount` of damage from the acting player's move `move` to `target`, a
  * rival: cut to PvP scale and armor, soaked by a Drednaw shield first. Stops
- * the target's channel, shows it in the grass (`reveal`) and marks who hit it
- * (`hurtAt`, `lastBy`). Returns the
- * HP taken. A knockout goes through `knockOut`.
+ * the target's channel (an interrupt on the hitter's scoreboard when one was
+ * filling), shows it in the grass (`reveal`) and marks who hit it (`hurtAt`,
+ * `lastBy`, `hitAt` for the assists). Returns the HP taken, dealt and taken on
+ * the scoreboard. A knockout goes through `knockOut`.
  */
 export const pvpHit = (g: Game, target: Player, amount: number, move: DamageSource | null) => {
   const by = g.player
@@ -55,6 +57,8 @@ export const pvpHit = (g: Game, target: Player, amount: number, move: DamageSour
   }
   tv.hurtAt = g.now
   tv.lastBy = by.slot
+  tv.hitAt[by.slot] = g.now
+  if (tv.channel > 0) bv.interrupts++
   tv.channel = 0
   // Taking a hit shows a Pokémon, in the grass or not.
   reveal(tv)
@@ -62,6 +66,8 @@ export const pvpHit = (g: Game, target: Player, amount: number, move: DamageSour
   if (dmg <= 0) return 0
   target.hp -= dmg
   target.record.taken += dmg
+  tv.taken += dmg
+  bv.dealt += dmg
   if (move) by.damageByMove[move] = (by.damageByMove[move] ?? 0) + dmg
   if (target.hp <= 0) knockOut(g, target, by.slot)
   return dmg
@@ -109,7 +115,8 @@ export const tickAvatar = (g: Game, e: Enemy, amount: number, move: DamageSource
 /**
  * `p` is knocked out (by the player at `by`, -1 for the wild or the spawn
  * pad, which credit the last rival to hit them within `ASSIST`): out until their respawn, half their Energy scattered where they fell,
- * their body gone from the field, and EXP for the knocker's team.
+ * their body gone from the field, and EXP for the knocker's team. Every other
+ * rival who hit them within `VERSUS.assist` seconds gets an assist.
  */
 export const knockOut = (g: Game, p: Player, by: number) => {
   const v = p.versus
@@ -136,6 +143,11 @@ export const knockOut = (g: Game, p: Player, by: number) => {
     killer.record.kills++
     shareXp(g, killer.versus.team, VERSUS.pvp.koXp * p.level, p.x, p.y)
   }
+  for (const slot of assistsOf(v.hitAt, g.now, VERSUS.assist, killer ? credit : -1)) {
+    const q = g.players[slot]?.versus
+    if (q && q.team !== v.team) q.assists++
+  }
+  v.hitAt.fill(-99)
   burst(g, p.x, p.y - 10, { colors: ['#f83838', '#ffffff', '#202028'], count: 24, speed: 90, ttl: 0.5 })
   g.events.push({ kind: 'versusKo', slot: p.slot, by: killer ? credit : -1 })
 }

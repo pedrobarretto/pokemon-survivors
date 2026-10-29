@@ -8,9 +8,10 @@ const result: ArenaResult = {
   winner: 0,
   seconds: 600,
   objective: null,
+  surrender: null,
   seats: [
-    { slot: 0, team: 0, starter: 'charmander', form: 'Charizard', bot: false, kos: 4, deaths: 2, scored: 60, damage: 9000, afk: 0 },
-    { slot: 1, team: 1, starter: 'squirtle', form: 'Blastoise', bot: true, kos: 1, deaths: 3, scored: 30, damage: 4000, afk: 0 },
+    { slot: 0, team: 0, starter: 'charmander', form: 'Charizard', bot: false, kos: 4, deaths: 2, scored: 60, damage: 9000, assists: 2, dealt: 3000, taken: 2500, healed: 0, interrupts: 1, afk: 0 },
+    { slot: 1, team: 1, starter: 'squirtle', form: 'Blastoise', bot: true, kos: 1, deaths: 3, scored: 30, damage: 4000, assists: 0, dealt: 1500, taken: 4000, healed: 200, interrupts: 0, afk: 0 },
   ],
 }
 

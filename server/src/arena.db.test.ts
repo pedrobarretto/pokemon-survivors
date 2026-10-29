@@ -12,10 +12,10 @@ import type { Sql } from './db'
  */
 const url = process.env.ARENA_TEST_DATABASE_URL
 
-const seat = (slot: number, team: 0 | 1) => ({ slot, team, starter: 'charmander', form: 'Charmander', bot: false, kos: 2, deaths: 1, scored: 10, damage: 500, afk: 0 }) as const
+const seat = (slot: number, team: 0 | 1) => ({ slot, team, starter: 'charmander', form: 'Charmander', bot: false, kos: 2, deaths: 1, scored: 10, damage: 500, assists: 1, dealt: 300, taken: 250, healed: 0, interrupts: 0, afk: 0 }) as const
 
 /** Blue (slots 0, 1) beats Red (slots 2, 3). */
-const result: ArenaResult = { v: 1, score: [40, 20], winner: 0, seconds: 420, objective: null, seats: [seat(0, 0), seat(1, 0), seat(2, 1), seat(3, 1)] }
+const result: ArenaResult = { v: 1, score: [40, 20], winner: 0, seconds: 420, objective: null, surrender: null, seats: [seat(0, 0), seat(1, 0), seat(2, 1), seat(3, 1)] }
 
 const report = (over: Partial<Record<string, unknown>> = {}): ParsedReport =>
   parseArenaReport({

@@ -239,7 +239,7 @@ describe('arenaResult', () => {
   it('reports a finished match and reads back from the wire, rejecting junk', () => {
     const g = createVersusGame(3, [])
     expect(arenaResult(g)).toBeNull()
-    g.versus!.result = { winner: 1 }
+    g.versus!.result = { winner: 1, surrender: null }
     g.versus!.score = [40, 60]
     const r = arenaResult(g, 1)!
     expect(r.seats).toHaveLength(8)
@@ -255,7 +255,7 @@ describe('arenaResult', () => {
     const g = createVersusGame(3, [{ starter: 'charmander', name: 'A', team: 0 }])
     const me = g.players[0]!
     me.versus!.afk = 73.4
-    g.versus!.result = { winner: 0 }
+    g.versus!.result = { winner: 0, surrender: null }
     expect(arenaResult(g)!.seats[0]!.afk).toBe(73)
   })
 })

@@ -283,6 +283,7 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           choiceRow(m.fog, 'fog', FOG_MODES, (mode) => m.fogModes[mode]),
           choiceRow(m.runToasts, 'runToasts', RUN_TOASTS, (mode) => m.runToastModes[mode]),
           choiceRow(m.minimap, 'minimap', MINIMAP_MODES, (mode) => m.minimapModes[mode]),
+          toggle(m.quickChat, (s) => s.quickChat, (on) => ({ quickChat: on })),
           slider(m.attackOpacity, 'attackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS),
           // Teammates' moves only matter in a build with co-op.
           ...(coopUrl() ? [slider(m.teamAttackOpacity, 'teamAttackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS)] : []),

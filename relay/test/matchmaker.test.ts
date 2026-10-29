@@ -8,7 +8,7 @@ const { players: SIZE, botsAfter } = ARENA_RANKED.queue
 let n = 0
 const ticket = (over: Partial<Ticket> = {}): Ticket => {
   n++
-  return { conn: `c${n}`, user: `u:user_${n}`, kind: 'casual', format: 'standard', party: null, build: 'b1', since: T0, mmr: 1000, holdUntil: 0, hint: 'enam', ...over }
+  return { conn: `c${n}`, user: `u:user_${n}`, kind: 'casual', format: 'standard', party: null, size: null, build: 'b1', since: T0, mmr: 1000, holdUntil: 0, hint: 'enam', ...over }
 }
 const many = (count: number, over: Partial<Ticket> = {}) => Array.from({ length: count }, () => ticket(over))
 
@@ -95,6 +95,37 @@ describe('matchmaking', () => {
     expect(big?.players).toHaveLength(6)
   })
 
+  it("holds a rematch's party for the rest of its team, up to the grace", () => {
+    const first = ticket({ party: 'r-K7QF2-1-0', size: 2 })
+    const solos = many(SIZE)
+    const early = formMatches([first, ...solos], T0 + 1000)
+    expect(early.matches[0]?.players.map((p) => p.conn)).not.toContain(first.conn)
+    expect(early.waiting).toEqual([expect.objectContaining({ conn: first.conn, found: 1 })])
+    // Its teammate comes in: the whole party plays, on one team.
+    const mate = ticket({ party: 'r-K7QF2-1-0', size: 2, since: T0 + 5000 })
+    const both = formMatches([first, mate, ...many(SIZE - 2)], T0 + 6000).matches[0]?.players.filter((p) => p.conn === first.conn || p.conn === mate.conn)
+    expect(both).toHaveLength(2)
+    expect(new Set(both?.map((p) => p.team)).size).toBe(1)
+    // Nobody else came: past the grace it matches as it stands.
+    const late = formMatches([first, ...many(SIZE - 1)], T0 + ARENA_RANKED.queue.partyGrace * 1000)
+    expect(late.matches[0]?.players.map((p) => p.conn)).toContain(first.conn)
+  })
+
+  it("holds a 3v3 rematch's party for a team of three at most, and a held party's grace starts after its hold", () => {
+    // A party that says 4 in a 3v3 waits for no more than a team: three of it play.
+    const trio = many(3, { party: 'r-Q', size: 4, format: 'quick' })
+    const quick = formMatches([...trio, ...many(3, { format: 'quick' })], T0 + 1000).matches[0]
+    expect(quick?.players.filter((p) => trio.some((t) => t.conn === p.conn))).toHaveLength(3)
+    // Fair Play holds one of a rematch's party: the whole party waits, then its grace for the rest runs from the hold's end.
+    const hold = 30_000
+    const pair = ticket({ party: 'r-H', size: 3, holdUntil: T0 + hold })
+    const mate = ticket({ party: 'r-H', size: 3, since: T0 + hold })
+    expect(formMatches([pair, mate, ...many(SIZE - 2)], T0 + hold - 1000).matches.flatMap((m) => m.players.map((p) => p.conn))).not.toContain(mate.conn)
+    const after = formMatches([pair, mate, ...many(SIZE - 2)], T0 + hold + 2000)
+    expect(after.matches.flatMap((m) => m.players.map((p) => p.conn))).not.toContain(pair.conn)
+    expect(after.waiting.filter((w) => w.conn === pair.conn || w.conn === mate.conn)).toHaveLength(2)
+  })
+
   it('reads only well-formed queue messages and ratings', () => {
     const auth = { kind: 'guest', id: 'guest-aaaaaaaaaaaaaaaa' }
     const queue = { t: 'queue', kind: 'ranked', starter: 'pikachu', party: null, build: 'b1', auth }
@@ -102,6 +133,10 @@ describe('matchmaking', () => {
     expect(parseQueueMessage(JSON.stringify({ ...queue, kind: 'practice' }))).toBeNull()
     expect(parseQueueMessage(JSON.stringify({ ...queue, auth: undefined }))).toBeNull()
     expect(parseQueueMessage(JSON.stringify({ ...queue, party: 'a b' }))).toBeNull()
+    expect(parseQueueMessage(JSON.stringify({ ...queue, party: 'r-K7QF2', size: 3 }))).toEqual({ ...queue, party: 'r-K7QF2', size: 3 })
+    expect(parseQueueMessage(JSON.stringify({ ...queue, party: 'r-K7QF2', size: 9 }))).toBeNull()
+    // A 3v3 party is at most a team of three.
+    expect(parseQueueMessage(JSON.stringify({ ...queue, kind: 'casual', format: 'quick', party: 'r-K7QF2', size: 4 }))).toBeNull()
     expect(parseQueueMessage('{"t":"cancel"}')).toEqual({ t: 'cancel' })
     // A 3v3 ticket says so; a ticket without a format (any client before formats) is a 4v4 one, and the 3v3 has no ranked queue.
     expect(parseQueueMessage(JSON.stringify({ ...queue, kind: 'casual', format: 'quick' }))).toEqual({ ...queue, kind: 'casual', format: 'quick' })
