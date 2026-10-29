@@ -42,6 +42,8 @@ import { drawPokemon, sprites, type AnimName, type SpeciesSprites } from './spri
 import { bodyOf } from '../data/bodies'
 import { drawDrainVines, drawTypeEvolvedAttack, drawTypeEvolvedGround } from './typeEvolved'
 import { drawCompanion, type CompanionView } from './companion'
+import { arenaEmote, arenaFollowers, drawArenaFxAir, drawArenaFxGround, drawFollower, isFollower, stepArenaFx, type FollowerDrawable } from './arenaFx'
+import { drawPlateBar, plateOf } from './arenaPlates'
 import { drawStatusBadge, statusTint } from './status'
 import { drawGuard, drawKitStatus, drawTelegraph } from './kitFx'
 import { drawEggAttack, drawEggGround, drawEggPlayer, eggPlayerLook } from './eggMoveFx'
@@ -622,7 +624,9 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const faded = calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink
   // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`).
   const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : 1) * grassAlpha(g, viewer, p)
-  if (alpha > 0) drawPokemon(ctx, s, anim, p.dir, p.animTime, p.x, p.y - (egg?.lift ?? 0), { alpha, flash, tint, outline: mega.outline })
+  // Arena: an emote plays its own sheet, facing the camera (`render/arenaFx.ts`).
+  const emote = p.versus ? arenaEmote(g, p) : null
+  if (alpha > 0) drawPokemon(ctx, s, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, p.y - (egg?.lift ?? 0), { alpha, flash, tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
   if (p.versus && g.versus) drawGrassFront(ctx, mapOf(g.versus).grass, p.x, p.y, s.bodyW, g.now, p.moving, p.slot)
   // The shiny entrance plays shortly after the run starts.
   if (p.shiny) drawSparkles(ctx, p.x, p.y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), g.now - 0.3, 0)
@@ -636,10 +640,15 @@ const drawHpBar = (ctx: Ctx, g: Game) => {
   const w = 22
   const x = Math.round(p.x - w / 2)
   const y = Math.round(p.y + 4)
-  ctx.fillStyle = '#181818'
-  ctx.fillRect(x - 1, y - 1, w + 2, 4)
-  ctx.fillStyle = '#504848'
-  ctx.fillRect(x, y, w, 2)
+  // Arena: a name plate frames the bar in its colors (`render/arenaPlates.ts`).
+  const plate = p.versus ? plateOf(p.slot) : null
+  if (plate) drawPlateBar(ctx, plate, x, y, w, g.now)
+  else {
+    ctx.fillStyle = '#181818'
+    ctx.fillRect(x - 1, y - 1, w + 2, 4)
+    ctx.fillStyle = '#504848'
+    ctx.fillRect(x, y, w, 2)
+  }
   const ratio = Math.max(0, p.hp / p.stats.maxHp)
   // Versus: everyone's bar in their team's color.
   ctx.fillStyle = p.versus ? TEAM_COLORS[p.versus.team] : hpColor(ratio)
@@ -737,7 +746,7 @@ const drawEvolution = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
 /** A co-op teammate, drawn from a copy of the game as that player (`coop/view.ts`). */
 type Mate = { mate: Game }
 
-type Drawable = Enemy | 'player' | 'companion' | Solid | Mate | ValeProp
+type Drawable = Enemy | 'player' | 'companion' | Solid | Mate | ValeProp | FollowerDrawable
 const drawables: Drawable[] = []
 /** `drawables` in depth order, with each one's depth worked out once: the sort compares them thousands of times a frame. */
 const inDepth: Drawable[] = []
@@ -928,6 +937,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   const camX = Math.round(g.camera.x) + shakeX
   const camY = Math.round(g.camera.y) + shakeY
 
+  // The Arena's cosmetic effects step on the drawing clock (and let go of a match once it's over).
+  stepArenaFx(g, t)
   const fade = biomeFade(g)
   const inside = g.place.inside
   const indoors = roomOf(g) !== null
@@ -1000,7 +1011,10 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawTraitGround(ctx, g, visible)
   drawAlphaGround(ctx, g, t, visible)
   drawPickups(ctx, g, t, visible)
-  if (g.versus) drawValeGround(ctx, g, t, visible)
+  if (g.versus) {
+    drawValeGround(ctx, g, t, visible)
+    drawArenaFxGround(ctx, g, t, visible)
+  }
   if (g.coop) drawTeamGround(ctx, g, t)
 
   drawables.length = 0
@@ -1019,11 +1033,13 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   }
   const companion = opts.companion
   if (companion) drawables.push('companion')
+  // Arena: the followers (`render/arenaFx.ts`).
+  if (g.versus) arenaFollowers(g, drawables)
   solidsInView(g, camX, camY, w, h, drawables)
   if (g.versus) valePropsInView(g.versus.map, visible, drawables)
   // Mid-jump leapers sort last so they fly over the horde, and so does a flyer over a rock or a mountain.
   const depth = (d: Drawable) =>
-    d === 'player' ? localPlayer(g).y : isMate(d) ? localPlayer(d.mate).y : d === 'companion' ? (companion?.y ?? 0) : isSolid(d) || isValeProp(d) ? d.y : isAirborne(d) || (overTerrain(d) && inSolid(g, d.x, d.y, 4)) ? d.y + 4096 : d.y
+    d === 'player' ? localPlayer(g).y : isMate(d) ? localPlayer(d.mate).y : d === 'companion' ? (companion?.y ?? 0) : isFollower(d) ? d.follower.view.y : isSolid(d) || isValeProp(d) ? d.y : isAirborne(d) || (overTerrain(d) && inSolid(g, d.x, d.y, 4)) ? d.y + 4096 : d.y
   // Filled by index and cut to size (emptying them would drop their storage every frame).
   const n = drawables.length
   for (let i = 0; i < n; i++) {
@@ -1059,6 +1075,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       }
     }
     else if (d === 'companion') companion && shadow(ctx, companion.x, companion.y, bodyOf(companion.dex).bodyW)
+    else if (isFollower(d)) shadow(ctx, d.follower.view.x, d.follower.view.y, bodyOf(d.follower.view.dex).bodyW)
     // Drawing lean, the regular horde goes without: a shadow each is a draw call each.
     else if (isMate(d)) {
       const m = localPlayer(d.mate)
@@ -1075,6 +1092,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     // Co-op: a player fainted, away or wrapped up in a moment of their own draws its own way (`render/team.ts`); this one only when fainted (their screen says the rest).
     if (d === 'player') !hidden && !liftMe && (g.coop && !showsStanding(me) ? drawTeammate(ctx, g, me, t, calm) : drawPlayer(ctx, g, calm))
     else if (d === 'companion') companion && drawCompanion(ctx, companion, t)
+    else if (isFollower(d)) drawFollower(ctx, g, d, t)
     else if (isMate(d)) !lifted.includes(d.mate) && (showsPlain(localPlayer(d.mate)) ? drawPlayer(ctx, d.mate, calm) : drawTeammate(ctx, d.mate, localPlayer(d.mate), t, calm))
     else if (isSolid(d)) drawSolid(ctx, g, d, look)
     else if (isValeProp(d)) drawValeProp(ctx, g, d, t, playerSprites(g).bodyW, playerSprites(g).bodyH)
@@ -1082,7 +1100,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   }
   // Badges only on bosses: on a 300-enemy horde they'd bury the sprites (tint + particles carry it there).
   for (const d of inDepth) {
-    if (d !== 'player' && d !== 'companion' && !isMate(d) && !isSolid(d) && !isValeProp(d) && d.boss && d.dying < 0) {
+    if (d !== 'player' && d !== 'companion' && !isMate(d) && !isSolid(d) && !isValeProp(d) && !isFollower(d) && d.boss && d.dying < 0) {
       const def: EnemyDef = ENEMIES[d.kind]
       drawStatusBadge(ctx, d.status, d.x, d.y - bodyOf(def.dex).bodyH * drawScale(d) - (d.alpha ? 14 : 5))
     }
@@ -1132,6 +1150,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   }
   // Teammates' name tags and bubbles, over everyone (in Versus, the goals' points left under them).
   if (g.versus) {
+    drawArenaFxAir(ctx, g, t, visible)
     drawValeAir(ctx, g)
     drawValePings(ctx, g, t)
   }

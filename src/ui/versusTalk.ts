@@ -7,6 +7,7 @@ import { VERSUS, type Team } from '../data/versus'
 import { localPlayer } from '../game/players'
 import type { Game, Player } from '../game/types'
 import { concealed } from '../render/valeGrass'
+import { equippedEmote } from '../render/arenaFx'
 import { arenaMapAt, MINIMAP } from '../render/minimap'
 import { PING_COLORS, pingIconUrl, seesPing } from '../render/valePings'
 import { fullBucket, PING_KINDS, QUICK_CHAT, surrenderNeed, takeToken, TO_ALL, voters, type PingKind, type QuickChat } from '../game/versusSocial'
@@ -25,8 +26,9 @@ import { versusName } from './versusHud'
  * pings (a four-way wheel at a spot of the field or the mini map; G at the
  * cursor, Alt+click or a middle click, a click or a long press on the mini
  * map, or the ping button at your feet), the line feed and the bubbles over
- * the speakers, the surrender vote's prompt (Y / N), and the live scoreboard
- * (held on its key, or the score bar or its button tapped). Everything is
+ * the speakers, the surrender vote's prompt (Y / N), the live scoreboard
+ * (held on its key, or the score bar or its button tapped), and the equipped
+ * emote (B, or its button: shown only with one equipped, `data/arenaEffects.ts`). Everything is
  * sent as tick entries and read back from the match's state, so every screen
  * shows what the simulation kept. The shell also holds a rate limit of its
  * own, the simulation's, so a spammed button says "wait" instead of sending
@@ -60,6 +62,7 @@ const ICONS = lazy(() => {
     chat: icon(['.ooooooooo.', 'owwwwwwwwwo', 'owwwwwwwwwo', 'owwkwwkwwko', 'owwkwwkwwko', 'owwwwwwwwwo', '.ooowwooooo', '...owo.....', '...oo......', '...........', '...........']),
     ping: icon(['...ooooo...', '..oyyyyyo..', '.oyyykyyyo.', '.oyyykyyyo.', '.oyyykyyyo.', '.oyyyyyyyo.', '..oyykyyo..', '...oyyyo...', '....oyo....', '.....o.....', '...........']),
     board: icon(['ooooooooooo', 'owwwwwwwwwo', 'okkkkkkkkko', 'owwwwwwwwwo', 'owkkwkkwkko', 'owwwwwwwwwo', 'owkkwkkwkko', 'owwwwwwwwwo', 'owkkwkkwkko', 'owwwwwwwwwo', 'ooooooooooo']),
+    emote: icon(['..ooooooo..', '.oyyyyyyyo.', 'oyyyyyyyyyo', 'oyykyyykyyo', 'oyykyyykyyo', 'oyyyyyyyyyo', 'oykyyyyykyo', 'oyykkkkkyyo', 'oyyyyyyyyyo', '.oyyyyyyyo.', '..ooooooo..']),
   }
 })
 
@@ -79,7 +82,7 @@ export const createVersusTalk = (root: HTMLElement, input: Input, deps: TalkDeps
 
   /* ---------------- The buttons ---------------- */
 
-  const socialButton = (kind: 'chat' | 'ping' | 'board', label: string, press: () => void) => {
+  const socialButton = (kind: 'chat' | 'ping' | 'board' | 'emote', label: string, press: () => void) => {
     const key = h('span', { class: 'vs-social-key keys-only' })
     const b = h('button', { class: `vs-social-btn ${kind}`, type: 'button', 'aria-label': label, title: label }, h('img', { src: ICONS()[kind], alt: '' }), key)
     // pointerdown, not click: it lands at once, the other thumb still on the stick, and never starts the floating stick.
@@ -94,7 +97,9 @@ export const createVersusTalk = (root: HTMLElement, input: Input, deps: TalkDeps
     socialButton('chat', m.chat.title, () => toggleChat()),
     socialButton('ping', m.ping.title, () => (wheelOpen() ? closeWheel() : openWheelAtMe())),
     socialButton('board', m.board.title, () => board.set(!board.isOpen())),
+    socialButton('emote', t().arenaFx.emote, () => emote()),
   ]
+  const emoteButton = buttons[buttons.length - 1]!.b
   const column = h('div', { class: 'vs-social' }, ...buttons.map((x) => x.b))
 
   /* ---------------- Quick chat ---------------- */
@@ -138,6 +143,20 @@ export const createVersusTalk = (root: HTMLElement, input: Input, deps: TalkDeps
       return playSfx('denied', 0)
     }
     deps.send({ kind: 'chat', msg })
+    closeChat()
+  }
+
+  /* ---------------- The emote ---------------- */
+
+  const emoteBucket = fullBucket(VERSUS.emote)
+  /** Plays the equipped emote for everyone (`playEmote`), unless none is equipped or this screen's bucket is empty. */
+  const emote = () => {
+    if (!active || !me || !equippedEmote(me.slot) || me.hp <= 0) return
+    if (!takeToken(emoteBucket, clock(), VERSUS.emote)) {
+      if (chatOpen()) chatNote.textContent = t().arenaFx.emoteWait
+      return playSfx('denied', 0)
+    }
+    deps.send({ kind: 'emote' })
     closeChat()
   }
 
@@ -404,6 +423,7 @@ export const createVersusTalk = (root: HTMLElement, input: Input, deps: TalkDeps
       return
     }
     if (key === 'KeyY' || key === 'KeyN') return cast(key === 'KeyY')
+    if (key === 'KeyB') return emote()
     const n = key.startsWith('Digit') ? Number(key.slice(5)) : NaN
     if (!(n >= 1)) return
     if (chatOpen() && QUICK_CHAT[n - 1]) return say(QUICK_CHAT[n - 1]!)
@@ -479,6 +499,7 @@ export const createVersusTalk = (root: HTMLElement, input: Input, deps: TalkDeps
     const now = clock()
     if (now - placedAt > 0.5) {
       placedAt = now
+      emoteButton.classList.toggle('hidden', !equippedEmote(p.slot))
       place()
       for (const x of buttons) setText(x.key, boundLabel(x.kind))
     }

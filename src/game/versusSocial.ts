@@ -6,13 +6,14 @@ import type { VersusState } from './versus'
 import type { Game, Player } from './types'
 
 /**
- * The Arena's social side: quick chat, pings and the surrender vote. All
- * three ride the lockstep as tick entries (`lockstep.ts`), so every client
+ * The Arena's social side: quick chat, pings, emotes and the surrender vote.
+ * All four ride the lockstep as tick entries (`lockstep.ts`), so every client
  * applies them in the same order and the simulation, not the client, holds
  * the rate limits: a line or a ping past its player's bucket is dropped
  * everywhere alike. Lines and pings are plain data on the match
- * (`VersusState.talk`, `pings`) that no rule reads, kept a few seconds for
- * the shell to show (bubbles, the feed, markers); the vote ends the match.
+ * (`VersusState.talk`, `pings`, `emotes`) that no rule reads, kept a few
+ * seconds for the shell to show (bubbles, the feed, markers, the emote's
+ * animation, which the seat's look picks); the vote ends the match.
  * Never the rng or the clock. Pure helpers first, then the match's side.
  */
 
@@ -113,6 +114,9 @@ export type Talk = { slot: number; msg: QuickChat; at: number; all: boolean }
 /** A ping on the map at (x, y), made at `at` (`g.now`). Only the pinger's team sees it. */
 export type Ping = { slot: number; kind: PingKind; x: number; y: number; at: number }
 
+/** An emote played at `at` (`g.now`): the animation is the seat's equipped one (`render/arenaFx.ts`), so the match never sees a cosmetic. */
+export type Emote = { slot: number; at: number }
+
 /** How many lines and pings the match keeps at most, whatever their age (a burst from eight players). */
 const KEPT = 24
 
@@ -127,6 +131,16 @@ export const sayQuick = (g: Game, p: Player, msg: QuickChat) => {
   s.talk.push({ slot: p.slot, msg, at: g.now, all: TO_ALL.has(msg) })
   if (s.talk.length > KEPT) s.talk.shift()
   g.events.push({ kind: 'versusTalk', slot: p.slot, msg })
+}
+
+/** `p` plays their emote: kept and announced (`versusEmote`) unless their bucket is empty or they're knocked out. */
+export const playEmote = (g: Game, p: Player) => {
+  const s = g.versus
+  const v = p.versus
+  if (!s || !v || !speaks(p) || p.hp <= 0 || !takeToken(v.emoteBucket, g.now, VERSUS.emote)) return
+  s.emotes.push({ slot: p.slot, at: g.now })
+  if (s.emotes.length > KEPT) s.emotes.shift()
+  g.events.push({ kind: 'versusEmote', slot: p.slot })
 }
 
 /** Each map's bounds (map px around the center), where a ping may land. */
@@ -169,7 +183,7 @@ export const voteSurrender = (g: Game, p: Player, yes: boolean) => {
 }
 
 /**
- * Each tick of a match: lines and pings past their time go, and each team's
+ * Each tick of a match: lines, pings and emotes past their time go, and each team's
  * vote is counted among its voters now (one who left the match no longer
  * counts; one away still does, without a vote). Returns the team whose surrender just passed (the match ends as
  * its loss), or null. A failed vote starts the team's cooldown.
@@ -180,6 +194,7 @@ export const updateSocial = (g: Game): Team | null => {
   const now = g.now
   retain(s.talk, (l) => now - l.at < VERSUS.talk.keep)
   retain(s.pings, (p) => now - p.at < VERSUS.ping.keep)
+  retain(s.emotes, (e) => now - e.at < VERSUS.emote.keep)
   for (const team of [0, 1] as const) {
     const vote = s.surrender[team]
     if (!vote) continue

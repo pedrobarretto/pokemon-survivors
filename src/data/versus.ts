@@ -88,6 +88,8 @@ export const VERSUS = {
    */
   talk: { burst: 3, every: 4, keep: 6 },
   ping: { burst: 3, every: 2.5, keep: 5 },
+  /** Emotes (`emote` in `game/versusSocial.ts`): one at a time, the next after `every` seconds; each plays `keep` seconds on every screen. */
+  emote: { burst: 1, every: 3, keep: 2.8 },
   /**
    * Surrender (`game/versusSocial.ts`): a team's human proposes it from
    * `from` of the format's clock on (half-time: 3:30 left in a 4v4, 1:30 in

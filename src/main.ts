@@ -210,6 +210,10 @@ import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked
 import { arenaResult } from './game/arenaRank'
 import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
+import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
+import { lookOf, setArenaLooks, setLocalLook } from './render/arenaLooks'
+import { COSMETIC_IDS, COSMETIC_SLOTS, parseLook, slotOf, type ArenaLook, type CosmeticSlot } from './data/arenaCosmetics'
+import { effectIn } from './data/arenaEffects'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
 import { createVersusTalk, type VersusTalk } from './ui/versusTalk'
 import { createArenaControls, type ArenaControls } from './ui/arenaControls'
@@ -2225,6 +2229,7 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   c.versus?.tray.dispose()
   c.versus?.talk.dispose()
   c.versus?.controls.dispose()
+  resetArenaFx()
   clearToasts(ui)
   run = null
   syncRunWatch()
@@ -2449,7 +2454,11 @@ const VERSUS_OWN: ReadonlySet<GameEvent['kind']> = new Set<GameEvent['kind']>(['
  * theirs). No co-op faints or revives: a knockout is the match's.
  */
 const versusEvent = (r: Run, g: Game, e: GameEvent, actor: number) => {
-  if (isVersusEvent(e)) return versusFeedback(ui, g, e)
+  if (isVersusEvent(e)) {
+    // The seats' cosmetic effects (spawn, KO, goal) play from the same moments (`render/arenaFx.ts`).
+    arenaFxEvent(g, e)
+    return versusFeedback(ui, g, e)
+  }
   const me = localPlayer(g)
   switch (e.kind) {
     case 'fainted':
@@ -4116,6 +4125,49 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
   return "ps.arena('hub', tab) · ('fake', scenario?) · ('queue', 'ranked' | 'casual', 'match' | 'downgrade' | 'hold' | 'blocked') · ('end', kind) · ('season', 'pre' | 'on')"
 }
 
+/**
+ * Dev: stages the Arena's cosmetics (`data/arenaEffects.ts`, `render/arenaFx.ts`) in a match against bots
+ * (`ps.versus('charmander')` first). `ps.look({ trail: 'emberTrail', follower: 'mewFollower' })` puts those on
+ * this player's seat, over what it wears (`{}` keeps it; `ps.look('clear')` takes everything off), and on the
+ * hub's profile too (a seat number after the look dresses that seat instead); `ps.look('bots')` dresses every other seat at random; `ps.look('emote')` plays the equipped
+ * emote (as B does); `ps.look('play', 'koSupernova')` plays a spawn, KO or goal effect at your feet. Returns
+ * the looks by seat (no argument: with the effects' particle counts too).
+ */
+const devLook = (cmd?: ArenaLook | 'bots' | 'emote' | 'play' | 'clear', arg?: string | number) => {
+  const c = run?.coop
+  const g = c?.runner.game
+  if (!c || !g?.versus) return 'ps.look: start a match first (ps.versus())'
+  const me = c.runner.slot
+  const looks = g.players.map((p) => ({ ...lookOf(p.slot) }))
+  if (cmd === undefined) return { looks, fx: arenaFxStats(), lean: detail.lean }
+  if (cmd === 'emote') return c.driver.send({ kind: 'emote' }), looks[me]
+  if (cmd === 'play') {
+    const id = String(arg)
+    const def = effectIn('spawn', id) ?? effectIn('ko', id) ?? effectIn('goal', id)
+    if (!def) return `ps.look('play', id): one of ${COSMETIC_IDS.filter((id) => ['spawn', 'ko', 'goal'].includes(slotOf(id))).join(', ')}`
+    const p = localPlayer(c.view.game)
+    playBurst(def.burst, p.x, p.y, p.versus?.team ?? 0)
+    return arenaFxStats()
+  }
+  if (cmd === 'bots') {
+    const bySlot = (slot: CosmeticSlot) => COSMETIC_IDS.filter((id) => slotOf(id) === slot)
+    looks.forEach((look, i) => {
+      if (i === me) return
+      for (const slot of COSMETIC_SLOTS) {
+        const ids = bySlot(slot)
+        if (ids.length > 0 && Math.random() < 0.8) look[slot] = ids[Math.floor(Math.random() * ids.length)]!
+      }
+    })
+  } else if (cmd === 'clear') looks[me] = {}
+  else if (cmd) {
+    const seat = typeof arg === 'number' && looks[arg] ? arg : me
+    looks[seat] = { ...looks[seat], ...parseLook(cmd) }
+  }
+  setArenaLooks(looks)
+  setLocalLook(looks[me] ?? {})
+  return looks
+}
+
 // `ps.biome('cave')` and `ps.weather('rain')` stage a run for screenshots (they hold until the next scheduled change).
 if (import.meta.env.DEV) {
   const withRun = (fn: (g: Game) => void) => (run ? fn(run.game) : console.warn('ps: start a run first'))
@@ -4128,6 +4180,7 @@ if (import.meta.env.DEV) {
       coop: devCoop,
       versus: devVersus,
       arena: devArena,
+      look: devLook,
       candyGoal: devCandyGoal,
       /**
        * `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet,

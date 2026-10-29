@@ -131,6 +131,29 @@ describe('quick chat and pings', () => {
   })
 })
 
+describe('emotes', () => {
+  it('keep one per bucket for a human standing, never a bot’s or a knocked out one’s, and carry no cosmetic', () => {
+    const a = createVersusGame(9, humans(2))
+    const b = createVersusGame(9, humans(2))
+    const emote = (slot: number): TickEntry => ({ slot, kind: 'emote' })
+    for (const g of [a, b]) {
+      g.players[1]!.hp = 0
+      stepTick(g, [emote(0), emote(0), emote(1), emote(5)])
+    }
+    expect(a.versus!.emotes.map((e) => e.slot)).toEqual([0])
+    expect(stateHash(a)).toBe(stateHash(b))
+    // An emote isn't playing: the AFK clock runs on.
+    expect(a.players[0]!.versus!.still).toBeGreaterThan(0)
+    // The bucket refills; the first one is gone by then.
+    run(a, VERSUS.emote.every)
+    stepTick(a, [emote(0)])
+    expect(a.versus!.emotes).toHaveLength(1)
+    run(a, VERSUS.emote.keep + 0.1)
+    expect(a.versus!.emotes).toHaveLength(0)
+    expect(parseTickEntry({ slot: 1, kind: 'emote', id: 'victoryEmote' }, 2)).toEqual({ slot: 1, kind: 'emote' })
+  })
+})
+
 describe('the scoreboard', () => {
   it('counts assists within the window, never for the knocker', () => {
     expect(assistsOf([-99, 10, 2.9, 9.5], 11, 8, 1)).toEqual([3])

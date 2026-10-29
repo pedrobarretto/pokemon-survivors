@@ -506,7 +506,8 @@ export const zh: Messages = {
   },
 
   wearables: { strawHat: '草帽' },
-  arenaEffects: { sparkTrail: '火花軌跡' },
+  arenaEffects: { pichuFollower: 'Pichu', togepiFollower: 'Togepi', azurillFollower: 'Azurill', swabluFollower: 'Swablu', togedemaruFollower: 'Togedemaru', dedenneFollower: 'Dedenne', eeveeFollower: 'Eevee', snomFollower: 'Snom', mimikyuFollower: 'Mimikyu', mewFollower: 'Mew', sparkTrail: '火花軌跡', petalTrail: '花瓣軌跡', bubbleTrail: '泡泡軌跡', emberTrail: '火星軌跡', snowTrail: '雪花軌跡', heartTrail: '愛心軌跡', starTrail: '星塵軌跡', rainbowTrail: '彩虹軌跡', spawnBeam: '光之柱', spawnLeaves: '落葉旋風', spawnSplash: '水花登場', spawnThunder: '雷霆降臨', spawnPokeball: '精靈球登場', koStars: '暈眩星星', koPuff: '煙塵', koGhost: '小幽靈', koLightning: '最後一擊', koSupernova: '超新星', goalConfetti: '彩紙', goalCoins: '聚寶功', goalBalloons: '氣球', goalHearts: '愛心爆發', goalRainbow: '凱旋彩虹', cheerEmote: '歡呼', spinEmote: '旋轉', napEmote: '打盹', powerEmote: '集氣', danceEmote: '跳舞', victoryEmote: '勝利姿勢', rookieTitle: '新秀', teamTitle: '團隊精神', goalTitle: '得分高手', wallTitle: '鐵壁', jungleTitle: '叢林殺手', unstoppableTitle: '勢不可擋', legendTitle: '競技場傳說', plateSteel: '鋼鐵名牌', plateLeaf: '綠葉名牌', plateWave: '海浪名牌', plateFlame: '火焰名牌', plateGold: '黃金名牌', plateMaster: '大師球名牌' },
+  arenaFx: { emote: '表情', emoteWait: '請稍候再做下一個表情。' },
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: '重新連線中…',
@@ -809,6 +810,7 @@ export const zh: Messages = {
       chat: '競技場：快速聊天',
       ping: '競技場：地圖標記',
       board: '競技場：計分板',
+      emote: '競技場：表情動作',
     },
     press: (action: string) => `*${action}*：請按下按鍵或手把按鈕…（ESC 取消）`,
     reserved: '方向鍵和ESC是固定的。請選其他按鍵。',

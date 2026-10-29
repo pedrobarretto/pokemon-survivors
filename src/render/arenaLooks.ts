@@ -15,3 +15,15 @@ export const setArenaLooks = (bySeat: readonly ArenaLook[]) => {
 const NONE: ArenaLook = {}
 
 export const lookOf = (seat: number): ArenaLook => looks[seat] ?? NONE
+
+/**
+ * This player's own equipped look, outside a match too (the hub's profile
+ * shows its title): the shop sets it from what the account wears.
+ */
+let own: ArenaLook = {}
+
+export const setLocalLook = (look: ArenaLook) => {
+  own = look
+}
+
+export const localLook = (): ArenaLook => own

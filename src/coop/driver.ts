@@ -55,6 +55,7 @@ export const coopDriver = (client: CoopClient, onLobby: () => void = () => {}): 
           return void client.input({ k: 'special', sample: client.state().sample })
         case 'mega':
         case 'lunge':
+        case 'emote':
           return void client.input({ k: e.kind })
         case 'pick':
           return void client.input({ k: 'pick', screen: e.screen, round: e.round, index: e.index })

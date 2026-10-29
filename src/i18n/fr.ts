@@ -506,7 +506,8 @@ export const fr: Messages = {
   },
 
   wearables: { strawHat: 'Chapeau de paille' },
-  arenaEffects: { sparkTrail: "Traînée d'étincelles" },
+  arenaEffects: { pichuFollower: 'Pichu', togepiFollower: 'Togepi', azurillFollower: 'Azurill', swabluFollower: 'Swablu', togedemaruFollower: 'Togedemaru', dedenneFollower: 'Dedenne', eeveeFollower: 'Eevee', snomFollower: 'Snom', mimikyuFollower: 'Mimikyu', mewFollower: 'Mew', sparkTrail: 'Traînée d\'étincelles', petalTrail: 'Traînée de pétales', bubbleTrail: 'Traînée de bulles', emberTrail: 'Traînée de braises', snowTrail: 'Traînée de flocons', heartTrail: 'Traînée de cœurs', starTrail: 'Poussière d\'étoiles', rainbowTrail: 'Traînée arc-en-ciel', spawnBeam: 'Rayon de lumière', spawnLeaves: 'Tourbillon de feuilles', spawnSplash: 'Arrivée éclaboussante', spawnThunder: 'Arrivée foudroyante', spawnPokeball: 'Sortie de Poké Ball', koStars: 'Étoiles étourdies', koPuff: 'Nuage de poussière', koGhost: 'Petit fantôme', koLightning: 'Éclair final', koSupernova: 'Supernova', goalConfetti: 'Confettis', goalCoins: 'Jackpot', goalBalloons: 'Ballons', goalHearts: 'Explosion de cœurs', goalRainbow: 'Arc-en-ciel triomphal', cheerEmote: 'Acclamer', spinEmote: 'Toupie', napEmote: 'Sieste', powerEmote: 'Concentration', danceEmote: 'Danse', victoryEmote: 'Pose de victoire', rookieTitle: 'Recrue', teamTitle: 'Esprit d\'équipe', goalTitle: 'Flair du but', wallTitle: 'La Muraille', jungleTitle: 'Terreur de la jungle', unstoppableTitle: 'Inarrêtable', legendTitle: 'Légende de l\'Arène', plateSteel: 'Plaque d\'acier', plateLeaf: 'Plaque feuille', plateWave: 'Plaque vague', plateFlame: 'Plaque flamme', plateGold: 'Plaque dorée', plateMaster: 'Plaque Master Ball' },
+  arenaFx: { emote: 'Emote', emoteWait: 'Attends ton prochain emote.' },
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: 'Reconnexion…',
@@ -809,6 +810,7 @@ export const fr: Messages = {
       chat: 'Arène : chat rapide',
       ping: 'Arène : marquer la carte',
       board: 'Arène : tableau des scores',
+      emote: 'Arène : emote',
     },
     press: (action: string) => `*${action}* : appuie sur une touche ou un bouton de manette… (ESC annule)`,
     reserved: 'Les flèches et ESC sont fixes. Choisis une autre touche.',

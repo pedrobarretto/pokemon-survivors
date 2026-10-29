@@ -4,7 +4,7 @@ import { drawPokemon, sprites } from './sprites'
 
 /**
  * The supporter's companion (`game/supporters.ts`): a Pokémon that trots
- * after the player. It lives only here, in the presentation: the simulation
+ * after the player (the Arena's followers walk the same way, `render/arenaFx.ts`). It lives only here, in the presentation: the simulation
  * never sees it, so it can't touch a run or its replay. One with `sparkles`
  * (`data/companions.ts`) leaves candy sparkles behind as it walks.
  */
@@ -71,8 +71,8 @@ export const stepCompanion = (c: CompanionView, target: { x: number; y: number }
   return c
 }
 
-/** Draws the companion at its feet, walking or idle, over the sparkles it left. */
-export const drawCompanion = (ctx: CanvasRenderingContext2D, c: CompanionView, t: number) => {
+/** Draws the companion at its feet, walking or idle, over the sparkles it left; `lift` px up (a floating one: the Arena's Mew), at `alpha`. */
+export const drawCompanion = (ctx: CanvasRenderingContext2D, c: CompanionView, t: number, lift = 0, alpha = 1) => {
   for (const s of c.sparks) drawCandySpark(ctx, s.x, s.y, s.age, s.color)
-  drawPokemon(ctx, sprites(c.dex, c.shiny), c.moving ? 'Walk' : 'Idle', c.dir, c.moving ? c.walk : t, c.x, c.y)
+  drawPokemon(ctx, sprites(c.dex, c.shiny), c.moving ? 'Walk' : 'Idle', c.dir, c.moving ? c.walk : t, c.x, c.y - lift, { alpha })
 }
