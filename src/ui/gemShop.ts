@@ -60,10 +60,12 @@ const fits = (id: CosmeticId, pick: VersusPick) => !isWearableId(id) || fitsWear
 /** Wearables' icons as image URLs, made once each from their models (`wearableIcon`) once the engine is in. */
 const icons = new Map<CosmeticId, string>()
 
-/** A card's art: the wearable itself, or its slot's icon (an effect, or a wearable while the engine loads). */
+/** A card's art: the wearable itself, a follower's portrait, or its slot's icon (another effect, or a wearable while the engine loads). */
 const iconUrl = (id: CosmeticId) => {
   const made = icons.get(id)
   if (made) return made
+  const follower = effectIn('follower', id)
+  if (follower) return portraitUrl(follower.dex)
   const icon = isWearableId(id) ? wearableIcon(id) : null
   if (!icon) return slotIconUrl(slotOf(id))
   const url = icon.toDataURL()
