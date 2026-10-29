@@ -1,6 +1,7 @@
 import { retain } from '../engine/math'
 import { createRng } from '../engine/rng'
 import { ARENA_FEET } from '../data/arenas'
+import { ARENA_RANKED } from '../data/arenaRanked'
 import { AURA_RANGE, ROLES, VERSUS, VERSUS_FORMATS, VERSUS_PICKS, type Team, type VersusPick } from '../data/versus'
 import { floorOf, MAPS, type MapId, type VersusMap } from '../data/versusMaps'
 import type { ArenaFormat } from '../data/arenaFormats'
@@ -339,7 +340,8 @@ const STILL: StepInput = { move: { x: 0, y: 0 }, special: false }
 
 /**
  * Each human's stretch without acting, for Fair Play's AFK: it grows while
- * they don't play, or while they're away (a bot plays the seat then), and
+ * they don't play, and slower while they're away (a bot plays the seat then;
+ * `fairPlay.awayWeight`), and
  * goes back to 0 when they act (`acts`). Knocked out or channeling into a
  * goal (standing still to score), it holds. Never read by the match's rules:
  * only the report's `afk` (its longest) says it.
@@ -350,7 +352,7 @@ const trackIdle = (g: Game, inputs: readonly StepInput[], dt: number) => {
     if (!v || v.bot || !inPlay(p) || v.channel > 0) continue
     const i = inputs[p.slot]
     const acting = !p.away && i !== undefined && acts(i)
-    v.still = acting ? 0 : v.still + dt
+    v.still = acting ? 0 : v.still + (p.away ? dt * ARENA_RANKED.fairPlay.awayWeight : dt)
     if (v.still > v.afk) v.afk = v.still
   }
 }

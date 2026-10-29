@@ -71,6 +71,18 @@ describe('the surrender vote', () => {
     expect(quick.versus!.result).toEqual({ winner: 1, surrender: 0 })
   })
 
+  it('counts a teammate who is away without a vote: the one present can’t give up for them', () => {
+    const g = createVersusGame(5, humans(2))
+    g.time = surrenderFrom(g.versus!)
+    g.players[1]!.away = true
+    stepTick(g, [vote(0)])
+    expect(g.versus!.surrender[0]).not.toBeNull()
+    g.time = g.versus!.surrender[0]!.ends
+    stepTick(g, [])
+    expect(g.versus!.surrender[0]).toBeNull()
+    expect(g.versus!.result).toBeNull()
+  })
+
   it('fails on a no that leaves too few, then waits out the cooldown; bots never vote', () => {
     const g = createVersusGame(5, humans(2))
     g.time = surrenderFrom(g.versus!)

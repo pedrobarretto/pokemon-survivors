@@ -78,8 +78,12 @@ export const voteState = (yes: number, no: number, voters: number, timeUp: boole
 /** A team's surrender vote: who proposed it, when it closes (match seconds) and the slots that voted each way. */
 export type SurrenderVote = { by: number; ends: number; yes: number[]; no: number[] }
 
-/** The humans who vote for `team` now: on it, not a bot, not gone and not away (bots never vote). */
-export const voters = (g: Game, team: Team) => g.players.filter((p) => p.versus?.team === team && !p.versus.bot && !p.gone && !p.away)
+/**
+ * The humans a surrender of `team` is counted among: on it, not a bot and not
+ * gone (bots never vote). One away (a locked screen, a dropped link) still
+ * counts without having voted, so the ones present can't give up for them.
+ */
+export const voters = (g: Game, team: Team) => g.players.filter((p) => p.versus?.team === team && !p.versus.bot && !p.gone)
 
 /** The match second from which a team may propose its surrender: `VERSUS.surrender.from` of its format's clock. */
 export const surrenderFrom = (s: Pick<VersusState, 'format'>) => rulesOf(s).length * VERSUS.surrender.from
@@ -166,8 +170,8 @@ export const voteSurrender = (g: Game, p: Player, yes: boolean) => {
 
 /**
  * Each tick of a match: lines and pings past their time go, and each team's
- * vote is counted among its voters now (one who left or went away no longer
- * counts). Returns the team whose surrender just passed (the match ends as
+ * vote is counted among its voters now (one who left the match no longer
+ * counts; one away still does, without a vote). Returns the team whose surrender just passed (the match ends as
  * its loss), or null. A failed vote starts the team's cooldown.
  */
 export const updateSocial = (g: Game): Team | null => {

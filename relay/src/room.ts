@@ -914,7 +914,8 @@ export const abandonedReport = (room: Room, now: number): ArenaReport | null => 
  * on its result too is reported (`arenaReport`), once. An Arena match ends on
  * its clock, so a seat gone silent (`away`: tab closed, connection lost)
  * without voting has abandoned it: it doesn't hold the end, and it's
- * reported as having left.
+ * reported as having left. One that left after voting the agreed end
+ * finished it.
  */
 const evaluateOver = (state: State, room: Room, now: number): Effect[] => {
   const run = room.run
@@ -937,7 +938,14 @@ const evaluateOver = (state: State, room: Room, now: number): Effect[] => {
     const o = run.overs[seat]
     return !!o && `${o.tick}:${o.h}` === best[0]
   })
-  const agreed = isArena(room) ? agreedResult(run, voters) : null
+  // A seat that left after voting this same end had finished the match (it tapped out of the end
+  // screen before the others' votes came in): it isn't a leaver, and its vote counts for the result.
+  const finished = isArena(room) ? run.left.filter((seat) => {
+    const o = run.overs[seat]
+    return !!o && `${o.tick}:${o.h}` === best[0]
+  }) : []
+  run.left = run.left.filter((seat) => !finished.includes(seat))
+  const agreed = isArena(room) ? agreedResult(run, [...voters, ...finished]) : null
   run.left.push(...gone)
   run.ended = { tick: Number(tick), h, result: agreed?.result ?? null }
   const report = agreed ? arenaReport(room, run, agreed, now) : null

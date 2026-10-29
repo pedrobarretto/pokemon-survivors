@@ -547,8 +547,8 @@ export const pt = {
           ok: 'Tudo certo: Casual e Ranqueada liberadas.',
           noRanked: (min: number, n: number) => `Abaixo de ${min}: sem Ranqueada. Termine ${n} ${n === 1 ? 'partida' : 'partidas'} para voltar.`,
           held: (s: number) => `A fila espera ${s} s a mais antes de procurar sua partida.`,
-          explain: (r: { left: number; afk: number; afkAfter: number; finish: number }) =>
-            `Sair antes do fim: −${r.left}. Ficar ${r.afkAfter} s sem jogar (andar, lançar, travar alvo) ou ausente: −${r.afk}. Cada partida até o fim: +${r.finish}. Vale na Casual e na Ranqueada com outro treinador.`,
+          explain: (r: { left: number; afk: number; afkAfter: number; awayAfter: number; finish: number }) =>
+            `Sair antes do fim: −${r.left}. Ficar ${r.afkAfter} s sem jogar (andar, lançar, travar alvo), ou ${r.awayAfter} s ausente: −${r.afk}. Cada partida até o fim: +${r.finish}. Vale na Casual e na Ranqueada com outro treinador.`,
           penalties: { left: 'Você saiu de uma partida', afk: 'Você ficou ausente numa partida' } satisfies Record<'left' | 'afk', string>,
           penalty: (what: string, n: number) => `${what}: −${Math.abs(n)} Fair Play`,
         },
@@ -604,7 +604,7 @@ export const pt = {
           humans: number
           days: number
           /** Fair Play's numbers, as positive points. */
-          fair: { max: number; left: number; afk: number; afkAfter: number; finish: number; rankedMin: number; holdBelow: number }
+          fair: { max: number; left: number; afk: number; afkAfter: number; awayAfter: number; finish: number; rankedMin: number; holdBelow: number }
           /** When season 1 starts, in the player's time. */
           season1: string
           /** The clock when a team may vote to surrender (half-time), in the 4v4 and the 3v3. */
@@ -617,7 +617,7 @@ export const pt = {
           'Sair no meio da partida conta como derrota (um bot assume o seu lugar) e custa Fair Play.',
           `As temporadas duram ${r.days} dias e viram à meia-noite de Brasília.`,
           'Os treinos contra bots ficam no histórico, mas não contam para o ranking. Partidas com amigos também não valem RP.',
-          `Fair Play: todo mundo começa com ${r.fair.max}. Sair antes do fim custa ${r.fair.left}, ficar ${r.fair.afkAfter} s sem jogar (sem andar, lançar golpes nem travar alvo) ou ausente custa ${r.fair.afk} e cada partida terminada devolve ${r.fair.finish}. Abaixo de ${r.fair.rankedMin}, sem Ranqueada; abaixo de ${r.fair.holdBelow}, a fila espera mais.`,
+          `Fair Play: todo mundo começa com ${r.fair.max}. Sair antes do fim custa ${r.fair.left}, ficar ${r.fair.afkAfter} s sem jogar (sem andar, lançar golpes nem travar alvo) ou ${r.fair.awayAfter} s ausente custa ${r.fair.afk} e cada partida terminada devolve ${r.fair.finish}. Abaixo de ${r.fair.rankedMin}, sem Ranqueada; abaixo de ${r.fair.holdBelow}, a fila espera mais.`,
           `Proteção: boas partidas na Ranqueada enchem a barra. Cheia, a próxima derrota não custa RP (o MMR ainda se move) e a barra zera.`,
           `Pré-temporada: até ${r.season1}, as Ranqueadas ficam no Histórico sem RP. O ranking começa com a Temporada 1.`,
           `Render-se: da metade da partida em diante (${r.surrender.standard} no relógio no 4v4, ${r.surrender.quick} no 3v3), o time pode votar pela rendição. Passa com 2/3 dos treinadores do time (sozinho com bots, você decide) e conta como derrota normal, não como abandono.`,

@@ -71,12 +71,13 @@ export const ARENA_RANKED = {
    * Fair Play (`game/arenaRank.ts`): every account's conduct score, 0 to
    * `max`, starting full. In a matchmade match (Casual or Ranqueada) with
    * another trainer in it, leaving before the end costs `left`, playing on
-   * but `afkAfter` seconds in a row without acting (stick idle, or away) costs
-   * `afk`, and finishing gives back `finish`. Below `rankedMin` the Ranqueada
+   * but `afkAfter` seconds in a row without acting (stick idle, or away, where
+   * a second counts `awayWeight`: a phone call or a dropped link that comes
+   * back isn't parking) costs `afk`, and finishing gives back `finish`. Below `rankedMin` the Ranqueada
    * refuses the ticket; below `holdBelow`, every point short holds a public
    * queue's ticket `holdPerPoint` seconds before it can be matched.
    */
-  fairPlay: { max: 100, left: -15, afk: -10, finish: 2, rankedMin: 80, holdBelow: 60, holdPerPoint: 6, afkAfter: 60 },
+  fairPlay: { max: 100, left: -15, afk: -10, finish: 2, rankedMin: 80, holdBelow: 60, holdPerPoint: 6, afkAfter: 60, awayWeight: 0.4 },
   /**
    * Proteção (Unite's Performance Points): every rated match played to the
    * end fills the meter by `performance × fill`, up to `max`; full, the next

@@ -16,6 +16,9 @@ import { h, later } from './dom'
 import { boundKey } from './inputLabels'
 import { hint, type Screen } from './screens'
 
+/** Seconds away in a row that cost Fair Play's AFK (an away second counts `awayWeight`). */
+const AWAY_AFTER = Math.round(ARENA_RANKED.fairPlay.afkAfter / ARENA_RANKED.fairPlay.awayWeight)
+
 /**
  * The Arena's hub: the competitive side of the Arena in five tabs. Perfil
  * (tier badge, RP to the next division, the season's totals and most played
@@ -168,7 +171,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
       meter(fp.score, F.max, level),
       h('p', { class: 'arena-hub-meter-status' }, ranked ? f.ok : f.noRanked(F.rankedMin, matchesToRanked(fp.score))),
       hold > 0 ? h('p', { class: 'arena-hub-meter-status' }, f.held(hold)) : null,
-      h('p', { class: 'arena-hub-meter-explain' }, f.explain({ left: -F.left, afk: -F.afk, afkAfter: F.afkAfter, finish: F.finish })),
+      h('p', { class: 'arena-hub-meter-explain' }, f.explain({ left: -F.left, afk: -F.afk, afkAfter: F.afkAfter, awayAfter: AWAY_AFTER, finish: F.finish })),
       ...fp.penalties.slice(0, 3).map((p) => h('p', { class: 'arena-hub-penalty' }, h('span', {}, f.penalty(f.penalties[p.conduct], p.change)), h('small', {}, when(p.at)))),
     )
   }
@@ -371,7 +374,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
       ranked: r.queue.botsAfter.ranked,
       humans: r.queue.minHumansRanked,
       days: r.season.days,
-      fair: { max: F.max, left: -F.left, afk: -F.afk, afkAfter: F.afkAfter, finish: F.finish, rankedMin: F.rankedMin, holdBelow: F.holdBelow },
+      fair: { max: F.max, left: -F.left, afk: -F.afk, afkAfter: F.afkAfter, awayAfter: AWAY_AFTER, finish: F.finish, rankedMin: F.rankedMin, holdBelow: F.holdBelow },
       season1: season1Date(),
       surrender: { standard: surrenderClock('standard'), quick: surrenderClock('quick') },
     })

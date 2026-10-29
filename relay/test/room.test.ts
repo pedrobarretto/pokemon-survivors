@@ -638,6 +638,23 @@ describe('arena rooms', () => {
     expect(casual).toMatchObject({ kind: 'casual', confirmed: true })
   })
 
+  it('counts a player who left the end screen after voting the agreed end as having finished, not left', () => {
+    const state = matchedPlaying(2)
+    say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    say(state, 'c1', { t: 'leave' }, T0 + 9100)
+    const [report] = reports(say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9300))
+    expect(report).toMatchObject({ kind: 'ranked', confirmed: true })
+    expect(report?.seats.slice(0, 2)).toMatchObject([{ slot: 0, left: false }, { slot: 1, left: false }])
+
+    // A vote for another end doesn't clear the leave.
+    const early = matchedPlaying(2)
+    say(early, 'c1', { t: 'over', tick: 400, h: 'early', result: result(1) }, T0 + 5000)
+    say(early, 'c1', { t: 'leave' }, T0 + 5100)
+    const [forged] = reports(say(early, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000))
+    expect(forged).toMatchObject({ confirmed: false })
+    expect(forged?.seats[1]).toMatchObject({ slot: 1, left: true })
+  })
+
   it('ends a match a player abandoned (tab closed) once their seat goes away, and reports them as having left', () => {
     const state = matchedPlaying(2)
     disconnect(state, 'c1', T0 + 4000)
