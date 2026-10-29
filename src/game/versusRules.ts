@@ -1,4 +1,6 @@
-import { ROLES, VERSUS, type Role, type Team } from '../data/versus'
+import { ROLES, VERSUS, VERSUS_FORMATS, type FormatRules, type Role, type Team } from '../data/versus'
+import { MAPS, type MapId } from '../data/versusMaps'
+import type { ArenaFormat } from '../data/arenaFormats'
 import type { PlayerStats } from './stats'
 import type { Enemy, Game } from './types'
 import type { GoalState, VersusState } from './versus'
@@ -17,9 +19,15 @@ export const channelTime = (energy: number, allies: number) =>
 /** Points a score is worth: double in the last stretch. */
 export const scoreValue = (energy: number, stretch: boolean) => (stretch ? energy * 2 : energy)
 
-/** Seconds down after a knockout at `level`. */
-export const respawnTime = (level: number, stretch: boolean) =>
-  VERSUS.respawn.base + VERSUS.respawn.perLevel * level + (stretch ? VERSUS.respawn.stretch : 0)
+/** What match `s` plays like: its format's rules. */
+export const rulesOf = (s: { format: ArenaFormat }) => VERSUS_FORMATS[s.format]
+
+/** The map match `s` plays on. */
+export const mapOf = (s: { map: MapId }) => MAPS[s.map]
+
+/** Seconds down after a knockout at `level` under `rules`. */
+export const respawnTime = (rules: FormatRules, level: number, stretch: boolean) =>
+  rules.respawn.base + rules.respawn.perLevel * level + (stretch ? rules.respawn.stretch : 0)
 
 /**
  * A rival's hit of `raw` (the move's damage after type effectiveness) on a

@@ -42,6 +42,7 @@ export const versusReport = (g: Game, slot: number, kind: MatchKind, local: bool
     level: g.players[slot]!.level,
     starter: g.players[slot]!.starter,
     humans: g.players.filter((p) => !p.versus?.bot).length,
+    format: s.format,
   }
 }
 

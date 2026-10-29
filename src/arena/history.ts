@@ -1,5 +1,6 @@
 import { ARENA_RANKED, TIER_IDS, type MatchKind, type TierId } from '../data/arenaRanked'
 import { isVersusPick, type Team } from '../data/versus'
+import { parseArenaFormat } from '../data/arenaFormats'
 import { tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile, type ArenaResult, type Season, type TierView } from '../game/arenaRank'
 import { isRecord } from '../game/parse'
 
@@ -31,6 +32,7 @@ export const historyEntry = (result: ArenaResult, slot: number, at: number, kind
     scored: seat.scored,
     damage: seat.damage,
     rp: null,
+    ...(result.format && { format: result.format }),
   }
 }
 
@@ -106,7 +108,8 @@ export const parseHistoryEntry = (raw: unknown): ArenaHistoryEntry | null => {
   const stats = [raw.kos, raw.deaths, raw.scored, raw.damage].map(count)
   if (at === null || side === null || score.length !== 2 || score.some((x) => x === null) || stats.some((x) => x === null)) return null
   const rp = raw.rp === null || raw.rp === undefined ? null : num(raw.rp)
-  return { id: raw.id, at, kind: raw.kind, team: side, outcome: raw.outcome, score: [score[0]!, score[1]!], starter: raw.starter, kos: stats[0]!, deaths: stats[1]!, scored: stats[2]!, damage: stats[3]!, rp }
+  const format = parseArenaFormat(raw.format)
+  return { id: raw.id, at, kind: raw.kind, team: side, outcome: raw.outcome, score: [score[0]!, score[1]!], starter: raw.starter, kos: stats[0]!, deaths: stats[1]!, scored: stats[2]!, damage: stats[3]!, rp, ...(format !== 'standard' && { format }) }
 }
 
 /** `GET /arena/history`'s entries (a list, or `{ history }`), the bad ones dropped. */

@@ -1,11 +1,12 @@
-import { VALE, type Team } from '../data/versus'
+import type { Team } from '../data/versus'
+import { MAPS, type MapId } from '../data/versusMaps'
 import type { Game } from '../game/types'
 import { localPlayer } from '../game/players'
 import { teamFile, valeArt } from './arenaArt'
 import { drawGoalPost, goalPostBox } from './vale'
 
 /**
- * What stands up on the Vale (`render/vale.ts` lays its floor): the goals'
+ * What stands up on an Arena map (`render/vale.ts` lays its floor): the goals'
  * posts, the banner pillars flanking each base's exits and the gates across
  * its carpet. The depth pass sorts them among the Pokémon by their feet
  * (`render/draw.ts`), and each goes faint while this screen's player stands
@@ -21,26 +22,29 @@ export type ValeProp = { prop: 'post' | 'pillar' | 'gate'; team: Team; x: number
 /** Each picture's feet: its middle, this many px up from its bottom row. */
 const FEET = { pillar: 6, gate: 2 } as const
 
-/** The west base's exits (|x| where the base ends, the jungle way's and the lanes' sides), mirrored east. */
-const EXIT_X = 555
-const PILLAR_YS = [-372, -204, -50, 56, 216, 376] as const
-/** The gates' feet across the carpet's spine, north and south of the base goal. */
-const GATE = { x: 645, ys: [-74, 146] } as const
+/** A map's standing pieces: its goals' posts, and each base's pillars by its exits and gates across its carpet's spine (the map's `look`), mirrored east. */
+const propsOf = (id: MapId): ValeProp[] => {
+  const map = MAPS[id]
+  const { pillars, gates, plaza } = map.look
+  return [
+    ...map.goals.map((goal, i): ValeProp => ({ prop: 'post', team: goal.team, x: goal.x, y: Math.round(goal.y + 4), goal: i })),
+    ...([0, 1] as const).flatMap((team) => {
+      const sx = team === 0 ? -1 : 1
+      return [
+        ...pillars.ys.map((y): ValeProp => ({ prop: 'pillar', team, x: sx * pillars.x, y, goal: -1 })),
+        ...gates.map((y): ValeProp => ({ prop: 'gate', team, x: sx * plaza.spine, y, goal: -1 })),
+      ]
+    }),
+  ]
+}
 
-const PROPS: readonly ValeProp[] = [
-  ...VALE.goals.map((goal, i): ValeProp => ({ prop: 'post', team: goal.team, x: goal.x, y: Math.round(goal.y + 4), goal: i })),
-  ...([0, 1] as const).flatMap((team) => {
-    const sx = team === 0 ? -1 : 1
-    return [
-      ...PILLAR_YS.map((y): ValeProp => ({ prop: 'pillar', team, x: sx * EXIT_X, y, goal: -1 })),
-      ...GATE.ys.map((y): ValeProp => ({ prop: 'gate', team, x: sx * GATE.x, y, goal: -1 })),
-    ]
-  }),
-]
+const props = new Map<MapId, ValeProp[]>()
 
-/** The standing pieces near the view (`visible`, with a margin for the tall ones), for the depth sort. */
-export const valePropsInView = (visible: (x: number, y: number, m?: number) => boolean, out: { push: (p: ValeProp) => unknown }) => {
-  for (const p of PROPS) if (visible(p.x, p.y, 110)) out.push(p)
+/** The standing pieces of `map` near the view (`visible`, with a margin for the tall ones), for the depth sort. */
+export const valePropsInView = (map: MapId, visible: (x: number, y: number, m?: number) => boolean, out: { push: (p: ValeProp) => unknown }) => {
+  let all = props.get(map)
+  if (!all) props.set(map, (all = propsOf(map)))
+  for (const p of all) if (visible(p.x, p.y, 110)) out.push(p)
 }
 
 const pictureOf = (p: ValeProp) => valeArt(p.prop === 'gate' ? `base-gate-${teamFile(p.team)}` : `base-pillar-${teamFile(p.team)}`)

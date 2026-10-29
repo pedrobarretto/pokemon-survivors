@@ -17,6 +17,8 @@ import type { ConsumableId } from '../game/consumables'
 import type { FriendMilestone } from '../game/referral'
 import type { Difficulty } from '../game/difficulty'
 import type { Role } from '../data/versus'
+import type { MapId } from '../data/versusMaps'
+import type { ArenaFormat } from '../data/arenaFormats'
 import type { MatchKind, TierId } from '../data/arenaRanked'
 import type { SurveyAnswer } from '../data/survey'
 import type { BackgroundId, FrameId, StyleSlot, WallpaperId } from '../data/style'
@@ -243,9 +245,15 @@ export const pt = {
     entry: 'Arena',
     fresh: 'NOVO',
     title: 'Arena',
-    tagline: 'MOBA 4v4',
-    map: 'Vale',
-    intro: 'Duas equipes de 4 no Vale. Derrote Pokémon selvagens, junte Energia e marque nos gols rivais.',
+    tagline: 'MOBA 4v4 · 3v3',
+    /** The Arena's maps' names (`data/versusMaps.ts`). */
+    maps: { vale: 'Vale', glade: 'Clareira' } satisfies Record<MapId, string>,
+    /** The match formats (`data/arenaFormats.ts`): the name, the size, the clock and a line on the map. */
+    formats: {
+      standard: { name: 'Padrão', size: '4v4', clock: '7 min', text: 'No Vale · 3 gols por equipe' },
+      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'Na Clareira · 2 gols por equipe' },
+    } satisfies Record<ArenaFormat, { name: string; size: string; clock: string; text: string }>,
+    intro: 'Duas equipes no Vale (4v4) ou na Clareira (3v3). Derrote Pokémon selvagens, junte Energia e marque nos gols rivais.',
     lobby: {
       how: 'Como jogar',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -253,7 +261,7 @@ export const pt = {
         { title: 'Derrote selvagens', text: 'Os acampamentos soltam orbes de Energia.' },
         { title: 'Junte Energia', text: 'Cada Pokémon carrega até 30.' },
         { title: 'Marque no gol rival', text: 'Fique dentro do gol até a barra encher.' },
-        { title: 'Reta final', text: 'Nos 2:00 finais, pontos em dobro e Zapdos.' },
+        { title: 'Reta final', text: 'No fim, pontos em dobro e Zapdos.' },
       ],
       stats: { damage: 'Dano', toughness: 'Resistência', speed: 'Velocidade', healing: 'Cura' },
       roleInfo: {
@@ -265,19 +273,22 @@ export const pt = {
       } satisfies Record<Role, string>,
       all: 'Todos',
       line: 'Evolui na partida',
-      quick: { title: 'Partida rápida', text: '4v4 contra bots, sem conta. Começa na hora.' },
+      quick: { title: 'Treino', text: 'Contra bots, sem conta. Começa na hora.' },
       room: { title: 'Com amigos', text: 'Crie uma sala e mande o código. Vagas vazias viram bots.', account: 'Precisa de conta com @' },
       offline: 'Indisponível nesta versão',
       casual: { title: 'Casual', text: 'Fila pública com outros treinadores. Sem RP.' },
       ranked: { title: 'Ranqueada', text: 'Vale RP na temporada. Da Poké à Master Ball.' },
       /** The button to the Arena's hub (`ui/arenaHub.ts`). */
+      /** The format picker over the ways to play, and why Ranqueada is off in the 3v3. */
+      format: 'Formato',
+      rankedOnly: 'Ranqueada só no 4v4',
       hub: 'Ranking',
     },
     pick: 'Escolha seu Pokémon',
     free: 'Os 27 iniciais, liberados para todos.',
     roles: { attacker: 'Atacante', speedster: 'Velocista', allRounder: 'Equilibrado', defender: 'Defensor', supporter: 'Suporte' } satisfies Record<Role, string>,
     back: 'Voltar',
-    hintKeys: '← → ↑ ↓ escolher · ENTER partida rápida · ESC voltar',
+    hintKeys: '← → ↑ ↓ escolher · ENTER treino · ESC voltar',
     hintTouch: 'Toque num Pokémon e escolha como jogar',
     /** Team names, Blue (0) then Red (1). */
     teams: ['Azul', 'Vermelho'],
@@ -307,7 +318,7 @@ export const pt = {
       refused: { auth: 'Entre com sua conta para jogar na fila.', duplicate: 'Você já está na fila em outra aba.', build: 'Há uma versão nova do jogo: recarregue a página.', closed: 'A fila está fechada agora. Tente mais tarde.' },
     },
     splash: {
-      loading: 'Carregando o Vale…',
+      loading: 'Carregando a arena…',
       ready: 'Tudo pronto!',
       tip: 'Dica',
       tips: [
@@ -461,12 +472,13 @@ export const pt = {
       rules: {
         title: 'Como funciona a Ranqueada',
         items: (r: { win: number; loss: number; perf: number; casual: number; ranked: number; humans: number; days: number }) => [
+          'Dois formatos: 4v4 Padrão no Vale (7 min, Casual e Ranqueada) e 3v3 Rápida na Clareira (3 min, só Casual, sem RP).',
           `MMR e RP: o MMR é escondido e decide com quem você joga. O RP aparece no ranking: vitória +${r.win}, derrota ${r.loss}, e até +${r.perf} pelo seu desempenho.`,
           `Se faltar gente, bots completam a partida: depois de ${r.casual} s na Casual e de ${r.ranked} s na Ranqueada.`,
           `A Ranqueada precisa de pelo menos ${r.humans} treinadores na partida. Com menos, ela vale como Casual.`,
           'Sair no meio da partida conta como derrota: um bot assume o seu lugar.',
           `As temporadas duram ${r.days} dias e viram à meia-noite de Brasília.`,
-          'Partidas rápidas contra bots são treino: ficam no histórico, mas não contam para o ranking. Partidas com amigos também não valem RP.',
+          'Os treinos contra bots ficam no histórico, mas não contam para o ranking. Partidas com amigos também não valem RP.',
         ],
       },
       hintKeys: '← → abas · ↑ ↓ rolar · ESC voltar',
@@ -474,6 +486,7 @@ export const pt = {
     },
     room: {
       mode: 'Modo',
+      format: 'Formato',
       modes: { run: 'Horda', versus: 'Arena' },
       team: 'Sua equipe',
       fill: 'Vagas livres viram CPU (4 contra 4).',
@@ -5485,7 +5498,7 @@ export const pt = {
     /** Ninjask, the Arena's judge, before the Arena opens: the first visit, then one of these in turn. */
     first: [
       'Bzzz! Bem-vindo ao Estádio! Eu sou o juiz da Arena: rápido demais para deixar qualquer lance passar.',
-      'Duas equipes de quatro se enfrentam no Vale. Derrote Pokémon selvagens, junte Energia e leve-a ao gol rival.',
+      'Duas equipes se enfrentam: de quatro no Vale, ou de três na Clareira para uma partida rápida. Derrote Pokémon selvagens, junte Energia e leve-a ao gol rival.',
       'Partida rápida: contra bots, começa na hora. Casual: contra treinadores, sem pontos. Ranqueada: cada vitória sobe seu tier.',
       'Cada temporada dura duas semanas. Os quadros do pátio mostram o ranking, a temporada, seu histórico e as regras.',
     ],

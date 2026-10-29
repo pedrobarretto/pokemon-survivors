@@ -15,6 +15,7 @@ import type { MatchKind, QueueKind } from './data/arenaRanked'
 import type { QueueServerMessage } from './net/arena'
 import type { CrumbMoment, Quality } from './crumb'
 import type { DeviceInfo } from './telemetry'
+import type { ArenaFormat } from './data/arenaFormats'
 
 /**
  * Analytics and error reports. Events go to PostHog (product analytics and
@@ -194,7 +195,7 @@ type AnalyticsEvents = {
      * a crash), sent on the next page load with the time and numbers last held (`ps:versusHeld`, every 5 s).
      */
     outcome: 'end' | 'quit' | 'dropped' | 'left' | 'gone'
-    /** The match's second when it ended or was left (420 at its end). */
+    /** The match's second when it ended or was left (its format's length at its end: 420 in a 4v4, 180 in a 3v3). */
     second: number
     /** Null for a match left before it ended. */
     winner: 'blue' | 'red' | 'draw' | null
@@ -210,15 +211,17 @@ type AnalyticsEvents = {
     level: number
     starter: string
     humans: number
+    /** The match's format (`data/arenaFormats.ts`): 4v4 on the Vale (`standard`) or 3v3 on the Clareira (`quick`). */
+    format: ArenaFormat
   }
   /**
    * One public queue attempt (Casual, Ranqueada; practice against bots has no queue), sent once as it
    * resolves: `kind` as asked, how it went (`matched`; `cancelled` by the player; `lost`, the queue's
    * connection; `refused` by the matchmaker, `why`; `left`, the page closed while waiting), the seconds
    * waited and the humans in it: the match's when matched (the rest are bots), else the most the screen
-   * found, this player included. `downgraded`: a ranked ticket matched as Casual.
+   * found, this player included. `downgraded`: a ranked ticket matched as Casual. `format`: the queue's (a 3v3 one is Casual).
    */
-  arena_queue: { kind: QueueKind; seconds: number; humans: number } & QueueEnd
+  arena_queue: { kind: QueueKind; format: ArenaFormat; seconds: number; humans: number } & QueueEnd
   /**
    * The Arena's screen (or its hub, `screen`) opened, once per page load whatever the opens after: the
    * top of the funnel to `arena_queue` and `versus_end`. `account`: past co-op's door (an account with a

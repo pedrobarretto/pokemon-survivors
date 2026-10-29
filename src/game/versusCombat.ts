@@ -1,7 +1,7 @@
 import { dirTo } from '../engine/math'
 import { chance, range } from '../engine/rng'
 import { effectiveness, TYPE_COLORS } from '../data/types'
-import { VALE, VERSUS_ROSTER, VERSUS, isVersusPick, type Role, type Team } from '../data/versus'
+import { VERSUS_ROSTER, VERSUS, isVersusPick, type Role, type Team } from '../data/versus'
 import { armored, drainHeal } from './combat'
 import { burst, damageText } from './effects'
 import { despawnEnemy, spawnEnemy } from './enemies'
@@ -9,7 +9,7 @@ import { actAs, inPlay } from './players'
 import { applyStatus, hitTakenMult, statusPace } from './status'
 import { playerTypes } from './terrain'
 import { gainXp } from './leveling'
-import { isAlly, pvpDamage, respawnTime } from './versusRules'
+import { isAlly, mapOf, pvpDamage, respawnTime, rulesOf } from './versusRules'
 import { reveal } from './versusGrass'
 import type { Attack, DamageSource, Enemy, Game, Player } from './types'
 import type { Objective } from './versus'
@@ -124,7 +124,7 @@ export const knockOut = (g: Game, p: Player, by: number) => {
   v.deaths++
   v.channel = 0
   v.shield = 0
-  v.respawn = respawnTime(p.level, s.stretch)
+  v.respawn = respawnTime(rulesOf(s), p.level, s.stretch)
   dropOrbs(g, p.x, p.y, Math.floor(v.energy * VERSUS.energy.dropShare))
   v.energy = 0
   removeAvatar(g, p)
@@ -156,16 +156,18 @@ export const dropOrbs = (g: Game, x: number, y: number, energy: number) => {
 }
 
 /**
- * EXP worth `xp` for `team` from a faint at (x, y): in full to the teammates
- * nearby, a share to the rest (`xpShareOf`), knocked out ones included.
+ * EXP worth `xp` (times the format's `xp`) for `team` from a faint at (x, y):
+ * in full to the teammates nearby, a share to the rest (`xpShareOf`),
+ * knocked out ones included.
  */
 export const shareXp = (g: Game, team: Team, xp: number, x: number, y: number) => {
+  const scale = g.versus ? rulesOf(g.versus).xp : 1
   const before = g.player
   for (const q of g.players) {
     if (q.gone || q.versus?.team !== team) continue
     g.player = q
     const near = dm.sq(q.x - x) + dm.sq(q.y - y) <= dm.sq(VERSUS.xpShare.radius)
-    gainXp(g, near ? xp : xp * VERSUS.xpShare.remote)
+    gainXp(g, (near ? xp : xp * VERSUS.xpShare.remote) * scale)
   }
   g.player = before
 }
@@ -252,7 +254,7 @@ export const wildDown = (g: Game, e: Enemy) => {
   g.events.push({ kind: 'kill', boss: e.boss })
   const b = e.behavior
   if (b.kind === 'camp' && b.camp >= 0) {
-    const def = VALE.camps[b.camp]!
+    const def = mapOf(s).camps[b.camp]!
     dropOrbs(g, e.x, e.y, def.energy)
     shareXp(g, team, def.xp, e.x, e.y)
   }
@@ -274,6 +276,6 @@ const objectiveDown = (g: Game, o: Objective, team: Team, e: Enemy) => {
   }
   shareXp(g, team, zap ? 120 : 60, e.x, e.y)
   if (zap) s.blessing[team] = VERSUS.zapdos.blessing
-  else s.drednawAt = g.time + VERSUS.drednaw.respawn
+  else s.drednawAt = g.time + rulesOf(s).drednaw.respawn
   g.events.push({ kind: 'versusObjective', enemy: o.kind, team })
 }

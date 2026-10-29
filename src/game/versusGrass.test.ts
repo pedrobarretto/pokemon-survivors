@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { VALE, VERSUS } from '../data/versus'
+import { VERSUS } from '../data/versus'
+import { VALE } from '../data/versusMaps'
 import { stepTick } from './lockstep'
 import { actAs } from './players'
 import { nearestEnemy } from './queries'
@@ -98,7 +99,7 @@ describe('tall grass', () => {
       put(red, target.x, target.y)
       stepTick(g, [])
     }
-    expect(patchAt(blue.x, blue.y)).toBe(0)
+    expect(patchAt(VALE.grass, blue.x, blue.y)).toBe(0)
     expect(moves.every((m) => m.cooldown === 0.05)).toBe(true)
     expect(g.attacks.some((a) => a.owner === blue.slot)).toBe(false)
     for (let i = 0; i < 10; i++) {

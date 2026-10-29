@@ -503,17 +503,22 @@ describe('arena rooms', () => {
   const reports = (effects: readonly Effect[]) => effects.flatMap((e) => (e.k === 'report' ? [e.report] : []))
 
   /** A room made by the matchmaker for `players` (guest identities) on alternating teams. */
-  const matched = (players: number, ranked = true) => {
+  const matched = (players: number, ranked = true, format?: 'quick') => {
     let n = 0
     const state = loadState(null, { secret: () => `secret-${String(++n).padStart(10, '0')}`, seed: () => 42 }, T0)
-    const lock: Omit<ArenaLock, 'startBy'> = { queue: 'ranked', ranked, players: Array.from({ length: players }, (_, i) => ({ id: `g:${guest(i)}`, team: (i % 2) as 0 | 1 })) }
+    const lock: Omit<ArenaLock, 'startBy'> = {
+      queue: format ? 'casual' : 'ranked',
+      ...(format && { format }),
+      ranked: format ? false : ranked,
+      players: Array.from({ length: players }, (_, i) => ({ id: `g:${guest(i)}`, team: (i % 2) as 0 | 1 })),
+    }
     createRoom(state, { code: 'ABCDE', build: 'b1', region: 'enam', lock }, T0)
     return state
   }
 
   /** Everyone in a matched room joins with a loadout asking for Blue: the run starts by itself. */
-  const matchedPlaying = (players: number, ranked = true) => {
-    const state = matched(players, ranked)
+  const matchedPlaying = (players: number, ranked = true, format?: 'quick') => {
+    const state = matched(players, ranked, format)
     for (let i = 0; i < players; i++) {
       join(state, `c${i}`, guest(i))
       say(state, `c${i}`, { t: 'loadout', loadout: { starter: 'pikachu', team: 0 } }, T0)
@@ -537,6 +542,30 @@ describe('arena rooms', () => {
     // A full Arena room can't become a co-op room of eight.
     say(arena, 'c0', { t: 'settings', settings: { difficulty: 'normal' } }, T0)
     expect(roomOf(arena).settings.mode).toBe('versus')
+  })
+
+  it('seats a 3v3 room six, and keeps a room of more on the 4v4', () => {
+    const quick = newState()
+    join(quick, 'c0', guest(0))
+    say(quick, 'c0', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus', format: 'quick' } }, T0)
+    for (let i = 1; i < 6; i++) expect(of(sent(join(quick, `c${i}`, guest(i)), `c${i}`), 'welcome')).toHaveLength(1)
+    expect(of(sent(join(quick, 'c6', guest(6)), 'c6'), 'refused')).toEqual([{ t: 'refused', code: 'unavailable' }])
+
+    const seven = newState()
+    join(seven, 'c0', guest(0))
+    say(seven, 'c0', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus' } }, T0)
+    for (let i = 1; i < 7; i++) join(seven, `c${i}`, guest(i))
+    say(seven, 'c0', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus', format: 'quick' } }, T0)
+    expect(roomOf(seven).settings.format).toBeUndefined()
+  })
+
+  it("carries a matched 3v3's format in its settings and reports its six seats", () => {
+    const state = matchedPlaying(2, false, 'quick')
+    expect(roomOf(state).settings).toEqual({ difficulty: 'normal', mode: 'versus', queue: 'casual', locked: true, format: 'quick' })
+    say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    const [report] = reports(say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000))
+    expect(report).toMatchObject({ kind: 'casual' })
+    expect(report?.seats).toHaveLength(6)
   })
 
   it('takes only the matched players, on their teams, and keeps its settings', () => {

@@ -3,6 +3,7 @@ import source from '../../src/net/protocol.ts?raw'
 import arenaSource from '../../src/net/arena.ts?raw'
 import queueSource from '../../src/net/arenaQueue.ts?raw'
 import rankedSource from '../../src/data/arenaRanked.ts?raw'
+import formatsSource from '../../src/data/arenaFormats.ts?raw'
 import { LIMITS, parseClientMessage } from '../../src/net/protocol'
 
 const importsOf = (text: string) => [...text.matchAll(/^\s*(?:import|export)\s[^;]*?\sfrom\s*['"]([^'"]+)['"]/gm)].map((m) => m[1])
@@ -17,7 +18,8 @@ describe('protocol', () => {
   it("bundles nothing of the game's with the Arena: its wire, its queue rules and their numbers", () => {
     expect(importsOf(arenaSource)).toEqual([])
     expect(importsOf(rankedSource)).toEqual([])
-    expect(importsOf(queueSource)).toEqual(['../data/arenaRanked'])
+    expect(importsOf(formatsSource)).toEqual([])
+    expect(importsOf(queueSource)).toEqual(['../data/arenaRanked', '../data/arenaFormats'])
   })
 
   it("carries an Arena result on `over`, and drops one past its size rather than the vote", () => {

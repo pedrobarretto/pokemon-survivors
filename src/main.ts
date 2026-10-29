@@ -197,7 +197,7 @@ import type { Runner } from './coop/runner'
 import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
-import { arenaPick, arenaScreen } from './ui/arena'
+import { arenaFormat, arenaPick, arenaScreen } from './ui/arena'
 import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
 import { arenaHub, isArenaHubTab, type ArenaHubTab } from './ui/arenaHub'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
@@ -210,7 +210,10 @@ import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
 import { versusEnd } from './ui/versusEnd'
-import { VALE, VERSUS, VERSUS_PICKS, isVersusPick, type Team, type VersusPick } from './data/versus'
+import { VERSUS, VERSUS_PICKS, isVersusPick, type Team, type VersusPick } from './data/versus'
+import { MAPS } from './data/versusMaps'
+import { ARENA_FORMATS, parseArenaFormat, type ArenaFormat } from './data/arenaFormats'
+import { rulesOf } from './game/versusRules'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
@@ -2880,16 +2883,16 @@ const reportArenaOpen = (screen: 'arena' | 'hub') => {
   track('arena_open', { screen, account: coopAccess(accountsEnabled, accountState()) === 'open' ? 1 : 0 })
 }
 
-/** The Arena's screen (the lobby's tile): pick a Pokémon, then bots (at once, no account), the public queue (Casual, Ranqueada) or friends (an Arena room); or its hub. */
+/** The Arena's screen (the lobby's tile): pick a Pokémon and a format, then bots (at once, no account), the public queue (Casual, Ranqueada) or friends (an Arena room); or its hub. */
 const showArena = () => {
   endRun()
   reportArenaOpen('arena')
   const relay = coopUrl() !== null
   setScreen(
     arenaScreen(ui, input, arenaStart(), {
-      bots: (id) => void playArenaBots(id),
-      queue: relay ? (id, kind) => enterArenaQueue(id, kind) : null,
-      friends: relay ? (id) => void openArenaRoom(id) : null,
+      bots: (id, format) => void playArenaBots(id, format),
+      queue: relay ? (id, kind, format) => enterArenaQueue(id, kind, format) : null,
+      friends: relay ? (id, format) => void openArenaRoom(id, format) : null,
       needsAccount: coopAccess(accountsEnabled, accountState()) !== 'open',
       hub: () => showArenaHub('profile'),
       back: () => showTitle({ focus: 'arena' }),
@@ -2913,8 +2916,8 @@ const showArenaHub = (tab: ArenaHubTab = 'profile') => {
   )
 }
 
-/** The public queue's match this tab was sent to (`matched`): its room, how it counts (for the end screen and analytics) and the queue it was asked from. */
-let queueMatch: { room: string; kind: QueueKind; asked: QueueKind } | null = null
+/** The public queue's match this tab was sent to (`matched`): its room, how it counts (for the end screen and analytics), the queue it was asked from and its format. */
+let queueMatch: { room: string; kind: QueueKind; asked: QueueKind; format: ArenaFormat } | null = null
 
 /**
  * A public queue's match ends for good (the matchmaker's room has no next
@@ -2925,13 +2928,14 @@ const queueMatchEnd = (c: CoopRun, me: Player) => {
   const kind = c.versus?.kind
   if (kind !== 'casual' && kind !== 'ranked') return null
   const asked = queueMatch?.room === c.runner.room ? queueMatch.asked : kind
+  const format = c.runner.game.versus?.format ?? 'standard'
   const leave = () => {
     endRun()
     coopClient()?.leave()
     linkRoom(null)
   }
   return {
-    again: () => (leave(), isVersusPick(me.starter) ? playArenaQueue(me.starter, asked) : showArena()),
+    again: () => (leave(), isVersusPick(me.starter) ? playArenaQueue(me.starter, asked, format) : showArena()),
     lobby: () => (leave(), showArena()),
   }
 }
@@ -2947,15 +2951,15 @@ const matchKindOf = (client: CoopClient, room: string): MatchKind => {
 /** The ticket in the public queue, while one waits. */
 let queueTicket: QueueHandle | null = null
 
-/** The queue attempt waiting for its answer, for its `arena_queue`: the kind asked, since when (performance.now() ms) and the most humans the screen found. */
-let queueAttempt: { kind: QueueKind; at: number; found: number } | null = null
+/** The queue attempt waiting for its answer, for its `arena_queue`: the kind asked and its format, since when (performance.now() ms) and the most humans the screen found. */
+let queueAttempt: { kind: QueueKind; format: ArenaFormat; at: number; found: number } | null = null
 
 /** Sends the queue attempt's `arena_queue`, once, as it resolves (`humans`: the match's; null: the most found). */
 const endQueueAttempt = (end: QueueEnd, humans: number | null = null, beacon = false) => {
   const a = queueAttempt
   if (!a) return
   queueAttempt = null
-  track('arena_queue', { kind: a.kind, seconds: Math.round((performance.now() - a.at) / 1000), humans: humans ?? a.found, ...end }, { beacon })
+  track('arena_queue', { kind: a.kind, format: a.format, seconds: Math.round((performance.now() - a.at) / 1000), humans: humans ?? a.found, ...end }, { beacon })
 }
 
 /** Drops the ticket; a wait still on was the player's cancel. */
@@ -2969,11 +2973,11 @@ const leaveQueue = () => {
  * Casual or Ranqueada: co-op's door first (an account with a handle: the
  * Arena's own sign-in, or the handle picker), then the queue.
  */
-const enterArenaQueue = (id: VersusPick, kind: QueueKind) => {
+const enterArenaQueue = (id: VersusPick, kind: QueueKind, format: ArenaFormat) => {
   const access = coopAccess(accountsEnabled, accountState())
-  if (access === 'open') return playArenaQueue(id, kind)
-  if (access === 'handle') return setScreen(profileEditor(ui, input, (saved) => (saved ? enterArenaQueue(id, kind) : showArena())))
-  setScreen(arenaGate(ui, input, { play: () => enterArenaQueue(id, kind), back: () => showArena() }))
+  if (access === 'open') return playArenaQueue(id, kind, format)
+  if (access === 'handle') return setScreen(profileEditor(ui, input, (saved) => (saved ? enterArenaQueue(id, kind, format) : showArena())))
+  setScreen(arenaGate(ui, input, { play: () => enterArenaQueue(id, kind, format), back: () => showArena() }))
 }
 
 /** How long after a match is found the room's start may take before the room screen shows instead (ms): the room is there, its match may not start. */
@@ -2986,7 +2990,9 @@ const MATCH_START_MS = (ARENA_RANKED.queue.joinTimeout + 15) * 1000
  * player's Pokémon on the side it was given, ready; the relay starts the
  * match by itself and its `run` event brings it in (`startCoopRun`).
  */
-const playArenaQueue = (id: VersusPick, kind: QueueKind) => {
+const playArenaQueue = (id: VersusPick, asked: QueueKind, format: ArenaFormat) => {
+  // Ranqueada is only in a ranked format: a 3v3 ticket queues Casual.
+  const kind: QueueKind = ARENA_FORMATS[format].ranked ? asked : 'casual'
   const client = coopClient()
   const deps = arenaQueueDeps()
   if (!client || !deps) return toast(ui, t().coop.off, 4000, 'coopOff')
@@ -3003,10 +3009,10 @@ const playArenaQueue = (id: VersusPick, kind: QueueKind) => {
     if (why) toast(ui, why, 4000, 'arenaQueue')
     showArena()
   }
-  const waiting = arenaQueueLive(ui, input, { name: arenaName(), pick: id }, kind, () => back(null))
+  const waiting = arenaQueueLive(ui, input, { name: arenaName(), pick: id }, kind, format, () => back(null))
   setScreen(waiting)
-  queueAttempt = { kind, at: performance.now(), found: 1 }
-  const ticket = joinQueue(deps, { kind, starter: id, party: null }, (e) => {
+  queueAttempt = { kind, format, at: performance.now(), found: 1 }
+  const ticket = joinQueue(deps, { kind, format, starter: id, party: null }, (e) => {
     if (queueTicket !== ticket) return
     const q = t().versus.queue
     if (e.t === 'queued') {
@@ -3024,7 +3030,7 @@ const playArenaQueue = (id: VersusPick, kind: QueueKind) => {
     }
     endQueueAttempt({ result: 'matched', downgraded: kind === 'ranked' && !e.ranked ? 1 : 0 }, e.humans)
     waiting.found(e)
-    queueMatch = { room: e.room, kind: e.ranked ? 'ranked' : 'casual', asked: kind }
+    queueMatch = { room: e.room, kind: e.ranked ? 'ranked' : 'casual', asked: kind, format }
     void joinQueueMatch(client, e.room, id, e.team, waiting)
   })
   queueTicket = ticket
@@ -3053,7 +3059,7 @@ const joinQueueMatch = async (client: CoopClient, room: string, id: VersusPick, 
  * Blue; once its seats have filled, "Partida encontrada!" and the start; the
  * `run` event brings the match in. Cancel drops the relay.
  */
-const playArenaBots = async (id: VersusPick) => {
+const playArenaBots = async (id: VersusPick, format: ArenaFormat) => {
   // A co-op room this tab was still in: left, the Arena runs alone.
   const net = coopClient()
   if (net && coopRoomCode() !== null) {
@@ -3062,7 +3068,7 @@ const playArenaBots = async (id: VersusPick) => {
   }
   const client = openArenaClient(arenaName())
   watchCoop(client)
-  const queue = arenaQueue(ui, input, { name: arenaName(), pick: id }, () => {
+  const queue = arenaQueue(ui, input, { name: arenaName(), pick: id }, format, () => {
     closeArenaClient()
     showArena()
   })
@@ -3078,7 +3084,7 @@ const playArenaBots = async (id: VersusPick) => {
   const res = await client.join(made.code)
   if (arenaClient() !== client) return
   if (!res.ok) return failed()
-  client.setSettings({ difficulty: 'normal', mode: 'versus' })
+  client.setSettings({ difficulty: 'normal', mode: 'versus', format })
   client.setLoadout(arenaLoadout(id, 0))
   await queue.filled()
   if (arenaClient() !== client) return
@@ -3092,7 +3098,7 @@ const playArenaBots = async (id: VersusPick) => {
  * account with a handle: past it, the hub, where the room's host switches it
  * to Arena); open, a room is made in Arena mode with this player on Blue.
  */
-const openArenaRoom = async (id: VersusPick) => {
+const openArenaRoom = async (id: VersusPick, format: ArenaFormat) => {
   if (coopAccess(accountsEnabled, accountState()) !== 'open') return enterCoop({ room: null, invitedBy: null })
   const client = coopClient()
   if (!client) return toast(ui, t().coop.off, 4000, 'coopOff')
@@ -3111,7 +3117,7 @@ const openArenaRoom = async (id: VersusPick) => {
     return showArena()
   }
   track('coop', { step: 'create', relay: made.home, ...(made.overflow ? { overflow: made.overflow } : {}) })
-  client.setSettings({ difficulty: loadSave().difficulty, mode: 'versus' })
+  client.setSettings({ difficulty: loadSave().difficulty, mode: 'versus', format })
   showRoom()
 }
 
@@ -3145,8 +3151,8 @@ const syncArenaLoadout = (client: CoopClient, room: RoomView) => {
   if (next) client.setLoadout(next)
 }
 
-/** The species a match shows besides its players: the camps' and the objectives'. */
-const VERSUS_CAST = [...new Set([...VALE.camps.map((c) => ENEMIES[c.species].dex), ENEMIES.drednaw.dex, ENEMIES.zapdos.dex])]
+/** The species a match shows besides its players: every map's camps' and the objectives'. */
+const VERSUS_CAST = [...new Set([...Object.values(MAPS).flatMap((map) => map.camps.map((c) => ENEMIES[c.species].dex)), ENEMIES.drednaw.dex, ENEMIES.zapdos.dex])]
 
 /**
  * Sends this player's `versus_end` once per match (`arena/report.ts`): at its
@@ -3945,9 +3951,10 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
 
 /**
  * Dev: the Arena from the console. `ps.versus()` starts a match against bots
- * (`ps.versus('squirtle')` with that Pokémon); `ps.versus('time', 125)` sets
- * the running match's clock to 125 s left (the stretch starts at 120, the end
- * screen at 0); `ps.versus('energy', 30)` sets the Energy you carry. Both
+ * (`ps.versus('squirtle')` with that Pokémon, `ps.versus('squirtle', 'quick')`
+ * a 3v3 on the Clareira, `ps.versus('quick')` with the Arena's pick);
+ * `ps.versus('time', 125)` sets the running match's clock to 125 s left
+ * (the stretch starts at 120 in the 4v4, 60 in the 3v3; the end screen at 0); `ps.versus('energy', 30)` sets the Energy you carry. Both
  * write the match's state directly: only a match against bots takes it
  * (a room's teammates would drift and be healed back). For screenshots:
  * `ps.versus('arena')` opens the Arena's screen, `ps.versus('queue')` its
@@ -3956,13 +3963,14 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
  * match's opening splash up again (again takes it down).
  */
 let devSplash: ReturnType<typeof versusSplash> | null = null
-const devVersus = (cmd?: string, arg?: number) => {
+const devVersus = (cmd?: string, arg?: number | string) => {
+  const num = typeof arg === 'number' ? arg : undefined
   const g = run?.coop?.runner.game
   const me = g ? g.players[run!.coop!.runner.slot] : undefined
   if (cmd === 'arena') return showArena()
   if (cmd === 'queue') {
     endRun()
-    const queue = arenaQueue(ui, input, { name: arenaName(), pick: arenaStart() }, () => showArena())
+    const queue = arenaQueue(ui, input, { name: arenaName(), pick: arenaStart() }, arenaFormat(), () => showArena())
     setScreen(queue)
     if (arg) void queue.filled().then(() => queue.found())
     return 'Arena: matchmaking screen'
@@ -3971,19 +3979,22 @@ const devVersus = (cmd?: string, arg?: number) => {
     if (devSplash) return (devSplash.dispose(), (devSplash = null), 'splash down')
     if (!g?.versus) return 'ps.versus: start a match first (ps.versus())'
     devSplash = versusSplash(ui, g, run!.coop!.runner.slot)
-    devSplash.progress(Math.round(arg ?? 6), 10)
+    devSplash.progress(Math.round(num ?? 6), 10)
     return 'splash up'
   }
   if (cmd === 'time' || cmd === 'energy') {
     if (!g?.versus || !me?.versus) return 'ps.versus: start a match first (ps.versus())'
-    if (cmd === 'time') g.time = Math.max(0, VERSUS.length - Math.max(0, arg ?? VERSUS.stretch + 5))
-    else me.versus.energy = Math.max(0, Math.min(VERSUS.energy.cap, Math.round(arg ?? VERSUS.energy.cap)))
-    return { time: g.time, left: VERSUS.length - g.time, energy: me.versus.energy }
+    const rules = rulesOf(g.versus)
+    if (cmd === 'time') g.time = Math.max(0, rules.length - Math.max(0, num ?? rules.stretch + 5))
+    else me.versus.energy = Math.max(0, Math.min(VERSUS.energy.cap, Math.round(num ?? VERSUS.energy.cap)))
+    return { time: g.time, left: rules.length - g.time, energy: me.versus.energy }
   }
-  const id = cmd ?? arenaStart()
-  if (!isVersusPick(id)) return `ps.versus(starter): one of ${VERSUS_PICKS.join(', ')}`
-  void playArenaBots(id)
-  return `Arena: ${id} vs bots`
+  const quick = cmd === 'quick' || cmd === 'standard'
+  const id = quick || cmd === undefined ? arenaStart() : cmd
+  const format = parseArenaFormat(quick ? cmd : arg)
+  if (!isVersusPick(id)) return `ps.versus(starter, format?): one of ${VERSUS_PICKS.join(', ')}; format 'standard' (4v4) or 'quick' (3v3)`
+  void playArenaBots(id, format)
+  return `Arena: ${id} vs bots (${format})`
 }
 
 /**
@@ -4011,7 +4022,7 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
     const kind: QueueKind = arg === 'casual' ? 'casual' : 'ranked'
     endRun()
     let timer = 0
-    const waiting = arenaQueueLive(ui, input, { name: arenaName(), pick: arenaStart() }, kind, () => (clearInterval(timer), showArena()))
+    const waiting = arenaQueueLive(ui, input, { name: arenaName(), pick: arenaStart() }, kind, kind === 'ranked' ? 'standard' : arenaFormat(), () => (clearInterval(timer), showArena()))
     setScreen(waiting)
     let waited = 0
     const bots = ARENA_RANKED.queue.botsAfter[kind]
@@ -4034,7 +4045,8 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
     const kind: MatchKind = arg === 'casual' || arg === 'room' || arg === 'practice' ? arg : 'ranked'
     fakeArena(true)
     c.versus.kind = kind
-    c.runner.game.time = VERSUS.length
+    const s = c.runner.game.versus
+    if (s) c.runner.game.time = rulesOf(s).length
     return `Arena: ending as ${kind}`
   }
   return "ps.arena('hub', tab) · ('fake') · ('queue', 'ranked' | 'casual', 'match' | 'downgrade') · ('end', kind)"

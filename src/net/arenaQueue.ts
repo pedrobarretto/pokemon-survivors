@@ -1,11 +1,12 @@
 import { ARENA_RANKED, type MatchKind, type QueueKind } from '../data/arenaRanked'
+import { ARENA_FORMATS, type ArenaFormat } from '../data/arenaFormats'
 
 /**
  * The public queue's pure rules (the numbers are `ARENA_RANKED.queue`): the
  * MMR window a ticket matches within, how a match's humans split into teams
  * and when bots fill it. Here rather than in `game/arenaRank.ts` (which
  * re-exports them) because the relay's matchmaker runs them: like the rest
- * of `src/net`, this imports no game code, only the import-free data file.
+ * of `src/net`, this imports no game code, only the import-free data files.
  */
 
 /** 0: Blue, 1: Red (`Team` in `data/versus.ts`). */
@@ -28,15 +29,14 @@ export type QueueGroup = { id: string; mmrs: readonly number[] }
 export type TeamSplit = { teams: Side[]; gap: number; score: number }
 
 /**
- * Splits up to `queue.players` humans (in parties) into two teams of at most
- * half each, never separating a party, minimizing the difference between the
+ * Splits humans (in parties) into two teams of at most `half` each (the
+ * format's team size; the standard's by default), never separating a party, minimizing the difference between the
  * teams' summed MMR (bots fill the short side later, at `mmr.bot`) plus
  * `humanSplitPenalty` per human one side has over the other, so humans don't
  * land together against bots. Brute force over the groups' assignments
  * (2^groups, at most 256). Null when no split fits.
  */
-export const splitTeams = (groups: readonly QueueGroup[]): TeamSplit | null => {
-  const half = ARENA_RANKED.queue.players / 2
+export const splitTeams = (groups: readonly QueueGroup[], half: number = ARENA_RANKED.queue.players / 2): TeamSplit | null => {
   const n = groups.length
   let best: TeamSplit | null = null
   // Group 0 always plays Blue: a split and its mirror are the same match.
@@ -54,8 +54,9 @@ export const splitTeams = (groups: readonly QueueGroup[]): TeamSplit | null => {
   return best
 }
 
-/** Whether a finished match moves ratings: a ranked queue's, with enough humans. */
-export const countsForRank = (kind: MatchKind, humans: number) => kind === 'ranked' && humans >= ARENA_RANKED.queue.minHumansRanked
+/** Whether a finished match moves ratings: a ranked queue's, in a ranked format, with enough humans. */
+export const countsForRank = (kind: MatchKind, humans: number, format: ArenaFormat = 'standard') =>
+  kind === 'ranked' && ARENA_FORMATS[format].ranked && humans >= ARENA_RANKED.queue.minHumansRanked
 
 /** Seconds a queue's ticket waits before bots fill its match. */
 export const botsAfter = (kind: QueueKind) => ARENA_RANKED.queue.botsAfter[kind]

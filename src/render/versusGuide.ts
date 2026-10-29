@@ -1,6 +1,6 @@
 import { blitPacked, blitRotated, textSprite } from '../engine/pixelart'
-import { VALE, VERSUS } from '../data/versus'
-import { goalOpen, rivalTeam } from '../game/versusRules'
+import { VERSUS } from '../data/versus'
+import { goalOpen, mapOf, rivalTeam } from '../game/versusRules'
 import type { GoalState } from '../game/versus'
 import type { Game, Player } from '../game/types'
 import { teamArrow } from './art'
@@ -36,7 +36,7 @@ export const healing = (g: Game, p: Player) => {
   const s = g.versus
   const v = p.versus
   if (!s || !v) return false
-  const pad = VALE.spawn[v.team]
+  const pad = mapOf(s).spawn[v.team]
   if (standsIn(p, pad.x, pad.y, VERSUS.spawnPad.r)) return true
   return s.goals.some((goal) => goal.team === v.team && !goal.broken && standsIn(p, goal.x, goal.y, goal.r))
 }
@@ -55,7 +55,7 @@ export const guideTarget = (g: Game, me: Player): GuideTarget | null => {
   const v = me.versus
   if (!s || !v || me.hp <= 0 || g.phase !== 'playing') return null
   if (me.hp / me.stats.maxHp < LOW_HP && !healing(g, me)) {
-    const pad = VALE.spawn[v.team]
+    const pad = mapOf(s).spawn[v.team]
     let best: { x: number; y: number } = pad
     for (const goal of s.goals) if (goal.team === v.team && !goal.broken && d2(me, goal.x, goal.y) < d2(me, best.x, best.y)) best = goal
     return { kind: 'heal', x: best.x, y: best.y }
