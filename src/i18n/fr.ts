@@ -505,6 +505,8 @@ export const fr: Messages = {
     },
   },
 
+  wearables: { strawHat: 'Chapeau de paille' },
+  arenaEffects: { sparkTrail: "Traînée d'étincelles" },
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: 'Reconnexion…',

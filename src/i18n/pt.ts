@@ -18,6 +18,8 @@ import type { FriendMilestone } from '../game/referral'
 import type { Difficulty } from '../game/difficulty'
 import type { Role } from '../data/versus'
 import type { MapId } from '../data/versusMaps'
+import type { WearableId } from '../data/wearables'
+import type { ArenaEffectId } from '../data/arenaEffects'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
 import type { Priority } from '../game/versusKit'
@@ -668,6 +670,10 @@ export const pt = {
   },
 
   /** Co-op: the connection pip, the overlays and notices in a run, the lobby's entry, the hub (create or join) and the room. */
+  /** The Arena's worn cosmetics (`data/wearables.ts`), by id. */
+  wearables: { strawHat: 'Chapéu de palha' } satisfies Record<WearableId, string>,
+  /** The Arena's other cosmetics (`data/arenaEffects.ts`), by id. */
+  arenaEffects: { sparkTrail: 'Rastro de faíscas' } satisfies Record<ArenaEffectId, string>,
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: 'Reconectando…',

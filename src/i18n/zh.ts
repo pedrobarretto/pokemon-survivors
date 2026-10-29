@@ -505,6 +505,8 @@ export const zh: Messages = {
     },
   },
 
+  wearables: { strawHat: '草帽' },
+  arenaEffects: { sparkTrail: '火花軌跡' },
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: '重新連線中…',
