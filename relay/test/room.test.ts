@@ -528,6 +528,23 @@ describe('arena rooms', () => {
 
   const result = (winner: 0 | 1) => JSON.stringify({ v: 1, score: [10, 3], winner, seconds: 600, objective: null, seats: [] })
 
+  it('keeps a well-shaped look, and in a matched room plays the one the API vouched for', () => {
+    const state = matched(2)
+    roomOf(state).lock!.players[0]!.look = { head: 'strawHat' }
+    join(state, 'c0', guest(0))
+    join(state, 'c1', guest(1))
+    say(state, 'c0', { t: 'loadout', loadout: { starter: 'pikachu', look: { head: 'crown', trail: 'sparkTrail' } } }, T0)
+    say(state, 'c1', { t: 'loadout', loadout: { starter: 'pikachu', look: { trail: 'sparkTrail' } } }, T0)
+    const seats = roomOf(state).seats
+    expect(seats[0]?.loadout).toEqual({ starter: 'pikachu', team: 0, look: { head: 'strawHat' } })
+    expect(seats[1]?.loadout).toEqual({ starter: 'pikachu', team: 1, look: { trail: 'sparkTrail' } })
+    // A friends' room keeps the client's look when it has a look's shape, and drops it otherwise (an old client sends none).
+    const room = newState()
+    join(room, 'c0', guest(0))
+    say(room, 'c0', { t: 'loadout', loadout: { starter: 'pikachu', look: { head: '<img>' } } }, T0)
+    expect(roomOf(room).seats[0]?.loadout).toEqual({ starter: 'pikachu' })
+  })
+
   it('seats two teams in an Arena room and a party of four elsewhere', () => {
     const coop = newState()
     for (let i = 0; i < MAX_PLAYERS; i++) join(coop, `c${i}`, guest(i))

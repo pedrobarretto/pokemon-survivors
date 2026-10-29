@@ -2,6 +2,7 @@ import { accountHandle, accountsEnabled, sessionToken } from './account'
 import { track, type RunPerf } from './analytics'
 import { bank, bankKey, paysAnything, type BankDelta, type Store } from './coop/bank'
 import { createBot, botPick, type Bot } from './coop/bot'
+import { COSMETIC_IDS, slotOf } from './data/arenaCosmetics'
 import { coopGuestId, createCoopClient, webSocket, type CoopClient, type CoopDeps } from './coop/client'
 import { measureRelay, type VpsUrls } from './coop/relays'
 import type { QueueDeps } from './arena/queue'
@@ -406,7 +407,9 @@ export const addBots = async (code: string, n: number) => {
     bots.push(bot)
     const res = await bot.client.join(code)
     if (!res.ok) continue
-    bot.client.setLoadout(botPick(k + 1))
+    // Each bot wears one cosmetic, so an Arena room shows every seat's look arriving.
+    const worn = COSMETIC_IDS[k % COSMETIC_IDS.length]!
+    bot.client.setLoadout({ ...botPick(k + 1), look: { [slotOf(worn)]: worn } })
     setTimeout(() => bot.client.setReady(true), 300)
     // After a run the relay clears everyone's ready: a bot is ready for "Jogar de novo" a moment later.
     bot.client.on((e) => {

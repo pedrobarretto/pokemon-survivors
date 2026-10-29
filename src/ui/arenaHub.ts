@@ -9,7 +9,10 @@ import { formatTime } from '../engine/math'
 import type { Input } from '../engine/input'
 import { matchesToRanked, mayQueue, queueHold, seasonAt, seasonById, tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile, type FairPlayView, type Season, type TierView } from '../game/arenaRank'
 import { formatNumber, locale, LOCALES, t } from '../i18n'
-import { arenaIconUrl, tierBallUrl, type ArenaIcon } from '../render/arenaArt'
+import { arenaIconUrl, tierBallUrl } from '../render/arenaArt'
+import { gemIconUrl, slotIconUrl } from '../render/gemArt'
+import type { VersusPick } from '../data/versus'
+import { gemChip, lockerTab, shopTab, type GemTab, type GemTabsContext } from './gemShop'
 import { portraitUrl } from '../render/sprites'
 import { firstForm, teamColor } from './arena'
 import { h, later } from './dom'
@@ -22,9 +25,11 @@ import { localLook } from '../render/arenaLooks'
 const AWAY_AFTER = Math.round(ARENA_RANKED.fairPlay.afkAfter / ARENA_RANKED.fairPlay.awayWeight)
 
 /**
- * The Arena's hub: the competitive side of the Arena in five tabs. Perfil
+ * The Arena's hub: the competitive side of the Arena in seven tabs. Perfil
  * (tier badge, RP to the next division, the season's totals and most played
- * Pokémon, Fair Play and the protection meter), Temporada (the season's
+ * Pokémon, Fair Play and the protection meter), Loja and Visual (the gem
+ * shop and the look worn in matches, `ui/gemShop.ts`; the gem chip in the
+ * title opens Loja), Temporada (the season's
  * number and time left, the ladder with each tier's title, how the reset
  * works), Ranking (the season's board, this
  * player's row pinned when it's off the page), Histórico (the API's matches
@@ -38,7 +43,7 @@ const AWAY_AFTER = Math.round(ARENA_RANKED.fairPlay.afkAfter / ARENA_RANKED.fair
  * scroll, Enter presses the tab's button, Esc goes back.
  */
 
-export const ARENA_HUB_TABS = ['profile', 'season', 'ranking', 'history', 'rules'] as const
+export const ARENA_HUB_TABS = ['profile', 'shop', 'locker', 'season', 'ranking', 'history', 'rules'] as const
 export type ArenaHubTab = (typeof ARENA_HUB_TABS)[number]
 export const isArenaHubTab = (x: unknown): x is ArenaHubTab => typeof x === 'string' && (ARENA_HUB_TABS as readonly string[]).includes(x)
 
@@ -58,8 +63,16 @@ export const tierBadge = (view: Pick<TierView, 'tier' | 'division'>, cls = '') =
     view.division ? h('b', { class: 'tier-badge-division' }, ROMAN[view.division]) : null,
   )
 
-/** Each tab's icon (`render/arenaArt.ts`). */
-const TAB_ICONS = { profile: 'tabProfile', season: 'tabSeason', ranking: 'tabRanking', history: 'tabHistory', rules: 'tabRules' } as const satisfies Record<ArenaHubTab, ArenaIcon>
+/** Each tab's icon (`render/arenaArt.ts`; the gem tabs', `render/gemArt.ts`). */
+const TAB_ICONS = {
+  profile: () => arenaIconUrl('tabProfile'),
+  shop: gemIconUrl,
+  locker: () => slotIconUrl('head'),
+  season: () => arenaIconUrl('tabSeason'),
+  ranking: () => arenaIconUrl('tabRanking'),
+  history: () => arenaIconUrl('tabHistory'),
+  rules: () => arenaIconUrl('tabRules'),
+} as const satisfies Record<ArenaHubTab, () => string>
 
 /** The tier above `view`'s division: the next division's, or the next tier's III. */
 const nextName = (view: TierView) => (view.next === null ? null : tierName(tierOf(view.next)))
@@ -105,8 +118,12 @@ const markPenaltySeen = (at: number) => {
 const meter = (value: number, max: number, level: 'good' | 'warn' | 'bad' | 'gold') =>
   h('div', { class: `arena-hub-bar meter ${level}`, role: 'img', 'aria-label': `${value}/${max}` }, h('i', { style: `width:${Math.round((Math.max(0, Math.min(max, value)) / max) * 100)}%` }))
 
-/** `signIn`: the way to an account (null in a build without accounts: the hub shows the device's history alone). */
-export type ArenaHubActions = { back: () => void; signIn: (() => void) | null }
+/**
+ * `signIn`: the way to an account (null in a build without accounts: the hub shows the device's history alone).
+ * `pick`: the Arena's Pokémon, the gem tabs' preview (Visual changes it with `keepPick`). `checkout`: the page came
+ * back from a gem pack's checkout (`?gems=`), so the Loja opens on its return.
+ */
+export type ArenaHubActions = { back: () => void; signIn: (() => void) | null; pick: VersusPick; keepPick: (id: VersusPick) => void; checkout?: boolean }
 
 export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, actions: ArenaHubActions): Screen => {
   const m = t().versus.hub
@@ -126,8 +143,22 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
   const seasonChip = h('span', { class: 'arena-hub-season' })
   const headBadge = h('span', { class: 'arena-hub-badge' })
   const tabs = ARENA_HUB_TABS.map((id) =>
-    h('button', { class: 'shell-tab arena-hub-tab', type: 'button', role: 'tab', onclick: () => switchTab(id) }, h('img', { class: 'arena-hub-tab-icon', src: arenaIconUrl(TAB_ICONS[id]), alt: '' }), h('span', {}, m.tabs[id])),
+    h('button', { class: `shell-tab arena-hub-tab ${id}`, type: 'button', role: 'tab', 'aria-label': m.tabs[id], onclick: () => switchTab(id) }, h('img', { class: 'arena-hub-tab-icon', src: TAB_ICONS[id](), alt: '' }), h('span', {}, m.tabs[id])),
   )
+
+  // The gem tabs keep their pages (and previews) across tab switches; made the first time they show.
+  let pick = actions.pick
+  const gemCtx: GemTabsContext = {
+    root,
+    input,
+    signIn: actions.signIn,
+    pick: () => pick,
+    setPick: (id) => ((pick = id), actions.keepPick(id)),
+    goTab: (id) => switchTab(id),
+  }
+  const gemTabs: { shop?: GemTab; locker?: GemTab } = {}
+  const gemTab = (id: 'shop' | 'locker') => (gemTabs[id] ??= id === 'shop' ? shopTab(gemCtx, actions.checkout === true) : lockerTab(gemCtx))
+  const chip = gemChip(() => switchTab('shop'))
 
   /** The button Enter presses on the tab shown (sign in, load more), if any. */
   let primary: HTMLButtonElement | null = null
@@ -413,9 +444,15 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
     seasonChip.textContent = `${m.season.title(s.id)} · ${now < s.startMs ? m.season.starts(countdown(now, s.startMs)) : m.season.ends(countdown(now, s.endMs))}`
     headBadge.replaceChildren(profile && profile !== 'loading' ? tierBadge(profile.tier) : h('img', { src: tierBallUrl('ultra'), alt: '' }))
     const scroll = body.scrollTop
+    body.dataset.tab = current
+    if (current === 'shop' || current === 'locker') {
+      const page = gemTab(current)
+      if (body.firstChild !== page.el || body.childNodes.length !== 1) body.replaceChildren(page.el)
+      page.enter()
+      return
+    }
     const content = { profile: profileTab, season: seasonTab, ranking: rankingTab, history: historyTab, rules: rulesTab }[current]()
     body.replaceChildren(...content.filter((c): c is HTMLElement => c !== null))
-    body.dataset.tab = current
     body.scrollTop = scroll
   }
 
@@ -460,7 +497,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
     h(
       'div',
       { class: 'dialog box pop arena-hub' },
-      h('div', { class: 'dialog-title arena-hub-title' }, headBadge, h('span', {}, m.title), seasonChip),
+      h('div', { class: 'dialog-title arena-hub-title' }, headBadge, h('span', {}, m.title), chip, seasonChip),
       h('nav', { class: 'shell-tabs arena-hub-tabs', role: 'tablist' }, ...tabs),
       notice,
       body,
@@ -469,6 +506,8 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
   )
 
   const off = input.onKey((key) => {
+    // A gem tab's sheet or dialog has the keys meanwhile.
+    if (gemTabs.shop?.busy() || gemTabs.locker?.busy()) return
     const at = ARENA_HUB_TABS.indexOf(current)
     if (key === 'ArrowLeft' || key === 'ArrowRight') switchTab(ARENA_HUB_TABS[(at + (key === 'ArrowLeft' ? -1 : 1) + ARENA_HUB_TABS.length) % ARENA_HUB_TABS.length]!)
     else if (key === 'ArrowUp' || key === 'ArrowDown') body.scrollBy({ top: key === 'ArrowUp' ? -80 : 80 })
@@ -487,6 +526,8 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
     dispose: () => {
       gone = true
       off()
+      gemTabs.shop?.dispose()
+      gemTabs.locker?.dispose()
       el.remove()
     },
   }

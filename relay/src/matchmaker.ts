@@ -2,7 +2,7 @@ import { ARENA_RANKED, type QueueKind } from '../../src/data/arenaRanked'
 import { ARENA_FORMATS, arenaPlayers, parseArenaFormat, type ArenaFormat } from '../../src/data/arenaFormats'
 import type { ArenaTicketsResponse, QueueClientMessage } from '../../src/net/arena'
 import { botsAfter, humansOnBothSides, mayQueue, mmrWindow, queueHold, splitTeams } from '../../src/net/arenaQueue'
-import { LIMITS, parseAuth } from '../../src/net/protocol'
+import { LIMITS, parseAuth, parseWireLook, type WireLook } from '../../src/net/protocol'
 
 /**
  * The Arena's matchmaker as pure rules (`matchmakerObject.ts` is its Durable
@@ -32,10 +32,12 @@ export type Ticket = {
   holdUntil: number
   /** The Durable Object location hint nearest the player (`hintFor`), or null. */
   hint: string | null
+  /** The Arena look the API vouches for (`ArenaTicketRating.look`), which the matched room plays over the client's; absent: the client's stands. */
+  look?: WireLook
 }
 
 /** A match made: its queue and format, whether it's rated, the build its room runs, where it should run and each player's team. */
-export type Match = { kind: QueueKind; format: ArenaFormat; ranked: boolean; build: string; hint: string | null; players: { conn: string; user: string; team: 0 | 1 }[] }
+export type Match = { kind: QueueKind; format: ArenaFormat; ranked: boolean; build: string; hint: string | null; players: { conn: string; user: string; team: 0 | 1; look?: WireLook }[] }
 
 /** A ticket still waiting, as `queued` tells it: seconds waited, humans its forming match has, seconds until bots fill it and Fair Play still holds it. */
 export type Waiting = { conn: string; kind: QueueKind; waited: number; found: number; botsIn: number; hold: number }
@@ -94,7 +96,9 @@ export const parseTickets = (v: unknown): ArenaTicketsResponse['ratings'] => {
     if (!isRecord(r) || typeof r.mmr !== 'number' || !Number.isFinite(r.mmr)) continue
     // An API from before Fair Play sends none: a full score.
     const fairPlay = typeof r.fairPlay === 'number' && Number.isFinite(r.fairPlay) ? r.fairPlay : ARENA_RANKED.fairPlay.max
-    out[id] = { mmr: r.mmr, rp: typeof r.rp === 'number' ? r.rp : 0, games: typeof r.games === 'number' ? r.games : 0, fairPlay }
+    // An API from before the gem shop sends no look: the client's stands.
+    const look = parseWireLook(r.look)
+    out[id] = { mmr: r.mmr, rp: typeof r.rp === 'number' ? r.rp : 0, games: typeof r.games === 'number' ? r.games : 0, fairPlay, ...(look && { look }) }
   }
   return out
 }
@@ -234,7 +238,7 @@ export const formMatches = (tickets: readonly Ticket[], now: number): { matches:
         ranked: kind === 'ranked' && ARENA_FORMATS[format].ranked && humans >= minHumansRanked && humansOnBothSides(group.flatMap((p, i) => p.tickets.map(() => split.teams[i]!))),
         build: anchor.tickets[0]!.build,
         hint: hintOf(all),
-        players: group.flatMap((p, i) => p.tickets.map((t) => ({ conn: t.conn, user: t.user, team: split.teams[i]! }))),
+        players: group.flatMap((p, i) => p.tickets.map((t) => ({ conn: t.conn, user: t.user, team: split.teams[i]!, ...(t.look && { look: t.look }) }))),
       })
     }
   }
