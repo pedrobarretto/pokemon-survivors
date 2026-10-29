@@ -3,6 +3,7 @@ import {
   atLevel, clusterSpots, electroMult, farthest, gyroMult, inArc, mostHurt, nearestPreferring, ringPoints, roostLands, selfDestructCost,
   SPEED_MULT, SPEED_REF,
 } from './moveVerbRules'
+import { createRng } from '../engine/rng'
 
 const foe = (id: number, x: number, y: number, hp = 10, maxHp = 10, dying = -1) => ({ id, x, y, hp, maxHp, dying })
 const origin = { x: 0, y: 0 }
@@ -33,6 +34,28 @@ describe('targeting', () => {
     const spots = clusterSpots([...pair, ...crowd, foe(7, 0, 400)], 2, 20)
     expect(spots).toEqual([{ x: 102, y: 102 }, { x: -202, y: 0 }])
     expect(clusterSpots([], 3, 20)).toEqual([])
+  })
+
+  it('Future Sight counts neighbors on its grid as checking every pair would', () => {
+    // The pick it made before the grid: every foe against every other.
+    const brute = (foes: ReturnType<typeof foe>[], count: number, radius: number) => {
+      const left = [...foes]
+      const spots: { x: number; y: number }[] = []
+      const near = (a: { x: number; y: number }, b: { x: number; y: number }) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2 <= radius * radius
+      while (spots.length < count && left.length > 0) {
+        const counts = left.map((e) => left.filter((o) => near(e, o)).length)
+        const top = Math.max(...counts)
+        const best = left.filter((_, i) => counts[i] === top).sort((a, b) => a.id - b.id)[0]!
+        const covered = left.filter((o) => near(best, o)).reverse()
+        spots.push({ x: covered.reduce((s, o) => s + o.x, 0) / covered.length, y: covered.reduce((s, o) => s + o.y, 0) / covered.length })
+        for (const o of covered) left.splice(left.indexOf(o), 1)
+      }
+      return spots
+    }
+    const rng = createRng(7)
+    // A horde on whole pixels, so some pairs sit exactly at the reach, across cell edges and negative coordinates.
+    const horde = Array.from({ length: 300 }, (_, i) => foe(i, Math.round((rng() - 0.5) * 400), Math.round((rng() - 0.5) * 300)))
+    for (const radius of [20, 26, 34.5]) expect(clusterSpots(horde, 6, radius)).toEqual(brute(horde, 6, radius))
   })
 
   it('Dragon Tail only catches foes in the arc behind', () => {
