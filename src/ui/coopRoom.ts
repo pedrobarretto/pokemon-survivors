@@ -312,6 +312,15 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
         )
       : h('span', { class: 'coop-difficulty-read' }, `${v.formats[format].size} ${v.formats[format].name}`, h('small', {}, m.hostPicks))
     const teamSize = ARENA_FORMATS[format].teamSize
+    /** Where each member plays once the match starts (`seatMatch`'s rule): the side they asked for, or the other once theirs is full. */
+    const sideOf = new Map<Member, Team>()
+    const filled = [0, 0]
+    for (const member of room.members) {
+      const want = teamOf(member) ?? 0
+      const side: Team = filled[want]! < teamSize ? want : want === 0 ? 1 : 0
+      filled[side]!++
+      sideOf.set(member, side)
+    }
 
     /**
      * Arena: the seats in two columns, Azul and Vermelho, each with its
@@ -323,7 +332,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
     const myTeam: Team = mine?.team ?? 0
     const columns = arena
       ? ([0, 1] as const).map((team) => {
-          const members = room.members.filter((member) => teamOf(member) === team)
+          const members = room.members.filter((member) => sideOf.get(member) === team)
           const open = Math.max(0, teamSize - members.length)
           const other: Team = team === 0 ? 1 : 0
           const switcher = lobby && mine && team === myTeam
