@@ -225,5 +225,7 @@ export const VERSUS_KIT = {
   snap: 28,
   /** Seconds a cast keeps the Pokémon turned to its aim, so the Unite Move releases that way after its charge. */
   hold: 0.7,
+  /** Seconds a cast holds a move's lasting effect (Flame Wheel's trail, Whirlpool's aura: endless in a run), so Move 1 and Move 2 never turn into passives. */
+  persist: 5,
 } as const
 

@@ -40,6 +40,7 @@ import { createMegaState, updateMega, updateMegaIntro } from './mega'
 import { NO_RANKS, runCharges, type Ranks } from './meta'
 import { afterCast as afterModCast, echoStats, hasMod, MOD } from './mods'
 import { forkAt, isManual, MOVES, moveStats, type CastStats, type MoveDef, type MoveId } from './moves'
+import { VERSUS_KIT } from '../data/versus'
 import { afterCast, updateMoveKit } from './moveHooks'
 import { updateSignatures } from './signatures'
 import { createTmState, pickTm } from './tms'
@@ -80,7 +81,7 @@ import { createWeather, updateWeather } from './weather'
 import { updateTraits } from './traitSystem'
 import { BASE_STATS } from './stats'
 import { TERRAIN } from '../data/terrain'
-import { actAs, eachPlayer, followPlayers, inPlay, phaseOf, setPhase } from './players'
+import { actAs, eachPlayer, followPlayers, inPlay, ownAttack, phaseOf, setPhase } from './players'
 import { createCoopState, createRecord, updateCoop } from './coop'
 import { COOP } from '../data/coop'
 import type { Game, Offer, OwnedMove, Player } from './types'
@@ -515,7 +516,21 @@ const updateKit = (g: Game, casts: readonly Cast[] | undefined, dt: number) => {
       g.events.push({ kind: 'versusCast', skill: cast.skill })
     }
     castOwned(g, owned)
+    if (i > 0) holdLasting(g, owned.id)
     v.focus = null
+  }
+}
+
+/**
+ * A move whose effect lasts on its own in a run (an aura, a trail: its hitbox
+ * has no end, each cast refreshing it) lasts `VERSUS_KIT.persist` seconds past
+ * each cast of Move 1 or Move 2, so the player casts it rather than owning it.
+ */
+const holdLasting = (g: Game, move: MoveId) => {
+  for (const a of g.attacks) {
+    if (a.move !== move || !ownAttack(g, a) || (a.ttl !== Infinity && !a.lasting)) continue
+    a.lasting = true
+    a.ttl = a.age + VERSUS_KIT.persist
   }
 }
 

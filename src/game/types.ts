@@ -505,6 +505,8 @@ export type Attack = {
   ignoreWards: boolean
   /** A number the move keeps on its hitbox (Thrash's bite timer, Snipe Shot's base damage…), read by `signatures.ts` and the renderer. */
   memo: number
+  /** Arena only: a lasting effect (an aura, a trail: a hitbox with no end) that its casts hold `VERSUS_KIT.persist` s at a time (`holdLasting`). */
+  lasting?: true
 }
 
 /** Enemy-owned hitbox that hurts the player (boss attacks). */

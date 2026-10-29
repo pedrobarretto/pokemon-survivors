@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { TAU } from '../engine/math'
 import { VERSUS_FORMATS, VERSUS_KIT } from '../data/versus'
-import { parseTickEntry, stepTick } from './lockstep'
+import { parseTickEntry, stepTick, type TickEntry } from './lockstep'
+import { TICK } from './tick'
 import { actAs } from './players'
 import { nearestEnemy } from './queries'
 import { createVersusGame } from './versus'
@@ -84,6 +85,11 @@ const duel = () => {
   return { g, me, rival }
 }
 
+/** Steps `g` for `seconds` with no inputs. */
+const run = (g: Game, seconds: number) => {
+  for (let i = 0; i < Math.round(seconds / TICK); i++) stepTick(g, [])
+}
+
 const bodyOf = (g: Game, p: Player) => g.enemies.find((e) => e.id === p.versus!.avatar)!
 
 describe('the kit in a match', () => {
@@ -100,6 +106,26 @@ describe('the kit in a match', () => {
     const after = move1.cooldown
     stepTick(g, [{ slot: 0, kind: 'cast', skill: 0, dir: 0, reach: 100, target: -1 }])
     expect(move1.cooldown).toBeLessThan(after)
+  })
+
+  it('holds a lasting move (Flame Wheel’s trail, Whirlpool’s aura) a while past each cast, never for good', () => {
+    for (const id of ['flameWheel', 'whirlpool'] as const) {
+      const { g, me } = duel()
+      me.moves[1] = { id, level: 1, cooldown: 0, path: 0 }
+      const cast: TickEntry = { slot: 0, kind: 'cast', skill: 0, dir: 0, reach: 100, target: -1 }
+      const lasting = () => g.attacks.filter((a) => a.owner === me.slot && a.move === id && a.lasting)
+      stepTick(g, [cast])
+      expect(lasting()).toHaveLength(1)
+      // Cast again within the hold: it goes on, from the new cast.
+      run(g, VERSUS_KIT.persist - 1)
+      stepTick(g, [cast])
+      run(g, VERSUS_KIT.persist - 0.5)
+      expect(lasting()).toHaveLength(1)
+      // No cast: it ends.
+      run(g, 1)
+      expect(g.attacks.some((a) => a.owner === me.slot && a.move === id && a.ttl === Infinity)).toBe(false)
+      expect(lasting()).toHaveLength(0)
+    }
   })
 
   it('aims the basic attack at the lock, else by priority, and a cast at its target or nobody', () => {
