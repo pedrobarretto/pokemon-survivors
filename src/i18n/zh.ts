@@ -414,7 +414,7 @@ export const zh: Messages = {
           ok: '一切正常：一般對戰與排位賽皆可參加。',
           noRanked: (min, n) => `低於${min}：無法進行排位賽。打完${n}場對戰即可恢復。`,
           held: (s) => `排隊時會多等${s}秒才開始搜尋對戰。`,
-          explain: (r) => `提前離開：−${r.left}。閒置或離線${r.afkAfter}秒：−${r.afk}。每打完一場：+${r.finish}。只在有其他訓練家的一般對戰與排位賽中計算。`,
+          explain: (r) => `提前離開：−${r.left}。${r.afkAfter}秒沒有操作（移動、施放、鎖定）或離線：−${r.afk}。每打完一場：+${r.finish}。只在有其他訓練家的一般對戰與排位賽中計算。`,
           penalties: { left: '你中途離開了一場對戰', afk: '你在一場對戰中閒置' },
           penalty: (what, n) => `${what}：−${Math.abs(n)} 公平競賽分數`,
         },

@@ -3908,8 +3908,8 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
       const made = await client.create()
       if (!made.ok) return made
       const joined = await joinCoop(made.code, null)
-      // ps.coop('create', 3, 'arena'): an Arena room (the bots take seats on Blue).
-      if (joined.ok) client.setSettings({ difficulty: loadSave().difficulty, ...(extra === 'arena' && { mode: 'versus' }) })
+      // ps.coop('create', 3, 'arena'): an Arena room (the bots take seats on Blue); 'arena-quick' a 3v3 one.
+      if (joined.ok) client.setSettings({ difficulty: loadSave().difficulty, ...((extra === 'arena' || extra === 'arena-quick') && { mode: 'versus' as const, format: extra === 'arena' ? 'standard' : 'quick' }) })
       if (joined.ok && Number(arg ?? 0) > 0) await addBots(made.code, Number(arg))
       if (joined.ok && !run) showRoom()
       return { ...made, joined }

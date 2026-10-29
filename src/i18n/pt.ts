@@ -548,7 +548,7 @@ export const pt = {
           noRanked: (min: number, n: number) => `Abaixo de ${min}: sem Ranqueada. Termine ${n} ${n === 1 ? 'partida' : 'partidas'} para voltar.`,
           held: (s: number) => `A fila espera ${s} s a mais antes de procurar sua partida.`,
           explain: (r: { left: number; afk: number; afkAfter: number; finish: number }) =>
-            `Sair antes do fim: −${r.left}. Ficar ${r.afkAfter} s parado ou ausente: −${r.afk}. Cada partida até o fim: +${r.finish}. Vale na Casual e na Ranqueada com outro treinador.`,
+            `Sair antes do fim: −${r.left}. Ficar ${r.afkAfter} s sem jogar (andar, lançar, travar alvo) ou ausente: −${r.afk}. Cada partida até o fim: +${r.finish}. Vale na Casual e na Ranqueada com outro treinador.`,
           penalties: { left: 'Você saiu de uma partida', afk: 'Você ficou ausente numa partida' } satisfies Record<'left' | 'afk', string>,
           penalty: (what: string, n: number) => `${what}: −${Math.abs(n)} Fair Play`,
         },

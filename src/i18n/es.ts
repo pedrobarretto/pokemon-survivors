@@ -414,7 +414,7 @@ export const es: Messages = {
           ok: 'Todo bien: Casual y Clasificatoria disponibles.',
           noRanked: (min, n) => `Debajo de ${min}: sin Clasificatoria. Termina ${n} ${n === 1 ? 'partida' : 'partidas'} para volver.`,
           held: (s) => `La cola espera ${s} s más antes de buscar tu partida.`,
-          explain: (r) => `Abandonar antes del final: −${r.left}. ${r.afkAfter} s quieto o ausente: −${r.afk}. Cada partida hasta el final: +${r.finish}. Cuenta en Casual y Clasificatoria con otro entrenador.`,
+          explain: (r) => `Abandonar antes del final: −${r.left}. ${r.afkAfter} s sin jugar (moverte, lanzar, fijar objetivo) o ausente: −${r.afk}. Cada partida hasta el final: +${r.finish}. Cuenta en Casual y Clasificatoria con otro entrenador.`,
           penalties: { left: 'Abandonaste una partida', afk: 'Estuviste ausente en una partida' },
           penalty: (what, n) => `${what}: −${Math.abs(n)} Fair Play`,
         },

@@ -414,7 +414,7 @@ export const fr: Messages = {
           ok: 'Tout va bien : Casual et Classé ouverts.',
           noRanked: (min, n) => `Sous ${min} : pas de Classé. Terminez ${n} ${n === 1 ? 'match' : 'matchs'} pour revenir.`,
           held: (s) => `La file attend ${s} s de plus avant de chercher votre match.`,
-          explain: (r) => `Quitter avant la fin : −${r.left}. ${r.afkAfter} s inactif ou absent : −${r.afk}. Chaque match terminé : +${r.finish}. Compte en Casual et en Classé avec un autre dresseur.`,
+          explain: (r) => `Quitter avant la fin : −${r.left}. ${r.afkAfter} s sans jouer (bouger, lancer, verrouiller) ou absent : −${r.afk}. Chaque match terminé : +${r.finish}. Compte en Casual et en Classé avec un autre dresseur.`,
           penalties: { left: 'Vous avez quitté un match', afk: 'Vous étiez absent pendant un match' },
           penalty: (what, n) => `${what} : −${Math.abs(n)} Fair Play`,
         },

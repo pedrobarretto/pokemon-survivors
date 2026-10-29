@@ -414,7 +414,7 @@ export const en: Messages = {
           ok: 'All good: Casual and Ranked are open.',
           noRanked: (min, n) => `Below ${min}: no Ranked. Finish ${n} ${n === 1 ? 'match' : 'matches'} to come back.`,
           held: (s) => `The queue waits ${s} s longer before searching for your match.`,
-          explain: (r) => `Leaving before the end: −${r.left}. ${r.afkAfter} s idle or away: −${r.afk}. Each match played to the end: +${r.finish}. Counts in Casual and Ranked with another trainer.`,
+          explain: (r) => `Leaving before the end: −${r.left}. ${r.afkAfter} s without playing (moving, casting, locking) or away: −${r.afk}. Each match played to the end: +${r.finish}. Counts in Casual and Ranked with another trainer.`,
           penalties: { left: 'You left a match', afk: 'You were away during a match' },
           penalty: (what, n) => `${what}: −${Math.abs(n)} Fair Play`,
         },
