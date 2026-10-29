@@ -4,7 +4,7 @@ import { divisionProgress, ladder, mergeHistory, record, timeLeft } from '../are
 import { ARENA_RANKED, type TierId } from '../data/arenaRanked'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
-import { seasonAt, seasonById, tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile, type Season, type TierView } from '../game/arenaRank'
+import { matchesToRanked, mayQueue, queueHold, seasonAt, seasonById, tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile, type FairPlayView, type Season, type TierView } from '../game/arenaRank'
 import { formatNumber, locale, LOCALES, t } from '../i18n'
 import { arenaIconUrl, tierBallUrl, type ArenaIcon } from '../render/arenaArt'
 import { portraitUrl } from '../render/sprites'
@@ -15,11 +15,15 @@ import { hint, type Screen } from './screens'
 /**
  * The Arena's hub: the competitive side of the Arena in five tabs. Perfil
  * (tier badge, RP to the next division, the season's totals and most played
- * Pokémon), Temporada (the season's number and time left, the ladder with
- * each tier's title, how the reset works), Ranking (the season's board, this
+ * Pokémon, Fair Play and the protection meter), Temporada (the season's
+ * number and time left, the ladder with each tier's title, how the reset
+ * works), Ranking (the season's board, this
  * player's row pinned when it's off the page), Histórico (the API's matches
  * merged with the device's practice, tagged Treino) and Regras (ranked in
- * plain words, its numbers from `ARENA_RANKED`). A guest sees the device's
+ * plain words, its numbers from `ARENA_RANKED`). Before season 1 both
+ * Perfil and Temporada say it's the pre-season (ranked matches kept unrated),
+ * and a Fair Play penalty this device hasn't shown yet is told on top of
+ * every tab ("Você saiu de uma partida"). A guest sees the device's
  * history and a way to sign in. Opened from the Arena screen and the
  * lobby's Stadium (`showArenaHub(tab)` in `main.ts`). ← → switch tabs, ↑ ↓
  * scroll, Enter presses the tab's button, Esc goes back.
@@ -55,6 +59,42 @@ const PAGE = 20
 
 /** A match's moment, short: day, month and time in this language. */
 const when = (ms: number) => new Date(ms).toLocaleString(LOCALES[locale()].tag, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+
+let staged: boolean | null = null
+
+/** Dev (`ps.arena('season', …)`): the screens act as in the pre-season (true) or in a season (false) whatever the date; null goes back to the clock. */
+export const stagePreseason = (on: boolean | null) => {
+  staged = on
+}
+
+/** Whether it's still the pre-season: before season 1 starts, ranked matches are stored unrated. */
+export const preseason = (now = Date.now()) => staged ?? seasonAt(now) === null
+
+/** When season 1 starts, in this player's own time and language ("02/11, 00:00"). */
+export const season1Date = () => when(seasonById(1).startMs)
+
+/** The newest Fair Play penalty this device told (ms), so the hub tells each one once. */
+const SEEN_KEY = 'ps:fairPlaySeen'
+
+const seenPenalty = () => {
+  try {
+    return Number(localStorage.getItem(SEEN_KEY)) || 0
+  } catch {
+    return 0
+  }
+}
+
+const markPenaltySeen = (at: number) => {
+  try {
+    localStorage.setItem(SEEN_KEY, String(at))
+  } catch {
+    // Storage blocked: told again next time.
+  }
+}
+
+/** A bar of `value` out of `max`, in the color its level calls for. */
+const meter = (value: number, max: number, level: 'good' | 'warn' | 'bad' | 'gold') =>
+  h('div', { class: `arena-hub-bar meter ${level}`, role: 'img', 'aria-label': `${value}/${max}` }, h('i', { style: `width:${Math.round((Math.max(0, Math.min(max, value)) / max) * 100)}%` }))
 
 /** `signIn`: the way to an account (null in a build without accounts: the hub shows the device's history alone). */
 export type ArenaHubActions = { back: () => void; signIn: (() => void) | null }
@@ -99,6 +139,64 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
 
   const note = (text: string, cls = '') => h('p', { class: `arena-hub-note ${cls}` }, text)
 
+  /** Before season 1: what the pre-season is, and that this player's ranked matches so far weren't lost. */
+  const preseasonCard = (played: number) =>
+    preseason()
+      ? h(
+          'div',
+          { class: 'arena-hub-card arena-hub-preseason' },
+          h('img', { src: arenaIconUrl('tabSeason'), alt: '' }),
+          h('div', {}, h('b', {}, m.profile.preseason.title), h('p', {}, m.profile.preseason.text(season1Date())), played > 0 ? h('p', {}, m.profile.preseason.played(played)) : null),
+        )
+      : null
+
+  /** Fair Play: the score on its bar, what it lets this player do now, what moves it and the latest penalties. */
+  const fairPlayCard = (fp: FairPlayView) => {
+    const F = ARENA_RANKED.fairPlay
+    const f = m.profile.fairPlay
+    const hold = queueHold(fp.score)
+    const ranked = mayQueue('ranked', fp.score)
+    const level = ranked ? 'good' : hold > 0 ? 'bad' : 'warn'
+    return h(
+      'div',
+      { class: `arena-hub-card arena-hub-meter fair ${level}` },
+      h('div', { class: 'arena-hub-meter-head' }, h('b', {}, f.title), h('b', { class: 'arena-hub-meter-value' }, `${fp.score}/${F.max}`)),
+      meter(fp.score, F.max, level),
+      h('p', { class: 'arena-hub-meter-status' }, ranked ? f.ok : f.noRanked(F.rankedMin, matchesToRanked(fp.score))),
+      hold > 0 ? h('p', { class: 'arena-hub-meter-status' }, f.held(hold)) : null,
+      h('p', { class: 'arena-hub-meter-explain' }, f.explain({ left: -F.left, afk: -F.afk, afkAfter: F.afkAfter, finish: F.finish })),
+      ...fp.penalties.slice(0, 3).map((p) => h('p', { class: 'arena-hub-penalty' }, h('span', {}, f.penalty(f.penalties[p.conduct], p.change)), h('small', {}, when(p.at)))),
+    )
+  }
+
+  /** The protection meter: full, the next ranked loss costs no RP. */
+  const protectionCard = (value: number) => {
+    const P = ARENA_RANKED.protection
+    const ready = value >= P.max
+    return h(
+      'div',
+      { class: `arena-hub-card arena-hub-meter shield${ready ? ' ready' : ''}` },
+      h('div', { class: 'arena-hub-meter-head' }, h('b', {}, m.profile.protection.title), h('b', { class: 'arena-hub-meter-value' }, `${Math.min(value, P.max)}/${P.max}`)),
+      meter(value, P.max, 'gold'),
+      h('p', { class: 'arena-hub-meter-status' }, ready ? m.profile.protection.ready : m.profile.protection.filling),
+    )
+  }
+
+  /** Fair Play penalties newer than the last this device told, newest first (each told once: seen as it's shown). */
+  const notice = h('div', { class: 'arena-hub-notice', role: 'status', hidden: true })
+  const tellPenalties = (fp: FairPlayView) => {
+    const seen = seenPenalty()
+    const fresh = fp.penalties.filter((p) => p.at > seen)
+    if (fresh.length === 0) return
+    const f = m.profile.fairPlay
+    notice.replaceChildren(
+      ...fresh.slice(0, 2).map((p) => h('p', {}, h('b', {}, f.penalty(f.penalties[p.conduct], p.change)), h('small', {}, when(p.at)))),
+      h('p', { class: 'arena-hub-notice-score' }, `${f.title}: ${fp.score}/${ARENA_RANKED.fairPlay.max}`),
+    )
+    notice.hidden = false
+    markPenaltySeen(Math.max(...fresh.map((p) => p.at)))
+  }
+
   const profileTab = () => {
     if (!signedIn) return [signInCard(), deviceCard()]
     if (profile === 'loading') return [note(m.loading, 'blink')]
@@ -124,6 +222,8 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
           h('small', {}, next ? m.profile.toNext(prog.of - prog.done, next) : m.profile.top),
         ),
       ),
+      preseasonCard(p.preseason),
+      h('div', { class: 'arena-hub-meters' }, fairPlayCard(p.fairPlay), protectionCard(p.rating.protection)),
       h(
         'div',
         { class: 'arena-hub-stats' },
@@ -158,6 +258,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
     const now = Date.now()
     const mine = profile !== 'loading' && profile ? profile.tier.tier : null
     return [
+      preseasonCard(profile !== 'loading' && profile ? profile.preseason : 0),
       h(
         'div',
         { class: 'arena-hub-season-head' },
@@ -233,7 +334,9 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
         'span',
         { class: 'arena-hub-match-end' },
         h('span', { class: 'arena-hub-score' }, h('b', {}, String(mine)), '×', String(theirs)),
-        h('b', { class: `arena-hub-delta${e.rp === null ? ' none' : e.rp >= 0 ? ' up' : ' down'}` }, e.rp === null ? '—' : m.delta(e.rp)),
+        e.protected
+          ? h('b', { class: 'arena-hub-delta shield' }, m.history.protected)
+          : h('b', { class: `arena-hub-delta${e.rp === null ? ' none' : e.rp >= 0 ? ' up' : ' down'}` }, e.rp === null ? '—' : m.delta(e.rp)),
       ),
     )
   }
@@ -254,7 +357,18 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
 
   const rulesTab = () => {
     const r = ARENA_RANKED
-    const items = m.rules.items({ win: r.rp.win, loss: r.rp.loss, perf: r.rp.perfMax, casual: r.queue.botsAfter.casual, ranked: r.queue.botsAfter.ranked, humans: r.queue.minHumansRanked, days: r.season.days })
+    const F = r.fairPlay
+    const items = m.rules.items({
+      win: r.rp.win,
+      loss: r.rp.loss,
+      perf: r.rp.perfMax,
+      casual: r.queue.botsAfter.casual,
+      ranked: r.queue.botsAfter.ranked,
+      humans: r.queue.minHumansRanked,
+      days: r.season.days,
+      fair: { max: F.max, left: -F.left, afk: -F.afk, afkAfter: F.afkAfter, finish: F.finish, rankedMin: F.rankedMin, holdBelow: F.holdBelow },
+      season1: season1Date(),
+    })
     return [h('b', { class: 'arena-hub-rules-title' }, m.rules.title), h('ol', { class: 'arena-hub-rules' }, ...items.map((text) => h('li', {}, text)))]
   }
 
@@ -303,7 +417,11 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
   }
 
   if (signedIn) {
-    void fetchArenaMe().then((p) => ((profile = p), paint()))
+    void fetchArenaMe().then((p) => {
+      profile = p
+      if (p && !gone) tellPenalties(p.fairPlay)
+      paint()
+    })
     void fetchArenaHistory(null, PAGE).then((api) => ((history = { api, more: (api?.length ?? 0) >= PAGE }), paint()))
   }
 
@@ -316,6 +434,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
       { class: 'dialog box pop arena-hub' },
       h('div', { class: 'dialog-title arena-hub-title' }, headBadge, h('span', {}, m.title), seasonChip),
       h('nav', { class: 'shell-tabs arena-hub-tabs', role: 'tablist' }, ...tabs),
+      notice,
       body,
       h('div', { class: 'arena-foot' }, backButton, hint(m.hintKeys, m.hintTouch)),
     ),

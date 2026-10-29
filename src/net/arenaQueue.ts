@@ -2,8 +2,8 @@ import { ARENA_RANKED, type MatchKind, type QueueKind } from '../data/arenaRanke
 
 /**
  * The public queue's pure rules (the numbers are `ARENA_RANKED.queue`): the
- * MMR window a ticket matches within, how a match's humans split into teams
- * and when bots fill it. Here rather than in `game/arenaRank.ts` (which
+ * MMR window a ticket matches within, how a match's humans split into teams,
+ * when bots fill it and what a Fair Play score lets a ticket do. Here rather than in `game/arenaRank.ts` (which
  * re-exports them) because the relay's matchmaker runs them: like the rest
  * of `src/net`, this imports no game code, only the import-free data file.
  */
@@ -59,3 +59,21 @@ export const countsForRank = (kind: MatchKind, humans: number) => kind === 'rank
 
 /** Seconds a queue's ticket waits before bots fill its match. */
 export const botsAfter = (kind: QueueKind) => ARENA_RANKED.queue.botsAfter[kind]
+
+/**
+ * Whether a match's humans play on both teams (by each human's side). A
+ * Ranqueada needs them there: humans together against bots only would farm
+ * RP, so a match without a rival human plays as Casual.
+ */
+export const humansOnBothSides = (sides: readonly Side[]) => sides.includes(0) && sides.includes(1)
+
+/* ---------------- Fair Play ---------------- */
+
+/** Whether a Fair Play score may queue for `kind`: the Ranqueada needs `fairPlay.rankedMin`. */
+export const mayQueue = (kind: QueueKind, fairPlay: number) => kind !== 'ranked' || fairPlay >= ARENA_RANKED.fairPlay.rankedMin
+
+/** Seconds a public queue holds the ticket of a Fair Play score before it can be matched: `holdPerPoint` per point under `holdBelow`. */
+export const queueHold = (fairPlay: number) => {
+  const { holdBelow, holdPerPoint } = ARENA_RANKED.fairPlay
+  return Math.max(0, Math.ceil(holdBelow - fairPlay)) * holdPerPoint
+}

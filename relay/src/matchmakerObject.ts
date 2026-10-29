@@ -3,7 +3,7 @@ import { ARENA_RANKED } from '../../src/data/arenaRanked'
 import type { ArenaTicketsRequest, ArenaTicketsResponse, QueueServerMessage } from '../../src/net/arena'
 import { LIMITS } from '../../src/net/protocol'
 import type { Env } from './env'
-import { formMatches, parseQueueMessage, parseTickets, type Match, type Ticket } from './matchmaker'
+import { fairPlayGate, formMatches, parseQueueMessage, parseTickets, type Match, type Ticket } from './matchmaker'
 import { arenaApiOf, postSigned } from './report'
 import { HINT_HEADER, identify, isRecord, log, shardStub } from './shell'
 import { SHARD_INDEXES, SHARD_REGIONS, shardName, type Shard } from './shards'
@@ -16,7 +16,9 @@ import { SHARD_INDEXES, SHARD_REGIONS, shardName, type Shard } from './shards'
  * MMR (`POST /arena/tickets`, signed), makes the matches the rules allow
  * (`matchmaker.ts`), creates each one's locked room in a shard near most of
  * its players and tells them `matched`, then tells everyone still waiting
- * how their match is forming (`queued`). Cloudflare only in v1: the VPS
+ * how their match is forming (`queued`). The API's answer carries each
+ * account's Fair Play too: a Ranqueada under its minimum is refused and a low
+ * score's ticket held (`fairPlayGate`). Cloudflare only in v1: the VPS
  * relays seat Arena rooms but have no queue.
  */
 
@@ -107,7 +109,7 @@ export class Matchmaker extends DurableObject<Env> {
     const now = Date.now()
     // Guests (a dev relay) have no rating: they match at the start.
     const mmr = identity.account ? null : ARENA_RANKED.mmr.start
-    this.tickets.set(a.id, { conn: a.id, user: identity.id, kind: msg.kind, party: msg.party, build: msg.build, since: now, mmr, hint: a.hint })
+    this.tickets.set(a.id, { conn: a.id, user: identity.id, kind: msg.kind, party: msg.party, build: msg.build, since: now, mmr, holdUntil: 0, hint: a.hint })
     log({ ev: 'queue.joined', kind: msg.kind, party: msg.party !== null, account: identity.account, tickets: this.tickets.size })
     this.send(a.id, { t: 'queued', kind: msg.kind, waited: 0, found: 1, botsIn: ARENA_RANKED.queue.botsAfter[msg.kind] })
     this.schedule()
@@ -165,8 +167,8 @@ export class Matchmaker extends DurableObject<Env> {
     }
   }
 
-  private refuse(id: string, why: Extract<QueueServerMessage, { t: 'refused' }>['why']) {
-    this.send(id, { t: 'refused', why })
+  private refuse(id: string, why: Exclude<Extract<QueueServerMessage, { t: 'refused' }>['why'], 'fairPlay'> | { fairPlay: number }) {
+    this.send(id, typeof why === 'string' ? { t: 'refused', why } : { t: 'refused', why: 'fairPlay', fairPlay: why.fairPlay })
     this.close(id, CLOSE_REFUSED, 'refused')
   }
 
@@ -218,19 +220,35 @@ export class Matchmaker extends DurableObject<Env> {
     const open = [...this.tickets.values()].filter((t) => !this.placing.has(t.conn))
     const { matches, waiting } = formMatches(open, now)
     for (const m of matches) this.ctx.waitUntil(this.place(m))
-    for (const w of waiting) this.send(w.conn, { t: 'queued', kind: w.kind, waited: w.waited, found: w.found, botsIn: w.botsIn })
+    for (const w of waiting) this.send(w.conn, { t: 'queued', kind: w.kind, waited: w.waited, found: w.found, botsIn: w.botsIn, ...(w.hold > 0 && { hold: w.hold }) })
   }
 
-  /** Asks the API for the MMR of the accounts waiting without one (one request at a time); no answer: they match at the start. */
+  /**
+   * Asks the API for the MMR and Fair Play of the accounts waiting without an
+   * MMR (one request at a time), and applies Fair Play (`fairPlayGate`: a
+   * Ranqueada refused, a ticket held). No answer: they match at the start,
+   * their Fair Play unchecked (the API that would take it is down too).
+   */
   private lookUpMmr() {
     const asking = [...this.tickets.values()].filter((t) => t.mmr === null)
     if (this.fetching || asking.length === 0) return
     const api = arenaApiOf(this.env.ARENA_API_URL, this.env.ARENA_REPORT_SECRET)
     const settle = (ratings: ArenaTicketsResponse['ratings']) => {
+      const now = Date.now()
       for (const t of asking) {
         const live = this.tickets.get(t.conn)
         const r = ratings[t.user.slice(2)]
-        if (live && live.mmr === null) live.mmr = r && Number.isFinite(r.mmr) ? r.mmr : ARENA_RANKED.mmr.start
+        if (!live || live.mmr !== null) continue
+        live.mmr = r && Number.isFinite(r.mmr) ? r.mmr : ARENA_RANKED.mmr.start
+        if (!r) continue
+        const gate = fairPlayGate(live.kind, r.fairPlay, now)
+        if (!gate.ok) {
+          log({ ev: 'queue.fairPlay', kind: live.kind, fairPlay: r.fairPlay, refused: true })
+          this.refuse(live.conn, { fairPlay: r.fairPlay })
+          continue
+        }
+        live.holdUntil = gate.holdUntil
+        if (gate.holdUntil > 0) log({ ev: 'queue.fairPlay', kind: live.kind, fairPlay: r.fairPlay, refused: false })
       }
     }
     if (!api) return settle({})

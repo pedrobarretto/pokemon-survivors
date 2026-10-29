@@ -304,7 +304,20 @@ export const pt = {
       joining: 'Entrando na partida…',
       downgraded: 'Poucos treinadores na fila: esta partida vale como Casual.',
       lost: 'A conexão com a fila caiu.',
-      refused: { auth: 'Entre com sua conta para jogar na fila.', duplicate: 'Você já está na fila em outra aba.', build: 'Há uma versão nova do jogo: recarregue a página.', closed: 'A fila está fechada agora. Tente mais tarde.' },
+      refused: { auth: 'Entre com sua conta para jogar na fila.', duplicate: 'Você já está na fila em outra aba.', build: 'Há uma versão nova do jogo: recarregue a página.', closed: 'A fila está fechada agora. Tente mais tarde.', fairPlay: 'Seu Fair Play está baixo para a Ranqueada.' },
+      /** Fair Play holds the ticket (`queued`'s `hold`): the time before the search starts. */
+      holding: (time: string) => `Fair Play baixo: a busca começa em ${time}`,
+      holdNote: 'Quem sai de partidas espera mais na fila. Termine partidas para recuperar o Fair Play.',
+      /** The Ranqueada refused for Fair Play (`refused` `fairPlay`). */
+      blocked: {
+        title: 'Ranqueada bloqueada',
+        score: (score: number, min: number) => `Seu Fair Play: ${score}/100. A Ranqueada pede ${min} ou mais.`,
+        how: (n: number) => `Termine ${n} ${n === 1 ? 'partida' : 'partidas'} de Casual até o fim para voltar.`,
+        casual: 'Jogar Casual',
+        back: 'Voltar',
+      },
+      /** Before season 1: ranked matches are kept unrated. `date`: when season 1 starts, in the player's time. */
+      preseason: (date: string) => `Pré-temporada: a Ranqueada fica no seu Histórico, mas só vale RP a partir de ${date}, quando começa a Temporada 1.`,
     },
     splash: {
       loading: 'Carregando o Vale…',
@@ -397,6 +410,8 @@ export const pt = {
         casual: 'Casual: sem RP',
         calculating: 'Calculando RP…',
         late: 'O RP aparece no Histórico em instantes.',
+        protected: 'Proteção usada! Esta derrota não custou RP.',
+        preseason: (date: string) => `Pré-temporada: a partida fica no Histórico, sem RP. A Temporada 1 começa em ${date}.`,
       },
     },
     menu: { note: 'A partida segue com o menu aberto.', leave: 'Sair da partida', confirm: 'Sair da partida? Um CPU assume o seu lugar.' },
@@ -430,6 +445,29 @@ export const pt = {
         none: 'Nenhuma partida ranqueada nesta temporada ainda. Jogue uma Ranqueada para entrar no ranking!',
         device: 'Neste aparelho',
         deviceLine: (matches: number, wins: number) => `${matches} partidas de treino · ${wins} vitórias`,
+        /** Fair Play (`ARENA_RANKED.fairPlay`): the score, what it allows, what moves it and the latest penalties. */
+        fairPlay: {
+          title: 'Fair Play',
+          ok: 'Tudo certo: Casual e Ranqueada liberadas.',
+          noRanked: (min: number, n: number) => `Abaixo de ${min}: sem Ranqueada. Termine ${n} ${n === 1 ? 'partida' : 'partidas'} para voltar.`,
+          held: (s: number) => `A fila espera ${s} s a mais antes de procurar sua partida.`,
+          explain: (r: { left: number; afk: number; afkAfter: number; finish: number }) =>
+            `Sair antes do fim: −${r.left}. Ficar ${r.afkAfter} s parado ou ausente: −${r.afk}. Cada partida até o fim: +${r.finish}. Vale na Casual e na Ranqueada com outro treinador.`,
+          penalties: { left: 'Você saiu de uma partida', afk: 'Você ficou ausente numa partida' } satisfies Record<'left' | 'afk', string>,
+          penalty: (what: string, n: number) => `${what}: −${Math.abs(n)} Fair Play`,
+        },
+        /** The protection meter (`ARENA_RANKED.protection`). */
+        protection: {
+          title: 'Proteção',
+          ready: 'Pronta! Sua próxima derrota na Ranqueada não custa RP.',
+          filling: 'Boas partidas na Ranqueada enchem a barra. Cheia, ela segura uma derrota inteira.',
+        },
+        /** Before season 1 (`seasonAt` null): ranked matches are stored unrated. */
+        preseason: {
+          title: 'Pré-temporada',
+          text: (date: string) => `A Ranqueada já roda, mas o RP só conta a partir de ${date}, quando começa a Temporada 1.`,
+          played: (n: number) => (n === 1 ? 'Sua Ranqueada da pré-temporada está no Histórico, sem RP: nada se perdeu.' : `Suas ${n} Ranqueadas da pré-temporada estão no Histórico, sem RP: nada se perdeu.`),
+        },
       },
       season: {
         title: (n: number) => `Temporada ${n}`,
@@ -457,16 +495,32 @@ export const pt = {
         more: 'Carregar mais',
         empty: 'Nenhuma partida ainda. Jogue na Arena!',
         device: 'Partidas deste aparelho. Entre para guardar o histórico na sua conta.',
+        protected: 'Proteção',
       },
       rules: {
         title: 'Como funciona a Ranqueada',
-        items: (r: { win: number; loss: number; perf: number; casual: number; ranked: number; humans: number; days: number }) => [
+        items: (r: {
+          win: number
+          loss: number
+          perf: number
+          casual: number
+          ranked: number
+          humans: number
+          days: number
+          /** Fair Play's numbers, as positive points. */
+          fair: { max: number; left: number; afk: number; afkAfter: number; finish: number; rankedMin: number; holdBelow: number }
+          /** When season 1 starts, in the player's time. */
+          season1: string
+        }) => [
           `MMR e RP: o MMR é escondido e decide com quem você joga. O RP aparece no ranking: vitória +${r.win}, derrota ${r.loss}, e até +${r.perf} pelo seu desempenho.`,
           `Se faltar gente, bots completam a partida: depois de ${r.casual} s na Casual e de ${r.ranked} s na Ranqueada.`,
-          `A Ranqueada precisa de pelo menos ${r.humans} treinadores na partida. Com menos, ela vale como Casual.`,
-          'Sair no meio da partida conta como derrota: um bot assume o seu lugar.',
+          `A Ranqueada precisa de pelo menos ${r.humans} treinadores na partida, com gente nos dois times. Senão, ela vale como Casual.`,
+          'Sair no meio da partida conta como derrota (um bot assume o seu lugar) e custa Fair Play.',
           `As temporadas duram ${r.days} dias e viram à meia-noite de Brasília.`,
           'Partidas rápidas contra bots são treino: ficam no histórico, mas não contam para o ranking. Partidas com amigos também não valem RP.',
+          `Fair Play: todo mundo começa com ${r.fair.max}. Sair antes do fim custa ${r.fair.left}, ficar ${r.fair.afkAfter} s parado ou ausente custa ${r.fair.afk} e cada partida terminada devolve ${r.fair.finish}. Abaixo de ${r.fair.rankedMin}, sem Ranqueada; abaixo de ${r.fair.holdBelow}, a fila espera mais.`,
+          `Proteção: boas partidas na Ranqueada enchem a barra. Cheia, a próxima derrota não custa RP (o MMR ainda se move) e a barra zera.`,
+          `Pré-temporada: até ${r.season1}, as Ranqueadas ficam no Histórico sem RP. O ranking começa com a Temporada 1.`,
         ],
       },
       hintKeys: '← → abas · ↑ ↓ rolar · ESC voltar',

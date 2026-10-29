@@ -52,13 +52,18 @@ export const parseQueueMessage = (data: unknown): QueueServerMessage | null => {
     const found = whole(m.found)
     const botsIn = whole(m.botsIn)
     const kind = QUEUES.find((k) => k === m.kind)
-    return kind && waited !== null && found !== null && botsIn !== null ? { t: 'queued', kind, waited, found, botsIn } : null
+    const hold = whole(m.hold) ?? 0
+    return kind && waited !== null && found !== null && botsIn !== null ? { t: 'queued', kind, waited, found, botsIn, ...(hold > 0 && { hold }) } : null
   }
   if (m.t === 'matched') {
     const humans = whole(m.humans)
     return typeof m.room === 'string' && (m.team === 0 || m.team === 1) && typeof m.ranked === 'boolean' && humans !== null ? { t: 'matched', room: m.room, team: m.team, ranked: m.ranked, humans } : null
   }
   if (m.t === 'refused') {
+    if (m.why === 'fairPlay') {
+      const fairPlay = whole(m.fairPlay)
+      return fairPlay === null ? null : { t: 'refused', why: 'fairPlay', fairPlay }
+    }
     const why = REFUSALS.find((w) => w === m.why)
     return why ? { t: 'refused', why } : null
   }

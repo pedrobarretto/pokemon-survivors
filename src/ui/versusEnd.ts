@@ -13,7 +13,7 @@ import { versusName } from './versusHud'
 import { countArenaMatch } from './versusCoach'
 import type { MatchKind } from '../data/arenaRanked'
 import type { RpChange } from '../arenaApi'
-import { tierBadge, tierName } from './arenaHub'
+import { preseason, season1Date, tierBadge, tierName } from './arenaHub'
 
 /**
  * A Versus match's end: Vitória, Derrota or Empate from this player's team,
@@ -28,13 +28,16 @@ export type VersusEndActions = { again: () => void; lobby: () => void }
 /**
  * What the match did to the ranking: a quick match against bots is practice,
  * a friends' room and Casual move no RP, and Ranqueada waits on the API's
- * rating (`rp`, "Calculando…" until it answers).
+ * rating (`rp`, "Calculando…" until it answers; "Proteção usada!" when the
+ * meter took the loss). Before season 1 a Ranqueada is kept without RP, and
+ * the line says so instead.
  */
 export type EndRank = { kind: MatchKind; rp: Promise<RpChange | null> | null }
 
 /** The ranking line under the score. */
 const rankLine = (rank: EndRank) => {
   const m = t().versus.end.rank
+  if (rank.kind === 'ranked' && preseason()) return h('p', { class: 'vs-end-rank ranked preseason' }, m.preseason(season1Date()))
   if (rank.kind !== 'ranked' || !rank.rp) return h('p', { class: `vs-end-rank ${rank.kind}` }, rank.kind === 'ranked' ? m.late : m[rank.kind])
   const el = h('p', { class: 'vs-end-rank ranked waiting' }, h('span', { class: 'blink' }, m.calculating))
   void rank.rp.then((change) => {
@@ -42,13 +45,14 @@ const rankLine = (rank: EndRank) => {
     if (!change) return el.replaceChildren(m.late)
     const hub = t().versus.hub
     const view = change.profile?.tier ?? null
-    el.classList.add(change.rp >= 0 ? 'up' : 'down')
+    el.classList.add(change.protected ? 'shield' : change.rp >= 0 ? 'up' : 'down')
     el.replaceChildren(
       ...(view ? [tierBadge(view)] : []),
       h('b', { class: 'vs-end-rp' }, hub.delta(change.rp)),
+      ...(change.protected ? [h('span', { class: 'vs-end-shield' }, m.protected)] : []),
       ...(view && change.profile ? [h('span', {}, `${tierName(view)} · ${hub.rp(change.profile.rating.rp)}`)] : []),
     )
-    if (change.rp > 0) playSfx('levelUp')
+    if (change.rp > 0 || change.protected) playSfx('levelUp')
   })
   return el
 }

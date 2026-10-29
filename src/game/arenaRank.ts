@@ -1,4 +1,4 @@
-import { ARENA_RANKED, TIER_IDS, type MatchKind, type TierId } from '../data/arenaRanked'
+import { ARENA_RANKED, TIER_IDS, type Conduct, type MatchKind, type TierId } from '../data/arenaRanked'
 import { isVersusPick, type Team, type VersusPick } from '../data/versus'
 import * as dm from '../engine/dmath'
 import { formAt } from './branch'
@@ -8,7 +8,8 @@ import type { Game } from './types'
 /**
  * The Arena's ranked rules, pure (`data/arenaRanked.ts` holds the numbers):
  * which season a moment is in, a rating's tier, how a match moves MMR and RP,
- * how the queue splits players into teams, and the result a match reports.
+ * how the queue splits players into teams, Fair Play and the protection
+ * meter, and the result a match reports.
  * The API rates matches with these; the matchmaker splits teams with them;
  * the game shows them. Never part of the simulation.
  */
@@ -56,24 +57,31 @@ export const clampToFloor = (rp: number, peak: number) => Math.max(rp, tierFloor
 
 /* ---------------- Ratings ---------------- */
 
-/** A player's rating in a season: hidden MMR, visible RP, the best RP reached, matches rated. */
-export type Rating = { mmr: number; rp: number; peak: number; games: number }
+/**
+ * A player's rating in a season: hidden MMR, visible RP, the best RP reached,
+ * matches rated and the protection meter (`ARENA_RANKED.protection`).
+ */
+export type Rating = { mmr: number; rp: number; peak: number; games: number; protection: number }
 
-export const freshRating = (): Rating => ({ mmr: ARENA_RANKED.mmr.start, rp: 0, peak: 0, games: 0 })
+export const freshRating = (): Rating => ({ mmr: ARENA_RANKED.mmr.start, rp: 0, peak: 0, games: 0, protection: 0 })
 
 /** A new season's starting rating from the last one's: MMR toward the start, RP to the floor one tier below. */
 export const seasonReset = (last: Rating): Rating => {
   const { start } = ARENA_RANKED.mmr
   const tier = TIER_IDS.indexOf(tierOf(last.rp).tier)
   const rp = tierFloor(TIER_IDS[Math.max(0, tier - 1)]!)
-  return { mmr: Math.round(last.mmr + (start - last.mmr) * ARENA_RANKED.softReset), rp, peak: rp, games: 0 }
+  return { mmr: Math.round(last.mmr + (start - last.mmr) * ARENA_RANKED.softReset), rp, peak: rp, games: 0, protection: 0 }
 }
 
 /** Elo's expected score of a side with mean MMR `a` against one with `b`. */
 export const expected = (a: number, b: number) => 1 / (1 + dm.pow(10, (b - a) / ARENA_RANKED.mmr.scale))
 
-/** One seat as rating sees it: a human's rating (null for a bot), their team and their match stats. */
-export type RatedSeat = { rating: Rating | null; team: Team; scored: number; kos: number; objective: boolean }
+/**
+ * One seat as rating sees it: a human's rating (null for a bot), their team
+ * and their match stats. `fair`: played it out (not gone, not idle); only
+ * then does the match fill or spend the protection meter.
+ */
+export type RatedSeat = { rating: Rating | null; team: Team; scored: number; kos: number; objective: boolean; fair: boolean }
 
 /**
  * Performance in [0, 1]: the seat's share of its team's points and KOs, plus
@@ -88,14 +96,31 @@ export const performance = (seat: RatedSeat, team: readonly RatedSeat[]) => {
   return Math.min(1, raw)
 }
 
-/** What a rated match changed for one human seat. */
-export type RatingChange = { mmr: number; rp: number; before: Rating; after: Rating }
+/** What a rated match changed for one human seat. `protected`: a full meter took the RP loss. */
+export type RatingChange = { mmr: number; rp: number; before: Rating; after: Rating; protected: boolean }
+
+/**
+ * The protection meter after a rated match (`ARENA_RANKED.protection`): a
+ * fair seat fills it by its performance, up to the top, and empties a full
+ * one when it takes a loss (`shielded`); a seat that left or idled leaves it
+ * as it was.
+ */
+export const protectionAfter = (meter: number, perf: number, fair: boolean, shielded: boolean) => {
+  const P = ARENA_RANKED.protection
+  if (!fair) return meter
+  return shielded ? 0 : Math.min(P.max, meter + Math.round(perf * P.fill))
+}
+
+/** Whether a full meter spends itself on this match: a fair seat whose RP would drop. */
+export const shieldsLoss = (meter: number, fair: boolean, rpBefore: number, rpAfter: number) => fair && meter >= ARENA_RANKED.protection.max && rpAfter < rpBefore
 
 /**
  * Rates a match: team Elo on each side's mean MMR (bots at `mmr.bot`), the
  * winner's side gaining what the other loses, scaled down by the share of
- * bots; RP as a win, loss or draw plus performance, held at the tier floor.
- * Returns one change per seat, null for bots.
+ * bots; RP as a win, loss or draw plus performance, held at the tier floor;
+ * a full protection meter takes a fair seat's RP loss (`shieldsLoss`), and
+ * performance fills the meter (`protectionAfter`). Returns one change per
+ * seat, null for bots.
  */
 export const rateMatch = (seats: readonly RatedSeat[], winner: Team | null): (RatingChange | null)[] => {
   const { mmr: M, rp: RP } = ARENA_RANKED
@@ -112,24 +137,58 @@ export const rateMatch = (seats: readonly RatedSeat[], winner: Team | null): (Ra
     const score = winner === null ? 0.5 : winner === seat.team ? 1 : 0
     const k = r.games < M.settledAfter ? M.kNew : M.kSettled
     const mmr = Math.round(k * (score - expected(means[seat.team], means[seat.team === 0 ? 1 : 0])) * weight)
-    const perf = Math.round(performance(seat, seats.filter((s) => s.team === seat.team)) * RP.perfMax)
+    const share = performance(seat, seats.filter((s) => s.team === seat.team))
+    const perf = Math.round(share * RP.perfMax)
     const base = winner === null ? RP.draw : winner === seat.team ? RP.win : RP.loss
     const rpRaw = Math.round((base + perf) * weight)
-    const rp = clampToFloor(r.rp + rpRaw, r.peak)
-    const after: Rating = { mmr: r.mmr + mmr, rp, peak: Math.max(r.peak, rp), games: r.games + 1 }
-    return { mmr, rp: rp - r.rp, before: r, after }
+    const landed = clampToFloor(r.rp + rpRaw, r.peak)
+    const shielded = shieldsLoss(r.protection, seat.fair, r.rp, landed)
+    const rp = shielded ? r.rp : landed
+    const after: Rating = { mmr: r.mmr + mmr, rp, peak: Math.max(r.peak, rp), games: r.games + 1, protection: protectionAfter(r.protection, share, seat.fair, shielded) }
+    return { mmr, rp: rp - r.rp, before: r, after, protected: shielded }
   })
+}
+
+/* ---------------- Fair Play ---------------- */
+
+/** Whether a match moves Fair Play: a public queue's (`casual`, `ranked`) with another human in it. Leaving bots alone harms nobody. */
+export const fairPlayCounts = (kind: MatchKind, humans: number) => (kind === 'casual' || kind === 'ranked') && humans >= 2
+
+/**
+ * A human's conduct in a matchmade match: gone before the end (`left`, the
+ * relay's word), on but idle `afkAfter` seconds in a row (`afk`, from the
+ * agreed result, so only when enough clients `confirmed` it), else finished.
+ */
+export const conductOf = (left: boolean, afkSeconds: number, confirmed: boolean): Conduct =>
+  left ? 'left' : confirmed && afkSeconds >= ARENA_RANKED.fairPlay.afkAfter ? 'afk' : 'finished'
+
+/** What a conduct does to a Fair Play score. */
+export const fairPlayDelta = (conduct: Conduct) => {
+  const F = ARENA_RANKED.fairPlay
+  return conduct === 'finished' ? F.finish : F[conduct]
+}
+
+/** A Fair Play score after a match played with `conduct`, held in [0, max]. */
+export const fairPlayAfter = (score: number, conduct: Conduct) => Math.max(0, Math.min(ARENA_RANKED.fairPlay.max, score + fairPlayDelta(conduct)))
+
+/** Matches to finish before a score reaches the Ranqueada again (0: it may queue now). */
+export const matchesToRanked = (score: number) => {
+  const F = ARENA_RANKED.fairPlay
+  return Math.max(0, Math.ceil((F.rankedMin - score) / F.finish))
 }
 
 /* ---------------- The queue ---------------- */
 
 // The queue's rules live import-free beside the wire (the relay's matchmaker runs them).
-export { botsAfter, countsForRank, mmrWindow, splitTeams, type QueueGroup, type TeamSplit } from '../net/arenaQueue'
+export { botsAfter, countsForRank, humansOnBothSides, mayQueue, mmrWindow, queueHold, splitTeams, type QueueGroup, type TeamSplit } from '../net/arenaQueue'
 
 /* ---------------- A match's result ---------------- */
 
-/** One seat's line in a match's result (by slot, the game's player order). */
-export type ArenaSeatResult = { slot: number; team: Team; starter: VersusPick; form: string; bot: boolean; kos: number; deaths: number; scored: number; damage: number }
+/**
+ * One seat's line in a match's result (by slot, the game's player order).
+ * `afk`: a human's longest stretch without acting, whole seconds (`VersusSeat.afk`).
+ */
+export type ArenaSeatResult = { slot: number; team: Team; starter: VersusPick; form: string; bot: boolean; kos: number; deaths: number; scored: number; damage: number; afk: number }
 
 /**
  * What a finished match reports: the final score, the winner (null: a draw),
@@ -163,6 +222,7 @@ export const arenaResult = (g: Game, objective: Team | null = null): ArenaResult
           deaths: v.deaths,
           scored: v.scored,
           damage: Math.round(Object.values(p.damageByMove).reduce((a, b) => a + (b ?? 0), 0)),
+          afk: Math.floor(v.afk),
         },
       ]
     }),
@@ -185,15 +245,22 @@ export const parseArenaResult = (raw: unknown): ArenaResult | null => {
     if (!isRecord(s)) return null
     const slot = count(s.slot)
     const side = team(s.team)
-    const nums = [s.kos, s.deaths, s.scored, s.damage].map(count)
+    // `afk` came with Fair Play: a result from an older build reads as none.
+    const nums = [s.kos, s.deaths, s.scored, s.damage, s.afk ?? 0].map(count)
     if (slot === null || side === null || typeof s.starter !== 'string' || !isVersusPick(s.starter) || typeof s.form !== 'string' || typeof s.bot !== 'boolean' || nums.some((x) => x === null)) return null
-    seats.push({ slot, team: side, starter: s.starter, form: s.form.slice(0, 24), bot: s.bot, kos: nums[0]!, deaths: nums[1]!, scored: nums[2]!, damage: nums[3]! })
+    seats.push({ slot, team: side, starter: s.starter, form: s.form.slice(0, 24), bot: s.bot, kos: nums[0]!, deaths: nums[1]!, scored: nums[2]!, damage: nums[3]!, afk: nums[4]! })
   }
   if (seats.length === 0 || seats.length > ARENA_RANKED.queue.players) return null
   return { v: 1, score: [score[0]!, score[1]!], winner: raw.winner === null ? null : (raw.winner as Team), seconds, objective: raw.objective === null ? null : (raw.objective as Team), seats }
 }
 
 /* ---------------- What the API serves ---------------- */
+
+/** A Fair Play penalty as the hub tells it: what it was for, the points it took and when (ms). */
+export type FairPlayPenalty = { conduct: Exclude<Conduct, 'finished'>; change: number; at: number }
+
+/** The signed-in player's Fair Play: the score and their latest penalties, newest first. */
+export type FairPlayView = { score: number; penalties: FairPlayPenalty[] }
 
 /** `GET /arena/me`: the signed-in player's season standing, totals and recent form. */
 export type ArenaProfile = {
@@ -205,6 +272,10 @@ export type ArenaProfile = {
   totals: { matches: number; wins: number; losses: number; draws: number; kos: number; scored: number }
   /** Their most played Pokémon this season, most first (up to 3). */
   favorites: { starter: VersusPick; matches: number; wins: number }[]
+  /** Their Fair Play (account-wide, every season). */
+  fairPlay: FairPlayView
+  /** Ranked matches they played before season 1 started, stored unrated (`rated: false`). */
+  preseason: number
 }
 
 /** One match in `GET /arena/history`: the player's own line and the score. */
@@ -222,6 +293,8 @@ export type ArenaHistoryEntry = {
   damage: number
   /** RP this match moved (null when it wasn't rated). */
   rp: number | null
+  /** A full protection meter took this match's RP loss. */
+  protected: boolean
 }
 
 /** A row of `GET /arena/leaderboard?season=N`. */

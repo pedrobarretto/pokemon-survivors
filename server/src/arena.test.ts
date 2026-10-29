@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { freshRating, seasonById, seasonReset, type ArenaResult, type ArenaSeatResult } from '../../src/game/arenaRank'
-import { arenaSignature, createArenaRewards, parseArenaReport, planMatch, ratingSeason, startingRating, verifyArenaSignature, type ReportSeat } from './arena'
+import { ARENA_RANKED } from '../../src/data/arenaRanked'
+import { arenaSignature, createArenaRewards, parseAbandonedReport, parseArenaReport, planMatch, ratingSeason, startingRating, verifyArenaSignature, type ReportSeat } from './arena'
 
 const seat = (slot: number, team: 0 | 1, bot = false, extra: Partial<ArenaSeatResult> = {}): ArenaSeatResult => ({
   slot,
@@ -12,6 +13,7 @@ const seat = (slot: number, team: 0 | 1, bot = false, extra: Partial<ArenaSeatRe
   deaths: 1,
   scored: 10,
   damage: 500,
+  afk: 0,
   ...extra,
 })
 
@@ -151,14 +153,52 @@ describe('planMatch', () => {
     expect(c?.change?.mmr).toBeLessThan(0)
     expect(c?.change?.after.games).toBe(1)
     // A leaver at their tier's floor stays there.
-    const floored = new Map([['c', { mmr: 1000, rp: 300, peak: 300, games: 20 }]])
+    const floored = new Map([['c', { mmr: 1000, rp: 300, peak: 300, games: 20, protection: 0 }]])
     expect(planMatch(lost, seats, floored, false)[1]?.change?.after.rp).toBe(300)
+  })
+
+  it('reads each human’s conduct: left from the relay, AFK only from a confirmed result', () => {
+    const idle = { ...result, seats: [seat(0, 0, false, { afk: ARENA_RANKED.fairPlay.afkAfter }), seat(1, 0), seat(2, 1), seat(3, 1)] }
+    const seats: ReportSeat[] = [
+      { slot: 0, userId: 'a', left: false },
+      { slot: 1, userId: 'b', left: true },
+      { slot: 2, userId: 'c', left: false },
+    ]
+    expect(planMatch(idle, seats, null).map((l) => l.conduct)).toEqual(['afk', 'left', 'finished'])
+    expect(planMatch(idle, seats, null, false).map((l) => l.conduct)).toEqual(['finished', 'left', 'finished'])
+  })
+
+  it('spends a full protection meter on a fair loss, never on an AFK or a leaver', () => {
+    const full = { ...freshRating(), rp: 150, peak: 150, protection: ARENA_RANKED.protection.max }
+    const shielded = new Map([['c', full], ['d', full], ['a', freshRating()]])
+    const seats: ReportSeat[] = [
+      { slot: 0, userId: 'a', left: false },
+      { slot: 2, userId: 'c', left: false },
+      { slot: 3, userId: 'd', left: true },
+    ]
+    const [, c, d] = planMatch(result, seats, shielded)
+    expect(c?.change).toMatchObject({ rp: 0, protected: true })
+    expect(d?.change?.protected).toBe(false)
+    expect(d?.change?.rp).toBeLessThan(0)
+    const idle = { ...result, seats: [seat(0, 0), seat(1, 0), seat(2, 1, false, { afk: 200 }), seat(3, 1)] }
+    expect(planMatch(idle, seats, shielded)[1]?.change).toMatchObject({ protected: false })
+  })
+})
+
+describe('parseAbandonedReport', () => {
+  const abandoned = { v: 1, room: 'K7QF2', run: 2, kind: 'casual', region: 'sa', endedAt: 1, abandoned: true, result: null, seats: [{ slot: 0, userId: 'u_b', handle: null, left: true }, { slot: 1, userId: 'u_a', handle: null, left: true }, { slot: 2, userId: null, handle: null, left: false }] }
+
+  it('reads the accounts of a match everyone left, and nothing else', () => {
+    expect(parseAbandonedReport(abandoned)).toEqual({ room: 'K7QF2', run: 2, kind: 'casual', endedAt: 1, users: ['u_a', 'u_b'] })
+    expect(parseAbandonedReport({ ...abandoned, abandoned: undefined })).toBeNull()
+    expect(parseAbandonedReport(report())).toBeNull()
+    expect(parseAbandonedReport({ ...abandoned, seats: [...abandoned.seats, { slot: 3, userId: 'u_a', handle: null, left: true }] })).toBeNull()
   })
 })
 
 describe('startingRating', () => {
   it('resets from the previous season, else starts fresh', () => {
-    const last = { mmr: 1400, rp: 950, peak: 1000, games: 80 }
+    const last = { mmr: 1400, rp: 950, peak: 1000, games: 80, protection: 50 }
     expect(startingRating(last)).toEqual(seasonReset(last))
     expect(startingRating(last).games).toBe(0)
     expect(startingRating(null)).toEqual(freshRating())

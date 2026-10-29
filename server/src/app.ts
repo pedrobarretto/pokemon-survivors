@@ -24,7 +24,7 @@ import { banGated, parseModeration, parseReport } from '../../src/game/reports'
 import { parseCode } from '../../src/game/supporters'
 import { isSuggestionSort, isSuggestionStatus, isVote, parseSuggestionDraft } from '../../src/game/suggestions'
 import type { AdminStore } from './admin'
-import { ARENA_PAGES, parseArenaReport, shownSeason, verifyArenaSignature, type ArenaStore } from './arena'
+import { ARENA_PAGES, parseAbandonedReport, parseArenaReport, shownSeason, verifyArenaSignature, type ArenaStore } from './arena'
 import type { Verify } from './auth'
 import type { BugReports } from './bugReports'
 import type { SaveStore } from './db'
@@ -68,7 +68,7 @@ export type AppDeps = {
   /** Reports and bans: the write gate asks who is banned, players report, the admin acts. */
   moderation: Pick<ModerationStore, 'banned' | 'report' | 'open' | 'act'>
   /** The Arena's ranked layer: reports, ratings, history and the season's board. */
-  arena: Pick<ArenaStore, 'report' | 'practice' | 'takePractice' | 'tickets' | 'profile' | 'history' | 'leaderboard'>
+  arena: Pick<ArenaStore, 'report' | 'abandoned' | 'practice' | 'takePractice' | 'tickets' | 'profile' | 'history' | 'leaderboard'>
   /** The secret the relay signs Arena reports and ticket lookups with; unset, those routes answer 503. */
   arenaReportSecret: string | undefined
   /** Linking a Patreon account (its OAuth client), null when the server has none. */
@@ -262,9 +262,9 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   resolving the reports it answers. `{ resolved }`, 404 for an unknown player or run.
  *   `GET /admin/festival`: `{ donations }` (`HeldDonation[]`), the festival donations held for review.
  *   `POST /admin/festival/:id/approve` (it counts in the pot) or `/void` (it never counts; its ₽ stays spent): `{ ok }`, 404 for an unknown or already settled one.
- * - `POST /arena/report` (relay, signed: `x-arena-signature`) `ArenaReport`: a finished match, once per (room, run).
+ * - `POST /arena/report` (relay, signed: `x-arena-signature`) `ArenaReport`: a finished match, once per (room, run); an abandoned one (`abandoned: true`) only moves Fair Play.
  *   `ArenaReportResponse`; a retry gets the stored match with `duplicate`. 400 invalid, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
- * - `POST /arena/tickets` (relay, signed) `{ userIds }`: `ArenaTicketsResponse`, each player's current-season MMR, RP and games.
+ * - `POST /arena/tickets` (relay, signed) `{ userIds }`: `ArenaTicketsResponse`, each player's current-season MMR, RP and games, and their Fair Play.
  * - `POST /arena/practice` (auth) `ArenaPracticeRequest`: a quick match against bots, for history and totals only.
  *   201 `{ match }` (200 `{ duplicate: true }` for a retried `key`), 400 invalid or a bot's slot, 429 past the hourly limit.
  * - `GET /arena/me` (auth): `ArenaProfile`. `GET /arena/history?before=<ms>&limit=` (auth): `ArenaHistoryEntry[]`, newest first.
@@ -714,6 +714,9 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
   app.post('/arena/report', bodyLimit({ maxSize: 32 * 1024 }), async (c) => {
     const signed = await relayBody(c)
     if ('error' in signed) return signed.error
+    // A match every human left has no result: only its Fair Play lands.
+    const gone = parseAbandonedReport(signed.body)
+    if (gone) return gone.endedAt > Date.now() + ARENA_CLOCK_SKEW_MS ? c.json({ error: 'invalid report' }, 400) : c.json(await arena.abandoned(gone))
     const r = parseArenaReport(signed.body)
     if (!r || r.endedAt > Date.now() + ARENA_CLOCK_SKEW_MS) return c.json({ error: 'invalid report' }, 400)
     return c.json(await arena.report(r))

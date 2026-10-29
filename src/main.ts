@@ -199,8 +199,9 @@ import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaPick, arenaScreen } from './ui/arena'
 import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
-import { arenaHub, isArenaHubTab, type ArenaHubTab } from './ui/arenaHub'
+import { arenaHub, isArenaHubTab, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaHub'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
+import { isFakeScenario } from './arena/fakes'
 import { historyEntry } from './arena/history'
 import { joinQueue, type QueueHandle } from './arena/queue'
 import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked'
@@ -2971,6 +2972,8 @@ const playArenaQueue = (id: VersusPick, kind: QueueKind) => {
     if (e.t === 'queued') return waiting.update(e)
     queueTicket = null
     if (e.t === 'lost') return back(q.lost)
+    // Fair Play shut the Ranqueada: the screen says why and offers a Casual instead.
+    if (e.t === 'refused' && e.why === 'fairPlay') return waiting.blocked(e.fairPlay, () => enterArenaQueue(id, 'casual'))
     if (e.t === 'refused') return back(q.refused[e.why])
     waiting.found(e)
     queueMatch = { room: e.room, kind: e.ranked ? 'ranked' : 'casual', asked: kind }
@@ -3114,7 +3117,8 @@ const reportVersus = (c: CoopRun) => {
     if (arenaSignedIn()) void postPractice(result, c.runner.slot)
   }
   // Ranked: the relay reports the match, and the API rates it a moment later; the end screen waits for its RP.
-  if (v.kind === 'ranked') v.rp ??= awaitRpChange(Date.now())
+  // Before season 1 a Ranqueada is stored unrated: no RP to wait for (the end screen says it's the pre-season).
+  if (v.kind === 'ranked' && !preseason()) v.rp ??= awaitRpChange(Date.now())
   track('versus_end', {
     mode: v.local ? 'bots' : 'friends',
     kind: v.kind,
@@ -3916,12 +3920,17 @@ const devVersus = (cmd?: string, arg?: number) => {
  * opens the hub on a tab (`profile`, `season`, `ranking`, `history`,
  * `rules`); `ps.arena('fake')` makes the API's reads answer made-up data
  * (`arena/fakes.ts`: a Great Ball profile, a history, a board) and the hub
- * act as signed in (`'off'` back to the API); `ps.arena('queue', 'ranked')`
- * stages the public queue's screen with fake `queued` updates (`'casual'`
- * too; a third `'match'` finds a match after a few seconds, `'downgrade'` a
- * ranked one that plays as casual); `ps.arena('end', 'ranked')` ends the
- * match against bots running now as if it were that kind (`casual`,
- * `room`, `practice`), a ranked one with a fake RP change.
+ * act as signed in (`'off'` back to the API; a second argument stages Fair
+ * Play and the protection meter: `fine`, `full`, `left`, `low`);
+ * `ps.arena('queue', 'ranked')` stages the public queue's screen with fake
+ * `queued` updates (`'casual'` too; a third `'match'` finds a match after a
+ * few seconds, `'downgrade'` a ranked one that plays as casual, `'hold'`
+ * holds the ticket for Fair Play and `'blocked'` refuses the Ranqueada for
+ * it); `ps.arena('end', 'ranked')` ends the match against bots running now
+ * as if it were that kind (`casual`, `room`, `practice`), a ranked one with
+ * a fake RP change (protected with the `full` scenario);
+ * `ps.arena('season', 'pre' | 'on')` shows the screens as in the pre-season
+ * or in a season whatever the date (no argument: the clock again).
  */
 const devArena = (cmd?: string, arg?: string, then?: string) => {
   if (cmd === 'hub') {
@@ -3929,8 +3938,12 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
     return `Arena hub: ${isArenaHubTab(arg) ? arg : 'profile'}`
   }
   if (cmd === 'fake') {
-    fakeArena(arg !== 'off')
-    return arg === 'off' ? 'Arena: the API again' : 'Arena: fake profile, history and board'
+    fakeArena(arg !== 'off', isFakeScenario(arg) ? arg : 'fine')
+    return arg === 'off' ? 'Arena: the API again' : `Arena: fake profile, history and board (${isFakeScenario(arg) ? arg : 'fine'})`
+  }
+  if (cmd === 'season') {
+    stagePreseason(arg === 'pre' ? true : arg === 'on' ? false : null)
+    return `Arena: ${arg === 'pre' ? 'pre-season' : arg === 'on' ? 'in season' : 'the clock decides'} (${preseason() ? 'pre-season' : 'season'})`
   }
   if (cmd === 'queue') {
     const kind: QueueKind = arg === 'casual' ? 'casual' : 'ranked'
@@ -3940,9 +3953,15 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
     setScreen(waiting)
     let waited = 0
     const bots = ARENA_RANKED.queue.botsAfter[kind]
+    if (then === 'blocked') {
+      window.setTimeout(() => screen === waiting && waiting.blocked(64, () => devArena('queue', 'casual')), 1200)
+      return `Arena: ${kind} queue refused for Fair Play (fake)`
+    }
+    const hold = then === 'hold' ? 48 : 0
     timer = window.setInterval(() => {
       if (screen !== waiting) return clearInterval(timer)
       waited++
+      if (waited < hold) return waiting.update({ t: 'queued', kind, waited, found: 1, botsIn: bots, hold: hold - waited })
       const found = Math.min(5, 1 + Math.floor(waited / 2))
       if ((then === 'match' || then === 'downgrade') && waited >= 6) {
         clearInterval(timer)
@@ -3962,7 +3981,7 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
     c.runner.game.time = VERSUS.length
     return `Arena: ending as ${kind}`
   }
-  return "ps.arena('hub', tab) · ('fake') · ('queue', 'ranked' | 'casual', 'match' | 'downgrade') · ('end', kind)"
+  return "ps.arena('hub', tab) · ('fake', scenario?) · ('queue', 'ranked' | 'casual', 'match' | 'downgrade' | 'hold' | 'blocked') · ('end', kind) · ('season', 'pre' | 'on')"
 }
 
 // `ps.biome('cave')` and `ps.weather('rain')` stage a run for screenshots (they hold until the next scheduled change).

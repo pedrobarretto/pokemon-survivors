@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ARENA_RANKED } from '../../src/data/arenaRanked'
-import { formMatches, parseQueueMessage, parseTickets, type Ticket } from '../src/matchmaker'
+import { fairPlayGate, formMatches, parseQueueMessage, parseTickets, type Ticket } from '../src/matchmaker'
 
 const T0 = 1_000_000
 const { players: SIZE, botsAfter } = ARENA_RANKED.queue
@@ -8,7 +8,7 @@ const { players: SIZE, botsAfter } = ARENA_RANKED.queue
 let n = 0
 const ticket = (over: Partial<Ticket> = {}): Ticket => {
   n++
-  return { conn: `c${n}`, user: `u:user_${n}`, kind: 'casual', party: null, build: 'b1', since: T0, mmr: 1000, hint: 'enam', ...over }
+  return { conn: `c${n}`, user: `u:user_${n}`, kind: 'casual', party: null, build: 'b1', since: T0, mmr: 1000, holdUntil: 0, hint: 'enam', ...over }
 }
 const many = (count: number, over: Partial<Ticket> = {}) => Array.from({ length: count }, () => ticket(over))
 
@@ -36,10 +36,35 @@ describe('matchmaking', () => {
     const solo = ticket({ kind: 'ranked' })
     const before = formMatches([solo], T0 + (botsAfter.ranked - 1) * 1000)
     expect(before.matches).toHaveLength(0)
-    expect(before.waiting).toEqual([{ conn: solo.conn, kind: 'ranked', waited: botsAfter.ranked - 1, found: 1, botsIn: 1 }])
+    expect(before.waiting).toEqual([{ conn: solo.conn, kind: 'ranked', waited: botsAfter.ranked - 1, found: 1, botsIn: 1, hold: 0 }])
     expect(formMatches([solo], T0 + botsAfter.ranked * 1000).matches).toEqual([expect.objectContaining({ kind: 'ranked', ranked: false })])
     const pair = many(2, { kind: 'ranked' })
     expect(formMatches(pair, T0 + botsAfter.ranked * 1000).matches).toEqual([expect.objectContaining({ ranked: true })])
+    // A party of two against bots alone isn't a Ranqueada.
+    const duo = many(2, { kind: 'ranked', party: 'DUO' })
+    expect(formMatches(duo, T0 + botsAfter.ranked * 1000).matches).toEqual([expect.objectContaining({ ranked: false })])
+  })
+
+  it('holds a low Fair Play’s ticket (and its party) out of matches, its wait starting when the hold ends', () => {
+    const hold = 30_000
+    const held = ticket({ holdUntil: T0 + hold })
+    const during = formMatches([held, ...many(SIZE)], T0 + 1000)
+    expect(during.matches[0]?.players).toHaveLength(SIZE)
+    expect(during.matches[0]?.players.some((p) => p.conn === held.conn)).toBe(false)
+    expect(during.waiting).toContainEqual(expect.objectContaining({ conn: held.conn, hold: 29, botsIn: botsAfter.casual }))
+    // Held for 30 s: bots come 90 s after the hold, not after the queue.
+    expect(formMatches([held], T0 + hold + (botsAfter.casual - 1) * 1000).matches).toHaveLength(0)
+    expect(formMatches([held], T0 + hold + botsAfter.casual * 1000).matches).toHaveLength(1)
+    const party = [ticket({ party: 'P', holdUntil: T0 + hold }), ticket({ party: 'P' })]
+    expect(formMatches(party, T0 + 1000).waiting.map((w) => w.hold)).toEqual([29, 29])
+  })
+
+  it('refuses a Ranqueada under the Fair Play minimum and holds a low score in either queue', () => {
+    const { rankedMin, holdBelow, holdPerPoint, max } = ARENA_RANKED.fairPlay
+    expect(fairPlayGate('ranked', rankedMin - 1, T0)).toEqual({ ok: false })
+    expect(fairPlayGate('ranked', max, T0)).toEqual({ ok: true, holdUntil: 0 })
+    expect(fairPlayGate('casual', rankedMin - 1, T0)).toEqual({ ok: true, holdUntil: 0 })
+    expect(fairPlayGate('casual', holdBelow - 10, T0)).toEqual({ ok: true, holdUntil: T0 + 10 * holdPerPoint * 1000 })
   })
 
   it('keeps a party on one team, and never mixes kinds, builds or tickets without an MMR', () => {
@@ -63,6 +88,8 @@ describe('matchmaking', () => {
     expect(parseQueueMessage(JSON.stringify({ ...queue, auth: undefined }))).toBeNull()
     expect(parseQueueMessage(JSON.stringify({ ...queue, party: 'a b' }))).toBeNull()
     expect(parseQueueMessage('{"t":"cancel"}')).toEqual({ t: 'cancel' })
-    expect(parseTickets({ season: 1, ratings: { user_1: { mmr: 1200, rp: 30, games: 2 }, user_2: { mmr: 'x' } } })).toEqual({ user_1: { mmr: 1200, rp: 30, games: 2 } })
+    expect(parseTickets({ season: 1, ratings: { user_1: { mmr: 1200, rp: 30, games: 2, fairPlay: 55 }, user_2: { mmr: 'x' } } })).toEqual({ user_1: { mmr: 1200, rp: 30, games: 2, fairPlay: 55 } })
+    // An API from before Fair Play: a full score.
+    expect(parseTickets({ ratings: { user_1: { mmr: 1200 } } }).user_1?.fairPlay).toBe(ARENA_RANKED.fairPlay.max)
   })
 })

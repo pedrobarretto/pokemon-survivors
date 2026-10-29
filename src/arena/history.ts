@@ -1,6 +1,6 @@
 import { ARENA_RANKED, TIER_IDS, type MatchKind, type TierId } from '../data/arenaRanked'
 import { isVersusPick, type Team } from '../data/versus'
-import { tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile, type ArenaResult, type Season, type TierView } from '../game/arenaRank'
+import { tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile, type ArenaResult, type FairPlayPenalty, type FairPlayView, type Season, type TierView } from '../game/arenaRank'
 import { isRecord } from '../game/parse'
 
 /**
@@ -31,6 +31,7 @@ export const historyEntry = (result: ArenaResult, slot: number, at: number, kind
     scored: seat.scored,
     damage: seat.damage,
     rp: null,
+    protected: false,
   }
 }
 
@@ -106,7 +107,7 @@ export const parseHistoryEntry = (raw: unknown): ArenaHistoryEntry | null => {
   const stats = [raw.kos, raw.deaths, raw.scored, raw.damage].map(count)
   if (at === null || side === null || score.length !== 2 || score.some((x) => x === null) || stats.some((x) => x === null)) return null
   const rp = raw.rp === null || raw.rp === undefined ? null : num(raw.rp)
-  return { id: raw.id, at, kind: raw.kind, team: side, outcome: raw.outcome, score: [score[0]!, score[1]!], starter: raw.starter, kos: stats[0]!, deaths: stats[1]!, scored: stats[2]!, damage: stats[3]!, rp }
+  return { id: raw.id, at, kind: raw.kind, team: side, outcome: raw.outcome, score: [score[0]!, score[1]!], starter: raw.starter, kos: stats[0]!, deaths: stats[1]!, scored: stats[2]!, damage: stats[3]!, rp, protected: raw.protected === true }
 }
 
 /** `GET /arena/history`'s entries (a list, or `{ history }`), the bad ones dropped. */
@@ -136,6 +137,23 @@ const parseSeason = (raw: unknown): Season | null => {
   return id === null || startMs === null || endMs === null ? null : { id, startMs, endMs }
 }
 
+const PENALTIES = ['left', 'afk'] as const satisfies readonly FairPlayPenalty['conduct'][]
+
+/** A profile's Fair Play; an API from before it reads as a full score with no penalties. */
+export const parseFairPlay = (raw: unknown): FairPlayView => {
+  const { max } = ARENA_RANKED.fairPlay
+  if (!isRecord(raw)) return { score: max, penalties: [] }
+  const score = count(raw.score)
+  const penalties = (Array.isArray(raw.penalties) ? raw.penalties : []).flatMap((p): FairPlayPenalty[] => {
+    if (!isRecord(p)) return []
+    const conduct = PENALTIES.find((c) => c === p.conduct)
+    const change = num(p.change)
+    const at = num(p.at)
+    return conduct && change !== null && at !== null ? [{ conduct, change, at }] : []
+  })
+  return { score: score === null ? max : Math.min(max, score), penalties: penalties.slice(0, 5) }
+}
+
 /** `GET /arena/me`: the profile (or `{ profile }`); null when it isn't one. */
 export const parseProfile = (body: unknown): ArenaProfile | null => {
   const raw = isRecord(body) && isRecord(body.profile) ? body.profile : body
@@ -151,10 +169,12 @@ export const parseProfile = (body: unknown): ArenaProfile | null => {
   )
   return {
     season,
-    rating: { mmr: num(r.mmr) ?? ARENA_RANKED.mmr.start, rp, peak: count(r.peak) ?? rp, games: count(r.games) ?? 0 },
+    rating: { mmr: num(r.mmr) ?? ARENA_RANKED.mmr.start, rp, peak: count(r.peak) ?? rp, games: count(r.games) ?? 0, protection: Math.min(ARENA_RANKED.protection.max, count(r.protection) ?? 0) },
     tier: parseTier(raw.tier, rp),
     place: count(raw.place),
     totals: { matches: total('matches'), wins: total('wins'), losses: total('losses'), draws: total('draws'), kos: total('kos'), scored: total('scored') },
     favorites: favorites.slice(0, 3),
+    fairPlay: parseFairPlay(raw.fairPlay),
+    preseason: count(raw.preseason) ?? 0,
   }
 }

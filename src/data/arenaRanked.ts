@@ -12,6 +12,9 @@ export type QueueKind = 'casual' | 'ranked'
 /** Where a match came from: a public queue, a friends' room, or a quick match against bots (device only). */
 export type MatchKind = QueueKind | 'room' | 'practice'
 
+/** How an account played a matchmade match out, for Fair Play: to the end, gone before it, or on but idle (`ARENA_RANKED.fairPlay`). */
+export type Conduct = 'finished' | 'left' | 'afk'
+
 /** The ranked ladder, low to high. Master has no divisions. */
 export const TIER_IDS = ['poke', 'great', 'ultra', 'master'] as const
 export type TierId = (typeof TIER_IDS)[number]
@@ -58,6 +61,22 @@ export const ARENA_RANKED = {
     /** Most humans in one match (the Arena's room size). */
     players: 8,
   },
+  /**
+   * Fair Play (`game/arenaRank.ts`): every account's conduct score, 0 to
+   * `max`, starting full. In a matchmade match (Casual or Ranqueada) with
+   * another trainer in it, leaving before the end costs `left`, playing on
+   * but `afkAfter` seconds in a row without acting (stick idle, or away) costs
+   * `afk`, and finishing gives back `finish`. Below `rankedMin` the Ranqueada
+   * refuses the ticket; below `holdBelow`, every point short holds a public
+   * queue's ticket `holdPerPoint` seconds before it can be matched.
+   */
+  fairPlay: { max: 100, left: -15, afk: -10, finish: 2, rankedMin: 80, holdBelow: 60, holdPerPoint: 6, afkAfter: 60 },
+  /**
+   * Proteção (Unite's Performance Points): every rated match played to the
+   * end fills the meter by `performance × fill`, up to `max`; full, the next
+   * rated loss costs no RP (MMR still moves) and empties it.
+   */
+  protection: { max: 100, fill: 35 },
 } as const
 
 /** Each tier's colors, for badges: the ball's top half and its rim. */

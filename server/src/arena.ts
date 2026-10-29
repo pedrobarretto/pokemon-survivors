@@ -1,9 +1,12 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
-import type { MatchKind } from '../../src/data/arenaRanked'
+import { ARENA_RANKED, type Conduct, type MatchKind } from '../../src/data/arenaRanked'
 import { isVersusPick, type Team, type VersusPick } from '../../src/data/versus'
 import {
+  conductOf,
   countsForRank,
+  fairPlayAfter,
+  fairPlayCounts,
   freshRating,
   parseArenaResult,
   rateMatch,
@@ -16,6 +19,7 @@ import {
   type ArenaLeaderboardRow,
   type ArenaProfile,
   type ArenaResult,
+  type FairPlayPenalty,
   type RatedSeat,
   type Rating,
   type RatingChange,
@@ -30,9 +34,11 @@ import { rateLimiter } from './rateLimit'
 
 /**
  * The Arena's competitive layer: match reports from the relay, ratings per
- * season, history, the season's board and its end-of-season titles. The
- * rules (seasons, MMR, RP, tiers) are `game/arenaRank.ts`; this file stores
- * what they decide. The relay signs what it sends (`verifyArenaSignature`).
+ * season, Fair Play, history, the season's board and its end-of-season
+ * titles. The rules (seasons, MMR, RP, tiers, Fair Play, the protection
+ * meter) are `game/arenaRank.ts`; this file stores what they decide, from
+ * the relay's reports only. The relay signs what it sends
+ * (`verifyArenaSignature`).
  */
 
 type Q = Sql | TransactionSql
@@ -92,6 +98,25 @@ export const parseArenaReport = (raw: unknown): ParsedReport | null => {
   return { v: 1, room, run, kind, region, endedAt, seats, result, confirmed }
 }
 
+/** A match its humans all left before its end (`ArenaReport.abandoned`): no result, every account a leaver. */
+export type AbandonedReport = { room: string; run: number; kind: 'casual' | 'ranked' | 'room'; endedAt: number; users: string[] }
+
+/** An abandoned match's report, or null when anything is off (or it isn't one). */
+export const parseAbandonedReport = (raw: unknown): AbandonedReport | null => {
+  if (!isRecord(raw) || raw.v !== 1 || raw.abandoned !== true || !Array.isArray(raw.seats)) return null
+  const room = text(raw.room, 32)
+  const kind = REPORT_KINDS.find((k) => k === raw.kind)
+  const { run, endedAt } = raw
+  if (!room || !kind || typeof run !== 'number' || !Number.isSafeInteger(run) || run < 0 || typeof endedAt !== 'number' || !Number.isFinite(endedAt) || endedAt <= 0) return null
+  const users: string[] = []
+  for (const s of raw.seats) {
+    if (!isRecord(s) || slotOf(s.slot) === null || (s.userId !== null && !text(s.userId, 64))) return null
+    if (typeof s.userId === 'string') users.push(s.userId)
+  }
+  if (raw.seats.length > 64 || new Set(users).size !== users.length) return null
+  return { room, run, kind, endedAt, users: [...users].sort() }
+}
+
 /* ---------------- Rating a match ---------------- */
 
 export type Outcome = ArenaHistoryEntry['outcome']
@@ -101,7 +126,7 @@ export const outcomeOf = (team: Team, winner: Team | null, left: boolean): Outco
 
 const rival = (t: Team): Team => (t === 0 ? 1 : 0)
 
-/** One human's line in a match, with what it moved when rated. */
+/** One human's line in a match, with what it moved when rated and how they played it out (Fair Play's `conduct`). */
 export type ArenaLine = {
   userId: string
   slot: number
@@ -114,6 +139,7 @@ export type ArenaLine = {
   damage: number
   left: boolean
   outcome: Outcome
+  conduct: Conduct
   change: RatingChange | null
 }
 
@@ -123,14 +149,19 @@ export type ArenaLine = {
  * are bots, and a human who left is rated as if their team lost (the rest
  * keep the real result). An unconfirmed result (`ArenaReport.confirmed`)
  * rates only the leavers: the stayers' lines go to history unrated. Without
- * `ratings`, nothing moves.
+ * `ratings`, nothing moves. Each line's `conduct` (`conductOf`) decides its
+ * Fair Play, and only a seat that `finished` fills or spends its protection.
  */
 export const planMatch = (result: ArenaResult, seats: readonly ReportSeat[], ratings: ReadonlyMap<string, Rating> | null, confirmed = true): ArenaLine[] => {
   const human = new Map(seats.flatMap((s) => (s.userId ? [[s.slot, { userId: s.userId, left: s.left }] as const] : [])))
+  const conducts = result.seats.map((s) => {
+    const h = human.get(s.slot)
+    return h ? conductOf(h.left, s.afk, confirmed) : 'finished'
+  })
   const rated = ratings
-    ? result.seats.map((s): RatedSeat => {
+    ? result.seats.map((s, i): RatedSeat => {
         const h = human.get(s.slot)
-        return { rating: h ? (ratings.get(h.userId) ?? freshRating()) : null, team: s.team, scored: s.scored, kos: s.kos, objective: result.objective === s.team }
+        return { rating: h ? (ratings.get(h.userId) ?? freshRating()) : null, team: s.team, scored: s.scored, kos: s.kos, objective: result.objective === s.team, fair: conducts[i] === 'finished' }
       })
     : null
   const changes = rated ? rateMatch(rated, result.winner) : null
@@ -145,7 +176,7 @@ export const planMatch = (result: ArenaResult, seats: readonly ReportSeat[], rat
     if (!h) return []
     const change = changeOf(i, s.team, h.left)
     const { slot, team, starter, form, kos, deaths, scored, damage } = s
-    return [{ userId: h.userId, slot, team, starter, form, kos, deaths, scored, damage, left: h.left, outcome: outcomeOf(team, result.winner, h.left), change }]
+    return [{ userId: h.userId, slot, team, starter, form, kos, deaths, scored, damage, left: h.left, outcome: outcomeOf(team, result.winner, h.left), conduct: conducts[i] ?? 'finished', change }]
   })
 }
 
@@ -180,14 +211,14 @@ const HISTORY = { page: 20, max: 50 } as const
 /** Board rows: the default and the most. */
 const BOARD = { rows: 50, max: 100 } as const
 
-type RatingRow = { user_id: string; season: number; mmr: number; rp: number; peak: number; games: number }
+type RatingRow = { user_id: string; season: number; mmr: number; rp: number; peak: number; games: number; protection: number }
 
-const toRating = (r: RatingRow): Rating => ({ mmr: r.mmr, rp: r.rp, peak: r.peak, games: r.games })
+const toRating = (r: RatingRow): Rating => ({ mmr: r.mmr, rp: r.rp, peak: r.peak, games: r.games, protection: r.protection })
 
 /** Each player's rating in `season` as it stands, written or not (`startingRating` when they have no row yet). */
 const ratingsOf = async (q: Q, userIds: readonly string[], season: number) => {
   const rows = await q<RatingRow[]>`
-    select user_id, season, mmr, rp, peak, games from arena_ratings
+    select user_id, season, mmr, rp, peak, games, protection from arena_ratings
     where user_id = any(${userIds}::text[]) and season in (${season}, ${season - 1})`
   const row = (id: string, s: number) => rows.find((r) => r.user_id === id && r.season === s)
   return new Map(
@@ -209,12 +240,12 @@ const lockRatings = async (tx: TransactionSql, userIds: readonly string[], seaso
   for (const id of userIds) {
     const r = start.get(id) ?? freshRating()
     await tx`
-      insert into arena_ratings (user_id, season, mmr, rp, peak, games)
-      values (${id}, ${season}, ${r.mmr}, ${r.rp}, ${r.peak}, ${r.games})
+      insert into arena_ratings (user_id, season, mmr, rp, peak, games, protection)
+      values (${id}, ${season}, ${r.mmr}, ${r.rp}, ${r.peak}, ${r.games}, ${r.protection})
       on conflict (user_id, season) do nothing`
   }
   const rows = await tx<RatingRow[]>`
-    select user_id, season, mmr, rp, peak, games from arena_ratings
+    select user_id, season, mmr, rp, peak, games, protection from arena_ratings
     where season = ${season} and user_id = any(${userIds}::text[]) order by user_id for update`
   return new Map(rows.map((r) => [r.user_id, toRating(r)] as const))
 }
@@ -225,15 +256,46 @@ const writeLines = async (tx: TransactionSql, match: string, kind: MatchKind, se
     const c = l.change
     if (c && season !== null) {
       await tx`
-        update arena_ratings set mmr = ${c.after.mmr}, rp = ${c.after.rp}, peak = ${c.after.peak}, games = ${c.after.games},
+        update arena_ratings set mmr = ${c.after.mmr}, rp = ${c.after.rp}, peak = ${c.after.peak}, games = ${c.after.games}, protection = ${c.after.protection},
           wins = wins + ${l.outcome === 'win' ? 1 : 0}, losses = losses + ${l.outcome === 'loss' ? 1 : 0}, draws = draws + ${l.outcome === 'draw' ? 1 : 0},
           updated_at = now()
         where user_id = ${l.userId} and season = ${season}`
     }
     await tx`
-      insert into arena_lines (match_id, user_id, slot, team, starter, form, kos, deaths, scored, damage, "left", outcome, kind, season, at, mmr_change, rp_change)
+      insert into arena_lines (match_id, user_id, slot, team, starter, form, kos, deaths, scored, damage, "left", outcome, kind, season, at, mmr_change, rp_change, protected)
       values (${match}, ${l.userId}, ${l.slot}, ${l.team}, ${l.starter}, ${l.form}, ${l.kos}, ${l.deaths}, ${l.scored}, ${l.damage}, ${l.left},
-        ${l.outcome}, ${kind}, ${season}, ${at}, ${c?.mmr ?? null}, ${c?.rp ?? null})`
+        ${l.outcome}, ${kind}, ${season}, ${at}, ${c?.mmr ?? null}, ${c?.rp ?? null}, ${c?.protected ?? false})`
+  }
+}
+
+/** Each player's Fair Play score as it stands (a full one without a row). */
+const fairPlayOf = async (q: Q, userIds: readonly string[]) => {
+  const rows = userIds.length > 0 ? await q<{ user_id: string; score: number }[]>`select user_id, score from arena_fair_play where user_id = any(${userIds}::text[])` : []
+  return new Map(userIds.map((id) => [id, rows.find((r) => r.user_id === id)?.score ?? ARENA_RANKED.fairPlay.max] as const))
+}
+
+/**
+ * Applies each player's conduct in match (`room`, `run`) to their Fair Play
+ * (`fairPlayAfter`), once per match and player (`arena_conduct`'s key): the
+ * scores' rows are made and locked first, in user id order (like the
+ * ratings, so two reports sharing players take turns).
+ */
+const writeConduct = async (tx: TransactionSql, room: string, run: number, kind: 'casual' | 'ranked', at: Date, conducts: ReadonlyMap<string, Conduct>) => {
+  const ids = [...conducts.keys()].sort()
+  if (ids.length === 0) return
+  const { max } = ARENA_RANKED.fairPlay
+  await tx`insert into arena_fair_play (user_id, score) select unnest(${ids}::text[]), ${max} on conflict (user_id) do nothing`
+  const rows = await tx<{ user_id: string; score: number }[]>`select user_id, score from arena_fair_play where user_id = any(${ids}::text[]) order by user_id for update`
+  for (const id of ids) {
+    const conduct = conducts.get(id)!
+    const before = rows.find((r) => r.user_id === id)?.score ?? max
+    const after = fairPlayAfter(before, conduct)
+    const [landed] = await tx<{ user_id: string }[]>`
+      insert into arena_conduct (room, run, user_id, kind, conduct, change, score, at)
+      values (${room}, ${run}, ${id}, ${kind}, ${conduct}, ${after - before}, ${after}, ${at})
+      on conflict (room, run, user_id) do nothing
+      returning user_id`
+    if (landed && after !== before) await tx`update arena_fair_play set score = ${after}, updated_at = now() where user_id = ${id}`
   }
 }
 
@@ -299,8 +361,26 @@ export const arenaStore = (sql: Sql) => {
         }
         if (users.length > 0) await tx`insert into users (id) select unnest(${users}::text[]) on conflict (id) do nothing`
         const ratings = rating ? await lockRatings(tx, users, rating.id) : null
-        await writeLines(tx, match.id, r.kind, season?.id ?? null, at, planMatch(r.result, r.seats, ratings, r.confirmed))
+        const lines = planMatch(r.result, r.seats, ratings, r.confirmed)
+        await writeLines(tx, match.id, r.kind, season?.id ?? null, at, lines)
+        if (r.kind !== 'room' && fairPlayCounts(r.kind, users.length)) await writeConduct(tx, r.room, r.run, r.kind, at, new Map(lines.map((l) => [l.userId, l.conduct])))
         return { match: match.id, rated, duplicate: false }
+      }),
+
+    /**
+     * A match every human left before its end (the relay reports it as its
+     * room closes): each account loses Fair Play as a leaver, once, when the
+     * match counts for it (`fairPlayCounts`). Nothing is rated or kept for
+     * history (there's no result): `rated` is false.
+     */
+    abandoned: (r: AbandonedReport): Promise<ArenaReportResponse> =>
+      sql.begin(async (tx) => {
+        const key = `abandoned:${r.room}:${r.run}`
+        if (r.kind === 'room' || !fairPlayCounts(r.kind, r.users.length)) return { match: key, rated: false, duplicate: false }
+        await tx`insert into users (id) select unnest(${r.users}::text[]) on conflict (id) do nothing`
+        const [seen] = await tx<{ n: number }[]>`select count(*)::int as n from arena_conduct where room = ${r.room} and run = ${r.run}`
+        await writeConduct(tx, r.room, r.run, r.kind, new Date(r.endedAt), new Map(r.users.map((id) => [id, 'left' as const])))
+        return { match: key, rated: false, duplicate: (seen?.n ?? 0) > 0 }
       }),
 
     /** Counts a practice upload against the player's hourly limit; false when they're past it. */
@@ -330,17 +410,20 @@ export const arenaStore = (sql: Sql) => {
       })
     },
 
-    /** Each player's current-season numbers, for the matchmaker (fresh for anyone not rated yet). */
+    /** Each player's current-season numbers and Fair Play, for the matchmaker (fresh and full for anyone without a row yet). */
     tickets: async (userIds: readonly string[], now = Date.now()): Promise<ArenaTicketsResponse> => {
       const season = shownSeason(now)
-      const ratings = userIds.length > 0 ? await ratingsOf(sql, userIds, season.id) : new Map<string, Rating>()
-      return { season: season.id, ratings: Object.fromEntries([...ratings].map(([id, r]) => [id, { mmr: r.mmr, rp: r.rp, games: r.games }])) }
+      const [ratings, fair] = userIds.length > 0 ? await Promise.all([ratingsOf(sql, userIds, season.id), fairPlayOf(sql, userIds)]) : [new Map<string, Rating>(), new Map<string, number>()]
+      return {
+        season: season.id,
+        ratings: Object.fromEntries([...ratings].map(([id, r]) => [id, { mmr: r.mmr, rp: r.rp, games: r.games, fairPlay: fair.get(id) ?? ARENA_RANKED.fairPlay.max }])),
+      }
     },
 
     /** `GET /arena/me`: the player's standing in the shown season, its totals (practice included) and favorites. */
     profile: async (userId: string, now = Date.now()): Promise<ArenaProfile> => {
       const season = shownSeason(now)
-      const [ratings, mine, totals, favorites] = await Promise.all([
+      const [ratings, mine, totals, favorites, fair, penalties, preseason] = await Promise.all([
         ratingsOf(sql, [userId], season.id),
         boardRows(sql, season.id, 1, userId),
         sql<ArenaProfile['totals'][]>`
@@ -351,6 +434,10 @@ export const arenaStore = (sql: Sql) => {
           select starter, count(*)::int as matches, count(*) filter (where outcome = 'win')::int as wins
           from arena_lines where user_id = ${userId} and season = ${season.id}
           group by starter order by matches desc, wins desc, starter limit 3`,
+        fairPlayOf(sql, [userId]),
+        sql<{ conduct: FairPlayPenalty['conduct']; change: number; at: Date }[]>`
+          select conduct, change, at from arena_conduct where user_id = ${userId} and conduct <> 'finished' order by at desc limit 5`,
+        sql<{ n: number }[]>`select count(*)::int as n from arena_lines where user_id = ${userId} and kind = 'ranked' and season is null`,
       ])
       const rating = ratings.get(userId) ?? freshRating()
       const row = mine[0]
@@ -361,22 +448,24 @@ export const arenaStore = (sql: Sql) => {
         place: row ? await placeOf(sql, season.id, userId) : null,
         totals: totals[0] ?? { matches: 0, wins: 0, losses: 0, draws: 0, kos: 0, scored: 0 },
         favorites: favorites.flatMap((f) => (isVersusPick(f.starter) ? [{ starter: f.starter, matches: f.matches, wins: f.wins }] : [])),
+        fairPlay: { score: fair.get(userId) ?? ARENA_RANKED.fairPlay.max, penalties: penalties.map((p) => ({ conduct: p.conduct, change: p.change, at: p.at.getTime() })) },
+        preseason: preseason[0]?.n ?? 0,
       }
     },
 
     /** `GET /arena/history`: the player's own matches ended before `before` (ms), newest first. */
     history: async (userId: string, before: number, limit: number): Promise<ArenaHistoryEntry[]> => {
       const rows = await sql<
-        { id: string; at: Date; kind: MatchKind; team: number; outcome: Outcome; score_blue: number; score_red: number; starter: string; kos: number; deaths: number; scored: number; damage: number; rp_change: number | null }[]
+        { id: string; at: Date; kind: MatchKind; team: number; outcome: Outcome; score_blue: number; score_red: number; starter: string; kos: number; deaths: number; scored: number; damage: number; rp_change: number | null; protected: boolean }[]
       >`
-        select l.match_id as id, l.at, l.kind, l.team, l.outcome, m.score_blue, m.score_red, l.starter, l.kos, l.deaths, l.scored, l.damage, l.rp_change
+        select l.match_id as id, l.at, l.kind, l.team, l.outcome, m.score_blue, m.score_red, l.starter, l.kos, l.deaths, l.scored, l.damage, l.rp_change, l.protected
         from arena_lines l join arena_matches m on m.id = l.match_id
         where l.user_id = ${userId} and l.at < ${new Date(before)}
         order by l.at desc, l.match_id desc
         limit ${Math.min(Math.max(1, limit), HISTORY.max)}`
       return rows.flatMap((r) =>
         isVersusPick(r.starter)
-          ? [{ id: r.id, at: r.at.getTime(), kind: r.kind, team: r.team === 1 ? 1 : 0, outcome: r.outcome, score: [r.score_blue, r.score_red], starter: r.starter, kos: r.kos, deaths: r.deaths, scored: r.scored, damage: r.damage, rp: r.rp_change }]
+          ? [{ id: r.id, at: r.at.getTime(), kind: r.kind, team: r.team === 1 ? 1 : 0, outcome: r.outcome, score: [r.score_blue, r.score_red], starter: r.starter, kos: r.kos, deaths: r.deaths, scored: r.scored, damage: r.damage, rp: r.rp_change, protected: r.protected }]
           : [],
       )
     },
@@ -400,7 +489,7 @@ export const arenaStore = (sql: Sql) => {
       sql.begin(async (tx) => {
         const key = `arena:season:${season}`
         const rows = await tx<RatingRow[]>`
-          select user_id, season, mmr, rp, peak, games from arena_ratings r
+          select user_id, season, mmr, rp, peak, games, protection from arena_ratings r
           where season = ${season} and games >= ${ARENA_REWARDS.minGames}
             and not exists (select 1 from gifts g where g.user_id = r.user_id and g.key = ${key})`
         let sent = 0
