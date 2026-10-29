@@ -11,7 +11,8 @@ import type { RunMode } from './game/ranking'
 import type { RelayHome, VpsHome } from './net/protocol'
 import type { LobbyFocus } from './ui/title'
 import type { NetSummary } from './coop/netStats'
-import type { MatchKind } from './data/arenaRanked'
+import type { MatchKind, QueueKind } from './data/arenaRanked'
+import type { QueueServerMessage } from './net/arena'
 import type { CrumbMoment, Quality } from './crumb'
 import type { DeviceInfo } from './telemetry'
 
@@ -42,6 +43,12 @@ export type RunPerf = {
   frameP95: number | null
   longFrames: number
 } & DeviceInfo
+
+/** How a public queue attempt resolved, for `arena_queue`. */
+export type QueueEnd =
+  | { result: 'matched'; downgraded: 0 | 1 }
+  | { result: 'cancelled' | 'lost' | 'left' }
+  | { result: 'refused'; why: Extract<QueueServerMessage, { t: 'refused' }>['why'] }
 
 /** Custom events, with their payloads. Keep this list short: every event counts against the free tier. */
 type AnalyticsEvents = {
@@ -170,18 +177,31 @@ type AnalyticsEvents = {
   /** A co-op client diverged and was healed from the agreed snapshot: the room, the tick it was told at, and how long until it was back in step. */
   coop_heal: { room: string; tick: number; ms: number }
   /**
-   * An Arena (Versus) match's end, once per player per match (never for a match left before it ends):
-   * against bots (the in-page relay) or with friends (a room), the winner and this player's side and
-   * result, the final score, this player's knockouts, falls, points and level, their Pokémon, and how
-   * many seats humans played (the rest were bots).
+   * An Arena (Versus) match for this player, exactly once per player per match (`arena/report.ts`): at its
+   * end, or when they leave it before (`outcome`). Against bots (the in-page relay) or with friends (a room),
+   * the winner and this player's side and result, the score, this player's knockouts, falls, points and
+   * level, their Pokémon, how many seats humans played (the rest were bots) and the match clock then.
+   * Events from before `outcome` existed are all `end`.
    */
   versus_end: {
     mode: 'bots' | 'friends'
     /** Where the match came from: practice against bots, a public queue's (casual, ranked as matched) or a friends' room. */
     kind: MatchKind
-    winner: 'blue' | 'red' | 'draw'
+    /**
+     * `end`: the clock ran out. Left before: `quit`, from the match's menu (or anything else that took
+     * the player elsewhere); `dropped`, the connection closed for good; `left`, the page closed or reloaded
+     * (by beacon); `gone`, the page went away without a word (a phone killing the tab in the background,
+     * a crash), sent on the next page load with the time and numbers last held (`ps:versusHeld`, every 5 s).
+     */
+    outcome: 'end' | 'quit' | 'dropped' | 'left' | 'gone'
+    /** The match's second when it ended or was left (420 at its end). */
+    second: number
+    /** Null for a match left before it ended. */
+    winner: 'blue' | 'red' | 'draw' | null
     team: 'blue' | 'red'
-    result: 'win' | 'loss' | 'draw'
+    /** Null for a match left before it ended. */
+    result: 'win' | 'loss' | 'draw' | null
+    /** The score then, final at the end. */
     blue: number
     red: number
     kos: number
@@ -191,6 +211,20 @@ type AnalyticsEvents = {
     starter: string
     humans: number
   }
+  /**
+   * One public queue attempt (Casual, Ranqueada; practice against bots has no queue), sent once as it
+   * resolves: `kind` as asked, how it went (`matched`; `cancelled` by the player; `lost`, the queue's
+   * connection; `refused` by the matchmaker, `why`; `left`, the page closed while waiting), the seconds
+   * waited and the humans in it: the match's when matched (the rest are bots), else the most the screen
+   * found, this player included. `downgraded`: a ranked ticket matched as Casual.
+   */
+  arena_queue: { kind: QueueKind; seconds: number; humans: number } & QueueEnd
+  /**
+   * The Arena's screen (or its hub, `screen`) opened, once per page load whatever the opens after: the
+   * top of the funnel to `arena_queue` and `versus_end`. `account`: past co-op's door (an account with a
+   * handle: the queues and rooms are open), else only bots are.
+   */
+  arena_open: { screen: 'arena' | 'hub'; account: 0 | 1 }
   /**
    * How a co-op run's link and pacing went for this player (`coop/netStats.ts`), one per player per run,
    * flat: where the relay ran and this player met Cloudflare, round trip, frame jitter, the hold, underruns,
@@ -255,13 +289,18 @@ const giveUp = () => {
   for (const p of waiting) p.never?.()
 }
 
+/** An event's payload, for code that builds one away from its `track`. */
+export type EventData<E extends keyof AnalyticsEvents> = AnalyticsEvents[E]
+
 /**
  * Sends a custom event. Silently does nothing where analytics don't run. Dev builds log it to the console.
  * `beacon`: the page may be going away (`pagehide`, hidden), so PostHog sends it at once by `sendBeacon`.
+ * `at`: when it happened, for one sent later (a page that went away mid-match, sent on the next load).
  */
-export const track = <E extends keyof AnalyticsEvents>(event: E, data: AnalyticsEvents[E], opts: { beacon?: boolean } = {}) => {
+export const track = <E extends keyof AnalyticsEvents>(event: E, data: AnalyticsEvents[E], opts: { beacon?: boolean; at?: Date } = {}) => {
   if (import.meta.env.DEV) console.debug('[analytics]', event, data)
-  withPosthog((ph) => ph.capture(event, data, opts.beacon ? { transport: 'sendBeacon', send_instantly: true } : undefined))
+  const beacon = opts.beacon ? ({ transport: 'sendBeacon', send_instantly: true } as const) : {}
+  withPosthog((ph) => ph.capture(event, data, { ...beacon, ...(opts.at ? { timestamp: opts.at } : {}) }))
 }
 
 /** The lobby entries opened since the last run report (`takeOpened`). */

@@ -40,7 +40,7 @@ import { devFestival, festivalView, startFestival } from './festival'
 import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
-import { identify, startAnalytics, takeOpened, track, type ErrorContext, type RunPerf } from './analytics'
+import { identify, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
 import type { Crumb, CrumbMoment } from './crumb'
 import { BAG_ITEMS, useArmed, type BagItem } from './game/bag'
@@ -203,6 +203,7 @@ import { arenaHub, isArenaHubTab, type ArenaHubTab } from './ui/arenaHub'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
 import { historyEntry } from './arena/history'
 import { joinQueue, type QueueHandle } from './arena/queue'
+import { parseHeldVersus, versusReport, type HeldVersus, type VersusLeave } from './arena/report'
 import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked'
 import { arenaResult } from './game/arenaRank'
 import { versusSplash } from './ui/versusSplash'
@@ -2150,6 +2151,8 @@ document.addEventListener('visibilitychange', () => {
   activeCoopClient()?.setHidden(document.hidden)
   // A phone may never come back to it: the run's link numbers so far go out now (once; the end sends the final ones).
   if (document.hidden && run?.coop) reportNet(run.coop, 'hidden')
+  // An Arena match's report as it stands, for the next page load if this one never comes back (`gone`).
+  if (document.hidden && run?.coop) holdVersus(run.coop)
   if (document.hidden && !run?.coop && run?.game.phase === 'playing') run.game.phase = 'paused'
   // Back: the paused frame is drawn again, in case the browser dropped the canvas' pixels while hidden.
   if (!document.hidden) dirty = true
@@ -2161,8 +2164,14 @@ document.addEventListener('visibilitychange', () => {
  * game makes (signing in, the guide, the title's links) starts from a menu,
  * with no run, so none of them is asked. iOS Safari ignores this prompt.
  */
-// The page goes away mid-run (closed, reloaded): a co-op run's link numbers, or a solo run's end, go out by beacon.
-window.addEventListener('pagehide', () => run && (run.coop ? reportNet(run.coop, 'unload') : reportRun(run, null, true)))
+// The page goes away mid-run (closed, reloaded): a co-op run's link numbers (and an Arena match's report), or a solo run's end, go out by beacon; so does a queue's wait.
+window.addEventListener('pagehide', () => {
+  endQueueAttempt({ result: 'left' }, null, true)
+  if (!run) return
+  if (!run.coop) return reportRun(run, null, true)
+  reportVersus(run.coop, 'left', true)
+  reportNet(run.coop, 'unload')
+})
 
 window.addEventListener('beforeunload', (e) => {
   if (!run || run.game.phase === 'gameover' || run.game.phase === 'victory') return
@@ -2189,6 +2198,8 @@ const bankCoop = (r: Run, c: CoopRun, withBonus: boolean) => {
 /** Leaves the co-op run's shell (not the room): banks what's due, reports how it went for this player, drops the HUD. */
 const endCoopRun = (r: Run, c: CoopRun) => {
   const g = c.runner.game
+  // An Arena match still on: the player went elsewhere (once; a match that ended already reported).
+  reportVersus(c, 'quit')
   bankCoop(r, c, wonRun(g) || coopOver(g))
   const outcome = wonRun(g) ? (g.endless ? 'endless' : 'victory') : coopOver(g) ? 'wipe' : 'left'
   // An Arena match reports its own end (`versus_end`, `reportVersus`).
@@ -2551,7 +2562,9 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
     c.banked.over = true
     bankCoop(r, c, true)
   }
-  reportVersus(c)
+  // The clock ran out: the match's end goes out (`end`); while it runs, its report is held on the device every few seconds.
+  if (runner.game.versus?.result) reportVersus(c, 'quit')
+  else if (c.versus && performance.now() - heldAt > HOLD_MS) holdVersus(c)
   syncOverlay(r)
   tickToasts(ui, dt, false)
   // The team's cards, the connection, the waits, and the camera: this player's, or a teammate's while fainted (`render/teamCamera.ts`).
@@ -2590,7 +2603,10 @@ const closedText = (why: CloseWhy) => t().coop.closed[why]
  */
 const coopClosed = (why: CloseWhy) => {
   track('coop', { step: 'fail', at: run?.coop ? 'run' : coopShown === 'room' ? 'room' : 'join', why })
-  if (run?.coop) endRun()
+  if (run?.coop) {
+    reportVersus(run.coop, 'dropped')
+    endRun()
+  }
   removeBots()
   // The link keeps the room, so the reload joins it again on the new version.
   const code = coopClient()?.state().code ?? null
@@ -2855,9 +2871,19 @@ const arenaName = () => {
   return handle ? `@${handle}` : t().versus.you
 }
 
+/** Whether this page load reported the Arena opening (`arena_open`, once whatever the opens after). */
+let arenaOpened = false
+
+const reportArenaOpen = (screen: 'arena' | 'hub') => {
+  if (arenaOpened) return
+  arenaOpened = true
+  track('arena_open', { screen, account: coopAccess(accountsEnabled, accountState()) === 'open' ? 1 : 0 })
+}
+
 /** The Arena's screen (the lobby's tile): pick a Pokémon, then bots (at once, no account), the public queue (Casual, Ranqueada) or friends (an Arena room); or its hub. */
 const showArena = () => {
   endRun()
+  reportArenaOpen('arena')
   const relay = coopUrl() !== null
   setScreen(
     arenaScreen(ui, input, arenaStart(), {
@@ -2878,6 +2904,7 @@ const showArena = () => {
  */
 const showArenaHub = (tab: ArenaHubTab = 'profile') => {
   endRun()
+  reportArenaOpen('hub')
   setScreen(
     arenaHub(ui, input, tab, {
       back: () => showArena(),
@@ -2920,9 +2947,22 @@ const matchKindOf = (client: CoopClient, room: string): MatchKind => {
 /** The ticket in the public queue, while one waits. */
 let queueTicket: QueueHandle | null = null
 
+/** The queue attempt waiting for its answer, for its `arena_queue`: the kind asked, since when (performance.now() ms) and the most humans the screen found. */
+let queueAttempt: { kind: QueueKind; at: number; found: number } | null = null
+
+/** Sends the queue attempt's `arena_queue`, once, as it resolves (`humans`: the match's; null: the most found). */
+const endQueueAttempt = (end: QueueEnd, humans: number | null = null, beacon = false) => {
+  const a = queueAttempt
+  if (!a) return
+  queueAttempt = null
+  track('arena_queue', { kind: a.kind, seconds: Math.round((performance.now() - a.at) / 1000), humans: humans ?? a.found, ...end }, { beacon })
+}
+
+/** Drops the ticket; a wait still on was the player's cancel. */
 const leaveQueue = () => {
   queueTicket?.cancel()
   queueTicket = null
+  endQueueAttempt({ result: 'cancelled' })
 }
 
 /**
@@ -2965,13 +3005,24 @@ const playArenaQueue = (id: VersusPick, kind: QueueKind) => {
   }
   const waiting = arenaQueueLive(ui, input, { name: arenaName(), pick: id }, kind, () => back(null))
   setScreen(waiting)
+  queueAttempt = { kind, at: performance.now(), found: 1 }
   const ticket = joinQueue(deps, { kind, starter: id, party: null }, (e) => {
     if (queueTicket !== ticket) return
     const q = t().versus.queue
-    if (e.t === 'queued') return waiting.update(e)
+    if (e.t === 'queued') {
+      if (queueAttempt) queueAttempt.found = Math.max(queueAttempt.found, e.found)
+      return waiting.update(e)
+    }
     queueTicket = null
-    if (e.t === 'lost') return back(q.lost)
-    if (e.t === 'refused') return back(q.refused[e.why])
+    if (e.t === 'lost') {
+      endQueueAttempt({ result: 'lost' })
+      return back(q.lost)
+    }
+    if (e.t === 'refused') {
+      endQueueAttempt({ result: 'refused', why: e.why })
+      return back(q.refused[e.why])
+    }
+    endQueueAttempt({ result: 'matched', downgraded: kind === 'ranked' && !e.ranked ? 1 : 0 }, e.humans)
     waiting.found(e)
     queueMatch = { room: e.room, kind: e.ranked ? 'ranked' : 'casual', asked: kind }
     void joinQueueMatch(client, e.room, id, e.team, waiting)
@@ -3097,15 +3148,18 @@ const syncArenaLoadout = (client: CoopClient, room: RoomView) => {
 /** The species a match shows besides its players: the camps' and the objectives'. */
 const VERSUS_CAST = [...new Set([...VALE.camps.map((c) => ENEMIES[c.species].dex), ENEMIES.drednaw.dex, ENEMIES.zapdos.dex])]
 
-/** Sends the match's end to analytics once (`versus_end`): how it went for this player. */
-const reportVersus = (c: CoopRun) => {
+/**
+ * Sends this player's `versus_end` once per match (`arena/report.ts`): at its
+ * end, or left before (`left`: how; a match that ended reports `end` whatever it says).
+ */
+const reportVersus = (c: CoopRun, left: VersusLeave, beacon = false) => {
   const g = c.runner.game
-  const s = g.versus
   const v = c.versus
-  const me = g.players[c.runner.slot]
-  if (!s?.result || !v || v.reported || !me?.versus) return
+  if (!v || v.reported) return
+  const data = versusReport(g, c.runner.slot, v.kind, v.local, left)
+  if (!data) return
   v.reported = true
-  const winner = s.result.winner
+  dropHeldVersus()
   const result = arenaResult(g)
   // Against bots: practice, kept on the device (guests too) and, signed in, reported (never rated).
   if (v.kind === 'practice' && result) {
@@ -3114,22 +3168,42 @@ const reportVersus = (c: CoopRun) => {
     if (arenaSignedIn()) void postPractice(result, c.runner.slot)
   }
   // Ranked: the relay reports the match, and the API rates it a moment later; the end screen waits for its RP.
-  if (v.kind === 'ranked') v.rp ??= awaitRpChange(Date.now())
-  track('versus_end', {
-    mode: v.local ? 'bots' : 'friends',
-    kind: v.kind,
-    winner: winner === null ? 'draw' : winner === 0 ? 'blue' : 'red',
-    team: me.versus.team === 0 ? 'blue' : 'red',
-    result: winner === null ? 'draw' : winner === me.versus.team ? 'win' : 'loss',
-    blue: s.score[0],
-    red: s.score[1],
-    kos: me.versus.kos,
-    deaths: me.versus.deaths,
-    scored: me.versus.scored,
-    level: me.level,
-    starter: me.starter,
-    humans: g.players.filter((p) => !p.versus?.bot).length,
-  })
+  if (v.kind === 'ranked' && result) v.rp ??= awaitRpChange(Date.now())
+  track('versus_end', data, { beacon })
+}
+
+/** Where a running match's report waits on the device, for a page that goes away without a word (`gone`, sent on the next load). */
+const VERSUS_HELD = 'ps:versusHeld'
+/** How often the held report is written again while a match runs (ms). */
+const HOLD_MS = 5000
+/** When the held report was last written (performance.now() ms). */
+let heldAt = -Infinity
+
+/** Holds the running match's report as it stands now (`VERSUS_HELD`); nothing once it went out. */
+const holdVersus = (c: CoopRun) => {
+  heldAt = performance.now()
+  const v = c.versus
+  const data = v && !v.reported ? versusReport(c.runner.game, c.runner.slot, v.kind, v.local, 'gone') : null
+  if (data?.outcome !== 'gone') return
+  try {
+    localStorage.setItem(VERSUS_HELD, JSON.stringify({ at: Date.now(), data } satisfies HeldVersus))
+  } catch {}
+}
+
+const dropHeldVersus = () => {
+  try {
+    localStorage.removeItem(VERSUS_HELD)
+  } catch {}
+}
+
+/** The last page went away mid-match without a word: its held report goes out now, dated when it was last written. */
+const sendHeldVersus = () => {
+  let held: HeldVersus | null = null
+  try {
+    held = parseHeldVersus(JSON.parse(localStorage.getItem(VERSUS_HELD) ?? 'null'))
+  } catch {}
+  dropHeldVersus()
+  if (held) track('versus_end', held.data, { at: new Date(held.at) })
 }
 
 /* ---------------- Loop ---------------- */
@@ -3456,6 +3530,7 @@ const askAboutCrash = () => {
 const boot = () => {
   loadSafeMode()
   startAnalytics(errorContext)
+  sendHeldVersus()
   watchDeploys()
   // Events and errors tie to the account on this device, known from its link before Clerk loads.
   const identifyAccount = () => identify(accountUserId(), accountHandle())
