@@ -2,7 +2,7 @@ import { accountHandle } from '../account'
 import { arenaSignedIn, deviceArenaHistory, fetchArenaBoard, fetchArenaHistory, fetchArenaMe } from '../arenaApi'
 import { divisionProgress, ladder, mergeHistory, record, timeLeft } from '../arena/history'
 import { ARENA_RANKED, type TierId } from '../data/arenaRanked'
-import { VERSUS, VERSUS_FORMATS } from '../data/versus'
+import { VERSUS, VERSUS_FORMATS, VERSUS_KIT } from '../data/versus'
 import type { ArenaFormat } from '../data/arenaFormats'
 import { playSfx } from '../engine/audio'
 import { formatTime } from '../engine/math'
@@ -375,7 +375,17 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
       season1: season1Date(),
       surrender: { standard: surrenderClock('standard'), quick: surrenderClock('quick') },
     })
-    const keys = { move1: boundKey('move1'), move2: boundKey('move2'), unite: boundKey('unite'), target: boundKey('target') }
+    const keys = {
+      move1: boundKey('move1'),
+      move2: boundKey('move2'),
+      unite: boundKey('unite'),
+      target: boundKey('target'),
+      chat: boundKey('chat'),
+      ping: boundKey('ping'),
+      board: boundKey('board'),
+      second: VERSUS_KIT.secondMove,
+      evo: { standard: VERSUS_FORMATS.standard.evolveAt, quick: VERSUS_FORMATS.quick.evolveAt },
+    }
     return [
       h('b', { class: 'arena-hub-rules-title' }, m.controls.title),
       h('ol', { class: 'arena-hub-rules' }, ...m.controls.items(keys).map((text) => h('li', {}, text))),

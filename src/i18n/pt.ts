@@ -342,13 +342,16 @@ export const pt = {
         'Cada aliado no mesmo gol acelera a marcação em 50%.',
         'Um golpe rival interrompe quem está marcando.',
         'No seu gol você se cura e corre 20% mais rápido.',
-        'O gol da base só abre depois que cai um gol de rota.',
+        'No Vale, o gol da base só abre depois que cai um gol de rota; a Clareira não tem gol de base.',
         'Derrotar o Drednaw dá escudo e Energia ao time todo.',
         'No mato alto os rivais não te veem, mas seus ataques param: bom para emboscar e fugir.',
         'As cartas de nível não pausam: toque numa ou use 1–4.',
         'O ataque básico é automático: Q, E e R lançam o Golpe 1, o Golpe 2 e o Unite.',
         'Clique ou toque num rival para travar o alvo; Tab troca. No celular, arraste o botão do golpe para mirar.',
-        'Ao evoluir (nível 5 e 9) você troca o Golpe 1, depois o Golpe 2, por um golpe da nova forma.',
+        'Cada evolução troca o Golpe 1, depois o Golpe 2, por um golpe da nova forma.',
+        'T abre o chat rápido, G marca o mapa e segurar ` mostra o placar completo.',
+        'Da metade da partida em diante, o time pode votar pela rendição: conta como derrota, não como abandono.',
+        'Terminar a partida devolve Fair Play; sair ou ficar parado custa, e abaixo de 80 não tem Ranqueada.',
       ],
     },
     hud: {
@@ -614,10 +617,9 @@ export const pt = {
           'Sair no meio da partida conta como derrota (um bot assume o seu lugar) e custa Fair Play.',
           `As temporadas duram ${r.days} dias e viram à meia-noite de Brasília.`,
           'Os treinos contra bots ficam no histórico, mas não contam para o ranking. Partidas com amigos também não valem RP.',
-          `Fair Play: todo mundo começa com ${r.fair.max}. Sair antes do fim custa ${r.fair.left}, ficar ${r.fair.afkAfter} s parado ou ausente custa ${r.fair.afk} e cada partida terminada devolve ${r.fair.finish}. Abaixo de ${r.fair.rankedMin}, sem Ranqueada; abaixo de ${r.fair.holdBelow}, a fila espera mais.`,
+          `Fair Play: todo mundo começa com ${r.fair.max}. Sair antes do fim custa ${r.fair.left}, ficar ${r.fair.afkAfter} s sem jogar (sem andar, lançar golpes nem travar alvo) ou ausente custa ${r.fair.afk} e cada partida terminada devolve ${r.fair.finish}. Abaixo de ${r.fair.rankedMin}, sem Ranqueada; abaixo de ${r.fair.holdBelow}, a fila espera mais.`,
           `Proteção: boas partidas na Ranqueada enchem a barra. Cheia, a próxima derrota não custa RP (o MMR ainda se move) e a barra zera.`,
           `Pré-temporada: até ${r.season1}, as Ranqueadas ficam no Histórico sem RP. O ranking começa com a Temporada 1.`,
-          'Chat rápido e marcações: frases prontas (T) e marcações no mapa (G, Alt+clique ou segurar o minimapa) chegam só ao seu time; "Bom jogo!" chega a todos. Dá para silenciar o chat em Configurações.',
           `Render-se: da metade da partida em diante (${r.surrender.standard} no relógio no 4v4, ${r.surrender.quick} no 3v3), o time pode votar pela rendição. Passa com 2/3 dos treinadores do time (sozinho com bots, você decide) e conta como derrota normal, não como abandono.`,
           'Revanche: entre amigos, a sala joga de novo com o mesmo time. Na fila pública, "Revanche com o time" volta à fila em grupo com quem do time também apertar.',
         ],
@@ -625,14 +627,26 @@ export const pt = {
       /** The Arena's controls, under the rules: `keys` are the bound labels of Move 1, Move 2, the Unite Move and switching targets. */
       controls: {
         title: 'Controles da Arena',
-        items: (k: { move1: string; move2: string; unite: string; target: string }) => [
+        items: (k: {
+          move1: string
+          move2: string
+          unite: string
+          target: string
+          chat: string
+          ping: string
+          board: string
+          /** The level Move 2 comes at, and each format's evolution levels. */
+          second: number
+          evo: { standard: readonly [number, number]; quick: readonly [number, number] }
+        }) => [
           'Ataque básico: sai sozinho, no alvo travado ou no rival que a sua prioridade escolhe (Configurações → Controles: mais perto, menos HP % ou menos HP).',
           `Golpe 1 (${k.move1}) e Golpe 2 (${k.move2}): você lança e mira. Golpe Unite (${k.unite}): o especial do seu tipo, com recarga.`,
           `Trocar de alvo: clique ou toque num Pokémon, ou use ${k.target}. No controle: R, ZR e ZL lançam; o analógico direito mira e troca de alvo.`,
           'No celular: toque no botão para lançar com mira assistida, arraste para mirar e volte ao botão para cancelar. Tocar no ataque básico troca de alvo.',
           'Mira assistida (padrão) acerta o alvo travado ou o melhor rival por perto; a manual vai exatamente para onde o mouse ou o dedo apontar.',
-          'Golpe 1 vem no começo e o Golpe 2 no nível 3. Na Arena se evolui no nível 5 e no 9: cada evolução troca um golpe por um da nova forma, no mesmo nível.',
+          `Golpe 1 vem no começo e o Golpe 2 no nível ${k.second}. Na Arena se evolui mais cedo: nos níveis ${k.evo.standard[0]} e ${k.evo.standard[1]} no 4v4, ${k.evo.quick[0]} e ${k.evo.quick[1]} no 3v3. Cada evolução troca um golpe por um da nova forma, no mesmo nível.`,
           'No mato alto o Golpe 1 e o Golpe 2 param; o Unite funciona, mas te revela.',
+          `Chat rápido (${k.chat}) e marcações (${k.ping}, Alt+clique ou segurar o minimapa) chegam só ao seu time; "Bom jogo!" chega a todos. Segure ${k.board} (ou toque no placar do topo) para ver o placar completo. Dá para silenciar o chat em Configurações.`,
         ],
       },
       hintKeys: '← → abas · ↑ ↓ rolar · ESC voltar',
