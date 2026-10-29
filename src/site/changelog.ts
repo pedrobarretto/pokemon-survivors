@@ -72,6 +72,12 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'Pré-temporada: até 2 de novembro, as Ranqueadas ficam no seu histórico sem RP, e as telas da fila, do fim da partida e do Perfil avisam. O ranking começa com a Temporada 1.', en: 'Pre-season: until November 2, Ranked matches go to your history with no RP, and the queue, end-of-match and Profile screens say so. The ranking starts with Season 1.', es: 'Pretemporada: hasta el 2 de noviembre, las Clasificatorias quedan en tu historial sin RP, y las pantallas de la cola, del final de la partida y del Perfil lo avisan. El ranking empieza con la Temporada 1.', fr: 'Pré-saison : jusqu’au 2 novembre, les matchs Classés restent dans ton historique sans RP, et les écrans de la file, de fin de match et du Profil le disent. Le classement commence avec la Saison 1.', zh: '季前賽：11 月 2 日之前，排位賽會留在你的紀錄中但不計 RP，排隊、比賽結束和個人資料畫面都會說明。排行榜從第 1 賽季開始。' },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          { pt: 'No iPhone, a tela do jogo podia ficar preta em runs longas (o iOS apaga os desenhos guardados quando falta memória ou o app vai para o fundo). Agora o jogo percebe e redesenha tudo em poucos segundos.', en: 'On iPhone, the game screen could go black in long runs (iOS wipes the stored drawings when memory runs low or the app goes to the background). Now the game notices and redraws everything within a few seconds.', es: 'En iPhone, la pantalla del juego podía quedar negra en partidas largas (iOS borra los dibujos guardados cuando falta memoria o la app pasa a segundo plano). Ahora el juego lo detecta y vuelve a dibujar todo en pocos segundos.', fr: 'Sur iPhone, l’écran du jeu pouvait devenir noir pendant les longues parties (iOS efface les dessins gardés quand la mémoire manque ou que l’app passe en arrière-plan). Le jeu le remarque désormais et redessine tout en quelques secondes.', zh: '在 iPhone 上，長時間遊玩時畫面可能會變黑（記憶體不足或 App 切到背景時，iOS 會清掉暫存的圖像）。現在遊戲會偵測到並在幾秒內重新繪製。' },
+        ],
+      },
     ],
   },
   {

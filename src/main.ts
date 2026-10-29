@@ -11,7 +11,7 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { canvasRestored, context2d, onCanvasReset, sweepArt } from './engine/pixelart'
+import { canvasLosses, canvasRestored, checkCanvases, context2d, onCanvasReset, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
@@ -294,6 +294,9 @@ onCanvasReset(() => {
   context2d(canvas)
   dirty = true
 })
+// iOS Safari wipes the canvases without that event (`checkCanvases`): look every few seconds, and on coming back (below).
+checkCanvases()
+setInterval(() => document.hidden || checkCanvases(), 3000)
 
 /* ---------------- App state ---------------- */
 
@@ -527,7 +530,7 @@ describeWith(() => {
   const view = [...ui.querySelectorAll(':scope > .screen:not(.bug-screen)')].map((el) => [...el.classList].filter((c) => !SCREEN_CLASSES.has(c)).join('.')).join(' > ')
   // The canvases the caches hold (`heldCanvases`) stand for the report's canvas memory.
   const memory = sampleMemory()
-  const perf = { canvases: memory.canvases, canvasMb: memory.canvasMb, peakCanvases: memory.peakCanvases, peakCanvasMb: memory.peakCanvasMb, frameMs: recentFrameMs(frames) }
+  const perf = { canvases: memory.canvases, canvasMb: memory.canvasMb, peakCanvases: memory.peakCanvases, peakCanvasMb: memory.peakCanvasMb, frameMs: recentFrameMs(frames), ...canvasLosses }
   const g = run && shownGame(run)
   if (!g || g.phase === 'gameover' || g.phase === 'victory') return { view, run: null, perf, memory }
   const boss = g.bossId === null ? undefined : g.enemies.find((e) => e.id === g.bossId)
@@ -2166,8 +2169,11 @@ document.addEventListener('visibilitychange', () => {
   // An Arena match's report as it stands, for the next page load if this one never comes back (`gone`).
   if (document.hidden && run?.coop) holdVersus(run.coop)
   if (document.hidden && !run?.coop && run?.game.phase === 'playing') run.game.phase = 'paused'
-  // Back: the paused frame is drawn again, in case the browser dropped the canvas' pixels while hidden.
-  if (!document.hidden) dirty = true
+  // Back: the paused frame is drawn again, in case the browser dropped the canvas' pixels while hidden (its caches' too).
+  if (!document.hidden) {
+    checkCanvases()
+    dirty = true
+  }
 })
 
 /**
@@ -4156,6 +4162,12 @@ if (import.meta.env.DEV) {
       safeMode: (choice?: boolean | SafeChoice) => {
         if (choice !== undefined) setSafeMode(choice === true ? 'on' : choice === false ? 'off' : choice)
         return { on: safeModeOn(), ...loadSafeMode() }
+      },
+      /** `ps.wipeCanvases()` blanks the caches' canvases and the screen as iOS does unannounced; the canvas watch redraws them within seconds. Returns its counts. */
+      wipeCanvases: () => {
+        wipeCanvases()
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        return { ...canvasLosses }
       },
       spawn: devSpawn,
       alpha: devAlpha,
