@@ -339,21 +339,30 @@ const STILL: StepInput = { move: { x: 0, y: 0 }, special: false }
 
 /**
  * Each human's stretch without acting, for Fair Play's AFK: it grows while
- * the stick is idle with no button pressed, or while they're away (a bot
- * plays the seat then), and goes back to 0 when they act. Knocked out or
- * channeling into a goal (standing still to score), it holds. Never read by
- * the match's rules: only the report's `afk` (its longest) says it.
+ * they don't play, or while they're away (a bot plays the seat then), and
+ * goes back to 0 when they act (`acts`). Knocked out or channeling into a
+ * goal (standing still to score), it holds. Never read by the match's rules:
+ * only the report's `afk` (its longest) says it.
  */
 const trackIdle = (g: Game, inputs: readonly StepInput[], dt: number) => {
   for (const p of g.players) {
     const v = p.versus
     if (!v || v.bot || !inPlay(p) || v.channel > 0) continue
     const i = inputs[p.slot]
-    const acting = !p.away && i !== undefined && (i.move.x !== 0 || i.move.y !== 0 || i.special || i.mega === true || i.lunge === true)
+    const acting = !p.away && i !== undefined && acts(i)
     v.still = acting ? 0 : v.still + dt
     if (v.still > v.afk) v.afk = v.still
   }
 }
+
+/**
+ * Whether a tick's input is playing, for `trackIdle`: the stick, the special
+ * (the Unite Move), Mega, a lunge, a cast of Move 1 or Move 2, a target
+ * locked or let go. Quick chat, pings, a surrender vote, the target priority
+ * and level-up picks aren't: a player parked at the base can do all of them.
+ */
+export const acts = (i: StepInput) =>
+  i.move.x !== 0 || i.move.y !== 0 || i.special || i.mega === true || i.lunge === true || (i.casts?.length ?? 0) > 0 || i.locked === true
 
 /** Keeps the players and the wild on the map's floor. */
 const keepEveryoneOn = (g: Game, room: Room) => {

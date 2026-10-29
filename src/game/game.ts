@@ -378,9 +378,10 @@ const rolling = (g: Game): RollOptions => {
 /**
  * Per-tick player input, as plain data so the simulation stays DOM-free. `mega`
  * presses the Mega button and `lunge` fires the manual moves (Quick Attack).
- * `casts` are the Arena kit's aimed casts this tick (`versusKit.ts`), at most one per skill.
+ * `casts` are the Arena kit's aimed casts this tick (`versusKit.ts`), at most one per skill;
+ * `locked`, a target locked or let go this tick (only Fair Play's idle count, `trackIdle`, reads it).
  */
-export type StepInput = { move: Vec; special: boolean; mega?: boolean; lunge?: boolean; casts?: Cast[] }
+export type StepInput = { move: Vec; special: boolean; mega?: boolean; lunge?: boolean; casts?: Cast[]; locked?: boolean }
 
 /** A player with no input this tick: stands still, presses nothing. */
 const STILL: StepInput = { move: { x: 0, y: 0 }, special: false }

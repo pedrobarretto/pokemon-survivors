@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { VERSUS, VERSUS_FORMATS } from '../data/versus'
 import { GLADE, VALE } from '../data/versusMaps'
-import { parseTickEntry, stepTick } from './lockstep'
+import { parseTickEntry, stepTick, type TickEntry } from './lockstep'
 import { moveCode } from './replay'
 import { actAs } from './players'
 import { restore, snapshot, stateHash } from './snapshot'
@@ -147,6 +147,19 @@ describe('a match', () => {
     run(g, 30)
     expect(v.afk).toBeGreaterThanOrEqual(30)
     expect(g.players.filter((p) => p.versus!.bot).every((p) => p.versus!.afk === 0)).toBe(true)
+  })
+
+  it('counts a cast or a target lock as playing, but not quick chat, pings, a vote or the priority', () => {
+    const still = (entry: (i: number) => TickEntry[]) => {
+      const g = createVersusGame(4, [{ starter: 'mudkip', name: 'me' }])
+      for (let i = 0; i < 40 / TICK; i++) stepTick(g, i % 120 === 0 ? entry(i) : [])
+      return g.players[0]!.versus!.afk
+    }
+    // Standing at the base, a cast or a lock every 2 s: never a long stretch.
+    expect(still(() => [{ slot: 0, kind: 'cast', skill: 0, dir: 0, reach: 100, target: -1 }])).toBeLessThan(3)
+    expect(still((i) => [{ slot: 0, kind: 'lock', target: i % 240 === 0 ? -1 : 0 }])).toBeLessThan(3)
+    // Talking, pinging, voting or changing the priority is no play: the 40 s count whole.
+    expect(still(() => [{ slot: 0, kind: 'chat', msg: 'go' }, { slot: 0, kind: 'ping', ping: 'omw', x: 0, y: 0 }, { slot: 0, kind: 'surrender', vote: true }, { slot: 0, kind: 'prio', prio: 1 }])).toBeGreaterThan(39)
   })
 
   it('has its bots carry Energy to the rival goals over a whole match, ending on the clock', () => {

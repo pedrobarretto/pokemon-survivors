@@ -274,7 +274,9 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
       return
     }
     case 'lock':
-      if (p.versus) p.versus.lock = e.target
+      if (!p.versus) return
+      p.versus.lock = e.target
+      input.locked = true
       return
     case 'prio':
       if (p.versus) p.versus.prio = e.prio
