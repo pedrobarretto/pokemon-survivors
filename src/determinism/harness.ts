@@ -5,11 +5,12 @@ import { LEGEND_IDS } from '../data/legends'
 import { startScenario, tickScenario, type Scenario } from './scenario'
 import { startCoopScenario, tickCoopScenario, type CoopScenario } from './coopScenario'
 import { createVersusGame, type VersusLoadout } from '../game/versus'
+import type { ArenaFormat } from '../data/arenaFormats'
 import { stepTick } from '../game/lockstep'
 import type { Game } from '../game/types'
 
-/** An Arena match: the humans' seats (standing still: no entries come for them, so the match is the bots' and the PvP's). */
-export type VersusScenario = { seed: number; versus: readonly VersusLoadout[] }
+/** An Arena match: the humans' seats (standing still: no entries come for them, so the match is the bots' and the PvP's), in a format (the 4v4 without one). */
+export type VersusScenario = { seed: number; versus: readonly VersusLoadout[]; format?: ArenaFormat }
 
 /** A solo run (`scenario.ts`), a co-op one (`coopScenario.ts`, a `team`) or an Arena match (`versus`). */
 export type AnyScenario = Scenario | CoopScenario | VersusScenario
@@ -19,7 +20,7 @@ type Run = { g: Game; tick: number; step: () => boolean }
 
 const start = (s: AnyScenario): Run => {
   if ('versus' in s) {
-    const g = createVersusGame(s.seed, s.versus)
+    const g = createVersusGame(s.seed, s.versus, s.format)
     let tick = 0
     const step = () => {
       if (g.phase === 'gameover') return false
@@ -61,6 +62,7 @@ export const HARNESS_SCENARIOS: ReadonlyArray<{ name: string; scenario: AnyScena
   // Arena: whole 4v4 matches of bots (PvP through the avatars, camps, Drednaw and Zapdos), one with a human seat standing in its base.
   { name: 'versus-bots-7min', scenario: { seed: 7001, versus: [] }, minutes: 7.2 },
   { name: 'versus-human-7min', scenario: { seed: 7002, versus: [{ starter: 'froakie', name: 'p1', team: 1 }] }, minutes: 7.2 },
+  { name: 'versus-quick-3min', scenario: { seed: 7003, versus: [], format: 'quick' }, minutes: 3.2 },
   { name: 'coop-3-nightmare-10min', scenario: { seed: 9003, team: ['riolu', 'scyther', 'porygon'], difficulty: 'nightmare', maxRanks: false }, minutes: 10 },
   { name: 'squirtle-normal-25min', scenario: { seed: 2, starter: 'squirtle', difficulty: 'normal', maxRanks: true }, minutes: 25 },
   { name: 'charmander-hard-mega-15min', scenario: { seed: 31, starter: 'charmander', difficulty: 'hard', maxRanks: true }, minutes: 15 },
