@@ -11,7 +11,7 @@ import { burst } from './effects'
 import { roomOf } from './room'
 import { isAirborne } from './traits'
 import { nearestPlayer } from './players'
-import type { Enemy, Game } from './types'
+import type { Enemy, Game, Pickup } from './types'
 import * as dm from '../engine/dmath'
 
 /**
@@ -473,5 +473,31 @@ export const updateTerrain = (g: Game, dt: number) => {
     burst(g, h.x, h.y, { colors: SHOT_SPARKS, count: 6, speed: 50, ttl: 0.25 })
   }
   // Loot that a flyer dropped over a mountain rolls off to where the players can reach it.
-  for (const k of g.pickups) if (!k.attracted) block(g, k, 3)
+  const room = roomOf(g)?.terrain ?? null
+  const door = g.place.entrance?.terrain ?? null
+  for (const k of g.pickups) if (!k.attracted) settleLoot(g, k, room, door)
+}
+
+/** Where a loose pickup last stood clear of the terrain, and the room and entrance (their terrain) about then. */
+type ClearSpot = { x: number; y: number; room: Feature | null; door: Feature | null }
+
+/**
+ * Loot found clear of every solid (`block` pushed nothing), kept beside the
+ * state like `solidBoxes`. `block` reads only the spot, the seed's cells, the
+ * room and the entrance, so loot that hasn't moved since, with the same room
+ * and entrance about, is still clear: the late game's thousands of candies and
+ * coins left behind skip the push, and every tick ends the same.
+ */
+const clearLoot = new WeakMap<Pickup, ClearSpot>()
+
+const settleLoot = (g: Game, k: Pickup, room: Feature | null, door: Feature | null) => {
+  const spot = clearLoot.get(k)
+  if (spot && spot.x === k.x && spot.y === k.y && spot.room === room && spot.door === door) return
+  if (block(g, k, 3) !== null) return
+  if (spot) {
+    spot.x = k.x
+    spot.y = k.y
+    spot.room = room
+    spot.door = door
+  } else clearLoot.set(k, { x: k.x, y: k.y, room, door })
 }

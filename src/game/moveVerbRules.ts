@@ -62,22 +62,55 @@ export const nearestPreferring = <T extends Foe>(
   return best
 }
 
+/** A grid cell's key from its column and row; two far cells may share one, which only adds foes the distance check drops. */
+const cellKey = (cx: number, cy: number) => ((cx & 0xffff) << 16) | (cy & 0xffff)
+
+/** `foes` bucketed by `size`-wide grid cells. */
+const cellsOf = <T extends Point>(foes: readonly T[], size: number) => {
+  const cells = new Map<number, T[]>()
+  for (const e of foes) {
+    const key = cellKey(Math.floor(e.x / size), Math.floor(e.y / size))
+    const cell = cells.get(key)
+    if (cell) cell.push(e)
+    else cells.set(key, [e])
+  }
+  return cells
+}
+
+/** How many foes in `cells` (bucketed at `size`, at least `reach` wide) lie within `reach` of `e` (`r2` = reach²), `e` itself included. */
+const neighbors = (cells: ReadonlyMap<number, readonly Point[]>, e: Point, size: number, r2: number) => {
+  const cx = Math.floor(e.x / size)
+  const cy = Math.floor(e.y / size)
+  let n = 0
+  for (let x = cx - 1; x <= cx + 1; x++) {
+    for (let y = cy - 1; y <= cy + 1; y++) {
+      const cell = cells.get(cellKey(x, y))
+      if (cell) for (const o of cell) if (d2(e, o) <= r2) n++
+    }
+  }
+  return n
+}
+
 /**
  * Future Sight's landing spots: up to `count` points over the densest groups of
  * `foes`. Each pick is the foe with the most neighbors within `radius` (ties to
  * the lower id); the spot is its neighbors' centroid, and the foes it covers
- * can't seed another spot. O(n²) on the foes in view, a few times a minute.
+ * can't seed another spot. Neighbors are counted from a grid of `radius`-wide
+ * cells (only the 3×3 around a foe can hold one in reach), so a late-game horde
+ * of a thousand in view stays cheap; the counts are the same as checking all.
  */
 export const clusterSpots = (foes: readonly Foe[], count: number, radius: number): Point[] => {
   const left = foes.filter((e) => e.dying < 0)
   const spots: Point[] = []
   const r2 = radius * radius
+  // Cells at least as wide as the reach (a reach of 0 or less finds only foes on the very spot).
+  const size = radius > 0 ? radius : 1
   while (spots.length < count && left.length > 0) {
+    const cells = cellsOf(left, size)
     let best = left[0]!
     let bestN = -1
     for (const e of left) {
-      let n = 0
-      for (const o of left) if (d2(e, o) <= r2) n++
+      const n = neighbors(cells, e, size, r2)
       if (n > bestN || (n === bestN && e.id < best.id)) {
         best = e
         bestN = n

@@ -508,7 +508,7 @@ export const ring = packed3((radius: number, thickness: number, color: string) =
   return canvas
 })
 
-/** Shapes past this many pixels are painted fresh instead of cached: a shockwave or a telegraph grows through every size. */
+/** Shapes past this many pixels stay off the atlas (`bigShape`): a shockwave or a telegraph grows through every size. */
 const BIG_SHAPE = 64 * 64
 
 let stage: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } | null = null
@@ -534,20 +534,66 @@ const stamp = (ctx: CanvasRenderingContext2D, w: number, h: number, x: number, y
   ctx.drawImage(stage.canvas, 0, 0, w, h, Math.round(x - w / 2), Math.round(y - h / 2), w, h)
 }
 
-/** `blitCentered(ctx, ellipse(rx, ry, color), x, y)`, with big ellipses painted fresh rather than cached. */
+/** Pixels the big shapes kept (`bigShape`) may hold in all (about 2 MB); the least recently drawn go first. */
+const KEEP_BIG = 512 * 1024
+
+/** Big shapes drawn more than once (a comet's scorch mark, a field holding its size), by key, least recently drawn first. */
+const keptBig = new Map<string, HTMLCanvasElement>()
+let keptBigPx = 0
+/** Keys of big shapes drawn once so far: only a second draw keeps one, so a shockwave growing every frame keeps none. */
+const seenBig = new Set<string>()
+onCanvasReset(
+  () => {
+    keptBig.clear()
+    keptBigPx = 0
+  },
+  () => keptBig,
+)
+
+/**
+ * Draws a big shape (`key` names its kind, size and color) centered at (x, y) as `stamp`
+ * does. One drawn again comes from a canvas of its own, kept while it fits `KEEP_BIG`:
+ * a late-game screen holds dozens of scorch marks and fields, and painting each one row
+ * by row every frame cost more than the rest of the moves together.
+ */
+const bigShape = (ctx: CanvasRenderingContext2D, key: string, w: number, h: number, x: number, y: number, paint: (s: CanvasRenderingContext2D) => void) => {
+  let canvas = keptBig.get(key)
+  if (canvas) {
+    keptBig.delete(key)
+    keptBig.set(key, canvas)
+  } else {
+    if (!seenBig.has(key) || w * h > KEEP_BIG / 8) {
+      if (seenBig.size >= 512) seenBig.clear()
+      seenBig.add(key)
+      return stamp(ctx, w, h, x, y, paint)
+    }
+    canvas = createCanvas(w, h)
+    paint(context2d(canvas))
+    keptBig.set(key, canvas)
+    keptBigPx += w * h
+    for (const [old, kept] of keptBig) {
+      if (keptBigPx <= KEEP_BIG) break
+      keptBig.delete(old)
+      keptBigPx -= kept.width * kept.height
+    }
+  }
+  ctx.drawImage(canvas, Math.round(x - w / 2), Math.round(y - h / 2))
+}
+
+/** `blitCentered(ctx, ellipse(rx, ry, color), x, y)`, with big ellipses painted fresh until one is drawn again (`bigShape`). */
 export const blitEllipse = (ctx: CanvasRenderingContext2D, rx: number, ry: number, color: string, x: number, y: number) => {
   const w = Math.round(rx) * 2 + 1
   const h = Math.round(ry) * 2 + 1
   if (w * h <= BIG_SHAPE) return blitPacked(ctx, ellipse(rx, ry, color), x, y)
-  stamp(ctx, w, h, x, y, (s) => paintEllipse(s, 0, 0, rx, ry, color))
+  bigShape(ctx, `e${rx},${ry},${color}`, w, h, x, y, (s) => paintEllipse(s, 0, 0, rx, ry, color))
 }
 
-/** `blitCentered(ctx, ring(radius, thickness, color), x, y)`, with big rings painted fresh rather than cached. */
+/** `blitCentered(ctx, ring(radius, thickness, color), x, y)`, with big rings painted fresh until one is drawn again (`bigShape`). */
 export const blitRing = (ctx: CanvasRenderingContext2D, radius: number, thickness: number, color: string, x: number, y: number) => {
   const r = Math.round(radius)
   const size = r * 2 + 1
   if (size * size <= BIG_SHAPE) return blitPacked(ctx, ring(radius, thickness, color), x, y)
-  stamp(ctx, size, size, x, y, (s) => paintRing(s, 0, 0, r, thickness, color))
+  bigShape(ctx, `r${r},${thickness},${color}`, size, size, x, y, (s) => paintRing(s, 0, 0, r, thickness, color))
 }
 
 /** Draws a sprite centered at (x, y), snapped to whole pixels. */
