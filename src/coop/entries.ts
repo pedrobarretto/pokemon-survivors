@@ -86,7 +86,7 @@ export const toTickEntry = (e: Entry, slots: ReadonlyMap<number, number>): TickE
       raw.vote = a
       break
   }
-  return parseTickEntry(raw)
+  return parseTickEntry(raw, slots.size)
 }
 
 /** A tick's stamped entries as tick entries, in order. */

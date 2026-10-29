@@ -161,7 +161,7 @@ const padSpot = (team: Team, i: number) => {
 }
 
 /**
- * A fresh match for `humans` (1 to 4, by slot) and the bots that fill the
+ * A fresh match for `humans` (1 to 8, by slot) and the bots that fill the
  * teams (`seatMatch`). Every client that calls it with the same seed and
  * loadouts gets the same game. Nobody brings anything from their save: no
  * Poké Mart ranks, Bag, TMs or items, and no shiny luck that would change a

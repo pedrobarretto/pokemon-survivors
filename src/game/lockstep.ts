@@ -55,12 +55,13 @@ const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'obj
 const isIndex = (v: unknown, max: number): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= max
 
 /**
- * Reads a tick entry from untrusted JSON: a fresh, well-formed entry, or null
- * for anything else (a wrong kind, a missing field, a slot or code out of
- * range). Never throws.
+ * Reads a tick entry from untrusted JSON for a run of `players` slots (a
+ * co-op team, or an Arena match's 8 seats): a fresh, well-formed entry, or
+ * null for anything else (a wrong kind, a missing field, a slot the run
+ * doesn't have, a code out of range). Never throws.
  */
-export const parseTickEntry = (raw: unknown): TickEntry | null => {
-  if (!isRecord(raw) || !isIndex(raw.slot, COOP.maxPlayers - 1) || typeof raw.kind !== 'string') return null
+export const parseTickEntry = (raw: unknown, players: number): TickEntry | null => {
+  if (!isRecord(raw) || !isIndex(raw.slot, players - 1) || typeof raw.kind !== 'string') return null
   const { slot, kind } = raw
   switch (kind) {
     case 'move':
@@ -240,7 +241,7 @@ export const stepTick = (g: Game, entries: readonly TickEntry[]) => {
   if (coop === null) return
   const inputs = inputsOf(g)
   for (const raw of entries) {
-    const e = parseTickEntry(raw)
+    const e = parseTickEntry(raw, g.players.length)
     if (e) applyEntry(g, e, inputs)
   }
   // `move` entries land in `held`; the step reads them this tick.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { VALE, VERSUS } from '../data/versus'
-import { stepTick } from './lockstep'
+import { parseTickEntry, stepTick } from './lockstep'
+import { moveCode } from './replay'
 import { actAs } from './players'
 import { restore, snapshot, stateHash } from './snapshot'
 import { TICK } from './tick'
@@ -53,6 +54,19 @@ describe('a match', () => {
     run(a, 10)
     run(c, 10)
     expect(stateHash(c)).toBe(stateHash(a))
+  })
+
+  it('moves a human in an upper slot (5 of 8) by its entries, and still rejects a slot past the match', () => {
+    const humans = Array.from({ length: 6 }, (_, i) => ({ starter: 'charmander' as const, name: `p${i}` }))
+    const g = createVersusGame(11, humans)
+    const p = g.players[5]!
+    expect(p.versus!.bot).toBe(false)
+    const x = p.x
+    const right = { slot: 5, kind: 'move', code: moveCode({ x: 1, y: 0 }) } as const
+    for (let i = 0; i < 30; i++) stepTick(g, [right])
+    expect(p.x).toBeGreaterThan(x + 10)
+    expect(parseTickEntry(right, g.players.length)).toEqual(right)
+    expect(parseTickEntry({ ...right, slot: g.players.length }, g.players.length)).toBeNull()
   })
 
   it('lets a rival hurt and knock out a Pokémon, never a teammate, and brings it back on its pad', () => {

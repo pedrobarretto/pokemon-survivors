@@ -314,9 +314,9 @@ describe('co-op payout and stats', () => {
 
 describe('co-op entries', () => {
   it('reads only well-formed entries', () => {
-    expect(parseTickEntry({ slot: 1, kind: 'move', code: 17 })).toEqual({ slot: 1, kind: 'move', code: 17 })
+    expect(parseTickEntry({ slot: 1, kind: 'move', code: 17 }, 4)).toEqual({ slot: 1, kind: 'move', code: 17 })
     for (const bad of [null, 7, 'move', [], { slot: 9, kind: 'away' }, { slot: 0, kind: 'move', code: 999 }, { slot: 0, kind: 'pick', screen: 'playing', round: 0, index: 0 }, { slot: 0, kind: 'stone', mega: 'nope' }, { slot: -1, kind: 'leave' }, { slot: 0, kind: 'endless', vote: 'yes' }, { slot: 0, kind: 'teleport' }]) {
-      expect(parseTickEntry(bad)).toBeNull()
+      expect(parseTickEntry(bad, 4)).toBeNull()
     }
   })
 
