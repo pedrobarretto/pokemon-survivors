@@ -47,6 +47,8 @@ const TAP_MS = 350
 /** The right stick past this tilt counts as a flick (it must come back under `FLICK_REST` before the next). */
 const FLICK = 0.7
 const FLICK_REST = 0.3
+/** How long (ms) the run may disagree with this screen's lock or priority before they go out again. */
+const RESEND_MS = 1500
 
 type Slot = 'basic' | Skill
 const SLOTS: readonly Slot[] = ['basic', 0, 1, 2]
@@ -70,6 +72,8 @@ export const createArenaControls = (root: HTMLElement, input: Input, canvas: HTM
   let mouse: Vec | null = null
   let drag: Drag | null = null
   let flicked = false
+  /** When the run last agreed with this screen's lock and priority (ms). */
+  let stale = performance.now()
   /** Touches on the canvas that may be taps: where and when each went down, and how far it strayed. */
   const taps = new Map<number, { x: number; y: number; at: number; far: boolean }>()
 
@@ -283,6 +287,16 @@ export const createArenaControls = (root: HTMLElement, input: Input, canvas: HTM
       sentPrio = prio
       send({ kind: 'prio', prio })
     }
+    // One sent before the client played (the opening frames) never got through: the run disagreeing a while sends them again.
+    const v = self.versus
+    const now = performance.now()
+    if (v && (v.prio !== prio || v.lock !== lock)) {
+      if (now - stale > RESEND_MS) {
+        stale = now
+        if (v.prio !== prio) send({ kind: 'prio', prio })
+        if (v.lock !== lock) send({ kind: 'lock', target: lock })
+      }
+    } else stale = now
     const stick = input.readAim()
     const tilt = stick ? Math.hypot(stick.x, stick.y) : 0
     if (stick && tilt > FLICK && !flicked && live()) {
