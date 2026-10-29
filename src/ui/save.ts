@@ -1,3 +1,5 @@
+import { AIM_ASSISTS, type AimAssist } from './arenaAim'
+import { PRIORITIES, type Priority } from '../game/versusKit'
 import type { TitleId } from '../data/achievements'
 import type { EnemyId } from '../data/enemies'
 import { mergeAttempts, parseAttempt, type Attempt } from '../game/attempt'
@@ -201,6 +203,9 @@ export type Settings = {
   minimap: MinimapMode
   /** Menus and HUD colors (`ui/theme.ts`). Per device: a phone may follow its own dark mode. */
   theme: Theme
+  /** The Arena: how a cast aims (`ui/arenaAim.ts`), and how the basic attack and the assist rank the rivals in reach (`game/versusKit.ts`). */
+  aimAssist: AimAssist
+  targetPriority: Priority
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -222,6 +227,8 @@ export const DEFAULT_SETTINGS: Settings = {
   uiScale: 'auto',
   minimap: 'square',
   theme: 'system',
+  aimAssist: 'assist',
+  targetPriority: 'closest',
 }
 
 const volume = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback)
@@ -261,6 +268,8 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     uiScale: UI_SCALES.find((s) => s === data.uiScale) ?? defaults.uiScale,
     minimap: MINIMAP_MODES.find((m) => m === data.minimap) ?? defaults.minimap,
     theme: THEMES.find((m) => m === data.theme) ?? defaults.theme,
+    aimAssist: AIM_ASSISTS.find((m) => m === data.aimAssist) ?? defaults.aimAssist,
+    targetPriority: PRIORITIES.find((m) => m === data.targetPriority) ?? defaults.targetPriority,
   }
 }
 

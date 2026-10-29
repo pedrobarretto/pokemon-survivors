@@ -4,22 +4,27 @@ import { goalOpen, rivalTeam } from '../game/versusRules'
 import { healing, LOW_HP, objectiveOf, standsIn } from '../render/versusGuide'
 import { t } from '../i18n'
 import { h, rich } from './dom'
+import type { Action } from '../engine/bindings'
+import { rivalsInReach } from '../game/versusKit'
 
 /**
  * The Arena's coach: one short line under the score saying what to do now
  * (farm, carry the Energy to a rival goal, stay in it, go heal, take the
- * objective...), so a first match teaches the mode as it plays. `coachTip`
+ * objective, the kit's keys and how to lock a target...), so a first match teaches the mode as it plays. `coachTip`
  * picks the line (pure); `createCoach` holds it on screen without flicker.
  * After a few matches on this device (`ps:arenaMatches`) the basics go quiet.
  */
 
-export type CoachTip = 'locked' | 'channel' | 'lowHp' | 'defend' | 'grass' | 'full' | 'zapdos' | 'drednaw' | 'stretch' | 'carry' | 'farm'
+export type CoachTip = 'locked' | 'channel' | 'lowHp' | 'defend' | 'grass' | 'full' | 'zapdos' | 'drednaw' | 'stretch' | 'kit' | 'aim' | 'carry' | 'farm'
 
 /** Most urgent first: a more urgent line replaces the one shown at once. */
-const ORDER: readonly CoachTip[] = ['locked', 'channel', 'lowHp', 'defend', 'grass', 'full', 'zapdos', 'drednaw', 'stretch', 'carry', 'farm']
+const ORDER: readonly CoachTip[] = ['locked', 'channel', 'lowHp', 'defend', 'grass', 'full', 'zapdos', 'drednaw', 'stretch', 'kit', 'aim', 'carry', 'farm']
 
 /** What a new player needs and a veteran doesn't. */
-const BASICS: ReadonlySet<CoachTip> = new Set<CoachTip>(['farm', 'carry', 'channel', 'grass'])
+const BASICS: ReadonlySet<CoachTip> = new Set<CoachTip>(['farm', 'carry', 'channel', 'grass', 'kit', 'aim'])
+
+/** The opening seconds the kit's line shows in (match seconds). */
+const KIT_SECONDS = 20
 
 /** The line for `me` now, most urgent first; null on the bench or when nothing needs saying. `quiet`: the basics left out. */
 export const coachTip = (g: Game, me: Player, quiet = false): CoachTip | null => {
@@ -43,6 +48,9 @@ export const coachTip = (g: Game, me: Player, quiet = false): CoachTip | null =>
   if (objective?.kind === 'zapdos') tips.push('zapdos')
   else if (objective) tips.push('drednaw')
   else if (s.stretch) tips.push('stretch')
+  // The kit: its controls in the opening seconds, then how to lock once a rival is in reach and nothing is locked.
+  if (g.time < KIT_SECONDS) tips.push('kit')
+  else if (v.lock < 0 && rivalsInReach(g, me).length > 0) tips.push('aim')
   tips.push(v.energy > 0 ? 'carry' : 'farm')
   for (const tip of ORDER) if (tips.includes(tip) && !(quiet && BASICS.has(tip))) return tip
   return null
@@ -74,12 +82,23 @@ export const countArenaMatch = () => {
 const HOLD = 2.4
 const SETTLE = 0.35
 /** How long a line can stay before it fades (s): a state that lasts (an objective up, carrying across the map) is said once. */
-const TTL: Record<CoachTip, number> = { lowHp: 8, locked: 6, channel: 30, defend: 6, grass: 5, full: 8, zapdos: 7, drednaw: 7, stretch: 6, carry: 10, farm: 12 }
+const TTL: Record<CoachTip, number> = { lowHp: 8, locked: 6, channel: 30, defend: 6, grass: 5, full: 8, zapdos: 7, drednaw: 7, stretch: 6, kit: KIT_SECONDS, aim: 6, carry: 10, farm: 12 }
+
+/** Whether this device plays by touch: the kit's lines name the buttons instead of the keys. */
+const touch = () => window.matchMedia?.('(pointer: coarse)').matches === true
+
+/** A tip's line, the kit's with the keys bound now (`keyOf`). */
+const lineOf = (tip: CoachTip, keyOf: (action: Action) => string) => {
+  const c = t().versus.coach
+  if (tip === 'kit') return touch() ? c.kitTouch : c.kit(keyOf('move1'), keyOf('move2'), keyOf('unite'))
+  if (tip === 'aim') return touch() ? c.aimTouch : c.aim(keyOf('target'))
+  return c[tip]
+}
 /** A faded line comes back only after it stopped being wanted this long (s). */
 const REST = 4
 
-/** The coach's line under the score. `update` every frame with this player on the draw copy. */
-export const createCoach = () => {
+/** The coach's line under the score. `update` every frame with this player on the draw copy; `keyOf` names an action's key. */
+export const createCoach = (keyOf: (action: Action) => string) => {
   const quiet = arenaMatches() >= QUIET_AFTER
   const text = h('span', { class: 'vs-coach-text' })
   const el = h('div', { class: 'vs-coach hidden', role: 'status' }, text)
@@ -95,7 +114,7 @@ export const createCoach = () => {
     shownAt = now
     el.classList.toggle('hidden', tip === null)
     if (tip === null) return
-    text.replaceChildren(rich(t().versus.coach[tip]))
+    text.replaceChildren(rich(lineOf(tip, keyOf)))
     el.dataset.tip = tip
     el.classList.remove('in')
     void el.offsetWidth

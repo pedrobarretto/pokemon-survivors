@@ -69,6 +69,7 @@ import { localPlayer } from '../game/players'
 import { riftDomain } from '../game/rift'
 import { drawTeamAir, drawTeamGround, drawTeammate, drawTeamMarkers, showsPlain, showsStanding } from './team'
 import { drawVersusGuide } from './versusGuide'
+import { drawArenaAim, type ArenaOverlay } from './arenaAim'
 import { drawValeAir, drawValeFloor, drawValeGround, drawValeZones, dropVale, TEAM_COLORS, warmVale } from './vale'
 import { concealed, drawGrassFront, drawGrassPatches, grassAlpha } from './valeGrass'
 import { drawValeProp, valePropCovers, valePropsInView, type ValeProp } from './valeProps'
@@ -827,6 +828,8 @@ export type RenderOptions = {
   companion?: CompanionView | null
   mates?: readonly Game[]
   shakeOffset?: { x: number; y: number }
+  /** The Arena's lock-on and a touch button's aim (`render/arenaAim.ts`), this screen's. */
+  arena?: ArenaOverlay | null
 }
 
 /** The Arena's viewer (this screen's player, `render` sets it; null outside Versus): who the grass hides from and shows see-through. */
@@ -1127,6 +1130,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   }
   // Teammates' name tags and bubbles, over everyone (in Versus, the goals' points left under them).
   if (g.versus) drawValeAir(ctx, g)
+  if (g.versus && opts.arena) drawArenaAim(ctx, g, me, opts.arena, t)
   if (g.coop) drawTeamAir(ctx, g, me, t)
   // Roar of Time's clocks over the foes it stopped: a mark on them, not a move, so it stays opaque.
   drawStoppedFoes(ctx, g, t, visible)

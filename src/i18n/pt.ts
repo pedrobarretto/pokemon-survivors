@@ -17,6 +17,8 @@ import type { ConsumableId } from '../game/consumables'
 import type { FriendMilestone } from '../game/referral'
 import type { Difficulty } from '../game/difficulty'
 import type { Role } from '../data/versus'
+import type { Priority } from '../game/versusKit'
+import type { AimAssist } from '../ui/arenaAim'
 import type { MatchKind, TierId } from '../data/arenaRanked'
 import type { SurveyAnswer } from '../data/survey'
 import type { BackgroundId, FrameId, StyleSlot, WallpaperId } from '../data/style'
@@ -319,6 +321,9 @@ export const pt = {
         'Derrotar o Drednaw dá escudo e Energia ao time todo.',
         'No mato alto os rivais não te veem, mas seus ataques param: bom para emboscar e fugir.',
         'As cartas de nível não pausam: toque numa ou use 1–4.',
+        'O ataque básico é automático: Q, E e R lançam o Golpe 1, o Golpe 2 e o Unite.',
+        'Clique ou toque num rival para travar o alvo; Tab troca. No celular, arraste o botão do golpe para mirar.',
+        'Ao evoluir (nível 5 e 9) você troca o Golpe 1, depois o Golpe 2, por um golpe da nova forma.',
       ],
     },
     hud: {
@@ -351,6 +356,12 @@ export const pt = {
       drednaw: '*Drednaw* no centro: vença-o e ganhe um escudo',
       zapdos: '*Zapdos* no centro: quem vencer marca na hora',
       stretch: 'Reta final: pontos em *dobro*!',
+      /** The kit, in the opening seconds: the keys bound to Move 1, Move 2 and the Unite Move. */
+      kit: (q: string, e: string, r: string) => `Ataque básico *automático* · *${q}* e *${e}* lançam golpes, *${r}* o Unite`,
+      kitTouch: 'Ataque básico *automático* · toque nos *botões* para lançar, arraste para mirar',
+      /** A rival in reach and nothing locked: how to lock (the key that switches targets). */
+      aim: (tab: string) => `Clique num rival para *travar o alvo* · *${tab}* troca`,
+      aimTouch: 'Toque num rival para *travar o alvo*',
     },
     toast: {
       weScored: (name: string) => `*${name}* marcou!`,
@@ -368,12 +379,27 @@ export const pt = {
       stretch: 'Reta final! Pontos em dobro',
       back: 'De volta à luta!',
     },
+    /** The Arena's kit on the HUD (`ui/arenaControls.ts`): the touch buttons and the desktop's key badges. */
+    kit: {
+      basic: 'Ataque básico',
+      move1: 'Golpe 1',
+      move2: 'Golpe 2',
+      unite: 'Golpe Unite',
+      /** The basic attack's badge, where the others show their key. */
+      auto: 'AUTO',
+      /** A move not learned yet: the level it comes at. */
+      learnAt: (level: number) => `Nv ${level}`,
+      /** Moves hold in tall grass. */
+      grass: 'MATO',
+    },
     tray: {
       first: 'Escolha um golpe',
       levelup: (level: number) => `Nível ${level}!`,
       branch: 'Evoluir para',
       ability: 'Habilidade',
       auto: 'escolha automática',
+      second: 'Seu Golpe 2',
+      upgrade: (n: number) => `Evoluiu! Novo Golpe ${n}`,
     },
     end: {
       victory: 'Vitória!',
@@ -467,6 +493,19 @@ export const pt = {
           'Sair no meio da partida conta como derrota: um bot assume o seu lugar.',
           `As temporadas duram ${r.days} dias e viram à meia-noite de Brasília.`,
           'Partidas rápidas contra bots são treino: ficam no histórico, mas não contam para o ranking. Partidas com amigos também não valem RP.',
+        ],
+      },
+      /** The Arena's controls, under the rules: `keys` are the bound labels of Move 1, Move 2, the Unite Move and switching targets. */
+      controls: {
+        title: 'Controles da Arena',
+        items: (k: { move1: string; move2: string; unite: string; target: string }) => [
+          'Ataque básico: sai sozinho, no alvo travado ou no rival que a sua prioridade escolhe (Configurações → Controles: mais perto, menos HP % ou menos HP).',
+          `Golpe 1 (${k.move1}) e Golpe 2 (${k.move2}): você lança e mira. Golpe Unite (${k.unite}): o especial do seu tipo, com recarga.`,
+          `Trocar de alvo: clique ou toque num Pokémon, ou use ${k.target}. No controle: R, ZR e ZL lançam; o analógico direito mira e troca de alvo.`,
+          'No celular: toque no botão para lançar com mira assistida, arraste para mirar e volte ao botão para cancelar. Tocar no ataque básico troca de alvo.',
+          'Mira assistida (padrão) acerta o alvo travado ou o melhor rival por perto; a manual vai exatamente para onde o mouse ou o dedo apontar.',
+          'Golpe 1 vem no começo e o Golpe 2 no nível 3. Na Arena se evolui no nível 5 e no 9: cada evolução troca um golpe por um da nova forma, no mesmo nível.',
+          'No mato alto o Golpe 1 e o Golpe 2 param; o Unite funciona, mas te revela.',
         ],
       },
       hintKeys: '← → abas · ↑ ↓ rolar · ESC voltar',
@@ -770,6 +809,10 @@ export const pt = {
     /** Touch only: the side of the special, lunge and Mega buttons (the fixed stick takes the other one). */
     buttonSide: 'Lado dos botões',
     buttonSides: { right: 'Direita', left: 'Esquerda' },
+    aimAssist: 'Mira na Arena',
+    aimAssists: { assist: 'Assistida', manual: 'Manual' } satisfies Record<AimAssist, string>,
+    targetPriority: 'Alvo na Arena',
+    priorities: { closest: 'Mais perto', lowestShare: 'Menos HP %', lowest: 'Menos HP' } satisfies Record<Priority, string>,
     /** Fixed stick only: how high it sits and how far from the side edge. */
     stickHeight: 'Altura do joystick',
     stickHeights: { low: 'Baixa', mid: 'Média', high: 'Alta' },
@@ -808,6 +851,10 @@ export const pt = {
       pause: 'Pausar',
       confirm: 'Confirmar',
       back: 'Voltar',
+      move1: 'Arena: Golpe 1',
+      move2: 'Arena: Golpe 2',
+      unite: 'Arena: Golpe Unite',
+      target: 'Arena: trocar de alvo',
     } satisfies Record<Action, string>,
     press: (action: string) => `*${action}*: pressione uma tecla ou um botão do controle… (ESC cancela)`,
     reserved: 'As setas e o ESC são fixos. Escolha outra tecla.',

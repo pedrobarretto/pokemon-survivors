@@ -6,6 +6,7 @@ import { goalOpen } from '../game/versusRules'
 import type { VersusState } from '../game/versus'
 import { channelShare } from '../render/vale'
 import { createCoach } from './versusCoach'
+import { boundKey } from './inputLabels'
 import { formAt } from '../game/branch'
 import { localPlayer } from '../game/players'
 import type { Game, GameEvent, Player } from '../game/types'
@@ -87,7 +88,7 @@ export const createVersusHud = (root: HTMLElement, local: boolean, goAt: number 
     h('span', { class: 'vs-goals-mid' }),
     goalRow(1),
   )
-  const coach = createCoach()
+  const coach = createCoach(boundKey)
   const blessing = h('div', { class: 'vs-pill vs-blessing hidden' })
   const shield = h('div', { class: 'vs-pill vs-shield hidden' }, m.hud.shield)
   const energyText = h('b', { class: 'vs-energy-text' })

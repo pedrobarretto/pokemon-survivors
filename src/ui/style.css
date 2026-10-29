@@ -21697,3 +21697,302 @@ span.arena-hub-face {
     font-size: 16px;
   }
 }
+
+/* ---------- The Arena's kit (ui/arenaControls.ts): a right-thumb cluster on touch, key badges on desktop ---------- */
+
+/* A match plays its kit: the run's own special, Mega and lunge controls step aside. */
+[data-arena] .special-button,
+[data-arena] .mega-button,
+[data-arena] .lunge-button,
+[data-arena] .special-badge:not(.kit-badge) {
+  display: none !important;
+}
+
+/* The basic attack in the corner, Move 1, Move 2 and the Unite Move on an arc around it (78 px from its center). */
+.arena-kit {
+  position: absolute;
+  right: max(14px, var(--safe-r));
+  bottom: max(14px, var(--safe-b));
+  width: 140px;
+  height: 140px;
+  pointer-events: none;
+  display: none;
+}
+
+.kit-btn {
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.kit-btn img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.kit-btn::after {
+  background: conic-gradient(transparent calc(var(--fill) * 360deg), rgba(8, 8, 20, 0.62) 0);
+}
+
+.kit-btn:active {
+  transform: translateY(2px);
+}
+
+.kit-btn.kit-basic {
+  right: 0;
+  bottom: 0;
+  width: 68px;
+  height: 68px;
+}
+
+.kit-btn.kit-basic img {
+  width: 40px;
+  height: 40px;
+}
+
+.kit-btn.kit-move1 {
+  right: 85px;
+  bottom: 7px;
+}
+
+.kit-btn.kit-move2 {
+  right: 62px;
+  bottom: 62px;
+}
+
+.kit-btn.kit-unite {
+  right: 7px;
+  bottom: 85px;
+}
+
+/* The Unite Move ready: its type's glow, wider than a move's. */
+.kit-btn.kit-unite.ready {
+  animation-duration: 0.6s;
+}
+
+/* Being dragged: a white rim while it aims. */
+.kit-btn.aiming {
+  box-shadow:
+    inset 0 0 0 2px #ffffff,
+    0 0 0 3px var(--type);
+}
+
+/* The seconds left on a cooldown, over the shade. */
+.kit-time {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: #ffffff;
+  text-shadow:
+    1px 1px 0 #101018,
+    -1px -1px 0 #101018,
+    1px -1px 0 #101018,
+    -1px 1px 0 #101018;
+  pointer-events: none;
+}
+
+.kit-time:empty {
+  display: none;
+}
+
+/* What holds it: the level Move 2 comes at, or the tall grass. */
+.kit-tag {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 3px;
+  transform: translateX(-50%);
+  padding: 1px 2px;
+  font-size: 6px;
+  line-height: 1;
+  white-space: nowrap;
+  color: #ffffff;
+  background: #101018;
+  pointer-events: none;
+}
+
+.kit-btn .kit-tag {
+  font-size: 7px;
+  bottom: 5px;
+}
+
+/* Not learned yet: an empty socket. */
+.special.empty {
+  background: rgba(16, 24, 48, 0.35);
+  box-shadow: inset 0 0 0 2px #606878;
+}
+
+.special.empty::after {
+  display: none;
+}
+
+/* Held in the grass: dimmed under a green rim. */
+.special.held {
+  box-shadow: inset 0 0 0 2px #58b848;
+  animation: none;
+}
+
+.special.held img {
+  opacity: 0.5;
+}
+
+/* The desktop's badges: a row in the bottom-right corner (the Energy carried has the bottom center), each with its key. */
+.arena-keys {
+  position: absolute;
+  right: max(14px, var(--safe-r));
+  bottom: max(14px, var(--safe-b));
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.kit-badge {
+  width: 52px;
+  height: 52px;
+}
+
+.kit-badge img {
+  width: 34px;
+  height: 34px;
+  image-rendering: pixelated;
+}
+
+.kit-badge .special-key {
+  bottom: 2px;
+  font-size: 7px;
+}
+
+.kit-badge .kit-time {
+  font-size: 12px;
+}
+
+/* On a badge the key sits at the bottom: what holds the slot goes on top. */
+.kit-badge .kit-tag {
+  top: 2px;
+  bottom: auto;
+}
+
+/* The Unite Move stands apart, a size up. */
+.kit-badge.s2 {
+  width: 60px;
+  height: 60px;
+  margin-left: 6px;
+}
+
+@media (pointer: coarse) {
+  .arena-kit {
+    display: block;
+  }
+  .arena-keys {
+    display: none;
+  }
+}
+
+/* Buttons on the left (Settings → Controls): the cluster mirrors. */
+@media (pointer: coarse) {
+  [data-hand='left'] .arena-kit {
+    right: auto;
+    left: max(14px, var(--safe-l));
+  }
+  [data-hand='left'] .kit-btn.kit-basic {
+    right: auto;
+    left: 0;
+  }
+  [data-hand='left'] .kit-btn.kit-move1 {
+    right: auto;
+    left: 85px;
+  }
+  [data-hand='left'] .kit-btn.kit-move2 {
+    right: auto;
+    left: 62px;
+  }
+  [data-hand='left'] .kit-btn.kit-unite {
+    right: auto;
+    left: 7px;
+  }
+}
+
+/* A small phone: the cluster a size down (the arc 66 px out). */
+@media (pointer: coarse) and (max-width: 380px), (pointer: coarse) and (max-height: 380px) {
+  .arena-kit {
+    width: 122px;
+    height: 122px;
+  }
+  .kit-btn {
+    width: 48px;
+    height: 48px;
+  }
+  .kit-btn img {
+    width: 28px;
+    height: 28px;
+  }
+  .kit-btn.kit-basic {
+    width: 60px;
+    height: 60px;
+  }
+  .kit-btn.kit-move1 {
+    right: 72px;
+    bottom: 6px;
+  }
+  .kit-btn.kit-move2 {
+    right: 53px;
+    bottom: 53px;
+  }
+  .kit-btn.kit-unite {
+    right: 6px;
+    bottom: 72px;
+  }
+  [data-hand='left'] .kit-btn.kit-move1 {
+    left: 72px;
+  }
+  [data-hand='left'] .kit-btn.kit-move2 {
+    left: 53px;
+  }
+  [data-hand='left'] .kit-btn.kit-unite {
+    left: 6px;
+  }
+}
+
+/* The cluster takes the corner the special button had: the Energy and the coach make room for it. */
+@media (pointer: coarse) {
+  [data-arena] .vs-energy {
+    bottom: calc(max(14px, var(--safe-b)) + 150px);
+  }
+}
+
+@media (pointer: coarse) and (max-height: 500px) {
+  [data-arena] .vs-energy {
+    right: calc(max(14px, var(--safe-r)) + 150px);
+    bottom: max(14px, var(--safe-b));
+  }
+  [data-arena][data-hand='left'] .vs-energy {
+    right: auto;
+    left: calc(max(14px, var(--safe-l)) + 150px);
+  }
+}
+
+@media (orientation: portrait) and (max-width: 700px) {
+  [data-arena] .vs-coach {
+    right: 158px;
+  }
+  [data-arena][data-hand='left'] .vs-coach {
+    left: 158px;
+    right: 8px;
+  }
+  /* The pick tray's strip rides over the cluster. */
+  [data-arena] .vs-tray {
+    bottom: calc(max(12px, var(--safe-b)) + 160px);
+  }
+}

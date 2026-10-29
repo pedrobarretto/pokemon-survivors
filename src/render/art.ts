@@ -1291,3 +1291,27 @@ export const teamBallIcon = () => toIconUrl('teamBall', TEAM_FX.ball)
 /** The "Zz" as a HUD icon. */
 export const teamAwayIcon = () => toIconUrl('teamZz', TEAM_FX.zz)
 
+
+/* ---------------- The Arena's lock-on (`render/arenaAim.ts`) ---------------- */
+
+/** A lock-on bracket's top-left corner: an L two pixels thick, dark rimmed. */
+const LOCK_CORNER = ['111111', '122221', '121111', '121...', '121...', '111...']
+/** The pin over a locked target, pointing down at it. */
+const LOCK_PIN = ['1111111', '1222221', '.12221.', '..121..', '...1...']
+
+const lockArt = canvasCache<string, { corners: readonly [PixelSprite, PixelSprite, PixelSprite, PixelSprite]; pin: PixelSprite }>()
+
+/** The lock-on's four bracket corners (top-left, top-right, bottom-left, bottom-right) and its pin in `color`, cached per color. */
+export const lockOnArt = (color: string) => {
+  let made = lockArt.get(color)
+  if (!made) {
+    const palette = { 1: '#181018', 2: color }
+    const flipped = [...LOCK_CORNER].reverse()
+    made = {
+      corners: [fromStrings(LOCK_CORNER, palette), fromStrings(LOCK_CORNER, palette, { mirror: true }), fromStrings(flipped, palette), fromStrings(flipped, palette, { mirror: true })],
+      pin: fromStrings(LOCK_PIN, palette),
+    }
+    lockArt.set(color, made)
+  }
+  return made
+}

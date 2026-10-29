@@ -42,11 +42,31 @@ describe('keyCode', () => {
   })
 })
 
+describe('the Arena kit', () => {
+  it('shares keys with the run only: E is Mega in a run and Move 2 in a match', () => {
+    expect(keyCode(keys, 'KeyE', 'run')).toBe('KeyE')
+    expect(keyCode(keys, 'KeyE', 'arena')).toBe('KeyE')
+    const moved = rebind(keys, 'key', 'mega', 'KeyM').table
+    expect(moved.move2).toBe('KeyE')
+    expect(keyCode(moved, 'KeyE', 'run')).toBeNull()
+    expect(keyCode(moved, 'KeyM', 'run')).toBe('KeyE')
+    expect(keyCode(moved, 'KeyE', 'arena')).toBe('KeyE')
+    // The special doesn't fire in a match: the Unite Move does, on R.
+    expect(keyCode(keys, 'Space', 'arena')).toBeNull()
+    expect(rebind(keys, 'key', 'move1', 'KeyP').moved).toEqual([{ action: 'pause', to: 'KeyQ' }])
+  })
+
+  it('gives a stored table from before the kit its keys, unless one is taken', () => {
+    const before = { special: 'KeyR', pause: 'KeyQ' }
+    expect(parseBindings({ key: before }).key).toMatchObject({ ...before, unite: 'KeyR', move1: null, move2: 'KeyE', target: 'Tab' })
+  })
+})
+
 describe('parseBindings (restore defaults)', () => {
   it('falls back to the defaults for missing, broken or clashing tables', () => {
     expect(parseBindings(undefined)).toEqual(DEFAULT_BINDINGS)
     expect(parseBindings({ key: { up: 'Escape' }, pad: { special: 'A' } })).toEqual(DEFAULT_BINDINGS)
-    expect(parseBindings({ key: { up: 'KeyS' } }).key).toEqual(keys)
+    expect(parseBindings({ key: { up: 'KeyS', down: 'KeyS' } }).key).toEqual(keys)
   })
 
   it('keeps a valid remap and gives the actions missing from it their defaults', () => {

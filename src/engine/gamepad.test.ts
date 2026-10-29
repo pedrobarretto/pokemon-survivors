@@ -7,14 +7,16 @@ const none = new Set<never>()
 
 describe('padActions', () => {
   it('reads the shared A as confirm in menus and as the special in a run', () => {
-    expect(padActions(pad, new Set([0]), none, false)).toEqual(['confirm'])
-    expect(padActions(pad, new Set([0]), none, true)).toEqual(['special'])
+    expect(padActions(pad, new Set([0]), none, 'menu')).toEqual(['confirm'])
+    expect(padActions(pad, new Set([0]), none, 'run')).toEqual(['special'])
+    // A match hears its kit, not a run's buttons.
+    expect(padActions(pad, new Set([0, 5, 6]), none, 'arena')).toEqual(['move1', 'unite'])
   })
 
   it('follows the bindings, while the stick keeps moving', () => {
     const swapped = rebind(pad, 'pad', 'up', 4).table
-    expect(padActions(swapped, new Set([4, 12]), none, true)).toEqual(['up'])
-    expect(padActions(swapped, none, stickActions([0, -0.9]), true)).toEqual(['up'])
+    expect(padActions(swapped, new Set([4, 12]), none, 'run')).toEqual(['up'])
+    expect(padActions(swapped, none, stickActions([0, -0.9]), 'run')).toEqual(['up'])
   })
 })
 
@@ -37,11 +39,11 @@ describe('stickVector', () => {
 })
 
 describe('padChanges', () => {
-  const state = (index: number, id: string, buttons: number[]): PadState => ({ index, id, buttons: new Set(buttons), stick: new Set(), move: { x: 0, y: 0 }, rested: true })
+  const state = (index: number, id: string, buttons: number[]): PadState => ({ index, id, buttons: new Set(buttons), stick: new Set(), move: { x: 0, y: 0 }, aim: { x: 0, y: 0 }, rested: true })
   /** A pad read with its stick at `axes`, as `readPads` makes it. */
   const tilted = (axes: number[]): PadState => {
     const move = stickVector(axes)
-    return { index: 0, id: 'Wheel', buttons: new Set(), stick: stickActions(axes), move, rested: move.x === 0 && move.y === 0 }
+    return { index: 0, id: 'Wheel', buttons: new Set(), stick: stickActions(axes), move, aim: { x: 0, y: 0 }, rested: move.x === 0 && move.y === 0 }
   }
 
   it('sees a press on one pad while another pad holds the same button', () => {

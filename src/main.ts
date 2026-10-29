@@ -208,6 +208,7 @@ import { arenaResult } from './game/arenaRank'
 import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
+import { createArenaControls, type ArenaControls } from './ui/arenaControls'
 import { versusEnd } from './ui/versusEnd'
 import { VALE, VERSUS, VERSUS_PICKS, isVersusPick, type Team, type VersusPick } from './data/versus'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
@@ -371,7 +372,7 @@ type CoopRun = {
    * analytics, where it came from (`kind`: practice against bots, a public queue's, a friends' room) and, for a ranked one,
    * the RP its end moved once the API rated it. Null in a co-op run.
    */
-  versus: { hud: VersusHud; tray: VersusTray; local: boolean; reported: boolean; kind: MatchKind; rp: Promise<RpChange | null> | null } | null
+  versus: { hud: VersusHud; tray: VersusTray; controls: ArenaControls; local: boolean; reported: boolean; kind: MatchKind; rp: Promise<RpChange | null> | null } | null
 }
 
 let screen: Screen | null = null
@@ -2120,6 +2121,8 @@ input.onKey((key) => {
   // Co-op never pauses the world: the menu opens over it.
   if ((key === 'Escape' || key === 'KeyP') && run.coop) run.coop.menu = true
   else if ((key === 'Escape' || key === 'KeyP') && g.phase === 'playing') g.phase = 'paused'
+  // A match hears its kit on its own keys (`ui/arenaControls.ts`): E is Move 2 there, not Mega.
+  if (g.versus) return
   if (key === 'Space') queueSpecial()
   if (key === 'KeyE') queueMega()
   if (key === 'ShiftLeft' || key === 'ShiftRight') queueLunge()
@@ -2200,6 +2203,7 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   c.team.dispose()
   c.versus?.hud.dispose()
   c.versus?.tray.dispose()
+  c.versus?.controls.dispose()
   clearToasts(ui)
   run = null
   syncRunWatch()
@@ -2327,6 +2331,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
       ? {
           hud: createVersusHud(ui, client === arenaClient(), goAt),
           tray: createVersusTray(ui, input, (offer) => c.team.pick(localPlayer(c.view.game), offer)),
+          controls: createArenaControls(ui, input, canvas, (e) => driver.send(e), () => c.menu),
           local: client === arenaClient(),
           reported: false,
           kind: matchKindOf(client, live.room),
@@ -2524,7 +2529,8 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   const me = localPlayer(g)
   // The stick reads still while a menu or a screen is up (a match's pick cards wait in a tray: the Pokémon keeps moving).
   const still = c.menu || (g.versus ? g.phase !== 'playing' : phaseOf(g, me) !== 'playing')
-  c.driver.advance(g, realDt, { move: still ? { x: 0, y: 0 } : input.readMove(), special: specialQueued, mega: megaQueued, lunge: lungeQueued })
+  // A match casts its kit instead (`ui/arenaControls.ts`): its casts carry their aim.
+  c.driver.advance(g, realDt, { move: still ? { x: 0, y: 0 } : input.readMove(), special: specialQueued, mega: megaQueued, lunge: lungeQueued, casts: c.versus?.controls.take() })
   specialQueued = megaQueued = lungeQueued = false
   const runner = c.runner
   const st = client.state()
@@ -2560,8 +2566,9 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   for (const e of shakes) feelShake(c.shake, e, runner.slot, shown.camera, shown.view)
   settleShake(c.shake, dt, runner.next, Math.random)
   shown.shake = c.shake.amount
+  c.versus?.controls.frame(shown, localPlayer(shown))
   const drawAt = performance.now()
-  render(ctx, shown, t, { ...settings(), companion: null, mates: c.view.mates, shakeOffset: c.shake })
+  render(ctx, shown, t, { ...settings(), companion: null, mates: c.view.mates, shakeOffset: c.shake, arena: c.versus?.controls.overlay() })
   noteDraw(c.net, { renderMs: performance.now() - drawAt, dt, shake: shown.shake > 0, prediction: c.prediction })
   const stick = input.readStick()
   if (stick && shown.phase === 'playing') drawJoystick(ctx, stick, cssScale)
@@ -3164,8 +3171,8 @@ const frame = (now: number) => {
   const realDt = Math.min(1, (now - last) / 1000)
   last = now
   const t = now / 1000
-  // Gamepads type the keyboard's codes: menus get confirm/back, a run its special, Mega and lunge.
-  input.poll(run?.game.phase === 'playing')
+  // Gamepads type the keyboard's codes: menus get confirm/back, a run its special, Mega and lunge, an Arena match its kit.
+  input.poll(run?.game.phase !== 'playing' ? 'menu' : run.game.versus ? 'arena' : 'run')
   setActivePad(input.activePad())
 
   // Co-op keeps its socket and lockstep going behind menus and loading screens too (not once it closed for good).

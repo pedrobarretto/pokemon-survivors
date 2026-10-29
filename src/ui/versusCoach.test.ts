@@ -10,10 +10,27 @@ const match = () => {
   // Off the spawn pad, in the jungle, away from every goal.
   me.x = -200
   me.y = 60
+  // Past the opening seconds, whose line is the kit's.
+  g.time = 30
   return { g, me }
 }
 
 describe('coachTip', () => {
+  it('opens with the kit, then says how to lock once a rival is in reach', () => {
+    const { g, me } = match()
+    g.time = 2
+    expect(coachTip(g, me)).toBe('kit')
+    g.time = 30
+    const rival = g.players.find((p) => p.versus!.team === 1)!
+    rival.x = me.x + 60
+    rival.y = me.y
+    g.enemies.find((e) => e.id === rival.versus!.avatar)!.x = rival.x
+    g.enemies.find((e) => e.id === rival.versus!.avatar)!.y = rival.y
+    expect(coachTip(g, me)).toBe('aim')
+    me.versus!.lock = rival.versus!.avatar
+    expect(coachTip(g, me)).toBe('farm')
+  })
+
   it('walks a new player from farming to carrying to scoring', () => {
     const { g, me } = match()
     expect(coachTip(g, me)).toBe('farm')
