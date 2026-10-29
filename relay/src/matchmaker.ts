@@ -1,7 +1,7 @@
 import { ARENA_RANKED, type QueueKind } from '../../src/data/arenaRanked'
 import { ARENA_FORMATS, arenaPlayers, parseArenaFormat, type ArenaFormat } from '../../src/data/arenaFormats'
 import type { ArenaTicketsResponse, QueueClientMessage } from '../../src/net/arena'
-import { botsAfter, mmrWindow, splitTeams } from '../../src/net/arenaQueue'
+import { botsAfter, humansOnBothSides, mayQueue, mmrWindow, queueHold, splitTeams } from '../../src/net/arenaQueue'
 import { LIMITS, parseAuth } from '../../src/net/protocol'
 
 /**
@@ -26,6 +26,8 @@ export type Ticket = {
   since: number
   /** Its MMR, or null while the API is asked (a ticket without one isn't matched yet). */
   mmr: number | null
+  /** Fair Play keeps it out of any match until then (ms; 0: never held), its party with it (`fairPlayGate`). */
+  holdUntil: number
   /** The Durable Object location hint nearest the player (`hintFor`), or null. */
   hint: string | null
 }
@@ -33,8 +35,8 @@ export type Ticket = {
 /** A match made: its queue and format, whether it's rated, the build its room runs, where it should run and each player's team. */
 export type Match = { kind: QueueKind; format: ArenaFormat; ranked: boolean; build: string; hint: string | null; players: { conn: string; user: string; team: 0 | 1 }[] }
 
-/** A ticket still waiting, as `queued` tells it: seconds waited, humans its forming match has, seconds until bots fill it. */
-export type Waiting = { conn: string; kind: QueueKind; waited: number; found: number; botsIn: number }
+/** A ticket still waiting, as `queued` tells it: seconds waited, humans its forming match has, seconds until bots fill it and Fair Play still holds it. */
+export type Waiting = { conn: string; kind: QueueKind; waited: number; found: number; botsIn: number; hold: number }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
@@ -85,10 +87,21 @@ export const parseTickets = (v: unknown): ArenaTicketsResponse['ratings'] => {
   const out: ArenaTicketsResponse['ratings'] = {}
   if (!isRecord(v) || !isRecord(v.ratings)) return out
   for (const [id, r] of Object.entries(v.ratings)) {
-    if (isRecord(r) && typeof r.mmr === 'number' && Number.isFinite(r.mmr)) out[id] = { mmr: r.mmr, rp: typeof r.rp === 'number' ? r.rp : 0, games: typeof r.games === 'number' ? r.games : 0 }
+    if (!isRecord(r) || typeof r.mmr !== 'number' || !Number.isFinite(r.mmr)) continue
+    // An API from before Fair Play sends none: a full score.
+    const fairPlay = typeof r.fairPlay === 'number' && Number.isFinite(r.fairPlay) ? r.fairPlay : ARENA_RANKED.fairPlay.max
+    out[id] = { mmr: r.mmr, rp: typeof r.rp === 'number' ? r.rp : 0, games: typeof r.games === 'number' ? r.games : 0, fairPlay }
   }
   return out
 }
+
+/**
+ * What a ticket's Fair Play (the API's, `ArenaTicketRating.fairPlay`) lets it
+ * do: a Ranqueada under the minimum is refused (`mayQueue`), and a low score
+ * is held out of any match until `holdUntil` (`queueHold`).
+ */
+export const fairPlayGate = (kind: QueueKind, fairPlay: number, now: number): { ok: false } | { ok: true; holdUntil: number } =>
+  mayQueue(kind, fairPlay) ? { ok: true, holdUntil: queueHold(fairPlay) > 0 ? now + queueHold(fairPlay) * 1000 : 0 } : { ok: false }
 
 /* ---------------- Matching ---------------- */
 
@@ -108,7 +121,8 @@ const partiesOf = (tickets: readonly Ticket[], half: number): Party[] => {
     for (let i = 0; i < group.length; i += half) {
       const ts = group.slice(i, i + half)
       const mmrs = ts.map((t) => t.mmr ?? ARENA_RANKED.mmr.start)
-      parties.push({ tickets: ts, mmrs, mean: mean(mmrs), since: Math.min(...ts.map((t) => t.since)) })
+      // A held ticket's wait (its window, the bots) starts when the hold ends.
+      parties.push({ tickets: ts, mmrs, mean: mean(mmrs), since: Math.min(...ts.map((t) => Math.max(t.since, t.holdUntil))) })
     }
   }
   return parties.sort((a, b) => a.since - b.since)
@@ -129,22 +143,37 @@ const hintOf = (tickets: readonly Ticket[]): string | null => {
  * parties by MMR within its window (`mmrWindow` of how long it waited) while
  * the teams still split (`splitTeams`); the match goes once it has its
  * format's seats in humans (`arenaPlayers`: 8 in the 4v4, 6 in the 3v3), or
- * once the anchor waited `botsAfter` (bots fill the rest). A
- * ranked match of fewer than `minHumansRanked` humans plays unrated. Every
- * other ticket is told how its match is forming. Tickets without an MMR yet
- * only wait.
+ * once the anchor waited `botsAfter` (bots fill the rest). A ranked match of
+ * fewer than `minHumansRanked` humans, or without one on each team, plays
+ * unrated (and a format that isn't ranked never is). Every other ticket is
+ * told how its match is forming. Tickets without an MMR yet, or held by Fair
+ * Play (with their party), only wait.
  */
 export const formMatches = (tickets: readonly Ticket[], now: number): { matches: Match[]; waiting: Waiting[] } => {
   const { minHumansRanked } = ARENA_RANKED.queue
   const seconds = (since: number) => Math.max(0, (now - since) / 1000)
   const matches: Match[] = []
   const waiting: Waiting[] = []
+  const partyKey = (t: Ticket) => (t.party === null ? null : `${t.kind}|${t.format}|${t.build}|${t.party}`)
+  const partyHold = new Map<string, number>()
+  for (const t of tickets) {
+    const key = partyKey(t)
+    if (key !== null && t.holdUntil > now) partyHold.set(key, Math.max(partyHold.get(key) ?? 0, t.holdUntil))
+  }
+  const holdOf = (t: Ticket) => Math.max(t.holdUntil, partyHold.get(partyKey(t) ?? '') ?? 0)
   const wait = (t: Ticket, found: number, anchorSince: number) =>
-    waiting.push({ conn: t.conn, kind: t.kind, waited: Math.floor(seconds(t.since)), found, botsIn: Math.max(0, Math.ceil(botsAfter(t.kind) - seconds(anchorSince))) })
+    waiting.push({
+      conn: t.conn,
+      kind: t.kind,
+      waited: Math.floor(seconds(t.since)),
+      found,
+      botsIn: Math.max(0, Math.ceil(botsAfter(t.kind) - seconds(anchorSince))),
+      hold: Math.max(0, Math.ceil((holdOf(t) - now) / 1000)),
+    })
   const pools = new Map<string, Ticket[]>()
   for (const t of tickets) {
-    if (t.mmr === null) {
-      wait(t, 1, t.since)
+    if (t.mmr === null || holdOf(t) > now) {
+      wait(t, 1, Math.max(t.since, holdOf(t)))
       continue
     }
     const key = `${t.kind}|${t.format}|${t.build}`
@@ -182,7 +211,7 @@ export const formMatches = (tickets: readonly Ticket[], now: number): { matches:
       matches.push({
         kind,
         format,
-        ranked: kind === 'ranked' && ARENA_FORMATS[format].ranked && humans >= minHumansRanked,
+        ranked: kind === 'ranked' && ARENA_FORMATS[format].ranked && humans >= minHumansRanked && humansOnBothSides(group.flatMap((p, i) => p.tickets.map(() => split.teams[i]!))),
         build: anchor.tickets[0]!.build,
         hint: hintOf(all),
         players: group.flatMap((p, i) => p.tickets.map((t) => ({ conn: t.conn, user: t.user, team: split.teams[i]! }))),

@@ -502,23 +502,23 @@ describe('arena rooms', () => {
   const guest = (i: number) => `guest-${i}-xxxxxxxxxxxx`
   const reports = (effects: readonly Effect[]) => effects.flatMap((e) => (e.k === 'report' ? [e.report] : []))
 
-  /** A room made by the matchmaker for `players` (guest identities) on alternating teams. */
-  const matched = (players: number, ranked = true, format?: 'quick') => {
+  /** A room made by the matchmaker for `players` (guest identities) on alternating teams (all on Blue: `oneSide`), in a 4v4 unless `format` says (a 3v3 is Casual). */
+  const matched = (players: number, ranked = true, { format, oneSide = false }: { format?: 'quick'; oneSide?: boolean } = {}) => {
     let n = 0
     const state = loadState(null, { secret: () => `secret-${String(++n).padStart(10, '0')}`, seed: () => 42 }, T0)
     const lock: Omit<ArenaLock, 'startBy'> = {
       queue: format ? 'casual' : 'ranked',
       ...(format && { format }),
       ranked: format ? false : ranked,
-      players: Array.from({ length: players }, (_, i) => ({ id: `g:${guest(i)}`, team: (i % 2) as 0 | 1 })),
+      players: Array.from({ length: players }, (_, i) => ({ id: `g:${guest(i)}`, team: (oneSide ? 0 : i % 2) as 0 | 1 })),
     }
     createRoom(state, { code: 'ABCDE', build: 'b1', region: 'enam', lock }, T0)
     return state
   }
 
   /** Everyone in a matched room joins with a loadout asking for Blue: the run starts by itself. */
-  const matchedPlaying = (players: number, ranked = true, format?: 'quick') => {
-    const state = matched(players, ranked, format)
+  const matchedPlaying = (players: number, ranked = true, opts: { format?: 'quick'; oneSide?: boolean } = {}) => {
+    const state = matched(players, ranked, opts)
     for (let i = 0; i < players; i++) {
       join(state, `c${i}`, guest(i))
       say(state, `c${i}`, { t: 'loadout', loadout: { starter: 'pikachu', team: 0 } }, T0)
@@ -560,7 +560,7 @@ describe('arena rooms', () => {
   })
 
   it("carries a matched 3v3's format in its settings and reports its six seats", () => {
-    const state = matchedPlaying(2, false, 'quick')
+    const state = matchedPlaying(2, false, { format: 'quick' })
     expect(roomOf(state).settings).toEqual({ difficulty: 'normal', mode: 'versus', queue: 'casual', locked: true, format: 'quick' })
     say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
     const [report] = reports(say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000))
@@ -647,6 +647,35 @@ describe('arena rooms', () => {
     expect(roomOf(state).phase).toBe('ended')
     expect(report).toMatchObject({ kind: 'ranked', confirmed: false })
     expect(report?.seats.slice(0, 2)).toMatchObject([{ slot: 0, left: false }, { slot: 1, left: true }])
+  })
+
+  it('plays a ranked match whose humans are all on one team as casual', () => {
+    const state = matchedPlaying(2, true, { oneSide: true })
+    say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    const [report] = reports(say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000))
+    expect(report).toMatchObject({ kind: 'casual', confirmed: true })
+  })
+
+  it('reports a match its humans all left as abandoned when the room closes, and nothing for a finished one', () => {
+    const state = matchedPlaying(2)
+    say(state, 'c0', { t: 'leave' }, T0 + 5000)
+    const out = say(state, 'c1', { t: 'leave' }, T0 + 6000)
+    expect(out).toContainEqual({ k: 'wipe' })
+    const [report] = reports(out)
+    expect(report).toMatchObject({ v: 1, room: 'ABCDE', run: 1, kind: 'ranked', endedAt: T0 + 6000, result: null, abandoned: true })
+    expect(report?.seats.slice(0, 3)).toMatchObject([{ slot: 0, left: true }, { slot: 1, left: true }, { slot: 2, userId: null, left: false }])
+
+    // Tabs closed: the room idles out and says the same.
+    const quiet = matchedPlaying(2)
+    disconnect(quiet, 'c0', T0 + 5000)
+    disconnect(quiet, 'c1', T0 + 5000)
+    expect(reports(tick(quiet, T0 + 5000 + TIMES.idle))).toMatchObject([{ abandoned: true }])
+
+    const done = matchedPlaying(2)
+    say(done, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    say(done, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    say(done, 'c0', { t: 'leave' }, T0 + 9500)
+    expect(reports(say(done, 'c1', { t: 'leave' }, T0 + 9600))).toHaveLength(0)
   })
 
   it("reports a friends' Arena room as a room, and an account by its Clerk id and handle", () => {

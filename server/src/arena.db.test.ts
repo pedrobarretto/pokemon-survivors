@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { ARENA_RANKED } from '../../src/data/arenaRanked'
 import { seasonById, seasonReset, type ArenaResult } from '../../src/game/arenaRank'
 import { arenaStore, parseArenaReport, planMatch, type ParsedReport } from './arena'
 import type { Sql } from './db'
@@ -11,7 +12,7 @@ import type { Sql } from './db'
  */
 const url = process.env.ARENA_TEST_DATABASE_URL
 
-const seat = (slot: number, team: 0 | 1) => ({ slot, team, starter: 'charmander', form: 'Charmander', bot: false, kos: 2, deaths: 1, scored: 10, damage: 500 }) as const
+const seat = (slot: number, team: 0 | 1) => ({ slot, team, starter: 'charmander', form: 'Charmander', bot: false, kos: 2, deaths: 1, scored: 10, damage: 500, afk: 0 }) as const
 
 /** Blue (slots 0, 1) beats Red (slots 2, 3). */
 const result: ArenaResult = { v: 1, score: [40, 20], winner: 0, seconds: 420, objective: null, seats: [seat(0, 0), seat(1, 0), seat(2, 1), seat(3, 1)] }
@@ -47,7 +48,7 @@ describe.skipIf(!url)('arena store (Postgres)', () => {
   })
 
   beforeEach(async () => {
-    await sql`truncate arena_lines, arena_matches, arena_ratings, gifts, users cascade`
+    await sql`truncate arena_lines, arena_matches, arena_ratings, arena_conduct, arena_fair_play, gifts, users cascade`
   })
 
   afterAll(async () => {
@@ -108,12 +109,60 @@ describe.skipIf(!url)('arena store (Postgres)', () => {
     expect((await rating('u_b'))?.games).toBe(1)
   })
 
+  it('costs a leaver Fair Play once, gives the finisher some back, and only with another human in it', async () => {
+    const { max, left, finish } = ARENA_RANKED.fairPlay
+    await sql`insert into users (id) values ('u_b')`
+    await sql`insert into arena_fair_play (user_id, score) values ('u_b', 50)`
+    const seats = [{ slot: 0, userId: 'u_a', handle: null, left: true }, { slot: 2, userId: 'u_b', handle: null, left: false }]
+    await arena.report(report({ kind: 'casual', seats }))
+    await arena.report(report({ kind: 'casual', seats }))
+    const tickets = await arena.tickets(['u_a', 'u_b', 'u_new'])
+    expect([tickets.ratings.u_a?.fairPlay, tickets.ratings.u_b?.fairPlay, tickets.ratings.u_new?.fairPlay]).toEqual([max + left, 50 + finish, max])
+    expect((await arena.profile('u_a')).fairPlay).toMatchObject({ score: max + left, penalties: [{ conduct: 'left', change: left }] })
+    expect((await arena.profile('u_b')).fairPlay.penalties).toEqual([])
+    // Alone with bots, or among friends: nothing moves.
+    await arena.report(report({ run: 2, kind: 'casual', seats: [{ slot: 0, userId: 'u_a', handle: null, left: true }] }))
+    await arena.report(report({ run: 3, kind: 'room', seats }))
+    expect((await arena.tickets(['u_a'])).ratings.u_a?.fairPlay).toBe(max + left)
+  })
+
+  it('costs everyone in an abandoned match Fair Play once, rating nothing', async () => {
+    const abandoned = { room: 'Z9', run: 1, kind: 'ranked' as const, endedAt: seasonById(1).startMs + 60_000, users: ['u_a', 'u_b'] }
+    expect(await arena.abandoned(abandoned)).toMatchObject({ rated: false, duplicate: false })
+    expect(await arena.abandoned(abandoned)).toMatchObject({ duplicate: true })
+    const { max, left } = ARENA_RANKED.fairPlay
+    expect((await arena.tickets(['u_a', 'u_b'])).ratings.u_b?.fairPlay).toBe(max + left)
+    expect(await rating('u_a')).toBeUndefined()
+    // A lone human leaving bots behind harms nobody.
+    await arena.abandoned({ ...abandoned, run: 2, users: ['u_a'] })
+    expect((await arena.tickets(['u_a'])).ratings.u_a?.fairPlay).toBe(max + left)
+  })
+
+  it('keeps the protection meter per season and marks the loss it took', async () => {
+    const full = ARENA_RANKED.protection.max
+    await sql`insert into users (id) values ('u_b')`
+    await sql`insert into arena_ratings (user_id, season, mmr, rp, peak, games, protection) values ('u_b', 1, 1000, 150, 150, 3, ${full})`
+    await arena.report(report())
+    expect(await rating('u_b')).toMatchObject({ rp: 150, games: 4, losses: 1 })
+    const [row] = await sql<{ protection: number }[]>`select protection from arena_ratings where user_id = 'u_b' and season = 1`
+    expect(row?.protection).toBe(0)
+    expect((await arena.history('u_b', LATER, 1)).map((e) => [e.outcome, e.rp, e.protected])).toEqual([['loss', 0, true]])
+    expect((await arena.profile('u_a', seasonById(1).startMs + 120_000)).rating.protection).toBeGreaterThan(0)
+  })
+
+  it('counts the ranked matches played before the first season', async () => {
+    await arena.report(report({ endedAt: seasonById(1).startMs - 60_000 }))
+    const profile = await arena.profile('u_a', seasonById(1).startMs - 30_000)
+    expect(profile.preseason).toBe(1)
+    expect(profile.totals.matches).toBe(0)
+  })
+
   it('starts a new season from the last one’s reset rating', async () => {
-    const last = { mmr: 1400, rp: 950, peak: 1000, games: 40 }
+    const last = { mmr: 1400, rp: 950, peak: 1000, games: 40, protection: 0 }
     await sql`insert into users (id) values ('u_a')`
     await sql`insert into arena_ratings (user_id, season, mmr, rp, peak, games) values ('u_a', 1, ${last.mmr}, ${last.rp}, ${last.peak}, ${last.games})`
     const now = seasonById(2).startMs + 60_000
-    expect((await arena.tickets(['u_a', 'u_new'], now)).ratings).toEqual({ u_a: { mmr: seasonReset(last).mmr, rp: seasonReset(last).rp, games: 0 }, u_new: { mmr: 1000, rp: 0, games: 0 } })
+    expect((await arena.tickets(['u_a', 'u_new'], now)).ratings).toEqual({ u_a: { mmr: seasonReset(last).mmr, rp: seasonReset(last).rp, games: 0, fairPlay: 100 }, u_new: { mmr: 1000, rp: 0, games: 0, fairPlay: 100 } })
     await arena.report(report({ endedAt: now }))
     const start = seasonReset(last)
     const [line] = planMatch(result, [{ slot: 0, userId: 'u_a', left: false }, { slot: 2, userId: 'u_b', left: false }], new Map([['u_a', start]]))

@@ -74,6 +74,9 @@ export type VersusSeat = {
   kos: number
   deaths: number
   scored: number
+  /** A human's current stretch without acting (seconds: stick idle and no special, or away) and its longest, the report's AFK (`trackIdle`). */
+  still: number
+  afk: number
 }
 
 /** A goal zone in play: its team, where it is, the points it still takes before it breaks. */
@@ -142,7 +145,7 @@ export const seatMatch = (seed: number, humans: readonly VersusLoadout[], size: 
 }
 
 const createSeat = (team: Team, bot: boolean, lane: Lane): VersusSeat => ({
-  team, bot, lane, energy: 0, respawn: 0, safe: 0, channel: 0, goal: -1, hurtAt: -99, lastBy: -1, shield: 0, avatar: -1, slow: 1, pace: 1, aim: null, think: 0, grass: -1, hidden: false, reveal: 0, kos: 0, deaths: 0, scored: 0,
+  team, bot, lane, energy: 0, respawn: 0, safe: 0, channel: 0, goal: -1, hurtAt: -99, lastBy: -1, shield: 0, avatar: -1, slow: 1, pace: 1, aim: null, think: 0, grass: -1, hidden: false, reveal: 0, kos: 0, deaths: 0, scored: 0, still: 0, afk: 0,
 })
 
 const createRoom = (map: VersusMap): Room => ({
@@ -240,6 +243,7 @@ export const stepVersus = (g: Game, inputs: readonly StepInput[], dt: number) =>
   hurryEvolutions(g)
   g.now += dt
   g.time += dt
+  trackIdle(g, inputs, dt)
   const actor = g.player
   for (const p of g.players) {
     if (!inPlay(p)) continue
@@ -280,6 +284,24 @@ export const stepVersus = (g: Game, inputs: readonly StepInput[], dt: number) =>
 }
 
 const STILL: StepInput = { move: { x: 0, y: 0 }, special: false }
+
+/**
+ * Each human's stretch without acting, for Fair Play's AFK: it grows while
+ * the stick is idle with no button pressed, or while they're away (a bot
+ * plays the seat then), and goes back to 0 when they act. Knocked out or
+ * channeling into a goal (standing still to score), it holds. Never read by
+ * the match's rules: only the report's `afk` (its longest) says it.
+ */
+const trackIdle = (g: Game, inputs: readonly StepInput[], dt: number) => {
+  for (const p of g.players) {
+    const v = p.versus
+    if (!v || v.bot || !inPlay(p) || v.channel > 0) continue
+    const i = inputs[p.slot]
+    const acting = !p.away && i !== undefined && (i.move.x !== 0 || i.move.y !== 0 || i.special || i.mega === true || i.lunge === true)
+    v.still = acting ? 0 : v.still + dt
+    if (v.still > v.afk) v.afk = v.still
+  }
+}
 
 /** Keeps the players and the wild on the map's floor. */
 const keepEveryoneOn = (g: Game, room: Room) => {

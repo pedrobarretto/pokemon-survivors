@@ -1,7 +1,7 @@
 import { accountState, accountsEnabled, API_URL } from './account'
 import { apiCall } from './api'
 import { parseBoard, parseHistory, parseHistoryEntry, parseProfile, pushHistory } from './arena/history'
-import { fakeBoard, fakeHistory, fakeProfile } from './arena/fakes'
+import { fakeBoard, fakeHistory, fakeProfile, type FakeScenario } from './arena/fakes'
 import type { ArenaHistoryEntry, ArenaLeaderboardRow, ArenaProfile, ArenaResult } from './game/arenaRank'
 
 /**
@@ -14,17 +14,20 @@ import type { ArenaHistoryEntry, ArenaLeaderboardRow, ArenaProfile, ArenaResult 
  * matches too (`ps:arenaHistory`), so guests have one.
  *
  * `ps.arena('fake')` makes every read answer made-up data (`arena/fakes.ts`)
- * and the hub act as signed in, for screenshots.
+ * and the hub act as signed in, for screenshots; `ps.arena('fake', s)`
+ * stages a Fair Play and protection scenario (`FakeScenario`).
  */
 
 /** Boards read from the API; a profile and history need an account too. */
 export const arenaApiEnabled = Boolean(API_URL)
 
 let faked = false
+let scenario: FakeScenario = 'fine'
 
-/** Dev: every read answers fake data (on), or the API again (off). */
-export const fakeArena = (on: boolean) => {
+/** Dev: every read answers fake data (on, in `as`'s Fair Play and protection), or the API again (off). */
+export const fakeArena = (on: boolean, as: FakeScenario = scenario) => {
   faked = on
+  scenario = as
 }
 
 export const arenaFaked = () => faked
@@ -34,7 +37,7 @@ export const arenaSignedIn = () => faked || (accountsEnabled && accountState().k
 
 /** `GET /arena/me`: null for a guest, offline, or an API that doesn't serve it. */
 export const fetchArenaMe = async (): Promise<ArenaProfile | null> => {
-  if (faked) return fakeProfile()
+  if (faked) return fakeProfile(scenario)
   if (!arenaSignedIn()) return null
   const res = await apiCall('/arena/me', { auth: true })
   return res.status === 200 ? parseProfile(res.body) : null
@@ -88,8 +91,8 @@ export const keepArenaMatch = (entry: ArenaHistoryEntry) => {
 
 /* ---------------- RP after a ranked match ---------------- */
 
-/** What a rated match did: the RP it moved and where the player stands now. */
-export type RpChange = { rp: number; profile: ArenaProfile | null }
+/** What a rated match did: the RP it moved, whether the protection meter took its loss, and where the player stands now. */
+export type RpChange = { rp: number; protected: boolean; profile: ArenaProfile | null }
 
 const wait = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
@@ -101,13 +104,14 @@ const wait = (ms: number) => new Promise((res) => setTimeout(res, ms))
 export const awaitRpChange = async (endedAt: number): Promise<RpChange | null> => {
   if (faked) {
     await wait(1600)
-    return { rp: 27, profile: fakeProfile() }
+    // A full meter (`ps.arena('fake', 'full')`) shows a protected loss.
+    return scenario === 'full' ? { rp: 0, protected: true, profile: fakeProfile('fine') } : { rp: 27, protected: false, profile: fakeProfile(scenario) }
   }
   for (const ms of [2500, 3500, 5000, 8000, 12000]) {
     await wait(ms)
     const recent = await fetchArenaHistory(null, 5)
     const rated = recent?.find((e) => e.kind === 'ranked' && e.rp !== null && e.at >= endedAt - 2 * 60_000)
-    if (rated) return { rp: rated.rp ?? 0, profile: await fetchArenaMe() }
+    if (rated) return { rp: rated.rp ?? 0, protected: rated.protected, profile: await fetchArenaMe() }
   }
   return null
 }

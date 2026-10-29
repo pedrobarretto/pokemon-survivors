@@ -1,20 +1,45 @@
 import { VERSUS_PICKS, type VersusPick } from '../data/versus'
-import type { MatchKind } from '../data/arenaRanked'
-import { seasonAt, seasonById, tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile } from '../game/arenaRank'
+import { ARENA_RANKED, type MatchKind } from '../data/arenaRanked'
+import { seasonAt, seasonById, tierOf, type ArenaHistoryEntry, type ArenaLeaderboardRow, type ArenaProfile, type FairPlayView } from '../game/arenaRank'
 
 /**
  * Made-up Arena standing, history and board (`ps.arena('fake')`), so the
  * hub and the end screen can be seen without the API. Fixed numbers: the
- * same shots every time.
+ * same shots every time. A scenario (`ps.arena('fake', s)`) stages Fair Play
+ * and the protection meter: `fine` (full score, meter part way), `full`
+ * (meter full: the next ranked loss is protected), `left` (just left a
+ * match) and `low` (under the Ranqueada's minimum and held in the queue).
  */
+
+export const FAKE_SCENARIOS = ['fine', 'full', 'left', 'low'] as const
+export type FakeScenario = (typeof FAKE_SCENARIOS)[number]
+export const isFakeScenario = (x: unknown): x is FakeScenario => typeof x === 'string' && (FAKE_SCENARIOS as readonly string[]).includes(x)
 
 const season = () => seasonAt(Date.now()) ?? seasonById(1)
 
-export const fakeProfile = (): ArenaProfile => {
+const ago = (minutes: number) => Date.now() - minutes * 60_000
+
+const FAIR_PLAY: Record<FakeScenario, () => FairPlayView> = {
+  fine: () => ({ score: ARENA_RANKED.fairPlay.max, penalties: [] }),
+  full: () => ({ score: ARENA_RANKED.fairPlay.max, penalties: [] }),
+  left: () => ({ score: 85, penalties: [{ conduct: 'left', change: ARENA_RANKED.fairPlay.left, at: ago(18) }] }),
+  low: () => ({
+    score: 52,
+    penalties: [
+      { conduct: 'left', change: ARENA_RANKED.fairPlay.left, at: ago(9) },
+      { conduct: 'afk', change: ARENA_RANKED.fairPlay.afk, at: ago(64) },
+      { conduct: 'left', change: ARENA_RANKED.fairPlay.left, at: ago(190) },
+    ],
+  }),
+}
+
+const PROTECTION: Record<FakeScenario, number> = { fine: 64, full: ARENA_RANKED.protection.max, left: 40, low: 12 }
+
+export const fakeProfile = (scenario: FakeScenario = 'fine'): ArenaProfile => {
   const rp = 372
   return {
     season: season(),
-    rating: { mmr: 1184, rp, peak: 410, games: 41 },
+    rating: { mmr: 1184, rp, peak: 410, games: 41, protection: PROTECTION[scenario] },
     tier: tierOf(rp),
     place: 37,
     totals: { matches: 41, wins: 24, losses: 15, draws: 2, kos: 133, scored: 1890 },
@@ -23,11 +48,16 @@ export const fakeProfile = (): ArenaProfile => {
       { starter: 'froakie', matches: 13, wins: 8 },
       { starter: 'bulbasaur', matches: 9, wins: 4 },
     ],
+    fairPlay: FAIR_PLAY[scenario](),
+    preseason: seasonAt(Date.now()) === null ? 12 : 0,
   }
 }
 
 const KINDS: readonly MatchKind[] = ['ranked', 'ranked', 'casual', 'ranked', 'practice', 'room', 'ranked', 'ranked', 'casual', 'practice', 'ranked', 'ranked']
 const STARTERS: readonly VersusPick[] = ['charmander', 'froakie', 'charmander', 'bulbasaur', 'piplup', 'charmander', 'froakie', 'treecko', 'charmander', 'fennekin', 'froakie', 'charmander']
+
+/** The fake history's entry whose loss the protection meter took (a ranked loss). */
+const PROTECTED = 7
 
 export const fakeHistory = (): ArenaHistoryEntry[] => {
   const now = Date.now()
@@ -49,7 +79,9 @@ export const fakeHistory = (): ArenaHistoryEntry[] => {
       deaths: 1 + (i % 4),
       scored: 20 + ((i * 13) % 50),
       damage: 6000 + i * 731,
-      rp,
+      // A ranked loss a full meter took.
+      rp: i === PROTECTED ? 0 : rp,
+      protected: i === PROTECTED,
     }
   })
 }

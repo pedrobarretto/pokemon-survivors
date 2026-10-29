@@ -21600,6 +21600,212 @@ span.arena-hub-face {
   line-height: 1.05;
 }
 
+.arena-hub-delta.shield {
+  color: #b07800;
+}
+
+/* Fair Play and the protection meter: two cards side by side, a bar each. */
+.arena-hub-meters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.arena-hub-card.arena-hub-meter {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  border-left: 6px solid var(--meter, #2f9a40);
+}
+
+.arena-hub-meter.fair.good {
+  --meter: #2f9a40;
+}
+
+.arena-hub-meter.fair.warn {
+  --meter: #e08a10;
+}
+
+.arena-hub-meter.fair.bad {
+  --meter: #c03040;
+}
+
+.arena-hub-meter.shield {
+  --meter: #e8b020;
+}
+
+.arena-hub-meter.shield.ready {
+  background: linear-gradient(100deg, var(--dk-wash-gold, #fff8d8), var(--dk-surface-2, #e8e8f0));
+}
+
+.arena-hub-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.arena-hub-card .arena-hub-meter-value {
+  font-size: 11px;
+  color: var(--meter);
+}
+
+.arena-hub-bar.meter.good i {
+  background: #2f9a40;
+}
+
+.arena-hub-bar.meter.warn i {
+  background: #e08a10;
+}
+
+.arena-hub-bar.meter.bad i {
+  background: #c03040;
+}
+
+.arena-hub-bar.meter.gold i {
+  background: #e8b020;
+}
+
+.arena-hub-card .arena-hub-meter-status,
+.arena-hub-card .arena-hub-meter-explain {
+  margin: 0;
+}
+
+.arena-hub-card .arena-hub-meter-explain {
+  font-size: 16px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.arena-hub-card .arena-hub-penalty {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 8px;
+  margin: 0;
+  color: #c03040;
+}
+
+.arena-hub-penalty span,
+.arena-hub-penalty small {
+  margin: 0;
+}
+
+.arena-hub-penalty small {
+  font-family: var(--body);
+  font-size: 15px;
+  color: var(--dk-ink-3, #707088);
+}
+
+/* The pre-season: before season 1, ranked matches are kept without RP. */
+.arena-hub-preseason {
+  border: 3px solid #3878e8;
+  background: var(--dk-wash-blue, #e4eefc);
+}
+
+.arena-hub-preseason img {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  align-self: flex-start;
+  image-rendering: pixelated;
+}
+
+/* A Fair Play penalty this device hasn't told yet, above every tab. */
+.dialog.arena-hub > .arena-hub-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  background: var(--dk-wash-red, #fde8ea);
+  border: 3px solid #c03040;
+  border-radius: 8px;
+  font-family: var(--body);
+  font-size: 18px;
+  line-height: 1.05;
+}
+
+.dialog.arena-hub > .arena-hub-notice[hidden] {
+  display: none;
+}
+
+.arena-hub-notice p {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 8px;
+  margin: 0;
+}
+
+.arena-hub-notice b {
+  font-family: var(--title);
+  font-size: 9px;
+  color: #c03040;
+}
+
+.arena-hub-notice small,
+.arena-hub-notice .arena-hub-notice-score {
+  color: var(--dk-ink-2, #505870);
+}
+
+/* The queue: Fair Play's hold, a Ranqueada refused for it, and the pre-season note. */
+.arena-queue.held .arena-queue-bots {
+  color: #c03040;
+}
+
+.arena-queue-honest.preseason {
+  color: #3878e8;
+}
+
+.arena-queue-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(440px, 100%);
+  margin: 0 auto;
+  font-family: var(--body);
+  font-size: 20px;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.arena-queue-block p {
+  margin: 0;
+}
+
+.arena-queue.blocked .arena-queue-head img {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+/* The end screen: a loss the protection meter took, and the pre-season's line. */
+.vs-end-rank.shield .vs-end-rp {
+  color: #b07800;
+}
+
+.vs-end-rank.shield {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.vs-end-rp {
+  white-space: nowrap;
+}
+
+.vs-end-shield {
+  flex-basis: 100%;
+  order: 1;
+  margin-top: 6px;
+  line-height: 1.4;
+  font-family: var(--title);
+  font-size: 10px;
+  color: #b07800;
+}
+
+.vs-end-rank.preseason {
+  color: #3878e8;
+}
+
 /* Phones held upright: two ways to play a row, the hub's numbers in fewer columns. */
 @media (max-width: 640px) {
   .dialog.arena .arena-modes {
@@ -21634,6 +21840,16 @@ span.arena-hub-face {
   }
   .arena-hub-stats {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .arena-hub-meters {
+    grid-template-columns: 1fr;
+  }
+  .arena-hub-notice b {
+    font-size: 8px;
+    line-height: 1.3;
+  }
+  .vs-end-rank {
+    flex-wrap: wrap;
   }
   .arena-hub-fav-list {
     grid-template-columns: 1fr;

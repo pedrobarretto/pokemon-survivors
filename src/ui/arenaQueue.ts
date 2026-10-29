@@ -9,7 +9,10 @@ import type { QueueServerMessage } from '../net/arena'
 import { arenaIcon, pokeballIcon } from '../render/art'
 import { arenaIconUrl } from '../render/arenaArt'
 import { portraitUrl } from '../render/sprites'
+import { ARENA_RANKED } from '../data/arenaRanked'
+import { matchesToRanked } from '../game/arenaRank'
 import { firstForm, roleChip, teamColor } from './arena'
+import { preseason, season1Date } from './arenaHub'
 import { h, later } from './dom'
 import { hint, type Screen } from './screens'
 
@@ -149,19 +152,23 @@ export const arenaQueue = (root: HTMLElement, input: Input, me: { name: string; 
 /* ---------------- The public queue ---------------- */
 
 export type LiveQueue = Screen & {
-  /** The matchmaker's word on the wait (`queued`). */
+  /** The matchmaker's word on the wait (`queued`), a Fair Play hold included. */
   update: (m: Extract<QueueServerMessage, { t: 'queued' }>) => void
   /** A match: the lineup fills (`humans` trainers, the rest CPUs), "Partida encontrada!", and a note when a ranked ticket plays as casual. */
   found: (m: Extract<QueueServerMessage, { t: 'matched' }>) => void
+  /** The Ranqueada refused for Fair Play (`fairPlay`: the score): why, how to come back, and a way to Casual (`casual`). */
+  blocked: (fairPlay: number, casual: () => void) => void
 }
 
 /**
  * Casual and Ranqueada's queue: the same lineups, with the real wait from the
  * matchmaker (`arena/queue.ts`): the time searched, how many trainers the
  * forming match has (they fill Blue's and Red's seats as Poké Balls), the
- * seconds until bots fill the rest, and what the kind means. On a match,
- * "Partida encontrada!" stays up while the shell joins the room, whose
- * match starts by itself. `cancel`: back out.
+ * seconds until bots fill the rest, and what the kind means (before season
+ * 1, that a Ranqueada is kept without RP). A ticket Fair Play holds counts
+ * the hold down first. On a match, "Partida encontrada!" stays up while the
+ * shell joins the room, whose match starts by itself; a Ranqueada refused for
+ * Fair Play says why and how to come back. `cancel`: back out.
  */
 export const arenaQueueLive = (root: HTMLElement, input: Input, me: { name: string; pick: VersusPick }, kind: QueueKind, format: ArenaFormat, cancel: () => void): LiveQueue => {
   const m = t().versus
@@ -177,6 +184,9 @@ export const arenaQueueLive = (root: HTMLElement, input: Input, me: { name: stri
   const count = h('b', { class: 'arena-queue-count' })
   const bots = h('span', { class: 'arena-queue-bots' })
   const note = h('p', { class: 'arena-queue-honest' }, kind === 'ranked' ? q.rankedNote : q.casualNote)
+  const season = kind === 'ranked' && preseason() ? h('p', { class: 'arena-queue-honest preseason' }, q.preseason(season1Date())) : null
+  /** When Fair Play lets the search start (performance clock), or null when it doesn't hold the ticket. */
+  let holdAt: number | null = null
   const columns = ([0, 1] as const).map((team) => h('div', { class: `arena-lineup team${team}`, style: `--team:${teamColor(team)}` }, h('b', { class: 'arena-lineup-head' }, m.teams[team])))
   const size = 2 * half
   const seats: HTMLElement[] = []
@@ -208,6 +218,7 @@ export const arenaQueueLive = (root: HTMLElement, input: Input, me: { name: stri
     h('div', { class: 'arena-queue-head' }, h('img', { class: 'arena-queue-spin', src: arenaIcon(), alt: '' }), title, chip, formatChip(format), clock),
     h('div', { class: 'arena-queue-status' }, count, bots),
     note,
+    season,
     h('div', { class: 'arena-lineups' }, columns[0]!, h('span', { class: 'arena-vs' }, 'VS'), columns[1]!),
     h('div', { class: 'buttons' }, cancelButton),
     hint(q.hintKeys, q.hintTouch),
@@ -218,7 +229,17 @@ export const arenaQueueLive = (root: HTMLElement, input: Input, me: { name: stri
   const paintCount = () => {
     count.textContent = q.players(found, size)
     if (matched) return
-    const left = botsAt === null ? null : Math.ceil((botsAt - performance.now()) / 1000)
+    const now = performance.now()
+    if (holdAt !== null && holdAt > now) {
+      bots.textContent = q.holding(formatTime(Math.ceil((holdAt - now) / 1000)))
+      return
+    }
+    if (holdAt !== null) {
+      holdAt = null
+      note.textContent = kind === 'ranked' ? q.rankedNote : q.casualNote
+      box.classList.remove('held')
+    }
+    const left = botsAt === null ? null : Math.ceil((botsAt - now) / 1000)
     bots.textContent = left === null ? '' : left > 0 ? q.botsIn(left) : q.botsNow
   }
   const tick = () => {
@@ -236,15 +257,22 @@ export const arenaQueueLive = (root: HTMLElement, input: Input, me: { name: stri
     later(cancel)
   }
   cancelButton.addEventListener('click', back)
+  /** Enter's button while the Ranqueada's block shows (Jogar Casual). */
+  let onEnter: (() => void) | null = null
   const off = input.onKey((key) => {
-    if (key === 'Escape' || key === 'Backspace' || key === 'Enter') back()
+    if (key === 'Enter' && onEnter) onEnter()
+    else if (key === 'Escape' || key === 'Backspace' || key === 'Enter') back()
   })
 
   const update: LiveQueue['update'] = (msg) => {
     if (matched) return
+    const hold = msg.hold ?? 0
+    holdAt = hold > 0 ? performance.now() + hold * 1000 : holdAt
+    box.classList.toggle('held', hold > 0)
+    if (hold > 0) note.textContent = q.holdNote
     title.textContent = q.searching
     since = performance.now() - msg.waited * 1000
-    botsAt = performance.now() + msg.botsIn * 1000
+    botsAt = performance.now() + (hold + msg.botsIn) * 1000
     if (msg.found !== found) playSfx('move', 0)
     found = Math.max(1, Math.min(size, msg.found))
     paintSeats(found, false)
@@ -269,11 +297,42 @@ export const arenaQueueLive = (root: HTMLElement, input: Input, me: { name: stri
     playSfx('levelUp')
   }
 
+  const blocked: LiveQueue['blocked'] = (fairPlay, casual) => {
+    if (matched) return
+    matched = true
+    cancelAnimationFrame(timer)
+    const b = q.blocked
+    const toCasual = () => {
+      if (left) return
+      left = true
+      playSfx('select')
+      later(casual)
+    }
+    const casualButton = h('button', { class: 'btn confirm', type: 'button', onclick: toCasual }, b.casual)
+    const backButton = h('button', { class: 'btn', type: 'button', onclick: back }, b.back)
+    onEnter = toCasual
+    box.classList.add('blocked')
+    box.replaceChildren(
+      h('div', { class: 'arena-queue-head' }, h('img', { src: arenaIconUrl('queueRanked'), alt: '' }), h('b', { class: 'arena-queue-title' }, b.title)),
+      h(
+        'div',
+        { class: 'arena-queue-block', role: 'alert' },
+        h('div', { class: 'arena-hub-bar meter bad', role: 'img', 'aria-label': `${fairPlay}/${ARENA_RANKED.fairPlay.max}` }, h('i', { style: `width:${Math.round((fairPlay / ARENA_RANKED.fairPlay.max) * 100)}%` })),
+        h('p', {}, b.score(fairPlay, ARENA_RANKED.fairPlay.rankedMin)),
+        h('p', {}, b.how(Math.max(1, matchesToRanked(fairPlay)))),
+        h('p', { class: 'arena-queue-honest' }, q.holdNote),
+      ),
+      h('div', { class: 'buttons' }, casualButton, backButton),
+    )
+    playSfx('denied')
+  }
+
   root.append(el)
   return {
     el,
     dim: 0.6,
     update,
+    blocked,
     found: foundMatch,
     dispose: () => {
       left = true

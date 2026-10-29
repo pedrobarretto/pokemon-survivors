@@ -135,6 +135,20 @@ describe('a match', () => {
     expect(s.objective?.kind).toBe('zapdos')
   }, 30_000)
 
+  it('times a human’s longest stretch without acting, away included, and none for bots', () => {
+    const g = createVersusGame(4, [{ starter: 'mudkip', name: 'me' }])
+    const v = g.players[0]!.versus!
+    run(g, 20)
+    stepTick(g, [{ slot: 0, kind: 'move', code: 40 }])
+    run(g, 5)
+    expect(v.still).toBeLessThan(5.1)
+    expect(v.afk).toBeGreaterThanOrEqual(20)
+    stepTick(g, [{ slot: 0, kind: 'move', code: 0 }, { slot: 0, kind: 'away' }])
+    run(g, 30)
+    expect(v.afk).toBeGreaterThanOrEqual(30)
+    expect(g.players.filter((p) => p.versus!.bot).every((p) => p.versus!.afk === 0)).toBe(true)
+  })
+
   it('has its bots carry Energy to the rival goals over a whole match, ending on the clock', () => {
     const g = createVersusGame(9, [])
     run(g, VERSUS_FORMATS.standard.length + 1)
