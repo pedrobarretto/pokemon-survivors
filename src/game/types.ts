@@ -805,6 +805,7 @@ export type GameEvent =
   /** Versus (`versusSocial.ts`): a quick chat line, a ping on the map, and a team's surrender vote opening, passing or failing. */
   | { kind: 'versusTalk'; slot: number; msg: QuickChat }
   | { kind: 'versusPing'; slot: number; ping: PingKind; x: number; y: number }
+  | { kind: 'versusEmote'; slot: number }
   | { kind: 'versusSurrender'; team: Team; slot: number; state: 'open' | 'passed' | 'failed' }
 
 /** A timed player buff (X Attack, X Speed, Max Repel). `left` counts down in seconds. */

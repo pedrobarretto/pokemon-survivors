@@ -15,7 +15,7 @@ import { detail } from './quality'
 export type AnimName = 'Walk' | 'Idle' | 'Hurt' | 'Fly'
 export type Dex = number
 
-type Sheet = {
+export type Sheet = {
   img: HTMLImageElement | HTMLCanvasElement
   fw: number
   fh: number
@@ -531,6 +531,21 @@ const fetchSpecies = async (dex: Dex, shiny: boolean, form: FormKey | undefined,
  */
 export type Variant = { dex: Dex; shiny: boolean; form?: string }
 
+/**
+ * One extra sheet of a species, outside its variant's set (an Arena emote's
+ * front row, `render/arenaFx.ts`): loaded in the same queue, as `shown`. The
+ * caller keeps it and lets it go with `freeSheet`; sweeps never see it.
+ */
+export const loadSheet = async (src: string, meta: { frameWidth: number; frameHeight: number; durations: readonly number[] }) =>
+  sheetOf(await loadImage(src, src, RANK.shown), meta.frameWidth, meta.frameHeight, meta.durations)
+
+/** Frees a sheet from `loadSheet`: it draws nothing from then on. */
+export const freeSheet = (sheet: Sheet) => {
+  sheet.seen = GONE
+  releaseOverlays(sheet)
+  freeImage(sheet.img)
+}
+
 /** A variant as it loads: a form the manifest lacks (a Mega SpriteCollab hasn't drawn) as nothing, shiny colors it lacks as the normal ones, as `sprites` would draw it. */
 type Loadable = { dex: Dex; shiny: boolean; form: Form | undefined }
 const loadable = (v: Variant): Loadable[] => {
@@ -906,6 +921,8 @@ export type DrawOpts = {
   outline?: string
   /** The outline's own 0..1 opacity: a throb in one color keeps a crowd to one silhouette per frame. */
   outlineAlpha?: number
+  /** A sheet of the species' own loaded apart (`loadSheet`: an Arena emote), drawn instead of `anim`'s, centered the same way. */
+  sheet?: Sheet
 }
 
 /** The hit flash's color. */
@@ -926,7 +943,7 @@ export const drawPokemon = (
   y: number,
   opts: DrawOpts = {},
 ) => {
-  const sheet = s.anims[anim] ?? s.anims.Walk
+  const sheet = opts.sheet ?? s.anims[anim] ?? s.anims.Walk
   if (sheet.seen === GONE) return
   sheet.seen = epoch
   const frame = frameIndex(sheet, seconds, opts.loop ?? true)

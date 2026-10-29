@@ -25,7 +25,7 @@ import { reveal, updateGrass, usedSpecial } from './versusGrass'
 import { channelTime, goalOpen, mapOf, rivalTeam, rulesOf, scoreValue, winnerOf } from './versusRules'
 import type { Enemy, Game, Player } from './types'
 import type { Aim } from './versusBots'
-import { fullBucket, updateSocial, type Bucket, type Ping, type SurrenderVote, type Talk } from './versusSocial'
+import { fullBucket, updateSocial, type Bucket, type Emote, type Ping, type SurrenderVote, type Talk } from './versusSocial'
 import { aimCast, type Focus } from './versusKit'
 import { specialReady } from './special'
 import * as dm from '../engine/dmath'
@@ -108,9 +108,10 @@ export type VersusSeat = {
   interrupts: number
   /** `g.now` of each rival's last hit on it, by slot (-99: none since it last came in), for the assists. */
   hitAt: number[]
-  /** Its quick chat's and pings' rate limits (`versusSocial.ts`). */
+  /** Its quick chat's, pings' and emotes' rate limits (`versusSocial.ts`). */
   talkBucket: Bucket
   pingBucket: Bucket
+  emoteBucket: Bucket
 }
 
 /** A goal zone in play: its team, where it is, the points it still takes before it breaks. */
@@ -143,6 +144,8 @@ export type VersusState = {
   /** Quick chat lines and pings of the last few seconds (`versusSocial.ts`): shown by the shell, read by no rule. */
   talk: Talk[]
   pings: Ping[]
+  /** Emotes of the last few seconds (`versusSocial.ts`): which one plays is the seat's look, the shell's (`render/arenaFx.ts`). */
+  emotes: Emote[]
   /** Each team's surrender vote while one runs, and the match second its next one may start (after a failed one). */
   surrender: [SurrenderVote | null, SurrenderVote | null]
   surrenderAt: [number, number]
@@ -188,6 +191,7 @@ export const seatMatch = (seed: number, humans: readonly VersusLoadout[], size: 
 const createSeat = (team: Team, bot: boolean, lane: Lane, players: number): VersusSeat => ({
   team, bot, lane, energy: 0, respawn: 0, safe: 0, channel: 0, goal: -1, hurtAt: -99, lastBy: -1, shield: 0, avatar: -1, slow: 1, pace: 1, aim: null, think: 0, grass: -1, hidden: false, reveal: 0, lock: -1, prio: 0, focus: null, hold: 0, learn: 0, upgrade: 0, kos: 0, deaths: 0, scored: 0, still: 0, afk: 0,
   assists: 0, dealt: 0, taken: 0, healed: 0, interrupts: 0, hitAt: new Array<number>(players).fill(-99), talkBucket: fullBucket(VERSUS.talk), pingBucket: fullBucket(VERSUS.ping),
+  emoteBucket: fullBucket(VERSUS.emote),
 })
 
 const createRoom = (map: VersusMap): Room => ({
@@ -237,6 +241,7 @@ export const createVersusGame = (seed: number, humans: readonly VersusLoadout[],
     drednawAt: rules.drednaw.first,
     talk: [],
     pings: [],
+    emotes: [],
     surrender: [null, null],
     surrenderAt: [0, 0],
     result: null,

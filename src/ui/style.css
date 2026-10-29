@@ -23018,3 +23018,70 @@ span.arena-hub-face {
     bottom: calc(max(12px, var(--safe-b)) + 160px);
   }
 }
+
+/* The Arena's titles (ui/arenaTitle.ts): under a name, in the rarity's color. */
+.arena-title {
+  font-family: var(--title);
+  font-size: 7px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: #a8b0c8;
+  text-shadow: 1px 1px 0 #101020;
+}
+
+.arena-title.rare {
+  color: #78b8f8;
+}
+
+.arena-title.epic {
+  color: #c088f8;
+}
+
+.arena-title.legendary {
+  color: #f8d030;
+  animation: arena-title-shine 2.4s steps(12) infinite;
+}
+
+@keyframes arena-title-shine {
+  0%,
+  70%,
+  100% {
+    color: #f8d030;
+  }
+  80% {
+    color: #fff8c0;
+  }
+}
+
+.vs-end-name .arena-title {
+  flex-basis: 100%;
+}
+
+.arena-hub-standing-text .arena-title {
+  font-size: 8px;
+}
+
+/* A win's victory pose (render/arenaFx.ts `victoryPose`): the emote at 2×, over the title. */
+.vs-victory-pose {
+  align-self: center;
+  width: 160px;
+  height: 144px;
+  margin: -16px 0 -28px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+@media (max-height: 520px), (max-width: 520px) {
+  .vs-victory-pose {
+    width: 80px;
+    height: 72px;
+    margin: -8px 0 -14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-title.legendary {
+    animation: none;
+  }
+}

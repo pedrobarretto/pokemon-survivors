@@ -552,7 +552,8 @@ export const en: Messages = {
     angelWings: 'Angel Wings',
     royalCape: 'Royal Cape',
   },
-  arenaEffects: { sparkTrail: 'Spark Trail' },
+  arenaEffects: { pichuFollower: 'Pichu', togepiFollower: 'Togepi', azurillFollower: 'Azurill', swabluFollower: 'Swablu', togedemaruFollower: 'Togedemaru', dedenneFollower: 'Dedenne', eeveeFollower: 'Eevee', snomFollower: 'Snom', mimikyuFollower: 'Mimikyu', mewFollower: 'Mew', sparkTrail: 'Spark Trail', petalTrail: 'Petal Trail', bubbleTrail: 'Bubble Trail', emberTrail: 'Ember Trail', snowTrail: 'Snowflake Trail', heartTrail: 'Heart Trail', starTrail: 'Stardust Trail', rainbowTrail: 'Rainbow Trail', spawnBeam: 'Beam of Light', spawnLeaves: 'Leaf Whirl', spawnSplash: 'Splash Landing', spawnThunder: 'Thunder Drop', spawnPokeball: 'Poké Ball Entrance', koStars: 'Dizzy Stars', koPuff: 'Dust Cloud', koGhost: 'Little Ghost', koLightning: 'Final Bolt', koSupernova: 'Supernova', goalConfetti: 'Confetti', goalCoins: 'Pay Day', goalBalloons: 'Balloons', goalHearts: 'Heart Burst', goalRainbow: 'Rainbow Triumph', cheerEmote: 'Cheer', spinEmote: 'Spin', napEmote: 'Nap', powerEmote: 'Power Up', danceEmote: 'Dance', victoryEmote: 'Victory Pose', rookieTitle: 'Rookie', teamTitle: 'Team Spirit', goalTitle: 'Goal Getter', wallTitle: 'The Wall', jungleTitle: 'Jungle Terror', unstoppableTitle: 'Unstoppable', legendTitle: 'Arena Legend', plateSteel: 'Steel Plate', plateLeaf: 'Leaf Plate', plateWave: 'Wave Plate', plateFlame: 'Flame Plate', plateGold: 'Gold Plate', plateMaster: 'Master Ball Plate' },
+  arenaFx: { emote: 'Emote', emoteWait: 'Wait for your next emote.' },
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: 'Reconnecting…',
@@ -856,6 +857,7 @@ export const en: Messages = {
       chat: 'Arena: quick chat',
       ping: 'Arena: ping the map',
       board: 'Arena: scoreboard',
+      emote: 'Arena: emote',
     },
     press: (action: string) => `*${action}*: press a key or a gamepad button… (ESC cancels)`,
     reserved: 'The arrows and ESC are fixed. Pick another key.',

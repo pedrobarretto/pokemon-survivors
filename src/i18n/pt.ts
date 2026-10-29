@@ -719,7 +719,9 @@ export const pt = {
     royalCape: 'Manto real',
   } satisfies Record<WearableId, string>,
   /** The Arena's other cosmetics (`data/arenaEffects.ts`), by id. */
-  arenaEffects: { sparkTrail: 'Rastro de faíscas' } satisfies Record<ArenaEffectId, string>,
+  arenaEffects: { pichuFollower: 'Pichu', togepiFollower: 'Togepi', azurillFollower: 'Azurill', swabluFollower: 'Swablu', togedemaruFollower: 'Togedemaru', dedenneFollower: 'Dedenne', eeveeFollower: 'Eevee', snomFollower: 'Snom', mimikyuFollower: 'Mimikyu', mewFollower: 'Mew', sparkTrail: 'Rastro de faíscas', petalTrail: 'Rastro de pétalas', bubbleTrail: 'Rastro de bolhas', emberTrail: 'Rastro de brasas', snowTrail: 'Rastro de neve', heartTrail: 'Rastro de corações', starTrail: 'Poeira estelar', rainbowTrail: 'Rastro arco-íris', spawnBeam: 'Feixe de luz', spawnLeaves: 'Redemoinho de folhas', spawnSplash: 'Chegada molhada', spawnThunder: 'Chegada trovejante', spawnPokeball: 'Saída da Poké Ball', koStars: 'Estrelinhas', koPuff: 'Nuvem de poeira', koGhost: 'Fantasminha', koLightning: 'Raio final', koSupernova: 'Supernova', goalConfetti: 'Confete', goalCoins: 'Chuva de moedas', goalBalloons: 'Balões', goalHearts: 'Explosão de corações', goalRainbow: 'Arco-íris triunfal', cheerEmote: 'Comemorar', spinEmote: 'Giro', napEmote: 'Soneca', powerEmote: 'Concentrar', danceEmote: 'Dança', victoryEmote: 'Pose da vitória', rookieTitle: 'Estreante', teamTitle: 'Espírito de equipe', goalTitle: 'Faro de gol', wallTitle: 'Muralha', jungleTitle: 'Terror da selva', unstoppableTitle: 'Imparável', legendTitle: 'Lenda da Arena', plateSteel: 'Placa de aço', plateLeaf: 'Placa folha', plateWave: 'Placa onda', plateFlame: 'Placa chama', plateGold: 'Placa dourada', plateMaster: 'Placa Master Ball' } satisfies Record<ArenaEffectId, string>,
+  /** The Arena's cosmetic effects' own copy (`render/arenaFx.ts`, `ui/versusTalk.ts`): the emote button and its wait. */
+  arenaFx: { emote: 'Emote', emoteWait: 'Espere para o próximo emote.' },
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: 'Reconectando…',
@@ -1054,6 +1056,7 @@ export const pt = {
       chat: 'Arena: chat rápido',
       ping: 'Arena: marcar no mapa',
       board: 'Arena: placar',
+      emote: 'Arena: emote',
     } satisfies Record<Action, string>,
     press: (action: string) => `*${action}*: pressione uma tecla ou um botão do controle… (ESC cancela)`,
     reserved: 'As setas e o ESC são fixos. Escolha outra tecla.',

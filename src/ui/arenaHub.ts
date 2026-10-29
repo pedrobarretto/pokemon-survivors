@@ -15,6 +15,8 @@ import { firstForm, teamColor } from './arena'
 import { h, later } from './dom'
 import { boundKey } from './inputLabels'
 import { hint, type Screen } from './screens'
+import { titleChip } from './arenaTitle'
+import { localLook } from '../render/arenaLooks'
 
 /** Seconds away in a row that cost Fair Play's AFK (an away second counts `awayWeight`). */
 const AWAY_AFTER = Math.round(ARENA_RANKED.fairPlay.afkAfter / ARENA_RANKED.fairPlay.awayWeight)
@@ -224,6 +226,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
           'div',
           { class: 'arena-hub-standing-text' },
           h('b', { class: 'arena-hub-tier' }, tierName(view)),
+          titleChip(localLook().title),
           h('span', { class: 'arena-hub-rp' }, m.rp(p.rating.rp), h('small', {}, p.place ? m.profile.place(p.place) : m.profile.unplaced)),
           next ? h('div', { class: 'arena-hub-bar' }, h('i', { style: `width:${Math.round((prog.done / prog.of) * 100)}%` })) : null,
           h('small', {}, next ? m.profile.toNext(prog.of - prog.done, next) : m.profile.top),

@@ -121,6 +121,7 @@ export const sitePt = {
     eventNote: 'Aparece nos eventos do mapa: foge de você e solta moedas a cada golpe. Derrube ele antes que escape para ganhar o Pay Day.',
     companionNote: 'Companheiro de presente: chega na caixa de presentes dos apoiadores durante a Noite das Bruxas e anda ao seu lado na partida, deixando um rastro de doces.',
     cameoNote: 'Não é um inimigo: aparece por um instante na fenda do Darkrai, durante a Noite das Bruxas, e quebra o pesadelo com a Lunar Wing.',
+    arenaNote: 'Um seguidor da Arena: um visual que trota atrás do seu Pokémon nas partidas. Só aparência, nunca poder.',
     wildNote: 'Valores base. Inimigos comuns ficam mais fortes a cada minuto; chefes, não.',
     appears: 'Quando aparece',
     horde: (from: string, until: string) => `Pode entrar na horda, de ${from} a ${until}`,

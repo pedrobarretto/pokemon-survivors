@@ -553,7 +553,8 @@ export const es: Messages = {
     angelWings: 'Alas de ángel',
     royalCape: 'Manto real',
   },
-  arenaEffects: { sparkTrail: 'Rastro de chispas' },
+  arenaEffects: { pichuFollower: 'Pichu', togepiFollower: 'Togepi', azurillFollower: 'Azurill', swabluFollower: 'Swablu', togedemaruFollower: 'Togedemaru', dedenneFollower: 'Dedenne', eeveeFollower: 'Eevee', snomFollower: 'Snom', mimikyuFollower: 'Mimikyu', mewFollower: 'Mew', sparkTrail: 'Rastro de chispas', petalTrail: 'Rastro de pétalos', bubbleTrail: 'Rastro de burbujas', emberTrail: 'Rastro de brasas', snowTrail: 'Rastro de nieve', heartTrail: 'Rastro de corazones', starTrail: 'Polvo de estrellas', rainbowTrail: 'Rastro arcoíris', spawnBeam: 'Haz de luz', spawnLeaves: 'Remolino de hojas', spawnSplash: 'Llegada salpicada', spawnThunder: 'Llegada atronadora', spawnPokeball: 'Salida de la Poké Ball', koStars: 'Estrellitas', koPuff: 'Nube de polvo', koGhost: 'Fantasmita', koLightning: 'Rayo final', koSupernova: 'Supernova', goalConfetti: 'Confeti', goalCoins: 'Lluvia de monedas', goalBalloons: 'Globos', goalHearts: 'Explosión de corazones', goalRainbow: 'Arcoíris triunfal', cheerEmote: 'Festejar', spinEmote: 'Giro', napEmote: 'Siesta', powerEmote: 'Concentrarse', danceEmote: 'Baile', victoryEmote: 'Pose de victoria', rookieTitle: 'Novato', teamTitle: 'Espíritu de equipo', goalTitle: 'Olfato de gol', wallTitle: 'La Muralla', jungleTitle: 'Terror de la selva', unstoppableTitle: 'Imparable', legendTitle: 'Leyenda de la Arena', plateSteel: 'Placa de acero', plateLeaf: 'Placa hoja', plateWave: 'Placa ola', plateFlame: 'Placa llama', plateGold: 'Placa dorada', plateMaster: 'Placa Master Ball' },
+  arenaFx: { emote: 'Emote', emoteWait: 'Espera para el próximo emote.' },
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: 'Reconectando…',
@@ -857,6 +858,7 @@ export const es: Messages = {
       chat: 'Arena: chat rápido',
       ping: 'Arena: marcar en el mapa',
       board: 'Arena: marcador',
+      emote: 'Arena: emote',
     },
     press: (action: string) => `*${action}*: presiona una tecla o un botón del mando… (ESC cancela)`,
     reserved: 'Las flechas y ESC son fijas. Elige otra tecla.',
