@@ -864,7 +864,8 @@ const tripPlace = (mode: ShopTrip): Place => (mode === 'dojo' || mode === 'stadi
  * Loja, Ranking, Ideias, and Co-op where the build has it). Arrows move between all of them by where they are on
  * screen; Enter presses the highlighted one, JOGAR at first. The movement
  * keys, a tap on the grass or a drag (a joystick) send the partner off its
- * stage for a walk in the meadow (`Meadow`), where it greets the wild Pokémon.
+ * stage for a walk in the meadow (`Meadow`), where it greets the wild Pokémon
+ * (a mouse's click or drag only in Passear, so a click on a computer never sets it off).
  * Loja (or a talk with Kecleon on a walk) is a trip to the Kecleon plaza east
  * of home (`visitShop`), and `shop` starts on one once the lobby is up
  * (`instant`: already there; `back`: leaving the shop calls it instead of
@@ -903,10 +904,10 @@ export const titleScreen = (
   let lobby: HTMLElement | null = null
   let tickers: ((time: number) => void)[] = []
   let stage: ReturnType<typeof partnerStage> | null = null
-  /** A press on the meadow: a tap until it travels `TAP_SLOP`, then a joystick. */
-  let drag: { id: number; origin: Vec; stick: Stick | null } | null = null
-  /** A tap on the meadow, for the next frame to send the partner to. */
-  let tap: Vec | null = null
+  /** A press on the meadow: a tap until it travels `TAP_SLOP`, then a joystick. `mouse` marks a mouse's, which walks only in Passear. */
+  let drag: { id: number; origin: Vec; stick: Stick | null; mouse: boolean } | null = null
+  /** A tap on the meadow, for the next frame to send the partner to (`walk`) or to go shopping on (a shopkeeper or the shop). */
+  let tap: { at: Vec; walk: boolean } | null = null
   let current: LobbyFocus = opts.focus ?? 'play'
   let offKeys: (() => void) | null = null
   let closeChip: (() => void) | null = null
@@ -1409,16 +1410,17 @@ export const titleScreen = (
   const onDown = (e: PointerEvent) => {
     if (!stage || drag || visit || (e.pointerType === 'mouse' && e.button !== 0)) return
     if (!onMeadow(e.target)) return
-    drag = { id: e.pointerId, origin: { x: e.clientX, y: e.clientY }, stick: null }
+    drag = { id: e.pointerId, origin: { x: e.clientX, y: e.clientY }, stick: null, mouse: e.pointerType === 'mouse' }
   }
   const onMove = (e: PointerEvent) => {
-    if (!drag || e.pointerId !== drag.id) return
+    // On a computer the mouse leaves the partner home unless Passear is on: the keys walk it there.
+    if (!drag || e.pointerId !== drag.id || (drag.mouse && !exploring)) return
     const at = { x: e.clientX, y: e.clientY }
     if (drag.stick || Math.hypot(at.x - drag.origin.x, at.y - drag.origin.y) >= TAP_SLOP) drag.stick = joystick(drag.stick?.origin ?? drag.origin, at)
   }
   const onUp = (e: PointerEvent) => {
     if (!drag || e.pointerId !== drag.id) return
-    if (!drag.stick && e.type === 'pointerup') tap = drag.origin
+    if (!drag.stick && e.type === 'pointerup') tap = { at: drag.origin, walk: !drag.mouse || exploring }
     drag = null
   }
   el.addEventListener('pointerdown', onDown)
@@ -1436,15 +1438,16 @@ export const titleScreen = (
     if (!stage) return
     const { meadow } = actions
     // A tap on a shopkeeper, the shop or the marker pointing to it goes shopping (Meowth's caravan; a stall's keeper talks only with the partner beside it).
-    const tapped = tap && meadow.tapsShop(tap)
+    const tapped = tap && meadow.tapsShop(tap.at)
     if (tapped) {
       tap = null
       return talkTo(tapped, meadow.talkSpot()?.who === tapped)
     }
     const move = drag?.stick?.vec ?? heldMove(input, exploring)
+    const to = tap?.walk ? tap.at : null
     // Passear's hint goes once the partner gets its first order.
-    if (exploring && (tap || move.x !== 0 || move.y !== 0)) exploreHint.classList.add('hidden')
-    meadow.steer(move, tap, stage.feet())
+    if (exploring && (to || move.x !== 0 || move.y !== 0)) exploreHint.classList.add('hidden')
+    meadow.steer(move, to, stage.feet())
     meadow.stageBox(!exploring && layout() !== 'wide' ? stage.el.getBoundingClientRect() : null)
     meadow.stick(drag?.stick ?? null)
     tap = null

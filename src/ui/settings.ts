@@ -130,6 +130,12 @@ const switchRow = (label: string, read: () => boolean, set: (on: boolean) => voi
   return { el, adjust: flip, activate: flip, sync }
 }
 
+/** The page in the browser's fullscreen, where it has the Fullscreen API (Android, computers; not iPhone Safari). */
+const canFullscreen = () => document.fullscreenEnabled && typeof document.documentElement.requestFullscreen === 'function'
+const isFullscreen = () => document.fullscreenElement !== null
+/** Fullscreen on or off; the browser may refuse (no gesture, a policy), and the switch then stays as it was (`fullscreenchange` syncs it). */
+const setFullscreen = (on: boolean) => void (on ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : document.exitFullscreen()).catch(() => {})
+
 /** A switch over one of the settings. */
 const toggle = (label: string, read: (s: Settings) => boolean, write: (on: boolean) => Partial<Settings>): Row =>
   switchRow(label, () => read(current), (on) => updateSettings(write(on)))
@@ -290,6 +296,8 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           // Teammates' moves only matter in a build with co-op.
           ...(coopUrl() ? [slider(m.teamAttackOpacity, 'teamAttackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS)] : []),
           ...uiScaleRows(m.uiScale, m.uiScaleAuto),
+          // The browser's fullscreen is the page's, not a setting: Esc (or the phone's back) leaves it too.
+          ...(canFullscreen() ? [switchRow(m.fullscreen, isFullscreen, setFullscreen)] : []),
           // Safe mode is the device's, not a setting (`safeMode.ts`): a crash turns it on by itself.
           switchRow(m.safeMode, safeModeOn, (on) => setSafeMode(on ? 'on' : 'off')),
         ]
@@ -386,12 +394,15 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
 
   // A prompt arriving or the app getting installed while Sobre is open shows or hides its row.
   const offInstall = onInstallChange(() => !away && tab === 'about' && build(nav?.index ?? 0, false))
+  // Fullscreen lands a moment after the switch asks for it, and the browser can leave it on its own.
+  document.addEventListener('fullscreenchange', sync)
 
   const dispose = () => {
     sub?.dispose()
     nav?.off()
     offKeys()
     offInstall()
+    document.removeEventListener('fullscreenchange', sync)
     el.remove()
     if (refresh === sync) refresh = null
   }
