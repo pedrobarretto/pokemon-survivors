@@ -38,6 +38,8 @@ export type SpeciesSprites = {
   /** Opaque body size on the first Walk frame (`bodyOf`). */
   bodyW: number
   bodyH: number
+  /** The variant these sheets were downloaded for (absent on a stand-in): the Arena's wearables (`render/wearables.ts`) find their anchors by it. */
+  variant?: { shiny: boolean; form?: FormKey }
 }
 
 type ManifestAnims = Partial<Record<AnimName, { frameWidth: number; frameHeight: number; durations: number[] }>>
@@ -517,6 +519,7 @@ const fetchSpecies = async (dex: Dex, shiny: boolean, form: FormKey | undefined,
     anims: { Walk: Walk.value, Idle: Idle.value, Hurt: Hurt.value, ...(Fly.value && { Fly: Fly.value }) },
     portrait: portraitUrl(dex, shiny),
     cry: cryUrl(dex, form),
+    variant: { shiny, ...(form && { form }) },
     // A form's own body only places its sheets; hitboxes keep the species' `bodyOf`.
     ...((form && variant.body) || bodyOf(dex, shiny)),
   }
@@ -864,6 +867,32 @@ const frameIndex = (sheet: Sheet, seconds: number, loop: boolean) => {
   return sheet.durations.length - 1
 }
 
+/** A frame's left edge on the canvas, for a sprite drawn centered on `x` at `k` times. */
+const frameLeft = (x: number, fw: number, k: number) => Math.round(x - (fw * k) / 2)
+/** A frame's top edge on the canvas, for a sprite drawn with its feet at `y` at `k` times. */
+const frameTop = (s: SpeciesSprites, y: number, fh: number, k: number) => Math.round(y - (s.footY + fh / 2) * k)
+
+/** Where `drawPokemon` puts a frame (`placeFrame`): its sheet (which anim it is, its frame size and count), the frame and its top-left corner. */
+export type FramePlace = { anim: AnimName; fw: number; fh: number; frames: number; frame: number; dx: number; dy: number }
+
+/**
+ * Where `drawPokemon` would draw `s` with the same arguments, written into
+ * `out` (things drawn on the sprite, the Arena's wearables, follow it pixel
+ * for pixel). False when it would draw nothing (a dropped sheet).
+ */
+export const placeFrame = (s: SpeciesSprites, anim: AnimName, seconds: number, x: number, y: number, scale: number, loop: boolean, out: FramePlace) => {
+  const sheet = s.anims[anim] ?? s.anims.Walk
+  if (sheet.seen === GONE) return false
+  out.anim = s.anims[anim] ? anim : 'Walk'
+  out.fw = sheet.fw
+  out.fh = sheet.fh
+  out.frames = sheet.durations.length
+  out.frame = frameIndex(sheet, seconds, loop)
+  out.dx = frameLeft(x, sheet.fw, scale)
+  out.dy = frameTop(s, y, sheet.fh, scale)
+  return true
+}
+
 export type DrawOpts = {
   /** 0..1 white overlay strength (hit flash). 1 = full silhouette. */
   flash?: number
@@ -904,8 +933,8 @@ export const drawPokemon = (
   const k = opts.scale ?? 1
   const dw = sheet.fw * k
   const dh = sheet.fh * k
-  const dx = Math.round(x - dw / 2)
-  const dy = Math.round(y - (s.footY + sheet.fh / 2) * k)
+  const dx = frameLeft(x, sheet.fw, k)
+  const dy = frameTop(s, y, sheet.fh, k)
   const alpha = opts.alpha ?? 1
   const flash = opts.flash ?? 0
   if (alpha !== 1) ctx.globalAlpha = alpha

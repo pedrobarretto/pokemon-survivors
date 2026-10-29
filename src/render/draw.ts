@@ -39,6 +39,8 @@ import { drawEntranceAir, drawEntranceGround, drawPlaceArrow, drawPlaceDark, dra
 import { roomOf } from '../game/room'
 import { drawLandmarkAir, drawTunnelDark, playerUnderground } from './landmarks'
 import { drawPokemon, sprites, type AnimName, type SpeciesSprites } from './sprites'
+import { drawWearables } from './wearables'
+import { lookOf } from './arenaLooks'
 import { bodyOf } from '../data/bodies'
 import { drawDrainVines, drawTypeEvolvedAttack, drawTypeEvolvedGround } from './typeEvolved'
 import { drawCompanion, type CompanionView } from './companion'
@@ -622,7 +624,14 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const faded = calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink
   // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`).
   const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : 1) * grassAlpha(g, viewer, p)
-  if (alpha > 0) drawPokemon(ctx, s, anim, p.dir, p.animTime, p.x, p.y - (egg?.lift ?? 0), { alpha, flash, tint, outline: mega.outline })
+  const feet = p.y - (egg?.lift ?? 0)
+  // Arena: the seat's look (its worn cosmetics) on the sprite, behind it and over it. Never in a run.
+  const look = g.versus ? lookOf(p.slot) : null
+  if (alpha > 0) {
+    if (look) drawWearables(ctx, s, look, anim, p.dir, p.animTime, p.x, feet, 'behind', { alpha })
+    drawPokemon(ctx, s, anim, p.dir, p.animTime, p.x, feet, { alpha, flash, tint, outline: mega.outline })
+    if (look) drawWearables(ctx, s, look, anim, p.dir, p.animTime, p.x, feet, 'front', { alpha })
+  }
   if (p.versus && g.versus) drawGrassFront(ctx, mapOf(g.versus).grass, p.x, p.y, s.bodyW, g.now, p.moving, p.slot)
   // The shiny entrance plays shortly after the run starts.
   if (p.shiny) drawSparkles(ctx, p.x, p.y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), g.now - 0.3, 0)
