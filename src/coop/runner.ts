@@ -41,15 +41,27 @@ const playbackRate = (excess: number) => {
   return excess < -SLOW_DOWN.under ? -SLOW_DOWN.rate : 0
 }
 
-/** CPU per display frame for simulation (ms): live, and while syncing. Past it, up to `BUDGET_FLOOR` ticks still run. */
+/** CPU per display frame for simulation (ms): live, and while syncing. Past it, the frame's floor (`floorOf`) still runs. */
 export const BUDGET = { live: 8, sync: 14 } as const
 
-/**
- * Ticks a display frame runs when due, past the budget: live, real time's own
- * (a few); syncing, as many, so a device whose ticks cost more than the budget
- * (a phone late in a run) still syncs faster than the run goes on.
- */
+/** Ticks a display frame runs when due, past the budget, at the least. */
 const BUDGET_FLOOR = 4
+
+/** Real time's own ticks a frame counts toward its floor, at most (~7 fps): a longer hitch is caught up on afterwards, not in one frame. */
+const OWN_MAX = 8
+
+/**
+ * Ticks a display frame of `dt` seconds runs when due, past the budget: live,
+ * the ones real time brought (a slow phone's frame brings more than
+ * `BUDGET_FLOOR`; dropping them would leave it slower than the run, falling
+ * into a sync every few seconds); syncing, those and `BUDGET_FLOOR` more, so a
+ * device whose ticks cost more than the budget (a phone late in a run, a busy
+ * fight) still syncs faster than the run goes on.
+ */
+const floorOf = (dt: number, syncing: boolean) => {
+  const own = Math.min(OWN_MAX, Math.round(dt / TICK))
+  return syncing ? own + BUDGET_FLOOR : Math.max(BUDGET_FLOOR, own)
+}
 
 export type Pending = {
   reason: 'join' | 'resume' | 'heal'
@@ -440,11 +452,12 @@ export const advance = (r: Runner, dt: number, deps: RunnerDeps): number => {
     r.stats.underruns = r.hold.underruns
   } else if (run > 0) r.starving = false
   const budget = r.syncing ? BUDGET.sync : BUDGET.live
+  const floor = floorOf(dt, r.syncing !== null)
   const t0 = deps.now()
   let ran = 0
-  // Real time's own ticks always run (a few at most); the catch-up and the sync past those only within the budget.
+  // Real time's own ticks always run (`floorOf`); the catch-up and the sync past those only within the budget.
   for (; ran < run; ran++) {
-    if (ran >= BUDGET_FLOOR && deps.now() - t0 + r.tickMs > budget) break
+    if (ran >= floor && deps.now() - t0 + r.tickMs > budget) break
     if (!r.syncing) rememberPositions(r)
     stepOne(r, deps)
     if (r.pending) {

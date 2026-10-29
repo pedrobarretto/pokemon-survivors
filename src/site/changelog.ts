@@ -72,6 +72,12 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'Pré-temporada: até 2 de novembro, as Ranqueadas ficam no seu histórico sem RP, e as telas da fila, do fim da partida e do Perfil avisam. O ranking começa com a Temporada 1.', en: 'Pre-season: until November 2, Ranked matches go to your history with no RP, and the queue, end-of-match and Profile screens say so. The ranking starts with Season 1.', es: 'Pretemporada: hasta el 2 de noviembre, las Clasificatorias quedan en tu historial sin RP, y las pantallas de la cola, del final de la partida y del Perfil lo avisan. El ranking empieza con la Temporada 1.', fr: 'Pré-saison : jusqu’au 2 novembre, les matchs Classés restent dans ton historique sans RP, et les écrans de la file, de fin de match et du Profil le disent. Le classement commence avec la Saison 1.', zh: '季前賽：11 月 2 日之前，排位賽會留在你的紀錄中但不計 RP，排隊、比賽結束和個人資料畫面都會說明。排行榜從第 1 賽季開始。' },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          { pt: 'Arena e co-op em celulares mais simples: quando a luta pesa (o Zapdos no centro com todo mundo em volta), a partida não fica mais segundos atrasada nem cai em "Sincronizando…" a cada pouco. O jogo perde alguns quadros por segundo, mas acompanha o time.', en: 'Arena and co-op on lower-end phones: when the fight gets heavy (Zapdos in the middle with everyone around it), the match no longer falls seconds behind or drops into "Syncing…" every so often. The game loses a few frames per second but keeps up with the team.', es: 'Arena y co-op en celulares más sencillos: cuando la pelea se pone pesada (Zapdos en el centro con todos alrededor), la partida ya no se atrasa varios segundos ni cae en "Sincronizando…" a cada rato. El juego pierde algunos cuadros por segundo, pero sigue al equipo.' },
+        ],
+      },
     ],
   },
   {
