@@ -2,6 +2,7 @@ import { COOP } from '../data/coop'
 import { VERSUS } from '../data/versus'
 import { driveBots } from './versusBots'
 import { stepVersus } from './versus'
+import { isPingKind, isQuickChat, pingAt, sayQuick, voteSurrender, type PingKind, type QuickChat } from './versusSocial'
 import { MEGAS, type MegaId } from '../data/megas'
 import { castVote, countAway, leaveRun, setAway, updateVote, worldHeld } from './coop'
 import { continueEndless } from './endlessSystem'
@@ -47,12 +48,18 @@ export type TickEntry =
   | { slot: number; kind: 'away' | 'back' | 'leave' }
   /** A vote on the victory's endless offer. */
   | { slot: number; kind: 'endless'; vote: boolean }
+  /** Arena (`versusSocial.ts`): a quick chat line by id, a ping on the map, a vote on the team's surrender (a yes with none running proposes one). */
+  | { slot: number; kind: 'chat'; msg: QuickChat }
+  | { slot: number; kind: 'ping'; ping: PingKind; x: number; y: number }
+  | { slot: number; kind: 'surrender'; vote: boolean }
 
 const MAX_CODE = 224
 const SCREENS: ReadonlySet<string> = new Set<PickScreen>(['levelup', 'branch', 'ability', 'curse', 'tm', 'pokeball'])
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isIndex = (v: unknown, max: number): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= max
+/** A ping's map coordinate: whole px, well past the Vale's edges either way (the simulation holds it to the map). */
+const isCoord = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && Math.abs(v) <= 4096
 
 /**
  * Reads a tick entry from untrusted JSON: a fresh, well-formed entry, or null
@@ -85,7 +92,12 @@ export const parseTickEntry = (raw: unknown): TickEntry | null => {
     case 'stone':
       return typeof raw.mega === 'string' && Object.hasOwn(MEGAS, raw.mega) ? { slot, kind, mega: raw.mega as MegaId } : null
     case 'endless':
+    case 'surrender':
       return typeof raw.vote === 'boolean' ? { slot, kind, vote: raw.vote } : null
+    case 'chat':
+      return isQuickChat(raw.msg) ? { slot, kind, msg: raw.msg } : null
+    case 'ping':
+      return isPingKind(raw.ping) && isCoord(raw.x) && isCoord(raw.y) ? { slot, kind, ping: raw.ping, x: raw.x, y: raw.y } : null
     default:
       return null
   }
@@ -221,6 +233,12 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
       return leaveRun(g, p)
     case 'endless':
       return castVote(g, p, e.vote)
+    case 'chat':
+      return sayQuick(g, p, e.msg)
+    case 'ping':
+      return pingAt(g, p, e.ping, e.x, e.y)
+    case 'surrender':
+      return voteSurrender(g, p, e.vote)
   }
 }
 

@@ -22,6 +22,7 @@ import { reveal, updateGrass, usedSpecial } from './versusGrass'
 import { channelTime, goalOpen, rivalTeam, scoreValue, winnerOf } from './versusRules'
 import type { Enemy, Game, Player } from './types'
 import type { Aim } from './versusBots'
+import { fullBucket, updateSocial, type Bucket, type Ping, type SurrenderVote, type Talk } from './versusSocial'
 import * as dm from '../engine/dmath'
 
 /**
@@ -72,6 +73,23 @@ export type VersusSeat = {
   kos: number
   deaths: number
   scored: number
+  /**
+   * The scoreboard's other stats: assists (a rival it hit within
+   * `VERSUS.assist` seconds of their knockout, the knocker aside), damage
+   * dealt to and taken from rival Pokémon, HP its moves, Ability and aura
+   * healed (the goals' and the pads' don't count), and rival channels its hits
+   * interrupted.
+   */
+  assists: number
+  dealt: number
+  taken: number
+  healed: number
+  interrupts: number
+  /** `g.now` of each rival's last hit on it, by slot (-99: none since it last came in), for the assists. */
+  hitAt: number[]
+  /** Its quick chat's and pings' rate limits (`versusSocial.ts`). */
+  talkBucket: Bucket
+  pingBucket: Bucket
 }
 
 /** A goal zone in play: its team, where it is, the points it still takes before it breaks. */
@@ -99,8 +117,14 @@ export type VersusState = {
   objective: Objective | null
   /** When Drednaw comes (back) to the center (match seconds). */
   drednawAt: number
-  /** Set when the clock runs out. */
-  result: { winner: Team | null } | null
+  /** Quick chat lines and pings of the last few seconds (`versusSocial.ts`): shown by the shell, read by no rule. */
+  talk: Talk[]
+  pings: Ping[]
+  /** Each team's surrender vote while one runs, and the match second its next one may start (after a failed one). */
+  surrender: [SurrenderVote | null, SurrenderVote | null]
+  surrenderAt: [number, number]
+  /** Set when the clock runs out, or a team surrenders (`surrender`: that team, which loses). */
+  result: { winner: Team | null; surrender: Team | null } | null
 }
 
 /** A human's seat: their Pokémon, the name the room sees and the team they asked for (Blue when left out). */
@@ -137,8 +161,10 @@ export const seatMatch = (seed: number, humans: readonly VersusLoadout[]) => {
   return seats
 }
 
-const createSeat = (team: Team, bot: boolean, lane: Lane): VersusSeat => ({
+/** A fresh seat for a match of `players` Pokémon. */
+const createSeat = (team: Team, bot: boolean, lane: Lane, players: number): VersusSeat => ({
   team, bot, lane, energy: 0, respawn: 0, safe: 0, channel: 0, goal: -1, hurtAt: -99, lastBy: -1, shield: 0, avatar: -1, slow: 1, pace: 1, aim: null, think: 0, grass: -1, hidden: false, reveal: 0, kos: 0, deaths: 0, scored: 0,
+  assists: 0, dealt: 0, taken: 0, healed: 0, interrupts: 0, hitAt: new Array<number>(players).fill(-99), talkBucket: fullBucket(VERSUS.talk), pingBucket: fullBucket(VERSUS.ping),
 })
 
 const createRoom = (): Room => ({
@@ -183,6 +209,10 @@ export const createVersusGame = (seed: number, humans: readonly VersusLoadout[])
     blessing: [0, 0],
     objective: null,
     drednawAt: VERSUS.drednaw.first,
+    talk: [],
+    pings: [],
+    surrender: [null, null],
+    surrenderAt: [0, 0],
     result: null,
   }
   g.events.length = 0
@@ -191,7 +221,7 @@ export const createVersusGame = (seed: number, humans: readonly VersusLoadout[])
   for (const p of g.players) {
     const seat = seats[p.slot]!
     const i = placed[seat.team]!++
-    p.versus = createSeat(seat.team, seat.bot, LANES[i % LANES.length]!)
+    p.versus = createSeat(seat.team, seat.bot, LANES[i % LANES.length]!, g.players.length)
     p.shiny = false
     p.luckyShiny = false
     const spot = padSpot(seat.team, i)
@@ -406,7 +436,7 @@ const updateGoals = (g: Game, dt: number) => {
     const own = goalUnder(s, p, v.team)
     if (own >= 0) {
       const before = actAs(g, p)
-      healPlayer(g, p.stats.maxHp * VERSUS.ownGoal.heal * dt)
+      healPlayer(g, p.stats.maxHp * VERSUS.ownGoal.heal * dt, null)
       actAs(g, before)
     }
     const at = v.energy > 0 ? goalUnder(s, p, rivalTeam(v.team)) : -1
@@ -460,7 +490,7 @@ const updatePads = (g: Game, dt: number) => {
     VALE.spawn.forEach((pad, team) => {
       if (!inside(p, pad.x, pad.y, VERSUS.spawnPad.r)) return
       g.player = p
-      if (team === v.team) healPlayer(g, p.stats.maxHp * VERSUS.spawnPad.heal * dt)
+      if (team === v.team) healPlayer(g, p.stats.maxHp * VERSUS.spawnPad.heal * dt, null)
       else {
         p.hp -= p.stats.maxHp * VERSUS.spawnPad.burn * dt
         // A knockout on a rival's pad is nobody's.
@@ -471,7 +501,7 @@ const updatePads = (g: Game, dt: number) => {
   g.player = before
 }
 
-/** Supporters' healing auras on their teammates nearby. */
+/** Supporters' healing auras on their teammates nearby (the Supporter's healing, on the scoreboard). */
 const updateAuras = (g: Game, dt: number) => {
   const before = g.player
   for (const p of g.players) {
@@ -480,7 +510,7 @@ const updateAuras = (g: Game, dt: number) => {
     for (const q of g.players) {
       if (q === p || q.versus?.team !== p.versus?.team || !inPlay(q) || !inside(q, p.x, p.y, AURA_RANGE)) continue
       g.player = q
-      healPlayer(g, q.stats.maxHp * aura * dt)
+      healPlayer(g, q.stats.maxHp * aura * dt, p)
     }
   }
   g.player = before
@@ -496,18 +526,20 @@ const updatePaces = (g: Game) => {
   }
 }
 
-/** The clock ran out: the team with more points wins (a draw on a tie). */
-const endMatch = (g: Game) => {
+/** The clock ran out (the team with more points wins, a draw on a tie), or `surrender` gave up (the other team wins, whatever the score). */
+const endMatch = (g: Game, surrender: Team | null = null) => {
   const s = g.versus!
-  const winner = winnerOf(s.score)
-  s.result = { winner }
+  const winner = surrender === null ? winnerOf(s.score) : rivalTeam(surrender)
+  s.result = { winner, surrender }
   g.phase = 'gameover'
-  g.events.push({ kind: 'versusEnd', winner })
+  g.events.push({ kind: 'versusEnd', winner, surrender })
 }
 
-/** The match's rules after the step: the clock, respawns, Energy, goals, spawn pads, auras and paces. */
+/** The match's rules after the step: the clock, respawns, Energy, goals, spawn pads, auras and paces; then quick chat, pings and the surrender vote. */
 const updateVersus = (g: Game, dt: number) => {
   const s = g.versus!
+  const surrendered = updateSocial(g)
+  if (surrendered !== null) return endMatch(g, surrendered)
   if (!s.stretch && g.time >= VERSUS.length - VERSUS.stretch) startStretch(g)
   updateRespawns(g, dt)
   updateOrbs(g, dt)

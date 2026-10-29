@@ -166,7 +166,7 @@ describe('the lockstep runner', () => {
     const h = harness()
     const r = createRunner({ ...START, settings: { difficulty: 'normal', mode: 'versus' } }, 'ROOMS', 0)
     r.ticks.set(0, [])
-    r.game.versus!.result = { winner: 1 }
+    r.game.versus!.result = { winner: 1, surrender: null }
     r.game.phase = 'gameover'
     stepOne(r, h.deps)
     const over = h.sent.find((m) => m.t === 'over')

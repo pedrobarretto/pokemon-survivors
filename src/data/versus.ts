@@ -88,6 +88,23 @@ export const VERSUS = {
    * after it hits or is hit by a rival, or uses its special.
    */
   grass: { near: 40, reveal: 1.5 },
+  /** A rival's hit counts toward an assist when the Pokémon it landed on is knocked out within this many seconds (`assistsOf`). */
+  assist: 8,
+  /**
+   * Quick chat and pings (`game/versusSocial.ts`): each player's lines and
+   * pings come out of a bucket of `burst` that refills one every `every`
+   * seconds (the simulation drops the rest, so every client shows the same);
+   * a line shows `keep` seconds, a ping `keep` seconds.
+   */
+  talk: { burst: 3, every: 4, keep: 6 },
+  ping: { burst: 3, every: 2.5, keep: 5 },
+  /**
+   * Surrender (`game/versusSocial.ts`): a team's human proposes it from
+   * `from` seconds into the match; the team's humans vote for `window`
+   * seconds and it passes with two thirds of them (one human alone decides).
+   * A vote that fails waits `cooldown` seconds before the team's next.
+   */
+  surrender: { from: 210, window: 20, cooldown: 60 },
 } as const
 
 /** What each role changes: damage dealt and taken in PvP, pace, and a Supporter's healing aura (share of max HP per second, px). */

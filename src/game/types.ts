@@ -30,6 +30,7 @@ import type { MoveId } from './moves'
 import type { MapEventNotice, MapEventsState } from './mapEvents'
 import type { Team } from '../data/versus'
 import type { VersusSeat, VersusState } from './versus'
+import type { PingKind, QuickChat } from './versusSocial'
 import type { MegaState } from './mega'
 import type { Prop } from './props'
 import type { TerrainState } from './terrain'
@@ -789,14 +790,18 @@ export type GameEvent =
   /** Co-op: a vote for the endless mode was cast, or the vote ended (`outcome`). */
   | { kind: 'vote'; slot: number; endless: boolean }
   | { kind: 'voted'; outcome: 'endless' | 'over' }
-  /** Versus (`versus.ts`): `slot` scored `points` for `team`; a goal broke; `slot` was knocked out (by `by`, -1 the wild) or came back; the last stretch began; an objective arrived or fell (to `team`, -1 none); the match ended (`winner` null on a draw). */
+  /** Versus (`versus.ts`): `slot` scored `points` for `team`; a goal broke; `slot` was knocked out (by `by`, -1 the wild) or came back; the last stretch began; an objective arrived or fell (to `team`, -1 none); the match ended (`winner` null on a draw; `surrender`: the team that gave up, else null). */
   | { kind: 'versusScore'; slot: number; team: Team; points: number }
   | { kind: 'versusGoal'; team: Team; goal: number }
   | { kind: 'versusKo'; slot: number; by: number }
   | { kind: 'versusBack'; slot: number }
   | { kind: 'versusStretch' }
   | { kind: 'versusObjective'; enemy: EnemyId; team: Team | -1 }
-  | { kind: 'versusEnd'; winner: Team | null }
+  | { kind: 'versusEnd'; winner: Team | null; surrender: Team | null }
+  /** Versus (`versusSocial.ts`): a quick chat line, a ping on the map, and a team's surrender vote opening, passing or failing. */
+  | { kind: 'versusTalk'; slot: number; msg: QuickChat }
+  | { kind: 'versusPing'; slot: number; ping: PingKind; x: number; y: number }
+  | { kind: 'versusSurrender'; team: Team; slot: number; state: 'open' | 'passed' | 'failed' }
 
 /** A timed player buff (X Attack, X Speed, Max Repel). `left` counts down in seconds. */
 export type Buff = { id: BuffId; left: number; total: number }

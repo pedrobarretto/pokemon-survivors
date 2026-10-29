@@ -12,11 +12,16 @@ const seat = (slot: number, team: 0 | 1, bot = false, extra: Partial<ArenaSeatRe
   deaths: 1,
   scored: 10,
   damage: 500,
+  assists: 1,
+  dealt: 300,
+  taken: 250,
+  healed: 0,
+  interrupts: 0,
   ...extra,
 })
 
 /** Blue (slots 0, 1) beats Red (slots 2, 3), 2v2. */
-const result: ArenaResult = { v: 1, score: [40, 20], winner: 0, seconds: 420, objective: 0, seats: [seat(0, 0), seat(1, 0), seat(2, 1), seat(3, 1)] }
+const result: ArenaResult = { v: 1, score: [40, 20], winner: 0, seconds: 420, objective: 0, surrender: null, seats: [seat(0, 0), seat(1, 0), seat(2, 1), seat(3, 1)] }
 
 const humans = (...ids: (string | null)[]): ReportSeat[] => ids.map((userId, slot) => ({ slot, userId, left: false }))
 
