@@ -250,13 +250,13 @@ export const pt = {
     title: 'Arena',
     tagline: 'MOBA 4v4 · 3v3',
     /** The Arena's maps' names (`data/versusMaps.ts`). */
-    maps: { vale: 'Vale', glade: 'Clareira' } satisfies Record<MapId, string>,
+    maps: { vale: 'Vale', glade: 'Clareira', cove: 'Enseada', reef: 'Recife' } satisfies Record<MapId, string>,
     /** The match formats (`data/arenaFormats.ts`): the name, the size, the clock and a line on the map. */
     formats: {
-      standard: { name: 'Padrão', size: '4v4', clock: '7 min', text: 'No Vale · 3 gols por equipe' },
-      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'Na Clareira · 2 gols por equipe' },
+      standard: { name: 'Padrão', size: '4v4', clock: '7 min', text: 'No Vale ou na Enseada · 3 gols por equipe' },
+      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'Na Clareira ou no Recife · 2 gols por equipe' },
     } satisfies Record<ArenaFormat, { name: string; size: string; clock: string; text: string }>,
-    intro: 'Duas equipes no Vale (4v4) ou na Clareira (3v3). Derrote Pokémon selvagens, junte Energia e marque nos gols rivais.',
+    intro: 'Duas equipes no Vale ou na Enseada (4v4), na Clareira ou no Recife (3v3). Derrote Pokémon selvagens, junte Energia e marque nos gols rivais.',
     lobby: {
       how: 'Como jogar',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -342,7 +342,7 @@ export const pt = {
         'Cada aliado no mesmo gol acelera a marcação em 50%.',
         'Um golpe rival interrompe quem está marcando.',
         'No seu gol você se cura e corre 20% mais rápido.',
-        'No Vale, o gol da base só abre depois que cai um gol de rota; a Clareira não tem gol de base.',
+        'No 4v4, o gol da base só abre depois que cai um gol de rota; o 3v3 não tem gol de base.',
         'Derrotar o Drednaw dá escudo e Energia ao time todo.',
         'No mato alto os rivais não te veem, mas seus ataques param: bom para emboscar e fugir.',
         'As cartas de nível não pausam: toque numa ou use 1–4.',
@@ -610,7 +610,7 @@ export const pt = {
           /** The clock when a team may vote to surrender (half-time), in the 4v4 and the 3v3. */
           surrender: { standard: string; quick: string }
         }) => [
-          'Dois formatos: 4v4 Padrão no Vale (7 min, Casual e Ranqueada) e 3v3 Rápida na Clareira (3 min, só Casual, sem RP).',
+          'Dois formatos: 4v4 Padrão no Vale ou na Enseada (7 min, Casual e Ranqueada) e 3v3 Rápida na Clareira ou no Recife (3 min, só Casual, sem RP).',
           `MMR e RP: o MMR é escondido e decide com quem você joga. O RP aparece no ranking: vitória +${r.win}, derrota ${r.loss}, e até +${r.perf} pelo seu desempenho.`,
           `Se faltar gente, bots completam a partida: depois de ${r.casual} s na Casual e de ${r.ranked} s na Ranqueada.`,
           `A Ranqueada precisa de pelo menos ${r.humans} treinadores na partida, com gente nos dois times. Senão, ela vale como Casual.`,
@@ -655,6 +655,8 @@ export const pt = {
     room: {
       mode: 'Modo',
       format: 'Formato',
+      map: 'Mapa',
+      random: 'Aleatório',
       modes: { run: 'Horda', versus: 'Arena' },
       team: 'Sua equipe',
       fill: 'Vagas livres viram CPU (4 contra 4).',
@@ -5679,7 +5681,7 @@ export const pt = {
     /** Ninjask, the Arena's judge, before the Arena opens: the first visit, then one of these in turn. */
     first: [
       'Bzzz! Bem-vindo ao Estádio! Eu sou o juiz da Arena: rápido demais para deixar qualquer lance passar.',
-      'Duas equipes se enfrentam: de quatro no Vale, ou de três na Clareira para uma partida rápida. Derrote Pokémon selvagens, junte Energia e leve-a ao gol rival.',
+      'Duas equipes se enfrentam: de quatro no Vale ou na Enseada, ou de três na Clareira ou no Recife para uma partida rápida. Derrote Pokémon selvagens, junte Energia e leve-a ao gol rival.',
       'Partida rápida: contra bots, começa na hora. Casual: contra treinadores, sem pontos. Ranqueada: cada vitória sobe seu tier.',
       'Cada temporada dura duas semanas. Os quadros do pátio mostram o ranking, a temporada, seu histórico e as regras.',
     ],

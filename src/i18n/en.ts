@@ -140,12 +140,12 @@ export const en: Messages = {
     fresh: 'NEW',
     title: 'Arena',
     tagline: '4v4 · 3v3 MOBA',
-    maps: { vale: 'The Vale', glade: 'The Glade' },
+    maps: { vale: 'The Vale', glade: 'The Glade', cove: 'The Cove', reef: 'The Reef' },
     formats: {
-      standard: { name: 'Standard', size: '4v4', clock: '7 min', text: 'In the Vale · 3 goals per team' },
-      quick: { name: 'Quick', size: '3v3', clock: '3 min', text: 'In the Glade · 2 goals per team' },
+      standard: { name: 'Standard', size: '4v4', clock: '7 min', text: 'In the Vale or the Cove · 3 goals per team' },
+      quick: { name: 'Quick', size: '3v3', clock: '3 min', text: 'In the Glade or the Reef · 2 goals per team' },
     },
-    intro: 'Two teams in the Vale (4v4) or the Glade (3v3). Defeat wild Pokémon, gather Energy and score it in the rival goals.',
+    intro: 'Two teams in the Vale or the Cove (4v4), the Glade or the Reef (3v3). Defeat wild Pokémon, gather Energy and score it in the rival goals.',
     lobby: {
       how: 'How to play',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -224,7 +224,7 @@ export const en: Messages = {
         'Each ally in the same goal speeds up scoring by 50%.',
         'A rival’s hit interrupts whoever is scoring.',
         'In your own goal you heal and run 20% faster.',
-        'On the Vale, the base goal only opens once a lane goal falls; the Glade has no base goal.',
+        'In 4v4, the base goal only opens once a lane goal falls; 3v3 has no base goal.',
         'Defeating Drednaw gives the whole team a shield and Energy.',
         'In tall grass rivals can’t see you, but your attacks stop: good for ambushes and escapes.',
         'Level-up cards don’t pause: tap one or press 1–4.',
@@ -460,7 +460,7 @@ export const en: Messages = {
       rules: {
         title: 'How Ranked works',
         items: (r) => [
-          'Two formats: 4v4 Standard in the Vale (7 min, Casual and Ranked) and 3v3 Quick in the Glade (3 min, Casual only, no RP).',
+          'Two formats: 4v4 Standard in the Vale or the Cove (7 min, Casual and Ranked) and 3v3 Quick in the Glade or the Reef (3 min, Casual only, no RP).',
           `MMR and RP: MMR is hidden and decides who you play with. RP is what the ranking shows: a win is +${r.win}, a loss ${r.loss}, and up to +${r.perf} for how you played.`,
           `If seats are empty, bots fill the match: after ${r.casual} s in Casual and ${r.ranked} s in Ranked.`,
           `Ranked needs at least ${r.humans} trainers in the match, with people on both teams. Otherwise, it counts as Casual.`,
@@ -493,6 +493,8 @@ export const en: Messages = {
     room: {
       mode: 'Mode',
       format: 'Format',
+      map: 'Map',
+      random: 'Random',
       modes: { run: 'Horde', versus: 'Arena' },
       team: 'Your team',
       fill: 'Empty seats become CPUs (4 vs 4).',
@@ -5329,7 +5331,7 @@ export const en: Messages = {
     boards: { play: 'Play', ranking: 'Ranking', season: 'Season', history: 'History', rules: 'Rules' },
     first: [
       'Bzzz! Welcome to the Stadium! I’m the Arena’s judge: too quick to let a single play slip by.',
-      'Two teams face off: four a side in the Vale, or three in the Glade for a quick one. Defeat wild Pokémon, gather Energy and carry it to the rival goal.',
+      'Two teams face off: four a side in the Vale or the Cove, or three in the Glade or the Reef for a quick one. Defeat wild Pokémon, gather Energy and carry it to the rival goal.',
       'Quick match: against bots, starts at once. Casual: against trainers, no points. Ranked: every win climbs your tier.',
       'Each season lasts two weeks. The boards around the court show the ranking, the season, your history and the rules.',
     ],

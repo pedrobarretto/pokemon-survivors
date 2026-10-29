@@ -18,6 +18,7 @@ import { slotColor } from './team'
 import { goalOpen, mapOf } from '../game/versusRules'
 import type { VersusState } from '../game/versus'
 import { TEAM_COLORS } from './vale'
+import { laneYAt, type MapTheme } from '../data/versusMaps'
 import { concealed } from './valeGrass'
 import { PING_COLORS, seesPing } from './valePings'
 import { PING_KINDS, type PingKind } from '../game/versusSocial'
@@ -566,8 +567,11 @@ const frame = (ctx: Ctx, shape: MinimapShape) => {
 
 /* ---------------- Versus ---------------- */
 
-/** An Arena map's colors (its scale is the map's own, `look.minimap`: the whole map fits the round window). */
-const VALE_LOOK = { hedge: '#143820', edge: '#7ab060', grass: '#4f8c3e', jungle: '#356a32', path: '#a88258', tall: '#1e4a20', base: ['#3e5c88', '#884048'] } as const
+/** An Arena map's colors by its theme (its scale is the map's own, `look.minimap`: the whole map fits the round window). */
+const VALE_LOOKS = {
+  meadow: { wall: '#143820', edge: '#7ab060', ground: '#4f8c3e', jungle: '#356a32', path: '#a88258', tall: '#1e4a20', base: ['#3e5c88', '#884048'] },
+  coast: { wall: '#1d5f82', edge: '#d8f0ec', ground: '#d8c08c', jungle: '#a89470', path: '#8a5e3a', tall: '#3e6a48', base: ['#3e5c88', '#884048'] },
+} as const satisfies Record<MapTheme, { wall: string; edge: string; ground: string; jungle: string; path: string; tall: string; base: readonly [string, string] }>
 
 const VALE_GLYPHS = lazy(() => ({
   goal: [0, 1].map((team) => glyph(['.c.', 'cwc', '.c.'], { c: TEAM_COLORS[team as 0 | 1], w: '#ffffff' })),
@@ -594,23 +598,29 @@ const drawValeMap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) => {
     const b = mapY(v, y0) - grow
     ctx.fillRect(a, b, mapX(v, x1) - a + grow, mapY(v, y1) - b + grow)
   }
-  ctx.fillStyle = VALE_LOOK.hedge
+  const colors = VALE_LOOKS[look.theme]
+  ctx.fillStyle = colors.wall
   ctx.fillRect(0, 0, S, S)
-  ctx.fillStyle = VALE_LOOK.edge
+  ctx.fillStyle = colors.edge
   for (const r of map.rects) rect(r.x0, r.y0, r.x1, r.y1, 1)
-  ctx.fillStyle = VALE_LOOK.grass
+  ctx.fillStyle = colors.ground
   for (const r of map.rects) rect(r.x0, r.y0, r.x1, r.y1)
-  ctx.fillStyle = VALE_LOOK.jungle
-  rect(look.jungle.x0, look.jungle.y0, look.jungle.x1, look.jungle.y1)
-  ctx.fillStyle = VALE_LOOK.path
-  for (const y of [-look.laneY, look.laneY]) rect(-look.baseX, y - 14, look.baseX, y + 14)
+  ctx.fillStyle = colors.jungle
+  for (const j of look.jungles) rect(j.x0, j.y0, j.x1, j.y1)
+  // The lanes' paths, a map pixel's column at a time (they may bend).
+  ctx.fillStyle = colors.path
+  const step = look.minimap
+  for (let x = -look.baseX; x < look.baseX; x += step) {
+    const y = laneYAt(look.lane, Math.abs(x + step / 2))
+    for (const sy of [-1, 1]) rect(x, sy * y - 14, x + step, sy * y + 14)
+  }
   map.rects.forEach((r) => {
     if (r.x1 <= -look.baseX || r.x0 >= look.baseX) {
-      ctx.fillStyle = VALE_LOOK.base[r.x0 < 0 ? 0 : 1]
+      ctx.fillStyle = colors.base[r.x0 < 0 ? 0 : 1]
       rect(r.x0, r.y0, r.x1, r.y1)
     }
   })
-  ctx.fillStyle = VALE_LOOK.tall
+  ctx.fillStyle = colors.tall
   for (const r of map.grass) rect(r.x0, r.y0, r.x1, r.y1)
   drawViewBox(ctx, v, g)
   const art = VALE_GLYPHS()

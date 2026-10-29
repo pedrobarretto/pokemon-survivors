@@ -4,7 +4,7 @@ import type { MapId } from './versusMaps'
 
 /**
  * Versus (`game/versus.ts`): two teams on one map, a Unite-style match, in
- * one of the formats (`VERSUS_FORMATS`: team size, map and clock). Wild Pokémon in camps drop Energy; a player carries it
+ * one of the formats (`VERSUS_FORMATS`: team size, maps and clock). Wild Pokémon in camps drop Energy; a player carries it
  * into a goal zone of the rival team and channels to score it. Goals have a
  * capacity and break; the base goal opens once a lane goal on its side is
  * gone. The last `stretch` seconds score double and bring Zapdos to the
@@ -102,7 +102,8 @@ export const VERSUS = {
 export type FormatRules = {
   /** Pokémon per team; seats no human takes are bots. */
   teamSize: number
-  map: MapId
+  /** The maps a match of this format plays on: the room's pick, or one drawn from the seed (`matchMap`). */
+  maps: readonly MapId[]
   /** Match length (s). */
   length: number
   /** The last seconds of the match: points count double and Zapdos comes to the center. */
@@ -120,13 +121,13 @@ export type FormatRules = {
 
 export const VERSUS_FORMATS = {
   /**
-   * 4v4 on the Vale, 7 minutes: Drednaw from 1:40, Zapdos for the last 2:00.
+   * 4v4 on the Vale or the Enseada, 7 minutes: Drednaw from 1:40, Zapdos for the last 2:00.
    * Evolutions at Lv 5 and 9 (Unite's Charmander curve): with bots, the first
    * around 0:50 and the second around 3:30.
    */
   standard: {
     teamSize: ARENA_FORMATS.standard.teamSize,
-    map: 'vale',
+    maps: ['vale', 'cove'],
     length: 420,
     stretch: 120,
     xp: 1,
@@ -136,7 +137,7 @@ export const VERSUS_FORMATS = {
     zapdos: { hp: 9000 },
   },
   /**
-   * 3v3 on the Clareira, 3 minutes: Drednaw from 0:40, Zapdos for the last
+   * 3v3 on the Clareira or the Recife, 3 minutes: Drednaw from 0:40, Zapdos for the last
    * 1:00. EXP at ×1.5 and evolutions at Lv 6 and 9, so with bots Move 2 comes
    * around 0:10, the first evolution around 1:00 and the second around 2:00
    * (before Zapdos), not all in the first minute; knockouts are short so
@@ -144,7 +145,7 @@ export const VERSUS_FORMATS = {
    */
   quick: {
     teamSize: ARENA_FORMATS.quick.teamSize,
-    map: 'glade',
+    maps: ['glade', 'reef'],
     length: 180,
     stretch: 60,
     xp: 1.5,

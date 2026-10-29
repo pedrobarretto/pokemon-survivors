@@ -13,7 +13,7 @@ const names = (paths: Record<string, unknown>) => new Set(Object.keys(paths).map
 const items = names(import.meta.glob('../../public/assets/items/*.png'))
 const shopArt = names(import.meta.glob('../../public/assets/shop/icons/*.png'))
 const scenery = names(import.meta.glob('../../public/assets/scenery/*.png'))
-const arena = names(import.meta.glob('../../public/assets/arena/*.png'))
+const arena = new Set([...names(import.meta.glob('../../public/assets/arena/*.png')), ...[...names(import.meta.glob('../../public/assets/arena/coast/*.png'))].map((n) => `coast/${n}`)])
 const arenaIcons = names(import.meta.glob('../../public/assets/arena/icons/*.png'))
 
 describe('picture files', () => {

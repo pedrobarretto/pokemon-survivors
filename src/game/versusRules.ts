@@ -5,6 +5,7 @@ import type { PlayerStats } from './stats'
 import type { Enemy, Game } from './types'
 import type { GoalState, VersusState } from './versus'
 import * as dm from '../engine/dmath'
+import { createRng, pick } from '../engine/rng'
 
 /**
  * Versus's pure rules (`versus.ts` runs them): the channel to score, the time
@@ -24,6 +25,19 @@ export const rulesOf = (s: { format: ArenaFormat }) => VERSUS_FORMATS[s.format]
 
 /** The map match `s` plays on. */
 export const mapOf = (s: { map: MapId }) => MAPS[s.map]
+
+/** Whether `id` is one of the maps a match of `format` plays on. */
+export const formatPlays = (format: ArenaFormat, id: unknown): id is MapId => VERSUS_FORMATS[format].maps.some((m) => m === id)
+
+/**
+ * The map a match of `format` plays: `asked` when it's one of the format's
+ * (a room's pick), else one drawn from the match's seed, so every client
+ * (and the queue's matches, which ask for none) lands on the same one.
+ */
+export const matchMap = (format: ArenaFormat, seed: number, asked?: MapId | null): MapId => {
+  if (formatPlays(format, asked)) return asked
+  return pick(createRng(seed ^ 0x6d6170), VERSUS_FORMATS[format].maps)
+}
 
 /** Seconds down after a knockout at `level` under `rules`. */
 export const respawnTime = (rules: FormatRules, level: number, stretch: boolean) =>

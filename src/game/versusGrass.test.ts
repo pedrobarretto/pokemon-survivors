@@ -24,7 +24,7 @@ const put = (p: Player, x: number, y: number) => {
 
 /** A match with one Blue and one Red Pokémon played by hand (standing still), the rest on their pads. */
 const duel = (seed = 3) => {
-  const g = createVersusGame(seed, [])
+  const g = createVersusGame(seed, [], 'standard', 'vale')
   const blue = g.players.find((p) => p.versus!.team === 0)!
   const red = g.players.find((p) => p.versus!.team === 1)!
   blue.versus!.bot = false

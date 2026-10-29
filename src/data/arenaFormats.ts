@@ -5,8 +5,8 @@
  * it alone. What a format plays like (its map, clock and numbers) is the
  * game's (`VERSUS_FORMATS` in `data/versus.ts`).
  *
- * - `standard`: 4v4 on the Vale, 7 minutes. Casual and Ranqueada.
- * - `quick`: 3v3 on the Clareira, 3 minutes. Casual only, so the season has one ladder.
+ * - `standard`: 4v4 on the Vale or the Enseada, 7 minutes. Casual and Ranqueada.
+ * - `quick`: 3v3 on the Clareira or the Recife, 3 minutes. Casual only, so the season has one ladder.
  */
 export const ARENA_FORMATS = {
   standard: { teamSize: 4, ranked: true },

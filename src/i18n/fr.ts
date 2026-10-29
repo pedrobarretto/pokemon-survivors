@@ -140,12 +140,12 @@ export const fr: Messages = {
     fresh: 'NOUVEAU',
     title: 'Arène',
     tagline: 'MOBA 4v4 · 3v3',
-    maps: { vale: 'La Vallée', glade: 'La Clairière' },
+    maps: { vale: 'La Vallée', glade: 'La Clairière', cove: 'La Crique', reef: 'Le Récif' },
     formats: {
-      standard: { name: 'Standard', size: '4v4', clock: '7 min', text: 'Dans la Vallée · 3 buts par équipe' },
-      quick: { name: 'Rapide', size: '3v3', clock: '3 min', text: 'Dans la Clairière · 2 buts par équipe' },
+      standard: { name: 'Standard', size: '4v4', clock: '7 min', text: 'Dans la Vallée ou la Crique · 3 buts par équipe' },
+      quick: { name: 'Rapide', size: '3v3', clock: '3 min', text: 'Dans la Clairière ou le Récif · 2 buts par équipe' },
     },
-    intro: 'Deux équipes dans la Vallée (4v4) ou la Clairière (3v3). Battez des Pokémon sauvages, ramassez de l’Énergie et marquez dans les buts adverses.',
+    intro: 'Deux équipes dans la Vallée ou la Crique (4v4), la Clairière ou le Récif (3v3). Battez des Pokémon sauvages, ramassez de l’Énergie et marquez dans les buts adverses.',
     lobby: {
       how: 'Comment jouer',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -224,7 +224,7 @@ export const fr: Messages = {
         'Chaque allié dans le même but accélère le marquage de 50 %.',
         'Un coup adverse interrompt celui qui marque.',
         'Dans votre but, vous vous soignez et courez 20 % plus vite.',
-        'Dans la Vallée, le but de la base ne s’ouvre qu’après la chute d’un but de voie ; la Clairière n’a pas de but de base.',
+        'En 4v4, le but de la base ne s’ouvre qu’après la chute d’un but de voie ; le 3v3 n’a pas de but de base.',
         'Battre Drednaw donne un bouclier et de l’Énergie à toute l’équipe.',
         'Dans les hautes herbes, les adversaires ne vous voient pas, mais vos attaques s’arrêtent : idéal pour les embuscades et les fuites.',
         'Les cartes de niveau ne mettent pas en pause : touchez-en une ou utilisez 1–4.',
@@ -460,7 +460,7 @@ export const fr: Messages = {
       rules: {
         title: 'Comment marche le Classé',
         items: (r) => [
-          'Deux formats : 4v4 Standard dans la Vallée (7 min, Casual et Classé) et 3v3 Rapide dans la Clairière (3 min, Casual seulement, sans RP).',
+          'Deux formats : 4v4 Standard dans la Vallée ou la Crique (7 min, Casual et Classé) et 3v3 Rapide dans la Clairière ou le Récif (3 min, Casual seulement, sans RP).',
           `MMR et RP : le MMR est caché et décide avec qui vous jouez. Les RP sont ce que montre le classement : victoire +${r.win}, défaite ${r.loss}, et jusqu’à +${r.perf} selon votre performance.`,
           `S’il manque du monde, des bots complètent le match : après ${r.casual} s en Casual et ${r.ranked} s en Classé.`,
           `Le Classé demande au moins ${r.humans} dresseurs dans le match, avec du monde dans les deux équipes. Sinon, il compte comme Casual.`,
@@ -493,6 +493,8 @@ export const fr: Messages = {
     room: {
       mode: 'Mode',
       format: 'Format',
+      map: 'Carte',
+      random: 'Aléatoire',
       modes: { run: 'Horde', versus: 'Arène' },
       team: 'Votre équipe',
       fill: 'Les places libres sont jouées par le CPU (4 contre 4).',
@@ -5325,7 +5327,7 @@ export const fr: Messages = {
     boards: { play: 'Jouer', ranking: 'Classement', season: 'Saison', history: 'Historique', rules: 'Règles' },
     first: [
       'Bzzz ! Bienvenue au Stade ! Je suis le juge de l’Arène : bien trop rapide pour laisser filer une seule action.',
-      'Deux équipes s’affrontent : à quatre dans la Vallée, ou à trois dans la Clairière pour un match rapide. Battez des Pokémon sauvages, ramassez de l’Énergie et portez-la au but adverse.',
+      'Deux équipes s’affrontent : à quatre dans la Vallée ou la Crique, ou à trois dans la Clairière ou le Récif pour un match rapide. Battez des Pokémon sauvages, ramassez de l’Énergie et portez-la au but adverse.',
       'Partie rapide : contre des bots, tout de suite. Normale : contre des dresseurs, sans points. Classée : chaque victoire fait monter ton rang.',
       'Chaque saison dure deux semaines. Les panneaux autour du terrain montrent le classement, la saison, ton historique et les règles.',
     ],

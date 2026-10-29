@@ -140,12 +140,12 @@ export const es: Messages = {
     fresh: 'NUEVO',
     title: 'Arena',
     tagline: 'MOBA 4v4 · 3v3',
-    maps: { vale: 'El Valle', glade: 'El Claro' },
+    maps: { vale: 'El Valle', glade: 'El Claro', cove: 'La Ensenada', reef: 'El Arrecife' },
     formats: {
-      standard: { name: 'Estándar', size: '4v4', clock: '7 min', text: 'En el Valle · 3 porterías por equipo' },
-      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'En el Claro · 2 porterías por equipo' },
+      standard: { name: 'Estándar', size: '4v4', clock: '7 min', text: 'En el Valle o la Ensenada · 3 porterías por equipo' },
+      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'En el Claro o el Arrecife · 2 porterías por equipo' },
     },
-    intro: 'Dos equipos en el Valle (4v4) o en el Claro (3v3). Derrota Pokémon salvajes, junta Energía y anótala en las porterías rivales.',
+    intro: 'Dos equipos en el Valle o la Ensenada (4v4), en el Claro o el Arrecife (3v3). Derrota Pokémon salvajes, junta Energía y anótala en las porterías rivales.',
     lobby: {
       how: 'Cómo jugar',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -224,7 +224,7 @@ export const es: Messages = {
         'Cada aliado en la misma portería acelera la anotación un 50%.',
         'Un golpe rival interrumpe a quien está anotando.',
         'En tu portería te curas y corres un 20% más rápido.',
-        'En el Valle, la portería de la base solo se abre cuando cae una de ruta; el Claro no tiene portería de base.',
+        'En el 4v4, la portería de la base solo se abre cuando cae una de ruta; el 3v3 no tiene portería de base.',
         'Derrotar a Drednaw da escudo y Energía a todo el equipo.',
         'En la hierba alta los rivales no te ven, pero tus ataques se detienen: ideal para emboscar y escapar.',
         'Las cartas de nivel no pausan: toca una o usa 1–4.',
@@ -461,7 +461,7 @@ export const es: Messages = {
       rules: {
         title: 'Cómo funciona la Clasificatoria',
         items: (r) => [
-          'Dos formatos: 4v4 Estándar en el Valle (7 min, Casual y Clasificatoria) y 3v3 Rápida en el Claro (3 min, solo Casual, sin RP).',
+          'Dos formatos: 4v4 Estándar en el Valle o la Ensenada (7 min, Casual y Clasificatoria) y 3v3 Rápida en el Claro o el Arrecife (3 min, solo Casual, sin RP).',
           `MMR y RP: el MMR es oculto y decide con quién juegas. El RP es lo que muestra el ranking: victoria +${r.win}, derrota ${r.loss}, y hasta +${r.perf} por tu desempeño.`,
           `Si faltan jugadores, los bots completan la partida: después de ${r.casual} s en Casual y de ${r.ranked} s en Clasificatoria.`,
           `La Clasificatoria necesita al menos ${r.humans} entrenadores en la partida, con gente en los dos equipos. Si no, cuenta como Casual.`,
@@ -494,6 +494,8 @@ export const es: Messages = {
     room: {
       mode: 'Modo',
       format: 'Formato',
+      map: 'Mapa',
+      random: 'Aleatorio',
       modes: { run: 'Horda', versus: 'Arena' },
       team: 'Tu equipo',
       fill: 'Los lugares libres los juega la CPU (4 contra 4).',
@@ -5331,7 +5333,7 @@ export const es: Messages = {
     boards: { play: 'Jugar', ranking: 'Ranking', season: 'Temporada', history: 'Historial', rules: 'Reglas' },
     first: [
       '¡Bzzz! ¡Bienvenido al Estadio! Soy el juez de la Arena: demasiado rápido para dejar pasar una sola jugada.',
-      'Dos equipos se enfrentan: de cuatro en el Valle, o de tres en el Claro para una partida rápida. Derrota Pokémon salvajes, junta Energía y llévala a la portería rival.',
+      'Dos equipos se enfrentan: de cuatro en el Valle o la Ensenada, o de tres en el Claro o el Arrecife para una partida rápida. Derrota Pokémon salvajes, junta Energía y llévala a la portería rival.',
       'Partida rápida: contra bots, empieza ya. Casual: contra entrenadores, sin puntos. Clasificatoria: cada victoria sube tu nivel.',
       'Cada temporada dura dos semanas. Los tableros del patio muestran el ranking, la temporada, tu historial y las reglas.',
     ],
