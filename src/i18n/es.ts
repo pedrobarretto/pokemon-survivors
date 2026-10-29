@@ -582,6 +582,7 @@ export const es: Messages = {
       short: (n: string) => `Te faltan ${n} gemas. ¿Qué tal un paquete?`,
       busy: '¡Calma! Demasiadas compras seguidas. Inténtalo de nuevo en un minuto.',
       offline: 'La tienda está fuera de alcance ahora. Inténtalo de nuevo en un momento.',
+      banned: 'Esta cuenta no puede usar la tienda.',
       receipts: 'Recibos',
       receiptsEmpty: 'Todavía no hay movimientos.',
       reasons: { pack: 'Paquete de gemas', patreon: 'Patreon', play: 'Partida en la Arena', buy: 'Compra', refund: 'Reembolso', dispute: 'Disputa', disputeWon: 'Disputa revertida', grant: 'Regalo del equipo' },

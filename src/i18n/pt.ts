@@ -22,7 +22,7 @@ import type { WearableId } from '../data/wearables'
 import type { ArenaEffectId } from '../data/arenaEffects'
 import type { CosmeticSlot, Rarity } from '../data/arenaCosmetics'
 import type { GemPackId } from '../data/gems'
-import type { ReceiptReason } from '../arena/gemShop'
+import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
 import type { Priority } from '../game/versusKit'
@@ -756,9 +756,10 @@ export const pt = {
       short: (n: string) => `Faltam ${n} gemas. Que tal um pacote?`,
       busy: 'Calma! Muitas compras seguidas. Tente de novo em um minuto.',
       offline: 'A loja está fora de alcance agora. Tente de novo em instantes.',
+      banned: 'Esta conta não pode usar a Loja.',
       receipts: 'Recibos',
       receiptsEmpty: 'Nenhuma movimentação ainda.',
-      reasons: { pack: 'Pacote de gemas', patreon: 'Patreon', play: 'Partida na Arena', buy: 'Compra', refund: 'Reembolso', dispute: 'Contestação', disputeWon: 'Contestação revertida', grant: 'Presente da equipe' } satisfies Record<ReceiptReason, string>,
+      reasons: { pack: 'Pacote de gemas', patreon: 'Patreon', play: 'Partida na Arena', buy: 'Compra', refund: 'Reembolso', dispute: 'Contestação', disputeWon: 'Contestação revertida', grant: 'Presente da equipe' } satisfies Record<GemReason, string>,
       signIn: { title: 'Entre para usar a Loja', text: 'As gemas e os visuais ficam na sua conta, em qualquer aparelho.', button: 'Entrar' },
       unavailable: 'A Loja não está disponível nesta versão do jogo.',
       onlyLooks: 'Gemas compram só visuais da Arena.',

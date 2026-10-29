@@ -1,10 +1,12 @@
 import { accountState, accountsEnabled, accountUserId, API_URL } from './account'
 import { track } from './analytics'
 import { apiCall } from './api'
-import { equip, isReceiptReason, ownedOnly, sameLook, type ReceiptReason } from './arena/gemShop'
+import { equip, ownedOnly, sameLook } from './arena/gemShop'
 import { ARENA_COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, slotOf, type ArenaLook, type CosmeticId } from './data/arenaCosmetics'
 import { isGemPackId, packGems, type GemCurrency, type GemMethod, type GemPackId } from './data/gems'
+import { isGemReason, type GemBuyResponse, type GemCheckoutRequest, type GemLedgerEntry, type GemsStatus } from './game/gems'
 import { isRecord } from './game/parse'
+import { setLocalLook } from './render/arenaLooks'
 import type { WireLook } from './net/protocol'
 
 /**
@@ -25,18 +27,12 @@ import type { WireLook } from './net/protocol'
  * moving (`fakeGems`, `stageCheckout`).
  */
 
-/** What the API says the account has: its balance (below 0 after a refund of spent gems), what it owns and the look it wears. */
-export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; look: ArenaLook }
-
-/** One line of the receipts: `amount` signed, `at` in ms, `reason` why (a pack, a buy, a match…), `ref` its checkout or item. */
-export type GemReceipt = { amount: number; reason: ReceiptReason; ref: string; at: number }
-
 /** The shop reads gems from the API: a build with one. */
 export const gemsEnabled = Boolean(API_URL)
 
 /* ---------------- Fakes ---------------- */
 
-type Fake = { status: GemsStatus; landing: { gems: number; at: number } | 'never' | null; ledger: GemReceipt[] }
+type Fake = { status: GemsStatus; landing: { gems: number; at: number } | 'never' | null; ledger: GemLedgerEntry[] }
 
 let fake: Fake | null = null
 
@@ -109,8 +105,10 @@ let mirror: Mirror | null = readMirror()
 
 const listeners = new Set<(s: GemsStatus | null) => void>()
 
+/** Tells the listeners, and keeps the hub's own look (`localLook`: its profile shows the title) on what the account wears. */
 const notify = () => {
   const s = knownGems()
+  setLocalLook(s ? ownedOnly(s.look, ownedSet(s)) : {})
   for (const fn of listeners) fn(s)
 }
 
@@ -188,7 +186,7 @@ export const fetchGems = async (): Promise<GemsStatus | null> => {
   return knownGems()
 }
 
-export type CheckoutOpened = { ok: true; url: string } | { ok: false; why: 'busy' | 'offline' }
+export type CheckoutOpened = { ok: true; url: string } | { ok: false; why: 'busy' | 'banned' | 'offline' }
 
 const PENDING_KEY = 'ps:gemsCheckout'
 
@@ -231,8 +229,10 @@ export const openCheckout = async (pack: GemPackId, method: GemMethod, currency:
     track('gems_checkout', { pack, method, currency })
     return { ok: true, url: `?gems=${stageCheckout(pack)}` }
   }
-  const res = await apiCall('/gems/checkout', { method: 'POST', body: { pack, method, currency }, auth: true })
+  const body: GemCheckoutRequest = { pack, method, currency }
+  const res = await apiCall('/gems/checkout', { method: 'POST', body, auth: true })
   if (res.status === 429) return { ok: false, why: 'busy' }
+  if (res.status === 403) return { ok: false, why: 'banned' }
   const url = isRecord(res.body) && typeof res.body.url === 'string' ? res.body.url : null
   if (res.status !== 200 || !url) return { ok: false, why: 'offline' }
   keepPending({ pack, before })
@@ -240,9 +240,17 @@ export const openCheckout = async (pack: GemPackId, method: GemMethod, currency:
   return { ok: true, url }
 }
 
-export type Bought = { ok: true; status: GemsStatus } | { ok: false; why: 'gems' | 'owned' | 'busy' | 'offline' }
+export type Bought = { ok: true; status: GemsStatus } | { ok: false; why: 'gems' | 'owned' | 'unsold' | 'busy' | 'banned' | 'offline' }
 
-/** `POST /gems/buy`: buys a cosmetic with gems. `gems`: short of them; `owned`: it was already. */
+/** A `POST /gems/buy` answer, or null. */
+const parseBought = (v: unknown): GemBuyResponse | null =>
+  isRecord(v) && typeof v.balance === 'number' && Array.isArray(v.owned) ? { balance: v.balance, owned: v.owned.filter(isCosmeticId) } : null
+
+/**
+ * `POST /gems/buy`: buys a cosmetic with gems. As the API answers: `gems`
+ * (402) short of them, `owned` (409) it was already, `unsold` (404) not on
+ * sale today, `busy` (429) too many in a row, `banned` (403).
+ */
 export const buyCosmetic = async (id: CosmeticId): Promise<Bought> => {
   const price = cosmeticPrice(id) ?? 0
   const bought = () => track('cosmetic_buy', { id, slot: slotOf(id), rarity: ARENA_COSMETICS[id].rarity, price })
@@ -262,12 +270,14 @@ export const buyCosmetic = async (id: CosmeticId): Promise<Bought> => {
     void fetchGems()
     return { ok: false, why: 'owned' }
   }
+  if (res.status === 404) return { ok: false, why: 'unsold' }
   if (res.status === 429) return { ok: false, why: 'busy' }
-  const body = isRecord(res.body) ? res.body : null
+  if (res.status === 403) return { ok: false, why: 'banned' }
+  const body = res.status === 200 ? parseBought(res.body) : null
   const was = knownGems()
-  if (res.status !== 200 || !body || typeof body.balance !== 'number' || !Array.isArray(body.owned) || !was) return { ok: false, why: 'offline' }
+  if (!body || !was) return { ok: false, why: 'offline' }
   bought()
-  remember({ ...was, balance: body.balance, owned: body.owned.filter(isCosmeticId) }, mirror?.pending ?? false)
+  remember({ ...was, ...body }, mirror?.pending ?? false)
   return { ok: true, status: knownGems()! }
 }
 
@@ -296,11 +306,11 @@ export const saveLook = async (look: ArenaLook): Promise<boolean> => {
 }
 
 /** A receipt from the API; a reason this build doesn't know reads as a grant. */
-const parseReceipt = (v: unknown): GemReceipt | null =>
-  isRecord(v) && typeof v.amount === 'number' && typeof v.at === 'number' ? { amount: v.amount, reason: isReceiptReason(v.reason) ? v.reason : 'grant', ref: typeof v.ref === 'string' ? v.ref : '', at: v.at } : null
+const parseReceipt = (v: unknown): GemLedgerEntry | null =>
+  isRecord(v) && typeof v.amount === 'number' && typeof v.at === 'number' ? { amount: v.amount, reason: isGemReason(v.reason) ? v.reason : 'grant', ref: typeof v.ref === 'string' ? v.ref : '', at: v.at } : null
 
 /** `GET /gems/ledger`: the account's last 50 receipts, newest first; null when they can't be read. */
-export const fetchReceipts = async (): Promise<GemReceipt[] | null> => {
+export const fetchReceipts = async (): Promise<GemLedgerEntry[] | null> => {
   if (fake) return [...fake.ledger]
   if (!gemsSignedIn()) return null
   const res = await apiCall('/gems/ledger', { auth: true })
@@ -352,3 +362,6 @@ export const awaitCheckout = async (alive: () => boolean): Promise<CheckoutLande
   }
   return report({ outcome: 'timeout' })
 }
+
+// The hub's profile shows the device's mirror of the look from its first paint.
+notify()

@@ -23020,7 +23020,7 @@ span.arena-hub-face {
 }
 
 /* The Arena's titles (ui/arenaTitle.ts): under a name, in the rarity's color. */
-.arena-title {
+.arena-seat-title {
   font-family: var(--title);
   font-size: 7px;
   line-height: 1.2;
@@ -23030,20 +23030,20 @@ span.arena-hub-face {
   text-shadow: 1px 1px 0 #101020;
 }
 
-.arena-title.rare {
+.arena-seat-title.rare {
   color: #78b8f8;
 }
 
-.arena-title.epic {
+.arena-seat-title.epic {
   color: #c088f8;
 }
 
-.arena-title.legendary {
+.arena-seat-title.legendary {
   color: #f8d030;
-  animation: arena-title-shine 2.4s steps(12) infinite;
+  animation: arena-seat-title-shine 2.4s steps(12) infinite;
 }
 
-@keyframes arena-title-shine {
+@keyframes arena-seat-title-shine {
   0%,
   70%,
   100% {
@@ -23054,11 +23054,11 @@ span.arena-hub-face {
   }
 }
 
-.vs-end-name .arena-title {
+.vs-end-name .arena-seat-title {
   flex-basis: 100%;
 }
 
-.arena-hub-standing-text .arena-title {
+.arena-hub-standing-text .arena-seat-title {
   font-size: 8px;
 }
 
@@ -23327,6 +23327,7 @@ span.arena-hub-face {
 
 /* The preview: a grassy pad under the Pokémon, the canvas upscaled by whole pixels. */
 .gem-stage {
+  position: relative;
   display: flex;
   justify-content: center;
   padding: 6px 0;
@@ -23344,6 +23345,17 @@ span.arena-hub-face {
 .gem-stage.big .gem-stage-canvas {
   width: 288px;
   height: 264px;
+}
+
+/* The look's title (ui/arenaTitle.ts), over the stage. */
+.gem-stage-title {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .gem-info {
@@ -23810,7 +23822,7 @@ span.arena-hub-face {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .arena-title.legendary {
+  .arena-seat-title.legendary {
     animation: none;
   }
   .gem-spark,

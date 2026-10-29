@@ -1,7 +1,7 @@
 import type { TransactionSql } from 'postgres'
 import type { ArenaLook, CosmeticId } from '../../src/data/arenaCosmetics'
 import type { GemCurrency, GemPackId } from '../../src/data/gems'
-import { knownOwned, playGems, refundedGems, wearableLook, type GemLedgerEntry, type GemReason, type GemsStatus } from '../../src/game/gems'
+import { knownOwned, playGems, refundedGems, wearableLook, type GemBuyResponse, type GemLedgerEntry, type GemReason, type GemsStatus } from '../../src/game/gems'
 import type { DayKey } from '../../src/game/day'
 import type { Sql } from './db'
 import { rateLimiter } from './rateLimit'
@@ -95,7 +95,7 @@ export type GemEvent =
 /** A checkout about to open: the pack, its price and who buys it. */
 export type GemOrder = { ref: string; userId: string; pack: GemPackId; gems: number; provider: GemProvider; currency: GemCurrency; amount: number }
 
-export type BuyOutcome = { ok: true; balance: number; owned: CosmeticId[] } | { ok: false; error: 'gems' | 'owned' }
+export type BuyOutcome = ({ ok: true } & GemBuyResponse) | { ok: false; error: 'gems' | 'owned' }
 
 /** Ledger lines `GET /gems/ledger` shows. */
 const LEDGER_PAGE = 50

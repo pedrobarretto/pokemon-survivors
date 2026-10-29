@@ -9,5 +9,5 @@ import { h } from './dom'
  */
 export const titleChip = (id: string | undefined) => {
   const def = effectIn('title', id)
-  return def && isArenaEffectId(id) ? h('small', { class: `arena-title ${def.rarity}` }, t().arenaEffects[id]) : null
+  return def && isArenaEffectId(id) ? h('small', { class: `arena-seat-title ${def.rarity}` }, t().arenaEffects[id]) : null
 }

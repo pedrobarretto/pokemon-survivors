@@ -581,6 +581,7 @@ export const zh: Messages = {
       short: (n: string) => `還差 ${n} 顆寶石。來一份寶石組合吧？`,
       busy: '慢一點！連續購買太多次了，請一分鐘後再試。',
       offline: '目前無法連線到商店，請稍後再試。',
+      banned: '此帳號無法使用商店。',
       receipts: '收據',
       receiptsEmpty: '目前還沒有任何紀錄。',
       reasons: { pack: '寶石組合', patreon: 'Patreon', play: '競技場對局', buy: '購買', refund: '退款', dispute: '爭議', disputeWon: '爭議撤回', grant: '團隊贈禮' },

@@ -1,18 +1,26 @@
-import { currencyFor, equip, fitsPick, methodsFor, priceText, rarityOf, shopCatalog, unequip } from '../arena/gemShop'
+import { currencyFor, equip, methodsFor, priceText, rarityOf, shopCatalog, unequip } from '../arena/gemShop'
 import { COSMETIC_SLOTS, WEARABLE_SLOTS, cosmeticPrice, slotOf, type ArenaLook, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/arenaCosmetics'
 import { GEM_PACK_IDS, GEM_PACKS, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
-import { VERSUS_PICKS, type VersusPick } from '../data/versus'
+import { effectIn } from '../data/arenaEffects'
+import { VERSUS, VERSUS_PICKS, type VersusPick } from '../data/versus'
+import { isWearableId } from '../data/wearables'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import type { Dir8 } from '../engine/math'
-import { context2d } from '../engine/pixelart'
+import { blitPacked, context2d, textSprite } from '../engine/pixelart'
 import { brasiliaDay } from '../game/day'
-import { awaitCheckout, buyCosmetic, fetchGems, fetchReceipts, gemsEnabled, gemsFaked, gemsSignedIn, knownGems, onGems, openCheckout, ownedSet, saveLook, type GemReceipt, type GemsStatus } from '../gems'
+import { awaitCheckout, buyCosmetic, fetchGems, fetchReceipts, gemsEnabled, gemsFaked, gemsSignedIn, knownGems, onGems, openCheckout, ownedSet, saveLook } from '../gems'
+import type { GemLedgerEntry, GemsStatus } from '../game/gems'
 import { formatNumber, locale, LOCALES, t } from '../i18n'
+import { createFxPreview } from '../render/arenaFx'
+import { drawPlateBar, drawPlateTag } from '../render/arenaPlates'
 import { gemIconUrl, slotIconUrl } from '../render/gemArt'
 import { drawPokemon, loadSpecies, portraitUrl, type Dex, type SpeciesSprites } from '../render/sprites'
-import { drawWearables } from '../render/wearables'
+import { versusTag } from '../render/team'
+import { TEAM_COLORS, TEAM_LIGHT } from '../render/vale'
+import { drawWearables, fitsWearer, loadWearables, wearableIcon } from '../render/wearables'
 import { firstForm } from './arena'
+import { titleChip } from './arenaTitle'
 import { h, later } from './dom'
 import { today } from './save'
 import { confirmDialog, type Screen } from './screens'
@@ -46,6 +54,23 @@ const tag = () => LOCALES[locale()].tag
 /** Children with the absent ones (null) left out, for `append` and `replaceChildren`. */
 const present = (...nodes: (Node | null)[]) => nodes.filter((n): n is Node => n !== null)
 
+/** Whether a wearable sits right on `pick`'s first form (`data/wearFits.ts`); the shop flags the ones that don't. Effects fit everyone. */
+const fits = (id: CosmeticId, pick: VersusPick) => !isWearableId(id) || fitsWearer(firstForm(pick).dex, id)
+
+/** Wearables' icons as image URLs, made once each from their models (`wearableIcon`) once the engine is in. */
+const icons = new Map<CosmeticId, string>()
+
+/** A card's art: the wearable itself, or its slot's icon (an effect, or a wearable while the engine loads). */
+const iconUrl = (id: CosmeticId) => {
+  const made = icons.get(id)
+  if (made) return made
+  const icon = isWearableId(id) ? wearableIcon(id) : null
+  if (!icon) return slotIconUrl(slotOf(id))
+  const url = icon.toDataURL()
+  icons.set(id, url)
+  return url
+}
+
 const itemName = (id: CosmeticId) => {
   const names: Record<string, string> = { ...t().wearables, ...t().arenaEffects }
   return names[id] ?? id
@@ -56,16 +81,40 @@ const gemAmount = (n: number, cls = '') => h('span', { class: `gem-amount ${cls}
 
 /* ---------------- The preview ---------------- */
 
+/** How the stage walks: px/s, how long it walks before an equipped emote plays (which lasts as in a match), and how often a spawn, KO or goal effect replays. */
+const STAGE = { speed: 60, walk: 4.2, emote: VERSUS.emote.keep, burst: 2.4 } as const
+
+/** A step of length 1 facing `dir` (`Dir8`: 0 south, 2 east), on screen. */
+const heading = (dir: Dir8) => {
+  const a = ((2 - dir) * Math.PI) / 4
+  return { x: Math.cos(a), y: Math.sin(a) }
+}
+
+const BURST_SLOTS = ['spawn', 'ko', 'goal'] as const satisfies readonly CosmeticSlot[]
+
 /**
- * A Pokémon on a little stage wearing `look()`: walking, and turning through
- * its 8 directions. Draws while it's on the page; `start` again after it
- * comes back (a tab switch).
+ * A Pokémon on a little stage wearing `look()`, with its effects
+ * (`createFxPreview`): it walks, turning through its 8 directions with the
+ * camera on it, so a trail falls behind and a follower trots after; every few
+ * seconds it plays its emote, and its spawn, KO and goal effects take turns.
+ * A plate frames its name and HP bar, and a title shows under the stage.
+ * `focus()` is the item being shown off: an emote plays on and on, a spawn,
+ * KO or goal effect replays. Draws while it's on the page; `start` again
+ * after it comes back (a tab switch), `dispose` with the hub.
  */
-const lookStage = (pick: () => VersusPick, look: () => ArenaLook, cls = '') => {
+const lookStage = (pick: () => VersusPick, look: () => ArenaLook, focus: () => CosmeticId | null, cls = '') => {
   const canvas = h('canvas', { class: 'gem-stage-canvas', width: 96, height: 88 })
-  const el = h('div', { class: `gem-stage ${cls}` }, canvas)
+  const title = h('div', { class: 'gem-stage-title' })
+  const el = h('div', { class: `gem-stage ${cls}` }, canvas, title)
+  const fx = createFxPreview()
   let loaded: { dex: Dex; sprites: SpeciesSprites | null } | null = null
   let raf = 0
+  let shownTitle: string | undefined
+  const at = { x: 0, y: 0 }
+  let last = -1
+  let walked = 0
+  let burstIn = 0.4
+  let burstTurn = 0
   const species = () => {
     const dex = firstForm(pick()).dex
     if (loaded?.dex !== dex) {
@@ -78,28 +127,88 @@ const lookStage = (pick: () => VersusPick, look: () => ArenaLook, cls = '') => {
   const frame = (ms: number) => {
     if (!canvas.isConnected) {
       raf = 0
+      last = -1
       return
     }
     raf = requestAnimationFrame(frame)
+    const seconds = ms / 1000
+    const dt = last < 0 ? 0 : Math.min(0.1, seconds - last)
+    last = seconds
+    const worn = look()
+    const shown = focus()
+    const show = shown ? equip(worn, shown) : worn
+    if (shownTitle !== show.title) {
+      shownTitle = show.title
+      title.replaceChildren(...present(titleChip(show.title)))
+    }
     const ctx = context2d(canvas)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     const s = species()
     if (!s) return
-    const seconds = ms / 1000
+    const dex = firstForm(pick()).dex
+    // It walks, then plays its emote; one being shown off plays on and on, and showing off anything else it just walks.
+    const showing = shown === null ? null : slotOf(shown)
+    const cycle = walked % (STAGE.walk + STAGE.emote)
+    const emoteFor = showing === 'emote' ? seconds : showing === null && show.emote !== undefined && cycle >= STAGE.walk ? cycle - STAGE.walk : null
+    walked += dt
     const dir = TURN_ORDER[Math.floor(seconds / TURN) % TURN_ORDER.length]!
-    // Small Pokémon get doubled (whole pixels), big ones stay 1:1.
-    const scale = s.bodyH * 2 <= canvas.height - 28 ? 2 : 1
-    const x = canvas.width / 2
-    const y = canvas.height - 12
-    const worn = look()
-    drawWearables(ctx, s, worn, 'Walk', dir, seconds, x, y, 'behind', { scale })
-    drawPokemon(ctx, s, 'Walk', dir, seconds, x, y, { scale })
-    drawWearables(ctx, s, worn, 'Walk', dir, seconds, x, y, 'front', { scale })
+    if (emoteFor === null) {
+      const step = heading(dir)
+      at.x += step.x * STAGE.speed * dt
+      at.y += step.y * STAGE.speed * dt
+    }
+    // Its spawn, KO and goal effects take turns (the one shown off, alone; none while showing off something else).
+    const bursts = showing === null ? BURST_SLOTS.flatMap((slot) => show[slot] ?? []) : (BURST_SLOTS as readonly CosmeticSlot[]).includes(showing) && shown ? [shown] : []
+    if (bursts.length > 0 && (burstIn -= dt) <= 0) {
+      burstIn = STAGE.burst
+      fx.burst(bursts[burstTurn++ % bursts.length], at.x, at.y)
+    }
+    fx.step(show, dex, at.x, at.y, emoteFor === null, emoteFor !== null, seconds)
+    const emote = emoteFor !== null ? fx.emote(show, dex, emoteFor) : null
+    // Small Pokémon get doubled (whole pixels), big ones stay 1:1; with effects around, they get the room.
+    const busy = show.follower !== undefined || show.trail !== undefined || bursts.length > 0
+    const scale = !busy && s.bodyH * 2 <= canvas.height - 28 ? 2 : 1
+    const cx = canvas.width / 2
+    const cy = busy ? Math.round(canvas.height * 0.68) : canvas.height - 12
+    ctx.save()
+    ctx.translate(cx - Math.round(at.x) * scale, cy - Math.round(at.y) * scale)
+    ctx.scale(scale, scale)
+    const x = Math.round(at.x)
+    const y = Math.round(at.y)
+    fx.drawGround(ctx, show, x, y, emoteFor)
+    fx.drawFollower(ctx, seconds, y, false)
+    // An emote's sheet plays bare: the wearables' anchors only cover Walk, Idle and Hurt (as in a match).
+    if (emote) drawPokemon(ctx, s, 'Idle', 0, emote.seconds, x, y, { sheet: emote.sheet, loop: emote.loop })
+    else {
+      drawWearables(ctx, s, show, 'Walk', dir, seconds, x, y, 'behind')
+      drawPokemon(ctx, s, 'Walk', dir, seconds, x, y)
+      drawWearables(ctx, s, show, 'Walk', dir, seconds, x, y, 'front')
+    }
+    fx.drawFollower(ctx, seconds, y, true)
+    fx.drawAir(ctx, seconds)
+    ctx.restore()
+    // A plate frames the name over its head and the HP bar under its feet, as in a match.
+    const plate = effectIn('plate', show.plate)?.plate
+    if (plate) {
+      const tag = textSprite(versusTag('', firstForm(pick()).name, 0), TEAM_LIGHT[0])
+      const top = cy - s.bodyH * scale - 12
+      blitPacked(ctx, tag, drawPlateTag(ctx, plate, cx, top, tag.w, seconds), top)
+      const w = 22
+      const bx = Math.round(cx - w / 2)
+      drawPlateBar(ctx, plate, bx, cy + 4, w, seconds)
+      ctx.fillStyle = TEAM_COLORS[0]
+      ctx.fillRect(bx, cy + 4, w, 2)
+    }
   }
   return {
     el,
     start: () => {
       if (raf === 0) raf = requestAnimationFrame(frame)
+    },
+    dispose: () => {
+      cancelAnimationFrame(raf)
+      raf = 0
+      fx.dispose()
     },
   }
 }
@@ -178,7 +287,7 @@ const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currenc
       busy = false
       playSfx('denied')
       status.classList.remove('blink')
-      status.textContent = res.why === 'busy' ? m.shop.busy : m.checkout.failed
+      status.textContent = res.why === 'busy' ? m.shop.busy : res.why === 'banned' ? m.shop.banned : m.checkout.failed
       buttons.forEach((b) => (b.disabled = false))
     })
   }
@@ -285,11 +394,11 @@ export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
   let modal = false
   let dialog: Screen | null = null
   let buying = false
-  let receipts: 'closed' | 'loading' | GemReceipt[] | null = 'closed'
+  let receipts: 'closed' | 'loading' | GemLedgerEntry[] | null = 'closed'
   let returning = checkout
 
   const worn = () => status?.look ?? {}
-  const stage = lookStage(ctx.pick, () => (chosen ? equip(worn(), chosen) : worn()))
+  const stage = lookStage(ctx.pick, worn, () => chosen)
   const el = h('div', { class: 'gem-shop' })
   const packsEl = h('section', { class: 'gem-packs' })
 
@@ -348,7 +457,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
               void fetchGems()
               return say(m.short(formatNumber(Math.max(1, price - (status?.balance ?? 0)))), true)
             }
-            say(res.why === 'owned' ? m.bought(itemName(id)) : res.why === 'busy' ? m.busy : m.offline, res.why !== 'owned')
+            say(res.why === 'owned' ? m.bought(itemName(id)) : { unsold: m.unsold, busy: m.busy, banned: m.banned, offline: m.offline }[res.why], res.why !== 'owned')
           })
         },
         { class: 'shop-confirm gem-confirm', yes: m.buy },
@@ -383,7 +492,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
     const owned = ownedSet(status).has(id)
     const on = worn()[slot] === id
     const price = cosmeticPrice(id)
-    const misfit = isWearable(slot) && !fitsPick(id, ctx.pick())
+    const misfit = !fits(id, ctx.pick())
     return h(
       'button',
       {
@@ -398,7 +507,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
           paint()
         },
       },
-      h('span', { class: 'gem-item-art' }, h('img', { src: slotIconUrl(slot), alt: '' })),
+      h('span', { class: 'gem-item-art' }, h('img', { src: iconUrl(id), alt: '' })),
       h('b', { class: 'gem-item-name' }, itemName(id)),
       h('small', { class: 'gem-item-tag' }, on ? m.equipped : owned ? m.owned : price === null ? m.unsold : gemAmount(price)),
       misfit ? h('em', { class: 'gem-item-misfit', title: m.misfit(firstForm(ctx.pick()).name) }, '!') : null,
@@ -415,7 +524,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
       { class: 'gem-info', style: `--rarity:${RARITY_COLORS[rarityOf(id)]}` },
       h('b', { class: 'gem-info-name' }, itemName(id)),
       h('small', { class: 'gem-info-kind' }, `${m.rarities[rarityOf(id)]} · ${m.slots[slot]}`),
-      isWearable(slot) ? (fitsPick(id, ctx.pick()) ? null : h('small', { class: 'gem-info-misfit' }, m.shop.misfit(firstForm(ctx.pick()).name))) : h('small', {}, m.shop.effect),
+      isWearable(slot) ? (fits(id, ctx.pick()) ? null : h('small', { class: 'gem-info-misfit' }, m.shop.misfit(firstForm(ctx.pick()).name))) : h('small', {}, m.shop.effect),
       act(id),
     )
   }
@@ -519,9 +628,11 @@ export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
 
   return {
     el,
-    dispose: () => (off(), dialog?.dispose()),
+    dispose: () => (off(), stage.dispose(), dialog?.dispose()),
     enter: () => {
       paint()
+      // The cards draw the wearables themselves once their engine is in.
+      if (icons.size === 0) void loadWearables().then(() => el.isConnected && paint(), () => undefined)
       if (signedIn()) void fetchGems()
       if (returning) {
         returning = false
@@ -540,7 +651,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: boolean): GemTab => {
 export const lockerTab = (ctx: GemTabsContext): GemTab => {
   let status = knownGems()
   let saving: 'idle' | 'saving' | 'saved' | 'local' = 'idle'
-  const stage = lookStage(ctx.pick, () => status?.look ?? {}, 'big')
+  const stage = lookStage(ctx.pick, () => status?.look ?? {}, () => null, 'big')
   const el = h('div', { class: 'gem-locker' })
 
   const wear = (look: ArenaLook) => {
@@ -581,7 +692,7 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
             onclick: () => !on && wear(id ? equip(look, id) : unequip(look, slot)),
           },
           id ? itemName(id) : m.locker.none,
-          id && isWearable(slot) && !fitsPick(id, ctx.pick()) ? h('em', { class: 'gem-item-misfit', title: m.shop.misfit(firstForm(ctx.pick()).name) }, '!') : null,
+          id && !fits(id, ctx.pick()) ? h('em', { class: 'gem-item-misfit', title: m.shop.misfit(firstForm(ctx.pick()).name) }, '!') : null,
         )
       }
       return h(
@@ -618,7 +729,7 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
 
   return {
     el,
-    dispose: off,
+    dispose: () => (off(), stage.dispose()),
     enter: () => {
       paint()
       if (gemsSignedIn()) void fetchGems()

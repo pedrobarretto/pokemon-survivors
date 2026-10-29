@@ -13,6 +13,7 @@ import { arenaIconUrl, tierBallUrl } from '../render/arenaArt'
 import { gemIconUrl, slotIconUrl } from '../render/gemArt'
 import type { VersusPick } from '../data/versus'
 import { gemChip, lockerTab, shopTab, type GemTab, type GemTabsContext } from './gemShop'
+import { onGems } from '../gems'
 import { portraitUrl } from '../render/sprites'
 import { firstForm, teamColor } from './arena'
 import { h, later } from './dom'
@@ -520,12 +521,20 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
 
   root.append(el)
   paint()
+  // The profile shows the title the account wears (`localLook`), which the gems' answer can bring after it painted.
+  let title = localLook().title
+  const offGems = onGems(() => {
+    if (localLook().title === title) return
+    title = localLook().title
+    if (current === 'profile') paint()
+  })
   return {
     el,
     dim: 0.55,
     dispose: () => {
       gone = true
       off()
+      offGems()
       gemTabs.shop?.dispose()
       gemTabs.locker?.dispose()
       el.remove()

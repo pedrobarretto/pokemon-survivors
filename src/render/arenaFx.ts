@@ -1,4 +1,5 @@
 import { effectIn, type BurstKind, type EmoteAnim, type EffectOf, type Flourish, type TrailKind } from '../data/arenaEffects'
+import type { ArenaLook } from '../data/arenaCosmetics'
 import { bodyOf } from '../data/bodies'
 import emoteManifest from '../data/emotes.generated.json'
 import { VERSUS } from '../data/versus'
@@ -696,17 +697,19 @@ const playing = (g: Game, p: Player) => {
  */
 export const arenaEmote = (g: Game, p: Player): { sheet: Sheet; seconds: number; loop: boolean } | null => {
   const e = p.versus ? playing(g, p) : null
-  if (!e) return null
-  const dex = formAt(p.starter, p.branch, p.stage).dex
-  const seconds = g.now - e.at
-  if (!e.def.sequence) {
-    const anim = emoteAnimOf(dex, e.def.anims)
+  return e ? emoteFrame(formAt(p.starter, p.branch, p.stage).dex, e.def, g.now - e.at) : null
+}
+
+/** What `dex` plays `seconds` into emote `def`: the sheet (loading it the first time), its clock and whether it loops; null while it loads. */
+const emoteFrame = (dex: number, def: EffectOf<'emote'>, seconds: number): { sheet: Sheet; seconds: number; loop: boolean } | null => {
+  if (!def.sequence) {
+    const anim = emoteAnimOf(dex, def.anims)
     const sheet = anim && emoteSheet(dex, anim)
-    return sheet ? { sheet, seconds, loop: e.def.once !== true } : null
+    return sheet ? { sheet, seconds, loop: def.once !== true } : null
   }
   // A sequence: each animation the species has, a loop each, round and round.
   const loops: Sheet[] = []
-  for (const anim of e.def.anims) {
+  for (const anim of def.anims) {
     if (emoteAnimOf(dex, [anim]) === null) continue
     const sheet = emoteSheet(dex, anim)
     if (!sheet) return null
@@ -990,3 +993,115 @@ export const victoryPose = (p: Player): { el: HTMLCanvasElement; dispose: () => 
     },
   }
 }
+
+/* ---------------- The shop's stage ---------------- */
+
+/** The preview that owns the particle pool outside a match (the last to step). */
+let previewing: object | null = null
+
+/**
+ * The gem shop's stage (`ui/gemShop.ts`): a look's effects around a Pokémon
+ * on a canvas of its own, out of any match. Its follower trots after it, its
+ * trail drops behind it while it walks, its emote plays (the sheet facing the
+ * camera, and the flourish) and a spawn, KO or goal effect plays on demand.
+ * It borrows the match's particle pool, so it steps nothing while a match
+ * holds it; the last preview to step owns it, and `dispose` lets go.
+ */
+export const createFxPreview = () => {
+  const me = {}
+  let follower: { id: string; view: CompanionView; float: boolean; legendary: boolean } | null = null
+  let last = -1
+  let trailIn = 0
+  let flourishIn = 0
+  let n = 0
+  const ribbon = { x: 0, y: 0, on: false }
+  const own = () => {
+    if (match) return false
+    if (previewing !== me) {
+      previewing = me
+      count = 0
+      for (const b of bursts) b.on = false
+      follower = null
+      last = -1
+    }
+    return true
+  }
+  return {
+    /**
+     * Steps to the clock `t` (seconds): `dex` stands at (x, y) wearing
+     * `look`, walking or not, `emoting` (its flourish throws) or not.
+     */
+    step: (look: ArenaLook, dex: number, x: number, y: number, moving: boolean, emoting: boolean, t: number) => {
+      if (!own()) return
+      const dt = last < 0 ? 0 : Math.max(0, Math.min(0.1, t - last))
+      last = t
+      const def = effectIn('follower', look.follower)
+      if (follower?.id !== look.follower) follower = def && look.follower ? { id: look.follower, view: createCompanion(def.dex, false, { x, y }), float: def.float === true, legendary: def.rarity === 'legendary' } : null
+      if (dt === 0) return
+      if (follower) stepCompanion(follower.view, { x, y }, dt)
+      const trail = effectIn('trail', look.trail)
+      const rule = trail && TRAILS[trail.trail]
+      if (rule?.gap && moving) {
+        if (!ribbon.on) Object.assign(ribbon, { x, y, on: true })
+        const d = Math.hypot(x - ribbon.x, y - ribbon.y)
+        const k = Math.min(8, Math.floor(d / rule.gap))
+        for (let i = 1; i <= k; i++) rule.emit(ribbon.x + ((x - ribbon.x) * i) / k, ribbon.y + ((y - ribbon.y) * i) / k, 0, i)
+        if (k > 0) Object.assign(ribbon, { x, y })
+      } else if (rule && moving && (trailIn -= dt) <= 0) {
+        trailIn = rule.every
+        rule.emit(x, y, 0, ++n)
+      } else if (!moving) ribbon.on = false
+      if (follower?.legendary && follower.view.moving && Math.random() < dt * 14) emit('glint', follower.view.x + rnd(10), follower.view.y - 14 - Math.random() * 8, 0, -10, 0.6, 0, 0, 0.66 + Math.random() * 0.3)
+      const emote = emoting ? effectIn('emote', look.emote) : null
+      if (emote && (flourishIn -= dt) <= 0) {
+        flourishIn = FLOURISHES[emote.flourish].every
+        FLOURISHES[emote.flourish].emit(x, y - bodyOf(dex).bodyH, 0, ++n)
+      }
+      stepParticles(dt)
+      for (const b of bursts) if (b.on && (b.age += dt) >= b.life) b.on = false
+    },
+    /** Plays spawn, KO or goal effect `id` at (x, y), in the blue team's colors. */
+    burst: (id: string | undefined, x: number, y: number) => {
+      const def = effectIn('spawn', id) ?? effectIn('ko', id) ?? effectIn('goal', id)
+      if (def && own()) startBurst(def.burst, x, y, 0)
+    },
+    /** What `dex` plays `seconds` into `look`'s emote (null: none, or its sheet still loading). */
+    emote: (look: ArenaLook, dex: number, seconds: number) => {
+      const def = effectIn('emote', look.emote)
+      return def ? emoteFrame(dex, def, def.once ? seconds % 2 : seconds) : null
+    },
+    /** The follower, at its feet: drawn before the Pokémon when it's behind (north of) `y`, after it otherwise. */
+    drawFollower: (ctx: Ctx, t: number, y: number, front: boolean) => {
+      const f = follower
+      if (!f || previewing !== me || f.view.y > y !== front) return
+      drawCompanion(ctx, f.view, t, f.float ? 9 + Math.round(Math.sin(t * 3) * 2) : 0)
+    },
+    /** Under the Pokémon: the trail, the bursts' rings and an emote's aura (`emoting` since `at`). */
+    drawGround: (ctx: Ctx, look: ArenaLook, x: number, y: number, emoting: number | null) => {
+      if (previewing !== me) return
+      for (const b of bursts) if (b.on) drawBurstGround(ctx, b)
+      if (emoting !== null && effectIn('emote', look.emote)?.flourish === 'aura') {
+        const k = (emoting * 2) % 1
+        ctx.globalAlpha = 1 - k
+        blitRing(ctx, 8 + k * 12, 1, '#f8d030', x, y)
+      }
+      for (let i = 0; i < count; i++) if (P.air[i] === 0) drawParticle(ctx, i, last)
+      ctx.globalAlpha = 1
+    },
+    /** Over the Pokémon: the bursts and the flourishes. */
+    drawAir: (ctx: Ctx, t: number) => {
+      if (previewing !== me) return
+      for (const b of bursts) if (b.on) drawBurstAir(ctx, b, t)
+      for (let i = 0; i < count; i++) if (P.air[i] === 1) drawParticle(ctx, i, t)
+      ctx.globalAlpha = 1
+    },
+    /** Lets go of the pool and the emote sheets (unless a match took them meanwhile). */
+    dispose: () => {
+      if (previewing !== me) return
+      previewing = null
+      if (!match) resetArenaFx()
+    },
+  }
+}
+
+export type FxPreview = ReturnType<typeof createFxPreview>

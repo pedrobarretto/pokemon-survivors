@@ -581,6 +581,7 @@ export const fr: Messages = {
       short: (n: string) => `Il te manque ${n} gemmes. Un pack, peut-être ?`,
       busy: 'Doucement ! Trop d’achats d’affilée. Réessaie dans une minute.',
       offline: 'La boutique est hors de portée pour le moment. Réessaie dans un instant.',
+      banned: 'Ce compte ne peut pas utiliser la boutique.',
       receipts: 'Reçus',
       receiptsEmpty: 'Rien pour l’instant.',
       reasons: { pack: 'Pack de gemmes', patreon: 'Patreon', play: 'Match dans l’Arène', buy: 'Achat', refund: 'Remboursement', dispute: 'Litige', disputeWon: 'Litige annulé', grant: 'Cadeau de l’équipe' },

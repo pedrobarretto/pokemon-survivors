@@ -581,6 +581,7 @@ export const en: Messages = {
       short: (n: string) => `You’re ${n} gems short. How about a pack?`,
       busy: 'Easy! Too many purchases in a row. Try again in a minute.',
       offline: 'The shop is out of reach right now. Try again in a moment.',
+      banned: "This account can't use the shop.",
       receipts: 'Receipts',
       receiptsEmpty: 'Nothing here yet.',
       reasons: { pack: 'Gem pack', patreon: 'Patreon', play: 'Arena match', buy: 'Purchase', refund: 'Refund', dispute: 'Dispute', disputeWon: 'Dispute reversed', grant: 'Gift from the team' },

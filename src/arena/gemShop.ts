@@ -83,21 +83,3 @@ export const ownedOnly = (look: ArenaLook, owned: ReadonlySet<CosmeticId>): Aren
 
 /** Whether two looks wear the same items. */
 export const sameLook = (a: ArenaLook, b: ArenaLook) => COSMETIC_SLOTS.every((slot) => a[slot] === b[slot])
-
-/**
- * Whether `id` sits right on the Arena's `pick`: a wearable lists the
- * Pokémon it doesn't fit in its entry's `misfits` (`data/wearables.ts`, a
- * hat on a Pokémon with no head to speak of), and the shop flags them.
- * Everything else fits everyone.
- */
-export const fitsPick = (id: CosmeticId, pick: string) => {
-  const def: CosmeticBase & { misfits?: readonly string[] } = ARENA_COSMETICS[id]
-  return !def.misfits?.includes(pick)
-}
-
-/** Why the receipts moved (`GET /gems/ledger`): a pack, a Patreon charge, an Arena match, a cosmetic, a refund or dispute taking a pack back, a dispute won, a grant by hand. */
-export const RECEIPT_REASONS = ['pack', 'patreon', 'play', 'buy', 'refund', 'dispute', 'disputeWon', 'grant'] as const
-
-export type ReceiptReason = (typeof RECEIPT_REASONS)[number]
-
-export const isReceiptReason = (v: unknown): v is ReceiptReason => typeof v === 'string' && (RECEIPT_REASONS as readonly string[]).includes(v)

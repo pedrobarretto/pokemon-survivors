@@ -8,10 +8,14 @@ import type { DayKey } from './day'
  */
 
 /** Why the ledger moved: a pack bought, a Patreon charge, an Arena match, a cosmetic bought, a refund or dispute taking a pack back, a dispute won giving it back, a grant by hand. */
-export type GemReason = 'pack' | 'patreon' | 'play' | 'buy' | 'refund' | 'dispute' | 'disputeWon' | 'grant'
+export const GEM_REASONS = ['pack', 'patreon', 'play', 'buy', 'refund', 'dispute', 'disputeWon', 'grant'] as const
+
+export type GemReason = (typeof GEM_REASONS)[number]
+
+export const isGemReason = (v: unknown): v is GemReason => typeof v === 'string' && (GEM_REASONS as readonly string[]).includes(v)
 
 /** `GET /gems`: the balance (negative after a refund of spent gems, which blocks buying), what the account owns and its equipped look. */
-export type GemsStatus = { balance: number; owned: CosmeticId[]; look: ArenaLook }
+export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; look: ArenaLook }
 
 /** One line of `GET /gems/ledger`: `amount` signed, `at` in ms. */
 export type GemLedgerEntry = { amount: number; reason: GemReason; ref: string; at: number }
@@ -20,7 +24,7 @@ export type GemLedgerEntry = { amount: number; reason: GemReason; ref: string; a
 export type GemCheckoutRequest = { pack: GemPackId; method: GemMethod; currency: GemCurrency }
 
 /** `POST /gems/buy`'s answer. */
-export type GemBuyResponse = { balance: number; owned: CosmeticId[] }
+export type GemBuyResponse = { balance: number; owned: readonly CosmeticId[] }
 
 /** Whether a cosmetic is free: price 0 counts as owned by every account. */
 export const isFree = (id: CosmeticId) => cosmeticPrice(id) === 0
