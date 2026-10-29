@@ -1,7 +1,8 @@
 import { blitCentered, blitEllipse, blitPacked, canvasCache, context2d, createCanvas, fromStrings, lazy, textSprite, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
-import { VALE, VERSUS, type Rect, type Team } from '../data/versus'
-import { channelTime, goalOpen } from '../game/versusRules'
+import { VERSUS, type Team } from '../data/versus'
+import { MAPS, type MapId, type MapLook, type Rect, type VersusMap } from '../data/versusMaps'
+import { channelTime, goalOpen, mapOf } from '../game/versusRules'
 import type { GoalState, VersusState } from '../game/versus'
 import type { Game, Player } from '../game/types'
 import { localPlayer } from '../game/players'
@@ -11,8 +12,9 @@ import { concealed } from './valeGrass'
 import { bannerOf, FLOWER_PATCHES, lampOf, LOG, MUSHROOMS, TALL_GRASS, TALL_GRASS_SMALL } from './valeDecor'
 
 /**
- * The Vale (Arena, `game/versus.ts`) on screen, draw-only: its floor baked in
- * 256 px tiles of code-authored pixel art (grass, the lanes' worn dirt paths,
+ * The Arena's maps (`data/versusMaps.ts`: the Vale, the Clareira) on screen,
+ * draw-only, all in the same kit (each map's `look` says where its parts
+ * lie): its floor baked in 256 px tiles of code-authored pixel art (grass, the lanes' worn dirt paths,
  * the darker jungle, the bases' flagstones tinted to their team, a hedge wall
  * around it all), the spawn pads and goal zones on the ground, the goals'
  * posts (standing among the Pokémon, `render/valeProps.ts`), the Energy
@@ -40,26 +42,74 @@ const mix = (a: RGB, b: RGB, k: number): RGB => [Math.round(a[0] + (b[0] - a[0])
 
 /* ---------------- The floor: what stands where ---------------- */
 
-/** Whether the world pixel (x, y) is on the Vale's floor (the union of `VALE.rects`). */
-export const onFloor = (x: number, y: number, rects: readonly Rect[] = VALE.rects) => {
+/** Whether the world pixel (x, y) is on a map's floor (the union of its `rects`). */
+export const onFloor = (rects: readonly Rect[], x: number, y: number) => {
   for (const r of rects) if (x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1) return true
   return false
 }
 
-/** Where the bases begin (|x|), and the lanes' paths (|y|). */
-const BASE_X = 540
-const LANE_Y = 295
-/** The passages' dirt columns, from the lanes into the jungle. */
-const PASSAGES = [-350, 0, 350] as const
-
 export type FloorZone = 'base' | 'lane' | 'jungle' | 'passage'
 
-/** Which part of the Vale a floor pixel belongs to. Pure, for the bake (and its test). */
-export const zoneAt = (x: number, y: number): FloorZone => {
-  if (x < -BASE_X || x >= BASE_X) return 'base'
-  if (y < -210 || y >= 210) return 'lane'
-  if (x >= -470 && x < 470 && y >= -160 && y < 160) return 'jungle'
+/** Which part of a map (by its `look`) a floor pixel belongs to. Pure, for the bake (and its test). */
+export const zoneAt = (look: MapLook, x: number, y: number): FloorZone => {
+  if (x < -look.baseX || x >= look.baseX) return 'base'
+  if (y < -look.laneFrom || y >= look.laneFrom) return 'lane'
+  const j = look.jungle
+  if (x >= j.x0 && x < j.x1 && y >= j.y0 && y < j.y1) return 'jungle'
   return 'passage'
+}
+
+/** A camp's nest on the ground (its trampled floor and pebble ring), sized to what stands there. */
+type Nest = { x: number; y: number; r: number }
+
+/** A decor sprite baked into the floor with its top left at (x, y). */
+type Decor = { sprite: () => PixelSprite; x: number; y: number }
+
+/**
+ * What the bake knows of a map, worked out once per map: its data, the
+ * camps' nests, the spots on the lanes' paths the chevrons keep clear of
+ * (|x| and how far), the box of its floor, its decor and its floor tiles.
+ */
+type Painter = {
+  id: MapId
+  map: VersusMap
+  look: MapLook
+  nests: readonly Nest[]
+  clear: readonly { x: number; r: number }[]
+  bounds: Rect
+  /** The spawn pads' |x|: the carpet's arm runs from the gate to it. */
+  pad: number
+  decor: () => Decor[]
+  tiles: () => readonly (readonly [number, number])[]
+}
+
+const painters = new Map<MapId, Painter>()
+
+const painterOf = (id: MapId): Painter => {
+  const known = painters.get(id)
+  if (known) return known
+  const map = MAPS[id]
+  const look = map.look
+  const nests = map.camps.map((c) => ({ x: c.x, y: c.y, r: c.species === 'ludicolo' ? 24 : 14 + c.count * 2 }))
+  const onPath = (y: number) => Math.abs(Math.abs(y) - look.laneY) < 30
+  const P: Painter = {
+    id,
+    map,
+    look,
+    nests,
+    clear: [...map.goals.filter((goal) => onPath(goal.y)).map((goal) => ({ x: Math.abs(goal.x), r: goal.r + 12 })), ...nests.filter((n) => onPath(n.y)).map((n) => ({ x: Math.abs(n.x), r: n.r + 8 }))],
+    bounds: {
+      x0: Math.min(...map.rects.map((r) => r.x0)),
+      y0: Math.min(...map.rects.map((r) => r.y0)),
+      x1: Math.max(...map.rects.map((r) => r.x1)),
+      y1: Math.max(...map.rects.map((r) => r.y1)),
+    },
+    pad: Math.abs(map.spawn[1].x),
+    decor: lazy(() => decorOf(P)),
+    tiles: lazy(() => floorTilesOf(P)),
+  }
+  painters.set(id, P)
+  return P
 }
 
 /* ---------------- Noise ---------------- */
@@ -144,26 +194,30 @@ const dirtAt = (x: number, y: number, out: number[]) => {
  * 0): the lanes' paths along their middle, the passages' columns from the
  * lanes into the jungle, and the ways from each base into the jungle.
  */
-const pathDepth = (x: number, y: number) => {
+const pathDepth = (look: MapLook, x: number, y: number) => {
   let best = -Infinity
-  if (Math.abs(y) >= 200) {
+  if (Math.abs(y) >= look.laneFrom - 10) {
     const half = 17 + noise1(x, 18, 41) * 8
-    best = Math.max(best, half - Math.abs(Math.abs(y) - LANE_Y))
+    best = Math.max(best, half - Math.abs(Math.abs(y) - look.laneY))
   }
   const ay = Math.abs(y)
-  if (ay >= 136 && ay <= LANE_Y) {
-    for (const cx of PASSAGES) {
+  if (ay >= look.passageFrom && ay <= look.laneY) {
+    for (const cx of look.passages) {
       const half = 16 + noise1(y, 14, 42 + cx) * 7
       best = Math.max(best, half - Math.abs(x - cx))
     }
   }
   const ax = Math.abs(x)
-  if (ax >= 430 && ax <= 560) best = Math.max(best, 15 + noise1(x, 12, 43) * 6 - Math.abs(y))
+  if (ax >= look.mouth[0] && ax <= look.mouth[1]) best = Math.max(best, 15 + noise1(x, 12, 43) * 6 - Math.abs(y))
   return best
 }
 
-/** The bases' plaza (|x|, |y|): the carpet's spine north–south, its arms out to both lanes and from the pad to the jungle, and the ball emblems on it. */
-const PLAZA = { spine: 645, half: 10, reach: 295, gate: 540, pad: 700, emblemY: 175, emblemR: 24 } as const
+/**
+ * The bases' carpet (px): its half width and the ball emblems' radius. It
+ * runs north–south along the look's spine to both lanes' paths, and out from
+ * the gate (where the base begins) to the spawn pad.
+ */
+const PLAZA = { half: 10, emblemR: 24 } as const
 const GOLD = { lit: hex('#f0d070'), main: hex('#d8a840'), dark: hex('#7a5a28') }
 const INK = hex('#282830')
 const CREAM = { lit: hex('#fbf6ea'), main: hex('#ece2cc'), dark: hex('#c8bca0') }
@@ -171,8 +225,12 @@ const WHITE = hex('#ffffff')
 const CARPETS = TINTS.map((c) => ({ main: mix(c, hex('#1c1c2c'), 0.38), lit: mix(c, WHITE, 0.18) }))
 
 /** How deep (ax, ay) sits in a base's carpet (> 0 inside, its half width at the middle) and how far along it, or null off it. */
-const carpetAt = (ax: number, ay: number): { depth: number; along: number } | null => {
-  const { spine, half, reach, gate, pad } = PLAZA
+const carpetAt = (P: Painter, ax: number, ay: number): { depth: number; along: number } | null => {
+  const { half } = PLAZA
+  const { spine } = P.look.plaza
+  const reach = P.look.laneY
+  const gate = P.look.baseX
+  const pad = P.pad
   let best: { depth: number; along: number } | null = null
   const take = (depth: number, along: number) => {
     if (depth >= 0 && (!best || depth > best.depth)) best = { depth, along }
@@ -211,12 +269,13 @@ const MOSS = hex('#6a9a4a')
  * the grout here and there), the team's carpet with gold trim and a diamond
  * weave from the spawn pad to every exit, and the ball emblems on it.
  */
-const plazaAt = (x: number, y: number, out: number[]) => {
+const plazaAt = (P: Painter, x: number, y: number, out: number[]) => {
   const team: Team = x < 0 ? 0 : 1
   const ax = Math.abs(x)
   const ay = Math.abs(y)
-  if (emblemAt(ax - PLAZA.spine, y - (y < 0 ? -PLAZA.emblemY : PLAZA.emblemY), team, out)) return
-  const carpet = carpetAt(ax, ay)
+  const { spine, emblemY } = P.look.plaza
+  if (emblemAt(ax - spine, y - (y < 0 ? -emblemY : emblemY), team, out)) return
+  const carpet = carpetAt(P, ax, ay)
   if (carpet) {
     const { depth, along } = carpet
     if (depth < 1) return set(out, GOLD.dark)
@@ -271,14 +330,12 @@ const centerAt = (x: number, y: number, out: number[]) => {
   return true
 }
 
-/** Each camp's nest (its trampled ground and pebble ring), sized to what stands there. */
-const NESTS = VALE.camps.map((c) => ({ x: c.x, y: c.y, r: c.species === 'ludicolo' ? 24 : 14 + c.count * 2 }))
 const PEBBLE = { lit: hex('#d8d4c8'), main: hex('#9e9a90'), dark: hex('#5e5c58') }
 const TRAMPLE = hex('#6e5a38')
 
 /** Over a camp's nest, the floor gets trampled and a ring of pebbles. */
-const nestAt = (x: number, y: number, out: number[]) => {
-  for (const n of NESTS) {
+const nestAt = (P: Painter, x: number, y: number, out: number[]) => {
+  for (const n of P.nests) {
     const dx = x - n.x
     const dy = y - n.y
     if (Math.abs(dx) > n.r + 1 || Math.abs(dy) > n.r + 1) continue
@@ -293,13 +350,14 @@ const nestAt = (x: number, y: number, out: number[]) => {
 }
 
 /** The lanes' paths: faint chevrons in each half's team color, pointing at the rival side, and the midline. */
-const chevronAt = (x: number, y: number, out: number[]) => {
-  const v = Math.abs(y) - LANE_Y
-  if (Math.abs(v) > 6 || Math.abs(x) > 500) return
+const chevronAt = (P: Painter, x: number, y: number, out: number[]) => {
+  const v = Math.abs(y) - P.look.laneY
+  if (Math.abs(v) > 6 || Math.abs(x) > P.look.baseX - 40) return
   if (Math.abs(x) < 1) return mixInto(out, out, STONE.lit, hash2(0, y, 60) < 0.8 ? 0.7 : 0.3)
   const ax = Math.abs(x)
-  // Clear of the goals and camps on the path.
-  if (Math.abs(ax - 420) < 46 || Math.abs(ax - 250) < 26 || ax < 34) return
+  // Clear of the midline and of the goals and camps on the path.
+  if (ax < 34) return
+  for (const c of P.clear) if (Math.abs(ax - c.x) < c.r) return
   // Apex toward the middle: each half's chevrons point the way its team attacks.
   const u = (((ax - 18) % 70) + 70) % 70
   const k = u - 30 - Math.abs(v)
@@ -358,80 +416,83 @@ const mixInto = (out: number[], a: RGB | number[], b: RGB, k: number) => {
 }
 
 /** A floor pixel's color before the hedge's shadows. */
-const floorAt = (x: number, y: number, out: number[]) => {
-  const zone = zoneAt(x, y)
-  if (zone === 'base') return plazaAt(x, y, out)
-  if (zone === 'jungle' && centerAt(x, y, out)) return
-  const depth = pathDepth(x, y)
+const floorAt = (P: Painter, x: number, y: number, out: number[]) => {
+  const zone = zoneAt(P.look, x, y)
+  if (zone === 'base') return plazaAt(P, x, y, out)
+  if (zone === 'jungle' && centerAt(x - P.map.center.x, y - P.map.center.y, out)) return
+  const depth = pathDepth(P.look, x, y)
   // The path's edge frays: grass and dirt dither over a couple of pixels.
   if (depth > 1.5 || (depth > -1.5 && hash2(x, y, 44) < (depth + 1.5) / 3)) {
     dirtAt(x, y, out)
-    if (zone === 'lane') chevronAt(x, y, out)
+    if (zone === 'lane') chevronAt(P, x, y, out)
   } else grassAt(x, y, zone === 'jungle', out)
-  nestAt(x, y, out)
+  nestAt(P, x, y, out)
 }
 
 /* ---------------- Decor ---------------- */
 
-/** A decor sprite baked into the floor with its top left at (x, y). */
-type Decor = { sprite: () => PixelSprite; x: number; y: number }
-
 /** Spots decor stays off: the goals, the pads, the camps, the center, the cover and the paths. */
-const keepsClear = (x: number, y: number, r: number) => {
-  for (const goal of VALE.goals) if (Math.hypot(x - goal.x, y - goal.y) < goal.r + r + 6) return true
-  for (const pad of VALE.spawn) if (Math.hypot(x - pad.x, y - pad.y) < VERSUS.spawnPad.r + r + 6) return true
-  for (const n of NESTS) if (Math.hypot(x - n.x, y - n.y) < n.r + r + 8) return true
-  for (const s of VALE.solids) if (Math.hypot(x - s.x, y - s.y) < r + 22) return true
-  if (Math.hypot(x, y) < CENTER.outer + r + 10) return true
-  return pathDepth(x, y) > -r - 4
+const keepsClear = (P: Painter, x: number, y: number, r: number) => {
+  const map = P.map
+  for (const goal of map.goals) if (Math.hypot(x - goal.x, y - goal.y) < goal.r + r + 6) return true
+  for (const pad of map.spawn) if (Math.hypot(x - pad.x, y - pad.y) < VERSUS.spawnPad.r + r + 6) return true
+  for (const n of P.nests) if (Math.hypot(x - n.x, y - n.y) < n.r + r + 8) return true
+  for (const s of map.solids) if (Math.hypot(x - s.x, y - s.y) < r + 22) return true
+  if (Math.hypot(x - map.center.x, y - map.center.y) < CENTER.outer + r + 10) return true
+  return pathDepth(P.look, x, y) > -r - 4
 }
 
 /** Whether a sprite `w`×`h` at top left (x, y) lies wholly on the floor, a few px clear of the hedge. */
-const fits = (x: number, y: number, w: number, h: number) => onFloor(x - 3, y - 3) && onFloor(x + w + 3, y - 3) && onFloor(x - 3, y + h + 3) && onFloor(x + w + 3, y + h + 3)
+const fits = (P: Painter, x: number, y: number, w: number, h: number) => {
+  const rects = P.map.rects
+  return onFloor(rects, x - 3, y - 3) && onFloor(rects, x + w + 3, y - 3) && onFloor(rects, x - 3, y + h + 3) && onFloor(rects, x + w + 3, y + h + 3)
+}
 
 /**
- * Every piece of decor, placed once: each base's banners on the hedge behind
- * it and lamps round its plaza, tall grass in the jungle, flowers on the
- * lanes' verges, mushrooms by the hedge and two fallen logs. Hashed spots,
- * the same on every device.
+ * Every piece of decor on a map, placed once: each base's banners on the
+ * hedge behind it and lamps round its plaza, tall grass in the jungle,
+ * flowers on the lanes' verges, mushrooms by the hedge and the fallen logs.
+ * Hashed spots, the same on every device.
  */
-const DECOR = lazy((): Decor[] => {
+const decorOf = (P: Painter): Decor[] => {
+  const { look, bounds } = P
   const out: Decor[] = []
   for (const team of [0, 1] as const) {
     const sx = team === 0 ? -1 : 1
-    for (const ax of [585, 705]) out.push({ sprite: () => bannerOf(team), x: sx * ax - 5, y: -386 })
-    for (const [ax, ay] of [[566, 140], [728, 140], [566, -140], [728, -140]] as const) out.push({ sprite: () => lampOf(team), x: sx * ax - 3, y: ay - 13 })
+    for (const ax of look.banners.xs) out.push({ sprite: () => bannerOf(team), x: sx * ax - 5, y: look.banners.y })
+    for (const [ax, ay] of look.lamps) out.push({ sprite: () => lampOf(team), x: sx * ax - 3, y: ay - 13 })
   }
-  for (const [x, y] of [[-96, -132], [92, 126]] as const) out.push({ sprite: LOG, x, y })
+  for (const [x, y] of look.logs) out.push({ sprite: LOG, x, y })
   const grass = [TALL_GRASS, TALL_GRASS_SMALL] as const
-  for (let cy = -160; cy < 160; cy += 26) {
-    for (let cx = -470; cx < 470; cx += 30) {
+  const j = look.jungle
+  for (let cy = j.y0; cy < j.y1; cy += 26) {
+    for (let cx = j.x0; cx < j.x1; cx += 30) {
       const h = hash2(cx, cy, 91)
       if (h > 0.5) continue
       const x = cx + Math.floor(hash2(cx, cy, 92) * 18)
       const y = cy + Math.floor(hash2(cx, cy, 93) * 14)
       const sprite = grass[h < 0.2 ? 1 : 0]
-      if (zoneAt(x, y) !== 'jungle' || keepsClear(x + 6, y + 4, 8) || !fits(x, y, 12, 8)) continue
+      if (zoneAt(look, x, y) !== 'jungle' || keepsClear(P, x + 6, y + 4, 8) || !fits(P, x, y, 12, 8)) continue
       out.push({ sprite, x, y })
     }
   }
-  for (let cy = -380; cy < 380; cy += 22) {
-    if (Math.abs(cy) < 200) continue
-    for (let cx = -540; cx < 540; cx += 34) {
+  for (let cy = bounds.y0; cy < bounds.y1; cy += 22) {
+    if (Math.abs(cy) < look.laneFrom - 10) continue
+    for (let cx = -look.baseX; cx < look.baseX; cx += 34) {
       const h = hash2(cx, cy, 94)
       if (h > 0.2) continue
       const x = cx + Math.floor(hash2(cx, cy, 95) * 20)
       const y = cy + Math.floor(hash2(cx, cy, 96) * 12)
-      if (zoneAt(x, y) !== 'lane' || keepsClear(x + 3, y + 3, 4) || !fits(x, y, 7, 7)) continue
+      if (zoneAt(look, x, y) !== 'lane' || keepsClear(P, x + 3, y + 3, 4) || !fits(P, x, y, 7, 7)) continue
       out.push({ sprite: h < 0.04 ? MUSHROOMS : () => FLOWER_PATCHES()[Math.floor(hash2(cx, cy, 97) * 3)]!, x, y })
     }
   }
   return out
-})
+}
 
 /** Bakes the decor overlapping the tile at world (ox, oy) onto it. */
-const stampDecor = (ctx: CanvasRenderingContext2D, ox: number, oy: number) => {
-  for (const d of DECOR()) {
+const stampDecor = (P: Painter, ctx: CanvasRenderingContext2D, ox: number, oy: number) => {
+  for (const d of P.decor()) {
     const s = d.sprite()
     if (d.x + s.width <= ox || d.x >= ox + TILE || d.y + s.height <= oy || d.y >= oy + TILE) continue
     ctx.drawImage(s, d.x - ox, d.y - oy)
@@ -446,18 +507,18 @@ const M = 8
 const SPAN = TILE + M * 2
 
 /** Whether a tile (`tx`, `ty` in tiles) has no floor within `M` px: all hedge, the shared tile. */
-const pureHedge = (tx: number, ty: number) => {
+const pureHedge = (P: Painter, tx: number, ty: number) => {
   const x0 = tx * TILE - M
   const y0 = ty * TILE - M
   const x1 = x0 + SPAN
   const y1 = y0 + SPAN
-  return !VALE.rects.some((r) => r.x0 < x1 && r.x1 > x0 && r.y0 < y1 && r.y1 > y0)
+  return !P.map.rects.some((r) => r.x0 < x1 && r.x1 > x0 && r.y0 < y1 && r.y1 > y0)
 }
 
-/** Bakes the tile whose top left is world (ox, oy); `pure`: no floor at all. */
-const bake = (ox: number, oy: number, pure: boolean) => {
+/** Bakes `P`'s tile whose top left is world (ox, oy), or (`P` null) the all-hedge tile every map shares. */
+const bake = (P: Painter | null, ox: number, oy: number) => {
   const mask = new Uint8Array(SPAN * SPAN)
-  if (!pure) for (let py = 0; py < SPAN; py++) for (let px = 0; px < SPAN; px++) mask[py * SPAN + px] = onFloor(ox + px - M, oy + py - M) ? 1 : 0
+  if (P) for (let py = 0; py < SPAN; py++) for (let px = 0; px < SPAN; px++) mask[py * SPAN + px] = onFloor(P.map.rects, ox + px - M, oy + py - M) ? 1 : 0
   const at = (px: number, py: number) => mask[(py + M) * SPAN + px + M] === 1
   const canvas = createCanvas(TILE, TILE)
   const ctx = context2d(canvas)
@@ -467,8 +528,8 @@ const bake = (ox: number, oy: number, pure: boolean) => {
     for (let px = 0; px < TILE; px++) {
       const x = ox + px
       const y = oy + py
-      if (at(px, py)) {
-        floorAt(x, y, c)
+      if (P && at(px, py)) {
+        floorAt(P, x, y, c)
         // The hedge casts a shadow down onto the floor below it, and a thin one at its other edges.
         let north = 0
         for (let d = 1; d <= 6 && !north; d++) if (!at(px, py - d)) north = d
@@ -497,52 +558,62 @@ const bake = (ox: number, oy: number, pure: boolean) => {
     }
   }
   ctx.putImageData(img, 0, 0)
-  if (!pure) stampDecor(ctx, ox, oy)
+  if (P) stampDecor(P, ctx, ox, oy)
   return canvas
 }
 
+/** The baked tiles of one map (`tilesOf`): a match on another map drops them first. */
 const tiles = canvasCache<number, HTMLCanvasElement>()
+let tilesOf: MapId | null = null
 const keyOf = (tx: number, ty: number) => (tx + 512) * 1024 + (ty + 512)
-const HEDGE_TILE = lazy(() => bake(0, 0, true))
+const HEDGE_TILE = lazy(() => bake(null, 0, 0))
 
-const tileAt = (tx: number, ty: number) => {
-  if (pureHedge(tx, ty)) return HEDGE_TILE()
+const tileAt = (P: Painter, tx: number, ty: number) => {
+  if (pureHedge(P, tx, ty)) return HEDGE_TILE()
+  if (tilesOf !== P.id) {
+    dropVale()
+    tilesOf = P.id
+  }
   const key = keyOf(tx, ty)
   let tile = tiles.get(key)
-  if (!tile) tiles.set(key, (tile = bake(tx * TILE, ty * TILE, false)))
+  if (!tile) tiles.set(key, (tile = bake(P, tx * TILE, ty * TILE)))
   return tile
 }
 
-/** Every tile with floor in it, nearest the middle first. */
-const FLOOR_TILES = (() => {
-  const x0 = Math.floor((Math.min(...VALE.rects.map((r) => r.x0)) - M) / TILE)
-  const x1 = Math.floor((Math.max(...VALE.rects.map((r) => r.x1)) + M) / TILE)
-  const y0 = Math.floor((Math.min(...VALE.rects.map((r) => r.y0)) - M) / TILE)
-  const y1 = Math.floor((Math.max(...VALE.rects.map((r) => r.y1)) + M) / TILE)
+/** Every tile of a map with floor in it, nearest the middle first. */
+const floorTilesOf = (P: Painter) => {
+  const b = P.bounds
+  const x0 = Math.floor((b.x0 - M) / TILE)
+  const x1 = Math.floor((b.x1 + M) / TILE)
+  const y0 = Math.floor((b.y0 - M) / TILE)
+  const y1 = Math.floor((b.y1 + M) / TILE)
   const out: [number, number][] = []
-  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (!pureHedge(tx, ty)) out.push([tx, ty])
+  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (!pureHedge(P, tx, ty)) out.push([tx, ty])
   return out.sort((a, b) => Math.hypot(a[0] + 0.5, a[1] + 0.5) - Math.hypot(b[0] + 0.5, b[1] + 0.5))
-})()
+}
 
-/** Bakes one of the Vale's tiles not baked yet (idle time, `warmScenery`), so walking into one never stalls a frame. True if it baked one. */
-export const warmVale = () => {
-  const missing = FLOOR_TILES.find(([tx, ty]) => !tiles.has(keyOf(tx, ty)))
+/** Bakes one of `map`'s tiles not baked yet (idle time, `warmScenery`), so walking into one never stalls a frame. True if it baked one. */
+export const warmVale = (map: MapId) => {
+  const P = painterOf(map)
+  const missing = tilesOf === map ? P.tiles().find(([tx, ty]) => !tiles.has(keyOf(tx, ty))) : P.tiles()[0]
   if (!missing) return false
-  tileAt(missing[0], missing[1])
+  tileAt(P, missing[0], missing[1])
   return true
 }
 
-/** Frees the Vale's tiles (about 0.25 MB each) once no match is on. */
+/** Frees the baked tiles (about 0.25 MB each) once no match is on. */
 export const dropVale = () => {
+  tilesOf = null
   if (tiles.size === 0) return
   for (const tile of tiles.values()) tile.width = tile.height = 0
   tiles.clear()
 }
 
-/** The Vale's floor for the view at (camX, camY), `w`×`h` (whole px). Replaces the map's ground in a match. */
-export const drawValeFloor = (ctx: Ctx, camX: number, camY: number, w: number, h: number) => {
+/** `map`'s floor for the view at (camX, camY), `w`×`h` (whole px). Replaces the world's ground in a match. */
+export const drawValeFloor = (ctx: Ctx, map: MapId, camX: number, camY: number, w: number, h: number) => {
+  const P = painterOf(map)
   for (let ty = Math.floor(camY / TILE); ty <= Math.floor((camY + h - 1) / TILE); ty++) {
-    for (let tx = Math.floor(camX / TILE); tx <= Math.floor((camX + w - 1) / TILE); tx++) ctx.drawImage(tileAt(tx, ty), tx * TILE - camX, ty * TILE - camY)
+    for (let tx = Math.floor(camX / TILE); tx <= Math.floor((camX + w - 1) / TILE); tx++) ctx.drawImage(tileAt(P, tx, ty), tx * TILE - camX, ty * TILE - camY)
   }
 }
 
@@ -781,7 +852,7 @@ const PADLOCK = lazy(() =>
 export const drawValeZones = (ctx: Ctx, g: Game, t: number) => {
   const s = g.versus
   if (!s) return
-  VALE.spawn.forEach((pad, team) => {
+  mapOf(s).spawn.forEach((pad, team) => {
     const art = valeArt(`spawn-pad-${teamFile(team as Team)}`)
     if (art) ctx.drawImage(art, Math.round(pad.x - art.width / 2), Math.round(pad.y - art.height / 2))
     else blitCentered(ctx, zoneSprite(team as Team, 'pad', VERSUS.spawnPad.r), pad.x, pad.y)

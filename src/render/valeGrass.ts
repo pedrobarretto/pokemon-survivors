@@ -1,7 +1,8 @@
 import { canvasCache, context2d, createCanvas, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
-import { VALE, type Rect } from '../data/versus'
+import { MAPS, type MapId, type Rect } from '../data/versusMaps'
 import { patchAt } from '../game/versusGrass'
+import { mapOf } from '../game/versusRules'
 import type { Game, Player } from '../game/types'
 import { localPlayer } from '../game/players'
 import { CLUMPS, valeArt, valeArtMirrored, type Clump, type ClumpFrame } from './arenaArt'
@@ -112,7 +113,13 @@ const spotsOf = (r: Rect, i: number): Spot[] => {
   return out
 }
 
-const SPOTS = VALE.grass.map(spotsOf)
+/** Each map's patches' clumps, laid out the first time the map shows. */
+const spots = new Map<MapId, Spot[][]>()
+const spotsFor = (map: MapId) => {
+  let s = spots.get(map)
+  if (!s) spots.set(map, (s = MAPS[map].grass.map(spotsOf)))
+  return s
+}
 
 const clumpArt = (s: Spot, frame: ClumpFrame) => (s.flip ? valeArtMirrored(`grass-${s.clump}${frame}`) : valeArt(`grass-${s.clump}${frame}`))
 
@@ -131,7 +138,7 @@ const rustling = (g: Game, viewer: Player, s: Spot, i: number) => {
 
 /** Patch `i`'s clumps, swaying in a wave across it (`FPS`), the ones walked through on their rustle frame. */
 const drawClumps = (ctx: Ctx, g: Game, viewer: Player, i: number, t: number) => {
-  for (const s of SPOTS[i]!) {
+  for (const s of spotsFor(g.versus!.map)[i]!) {
     const frame: ClumpFrame = rustling(g, viewer, s, i) ? '-rustle' : (Math.floor(t * FPS - s.x / 48) & 1) === 1 ? '-sway' : ''
     const art = clumpArt(s, frame)
     if (art) ctx.drawImage(art, s.x - (art.width >> 1), s.y - art.height)
@@ -140,16 +147,18 @@ const drawClumps = (ctx: Ctx, g: Game, viewer: Player, i: number, t: number) => 
 
 /** Every patch in view (`visible`), swaying: on the ground, under the Pokémon. */
 export const drawGrassPatches = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
+  const s = g.versus
+  if (!s) return
   const painted = clumpsLoaded()
   const viewer = localPlayer(g)
-  VALE.grass.forEach((r, i) => {
+  mapOf(s).grass.forEach((r, i) => {
     if (!visible((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2, 80)) return
     if (painted) return drawClumps(ctx, g, viewer, i, t)
     const f = frameAt(t, i)
-    const key = `${i}:${f}`
-    let s = patches.get(key)
-    if (!s) patches.set(key, (s = bakePatch(r, i, f)))
-    ctx.drawImage(s, r.x0, r.y0 - TALL)
+    const key = `${s.map}:${i}:${f}`
+    let patch = patches.get(key)
+    if (!patch) patches.set(key, (patch = bakePatch(r, i, f)))
+    ctx.drawImage(patch, r.x0, r.y0 - TALL)
   })
 }
 
@@ -161,9 +170,9 @@ export const concealed = (viewer: Player, p: Player) => p.versus?.hidden === tru
  * Pokémon of the viewer's team (themselves too) shows faint while hidden and
  * half-faint once a rival sees it; a rival drawn there is in plain sight.
  */
-export const grassAlpha = (viewer: Player | null, p: Player) => {
+export const grassAlpha = (g: Game, viewer: Player | null, p: Player) => {
   const v = p.versus
-  if (!v || !viewer?.versus || v.team !== viewer.versus.team || patchAt(p.x, p.y) < 0) return 1
+  if (!v || !g.versus || !viewer?.versus || v.team !== viewer.versus.team || patchAt(mapOf(g.versus).grass, p.x, p.y) < 0) return 1
   return v.hidden ? 0.5 : 0.8
 }
 
@@ -172,10 +181,10 @@ export const grassAlpha = (viewer: Player | null, p: Player) => {
  * width): a row of blades, cut to its patch's sides; walking (`moving`), they
  * shake and leaves flick off them. Nothing outside the grass.
  */
-export const drawGrassFront = (ctx: Ctx, x: number, y: number, bodyW: number, t: number, moving: boolean, seed: number) => {
-  const i = patchAt(x, y)
+export const drawGrassFront = (ctx: Ctx, grass: readonly Rect[], x: number, y: number, bodyW: number, t: number, moving: boolean, seed: number) => {
+  const i = patchAt(grass, x, y)
   if (i < 0) return
-  const r = VALE.grass[i]!
+  const r = grass[i]!
   const w = Math.max(14, Math.round(bodyW) + 8)
   const f = moving ? Math.floor(t * 12 + seed) % FRAMES : frameAt(t, i)
   const key = `${w}:${f}`

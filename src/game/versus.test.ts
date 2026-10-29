@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { VALE, VERSUS } from '../data/versus'
+import { VERSUS, VERSUS_FORMATS } from '../data/versus'
+import { GLADE, VALE } from '../data/versusMaps'
 import { stepTick } from './lockstep'
 import { actAs } from './players'
 import { restore, snapshot, stateHash } from './snapshot'
@@ -22,14 +23,22 @@ describe('seatMatch', () => {
     expect(seats.slice(0, 2)).toMatchObject([{ name: 'ash', team: 1, bot: false }, { name: 'misty', team: 0, bot: false }])
     for (const team of [0, 1]) {
       const mine = seats.filter((s) => s.team === team)
-      expect(mine).toHaveLength(VERSUS.teamSize)
-      expect(new Set(mine.map((s) => s.starter)).size).toBe(VERSUS.teamSize)
+      expect(mine).toHaveLength(4)
+      expect(new Set(mine.map((s) => s.starter)).size).toBe(4)
     }
   })
 
   it('sends a human to the other team when theirs is full', () => {
-    const humans = Array.from({ length: VERSUS.teamSize + 1 }, (_, i) => ({ starter: 'charmander' as const, name: `p${i}`, team: 0 as const }))
-    expect(seatMatch(1, humans)[VERSUS.teamSize]!.team).toBe(1)
+    const humans = Array.from({ length: 5 }, (_, i) => ({ starter: 'charmander' as const, name: `p${i}`, team: 0 as const }))
+    expect(seatMatch(1, humans)[4]!.team).toBe(1)
+  })
+
+  it('seats three a side for a 3v3, leaving out humans past both teams', () => {
+    const humans = Array.from({ length: 7 }, (_, i) => ({ starter: 'charmander' as const, name: `p${i}` }))
+    const seats = seatMatch(2, humans, 3)
+    expect(seats).toHaveLength(6)
+    expect(seats.filter((s) => s.team === 0)).toHaveLength(3)
+    expect(seats.every((s) => !s.bot)).toBe(true)
   })
 })
 
@@ -96,11 +105,37 @@ describe('a match', () => {
     expect(goalOpen(s, base)).toBe(true)
   })
 
+  it('plays a 3v3 on the Clareira on its own clock: two goals a side, Drednaw at its time, the stretch for the last minute', () => {
+    const g = createVersusGame(4, [{ starter: 'chikorita', name: 'me' }], 'quick')
+    const s = g.versus!
+    const rules = VERSUS_FORMATS.quick
+    expect(g.players).toHaveLength(6)
+    expect(s.map).toBe('glade')
+    expect(s.goals.filter((o) => o.team === 0)).toHaveLength(2)
+    expect(s.goals.every((o) => goalOpen(s, o))).toBe(true)
+    expect(Math.abs(g.players[0]!.x - GLADE.spawn[0].x)).toBeLessThan(VERSUS.spawnPad.r)
+    run(g, rules.drednaw.first + 0.1)
+    expect(s.objective?.kind).toBe('drednaw')
+    run(g, rules.length - rules.stretch - rules.drednaw.first)
+    expect(s.stretch).toBe(true)
+    expect(s.objective?.kind).toBe('zapdos')
+  }, 30_000)
+
   it('has its bots carry Energy to the rival goals over a whole match, ending on the clock', () => {
     const g = createVersusGame(9, [])
-    run(g, VERSUS.length + 1)
+    run(g, VERSUS_FORMATS.standard.length + 1)
     expect(g.phase).toBe('gameover')
     expect(g.versus!.result).not.toBeNull()
+    expect(g.versus!.score[0]).toBeGreaterThan(0)
+    expect(g.versus!.score[1]).toBeGreaterThan(0)
+  }, 30_000)
+
+  it('ends a 3v3 at three minutes with both teams scoring', () => {
+    const g = createVersusGame(10, [], 'quick')
+    run(g, VERSUS_FORMATS.quick.length - 1)
+    expect(g.phase).toBe('playing')
+    run(g, 2)
+    expect(g.phase).toBe('gameover')
     expect(g.versus!.score[0]).toBeGreaterThan(0)
     expect(g.versus!.score[1]).toBeGreaterThan(0)
   }, 30_000)

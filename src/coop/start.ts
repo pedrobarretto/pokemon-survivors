@@ -7,6 +7,7 @@ import { isRecord } from '../game/parse'
 import type { Game } from '../game/types'
 import type { Loadout, RunStart, Settings } from '../net/protocol'
 import { isVersusPick, VERSUS_PICKS, type Team } from '../data/versus'
+import { parseArenaFormat, type ArenaFormat } from '../data/arenaFormats'
 import { createVersusGame } from '../game/versus'
 
 /**
@@ -28,12 +29,17 @@ export type CoopPick = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks; s
  */
 export type RoomMode = 'run' | 'versus'
 
-/** The room's settings as the host sets them. */
-export type CoopSettings = { difficulty: Difficulty; mode?: RoomMode }
+/** The room's settings as the host sets them; `format` only matters in a Versus room (`data/arenaFormats.ts`, the standard 4v4 when left out). */
+export type CoopSettings = { difficulty: Difficulty; mode?: RoomMode; format?: ArenaFormat }
 
 export const loadoutOf = (pick: CoopPick): Loadout => ({ starter: pick.starter, ranks: { ...pick.ranks }, shiny: pick.shiny, ...(pick.team !== undefined && { team: pick.team }) })
 
-export const settingsOf = (s: CoopSettings): Settings => ({ difficulty: s.difficulty, ...(s.mode === 'versus' && { mode: 'versus' }) })
+/** The settings on the wire: a Versus room says its format only when it isn't the standard (so a standard room's are what they always were). */
+export const settingsOf = (s: CoopSettings): Settings => ({
+  difficulty: s.difficulty,
+  ...(s.mode === 'versus' && { mode: 'versus' }),
+  ...(s.mode === 'versus' && s.format !== undefined && s.format !== 'standard' && { format: s.format }),
+})
 
 const rankOf = (raw: unknown, max: number) => (typeof raw === 'number' && Number.isInteger(raw) && raw >= 0 ? Math.min(raw, max) : 0)
 
@@ -47,15 +53,15 @@ export const parseLoadout = (raw: Loadout): CoopPick => {
   return { starter, ranks, shiny: raw.shiny === true, ...(team !== undefined && { team }) }
 }
 
-export const parseSettings = (raw: Settings): CoopSettings => ({ difficulty: parseDifficulty(raw.difficulty), mode: raw.mode === 'versus' ? 'versus' : 'run' })
+export const parseSettings = (raw: Settings): CoopSettings => ({ difficulty: parseDifficulty(raw.difficulty), mode: raw.mode === 'versus' ? 'versus' : 'run', format: parseArenaFormat(raw.format) })
 
 /** The loadouts of a run, by slot (`RunStart.players` order), with each player's name. */
 export const runLoadouts = (start: RunStart): CoopLoadout[] => start.players.map((p) => ({ ...parseLoadout(p.loadout), name: p.name }))
 
 /**
  * The run's game at tick 0: every client builds the same one. A Versus room
- * starts a match: each seat plays its Pokémon if Versus offers it (else the
- * first of the roster) on the team it asked for.
+ * starts a match of its format: each seat plays its Pokémon if Versus offers
+ * it (else the first of the roster) on the team it asked for.
  */
 export const startGame = (start: RunStart): Game => {
   const settings = parseSettings(start.settings)
@@ -64,7 +70,7 @@ export const startGame = (start: RunStart): Game => {
       const pick = parseLoadout(p.loadout)
       return { starter: isVersusPick(pick.starter) ? pick.starter : VERSUS_PICKS[0]!, name: p.name, ...(pick.team !== undefined && { team: pick.team }) }
     })
-    return createVersusGame(start.seed, humans)
+    return createVersusGame(start.seed, humans, settings.format)
   }
   return createCoopGame(start.seed, runLoadouts(start), { difficulty: settings.difficulty, view: { ...COOP.view } })
 }

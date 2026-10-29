@@ -1,7 +1,9 @@
 import { retain } from '../engine/math'
 import { createRng } from '../engine/rng'
 import { ARENA_FEET } from '../data/arenas'
-import { AURA_RANGE, ROLES, VALE, VERSUS, VERSUS_PICKS, valeFloor, type Team, type VersusPick } from '../data/versus'
+import { AURA_RANGE, ROLES, VERSUS, VERSUS_FORMATS, VERSUS_PICKS, type Team, type VersusPick } from '../data/versus'
+import { floorOf, MAPS, type MapId, type VersusMap } from '../data/versusMaps'
+import type { ArenaFormat } from '../data/arenaFormats'
 import { updateAttacks } from './attacks'
 import { updateBosses, updateHazards } from './bosses'
 import { healPlayer } from './combat'
@@ -19,14 +21,14 @@ import { footOf, updateTerrain } from './terrain'
 import { updateVerbEvolved } from './verbEvolutions'
 import { addAvatar, knockOut, roleOf, syncAvatars } from './versusCombat'
 import { reveal, updateGrass, usedSpecial } from './versusGrass'
-import { channelTime, goalOpen, rivalTeam, scoreValue, winnerOf } from './versusRules'
+import { channelTime, goalOpen, mapOf, rivalTeam, rulesOf, scoreValue, winnerOf } from './versusRules'
 import type { Enemy, Game, Player } from './types'
 import type { Aim } from './versusBots'
 import * as dm from '../engine/dmath'
 
 /**
- * Versus: a Unite-style match on the Vale (`data/versus.ts`), two teams of
- * `VERSUS.teamSize`, run by the co-op lockstep like any co-op run (humans
+ * Versus: a Unite-style match in one of its formats (`VERSUS_FORMATS`: two
+ * teams of its size on its map, `data/versusMaps.ts`, on its clock), run by the co-op lockstep like any co-op run (humans
  * by seat; the rest are bots the simulation drives, `versusBots.ts`). The map
  * is a room (`room.ts`), so the world's spawns, weather and map events stay
  * out; `stepVersus` runs only what a match needs. PvP goes through each
@@ -87,7 +89,9 @@ export type Orb = { id: number; x: number; y: number; vx: number; vy: number; va
 export type Objective = { kind: 'drednaw' | 'zapdos'; id: number }
 
 export type VersusState = {
-  map: 'vale'
+  /** The match's format and the map it plays (`rulesOf`, `mapOf`). */
+  format: ArenaFormat
+  map: MapId
   room: Room
   score: [number, number]
   goals: GoalState[]
@@ -110,13 +114,13 @@ export type VersusLoadout = { starter: VersusPick; name: string; team?: Team }
 const LANES: readonly Lane[] = ['north', 'south', 'jungle', 'south', 'north']
 
 /**
- * The seats of a match: the humans on the teams they asked for (a full team
- * sends the rest to the other), then bots filling each team to
- * `VERSUS.teamSize` with Pokémon nobody on that team plays. Humans keep the
- * first slots, in order (their seats' slots on the relay). Pure: `seed` draws the bots.
+ * The seats of a match of `size` a side: the humans on the teams they asked
+ * for (a full team sends the rest to the other; past both teams they're left
+ * out), then bots filling each team with Pokémon nobody on that team plays.
+ * Humans keep the first slots, in order (their seats' slots on the relay).
+ * Pure: `seed` draws the bots.
  */
-export const seatMatch = (seed: number, humans: readonly VersusLoadout[]) => {
-  const size = VERSUS.teamSize
+export const seatMatch = (seed: number, humans: readonly VersusLoadout[], size: number = VERSUS_FORMATS.standard.teamSize) => {
   const counts = [0, 0]
   const seats = humans.slice(0, size * 2).map((h) => {
     const want: Team = h.team ?? 0
@@ -141,50 +145,54 @@ const createSeat = (team: Team, bot: boolean, lane: Lane): VersusSeat => ({
   team, bot, lane, energy: 0, respawn: 0, safe: 0, channel: 0, goal: -1, hurtAt: -99, lastBy: -1, shield: 0, avatar: -1, slow: 1, pace: 1, aim: null, think: 0, grass: -1, hidden: false, reveal: 0, kos: 0, deaths: 0, scored: 0,
 })
 
-const createRoom = (): Room => ({
+const createRoom = (map: VersusMap): Room => ({
   x: 0,
   y: 0,
-  layout: valeFloor,
+  layout: floorOf(map),
   terrain: {
     lake: null,
-    solids: VALE.solids.map((s, i) => {
+    solids: map.solids.map((s, i) => {
       const foot = ARENA_FEET[s.piece]
       return { kind: s.piece, x: s.x, y: s.y, variant: i, foot: [{ ...foot, x: s.x + foot.x, y: s.y + foot.y }] }
     }),
   },
 })
 
-/** Where the `i`th Pokémon of `team` stands on its spawn pad. */
-const padSpot = (team: Team, i: number) => {
-  const pad = VALE.spawn[team]
-  return { x: pad.x, y: pad.y + (i - (VERSUS.teamSize - 1) / 2) * 22 }
+/** Where the `i`th Pokémon of `team` stands on its spawn pad in match `s`. */
+const padSpot = (s: VersusState, team: Team, i: number) => {
+  const pad = mapOf(s).spawn[team]
+  return { x: pad.x, y: pad.y + (i - (rulesOf(s).teamSize - 1) / 2) * 22 }
 }
 
 /**
- * A fresh match for `humans` (1 to 4, by slot) and the bots that fill the
- * teams (`seatMatch`). Every client that calls it with the same seed and
+ * A fresh match of `format` for `humans` (by slot, up to both teams) and the
+ * bots that fill the teams (`seatMatch`). Every client that calls it with the same seed and
  * loadouts gets the same game. Nobody brings anything from their save: no
  * Poké Mart ranks, Bag, TMs or items, and no shiny luck that would change a
  * fight. Each Pokémon opens with the draft (its second move).
  */
-export const createVersusGame = (seed: number, humans: readonly VersusLoadout[]): Game => {
-  const seats = seatMatch(seed, humans)
+export const createVersusGame = (seed: number, humans: readonly VersusLoadout[], format: ArenaFormat = 'standard'): Game => {
+  const rules = VERSUS_FORMATS[format]
+  const map = MAPS[rules.map]
+  const seats = seatMatch(seed, humans, rules.teamSize)
   const setups: PlayerSetup[] = seats.map((s) => ({ starter: s.starter, ranks: NO_RANKS, shiny: false }))
   const g = createRun({ ...VERSUS.view }, seed, setups, undefined, { draft: true }, true)
   g.coop!.names = seats.map((s) => s.name)
-  g.versus = {
-    map: 'vale',
-    room: createRoom(),
+  const s: VersusState = {
+    format,
+    map: rules.map,
+    room: createRoom(map),
     score: [0, 0],
-    goals: VALE.goals.map((d) => ({ team: d.team, x: d.x, y: d.y, r: d.r, left: d.points, max: d.points, base: d.base, broken: false })),
-    camps: VALE.camps.map((c) => ({ alive: [], respawnAt: c.first })),
+    goals: map.goals.map((d) => ({ team: d.team, x: d.x, y: d.y, r: d.r, left: d.points, max: d.points, base: d.base, broken: false })),
+    camps: map.camps.map((c) => ({ alive: [], respawnAt: c.first })),
     orbs: [],
     stretch: false,
     blessing: [0, 0],
     objective: null,
-    drednawAt: VERSUS.drednaw.first,
+    drednawAt: rules.drednaw.first,
     result: null,
   }
+  g.versus = s
   g.events.length = 0
   const placed = [0, 0]
   const before = g.player
@@ -194,7 +202,7 @@ export const createVersusGame = (seed: number, humans: readonly VersusLoadout[])
     p.versus = createSeat(seat.team, seat.bot, LANES[i % LANES.length]!)
     p.shiny = false
     p.luckyShiny = false
-    const spot = padSpot(seat.team, i)
+    const spot = padSpot(s, seat.team, i)
     p.x = spot.x
     p.y = spot.y
     p.facing = { x: seat.team === 0 ? 1 : -1, y: 0 }
@@ -297,7 +305,8 @@ const CAMP_LEASH = 150
 /** Camps fill up when they're due, and start their clock once the last of them falls. */
 const updateCamps = (g: Game) => {
   const s = g.versus!
-  VALE.camps.forEach((def, i) => {
+  const map = mapOf(s)
+  map.camps.forEach((def, i) => {
     const camp = s.camps[i]!
     if (camp.alive.length > 0) {
       camp.alive = camp.alive.filter((id) => g.enemies.some((e) => e.id === id && e.dying < 0))
@@ -314,8 +323,7 @@ const updateCamps = (g: Game) => {
     camp.respawnAt = Infinity
   })
   if (!s.stretch && s.objective === null && g.time >= s.drednawAt) {
-    const d = VERSUS.drednaw
-    const e = spawnWild(g, 'drednaw', -1, VALE.center.x, VALE.center.y, d.hp, 14, 120)
+    const e = spawnWild(g, 'drednaw', -1, map.center.x, map.center.y, rulesOf(s).drednaw.hp, 14, 120)
     s.objective = { kind: 'drednaw', id: e.id }
     g.events.push({ kind: 'versusObjective', enemy: 'drednaw', team: -1 })
   }
@@ -329,9 +337,9 @@ const startStretch = (g: Game) => {
     const old = g.enemies.find((e) => e.id === s.objective!.id)
     if (old) old.dying = 0
   }
-  const z = VERSUS.zapdos
-  const e = spawnWild(g, 'zapdos', -1, VALE.center.x, VALE.center.y, z.hp, 0, 160)
-  e.damage = 30 * z.damage
+  const center = mapOf(s).center
+  const e = spawnWild(g, 'zapdos', -1, center.x, center.y, rulesOf(s).zapdos.hp, 0, 160)
+  e.damage = 30 * VERSUS.zapdos.damage
   s.objective = { kind: 'zapdos', id: e.id }
   g.bossId = e.id
   g.flash = 0.6
@@ -348,6 +356,7 @@ const goalUnder = (s: VersusState, p: Player, team: Team) => s.goals.findIndex((
 
 /** Players back from a knockout, protection wearing off. */
 const updateRespawns = (g: Game, dt: number) => {
+  const s = g.versus!
   for (const p of g.players) {
     const v = p.versus
     if (!v) continue
@@ -356,7 +365,7 @@ const updateRespawns = (g: Game, dt: number) => {
     v.respawn -= dt
     if (v.respawn > 0) continue
     v.respawn = 0
-    const spot = padSpot(v.team, p.slot % VERSUS.teamSize)
+    const spot = padSpot(s, v.team, p.slot % rulesOf(s).teamSize)
     p.x = spot.x
     p.y = spot.y
     p.hp = p.stats.maxHp
@@ -453,11 +462,12 @@ const score = (g: Game, p: Player, goal: GoalState, at: number) => {
 
 /** Each team's spawn pad heals its own and burns a rival who walks in (a knockout there is nobody's). */
 const updatePads = (g: Game, dt: number) => {
+  const spawn = mapOf(g.versus!).spawn
   const before = g.player
   for (const p of g.players) {
     const v = p.versus
     if (!v || !inPlay(p)) continue
-    VALE.spawn.forEach((pad, team) => {
+    spawn.forEach((pad, team) => {
       if (!inside(p, pad.x, pad.y, VERSUS.spawnPad.r)) return
       g.player = p
       if (team === v.team) healPlayer(g, p.stats.maxHp * VERSUS.spawnPad.heal * dt)
@@ -508,7 +518,8 @@ const endMatch = (g: Game) => {
 /** The match's rules after the step: the clock, respawns, Energy, goals, spawn pads, auras and paces. */
 const updateVersus = (g: Game, dt: number) => {
   const s = g.versus!
-  if (!s.stretch && g.time >= VERSUS.length - VERSUS.stretch) startStretch(g)
+  const rules = rulesOf(s)
+  if (!s.stretch && g.time >= rules.length - rules.stretch) startStretch(g)
   updateRespawns(g, dt)
   updateOrbs(g, dt)
   updateGoals(g, dt)
@@ -517,8 +528,8 @@ const updateVersus = (g: Game, dt: number) => {
   updatePaces(g)
   s.blessing[0] = Math.max(0, s.blessing[0] - dt)
   s.blessing[1] = Math.max(0, s.blessing[1] - dt)
-  if (g.time >= VERSUS.length) endMatch(g)
+  if (g.time >= rules.length) endMatch(g)
 }
 
-/** Seconds left on the match clock. */
-export const timeLeft = (g: Game) => Math.max(0, VERSUS.length - g.time)
+/** Seconds left on the match clock (0 outside a match). */
+export const timeLeft = (g: Game) => (g.versus ? Math.max(0, rulesOf(g.versus).length - g.time) : 0)

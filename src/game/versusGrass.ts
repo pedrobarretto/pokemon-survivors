@@ -1,4 +1,6 @@
-import { VALE, VERSUS } from '../data/versus'
+import { VERSUS } from '../data/versus'
+import type { Rect } from '../data/versusMaps'
+import { mapOf } from './versusRules'
 import { inPlay } from './players'
 import type { SpecialState } from './special'
 import type { Game, Player } from './types'
@@ -6,7 +8,7 @@ import type { VersusSeat } from './versus'
 import * as dm from '../engine/dmath'
 
 /**
- * The Arena's tall grass (`VALE.grass`): a Pokémon standing in a patch is
+ * The Arena's tall grass (the map's `grass`): a Pokémon standing in a patch is
  * hidden from the rival team (`VersusSeat.hidden`): their moves don't aim at
  * it (`unseen` in `versusRules.ts`; a hitbox that reaches it still lands) and
  * their bots don't see it. Its own moves hold while it's in the grass (the
@@ -15,9 +17,8 @@ import * as dm from '../engine/dmath'
  * does everyone for a moment after a hit (dealt or taken) or its special.
  */
 
-/** The patch (x, y) stands in (feet), or -1. */
-export const patchAt = (x: number, y: number) => {
-  const grass = VALE.grass
+/** The patch of `grass` (a map's) that (x, y) stands in (feet), or -1. */
+export const patchAt = (grass: readonly Rect[], x: number, y: number) => {
   for (let i = 0; i < grass.length; i++) {
     const r = grass[i]!
     if (x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1) return i
@@ -53,11 +54,13 @@ const spotted = (g: Game, p: Player, v: VersusSeat) => {
  * moved and before the moves cast: a Pokémon out of play is in none.
  */
 export const updateGrass = (g: Game, dt: number) => {
+  if (!g.versus) return
+  const grass = mapOf(g.versus).grass
   for (const p of g.players) {
     const v = p.versus
     if (!v) continue
     v.reveal = Math.max(0, v.reveal - dt)
-    v.grass = inPlay(p) ? patchAt(p.x, p.y) : -1
+    v.grass = inPlay(p) ? patchAt(grass, p.x, p.y) : -1
   }
   for (const p of g.players) {
     const v = p.versus

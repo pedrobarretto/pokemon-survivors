@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { VALE, VERSUS } from '../data/versus'
+import { VERSUS } from '../data/versus'
+import { VALE } from '../data/versusMaps'
 import { createVersusGame } from '../game/versus'
 import { guideTarget } from '../render/versusGuide'
 import { coachTip } from './versusCoach'
