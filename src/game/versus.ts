@@ -22,6 +22,8 @@ import { reveal, updateGrass, usedSpecial } from './versusGrass'
 import { channelTime, goalOpen, rivalTeam, scoreValue, winnerOf } from './versusRules'
 import type { Enemy, Game, Player } from './types'
 import type { Aim } from './versusBots'
+import { aimCast, type Focus } from './versusKit'
+import { specialReady } from './special'
 import * as dm from '../engine/dmath'
 
 /**
@@ -68,6 +70,19 @@ export type VersusSeat = {
   grass: number
   hidden: boolean
   reveal: number
+  /**
+   * The kit (`versusKit.ts`): the enemy the player locked (-1 none; the basic
+   * attack and the assist aim there while it's in reach), how they rank the
+   * rest (`PRIORITIES` index), a cast's focus while its move fires (null
+   * between ticks), and seconds the Pokémon stays turned to its last cast.
+   */
+  lock: number
+  prio: number
+  focus: Focus | null
+  hold: number
+  /** The kit's pace (`versusPacing.ts`): the slot the level-up on screen teaches (0 a regular one), and the slot an evolution's upgrade waits for (0 none). */
+  learn: number
+  upgrade: number
   /** Match stats: knockouts dealt, times knocked out, points scored. */
   kos: number
   deaths: number
@@ -138,7 +153,7 @@ export const seatMatch = (seed: number, humans: readonly VersusLoadout[]) => {
 }
 
 const createSeat = (team: Team, bot: boolean, lane: Lane): VersusSeat => ({
-  team, bot, lane, energy: 0, respawn: 0, safe: 0, channel: 0, goal: -1, hurtAt: -99, lastBy: -1, shield: 0, avatar: -1, slow: 1, pace: 1, aim: null, think: 0, grass: -1, hidden: false, reveal: 0, kos: 0, deaths: 0, scored: 0,
+  team, bot, lane, energy: 0, respawn: 0, safe: 0, channel: 0, goal: -1, hurtAt: -99, lastBy: -1, shield: 0, avatar: -1, slow: 1, pace: 1, aim: null, think: 0, grass: -1, hidden: false, reveal: 0, lock: -1, prio: 0, focus: null, hold: 0, learn: 0, upgrade: 0, kos: 0, deaths: 0, scored: 0,
 })
 
 const createRoom = (): Room => ({
@@ -236,10 +251,17 @@ export const stepVersus = (g: Game, inputs: readonly StepInput[], dt: number) =>
   for (const p of g.players) {
     if (!inPlay(p)) continue
     g.player = p
+    const input = inputs[p.slot] ?? STILL
+    const v = p.versus
+    if (v) v.hold = Math.max(0, v.hold - dt)
+    // The Unite Move goes where its cast aimed: the Pokémon turns that way first, since the special releases along `facing`.
+    const unite = v && input.special ? input.casts?.find((c) => c.skill === 2) : undefined
+    if (v && unite && (specialReady(p.special) || p.special.window > 0)) v.focus = aimCast(g, p, unite)
     const cooldown = p.special.cooldown
-    stepPlayer(g, inputs[p.slot] ?? STILL, dt)
+    stepPlayer(g, input, dt)
+    if (v) v.focus = null
     // A special shows its user, grass or not.
-    if (p.versus && usedSpecial(p.special, cooldown)) reveal(p.versus)
+    if (v && usedSpecial(p.special, cooldown)) reveal(v)
   }
   g.player = actor
   syncAvatars(g)

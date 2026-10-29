@@ -3,6 +3,7 @@ import { inPlay } from './players'
 import type { VersusSeat } from './versus'
 import { goalOpen, rivalTeam } from './versusRules'
 import type { StepInput } from './game'
+import { aimCode, reachCode, type Cast, type Skill } from './versusKit'
 import type { Enemy, Game, Player } from './types'
 import * as dm from '../engine/dmath'
 
@@ -11,8 +12,9 @@ import * as dm from '../engine/dmath'
  * by the simulation itself, so every client drives them the same. Each tick a
  * bot picks where to go (retreat, score, fight, farm its lane, take the
  * objective, push) and walks there through the map's rooms (`route`). Its
- * moves fire on their own like anyone's; it presses its special when a rival
- * is close. It doesn't see rivals hidden in tall grass, and slips into grass
+ * basic attack fires on its own like anyone's; it casts Move 1 and Move 2 at
+ * the foe in front of it once they recharge, and its Unite Move (the special)
+ * when a rival is close (`castKit`). It doesn't see rivals hidden in tall grass, and slips into grass
  * itself to shake off a stronger rival. Pure on the game state: no rng, no clock.
  */
 
@@ -249,6 +251,34 @@ const aimAt = (g: Game, aim: Aim): { x: number; y: number } | null => {
   return null
 }
 
+/** Farthest (px) a bot casts Move 1 and Move 2 at a rival it sees, and at the wild Pokémon it's after. */
+const CAST_RIVAL = 130
+const CAST_WILD = 90
+
+/** A bot's cast of `skill` straight at `e`, picking it as the target. */
+const castAt = (p: Player, skill: Skill, e: Enemy): Cast => ({ skill, dir: aimCode(e.x - p.x, e.y - p.y), reach: reachCode(dm.hypot(e.x - p.x, e.y - p.y)), target: e.id })
+
+/**
+ * What a bot casts this tick (`versusKit.ts`): Move 1 and Move 2 once
+ * recharged, at the nearest rival it sees in reach (its body), else at the
+ * wild Pokémon it's after; the Unite Move, when it presses the special, at
+ * the same foe. Aimed at the foe itself, so no rng and no lead.
+ */
+const castKit = (g: Game, p: Player, input: StepInput, aim: Aim) => {
+  const rival = nearestRival(g, p, p.versus!.team, CAST_RIVAL)
+  const body = rival ? g.enemies.find((e) => e.id === rival.versus!.avatar && e.dying < 0) : undefined
+  const wild = aim.kind === 'enemy' ? g.enemies.find((e) => e.id === aim.id && e.dying < 0 && d2(p, e) < CAST_WILD * CAST_WILD) : undefined
+  const foe = body ?? wild
+  if (!foe) return
+  const casts: Cast[] = []
+  for (const skill of [0, 1] as const) {
+    const owned = p.moves[skill + 1]
+    if (owned && owned.cooldown <= 0) casts.push(castAt(p, skill, foe))
+  }
+  if (input.special) casts.push(castAt(p, 2, foe))
+  if (casts.length > 0) input.casts = casts
+}
+
 /** Ticks a bot holds an aim before thinking again (a slot's offset spreads the thinking out). */
 const THINK = 15
 
@@ -273,6 +303,7 @@ export const driveBots = (g: Game, inputs: StepInput[]) => {
     }
     const rival = nearestRival(g, p, v.team, 70)
     input.special = rival !== null || (v.aim.kind === 'enemy' && d2(p, at) < 50 * 50)
+    castKit(g, p, input, v.aim)
     if (v.aim.near > 0 && d2(p, at) < v.aim.near * v.aim.near) {
       input.move = { x: 0, y: 0 }
       continue
