@@ -29,7 +29,8 @@ export type QueueDeps = {
   rtts?: () => Promise<Record<string, number>>
 }
 
-export type Ticket = { kind: QueueKind; starter: string; party: string | null }
+/** What a player queues with: the kind, their Pokémon, and a party's code and the size it expects (a rematch's team), or null. */
+export type Ticket = { kind: QueueKind; starter: string; party: { code: string; size: number } | null }
 
 /** The matchmaker's WebSocket URL from the relay's: same origin, `ws(s)`, path `/arena/queue`. */
 export const queueUrl = (relay: string) => `${relay.replace(/^http/, 'ws').replace(/\/+$/, '')}/arena/queue`
@@ -80,7 +81,8 @@ export const joinQueue = (deps: QueueDeps, ticket: Ticket, on: (e: QueueEvent) =
     if (over) return
     ws = deps.socket(queueUrl(deps.relay), {
       open: () => {
-        send({ t: 'queue', kind: ticket.kind, starter: ticket.starter, party: ticket.party, build: deps.build, auth })
+        const party = ticket.party
+        send({ t: 'queue', kind: ticket.kind, starter: ticket.starter, party: party?.code ?? null, ...(party && { size: party.size }), build: deps.build, auth })
         void deps.rtts?.().then((homes) => !over && Object.keys(homes).length > 0 && send({ t: 'rtt', homes }))
       },
       message: (data) => {

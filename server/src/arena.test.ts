@@ -141,6 +141,26 @@ describe('planMatch', () => {
     expect(left?.change?.mmr).toBeLessThan(0)
   })
 
+  it('rates a surrender as an ordinary win and loss, whatever the score, nobody a leaver', () => {
+    // Blue led 40–20 and gave up: Red won.
+    const given: ArenaResult = { ...result, winner: 1, surrender: 0 }
+    const parsed = parseArenaReport(report({ result: given }))
+    expect(parsed?.result).toMatchObject({ winner: 1, surrender: 0 })
+    const [a, c] = planMatch(given, humans('a', null, 'c', null), ratings)
+    expect([a?.outcome, a?.left, c?.outcome, c?.left]).toEqual(['loss', false, 'win', false])
+    expect(a?.change?.mmr).toBeLessThan(0)
+    expect(c?.change?.mmr).toBeGreaterThan(0)
+    // A surrender the winner doesn't match is junk.
+    expect(parseArenaReport(report({ result: { ...result, surrender: 0 } }))).toBeNull()
+  })
+
+  it('reads an older report without the surrender or the scoreboard stats', () => {
+    const old = { ...result, surrender: undefined, seats: result.seats.map(({ assists: _a, dealt: _d, taken: _t, healed: _h, interrupts: _i, ...rest }) => rest) }
+    const parsed = parseArenaReport(report({ result: JSON.parse(JSON.stringify(old)) }))
+    expect(parsed?.result.surrender).toBeNull()
+    expect(parsed?.result.seats[0]).toMatchObject({ kos: 2, assists: 0, dealt: 0, interrupts: 0 })
+  })
+
   it('rates only the leavers of an unconfirmed match, each as a loss, the stayers unrated', () => {
     // Red's c left; Blue's a reported a loss nobody can confirm.
     const seats: ReportSeat[] = [

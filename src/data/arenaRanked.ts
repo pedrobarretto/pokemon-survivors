@@ -55,6 +55,12 @@ export const ARENA_RANKED = {
     humanSplitPenalty: 400,
     /** Seconds the matched players have to join the room; who's missing plays as a bot. */
     joinTimeout: 20,
+    /**
+     * Seconds a party that said its size (`QueueClientMessage.size`, a
+     * rematch's team) waits for the rest of it before it matches as it
+     * stands, so teammates pressing "Revanche" a few seconds apart land together.
+     */
+    partyGrace: 12,
     /** Most humans in one match (the Arena's room size). */
     players: 8,
   },

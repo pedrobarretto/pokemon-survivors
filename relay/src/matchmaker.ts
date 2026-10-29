@@ -18,6 +18,8 @@ export type Ticket = {
   kind: QueueKind
   /** Its friends' party (tickets with the same code, kind and build play on one team), or null. */
   party: string | null
+  /** How many its party expects (a rematch's team), or null: a party short of it waits `partyGrace` for the rest. */
+  size: number | null
   build: string
   /** When it queued (ms). */
   since: number
@@ -52,8 +54,9 @@ export const parseQueueMessage = (raw: string): QueueClientMessage | null => {
       const party = m.party === null || m.party === undefined ? null : typeof m.party === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(m.party) ? m.party : undefined
       const build = typeof m.build === 'string' && /^[\w.-]{1,40}$/.test(m.build) ? m.build : null
       const starter = typeof m.starter === 'string' && /^[A-Za-z0-9_-]{1,24}$/.test(m.starter) ? m.starter : null
-      if (!auth || !kind || party === undefined || !build || !starter) return null
-      return { t: 'queue', kind, starter, party, build, auth }
+      const size = m.size === undefined || m.size === null ? null : typeof m.size === 'number' && Number.isInteger(m.size) && m.size >= 1 && m.size <= ARENA_RANKED.queue.players / 2 ? m.size : undefined
+      if (!auth || !kind || party === undefined || size === undefined || !build || !starter) return null
+      return { t: 'queue', kind, starter, party, ...(size !== null && party !== null && { size }), build, auth }
     }
     case 'cancel':
       return { t: 'cancel' }
@@ -84,6 +87,12 @@ export const parseTickets = (v: unknown): ArenaTicketsResponse['ratings'] => {
 /* ---------------- Matching ---------------- */
 
 type Party = { tickets: Ticket[]; mmrs: number[]; mean: number; since: number }
+
+/** Whether a party is still waiting for the rest of it at `seconds` past its first ticket: short of the size it said, within `partyGrace`. */
+export const forming = (p: Pick<Party, 'tickets'>, seconds: number) => {
+  const size = Math.max(...p.tickets.map((t) => (t.party === null ? 0 : (t.size ?? 0))))
+  return p.tickets.length < Math.min(size, ARENA_RANKED.queue.players / 2) && seconds < ARENA_RANKED.queue.partyGrace
+}
 
 const mean = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length)
 
@@ -144,6 +153,12 @@ export const formMatches = (tickets: readonly Ticket[], now: number): { matches:
   for (const pool of pools.values()) {
     const parties = partiesOf(pool)
     const used = new Set<Party>()
+    // A party waiting for the rest of it neither anchors nor joins a match yet.
+    for (const p of parties) {
+      if (!forming(p, seconds(p.since))) continue
+      used.add(p)
+      for (const t of p.tickets) wait(t, p.tickets.length, p.since)
+    }
     for (const anchor of parties) {
       if (used.has(anchor)) continue
       const window = mmrWindow(seconds(anchor.since))

@@ -25,10 +25,12 @@ export type QueueAuth = { kind: 'clerk'; token: string } | { kind: 'guest'; id: 
 
 /**
  * What a client in the queue sends. `party`: the code of the friends' party it queues with (all of it
- * joins the same team). `build`: the co-op build id (`__SIM_BUILD__`), the matched room's.
+ * joins the same team). `size`: how many the party expects (a rematch's team, 1 to 4): until that many
+ * are in, it waits up to `ARENA_RANKED.queue.partyGrace` seconds for the rest; absent, it matches as
+ * it stands. `build`: the co-op build id (`__SIM_BUILD__`), the matched room's.
  */
 export type QueueClientMessage =
-  | { t: 'queue'; kind: 'casual' | 'ranked'; starter: string; party: string | null; build: string; auth: QueueAuth }
+  | { t: 'queue'; kind: 'casual' | 'ranked'; starter: string; party: string | null; size?: number; build: string; auth: QueueAuth }
   | { t: 'cancel' }
   /** The client's round trip to each relay home, so the match lands where it plays best. */
   | { t: 'rtt'; homes: Record<string, number> }

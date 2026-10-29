@@ -107,7 +107,7 @@ export class Matchmaker extends DurableObject<Env> {
     const now = Date.now()
     // Guests (a dev relay) have no rating: they match at the start.
     const mmr = identity.account ? null : ARENA_RANKED.mmr.start
-    this.tickets.set(a.id, { conn: a.id, user: identity.id, kind: msg.kind, party: msg.party, build: msg.build, since: now, mmr, hint: a.hint })
+    this.tickets.set(a.id, { conn: a.id, user: identity.id, kind: msg.kind, party: msg.party, size: msg.size ?? null, build: msg.build, since: now, mmr, hint: a.hint })
     log({ ev: 'queue.joined', kind: msg.kind, party: msg.party !== null, account: identity.account, tickets: this.tickets.size })
     this.send(a.id, { t: 'queued', kind: msg.kind, waited: 0, found: 1, botsIn: ARENA_RANKED.queue.botsAfter[msg.kind] })
     this.schedule()
