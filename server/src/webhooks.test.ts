@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { ABACATE_REF, abacateDonation, ABACATEPAY_PUBLIC_KEY, patreonAmount, patreonCharge, patreonMember, stripeDonation, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
+import { ABACATE_GEMS_REF, ABACATE_REF, abacateDonation, abacateGems, ABACATEPAY_PUBLIC_KEY, patreonAmount, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
 
 const SECRET = 'whsec_test'
 
@@ -33,6 +33,50 @@ describe('Stripe webhooks', () => {
   it("counts an Adaptive Pricing session in the link's own currency", () => {
     const converted = session({ amount_total: 920, currency: 'eur', currency_conversion: { amount_total: 1000, source_currency: 'usd' } })
     expect(stripeDonation(converted, null)).toMatchObject({ amount: 1000, currency: 'usd' })
+  })
+})
+
+describe('Stripe gem packs', () => {
+  const REF = '8f14e45f-ceea-467f-a0e6-1b7a2c1c9a01'
+  const pack = (over: Record<string, unknown> = {}) => session({ payment_link: null, client_reference_id: REF, payment_intent: 'pi_3Abc123', metadata: { kind: 'gems', ref: REF, user: 'user_1', pack: 'bag' }, ...over })
+
+  it('reads a paid pack, never as a donation', () => {
+    expect(stripeGems(pack())).toEqual({ kind: 'paid', provider: 'stripe', ref: REF, session: 'cs_live_abc', payment: 'pi_3Abc123' })
+    expect(stripeGems({ ...pack(), type: 'checkout.session.async_payment_succeeded' })?.kind).toBe('paid')
+    expect(stripeDonation(pack(), null)).toBeNull()
+    expect(stripeGems(pack({ payment_status: 'unpaid' }))).toBeNull()
+    expect(stripeGems(pack({ metadata: { kind: 'gems', ref: "x'; drop table users" } }))).toBeNull()
+    expect(stripeGems(session())).toBeNull()
+  })
+
+  it('reads refunds by their running total, disputes and won disputes', () => {
+    const charge = (type: string, over: Record<string, unknown>) => ({ type, data: { object: { id: 'ch_3Abc123', payment_intent: 'pi_3Abc123', amount: 2490, ...over } } })
+    expect(stripeGems(charge('charge.refunded', { amount_refunded: 1000 }))).toEqual({
+      kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_3Abc123' }, refunded: 1000, amount: 2490, key: 'refund:stripe:ch_3Abc123:1000',
+    })
+    expect(stripeGems(charge('charge.refunded', { amount_refunded: 0 }))).toBeNull()
+    const dispute = (type: string, status: string) => ({ type, data: { object: { id: 'du_1Abc123', payment_intent: 'pi_3Abc123', status } } })
+    expect(stripeGems(dispute('charge.dispute.created', 'needs_response'))).toEqual({ kind: 'dispute', provider: 'stripe', purchase: { payment: 'pi_3Abc123' }, key: 'dispute:stripe:du_1Abc123' })
+    expect(stripeGems(dispute('charge.dispute.closed', 'won'))).toMatchObject({ kind: 'disputeWon', dispute: 'dispute:stripe:du_1Abc123', key: 'dispute-won:stripe:du_1Abc123' })
+    expect(stripeGems(dispute('charge.dispute.closed', 'lost'))).toBeNull()
+  })
+})
+
+describe('AbacatePay gem packs', () => {
+  const REF = '8f14e45f-ceea-467f-a0e6-1b7a2c1c9a01'
+  const event = (name: string, externalId = `${ABACATE_GEMS_REF}${REF}`, status = 'PAID') => ({ event: name, data: { checkout: { id: 'bill_abc123', externalId, status, amount: 2490, paidAmount: 2490 } } })
+
+  it('reads a paid pack, never as a donation', () => {
+    expect(abacateGems(event('checkout.completed'))).toEqual({ kind: 'paid', provider: 'abacatepay', ref: REF, session: 'bill_abc123', payment: 'bill_abc123' })
+    expect(abacateDonation(event('checkout.completed'))).toBeNull()
+    expect(abacateGems(event('checkout.completed', undefined, 'PENDING'))).toBeNull()
+    expect(abacateGems(event('checkout.completed', `${ABACATE_REF}${REF}`))).toBeNull()
+  })
+
+  it('takes a refund in full and a dispute or a lost one once, by name (their payloads still say PAID)', () => {
+    expect(abacateGems(event('checkout.refunded'))).toEqual({ kind: 'refund', provider: 'abacatepay', purchase: { ref: REF }, refunded: 2490, amount: 2490, key: 'refund:abacatepay:bill_abc123:2490' })
+    expect(abacateGems(event('checkout.disputed'))).toEqual({ kind: 'dispute', provider: 'abacatepay', purchase: { ref: REF }, key: 'dispute:abacatepay:bill_abc123' })
+    expect(abacateGems(event('checkout.lost'))).toMatchObject({ kind: 'dispute', key: 'dispute:abacatepay:bill_abc123' })
   })
 })
 
@@ -103,6 +147,7 @@ describe('Patreon webhooks', () => {
       lifetime: 1500,
       entitled: 500,
       currency: 'usd',
+      tier: 'supporter',
     })
     // A later update of the same member (a new address, say) names the same charge.
     expect(patreonCharge('members:update', member({ last_charge_date: '2026-11-01T08:15:00Z' }), 'usd')?.ref).toBe(charge?.ref)

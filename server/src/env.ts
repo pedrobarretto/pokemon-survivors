@@ -32,7 +32,7 @@ export const loadEnv = () => {
     clerkSecretKey: required('CLERK_SECRET_KEY'),
     /** Optional PEM public key: verifies tokens without fetching Clerk's keys. */
     clerkJwtKey: process.env.CLERK_JWT_KEY || undefined,
-    /** Optional AbacatePay key (donations by Pix and Brazilian cards). Without it `POST /donations` answers 503. */
+    /** Optional AbacatePay key (donations by Pix and Brazilian cards, gem packs by Pix). Without it `POST /donations` and Pix gem checkouts answer 503. */
     abacatePayKey: process.env.ABACATEPAY_API_KEY || undefined,
     /**
      * Optional: the AbacatePay webhook's secret, `whsec_…` (Standard Webhooks), or for a webhook made
@@ -41,6 +41,11 @@ export const loadEnv = () => {
     abacatePayWebhookSecret: process.env.ABACATEPAY_WEBHOOK_SECRET || undefined,
     /** Optional: the Stripe webhook's signing secret (`whsec_…`). Without it `POST /webhooks/stripe` answers 503. */
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || undefined,
+    /**
+     * Optional: a Stripe secret key for gem packs' Checkout Sessions (`src/stripe.ts`), best a restricted `rk_` key
+     * that may write Checkout Sessions. Without it `POST /gems/checkout` answers 503 for `card`.
+     */
+    stripeSecretKey: process.env.STRIPE_SECRET_KEY || undefined,
     /** Optional: the donation Payment Link's id (`plink_…`); set, other Checkout Sessions of the account are ignored. */
     stripePaymentLink: process.env.STRIPE_PAYMENT_LINK || null,
     /**
