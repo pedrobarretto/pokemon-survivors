@@ -109,6 +109,8 @@ export type FormatRules = {
   stretch: number
   /** Every EXP of the match (wild Pokémon, knockouts, objectives) is worth this many times its base. */
   xp: number
+  /** The levels a Pokémon evolves at in this format (Arena only; a run's Lv 12 and 28 would come at ~5:00 and never in a match). */
+  evolveAt: readonly [number, number]
   /** Seconds down after a knockout: `base + perLevel × level`, plus `stretch` in the last stretch. */
   respawn: { base: number; perLevel: number; stretch: number }
   /** Drednaw's first arrival and its return after a faint (match s), and its HP. */
@@ -117,29 +119,36 @@ export type FormatRules = {
 }
 
 export const VERSUS_FORMATS = {
-  /** 4v4 on the Vale, 7 minutes: Drednaw from 1:40, Zapdos for the last 2:00. */
+  /**
+   * 4v4 on the Vale, 7 minutes: Drednaw from 1:40, Zapdos for the last 2:00.
+   * Evolutions at Lv 5 and 9 (Unite's Charmander curve): with bots, the first
+   * around 0:50 and the second around 3:30.
+   */
   standard: {
     teamSize: ARENA_FORMATS.standard.teamSize,
     map: 'vale',
     length: 420,
     stretch: 120,
     xp: 1,
+    evolveAt: [5, 9],
     respawn: { base: 4, perLevel: 0.5, stretch: 3 },
     drednaw: { first: 100, respawn: 120, hp: 2600 },
     zapdos: { hp: 9000 },
   },
   /**
    * 3v3 on the Clareira, 3 minutes: Drednaw from 0:40, Zapdos for the last
-   * 1:00. EXP runs at double so the first evolution (Lv 12) lands around the
-   * two-minute mark, and knockouts are short so nobody spends a tenth of the
-   * match on the bench.
+   * 1:00. EXP at ×1.5 and evolutions at Lv 6 and 9, so with bots Move 2 comes
+   * around 0:10, the first evolution around 1:00 and the second around 2:00
+   * (before Zapdos), not all in the first minute; knockouts are short so
+   * nobody spends a tenth of the match on the bench.
    */
   quick: {
     teamSize: ARENA_FORMATS.quick.teamSize,
     map: 'glade',
     length: 180,
     stretch: 60,
-    xp: 2,
+    xp: 1.5,
+    evolveAt: [6, 9],
     respawn: { base: 3, perLevel: 0.3, stretch: 2 },
     drednaw: { first: 40, respawn: 50, hp: 900 },
     zapdos: { hp: 3800 },
@@ -200,17 +209,16 @@ export const isVersusPick = (id: string): id is VersusPick => Object.hasOwn(VERS
  * fires on its own (the Pokémon's signature, `signature` in
  * `data/starters.ts`, the move every run opens with), Move 1 and Move 2 cast
  * by the player, aimed, and the Unite Move (the type's special). Move 1 comes
- * from the opening draft, Move 2 at `secondMove`; each evolution then offers
- * the new form's moves to upgrade one of them (the first Move 1, the second
- * Move 2), the way Unite's Charmander picks Flamethrower or Fire Spin.
+ * from the opening draft, Move 2 at `secondMove`; each evolution (at the
+ * format's levels, `FormatRules.evolveAt`) then offers the new form's moves to
+ * upgrade one of them (the first Move 1, the second Move 2), the way Unite's
+ * Charmander picks Flamethrower or Fire Spin.
  */
 export const VERSUS_KIT = {
   /** Moves a Pokémon carries in the Arena: the basic attack, Move 1 and Move 2. */
   moves: 3,
   /** The level Move 2 is learned at (its level-up offers new moves only). */
   secondMove: 3,
-  /** Arena-only evolution levels (Unite's Charmander curve): a run's Lv 12 and 28 would come at ~5:00 and never in 7 minutes. */
-  evolveAt: [5, 9],
   /** How far (px) the auto basic attack and the aim assist look for a target, and the farthest a skill's aim reaches. */
   reach: 220,
   /** A manual aim's point takes the foe standing within this many px of it as its target. */

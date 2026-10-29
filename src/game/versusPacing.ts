@@ -5,8 +5,8 @@ import type { Game, Offer, Player } from './types'
 
 /**
  * The Arena's pace of the kit (`VERSUS_KIT`): Move 1 from the opening draft,
- * Move 2 at `secondMove`, and an evolution at each of `evolveAt` (a run's
- * Lv 12 and 28 don't fit a 7-minute match) whose new form offers its own
+ * Move 2 at `secondMove`, and an evolution at each of its format's levels
+ * (`FormatRules.evolveAt`: a run's Lv 12 and 28 don't fit a match) whose new form offers its own
  * moves to take one's place: the first evolution Move 1's, the second Move
  * 2's, as Unite's Charmeleon picks Flamethrower or Fire Spin. Every other
  * level-up upgrades the kit (no new moves, no duo fusions: `Loadout.kit`).

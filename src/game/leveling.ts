@@ -24,8 +24,8 @@ import { stanceStats } from './stance'
 import { awakeningDeltas } from './legend'
 import { applyDeltas, BASE_STATS, boostStats, type StatDelta } from './stats'
 import { bagDeltas } from './bag'
-import { versusStats } from './versusRules'
-import { VERSUS_KIT } from '../data/versus'
+import { rulesOf, versusStats } from './versusRules'
+import type { VersusState } from './versus'
 import { BAG_ITEMS } from '../data/shop'
 import { ownAttack, setPhase } from './players'
 import type { Game, Offer, OwnedItem, OwnedMove, PrizeSource, Rarity } from './types'
@@ -379,8 +379,8 @@ const fuseMoves = (g: Game, from: readonly [MoveId, MoveId], to: MoveId) => {
   g.events.push({ kind: 'duoFused', from, to })
 }
 
-/** The level a Pokémon at `stage` evolves at in the Arena (none past its last). */
-export const versusEvolveAt = (stage: number): number | undefined => VERSUS_KIT.evolveAt[stage]
+/** The level a Pokémon at `stage` evolves at in Arena match `s` (its format's, none past its last). */
+export const versusEvolveAt = (s: Pick<VersusState, 'format'>, stage: number): number | undefined => rulesOf(s).evolveAt[stage]
 
 /** The next evolution, if the player's level has reached it (into the branch picked, for a branching one; `advancePhase` asks where, or holds it without items). */
 export const pendingEvolution = (g: Game) => {
@@ -389,7 +389,7 @@ export const pendingEvolution = (g: Game) => {
   if (p.everstone || p.stage + 1 >= PLAYABLE[p.starter].line.length) return null
   const stage = formAt(p.starter, p.branch, p.stage)
   const next = formAt(p.starter, p.branch, p.stage + 1)
-  // The Arena evolves at its own levels (`VERSUS_KIT.evolveAt`).
-  const at = p.versus ? versusEvolveAt(p.stage) : stage.evolveAt
+  // The Arena evolves at its format's own levels (`FormatRules.evolveAt`).
+  const at = p.versus && g.versus ? versusEvolveAt(g.versus, p.stage) : stage.evolveAt
   return at !== undefined && p.level >= at ? { from: stage.dex, to: next.dex } : null
 }

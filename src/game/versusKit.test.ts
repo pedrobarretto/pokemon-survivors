@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TAU } from '../engine/math'
-import { VERSUS_KIT } from '../data/versus'
+import { VERSUS_FORMATS, VERSUS_KIT } from '../data/versus'
 import { parseTickEntry, stepTick } from './lockstep'
 import { actAs } from './players'
 import { nearestEnemy } from './queries'
@@ -131,7 +131,7 @@ describe('the kit in a match', () => {
     stepTick(g, [{ slot: 0, kind: 'pick', screen: 'levelup', round: me.round, index: 0 }])
     expect(me.moves).toHaveLength(VERSUS_KIT.moves)
     // A level-up into the evolution's level, picked, evolves it.
-    me.level = VERSUS_KIT.evolveAt[0]
+    me.level = VERSUS_FORMATS.standard.evolveAt[0]
     me.pendingLevelUps = 1
     stepTick(g, [])
     stepTick(g, [{ slot: 0, kind: 'pick', screen: 'levelup', round: me.round, index: 0 }])
