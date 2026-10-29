@@ -447,7 +447,15 @@ export const createVersusTalk = (root: HTMLElement, input: Input, deps: TalkDeps
     }
     stack.style.top = `${unzoom(bottom + 6)}px`
     const map = minimap?.getBoundingClientRect()
-    column.style.top = `${unzoom((map && map.height > 0 ? map.bottom : bottom) + 8)}px`
+    const below = (map && map.height > 0 ? map.bottom : bottom) + 8
+    // Under the mini map, unless that runs into the kit's buttons or the fixed stick (a phone lying down): then beside it, on its left.
+    const col = column.getBoundingClientRect()
+    const fixedStick = settings().joystick === 'fixed' && !matchMedia('(hover: hover) and (pointer: fine)').matches
+    const obstacles = [...root.querySelectorAll<HTMLElement>('.kit-btn'), ...(fixedStick ? document.querySelectorAll<HTMLElement>('.stick-anchor') : [])].map((b) => b.getBoundingClientRect())
+    const hits = (r: DOMRect) => r.height > 0 && r.left < col.right + 8 && r.right > col.left - 8 && r.top < below + col.height + 8 && r.bottom > below - 8
+    const beside = !!map && map.height > 0 && obstacles.some(hits)
+    column.style.top = `${unzoom(beside ? map.top : below)}px`
+    column.style.right = beside ? `${unzoom(window.innerWidth - map.left + 8)}px` : ''
   }
 
   /**

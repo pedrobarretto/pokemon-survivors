@@ -20712,6 +20712,10 @@ button.hall-tile:hover {
     padding: 6px;
     gap: 4px;
   }
+  /* Buttons on the left: the kit's cluster (`.arena-kit`, 140 px) holds that corner, so the cards stand just right of it. */
+  [data-hand='left'] .vs-tray {
+    left: calc(max(14px, var(--safe-l)) + 148px);
+  }
   .vs-card {
     min-height: 38px;
   }

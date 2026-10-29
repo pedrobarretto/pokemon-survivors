@@ -62,7 +62,38 @@ const snapAt = (g: Game, me: Player, x: number, y: number) => {
   return best
 }
 
-/** The overlay, in world px (the caller has the camera's translate on). `me` is this screen's player. */
+/** How far in from the screen's edge (world px) a path that runs off it stops. */
+const EDGE = 10
+
+/**
+ * How far along the ray from (ox, oy) in direction (ux, uy) it stays on
+ * screen (`EDGE` in from its sides), as the canvas's transform shows the
+ * world now: a portrait phone shows ~110 px either side, half the reach.
+ */
+const onScreen = (ctx: CanvasRenderingContext2D, ox: number, oy: number, ux: number, uy: number) => {
+  const m = ctx.getTransform()
+  const x0 = -m.e / m.a + EDGE
+  const x1 = (ctx.canvas.width - m.e) / m.a - EDGE
+  const y0 = -m.f / m.d + EDGE
+  const y1 = (ctx.canvas.height - m.f) / m.d - EDGE
+  const tx = ux > 0 ? (x1 - ox) / ux : ux < 0 ? (x0 - ox) / ux : Infinity
+  const ty = uy > 0 ? (y1 - oy) / uy : uy < 0 ? (y0 - oy) / uy : Infinity
+  return Math.max(0, Math.min(tx, ty))
+}
+
+/** A chevron at (x, y) pointing along (ux, uy): the path goes on past the screen's edge. */
+const chevron = (ctx: CanvasRenderingContext2D, x: number, y: number, ux: number, uy: number) => {
+  for (let k = 0; k <= 3; k++) {
+    ctx.fillRect(Math.round(x - ux * k * 1.5 - uy * k * 1.5), Math.round(y - uy * k * 1.5 + ux * k * 1.5), 1, 1)
+    ctx.fillRect(Math.round(x - ux * k * 1.5 + uy * k * 1.5), Math.round(y - uy * k * 1.5 - ux * k * 1.5), 1, 1)
+  }
+}
+
+/**
+ * The overlay, in world px (the caller has the camera's translate on). `me` is
+ * this screen's player. The reach is the simulation's whatever the screen: a
+ * path whose landing is off screen stops at its edge with a chevron.
+ */
 export const drawArenaAim = (ctx: CanvasRenderingContext2D, g: Game, me: Player, overlay: ArenaOverlay, t: number) => {
   if (!me.versus || me.hp <= 0) return
   const locked = aimableById(g, me, overlay.lock)
@@ -89,12 +120,16 @@ export const drawArenaAim = (ctx: CanvasRenderingContext2D, g: Game, me: Player,
   blitRing(ctx, VERSUS_KIT.reach, 1, color, ox, oy)
   ctx.globalAlpha = 0.9
   ctx.fillStyle = color
-  // The path: a dotted line out to where it lands.
-  for (let d = 12; d < reach - 4; d += 7) ctx.fillRect(Math.round(ox + ux * d) - 1, Math.round(oy + uy * d) - 1, 2, 2)
-  const ex = ox + ux * reach
-  const ey = oy + uy * reach
-  blitRing(ctx, 6, 1, color, Math.round(ex), Math.round(ey))
-  ctx.fillRect(Math.round(ex), Math.round(ey), 1, 1)
+  // The path: a dotted line out to where it lands, or to the screen's edge when that's off it.
+  const shown = Math.min(reach, onScreen(ctx, ox, oy, ux, uy))
+  for (let d = 12; d < shown - 4; d += 7) ctx.fillRect(Math.round(ox + ux * d) - 1, Math.round(oy + uy * d) - 1, 2, 2)
+  const ex = ox + ux * shown
+  const ey = oy + uy * shown
+  if (shown < reach) chevron(ctx, ex, ey, ux, uy)
+  else {
+    blitRing(ctx, 6, 1, color, Math.round(ex), Math.round(ey))
+    ctx.fillRect(Math.round(ex), Math.round(ey), 1, 1)
+  }
   ctx.globalAlpha = 1
   if (aim.cancel) return
   const snap = snapAt(g, me, me.x + ux * reach, me.y + uy * reach)
