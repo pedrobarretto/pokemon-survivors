@@ -38,8 +38,10 @@ export type SpeciesSprites = {
   /** Opaque body size on the first Walk frame (`bodyOf`). */
   bodyW: number
   bodyH: number
-  /** The variant these sheets were downloaded for (absent on a stand-in): the Arena's wearables (`render/wearables.ts`) find their anchors by it. */
+  /** The variant these sheets were downloaded for (absent on a stand-in): the wearables (`render/wearables.ts`) find their anchors by it. */
   variant?: { shiny: boolean; form?: FormKey }
+  /** Set on sprites `fitSprites` shrank: the downloaded ones and the scale, so the wearables pin to the anchors they measured and shrink with the sprite. */
+  fitted?: { from: SpeciesSprites; scale: number }
 }
 
 type ManifestAnims = Partial<Record<AnimName, { frameWidth: number; frameHeight: number; durations: number[] }>>
@@ -793,6 +795,7 @@ export const fitSprites = (s: SpeciesSprites, maxW: number, minH = 0): SpeciesSp
       footY: Math.round(s.footY * k),
       bodyW: Math.round(s.bodyW * k),
       bodyH: Math.round(s.bodyH * k),
+      fitted: { from: s, scale: k },
     }
     fits.set(s, fit)
   }

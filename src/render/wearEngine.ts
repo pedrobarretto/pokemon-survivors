@@ -35,8 +35,18 @@ import { placeFrame, type AnimName, type FramePlace, type SpeciesSprites } from 
 
 /* ---------------- Anchors ---------------- */
 
-/** The anchors' files (`data/wearAnchors/`, `npm run anchors`), each its own small chunk. */
-const CHUNKS = import.meta.glob<AnchorChunk>('../data/wearAnchors/*.json', { import: 'default' })
+/**
+ * The anchors' files (`data/wearAnchors/`, `npm run anchors`), each its own
+ * small asset, by URL: fetched rather than imported, since some browsers keep
+ * a failed dynamic import failed for the page's life and a retry must refetch.
+ */
+const CHUNKS = import.meta.glob<string>('../data/wearAnchors/*.json', { query: '?url', import: 'default', eager: true })
+
+const fetchChunk = async (url: string): Promise<AnchorChunk> => {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`anchors ${res.status}`)
+  return res.json()
+}
 
 /** Each chunk's entries once loaded (`anchorChunk`), null while it loads or after it failed lately. */
 const chunks = new Map<number, Record<string, AnchorEntry> | null>()
@@ -52,10 +62,10 @@ const entriesOf = (dex: number) => {
   const n = anchorChunk(dex)
   const have = chunks.get(n)
   if (have !== undefined) return have
-  const load = CHUNKS[`../data/wearAnchors/anchors-${n}.json`]
-  chunks.set(n, load ? null : NONE)
-  if (!load) return NONE
-  void load().then(
+  const url = CHUNKS[`../data/wearAnchors/anchors-${n}.json`]
+  chunks.set(n, url ? null : NONE)
+  if (!url) return NONE
+  void fetchChunk(url).then(
     (c) => chunks.set(n, c.species),
     () => setTimeout(() => chunks.delete(n), RETRY),
   )
@@ -282,10 +292,12 @@ export const drawWearables = (
   layer: Exclude<Layer, 'hidden'>,
   opts: { alpha?: number; scale?: number; loop?: boolean; clock?: number },
 ) => {
-  const w = wearerOf(s)
+  // A legend shrunk to fit (`fitSprites`) wears on its downloaded sheets' anchors, shrunk with it.
+  const src = s.fitted?.from ?? s
+  const w = wearerOf(src)
   if (!w) return
-  const k = opts.scale ?? 1
-  if (!placeFrame(s, anim, seconds, x, y, k, opts.loop ?? true, place)) return
+  const k = (opts.scale ?? 1) * (s.fitted?.scale ?? 1)
+  if (!placeFrame(src, anim, seconds, x, y, k, opts.loop ?? true, place)) return
   const sheet = anchoredSheet(w.anchors, place)
   if (!sheet) return
   const alpha = opts.alpha ?? 1
@@ -296,7 +308,7 @@ export const drawWearables = (
     if (!art) continue
     pivotAt(w.anchors, sheet, dir, place.frame, slot, nudgeOf(w.fit, slot, dir), pivot)
     if (alpha !== 1) ctx.globalAlpha = alpha
-    ctx.drawImage(art.canvas, place.dx + (pivot.x - art.ox) * k, place.dy + (pivot.y - art.oy) * k, art.canvas.width * k, art.canvas.height * k)
+    ctx.drawImage(art.canvas, Math.round(place.dx + (pivot.x - art.ox) * k), Math.round(place.dy + (pivot.y - art.oy) * k), Math.round(art.canvas.width * k), Math.round(art.canvas.height * k))
   }
   if (alpha !== 1) ctx.globalAlpha = 1
 }

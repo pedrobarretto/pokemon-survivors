@@ -810,14 +810,17 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     return c.json(await arena.tickets(ids))
   })
 
-  app.post('/looks', smallBody, async (c) => {
+  const looksLookup = async (c: Context) => {
     const signed = await relayBody(c)
     if ('error' in signed) return signed.error
     const ids = isRecord(signed.body) && Array.isArray(signed.body.userIds) ? signed.body.userIds : null
     if (!ids || ids.length > 64 || !ids.every((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 64)) return c.json({ error: 'expected { userIds }' }, 400)
     const looks = await gems.looks(ids)
     return c.json({ looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])) } satisfies LooksResponse)
-  })
+  }
+  app.post('/looks', smallBody, looksLookup)
+  // The old path, for relays deployed before the API's rename: drop it once both relays ask `/looks`.
+  app.post('/arena/looks', smallBody, looksLookup)
 
   app.post('/arena/practice', auth, bodyLimit({ maxSize: 16 * 1024 }), async (c) => {
     const body = await json(c)

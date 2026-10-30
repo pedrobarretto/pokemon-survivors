@@ -82,8 +82,8 @@ export const openBoutique = (root: HTMLElement, input: Input, opts: BoutiqueOpts
     root,
     input,
     signIn: opts.signIn,
-    // The partner tries things on when its species can wear looks (it has anchors), the Arena pick otherwise (and while the wearables' engine loads).
-    wearer: () => (chosen ? pickWearer(chosen) : wearsLooks(partner.dex) ? partner : pickWearer(opts.pick)),
+    // The partner tries things on (every player species has anchors but a few), the Arena pick only when its species has none.
+    wearer: () => (chosen ? pickWearer(chosen) : wearsLooks(partner.dex) === false ? pickWearer(opts.pick) : partner),
     pick: () => chosen,
     setPick: (id) => {
       chosen = id

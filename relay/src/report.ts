@@ -43,7 +43,7 @@ export const postSigned = async (api: ArenaApi, path: string, body: string, fetc
   })
 
 /** A room's run waits this long at most for its looks before starting without them. */
-export const LOOKS_TIMEOUT_MS = 3000
+export const LOOKS_TIMEOUT_MS = 1500
 
 /**
  * The looks the API vouches for (`POST /looks`, signed), by
