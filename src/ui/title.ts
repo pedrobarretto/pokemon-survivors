@@ -849,7 +849,7 @@ const BOARD_TABS = { play: null, ranking: 'ranking', season: 'season', history: 
  * `ps.festival('open')`, a talk at the fountain) opens the Festival da Praça's
  * sheet there (`plaque`, a talk at the donors' plaque, on its plaque tab),
  * `look` (dev, `ps.plaza()`) only goes there, for a look; Esc or Enter brings it back.
- * `boutique` (a talk with Leavanny, the shop's Boutique button, `?boutique`) goes to Leavanny's Boutique at the plaza's east end and
+ * `boutique` (a talk with Leavanny, the shop's Boutique button, `?boutique`) goes to Leavanny's Boutique on the plaza's north-west and
  * opens it on Loja (`locker`: on Visual, the Trainer Card's row); walking there, Leavanny says hello first.
  * `dojo` and `stadium` go west to the Dojo and south to the Estádio instead, where Machoke or Ninjask says hello.
  */

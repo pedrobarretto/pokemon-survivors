@@ -523,7 +523,7 @@ const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void
 /** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
 let boutiqueCheckout: string | null = null
 
-/** Leavanny's Boutique over the plaza's east end (`ui/boutique.ts`); closing it leaves `?boutique` behind too. */
+/** Leavanny's Boutique over the plaza's north-west (`ui/boutique.ts`); closing it leaves `?boutique` behind too. */
 const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
   const checkout = boutiqueCheckout
   boutiqueCheckout = null
@@ -542,8 +542,8 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
 
 /**
  * The Boutique without the walk (the Arena's gem chip and Loja, the Trainer
- * Card's look, `?boutique`, a checkout's return): the lobby lands at the
- * plaza's east end with the sheet open on `tab`; leaving it calls `back`
+ * Card's look, `?boutique`, a checkout's return): the lobby lands on the
+ * plaza's north-west with the sheet open on `tab`; leaving it calls `back`
  * when given (where it came from), else pans home. `checkout`: the
  * `?gems=<ref>` the Loja waits on.
  */
@@ -1086,7 +1086,7 @@ const menuSprites = (): Variant[] => [
     ...new Set([
     ...(halloweenToday() ? HAUNT_DEX : []),
     KECLEON_DEX,
-    // Leavanny at the Boutique, the plaza's east end.
+    // Leavanny at the Boutique, on the plaza's north-west.
     TAILOR.dex,
     // The Dojo's Machoke and Wobbuffet, west of home, and the Estádio's Ninjask, south of it.
     ...DOJO_DEX,
@@ -3535,7 +3535,7 @@ const showSharedProfile = (handle: string) => {
 const IDEAS_PARAM = 'ideias'
 /** `?loja`, the Kecleon's shop's own link: the lobby opens at the plaza, Kecleon says hello and the shop opens. */
 const SHOP_PARAM = 'loja'
-/** `?boutique`, Leavanny's Boutique's own link: the lobby opens at the plaza's east end with the Boutique open on Loja. */
+/** `?boutique`, Leavanny's Boutique's own link: the lobby opens on the plaza's north-west with the Boutique open on Loja. */
 const BOUTIQUE_PARAM = 'boutique'
 
 const showIdeasLink = () =>
@@ -4388,7 +4388,7 @@ if (import.meta.env.DEV) {
        */
       stadium: () => showTitle({ shop: 'stadium' }),
       /**
-       * Leavanny's Boutique at the plaza's east end: `ps.boutique()` walks the lobby there, Leavanny's hello included (the first
+       * Leavanny's Boutique on the plaza's north-west: `ps.boutique()` walks the lobby there, Leavanny's hello included (the first
        * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
        * `ps.boutique('open')` lands there with the sheet open at once (`'locker'` on Visual).
        */

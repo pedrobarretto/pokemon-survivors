@@ -58,8 +58,8 @@ import {
  * Attract-mode backdrop behind the menus: the meadow around the partner's
  * home, under a camera that stands still, with wild Pokémon strolling around
  * (and, rarely, a shiny). East of home stands the Kecleon plaza
- * (`render/plaza.ts`), the shop as a place, with Leavanny's Boutique at its
- * east end, west of it the Dojo
+ * (`render/plaza.ts`), the town square around the shop, with Leavanny's
+ * Boutique on its north-west, west of it the Dojo
  * (`render/dojo.ts`), Machoke's training hall, and south of it the Estádio
  * (`render/stadium.ts`), the Arena's, Ninjask judging at its gate. On the lobby the partner can hop
  * off its stage and take a walk among them (`meetPartner`, `steerPartner`):
@@ -135,7 +135,7 @@ export type Partner = {
   trail: Vec[]
 }
 
-/** Where the camera rests when nobody strolls: the partner's home, the Kecleon plaza (the shop, or Leavanny's Boutique at its east end), the Dojo or the Estádio. */
+/** Where the camera rests when nobody strolls: the partner's home, the Kecleon plaza (the shop, or Leavanny's Boutique on its north-west), the Dojo or the Estádio. */
 export type Place = 'home' | 'plaza' | 'boutique' | 'dojo' | 'stadium'
 
 /** Who the partner can talk to in the meadow: the plaza's keepers and visitors, Machoke at the Dojo, or Ninjask and the boards at the Estádio. */

@@ -19,7 +19,7 @@ import type { PokeType } from './types'
  * weekend per save. With `haggle.stamps` loyalty stamps or more, haggling
  * takes `haggle.off` off the whole weekend; without them Meowth refuses.
  */
-/** Leavanny, the Boutique's tailor at the plaza's east end (`render/plaza.ts`, `ui/boutique.ts`): it sews clothes from leaves, and lives only there. */
+/** Leavanny, the Boutique's tailor on the plaza's north-west (`render/plaza.ts`, `ui/boutique.ts`): it sews clothes from leaves, and lives only there. */
 export const TAILOR = { dex: 542, name: 'Leavanny', types: ['bug', 'grass'] } as const satisfies { dex: number; name: string; types: readonly PokeType[] }
 
 export const CARAVAN = {
