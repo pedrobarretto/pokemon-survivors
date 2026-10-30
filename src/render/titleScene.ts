@@ -11,8 +11,6 @@ import { drawPokemon, hasShiny, loadedSprites, loadSpecies, type Dex } from './s
 import { drawGround } from './world'
 import { drawMeadowJacks, drawMeadowNight } from './halloweenArt'
 import {
-  boutiqueFrame,
-  boutiqueSpot,
   celebratePlaza,
   createPlaza,
   drawPlazaDusk,
@@ -21,8 +19,10 @@ import {
   drawPlazaOverhead,
   drawPlazaParty,
   greetKeepers,
-  greetTailor,
+  greetShopkeeper,
   KECLEON_DEX,
+  lotFrame,
+  lotSpot,
   plazaFrame,
   plazaPieces,
   plazaTapped,
@@ -335,7 +335,7 @@ export const exploreMeadow = (s: TitleScene, on: boolean, w: number, h: number) 
  */
 const restCam = (s: TitleScene, place: Place, w: number, h: number): Vec =>
   place === 'plaza' ? plazaFrame(s.plaza, w, h)
-  : place === 'boutique' ? boutiqueFrame(s.plaza, w, h)
+  : place === 'boutique' ? lotFrame(s.plaza, 'boutique', w, h)
   : place === 'dojo' ? dojoFrame(s.dojo, w, h)
   : place === 'stadium' ? stadiumFrame(s.stadium, w, h)
   : { x: Math.round(s.home.x - w / 2), y: Math.round(s.home.y - h / 2) }
@@ -345,7 +345,7 @@ const easeInOut = (k: number) => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 
 /** Where the partner ends a trip to `place`: the shop's counter, before Leavanny, before Machoke, before Ninjask, or its stage. */
 const tripGoal = (s: TitleScene, p: Partner, place: Place) =>
   place === 'plaza' ? shopSpot(s.plaza)
-  : place === 'boutique' ? boutiqueSpot(s.plaza)
+  : place === 'boutique' ? lotSpot(s.plaza, 'boutique')
   : place === 'dojo' ? senseiSpot(s.dojo)
   : place === 'stadium' ? judgeSpot(s.stadium)
   : p.home
@@ -398,7 +398,7 @@ const arrive = (s: TitleScene, to: Place) => {
     cry(s, JUDGE.dex)
   }
   if (to === 'boutique') {
-    greetTailor(s.plaza, s.time)
+    greetShopkeeper(s.plaza, 'boutique', s.time)
     cry(s, TAILOR.dex)
   }
   // A camouflaged Kecleon keeps still and quiet until it's talked to (`revealShopkeeper`).
