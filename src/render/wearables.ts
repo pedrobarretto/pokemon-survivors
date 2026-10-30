@@ -12,9 +12,10 @@ let engine: Engine | null = null
 let loading: Promise<Engine> | null = null
 
 /**
- * Loads the wearables' engine and the roster's anchors (a separate chunk,
- * about 40 KB gzipped, that only a look needs). `drawWearables` starts it on
- * its own; await it where a screen must show a look at once (the locker).
+ * Loads the wearables' engine (a separate chunk, about 11 KB gzipped, that
+ * only a look needs; each species' anchors come in a small chunk of their own
+ * on its first draw). `drawWearables` starts it on its own; await it where a
+ * screen must show a look at once (the locker).
  */
 export const loadWearables = () =>
   (loading ??= import('./wearEngine').then(
@@ -46,9 +47,10 @@ export type WearOpts = {
  * the species' head, neck and body; drawn in the pass its slot takes facing
  * `dir` (`render/wearFit.ts`: a cape behind facing south and over the body
  * facing north, glasses gone facing away). Draws nothing until the engine
- * loads (the first call starts it), for a stand-in sprite (a dust puff), a
- * form or a species outside the Arena's roster, and for an item the species
- * can't wear (`data/wearFits.ts`).
+ * loads (the first call starts it) and until the species' anchors land, for a
+ * stand-in sprite (a dust puff) or a variant without anchors (a species no
+ * player can be; `npm run anchors` lists the rest), and for an item the
+ * species can't wear (`data/wearFits.ts`).
  */
 export const drawWearables = (
   ctx: CanvasRenderingContext2D,

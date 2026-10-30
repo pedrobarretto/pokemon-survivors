@@ -1,33 +1,37 @@
-// Fits the Arena's wearables (src/render/wearables.ts) to the roster's sprites:
-// `npm run anchors`. SpriteCollab ships an `<Anim>-Offsets.png` beside every
+// Fits the wearables (src/render/wearables.ts) to every Pokémon a player can
+// be: `npm run anchors`. SpriteCollab ships an `<Anim>-Offsets.png` beside every
 // sheet, with the same frame grid and one marker pixel per frame: black where
 // the move comes out of (the mouth: the chin facing south, the snout's tip
 // facing east, the back of the head facing north), green the body's center,
-// red and blue the hands. This downloads them for the Arena's roster
-// (`ARENA`, cached in node_modules/.cache, never committed), keeps each
-// frame's mouth and center, and measures each direction's head, eyes, neck
-// and back once from the sprite's own pixels around them (the first Walk
-// frame), relative to those markers, as the points each kind of wearable
-// turns around (`render/wearModels.ts`): the top of the head's axis (hats),
-// the head's center at the eyes' height (face), the neck's axis (neck) and
-// the body's at the shoulders (back). What the measures get wrong for a
-// species (a leaf, a crest, a bulb on top of the head) is fixed by hand in
-// src/data/wearFits.ts (the dev console's `ps.wear('fit')` prints it).
+// red and blue the hands. This downloads them for the players' species and
+// their forms (`PLAYERS` and `FORMS`, cached in node_modules/.cache, never
+// committed), keeps each frame's mouth and center, and measures each
+// direction's head, eyes, neck and back once from the sprite's own pixels
+// around them (the first Walk frame), relative to those markers, as the points
+// each kind of wearable turns around (`render/wearModels.ts`): the top of the
+// head's axis (hats), the head's center at the eyes' height (face), the neck's
+// axis (neck) and the body's at the shoulders (back). What the measures get
+// wrong for a species (a leaf, a crest, a bulb on top of the head) is fixed by
+// hand in src/data/wearFits.ts (the dev console's `ps.wear('fit')` prints it).
+// A variant without offsets (or with offsets that don't fit its sheets) is
+// left out, and listed at the end: it draws bare.
 //
-// Output: src/data/wearAnchors.generated.json, by species (`<dex>`, and
-// `<dex>s` for a shiny whose frames differ), each a few base64 byte strings:
+// Output: src/data/wearAnchors/anchors-<chunk>.json, a file per 32 dex numbers
+// (`anchorChunk`), so a client loads only the chunks of the species it draws.
+// By variant (`<dex>`, `<dex>:<form>`, and either with an `s` for a shiny
+// whose frames differ), each a few base64 byte strings:
 //   dirs: 8 directions × GEOMETRY bytes (signed values + 128)
 //   Walk, Idle, Hurt: frame width, height and count, then for each direction
 //     and frame the mouth's x, y and the center's x, y.
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { ARENA, pad } from './dex.mjs'
+import { FORMS, PLAYERS, pad } from './dex.mjs'
 import { readPng } from './png.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const SPRITES = join(ROOT, 'public/assets/pokemon')
 const CACHE = join(ROOT, 'node_modules/.cache/ps-offsets')
-const OUT = join(ROOT, 'src/data/wearAnchors.generated.json')
+const OUT = join(ROOT, 'src/data/wearAnchors')
 const REMOTE = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/sprite'
 const ANIMS = ['Walk', 'Idle', 'Hurt']
 /** The bytes of one direction's measures, in this order (`render/wearFit.ts` reads them): head, face and neck from the mouth, back and feet from the center. */
@@ -35,6 +39,8 @@ const GEOMETRY = ['headX', 'headY', 'headW', 'faceX', 'faceY', 'neckX', 'neckY',
 /** How far down the camera looks at the sprites (degrees): `PITCH` in src/render/wearArt.ts, which renders the wearables from the same angle. */
 const PITCH = 22
 const SIN_PITCH = Math.sin((PITCH * Math.PI) / 180)
+/** The file a species' anchors go in: `anchorChunk` in src/render/wearFit.ts, which loads them. */
+const anchorChunk = (dex) => Math.floor(dex / 32)
 
 const manifest = JSON.parse(await readFile(join(ROOT, 'src/data/sprites.generated.json'), 'utf8'))
 const exists = (p) => access(p).then(() => true, () => false)
@@ -49,15 +55,19 @@ const download = async (url, dest) => {
 
 const tag = (xml, name) => xml.match(new RegExp(`<${name}>([^<]*)</${name}>`))?.[1]
 
-/** A variant's Walk, Idle and Hurt offsets into the cache (an anim that's a copy of another reads that one's). */
-const fetchOffsets = async (dex, variant, dir) => {
+/**
+ * A variant's Walk, Idle and Hurt offsets into the cache (an anim that's a copy of another reads that one's; an anim
+ * the variant has no sheet for, `has`, reads Walk's, as `placeFrame` draws it). False where SpriteCollab has none.
+ */
+const fetchOffsets = async (path, has, dir) => {
   await mkdir(dir, { recursive: true })
-  if (!(await download(`${REMOTE}/${pad(dex)}${variant}/AnimData.xml`, join(dir, 'AnimData.xml')))) return false
+  if (!(await download(`${REMOTE}/${path}/AnimData.xml`, join(dir, 'AnimData.xml')))) return false
   const xml = await readFile(join(dir, 'AnimData.xml'), 'utf8')
   const copies = Object.fromEntries([...xml.matchAll(/<Anim>([\s\S]*?)<\/Anim>/g)].map(([, body]) => [tag(body, 'Name'), tag(body, 'CopyOf')]))
   const resolve = (name) => (copies[name] ? resolve(copies[name]) : name)
   for (const anim of ANIMS) {
-    if (!(await download(`${REMOTE}/${pad(dex)}${variant}/${resolve(anim)}-Offsets.png`, join(dir, `${anim}.png`)))) throw new Error(`#${dex}${variant}: no ${anim} offsets`)
+    const sheet = resolve(has(anim) ? anim : 'Walk')
+    if (!(await download(`${REMOTE}/${path}/${sheet}-Offsets.png`, join(dir, `${anim}.png`)))) throw new Error(`no ${anim} offsets`)
   }
   return true
 }
@@ -204,21 +214,35 @@ const signed = (values) =>
 
 const b64 = (bytes) => Buffer.from(Uint8Array.from(bytes)).toString('base64')
 
-/** A species variant's anchors: its sheets' markers and its directions' measures. */
-const fit = async (dex, shiny) => {
-  const variant = shiny ? manifest[dex].shiny : manifest[dex]
-  const dir = join(CACHE, `${dex}${shiny ? 's' : ''}`)
-  if (!(await fetchOffsets(dex, shiny ? '/0000/0001' : '', dir))) return null
+/** Every variant a player can be: each species and each of its forms (`FORMS`), by its key and its SpriteCollab folder. */
+const VARIANTS = PLAYERS.flatMap((dex) => [
+  { key: String(dex), dex, form: null, path: pad(dex) },
+  ...Object.entries(FORMS[dex] ?? {}).map(([form, id]) => ({ key: `${dex}:${form}`, dex, form, path: `${pad(dex)}/${id}` })),
+])
+
+/** A variant's sheets in the manifest (`shiny`: its shiny colors'), if the game has them. */
+const sheetsOf = ({ dex, form }, shiny) => {
+  const entry = form ? manifest[dex].forms?.[form] : manifest[dex]
+  return shiny ? entry?.shiny : entry
+}
+
+/** A variant's anchors, normal or shiny: its sheets' markers and its directions' measures; null where SpriteCollab has no offsets for it. */
+const fit = async ({ key, dex, form, path }, shiny) => {
+  const variant = sheetsOf({ dex, form }, shiny)
+  const dir = join(CACHE, `${key.replace(':', '-')}${shiny ? 's' : ''}`)
+  // A shiny lives under `0000/0001` (a form's under its own `<id>/0001`).
+  const remote = shiny ? `${path}/${form ? '' : '0000/'}0001` : path
+  if (!(await fetchOffsets(remote, (anim) => anim in variant.anims, dir))) return null
   const anims = {}
   for (const anim of ANIMS) {
     const meta = variant.anims[anim] ?? variant.anims.Walk
     const png = await readPng(join(dir, `${anim}.png`))
     const frames = meta.durations.length
-    if (png.width !== meta.frameWidth * frames || png.height !== meta.frameHeight * 8) throw new Error(`#${dex}${shiny ? 's' : ''} ${anim}: offsets don't match the sheet`)
+    if (png.width !== meta.frameWidth * frames || png.height !== meta.frameHeight * 8) throw new Error(`${anim}: offsets don't match the sheet`)
     anims[anim] = { fw: meta.frameWidth, fh: meta.frameHeight, frames, marks: markers(png, meta.frameWidth, meta.frameHeight, frames) }
   }
   const walk = anims.Walk
-  const sheet = await readPng(join(SPRITES, String(dex), shiny ? 'shiny' : '', 'Walk.png'))
+  const sheet = await readPng(join(SPRITES, String(dex), form ?? '', shiny ? 'shiny' : '', 'Walk.png'))
   const measured = []
   for (const row of [0, 1, 2, 6, 7, 3, 4, 5]) measured[row] = measure(sheet, walk.fw, walk.fh, row, walk.marks[row][0], measured[FRONT_OF[row]])
   return {
@@ -227,17 +251,46 @@ const fit = async (dex, shiny) => {
   }
 }
 
-const out = {}
-for (const dex of ARENA) {
-  const normal = await fit(dex, false)
-  if (!normal) throw new Error(`#${dex}: no offsets on SpriteCollab`)
-  out[dex] = normal
-  // A shiny is its own entry only where its frames differ (Dewott's are laid out anew, a few move a marker).
-  const shiny = manifest[dex].shiny ? await fit(dex, true) : null
+/**
+ * Variants left out (no offsets, or offsets that don't fit the sheets), with why: they draw bare. A shiny left out
+ * (a hand-made one, `HANDMADE_SHINIES`) wears its normal colors' anchors: its sheets are theirs, recolored.
+ */
+const left = []
+const tryFit = (v, shiny) =>
+  fit(v, shiny).then(
+    (a) => (a ? a : (left.push(`${v.key}${shiny ? ' (shiny)' : ''}: no offsets on SpriteCollab`), null)),
+    (error) => (left.push(`${v.key}${shiny ? ' (shiny)' : ''}: ${error.message}`), null),
+  )
+
+/** A variant's entries: the normal one, and the shiny only where its frames differ (Dewott's are laid out anew, a few move a marker). */
+const entriesOf = async (v) => {
+  const normal = await tryFit(v, false)
+  if (!normal) return []
+  const shiny = sheetsOf(v, true) ? await tryFit(v, true) : null
   const differs = shiny && ANIMS.some((anim) => shiny[anim] !== normal[anim])
-  if (differs) out[`${dex}s`] = shiny
-  console.log(`#${dex}: ${ANIMS.map((a) => `${a} ${normal[a].length}`).join(', ')}${differs ? ' +shiny' : ''}`)
+  console.log(`${v.key}: ${ANIMS.map((a) => `${a} ${normal[a].length}`).join(', ')}${differs ? ' +shiny' : ''}`)
+  return differs ? [[v.key, normal], [`${v.key}s`, shiny]] : [[v.key, normal]]
 }
-const json = JSON.stringify({ pitch: PITCH, geometry: GEOMETRY, species: out }) + '\n'
-await writeFile(OUT, json)
-console.log(`Wrote ${OUT} (${Object.keys(out).length} variants, ${(json.length / 1024).toFixed(1)} KB)`)
+
+// A few variants at a time (each is a handful of small downloads), written in `VARIANTS`' order.
+const found = []
+for (let i = 0; i < VARIANTS.length; i += 8) found.push(...(await Promise.all(VARIANTS.slice(i, i + 8).map(entriesOf))).flat())
+
+// One file per chunk of the dex (`anchorChunk`): a client loads only the chunks of the species it draws.
+const chunks = new Map()
+for (const [key, entry] of found) {
+  const n = anchorChunk(parseInt(key, 10))
+  if (!chunks.has(n)) chunks.set(n, {})
+  chunks.get(n)[key] = entry
+}
+await rm(OUT, { recursive: true, force: true })
+await mkdir(OUT, { recursive: true })
+let total = 0
+for (const [n, species] of [...chunks].sort(([a], [b]) => a - b)) {
+  const json = JSON.stringify({ pitch: PITCH, geometry: GEOMETRY, species }) + '\n'
+  total += json.length
+  await writeFile(join(OUT, `anchors-${n}.json`), json)
+  console.log(`chunk ${n}: ${Object.keys(species).length} variants, ${(json.length / 1024).toFixed(1)} KB`)
+}
+console.log(`Wrote ${OUT} (${found.length} variants in ${chunks.size} chunks, ${(total / 1024).toFixed(1)} KB)`)
+if (left.length > 0) console.log(`Left out (drawn bare):\n  ${left.join('\n  ')}`)
