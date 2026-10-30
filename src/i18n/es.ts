@@ -5456,6 +5456,22 @@ export const es: Messages = {
     ],
     hello: ['¡Bzzz! ¿De vuelta a la Arena? ¡Que gane el mejor equipo!', 'La Energía guardada no suma puntos. ¡Llévala a la portería!', 'Cuatro cabezas piensan mejor que una. Juega con tu equipo.', 'El marcador de la temporada no espera. ¿Vamos?'],
   },
+  boutique: {
+    title: 'Boutique',
+    tabs: { shop: 'Tienda', locker: 'Estilo' },
+    shopButton: 'Boutique',
+    lockerRow: 'Estilo del Pokémon',
+    first: [
+      '¡Ah, una visita! Bienvenido a la Boutique. Soy Leavanny: coso ropita con hojas y mucho cariño.',
+      'Aquí las gemas compran estilos: sombreros, lentes, bufandas, capas, rastros y más. Cambian el aspecto, nunca el poder.',
+      'En la pestaña Estilo eliges qué usar. ¡Pruébate lo que quieras: el espejo corre por mi cuenta!',
+    ],
+    hello: ['¡Qué gusto verte! ¿Nos probamos algo?', 'Acabo de coser unas piezas nuevas. ¡Echa un vistazo!', 'Un buen estilo empieza por el sombrero. ¿O por la capa?', 'Cada puntada, una hoja. Cada hoja, un cariño.'],
+    browse: 'Elige una pieza y tu Pokémon se la prueba al instante.',
+    guest: '¡Pruébate lo que quieras! Para comprar o usar, solo inicia sesión.',
+    hintKeys: 'Q E pestañas · ↑ ↓ desplazar · ESC volver',
+    hintTouch: 'Toca una pieza para probártela',
+  },
   traits: {
     healer: (name: string) => `*${name}* cura a los aliados cercanos. ¡Derríbalo primero!`,
     shield: (name: string) => `*${name}* protege a sus aliados con un _escudo_ que absorbe daño.`,

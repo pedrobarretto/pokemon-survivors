@@ -40254,6 +40254,47 @@
       }
     }
   },
+  "542": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 32,
+        "frameHeight": 48,
+        "durations": [
+          8,
+          10,
+          8,
+          10
+        ]
+      },
+      "Idle": {
+        "frameWidth": 32,
+        "frameHeight": 64,
+        "durations": [
+          30,
+          2,
+          3,
+          3,
+          3,
+          2
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 48,
+        "frameHeight": 64,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 23,
+      "bodyH": 27,
+      "footY": 5
+    },
+    "cry": true
+  },
   "543": {
     "anims": {
       "Walk": {

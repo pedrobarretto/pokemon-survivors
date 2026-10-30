@@ -333,7 +333,7 @@ export const card = (entry: DexEntry, locale: Locale, css: SpriteCss, page?: str
   </div>
   <h2>${page ? html`<a href="${page}" title="${m.dexPage.page(name)}">${name}</a>` : name}</h2>
   <div class="types">${types.map((t) => typeBadge(t, m))}</div>
-  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'arena' ? m.pokedex.arenaNote : m.pokedex.eventNote}</p>`}
+  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'arena' ? m.pokedex.arenaNote : entry.source.kind === 'lobby' ? m.pokedex.lobbyNote : m.pokedex.eventNote}</p>`}
 </article>`
 }
 

@@ -89,6 +89,7 @@ export const siteEs: SiteMessages = {
     companionNote: 'Compañero de regalo: llega a la caja de regalos de quienes apoyan durante la Noche de Brujas y camina a tu lado en la partida, dejando un rastro de dulces.',
     cameoNote: 'No es un enemigo: aparece por un instante en la grieta de Darkrai durante la Noche de Brujas y rompe la pesadilla con Lunar Wing.',
     arenaNote: 'Un seguidor de la Arena: un aspecto que trota detrás de tu Pokémon en las partidas. Solo apariencia, nunca poder.',
+    lobbyNote: 'El sastre de la Boutique, en la plaza del lobby: cose con hojas los estilos que vende la tienda de gemas.',
     wildNote: 'Valores base. Los enemigos comunes se vuelven más fuertes cada minuto; los jefes, no.',
     appears: 'Cuándo aparece',
     horde: (from: string, until: string) => `Puede entrar en la horda, de ${from} a ${until}`,

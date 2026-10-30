@@ -124,6 +124,7 @@ export const sitePt = {
     companionNote: 'Companheiro de presente: chega na caixa de presentes dos apoiadores durante a Noite das Bruxas e anda ao seu lado na partida, deixando um rastro de doces.',
     cameoNote: 'Não é um inimigo: aparece por um instante na fenda do Darkrai, durante a Noite das Bruxas, e quebra o pesadelo com a Lunar Wing.',
     arenaNote: 'Um seguidor da Arena: um visual que trota atrás do seu Pokémon nas partidas. Só aparência, nunca poder.',
+    lobbyNote: 'A costureira da Boutique, na praça do lobby: costura com folhas os visuais que a loja de gemas vende.',
     wildNote: 'Valores base. Inimigos comuns ficam mais fortes a cada minuto; chefes, não.',
     appears: 'Quando aparece',
     horde: (from: string, until: string) => `Pode entrar na horda, de ${from} a ${until}`,

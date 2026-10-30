@@ -5817,6 +5817,28 @@ export const pt = {
     ],
     hello: ['Bzzz! De volta à Arena? Que vença o melhor time!', 'Energia guardada não marca ponto. Leve-a ao gol!', 'Quatro cabeças pensam melhor que uma. Jogue com sua equipe.', 'O placar da temporada não espera. Vamos?'],
   },
+  /** The Boutique (`ui/boutique.ts`), Leavanny's on the plaza: the gem shop and the look the Pokémon wears. */
+  boutique: {
+    title: 'Boutique',
+    /** Its tabs: the gem shop and the look worn. */
+    tabs: { shop: 'Loja', locker: 'Visual' },
+    /** The Kecleon shop's button to it. */
+    shopButton: 'Boutique',
+    /** The Trainer Card's row to the look worn (the Boutique's Visual, without the walk). */
+    lockerRow: 'Visual do Pokémon',
+    /** Leavanny, the tailor, as the partner walks up: the first visit, then one of these in turn. */
+    first: [
+      'Ah, visita! Bem-vindo à Boutique. Eu sou Leavanny: costuro roupinhas com folhas e muito carinho.',
+      'Aqui as gemas compram visuais: chapéus, óculos, cachecóis, capas, rastros e mais. Eles mudam o visual, nunca o poder.',
+      'Na aba Visual você escolhe o que usar. Prove à vontade: o espelho é por minha conta!',
+    ],
+    hello: ['Que bom te ver! Vamos provar alguma coisa?', 'Acabei de costurar umas peças novas. Dê uma olhada!', 'Um bom visual começa pelo chapéu. Ou pela capa?', 'Cada ponto, uma folha. Cada folha, um carinho.'],
+    /** Leavanny beside the open sheet: signed in, and for a guest. */
+    browse: 'Escolha uma peça e seu Pokémon prova na hora.',
+    guest: 'Pode provar à vontade! Para comprar ou usar, é só entrar na sua conta.',
+    hintKeys: 'Q E abas · ↑ ↓ rolar · ESC voltar',
+    hintTouch: 'Toque numa peça para provar',
+  },
 
   /** Explainer toast the first time each enemy trait shows up in a run. */
   traits: {
