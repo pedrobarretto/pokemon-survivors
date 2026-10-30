@@ -24,6 +24,45 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-30',
+    title: { pt: 'Correções de 30/10', en: 'Fixes of Oct 30', es: 'Correcciones del 30/10', fr: 'Correctifs du 30/10', zh: '10/30 修正' },
+    highlights: [
+      {
+        pt: 'Se o navegador perder o save de um aparelho com conta, o progresso da conta não é mais apagado.',
+        en: 'If the browser loses a signed-in device’s save, your account’s progress is no longer wiped.',
+        es: 'Si el navegador pierde el save de un dispositivo con cuenta, el progreso de la cuenta ya no se borra.',
+        fr: 'Si le navigateur perd la sauvegarde d’un appareil connecté, la progression du compte n’est plus effacée.',
+        zh: '若瀏覽器遺失了已登入裝置的存檔，帳號的進度不會再被清除。',
+      },
+      {
+        pt: 'O progresso da conta volta sozinho para o aparelho na próxima sincronização.',
+        en: 'Your account’s progress comes back to the device on its own at the next sync.',
+        es: 'El progreso de la cuenta vuelve solo al dispositivo en la próxima sincronización.',
+        fr: 'La progression du compte revient d’elle-même sur l’appareil à la prochaine synchronisation.',
+        zh: '帳號的進度會在下次同步時自動回到裝置上。',
+      },
+      {
+        pt: 'Ovos chocados, lendários capturados e conquistas ficam guardados na conta mesmo se o navegador limpar os dados do site.',
+        en: 'Hatched eggs, captured legendaries and achievements stay in your account even if the browser clears the site’s data.',
+        es: 'Los huevos eclosionados, los legendarios capturados y los logros quedan en la cuenta aunque el navegador borre los datos del sitio.',
+        fr: 'Les œufs éclos, les légendaires capturés et les succès restent sur le compte même si le navigateur efface les données du site.',
+        zh: '即使瀏覽器清除了網站資料，孵化的蛋、收服的傳說寶可夢與成就仍會保存在帳號中。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Conta protegida contra save perdido', en: 'Accounts safe from a lost save', es: 'Cuenta protegida contra un save perdido', fr: 'Compte protégé contre une sauvegarde perdue', zh: '帳號不怕存檔遺失' },
+        notes: [
+          {
+            pt: 'Quando o navegador apagava ou não conseguia ler o save de um aparelho que continuava conectado à conta, o save em branco substituía o da conta e tudo sumia (ovos chocados, lendários, conquistas). Agora a conta junta os dois e devolve o seu progresso ao aparelho.',
+            en: 'When the browser cleared or couldn’t read the save of a device that stayed signed in, the blank save replaced the account’s and everything was gone (hatched eggs, legendaries, achievements). Now the account merges both and gives your progress back to the device.',
+            es: 'Cuando el navegador borraba o no podía leer el save de un dispositivo que seguía conectado a la cuenta, el save en blanco reemplazaba el de la cuenta y todo desaparecía (huevos eclosionados, legendarios, logros). Ahora la cuenta junta los dos y le devuelve tu progreso al dispositivo.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-29',
     title: { pt: 'Arena: golpes na mão, 3v3, mapas no litoral e jogo em equipe', en: 'Arena: aimed moves, 3v3, coast maps and teamplay', es: 'Arena: movimientos en tus manos, 3v3, mapas en la costa y juego en equipo', fr: 'Arène : capacités en main, 3v3, cartes côtières et jeu d’équipe', zh: '競技場：親手施放招式、3v3、海岸地圖與團隊合作' },
     highlights: [
