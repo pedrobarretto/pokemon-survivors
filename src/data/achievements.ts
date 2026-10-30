@@ -122,9 +122,10 @@ export type MedalTitleId = { [K in AchievementId]: (typeof ACHIEVEMENTS)[K] exte
  * the VIP Customer's for 30 loyalty stamps and the Tycoon's for the Department Store (`game/loyalty.ts`),
  * the Patron's (Mecenas) for donating to a Festival da Praça (`game/festival.ts`),
  * the OG Supporter's for supporting the game before Patreon (`OG_GIFT` in `game/supporters.ts`),
- * the Arena's four for a ranked season's peak tier (`ARENA_REWARDS` in `game/arenaRewards.ts`).
+ * the Arena's four for a ranked season's peak tier (`ARENA_REWARDS` in `game/arenaRewards.ts`),
+ * the Creator's for making videos of the game (sent from the admin desk, `data/creators.ts`).
  */
-export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster'] as const
+export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator'] as const
 
 export type GiftTitleId = (typeof GIFT_TITLES)[number]
 

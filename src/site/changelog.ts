@@ -24,6 +24,24 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-30',
+    title: { pt: 'Criadores: vídeos de quem joga', en: 'Creators: videos from players', es: 'Creadores: videos de quienes juegan', fr: 'Créateurs : les vidéos des joueurs', zh: '創作者：玩家的影片' },
+    highlights: [
+      { pt: 'Nova página Criadores no site, com vídeos de Pokémon Survivors feitos por quem joga. Dá para assistir ali mesmo.', en: 'New Creators page on the site, with Pokémon Survivors videos made by players. Watch them right there.', es: 'Nueva página Creadores en el sitio, con videos de Pokémon Survivors hechos por jugadores. Puedes verlos ahí mismo.', fr: 'Nouvelle page Créateurs sur le site, avec des vidéos de Pokémon Survivors faites par des joueurs. Regardez-les directement.', zh: '網站新增「創作者」頁面，收錄玩家製作的 Pokémon Survivors 影片，可直接在頁面上觀看。' },
+      { pt: 'Faz vídeos ou lives do jogo? Mande o link no Discord: seu vídeo entra na página e você ganha o título Criador(a) de Conteúdo e a moldura de criador.', en: 'Make videos or streams of the game? Share the link on Discord: your video goes on the page and you get the Content Creator title and the creator frame.', es: '¿Haces videos o directos del juego? Comparte el enlace en Discord: tu video entra en la página y recibes el título Creador(a) de Contenido y el marco de creador.', fr: 'Vous faites des vidéos ou des lives du jeu ? Partagez le lien sur Discord : votre vidéo rejoint la page et vous recevez le titre Créateur de contenu et le cadre de créateur.', zh: '有在拍遊戲影片或直播嗎？到 Discord 分享連結：你的影片會登上頁面，還能獲得「內容創作者」稱號和創作者相框。' },
+      { pt: 'Os primeiros: WePlay Z (português) e Son Titan Games (espanhol) no YouTube, e BirdseyeGaming (inglês) no TikTok.', en: 'The first ones: WePlay Z (Portuguese) and Son Titan Games (Spanish) on YouTube, and BirdseyeGaming (English) on TikTok.', es: 'Los primeros: WePlay Z (portugués) y Son Titan Games (español) en YouTube, y BirdseyeGaming (inglés) en TikTok.', fr: 'Les premiers : WePlay Z (portugais) et Son Titan Games (espagnol) sur YouTube, et BirdseyeGaming (anglais) sur TikTok.', zh: '首批創作者：YouTube 上的 WePlay Z（葡萄牙語）和 Son Titan Games（西班牙語），以及 TikTok 上的 BirdseyeGaming（英語）。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Página Criadores', en: 'Creators page', es: 'Página Creadores', fr: 'Page Créateurs', zh: '創作者頁面' },
+        notes: [
+          { pt: 'Os primeiros vídeos são do WePlay Z (em português) e do Son Titan Games (em espanhol), e o BirdseyeGaming faz lives no TikTok. Cada criador aparece com links para os canais dele.', en: 'The first videos are by WePlay Z (in Portuguese) and Son Titan Games (in Spanish), and BirdseyeGaming streams on TikTok. Each creator shows up with links to their channels.', es: 'Los primeros videos son de WePlay Z (en portugués) y Son Titan Games (en español), y BirdseyeGaming hace directos en TikTok. Cada creador aparece con enlaces a sus canales.' },
+          { pt: 'O título Criador(a) de Conteúdo e a moldura de criador (rosa e ciano, com botões de play nos cantos) chegam como Presente Misterioso.', en: 'The Content Creator title and the creator frame (pink and cyan, with play buttons in the corners) arrive as a Mystery Gift.', es: 'El título Creador(a) de Contenido y el marco de creador (rosa y cian, con botones de play en las esquinas) llegan como Regalo Misterioso.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-29',
     title: { pt: 'Arena: golpes na mão, 3v3, mapas no litoral e jogo em equipe', en: 'Arena: aimed moves, 3v3, coast maps and teamplay', es: 'Arena: movimientos en tus manos, 3v3, mapas en la costa y juego en equipo', fr: 'Arène : capacités en main, 3v3, cartes côtières et jeu d’équipe', zh: '競技場：親手施放招式、3v3、海岸地圖與團隊合作' },
     highlights: [

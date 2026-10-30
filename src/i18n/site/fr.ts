@@ -23,6 +23,7 @@ export const siteFr: SiteMessages = {
     tierList: 'Tier list',
     legal: 'Mentions légales',
     support: 'Soutenir',
+    creators: 'Créateurs',
     compare: 'Pokémon Survivors vs PokéSurvivor',
     alternatives: 'Jeux façon Vampire Survivors',
     language: 'Langue',
@@ -929,6 +930,29 @@ export const siteFr: SiteMessages = {
     ],
     issues: 'Ouvrir une issue sur GitHub',
     source: 'Voir le code source',
+  },
+  creators: {
+    title: 'Créateurs : vidéos et lives de Pokémon Survivors',
+    description:
+      'Des vidéos et des lives de Pokémon Survivors faits par des joueurs, sur YouTube et TikTok. Faites la vôtre, partagez-la sur Discord et recevez dans le jeu le titre Créateur de contenu et le cadre de créateur.',
+    h1: 'Créateurs',
+    lead: 'Les vidéos et les lives de ceux qui jouent à Pokémon Survivors. Regardez-les ici et suivez ceux qui les font.',
+    videos: 'Vidéos',
+    people: 'Qui les fait',
+    play: (title: string) => `Regarder : ${title}`,
+    watchOn: (platform: string) => `Voir sur ${platform}`,
+    videoAbout: (name: string) => `Une vidéo de Pokémon Survivors par ${name}.`,
+    langs: { pt: 'En portugais', en: 'En anglais', es: 'En espagnol', fr: 'En français', zh: 'En chinois' },
+    join: {
+      title: 'Vous faites des vidéos du jeu ?',
+      lead: 'Gameplay, live, guide, Short ou TikTok, dans n’importe quelle langue : chaque vidéo du jeu peut figurer ici.',
+      steps: [
+        'Publiez votre vidéo sur YouTube, TikTok ou ailleurs.',
+        'Partagez le lien dans le salon #screenshots-and-clips de notre Discord.',
+        'Donnez-nous votre @ dans le jeu : vous recevez le titre Créateur de contenu et le cadre de créateur.',
+      ],
+      cta: 'Partager ma vidéo sur Discord',
+    },
   },
   compare: {
     title: 'Pokémon Survivors vs PokéSurvivor : est-ce le même jeu ? Les différences',
