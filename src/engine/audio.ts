@@ -30,11 +30,34 @@ const applyMix = () => {
   graph.music.gain.setTargetAtTime(loudness(mix.musicVolume) * MUSIC_HEADROOM, t, 0.02)
 }
 
+/** The kinds of audio session `navigator.audioSession` takes (Safari 16.4+; not in TypeScript's DOM types yet). */
+type AudioSessionType = 'auto' | 'playback' | 'transient' | 'transient-solo' | 'ambient' | 'play-and-record'
+
 declare global {
   interface Window {
     /** Safari before 14.1 names the constructor this way. */
     webkitAudioContext?: typeof AudioContext
   }
+  interface Navigator {
+    audioSession?: { type: AudioSessionType }
+  }
+}
+
+/**
+ * The iPhone's audio session for a mix. WebAudio plays as `ambient` there by default, which the
+ * ringer switch silences: on a phone left on silent the game made no sound at all, music
+ * included. With the game's music on it plays as `playback`, like a music app (the switch no
+ * longer mutes it, and another app's music stops); with the music off or the game muted it stays
+ * `ambient`, so the player's own music plays on under the effects.
+ */
+export const sessionType = (m: Mix): AudioSessionType => (!m.muted && m.musicVolume > 0 ? 'playback' : 'ambient')
+
+/** Sets the audio session where the browser has one (iOS Safari); elsewhere nothing to do. */
+const applySession = () => {
+  const session = navigator.audioSession
+  if (!session) return
+  const type = sessionType(mix)
+  if (session.type !== type) session.type = type
 }
 
 /** Set when this browser has no WebAudio (iOS Lockdown Mode turns it off) or refused a context: the game plays silent. */
@@ -79,6 +102,7 @@ const audio = () => {
 /** Updates bus volumes and mute. Safe to call before audio is unlocked. */
 export const setMix = (next: Mix) => {
   mix = next
+  applySession()
   applyMix()
 }
 

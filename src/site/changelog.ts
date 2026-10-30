@@ -24,6 +24,24 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-30',
+    title: { pt: 'Correções de 30/10', en: 'October 30 fixes', es: 'Correcciones del 30/10', fr: 'Corrections du 30/10', zh: '10/30 修正' },
+    highlights: [
+      { pt: 'iPhone: a tela do jogo não fica mais em branco ao voltar de um bloqueio com o jogo pausado.', en: 'iPhone: the game’s screen no longer stays blank when you come back from a locked phone with the game paused.', es: 'iPhone: la pantalla del juego ya no queda en blanco al volver de un bloqueo con el juego en pausa.', fr: 'iPhone : l’écran du jeu ne reste plus vide quand vous revenez d’un verrouillage avec le jeu en pause.', zh: 'iPhone：遊戲暫停時鎖定螢幕再回來，遊戲畫面不會再一片空白。' },
+      { pt: 'iPhone: a música e os efeitos tocam mesmo com o celular no silencioso.', en: 'iPhone: the music and sound effects play even with the phone on silent.', es: 'iPhone: la música y los efectos suenan aunque el celular esté en silencio.', fr: 'iPhone : la musique et les effets sonores jouent même téléphone en mode silencieux.', zh: 'iPhone：手機切到靜音時，音樂和音效也照樣播放。' },
+      { pt: 'Quer ouvir a sua própria música? Com a Música em 0 nos Ajustes, o jogo deixa ela tocando e fica só nos efeitos.', en: 'Want your own music? With Music at 0 in Settings, the game leaves it playing and keeps to its sound effects.', es: '¿Quieres tu propia música? Con la Música en 0 en Ajustes, el juego la deja sonar y se queda solo con los efectos.', fr: 'Envie de votre propre musique ? Avec la Musique à 0 dans les Réglages, le jeu la laisse jouer et se contente de ses effets sonores.', zh: '想聽自己的音樂？在設定中把音樂調到 0，遊戲就會讓它繼續播放，只保留音效。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          { pt: 'iPhone: com o jogo pausado, bloquear o celular por um tempo podia deixar a tela do jogo em branco atrás do menu ao voltar. Agora o quadro é redesenhado ao voltar e de tempos em tempos enquanto está pausado.', en: 'iPhone: with the game paused, locking the phone for a while could leave the game’s screen blank behind the menu when you came back. Now the frame is drawn again when you come back, and every so often while paused.', es: 'iPhone: con el juego en pausa, bloquear el celular un rato podía dejar la pantalla del juego en blanco detrás del menú al volver. Ahora el cuadro se vuelve a dibujar al volver y cada tanto mientras está en pausa.' },
+          { pt: 'iPhone: com a chave de silencioso ligada, o jogo não fazia som nenhum, música incluída. Agora, com a música do jogo ligada, ele toca como um app de música (e pausa a música de outro app); com a Música em 0 ou o Som desligado nos Ajustes, ele respeita o silencioso e deixa a sua música tocando.', en: 'iPhone: with the silent switch on, the game made no sound at all, music included. Now, with the game’s music on, it plays like a music app (and pauses another app’s music); with Music at 0 or Sound off in Settings, it follows the silent switch and leaves your own music playing.', es: 'iPhone: con el interruptor de silencio activado, el juego no hacía ningún sonido, música incluida. Ahora, con la música del juego encendida, suena como una app de música (y pausa la música de otra app); con la Música en 0 o el Sonido apagado en Ajustes, respeta el silencio y deja sonar tu propia música.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-29',
     title: { pt: 'Arena: golpes na mão, 3v3, mapas no litoral e jogo em equipe', en: 'Arena: aimed moves, 3v3, coast maps and teamplay', es: 'Arena: movimientos en tus manos, 3v3, mapas en la costa y juego en equipo', fr: 'Arène : capacités en main, 3v3, cartes côtières et jeu d’équipe', zh: '競技場：親手施放招式、3v3、海岸地圖與團隊合作' },
     highlights: [
