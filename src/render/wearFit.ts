@@ -1,11 +1,11 @@
 import type { WearableSlot } from '../data/cosmetics'
-import { ART_DIRS, WEAR_FITS, type Nudge, type SpeciesFit } from '../data/wearFits'
+import { ART_DIRS, WEAR_FITS, type FitKey, type Nudge, type SpeciesFit } from '../data/wearFits'
 import type { WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 
 /**
  * Where a wearable goes on a frame (`render/wearables.ts` draws it): the
- * species' anchors (`data/wearAnchors.generated.json`, `npm run anchors`)
+ * species' anchors (`data/wearAnchors/`, `npm run anchors`)
  * decoded, the pivot of each slot per frame and direction, the size class a
  * species wears, and which pass a slot draws in as the Pokémon turns.
  */
@@ -46,6 +46,23 @@ export const layerOf = (slot: WearableSlot, dir: Dir8, own?: readonly Layer[]): 
 /** A generated entry (`npm run anchors`): base64 bytes. */
 export type AnchorEntry = { dirs: string; Walk: string; Idle: string; Hurt: string }
 
+/** One file of `data/wearAnchors/`: the entries of the variants whose dex falls in its chunk (`anchorChunk`), by `anchorKey`. */
+export type AnchorChunk = { pitch: number; geometry: readonly string[]; species: Record<string, AnchorEntry> }
+
+/**
+ * The file of `data/wearAnchors/` a species' anchors are in, every form and
+ * color of it together (`scripts/anchors.mjs` files them so): 32 dex numbers a
+ * file, so a client loads only the chunks of the species it draws, a few KB each.
+ */
+export const anchorChunk = (dex: number) => Math.floor(dex / 32)
+
+/**
+ * A variant's entry in its chunk: `<dex>`, `<dex>:<form>`, and an `s` after
+ * either for a shiny whose frames differ (any other shiny wears its normal
+ * colors' anchors: same sheets, recolored). Also `WEAR_FITS`' key, without the `s`.
+ */
+export const anchorKey = (dex: number, form: string | undefined, shiny: boolean) => `${dex}${form ? `:${form}` : ''}${shiny ? 's' : ''}`
+
 export type AnchorAnim = 'Walk' | 'Idle' | 'Hurt'
 
 /** One sheet's markers: per direction and frame, the mouth's x, y and the center's x, y. */
@@ -73,21 +90,6 @@ export const decodeAnchors = (e: AnchorEntry): Anchors => ({
 })
 
 /**
- * The anchors entry (`data/wearAnchors.generated.json`'s key, `has` asks the
- * data) a drawn sprite pins a look by, or null when it draws bare. Only what
- * `npm run anchors` measured has one: a species' own SpriteCollab sheets in
- * its normal colors, and its shiny ones (measured apart where they differ,
- * else they share the normal's). A stand-in (a puff), any form (a Mega's, a
- * legend's, a stance's, the hand-made shinies, which are all forms) and a
- * species the anchors don't cover yet draw bare, one species at a time.
- */
-export const anchorKey = (dex: number, variant: { shiny: boolean; form?: string } | undefined, has: (key: string) => boolean): string | null => {
-  if (!variant || variant.form) return null
-  const key = variant.shiny && has(`${dex}s`) ? `${dex}s` : String(dex)
-  return has(key) ? key : null
-}
-
-/**
  * Which of the anchors' sheets a drawn frame is (`placeFrame` found it), or
  * null when the anchors don't know it: the sky's Fly sheet, a sheet shrunk to
  * size (a legend's) or swapped (an emote's) draw bare.
@@ -98,8 +100,11 @@ export const anchoredSheet = (a: Anchors, p: { anim: string; fw: number; fh: num
   return s.fw === p.fw && s.fh === p.fh && s.frames === p.frames ? p.anim : null
 }
 
-/** A species' fitting by hand (`data/wearFits.ts`). */
-export const fitOf = (dex: number): SpeciesFit | undefined => WEAR_FITS[dex]
+/** A species' fitting by hand (`data/wearFits.ts`), or a form's (its own: a Mega is drawn anew, so the species' nudges don't carry over). */
+export const fitOf = (dex: number, form?: string): SpeciesFit | undefined => {
+  const key: FitKey = form ? `${dex}:${form}` : dex
+  return WEAR_FITS[key]
+}
 
 /** A slot's nudge facing `dir` (mirrored for the west-facing rows), or null. */
 export const nudgeOf = (fit: SpeciesFit | undefined, slot: WearableSlot, dir: Dir8): Nudge | null => {

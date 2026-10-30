@@ -630,10 +630,10 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // Arena: an emote plays its own sheet, facing the camera (`render/arenaFx.ts`).
   const emote = p.versus ? arenaEmote(g, p) : null
   // The seat's look (its worn cosmetics) on the sprite, behind it and over it, in every mode. The anchors only
-  // cover the species' own Walk, Idle and Hurt (`render/wearFit.ts` checks the sheet), so the moments that
-  // swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega (its form, or the base sprite standing in
-  // for a Mega without sheets) and its transformation, and a move's own look (Fly, Dig, a lunge).
-  const bare = emote !== null || egg !== null || mega.form !== undefined || p.mega.intro > 0
+  // cover each variant's own Walk, Idle and Hurt (a Mega with sheets has its own; `render/wearFit.ts` checks the
+  // sheet), so the moments that swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega's
+  // transformation and a move's own look (Fly, Dig, a lunge).
+  const bare = emote !== null || egg !== null || p.mega.intro > 0
   const look = bare ? null : shownLook(g, p.slot)
   if (alpha > 0) {
     if (look) drawWearables(ctx, s, look, anim, p.dir, p.animTime, p.x, feet, 'behind', { alpha })

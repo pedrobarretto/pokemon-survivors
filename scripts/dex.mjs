@@ -14,11 +14,6 @@ export const STARTERS = [
   810, 811, 812, 813, 814, 815, 816, 817, 818, // Galar
   906, 907, 908, 909, 910, 911, 912, 913, 914, // Paldea
 ]
-/**
- * The Arena's roster (`VERSUS_ROSTER` in src/data/versus.ts: the 27 starters) with every stage
- * a match evolves them to: the species whose wearables `npm run anchors` fits (`render/wearFit.test.ts` keeps them in sync).
- */
-export const ARENA = STARTERS
 /** Families that hatch from eggs (src/data/hatchlings.ts), whole lines. Some also roam the horde. */
 export const HATCHLINGS = [
   172, 25, 26, 66, 67, 68, 133, 197, 175, 176, 468, 363, 364, 365, 396, 397, 398, 406, 315, 407, 744, 745, 736, 737, 738, // common
@@ -89,6 +84,12 @@ export const FLYERS = new Set([
 /** Species that can roll shiny: the player lines, regular enemies, rift legendaries, places' bosses and the companions (Pumpkaboo for Gold supporters). */
 /** Legendaries that can also roll shiny as wave bosses (the trios, Mewtwo, the mythicals) and Arceus, for the Legend mode's captures. */
 export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 378, 379, 385, 493]
+/**
+ * Every species a player can be: the starters' and the hatchlings' whole lines (branches included) and the Legend
+ * mode's 25 (the rift, event and festival legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
+ * wearables `npm run anchors` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
+ */
+export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS])]
 export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...SHINY_LEGENDS, ...COMPANIONS])
 
 /**

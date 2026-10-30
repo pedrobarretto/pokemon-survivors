@@ -11,7 +11,7 @@ import { ARENA_EFFECTS, type ArenaEffectDef } from './arenaEffects'
  * - `WEARABLES` (`data/wearables.ts`): worn on the Pokémon's sprite, anchored
  *   to the head, neck or back of every frame from SpriteCollab's offsets and
  *   drawn by `render/wearables.ts`. Generic: one hat fits every Pokémon the
- *   anchors measured (`data/wearAnchors.generated.json`); any other draws bare.
+ *   anchors measured (`data/wearAnchors/`); any other draws bare.
  * - `ARENA_EFFECTS` (`data/arenaEffects.ts`): everything that isn't worn: a
  *   follower, trails, spawn/KO/goal effects, emotes, titles and name plates.
  *

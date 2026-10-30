@@ -1,5 +1,4 @@
 import type { Look, WearableSlot } from '../data/cosmetics'
-import data from '../data/wearAnchors.generated.json'
 import { isWearableId, WEARABLES, type WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { createCanvas, context2d, onCanvasReset } from '../engine/pixelart'
@@ -7,6 +6,7 @@ import type { PixelArt } from './wearArt'
 import { renderJob, type ArtDone, type ArtJob } from './wearWorker'
 import {
   anchoredSheet,
+  anchorChunk,
   anchorKey,
   classOf,
   decodeAnchors,
@@ -17,6 +17,7 @@ import {
   nudgeOf,
   pivotAt,
   wears,
+  type AnchorChunk,
   type AnchorEntry,
   type Anchors,
   type Layer,
@@ -26,22 +27,46 @@ import { placeFrame, type AnimName, type FramePlace, type SpeciesSprites } from 
 
 /**
  * The wearables' engine, loaded with the first look drawn
- * (`render/wearables.ts` imports it on demand, with the anchors' data): it
- * finds a species' anchors, sizes its wearables, renders each model once per
- * size, direction and frame (`render/wearArt.ts`) into a small canvas and
- * draws it pinned to the frame's pivot.
+ * (`render/wearables.ts` imports it on demand): it finds a species' anchors
+ * (their chunk loads the first time the species wears something), sizes its
+ * wearables, renders each model once per size, direction and frame
+ * (`render/wearArt.ts`) into a small canvas and draws it pinned to the frame's pivot.
  */
 
-const SPECIES = data.species as Record<string, AnchorEntry>
+/* ---------------- Anchors ---------------- */
 
-const measured = (key: string) => Object.hasOwn(SPECIES, key)
+/** The anchors' files (`data/wearAnchors/`, `npm run anchors`), each its own small chunk. */
+const CHUNKS = import.meta.glob<AnchorChunk>('../data/wearAnchors/*.json', { import: 'default' })
+
+/** Each chunk's entries once loaded (`anchorChunk`), null while it loads or after it failed lately. */
+const chunks = new Map<number, Record<string, AnchorEntry> | null>()
+
+/** How long (ms) a chunk that failed to load waits before the next try. */
+const RETRY = 5000
+
+/** A chunk no player's dex falls in: no anchors there. */
+const NONE: Record<string, AnchorEntry> = {}
+
+/** The entries of `dex`'s chunk, or null until it lands (the first ask starts it: a species' first frames draw bare). */
+const entriesOf = (dex: number) => {
+  const n = anchorChunk(dex)
+  const have = chunks.get(n)
+  if (have !== undefined) return have
+  const load = CHUNKS[`../data/wearAnchors/anchors-${n}.json`]
+  chunks.set(n, load ? null : NONE)
+  if (!load) return NONE
+  void load().then(
+    (c) => chunks.set(n, c.species),
+    () => setTimeout(() => chunks.delete(n), RETRY),
+  )
+  return null
+}
 
 /** One art direction's (or its mirror's) art, ready to draw: a canvas and where its pivot is. */
 type Art = { canvas: HTMLCanvasElement; ox: number; oy: number }
 
 /** A species variant as a wearer: its anchors, its hand fitting and the size each slot's art comes in. */
 type Wearer = {
-  dex: number
   anchors: Anchors
   fit: ReturnType<typeof fitOf>
   sizes: Record<WearableSlot, WearSize>
@@ -49,7 +74,7 @@ type Wearer = {
   keys: Record<WearableSlot, number>
 }
 
-const wearers = new Map<string, Wearer>()
+const wearers = new Map<string, Wearer | null>()
 
 /** The size class a species wears in each slot: its own measures (`measuresOf`), or its hand fitting's (`SpeciesFit.size`). */
 const sizesOf = (a: Anchors, fit: Wearer['fit']) => {
@@ -69,17 +94,31 @@ const sizesOf = (a: Anchors, fit: Wearer['fit']) => {
   }
 }
 
-/** The wearer for loaded sprites, or null when they draw bare (`anchorKey`: a stand-in, a form, a species the anchors don't cover). */
+/**
+ * The wearer for loaded sprites, or null: a stand-in (a puff), a species no
+ * player can be or a variant without anchors (`npm run anchors` lists them),
+ * and any species until its anchors' chunk lands. By variant, so a stage
+ * change mid-run (new sprites, a new dex) just finds the next stage's.
+ */
 const wearerOf = (s: SpeciesSprites): Wearer | null => {
-  const key = anchorKey(s.dex, s.variant, measured)
-  if (key === null) return null
-  let w = wearers.get(key)
-  if (w === undefined) {
-    const anchors = decodeAnchors(SPECIES[key]!)
-    const fit = fitOf(s.dex)
-    w = { dex: s.dex, anchors, fit, ...sizesOf(anchors, fit) }
-    wearers.set(key, w)
+  const v = s.variant
+  if (!v) return null
+  const key = anchorKey(s.dex, v.form, v.shiny)
+  const known = wearers.get(key)
+  if (known !== undefined) return known
+  const entries = entriesOf(s.dex)
+  if (!entries) {
+    misses++
+    return null
   }
+  const entry = entries[key] ?? entries[anchorKey(s.dex, v.form, false)]
+  let w: Wearer | null = null
+  if (entry) {
+    const anchors = decodeAnchors(entry)
+    const fit = fitOf(s.dex, v.form)
+    w = { anchors, fit, ...sizesOf(anchors, fit) }
+  }
+  wearers.set(key, w)
   return w
 }
 
@@ -298,5 +337,8 @@ export const takeMisses = () => {
   return n
 }
 
-/** Whether a species (by dex) has anchors to wear things on: the Boutique tries looks on the partner only then. */
-export const hasAnchors = (dex: number) => Object.hasOwn(SPECIES, String(dex))
+/** Whether a species (by dex) has anchors to wear things on, null while its chunk loads: the Boutique tries looks on the partner only then. */
+export const hasAnchors = (dex: number): boolean | null => {
+  const entries = entriesOf(dex)
+  return entries && Object.hasOwn(entries, anchorKey(dex, undefined, false))
+}

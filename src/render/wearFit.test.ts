@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { BRANCHES } from '../data/branches'
+import { PLAYABLE } from '../data/hatchlings'
 import manifest from '../data/sprites.generated.json'
-import data from '../data/wearAnchors.generated.json'
-import { STARTERS } from '../data/starters'
-import { VERSUS_PICKS } from '../data/versus'
 import type { Dir8 } from '../engine/math'
 import { mirror, PITCH, type PixelArt } from './wearArt'
-import { anchoredSheet, anchorKey, artDir, decodeAnchors, GEOMETRY, isMirrored, layerOf, nudgeOf, pivotAt, type AnchorEntry } from './wearFit'
+import { anchoredSheet, anchorChunk, anchorKey, artDir, decodeAnchors, GEOMETRY, isMirrored, layerOf, nudgeOf, pivotAt, type AnchorChunk, type AnchorEntry } from './wearFit'
 import { WEAR_MODELS } from './wearModels'
 
 const b64 = (bytes: readonly number[]) => btoa(String.fromCharCode(...bytes))
@@ -85,32 +84,47 @@ describe('anchors', () => {
     expect(anchoredSheet(a, { anim: 'Walk', fw: 32, fh: 40, frames: 6 })).toBeNull()
   })
 
-  it('finds a species by its own colors, one species at a time', () => {
-    const has = (key: string) => key === '4' || key === '7' || key === '7s'
-    expect(anchorKey(4, { shiny: false }, has)).toBe('4')
-    // Shiny colors share the normal's measures unless measured apart.
-    expect(anchorKey(4, { shiny: true }, has)).toBe('4')
-    expect(anchorKey(7, { shiny: true }, has)).toBe('7s')
-    // A species not measured yet, any form (a Mega, a hand-made shiny) and a stand-in draw bare.
-    expect(anchorKey(25, { shiny: false }, has)).toBeNull()
-    expect(anchorKey(4, { shiny: false, form: 'megaX' }, has)).toBeNull()
-    expect(anchorKey(4, undefined, has)).toBeNull()
-  })
+  // The generated files (`npm run anchors`), by chunk.
+  const files = Object.entries(import.meta.glob<AnchorChunk>('../data/wearAnchors/*.json', { eager: true, import: 'default' })).map(
+    ([path, chunk]) => [Number(path.match(/anchors-(\d+)\.json$/)![1]), chunk] as const,
+  )
 
   it('was measured from the camera angle the art renders at', () => {
-    expect(data.pitch).toBe(Math.round((PITCH * 180) / Math.PI))
-    expect(data.geometry).toEqual([...GEOMETRY])
+    for (const [, chunk] of files) {
+      expect(chunk.pitch).toBe(Math.round((PITCH * 180) / Math.PI))
+      expect(chunk.geometry).toEqual([...GEOMETRY])
+    }
   })
 
-  it("covers every stage the Arena plays, frame for frame with the sprites' sheets", () => {
-    const species = data.species as Record<string, AnchorEntry>
-    const sheets = manifest as Record<string, { anims: Record<string, { frameWidth: number; frameHeight: number; durations: number[] }> }>
-    for (const pick of VERSUS_PICKS) {
-      for (const { dex } of STARTERS[pick].line) {
-        const a = decodeAnchors(species[dex]!)
+  it("files every variant in its dex's chunk, which the engine loads it from", () => {
+    expect(files.length).toBeGreaterThan(1)
+    for (const [n, chunk] of files) for (const key of Object.keys(chunk.species)) expect(anchorChunk(parseInt(key, 10)), key).toBe(n)
+  })
+
+  /** Players' variants SpriteCollab has no usable offsets for (`npm run anchors` lists them): they draw bare. Sandygast's Walk offsets carry no markers. */
+  const BARE = new Set(['769'])
+
+  it('covers every Pokémon a player can be and its forms, frame for frame with the sprites\' sheets', () => {
+    const species = Object.assign({}, ...files.map(([, chunk]) => chunk.species)) as Record<string, AnchorEntry>
+    type Sheets = { anims: Record<string, { frameWidth: number; frameHeight: number; durations: number[] }>; shiny?: Sheets }
+    const sheets = manifest as Record<string, Sheets & { forms?: Record<string, Sheets> }>
+    const dexes = new Set([...Object.values(PLAYABLE).flatMap((p) => p.line.map((s) => s.dex)), ...Object.values(BRANCHES).map((b) => b.dex)])
+    const variants = [...dexes].flatMap((dex) => [
+      { dex, form: undefined, meta: sheets[dex]! },
+      ...Object.entries(sheets[dex]!.forms ?? {}).map(([form, meta]) => ({ dex, form, meta })),
+    ])
+    expect(variants.length).toBeGreaterThan(300)
+    for (const { dex, form, meta } of variants) {
+      const key = anchorKey(dex, form, false)
+      if (BARE.has(key)) continue
+      expect(species[key], key).toBeDefined()
+      for (const [shiny, colors] of [[false, meta], [true, meta.shiny]] as const) {
+        if (!colors) continue
+        const a = decodeAnchors((shiny && species[anchorKey(dex, form, true)]) || species[key]!)
         for (const anim of ['Walk', 'Idle', 'Hurt'] as const) {
-          const meta = sheets[dex]!.anims[anim]!
-          expect([a.anims[anim].fw, a.anims[anim].fh, a.anims[anim].frames], `#${dex} ${anim}`).toEqual([meta.frameWidth, meta.frameHeight, meta.durations.length])
+          // A form without a sheet for an anim draws its Walk in its place (`placeFrame`), and so do its anchors.
+          const m = colors.anims[anim] ?? colors.anims.Walk!
+          expect([a.anims[anim].fw, a.anims[anim].fh, a.anims[anim].frames], `${anchorKey(dex, form, shiny)} ${anim}`).toEqual([m.frameWidth, m.frameHeight, m.durations.length])
         }
       }
     }
