@@ -291,8 +291,9 @@ const inputsOf = (g: Game): StepInput[] => g.players.map(() => ({ move: moveOf(0
  * One co-op tick: applies `entries` in order (malformed or stale ones are
  * ignored), then plays the tick. Evolutions play for everyone, the world held
  * or not; while anyone has a pick screen open the world waits and the screens'
- * timers run; while nobody active stands (everyone left standing is away) the
- * world waits for them, up to `COOP.away.hold`; otherwise the team steps. At the victory the endless
+ * timers run; while nobody active is free to play (everyone left standing is
+ * away, up to `COOP.away.hold`, or busy on a screen of their own) the world
+ * waits for them (`worldHeld`); otherwise the team steps. At the victory the endless
  * vote runs instead. A no-op on a solo game.
  */
 export const stepTick = (g: Game, entries: readonly TickEntry[]) => {

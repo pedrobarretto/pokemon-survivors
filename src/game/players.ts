@@ -1,5 +1,6 @@
 import type { Attack, Game, Phase, Player, PlayerPhase } from './types'
 import * as dm from '../engine/dmath'
+import { COOP } from '../data/coop'
 
 /**
  * Who's in the run. Per-player code (walking, moves and their hitboxes,
@@ -56,7 +57,8 @@ export const inPlay = (p: Player) =>
  * evolution and the screens that follow it (where it branches, the Ability)
  * and the ones a pickup or chest opens (a TM, a Poké Ball's prize, a cursed
  * item). Only level-ups, which the team's shared EXP brings to everyone on the
- * same tick, hold the world for everyone.
+ * same tick, hold the world for everyone (these only when nobody else is free
+ * to play, `worldHeld`).
  */
 export const personal = (phase: PlayerPhase) => phase !== 'playing' && phase !== 'levelup'
 
@@ -223,10 +225,13 @@ export const phaseOf = (g: Game, p: Player = g.player): Phase =>
  * world's: held on the first player in slot order who isn't playing, playing
  * once nobody is busy. Solo the world takes `phase` as is. In co-op only a
  * level-up holds the world: a `personal` phase plays with the player wrapped
- * up, untargetable, while the team plays on (`inPlay`). Versus holds it for
- * nobody.
+ * up, untargetable, while the team plays on (`inPlay`), and back from it they
+ * get `COOP.revive.iframes` (the world held only if nobody else is free,
+ * `worldHeld`). Versus holds it for nobody.
  */
 export const setPhase = (g: Game, phase: PlayerPhase, p: Player = g.player) => {
+  // Co-op: back from a screen the world played on around them, a moment of i-frames to step out of the crowd that gathered.
+  if (g.coop !== null && p.versus === undefined && phase === 'playing' && personal(p.phase)) p.iframes = Math.max(p.iframes, COOP.revive.iframes)
   p.phase = phase
   let team: PlayerPhase = 'playing'
   for (const q of g.players) {

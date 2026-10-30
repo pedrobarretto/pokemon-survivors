@@ -24,6 +24,23 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-30',
+    title: { pt: 'Correções de 30/10', en: 'Fixes for Oct 30', es: 'Correcciones del 30/10', fr: 'Correctifs du 30/10', zh: '10/30 修正' },
+    highlights: [
+      { pt: 'Co-op: se o seu colega desmaiou e você abre um TM, uma Poké Ball ou a evolução, o mundo espera por você, como no solo.', en: 'Co-op: if your teammate has fainted and you open a TM, a Poké Ball prize or an evolution, the world waits for you, as in solo.', es: 'Co-op: si tu compañero se debilitó y abres una MT, una Poké Ball o la evolución, el mundo te espera, como en solitario.', fr: 'Coop : si votre coéquipier est K.O. et que vous ouvrez une CT, le prix d’une Poké Ball ou une évolution, le monde vous attend, comme en solo.', zh: '合作模式：隊友倒下時，若你打開招式學習器、精靈球獎品或進化畫面，世界會像單人模式一樣等你。' },
+      { pt: 'Co-op: ao fechar uma dessas telas, você tem 2 segundos de invencibilidade para sair da multidão.', en: 'Co-op: closing one of those screens gives you 2 seconds of invincibility to get out of the crowd.', es: 'Co-op: al cerrar una de esas pantallas, tienes 2 segundos de invencibilidad para salir de la multitud.', fr: 'Coop : en fermant l’un de ces écrans, vous avez 2 secondes d’invincibilité pour sortir de la foule.', zh: '合作模式：關閉這些畫面後，你有 2 秒無敵時間可以逃出怪群。' },
+      { pt: 'Co-op: se a equipe toda está escolhendo ou evoluindo ao mesmo tempo, a horda também espera.', en: 'Co-op: if the whole team is picking or evolving at once, the horde waits too.', es: 'Co-op: si todo el equipo está eligiendo o evolucionando a la vez, la horda también espera.', fr: 'Coop : si toute l’équipe choisit ou évolue en même temps, la horde attend aussi.', zh: '合作模式：若全隊同時在選擇或進化，怪群也會等待。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Co-op: sem emboscada depois de escolher', en: 'Co-op: no ambush after a pick', es: 'Co-op: sin emboscada después de elegir', fr: 'Coop : plus d’embuscade après un choix', zh: '合作模式：選擇後不再被圍攻' },
+        notes: [
+          { pt: 'Enquanto você escolhia um TM, o prêmio de uma Poké Ball, um item amaldiçoado ou o caminho da evolução, a partida seguia e os inimigos se juntavam em cima de você; ao fechar a tela, você tomava o dano todo de uma vez. Agora, se o seu colega desmaiou (ou também está escolhendo), o mundo espera por você, como no solo, e ao voltar de qualquer uma dessas telas você tem 2 segundos de invencibilidade para sair da multidão.', en: 'While you picked a TM, a Poké Ball prize, a cursed item or where your evolution goes, the run went on and foes piled up on top of you; closing the screen, you took all the damage at once. Now, if your teammate has fainted (or is picking too), the world waits for you, as in solo, and coming back from any of those screens gives you 2 seconds of invincibility to get out of the crowd.', es: 'Mientras elegías una MT, el premio de una Poké Ball, un objeto maldito o el camino de la evolución, la partida seguía y los enemigos se amontonaban encima de ti; al cerrar la pantalla, recibías todo el daño de golpe. Ahora, si tu compañero se debilitó (o también está eligiendo), el mundo te espera, como en solitario, y al volver de cualquiera de esas pantallas tienes 2 segundos de invencibilidad para salir de la multitud.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-29',
     title: { pt: 'Arena: golpes na mão, 3v3, mapas no litoral e jogo em equipe', en: 'Arena: aimed moves, 3v3, coast maps and teamplay', es: 'Arena: movimientos en tus manos, 3v3, mapas en la costa y juego en equipo', fr: 'Arène : capacités en main, 3v3, cartes côtières et jeu d’équipe', zh: '競技場：親手施放招式、3v3、海岸地圖與團隊合作' },
     highlights: [
