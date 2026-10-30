@@ -231,7 +231,7 @@ export type Live = {
   unlogged: { ticks: TickEntries[]; hashes: [number, Record<number, string>][] }
   /** Log batches written since this object started (half of a batch's key). */
   batches: number
-  /** A friends' Arena run waiting on the API's looks (`looks` effect): the ask's number and who asked. Lost in a restart: the host starts again. */
+  /** A friends' run waiting on the API's looks (`looks` effect): the ask's number and who asked. Lost in a restart: the host starts again. */
   starting: { ask: number; conn: ConnId } | null
   /** Asks made so far: the next one's number. */
   asks: number
@@ -270,7 +270,7 @@ export type Effect =
   /** An Arena match ended with an agreed result: post it to the API (`report.ts`), retrying until it lands. */
   | { k: 'report'; report: ArenaReport }
   /**
-   * A friends' Arena run is about to start: ask the API for the looks of the account `ids` (`u:<clerk id>`,
+   * A friends' run (co-op or Arena) is about to start: ask the API for the looks of the account `ids` (`u:<clerk id>`,
    * `lookUpLooks`) and hand the answer to `looked` with this `ask` (an empty one when the API fails or isn't set).
    */
   | { k: 'looks'; ask: number; ids: string[] }
@@ -738,8 +738,8 @@ export const message = (state: State, connId: ConnId, msg: ClientMessage | null,
       if (!outside || room.lock || state.live.starting) return out
       if (!isHost) return [...out, send(connId, { t: 'denied', what: 'start', why: 'notHost' })]
       if (!startable(state, room, seat)) return [...out, send(connId, { t: 'denied', what: 'start', why: 'notReady' })]
-      // A friends' Arena room shows only the looks the API vouches for: it asks for its accounts' first (`looked` starts the run).
-      const ids = isArena(room) ? room.seats.flatMap((s) => (s.account && s.loadout && s.identity.startsWith('u:') ? [s.identity] : [])) : []
+      // A friends' room, co-op or Arena, shows only the looks the API vouches for: it asks for its accounts' first (`looked` starts the run).
+      const ids = room.seats.flatMap((s) => (s.account && s.loadout && s.identity.startsWith('u:') ? [s.identity] : []))
       if (ids.length === 0) return [...out, ...startRun(state, room, now)]
       state.live.starting = { ask: ++state.live.asks, conn: connId }
       return [...out, { k: 'looks', ask: state.live.asks, ids }]
@@ -816,7 +816,7 @@ export const withLook = (loadout: Loadout, vouched?: WireLook): Loadout => {
 const startable = (state: State, room: Room, seat: Seat) => !!seat.loadout && !room.seats.some((s) => s !== seat && online(state, s) && (!s.ready || !s.loadout))
 
 /**
- * The API's answer to a friends' Arena start (`looks` effect, `ask`): the
+ * The API's answer to a friends' room's start (`looks` effect, `ask`): the
  * stored looks by identity (`{}` when it failed). The run starts with them,
  * every other seat bare, if the room still may (the host is told otherwise);
  * an answer to an ask that's gone (a restart, a newer one) changes nothing.
@@ -848,7 +848,7 @@ export const disconnect = (state: State, connId: ConnId, now: number): Effect[] 
 
 /* ---------------- Runs ---------------- */
 
-/** Starts the run. `looks`: a friends' Arena room's looks the API vouched for, by identity (a matched room's are on its loadouts already). */
+/** Starts the run. `looks`: a friends' room's looks the API vouched for, by identity (a matched room's are on its loadouts already). */
 const startRun = (state: State, room: Room, now: number, looks: Readonly<Record<string, WireLook>> = {}): Effect[] => {
   const out: Effect[] = []
   if (room.run) out.push({ k: 'dropRun', run: room.run.start.id })

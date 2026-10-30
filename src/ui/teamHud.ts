@@ -10,9 +10,11 @@ import { MOVES, maxMoveLevel, type MoveId } from '../game/moves'
 import type { Game, Player } from '../game/types'
 import { t } from '../i18n'
 import { curseIcon, itemIcon, moveIcon, teamAwayIcon, teamBallIcon, sparkleIcon } from '../render/art'
+import { shownLook } from '../render/looks'
 import { portraitUrl } from '../render/sprites'
 import { busyWith, slotColor } from '../render/team'
 import { TEAM_COLORS } from '../render/vale'
+import { titleChip } from './arenaTitle'
 import { h, setStyle, setText } from './dom'
 import { moveCard, withMoveCard } from './moveCard'
 import { versusName } from './versusHud'
@@ -58,9 +60,10 @@ const buildIcons = (g: Game, p: Player, big = false) => {
 }
 
 /**
- * The co-op menu's look at the team: each teammate's face, name and level
- * over their build (moves and items with their levels), so a player can read
- * what the others run and coordinate theirs. Null solo or alone.
+ * The co-op menu's look at the team: each teammate's face, name (and the
+ * title their look wears) and level over their build (moves and items with
+ * their levels), so a player can read what the others run and coordinate
+ * theirs. Null solo or alone.
  */
 export const teamBuilds = (g: Game, me: Player) => {
   // Versus: your team's builds only.
@@ -77,7 +80,7 @@ export const teamBuilds = (g: Game, me: Player) => {
           'div',
           { class: 'team-build-head' },
           h('img', { class: 'team-portrait', src: portraitUrl(formAt(p.starter, p.branch, p.stage).dex, p.shiny), alt: '' }),
-          h('b', { class: 'team-name' }, seatName(g, p.slot)),
+          h('b', { class: 'team-name' }, seatName(g, p.slot), titleChip(shownLook(g, p.slot).title)),
           h('span', { class: 'team-level' }, t().levelShort(p.level)),
         ),
         buildIcons(g, p, true),

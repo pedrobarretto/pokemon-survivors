@@ -4,7 +4,7 @@ import { drawPokemon, sprites } from './sprites'
 
 /**
  * The supporter's companion (`game/supporters.ts`): a Pokémon that trots
- * after the player (the Arena's followers walk the same way, `render/arenaFx.ts`). It lives only here, in the presentation: the simulation
+ * after the player (a look's followers walk the same way, `render/arenaFx.ts`, and stay home while it does). It lives only here, in the presentation: the simulation
  * never sees it, so it can't touch a run or its replay. One with `sparkles`
  * (`data/companions.ts`) leaves candy sparkles behind as it walks.
  */

@@ -98,7 +98,7 @@ describe('looks for a friends\' Arena room', () => {
       return Response.json({ looks: { user_ash: { head: 'strawHat' }, user_brock: { head: 7 } } })
     }
     expect(await lookUpLooks(API, ['u:user_ash', 'u:user_brock', 'g:guest'], fetcher)).toEqual({ 'u:user_ash': { head: 'strawHat' } })
-    expect(posts).toEqual([{ url: 'https://api.test/arena/looks', body: '{"userIds":["user_ash","user_brock"]}', signature: await sign('s3cret', '{"userIds":["user_ash","user_brock"]}') }])
+    expect(posts).toEqual([{ url: 'https://api.test/looks', body: '{"userIds":["user_ash","user_brock"]}', signature: await sign('s3cret', '{"userIds":["user_ash","user_brock"]}') }])
   })
 
   it('vouches for nothing when the API fails, is older or is unset', async () => {

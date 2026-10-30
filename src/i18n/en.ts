@@ -563,7 +563,7 @@ export const en: Messages = {
     rarities: { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' },
     packs: { pouch: 'Handful', bag: 'Bag', chest: 'Chest', hoard: 'Hoard', vault: 'Vault' },
     shop: {
-      pitch: 'Looks for your Pokémon in the Arena: everyone in the match sees them, and none of them give power.',
+      pitch: 'Looks for your Pokémon in runs, co-op and the Arena: everyone sees them, and none of them give power.',
       balance: 'Your balance',
       currency: 'Currency',
       packs: 'Gem packs',
@@ -574,7 +574,9 @@ export const en: Messages = {
       equipped: 'Wearing',
       unsold: 'Unavailable',
       misfit: (name: string) => `Doesn’t sit well on ${name}`,
-      effect: 'Shows up during the match.',
+      effect: 'Shows up in runs, co-op and the Arena.',
+      arenaOnly: 'Only shows up in the Arena, for now.',
+      arenaTag: 'ARENA',
       buy: 'Buy',
       equip: 'Wear',
       unequip: 'Take off',
@@ -589,7 +591,7 @@ export const en: Messages = {
       reasons: { pack: 'Gem pack', patreon: 'Patreon', play: 'Arena match', buy: 'Purchase', refund: 'Refund', dispute: 'Dispute', disputeWon: 'Dispute reversed', grant: 'Gift from the team' },
       signIn: { title: 'Sign in to use the Shop', text: 'Your gems and looks stay on your account, on any device.', button: 'Sign in' },
       unavailable: 'The Shop isn’t available in this version of the game.',
-      onlyLooks: 'Gems only buy Arena looks.',
+      onlyLooks: 'Gems only buy looks.',
     },
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} bonus`,
@@ -616,7 +618,7 @@ export const en: Messages = {
       saving: 'Saving…',
       saved: 'Saved to your account.',
       local: 'Saved on this device: it goes to your account when you’re back online.',
-      note: 'Everyone in Arena matches sees your look.',
+      note: 'Your look shows up in your runs, in co-op and in the Arena.',
     },
   },
   coop: {

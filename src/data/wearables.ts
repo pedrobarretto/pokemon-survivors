@@ -5,8 +5,8 @@ import type { CosmeticBase, WearableSlot } from './cosmetics'
  * into the catalog): hats, glasses, scarves, capes. Each is a small 3D model
  * (`render/wearModels.ts`, keyed by the same id) that `render/wearables.ts`
  * turns and sizes to each Pokémon, anchored per frame and direction from the
- * species' SpriteCollab offsets, so one entry fits every Pokémon of the
- * Arena's roster. A species that can't wear one well is left out by hand
+ * species' SpriteCollab offsets, so one entry fits every Pokémon the anchors
+ * measured, in every mode. A species that can't wear one well is left out by hand
  * (`data/wearFits.ts`), never drawn badly. Legendary ones move.
  */
 export type WearableDef = CosmeticBase & { slot: WearableSlot }

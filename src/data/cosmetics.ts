@@ -2,14 +2,16 @@ import { WEARABLES, type WearableDef } from './wearables'
 import { ARENA_EFFECTS, type ArenaEffectDef } from './arenaEffects'
 
 /**
- * The Arena's cosmetics, bought with gems (`data/gems.ts`) in the Arena's
- * shop: looks only, never power, so nothing here may reach the simulation.
- * The catalog spreads two tables that live in their own modules:
+ * The game's cosmetics, bought with gems (`data/gems.ts`) in the gem shop:
+ * looks only, never power, so nothing here may reach the simulation. They
+ * show in every mode a slot makes sense in (`SLOT_MODES`): a run, solo or
+ * co-op, and the Arena. The catalog spreads two tables that live in their
+ * own modules:
  *
  * - `WEARABLES` (`data/wearables.ts`): worn on the Pokémon's sprite, anchored
  *   to the head, neck or back of every frame from SpriteCollab's offsets and
- *   drawn by `render/wearables.ts`. Generic: one hat fits every Pokémon of the
- *   Arena's roster.
+ *   drawn by `render/wearables.ts`. Generic: one hat fits every Pokémon the
+ *   anchors measured (`data/wearAnchors.generated.json`); any other draws bare.
  * - `ARENA_EFFECTS` (`data/arenaEffects.ts`): everything that isn't worn: a
  *   follower, trails, spawn/KO/goal effects, emotes, titles and name plates.
  *
@@ -27,6 +29,38 @@ export type CosmeticSlot = (typeof COSMETIC_SLOTS)[number]
 export const WEARABLE_SLOTS = ['head', 'face', 'neck', 'back'] as const satisfies readonly CosmeticSlot[]
 
 export type WearableSlot = (typeof WEARABLE_SLOTS)[number]
+
+/** The modes a look shows in: a run (solo or co-op, the Dojo and Legend mode too) and the Arena. A new mode is a new entry here and in `SLOT_MODES`. */
+export const COSMETIC_MODES = ['run', 'arena'] as const
+
+export type CosmeticMode = (typeof COSMETIC_MODES)[number]
+
+const EVERYWHERE = COSMETIC_MODES
+
+/**
+ * Where each slot shows. What's worn, the follower, the trail, the title and
+ * the plate go everywhere; the spawn, KO and goal effects and the emote need
+ * moments only the Arena has (a respawn, a knock-out of a rival, a goal, the
+ * emote's tick entry), so they show there alone for now. The shop says so on
+ * an item whose slot doesn't show everywhere (`arenaOnly`).
+ */
+export const SLOT_MODES: Readonly<Record<CosmeticSlot, readonly CosmeticMode[]>> = {
+  head: EVERYWHERE,
+  face: EVERYWHERE,
+  neck: EVERYWHERE,
+  back: EVERYWHERE,
+  follower: EVERYWHERE,
+  trail: EVERYWHERE,
+  title: EVERYWHERE,
+  plate: EVERYWHERE,
+  spawn: ['arena'],
+  ko: ['arena'],
+  goal: ['arena'],
+  emote: ['arena'],
+}
+
+/** Whether a slot's cosmetics show in `mode`. */
+export const showsIn = (slot: CosmeticSlot, mode: CosmeticMode): boolean => SLOT_MODES[slot].includes(mode)
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary'
 
@@ -58,6 +92,9 @@ export const cosmeticPrice = (id: CosmeticId): number | null => {
 
 export const slotOf = (id: CosmeticId): CosmeticSlot => entry(id).slot
 
+/** Whether a cosmetic shows only in the Arena (the shop tells the buyer). */
+export const arenaOnly = (id: CosmeticId): boolean => !showsIn(slotOf(id), 'run')
+
 /** A player's equipped cosmetics: at most one per slot. */
 export type Look = Partial<Record<CosmeticSlot, CosmeticId>>
 
@@ -74,4 +111,11 @@ export const parseLook = (raw: unknown): Look => {
     if (isCosmeticId(id) && slotOf(id) === slot) look[slot] = id
   }
   return look
+}
+
+/** The part of a look that shows in `mode` (`SLOT_MODES`). */
+export const lookIn = (look: Look, mode: CosmeticMode): Look => {
+  const shown: Look = {}
+  for (const slot of COSMETIC_SLOTS) if (look[slot] !== undefined && showsIn(slot, mode)) shown[slot] = look[slot]
+  return shown
 }

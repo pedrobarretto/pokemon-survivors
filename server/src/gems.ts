@@ -157,7 +157,7 @@ export const gemStore = (sql: Sql) => {
       return p ? { status: purchaseStatus(p.state), gems: p.gems, balance: p.balance } : null
     },
 
-    /** The looks a friends' Arena room's accounts may wear (`vouchedLooks`), for `POST /arena/looks`. */
+    /** The looks a room's accounts may wear, co-op or Arena (`vouchedLooks`), for `POST /looks`. */
     looks: (userIds: readonly string[]) => vouchedLooks(sql, userIds),
 
     /** `GET /gems/ledger`: the account's latest lines, newest first. */

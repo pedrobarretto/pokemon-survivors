@@ -1,12 +1,14 @@
 import { effectIn, type PlateEmblem, type PlateStyle } from '../data/arenaEffects'
 import { canvasCache, fromStrings } from '../engine/pixelart'
-import { lookOf } from './looks'
+import type { Game } from '../game/types'
+import { shownLook } from './looks'
 
 /**
- * The Arena's name plates (`plate` in `data/arenaEffects.ts`): the box behind
- * a Pokémon's name tag (`render/team.ts`) and the frame of its HP bar
- * (`render/draw.ts`), in the plate's colors, with its emblem left of them.
- * The text keeps its team's color, so a plate never hides whose side it's on.
+ * The name plates (`plate` in `data/arenaEffects.ts`), in a run and in the
+ * Arena: the box behind a Pokémon's name tag (`render/team.ts`) and the frame
+ * of its HP bar (`render/draw.ts`), in the plate's colors, with its emblem
+ * left of them. The text keeps its seat's or team's color, so a plate never
+ * hides who it is or whose side it's on.
  */
 
 type Ctx = CanvasRenderingContext2D
@@ -30,8 +32,8 @@ const emblemOf = (style: PlateStyle) => {
   return made
 }
 
-/** The plate `slot`'s look wears, or null. */
-export const plateOf = (slot: number): PlateStyle | null => effectIn('plate', lookOf(slot).plate)?.plate ?? null
+/** The plate `slot`'s look wears in `g`, or null. */
+export const plateOf = (g: Pick<Game, 'versus'>, slot: number): PlateStyle | null => effectIn('plate', shownLook(g, slot).plate)?.plate ?? null
 
 /** Room a plate's emblem takes left of the name (px). */
 export const PLATE_EMBLEM_W = 7

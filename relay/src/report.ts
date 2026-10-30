@@ -1,4 +1,5 @@
-import type { ArenaLooksRequest, ArenaReport } from '../../src/net/arena'
+import type { ArenaReport } from '../../src/net/arena'
+import type { LooksRequest } from '../../src/net/looks'
 import { parseWireLook, type WireLook } from '../../src/net/protocol'
 
 /**
@@ -41,11 +42,11 @@ export const postSigned = async (api: ArenaApi, path: string, body: string, fetc
     signal: AbortSignal.timeout(timeout),
   })
 
-/** A friends' Arena run waits this long at most for its looks before starting without them. */
+/** A room's run waits this long at most for its looks before starting without them. */
 export const LOOKS_TIMEOUT_MS = 3000
 
 /**
- * The Arena looks the API vouches for (`POST /arena/looks`, signed), by
+ * The looks the API vouches for (`POST /looks`, signed), by
  * identity (`u:<clerk id>`): what each account stored and owns. Anything
  * else (no API set, an API from before it, a failure, a slow answer, a
  * malformed look) leaves those seats bare: a client's own claim never stands.
@@ -54,7 +55,7 @@ export const lookUpLooks = async (api: ArenaApi | null, ids: readonly string[], 
   const userIds = ids.flatMap((id) => (id.startsWith('u:') ? [id.slice(2)] : []))
   if (!api || userIds.length === 0) return {}
   try {
-    const res = await postSigned(api, '/arena/looks', JSON.stringify({ userIds } satisfies ArenaLooksRequest), fetcher, LOOKS_TIMEOUT_MS)
+    const res = await postSigned(api, '/looks', JSON.stringify({ userIds } satisfies LooksRequest), fetcher, LOOKS_TIMEOUT_MS)
     const body: unknown = res.ok ? await res.json() : null
     const looks = isRecord(body) && isRecord(body.looks) ? body.looks : {}
     return Object.fromEntries(

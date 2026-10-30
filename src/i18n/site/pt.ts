@@ -843,9 +843,9 @@ export const sitePt = {
   support: {
     title: 'Apoie o Pokémon Survivors | Doe por Pix ou cartão',
     description:
-      'O Pokémon Survivors é grátis, sem anúncios e sem compras. Se quiser ajudar a pagar os servidores, doe por Pix ou cartão brasileiro (AbacatePay) ou, de outros países, com cartão, Apple Pay ou Google Pay (Stripe). Com uma conta, quem doa ganha um agradecimento cosmético no jogo: título, moldura, selo, um shiny à escolha e um companheiro.',
+      'O Pokémon Survivors é grátis e sem anúncios, e nada que dê poder é vendido. Se quiser ajudar a pagar os servidores, doe por Pix ou cartão brasileiro (AbacatePay) ou, de outros países, com cartão, Apple Pay ou Google Pay (Stripe). Com uma conta, quem doa ganha um agradecimento cosmético no jogo: título, moldura, selo, um shiny à escolha e um companheiro.',
     h1: 'Apoie o projeto',
-    lead: 'O jogo é grátis e vai continuar assim, sem anúncios e sem nada à venda. Se ele te divertiu e você quiser ajudar a pagar os servidores (contas, ranking e o Desafio do dia), qualquer valor ajuda. Como agradecimento, quem doa com uma conta ganha recompensas cosméticas no jogo, nada que mude uma partida.',
+    lead: 'O jogo é grátis e vai continuar assim, sem anúncios e sem nada que dê poder à venda. Se ele te divertiu e você quiser ajudar a pagar os servidores (contas, ranking e o Desafio do dia), qualquer valor ajuda. Como agradecimento, quem doa com uma conta ganha recompensas cosméticas no jogo, nada que mude uma partida.',
     thanks: 'Obrigado pelo apoio! ♥',
     status: {
       pending: 'Confirmando o pagamento… Pode levar alguns minutos (deixe esta página aberta).',
@@ -916,12 +916,12 @@ export const sitePt = {
   legal: {
     title: 'Legal, privacidade e créditos | Pokémon Survivors',
     description:
-      'Pokémon Survivors é um fan game não oficial e gratuito, sem anúncios e sem compras. Licenças (código MIT, sprites CC BY-NC 4.0), privacidade (contas opcionais com perfil público no ranking; como convidado, nada sai do seu aparelho), créditos e contato.',
+      'Pokémon Survivors é um fan game não oficial e gratuito, sem anúncios; só visuais opcionais são pagos. Licenças (código MIT, sprites CC BY-NC 4.0), privacidade (contas opcionais com perfil público no ranking; como convidado, nada sai do seu aparelho), créditos e contato.',
     h1: 'Legal, privacidade e créditos',
     sections: {
       fanGame: 'Fan game não oficial',
-      free: 'Grátis, sem anúncios e sem compras',
-      gems: 'Gemas da Arena',
+      free: 'Grátis e sem anúncios',
+      gems: 'Gemas',
       licenses: 'Licenças e créditos',
       privacy: 'Privacidade',
       contact: 'Contato e remoção de conteúdo',
@@ -932,12 +932,12 @@ export const sitePt = {
       'Pokémon e os nomes dos personagens são marcas registradas da Nintendo. Pokémon © Nintendo, Creatures Inc. e GAME FREAK inc. As demais marcas pertencem aos seus donos.',
     ],
     free: [
-      'O jogo é gratuito e vai continuar assim: não tem anúncios, conteúdo pago nem compras dentro do app.',
+      'O jogo é gratuito e vai continuar assim: não tem anúncios, e nada que mude uma partida ou o ranking custa dinheiro. A única compra possível são gemas, opcionais, para visuais (veja abaixo).',
       'Poké Dollars (₽) existem só dentro do jogo e não podem ser comprados com dinheiro de verdade.',
       'Quem quiser pode doar na página Apoie o projeto. Doações são voluntárias e, com uma conta, dão só um agradecimento cosmético (título, moldura, selo, um shiny à escolha, um companheiro), nada que mude uma partida ou o ranking.',
     ],
     gems: [
-      'Gemas são um item virtual da Arena: compram só itens cosméticos (como chapéus, rastros e títulos), nunca nada que mude uma partida ou o ranking. Elas não têm valor em dinheiro, não podem ser trocadas por dinheiro nem passadas para outra conta e ficam ligadas à sua conta do jogo.',
+      'Gemas são um item virtual do jogo: compram só itens cosméticos (como chapéus, rastros e títulos), que aparecem nas partidas, no co-op e na Arena, nunca nada que mude uma partida ou o ranking. Elas não têm valor em dinheiro, não podem ser trocadas por dinheiro nem passadas para outra conta e ficam ligadas à sua conta do jogo.',
       'Você ganha gemas jogando a Arena (com um limite por dia), apoiando no Patreon ou comprando um pacote. Pacotes são pagos no Stripe (cartão, Apple Pay e Google Pay) ou na AbacatePay (Pix), e os dados de pagamento vão direto para eles: o jogo nunca vê seu cartão.',
       'Direito de arrependimento: até 7 dias depois da compra de um pacote, você pode pedir o reembolso das gemas dele que ainda não gastou (Código de Defesa do Consumidor, art. 49). Peça pelo e-mail pedro@wavyia.com.br, com a referência da compra. Gemas já gastas e os itens cosméticos comprados com elas não são reembolsáveis.',
       'Um estorno ou uma contestação do pagamento (chargeback) tira da conta as gemas daquele pacote, mesmo as já gastas. O saldo pode ficar negativo e, enquanto estiver, não dá para comprar nada com gemas.',

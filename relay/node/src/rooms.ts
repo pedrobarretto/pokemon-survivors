@@ -74,7 +74,7 @@ export type RoomsDeps = {
   now: () => number
   /** An Arena match's agreed result, for the API (`report.ts`'s outbox). */
   report: (report: ArenaReport) => void
-  /** The Arena looks the API vouches for these identities (`lookUpLooks`): none for a failure, never throws. */
+  /** The looks the API vouches for these identities (`lookUpLooks`): none for a failure, never throws. */
   looks: (ids: readonly string[]) => Promise<Record<string, WireLook>>
 }
 
@@ -154,10 +154,10 @@ export const createRooms = (deps: RoomsDeps) => {
     schedule(shell)
   }
 
-  /** A friends' Arena start's looks, back to the room that asked, if it's still here. */
+  /** A friends' room's looks as its run starts, back to the room that asked, if it's still here. */
   const lookUp = async (shell: Shell, e: Extract<Effect, { k: 'looks' }>) => {
     const looks = await deps.looks(e.ids)
-    log('arena.looks', { code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length })
+    log('room.looks', { code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length })
     if (rooms.get(shell.code) === shell) step(shell, () => looked(shell.state, e.ask, looks, now()))
   }
 

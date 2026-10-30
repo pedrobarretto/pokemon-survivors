@@ -40,7 +40,7 @@ import { roomOf } from '../game/room'
 import { drawLandmarkAir, drawTunnelDark, playerUnderground } from './landmarks'
 import { drawPokemon, sprites, type AnimName, type SpeciesSprites } from './sprites'
 import { drawWearables } from './wearables'
-import { lookOf } from './looks'
+import { shownLook } from './looks'
 import { bodyOf } from '../data/bodies'
 import { drawDrainVines, drawTypeEvolvedAttack, drawTypeEvolvedGround } from './typeEvolved'
 import { drawCompanion, type CompanionView } from './companion'
@@ -629,9 +629,12 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const feet = p.y - (egg?.lift ?? 0)
   // Arena: an emote plays its own sheet, facing the camera (`render/arenaFx.ts`).
   const emote = p.versus ? arenaEmote(g, p) : null
-  // Arena: the seat's look (its worn cosmetics) on the sprite, behind it and over it. Never in a run. The
-  // anchors only cover Walk, Idle and Hurt, so an emote's sheet (a hop, a spin, a nap) plays bare.
-  const look = g.versus && !emote ? lookOf(p.slot) : null
+  // The seat's look (its worn cosmetics) on the sprite, behind it and over it, in every mode. The anchors only
+  // cover the species' own Walk, Idle and Hurt (`render/wearFit.ts` checks the sheet), so the moments that
+  // swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega (its form, or the base sprite standing in
+  // for a Mega without sheets) and its transformation, and a move's own look (Fly, Dig, a lunge).
+  const bare = emote !== null || egg !== null || mega.form !== undefined || p.mega.intro > 0
+  const look = bare ? null : shownLook(g, p.slot)
   if (alpha > 0) {
     if (look) drawWearables(ctx, s, look, anim, p.dir, p.animTime, p.x, feet, 'behind', { alpha })
     drawPokemon(ctx, s, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, { alpha, flash, tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
@@ -650,8 +653,8 @@ const drawHpBar = (ctx: Ctx, g: Game) => {
   const w = 22
   const x = Math.round(p.x - w / 2)
   const y = Math.round(p.y + 4)
-  // Arena: a name plate frames the bar in its colors (`render/arenaPlates.ts`).
-  const plate = p.versus ? plateOf(p.slot) : null
+  // A name plate frames the bar in its colors (`render/arenaPlates.ts`).
+  const plate = plateOf(g, p.slot)
   if (plate) drawPlateBar(ctx, plate, x, y, w, g.now)
   else {
     ctx.fillStyle = '#181818'
@@ -948,8 +951,9 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   const camX = Math.round(g.camera.x) + shakeX
   const camY = Math.round(g.camera.y) + shakeY
 
-  // The Arena's cosmetic effects step on the drawing clock (and let go of a match once it's over).
-  stepArenaFx(g, t)
+  // The looks' effects step on the drawing clock (and let go of a game once another starts). The player's own
+  // companion walking along (a supporter's, `render/companion.ts`) keeps their follower home: one buddy at a time.
+  stepArenaFx(g, t, opts.companion ? localPlayer(g).slot : -1)
   const fade = biomeFade(g)
   const inside = g.place.inside
   const indoors = roomOf(g) !== null
@@ -1022,10 +1026,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawTraitGround(ctx, g, visible)
   drawAlphaGround(ctx, g, t, visible)
   drawPickups(ctx, g, t, visible)
-  if (g.versus) {
-    drawValeGround(ctx, g, t, visible)
-    drawArenaFxGround(ctx, g, t, visible)
-  }
+  if (g.versus) drawValeGround(ctx, g, t, visible)
+  drawArenaFxGround(ctx, g, t, visible)
   if (g.coop) drawTeamGround(ctx, g, t)
 
   drawables.length = 0
@@ -1044,8 +1046,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   }
   const companion = opts.companion
   if (companion) drawables.push('companion')
-  // Arena: the followers (`render/arenaFx.ts`).
-  if (g.versus) arenaFollowers(g, drawables)
+  // The looks' followers (`render/arenaFx.ts`).
+  arenaFollowers(g, drawables)
   solidsInView(g, camX, camY, w, h, drawables)
   if (g.versus) valePropsInView(g.versus.map, visible, drawables)
   // Mid-jump leapers sort last so they fly over the horde, and so does a flyer over a rock or a mountain.
@@ -1160,8 +1162,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     drawPlayerAir(ctx, g, t)
   }
   // Teammates' name tags and bubbles, over everyone (in Versus, the goals' points left under them).
+  drawArenaFxAir(ctx, g, t, visible)
   if (g.versus) {
-    drawArenaFxAir(ctx, g, t, visible)
     drawValeAir(ctx, g)
     drawValePings(ctx, g, t)
   }

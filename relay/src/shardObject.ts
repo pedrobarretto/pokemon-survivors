@@ -448,10 +448,10 @@ export class ShardObject extends DurableObject<Env> {
     this.schedule(shell)
   }
 
-  /** A friends' Arena start's looks, from the API (none when it fails), back to the room that asked, if it's still here. */
+  /** A friends' room's looks as its run starts, from the API (none when it fails), back to the room that asked, if it's still here. */
   private async lookUp(shell: Shell, e: Extract<Effect, { k: 'looks' }>) {
     const looks = await lookUpLooks(this.api, e.ids)
-    this.log({ ev: 'arena.looks', code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length })
+    this.log({ ev: 'room.looks', code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length })
     if (this.rooms.get(shell.code) === shell) this.step(shell, () => looked(shell.state, e.ask, looks, Date.now()))
   }
 

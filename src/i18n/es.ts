@@ -564,7 +564,7 @@ export const es: Messages = {
     rarities: { common: 'Común', rare: 'Raro', epic: 'Épico', legendary: 'Legendario' },
     packs: { pouch: 'Puñado', bag: 'Bolsa', chest: 'Cofre', hoard: 'Tesoro', vault: 'Bóveda' },
     shop: {
-      pitch: 'Estilos para tu Pokémon en la Arena: todos en la partida los ven, y ninguno da poder.',
+      pitch: 'Estilos para tu Pokémon en las partidas, el co-op y la Arena: todos los ven, y ninguno da poder.',
       balance: 'Tu saldo',
       currency: 'Moneda',
       packs: 'Paquetes de gemas',
@@ -575,7 +575,9 @@ export const es: Messages = {
       equipped: 'En uso',
       unsold: 'No disponible',
       misfit: (name: string) => `No le queda bien a ${name}`,
-      effect: 'Aparece durante la partida.',
+      effect: 'Aparece en las partidas, el co-op y la Arena.',
+      arenaOnly: 'Por ahora, solo aparece en la Arena.',
+      arenaTag: 'ARENA',
       buy: 'Comprar',
       equip: 'Usar',
       unequip: 'Quitar',
@@ -590,7 +592,7 @@ export const es: Messages = {
       reasons: { pack: 'Paquete de gemas', patreon: 'Patreon', play: 'Partida en la Arena', buy: 'Compra', refund: 'Reembolso', dispute: 'Disputa', disputeWon: 'Disputa revertida', grant: 'Regalo del equipo' },
       signIn: { title: 'Inicia sesión para usar la Tienda', text: 'Tus gemas y estilos quedan en tu cuenta, en cualquier dispositivo.', button: 'Iniciar sesión' },
       unavailable: 'La Tienda no está disponible en esta versión del juego.',
-      onlyLooks: 'Las gemas solo compran estilos de la Arena.',
+      onlyLooks: 'Las gemas solo compran estilos.',
     },
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} de bono`,
@@ -617,7 +619,7 @@ export const es: Messages = {
       saving: 'Guardando…',
       saved: 'Guardado en tu cuenta.',
       local: 'Guardado en este dispositivo: pasa a tu cuenta cuando vuelva la conexión.',
-      note: 'Todos en las partidas de la Arena ven tu estilo.',
+      note: 'Tu estilo aparece en tus partidas, en el co-op y en la Arena.',
     },
   },
   coop: {

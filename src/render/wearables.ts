@@ -46,8 +46,9 @@ export type WearOpts = {
  * the species' head, neck and body; drawn in the pass its slot takes facing
  * `dir` (`render/wearFit.ts`: a cape behind facing south and over the body
  * facing north, glasses gone facing away). Draws nothing until the engine
- * loads (the first call starts it), for a stand-in sprite (a dust puff), a
- * form or a species outside the Arena's roster, and for an item the species
+ * loads (the first call starts it), on a sheet the anchors didn't measure
+ * (`anchorKey`, `anchoredSheet` in `render/wearFit.ts`: a stand-in, a form,
+ * the Fly sheet, a species not covered yet), and for an item the species
  * can't wear (`data/wearFits.ts`).
  */
 export const drawWearables = (
@@ -76,7 +77,7 @@ export const wearableIcon = (id: WearableId): HTMLCanvasElement | null => engine
 /** Dev: forgets the engine's fits and art after `WEAR_FITS` changes (the fitting gallery, `ui/wearFitting.ts`). */
 export const refitWearables = () => engine?.refit()
 
-/** A match ended: the engine lets go of its rendered art (`freeWearArt`). */
+/** A room's game ended: the engine lets go of its rendered art (`freeWearArt`). */
 export const freeWearables = () => engine?.freeWearArt()
 
 /** Dev: how many draws since the last ask found their art still rendering (`ui/wearFitting.ts`'s contact sheets wait for none). */

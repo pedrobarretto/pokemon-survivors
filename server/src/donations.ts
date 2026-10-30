@@ -35,7 +35,7 @@ const donationProduct = (amount: number): Product => ({
 const gemProduct = (pack: GemPackId): Product => ({
   externalId: `pokemon-survivors-gems-${pack}-${GEM_PACKS[pack].brl}`,
   name: `Pokémon Survivors: ${packGems(pack)} gemas`,
-  description: 'Gemas da Arena do Pokémon Survivors: só para itens cosméticos, sem valor em dinheiro.',
+  description: 'Gemas do Pokémon Survivors: só para itens cosméticos, sem valor em dinheiro.',
   price: GEM_PACKS[pack].brl,
 })
 
