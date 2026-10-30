@@ -267,10 +267,10 @@ export const focusPunch: Cast = (g, s, owned) => {
     grow: (FOCUS.shock * s.area - 6) / 0.16,
   })
   burst(g, at.x, at.y, { colors: ['#ffffff', '#f8d030', '#f87040', '#c03028'], count: 22, speed: 180, ttl: 0.4, size: 2 })
-  // The follow-through: a breath of safety while the shockwave clears the crowd.
+  // The follow-through: a breath of safety while the shockwave clears the crowd. No hitstop: charged
+  // again in a second or so, it would freeze the world on a loop, which plays as being stunned.
   p.iframes = Math.max(p.iframes, FOCUS.iframes)
   shakeScreen(g, 6)
-  g.hitstop = Math.max(g.hitstop, 0.07)
   sound(g, 'focusPunch')
 }
 
