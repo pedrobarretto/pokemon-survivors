@@ -8,14 +8,24 @@ import { inheritMods, modHit, modTick } from './mods'
 import { lungeStep, mineArmed, mineBlast, rollStep, TURRET_RANGE } from './moveRules'
 import { nearestEnemy } from './queries'
 import { inDoorway } from './rift'
+import { atCaveChest } from './cave'
+import { inStandRing } from './mapEvents'
 import { spawnAttack } from './spawn'
 import { typeEvolvedTrail } from './typeEvolutions'
 import { ownerOf } from './players'
 import { isAlly } from './versusRules'
-import type { Attack, Enemy, Game, Motion, Trailer, Turret } from './types'
+import type { Attack, Enemy, Game, Motion, Player, Trailer, Turret } from './types'
 import * as dm from '../engine/dmath'
 
 const neighbors: number[] = []
+
+/**
+ * Whether a move carrying the player (a lunge, Rollout) holds them where they
+ * stand: in a portal or a place's door filling (`inDoorway`), at a shut chest
+ * or in the Move Tutor's tent, so it never hops them off a spot that fills by
+ * standing. Co-op's prediction ghost asks it too (`coop/predict.ts`).
+ */
+export const holdsCarry = (g: Game, p: Pick<Player, 'x' | 'y' | 'radius'>) => inDoorway(g, p) || inStandRing(g, p) || atCaveChest(g, p)
 
 const move = (g: Game, a: Attack, m: Motion, dt: number) => {
   const p = g.player
@@ -57,8 +67,8 @@ const move = (g: Game, a: Attack, m: Motion, dt: number) => {
     case 'static':
       break
     case 'lunge': {
-      // A portal or a place's door being stepped into holds the player: the lunge ends there.
-      if (inDoorway(g, p)) m.left = 0
+      // A portal, a place's door or a chest being stood in holds the player: the lunge ends there.
+      if (holdsCarry(g, p)) m.left = 0
       const step = lungeStep(m, dt)
       m.left = step.left
       p.x += step.dx
@@ -111,9 +121,12 @@ const move = (g: Game, a: Attack, m: Motion, dt: number) => {
       break
     }
     case 'roll': {
-      const step = rollStep(p.facing, m.speed, dt)
-      p.x += step.dx
-      p.y += step.dy
+      // Held, it rolls in place (the stick still walks the player out).
+      if (!holdsCarry(g, p)) {
+        const step = rollStep(p.facing, m.speed, dt)
+        p.x += step.dx
+        p.y += step.dy
+      }
       a.x = p.x
       a.y = p.y - 8
       break

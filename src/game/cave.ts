@@ -14,7 +14,7 @@ import { placePool, type PlaceInteriorOf } from './place'
 import { notifyPlace, solidAt, spawnInPlace, startLoot } from './placeKit'
 import { playerTypes, type Solid } from './terrain'
 import { anchorPlayer, centerScreen, placeTeam } from './players'
-import type { Game } from './types'
+import type { Game, Player } from './types'
 import * as dm from '../engine/dmath'
 
 /**
@@ -195,6 +195,18 @@ const openChest = (g: Game, inside: CaveInside, chest: NonNullable<CaveState['ch
   shakeScreen(g, 4, { x, y })
   notifyPlace(g, 'cave', { kind: 'treasure', coins: coins.reduce((a, b) => a + b, 0) })
   startLoot(g, inside)
+}
+
+/**
+ * Whether `p` stands where the treasure chamber's chest fills, still shut: a
+ * lunge stops there (`attacks.ts`), like at a doorway, so a move that keeps
+ * carrying the player (Aqua Step's dance) can't hop them off it every time.
+ */
+export const atCaveChest = (g: Pick<Game, 'place'>, p: Pick<Player, 'x' | 'y' | 'radius'>) => {
+  const inside = g.place.inside
+  if (inside?.id !== 'cave') return false
+  const chest = inside.state.chest
+  return chest !== null && !chest.open && dm.sq(p.x - inside.x - chest.x) + dm.sq(p.y - inside.y - chest.y) < dm.sq(CAVE.chestRadius + p.radius)
 }
 
 /** Every tick in the cave: the wind's warnings, the stairs, the Monster House, the chest and the dark's spawns. */
