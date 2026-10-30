@@ -182,7 +182,7 @@ describe('co-op picks', () => {
   })
 
   it('an evolution and a personal screen play without holding the team; the timer leaves a cursed item', () => {
-    const g = team()
+    const g = team(3)
     calm(g)
     const [a, b] = players(g)
     a.evolution = { from: 4, to: 5, t: 0 }
@@ -195,6 +195,24 @@ describe('co-op picks', () => {
     expect(g.time).toBeGreaterThan(time + 0.9)
     run(g, COOP.pick.time)
     expect([b.phase, b.curses.held]).toEqual(['playing', []])
+  })
+
+  it('a personal screen holds the world when nobody else is free to play, and closing one gives i-frames', () => {
+    const g = team()
+    calm(g)
+    const [a, b] = players(g)
+    knockOut(g, a)
+    b.offers = [{ kind: 'curse', id: 'lifeOrb', take: true }, { kind: 'curse', id: 'lifeOrb', take: false }]
+    setPhase(g, 'curse', b)
+    const time = g.time
+    run(g, 1)
+    expect([g.phase, phaseOf(g, b)]).toEqual(['playing', 'curse'])
+    expect(g.time).toBeLessThan(time + TICK)
+    run(g, TICK, () => [{ slot: 1, kind: 'pick', screen: 'curse', round: b.round, index: 1 }])
+    expect(b.phase).toBe('playing')
+    expect(b.iframes).toBeGreaterThan(COOP.revive.iframes - 2 * TICK)
+    run(g, 1)
+    expect(g.time).toBeGreaterThan(time + 0.9)
   })
 
   it('an Alpha drops one prize for the team: whoever takes it opens the rare level-up for everyone', () => {

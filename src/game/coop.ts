@@ -5,7 +5,7 @@ import type { HitKind } from '../data/abilities'
 import { burst } from './effects'
 import { toSteps, type EggTier } from './eggs'
 import { runBonus, wonRun } from './meta'
-import { inPlay, setPhase } from './players'
+import { inPlay, personal, setPhase } from './players'
 import { createTally, summarizeRun, type RunSummary } from './tally'
 import type { Game, Player, PlayerRecord } from './types'
 import type { DexLog } from './dex'
@@ -122,13 +122,21 @@ export const checkWipe = (g: Game, foe: EnemyId | null = null, hit: HitKind = 'h
   return true
 }
 
-/** No active player stands, but an away one does and still holds the world: it waits for them to come back. */
+/**
+ * Whether the world waits with the team's level-ups done: no active player is
+ * free to play, but one stands and is busy on a screen of their own (a TM, a
+ * Poké Ball's prize, an evolution and its picks: `personal`, which otherwise
+ * play on around them), or an away one still holds the world. So the last one
+ * standing never comes back from a pick into a horde that kept coming.
+ */
 export const worldHeld = (g: Game) => {
   if (g.coop === null) return false
   let held = false
   for (const p of g.players) {
-    if (!p.gone && !p.away && p.hp > 0) return false
-    if (holdsWorld(g, p)) held = true
+    if (!p.gone && !p.away && p.hp > 0) {
+      if (!g.versus && personal(p.phase)) held = true
+      else return false
+    } else if (holdsWorld(g, p)) held = true
   }
   return held
 }
