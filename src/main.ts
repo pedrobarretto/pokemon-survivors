@@ -178,7 +178,7 @@ import { suggestionsScreen } from './ui/suggestions'
 import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
-import { activeCoopClient, addBots, arenaClient, botsTalk, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
+import { activeCoopClient, addBots, arenaClient, botsTalk, tabBotLook, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
 import { isQuickChat } from './game/versusSocial'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
@@ -199,7 +199,7 @@ import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaFormat, arenaPick, arenaScreen, keepArenaPick } from './ui/arena'
-import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, stageCheckout, stageGems, takeCheckoutReturn } from './gems'
+import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, takeCheckoutReturn } from './gems'
 import { isGemPackId } from './data/gems'
 import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
 import { arenaHub, isArenaHubTab, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaHub'
@@ -213,7 +213,7 @@ import { arenaResult } from './game/arenaRank'
 import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
-import { lookOf, setLooks, setArenaMatch, setLocalLook } from './render/looks'
+import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
 import { freeWearables } from './render/wearables'
 import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, type Look, type CosmeticSlot } from './data/cosmetics'
 import { effectIn } from './data/arenaEffects'
@@ -671,6 +671,27 @@ const showMenu = (initial: PlayableId = loadSave().partner) => {
   setScreen(select)
 }
 
+/**
+ * A solo run's looks (and the Dojo's, `render/looks.ts`): this player's own
+ * in seat 0, as the account wears and owns it. The shop's answers reach it
+ * mid-run (`onGems`); co-op and the Arena take each seat's from the room.
+ */
+const wearOwnLook = () => {
+  setLooksGame(null)
+  setLooks([parseLook(equippedLook())])
+}
+
+onGems(() => {
+  if (run && !run.coop) setLooks([parseLook(equippedLook())])
+})
+
+/** A game ended: its looks and their effects go (the next one dresses again). */
+const takeOffLooks = () => {
+  resetArenaFx()
+  setLooks([])
+  setLooksGame(null)
+}
+
 /** The save's companion for a run starting now, if the account's tier still allows it (`knownTier`; its sprites start loading). */
 const runCompanion = (at: Vec): CompanionView | null => {
   const save = loadSave()
@@ -930,6 +951,7 @@ const endRun = () => {
   run.closeText?.()
   run.hud.dispose()
   clearToasts(ui)
+  takeOffLooks()
   run = null
   syncRunWatch()
 }
@@ -1203,6 +1225,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     training: null,
   }
   if (run.companion) run.sprites.always.push(run.companion.dex)
+  wearOwnLook()
   // The menus' sheets age out from here; the run's next stage starts streaming.
   syncSprites()
   // The crash watch holds the run from now on (`bugReport.ts`), and the run's own peaks and frames start here.
@@ -1317,6 +1340,7 @@ const startDojo = async (starter: PlayableId) => {
       training: null,
     }
     if (r.companion) r.sprites.always.push(r.companion.dex)
+    wearOwnLook()
     const name = PLAYABLE[starter].name
     const forget = () =>
       loadSave().builds[starter]
@@ -1386,6 +1410,7 @@ const endDojo = (r: Run, dojo: DojoRun) => {
   r.closeText?.()
   r.hud.dispose()
   clearToasts(ui)
+  takeOffLooks()
   run = null
   syncRunWatch()
 }
@@ -2238,9 +2263,7 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   c.versus?.tray.dispose()
   c.versus?.talk.dispose()
   c.versus?.controls.dispose()
-  resetArenaFx()
-  setLooks([])
-  setArenaMatch(null)
+  takeOffLooks()
   freeWearables()
   clearToasts(ui)
   run = null
@@ -2388,9 +2411,12 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
       : null,
   }
   const me = localPlayer(live.game)
-  // Each seat's Arena look, as the relay vouched for it; this player's own previews what it equipped (shell state: the simulation never sees it).
-  setLooks(live.game.versus ? live.start.players.map((p, i) => parseLook(i === me.slot ? equippedLook() : p.loadout.look)) : [])
-  setArenaMatch(live.game.versus ? `${live.room}:${live.start.id}` : null)
+  // Each seat's look, in a co-op run as in the Arena, as the relay vouched for it; this player's own previews what it
+  // equipped (shell state: the simulation never sees it). Dev: the tab's bots wear their own (`tabBotLook`).
+  const seatLook = (p: (typeof live.start.players)[number], i: number) =>
+    i === me.slot ? equippedLook() : (p.loadout.look ?? (import.meta.env.DEV ? tabBotLook(p.seat) : null))
+  setLooks(live.start.players.map((p, i) => parseLook(seatLook(p, i))))
+  setLooksGame(`${live.room}:${live.start.id}`)
   run = {
     game: live.game,
     hud: coopRunHud(c),
@@ -4152,26 +4178,27 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
 }
 
 /**
- * Dev: stages the Arena's cosmetics (`data/arenaEffects.ts`, `render/arenaFx.ts`) in a match against bots
- * (`ps.versus('charmander')` first). `ps.look({ trail: 'emberTrail', follower: 'mewFollower' })` puts those on
- * this player's seat, over what it wears (`{}` keeps it; `ps.look('clear')` takes everything off), and on the
- * hub's profile too (a seat number after the look dresses that seat instead); `ps.look('bots')` dresses every other seat at random; `ps.look('emote')` plays the equipped
- * emote (as B does); `ps.look('play', 'koSupernova')` plays a spawn, KO or goal effect at your feet. Returns
- * the looks by seat (no argument: with the effects' particle counts too).
+ * Dev: stages the cosmetics (`data/arenaEffects.ts`, `render/arenaFx.ts`) in a run (`ps.startRun('charmander')`,
+ * a co-op one) or a match against bots (`ps.versus('charmander')`). `ps.look({ trail: 'emberTrail', follower:
+ * 'mewFollower' })` puts those on this player's seat, over what it wears (`{}` keeps it; `ps.look('clear')` takes
+ * everything off), and on the hub's profile too (a seat number after the look dresses that seat instead);
+ * `ps.look('bots')` dresses every other seat at random; `ps.look('emote')` plays the equipped emote (as B does, in
+ * a match); `ps.look('play', 'koSupernova')` plays a spawn, KO or goal effect at your feet. Returns the looks by
+ * seat (no argument: with the effects' particle counts too). A run shows only what its mode does (`SLOT_MODES`).
  */
 const devLook = (cmd?: Look | 'bots' | 'emote' | 'play' | 'clear', arg?: string | number) => {
   const c = run?.coop
-  const g = c?.runner.game
-  if (!c || !g?.versus) return 'ps.look: start a match first (ps.versus())'
-  const me = c.runner.slot
+  const g = c ? c.runner.game : run?.game
+  if (!run || !g) return "ps.look: start a run or a match first (ps.startRun('charmander'), ps.versus())"
+  const me = c ? c.runner.slot : 0
   const looks = g.players.map((p) => ({ ...lookOf(p.slot) }))
   if (cmd === undefined) return { looks, fx: arenaFxStats(), lean: detail.lean }
-  if (cmd === 'emote') return c.driver.send({ kind: 'emote' }), looks[me]
+  if (cmd === 'emote') return c?.driver.send({ kind: 'emote' }), looks[me]
   if (cmd === 'play') {
     const id = String(arg)
     const def = effectIn('spawn', id) ?? effectIn('ko', id) ?? effectIn('goal', id)
     if (!def) return `ps.look('play', id): one of ${COSMETIC_IDS.filter((id) => ['spawn', 'ko', 'goal'].includes(slotOf(id))).join(', ')}`
-    const p = localPlayer(c.view.game)
+    const p = localPlayer(c ? c.view.game : g)
     playBurst(def.burst, p.x, p.y, p.versus?.team ?? 0)
     return arenaFxStats()
   }
@@ -4218,8 +4245,8 @@ const devGems = (cmd?: string, arg?: string | number) => {
   } else if (cmd === 'shop' || cmd === 'locker') showArenaHub(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
   else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('shop') · ('locker') · ('fetch')"
-  // In a match, each seat's look as the shell draws it.
-  return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run?.game.versus ? run.game.players.map((p) => lookOf(p.slot)) : null }
+  // In a run or a match, each seat's look as the shell holds it.
+  return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }
 
 // `ps.biome('cave')` and `ps.weather('rain')` stage a run for screenshots (they hold until the next scheduled change).
@@ -4234,10 +4261,10 @@ if (import.meta.env.DEV) {
       coop: devCoop,
       versus: devVersus,
       arena: devArena,
-      /** The Arena's wearables (`ui/wearFitting.ts`, loaded on demand): `ps.wear('topHat')` on your Pokémon in a match, `ps.wear('fit', 'topHat')` the fitting gallery. */
+      /** The wearables (`ui/wearFitting.ts`, loaded on demand): `ps.wear('topHat')` on your Pokémon in a run or a match, `ps.wear('fit', 'topHat')` the fitting gallery. */
       wear: (cmd?: string, arg?: unknown, more?: unknown, extra?: unknown) =>
         import('./ui/wearFitting').then((m) =>
-          m.devWear({ seat: () => (run?.coop?.runner.game.versus ? run.coop.runner.slot : null), seats: () => run?.coop?.runner.game.players.length ?? 0 }, cmd, arg, more, extra),
+          m.devWear({ seat: () => (run ? (run.coop?.runner.slot ?? 0) : null), seats: () => run?.game.players.length ?? 0 }, cmd, arg, more, extra),
         ),
       look: devLook,
       gems: devGems,

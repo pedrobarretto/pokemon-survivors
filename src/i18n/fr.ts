@@ -563,7 +563,7 @@ export const fr: Messages = {
     rarities: { common: 'Commun', rare: 'Rare', epic: 'Épique', legendary: 'Légendaire' },
     packs: { pouch: 'Poignée', bag: 'Sacoche', chest: 'Coffre', hoard: 'Trésor', vault: 'Chambre forte' },
     shop: {
-      pitch: 'Des styles pour ton Pokémon dans l’Arène : tout le monde dans le match les voit, et aucun ne donne de puissance.',
+      pitch: 'Des styles pour ton Pokémon dans tes parties, en coop et dans l’Arène : tout le monde les voit, et aucun ne donne de puissance.',
       balance: 'Ton solde',
       currency: 'Devise',
       packs: 'Packs de gemmes',
@@ -574,7 +574,9 @@ export const fr: Messages = {
       equipped: 'Porté',
       unsold: 'Indisponible',
       misfit: (name: string) => `Ne va pas bien à ${name}`,
-      effect: 'Apparaît pendant le match.',
+      effect: 'Apparaît dans tes parties, en coop et dans l’Arène.',
+      arenaOnly: 'Pour l’instant, n’apparaît que dans l’Arène.',
+      arenaTag: 'ARENE',
       buy: 'Acheter',
       equip: 'Porter',
       unequip: 'Retirer',
@@ -589,7 +591,7 @@ export const fr: Messages = {
       reasons: { pack: 'Pack de gemmes', patreon: 'Patreon', play: 'Match dans l’Arène', buy: 'Achat', refund: 'Remboursement', dispute: 'Litige', disputeWon: 'Litige annulé', grant: 'Cadeau de l’équipe' },
       signIn: { title: 'Connecte-toi pour utiliser la Boutique', text: 'Tes gemmes et tes styles restent sur ton compte, sur tous tes appareils.', button: 'Se connecter' },
       unavailable: 'La Boutique n’est pas disponible dans cette version du jeu.',
-      onlyLooks: 'Les gemmes n’achètent que des styles de l’Arène.',
+      onlyLooks: 'Les gemmes n’achètent que des styles.',
     },
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} en bonus`,
@@ -616,7 +618,7 @@ export const fr: Messages = {
       saving: 'Enregistrement…',
       saved: 'Enregistré sur ton compte.',
       local: 'Enregistré sur cet appareil : il passe sur ton compte au retour de la connexion.',
-      note: 'Tout le monde voit ton style dans les matchs de l’Arène.',
+      note: 'Ton style apparaît dans tes parties, en coop et dans l’Arène.',
     },
   },
   coop: {

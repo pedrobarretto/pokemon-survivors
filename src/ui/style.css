@@ -23040,6 +23040,12 @@ span.arena-hub-face {
   text-shadow: 1px 1px 0 #101020;
 }
 
+/* Under a teammate's name in the co-op menu's team look (`teamBuilds`). */
+.team-build-head .arena-seat-title {
+  display: block;
+  margin-top: 2px;
+}
+
 .arena-seat-title.rare {
   color: #78b8f8;
 }
@@ -23535,6 +23541,28 @@ span.arena-hub-face {
   color: #fff;
   background: #c03040;
   border-radius: 99px;
+}
+
+/* An item that only shows in the Arena (`arenaOnly`): a small tag on its card's corner and on its locker row. */
+.gem-item-arena {
+  padding: 2px 3px 1px;
+  font-family: var(--title);
+  font-size: 6px;
+  font-style: normal;
+  line-height: 1;
+  color: #fff;
+  background: #3868d8;
+  border-radius: 3px;
+}
+
+.gem-item > .gem-item-arena {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+}
+
+.gem-slot-head .gem-item-arena {
+  margin-left: auto;
 }
 
 .gem-receipts summary {

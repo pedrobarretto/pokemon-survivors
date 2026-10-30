@@ -791,9 +791,9 @@ export const siteFr: SiteMessages = {
   support: {
     title: 'Soutenir Pokémon Survivors | Don par carte, Apple Pay ou Google Pay',
     description:
-      'Pokémon Survivors est gratuit, sans pubs et sans rien à vendre. Si tu veux aider à payer les serveurs, fais un don par carte, Apple Pay ou Google Pay depuis n’importe quel pays (Stripe), ou par Pix ou carte brésilienne depuis le Brésil (AbacatePay). Avec un compte, les donateurs reçoivent un remerciement cosmétique en jeu : un titre, un cadre de carte, un badge, un chromatique au choix et un compagnon.',
+      'Pokémon Survivors est gratuit, sans pubs et sans rien à vendre qui donne de la puissance. Si tu veux aider à payer les serveurs, fais un don par carte, Apple Pay ou Google Pay depuis n’importe quel pays (Stripe), ou par Pix ou carte brésilienne depuis le Brésil (AbacatePay). Avec un compte, les donateurs reçoivent un remerciement cosmétique en jeu : un titre, un cadre de carte, un badge, un chromatique au choix et un compagnon.',
     h1: 'Soutenir le projet',
-    lead: 'Le jeu est gratuit et le restera, sans pubs et sans rien à vendre. Si tu t’es amusé et que tu veux aider à payer les serveurs (comptes, classements et Défi du jour), chaque montant compte. En remerciement, les donateurs avec un compte reçoivent des récompenses cosmétiques en jeu, rien qui change une partie.',
+    lead: 'Le jeu est gratuit et le restera, sans pubs et sans rien à vendre qui donne de la puissance. Si tu t’es amusé et que tu veux aider à payer les serveurs (comptes, classements et Défi du jour), chaque montant compte. En remerciement, les donateurs avec un compte reçoivent des récompenses cosmétiques en jeu, rien qui change une partie.',
     thanks: 'Merci pour ton soutien ! ♥',
     status: {
       pending: 'Confirmation du paiement… Ça peut prendre quelques minutes (garde cette page ouverte).',
@@ -863,12 +863,12 @@ export const siteFr: SiteMessages = {
   legal: {
     title: 'Mentions légales, confidentialité et crédits | Pokémon Survivors',
     description:
-      'Pokémon Survivors est un fan game non officiel et gratuit, sans pubs ni achats. Licences (code MIT, sprites CC BY-NC 4.0), confidentialité (comptes facultatifs avec un profil public dans le classement ; en invité, rien ne quitte ton appareil), crédits et contact.',
+      'Pokémon Survivors est un fan game non officiel et gratuit, sans pubs ; seuls des styles facultatifs sont payants. Licences (code MIT, sprites CC BY-NC 4.0), confidentialité (comptes facultatifs avec un profil public dans le classement ; en invité, rien ne quitte ton appareil), crédits et contact.',
     h1: 'Mentions légales, confidentialité et crédits',
     sections: {
       fanGame: 'Fan game non officiel',
-      free: 'Gratuit, sans pubs, sans achats',
-      gems: 'Gemmes de l\'Arène',
+      free: 'Gratuit, sans pubs',
+      gems: 'Gemmes',
       licenses: 'Licences et crédits',
       privacy: 'Confidentialité',
       contact: 'Contact et demandes de retrait',
@@ -879,12 +879,12 @@ export const siteFr: SiteMessages = {
       'Pokémon et les noms des personnages Pokémon sont des marques déposées de Nintendo. Pokémon © Nintendo, Creatures Inc. et GAME FREAK inc. Toutes les autres marques appartiennent à leurs propriétaires respectifs.',
     ],
     free: [
-      'Le jeu est gratuit et le restera : pas de pubs, pas de contenu payant et pas d’achats intégrés.',
+      'Le jeu est gratuit et le restera : pas de pubs, et rien qui change une partie ou le classement ne coûte d’argent. Le seul achat possible, ce sont des gemmes facultatives, pour des styles (voir plus bas).',
       'Les Pokédollars (₽) n’existent que dans le jeu et ne peuvent pas être achetés avec de l’argent réel.',
       'Si tu le souhaites, tu peux faire un don sur la page Soutenir le projet. Les dons sont volontaires et, avec un compte, n’apportent qu’un remerciement cosmétique (un titre, un cadre de carte, un badge, un chromatique au choix, un compagnon), rien qui change une partie ou le classement.',
     ],
     gems: [
-      'Les gemmes sont un objet virtuel de l\'Arène : elles n\'achètent que des objets cosmétiques (chapeaux, traînées, titres…), jamais rien qui change une partie ou le classement. Elles n\'ont aucune valeur monétaire, ne peuvent être ni échangées contre de l\'argent ni transférées à un autre compte, et restent liées à votre compte de jeu.',
+      'Les gemmes sont un objet virtuel du jeu : elles n\'achètent que des objets cosmétiques (chapeaux, traînées, titres…), qui apparaissent dans les parties, en coop et dans l\'Arène, jamais rien qui change une partie ou le classement. Elles n\'ont aucune valeur monétaire, ne peuvent être ni échangées contre de l\'argent ni transférées à un autre compte, et restent liées à votre compte de jeu.',
       'Vous gagnez des gemmes en jouant à l\'Arène (dans une limite par jour), en soutenant le jeu sur Patreon ou en achetant un pack. Les packs se paient sur Stripe (carte, Apple Pay et Google Pay) ou AbacatePay (Pix), et vos données de paiement vont directement chez eux : le jeu ne voit jamais votre carte.',
       'Droit de rétractation : dans les 7 jours suivant l\'achat d\'un pack, vous pouvez demander le remboursement de ses gemmes que vous n\'avez pas encore dépensées (Code de défense du consommateur brésilien, art. 49). Demandez-le par e-mail à pedro@wavyia.com.br, avec la référence de l\'achat. Les gemmes déjà dépensées et les objets cosmétiques achetés avec elles ne sont pas remboursables.',
       'Une rétrofacturation ou une contestation du paiement (chargeback) retire du compte les gemmes de ce pack, même celles déjà dépensées. Le solde peut devenir négatif et, tant qu\'il l\'est, rien ne peut être acheté avec des gemmes.',

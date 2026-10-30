@@ -10,7 +10,7 @@ import { formAt } from '../game/branch'
 import { localPlayer } from '../game/players'
 import type { Game, GameEvent, Player } from '../game/types'
 import type { VersusState } from '../game/versus'
-import { arenaMatchKey, lookOf } from './looks'
+import { lookOf, looksGameKey, shownLook } from './looks'
 import { createCompanion, drawCompanion, stepCompanion, type CompanionView } from './companion'
 import { detail } from './quality'
 import { drawPokemon, freeSheet, loadSheet, sprites, type Sheet } from './sprites'
@@ -18,18 +18,21 @@ import { concealed, grassAlpha } from './valeGrass'
 import { TEAM_COLORS } from './vale'
 
 /**
- * The Arena's cosmetic effects in a match (`data/arenaEffects.ts`), read from
- * each seat's look (`lookOf`): the followers trotting after their trainers,
- * the trails, the spawn, KO and goal effects, and the emotes' animations and
- * flourishes. Shell state only, never the simulation's: it steps on the
- * drawing clock and hears the match's events (`arenaFxEvent`); the emote is
- * the one thing a player sends (`versusSocial.ts`), and the match only keeps
- * when it played, so every screen plays the seat's own.
+ * The cosmetic effects in a game (`data/arenaEffects.ts`), read from each
+ * seat's look as its mode shows it (`shownLook`): the followers trotting
+ * after their trainers and the trails in a run (solo or co-op) and in the
+ * Arena; there also the spawn, KO and goal effects and the emotes'
+ * animations and flourishes. Shell state only, never the simulation's: it
+ * steps on the drawing clock and hears the match's events (`arenaFxEvent`);
+ * the emote is the one thing a player sends (`versusSocial.ts`), and the
+ * match only keeps when it played, so every screen plays the seat's own.
  *
  * Particles live in one fixed pool (typed arrays, no allocation per frame:
  * eight players' trails on a phone at 60 Hz), capped lower and emitted half
- * as often when the frame governor draws lean (`render/quality.ts`). Anything
- * of a Pokémon hidden from this screen in the tall grass (`concealed`) shows
+ * as often when the frame governor draws lean (`render/quality.ts`); a lean
+ * run also leaves teammates' followers and trails out (the horde already
+ * fills a struggling phone's frame), keeping this screen's own. Anything of
+ * a Pokémon hidden from this screen in the tall grass (`concealed`) shows
  * nowhere: its follower, its trail, its emote.
  */
 
@@ -648,7 +651,7 @@ const emoteSheet = (dex: number, anim: EmoteAnim): Sheet | null => {
   return null
 }
 
-/* ---------------- The match's state ---------------- */
+/* ---------------- The game's state ---------------- */
 
 type FollowerSeat = { id: string; view: CompanionView; float: boolean; legendary: boolean; slot: number }
 
@@ -656,13 +659,20 @@ type FollowerSeat = { id: string; view: CompanionView; float: boolean; legendary
 export type FollowerDrawable = { follower: FollowerSeat }
 
 /**
- * The match the effects belong to (`matchOf`: the shell's key for it, else
+ * The game the effects belong to (`matchOf`: the shell's key for it, else
  * its state object), and what they hold for it.
  */
-let match: string | VersusState | null = null
+let match: string | VersusState | Game | null = null
 
-/** What names `s`'s match: the shell's room and run (`setArenaMatch`), which a snapshot heal or a rejoin keeps; else the state object (a new match is a new one). */
-const matchOf = (s: VersusState): string | VersusState => arenaMatchKey() ?? s
+/**
+ * What names `g`'s game: the shell's room and run (`setLooksGame`), which a
+ * snapshot heal or a rejoin keeps; else the match's state, or the run's (a
+ * new game is a new one).
+ */
+const matchOf = (g: Game): string | VersusState | Game => looksGameKey() ?? g.versus ?? g
+
+/** The seat whose own companion walks with it (`render/companion.ts`), so its follower stays home, or -1. */
+let home = -1
 let last = -1
 const followers: (FollowerDrawable | null)[] = []
 const trailIn: number[] = []
@@ -673,7 +683,7 @@ const flourishIn: number[] = []
 /** Each seat's emote cut short by moving (its `at`). */
 const cut: number[] = []
 
-/** Lets go of a match's effects: its particles, bursts, followers and emote sheets. */
+/** Lets go of a game's effects: its particles, bursts, followers and emote sheets. */
 export const resetArenaFx = () => {
   match = null
   last = -1
@@ -695,7 +705,7 @@ const playing = (g: Game, p: Player) => {
     const e = s.emotes[i]!
     if (e.slot !== p.slot) continue
     if (g.now - e.at >= VERSUS.emote.keep || cut[p.slot] === e.at) return null
-    const def = effectIn('emote', lookOf(p.slot).emote)
+    const def = effectIn('emote', shownLook(g, p.slot).emote)
     return def ? { at: e.at, def } : null
   }
   return null
@@ -739,9 +749,12 @@ const emoteFrame = (dex: number, def: EffectOf<'emote'>, seconds: number): { she
 /** Whether `p` and what's theirs show on this screen: in the match, standing, and not hidden from `viewer` in the grass. */
 const shows = (viewer: Player, p: Player | undefined): p is Player => !!p && !p.gone && p.hp > 0 && !concealed(viewer, p)
 
-/** Keeps `p`'s follower the one their look names (a look can change mid-match: the dev console's `ps.look`). */
-const syncFollower = (p: Player) => {
-  const id = lookOf(p.slot).follower
+/**
+ * Keeps `p`'s follower the one their look names (a look can change mid-game:
+ * the dev console's `ps.look`), none while their own companion walks with them.
+ */
+const syncFollower = (g: Game, p: Player) => {
+  const id = p.slot === home ? undefined : shownLook(g, p.slot).follower
   if (followers[p.slot]?.follower.id === id) return
   const def = effectIn('follower', id)
   followers[p.slot] = def && id ? { follower: { id, view: createCompanion(def.dex, false, p), float: def.float === true, legendary: def.rarity === 'legendary', slot: p.slot } } : null
@@ -751,8 +764,8 @@ const syncFollower = (p: Player) => {
 const readied: { dex: number; id: string | undefined }[] = []
 
 /** Loads `p`'s emote sheets ahead of its first play, again when the emote or the form changes. */
-const readyEmote = (p: Player) => {
-  const id = lookOf(p.slot).emote
+const readyEmote = (g: Game, p: Player) => {
+  const id = shownLook(g, p.slot).emote
   const dex = formAt(p.starter, p.branch, p.stage).dex
   const had = readied[p.slot]
   if (had && had.dex === dex && had.id === id) return
@@ -761,19 +774,19 @@ const readyEmote = (p: Player) => {
   for (const anim of emote ? (emote.sequence ? emote.anims : [emoteAnimOf(dex, emote.anims)]) : []) if (anim && emoteAnimOf(dex, [anim])) emoteSheet(dex, anim)
 }
 
-/** Takes up a new match: its followers and the opening spawn effects. */
-const begin = (g: Game, s: VersusState) => {
+/** Takes up a new game: its followers and the opening spawn effects. */
+const begin = (g: Game) => {
   resetArenaFx()
-  match = matchOf(s)
+  match = matchOf(g)
   for (const p of g.players) {
-    syncFollower(p)
-    readyEmote(p)
-    spawnFx(p)
+    syncFollower(g, p)
+    readyEmote(g, p)
+    spawnFx(g, p)
   }
 }
 
-const spawnFx = (p: Player) => {
-  const def = effectIn('spawn', lookOf(p.slot).spawn)
+const spawnFx = (g: Game, p: Player) => {
+  const def = effectIn('spawn', shownLook(g, p.slot).spawn)
   if (def) startBurst(def.burst, p.x, p.y, p.versus?.team ?? 0)
 }
 
@@ -795,22 +808,22 @@ const goalNear = (s: VersusState, x: number, y: number) => {
 export const arenaFxEvent = (g: Game, e: GameEvent) => {
   const s = g.versus
   if (!s) return
-  if (match !== matchOf(s)) begin(g, s)
+  if (match !== matchOf(g)) begin(g)
   switch (e.kind) {
     case 'versusBack': {
       const p = g.players[e.slot]
-      if (p) spawnFx(p)
+      if (p) spawnFx(g, p)
       return
     }
     case 'versusKo': {
       const victim = g.players[e.slot]
-      const def = e.by >= 0 ? effectIn('ko', lookOf(e.by).ko) : null
+      const def = e.by >= 0 ? effectIn('ko', shownLook(g, e.by).ko) : null
       if (victim && def) startBurst(def.burst, victim.x, victim.y, g.players[e.by]?.versus?.team ?? 0)
       return
     }
     case 'versusScore': {
       const p = g.players[e.slot]
-      const def = effectIn('goal', lookOf(e.slot).goal)
+      const def = effectIn('goal', shownLook(g, e.slot).goal)
       const goal = p && goalNear(s, p.x, p.y)
       if (def && goal) startBurst(def.burst, goal.x, goal.y, e.team)
       return
@@ -820,19 +833,19 @@ export const arenaFxEvent = (g: Game, e: GameEvent) => {
   }
 }
 
+/** Whether a lean frame leaves `p`'s follower and trail out: a run's teammates, not this screen's own player. */
+const spared = (g: Game, viewer: Player, p: Player | undefined) => detail.lean && !g.versus && p !== viewer
+
 /**
- * One drawn frame of a match's effects, on the drawing clock `t` (seconds):
+ * One drawn frame of a game's effects, on the drawing clock `t` (seconds):
  * the followers walk, trails and flourishes throw their particles, particles
- * and bursts age. Called by `render` before it draws; a new match (or none)
- * lets go of the last one's.
+ * and bursts age. Called by `render` before it draws, with the seat whose own
+ * companion walks along (`walking`, -1 none: its follower stays home); a new
+ * game lets go of the last one's.
  */
-export const stepArenaFx = (g: Game, t: number) => {
-  const s = g.versus
-  if (!s) {
-    if (match) resetArenaFx()
-    return
-  }
-  if (match !== matchOf(s)) begin(g, s)
+export const stepArenaFx = (g: Game, t: number, walking = -1) => {
+  if (match !== matchOf(g)) begin(g)
+  home = walking
   const dt = last < 0 ? 0 : Math.max(0, Math.min(0.1, t - last))
   last = t
   if (dt === 0) return
@@ -840,12 +853,12 @@ export const stepArenaFx = (g: Game, t: number) => {
   const viewer = localPlayer(g)
   for (const p of g.players) {
     const slot = p.slot
-    const look = lookOf(slot)
-    syncFollower(p)
-    readyEmote(p)
+    const look = shownLook(g, slot)
+    syncFollower(g, p)
+    readyEmote(g, p)
     const f = followers[slot]
     if (f) stepCompanion(f.follower.view, p, dt)
-    const visible = shows(viewer, p)
+    const visible = shows(viewer, p) && !spared(g, viewer, p)
     // An emote stops the moment its Pokémon moves or is hit.
     const e = playing(g, p)
     if (e && (p.moving || p.hurt > 0)) cut[slot] = e.at
@@ -888,9 +901,13 @@ export const stepArenaFx = (g: Game, t: number) => {
 
 /** The followers of the seats this screen sees, for the depth pass. */
 export const arenaFollowers = (g: Game, out: { push: (d: FollowerDrawable) => unknown }) => {
-  if (!g.versus || match !== matchOf(g.versus)) return
+  if (match !== matchOf(g)) return
   const viewer = localPlayer(g)
-  for (const f of followers) if (f && shows(viewer, g.players[f.follower.slot])) out.push(f)
+  for (const f of followers) {
+    if (!f) continue
+    const owner = g.players[f.follower.slot]
+    if (shows(viewer, owner) && !spared(g, viewer, owner)) out.push(f)
+  }
 }
 
 export const isFollower = (d: unknown): d is FollowerDrawable => typeof d === 'object' && d !== null && 'follower' in d
@@ -911,7 +928,7 @@ const particleShows = (g: Game, viewer: Player, i: number, visible: (x: number, 
 
 /** Under the Pokémon: the trails' particles, the bursts' rings and an emote's aura. */
 export const drawArenaFxGround = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
-  if (!g.versus || match !== matchOf(g.versus)) return
+  if (match !== matchOf(g)) return
   const viewer = localPlayer(g)
   for (const b of bursts) if (b.on && visible(b.x, b.y, 60)) drawBurstGround(ctx, b)
   for (const p of g.players) {
@@ -929,7 +946,7 @@ export const drawArenaFxGround = (ctx: Ctx, g: Game, t: number, visible: (x: num
 
 /** Over the Pokémon: the bursts and the flourishes. */
 export const drawArenaFxAir = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
-  if (!g.versus || match !== matchOf(g.versus)) return
+  if (match !== matchOf(g)) return
   const viewer = localPlayer(g)
   for (const b of bursts) if (b.on && visible(b.x, b.y, 120)) drawBurstAir(ctx, b, t)
   for (let i = 0; i < count; i++) if (P.air[i] === 1 && particleShows(g, viewer, i, visible)) drawParticle(ctx, i, t)

@@ -723,11 +723,11 @@ export const pt = {
     angelWings: 'Asas de anjo',
     royalCape: 'Manto real',
   } satisfies Record<WearableId, string>,
-  /** The Arena's other cosmetics (`data/arenaEffects.ts`), by id. */
+  /** The cosmetics that aren't worn (`data/arenaEffects.ts`), by id. */
   arenaEffects: { pichuFollower: 'Pichu', togepiFollower: 'Togepi', azurillFollower: 'Azurill', swabluFollower: 'Swablu', togedemaruFollower: 'Togedemaru', dedenneFollower: 'Dedenne', eeveeFollower: 'Eevee', snomFollower: 'Snom', mimikyuFollower: 'Mimikyu', mewFollower: 'Mew', sparkTrail: 'Rastro de faíscas', petalTrail: 'Rastro de pétalas', bubbleTrail: 'Rastro de bolhas', emberTrail: 'Rastro de brasas', snowTrail: 'Rastro de neve', heartTrail: 'Rastro de corações', starTrail: 'Poeira estelar', rainbowTrail: 'Rastro arco-íris', spawnBeam: 'Feixe de luz', spawnLeaves: 'Redemoinho de folhas', spawnSplash: 'Chegada molhada', spawnThunder: 'Chegada trovejante', spawnPokeball: 'Saída da Poké Ball', koStars: 'Estrelinhas', koPuff: 'Nuvem de poeira', koGhost: 'Fantasminha', koLightning: 'Raio final', koSupernova: 'Supernova', goalConfetti: 'Confete', goalCoins: 'Chuva de moedas', goalBalloons: 'Balões', goalHearts: 'Explosão de corações', goalRainbow: 'Arco-íris triunfal', cheerEmote: 'Comemorar', spinEmote: 'Giro', napEmote: 'Soneca', powerEmote: 'Concentrar', danceEmote: 'Dança', victoryEmote: 'Pose da vitória', rookieTitle: 'Estreante', teamTitle: 'Espírito de equipe', goalTitle: 'Faro de gol', wallTitle: 'Muralha', jungleTitle: 'Terror da selva', unstoppableTitle: 'Imparável', legendTitle: 'Lenda da Arena', plateSteel: 'Placa de aço', plateLeaf: 'Placa folha', plateWave: 'Placa onda', plateFlame: 'Placa chama', plateGold: 'Placa dourada', plateMaster: 'Placa Master Ball' } satisfies Record<ArenaEffectId, string>,
   /** The Arena's cosmetic effects' own copy (`render/arenaFx.ts`, `ui/versusTalk.ts`): the emote button and its wait. */
   arenaFx: { emote: 'Emote', emoteWait: 'Espere para o próximo emote.' },
-  /** The Arena's gem shop (`ui/gemShop.ts`): the gem chip, the hub's Loja and Visual tabs, a pack's checkout and its return. */
+  /** The gem shop (`ui/gemShop.ts`): the gem chip, the Loja and Visual tabs, a pack's checkout and its return. Gems buy looks for every mode. */
   gems: {
     /** The gem chip's label, for screen readers and its tooltip. */
     chip: (n: string) => `${n} gemas`,
@@ -737,7 +737,7 @@ export const pt = {
     /** The packs' names (`GEM_PACKS` in `data/gems.ts`). */
     packs: { pouch: 'Punhado', bag: 'Bolsa', chest: 'Baú', hoard: 'Tesouro', vault: 'Cofre' } satisfies Record<GemPackId, string>,
     shop: {
-      pitch: 'Visuais para o seu Pokémon na Arena: todo mundo na partida vê, e nenhum dá poder.',
+      pitch: 'Visuais para o seu Pokémon nas partidas, no co-op e na Arena: todo mundo vê, e nenhum dá poder.',
       balance: 'Seu saldo',
       currency: 'Moeda',
       packs: 'Pacotes de gemas',
@@ -749,7 +749,10 @@ export const pt = {
       unsold: 'Indisponível',
       /** A wearable that doesn't sit right on the previewed Pokémon. */
       misfit: (name: string) => `Não fica bem no ${name}`,
-      effect: 'Aparece durante a partida.',
+      effect: 'Aparece nas partidas, no co-op e na Arena.',
+      /** An item whose slot shows only in the Arena (`SLOT_MODES`): its info, and the short tag on its card and locker row. */
+      arenaOnly: 'Por enquanto, só aparece na Arena.',
+      arenaTag: 'ARENA',
       buy: 'Comprar',
       equip: 'Usar',
       unequip: 'Tirar',
@@ -764,7 +767,7 @@ export const pt = {
       reasons: { pack: 'Pacote de gemas', patreon: 'Patreon', play: 'Partida na Arena', buy: 'Compra', refund: 'Reembolso', dispute: 'Contestação', disputeWon: 'Contestação revertida', grant: 'Presente da equipe' } satisfies Record<GemReason, string>,
       signIn: { title: 'Entre para usar a Loja', text: 'As gemas e os visuais ficam na sua conta, em qualquer aparelho.', button: 'Entrar' },
       unavailable: 'A Loja não está disponível nesta versão do jogo.',
-      onlyLooks: 'Gemas compram só visuais da Arena.',
+      onlyLooks: 'Gemas compram só visuais.',
     },
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} bônus`,
@@ -791,7 +794,7 @@ export const pt = {
       saving: 'Salvando…',
       saved: 'Salvo na sua conta.',
       local: 'Salvo neste aparelho: vai para a conta quando a conexão voltar.',
-      note: 'Todo mundo nas partidas da Arena vê o seu visual.',
+      note: 'Seu visual aparece nas suas partidas, no co-op e na Arena.',
     },
   },
   coop: {

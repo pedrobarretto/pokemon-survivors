@@ -11,12 +11,13 @@ import { artDir, isMirrored } from '../render/wearFit'
 import { drawWearables, loadWearables, refitWearables, wearMisses } from '../render/wearables'
 
 /**
- * Dev only (`ps.wear`, loaded on demand from `main.ts`): wearing the Arena's
- * wearables in a match, a fitting gallery that nudges them per species and
- * prints `WEAR_FITS` (`data/wearFits.ts`) back, and contact sheets for PRs.
+ * Dev only (`ps.wear`, loaded on demand from `main.ts`): wearing the
+ * wearables in a run or a match, a fitting gallery that nudges them per
+ * species and prints `WEAR_FITS` (`data/wearFits.ts`) back, and contact
+ * sheets for PRs.
  */
 
-/** The seats of the running Arena match, from the shell. */
+/** The seats of the running game (a run, a match), from the shell: this player's (null: none runs) and how many. */
 export type WearShell = { seat: () => number | null; seats: () => number }
 
 /** Every species the Arena draws: each pick's whole line. */
@@ -296,7 +297,7 @@ const openGallery = async (first: WearableId, dexes?: readonly number[]) => {
 /* ---------------- ps.wear ---------------- */
 
 /**
- * `ps.wear('topHat')` puts an item on the running Arena match's local player
+ * `ps.wear('topHat')` puts an item on the running game's local player (a run, a match)
  * (`ps.wear('topHat', 3)` on seat 3), `ps.wear('look', { head: 'crown', back:
  * 'cape' })` a whole look, `ps.wear('bots')` a random look on every seat,
  * `ps.wear('off')` takes the local player's off; `ps.wear('fit', 'topHat')`
@@ -315,7 +316,7 @@ export const devWear = async (shell: WearShell, cmd?: string, arg?: unknown, mor
     setLooks(Array.from({ length: n }, (_, i) => (i === shell.seat() ? lookOf(i) : randomLook())))
     return Array.from({ length: n }, (_, i) => lookOf(i))
   }
-  if (seat === null) return 'ps.wear: start an Arena match first (ps.versus())'
+  if (seat === null) return "ps.wear: start a run or a match first (ps.startRun('charmander'), ps.versus())"
   if (cmd === 'off') return setSeat(shell, seat, {}), {}
   if (cmd === 'look' && typeof arg === 'object' && arg) return setSeat(shell, shell.seat() ?? 0, arg as Look), lookOf(shell.seat() ?? 0)
   if (isWearableId(cmd)) {

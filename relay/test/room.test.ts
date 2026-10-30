@@ -568,7 +568,17 @@ describe('arena rooms', () => {
     expect(started?.run.players.map((p) => p.loadout.look)).toEqual([{ head: 'strawHat' }, undefined, undefined])
   })
 
-  it("starts a friends' Arena room bare when the API can't vouch, and a co-op room or one of guests at once", () => {
+  it('asks for the looks of a co-op room\'s accounts too, as its run starts', () => {
+    const state = newState()
+    connect(state, 'a', 'ua', T0)
+    hello(state, 'a', helloMsg('x'.repeat(16), { auth: { kind: 'clerk', token: 'jwt' }, name: '@ash' }), { id: 'u:ash', account: true }, T0, { guests: false })
+    say(state, 'a', { t: 'loadout', loadout: { starter: 'pikachu', look: { head: 'crown' } } }, T0)
+    expect(say(state, 'a', { t: 'start' }, T0).flatMap((e) => (e.k === 'looks' ? [e] : []))).toEqual([{ k: 'looks', ask: 1, ids: ['u:ash'] }])
+    const started = of(sent(looked(state, 1, { 'u:ash': { head: 'strawHat', trail: 'sparkTrail' } }, T0), 'a'), 'start')[0]
+    expect(started?.run.players[0]?.loadout).toEqual({ starter: 'pikachu', look: { head: 'strawHat', trail: 'sparkTrail' } })
+  })
+
+  it("starts a friends' Arena room bare when the API can't vouch, and a room of guests at once", () => {
     const state = newState()
     connect(state, 'a', 'ua', T0)
     hello(state, 'a', helloMsg('x'.repeat(16), { auth: { kind: 'clerk', token: 'jwt' }, name: '@ash' }), { id: 'u:ash', account: true }, T0, { guests: false })

@@ -20,7 +20,7 @@ import { parseHandlePrefix, parsePresenceUpdate, parseRoomCode } from '../../src
 import { parseSaveData } from '../../src/game/meta'
 import { outbreakAt } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
-import type { ArenaLooksResponse } from '../../src/net/arena'
+import type { LooksResponse } from '../../src/net/looks'
 import { isBoardPeriod, isPlayable, isRunMode, parseDisplayName, parseHandle, parseRunResult } from '../../src/game/ranking'
 import { parseReplay, RULES_VERSION, rulesStanding } from '../../src/game/replay'
 import { parseChunk } from '../../src/game/replayStream'
@@ -284,7 +284,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /arena/report` (relay, signed: `x-arena-signature`) `ArenaReport`: a finished match, once per (room, run); an abandoned one (`abandoned: true`) only moves Fair Play.
  *   `ArenaReportResponse`; a retry gets the stored match with `duplicate`. 400 invalid, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
  * - `POST /arena/tickets` (relay, signed) `{ userIds }`: `ArenaTicketsResponse`, each player's current-season MMR, RP and games, and their Fair Play.
- * - `POST /arena/looks` (relay, signed) `{ userIds }`: `ArenaLooksResponse`, each account's vouched Arena look (a friends' room asks as its run starts).
+ * - `POST /looks` (relay, signed) `{ userIds }`: `LooksResponse`, each account's vouched look (a room, co-op or Arena, asks as its run starts).
  * - `POST /arena/practice` (auth) `ArenaPracticeRequest`: a quick match against bots, for history and totals only.
  *   201 `{ match }` (200 `{ duplicate: true }` for a retried `key`), 400 invalid or a bot's slot, 429 past the hourly limit.
  * - `GET /arena/me` (auth): `ArenaProfile`. `GET /arena/history?before=<ms>&limit=` (auth): `ArenaHistoryEntry[]`, newest first.
@@ -810,13 +810,13 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     return c.json(await arena.tickets(ids))
   })
 
-  app.post('/arena/looks', smallBody, async (c) => {
+  app.post('/looks', smallBody, async (c) => {
     const signed = await relayBody(c)
     if ('error' in signed) return signed.error
     const ids = isRecord(signed.body) && Array.isArray(signed.body.userIds) ? signed.body.userIds : null
     if (!ids || ids.length > 64 || !ids.every((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 64)) return c.json({ error: 'expected { userIds }' }, 400)
     const looks = await gems.looks(ids)
-    return c.json({ looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])) } satisfies ArenaLooksResponse)
+    return c.json({ looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])) } satisfies LooksResponse)
   })
 
   app.post('/arena/practice', auth, bodyLimit({ maxSize: 16 * 1024 }), async (c) => {

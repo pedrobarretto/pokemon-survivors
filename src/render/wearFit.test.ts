@@ -5,7 +5,7 @@ import { STARTERS } from '../data/starters'
 import { VERSUS_PICKS } from '../data/versus'
 import type { Dir8 } from '../engine/math'
 import { mirror, PITCH, type PixelArt } from './wearArt'
-import { artDir, decodeAnchors, GEOMETRY, isMirrored, layerOf, nudgeOf, pivotAt, type AnchorEntry } from './wearFit'
+import { anchoredSheet, anchorKey, artDir, decodeAnchors, GEOMETRY, isMirrored, layerOf, nudgeOf, pivotAt, type AnchorEntry } from './wearFit'
 import { WEAR_MODELS } from './wearModels'
 
 const b64 = (bytes: readonly number[]) => btoa(String.fromCharCode(...bytes))
@@ -74,6 +74,27 @@ describe('anchors', () => {
     expect(pivotAt(a, 'Walk', 6, 0, 'back', [2, 1], out)).toEqual({ x: 16 + 1 + 2, y: 20 - 2 + 1 })
     // A frame past the sheet's holds its last.
     expect(pivotAt(a, 'Walk', 0, 9, 'head', null, out)).toEqual({ x: 10 - 3, y: 6 - 4 })
+  })
+
+  it('wears a look only on the sheets they measured', () => {
+    const a = decodeAnchors(entry)
+    expect(anchoredSheet(a, { anim: 'Idle', fw: 32, fh: 40, frames: 2 })).toBe('Idle')
+    // The sky's Fly sheet, and a sheet shrunk to size (a legend's) or swapped (an emote's), draw bare.
+    expect(anchoredSheet(a, { anim: 'Fly', fw: 32, fh: 40, frames: 2 })).toBeNull()
+    expect(anchoredSheet(a, { anim: 'Walk', fw: 24, fh: 30, frames: 2 })).toBeNull()
+    expect(anchoredSheet(a, { anim: 'Walk', fw: 32, fh: 40, frames: 6 })).toBeNull()
+  })
+
+  it('finds a species by its own colors, one species at a time', () => {
+    const has = (key: string) => key === '4' || key === '7' || key === '7s'
+    expect(anchorKey(4, { shiny: false }, has)).toBe('4')
+    // Shiny colors share the normal's measures unless measured apart.
+    expect(anchorKey(4, { shiny: true }, has)).toBe('4')
+    expect(anchorKey(7, { shiny: true }, has)).toBe('7s')
+    // A species not measured yet, any form (a Mega, a hand-made shiny) and a stand-in draw bare.
+    expect(anchorKey(25, { shiny: false }, has)).toBeNull()
+    expect(anchorKey(4, { shiny: false, form: 'megaX' }, has)).toBeNull()
+    expect(anchorKey(4, undefined, has)).toBeNull()
   })
 
   it('was measured from the camera angle the art renders at', () => {

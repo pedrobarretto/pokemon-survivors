@@ -563,7 +563,7 @@ export const zh: Messages = {
     rarities: { common: '普通', rare: '稀有', epic: '史詩', legendary: '傳說' },
     packs: { pouch: '一小把', bag: '一袋', chest: '寶箱', hoard: '寶藏', vault: '金庫' },
     shop: {
-      pitch: '競技場裡寶可夢的造型：對局中所有人都看得到，而且都不會增加能力。',
+      pitch: '寶可夢的造型，在對局、合作模式和競技場都會出現：所有人都看得到，而且都不會增加能力。',
       balance: '你的餘額',
       currency: '幣別',
       packs: '寶石組合',
@@ -574,7 +574,9 @@ export const zh: Messages = {
       equipped: '使用中',
       unsold: '未販售',
       misfit: (name: string) => `${name} 戴起來不太合適`,
-      effect: '在對局中出現。',
+      effect: '在對局、合作模式和競技場中出現。',
+      arenaOnly: '目前只在競技場中出現。',
+      arenaTag: '競技場',
       buy: '購買',
       equip: '使用',
       unequip: '取下',
@@ -589,7 +591,7 @@ export const zh: Messages = {
       reasons: { pack: '寶石組合', patreon: 'Patreon', play: '競技場對局', buy: '購買', refund: '退款', dispute: '爭議', disputeWon: '爭議撤回', grant: '團隊贈禮' },
       signIn: { title: '登入以使用商店', text: '寶石和造型都會保存在你的帳號，任何裝置都能使用。', button: '登入' },
       unavailable: '這個版本的遊戲沒有開放商店。',
-      onlyLooks: '寶石只能購買競技場造型。',
+      onlyLooks: '寶石只能購買造型。',
     },
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} 加贈`,
@@ -616,7 +618,7 @@ export const zh: Messages = {
       saving: '儲存中…',
       saved: '已儲存到你的帳號。',
       local: '已儲存在這台裝置：連線恢復後會同步到帳號。',
-      note: '競技場對局中的所有人都看得到你的造型。',
+      note: '你的造型會出現在你的對局、合作模式和競技場中。',
     },
   },
   coop: {

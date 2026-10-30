@@ -72,6 +72,32 @@ export const decodeAnchors = (e: AnchorEntry): Anchors => ({
   anims: { Walk: sheet(e.Walk), Idle: sheet(e.Idle), Hurt: sheet(e.Hurt) },
 })
 
+/**
+ * The anchors entry (`data/wearAnchors.generated.json`'s key, `has` asks the
+ * data) a drawn sprite pins a look by, or null when it draws bare. Only what
+ * `npm run anchors` measured has one: a species' own SpriteCollab sheets in
+ * its normal colors, and its shiny ones (measured apart where they differ,
+ * else they share the normal's). A stand-in (a puff), any form (a Mega's, a
+ * legend's, a stance's, the hand-made shinies, which are all forms) and a
+ * species the anchors don't cover yet draw bare, one species at a time.
+ */
+export const anchorKey = (dex: number, variant: { shiny: boolean; form?: string } | undefined, has: (key: string) => boolean): string | null => {
+  if (!variant || variant.form) return null
+  const key = variant.shiny && has(`${dex}s`) ? `${dex}s` : String(dex)
+  return has(key) ? key : null
+}
+
+/**
+ * Which of the anchors' sheets a drawn frame is (`placeFrame` found it), or
+ * null when the anchors don't know it: the sky's Fly sheet, a sheet shrunk to
+ * size (a legend's) or swapped (an emote's) draw bare.
+ */
+export const anchoredSheet = (a: Anchors, p: { anim: string; fw: number; fh: number; frames: number }): AnchorAnim | null => {
+  if (p.anim !== 'Walk' && p.anim !== 'Idle' && p.anim !== 'Hurt') return null
+  const s = a.anims[p.anim]
+  return s.fw === p.fw && s.fh === p.fh && s.frames === p.frames ? p.anim : null
+}
+
 /** A species' fitting by hand (`data/wearFits.ts`). */
 export const fitOf = (dex: number): SpeciesFit | undefined => WEAR_FITS[dex]
 

@@ -1,5 +1,5 @@
 import { currencyFor, equip, methodsFor, priceText, rarityOf, shopCatalog, unequip } from '../arena/gemShop'
-import { COSMETIC_SLOTS, WEARABLE_SLOTS, cosmeticPrice, slotOf, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
+import { COSMETIC_SLOTS, WEARABLE_SLOTS, arenaOnly, cosmeticPrice, showsIn, slotOf, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
 import { GEM_PACK_IDS, GEM_PACKS, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
 import { effectIn } from '../data/arenaEffects'
 import { VERSUS, VERSUS_PICKS, type VersusPick } from '../data/versus'
@@ -513,6 +513,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       h('b', { class: 'gem-item-name' }, itemName(id)),
       h('small', { class: 'gem-item-tag' }, on ? m.equipped : owned ? m.owned : price === null ? m.unsold : gemAmount(price)),
       misfit ? h('em', { class: 'gem-item-misfit', title: m.misfit(firstForm(ctx.pick()).name) }, '!') : null,
+      arenaOnly(id) ? h('em', { class: 'gem-item-arena', title: m.arenaOnly }, m.arenaTag) : null,
     )
   }
 
@@ -526,7 +527,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       { class: 'gem-info', style: `--rarity:${RARITY_COLORS[rarityOf(id)]}` },
       h('b', { class: 'gem-info-name' }, itemName(id)),
       h('small', { class: 'gem-info-kind' }, `${m.rarities[rarityOf(id)]} · ${m.slots[slot]}`),
-      isWearable(slot) ? (fits(id, ctx.pick()) ? null : h('small', { class: 'gem-info-misfit' }, m.shop.misfit(firstForm(ctx.pick()).name))) : h('small', {}, m.shop.effect),
+      isWearable(slot) ? (fits(id, ctx.pick()) ? null : h('small', { class: 'gem-info-misfit' }, m.shop.misfit(firstForm(ctx.pick()).name))) : h('small', {}, arenaOnly(id) ? m.shop.arenaOnly : m.shop.effect),
       act(id),
     )
   }
@@ -700,7 +701,7 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
       return h(
         'div',
         { class: 'gem-slot' },
-        h('span', { class: 'gem-slot-head' }, h('img', { src: slotIconUrl(slot), alt: '' }), h('b', {}, m.slots[slot])),
+        h('span', { class: 'gem-slot-head' }, h('img', { src: slotIconUrl(slot), alt: '' }), h('b', {}, m.slots[slot]), showsIn(slot, 'run') ? null : h('em', { class: 'gem-item-arena', title: m.shop.arenaOnly }, m.shop.arenaTag)),
         h('div', { class: 'gem-slot-items' }, ...(mine.length === 0 ? [h('small', { class: 'gem-slot-empty' }, m.locker.slotEmpty)] : [chipFor(null), ...mine.map(chipFor)])),
       )
     })

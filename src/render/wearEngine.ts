@@ -6,6 +6,8 @@ import { createCanvas, context2d, onCanvasReset } from '../engine/pixelart'
 import type { PixelArt } from './wearArt'
 import { renderJob, type ArtDone, type ArtJob } from './wearWorker'
 import {
+  anchoredSheet,
+  anchorKey,
   classOf,
   decodeAnchors,
   DRAW_ORDER,
@@ -15,7 +17,6 @@ import {
   nudgeOf,
   pivotAt,
   wears,
-  type AnchorAnim,
   type AnchorEntry,
   type Anchors,
   type Layer,
@@ -24,7 +25,7 @@ import { SIZE_CLASSES, WEAR_MODELS, type WearSize } from './wearModels'
 import { placeFrame, type AnimName, type FramePlace, type SpeciesSprites } from './sprites'
 
 /**
- * The wearables' engine, loaded with the Arena's first look
+ * The wearables' engine, loaded with the first look drawn
  * (`render/wearables.ts` imports it on demand, with the anchors' data): it
  * finds a species' anchors, sizes its wearables, renders each model once per
  * size, direction and frame (`render/wearArt.ts`) into a small canvas and
@@ -32,6 +33,8 @@ import { placeFrame, type AnimName, type FramePlace, type SpeciesSprites } from 
  */
 
 const SPECIES = data.species as Record<string, AnchorEntry>
+
+const measured = (key: string) => Object.hasOwn(SPECIES, key)
 
 /** One art direction's (or its mirror's) art, ready to draw: a canvas and where its pivot is. */
 type Art = { canvas: HTMLCanvasElement; ox: number; oy: number }
@@ -46,7 +49,7 @@ type Wearer = {
   keys: Record<WearableSlot, number>
 }
 
-const wearers = new Map<string, Wearer | null>()
+const wearers = new Map<string, Wearer>()
 
 /** The size class a species wears in each slot: its own measures (`measuresOf`), or its hand fitting's (`SpeciesFit.size`). */
 const sizesOf = (a: Anchors, fit: Wearer['fit']) => {
@@ -66,20 +69,15 @@ const sizesOf = (a: Anchors, fit: Wearer['fit']) => {
   }
 }
 
-/** The wearer for loaded sprites, or null: a stand-in (a puff), a form without anchors, a species outside the Arena's roster. */
+/** The wearer for loaded sprites, or null when they draw bare (`anchorKey`: a stand-in, a form, a species the anchors don't cover). */
 const wearerOf = (s: SpeciesSprites): Wearer | null => {
-  const v = s.variant
-  if (!v || v.form) return null
-  const key = v.shiny && SPECIES[`${s.dex}s`] ? `${s.dex}s` : String(s.dex)
+  const key = anchorKey(s.dex, s.variant, measured)
+  if (key === null) return null
   let w = wearers.get(key)
   if (w === undefined) {
-    const entry = SPECIES[key]
-    if (!entry) w = null
-    else {
-      const anchors = decodeAnchors(entry)
-      const fit = fitOf(s.dex)
-      w = { dex: s.dex, anchors, fit, ...sizesOf(anchors, fit) }
-    }
+    const anchors = decodeAnchors(SPECIES[key]!)
+    const fit = fitOf(s.dex)
+    w = { dex: s.dex, anchors, fit, ...sizesOf(anchors, fit) }
     wearers.set(key, w)
   }
   return w
@@ -226,13 +224,6 @@ const modelFrame = (id: WearableId, seconds: number) => {
 const place: FramePlace = { anim: 'Walk', fw: 0, fh: 0, frames: 0, frame: 0, dx: 0, dy: 0 }
 const pivot = { x: 0, y: 0 }
 
-/** Whether the frame `placeFrame` found is the one the anchors know (a shrunk or swapped sheet isn't), and which of their sheets it is. */
-const anchorAnim = (a: Anchors, p: FramePlace): AnchorAnim | null => {
-  if (p.anim === 'Fly') return null
-  const s = a.anims[p.anim]
-  return s.fw === p.fw && s.fh === p.fh && s.frames === p.frames ? p.anim : null
-}
-
 /** The item a look wears in a slot, if it's a wearable this species wears. */
 const wornIn = (look: Look, slot: WearableSlot, w: Wearer): WearableId | null => {
   const id = look[slot]
@@ -256,7 +247,7 @@ export const drawWearables = (
   if (!w) return
   const k = opts.scale ?? 1
   if (!placeFrame(s, anim, seconds, x, y, k, opts.loop ?? true, place)) return
-  const sheet = anchorAnim(w.anchors, place)
+  const sheet = anchoredSheet(w.anchors, place)
   if (!sheet) return
   const alpha = opts.alpha ?? 1
   for (const slot of DRAW_ORDER) {

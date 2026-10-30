@@ -260,7 +260,9 @@ export const drawTeamAir = (ctx: Ctx, g: Game, me: Player, t: number) => {
     const down = fainted(p)
     const top = down ? p.y - 12 : p.y - mateSprites(g, p).bodyH
     const tag = textSprite(tagOf(g, p.slot), slotColor(p.slot))
-    blitPacked(ctx, tag, p.x, top - 5)
+    // A name plate goes behind it, as in the Arena (`render/arenaPlates.ts`).
+    const plate = down ? null : plateOf(g, p.slot)
+    blitPacked(ctx, tag, plate ? drawPlateTag(ctx, plate, p.x, top - 5, tag.w, g.now) : p.x, top - 5)
     if (down) continue
     // Standing and here, `drawPlayer` drew their HP bar already.
     if (!showsPlain(p)) drawMateHp(ctx, p)
@@ -298,7 +300,7 @@ const drawVersusAir = (ctx: Ctx, g: Game, me: Player) => {
     if (p !== me) {
       const tag = textSprite(versusTagOf(g, p), TEAM_LIGHT[p.versus.team])
       // A name plate goes behind it (`render/arenaPlates.ts`).
-      const plate = plateOf(p.slot)
+      const plate = plateOf(g, p.slot)
       blitPacked(ctx, tag, plate ? drawPlateTag(ctx, plate, p.x, above, tag.w, g.now) : p.x, above)
       above -= plate ? 11 : 9
     }

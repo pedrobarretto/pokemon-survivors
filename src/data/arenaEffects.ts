@@ -2,12 +2,12 @@ import type { CosmeticBase, CosmeticSlot } from './cosmetics'
 import type { PokeType } from './types'
 
 /**
- * The Arena's cosmetics that aren't worn (`data/cosmetics.ts` spreads
- * them into the catalog): a follower that trots after the Pokémon, a trail,
- * the spawn, KO and goal effects, emotes, titles and name plates. Pure
- * presentation, drawn by the shell (`render/arenaFx.ts`) from what the
- * simulation already says happened (a goal, a KO), never feeding back into
- * it. Only the emote reaches the match, as a tick entry with no payload
+ * The cosmetics that aren't worn (`data/cosmetics.ts` spreads them into the
+ * catalog): a follower that trots after the Pokémon, a trail, titles and
+ * name plates, in every mode; the spawn, KO and goal effects and emotes, in
+ * the Arena (`SLOT_MODES`). Pure presentation, drawn by the shell
+ * (`render/arenaFx.ts`) from what the simulation already says happened (a
+ * goal, a KO), never feeding back into it. Only the emote reaches the match, as a tick entry with no payload
  * (`versusSocial.ts`): every screen plays the emote the seat's look names.
  *
  * - `follower`: a small Pokémon (`dex`, SpriteCollab's sheets; `float`: it
