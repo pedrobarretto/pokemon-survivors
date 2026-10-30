@@ -1,4 +1,6 @@
 import type { ArenaReport } from '../../src/net/arena'
+import type { LooksRequest } from '../../src/net/looks'
+import { parseWireLook, type WireLook } from '../../src/net/protocol'
 
 /**
  * What the relay posts to the API about the Arena (`net/arena.ts`): signed
@@ -31,14 +33,41 @@ const TIMEOUT_MS = 10_000
 
 export type Fetcher = (url: string, init: RequestInit) => Promise<Response>
 
-/** POSTs `body` (JSON text) to `path` on the API, signed. Throws on a network failure or timeout. */
-export const postSigned = async (api: ArenaApi, path: string, body: string, fetcher: Fetcher = fetch): Promise<Response> =>
+/** POSTs `body` (JSON text) to `path` on the API, signed. Throws on a network failure or timeout (`timeout` ms). */
+export const postSigned = async (api: ArenaApi, path: string, body: string, fetcher: Fetcher = fetch, timeout = TIMEOUT_MS): Promise<Response> =>
   fetcher(`${api.url}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', [SIGNATURE_HEADER]: await sign(api.secret, body) },
     body,
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeout),
   })
+
+/** A room's run waits this long at most for its looks before starting without them. */
+export const LOOKS_TIMEOUT_MS = 3000
+
+/**
+ * The looks the API vouches for (`POST /looks`, signed), by
+ * identity (`u:<clerk id>`): what each account stored and owns. Anything
+ * else (no API set, an API from before it, a failure, a slow answer, a
+ * malformed look) leaves those seats bare: a client's own claim never stands.
+ */
+export const lookUpLooks = async (api: ArenaApi | null, ids: readonly string[], fetcher: Fetcher = fetch): Promise<Record<string, WireLook>> => {
+  const userIds = ids.flatMap((id) => (id.startsWith('u:') ? [id.slice(2)] : []))
+  if (!api || userIds.length === 0) return {}
+  try {
+    const res = await postSigned(api, '/looks', JSON.stringify({ userIds } satisfies LooksRequest), fetcher, LOOKS_TIMEOUT_MS)
+    const body: unknown = res.ok ? await res.json() : null
+    const looks = isRecord(body) && isRecord(body.looks) ? body.looks : {}
+    return Object.fromEntries(
+      userIds.flatMap((id) => {
+        const look = parseWireLook(looks[id])
+        return look ? [[`u:${id}`, look] as const] : []
+      }),
+    )
+  } catch {
+    return {}
+  }
+}
 
 /** A report waiting in a shell's outbox: its body as posted, the attempts made and when the next is due (ms). */
 export type Outgoing = { id: string; body: string; attempts: number; at: number }

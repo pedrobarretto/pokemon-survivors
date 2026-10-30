@@ -138,8 +138,8 @@ describe.skipIf(!url)('arena store (Postgres)', () => {
     const [a] = await arena.history('u_a', LATER, 5)
     expect(a).toMatchObject({ format: 'quick', outcome: 'loss', protected: false, rp: null })
     expect((await arena.tickets(['u_a', 'u_b'])).ratings).toMatchObject({ u_a: { fairPlay: 50 + finish }, u_b: { fairPlay: 50 + finish } })
-    // A 4v4 says no format.
-    await arena.report(report({ run: 2, kind: 'casual', seats }))
+    // A 4v4 says no format (a minute later, so it heads the history).
+    await arena.report(report({ run: 2, kind: 'casual', seats, endedAt: seasonById(1).startMs + 120_000 }))
     expect((await arena.history('u_a', LATER, 5))[0]).not.toHaveProperty('format')
   })
 
@@ -179,7 +179,7 @@ describe.skipIf(!url)('arena store (Postgres)', () => {
     await sql`insert into users (id) values ('u_a')`
     await sql`insert into arena_ratings (user_id, season, mmr, rp, peak, games) values ('u_a', 1, ${last.mmr}, ${last.rp}, ${last.peak}, ${last.games})`
     const now = seasonById(2).startMs + 60_000
-    expect((await arena.tickets(['u_a', 'u_new'], now)).ratings).toEqual({ u_a: { mmr: seasonReset(last).mmr, rp: seasonReset(last).rp, games: 0, fairPlay: 100 }, u_new: { mmr: 1000, rp: 0, games: 0, fairPlay: 100 } })
+    expect((await arena.tickets(['u_a', 'u_new'], now)).ratings).toEqual({ u_a: { mmr: seasonReset(last).mmr, rp: seasonReset(last).rp, games: 0, fairPlay: 100, look: {} }, u_new: { mmr: 1000, rp: 0, games: 0, fairPlay: 100, look: {} } })
     await arena.report(report({ endedAt: now }))
     const start = seasonReset(last)
     const [line] = planMatch(result, [{ slot: 0, userId: 'u_a', left: false }, { slot: 2, userId: 'u_b', left: false }], new Map([['u_a', start]]))

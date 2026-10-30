@@ -61,9 +61,18 @@ export const COMPANIONS = [710]
  * wave bosses, they never roll shiny (the ones the horde has come with its shinies).
  */
 export const HALLOWEEN_BOSSES = [778, 354, 302, 426, 429, 229, 94, 609, 711, 709, 430, 477]
-/** The lobby's shopkeepers (render/plaza.ts): Kecleon, and its purple brother recolored from the same sheets. */
-export const SHOPKEEPERS = [352]
-export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS])]
+/** The lobby's shopkeepers (render/plaza.ts): Kecleon (and its purple brother, recolored from the same sheets), and Leavanny, the Boutique's tailor. */
+export const SHOPKEEPERS = [352, 542]
+/** The Arena's followers (`follower` in src/data/arenaEffects.ts): small Pokémon trotting after a player's in a match. */
+export const FOLLOWERS = [172, 175, 298, 333, 777, 702, 133, 872, 778, 151]
+export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...FOLLOWERS])]
+/**
+ * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
+ * animations, only for the species the Arena plays (the starters' lines) and only their front row
+ * (`scripts/fetch-emotes.mjs`), into `public/assets/pokemon/<dex>/emote/` and src/data/emotes.generated.json.
+ */
+export const EMOTE_SPECIES = STARTERS
+export const EMOTE_ANIMS = ['Hop', 'Rotate', 'Sleep', 'Charge', 'Pose']
 /**
  * Flying types that take to the sky (the sky's flock in src/data/places.ts and the
  * Flying-type player forms): they get a `Fly` sheet when SpriteCollab has one.
@@ -75,6 +84,12 @@ export const FLYERS = new Set([
 /** Species that can roll shiny: the player lines, regular enemies, rift legendaries, places' bosses and the companions (Pumpkaboo for Gold supporters). */
 /** Legendaries that can also roll shiny as wave bosses (the trios, Mewtwo, the mythicals) and Arceus, for the Legend mode's captures. */
 export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 378, 379, 385, 493]
+/**
+ * Every species a player can be: the starters' and the hatchlings' whole lines (branches included) and the Legend
+ * mode's 25 (the rift, event and festival legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
+ * wearables `npm run anchors` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
+ */
+export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS])]
 export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...SHINY_LEGENDS, ...COMPANIONS])
 
 /**
@@ -193,6 +208,8 @@ export const EMOTIONS = {
   67: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
   // Ninjask, the Estádio's judge (render/stadium.ts).
   291: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
+  // Leavanny, the Boutique's tailor (render/plaza.ts).
+  542: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
 }
 
 export const pad = (n) => String(n).padStart(4, '0')

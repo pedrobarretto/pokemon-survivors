@@ -7,7 +7,7 @@ import { detail } from './quality'
 import { drawPokemon, loadedSprites, loadSpecies, type SpeciesSprites } from './sprites'
 import type { PlazaStage } from '../data/festivals'
 import type { ShopLevel, ShopProp } from '../data/shop'
-import { CARAVAN, STALLS, type StallId } from '../data/visitors'
+import { CARAVAN, STALLS, TAILOR, type StallId } from '../data/visitors'
 
 /**
  * The Kecleon plaza: the lobby's shop as a place in the meadow, east of the
@@ -63,8 +63,8 @@ const FIREFLY_DEX = [313, 314] as const
 /** The species the festival puts on the plaza, for the sprite stream to keep. */
 export const festivalSprites = (f: PlazaFestival): number[] => (f.fountain && f.running ? [LANTURN.dex, ...(f.stage >= 3 ? FIREFLY_DEX : [])] : [])
 
-/** Who talks at the plaza: a shopkeeper (the shop), Meowth (his caravan), a seasonal stall's keeper, Lanturn (a word, then the festival's sheet), or the festival's fountain or plaque (its sheet). */
-export type PlazaNpc = 'keeper' | 'meowth' | 'stall' | 'lanturn' | 'fountain' | 'plaque'
+/** Who talks at the plaza: a shopkeeper (the shop), Meowth (his caravan), a seasonal stall's keeper, Lanturn (a word, then the festival's sheet), the festival's fountain or plaque (its sheet), or Leavanny (the Boutique). */
+export type PlazaNpc = 'keeper' | 'meowth' | 'stall' | 'lanturn' | 'fountain' | 'plaque' | 'tailor'
 
 /** The plaza's PNGs (`public/assets/shop/`), by id. */
 const ART_FILES = {
@@ -78,6 +78,7 @@ const ART_FILES = {
   crates: 'prop-crates',
   flowers: 'prop-flowers',
   pedestal: 'prop-pedestal',
+  boutique: 'boutique',
   caravan: 'caravan-meowth',
   'stall-duskull': 'stall-duskull',
   'stall-delibird': 'stall-delibird',
@@ -280,6 +281,11 @@ type Layout = {
   cobbles: Placed & { rx: number; ry: number }
   /** Whether the floor is the festival's Lantern Ring (curbed, with its approach) rather than the cobblestones. */
   ring: boolean
+  /** The Boutique (always there): its building's feet, its own patch of cobblestones, Leavanny and where the partner stands to shop there. */
+  boutique: Placed & { art: Art }
+  boutiqueFloor: Placed & { rx: number; ry: number }
+  tailor: KeeperSpot
+  boutiqueSpot: Placed
   /** Where the visitors stand, when they come: Meowth's wagon and Meowth, a seasonal stall and its keeper, the golden statue. */
   wagon: Placed
   meowth: KeeperSpot
@@ -405,6 +411,24 @@ const RING = {
 } as const
 /** The bunting and the lantern strings tie on the lamp's cap, this high above its feet. */
 const LAMP_TIE = 40
+
+/**
+ * The Boutique, east of everything else on the plaza, relative to the shop's
+ * feet: `gap` px past the lamps (beyond a seasonal stall's spot and the
+ * cobblestones' end), or on the grass off the Lantern Ring's east curb
+ * (`ring`), as Meowth's wagon parks off its west one. It stands on its own
+ * patch of stones (`floor`: `pad` px past its sides, `ry` deep, `dy` below its
+ * feet); Leavanny waits by its door (`tailor`, from the Boutique's feet) and
+ * the partner shops from `spot` (from Leavanny's).
+ */
+const BOUTIQUE = {
+  gap: 250,
+  y: 24,
+  ring: { x: 372, y: 40 },
+  tailor: { x: -34, y: 16, dir: 7 },
+  spot: { x: -4, y: 24 },
+  floor: { pad: 34, ry: 30, dy: 10 },
+} as const
 /**
  * The festival's footprints (radii, `dy` from the feet): the fountain's basin,
  * the plaque's posts, each gate post and ring lamp, the tree's planter, the
@@ -615,6 +639,10 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
         ...(f.fountain ? [-1, 1].map((side) => ({ id: 'flowers' as const, x: FOUNTAIN_BEFORE.x + side * FOUNTAIN_BEFORE.flowers, y: FOUNTAIN_BEFORE.y + 2 })) : []),
       ]
   const festival = f.fountain ? festivalLayout(f, lamp, v.stall === null) : null
+  const boutiqueArt = arts.get('boutique')!
+  const boutique = { ...(ring ? BOUTIQUE.ring : { x: lamp + BOUTIQUE.gap, y: BOUTIQUE.y }), art: boutiqueArt }
+  const tailor = { x: boutique.x + BOUTIQUE.tailor.x, y: boutique.y + BOUTIQUE.tailor.y, dir: BOUTIQUE.tailor.dir }
+  const boutiqueFloor = { x: boutique.x, y: boutique.y + BOUTIQUE.floor.dy, rx: Math.round(boutiqueArt.w / 2) + BOUTIQUE.floor.pad, ry: BOUTIQUE.floor.ry }
   // The festival's fountain stands in front of the shop: the stones reach further down for it the day before; the Ring has its own floor.
   const cobbles = ring
     ? RING.floor
@@ -626,6 +654,7 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
     ...(v.caravan ? [{ ...wagon, art: arts.get('caravan')! }] : []),
     ...(v.stall ? [{ ...stall, art: arts.get(STALLS[v.stall].art)! }] : []),
     ...(v.statue ? [{ ...statue, art: arts.get('pedestal')! }] : []),
+    boutique,
     // A piece that changes by stage keeps its first stage's shadow (the fountain's doesn't grow when the lanterns and the statue come); the bunting and the strings cast none.
     ...(festival ? [{ x: festival.fountain.x, y: festival.fountain.y, art: arts.get('fountain-s0-f0')! }] : []),
     ...(festival?.plaque ? [{ ...festival.plaque, art: arts.get('plaque')! }] : []),
@@ -651,6 +680,10 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
     spot: ring ? RING.spot : { x: 0, y: 34 },
     cobbles,
     ring,
+    boutique,
+    boutiqueFloor,
+    tailor,
+    boutiqueSpot: { x: tailor.x + BOUTIQUE.spot.x, y: tailor.y + BOUTIQUE.spot.y },
     wagon,
     meowth: { x: wagon.x + 84, y: wagon.y + 16, dir: 1 },
     stall,
@@ -660,7 +693,7 @@ const layoutOf = (level: ShopLevel, v: PlazaVisitors, f: PlazaFestival): Layout 
     shadows,
     // The bunting and the lantern strings hang between pieces inside these boxes already (the sky lanterns don't count).
     pieces: pieceBoxes,
-    bounds: unionOf([{ left: cobbles.x - cobbles.rx, top: cobbles.y - cobbles.ry, right: cobbles.x + cobbles.rx, bottom: cobbles.y + cobbles.ry }, ...pieceBoxes]),
+    bounds: unionOf([...[cobbles, boutiqueFloor].map((c) => ({ left: c.x - c.rx, top: c.y - c.ry, right: c.x + c.rx, bottom: c.y + c.ry })), ...pieceBoxes] as [Box, ...Box[]]),
   }
   layouts.set(key, layout)
   return layout
@@ -678,6 +711,8 @@ export type Plaza = {
   /** The shop's level (set by the shell: the save's, or the dev override). */
   level: ShopLevel
   keepers: [Keeper, Keeper]
+  /** Leavanny at the Boutique: its hop and emote when the partner comes to shop (`greetTailor`). */
+  tailor: Keeper
   /** The edge markers as last drawn (world px), for taps: the shop's and a seasonal stall's. */
   markers: Record<MarkerWho, { x: number; y: number; shown: boolean }>
   /** The green Kecleon blends into the counter (the 1-in-20 easter egg) until it pops out (`revealKeeper`). */
@@ -702,6 +737,7 @@ export const createPlaza = (home: Vec): Plaza => {
       { hopAt: -9, emote: 'note', dir: 0 },
       { hopAt: -9, emote: 'sparkle', dir: 0 },
     ],
+    tailor: { hopAt: -9, emote: 'note', dir: 0 },
     markers: { keeper: { x: 0, y: 0, shown: false }, stall: { x: 0, y: 0, shown: false } },
     hidden: false,
     party: -9,
@@ -718,6 +754,7 @@ const keepersAt = (plaza: Plaza, layout: Layout) => layout.keepers.map((k, i) =>
 const npcsAt = (plaza: Plaza, layout: Layout): { who: PlazaNpc; dex: number; spot: KeeperSpot }[] => {
   const v = plaza.visitors
   return [
+    { who: 'tailor', dex: TAILOR.dex, spot: layout.tailor },
     ...(v.caravan ? [{ who: 'meowth' as const, dex: CARAVAN.dex, spot: layout.meowth }] : []),
     ...(v.stall ? [{ who: 'stall' as const, dex: STALLS[v.stall].dex, spot: layout.stallKeeper }] : []),
     ...(layout.festival?.lanturn ? [{ who: 'lanturn' as const, dex: LANTURN.dex, spot: layout.festival.lanturn }] : []),
@@ -731,6 +768,11 @@ const visitorDirs = new WeakMap<Plaza, Partial<Record<PlazaNpc, Dir8>>>()
 export const greetKeepers = (plaza: Plaza, time: number) => {
   plaza.keepers[0].hopAt = time
   plaza.keepers[1].hopAt = time + 0.18
+}
+
+/** Leavanny hops and pops an emote at scene time `time`, as the partner comes to the Boutique. */
+export const greetTailor = (plaza: Plaza, time: number) => {
+  plaza.tailor.hopAt = time
 }
 
 /** The camouflaged Kecleon pops out at scene time `time`: it shows again, hops and pops a "!". */
@@ -768,6 +810,13 @@ export const shopSpot = (plaza: Plaza): Vec => {
   return { x: plaza.x + spot.x, y: plaza.y + spot.y }
 }
 
+/** Where the partner stands to shop at the Boutique, before Leavanny, world px. */
+export const boutiqueSpot = (plaza: Plaza): Vec => {
+  const layout = plazaLayout(plaza)
+  const spot = layout?.boutiqueSpot ?? { x: 104 + BOUTIQUE.gap + BOUTIQUE.tailor.x + BOUTIQUE.spot.x, y: BOUTIQUE.y + BOUTIQUE.tailor.y + BOUTIQUE.spot.y }
+  return { x: plaza.x + spot.x, y: plaza.y + spot.y }
+}
+
 /** How close (world px) the partner must stand to a shopkeeper or the counter to talk. */
 const TALK_RANGE = 24
 
@@ -778,7 +827,8 @@ export const talkAnchor = (plaza: Plaza, p: Vec): (Vec & { who: PlazaNpc }) | nu
   const atCounter = Math.hypot(p.x - plaza.x - layout.spot.x, p.y - plaza.y - layout.spot.y) < TALK_RANGE
   const candidates = [
     ...layout.keepers.map((spot) => ({ spot, who: 'keeper' as PlazaNpc, counter: atCounter })),
-    ...npcsAt(plaza, layout).map((n) => ({ spot: n.spot, who: n.who, counter: false })),
+    // Standing where it shops at the Boutique talks to Leavanny too.
+    ...npcsAt(plaza, layout).map((n) => ({ spot: n.spot, who: n.who, counter: n.who === 'tailor' && Math.hypot(p.x - plaza.x - layout.boutiqueSpot.x, p.y - plaza.y - layout.boutiqueSpot.y) < TALK_RANGE })),
   ].flatMap((c) => {
     const d = Math.hypot(p.x - plaza.x - c.spot.x, p.y - plaza.y - c.spot.y)
     return d < TALK_RANGE || c.counter ? [{ ...c, d }] : []
@@ -821,15 +871,19 @@ export const pushOut = (plaza: Plaza, v: Vec) => {
     v.x = plaza.x + k.x + (d > 1e-6 ? (dx / d) * KEEPER_ROOM : KEEPER_ROOM)
     v.y = plaza.y + k.y + (d > 1e-6 ? (dy / d) * KEEPER_ROOM : 0)
   }
-  const half = layout.building.w / 2 + 10
-  // Well clear of the roof line: feet just above it read as standing on the roof.
-  const top = plaza.y - layout.building.h - 24
-  const bottom = plaza.y + layout.pad.y
-  if (v.y > top && v.y < bottom && Math.abs(v.x - plaza.x) < half) {
-    const side = half - Math.abs(v.x - plaza.x)
-    if (v.y - top < side) v.y = top
-    else v.x = plaza.x + Math.sign(v.x - plaza.x || 1) * half
-    return
+  // The shop's building and the Boutique's.
+  for (const b of [{ x: 0, y: 0, art: layout.building, front: layout.pad.y }, { ...layout.boutique, front: BOUTIQUE_FRONT }]) {
+    const cx = plaza.x + b.x
+    const half = b.art.w / 2 + 10
+    // Well clear of the roof line: feet just above it read as standing on the roof.
+    const top = plaza.y + b.y - b.art.h - 24
+    const bottom = plaza.y + b.y + b.front
+    if (v.y > top && v.y < bottom && Math.abs(v.x - cx) < half) {
+      const side = half - Math.abs(v.x - cx)
+      if (v.y - top < side) v.y = top
+      else v.x = cx + Math.sign(v.x - cx || 1) * half
+      return
+    }
   }
   // Off the building's footprint and the visitors' (a wagon or a stall is as solid as its footprint, a little taller behind).
   for (const pad of padsOf(plaza, layout)) {
@@ -852,6 +906,9 @@ export const pushOut = (plaza: Plaza, v: Vec) => {
 
 type Pad = { x: number; y: number; rx: number; ry: number; back: number }
 
+/** How far above its feet (world px) the ground the Boutique covers ends: its footprint (`padsOf`) rounds off the front below that. */
+const BOUTIQUE_FRONT = -8
+
 const padCache = new WeakMap<Layout, readonly Pad[]>()
 
 /**
@@ -867,6 +924,7 @@ const padsOf = (plaza: Plaza, layout: Layout): readonly Pad[] => {
   const f = layout.festival
   const pads: Pad[] = [
     { x: 0, y: layout.pad.y, rx: layout.pad.rx, ry: layout.pad.ry, back: 1 },
+    { x: layout.boutique.x, y: layout.boutique.y + BOUTIQUE_FRONT, rx: Math.round(layout.boutique.art.w / 2) + 4, ry: 12, back: 1 },
     ...(v.caravan ? [{ x: layout.wagon.x, y: layout.wagon.y - 6, ...VISITOR_PADS.wagon, back: 3 }] : []),
     ...(v.stall ? [{ x: layout.stall.x, y: layout.stall.y - 16, ...VISITOR_PADS.stall, back: 3 }] : []),
     ...(v.statue ? [{ x: layout.statue.x, y: layout.statue.y - 3, ...VISITOR_PADS.statue, back: 2 }] : []),
@@ -912,6 +970,7 @@ export const plazaTapped = (plaza: Plaza, at: Vec): PlazaNpc | null => {
   if (fest?.stall && over(fest.stall.art, fest.stall)) return 'lanturn'
   if (fest?.plaque && over(arts.get('plaque'), fest.plaque)) return 'plaque'
   if (fest && over(fest.fountain.frames[0], fest.fountain)) return 'fountain'
+  if (over(layout.boutique.art, layout.boutique)) return 'tailor'
   const half = layout.building.w / 2
   if (Math.abs(at.x - plaza.x) <= half && at.y <= plaza.y + 4 && at.y >= plaza.y - layout.building.h) return 'keeper'
   return keepersAt(plaza, layout).some((k) => near({ x: k.x - plaza.x, y: k.y - plaza.y })) ? 'keeper' : null
@@ -943,6 +1002,22 @@ export const plazaFrame = (plaza: Plaza, w: number, h: number): Vec => {
   // A step towards the shopkeeper who talks (the purple brother's shelves).
   const lean = Math.round((layout?.keepers[typeof plaza.focus === 'number' ? plaza.focus : 0]?.x ?? 0) * 0.4)
   return { x: framed.x + lean, y: framed.y }
+}
+
+/**
+ * Where the camera (its top-left, world px) frames the Boutique for a `w`×`h`
+ * view, as `plazaFrame` frames the shop: at the top on portrait screens (the
+ * sheet and Leavanny's box below it), on the left beside the sheet elsewhere.
+ */
+export const boutiqueFrame = (plaza: Plaza, w: number, h: number): Vec => {
+  const b = plazaLayout(plaza)?.boutique
+  const at = { x: plaza.x + (b?.x ?? 104 + BOUTIQUE.gap), y: plaza.y + (b?.y ?? BOUTIQUE.y) }
+  const tall = b?.art.h ?? 120
+  // Portrait: the Boutique is short, so it rides just under the top, clear of Leavanny's box over the sheet.
+  if (h > w * 1.1) return { x: Math.round(at.x - w / 2), y: at.y - Math.min(tall + 8, Math.round(h * 0.33)) }
+  const left = Math.round(Math.max(w * 0.32, (b?.art.w ?? 120) / 2 + 46))
+  const feet = Math.round(Math.min(h - 44, Math.max(h * 0.6, tall + 12)))
+  return { x: at.x - left, y: at.y - feet }
 }
 
 const frameAt = (plaza: Plaza, layout: Layout | null, tall: number, w: number, h: number): Vec => {
@@ -1161,6 +1236,8 @@ export const drawPlazaGround = (ctx: CanvasRenderingContext2D, plaza: Plaza, cam
     const c = layout.cobbles
     blitCentered(ctx, cobbles(c.rx, c.ry), plaza.x + c.x - camX, plaza.y + c.y - camY)
   }
+  const f = layout.boutiqueFloor
+  blitCentered(ctx, cobbles(f.rx, f.ry), plaza.x + f.x - camX, plaza.y + f.y - camY)
   for (const s of layout.shadows) drawShadow(ctx, s, plaza.x + s.x - camX, plaza.y + s.y - camY)
 }
 
@@ -1272,6 +1349,10 @@ export const plazaPieces = (plaza: Plaza): readonly Piece[] => {
     ...(counter === null
       ? keepers.map((k): Piece => ({ y: k.y, draw: (ctx, camX, camY, time) => drawKeeper(ctx, k.keeper, k.purple, k.x - camX, k.y - camY, time, true, plaza.hidden && !k.purple) }))
       : []),
+    {
+      y: plaza.y + layout.boutique.y,
+      draw: (ctx, camX, camY) => put(ctx, layout.boutique.art, plaza.x + layout.boutique.x - camX, plaza.y + layout.boutique.y - camY),
+    },
     ...visitorPieces(plaza, layout),
     ...festivalPieces(plaza, layout.festival),
   ]
@@ -1469,8 +1550,12 @@ const visitorPieces = (plaza: Plaza, layout: Layout): Piece[] => {
       draw: (ctx, camX, camY, time) => {
         const sprite = loadedSprites(n.dex)
         if (!sprite) return
+        // Leavanny hops and pops an emote as the partner comes to shop (`greetTailor`).
+        const since = n.who === 'tailor' ? time - plaza.tailor.hopAt : -1
+        const lift = hop(since, 2, 4)
         shadow(ctx, x - camX, y - camY, sprite.bodyW)
-        drawPokemon(ctx, sprite, 'Idle', visitorDirs.get(plaza)?.[n.who] ?? n.spot.dir, time + 0.7, x - camX, y - camY)
+        drawPokemon(ctx, sprite, 'Idle', visitorDirs.get(plaza)?.[n.who] ?? n.spot.dir, time + 0.7, x - camX, y - camY - lift)
+        if (since >= 0 && since < KEEPER_REACTION) blitCentered(ctx, EMOTES()[plaza.tailor.emote], x - camX, y - camY - sprite.bodyH - lift - 8 - (Math.floor(since * 4) % 2))
       },
     }
   })

@@ -1,7 +1,7 @@
 import { DurableObject } from 'cloudflare:workers'
 import { ARENA_RANKED } from '../../src/data/arenaRanked'
 import type { ArenaTicketsRequest, ArenaTicketsResponse, QueueServerMessage } from '../../src/net/arena'
-import { LIMITS } from '../../src/net/protocol'
+import { LIMITS, parseWireLook } from '../../src/net/protocol'
 import type { Env } from './env'
 import { fairPlayGate, formMatches, parseQueueMessage, parseTickets, type Match, type Ticket } from './matchmaker'
 import { arenaApiOf, postSigned } from './report'
@@ -228,7 +228,8 @@ export class Matchmaker extends DurableObject<Env> {
    * Asks the API for the MMR and Fair Play of the accounts waiting without an
    * MMR (one request at a time), and applies Fair Play (`fairPlayGate`: a
    * Ranqueada refused, a ticket held). No answer: they match at the start,
-   * their Fair Play unchecked (the API that would take it is down too).
+   * their Fair Play unchecked (the API that would take it is down too), and
+   * bare: a look only the API vouched for is ever shown (`withLook`).
    */
   private lookUpMmr() {
     const asking = [...this.tickets.values()].filter((t) => t.mmr === null)
@@ -242,6 +243,8 @@ export class Matchmaker extends DurableObject<Env> {
         if (!live || live.mmr !== null) continue
         live.mmr = r && Number.isFinite(r.mmr) ? r.mmr : ARENA_RANKED.mmr.start
         if (!r) continue
+        const look = parseWireLook(r.look)
+        if (look) live.look = look
         const gate = fairPlayGate(live.kind, r.fairPlay, now)
         if (!gate.ok) {
           log({ ev: 'queue.fairPlay', kind: live.kind, fairPlay: r.fairPlay, refused: true })
@@ -276,7 +279,7 @@ export class Matchmaker extends DurableObject<Env> {
     const conns = m.players.map((p) => p.conn)
     for (const c of conns) this.placing.add(c)
     const region = regionOf(m.hint)
-    const lock = { queue: m.kind, ...(m.format !== 'standard' && { format: m.format }), ranked: m.ranked, players: m.players.map((p) => ({ id: p.user, team: p.team })) }
+    const lock = { queue: m.kind, ...(m.format !== 'standard' && { format: m.format }), ranked: m.ranked, players: m.players.map((p) => ({ id: p.user, team: p.team, ...(p.look && { look: p.look }) })) }
     let code: string | null = null
     for (let index = 0; index < SHARD_INDEXES && code === null; index++) {
       const shard: Shard = { region, index }

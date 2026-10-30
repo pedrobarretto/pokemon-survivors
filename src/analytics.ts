@@ -16,6 +16,8 @@ import type { QueueServerMessage } from './net/arena'
 import type { CrumbMoment, Quality } from './crumb'
 import type { DeviceInfo } from './telemetry'
 import type { ArenaFormat } from './data/arenaFormats'
+import type { CosmeticId, CosmeticSlot, Rarity } from './data/cosmetics'
+import type { GemCurrency, GemMethod, GemPackId } from './data/gems'
 
 /**
  * Analytics and error reports. Events go to PostHog (product analytics and
@@ -230,6 +232,12 @@ type AnalyticsEvents = {
    * handle: the queues and rooms are open), else only bots are.
    */
   arena_open: { screen: 'arena' | 'hub'; account: 0 | 1 }
+  /** The Arena's gem shop (`ui/gemShop.ts`): a pack's checkout opened (Stripe for `card`, AbacatePay for `pix`), in the currency shown. */
+  gems_checkout: { pack: GemPackId; method: GemMethod; currency: GemCurrency }
+  /** A checkout came back (`?gems=`): the gems landed (`ok`, how many and after how long) or the wait ran out first (`timeout`). */
+  gems_return: { outcome: 'ok' | 'timeout'; gems: number; seconds: number }
+  /** A cosmetic bought with gems. */
+  cosmetic_buy: { id: CosmeticId; slot: CosmeticSlot; rarity: Rarity; price: number }
   /**
    * How a co-op run's link and pacing went for this player (`coop/netStats.ts`), one per player per run,
    * flat: where the relay ran and this player met Cloudflare, round trip, frame jitter, the hold, underruns,

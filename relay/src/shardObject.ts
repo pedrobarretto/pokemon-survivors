@@ -10,6 +10,7 @@ import {
   disconnect,
   hello,
   loadState,
+  looked,
   message,
   nextTickAt,
   reattach,
@@ -21,7 +22,7 @@ import {
   type Room,
   type State,
 } from './room'
-import { arenaApiOf, createOutbox, parseOutgoing, type Outbox } from './report'
+import { arenaApiOf, createOutbox, lookUpLooks, parseOutgoing, type ArenaApi, type Outbox } from './report'
 import { DELETE_MAX, HELLO_TIMEOUT_MS, LAZY, WHERE_WAIT_MS, identify, isRecord, log, noSuchRoom, whereOnce } from './shell'
 import { admits, capOf, createMeter, due, earliest, shardCode, shardName, shardOf, tally, weighs, type Shard } from './shards'
 import { dumpJson, parseRoom, persist, readBound, syncTexts, type DumpRequest, type Store, type Stored } from './store'
@@ -150,13 +151,16 @@ export class ShardObject extends DurableObject<Env> {
   private inbound = createMeter(Date.now())
   /** The rooms' Arena match reports on their way to the API. */
   private readonly outbox: Outbox
+  /** The API the Arena's reports and look lookups go to, or null when unset. */
+  private readonly api: ArenaApi | null
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
     const kept = [...ctx.storage.kv.list<unknown>({ prefix: OUT_KEY })].flatMap(([, v]) => parseOutgoing(v) ?? [])
+    this.api = arenaApiOf(env.ARENA_API_URL, env.ARENA_REPORT_SECRET)
     this.outbox = createOutbox(
       {
-        api: arenaApiOf(env.ARENA_API_URL, env.ARENA_REPORT_SECRET),
+        api: this.api,
         save: (o) => void ctx.storage.put(OUT_KEY + o.id, o, LAZY),
         remove: (id) => void ctx.storage.delete(OUT_KEY + id, LAZY),
         log: (ev, data) => this.log({ ev, ...data }),
@@ -431,6 +435,7 @@ export class ShardObject extends DurableObject<Env> {
       else if (e.k === 'dump') this.ctx.waitUntil(this.dump(shell, e, room).catch((err: unknown) => this.log({ ev: 'dump.failed', code: shell.code, error: String(err) })))
       else if (e.k === 'wipe') wiped = true
       else if (e.k === 'report') this.ctx.waitUntil(this.outbox.add(e.report))
+      else if (e.k === 'looks') this.ctx.waitUntil(this.lookUp(shell, e))
     }
     if (wiped) return this.wipe(shell)
     for (const [id, a] of shell.attached) {
@@ -441,6 +446,13 @@ export class ShardObject extends DurableObject<Env> {
       shell.sockets.get(id)?.serializeAttachment(next)
     }
     this.schedule(shell)
+  }
+
+  /** A friends' room's looks as its run starts, from the API (none when it fails), back to the room that asked, if it's still here. */
+  private async lookUp(shell: Shell, e: Extract<Effect, { k: 'looks' }>) {
+    const looks = await lookUpLooks(this.api, e.ids)
+    this.log({ ev: 'room.looks', code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length })
+    if (this.rooms.get(shell.code) === shell) this.step(shell, () => looked(shell.state, e.ask, looks, Date.now()))
   }
 
   /** The room's frame timer while its run's clock runs; its deadline, for the shard's alarm. */

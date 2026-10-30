@@ -1,6 +1,7 @@
 import type { EggTier } from '../game/eggs'
 import type { GiftContent } from '../game/gifts'
 import { HALLOWEEN } from './halloween'
+import type { PokeType } from './types'
 
 /**
  * Who comes by the Kecleon plaza besides the two Kecleon, as data: Meowth's
@@ -18,6 +19,9 @@ import { HALLOWEEN } from './halloween'
  * weekend per save. With `haggle.stamps` loyalty stamps or more, haggling
  * takes `haggle.off` off the whole weekend; without them Meowth refuses.
  */
+/** Leavanny, the Boutique's tailor at the plaza's east end (`render/plaza.ts`, `ui/boutique.ts`): it sews clothes from leaves, and lives only there. */
+export const TAILOR = { dex: 542, name: 'Leavanny', types: ['bug', 'grass'] } as const satisfies { dex: number; name: string; types: readonly PokeType[] }
+
 export const CARAVAN = {
   dex: 52,
   name: 'Meowth',

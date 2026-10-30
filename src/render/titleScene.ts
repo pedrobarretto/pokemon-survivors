@@ -3,6 +3,7 @@ import { blitCentered, blitEllipse } from '../engine/pixelart'
 import { chance, createRng, pick, range, weightedPick, type Rng } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
 import { STARTER_IDS, starterDex } from '../data/starters'
+import { TAILOR } from '../data/visitors'
 import { EMOTES, type Emote } from './art'
 import { createCompanion, drawCompanion, stepCompanion, type CompanionView } from './companion'
 import { drawSparkles, shadow } from './draw'
@@ -10,6 +11,8 @@ import { drawPokemon, hasShiny, loadedSprites, loadSpecies, type Dex } from './s
 import { drawGround } from './world'
 import { drawMeadowJacks, drawMeadowNight } from './halloweenArt'
 import {
+  boutiqueFrame,
+  boutiqueSpot,
   celebratePlaza,
   createPlaza,
   drawPlazaDusk,
@@ -18,6 +21,7 @@ import {
   drawPlazaOverhead,
   drawPlazaParty,
   greetKeepers,
+  greetTailor,
   KECLEON_DEX,
   plazaFrame,
   plazaPieces,
@@ -54,7 +58,8 @@ import {
  * Attract-mode backdrop behind the menus: the meadow around the partner's
  * home, under a camera that stands still, with wild Pokémon strolling around
  * (and, rarely, a shiny). East of home stands the Kecleon plaza
- * (`render/plaza.ts`), the shop as a place, west of it the Dojo
+ * (`render/plaza.ts`), the shop as a place, with Leavanny's Boutique at its
+ * east end, west of it the Dojo
  * (`render/dojo.ts`), Machoke's training hall, and south of it the Estádio
  * (`render/stadium.ts`), the Arena's, Ninjask judging at its gate. On the lobby the partner can hop
  * off its stage and take a walk among them (`meetPartner`, `steerPartner`):
@@ -130,8 +135,8 @@ export type Partner = {
   trail: Vec[]
 }
 
-/** Where the camera rests when nobody strolls: the partner's home, the Kecleon plaza, the Dojo or the Estádio. */
-export type Place = 'home' | 'plaza' | 'dojo' | 'stadium'
+/** Where the camera rests when nobody strolls: the partner's home, the Kecleon plaza (the shop, or Leavanny's Boutique at its east end), the Dojo or the Estádio. */
+export type Place = 'home' | 'plaza' | 'boutique' | 'dojo' | 'stadium'
 
 /** Who the partner can talk to in the meadow: the plaza's keepers and visitors, Machoke at the Dojo, or Ninjask and the boards at the Estádio. */
 export type LobbyNpc = PlazaNpc | 'sensei' | StadiumNpc
@@ -330,15 +335,17 @@ export const exploreMeadow = (s: TitleScene, on: boolean, w: number, h: number) 
  */
 const restCam = (s: TitleScene, place: Place, w: number, h: number): Vec =>
   place === 'plaza' ? plazaFrame(s.plaza, w, h)
+  : place === 'boutique' ? boutiqueFrame(s.plaza, w, h)
   : place === 'dojo' ? dojoFrame(s.dojo, w, h)
   : place === 'stadium' ? stadiumFrame(s.stadium, w, h)
   : { x: Math.round(s.home.x - w / 2), y: Math.round(s.home.y - h / 2) }
 
 const easeInOut = (k: number) => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2)
 
-/** Where the partner ends a trip to `place`: the shop's counter, before Machoke, before Ninjask, or its stage. */
+/** Where the partner ends a trip to `place`: the shop's counter, before Leavanny, before Machoke, before Ninjask, or its stage. */
 const tripGoal = (s: TitleScene, p: Partner, place: Place) =>
   place === 'plaza' ? shopSpot(s.plaza)
+  : place === 'boutique' ? boutiqueSpot(s.plaza)
   : place === 'dojo' ? senseiSpot(s.dojo)
   : place === 'stadium' ? judgeSpot(s.stadium)
   : p.home
@@ -389,6 +396,10 @@ const arrive = (s: TitleScene, to: Place) => {
   if (to === 'stadium') {
     greetJudge(s.stadium, s.time)
     cry(s, JUDGE.dex)
+  }
+  if (to === 'boutique') {
+    greetTailor(s.plaza, s.time)
+    cry(s, TAILOR.dex)
   }
   // A camouflaged Kecleon keeps still and quiet until it's talked to (`revealShopkeeper`).
   if (to === 'plaza' && !s.plaza.hidden) {

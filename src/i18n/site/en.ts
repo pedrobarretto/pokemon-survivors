@@ -88,6 +88,8 @@ export const siteEn: SiteMessages = {
     eventNote: 'Shows up as a map event: it runs from you and drops coins with every hit. Knock it out before it escapes for the Pay Day jackpot.',
     companionNote: 'A gift companion: it lands in supporters\' gift box during Halloween Night and walks beside you in runs, leaving a trail of candy.',
     cameoNote: 'Not a foe: it shows up for a moment in Darkrai\'s rift during Halloween Night and breaks the nightmare with Lunar Wing.',
+    arenaNote: 'An Arena follower: a look that trots after your Pokémon in matches. Looks only, never power.',
+    lobbyNote: "The Boutique's tailor, on the lobby's plaza: it sews from leaves the looks the gem shop sells.",
     wildNote: 'Base values. Regular enemies get tougher every minute; bosses don\'t.',
     appears: 'When it shows up',
     horde: (from: string, until: string) => `May join the horde, from ${from} to ${until}`,
@@ -789,9 +791,9 @@ export const siteEn: SiteMessages = {
   support: {
     title: 'Support Pokémon Survivors | Donate by card, Apple Pay or Google Pay',
     description:
-      'Pokémon Survivors is free, with no ads and nothing for sale. If you want to help pay for the servers, donate by card, Apple Pay or Google Pay from any country (Stripe), or by Pix or a Brazilian card from Brazil (AbacatePay). With an account, donors get a cosmetic thank-you in the game: a title, a card frame, a badge, a shiny of their choice and a companion.',
+      'Pokémon Survivors is free, with no ads and nothing for sale that gives power. If you want to help pay for the servers, donate by card, Apple Pay or Google Pay from any country (Stripe), or by Pix or a Brazilian card from Brazil (AbacatePay). With an account, donors get a cosmetic thank-you in the game: a title, a card frame, a badge, a shiny of their choice and a companion.',
     h1: 'Support the project',
-    lead: 'The game is free and will stay that way, with no ads and nothing for sale. If you had fun and want to help pay for the servers (accounts, rankings and the Daily Challenge), any amount helps. As a thank-you, donors with an account get cosmetic rewards in the game, nothing that changes a run.',
+    lead: 'The game is free and will stay that way, with no ads and nothing for sale that gives power. If you had fun and want to help pay for the servers (accounts, rankings and the Daily Challenge), any amount helps. As a thank-you, donors with an account get cosmetic rewards in the game, nothing that changes a run.',
     thanks: 'Thank you for your support! ♥',
     status: {
       pending: 'Confirming the payment… It may take a few minutes (keep this page open).',
@@ -861,11 +863,12 @@ export const siteEn: SiteMessages = {
   legal: {
     title: 'Legal, privacy and credits | Pokémon Survivors',
     description:
-      'Pokémon Survivors is an unofficial, free fan game with no ads and no purchases. Licenses (MIT code, CC BY-NC 4.0 sprites), privacy (optional accounts with a public ranking profile; as a guest, nothing leaves your device), credits and contact.',
+      'Pokémon Survivors is an unofficial, free fan game with no ads; only optional looks are paid. Licenses (MIT code, CC BY-NC 4.0 sprites), privacy (optional accounts with a public ranking profile; as a guest, nothing leaves your device), credits and contact.',
     h1: 'Legal, privacy and credits',
     sections: {
       fanGame: 'Unofficial fan game',
-      free: 'Free, no ads, no purchases',
+      free: 'Free, no ads',
+      gems: 'Gems',
       licenses: 'Licenses and credits',
       privacy: 'Privacy',
       contact: 'Contact and takedown requests',
@@ -876,9 +879,15 @@ export const siteEn: SiteMessages = {
       'Pokémon and Pokémon character names are trademarks of Nintendo. Pokémon © Nintendo, Creatures Inc. and GAME FREAK inc. All other trademarks belong to their respective owners.',
     ],
     free: [
-      'The game is free and will stay that way: no ads, no paid content and no in-app purchases.',
+      'The game is free and will stay that way: no ads, and nothing that changes a run or the ranking costs money. The only possible purchase is optional gems, for looks (see below).',
       'Poké Dollars (₽) exist only inside the game and can\'t be bought with real money.',
       'If you want, you can donate on the Support the project page. Donations are voluntary and, with an account, only bring a cosmetic thank-you (a title, a card frame, a badge, a shiny of your choice, a companion), nothing that changes a run or the ranking.',
+    ],
+    gems: [
+      'Gems are a virtual item of the game: they buy cosmetic items only (such as hats, trails and titles), which show in runs, co-op and the Arena, never anything that changes a match or the ranking. They have no cash value, can\'t be exchanged for money or moved to another account, and stay tied to your game account.',
+      'You get gems by playing the Arena (up to a daily limit), by supporting on Patreon or by buying a pack. Packs are paid on Stripe (card, Apple Pay and Google Pay) or AbacatePay (Pix), and your payment details go straight to them: the game never sees your card.',
+      'Right of withdrawal: within 7 days of buying a pack, you can ask for a refund of its gems you haven\'t spent yet (Brazilian Consumer Protection Code, art. 49). Email pedro@wavyia.com.br with the purchase reference. Gems already spent and the cosmetic items bought with them are not refundable.',
+      'A chargeback or payment dispute removes that pack\'s gems from the account, even spent ones. The balance can go negative, and while it is, nothing can be bought with gems.',
     ],
     licenses: {
       code: 'Source code',
@@ -976,7 +985,7 @@ export const siteEn: SiteMessages = {
       ['Languages', `${f.languages}: Portuguese, English, Spanish, French and Traditional Chinese.`, '7: Spanish, English, French, Italian, Portuguese, and Simplified and Traditional Chinese.'],
       ['Rankings', 'By time survived. Runs on the boards are checked: the server re-simulates each one from its replay.', 'By time survived, solo or as a group.'],
       ['Source code', 'Open source, MIT license.', 'Public, PolyForm Noncommercial license (MIT until 2026-10-14).'],
-      ['Ads and purchases', 'None. Optional donations.', 'None. Optional donations.'],
+      ['Ads and purchases', 'No ads. Only optional gems, for looks (never power), and donations.', 'None. Optional donations.'],
     ],
     names: {
       title: 'Similar names',
@@ -1025,7 +1034,7 @@ export const siteEn: SiteMessages = {
         },
         {
           q: 'Are both free and official?',
-          a: 'Both are free, with no ads or purchases, and run in the browser. Neither is official: they are fan games with no ties to Nintendo, The Pokémon Company, GAME FREAK or Creatures.',
+          a: 'Both are free, with no ads, and run in the browser: Pokémon Survivors only sells optional gems, for looks, and PokéSurvivor has no purchases. Neither is official: they are fan games with no ties to Nintendo, The Pokémon Company, GAME FREAK or Creatures.',
         },
         {
           q: 'Can I play Pokémon Survivors with friends?',

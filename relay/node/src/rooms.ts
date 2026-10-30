@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { RawData, WebSocket } from 'ws'
 import type { ArenaReport } from '../../../src/net/arena'
-import { CLOSE_CODES, LIMITS, parseClientMessage, type Auth, type CloseReason, type ServerMessage, type VpsHome } from '../../../src/net/protocol'
+import { CLOSE_CODES, LIMITS, parseClientMessage, type Auth, type CloseReason, type ServerMessage, type VpsHome, type WireLook } from '../../../src/net/protocol'
 import { gen, randomCode, randomToken } from '../../src/codes'
 import { gzip } from '../../src/gzip'
 import {
@@ -12,6 +12,7 @@ import {
   flushLog,
   hello,
   loadState,
+  looked,
   message,
   nextTickAt,
   reattach,
@@ -73,6 +74,8 @@ export type RoomsDeps = {
   now: () => number
   /** An Arena match's agreed result, for the API (`report.ts`'s outbox). */
   report: (report: ArenaReport) => void
+  /** The looks the API vouches for these identities (`lookUpLooks`): none for a failure, never throws. */
+  looks: (ids: readonly string[]) => Promise<Record<string, WireLook>>
 }
 
 /** The storage effects: a batch with none of them writes nothing (most frames). */
@@ -145,9 +148,17 @@ export const createRooms = (deps: RoomsDeps) => {
       else if (e.k === 'dump') void dump(shell, e).catch((err: unknown) => log('dump.failed', { code: shell.code, error: String(err) }))
       else if (e.k === 'wipe') wiped = true
       else if (e.k === 'report') deps.report(e.report)
+      else if (e.k === 'looks') void lookUp(shell, e)
     }
     if (wiped) return wipe(shell)
     schedule(shell)
+  }
+
+  /** A friends' room's looks as its run starts, back to the room that asked, if it's still here. */
+  const lookUp = async (shell: Shell, e: Extract<Effect, { k: 'looks' }>) => {
+    const looks = await deps.looks(e.ids)
+    log('room.looks', { code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length })
+    if (rooms.get(shell.code) === shell) step(shell, () => looked(shell.state, e.ask, looks, now()))
   }
 
   /**

@@ -21058,7 +21058,7 @@ button.hall-tile:hover {
 
 /* The hub: a fixed frame, its tabs, and one scrolling page per tab. */
 .dialog.arena-hub {
-  width: min(760px, 96 * var(--vw));
+  width: min(880px, 96 * var(--vw));
   height: min(640px, calc(100 * var(--vh) - 36px));
   gap: 10px;
   padding: 14px 16px 12px;
@@ -23026,5 +23026,1040 @@ span.arena-hub-face {
   /* The pick tray's strip rides over the cluster. */
   [data-arena] .vs-tray {
     bottom: calc(max(12px, var(--safe-b)) + 160px);
+  }
+}
+
+/* The Arena's titles (ui/arenaTitle.ts): under a name, in the rarity's color. */
+.arena-seat-title {
+  font-family: var(--title);
+  font-size: 7px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: #a8b0c8;
+  text-shadow: 1px 1px 0 #101020;
+}
+
+/* Under a teammate's name in the co-op menu's team look (`teamBuilds`). */
+.team-build-head .arena-seat-title {
+  display: block;
+  margin-top: 2px;
+}
+
+.arena-seat-title.rare {
+  color: #78b8f8;
+}
+
+.arena-seat-title.epic {
+  color: #c088f8;
+}
+
+.arena-seat-title.legendary {
+  color: #f8d030;
+  animation: arena-seat-title-shine 2.4s steps(12) infinite;
+}
+
+@keyframes arena-seat-title-shine {
+  0%,
+  70%,
+  100% {
+    color: #f8d030;
+  }
+  80% {
+    color: #fff8c0;
+  }
+}
+
+.vs-end-name .arena-seat-title {
+  flex-basis: 100%;
+}
+
+.arena-hub-standing-text .arena-seat-title {
+  font-size: 8px;
+}
+
+/* A win's victory pose (render/arenaFx.ts `victoryPose`): the emote at 2×, over the title. */
+.vs-victory-pose {
+  align-self: center;
+  width: 160px;
+  height: 144px;
+  margin: -16px 0 -28px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+@media (max-height: 520px), (max-width: 520px) {
+  .vs-victory-pose {
+    width: 80px;
+    height: 72px;
+    margin: -8px 0 -14px;
+  }
+}
+
+/* ---------- The Arena's gem shop (ui/gemShop.ts): the gem chip, the hub's Loja and Visual tabs, the checkout sheets ---------- */
+
+.gem-icon {
+  width: 13px;
+  height: 10px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.gem-icon.big {
+  width: 26px;
+  height: 20px;
+}
+
+.gem-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--title);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.gem-amount.big {
+  gap: 8px;
+  font-size: 18px;
+}
+
+.gem-amount.big .gem-icon {
+  width: 26px;
+  height: 20px;
+}
+
+/* The chip: the Arena screen's title and the hub's, the balance in a pill that opens the Loja. */
+.gem-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  font-family: var(--title);
+  font-size: 10px;
+  color: #fff;
+  background: linear-gradient(180deg, #a050e0, #6a30a8);
+  border: 2px solid #3a1858;
+  border-radius: 99px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.gem-chip .gem-icon {
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.35));
+}
+
+.arena-hub-title .gem-chip {
+  margin-left: auto;
+}
+
+.arena-hub-title .gem-chip + .arena-hub-season {
+  margin-left: 0;
+}
+
+/* The gem tabs' icons are smaller pixel art: whole-pixel scales. */
+.arena-hub-tab.shop .arena-hub-tab-icon {
+  width: 26px;
+  height: 20px;
+}
+
+.arena-hub-tab.locker .arena-hub-tab-icon {
+  width: 24px;
+  height: 24px;
+  filter: invert(0.8);
+}
+
+.arena-hub-tab.locker.on .arena-hub-tab-icon {
+  filter: none;
+}
+
+/* Seven tabs: a smaller label, and on a narrow screen icons only (each tab keeps its name for screen readers). */
+.arena-hub-tabs .shell-tab {
+  font-size: 8px;
+}
+
+@media (max-width: 640px) {
+  .arena-hub-tab > span {
+    display: none;
+  }
+}
+
+.gem-shop,
+.gem-locker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.gem-balance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  background: linear-gradient(100deg, var(--dk-wash-purple, #efe4fb), var(--dk-surface-2, #e8e8f0));
+  border-radius: 8px;
+}
+
+.gem-balance small {
+  font-family: var(--body);
+  font-size: 17px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-balance .gem-balance-note {
+  flex-basis: 100%;
+  font-size: 15px;
+}
+
+.gem-cta .gem-icon {
+  width: 39px;
+  height: 30px;
+}
+
+.gem-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.gem-currency {
+  flex: none;
+}
+
+.gem-currency .shell-seg-option {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 9px;
+}
+
+.gem-pack-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.gem-pack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 132px;
+  padding: 10px 6px 8px;
+  color: var(--dk-ink, #303040);
+  background: var(--dk-surface-0, #fff);
+  border: 3px solid #8848c8;
+  border-radius: 8px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.gem-pack:hover,
+.gem-pack:focus-visible {
+  background: var(--dk-wash-purple, #efe4fb);
+}
+
+.gem-pack-art {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 30px;
+}
+
+.gem-pack-art img {
+  width: 26px;
+  height: 20px;
+  margin: 0 -5px;
+  image-rendering: pixelated;
+}
+
+.gem-pack-art img:nth-child(2n) {
+  margin-bottom: 8px;
+}
+
+.gem-pack-gems {
+  font-family: var(--title);
+  font-size: 13px;
+}
+
+.gem-pack-name {
+  font-family: var(--body);
+  font-size: 16px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-pack-bonus {
+  position: absolute;
+  top: -9px;
+  right: -4px;
+  padding: 2px 5px;
+  font-family: var(--title);
+  font-size: 7px;
+  font-style: normal;
+  color: #fff;
+  background: #2f9a40;
+  border-radius: 4px;
+}
+
+.gem-pack-price {
+  margin-top: auto;
+  padding: 4px 8px;
+  font-family: var(--title);
+  font-size: 9px;
+  color: #fff;
+  background: #6a30a8;
+  border-radius: 4px;
+}
+
+/* Short of gems: the packs nudge. */
+.gem-packs.nudge .gem-pack {
+  animation: gem-nudge 0.5s steps(4) 2;
+}
+
+@keyframes gem-nudge {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.gem-catalog-main {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.gem-try {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+/* The preview: a grassy pad under the Pokémon, the canvas upscaled by whole pixels. */
+.gem-stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+  background: radial-gradient(ellipse 60% 22% at 50% 82%, #5aa848 98%, transparent), linear-gradient(180deg, var(--dk-wash-blue, #dfeefe), var(--dk-wash-green, #e2f4dc));
+  border: 3px solid #283040;
+  border-radius: 8px;
+}
+
+.gem-stage-canvas {
+  width: 192px;
+  height: 176px;
+  image-rendering: pixelated;
+}
+
+.gem-stage.big .gem-stage-canvas {
+  width: 288px;
+  height: 264px;
+}
+
+/* The look's title (ui/arenaTitle.ts), over the stage. */
+.gem-stage-title {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.gem-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--dk-surface-2, #e8e8f0);
+  border-left: 6px solid var(--rarity);
+  border-radius: 6px;
+}
+
+.gem-info-name {
+  font-family: var(--title);
+  font-size: 11px;
+  color: var(--rarity);
+}
+
+.gem-info small,
+.gem-info-hint {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.05;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-info .gem-info-misfit {
+  color: #c03040;
+}
+
+.gem-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.gem-note {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.05;
+  color: #2f9a40;
+}
+
+.gem-note.bad {
+  color: #c03040;
+}
+
+.gem-browse {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gem-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gem-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 2px 8px;
+  font-family: var(--title);
+  font-size: 8px;
+  color: var(--dk-ink, #303040);
+  background: var(--dk-surface-2, #e8e8f0);
+  border: 2px solid transparent;
+  border-radius: 99px;
+}
+
+.gem-filter img {
+  width: 12px;
+  height: 12px;
+  image-rendering: pixelated;
+  filter: invert(0.85);
+}
+
+.gem-filter.on {
+  color: #fff;
+  background: #283040;
+}
+
+.gem-filter.on img {
+  filter: none;
+}
+
+.gem-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+}
+
+.gem-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  color: var(--dk-ink, #303040);
+  background: var(--dk-surface-0, #fff);
+  border: 3px solid var(--rarity);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.gem-item.chosen {
+  box-shadow: 0 0 0 3px var(--dk-ink, #283040);
+}
+
+.gem-item-art {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--rarity);
+  border-radius: 6px;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.2);
+}
+
+.gem-item-art img {
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+}
+
+.gem-item.legendary .gem-item-art {
+  background: linear-gradient(135deg, #f8d870, var(--rarity) 60%);
+}
+
+.gem-item-name {
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1;
+  text-align: center;
+}
+
+.gem-item-tag {
+  font-family: var(--title);
+  font-size: 8px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-item.owned .gem-item-tag {
+  color: #2f9a40;
+}
+
+.gem-item-misfit {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-style: normal;
+  color: #fff;
+  background: #c03040;
+  border-radius: 99px;
+}
+
+/* An item that only shows in the Arena (`arenaOnly`): a small tag on its card's corner and on its locker row. */
+.gem-item-arena {
+  padding: 2px 3px 1px;
+  font-family: var(--title);
+  font-size: 6px;
+  font-style: normal;
+  line-height: 1;
+  color: #fff;
+  background: #3868d8;
+  border-radius: 3px;
+}
+
+.gem-item > .gem-item-arena {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+}
+
+.gem-slot-head .gem-item-arena {
+  margin-left: auto;
+}
+
+.gem-receipts summary {
+  min-height: 32px;
+  font-family: var(--title);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.gem-receipt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gem-receipt-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--dk-surface-2, #e8e8f0);
+  border-radius: 6px;
+}
+
+.gem-receipt-list li span {
+  display: flex;
+  flex-direction: column;
+}
+
+.gem-receipt-list b {
+  font-family: var(--title);
+  font-size: 9px;
+}
+
+.gem-receipt-list small {
+  font-family: var(--body);
+  font-size: 15px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-receipt-list .up {
+  color: #2f9a40;
+}
+
+.gem-receipt-list .down {
+  color: #c03040;
+}
+
+/* Visual: the big preview beside the roster to preview, then a row per slot. */
+.gem-locker-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.gem-locker-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gem-save {
+  max-width: 300px;
+  margin: 0;
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.05;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-save.saved {
+  color: #2f9a40;
+}
+
+.gem-save.local {
+  color: #b07010;
+}
+
+.gem-locker-picks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.gem-pick-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 6px;
+}
+
+.gem-pick {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 2px;
+  background: var(--dk-surface-2, #e8e8f0);
+  border: 3px solid transparent;
+  border-radius: 8px;
+}
+
+.gem-pick img {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.gem-pick.on {
+  background: var(--dk-surface-0, #fff);
+  border-color: #283040;
+}
+
+.gem-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.gem-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--dk-surface-2, #e8e8f0);
+  border-radius: 8px;
+}
+
+.gem-slot-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gem-slot-head img {
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  background: #283040;
+  border-radius: 4px;
+  image-rendering: pixelated;
+}
+
+.gem-slot-head b {
+  font-family: var(--title);
+  font-size: 9px;
+}
+
+.gem-slot-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gem-slot-empty {
+  font-family: var(--body);
+  font-size: 16px;
+  color: var(--dk-ink-3, #8088a0);
+}
+
+.gem-wear {
+  position: relative;
+  min-height: 34px;
+  padding: 2px 10px;
+  font-family: var(--body);
+  font-size: 17px;
+  color: var(--dk-ink, #303040);
+  background: var(--dk-surface-0, #fff);
+  border: 2px solid var(--rarity, #8088a0);
+  border-radius: 6px;
+}
+
+.gem-wear.on {
+  color: #fff;
+  background: var(--rarity, #283040);
+  border-color: var(--rarity, #283040);
+}
+
+.gem-wear .gem-item-misfit {
+  top: -6px;
+  right: -6px;
+}
+
+.gem-empty {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+/* The checkout's sheets. */
+.dialog.gem-sheet {
+  position: relative;
+  align-items: center;
+  width: min(380px, 92 * var(--vw));
+  gap: 8px;
+  text-align: center;
+}
+
+.gem-sheet-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.gem-sheet-gems {
+  font-family: var(--title);
+  font-size: 16px;
+}
+
+.gem-sheet-split,
+.gem-sheet-status,
+.gem-sheet p {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 18px;
+  line-height: 1.05;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-sheet-price {
+  font-family: var(--title);
+  font-size: 14px;
+  color: #6a30a8;
+}
+
+.gem-pay-list {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 8px;
+}
+
+.gem-pay.pix {
+  color: #fff;
+  background: #32bcad;
+}
+
+.gem-pay:disabled {
+  opacity: 0.5;
+}
+
+.gem-return-icon {
+  width: 52px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.gem-return-title {
+  font-family: var(--title);
+  font-size: 13px;
+}
+
+.gem-sheet.landed .gem-return-title {
+  font-size: 18px;
+  color: #6a30a8;
+}
+
+.gem-return-burst {
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  pointer-events: none;
+}
+
+.gem-spark {
+  position: absolute;
+  width: 13px;
+  height: 10px;
+  image-rendering: pixelated;
+  animation: gem-burst 0.9s ease-out forwards;
+}
+
+.gem-spark.s0 { --dx: -70px; --dy: -30px; }
+.gem-spark.s1 { --dx: 70px; --dy: -30px; }
+.gem-spark.s2 { --dx: -90px; --dy: 10px; }
+.gem-spark.s3 { --dx: 90px; --dy: 10px; }
+.gem-spark.s4 { --dx: -50px; --dy: 40px; }
+.gem-spark.s5 { --dx: 50px; --dy: 40px; }
+.gem-spark.s6 { --dx: -20px; --dy: -50px; }
+.gem-spark.s7 { --dx: 20px; --dy: -50px; }
+
+@keyframes gem-burst {
+  from {
+    transform: translate(0, 0) scale(2);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--dx), var(--dy)) scale(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-seat-title.legendary {
+    animation: none;
+  }
+  .gem-spark,
+  .gem-packs.nudge .gem-pack {
+    animation: none;
+  }
+}
+
+/* Phones upright: the packs scroll sideways, the preview stacks above the items. */
+@media (max-width: 640px) {
+  .gem-pack-grid {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 2px 4px;
+    scroll-snap-type: x mandatory;
+  }
+  .gem-pack {
+    flex: 0 0 112px;
+    scroll-snap-align: start;
+  }
+  .gem-catalog-main {
+    grid-template-columns: 1fr;
+  }
+  .gem-try {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+  .gem-try .gem-stage-canvas {
+    width: 96px;
+    height: 88px;
+  }
+  .gem-try .gem-note {
+    grid-column: 1 / -1;
+  }
+  .gem-items {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  }
+  .gem-locker-top {
+    grid-template-columns: 1fr;
+  }
+  .gem-locker-stage {
+    align-items: center;
+  }
+  .gem-stage.big .gem-stage-canvas {
+    width: 192px;
+    height: 176px;
+  }
+  .gem-pick-list {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .gem-pick {
+    flex: 0 0 52px;
+  }
+  .gem-slots {
+    grid-template-columns: 1fr;
+  }
+  .arena-title .gem-chip {
+    order: 5;
+  }
+}
+
+/* Phones on their side: a shorter preview. */
+@media (max-height: 500px) {
+  .gem-stage-canvas,
+  .gem-stage.big .gem-stage-canvas {
+    width: 96px;
+    height: 88px;
+  }
+  .gem-pack {
+    min-height: 112px;
+  }
+  .gem-locker-top {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+/* ---------- Boutique (ui/boutique.ts) ---------- */
+/* Leavanny's sheet is the shop's panel (`.shop-sheet`): the same place, size and touch scrolling, holding the gem shop's pages. */
+
+.boutique-sheet .shop-head .gem-chip {
+  flex: none;
+}
+
+.boutique-sheet .shop-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-block: 4px;
+}
+
+.boutique-sheet .shop-tab img,
+.shop-tab.boutique-tab img {
+  width: 26px;
+  height: 20px;
+  margin: -2px 0;
+  image-rendering: pixelated;
+}
+
+.boutique-sheet .shop-tab.locker img {
+  width: 24px;
+  height: 24px;
+}
+
+.shop-sheet > .boutique-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 2px;
+}
+
+.boutique-body:focus {
+  outline: none;
+}
+
+/* The Kecleon shop's Boutique button, after its tabs: Leavanny's leaf green, with a gem. */
+.shop-tab.boutique-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-block: 4px;
+  color: #f4ffe8;
+  background: #3f8f3a;
+}
+
+.shop-tab.boutique-tab[hidden] {
+  display: none;
+}
+
+.shop-tab.boutique-tab img {
+  width: 13px;
+  height: 10px;
+  margin: 0;
+}
+
+/* NOVO inside a button that scrolls with its row (the shop's tabs, the Trainer Card's rows): in the flow, not on the corner. */
+.shop-tab .boutique-new,
+.trainer-row .boutique-new {
+  position: static;
+  flex: none;
+}
+
+.trainer-row img[src^='data:'] {
+  image-rendering: pixelated;
+}
+
+/* The sheet is narrower than the Arena hub: the gem pages take their phone layout inside it. */
+@container shop (max-width: 560px) {
+  .boutique-body .gem-pack-grid {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 2px 4px;
+    scroll-snap-type: x mandatory;
+  }
+  .boutique-body .gem-pack {
+    flex: 0 0 112px;
+    scroll-snap-align: start;
+  }
+  .boutique-body .gem-catalog-main {
+    grid-template-columns: 1fr;
+  }
+  .boutique-body .gem-try {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+  .boutique-body .gem-try .gem-stage-canvas {
+    width: 96px;
+    height: 88px;
+  }
+  .boutique-body .gem-try .gem-note {
+    grid-column: 1 / -1;
+  }
+  .boutique-body .gem-items {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  }
+  .boutique-body .gem-locker-top {
+    grid-template-columns: 1fr;
+  }
+  .boutique-body .gem-locker-stage {
+    align-items: center;
+  }
+  .boutique-body .gem-stage.big .gem-stage-canvas {
+    width: 192px;
+    height: 176px;
+  }
+  .boutique-body .gem-pick-list {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .boutique-body .gem-pick {
+    flex: 0 0 52px;
+  }
+  .boutique-body .gem-slots {
+    grid-template-columns: 1fr;
   }
 }

@@ -2,6 +2,7 @@ import { accountHandle, accountsEnabled, sessionToken } from './account'
 import { track, type RunPerf } from './analytics'
 import { bank, bankKey, paysAnything, type BankDelta, type Store } from './coop/bank'
 import { createBot, botPick, type Bot } from './coop/bot'
+import { COSMETIC_IDS, slotOf, type CosmeticSlot } from './data/cosmetics'
 import { coopGuestId, createCoopClient, webSocket, type CoopClient, type CoopDeps } from './coop/client'
 import { measureRelay, type VpsUrls } from './coop/relays'
 import type { QueueDeps } from './arena/queue'
@@ -15,7 +16,7 @@ import { coopPayout, playerDexLog } from './game/coop'
 import { mergeDex, recordRun, type Pokedex } from './game/dex'
 import { localPlayer } from './game/players'
 import type { Game, GameEvent } from './game/types'
-import { ROOM_PARAM, VPS_HOMES, parseRoomCode, type VpsHome } from './net/protocol'
+import { ROOM_PARAM, VPS_HOMES, parseRoomCode, type VpsHome, type WireLook } from './net/protocol'
 import { timeoutSignal } from './net/timeout'
 import { REF_PARAM } from './game/referral'
 import { ROUTES } from './site/routes'
@@ -394,6 +395,35 @@ export const setBotRelays = (spec: string | null) => {
   return botRelays
 }
 
+/** Dev: the look each of the tab's bots wears (`botLook`). */
+const botLooks = new Map<Bot, WireLook>()
+
+/** The slots a dev bot dresses: worn, a follower, a trail and a plate, so a room or a run shows every kind arriving. */
+const BOT_SLOTS = ['head', 'face', 'neck', 'back', 'follower', 'trail', 'plate'] as const satisfies readonly CosmeticSlot[]
+
+/** Dev: bot `k`'s look, a different item of each slot per bot, every slot but one in turn (the Arena's moments too, its emote and effects). */
+const botLook = (k: number): WireLook => {
+  const look: Record<string, string> = {}
+  BOT_SLOTS.forEach((slot, i) => {
+    const ids = COSMETIC_IDS.filter((id) => slotOf(id) === slot)
+    if (ids.length > 0 && (k + i) % BOT_SLOTS.length !== 0) look[slot] = ids[(k * 7 + i * 3) % ids.length]!
+  })
+  const arena = COSMETIC_IDS.filter((id) => !(BOT_SLOTS as readonly string[]).includes(slotOf(id)))
+  const extra = arena[k % arena.length]
+  if (extra) look[slotOf(extra)] = extra
+  return look
+}
+
+/**
+ * Dev: the look the tab's bot in `seat` wears, or null for another client.
+ * The relay keeps only the looks the API vouches for, and a bot is a guest,
+ * so this tab dresses its bots' seats itself (`main.ts`, as a run starts).
+ */
+export const tabBotLook = (seat: number): WireLook | null => {
+  for (const [bot, look] of botLooks) if (bot.client.state().seat === seat) return look
+  return null
+}
+
 /** Dev: `n` bots join room `code` (they set a loadout and get ready; the soak's bots in a tab). */
 export const addBots = async (code: string, n: number) => {
   const url = coopUrl()
@@ -406,7 +436,10 @@ export const addBots = async (code: string, n: number) => {
     bots.push(bot)
     const res = await bot.client.join(code)
     if (!res.ok) continue
-    bot.client.setLoadout(botPick(k + 1))
+    // Each bot wears a look of its own (`botLook`), so a room shows every seat's look arriving.
+    const look = botLook(k)
+    botLooks.set(bot, look)
+    bot.client.setLoadout({ ...botPick(k + 1), look })
     setTimeout(() => bot.client.setReady(true), 300)
     // After a run the relay clears everyone's ready: a bot is ready for "Jogar de novo" a moment later.
     bot.client.on((e) => {
@@ -440,6 +473,7 @@ export const botsTalk = (msg: QuickChat, ping: PingKind) => {
 
 export const removeBots = () => {
   for (const b of bots.splice(0)) b.client.leave()
+  botLooks.clear()
   if (botLoop !== null) clearInterval(botLoop)
   botLoop = null
 }

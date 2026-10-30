@@ -34,12 +34,13 @@ import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
 import { isLegend } from './data/legends'
-import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
+import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
 import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
+import { openBoutique, type BoutiqueTab } from './ui/boutique'
 import { identify, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
 import type { Crumb, CrumbMoment } from './crumb'
@@ -150,7 +151,7 @@ import { challengeScreen, challengeShiny } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
 import { martDevTools } from './ui/martDev'
-import { CARAVAN, STALL_IDS, STALLS, type StallId } from './data/visitors'
+import { CARAVAN, STALL_IDS, STALLS, TAILOR, type StallId } from './data/visitors'
 import { nextMilestone } from './game/loyalty'
 import { plazaVisitors, setDevCaravan, setDevStall } from './ui/visitors'
 import { missionDevTools } from './ui/missionsDev'
@@ -178,7 +179,7 @@ import { suggestionsScreen } from './ui/suggestions'
 import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
-import { activeCoopClient, addBots, arenaClient, botsTalk, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
+import { activeCoopClient, addBots, arenaClient, botsTalk, tabBotLook, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
 import { isQuickChat } from './game/versusSocial'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
@@ -198,7 +199,9 @@ import type { Runner } from './coop/runner'
 import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
-import { arenaFormat, arenaPick, arenaScreen } from './ui/arena'
+import { arenaFormat, arenaPick, arenaScreen, keepArenaPick } from './ui/arena'
+import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, takeCheckoutReturn } from './gems'
+import { isGemPackId } from './data/gems'
 import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
 import { arenaHub, isArenaHubTab, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaHub'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
@@ -210,6 +213,11 @@ import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked
 import { arenaResult } from './game/arenaRank'
 import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
+import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
+import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
+import { freeWearables } from './render/wearables'
+import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, type Look, type CosmeticSlot } from './data/cosmetics'
+import { effectIn } from './data/arenaEffects'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
 import { createVersusTalk, type VersusTalk } from './ui/versusTalk'
 import { createArenaControls, type ArenaControls } from './ui/arenaControls'
@@ -495,8 +503,8 @@ const refreshVisitors = (now: number) => {
   if (fest.fountain !== had.fountain || fest.stage !== had.stage || fest.running !== had.running) scene.plaza.festival = fest
 }
 
-/** The shop over the plaza; `close` leaves it (and `?loja` behind); `shelf` opens on Meowth's caravan or a seasonal stall's shelf; `festival` swaps it for the festival's sheet. */
-const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void) => {
+/** The shop over the plaza; `close` leaves it (and `?loja` behind); `shelf` opens on Meowth's caravan or a seasonal stall's shelf; `festival` swaps it for the festival's sheet, `boutique` walks over to Leavanny's. */
+const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void, boutique?: () => void) => {
   const won = wonLastRun
   wonLastRun = false
   return shop(ui, input, {
@@ -504,11 +512,44 @@ const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void
     wonLastRun: won,
     shelf,
     festival,
+    boutique,
     close: () => {
       if (new URLSearchParams(location.search).has(SHOP_PARAM)) history.replaceState(null, '', location.pathname)
       close()
     },
   })
+}
+
+/** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
+let boutiqueCheckout: string | null = null
+
+/** Leavanny's Boutique over the plaza's east end (`ui/boutique.ts`); closing it leaves `?boutique` behind too. */
+const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
+  const checkout = boutiqueCheckout
+  boutiqueCheckout = null
+  return openBoutique(ui, input, {
+    tab,
+    checkout,
+    signIn: accountsEnabled ? () => void signIn() : null,
+    pick: arenaStart(),
+    keepPick: keepArenaPick,
+    close: () => {
+      if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) history.replaceState(null, '', location.pathname)
+      close()
+    },
+  })
+}
+
+/**
+ * The Boutique without the walk (the Arena's gem chip and Loja, the Trainer
+ * Card's look, `?boutique`, a checkout's return): the lobby lands at the
+ * plaza's east end with the sheet open on `tab`; leaving it calls `back`
+ * when given (where it came from), else pans home. `checkout`: the
+ * `?gems=<ref>` the Loja waits on.
+ */
+const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null) => {
+  boutiqueCheckout = checkout
+  showTitle({ shop: tab === 'locker' ? 'locker' : 'boutique', instant: true, ...(back && { back }) })
 }
 
 const queueMega = () => {
@@ -621,9 +662,18 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
         scene.plaza.focus = 'fountain'
         return openFestival(ui, input, () => ((scene.plaza.focus = 0), close()), tab)
       },
+      boutique: openBoutiqueSheet,
       // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
       trainer: (focus) =>
-        trainerCardScreen(ui, input, { supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null) }, () => showTitle({ focus })),
+        trainerCardScreen(
+          ui,
+          input,
+          {
+            supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null),
+            locker: () => showBoutique('locker', () => showTitle({ focus })),
+          },
+          () => showTitle({ focus }),
+        ),
       ranking: rankingEnabled ? (focus) => rankingScreen(ui, input, () => showTitle({ focus }), { difficulty: loadSave().difficulty, mode: runMode(loadSave().partner) }) : undefined,
       ideas: rankingEnabled ? (focus) => suggestionsScreen(ui, input, () => showTitle({ focus })) : undefined,
       supporters: (focus, open) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: () => showTitle({ focus }) }, open),
@@ -662,6 +712,27 @@ const showMenu = (initial: PlayableId = loadSave().partner) => {
     incubator: () => showIncubator(() => showMenu(select.selected())),
   }, initial)
   setScreen(select)
+}
+
+/**
+ * A solo run's looks (and the Dojo's, `render/looks.ts`): this player's own
+ * in seat 0, as the account wears and owns it. The shop's answers reach it
+ * mid-run (`onGems`); co-op and the Arena take each seat's from the room.
+ */
+const wearOwnLook = () => {
+  setLooksGame(null)
+  setLooks([parseLook(equippedLook())])
+}
+
+onGems(() => {
+  if (run && !run.coop) setLooks([parseLook(equippedLook())])
+})
+
+/** A game ended: its looks and their effects go (the next one dresses again). */
+const takeOffLooks = () => {
+  resetArenaFx()
+  setLooks([])
+  setLooksGame(null)
 }
 
 /** The save's companion for a run starting now, if the account's tier still allows it (`knownTier`; its sprites start loading). */
@@ -923,6 +994,7 @@ const endRun = () => {
   run.closeText?.()
   run.hud.dispose()
   clearToasts(ui)
+  takeOffLooks()
   run = null
   syncRunWatch()
 }
@@ -1014,6 +1086,8 @@ const menuSprites = (): Variant[] => [
     ...new Set([
     ...(halloweenToday() ? HAUNT_DEX : []),
     KECLEON_DEX,
+    // Leavanny at the Boutique, the plaza's east end.
+    TAILOR.dex,
     // The Dojo's Machoke and Wobbuffet, west of home, and the Estádio's Ninjask, south of it.
     ...DOJO_DEX,
     ...STADIUM_DEX,
@@ -1196,6 +1270,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     training: null,
   }
   if (run.companion) run.sprites.always.push(run.companion.dex)
+  wearOwnLook()
   // The menus' sheets age out from here; the run's next stage starts streaming.
   syncSprites()
   // The crash watch holds the run from now on (`bugReport.ts`), and the run's own peaks and frames start here.
@@ -1310,6 +1385,7 @@ const startDojo = async (starter: PlayableId) => {
       training: null,
     }
     if (r.companion) r.sprites.always.push(r.companion.dex)
+    wearOwnLook()
     const name = PLAYABLE[starter].name
     const forget = () =>
       loadSave().builds[starter]
@@ -1379,6 +1455,7 @@ const endDojo = (r: Run, dojo: DojoRun) => {
   r.closeText?.()
   r.hud.dispose()
   clearToasts(ui)
+  takeOffLooks()
   run = null
   syncRunWatch()
 }
@@ -2148,7 +2225,7 @@ for (const type of ['pointerdown', 'pointerup', 'touchend'] as const) window.add
 // No pinch/double-tap zoom, pull-to-refresh, rubber-banding or long-press menus.
 // CSS `touch-action` covers most browsers; these guards cover iOS Safari quirks.
 // A one-finger drag still scrolls inside a screen or the Kecleon Shop's panel, which lives over the plaza, outside any screen
-// (the Festival da Praça's sheet is one too: `.shop-sheet.festival-sheet`).
+// (the Festival da Praça's and the Boutique's sheets are too: `.shop-sheet.festival-sheet`, `.shop-sheet.boutique-sheet`).
 const blockDefault = (e: Event) => e.preventDefault()
 document.addEventListener('contextmenu', blockDefault)
 document.addEventListener('gesturestart', blockDefault)
@@ -2231,6 +2308,8 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   c.versus?.tray.dispose()
   c.versus?.talk.dispose()
   c.versus?.controls.dispose()
+  takeOffLooks()
+  freeWearables()
   clearToasts(ui)
   run = null
   syncRunWatch()
@@ -2377,6 +2456,12 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
       : null,
   }
   const me = localPlayer(live.game)
+  // Each seat's look, in a co-op run as in the Arena, as the relay vouched for it; this player's own previews what it
+  // equipped (shell state: the simulation never sees it). Dev: the tab's bots wear their own (`tabBotLook`).
+  const seatLook = (p: (typeof live.start.players)[number], i: number) =>
+    i === me.slot ? equippedLook() : (p.loadout.look ?? (import.meta.env.DEV ? tabBotLook(p.seat) : null))
+  setLooks(live.start.players.map((p, i) => parseLook(seatLook(p, i))))
+  setLooksGame(`${live.room}:${live.start.id}`)
   run = {
     game: live.game,
     hud: coopRunHud(c),
@@ -2455,7 +2540,11 @@ const VERSUS_OWN: ReadonlySet<GameEvent['kind']> = new Set<GameEvent['kind']>(['
  * theirs). No co-op faints or revives: a knockout is the match's.
  */
 const versusEvent = (r: Run, g: Game, e: GameEvent, actor: number) => {
-  if (isVersusEvent(e)) return versusFeedback(ui, g, e)
+  if (isVersusEvent(e)) {
+    // The seats' cosmetic effects (spawn, KO, goal) play from the same moments (`render/arenaFx.ts`).
+    arenaFxEvent(g, e)
+    return versusFeedback(ui, g, e)
+  }
   const me = localPlayer(g)
   switch (e.kind) {
     case 'fainted':
@@ -2547,7 +2636,7 @@ const joinCoop = async (code: string, via: 'code' | 'link' | 'invite' | null, pi
   if (via) track('coop', { step: 'join', via })
   // The room it landed in: an old link's room may have moved (`moved`).
   linkRoom(res.room.code)
-  client.setLoadout(pick ?? (parseSettings(res.room.settings).mode === 'versus' ? arenaLoadout(arenaStart(), 0) : coopLoadout()))
+  client.setLoadout(pick ?? (parseSettings(res.room.settings).mode === 'versus' ? arenaLoadout(arenaStart(), 0, equippedLook()) : coopLoadout()))
   const me = res.room.members.find((m) => m.seat === res.seat)
   if (me && !me.host) client.setReady(true)
   return res
@@ -2926,6 +3015,7 @@ const showArena = () => {
       friends: relay ? (id, format) => void openArenaRoom(id, format) : null,
       needsAccount: coopAccess(accountsEnabled, accountState()) !== 'open',
       hub: () => showArenaHub('profile'),
+      shop: () => showBoutique('shop', () => showArena()),
       back: () => showTitle({ focus: 'arena' }),
     }),
   )
@@ -2933,16 +3023,21 @@ const showArena = () => {
 
 /**
  * The Arena's hub (`ui/arenaHub.ts`) on `tab`: profile, season, ranking,
- * history or rules. The Arena screen opens it, and so do the lobby's Stadium
- * boards; Voltar goes back to the Arena screen.
+ * history, rules or the look worn (Visual). The Arena screen opens it, and so
+ * do the lobby's Stadium boards; Voltar goes back to the Arena screen. Its
+ * Loja is the Boutique's (`showBoutique`), which comes back to the hub.
  */
 const showArenaHub = (tab: ArenaHubTab = 'profile') => {
+  if (tab === 'shop') return showBoutique('shop', () => showArenaHub('profile'))
   endRun()
   reportArenaOpen('hub')
   setScreen(
     arenaHub(ui, input, tab, {
       back: () => showArena(),
       signIn: accountsEnabled ? () => setScreen(arenaGate(ui, input, { play: () => showArenaHub(tab), back: () => showArenaHub(tab) })) : null,
+      pick: arenaStart(),
+      keepPick: keepArenaPick,
+      shop: (from) => showBoutique('shop', () => showArenaHub(from)),
     }),
   )
 }
@@ -3096,7 +3191,7 @@ const joinQueueMatch = async (client: CoopClient, room: string, id: VersusPick, 
     return showArena()
   }
   linkRoom(res.room.code)
-  client.setLoadout(arenaLoadout(id, team))
+  client.setLoadout(arenaLoadout(id, team, equippedLook()))
   client.setReady(true)
   setTimeout(() => screen === waiting && run?.coop?.runner.room !== room && showRoom(), MATCH_START_MS)
 }
@@ -3135,7 +3230,7 @@ const playArenaBots = async (id: VersusPick, format: ArenaFormat, map: MapId | n
   if (arenaClient() !== client) return
   if (!res.ok) return failed()
   client.setSettings({ difficulty: 'normal', mode: 'versus', format, ...(map && { map }) })
-  client.setLoadout(arenaLoadout(id, 0))
+  client.setLoadout(arenaLoadout(id, 0, equippedLook()))
   await queue.filled()
   if (arenaClient() !== client) return
   await queue.found()
@@ -3161,7 +3256,7 @@ const openArenaRoom = async (id: VersusPick, format: ArenaFormat) => {
     return showArena()
   }
   // The seat takes the Arena pick as it joins, before the room turns Arena: a co-op loadout there would be swapped by `syncArenaLoadout`.
-  const res = await joinCoop(made.code, null, arenaLoadout(id, 0))
+  const res = await joinCoop(made.code, null, arenaLoadout(id, 0, equippedLook()))
   if (!res.ok) {
     toast(ui, closedText(res.why), 4000, 'arenaFailed')
     return showArena()
@@ -3180,7 +3275,7 @@ const showArenaRoomPick = () => {
   setScreen(
     arenaScreen(ui, input, arenaStart(), {
       choose: (id) => {
-        client?.setLoadout(arenaLoadout(id, team))
+        client?.setLoadout(arenaLoadout(id, team, equippedLook()))
         setTimeout(showRoom, 150)
       },
       back: () => showRoom(),
@@ -3197,7 +3292,7 @@ const syncArenaLoadout = (client: CoopClient, room: RoomView) => {
   if (parseSettings(room.settings).mode !== 'versus') return
   const me = room.members.find((m) => m.seat === client.state().seat)
   if (!me?.loadout) return
-  const next = arenaSeat(parseLoadout(me.loadout), arenaStart())
+  const next = arenaSeat(parseLoadout(me.loadout), arenaStart(), equippedLook())
   if (next) client.setLoadout(next)
 }
 
@@ -3440,6 +3535,8 @@ const showSharedProfile = (handle: string) => {
 const IDEAS_PARAM = 'ideias'
 /** `?loja`, the Kecleon's shop's own link: the lobby opens at the plaza, Kecleon says hello and the shop opens. */
 const SHOP_PARAM = 'loja'
+/** `?boutique`, Leavanny's Boutique's own link: the lobby opens at the plaza's east end with the Boutique open on Loja. */
+const BOUTIQUE_PARAM = 'boutique'
 
 const showIdeasLink = () =>
   setScreen(
@@ -3597,11 +3694,15 @@ const boot = () => {
   // Someone's link (`?ref=`, a profile): remember who brought this device, before anything reads the URL.
   captureRef()
   const shared = rankingEnabled ? parseHandle(new URLSearchParams(location.search).get(PROFILE_PARAM)) : null
+  const checkoutRef = takeCheckoutReturn()
   const poll = accountsEnabled ? linkedPoll() : null
   if (shared) showSharedProfile(shared)
   else if (rankingEnabled && new URLSearchParams(location.search).has(IDEAS_PARAM)) showIdeasLink()
   else if (new URLSearchParams(location.search).has(SHOP_PARAM)) showTitle({ shop: 'shop', instant: true })
+  else if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) showBoutique('shop')
   else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
+  // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack.
+  else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
   else if (poll) showPollLink(poll)
   // Back from signing in, the player already pressed start before leaving: straight to the menu.
   else showTitle({ intro: !backFromSignIn() })
@@ -4126,6 +4227,78 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
   return "ps.arena('hub', tab) · ('fake', scenario?) · ('queue', 'ranked' | 'casual', 'match' | 'downgrade' | 'hold' | 'blocked') · ('end', kind) · ('season', 'pre' | 'on')"
 }
 
+/**
+ * Dev: stages the cosmetics (`data/arenaEffects.ts`, `render/arenaFx.ts`) in a run (`ps.startRun('charmander')`,
+ * a co-op one) or a match against bots (`ps.versus('charmander')`). `ps.look({ trail: 'emberTrail', follower:
+ * 'mewFollower' })` puts those on this player's seat, over what it wears (`{}` keeps it; `ps.look('clear')` takes
+ * everything off), and on the hub's profile too (a seat number after the look dresses that seat instead);
+ * `ps.look('bots')` dresses every other seat at random; `ps.look('emote')` plays the equipped emote (as B does, in
+ * a match); `ps.look('play', 'koSupernova')` plays a spawn, KO or goal effect at your feet. Returns the looks by
+ * seat (no argument: with the effects' particle counts too). A run shows only what its mode does (`SLOT_MODES`).
+ */
+const devLook = (cmd?: Look | 'bots' | 'emote' | 'play' | 'clear', arg?: string | number) => {
+  const c = run?.coop
+  const g = c ? c.runner.game : run?.game
+  if (!run || !g) return "ps.look: start a run or a match first (ps.startRun('charmander'), ps.versus())"
+  const me = c ? c.runner.slot : 0
+  const looks = g.players.map((p) => ({ ...lookOf(p.slot) }))
+  if (cmd === undefined) return { looks, fx: arenaFxStats(), lean: detail.lean }
+  if (cmd === 'emote') return c?.driver.send({ kind: 'emote' }), looks[me]
+  if (cmd === 'play') {
+    const id = String(arg)
+    const def = effectIn('spawn', id) ?? effectIn('ko', id) ?? effectIn('goal', id)
+    if (!def) return `ps.look('play', id): one of ${COSMETIC_IDS.filter((id) => ['spawn', 'ko', 'goal'].includes(slotOf(id))).join(', ')}`
+    const p = localPlayer(c ? c.view.game : g)
+    playBurst(def.burst, p.x, p.y, p.versus?.team ?? 0)
+    return arenaFxStats()
+  }
+  if (cmd === 'bots') {
+    const bySlot = (slot: CosmeticSlot) => COSMETIC_IDS.filter((id) => slotOf(id) === slot)
+    looks.forEach((look, i) => {
+      if (i === me) return
+      for (const slot of COSMETIC_SLOTS) {
+        const ids = bySlot(slot)
+        if (ids.length > 0 && Math.random() < 0.8) look[slot] = ids[Math.floor(Math.random() * ids.length)]!
+      }
+    })
+  } else if (cmd === 'clear') looks[me] = {}
+  else if (cmd) {
+    const seat = typeof arg === 'number' && looks[arg] ? arg : me
+    looks[seat] = { ...looks[seat], ...parseLook(cmd) }
+  }
+  setLooks(looks)
+  setLocalLook(looks[me] ?? {})
+  return looks
+}
+
+/**
+ * Dev: the Arena's gem shop from the console (`gems.ts`, `ui/gemShop.ts`).
+ * `ps.gems()` prints what the shop knows (and the look a match would carry);
+ * `ps.gems('fake', 1250)` makes every call answer made-up data from that
+ * balance, a third of the catalog owned, and the shop act as signed in
+ * (`'off'` back to the API); `('balance', n)` sets the balance, `('own', id)`
+ * owns a cosmetic (all without one); `('return', 'chest')` comes back from a
+ * checkout of that pack (`'never'`: the gems never land and the wait runs
+ * out); `('shop')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
+ */
+const devGems = (cmd?: string, arg?: string | number) => {
+  if (cmd === 'fake') {
+    fakeGems(arg !== 'off', typeof arg === 'number' ? arg : undefined)
+    return arg === 'off' ? 'Gems: the API again' : `Gems: fake (${knownGems()?.balance ?? 0})`
+  }
+  if (cmd === 'balance') stageGems({ balance: Number(arg ?? 0) })
+  else if (cmd === 'own') {
+    if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
+    stageGems({ own: arg === undefined ? 'all' : [arg] })
+  } else if (cmd === 'return') {
+    showBoutique('shop', undefined, stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
+  } else if (cmd === 'shop' || cmd === 'locker') showBoutique(cmd)
+  else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
+  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('shop') · ('locker') · ('fetch')"
+  // In a run or a match, each seat's look as the shell holds it.
+  return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
+}
+
 // `ps.biome('cave')` and `ps.weather('rain')` stage a run for screenshots (they hold until the next scheduled change).
 if (import.meta.env.DEV) {
   const withRun = (fn: (g: Game) => void) => (run ? fn(run.game) : console.warn('ps: start a run first'))
@@ -4138,6 +4311,13 @@ if (import.meta.env.DEV) {
       coop: devCoop,
       versus: devVersus,
       arena: devArena,
+      /** The wearables (`ui/wearFitting.ts`, loaded on demand): `ps.wear('topHat')` on your Pokémon in a run or a match, `ps.wear('fit', 'topHat')` the fitting gallery. */
+      wear: (cmd?: string, arg?: unknown, more?: unknown, extra?: unknown) =>
+        import('./ui/wearFitting').then((m) =>
+          m.devWear({ seat: () => (run ? (run.coop?.runner.slot ?? 0) : null), seats: () => run?.game.players.length ?? 0 }, cmd, arg, more, extra),
+        ),
+      look: devLook,
+      gems: devGems,
       candyGoal: devCandyGoal,
       /**
        * `ps.festival(...)` (`devFestival`), plus `ps.festival('open')`: the lobby goes to the plaza and opens the festival's sheet,
@@ -4207,6 +4387,12 @@ if (import.meta.env.DEV) {
        * Histórico, Regras) open with E or a tap while the partner strolls by them.
        */
       stadium: () => showTitle({ shop: 'stadium' }),
+      /**
+       * Leavanny's Boutique at the plaza's east end: `ps.boutique()` walks the lobby there, Leavanny's hello included (the first
+       * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
+       * `ps.boutique('open')` lands there with the sheet open at once (`'locker'` on Visual).
+       */
+      boutique: (cmd?: 'open' | 'locker') => (cmd ? showBoutique(cmd === 'locker' ? 'locker' : 'shop') : showTitle({ shop: 'boutique' })),
       /**
        * The Kecleon plaza: `ps.plaza(3)` shows the shop's building at that level (1 to 5, until the next reload; `ps.plaza(0)`
        * goes back to the save's) and the lobby pans there for a look, cards out; Esc or Enter comes back.
