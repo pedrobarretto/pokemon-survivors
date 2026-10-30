@@ -8,6 +8,7 @@ import type { PokeType } from '../../data/types'
 import type { EggSource } from '../../game/eggs'
 import type { StatusKind } from '../../game/status'
 import type { Difficulty } from '../../game/difficulty'
+import type { Locale } from '..'
 import type { OurFacts } from '../../site/rivals'
 
 /** Number in Brazilian format (`1.250`, `0,75`). */
@@ -55,6 +56,7 @@ export const sitePt = {
     tierList: 'Tier list',
     legal: 'Legal',
     support: 'Apoie',
+    creators: 'Criadores',
     compare: 'Pokémon Survivors vs PokéSurvivor',
     alternatives: 'Jogos estilo Vampire Survivors',
     language: 'Idioma',
@@ -982,6 +984,29 @@ export const sitePt = {
     ],
     issues: 'Abrir uma issue no GitHub',
     source: 'Ver o código-fonte',
+  },
+  creators: {
+    title: 'Criadores: vídeos e lives de Pokémon Survivors',
+    description:
+      'Vídeos e lives de Pokémon Survivors feitos por quem joga, no YouTube e no TikTok. Grave o seu, mande no Discord e ganhe no jogo o título Criador(a) de Conteúdo e a moldura de criador.',
+    h1: 'Criadores',
+    lead: 'Vídeos e lives de quem joga Pokémon Survivors. Dê o play aqui mesmo e siga quem faz.',
+    videos: 'Vídeos',
+    people: 'Quem faz',
+    play: (title: string) => `Assistir: ${title}`,
+    watchOn: (platform: string) => `Ver no ${platform}`,
+    videoAbout: (name: string) => `Vídeo de Pokémon Survivors feito por ${name}.`,
+    langs: { pt: 'Em português', en: 'Em inglês', es: 'Em espanhol', fr: 'Em francês', zh: 'Em chinês' } satisfies Record<Locale, string>,
+    join: {
+      title: 'Faz vídeos do jogo?',
+      lead: 'Gameplay, live, guia, Short ou TikTok, em qualquer língua: todo vídeo do jogo pode entrar aqui.',
+      steps: [
+        'Publique o vídeo no YouTube, no TikTok ou onde preferir.',
+        'Mande o link no canal #screenshots-and-clips do nosso Discord.',
+        'Diga seu @ no jogo: você ganha o título Criador(a) de Conteúdo e a moldura de criador.',
+      ],
+      cta: 'Mandar meu vídeo no Discord',
+    },
   },
   compare: {
     title: 'Pokémon Survivors vs PokéSurvivor: são o mesmo jogo? As diferenças',

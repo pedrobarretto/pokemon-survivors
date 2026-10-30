@@ -12,6 +12,7 @@
     "roster": "node scripts/roster.mjs",
     "assets": "node scripts/fetch-assets.mjs",
     "credits": "node scripts/credits.mjs",
+    "creators": "node scripts/creators.mjs",
     "bodies": "node scripts/bodies.mjs",
     "determinism": "node scripts/determinism.mjs",
     "rules:freeze": "npm run rules:freeze --prefix server",
