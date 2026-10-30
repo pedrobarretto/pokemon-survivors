@@ -531,13 +531,15 @@ describeWith(() => {
   // The canvases the caches hold (`heldCanvases`) stand for the report's canvas memory.
   const memory = sampleMemory()
   const perf = { canvases: memory.canvases, canvasMb: memory.canvasMb, peakCanvases: memory.peakCanvases, peakCanvasMb: memory.peakCanvasMb, frameMs: recentFrameMs(frames), ...canvasLosses }
+  const played = { last: input.lastKind(), pads: input.pads() }
   const g = run && shownGame(run)
-  if (!g || g.phase === 'gameover' || g.phase === 'victory') return { view, run: null, perf, memory }
+  if (!g || g.phase === 'gameover' || g.phase === 'victory') return { view, run: null, perf, memory, input: played }
   const boss = g.bossId === null ? undefined : g.enemies.find((e) => e.id === g.bossId)
   return {
     view,
     perf,
     memory,
+    input: played,
     run: {
       partner: localPlayer(g).starter,
       form: playerName(g),

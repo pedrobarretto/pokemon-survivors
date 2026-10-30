@@ -1,3 +1,4 @@
+import type { InputKind } from '../game/bugReport'
 import { ACTIONS, keyCode, type Bindings, type Context } from './bindings'
 import { padActions, padChanges, readPads, type PadState } from './gamepad'
 import type { Vec } from './math'
@@ -26,6 +27,8 @@ export type Input = {
   activePad: () => string | null
   /** The ids of the gamepads the browser shows the game. A pad only appears after its first press. */
   pads: () => readonly string[]
+  /** What the player used last in a run (a match too), or anywhere before the first one; null before any input. For bug reports. */
+  lastKind: () => InputKind | null
   /**
    * Hands every raw key and pad button press to `take`, bypassing the bindings
    * and `onKey`, until the returned function is called (the remap screen).
@@ -164,11 +167,19 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   let padAim: Vec | null = null
   /** The context of the last poll: keys type by it too. */
   let context: Context = 'menu'
+  /** The input kind used last while playing, and anywhere (`lastKind`). */
+  let lastPlay: InputKind | null = null
+  let lastAny: InputKind | null = null
+  const used = (kind: InputKind) => {
+    lastAny = kind
+    if (context !== 'menu') lastPlay = kind
+  }
 
   window.addEventListener('keydown', (e) => {
     // Typing in a text field (the profile editor) or a Clerk modal (reverification) is not playing: they keep their keys.
     if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select, .cl-modalBackdrop')) return
     activePad = null
+    used('keyboard')
     if (capturing) {
       e.preventDefault()
       if (!e.repeat && e.code) capturing({ device: 'key', code: e.code })
@@ -209,6 +220,8 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
       // Not an active pointer (a synthetic event): the window's listeners still hear its end.
     }
   })
+  // Any press in the page, menus included, says what the player plays with.
+  window.addEventListener('pointerdown', (e) => used(e.pointerType === 'mouse' ? 'mouse' : 'touch'), { capture: true, passive: true })
   window.addEventListener('pointermove', (e) => (grip = gripMove(grip, e.pointerId, { x: e.clientX, y: e.clientY })))
   const release = (e: PointerEvent) => (grip = gripUp(grip, e.pointerId))
   window.addEventListener('pointerup', release)
@@ -243,6 +256,8 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
     const { buttons, stick: axes, fresh, freshStick, pressed, move, aim, pads: seen } = padChanges(pads, readPads())
     pads = seen
     if (pressed !== null) activePad = pressed
+    // A stick out of its dead zone counts even when it presses nothing: a drifting one is what walks the Pokémon.
+    if (pressed !== null || move.x !== 0 || move.y !== 0) used('gamepad')
     const pad = bindings().pad
     padHeld = playing ? padActions(pad, buttons, axes, now).map((a) => ACTIONS[a].code) : []
     padMove = playing ? move : { x: 0, y: 0 }
@@ -276,6 +291,7 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
     readAim: () => padAim,
     activePad: () => activePad,
     pads: () => pads.map((p) => p.id),
+    lastKind: () => lastPlay ?? lastAny,
     capture,
   }
 }

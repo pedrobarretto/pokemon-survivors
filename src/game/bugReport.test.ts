@@ -37,6 +37,16 @@ describe('parseBugReport', () => {
     expect(parseBugReport({ text: 'Older client', tech: { crash: {} } })!.tech).toMatchObject({ perf: null, crash: { perf: null } })
   })
 
+  it('rebuilds the input: a known kind or null, at most four pad ids, trimmed', () => {
+    const pads = ['  Xbox Wireless Controller (STANDARD GAMEPAD) ', '', 7, 'b', 'c', 'd', 'e']
+    expect(parseBugReport({ text: 'Keeps walking', tech: { input: { last: 'gamepad', pads } } })!.tech!.input).toEqual({
+      last: 'gamepad',
+      pads: ['Xbox Wireless Controller (STANDARD GAMEPAD)', 'b', 'c', 'd'],
+    })
+    expect(parseBugReport({ text: 'Keeps walking', tech: { input: { last: 'joystick' } } })!.tech!.input).toEqual({ last: null, pads: [] })
+    expect(parseBugReport({ text: 'Older client', tech: {} })!.tech!.input).toBeNull()
+  })
+
   it('drops a tech that is not an object', () => {
     expect(parseBugReport({ text: 'No tech here', tech: 'lots' })).toEqual({ text: 'No tech here', tech: null })
   })
