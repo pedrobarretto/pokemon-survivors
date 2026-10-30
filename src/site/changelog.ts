@@ -24,6 +24,25 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-10-30',
+    title: { pt: 'Correções de 30/10', en: 'Fixes for 10/30', es: 'Correcciones del 30/10', fr: 'Corrections du 30/10', zh: '10/30 修正' },
+    highlights: [
+      { pt: 'Golpes que te carregam (Aqua Step, Quick Attack, U-turn, Rollout…) param no baú e na tenda do Tutor: dá para abrir o baú da caverna com o Quaxwell.', en: 'Moves that carry you (Aqua Step, Quick Attack, U-turn, Rollout…) stop at chests and the Tutor’s tent: Quaxwell can open the cave’s chest now.', es: 'Los movimientos que te llevan (Aqua Step, Quick Attack, U-turn, Rollout…) se detienen en el cofre y en la tienda del Tutor: Quaxwell ya puede abrir el cofre de la cueva.', fr: 'Les capacités qui vous emportent (Aqua Step, Quick Attack, U-turn, Rollout…) s’arrêtent aux coffres et à la tente du Maître des capacités : Quaxwell peut ouvrir le coffre de la grotte.', zh: '會帶著你移動的招式（Aqua Step、Quick Attack、U-turn、Rollout…）會在寶箱和招式教學帳篷前停下：Quaxwell 現在能打開洞窟的寶箱了。' },
+      { pt: 'Focus Punch e Sky Uppercut não congelam mais a tela a cada soco, que parecia um atordoamento a cada segundo.', en: 'Focus Punch and Sky Uppercut no longer freeze the screen on every punch, which felt like being stunned every second.', es: 'Focus Punch y Sky Uppercut ya no congelan la pantalla en cada golpe, que parecía un aturdimiento cada segundo.', fr: 'Focus Punch et Sky Uppercut ne figent plus l’écran à chaque coup, ce qui donnait l’impression d’être étourdi chaque seconde.', zh: 'Focus Punch 和 Sky Uppercut 不再每次出拳都讓畫面凍結，以前感覺像每秒都被暈眩。' },
+      { pt: 'Com o item Metronome, U-turn, Quick Attack e os outros golpes de botão não saem mais sozinhos: esperam o seu toque.', en: 'With the Metronome item, U-turn, Quick Attack and the other button moves no longer fire on their own: they wait for your press.', es: 'Con el objeto Metronome, U-turn, Quick Attack y los demás movimientos de botón ya no salen solos: esperan a que los pulses.', fr: 'Avec l’objet Metronome, U-turn, Quick Attack et les autres capacités à bouton ne partent plus toutes seules : elles attendent votre appui.', zh: '持有道具 Metronome 時，U-turn、Quick Attack 等按鍵招式不會再自己發動，會等你按下。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          { pt: 'Golpes que carregam o seu Pokémon (Aqua Step, Quick Attack, U-turn, Brave Bird, Rollout…) agora param quando ele chega a um baú fechado, ao baú do tesouro da caverna ou à tenda do Tutor de Golpes, como já paravam nas portas. Antes o Aqua Step jogava você para fora do baú a cada passo e ele nunca terminava de abrir.', en: 'Moves that carry your Pokémon (Aqua Step, Quick Attack, U-turn, Brave Bird, Rollout…) now stop when it reaches a locked chest, the cave’s treasure chest or the Move Tutor’s tent, as they already did at doors. Before, Aqua Step threw you off the chest with every step and it never finished opening.', es: 'Los movimientos que llevan a tu Pokémon (Aqua Step, Quick Attack, U-turn, Brave Bird, Rollout…) ahora se detienen cuando llega a un cofre cerrado, al cofre del tesoro de la cueva o a la tienda del Tutor de Movimientos, como ya pasaba en las puertas. Antes Aqua Step te sacaba del cofre en cada paso y nunca terminaba de abrirse.' },
+          { pt: 'Focus Punch e Sky Uppercut recarregam em um segundo ou dois, e cada soco congelava o jogo por um instante: parecia que o seu Pokémon ficava atordoado a cada segundo. Agora o soco treme a tela sem congelar.', en: 'Focus Punch and Sky Uppercut recharge in a second or two, and every punch froze the game for an instant: it looked like your Pokémon got stunned every second. Now the punch shakes the screen without freezing it.', es: 'Focus Punch y Sky Uppercut se recargan en uno o dos segundos, y cada golpe congelaba el juego un instante: parecía que tu Pokémon quedaba aturdido cada segundo. Ahora el golpe sacude la pantalla sin congelarla.' },
+          { pt: 'Com o Metronome (o item), os golpes que você lança no botão (U-turn, Quick Attack, Extreme Speed…) não saem mais sozinhos quando o especial pousa: eles esperam o seu toque.', en: 'With the Metronome (the item), the moves you fire with the button (U-turn, Quick Attack, Extreme Speed…) no longer go off on their own when the special lands: they wait for your press.', es: 'Con el Metronome (el objeto), los movimientos que lanzas con el botón (U-turn, Quick Attack, Extreme Speed…) ya no salen solos cuando aterriza el especial: esperan a que los pulses.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-29',
     title: { pt: 'Arena: golpes na mão, 3v3, mapas no litoral e jogo em equipe', en: 'Arena: aimed moves, 3v3, coast maps and teamplay', es: 'Arena: movimientos en tus manos, 3v3, mapas en la costa y juego en equipo', fr: 'Arène : capacités en main, 3v3, cartes côtières et jeu d’équipe', zh: '競技場：親手施放招式、3v3、海岸地圖與團隊合作' },
     highlights: [
