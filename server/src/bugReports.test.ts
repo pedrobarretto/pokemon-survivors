@@ -45,6 +45,12 @@ describe('bugThread', () => {
     expect(wiped.messages[0]).not.toContain('refused')
   })
 
+  it('says what the player plays with, pads included, and nothing for clients older than the field', () => {
+    const pad = bugThread(report('Keeps walking', { userAgent: ANDROID, input: { last: 'keyboard', pads: ['Xbox Wireless Controller'] } }), 'a guest')
+    expect(pad.messages[0]).toContain('input: keyboard (Xbox Wireless Controller)')
+    expect(bugThread(report('Keeps walking'), 'a guest').messages[0]).not.toContain('input:')
+  })
+
   it('moves the technical info to a message of its own rather than cut the player’s words', () => {
     const run = { partner: 'p'.repeat(40), form: 'f'.repeat(40), boss: 'b'.repeat(40), place: 'q'.repeat(40) }
     const tech = { userAgent: ANDROID.repeat(3), view: 'v'.repeat(60), perf: {}, run, crash: { at: 'x', run, perf: {} } }

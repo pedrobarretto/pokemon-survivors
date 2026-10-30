@@ -1,7 +1,7 @@
 import { accountState, API_URL } from './account'
 import { isExpectedFailure, isOwnError } from './analytics'
 import { apiCall } from './api'
-import { BUG_REPORT, clip, parseBugCrash, type BugCrash, type BugError, type BugPerf, type BugReport, type BugRun, type BugTech } from './game/bugReport'
+import { BUG_REPORT, clip, parseBugCrash, type BugCrash, type BugError, type BugPerf, type BugInput, type BugReport, type BugRun, type BugTech } from './game/bugReport'
 import { isRecord } from './game/parse'
 import { parseCrumb, type Crumb, type CrumbMoment, type Memory } from './crumb'
 import { locale } from './i18n'
@@ -35,10 +35,10 @@ const MOMENT_GAP_MS = 1000
 
 const errors: BugError[] = []
 
-/** What the shell has on screen and how the device copes, set by `main.ts` (`describeWith`). */
-type Context = { view: string; run: BugRun | null; perf: BugPerf | null; memory: Memory | null }
+/** What the shell has on screen, how the device copes and what the player plays with (`Input.lastKind`, `Input.pads`), set by `main.ts` (`describeWith`). */
+type Context = { view: string; run: BugRun | null; perf: BugPerf | null; memory: Memory | null; input: { last: BugInput['last']; pads: readonly string[] } | null }
 
-let describe = (): Context => ({ view: '', run: null, perf: null, memory: null })
+let describe = (): Context => ({ view: '', run: null, perf: null, memory: null, input: null })
 
 /**
  * The crash watch as stored: the run, the session's last error, whether the page was in the
@@ -223,7 +223,7 @@ const size = (w: number, h: number) => `${Math.round(w)}x${Math.round(h)}`
 
 /** The technical info right now, with the crashed run when the report is about one. */
 export const techInfo = (crash: BugCrash | null): BugTech => {
-  const { view, run, perf } = describe()
+  const { view, run, perf, input } = describe()
   return {
     version: __GAME_VERSION__,
     locale: locale(),
@@ -236,6 +236,7 @@ export const techInfo = (crash: BugCrash | null): BugTech => {
     heapMb: heapMb(),
     standalone: matchMedia('(display-mode: standalone)').matches,
     touch: navigator.maxTouchPoints > 0,
+    input: input && { last: input.last, pads: input.pads.slice(0, BUG_REPORT.pads).map((id) => id.trim()) },
     uptime: Math.round(performance.now() / 1000),
     perf,
     view,

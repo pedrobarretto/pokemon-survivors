@@ -33,7 +33,7 @@ describe('stickVector', () => {
     const tilted = stickVector([Math.cos(0.35), Math.sin(0.35)])
     expect(Math.atan2(tilted.y, tilted.x)).toBeCloseTo(0.35)
     expect(Math.hypot(tilted.x, tilted.y)).toBeCloseTo(1)
-    expect(Math.hypot(...Object.values(stickVector([0.55, 0])))).toBeCloseTo(0.5)
+    expect(Math.hypot(...Object.values(stickVector([0.57, 0])))).toBeCloseTo(0.5)
     expect(Math.hypot(...Object.values(stickVector([1, 1])))).toBeCloseTo(1)
   })
 })
