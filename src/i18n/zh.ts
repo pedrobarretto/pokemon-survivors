@@ -140,12 +140,12 @@ export const zh: Messages = {
     fresh: '新',
     title: '競技場',
     tagline: '4對4 · 3對3 MOBA',
-    maps: { vale: '山谷', glade: '林間空地' },
+    maps: { vale: '山谷', glade: '林間空地', cove: '海灣', reef: '珊瑚礁' },
     formats: {
-      standard: { name: '標準', size: '4對4', clock: '7分鐘', text: '在山谷 · 每隊3個得分區' },
-      quick: { name: '快速', size: '3對3', clock: '3分鐘', text: '在林間空地 · 每隊2個得分區' },
+      standard: { name: '標準', size: '4對4', clock: '7分鐘', text: '在山谷或海灣 · 每隊3個得分區' },
+      quick: { name: '快速', size: '3對3', clock: '3分鐘', text: '在林間空地或珊瑚礁 · 每隊2個得分區' },
     },
-    intro: '兩隊在山谷（4對4）或林間空地（3對3）對戰。擊倒野生寶可夢、收集能量，送進對手的得分區。',
+    intro: '兩隊在山谷或海灣（4對4）、林間空地或珊瑚礁（3對3）對戰。擊倒野生寶可夢、收集能量，送進對手的得分區。',
     lobby: {
       how: '玩法',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -224,7 +224,7 @@ export const zh: Messages = {
         '同一得分區每多一名隊友，得分速度加快50%。',
         '對手的攻擊會打斷正在得分的人。',
         '在自己的得分區會回復體力，移動快20%。',
-        '山谷的基地得分區要等一個路線得分區被破壞後才會開啟；林間空地沒有基地得分區。',
+        '4對4的基地得分區要等一個路線得分區被破壞後才會開啟；3對3沒有基地得分區。',
         '擊倒Drednaw，全隊獲得護盾和能量。',
         '在草叢裡對手看不到你，但你的攻擊會停止：適合埋伏和脫逃。',
         '升級卡片不會暫停：點一張或按1–4。',
@@ -460,7 +460,7 @@ export const zh: Messages = {
       rules: {
         title: '排位賽怎麼運作',
         items: (r) => [
-          '兩種模式：山谷的4對4標準模式（7分鐘，一般對戰和排位賽）與林間空地的3對3快速模式（3分鐘，僅限一般對戰，不計RP）。',
+          '兩種模式：山谷或海灣的4對4標準模式（7分鐘，一般對戰和排位賽）與林間空地或珊瑚礁的3對3快速模式（3分鐘，僅限一般對戰，不計RP）。',
           `MMR和RP：MMR是隱藏的，用來決定你和誰配對。RP會顯示在排行榜上：勝利+${r.win}，落敗${r.loss}，依表現最多再+${r.perf}。`,
           `人數不足時由電腦補位：一般對戰等待${r.casual}秒、排位賽等待${r.ranked}秒後。`,
           `排位賽至少需要${r.humans}位訓練家，且兩隊都要有人，否則改為一般對戰。`,
@@ -493,6 +493,8 @@ export const zh: Messages = {
     room: {
       mode: '模式',
       format: '模式',
+      map: '地圖',
+      random: '隨機',
       modes: { run: '群戰', versus: '競技場' },
       team: '你的隊伍',
       fill: '空位由CPU遊玩（4對4）。',
@@ -868,6 +870,7 @@ export const zh: Messages = {
     teamAttackOpacity: '隊伍招式透明度',
     uiScale: '介面大小',
     uiScaleAuto: '自動',
+    fullscreen: '全螢幕',
     safeMode: '輕量模式',
     joystick: '搖桿',
     joystickModes: { floating: '跟隨手指', fixed: '固定' },
@@ -1217,7 +1220,7 @@ export const zh: Messages = {
       wallpaper: '電腦箱的桌布。',
     },
     styles: {
-      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠' },
+      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者' },
       background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜' },
       wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋' },
     },
@@ -2506,7 +2509,7 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播' },
     newMedals: '新獎牌',
     names: {
       firstRun: '第一步',
@@ -2601,6 +2604,7 @@ export const zh: Messages = {
       arenaGreat: '競技場 Great Ball',
       arenaUltra: '競技場 Ultra Ball',
       arenaMaster: '競技場 Master Ball',
+      creator: '內容創作者',
     },
     goals: {
       runs: (n) => `玩 ${n} 局`,
@@ -5438,7 +5442,7 @@ export const zh: Messages = {
     boards: { play: '對戰', ranking: '排行榜', season: '賽季', history: '戰績', rules: '規則' },
     first: [
       '嗡嗡！歡迎來到競技場！我是競技場的裁判，動作快到任何一個細節都逃不過我的眼睛。',
-      '兩隊對戰：在山谷各派四隻，或在林間空地各派三隻快速對決。擊倒野生寶可夢、收集能量，再送進對手的得分區。',
+      '兩隊對戰：在山谷或海灣各派四隻，或在林間空地或珊瑚礁各派三隻快速對決。擊倒野生寶可夢、收集能量，再送進對手的得分區。',
       '快速對戰：對戰電腦，立即開始。休閒賽：和訓練家對戰，不計分。排位賽：每場勝利都讓段位上升。',
       '每個賽季為期兩週。場邊的看板會顯示排行榜、賽季、你的戰績和規則。',
     ],
@@ -5475,13 +5479,17 @@ export const zh: Messages = {
     clone: (name: string) => `${name} 複製體`,
     escaped: (name: string, wins: number, need: number) => `*${name}* 掙脫了……_${wins}/${need}_`,
     escapedHint: (left: number) => `再擊敗它${left}次就能收服。`,
-    arceusHint: (left: number) => (left > 0 ? `只能在無盡模式中收服，且要先收服其他傳說寶可夢（還差${left}隻）。` : '只能在無盡模式中收服。'),
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? '只能在無盡模式中收服。'
+        : missing.length <= 3 ? `只能在無盡模式中收服，且要先收服其他所有傳說寶可夢。還沒收服：${missing.join('、')}。`
+        : `只能在無盡模式中收服，且要先收服其他所有傳說寶可夢（還差${missing.length}隻，請看「傳說」分頁）。`,
     caught: (name: string) => `收服了 *${name}*！可在_傳說模式_中使用。`,
     caughtShiny: (name: string) => `收服了_異色_ *${name}*！可在_傳說模式_中使用。`,
     shinyUnlocked: (name: string) => `已在_傳說模式_中解鎖_異色_ *${name}*！`,
     caughtHint: '在夥伴選擇畫面的「傳說」分頁中選擇它。',
     tab: '傳說',
     wins: (n: string) => `勝場：${n}`,
+    stillMissing: (missing: readonly string[]) => `還沒收服（${missing.length}）：${missing.join('、')}。`,
     lockedButton: '尚未收服',
     where: {
       rift: '在_傳說裂縫_中等待：穿過傳送門，在那裡擊敗它。',

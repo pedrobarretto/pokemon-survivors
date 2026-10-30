@@ -140,12 +140,12 @@ export const en: Messages = {
     fresh: 'NEW',
     title: 'Arena',
     tagline: '4v4 · 3v3 MOBA',
-    maps: { vale: 'The Vale', glade: 'The Glade' },
+    maps: { vale: 'The Vale', glade: 'The Glade', cove: 'The Cove', reef: 'The Reef' },
     formats: {
-      standard: { name: 'Standard', size: '4v4', clock: '7 min', text: 'In the Vale · 3 goals per team' },
-      quick: { name: 'Quick', size: '3v3', clock: '3 min', text: 'In the Glade · 2 goals per team' },
+      standard: { name: 'Standard', size: '4v4', clock: '7 min', text: 'In the Vale or the Cove · 3 goals per team' },
+      quick: { name: 'Quick', size: '3v3', clock: '3 min', text: 'In the Glade or the Reef · 2 goals per team' },
     },
-    intro: 'Two teams in the Vale (4v4) or the Glade (3v3). Defeat wild Pokémon, gather Energy and score it in the rival goals.',
+    intro: 'Two teams in the Vale or the Cove (4v4), the Glade or the Reef (3v3). Defeat wild Pokémon, gather Energy and score it in the rival goals.',
     lobby: {
       how: 'How to play',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -224,7 +224,7 @@ export const en: Messages = {
         'Each ally in the same goal speeds up scoring by 50%.',
         'A rival’s hit interrupts whoever is scoring.',
         'In your own goal you heal and run 20% faster.',
-        'On the Vale, the base goal only opens once a lane goal falls; the Glade has no base goal.',
+        'In 4v4, the base goal only opens once a lane goal falls; 3v3 has no base goal.',
         'Defeating Drednaw gives the whole team a shield and Energy.',
         'In tall grass rivals can’t see you, but your attacks stop: good for ambushes and escapes.',
         'Level-up cards don’t pause: tap one or press 1–4.',
@@ -460,7 +460,7 @@ export const en: Messages = {
       rules: {
         title: 'How Ranked works',
         items: (r) => [
-          'Two formats: 4v4 Standard in the Vale (7 min, Casual and Ranked) and 3v3 Quick in the Glade (3 min, Casual only, no RP).',
+          'Two formats: 4v4 Standard in the Vale or the Cove (7 min, Casual and Ranked) and 3v3 Quick in the Glade or the Reef (3 min, Casual only, no RP).',
           `MMR and RP: MMR is hidden and decides who you play with. RP is what the ranking shows: a win is +${r.win}, a loss ${r.loss}, and up to +${r.perf} for how you played.`,
           `If seats are empty, bots fill the match: after ${r.casual} s in Casual and ${r.ranked} s in Ranked.`,
           `Ranked needs at least ${r.humans} trainers in the match, with people on both teams. Otherwise, it counts as Casual.`,
@@ -493,6 +493,8 @@ export const en: Messages = {
     room: {
       mode: 'Mode',
       format: 'Format',
+      map: 'Map',
+      random: 'Random',
       modes: { run: 'Horde', versus: 'Arena' },
       team: 'Your team',
       fill: 'Empty seats become CPUs (4 vs 4).',
@@ -869,6 +871,7 @@ export const en: Messages = {
     teamAttackOpacity: 'Team move opacity',
     uiScale: 'UI size',
     uiScaleAuto: 'Auto',
+    fullscreen: 'Fullscreen',
     safeMode: 'Lite mode',
     joystick: 'Joystick',
     joystickModes: { floating: 'Follows finger', fixed: 'Fixed' },
@@ -1218,7 +1221,7 @@ export const en: Messages = {
       wallpaper: 'Wallpaper of the PC Box.',
     },
     styles: {
-      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth', lantern: 'Lantern' },
+      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth', lantern: 'Lantern', creator: 'Creator' },
       background: { night: 'Starry night', meadow: 'Route 1', forest: 'Viridian Forest', cave: 'Mt. Moon', snow: 'Mt. Silver', tower: 'Lavender Tower', supporter: 'Golden sky', halloween: 'Halloween Night' },
       wallpaper: { classic: 'Classic', forest: 'Leaves', cave: 'Pebbles', snow: 'Snowflakes', tower: 'Little ghosts', supporter: 'Golden stars', haunted: 'Haunted House' },
     },
@@ -2508,7 +2511,7 @@ export const en: Messages = {
     noTitle: 'none',
     titleTag: 'TITLE',
     equipped: 'SHOWN',
-    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season' },
+    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors' },
     newMedals: 'New medals',
     names: {
       firstRun: 'First steps',
@@ -2603,6 +2606,7 @@ export const en: Messages = {
       arenaGreat: 'Arena Great Ball',
       arenaUltra: 'Arena Ultra Ball',
       arenaMaster: 'Arena Master Ball',
+      creator: 'Content Creator',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Play a run' : `Play ${n} runs`),
@@ -5442,7 +5446,7 @@ export const en: Messages = {
     boards: { play: 'Play', ranking: 'Ranking', season: 'Season', history: 'History', rules: 'Rules' },
     first: [
       'Bzzz! Welcome to the Stadium! I’m the Arena’s judge: too quick to let a single play slip by.',
-      'Two teams face off: four a side in the Vale, or three in the Glade for a quick one. Defeat wild Pokémon, gather Energy and carry it to the rival goal.',
+      'Two teams face off: four a side in the Vale or the Cove, or three in the Glade or the Reef for a quick one. Defeat wild Pokémon, gather Energy and carry it to the rival goal.',
       'Quick match: against bots, starts at once. Casual: against trainers, no points. Ranked: every win climbs your tier.',
       'Each season lasts two weeks. The boards around the court show the ranking, the season, your history and the rules.',
     ],
@@ -5479,13 +5483,17 @@ export const en: Messages = {
     clone: (name: string) => `${name} Clone`,
     escaped: (name: string, wins: number, need: number) => `*${name}* broke free… _${wins}/${need}_`,
     escapedHint: (left: number) => (left === 1 ? 'Beat it 1 more time to catch it.' : `Beat it ${left} more times to catch it.`),
-    arceusHint: (left: number) => (left > 0 ? `It can only be caught in endless mode, after the other legendaries (${left} to go).` : 'It can only be caught in endless mode.'),
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? 'It can only be caught in endless mode.'
+        : missing.length <= 3 ? `It can only be caught in endless mode, once every other legendary is caught. Still to catch: ${missing.join(', ')}.`
+        : `It can only be caught in endless mode, once every other legendary is caught (${missing.length} to go: see the Legends tab).`,
     caught: (name: string) => `*${name}* caught! Playable in _Legend Mode_.`,
     caughtShiny: (name: string) => `_Shiny_ *${name}* caught! Playable in _Legend Mode_.`,
     shinyUnlocked: (name: string) => `_Shiny_ *${name}* unlocked in _Legend Mode_!`,
     caughtHint: 'Pick it in the Legendaries tab of the partner select.',
     tab: 'LEGENDARIES',
     wins: (n: string) => `Wins: ${n}`,
+    stillMissing: (missing: readonly string[]) => `Still to catch (${missing.length}): ${missing.join(', ')}.`,
     lockedButton: 'Not caught',
     where: {
       rift: 'Waits inside a _legendary rift_: step through the portal and beat it there.',

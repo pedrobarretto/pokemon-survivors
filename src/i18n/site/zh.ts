@@ -25,6 +25,7 @@ export const siteZh: SiteMessages = {
     tierList: '強度排行',
     legal: '法律資訊',
     support: '贊助',
+    creators: '創作者',
     compare: 'Pokémon Survivors 與 PokéSurvivor',
     alternatives: '像《吸血鬼倖存者》的遊戲',
     language: '語言',
@@ -943,6 +944,29 @@ export const siteZh: SiteMessages = {
     ],
     issues: '在 GitHub 上開 issue',
     source: '查看原始碼',
+  },
+  creators: {
+    title: '創作者：Pokémon Survivors 的影片與直播',
+    description:
+      '玩家在 YouTube 和 TikTok 上製作的 Pokémon Survivors 影片與直播。拍下你的影片、分享到 Discord，就能在遊戲中獲得「內容創作者」稱號和創作者相框。',
+    h1: '創作者',
+    lead: '來自 Pokémon Survivors 玩家的影片與直播。直接在這裡觀看，並追蹤創作者。',
+    videos: '影片',
+    people: '創作者們',
+    play: (title: string) => `觀看：${title}`,
+    watchOn: (platform: string) => `在 ${platform} 觀看`,
+    videoAbout: (name: string) => `${name} 製作的 Pokémon Survivors 影片。`,
+    langs: { pt: '葡萄牙語', en: '英語', es: '西班牙語', fr: '法語', zh: '中文' },
+    join: {
+      title: '你有在拍這款遊戲的影片嗎？',
+      lead: '實況、直播、攻略、Short 或 TikTok，任何語言都可以：每一部遊戲影片都能出現在這裡。',
+      steps: [
+        '把影片發布到 YouTube、TikTok 或任何你喜歡的平台。',
+        '在我們 Discord 的 #screenshots-and-clips 頻道分享連結。',
+        '告訴我們你的遊戲 @：你會獲得「內容創作者」稱號和創作者相框。',
+      ],
+      cta: '到 Discord 分享我的影片',
+    },
   },
   compare: {
     title: 'Pokémon Survivors 和 PokéSurvivor 是同一款遊戲嗎？兩者的差異',

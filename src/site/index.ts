@@ -4,6 +4,7 @@ import { CHANGELOG } from './changelog'
 import { alternativesPage } from './pages/alternatives'
 import { changelogPage } from './pages/changelog'
 import { comparePage } from './pages/compare'
+import { creatorsPage } from './pages/creators'
 import { dexPage } from './pages/dexPage'
 import { guidePage } from './pages/guide'
 import { legalPage } from './pages/legal'
@@ -21,6 +22,7 @@ const RENDER: Record<PageId, (locale: Locale) => string> = {
   changelog: changelogPage,
   legal: legalPage,
   support: supportPage,
+  creators: creatorsPage,
   compare: comparePage,
   alternatives: alternativesPage,
 }

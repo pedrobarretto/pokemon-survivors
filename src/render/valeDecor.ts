@@ -2,9 +2,11 @@ import { fromStrings, lazy } from '../engine/pixelart'
 import type { Team } from '../data/versus'
 
 /**
- * The Vale's ground decor (`render/vale.ts` bakes them into its floor tiles):
- * tall grass, flowers, mushrooms, logs, and each base's banners and lamps.
- * Code-authored pixel strings; draw-only, nothing here stands in anyone's way.
+ * The Arena maps' ground decor (`render/vale.ts` bakes them into its floor
+ * tiles): the meadow's tall grass, flowers, mushrooms and logs, the coast's
+ * seaweed, pebbles, shells, starfish and driftwood, and each base's banners
+ * and lamps. Code-authored pixel strings; draw-only, nothing here stands in
+ * anyone's way.
  */
 
 const LEAF = { a: '#2a5c2a', b: '#3e7e36', c: '#5a964a', d: '#1e4820' } as const
@@ -46,6 +48,37 @@ export const LOG = lazy(() =>
   fromStrings(
     ['..gggggggggggg..', '.bmmmmmmmmmmmmro', 'bbccbccbbcbbccrro', 'bcbbcbbccbbcbbrwo', 'bbccbbcbbccbbcrro', '.bbbbbbbbbbbbbro.', '..ssssssssssss...'],
     { g: '#5a964a', m: '#46843e', b: '#7a5232', c: '#5e3e26', r: '#a87e4e', w: '#d0ae7e', o: '#3e2818', s: 'rgba(12,28,16,0.45)' },
+  ),
+)
+
+/** A tuft of seaweed washed up in a tidepool, for the coast's jungle. */
+export const SEAWEED = lazy(() =>
+  fromStrings(
+    ['...c....c...', '..cb...cb...', '.cbb..cbb.c.', '.bba.cbba.b.', 'bbaa.bbaabba', 'baaaabaaaaaa', '.dddddddddd.'],
+    { a: '#2e5a3c', b: '#46784a', c: '#7aa25a', d: 'rgba(40,60,50,0.45)' },
+  ),
+)
+
+/** A few wet pebbles, the coast jungle's small clump. */
+export const PEBBLES = lazy(() => fromStrings(['.ll....', 'lmmd.l.', 'mmdd.md', '.dd..dd', '..ss.ss'], { l: '#d8d4c8', m: '#9e9a90', d: '#5e5c58', s: 'rgba(60,70,60,0.4)' }))
+
+/** Shells on the sand for the coast's lanes, in three colorways. */
+export const SHELLS = lazy(() =>
+  ([['#f8eee0', '#d8b898'], ['#f8c0b0', '#d08878'], ['#e8d0f0', '#a888c0']] as const).map(([lit, rib]) =>
+    fromStrings(['..o....', '.oro...', 'olrlo..', 'orlro.o', '.ooo.oo', '.....o.'], { o: '#6a5040', l: lit, r: rib }),
+  ),
+)
+
+/** A starfish, the coast's rare find. */
+export const STARFISH = lazy(() =>
+  fromStrings(['...o...', '...r...', 'orrlrro', '.rlyr..', '.r..r..', 'r....r.'], { o: '#a83828', r: '#e86848', l: '#f8a080', y: '#f8d848' }),
+)
+
+/** Bleached driftwood washed up on the sand. */
+export const DRIFTWOOD = lazy(() =>
+  fromStrings(
+    ['.............o.', '..oooooooooooro', '.obbcbbbcbbbbo.', 'obcbbbccbbbcbro', '.obbbbbbbcbbo..', '..oooooooooo...', '...ssssssssss..'],
+    { o: '#5a4a3a', b: '#c8b8a0', c: '#a89880', r: '#e0d4c0', s: 'rgba(60,50,30,0.35)' },
   ),
 )
 

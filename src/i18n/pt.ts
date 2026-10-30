@@ -255,13 +255,13 @@ export const pt = {
     title: 'Arena',
     tagline: 'MOBA 4v4 · 3v3',
     /** The Arena's maps' names (`data/versusMaps.ts`). */
-    maps: { vale: 'Vale', glade: 'Clareira' } satisfies Record<MapId, string>,
+    maps: { vale: 'Vale', glade: 'Clareira', cove: 'Enseada', reef: 'Recife' } satisfies Record<MapId, string>,
     /** The match formats (`data/arenaFormats.ts`): the name, the size, the clock and a line on the map. */
     formats: {
-      standard: { name: 'Padrão', size: '4v4', clock: '7 min', text: 'No Vale · 3 gols por equipe' },
-      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'Na Clareira · 2 gols por equipe' },
+      standard: { name: 'Padrão', size: '4v4', clock: '7 min', text: 'No Vale ou na Enseada · 3 gols por equipe' },
+      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'Na Clareira ou no Recife · 2 gols por equipe' },
     } satisfies Record<ArenaFormat, { name: string; size: string; clock: string; text: string }>,
-    intro: 'Duas equipes no Vale (4v4) ou na Clareira (3v3). Derrote Pokémon selvagens, junte Energia e marque nos gols rivais.',
+    intro: 'Duas equipes no Vale ou na Enseada (4v4), na Clareira ou no Recife (3v3). Derrote Pokémon selvagens, junte Energia e marque nos gols rivais.',
     lobby: {
       how: 'Como jogar',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -347,7 +347,7 @@ export const pt = {
         'Cada aliado no mesmo gol acelera a marcação em 50%.',
         'Um golpe rival interrompe quem está marcando.',
         'No seu gol você se cura e corre 20% mais rápido.',
-        'No Vale, o gol da base só abre depois que cai um gol de rota; a Clareira não tem gol de base.',
+        'No 4v4, o gol da base só abre depois que cai um gol de rota; o 3v3 não tem gol de base.',
         'Derrotar o Drednaw dá escudo e Energia ao time todo.',
         'No mato alto os rivais não te veem, mas seus ataques param: bom para emboscar e fugir.',
         'As cartas de nível não pausam: toque numa ou use 1–4.',
@@ -615,7 +615,7 @@ export const pt = {
           /** The clock when a team may vote to surrender (half-time), in the 4v4 and the 3v3. */
           surrender: { standard: string; quick: string }
         }) => [
-          'Dois formatos: 4v4 Padrão no Vale (7 min, Casual e Ranqueada) e 3v3 Rápida na Clareira (3 min, só Casual, sem RP).',
+          'Dois formatos: 4v4 Padrão no Vale ou na Enseada (7 min, Casual e Ranqueada) e 3v3 Rápida na Clareira ou no Recife (3 min, só Casual, sem RP).',
           `MMR e RP: o MMR é escondido e decide com quem você joga. O RP aparece no ranking: vitória +${r.win}, derrota ${r.loss}, e até +${r.perf} pelo seu desempenho.`,
           `Se faltar gente, bots completam a partida: depois de ${r.casual} s na Casual e de ${r.ranked} s na Ranqueada.`,
           `A Ranqueada precisa de pelo menos ${r.humans} treinadores na partida, com gente nos dois times. Senão, ela vale como Casual.`,
@@ -660,6 +660,8 @@ export const pt = {
     room: {
       mode: 'Modo',
       format: 'Formato',
+      map: 'Mapa',
+      random: 'Aleatório',
       modes: { run: 'Horda', versus: 'Arena' },
       team: 'Sua equipe',
       fill: 'Vagas livres viram CPU (4 contra 4).',
@@ -1071,6 +1073,7 @@ export const pt = {
     uiScale: 'Tamanho da interface',
     uiScaleAuto: 'Auto',
     /** Safe mode (`safeMode.ts`): lean drawing, on by itself after the game closed mid-run. */
+    fullscreen: 'Tela cheia',
     safeMode: 'Modo leve',
     joystick: 'Joystick',
     joystickModes: { floating: 'Segue o dedo', fixed: 'Fixo' },
@@ -1454,7 +1457,7 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna' } satisfies Record<FrameId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)' } satisfies Record<FrameId, string>,
       background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas' } satisfies Record<BackgroundId, string>,
       wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada' } satisfies Record<WallpaperId, string>,
     },
@@ -2840,7 +2843,7 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
       firstRun: 'Primeiros passos',
@@ -2935,6 +2938,7 @@ export const pt = {
       arenaGreat: 'Great Ball da Arena',
       arenaUltra: 'Ultra Ball da Arena',
       arenaMaster: 'Master Ball da Arena',
+      creator: 'Criador(a) de Conteúdo',
     } satisfies Record<TitleId, string>,
     goals: {
       runs: (n: string) => (n === '1' ? 'Jogue uma partida' : `Jogue ${n} partidas`),
@@ -5804,7 +5808,7 @@ export const pt = {
     /** Ninjask, the Arena's judge, before the Arena opens: the first visit, then one of these in turn. */
     first: [
       'Bzzz! Bem-vindo ao Estádio! Eu sou o juiz da Arena: rápido demais para deixar qualquer lance passar.',
-      'Duas equipes se enfrentam: de quatro no Vale, ou de três na Clareira para uma partida rápida. Derrote Pokémon selvagens, junte Energia e leve-a ao gol rival.',
+      'Duas equipes se enfrentam: de quatro no Vale ou na Enseada, ou de três na Clareira ou no Recife para uma partida rápida. Derrote Pokémon selvagens, junte Energia e leve-a ao gol rival.',
       'Partida rápida: contra bots, começa na hora. Casual: contra treinadores, sem pontos. Ranqueada: cada vitória sobe seu tier.',
       'Cada temporada dura duas semanas. Os quadros do pátio mostram o ranking, a temporada, seu histórico e as regras.',
     ],
@@ -5850,14 +5854,19 @@ export const pt = {
     /* Capturing legends (`game/capture.ts`, `ui/capture.ts`): the toasts as one falls, and the partner select's Lendários tab. */
     escaped: (name: string, wins: number, need: number) => `*${name}* escapou… _${wins}/${need}_`,
     escapedHint: (left: number) => (left === 1 ? 'Falta 1 vitória para a captura.' : `Faltam ${left} vitórias para a captura.`),
-    /** Arceus before it can count: the endless mode, after the other legends (`left` still to capture). */
-    arceusHint: (left: number) => (left > 0 ? `Só se deixa capturar no modo sem fim, depois dos outros lendários (faltam ${left}).` : 'Só se deixa capturar no modo sem fim.'),
+    /** Arceus before it can count: the endless mode, after the other legends (`missing`: the names still to capture). */
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? 'Só se deixa capturar no modo sem fim.'
+        : missing.length <= 3 ? `Só se deixa capturar no modo sem fim, depois de todos os outros lendários. Falta capturar: ${missing.join(', ')}.`
+        : `Só se deixa capturar no modo sem fim, depois de todos os outros lendários (faltam ${missing.length}: veja a aba Lendários).`,
     caught: (name: string) => `*${name}* capturado! Jogável no _Modo Lendário_.`,
     caughtShiny: (name: string) => `*${name}* _shiny_ capturado! Jogável no _Modo Lendário_.`,
     shinyUnlocked: (name: string) => `*${name}* _shiny_ liberado no _Modo Lendário_!`,
     caughtHint: 'Escolha-o na aba Lendários da seleção de parceiro.',
     tab: 'LENDÁRIOS',
     wins: (n: string) => `Vitórias: ${n}`,
+    /** Arceus' locked card: the regular legends still to capture before it counts. */
+    stillMissing: (missing: readonly string[]) => `Falta capturar (${missing.length}): ${missing.join(', ')}.`,
     lockedButton: 'Não capturado',
     /** Where each legend is beaten (`LegendSource`). */
     where: {

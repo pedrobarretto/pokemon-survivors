@@ -22074,6 +22074,16 @@ span.arena-hub-face {
   white-space: nowrap;
 }
 
+/* The map's names wrap on a narrow phone (a long one in French or Spanish) instead of running off the segment. */
+.coop-map {
+  max-width: 100%;
+}
+
+.coop-map .shell-seg-option {
+  padding: 4px 8px;
+  line-height: 1.5;
+}
+
 /* ---------- A match's social layer (ui/versusTalk.ts): the buttons, quick chat, the ping wheel, the feed, the bubbles, the vote; the scoreboard (ui/versusBoard.ts) ---------- */
 
 /* Laid out in viewport px (the bubbles and the wheel follow the field): the safe areas go on each piece. */

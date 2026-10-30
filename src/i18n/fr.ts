@@ -140,12 +140,12 @@ export const fr: Messages = {
     fresh: 'NOUVEAU',
     title: 'Arène',
     tagline: 'MOBA 4v4 · 3v3',
-    maps: { vale: 'La Vallée', glade: 'La Clairière' },
+    maps: { vale: 'La Vallée', glade: 'La Clairière', cove: 'La Crique', reef: 'Le Récif' },
     formats: {
-      standard: { name: 'Standard', size: '4v4', clock: '7 min', text: 'Dans la Vallée · 3 buts par équipe' },
-      quick: { name: 'Rapide', size: '3v3', clock: '3 min', text: 'Dans la Clairière · 2 buts par équipe' },
+      standard: { name: 'Standard', size: '4v4', clock: '7 min', text: 'Dans la Vallée ou la Crique · 3 buts par équipe' },
+      quick: { name: 'Rapide', size: '3v3', clock: '3 min', text: 'Dans la Clairière ou le Récif · 2 buts par équipe' },
     },
-    intro: 'Deux équipes dans la Vallée (4v4) ou la Clairière (3v3). Battez des Pokémon sauvages, ramassez de l’Énergie et marquez dans les buts adverses.',
+    intro: 'Deux équipes dans la Vallée ou la Crique (4v4), la Clairière ou le Récif (3v3). Battez des Pokémon sauvages, ramassez de l’Énergie et marquez dans les buts adverses.',
     lobby: {
       how: 'Comment jouer',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -224,7 +224,7 @@ export const fr: Messages = {
         'Chaque allié dans le même but accélère le marquage de 50 %.',
         'Un coup adverse interrompt celui qui marque.',
         'Dans votre but, vous vous soignez et courez 20 % plus vite.',
-        'Dans la Vallée, le but de la base ne s’ouvre qu’après la chute d’un but de voie ; la Clairière n’a pas de but de base.',
+        'En 4v4, le but de la base ne s’ouvre qu’après la chute d’un but de voie ; le 3v3 n’a pas de but de base.',
         'Battre Drednaw donne un bouclier et de l’Énergie à toute l’équipe.',
         'Dans les hautes herbes, les adversaires ne vous voient pas, mais vos attaques s’arrêtent : idéal pour les embuscades et les fuites.',
         'Les cartes de niveau ne mettent pas en pause : touchez-en une ou utilisez 1–4.',
@@ -460,7 +460,7 @@ export const fr: Messages = {
       rules: {
         title: 'Comment marche le Classé',
         items: (r) => [
-          'Deux formats : 4v4 Standard dans la Vallée (7 min, Casual et Classé) et 3v3 Rapide dans la Clairière (3 min, Casual seulement, sans RP).',
+          'Deux formats : 4v4 Standard dans la Vallée ou la Crique (7 min, Casual et Classé) et 3v3 Rapide dans la Clairière ou le Récif (3 min, Casual seulement, sans RP).',
           `MMR et RP : le MMR est caché et décide avec qui vous jouez. Les RP sont ce que montre le classement : victoire +${r.win}, défaite ${r.loss}, et jusqu’à +${r.perf} selon votre performance.`,
           `S’il manque du monde, des bots complètent le match : après ${r.casual} s en Casual et ${r.ranked} s en Classé.`,
           `Le Classé demande au moins ${r.humans} dresseurs dans le match, avec du monde dans les deux équipes. Sinon, il compte comme Casual.`,
@@ -493,6 +493,8 @@ export const fr: Messages = {
     room: {
       mode: 'Mode',
       format: 'Format',
+      map: 'Carte',
+      random: 'Aléatoire',
       modes: { run: 'Horde', versus: 'Arène' },
       team: 'Votre équipe',
       fill: 'Les places libres sont jouées par le CPU (4 contre 4).',
@@ -868,6 +870,7 @@ export const fr: Messages = {
     teamAttackOpacity: 'Opacité de l’équipe',
     uiScale: 'Taille de l’interface',
     uiScaleAuto: 'Auto',
+    fullscreen: 'Plein écran',
     safeMode: 'Mode léger',
     joystick: 'Joystick',
     joystickModes: { floating: 'Suit le doigt', fixed: 'Fixe' },
@@ -1217,7 +1220,7 @@ export const fr: Messages = {
       wallpaper: 'Fond d’écran de la Boîte PC.',
     },
     styles: {
-      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne' },
+      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur' },
       background: { night: 'Nuit étoilée', meadow: 'Route 1', forest: 'Forêt de Jade', cave: 'Mont Sélénite', snow: 'Mont Argenté', tower: 'Tour Pokémon de Lavanville', supporter: 'Ciel doré', halloween: 'Nuit des Sorcières' },
       wallpaper: { classic: 'Classique', forest: 'Feuilles', cave: 'Cailloux', snow: 'Flocons', tower: 'Petits fantômes', supporter: 'Étoiles dorées', haunted: 'Maison hantée' },
     },
@@ -2506,7 +2509,7 @@ export const fr: Messages = {
     noTitle: 'aucun',
     titleTag: 'TITRE',
     equipped: 'AFFICHE',
-    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène' },
+    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors' },
     newMedals: 'Nouvelles médailles',
     names: {
       firstRun: 'Premiers pas',
@@ -2601,6 +2604,7 @@ export const fr: Messages = {
       arenaGreat: 'Great Ball de l’Arène',
       arenaUltra: 'Ultra Ball de l’Arène',
       arenaMaster: 'Master Ball de l’Arène',
+      creator: 'Créateur de contenu',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Joue une partie' : `Joue ${n} parties`),
@@ -5438,7 +5442,7 @@ export const fr: Messages = {
     boards: { play: 'Jouer', ranking: 'Classement', season: 'Saison', history: 'Historique', rules: 'Règles' },
     first: [
       'Bzzz ! Bienvenue au Stade ! Je suis le juge de l’Arène : bien trop rapide pour laisser filer une seule action.',
-      'Deux équipes s’affrontent : à quatre dans la Vallée, ou à trois dans la Clairière pour un match rapide. Battez des Pokémon sauvages, ramassez de l’Énergie et portez-la au but adverse.',
+      'Deux équipes s’affrontent : à quatre dans la Vallée ou la Crique, ou à trois dans la Clairière ou le Récif pour un match rapide. Battez des Pokémon sauvages, ramassez de l’Énergie et portez-la au but adverse.',
       'Partie rapide : contre des bots, tout de suite. Normale : contre des dresseurs, sans points. Classée : chaque victoire fait monter ton rang.',
       'Chaque saison dure deux semaines. Les panneaux autour du terrain montrent le classement, la saison, ton historique et les règles.',
     ],
@@ -5475,13 +5479,17 @@ export const fr: Messages = {
     clone: (name: string) => `Clone de ${name}`,
     escaped: (name: string, wins: number, need: number) => `*${name}* s’est libéré… _${wins}/${need}_`,
     escapedHint: (left: number) => `Bats-le encore ${left} fois pour le capturer.`,
-    arceusHint: (left: number) => (left > 0 ? `Il ne se capture qu’en mode sans fin, après les autres légendaires (encore ${left}).` : 'Il ne se capture qu’en mode sans fin.'),
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? 'Il ne se capture qu’en mode sans fin.'
+        : missing.length <= 3 ? `Il ne se capture qu’en mode sans fin, une fois tous les autres légendaires capturés. Encore à capturer : ${missing.join(', ')}.`
+        : `Il ne se capture qu’en mode sans fin, une fois tous les autres légendaires capturés (encore ${missing.length} : voir l’onglet Légendaires).`,
     caught: (name: string) => `*${name}* capturé ! Jouable en _Mode Légendaire_.`,
     caughtShiny: (name: string) => `*${name}* _chromatique_ capturé ! Jouable en _Mode Légendaire_.`,
     shinyUnlocked: (name: string) => `*${name}* _chromatique_ débloqué en _Mode Légendaire_ !`,
     caughtHint: 'Choisis-le dans l’onglet Légendaires du choix du partenaire.',
     tab: 'LEGENDAIRES',
     wins: (n: string) => `Victoires : ${n}`,
+    stillMissing: (missing: readonly string[]) => `Encore à capturer (${missing.length}) : ${missing.join(', ')}.`,
     lockedButton: 'Pas capturé',
     where: {
       rift: 'Attend dans une _faille légendaire_ : franchis le portail et bats-le là-bas.',

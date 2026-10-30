@@ -18,7 +18,7 @@ export type PageMeta = {
 
 const pathsOf = ({ id, sub }: Pick<PageMeta, 'id' | 'sub'>): Paths => sub?.paths ?? ROUTES[id]
 
-const NAV: readonly RouteId[] = ['play', 'pokedex', 'tierList', 'guide', 'changelog']
+const NAV: readonly RouteId[] = ['play', 'pokedex', 'tierList', 'guide', 'changelog', 'creators']
 
 const others = (locale: Locale) => LOCALE_IDS.filter((l) => l !== locale)
 

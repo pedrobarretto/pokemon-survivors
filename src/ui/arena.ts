@@ -437,7 +437,8 @@ export const arenaScreen = (root: HTMLElement, input: Input, pick: VersusPick, a
   })
   root.append(el)
   // The maps' pictures start loading here, so a match opens with them.
-  loadValeArt()
+  loadValeArt('meadow')
+  loadValeArt('coast')
   paintFormat()
   select(selected, false)
   later(() => tiles[selected]?.scrollIntoView({ block: 'nearest' }))

@@ -672,7 +672,8 @@ const drawPickups = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: numbe
   for (const k of g.pickups) {
     if (!visible(k.x, k.y)) continue
     const bob = k.attracted ? 0 : Math.round(Math.sin(t * 4 + k.id) * 1.2)
-    if (!k.attracted) blitEllipse(ctx, 3, 1, 'rgba(16,40,16,0.25)', k.x, k.y + 4)
+    // Drawing lean, loot goes without its shadow, like the horde: thousands of candies lie about in a long endless run.
+    if (!k.attracted && !detail.lean) blitEllipse(ctx, 3, 1, 'rgba(16,40,16,0.25)', k.x, k.y + 4)
     if (k.kind === 'consumable') {
       drawConsumable(ctx, k.item, k.x, k.y + bob, k.id, t)
       continue

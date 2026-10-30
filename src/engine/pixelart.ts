@@ -16,6 +16,9 @@ export const createCanvas = (w: number, h: number) => {
   return c
 }
 
+/** This session's blank canvases, for bug reports: times `canvasWatch` found them all wiped, and contexts `context2d` was refused. */
+export const canvasLosses = { wiped: 0, refused: 0 }
+
 /** A 1×1 context made with the first one, for when a canvas gets none. */
 let spare: CanvasRenderingContext2D | null = null
 
@@ -26,7 +29,9 @@ let spare: CanvasRenderingContext2D | null = null
  */
 export const context2d = (canvas: HTMLCanvasElement) => {
   spare ??= createCanvas(1, 1).getContext('2d')
-  const ctx = canvas.getContext('2d', { willReadFrequently: false }) ?? spare
+  const own = canvas.getContext('2d', { willReadFrequently: false })
+  if (!own) canvasLosses.refused++
+  const ctx = own ?? spare
   if (!ctx) throw new Error('No 2D canvas context')
   ctx.imageSmoothingEnabled = false
   return ctx
@@ -113,6 +118,58 @@ export const canvasRestored = () => {
   })
 }
 
+/** What `canvasWatch` paints and reads back: a 2D context, or a stand-in for one. */
+export type Probe = {
+  fillStyle: string | CanvasGradient | CanvasPattern
+  fillRect: (x: number, y: number, w: number, h: number) => void
+  getImageData: (x: number, y: number, w: number, h: number) => { data: ArrayLike<number> }
+}
+
+/**
+ * Watches for the browser dropping every canvas' pixels without a word. iOS Safari fires no
+ * `contextrestored`: after the GPU process gives way under memory pressure, or the pixels of a
+ * tab left in the background are purged, the caches' canvases come back blank and the ground
+ * draws nothing (a black screen). `check` reads back one pixel of a canvas it painted opaque;
+ * gone, it drops the caches as a restore would, on a new probe in case this one stays lost.
+ * True if it found them blank. A read every few seconds costs little.
+ */
+export const canvasWatch = (make: () => Probe | null) => {
+  let probe: Probe | null = null
+  const paint = () => {
+    probe = make()
+    if (!probe) return
+    probe.fillStyle = '#f0f'
+    probe.fillRect(0, 0, 1, 1)
+  }
+  return () => {
+    if (!probe) {
+      paint()
+      return false
+    }
+    if (probe.getImageData(0, 0, 1, 1).data[3] === 255) return false
+    canvasLosses.wiped++
+    paint()
+    canvasRestored()
+    return true
+  }
+}
+
+/** Side of the watched canvas: big enough that WebKit keeps it on the GPU like the caches' (small ones may stay in memory). */
+const WATCHED = 256
+
+/** The canvas `checkCanvases` watches. */
+let watched: HTMLCanvasElement | null = null
+
+/** `canvasWatch` over the game's canvases. Call it every few seconds and when the page comes back into view. */
+export const checkCanvases = canvasWatch(() => (watched = createCanvas(WATCHED, WATCHED)).getContext('2d'))
+
+/** Blanks every canvas the caches hold and the watched one, as iOS does unannounced (`ps.wipeCanvases`, to see the game recover). */
+export const wipeCanvases = () => {
+  for (const c of [...reachableCanvases(holders.map((holds) => holds())), watched]) {
+    if (c instanceof HTMLCanvasElement) c.getContext('2d')?.clearRect(0, 0, c.width, c.height)
+  }
+}
+
 /** Canvases (anything with `getContext` and a size), told apart from the images and patterns caches also keep. */
 type Sized = { width: number; height: number; getContext: unknown }
 const isCanvas = (v: object): v is Sized => 'getContext' in v && 'width' in v && typeof v.width === 'number' && 'height' in v && typeof v.height === 'number'
@@ -126,17 +183,19 @@ const WEIGH_DEPTH = 6
  * 0×0 weighs nothing and doesn't count.
  */
 export const weighCanvases = (roots: Iterable<unknown>) => {
+  const canvases = reachableCanvases(roots)
+  return { canvases: canvases.length, bytes: canvases.reduce((sum, c) => sum + c.width * c.height * 4, 0) }
+}
+
+/** The distinct canvases (not freed to 0×0) reachable from `roots`, as `weighCanvases` counts them. */
+const reachableCanvases = (roots: Iterable<unknown>) => {
   const seen = new Set<object>()
-  const out = { canvases: 0, bytes: 0 }
+  const out: Sized[] = []
   const visit = (v: unknown, depth: number): void => {
     if (typeof v !== 'object' || v === null || seen.has(v)) return
     seen.add(v)
     if (isCanvas(v)) {
-      const bytes = v.width * v.height * 4
-      if (bytes > 0) {
-        out.canvases++
-        out.bytes += bytes
-      }
+      if (v.width * v.height > 0) out.push(v)
       return
     }
     if (depth === 0) return
@@ -508,7 +567,7 @@ export const ring = packed3((radius: number, thickness: number, color: string) =
   return canvas
 })
 
-/** Shapes past this many pixels are painted fresh instead of cached: a shockwave or a telegraph grows through every size. */
+/** Shapes past this many pixels stay off the atlas (`bigShape`): a shockwave or a telegraph grows through every size. */
 const BIG_SHAPE = 64 * 64
 
 let stage: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } | null = null
@@ -534,20 +593,66 @@ const stamp = (ctx: CanvasRenderingContext2D, w: number, h: number, x: number, y
   ctx.drawImage(stage.canvas, 0, 0, w, h, Math.round(x - w / 2), Math.round(y - h / 2), w, h)
 }
 
-/** `blitCentered(ctx, ellipse(rx, ry, color), x, y)`, with big ellipses painted fresh rather than cached. */
+/** Pixels the big shapes kept (`bigShape`) may hold in all (about 2 MB); the least recently drawn go first. */
+const KEEP_BIG = 512 * 1024
+
+/** Big shapes drawn more than once (a comet's scorch mark, a field holding its size), by key, least recently drawn first. */
+const keptBig = new Map<string, HTMLCanvasElement>()
+let keptBigPx = 0
+/** Keys of big shapes drawn once so far: only a second draw keeps one, so a shockwave growing every frame keeps none. */
+const seenBig = new Set<string>()
+onCanvasReset(
+  () => {
+    keptBig.clear()
+    keptBigPx = 0
+  },
+  () => keptBig,
+)
+
+/**
+ * Draws a big shape (`key` names its kind, size and color) centered at (x, y) as `stamp`
+ * does. One drawn again comes from a canvas of its own, kept while it fits `KEEP_BIG`:
+ * a late-game screen holds dozens of scorch marks and fields, and painting each one row
+ * by row every frame cost more than the rest of the moves together.
+ */
+const bigShape = (ctx: CanvasRenderingContext2D, key: string, w: number, h: number, x: number, y: number, paint: (s: CanvasRenderingContext2D) => void) => {
+  let canvas = keptBig.get(key)
+  if (canvas) {
+    keptBig.delete(key)
+    keptBig.set(key, canvas)
+  } else {
+    if (!seenBig.has(key) || w * h > KEEP_BIG / 8) {
+      if (seenBig.size >= 512) seenBig.clear()
+      seenBig.add(key)
+      return stamp(ctx, w, h, x, y, paint)
+    }
+    canvas = createCanvas(w, h)
+    paint(context2d(canvas))
+    keptBig.set(key, canvas)
+    keptBigPx += w * h
+    for (const [old, kept] of keptBig) {
+      if (keptBigPx <= KEEP_BIG) break
+      keptBig.delete(old)
+      keptBigPx -= kept.width * kept.height
+    }
+  }
+  ctx.drawImage(canvas, Math.round(x - w / 2), Math.round(y - h / 2))
+}
+
+/** `blitCentered(ctx, ellipse(rx, ry, color), x, y)`, with big ellipses painted fresh until one is drawn again (`bigShape`). */
 export const blitEllipse = (ctx: CanvasRenderingContext2D, rx: number, ry: number, color: string, x: number, y: number) => {
   const w = Math.round(rx) * 2 + 1
   const h = Math.round(ry) * 2 + 1
   if (w * h <= BIG_SHAPE) return blitPacked(ctx, ellipse(rx, ry, color), x, y)
-  stamp(ctx, w, h, x, y, (s) => paintEllipse(s, 0, 0, rx, ry, color))
+  bigShape(ctx, `e${rx},${ry},${color}`, w, h, x, y, (s) => paintEllipse(s, 0, 0, rx, ry, color))
 }
 
-/** `blitCentered(ctx, ring(radius, thickness, color), x, y)`, with big rings painted fresh rather than cached. */
+/** `blitCentered(ctx, ring(radius, thickness, color), x, y)`, with big rings painted fresh until one is drawn again (`bigShape`). */
 export const blitRing = (ctx: CanvasRenderingContext2D, radius: number, thickness: number, color: string, x: number, y: number) => {
   const r = Math.round(radius)
   const size = r * 2 + 1
   if (size * size <= BIG_SHAPE) return blitPacked(ctx, ring(radius, thickness, color), x, y)
-  stamp(ctx, size, size, x, y, (s) => paintRing(s, 0, 0, r, thickness, color))
+  bigShape(ctx, `r${r},${thickness},${color}`, size, size, x, y, (s) => paintRing(s, 0, 0, r, thickness, color))
 }
 
 /** Draws a sprite centered at (x, y), snapped to whole pixels. */

@@ -22,7 +22,7 @@ import { footOf, updateTerrain } from './terrain'
 import { updateVerbEvolved } from './verbEvolutions'
 import { addAvatar, knockOut, roleOf, syncAvatars } from './versusCombat'
 import { reveal, updateGrass, usedSpecial } from './versusGrass'
-import { channelTime, goalOpen, mapOf, rivalTeam, rulesOf, scoreValue, winnerOf } from './versusRules'
+import { channelTime, goalOpen, mapOf, matchMap, rivalTeam, rulesOf, scoreValue, winnerOf } from './versusRules'
 import type { Enemy, Game, Player } from './types'
 import type { Aim } from './versusBots'
 import { fullBucket, updateSocial, type Bucket, type Emote, type Ping, type SurrenderVote, type Talk } from './versusSocial'
@@ -215,21 +215,23 @@ const padSpot = (s: VersusState, team: Team, i: number) => {
 
 /**
  * A fresh match of `format` for `humans` (by slot, up to both teams) and the
- * bots that fill the teams (`seatMatch`). Every client that calls it with the same seed and
+ * bots that fill the teams (`seatMatch`), on `map` if it's one of the
+ * format's, else on one drawn from the seed (`matchMap`). Every client that calls it with the same seed and
  * loadouts gets the same game. Nobody brings anything from their save: no
  * Poké Mart ranks, Bag, TMs or items, and no shiny luck that would change a
  * fight. Each Pokémon opens with the draft (its second move).
  */
-export const createVersusGame = (seed: number, humans: readonly VersusLoadout[], format: ArenaFormat = 'standard'): Game => {
+export const createVersusGame = (seed: number, humans: readonly VersusLoadout[], format: ArenaFormat = 'standard', asked: MapId | null = null): Game => {
   const rules = VERSUS_FORMATS[format]
-  const map = MAPS[rules.map]
+  const id = matchMap(format, seed, asked)
+  const map = MAPS[id]
   const seats = seatMatch(seed, humans, rules.teamSize)
   const setups: PlayerSetup[] = seats.map((s) => ({ starter: s.starter, ranks: NO_RANKS, shiny: false }))
   const g = createRun({ ...VERSUS.view }, seed, setups, undefined, { draft: true }, true)
   g.coop!.names = seats.map((s) => s.name)
   const s: VersusState = {
     format,
-    map: rules.map,
+    map: id,
     room: createRoom(map),
     score: [0, 0],
     goals: map.goals.map((d) => ({ team: d.team, x: d.x, y: d.y, r: d.r, left: d.points, max: d.points, base: d.base, broken: false })),

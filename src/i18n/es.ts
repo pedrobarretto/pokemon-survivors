@@ -140,12 +140,12 @@ export const es: Messages = {
     fresh: 'NUEVO',
     title: 'Arena',
     tagline: 'MOBA 4v4 · 3v3',
-    maps: { vale: 'El Valle', glade: 'El Claro' },
+    maps: { vale: 'El Valle', glade: 'El Claro', cove: 'La Ensenada', reef: 'El Arrecife' },
     formats: {
-      standard: { name: 'Estándar', size: '4v4', clock: '7 min', text: 'En el Valle · 3 porterías por equipo' },
-      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'En el Claro · 2 porterías por equipo' },
+      standard: { name: 'Estándar', size: '4v4', clock: '7 min', text: 'En el Valle o la Ensenada · 3 porterías por equipo' },
+      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'En el Claro o el Arrecife · 2 porterías por equipo' },
     },
-    intro: 'Dos equipos en el Valle (4v4) o en el Claro (3v3). Derrota Pokémon salvajes, junta Energía y anótala en las porterías rivales.',
+    intro: 'Dos equipos en el Valle o la Ensenada (4v4), en el Claro o el Arrecife (3v3). Derrota Pokémon salvajes, junta Energía y anótala en las porterías rivales.',
     lobby: {
       how: 'Cómo jugar',
       /** The Como jogar strip, in order: each step's title and line. */
@@ -224,7 +224,7 @@ export const es: Messages = {
         'Cada aliado en la misma portería acelera la anotación un 50%.',
         'Un golpe rival interrumpe a quien está anotando.',
         'En tu portería te curas y corres un 20% más rápido.',
-        'En el Valle, la portería de la base solo se abre cuando cae una de ruta; el Claro no tiene portería de base.',
+        'En el 4v4, la portería de la base solo se abre cuando cae una de ruta; el 3v3 no tiene portería de base.',
         'Derrotar a Drednaw da escudo y Energía a todo el equipo.',
         'En la hierba alta los rivales no te ven, pero tus ataques se detienen: ideal para emboscar y escapar.',
         'Las cartas de nivel no pausan: toca una o usa 1–4.',
@@ -461,7 +461,7 @@ export const es: Messages = {
       rules: {
         title: 'Cómo funciona la Clasificatoria',
         items: (r) => [
-          'Dos formatos: 4v4 Estándar en el Valle (7 min, Casual y Clasificatoria) y 3v3 Rápida en el Claro (3 min, solo Casual, sin RP).',
+          'Dos formatos: 4v4 Estándar en el Valle o la Ensenada (7 min, Casual y Clasificatoria) y 3v3 Rápida en el Claro o el Arrecife (3 min, solo Casual, sin RP).',
           `MMR y RP: el MMR es oculto y decide con quién juegas. El RP es lo que muestra el ranking: victoria +${r.win}, derrota ${r.loss}, y hasta +${r.perf} por tu desempeño.`,
           `Si faltan jugadores, los bots completan la partida: después de ${r.casual} s en Casual y de ${r.ranked} s en Clasificatoria.`,
           `La Clasificatoria necesita al menos ${r.humans} entrenadores en la partida, con gente en los dos equipos. Si no, cuenta como Casual.`,
@@ -494,6 +494,8 @@ export const es: Messages = {
     room: {
       mode: 'Modo',
       format: 'Formato',
+      map: 'Mapa',
+      random: 'Aleatorio',
       modes: { run: 'Horda', versus: 'Arena' },
       team: 'Tu equipo',
       fill: 'Los lugares libres los juega la CPU (4 contra 4).',
@@ -870,6 +872,7 @@ export const es: Messages = {
     teamAttackOpacity: 'Opacidad del equipo',
     uiScale: 'Tamaño de la interfaz',
     uiScaleAuto: 'Auto',
+    fullscreen: 'Pantalla completa',
     safeMode: 'Modo ligero',
     joystick: 'Joystick',
     joystickModes: { floating: 'Sigue el dedo', fixed: 'Fijo' },
@@ -1219,7 +1222,7 @@ export const es: Messages = {
       wallpaper: 'Fondo de pantalla de la Caja del PC.',
     },
     styles: {
-      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna' },
+      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna', creator: 'Creador(a)' },
       background: { night: 'Noche estrellada', meadow: 'Ruta 1', forest: 'Bosque Verde', cave: 'Mt. Moon', snow: 'Monte Plateado', tower: 'Torre Lavanda', supporter: 'Cielo dorado', halloween: 'Noche de Brujas' },
       wallpaper: { classic: 'Clásico', forest: 'Hojas', cave: 'Piedritas', snow: 'Copos de nieve', tower: 'Fantasmitas', supporter: 'Estrellas doradas', haunted: 'Casa Embrujada' },
     },
@@ -2510,7 +2513,7 @@ export const es: Messages = {
     noTitle: 'ninguno',
     titleTag: 'TÍTULO',
     equipped: 'EN USO',
-    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena' },
+    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors' },
     newMedals: 'Nuevas medallas',
     names: {
       firstRun: 'Primeros pasos',
@@ -2605,6 +2608,7 @@ export const es: Messages = {
       arenaGreat: 'Great Ball de la Arena',
       arenaUltra: 'Ultra Ball de la Arena',
       arenaMaster: 'Master Ball de la Arena',
+      creator: 'Creador(a) de Contenido',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Juega una partida' : `Juega ${n} partidas`),
@@ -5444,7 +5448,7 @@ export const es: Messages = {
     boards: { play: 'Jugar', ranking: 'Ranking', season: 'Temporada', history: 'Historial', rules: 'Reglas' },
     first: [
       '¡Bzzz! ¡Bienvenido al Estadio! Soy el juez de la Arena: demasiado rápido para dejar pasar una sola jugada.',
-      'Dos equipos se enfrentan: de cuatro en el Valle, o de tres en el Claro para una partida rápida. Derrota Pokémon salvajes, junta Energía y llévala a la portería rival.',
+      'Dos equipos se enfrentan: de cuatro en el Valle o la Ensenada, o de tres en el Claro o el Arrecife para una partida rápida. Derrota Pokémon salvajes, junta Energía y llévala a la portería rival.',
       'Partida rápida: contra bots, empieza ya. Casual: contra entrenadores, sin puntos. Clasificatoria: cada victoria sube tu nivel.',
       'Cada temporada dura dos semanas. Los tableros del patio muestran el ranking, la temporada, tu historial y las reglas.',
     ],
@@ -5481,13 +5485,17 @@ export const es: Messages = {
     clone: (name: string) => `${name} Clon`,
     escaped: (name: string, wins: number, need: number) => `*${name}* se escapó… _${wins}/${need}_`,
     escapedHint: (left: number) => (left === 1 ? 'Falta 1 victoria para la captura.' : `Faltan ${left} victorias para la captura.`),
-    arceusHint: (left: number) => (left > 0 ? `Solo se deja capturar en el modo infinito, después de los otros legendarios (faltan ${left}).` : 'Solo se deja capturar en el modo infinito.'),
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? 'Solo se deja capturar en el modo infinito.'
+        : missing.length <= 3 ? `Solo se deja capturar en el modo infinito, después de todos los otros legendarios. Falta capturar: ${missing.join(', ')}.`
+        : `Solo se deja capturar en el modo infinito, después de todos los otros legendarios (faltan ${missing.length}: mira la pestaña Legendarios).`,
     caught: (name: string) => `¡*${name}* capturado! Jugable en el _Modo Legendario_.`,
     caughtShiny: (name: string) => `¡*${name}* _shiny_ capturado! Jugable en el _Modo Legendario_.`,
     shinyUnlocked: (name: string) => `¡*${name}* _shiny_ desbloqueado en el _Modo Legendario_!`,
     caughtHint: 'Elígelo en la pestaña Legendarios de la selección de compañero.',
     tab: 'LEGENDARIOS',
     wins: (n: string) => `Victorias: ${n}`,
+    stillMissing: (missing: readonly string[]) => `Falta capturar (${missing.length}): ${missing.join(', ')}.`,
     lockedButton: 'No capturado',
     where: {
       rift: 'Espera en una _grieta legendaria_: entra al portal y véncelo allí.',

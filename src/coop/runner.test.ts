@@ -127,6 +127,23 @@ describe('the lockstep runner', () => {
     expect(r.syncing).toBeNull()
   })
 
+  it('keeps real time live on a slow phone whose frames bring more ticks than the floor, instead of falling into syncs', () => {
+    // 10 fps (6 ticks per frame) and every clock reading costs 5 ms (a busy fight's ticks on a cheap phone): over the budget every frame.
+    const h = harness(5)
+    const r = createRunner(START, 'ROOMS', 0)
+    let known = 0
+    let synced = 0
+    for (let i = 0; i < 600; i++) {
+      onFrame(r, frame(known, known + 6), h.at(), () => {})
+      known += 6
+      h.tick(100)
+      advance(r, 0.1, h.deps)
+      if (r.syncing) synced++
+    }
+    expect(synced).toBe(0)
+    expect(r.known - r.next).toBeLessThan(SYNC_FAR / 4)
+  })
+
   it('plays a snapshot only if it restores to the hash the team agreed on; a bad one is reported and never played', async () => {
     const h = harness()
     const source = createRunner(START, 'ROOMS', 0)

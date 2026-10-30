@@ -79,7 +79,7 @@ describe('a match', () => {
   })
 
   it('lets a rival hurt and knock out a Pokémon, never a teammate, and brings it back on its pad', () => {
-    const g = createVersusGame(3, [])
+    const g = createVersusGame(3, [], 'standard', 'vale')
     const [blue, mate] = g.players.filter((p) => p.versus!.team === 0)
     const red = g.players.find((p) => p.versus!.team === 1)!
     red.versus!.energy = 10
@@ -98,7 +98,7 @@ describe('a match', () => {
   })
 
   it('scores Energy carried into an open rival goal, and opens a base goal only once a lane goal of its team breaks', () => {
-    const g = createVersusGame(5, [{ starter: 'mudkip', name: 'me' }])
+    const g = createVersusGame(5, [{ starter: 'mudkip', name: 'me' }], 'standard', 'vale')
     const me = g.players[0]!
     const s = g.versus!
     me.versus!.bot = false
@@ -120,7 +120,7 @@ describe('a match', () => {
   })
 
   it('plays a 3v3 on the Clareira on its own clock: two goals a side, Drednaw at its time, the stretch for the last minute', () => {
-    const g = createVersusGame(4, [{ starter: 'chikorita', name: 'me' }], 'quick')
+    const g = createVersusGame(4, [{ starter: 'chikorita', name: 'me' }], 'quick', 'glade')
     const s = g.versus!
     const rules = VERSUS_FORMATS.quick
     expect(g.players).toHaveLength(6)
@@ -164,8 +164,8 @@ describe('a match', () => {
     expect(still(() => [{ slot: 0, kind: 'chat', msg: 'go' }, { slot: 0, kind: 'ping', ping: 'omw', x: 0, y: 0 }, { slot: 0, kind: 'surrender', vote: true }, { slot: 0, kind: 'prio', prio: 1 }])).toBeGreaterThan(39)
   })
 
-  it('has its bots carry Energy to the rival goals over a whole match, ending on the clock', () => {
-    const g = createVersusGame(9, [])
+  it.each(VERSUS_FORMATS.standard.maps)('has its bots carry Energy to the rival goals over a whole match on the %s, ending on the clock', (map) => {
+    const g = createVersusGame(9, [], 'standard', map)
     run(g, VERSUS_FORMATS.standard.length + 1)
     expect(g.phase).toBe('gameover')
     expect(g.versus!.result).not.toBeNull()
@@ -173,8 +173,8 @@ describe('a match', () => {
     expect(g.versus!.score[1]).toBeGreaterThan(0)
   }, 30_000)
 
-  it('ends a 3v3 at three minutes with both teams scoring', () => {
-    const g = createVersusGame(10, [], 'quick')
+  it.each(VERSUS_FORMATS.quick.maps)('ends a 3v3 on the %s at three minutes with both teams scoring', (map) => {
+    const g = createVersusGame(10, [], 'quick', map)
     run(g, VERSUS_FORMATS.quick.length - 1)
     expect(g.phase).toBe('playing')
     run(g, 2)

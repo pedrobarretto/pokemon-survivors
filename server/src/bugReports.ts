@@ -66,8 +66,11 @@ const runLine = (r: BugRun) =>
     .filter(Boolean)
     .join(' · ')
 
-/** Canvas memory and frame pace: `canvas: 412 (38.5 MB, peak 51.2 MB / 530) · frame 17.1 ms`. */
-const perfLine = (p: BugPerf) => `canvas: ${p.canvases} (${p.canvasMb} MB, peak ${p.peakCanvasMb} MB / ${p.peakCanvases}) · frame ${p.frameMs ?? '?'} ms`
+/** Canvas memory and frame pace: `canvas: 412 (38.5 MB, peak 51.2 MB / 530) · frame 17.1 ms`, then any canvases the browser wiped or refused. */
+const perfLine = (p: BugPerf) =>
+  [`canvas: ${p.canvases} (${p.canvasMb} MB, peak ${p.peakCanvasMb} MB / ${p.peakCanvases}) · frame ${p.frameMs ?? '?'} ms`, p.wiped > 0 && `wiped ${p.wiped}×`, p.refused > 0 && `refused ${p.refused}`]
+    .filter(Boolean)
+    .join(' · ')
 
 const errorMessage = (e: BugError, title: string) => {
   const head = `**${title}** (${e.kind}, ${e.at})\n`

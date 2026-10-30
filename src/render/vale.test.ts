@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { GLADE, VALE } from '../data/versusMaps'
+import { COVE, GLADE, REEF, VALE } from '../data/versusMaps'
 import { onFloor, zoneAt } from './vale'
 import { versusTag } from './team'
 
 describe('the maps\' floors', () => {
   it('has the spawn pads, the goals and the camps on the floor, and the hedge around it', () => {
-    for (const map of [VALE, GLADE]) for (const p of [...map.spawn, ...map.goals, ...map.camps]) expect(onFloor(map.rects, p.x, p.y)).toBe(true)
+    for (const map of [VALE, GLADE, COVE, REEF]) for (const p of [...map.spawn, ...map.goals, ...map.camps]) expect(onFloor(map.rects, p.x, p.y)).toBe(true)
     expect(onFloor(VALE.rects, 200, -190)).toBe(false)
     expect(onFloor(VALE.rects, 800, 0)).toBe(false)
     expect(onFloor(GLADE.rects, 360, 100)).toBe(false)
@@ -23,6 +23,13 @@ describe('the maps\' floors', () => {
     expect(zoneAt(glade, 0, 255)).toBe('lane')
     expect(zoneAt(glade, 0, 0)).toBe('jungle')
     expect(zoneAt(glade, -350, 0)).toBe('passage')
+    const cove = COVE.look
+    expect(zoneAt(cove, -330, 0)).toBe('jungle')
+    expect(zoneAt(cove, 0, 0)).toBe('jungle')
+    expect(zoneAt(cove, -140, 0)).toBe('passage')
+    expect(zoneAt(cove, 0, -340)).toBe('lane')
+    expect(zoneAt(REEF.look, 0, -262)).toBe('lane')
+    expect(zoneAt(REEF.look, 100, 0)).toBe('passage')
   })
 })
 

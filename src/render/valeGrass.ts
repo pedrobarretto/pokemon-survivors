@@ -1,6 +1,6 @@
 import { canvasCache, context2d, createCanvas, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
-import { MAPS, type MapId, type Rect } from '../data/versusMaps'
+import { MAPS, type MapId, type MapTheme, type Rect } from '../data/versusMaps'
 import { patchAt } from '../game/versusGrass'
 import { mapOf } from '../game/versusRules'
 import type { Game, Player } from '../game/types'
@@ -121,11 +121,16 @@ const spotsFor = (map: MapId) => {
   return s
 }
 
-const clumpArt = (s: Spot, frame: ClumpFrame) => (s.flip ? valeArtMirrored(`grass-${s.clump}${frame}`) : valeArt(`grass-${s.clump}${frame}`))
+const clumpArt = (s: Spot, frame: ClumpFrame, theme: MapTheme) => (s.flip ? valeArtMirrored(`grass-${s.clump}${frame}`, theme) : valeArt(`grass-${s.clump}${frame}`, theme))
 
-let clumpsReady = false
-/** Whether every clump's frames have loaded (until then the code's blades stand in). */
-const clumpsLoaded = () => (clumpsReady ||= CLUMPS.every((c) => (['', '-sway', '-rustle'] as const).every((f) => valeArt(`grass-${c}${f}`) !== null)))
+const clumpsReady = new Set<MapTheme>()
+/** Whether every clump's frames of `theme` have loaded (until then the code's blades stand in). */
+const clumpsLoaded = (theme: MapTheme) => {
+  if (clumpsReady.has(theme)) return true
+  const ready = CLUMPS.every((c) => (['', '-sway', '-rustle'] as const).every((f) => valeArt(`grass-${c}${f}`, theme) !== null))
+  if (ready) clumpsReady.add(theme)
+  return ready
+}
 
 /** Whether a Pokémon the viewer sees walks through clump `s` of patch `i` (a hidden rival never rustles one). */
 const rustling = (g: Game, viewer: Player, s: Spot, i: number) => {
@@ -138,9 +143,11 @@ const rustling = (g: Game, viewer: Player, s: Spot, i: number) => {
 
 /** Patch `i`'s clumps, swaying in a wave across it (`FPS`), the ones walked through on their rustle frame. */
 const drawClumps = (ctx: Ctx, g: Game, viewer: Player, i: number, t: number) => {
-  for (const s of spotsFor(g.versus!.map)[i]!) {
+  const map = g.versus!.map
+  const theme = MAPS[map].look.theme
+  for (const s of spotsFor(map)[i]!) {
     const frame: ClumpFrame = rustling(g, viewer, s, i) ? '-rustle' : (Math.floor(t * FPS - s.x / 48) & 1) === 1 ? '-sway' : ''
-    const art = clumpArt(s, frame)
+    const art = clumpArt(s, frame, theme)
     if (art) ctx.drawImage(art, s.x - (art.width >> 1), s.y - art.height)
   }
 }
@@ -149,7 +156,7 @@ const drawClumps = (ctx: Ctx, g: Game, viewer: Player, i: number, t: number) => 
 export const drawGrassPatches = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
   const s = g.versus
   if (!s) return
-  const painted = clumpsLoaded()
+  const painted = clumpsLoaded(mapOf(s).look.theme)
   const viewer = localPlayer(g)
   mapOf(s).grass.forEach((r, i) => {
     if (!visible((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2, 80)) return

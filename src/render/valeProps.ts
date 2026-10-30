@@ -47,12 +47,12 @@ export const valePropsInView = (map: MapId, visible: (x: number, y: number, m?: 
   for (const p of all) if (visible(p.x, p.y, 110)) out.push(p)
 }
 
-const pictureOf = (p: ValeProp) => valeArt(p.prop === 'gate' ? `base-gate-${teamFile(p.team)}` : `base-pillar-${teamFile(p.team)}`)
+const pictureOf = (g: Game, p: ValeProp) => valeArt(p.prop === 'gate' ? `base-gate-${teamFile(p.team)}` : `base-pillar-${teamFile(p.team)}`, MAPS[g.versus?.map ?? 'vale'].look.theme)
 
 /** A piece's box (top left, size) as drawn now, or null while its picture loads. */
 const boxOf = (g: Game, p: ValeProp) => {
   if (p.prop === 'post') return goalPostBox(g, p.goal)
-  const art = pictureOf(p)
+  const art = pictureOf(g, p)
   if (!art) return null
   return { x: Math.round(p.x) - (art.width >> 1), y: Math.round(p.y) + (p.prop === 'gate' ? FEET.gate : FEET.pillar) - art.height, w: art.width, h: art.height }
 }
@@ -70,7 +70,7 @@ export const drawValeProp = (ctx: Ctx, g: Game, p: ValeProp, t: number, w: numbe
   const see = valePropCovers(g, p, me.x, me.y, w, h)
   if (p.prop === 'post') return drawGoalPost(ctx, g, p.goal, t, see)
   const b = boxOf(g, p)
-  const art = pictureOf(p)
+  const art = pictureOf(g, p)
   if (!b || !art) return
   if (see) ctx.globalAlpha = 0.5
   ctx.drawImage(art, b.x, b.y)

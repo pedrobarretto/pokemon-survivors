@@ -1,7 +1,7 @@
 import { blitCentered, blitEllipse, blitPacked, canvasCache, context2d, createCanvas, fromStrings, lazy, textSprite, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { VERSUS, type Team } from '../data/versus'
-import { MAPS, type MapId, type MapLook, type Rect, type VersusMap } from '../data/versusMaps'
+import { laneYAt, MAPS, type MapId, type MapLook, type MapTheme, type Rect, type VersusMap } from '../data/versusMaps'
 import { channelTime, goalOpen, mapOf } from '../game/versusRules'
 import type { GoalState, VersusState } from '../game/versus'
 import type { Game, Player } from '../game/types'
@@ -9,19 +9,20 @@ import { localPlayer } from '../game/players'
 import { teamFile, valeArt, type PostLook } from './arenaArt'
 import { dashedRing } from './strokes'
 import { concealed } from './valeGrass'
-import { bannerOf, FLOWER_PATCHES, lampOf, LOG, MUSHROOMS, TALL_GRASS, TALL_GRASS_SMALL } from './valeDecor'
+import { bannerOf, DRIFTWOOD, FLOWER_PATCHES, lampOf, LOG, MUSHROOMS, PEBBLES, SEAWEED, SHELLS, STARFISH, TALL_GRASS, TALL_GRASS_SMALL } from './valeDecor'
 
 /**
- * The Arena's maps (`data/versusMaps.ts`: the Vale, the Clareira) on screen,
- * draw-only, all in the same kit (each map's `look` says where its parts
- * lie): its floor baked in 256 px tiles of code-authored pixel art (grass, the lanes' worn dirt paths,
- * the darker jungle, the bases' flagstones tinted to their team, a hedge wall
- * around it all), the spawn pads and goal zones on the ground, the goals'
- * posts (standing among the Pokémon, `render/valeProps.ts`), the Energy
- * orbs, each scorer's channel arc and the goals' points left. The pads and
- * posts are PixelLab pictures (`render/arenaArt.ts`); until they load, the
- * code's own (`bakePad`, `bakePost`) stand in. `render` calls the passes only
- * while `g.versus` is set.
+ * The Arena's maps (`data/versusMaps.ts`) on screen, draw-only, all in the
+ * same kit (each map's `look` says where its parts lie, its `theme` how they
+ * look): its floor baked in 256 px tiles of code-authored pixel art (the
+ * meadow's grass, worn dirt paths and hedge wall, or the coast's sand,
+ * boardwalks, tidepools and the sea round it; the bases' flagstones tinted to
+ * their team either way), the spawn pads and goal zones on the ground, the
+ * goals' posts (standing among the Pokémon, `render/valeProps.ts`), the
+ * Energy orbs, each scorer's channel arc and the goals' points left. The pads
+ * and posts are PixelLab pictures (`render/arenaArt.ts`), a set per theme;
+ * until they load, the code's own (`bakePad`, `bakePost`) stand in. `render`
+ * calls the passes only while `g.versus` is set.
  */
 
 type Ctx = CanvasRenderingContext2D
@@ -54,8 +55,7 @@ export type FloorZone = 'base' | 'lane' | 'jungle' | 'passage'
 export const zoneAt = (look: MapLook, x: number, y: number): FloorZone => {
   if (x < -look.baseX || x >= look.baseX) return 'base'
   if (y < -look.laneFrom || y >= look.laneFrom) return 'lane'
-  const j = look.jungle
-  if (x >= j.x0 && x < j.x1 && y >= j.y0 && y < j.y1) return 'jungle'
+  for (const j of look.jungles) if (x >= j.x0 && x < j.x1 && y >= j.y0 && y < j.y1) return 'jungle'
   return 'passage'
 }
 
@@ -74,6 +74,7 @@ type Painter = {
   id: MapId
   map: VersusMap
   look: MapLook
+  scenery: Scenery
   nests: readonly Nest[]
   clear: readonly { x: number; r: number }[]
   bounds: Rect
@@ -90,14 +91,15 @@ const painterOf = (id: MapId): Painter => {
   if (known) return known
   const map = MAPS[id]
   const look = map.look
-  const nests = map.camps.map((c) => ({ x: c.x, y: c.y, r: c.species === 'ludicolo' ? 24 : 14 + c.count * 2 }))
-  const onPath = (y: number) => Math.abs(Math.abs(y) - look.laneY) < 30
+  const nests = map.camps.map((c) => ({ x: c.x, y: c.y, r: c.count === 1 ? 24 : 14 + c.count * 2 }))
+  const onPath = (x: number, y: number) => Math.abs(Math.abs(y) - laneYAt(look.lane, Math.abs(x))) < 30
   const P: Painter = {
     id,
     map,
     look,
+    scenery: SCENERY[look.theme],
     nests,
-    clear: [...map.goals.filter((goal) => onPath(goal.y)).map((goal) => ({ x: Math.abs(goal.x), r: goal.r + 12 })), ...nests.filter((n) => onPath(n.y)).map((n) => ({ x: Math.abs(n.x), r: n.r + 8 }))],
+    clear: [...map.goals.filter((goal) => onPath(goal.x, goal.y)).map((goal) => ({ x: Math.abs(goal.x), r: goal.r + 12 })), ...nests.filter((n) => onPath(n.x, n.y)).map((n) => ({ x: Math.abs(n.x), r: n.r + 8 }))],
     bounds: {
       x0: Math.min(...map.rects.map((r) => r.x0)),
       y0: Math.min(...map.rects.map((r) => r.y0)),
@@ -189,27 +191,55 @@ const dirtAt = (x: number, y: number, out: number[]) => {
   return set(out, noise2(x, y, 14, 32) > 0.58 ? DIRT.alt : DIRT.main)
 }
 
+/** Distance from (ax, ay) to the segment (x0, y0)–(x1, y1). */
+const segmentDistance = (ax: number, ay: number, x0: number, y0: number, x1: number, y1: number) => {
+  const dx = x1 - x0
+  const dy = y1 - y0
+  const k = Math.max(0, Math.min(1, ((ax - x0) * dx + (ay - y0) * dy) / (dx * dx + dy * dy || 1)))
+  return Math.hypot(ax - x0 - k * dx, ay - y0 - k * dy)
+}
+
+/** How far (ax, ay), folded into the north-west, is from the lanes' path (`look.lane`, run on flat past the base's edge). */
+const laneDistance = (look: MapLook, ax: number, ay: number) => {
+  const lane = look.lane
+  let best = ax >= lane[0]![0] ? Math.abs(ay - lane[0]![1]) : Infinity
+  for (let i = 1; i < lane.length; i++) best = Math.min(best, segmentDistance(ax, ay, lane[i - 1]![0], lane[i - 1]![1], lane[i]![0], lane[i]![1]))
+  return best
+}
+
+/** Where a floor pixel sits on the paths (`pathAt`): how deep in one (> 0 inside, the edge around 0), and whether the deepest runs north–south (a passage) or along (a lane, a way). */
+type PathHit = { depth: number; upDown: boolean }
+
 /**
- * How deep (x, y) sits in a dirt path (> 0 inside, the ragged edge around
- * 0): the lanes' paths along their middle, the passages' columns from the
- * lanes into the jungle, and the ways from each base into the jungle.
+ * How deep (x, y) sits in a path (`hit`): the lanes' paths along their
+ * middle, the passages' columns from the lanes into the jungle, and the ways
+ * along the middle (from each base into the jungle, from a cove to its
+ * island). `ragged` gives the meadow's dirt its uneven edge; the coast's
+ * boardwalks run straight.
  */
-const pathDepth = (look: MapLook, x: number, y: number) => {
-  let best = -Infinity
-  if (Math.abs(y) >= look.laneFrom - 10) {
-    const half = 17 + noise1(x, 18, 41) * 8
-    best = Math.max(best, half - Math.abs(Math.abs(y) - look.laneY))
-  }
+const pathAt = (look: MapLook, x: number, y: number, ragged: boolean, hit: PathHit) => {
+  hit.depth = -Infinity
+  hit.upDown = false
+  const ax = Math.abs(x)
   const ay = Math.abs(y)
-  if (ay >= look.passageFrom && ay <= look.laneY) {
-    for (const cx of look.passages) {
-      const half = 16 + noise1(y, 14, 42 + cx) * 7
-      best = Math.max(best, half - Math.abs(x - cx))
+  if (ay >= look.laneFrom - 10) hit.depth = (ragged ? 17 + noise1(x, 18, 41) * 8 : 15) - laneDistance(look, ax, ay)
+  for (const p of look.passages) {
+    if (ay < p.from || ay > laneYAt(look.lane, Math.abs(p.x))) continue
+    const d = (ragged ? 16 + noise1(y, 14, 42 + p.x) * 7 : 13) - Math.abs(x - p.x)
+    if (d > hit.depth) {
+      hit.depth = d
+      hit.upDown = true
     }
   }
-  const ax = Math.abs(x)
-  if (ax >= look.mouth[0] && ax <= look.mouth[1]) best = Math.max(best, 15 + noise1(x, 12, 43) * 6 - Math.abs(y))
-  return best
+  for (const [a, b] of look.ways) {
+    if (ax < a || ax > b) continue
+    const d = (ragged ? 15 + noise1(x, 12, 43) * 6 : 13) - ay
+    if (d > hit.depth) {
+      hit.depth = d
+      hit.upDown = false
+    }
+  }
+  return hit
 }
 
 /**
@@ -228,7 +258,7 @@ const CARPETS = TINTS.map((c) => ({ main: mix(c, hex('#1c1c2c'), 0.38), lit: mix
 const carpetAt = (P: Painter, ax: number, ay: number): { depth: number; along: number } | null => {
   const { half } = PLAZA
   const { spine } = P.look.plaza
-  const reach = P.look.laneY
+  const reach = P.look.lane[0]![1]
   const gate = P.look.baseX
   const pad = P.pad
   let best: { depth: number; along: number } | null = null
@@ -258,10 +288,6 @@ const emblemAt = (dx: number, dy: number, team: Team, out: number[]) => {
   return true
 }
 
-const PLAZA_STONE = [hex('#d2c6aa'), hex('#dcd2b8'), hex('#c8bc9e')] as const
-const PLAZA_LIT = hex('#eee6d0')
-const PLAZA_EDGE = hex('#b4a888')
-const PLAZA_GROUT = hex('#8c8068')
 const MOSS = hex('#6a9a4a')
 
 /**
@@ -286,6 +312,7 @@ const plazaAt = (P: Painter, x: number, y: number, out: number[]) => {
     const k = Math.abs(u - 7) + Math.abs(v + 3)
     return set(out, k === 3 ? GOLD.main : k < 3 ? CARPETS[team]!.lit : CARPETS[team]!.main)
   }
+  const { stones, lit, edge, grout, fleck } = P.scenery.plaza
   const W = 26
   const H = 16
   const row = Math.floor((y + 1400) / H)
@@ -293,10 +320,10 @@ const plazaAt = (P: Painter, x: number, y: number, out: number[]) => {
   const col = Math.floor(sx / W)
   const lx = sx - col * W
   const ly = y + 1400 - row * H
-  if (lx === 0 || ly === 0) set(out, hash2(x, y, 53) < 0.07 ? MOSS : PLAZA_GROUT)
+  if (lx === 0 || ly === 0) set(out, hash2(x, y, 53) < 0.07 ? fleck : grout)
   else {
-    const tone = PLAZA_STONE[Math.floor(hash2(col, row, 51) * PLAZA_STONE.length)]!
-    set(out, lx === 1 || ly === 1 ? PLAZA_LIT : lx === W - 1 || ly === H - 1 ? PLAZA_EDGE : hash2(x, y, 52) < 0.03 ? PLAZA_EDGE : tone)
+    const tone = stones[Math.floor(hash2(col, row, 51) * stones.length)]!
+    set(out, lx === 1 || ly === 1 ? lit : lx === W - 1 || ly === H - 1 ? edge : hash2(x, y, 52) < 0.03 ? edge : tone)
   }
   mixInto(out, out, TINTS[team], 0.1)
 }
@@ -305,22 +332,23 @@ const plazaAt = (P: Painter, x: number, y: number, out: number[]) => {
 const CENTER = { inner: 50, outer: 60 } as const
 const SAND = { main: hex('#c8a870'), alt: hex('#bc9c64'), line: hex('#e4cc98'), dark: hex('#9c7c4c') }
 
-/** The center: a ring of stone blocks round trodden sand, a painted circle inside; false off it. */
-const centerAt = (x: number, y: number, out: number[]) => {
+/** The center: a ring of stone blocks round trodden sand, a painted circle inside; false off it. (x, y) from the center; (wx, wy) the world pixel. */
+const centerAt = (S: Scenery, x: number, y: number, wx: number, wy: number, out: number[]) => {
   const d = Math.sqrt(x * x + y * y)
   const { inner, outer } = CENTER
   if (d > outer + 3) return false
   if (d > outer) {
-    grassAt(x, y, true, out)
+    S.ground(wx, wy, true, out)
     mixInto(out, out, SHADOW, 0.3)
     return true
   }
   if (d > inner) {
     const arc = (Math.atan2(y, x) + Math.PI) * ((inner + outer) / 2)
     const block = Math.floor(arc / 13)
-    if (d > outer - 1 || d <= inner + 1 || arc - block * 13 < 1) set(out, d > outer - 1 ? INK : STONE.grout)
-    else set(out, d < inner + 3 || y < -inner ? STONE.lit : hash2(block, 0, 54) < 0.5 ? STONE.a : STONE.b)
-    if (hash2(x, y, 55) < 0.05) mixInto(out, out, MOSS, 0.6)
+    const ring = S.ring
+    if (d > outer - 1 || d <= inner + 1 || arc - block * 13 < 1) set(out, d > outer - 1 ? INK : ring.grout)
+    else set(out, d < inner + 3 || y < -inner ? ring.lit : hash2(block, 0, 54) < 0.5 ? ring.a : ring.b)
+    if (hash2(x, y, 55) < 0.05) mixInto(out, out, ring.fleck, 0.6)
     return true
   }
   const painted = Math.abs(d - 30) < 1 || (d < 6 && (Math.abs(x) < 1.5 || Math.abs(y) < 1.5))
@@ -351,7 +379,7 @@ const nestAt = (P: Painter, x: number, y: number, out: number[]) => {
 
 /** The lanes' paths: faint chevrons in each half's team color, pointing at the rival side, and the midline. */
 const chevronAt = (P: Painter, x: number, y: number, out: number[]) => {
-  const v = Math.abs(y) - P.look.laneY
+  const v = Math.abs(y) - laneYAt(P.look.lane, Math.abs(x))
   if (Math.abs(v) > 6 || Math.abs(x) > P.look.baseX - 40) return
   if (Math.abs(x) < 1) return mixInto(out, out, STONE.lit, hash2(0, y, 60) < 0.8 ? 0.7 : 0.3)
   const ax = Math.abs(x)
@@ -415,19 +443,173 @@ const mixInto = (out: number[], a: RGB | number[], b: RGB, k: number) => {
   out[2] = Math.round(a[2]! + (b[2] - a[2]!) * k)
 }
 
-/** A floor pixel's color before the hedge's shadows. */
+const HIT: PathHit = { depth: 0, upDown: false }
+
+/** A floor pixel's color before the wall's shadows. */
 const floorAt = (P: Painter, x: number, y: number, out: number[]) => {
+  const S = P.scenery
   const zone = zoneAt(P.look, x, y)
   if (zone === 'base') return plazaAt(P, x, y, out)
-  if (zone === 'jungle' && centerAt(x - P.map.center.x, y - P.map.center.y, out)) return
-  const depth = pathDepth(P.look, x, y)
-  // The path's edge frays: grass and dirt dither over a couple of pixels.
-  if (depth > 1.5 || (depth > -1.5 && hash2(x, y, 44) < (depth + 1.5) / 3)) {
-    dirtAt(x, y, out)
+  if (zone === 'jungle' && centerAt(S, x - P.map.center.x, y - P.map.center.y, x, y, out)) return
+  const hit = pathAt(P.look, x, y, S.ragged, HIT)
+  if (S.path(x, y, hit, out)) {
     if (zone === 'lane') chevronAt(P, x, y, out)
-  } else grassAt(x, y, zone === 'jungle', out)
+  } else S.ground(x, y, zone === 'jungle', out)
   nestAt(P, x, y, out)
 }
+
+/* ---------------- Sceneries ---------------- */
+
+type Stones = { a: RGB; b: RGB; grout: RGB; lit: RGB; fleck: RGB }
+
+/**
+ * How a theme paints a map (`MapLook.theme`): its ground (the open floor,
+ * darker in the jungle), its paths (true where (x, y) is on one), the wall
+ * round the floor and its edge on the floor below, the bases' flagstones,
+ * the center's ring, and its decor sprites.
+ */
+type Scenery = {
+  ground: (x: number, y: number, jungle: boolean, out: number[]) => void
+  /** Paints a path pixel and says so, or leaves `out` alone off the paths. */
+  path: (x: number, y: number, hit: PathHit, out: number[]) => boolean
+  /** Whether paths fray (`pathAt`). */
+  ragged: boolean
+  /** A wall pixel `south` px above the floor (0: not within 6), or `near` px beside or below it (0: not within 2). */
+  wall: (x: number, y: number, south: number, near: number, out: number[]) => void
+  /** A floor pixel `north` px below the wall (0: not within 6), or (`side`) beside it. */
+  edge: (x: number, y: number, north: number, side: boolean, out: number[]) => void
+  plaza: { stones: readonly RGB[]; lit: RGB; edge: RGB; grout: RGB; fleck: RGB }
+  ring: Stones
+  /** The jungle's clumps (a big one, a small one), the lanes' verge sprites (three) and the rare one among them, and the logs. */
+  jungle: readonly [() => PixelSprite, () => PixelSprite]
+  verge: () => readonly PixelSprite[]
+  rare: () => PixelSprite
+  log: () => PixelSprite
+}
+
+/** The Vale's and the Clareira's: grass, worn dirt paths, a hedge wall casting its shadow. */
+const MEADOW: Scenery = {
+  ground: grassAt,
+  path: (x, y, hit, out) => {
+    // The path's edge frays: grass and dirt dither over a couple of pixels.
+    const { depth } = hit
+    if (!(depth > 1.5 || (depth > -1.5 && hash2(x, y, 44) < (depth + 1.5) / 3))) return false
+    dirtAt(x, y, out)
+    return true
+  },
+  ragged: true,
+  wall: (x, y, south, near, out) => {
+    // South of the hedge, where the floor lies below, its front face shows; elsewhere a lit rim.
+    if (south) {
+      hedgeAt(x, y, out)
+      const face = south === 1 ? FACE[0] : FACE[1 + ((((Math.floor(x / 2) + south) % 3) + 3) % 3)]!
+      if (south <= 2 || hash2(x, y, 71) < 0.7) set(out, face)
+    } else if (near) set(out, RIM[near - 1]!)
+    else hedgeAt(x, y, out)
+  },
+  edge: (_x, _y, north, side, out) => {
+    // The hedge casts a shadow down onto the floor below it, and a thin one at its other edges.
+    if (north) mixInto(out, out, SHADOW, 0.5 - north * 0.065)
+    else if (side) mixInto(out, out, SHADOW, 0.25)
+  },
+  plaza: { stones: [hex('#d2c6aa'), hex('#dcd2b8'), hex('#c8bc9e')], lit: hex('#eee6d0'), edge: hex('#b4a888'), grout: hex('#8c8068'), fleck: MOSS },
+  ring: { ...STONE, fleck: MOSS },
+  jungle: [TALL_GRASS, TALL_GRASS_SMALL],
+  verge: FLOWER_PATCHES,
+  rare: MUSHROOMS,
+  log: LOG,
+}
+
+const BEACH = { main: hex('#e6d2a0'), alt: hex('#dfc994'), dark: hex('#c8ac78'), light: hex('#f6ead2') }
+const WET = { main: hex('#c2ae86'), alt: hex('#b9a47c'), dark: hex('#9c8862'), light: hex('#d6c69e') }
+const POOL = { deep: hex('#5aaebc'), main: hex('#78c2c6'), rim: hex('#b2dcd4'), glint: hex('#e8f8f4') }
+const SHELL_SPECKS = [hex('#f6f0e6'), hex('#f0b4a8'), hex('#e8c8e0')] as const
+const SEA = { deep: hex('#1a5e80'), main: hex('#21698c'), alt: hex('#1d6286'), crest: hex('#5cb0cc'), trough: hex('#164e6c') }
+/** The shore, out from the sand: foam, the surf's lighter water, then the shallows (`COAST.wall`). */
+const SURF = [hex('#f4f8f2'), hex('#bfe6e4'), hex('#6cc4cc'), hex('#4aa8bc'), hex('#3794b0'), hex('#2a7ea0')] as const
+const WOOD = { main: hex('#a8784a'), alt: hex('#9a6c40'), light: hex('#c4925e'), gap: hex('#5c3c22'), rail: hex('#4a2e18'), beam: hex('#7a5232'), nail: hex('#d8c8b0') }
+
+/** Sand (the tidepool flats in the jungle: wet sand with pools), shell specks and tiny pebbles. */
+const sandAt = (x: number, y: number, jungle: boolean, out: number[]) => {
+  const p = jungle ? WET : BEACH
+  if (jungle) {
+    const n = noise2(x, y, 26, 23)
+    if (n > 0.78) return set(out, hash2(x, y, 24) < 0.012 ? POOL.glint : n > 0.84 ? POOL.deep : POOL.main)
+    if (n > 0.765) return set(out, POOL.rim)
+  }
+  const h = hash2(x, y, 11)
+  if (h < 0.004) return set(out, SHELL_SPECKS[Math.floor(hash2(x, y, 25) * SHELL_SPECKS.length)]!)
+  if (h < 0.04) return set(out, p.dark)
+  if (h > 0.985) return set(out, p.light)
+  set(out, noise2(x, y, 22, jungle ? 21 : 20) > 0.55 ? p.alt : p.main)
+  // Ripples the wind left: faint broken diagonal bands, in patches.
+  if (!jungle && (((x + Math.floor(y * 0.5) + Math.floor(noise1(y, 30, 26) * 9)) % 11) + 11) % 11 === 0 && noise2(x, y, 40, 29) > 0.5) mixInto(out, out, p.light, 0.45)
+}
+
+/** A boardwalk: planks across the way it runs, dark gaps between, a nail here and there, a beam at each side. */
+const boardwalkAt = (x: number, y: number, hit: PathHit, out: number[]) => {
+  const { depth } = hit
+  if (depth <= 0) return false
+  if (depth < 1.5) return (set(out, WOOD.rail), true)
+  if (depth < 3) return (set(out, WOOD.beam), true)
+  const along = hit.upDown ? y : x
+  const across = hit.upDown ? x : y
+  const plank = Math.floor(along / 5)
+  const u = along - plank * 5
+  if (u === 0) return (set(out, WOOD.gap), true)
+  if (u === 1 && (((across % 9) + 9) % 9 === 4) && depth > 4) return (set(out, WOOD.nail), true)
+  const tone = hash2(plank, 0, 27)
+  set(out, u === 1 ? WOOD.light : tone < 0.3 ? WOOD.alt : WOOD.main)
+  if (hash2(x, y, 28) < 0.04) mixInto(out, out, WOOD.gap, 0.35)
+  return true
+}
+
+/** The open sea round the coast, waves cresting in short light dashes; repeats every 256 px, like the hedge. */
+const seaAt = (x: number, y: number, out: number[]) => {
+  const cx = Math.floor(x / 12)
+  const cy = Math.floor(y / 6)
+  const kx = ((cx % 21) + 21) % 21
+  const ky = ((cy % 42) + 42) % 42
+  if (hash2(kx, ky, 72) < 0.28) {
+    const ox = cx * 12 + Math.floor(hash2(kx, ky, 73) * 6)
+    const oy = cy * 6 + 2
+    const dx = x - ox
+    if (dx >= 0 && dx < 5) {
+      if (y === oy) return set(out, SEA.crest)
+      if (y === oy + 1 && dx > 0 && dx < 4) return set(out, SEA.trough)
+    }
+  }
+  return set(out, noise2(((x % 256) + 256) % 256, ((y % 256) + 256) % 256, 32, 74) > 0.55 ? SEA.alt : hash2(x, y, 75) < 0.04 ? SEA.deep : SEA.main)
+}
+
+/** The Enseada's and the Recife's: sand and tidepools, boardwalks, the sea round it all with surf at the shore. */
+const COAST: Scenery = {
+  ground: sandAt,
+  path: boardwalkAt,
+  ragged: false,
+  wall: (x, y, south, near, out) => {
+    // From the sand out: foam, surf, the shallows, the sea; the surf's line wavers.
+    const d = south || near
+    if (!d) return seaAt(x, y, out)
+    const k = d - 1 + (hash2(x, Math.floor(y / 3), 76) < 0.25 ? 1 : 0)
+    if (k < SURF.length) set(out, SURF[k]!)
+    else seaAt(x, y, out)
+  },
+  edge: (x, y, north, side, out) => {
+    // The sand by the water is wet: darker toward the surf.
+    if (north) mixInto(out, out, WET.dark, 0.55 - north * 0.08)
+    else if (side) mixInto(out, out, WET.dark, 0.35)
+    if ((north === 1 || side) && hash2(x, y, 77) < 0.2) set(out, SURF[1])
+  },
+  plaza: { stones: [hex('#e6dccb'), hex('#eee6d6'), hex('#dcd2be')], lit: hex('#faf6ec'), edge: hex('#c6baa2'), grout: hex('#a8987c'), fleck: BEACH.dark },
+  ring: { a: hex('#e0a898'), b: hex('#d49888'), grout: hex('#8a5448'), lit: hex('#f6cfc0'), fleck: hex('#4aa0a0') },
+  jungle: [SEAWEED, PEBBLES],
+  verge: SHELLS,
+  rare: STARFISH,
+  log: DRIFTWOOD,
+}
+
+const SCENERY: Record<MapTheme, Scenery> = { meadow: MEADOW, coast: COAST }
 
 /* ---------------- Decor ---------------- */
 
@@ -439,7 +621,7 @@ const keepsClear = (P: Painter, x: number, y: number, r: number) => {
   for (const n of P.nests) if (Math.hypot(x - n.x, y - n.y) < n.r + r + 8) return true
   for (const s of map.solids) if (Math.hypot(x - s.x, y - s.y) < r + 22) return true
   if (Math.hypot(x - map.center.x, y - map.center.y) < CENTER.outer + r + 10) return true
-  return pathDepth(P.look, x, y) > -r - 4
+  return pathAt(P.look, x, y, P.scenery.ragged, HIT).depth > -r - 4
 }
 
 /** Whether a sprite `w`×`h` at top left (x, y) lies wholly on the floor, a few px clear of the hedge. */
@@ -450,8 +632,9 @@ const fits = (P: Painter, x: number, y: number, w: number, h: number) => {
 
 /**
  * Every piece of decor on a map, placed once: each base's banners on the
- * hedge behind it and lamps round its plaza, tall grass in the jungle,
- * flowers on the lanes' verges, mushrooms by the hedge and the fallen logs.
+ * wall behind it and lamps round its plaza, the scenery's jungle clumps (tall
+ * grass; seaweed and pebbles), its lanes' verge sprites (flowers and the odd
+ * mushroom; shells and the odd starfish) and the fallen logs or driftwood.
  * Hashed spots, the same on every device.
  */
 const decorOf = (P: Painter): Decor[] => {
@@ -462,18 +645,19 @@ const decorOf = (P: Painter): Decor[] => {
     for (const ax of look.banners.xs) out.push({ sprite: () => bannerOf(team), x: sx * ax - 5, y: look.banners.y })
     for (const [ax, ay] of look.lamps) out.push({ sprite: () => lampOf(team), x: sx * ax - 3, y: ay - 13 })
   }
-  for (const [x, y] of look.logs) out.push({ sprite: LOG, x, y })
-  const grass = [TALL_GRASS, TALL_GRASS_SMALL] as const
-  const j = look.jungle
-  for (let cy = j.y0; cy < j.y1; cy += 26) {
-    for (let cx = j.x0; cx < j.x1; cx += 30) {
-      const h = hash2(cx, cy, 91)
-      if (h > 0.5) continue
-      const x = cx + Math.floor(hash2(cx, cy, 92) * 18)
-      const y = cy + Math.floor(hash2(cx, cy, 93) * 14)
-      const sprite = grass[h < 0.2 ? 1 : 0]
-      if (zoneAt(look, x, y) !== 'jungle' || keepsClear(P, x + 6, y + 4, 8) || !fits(P, x, y, 12, 8)) continue
-      out.push({ sprite, x, y })
+  const S = P.scenery
+  for (const [x, y] of look.logs) out.push({ sprite: S.log, x, y })
+  for (const j of look.jungles) {
+    for (let cy = j.y0; cy < j.y1; cy += 26) {
+      for (let cx = j.x0; cx < j.x1; cx += 30) {
+        const h = hash2(cx, cy, 91)
+        if (h > 0.5) continue
+        const x = cx + Math.floor(hash2(cx, cy, 92) * 18)
+        const y = cy + Math.floor(hash2(cx, cy, 93) * 14)
+        const sprite = S.jungle[h < 0.2 ? 1 : 0]
+        if (zoneAt(look, x, y) !== 'jungle' || keepsClear(P, x + 6, y + 4, 8) || !fits(P, x, y, 12, 8)) continue
+        out.push({ sprite, x, y })
+      }
     }
   }
   for (let cy = bounds.y0; cy < bounds.y1; cy += 22) {
@@ -484,7 +668,7 @@ const decorOf = (P: Painter): Decor[] => {
       const x = cx + Math.floor(hash2(cx, cy, 95) * 20)
       const y = cy + Math.floor(hash2(cx, cy, 96) * 12)
       if (zoneAt(look, x, y) !== 'lane' || keepsClear(P, x + 3, y + 3, 4) || !fits(P, x, y, 7, 7)) continue
-      out.push({ sprite: h < 0.04 ? MUSHROOMS : () => FLOWER_PATCHES()[Math.floor(hash2(cx, cy, 97) * 3)]!, x, y })
+      out.push({ sprite: h < 0.04 ? S.rare : () => S.verge()[Math.floor(hash2(cx, cy, 97) * 3)]!, x, y })
     }
   }
   return out
@@ -506,8 +690,8 @@ const TILE = 256
 const M = 8
 const SPAN = TILE + M * 2
 
-/** Whether a tile (`tx`, `ty` in tiles) has no floor within `M` px: all hedge, the shared tile. */
-const pureHedge = (P: Painter, tx: number, ty: number) => {
+/** Whether a tile (`tx`, `ty` in tiles) has no floor within `M` px: all wall, its scenery's shared tile. */
+const pureWall = (P: Painter, tx: number, ty: number) => {
   const x0 = tx * TILE - M
   const y0 = ty * TILE - M
   const x1 = x0 + SPAN
@@ -515,8 +699,8 @@ const pureHedge = (P: Painter, tx: number, ty: number) => {
   return !P.map.rects.some((r) => r.x0 < x1 && r.x1 > x0 && r.y0 < y1 && r.y1 > y0)
 }
 
-/** Bakes `P`'s tile whose top left is world (ox, oy), or (`P` null) the all-hedge tile every map shares. */
-const bake = (P: Painter | null, ox: number, oy: number) => {
+/** Bakes `P`'s tile whose top left is world (ox, oy), or (`P` null) the all-wall tile of `theme`. */
+const bake = (P: Painter | null, S: Scenery, ox: number, oy: number) => {
   const mask = new Uint8Array(SPAN * SPAN)
   if (P) for (let py = 0; py < SPAN; py++) for (let px = 0; px < SPAN; px++) mask[py * SPAN + px] = onFloor(P.map.rects, ox + px - M, oy + py - M) ? 1 : 0
   const at = (px: number, py: number) => mask[(py + M) * SPAN + px + M] === 1
@@ -530,25 +714,17 @@ const bake = (P: Painter | null, ox: number, oy: number) => {
       const y = oy + py
       if (P && at(px, py)) {
         floorAt(P, x, y, c)
-        // The hedge casts a shadow down onto the floor below it, and a thin one at its other edges.
+        // The wall's edge on the floor: how far below it (up to 6 px), or whether it's beside one.
         let north = 0
         for (let d = 1; d <= 6 && !north; d++) if (!at(px, py - d)) north = d
-        if (north) mixInto(c, c, SHADOW, 0.5 - north * 0.065)
-        else if (!at(px - 1, py) || !at(px + 1, py) || !at(px, py + 1)) mixInto(c, c, SHADOW, 0.25)
+        P.scenery.edge(x, y, north, !north && (!at(px - 1, py) || !at(px + 1, py) || !at(px, py + 1)), c)
       } else {
-        // South of the hedge, where the floor lies below, its front face shows; elsewhere a lit rim.
+        // The wall by the floor: how far above it (up to 6 px), or how near beside or below it (up to 2).
         let south = 0
         for (let d = 1; d <= 6 && !south; d++) if (at(px, py + d)) south = d
-        if (south) {
-          hedgeAt(x, y, c)
-          const face = south === 1 ? FACE[0] : FACE[1 + ((((Math.floor(x / 2) + south) % 3) + 3) % 3)]!
-          if (south <= 2 || hash2(x, y, 71) < 0.7) set(c, face)
-        } else {
-          let near = 0
-          for (let d = 1; d <= 2 && !near; d++) if (at(px - d, py) || at(px + d, py) || at(px, py - d)) near = d
-          if (near) set(c, RIM[near - 1]!)
-          else hedgeAt(x, y, c)
-        }
+        let near = 0
+        if (!south) for (let d = 1; d <= 2 && !near; d++) if (at(px - d, py) || at(px + d, py) || at(px, py - d)) near = d
+        S.wall(x, y, south, near, c)
       }
       const i = (py * TILE + px) * 4
       img.data[i] = c[0]!
@@ -566,17 +742,18 @@ const bake = (P: Painter | null, ox: number, oy: number) => {
 const tiles = canvasCache<number, HTMLCanvasElement>()
 let tilesOf: MapId | null = null
 const keyOf = (tx: number, ty: number) => (tx + 512) * 1024 + (ty + 512)
-const HEDGE_TILE = lazy(() => bake(null, 0, 0))
+/** Each scenery's tile with no floor near it: the same everywhere, baked once. */
+const WALL_TILES = { meadow: lazy(() => bake(null, MEADOW, 0, 0)), coast: lazy(() => bake(null, COAST, 0, 0)) } satisfies Record<MapTheme, () => HTMLCanvasElement>
 
 const tileAt = (P: Painter, tx: number, ty: number) => {
-  if (pureHedge(P, tx, ty)) return HEDGE_TILE()
+  if (pureWall(P, tx, ty)) return WALL_TILES[P.look.theme]()
   if (tilesOf !== P.id) {
     dropVale()
     tilesOf = P.id
   }
   const key = keyOf(tx, ty)
   let tile = tiles.get(key)
-  if (!tile) tiles.set(key, (tile = bake(P, tx * TILE, ty * TILE)))
+  if (!tile) tiles.set(key, (tile = bake(P, P.scenery, tx * TILE, ty * TILE)))
   return tile
 }
 
@@ -588,7 +765,7 @@ const floorTilesOf = (P: Painter) => {
   const y0 = Math.floor((b.y0 - M) / TILE)
   const y1 = Math.floor((b.y1 + M) / TILE)
   const out: [number, number][] = []
-  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (!pureHedge(P, tx, ty)) out.push([tx, ty])
+  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (!pureWall(P, tx, ty)) out.push([tx, ty])
   return out.sort((a, b) => Math.hypot(a[0] + 0.5, a[1] + 0.5) - Math.hypot(b[0] + 0.5, b[1] + 0.5))
 }
 
@@ -828,11 +1005,11 @@ const postFoot = (goal: GoalState) => Math.round(goal.y + 4)
 /** The painted post's pedestal middle, from the picture's bottom row. */
 const ART_FOOT = 5
 
-const postArt = (goal: GoalState, look: PostLook) => valeArt(`goal-post-${teamFile(goal.team)}-${look}`)
+const postArt = (s: VersusState, goal: GoalState, look: PostLook) => valeArt(`goal-post-${teamFile(goal.team)}-${look}`, mapOf(s).look.theme)
 
 /** A goal's post as drawn now: the painted one, or the code's until it lands. Its box (top left, size) and its hoop's middle. */
-const postLayout = (goal: GoalState, look: PostLook) => {
-  const art = postArt(goal, look)
+const postLayout = (s: VersusState, goal: GoalState, look: PostLook) => {
+  const art = postArt(s, goal, look)
   if (art) {
     const x = Math.round(goal.x) - (art.width >> 1)
     const y = postFoot(goal) + ART_FOOT - art.height
@@ -853,7 +1030,7 @@ export const drawValeZones = (ctx: Ctx, g: Game, t: number) => {
   const s = g.versus
   if (!s) return
   mapOf(s).spawn.forEach((pad, team) => {
-    const art = valeArt(`spawn-pad-${teamFile(team as Team)}`)
+    const art = valeArt(`spawn-pad-${teamFile(team as Team)}`, mapOf(s).look.theme)
     if (art) ctx.drawImage(art, Math.round(pad.x - art.width / 2), Math.round(pad.y - art.height / 2))
     else blitCentered(ctx, zoneSprite(team as Team, 'pad', VERSUS.spawnPad.r), pad.x, pad.y)
     dashedRing(ctx, pad.x, pad.y, VERSUS.spawnPad.r - 4, t * 0.8, [TEAM_LIGHT[team as Team], '#ffffff'], 0.35)
@@ -871,7 +1048,7 @@ export const drawValeZones = (ctx: Ctx, g: Game, t: number) => {
 export const goalPostBox = (g: Game, i: number) => {
   const s = g.versus
   const goal = s?.goals[i]
-  return s && goal ? postLayout(goal, lookOf(s, goal)) : null
+  return s && goal ? postLayout(s, goal, lookOf(s, goal)) : null
 }
 
 /**
@@ -885,7 +1062,7 @@ export const drawGoalPost = (ctx: Ctx, g: Game, i: number, t: number, see: boole
   const goal = s?.goals[i]
   if (!s || !goal) return
   const look = lookOf(s, goal)
-  const at = postLayout(goal, look)
+  const at = postLayout(s, goal, look)
   if (see) ctx.globalAlpha = 0.5
   if (look === 'open') blitEllipse(ctx, 13, 13, GLOWS[goal.team], at.hx, at.hy)
   if (at.art) ctx.drawImage(at.art, at.x, at.y)
@@ -990,7 +1167,7 @@ export const drawValeAir = (ctx: Ctx, g: Game) => {
   for (const goal of s.goals) {
     if (goal.broken) continue
     const open = goalOpen(s, goal)
-    const top = postLayout(goal, open ? 'open' : 'locked').y
+    const top = postLayout(s, goal, open ? 'open' : 'locked').y
     blitPacked(ctx, textSprite(numberText(Math.max(0, Math.round(goal.left))), open ? TEAM_LIGHT[goal.team] : '#a8a8b0'), goal.x, top - 7)
     const w = 16
     const x = Math.round(goal.x - w / 2)

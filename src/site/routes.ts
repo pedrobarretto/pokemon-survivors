@@ -15,6 +15,9 @@ export const SOCIALS = {
   instagram: { name: 'Instagram', handle: '@pokemonsurvivors', url: 'https://www.instagram.com/pokemonsurvivors/' },
 } as const satisfies Record<string, { name: string; handle: string; url: string }>
 
+/** The community server's permanent invite (made by the bot, on #welcome). */
+export const DISCORD_INVITE = 'https://discord.gg/Vx3RWFsjaD'
+
 export type SocialId = keyof typeof SOCIALS
 
 export const SOCIAL_IDS = Object.keys(SOCIALS) as SocialId[]
@@ -40,6 +43,7 @@ export const ROUTES = {
   changelog: { pt: '/novidades/', en: '/en/changelog/', es: '/es/novedades/', fr: '/fr/nouveautes/', zh: '/zh-tw/changelog/' },
   legal: { pt: '/legal/', en: '/en/legal/', es: '/es/legal/', fr: '/fr/legal/', zh: '/zh-tw/legal/' },
   support: { pt: '/apoie/', en: '/en/support/', es: '/es/apoya/', fr: '/fr/soutenir/', zh: '/zh-tw/support/' },
+  creators: { pt: '/criadores/', en: '/en/creators/', es: '/es/creadores/', fr: '/fr/createurs/', zh: '/zh-tw/creators/' },
   // The two pages that answer searches for the other games (`src/site/rivals.ts`): their paths carry the names people type.
   compare: {
     pt: '/pokemon-survivors-vs-pokesurvivor/',

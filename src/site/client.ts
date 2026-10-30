@@ -3,7 +3,8 @@
  * without it; this only adds the Pokédex filters, the cards' shiny toggles and tap-to-walk,
  * the 404 page's suggestion and mini game (`notFoundClient.ts`, loaded only there),
  * the donation form (with the account's @, the thank-you's code and the
- * supporters' wall), and remembers the language for the game. It must never
+ * supporters' wall), the creators page's videos playing on a tap, and remembers
+ * the language for the game. It must never
  * import game code (plain data like `data/donations` is fine), so the game and
  * the site never load each other's bundles.
  */
@@ -360,3 +361,22 @@ const support = (ways: HTMLElement) => {
 
 const ways = document.getElementById('donate-ways')
 if (ways) support(ways)
+
+/**
+ * The creators page: a video's thumbnail links to it on its platform; with JS,
+ * a tap plays it right there instead (its player loads only then).
+ */
+for (const link of document.querySelectorAll<HTMLAnchorElement>('a.video-play[data-embed]')) {
+  link.addEventListener('click', (e) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+    e.preventDefault()
+    const player = document.createElement('iframe')
+    player.src = link.dataset.embed ?? ''
+    player.title = link.getAttribute('aria-label') ?? ''
+    player.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'
+    player.allowFullscreen = true
+    player.referrerPolicy = 'strict-origin-when-cross-origin'
+    link.replaceWith(player)
+    player.focus()
+  })
+}

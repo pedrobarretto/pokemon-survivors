@@ -11,7 +11,7 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { canvasRestored, context2d, onCanvasReset, sweepArt } from './engine/pixelart'
+import { canvasLosses, canvasRestored, checkCanvases, context2d, onCanvasReset, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
@@ -222,9 +222,9 @@ import { createVersusTalk, type VersusTalk } from './ui/versusTalk'
 import { createArenaControls, type ArenaControls } from './ui/arenaControls'
 import { versusEnd } from './ui/versusEnd'
 import { VERSUS, VERSUS_PICKS, isVersusPick, type Team, type VersusPick } from './data/versus'
-import { MAPS } from './data/versusMaps'
-import { ARENA_FORMATS, parseArenaFormat, type ArenaFormat } from './data/arenaFormats'
-import { rulesOf } from './game/versusRules'
+import { MAPS, type MapId } from './data/versusMaps'
+import { ARENA_FORMAT_IDS, ARENA_FORMATS, parseArenaFormat, type ArenaFormat } from './data/arenaFormats'
+import { formatPlays, rulesOf } from './game/versusRules'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
@@ -301,6 +301,9 @@ onCanvasReset(() => {
   context2d(canvas)
   dirty = true
 })
+// iOS Safari wipes the canvases without that event (`checkCanvases`): look every few seconds, and on coming back (below).
+checkCanvases()
+setInterval(() => document.hidden || checkCanvases(), 3000)
 
 /* ---------------- App state ---------------- */
 
@@ -534,7 +537,7 @@ describeWith(() => {
   const view = [...ui.querySelectorAll(':scope > .screen:not(.bug-screen)')].map((el) => [...el.classList].filter((c) => !SCREEN_CLASSES.has(c)).join('.')).join(' > ')
   // The canvases the caches hold (`heldCanvases`) stand for the report's canvas memory.
   const memory = sampleMemory()
-  const perf = { canvases: memory.canvases, canvasMb: memory.canvasMb, peakCanvases: memory.peakCanvases, peakCanvasMb: memory.peakCanvasMb, frameMs: recentFrameMs(frames) }
+  const perf = { canvases: memory.canvases, canvasMb: memory.canvasMb, peakCanvases: memory.peakCanvases, peakCanvasMb: memory.peakCanvasMb, frameMs: recentFrameMs(frames), ...canvasLosses }
   const g = run && shownGame(run)
   if (!g || g.phase === 'gameover' || g.phase === 'victory') return { view, run: null, perf, memory }
   const boss = g.bossId === null ? undefined : g.enemies.find((e) => e.id === g.bossId)
@@ -2173,8 +2176,11 @@ document.addEventListener('visibilitychange', () => {
   // An Arena match's report as it stands, for the next page load if this one never comes back (`gone`).
   if (document.hidden && run?.coop) holdVersus(run.coop)
   if (document.hidden && !run?.coop && run?.game.phase === 'playing') run.game.phase = 'paused'
-  // Back: the paused frame is drawn again, in case the browser dropped the canvas' pixels while hidden.
-  if (!document.hidden) dirty = true
+  // Back: the paused frame is drawn again, in case the browser dropped the canvas' pixels while hidden (its caches' too).
+  if (!document.hidden) {
+    checkCanvases()
+    dirty = true
+  }
 })
 
 /**
@@ -3125,7 +3131,7 @@ const joinQueueMatch = async (client: CoopClient, room: string, id: VersusPick, 
  * Blue; once its seats have filled, "Partida encontrada!" and the start; the
  * `run` event brings the match in. Cancel drops the relay.
  */
-const playArenaBots = async (id: VersusPick, format: ArenaFormat) => {
+const playArenaBots = async (id: VersusPick, format: ArenaFormat, map: MapId | null = null) => {
   // A co-op room this tab was still in: left, the Arena runs alone.
   const net = coopClient()
   if (net && coopRoomCode() !== null) {
@@ -3150,7 +3156,7 @@ const playArenaBots = async (id: VersusPick, format: ArenaFormat) => {
   const res = await client.join(made.code)
   if (arenaClient() !== client) return
   if (!res.ok) return failed()
-  client.setSettings({ difficulty: 'normal', mode: 'versus', format })
+  client.setSettings({ difficulty: 'normal', mode: 'versus', format, ...(map && { map }) })
   client.setLoadout(arenaLoadout(id, 0, equippedLook()))
   await queue.filled()
   if (arenaClient() !== client) return
@@ -4026,7 +4032,9 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
 /**
  * Dev: the Arena from the console. `ps.versus()` starts a match against bots
  * (`ps.versus('squirtle')` with that Pokémon, `ps.versus('squirtle', 'quick')`
- * a 3v3 on the Clareira, `ps.versus('quick')` with the Arena's pick);
+ * a 3v3, `ps.versus('quick')` with the Arena's pick; the format's map drawn
+ * as in a match, or a map forced: `ps.versus('cove')`, `ps.versus('squirtle',
+ * 'reef')`, the format following the map's);
  * `ps.versus('time', 125)` sets the running match's clock to 125 s left
  * (the stretch starts at 120 in the 4v4, 60 in the 3v3; the end screen at 0); `ps.versus('energy', 30)` sets the Energy you carry. Both
  * write the match's state directly: only a match against bots takes it
@@ -4037,7 +4045,7 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
  * match's opening splash up again (again takes it down).
  */
 let devSplash: ReturnType<typeof versusSplash> | null = null
-const devVersus = (cmd?: string, arg?: number | string) => {
+const devVersus = (cmd?: string, arg?: number | string, third?: string) => {
   const num = typeof arg === 'number' ? arg : undefined
   const g = run?.coop?.runner.game
   const me = g ? g.players[run!.coop!.runner.slot] : undefined
@@ -4063,12 +4071,14 @@ const devVersus = (cmd?: string, arg?: number | string) => {
     else me.versus.energy = Math.max(0, Math.min(VERSUS.energy.cap, Math.round(num ?? VERSUS.energy.cap)))
     return { time: g.time, left: rules.length - g.time, energy: me.versus.energy }
   }
+  const isMap = (v: unknown): v is MapId => Object.hasOwn(MAPS, String(v))
+  const map = [cmd, arg, third].find(isMap) ?? null
   const quick = cmd === 'quick' || cmd === 'standard'
-  const id = quick || cmd === undefined ? arenaStart() : cmd
-  const format = parseArenaFormat(quick ? cmd : arg)
-  if (!isVersusPick(id)) return `ps.versus(starter, format?): one of ${VERSUS_PICKS.join(', ')}; format 'standard' (4v4) or 'quick' (3v3)`
-  void playArenaBots(id, format)
-  return `Arena: ${id} vs bots (${format})`
+  const id = quick || cmd === undefined || isMap(cmd) ? arenaStart() : cmd
+  const format = map ? (ARENA_FORMAT_IDS.find((f) => formatPlays(f, map)) ?? 'standard') : parseArenaFormat(quick ? cmd : arg)
+  if (!isVersusPick(id)) return `ps.versus(starter, format?, map?): one of ${VERSUS_PICKS.join(', ')}; format 'standard' (4v4) or 'quick' (3v3); map ${Object.keys(MAPS).join(', ')}`
+  void playArenaBots(id, format, map)
+  return `Arena: ${id} vs bots (${format}${map ? `, ${map}` : ''})`
 }
 
 /**
@@ -4259,6 +4269,12 @@ if (import.meta.env.DEV) {
       safeMode: (choice?: boolean | SafeChoice) => {
         if (choice !== undefined) setSafeMode(choice === true ? 'on' : choice === false ? 'off' : choice)
         return { on: safeModeOn(), ...loadSafeMode() }
+      },
+      /** `ps.wipeCanvases()` blanks the caches' canvases and the screen as iOS does unannounced; the canvas watch redraws them within seconds. Returns its counts. */
+      wipeCanvases: () => {
+        wipeCanvases()
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        return { ...canvasLosses }
       },
       spawn: devSpawn,
       alpha: devAlpha,

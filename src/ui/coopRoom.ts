@@ -15,7 +15,9 @@ import { h, later } from './dom'
 import { confirmDialog, difficultyTag, hint, type Screen } from './screens'
 import { toast } from './toasts'
 import { roleChip, teamColor } from './arena'
-import { isVersusPick, VERSUS_ROSTER, type Team } from '../data/versus'
+import { isVersusPick, VERSUS_FORMATS, VERSUS_ROSTER, type Team } from '../data/versus'
+import type { MapId } from '../data/versusMaps'
+import { formatPlays } from '../game/versusRules'
 import { ARENA_FORMAT_IDS, ARENA_FORMATS } from '../data/arenaFormats'
 
 /**
@@ -278,7 +280,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
           ...(['run', 'versus'] as const).map((id) =>
             h(
               'button',
-              { class: `shell-seg-option${(id === 'versus') === arena ? ' on' : ''}`, type: 'button', 'data-nav': `mode:${id}`, 'aria-pressed': String((id === 'versus') === arena), onclick: () => (id === 'versus') !== arena && (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, mode: id, format: settings.format })) },
+              { class: `shell-seg-option${(id === 'versus') === arena ? ' on' : ''}`, type: 'button', 'data-nav': `mode:${id}`, 'aria-pressed': String((id === 'versus') === arena), onclick: () => (id === 'versus') !== arena && (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, mode: id, format: settings.format, map: settings.map })) },
               v.room.modes[id],
             ),
           ),
@@ -286,9 +288,10 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
       : h('span', { class: 'coop-difficulty-read' }, v.room.modes[arena ? 'versus' : 'run'], h('small', {}, m.hostPicks))
 
     /**
-     * An Arena room's format, the host's switch: 4v4 on the Vale or 3v3 on
-     * the Clareira (the relay keeps a room of more trainers than the 3v3
-     * seats on the 4v4).
+     * An Arena room's format, the host's switch: 4v4 (the Vale or the
+     * Enseada) or 3v3 (the Clareira or the Recife); the relay keeps a room of
+     * more trainers than the 3v3 seats on the 4v4. A new format drops a map
+     * it doesn't play.
      */
     const format = settings.format ?? 'standard'
     const formatPick = host && lobby
@@ -304,13 +307,35 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
                 'data-nav': `format:${id}`,
                 'aria-pressed': String(id === format),
                 disabled: id !== format && room.members.length > ARENA_FORMATS[id].teamSize * 2,
-                onclick: () => id !== format && (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, mode: 'versus', format: id })),
+                onclick: () => id !== format && (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, mode: 'versus', format: id, ...(settings.map && formatPlays(id, settings.map) && { map: settings.map }) })),
               },
               `${v.formats[id].size} ${v.formats[id].name}`,
             ),
           ),
         )
       : h('span', { class: 'coop-difficulty-read' }, `${v.formats[format].size} ${v.formats[format].name}`, h('small', {}, m.hostPicks))
+    /** An Arena room's map, the host's switch: Random (drawn as the match starts) or one of the format's. */
+    const mapChoice = settings.map && formatPlays(format, settings.map) ? settings.map : 'random'
+    const mapName = (id: MapId | 'random') => (id === 'random' ? v.room.random : v.maps[id])
+    const mapPick = host && lobby
+      ? h(
+          'div',
+          { class: 'shell-seg coop-map', role: 'radiogroup', 'aria-label': v.room.map },
+          ...(['random', ...VERSUS_FORMATS[format].maps] as const).map((id) =>
+            h(
+              'button',
+              {
+                class: `shell-seg-option${id === mapChoice ? ' on' : ''}`,
+                type: 'button',
+                'data-nav': `map:${id}`,
+                'aria-pressed': String(id === mapChoice),
+                onclick: () => id !== mapChoice && (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, mode: 'versus', format, ...(id !== 'random' && { map: id }) })),
+              },
+              mapName(id),
+            ),
+          ),
+        )
+      : h('span', { class: 'coop-difficulty-read' }, mapName(mapChoice), h('small', {}, m.hostPicks))
     const teamSize = ARENA_FORMATS[format].teamSize
     /** Where each member plays once the match starts (`seatMatch`'s rule): the side they asked for, or the other once theirs is full. */
     const sideOf = new Map<Member, Team>()
@@ -414,6 +439,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
           columns ? h('div', { class: 'arena-room-teams' }, columns[0]!, h('span', { class: 'arena-vs' }, 'VS'), columns[1]!) : h('div', { class: 'coop-seats' }, ...seats),
           h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.mode), mode),
           arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.format), formatPick),
+          arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.map), mapPick),
           !arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, m.difficulty), difficulty),
           arena
             ? h('ol', { class: 'arena-room-steps' }, ...v.room.steps.map((step, i) => h('li', {}, h('span', { class: 'arena-step-n' }, String(i + 1)), h('span', {}, step))))

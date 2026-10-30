@@ -6,7 +6,7 @@ import { guideTarget } from '../render/versusGuide'
 import { coachTip } from './versusCoach'
 
 const match = () => {
-  const g = createVersusGame(3, [{ starter: 'charmander', name: 'ash', team: 0 }])
+  const g = createVersusGame(3, [{ starter: 'charmander', name: 'ash', team: 0 }], 'standard', 'vale')
   const me = g.players[0]!
   // Off the spawn pad, in the jungle, away from every goal.
   me.x = -200
