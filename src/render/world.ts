@@ -266,6 +266,17 @@ const isMortar = (wx: number, wy: number) => {
 }
 
 const pathAt = (wx: number, wy: number, width: number) => Math.abs(noise(wx, wy, 220, SEED + 7) - 0.5) < width
+/** How far (in noise) from the middle of a path the ground still draws it. */
+const PATH_WIDTH = 0.025
+
+/** Whether the meadow draws a path at world pixel (wx, wy), as its chunks do (the lobby's plaza opens its curb where one arrives). */
+export const meadowPath = (wx: number, wy: number) => pathAt(wx, wy, PATH_WIDTH)
+
+/** The meadow path's shade at world pixel (wx, wy), dithered as its chunks draw it, so a lane drawn to meet one blends in. */
+export const meadowPathRgb = (wx: number, wy: number): Rgb => {
+  const r = hash2(wx, wy, SEED + 1)
+  return STYLES.meadow.path[r < 0.7 ? 0 : r < 0.9 ? 1 : 2]
+}
 
 /**
  * `noise` at the `out.length` pixels of world row `wy` starting at `wx0`, hashing
@@ -323,7 +334,7 @@ const buildChunk = (biome: BiomeId, cx: number, cy: number, canvas: HTMLCanvasEl
     if (spots) noiseRow(spotRow, ox, wy, 20, SEED + 9)
     for (let x = 0; x < CHUNK; x++) {
       const wx = ox + x
-      const path = Math.abs(pathRow[x]! - 0.5) < 0.025
+      const path = Math.abs(pathRow[x]! - 0.5) < PATH_WIDTH
       const r = hash2(wx, wy, SEED + 1)
       const palette = path ? 2 : spots && spotRow[x]! > 0.76 ? 3 : altRow[x]! > 0.55 ? 1 : 0
       // Ordered-ish dither: mostly the base shade with sparse lighter/darker pixels.
