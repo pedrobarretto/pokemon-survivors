@@ -22,7 +22,7 @@ create index gem_ledger_play on gem_ledger (user_id, day) where reason = 'play';
 -- The balance, kept in step with the ledger in the same transaction (it may go negative after a refund of spent gems).
 alter table users add column gems integer not null default 0;
 
--- The equipped Arena look (`ArenaLook`), as the account last set it; read back through what it owns.
+-- The equipped Arena look (`Look`), as the account last set it; read back through what it owns.
 alter table users add column arena_look jsonb not null default '{}';
 
 -- Gem packs bought with money: opened at checkout (`ref`, the game's `?gems=<ref>`), paid by the webhook.

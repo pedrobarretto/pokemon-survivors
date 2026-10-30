@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
-import type { ArenaLook } from '../../src/data/arenaCosmetics'
+import type { Look } from '../../src/data/cosmetics'
 import { ARENA_RANKED, type Conduct, type MatchKind } from '../../src/data/arenaRanked'
 import { isVersusPick, type Team, type VersusPick } from '../../src/data/versus'
 import {
@@ -429,7 +429,7 @@ export const arenaStore = (sql: Sql) => {
       const [ratings, fair, looks] =
         userIds.length > 0
           ? await Promise.all([ratingsOf(sql, userIds, season.id), fairPlayOf(sql, userIds), vouchedLooks(sql, userIds)])
-          : [new Map<string, Rating>(), new Map<string, number>(), new Map<string, ArenaLook>()]
+          : [new Map<string, Rating>(), new Map<string, number>(), new Map<string, Look>()]
       return {
         season: season.id,
         ratings: Object.fromEntries([...ratings].map(([id, r]) => [id, { mmr: r.mmr, rp: r.rp, games: r.games, fairPlay: fair.get(id) ?? ARENA_RANKED.fairPlay.max, look: looks.get(id) ?? {} }])),

@@ -407,8 +407,8 @@ export const parseName = (v: unknown): string | null => {
 }
 
 /**
- * An Arena look on the wire, in a loadout's `look` (`ArenaLook` in
- * `data/arenaCosmetics.ts`): slot to cosmetic id. Shell side only: the
+ * An Arena look on the wire, in a loadout's `look` (`Look` in
+ * `data/cosmetics.ts`): slot to cosmetic id. Shell side only: the
  * simulation never reads it, the relay only checks its shape.
  */
 export type WireLook = { readonly [slot: string]: string }

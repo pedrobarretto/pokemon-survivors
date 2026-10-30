@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ARENA_COSMETICS, COSMETIC_IDS, RARITY_PRICE, cosmeticPrice, parseLook } from './arenaCosmetics'
+import { COSMETICS, COSMETIC_IDS, RARITY_PRICE, cosmeticPrice, parseLook } from './cosmetics'
 
 describe('parseLook', () => {
   it('keeps known ids in their own slot only', () => {
@@ -12,7 +12,7 @@ describe('parseLook', () => {
 describe('cosmeticPrice', () => {
   it("falls back to the rarity's price", () => {
     for (const id of COSMETIC_IDS) {
-      const def: { price?: number | null; rarity: keyof typeof RARITY_PRICE } = ARENA_COSMETICS[id]
+      const def: { price?: number | null; rarity: keyof typeof RARITY_PRICE } = COSMETICS[id]
       expect(cosmeticPrice(id)).toBe(def.price === undefined ? RARITY_PRICE[def.rarity] : def.price)
     }
   })

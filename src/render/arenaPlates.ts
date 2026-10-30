@@ -1,6 +1,6 @@
 import { effectIn, type PlateEmblem, type PlateStyle } from '../data/arenaEffects'
 import { canvasCache, fromStrings } from '../engine/pixelart'
-import { lookOf } from './arenaLooks'
+import { lookOf } from './looks'
 
 /**
  * The Arena's name plates (`plate` in `data/arenaEffects.ts`): the box behind

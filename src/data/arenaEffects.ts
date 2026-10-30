@@ -1,8 +1,8 @@
-import type { CosmeticBase, CosmeticSlot } from './arenaCosmetics'
+import type { CosmeticBase, CosmeticSlot } from './cosmetics'
 import type { PokeType } from './types'
 
 /**
- * The Arena's cosmetics that aren't worn (`data/arenaCosmetics.ts` spreads
+ * The Arena's cosmetics that aren't worn (`data/cosmetics.ts` spreads
  * them into the catalog): a follower that trots after the Pokémon, a trail,
  * the spawn, KO and goal effects, emotes, titles and name plates. Pure
  * presentation, drawn by the shell (`render/arenaFx.ts`) from what the

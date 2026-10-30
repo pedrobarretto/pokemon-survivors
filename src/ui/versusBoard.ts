@@ -8,7 +8,7 @@ import { teamColor } from './arena'
 import { h } from './dom'
 import { goalOrder, versusName } from './versusHud'
 import { titleChip } from './arenaTitle'
-import { lookOf } from '../render/arenaLooks'
+import { lookOf } from '../render/looks'
 
 /**
  * The Arena's scoreboard: one table per team, each Pokémon with its KOs,

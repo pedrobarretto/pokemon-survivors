@@ -1,4 +1,4 @@
-import type { CosmeticSlot } from '../data/arenaCosmetics'
+import type { CosmeticSlot } from '../data/cosmetics'
 import { fromStrings, lazy } from '../engine/pixelart'
 
 /**

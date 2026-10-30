@@ -1,11 +1,11 @@
-import type { ArenaLook, WearableSlot } from '../data/arenaCosmetics'
+import type { Look, WearableSlot } from '../data/cosmetics'
 import { STARTERS } from '../data/starters'
 import { VERSUS_PICKS } from '../data/versus'
 import { ART_DIRS, WEAR_FITS, type ArtDirName, type Nudge, type SpeciesFit } from '../data/wearFits'
 import { isWearableId, WEARABLE_IDS, WEARABLES, type WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { createCanvas, context2d } from '../engine/pixelart'
-import { lookOf, setArenaLooks } from '../render/arenaLooks'
+import { lookOf, setLooks } from '../render/looks'
 import { drawPokemon, loadSpecies, type AnimName, type SpeciesSprites } from '../render/sprites'
 import { artDir, isMirrored } from '../render/wearFit'
 import { drawWearables, loadWearables, refitWearables, wearMisses } from '../render/wearables'
@@ -23,14 +23,14 @@ export type WearShell = { seat: () => number | null; seats: () => number }
 const ROSTER = VERSUS_PICKS.flatMap((id) => STARTERS[id].line.map((stage) => ({ dex: stage.dex, name: stage.name })))
 const nameOf = (dex: number) => ROSTER.find((r) => r.dex === dex)?.name ?? `#${dex}`
 
-const setSeat = (shell: WearShell, seat: number, look: ArenaLook) =>
-  setArenaLooks(Array.from({ length: Math.max(shell.seats(), seat + 1) }, (_, i) => (i === seat ? look : lookOf(i))))
+const setSeat = (shell: WearShell, seat: number, look: Look) =>
+  setLooks(Array.from({ length: Math.max(shell.seats(), seat + 1) }, (_, i) => (i === seat ? look : lookOf(i))))
 
 const pickOf = <T>(list: readonly T[]) => list[Math.floor(Math.random() * list.length)]!
 
 /** A random look: each slot filled half the time. */
-const randomLook = (): ArenaLook => {
-  const look: ArenaLook = {}
+const randomLook = (): Look => {
+  const look: Look = {}
   for (const slot of ['head', 'face', 'neck', 'back'] as const) if (Math.random() < 0.6) look[slot] = pickOf(WEARABLE_IDS.filter((id) => WEARABLES[id].slot === slot))
   return look
 }
@@ -96,7 +96,7 @@ const secondsAt = (s: SpeciesSprites, anim: AnimName, frame: number) => {
 }
 
 /** One cell: a checker, then the look behind the sprite, the sprite and the look over it. */
-const drawCell = (ctx: CanvasRenderingContext2D, s: SpeciesSprites, look: ArenaLook, anim: AnimName, dir: Dir8, t: number, cx: number, cy: number, k: number, clock: number) => {
+const drawCell = (ctx: CanvasRenderingContext2D, s: SpeciesSprites, look: Look, anim: AnimName, dir: Dir8, t: number, cx: number, cy: number, k: number, clock: number) => {
   ctx.fillStyle = '#e4e8dc'
   ctx.fillRect(cx, cy, CELL_W * k, CELL_H * k)
   const x = cx + (CELL_W / 2) * k
@@ -115,7 +115,7 @@ const DIRS: readonly Dir8[] = [0, 1, 2, 3, 4, 5, 6, 7]
  * wearing `look`, one row each, labeled; resolves to a PNG data URL once the
  * art has rendered (it renders a few per frame, `render/wearEngine.ts`).
  */
-export const contactSheet = async (look: ArenaLook, dexes: readonly number[], opts: { scale?: number; anim?: AnimName; frame?: number; title?: string; dirs?: readonly Dir8[] } = {}) => {
+export const contactSheet = async (look: Look, dexes: readonly number[], opts: { scale?: number; anim?: AnimName; frame?: number; title?: string; dirs?: readonly Dir8[] } = {}) => {
   await loadWearables()
   const k = opts.scale ?? 3
   const anim = opts.anim ?? 'Walk'
@@ -309,15 +309,15 @@ export const devWear = async (shell: WearShell, cmd?: string, arg?: unknown, mor
   if (cmd === 'fit') return openGallery(isWearableId(arg) ? arg : 'topHat', Array.isArray(more) ? more.filter((d): d is number => typeof d === 'number') : undefined)
   if (cmd === 'table') return fitsSource()
   if (cmd === 'catalog') return catalogSheet(typeof arg === 'number' ? arg : 4, (typeof more === 'number' ? more : 1) as Dir8)
-  if (cmd === 'sheet') return contactSheet((arg ?? {}) as ArenaLook, Array.isArray(more) ? more : [4, 7, 1, 255, 393, 9], (extra ?? {}) as Parameters<typeof contactSheet>[2])
+  if (cmd === 'sheet') return contactSheet((arg ?? {}) as Look, Array.isArray(more) ? more : [4, 7, 1, 255, 393, 9], (extra ?? {}) as Parameters<typeof contactSheet>[2])
   if (cmd === 'bots') {
     const n = shell.seats()
-    setArenaLooks(Array.from({ length: n }, (_, i) => (i === shell.seat() ? lookOf(i) : randomLook())))
+    setLooks(Array.from({ length: n }, (_, i) => (i === shell.seat() ? lookOf(i) : randomLook())))
     return Array.from({ length: n }, (_, i) => lookOf(i))
   }
   if (seat === null) return 'ps.wear: start an Arena match first (ps.versus())'
   if (cmd === 'off') return setSeat(shell, seat, {}), {}
-  if (cmd === 'look' && typeof arg === 'object' && arg) return setSeat(shell, shell.seat() ?? 0, arg as ArenaLook), lookOf(shell.seat() ?? 0)
+  if (cmd === 'look' && typeof arg === 'object' && arg) return setSeat(shell, shell.seat() ?? 0, arg as Look), lookOf(shell.seat() ?? 0)
   if (isWearableId(cmd)) {
     const look = { ...lookOf(seat), [WEARABLES[cmd].slot]: cmd }
     setSeat(shell, seat, look)

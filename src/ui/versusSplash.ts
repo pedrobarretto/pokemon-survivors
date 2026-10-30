@@ -10,7 +10,7 @@ import { teamColor } from './arena'
 import { lineupSeat } from './arenaQueue'
 import { h, setStyle } from './dom'
 import { titleChip } from './arenaTitle'
-import { lookOf } from '../render/arenaLooks'
+import { lookOf } from '../render/looks'
 
 /**
  * A match's opening splash, while its sprites load (`startCoopRun`): both

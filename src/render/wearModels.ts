@@ -1,4 +1,4 @@
-import type { WearableSlot } from '../data/arenaCosmetics'
+import type { WearableSlot } from '../data/cosmetics'
 import type { WearableId } from '../data/wearables'
 import { box, capsule, cone, cylinder, ellipsoid, extrude, heart, sphere, star, torus, triangle, blend, type Ramp, type Scene } from './wearArt'
 import type { Layer } from './wearFit'

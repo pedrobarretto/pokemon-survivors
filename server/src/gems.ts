@@ -1,5 +1,5 @@
 import type { TransactionSql } from 'postgres'
-import type { ArenaLook, CosmeticId } from '../../src/data/arenaCosmetics'
+import type { Look, CosmeticId } from '../../src/data/cosmetics'
 import type { GemCurrency, GemPackId } from '../../src/data/gems'
 import { knownOwned, playGems, purchaseStatus, refundedGems, wearableLook, type GemBuyResponse, type GemLedgerEntry, type GemPurchaseResponse, type GemReason, type GemsStatus, type PurchaseState } from '../../src/game/gems'
 import type { DayKey } from '../../src/game/day'
@@ -50,7 +50,7 @@ const toStatus = (r: StatusRow | undefined): GemsStatus => {
  * read back through what each owns), by user id: the matchmaker's ticket
  * lookup sends them so queue matches show these instead of a client's word.
  */
-export const vouchedLooks = async (q: Q, userIds: readonly string[]): Promise<Map<string, ArenaLook>> => {
+export const vouchedLooks = async (q: Q, userIds: readonly string[]): Promise<Map<string, Look>> => {
   const rows = userIds.length > 0 ? await statusRows(q, userIds) : []
   return new Map(rows.map((r) => [r.id, toStatus(r).look] as const))
 }
@@ -187,7 +187,7 @@ export const gemStore = (sql: Sql) => {
       }),
 
     /** `PUT /gems/look`: stores the look the account may wear (`wearableLook`) and returns it. */
-    setLook: (userId: string, raw: unknown): Promise<ArenaLook> =>
+    setLook: (userId: string, raw: unknown): Promise<Look> =>
       sql.begin(async (tx) => {
         await tx`insert into users (id) values (${userId}) on conflict (id) do nothing`
         const owned = await tx<{ cosmetic: string }[]>`select cosmetic from cosmetics_owned where user_id = ${userId}`

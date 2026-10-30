@@ -107,7 +107,7 @@ export type ArenaTicketsRequest = { userIds: string[] }
 
 /**
  * One player's numbers in the current season, as the matchmaker matches on them (a fresh rating for a newcomer), and their Fair Play (full without one).
- * `look`: the Arena look the API vouches for, an `ArenaLook` (`data/arenaCosmetics.ts`, slot to cosmetic id; read it with `parseLook`, kept loose here
+ * `look`: the Arena look the API vouches for, an `Look` (`data/cosmetics.ts`, slot to cosmetic id; read it with `parseLook`, kept loose here
  * so this file stays import-free): stored, and only what the account owns or what's free (`{}` for none), so a queue match shows it instead of
  * what a client claims. An API from before the gem shop sends none.
  */

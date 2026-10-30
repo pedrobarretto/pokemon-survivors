@@ -1,4 +1,4 @@
-import type { ArenaLook, WearableSlot } from '../data/arenaCosmetics'
+import type { Look, WearableSlot } from '../data/cosmetics'
 import data from '../data/wearAnchors.generated.json'
 import { isWearableId, WEARABLES, type WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
@@ -234,7 +234,7 @@ const anchorAnim = (a: Anchors, p: FramePlace): AnchorAnim | null => {
 }
 
 /** The item a look wears in a slot, if it's a wearable this species wears. */
-const wornIn = (look: ArenaLook, slot: WearableSlot, w: Wearer): WearableId | null => {
+const wornIn = (look: Look, slot: WearableSlot, w: Wearer): WearableId | null => {
   const id = look[slot]
   return id !== undefined && isWearableId(id) && WEARABLES[id].slot === slot && wears(w.fit, slot, id) ? id : null
 }
@@ -243,7 +243,7 @@ const wornIn = (look: ArenaLook, slot: WearableSlot, w: Wearer): WearableId | nu
 export const drawWearables = (
   ctx: CanvasRenderingContext2D,
   s: SpeciesSprites,
-  look: ArenaLook,
+  look: Look,
   anim: AnimName,
   dir: Dir8,
   seconds: number,

@@ -1,4 +1,4 @@
-import type { WearableSlot } from './arenaCosmetics'
+import type { WearableSlot } from './cosmetics'
 import type { WearableId } from './wearables'
 
 /**

@@ -13,7 +13,7 @@ import { ARENA_EFFECTS, type ArenaEffectDef } from './arenaEffects'
  * - `ARENA_EFFECTS` (`data/arenaEffects.ts`): everything that isn't worn: a
  *   follower, trails, spawn/KO/goal effects, emotes, titles and name plates.
  *
- * A player's equipped set is an `ArenaLook`: one id per slot. It travels in
+ * A player's equipped set is an `Look`: one id per slot. It travels in
  * the room's loadout (shell side, like the name: the simulation never holds
  * it) and the API keeps it with what the account owns. Names live in i18n
  * (`wearables`, `arenaEffects`), keyed by the same ids.
@@ -40,15 +40,15 @@ export const RARITY_PRICE = { common: 150, rare: 400, epic: 900, legendary: 1800
  */
 export type CosmeticBase = { slot: CosmeticSlot; rarity: Rarity; price?: number | null; from?: string }
 
-export const ARENA_COSMETICS = { ...WEARABLES, ...ARENA_EFFECTS } as const satisfies Record<string, WearableDef | ArenaEffectDef>
+export const COSMETICS = { ...WEARABLES, ...ARENA_EFFECTS } as const satisfies Record<string, WearableDef | ArenaEffectDef>
 
-export type CosmeticId = keyof typeof ARENA_COSMETICS & string
+export type CosmeticId = keyof typeof COSMETICS & string
 
-export const COSMETIC_IDS = Object.keys(ARENA_COSMETICS) as CosmeticId[]
+export const COSMETIC_IDS = Object.keys(COSMETICS) as CosmeticId[]
 
-export const isCosmeticId = (v: unknown): v is CosmeticId => typeof v === 'string' && Object.hasOwn(ARENA_COSMETICS, v)
+export const isCosmeticId = (v: unknown): v is CosmeticId => typeof v === 'string' && Object.hasOwn(COSMETICS, v)
 
-const entry = (id: CosmeticId): CosmeticBase => ARENA_COSMETICS[id]
+const entry = (id: CosmeticId): CosmeticBase => COSMETICS[id]
 
 /** A cosmetic's price in gems, or null when it isn't sold. */
 export const cosmeticPrice = (id: CosmeticId): number | null => {
@@ -59,16 +59,16 @@ export const cosmeticPrice = (id: CosmeticId): number | null => {
 export const slotOf = (id: CosmeticId): CosmeticSlot => entry(id).slot
 
 /** A player's equipped cosmetics: at most one per slot. */
-export type ArenaLook = Partial<Record<CosmeticSlot, CosmeticId>>
+export type Look = Partial<Record<CosmeticSlot, CosmeticId>>
 
 /**
  * A look from the wire or a save: only known ids in their own slot survive,
  * so an old client's or a forged look never draws something that isn't there.
  * Ownership is the API's to check (`PUT /gems/look`), not this.
  */
-export const parseLook = (raw: unknown): ArenaLook => {
+export const parseLook = (raw: unknown): Look => {
   if (typeof raw !== 'object' || raw === null) return {}
-  const look: ArenaLook = {}
+  const look: Look = {}
   for (const slot of COSMETIC_SLOTS) {
     const id: unknown = (raw as Record<string, unknown>)[slot]
     if (isCosmeticId(id) && slotOf(id) === slot) look[slot] = id

@@ -1,4 +1,4 @@
-import type { ArenaLook } from '../data/arenaCosmetics'
+import type { Look } from '../data/cosmetics'
 
 /**
  * The running Arena match's equipped looks, by seat (`Game.players` index).
@@ -6,9 +6,9 @@ import type { ArenaLook } from '../data/arenaCosmetics'
  * loadouts when it starts and clears them when it ends, and whatever draws a
  * seat's Pokémon (`render/wearables.ts`, the Arena's effects) reads them here.
  */
-let looks: readonly ArenaLook[] = []
+let looks: readonly Look[] = []
 
-export const setArenaLooks = (bySeat: readonly ArenaLook[]) => {
+export const setLooks = (bySeat: readonly Look[]) => {
   looks = bySeat
 }
 
@@ -26,18 +26,18 @@ export const setArenaMatch = (key: string | null) => {
 
 export const arenaMatchKey = (): string | null => match
 
-const NONE: ArenaLook = {}
+const NONE: Look = {}
 
-export const lookOf = (seat: number): ArenaLook => looks[seat] ?? NONE
+export const lookOf = (seat: number): Look => looks[seat] ?? NONE
 
 /**
  * This player's own equipped look, outside a match too (the hub's profile
  * shows its title): the shop sets it from what the account wears.
  */
-let own: ArenaLook = {}
+let own: Look = {}
 
-export const setLocalLook = (look: ArenaLook) => {
+export const setLocalLook = (look: Look) => {
   own = look
 }
 
-export const localLook = (): ArenaLook => own
+export const localLook = (): Look => own

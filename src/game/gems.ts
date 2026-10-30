@@ -1,5 +1,5 @@
 import { GEM_PLAY, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
-import { ARENA_COSMETICS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, type ArenaLook, type CosmeticBase, type CosmeticId } from '../data/arenaCosmetics'
+import { COSMETICS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, type Look, type CosmeticBase, type CosmeticId } from '../data/cosmetics'
 import type { DayKey } from './day'
 
 /**
@@ -15,7 +15,7 @@ export type GemReason = (typeof GEM_REASONS)[number]
 export const isGemReason = (v: unknown): v is GemReason => typeof v === 'string' && (GEM_REASONS as readonly string[]).includes(v)
 
 /** `GET /gems`: the balance (negative after a refund of spent gems, which blocks buying), what the account owns and its equipped look. */
-export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; look: ArenaLook }
+export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; look: Look }
 
 /** One line of `GET /gems/ledger`: `amount` signed, `at` in ms. */
 export type GemLedgerEntry = { amount: number; reason: GemReason; ref: string; at: number }
@@ -53,7 +53,7 @@ export const isFree = (id: CosmeticId) => cosmeticPrice(id) === 0
  */
 export const onSale = (id: CosmeticId, day: DayKey) => {
   const price = cosmeticPrice(id)
-  const { from }: CosmeticBase = ARENA_COSMETICS[id]
+  const { from }: CosmeticBase = COSMETICS[id]
   return price !== null && price > 0 && (from === undefined || from <= day)
 }
 
@@ -61,7 +61,7 @@ export const onSale = (id: CosmeticId, day: DayKey) => {
  * The look an account may wear: `raw` parsed (`parseLook`), keeping only
  * what it owns or what's free. Ids the catalog dropped are dropped too.
  */
-export const wearableLook = (raw: unknown, owned: ReadonlySet<string>): ArenaLook => {
+export const wearableLook = (raw: unknown, owned: ReadonlySet<string>): Look => {
   const look = parseLook(raw)
   for (const slot of COSMETIC_SLOTS) {
     const id = look[slot]

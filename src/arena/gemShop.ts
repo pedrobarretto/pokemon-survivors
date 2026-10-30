@@ -1,4 +1,4 @@
-import { ARENA_COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, slotOf, type ArenaLook, type CosmeticBase, type CosmeticId, type CosmeticSlot, type Rarity } from '../data/arenaCosmetics'
+import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, slotOf, type Look, type CosmeticBase, type CosmeticId, type CosmeticSlot, type Rarity } from '../data/cosmetics'
 import type { GemCurrency, GemMethod } from '../data/gems'
 import type { DayKey } from '../game/day'
 
@@ -40,10 +40,10 @@ export const priceText = (cents: number, currency: GemCurrency, tag: string) => 
 /** Rarities from the plainest up, the order the shop lists them in. */
 export const RARITIES = ['common', 'rare', 'epic', 'legendary'] as const satisfies readonly Rarity[]
 
-export const rarityOf = (id: CosmeticId): Rarity => ARENA_COSMETICS[id].rarity
+export const rarityOf = (id: CosmeticId): Rarity => COSMETICS[id].rarity
 
 const fromOf = (id: CosmeticId): DayKey | undefined => {
-  const { from }: CosmeticBase = ARENA_COSMETICS[id]
+  const { from }: CosmeticBase = COSMETICS[id]
   return from
 }
 
@@ -63,17 +63,17 @@ export const shopCatalog = (day: DayKey, owned: ReadonlySet<CosmeticId> = new Se
 }
 
 /** `look` with `id` on, in its own slot (replacing what was there). */
-export const equip = (look: ArenaLook, id: CosmeticId): ArenaLook => ({ ...look, [slotOf(id)]: id })
+export const equip = (look: Look, id: CosmeticId): Look => ({ ...look, [slotOf(id)]: id })
 
 /** `look` with `slot` empty. */
-export const unequip = (look: ArenaLook, slot: CosmeticSlot): ArenaLook => {
+export const unequip = (look: Look, slot: CosmeticSlot): Look => {
   const { [slot]: _off, ...rest } = look
   return rest
 }
 
 /** `look` keeping only what the player owns (as the API's `PUT /gems/look` does). */
-export const ownedOnly = (look: ArenaLook, owned: ReadonlySet<CosmeticId>): ArenaLook => {
-  const out: ArenaLook = {}
+export const ownedOnly = (look: Look, owned: ReadonlySet<CosmeticId>): Look => {
+  const out: Look = {}
   for (const slot of COSMETIC_SLOTS) {
     const id = look[slot]
     if (id !== undefined && owned.has(id)) out[slot] = id
@@ -82,4 +82,4 @@ export const ownedOnly = (look: ArenaLook, owned: ReadonlySet<CosmeticId>): Aren
 }
 
 /** Whether two looks wear the same items. */
-export const sameLook = (a: ArenaLook, b: ArenaLook) => COSMETIC_SLOTS.every((slot) => a[slot] === b[slot])
+export const sameLook = (a: Look, b: Look) => COSMETIC_SLOTS.every((slot) => a[slot] === b[slot])

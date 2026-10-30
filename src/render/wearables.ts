@@ -1,4 +1,4 @@
-import type { ArenaLook } from '../data/arenaCosmetics'
+import type { Look } from '../data/cosmetics'
 import { WEARABLES, type WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { fitOf, wears } from './wearFit'
@@ -26,7 +26,7 @@ export const loadWearables = () =>
   ))
 
 /** Whether a look wears anything on the sprite. */
-const wearsAny = (look: ArenaLook) => look.head !== undefined || look.face !== undefined || look.neck !== undefined || look.back !== undefined
+const wearsAny = (look: Look) => look.head !== undefined || look.face !== undefined || look.neck !== undefined || look.back !== undefined
 
 export type WearOpts = {
   alpha?: number
@@ -53,7 +53,7 @@ export type WearOpts = {
 export const drawWearables = (
   ctx: CanvasRenderingContext2D,
   s: SpeciesSprites,
-  look: ArenaLook,
+  look: Look,
   anim: AnimName,
   dir: Dir8,
   seconds: number,

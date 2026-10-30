@@ -16,7 +16,7 @@ import type { QueueServerMessage } from './net/arena'
 import type { CrumbMoment, Quality } from './crumb'
 import type { DeviceInfo } from './telemetry'
 import type { ArenaFormat } from './data/arenaFormats'
-import type { CosmeticId, CosmeticSlot, Rarity } from './data/arenaCosmetics'
+import type { CosmeticId, CosmeticSlot, Rarity } from './data/cosmetics'
 import type { GemCurrency, GemMethod, GemPackId } from './data/gems'
 
 /**

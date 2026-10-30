@@ -1,4 +1,4 @@
-import type { WearableSlot } from '../data/arenaCosmetics'
+import type { WearableSlot } from '../data/cosmetics'
 import { ART_DIRS, WEAR_FITS, type Nudge, type SpeciesFit } from '../data/wearFits'
 import type { WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'

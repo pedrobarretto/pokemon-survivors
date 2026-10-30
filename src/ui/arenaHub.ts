@@ -20,7 +20,7 @@ import { h, later } from './dom'
 import { boundKey } from './inputLabels'
 import { hint, type Screen } from './screens'
 import { titleChip } from './arenaTitle'
-import { localLook } from '../render/arenaLooks'
+import { localLook } from '../render/looks'
 
 /** Seconds away in a row that cost Fair Play's AFK (an away second counts `awayWeight`). */
 const AWAY_AFTER = Math.round(ARENA_RANKED.fairPlay.afkAfter / ARENA_RANKED.fairPlay.awayWeight)

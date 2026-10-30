@@ -1,5 +1,5 @@
 import { effectIn, type BurstKind, type EmoteAnim, type EffectOf, type Flourish, type TrailKind } from '../data/arenaEffects'
-import type { ArenaLook } from '../data/arenaCosmetics'
+import type { Look } from '../data/cosmetics'
 import { bodyOf } from '../data/bodies'
 import emoteManifest from '../data/emotes.generated.json'
 import { VERSUS } from '../data/versus'
@@ -10,7 +10,7 @@ import { formAt } from '../game/branch'
 import { localPlayer } from '../game/players'
 import type { Game, GameEvent, Player } from '../game/types'
 import type { VersusState } from '../game/versus'
-import { arenaMatchKey, lookOf } from './arenaLooks'
+import { arenaMatchKey, lookOf } from './looks'
 import { createCompanion, drawCompanion, stepCompanion, type CompanionView } from './companion'
 import { detail } from './quality'
 import { drawPokemon, freeSheet, loadSheet, sprites, type Sheet } from './sprites'
@@ -1042,7 +1042,7 @@ export const createFxPreview = () => {
      * Steps to the clock `t` (seconds): `dex` stands at (x, y) wearing
      * `look`, walking or not, `emoting` (its flourish throws) or not.
      */
-    step: (look: ArenaLook, dex: number, x: number, y: number, moving: boolean, emoting: boolean, t: number) => {
+    step: (look: Look, dex: number, x: number, y: number, moving: boolean, emoting: boolean, t: number) => {
       if (!own()) return
       const dt = last < 0 ? 0 : Math.max(0, Math.min(0.1, t - last))
       last = t
@@ -1077,7 +1077,7 @@ export const createFxPreview = () => {
       if (def && own()) startBurst(def.burst, x, y, 0)
     },
     /** What `dex` plays `seconds` into `look`'s emote (null: none, or its sheet still loading). */
-    emote: (look: ArenaLook, dex: number, seconds: number) => {
+    emote: (look: Look, dex: number, seconds: number) => {
       const def = effectIn('emote', look.emote)
       return def ? emoteFrame(dex, def, def.once ? seconds % 2 : seconds) : null
     },
@@ -1088,7 +1088,7 @@ export const createFxPreview = () => {
       drawCompanion(ctx, f.view, t, f.float ? 9 + Math.round(Math.sin(t * 3) * 2) : 0)
     },
     /** Under the Pokémon: the trail, the bursts' rings and an emote's aura (`emoting` since `at`). */
-    drawGround: (ctx: Ctx, look: ArenaLook, x: number, y: number, emoting: number | null) => {
+    drawGround: (ctx: Ctx, look: Look, x: number, y: number, emoting: number | null) => {
       if (previewing !== me) return
       for (const b of bursts) if (b.on) drawBurstGround(ctx, b)
       if (emoting !== null && effectIn('emote', look.emote)?.flourish === 'aura') {

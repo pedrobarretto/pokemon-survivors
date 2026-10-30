@@ -1,5 +1,5 @@
 import { currencyFor, equip, methodsFor, priceText, rarityOf, shopCatalog, unequip } from '../arena/gemShop'
-import { COSMETIC_SLOTS, WEARABLE_SLOTS, cosmeticPrice, slotOf, type ArenaLook, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/arenaCosmetics'
+import { COSMETIC_SLOTS, WEARABLE_SLOTS, cosmeticPrice, slotOf, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
 import { GEM_PACK_IDS, GEM_PACKS, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
 import { effectIn } from '../data/arenaEffects'
 import { VERSUS, VERSUS_PICKS, type VersusPick } from '../data/versus'
@@ -104,7 +104,7 @@ const BURST_SLOTS = ['spawn', 'ko', 'goal'] as const satisfies readonly Cosmetic
  * KO or goal effect replays. Draws while it's on the page; `start` again
  * after it comes back (a tab switch), `dispose` with the hub.
  */
-const lookStage = (pick: () => VersusPick, look: () => ArenaLook, focus: () => CosmeticId | null, cls = '') => {
+const lookStage = (pick: () => VersusPick, look: () => Look, focus: () => CosmeticId | null, cls = '') => {
   const canvas = h('canvas', { class: 'gem-stage-canvas', width: 96, height: 88 })
   const title = h('div', { class: 'gem-stage-title' })
   const el = h('div', { class: `gem-stage ${cls}` }, canvas, title)
@@ -656,7 +656,7 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
   const stage = lookStage(ctx.pick, () => status?.look ?? {}, () => null, 'big')
   const el = h('div', { class: 'gem-locker' })
 
-  const wear = (look: ArenaLook) => {
+  const wear = (look: Look) => {
     playSfx('select')
     saving = 'saving'
     void saveLook(look).then((ok) => {

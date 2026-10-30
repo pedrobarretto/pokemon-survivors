@@ -1,7 +1,7 @@
-import type { CosmeticBase, WearableSlot } from './arenaCosmetics'
+import type { CosmeticBase, WearableSlot } from './cosmetics'
 
 /**
- * The cosmetics worn on the sprite (`data/arenaCosmetics.ts` spreads them
+ * The cosmetics worn on the sprite (`data/cosmetics.ts` spreads them
  * into the catalog): hats, glasses, scarves, capes. Each is a small 3D model
  * (`render/wearModels.ts`, keyed by the same id) that `render/wearables.ts`
  * turns and sizes to each Pokémon, anchored per frame and direction from the

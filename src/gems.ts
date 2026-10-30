@@ -2,11 +2,11 @@ import { accountState, accountsEnabled, accountUserId, API_URL } from './account
 import { track } from './analytics'
 import { apiCall } from './api'
 import { equip, ownedOnly, sameLook } from './arena/gemShop'
-import { ARENA_COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, slotOf, type ArenaLook, type CosmeticId } from './data/arenaCosmetics'
+import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, slotOf, type Look, type CosmeticId } from './data/cosmetics'
 import { packGems, type GemCurrency, type GemMethod, type GemPackId } from './data/gems'
 import { isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus } from './game/gems'
 import { isRecord } from './game/parse'
-import { setLocalLook } from './render/arenaLooks'
+import { setLocalLook } from './render/looks'
 import type { WireLook } from './net/protocol'
 
 /**
@@ -40,7 +40,7 @@ let fake: Fake | null = null
 
 const fakeStatus = (balance: number): GemsStatus => {
   const owned = COSMETIC_IDS.filter((_, i) => i % 3 === 1)
-  return { balance, owned, look: owned.reduce<ArenaLook>(equip, {}) }
+  return { balance, owned, look: owned.reduce<Look>(equip, {}) }
 }
 
 /** Dev: every call answers made-up data, starting at `balance` gems with a third of the catalog owned (on), or the API again (off). */
@@ -230,7 +230,7 @@ const parseBought = (v: unknown): GemBuyResponse | null =>
  */
 export const buyCosmetic = async (id: CosmeticId): Promise<Bought> => {
   const price = cosmeticPrice(id) ?? 0
-  const bought = () => track('cosmetic_buy', { id, slot: slotOf(id), rarity: ARENA_COSMETICS[id].rarity, price })
+  const bought = () => track('cosmetic_buy', { id, slot: slotOf(id), rarity: COSMETICS[id].rarity, price })
   if (fake) {
     const s = fake.status
     if (s.owned.includes(id)) return { ok: false, why: 'owned' }
@@ -264,7 +264,7 @@ export const buyCosmetic = async (id: CosmeticId): Promise<Bought> => {
  * Offline, it waits on the device and goes up with the next `fetchGems`.
  * True when the API took it.
  */
-export const saveLook = async (look: ArenaLook): Promise<boolean> => {
+export const saveLook = async (look: Look): Promise<boolean> => {
   const was = knownGems()
   if (!was) return false
   if (fake) {

@@ -213,9 +213,9 @@ import { arenaResult } from './game/arenaRank'
 import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
-import { lookOf, setArenaLooks, setArenaMatch, setLocalLook } from './render/arenaLooks'
+import { lookOf, setLooks, setArenaMatch, setLocalLook } from './render/looks'
 import { freeWearables } from './render/wearables'
-import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, type ArenaLook, type CosmeticSlot } from './data/arenaCosmetics'
+import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, type Look, type CosmeticSlot } from './data/cosmetics'
 import { effectIn } from './data/arenaEffects'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
 import { createVersusTalk, type VersusTalk } from './ui/versusTalk'
@@ -2239,7 +2239,7 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   c.versus?.talk.dispose()
   c.versus?.controls.dispose()
   resetArenaFx()
-  setArenaLooks([])
+  setLooks([])
   setArenaMatch(null)
   freeWearables()
   clearToasts(ui)
@@ -2389,7 +2389,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   }
   const me = localPlayer(live.game)
   // Each seat's Arena look, as the relay vouched for it; this player's own previews what it equipped (shell state: the simulation never sees it).
-  setArenaLooks(live.game.versus ? live.start.players.map((p, i) => parseLook(i === me.slot ? equippedLook() : p.loadout.look)) : [])
+  setLooks(live.game.versus ? live.start.players.map((p, i) => parseLook(i === me.slot ? equippedLook() : p.loadout.look)) : [])
   setArenaMatch(live.game.versus ? `${live.room}:${live.start.id}` : null)
   run = {
     game: live.game,
@@ -4159,7 +4159,7 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
  * emote (as B does); `ps.look('play', 'koSupernova')` plays a spawn, KO or goal effect at your feet. Returns
  * the looks by seat (no argument: with the effects' particle counts too).
  */
-const devLook = (cmd?: ArenaLook | 'bots' | 'emote' | 'play' | 'clear', arg?: string | number) => {
+const devLook = (cmd?: Look | 'bots' | 'emote' | 'play' | 'clear', arg?: string | number) => {
   const c = run?.coop
   const g = c?.runner.game
   if (!c || !g?.versus) return 'ps.look: start a match first (ps.versus())'
@@ -4189,7 +4189,7 @@ const devLook = (cmd?: ArenaLook | 'bots' | 'emote' | 'play' | 'clear', arg?: st
     const seat = typeof arg === 'number' && looks[arg] ? arg : me
     looks[seat] = { ...looks[seat], ...parseLook(cmd) }
   }
-  setArenaLooks(looks)
+  setLooks(looks)
   setLocalLook(looks[me] ?? {})
   return looks
 }

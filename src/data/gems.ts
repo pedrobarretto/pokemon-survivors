@@ -1,5 +1,5 @@
 /**
- * Gems: the Arena shop's currency (`data/arenaCosmetics.ts`). They buy looks
+ * Gems: the Arena shop's currency (`data/cosmetics.ts`). They buy looks
  * only, never power. The API keeps every account's balance in a ledger (the
  * device never decides one), fed from three sources:
  *
