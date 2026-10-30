@@ -696,8 +696,8 @@ const crossed = (a: Attack, at: number, dt: number) => a.age >= at && a.age - dt
 const impact = (g: Game, a: Attack) => {
   switch (a.visual) {
     case 'skyUppercut':
+      // No hitstop, like Focus Punch: it lands again every second or so.
       shakeScreen(g, 7)
-      g.hitstop = Math.max(g.hitstop, 0.06)
       cast(g, 'skyUppercut')
       return burst(g, a.x, a.y + 6, { colors: ['#ffffff', '#f8d030', '#f87040', '#a07040'], count: 26, speed: 190, ttl: 0.45, gravity: 140, size: 2 })
     case 'hyperspaceBurst':
