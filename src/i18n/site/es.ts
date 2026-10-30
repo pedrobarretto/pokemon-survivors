@@ -989,7 +989,7 @@ export const siteEs: SiteMessages = {
       ['Idiomas', `${f.languages}: portugués, inglés, español, francés y chino tradicional.`, '7: español, inglés, francés, italiano, portugués y chino simplificado y tradicional.'],
       ['Ranking', 'Por tiempo sobrevivido. Las partidas que aparecen en el ranking se verifican: el servidor juega cada una de nuevo a partir del replay.', 'Por tiempo sobrevivido, solo o en grupo.'],
       ['Código', 'Abierto, licencia MIT.', 'Público, licencia PolyForm Noncommercial (MIT hasta el 14/10/2026).'],
-      ['Anuncios y compras', 'Ninguno. Donaciones opcionales.', 'Ninguno. Donaciones opcionales.'],
+      ['Anuncios y compras', 'Sin anuncios. Solo gemas opcionales, para estilos (nunca poder), y donaciones.', 'Ninguno. Donaciones opcionales.'],
     ],
     names: {
       title: 'Nombres parecidos',
@@ -1038,7 +1038,7 @@ export const siteEs: SiteMessages = {
         },
         {
           q: '¿Los dos son gratis y oficiales?',
-          a: 'Los dos son gratis, sin anuncios ni compras, y funcionan en el navegador. Ninguno es oficial: son fan games sin relación con Nintendo, The Pokémon Company, GAME FREAK ni Creatures.',
+          a: 'Los dos son gratis, sin anuncios, y funcionan en el navegador: Pokémon Survivors solo vende gemas opcionales, para estilos, y PokéSurvivor no tiene compras. Ninguno es oficial: son fan games sin relación con Nintendo, The Pokémon Company, GAME FREAK ni Creatures.',
         },
         {
           q: '¿Puedo jugar Pokémon Survivors con amigos?',

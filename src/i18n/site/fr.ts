@@ -986,7 +986,7 @@ export const siteFr: SiteMessages = {
       ['Langues', `${f.languages} : portugais, anglais, espagnol, français et chinois traditionnel.`, '7 : espagnol, anglais, français, italien, portugais, et chinois simplifié et traditionnel.'],
       ['Classement', 'Au temps survécu. Les parties qui apparaissent au classement sont vérifiées : le serveur rejoue chacune à partir de son replay.', 'Au temps survécu, en solo ou en groupe.'],
       ['Code source', 'Ouvert, licence MIT.', 'Public, licence PolyForm Noncommercial (MIT jusqu’au 14/10/2026).'],
-      ['Pubs et achats', 'Aucun. Dons facultatifs.', 'Aucun. Dons facultatifs.'],
+      ['Pubs et achats', 'Pas de pubs. Seulement des gemmes facultatives, pour le style (jamais de puissance), et des dons.', 'Aucun. Dons facultatifs.'],
     ],
     names: {
       title: 'Des noms qui se ressemblent',
@@ -1035,7 +1035,7 @@ export const siteFr: SiteMessages = {
         },
         {
           q: 'Les deux sont-ils gratuits et officiels ?',
-          a: 'Les deux sont gratuits, sans pubs ni achats, et tournent dans le navigateur. Aucun n’est officiel : ce sont des fan games sans lien avec Nintendo, The Pokémon Company, GAME FREAK ou Creatures.',
+          a: 'Les deux sont gratuits, sans pubs, et tournent dans le navigateur : Pokémon Survivors ne vend que des gemmes facultatives, pour le style, et PokéSurvivor n’a aucun achat. Aucun n’est officiel : ce sont des fan games sans lien avec Nintendo, The Pokémon Company, GAME FREAK ou Creatures.',
         },
         {
           q: 'Peut-on jouer à Pokémon Survivors entre amis ?',
