@@ -92,6 +92,7 @@ export const siteZh: SiteMessages = {
     companionNote: '禮物同伴：女巫之夜期間會送到贊助者的禮物箱，在對局中走在你身旁，沿路留下糖果。',
     cameoNote: '不是敵人：女巫之夜期間，牠會在 Darkrai 的裂縫中短暫現身，用 Lunar Wing 打破惡夢。',
     arenaNote: '競技場跟班：對戰時跟在你的寶可夢身後的外觀。只是外觀，絕不影響強度。',
+    lobbyNote: '大廳廣場上精品服飾店的裁縫：用葉子縫製寶石商店販售的造型。',
     wildNote: '基礎數值。一般敵人每分鐘都會變強，首領則不會。',
     appears: '出現時機',
     horde: (from: string, until: string) => `可能加入獸群，從 ${from} 到 ${until}`,

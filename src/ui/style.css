@@ -23911,3 +23911,127 @@ span.arena-hub-face {
     grid-template-columns: auto minmax(0, 1fr);
   }
 }
+
+/* ---------- Boutique (ui/boutique.ts) ---------- */
+/* Leavanny's sheet is the shop's panel (`.shop-sheet`): the same place, size and touch scrolling, holding the gem shop's pages. */
+
+.boutique-sheet .shop-head .gem-chip {
+  flex: none;
+}
+
+.boutique-sheet .shop-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-block: 4px;
+}
+
+.boutique-sheet .shop-tab img,
+.shop-tab.boutique-tab img {
+  width: 26px;
+  height: 20px;
+  margin: -2px 0;
+  image-rendering: pixelated;
+}
+
+.boutique-sheet .shop-tab.locker img {
+  width: 24px;
+  height: 24px;
+}
+
+.shop-sheet > .boutique-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 2px;
+}
+
+.boutique-body:focus {
+  outline: none;
+}
+
+/* The Kecleon shop's Boutique button, after its tabs: Leavanny's leaf green, with a gem. */
+.shop-tab.boutique-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-block: 4px;
+  color: #f4ffe8;
+  background: #3f8f3a;
+}
+
+.shop-tab.boutique-tab[hidden] {
+  display: none;
+}
+
+.shop-tab.boutique-tab img {
+  width: 13px;
+  height: 10px;
+  margin: 0;
+}
+
+/* NOVO inside a button that scrolls with its row (the shop's tabs, the Trainer Card's rows): in the flow, not on the corner. */
+.shop-tab .boutique-new,
+.trainer-row .boutique-new {
+  position: static;
+  flex: none;
+}
+
+.trainer-row img[src^='data:'] {
+  image-rendering: pixelated;
+}
+
+/* The sheet is narrower than the Arena hub: the gem pages take their phone layout inside it. */
+@container shop (max-width: 560px) {
+  .boutique-body .gem-pack-grid {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 2px 4px;
+    scroll-snap-type: x mandatory;
+  }
+  .boutique-body .gem-pack {
+    flex: 0 0 112px;
+    scroll-snap-align: start;
+  }
+  .boutique-body .gem-catalog-main {
+    grid-template-columns: 1fr;
+  }
+  .boutique-body .gem-try {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+  .boutique-body .gem-try .gem-stage-canvas {
+    width: 96px;
+    height: 88px;
+  }
+  .boutique-body .gem-try .gem-note {
+    grid-column: 1 / -1;
+  }
+  .boutique-body .gem-items {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  }
+  .boutique-body .gem-locker-top {
+    grid-template-columns: 1fr;
+  }
+  .boutique-body .gem-locker-stage {
+    align-items: center;
+  }
+  .boutique-body .gem-stage.big .gem-stage-canvas {
+    width: 192px;
+    height: 176px;
+  }
+  .boutique-body .gem-pick-list {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .boutique-body .gem-pick {
+    flex: 0 0 52px;
+  }
+  .boutique-body .gem-slots {
+    grid-template-columns: 1fr;
+  }
+}

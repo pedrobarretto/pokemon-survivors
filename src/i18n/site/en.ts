@@ -89,6 +89,7 @@ export const siteEn: SiteMessages = {
     companionNote: 'A gift companion: it lands in supporters\' gift box during Halloween Night and walks beside you in runs, leaving a trail of candy.',
     cameoNote: 'Not a foe: it shows up for a moment in Darkrai\'s rift during Halloween Night and breaks the nightmare with Lunar Wing.',
     arenaNote: 'An Arena follower: a look that trots after your Pokémon in matches. Looks only, never power.',
+    lobbyNote: "The Boutique's tailor, on the lobby's plaza: it sews from leaves the looks the gem shop sells.",
     wildNote: 'Base values. Regular enemies get tougher every minute; bosses don\'t.',
     appears: 'When it shows up',
     horde: (from: string, until: string) => `May join the horde, from ${from} to ${until}`,

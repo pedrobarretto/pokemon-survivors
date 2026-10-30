@@ -12,7 +12,7 @@ import { formatNumber, locale, LOCALES, t } from '../i18n'
 import { arenaIconUrl, tierBallUrl } from '../render/arenaArt'
 import { gemIconUrl, slotIconUrl } from '../render/gemArt'
 import type { VersusPick } from '../data/versus'
-import { gemChip, lockerTab, shopTab, type GemTab, type GemTabsContext } from './gemShop'
+import { gemChip, lockerTab, pickWearer, type GemTab, type GemTabsContext } from './gemShop'
 import { onGems } from '../gems'
 import { portraitUrl } from '../render/sprites'
 import { firstForm, teamColor } from './arena'
@@ -28,9 +28,10 @@ const AWAY_AFTER = Math.round(ARENA_RANKED.fairPlay.afkAfter / ARENA_RANKED.fair
 /**
  * The Arena's hub: the competitive side of the Arena in seven tabs. Perfil
  * (tier badge, RP to the next division, the season's totals and most played
- * Pokémon, Fair Play and the protection meter), Loja and Visual (the gem
- * shop and the look worn in matches, `ui/gemShop.ts`; the gem chip in the
- * title opens Loja), Temporada (the season's
+ * Pokémon, Fair Play and the protection meter), Loja (a shortcut into
+ * Leavanny's Boutique on the plaza, `ui/boutique.ts`, as the gem chip in the
+ * title is) and Visual (the look worn in matches, the Boutique's own page,
+ * `ui/gemShop.ts`), Temporada (the season's
  * number and time left, the ladder with each tier's title, how the reset
  * works), Ranking (the season's board, this
  * player's row pinned when it's off the page), Histórico (the API's matches
@@ -47,6 +48,8 @@ const AWAY_AFTER = Math.round(ARENA_RANKED.fairPlay.afkAfter / ARENA_RANKED.fair
 export const ARENA_HUB_TABS = ['profile', 'shop', 'locker', 'season', 'ranking', 'history', 'rules'] as const
 export type ArenaHubTab = (typeof ARENA_HUB_TABS)[number]
 export const isArenaHubTab = (x: unknown): x is ArenaHubTab => typeof x === 'string' && (ARENA_HUB_TABS as readonly string[]).includes(x)
+/** The tabs the hub shows itself: Loja leads into the Boutique. */
+type ShownTab = Exclude<ArenaHubTab, 'shop'>
 
 /** The tiers' names: the balls' official ones, in every language. */
 const TIER_NAMES = { poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball' } as const satisfies Record<TierId, string>
@@ -121,15 +124,16 @@ const meter = (value: number, max: number, level: 'good' | 'warn' | 'bad' | 'gol
 
 /**
  * `signIn`: the way to an account (null in a build without accounts: the hub shows the device's history alone).
- * `pick`: the Arena's Pokémon, the gem tabs' preview (Visual changes it with `keepPick`). `checkout`: the ref the page came
- * back from a gem pack's checkout with (`?gems=<ref>`), so the Loja opens on that pack's return.
+ * `pick`: the Arena's Pokémon, Visual's preview (its picker changes it with `keepPick`). `shop`: Loja's shortcut, into
+ * the Boutique's (the hub comes back on `from`, the tab it left).
  */
-export type ArenaHubActions = { back: () => void; signIn: (() => void) | null; pick: VersusPick; keepPick: (id: VersusPick) => void; checkout?: string }
+export type ArenaHubActions = { back: () => void; signIn: (() => void) | null; pick: VersusPick; keepPick: (id: VersusPick) => void; shop: (from: ArenaHubTab) => void }
 
 export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, actions: ArenaHubActions): Screen => {
   const m = t().versus.hub
   const signedIn = arenaSignedIn()
-  let current = tab
+  // Loja lives in the Boutique: the hub never shows it itself.
+  let current: ShownTab = tab === 'shop' ? 'locker' : tab
   let gone = false
 
   // What the tabs read, each asked once and kept for the screen's life.
@@ -147,18 +151,19 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
     h('button', { class: `shell-tab arena-hub-tab ${id}`, type: 'button', role: 'tab', 'aria-label': m.tabs[id], onclick: () => switchTab(id) }, h('img', { class: 'arena-hub-tab-icon', src: TAB_ICONS[id](), alt: '' }), h('span', {}, m.tabs[id])),
   )
 
-  // The gem tabs keep their pages (and previews) across tab switches; made the first time they show.
+  // Visual keeps its page (and preview) across tab switches, made the first time it shows; Loja leaves for the Boutique.
   let pick = actions.pick
   const gemCtx: GemTabsContext = {
     root,
     input,
     signIn: actions.signIn,
+    wearer: () => pickWearer(pick),
     pick: () => pick,
     setPick: (id) => ((pick = id), actions.keepPick(id)),
     goTab: (id) => switchTab(id),
   }
-  const gemTabs: { shop?: GemTab; locker?: GemTab } = {}
-  const gemTab = (id: 'shop' | 'locker') => (gemTabs[id] ??= id === 'shop' ? shopTab(gemCtx, actions.checkout ?? null) : lockerTab(gemCtx))
+  let locker: GemTab | null = null
+  const lockerPage = () => (locker ??= lockerTab(gemCtx))
   const chip = gemChip(() => switchTab('shop'))
 
   /** The button Enter presses on the tab shown (sign in, load more), if any. */
@@ -446,8 +451,8 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
     headBadge.replaceChildren(profile && profile !== 'loading' ? tierBadge(profile.tier) : h('img', { src: tierBallUrl('ultra'), alt: '' }))
     const scroll = body.scrollTop
     body.dataset.tab = current
-    if (current === 'shop' || current === 'locker') {
-      const page = gemTab(current)
+    if (current === 'locker') {
+      const page = lockerPage()
       if (body.firstChild !== page.el || body.childNodes.length !== 1) body.replaceChildren(page.el)
       page.enter()
       return
@@ -458,6 +463,11 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
   }
 
   const switchTab = (id: ArenaHubTab) => {
+    // Loja is the Boutique's, on the plaza: the hub comes back on the tab it left.
+    if (id === 'shop') {
+      playSfx('select')
+      return later(() => actions.shop(current))
+    }
     if (id === current) return
     playSfx('move')
     current = id
@@ -507,10 +517,12 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
   )
 
   const off = input.onKey((key) => {
-    // A gem tab's sheet or dialog has the keys meanwhile.
-    if (gemTabs.shop?.busy() || gemTabs.locker?.busy()) return
-    const at = ARENA_HUB_TABS.indexOf(current)
-    if (key === 'ArrowLeft' || key === 'ArrowRight') switchTab(ARENA_HUB_TABS[(at + (key === 'ArrowLeft' ? -1 : 1) + ARENA_HUB_TABS.length) % ARENA_HUB_TABS.length]!)
+    // Visual's dialog has the keys meanwhile.
+    if (locker?.busy()) return
+    // The arrows walk the tabs the hub shows itself: Loja is a way out, pressed on purpose.
+    const walked = ARENA_HUB_TABS.filter((id): id is ShownTab => id !== 'shop')
+    const at = walked.indexOf(current)
+    if (key === 'ArrowLeft' || key === 'ArrowRight') switchTab(walked[(at + (key === 'ArrowLeft' ? -1 : 1) + walked.length) % walked.length]!)
     else if (key === 'ArrowUp' || key === 'ArrowDown') body.scrollBy({ top: key === 'ArrowUp' ? -80 : 80 })
     else if (key === 'Enter') primary?.click()
     else if (key === 'Escape' || key === 'Backspace') {
@@ -535,8 +547,7 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
       gone = true
       off()
       offGems()
-      gemTabs.shop?.dispose()
-      gemTabs.locker?.dispose()
+      locker?.dispose()
       el.remove()
     },
   }

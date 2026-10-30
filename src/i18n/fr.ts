@@ -5448,6 +5448,22 @@ export const fr: Messages = {
     ],
     hello: ['Bzzz ! De retour à l’Arène ? Que la meilleure équipe gagne !', 'L’Énergie gardée ne marque rien. Porte-la au but !', 'Quatre têtes valent mieux qu’une. Joue avec ton équipe.', 'Le tableau de la saison n’attend pas. On y va ?'],
   },
+  boutique: {
+    title: 'Boutique',
+    tabs: { shop: 'Boutique', locker: 'Tenue' },
+    shopButton: 'Boutique',
+    lockerRow: 'Tenue du Pokémon',
+    first: [
+      'Oh, de la visite ! Bienvenue à la Boutique. Je suis Leavanny : je couds des petites tenues avec des feuilles et beaucoup d’amour.',
+      'Ici, les gemmes achètent des tenues : chapeaux, lunettes, écharpes, capes, traînées et plus. Elles changent le style, jamais la puissance.',
+      'Dans l’onglet Tenue, tu choisis quoi porter. Essaie tout ce que tu veux : le miroir, c’est cadeau !',
+    ],
+    hello: ['Ravie de te voir ! On essaie quelque chose ?', 'Je viens de coudre de nouvelles pièces. Jette un œil !', 'Un beau style commence par le chapeau. Ou par la cape ?', 'Chaque point, une feuille. Chaque feuille, un peu d’amour.'],
+    browse: 'Choisis une pièce et ton Pokémon l’essaie tout de suite.',
+    guest: 'Essaie tout ce que tu veux ! Pour acheter ou porter, connecte-toi.',
+    hintKeys: 'Q E onglets · ↑ ↓ défiler · ÉCHAP retour',
+    hintTouch: 'Touche une pièce pour l’essayer',
+  },
   traits: {
     healer: (name: string) => `*${name}* soigne ses alliés proches. Élimine-le en premier !`,
     shield: (name: string) => `*${name}* protège ses alliés avec un _bouclier_ qui absorbe les dégâts.`,

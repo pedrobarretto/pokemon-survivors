@@ -26,16 +26,18 @@ import { today } from './save'
 import { confirmDialog, type Screen } from './screens'
 
 /**
- * The Arena hub's gem tabs (`ui/arenaHub.ts`): Loja (the balance, the gem
- * packs in the buyer's currency, the catalog by slot, a live preview of the
- * Arena pick trying an item on, buying with a confirm, the receipts) and
- * Visual (the look by slot, a big preview walking and turning through its 8
- * directions, any roster Pokémon wearing it), plus the gem chip the Arena
- * screen and the hub's title show. A pack opens its checkout in a sheet
- * (card, and Pix in reais) and leaves for it; back on `?gems=`, the Loja
- * opens on the return sheet, which waits for the gems (`awaitCheckout`).
- * Guests browse and try things on; anything that needs the account leads to
- * sign in. The API lives in `gems.ts`, the rules in `arena/gemShop.ts`.
+ * The gem shop's two pages, which Leavanny's Boutique on the plaza holds
+ * (`ui/boutique.ts`) and the Arena hub's Visual tab shows too
+ * (`ui/arenaHub.ts`): Loja (the balance, the gem packs in the buyer's
+ * currency, the catalog by slot, a live preview of the `wearer` trying an
+ * item on, buying with a confirm, the receipts) and Visual (the look by slot,
+ * a big preview walking and turning through its 8 directions, any roster
+ * Pokémon wearing it), plus the gem chip the Arena screen, the hub's title
+ * and the Boutique's sheet show. A pack opens its checkout in a sheet (card,
+ * and Pix in reais) and leaves for it; back on `?gems=`, the Loja opens on
+ * the return sheet, which waits for the gems (`awaitCheckout`). Guests
+ * browse and try things on; anything that needs the account leads to sign
+ * in. The API lives in `gems.ts`, the rules in `arena/gemShop.ts`.
  */
 
 /** A rarity's color: the item cards' background, the names' tint. */
@@ -54,8 +56,14 @@ const tag = () => LOCALES[locale()].tag
 /** Children with the absent ones (null) left out, for `append` and `replaceChildren`. */
 const present = (...nodes: (Node | null)[]) => nodes.filter((n): n is Node => n !== null)
 
-/** Whether a wearable sits right on `pick`'s first form (`data/wearFits.ts`); the shop flags the ones that don't. Effects fit everyone. */
-const fits = (id: CosmeticId, pick: VersusPick) => !isWearableId(id) || fitsWearer(firstForm(pick).dex, id)
+/** Who the previews dress: a species (by dex) and its name, for the plate and the misfit flags. */
+export type Wearer = { dex: Dex; name: string }
+
+/** A roster pick's first form as a wearer. */
+export const pickWearer = (id: VersusPick): Wearer => ({ dex: firstForm(id).dex, name: firstForm(id).name })
+
+/** Whether a wearable sits right on the species `dex` (`data/wearFits.ts`); the shop flags the ones that don't. Effects fit everyone. */
+const fits = (id: CosmeticId, dex: Dex) => !isWearableId(id) || fitsWearer(dex, id)
 
 /** Wearables' icons as image URLs, made once each from their models (`wearableIcon`) once the engine is in. */
 const icons = new Map<CosmeticId, string>()
@@ -102,9 +110,9 @@ const BURST_SLOTS = ['spawn', 'ko', 'goal'] as const satisfies readonly Cosmetic
  * A plate frames its name and HP bar, and a title shows under the stage.
  * `focus()` is the item being shown off: an emote plays on and on, a spawn,
  * KO or goal effect replays. Draws while it's on the page; `start` again
- * after it comes back (a tab switch), `dispose` with the hub.
+ * after it comes back (a tab switch), `dispose` with its screen.
  */
-const lookStage = (pick: () => VersusPick, look: () => Look, focus: () => CosmeticId | null, cls = '') => {
+const lookStage = (wearer: () => Wearer, look: () => Look, focus: () => CosmeticId | null, cls = '') => {
   const canvas = h('canvas', { class: 'gem-stage-canvas', width: 96, height: 88 })
   const title = h('div', { class: 'gem-stage-title' })
   const el = h('div', { class: `gem-stage ${cls}` }, canvas, title)
@@ -118,7 +126,7 @@ const lookStage = (pick: () => VersusPick, look: () => Look, focus: () => Cosmet
   let burstIn = 0.4
   let burstTurn = 0
   const species = () => {
-    const dex = firstForm(pick()).dex
+    const dex = wearer().dex
     if (loaded?.dex !== dex) {
       const want: { dex: Dex; sprites: SpeciesSprites | null } = { dex, sprites: null }
       loaded = want
@@ -147,7 +155,7 @@ const lookStage = (pick: () => VersusPick, look: () => Look, focus: () => Cosmet
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     const s = species()
     if (!s) return
-    const dex = firstForm(pick()).dex
+    const dex = wearer().dex
     // It walks, then plays its emote; one being shown off plays on and on, and showing off anything else it just walks.
     const showing = shown === null ? null : slotOf(shown)
     const cycle = walked % (STAGE.walk + STAGE.emote)
@@ -192,7 +200,7 @@ const lookStage = (pick: () => VersusPick, look: () => Look, focus: () => Cosmet
     // A plate frames the name over its head and the HP bar under its feet, as in a match.
     const plate = effectIn('plate', show.plate)?.plate
     if (plate) {
-      const tag = textSprite(versusTag('', firstForm(pick()).name, 0), TEAM_LIGHT[0])
+      const tag = textSprite(versusTag('', wearer().name, 0), TEAM_LIGHT[0])
       const top = cy - s.bodyH * scale - 12
       blitPacked(ctx, tag, drawPlateTag(ctx, plate, cx, top, tag.w, seconds), top)
       const w = 22
@@ -338,17 +346,27 @@ const returnSheet = (root: HTMLElement, input: Input, ref: string, onClose: () =
 
 /* ---------------- The tabs ---------------- */
 
-/** What the gem tabs need from the hub: where sheets go, the way to sign in (null: a build without accounts), the previewed Pokémon and the other tab. */
+/**
+ * What the gem tabs need from the screen holding them (the Boutique, the
+ * Arena hub): where sheets go, the way to sign in (null: a build without
+ * accounts), who wears the looks in the previews, the roster Pokémon Visual
+ * shows picked (null: none, the wearer is someone else) and how a pick
+ * changes it, and the way to the other tab.
+ */
 export type GemTabsContext = {
   root: HTMLElement
   input: Input
   signIn: (() => void) | null
-  pick: () => VersusPick
+  wearer: () => Wearer
+  pick: () => VersusPick | null
   setPick: (id: VersusPick) => void
-  goTab: (tab: 'shop' | 'locker') => void
+  goTab: (tab: GemTabId) => void
 }
 
-/** A gem tab as the hub holds it: its page (kept across tab switches), `enter` when it shows, whether a sheet or a dialog has the keys, and `dispose` with the hub. */
+/** The gem shop's pages: Loja and Visual. */
+export type GemTabId = 'shop' | 'locker'
+
+/** A gem tab as its screen holds it: its page (kept across tab switches), `enter` when it shows, whether a sheet or a dialog has the keys, and `dispose` with the screen. */
 export type GemTab = { el: HTMLElement; enter: () => void; busy: () => boolean; dispose: () => void }
 
 const CURRENCY_KEY = 'ps:gemCurrency'
@@ -400,7 +418,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
   let returning = checkout
 
   const worn = () => status?.look ?? {}
-  const stage = lookStage(ctx.pick, worn, () => chosen)
+  const stage = lookStage(ctx.wearer, worn, () => chosen)
   const el = h('div', { class: 'gem-shop' })
   const packsEl = h('section', { class: 'gem-packs' })
 
@@ -494,7 +512,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
     const owned = ownedSet(status).has(id)
     const on = worn()[slot] === id
     const price = cosmeticPrice(id)
-    const misfit = !fits(id, ctx.pick())
+    const misfit = !fits(id, ctx.wearer().dex)
     return h(
       'button',
       {
@@ -512,7 +530,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       h('span', { class: 'gem-item-art' }, h('img', { src: iconUrl(id), alt: '' })),
       h('b', { class: 'gem-item-name' }, itemName(id)),
       h('small', { class: 'gem-item-tag' }, on ? m.equipped : owned ? m.owned : price === null ? m.unsold : gemAmount(price)),
-      misfit ? h('em', { class: 'gem-item-misfit', title: m.misfit(firstForm(ctx.pick()).name) }, '!') : null,
+      misfit ? h('em', { class: 'gem-item-misfit', title: m.misfit(ctx.wearer().name) }, '!') : null,
     )
   }
 
@@ -526,7 +544,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       { class: 'gem-info', style: `--rarity:${RARITY_COLORS[rarityOf(id)]}` },
       h('b', { class: 'gem-info-name' }, itemName(id)),
       h('small', { class: 'gem-info-kind' }, `${m.rarities[rarityOf(id)]} · ${m.slots[slot]}`),
-      isWearable(slot) ? (fits(id, ctx.pick()) ? null : h('small', { class: 'gem-info-misfit' }, m.shop.misfit(firstForm(ctx.pick()).name))) : h('small', {}, m.shop.effect),
+      isWearable(slot) ? (fits(id, ctx.wearer().dex) ? null : h('small', { class: 'gem-info-misfit' }, m.shop.misfit(ctx.wearer().name))) : h('small', {}, m.shop.effect),
       act(id),
     )
   }
@@ -653,7 +671,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
 export const lockerTab = (ctx: GemTabsContext): GemTab => {
   let status = knownGems()
   let saving: 'idle' | 'saving' | 'saved' | 'local' = 'idle'
-  const stage = lookStage(ctx.pick, () => status?.look ?? {}, () => null, 'big')
+  const stage = lookStage(ctx.wearer, () => status?.look ?? {}, () => null, 'big')
   const el = h('div', { class: 'gem-locker' })
 
   const wear = (look: Look) => {
@@ -694,7 +712,7 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
             onclick: () => !on && wear(id ? equip(look, id) : unequip(look, slot)),
           },
           id ? itemName(id) : m.locker.none,
-          id && !fits(id, ctx.pick()) ? h('em', { class: 'gem-item-misfit', title: m.shop.misfit(firstForm(ctx.pick()).name) }, '!') : null,
+          id && !fits(id, ctx.wearer().dex) ? h('em', { class: 'gem-item-misfit', title: m.shop.misfit(ctx.wearer().name) }, '!') : null,
         )
       }
       return h(

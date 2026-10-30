@@ -1,4 +1,4 @@
-import { CARAVAN, STALLS, type StallId } from '../data/visitors'
+import { CARAVAN, STALLS, TAILOR, type StallId } from '../data/visitors'
 import { caravanHere, isCaravanDay } from '../game/caravan'
 import { addDays, brasiliaDay, type DayKey } from '../game/day'
 import { hasStatue } from '../game/loyalty'
@@ -85,6 +85,9 @@ export const lanturnSpeaker = () => visitorSpeaker(LANTURN.dex, LANTURN.name, '#
 
 /** Machoke, the Dojo's sensei (`render/dojo.ts`). */
 export const senseiSpeaker = () => visitorSpeaker(SENSEI.dex, SENSEI.name, '#c04830')
+
+/** Leavanny, the Boutique's tailor (`ui/boutique.ts`). */
+export const tailorSpeaker = () => visitorSpeaker(TAILOR.dex, TAILOR.name, '#3f8f3a')
 
 /** Ninjask, the Estádio's judge (`render/stadium.ts`). */
 export const judgeSpeaker = () => visitorSpeaker(JUDGE.dex, JUDGE.name, '#b08818')

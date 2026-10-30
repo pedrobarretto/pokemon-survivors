@@ -70,6 +70,9 @@ export const drawWearables = (
 /** Whether a species (by dex) can wear an item: the locker greys out the ones it can't (`data/wearFits.ts`). */
 export const fitsWearer = (dex: number, id: WearableId) => wears(fitOf(dex), WEARABLES[id].slot, id)
 
+/** Whether a species (by dex) can wear looks at all (it has anchors); null until `loadWearables` lands. */
+export const wearsLooks = (dex: number): boolean | null => engine?.hasAnchors(dex) ?? null
+
 /** An item's art in three-quarter view, for the shop's and the locker's tiles (scale it up by whole numbers); null until `loadWearables` lands. */
 export const wearableIcon = (id: WearableId): HTMLCanvasElement | null => engine?.wearableIcon(id) ?? null
 

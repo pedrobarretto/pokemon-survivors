@@ -23,7 +23,8 @@ import { isBoard, type BoardId } from '../render/stadium'
 import { stallGoods } from '../game/stalls'
 import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue, type Speaker } from './dialogue'
-import { judgeSpeaker, lanturnSpeaker, senseiSpeaker, stallSpeaker, stallToday } from './visitors'
+import { judgeSpeaker, lanturnSpeaker, senseiSpeaker, stallSpeaker, stallToday, tailorSpeaker } from './visitors'
+import { boutiqueSeen, type BoutiqueTab } from './boutique'
 import { inviterName } from '../ranking'
 import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
 import { fetchWall, knownStatus } from '../supporters'
@@ -135,14 +136,17 @@ export type TitleActions = {
    * Opens the shop over the Kecleon plaza once the camera got there (Kecleon
    * talks beside it, `ui/shop.ts`); its Back must call `close`, which pans
    * back home and brings the lobby back in. `shelf`: open on Meowth's caravan or a seasonal stall's shelf (a talk with its keeper).
+   * `festival` and `boutique` are its Festival and Boutique buttons (the lobby swaps the shop for that sheet).
    */
-  mart: (close: () => void, shelf?: VisitorShelf, festival?: () => void) => Screen
+  mart: (close: () => void, shelf?: VisitorShelf, festival?: () => void, boutique?: () => void) => Screen
   /**
    * Opens the Festival da Praça's sheet over the Kecleon plaza once the camera
    * got there (`openFestival` in `ui/festival.ts`), on `tab`; `close` goes on
    * from it (home, or back to the shop it was opened from).
    */
   festival: (close: () => void, tab?: FestivalTab) => Screen
+  /** Opens Leavanny's Boutique over the plaza once the camera got there (`openBoutique` in `ui/boutique.ts`), on `tab`; `close` goes home. */
+  boutique: (close: () => void, tab: BoutiqueTab) => Screen
   /** Opens the Trainer Card over the title (the Trainer chip, `C`, the invite banner), like `settings`. */
   trainer: (focus: LobbyFocus) => Screen
   /** Opens the boards over the title, like `settings`. No action (no API), no tile. */
@@ -845,12 +849,14 @@ const BOARD_TABS = { play: null, ranking: 'ranking', season: 'season', history: 
  * `ps.festival('open')`, a talk at the fountain) opens the Festival da Praça's
  * sheet there (`plaque`, a talk at the donors' plaque, on its plaque tab),
  * `look` (dev, `ps.plaza()`) only goes there, for a look; Esc or Enter brings it back.
+ * `boutique` (a talk with Leavanny, the shop's Boutique button, `?boutique`) goes to Leavanny's Boutique at the plaza's east end and
+ * opens it on Loja (`locker`: on Visual, the Trainer Card's row); walking there, Leavanny says hello first.
  * `dojo` and `stadium` go west to the Dojo and south to the Estádio instead, where Machoke or Ninjask says hello.
  */
-export type ShopTrip = 'shop' | 'festival' | 'plaque' | 'look' | 'dojo' | 'stadium'
+export type ShopTrip = 'shop' | 'festival' | 'plaque' | 'look' | 'boutique' | 'locker' | 'dojo' | 'stadium'
 
 /** The place a trip goes to. */
-const tripPlace = (mode: ShopTrip): Place => (mode === 'dojo' || mode === 'stadium' ? mode : 'plaza')
+const tripPlace = (mode: ShopTrip): Place => (mode === 'dojo' || mode === 'stadium' ? mode : mode === 'boutique' || mode === 'locker' ? 'boutique' : 'plaza')
 
 /**
  * Title screen over the live meadow: the pixel logo and a blinking "press
@@ -917,7 +923,7 @@ export const titleScreen = (
   /** How this lobby lets the partner go (see `Meadow.meet`). */
   let leave: (() => void) | null = null
   /** A trip to the Kecleon's shop under way: going there, the shop open, or coming back. */
-  let visit: { mode: ShopTrip; phase: 'going' | 'here' | 'shop' | 'back'; shelf?: VisitorShelf } | null = null
+  let visit: { mode: ShopTrip; phase: 'going' | 'here' | 'shop' | 'back'; shelf?: VisitorShelf; instant: boolean } | null = null
   /** Who the talk prompt is over: a shopkeeper, Meowth, a stall's keeper, the festival's fountain or plaque. */
   let talkWho: LobbyNpc = 'keeper'
   /** A seasonal stall's keeper talking, over the plaza (the lobby's keys wait). */
@@ -1179,7 +1185,7 @@ export const titleScreen = (
    */
   function visitShop(mode: ShopTrip, instant = false, shelf?: VisitorShelf) {
     if (visit || !stage) return
-    visit = { mode, phase: 'going', shelf }
+    visit = { mode, phase: 'going', shelf, instant }
     offKeys?.()
     offKeys = input.onKey(visitKey)
     el.classList.add('visiting')
@@ -1193,7 +1199,7 @@ export const titleScreen = (
   }
 
   /**
-   * A talk at the plaza, the Dojo or the Estádio: the shop with a shopkeeper, the caravan's shelf with Meowth, a few words with a stall's keeper or Lanturn, the festival's sheet at the fountain (its plaque tab at the plaque), the Dojo with its sensei,
+   * A talk at the plaza, the Dojo or the Estádio: the shop with a shopkeeper, the caravan's shelf with Meowth, a few words with a stall's keeper or Lanturn, the festival's sheet at the fountain (its plaque tab at the plaque), the Boutique with Leavanny, the Dojo with its sensei,
    * the Arena with Ninjask (its hello first) and a board's screen at an Estádio board.
    * `beside`: the partner stands by `who`; from afar (a tap on the stall's edge marker), the stall skips its keeper's words.
    */
@@ -1205,6 +1211,7 @@ export const titleScreen = (
     if (who === 'lanturn') return chatThen(lanturnSpeaker(), t().plaza.lanturn, () => visitShop('festival'))
     if (who === 'fountain') return visitShop('festival')
     if (who === 'plaque') return visitShop('plaque')
+    if (who === 'tailor') return visitShop('boutique')
     visitShop('shop', false, who === 'meowth' ? 'caravan' : undefined)
   }
 
@@ -1259,7 +1266,7 @@ export const titleScreen = (
     if ((visit.phase === 'going' && back) || (visit.phase === 'here' && (back || key === 'Enter' || key === 'Space'))) goHome()
   }
 
-  /** At the plaza: the shop opens, Kecleon talking beside it (a look just waits). At the Dojo, Machoke says hello and the Dojo opens; at the Estádio, Ninjask and then the Arena. */
+  /** At the plaza: the shop opens, Kecleon talking beside it (a look just waits). At the Boutique, Leavanny (when walked to) and then its sheet; at the Dojo, Machoke says hello and the Dojo opens; at the Estádio, Ninjask and then the Arena. */
   const arrived = () => {
     if (!visit) return
     if (visit.mode === 'look') {
@@ -1269,6 +1276,7 @@ export const titleScreen = (
     visit.phase = 'shop'
     if (visit.mode === 'dojo') return greetAtDojo()
     if (visit.mode === 'stadium') return greetAtStadium()
+    if (visit.mode === 'boutique' || visit.mode === 'locker') return greetAtBoutique(visit.mode === 'locker' ? 'locker' : 'shop', visit.instant)
     if (visit.mode === 'festival' || visit.mode === 'plaque') overScreen = actions.festival(goHome, visit.mode === 'plaque' ? 'plaque' : 'fountain')
     else openShop(visit.shelf)
   }
@@ -1310,13 +1318,48 @@ export const titleScreen = (
     })
   }
 
-  /** The shop over the plaza; its Festival button swaps it for the festival's sheet, whose Back brings the shop again. */
+  /**
+   * Leavanny's hello at the Boutique (the long one, about the shop, the first time), then its sheet on `tab`; Esc during it turns back home.
+   * Landed there at once (a shortcut: the Trainer Card, the Arena, a link), the sheet opens straight away, Leavanny talking beside it.
+   */
+  function greetAtBoutique(tab: BoutiqueTab, instant: boolean) {
+    const open = () => (overScreen = actions.boutique(goHome, tab))
+    if (instant) return open()
+    const m = t().boutique
+    const lines = boutiqueSeen() ? [m.hello[Math.floor(Math.random() * m.hello.length)]!] : m.first
+    chat = dialogue(root, input, {
+      speaker: tailorSpeaker(),
+      lines: lines.map((text, i) => ({ text, emotion: i === 0 ? 'Happy' : 'Joyous' })),
+      onDone: () =>
+        later(() => {
+          chat?.dispose()
+          chat = null
+          if (visit?.phase === 'shop') open()
+        }),
+    })
+  }
+
+  /** The shop over the plaza; its Festival button swaps it for the festival's sheet, whose Back brings the shop again, and its Boutique button walks over to Leavanny. */
   function openShop(shelf?: VisitorShelf) {
     overScreen?.dispose()
-    overScreen = actions.mart(goHome, shelf, () => {
-      overScreen?.dispose()
-      overScreen = actions.festival(() => openShop())
-    })
+    overScreen = actions.mart(
+      goHome,
+      shelf,
+      () => {
+        overScreen?.dispose()
+        overScreen = actions.festival(() => openShop())
+      },
+      shopToBoutique,
+    )
+  }
+
+  /** From the shop to the Boutique: the shop's sheet goes, the camera pans along the plaza and the partner hops over to Leavanny. */
+  function shopToBoutique() {
+    if (!visit) return
+    overScreen?.dispose()
+    overScreen = null
+    visit = { mode: 'boutique', phase: 'going', instant: false }
+    actions.meadow.visit('boutique')
   }
 
   /** Back from the shop: the camera pans home, the partner hops back to its stage and the lobby slides in (from Passear, the walk goes on at the plaza instead). */

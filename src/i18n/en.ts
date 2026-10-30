@@ -5452,6 +5452,22 @@ export const en: Messages = {
     ],
     hello: ['Bzzz! Back to the Arena? May the best team win!', 'Energy you hold scores nothing. Take it to the goal!', 'Four heads think better than one. Play with your team.', 'The season’s scoreboard won’t wait. Shall we?'],
   },
+  boutique: {
+    title: 'Boutique',
+    tabs: { shop: 'Shop', locker: 'Look' },
+    shopButton: 'Boutique',
+    lockerRow: "Pokémon's look",
+    first: [
+      "Oh, a visitor! Welcome to the Boutique. I'm Leavanny: I sew little outfits out of leaves, with lots of love.",
+      'Here gems buy looks: hats, glasses, scarves, capes, trails and more. They change the look, never the power.',
+      "On the Look tab you choose what to wear. Try anything on: the mirror's on me!",
+    ],
+    hello: ['So good to see you! Shall we try something on?', 'I just sewed a few new pieces. Take a look!', 'A good look starts with the hat. Or the cape?', 'Every stitch, a leaf. Every leaf, a little love.'],
+    browse: 'Pick a piece and your Pokémon tries it on right away.',
+    guest: 'Try on anything you like! To buy or wear it, just sign in.',
+    hintKeys: 'Q E tabs · ↑ ↓ scroll · ESC back',
+    hintTouch: 'Tap a piece to try it on',
+  },
   traits: {
     healer: (name: string) => `*${name}* heals nearby allies. Take it down first!`,
     shield: (name: string) => `*${name}* wards its allies with a _shield_ that soaks damage.`,

@@ -306,3 +306,6 @@ export const takeMisses = () => {
   misses = 0
   return n
 }
+
+/** Whether a species (by dex) has anchors to wear things on: the Boutique tries looks on the partner only then. */
+export const hasAnchors = (dex: number) => Object.hasOwn(SPECIES, String(dex))

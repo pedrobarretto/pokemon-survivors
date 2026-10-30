@@ -34,12 +34,13 @@ import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
 import { isLegend } from './data/legends'
-import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
+import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
 import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
+import { openBoutique, type BoutiqueTab } from './ui/boutique'
 import { identify, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
 import type { Crumb, CrumbMoment } from './crumb'
@@ -150,7 +151,7 @@ import { challengeScreen, challengeShiny } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
 import { martDevTools } from './ui/martDev'
-import { CARAVAN, STALL_IDS, STALLS, type StallId } from './data/visitors'
+import { CARAVAN, STALL_IDS, STALLS, TAILOR, type StallId } from './data/visitors'
 import { nextMilestone } from './game/loyalty'
 import { plazaVisitors, setDevCaravan, setDevStall } from './ui/visitors'
 import { missionDevTools } from './ui/missionsDev'
@@ -502,8 +503,8 @@ const refreshVisitors = (now: number) => {
   if (fest.fountain !== had.fountain || fest.stage !== had.stage || fest.running !== had.running) scene.plaza.festival = fest
 }
 
-/** The shop over the plaza; `close` leaves it (and `?loja` behind); `shelf` opens on Meowth's caravan or a seasonal stall's shelf; `festival` swaps it for the festival's sheet. */
-const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void) => {
+/** The shop over the plaza; `close` leaves it (and `?loja` behind); `shelf` opens on Meowth's caravan or a seasonal stall's shelf; `festival` swaps it for the festival's sheet, `boutique` walks over to Leavanny's. */
+const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void, boutique?: () => void) => {
   const won = wonLastRun
   wonLastRun = false
   return shop(ui, input, {
@@ -511,11 +512,44 @@ const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void
     wonLastRun: won,
     shelf,
     festival,
+    boutique,
     close: () => {
       if (new URLSearchParams(location.search).has(SHOP_PARAM)) history.replaceState(null, '', location.pathname)
       close()
     },
   })
+}
+
+/** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
+let boutiqueCheckout: string | null = null
+
+/** Leavanny's Boutique over the plaza's east end (`ui/boutique.ts`); closing it leaves `?boutique` behind too. */
+const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
+  const checkout = boutiqueCheckout
+  boutiqueCheckout = null
+  return openBoutique(ui, input, {
+    tab,
+    checkout,
+    signIn: accountsEnabled ? () => void signIn() : null,
+    pick: arenaStart(),
+    keepPick: keepArenaPick,
+    close: () => {
+      if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) history.replaceState(null, '', location.pathname)
+      close()
+    },
+  })
+}
+
+/**
+ * The Boutique without the walk (the Arena's gem chip and Loja, the Trainer
+ * Card's look, `?boutique`, a checkout's return): the lobby lands at the
+ * plaza's east end with the sheet open on `tab`; leaving it calls `back`
+ * when given (where it came from), else pans home. `checkout`: the
+ * `?gems=<ref>` the Loja waits on.
+ */
+const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null) => {
+  boutiqueCheckout = checkout
+  showTitle({ shop: tab === 'locker' ? 'locker' : 'boutique', instant: true, ...(back && { back }) })
 }
 
 const queueMega = () => {
@@ -628,9 +662,18 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
         scene.plaza.focus = 'fountain'
         return openFestival(ui, input, () => ((scene.plaza.focus = 0), close()), tab)
       },
+      boutique: openBoutiqueSheet,
       // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
       trainer: (focus) =>
-        trainerCardScreen(ui, input, { supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null) }, () => showTitle({ focus })),
+        trainerCardScreen(
+          ui,
+          input,
+          {
+            supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null),
+            locker: () => showBoutique('locker', () => showTitle({ focus })),
+          },
+          () => showTitle({ focus }),
+        ),
       ranking: rankingEnabled ? (focus) => rankingScreen(ui, input, () => showTitle({ focus }), { difficulty: loadSave().difficulty, mode: runMode(loadSave().partner) }) : undefined,
       ideas: rankingEnabled ? (focus) => suggestionsScreen(ui, input, () => showTitle({ focus })) : undefined,
       supporters: (focus, open) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: () => showTitle({ focus }) }, open),
@@ -1021,6 +1064,8 @@ const menuSprites = (): Variant[] => [
     ...new Set([
     ...(halloweenToday() ? HAUNT_DEX : []),
     KECLEON_DEX,
+    // Leavanny at the Boutique, the plaza's east end.
+    TAILOR.dex,
     // The Dojo's Machoke and Wobbuffet, west of home, and the Estádio's Ninjask, south of it.
     ...DOJO_DEX,
     ...STADIUM_DEX,
@@ -2155,7 +2200,7 @@ for (const type of ['pointerdown', 'pointerup', 'touchend'] as const) window.add
 // No pinch/double-tap zoom, pull-to-refresh, rubber-banding or long-press menus.
 // CSS `touch-action` covers most browsers; these guards cover iOS Safari quirks.
 // A one-finger drag still scrolls inside a screen or the Kecleon Shop's panel, which lives over the plaza, outside any screen
-// (the Festival da Praça's sheet is one too: `.shop-sheet.festival-sheet`).
+// (the Festival da Praça's and the Boutique's sheets are too: `.shop-sheet.festival-sheet`, `.shop-sheet.boutique-sheet`).
 const blockDefault = (e: Event) => e.preventDefault()
 document.addEventListener('contextmenu', blockDefault)
 document.addEventListener('gesturestart', blockDefault)
@@ -2944,7 +2989,7 @@ const showArena = () => {
       friends: relay ? (id, format) => void openArenaRoom(id, format) : null,
       needsAccount: coopAccess(accountsEnabled, accountState()) !== 'open',
       hub: () => showArenaHub('profile'),
-      shop: () => showArenaHub('shop'),
+      shop: () => showBoutique('shop', () => showArena()),
       back: () => showTitle({ focus: 'arena' }),
     }),
   )
@@ -2952,10 +2997,12 @@ const showArena = () => {
 
 /**
  * The Arena's hub (`ui/arenaHub.ts`) on `tab`: profile, season, ranking,
- * history or rules. The Arena screen opens it, and so do the lobby's Stadium
- * boards; Voltar goes back to the Arena screen.
+ * history, rules or the look worn (Visual). The Arena screen opens it, and so
+ * do the lobby's Stadium boards; Voltar goes back to the Arena screen. Its
+ * Loja is the Boutique's (`showBoutique`), which comes back to the hub.
  */
-const showArenaHub = (tab: ArenaHubTab = 'profile', checkout?: string) => {
+const showArenaHub = (tab: ArenaHubTab = 'profile') => {
+  if (tab === 'shop') return showBoutique('shop', () => showArenaHub('profile'))
   endRun()
   reportArenaOpen('hub')
   setScreen(
@@ -2964,7 +3011,7 @@ const showArenaHub = (tab: ArenaHubTab = 'profile', checkout?: string) => {
       signIn: accountsEnabled ? () => setScreen(arenaGate(ui, input, { play: () => showArenaHub(tab), back: () => showArenaHub(tab) })) : null,
       pick: arenaStart(),
       keepPick: keepArenaPick,
-      ...(checkout !== undefined && { checkout }),
+      shop: (from) => showBoutique('shop', () => showArenaHub(from)),
     }),
   )
 }
@@ -3462,6 +3509,8 @@ const showSharedProfile = (handle: string) => {
 const IDEAS_PARAM = 'ideias'
 /** `?loja`, the Kecleon's shop's own link: the lobby opens at the plaza, Kecleon says hello and the shop opens. */
 const SHOP_PARAM = 'loja'
+/** `?boutique`, Leavanny's Boutique's own link: the lobby opens at the plaza's east end with the Boutique open on Loja. */
+const BOUTIQUE_PARAM = 'boutique'
 
 const showIdeasLink = () =>
   setScreen(
@@ -3624,9 +3673,10 @@ const boot = () => {
   if (shared) showSharedProfile(shared)
   else if (rankingEnabled && new URLSearchParams(location.search).has(IDEAS_PARAM)) showIdeasLink()
   else if (new URLSearchParams(location.search).has(SHOP_PARAM)) showTitle({ shop: 'shop', instant: true })
+  else if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) showBoutique('shop')
   else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
-  // Back from a gem pack's checkout (`?gems=<ref>`): the Arena's Loja, waiting for that pack.
-  else if (checkoutRef !== null) showArenaHub('shop', checkoutRef)
+  // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack.
+  else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
   else if (poll) showPollLink(poll)
   // Back from signing in, the player already pressed start before leaving: straight to the menu.
   else showTitle({ intro: !backFromSignIn() })
@@ -4202,7 +4252,7 @@ const devLook = (cmd?: Look | 'bots' | 'emote' | 'play' | 'clear', arg?: string 
  * (`'off'` back to the API); `('balance', n)` sets the balance, `('own', id)`
  * owns a cosmetic (all without one); `('return', 'chest')` comes back from a
  * checkout of that pack (`'never'`: the gems never land and the wait runs
- * out); `('shop')` and `('locker')` open the hub's tabs; `('fetch')` asks the API now.
+ * out); `('shop')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
  */
 const devGems = (cmd?: string, arg?: string | number) => {
   if (cmd === 'fake') {
@@ -4214,8 +4264,8 @@ const devGems = (cmd?: string, arg?: string | number) => {
     if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
     stageGems({ own: arg === undefined ? 'all' : [arg] })
   } else if (cmd === 'return') {
-    showArenaHub('shop', stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
-  } else if (cmd === 'shop' || cmd === 'locker') showArenaHub(cmd)
+    showBoutique('shop', undefined, stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
+  } else if (cmd === 'shop' || cmd === 'locker') showBoutique(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
   else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('shop') · ('locker') · ('fetch')"
   // In a match, each seat's look as the shell draws it.
@@ -4310,6 +4360,12 @@ if (import.meta.env.DEV) {
        * Histórico, Regras) open with E or a tap while the partner strolls by them.
        */
       stadium: () => showTitle({ shop: 'stadium' }),
+      /**
+       * Leavanny's Boutique at the plaza's east end: `ps.boutique()` walks the lobby there, Leavanny's hello included (the first
+       * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
+       * `ps.boutique('open')` lands there with the sheet open at once (`'locker'` on Visual).
+       */
+      boutique: (cmd?: 'open' | 'locker') => (cmd ? showBoutique(cmd === 'locker' ? 'locker' : 'shop') : showTitle({ shop: 'boutique' })),
       /**
        * The Kecleon plaza: `ps.plaza(3)` shows the shop's building at that level (1 to 5, until the next reload; `ps.plaza(0)`
        * goes back to the save's) and the lobby pans there for a look, cards out; Esc or Enter comes back.
