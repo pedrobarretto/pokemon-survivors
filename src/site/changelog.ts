@@ -33,6 +33,12 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     ],
     changes: [
       {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          { pt: 'Na Arena, Dragon Tail e Breaking Swipe não teleportam mais ninguém: o golpe não arremessa você nem seus aliados, e um rival arremessado só é empurrado um pouco.', en: 'In the Arena, Dragon Tail and Breaking Swipe no longer teleport anyone: they never throw you or your teammates, and a thrown rival is only pushed a little.', es: 'En la Arena, Dragon Tail y Breaking Swipe ya no teletransportan a nadie: no te lanzan a ti ni a tus aliados, y un rival lanzado solo recibe un pequeño empujón.', fr: 'Dans l’Arène, Dragon Tail et Breaking Swipe ne téléportent plus personne : ils ne projettent ni vous ni vos alliés, et un rival projeté n’est que légèrement poussé.', zh: '競技場裡，Dragon Tail 和 Breaking Swipe 不會再把人瞬間傳送：招式不會甩飛自己或隊友，被甩的對手也只會被稍微推開。' },
+        ],
+      },
+      {
         title: { pt: 'Página Criadores', en: 'Creators page', es: 'Página Creadores', fr: 'Page Créateurs', zh: '創作者頁面' },
         notes: [
           { pt: 'Os primeiros vídeos são do WePlay Z (em português) e do Son Titan Games (em espanhol), e o BirdseyeGaming faz lives no TikTok. Cada criador aparece com links para os canais dele.', en: 'The first videos are by WePlay Z (in Portuguese) and Son Titan Games (in Spanish), and BirdseyeGaming streams on TikTok. Each creator shows up with links to their channels.', es: 'Los primeros videos son de WePlay Z (en portugués) y Son Titan Games (en español), y BirdseyeGaming hace directos en TikTok. Cada creador aparece con enlaces a sus canales.' },

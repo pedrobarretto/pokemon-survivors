@@ -66,7 +66,7 @@ export const kitDevTools = (game: () => Game | undefined) => ({
         const to = foes[foes.length - 1]
         if (!e) return
         const angle = to && to !== e ? dm.atan2(to.y - e.y, to.x - e.x) : facing
-        return throwFoe(e, angle, 900 * e.mass, 30, 'hex', g.player.slot)
+        return throwFoe(g, e, angle, 900 * e.mass, 30, 'hex')
       }
       case 'drain':
         return void spawnAttack(g, {

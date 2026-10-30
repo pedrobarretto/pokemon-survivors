@@ -648,7 +648,7 @@ const breakingSwipe: Cast = (g, s) => {
   for (const e of g.enemies) {
     if (e.dying >= 0 || dm.sq(e.x - p.x) + dm.sq(e.y - e.radius - (p.y - 8)) > dm.sq(reach + e.radius)) continue
     damageEnemy(g, e, swing)
-    if (e.dying < 0 && !e.boss) throwFoe(e, dm.atan2(e.y - p.y, e.x - p.x), SWIPE.force, s.damage * SWIPE.crash, 'breakingSwipe', p.slot)
+    if (e.dying < 0 && !e.boss) throwFoe(g, e, dm.atan2(e.y - p.y, e.x - p.x), SWIPE.force, s.damage * SWIPE.crash, 'breakingSwipe')
   }
   shakeScreen(g, 3)
   cast(g, 'breakingSwipe')

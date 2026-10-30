@@ -94,7 +94,7 @@ export const strikeAvatar = (g: Game, e: Enemy, attack: Attack) => {
   if (status && chance(g.rng, status.chance)) applyStatus(e.status, status, base * VERSUS.pvp.damage, false, attack.move, g.player.slot)
   if (attack.knockback > 0) {
     const away = dirTo(attack.x, attack.y, target.x, target.y, g.player.facing)
-    const px = Math.min(12, (attack.knockback / 100) * VERSUS.pvp.shove)
+    const px = Math.min(VERSUS.pvp.shoveMax, (attack.knockback / 100) * VERSUS.pvp.shove)
     e.kx += away.x * px
     e.ky += away.y * px
   }
@@ -212,15 +212,18 @@ export const avatarOf = (g: Game, p: Player): Enemy | null => {
 
 /**
  * Puts the body where its player stands, with their HP, size and types. A
- * shove it took (a rival's knockback) moves the player instead; a slow, a
- * paralysis or a freeze on it slows them (`VersusSeat.pace`).
+ * shove it took (a rival's knockback, a throw) moves the player instead, at
+ * most `VERSUS.pvp.shoveMax` px (`shoveOf`); a slow, a paralysis or a freeze
+ * on it slows them (`VersusSeat.pace`).
  */
 const syncAvatar = (g: Game, p: Player, e: Enemy) => {
   if (e.kx !== 0 || e.ky !== 0) {
-    p.x += e.kx
-    p.y += e.ky
+    const shove = shoveOf(e.kx, e.ky)
+    p.x += shove.x
+    p.y += shove.y
     e.kx = 0
     e.ky = 0
+    e.thrown = null
   }
   e.x = p.x
   e.y = p.y
@@ -231,6 +234,17 @@ const syncAvatar = (g: Game, p: Player, e: Enemy) => {
   e.types = playerTypes(g)
   actAs(g, before)
   if (p.versus) p.versus.slow = statusPace(e.status)
+}
+
+/**
+ * The shove a body's knockback (kx, ky) gives its player, capped at
+ * `VERSUS.pvp.shoveMax` px. The world's pushes write a speed there (a throw
+ * hundreds of px/s), which taken whole would fling the Pokémon across the map.
+ */
+export const shoveOf = (kx: number, ky: number) => {
+  const d = dm.hypot(kx, ky)
+  const k = d > VERSUS.pvp.shoveMax ? VERSUS.pvp.shoveMax / d : 1
+  return { x: kx * k, y: ky * k }
 }
 
 /** Every Pokémon in play has its body on the field, where it stands; the ones out of play have none. */

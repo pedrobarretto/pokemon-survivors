@@ -4,6 +4,7 @@ import type { CastStats, Look, MoveId } from './moves'
 import type { DamageSource, Enemy, Game, Player } from './types'
 import * as dm from '../engine/dmath'
 import { wardOpens } from './kitRules'
+import { isAlly } from './versusRules'
 
 /**
  * The move kit: building blocks for new move mechanics. A move stays a data
@@ -55,7 +56,7 @@ import { wardOpens } from './kitRules'
  * Both return false when the window doesn't open: windows from different
  * moves don't chain (`wardOpens`), so a move whose point is the window bails.
  *
- * FOES: `throwFoe(e, angle, force, damage, move)` hurls a foe that hurts
+ * FOES: `throwFoe(g, e, angle, force, damage, move)` hurls a foe that hurts
  * every foe it crashes into while its knockback is fast (Circle Throw).
  *
  * LOADOUT: at most one manual move (`manual: true`) can be learned (`learnable`).
@@ -186,13 +187,15 @@ export const burrow = (g: Game, move: MoveId, seconds: number) => {
 
 /**
  * Hurls `e` toward `angle` with `force` (÷ mass, like knockback). While it flies
- * fast it deals `damage` to each foe it crashes into, once per throw, credited to `move` of the player at slot `by`.
+ * fast it deals `damage` to each foe it crashes into, once per throw, credited to `move` of the acting player.
+ * In Versus a move never throws its own team's bodies (its user's included); a rival's lands as a shove (`syncAvatar`).
  */
-export const throwFoe = (e: Enemy, angle: number, force: number, damage: number, move: DamageSource, by: number) => {
+export const throwFoe = (g: Game, e: Enemy, angle: number, force: number, damage: number, move: DamageSource) => {
+  if (isAlly(g, e)) return
   const v = fromAngle(angle, force / e.mass)
   e.kx += v.x
   e.ky += v.y
-  e.thrown = { damage, move, hit: new Set([e.id]), by }
+  e.thrown = { damage, move, hit: new Set([e.id]), by: g.player.slot }
 }
 
 export { hpFraction, scaleBy, stacksOf, took, walkedSince } from './kitRules'

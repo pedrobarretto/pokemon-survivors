@@ -461,7 +461,7 @@ export const dragonTail: Cast = (g, s) => {
   })
   for (const e of inArc(g.enemies, { x: p.x, y: p.y - 8 }, back, TAIL.half, reach)) {
     damageEnemy(g, e, swing)
-    if (e.dying < 0 && !e.boss) throwFoe(e, dm.atan2(e.y - p.y, e.x - p.x), TAIL.force, s.damage * TAIL.crash, 'dragonTail', p.slot)
+    if (e.dying < 0 && !e.boss) throwFoe(g, e, dm.atan2(e.y - p.y, e.x - p.x), TAIL.force, s.damage * TAIL.crash, 'dragonTail')
   }
   sound(g, 'dragonTail')
 }
