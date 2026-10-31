@@ -145,8 +145,9 @@ export const climb = (f: Pixels, { solid, ink }: Masks, x: number, y0: number, w
  * axis is a little behind the snout's tip) and its face's details in its
  * lower half down to the mouth (pixel indexes): small blobs (a pupil, a closed
  * eye's line, a nostril) of ink or of pixels darker than most of what's around
- * them (not the shading where two tones meet, nor a long contour), and the
- * glints beside them. Not an eye finder: no pairs, no scores.
+ * them (not the shading where two tones meet, nor a long contour) with some ink
+ * or a glint (not a marking in a darker shade of the skin), and the glints
+ * beside them. Not an eye finder: no pairs, no scores.
  */
 export const silhouetteOf = (f: Pixels, row: number, marks: Marks) => {
   const m = masksOf(f)
@@ -178,7 +179,10 @@ export const silhouetteOf = (f: Pixels, row: number, marks: Marks) => {
       else if (lum >= 200 && Math.max(r, g, b) - Math.min(r, g, b) < 60 && darker >= 4) glints.push(k)
     }
   }
-  // Small blobs only: a contour or a band of shadow across the face is no detail.
+  // Small blobs only: a contour or a band of shadow across the face is no detail. And an eye's: some of it as dark as
+  // the outline (a pupil, a closed eye's line) or a glint beside it; a marking in a darker shade of the skin
+  // (Bulbasaur's forehead spots, Umbreon's rings) is no eye.
+  const glinty = new Set(glints)
   const details: number[] = []
   const seen = new Uint8Array(w * h)
   for (let k0 = 0; k0 < w * h; k0++) {
@@ -196,7 +200,9 @@ export const silhouetteOf = (f: Pixels, row: number, marks: Marks) => {
     }
     const xs = blob.map((k) => k % w)
     const ys = blob.map((k) => Math.floor(k / w))
-    if (blob.length <= 10 && Math.max(...xs) - Math.min(...xs) < 5 && Math.max(...ys) - Math.min(...ys) < 4) details.push(...blob)
+    const small = blob.length <= 10 && Math.max(...xs) - Math.min(...xs) < 5 && Math.max(...ys) - Math.min(...ys) < 4
+    const eyeLike = blob.some((k) => m.ink[k] || N8.some((d) => glinty.has(k + d)))
+    if (small && eyeLike) details.push(...blob)
   }
   const near = new Set(details.flatMap((k) => N8.map((d) => k + d)))
   return { top, details: [...details, ...glints.filter((k) => near.has(k))], m }

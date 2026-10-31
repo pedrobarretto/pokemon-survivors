@@ -3,7 +3,7 @@ import type { Nudge } from '../data/wearFits'
 import type { WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { mirror, rasterize, type PixelArt } from './wearArt'
-import { artDir, headSpan, isMirrored, pivotOf, radius, yawFor, type WearSize } from './wearFit'
+import { artDir, headSpan, isMirrored, pivotOf, radius, yawFor, yawOf, type WearSize } from './wearFit'
 import { sceneOf, WEAR_MODELS } from './wearModels'
 import { glinty, masksOf, NONE, type Masks, type Pixels, type RigFrame } from './wearRig'
 
@@ -18,7 +18,8 @@ import { glinty, masksOf, NONE, type Masks, type Pixels, type RigFrame } from '.
  * - no hat, scarf or cape covers an eye, and a hat's band stops a row of the
  *   face short of them (`browOf`), so its outline never reads as their line;
  * - glasses stay on the head (nothing past a pixel off the sprite), and a
- *   frame whose eyes weren't found wears none;
+ *   frame whose eyes weren't found wears none; a clear lens tints the eye
+ *   under it, which shows through;
  * - what wraps the wearer (a strap, a temple, a scarf's wrap: `PixelArt.hug`)
  *   stays on its silhouette, inside its outline, and a face item's on the
  *   head's span at the eyes: past the head it went round, it's out of sight;
@@ -38,7 +39,7 @@ export type ItemArt = { still: PixelArt; moving: PixelArt[] | null }
 
 /** A model rendered for `size` facing `dir` (its frame of animation `frame`), flipped for the west-facing rows. */
 const render = (id: WearableId, slot: WearableSlot, size: WearSize, dir: Dir8, frame: number, squash: number) => {
-  const raw = rasterize(sceneOf(id, slot, size, frame, squash), yawFor(slot, artDir(dir)))
+  const raw = rasterize(sceneOf(id, slot, size, frame, squash, artDir(dir)), yawFor(slot, artDir(dir)))
   return isMirrored(dir) ? mirror(raw) : raw
 }
 
@@ -53,11 +54,13 @@ const reach = (art: PixelArt) => {
  * ends a row of the face over the eyes (`BROW`) facing south, turned a little and in profile
  * (`WearSize.brow`, `brows`): per direction, two renders measure how its
  * reach grows with the press (the brim's own perspective doesn't), and the
- * press that leaves it there follows; the hat takes the strongest.
+ * press that leaves it there follows; the hat takes the strongest. 0: the
+ * hat's tight way (`WearModel.tight`), where no press and lift would clear the eyes.
  */
 export const squashOf = (id: WearableId, size: WearSize) => {
   if (WEAR_MODELS[id].unpressed) return 1
   let press = 1
+  let lifted = 1
   for (const [dir, brow] of [[0, size.brow], [1, size.brows[0]], [2, size.brows[1]]] as const) {
     if (brow <= 0) continue
     const room = brow - BROW - 1
@@ -65,10 +68,17 @@ export const squashOf = (id: WearableId, size: WearSize) => {
     if (full <= room) continue
     const half = reach(render(id, 'head', size, dir, 0, 0.5))
     const per = (full - half) * 2
-    if (per > 0) press = Math.min(press, (room - (half - per / 2)) / per)
+    if (per <= 0) continue
+    press = Math.min(press, (room - (half - per / 2)) / per)
+    lifted = Math.min(lifted, (room + MAX_LIFT - (half - per / 2)) / per)
   }
-  return Math.min(1, Math.max(0.3, press))
+  // Pressed as far as it goes and lifted as far as it may (`placeOf`), still over the eyes: worn its tight way, if it has one.
+  if (lifted < MIN_PRESS && WEAR_MODELS[id].tight) return 0
+  return Math.min(1, Math.max(MIN_PRESS, press))
 }
+
+/** How far a hat may be pressed (`squashOf`): flatter, it no longer reads as the hat. */
+const MIN_PRESS = 0.3
 
 /**
  * An item's art for a wearer (see `ItemArt`): a still item's single render;
@@ -89,7 +99,7 @@ export const itemArt = (id: WearableId, slot: WearableSlot, size: WearSize, dir:
   }
   const keep = new Uint8Array(first.px.length)
   for (let k = 0; k < keep.length; k++) keep[k] = first.px[k] && !first.edge[k] && all.every((b) => same(first, k, b)) ? 1 : 0
-  const still: PixelArt = { ...first, px: first.px.map((v, k) => (keep[k] ? v : 0)), edge: new Uint8Array(first.px.length), back: first.back.map((v, k) => (keep[k] ? v : 0)), hug: first.hug.map((v, k) => (keep[k] ? v : 0)) }
+  const still: PixelArt = { ...first, px: first.px.map((v, k) => (keep[k] ? v : 0)), edge: new Uint8Array(first.px.length), back: first.back.map((v, k) => (keep[k] ? v : 0)), hug: first.hug.map((v, k) => (keep[k] ? v : 0)), clear: first.clear.map((v, k) => (keep[k] ? v : 0)) }
   const moving = all.map((b) => {
     const px = b.px.map((v, k) => {
       const i = (k % b.w) - b.ox + first.ox
@@ -134,7 +144,8 @@ const reachIn = (art: PixelArt, i0: number, i1: number) => {
  * it keeps its shape instead of losing its brim to the cut. Turned to a side,
  * a neck item rests on the throat: the model's neck meets the frame's
  * (`sprite`) on the side it faces, so what hangs in front (a bell, a bow, a
- * medal) touches the chest instead of floating before it.
+ * medal) touches the chest instead of floating before it; and what hangs on
+ * the back comes in to the frame's back where the body is shallower than wide.
  */
 export const placeOf = (rig: RigFrame, slot: WearableSlot, dir: Dir8, size: WearSize, art: ItemArt, out: { x: number; y: number }, sprite?: Pixels) => {
   pivotOf(rig, slot, dir, size, out)
@@ -144,6 +155,19 @@ export const placeOf = (rig: RigFrame, slot: WearableSlot, dir: Dir8, size: Wear
     const brow = browOf(rig, sprite ? eyeTopOf(sprite, masksOf(sprite), rig) : rig.eyeY0)!
     const low = Math.max(...[art.still, ...(art.moving ?? [])].map((p) => reachIn(p, brow.x0 - out.x, brow.x1 - out.x)))
     out.y -= Math.min(MAX_LIFT, Math.max(0, out.y + low - brow.y0))
+  }
+  if (slot === 'back' && sprite && (a === 1 || a === 2)) {
+    const run = runAt(sprite, rig.backX, rig.backY)
+    if (run && run[0] <= out.x && out.x <= run[1]) {
+      const s = isMirrored(dir) ? -1 : 1
+      const r = radius(size.body)
+      // The model's back where it turns to the camera's side, pulled in to a pixel inside the frame's back outline
+      // when it would hang in the air behind it (a body shallower than it is wide: Gengar's, Snorlax's), never
+      // pushed out, nor its axis off the body.
+      const back = out.x - s * r * Math.sin(yawOf(a))
+      const gap = Math.min(((s > 0 ? run[0] : run[1]) + s - back) * s, r, (s > 0 ? run[1] - out.x : out.x - run[0]) - 1)
+      if (gap > 0) out.x += s * Math.round(gap)
+    }
   }
   if (slot === 'neck' && sprite && a >= 1 && a <= 3) {
     const run = runAt(sprite, rig.neckX, rig.neckY)
@@ -251,6 +275,14 @@ const TUFT = 3
 
 const rgbOf = (c: string) => parseInt(c.slice(1, 7), 16)
 
+/** How much of a clear lens's color tints what's under it. */
+const GLASS_TINT = 0.3
+/** A packed RGB color under a clear lens of color `glass`. */
+const tint = (under: number, glass: number) => {
+  const mix = (sh: number) => Math.round(((under >> sh) & 255) * (1 - GLASS_TINT) + ((glass >> sh) & 255) * GLASS_TINT)
+  return (mix(16) << 16) | (mix(8) << 8) | mix(0)
+}
+
 /**
  * Dresses one frame (see the module's doc): the sprite's pixels, its rig, the
  * items in drawing order (`DRAW_ORDER`) and the hand fix's pixels drawn over
@@ -342,8 +374,9 @@ export const dress = (sprite: Pixels, rig: RigFrame, items: readonly Dressing[],
         if (it.slot === 'neck' && onSprite && (art.back[k] || y < rig.neckY - 2)) continue
         // Facing away, the head stays over what hangs on the back.
         if (it.slot === 'back' && onSprite && y < rig.neckY) continue
+        // A clear lens over the sprite tints what's under it: the eye shows through.
+        color[o] = art.clear[k] && onSprite ? tint(color[o]!, palettes[i]![art.px[k]!]!) : palettes[i]![art.px[k]!]!
         owner[o] = 2 + i
-        color[o] = palettes[i]![art.px[k]!]!
         inkAt[o] = art.ink[k]!
         front[o] = 1 + i
       }

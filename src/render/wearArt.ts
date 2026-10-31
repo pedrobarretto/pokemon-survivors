@@ -32,6 +32,8 @@ export type Scene = {
   part?: (x: number, y: number, z: number) => number
   /** Ramps lit evenly (their base and light tones only by facing): glass, a glow. */
   flat?: readonly number[]
+  /** Ramps seen through (a clear lens): over the sprite they tint what's under them rather than hide it (`PixelArt.clear`). */
+  clear?: readonly number[]
   /** The outline's color; by default each ramp's shadow, darkened. */
   ink?: string
   /** A ramp's own outline color by index, or null for none (a glow, a flame, a string). */
@@ -57,9 +59,10 @@ export type Scene = {
  * far half, seen from the camera (what grows from the head shows through a
  * crown's far side; a scarf's far half goes behind the neck), and `hug` a
  * pixel of a part that wraps the wearer (`Scene.hug`: a strap never pokes past
- * the head it goes round).
+ * the head it goes round), and `clear` a pixel of a see-through part
+ * (`Scene.clear`: the eye shows through a clear lens).
  */
-export type PixelArt = { w: number; h: number; ox: number; oy: number; px: Uint8Array; colors: readonly string[]; edge: Uint8Array; ink: Uint8Array; back: Uint8Array; hug: Uint8Array }
+export type PixelArt = { w: number; h: number; ox: number; oy: number; px: Uint8Array; colors: readonly string[]; edge: Uint8Array; ink: Uint8Array; back: Uint8Array; hug: Uint8Array; clear: Uint8Array }
 
 /** Where the light comes from, on screen: the top left, a little toward the viewer. */
 const LIGHT = (() => {
@@ -224,6 +227,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
   const px = new Uint8Array(n)
   const edge = new Uint8Array(n)
   const ink = new Uint8Array(n)
+  const clear = new Uint8Array(n)
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
       const k = j * w + i
@@ -236,6 +240,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
           return o >= 0 && solid[o] === 1 && depth[o]! < depth[k]! - (parts[o] === parts[k] ? FOLD : EDGE)
         })
         px[k] = behind ? inkOf(m) : 1 + m * 4 + shade[k]!
+        clear[k] = !behind && scene.clear?.includes(m) ? 1 : 0
         continue
       }
       // The outline: a clear pixel beside the shape takes the ink of its first solid neighbor that has one.
@@ -249,7 +254,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
       }
     }
   }
-  return { w, h, ox: half, oy: up, px, colors, edge, ink, back: Uint8Array.from(back, (b, k) => (solid[k] ? b : 0)), hug: Uint8Array.from(hug, (b, k) => (solid[k] ? b : 0)) }
+  return { w, h, ox: half, oy: up, px, colors, edge, ink, back: Uint8Array.from(back, (b, k) => (solid[k] ? b : 0)), hug: Uint8Array.from(hug, (b, k) => (solid[k] ? b : 0)), clear }
 }
 
 /** The art mirrored left to right (the west-facing directions are the east-facing ones flipped, like the sheets). */
@@ -259,7 +264,7 @@ export const mirror = (art: PixelArt): PixelArt => {
     for (let j = 0; j < art.h; j++) for (let i = 0; i < art.w; i++) out[j * art.w + i] = a[j * art.w + art.w - 1 - i]!
     return out
   }
-  return { ...art, ox: art.w - 1 - art.ox, px: flip(art.px), edge: flip(art.edge), ink: flip(art.ink), back: flip(art.back), hug: flip(art.hug) }
+  return { ...art, ox: art.w - 1 - art.ox, px: flip(art.px), edge: flip(art.edge), ink: flip(art.ink), back: flip(art.back), hug: flip(art.hug), clear: flip(art.clear) }
 }
 
 /* ---------------- Shapes (signed distances, px) ---------------- */

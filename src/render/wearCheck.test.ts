@@ -49,4 +49,13 @@ describe('the head by its silhouette', () => {
     expect(at).toEqual(expect.arrayContaining([[10, 12], [10, 13], [14, 12], [14, 13], [11, 12], [15, 12]]))
     expect(at).toHaveLength(6)
   })
+
+  it('takes a marking in a darker shade of the skin for no eye: no ink in it, no glint beside it', () => {
+    const f = head()
+    for (const x of [12, 13]) f.rgba.set([140, 110, 40, 255], (15 * f.w + x) * 4)
+    expect(silhouetteOf(f, 0, { mx: 12, my: 16, gx: 12, gy: 22 }).details).toHaveLength(6)
+    // The same blob in the outline's ink is a detail (a nostril, a closed eye's line).
+    for (const x of [12, 13]) f.rgba.set([...INK, 255], (15 * f.w + x) * 4)
+    expect(silhouetteOf(f, 0, { mx: 12, my: 16, gx: 12, gy: 22 }).details).toHaveLength(8)
+  })
 })

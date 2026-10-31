@@ -198,25 +198,26 @@ export const contactSheet = async (
   return paintAll(paint, canvas)
 }
 
-/** The whole catalog on one variant (as `contactSheet` takes them) facing `dir`, nine items a row, labeled by id; resolves to a PNG data URL. */
+/** The whole catalog on one variant (as `contactSheet` takes them) facing `dir`, bare first and then every item, nine a row, labeled by id; resolves to a PNG data URL. */
 export const catalogSheet = async (variant: Variant, dir: Dir8, scale = 3) => {
   await loadWearables()
   const s = await loadVariant(variant)
   const cols = 9
   const label = 14
-  const rows = Math.ceil(WEARABLE_IDS.length / cols)
+  const cells = [null, ...WEARABLE_IDS] as const
+  const rows = Math.ceil(cells.length / cols)
   const canvas = createCanvas(cols * CELL_W * scale, rows * (CELL_H * scale + label))
   const ctx = context2d(canvas)
   const paint = () => {
     ctx.fillStyle = '#1c1c24'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    WEARABLE_IDS.forEach((id, i) => {
+    cells.forEach((id, i) => {
       const x = (i % cols) * CELL_W * scale
       const y = Math.floor(i / cols) * (CELL_H * scale + label)
       ctx.fillStyle = '#c8c8d0'
-      ctx.font = '12px monospace'
-      ctx.fillText(`${id} · ${WEARABLES[id].rarity}`, x + 4, y + 11)
-      drawCell(ctx, s, { [WEARABLES[id].slot]: id }, 'Walk', dir, secondsAt(s, 'Walk', 0), x, y + label, scale, 0)
+      ctx.font = `${Math.min(12, 4 + scale * 3)}px monospace`
+      ctx.fillText(id ? (scale >= 3 ? `${id} · ${WEARABLES[id].rarity}` : id) : nameOf(variant), x + 2, y + 11)
+      drawCell(ctx, s, id ? { [WEARABLES[id].slot]: id } : {}, 'Walk', dir, secondsAt(s, 'Walk', 0), x, y + label, scale, 0)
     })
   }
   return paintAll(paint, canvas)
@@ -346,13 +347,13 @@ const openGallery = async (first: WearableId, dexes?: readonly unknown[]) => {
  * `'<dex>[:<form>][s]'` after the item fits only those: `[4, '6:megaX']`),
  * `ps.wear('table')` prints `WEAR_FITS` as edited and `ps.wear('sheet', look,
  * dexes, opts?)` resolves a contact sheet's PNG data URL (`ps.wear('catalog',
- * dex, dir)`: every item on one species).
+ * dex, dir, scale?)`: every item on one species, bare first).
  */
 export const devWear = async (shell: WearShell, cmd?: string, arg?: unknown, more?: unknown, extra?: unknown) => {
   const seat = typeof arg === 'number' ? arg : shell.seat()
   if (cmd === 'fit') return openGallery(isWearableId(arg) ? arg : 'topHat', Array.isArray(more) ? more : undefined)
   if (cmd === 'table') return fitsSource()
-  if (cmd === 'catalog') return catalogSheet(parseVariant(arg) ?? { dex: 4, shiny: false }, (typeof more === 'number' ? more : 1) as Dir8)
+  if (cmd === 'catalog') return catalogSheet(parseVariant(arg) ?? { dex: 4, shiny: false }, (typeof more === 'number' ? more : 1) as Dir8, typeof extra === 'number' ? extra : 3)
   if (cmd === 'sheet') return contactSheet((arg ?? {}) as Look, Array.isArray(more) ? more : [4, 7, 1, 255, 393, 9], (extra ?? {}) as Parameters<typeof contactSheet>[2])
   if (cmd === 'bots') {
     const n = shell.seats()

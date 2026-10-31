@@ -23,13 +23,17 @@ export const isMirrored = (dir: Dir8) => dir > 4
 /** How far an art direction is turned from facing the camera (radians, toward screen right). */
 export const yawOf = (d: ArtDir) => (d * Math.PI) / 4
 
+/** How far glasses turn in profile (radians): see `yawFor`. */
+const PROFILE_FACE = (55 * Math.PI) / 180
+
 /**
  * How far a slot's models turn facing an art direction: their direction's
- * turn, but glasses in profile turn 70° rather than 90°, as sprite artists
+ * turn, but glasses in profile turn 55° rather than 90°, as sprite artists
  * draw a profile's eye, a little toward the viewer: edge-on, a lens is a
- * one-pixel bar that the eye shows past.
+ * one-pixel bar that the eye shows past. Only their near half is drawn there
+ * (`render/wearModels.ts`), its lens turned further still.
  */
-export const yawFor = (slot: WearableSlot, d: ArtDir) => (slot === 'face' && d === 2 ? (70 * Math.PI) / 180 : yawOf(d))
+export const yawFor = (slot: WearableSlot, d: ArtDir) => (slot === 'face' && d === 2 ? PROFILE_FACE : yawOf(d))
 
 /** How far down the camera looks at the sprites (radians): PMD sprites are drawn from a little above, heads almost head-on. */
 export const PITCH = (22 * Math.PI) / 180

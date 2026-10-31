@@ -20,6 +20,7 @@ const art = (w: number, h: number, ox: number, oy: number, px: number[], extra: 
   ink: new Uint8Array(w * h).fill(2),
   back: new Uint8Array(w * h),
   hug: new Uint8Array(w * h),
+  clear: new Uint8Array(w * h),
   ...extra,
 })
 
