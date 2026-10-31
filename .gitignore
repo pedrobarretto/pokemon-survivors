@@ -5,3 +5,4 @@ dist
 .env.*.local
 .env.local
 determinism-out
+.fit-check/

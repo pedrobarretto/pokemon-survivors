@@ -2,36 +2,40 @@ import { BRANCHES } from '../data/branches'
 import type { Look, WearableSlot } from '../data/cosmetics'
 import { PLAYABLE } from '../data/hatchlings'
 import manifest from '../data/sprites.generated.json'
-import { ART_DIRS, WEAR_FITS, type ArtDirName, type FitKey, type Nudge, type SpeciesFit } from '../data/wearFits'
+import { ART_DIRS, WEAR_FITS, type FitKey, type SpeciesFit } from '../data/wearFits'
 import { isWearableId, WEARABLE_IDS, WEARABLES, type WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { createCanvas, context2d } from '../engine/pixelart'
 import { lookOf, setLooks } from '../render/looks'
-import { drawPokemon, formOf, loadSpecies, type AnimName, type Form, type SpeciesSprites } from '../render/sprites'
-import { anchorKey, artDir, isMirrored } from '../render/wearFit'
-import { drawWearables, loadWearables, refitWearables, wearMisses } from '../render/wearables'
+import { formOf, loadSpecies, type AnimName, type Form, type SpeciesSprites } from '../render/sprites'
+import { artDir, isMirrored, rigKey } from '../render/wearFit'
+import { drawDressed, holdWearables, loadWearables, refitWearables, wearMisses } from '../render/wearables'
 
 /**
  * Dev only (`ps.wear`, loaded on demand from `main.ts`): wearing the
- * wearables in a run or a match, a fitting gallery that nudges them per
- * species and prints `WEAR_FITS` (`data/wearFits.ts`) back, and contact
- * sheets for PRs.
+ * wearables in a run or a match, a gallery of every player wearing an item
+ * (which leaves items off species and prints `WEAR_FITS`, `data/wearFits.ts`,
+ * back; the rig's fixes are `ps.rig`'s, `ui/rigTool.ts`), and contact sheets for PRs.
  */
 
 /** The seats of the running game (a run, a match), from the shell: this player's (null: none runs) and how many. */
 export type WearShell = { seat: () => number | null; seats: () => number }
 
 /** A variant the fitting tools draw: a species or one of its forms with sheets, in its normal or shiny colors. */
-type Variant = { dex: number; form?: Form; shiny: boolean }
+export type Variant = { dex: number; form?: Form; shiny: boolean }
 
-const keyOf = (v: Variant) => anchorKey(v.dex, v.form, v.shiny)
-const fitKeyOf = (v: Variant): FitKey => (v.form ? `${v.dex}:${v.form}` : v.dex)
+const keyOf = (v: Variant) => rigKey(v.dex, v.form, v.shiny)
+/** A variant's `WEAR_FITS` key: a shiny's own (`'<dex>s'`), which its normal colors' covers until it's made. */
+export const fitKeyOf = (v: Variant): FitKey => {
+  const base = v.form ? `${v.dex}:${v.form}` : `${v.dex}`
+  return v.shiny ? (`${base}s` as FitKey) : v.form ? (base as FitKey) : v.dex
+}
 
 /** The forms with sheets of a species (Megas, Primal Reversion, Deoxys' formes, Aegislash's blade). */
 const formsOf = (dex: number) => Object.keys((manifest as Record<string, { forms?: object }>)[dex]?.forms ?? {}).flatMap((key) => formOf(dex, key) ?? [])
 
-/** Every Pokémon a player can be (`npm run anchors` fits them): each playable line with its branches, then their forms. */
-const ROSTER = ((): readonly (Variant & { name: string })[] => {
+/** Every Pokémon a player can be (`npm run rig` fits them): each playable line with its branches, then their forms. */
+export const ROSTER = ((): readonly (Variant & { name: string })[] => {
   const species = new Map<number, string>()
   for (const [id, p] of Object.entries(PLAYABLE)) {
     for (const stage of p.line) species.set(stage.dex, stage.name)
@@ -41,13 +45,13 @@ const ROSTER = ((): readonly (Variant & { name: string })[] => {
   return [...all, ...all.flatMap(({ dex, name }) => formsOf(dex).map((form) => ({ dex, form, shiny: false, name: `${name} (${form})` })))]
 })()
 
-const nameOf = (v: Variant) => {
+export const nameOf = (v: Variant) => {
   const name = ROSTER.find((r) => r.dex === v.dex && r.form === v.form)?.name ?? keyOf(v)
   return v.shiny ? `${name} ★` : name
 }
 
-/** A variant from the console: a dex (`6`), or `'<dex>[:<form>][s]'` as `anchorKey` writes them (`'6:megaX'`, `'502s'`). */
-const parseVariant = (v: unknown): Variant | null => {
+/** A variant from the console: a dex (`6`), or `'<dex>[:<form>][s]'` as `rigKey` writes them (`'6:megaX'`, `'502s'`). */
+export const parseVariant = (v: unknown): Variant | null => {
   if (typeof v === 'number') return { dex: v, shiny: false }
   const m = typeof v === 'string' ? /^(\d+)(?::([a-zA-Z]+?))?(s?)$/.exec(v) : null
   if (!m) return null
@@ -59,7 +63,7 @@ const parseVariant = (v: unknown): Variant | null => {
 
 const variantsOf = (list: readonly unknown[]) => list.flatMap((v) => parseVariant(v) ?? [])
 
-const loadVariant = (v: Variant) => loadSpecies(v.dex, v.shiny, v.form, 'now')
+export const loadVariant = (v: Variant) => loadSpecies(v.dex, v.shiny, v.form, 'now')
 
 const setSeat = (shell: WearShell, seat: number, look: Look) =>
   setLooks(Array.from({ length: Math.max(shell.seats(), seat + 1) }, (_, i) => (i === seat ? look : lookOf(i))))
@@ -75,31 +79,7 @@ const randomLook = (): Look => {
 
 /* ---------------- WEAR_FITS edits ---------------- */
 
-const fitFor = (key: FitKey): SpeciesFit => (WEAR_FITS[key] ??= {})
-
-/** Moves a slot's pivot for one art direction (in that direction's own px: a west-facing row's x is flipped into its east twin's). */
-const nudge = (key: FitKey, slot: WearableSlot, dir: Dir8, dx: number, dy: number, all: boolean) => {
-  const fit = fitFor(key)
-  const nudges = (fit.nudge ??= {})
-  const was = nudges[slot]
-  const per: Partial<Record<ArtDirName, Nudge>> = Array.isArray(was) ? Object.fromEntries(ART_DIRS.map((d) => [d, was as Nudge])) : { ...(was as Partial<Record<ArtDirName, Nudge>> | undefined) }
-  const fx = isMirrored(dir) ? -dx : dx
-  for (const d of all ? ART_DIRS : [ART_DIRS[artDir(dir)]]) {
-    const [x, y] = per[d] ?? [0, 0]
-    per[d] = [x + fx, y + dy]
-  }
-  for (const d of ART_DIRS) if (per[d]?.[0] === 0 && per[d]?.[1] === 0) delete per[d]
-  if (Object.keys(per).length === 0) delete nudges[slot]
-  else nudges[slot] = per
-  refitWearables()
-}
-
-const resize = (key: FitKey, slot: WearableSlot, by: number) => {
-  const fit = fitFor(key)
-  const now = fit.size?.[slot] ?? 1
-  fit.size = { ...fit.size, [slot]: Math.max(0, Math.min(2, now + by)) as 0 | 1 | 2 }
-  refitWearables()
-}
+export const fitFor = (key: FitKey): SpeciesFit => (WEAR_FITS[key] ??= {})
 
 const toggleNo = (key: FitKey, what: WearableSlot | WearableId) => {
   const fit = fitFor(key)
@@ -114,13 +94,16 @@ const toggleNo = (key: FitKey, what: WearableSlot | WearableId) => {
 /** `WEAR_FITS` as the source of `data/wearFits.ts` would write it. */
 export const fitsSource = () => {
   const lines = Object.entries(WEAR_FITS)
-    .filter(([, fit]) => fit && (fit.nudge || fit.size || fit.no))
+    .filter(([, fit]) => fit && (fit.rig || fit.size || fit.no))
     .sort(([a], [b]) => parseInt(a, 10) - parseInt(b, 10) || a.length - b.length || a.localeCompare(b))
-    .map(([key, fit]) => {
-      const v = parseVariant(/^\d+$/.test(key) ? Number(key) : key)
-      return `  ${/^\d+$/.test(key) ? key : `'${key}'`}: ${JSON.stringify(fit).replace(/"(\w+)":/g, '$1: ').replace(/"/g, "'").replace(/,/g, ', ')}, // ${v ? nameOf(v) : key}`
-    })
+    .map(([key]) => fitLine(/^\d+$/.test(key) ? Number(key) : (key as FitKey)))
   return `export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {\n${lines.join('\n')}\n}`
+}
+
+/** One `WEAR_FITS` entry as its line of `data/wearFits.ts` (its comment names the Pokémon; the reason is yours to add). */
+export const fitLine = (key: FitKey) => {
+  const v = parseVariant(key)
+  return `  ${typeof key === 'number' ? key : `'${key}'`}: ${JSON.stringify(WEAR_FITS[key] ?? {}).replace(/"(\w+)":/g, '$1: ').replace(/"/g, "'").replace(/,/g, ', ')}, // ${v ? nameOf(v) : key}`
 }
 
 /* ---------------- Drawing a grid of wearers ---------------- */
@@ -136,17 +119,35 @@ const secondsAt = (s: SpeciesSprites, anim: AnimName, frame: number) => {
   return (ticks + 0.5) / 60
 }
 
-/** One cell: a checker, then the look behind the sprite, the sprite and the look over it. */
-const drawCell = (ctx: CanvasRenderingContext2D, s: SpeciesSprites, look: Look, anim: AnimName, dir: Dir8, t: number, cx: number, cy: number, k: number, clock: number) => {
+/**
+ * Paints until a whole paint found every dressed row (they dress in the
+ * background, a few at a time), keeping them all meanwhile (`holdWearables`:
+ * a sheet draws more rows than the game keeps), and resolves to the PNG.
+ */
+const paintAll = async (paint: () => void, canvas: HTMLCanvasElement) => {
+  holdWearables(true)
+  try {
+    wearMisses()
+    for (let i = 0; i < 400; i++) {
+      paint()
+      if (wearMisses() === 0) break
+      await new Promise((r) => setTimeout(r, 25))
+    }
+    return canvas.toDataURL('image/png')
+  } finally {
+    holdWearables(false)
+  }
+}
+
+/** One cell: a checker, then the Pokémon dressed in the look. */
+export const drawCell = (ctx: CanvasRenderingContext2D, s: SpeciesSprites, look: Look, anim: AnimName, dir: Dir8, t: number, cx: number, cy: number, k: number, clock: number) => {
   ctx.fillStyle = '#e4e8dc'
   ctx.fillRect(cx, cy, CELL_W * k, CELL_H * k)
   const x = cx + (CELL_W / 2) * k
   const y = cy + (CELL_H - 12) * k
   ctx.fillStyle = 'rgba(16,40,16,0.18)'
   ctx.fillRect(x - 6 * k, y + k, 12 * k, 2 * k)
-  drawWearables(ctx, s, look, anim, dir, t, x, y, 'behind', { scale: k, clock })
-  drawPokemon(ctx, s, anim, dir, t, x, y, { scale: k })
-  drawWearables(ctx, s, look, anim, dir, t, x, y, 'front', { scale: k, clock })
+  drawDressed(ctx, s, look, anim, dir, t, x, y, { scale: k, clock })
 }
 
 const DIRS: readonly Dir8[] = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -194,43 +195,32 @@ export const contactSheet = async (
     })
   }
   // The art renders in the background: paint until a whole paint found all of it.
-  wearMisses()
-  for (let i = 0; i < 400; i++) {
-    paint()
-    if (wearMisses() === 0) break
-    await new Promise((r) => setTimeout(r, 25))
-  }
-  return canvas.toDataURL('image/png')
+  return paintAll(paint, canvas)
 }
 
-/** The whole catalog on one variant (as `contactSheet` takes them) facing `dir`, nine items a row, labeled by id; resolves to a PNG data URL. */
+/** The whole catalog on one variant (as `contactSheet` takes them) facing `dir`, bare first and then every item, nine a row, labeled by id; resolves to a PNG data URL. */
 export const catalogSheet = async (variant: Variant, dir: Dir8, scale = 3) => {
   await loadWearables()
   const s = await loadVariant(variant)
   const cols = 9
   const label = 14
-  const rows = Math.ceil(WEARABLE_IDS.length / cols)
+  const cells = [null, ...WEARABLE_IDS] as const
+  const rows = Math.ceil(cells.length / cols)
   const canvas = createCanvas(cols * CELL_W * scale, rows * (CELL_H * scale + label))
   const ctx = context2d(canvas)
   const paint = () => {
     ctx.fillStyle = '#1c1c24'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    WEARABLE_IDS.forEach((id, i) => {
+    cells.forEach((id, i) => {
       const x = (i % cols) * CELL_W * scale
       const y = Math.floor(i / cols) * (CELL_H * scale + label)
       ctx.fillStyle = '#c8c8d0'
-      ctx.font = '12px monospace'
-      ctx.fillText(`${id} · ${WEARABLES[id].rarity}`, x + 4, y + 11)
-      drawCell(ctx, s, { [WEARABLES[id].slot]: id }, 'Walk', dir, secondsAt(s, 'Walk', 0), x, y + label, scale, 0)
+      ctx.font = `${Math.min(12, 4 + scale * 3)}px monospace`
+      ctx.fillText(id ? (scale >= 3 ? `${id} · ${WEARABLES[id].rarity}` : id) : nameOf(variant), x + 2, y + 11)
+      drawCell(ctx, s, id ? { [WEARABLES[id].slot]: id } : {}, 'Walk', dir, secondsAt(s, 'Walk', 0), x, y + label, scale, 0)
     })
   }
-  wearMisses()
-  for (let i = 0; i < 400; i++) {
-    paint()
-    if (wearMisses() === 0) break
-    await new Promise((r) => setTimeout(r, 25))
-  }
-  return canvas.toDataURL('image/png')
+  return paintAll(paint, canvas)
 }
 
 /* ---------------- The fitting gallery ---------------- */
@@ -240,11 +230,11 @@ let gallery: { close: () => void } | null = null
 /**
  * The fitting gallery: every Pokémon a player can be (or `dexes`, as
  * `contactSheet` takes them) wearing one item, six a page, all eight
- * directions, walking or idle. Click a cell to pick it, then: arrows
- * nudge the item's slot for that direction (shift: every direction), `[` and
- * `]` change its size class, `x` leaves the slot off the species and `n`
- * just this item, `w` walks or idles, PageUp and PageDown turn the page, Tab
- * the next item, `p` prints `WEAR_FITS` (and copies it), Esc closes.
+ * directions, walking or idle. Click a cell to pick it, then: `r` opens the
+ * rig tool on it (`ps.rig`, which fixes the seat, the eyes and the rest),
+ * `x` leaves the slot off the species and `n` just this item, `w` walks or
+ * idles, PageUp and PageDown turn the page, Tab the next item, `p` prints
+ * `WEAR_FITS` (and copies it), Esc closes.
  */
 const openGallery = async (first: WearableId, dexes?: readonly unknown[]) => {
   gallery?.close()
@@ -275,7 +265,7 @@ const openGallery = async (first: WearableId, dexes?: readonly unknown[]) => {
     bar.textContent =
       `${item} (${slot}) · ${anim} · page ${page + 1}/${Math.ceil(species.length / perPage)}` +
       (picked ? ` · ${nameOf(picked.variant)} ${ART_DIRS[artDir(picked.dir)]}${isMirrored(picked.dir) ? ' (mirrored)' : ''} ${JSON.stringify(fit ?? {})}` : ' · click a cell') +
-      ' — arrows nudge (shift: all dirs) · [ ] size · x slot off · n item off · w walk/idle · PgUp/PgDn · Tab item · p print · Esc'
+      ' — r rig tool · x slot off · n item off · w walk/idle · PgUp/PgDn · Tab item · p print · Esc'
   }
   let raf = 0
   const frame = (now: number) => {
@@ -313,11 +303,11 @@ const openGallery = async (first: WearableId, dexes?: readonly unknown[]) => {
   const ids = WEARABLE_IDS
   const onKey = (e: KeyboardEvent) => {
     const slot = WEARABLES[item].slot
-    const step = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key]
-    if (step && picked) nudge(fitKeyOf(picked.variant), slot, picked.dir, step[0]!, step[1]!, e.shiftKey)
-    else if (e.key === '[' && picked) resize(fitKeyOf(picked.variant), slot, -1)
-    else if (e.key === ']' && picked) resize(fitKeyOf(picked.variant), slot, 1)
-    else if (e.key === 'x' && picked) toggleNo(fitKeyOf(picked.variant), slot)
+    if (e.key === 'r' && picked) {
+      const { variant, dir } = picked
+      gallery?.close()
+      void import('./rigTool').then((m) => m.openRig(keyOf(variant), { dir, item }))
+    } else if (e.key === 'x' && picked) toggleNo(fitKeyOf(picked.variant), slot)
     else if (e.key === 'n' && picked) toggleNo(fitKeyOf(picked.variant), item)
     else if (e.key === 'w') anim = anim === 'Walk' ? 'Idle' : 'Walk'
     else if (e.key === 'PageDown') page = Math.min(page + 1, Math.ceil(species.length / perPage) - 1)
@@ -357,13 +347,13 @@ const openGallery = async (first: WearableId, dexes?: readonly unknown[]) => {
  * `'<dex>[:<form>][s]'` after the item fits only those: `[4, '6:megaX']`),
  * `ps.wear('table')` prints `WEAR_FITS` as edited and `ps.wear('sheet', look,
  * dexes, opts?)` resolves a contact sheet's PNG data URL (`ps.wear('catalog',
- * dex, dir)`: every item on one species).
+ * dex, dir, scale?)`: every item on one species, bare first).
  */
 export const devWear = async (shell: WearShell, cmd?: string, arg?: unknown, more?: unknown, extra?: unknown) => {
   const seat = typeof arg === 'number' ? arg : shell.seat()
   if (cmd === 'fit') return openGallery(isWearableId(arg) ? arg : 'topHat', Array.isArray(more) ? more : undefined)
   if (cmd === 'table') return fitsSource()
-  if (cmd === 'catalog') return catalogSheet(parseVariant(arg) ?? { dex: 4, shiny: false }, (typeof more === 'number' ? more : 1) as Dir8)
+  if (cmd === 'catalog') return catalogSheet(parseVariant(arg) ?? { dex: 4, shiny: false }, (typeof more === 'number' ? more : 1) as Dir8, typeof extra === 'number' ? extra : 3)
   if (cmd === 'sheet') return contactSheet((arg ?? {}) as Look, Array.isArray(more) ? more : [4, 7, 1, 255, 393, 9], (extra ?? {}) as Parameters<typeof contactSheet>[2])
   if (cmd === 'bots') {
     const n = shell.seats()

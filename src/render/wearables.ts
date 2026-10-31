@@ -2,20 +2,17 @@ import type { Look } from '../data/cosmetics'
 import { WEARABLES, type WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { fitOf, wears } from './wearFit'
-import type { AnimName, SpeciesSprites } from './sprites'
-
-/** Which pass of a look to draw: `behind` before the Pokémon's sprite (a cape seen from the front), `front` after it (a hat, glasses). */
-export type WearLayer = 'behind' | 'front'
+import { drawPokemon, type AnimName, type DrawOpts, type SpeciesSprites } from './sprites'
 
 type Engine = typeof import('./wearEngine')
 let engine: Engine | null = null
 let loading: Promise<Engine> | null = null
 
 /**
- * Loads the wearables' engine (a separate chunk, about 11 KB gzipped, that
- * only a look needs; each species' anchors come in a small chunk of their own
- * on its first draw). `drawWearables` starts it on its own; await it where a
- * screen must show a look at once (the locker).
+ * Loads the wearables' engine (a separate chunk that only a look needs; each
+ * species' rig comes in a small chunk of its own on its first draw, and the
+ * dressing runs in a worker). `drawDressed` starts it on its own; await it
+ * where a screen must show a look at once (the locker).
  */
 export const loadWearables = () =>
   (loading ??= import('./wearEngine').then(
@@ -29,62 +26,60 @@ export const loadWearables = () =>
 /** Whether a look wears anything on the sprite. */
 const wearsAny = (look: Look) => look.head !== undefined || look.face !== undefined || look.neck !== undefined || look.back !== undefined
 
-export type WearOpts = {
-  alpha?: number
-  scale?: number
-  /** As `drawPokemon`'s: false plays the anim once (a faint's Hurt). */
-  loop?: boolean
-  /** The clock (s) an animated wearable (a flowing cape, a sparkling crown) plays by; by default `seconds`, the anim's own. */
-  clock?: number
-}
-
 /**
- * Draws a look's worn cosmetics (`data/wearables.ts`) on a Pokémon that
- * `drawPokemon` draws with the same species, anim, direction, clock, feet
- * position and scale: call it once with `behind` before the sprite and once
- * with `front` after it. Anchored per frame from the species' SpriteCollab
- * offsets, so a hat bobs with the walk and turns with the Pokémon; sized to
- * the species' head, neck and body; drawn in the pass its slot takes facing
- * `dir` (`render/wearFit.ts`: a cape behind facing south and over the body
- * facing north, glasses gone facing away). Draws nothing until the engine
- * loads (the first call starts it) and until the species' anchors' chunk
- * lands, on a sheet the anchors didn't measure (`anchoredSheet` in
- * `render/wearFit.ts`: the Fly sheet, a shrunk or swapped sheet), for a
- * stand-in sprite (a dust puff) or a variant without anchors (a species no
- * player can be; `npm run anchors` lists the rest), and for an item the
- * species can't wear (`data/wearFits.ts`).
+ * Draws a Pokémon as `drawPokemon` does, dressed in a look's worn cosmetics
+ * (`data/wearables.ts`): the frame comes back from the wearables' worker with
+ * the items drawn into it (`render/wearDress.ts`: pinned per frame to the
+ * variant's head rig, sized to its head, neck and body, behind the body or
+ * over it as the Pokémon turns, the eyes never covered), so a hat bobs with
+ * the walk and turns with the Pokémon, and an animated item's moving part
+ * plays over it on `opts.clock` (by default `seconds`, the anim's own). Draws
+ * bare until the engine loads (the first call starts it) and the variant's
+ * rows are dressed, on a sheet the rig didn't measure (`rigSheet` in
+ * `render/wearFit.ts`: the Fly sheet, a swapped one), for a stand-in sprite
+ * (a dust puff) or a variant without a rig (`npm run rig` lists them), and
+ * without the items the species can't wear (`data/wearFits.ts`).
  */
-export const drawWearables = (
+export const drawDressed = (
   ctx: CanvasRenderingContext2D,
   s: SpeciesSprites,
-  look: Look,
+  look: Look | null,
   anim: AnimName,
   dir: Dir8,
   seconds: number,
   x: number,
   y: number,
-  layer: WearLayer,
-  opts: WearOpts = {},
+  opts: DrawOpts & { clock?: number } = {},
 ) => {
-  if (!wearsAny(look)) return
-  if (engine) engine.drawWearables(ctx, s, look, anim, dir, seconds, x, y, layer, opts)
-  else void loadWearables().catch(() => {})
+  if (!look || !wearsAny(look) || opts.sheet) return drawPokemon(ctx, s, anim, dir, seconds, x, y, opts)
+  if (engine) return engine.drawDressed(ctx, s, look, anim, dir, seconds, x, y, opts)
+  void loadWearables().catch(() => {})
+  drawPokemon(ctx, s, anim, dir, seconds, x, y, opts)
 }
 
 /** Whether a species (by dex) can wear an item: the locker greys out the ones it can't (`data/wearFits.ts`). */
 export const fitsWearer = (dex: number, id: WearableId) => wears(fitOf(dex), WEARABLES[id].slot, id)
 
-/** Whether a species (by dex) can wear looks at all (it has anchors); null until `loadWearables` lands. */
-export const wearsLooks = (dex: number): boolean | null => engine?.hasAnchors(dex) ?? null
+/** Whether a species (by dex) can wear looks at all (it has a rig); null until `loadWearables` lands. */
+export const wearsLooks = (dex: number): boolean | null => engine?.hasRig(dex) ?? null
 
 /** An item's art in three-quarter view, for the shop's and the locker's tiles (scale it up by whole numbers); null until `loadWearables` lands. */
 export const wearableIcon = (id: WearableId): HTMLCanvasElement | null => engine?.wearableIcon(id) ?? null
 
-/** Dev: forgets the engine's fits and art after `WEAR_FITS` changes (the fitting gallery, `ui/wearFitting.ts`). */
+/** Dev: forgets the engine's wearers and dressed frames after `WEAR_FITS` changes (`ui/wearFitting.ts`, `ui/rigTool.ts`). */
 export const refitWearables = () => engine?.refit()
 
-/** A room's game ended: the engine lets go of its rendered art (`freeWearArt`). */
+/** A room's game ended: the engine lets go of its dressed frames (`freeWearArt`). */
 export const freeWearables = () => engine?.freeWearArt()
 
-/** Dev: how many draws since the last ask found their art still rendering (`ui/wearFitting.ts`'s contact sheets wait for none). */
+/** Dev: how many draws since the last ask found their frames still dressing (`ui/wearFitting.ts`'s contact sheets wait for none). */
 export const wearMisses = () => engine?.takeMisses() ?? 0
+
+/** Dev: keeps every dressed row while a contact sheet renders (`holdWearArt`), from `on` until the matching `false`. */
+export const holdWearables = (on: boolean) => engine?.holdWearArt(on)
+
+/** Dev: the dressed frames' memory now and at its peak (`ps.sprites()`). */
+export const wearMemory = (reset = false) => engine?.wearMemory(reset) ?? null
+
+/** Dev (`ps.rig`): a variant's rig and size as the engine dresses it now (its fixes decoded afresh); null until the engine and its chunk land. */
+export const rigOfSprites = (s: SpeciesSprites) => engine?.devWearer(s) ?? null

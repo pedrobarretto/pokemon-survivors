@@ -8,10 +8,10 @@ import { ARENA_EFFECTS, type ArenaEffectDef } from './arenaEffects'
  * co-op, and the Arena. The catalog spreads two tables that live in their
  * own modules:
  *
- * - `WEARABLES` (`data/wearables.ts`): worn on the Pokémon's sprite, anchored
- *   to the head, neck or back of every frame from SpriteCollab's offsets and
- *   drawn by `render/wearables.ts`. Generic: one hat fits every Pokémon the
- *   anchors measured (`data/wearAnchors/`); any other draws bare.
+ * - `WEARABLES` (`data/wearables.ts`): worn on the Pokémon's sprite, dressed
+ *   into every frame at its head, neck or back by the head rig
+ *   (`data/wearRig/`) and drawn by `render/wearables.ts`. Generic: one hat
+ *   fits every Pokémon the rig measured; any other draws bare.
  * - `ARENA_EFFECTS` (`data/arenaEffects.ts`): everything that isn't worn: a
  *   follower, trails, spawn/KO/goal effects, emotes, titles and name plates.
  *

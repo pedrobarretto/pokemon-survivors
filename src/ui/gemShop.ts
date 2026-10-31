@@ -18,7 +18,7 @@ import { gemIconUrl, slotIconUrl } from '../render/gemArt'
 import { drawPokemon, loadSpecies, portraitUrl, type Dex, type SpeciesSprites } from '../render/sprites'
 import { versusTag } from '../render/team'
 import { TEAM_COLORS, TEAM_LIGHT } from '../render/vale'
-import { drawWearables, fitsWearer, loadWearables, wearableIcon } from '../render/wearables'
+import { drawDressed, fitsWearer, loadWearables, wearableIcon } from '../render/wearables'
 import { firstForm } from './arena'
 import { titleChip } from './arenaTitle'
 import { h, later } from './dom'
@@ -190,9 +190,7 @@ const lookStage = (wearer: () => Wearer, look: () => Look, focus: () => Cosmetic
     // An emote's sheet plays bare: the wearables' anchors only cover Walk, Idle and Hurt (as in a match).
     if (emote) drawPokemon(ctx, s, 'Idle', 0, emote.seconds, x, y, { sheet: emote.sheet, loop: emote.loop })
     else {
-      drawWearables(ctx, s, show, 'Walk', dir, seconds, x, y, 'behind')
-      drawPokemon(ctx, s, 'Walk', dir, seconds, x, y)
-      drawWearables(ctx, s, show, 'Walk', dir, seconds, x, y, 'front')
+      drawDressed(ctx, s, show, 'Walk', dir, seconds, x, y)
     }
     fx.drawFollower(ctx, seconds, y, true)
     fx.drawAir(ctx, seconds)

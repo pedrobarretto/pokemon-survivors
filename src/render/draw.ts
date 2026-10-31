@@ -39,7 +39,7 @@ import { drawEntranceAir, drawEntranceGround, drawPlaceArrow, drawPlaceDark, dra
 import { roomOf } from '../game/room'
 import { drawLandmarkAir, drawTunnelDark, playerUnderground } from './landmarks'
 import { drawPokemon, sprites, type AnimName, type SpeciesSprites } from './sprites'
-import { drawWearables } from './wearables'
+import { drawDressed } from './wearables'
 import { shownLook } from './looks'
 import { bodyOf } from '../data/bodies'
 import { drawDrainVines, drawTypeEvolvedAttack, drawTypeEvolvedGround } from './typeEvolved'
@@ -629,16 +629,14 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const feet = p.y - (egg?.lift ?? 0)
   // Arena: an emote plays its own sheet, facing the camera (`render/arenaFx.ts`).
   const emote = p.versus ? arenaEmote(g, p) : null
-  // The seat's look (its worn cosmetics) on the sprite, behind it and over it, in every mode. The anchors only
-  // cover each variant's own Walk, Idle and Hurt (a Mega with sheets has its own; `render/wearFit.ts` checks the
-  // sheet), so the moments that swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega's
-  // transformation and a move's own look (Fly, Dig, a lunge).
+  // The seat's look (its worn cosmetics) dressed into the sprite, in every mode. The rig only covers each
+  // variant's own Walk, Idle and Hurt (a Mega with sheets has its own; `render/wearFit.ts` checks the sheet),
+  // so the moments that swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega's transformation
+  // and a move's own look (Fly, Dig, a lunge).
   const bare = emote !== null || egg !== null || p.mega.intro > 0
   const look = bare ? null : shownLook(g, p.slot)
   if (alpha > 0) {
-    if (look) drawWearables(ctx, s, look, anim, p.dir, p.animTime, p.x, feet, 'behind', { alpha })
-    drawPokemon(ctx, s, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, { alpha, flash, tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
-    if (look) drawWearables(ctx, s, look, anim, p.dir, p.animTime, p.x, feet, 'front', { alpha })
+    drawDressed(ctx, s, look, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, { alpha, flash, tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
   }
   if (p.versus && g.versus) drawGrassFront(ctx, mapOf(g.versus).grass, p.x, p.y, s.bodyW, g.now, p.moving, p.slot)
   // The shiny entrance plays shortly after the run starts.

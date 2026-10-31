@@ -2,7 +2,7 @@
 // PNGs, non-interlaced: what SpriteCollab ships), so they read pixels without a
 // dependency.
 import { readFile } from 'node:fs/promises'
-import { inflateSync } from 'node:zlib'
+import { deflateSync, inflateSync } from 'node:zlib'
 
 /** Every pixel of `file` as RGBA bytes, row by row. */
 export const readPng = async (file) => {
@@ -53,4 +53,35 @@ export const readPng = async (file) => {
     } else rgba.set([rows[i], rows[i], rows[i], 255], o)
   }
   return { width, height, rgba }
+}
+
+const CRC = Int32Array.from({ length: 256 }, (_, n) => {
+  let c = n
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
+  return c
+})
+const crc = (buf) => {
+  let c = -1
+  for (const b of buf) c = CRC[(c ^ b) & 255] ^ (c >>> 8)
+  return (c ^ -1) >>> 0
+}
+const chunk = (type, data) => {
+  const out = Buffer.alloc(12 + data.length)
+  out.writeUInt32BE(data.length, 0)
+  out.write(type, 4, 'ascii')
+  data.copy(out, 8)
+  out.writeUInt32BE(crc(out.subarray(4, 8 + data.length)), 8 + data.length)
+  return out
+}
+
+/** `rgba` (`w` × `h` RGBA bytes) as a PNG file's bytes, for contact sheets. */
+export const writePng = (w, h, rgba) => {
+  const raw = Buffer.alloc((w * 4 + 1) * h)
+  for (let y = 0; y < h; y++) Buffer.from(rgba.buffer, rgba.byteOffset + y * w * 4, w * 4).copy(raw, y * (w * 4 + 1) + 1)
+  const header = Buffer.alloc(13)
+  header.writeUInt32BE(w, 0)
+  header.writeUInt32BE(h, 4)
+  header[8] = 8
+  header[9] = 6
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', header), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))])
 }
