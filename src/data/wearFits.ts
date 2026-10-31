@@ -115,49 +115,64 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   146: { rig: { SE: { seat: [11, 0, -22], eyesAt: [[2, 1]] }, E: { seat: [3, 9, 1] }, NE: { seat: [4, -1, -15] } }, no: ['back'] }, // Moltres: its own wings; turned a little, the seat and eyes slide down to its chest, and in profile the seat tops its flames
   147: { no: ['back'] }, // Dratini: a serpent
   148: { no: ['back'] }, // Dragonair: a serpent
-  152: { no: UPRIGHT }, // Chikorita: on four legs
+  150: { rig: { 'E:Hurt': { seat: [0, -2], eyesAt: [[2, 2]] } } }, // Mewtwo: hurt in profile its head is thrown back, the seat found on its eye's row and the eye on the back of its head
+  '150:megaY': { rig: { S: { eyesAt: [[-3, 6], [3, 6]], neck: [0, 2] }, 'S:Hurt': { seat: [0, -3, -4], eyesAt: [[-3, 4], [2, 4]] }, SE: { eyesAt: [[1, 12], [6, 11]], neck: [0, 2] }, 'SE:Hurt': { eyes: 'none' }, E: { seat: [0, -2, -6], eyesAt: [[4, 9]] }, 'E:Hurt': { seat: [0, -2], eyes: 'none' } } }, // Mega Mewtwo Y: the hat rides the loop of its crest; its red eyes, low on the face, aren't found (the loop's inside is), the neck was read at their row, and hurt turned it shows no face
+  151: { rig: { 'E:Hurt': { seat: [-2, -1], eyesAt: [[-1, 1]] } } }, // Mew: hurt in profile it curls, its head lower and further back than walking
+  152: { rig: { S: { seat: [0, -4] }, E: { seat: [-1, -1] } }, no: UPRIGHT }, // Chikorita: on four legs; the hat sits on its leaf, as it does turned (standing it looks up, its eyes rising to the leaf's base)
   153: { no: UPRIGHT }, // Bayleef
-  154: { no: ['neck', ...UPRIGHT] }, // Meganium: the petals around its neck
+  154: { rig: { E: { seat: [-2, -2] }, 'E:Hurt': { seat: [0, -2] } }, no: ['neck', ...UPRIGHT] }, // Meganium: the petals around its neck; in profile the seat sat over its eye, under the antennae (hurt, it looks up)
   155: { rig: { all: { seat: [0, -2] }, S: { seat: [0, 0, 2] } }, no: ['back'] }, // Cyndaquil: the flames on its back; its closed eyes sit 3 px under the crown, so hats sit higher
-  156: { rig: { SE: { seat: [3, 0, -5] }, E: { seat: [6, 0, -12] } }, no: ['neck', 'back'] }, // Quilava: flames at the neck and the back; turned, the seat spanned the whole back
-  157: { no: ['neck'] }, // Typhlosion: the flame collar
-  159: { rig: { S: { eyes: [0, -3] }, E: { seat: [0, 0, -5], eyesAt: [[1, 2]] } }, size: { head: 1 } }, // Croconaw: facing south the jaw's corners read as its eyes, and the seat spans the cheeks
-  160: { rig: { SE: { seat: [4, 0, -5] } }, size: { head: -3 } }, // Feraligatr: the seat spanned its shoulders
-  169: { size: { head: -11 } }, // Crobat: facing south the seat spanned its wings
-  172: { size: { head: -3 } }, // Pichu: the seat spanned the ears' roots
-  175: { rig: { S: { eyesAt: [[-4, 6], [5, 6]] }, E: { eyesAt: [[2, 6]] } }, no: ['back'] }, // Togepi: the shell; facing south its spikes' tips read as eyes
+  156: { rig: { SE: { seat: [3, 0, -5], left: 'none' }, E: { seat: [6, 0, -12] } }, no: ['neck', 'back'] }, // Quilava: flames at the neck and the back; turned, the seat spanned the whole back and a mark on its throat read as a second eye
+  157: { rig: { S: { eyesAt: [[-2, 7], [2, 7]] }, 'S:Idle': { seat: [2, 0, -5], eyesAt: [[-2, 7], [2, 7]] }, 'S:Hurt': { eyes: 'none' }, 'SE:Idle': { seat: [-1, 0] }, E: { eyesAt: [[5, 6]] }, 'E:Idle': { seat: [-3, 1] }, 'E:Hurt': { seat: [0, -1], eyesAt: [[4, 1]] }, 'NE:Idle': { seat: [-1, -1] }, 'N:Idle': { seat: [-2, 0] } }, no: ['neck'] }, // Typhlosion: the flame collar; its red eyes, where the blue meets the cream, aren't found (facing south its fur's dark spots are), standing the seat sat left of its head, and hurt facing south it shows its open mouth, not its eyes
+  158: { rig: { 'S:Idle': { seat: [-1, -5, 7], eyesAt: [[-3, 5], [2, 5]] }, SE: { eyesAt: [[-2, 4]] }, 'SE:Idle': { seat: [-2, -4, 4] }, 'SE:Hurt': { eyesAt: [[-2, 3]] }, E: { eyesAt: [[0, 3]] }, 'E:Hurt': { eyesAt: [[2, 2]] }, 'N:Idle': { seat: [-1, 0] } } }, // Totodile: its red eyes aren't found turned (its teeth are); standing it crouches with its jaws open, the seat found on its eyes (for the short snap where it throws its head back, the hat stands off it)
+  159: { rig: { S: { eyes: [0, -3] }, E: { seat: [0, 0, -5], eyesAt: [[1, 2]] }, 'E:Hurt': { seat: [1, -2] } }, size: { head: 1 } }, // Croconaw: facing south the jaw's corners read as its eyes, and the seat spans the cheeks
+  160: { rig: { 'S:Hurt': { seat: [-1, 8, -11], eyes: 'none' }, SE: { seat: [4, 0, -5] }, 'SE:Hurt': { seat: [2, 4, -6], eyes: 'none' }, 'E:Hurt': { seat: [7, -1, -10], eyes: 'none' } }, size: { head: -3 } }, // Feraligatr: the seat spanned its shoulders; hurt, it throws its head back, jaws up, its eyes out of sight, and the hat rides its snout
+  169: { rig: { SE: { eyesAt: [[0, 6], [5, 6]] }, E: { seat: [3, 0, -4] } }, size: { head: -11 } }, // Crobat: facing south the seat spanned its wings; turned a little, a wing's shade read as its near eye, and in profile the seat spanned its ears
+  172: { rig: { S: { seat: [0, -4] }, 'S:Idle': { seat: [0, 5] }, 'SE:Idle': { seat: [0, 1] }, E: { seat: [0, -2] } }, size: { head: -3 } }, // Pichu: the seat spanned the ears' roots, at its eyes' row facing south (standing, it was found on the head); in profile its far ear's black reads as the face's details
+  175: { rig: { S: { eyesAt: [[-1, 5], [1, 5]] }, 'S:Idle': { seat: [-1, 1] }, SE: { eyesAt: [[1, 6], [3, 6]] }, E: { eyesAt: [[5, 5]] } }, no: ['back'] }, // Togepi: the shell; its small eyes, close together over the shell's rim, aren't found (the rim's dark band is); standing facing south, the seat sat a pixel off
   176: { rig: { E: { eyes: [6, 3] } } }, // Togetic: in profile a shade on its crown read as the eye
-  179: { rig: { S: { seat: [3, 7, 2] }, SE: { seat: [3, 0, -8] }, E: { seat: [7, 0, -12] } }, size: { head: -3 }, no: UPRIGHT }, // Mareep: the seat spanned the whole wool ball; the hat goes on the head, in front
-  183: { size: { head: -4 } }, // Marill: the seat spanned its ears
-  186: { rig: { S: { seat: [0, -6, 10], eyes: [0, -2] }, SE: { seat: [0, -1] } }, size: { head: -1 } }, // Politoed: facing south the seat dropped to its eyes and spanned the whole body
-  196: { rig: { S: { eyes: [7, 5] } }, size: { head: 4, face: -9 }, no: UPRIGHT }, // Espeon: facing south the seat spanned its ears and an ear's inside read as its one eye
-  197: { rig: { SE: { eyes: [1, 0] }, E: { seat: [6, -4, -10], eyesAt: [[2, 4]] } }, size: { head: -2 }, no: UPRIGHT }, // Umbreon: in profile the seat spanned its back at the eyes' height
-  212: { no: ['back'] }, // Scizor: its own wings
-  216: { size: { head: -6 } }, // Teddiursa: facing south the seat spanned its ears
-  220: { no: NO_BODY }, // Swinub: a ball of fur
-  221: { no: NO_BODY }, // Piloswine: a mound of fur
-  228: { no: UPRIGHT }, // Houndour
-  229: { rig: { SE: { seat: [4, 1], eyesAt: [[0, 3]] } }, no: UPRIGHT }, // Houndoom: turned a little, a horn's dark inside reads as a second eye, and the seat drops to it
-  '229:mega': { no: UPRIGHT }, // Mega Houndoom
-  230: { rig: { S: { seat: [0, -1, 2] }, SE: { seat: [3, 3, 1] }, E: { seat: [14, 3, -10] } }, size: { head: -2 } }, // Kingdra: the seat spanned its spines, and turned it slid back onto its body
-  233: { rig: { E: { seat: [4, -1, -3], eyesAt: [[1, 5]] } }, no: UPRIGHT }, // Porygon2: walking in profile the seat spans its whole body (standing it doesn't: the nudge splits the two)
-  243: { rig: { S: { seat: [0, 2] } }, size: { head: -8 }, no: UPRIGHT }, // Raikou: facing south the seat spanned its mane
-  244: { rig: { S: { seat: [0, -6] }, SE: { seat: [6, 5, 1] }, E: { seat: [7, -2, -8] } }, size: { head: -4 }, no: UPRIGHT }, // Entei: the hat goes over the crest, not on the face; in profile the seat slid back onto its mane
-  245: { rig: { S: { seat: [0, 7, 9] }, SE: { seat: [4, 6, -1] }, E: { seat: [6, 4, -13] } }, size: { head: -1 }, no: UPRIGHT }, // Suicune: the seat sat on the mane, not the head (turned, walking and standing disagree by 12 px: the nudge splits them)
-  247: { rig: { all: { seat: [0, -2, -3] }, S: { seat: [0, 0, 1] }, SE: { seat: [0, 0, 3] } }, no: NO_BODY }, // Pupitar: a cocoon; its eyes sit right under the shell's top, and the seat spanned its spikes
-  249: { no: ['back'] }, // Lugia: its own wings
+  179: { rig: { S: { eyesAt: [[-2, 12], [2, 12]] }, 'S:Idle': { seat: [0, 1] }, SE: { seat: [3, 0, -8] }, E: { seat: [7, 0, -12] } }, size: { head: -3 }, no: UPRIGHT }, // Mareep: its head is the wool ball, the hat on top of it (facing south its small face, under the wool, has no room for one); turned, the seat spanned the whole ball, and facing south its ears' stripes read as eyes
+  180: { rig: { E: { eyesAt: [[3, 8]] } } }, // Flaaffy: in profile its eye, under the wool, isn't found
+  181: { rig: { 'S:Idle': { seat: [0, -2], eyesAt: [[-2, 7], [2, 7]] }, 'E:Idle': { seat: [0, -4], eyesAt: [[3, 4]] } } }, // Ampharos: standing, its head rises over the seat walking found (and for a beat it looks up, out of the rig's reach)
+  183: { rig: { 'S:Hurt': { seat: [0, -4] } }, size: { head: -4 } }, // Marill: the seat spanned its ears; hurt, facing south, it fell to its squeezed eyes
+  184: { rig: { E: { seat: [2, -1, -2] }, 'N:Idle': { seat: [1, 1] } } }, // Azumarill: in profile the seat sat back on its ears' roots, over its far ear's stripes; standing facing away, a pixel off
+  186: { rig: { S: { seat: [0, -6, 10], eyes: [0, -2] }, SE: { seat: [0, -1], eyesAt: [[-1, 6], [6, 5]] } }, size: { head: -1 } }, // Politoed: facing south the seat dropped to its eyes and spanned the whole body; turned a little, only its far eye was found
+  196: { rig: { S: { eyes: [7, 5] }, SE: { eyesAt: [[0, 6], [6, 6]] }, E: { seat: [0, -1], eyesAt: [[3, 7]] } }, size: { head: 4, face: -9 }, no: UPRIGHT }, // Espeon: facing south the seat spanned its ears and an ear's inside read as its one eye, as it does turned
+  197: { rig: { 'S:Idle': { seat: [0, 2] }, SE: { eyes: [1, 0] }, E: { seat: [6, -4, -10], eyesAt: [[2, 4]] }, 'E:Idle': { seat: [-1, 9] }, 'NE:Idle': { seat: [5, 1] }, 'N:Idle': { seat: [0, -1] } }, size: { head: -2 }, no: UPRIGHT }, // Umbreon: in profile the seat spanned its back at the eyes' height; standing, the seat stayed over its head as it crouched
+  212: { rig: { 'SE:Idle': { seat: [1, -5] } }, no: ['back'] }, // Scizor: its own wings; standing turned a little, the seat sat low on its face
+  216: { rig: { E: { seat: [1, -1, -2] } }, size: { head: -6 } }, // Teddiursa: facing south the seat spanned its ears; in profile it sat low, over its eyes
+  217: { rig: { 'S:Idle': { seat: [0, -2, 4], eyesAt: [[-2, 5], [2, 5]] }, 'SE:Idle': { seat: [-2, -2] }, 'SE:Hurt': { neck: [0, 2] }, 'E:Idle': { seat: [0, 1] } } }, // Ursaring: standing, the seat sat a little lower on its head than walking (facing south on its brow, between its ears, where its eyes weren't found); hurt turned, the neck was read at its chin
+  220: { no: ['face', ...NO_BODY] }, // Swinub: a ball of fur, its eyes hidden under it
+  221: { no: ['face', ...NO_BODY] }, // Piloswine: a mound of fur, its eyes hidden under it
+  228: { rig: { 'S:Idle': { seat: [0, -2], eyesAt: [[-3, 5], [2, 5]] }, 'S:Hurt': { eyes: 'none' }, 'SE:Idle': { seat: [-2, -2, 5], eyesAt: [[-3, 5], [1, 5]] }, 'E:Idle': { seat: [-1, -1, 2], eyesAt: [[1, 5]] } }, no: UPRIGHT }, // Houndour: standing, the seat sat low on its face and its eyes weren't found; hurt facing south it shows its throat
+  229: { rig: { 'S:Idle': { seat: [0, -2], eyesAt: [[-2, 4], [2, 4]] }, SE: { seat: [4, -3], eyesAt: [[2, 4]] }, 'SE:Idle': { seat: [-6, 4] }, 'E:Idle': { seat: [-4, 1], eyesAt: [[2, 3]] }, 'NE:Idle': { seat: [-1, 0] } }, no: UPRIGHT }, // Houndoom: turned a little, a horn's dark inside reads as a second eye and the seat drops to it, on the real eye over its muzzle; standing, the seat strayed off its head (and for its howl, which throws its head back, the rig can't follow)
+  '229:mega': { rig: { 'S:Idle': { eyesAt: [[-2, 3], [2, 3]] }, 'E:Idle': { seat: [-1, 2], eyesAt: [[0, 3]] }, 'NE:Idle': { seat: [-2, 4] }, 'N:Idle': { seat: [0, 6] } }, no: UPRIGHT }, // Mega Houndoom: standing, the seat strayed off its head and its eyes weren't found
+  230: { rig: { S: { seat: [0, -1, 2] }, 'S:Hurt': { eyes: 'none' }, SE: { seat: [3, -1, 1], eyesAt: [[-1, 4]] }, E: { seat: [5, -1, -10], eyesAt: [[1, 4]] }, 'E:Idle': { seat: [0, 2] } }, size: { head: -2 } }, // Kingdra: the seat spanned its spines, and turned it slid back onto its body; turned, its red eye isn't found (its spines' shade is), and hurt facing south it throws its snout up
+  233: { rig: { 'S:Hurt': { eyes: 'none' }, E: { seat: [4, -1, -3], eyesAt: [[1, 5]] } }, no: UPRIGHT }, // Porygon2: walking in profile the seat spans its whole body (standing it doesn't: the nudge splits the two); hurt facing south it tumbles snout up, its eyes out of sight
+  243: { rig: { S: { seat: [0, 2] }, SE: { eyesAt: [[0, 6], [4, 5]], neck: [0, 3] }, E: { eyesAt: [[3, 7]] }, 'NE:Idle': { seat: [-8, 1] }, 'N:Idle': { seat: [0, 1] } }, size: { head: -8 }, no: UPRIGHT }, // Raikou: facing south the seat spanned its mane; turned, the eyes found are its fangs and its jaw (and the neck its mouth), and standing facing away the seat strayed off its head
+  244: { rig: { S: { seat: [0, -6] }, SE: { seat: [2, -1, 1], eyesAt: [[-2, 11], [3, 11]] }, E: { seat: [7, -2, -8] }, 'E:Idle': { seat: [-3, 0] }, 'N:Idle': { seat: [0, -1] } }, size: { head: -4 }, no: UPRIGHT }, // Entei: the hat goes over the crest, not on the face; in profile the seat slid back onto its mane (standing, further back still), and turned a little the eyes found were the crest's
+  245: { rig: { S: { seat: [0, 4, 5], eyesAt: [[-2, 8], [2, 8]] }, 'S:Idle': { seat: [0, -1] }, SE: { seat: [7, 6, -1], eyesAt: [[1, 2]] }, 'SE:Idle': { seat: [-6, 0] }, E: { seat: [8, 4, -13], eyesAt: [[2, 5]] }, 'E:Idle': { seat: [-8, -3] }, 'NE:Idle': { seat: [-5, 4] }, 'N:Idle': { seat: [0, 7] } }, size: { head: -1 }, no: UPRIGHT }, // Suicune: the seat sat on the mane, not the head, and walking and standing disagree by up to 12 px; its red eyes aren't found (its muzzle and its ribbons are)
+  246: { rig: { SE: { eyesAt: [[0, 6]] }, 'SE:Hurt': { seat: [0, -3], eyesAt: [[0, 3]] }, E: { eyesAt: [[1, 6]] }, 'E:Hurt': { eyesAt: [[0, 3]] } } }, // Larvitar: turned, the eyes found sat on its cheek, not on its red eye
+  247: { rig: { all: { seat: [0, -2, -3] }, S: { seat: [0, 0, 1] }, SE: { seat: [0, 0, 3], eyesAt: [[0, 8], [5, 6]] }, E: { eyesAt: [[2, 9]] } }, no: NO_BODY }, // Pupitar: a cocoon; its eyes sit right under the shell's top, and the seat spanned its spikes; turned, the shell's holes read as its eyes
+  '248:mega': { rig: { S: { eyesAt: [[-3, 10], [3, 10]], neck: [0, 3] }, SE: { eyesAt: [[0, 11], [4, 11]], neck: [0, 3] }, E: { eyesAt: [[0, 12]], neck: [0, 3] } } }, // Mega Tyranitar: the eyes found are the white spots on its forehead plate, over its red eyes, and the neck was read at their row
+  249: { rig: { 'SE:Walk': { seat: [20, -9, -28], eyesAt: [[1, 10]] }, 'SE:Hurt': { seat: [19, -13, -28], eyesAt: [[-1, 3]] } }, no: ['back'] }, // Lugia: its own wings; flying turned a little, the seat spanned a wing and its head wasn't found
   250: { no: ['head', 'face', 'neck', 'back'] }, // Ho-Oh: its head hangs low between its wings, under a crest
   251: { no: ['back'] }, // Celebi: its own wings
+  252: { rig: { 'E:Walk': { seat: [5, -2, -16], eyesAt: [[0, 3]] }, 'E:Idle': { seat: [0, -1], eyesAt: [[0, 6]] }, 'E:Hurt': { seat: [4, -2, -16], eyesAt: [[2, 5]] } } }, // Treecko: running in profile the seat spans its whole body and tail, and its eye isn't found
   253: { rig: { E: { eyesAt: [[-1, 3]] } } }, // Grovyle: its eye in profile isn't found
-  254: { rig: { SE: { eyesAt: [[-1, 4]] }, E: { eyesAt: [[0, 6]] } } }, // Sceptile: its eye turned and in profile isn't found
-  '254:mega': { rig: { SE: { eyesAt: [[-1, 5]] } } }, // Mega Sceptile: its eye turned isn't found
-  255: { rig: { S: { seat: [0, -2] }, SE: { seat: [0, -1] }, E: { seat: [0, -1] } } }, // Torchic: all head, its eyes right under the crest
-  256: { rig: { E: { eyesAt: [[1, 4]] } } }, // Combusken: its eye in profile isn't found
+  254: { rig: { 'S:Hurt': { seat: [0, 5] }, SE: { eyesAt: [[-1, 4]] }, 'SE:Hurt': { seat: [0, 5] }, E: { eyesAt: [[0, 6]] } } }, // Sceptile: its eye turned and in profile isn't found (hurt, it crouches under the seat)
+  '254:mega': { rig: { SE: { eyesAt: [[-1, 5]] }, E: { eyesAt: [[0, 6]] } } }, // Mega Sceptile: its eye turned and in profile isn't found
+  255: { rig: { S: { seat: [0, -2] }, SE: { seat: [0, -1], eyesAt: [[-1, 7], [6, 5]] }, 'SE:Hurt': { eyesAt: [[0, 4], [6, 4]] }, E: { seat: [0, -1] } } }, // Torchic: all head, its eyes right under the crest; turned a little, only its far eye was found
+  256: { rig: { 'SE:Idle': { seat: [1, 1] }, E: { eyesAt: [[1, 4]] }, 'NE:Idle': { seat: [1, 1] } } }, // Combusken: its eye in profile isn't found; standing turned, the seat sat a pixel off
   257: { rig: { S: { seat: [0, -2] }, SE: { seat: [2, 0, -1] }, E: { seat: [3, 0, -7], eyesAt: [[2, 5]] } } }, // Blaziken: the seat sat on its brow, and turned it spanned the hair
   258: { rig: { S: { seat: [0, -1, 1] }, SE: { seat: [0, -1, -3] } }, size: { head: -4 }, no: UPRIGHT }, // Mudkip: the seat spanned the gills
-  260: { rig: { SE: { seat: [-1, 1, -3] }, E: { seat: [1, 4, -1] } }, size: { head: -4 } }, // Swampert: the seat spanned the gills, and turned it sat on the fin
-  280: { rig: { E: { seat: [0, 0, -2] } } }, // Ralts: in profile the seat spanned its horns
-  285: { rig: { S: { eyesAt: [[-3, 6], [3, 6]] }, E: { eyes: [3, 10] } }, size: { head: -5 }, no: NO_BODY }, // Shroomish: a mushroom cap; facing south its closed eyes aren't found, in profile a fleck on the cap reads as the eye
+  259: { rig: { 'SE:Hurt': { seat: [3, 8] } } }, // Marshtomp: hurt turned a little, it ducks under the seat
+  260: { rig: { SE: { seat: [-1, 1, -3] }, E: { seat: [1, 4, -1], eyesAt: [[3, 4]] } }, size: { head: -4 } }, // Swampert: the seat spanned the gills, and turned it sat on the fin; in profile its eye isn't found
+  280: { rig: { E: { seat: [0, 0, -2] } }, no: ['face'] }, // Ralts: in profile the seat spanned its horns; its eyes are hidden under its hair
+  281: { rig: { S: { seat: [0, -1] }, 'SE:Idle': { seat: [-5, 1], eyesAt: [[-1, 7], [5, 7]] }, 'SE:Hurt': { seat: [1, 8], eyes: 'none' }, 'E:Idle': { seat: [0, -2], eyesAt: [[-1, 9]] }, 'E:Hurt': { seat: [-1, 8], eyes: 'none' } } }, // Kirlia: standing, the seat strayed off its head and its eyes weren't found; hurt, it falls face down under the seat
+  282: { rig: { E: { eyesAt: [[1, 8]] } } }, // Gardevoir: in profile the eye found sat on its hair, behind its red eye
+  '282:mega': { rig: { E: { eyesAt: [[1, 8]] } } }, // Mega Gardevoir: in profile its red eye isn't found
+  285: { rig: { S: { eyesAt: [[-3, 6], [3, 6]] }, E: { eyesAt: [[4, 6]] }, 'E:Idle': { seat: [0, -1] }, 'E:Hurt': { eyesAt: [[3, 4]] } }, size: { head: -5 }, no: NO_BODY }, // Shroomish: a mushroom cap; its closed eyes aren't found (in profile a fleck on the cap is)
   287: { rig: { S: { seat: [0, 1, -1] }, SE: { seat: [1, 1, 5] }, E: { seat: [6, 2, -10] } }, size: { face: -4 }, no: UPRIGHT }, // Slakoth: lying flat, the seat spans its arms facing south and its whole back in profile, where the head is the front end
   304: { no: UPRIGHT }, // Aron
   305: { rig: { SE: { back: [4, -9] }, E: { back: [8, -9] } }, no: UPRIGHT }, // Lairon: on four legs the back point falls under the body, so the wings hung from its rump
