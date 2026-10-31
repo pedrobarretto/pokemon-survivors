@@ -64,7 +64,7 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   18: { no: UPRIGHT }, // Pidgeot
   37: { no: UPRIGHT }, // Vulpix
   38: { rig: { S: { seat: [-1, 6, -10], eyesAt: [[-3, 4], [1, 4]] }, SE: { seat: [2, 5, -8], eyesAt: [[3, 5]] }, E: { seat: [4, 2, -8], eyesAt: [[3, 4]] } }, size: { face: -4 }, no: ['back'] }, // Ninetales: the tails fill its back; the seat found is its crest's tip and the eyes its fur's marks
-  41: { rig: { S: { seat: [0, 0, -15] }, SE: { seat: [0, 0, -4] }, NE: { seat: [0, 0, -4] } }, size: { neck: -4 }, no: ['face', 'back'] }, // Zubat: no eyes, and it's all wings: the seat spans them facing south and lands on one turned a little
+  41: { rig: { S: { seat: [0, 0, -15] }, SE: { seat: [0, 0, -4] }, NE: { seat: [0, 0, -4] } }, size: { neck: -4 }, no: ['face', 'back'] }, // Zubat: no eyes, and it's all wings, which the seat spans
   42: { rig: { SE: { seat: [-2, 1, -3] }, E: { seat: [2, 1] } }, no: ['back'] }, // Golbat: its own wings, which the seat lands on turned a little
   58: { no: UPRIGHT }, // Growlithe
   59: { no: UPRIGHT }, // Arcanine
@@ -75,7 +75,7 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   92: { rig: { S: { seat: [0, -5], eyes: [0, -4] }, SE: { seat: [1, -3], eyesAt: [[-1, 5], [6, 3]] }, E: { seat: [0, -3], eyesAt: [[0, 5]] }, NE: { seat: [-5, -1] }, N: { seat: [0, 3, 6] } }, no: NO_BODY }, // Gastly: a ball of gas; the seat drops into its face between the eyes, which are found by their lower edge, and not at all turned
   93: { no: NO_BODY }, // Haunter: a floating head and hands
   '94:mega': { rig: { SE: { eyes: [0, -2] }, E: { eyes: [0, -2] } } }, // Mega Gengar: turned, its grin's top reads as the eyes
-  102: { rig: { S: { seat: [0, 0, -16] }, SE: { seat: [0, 0, -11] }, E: { seat: [0, 0, -4] }, NE: { seat: [0, 0, -2] } }, no: ['face', ...NO_BODY] }, // Exeggcute: six eggs; a hat goes on the top one, not across the clutch
+  102: { rig: { S: { seat: [0, 0, -16] }, SE: { seat: [0, 0, -11] }, E: { seat: [0, 0, -4] }, NE: { seat: [0, 0, -2] } }, no: ['face', ...NO_BODY] }, // Exeggcute: six eggs; a hat sized to one egg, not to the clutch
   117: { rig: { S: { eyesAt: [[-3, 7], [3, 7]] }, NE: { seat: [-4, 1, 4] } } }, // Seadra: facing south only its pupils are found, not the whites; turned away the seat lands on its snout's tip walking (and on its skull idle: halfway serves both)
   123: { no: ['back'] }, // Scyther: its own wings
   129: { no: NO_BODY }, // Magikarp
