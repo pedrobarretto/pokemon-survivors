@@ -304,8 +304,9 @@ const BAND_ROOM = 4
  * Its sides stop above the jaw, and the dresser keeps it off the eyes.
  */
 const hairband = (r: number, dir: ArtDir) => {
-  // Leaning back enough that in profile it runs down well behind the eye, clear of the dresser's cut round it.
-  const [ct, st] = [Math.cos(0.38), Math.sin(0.38)]
+  // Leaning back, and in profile further still: there it runs down well behind the eye, clear of the dresser's cut round it.
+  const lean = dir === 2 ? 0.65 : 0.38
+  const [ct, st] = [Math.cos(lean), Math.sin(lean)]
   const band: Dist = (x, y, z) => {
     const [up, out] = [(y + r) * ct - z * st, (y + r) * st + z * ct]
     return Math.max(Math.hypot(Math.hypot(x, up) - r - 0.3, out) - 0.75, -(y + r * 0.6))
