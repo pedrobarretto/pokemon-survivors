@@ -816,7 +816,9 @@ const masquerade: WearModel = {
   layers: FACE_LAYERS,
   scene: (size) => {
     const r = radius(size.face)
-    const e = eyeOf(size, r)
+    // Its holes on the wearer's own eyes, set wider than glasses' (`eyeOf`) may be: the pivot centers the model
+    // between the eyes found, so a mask sized to the clamped gap leaves eyes set wide outside it.
+    const e = clamp(size.eye, eyeOf(size, r), r * 0.8)
     // A band across the eyes, its outer corners swept up, with holes for the eyes.
     const lo = -r * 0.28 - 0.2
     const hi = (x: number) => r * 0.28 - 0.2 + Math.max(0, Math.abs(x) - e) * 0.45
@@ -825,7 +827,7 @@ const masquerade: WearModel = {
       const band = Math.max(lo - y, y - hi(x))
       const holes = Math.min(Math.hypot(x - e, y + 0.1) - r * 0.17, Math.hypot(x + e, y + 0.1) - r * 0.17)
       // Over the front of the face only: wrapped further round, it's a slab across the side of the head in profile.
-      return Math.max(shell, band, -holes, -(z - r * 0.4), Math.abs(x) - r * 0.98)
+      return Math.max(shell, band, -holes, -(z - r * 0.3), Math.abs(x) - Math.max(r * 0.98, e + r * 0.3))
     }
     const feather: Dist = (x, y, z) => ellipsoid(x - r * 0.9, y - r * 0.55, z - r * 0.42, 0.9, r * 0.55, 0.7)
     return scene([PURPLE, GOLD, PINK], [

@@ -300,6 +300,8 @@ export const judge = (f: Pixels, truth: Measure, row: number, slot: WearableSlot
   }
   if (slot === 'neck') {
     // On the neck: some of it within two rows of the neck's line, and none of it up on the face (on the sprite over the mouth).
+    // A mouth marker under the neck's line is no chin to judge by: a beak pointing down (Staraptor's), another head's (Zweilous').
+    const chin = Math.min(mouthY, rig.neckY)
     let onLine = false
     let faceUp = 0
     for (let j = 0; j < worn.h; j++) {
@@ -307,7 +309,7 @@ export const judge = (f: Pixels, truth: Measure, row: number, slot: WearableSlot
         if (!worn.front[j * worn.w + i] && !worn.behind[j * worn.w + i]) continue
         const y = worn.y0 + j
         if (Math.abs(y - rig.neckY) <= 2) onLine = true
-        if (worn.front[j * worn.w + i] && row <= 2 && y < mouthY - 1 && solid(worn.x0 + i, y)) faceUp++
+        if (worn.front[j * worn.w + i] && row <= 2 && y < chin - 1 && solid(worn.x0 + i, y)) faceUp++
       }
     }
     if (!onLine || faceUp > 2) out.push({ rule: 'neck-off', note: onLine ? `${faceUp} px up on the face` : `nowhere near the neck (row ${rig.neckY})` })
