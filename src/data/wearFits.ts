@@ -75,46 +75,59 @@ const NO_BODY = ['neck', 'back'] as const satisfies readonly WearableSlot[]
 const SEEN_FROM_ABOVE = ['head', 'face', 'neck', 'back'] as const satisfies readonly WearableSlot[]
 
 export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
-  1: { no: ['back'] }, // Bulbasaur: the bulb rises over its head and fills its back
-  2: { rig: { S: { seat: [0, 10, 9], eyesAt: [[-4, 5], [4, 5]], neck: [0, 12] }, SE: { seat: [4, 10, 6], eyesAt: [[3, 5]], neck: [4, 17] }, E: { seat: [6, 8, 5], eyesAt: [[5, 5]], neck: [7, 13] }, NE: { seat: [5, 6] } }, no: ['back'] }, // Ivysaur: the bud; its sheets' mouth marker sits on the bud, so the rig is measured there, not on the head under it
-  3: { rig: { NE: { neck: [-2, 6] }, N: { neck: [0, 5] } }, no: ['head', 'back'] }, // Venusaur: the flower is where a hat or a cape would go; facing away, the neck under it
-  5: { rig: { SE: { seat: [-1, -4], eyesAt: [[-3, 5], [2, 4]] }, E: { seat: [-3, -3], eyesAt: [[0, 5]] } } }, // Charmeleon: turned, its blue eyes aren't found and the seat drops to their line walking (idle, it looks up: the seat meets both halfway)
-  6: { no: ['back'] }, // Charizard: its own wings
-  '6:megaX': { rig: { S: { seat: [0, -2, -7], eyes: [0, -3] }, SE: { eyesAt: [[0, 5]] }, E: { eyesAt: [[6, 4]] } }, size: { face: -10, neck: -9 }, no: ['back'] }, // Mega Charizard X: its own wings; facing south its seat, face and neck span the wings, and its blue cheeks read as eyes
-  9: { no: ['back'] }, // Blastoise: the cannons
-  16: { no: UPRIGHT }, // Pidgey: a bird's back is its wings
-  17: { no: UPRIGHT }, // Pidgeotto
+  1: { rig: { SE: { eyesAt: [[2, 10]] }, E: { eyesAt: [[6, 4]] } }, no: ['back'] }, // Bulbasaur: the bulb rises over its head and fills its back; turned, its forehead's spots read as the eyes, and the hat came down onto them
+  2: { rig: { S: { seat: [0, 10, 9], eyesAt: [[-4, 5], [4, 5]], neck: [0, 12] }, SE: { seat: [4, 10, 6], eyesAt: [[1, 5]], neck: [4, 17] }, E: { seat: [6, 7, 5], eyesAt: [[3, 6]], neck: [7, 13] }, NE: { seat: [5, 6] }, Hurt: { eyes: 'none' }, 'SE:Hurt': { seat: [-3, -8, -4] }, 'E:Hurt': { seat: [-5, -2, -3] }, 'N:Hurt': { seat: [0, 6] } }, no: ['back'] }, // Ivysaur: the bud; its sheets' mouth marker sits on the bud, so the rig is measured there, not on the head under it; hurt, it shows its back from every side, so the hat goes on the bud and no glasses show
+  3: { rig: { NE: { neck: [-2, 6] }, N: { neck: [0, 5] } }, no: ['head', 'back', 'neck:S', 'neck:SE'] }, // Venusaur: the flower is where a hat or a cape would go; facing away, the neck under it, and facing south its face is the sprite's bottom edge, with no neck under it
+  5: { rig: { SE: { seat: [-1, -4], eyesAt: [[-3, 5], [2, 4]] }, E: { seat: [-3, -3], eyesAt: [[0, 5]] }, 'SE:Idle': { seat: [0, 4], eyesAt: [[0, 4]] }, 'E:Idle': { seat: [1, 3], eyesAt: [[1, 5]] }, 'E:Hurt': { neck: [-3, 1] } } }, // Charmeleon: turned, its blue eyes aren't found and the seat drops to their line walking; idle, it hops and looks up, its head drawn lower under the seat
+  6: { rig: { 'S:Hurt': { seat: [0, 2, -6], eyes: 'none' }, 'SE:Hurt': { seat: [4, 0, -4], eyes: 'none' } }, no: ['back'] }, // Charizard: its own wings; hurt, it throws its head back (its face out of sight) and the rig took the tail's flame over it for the head
+  '6:megaX': { rig: { S: { seat: [0, -2, -7], eyes: [0, -3] }, SE: { eyesAt: [[0, 5]] }, E: { eyesAt: [[6, 4]] }, NE: { seat: [-1, 3, -4] }, 'S:Hurt': { seat: [0, -2, 1], eyes: 'none' } }, size: { face: -10, neck: -9 }, no: ['back'] }, // Mega Charizard X: its own wings; facing south its seat, face and neck span the wings, and its blue cheeks read as eyes
+  7: { rig: { 'SE:Hurt': { seat: [0, 6] }, 'E:Hurt': { eyes: [0, -1] } } }, // Squirtle: hurt, the seat stays where the head was walking turned a little, and in profile its squint is found a row low
+  9: { rig: { S: { seat: [-2, 1, -2], eyesAt: [[-4, 6], [3, 6]] }, 'S:Idle': { seat: [1, -2] } }, no: ['back'] }, // Blastoise: the cannons; facing south the seat took the shell's rim behind the head and the eyes a cannon's edge
+  16: { rig: { SE: { seat: [0, 0, -3], eyesAt: [[1, 6]] } }, no: UPRIGHT }, // Pidgey: a bird's back is its wings; turned a little, its one eye was read as a pair either side of it, and the seat spanned a wing's edge
+  17: { rig: { E: { eyesAt: [[2, 5]] }, 'S:Hurt': { seat: [0, 6, -6], eyes: 'none' }, 'SE:Hurt': { seat: [-2, 7, -4], eyesAt: [[1, 5]] }, 'E:Hurt': { seat: [5, 5, -6], eyes: 'none' } }, no: UPRIGHT }, // Pidgeotto: in profile its eye isn't found; hurt, it throws its head back under the seat
   18: { no: UPRIGHT }, // Pidgeot
-  37: { no: UPRIGHT }, // Vulpix
+  25: { rig: { SE: { seat: [0, 0, -2] } } }, // Pikachu: turned a little, the seat spanned an ear's root and sized the hat up
+  37: { rig: { 'E:Hurt': { seat: [-4, -4, -2], eyes: 'none' } }, no: UPRIGHT }, // Vulpix: hurt in profile, it throws its head back and the seat slid to its snout
   38: { rig: { S: { seat: [1, 7, -6], eyesAt: [[-3, 4], [1, 4]] }, SE: { seat: [2, 6, -8], eyesAt: [[3, 5]] }, E: { seat: [4, 2, -8], eyesAt: [[3, 4]] } }, size: { face: -4 }, no: ['back'] }, // Ninetales: the tails fill its back; the seat found is its crest's tip and the eyes its fur's marks
-  41: { rig: { S: { seat: [0, 0, -3] }, SE: { seat: [2, 0, -3] }, NE: { seat: [2, 0, -4] } }, size: { neck: -4 }, no: ['face', 'back'] }, // Zubat: no eyes, and it's all wings, which the seat spans
-  42: { rig: { SE: { seat: [-2, 2, -2] }, E: { seat: [2, 1] } }, no: ['back'] }, // Golbat: its own wings, which the seat lands on turned a little
+  41: { rig: { S: { seat: [0, 0, -3] }, SE: { seat: [2, 0, -3] }, NE: { seat: [2, 0, -4] } }, no: ['face', 'neck', 'back'] }, // Zubat: no eyes, and it's all wings, which the seat spans, and a head with legs: a scarf lands on its mouth
+  42: { rig: { SE: { seat: [-1, -4, -2], eyesAt: [[-1, 4]] }, E: { seat: [2, -2, -8], eyesAt: [[4, 1]] }, NE: { seat: [0, 0, -3] }, N: { seat: [0, 0, -13] } }, no: ['back'] }, // Golbat: its own wings; turned, the seat dropped into its mouth, under the eyes, and spanned a wing (facing away, both)
   58: { no: UPRIGHT }, // Growlithe
   59: { no: UPRIGHT }, // Arcanine
   60: { no: ['neck', ...UPRIGHT] }, // Poliwag: a round tadpole
-  '65:mega': { rig: { S: { seat: [0, -7, -23], eyesAt: [[-2, 5], [2, 5]] }, SE: { seat: [0, 3] }, E: { seat: [0, 3] } }, size: { face: -22, neck: -14, back: -10 } }, // Mega Alakazam: facing south the seat, face and neck span its five spoons and its eyes aren't found; turned, the seat is its crest's tip
+  62: { rig: { S: { seat: [0, 0, -6] }, SE: { seat: [0, 0, -4] }, E: { eyesAt: [[1, 8]] }, NE: { seat: [0, 0, -4] }, N: { seat: [0, 0, -4] } } }, // Poliwrath: its seat spanned its whole round body, which sized the hats up to it; in profile the top of its head read as the eye
+  63: { rig: { 'SE:Hurt': { seat: [-3, 0, -2] }, 'E:Hurt': { seat: [-2, -3, -3], eyesAt: [[1, 4]] } } }, // Abra: hurt, its head tips back and the seat slid down to its shut eye in profile
+  64: { rig: { Hurt: { eyes: 'none' }, 'S:Hurt': { seat: [0, 8, -5] }, 'SE:Hurt': { seat: [2, -4, -4] }, 'E:Hurt': { seat: [1, 7, -3] } } }, // Kadabra: hurt, it throws its head back out of sight and the rig took the stars over it for the head
+  65: { rig: { 'SE:Hurt': { seat: [-2, -4] } } }, // Alakazam: hurt and turned a little, its head tips back over the seat
+  '65:mega': { rig: { S: { seat: [0, -7, -23], eyesAt: [[-2, 5], [2, 5]] }, SE: { seat: [0, 1] }, E: { seat: [0, 1] }, 'S:Hurt': { seat: [0, 4] } }, size: { face: -22, neck: -14, back: -10 } }, // Mega Alakazam: facing south the seat, face and neck span its five spoons and its eyes aren't found; turned, the seat is its crest's tip
+  67: { rig: { S: { seat: [0, 0, -6], eyesAt: [[-2, 6], [2, 6]] }, NE: { seat: [2, 1, -6] }, 'S:Idle': { seat: [-2, 0] }, 'E:Idle': { eyesAt: [[-1, 6]] }, 'S:Hurt': { seat: [0, 2], eyes: 'none' } } }, // Machoke: facing south and away its seat spanned its shoulders, and its eyes were read on their line, wide of them (idle in profile, not at all); hurt, its eyes shut
+  68: { rig: { SE: { seat: [4, -1, -9], eyesAt: [[-2, 5], [3, 4]] }, E: { seat: [4, 0, -8] }, NE: { seat: [0, 0, -13] }, N: { seat: [0, 0, -19] } } }, // Machamp: turned or away, the seat spanned its shoulders and arms, and turned a little a shoulder read as an eye
   74: { rig: { S: { seat: [0, 0, -3] }, SE: { seat: [3, 0, -8], eyesAt: [[-1, 5], [2, 5]] }, NE: { seat: [0, 1, -6] }, N: { seat: [0, 0, -14] } }, no: NO_BODY }, // Geodude: a rock with arms, which the seat spans; turned a little, a fist reads as an eye
-  76: { no: ['back'] }, // Golem: the shell
+  75: { rig: { SE: { seat: [5, -2, -8], left: 'none' }, E: { seat: [4, -1, -9] }, NE: { seat: [0, 0, -5] }, N: { seat: [0, 0, -9] }, 'SE:Walk': { seat: [-4, 4, 6], eyesAt: [[4, 7]] } } }, // Graveler: turned, the seat spanned a raised arm with the head, and the arm's edge read as an eye (walking turned a little, the arm rises over the rock's top and its face sits lower)
+  76: { rig: { S: { seat: [0, 7, -4] }, SE: { seat: [4, 6, -4], eyesAt: [[-1, 5], [4, 4]] }, NE: { seat: [0, 0, -9] }, N: { seat: [0, 0, -6] }, Hurt: { eyes: 'none' }, 'S:Hurt': { seat: [0, 2, -2] }, 'SE:Hurt': { seat: [1, 6, -3] } }, no: ['back'] }, // Golem: the shell; facing south and turned a little the seat took the shell's top over its head; hurt, it curls up with its head out of sight
   92: { rig: { S: { seat: [0, -5], eyes: [0, -4] }, SE: { seat: [1, -3], eyesAt: [[-1, 5], [6, 3]] }, E: { seat: [0, -3], eyesAt: [[0, 5]] }, NE: { seat: [-5, -1] }, N: { seat: [0, 3, 6] } }, no: NO_BODY }, // Gastly: a ball of gas; the seat drops into its face between the eyes, which are found by their lower edge, and not at all turned
-  93: { no: NO_BODY }, // Haunter: a floating head and hands
-  '94:mega': { rig: { SE: { eyes: [0, -2] }, E: { eyes: [0, -2] } } }, // Mega Gengar: turned, its grin's top reads as the eyes
+  93: { rig: { 'S:Hurt': { seat: [-1, 9, -5] }, 'SE:Hurt': { seat: [-2, 7, -6] }, 'E:Hurt': { seat: [-7, 8, -3], eyes: 'none' } }, no: NO_BODY }, // Haunter: a floating head and hands; hurt, the seat stays up with the stars over its head
+  94: { rig: { S: { seat: [0, 0, -4], eyes: [0, 1], neck: [0, 4] }, SE: { seat: [0, 0, -2], neck: [-1, 3] }, E: { seat: [0, 0, -3] }, NE: { seat: [0, 0, -4] }, N: { seat: [0, 0, -4] }, 'SE:Idle': { neck: [-2, -1] } } }, // Gengar: its seat spans its ears' roots, which sized the hats up; no neck, its grin fills its front: a scarf goes round under it, on the belly (idle, its tongue hangs over it)
+  '94:mega': { rig: { SE: { eyes: [0, -2] }, E: { eyes: [0, -2] }, NE: { seat: [-2, -5] }, 'S:Idle': { seat: [0, -7, 11], eyesAt: [[-3, 9], [3, 9]] }, 'SE:Idle': { seat: [-4, -7, 4], eyesAt: [[1, 10], [4, 11]] }, 'E:Idle': { seat: [-3, -7, 11], eyesAt: [[3, 11]] } } }, // Mega Gengar: turned, its grin's top reads as the eyes, and turned away the seat sank under its spikes; idle, the rig follows its tongue, not its head: fitted to the first frame, the one held (the tongue's frames are a flick)
   102: { rig: { S: { seat: [0, 0, -4] }, SE: { seat: [0, 2, -5] }, E: { seat: [3, 3, -4] }, NE: { seat: [0, 0, -2] } }, no: ['face', ...NO_BODY] }, // Exeggcute: six eggs; a hat sized to one egg, not to the clutch
-  117: { rig: { S: { eyesAt: [[-3, 7], [3, 7]] }, NE: { seat: [-4, 1, 4] } } }, // Seadra: facing south only its pupils are found, not the whites; turned away the seat lands on its snout's tip walking (and on its skull idle: halfway serves both)
+  103: { no: ['head'] }, // Exeggutor: its leaves crown its three heads where a hat would go (and reach the frame's top)
+  117: { rig: { S: { eyesAt: [[-3, 7], [3, 7]] }, SE: { eyesAt: [[1, 4]] }, NE: { seat: [-4, 1, 4] } } }, // Seadra: facing south only its pupils are found, not the whites; turned a little, its snout's tip read as a second eye; turned away the seat lands on its snout's tip walking (and on its skull idle: halfway serves both)
   123: { no: ['back'] }, // Scyther: its own wings
-  129: { no: NO_BODY }, // Magikarp
-  130: { no: ['back'] }, // Gyarados: a serpent
+  129: { rig: { E: { eyesAt: [[1, 5]] } }, no: NO_BODY }, // Magikarp: in profile its eye isn't found
+  130: { rig: { E: { seat: [0, 0, -13] }, NE: { seat: [0, 0, -13] }, N: { seat: [0, 0, -9] } }, no: ['back'] }, // Gyarados: a serpent; in profile and away the seat spanned its fins
   133: { no: UPRIGHT }, // Eevee
-  134: { no: UPRIGHT }, // Vaporeon
-  135: { no: UPRIGHT }, // Jolteon
-  136: { no: UPRIGHT }, // Flareon
+  134: { rig: { S: { eyesAt: [[-4, 6], [4, 6]] } }, no: UPRIGHT }, // Vaporeon: facing south its cheeks' line read as its eyes, two rows under its shut ones, and the hat came down over them
+  135: { rig: { SE: { seat: [0, 0, -4] } }, no: UPRIGHT }, // Jolteon: turned a little, the seat spanned its spikes
+  136: { rig: { NE: { seat: [0, 0, -6] } }, no: UPRIGHT }, // Flareon: turned away, the seat spanned its mane
   137: { rig: { E: { eyesAt: [[0, 4]] } }, no: UPRIGHT }, // Porygon: in profile its eye isn't found
-  140: { no: NO_BODY }, // Kabuto: a shell
-  143: { rig: { S: { seat: [0, -3] }, SE: { seat: [1, 2, 1] }, E: { eyes: [9, 1] } } }, // Snorlax: facing south the seat drops to its face's top, turned a little it's an ear's tip, and in profile an ear's inside reads as the eye
-  144: { rig: { SE: { seat: [15, -1, -26], eyesAt: [[4, 4]] }, E: { seat: [5, -2, -12], eyesAt: [[1, 3]] }, NE: { seat: [6, 0, -3] } }, no: ['back'] }, // Articuno: its own wings; turned, the seat and eyes slide down its near wing and neck
-  145: { no: ['back'] }, // Zapdos: its own wings
-  146: { rig: { SE: { seat: [11, 0, -22], eyesAt: [[2, 1]] }, E: { seat: [3, 9, 1] }, NE: { seat: [4, -1, -15] } }, no: ['back'] }, // Moltres: its own wings; turned a little, the seat and eyes slide down to its chest, and in profile the seat tops its flames
+  140: { rig: { E: { seat: [2, 0], eyesAt: [[4, 4]] }, 'E:Idle': { eyesAt: [[1, 4]] }, 'SE:Walk': { eyesAt: [[1, 4], [5, 2]] }, Hurt: { eyes: 'none' } }, no: NO_BODY }, // Kabuto: a shell; turned, its eyes aren't found and the hat came down over them; hurt, it lies on its back, eyes out of sight
+  141: { rig: { SE: { left: 'none' }, E: { eyesAt: [[1, 4]] }, 'E:Idle': { eyesAt: [[1, 5]] } } }, // Kabutops: turned a little, the back of its head read as a second eye; in profile its eye is found a row high, a pixel small
+  143: { rig: { S: { seat: [0, -3] }, SE: { seat: [1, 2, 1], eyes: [0, -1] }, E: { eyesAt: [[4, 5]] }, N: { seat: [0, -4] }, 'E:Idle': { eyesAt: [[4, 7]] } } }, // Snorlax: facing south the seat drops to its face's top (and facing away, as far down its back), turned a little it's an ear's tip, and in profile an ear's inside reads as the eye (idle, its held first frame sits lower under the seat)
+  144: { rig: { SE: { seat: [15, -1, -26], eyesAt: [[-2, 2]] }, E: { seat: [5, -3, -12], eyesAt: [[1, 4]] }, NE: { seat: [6, 0, -3] } }, no: ['back'] }, // Articuno: its own wings; turned, the seat and eyes slide down its near wing and neck
+  145: { rig: { N: { seat: [0, 0, -8] } }, no: ['back'] }, // Zapdos: its own wings; facing away, the seat spanned its crest's spikes
+  146: { rig: { SE: { seat: [11, 0, -22], eyesAt: [[2, 1]] }, E: { seat: [3, 9, 1], neck: [-7, -1] }, NE: { seat: [4, -1, -15] } }, no: ['back'] }, // Moltres: its own wings; turned a little, the seat and eyes slide down to its chest, and in profile the seat tops its flames and the neck was read under its beak, off the sprite
   147: { no: ['back'] }, // Dratini: a serpent
   148: { no: ['back'] }, // Dragonair: a serpent
+  149: { rig: { E: { seat: [0, 0, -5] } } }, // Dragonite: in profile the seat spanned an antenna
   152: { no: UPRIGHT }, // Chikorita: on four legs
   153: { no: UPRIGHT }, // Bayleef
   154: { no: ['neck', ...UPRIGHT] }, // Meganium: the petals around its neck
