@@ -38,6 +38,10 @@ export type Scene = {
   inks?: Readonly<Record<number, string | null>>
   /** How much of each distance the march trusts (0..1): below 1 for bent shapes, whose distances overshoot. */
   step?: number
+  /** How far down the camera looks (radians; `PITCH` by default). */
+  pitch?: number
+  /** Whether a point of the surface hugs the wearer (a strap, a band, a ring): the dresser keeps it on the head or neck it wraps (`PixelArt.hug`). */
+  hug?: (x: number, y: number, z: number) => boolean
   /** The model's bounds (px): its radius around the y axis and its height range. */
   r: number
   top: number
@@ -49,11 +53,13 @@ export type Scene = {
  * (`ox`, `oy`) is the pixel the model's origin lands on. For the dresser
  * (`render/wearDress.ts`), per pixel: `edge` marks the outline around the
  * shape (its own, which the dresser redraws around the dressed frame), `ink`
- * the outline color a shape's pixel takes (0: none), and `back` a pixel of its
+ * the outline color a shape's pixel takes (0: none), `back` a pixel of its
  * far half, seen from the camera (what grows from the head shows through a
- * crown's far side; a scarf's far half goes behind the neck).
+ * crown's far side; a scarf's far half goes behind the neck), and `hug` a
+ * pixel of a part that wraps the wearer (`Scene.hug`: a strap never pokes past
+ * the head it goes round).
  */
-export type PixelArt = { w: number; h: number; ox: number; oy: number; px: Uint8Array; colors: readonly string[]; edge: Uint8Array; ink: Uint8Array; back: Uint8Array }
+export type PixelArt = { w: number; h: number; ox: number; oy: number; px: Uint8Array; colors: readonly string[]; edge: Uint8Array; ink: Uint8Array; back: Uint8Array; hug: Uint8Array }
 
 /** Where the light comes from, on screen: the top left, a little toward the viewer. */
 const LIGHT = (() => {
@@ -87,8 +93,8 @@ const tone = (lambert: number, flat: boolean) => (flat ? (lambert > 0.2 ? 2 : 1)
  */
 export const rasterize = (scene: Scene, yaw: number): PixelArt => {
   const { sdf, paint, ramps, r, top, bottom } = scene
-  const cp = Math.cos(PITCH)
-  const sp = Math.sin(PITCH)
+  const cp = Math.cos(scene.pitch ?? PITCH)
+  const sp = Math.sin(scene.pitch ?? PITCH)
   const cy = Math.cos(yaw)
   const sy = Math.sin(yaw)
   // The art's size: the bounds projected, plus the outline.
@@ -108,7 +114,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
   const q = [0, 0, 0]
   /** Marches the ray through the camera plane at (u, v): its depth at the surface (the point in `q`), or −1 for a miss or an occluder. */
   const march = (u: number, v: number) => {
-    // The camera plane through the origin, looking down at PITCH.
+    // The camera plane through the origin, looking down at the pitch.
     const oy = v * cp + far * sp
     const oz = -v * sp + far * cp
     let t = far - reach
@@ -176,6 +182,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
   const parts = new Int16Array(n)
   const shade = new Uint8Array(n)
   const back = new Uint8Array(n)
+  const hug = new Uint8Array(n)
   const e = 0.04
   for (let k = 0; k < n; k++) {
     if (!solid[k]) continue
@@ -189,6 +196,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
     }
     mat[k] = m
     back[k] = depth[k]! > farther ? 1 : 0
+    hug[k] = scene.hug?.(x, y, z) ? 1 : 0
     parts[k] = scene.part?.(x, y, z) ?? 0
     const nx = sdf(x + e, y, z) - sdf(x - e, y, z)
     const ny = sdf(x, y + e, z) - sdf(x, y - e, z)
@@ -241,7 +249,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
       }
     }
   }
-  return { w, h, ox: half, oy: up, px, colors, edge, ink, back: Uint8Array.from(back, (b, k) => (solid[k] ? b : 0)) }
+  return { w, h, ox: half, oy: up, px, colors, edge, ink, back: Uint8Array.from(back, (b, k) => (solid[k] ? b : 0)), hug: Uint8Array.from(hug, (b, k) => (solid[k] ? b : 0)) }
 }
 
 /** The art mirrored left to right (the west-facing directions are the east-facing ones flipped, like the sheets). */
@@ -251,7 +259,7 @@ export const mirror = (art: PixelArt): PixelArt => {
     for (let j = 0; j < art.h; j++) for (let i = 0; i < art.w; i++) out[j * art.w + i] = a[j * art.w + art.w - 1 - i]!
     return out
   }
-  return { ...art, ox: art.w - 1 - art.ox, px: flip(art.px), edge: flip(art.edge), ink: flip(art.ink), back: flip(art.back) }
+  return { ...art, ox: art.w - 1 - art.ox, px: flip(art.px), edge: flip(art.edge), ink: flip(art.ink), back: flip(art.back), hug: flip(art.hug) }
 }
 
 /* ---------------- Shapes (signed distances, px) ---------------- */

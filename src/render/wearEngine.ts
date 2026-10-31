@@ -6,7 +6,7 @@ import { createCanvas, context2d, onCanvasReset } from '../engine/pixelart'
 import { detail } from './quality'
 import { drawPokemon, placeFrame, type AnimName, type DrawOpts, type FramePlace, type SpeciesSprites } from './sprites'
 import { rasterize } from './wearArt'
-import { decodeRig, DRAW_ORDER, fitOf, fixOf, layerOf, rigChunk, rigKey, rigSheet, sizeOf, wears, yawOf, type Rig, type RigAnim, type RigChunk, type RigEntry, type WearSize } from './wearFit'
+import { artDir, decodeRig, DRAW_ORDER, fitOf, fixOf, layerOf, rigChunk, rigKey, rigSheet, sizeOf, wears, yawOf, type Rig, type RigAnim, type RigChunk, type RigEntry, type WearSize } from './wearFit'
 import { sceneOf, WEAR_MODELS } from './wearModels'
 import type { DressDone, DressJob } from './wearWorker'
 
@@ -60,8 +60,8 @@ const entriesOf = (dex: number) => {
   return null
 }
 
-/** A variant as a wearer: its rig with its hand fixes, its size, and each row's pixels drawn over any hat. */
-type Wearer = { key: string; rig: Rig; size: WearSize; fit: ReturnType<typeof fitOf>; over: readonly (readonly Nudge[])[] }
+/** A variant as a wearer: its rig with its hand fixes, its size facing each row's way, and each anim's rows' pixels drawn over any hat. */
+type Wearer = { key: string; rig: Rig; sizes: readonly WearSize[]; fit: ReturnType<typeof fitOf>; over: Record<RigAnim, readonly (readonly Nudge[])[]> }
 
 const wearers = new Map<string, Wearer | null>()
 
@@ -85,9 +85,10 @@ const wearerOf = (s: SpeciesSprites): Wearer | null => {
   const entry = entries[key] ?? entries[rigKey(s.dex, v.form, false)]
   let w: Wearer | null = null
   if (entry) {
-    const fit = fitOf(s.dex, v.form)
+    const fit = fitOf(s.dex, v.form, v.shiny)
     const rig = decodeRig(entry, fit)
-    w = { key, rig, size: sizeOf(rig, fit), fit, over: Array.from({ length: 8 }, (_, row) => fixOf(fit, row)?.over ?? []) }
+    const over = (anim: RigAnim) => Array.from({ length: 8 }, (_, row) => fixOf(fit, row, anim)?.over ?? [])
+    w = { key, rig, sizes: Array.from({ length: 8 }, (_, d) => sizeOf(rig, fit, d as Dir8)), fit, over: { Walk: over('Walk'), Idle: over('Idle'), Hurt: over('Hurt') } }
   }
   wearers.set(key, w)
   return w
@@ -134,10 +135,24 @@ const free = (img: Drawable) => {
   else img.width = img.height = 0
 }
 
+/**
+ * Rows kept past the budget while held (`holdWearArt`): a contact sheet draws
+ * every direction of every wearer in one paint, more rows than the budget
+ * keeps, and would let go of its own first rows before its last land. A run
+ * or a match draws a row per wearer at a time, the most recent, never trimmed.
+ */
+let holds = 0
+
+/** Keeps every dressed row while `on` (a dev sheet renders), and trims to the budget once the last hold lets go. */
+export const holdWearArt = (on: boolean) => {
+  holds = Math.max(0, holds + (on ? 1 : -1))
+  if (holds === 0) trim()
+}
+
 /** Lets go of the least recently drawn rows until the kept ones fit the budget. */
 const trim = () => {
   const budget = detail.safe ? ROW_BUDGET.safe : ROW_BUDGET.normal
-  if (held <= budget) return
+  if (held <= budget || holds > 0) return
   const done = [...rows].flatMap(([k, r]) => (r ? [[k, r] as const] : [])).sort((a, b) => a[1].used - b[1].used)
   for (const [k, r] of done) {
     if (held <= budget * 0.8) break
@@ -263,7 +278,7 @@ const pump = () => {
 const itemsOf = (look: Look, w: Wearer, dir: Dir8) =>
   DRAW_ORDER.flatMap((slot) => {
     const id = look[slot]
-    if (id === undefined || !isWearableId(id) || WEARABLES[id].slot !== slot || !wears(w.fit, slot, id)) return []
+    if (id === undefined || !isWearableId(id) || WEARABLES[id].slot !== slot || !wears(w.fit, slot, id, dir)) return []
     const layer = layerOf(slot, dir, WEAR_MODELS[id].layers)
     return layer === 'hidden' ? [] : [{ id, layer }]
   })
@@ -297,7 +312,7 @@ const ask = (s: SpeciesSprites, w: Wearer, look: Look, key: string, anim: RigAni
   queue.push({
     urgent,
     look: `${w.key}|${key}`,
-    job: { key: rk, sheet, fw: r.fw, fh: r.fh, frames: r.frames, row: dir, rigs: r.rows[dir]!, over: w.over[dir]!, size: w.size, wearer: `${w.key}|${scale}`, items, scale },
+    job: { key: rk, sheet, fw: r.fw, fh: r.fh, frames: r.frames, row: dir, rigs: r.rows[dir]!, over: w.over[anim][dir]!, size: w.sizes[dir]!, wearer: `${w.key}|${scale}|${artDir(dir)}`, items, scale },
   })
   pump()
 }
@@ -382,7 +397,7 @@ onCanvasReset(
 )
 
 /** A size for the icons: a middling head. */
-const ICON_SIZE: WearSize = { head: 13, depth: 13, brow: 9, brows: [9, 9], face: 13, eye: 0, neck: 9, body: 16, drop: 12, rise: 14 }
+const ICON_SIZE: WearSize = { head: 13, depth: 13, faceDepth: 13, brow: 9, brows: [9, 9], face: 13, eye: 0, neck: 9, body: 16, drop: 12, rise: 14 }
 
 /** An item's art facing south-east (its truest three-quarter view) at a middling size, for the shop and the locker's tiles. */
 export const wearableIcon = (id: WearableId): HTMLCanvasElement => {

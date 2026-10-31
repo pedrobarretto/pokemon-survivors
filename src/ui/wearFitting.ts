@@ -9,7 +9,7 @@ import { createCanvas, context2d } from '../engine/pixelart'
 import { lookOf, setLooks } from '../render/looks'
 import { formOf, loadSpecies, type AnimName, type Form, type SpeciesSprites } from '../render/sprites'
 import { artDir, isMirrored, rigKey } from '../render/wearFit'
-import { drawDressed, loadWearables, refitWearables, wearMisses } from '../render/wearables'
+import { drawDressed, holdWearables, loadWearables, refitWearables, wearMisses } from '../render/wearables'
 
 /**
  * Dev only (`ps.wear`, loaded on demand from `main.ts`): wearing the
@@ -25,7 +25,11 @@ export type WearShell = { seat: () => number | null; seats: () => number }
 export type Variant = { dex: number; form?: Form; shiny: boolean }
 
 const keyOf = (v: Variant) => rigKey(v.dex, v.form, v.shiny)
-export const fitKeyOf = (v: Variant): FitKey => (v.form ? `${v.dex}:${v.form}` : v.dex)
+/** A variant's `WEAR_FITS` key: a shiny's own (`'<dex>s'`), which its normal colors' covers until it's made. */
+export const fitKeyOf = (v: Variant): FitKey => {
+  const base = v.form ? `${v.dex}:${v.form}` : `${v.dex}`
+  return v.shiny ? (`${base}s` as FitKey) : v.form ? (base as FitKey) : v.dex
+}
 
 /** The forms with sheets of a species (Megas, Primal Reversion, Deoxys' formes, Aegislash's blade). */
 const formsOf = (dex: number) => Object.keys((manifest as Record<string, { forms?: object }>)[dex]?.forms ?? {}).flatMap((key) => formOf(dex, key) ?? [])
@@ -115,6 +119,26 @@ const secondsAt = (s: SpeciesSprites, anim: AnimName, frame: number) => {
   return (ticks + 0.5) / 60
 }
 
+/**
+ * Paints until a whole paint found every dressed row (they dress in the
+ * background, a few at a time), keeping them all meanwhile (`holdWearables`:
+ * a sheet draws more rows than the game keeps), and resolves to the PNG.
+ */
+const paintAll = async (paint: () => void, canvas: HTMLCanvasElement) => {
+  holdWearables(true)
+  try {
+    wearMisses()
+    for (let i = 0; i < 400; i++) {
+      paint()
+      if (wearMisses() === 0) break
+      await new Promise((r) => setTimeout(r, 25))
+    }
+    return canvas.toDataURL('image/png')
+  } finally {
+    holdWearables(false)
+  }
+}
+
 /** One cell: a checker, then the Pokémon dressed in the look. */
 export const drawCell = (ctx: CanvasRenderingContext2D, s: SpeciesSprites, look: Look, anim: AnimName, dir: Dir8, t: number, cx: number, cy: number, k: number, clock: number) => {
   ctx.fillStyle = '#e4e8dc'
@@ -171,13 +195,7 @@ export const contactSheet = async (
     })
   }
   // The art renders in the background: paint until a whole paint found all of it.
-  wearMisses()
-  for (let i = 0; i < 400; i++) {
-    paint()
-    if (wearMisses() === 0) break
-    await new Promise((r) => setTimeout(r, 25))
-  }
-  return canvas.toDataURL('image/png')
+  return paintAll(paint, canvas)
 }
 
 /** The whole catalog on one variant (as `contactSheet` takes them) facing `dir`, nine items a row, labeled by id; resolves to a PNG data URL. */
@@ -201,13 +219,7 @@ export const catalogSheet = async (variant: Variant, dir: Dir8, scale = 3) => {
       drawCell(ctx, s, { [WEARABLES[id].slot]: id }, 'Walk', dir, secondsAt(s, 'Walk', 0), x, y + label, scale, 0)
     })
   }
-  wearMisses()
-  for (let i = 0; i < 400; i++) {
-    paint()
-    if (wearMisses() === 0) break
-    await new Promise((r) => setTimeout(r, 25))
-  }
-  return canvas.toDataURL('image/png')
+  return paintAll(paint, canvas)
 }
 
 /* ---------------- The fitting gallery ---------------- */

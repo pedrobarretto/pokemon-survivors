@@ -1,16 +1,21 @@
 /**
  * The head rig: where each frame of a player's sprite takes a wearable,
  * measured from the frame's own pixels and its SpriteCollab markers (the
- * mouth and the body's center, `scripts/rig.mjs` reads them) by `measure`,
- * then kept steady direction by direction (`settle`). Per frame it finds:
+ * mouth and the body's center, `scripts/rig.mjs` reads them) by `measure`.
+ * Per frame it finds:
  *
  * - the seat: the skull's top, where a hat's opening rests once the thin
  *   parts above it (ears, horns, crests, leaf stalks) are opened away and the
- *   lobes an outline sets apart (a leaf, a bulb) are left out;
+ *   lobes an outline sets apart (a leaf, a bulb) are left out, as wide as the
+ *   skull (not its ears or wings beside it);
  * - the eyes (their box and centers) and the head's span at their line: no
  *   hat, scarf or cape may cover them, and glasses sit on them;
  * - the neck (the narrowest row under the chin) and the back (the body's axis
  *   at the shoulders).
+ *
+ * A direction's head is read once, on the Walk frame the others agree with,
+ * and tracked into every frame of Walk, Idle and Hurt (`rigSheets`): a hat
+ * rides the head instead of each frame's own reading of it.
  *
  * Pure math on RGBA bytes: the offline script, the wearables' worker and the
  * fit check (`npm run fit-check`) share it.
@@ -189,7 +194,7 @@ export const open = (mask: Uint8Array, w: number, h: number, r: number) => {
 type Blob = Eye & { n: number; glint: number; edge: number; px: number[] }
 
 /** Whether a pixel is a glint: near white (eyes are lit by one in PMD art). */
-const glinty = (p: Uint8Array | Uint8ClampedArray, i: number) => {
+export const glinty = (p: Uint8Array | Uint8ClampedArray, i: number) => {
   const r = p[i]!
   const g = p[i + 1]!
   const b = p[i + 2]!
@@ -281,8 +286,8 @@ type EyeWindow = { within: Uint8Array; top: number; headW: number }
  * The eyes of a frame facing `row`: the best pair (facing the camera or
  * turned a little) or the best single eye (in profile). Each candidate scores
  * for a glint, a compact shape and sitting in the head's lower part, above the
- * mouth; a pair scores for matching heights and sitting either side of the
- * head's axis. `prior`: where the direction's other frames put them (offsets
+ * mouth (never level with it or under it); a pair scores for matching
+ * heights and sitting either side of the head's axis. `prior`: where the direction's other frames put them (offsets
  * from the mouth). Empty facing away, or when nothing scores well enough.
  */
 export const findEyes = (f: Pixels, m: Masks, row: number, marks: Marks, win: EyeWindow, prior?: readonly { dx: number; dy: number }[]): (Eye & { px: number[] })[] => {
@@ -291,7 +296,8 @@ export const findEyes = (f: Pixels, m: Masks, row: number, marks: Marks, win: Ey
   const s = FACING[row]!
   const headH = Math.max(5, my - win.top)
   const blobs = blobsOf(f, m, win.within).filter((b) => {
-    if (b.y0 <= win.top || b.y > my + 3) return false
+    // Eyes sit over the mouth: a blob level with the mouth marker or under it is a chin, a fang, a collar.
+    if (b.y0 <= win.top || b.y > my - 0.5) return false
     const dx = (b.x - mx) * (s === 0 ? 1 : s)
     return s === 0 ? Math.abs(dx) <= Math.max(5, win.headW * 0.6) : dx <= 2 && dx >= -Math.max(8, win.headW)
   })
@@ -458,15 +464,14 @@ const topOf = (mask: Uint8Array, w: number, x: number, y0: number, colors?: { f:
 /** The disk an opening rolls for a head `width` px wide: wider heads lose wider ears. */
 const diskFor = (width: number) => (width >= 9 ? 2 : 1)
 
-/** A frame's measures before `settle` steadies them: the rig, plus the eyes' pixels and the skull (the fit check and the dev tool draw them). */
+/** A frame's own measures (before `rigSheets` tracks a direction's reference into it): the rig, plus the eyes' pixels and the skull (the dev tool draws them). */
 export type Measure = { rig: RigFrame; eyePx: number[]; skull: Uint8Array; eyes: Eye[]; palette: readonly number[] }
 
 /**
  * Measures one frame facing `row` (see the module's doc). First the head
  * around the mouth marker (its top bounds where eyes may be), then the eyes,
  * then the skull again from the forehead over the eyes, where the hat goes.
- * `eyes` replaces the eyes found (`settle` passes a direction's own when a
- * frame's are off); `prior` helps the finder (`findEyes`).
+ * `eyes` replaces the eyes found; `prior` helps the finder (`findEyes`).
  */
 export const measure = (
   f: Pixels,
@@ -558,6 +563,9 @@ export const measure = (
   const eyeY = eyes.length ? Math.round(eyes.reduce((a, e) => a + e.y, 0) / eyes.length) : Math.round(seatY + (my - seatY) * 0.55)
   const faceRow = Math.min(h - 1, Math.max(0, eyeY))
   const faceSpan = spanAt(head, w, eyes.length ? eyeMid : seatX, faceRow) ?? spanAt(m.solid, w, eyes.length ? eyeMid : seatX, faceRow)
+  // The skull's width, not its side lobes' (ears, wings, a mane level with its top): no wider than the head at the eyes, nor than their gap makes believable.
+  const eyesW = eyes.length === 2 ? Math.round((eyes[1]!.x - eyes[0]!.x) * 2.4 + 4) : Infinity
+  seatW = Math.max(5, Math.min(seatW, faceSpan ? faceSpan[1] - faceSpan[0] + 3 : Infinity, eyesW))
   // The neck: the narrowest row from under the chin down toward the body's center.
   const neckAxis = s === 0 ? mx : Math.round((mx + seatX) / 2)
   let neckY = Math.min(h - 1, my + 1)
@@ -608,88 +616,196 @@ export const measure = (
   return { rig, eyePx: eyes.flatMap((e) => [...(e.px ?? [])]), skull: opened, eyes: eyes.map(({ x, y, x0, y0, x1, y1, score }) => ({ x, y, x0, y0, x1, y1, score })), palette: paletteOf(f, faceRows) }
 }
 
-/* ---------------- Steadying a direction's frames ---------------- */
+/* ---------------- Tracking the head across a direction ---------------- */
 
 const median = (xs: readonly number[]) => {
   const s = [...xs].sort((a, b) => a - b)
   return s.length ? s[s.length >> 1]! : 0
 }
 
-/** A sheet row's frames to settle: each frame's pixels and markers. */
+/** One anim's frames of a sheet row: each frame's pixels and markers. */
 export type RowFrames = readonly { f: Pixels; marks: Marks }[]
 
-/** A direction's eyes as offsets from the seat (sorted left to right), with their boxes' sizes: its template. */
-export type EyeTemplate = readonly { dx: number; dy: number; bw: number; bh: number }[]
+/** A head's shift from one frame to another, and how unlike the two still are there (`unlike`). */
+export type Shift = { x: number; y: number; unlike: number }
 
-/** The eye count most of a row's frames agree on (two over one on a tie) and where they sit from each frame's own seat. */
-const templateOf = (frames: readonly Measure[]): EyeTemplate => {
-  const counts = [0, 0, 0]
-  for (const m of frames) counts[m.eyes.length]!++
-  const n = counts[2]! >= counts[1]! && counts[2]! > 0 ? 2 : counts[1]! > 0 ? 1 : 0
-  if (n === 0 || counts[n]! * 3 < frames.length) return []
-  return Array.from({ length: n }, (_, i) => {
-    const with_ = frames.filter((m) => m.eyes.length === n)
-    return {
-      dx: median(with_.map((m) => m.eyes[i]!.x - m.rig.seatX)),
-      dy: median(with_.map((m) => m.eyes[i]!.y - m.rig.seatY)),
-      bw: median(with_.map((m) => m.eyes[i]!.x1 - m.eyes[i]!.x0)),
-      bh: median(with_.map((m) => m.eyes[i]!.y1 - m.eyes[i]!.y0)),
+/** How far (px) around the markers' shift the head is looked for. */
+const TRACK_REACH = 4
+/**
+ * How unlike (the mean RGB difference per pixel of the head's box, an opaque
+ * pixel against a clear one counting 255) a frame's head may be to the
+ * reference's and still be the same drawing, moved: a walk's bob, an idle's
+ * breath, a flinch. Past it the pose is another (a flying sheet, a curl).
+ */
+export const TRACKED = 40
+
+/** The box a row's head is tracked by on a frame: around where its seat sits from the mouth marker, from over the seat down to the mouth. */
+type HeadBox = { dx: number; half: number; up: number }
+
+const boxOf = (measures: readonly Measure[], frames: RowFrames): HeadBox => ({
+  dx: median(measures.map((m, i) => m.rig.seatX - frames[i]!.marks.mx)),
+  half: Math.min(14, Math.max(5, (median(measures.map((m) => m.rig.seatW)) >> 1) + 2)),
+  up: Math.min(24, Math.max(6, median(measures.map((m, i) => frames[i]!.marks.my - m.rig.seatY)) + 2)),
+})
+
+/** How unlike frame `b` is to frame `a` over `a`'s head box, moved by (sx, sy) (`TRACKED`). */
+const unlike = (a: Pixels, ma: Marks, box: HeadBox, b: Pixels, sx: number, sy: number) => {
+  const cx = ma.mx + box.dx
+  let sum = 0
+  let n = 0
+  for (let y = Math.max(0, ma.my - box.up); y <= Math.min(a.h - 1, ma.my + 2); y++) {
+    for (let x = Math.max(0, cx - box.half); x <= Math.min(a.w - 1, cx + box.half); x++) {
+      const i = (y * a.w + x) * 4
+      const bx = x + sx
+      const by = y + sy
+      const j = (by * b.w + bx) * 4
+      const ao = a.rgba[i + 3]! > 0
+      const bo = bx >= 0 && by >= 0 && bx < b.w && by < b.h && b.rgba[j + 3]! > 0
+      if (!ao && !bo) continue
+      n++
+      sum += ao !== bo ? 255 : (Math.abs(a.rgba[i]! - b.rgba[j]!) + Math.abs(a.rgba[i + 1]! - b.rgba[j + 1]!) + Math.abs(a.rgba[i + 2]! - b.rgba[j + 2]!)) / 3
     }
+  }
+  return n ? sum / n : Infinity
+}
+
+/** Where frame `b`'s head is from frame `a`'s: the shift that matches `a`'s head box best, looked for around the markers' shift (the nearer of two as good). */
+export const track = (a: Pixels, ma: Marks, box: HeadBox, b: Pixels, mb: Marks): Shift => {
+  const x0 = mb.mx - ma.mx
+  const y0 = mb.my - ma.my
+  let best: Shift = { x: x0, y: y0, unlike: Infinity }
+  let near = Infinity
+  for (let dy = -TRACK_REACH; dy <= TRACK_REACH; dy++) {
+    for (let dx = -TRACK_REACH; dx <= TRACK_REACH; dx++) {
+      const u = unlike(a, ma, box, b, x0 + dx, y0 + dy)
+      const d = Math.abs(dx) + Math.abs(dy)
+      if (u < best.unlike - 0.01 || (Math.abs(u - best.unlike) <= 0.01 && d < near)) [best, near] = [{ x: x0 + dx, y: y0 + dy, unlike: u }, d]
+    }
+  }
+  return best
+}
+
+/** How far (px, across and up or down) one frame's seat or eyes may stray from where another's put them for the two to agree. */
+const STRAY = { x: 3, y: 2 }
+
+/** A rig moved with its head by `s` (what's the body's, the back and the feet, is `own`'s: the frame's own measure). */
+const shifted = (r: RigFrame, s: { x: number; y: number }, own: RigFrame, w: number, h: number): RigFrame => {
+  const x = (v: number) => (v === NONE ? NONE : Math.min(Math.max(v + s.x, 0), w - 1))
+  const y = (v: number) => (v === NONE ? NONE : Math.min(Math.max(v + s.y, 0), h - 1))
+  const neckY = y(r.neckY)
+  return {
+    ...r,
+    seatX: x(r.seatX), seatY: y(r.seatY),
+    e1x: x(r.e1x), e1y: y(r.e1y), e2x: x(r.e2x), e2y: y(r.e2y),
+    eyeX0: x(r.eyeX0), eyeY0: y(r.eyeY0), eyeX1: x(r.eyeX1), eyeY1: y(r.eyeY1),
+    faceL: x(r.faceL), faceR: x(r.faceR), neckX: x(r.neckX), neckY,
+    backX: own.backX, backY: Math.min(h - 1, Math.max(neckY + 2, own.backY)), feetY: own.feetY,
+  }
+}
+
+/** Whether two rigs of a frame agree: as many eyes, and the seat and the first eye where the other puts them (`STRAY`). */
+const agree = (a: RigFrame, b: RigFrame) =>
+  (a.e1x === NONE) === (b.e1x === NONE) &&
+  (a.e1x === NONE || (a.e2x === a.e1x) === (b.e2x === b.e1x)) &&
+  Math.abs(a.seatX - b.seatX) <= STRAY.x && Math.abs(a.seatY - b.seatY) <= STRAY.y &&
+  (a.e1x === NONE || (Math.abs(a.e1x - b.e1x) <= STRAY.x && Math.abs(a.e1y - b.e1y) <= STRAY.y))
+
+/** A row's reference: its frame and that frame's measure, whose box tracks the head into the others. */
+export type Reference = { f: Pixels; marks: Marks; m: Measure; box: HeadBox; at: number }
+
+/**
+ * A row's reference among its frames (`measures` theirs): the frame whose
+ * measure most of the others agree with once moved with the head (each
+ * tracked from the first frame), the closest overall on a tie. A misread
+ * (an ear caught, a tail's star for a skull, a chin for the eyes) is one
+ * frame's, or a few's: the head that most frames see, moved, is the one.
+ */
+export const referenceOf = (frames: RowFrames, measures: readonly Measure[]): Reference => {
+  const box = boxOf(measures, frames)
+  const { f: f0, marks: m0 } = frames[0]!
+  const shifts = frames.map(({ f, marks }, j) => (j === 0 ? { x: 0, y: 0, unlike: 0 } : track(f0, m0, box, f, marks)))
+  let best = 0
+  let most = -1
+  let off = Infinity
+  measures.forEach((mi, i) => {
+    let n = 0
+    let dist = 0
+    measures.forEach((mj, j) => {
+      const at = shifted(mi.rig, { x: shifts[j]!.x - shifts[i]!.x, y: shifts[j]!.y - shifts[i]!.y }, mj.rig, frames[j]!.f.w, frames[j]!.f.h)
+      if (agree(at, mj.rig)) n++
+      dist += Math.abs(at.seatX - mj.rig.seatX) + Math.abs(at.seatY - mj.rig.seatY)
+    })
+    if (n > most || (n === most && dist < off)) [best, most, off] = [i, n, dist]
+  })
+  return { f: frames[best]!.f, marks: frames[best]!.marks, m: measures[best]!, box: boxOf(measures, frames), at: best }
+}
+
+/** The top of the silhouette on column `x` (and its neighbors) from row `y0` down to `y1`: the first row it's there, or null. */
+const topAt = (f: Pixels, x: number, y0: number, y1: number) => {
+  for (let y = Math.max(0, y0); y <= Math.min(f.h - 1, y1); y++) for (const c of [x - 1, x, x + 1]) if (c >= 0 && c < f.w && f.rgba[(y * f.w + c) * 4 + 3]! > 0) return y
+  return null
+}
+
+/** How far over the seat the silhouette's top is searched for, and under it, on a frame that doesn't track. */
+const SNAP = { up: 5, down: 6 }
+
+/**
+ * One anim's sheet row rigged from a reference (`referenceOf`): every frame
+ * is the reference's rig moved with the head, tracked into it by the
+ * reference's head box, so a hat rides the head from frame to frame instead
+ * of each frame's own reading of it. Where a frame isn't the same drawing
+ * (`TRACKED`: a flinch, a recoil), the markers' shift moves it, and its seat
+ * drops or rises onto that frame's own skull, as far under its top as the
+ * reference's seat is under its own (a hat rests on a recoiling head). The
+ * body's points (the back, the feet) are each frame's own.
+ */
+export const rigRow = (ref: Reference, frames: RowFrames, measures: readonly Measure[]) => {
+  const r = ref.m.rig
+  const refTop = topAt(ref.f, r.seatX, r.seatY - SNAP.up, r.seatY + SNAP.down)
+  return frames.map(({ f, marks }, j) => {
+    const s = track(ref.f, ref.marks, ref.box, f, marks)
+    const by = s.unlike <= TRACKED ? { x: s.x, y: s.y } : { x: marks.mx - ref.marks.mx, y: marks.my - ref.marks.my }
+    const rig = shifted(r, by, measures[j]!.rig, f.w, f.h)
+    if (s.unlike > TRACKED && refTop !== null) {
+      const top = topAt(f, rig.seatX, rig.seatY - (r.seatY - refTop) - SNAP.up, rig.seatY + SNAP.down)
+      if (top !== null) rig.seatY = top + (r.seatY - refTop)
+    }
+    return { rig, shift: s }
   })
 }
 
-/** The template's eyes on a frame whose seat is `seat` (a blink, a squint: where they'd be). */
-const eyesAt = (t: EyeTemplate, seat: { seatX: number; seatY: number }): Eye[] =>
-  t.map(({ dx, dy, bw, bh }) => {
-    const x = seat.seatX + dx
-    const y = seat.seatY + dy
-    const x0 = Math.round(x - bw / 2)
-    const y0 = Math.round(y - bh / 2)
-    return { x, y, x0, y0, x1: x0 + Math.round(bw), y1: y0 + Math.round(bh), score: 0 }
-  })
+/** A variant's frames to rig: each anim's sheet rows (8), each row's frames. */
+export type SheetFrames = Readonly<Record<'Walk' | 'Idle' | 'Hurt', readonly RowFrames[]>>
 
 /**
- * One sheet row's rig, frame by frame (see `measure`), steadied. A frame
- * keeps its own measures when it sees as many eyes as most of the row does
- * (the mouth marker isn't always rigid with the head: an Idle's breath, a
- * roll, a dance move it); one that sees fewer (a blink, a squint) looks again
- * where the others put them, and takes them from its own seat if it still
- * can't. A seat that strays from where its eyes put the others' is put back.
- * The widths and the feet are the row's. `fallback`: another anim's template
- * for the same row (Walk's), for a row whose own frames don't agree (Hurt's
- * squeezed eyes). `palette`: the face's colors as the front view finds them
- * (`Measure.palette`), which hold from every side.
+ * A variant's rig (see the module's doc), anim by anim and row by row. Each
+ * direction's head is read once, on Walk's reference frame (`referenceOf`),
+ * and tracked into every frame of Walk, Idle and Hurt (`rigRow`): the three
+ * draw the same head, so a hat sits on it alike in all of them, and a hand
+ * fix of a direction holds for every frame. Where an Idle row isn't the
+ * same drawing as Walk's (fewer than half its frames track, `TRACKED`: a
+ * flying Walk, a sleeping Idle), it takes a reference of its own; Hurt is a
+ * flinch of Walk's head (a gaping mouth, squeezed eyes the measure would
+ * misread), moved by the markers where it doesn't track. `palette`: the
+ * face's colors as the front view finds them (`Measure.palette`).
  */
-export const settle = (row: number, frames: RowFrames, fallback?: EyeTemplate, palette?: readonly number[]) => {
-  const first = frames.map(({ f, marks }) => measure(f, row, marks, { palette }))
-  let t = templateOf(first)
-  if (t.length === 0 && fallback?.length && !away(row)) t = fallback
-  const measured = first.map((m, i) => {
-    const { f, marks: mk } = frames[i]!
-    if (m.eyes.length >= t.length) return t.length === 0 && m.eyes.length ? measure(f, row, mk, { eyes: [], palette }) : m
-    const prior = t.map(({ dx, dy }) => ({ dx: m.rig.seatX + dx - mk.mx, dy: m.rig.seatY + dy - mk.my }))
-    const again = measure(f, row, mk, { prior, palette })
-    return again.eyes.length === t.length ? again : measure(f, row, mk, { eyes: eyesAt(t, m.rig), palette })
-  })
-  // A seat that strays (an ear caught on one frame) goes where its eyes put the row's others.
-  const off = measured.flatMap((m) => (m.eyes.length ? [{ x: m.rig.seatX - m.eyes[0]!.x, y: m.rig.seatY - Math.min(...m.eyes.map((e) => e.y0)) }] : []))
-  const sx = median(off.map((o) => o.x))
-  const sy = median(off.map((o) => o.y))
-  const sw = median(measured.map((m) => m.rig.seatW))
-  const lead = measured[0]!.rig
-  const rigs = measured.map((m, i) => {
-    const r = { ...m.rig, seatW: sw, neckW: lead.neckW, bodyW: lead.bodyW, feetY: lead.feetY, faceL: lead.faceL - lead.seatX + m.rig.seatX, faceR: lead.faceR - lead.seatX + m.rig.seatX }
-    if (m.eyes.length && off.length >= 3) {
-      const ex = m.eyes[0]!.x
-      const ey = Math.min(...m.eyes.map((e) => e.y0))
-      if (Math.abs(r.seatY - ey - sy) > 3 || Math.abs(r.seatX - ex - sx) > 4) {
-        r.seatX = Math.min(Math.max(Math.round(ex + sx), 0), frames[i]!.f.w - 1)
-        r.seatY = Math.min(Math.max(Math.round(ey + sy), 0), frames[i]!.f.h - 1)
+export const rigSheets = (sheets: SheetFrames, palette?: readonly number[]) => {
+  const out = {} as Record<'Walk' | 'Idle' | 'Hurt', RigFrame[][]>
+  const refs: Reference[] = []
+  for (const anim of ['Walk', 'Idle', 'Hurt'] as const) {
+    out[anim] = sheets[anim].map((frames, row) => {
+      const measures = frames.map(({ f, marks }) => measure(f, row, marks, { palette }))
+      const walk = refs[row]
+      if (walk) {
+        const rigged = rigRow(walk, frames, measures)
+        if (anim === 'Hurt' || rigged.filter((r) => r.shift.unlike <= TRACKED).length * 2 >= frames.length) return rigged.map((r) => r.rig)
       }
-    }
-    return r
-  })
-  return { rigs, measured, template: t }
+      const ref = referenceOf(frames, measures)
+      if (anim === 'Walk') refs[row] = ref
+      return rigRow(ref, frames, measures).map((r) => r.rig)
+    })
+  }
+  return out
 }
 
 /* ---------------- Packing ---------------- */
@@ -697,8 +813,8 @@ export const settle = (row: number, frames: RowFrames, fallback?: EyeTemplate, p
 /**
  * The field each one moves with from frame to frame (packed as its change
  * less that field's), so a head that moves as one packs as zeros: the eyes
- * with the seat and each other, the back with the neck. The widths and the
- * feet are the row's (`settle`).
+ * with the seat and each other, the back with the neck. The widths are the
+ * reference's (`rigSheets`).
  */
 const REF = {
   seatX: null,
@@ -747,7 +863,7 @@ export const packRig = (fw: number, fh: number, rows: readonly (readonly RigFram
     for (const k of RIG_FIELDS) {
       const ref = REF[k]
       for (let f = 1; f < frames; f++) {
-        // A row's frames all see its eyes or none do (`settle`): unseen, the field stays NONE throughout.
+        // A row's frames all see its eyes or none do (one reference's, `rigSheets`): unseen, the field stays NONE throughout.
         if ((b[f]![k] === NONE) !== (b[0]![k] === NONE)) throw new Error(`rig ${k}: seen on some frames of a row only`)
         out[o++] = b[0]![k] === NONE ? 0 : (b[f]![k] - b[0]![k] - (ref ? b[f]![ref] - b[0]![ref] : 0)) & 255
       }

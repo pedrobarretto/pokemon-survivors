@@ -3,9 +3,9 @@ import type { Nudge } from '../data/wearFits'
 import type { WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { mirror, rasterize, type PixelArt } from './wearArt'
-import { artDir, isMirrored, pivotOf, yawOf, type WearSize } from './wearFit'
+import { artDir, headSpan, isMirrored, pivotOf, radius, yawFor, type WearSize } from './wearFit'
 import { sceneOf, WEAR_MODELS } from './wearModels'
-import { masksOf, NONE, type Pixels, type RigFrame } from './wearRig'
+import { glinty, masksOf, NONE, type Masks, type Pixels, type RigFrame } from './wearRig'
 
 /**
  * The dresser: worn items drawn into a sprite's frame as if its artist had
@@ -15,9 +15,13 @@ import { masksOf, NONE, type Pixels, type RigFrame } from './wearRig'
  * its rig, and per pixel: what hangs behind goes under the sprite, the rest
  * over it, except where the rig says no:
  *
- * - no hat, scarf or cape covers an eye, and no hat's band comes down to the eyes;
+ * - no hat, scarf or cape covers an eye, and a hat's band stops a row of the
+ *   face short of them (`browOf`), so its outline never reads as their line;
  * - glasses stay on the head (nothing past a pixel off the sprite), and a
  *   frame whose eyes weren't found wears none;
+ * - what wraps the wearer (a strap, a temple, a scarf's wrap: `PixelArt.hug`)
+ *   stays on its silhouette, inside its outline, and a face item's on the
+ *   head's span at the eyes: past the head it went round, it's out of sight;
  * - a scarf's far half goes behind the neck, and the chin over it; the head
  *   stays over what hangs on the back (`placeOf` keeps wings under it);
  * - what grows from the head above the seat (a leaf, a horn) shows through the
@@ -34,7 +38,7 @@ export type ItemArt = { still: PixelArt; moving: PixelArt[] | null }
 
 /** A model rendered for `size` facing `dir` (its frame of animation `frame`), flipped for the west-facing rows. */
 const render = (id: WearableId, slot: WearableSlot, size: WearSize, dir: Dir8, frame: number, squash: number) => {
-  const raw = rasterize(sceneOf(id, slot, size, frame, squash), yawOf(artDir(dir)))
+  const raw = rasterize(sceneOf(id, slot, size, frame, squash), yawFor(slot, artDir(dir)))
   return isMirrored(dir) ? mirror(raw) : raw
 }
 
@@ -45,17 +49,18 @@ const reach = (art: PixelArt) => {
 }
 
 /**
- * How far a hat's part under its seat is pressed (0..1) so that it ends a
- * pixel over the eyes facing south, turned a little and in profile
+ * How far a hat's part under its seat is pressed (0..1) so that its outline
+ * ends a row of the face over the eyes (`BROW`) facing south, turned a little and in profile
  * (`WearSize.brow`, `brows`): per direction, two renders measure how its
  * reach grows with the press (the brim's own perspective doesn't), and the
  * press that leaves it there follows; the hat takes the strongest.
  */
 export const squashOf = (id: WearableId, size: WearSize) => {
+  if (WEAR_MODELS[id].unpressed) return 1
   let press = 1
   for (const [dir, brow] of [[0, size.brow], [1, size.brows[0]], [2, size.brows[1]]] as const) {
     if (brow <= 0) continue
-    const room = brow - 2
+    const room = brow - BROW - 1
     const full = reach(render(id, 'head', size, dir, 0, 1))
     if (full <= room) continue
     const half = reach(render(id, 'head', size, dir, 0, 0.5))
@@ -84,7 +89,7 @@ export const itemArt = (id: WearableId, slot: WearableSlot, size: WearSize, dir:
   }
   const keep = new Uint8Array(first.px.length)
   for (let k = 0; k < keep.length; k++) keep[k] = first.px[k] && !first.edge[k] && all.every((b) => same(first, k, b)) ? 1 : 0
-  const still: PixelArt = { ...first, px: first.px.map((v, k) => (keep[k] ? v : 0)), edge: new Uint8Array(first.px.length), back: first.back.map((v, k) => (keep[k] ? v : 0)) }
+  const still: PixelArt = { ...first, px: first.px.map((v, k) => (keep[k] ? v : 0)), edge: new Uint8Array(first.px.length), back: first.back.map((v, k) => (keep[k] ? v : 0)), hug: first.hug.map((v, k) => (keep[k] ? v : 0)) }
   const moving = all.map((b) => {
     const px = b.px.map((v, k) => {
       const i = (k % b.w) - b.ox + first.ox
@@ -97,18 +102,92 @@ export const itemArt = (id: WearableId, slot: WearableSlot, size: WearSize, dir:
   return { still, moving }
 }
 
+/** The run of `sprite`'s opaque pixels on row `y` through column `x` (or the nearest within 2 px), or null. */
+const runAt = (sprite: Pixels, x: number, y: number): [number, number] | null => {
+  if (y < 0 || y >= sprite.h) return null
+  const solid = (i: number) => i >= 0 && i < sprite.w && sprite.rgba[(y * sprite.w + i) * 4 + 3]! > 0
+  const c = [0, -1, 1, -2, 2].map((d) => x + d).find(solid)
+  if (c === undefined) return null
+  let l = c
+  let r = c
+  while (solid(l - 1)) l--
+  while (solid(r + 1)) r++
+  return [l, r]
+}
+
+/** How far (px) a hat may be lifted off its seat to clear the eyes (`placeOf`); past it, its part on the brow is cut. */
+export const MAX_LIFT = 3
+
+/** The lowest row (from the pivot, px down) an art reaches in columns `i0`..`i1` (from the pivot), outline included; -Infinity where it has none. */
+const reachIn = (art: PixelArt, i0: number, i1: number) => {
+  for (let j = art.h - 1; j >= 0; j--) for (let i = Math.max(0, i0 + art.ox); i <= Math.min(art.w - 1, i1 + art.ox); i++) if (art.px[j * art.w + i]) return j - art.oy
+  return -Infinity
+}
+
 /**
  * Where an item's model turns on a frame (`pivotOf`), its art known: facing
  * away, what hangs on the back (wings, a balloon) comes down until its top is
  * under the neck's line, so it never stands over the back of the head (a
- * quadruped's shoulders sit right under it), but no lower than halfway to the feet.
+ * quadruped's shoulders sit right under it), but no lower than halfway to the
+ * feet. A hat whose brim, pressed as far as it goes (`squashOf`), still comes
+ * down over the brow (`browOf`) is lifted clear of it, up to `MAX_LIFT`, so
+ * it keeps its shape instead of losing its brim to the cut. Turned to a side,
+ * a neck item rests on the throat: the model's neck meets the frame's
+ * (`sprite`) on the side it faces, so what hangs in front (a bell, a bow, a
+ * medal) touches the chest instead of floating before it.
  */
-export const placeOf = (rig: RigFrame, slot: WearableSlot, dir: Dir8, size: WearSize, top: number, out: { x: number; y: number }) => {
+export const placeOf = (rig: RigFrame, slot: WearableSlot, dir: Dir8, size: WearSize, art: ItemArt, out: { x: number; y: number }, sprite?: Pixels) => {
   pivotOf(rig, slot, dir, size, out)
   const a = artDir(dir)
-  if (slot === 'back' && (a === 3 || a === 4)) out.y = Math.min(Math.max(out.y, rig.neckY + top), Math.round((rig.backY + rig.feetY) / 2))
+  if (slot === 'back' && (a === 3 || a === 4)) out.y = Math.min(Math.max(out.y, rig.neckY + topOf(art)), Math.round((rig.backY + rig.feetY) / 2))
+  if (slot === 'head' && rig.eyeY0 !== NONE) {
+    const brow = browOf(rig, sprite ? eyeTopOf(sprite, masksOf(sprite), rig) : rig.eyeY0)!
+    const low = Math.max(...[art.still, ...(art.moving ?? [])].map((p) => reachIn(p, brow.x0 - out.x, brow.x1 - out.x)))
+    out.y -= Math.min(MAX_LIFT, Math.max(0, out.y + low - brow.y0))
+  }
+  if (slot === 'neck' && sprite && a >= 1 && a <= 3) {
+    const run = runAt(sprite, rig.neckX, rig.neckY)
+    if (run) {
+      const s = isMirrored(dir) ? -1 : 1
+      const r = radius(size.neck)
+      // The model's neck surface one pixel inside the frame's outline, never more than its radius off the rig's axis.
+      const edge = (s > 0 ? run[1] : run[0]) - s
+      out.x += Math.round(Math.min(r, Math.max(-r, edge - (out.x + s * r))))
+    }
+  }
   return out
 }
+
+/** Rows of the face a hat leaves between its outline and the eyes. */
+const BROW = 1
+
+/**
+ * The eyes' top on a frame: the rig's, or up to two rows higher where a glint
+ * or a line sits right over it across the eyes (the rig finds a pupil's dark;
+ * its glint, its lid are the eye too).
+ */
+const eyeTopOf = (sprite: Pixels, m: Masks, rig: RigFrame) => {
+  let top = rig.eyeY0
+  for (let y = rig.eyeY0 - 1; y >= Math.max(0, rig.eyeY0 - 2); y--) {
+    let eye = false
+    for (let x = Math.max(0, rig.eyeX0); x <= Math.min(sprite.w - 1, rig.eyeX1) && !eye; x++) {
+      const k = y * sprite.w + x
+      eye = m.solid[k] === 1 && !m.edge[k] && (m.ink[k] === 1 || glinty(sprite.rgba, k * 4))
+    }
+    if (!eye) break
+    top = y
+  }
+  return top
+}
+
+/**
+ * Where a hat may not reach on a frame with eyes: from `BROW` rows and its
+ * outline over the eyes' top (`top`: `eyeTopOf`, the rig's without the
+ * frame) down, across the eyes and a little either side (within the head's
+ * span at them). Null without eyes.
+ */
+export const browOf = (rig: RigFrame, top = rig.eyeY0) =>
+  rig.eyeY0 === NONE ? null : { x0: Math.max(rig.faceL, rig.eyeX0 - 3), x1: Math.min(rig.faceR, rig.eyeX1 + 3), y0: top - BROW - 1 }
 
 /** How far (px) an item's art reaches over its pivot, all its frames counted. */
 export const topOf = (art: ItemArt) => Math.max(art.still.oy, ...(art.moving ?? []).map((m) => m.oy))
@@ -117,19 +196,20 @@ export const topOf = (art: ItemArt) => Math.max(art.still.oy, ...(art.moving ?? 
  * A moving item's frames as they play over a dressed row (`itemArt`'s
  * `moving`), cut as the dresser cuts the still part: never on the eyes
  * (where they sit around the pivot on any of the row's frames) nor, for a
- * hat, level with them; a scarf's or a cape's far half plays behind the body.
+ * hat, over its brow (`browOf`); a scarf's or a cape's far half plays behind
+ * the body. `sprites`: the row's frames, which place a neck item (`placeOf`).
  */
-export const movingParts = (art: ItemArt, slot: WearableSlot, layer: 'front' | 'behind', rigs: readonly RigFrame[], row: Dir8, size: WearSize) => {
+export const movingParts = (art: ItemArt, slot: WearableSlot, layer: 'front' | 'behind', rigs: readonly RigFrame[], row: Dir8, size: WearSize, sprites?: readonly (Pixels | undefined)[]) => {
   if (!art.moving) return []
   const pivot = { x: 0, y: 0 }
-  const top = topOf(art)
-  const cuts = rigs.flatMap((rig) => {
+  const cuts = rigs.flatMap((rig, f) => {
     if (rig.eyeY0 === NONE || slot === 'face') return []
-    placeOf(rig, slot, row, size, top, pivot)
-    const wide = slot === 'head' ? 1 : 0
-    const eye = { x0: rig.eyeX0 - pivot.x - wide, x1: rig.eyeX1 - pivot.x + wide, y0: rig.eyeY0 - pivot.y, y1: slot === 'head' ? Infinity : rig.eyeY1 - pivot.y }
-    // A scarf's moving end stays under the chin across the face.
-    const chin = { x0: rig.faceL - pivot.x, x1: rig.faceR - pivot.x, y0: -Infinity, y1: rig.neckY - 3 - pivot.y }
+    const sprite = sprites?.[f]
+    placeOf(rig, slot, row, size, art, pivot, sprite)
+    const brow = browOf(rig, sprite ? eyeTopOf(sprite, masksOf(sprite), rig) : rig.eyeY0)!
+    const eye = slot === 'head' ? { x0: brow.x0 - pivot.x, x1: brow.x1 - pivot.x, y0: brow.y0 - pivot.y, y1: Infinity } : { x0: rig.eyeX0 - pivot.x, x1: rig.eyeX1 - pivot.x, y0: rig.eyeY0 - pivot.y, y1: rig.eyeY1 - pivot.y }
+    // A scarf's moving end stays under the neck's line, as its still part does (`dress`): turned, it streams up behind the head.
+    const chin = { x0: -Infinity, x1: Infinity, y0: -Infinity, y1: rig.neckY - 3 - pivot.y }
     return slot === 'neck' ? [eye, chin] : [eye]
   })
   const split = layer === 'front' && (slot === 'neck' || slot === 'back')
@@ -208,6 +288,10 @@ export const dress = (sprite: Pixels, rig: RigFrame, items: readonly Dressing[],
   const spriteAt = (x: number, y: number) => x >= 0 && y >= 0 && x < fw && y < fh && m.solid[y * fw + x] === 1
   const eyes = rig.eyeY0 !== NONE
   const inEyes = (x: number, y: number) => eyes && x >= rig.eyeX0 && x <= rig.eyeX1 && y >= rig.eyeY0 && y <= rig.eyeY1
+  const brow = eyes ? browOf(rig, eyeTopOf(sprite, m, rig)) : null
+  const [headL, headR] = headSpan(rig)
+  /** Whether a hugging pixel of a `slot` item shows at (x, y): inside the sprite's outline, and a face item's within the head's span. */
+  const wraps = (slot: WearableSlot, x: number, y: number) => spriteAt(x, y) && !m.edge[y * fw + x] && (slot !== 'face' || (x >= headL && x <= headR))
   const overSet = new Set(over.map(([dx, dy]) => (rig.seatY + dy) * 4096 + rig.seatX + dx))
   const palettes = items.map((it) => it.art.colors.map((c) => (c ? rgbOf(c) : 0)))
   const paint = (i: number, pass: 'front' | 'behind') => {
@@ -224,6 +308,8 @@ export const dress = (sprite: Pixels, rig: RigFrame, items: readonly Dressing[],
         const y = it.y - art.oy + j
         total[i]!++
         const o = at(x, y)
+        // What wraps the wearer is on it or out of sight: never under it, nor past its outline.
+        if (art.hug[k] && !wraps(it.slot, x, y)) continue
         if (pass === 'behind') {
           if (owner[o] === 0 || owner[o]! >= 2) {
             owner[o] = 2 + i
@@ -239,7 +325,7 @@ export const dress = (sprite: Pixels, rig: RigFrame, items: readonly Dressing[],
           cut[i]!++
           continue
         }
-        if (it.slot === 'head' && eyes && y >= rig.eyeY0 && x >= rig.eyeX0 - 1 && x <= rig.eyeX1 + 1) {
+        if (it.slot === 'head' && brow && y >= brow.y0 && x >= brow.x0 && x <= brow.x1 && onSprite) {
           cut[i]!++
           continue
         }

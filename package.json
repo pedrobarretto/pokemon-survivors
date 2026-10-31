@@ -18,6 +18,7 @@
     "rules:freeze": "npm run rules:freeze --prefix server",
     "soak": "node scripts/coop/soak.mjs",
     "rig": "node scripts/rig.mjs",
+    "rig:migrate": "node scripts/rig-migrate.mjs",
     "fit-check": "node scripts/fit-check.mjs"
   },
   "devDependencies": {
