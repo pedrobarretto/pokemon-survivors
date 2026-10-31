@@ -1,4 +1,4 @@
-import { ART_DIRS, WEAR_FITS, type ArtDirName, type FitKey, type Nudge, type RigFix } from '../data/wearFits'
+import { ART_DIRS, WEAR_FITS, type FitKey, type FixScope, type Nudge, type RigFix } from '../data/wearFits'
 import { isWearableId, WEARABLE_IDS, WEARABLES, type WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { createCanvas, context2d } from '../engine/pixelart'
@@ -20,7 +20,8 @@ import { drawCell, fitFor, fitKeyOf, fitLine, fitsSource, loadVariant, nameOf, p
  * (the mode a click and the arrows act on: a click puts the point there,
  * arrows move it a pixel, shift for every direction at once); `[` `]` the
  * seat's width, `0` no eyes here (again: back to the found ones), `a` the
- * anim, `,` `.` the frame, `d` `D` the direction, `i` `I` the item, `n` `N`
+ * anim, `A` fixes this anim only (`'E:Idle'`, where its frames aren't Walk's
+ * drawing) or every anim again, `,` `.` the frame, `d` `D` the direction, `i` `I` the item, `n` `N`
  * the next or last Pokémon, `p` prints the variant's entry (and copies it),
  * `P` the whole table, Esc closes.
  */
@@ -30,10 +31,11 @@ const MODES: readonly Mode[] = ['seat', 'eyes', 'neck', 'back', 'over']
 
 let tool: { close: () => void } | null = null
 
-/** This direction's fix (or `all`'s), made if it isn't there yet. */
-const fixFor = (key: FitKey, dir: Dir8, all: boolean): RigFix => {
+/** The fix of a scope (`FixScope`): every direction's (`all`), this direction's, or this anim's facing it (`anim`), made if it isn't there yet. */
+const fixFor = (key: FitKey, dir: Dir8, all: boolean, anim: RigAnim | null): RigFix => {
   const fit = fitFor(key)
-  const name: ArtDirName | 'all' = all ? 'all' : ART_DIRS[artDir(dir)]!
+  const d = ART_DIRS[artDir(dir)]!
+  const name: FixScope = all ? 'all' : anim ? `${d}:${anim}` : d
   const rig = (fit.rig ??= {})
   return (rig[name] ??= {})
 }
@@ -48,7 +50,7 @@ const tidy = (key: FitKey) => {
       const v = fix[k]
       if (v === undefined || (Array.isArray(v) && (v.length === 0 || v.every((n) => n === 0)))) delete fix[k]
     }
-    if (Object.keys(fix).length === 0) delete fit.rig[name as ArtDirName]
+    if (Object.keys(fix).length === 0) delete fit.rig[name as FixScope]
   }
   if (Object.keys(fit.rig).length === 0) delete fit.rig
 }
@@ -63,6 +65,7 @@ export const openRig = async (variant?: unknown, opts: { dir?: Dir8; item?: Wear
   let v: Variant = parseVariant(variant) ?? list[0]!
   let dir: Dir8 = opts.dir ?? 0
   let anim: RigAnim = opts.anim ?? 'Walk'
+  let only = false
   let frame = 0
   let item: WearableId = opts.item && isWearableId(opts.item) ? opts.item : 'topHat'
   let mode: Mode = 'seat'
@@ -88,7 +91,7 @@ export const openRig = async (variant?: unknown, opts: { dir?: Dir8; item?: Wear
   const scratch = createCanvas(1, 1)
   const key = () => fitKeyOf(v)
   const edit = (fn: (fix: RigFix) => void, all: boolean) => {
-    fn(fixFor(key(), dir, all))
+    fn(fixFor(key(), dir, all, only ? anim : null))
     tidy(key())
     refitWearables()
   }
@@ -112,10 +115,10 @@ export const openRig = async (variant?: unknown, opts: { dir?: Dir8; item?: Wear
     const now = rigNow()
     const fix = WEAR_FITS[key()]
     bar.textContent =
-      `${nameOf(v)} (${rigKey(v.dex, v.form, v.shiny)}) · ${anim} f${frame}/${now ? now.frames - 1 : '?'} · ${ART_DIRS[artDir(dir)]}${isMirrored(dir) ? ' (mirrored)' : ''} · item ${item} · mode ${mode}\n` +
-      (now ? `seat ${now.f.seatX},${now.f.seatY} w${now.f.seatW} · eyes ${now.f.e1x === NONE ? 'none' : `${now.f.e1x},${now.f.e1y} ${now.f.e2x},${now.f.e2y}`} · neck ${now.f.neckX},${now.f.neckY} w${now.f.neckW} · back ${now.f.backX},${now.f.backY} · size ${JSON.stringify(now.w.size)}\n` : 'loading…\n') +
+      `${nameOf(v)} (${rigKey(v.dex, v.form, v.shiny)}) · ${anim}${only ? ' (fixes this anim only)' : ''} f${frame}/${now ? now.frames - 1 : '?'} · ${ART_DIRS[artDir(dir)]}${isMirrored(dir) ? ' (mirrored)' : ''} · item ${item} · mode ${mode}\n` +
+      (now ? `seat ${now.f.seatX},${now.f.seatY} w${now.f.seatW} · eyes ${now.f.e1x === NONE ? 'none' : `${now.f.e1x},${now.f.e1y} ${now.f.e2x},${now.f.e2y}`} · neck ${now.f.neckX},${now.f.neckY} w${now.f.neckW} · back ${now.f.backX},${now.f.backY} · size ${JSON.stringify(now.w.sizes[dir])}\n` : 'loading…\n') +
       `fix ${JSON.stringify(fix ?? {})}\n` +
-      '1 seat · 2 eyes · 3 neck · 4 back · 5 over-hat pixels · click/arrows (shift: all dirs) · [ ] seat width · 0 no eyes · a anim · , . frame · d D dir · i I item · n N Pokémon · p print · P table · Esc'
+      '1 seat · 2 eyes · 3 neck · 4 back · 5 over-hat pixels · click/arrows (shift: all dirs) · [ ] seat width · 0 no eyes · a anim · A this anim only · , . frame · d D dir · i I item · n N Pokémon · p print · P table · Esc'
   }
   let raf = 0
   const paint = (t: number) => {
@@ -158,7 +161,7 @@ export const openRig = async (variant?: unknown, opts: { dir?: Dir8; item?: Wear
       mctx.fillRect(r.backX * Z + Z / 2 - 1, r.backY * Z, 2, Z)
       mctx.fillRect(r.backX * Z, r.backY * Z + Z / 2 - 1, Z, 2)
       mctx.strokeStyle = '#ff40ff'
-      for (const [dx, dy] of now.w.over[dir] ?? []) mctx.strokeRect((r.seatX + dx) * Z + 1, (r.seatY + dy) * Z + 1, Z - 2, Z - 2)
+      for (const [dx, dy] of now.w.over[anim][dir] ?? []) mctx.strokeRect((r.seatX + dx) * Z + 1, (r.seatY + dy) * Z + 1, Z - 2, Z - 2)
       // The dressed preview, live.
       drawCell(sctx, now.s, { [WEARABLES[item].slot]: item }, anim, dir, t / 1000, 0, 0, 4, t / 1000)
     }
@@ -202,6 +205,7 @@ export const openRig = async (variant?: unknown, opts: { dir?: Dir8; item?: Wear
     else if (e.key === '[' || e.key === ']') edit((fix) => (fix.seat = add(fix.seat, 0, 0, e.key === '[' ? -1 : 1)), e.shiftKey)
     else if (e.key === '0') edit((fix) => (fix.eyes = fix.eyes === 'none' ? undefined : 'none'), e.shiftKey)
     else if (e.key === 'a') anim = anim === 'Walk' ? 'Idle' : anim === 'Idle' ? 'Hurt' : 'Walk'
+    else if (e.key === 'A') only = !only
     else if (e.key === ',' || e.key === '.') frame = Math.max(0, Math.min((now?.frames ?? 1) - 1, frame + (e.key === ',' ? -1 : 1)))
     else if (e.key === 'd' || e.key === 'D') dir = ((dir + (e.key === 'd' ? 1 : 7)) % 8) as Dir8
     else if (e.key === 'i' || e.key === 'I') item = WEARABLE_IDS[(WEARABLE_IDS.indexOf(item) + (e.key === 'i' ? 1 : WEARABLE_IDS.length - 1)) % WEARABLE_IDS.length]!

@@ -1,9 +1,11 @@
-// The wearables' head rig: `npm run rig`. Measures every frame of Walk, Idle and
-// Hurt of every variant a player can be, in all eight rows, from the frame's
-// own pixels and its SpriteCollab markers (scripts/wearSheets.mjs downloads
-// them): the hat's seat on the skull, the eyes, the head's span at them, the
-// neck and the back (`measure` and `settle` in src/render/wearRig.ts, which
-// the game's worker and the fit check share). What the measures get wrong for
+// The wearables' head rig: `npm run rig`. Rigs every frame of Walk, Idle and
+// Hurt of every variant a player can be, in all eight rows, from the frames'
+// own pixels and their SpriteCollab markers (scripts/wearSheets.mjs downloads
+// them): each direction's head is read once, on the Walk frame most of the
+// others agree with (the hat's seat on the skull, the eyes, the head's span at
+// them, the neck), and tracked into every frame of the three anims
+// (`rigSheets` in src/render/wearRig.ts, which the game's worker and the fit
+// check share). What the measures get wrong for
 // a species is fixed by hand in src/data/wearFits.ts (the dev console's
 // `ps.rig()` shows a frame's rig and prints the fix). A variant without
 // offsets (or with offsets that don't fit its sheets) is left out, and listed
@@ -30,22 +32,18 @@ const fit = async (v, shiny) => {
   if (!(await fetchOffsets(v, shiny))) return null
   const out = {}
   const marks = {}
-  let walk = null
+  const sheets = {}
+  const loaded = {}
   let palette = null
   for (const anim of ANIMS) {
-    const s = await loadAnim(v, shiny, anim)
-    // The face's colors facing the camera hold from every side (`settle`).
+    const s = (loaded[anim] = await loadAnim(v, shiny, anim))
+    // The face's colors facing the camera hold from every side (`measure`).
     palette ??= Rig.measure(Rig.frameOf(s.png.rgba, s.png.width, 0, 0, s.fw, s.fh), 0, s.marks[0][0]).palette
-    const rows = []
-    for (let row = 0; row < 8; row++) {
-      const frames = Array.from({ length: s.frames }, (_, col) => ({ f: Rig.frameOf(s.png.rgba, s.png.width, col, row, s.fw, s.fh), marks: s.marks[row][col] }))
-      const settled = Rig.settle(row, frames, walk?.[row], palette)
-      if (anim === 'Walk') (walk ??= [])[row] = settled.template
-      rows.push(settled.rigs)
-    }
-    out[anim] = b64(Rig.packRig(s.fw, s.fh, rows))
+    sheets[anim] = Array.from({ length: 8 }, (_, row) => Array.from({ length: s.frames }, (_, col) => ({ f: Rig.frameOf(s.png.rgba, s.png.width, col, row, s.fw, s.fh), marks: s.marks[row][col] })))
     marks[anim] = JSON.stringify(s.marks)
   }
+  const rigs = Rig.rigSheets(sheets, palette)
+  for (const anim of ANIMS) out[anim] = b64(Rig.packRig(loaded[anim].fw, loaded[anim].fh, rigs[anim]))
   return { out, marks }
 }
 

@@ -4,10 +4,10 @@ import { PLAYABLE } from '../data/hatchlings'
 import manifest from '../data/sprites.generated.json'
 import type { Dir8 } from '../engine/math'
 import { mirror, type PixelArt } from './wearArt'
-import { dress } from './wearDress'
-import { artDir, decodeRig, fixFrame, fixOf, isMirrored, layerOf, pivotOf, rigChunk, rigKey, type RigChunk, type RigEntry, type WearSize } from './wearFit'
+import { browOf, dress, MAX_LIFT, placeOf } from './wearDress'
+import { artDir, decodeRig, fixFrame, fixOf, headSpan, isMirrored, layerOf, pivotOf, rigChunk, rigKey, wears, type RigChunk, type RigEntry, type WearSize } from './wearFit'
 import { WEAR_MODELS } from './wearModels'
-import { measure, NONE, packRig, unpackRig, type Pixels, type RigFrame } from './wearRig'
+import { masksOf, measure, NONE, packRig, rigSheets, unpackRig, type Marks, type Pixels, type RigFrame } from './wearRig'
 
 const art = (w: number, h: number, ox: number, oy: number, px: number[], extra: Partial<PixelArt> = {}): PixelArt => ({
   w,
@@ -19,6 +19,7 @@ const art = (w: number, h: number, ox: number, oy: number, px: number[], extra: 
   edge: new Uint8Array(w * h),
   ink: new Uint8Array(w * h).fill(2),
   back: new Uint8Array(w * h),
+  hug: new Uint8Array(w * h),
   ...extra,
 })
 
@@ -29,12 +30,13 @@ describe('art directions', () => {
     expect(dirs.map(isMirrored)).toEqual([false, false, false, false, false, true, true, true])
   })
 
-  it('mirrors art around its pivot, with its outline and far side', () => {
-    const a = art(4, 2, 1, 1, [1, 2, 0, 0, 0, 1, 0, 2], { edge: Uint8Array.from([0, 1, 0, 0, 0, 0, 0, 0]), back: Uint8Array.from([1, 0, 0, 0, 0, 0, 0, 0]) })
+  it('mirrors art around its pivot, with its outline, far side and hugging parts', () => {
+    const a = art(4, 2, 1, 1, [1, 2, 0, 0, 0, 1, 0, 2], { edge: Uint8Array.from([0, 1, 0, 0, 0, 0, 0, 0]), back: Uint8Array.from([1, 0, 0, 0, 0, 0, 0, 0]), hug: Uint8Array.from([0, 0, 0, 0, 0, 1, 0, 0]) })
     const m = mirror(a)
     expect([...m.px]).toEqual([0, 0, 2, 1, 2, 0, 1, 0])
     expect([...m.edge]).toEqual([0, 0, 1, 0, 0, 0, 0, 0])
     expect([...m.back]).toEqual([0, 0, 0, 1, 0, 0, 0, 0])
+    expect([...m.hug]).toEqual([0, 0, 0, 0, 0, 0, 1, 0])
     // The pivot's pixel moves with the art: column 1 of 4 becomes column 2.
     expect(m.ox).toBe(2)
     expect(mirror(m)).toEqual(a)
@@ -47,6 +49,32 @@ describe('art directions', () => {
     expect(fixOf(fit, 6)?.over).toEqual([[-2, -3]])
     expect(fixOf(fit, 0)?.seat).toEqual([0, 1, 0])
     expect(fixOf(undefined, 0)).toBeNull()
+  })
+})
+
+describe('hand fixes', () => {
+  it('adds a direction, an anim and an anim facing that way on top of every direction, the eyes taking the narrowest', () => {
+    const fit = { rig: { all: { seat: [0, 1] as const }, E: { seat: [2, 0] as const, eyes: [1, 0] as const }, Idle: { seat: [0, -3] as const }, 'E:Idle': { eyes: [0, 2] as const } } }
+    expect(fixOf(fit, 2, 'Walk')).toMatchObject({ seat: [2, 1, 0], eyes: [1, 0] })
+    expect(fixOf(fit, 2, 'Idle')).toMatchObject({ seat: [2, -2, 0], eyes: [0, 2] })
+    // Facing west, the east-facing fix mirrored; facing south only `all` and the anim's.
+    expect(fixOf(fit, 6, 'Idle')).toMatchObject({ seat: [-2, -2, 0], eyes: [-0, 2] })
+    expect(fixOf(fit, 0, 'Idle')?.seat).toEqual([0, -2, 0])
+  })
+
+  it('moves or drops one eye of a pair, the east-facing left one being the west-facing right one', () => {
+    const r = rigFrame()
+    expect(fixFrame(r, { left: 'none' })).toMatchObject({ e1x: 12, e2x: 12, eyeX0: 11, eyeX1: 13 })
+    expect(fixFrame(r, { right: [1, 1] })).toMatchObject({ e1x: 8, e1y: 9, e2x: 13, e2y: 10, eyeX1: 14, eyeY1: 11 })
+    expect(fixOf({ rig: { E: { left: 'none' } } }, 6)?.right).toBe('none')
+  })
+
+  it('leaves a slot off facing one way only', () => {
+    const fit = { no: ['head:S', 'scarf'] as const }
+    expect(wears(fit, 'head', 'topHat', 0)).toBe(false)
+    expect(wears(fit, 'head', 'topHat', 2)).toBe(true)
+    expect(wears(fit, 'head', 'topHat')).toBe(true)
+    expect(wears(fit, 'neck', 'scarf', 2)).toBe(false)
   })
 })
 
@@ -92,7 +120,7 @@ describe('the rig', () => {
   })
 
   it('puts glasses where their eyes land on the eyes found', () => {
-    const size: WearSize = { head: 9, depth: 9, brow: 4, brows: [4, 4], face: 11, eye: 2, neck: 6, body: 12, drop: 14, rise: 12 }
+    const size: WearSize = { head: 9, depth: 9, faceDepth: 11, brow: 4, brows: [4, 4], face: 11, eye: 2, neck: 6, body: 12, drop: 14, rise: 12 }
     const out = { x: 0, y: 0 }
     pivotOf(rigFrame(), 'face', 0, size, out)
     // Facing the camera: halfway between the eyes, a little over them (the camera looks down at the face's front).
@@ -161,6 +189,88 @@ describe('measuring a frame', () => {
     expect(solidHat.front[ear]).toBeGreaterThan(0)
     const crown = dress(f, m.rig, [{ id: 'crown', slot: 'head', art: slab, x: 12, y: 2, layer: 'front' }])
     expect(crown.front[ear]).toBe(0)
+  })
+
+  it("keeps a row of the face between a hat's outline and the eyes", () => {
+    const f = head()
+    const { rig } = measure(f, 0, marks)
+    const slab = art(16, 14, 8, 2, Array(16 * 14).fill(1))
+    const d = dress(f, rig, [{ id: 'topHat', slot: 'head', art: slab, x: 12, y: 2, layer: 'front' }])
+    // Over the eyes' columns, the row right over them is the face's own: the hat's outline stops a row higher.
+    for (let x = rig.eyeX0; x <= rig.eyeX1; x++) expect(d.front[(rig.eyeY0 - 1 + d.oy) * d.w + x + d.ox], `x ${x}`).toBe(0)
+    expect(d.front[(rig.eyeY0 - 2 + d.oy) * d.w + rig.eyeX0 + d.ox]).toBeGreaterThan(0)
+  })
+
+  it("wraps a strap round the head: inside its outline and its span, never past them", () => {
+    const f = head()
+    const { rig } = measure(f, 0, marks)
+    // A strap far wider than the head across the eyes' row.
+    const W = 24
+    const strap = art(W, 3, 12, 1, Array(W * 3).fill(1), { hug: new Uint8Array(W * 3).fill(1) })
+    const d = dress(f, rig, [{ id: 'goggles', slot: 'face', art: strap, x: 12, y: 11, layer: 'front' }])
+    const { solid, edge } = masksOf(f)
+    const [l, r] = headSpan(rig)
+    let shown = 0
+    for (let y = 0; y < d.h; y++) {
+      for (let x = 0; x < d.w; x++) {
+        if (!d.front[y * d.w + x]) continue
+        const fx = x - d.ox
+        const fy = y - d.oy
+        // The strap itself, or its outline on the face where it meets it.
+        expect(solid[fy * f.w + fx] && !edge[fy * f.w + fx] && fx >= l && fx <= r, `${fx},${fy}`).toBe(true)
+        shown++
+      }
+    }
+    expect(shown).toBeGreaterThan(0)
+  })
+
+  it('lifts a hat whose brim comes down over the brow clear of it, up to a limit', () => {
+    const f = head()
+    const { rig } = measure(f, 0, marks)
+    const brow = browOf(rig)!
+    const size: WearSize = { head: 9, depth: 9, faceDepth: 9, brow: 4, brows: [4, 4], face: 11, eye: 2, neck: 7, body: 12, drop: 14, rise: 12 }
+    // Reaching a row past the brow: lifted by one; reaching far past it: by the limit, and the cut does the rest.
+    const reaching = (rows: number) => ({ still: art(9, rows + 1, 4, 0, Array(9 * (rows + 1)).fill(1)), moving: null })
+    expect(placeOf(rig, 'head', 0, size, reaching(brow.y0 - rig.seatY + 1), { x: 0, y: 0 }).y).toBe(rig.seatY - 1)
+    expect(placeOf(rig, 'head', 0, size, reaching(brow.y0 - rig.seatY + 9), { x: 0, y: 0 }).y).toBe(rig.seatY - MAX_LIFT)
+    expect(placeOf(rig, 'head', 0, size, reaching(brow.y0 - rig.seatY - 1), { x: 0, y: 0 }).y).toBe(rig.seatY)
+  })
+
+  it('rests a neck item on the throat turned to a side, from whichever side it faces', () => {
+    const f = head()
+    const { rig } = measure(f, 0, marks)
+    const size: WearSize = { head: 9, depth: 9, faceDepth: 9, brow: 4, brows: [4, 4], face: 11, eye: 2, neck: 7, body: 12, drop: 14, rise: 12 }
+    // The neck's run on its line spans x 7..17: the model's neck (radius 3) meets it a pixel inside its outline.
+    const at = (dir: Dir8) => placeOf({ ...rig, neckX: 12, neckY: 16 }, 'neck', dir, size, { still: art(1, 1, 0, 0, [1]), moving: null }, { x: 0, y: 0 }, f).x
+    expect(at(2)).toBe(16 - 3)
+    expect(at(6)).toBe(8 + 3)
+    // Facing the camera it stays on the rig's axis.
+    expect(at(0)).toBe(12)
+  })
+})
+
+describe('tracking the head', () => {
+  /** `f` moved by (dx, dy) in a frame of the same size, its markers with it. */
+  const moved = (f: Pixels, m: Marks, dx: number, dy: number) => {
+    const rgba = new Uint8Array(f.rgba.length)
+    for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) if (x - dx >= 0 && y - dy >= 0 && x - dx < f.w && y - dy < f.h) rgba.set(f.rgba.subarray(((y - dy) * f.w + x - dx) * 4, ((y - dy) * f.w + x - dx) * 4 + 4), (y * f.w + x) * 4)
+    return { f: { w: f.w, h: f.h, rgba }, marks: { mx: m.mx + dx, my: m.my + dy, gx: m.gx + dx, gy: m.gy + dy } }
+  }
+
+  it("moves every frame's rig with its head, Idle and Hurt's too, whatever a frame of them would read alone", () => {
+    const marks = { mx: 12, my: 16, gx: 12, gy: 22 }
+    const shifts = [[0, 0], [0, 1], [1, 1], [0, 0]] as const
+    const walk = shifts.map(([dx, dy]) => moved(head(), marks, dx, dy))
+    // One frame with a dark tuft on its dome: read alone, its seat climbs onto it.
+    const odd = moved(head(), marks, 0, 1)
+    for (const [x, y] of [[12, 5], [12, 6]] as const) odd.f.rgba.set([16, 16, 24, 255], (y * odd.f.w + x) * 4)
+    const idle = [moved(head(), marks, 0, 0), odd]
+    const rows = (frames: typeof walk) => Array.from({ length: 8 }, () => frames)
+    const rig = rigSheets({ Walk: rows(walk), Idle: rows(idle), Hurt: rows([moved(head(), marks, 1, 0)]) })
+    const s = rig.Walk[0]!
+    shifts.forEach(([dx, dy], i) => expect([s[i]!.seatX - s[0]!.seatX, s[i]!.seatY - s[0]!.seatY, s[i]!.e1y - s[0]!.e1y]).toEqual([dx, dy, dy]))
+    expect([rig.Idle[0]![1]!.seatX, rig.Idle[0]![1]!.seatY]).toEqual([s[0]!.seatX, s[0]!.seatY + 1])
+    expect(rig.Hurt[0]![0]!.seatX).toBe(s[0]!.seatX + 1)
   })
 })
 

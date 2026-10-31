@@ -3,7 +3,7 @@ import type { Nudge } from '../data/wearFits'
 import { WEARABLES, type WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import type { PixelArt } from './wearArt'
-import { dress, itemArt, movingParts, placeOf, squashOf, topOf, type Dressed, type ItemArt } from './wearDress'
+import { dress, itemArt, movingParts, placeOf, squashOf, type Dressed, type ItemArt } from './wearDress'
 import type { WearSize } from './wearFit'
 import { decodePng } from './wearPng'
 import { frameOf, type RigFrame } from './wearRig'
@@ -201,14 +201,15 @@ export const runJob = async (job: DressJob): Promise<DressDone> => {
   const pivot = { x: 0, y: 0 }
   const arts = job.items.map(({ id, layer }) => ({ id, layer, slot: WEARABLES[id].slot, art: artOf(job.wearer, id, WEARABLES[id].slot, job.size, job.row) }))
   let cells: { w: number; h: number; ox: number; oy: number; rgba: Uint8ClampedArray }[] = []
+  const frames = Array.from({ length: job.frames }, (_, f) => frameOf(sheet.rgba, sheet.w, f, job.row, job.fw, job.fh))
   for (let f = 0; f < job.frames; f++) {
     const rig = job.rigs[Math.min(f, job.rigs.length - 1)]!
-    const frame = frameOf(sheet.rgba, sheet.w, f, job.row, job.fw, job.fh)
+    const frame = frames[f]!
     const d: Dressed = dress(
       frame,
       rig,
       arts.map(({ id, slot, layer, art }) => {
-        placeOf(rig, slot, job.row, job.size, topOf(art), pivot)
+        placeOf(rig, slot, job.row, job.size, art, pivot, frame)
         return { id, slot, layer, art: art.still, x: pivot.x, y: pivot.y }
       }),
       job.over,
@@ -238,11 +239,11 @@ export const runJob = async (job: DressJob): Promise<DressDone> => {
   const moving = arts.flatMap(({ id, slot, layer, art }) => {
     if (!art.moving) return []
     // Where the moving part turns on each of the row's frames (frame px, shrunk with the frames).
-    const pivots = job.rigs.map((rig) => {
-      placeOf(rig, slot, job.row, job.size, topOf(art), pivot)
+    const pivots = job.rigs.map((rig, f) => {
+      placeOf(rig, slot, job.row, job.size, art, pivot, frames[f])
       return { x: Math.round(pivot.x * job.scale), y: Math.round(pivot.y * job.scale) }
     })
-    return movingParts(art, slot, layer, job.rigs, job.row, job.size).map((m) => ({
+    return movingParts(art, slot, layer, job.rigs, job.row, job.size, frames).map((m) => ({
       id,
       layer: m.layer,
       pivots,

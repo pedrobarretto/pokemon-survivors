@@ -75,6 +75,9 @@ export const freeWearables = () => engine?.freeWearArt()
 /** Dev: how many draws since the last ask found their frames still dressing (`ui/wearFitting.ts`'s contact sheets wait for none). */
 export const wearMisses = () => engine?.takeMisses() ?? 0
 
+/** Dev: keeps every dressed row while a contact sheet renders (`holdWearArt`), from `on` until the matching `false`. */
+export const holdWearables = (on: boolean) => engine?.holdWearArt(on)
+
 /** Dev: the dressed frames' memory now and at its peak (`ps.sprites()`). */
 export const wearMemory = (reset = false) => engine?.wearMemory(reset) ?? null
 
