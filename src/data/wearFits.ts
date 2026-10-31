@@ -221,33 +221,41 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   651: { rig: { SE: { eyesAt: [[1, 3], [6, 2]] } } }, // Quilladin: turned a little, its eyes under the shell aren't found
   652: { no: ['back'] }, // Chesnaught: the shell
   653: { no: UPRIGHT }, // Fennekin
+  656: { rig: { S: { seat: [0, -2] }, SE: { seat: [0, -2] } } }, // Froakie: its eyes bulge from the top of its head, so the hat rests on them
   657: { no: ['neck'] }, // Frogadier: the bubbles at its neck
   658: { no: ['neck'] }, // Greninja: its tongue is already a scarf
-  679: { no: NO_BODY }, // Honedge: a sword
+  679: { rig: { S: { eyesAt: [[0, 5]] }, SE: { eyesAt: [[0, 5]] } }, no: NO_BODY }, // Honedge: a sword; its one eye in the guard isn't found
   680: { no: NO_BODY }, // Doublade: two swords
-  681: { no: NO_BODY }, // Aegislash: a sword and a shield
+  681: { rig: { S: { seat: [0, 3], eyesAt: [[0, 3]] } }, no: NO_BODY }, // Aegislash: a sword and a shield; facing us its eye in the guard blinks shut, and without it the seat climbs the pommel's spike
   '681:blade': { no: NO_BODY }, // Aegislash (Blade Forme)
   700: { no: UPRIGHT }, // Sylveon: on four legs
   708: { no: ['back'] }, // Phantump: a stump
   709: { no: ['back'] }, // Trevenant: a tree
-  714: { no: ['back'] }, // Noibat: its own wings
-  715: { no: ['back'] }, // Noivern: its own wings
+  714: { rig: { E: { eyesAt: [[4, 10]] } }, no: ['back'] }, // Noibat: its own wings; in profile its small eye under the ear isn't found
+  715: { rig: { S: { seat: [0, 3, -13] } }, no: ['back'] }, // Noivern: its own wings; facing us the seat spans its ears and wings, a hat that wide swallowed its head
   722: { no: UPRIGHT }, // Rowlet
   724: { no: ['back'] }, // Decidueye: the cloak is its own
   725: { no: UPRIGHT }, // Litten
   726: { no: UPRIGHT }, // Torracat
-  728: { no: UPRIGHT }, // Popplio
+  728: { rig: { E: { eyesAt: [[1, 6]] } }, no: UPRIGHT }, // Popplio: in profile a highlight on its head reads as the eye, which is further forward
   729: { no: UPRIGHT }, // Brionne
-  730: { no: UPRIGHT }, // Primarina: on flippers
-  736: { no: UPRIGHT }, // Grubbin
-  737: { no: NO_BODY }, // Charjabug: a battery
+  730: { rig: { NE: { seat: [-8, -5] } }, no: UPRIGHT }, // Primarina: on flippers; turned away, the seat slips forward off its hair onto the brow
+  736: { rig: { E: { seat: [1, -4, -11] } }, no: UPRIGHT }, // Grubbin: in profile the seat spans its whole body, at its jaws
+  737: { rig: { E: { eyes: [-3, 2] } }, no: NO_BODY }, // Charjabug: a battery; in profile its front's corner reads as the eye
   738: { no: NO_BODY }, // Vikavolt: its own wings, and its jaws are where a neck would be
-  744: { no: UPRIGHT }, // Rockruff
-  745: { no: UPRIGHT }, // Lycanroc
-  770: { no: NO_BODY }, // Palossand: a sand castle
-  816: { no: UPRIGHT }, // Sobble
-  885: { no: ['back'] }, // Dreepy: a head and a tail
-  911: { no: UPRIGHT }, // Skeledirge: on four legs
+  744: { rig: { SE: { eyes: [5, -1] }, E: { eyes: [6, -1] } }, no: UPRIGHT }, // Rockruff: turned, the eyes are read off the dark of its ruff, behind the real ones
+  745: { rig: { SE: { seat: [6, -1, -20], eyesAt: [[0, 6]] } }, no: UPRIGHT }, // Lycanroc: turned, the seat and the eyes are read off its white mane, behind the head
+  770: { rig: { S: { seat: [0, -3, -20], eyesAt: [[-3, 5], [2, 5]] }, SE: { eyesAt: [[-1, 4], [4, 3]] } }, no: NO_BODY }, // Palossand: a sand castle; the hat goes on its middle tower, not over its walls, and its eyes are the tower's windows
+  810: { rig: { NE: { seat: [0, -4] }, N: { seat: [0, -4] } } }, // Grookey: from behind the seat drops onto the back of its head
+  813: { rig: { SE: { eyesAt: [[-2, 7], [3, 7]] }, E: { eyesAt: [[1, 7]] } } }, // Scorbunny: turned, its red eyes melt into the red of its face and aren't found
+  816: { rig: { S: { seat: [0, -2] }, SE: { seat: [0, -2] }, E: { seat: [4, 0, -9], eyesAt: [[1, 4]] } }, no: UPRIGHT }, // Sobble: a short head with its eyes high, so the hat sits on its crown; in profile the seat spans the tail too
+  817: { rig: { S: { eyes: [0, -3] }, SE: { seat: [3, 0, -7], eyesAt: [[-1, 6], [3, 6]] }, E: { seat: [3, 1, -10], eyesAt: [[1, 4]] } } }, // Drizzile: its fringe hides an eye; turned, the seat spans its curled tail and the eyes are read off it
+  885: { rig: { S: { seat: [0, -1, -8] } }, no: ['back'] }, // Dreepy: a head and a tail; facing us the seat spans its fins
+  886: { rig: { S: { seat: [0, 0, -15] }, SE: { seat: [0, 0, -12] } } }, // Drakloak: the seat spans its horns, a hat that wide hid them
+  907: { rig: { E: { eyes: [5, -2] } } }, // Floragato: in profile a dark leaf on its cheek reads as the eye, which is further forward
+  908: { no: ['neck'] }, // Meowscarada: its cloak's collar hides its neck
+  911: { no: ['head', 'face', 'neck', ...UPRIGHT] }, // Skeledirge: on four legs, its fire bird perches where a hat would go, its eyes hide in its skull mask and its neck under its head
+  912: { rig: { SE: { eyesAt: [[-1, 9], [3, 8]] }, E: { eyesAt: [[2, 8]] } } }, // Quaxly: its shiny's eyes, turned, aren't found under its crest
   935: { no: ['head'] }, // Charcadet: its head is a flame
   959: { no: ['back'] }, // Tinkaton: the hammer on its back
 }
