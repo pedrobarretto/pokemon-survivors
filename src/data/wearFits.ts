@@ -113,43 +113,55 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   251: { no: ['back'] }, // Celebi: its own wings
   258: { no: UPRIGHT }, // Mudkip
   285: { no: NO_BODY }, // Shroomish: a mushroom cap
-  287: { no: UPRIGHT }, // Slakoth
+  287: { rig: { S: { seat: [0, 0, -8] }, SE: { seat: [1, 1] }, E: { seat: [6, 2, -10] } }, size: { face: -4 }, no: UPRIGHT }, // Slakoth: lying flat, the seat spans its arms facing south and its whole back in profile, where the head is the front end
   304: { no: UPRIGHT }, // Aron
-  305: { no: UPRIGHT }, // Lairon
-  309: { no: UPRIGHT }, // Electrike
-  310: { no: UPRIGHT }, // Manectric
-  '310:mega': { no: UPRIGHT }, // Mega Manectric
-  328: { no: NO_BODY }, // Trapinch: a head on legs
-  329: { no: ['back'] }, // Vibrava: its own wings
+  305: { rig: { SE: { back: [4, -9] }, E: { back: [8, -9] } }, no: UPRIGHT }, // Lairon: on four legs the back point falls under the body, so the wings hung from its rump
+  306: { rig: { S: { seat: [0, 0, -10], eyesAt: [[-2, 4], [2, 4]] }, SE: { eyesAt: [[-1, 6]] }, E: { eyesAt: [[3, 6]] } }, size: { neck: -3 } }, // Aggron: the seat and the neck span its shoulder plates facing south, and the armor's dark holes read as eyes where its blue eyes are
+  309: { rig: { SE: { back: [3, -9] }, E: { back: [5, -8] } }, no: UPRIGHT }, // Electrike: on four legs the back point falls under the body, so the wings hung from its rump
+  310: { rig: { SE: { back: [3, -6] }, E: { back: [3, -4] } }, no: UPRIGHT }, // Manectric: on four legs the back point falls under the body
+  '310:mega': { rig: { E: { seat: [7, 2, -16] } }, no: UPRIGHT }, // Mega Manectric: in profile the seat spans its whole mane, behind the head
+  328: { rig: { SE: { eyesAt: [[-5, 6]] } }, no: NO_BODY }, // Trapinch: a head on legs; turned a little, one eye shows, read as two
+  329: { rig: { S: { eyesAt: [[-4, 4], [4, 4]] }, SE: { seat: [5, 1, -8] }, E: { seat: [4, 0, -12] } }, no: ['back'] }, // Vibrava: its own wings; the seat spans them, behind its small head, and facing south the eyes found sit between its green ones
   330: { no: ['back'] }, // Flygon: its own wings
-  333: { no: ['back'] }, // Swablu: cotton wings
-  334: { no: ['back'] }, // Altaria: cloud wings
-  '334:mega': { no: ['neck', 'back'] }, // Mega Altaria: a small face in a big cloud that hides its neck
+  333: { rig: { S: { seat: [0, -2] }, SE: { seat: [6, -1, -8] }, E: { seat: [2, 0] }, NE: { seat: [2, 1] } }, size: { head: -16, face: -4, neck: -3 }, no: ['back'] }, // Swablu: cotton wings, which the seat and the face span; its head is the small blue ball between them
+  334: { rig: { S: { seat: [0, -2] } }, size: { head: -29, face: -4, neck: -12 }, no: ['back'] }, // Altaria: cloud wings; facing south the seat, the face and the neck span the cloud, around its small head
+  '334:mega': { rig: { S: { seat: [0, 17, -31], eyesAt: [[-2, 6], [3, 6]] }, SE: { seat: [-1, 4, -8], eyesAt: [[-3, 6], [2, 6]] }, E: { eyesAt: [[3, 3]] } }, size: { face: -25 }, no: ['neck', 'back'] }, // Mega Altaria: a small face in a big cloud that hides its neck; the seat found is the cloud's top, the eyes found its folds
   349: { no: NO_BODY }, // Feebas
   350: { no: ['back'] }, // Milotic: a serpent
   353: { no: ['back'] }, // Shuppet: no shoulders
-  362: { no: NO_BODY }, // Glalie: a floating head
-  '362:mega': { no: NO_BODY }, // Mega Glalie
+  361: { rig: { S: { eyesAt: [[-2, 9], [2, 9]] }, SE: { eyesAt: [[2, 9], [5, 9]] }, E: { seat: [-4, -5, 8], eyesAt: [[5, 8]] } }, size: { face: -9 } }, // Snorunt: the eyes found are its mouth, low in the hood, the face spans the whole hood, and in profile the seat found is the hood's opening, under its top
+  362: { rig: { S: { seat: [0, -13, -2], eyesAt: [[-5, 11], [5, 11]] }, SE: { eyesAt: [[2, 11], [8, 9]] }, E: { seat: [-4, 0, 6] } }, no: NO_BODY }, // Glalie: a floating head; facing south its teeth read as eyes and the seat drops onto them
+  '362:mega': { rig: { S: { seat: [0, 0, 8], eyesAt: [[-4, 11], [3, 11]] }, SE: { eyesAt: [[1, 13], [8, 11]] }, E: { seat: [0, -3], eyesAt: [[7, 10]] } }, no: NO_BODY }, // Mega Glalie: the eyes found are the blue crest and the jaw's folds, far from its red eyes; facing south the seat is only the crest, in profile it sinks into the brow
   363: { no: NO_BODY }, // Spheal
-  364: { no: UPRIGHT }, // Sealeo
-  365: { no: UPRIGHT }, // Walrein
-  372: { no: NO_BODY }, // Shelgon: a shell
-  373: { no: ['back'] }, // Salamence: its own wings
-  374: { no: NO_BODY }, // Beldum
-  375: { no: NO_BODY }, // Metang
-  376: { no: NO_BODY }, // Metagross
+  364: { rig: { SE: { seat: [6, 0], eyesAt: [[-1, 5]] } }, size: { face: -6 }, no: UPRIGHT }, // Sealeo: turned a little, the seat falls behind its head and the head's outline reads as a second eye; the face found spans its whiskers
+  365: { rig: { E: { eyesAt: [[3, 5]] } }, no: UPRIGHT }, // Walrein: in profile its small eye in the mane isn't found
+  371: { rig: { SE: { seat: [-1, -7] }, E: { seat: [-4, -7] } } }, // Bagon: turned, the seat drops under its helmet, onto its face
+  372: { rig: { S: { seat: [0, 0, -5] }, E: { seat: [0, 0, -5] } }, no: NO_BODY }, // Shelgon: a shell, its face peeking out of the opening; a hat as wide as the whole shell swallowed it
+  373: { rig: { S: { seat: [0, -4] }, SE: { seat: [-6, -1, -2] } }, no: ['back'] }, // Salamence: its own wings; the seat sits on its brow facing south and slides off its head onto the crest's tip turned a little (on Walk: Idle's SE seat is on its back, see the PR)
+  374: { no: ['roundGlasses', 'sunglasses', 'noseGlasses', 'heartShades', 'goggles', 'starShades', 'masquerade', ...NO_BODY] }, // Beldum: one eye (a monocle or a patch, never a pair of lenses), and no neck or back
+  375: { rig: { S: { eyesAt: [[-4, 7], [4, 7]] }, SE: { eyesAt: [[2, 8], [8, 6]] }, E: { seat: [-7, 0, 7], eyesAt: [[1, 9]] } }, no: NO_BODY }, // Metang: the white spikes at its edges read as eyes where its red ones are, and in profile the seat is its front spike
+  376: { rig: { S: { eyesAt: [[-4, 9], [4, 9]] }, SE: { seat: [1, -9, -4], eyesAt: [[-1, 8], [5, 6]] } }, no: NO_BODY }, // Metagross: the X's arms read as eyes where its red ones are, and turned a little the seat drops onto the X
+  377: { rig: { S: { seat: [0, -4, -17], eyesAt: [[-2, 3], [2, 3]] }, SE: { seat: [-2, 2, -5], eyesAt: [[-1, 3], [3, 4]] }, E: { seat: [3, 1], eyesAt: [[1, 5]] } } }, // Regirock: its eyes are the dots; facing south the seat cuts through them and spans the shoulder rocks, turned it sits on a shoulder
+  378: { rig: { SE: { seat: [4, 1], eyesAt: [[-1, 9], [4, 9]] }, E: { eyesAt: [[3, 9]] } } }, // Regice: its eyes are the dots; turned, the eyes found are dents over them and the seat sits on an ear spike, and in profile they aren't found
+  379: { rig: { S: { eyesAt: [[-2, 9], [2, 9]] }, SE: { eyesAt: [[1, 9], [5, 9]] }, E: { eyesAt: [[8, 9]] } } }, // Registeel: its eyes are the dots, the eyes found the dark band's top corners
   380: { no: ['back'] }, // Latias: its own wings
   '380:mega': { no: ['back'] }, // Mega Latias
   381: { no: ['back'] }, // Latios
   '381:mega': { no: ['back'] }, // Mega Latios
   382: { no: NO_BODY }, // Kyogre: a whale
   '382:primal': { no: NO_BODY }, // Primal Kyogre
-  384: { no: ['back'] }, // Rayquaza: a serpent
-  '384:mega': { no: ['back'] }, // Mega Rayquaza
-  385: { no: ['head'] }, // Jirachi: the star is its head
+  383: { rig: { SE: { eyesAt: [[-2, 9]] }, E: { seat: [3, -2, 4], eyesAt: [[1, 7]] } } }, // Groudon: turned, the crest's stripes read as eyes over its yellow one, and in profile the seat sinks behind the crest
+  384: { rig: { S: { eyesAt: [[-5, 10], [4, 10]] }, E: { seat: [4, 1, -12] } }, no: ['back'] }, // Rayquaza: a serpent; facing south its nostrils read as eyes under its yellow ones, and in profile the seat spans its horns
+  '384:mega': { size: { face: -8 }, no: ['back'] }, // Mega Rayquaza: a serpent; the face found spans its whiskers
+  385: { rig: { SE: { eyesAt: [[-2, 8], [3, 7]] } }, no: ['head'] }, // Jirachi: the star is its head; turned a little, the star's point reads as an eye
+  '386:speed': { rig: { SE: { eyesAt: [[0, 8]] }, E: { eyesAt: [[3, 6]] } } }, // Deoxys (Speed Forme): turned, the head's dark plates read as eyes beside its white one, and in profile it isn't found
+  '386:attack': { rig: { S: { seat: [0, 0, -5], eyesAt: [[-2, 4], [2, 4]] }, SE: { seat: [2, 1], eyesAt: [[2, 6]] }, E: { seat: [2, 0], eyesAt: [[2, 5]] } } }, // Deoxys (Attack Forme): the seat spans its head's side spikes, and turned, the eyes found are the spikes' dark edges, or none
   387: { no: UPRIGHT }, // Turtwig
-  388: { no: ['back'] }, // Grotle: the shrubs on its shell
+  388: { no: ['head', 'back'] }, // Grotle: its shell overhangs its head (a hat on it swallows the shell, under it the shell buries it) and the shrubs fill its back
   389: { no: ['head', 'back'] }, // Torterra: the tree
+  390: { rig: { S: { seat: [0, -2, -2], neck: [0, 1] }, SE: { seat: [0, -2] } } }, // Chimchar: facing it, the seat sinks into its forehead, so the brims came down to its eyes, and the neck rides up onto its mouth
+  391: { rig: { S: { seat: [0, -3, -4] }, SE: { seat: [0, -3, -2] }, E: { seat: [0, -2] } } }, // Monferno: the seat drops to the top of its blue mask, under its pointed crown, so the brims came down to its eyes
+  392: { rig: { S: { eyesAt: [[-2, 11], [3, 11]] }, SE: { seat: [-3, 1, -4], eyesAt: [[0, 8]] }, E: { seat: [6, 1, -6], eyesAt: [[2, 8]] } } }, // Infernape: the eyes found are its face's edges or its arm, and turned the seat follows its flame off its head
   396: { no: UPRIGHT }, // Starly
   397: { no: UPRIGHT }, // Staravia
   398: { no: UPRIGHT }, // Staraptor
