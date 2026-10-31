@@ -1,3 +1,5 @@
+import { PITCH } from './wearFit'
+
 /**
  * A tiny 3D-to-pixel-art renderer for the Arena's wearables
  * (`render/wearables.ts`). Each wearable is a small model (`render/wearModels.ts`):
@@ -42,11 +44,16 @@ export type Scene = {
   bottom: number
 }
 
-/** One direction's art: `px` holds indexes into `colors` (0 is clear), and (`ox`, `oy`) is the pixel the model's origin lands on. */
-export type PixelArt = { w: number; h: number; ox: number; oy: number; px: Uint8Array; colors: readonly string[] }
-
-/** How far down the camera looks (radians): PMD sprites are drawn from a little above, heads almost head-on. */
-export const PITCH = (22 * Math.PI) / 180
+/**
+ * One direction's art: `px` holds indexes into `colors` (0 is clear), and
+ * (`ox`, `oy`) is the pixel the model's origin lands on. For the dresser
+ * (`render/wearDress.ts`), per pixel: `edge` marks the outline around the
+ * shape (its own, which the dresser redraws around the dressed frame), `ink`
+ * the outline color a shape's pixel takes (0: none), and `back` a pixel of its
+ * far half, seen from the camera (what grows from the head shows through a
+ * crown's far side; a scarf's far half goes behind the neck).
+ */
+export type PixelArt = { w: number; h: number; ox: number; oy: number; px: Uint8Array; colors: readonly string[]; edge: Uint8Array; ink: Uint8Array; back: Uint8Array }
 
 /** Where the light comes from, on screen: the top left, a little toward the viewer. */
 const LIGHT = (() => {
@@ -121,6 +128,8 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
   // (the shape's edges), 3×3 samples decide its coverage. A pixel takes the surface its center sees, or
   // its nearest sample's.
   const depth = new Float32Array(n).fill(-1)
+  // A point farther from the camera than the model's origin is on its far side (`PixelArt.back`).
+  const farther = far + 0.3
   const point = new Float32Array(n * 3)
   const keep = (k: number, t: number) => {
     depth[k] = t
@@ -166,6 +175,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
   const mat = new Int16Array(n).fill(-1)
   const parts = new Int16Array(n)
   const shade = new Uint8Array(n)
+  const back = new Uint8Array(n)
   const e = 0.04
   for (let k = 0; k < n; k++) {
     if (!solid[k]) continue
@@ -178,6 +188,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
       continue
     }
     mat[k] = m
+    back[k] = depth[k]! > farther ? 1 : 0
     parts[k] = scene.part?.(x, y, z) ?? 0
     const nx = sdf(x + e, y, z) - sdf(x - e, y, z)
     const ny = sdf(x, y + e, z) - sdf(x, y - e, z)
@@ -203,11 +214,14 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
   // A ramp without an outline draws its shadow where its depth lines would go.
   const inkOf = (m: number) => (inks[m] === null ? 1 + m * 4 : 1 + ramps.length * 4 + m)
   const px = new Uint8Array(n)
+  const edge = new Uint8Array(n)
+  const ink = new Uint8Array(n)
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
       const k = j * w + i
       if (solid[k]) {
         const m = mat[k]!
+        if (inks[m] !== null) ink[k] = inkOf(m)
         // A nearer neighbor in front of this pixel: a line on this, the farther, side.
         const behind = NB.some(([dx, dy]) => {
           const o = at(i + dx, j + dy)
@@ -221,19 +235,23 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
         const o = at(i + dx, j + dy)
         if (o >= 0 && solid[o] && inks[mat[o]!] !== null) {
           px[k] = inkOf(mat[o]!)
+          edge[k] = 1
           break
         }
       }
     }
   }
-  return { w, h, ox: half, oy: up, px, colors }
+  return { w, h, ox: half, oy: up, px, colors, edge, ink, back: Uint8Array.from(back, (b, k) => (solid[k] ? b : 0)) }
 }
 
 /** The art mirrored left to right (the west-facing directions are the east-facing ones flipped, like the sheets). */
 export const mirror = (art: PixelArt): PixelArt => {
-  const px = new Uint8Array(art.px.length)
-  for (let j = 0; j < art.h; j++) for (let i = 0; i < art.w; i++) px[j * art.w + i] = art.px[j * art.w + art.w - 1 - i]!
-  return { ...art, ox: art.w - 1 - art.ox, px }
+  const flip = (a: Uint8Array) => {
+    const out = new Uint8Array(a.length)
+    for (let j = 0; j < art.h; j++) for (let i = 0; i < art.w; i++) out[j * art.w + i] = a[j * art.w + art.w - 1 - i]!
+    return out
+  }
+  return { ...art, ox: art.w - 1 - art.ox, px: flip(art.px), edge: flip(art.edge), ink: flip(art.ink), back: flip(art.back) }
 }
 
 /* ---------------- Shapes (signed distances, px) ---------------- */

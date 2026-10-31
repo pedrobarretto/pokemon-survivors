@@ -17,7 +17,8 @@
     "determinism": "node scripts/determinism.mjs",
     "rules:freeze": "npm run rules:freeze --prefix server",
     "soak": "node scripts/coop/soak.mjs",
-    "anchors": "node scripts/anchors.mjs"
+    "rig": "node scripts/rig.mjs",
+    "fit-check": "node scripts/fit-check.mjs"
   },
   "devDependencies": {
     "@posthog/cli": "^0.16.2",

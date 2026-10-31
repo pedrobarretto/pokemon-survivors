@@ -215,7 +215,7 @@ import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
-import { freeWearables } from './render/wearables'
+import { freeWearables, wearMemory } from './render/wearables'
 import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, type Look, type CosmeticSlot } from './data/cosmetics'
 import { effectIn } from './data/arenaEffects'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
@@ -4307,15 +4307,17 @@ if (import.meta.env.DEV) {
       run: () => run,
       startRun,
       // Sheets loaded (their decoded MB now and at peak; `true` starts a new peak) and frame silhouettes cached right now (`render/sprites.ts`).
-      sprites: (resetPeak = false) => ({ ...spriteMemory(resetPeak), overlays: overlayStats() }),
+      sprites: (resetPeak = false) => ({ ...spriteMemory(resetPeak), overlays: overlayStats(), dressed: wearMemory(resetPeak) }),
       coop: devCoop,
       versus: devVersus,
       arena: devArena,
-      /** The wearables (`ui/wearFitting.ts`, loaded on demand): `ps.wear('topHat')` on your Pokémon in a run or a match, `ps.wear('fit', 'topHat')` the fitting gallery. */
+      /** The wearables (`ui/wearFitting.ts`, loaded on demand): `ps.wear('topHat')` on your Pokémon in a run or a match, `ps.wear('fit', 'topHat')` the gallery. */
       wear: (cmd?: string, arg?: unknown, more?: unknown, extra?: unknown) =>
         import('./ui/wearFitting').then((m) =>
           m.devWear({ seat: () => (run ? (run.coop?.runner.slot ?? 0) : null), seats: () => run?.game.players.length ?? 0 }, cmd, arg, more, extra),
         ),
+      /** The head rig tool (`ui/rigTool.ts`, loaded on demand): `ps.rig(152)` shows a variant's rig over its frame and fixes it by hand (`'6:megaX'`, `'502s'`; `ps.rig(25, { dir: 2, item: 'crown' })`). */
+      rig: (variant?: unknown, opts?: Parameters<typeof import('./ui/rigTool').openRig>[1]) => import('./ui/rigTool').then((m) => m.openRig(variant, opts)),
       look: devLook,
       gems: devGems,
       candyGoal: devCandyGoal,

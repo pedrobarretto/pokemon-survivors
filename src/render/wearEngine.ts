@@ -1,68 +1,56 @@
-import type { Look, WearableSlot } from '../data/cosmetics'
+import type { Look } from '../data/cosmetics'
+import type { Nudge } from '../data/wearFits'
 import { isWearableId, WEARABLES, type WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { createCanvas, context2d, onCanvasReset } from '../engine/pixelart'
-import type { PixelArt } from './wearArt'
-import { renderJob, type ArtDone, type ArtJob } from './wearWorker'
-import {
-  anchoredSheet,
-  anchorChunk,
-  anchorKey,
-  classOf,
-  decodeAnchors,
-  DRAW_ORDER,
-  fitOf,
-  layerOf,
-  measuresOf,
-  nudgeOf,
-  pivotAt,
-  wears,
-  type AnchorChunk,
-  type AnchorEntry,
-  type Anchors,
-  type Layer,
-} from './wearFit'
-import { SIZE_CLASSES, WEAR_MODELS, type WearSize } from './wearModels'
-import { placeFrame, type AnimName, type FramePlace, type SpeciesSprites } from './sprites'
+import { detail } from './quality'
+import { drawPokemon, placeFrame, type AnimName, type DrawOpts, type FramePlace, type SpeciesSprites } from './sprites'
+import { rasterize } from './wearArt'
+import { decodeRig, DRAW_ORDER, fitOf, fixOf, layerOf, rigChunk, rigKey, rigSheet, sizeOf, wears, yawOf, type Rig, type RigAnim, type RigChunk, type RigEntry, type WearSize } from './wearFit'
+import { sceneOf, WEAR_MODELS } from './wearModels'
+import type { DressDone, DressJob } from './wearWorker'
 
 /**
  * The wearables' engine, loaded with the first look drawn
- * (`render/wearables.ts` imports it on demand): it finds a species' anchors
- * (their chunk loads the first time the species wears something), sizes its
- * wearables, renders each model once per size, direction and frame
- * (`render/wearArt.ts`) into a small canvas and draws it pinned to the frame's pivot.
+ * (`render/wearables.ts` imports it on demand): it finds a variant's head rig
+ * (its chunk loads the first time the variant wears something), asks the
+ * worker (`render/wearWorker.ts`) to dress each sheet row the wearer shows in
+ * its look, and draws the dressed frame in the sprite's place, with an
+ * animated item's moving part over it. Until a row lands the Pokémon draws
+ * bare. Dressed rows are bitmaps kept while drawn, within a memory budget
+ * (`ROW_BUDGET`), the least recently drawn let go first.
  */
 
-/* ---------------- Anchors ---------------- */
+/* ---------------- Rig ---------------- */
 
 /**
- * The anchors' files (`data/wearAnchors/`, `npm run anchors`), each its own
- * small asset, by URL: fetched rather than imported, since some browsers keep
- * a failed dynamic import failed for the page's life and a retry must refetch.
+ * The rig's files (`data/wearRig/`, `npm run rig`), each its own small asset,
+ * by URL: fetched rather than imported, since some browsers keep a failed
+ * dynamic import failed for the page's life and a retry must refetch.
  */
-const CHUNKS = import.meta.glob<string>('../data/wearAnchors/*.json', { query: '?url', import: 'default', eager: true })
+const CHUNKS = import.meta.glob<string>('../data/wearRig/*.json', { query: '?url', import: 'default', eager: true })
 
-const fetchChunk = async (url: string): Promise<AnchorChunk> => {
+const fetchChunk = async (url: string): Promise<RigChunk> => {
   const res = await fetch(url)
-  if (!res.ok) throw new Error(`anchors ${res.status}`)
+  if (!res.ok) throw new Error(`rig ${res.status}`)
   return res.json()
 }
 
-/** Each chunk's entries once loaded (`anchorChunk`), null while it loads or after it failed lately. */
-const chunks = new Map<number, Record<string, AnchorEntry> | null>()
+/** Each chunk's entries once loaded (`rigChunk`), null while it loads or after it failed lately. */
+const chunks = new Map<number, Record<string, RigEntry> | null>()
 
 /** How long (ms) a chunk that failed to load waits before the next try. */
 const RETRY = 5000
 
-/** A chunk no player's dex falls in: no anchors there. */
-const NONE: Record<string, AnchorEntry> = {}
+/** A chunk no player's dex falls in: no rig there. */
+const NONE: Record<string, RigEntry> = {}
 
 /** The entries of `dex`'s chunk, or null until it lands (the first ask starts it: a species' first frames draw bare). */
 const entriesOf = (dex: number) => {
-  const n = anchorChunk(dex)
+  const n = rigChunk(dex)
   const have = chunks.get(n)
   if (have !== undefined) return have
-  const url = CHUNKS[`../data/wearAnchors/anchors-${n}.json`]
+  const url = CHUNKS[`../data/wearRig/rig-${n}.json`]
   chunks.set(n, url ? null : NONE)
   if (!url) return NONE
   void fetchChunk(url).then(
@@ -72,48 +60,21 @@ const entriesOf = (dex: number) => {
   return null
 }
 
-/** One art direction's (or its mirror's) art, ready to draw: a canvas and where its pivot is. */
-type Art = { canvas: HTMLCanvasElement; ox: number; oy: number }
-
-/** A species variant as a wearer: its anchors, its hand fitting and the size each slot's art comes in. */
-type Wearer = {
-  anchors: Anchors
-  fit: ReturnType<typeof fitOf>
-  sizes: Record<WearableSlot, WearSize>
-  /** Each slot's size as a small number, for the art's cache key. */
-  keys: Record<WearableSlot, number>
-}
+/** A variant as a wearer: its rig with its hand fixes, its size, and each row's pixels drawn over any hat. */
+type Wearer = { key: string; rig: Rig; size: WearSize; fit: ReturnType<typeof fitOf>; over: readonly (readonly Nudge[])[] }
 
 const wearers = new Map<string, Wearer | null>()
 
-/** The size class a species wears in each slot: its own measures (`measuresOf`), or its hand fitting's (`SpeciesFit.size`). */
-const sizesOf = (a: Anchors, fit: Wearer['fit']) => {
-  const m = measuresOf(a)
-  const pick = (slot: WearableSlot, value: number) => fit?.size?.[slot] ?? classOf(value, SIZE_CLASSES[slot])
-  const head = pick('head', m.head)
-  const face = pick('face', m.head)
-  const neck = pick('neck', m.neck)
-  const back = pick('back', m.body)
-  // A back item also reaches the feet (a cape) or above the head (a balloon): those go by 2 px steps.
-  const drop = Math.max(4, Math.round(m.drop / 2) * 2)
-  const rise = Math.max(4, Math.round(m.rise / 2) * 2)
-  const size = (h: number, n: number, b: number): WearSize => ({ head: SIZE_CLASSES.head[h]!, neck: SIZE_CLASSES.neck[n]!, body: SIZE_CLASSES.back[b]!, drop, rise })
-  return {
-    sizes: { head: size(head, neck, back), face: size(face, neck, back), neck: size(head, neck, back), back: size(head, neck, back) },
-    keys: { head, face, neck, back: back + 3 * (drop + 64 * rise) },
-  }
-}
-
 /**
  * The wearer for loaded sprites, or null: a stand-in (a puff), a species no
- * player can be or a variant without anchors (`npm run anchors` lists them),
- * and any species until its anchors' chunk lands. By variant, so a stage
- * change mid-run (new sprites, a new dex) just finds the next stage's.
+ * player can be or a variant without a rig (`npm run rig` lists them), and
+ * any species until its rig's chunk lands. By variant, so a stage change
+ * mid-run (new sprites, a new dex) just finds the next stage's.
  */
 const wearerOf = (s: SpeciesSprites): Wearer | null => {
   const v = s.variant
   if (!v) return null
-  const key = anchorKey(s.dex, v.form, v.shiny)
+  const key = rigKey(s.dex, v.form, v.shiny)
   const known = wearers.get(key)
   if (known !== undefined) return known
   const entries = entriesOf(s.dex)
@@ -121,85 +82,157 @@ const wearerOf = (s: SpeciesSprites): Wearer | null => {
     misses++
     return null
   }
-  const entry = entries[key] ?? entries[anchorKey(s.dex, v.form, false)]
+  const entry = entries[key] ?? entries[rigKey(s.dex, v.form, false)]
   let w: Wearer | null = null
   if (entry) {
-    const anchors = decodeAnchors(entry)
     const fit = fitOf(s.dex, v.form)
-    w = { anchors, fit, ...sizesOf(anchors, fit) }
+    const rig = decodeRig(entry, fit)
+    w = { key, rig, size: sizeOf(rig, fit), fit, over: Array.from({ length: 8 }, (_, row) => fixOf(fit, row)?.over ?? []) }
   }
   wearers.set(key, w)
   return w
 }
 
-/* ---------------- Art ---------------- */
+/* ---------------- Dressed rows ---------------- */
 
-/** Rendered art by item, then by size, direction and frame (`artKey`); null while it renders. */
-const arts = new Map<WearableId, Map<number, Art | null>>()
-
-onCanvasReset(
-  () => {
-    arts.clear()
-    jobs.clear()
-  },
-  () => [...arts.values()].flatMap((m) => [...m.values()].flatMap((a) => (a ? [a.canvas] : []))),
-)
-
-const artKey = (size: number, dir: Dir8, frame: number) => (size * 8 + dir) * 64 + frame
-
-/** Pixel art into a canvas (the art's palette indexes to colors). */
-const toCanvas = (art: PixelArt): Art => {
-  const canvas = createCanvas(art.w, art.h)
-  const ctx = context2d(canvas)
-  const img = ctx.createImageData(art.w, art.h)
-  const rgb = art.colors.map((c) => (c ? parseInt(c.slice(1, 7), 16) : 0))
-  for (let i = 0; i < art.px.length; i++) {
-    const c = art.px[i]!
-    if (c === 0) continue
-    const v = rgb[c]!
-    img.data[i * 4] = (v >> 16) & 255
-    img.data[i * 4 + 1] = (v >> 8) & 255
-    img.data[i * 4 + 2] = v & 255
-    img.data[i * 4 + 3] = 255
-  }
-  ctx.putImageData(img, 0, 0)
-  return { canvas, ox: art.ox, oy: art.oy }
-}
-
-/** An item's art for a size facing `dir` (`renderJob`), into a canvas. */
-const renderArt = (id: WearableId, size: WearSize, dir: Dir8, frame: number) => toCanvas(renderJob({ key: '', id, size, dir, frame }))
+type Drawable = ImageBitmap | HTMLCanvasElement
+type MovingFrames = { img: Drawable; w: number; h: number; ox: number; oy: number }[]
+/** A moving item on a row: its frames (shared by the direction's every anim, `movingKey`) and where they turn on each of the row's frames. */
+type MovingRow = { id: WearableId; layer: 'front' | 'behind'; key: string; pivots: readonly { x: number; y: number }[]; frames: MovingFrames }
+/** A dressed sheet row: its cells (`cw` × `ch`, a frame's top-left at `ox`, `oy`), its moving items and what its cells weigh. */
+type Row = { img: Drawable; cw: number; ch: number; ox: number; oy: number; moving: MovingRow[]; bytes: number; used: number }
 
 /**
- * The art renders in a worker (`render/wearWorker.ts`), so a new look never
- * stalls a frame: until it lands the item just isn't drawn. Where no worker
- * runs, it renders here, a few models per stretch of drawing (`BUDGET`).
+ * A moving item's frames depend on the wearer, the item and the direction,
+ * not the anim: Walk, Idle and Hurt share them, kept while a row uses them.
  */
-let worker: Worker | null | undefined
-const jobs = new Map<string, { id: WearableId; key: number }>()
+const movings = new Map<string, { frames: MovingFrames; rows: number; bytes: number }>()
 
-const byItem = (id: WearableId) => {
-  let m = arts.get(id)
-  if (!m) arts.set(id, (m = new Map()))
-  return m
+/** A row's moving items let go: frames no row uses any more are freed. */
+const release = (r: Row) => {
+  for (const m of r.moving) {
+    const shared = movings.get(m.key)
+    if (!shared || --shared.rows > 0) continue
+    for (const f of shared.frames) free(f.img)
+    held -= shared.bytes
+    movings.delete(m.key)
+  }
 }
 
-const land = ({ key, art }: ArtDone) => {
-  const job = jobs.get(key)
-  if (!job) return
-  jobs.delete(key)
-  byItem(job.id).set(job.key, toCanvas(art))
+/** Dressed rows by `rowKey`: a row, `null` while it's being dressed. */
+const rows = new Map<string, Row | null>()
+
+/** Bytes of dressed rows kept (normal and safe mode): a wearer's whole look is about 1 MB, a match shows eight. */
+const ROW_BUDGET = { normal: 16 * 1048576, safe: 6 * 1048576 }
+let held = 0
+let peak = 0
+/** The drawing's clock for the rows' recency: one tick per `drawDressed` call. */
+let tick = 0
+
+const free = (img: Drawable) => {
+  if ('close' in img) img.close()
+  else img.width = img.height = 0
+}
+
+/** Lets go of the least recently drawn rows until the kept ones fit the budget. */
+const trim = () => {
+  const budget = detail.safe ? ROW_BUDGET.safe : ROW_BUDGET.normal
+  if (held <= budget) return
+  const done = [...rows].flatMap(([k, r]) => (r ? [[k, r] as const] : [])).sort((a, b) => a[1].used - b[1].used)
+  for (const [k, r] of done) {
+    if (held <= budget * 0.8) break
+    rows.delete(k)
+    free(r.img)
+    release(r)
+    held -= r.bytes
+  }
+}
+
+/** RGBA into something to draw: a bitmap where the browser makes them (off the main thread), else a canvas. */
+const drawable = async (rgba: Uint8ClampedArray<ArrayBuffer>, w: number, h: number): Promise<Drawable> => {
+  const data = new ImageData(rgba, w, h)
+  if (typeof createImageBitmap === 'function') return createImageBitmap(data)
+  const c = createCanvas(w, h)
+  context2d(c).putImageData(data, 0, 0)
+  return c
+}
+
+onCanvasReset(
+  () => freeWearArt(),
+  () => [...rows.values()].flatMap((r) => (r && !('close' in r.img) ? [r.img] : [])),
+)
+
+/* ---------------- The worker ---------------- */
+
+let worker: Worker | null | undefined
+type Queued = { job: DressJob; urgent: boolean; look: string }
+const queue: Queued[] = []
+const inFlight = new Set<string>()
+/** Jobs the worker runs at once: a few, so the row a wearer shows now never waits behind a whole look's. */
+const PARALLEL = 2
+/** When (tick) each wearer's look was last drawn: queued rows for a look no longer shown are dropped. */
+const shown = new Map<string, number>()
+/** Ticks a look may go undrawn before its queued rows go. */
+const STALE = 240
+
+const land = async (done: DressDone) => {
+  inFlight.delete(done.key)
+  pump()
+  if (!rows.has(done.key)) return
+  if ('error' in done) {
+    // Drawn bare until the next ask (a sheet that failed to load).
+    rows.delete(done.key)
+    return
+  }
+  const W = done.cw * Math.max(1, Math.round(done.rgba.length / 4 / done.ch / done.cw))
+  try {
+    const img = await drawable(done.rgba, W, done.ch)
+    // The row's key is `rowKey`'s: wearer, look, anim, direction and scale.
+    const [wearer, , , dir, scale] = done.key.split('|')
+    const moving: MovingRow[] = []
+    for (const m of done.moving) {
+      const key = `${wearer}|${scale}|${dir}|${m.id}|${m.layer}`
+      let shared = movings.get(key)
+      if (!shared) {
+        const frames = await Promise.all(m.frames.map(async (f) => ({ img: await drawable(f.rgba, f.w, f.h), w: f.w, h: f.h, ox: f.ox, oy: f.oy })))
+        // Another row of the direction may have landed meanwhile.
+        shared = movings.get(key)
+        if (shared) for (const f of frames) free(f.img)
+        else {
+          const bytes = m.frames.reduce((a, f) => a + f.rgba.length, 0)
+          movings.set(key, (shared = { frames, rows: 0, bytes }))
+          held += bytes
+        }
+      }
+      shared.rows++
+      moving.push({ id: m.id, layer: m.layer, key, pivots: m.pivots, frames: shared.frames })
+    }
+    const row: Row = { img, cw: done.cw, ch: done.ch, ox: done.ox, oy: done.oy, moving, bytes: done.rgba.length, used: tick }
+    if (!rows.has(done.key)) {
+      free(img)
+      release(row)
+      return
+    }
+    rows.set(done.key, row)
+    held += row.bytes
+    peak = Math.max(peak, held)
+    trim()
+  } catch {
+    rows.delete(done.key)
+  }
 }
 
 const workerOf = () => {
   if (worker !== undefined) return worker
   try {
     worker = new Worker(new URL('./wearWorker.ts', import.meta.url), { type: 'module' })
-    worker.onmessage = (e: MessageEvent<ArtDone>) => land(e.data)
-    // A worker that can't run: what it was given renders here instead.
+    worker.onmessage = (e: MessageEvent<DressDone>) => void land(e.data)
+    // A worker that can't run: everything draws bare.
     worker.onerror = () => {
       worker = null
-      for (const { id, key } of jobs.values()) byItem(id).delete(key)
-      jobs.clear()
+      rows.clear()
+      queue.length = 0
+      inFlight.clear()
     }
   } catch {
     worker = null
@@ -207,80 +240,88 @@ const workerOf = () => {
   return worker
 }
 
-/** Time (ms) a stretch of drawing may spend rendering art without a worker; a new stretch starts this long (ms) after the last began. */
-const BUDGET = 3
-const STRETCH = 12
-let stretch = 0
-let spent = 0
+/** Posts the next jobs: the urgent first, then the look's other rows; a look not drawn lately loses its queued rows. */
+const pump = () => {
+  const w = workerOf()
+  if (!w) return
+  while (inFlight.size < PARALLEL && queue.length) {
+    const i = queue.findIndex((q) => q.urgent)
+    const [next] = queue.splice(i >= 0 ? i : 0, 1)
+    if (!next) break
+    if (!next.urgent && tick - (shown.get(next.look) ?? -Infinity) > STALE) {
+      rows.delete(next.job.key)
+      continue
+    }
+    inFlight.add(next.job.key)
+    w.postMessage(next.job)
+  }
+}
 
-/** Asks for an item's art: posted to the worker (null meanwhile), or rendered here while the budget lasts. */
-const request = (id: WearableId, w: Wearer, slot: WearableSlot, dir: Dir8, frame: number, key: number) => {
-  const m = byItem(id)
-  const off = workerOf()
-  if (off) {
-    m.set(key, null)
-    const tag = `${id}:${key}`
-    jobs.set(tag, { id, key })
-    off.postMessage({ key: tag, id, size: w.sizes[slot], dir, frame } satisfies ArtJob)
+/* ---------------- Looks ---------------- */
+
+/** The items a look puts on a wearer facing `dir`, in drawing order, with the pass each takes (hidden ones left out). */
+const itemsOf = (look: Look, w: Wearer, dir: Dir8) =>
+  DRAW_ORDER.flatMap((slot) => {
+    const id = look[slot]
+    if (id === undefined || !isWearableId(id) || WEARABLES[id].slot !== slot || !wears(w.fit, slot, id)) return []
+    const layer = layerOf(slot, dir, WEAR_MODELS[id].layers)
+    return layer === 'hidden' ? [] : [{ id, layer }]
+  })
+
+/** A look's key: its worn items. */
+const lookKey = (look: Look) => `${look.head ?? ''},${look.face ?? ''},${look.neck ?? ''},${look.back ?? ''}`
+
+const rowKey = (w: Wearer, look: string, anim: RigAnim, dir: Dir8, scale: number) => `${w.key}|${look}|${anim}|${dir}|${scale}`
+
+/** A sheet's URL, for the worker to fetch: the loaded image's own (a canvas, a recolor, has none and draws bare). */
+const urlOf = (s: SpeciesSprites, anim: RigAnim) => {
+  const img = s.anims[anim].img
+  return typeof HTMLImageElement !== 'undefined' && img instanceof HTMLImageElement && img.src ? img.src : null
+}
+
+/** Asks for one row (urgent: drawn now) unless it's kept or on its way. */
+const ask = (s: SpeciesSprites, w: Wearer, look: Look, key: string, anim: RigAnim, dir: Dir8, scale: number, urgent: boolean) => {
+  const rk = rowKey(w, key, anim, dir, scale)
+  if (rows.has(rk)) {
+    if (urgent) {
+      const q = queue.find((j) => j.job.key === rk)
+      if (q) q.urgent = true
+    }
     return
   }
-  const now = performance.now()
-  if (now - stretch > STRETCH) {
-    stretch = now
-    spent = 0
-  }
-  if (spent > BUDGET) return
-  m.set(key, renderArt(id, w.sizes[slot], dir, frame))
-  spent += performance.now() - now
+  const items = itemsOf(look, w, dir)
+  const sheet = urlOf(s, anim)
+  if (items.length === 0 || !sheet) return
+  const r = w.rig[anim]
+  rows.set(rk, null)
+  queue.push({
+    urgent,
+    look: `${w.key}|${key}`,
+    job: { key: rk, sheet, fw: r.fw, fh: r.fh, frames: r.frames, row: dir, rigs: r.rows[dir]!, over: w.over[dir]!, size: w.size, wearer: `${w.key}|${scale}`, items, scale },
+  })
+  pump()
 }
 
-/** The art for an item on a wearer facing `dir` at a frame of its animation, or null while it renders. The first ask for an item at a size asks for all its directions and frames. */
-const artOf = (id: WearableId, w: Wearer, slot: WearableSlot, dir: Dir8, frame: number): Art | null => {
-  const m = byItem(id)
-  const key = artKey(w.keys[slot], dir, frame)
-  const have = m.get(key)
-  if (have) return have
-  if (have === null) {
-    misses++
-    return null
-  }
-  request(id, w, slot, dir, frame, key)
-  if (workerOf()) {
-    const frames = WEAR_MODELS[id].frames?.count ?? 1
-    for (let f = 0; f < frames; f++) {
-      for (let d = 0; d < 8; d++) {
-        const k = artKey(w.keys[slot], d as Dir8, f)
-        if (!m.has(k)) request(id, w, slot, d as Dir8, f, k)
-      }
-    }
-  }
-  const art = m.get(key) ?? null
-  if (!art) misses++
-  return art
-}
-
-/** Draws that found no art yet, since `takeMisses` last asked. */
-let misses = 0
-
-/** An animated item's frame at `seconds`, 0 for a still one. */
-const modelFrame = (id: WearableId, seconds: number) => {
-  const f = WEAR_MODELS[id].frames
-  return f ? Math.floor(seconds / f.every) % f.count : 0
+/** Asks for a look's every row (Walk and Idle in every direction, then Hurt), so turning and stopping never draw bare once it's in. */
+const askAll = (s: SpeciesSprites, w: Wearer, look: Look, key: string, scale: number) => {
+  for (const anim of ['Walk', 'Idle', 'Hurt'] as const) for (let d = 0; d < 8; d++) ask(s, w, look, key, anim, d as Dir8, scale, false)
 }
 
 /* ---------------- Drawing ---------------- */
 
 const place: FramePlace = { anim: 'Walk', fw: 0, fh: 0, frames: 0, frame: 0, dx: 0, dy: 0 }
-const pivot = { x: 0, y: 0 }
 
-/** The item a look wears in a slot, if it's a wearable this species wears. */
-const wornIn = (look: Look, slot: WearableSlot, w: Wearer): WearableId | null => {
-  const id = look[slot]
-  return id !== undefined && isWearableId(id) && WEARABLES[id].slot === slot && wears(w.fit, slot, id) ? id : null
+/** An animated item's frame at `seconds`. */
+const modelFrame = (id: WearableId, seconds: number) => {
+  const f = WEAR_MODELS[id].frames
+  return f ? Math.floor(seconds / f.every) % f.count : 0
 }
 
-/** `render/wearables.ts`'s `drawWearables`, once this module is loaded. */
-export const drawWearables = (
+/** Draws that found their row still dressing, since `takeMisses` last asked. */
+let misses = 0
+
+/** `render/wearables.ts`'s `drawDressed`, once this module is loaded. */
+export const drawDressed = (
   ctx: CanvasRenderingContext2D,
   s: SpeciesSprites,
   look: Look,
@@ -289,29 +330,50 @@ export const drawWearables = (
   seconds: number,
   x: number,
   y: number,
-  layer: Exclude<Layer, 'hidden'>,
-  opts: { alpha?: number; scale?: number; loop?: boolean; clock?: number },
+  opts: DrawOpts & { clock?: number },
 ) => {
-  // A legend shrunk to fit (`fitSprites`) wears on its downloaded sheets' anchors, shrunk with it.
+  tick++
+  // A legend shrunk to fit (`fitSprites`) dresses on its downloaded sheets' rig, shrunk with it.
   const src = s.fitted?.from ?? s
   const w = wearerOf(src)
-  if (!w) return
-  const k = (opts.scale ?? 1) * (s.fitted?.scale ?? 1)
-  if (!placeFrame(src, anim, seconds, x, y, k, opts.loop ?? true, place)) return
-  const sheet = anchoredSheet(w.anchors, place)
-  if (!sheet) return
-  const alpha = opts.alpha ?? 1
-  for (const slot of DRAW_ORDER) {
-    const id = wornIn(look, slot, w)
-    if (!id || layerOf(slot, dir, WEAR_MODELS[id].layers) !== layer) continue
-    const art = artOf(id, w, slot, dir, modelFrame(id, opts.clock ?? seconds))
-    if (!art) continue
-    pivotAt(w.anchors, sheet, dir, place.frame, slot, nudgeOf(w.fit, slot, dir), pivot)
-    if (alpha !== 1) ctx.globalAlpha = alpha
-    ctx.drawImage(art.canvas, Math.round(place.dx + (pivot.x - art.ox) * k), Math.round(place.dy + (pivot.y - art.oy) * k), Math.round(art.canvas.width * k), Math.round(art.canvas.height * k))
+  const bare = () => drawPokemon(ctx, s, anim, dir, seconds, x, y, opts)
+  if (!w || !placeFrame(src, anim, seconds, 0, 0, 1, opts.loop ?? true, place)) return bare()
+  const sheet = rigSheet(w.rig, place)
+  if (!sheet) return bare()
+  const frame = place.frame
+  const scale = s.fitted?.scale ?? 1
+  const key = lookKey(look)
+  const rk = rowKey(w, key, sheet, dir, scale)
+  const first = !shown.has(`${w.key}|${key}`)
+  shown.set(`${w.key}|${key}`, tick)
+  const row = rows.get(rk)
+  if (!row) {
+    ask(src, w, look, key, sheet, dir, scale, true)
+    if (first) askAll(src, w, look, key, scale)
+    misses++
+    return bare()
   }
-  if (alpha !== 1) ctx.globalAlpha = 1
+  row.used = tick
+  const k = opts.scale ?? 1
+  const items = itemsOf(look, w, dir)
+  if (!placeFrame(s, anim, seconds, x, y, k, opts.loop ?? true, place)) return
+  const alpha = opts.alpha ?? 1
+  const drawMoving = (layer: 'front' | 'behind') => {
+    for (const m of row.moving) {
+      if (m.layer !== layer) continue
+      const f = m.frames[modelFrame(m.id, opts.clock ?? seconds) % m.frames.length]!
+      const at = m.pivots[Math.min(frame, m.pivots.length - 1)]!
+      if (alpha !== 1) ctx.globalAlpha = alpha
+      ctx.drawImage(f.img, Math.round(place.dx + (at.x - f.ox) * k), Math.round(place.dy + (at.y - f.oy) * k), f.w * k, f.h * k)
+      ctx.globalAlpha = 1
+    }
+  }
+  if (items.length) drawMoving('behind')
+  drawPokemon(ctx, s, anim, dir, seconds, x, y, { ...opts, body: { img: row.img, sx: frame * row.cw, sy: 0, w: row.cw, h: row.ch, ox: row.ox, oy: row.oy } })
+  if (items.length) drawMoving('front')
 }
+
+/* ---------------- Icons and housekeeping ---------------- */
 
 const icons = new Map<WearableId, HTMLCanvasElement>()
 onCanvasReset(
@@ -319,38 +381,66 @@ onCanvasReset(
   () => [...icons.values()],
 )
 
-/** An item's art facing south-east (its truest three-quarter view) at its middle size, for the shop and the locker's tiles. */
+/** A size for the icons: a middling head. */
+const ICON_SIZE: WearSize = { head: 13, depth: 13, brow: 9, brows: [9, 9], face: 13, eye: 0, neck: 9, body: 16, drop: 12, rise: 14 }
+
+/** An item's art facing south-east (its truest three-quarter view) at a middling size, for the shop and the locker's tiles. */
 export const wearableIcon = (id: WearableId): HTMLCanvasElement => {
   let icon = icons.get(id)
   if (!icon) {
-    const size: WearSize = { head: SIZE_CLASSES.head[1], neck: SIZE_CLASSES.neck[1], body: SIZE_CLASSES.back[1], drop: 12, rise: 14 }
-    icons.set(id, (icon = renderArt(id, size, 1, 0).canvas))
+    const art = rasterize(sceneOf(id, WEARABLES[id].slot, ICON_SIZE, 0), yawOf(1))
+    icon = createCanvas(art.w, art.h)
+    const ctx = context2d(icon)
+    const img = ctx.createImageData(art.w, art.h)
+    const rgb = art.colors.map((c) => (c ? parseInt(c.slice(1, 7), 16) : 0))
+    for (let i = 0; i < art.px.length; i++) {
+      const c = art.px[i]!
+      if (!c) continue
+      img.data.set([(rgb[c]! >> 16) & 255, (rgb[c]! >> 8) & 255, rgb[c]! & 255, 255], i * 4)
+    }
+    ctx.putImageData(img, 0, 0)
+    icons.set(id, icon)
   }
   return icon
 }
 
-/** Lets go of the rendered art (a match ended: the next one renders what its looks wear), so a long session doesn't keep every look it ever saw. */
+/** Lets go of the dressed rows (a match ended: the next one dresses what its looks wear), so a long session doesn't keep every look it ever saw. */
 export const freeWearArt = () => {
-  arts.clear()
-  jobs.clear()
+  for (const r of rows.values()) if (r) free(r.img)
+  for (const m of movings.values()) for (const f of m.frames) free(f.img)
+  rows.clear()
+  movings.clear()
+  queue.length = 0
+  held = 0
 }
 
-/** Drops the cached wearers and art (the fitting tool changes `WEAR_FITS` live). */
+/** Drops the cached wearers and rows (the dev tools change `WEAR_FITS` live). */
 export const refit = () => {
   wearers.clear()
-  arts.clear()
-  jobs.clear()
+  freeWearArt()
 }
 
-/** Dev: how many draws found no art yet since the last ask (a contact sheet repaints until none did). */
+/** Dev: how many draws found no dressed row yet since the last ask (a contact sheet repaints until none did). */
 export const takeMisses = () => {
-  const n = misses
+  const n = misses + queue.length + inFlight.size
   misses = 0
   return n
 }
 
-/** Whether a species (by dex) has anchors to wear things on, null while its chunk loads: the Boutique tries looks on the partner only then. */
-export const hasAnchors = (dex: number): boolean | null => {
+/** Dev: what the dressed rows weigh now and at their peak (MB), and how many (`ps.sprites()` prints it beside the sheets'). */
+export const wearMemory = (reset = false) => {
+  if (reset) peak = held
+  return { rows: [...rows.values()].filter(Boolean).length, MB: +(held / 1048576).toFixed(2), peakMB: +(peak / 1048576).toFixed(2), queued: queue.length }
+}
+
+/** Whether a species (by dex) has a rig to wear things on, null while its chunk loads: the Boutique tries looks on the partner only then. */
+export const hasRig = (dex: number): boolean | null => {
   const entries = entriesOf(dex)
-  return entries && Object.hasOwn(entries, anchorKey(dex, undefined, false))
+  return entries && Object.hasOwn(entries, rigKey(dex, undefined, false))
+}
+
+/** Dev (`ps.rig`): a variant's wearer, decoded fresh (its fixes as they are now). */
+export const devWearer = (s: SpeciesSprites) => {
+  if (s.variant) wearers.delete(rigKey(s.dex, s.variant.form, s.variant.shiny))
+  return wearerOf(s)
 }

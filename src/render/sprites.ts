@@ -926,6 +926,12 @@ export type DrawOpts = {
   outlineAlpha?: number
   /** A sheet of the species' own loaded apart (`loadSheet`: an Arena emote), drawn instead of `anim`'s, centered the same way. */
   sheet?: Sheet
+  /**
+   * The frame dressed in a look (`render/wearables.ts`), drawn in its place:
+   * its cell in `img` and where the frame's top-left is in it. Flashes,
+   * tints and outlines stay the bare frame's.
+   */
+  body?: { img: CanvasImageSource; sx: number; sy: number; w: number; h: number; ox: number; oy: number }
 }
 
 /** The hit flash's color. */
@@ -970,7 +976,9 @@ export const drawPokemon = (
       }
       ctx.globalAlpha = alpha
     }
-    if (flash < 1) ctx.drawImage(sheet.img, frame * fw, dir * fh, fw, fh, dx, dy, dw, dh)
+    const body = opts.body
+    if (flash < 1 && body) ctx.drawImage(body.img, body.sx, body.sy, body.w, body.h, dx - body.ox * k, dy - body.oy * k, body.w * k, body.h * k)
+    else if (flash < 1) ctx.drawImage(sheet.img, frame * fw, dir * fh, fw, fh, dx, dy, dw, dh)
     const tint = opts.tint
     if (tint && tint.amount > 0 && flash < 1) {
       ctx.globalAlpha = alpha * Math.min(1, tint.amount)
