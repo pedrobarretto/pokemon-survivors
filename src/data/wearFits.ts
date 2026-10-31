@@ -151,35 +151,40 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   388: { no: ['back'] }, // Grotle: the shrubs on its shell
   389: { no: ['head', 'back'] }, // Torterra: the tree
   396: { no: UPRIGHT }, // Starly
-  397: { no: UPRIGHT }, // Staravia
+  397: { rig: { SE: { eyesAt: [[3, 5]] } }, no: UPRIGHT }, // Staravia: turned a little, no eye is found
   398: { no: UPRIGHT }, // Staraptor
-  403: { no: UPRIGHT }, // Shinx
-  404: { no: UPRIGHT }, // Luxio
-  405: { no: UPRIGHT }, // Luxray
+  403: { rig: { S: { eyesAt: [[-4, 4], [4, 4]] } }, size: { head: -8 }, no: UPRIGHT }, // Shinx: the seat spans the ears, and facing south the eyes are read on the paws
+  404: { rig: { S: { eyesAt: [[-4, 7], [3, 7]] } }, size: { head: -12, face: -4 }, no: UPRIGHT }, // Luxio: the seat spans the ears
+  405: { rig: { S: { eyes: [-1, 4] } }, size: { head: -5 }, no: UPRIGHT }, // Luxray: the seat spans the ears, the eyes are read on the brow
   425: { no: NO_BODY }, // Drifloon: a balloon
-  426: { no: NO_BODY }, // Drifblim: a balloon
-  468: { no: ['back'] }, // Togekiss: its own wings
+  426: { rig: { S: { eyesAt: [[-5, 4], [4, 4]] }, SE: { eyesAt: [[-1, 5], [7, 3]] }, E: { eyesAt: [[3, 5]] } }, no: NO_BODY }, // Drifblim: a balloon; its small red eyes aren't found, and hats came down over them
+  447: { rig: { S: { eyesAt: [[-3, 6], [2, 6]] } }, size: { head: -6, face: -5 } }, // Riolu: the seat spans the ears hanging at its sides
+  468: { size: { head: -15 }, no: ['back'] }, // Togekiss: its own wings (the seat spans them)
   470: { no: UPRIGHT }, // Leafeon
   471: { no: UPRIGHT }, // Glaceon
   473: { no: ['neck', ...UPRIGHT] }, // Mamoswine: a mound of fur
   483: { no: UPRIGHT }, // Dialga
   488: { no: ['back'] }, // Cresselia: its own wings
   '491:mega': { no: ['head', 'back'] }, // Mega Darkrai: the plume over its head, the shadows on its back
-  493: { no: UPRIGHT }, // Arceus
-  497: { no: ['back'] }, // Serperior: no shoulders to hang anything from
+  493: { rig: { S: { seat: [0, -4], eyesAt: [[-3, 3], [3, 3]] } }, no: UPRIGHT }, // Arceus: facing south the seat and the eyes are read on its face mask, under the eyes; the hat goes on the crest's base
+  495: { rig: { S: { eyes: [0, -2], neck: [0, 2] } } }, // Snivy: facing south its yellow collar reads as the eyes and the neck sits on the face
+  496: { rig: { S: { eyesAt: [[-3, 5], [3, 5]], neck: [0, 1] }, SE: { neck: [-1, 3] }, E: { neck: [-2, 4] } } }, // Servine: facing south its eyes aren't found; turned, the neck is read on its snout
+  497: { rig: { S: { seat: [0, 1], eyes: [0, 4], neck: [0, 2] }, SE: { eyesAt: [[0, 5]], neck: [-3, 5] } }, size: { head: 2 }, no: ['back'] }, // Serperior: no shoulders to hang anything from; the eyes are read on its brow, the neck on its chin
   498: { no: UPRIGHT }, // Tepig
   503: { no: UPRIGHT }, // Samurott
-  524: { no: NO_BODY }, // Roggenrola
-  525: { no: NO_BODY }, // Boldore
+  524: { no: ['face', ...NO_BODY] }, // Roggenrola: a rock; the yellow hexagon is an ear, it has no eyes to wear glasses on
+  525: { rig: { all: { eyes: 'none' } }, no: ['face', ...NO_BODY] }, // Boldore: a rock with no eyes (the dark gaps beside its crest read as eyes and cut the hats)
+  559: { rig: { S: { eyesAt: [[-4, 6], [4, 6]] }, SE: { eyesAt: [[-2, 6], [5, 6]] } } }, // Scraggy: its eyes at the sides of its head aren't found
   570: { no: UPRIGHT }, // Zorua
-  607: { no: ['head', 'back'] }, // Litwick: the flame is where a hat would go
-  608: { no: NO_BODY }, // Lampent: a lamp
+  607: { rig: { S: { eyesAt: [[-1, 10], [3, 10]] }, SE: { eyesAt: [[-1, 10], [3, 10]] }, E: { eyes: 'none' } }, no: ['head', 'back'] }, // Litwick: the flame is where a hat would go; the wax's shading reads as eyes (one shows, the other is under the wax)
+  608: { rig: { all: { seat: [0, -6] }, S: { eyesAt: [[-4, 7], [3, 7]] }, SE: { seat: [-1, 0], eyesAt: [[0, 7], [5, 7]] }, E: { eyesAt: [[2, 7]] } }, size: { head: -4 }, no: NO_BODY }, // Lampent: a lamp; the hat goes on its cap, not round its brim over the eyes
   609: { no: ['head', 'back'] }, // Chandelure: a flame on top of its head
   633: { no: UPRIGHT }, // Deino
-  634: { no: UPRIGHT }, // Zweilous
-  635: { no: ['back'] }, // Hydreigon: its own wings
+  634: { rig: { S: { seat: [9, -1], eyesAt: [[-2, 4], [2, 4]], neck: [7, 0] }, SE: { seat: [10, -5], eyesAt: [[-1, 4], [3, 4]], neck: [6, -3] }, E: { seat: [7, -8], eyesAt: [[2, 3]], neck: [5, -3] }, N: { seat: [-13, 2], neck: [-7, -4] } }, size: { head: -13, neck: -10 }, no: UPRIGHT }, // Zweilous: two heads, the rig reads both as one; everything goes on its left head
+  635: { size: { head: 3 }, no: ['back'] }, // Hydreigon: its own wings; the seat is read narrower than the crest the hat must cover
   636: { no: UPRIGHT }, // Larvesta
-  637: { no: ['back'] }, // Volcarona: its own wings
+  637: { rig: { S: { eyesAt: [[-2, 5], [2, 5]] }, SE: { seat: [7, -2], eyesAt: [[0, 5], [3, 4]] }, E: { seat: [2, -2], eyesAt: [[2, 5]] } }, size: { head: -17, neck: -12 }, no: ['back'] }, // Volcarona: its own wings (the seat spans them)
+  651: { rig: { SE: { eyesAt: [[1, 3], [6, 2]] } } }, // Quilladin: turned a little, its eyes under the shell aren't found
   652: { no: ['back'] }, // Chesnaught: the shell
   653: { no: UPRIGHT }, // Fennekin
   657: { no: ['neck'] }, // Frogadier: the bubbles at its neck
