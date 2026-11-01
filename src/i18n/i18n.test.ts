@@ -11,6 +11,7 @@ describe('detectLocale', () => {
     expect(detectLocale(null, ['es-MX', 'en-US'])).toBe('es')
     expect(detectLocale(null, ['fr-CA', 'en-US'])).toBe('fr')
     expect(detectLocale(null, ['zh-HK', 'en-US'])).toBe('zh')
+    expect(detectLocale(null, ['tr-TR', 'en-US'])).toBe('tr')
     expect(detectLocale(null, ['de-DE', 'en-GB', 'pt-BR'])).toBe('en')
   })
 

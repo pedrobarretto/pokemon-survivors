@@ -412,7 +412,8 @@ const socialCard = (id: SocialId) => {
     'button',
     { class: `lobby-invites lobby-social ${id} box`, type: 'button', 'aria-label': t().socials.follow(s.name), title: t().socials.follow(s.name) },
     h('img', { class: 'lobby-social-icon', src: socialIcon(id), alt: '' }),
-    h('span', { class: 'lobby-invites-text' }, h('b', {}, s.name), h('span', { class: 'lobby-invites-row' }, s.handle)),
+    // The brand name is English: `lang` keeps the uppercase from turning TikTok into TİKTOK on a Turkish page.
+    h('span', { class: 'lobby-invites-text' }, h('b', { lang: 'en' }, s.name), h('span', { class: 'lobby-invites-row' }, s.handle)),
   )
 }
 

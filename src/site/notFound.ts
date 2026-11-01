@@ -44,7 +44,7 @@ export const cleanPath = (pathname: string) => {
   return path.endsWith('/') ? path : `${path}/`
 }
 
-const LOCALES = ['pt', 'en', 'es', 'fr', 'zh'] as const satisfies readonly Locale[]
+const LOCALES = ['pt', 'en', 'es', 'fr', 'zh', 'tr'] as const satisfies readonly Locale[]
 
 /** The language a path's prefix names (`/es/…` → es), or null without one (the Portuguese pages live at the root). */
 export const localeOfPath = (pathname: string, prefixes: Paths): Locale | null => {

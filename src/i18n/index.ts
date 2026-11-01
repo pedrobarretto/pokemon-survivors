@@ -3,6 +3,7 @@ import { es } from './es'
 import { fr } from './fr'
 import { pt, type Messages } from './pt'
 import { zh } from './zh'
+import { tr } from './tr'
 
 export type { Messages }
 
@@ -13,6 +14,7 @@ export const LOCALES = {
   es: { name: 'Español', short: 'ES', tag: 'es-419', messages: es },
   fr: { name: 'Français', short: 'FR', tag: 'fr-FR', messages: fr },
   zh: { name: '繁體中文', short: '中文', tag: 'zh-TW', messages: zh },
+  tr: { name: 'Türkçe', short: 'TR', tag: 'tr-TR', messages: tr },
 } as const satisfies Record<string, { name: string; short: string; tag: string; messages: Messages }>
 
 export type Locale = keyof typeof LOCALES

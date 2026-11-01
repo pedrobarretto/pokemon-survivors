@@ -149,7 +149,7 @@ const simBuildFile = (): Plugin => {
   }
 }
 
-// One page per language for the game (index.html, en/, es/, fr/ and zh-tw/index.html); the site pages are added by `sitePages`.
+// One page per language for the game (index.html, en/, es/, fr/, zh-tw/ and tr/index.html); the site pages are added by `sitePages`.
 export default defineConfig({
   plugins: [sitePages(), simBuildFile()],
   // The co-op relay (`relay/`) is its own package with its own Workers test runner.
@@ -161,7 +161,7 @@ export default defineConfig({
     // Hidden source maps, for `scripts/sourcemaps.mjs` to upload to PostHog, only where it will.
     sourcemap: process.env.POSTHOG_CLI_API_KEY ? 'hidden' : false,
     rolldownOptions: {
-      input: { main: 'index.html', en: 'en/index.html', es: 'es/index.html', fr: 'fr/index.html', zh: 'zh-tw/index.html' },
+      input: { main: 'index.html', en: 'en/index.html', es: 'es/index.html', fr: 'fr/index.html', zh: 'zh-tw/index.html', tr: 'tr/index.html' },
     },
   },
 })

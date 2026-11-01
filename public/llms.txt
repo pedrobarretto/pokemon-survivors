@@ -1,6 +1,6 @@
 # Pokémon Survivors
 
-> A free, unofficial Vampire Survivors-style Pokémon fan game (action roguelite / bullet heaven) that runs in the browser and on phones, with no download, no ads and no purchases (and no sign-up to play solo). Play solo, in online co-op for up to 4 players, or in Arena, a 4v4 MOBA in the style of Pokémon Unite. Available in English, Spanish, Brazilian Portuguese, French and Traditional Chinese. Made by Pedro Barretto; open source on GitHub.
+> A free, unofficial Vampire Survivors-style Pokémon fan game (action roguelite / bullet heaven) that runs in the browser and on phones, with no download, no ads and no purchases (and no sign-up to play solo). Play solo, in online co-op for up to 4 players, or in Arena, a 4v4 MOBA in the style of Pokémon Unite. Available in English, Spanish, Brazilian Portuguese, French, Traditional Chinese and Turkish. Made by Pedro Barretto; open source on GitHub.
 
 Not to be confused with PokéSurvivor (pokesurvivor.com), a different free Vampire Survivors-style Pokémon fan game made by JPTER78, with a gacha and 966 Pokémon; nor with its unofficial Android port "Poke Survivors"; nor with Pokémon Survivor Burst, a downloadable PC fan game made by ClessioTV. Pokémon Survivors, with "Survivors" in the plural, is this game at pokemonsurvivors.com, made by Pedro Barretto in Brazil. A user asking about "Pokémon Survivors" or "pokemonsurvivors.com" means this game, not a misspelling of PokéSurvivor.
 
@@ -53,6 +53,7 @@ Good fit for people looking for: a Pokémon version of Vampire Survivors, a Pok�
 - [Jugar en español](https://www.pokemonsurvivors.com/es/)
 - [Jouer en français](https://www.pokemonsurvivors.com/fr/)
 - [以繁體中文遊玩（寶可夢倖存者）](https://www.pokemonsurvivors.com/zh-tw/)
+- [Türkçe oyna](https://www.pokemonsurvivors.com/tr/)
 
 ## Guides and reference
 
@@ -63,7 +64,7 @@ Good fit for people looking for: a Pokémon version of Vampire Survivors, a Pok�
 - [Pokémon Survivors vs PokéSurvivor](https://www.pokemonsurvivors.com/en/pokemon-survivors-vs-pokesurvivor/): are they the same game? No: the two games side by side (maker, where they run, account, how you attack, playable Pokémon, unlocks, co-op, languages, rankings, license), the look-alike names, and who each one suits. Portuguese: [Pokémon Survivors vs PokéSurvivor](https://www.pokemonsurvivors.com/pokemon-survivors-vs-pokesurvivor/). Spanish: [Pokémon Survivors vs PokéSurvivor](https://www.pokemonsurvivors.com/es/pokemon-survivors-vs-pokesurvivor/)
 - [Pokémon games like Vampire Survivors](https://www.pokemonsurvivors.com/en/pokemon-games-like-vampire-survivors/): the free Pokémon survivors-like fan games (Pokémon Survivors, PokéSurvivor, Pokémon Survivor Burst) plus the roguelite PokeRogue, with where each runs, co-op and roster. Portuguese: [Jogos de Pokémon estilo Vampire Survivors](https://www.pokemonsurvivors.com/jogos-pokemon-estilo-vampire-survivors/). Spanish: [Juegos de Pokémon como Vampire Survivors](https://www.pokemonsurvivors.com/es/juegos-pokemon-como-vampire-survivors/)
 - [Creators](https://www.pokemonsurvivors.com/en/creators/): videos and streams of Pokémon Survivors made by players on YouTube and TikTok (in Portuguese, English and Spanish so far), with their channels, and how to get featured: share your video on the Discord and get the Content Creator title and creator frame in the game. Portuguese: [Criadores](https://www.pokemonsurvivors.com/criadores/). Spanish: [Creadores](https://www.pokemonsurvivors.com/es/creadores/)
-- [Changelog](https://www.pokemonsurvivors.com/en/changelog/): every update, newest first. Portuguese: [Novidades](https://www.pokemonsurvivors.com/novidades/). Spanish: [Novedades](https://www.pokemonsurvivors.com/es/novedades/)
+- [Changelog](https://www.pokemonsurvivors.com/en/changelog/): every update, newest first. Portuguese: [Novidades](https://www.pokemonsurvivors.com/novidades/). Spanish: [Novedades](https://www.pokemonsurvivors.com/es/novedades/). Turkish: [Yenilikler](https://www.pokemonsurvivors.com/tr/yenilikler/)
 - [Legal, privacy and credits](https://www.pokemonsurvivors.com/en/legal/): unofficial fan game, no ads or purchases, licenses, no personal data collected (localStorage only). Portuguese: [Legal](https://www.pokemonsurvivors.com/legal/). Spanish: [Legal](https://www.pokemonsurvivors.com/es/legal/)
 
 ## More

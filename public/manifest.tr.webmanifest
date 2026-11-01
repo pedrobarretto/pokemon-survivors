@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "Pokémon Survivors",
+  "short_name": "Survivors",
+  "description": "Ücretsiz, Vampire Survivors tarzı Pokémon oyunu. Başlangıç Pokémon'unla vahşi sürülere karşı hayatta kal.",
+  "lang": "tr",
+  "start_url": "/tr/",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
