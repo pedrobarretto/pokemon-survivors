@@ -37,6 +37,19 @@ export const context2d = (canvas: HTMLCanvasElement) => {
   return ctx
 }
 
+/**
+ * A canvas' pixels, or null when the browser won't read them back: WebKit throws `InvalidStateError`
+ * from `getImageData` on a canvas it gave no pixels to (past iOS' canvas memory budget, or after
+ * its GPU process let them go). Callers go on without the readback instead of failing every frame.
+ */
+export const readPixels = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
+  try {
+    return ctx.getImageData(x, y, w, h)
+  } catch {
+    return null
+  }
+}
+
 let probe: CanvasRenderingContext2D | null = null
 const checked = new WeakMap<HTMLImageElement, boolean>()
 
@@ -131,7 +144,7 @@ export type Probe = {
  * tab left in the background are purged, the caches' canvases come back blank and the ground
  * draws nothing (a black screen). `check` reads back one pixel of a canvas it painted opaque;
  * gone, it drops the caches as a restore would, on a new probe in case this one stays lost.
- * True if it found them blank. A read every few seconds costs little.
+ * True if it found them blank (or the probe unreadable). A read every few seconds costs little.
  */
 export const canvasWatch = (make: () => Probe | null) => {
   let probe: Probe | null = null
@@ -141,14 +154,32 @@ export const canvasWatch = (make: () => Probe | null) => {
     probe.fillStyle = '#f0f'
     probe.fillRect(0, 0, 1, 1)
   }
+  /** The last probe couldn't be read either: the caches were dropped for it already. */
+  let unreadable = false
+  const read = (p: Probe) => {
+    try {
+      return p.getImageData(0, 0, 1, 1).data[3] ?? 0
+    } catch {
+      return null
+    }
+  }
   return () => {
     if (!probe) {
       paint()
       return false
     }
-    if (probe.getImageData(0, 0, 1, 1).data[3] === 255) return false
-    canvasLosses.wiped++
+    // WebKit throws on a canvas whose pixels it let go (`readPixels`): lost like a blank one, but
+    // only the first time in a row, so a page held past its memory budget doesn't redraw every check.
+    const alpha = read(probe)
+    if (alpha === 255) {
+      unreadable = false
+      return false
+    }
+    const again = alpha === null && unreadable
+    unreadable = alpha === null
     paint()
+    if (again) return false
+    canvasLosses.wiped++
     canvasRestored()
     return true
   }

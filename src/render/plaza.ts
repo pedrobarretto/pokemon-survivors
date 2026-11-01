@@ -1,5 +1,5 @@
 import { clamp, dir8, type Dir8, type Vec } from '../engine/math'
-import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, drawable, ellipse, glow, lazy, onCanvasReset } from '../engine/pixelart'
+import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, drawable, ellipse, glow, lazy, onCanvasReset, readPixels } from '../engine/pixelart'
 import { EMOTES, type Emote } from './art'
 import { drawSparkles, shadow } from './draw'
 import { LANTERN_ART, lanternString, stringLanterns, type LanternKind, type LanternString } from './lanterns'
@@ -146,7 +146,8 @@ const measure = (img: HTMLImageElement): Art => {
   const canvas = createCanvas(img.width, img.height)
   const ctx = context2d(canvas)
   ctx.drawImage(img, 0, 0)
-  const data = ctx.getImageData(0, 0, img.width, img.height).data
+  // Unreadable (`readPixels`): the whole picture counts.
+  const data = readPixels(ctx, 0, 0, img.width, img.height)?.data ?? new Uint8ClampedArray(img.width * img.height * 4).fill(255)
   let minX = img.width
   let maxX = -1
   let minY = img.height
@@ -211,12 +212,13 @@ const put = (ctx: CanvasRenderingContext2D, art: Art, x: number, y: number, from
 
 /* ---------------- The purple brother ---------------- */
 
-/** PMD's purple Kecleon: green-dominant pixels move to a purple ramp; the red stripe and the dark outline stay. */
+/** PMD's purple Kecleon: green-dominant pixels move to a purple ramp; the red stripe and the dark outline stay. Null when the browser won't read the pixels back (`readPixels`). */
 export const purpleize = (src: CanvasImageSource & { width: number; height: number }) => {
   const canvas = createCanvas(src.width, src.height)
   const ctx = context2d(canvas)
   ctx.drawImage(src, 0, 0)
-  const image = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const image = readPixels(ctx, 0, 0, canvas.width, canvas.height)
+  if (!image) return null
   const a = image.data
   for (let i = 0; i < a.length; i += 4) {
     const r = a[i]!
@@ -232,7 +234,7 @@ export const purpleize = (src: CanvasImageSource & { width: number; height: numb
 }
 
 type Sheet = SpeciesSprites['anims']['Idle']
-const purpleSheet = (sheet: Sheet): Sheet => ({ ...sheet, img: purpleize(sheet.img), overlays: null })
+const purpleSheet = (sheet: Sheet): Sheet => ({ ...sheet, img: purpleize(sheet.img) ?? sheet.img, overlays: null })
 
 let brother: { from: SpeciesSprites; to: SpeciesSprites } | null = null
 onCanvasReset(
@@ -1193,12 +1195,13 @@ const pieceCache = new WeakMap<Plaza, { layout: Layout; pieces: Piece[] }>()
 /** A gold leaf ramp, darkest first: each opaque pixel of Kecleon's sheet takes the step of its brightness. */
 const GOLD = ['#3a2408', '#6e4a10', '#a87418', '#d8a428', '#f4d050', '#fff2a8'].map(rgb)
 
-/** Kecleon's sheet cast in gold: the outline stays dark, the rest follows its brightness up the ramp. */
+/** Kecleon's sheet cast in gold: the outline stays dark, the rest follows its brightness up the ramp. Null when unreadable, like `purpleize`. */
 const goldize = (src: CanvasImageSource & { width: number; height: number }) => {
   const canvas = createCanvas(src.width, src.height)
   const ctx = context2d(canvas)
   ctx.drawImage(src, 0, 0)
-  const image = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const image = readPixels(ctx, 0, 0, canvas.width, canvas.height)
+  if (!image) return null
   const a = image.data
   for (let i = 0; i < a.length; i += 4) {
     if (a[i + 3] === 0) continue
@@ -1221,7 +1224,7 @@ onCanvasReset(
 /** The golden Kecleon's sprites, cast once from the green one's. */
 const goldenSprites = (green: SpeciesSprites) => {
   if (golden?.from !== green) {
-    const gild = (sheet: Sheet): Sheet => ({ ...sheet, img: goldize(sheet.img), overlays: null })
+    const gild = (sheet: Sheet): Sheet => ({ ...sheet, img: goldize(sheet.img) ?? sheet.img, overlays: null })
     golden = { from: green, to: { ...green, anims: { Walk: green.anims.Walk, Idle: gild(green.anims.Idle), Hurt: green.anims.Hurt } } }
   }
   return golden.to

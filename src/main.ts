@@ -294,9 +294,26 @@ onCanvasReset(() => {
   context2d(canvas)
   dirty = true
 })
+/**
+ * Gives the game's canvas a new bitmap (setting its size, even to the same one, does) and draws
+ * it again. A browser may keep showing the canvas' last picture once the bitmap behind it went
+ * bad while the page was away: Firefox on Android, after its "Leave page?" was answered Stay,
+ * showed a run's world frozen while the HUD (the minimap too) kept moving. A lost context
+ * (`isContextLost`, where the browser has it) gets the same.
+ */
+const freshCanvas = () => {
+  canvas.width = view.w
+  canvas.height = view.h
+  context2d(canvas)
+  dirty = true
+}
 // iOS Safari wipes the canvases without that event (`checkCanvases`): look every few seconds, and on coming back (below).
 checkCanvases()
-setInterval(() => document.hidden || checkCanvases(), 3000)
+setInterval(() => {
+  if (document.hidden) return
+  checkCanvases()
+  if (ctx.isContextLost?.()) freshCanvas()
+}, 3000)
 
 /**
  * A held frame (paused, a level-up, any menu over a run) draws only when something asks for it,
@@ -316,7 +333,7 @@ const cameBack = () => {
   backAt = performance.now()
   scheduleResize()
   checkCanvases()
-  dirty = true
+  freshCanvas()
 }
 
 /* ---------------- App state ---------------- */
@@ -1517,7 +1534,8 @@ const syncOverlay = (r: Run) => {
       }
       r.overlay = pauseMenu(ui, input, g, {
         // Only from the pause: a late press must never flip a level-up to playing (unrecorded) or end the run under it.
-        resume: () => g.phase === 'paused' && (g.phase = 'playing'),
+        // A fresh canvas too: the player's way out of a world that stopped drawing behind the pause (`freshCanvas`).
+        resume: () => g.phase === 'paused' && ((g.phase = 'playing'), freshCanvas()),
         quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : afterRun(() => showMenu())),
         settings: (back) => runSettings(r, back),
         report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,

@@ -24,6 +24,23 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-01',
+    title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+    highlights: [
+      { pt: 'O jogo não fica mais parado na tela (só o minimapa se mexendo) depois de voltar de outro app ou de tocar em Voltar e escolher ficar.', en: 'The game no longer freezes on screen (only the minimap moving) after coming back from another app, or after pressing Back and choosing to stay.', es: 'El juego ya no se queda congelado en pantalla (solo el minimapa moviéndose) al volver de otra app, o al tocar Atrás y elegir quedarte.', fr: 'Le jeu ne reste plus figé à l’écran (seule la mini-carte bouge) au retour d’une autre appli, ou après avoir appuyé sur Retour et choisi de rester.', zh: '從其他應用程式返回，或按下返回鍵後選擇留下時，畫面不會再卡住（只剩小地圖在動）。' },
+      { pt: 'Se a tela do jogo parar mesmo assim, pausar e continuar a refaz.', en: 'If the game’s screen still stops, pausing and resuming rebuilds it.', es: 'Si la pantalla del juego se detiene igual, pausar y continuar la rehace.', fr: 'Si l’écran du jeu se fige quand même, mettre en pause puis reprendre le refait.', zh: '若遊戲畫面仍然停住，暫停後繼續即可重新繪製。' },
+      { pt: 'iPhone: com pouca memória para imagens, o cenário e a praça não dão mais erro, e o jogo percebe sozinho quando o iOS apaga as imagens.', en: 'iPhone: low on memory for images, the scenery and the plaza no longer throw errors, and the game notices on its own when iOS wipes its images.', es: 'iPhone: con poca memoria para imágenes, el escenario y la plaza ya no dan error, y el juego nota solo cuando iOS borra sus imágenes.', fr: 'iPhone : à court de mémoire pour les images, le décor et la place ne plantent plus, et le jeu remarque de lui-même quand iOS efface ses images.', zh: 'iPhone：圖像記憶體不足時，場景與廣場不再出錯，iOS 清除圖像時遊戲也會自行察覺。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          { pt: 'Android (Firefox e outros): depois de tocar em Voltar e escolher ficar no jogo, ou de voltar de outro app, a tela do jogo podia ficar parada enquanto só o minimapa se mexia. Agora a tela é refeita ao voltar e ao sair da pausa. No iPhone, quando o aparelho fica sem memória para imagens, o jogo também se recupera sem erros.', en: 'Android (Firefox and others): after pressing Back and choosing to stay, or coming back from another app, the game’s screen could stay frozen while only the minimap moved. The screen is now rebuilt when you come back and when you leave the pause. On iPhone, when the device runs out of memory for images, the game also recovers without errors.', es: 'Android (Firefox y otros): después de tocar Atrás y elegir quedarte, o de volver de otra app, la pantalla del juego podía quedarse congelada mientras solo se movía el minimapa. Ahora la pantalla se rehace al volver y al salir de la pausa. En iPhone, cuando el dispositivo se queda sin memoria para imágenes, el juego también se recupera sin errores.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-30',
     title: { pt: 'Criadores e correções', en: 'Creators and fixes', es: 'Creadores y correcciones', fr: 'Créateurs et correctifs', zh: '創作者與修正' },
     highlights: [
