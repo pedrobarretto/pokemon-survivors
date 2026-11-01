@@ -240,6 +240,7 @@ let brother: { from: SpeciesSprites; to: SpeciesSprites } | null = null
 onCanvasReset(
   () => (brother = null),
   () => brother?.to,
+  'lobby',
 )
 
 /** The purple brother's sprites, recolored once from the green Kecleon's. */
@@ -981,6 +982,7 @@ const cobbles = (() => {
   onCanvasReset(
     () => cache.clear(),
     () => cache,
+    'lobby',
   )
   return (rx: number, ry: number) => {
     const key = `${rx}x${ry}`
@@ -1115,7 +1117,7 @@ const ringFloor = lazy(() => {
   tufts(0, 0, w, h, inner, (x, y, c) => set(x, y, c))
   ctx.putImageData(image, 0, 0)
   return { canvas, x: x0, y: y0 }
-})
+}, 'lobby')
 
 /** The shadows' tint: a dark green that reads on the cobblestones and on the grass. */
 const SHADOW = 'rgba(30,40,30,0.3)'
@@ -1128,6 +1130,7 @@ const silhouette = (() => {
   onCanvasReset(
     () => cache.clear(),
     () => cache,
+    'lobby',
   )
   return (art: Art) => {
     const hit = cache.get(art)
@@ -1219,6 +1222,7 @@ let golden: { from: SpeciesSprites; to: SpeciesSprites } | null = null
 onCanvasReset(
   () => (golden = null),
   () => golden?.to,
+  'lobby',
 )
 
 /** The golden Kecleon's sprites, cast once from the green one's. */
@@ -1384,7 +1388,7 @@ const LIGHT = '#ffd678'
 
 /** A light's hard rings (`glow`), built once per size and strength. */
 const lightSprite = (() => {
-  const cache = canvasCache<string, HTMLCanvasElement>()
+  const cache = canvasCache<string, HTMLCanvasElement>('lobby')
   return (r: number, alpha: number) => {
     const key = `${r}:${alpha}`
     const hit = cache.get(key)
@@ -1519,7 +1523,7 @@ const STALL_MARKERS = {
   christmas: { card: '#f8e0e0', arrow: '#d84838', headDy: 0 },
 } as const satisfies Record<StallId, MarkerLook>
 
-const markerCards = canvasCache<string, HTMLCanvasElement>()
+const markerCards = canvasCache<string, HTMLCanvasElement>('lobby')
 /** Stall keepers whose sheets were asked for, so the marker asks once. */
 const markerAsked = new Set<number>()
 

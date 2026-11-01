@@ -13,7 +13,8 @@ import type { LobbyFocus } from './ui/title'
 import type { NetSummary } from './coop/netStats'
 import type { MatchKind, QueueKind } from './data/arenaRanked'
 import type { QueueServerMessage } from './net/arena'
-import type { CrumbMoment, Quality } from './crumb'
+import type { CrumbMoment, LaunchStep, Quality } from './crumb'
+import type { SafeLevel } from './render/quality'
 import type { DeviceInfo } from './telemetry'
 import type { ArenaFormat } from './data/arenaFormats'
 
@@ -91,8 +92,9 @@ type AnalyticsEvents = {
     rerolls: number
     /** The lobby entries opened since the last report (`lobbyPress`), each once. */
     opened: LobbyFocus[]
-    /** Whether the device played it in safe mode (`safeMode.ts`, on after a crash). */
+    /** Whether the device played it in safe mode (`safeMode.ts`, on after a crash), and at which level (2 after crashes again). */
     safeMode: boolean
+    safeLevel: SafeLevel
   } & RunPerf
   /**
    * A Dojo session ended (`game/training.ts`), one per visit: who trained, for how long, and the
@@ -131,6 +133,11 @@ type AnalyticsEvents = {
     /** The run's last key moment before the crash (a boss, a rift, a pick…) and the run's second it came at. */
     moment: CrumbMoment | null
     momentAt: number | null
+    /**
+     * How far the run's launch had got (`LaunchStep`): `ticket` or `sheets` died before the run
+     * existed (no run fields then), `firstFrame` before its first frame, `running` after. Null from a build before it.
+     */
+    launch: LaunchStep | null
     heapMb: number | null
     liveCanvasMb: number | null
     peakLiveCanvasMb: number | null
@@ -143,8 +150,9 @@ type AnalyticsEvents = {
     deviceMemory: number | null
     /** The session's last error, if one came first. */
     error: string | null
-    /** Whether safe mode was on for the run that died (`safeMode.ts`). */
+    /** Whether safe mode was on for the run that died (`safeMode.ts`), and its level. */
     safeMode: boolean
+    safeLevel: SafeLevel
   } & DeviceInfo
   /**
    * The page went away mid-run last time while the player was elsewhere (`takeCrash`'s `away`):

@@ -64,7 +64,7 @@ import { drawSolid, drawTerrainGround, drawWading, keepTerrain, solidCovers, sol
 import { drawGround, GROUND_LOOKAHEAD, warmGround } from './world'
 import { damageBudget, showsText, textAlpha, type DamageNumbers } from './damageNumbers'
 import { CALM_PERIOD, HURT_TINT, type Flashes } from './flashes'
-import { detail } from './quality'
+import { detail, safeShare } from './quality'
 import { localPlayer } from '../game/players'
 import { riftDomain } from '../game/rift'
 import { drawTeamAir, drawTeamGround, drawTeammate, drawTeamMarkers, showsPlain, showsStanding } from './team'
@@ -795,13 +795,22 @@ export const warmScenery = (g: Game | null, calm: boolean, fog: FogMode) => {
 }
 
 /**
+ * How far ahead (game seconds) the next biome's terrain may be kept and built while a menu is
+ * open: not from a run's first second, when the phone is still decoding the run's sheets (the
+ * next biome's pieces weighed as much as the first's), but well before it comes.
+ */
+const TERRAIN_LEAD = 60
+
+/**
  * The biomes whose terrain stays sculpted: the one here, the one dissolving out and the next
- * in order (a run only moves forward); before a run, the first. The rest is dropped (`keepTerrain`).
+ * in order (a run only moves forward) once it's `TERRAIN_LEAD` away; before a run, the first.
+ * The rest is dropped (`keepTerrain`).
  */
 const terrainBiomes = (g: Game | null): BiomeId[] => {
   if (!g) return [BIOME_ORDER[0]]
   const here = g.biome.id
-  const next = BIOME_ORDER[BIOME_ORDER.indexOf(here) + 1]
+  const after = BIOME_ORDER[BIOME_ORDER.indexOf(here) + 1]
+  const next = after && biomeAt(g.time + TERRAIN_LEAD) === after ? after : undefined
   const fading = biomeFade(g)?.from
   return [here, ...(next ? [next] : []), ...(fading && fading !== here ? [fading] : [])]
 }
@@ -1145,8 +1154,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     else if (hz.phantom === 0 && visible(hz.x, hz.y, 200)) drawHazard(ctx, hz)
   drawPhantoms(ctx, g, t)
 
-  // Drawing lean, a big burst shows every 2nd (3rd...) particle, about `LEAN_PARTICLES` in all.
-  const every = lean ? Math.max(1, Math.ceil(g.particles.length / LEAN_PARTICLES)) : 1
+  // Drawing lean, a big burst shows every 2nd (3rd...) particle, about `LEAN_PARTICLES` in all (fewer at safe mode level 2).
+  const every = lean ? Math.max(1, Math.ceil(g.particles.length / (LEAN_PARTICLES * safeShare(detail.safe)))) : 1
   for (let i = 0; i < g.particles.length; i += every) {
     const p = g.particles[i]!
     if (!visible(p.x, p.y, 8)) continue
