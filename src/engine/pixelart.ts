@@ -85,6 +85,8 @@ export const recolor = (rows: readonly string[], palette: Palette) => fromString
 
 const resets: Array<() => void> = []
 const holders: Array<() => unknown> = []
+/** Where each holder was registered (dev builds only), for `heldCanvasesBy`. */
+const holderSites: string[] = []
 
 /**
  * Registers how to drop a cache of drawn canvases. When the browser loses its GPU context
@@ -95,7 +97,9 @@ const holders: Array<() => unknown> = []
  */
 export const onCanvasReset = (reset: () => void, holds?: () => unknown) => {
   resets.push(reset)
-  if (holds) holders.push(holds)
+  if (!holds) return
+  holders.push(holds)
+  if (import.meta.env.DEV) holderSites.push(new Error().stack?.split('\n').find((l, i) => i > 1 && !l.includes('pixelart.ts'))?.trim() ?? '?')
 }
 
 /** Drops every registered cache so it redraws. Called when a canvas gets its context back (`canvasRestored`). */
@@ -214,6 +218,13 @@ const reachableCanvases = (roots: Iterable<unknown>) => {
  * the collector hasn't got to yet. Walks every cache, so it's for a sample every few seconds, not a frame.
  */
 export const heldCanvases = () => weighCanvases(holders.map((holds) => holds()))
+
+/** `heldCanvases` per cache, heaviest first, named by where it registered (dev builds: `ps.canvases()`). */
+export const heldCanvasesBy = () =>
+  holders
+    .map((holds, i) => ({ at: holderSites[i] ?? '?', ...weighCanvases([holds()]) }))
+    .filter((h) => h.canvases > 0)
+    .sort((a, b) => b.bytes - a.bytes)
 
 /** A Map holding drawn canvases, emptied on a GPU reset. */
 export const canvasCache = <K, V>() => {

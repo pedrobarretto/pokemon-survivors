@@ -11,7 +11,7 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { canvasLosses, canvasRestored, checkCanvases, context2d, onCanvasReset, sweepArt, wipeCanvases } from './engine/pixelart'
+import { canvasLosses, canvasRestored, checkCanvases, context2d, heldCanvases, heldCanvasesBy, onCanvasReset, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
@@ -4158,6 +4158,8 @@ if (import.meta.env.DEV) {
       startRun,
       // Sheets loaded (their decoded MB now and at peak; `true` starts a new peak) and frame silhouettes cached right now (`render/sprites.ts`).
       sprites: (resetPeak = false) => ({ ...spriteMemory(resetPeak), overlays: overlayStats() }),
+      // The canvases each cache holds now (`heldCanvasesBy`), heaviest first, and their sum (`heldCanvases`, the crash report's numbers).
+      canvases: () => ({ total: heldCanvases(), by: heldCanvasesBy() }),
       coop: devCoop,
       versus: devVersus,
       arena: devArena,
