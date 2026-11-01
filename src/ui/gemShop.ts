@@ -68,12 +68,10 @@ const fits = (id: CosmeticId, dex: Dex) => !isWearableId(id) || fitsWearer(dex, 
 /** Wearables' icons as image URLs, made once each from their models (`wearableIcon`) once the engine is in. */
 const icons = new Map<CosmeticId, string>()
 
-/** A card's art: the wearable itself, a follower's portrait, or its slot's icon (another effect, or a wearable while the engine loads). */
+/** A card's art: the wearable itself, or its slot's icon (another effect, or a wearable while the engine loads). */
 const iconUrl = (id: CosmeticId) => {
   const made = icons.get(id)
   if (made) return made
-  const follower = effectIn('follower', id)
-  if (follower) return portraitUrl(follower.dex)
   const icon = isWearableId(id) ? wearableIcon(id) : null
   if (!icon) return slotIconUrl(slotOf(id))
   const url = icon.toDataURL()
@@ -105,7 +103,7 @@ const BURST_SLOTS = ['spawn', 'ko', 'goal'] as const satisfies readonly Cosmetic
 /**
  * A Pokémon on a little stage wearing `look()`, with its effects
  * (`createFxPreview`): it walks, turning through its 8 directions with the
- * camera on it, so a trail falls behind and a follower trots after; every few
+ * camera on it, so a trail falls behind; every few
  * seconds it plays its emote, and its spawn, KO and goal effects take turns.
  * A plate frames its name and HP bar, and a title shows under the stage.
  * `focus()` is the item being shown off: an emote plays on and on, a spawn,
@@ -176,7 +174,7 @@ const lookStage = (wearer: () => Wearer, look: () => Look, focus: () => Cosmetic
     fx.step(show, dex, at.x, at.y, emoteFor === null, emoteFor !== null, seconds)
     const emote = emoteFor !== null ? fx.emote(show, dex, emoteFor) : null
     // Small Pokémon get doubled (whole pixels), big ones stay 1:1; with effects around, they get the room.
-    const busy = show.follower !== undefined || show.trail !== undefined || bursts.length > 0
+    const busy = show.trail !== undefined || bursts.length > 0
     const scale = !busy && s.bodyH * 2 <= canvas.height - 28 ? 2 : 1
     const cx = canvas.width / 2
     const cy = busy ? Math.round(canvas.height * 0.68) : canvas.height - 12
@@ -186,13 +184,11 @@ const lookStage = (wearer: () => Wearer, look: () => Look, focus: () => Cosmetic
     const x = Math.round(at.x)
     const y = Math.round(at.y)
     fx.drawGround(ctx, show, x, y, emoteFor)
-    fx.drawFollower(ctx, seconds, y, false)
     // An emote's sheet plays bare: the wearables' anchors only cover Walk, Idle and Hurt (as in a match).
     if (emote) drawPokemon(ctx, s, 'Idle', 0, emote.seconds, x, y, { sheet: emote.sheet, loop: emote.loop })
     else {
       drawDressed(ctx, s, show, 'Walk', dir, seconds, x, y)
     }
-    fx.drawFollower(ctx, seconds, y, true)
     fx.drawAir(ctx, seconds)
     ctx.restore()
     // A plate frames the name over its head and the HP bar under its feet, as in a match.

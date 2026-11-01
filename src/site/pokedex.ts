@@ -13,7 +13,6 @@ import { NIGHT_BOSSES } from '../data/halloween'
 import { ENDLESS, REAPER } from '../game/endless'
 import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
-import { ARENA_EFFECTS, type ArenaEffectDef } from '../data/arenaEffects'
 import { TAILOR } from '../data/visitors'
 import { EVENT_LEGENDS, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
 
@@ -60,8 +59,6 @@ export type DexEntry = {
     | { kind: 'companion'; id: SpecialCompanionId }
     /** `cameo`: seen only in a domain's scene (Cresselia breaking Darkrai's nightmare, `LegendDomain.cameo`), never fought. */
     | { kind: 'cameo'; by: RiftLegend }
-    /** `arena`: an Arena follower (`follower` in `data/arenaEffects.ts`) met nowhere else. */
-    | { kind: 'arena' }
     /** `lobby`: lives only in the lobby (Leavanny, the Boutique's tailor, `TAILOR`). */
     | { kind: 'lobby' }
 }
@@ -148,10 +145,6 @@ const cameoEntries = (): DexEntry[] =>
     return c ? [{ ...base(c.dex, c.name, c.types), role: 'event' as const, source: { kind: 'cameo' as const, by } }] : []
   })
 
-/** The Arena's followers no other source lists, as event Pokémon. */
-const arenaEntries = (listed: ReadonlySet<number>): DexEntry[] =>
-  Object.values(ARENA_EFFECTS).flatMap((d: ArenaEffectDef) => (d.slot === 'follower' && !listed.has(d.dex) ? [{ ...base(d.dex, d.name, d.types), role: 'event' as const, source: { kind: 'arena' as const } }] : []))
-
 /** Who lives only in the lobby (Leavanny at the Boutique), as event Pokémon. */
 const lobbyEntries = (): DexEntry[] => [{ ...base(TAILOR.dex, TAILOR.name, TAILOR.types), role: 'event', source: { kind: 'lobby' } }]
 
@@ -173,12 +166,11 @@ export const gameDex = (): DexEntry[] => {
 
 /**
  * The site's Pokédex: every species the game loads, `gameDex()` plus the
- * gift-only companions, the domains' cameos and the Arena's followers (never
+ * gift-only companions, the domains' cameos and the lobby's Leavanny (never
  * met in a run, so never counted in game).
  */
 export const pokedex = (): DexEntry[] => {
-  const listed = [...gameDex(), ...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries()]
-  return [...listed, ...arenaEntries(new Set(listed.map((e) => e.dex)))].sort(byDex)
+  return [...gameDex(), ...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries()].sort(byDex)
 }
 
 /* ---------------- When a wild Pokémon shows up ---------------- */

@@ -17,7 +17,6 @@ const SLOT_ROWS = {
   face: sym(['......', '......', '......', '......', '.oooo.', 'owwwwo', 'owggwo', '.oooo.', '......', '......', '......', '......']),
   neck: sym(['......', '......', '......', 'oooooo', 'owwwww', 'owgwgw', 'oooooo', '....ow', '...owg', '...ooo', '......', '......']),
   back: sym(['......', '...ooo', '..owww', '.owwww', '.owwww', 'owwwww', 'owwwww', 'owgwww', 'owwgww', 'owwwgw', 'oooooo', '......']),
-  follower: sym(['......', '...oo.', '..owwo', '.o.oo.', 'owo...', 'owo.oo', '.o.oww', '...oww', '..owww', '..owww', '...ooo', '......']),
   trail: sym(['......', '.....o', '....ow', '....ow', '..ooow', 'oowwww', '..ooow', '....ow', '....ow', '.....o', '......', '......']),
   spawn: sym(['.....o', '....ow', '....ow', 'ooooow', '.owwww', '..owww', '..owww', '.owwoo', '.owo..', '.oo...', '......', '......']),
   ko: sym(['......', '.o...o', '..o.ow', '...oww', 'ooowww', '.owwww', '..owwg', '.owwww', 'ooowww', '...oww', '..o.ow', '.o...o']),

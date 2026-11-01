@@ -19,10 +19,10 @@ describe('cosmeticPrice', () => {
 })
 
 describe('where a look shows', () => {
-  const look = parseLook({ head: 'strawHat', trail: 'sparkTrail', follower: 'pichuFollower', emote: 'victoryEmote', ko: 'koSupernova' })
+  const look = parseLook({ head: 'strawHat', trail: 'sparkTrail', emote: 'victoryEmote', ko: 'koSupernova' })
 
-  it('wears, follows and trails in a run, and keeps the Arena-only slots for the Arena', () => {
-    expect(lookIn(look, 'run')).toEqual({ head: 'strawHat', trail: 'sparkTrail', follower: 'pichuFollower' })
+  it('wears and trails in a run, and keeps the Arena-only slots for the Arena', () => {
+    expect(lookIn(look, 'run')).toEqual({ head: 'strawHat', trail: 'sparkTrail' })
     expect(lookIn(look, 'arena')).toEqual(look)
   })
 
@@ -30,6 +30,6 @@ describe('where a look shows', () => {
     expect(arenaOnly('koSupernova')).toBe(true)
     expect(arenaOnly('victoryEmote')).toBe(true)
     expect(arenaOnly('strawHat')).toBe(false)
-    expect(arenaOnly('pichuFollower')).toBe(false)
+    expect(arenaOnly('sparkTrail')).toBe(false)
   })
 })

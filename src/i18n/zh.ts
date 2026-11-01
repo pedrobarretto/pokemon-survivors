@@ -554,12 +554,12 @@ export const zh: Messages = {
     angelWings: '天使翅膀',
     royalCape: '皇家披風',
   },
-  arenaEffects: { pichuFollower: 'Pichu', togepiFollower: 'Togepi', azurillFollower: 'Azurill', swabluFollower: 'Swablu', togedemaruFollower: 'Togedemaru', dedenneFollower: 'Dedenne', eeveeFollower: 'Eevee', snomFollower: 'Snom', mimikyuFollower: 'Mimikyu', mewFollower: 'Mew', sparkTrail: '火花軌跡', petalTrail: '花瓣軌跡', bubbleTrail: '泡泡軌跡', emberTrail: '火星軌跡', snowTrail: '雪花軌跡', heartTrail: '愛心軌跡', starTrail: '星塵軌跡', rainbowTrail: '彩虹軌跡', spawnBeam: '光之柱', spawnLeaves: '落葉旋風', spawnSplash: '水花登場', spawnThunder: '雷霆降臨', spawnPokeball: '精靈球登場', koStars: '暈眩星星', koPuff: '煙塵', koGhost: '小幽靈', koLightning: '最後一擊', koSupernova: '超新星', goalConfetti: '彩紙', goalCoins: '聚寶功', goalBalloons: '氣球', goalHearts: '愛心爆發', goalRainbow: '凱旋彩虹', cheerEmote: '歡呼', spinEmote: '旋轉', napEmote: '打盹', powerEmote: '集氣', danceEmote: '跳舞', victoryEmote: '勝利姿勢', rookieTitle: '新秀', teamTitle: '團隊精神', goalTitle: '得分高手', wallTitle: '鐵壁', jungleTitle: '叢林殺手', unstoppableTitle: '勢不可擋', legendTitle: '競技場傳說', plateSteel: '鋼鐵名牌', plateLeaf: '綠葉名牌', plateWave: '海浪名牌', plateFlame: '火焰名牌', plateGold: '黃金名牌', plateMaster: '大師球名牌' },
+  arenaEffects: { sparkTrail: '火花軌跡', petalTrail: '花瓣軌跡', bubbleTrail: '泡泡軌跡', emberTrail: '火星軌跡', snowTrail: '雪花軌跡', heartTrail: '愛心軌跡', starTrail: '星塵軌跡', rainbowTrail: '彩虹軌跡', spawnBeam: '光之柱', spawnLeaves: '落葉旋風', spawnSplash: '水花登場', spawnThunder: '雷霆降臨', spawnPokeball: '精靈球登場', koStars: '暈眩星星', koPuff: '煙塵', koGhost: '小幽靈', koLightning: '最後一擊', koSupernova: '超新星', goalConfetti: '彩紙', goalCoins: '聚寶功', goalBalloons: '氣球', goalHearts: '愛心爆發', goalRainbow: '凱旋彩虹', cheerEmote: '歡呼', spinEmote: '旋轉', napEmote: '打盹', powerEmote: '集氣', danceEmote: '跳舞', victoryEmote: '勝利姿勢', rookieTitle: '新秀', teamTitle: '團隊精神', goalTitle: '得分高手', wallTitle: '鐵壁', jungleTitle: '叢林殺手', unstoppableTitle: '勢不可擋', legendTitle: '競技場傳說', plateSteel: '鋼鐵名牌', plateLeaf: '綠葉名牌', plateWave: '海浪名牌', plateFlame: '火焰名牌', plateGold: '黃金名牌', plateMaster: '大師球名牌' },
   arenaFx: { emote: '表情', emoteWait: '請稍候再做下一個表情。' },
   gems: {
     chip: (n: string) => `${n} 顆寶石`,
     gems: (n: string) => `${n} 顆寶石`,
-    slots: { head: '頭部', face: '臉部', neck: '頸部', back: '背部', follower: '跟班', trail: '軌跡', spawn: '登場', ko: '擊倒', goal: '得分', emote: '表情', title: '稱號', plate: '名牌' },
+    slots: { head: '頭部', face: '臉部', neck: '頸部', back: '背部', trail: '軌跡', spawn: '登場', ko: '擊倒', goal: '得分', emote: '表情', title: '稱號', plate: '名牌' },
     rarities: { common: '普通', rare: '稀有', epic: '史詩', legendary: '傳說' },
     packs: { pouch: '一小把', bag: '一袋', chest: '寶箱', hoard: '寶藏', vault: '金庫' },
     shop: {

@@ -1,18 +1,13 @@
 import type { CosmeticBase, CosmeticSlot } from './cosmetics'
-import type { PokeType } from './types'
 
 /**
  * The cosmetics that aren't worn (`data/cosmetics.ts` spreads them into the
- * catalog): a follower that trots after the Pokémon, a trail, titles and
- * name plates, in every mode; the spawn, KO and goal effects and emotes, in
+ * catalog): a trail, titles and name plates, in every mode; the spawn, KO and goal effects and emotes, in
  * the Arena (`SLOT_MODES`). Pure presentation, drawn by the shell
  * (`render/arenaFx.ts`) from what the simulation already says happened (a
  * goal, a KO), never feeding back into it. Only the emote reaches the match, as a tick entry with no payload
  * (`versusSocial.ts`): every screen plays the emote the seat's look names.
  *
- * - `follower`: a small Pokémon (`dex`, SpriteCollab's sheets; `float`: it
- *   hovers) trotting after its trainer like the supporters' companion. Its
- *   `name` and `types` list it in the site's Pokédex when nothing else does.
  * - `trail`: particles left while moving (`TrailKind`).
  * - `spawn`, `ko`, `goal`: a one-shot effect (`BurstKind`) where the Pokémon
  *   (re)spawns, on a rival it knocked out, at the goal it scored in.
@@ -63,7 +58,6 @@ type Base<S extends CosmeticSlot> = CosmeticBase & { slot: S }
 type Burst<S extends 'spawn' | 'ko' | 'goal'> = Base<S> & { burst: BurstKind }
 
 export type ArenaEffectDef =
-  | (Base<'follower'> & { dex: number; name: string; types: readonly PokeType[]; float?: boolean })
   | (Base<'trail'> & { trail: TrailKind })
   | Burst<'spawn'>
   | Burst<'ko'>
@@ -73,18 +67,6 @@ export type ArenaEffectDef =
   | (Base<'plate'> & { plate: PlateStyle })
 
 export const ARENA_EFFECTS = {
-  // Followers: cute and small, none of them in the Arena's roster.
-  pichuFollower: { slot: 'follower', rarity: 'common', dex: 172, name: 'Pichu', types: ['electric'] },
-  togepiFollower: { slot: 'follower', rarity: 'common', dex: 175, name: 'Togepi', types: ['fairy'] },
-  azurillFollower: { slot: 'follower', rarity: 'common', dex: 298, name: 'Azurill', types: ['normal', 'fairy'] },
-  swabluFollower: { slot: 'follower', rarity: 'rare', dex: 333, name: 'Swablu', types: ['normal', 'flying'], float: true },
-  togedemaruFollower: { slot: 'follower', rarity: 'rare', dex: 777, name: 'Togedemaru', types: ['electric', 'steel'] },
-  dedenneFollower: { slot: 'follower', rarity: 'rare', dex: 702, name: 'Dedenne', types: ['electric', 'fairy'] },
-  eeveeFollower: { slot: 'follower', rarity: 'epic', dex: 133, name: 'Eevee', types: ['normal'] },
-  snomFollower: { slot: 'follower', rarity: 'epic', dex: 872, name: 'Snom', types: ['ice', 'bug'] },
-  mimikyuFollower: { slot: 'follower', rarity: 'epic', dex: 778, name: 'Mimikyu', types: ['ghost', 'fairy'] },
-  mewFollower: { slot: 'follower', rarity: 'legendary', dex: 151, name: 'Mew', types: ['psychic'], float: true },
-
   sparkTrail: { slot: 'trail', rarity: 'common', trail: 'spark' },
   petalTrail: { slot: 'trail', rarity: 'common', trail: 'petal' },
   bubbleTrail: { slot: 'trail', rarity: 'common', trail: 'bubble' },
@@ -148,6 +130,3 @@ export const effectIn = <S extends ArenaEffectDef['slot']>(slot: S, id: string |
   const def: ArenaEffectDef = ARENA_EFFECTS[id]
   return def.slot === slot ? (def as EffectOf<S>) : null
 }
-
-/** The followers' species, for the asset pipeline (`FOLLOWERS` in scripts/dex.mjs must hold them) and preloading. */
-export const FOLLOWER_DEX = Object.values(ARENA_EFFECTS).flatMap((d: ArenaEffectDef) => (d.slot === 'follower' ? [d.dex] : []))
