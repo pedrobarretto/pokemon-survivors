@@ -52,7 +52,7 @@ export const LANTERN_ART = lazy(() => ({
   sky: fromStrings(['.OOO.', 'OFffO', 'OffoO', 'OfooO', '.OOO.', '..y..'], PALETTE),
   skyFar: fromStrings(['.O.', 'OfO', 'OoO', '.y.'], PALETTE),
   firefly: fromStrings(['F'], PALETTE),
-}))
+}), 'lobby')
 
 /** A lantern string from a tie point to another `dx`, `dy` px away, sagging `sag` px, a lantern each `step` px from `start` px in, cycling `kinds`. */
 export type LanternString = { dx: number; dy: number; sag: number; step: number; start: number; kinds: readonly LanternKind[] }
@@ -78,7 +78,7 @@ const BELOW = 12
  * minus `ox`, `oy`. Cached per shape, dropped on a GPU reset.
  */
 export const lanternString = (() => {
-  const cache = canvasCache<string, { canvas: HTMLCanvasElement; ox: number; oy: number }>()
+  const cache = canvasCache<string, { canvas: HTMLCanvasElement; ox: number; oy: number }>('lobby')
   return (s: LanternString) => {
     const key = `${s.dx},${s.dy},${s.sag},${s.step},${s.start},${s.kinds.join('+')}`
     const hit = cache.get(key)

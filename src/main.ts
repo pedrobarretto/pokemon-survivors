@@ -2,7 +2,7 @@ import '@fontsource/press-start-2p'
 import '@fontsource/vt323'
 import './ui/style.css'
 // First, so its error listeners catch what goes wrong while the rest loads.
-import { bugReportsEnabled, describeWith, deviceMemory, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
+import { bugReportsEnabled, describeWith, deviceMemory, launchStep, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
 import type { BugCrash } from './game/bugReport'
 
 import { playCry, playSfx, unlockAudio, type Sfx } from './engine/audio'
@@ -11,7 +11,7 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { canvasLosses, canvasRestored, checkCanvases, context2d, heldCanvases, heldCanvasesBy, onCanvasReset, sweepArt, wipeCanvases } from './engine/pixelart'
+import { canvasLosses, canvasRestored, checkCanvases, context2d, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
@@ -122,8 +122,8 @@ import { MOVES } from './game/moves'
 import type { Game, GameEvent, Offer, Phase, Player } from './game/types'
 import { setWeather } from './game/weather'
 import { render, warmScenery } from './render/draw'
-import { createGovernor, detail, observeFrame } from './render/quality'
-import { loadSafeMode, noteCleanRun, noteCrash, safeModeOn, setSafeMode, takeSafeNotice, type SafeChoice } from './safeMode'
+import { createGovernor, detail, observeFrame, type SafeLevel } from './render/quality'
+import { loadSafeMode, noteCleanRun, noteCrash, safeModeLevel, safeModeOn, setSafeLevel, setSafeMode, takeSafeNotice, type SafeChoice } from './safeMode'
 import { drawJoystick } from './render/joystick'
 import { cryUrl, loadAll, loadSpecies, overlayStats, portraitUrl, preloadShinies, releaseSprites, spriteMemory, streamSprites, sweepSprites, type Dex, type Variant } from './render/sprites'
 import { castNeeds, runSprites, type SpriteNeed } from './render/spriteNeeds'
@@ -909,7 +909,8 @@ const reportRun = (r: Run, faint: Extract<GameEvent, { kind: 'gameover' }> | nul
     ...(g.halloween ? { candies: g.candies } : {}),
     rerolls,
     opened: takeOpened(),
-    safeMode: detail.safe,
+    safeMode: detail.safe > 0,
+    safeLevel: detail.safe,
   }, { beacon: left })
   rerolls = 0
   // The page dying would have left the run unreported: a long run that got here counts toward safe mode turning off.
@@ -1079,7 +1080,8 @@ const syncSprites = () => {
   if (startingRun) return
   sweepArt(ART_IDLE)
   if (run) {
-    const { stream, extras, keep } = runSprites(run.game, run.sprites.needs, run.sprites.always)
+    // At safe mode level 2 the cast streams only a little ahead: fewer sheets held at once.
+    const { stream, extras, keep } = runSprites(run.game, run.sprites.needs, run.sprites.always, detail.safe === 2)
     // The forms and shiny colors about to show up first, then the cast by when it comes.
     streamSprites([...extras, ...stream])
     // The results screen is a menu: its share card loads the run's shinies and legendaries to draw them.
@@ -1095,6 +1097,22 @@ const syncSprites = () => {
 /** True while a run swaps the lobby's sheets for its own (`loadRunSheets`): the meadow holds still and the menus' stream waits. */
 let startingRun = false
 
+/** Set as a run is set up, until the frame loop draws it: the crash watch then marks the launch done (`launchStep`). */
+let firstFrameDue = false
+
+/** The run is set up: the watch says so now, and again once its first frame is drawn (`firstFrameDrawn`). */
+const awaitFirstFrame = () => {
+  firstFrameDue = true
+  launchStep('firstFrame')
+}
+
+/** Called after each frame that drew a run: the first one ends its launch. */
+const firstFrameDrawn = () => {
+  if (!firstFrameDue) return
+  firstFrameDue = false
+  launchStep('running')
+}
+
 /** A player's whole family (branches included: the evolution scene can land on any of them) in the colors they play, not the normal ones as well. */
 const familySheets = (starter: PlayableId, shiny: boolean): Variant[] => familyDex(starter).map((dex) => ({ dex, shiny }))
 
@@ -1107,6 +1125,9 @@ const familySheets = (starter: PlayableId, shiny: boolean): Variant[] => familyD
  */
 const loadRunSheets = async (families: readonly Variant[], opening: readonly Dex[], progress?: (done: number, total: number) => void) => {
   startingRun = true
+  launchStep('sheets')
+  // The lobby's own art (the plaza, the Estádio, the Dojo, the logo) goes too: back there, it's drawn again.
+  dropLobbyArt()
   try {
     const sheets = [...families, ...opening.map((dex) => ({ dex, shiny: false }))]
     await releaseSprites({ species: new Set(sheets.map((v) => v.dex)), variants: new Set(families.flatMap((v) => (v.shiny ? [v.dex] : []))) })
@@ -1133,6 +1154,8 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
   launching = true
   try {
     await launchRun(starter, daily)
+    // A launch that didn't end in a run (a newer build reloading) leaves no watch behind.
+    if (!run) launchStep(null)
   } finally {
     launching = false
   }
@@ -1144,6 +1167,8 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   setScreen(null)
   endRun()
   wonLastRun = false
+  // The crash watch holds the launch from here: a page dying while the run loads says where (`launchStep`).
+  launchStep('ticket')
   const c = daily?.challenge ?? null
   // The Desafio do dia's Pokémon is the day's, not the player's pick.
   if (!c) updateSave((s) => ({ ...s, partner: starter }))
@@ -1241,7 +1266,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // The crash watch holds the run from now on (`bugReport.ts`), and the run's own peaks and frames start here.
   resetMemoryPeaks()
   resetRunFrames(frames)
-  syncRunWatch()
+  awaitFirstFrame()
   announceRun(start, run.challenge)
 }
 
@@ -1391,7 +1416,7 @@ const startDojo = async (starter: PlayableId) => {
     syncSprites()
     resetMemoryPeaks()
     resetRunFrames(frames)
-    syncRunWatch()
+    awaitFirstFrame()
     if (build) aside(rich(t().training.loaded(name)), 3000, 'dojo')
   } finally {
     launching = false
@@ -2370,10 +2395,11 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   if (splash) splash.dispose()
   else loading.remove()
   // Closed for good while loading (kicked, the room gone): the close already went back to the title.
-  if (client.state().status.kind === 'closed') return
+  if (client.state().status.kind === 'closed') return launchStep(null)
   // The run may have moved on while loading (a heal, a newer run): show the client's current one.
   const live = client.state().runner
-  if (!live || run?.coop?.runner === live) return
+  if (!live) return launchStep(null)
+  if (run?.coop?.runner === live) return awaitFirstFrame()
   if (run) endRun()
   const save = loadSave()
   const view = createDrawView(live.game)
@@ -2453,7 +2479,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   syncSprites()
   resetMemoryPeaks()
   resetRunFrames(frames)
-  syncRunWatch()
+  awaitFirstFrame()
   leftRun = null
   syncPresence()
 }
@@ -2648,6 +2674,7 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   c.versus?.controls.frame(shown, localPlayer(shown))
   const drawAt = performance.now()
   render(ctx, shown, t, { ...settings(), companion: null, mates: c.view.mates, shakeOffset: c.shake, arena: c.versus?.controls.overlay() })
+  firstFrameDrawn()
   noteDraw(c.net, { renderMs: performance.now() - drawAt, dt, shake: shown.shake > 0, prediction: c.prediction })
   const stick = input.readStick()
   if (stick && shown.phase === 'playing') drawJoystick(ctx, stick, cssScale)
@@ -3313,7 +3340,7 @@ const governor = createGovernor((navigator as Navigator & { deviceMemory?: numbe
 /** `ps.quality()` pins the governor's choice for screenshots and tests. */
 let qualityPin: 'auto' | 'lean' | 'full' = 'auto'
 /** Lean drawing as the governor says, always in safe mode (`safeMode.ts`), unless `ps.quality` pins it. */
-const drawsLean = () => (qualityPin === 'auto' ? governor.lean || detail.safe : qualityPin === 'lean')
+const drawsLean = () => (qualityPin === 'auto' ? governor.lean || detail.safe > 0 : qualityPin === 'lean')
 /** When the last frame that advanced the run was drawn (NaN after one that didn't). */
 let lastDrawn = NaN
 /** Seconds of menu time not drawn yet: the menus' meadow and screens draw at most about 60 times a second. */
@@ -3393,6 +3420,7 @@ const frame = (now: number) => {
         dirty = false
         runDrawnAt = now
         render(ctx, g, t, { ...settings(), companion: r.companion })
+        firstFrameDrawn()
         const stick = input.readStick()
         if (stick && g.phase === 'playing') drawJoystick(ctx, stick, cssScale)
         r.hud.update(g)
@@ -3560,7 +3588,7 @@ const watchDeploys = () => {
  * Counts a run the page died in, once, whether or not the player reports it: rare enough for an event of its own.
  * Waits for the device's Client Hints (2 s at most), which this boot asks for the same phone.
  */
-const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeMode: boolean) => {
+const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeLevel: SafeLevel) => {
   const device = await deviceInfo()
   track('run_crash', {
     version: c.version,
@@ -3578,6 +3606,7 @@ const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeMode: boolean) 
     biome: c.run?.biome || null,
     moment: crumb?.moment ?? null,
     momentAt: crumb?.momentAt ?? null,
+    launch: crumb?.launch ?? null,
     heapMb: c.heapMb,
     liveCanvasMb: crumb?.canvasMb ?? null,
     peakLiveCanvasMb: crumb?.peakCanvasMb ?? null,
@@ -3590,7 +3619,8 @@ const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeMode: boolean) 
     deviceMemory: deviceMemory(),
     ...device,
     error: c.error?.message ?? null,
-    safeMode,
+    safeMode: safeLevel > 0,
+    safeLevel,
   })
 }
 
@@ -3618,8 +3648,8 @@ const askAboutCrash = () => {
   if (!found) return
   if (found.away) return void reportClosed(found.crash, found.away)
   const { crash, crumb } = found
-  // Whether safe mode was on for the run that died, then on from here (`safeMode.ts`).
-  void reportCrash(crash, crumb, safeModeOn())
+  // The safe mode level the run that died played at, then up a level from here (`safeMode.ts`).
+  void reportCrash(crash, crumb, safeModeLevel())
   noteCrash()
   if (!bugReportsEnabled || !screen?.el.classList.contains('title-home')) return
   crashPrompt(screen.el, () => setScreen(bugReportForm(ui, input, () => showTitle(), crash)))
@@ -4205,10 +4235,14 @@ if (import.meta.env.DEV) {
         detail.lean = drawsLean()
         return { pin: qualityPin, drawing: detail.lean ? 'lean' : 'full', safe: detail.safe, governor: { ...governor } }
       },
-      /** `ps.safeMode(true)` turns safe mode on as Ajustes would (`false` off, `'auto'` back to the crashes); returns its stored state. */
-      safeMode: (choice?: boolean | SafeChoice) => {
-        if (choice !== undefined) setSafeMode(choice === true ? 'on' : choice === false ? 'off' : choice)
-        return { on: safeModeOn(), ...loadSafeMode() }
+      /**
+       * `ps.safeMode(true)` turns safe mode on as Ajustes would (`false` off, `'auto'` back to the crashes);
+       * `ps.safeMode(2)` sets the crashes' level (0 to 2) as if they had come. Returns its stored state and the level drawn.
+       */
+      safeMode: (choice?: boolean | SafeChoice | SafeLevel) => {
+        if (typeof choice === 'number') setSafeLevel(choice)
+        else if (choice !== undefined) setSafeMode(choice === true ? 'on' : choice === false ? 'off' : choice)
+        return { on: safeModeOn(), drawn: safeModeLevel(), ...loadSafeMode() }
       },
       /** `ps.wipeCanvases()` blanks the caches' canvases and the screen as iOS does unannounced; the canvas watch redraws them within seconds. Returns its counts. */
       wipeCanvases: () => {

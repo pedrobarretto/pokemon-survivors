@@ -5,7 +5,7 @@ import { EVENTS, STAGES, stageStart } from '../data/waves'
 import { enterDomain, jumpToAct } from '../game/domain'
 import { createGame, step } from '../game/game'
 import { drawRoster } from '../game/roster'
-import { bossForms, castNeeds, dueNeeds, playerForms } from './spriteNeeds'
+import { bossForms, castNeeds, dueNeeds, playerForms, RUN_SETTLE, streamHorizon } from './spriteNeeds'
 
 const roster = drawRoster(createRng(42))
 const needs = castNeeds(roster)
@@ -28,6 +28,14 @@ describe('dueNeeds', () => {
     const boss = EVENTS.findIndex((e) => e.kind === 'boss' && e.at >= STAGES[4]!.until && e.at < STAGES[5]!.until)
     const id = roster.events[boss]
     expect(id && due.includes(ENEMIES[id].dex)).toBe(true)
+  })
+
+  it("streams only what shows now in a run's first seconds, and a little ahead when near", () => {
+    const settling = dueNeeds(needs, 0, streamHorizon(0))
+    expect(settling.sort()).toEqual([...new Set(poolDex(0))].sort())
+    const at = RUN_SETTLE + 1
+    expect(streamHorizon(at)).toBe(STAGES[1]!.until)
+    expect(streamHorizon(at, true)).toBeLessThan(STAGES[0]!.until)
   })
 
   it('lists the soonest first, each species once', () => {

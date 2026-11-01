@@ -26,7 +26,7 @@ const tintAll = (s: SpeciesSprites, n: number) => {
 }
 
 afterEach(() => {
-  detail.safe = false
+  detail.safe = 0
   vi.useRealTimers()
 })
 
@@ -37,7 +37,7 @@ describe('silhouette pages', () => {
     tintAll(species(255), OVERLAY_PAGES * 4)
     vi.runAllTimers()
     expect(overlayStats().pages).toBe(OVERLAY_PAGES)
-    detail.safe = true
+    detail.safe = 1
     // Shorter frames fit no shelf there and no evicted spot: only freeing whole pages makes room.
     tintAll(species(100), 3)
     expect(() => vi.runAllTimers()).not.toThrow()

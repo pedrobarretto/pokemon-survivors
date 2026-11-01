@@ -5,7 +5,7 @@ import manifest from '../data/sprites.generated.json'
 import { createCanvas, context2d, drawable, fromStrings, onCanvasReset } from '../engine/pixelart'
 import { sheetsLocked } from '../game/communityGoal'
 import type { Dir8 } from '../engine/math'
-import { detail } from './quality'
+import { detail, type SafeLevel } from './quality'
 
 /**
  * Loader/renderer for PMD SpriteCollab sheets. Each sheet has 8 rows (one per
@@ -204,8 +204,8 @@ const SHELF_SLACK = 6
  * trimmed to their opaque boxes, 8 pages hold more of them than that did.
  */
 export const OVERLAY_PAGES = 8
-/** Pages kept at most in safe mode (`detail.safe`): half the memory, for some silhouettes redone on a crowded screen. */
-const SAFE_OVERLAY_PAGES = 4
+/** Pages kept at most at each safe mode level (`detail.safe`): half the memory, then a quarter, for some silhouettes redone on a crowded screen. */
+const SAFE_OVERLAY_PAGES = [OVERLAY_PAGES, 4, 2] as const satisfies Record<SafeLevel, number>
 
 /** Sweeps (`sweepSprites`) a silhouette stays undrawn before it's dropped; a page left empty is freed. */
 const OVERLAY_IDLE = 10
@@ -288,7 +288,7 @@ const spot = (w: number, h: number): { shelf: Shelf; x: number } | null => {
     }
   }
   let page = pages.find((p) => p.top + h <= PAGE)
-  if (!page && pages.length < (detail.safe ? SAFE_OVERLAY_PAGES : OVERLAY_PAGES)) {
+  if (!page && pages.length < SAFE_OVERLAY_PAGES[detail.safe]) {
     const canvas = createCanvas(PAGE, PAGE)
     page = { canvas, ctx: context2d(canvas), shelves: [], top: 0, count: 0 }
     pages.push(page)
