@@ -11,17 +11,15 @@ import { localPlayer } from '../game/players'
 import type { Game, GameEvent, Player } from '../game/types'
 import type { VersusState } from '../game/versus'
 import { lookOf, looksGameKey, shownLook } from './looks'
-import { createCompanion, drawCompanion, stepCompanion, type CompanionView } from './companion'
 import { detail } from './quality'
 import { drawPokemon, freeSheet, loadSheet, sprites, type Sheet } from './sprites'
-import { concealed, grassAlpha } from './valeGrass'
+import { concealed } from './valeGrass'
 import { TEAM_COLORS } from './vale'
 
 /**
  * The cosmetic effects in a game (`data/arenaEffects.ts`), read from each
- * seat's look as its mode shows it (`shownLook`): the followers trotting
- * after their trainers and the trails in a run (solo or co-op) and in the
- * Arena; there also the spawn, KO and goal effects and the emotes'
+ * seat's look as its mode shows it (`shownLook`): the trails in a run
+ * (solo or co-op) and in the Arena; there also the spawn, KO and goal effects and the emotes'
  * animations and flourishes. Shell state only, never the simulation's: it
  * steps on the drawing clock and hears the match's events (`arenaFxEvent`);
  * the emote is the one thing a player sends (`versusSocial.ts`), and the
@@ -30,10 +28,10 @@ import { TEAM_COLORS } from './vale'
  * Particles live in one fixed pool (typed arrays, no allocation per frame:
  * eight players' trails on a phone at 60 Hz), capped lower and emitted half
  * as often when the frame governor draws lean (`render/quality.ts`); a lean
- * run also leaves teammates' followers and trails out (the horde already
+ * run also leaves teammates' trails out (the horde already
  * fills a struggling phone's frame), keeping this screen's own. Anything of
  * a Pokémon hidden from this screen in the tall grass (`concealed`) shows
- * nowhere: its follower, its trail, its emote.
+ * nowhere: its trail, its emote.
  */
 
 type Ctx = CanvasRenderingContext2D
@@ -653,11 +651,6 @@ const emoteSheet = (dex: number, anim: EmoteAnim): Sheet | null => {
 
 /* ---------------- The game's state ---------------- */
 
-type FollowerSeat = { id: string; view: CompanionView; float: boolean; legendary: boolean; slot: number }
-
-/** A follower to sort among the drawables (`render/draw.ts`), by its feet. */
-export type FollowerDrawable = { follower: FollowerSeat }
-
 /**
  * The game the effects belong to (`matchOf`: the shell's key for it, else
  * its state object), and what they hold for it.
@@ -671,10 +664,7 @@ let match: string | VersusState | Game | null = null
  */
 const matchOf = (g: Game): string | VersusState | Game => looksGameKey() ?? g.versus ?? g
 
-/** The seat whose own companion walks with it (`render/companion.ts`), so its follower stays home, or -1. */
-let home = -1
 let last = -1
-const followers: (FollowerDrawable | null)[] = []
 const trailIn: number[] = []
 /** Where a ribbon trail last dropped a particle, by seat (`on`: while walking). */
 const trailAt: { x: number; y: number; on: boolean }[] = []
@@ -683,13 +673,13 @@ const flourishIn: number[] = []
 /** Each seat's emote cut short by moving (its `at`). */
 const cut: number[] = []
 
-/** Lets go of a game's effects: its particles, bursts, followers and emote sheets. */
+/** Lets go of a game's effects: its particles, bursts and emote sheets. */
 export const resetArenaFx = () => {
   match = null
   last = -1
   count = 0
   for (const b of bursts) b.on = false
-  followers.length = trailIn.length = trailAt.length = trailN.length = flourishIn.length = cut.length = readied.length = 0
+  trailIn.length = trailAt.length = trailN.length = flourishIn.length = cut.length = readied.length = 0
   for (const sheet of sheets.values()) if (sheet) freeSheet(sheet)
   sheets.clear()
   sheetsGen++
@@ -749,17 +739,6 @@ const emoteFrame = (dex: number, def: EffectOf<'emote'>, seconds: number): { she
 /** Whether `p` and what's theirs show on this screen: in the match, standing, and not hidden from `viewer` in the grass. */
 const shows = (viewer: Player, p: Player | undefined): p is Player => !!p && !p.gone && p.hp > 0 && !concealed(viewer, p)
 
-/**
- * Keeps `p`'s follower the one their look names (a look can change mid-game:
- * the dev console's `ps.look`), none while their own companion walks with them.
- */
-const syncFollower = (g: Game, p: Player) => {
-  const id = p.slot === home ? undefined : shownLook(g, p.slot).follower
-  if (followers[p.slot]?.follower.id === id) return
-  const def = effectIn('follower', id)
-  followers[p.slot] = def && id ? { follower: { id, view: createCompanion(def.dex, false, p), float: def.float === true, legendary: def.rarity === 'legendary', slot: p.slot } } : null
-}
-
 /** Each seat's form and emote whose sheets were asked for ahead. */
 const readied: { dex: number; id: string | undefined }[] = []
 
@@ -774,12 +753,11 @@ const readyEmote = (g: Game, p: Player) => {
   for (const anim of emote ? (emote.sequence ? emote.anims : [emoteAnimOf(dex, emote.anims)]) : []) if (anim && emoteAnimOf(dex, [anim])) emoteSheet(dex, anim)
 }
 
-/** Takes up a new game: its followers and the opening spawn effects. */
+/** Takes up a new game: its emote sheets and the opening spawn effects. */
 const begin = (g: Game) => {
   resetArenaFx()
   match = matchOf(g)
   for (const p of g.players) {
-    syncFollower(g, p)
     readyEmote(g, p)
     spawnFx(g, p)
   }
@@ -833,19 +811,16 @@ export const arenaFxEvent = (g: Game, e: GameEvent) => {
   }
 }
 
-/** Whether a lean frame leaves `p`'s follower and trail out: a run's teammates, not this screen's own player. */
+/** Whether a lean frame leaves `p`'s trail out: a run's teammates, not this screen's own player. */
 const spared = (g: Game, viewer: Player, p: Player | undefined) => detail.lean && !g.versus && p !== viewer
 
 /**
  * One drawn frame of a game's effects, on the drawing clock `t` (seconds):
- * the followers walk, trails and flourishes throw their particles, particles
- * and bursts age. Called by `render` before it draws, with the seat whose own
- * companion walks along (`walking`, -1 none: its follower stays home); a new
- * game lets go of the last one's.
+ * trails and flourishes throw their particles, particles and bursts age.
+ * Called by `render` before it draws; a new game lets go of the last one's.
  */
-export const stepArenaFx = (g: Game, t: number, walking = -1) => {
+export const stepArenaFx = (g: Game, t: number) => {
   if (match !== matchOf(g)) begin(g)
-  home = walking
   const dt = last < 0 ? 0 : Math.max(0, Math.min(0.1, t - last))
   last = t
   if (dt === 0) return
@@ -854,10 +829,7 @@ export const stepArenaFx = (g: Game, t: number, walking = -1) => {
   for (const p of g.players) {
     const slot = p.slot
     const look = shownLook(g, slot)
-    syncFollower(g, p)
     readyEmote(g, p)
-    const f = followers[slot]
-    if (f) stepCompanion(f.follower.view, p, dt)
     const visible = shows(viewer, p) && !spared(g, viewer, p)
     // An emote stops the moment its Pokémon moves or is hit.
     const e = playing(g, p)
@@ -883,8 +855,6 @@ export const stepArenaFx = (g: Game, t: number, walking = -1) => {
         rule.emit(p.x, p.y, slot, trailN[slot]!)
       }
     } else if (trailAt[slot]) trailAt[slot].on = false
-    // A legendary follower leaves sparkles of its own.
-    if (f?.follower.legendary && f.follower.view.moving && Math.random() < dt * 14) emit('glint', f.follower.view.x + rnd(10), f.follower.view.y - 14 - Math.random() * 8, 0, -10, 0.6, slot, 0, 0.66 + Math.random() * 0.3)
     const now = e && cut[slot] !== e.at ? e : null
     if (now) {
       const rule = FLOURISHES[now.def.flourish]
@@ -897,27 +867,6 @@ export const stepArenaFx = (g: Game, t: number, walking = -1) => {
   }
   stepParticles(dt)
   for (const b of bursts) if (b.on && (b.age += dt) >= b.life) b.on = false
-}
-
-/** The followers of the seats this screen sees, for the depth pass. */
-export const arenaFollowers = (g: Game, out: { push: (d: FollowerDrawable) => unknown }) => {
-  if (match !== matchOf(g)) return
-  const viewer = localPlayer(g)
-  for (const f of followers) {
-    if (!f) continue
-    const owner = g.players[f.follower.slot]
-    if (shows(viewer, owner) && !spared(g, viewer, owner)) out.push(f)
-  }
-}
-
-export const isFollower = (d: unknown): d is FollowerDrawable => typeof d === 'object' && d !== null && 'follower' in d
-
-/** A follower at its feet (a floating one bobbing over its shadow, which the depth pass draws), faint like its trainer in the grass. */
-export const drawFollower = (ctx: Ctx, g: Game, d: FollowerDrawable, t: number) => {
-  const { view, float, slot } = d.follower
-  const owner = g.players[slot]
-  const lift = float ? 9 + Math.round(Math.sin(t * 3 + slot) * 2) : 0
-  drawCompanion(ctx, view, t, lift, owner ? grassAlpha(g, localPlayer(g), owner) : 1)
 }
 
 /** Whether this screen draws particle `i` now: its owner standing and not hidden from it. */
@@ -960,7 +909,7 @@ export const playBurst = (kind: BurstKind, x: number, y: number, team: number) =
 export const equippedEmote = (slot: number): EffectOf<'emote'> | null => effectIn('emote', lookOf(slot).emote)
 
 /** How many particles are alive now, for the dev console. */
-export const arenaFxStats = () => ({ particles: count, bursts: bursts.filter((b) => b.on).length, followers: followers.filter(Boolean).length, sheets: sheets.size })
+export const arenaFxStats = () => ({ particles: count, bursts: bursts.filter((b) => b.on).length, sheets: sheets.size })
 
 /** The art circling a victory pose, by its emote's flourish. */
 const POSE_ART: Record<Flourish, () => readonly HTMLCanvasElement[]> = {
@@ -1029,15 +978,13 @@ let previewing: object | null = null
 
 /**
  * The gem shop's stage (`ui/gemShop.ts`): a look's effects around a Pokémon
- * on a canvas of its own, out of any match. Its follower trots after it, its
- * trail drops behind it while it walks, its emote plays (the sheet facing the
+ * on a canvas of its own, out of any match. Its trail drops behind it while it walks, its emote plays (the sheet facing the
  * camera, and the flourish) and a spawn, KO or goal effect plays on demand.
  * It borrows the match's particle pool, so it steps nothing while a match
  * holds it; the last preview to step owns it, and `dispose` lets go.
  */
 export const createFxPreview = () => {
   const me = {}
-  let follower: { id: string; view: CompanionView; float: boolean; legendary: boolean } | null = null
   let last = -1
   let trailIn = 0
   let flourishIn = 0
@@ -1049,7 +996,6 @@ export const createFxPreview = () => {
       previewing = me
       count = 0
       for (const b of bursts) b.on = false
-      follower = null
       last = -1
     }
     return true
@@ -1063,10 +1009,7 @@ export const createFxPreview = () => {
       if (!own()) return
       const dt = last < 0 ? 0 : Math.max(0, Math.min(0.1, t - last))
       last = t
-      const def = effectIn('follower', look.follower)
-      if (follower?.id !== look.follower) follower = def && look.follower ? { id: look.follower, view: createCompanion(def.dex, false, { x, y }), float: def.float === true, legendary: def.rarity === 'legendary' } : null
       if (dt === 0) return
-      if (follower) stepCompanion(follower.view, { x, y }, dt)
       const trail = effectIn('trail', look.trail)
       const rule = trail && TRAILS[trail.trail]
       if (rule?.gap && moving) {
@@ -1079,7 +1022,6 @@ export const createFxPreview = () => {
         trailIn = rule.every
         rule.emit(x, y, 0, ++n)
       } else if (!moving) ribbon.on = false
-      if (follower?.legendary && follower.view.moving && Math.random() < dt * 14) emit('glint', follower.view.x + rnd(10), follower.view.y - 14 - Math.random() * 8, 0, -10, 0.6, 0, 0, 0.66 + Math.random() * 0.3)
       const emote = emoting ? effectIn('emote', look.emote) : null
       if (emote && (flourishIn -= dt) <= 0) {
         flourishIn = FLOURISHES[emote.flourish].every
@@ -1097,12 +1039,6 @@ export const createFxPreview = () => {
     emote: (look: Look, dex: number, seconds: number) => {
       const def = effectIn('emote', look.emote)
       return def ? emoteFrame(dex, def, def.once ? seconds % 2 : seconds) : null
-    },
-    /** The follower, at its feet: drawn before the Pokémon when it's behind (north of) `y`, after it otherwise. */
-    drawFollower: (ctx: Ctx, t: number, y: number, front: boolean) => {
-      const f = follower
-      if (!f || previewing !== me || f.view.y > y !== front) return
-      drawCompanion(ctx, f.view, t, f.float ? 9 + Math.round(Math.sin(t * 3) * 2) : 0)
     },
     /** Under the Pokémon: the trail, the bursts' rings and an emote's aura (`emoting` since `at`). */
     drawGround: (ctx: Ctx, look: Look, x: number, y: number, emoting: number | null) => {

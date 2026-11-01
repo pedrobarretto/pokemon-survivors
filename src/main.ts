@@ -4229,8 +4229,8 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
 
 /**
  * Dev: stages the cosmetics (`data/arenaEffects.ts`, `render/arenaFx.ts`) in a run (`ps.startRun('charmander')`,
- * a co-op one) or a match against bots (`ps.versus('charmander')`). `ps.look({ trail: 'emberTrail', follower:
- * 'mewFollower' })` puts those on this player's seat, over what it wears (`{}` keeps it; `ps.look('clear')` takes
+ * a co-op one) or a match against bots (`ps.versus('charmander')`). `ps.look({ trail: 'emberTrail', plate:
+ * 'plateGold' })` puts those on this player's seat, over what it wears (`{}` keeps it; `ps.look('clear')` takes
  * everything off), and on the hub's profile too (a seat number after the look dresses that seat instead);
  * `ps.look('bots')` dresses every other seat at random; `ps.look('emote')` plays the equipped emote (as B does, in
  * a match); `ps.look('play', 'koSupernova')` plays a spawn, KO or goal effect at your feet. Returns the looks by

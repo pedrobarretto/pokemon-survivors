@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { bodyOf } from './bodies'
-import { ARENA_EFFECTS, FOLLOWER_DEX, type ArenaEffectDef } from './arenaEffects'
+import { ARENA_EFFECTS, type ArenaEffectDef } from './arenaEffects'
 import emotes from './emotes.generated.json'
-import sprites from './sprites.generated.json'
 import { STARTERS } from './starters'
 import { VERSUS_PICKS } from './versus'
 
@@ -18,13 +16,6 @@ describe('the Arena effects', () => {
           expect(def.anims.some((a) => has[String(stage.dex)]?.[a] !== undefined), `${def.anims} for #${stage.dex}`).toBe(true)
         }
       }
-    }
-  })
-
-  it('draw every follower from sheets the game ships', () => {
-    for (const dex of FOLLOWER_DEX) {
-      expect(Object.hasOwn(sprites, String(dex)), `#${dex}`).toBe(true)
-      expect(bodyOf(dex).bodyH).toBeLessThan(40)
     }
   })
 })

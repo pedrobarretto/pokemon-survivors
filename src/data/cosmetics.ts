@@ -13,7 +13,9 @@ import { ARENA_EFFECTS, type ArenaEffectDef } from './arenaEffects'
  *   drawn by `render/wearables.ts`. Generic: one hat fits every Pokémon the
  *   anchors measured (`data/wearAnchors/`); any other draws bare.
  * - `ARENA_EFFECTS` (`data/arenaEffects.ts`): everything that isn't worn: a
- *   follower, trails, spawn/KO/goal effects, emotes, titles and name plates.
+ *   trails, spawn/KO/goal effects, emotes, titles and name plates. No
+ *   followers: a Pokémon walking along is the supporters' companion
+ *   (`data/companions.ts`), never sold.
  *
  * A player's equipped set is an `Look`: one id per slot. It travels in
  * the room's loadout (shell side, like the name: the simulation never holds
@@ -22,7 +24,7 @@ import { ARENA_EFFECTS, type ArenaEffectDef } from './arenaEffects'
  */
 
 /** Where a cosmetic goes. The first four are worn on the sprite (`WEARABLE_SLOTS`). */
-export const COSMETIC_SLOTS = ['head', 'face', 'neck', 'back', 'follower', 'trail', 'spawn', 'ko', 'goal', 'emote', 'title', 'plate'] as const
+export const COSMETIC_SLOTS = ['head', 'face', 'neck', 'back', 'trail', 'spawn', 'ko', 'goal', 'emote', 'title', 'plate'] as const
 
 export type CosmeticSlot = (typeof COSMETIC_SLOTS)[number]
 
@@ -38,8 +40,8 @@ export type CosmeticMode = (typeof COSMETIC_MODES)[number]
 const EVERYWHERE = COSMETIC_MODES
 
 /**
- * Where each slot shows. What's worn, the follower, the trail, the title and
- * the plate go everywhere; the spawn, KO and goal effects and the emote need
+ * Where each slot shows. What's worn, the trail, the title and the plate go
+ * everywhere; the spawn, KO and goal effects and the emote need
  * moments only the Arena has (a respawn, a knock-out of a rival, a goal, the
  * emote's tick entry), so they show there alone for now. The shop says so on
  * an item whose slot doesn't show everywhere (`arenaOnly`).
@@ -49,7 +51,6 @@ export const SLOT_MODES: Readonly<Record<CosmeticSlot, readonly CosmeticMode[]>>
   face: EVERYWHERE,
   neck: EVERYWHERE,
   back: EVERYWHERE,
-  follower: EVERYWHERE,
   trail: EVERYWHERE,
   title: EVERYWHERE,
   plate: EVERYWHERE,

@@ -89,7 +89,6 @@ export const siteFr: SiteMessages = {
     eventNote: 'Apparaît comme événement sur la carte : il te fuit et lâche des pièces à chaque coup. Mets-le K.O. avant qu’il ne s’échappe pour décrocher le jackpot de Pay Day.',
     companionNote: 'Un compagnon offert : il arrive dans la boîte à cadeaux des soutiens pendant la Nuit des Sorcières et marche à tes côtés pendant les parties, en laissant une traînée de bonbons.',
     cameoNote: 'Pas un ennemi : il apparaît un instant dans la faille de Darkrai pendant la Nuit des Sorcières et brise le cauchemar avec Lunar Wing.',
-    arenaNote: 'Un compagnon de l\'Arène : un style qui trottine derrière ton Pokémon pendant les matchs. Juste du style, jamais de puissance.',
     lobbyNote: 'Le tailleur de la Boutique, sur la place du lobby : il coud avec des feuilles les tenues que vend la boutique de gemmes.',
     wildNote: 'Valeurs de base. Les ennemis normaux deviennent plus coriaces chaque minute ; pas les boss.',
     appears: 'Quand il apparaît',
