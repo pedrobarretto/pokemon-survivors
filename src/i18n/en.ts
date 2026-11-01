@@ -5313,7 +5313,7 @@ export const en: Messages = {
     noAbility: 'None',
     /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
     noMega: 'None',
-    megaReady: 'Press *MEGA* (or E) to Mega Evolve. There is no recharge in the Dojo.',
+    megaReady: 'Press *MEGA* (or E) to Mega Evolve. The form lasts and recharges as in a run.',
     megaLocked: 'Pick the final form above to be able to Mega Evolve.',
     count: 'How many targets',
     countOf: (n) => `${n}`,

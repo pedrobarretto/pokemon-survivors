@@ -5309,7 +5309,7 @@ export const zh: Messages = {
     noAbility: '無',
     /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
     noMega: '無',
-    megaReady: '按下 *MEGA*（或 E）進行超級進化。道館內沒有冷卻時間。',
+    megaReady: '按下 *MEGA*（或 E）進行超級進化。型態的持續與冷卻時間和對局相同。',
     megaLocked: '請在上方選擇最終型態，才能超級進化。',
     count: '靶子數量',
     countOf: (n) => `${n}`,

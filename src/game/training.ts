@@ -129,11 +129,9 @@ export const setDummies = (g: Game, target: TrainingTarget, count: number) => {
 export const updateTraining = (g: Game, dt: number) => {
   const t = g.training
   if (!t) return
-  // No harm, and no wait between Mega Evolutions: the form still lasts its time, then can be pressed again.
-  for (const p of g.players) {
-    p.hp = p.stats.maxHp
-    p.mega.charge = 0
-  }
+  for (const p of g.players) p.hp = p.stats.maxHp
+  // The screen flash (a Mega Evolution's burst) fades here: a run does it in `updateConsumables`, which the Dojo's tick skips.
+  g.flash = Math.max(0, g.flash - dt * 2.5)
   const k = Math.min(1, TRAINING.spring * dt)
   for (const post of t.posts) {
     let e = g.enemies.find((x) => x.id === post.id)
@@ -278,6 +276,8 @@ export const setForm = (g: Game, stage: number, branch: BranchId | null, awakene
   p.mega.active = p.mega.intro = 0
   p.stage = stage
   p.branch = branch && BRANCHES[branch].line === p.starter && BRANCHES[branch].stage <= stage ? branch : null
+  // A branch's own Mega stone (Gallade's) no longer fits once the branch changes: it goes.
+  if (p.mega.stone && !runMegas(g).includes(p.mega.stone)) p.mega.stone = null
   if (p.legend) p.legend.awakened = Math.max(0, Math.min(AWAKEN_AT.length, awakened))
   const id = p.ability.id
   if (id && (!abilitySet(p.starter, p.branch).includes(id) || p.legend?.awakened === 0)) p.ability = createAbilityState()

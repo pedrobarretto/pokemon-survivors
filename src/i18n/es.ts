@@ -5315,7 +5315,7 @@ export const es: Messages = {
     noAbility: 'Ninguna',
     /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
     noMega: 'Ninguna',
-    megaReady: 'Pulsa *MEGA* (o E) para Megaevolucionar. En el Dojo no hay recarga.',
+    megaReady: 'Pulsa *MEGA* (o E) para Megaevolucionar. La forma dura y se recarga como en una partida.',
     megaLocked: 'Elige la forma final arriba para poder Megaevolucionar.',
     count: 'Cuántos blancos',
     countOf: (n) => `${n}`,

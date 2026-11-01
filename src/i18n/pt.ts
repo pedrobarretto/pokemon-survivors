@@ -5658,7 +5658,7 @@ export const pt = {
     noAbility: 'Nenhuma',
     /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
     noMega: 'Nenhuma',
-    megaReady: 'Aperte *MEGA* (ou E) para Mega Evoluir. No Dojo não há recarga.',
+    megaReady: 'Aperte *MEGA* (ou E) para Mega Evoluir. A forma dura e recarrega como numa partida.',
     megaLocked: 'Escolha a forma final na lista acima para poder Mega Evoluir.',
     count: 'Quantos alvos',
     countOf: (n: number) => `${n}`,

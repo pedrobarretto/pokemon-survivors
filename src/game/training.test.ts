@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { MEGA } from '../data/megas'
 import { TRAINING } from '../data/training'
 import { buildOf, parseBuilds, planned, type Build } from './builds'
 import { createGame, step } from './game'
@@ -78,7 +79,7 @@ describe('the Dojo', () => {
     expect(g.player.moves.filter((m) => isLegendary(m.id))).toHaveLength(1)
   })
 
-  it('hands out a Mega Stone, so the final stage can Mega Evolve at will and again with no recharge', () => {
+  it('hands out a Mega Stone, and the Mega lasts and recharges as in a run', () => {
     const g = dojo()
     expect(setMega(g, 'blastoise')).toBe(false)
     expect(setMega(g, 'charizardY')).toBe(true)
@@ -87,13 +88,30 @@ describe('the Dojo', () => {
     seconds(g, 3)
     expect(g.player.mega.active).toBeGreaterThan(0)
     expect(g.player.mega.count).toBe(1)
-    setForm(g, 1, null)
+    expect(g.flash).toBe(0)
+    seconds(g, MEGA.duration)
     expect(g.player.mega.active).toBe(0)
-    setForm(g, 2, null)
+    expect(g.player.mega.charge).toBeGreaterThan(0)
+    step(g, { ...STILL, mega: true }, TICK)
+    seconds(g, 3)
+    expect(g.player.mega.count).toBe(1)
+    seconds(g, MEGA.recharge)
     step(g, { ...STILL, mega: true }, TICK)
     seconds(g, 3)
     expect(g.player.mega.count).toBe(2)
+    setForm(g, 1, null)
+    expect(g.player.mega.active).toBe(0)
     setMega(g, null)
+    expect(g.player.mega.stone).toBe(null)
+  })
+
+  it('drops a branch’s Mega stone when the form changes to the other branch', () => {
+    const g = createGame('ralts', { w: 480, h: 270 }, 7)
+    startTraining(g)
+    setForm(g, 2, 'gallade')
+    expect(setMega(g, 'gardevoir')).toBe(false)
+    expect(setMega(g, 'gallade')).toBe(true)
+    setForm(g, 2, 'gardevoir')
     expect(g.player.mega.stone).toBe(null)
   })
 
