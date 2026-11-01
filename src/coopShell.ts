@@ -399,7 +399,7 @@ export const setBotRelays = (spec: string | null) => {
 const botLooks = new Map<Bot, WireLook>()
 
 /** The slots a dev bot dresses: worn, a trail and a plate, so a room or a run shows every kind arriving. */
-const BOT_SLOTS = ['head', 'face', 'neck', 'back', 'trail', 'plate'] as const satisfies readonly CosmeticSlot[]
+const BOT_SLOTS = ['head', 'back', 'trail', 'plate'] as const satisfies readonly CosmeticSlot[]
 
 /** Dev: bot `k`'s look, a different item of each slot per bot, every slot but one in turn (the Arena's moments too, its emote and effects). */
 const botLook = (k: number): WireLook => {

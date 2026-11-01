@@ -5,9 +5,8 @@ import manifest from '../data/sprites.generated.json'
 import type { Dir8 } from '../engine/math'
 import { mirror, type PixelArt } from './wearArt'
 import { browOf, dress, MAX_LIFT, placeOf } from './wearDress'
-import { artDir, decodeRig, fixFrame, fixOf, headSpan, isMirrored, layerOf, pivotOf, rigChunk, rigKey, wears, type RigChunk, type RigEntry, type WearSize } from './wearFit'
-import { WEAR_MODELS } from './wearModels'
-import { masksOf, measure, NONE, packRig, rigSheets, unpackRig, type Marks, type Pixels, type RigFrame } from './wearRig'
+import { artDir, decodeRig, fixFrame, fixOf, isMirrored, layerOf, rigChunk, rigKey, wears, type RigChunk, type RigEntry, type WearSize } from './wearFit'
+import { measure, NONE, packRig, rigSheets, unpackRig, type Marks, type Pixels, type RigFrame } from './wearRig'
 
 const art = (w: number, h: number, ox: number, oy: number, px: number[], extra: Partial<PixelArt> = {}): PixelArt => ({
   w,
@@ -20,7 +19,6 @@ const art = (w: number, h: number, ox: number, oy: number, px: number[], extra: 
   ink: new Uint8Array(w * h).fill(2),
   back: new Uint8Array(w * h),
   hug: new Uint8Array(w * h),
-  clear: new Uint8Array(w * h),
   ...extra,
 })
 
@@ -71,29 +69,25 @@ describe('hand fixes', () => {
   })
 
   it('leaves a slot off facing one way only', () => {
-    const fit = { no: ['head:S', 'scarf'] as const }
+    const fit = { no: ['head:S', 'balloon'] as const }
     expect(wears(fit, 'head', 'topHat', 0)).toBe(false)
     expect(wears(fit, 'head', 'topHat', 2)).toBe(true)
     expect(wears(fit, 'head', 'topHat')).toBe(true)
-    expect(wears(fit, 'neck', 'scarf', 2)).toBe(false)
+    expect(wears(fit, 'back', 'balloon', 2)).toBe(false)
   })
 })
 
 describe('layers', () => {
   const all: Dir8[] = [0, 1, 2, 3, 4, 5, 6, 7]
 
-  it('keeps hats in front and face items off when facing away', () => {
+  it('keeps hats in front', () => {
     expect(all.map((d) => layerOf('head', d))).toEqual(Array(8).fill('front'))
-    expect(all.map((d) => layerOf('face', d))).toEqual(['front', 'front', 'front', 'hidden', 'hidden', 'hidden', 'front', 'front'])
   })
 
-  it('hangs a cape behind the body facing south and over it facing north', () => {
+  it('hangs what goes on the back behind the body facing south and over it facing north', () => {
     expect(all.map((d) => layerOf('back', d))).toEqual(['behind', 'behind', 'behind', 'front', 'front', 'front', 'behind', 'behind'])
   })
 
-  it("takes an item's own layers over its slot's", () => {
-    expect(all.map((d) => layerOf('neck', d, WEAR_MODELS.bowTie.layers))).toEqual(['front', 'front', 'front', 'hidden', 'hidden', 'hidden', 'front', 'front'])
-  })
 })
 
 /** A rig frame with everything at `v` but what `o` sets. */
@@ -120,17 +114,6 @@ describe('the rig', () => {
     expect(fixFrame(none, { eyesAt: [[3, 5], [-3, 5]] })).toMatchObject({ e1x: 7, e1y: 9, e2x: 13, e2y: 9 })
   })
 
-  it('puts glasses where their eyes land on the eyes found', () => {
-    const size: WearSize = { head: 9, depth: 9, faceDepth: 11, brow: 4, brows: [4, 4], face: 11, eye: 2, neck: 6, body: 12, drop: 14, rise: 12 }
-    const out = { x: 0, y: 0 }
-    pivotOf(rigFrame(), 'face', 0, size, out)
-    // Facing the camera: halfway between the eyes, a little over them (the camera looks down at the face's front).
-    expect(out.x).toBe(10)
-    expect(out.y).toBeLessThan(9)
-    // Turned away a little the pivot stays behind the near eye.
-    pivotOf(rigFrame({ e1x: 9, e2x: 13 }), 'face', 1, size, out)
-    expect(out.x).toBeLessThan(11)
-  })
 })
 
 /** A round head on a body, ears up either side, eyes with glints: what `measure` should find. */
@@ -202,34 +185,11 @@ describe('measuring a frame', () => {
     expect(d.front[(rig.eyeY0 - 2 + d.oy) * d.w + rig.eyeX0 + d.ox]).toBeGreaterThan(0)
   })
 
-  it("wraps a strap round the head: inside its outline and its span, never past them", () => {
-    const f = head()
-    const { rig } = measure(f, 0, marks)
-    // A strap far wider than the head across the eyes' row.
-    const W = 24
-    const strap = art(W, 3, 12, 1, Array(W * 3).fill(1), { hug: new Uint8Array(W * 3).fill(1) })
-    const d = dress(f, rig, [{ id: 'goggles', slot: 'face', art: strap, x: 12, y: 11, layer: 'front' }])
-    const { solid, edge } = masksOf(f)
-    const [l, r] = headSpan(rig)
-    let shown = 0
-    for (let y = 0; y < d.h; y++) {
-      for (let x = 0; x < d.w; x++) {
-        if (!d.front[y * d.w + x]) continue
-        const fx = x - d.ox
-        const fy = y - d.oy
-        // The strap itself, or its outline on the face where it meets it.
-        expect(solid[fy * f.w + fx] && !edge[fy * f.w + fx] && fx >= l && fx <= r, `${fx},${fy}`).toBe(true)
-        shown++
-      }
-    }
-    expect(shown).toBeGreaterThan(0)
-  })
-
   it('lifts a hat whose brim comes down over the brow clear of it, up to a limit', () => {
     const f = head()
     const { rig } = measure(f, 0, marks)
     const brow = browOf(rig)!
-    const size: WearSize = { head: 9, depth: 9, faceDepth: 9, brow: 4, brows: [4, 4], face: 11, eye: 2, neck: 7, body: 12, drop: 14, rise: 12 }
+    const size: WearSize = { head: 9, depth: 9, brow: 4, brows: [4, 4], body: 12, drop: 14, rise: 12 }
     // Reaching a row past the brow: lifted by one; reaching far past it: by the limit, and the cut does the rest.
     const reaching = (rows: number) => ({ still: art(9, rows + 1, 4, 0, Array(9 * (rows + 1)).fill(1)), moving: null })
     expect(placeOf(rig, 'head', 0, size, reaching(brow.y0 - rig.seatY + 1), { x: 0, y: 0 }).y).toBe(rig.seatY - 1)
@@ -237,17 +197,6 @@ describe('measuring a frame', () => {
     expect(placeOf(rig, 'head', 0, size, reaching(brow.y0 - rig.seatY - 1), { x: 0, y: 0 }).y).toBe(rig.seatY)
   })
 
-  it('rests a neck item on the throat turned to a side, from whichever side it faces', () => {
-    const f = head()
-    const { rig } = measure(f, 0, marks)
-    const size: WearSize = { head: 9, depth: 9, faceDepth: 9, brow: 4, brows: [4, 4], face: 11, eye: 2, neck: 7, body: 12, drop: 14, rise: 12 }
-    // The neck's run on its line spans x 7..17: the model's neck (radius 3) meets it a pixel inside its outline.
-    const at = (dir: Dir8) => placeOf({ ...rig, neckX: 12, neckY: 16 }, 'neck', dir, size, { still: art(1, 1, 0, 0, [1]), moving: null }, { x: 0, y: 0 }, f).x
-    expect(at(2)).toBe(16 - 3)
-    expect(at(6)).toBe(8 + 3)
-    // Facing the camera it stays on the rig's axis.
-    expect(at(0)).toBe(12)
-  })
 })
 
 describe('tracking the head', () => {

@@ -3,7 +3,7 @@ import type { Nudge } from '../data/wearFits'
 import type { WearableId } from '../data/wearables'
 import type { Dir8 } from '../engine/math'
 import { mirror, rasterize, type PixelArt } from './wearArt'
-import { artDir, headSpan, isMirrored, pivotOf, radius, yawFor, yawOf, type WearSize } from './wearFit'
+import { artDir, isMirrored, pivotOf, radius, yawOf, type WearSize } from './wearFit'
 import { sceneOf, WEAR_MODELS } from './wearModels'
 import { glinty, masksOf, NONE, type Masks, type Pixels, type RigFrame } from './wearRig'
 
@@ -15,16 +15,11 @@ import { glinty, masksOf, NONE, type Masks, type Pixels, type RigFrame } from '.
  * its rig, and per pixel: what hangs behind goes under the sprite, the rest
  * over it, except where the rig says no:
  *
- * - no hat, scarf or cape covers an eye, and a hat's band stops a row of the
- *   face short of them (`browOf`), so its outline never reads as their line;
- * - glasses stay on the head (nothing past a pixel off the sprite), and a
- *   frame whose eyes weren't found wears none; a clear lens tints the eye
- *   under it, which shows through;
- * - what wraps the wearer (a strap, a temple, a scarf's wrap: `PixelArt.hug`)
- *   stays on its silhouette, inside its outline, and a face item's on the
- *   head's span at the eyes: past the head it went round, it's out of sight;
- * - a scarf's far half goes behind the neck, and the chin over it; the head
- *   stays over what hangs on the back (`placeOf` keeps wings under it);
+ * - no item covers an eye, and a hat's band stops a row of the face short of
+ *   them (`browOf`), so its outline never reads as their line;
+ * - what wraps the wearer (`PixelArt.hug`) stays on its silhouette, inside its
+ *   outline: past the head it went round, it's out of sight;
+ * - the head stays over what hangs on the back (`placeOf` keeps it under it);
  * - what grows from the head above the seat (a leaf, a horn) shows through the
  *   far side of an open item (a crown's ring), and through any hat where the
  *   hand fix says so (`RigFix.over`); a tuft a hat leaves poking out goes;
@@ -39,7 +34,7 @@ export type ItemArt = { still: PixelArt; moving: PixelArt[] | null }
 
 /** A model rendered for `size` facing `dir` (its frame of animation `frame`), flipped for the west-facing rows. */
 const render = (id: WearableId, slot: WearableSlot, size: WearSize, dir: Dir8, frame: number, squash: number) => {
-  const raw = rasterize(sceneOf(id, slot, size, frame, squash, artDir(dir)), yawFor(slot, artDir(dir)))
+  const raw = rasterize(sceneOf(id, slot, size, frame, squash, artDir(dir)), yawOf(artDir(dir)))
   return isMirrored(dir) ? mirror(raw) : raw
 }
 
@@ -82,7 +77,7 @@ const MIN_PRESS = 0.3
 
 /**
  * An item's art for a wearer (see `ItemArt`): a still item's single render;
- * a moving one's (a propeller, a flowing cape) split into what every frame of
+ * a moving one's (a propeller, a bobbing balloon) split into what every frame of
  * it shares (dressed into the sprite's frames) and each frame's rest, drawn
  * over the dressed frame as it plays.
  */
@@ -99,7 +94,7 @@ export const itemArt = (id: WearableId, slot: WearableSlot, size: WearSize, dir:
   }
   const keep = new Uint8Array(first.px.length)
   for (let k = 0; k < keep.length; k++) keep[k] = first.px[k] && !first.edge[k] && all.every((b) => same(first, k, b)) ? 1 : 0
-  const still: PixelArt = { ...first, px: first.px.map((v, k) => (keep[k] ? v : 0)), edge: new Uint8Array(first.px.length), back: first.back.map((v, k) => (keep[k] ? v : 0)), hug: first.hug.map((v, k) => (keep[k] ? v : 0)), clear: first.clear.map((v, k) => (keep[k] ? v : 0)) }
+  const still: PixelArt = { ...first, px: first.px.map((v, k) => (keep[k] ? v : 0)), edge: new Uint8Array(first.px.length), back: first.back.map((v, k) => (keep[k] ? v : 0)), hug: first.hug.map((v, k) => (keep[k] ? v : 0)) }
   const moving = all.map((b) => {
     const px = b.px.map((v, k) => {
       const i = (k % b.w) - b.ox + first.ox
@@ -142,13 +137,11 @@ const reachIn = (art: PixelArt, i0: number, i1: number) => {
  * feet. A hat whose brim, pressed as far as it goes (`squashOf`), still comes
  * down over the brow (`browOf`) is lifted clear of it, up to `MAX_LIFT`, so
  * it keeps its shape instead of losing its brim to the cut. Turned to a side,
- * a neck item rests on the throat: the model's neck meets the frame's
- * (`sprite`) on the side it faces, so what hangs in front (a bell, a bow, a
- * medal) touches the chest instead of floating before it; and what hangs on
- * the back comes in to the frame's back where the body is shallower than wide.
+ * what hangs on the back comes in to the frame's back (`sprite`) where the
+ * body is shallower than wide.
  */
 export const placeOf = (rig: RigFrame, slot: WearableSlot, dir: Dir8, size: WearSize, art: ItemArt, out: { x: number; y: number }, sprite?: Pixels) => {
-  pivotOf(rig, slot, dir, size, out)
+  pivotOf(rig, slot, out)
   const a = artDir(dir)
   if (slot === 'back' && (a === 3 || a === 4)) out.y = Math.min(Math.max(out.y, rig.neckY + topOf(art)), Math.round((rig.backY + rig.feetY) / 2))
   if (slot === 'head' && rig.eyeY0 !== NONE) {
@@ -167,16 +160,6 @@ export const placeOf = (rig: RigFrame, slot: WearableSlot, dir: Dir8, size: Wear
       const back = out.x - s * r * Math.sin(yawOf(a))
       const gap = Math.min(((s > 0 ? run[0] : run[1]) + s - back) * s, r, (s > 0 ? run[1] - out.x : out.x - run[0]) - 1)
       if (gap > 0) out.x += s * Math.round(gap)
-    }
-  }
-  if (slot === 'neck' && sprite && a >= 1 && a <= 3) {
-    const run = runAt(sprite, rig.neckX, rig.neckY)
-    if (run) {
-      const s = isMirrored(dir) ? -1 : 1
-      const r = radius(size.neck)
-      // The model's neck surface one pixel inside the frame's outline, never more than its radius off the rig's axis.
-      const edge = (s > 0 ? run[1] : run[0]) - s
-      out.x += Math.round(Math.min(r, Math.max(-r, edge - (out.x + s * r))))
     }
   }
   return out
@@ -220,23 +203,21 @@ export const topOf = (art: ItemArt) => Math.max(art.still.oy, ...(art.moving ?? 
  * A moving item's frames as they play over a dressed row (`itemArt`'s
  * `moving`), cut as the dresser cuts the still part: never on the eyes
  * (where they sit around the pivot on any of the row's frames) nor, for a
- * hat, over its brow (`browOf`); a scarf's or a cape's far half plays behind
- * the body. `sprites`: the row's frames, which place a neck item (`placeOf`).
+ * hat, over its brow (`browOf`); a back item's far half plays behind
+ * the body. `sprites`: the row's frames, which place it (`placeOf`).
  */
 export const movingParts = (art: ItemArt, slot: WearableSlot, layer: 'front' | 'behind', rigs: readonly RigFrame[], row: Dir8, size: WearSize, sprites?: readonly (Pixels | undefined)[]) => {
   if (!art.moving) return []
   const pivot = { x: 0, y: 0 }
   const cuts = rigs.flatMap((rig, f) => {
-    if (rig.eyeY0 === NONE || slot === 'face') return []
+    if (rig.eyeY0 === NONE) return []
     const sprite = sprites?.[f]
     placeOf(rig, slot, row, size, art, pivot, sprite)
     const brow = browOf(rig, sprite ? eyeTopOf(sprite, masksOf(sprite), rig) : rig.eyeY0)!
     const eye = slot === 'head' ? { x0: brow.x0 - pivot.x, x1: brow.x1 - pivot.x, y0: brow.y0 - pivot.y, y1: Infinity } : { x0: rig.eyeX0 - pivot.x, x1: rig.eyeX1 - pivot.x, y0: rig.eyeY0 - pivot.y, y1: rig.eyeY1 - pivot.y }
-    // A scarf's moving end stays under the neck's line, as its still part does (`dress`): turned, it streams up behind the head.
-    const chin = { x0: -Infinity, x1: Infinity, y0: -Infinity, y1: rig.neckY - 3 - pivot.y }
-    return slot === 'neck' ? [eye, chin] : [eye]
+    return [eye]
   })
-  const split = layer === 'front' && (slot === 'neck' || slot === 'back')
+  const split = layer === 'front' && slot === 'back'
   const part = (far: boolean): PixelArt[] =>
     art.moving!.map((m) => ({
       ...m,
@@ -268,20 +249,10 @@ export type Dressed = {
   total: number[]
 }
 
-/** How far (px) glasses may stray off the sprite before the dresser cuts them (the fit check allows a pixel more). */
-const FACE_SLACK = 1
 /** A tuft of the sprite this small poking out of a hat goes. */
 const TUFT = 3
 
 const rgbOf = (c: string) => parseInt(c.slice(1, 7), 16)
-
-/** How much of a clear lens's color tints what's under it. */
-const GLASS_TINT = 0.3
-/** A packed RGB color under a clear lens of color `glass`. */
-const tint = (under: number, glass: number) => {
-  const mix = (sh: number) => Math.round(((under >> sh) & 255) * (1 - GLASS_TINT) + ((glass >> sh) & 255) * GLASS_TINT)
-  return (mix(16) << 16) | (mix(8) << 8) | mix(0)
-}
 
 /**
  * Dresses one frame (see the module's doc): the sprite's pixels, its rig, the
@@ -321,17 +292,14 @@ export const dress = (sprite: Pixels, rig: RigFrame, items: readonly Dressing[],
   const eyes = rig.eyeY0 !== NONE
   const inEyes = (x: number, y: number) => eyes && x >= rig.eyeX0 && x <= rig.eyeX1 && y >= rig.eyeY0 && y <= rig.eyeY1
   const brow = eyes ? browOf(rig, eyeTopOf(sprite, m, rig)) : null
-  const [headL, headR] = headSpan(rig)
-  /** Whether a hugging pixel of a `slot` item shows at (x, y): inside the sprite's outline, and a face item's within the head's span. */
-  const wraps = (slot: WearableSlot, x: number, y: number) => spriteAt(x, y) && !m.edge[y * fw + x] && (slot !== 'face' || (x >= headL && x <= headR))
+  /** Whether a hugging pixel shows at (x, y): inside the sprite's outline. */
+  const wraps = (x: number, y: number) => spriteAt(x, y) && !m.edge[y * fw + x]
   const overSet = new Set(over.map(([dx, dy]) => (rig.seatY + dy) * 4096 + rig.seatX + dx))
   const palettes = items.map((it) => it.art.colors.map((c) => (c ? rgbOf(c) : 0)))
   const paint = (i: number, pass: 'front' | 'behind') => {
     const it = items[i]!
     const { art } = it
     const open = WEAR_MODELS[it.id].open === true
-    // Glasses go where eyes were found: a frame without them (a profile the rig can't read) wears none.
-    if (it.slot === 'face' && !eyes) return
     for (let j = 0; j < art.h; j++) {
       for (let a = 0; a < art.w; a++) {
         const k = j * art.w + a
@@ -341,7 +309,7 @@ export const dress = (sprite: Pixels, rig: RigFrame, items: readonly Dressing[],
         total[i]!++
         const o = at(x, y)
         // What wraps the wearer is on it or out of sight: never under it, nor past its outline.
-        if (art.hug[k] && !wraps(it.slot, x, y)) continue
+        if (art.hug[k] && !wraps(x, y)) continue
         if (pass === 'behind') {
           if (owner[o] === 0 || owner[o]! >= 2) {
             owner[o] = 2 + i
@@ -352,8 +320,8 @@ export const dress = (sprite: Pixels, rig: RigFrame, items: readonly Dressing[],
           continue
         }
         const onSprite = spriteAt(x, y)
-        // The rig's cuts: the eyes, a band down to them, glasses off the head.
-        if (it.slot !== 'face' && inEyes(x, y)) {
+        // The rig's cuts: the eyes and a band down to them.
+        if (inEyes(x, y)) {
           cut[i]!++
           continue
         }
@@ -361,21 +329,11 @@ export const dress = (sprite: Pixels, rig: RigFrame, items: readonly Dressing[],
           cut[i]!++
           continue
         }
-        if (it.slot === 'face' && !onSprite) {
-          let near = false
-          for (let dy = -FACE_SLACK; dy <= FACE_SLACK && !near; dy++) for (let dx = -FACE_SLACK; dx <= FACE_SLACK; dx++) if (spriteAt(x + dx, y + dy)) near = true
-          if (!near) {
-            cut[i]!++
-            continue
-          }
-        }
-        // What grows from the head shows through an open item's far side, and through any hat where the fix says; a scarf's far half is behind the neck.
+        // What grows from the head shows through an open item's far side, and through any hat where the fix says.
         if (it.slot === 'head' && onSprite && y < rig.seatY && ((open && art.back[k]) || overSet.has(y * 4096 + x))) continue
-        if (it.slot === 'neck' && onSprite && (art.back[k] || y < rig.neckY - 2)) continue
         // Facing away, the head stays over what hangs on the back.
         if (it.slot === 'back' && onSprite && y < rig.neckY) continue
-        // A clear lens over the sprite tints what's under it: the eye shows through.
-        color[o] = art.clear[k] && onSprite ? tint(color[o]!, palettes[i]![art.px[k]!]!) : palettes[i]![art.px[k]!]!
+        color[o] = palettes[i]![art.px[k]!]!
         owner[o] = 2 + i
         inkAt[o] = art.ink[k]!
         front[o] = 1 + i
@@ -454,10 +412,9 @@ export const dress = (sprite: Pixels, rig: RigFrame, items: readonly Dressing[],
       const fx = x - ox
       const fy = y - oy
       const item = items[owner[near]! - 2]!
-      if (item.slot !== 'face' && inEyes(fx, fy)) continue
+      if (inEyes(fx, fy)) continue
       if (owner[o] === 1) {
-        // On the sprite: its own outline stays; elsewhere the item's ink is where they meet (not up on the chin over a scarf, nor on the head over a cape).
-        if (item.slot === 'neck' && fy < rig.neckY - 2) continue
+        // On the sprite: its own outline stays; elsewhere the item's ink is where they meet (not on the head over what hangs on the back).
         if (item.slot === 'back' && fy < rig.neckY) continue
         if (!m.ink[fy * fw + fx]) outline[o] = ink
         continue

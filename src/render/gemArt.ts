@@ -14,8 +14,6 @@ const GEM = ['...ooooooo...', '..owllmmmddo.', '.owwllmmmmddo', 'owlllmmmmmddo',
 
 const SLOT_ROWS = {
   head: sym(['......', '......', '..oooo', '..owww', '..owww', '..owww', '..oggg', 'oooooo', 'owwwww', 'oooooo', '......', '......']),
-  face: sym(['......', '......', '......', '......', '.oooo.', 'owwwwo', 'owggwo', '.oooo.', '......', '......', '......', '......']),
-  neck: sym(['......', '......', '......', 'oooooo', 'owwwww', 'owgwgw', 'oooooo', '....ow', '...owg', '...ooo', '......', '......']),
   back: sym(['......', '...ooo', '..owww', '.owwww', '.owwww', 'owwwww', 'owwwww', 'owgwww', 'owwgww', 'owwwgw', 'oooooo', '......']),
   trail: sym(['......', '.....o', '....ow', '....ow', '..ooow', 'oowwww', '..ooow', '....ow', '....ow', '.....o', '......', '......']),
   spawn: sym(['.....o', '....ow', '....ow', 'ooooow', '.owwww', '..owww', '..owww', '.owwoo', '.owo..', '.oo...', '......', '......']),

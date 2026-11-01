@@ -66,7 +66,7 @@ export const adapter = {
     for (const e of eyes) for (let y = Math.max(0, e.y0); y <= Math.min(f.h - 1, e.y1); y++) for (let x = Math.max(0, e.x0); x <= Math.min(f.w - 1, e.x1); x++) if (f.rgba[(y * f.w + x) * 4 + 3]) eyePx.push(y * f.w + x)
     return { rig, eyes, eyePx, skull: new Uint8Array(0), palette: [] }
   },
-  wear: (key: string, id: WearableId, anim: RigAnim, row: number, frame: number, f: Pixels): (Worn & { rgba: Uint8Array }) | 'hidden' | 'unseen' | null => {
+  wear: (key: string, id: WearableId, anim: RigAnim, row: number, frame: number, f: Pixels): (Worn & { rgba: Uint8Array }) | 'hidden' | null => {
     const w = wearerOf(key)
     if (!w) return null
     const slot = WEARABLES[id].slot
@@ -74,8 +74,6 @@ export const adapter = {
     const layer = layerOf(slot, dir, WEAR_MODELS[id].layers)
     if (layer === 'hidden') return 'hidden'
     const rf = frameRig(key, anim, row, frame)!
-    // Glasses on a frame whose eyes weren't found aren't drawn (`dress`): a hole in the look, unless a fix says no eyes show.
-    if (slot === 'face' && rf.e1x === NONE) return fixOf(w.fit, row, anim)?.eyes === 'none' ? 'hidden' : 'unseen'
     const size = w.sizes[row]!
     let squash = squashes.get(`${key}:${id}:${row}`)
     if (squash === undefined) squashes.set(`${key}:${id}:${row}`, (squash = slot === 'head' ? squashOf(id, size) : 1))

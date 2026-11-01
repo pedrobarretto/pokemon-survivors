@@ -24,7 +24,7 @@ export const loadWearables = () =>
   ))
 
 /** Whether a look wears anything on the sprite. */
-const wearsAny = (look: Look) => look.head !== undefined || look.face !== undefined || look.neck !== undefined || look.back !== undefined
+const wearsAny = (look: Look) => look.head !== undefined || look.back !== undefined
 
 /**
  * Draws a Pokémon as `drawPokemon` does, dressed in a look's worn cosmetics

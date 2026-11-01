@@ -1,7 +1,7 @@
 import type { WearableSlot } from '../data/cosmetics'
 import type { WearableId } from '../data/wearables'
-import { box, capsule, cone, cylinder, ellipsoid, extrude, heart, sphere, star, torus, triangle, blend, type Ramp, type Scene } from './wearArt'
-import { depthOf, eyeOf, PITCH, pitchOf, radius, type ArtDir, type Layer, type WearSize } from './wearFit'
+import { box, capsule, cone, cylinder, ellipsoid, sphere, torus, blend, type Ramp, type Scene } from './wearArt'
+import { depthOf, PITCH, radius, type ArtDir, type Layer, type WearSize } from './wearFit'
 
 /**
  * The Arena's wearables as models (`render/wearArt.ts` renders them): one per
@@ -9,20 +9,17 @@ import { depthOf, eyeOf, PITCH, pitchOf, radius, type ArtDir, type Layer, type W
  * anchors give in every direction (`render/wearFit.ts`):
  *
  * - head: the top of the head's axis; the head is a sphere of `head / 2` below it.
- * - face: the head's center at the eyes' height; the face is that sphere's front (+z).
- * - neck: the neck's axis under the chin; the neck a cylinder of `neck / 2` around it.
  * - back: the body's axis at the shoulders; the back `body / 2` behind it (−z), the
  *   feet `drop` below and the top of the head `rise` above.
  *
- * Bands, rings and lenses carry the head or neck as an occluder, so their far
- * side hides behind it as the Pokémon turns, and the parts that wrap the
- * wearer (a strap, a temple, a scarf's wrap) are marked `HUG`: the dresser
- * keeps them on the sprite's head or neck, whatever its shape. Sizes are px;
+ * Bands and rings carry the head as an occluder, so their far side hides
+ * behind it as the Pokémon turns, and the parts that wrap the wearer are
+ * marked `HUG`: the dresser keeps them on the sprite's head, whatever its shape. Sizes are px;
  * a part thinner than a pixel vanishes, so lines are at least 0.5 px in radius.
  */
 
 export type WearModel = {
-  /** The scene for a size, a frame of its animation (0 when still) and an art direction (glasses turn their near lens in profile). */
+  /** The scene for a size, a frame of its animation (0 when still) and an art direction (what's flat on a hat turns toward the camera in profile). */
   scene: (size: WearSize, frame: number, dir: ArtDir) => Scene
   /** Open on top (a ring, a band): what grows from the head (a leaf, a horn) shows through its far side. */
   open?: true
@@ -55,25 +52,15 @@ const STRAW: Ramp = ['#8a5c20', '#c89040', '#e8c068', '#f8e8b0']
 const BROWN: Ramp = ['#4c2818', '#7c4828', '#a87040', '#d8a870']
 const LEATHER: Ramp = ['#382018', '#5c3424', '#844c30', '#b07850']
 const GREEN: Ramp = ['#205828', '#389040', '#60c058', '#b0e890']
-const LEAF: Ramp = ['#185020', '#287830', '#48a040', '#90d070']
-const TEAL: Ramp = ['#185858', '#209088', '#40c0b0', '#a8f0e0']
 const SKY: Ramp = ['#2858a0', '#4888d8', '#78b8f0', '#d0ecff']
 const BLUE: Ramp = ['#1c3070', '#2c50b0', '#4c80e0', '#a0c8f8']
 const PURPLE: Ramp = ['#381450', '#602890', '#9048c0', '#c890f0']
-const VIOLET: Ramp = ['#2c1838', '#48285c', '#684080', '#9870b0']
 const BLACK: Ramp = ['#101018', '#22222e', '#383848', '#606078']
 const STEEL: Ramp = ['#404858', '#707a8c', '#a0aabc', '#e0e8f4']
 const WHITE: Ramp = ['#8c94a4', '#c4ccd8', '#eceff4', '#ffffff']
 const CREAM: Ramp = ['#a08860', '#d8c098', '#f4e8c8', '#fffaf0']
 const IVORY: Ramp = ['#907858', '#c8b088', '#ece0c0', '#fffcf0']
-const SKIN: Ramp = ['#b05860', '#e07880', '#f8a8a8', '#ffe0e0']
-/** Lenses and glows: lit flat (`Scene.flat`). */
-const GLASS: Ramp = ['#3c6c94', '#78b0d8', '#b8e0f8', '#ffffff']
-const SHADE: Ramp = ['#0c0c18', '#1c1c30', '#34385c', '#a0b0e0']
-const TINT: Ramp = ['#601848', '#a02870', '#d04890', '#f8a0d0']
-const FLAME: Ramp = ['#c83010', '#f87818', '#f8c030', '#fff8c0']
 const HALO: Ramp = ['#c89820', '#f0c838', '#f8e878', '#fffce0']
-const FAIRY: Ramp = ['#78a8d0', '#a8d8f0', '#d8f4ff', '#ffffff']
 
 /* ---------------- Building blocks ---------------- */
 
@@ -123,27 +110,9 @@ const scene = (ramps: readonly Ramp[], parts: readonly Part[], bounds: { r: numb
 
 /** The head under a hat: a sphere of radius `r` whose top is the origin. */
 const headUnder = (r: number): Part => [(x, y, z) => sphere(x, y + r, z, r * 0.98), OCCLUDER]
-/** The head behind face items: a sphere of radius `r` around the origin. */
-const headAround = (r: number): Part => [(x, y, z) => sphere(x, y, z, r * 0.96), OCCLUDER]
-/**
- * The neck inside neck items, and the head above it (about 1.6 necks wide, a
- * little forward): facing the camera the chin hides the back of a scarf.
- */
-const neckIn = (r: number): Part => [(x, y, z) => Math.min(cylinder(x, y, z, r * 0.95, -r * 2.2, r * 1.6), sphere(x, y - r * 1.5, z - r * 0.3, r * 1.4)), OCCLUDER]
 
 /** A ring standing upright, facing +z (around the z axis), centered at (cx, cy, cz). */
 const ringZ = (x: number, y: number, z: number, cx: number, cy: number, cz: number, big: number, small: number) => Math.hypot(Math.hypot(x - cx, y - cy) - big, z - cz) - small
-
-/** A scene mirrored left to right: an item on one eye sits on the one nearest the camera facing east (and, mirrored, west). */
-const flipX = (s: Scene): Scene => ({
-  ...s,
-  sdf: (x, y, z) => s.sdf(-x, y, z),
-  paint: (x, y, z) => s.paint(-x, y, z),
-  ...(s.part && { part: (x: number, y: number, z: number) => s.part!(-x, y, z) }),
-  ...(s.hug && { hug: (x: number, y: number, z: number) => s.hug!(-x, y, z) }),
-})
-
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
 /** An angle around the y axis, 0 at the front (+z), growing toward +x. */
 const around = (x: number, z: number) => Math.atan2(x, z)
@@ -154,20 +123,15 @@ const turnY = (x: number, z: number, a: number): [number, number] => [x * Math.c
 /**
  * A point in the frame of a part turned `a` about the vertical through (cx, cz),
  * its front (+z) toward the camera's side in profile (−x): artists cheat what's
- * flat toward the viewer (a lens, a bow, a coin), which edge-on is a line.
+ * flat toward the viewer (a bow, bunny ears), which edge-on is a line.
  */
 const facing = (x: number, z: number, cx: number, cz: number, a: number): readonly [number, number] => {
   const [tx, tz] = turnY(x - cx, z - cz, -a)
   return [cx + tx, cz + tz]
 }
 
-/** Where the face's surface is at `x` across it, for a head of radius `r`. */
-const faceZ = (r: number, x: number, y = 0) => Math.sqrt(Math.max(r * r - x * x - y * y, 0))
-
 /** The frame's offset along a loop of `count`: 0, ½, 1, ½ for four frames (a bob). */
 const bob = (frame: number, count: number) => (1 - Math.cos((frame / count) * Math.PI * 2)) / 2
-
-const FACE_LAYERS = ['front', 'front', 'front', 'hidden', 'hidden'] as const satisfies WearModel['layers']
 
 /* ---------------- Head (origin: the top of the head) ---------------- */
 
@@ -224,35 +188,6 @@ const cap: WearModel = {
   },
 }
 
-/** Knit ribs on a beanie's folded cuff. */
-const rib = (x: number, _y: number, z: number) => (Math.floor(((around(x, z) + Math.PI) / (Math.PI * 2)) * 16) % 2 === 0 ? 1 : 2)
-
-const beanie: WearModel = {
-  scene: ({ head }) => {
-    const r = radius(head)
-    const pom = Math.max(1.5, above(r) * 0.3)
-    return scene([TEAL, CREAM, WHITE], [
-      headUnder(r),
-      [(x, y, z) => Math.max(sphere(x, y + r * 0.66, z, r * 1.06), -(y + r * 0.52)), 0],
-      [(x, y, z) => cylinder(x, y, z, r * 1.1 - 0.7, -r * 0.86, -r * 0.4) - 0.7, rib],
-      [(x, y, z) => sphere(x, y - r * 0.32 - pom * 0.7, z, pom), 2],
-    ], { r: r * 1.15, top: r * 0.4 + pom * 2, bottom: -r * 1.1 })
-  },
-  // Pushed up off the brow: a shallow crown on top of the head, its cuff a thin rib round its rim.
-  tight: ({ head }) => {
-    const r = radius(head)
-    const pom = Math.max(1.5, above(r) * 0.3)
-    const [cy, cr] = [-r * 0.6, r * 1.02]
-    const rimR = Math.sqrt(cr * cr - (r * 0.08 + cy) ** 2)
-    return scene([TEAL, CREAM, WHITE], [
-      headUnder(r),
-      [(x, y, z) => Math.max(sphere(x, y - cy, z, cr), -(y + r * 0.04)), 0],
-      [(x, y, z) => cylinder(x, y, z, rimR - 0.2, -r * 0.14, r * 0.12) - 0.6, rib],
-      [(x, y, z) => sphere(x, y - (cy + cr) - pom * 0.5, z, pom), 2],
-    ], { r: r * 1.05, top: cy + cr + pom * 2, bottom: -r * 0.5 })
-  },
-}
-
 const partyHat: WearModel = {
   perched: true,
   scene: ({ head }) => {
@@ -294,52 +229,6 @@ const hairBow: WearModel = {
   },
 }
 
-/** The rows (seat to eyes) a headband needs across the forehead, its outline and a row of the face clear of the eyes. */
-const BAND_ROOM = 4
-
-/**
- * A headband on a head with no forehead (`BAND_ROOM`): over the crown from ear
- * to ear, leaning back, as an Alice band is worn: facing south it rides the
- * top of the head's outline, in profile it runs down behind the eye.
- * Its sides stop above the jaw, and the dresser keeps it off the eyes.
- */
-const hairband = (r: number, dir: ArtDir) => {
-  // Leaning back, and in profile further still: there it runs down well behind the eye, clear of the dresser's cut round it.
-  const lean = dir === 2 ? 0.65 : 0.38
-  const [ct, st] = [Math.cos(lean), Math.sin(lean)]
-  const band: Dist = (x, y, z) => {
-    const [up, out] = [(y + r) * ct - z * st, (y + r) * st + z * ct]
-    return Math.max(Math.hypot(Math.hypot(x, up) - r - 0.3, out) - 0.75, -(y + r * 0.6))
-  }
-  // In profile, on the head inside its outline (`HUG`): past it, over a crest or an ear, it would stand up off the head.
-  const paint = (x: number, y: number) => (Math.abs(x) < r * 0.18 && y > -r * 0.2 ? 1 : 0)
-  return scene([RED, WHITE], [headUnder(r), dir === 2 ? [band, paint, HUG] : [band, paint]], { r: r * 1.3, top: 1.5, bottom: -r * 0.7 })
-}
-
-const headband: WearModel = {
-  open: true,
-  unpressed: true,
-  scene: ({ head, brow, brows }, _frame, dir) => {
-    const r = radius(head)
-    // Tilted up at the front by the camera's pitch: facing south it's seen edge-on, a straight band across the forehead
-    // (flat, its front would sag down to the eyes), and in profile it slants down to the back of the head, as a headband does.
-    const [ct, st] = [Math.cos(PITCH), Math.sin(PITCH)]
-    // Across the forehead, its outline and a row of the face clear of the eyes wherever they show (`browOf`), at most halfway down the head.
-    const room = Math.min(brow, ...brows.filter((b) => b > 0))
-    if (room < BAND_ROOM) return hairband(r, dir)
-    const y0 = -Math.min(Math.max(room - 3.3, 0.6), r * 0.5) / ct
-    const band: Dist = (x, y, z) => torus(x, (y - y0) * ct - z * st, (y - y0) * st + z * ct, r * 0.98, 0.8)
-    const backY = y0 - r * 0.98 * Math.tan(PITCH)
-    const tail = (side: number): Dist => (x, y, z) => capsule(x, y, z, side * r * 0.12, backY, -r * 0.98, side * r * 0.42, backY - r * 0.62, -r * 1.42, 0.62)
-    return scene([RED, WHITE], [
-      headUnder(r),
-      [band, (x, _y, z) => (z > r * 0.75 && Math.abs(x) < r * 0.28 ? 1 : 0), HUG],
-      [tail(1), 0],
-      [tail(-1), 0],
-    ], { r: r * 1.6, top: 0, bottom: -r * 1.4 })
-  },
-}
-
 const topHat: WearModel = {
   perched: true,
   scene: ({ head }) => {
@@ -351,29 +240,6 @@ const topHat: WearModel = {
       [(x, y, z) => cone(x, y, z, r * 0.62, r * 0.68, -0.6, h), 0],
       [(x, y, z) => cylinder(x, y, z, r * 0.64 + 0.35, -0.2, r * 0.3), 1],
     ], { r: r * 1.2, top: h + 0.5, bottom: -1.6 })
-  },
-}
-
-const flowerCrown: WearModel = {
-  open: true,
-  scene: ({ head }) => {
-    const r = radius(head)
-    const y0 = -r * 0.28
-    const ring = r * 0.9
-    const count = 8
-    const flowers = [PINK, YELLOW, WHITE] as const
-    const bloom: Dist = (x, y, z) => {
-      const a = around(x, z)
-      const k = Math.round((a / (Math.PI * 2)) * count)
-      const b = (k / count) * Math.PI * 2
-      return sphere(x - Math.sin(b) * ring, y - y0 - 0.3, z - Math.cos(b) * ring, Math.max(1.1, above(r) * 0.2))
-    }
-    const which = (x: number, _y: number, z: number) => 1 + (((Math.round((around(x, z) / (Math.PI * 2)) * count) % 3) + 3) % 3)
-    return scene([LEAF, ...flowers], [
-      headUnder(r),
-      [(x, y, z) => torus(x, y - y0, z, ring, 0.62), 0],
-      [bloom, which],
-    ], { r: ring + 2, top: 2, bottom: y0 - 2 })
   },
 }
 
@@ -617,466 +483,7 @@ const halo: WearModel = {
   },
 }
 
-/* ---------------- Face (origin: the head's center at the eyes) ---------------- */
-
-/** Temples from a frame's outer edge back to the ears. */
-const temples = (r: number, from: number, y: number): Dist => (x, yy, z) =>
-  Math.min(capsule(x, yy, z, from, y, faceZ(r, from) - 0.4, r * 0.98, y, -r * 0.1, 0.5), capsule(x, yy, z, -from, y, faceZ(r, from) - 0.4, -r * 0.98, y, -r * 0.1, 0.5))
-
-/**
- * How far the near lens turns toward the camera in profile (radians): seen at
- * the profile's angle a lens is a sliver, so it's drawn turned to show its
- * shape (a heart, a star, a ring), as artists cheat a profile's glasses.
- */
-const LENS_TURN = (30 * Math.PI) / 180
-
-/**
- * A point in the frame of the lens on `side` (±1: its center at `side` × e,
- * zf): (lx, lz), lz along the lens's normal. Facing `dir` 2 (profile) the near
- * lens (side −1, the camera's side) is turned `LENS_TURN` toward the camera.
- */
-const lensFrame = (x: number, z: number, side: number, e: number, zf: number, dir: ArtDir): readonly [number, number] =>
-  dir !== 2 || side > 0 ? [x - side * e, z - zf] : turnY(x - side * e, z - zf, -LENS_TURN)
-
-/** A pair of lenses: `one` gives a lens's distance at a point of its own frame (lx, y, lz: `lensFrame`). */
-const lenses = (e: number, zf: number, dir: ArtDir, one: (lx: number, y: number, lz: number) => number): Dist => (x, y, z) => {
-  const [ax, az] = lensFrame(x, z, 1, e, zf, dir)
-  const [bx, bz] = lensFrame(x, z, -1, e, zf, dir)
-  return Math.min(one(ax, y, az), one(bx, y, bz))
-}
-
-/** A paint by a point's place in its lens's frame (the lens on its side of the face). */
-const onLens = (e: number, zf: number, dir: ArtDir, paint: (lx: number, y: number, lz: number) => number) => (x: number, y: number, z: number) => {
-  const [lx, lz] = lensFrame(x, z, x < 0 ? -1 : 1, e, zf, dir)
-  return paint(lx, y, lz)
-}
-
-/** A rim round a lens: a ring of radius `big`, its wire `small`, in the lens's frame. */
-const rim = (lx: number, y: number, lz: number, big: number, small: number) => Math.hypot(Math.hypot(lx, y) - big, lz) - small
-
-const roundGlasses: WearModel = {
-  layers: FACE_LAYERS,
-  scene: (size, _frame, dir) => {
-    const r = radius(size.face)
-    const e = eyeOf(size, r)
-    const lens = Math.max(1.7, r * 0.32)
-    const zf = faceZ(r, e) + 0.5
-    // Wire frames are their own line: no outline around them or the lenses.
-    return scene([LEATHER, GLASS], [
-      headAround(r),
-      [lenses(e, zf, dir, (lx, y, lz) => rim(lx, y, lz, lens, 0.5)), 0],
-      [lenses(e, zf, dir, (lx, y, lz) => extrude(Math.hypot(lx, y) - lens, lz, 0, 0.2)), 1],
-      [(x, y, z) => capsule(x, y, z, -e + lens, 0.4, zf + 0.2, e - lens, 0.4, zf + 0.2, 0.5), 0],
-      [temples(r, e + lens, 0.2), 0, HUG],
-    ], { r: r + 1, top: lens + 1, bottom: -lens - 1 }, { flat: [1], clear: [1], inks: { 0: null, 1: null } })
-  },
-}
-
-const sunglasses: WearModel = {
-  layers: FACE_LAYERS,
-  scene: (size, _frame, dir) => {
-    const r = radius(size.face)
-    const e = eyeOf(size, r)
-    const zf = faceZ(r, e) + 0.4
-    const lw = Math.max(1.8, r * 0.36)
-    const lh = Math.max(1.2, r * 0.22)
-    const glint = onLens(e, zf, dir, (lx, y) => (Math.abs(lx + lw * 0.5) < 0.7 && y > lh * 0.2 ? 1 : 0))
-    return scene([SHADE, WHITE, BLACK], [
-      headAround(r),
-      [lenses(e, zf, dir, (lx, y, lz) => box(lx, y + 0.2, lz, lw, lh, 0.5, 0.6)), glint],
-      [(x, y, z) => capsule(x, y, z, -e, lh * 0.7, zf + 0.3, e, lh * 0.7, zf + 0.3, 0.55), 2],
-      [temples(r, e + lw, lh * 0.5), 2, HUG],
-    ], { r: r + 1, top: lh + 1.5, bottom: -lh - 1.5 }, { flat: [0, 1], ink: '#08080c' })
-  },
-}
-
-const noseGlasses: WearModel = {
-  layers: FACE_LAYERS,
-  scene: (size, _frame, dir) => {
-    const r = radius(size.face)
-    const e = eyeOf(size, r)
-    const lens = Math.max(1.6, r * 0.3)
-    const zf = faceZ(r, e) + 0.5
-    const nose: Dist = (x, y, z) => sphere(x, y + lens * 1.15, z - r * 0.98, Math.max(1.4, r * 0.28))
-    const stache: Dist = (x, y, z) => ellipsoid(x, y + lens * 1.15 + Math.max(1.4, r * 0.28) + 0.4, z - r * 0.9, r * 0.6, 0.9, 0.9)
-    return scene([BLACK, SKIN, BROWN], [
-      headAround(r),
-      [lenses(e, zf, dir, (lx, y, lz) => rim(lx, y, lz, lens, 0.5)), 0],
-      [(x, y, z) => capsule(x, y, z, -e + lens, 0.4, zf + 0.2, e - lens, 0.4, zf + 0.2, 0.5), 0],
-      [temples(r, e + lens, 0), 0, HUG],
-      [nose, 1],
-      [stache, 2],
-    ], { r: r + 1, top: lens + 1, bottom: -lens * 1.15 - r * 0.6 - 2 })
-  },
-}
-
-const heartShades: WearModel = {
-  layers: FACE_LAYERS,
-  scene: (size, _frame, dir) => {
-    const r = radius(size.face)
-    const e = eyeOf(size, r) + 0.2
-    // Big enough to read as hearts, never a visor across a wide face.
-    const s = clamp(r * 0.82, 4.2, 6.5)
-    const zf = faceZ(r, e) + 0.4
-    return scene([RED, PINK], [
-      headAround(r),
-      [lenses(e, zf, dir, (lx, y, lz) => extrude(heart(lx, y, s), lz, 0, 0.4)), onLens(e, zf, dir, (lx, y) => (Math.abs(lx + s * 0.22) < 0.6 && y > s * 0.12 ? 1 : 0))],
-      [(x, y, z) => capsule(x, y, z, -e + s * 0.3, s * 0.25, zf + 0.2, e - s * 0.3, s * 0.25, zf + 0.2, 0.5), 1],
-      [temples(r, e + s * 0.5, s * 0.15), 1, HUG],
-    ], { r: r + 1, top: s * 0.7 + 1, bottom: -s * 0.7 - 1 }, { flat: [0] })
-  },
-}
-
-const monocle: WearModel = {
-  layers: FACE_LAYERS,
-  // On the wearer's right eye: the one nearest the camera facing east (and, mirrored, west).
-  scene: (size, _frame, dir) => {
-    const r = radius(size.face)
-    const e = eyeOf(size, r)
-    const lens = Math.max(1.9, r * 0.36)
-    const zf = faceZ(r, e) + 0.5
-    const one = (d: (lx: number, y: number, lz: number) => number): Dist => (x, y, z) => {
-      const [lx, lz] = lensFrame(x, z, -1, e, zf, dir)
-      return d(lx, y, lz)
-    }
-    // The chain, a fine line: from the lens's rim down the cheek, sagging a little, and back up to the ear.
-    const sag = { x: -e - lens * 0.8, y: -lens - r * 0.18, z: faceZ(r, e + lens * 0.8) - 0.5 }
-    const ear = { x: -r * 0.96, y: -r * 0.1, z: -r * 0.05 }
-    const chain: Dist = (x, y, z) => Math.min(capsule(x, y, z, -e - lens * 0.45, -lens * 0.85, zf - 0.2, sag.x, sag.y, sag.z, 0.5), capsule(x, y, z, sag.x, sag.y, sag.z, ear.x, ear.y, ear.z, 0.5))
-    return scene([GOLD, GLASS, BRASS], [
-      headAround(r),
-      [one((lx, y, lz) => rim(lx, y, lz, lens, 0.6)), 0],
-      [one((lx, y, lz) => extrude(Math.hypot(lx, y) - lens, lz, 0, 0.2)), 1],
-      [chain, 2, HUG],
-    ], { r: r + 1, top: lens + 1, bottom: -lens - r * 0.2 - 1.5 }, { flat: [1], clear: [1], inks: { 1: null, 2: null } })
-  },
-}
-
-const eyePatch: WearModel = {
-  layers: FACE_LAYERS,
-  scene: (size) => {
-    const r = radius(size.face)
-    const e = eyeOf(size, r)
-    const tilt = 0.42
-    const strap: Dist = (x, y, z) => {
-      // A ring around the head, tilted across the brow.
-      const ty = y * Math.cos(tilt) + x * Math.sin(tilt)
-      return Math.hypot(Math.hypot(x * Math.cos(tilt) - y * Math.sin(tilt), z) - r * 1.0, ty - r * 0.08) - 0.5
-    }
-    return flipX(scene([BLACK], [
-      headAround(r),
-      [(x, y, z) => ellipsoid(x - e, y, z - faceZ(r, e) - 0.2, Math.max(1.8, r * 0.36), Math.max(1.5, r * 0.3), 0.8), 0],
-      [strap, 0, HUG],
-    ], { r: r * 1.1 + 1, top: r * 0.9, bottom: -r * 0.9 }))
-  },
-}
-
-const goggles: WearModel = {
-  layers: FACE_LAYERS,
-  scene: (size, _frame, dir) => {
-    const r = radius(size.face)
-    const e = eyeOf(size, r) + 0.3
-    const lens = Math.max(1.7, r * 0.33)
-    const zf = faceZ(r, e)
-    const housing = lenses(e, zf, dir, (lx, y, lz) => {
-      const dr = Math.hypot(lx, y) - lens - 0.5
-      const dz = Math.abs(lz - 0.3) - 0.8
-      return Math.min(Math.max(dr, dz), 0) + Math.hypot(Math.max(dr, 0), Math.max(dz, 0))
-    })
-    // A strap a pixel or two tall: thicker, it reads as a slab across the side of the head.
-    const strap: Dist = (x, y, z) => Math.max(Math.abs(Math.hypot(x, z) - r * 0.98) - 0.5, Math.abs(y) - Math.max(0.6, r * 0.11))
-    return scene([BRASS, GLASS, LEATHER], [
-      headAround(r),
-      [housing, onLens(e, zf, dir, (lx, y, lz) => (lz > 0.9 && Math.hypot(lx, y) < lens - 0.2 ? 1 : 0))],
-      [strap, 2, HUG],
-    ], { r: r + 1.5, top: lens + 1.5, bottom: -lens - 1.5 }, { flat: [1], clear: [1] })
-  },
-}
-
-const starShades: WearModel = {
-  layers: FACE_LAYERS,
-  scene: (size, _frame, dir) => {
-    const r = radius(size.face)
-    const e = eyeOf(size, r) + 0.3
-    const s = clamp(r * 0.5, 2.4, 4.2)
-    const zf = faceZ(r, e) + 0.4
-    // A gold star frame round a tinted lens: a gold lens alone vanishes on a yellow face.
-    const lens = lenses(e, zf, dir, (lx, y, lz) => extrude(star(lx, y, s), lz, 0, 0.4))
-    const tint = onLens(e, zf, dir, (lx, y) => (star(lx, y, s) < -0.9 ? 1 : 0))
-    return scene([GOLD, TINT, PINK], [
-      headAround(r),
-      [lens, tint],
-      [(x, y, z) => capsule(x, y, z, -e + s * 0.4, 0.3, zf + 0.2, e - s * 0.4, 0.3, zf + 0.2, 0.5), 2],
-      [temples(r, e + s * 0.7, 0), 2, HUG],
-    ], { r: r + 1.5, top: s + 1, bottom: -s - 1 }, { flat: [0, 1] })
-  },
-}
-
-const masquerade: WearModel = {
-  layers: FACE_LAYERS,
-  scene: (size) => {
-    const r = radius(size.face)
-    // Its holes on the wearer's own eyes, set wider than glasses' (`eyeOf`) may be: the pivot centers the model
-    // between the eyes found, so a mask sized to the clamped gap leaves eyes set wide outside it.
-    const e = clamp(size.eye, eyeOf(size, r), r * 0.8)
-    // A band across the eyes, its outer corners swept up, with holes for the eyes.
-    const lo = -r * 0.28 - 0.2
-    const hi = (x: number) => r * 0.28 - 0.2 + Math.max(0, Math.abs(x) - e) * 0.45
-    const mask: Dist = (x, y, z) => {
-      const shell = Math.abs(sphere(x, y, z, r * 1.02)) - 0.5
-      const band = Math.max(lo - y, y - hi(x))
-      const holes = Math.min(Math.hypot(x - e, y + 0.1) - r * 0.17, Math.hypot(x + e, y + 0.1) - r * 0.17)
-      // Over the front of the face only: wrapped further round, it's a slab across the side of the head in profile.
-      return Math.max(shell, band, -holes, -(z - r * 0.3), Math.abs(x) - Math.max(r * 0.98, e + r * 0.3))
-    }
-    const feather: Dist = (x, y, z) => ellipsoid(x - r * 0.9, y - r * 0.55, z - r * 0.42, 0.9, r * 0.55, 0.7)
-    return scene([PURPLE, GOLD, PINK], [
-      headAround(r),
-      [mask, (x, y) => (y < lo + 0.9 || y > hi(x) - 0.9 ? 1 : 0), HUG],
-      [feather, 2],
-    ], { r: r * 1.1 + 1, top: r * 1.2, bottom: -r * 0.6 }, { step: 0.7 })
-  },
-}
-
-/* ---------------- Neck (origin: the neck's axis under the chin) ---------------- */
-
-/**
- * How far what lies on the throat (a bow, a bandana's flap) slides round it
- * toward the camera in profile (radians): at the front of the throat it's on
- * the sprite's outline, a slab standing off it; a little round, it shows its
- * shape on the side of the neck, as an artist draws it.
- */
-const THROAT_TURN = (40 * Math.PI) / 180
-
-/** A point in the frame of what lies on the throat (`THROAT_TURN`): (x, z) turned so its front faces a little toward the camera in profile. */
-const throat = (x: number, z: number, dir: ArtDir): readonly [number, number] => (dir === 2 ? facing(x, z, 0, 0, THROAT_TURN) : [x, z])
-
-/** A scarf's wrap: a ring hugging the neck, hanging just under the chin (the pivot). */
-const scarfRing = (r: number, tube: number): Dist => (x, y, z) => torus(x, y + tube * 0.7, z, r + tube * 0.3, tube)
-/** A scarf's thickness round a neck of radius `r`: a wide neck's no thicker than a pixel or so more, or its top climbs onto the chin. */
-const scarfTube = (r: number) => clamp(r * 0.26, 1, 1.7)
-
-const scarf: WearModel = {
-  scene: ({ neck }) => {
-    const r = radius(neck)
-    const tube = scarfTube(r)
-    const tail = (dx: number, len: number): Dist => (x, y, z) => box(x - dx, y + tube + len / 2, z - r - tube * 0.6, 0.8, len / 2, 0.4, 0.3)
-    return scene([RED, CRIMSON], [
-      neckIn(r),
-      [scarfRing(r, tube), 0, HUG],
-      [tail(r * 0.35, r * 0.9 + 1.5), 0],
-      [tail(r * 0.35 + 1.6, r * 0.6 + 1.2), 1],
-    ], { r: r + tube * 2 + 1, top: tube + 1, bottom: -r * 1.3 - 3 })
-  },
-}
-
-const stripedScarf: WearModel = {
-  scene: ({ neck, drop }) => {
-    const r = radius(neck)
-    const tube = scarfTube(r)
-    const stripes = (x: number, _y: number, z: number) => (Math.floor(((around(x, z) + Math.PI) / (Math.PI * 2)) * 10) % 2 === 0 ? 0 : 1)
-    // One end down the back, swinging back a little as it falls, well clear of the feet.
-    const len = Math.min(r * 1.1 + 2, Math.max(3, drop * 0.45))
-    const tilt = 0.3
-    const along = (y: number, z: number) => -(y + tube * 0.4) * Math.cos(tilt) - (z + r + tube * 0.5) * Math.sin(tilt)
-    const across = (y: number, z: number) => -(y + tube * 0.4) * Math.sin(tilt) + (z + r + tube * 0.5) * Math.cos(tilt)
-    const end: Dist = (x, y, z) => box(x + r * 0.3, along(y, z) - len / 2, across(y, z), 0.9, len / 2, 0.45, 0.3)
-    const endStripes = (_x: number, y: number, z: number) => (Math.floor(along(y, z) / 1.6) % 2 === 0 ? 1 : 0)
-    return scene([GREEN, CREAM], [neckIn(r), [scarfRing(r, tube), stripes, HUG], [end, endStripes]], { r: r + tube * 2 + len * 0.4 + 1, top: tube + 1, bottom: -len - tube - 2 })
-  },
-}
-
-const bandana: WearModel = {
-  scene: ({ neck }, _frame, dir) => {
-    const r = radius(neck)
-    // The flap: a triangle down the chest, no longer than the neck is wide, curved round it and lying close
-    // (turned, it's a fold on the throat, not a board standing off it).
-    const tip = Math.min(r * 1.1, 6) + 1.2
-    const flap: Dist = (x, y, z) => {
-      const [fx, fz] = throat(x, z, dir)
-      const d2 = triangle(fx, y, -r * 1.05, 0.3, r * 1.05, 0.3, 0, -tip)
-      return extrude(d2, fz, faceZ(r + 0.9, Math.min(Math.abs(fx), r + 0.6)) + 0.2, 0.45)
-    }
-    const dots = (x: number, y: number) => ((Math.round(x * 0.7) + Math.round(y * 0.7)) % 3 === 0 && Math.round(y) % 2 === 0 ? 1 : 0)
-    return scene([BLUE, WHITE], [
-      neckIn(r),
-      [(x, y, z) => torus(x, y, z, r + 0.5, 0.9), 0, HUG],
-      [flap, dots],
-      [(x, y, z) => sphere(x, y, z + r + 0.9, 1.1), 0],
-    ], { r: r * 1.3 + 2, top: 2, bottom: -tip - 2 }, { step: 0.7 })
-  },
-}
-
-const bowTie: WearModel = {
-  layers: ['front', 'front', 'front', 'hidden', 'hidden'],
-  scene: ({ neck }, _frame, dir) => {
-    const r = radius(neck)
-    const w = clamp(r * 0.75, 2.4, 4)
-    const h = clamp(r * 0.4, 1.4, 2.4)
-    // Under the chin, on the throat: wrapped round the neck (s across its surface, d off it), so turned it hugs the throat
-    // instead of standing off it as a slab.
-    const R = r + 0.4
-    const cy = -h * 0.8
-    const on = (d2: (s: number, y: number) => number, lift: number, half: number): Dist => (x, y, z) => {
-      const [tx, tz] = throat(x, z, dir)
-      return extrude(d2(Math.atan2(tx, tz) * R, y - cy), Math.hypot(tx, tz) - R, lift, half)
-    }
-    const lobes = on((s, y) => Math.min(triangle(s, y, 0, 0, w, h, w, -h), triangle(s, y, 0, 0, -w, -h, -w, h)) - 0.2, 0.5, 0.5)
-    const knot = on((s, y) => box(s, y, 0, 0.8, h * 0.55, 1, 0.2), 0.8, 0.6)
-    return scene([RED, CRIMSON], [neckIn(r), [lobes, 0], [knot, 1]], { r: R + 2, top: 1, bottom: cy - h - 1 }, { step: 0.7 })
-  },
-}
-
-const bellCollar: WearModel = {
-  scene: ({ neck }) => {
-    const r = radius(neck)
-    // A small bell at the front, hanging against the throat.
-    const bell = clamp(r * 0.4, 1.4, 2.2)
-    const bellZ = r + 0.4 + bell * 0.5
-    return scene([RED, GOLD, BLACK], [
-      neckIn(r),
-      [(x, y, z) => torus(x, y, z, r + 0.4, 0.75), 0, HUG],
-      [(x, y, z) => sphere(x, y + bell * 0.9, z - bellZ, bell), (x, y) => (y < -bell * 1.15 && Math.abs(x) < 0.6 ? 2 : 1)],
-    ], { r: r + bell * 2 + 1, top: 2, bottom: -bell * 2 - 2 })
-  },
-}
-
-const lei: WearModel = {
-  scene: ({ neck }) => {
-    const r = radius(neck)
-    const ring = r + 1
-    const count = 12
-    const petal = Math.max(1.05, r * 0.3)
-    // Lower at the front, as a garland hangs.
-    const sag = (a: number) => -r * 0.55 * (1 + Math.cos(a)) * 0.5
-    const flower: Dist = (x, y, z) => {
-      const k = Math.round((around(x, z) / (Math.PI * 2)) * count)
-      const b = (k / count) * Math.PI * 2
-      return sphere(x - Math.sin(b) * ring, y - sag(b), z - Math.cos(b) * ring, petal)
-    }
-    const which = (x: number, _y: number, z: number) => (((Math.round((around(x, z) / (Math.PI * 2)) * count) % 3) + 3) % 3)
-    return scene([PINK, ORANGE, YELLOW], [neckIn(r), [flower, which, HUG]], { r: ring + petal + 1, top: petal + 1, bottom: -r * 0.6 - petal - 1 })
-  },
-}
-
-const pearls: WearModel = {
-  scene: ({ neck }) => {
-    const r = radius(neck)
-    const ring = r + 0.5
-    const count = 14
-    const sag = (a: number) => -r * 0.5 * (1 + Math.cos(a)) * 0.5
-    const pearl: Dist = (x, y, z) => {
-      const k = Math.round((around(x, z) / (Math.PI * 2)) * count)
-      const b = (k / count) * Math.PI * 2
-      return sphere(x - Math.sin(b) * ring, y - sag(b), z - Math.cos(b) * ring, 0.95)
-    }
-    return scene([CREAM], [neckIn(r), [pearl, 0, HUG]], { r: ring + 2, top: 2, bottom: -r * 0.6 - 2 }, { ink: '#6c5840' })
-  },
-}
-
-const medal: WearModel = {
-  layers: ['front', 'front', 'front', 'hidden', 'hidden'],
-  scene: ({ neck }, _frame, dir) => {
-    const r = radius(neck)
-    const disc = clamp(r * 0.42, 1.7, 2.8)
-    // On the chest, not down at the feet.
-    const drop = clamp(r * 0.55 + 1.2, 2.5, 5)
-    // Lying on the neck and chest (s across their surface, d off it), slid toward the camera in profile (`throat`):
-    // a ribbon standing off the neck hides inside it, and a coin edge-on is a line.
-    const R = r + 0.5
-    const on = (d2: (s: number, y: number) => number, lift: number, half: number): Dist => (x, y, z) => {
-      const [tx, tz] = throat(x, z, dir)
-      return extrude(d2(Math.atan2(tx, tz) * R, y), Math.hypot(tx, tz) - R, lift, half)
-    }
-    const side = R * 0.75
-    const ribbon = on((s, y) => Math.min(segment(s, y, side, 0.3, 0.6, -drop), segment(s, y, -side, 0.3, -0.6, -drop)) - 0.6, 0.3, 0.4)
-    const coin = on((s, y) => Math.hypot(s, y + drop + disc * 0.8) - disc, 0.7, 0.45)
-    return scene([BLUE, GOLD], [neckIn(r), [ribbon, 0], [coin, 1]], { r: R + 2, top: 1.5, bottom: -drop - disc * 2 - 1 }, { step: 0.7 })
-  },
-}
-
-const HERO_FRAMES = 6
-const heroScarf: WearModel = {
-  frames: { count: HERO_FRAMES, every: 0.1 },
-  scene: ({ neck }, frame) => {
-    const r = radius(neck)
-    const tube = scarfTube(r)
-    const phase = (frame / HERO_FRAMES) * Math.PI * 2
-    // The end streams out behind, falling as it goes (seen from above, level it would climb up behind the head), and waves.
-    const links = 5
-    const pts = Array.from({ length: links + 1 }, (_, i) => [r * 0.3 + i * 0.4, -0.4 - i * 0.9 + Math.sin(phase - i * 1.1) * (0.3 + i * 0.25), -r - tube * 0.3 - i * 1.5] as const)
-    const end: Dist = (x, y, z) => {
-      let d = Infinity
-      for (let i = 0; i < links; i++) {
-        const [ax, ay, az] = pts[i]!
-        const [bx, by, bz] = pts[i + 1]!
-        d = Math.min(d, capsule(x, y, z, ax, ay, az, bx, by, bz, Math.max(0.6, tube * 0.75 - i * 0.08)))
-      }
-      return d
-    }
-    return scene([CRIMSON, GOLD], [neckIn(r), [scarfRing(r, tube), 0, HUG], [end, (_x, _y, z) => (z < -r - tube * 0.3 - (links - 0.7) * 1.5 ? 1 : 0)]], { r: r + links * 1.6 + 3, top: tube + 3, bottom: -links * 1.6 - 4 })
-  },
-}
-
 /* ---------------- Back (origin: the body's axis at the shoulders) ---------------- */
-
-/** A cloth hanging from the shoulders down the back, flaring a little as it falls; `wave` ripples its hem. */
-const cloak = (body: number, drop: number, wave: (a: number, t: number) => number): Dist => {
-  const r = radius(body)
-  const len = Math.max(4, drop * 0.82)
-  return (x, y, z) => {
-    const t = Math.min(Math.max(-y / len, 0), 1)
-    const a = around(x, -z)
-    const sheet = Math.abs(Math.hypot(x, z) - cloakR(r, t) - wave(a, t)) - 0.45
-    // Only the back, wrapping a little further round as it falls.
-    const spread = Math.abs(a) - (0.95 + t * 0.15)
-    // Its top rises behind the neck, as a collar does.
-    return Math.max(sheet, spread * r * 0.7, y - r * 0.4 - 0.6, -y - len)
-  }
-}
-/** The cloth's distance from the spine `t` of the way down. */
-const cloakR = (r: number, t: number) => r * 0.8 + 0.5 + t * r * 0.12
-/** Whether a point of the cloth is on its outer side (the lining faces the body). */
-const outside = (body: number, drop: number) => (x: number, y: number, z: number) =>
-  Math.hypot(x, z) > cloakR(radius(body), Math.min(Math.max(-y / Math.max(4, drop * 0.82), 0), 1))
-
-const cape: WearModel = {
-  scene: ({ body, drop }) => {
-    const out = outside(body, drop)
-    return scene([RED, GOLD], [[cloak(body, drop, () => 0), (x, y, z) => (out(x, y, z) ? 0 : 1)]], { r: body * 0.8 + 2, top: 1.5, bottom: -drop - 1 }, { step: 0.6 })
-  },
-}
-
-const ROYAL_FRAMES = 6
-const royalCape: WearModel = {
-  frames: { count: ROYAL_FRAMES, every: 0.12 },
-  scene: ({ body, drop }, frame) => {
-    const r = radius(body)
-    const phase = (frame / ROYAL_FRAMES) * Math.PI * 2
-    const len = Math.max(4, drop * 0.82)
-    const cloth = cloak(body, drop, (a, t) => Math.sin(a * 3 + phase) * 0.7 * t)
-    const out = outside(body, drop)
-    const paint = (x: number, y: number, z: number) => (-y > len - 1.2 ? 2 : out(x, y, z) ? 0 : 1)
-    // The ermine collar round the shoulders, from behind the neck to its sides: further round, turned it shows in front of the chest.
-    const collar: Dist = (x, y, z) => Math.max(torus(x, y - 0.4, z, r * 0.72, Math.max(1.1, r * 0.2)), z + r * 0.05)
-    return scene([PURPLE, CRIMSON, GOLD, WHITE], [[cloth, paint], [collar, 3]], { r: body * 0.85 + 2, top: 2.5, bottom: -drop - 1 }, { step: 0.6 })
-  },
-}
-
-const backpack: WearModel = {
-  scene: ({ body, drop }) => {
-    const r = radius(body)
-    const h = Math.max(3, Math.min(drop * 0.55, r * 1.3))
-    const w = Math.max(2.6, r * 0.62)
-    const zc = -r - 1.2
-    const pack: Dist = (x, y, z) => box(x, y + h * 0.55, z - zc, w, h * 0.62, 1.4, 1)
-    const pocket: Dist = (x, y, z) => box(x, y + h * 0.82, z - zc + 1.5, w * 0.65, h * 0.28, 0.6, 0.5)
-    return scene([YELLOW, ORANGE], [
-      [pack, (_x, y) => (y > -h * 0.18 ? 1 : 0)],
-      [pocket, 1],
-    ], { r: r + 4, top: h * 0.2 + 1, bottom: -h * 1.3 - 1 })
-  },
-}
 
 const BALLOON_FRAMES = 4
 const balloon: WearModel = {
@@ -1097,119 +504,12 @@ const balloon: WearModel = {
   },
 }
 
-const JET_FRAMES = 4
-const jetpack: WearModel = {
-  frames: { count: JET_FRAMES, every: 0.07 },
-  scene: ({ body, drop }, frame) => {
-    const r = radius(body)
-    const tank = Math.max(1.3, r * 0.3)
-    const tx = tank + 0.4
-    const zc = -r - tank - 0.4
-    const h = Math.max(3.5, Math.min(drop * 0.5, r * 1.2))
-    const flame = 1.6 + [0, 1, 0.4, 1.4][frame % 4]!
-    const tanks: Dist = (x, y, z) => Math.min(cylinder(x - tx, y, z - zc, tank, -h, 0.4) - 0.1, cylinder(x + tx, y, z - zc, tank, -h, 0.4) - 0.1)
-    const nozzles: Dist = (x, y, z) => Math.min(cone(x - tx, y, z - zc, tank * 0.5, tank * 0.85, -h - 1.4, -h), cone(x + tx, y, z - zc, tank * 0.5, tank * 0.85, -h - 1.4, -h))
-    const fire: Dist = (x, y, z) => Math.min(cone(x - tx, y, z - zc, 0.3, tank * 0.6, -h - 1.4 - flame, -h - 1.2), cone(x + tx, y, z - zc, 0.3, tank * 0.6, -h - 1.4 - flame, -h - 1.2))
-    return scene([STEEL, RED, FLAME], [[tanks, (_x, y) => (y > -0.6 ? 1 : 0)], [nozzles, 0], [fire, 2]], { r: r + tank * 2 + 3, top: 1.5, bottom: -h - 4 - flame }, { flat: [2], inks: { 2: null } })
-  },
-}
-
-/** Two wings spread from the shoulders: `shape` is one wing's flat outline (x out from the spine, y up), `open` how far they swing out (radians). */
-const wings = (r: number, open: number, half: number, shape: (u: number, v: number) => number): Dist => (x, y, z) => {
-  // Into the wing's plane: out along u, up along v, thickness along w, hinged behind the spine.
-  const hx = Math.abs(x) - 0.4
-  const hz = z + r * 0.75
-  const u = hx * Math.cos(open) - hz * Math.sin(open)
-  const w = hx * Math.sin(open) + hz * Math.cos(open)
-  // Far off the wing's plane its distance is at least that far: skip the outline (most of the march).
-  if (Math.abs(w) > half + 1.5) return Math.abs(w) - half
-  return extrude(shape(u, y), w, 0, half)
-}
-
-/** A flat outline from the union of the triangles fanning from its first point through the rest (a wing's membrane). */
-const fan = (u: number, v: number, pts: readonly (readonly [number, number])[]) => {
-  let d = Infinity
-  const [ox, oy] = pts[0]!
-  for (let i = 1; i + 1 < pts.length; i++) d = Math.min(d, triangle(u, v, ox, oy, pts[i]![0], pts[i]![1], pts[i + 1]![0], pts[i + 1]![1]))
-  return d
-}
-
-/** Distance (2D) to the segment a–b. */
-const segment = (u: number, v: number, ax: number, ay: number, bx: number, by: number) => {
-  const dx = bx - ax
-  const dy = by - ay
-  const h = Math.min(Math.max(((u - ax) * dx + (v - ay) * dy) / (dx * dx + dy * dy), 0), 1)
-  return Math.hypot(u - ax - dx * h, v - ay - dy * h)
-}
-
-const batWings: WearModel = {
-  scene: ({ body }) => {
-    const r = radius(body)
-    const S = Math.max(5, r * 1.25)
-    // Shoulder, wrist, then the three finger tips and back along the trailing edge.
-    const wrist = [0.5 * S, 0.62 * S] as const
-    const tips = [[1.02 * S, 0.86 * S], [1.1 * S, 0.22 * S], [0.72 * S, -0.22 * S]] as const
-    const outline = [[0, 0.1 * S], wrist, tips[0], tips[1], tips[2], [0.18 * S, -0.12 * S]] as const
-    const shape = (u: number, v: number) => {
-      let cut = Infinity
-      // Scallops between the fingers.
-      for (const [cx, cy, cr] of [[1.24, 0.55, 0.22], [1.02, -0.16, 0.22], [0.42, -0.36, 0.24]] as const) cut = Math.min(cut, Math.hypot(u - cx * S, v - cy * S) - cr * S)
-      return Math.max(fan(u, v, outline), -cut)
-    }
-    const bones = (x: number, y: number) => {
-      const u = Math.abs(x)
-      let d = segment(u, y, 0, 0.1 * S, wrist[0], wrist[1])
-      for (const [tx, ty] of tips) d = Math.min(d, segment(u, y, wrist[0], wrist[1], tx, ty))
-      return d < 0.6 ? 1 : 0
-    }
-    return scene([VIOLET, BLACK], [[wings(r, 0.55, 0.4, shape), bones]], { r: r + S * 1.3 + 2, top: S + 1, bottom: -S * 0.5 - 1 }, { step: 0.6 })
-  },
-}
-
-const FAIRY_FRAMES = 4
-const fairyWings: WearModel = {
-  frames: { count: FAIRY_FRAMES, every: 0.08 },
-  scene: ({ body }, frame) => {
-    const r = radius(body)
-    const span = Math.max(4, r * 0.95)
-    const flap = 0.35 + bob(frame, FAIRY_FRAMES) * 0.6
-    const shape = (u: number, v: number) =>
-      Math.min(ellipsoid(u - span * 0.5, v - span * 0.35, 0, span * 0.52, span * 0.42, 1), ellipsoid(u - span * 0.36, v + span * 0.28, 0, span * 0.36, span * 0.3, 1))
-    return scene([FAIRY, PINK], [[wings(r, flap, 0.35, shape), (x, y) => (Math.hypot(Math.abs(x) - span * 0.5, y - span * 0.35) < span * 0.2 ? 1 : 0)]], { r: r + span * 1.2 + 2, top: span * 0.8 + 1, bottom: -span * 0.6 - 1 }, { flat: [0, 1], ink: '#5878a8', step: 0.6 })
-  },
-}
-
-const ANGEL_FRAMES = 6
-const angelWings: WearModel = {
-  frames: { count: ANGEL_FRAMES, every: 0.14 },
-  scene: ({ body }, frame) => {
-    const r = radius(body)
-    const S = Math.max(5.5, r * 1.3)
-    const flap = 0.45 + bob(frame, ANGEL_FRAMES) * 0.3
-    const shape = (u: number, v: number) => {
-      // The arm sweeping up and out, its long feathers fanning down with round tips.
-      let d = fan(u, v, [[0, 0.05 * S], [0.45 * S, 0.7 * S], [1.0 * S, 0.95 * S], [1.08 * S, 0.5 * S], [0.75 * S, -0.3 * S], [0.15 * S, -0.15 * S]])
-      for (const [cx, cy] of [[0.95, 0.45], [0.78, 0.05], [0.52, -0.22], [0.25, -0.18]] as const) d = Math.min(d, Math.hypot(u - cx * S, v - cy * S) - 0.2 * S)
-      return Math.max(d, -u)
-    }
-    // Rows of feathers across the wing.
-    const rows = (x: number, y: number) => {
-      const u = Math.abs(x)
-      return Math.floor((Math.hypot(u, y - S * 0.95) / Math.max(1.8, S * 0.24))) % 2 === 0 ? 0 : 1
-    }
-    return scene([WHITE, CREAM], [[wings(r, flap, 0.45, shape), rows]], { r: r + S * 1.35 + 2, top: S * 1.1 + 1, bottom: -S * 0.5 - 1 }, { step: 0.6 })
-  },
-}
-
 export const WEAR_MODELS = {
   strawHat,
   cap,
-  beanie,
   partyHat,
   hairBow,
-  headband,
   topHat,
-  flowerCrown,
   chefHat,
   cowboyHat,
   gradCap,
@@ -1221,56 +521,22 @@ export const WEAR_MODELS = {
   propellerCap,
   crown,
   halo,
-  roundGlasses,
-  sunglasses,
-  noseGlasses,
-  heartShades,
-  monocle,
-  eyePatch,
-  goggles,
-  starShades,
-  masquerade,
-  scarf,
-  bandana,
-  bowTie,
-  stripedScarf,
-  bellCollar,
-  lei,
-  pearls,
-  medal,
-  heroScarf,
-  backpack,
-  cape,
   balloon,
-  batWings,
-  fairyWings,
-  jetpack,
-  angelWings,
-  royalCape,
 } as const satisfies Record<WearableId, WearModel>
 
 /**
- * Glasses in profile: their near half (the wearer's right, `x < 0`, faces the
- * camera turned east), as an artist draws a profile's glasses: the near lens
- * on the eye and its temple back to the ear; the far lens is behind the nose,
- * and drawn it pokes out in front of the face.
- */
-const nearHalf = (s: Scene): Scene => ({ ...s, sdf: (x, y, z) => Math.max(s.sdf(x, y, z), x) })
-
-/**
- * A model's scene for a wearer (`render/wearDress.ts` renders it): a hat or
- * glasses stretched front to back as deep as the head is (`depthOf`), drawn at their slot's pitch (`pitchOf`), and a
- * hat's part under its seat pressed down to `squash` (0..1) of its height, so
- * its band stays over the eyes of a head whose eyes sit high (Snorlax's), or
- * at 0 worn its tight way (`WearModel.tight`); a hat that sits on top sized by `perch`.
- * Facing `dir` (an art direction), glasses in profile keep their near half (`nearHalf`).
+ * A model's scene for a wearer (`render/wearDress.ts` renders it): a hat
+ * stretched front to back as deep as the head is (`depthOf`), drawn at the
+ * sprites' pitch (`PITCH`), its part under its seat pressed down to `squash`
+ * (0..1) of its height, so its band stays over the eyes of a head whose eyes
+ * sit high (Snorlax's), or at 0 worn its tight way (`WearModel.tight`); a hat
+ * that sits on top sized by `perch`.
  */
 export const sceneOf = (id: WearableId, slot: WearableSlot, size: WearSize, frame: number, squash = 1, dir: ArtDir = 0): Scene => {
   const model = WEAR_MODELS[id]
   const build = squash === 0 && model.tight ? model.tight : model.scene
-  const whole = { ...build(model.perched ? { ...size, head: perch(size.head) } : size, frame, dir), pitch: pitchOf(slot) }
-  const s = slot === 'face' && dir === 2 ? nearHalf(whole) : whole
-  const kz = slot === 'head' || slot === 'face' ? depthOf(size, slot) : 1
+  const s = { ...build(model.perched ? { ...size, head: perch(size.head) } : size, frame, dir), pitch: PITCH }
+  const kz = slot === 'head' ? depthOf(size) : 1
   const sq = slot === 'head' && !model.unpressed && squash > 0 ? squash : 1
   if (kz === 1 && sq === 1) return s
   const Y = (y: number) => (y < 0 ? y / sq : y)

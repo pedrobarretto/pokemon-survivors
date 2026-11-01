@@ -23,12 +23,12 @@ import { ARENA_EFFECTS, type ArenaEffectDef } from './arenaEffects'
  * (`wearables`, `arenaEffects`), keyed by the same ids.
  */
 
-/** Where a cosmetic goes. The first four are worn on the sprite (`WEARABLE_SLOTS`). */
-export const COSMETIC_SLOTS = ['head', 'face', 'neck', 'back', 'trail', 'spawn', 'ko', 'goal', 'emote', 'title', 'plate'] as const
+/** Where a cosmetic goes. The first two are worn on the sprite (`WEARABLE_SLOTS`). */
+export const COSMETIC_SLOTS = ['head', 'back', 'trail', 'spawn', 'ko', 'goal', 'emote', 'title', 'plate'] as const
 
 export type CosmeticSlot = (typeof COSMETIC_SLOTS)[number]
 
-export const WEARABLE_SLOTS = ['head', 'face', 'neck', 'back'] as const satisfies readonly CosmeticSlot[]
+export const WEARABLE_SLOTS = ['head', 'back'] as const satisfies readonly CosmeticSlot[]
 
 export type WearableSlot = (typeof WEARABLE_SLOTS)[number]
 
@@ -48,8 +48,6 @@ const EVERYWHERE = COSMETIC_MODES
  */
 export const SLOT_MODES: Readonly<Record<CosmeticSlot, readonly CosmeticMode[]>> = {
   head: EVERYWHERE,
-  face: EVERYWHERE,
-  neck: EVERYWHERE,
   back: EVERYWHERE,
   trail: EVERYWHERE,
   title: EVERYWHERE,

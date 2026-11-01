@@ -23,45 +23,23 @@ export const isMirrored = (dir: Dir8) => dir > 4
 /** How far an art direction is turned from facing the camera (radians, toward screen right). */
 export const yawOf = (d: ArtDir) => (d * Math.PI) / 4
 
-/** How far glasses turn in profile (radians): see `yawFor`. */
-const PROFILE_FACE = (55 * Math.PI) / 180
-
-/**
- * How far a slot's models turn facing an art direction: their direction's
- * turn, but glasses in profile turn 55° rather than 90°, as sprite artists
- * draw a profile's eye, a little toward the viewer: edge-on, a lens is a
- * one-pixel bar that the eye shows past. Only their near half is drawn there
- * (`render/wearModels.ts`), its lens turned further still.
- */
-export const yawFor = (slot: WearableSlot, d: ArtDir) => (slot === 'face' && d === 2 ? PROFILE_FACE : yawOf(d))
-
 /** How far down the camera looks at the sprites (radians): PMD sprites are drawn from a little above, heads almost head-on. */
 export const PITCH = (22 * Math.PI) / 180
-/**
- * The face's own pitch: drawn almost head-on, as the sprites draw faces, so a
- * strap round the head reads as a band from every side (at `PITCH` it sags into a slab in profile).
- */
-export const FACE_PITCH = (8 * Math.PI) / 180
-
-/** The pitch a slot's models are drawn at (`Scene.pitch`). */
-export const pitchOf = (slot: WearableSlot) => (slot === 'face' ? FACE_PITCH : PITCH)
 
 /**
  * Where a slot draws relative to the sprite: `behind` before it, `front` after
- * it, or not at all. Face items hide facing away; a cape is behind the body
- * facing south and over it facing north; hats are always in front.
+ * it, or not at all. What hangs on the back is behind the body facing south
+ * and over it facing north; hats are always in front.
  */
 export type Layer = 'front' | 'behind' | 'hidden'
 
 export const SLOT_LAYERS = {
   head: ['front', 'front', 'front', 'front', 'front'],
-  face: ['front', 'front', 'front', 'hidden', 'hidden'],
-  neck: ['front', 'front', 'front', 'front', 'front'],
   back: ['behind', 'behind', 'behind', 'front', 'front'],
 } as const satisfies Record<WearableSlot, readonly [Layer, Layer, Layer, Layer, Layer]>
 
 /** The slots in the order a pass draws them: what hangs on the back first, the hat last, on top. */
-export const DRAW_ORDER = ['back', 'neck', 'face', 'head'] as const satisfies readonly WearableSlot[]
+export const DRAW_ORDER = ['back', 'head'] as const satisfies readonly WearableSlot[]
 
 /** A slot's layer facing `dir`, from an item's own table (`WearModel.layers`) or its slot's. */
 export const layerOf = (slot: WearableSlot, dir: Dir8, own?: readonly Layer[]): Layer => (own ?? SLOT_LAYERS[slot])[artDir(dir)]!
@@ -232,14 +210,13 @@ export const wears = (fit: SpeciesFit | undefined, slot: WearableSlot, id: Weara
 /**
  * What a variant's models are sized from (px), measured facing south on its
  * first Walk frame (the depths in profile): the seat's width (`head`), the
- * skull's depth (`depth`) and the head's at the eyes (`faceDepth`, `headSpan`), how far below the seat its eyes start (`brow`: no band comes
- * down that far), the head's width at the eyes (`face`), half the eyes' gap
- * (`eye`, 0 unknown), the neck's and body's widths, and from the back down
+ * skull's depth (`depth`), how far below the seat its eyes start (`brow`: no band comes
+ * down that far), the body's width, and from the back down
  * to the feet (`drop`) and up to the seat (`rise`); `brows`, the brow's room
  * turned a little and in profile (SE, E; 0 where no eyes show), which a hat's
  * band must clear too.
  */
-export type WearSize = { head: number; depth: number; faceDepth: number; brow: number; brows: readonly [number, number]; face: number; eye: number; neck: number; body: number; drop: number; rise: number }
+export type WearSize = { head: number; depth: number; brow: number; brows: readonly [number, number]; body: number; drop: number; rise: number }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
@@ -258,7 +235,6 @@ export const sizeOf = (rig: Rig, fit: SpeciesFit | undefined, dir: Dir8 = 0): We
   const add = fit?.size ?? {}
   const head = clamp(s.seatW + (add.head ?? 0), 7, 26)
   const eyes = s.eyeY0 !== NONE
-  const [l, r] = headSpan(e)
   const depth = clamp(e.seatW, Math.round(head * 0.6), Math.round(head * 1.6))
   // Turned between the camera and a side, or away: the model's width there against the skull's.
   const a = artDir(dir)
@@ -267,13 +243,8 @@ export const sizeOf = (rig: Rig, fit: SpeciesFit | undefined, dir: Dir8 = 0): We
   return {
     head: Math.round(head * k),
     depth: Math.round(depth * k),
-    faceDepth: r - l + 1,
     brow: eyes ? Math.max(1, s.eyeY0 - s.seatY) : Math.max(3, Math.round((s.neckY - s.seatY) * 0.45)),
     brows: [room(se), room(e)],
-    // Glasses as wide as the face, but no wider than the eyes' gap makes believable (a face read too wide spans the chest).
-    face: clamp(s.faceR - s.faceL + 1 + (add.face ?? 0), eyes && s.e2x !== s.e1x ? s.e2x - s.e1x + 5 : 7, eyes && s.e2x !== s.e1x ? Math.round((s.e2x - s.e1x) * 2.6) + 5 : 26),
-    eye: eyes && s.e2x !== s.e1x ? (s.e2x - s.e1x) / 2 : 0,
-    neck: clamp(s.neckW + (add.neck ?? 0), 5, 22),
     body: clamp(s.bodyW + (add.back ?? 0), 8, 40),
     drop: Math.max(4, Math.round((s.feetY - s.backY) / 2) * 2),
     rise: Math.max(4, Math.round((s.backY - s.seatY) / 2) * 2),
@@ -283,53 +254,18 @@ export const sizeOf = (rig: Rig, fit: SpeciesFit | undefined, dir: Dir8 = 0): We
 /** A model's radius for a measured width: the art adds a 1 px outline around the shape. */
 export const radius = (w: number) => (w - 1) / 2
 
-/** Half the eyes' gap a face model takes, for a face of radius `r`: the rig's, kept believable. */
-export const eyeOf = (size: WearSize, r: number) => (size.eye > 0 ? clamp(size.eye, r * 0.26, r * 0.62) : r * 0.42)
-
-/** How much deeper than wide a variant's head is: hats stretch along the skull's depth, face models along the head's at the eyes. */
-export const depthOf = (size: WearSize, slot: 'head' | 'face') => clamp(slot === 'face' ? size.faceDepth / size.face : size.depth / size.head, 0.7, 1.4)
-
-/**
- * A frame's head span (px, inclusive): its width at the eyes' line, no wider
- * than the skull's seat and a pixel either side (a crest, a shoulder or spikes
- * level with the eyes aren't head). What a face item's strap wraps.
- */
-export const headSpan = (r: RigFrame): readonly [number, number] => [Math.max(r.faceL, r.seatX - (r.seatW >> 1) - 1), Math.min(r.faceR, r.seatX + (r.seatW >> 1) + 1)]
+/** How much deeper than wide a variant's head is: hats stretch along the skull's depth. */
+export const depthOf = (size: WearSize) => clamp(size.depth / size.head, 0.7, 1.4)
 
 /**
  * The pivot of `slot` (`render/wearModels.ts` builds each model around it) on a
- * frame's rig, facing `dir`, in the frame's px: the seat (hats), the head's
- * center behind the eyes (glasses: where the model's eyes, turned to face
- * `dir`, land on the eyes found), the neck's axis behind its front, the
- * back's point. Written into `out` (the draw loop runs it every frame).
+ * frame's rig, in the frame's px: the seat (hats) or the back's point.
+ * Written into `out` (the draw loop runs it every frame).
  */
-export const pivotOf = (r: RigFrame, slot: WearableSlot, dir: Dir8, size: WearSize, out: { x: number; y: number }) => {
-  const yaw = yawFor(slot, artDir(dir))
-  const flip = isMirrored(dir) ? -1 : 1
-  const sp = Math.sin(pitchOf(slot))
+export const pivotOf = (r: RigFrame, slot: WearableSlot, out: { x: number; y: number }) => {
   if (slot === 'head') {
     out.x = r.seatX
     out.y = r.seatY
-  } else if (slot === 'face') {
-    const rf = radius(size.face)
-    const e = eyeOf(size, rf)
-    const zf = Math.sqrt(Math.max(rf * rf - e * e, 0)) * depthOf(size, 'face')
-    if (r.e1x === NONE) {
-      out.x = r.seatX
-      out.y = r.seatY + Math.round(size.brow + 1 - zf * sp * Math.cos(yaw))
-      return out
-    }
-    // The model's eyes (±e, 0, zf) turned to `dir`: where they land from the pivot, nearest the camera first.
-    const model = [-e, e]
-      .map((x) => ({ u: (x * Math.cos(yaw) + zf * Math.sin(yaw)) * flip, wz: -x * Math.sin(yaw) + zf * Math.cos(yaw) }))
-      .sort((a, b) => b.wz - a.wz)
-    const found = r.e2x !== r.e1x || r.e2y !== r.e1y ? [[r.e1x, r.e1y], [r.e2x, r.e2y]] : [[r.e1x, r.e1y]]
-    const pairs = found.length === 2 ? [...model].sort((a, b) => a.u - b.u).map((m, i) => [m, found[i]!] as const) : [[model[0]!, found[0]!] as const]
-    out.x = Math.round(pairs.reduce((a, [m, [x]]) => a + x! - m.u, 0) / pairs.length)
-    out.y = Math.round(pairs.reduce((a, [m, [, y]]) => a + y! - m.wz * sp, 0) / pairs.length)
-  } else if (slot === 'neck') {
-    out.x = r.neckX
-    out.y = r.neckY - Math.round(radius(size.neck) * sp * Math.max(0, Math.cos(yaw)))
   } else {
     out.x = r.backX
     out.y = r.backY

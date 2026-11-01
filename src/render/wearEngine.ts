@@ -284,7 +284,7 @@ const itemsOf = (look: Look, w: Wearer, dir: Dir8) =>
   })
 
 /** A look's key: its worn items. */
-const lookKey = (look: Look) => `${look.head ?? ''},${look.face ?? ''},${look.neck ?? ''},${look.back ?? ''}`
+const lookKey = (look: Look) => `${look.head ?? ''},${look.back ?? ''}`
 
 const rowKey = (w: Wearer, look: string, anim: RigAnim, dir: Dir8, scale: number) => `${w.key}|${look}|${anim}|${dir}|${scale}`
 
@@ -397,7 +397,7 @@ onCanvasReset(
 )
 
 /** A size for the icons: a middling head. */
-const ICON_SIZE: WearSize = { head: 13, depth: 13, faceDepth: 13, brow: 9, brows: [9, 9], face: 13, eye: 0, neck: 9, body: 16, drop: 12, rise: 14 }
+const ICON_SIZE: WearSize = { head: 13, depth: 13, brow: 9, brows: [9, 9], body: 16, drop: 12, rise: 14 }
 
 /** An item's art facing south-east (its truest three-quarter view) at a middling size, for the shop and the locker's tiles. */
 export const wearableIcon = (id: WearableId): HTMLCanvasElement => {

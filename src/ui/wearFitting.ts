@@ -1,5 +1,5 @@
 import { BRANCHES } from '../data/branches'
-import type { Look, WearableSlot } from '../data/cosmetics'
+import { WEARABLE_SLOTS, type Look, type WearableSlot } from '../data/cosmetics'
 import { PLAYABLE } from '../data/hatchlings'
 import manifest from '../data/sprites.generated.json'
 import { ART_DIRS, WEAR_FITS, type FitKey, type SpeciesFit } from '../data/wearFits'
@@ -73,7 +73,7 @@ const pickOf = <T>(list: readonly T[]) => list[Math.floor(Math.random() * list.l
 /** A random look: each slot filled half the time. */
 const randomLook = (): Look => {
   const look: Look = {}
-  for (const slot of ['head', 'face', 'neck', 'back'] as const) if (Math.random() < 0.6) look[slot] = pickOf(WEARABLE_IDS.filter((id) => WEARABLES[id].slot === slot))
+  for (const slot of WEARABLE_SLOTS) if (Math.random() < 0.6) look[slot] = pickOf(WEARABLE_IDS.filter((id) => WEARABLES[id].slot === slot))
   return look
 }
 
@@ -341,7 +341,7 @@ const openGallery = async (first: WearableId, dexes?: readonly unknown[]) => {
 /**
  * `ps.wear('topHat')` puts an item on the running game's local player (a run, a match)
  * (`ps.wear('topHat', 3)` on seat 3), `ps.wear('look', { head: 'crown', back:
- * 'cape' })` a whole look, `ps.wear('bots')` a random look on every seat,
+ * 'balloon' })` a whole look, `ps.wear('bots')` a random look on every seat,
  * `ps.wear('off')` takes the local player's off; `ps.wear('fit', 'topHat')`
  * opens the fitting gallery (`openGallery`; a list of dex numbers or
  * `'<dex>[:<form>][s]'` after the item fits only those: `[4, '6:megaX']`),

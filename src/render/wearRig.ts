@@ -9,7 +9,7 @@
  *   lobes an outline sets apart (a leaf, a bulb) are left out, as wide as the
  *   skull (not its ears or wings beside it);
  * - the eyes (their box and centers) and the head's span at their line: no
- *   hat, scarf or cape may cover them, and glasses sit on them;
+ *   hat may cover them, and a hat's band stops short of them;
  * - the neck (the narrowest row under the chin) and the back (the body's axis
  *   at the shoulders).
  *

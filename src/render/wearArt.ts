@@ -24,7 +24,7 @@ export type Scene = {
   /**
    * The index (in `ramps`) of the color at a point of the surface, or a negative
    * number where the surface is an occluder: drawn as nothing, it hides what's
-   * behind it (the head behind a band, the neck behind a scarf's back half).
+   * behind it (the head behind a band or a crown's far side).
    */
   paint: (x: number, y: number, z: number) => number
   ramps: readonly Ramp[]
@@ -32,8 +32,6 @@ export type Scene = {
   part?: (x: number, y: number, z: number) => number
   /** Ramps lit evenly (their base and light tones only by facing): glass, a glow. */
   flat?: readonly number[]
-  /** Ramps seen through (a clear lens): over the sprite they tint what's under them rather than hide it (`PixelArt.clear`). */
-  clear?: readonly number[]
   /** The outline's color; by default each ramp's shadow, darkened. */
   ink?: string
   /** A ramp's own outline color by index, or null for none (a glow, a flame, a string). */
@@ -42,7 +40,7 @@ export type Scene = {
   step?: number
   /** How far down the camera looks (radians; `PITCH` by default). */
   pitch?: number
-  /** Whether a point of the surface hugs the wearer (a strap, a band, a ring): the dresser keeps it on the head or neck it wraps (`PixelArt.hug`). */
+  /** Whether a point of the surface hugs the wearer (a band, a ring): the dresser keeps it on the head it wraps (`PixelArt.hug`). */
   hug?: (x: number, y: number, z: number) => boolean
   /** The model's bounds (px): its radius around the y axis and its height range. */
   r: number
@@ -57,12 +55,11 @@ export type Scene = {
  * shape (its own, which the dresser redraws around the dressed frame), `ink`
  * the outline color a shape's pixel takes (0: none), `back` a pixel of its
  * far half, seen from the camera (what grows from the head shows through a
- * crown's far side; a scarf's far half goes behind the neck), and `hug` a
- * pixel of a part that wraps the wearer (`Scene.hug`: a strap never pokes past
- * the head it goes round), and `clear` a pixel of a see-through part
- * (`Scene.clear`: the eye shows through a clear lens).
+ * crown's far side), and `hug` a
+ * pixel of a part that wraps the wearer (`Scene.hug`: a band never pokes past
+ * the head it goes round).
  */
-export type PixelArt = { w: number; h: number; ox: number; oy: number; px: Uint8Array; colors: readonly string[]; edge: Uint8Array; ink: Uint8Array; back: Uint8Array; hug: Uint8Array; clear: Uint8Array }
+export type PixelArt = { w: number; h: number; ox: number; oy: number; px: Uint8Array; colors: readonly string[]; edge: Uint8Array; ink: Uint8Array; back: Uint8Array; hug: Uint8Array }
 
 /** Where the light comes from, on screen: the top left, a little toward the viewer. */
 const LIGHT = (() => {
@@ -227,7 +224,6 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
   const px = new Uint8Array(n)
   const edge = new Uint8Array(n)
   const ink = new Uint8Array(n)
-  const clear = new Uint8Array(n)
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
       const k = j * w + i
@@ -240,7 +236,6 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
           return o >= 0 && solid[o] === 1 && depth[o]! < depth[k]! - (parts[o] === parts[k] ? FOLD : EDGE)
         })
         px[k] = behind ? inkOf(m) : 1 + m * 4 + shade[k]!
-        clear[k] = !behind && scene.clear?.includes(m) ? 1 : 0
         continue
       }
       // The outline: a clear pixel beside the shape takes the ink of its first solid neighbor that has one.
@@ -254,7 +249,7 @@ export const rasterize = (scene: Scene, yaw: number): PixelArt => {
       }
     }
   }
-  return { w, h, ox: half, oy: up, px, colors, edge, ink, back: Uint8Array.from(back, (b, k) => (solid[k] ? b : 0)), hug: Uint8Array.from(hug, (b, k) => (solid[k] ? b : 0)), clear }
+  return { w, h, ox: half, oy: up, px, colors, edge, ink, back: Uint8Array.from(back, (b, k) => (solid[k] ? b : 0)), hug: Uint8Array.from(hug, (b, k) => (solid[k] ? b : 0)) }
 }
 
 /** The art mirrored left to right (the west-facing directions are the east-facing ones flipped, like the sheets). */
@@ -264,7 +259,7 @@ export const mirror = (art: PixelArt): PixelArt => {
     for (let j = 0; j < art.h; j++) for (let i = 0; i < art.w; i++) out[j * art.w + i] = a[j * art.w + art.w - 1 - i]!
     return out
   }
-  return { ...art, ox: art.w - 1 - art.ox, px: flip(art.px), edge: flip(art.edge), ink: flip(art.ink), back: flip(art.back), hug: flip(art.hug), clear: flip(art.clear) }
+  return { ...art, ox: art.w - 1 - art.ox, px: flip(art.px), edge: flip(art.edge), ink: flip(art.ink), back: flip(art.back), hug: flip(art.hug) }
 }
 
 /* ---------------- Shapes (signed distances, px) ---------------- */
@@ -332,59 +327,4 @@ export const capsule = (x: number, y: number, z: number, ax: number, ay: number,
 export const blend = (a: number, b: number, k: number) => {
   const h = Math.min(Math.max(0.5 + (0.5 * (b - a)) / k, 0), 1)
   return b * (1 - h) + a * h - k * h * (1 - h)
-}
-
-/* ---------------- Flat shapes (2D signed distances, px), to extrude ---------------- */
-
-/** A flat shape `d2` (its 2D distance at the point) given `half` px of thickness around z = `z0`. */
-export const extrude = (d2: number, z: number, z0: number, half: number) => {
-  const dz = Math.abs(z - z0) - half
-  return Math.min(Math.max(d2, dz), 0) + Math.hypot(Math.max(d2, 0), Math.max(dz, 0))
-}
-
-/** A triangle a, b, c (Inigo Quilez's exact 2D distance). */
-export const triangle = (px: number, py: number, ax: number, ay: number, bx: number, by: number, cx: number, cy: number) => {
-  const e0x = bx - ax, e0y = by - ay, e1x = cx - bx, e1y = cy - by, e2x = ax - cx, e2y = ay - cy
-  const v0x = px - ax, v0y = py - ay, v1x = px - bx, v1y = py - by, v2x = px - cx, v2y = py - cy
-  const c = (v: number) => Math.min(Math.max(v, 0), 1)
-  const h0 = c((v0x * e0x + v0y * e0y) / (e0x * e0x + e0y * e0y))
-  const h1 = c((v1x * e1x + v1y * e1y) / (e1x * e1x + e1y * e1y))
-  const h2 = c((v2x * e2x + v2y * e2y) / (e2x * e2x + e2y * e2y))
-  const q0 = Math.hypot(v0x - e0x * h0, v0y - e0y * h0)
-  const q1 = Math.hypot(v1x - e1x * h1, v1y - e1y * h1)
-  const q2 = Math.hypot(v2x - e2x * h2, v2y - e2y * h2)
-  const s = Math.sign(e0x * e2y - e0y * e2x)
-  const inside = s * (v0x * e0y - v0y * e0x) >= 0 && s * (v1x * e1y - v1y * e1x) >= 0 && s * (v2x * e2y - v2y * e2x) >= 0
-  return Math.min(q0, q1, q2) * (inside ? -1 : 1)
-}
-
-/** A five-pointed star of outer radius `r`, its inner corners at `inner` × r, a point up (Inigo Quilez's exact distance). */
-export const star = (px: number, py: number, r: number, inner = 0.45) => {
-  const k1x = 0.809016994375
-  const k1y = -0.587785252292
-  let x = Math.abs(px)
-  let y = py
-  let d = Math.max(k1x * x + k1y * y, 0)
-  x -= 2 * d * k1x
-  y -= 2 * d * k1y
-  d = Math.max(-k1x * x + k1y * y, 0)
-  x -= 2 * d * -k1x
-  y -= 2 * d * k1y
-  x = Math.abs(x)
-  y -= r
-  const bax = inner * -k1y
-  const bay = inner * k1x - 1
-  const h = Math.min(Math.max((x * bax + y * bay) / (bax * bax + bay * bay), 0), r)
-  return Math.hypot(x - bax * h, y - bay * h) * Math.sign(y * bax - x * bay)
-}
-
-/** A heart about `s` px across, its point down. */
-export const heart = (px: number, py: number, s: number) => {
-  const x = Math.abs(px) / s
-  const y = py / s + 0.45
-  const d =
-    y + x > 1
-      ? Math.hypot(x - 0.25, y - 0.75) - Math.SQRT2 / 4
-      : Math.sign(x - y) * Math.min(Math.hypot(x, y - 1), Math.hypot(x - 0.5 * Math.max(x + y, 0), y - 0.5 * Math.max(x + y, 0)))
-  return d * s
 }

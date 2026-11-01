@@ -3,19 +3,17 @@
 // Idle and Hurt (`--frames first`: the first of Walk and Idle, quicker), and
 // judges each from masks (`src/render/wearCheck.ts`). The rig's rules take the
 // rig the game draws on the frame (the shipped one, its hand fixes on) for the
-// truth: an eye covered, a hat
-// floating or sunk, glasses off the eyes or off the head, a scarf off the neck,
-// a cape hung at head height, an item mostly cut away. Where the rig is wrong
-// those pass anyway, so the silhouette's rules judge without it: glasses left
-// off for want of eyes found, a seat with skull over it or on a tip, a hat on
-// the face's details. The renderer is the game's (`src/render/wearDress.ts`
+// truth: an eye covered, a hat floating or sunk, what hangs on the back hung
+// at head height, an item mostly cut away. Where the rig is wrong those pass
+// anyway, so the silhouette's rules judge without it: a seat with skull over
+// it or on a tip, a hat on the face's details. The renderer is the game's (`src/render/wearDress.ts`
 // through `wearCheckAdapter.ts`), run here in Node.
 //
 // Writes .fit-check/<renderer>/: report.json (every failure, and counts by
 // rule, item, variant and direction, and how many fail the rig's rules alone),
 // summary.txt, and contact sheets of the
 // failures only (fails-<n>.png, at 3×). Options: --only 25,6:megaX (variants),
-// --items crown,cape, --frames all, --renderer <name> (an adapter module in
+// --items crown,balloon, --frames all, --renderer <name> (an adapter module in
 // src/render: wearCheckAdapter.ts by default), --sheets <max cells> (default 600),
 // --jobs <n> (processes, by default most of the machine's cores: each takes a
 // share of the variants, `--shard k/n`, and the first process merges them).
@@ -163,13 +161,7 @@ for (const v of variants) {
           const worn = adapter.wear(v.key, id, anim, row, frame, f)
           if (!worn || worn === 'hidden') continue
           checks++
-          // Left off for want of eyes: the look has a hole there.
-          if (worn === 'unseen') {
-            failed++
-            failures.push({ variant: v.key, item: id, anim, dir: DIRS[row], frame, fails: [{ rule: 'eyes-unfound', note: 'no eyes found: left off' }] })
-            continue
-          }
-          const all = Check.judge(f, truth, row, WEARABLES[id].slot, id, worn, marks.my, sil)
+          const all = Check.judge(f, truth, row, WEARABLES[id].slot, id, worn, sil)
           const fails = all.filter((x) => !Check.SUSPECT_RULES.includes(x.rule))
           if (all.length > fails.length) suspects.push({ variant: v.key, item: id, anim, dir: DIRS[row], frame, fails: all.filter((x) => Check.SUSPECT_RULES.includes(x.rule)) })
           if (fails.length === 0) continue
