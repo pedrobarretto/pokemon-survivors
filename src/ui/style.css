@@ -18222,24 +18222,22 @@ button.hall-tile:hover {
   padding-right: 2px;
 }
 
+/* The shelves' chips share the first line whole; the slot count wraps under them, at the right. */
 .dojo-shelves {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
 .dojo-shelves .dojo-chip {
-  flex: 1;
+  flex: 1 1 auto;
   justify-content: center;
-  min-width: 0;
-  overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .dojo-shelves .dojo-slots {
-  flex: none;
-  align-self: center;
-  margin-left: 2px;
+  flex: 1 0 100%;
+  text-align: right;
   white-space: nowrap;
 }
 
