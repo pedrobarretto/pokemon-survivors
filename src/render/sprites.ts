@@ -25,6 +25,8 @@ type Sheet = {
   seen: number
   /** Its frames' silhouettes (`overlay`), by `overlayKey`; null until the first one. */
   overlays: Map<number, Overlay> | null
+  /** Each frame's opaque box (x, y, w, h; `frameBoxes`), read once its first silhouette is packed. */
+  boxes?: Int16Array
 }
 
 export type SpeciesSprites = {
@@ -155,14 +157,24 @@ const loadImage = (src: string, key: Key, rank: number) =>
  * `OVERLAY_PAGES` the least recently drawn silhouette gives its spot to the
  * new one. Whole-sheet silhouettes per color, kept for good, grew past 100 MB
  * of canvases over a run (every species, sheet and status color) until phones
- * killed the tab.
+ * killed the tab. A page keeps only each silhouette's opaque box: a frame's
+ * cell is mostly clear (Bulbasaur's body is a fifth of its 40×40 walk cell).
  */
 type Overlay = {
   sheet: Sheet
   key: number
+  /** Its frame in the sheet, and whether it's the frame's outline (`overlay`'s `ring`). */
+  col: number
+  row: number
+  ring: boolean
   /** Where it's packed; null while it's `loose`. */
   shelf: Shelf | null
   x: number
+  /** The part of the frame it keeps on the page (its opaque box), from the frame's top-left; 0×0 draws nothing. */
+  ox: number
+  oy: number
+  w: number
+  h: number
   loose: HTMLCanvasElement | null
   /** The sweep it was last drawn in. */
   seen: number
@@ -185,17 +197,15 @@ const GAP = 1
 const SHELF_SLACK = 6
 
 /**
- * Pages kept at most: 16 MB, a fixed, small slice of a phone's canvas memory
+ * Pages kept at most: 8 MB, a fixed, small slice of a phone's canvas memory
  * (the whole-sheet ones passed 100 MB). A crowded late screen (a dozen species
- * in 8 directions, white-flashed, burning, poisoned, outlined) draws a few MB
- * of silhouettes. A stress of 240 enemies of 8 species, all flashing, outlined
- * and in every status color at once, needs 22 MB: at 16 it redoes a few dozen
- * silhouettes a second and its frames cost what they did with no cap, while
- * at 12 the redoing showed (about 1.5 ms a frame on a 4× slowed CPU).
+ * in 8 directions, white-flashed, burning, poisoned, outlined) filled 16 pages
+ * of whole frame cells and still redid a couple dozen silhouettes a second;
+ * trimmed to their opaque boxes, 8 pages hold more of them than that did.
  */
-export const OVERLAY_PAGES = 16
+export const OVERLAY_PAGES = 8
 /** Pages kept at most in safe mode (`detail.safe`): half the memory, for some silhouettes redone on a crowded screen. */
-const SAFE_OVERLAY_PAGES = 8
+const SAFE_OVERLAY_PAGES = 4
 
 /** Sweeps (`sweepSprites`) a silhouette stays undrawn before it's dropped; a page left empty is freed. */
 const OVERLAY_IDLE = 10
@@ -240,7 +250,7 @@ const evict = (o: Overlay) => {
   unlink(o)
   if (o.sheet.overlays?.get(o.key) === o) o.sheet.overlays.delete(o.key)
   if (o.shelf) {
-    o.shelf.free.push({ x: o.x, w: o.sheet.fw })
+    o.shelf.free.push({ x: o.x, w: o.w })
     o.shelf.page.count--
   }
   o.shelf = null
@@ -302,7 +312,7 @@ const claim = (w: number, h: number) => {
   if (free) return free
   let looked = 0
   for (let o = oldest; o && looked < 256; o = o.newer, looked++) {
-    if (o.shelf && holds(o.shelf, h) && o.sheet.fw >= w) {
+    if (o.shelf && holds(o.shelf, h) && o.w >= w) {
       const shelf = o.shelf
       const x = o.x
       evict(o)
@@ -318,6 +328,70 @@ const claim = (w: number, h: number) => {
   return spot(w, h)
 }
 
+/**
+ * The opaque box of every frame of `sheet` (x, y, w, h; 0×0 for a clear one), read from its
+ * pixels once on a scratch canvas kept in memory for the reading. All full frames if it can't read.
+ */
+const frameBoxes = (sheet: Sheet) => {
+  const { img, fw, fh } = sheet
+  const cols = Math.max(1, Math.round(img.width / fw))
+  const rows = Math.max(1, Math.round(img.height / fh))
+  const boxes = new Int16Array(cols * rows * 4)
+  for (let i = 0; i < cols * rows; i++) boxes.set([0, 0, fw, fh], i * 4)
+  const scratch = createCanvas(cols * fw, rows * fh)
+  try {
+    const read = scratch.getContext('2d', { willReadFrequently: true })
+    if (!read) return boxes
+    read.drawImage(img, 0, 0)
+    const { data } = read.getImageData(0, 0, scratch.width, scratch.height)
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        let x0 = fw
+        let y0 = fh
+        let x1 = -1
+        let y1 = -1
+        for (let y = 0; y < fh; y++) {
+          let i = ((r * fh + y) * scratch.width + c * fw) * 4 + 3
+          for (let x = 0; x < fw; x++, i += 4) {
+            if (data[i] === 0) continue
+            if (x < x0) x0 = x
+            if (x > x1) x1 = x
+            if (y < y0) y0 = y
+            y1 = y
+          }
+        }
+        boxes.set(x1 < 0 ? [0, 0, 0, 0] : [x0, y0, x1 - x0 + 1, y1 - y0 + 1], (r * cols + c) * 4)
+      }
+    }
+  } catch {
+    // A tainted or broken image: whole frames, as before boxes.
+  } finally {
+    scratch.width = scratch.height = 0
+  }
+  return boxes
+}
+
+/** Where a silhouette's pixels sit in its frame: the frame's opaque box, a pixel wider each way for an outline (`RING`). */
+const boxOf = (o: Overlay) => {
+  const { sheet } = o
+  const boxes = (sheet.boxes ??= frameBoxes(sheet))
+  const cols = Math.max(1, Math.round(sheet.img.width / sheet.fw))
+  const i = (o.row * cols + o.col) * 4
+  let x = boxes[i] ?? 0
+  let y = boxes[i + 1] ?? 0
+  let w = boxes[i + 2] ?? sheet.fw
+  let h = boxes[i + 3] ?? sheet.fh
+  if (w > 0 && o.ring) {
+    const x1 = Math.min(sheet.fw, x + w + 1)
+    const y1 = Math.min(sheet.fh, y + h + 1)
+    x = Math.max(0, x - 1)
+    y = Math.max(0, y - 1)
+    w = x1 - x
+    h = y1 - y
+  }
+  return { x, y, w, h }
+}
+
 /** Packs the silhouettes made since the last task into pages, which no frame is drawing from now, and frees their loose canvases. */
 const pack = () => {
   packing = false
@@ -325,19 +399,25 @@ const pack = () => {
     const loose = o.loose
     if (!loose) continue
     o.loose = null
-    const { fw, fh } = o.sheet
-    const place = o.sheet.overlays?.get(o.key) === o && claim(fw, fh)
+    const live = o.sheet.overlays?.get(o.key) === o
+    const box = live ? boxOf(o) : null
+    // A clear frame keeps nothing and draws nothing.
+    const place = box !== null && box.w > 0 && claim(box.w, box.h)
     // Left unpacked, it's forgotten and made again when next drawn.
     if (place === null) evict(o)
-    else if (place) {
+    else if (place && box) {
       const { shelf, x } = place
-      shelf.page.ctx.clearRect(x, shelf.y, fw, shelf.h)
-      shelf.page.ctx.drawImage(loose, x, shelf.y)
+      shelf.page.ctx.clearRect(x, shelf.y, box.w, shelf.h)
+      shelf.page.ctx.drawImage(loose, box.x, box.y, box.w, box.h, x, shelf.y, box.w, box.h)
       o.shelf = shelf
       o.x = x
+      o.ox = box.x
+      o.oy = box.y
+      o.w = box.w
+      o.h = box.h
       shelf.page.count++
       pushNewest(o)
-    }
+    } else if (box) o.w = o.h = 0
     loose.width = 0
     loose.height = 0
   }
@@ -374,7 +454,7 @@ const overlay = (sheet: Sheet, col: number, row: number, color: string, ring = f
   ctx.globalCompositeOperation = 'source-in'
   ctx.fillStyle = color
   ctx.fillRect(0, 0, fw, fh)
-  const fresh: Overlay = { sheet, key, shelf: null, x: 0, loose, seen: epoch, older: null, newer: null }
+  const fresh: Overlay = { sheet, key, col, row, ring, shelf: null, x: 0, ox: 0, oy: 0, w: fw, h: fh, loose, seen: epoch, older: null, newer: null }
   ;(sheet.overlays ??= new Map()).set(key, fresh)
   toPack.push(fresh)
   if (!packing) {
@@ -386,8 +466,11 @@ const overlay = (sheet: Sheet, col: number, row: number, color: string, ring = f
 
 /** Draws a silhouette (`overlay`) of a `fw`×`fh` frame into (dx, dy, dw, dh). */
 const blit = (ctx: CanvasRenderingContext2D, o: Overlay, fw: number, fh: number, dx: number, dy: number, dw: number, dh: number) => {
-  if (o.shelf) ctx.drawImage(o.shelf.page.canvas, o.x, o.shelf.y, fw, fh, dx, dy, dw, dh)
-  else if (o.loose) ctx.drawImage(o.loose, dx, dy, dw, dh)
+  if (o.shelf) {
+    const kx = dw / fw
+    const ky = dh / fh
+    ctx.drawImage(o.shelf.page.canvas, o.x, o.shelf.y, o.w, o.h, dx + o.ox * kx, dy + o.oy * ky, o.w * kx, o.h * ky)
+  } else if (o.loose) ctx.drawImage(o.loose, dx, dy, dw, dh)
 }
 
 /** Forgets a dropped sheet's silhouettes. */
