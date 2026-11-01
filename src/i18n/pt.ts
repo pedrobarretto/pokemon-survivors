@@ -5644,8 +5644,8 @@ export const pt = {
     manualFull: 'Já tem um manual',
     legendaryFull: 'Já tem um lendário',
     duoFull: 'Já tem um duo',
-    /** The moves tab's shelves: the family's own moves, every TM and the legendaries' capstones. */
-    shelves: { family: 'Família', tms: 'TMs', legendary: 'Lendários', duo: 'Duo Moves' },
+    /** The moves tab's shelves: the family's own moves, every TM, the legendaries' capstones and the duo moves. */
+    shelves: { family: 'Família', tms: 'TMs', legendary: 'Lendários', duo: 'Duo' },
     /** Under a shelf's chips: where its moves come from in a run. */
     shelfNote: {
       tms: 'Nas partidas, as TMs caem dos chefes, vêm dos Tutores de Golpes e da prateleira da loja.',
