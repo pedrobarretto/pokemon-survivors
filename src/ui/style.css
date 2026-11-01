@@ -7047,6 +7047,11 @@ button {
     font-size: 18px;
     gap: 2px 10px;
   }
+  /* Icons as tall as the text, so a phone on its side shows all six moves without scrolling. */
+  .loadout-row img {
+    width: 18px;
+    height: 18px;
+  }
   .result-portrait {
     display: none;
   }
