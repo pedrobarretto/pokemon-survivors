@@ -2,7 +2,7 @@ import { BIOMES, type BiomeId } from '../data/biomes'
 import type { LandmarkPiece } from '../data/landmarks'
 import type { PlacePiece } from '../data/places'
 import type { SolidKind } from '../data/terrain'
-import { canvasCache, context2d, createCanvas, drawable, dropKept, keepPacked, type Packed } from '../engine/pixelart'
+import { canvasCache, context2d, createCanvas, drawable, dropKept, keepPacked, readPixels, type Packed } from '../engine/pixelart'
 
 /**
  * Painted scenery (made with PixelLab) standing in for pieces sculpted in
@@ -80,10 +80,11 @@ const toPiece = (img: HTMLImageElement, group: string): ArtPiece => {
   ctx.drawImage(img, 0, 0)
   const { width: w, height: h } = sprite
   const rows = Math.min(FOOT_ROWS, h)
-  const alpha = ctx.getImageData(0, h - rows, w, rows).data
+  // Unreadable (`readPixels`): no foot found, so the whole width stands on the ground.
+  const alpha = readPixels(ctx, 0, h - rows, w, rows)?.data
   let x0 = w
   let x1 = -1
-  for (let y = 0; y < rows; y++) {
+  for (let y = 0; alpha && y < rows; y++) {
     for (let x = 0; x < w; x++) {
       if (alpha[(y * w + x) * 4 + 3]! < 128) continue
       x0 = Math.min(x0, x)

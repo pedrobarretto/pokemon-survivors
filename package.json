@@ -19,19 +19,19 @@
     "soak": "node scripts/coop/soak.mjs"
   },
   "devDependencies": {
-    "@posthog/cli": "^0.16.2",
+    "@posthog/cli": "^0.19.0",
     "playwright": "^1.64.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4",
-    "vitest": "^5.0.4"
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   },
   "dependencies": {
-    "@clerk/clerk-js": "^6.39.0",
+    "@clerk/clerk-js": "^6.42.0",
     "@clerk/shared": "^4.40.0",
     "@fontsource/press-start-2p": "^5.3.0",
     "@fontsource/vt323": "^5.3.0",
     "fflate": "^0.8.3",
-    "posthog-js": "^1.438.12"
+    "posthog-js": "^1.441.2"
   },
   "license": "MIT",
   "homepage": "https://www.pokemonsurvivors.com",
