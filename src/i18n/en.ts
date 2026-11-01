@@ -5301,10 +5301,12 @@ export const en: Messages = {
     itemsFull: 'No slot left',
     manualFull: 'Has a manual one',
     legendaryFull: 'Has a legendary one',
-    shelves: { family: 'Family', tms: 'TMs', legendary: 'Legendary' },
+    duoFull: 'Has a duo move',
+    shelves: { family: 'Family', tms: 'TMs', legendary: 'Legendary', duo: 'Duo' },
     shelfNote: {
       tms: 'In runs, TMs drop from bosses and come from Move Tutors and the shop’s shelf.',
       legendary: 'In runs, a beaten legendary leaves its move’s golden disc: only one per run.',
+      duo: 'In runs, two maxed moves of the right types fuse into a duo move (only one per run). Here you pick it directly.',
     },
     form: 'Form',
     abilityAwaken: 'The ability comes with the first awakening.',

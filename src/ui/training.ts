@@ -217,7 +217,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
           ...forks,
         ),
         blocked
-          ? h('small', { class: 'dojo-row-full' }, { full: m().movesFull, manual: m().manualFull, legendary: m().legendaryFull }[blocked])
+          ? h('small', { class: 'dojo-row-full' }, { full: m().movesFull, manual: m().manualFull, legendary: m().legendaryFull, duo: m().duoFull }[blocked])
           : o
             ? stepper(level, max, set, (lv) => (lv === 0 ? m().forget : m().level(lv)))
             : h('button', { class: 'dojo-learn', type: 'button', onclick: () => set(1) }, m().learn),

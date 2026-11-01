@@ -24,6 +24,21 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-01',
+    title: { pt: 'Dojo mais completo', en: 'A fuller Dojo', es: 'Un Dojo más completo', fr: 'Un Dojo plus complet', zh: '更完整的道館' },
+    highlights: [
+      { pt: 'No Dojo, os Duo Moves ganharam uma prateleira própria na aba Golpes: dá para montar a build com eles sem precisar fundir dois golpes.', en: 'In the Dojo, duo moves got their own shelf on the Moves tab: you can build with them without fusing two moves first.', es: 'En el Dojo, los movimientos dúo tienen su propio estante en la pestaña Movimientos: puedes armar la build con ellos sin fusionar dos movimientos.', fr: 'Au Dojo, les capacités duo ont leur propre étagère dans l’onglet Capacités : on peut construire avec elles sans fusionner deux capacités.', zh: '道館的招式分頁新增「合體」架：不用先融合兩個招式，就能直接用合體招式配置構築。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Dojo', en: 'Dojo', es: 'Dojo', fr: 'Dojo', zh: '道館' },
+        notes: [
+          { pt: 'Nova prateleira Duo Moves na aba Golpes do Dojo, com todos os golpes de dupla (Fire Pledge, Fusion Flare, Nightmare…). Como numa partida, só dá para levar um por vez.', en: 'New Duo shelf on the Dojo’s Moves tab, with every duo move (Fire Pledge, Fusion Flare, Nightmare…). As in a run, you can carry only one at a time.', es: 'Nuevo estante Dúo en la pestaña Movimientos del Dojo, con todos los movimientos dúo (Fire Pledge, Fusion Flare, Nightmare…). Como en una partida, solo puedes llevar uno a la vez.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-30',
     title: { pt: 'Criadores e correções', en: 'Creators and fixes', es: 'Creadores y correcciones', fr: 'Créateurs et correctifs', zh: '創作者與修正' },
     highlights: [

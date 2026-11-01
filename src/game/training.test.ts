@@ -78,6 +78,16 @@ describe('the Dojo', () => {
     expect(g.player.moves.filter((m) => isLegendary(m.id))).toHaveLength(1)
   })
 
+  it('lends the duo moves, one at a time as a run fuses at most one, and they hit the dummies', () => {
+    const g = dojo(3)
+    expect(shelfMoves('duo', 'charmander', null, [])).toEqual(expect.arrayContaining(['firePledge', 'fusionFlare', 'fusionBolt', 'nightmare']))
+    expect(setMove(g, 'nightmare', 5)).toBe(true)
+    expect(moveBlock(g, 'waterPledge')).toBe('duo')
+    expect(setMove(g, 'waterPledge', 1)).toBe(false)
+    seconds(g, 6)
+    expect(g.player.damageByMove.nightmare).toBeGreaterThan(0)
+  })
+
   it('trains a legend through its awakenings, its own legendary move not counting against a TM one', () => {
     const g = createGame('kyogre', { w: 480, h: 270 }, 7)
     startTraining(g)
