@@ -24,23 +24,6 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
-    date: '2026-11-01',
-    title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
-    highlights: [
-      { pt: 'Partidas longas usam menos memória, então o jogo fecha sozinho menos vezes no fim da partida, ainda mais na Torre e contra Arceus.', en: 'Long runs use less memory, so the game closes on its own less often late in a run, especially in the Tower and against Arceus.', es: 'Las partidas largas usan menos memoria, así que el juego se cierra solo menos veces al final de la partida, sobre todo en la Torre y contra Arceus.', fr: 'Les longues parties utilisent moins de mémoire : le jeu se ferme moins souvent tout seul en fin de partie, surtout dans la Tour et contre Arceus.', zh: '長時間的遊戲佔用更少記憶體，後期遊戲自動關閉的情況減少了，尤其是在高塔和對戰 Arceus 時。' },
-      { pt: 'O piscar branco dos golpes, as cores de status e o contorno dos inimigos de elite ocupam menos da metade da memória de antes.', en: 'The white hit flash, the status colors and the elite foes’ outlines take less than half the memory they did.', es: 'El destello blanco de los golpes, los colores de estado y el contorno de los enemigos de élite ocupan menos de la mitad de la memoria que antes.', fr: 'Le flash blanc des coups, les couleurs d’état et le contour des ennemis d’élite prennent moins de la moitié de la mémoire d’avant.', zh: '受擊白光、異常狀態顏色和精英敵人的輪廓，佔用的記憶體不到以前的一半。' },
-      { pt: 'A neblina, que cobre a Torre quase sempre, ocupa um quarto da memória e continua igual na tela.', en: 'The fog, which covers the Tower most of the time, takes a quarter of the memory and looks just the same.', es: 'La niebla, que cubre la Torre casi siempre, ocupa un cuarto de la memoria y se ve igual.', fr: 'Le brouillard, qui couvre la Tour presque tout le temps, prend un quart de la mémoire et reste identique à l’écran.', zh: '幾乎總是籠罩高塔的霧，只佔原本四分之一的記憶體，畫面完全不變。' },
-    ],
-    changes: [
-      {
-        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
-        notes: [
-          { pt: 'No fim de partidas longas (Torre, neblina, Arceus, centenas de inimigos) o jogo podia fechar sozinho no celular. Agora os brilhos e contornos dos Pokémon e a neblina ocupam bem menos memória, sem mudar nada na tela.', en: 'Late in long runs (the Tower, fog, Arceus, hundreds of foes) the game could close on its own on phones. Now the Pokémon’s flashes and outlines and the fog take far less memory, with nothing changed on screen.', es: 'Al final de partidas largas (la Torre, niebla, Arceus, cientos de enemigos) el juego podía cerrarse solo en el celular. Ahora los destellos y contornos de los Pokémon y la niebla ocupan mucha menos memoria, sin cambiar nada en pantalla.' },
-        ],
-      },
-    ],
-  },
-  {
     date: '2026-10-30',
     title: { pt: 'Criadores e correções', en: 'Creators and fixes', es: 'Creadores y correcciones', fr: 'Créateurs et correctifs', zh: '創作者與修正' },
     highlights: [
@@ -62,6 +45,7 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'iPhone: com o jogo pausado, bloquear o celular por um tempo podia deixar a tela do jogo em branco atrás do menu ao voltar. Agora o quadro é redesenhado ao voltar e de tempos em tempos enquanto está pausado.', en: 'iPhone: with the game paused, locking the phone for a while could leave the game’s screen blank behind the menu when you came back. Now the frame is drawn again when you come back, and every so often while paused.', es: 'iPhone: con el juego en pausa, bloquear el celular un rato podía dejar la pantalla del juego en blanco detrás del menú al volver. Ahora el cuadro se vuelve a dibujar al volver y cada tanto mientras está en pausa.' },
           { pt: 'iPhone: com a chave de silencioso ligada, o jogo não fazia som nenhum, música incluída. Agora, com a música do jogo ligada, ele toca como um app de música (e pausa a música de outro app); com a Música em 0 ou o Som desligado nos Ajustes, ele respeita o silencioso e deixa a sua música tocando.', en: 'iPhone: with the silent switch on, the game made no sound at all, music included. Now, with the game’s music on, it plays like a music app (and pauses another app’s music); with Music at 0 or Sound off in Settings, it follows the silent switch and leaves your own music playing.', es: 'iPhone: con el interruptor de silencio activado, el juego no hacía ningún sonido, música incluida. Ahora, con la música del juego encendida, suena como una app de música (y pausa la música de otra app); con la Música en 0 o el Sonido apagado en Ajustes, respeta el silencio y deja sonar tu propia música.' },
           { pt: 'Quando o navegador apagava ou não conseguia ler o save de um aparelho que continuava conectado à conta, o save em branco substituía o da conta e tudo sumia (ovos chocados, lendários, conquistas). Agora a conta junta os dois e devolve o seu progresso ao aparelho.', en: 'When the browser cleared or couldn’t read the save of a device that stayed signed in, the blank save replaced the account’s and everything was gone (hatched eggs, legendaries, achievements). Now the account merges both and gives your progress back to the device.', es: 'Cuando el navegador borraba o no podía leer el save de un dispositivo que seguía conectado a la cuenta, el save en blanco reemplazaba el de la cuenta y todo desaparecía (huevos eclosionados, legendarios, logros). Ahora la cuenta junta los dos y le devuelve tu progreso al dispositivo.' },
+          { pt: 'No fim de partidas longas (Torre, neblina, Arceus, centenas de inimigos) o jogo podia fechar sozinho no celular. Agora os brilhos e contornos dos Pokémon e a neblina ocupam bem menos memória, sem mudar nada na tela.', en: 'Late in long runs (the Tower, fog, Arceus, hundreds of foes) the game could close on its own on phones. Now the Pokémon’s flashes and outlines and the fog take far less memory, with nothing changed on screen.', es: 'Al final de partidas largas (la Torre, niebla, Arceus, cientos de enemigos) el juego podía cerrarse solo en el celular. Ahora los destellos y contornos de los Pokémon y la niebla ocupan mucha menos memoria, sin cambiar nada en pantalla.' },
         ],
       },
       {
