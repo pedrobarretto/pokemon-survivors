@@ -6,6 +6,7 @@ import { BRANCHES, branchesAt, type BranchId } from '../data/branches'
 import { evolutionOf, evolvedFrom } from '../data/evolutions'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { ITEMS, type ItemId } from '../data/items'
+import type { MegaId } from '../data/megas'
 import { TRAINING, type TrainingTarget } from '../data/training'
 import type { Build } from './builds'
 import { spawnEnemy } from './enemies'
@@ -14,6 +15,7 @@ import { MAX_ITEMS, MAX_MOVES, recomputeStats } from './leveling'
 import { LEGENDARY_MOVE_OF } from '../data/legendaryMoves'
 import { AWAKEN_AT, isLegend, legendSignature, type LegendId } from '../data/legends'
 import { learnable } from './kitRules'
+import { runMegas } from './mega'
 import { forkAt, isLegendary, isManual, maxMoveLevel, withBranch, type MoveId } from './moves'
 import { aimScreen, ownAttack } from './players'
 import { shelfTms } from './tmShelf'
@@ -127,7 +129,11 @@ export const setDummies = (g: Game, target: TrainingTarget, count: number) => {
 export const updateTraining = (g: Game, dt: number) => {
   const t = g.training
   if (!t) return
-  for (const p of g.players) p.hp = p.stats.maxHp
+  // No harm, and no wait between Mega Evolutions: the form still lasts its time, then can be pressed again.
+  for (const p of g.players) {
+    p.hp = p.stats.maxHp
+    p.mega.charge = 0
+  }
   const k = Math.min(1, TRAINING.spring * dt)
   for (const post of t.posts) {
     let e = g.enemies.find((x) => x.id === post.id)
@@ -268,12 +274,28 @@ export const trainingForms = (starter: PlayableId): TrainingForm[] =>
  */
 export const setForm = (g: Game, stage: number, branch: BranchId | null, awakened = 0) => {
   const p = g.player
+  // A form change ends a Mega in progress (it only fits the final stage).
+  p.mega.active = p.mega.intro = 0
   p.stage = stage
   p.branch = branch && BRANCHES[branch].line === p.starter && BRANCHES[branch].stage <= stage ? branch : null
   if (p.legend) p.legend.awakened = Math.max(0, Math.min(AWAKEN_AT.length, awakened))
   const id = p.ability.id
   if (id && (!abilitySet(p.starter, p.branch).includes(id) || p.legend?.awakened === 0)) p.ability = createAbilityState()
   recomputeStats(g)
+}
+
+/**
+ * Holds the Mega Stone of `id` (null: none), as a run does once a rift drops
+ * it: the Mega button then works from the final stage on. Returns false for a
+ * Mega the Pokémon can't reach (another line's, or the other branch's).
+ */
+export const setMega = (g: Game, id: MegaId | null) => {
+  const p = g.player
+  if (id !== null && !runMegas(g).includes(id)) return false
+  p.mega.stone = id
+  p.mega.active = p.mega.intro = p.mega.charge = 0
+  recomputeStats(g)
+  return true
 }
 
 /** Sets the ability (null: none), one of the form's set. */

@@ -24,6 +24,21 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-01',
+    title: { pt: 'Dojo mais completo', en: 'A fuller Dojo', es: 'Un Dojo más completo', fr: 'Un Dojo plus complet', zh: '更完整的道館' },
+    highlights: [
+      { pt: 'No Dojo, dá para Mega Evoluir: escolha a Mega na aba Forma e use o botão MEGA (ou E) na forma final, sem esperar recarga.', en: 'You can Mega Evolve in the Dojo: pick the Mega on the Form tab and use the MEGA button (or E) on the final form, with no recharge wait.', es: 'En el Dojo se puede Megaevolucionar: elige la Mega en la pestaña Forma y usa el botón MEGA (o E) en la forma final, sin esperar recarga.', fr: 'Au Dojo, on peut Méga-évoluer : choisis la Méga dans l’onglet Forme et utilise le bouton MEGA (ou E) sur la forme finale, sans recharge.', zh: '道館現在可以超級進化：在「型態」分頁選擇超級進化，並在最終型態按下 MEGA 按鈕（或 E），不需等待冷卻。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Dojo', en: 'Dojo', es: 'Dojo', fr: 'Dojo', zh: '道館' },
+        notes: [
+          { pt: 'A aba Forma do Dojo ganhou a Mega Evolução: escolha a Mega (ou nenhuma) e aperte MEGA na forma final. No Dojo não há recarga entre uma Mega Evolução e outra.', en: 'The Dojo’s Form tab now has Mega Evolution: pick the Mega (or none) and press MEGA on the final form. There is no recharge between Mega Evolutions in the Dojo.', es: 'La pestaña Forma del Dojo ahora tiene Megaevolución: elige la Mega (o ninguna) y pulsa MEGA en la forma final. En el Dojo no hay recarga entre una Megaevolución y otra.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-30',
     title: { pt: 'Criadores e correções', en: 'Creators and fixes', es: 'Creadores y correcciones', fr: 'Créateurs et correctifs', zh: '創作者與修正' },
     highlights: [

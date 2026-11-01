@@ -5313,6 +5313,10 @@ export const es: Messages = {
     legendNote: 'Los legendarios capturados también entrenan aquí, con los *despertares* del Nv 12 y 28 en la pestaña Forma.',
     abilityLater: 'La habilidad llega con la primera evolución.',
     noAbility: 'Ninguna',
+    /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
+    noMega: 'Ninguna',
+    megaReady: 'Pulsa *MEGA* (o E) para Megaevolucionar. En el Dojo no hay recarga.',
+    megaLocked: 'Elige la forma final arriba para poder Megaevolucionar.',
     count: 'Cuántos blancos',
     countOf: (n) => `${n}`,
     target: 'Blanco',

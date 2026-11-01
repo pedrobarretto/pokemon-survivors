@@ -5307,6 +5307,10 @@ export const zh: Messages = {
     legendNote: '捕捉到的傳說寶可夢也能在這裡修行，在「型態」分頁可切換 Lv 12 和 28 的*覺醒*。',
     abilityLater: '特性會在第一次進化時獲得。',
     noAbility: '無',
+    /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
+    noMega: '無',
+    megaReady: '按下 *MEGA*（或 E）進行超級進化。道館內沒有冷卻時間。',
+    megaLocked: '請在上方選擇最終型態，才能超級進化。',
     count: '靶子數量',
     countOf: (n) => `${n}`,
     target: '靶子',

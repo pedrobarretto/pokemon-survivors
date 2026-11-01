@@ -5,7 +5,7 @@ import { createGame, step } from './game'
 import { MAX_MOVES } from './leveling'
 import { TICK } from './replay'
 import { isLegendary, isManual } from './moves'
-import { applyBuild, createMeter, moveBlock, setAbility, trainingForms, readMeter, sampleMeter, setDummies, setForm, setItem, setMove, shelfMoves, startTraining, trainingMoves } from './training'
+import { applyBuild, createMeter, moveBlock, setAbility, trainingForms, readMeter, sampleMeter, setDummies, setForm, setItem, setMega, setMove, shelfMoves, startTraining, trainingMoves } from './training'
 
 const STILL = { move: { x: 0, y: 0 }, special: false }
 
@@ -76,6 +76,25 @@ describe('the Dojo', () => {
     expect(setMove(g, 'selfDestruct', 1)).toBe(true)
     expect(moveBlock(g, 'uTurn')).toBe('manual')
     expect(g.player.moves.filter((m) => isLegendary(m.id))).toHaveLength(1)
+  })
+
+  it('hands out a Mega Stone, so the final stage can Mega Evolve at will and again with no recharge', () => {
+    const g = dojo()
+    expect(setMega(g, 'blastoise')).toBe(false)
+    expect(setMega(g, 'charizardY')).toBe(true)
+    setForm(g, 2, null)
+    step(g, { ...STILL, mega: true }, TICK)
+    seconds(g, 3)
+    expect(g.player.mega.active).toBeGreaterThan(0)
+    expect(g.player.mega.count).toBe(1)
+    setForm(g, 1, null)
+    expect(g.player.mega.active).toBe(0)
+    setForm(g, 2, null)
+    step(g, { ...STILL, mega: true }, TICK)
+    seconds(g, 3)
+    expect(g.player.mega.count).toBe(2)
+    setMega(g, null)
+    expect(g.player.mega.stone).toBe(null)
   })
 
   it('trains a legend through its awakenings, its own legendary move not counting against a TM one', () => {
