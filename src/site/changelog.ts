@@ -24,6 +24,23 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-01',
+    title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+    highlights: [
+      { pt: 'Partidas longas usam menos memória, então o jogo fecha sozinho menos vezes no fim da partida, ainda mais na Torre e contra Arceus.', en: 'Long runs use less memory, so the game closes on its own less often late in a run, especially in the Tower and against Arceus.', es: 'Las partidas largas usan menos memoria, así que el juego se cierra solo menos veces al final de la partida, sobre todo en la Torre y contra Arceus.', fr: 'Les longues parties utilisent moins de mémoire : le jeu se ferme moins souvent tout seul en fin de partie, surtout dans la Tour et contre Arceus.', zh: '長時間的遊戲佔用更少記憶體，後期遊戲自動關閉的情況減少了，尤其是在高塔和對戰 Arceus 時。' },
+      { pt: 'O piscar branco dos golpes, as cores de status e o contorno dos inimigos de elite ocupam menos da metade da memória de antes.', en: 'The white hit flash, the status colors and the elite foes’ outlines take less than half the memory they did.', es: 'El destello blanco de los golpes, los colores de estado y el contorno de los enemigos de élite ocupan menos de la mitad de la memoria que antes.', fr: 'Le flash blanc des coups, les couleurs d’état et le contour des ennemis d’élite prennent moins de la moitié de la mémoire d’avant.', zh: '受擊白光、異常狀態顏色和精英敵人的輪廓，佔用的記憶體不到以前的一半。' },
+      { pt: 'A neblina, que cobre a Torre quase sempre, ocupa um quarto da memória e continua igual na tela.', en: 'The fog, which covers the Tower most of the time, takes a quarter of the memory and looks just the same.', es: 'La niebla, que cubre la Torre casi siempre, ocupa un cuarto de la memoria y se ve igual.', fr: 'Le brouillard, qui couvre la Tour presque tout le temps, prend un quart de la mémoire et reste identique à l’écran.', zh: '幾乎總是籠罩高塔的霧，只佔原本四分之一的記憶體，畫面完全不變。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          { pt: 'No fim de partidas longas (Torre, neblina, Arceus, centenas de inimigos) o jogo podia fechar sozinho no celular. Agora os brilhos e contornos dos Pokémon e a neblina ocupam bem menos memória, sem mudar nada na tela.', en: 'Late in long runs (the Tower, fog, Arceus, hundreds of foes) the game could close on its own on phones. Now the Pokémon’s flashes and outlines and the fog take far less memory, with nothing changed on screen.', es: 'Al final de partidas largas (la Torre, niebla, Arceus, cientos de enemigos) el juego podía cerrarse solo en el celular. Ahora los destellos y contornos de los Pokémon y la niebla ocupan mucha menos memoria, sin cambiar nada en pantalla.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-10-30',
     title: { pt: 'Criadores e correções', en: 'Creators and fixes', es: 'Creadores y correcciones', fr: 'Créateurs et correctifs', zh: '創作者與修正' },
     highlights: [
