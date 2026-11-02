@@ -11,6 +11,15 @@ import { isRecord } from './game/parse'
 export const CRUMB_MOMENTS = ['boss', 'phase', 'omen', 'rift', 'riftExit', 'biome', 'place', 'pick', 'evolve', 'mega'] as const
 export type CrumbMoment = (typeof CRUMB_MOMENTS)[number]
 
+/**
+ * How far a run's launch got (`launchStep` in `bugReport.ts`), written as each step starts:
+ * `ticket` waiting for the ranked ticket, `sheets` swapping the lobby's sheets for the run's
+ * (decoding them), `firstFrame` the run set up and its first frame not drawn yet, `running`
+ * past it. Pages died most in a run's first seconds: this says which of them.
+ */
+export const LAUNCH_STEPS = ['ticket', 'sheets', 'firstFrame', 'running'] as const
+export type LaunchStep = (typeof LAUNCH_STEPS)[number]
+
 export type Quality = 'lean' | 'full'
 
 /**
@@ -29,14 +38,19 @@ export type Memory = {
   quality: Quality
 }
 
-/** The breadcrumb: the memory as last sampled, and the last key moment with the run's second it came at (null before any). */
-export type Crumb = Memory & { moment: CrumbMoment | null; momentAt: number | null }
+/**
+ * The breadcrumb: the memory as last sampled, the last key moment with the run's second it came
+ * at (null before any) and the launch's step (null from a build before it).
+ */
+export type Crumb = Memory & { moment: CrumbMoment | null; momentAt: number | null; launch: LaunchStep | null }
 
 /** Bytes in MB, to one decimal. */
 export const toMb = (bytes: number) => Math.round(bytes / 104_857.6) / 10
 
 const MOMENTS: ReadonlySet<string> = new Set(CRUMB_MOMENTS)
 const isMoment = (v: unknown): v is CrumbMoment => typeof v === 'string' && MOMENTS.has(v)
+const STEPS: ReadonlySet<string> = new Set(LAUNCH_STEPS)
+const isStep = (v: unknown): v is LaunchStep => typeof v === 'string' && STEPS.has(v)
 
 /** A finite number ≥ 0 (rounded to 1 decimal), else 0. */
 const amount = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.round(v * 10) / 10 : 0)
@@ -56,6 +70,7 @@ export const parseCrumb = (v: unknown): Crumb | null => {
     quality: v.quality === 'lean' ? 'lean' : 'full',
     moment,
     momentAt: moment && typeof v.momentAt === 'number' ? Math.round(amount(v.momentAt)) : null,
+    launch: isStep(v.launch) ? v.launch : null,
   }
 }
 

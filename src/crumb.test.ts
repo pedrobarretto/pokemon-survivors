@@ -22,6 +22,7 @@ describe('parseCrumb', () => {
     quality: 'lean',
     moment: 'boss',
     momentAt: 300,
+    launch: 'running',
   }
 
   it('reads back what the watch stored', () => {
@@ -31,7 +32,7 @@ describe('parseCrumb', () => {
   it('makes do with an old or tampered one', () => {
     expect(parseCrumb(null)).toBeNull()
     expect(parseCrumb('boss')).toBeNull()
-    expect(parseCrumb({ sheetMb: -4, canvases: 'many', quality: 'ultra', moment: 'dance', momentAt: 12 })).toEqual({
+    expect(parseCrumb({ sheetMb: -4, canvases: 'many', quality: 'ultra', moment: 'dance', momentAt: 12, launch: 'warp' })).toEqual({
       sheetMb: 0,
       peakSheetMb: 0,
       sheets: 0,
@@ -42,6 +43,7 @@ describe('parseCrumb', () => {
       quality: 'full',
       moment: null,
       momentAt: null,
+      launch: null,
     })
   })
 })

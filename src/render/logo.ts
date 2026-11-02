@@ -102,7 +102,7 @@ const build = (haunted: boolean) => {
 }
 
 const logos = new Map<boolean, Promise<HTMLCanvasElement>>()
-onCanvasReset(() => logos.clear())
+onCanvasReset(() => logos.clear(), undefined, 'lobby')
 
 /** The logo sprite (`haunted`: the Noite das Bruxas one), built once the game font has loaded. */
 export const titleLogo = (haunted = false) => {

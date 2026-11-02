@@ -107,7 +107,7 @@ const fontsReady = () => Promise.all([document.fonts.load(`8px ${FAMILY.title}`,
 
 type Mask = { canvas: HTMLCanvasElement; width: number; baseline: number }
 
-const masks = canvasCache<string, Mask>()
+const masks = canvasCache<string, Mask>('lobby')
 
 /** Text in white with every pixel fully on or off, so it reads like the rest of the pixel art. */
 const textMask = (text: string, font: Font, size: number): Mask => {
@@ -224,6 +224,7 @@ let darkSparkles: PixelSprite[] | null = null
 onCanvasReset(
   () => (darkSparkles = null),
   () => darkSparkles,
+  'lobby',
 )
 const outlinedSparkles = () => (darkSparkles ??= SPARKLE().map((s) => outlined(s, '#584010')))
 

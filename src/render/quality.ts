@@ -8,11 +8,18 @@
  * the simulation never reads it, so replays and the ranking are untouched.
  */
 
+/** Safe mode's levels (`safeMode.ts`): 0 off, 1 after a crash, 2 after another one. */
+export type SafeLevel = 0 | 1 | 2
+
 /**
- * What the renderers read each frame. `safe`: the device's safe mode
- * (`safeMode.ts`, after a crash), which pins lean and keeps fewer silhouettes.
+ * What the renderers read each frame. `safe`: the device's safe mode level
+ * (`safeMode.ts`, after a crash), which pins lean and keeps fewer silhouettes;
+ * level 2 also draws fewer particles and weather drops (`safeShare`).
  */
-export const detail = { lean: false, safe: false }
+export const detail: { lean: boolean; safe: SafeLevel } = { lean: false, safe: 0 }
+
+/** The share of optional decoration (burst particles, weather drops) drawn at a safe mode level: all, all, a third. */
+export const safeShare = (level: SafeLevel) => (level === 2 ? 1 / 3 : 1)
 
 export type Governor = {
   /** Share of recent frames that struggled (an average over about a second). */
