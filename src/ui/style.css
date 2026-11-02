@@ -18696,6 +18696,15 @@ button.hall-tile:hover {
   .lobby.dock7 .lobby-tile > span:not(.key-hint) {
     font-size: 6px;
   }
+  /* Eight tiles (Ranking, Ideias, Arena and Co-op): one more column, or Co-op's (`--tiles`) would be JOGAR's. */
+  .lobby.dock8 {
+    grid-template-columns: repeat(8, minmax(0, 1fr)) minmax(0, 7fr);
+    grid-template-areas:
+      'logo logo logo logo logo logo logo logo today'
+      'stage stage stage stage stage stage stage stage today'
+      'stage stage stage stage stage stage stage stage side'
+      'd1 d2 d3 d4 d5 d6 d7 d8 play';
+  }
 }
 
 /* The Arena's screen (ui/arena.ts): the picked Pokémon in a hero panel beside the roster, Como jogar, and the two ways to play. */
