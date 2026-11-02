@@ -119,7 +119,7 @@ const yard = lazy(() => {
   }
   ctx.putImageData(img, 0, 0)
   return canvas
-})
+}, 'lobby')
 
 const SHADOW = 'rgba(30,40,30,0.3)'
 

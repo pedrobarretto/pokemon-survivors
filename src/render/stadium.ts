@@ -149,7 +149,7 @@ const forecourt = lazy(() => {
   }
   ctx.putImageData(img, 0, 0)
   return canvas
-})
+}, 'lobby')
 
 /* ---------------- The boards and pennants ---------------- */
 
@@ -212,7 +212,7 @@ const boardArt = (id: BoardId) => {
   return c
 }
 
-const BOARDS = lazy(() => Object.fromEntries(BOARD_IDS.map((id) => [id, boardArt(id)])) as Record<BoardId, HTMLCanvasElement>)
+const BOARDS = lazy(() => Object.fromEntries(BOARD_IDS.map((id) => [id, boardArt(id)])) as Record<BoardId, HTMLCanvasElement>, 'lobby')
 
 /** Pennant size, px: a pole with a gold knob and a flag at its top. */
 const PENNANT = { w: 12, h: 32, flag: 7 } as const
@@ -243,7 +243,7 @@ const pennantArt = (tier: (typeof TIER_IDS)[number], frame: 0 | 1) => {
   return c
 }
 
-const PENNANTS = lazy(() => TIER_IDS.map((tier) => [pennantArt(tier, 0), pennantArt(tier, 1)] as const))
+const PENNANTS = lazy(() => TIER_IDS.map((tier) => [pennantArt(tier, 0), pennantArt(tier, 1)] as const), 'lobby')
 
 /* ---------------- Drawing ---------------- */
 

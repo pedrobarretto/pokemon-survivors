@@ -97,6 +97,8 @@ export const recolor = (rows: readonly string[], palette: Palette) => fromString
 /* ---------- GPU resets ---------- */
 
 const resets: Array<() => void> = []
+/** The resets of the caches only the lobby draws from (`ArtScope`), for `dropLobbyArt`. */
+const lobbyResets: Array<() => void> = []
 const holders: Array<() => unknown> = []
 /** Where each holder was registered (dev builds only), for `heldCanvasesBy`. */
 const holderSites: string[] = []
@@ -106,13 +108,29 @@ const holderSites: string[] = []
  * (memory pressure on phones, a driver reset), every 2D canvas comes back blank, so a cache
  * kept past that would silently draw nothing: no ground under the horde, which then smears.
  * `holds` returns what the cache keeps right now (a canvas, or Maps, arrays and plain objects
- * of them), so `heldCanvases` can weigh it.
+ * of them), so `heldCanvases` can weigh it. A `lobby` cache is also dropped as a run starts (`dropLobbyArt`).
  */
-export const onCanvasReset = (reset: () => void, holds?: () => unknown) => {
+export const onCanvasReset = (reset: () => void, holds?: () => unknown, scope: ArtScope = 'shared') => {
   resets.push(reset)
+  if (scope === 'lobby') lobbyResets.push(reset)
   if (!holds) return
   holders.push(holds)
   if (import.meta.env.DEV) holderSites.push(new Error().stack?.split('\n').find((l, i) => i > 1 && !l.includes('pixelart.ts'))?.trim() ?? '?')
+}
+
+/**
+ * Who draws from a cache: `shared` (a run, or both), or only the `lobby` (the plaza, the Estádio,
+ * the Dojo, the title's logo), whose art a run never shows and lets go of as it starts.
+ */
+export type ArtScope = 'shared' | 'lobby'
+
+/**
+ * Drops the lobby's caches (`ArtScope`) as a run starts loading, so a phone doesn't hold them
+ * through the run (nor through its first seconds, when it decodes its own): back in the lobby,
+ * each is drawn again on first use.
+ */
+export const dropLobbyArt = () => {
+  for (const reset of lobbyResets) reset()
 }
 
 /** Drops every registered cache so it redraws. Called when a canvas gets its context back (`canvasRestored`). */
@@ -257,12 +275,13 @@ export const heldCanvasesBy = () =>
     .filter((h) => h.canvases > 0)
     .sort((a, b) => b.bytes - a.bytes)
 
-/** A Map holding drawn canvases, emptied on a GPU reset. */
-export const canvasCache = <K, V>() => {
+/** A Map holding drawn canvases, emptied on a GPU reset (and, the lobby's, as a run starts). */
+export const canvasCache = <K, V>(scope: ArtScope = 'shared') => {
   const cache = new Map<K, V>()
   onCanvasReset(
     () => cache.clear(),
     () => cache,
+    scope,
   )
   return cache
 }
@@ -271,13 +290,14 @@ export const canvasCache = <K, V>() => {
 let artSweeps = 0
 const idleArt: Array<(before: number) => void> = []
 
-/** Builds a value holding canvases on first use, and again after a GPU reset or once `sweepArt` let it go. */
-export const lazy = <T>(build: () => T) => {
+/** Builds a value holding canvases on first use, and again after a GPU reset, once `sweepArt` let it go or (the lobby's) as a run starts. */
+export const lazy = <T>(build: () => T, scope: ArtScope = 'shared') => {
   let value: T | undefined
   let used = 0
   onCanvasReset(
     () => (value = undefined),
     () => value,
+    scope,
   )
   idleArt.push((before) => {
     if (used < before) value = undefined
