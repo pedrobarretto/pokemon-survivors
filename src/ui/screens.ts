@@ -625,7 +625,6 @@ const duoPanel = (g: Game) => {
   )
 }
 
-/** The ability in play for the pause menu: the one picked (its Hidden tag too), the Mega's while that lasts, or when it comes. */
 /** What a map archetype is good for: the types its terrain rewards ("Bom para", when it has any) and a line (the run's sign, the pause menu). */
 export const mapGoodFor = (id: MapArchetypeId) => {
   const types = MAP_ARCHETYPES[id].goodFor
@@ -654,6 +653,7 @@ const mapPanel = (g: Game) => {
   )
 }
 
+/** The ability in play for the pause menu: the one picked (its Hidden tag too), the Mega's while that lasts, or when it comes. */
 const abilityPanel = (g: Game) => {
   const m = t().ability
   const mega = localPlayer(g).mega.active > 0 ? heldMega(g) : null
@@ -819,7 +819,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
         // A match has no difficulty: everyone plays the same.
         !g.versus && difficultyTag(g.difficulty),
         abilityPanel(g),
-        mapPanel(g),
+        !g.versus && mapPanel(g),
         h(
           'div',
           { class: 'pause-body' },

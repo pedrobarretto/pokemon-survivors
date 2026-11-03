@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { MAP_ARCHETYPE_IDS, MAP_ARCHETYPES, type MapArchetypeId } from '../data/mapArchetypes'
 import { TERRAIN, type Ellipse } from '../data/terrain'
 import { createGame } from './game'
-import { archetypeOf, clearSpot, createTerrain, crossings, featureAt, groundPace, isOpen, PLAYER_FOOT, runArchetype, slidesOnIce, type Feature } from './terrain'
+import { archetypeOf, clearSpot, createTerrain, crossings, featureAt, groundPace, isOpen, phases, PLAYER_FOOT, runArchetype, slidesOnIce, type Feature } from './terrain'
+import { startTraining } from './training'
 import { hash2 } from '../engine/rng'
 
 const C = TERRAIN.cell
@@ -139,5 +140,20 @@ describe('traversal by type', () => {
     expect(groundPace(rowlet, 'water')).toBe(1)
     expect(slidesOnIce(rowlet)).toBe(false)
     expect(crossings(rowlet)).toEqual(['hover'])
+  })
+
+  it('keeps the old wading in the Dojo, on its classic route', () => {
+    const squirtle = createGame('squirtle', { w: 480, h: 270 }, 1)
+    startTraining(squirtle)
+    expect(squirtle.terrain.archetype).toBe('route')
+    expect(groundPace(squirtle, 'water')).toBe(1)
+    const rowlet = createGame('rowlet', { w: 480, h: 270 }, 1)
+    startTraining(rowlet)
+    expect(groundPace(rowlet, 'water')).toBe(TERRAIN.waterPace)
+    expect(slidesOnIce(rowlet)).toBe(true)
+    const gastly = createGame('gastly', { w: 480, h: 270 }, 1)
+    expect(phases(gastly, gastly.player)).toBe(true)
+    startTraining(gastly)
+    expect(phases(gastly, gastly.player)).toBe(false)
   })
 })

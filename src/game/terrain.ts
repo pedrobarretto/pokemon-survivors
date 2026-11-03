@@ -523,12 +523,15 @@ export const typesOf = (g: Game, p: Player): readonly PokeType[] => {
 /*
  * Traversal: how a player's types cross the terrain, so a map can suit a
  * build (the archetypes' `goodFor`, `data/mapArchetypes.ts`). Per player, so
- * each co-op teammate keeps their own; the horde's pace is untouched.
+ * each co-op teammate keeps their own; the horde's pace is untouched. Only on
+ * a run's open map (`ownWay`): in a room (a rift, a place, an Arena match) and
+ * in the Dojo everyone crosses as before (Water types and Levitate wade at
+ * full speed, the rest slowed).
  * - surf: a Water type is faster in water than on land (`TERRAIN.surfPace`);
  * - hover: a Flying type (or an ability that ignores terrain, Levitate)
  *   crosses water unslowed and ice without sliding;
  * - skate: an Ice type is faster on ice and never slides (`TERRAIN.skatePace`);
- * - phase: a Ghost type slips through the thin scenery (`THIN_SOLIDS`) on the map.
+ * - phase: a Ghost type slips through the thin scenery (`THIN_SOLIDS`).
  */
 export type Crossing = 'surf' | 'hover' | 'skate' | 'phase'
 
@@ -537,27 +540,40 @@ export const CROSSINGS = ['surf', 'hover', 'skate', 'phase'] as const satisfies 
 /** The type behind each way across (hover also comes with Levitate). */
 export const CROSSING_TYPE = { surf: 'water', hover: 'flying', skate: 'ice', phase: 'ghost' } as const satisfies Record<Crossing, PokeType>
 
+/** Whether the types' own ways across apply: a run's open map, not a room (rift, place, Arena) nor the Dojo. */
+const ownWay = (g: Game) => g.training === null && !roomOf(g)
+
 /** Whether the acting player hovers over water and ice: a Flying type, or an ability that ignores terrain. */
 const hovers = (g: Game) => playerTypes(g).includes('flying') || abilityImmune(g, 'terrain')
 
 /** The acting player's ways across the terrain (the pause menu lists them). */
 export const crossings = (g: Game): Crossing[] => CROSSINGS.filter((c) => (c === 'hover' ? hovers(g) : playerTypes(g).includes(CROSSING_TYPE[c])))
 
-/** The acting player's walking pace on `ground`: slowed wading, faster surfing (Water) or skating (Ice). */
+/** The acting player's walking pace on `ground`: slowed wading, faster surfing (Water) or skating (Ice) on the open map. */
 export const groundPace = (g: Game, ground: Ground) => {
-  if (ground === 'water') return playerTypes(g).includes('water') ? TERRAIN.surfPace : hovers(g) ? 1 : TERRAIN.waterPace
-  if (ground === 'ice') return playerTypes(g).includes('ice') ? TERRAIN.skatePace : 1
+  if (ground === 'water') {
+    const water = playerTypes(g).includes('water')
+    if (!ownWay(g)) return water || abilityImmune(g, 'terrain') ? 1 : TERRAIN.waterPace
+    return water ? TERRAIN.surfPace : hovers(g) ? 1 : TERRAIN.waterPace
+  }
+  if (ground === 'ice' && ownWay(g)) return playerTypes(g).includes('ice') ? TERRAIN.skatePace : 1
   return 1
 }
 
-/** Whether the acting player slides on ice: not a Flying or Ice type, nor Levitating. */
-export const slidesOnIce = (g: Game) => !(hovers(g) || playerTypes(g).includes('ice'))
+/** Whether the acting player slides on ice: not Levitating, nor (on the open map) a Flying or Ice type. */
+export const slidesOnIce = (g: Game) => !(abilityImmune(g, 'terrain') || (ownWay(g) && (hovers(g) || playerTypes(g).includes('ice'))))
 
-/** Whether player `p` slips through the thin scenery: a Ghost type, on the map (a room's walls hold everyone). */
-export const phases = (g: Game, p: Player) => !roomOf(g) && typesOf(g, p).includes('ghost')
+/** Whether player `p` slips through the thin scenery: a Ghost type, on the open map (a room's walls hold everyone). */
+export const phases = (g: Game, p: Player) => ownWay(g) && typesOf(g, p).includes('ghost')
 
 /** Whether player `p` is phasing through a solid right now (drawn see-through). */
 export const phasingNow = (g: Game, p: Player) => phases(g, p) && solidAt(g, p.x, p.y, footOf(p) - 1, false)
+
+/** Rebuilds the map as archetype `id` (its cells drop and rebuild): the Dojo's classic route, `ps.map`. */
+export const setArchetype = (g: Game, id: MapArchetypeId) => {
+  g.terrain.archetype = id
+  g.terrain.cells.clear()
+}
 
 /**
  * Nudges an enemy pressed against a solid along its edge, toward the side of

@@ -14,9 +14,12 @@ import { mapGoodFor } from './screens'
 /** The runs whose sign was shown: once per run, whatever the game object (co-op swaps it on a heal). */
 const announced = new WeakSet<object>()
 
+/** Whether a game plays on an archetype's map: not an Arena match, nor the Dojo (always the classic route). */
+export const onArchetypeMap = (g: Game) => !g.versus && g.training === null
+
 /** Slides the map's sign in, once per `run`. */
 export const announceMap = (root: HTMLElement, run: object, g: Game) => {
-  if (announced.has(run)) return
+  if (announced.has(run) || !onArchetypeMap(g)) return
   announced.add(run)
   dropMapSign(root)
   const m = t().maps

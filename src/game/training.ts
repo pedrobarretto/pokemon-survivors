@@ -18,6 +18,7 @@ import { forkAt, isLegendary, isManual, maxMoveLevel, withBranch, type MoveId } 
 import { aimScreen, ownAttack } from './players'
 import { shelfTms } from './tmShelf'
 import { createTraitState } from './traits'
+import { setArchetype } from './terrain'
 import type { DamageSource, Enemy, Game } from './types'
 
 /**
@@ -79,9 +80,10 @@ const spawnDummy = (g: Game, target: TrainingTarget, at: Vec): Enemy => {
   return e
 }
 
-/** Turns the run into the Dojo, with `count` dummies of `target` around the player, along `aim`. */
+/** Turns the run into the Dojo, with `count` dummies of `target` around the player, along `aim`, on the classic route (no map archetype). */
 export const startTraining = (g: Game, target: TrainingTarget = TRAINING.target, count: number = TRAINING.counts[0], aim: Aim = AHEAD) => {
   const p = g.player
+  setArchetype(g, 'route')
   g.training = { target, posts: [], home: { x: p.x, y: p.y }, aim, lens: { x: 0, y: 0 }, shown: { x: 0, y: 0 } }
   setDummies(g, target, count)
 }

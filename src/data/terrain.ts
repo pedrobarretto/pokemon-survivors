@@ -65,41 +65,42 @@ const MOUNTAINS: readonly (readonly Tier[])[] = [
 const chain = (points: readonly (readonly [number, number])[], rx: number, ry: number): Ellipse[] => points.map(([x, y]) => ({ x, y, rx, ry }))
 
 /**
- * Ridges: long walls of rock spanning a cell (the canyon's, `data/mapArchetypes.ts`).
- * Each reaches a cell's margins, so neighbors line up into long walls with a
- * gap (a chokepoint) at every cell edge; the broken one has a pass in its middle.
+ * Ridges: long walls of rock across a cell (the canyon's, `data/mapArchetypes.ts`).
+ * Neighbors line up into long walls with a pass of some 80 px at each cell
+ * edge (wide enough that the horde can't plug it, a phone's screen sees the
+ * way out); the broken one has a pass in its middle too.
  */
 const RIDGES: readonly (readonly Tier[])[] = [
   // East to west.
   [
-    { foot: chain([[-92, 2], [-46, -2], [0, 1], [46, -3], [92, 1]], 28, 20), h: 20 },
-    { foot: chain([[-68, -6], [-22, -8], [24, -7], [68, -8]], 22, 11), h: 14 },
-    { foot: chain([[-30, -10], [30, -11]], 16, 6), h: 10 },
+    { foot: chain([[-72, 2], [-36, -2], [0, 1], [36, -3], [72, 1]], 28, 20), h: 20 },
+    { foot: chain([[-54, -6], [-18, -8], [18, -7], [54, -8]], 22, 11), h: 14 },
+    { foot: chain([[-26, -10], [26, -11]], 16, 6), h: 10 },
   ],
   // North to south.
   [
-    { foot: chain([[2, -92], [-2, -46], [1, 0], [-3, 46], [1, 92]], 24, 28), h: 20 },
-    { foot: chain([[0, -70], [-2, -24], [1, 22], [-1, 68]], 15, 22), h: 14 },
+    { foot: chain([[2, -76], [-2, -38], [1, 0], [-3, 38], [1, 76]], 24, 28), h: 20 },
+    { foot: chain([[0, -56], [-2, -18], [1, 18], [-1, 56]], 15, 22), h: 14 },
   ],
   // A corner: a wall along the north and down the west.
   [
-    { foot: [...chain([[-96, -94], [-50, -96], [-4, -94], [40, -96]], 26, 18), ...chain([[-98, -54], [-96, -8], [-98, 38], [-96, 84]], 22, 26)], h: 20 },
+    { foot: [...chain([[-96, -94], [-50, -96], [-4, -94], [40, -96]], 26, 18), ...chain([[-98, -54], [-96, -8], [-98, 38], [-96, 66]], 22, 26)], h: 20 },
     { foot: [...chain([[-80, -100], [-34, -101], [12, -100]], 20, 8), ...chain([[-98, -66], [-97, -20], [-98, 26]], 14, 20)], h: 14 },
   ],
   // East to west, broken by a pass in the middle.
   [
-    { foot: [...chain([[-96, 0], [-56, -2]], 26, 20), ...chain([[56, 1], [96, -1]], 26, 20)], h: 20 },
-    { foot: [...chain([[-84, -6]], 20, 9), ...chain([[84, -6]], 20, 9)], h: 14 },
+    { foot: [...chain([[-80, 0], [-56, -2]], 26, 20), ...chain([[56, 1], [80, -1]], 26, 20)], h: 20 },
+    { foot: [...chain([[-72, -6]], 20, 9), ...chain([[72, -6]], 20, 9)], h: 14 },
   ],
   // A gorge: two walls east to west with a corridor between them.
   [
-    { foot: [...chain([[-92, -64], [-46, -66], [0, -63], [46, -66], [92, -64]], 28, 18), ...chain([[-92, 66], [-46, 63], [0, 66], [46, 64], [92, 66]], 28, 18)], h: 20 },
-    { foot: [...chain([[-60, -70], [0, -69], [60, -70]], 26, 9), ...chain([[-60, 60], [0, 61], [60, 60]], 26, 9)], h: 12 },
+    { foot: [...chain([[-72, -64], [-36, -66], [0, -63], [36, -66], [72, -64]], 28, 18), ...chain([[-72, 66], [-36, 63], [0, 66], [36, 64], [72, 66]], 28, 18)], h: 20 },
+    { foot: [...chain([[-50, -70], [0, -69], [50, -70]], 26, 9), ...chain([[-50, 60], [0, 61], [50, 60]], 26, 9)], h: 12 },
   ],
   // A gorge north to south.
   [
-    { foot: [...chain([[-64, -92], [-66, -46], [-63, 0], [-66, 46], [-64, 92]], 20, 28), ...chain([[66, -92], [63, -46], [66, 0], [64, 46], [66, 92]], 20, 28)], h: 20 },
-    { foot: [...chain([[-64, -60], [-65, 0], [-64, 60]], 12, 28), ...chain([[64, -60], [65, 0], [64, 60]], 12, 28)], h: 12 },
+    { foot: [...chain([[-64, -76], [-66, -38], [-63, 0], [-66, 38], [-64, 76]], 20, 28), ...chain([[66, -76], [63, -38], [66, 0], [64, 38], [66, 76]], 20, 28)], h: 20 },
+    { foot: [...chain([[-64, -50], [-65, 0], [-64, 50]], 12, 28), ...chain([[64, -50], [65, 0], [64, 50]], 12, 28)], h: 12 },
   ],
 ]
 
@@ -115,12 +116,12 @@ export const CLIFF_CRESTS: readonly (readonly (readonly [number, number, number]
   [[-36, -16, 1], [30, -16, 1], [-2, -21, 3]],
   [[24, -12, 1], [2, -9, 2]],
   [[-44, -6, 1], [10, -9, 2]],
-  [[-90, -4, 1], [86, -6, 1], [-4, -12, 3]],
-  [[0, -96, 1], [-1, 2, 2], [1, 70, 1]],
-  [[30, -98, 1], [-100, 70, 1], [-60, -102, 2]],
-  [[-100, -4, 1], [100, -6, 1]],
-  [[-80, -70, 2], [70, -70, 1], [-20, 58, 2], [88, 62, 1]],
-  [[-64, -84, 1], [-64, 30, 2], [64, -40, 2], [66, 84, 1]],
+  [[-70, -4, 1], [66, -6, 1], [-4, -12, 3]],
+  [[0, -76, 1], [-1, 2, 2], [1, 56, 1]],
+  [[30, -98, 1], [-100, 56, 1], [-60, -102, 2]],
+  [[-84, -4, 1], [84, -6, 1]],
+  [[-60, -70, 2], [56, -70, 1], [-20, 58, 2], [66, 62, 1]],
+  [[-64, -66, 1], [-64, 30, 2], [64, -40, 2], [66, 66, 1]],
 ]
 
 /** Ponds: flat footprints that slow walkers (ice in the snow, where they slide instead). */
@@ -145,7 +146,7 @@ const BAYS: readonly (readonly Ellipse[])[] = [
   // Two channels crossing.
   [...chain([[-86, 0], [-40, 2], [40, -2], [86, 0]], 34, 28), ...chain([[0, -86], [2, -40], [-2, 40], [0, 86]], 28, 34), { x: 0, y: 0, rx: 54, ry: 52 }],
   // A ring of water around an island.
-  chain([[74, 0], [37, 64], [-37, 64], [-74, 0], [-37, -64], [37, -64]], 44, 40),
+  chain([[78, 0], [55, 55], [0, 78], [-55, 55], [-78, 0], [-55, -55], [0, -78], [55, -55]], 34, 32),
   // A lagoon in two lobes.
   [{ x: -50, y: -50, rx: 70, ry: 60 }, { x: 50, y: 50, rx: 70, ry: 60 }, { x: 0, y: 0, rx: 56, ry: 52 }],
 ]
@@ -172,19 +173,20 @@ const row = <K extends string>(kind: K, n: number, x: number, y: number, dx: num
 /**
  * Thickets: walls of trees close enough that nobody slips between their
  * trunks, with a bush at each end (the forest's, `data/mapArchetypes.ts`).
- * Neighbors' walls turn the woods into a maze of trails.
+ * Neighbors' walls turn the woods into a maze of trails, with a gap of some
+ * 80 px wherever two walls meet at a cell edge (no trap for the horde to plug).
  */
 export const THICKETS: readonly (readonly Spot<'tree' | 'bush'>[])[] = [
   // East to west.
-  [...row('tree', 11, -90, 0, 18, 0, 3), ['bush', -110, 0], ['bush', 110, 0]],
+  [...row('tree', 10, -76, 0, 17, 0, 3), ['bush', -94, 0], ['bush', 94, 0]],
   // North to south.
-  [...row('tree', 13, 0, -96, 0, 16, 3), ['bush', 0, -114], ['bush', 0, 114]],
+  [...row('tree', 11, 0, -80, 0, 16, 3), ['bush', 0, -98], ['bush', 0, 98]],
   // A corner.
-  [...row('tree', 9, -96, -90, 18, 0, 2), ...row('tree', 10, -96, -72, 0, 16, 2), ['bush', 70, -90], ['bush', -96, 92]],
+  [...row('tree', 9, -96, -90, 18, 0, 2), ...row('tree', 9, -96, -72, 0, 16, 2), ['bush', 70, -90], ['bush', -96, 74]],
   // A clearing open to the south.
   [...row('tree', 9, -80, -80, 20, 0, 2), ...row('tree', 7, -92, -60, 0, 16, 2), ...row('tree', 7, 92, -60, 0, 16, 2), ['bush', -92, 54], ['bush', 92, 54]],
   // A trail between two walls.
-  [...row('tree', 11, -90, -48, 18, 0, 2), ...row('tree', 11, -90, 48, 18, 0, 2), ['bush', -110, -48], ['bush', 110, 48]],
+  [...row('tree', 10, -76, -48, 17, 0, 2), ...row('tree', 10, -76, 48, 17, 0, 2), ['bush', -94, -48], ['bush', 94, 48]],
 ]
 
 /** What stands in the ruins' colonnades: broken columns, standing stones and rubble. */
@@ -248,9 +250,9 @@ export const TERRAIN = {
   /** Walking speed in water for whoever wades (`game/terrain.ts`, `groundPace`). */
   waterPace: 0.62,
   /** A Water-type player surfs a lake this much faster than it walks. */
-  surfPace: 1.25,
+  surfPace: 1.15,
   /** An Ice-type player skates on ice this much faster than it walks, without sliding. */
-  skatePace: 1.2,
+  skatePace: 1.1,
   /** How fast the player's speed follows the stick on ice (per second): low means sliding. */
   iceGrip: 2.6,
   /** Variants of the single pieces (each is drawn a little differently). */

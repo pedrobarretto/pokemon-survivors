@@ -13383,7 +13383,7 @@ button.hall-tile:hover {
   flex-direction: column;
   gap: 4px;
   padding: 6px 10px;
-  background: #e8f0e0;
+  background: var(--dk-surface-1, #e8f0e0);
   border-radius: 6px;
 }
 
@@ -13398,18 +13398,37 @@ button.hall-tile:hover {
 
 .pause-map b small {
   font-size: 7px;
-  color: #5a7848;
+  color: color-mix(in srgb, #5a7848 var(--dk-lift, 100%), #fff);
 }
 
 .pause-map .map-good-tip,
 .pause-map-ways {
   font-size: 17px;
   line-height: 1;
-  color: #505068;
+  color: var(--dk-ink-2, #505068);
 }
 
 .pause-map-ways {
-  color: #2c6c8c;
+  color: color-mix(in srgb, #2c6c8c var(--dk-lift, 100%), #fff);
+}
+
+/* A phone held sideways: one line (name, types, how the player crosses), so the stats and the six moves keep their room. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .pause-map {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 10px;
+    padding: 4px 10px;
+  }
+
+  .pause-map .map-good-tip {
+    display: none;
+  }
+
+  .pause-map-ways {
+    font-size: 15px;
+  }
 }
 
 /* The partner details: the abilities, and a branching evolution in the line. */

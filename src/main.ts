@@ -105,7 +105,7 @@ import { pokeballPick } from './ui/pokeballPick'
 import { dropPickup } from './game/pickups'
 import { CURSES } from './data/curses'
 import { CAST_SFX } from './ui/castSfx'
-import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype } from './game/terrain'
+import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype, setArchetype } from './game/terrain'
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
 import { dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
@@ -4209,8 +4209,7 @@ let devMap: MapArchetypeId | null = null
 
 /** Dev only: rebuilds a run's map as archetype `id` (its cells, and the breakables, placed again around the new terrain). */
 const setDevMap = (g: Game, id: MapArchetypeId) => {
-  g.terrain.archetype = id
-  g.terrain.cells.clear()
+  setArchetype(g, id)
   g.props.length = 0
 }
 
