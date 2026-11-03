@@ -291,93 +291,24 @@ type ScenarioId = keyof typeof SCENARIOS
  */
 const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
   44: {
-    levelUps: '2998·50·13·8c971102',
-    mega: '1892·30·2·f974c5de',
-    riftFall: '675·0·1·b7486277',
-    alphaHazards: '1002·6·19·93ff9daa',
-    nightBoss: '2098·46·17·c93d0636',
-    bag: '1077·9·3·d13820e7',
-    shop: '1521·66·19·fcbbb126',
-    shopTms2: '1787·47·17·3cba2f20',
-    evoGate: '1487·55·24·ea1fa054',
-    porygonGate: '2074·60·37·391ff3dc',
-    sketch: '1210·20·2·e776249d',
-    legend: '1100·51·14·cdbdb688',
-    waveLegend: '1998·14·17·1fa0f40a',
+    levelUps: '2998·45·12·78f86519',
+    mega: '1892·27·1·2d1d227c',
+    riftFall: '665·0·1·8722c904',
+    alphaHazards: '1002·2·19·4c8862d5',
+    nightBoss: '2093·36·17·04c2b2b6',
+    bag: '989·11·4·ebcf7333',
+    shop: '1521·113·20·051146de',
+    shopTms2: '1787·49·18·57c9b8dd',
+    evoGate: '1487·55·24·5f3f7264',
+    porygonGate: '2074·69·37·77df1acd',
+    sketch: '1210·22·1·d5a7050c',
+    legend: '1487·99·14·4ccd28a1',
+    waveLegend: '1998·22·17·db5ba4c3',
     cave: '2188·16·12·d2d47594',
     grotto: '2782·23·18·bb75df4d',
     underground: '3084·23·37·100fda44',
-    magicGuard: '1188·29·19·fddbed17',
+    magicGuard: '1188·51·20·285cf0b7',
   },
-  44: {
-    levelUps: '2998·49·12·80c39eca',
-    mega: '1892·31·1·b9158414',
-    riftFall: '663·0·1·f89d7d26',
-    alphaHazards: '1002·3·19·85717122',
-    nightBoss: '2098·75·18·31308607',
-    bag: '970·14·4·3c9b5b5a',
-    shop: '1526·99·20·4075c825',
-    shopTms2: '1787·47·17·215b2279',
-    evoGate: '1487·53·24·271f27eb',
-    porygonGate: '2074·68·37·92c80df1',
-    sketch: '1210·21·1·3cf29bd9',
-    legend: '1487·99·14·54c83eef',
-    waveLegend: '1998·21·17·2bdc2ed7',
-    cave: '2188·16·12·d2d47594',
-    magicGuard: '1188·41·19·cd13b4ca',
-  },
-}
-
-/** Phases that wait on a pick, made by the script like a player's tap. */
-const PICKS: ReadonlySet<Game['phase']> = new Set(['levelup', 'branch', 'ability', 'tm', 'curse', 'pokeball'])
-
-/** What a run looks like at a moment: the clock, the player, every enemy and pickup, bit for bit. */
-const snapshot = (g: Game): Array<number | string> => {
-  const p = g.player
-  const values: Array<number | string> = [g.phase, g.time, g.kills, g.coins, g.player.revives, p.level, p.xp, p.hp, p.x, p.y, p.stage, g.enemies.length, g.pickups.length]
-  for (const e of g.enemies) values.push(e.kind, e.x, e.y, e.hp)
-  for (const k of g.pickups) values.push(k.kind, k.x, k.y)
-  return values
-}
-
-/** Ticks between the snapshots of a recording's trail: a change that moves the run for a while and then settles still shows. */
-const TRAIL_EVERY = 30
-
-/**
- * Plays a scenario with a scripted player, recording it: the stick wanders
- * through the 32 directions at full speed, the special every 4 s, the Mega
- * button and the lunge on their own beats, a card at every pick and a
- * rotation at 10 s. All from a seeded rng, so the replay is the same every
- * time. `trail` is a snapshot every `TRAIL_EVERY` ticks.
- */
-const record = ({ start, seconds, stage }: Scenario) => {
-  const view = { ...start.view }
-  const g = startGame(start, view)
-  stage(g)
-  const end = g.time + seconds
-  const rec = startRecording(start)
-  const bot = createRng(5)
-  const trail: Array<number | string> = []
-  let dir = 0
-  while (g.time < end && g.phase !== 'gameover' && g.phase !== 'victory') {
-    if (PICKS.has(g.phase)) {
-      const i = Math.floor(bot() * g.player.offers.length)
-      recordEvent(rec, ['offer', i])
-      chooseOffer(g, g.player.offers[i]!)
-      continue
-    }
-    if (rec.tick % TRAIL_EVERY === 0) trail.push(...snapshot(g))
-    if (rec.tick === 600) Object.assign(view, { w: 300, h: 520 })
-    dir = (dir + Math.floor(bot() * 3) + 31) % 32
-    const special = rec.tick % 240 === 0
-    const mega = rec.tick % 400 === 100
-    const lunge = rec.tick % 120 === 60
-    if (special) recordEvent(rec, ['special'])
-    if (mega) recordEvent(rec, ['mega'])
-    if (lunge) recordEvent(rec, ['lunge'])
-    step(g, { move: recordStep(rec, view, moveOf(1 + 6 * 32 + dir)), special, mega, lunge }, TICK)
-  }
-  return { live: g, trail, replay: JSON.parse(JSON.stringify(rec.replay)) as Replay }
 }
 
 /** FNV-1a over the bytes of each number's float64 bits and of each string's char codes: the same on every engine. */

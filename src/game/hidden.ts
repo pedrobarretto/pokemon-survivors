@@ -15,6 +15,7 @@ import { anchorPlayer } from './players'
 import { DIRECTOR } from './mapEventRules'
 import type { Enemy, Game } from './types'
 import * as dm from '../engine/dmath'
+import { biomeOf } from './biomeMap'
 
 /**
  * Hidden zones on the map and the Pokémon they share (`data/places.ts`,
@@ -53,13 +54,6 @@ const hiddenSpot = (g: Game) => {
 }
 
 /**
- * The biome a hidden entrance at (x, y) stands in, which weighs the zone it
- * opens (`pickHidden`). The run's biome for now: the one place to switch to a
- * lookup by position once biomes follow the map.
- */
-const biomeAt = (g: Game, _x: number, _y: number) => g.biome.id
-
-/**
  * Opens hidden zone `which`'s entrance (the biome's pick without one) at (x, y), or just ahead of the player;
  * without room it tries again in a few seconds. Unannounced: nothing tells
  * the shell until a player finds it (`revealHidden`).
@@ -71,9 +65,11 @@ export const openHidden = (g: Game, which?: PlaceId, at?: { x: number; y: number
     return null
   }
   const { x, y } = spot
-  const id = which ?? pickHidden(g.rng, biomeAt(g, x, y))
+  // The biome the entrance stands in weighs the zone it opens.
+  const biome = biomeOf(g, x, y)
+  const id = which ?? pickHidden(g.rng, biome)
   const solids = ENTRANCE_PIECES[id].map(([piece, dx, dy], i) => solidAt(piece, entranceFeet(piece), x + dx, y + dy, piece === 'tree' || piece === 'bush' || piece === 'rock' ? i % 3 : i))
-  g.place.entrance = { id, x, y, left: HIDDEN.openTime, charge: 0, open: true, terrain: { solids, lake: null }, hidden: true, foundAt: null }
+  g.place.entrance = { id, x, y, left: HIDDEN.openTime, charge: 0, open: true, terrain: { solids, lake: null, biome }, hidden: true, foundAt: null }
   g.place.hiddenAt = null
   // Breakables that stood where the entrance now is make room for it.
   const feet = solids.flatMap((s) => s.foot)
