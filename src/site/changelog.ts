@@ -24,6 +24,23 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-02',
+    title: { pt: 'Ajustes', en: 'Tweaks', es: 'Ajustes', fr: 'Ajustements', zh: '調整' },
+    highlights: [
+      { pt: 'Swablu e Altaria trocam Cute Charm por Cloud Nine, a habilidade oculta deles nos jogos principais.', en: 'Swablu and Altaria swap Cute Charm for Cloud Nine, their Hidden Ability in the main games.', es: 'Swablu y Altaria cambian Cute Charm por Cloud Nine, su habilidad oculta en los juegos principales.', fr: 'Swablu et Altaria échangent Cute Charm contre Cloud Nine, leur talent caché dans les jeux principaux.', zh: 'Swablu 與 Altaria 的 Cute Charm 換成 Cloud Nine，也就是正傳中牠們的隱藏特性。' },
+      { pt: 'Com Cloud Nine, chuva, sol, areia e neve não desgastam mais o seu HP.', en: 'With Cloud Nine, rain, sun, sand and snow no longer wear your HP down.', es: 'Con Cloud Nine, la lluvia, el sol, la arena y la nieve ya no desgastan tu HP.', fr: 'Avec Cloud Nine, la pluie, le soleil, le sable et la neige n’usent plus tes PV.', zh: '有了 Cloud Nine，雨、晴、沙暴和下雪都不會再消耗你的 HP。' },
+      { pt: 'E o clima não deixa mais os golpes dos inimigos mais fortes contra você.', en: 'And the weather no longer makes foes’ hits on you stronger.', es: 'Y el clima ya no hace más fuertes los golpes de los enemigos contra ti.', fr: 'Et la météo ne renforce plus les coups des ennemis contre toi.', zh: '天氣也不會再讓敵人打你的招式變得更強。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Habilidades', en: 'Abilities', es: 'Habilidades', fr: 'Talents', zh: '特性' },
+        notes: [
+          { pt: 'Swablu e Altaria trocam Cute Charm por Cloud Nine, a habilidade oculta deles nos jogos principais: chuva, sol, areia e neve não desgastam mais o seu HP e não deixam os golpes dos inimigos mais fortes. Os ataques do mundo continuam acertando. Ideia do Bluclair no Discord.', en: 'Swablu and Altaria swap Cute Charm for Cloud Nine, their Hidden Ability in the main games: rain, sun, sand and snow no longer wear your HP down or make foes’ hits stronger. The world’s attacks still land. An idea from Bluclair on Discord.', es: 'Swablu y Altaria cambian Cute Charm por Cloud Nine, su habilidad oculta en los juegos principales: la lluvia, el sol, la arena y la nieve ya no desgastan tu HP ni hacen más fuertes los golpes de los enemigos. Los ataques del mundo siguen acertando. Idea de Bluclair en Discord.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-01',
     title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
     highlights: [

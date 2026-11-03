@@ -1954,6 +1954,7 @@ export const es: Messages = {
     sandVeil: 'En tormenta de arena: recibes 25% menos de daño, y la arena no te desgasta.',
     snowCloak: 'Con nieve: recibes 25% menos de daño, y la nieve no te desgasta.',
     leafGuard: 'Con sol intenso: recibes 30% menos de daño y regeneras 0,5 HP/s.',
+    cloudNine: 'El clima no potencia a los enemigos ni te desgasta.',
     drought: 'Llama al sol intenso al elegirla y en cada bioma nuevo (fuera de las grietas): Fuego ×1,5.',
     sandStream: 'Levanta una tormenta de arena al elegirla y en cada bioma nuevo: desgasta a la horda, no a ti.',
     static: 'Los enemigos que te tocan pueden quedar paralizados.',
