@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ARENA_RANKED } from '../../src/data/arenaRanked'
-import { MAX_ARENA_PLAYERS, MAX_PLAYERS, PROTOCOL, type ClientMessage, type Hello, type ServerMessage } from '../../src/net/protocol'
+import { COOP_REPORT_PATH } from '../../src/net/coopReport'
+import { LIMITS, MAX_ARENA_PLAYERS, MAX_PLAYERS, PROTOCOL, type ClientMessage, type Hello, type ServerMessage } from '../../src/net/protocol'
 import {
   BOUND_AHEAD,
   BOUND_REFRESH,
@@ -500,7 +501,7 @@ describe('moving the room', () => {
 
 describe('arena rooms', () => {
   const guest = (i: number) => `guest-${i}-xxxxxxxxxxxx`
-  const reports = (effects: readonly Effect[]) => effects.flatMap((e) => (e.k === 'report' ? [e.report] : []))
+  const reports = (effects: readonly Effect[]) => effects.flatMap((e) => (e.k === 'report' && e.path === '/arena/report' ? [e.report] : []))
 
   /** A room made by the matchmaker for `players` (guest identities) on alternating teams (all on Blue: `oneSide`), in a 4v4 unless `format` says (a 3v3 is Casual). */
   const matched = (players: number, ranked = true, { format, oneSide = false }: { format?: 'quick'; oneSide?: boolean } = {}) => {
@@ -709,5 +710,79 @@ describe('arena rooms', () => {
     const [report] = reports(say(state, 'b', { t: 'over', tick: 900, h: 'end', result: result(1) }, T0 + 9000))
     expect(report?.kind).toBe('room')
     expect(report?.seats[0]).toEqual({ slot: 0, userId: 'user_ash', handle: 'ash', left: false })
+  })
+})
+
+describe('co-op run reports', () => {
+  const reports = (effects: readonly Effect[]) => effects.flatMap((e) => (e.k === 'report' && e.path === COOP_REPORT_PATH ? [e.report] : []))
+
+  /** A `CoopResult`-shaped JSON (opaque to the relay) for `players` seats. */
+  const result = (players: number, time = 754.5) =>
+    JSON.stringify({ v: 1, difficulty: 'normal', challenge: null, time, outcome: 'wipe', kills: players, players: Array.from({ length: players }, (_, slot) => ({ slot, starter: 'pichu', stage: 1, branch: null, shiny: false, level: 30, kills: 1 })) })
+
+  it("reports a run its end's voters agree on, once, with its seats and votes", () => {
+    const { state, t0 } = playing(2)
+    say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(2) }, t0)
+    const out = say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(2) }, t0 + 10)
+    const [report] = reports(out)
+    expect(reports(out)).toHaveLength(1)
+    expect(report).toEqual({
+      v: 1,
+      room: 'ABCDE',
+      run: 1,
+      region: 'sam',
+      endedAt: t0 + 10,
+      seats: [0, 1].map((slot) => ({ slot, userId: null, handle: null, left: false })),
+      result: JSON.parse(result(2)),
+      votes: 2,
+    })
+    expect(out).toContainEqual(expect.objectContaining({ k: 'event', ev: 'coop.result' }))
+    expect(reports(say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(2) }, t0 + 20))).toHaveLength(0)
+  })
+
+  it('names an account by its Clerk id and handle, and a leaver as left', () => {
+    const state = newState()
+    connect(state, 'a', 'ua', T0)
+    hello(state, 'a', helloMsg('x'.repeat(16), { auth: { kind: 'clerk', token: 'jwt' }, name: '@ash' }), { id: 'u:user_ash', account: true }, T0, { guests: false })
+    for (const [c, g] of [['b', 'guest-1-xxxxxxxxxxxx'], ['c', 'guest-2-xxxxxxxxxxxx']] as const) join(state, c, g)
+    for (const c of ['a', 'b', 'c']) say(state, c, { t: 'loadout', loadout: { starter: 'pichu' } }, T0)
+    for (const c of ['b', 'c']) say(state, c, { t: 'ready', ready: true }, T0)
+    say(state, 'a', { t: 'start' }, T0)
+    say(state, 'c', { t: 'leave' }, T0 + 5000)
+    say(state, 'a', { t: 'over', tick: 900, h: 'end', result: result(3) }, T0 + 9000)
+    const [report] = reports(say(state, 'b', { t: 'over', tick: 900, h: 'end', result: result(3) }, T0 + 9000))
+    expect(report?.seats).toEqual([
+      { slot: 0, userId: 'user_ash', handle: 'ash', left: false },
+      { slot: 1, userId: null, handle: null, left: false },
+      { slot: 2, userId: null, handle: null, left: true },
+    ])
+    expect(report?.votes).toBe(2)
+  })
+
+  it("never reports a room of one, a split result, an end without one or a run its room closed on", () => {
+    const { state: solo, t0 } = playing(1)
+    expect(reports(say(solo, 'c0', { t: 'over', tick: 900, h: 'end', result: result(1) }, t0))).toHaveLength(0)
+    expect(roomOf(solo).phase).toBe('ended')
+
+    const { state: split } = playing(2)
+    say(split, 'c0', { t: 'over', tick: 900, h: 'end', result: result(2) }, t0)
+    expect(reports(say(split, 'c1', { t: 'over', tick: 900, h: 'end', result: result(2, 755) }, t0))).toHaveLength(0)
+    expect(roomOf(split).phase).toBe('ended')
+
+    const { state: old } = playing(2)
+    say(old, 'c0', { t: 'over', tick: 900, h: 'end' }, t0)
+    expect(reports(say(old, 'c1', { t: 'over', tick: 900, h: 'end' }, t0))).toHaveLength(0)
+
+    const { state: gone } = playing(2)
+    say(gone, 'c0', { t: 'leave' }, t0)
+    const out = say(gone, 'c1', { t: 'leave' }, t0 + 10)
+    expect(out).toContainEqual({ k: 'wipe' })
+    expect(out.some((e) => e.k === 'report')).toBe(false)
+  })
+
+  it("fits a squad's result in `over` at its longest", () => {
+    const long = { v: 1, difficulty: 'nightmare', challenge: '2026-11-02', time: 14399.983333333334, outcome: 'victory', kills: 99_999_996 }
+    const player = (slot: number) => ({ slot, starter: 'x'.repeat(16), stage: 2, branch: 'y'.repeat(16), shiny: true, level: 9999, kills: 24_999_999 })
+    expect(JSON.stringify({ ...long, players: [0, 1, 2, 3].map(player) }).length).toBeLessThan(LIMITS.result)
   })
 })

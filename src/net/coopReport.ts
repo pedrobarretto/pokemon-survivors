@@ -12,7 +12,7 @@
  */
 
 /** Where the relay posts it. */
-export const COOP_REPORT_PATH = '/coop/report'
+export const COOP_REPORT_PATH = '/coop/report' as const
 
 /**
  * `POST /coop/report` (relay → API). `seats` maps each slot that started the
@@ -20,7 +20,7 @@ export const COOP_REPORT_PATH = '/coop/report'
  * which only the dev relay seats) and its @handle, `left` when it left
  * before the end. `result`: the agreed `CoopResult` as the clients built it
  * (the API parses it with `parseCoopResult`). `votes`: how many clients sent
- * it. Once per (room, run): a retry gets `duplicate`.
+ * it. Once per (room, run, endedAt): a retry gets `duplicate`.
  */
 export type CoopReport = {
   v: 1

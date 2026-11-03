@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { ArenaReport } from '../../src/net/arena'
-import { RETRY_MS, SIGNATURE_HEADER, createOutbox, outcomeOf, sign, type Fetcher, type Outgoing } from '../src/report'
+import { COOP_REPORT_PATH, type CoopReport } from '../../src/net/coopReport'
+import { ARENA_REPORT_PATH, RETRY_MS, SIGNATURE_HEADER, createOutbox, outcomeOf, parseOutgoing, sign, type Fetcher, type Outgoing } from '../src/report'
 
-const report = (run = 1): ArenaReport => ({ v: 1, room: 'ABCDE', run, kind: 'ranked', region: 'enam', endedAt: 5000, seats: [{ slot: 0, userId: 'user_ash', handle: 'ash', left: false }], result: { v: 1 } })
+const arena = (run = 1): ArenaReport => ({ v: 1, room: 'ABCDE', run, kind: 'ranked', region: 'enam', endedAt: 5000, seats: [{ slot: 0, userId: 'user_ash', handle: 'ash', left: false }], result: { v: 1 } })
+const report = (run = 1) => ({ path: ARENA_REPORT_PATH, report: arena(run) })
 
 /** A fake API answering each post with the next status of `statuses` (the last one after that), recording what came. */
 const api = (statuses: number[]) => {
@@ -42,7 +44,7 @@ describe('arena reports', () => {
     await box.add(report())
     expect(posts).toHaveLength(1)
     expect(posts[0]?.url).toBe('https://api.test/arena/report')
-    expect(JSON.parse(posts[0]?.body ?? '')).toEqual(report())
+    expect(JSON.parse(posts[0]?.body ?? '')).toEqual(arena())
     expect(posts[0]?.signature).toBe(await sign('s3cret', posts[0]?.body ?? ''))
     expect(stored.size).toBe(0)
     expect(logs).toEqual(['arena.report.sent'])
@@ -84,5 +86,25 @@ describe('arena reports', () => {
     await off.add(report())
     expect(none.posts).toHaveLength(0)
     expect(logs).toEqual(['arena.report.noApi'])
+  })
+
+  it("posts a co-op run's report to its own path, apart from an Arena match's of the same room and run", async () => {
+    const { posts, fetcher } = api([503])
+    const now = { t: 1000 }
+    const { box, stored, logs } = outboxWith(fetcher, now)
+    const coop: CoopReport = { v: 1, room: 'ABCDE', run: 1, region: 'sam', endedAt: 5000, seats: [], result: { v: 1 }, votes: 2 }
+    await box.add({ path: COOP_REPORT_PATH, report: coop })
+    await box.add(report())
+    expect(posts.map((p) => p.url)).toEqual(['https://api.test/coop/report', 'https://api.test/arena/report'])
+    expect(stored.size).toBe(2)
+    expect([...stored.values()].map((o) => o.path).sort()).toEqual([ARENA_REPORT_PATH, COOP_REPORT_PATH])
+    expect(logs).toEqual(['coop.report.retry', 'arena.report.retry'])
+  })
+
+  it('reads an entry stored before entries had a path as an Arena report, and refuses an unknown path', () => {
+    const kept = { id: 'ABCDE-1-5000', body: '{}', attempts: 2, at: 7 }
+    expect(parseOutgoing(kept)).toEqual({ ...kept, path: ARENA_REPORT_PATH })
+    expect(parseOutgoing({ ...kept, path: COOP_REPORT_PATH })?.path).toBe(COOP_REPORT_PATH)
+    expect(parseOutgoing({ ...kept, path: '/elsewhere' })).toBeNull()
   })
 })

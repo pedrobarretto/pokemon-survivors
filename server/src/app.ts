@@ -7,6 +7,7 @@ import { parseAdminGift, parseAdminQuery } from '../../src/game/admin'
 import { parseArenaResult } from '../../src/game/arenaRank'
 import { parseBugReport } from '../../src/game/bugReport'
 import { challengeOpen } from '../../src/game/challenge'
+import { parseTeamSize } from '../../src/game/coopBoard'
 import { parseDonation } from '../../src/data/donations'
 import { isPollOptionOf, type PollKind } from '../../src/data/supporters'
 import { isDayKey } from '../../src/game/day'
@@ -27,6 +28,7 @@ import type { AdminStore } from './admin'
 import { ARENA_PAGES, parseAbandonedReport, parseArenaReport, shownSeason, verifyArenaSignature, type ArenaStore } from './arena'
 import type { Verify } from './auth'
 import type { BugReports } from './bugReports'
+import { coopListing, parseCoopReport, type CoopBoardStore } from './coopBoards'
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report } from './errors'
@@ -69,7 +71,9 @@ export type AppDeps = {
   moderation: Pick<ModerationStore, 'banned' | 'report' | 'open' | 'act'>
   /** The Arena's ranked layer: reports, ratings, history and the season's board. */
   arena: Pick<ArenaStore, 'report' | 'abandoned' | 'practice' | 'takePractice' | 'tickets' | 'profile' | 'history' | 'leaderboard'>
-  /** The secret the relay signs Arena reports and ticket lookups with; unset, those routes answer 503. */
+  /** The co-op boards and the Desafio co-op do dia's: the relay's run reports and the boards by team. */
+  coop: Pick<CoopBoardStore, 'report' | 'board' | 'challengeBoard'>
+  /** The secret the relay signs Arena and co-op reports and ticket lookups with; unset, those routes answer 503. */
   arenaReportSecret: string | undefined
   /** Linking a Patreon account (its OAuth client), null when the server has none. */
   patreon: Pick<PatreonOAuth, 'linkUrl' | 'readState' | 'patronOf'> | null
@@ -118,7 +122,7 @@ const INVITE_ERRORS = { notFriend: 404, limit: 429 } as const
 /** What a festival donation answers when it's refused, by `DonateError`. */
 const DONATE_ERRORS = { closed: 409, profile: 403, runs: 403, cap: 409, funds: 409, nosave: 409, stale: 409 } as const satisfies Record<DonateError, number>
 
-/** How far ahead of this clock a relay's `endedAt` may be (its clock drifts a little). */
+/** How far ahead of this clock a relay's `endedAt` (an Arena match's or a co-op run's) may be (its clock drifts a little). */
 const ARENA_CLOCK_SKEW_MS = 5 * 60_000
 
 /** An Arena practice's optional retry key. */
@@ -269,8 +273,16 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   201 `{ match }` (200 `{ duplicate: true }` for a retried `key`), 400 invalid or a bot's slot, 429 past the hourly limit.
  * - `GET /arena/me` (auth): `ArenaProfile`. `GET /arena/history?before=<ms>&limit=` (auth): `ArenaHistoryEntry[]`, newest first.
  * - `GET /arena/leaderboard?season=N&limit=`: `ArenaLeaderboard`, the season's top rows, with a token the asker's own.
+ * - `POST /coop/report` (relay, signed like `/arena/report`) `CoopReport`: a finished co-op run, once per (room, run, endedAt).
+ *   `CoopReportResponse`: the stored run (a retry gets it with `duplicate`), or `run: null` (200) when it doesn't list
+ *   (`coopListing`: a guest seat, a single player, under 2 votes, a result that doesn't parse, a challenge off its day or
+ *   difficulty). 400 malformed or ended in the future, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
+ * - `GET /coop/boards/:difficulty?size=duo|trio|squad&period=day|week|all&friends=1`: `CoopBoard`, the top teams (best run
+ *   each; challenge runs stay off it) and with a token the asker's best team (`me`). `size` 2 to 4 or its key (duo when
+ *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
+ * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
  */
-export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
 
@@ -393,6 +405,25 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!isDayKey(day)) return c.json({ error: 'unknown day' }, 400)
     if (friends && !c.var.userId) return c.json({ error: 'unauthorized' }, 401)
     return c.json(await ranking.challengeBoard(day, friends, c.var.userId))
+  })
+
+  app.get('/coop/boards/:difficulty', maybeAuth, async (c) => {
+    const difficulty = c.req.param('difficulty')
+    const size = parseTeamSize(c.req.query('size') ?? 'duo')
+    const period = c.req.query('period') ?? 'all'
+    const friends = c.req.query('friends') === '1'
+    if (!isDifficulty(difficulty) || size === null || !isBoardPeriod(period)) return c.json({ error: 'unknown board' }, 400)
+    if (friends && !c.var.userId) return c.json({ error: 'unauthorized' }, 401)
+    return c.json(await coop.board({ size, difficulty, period, friends, viewer: c.var.userId }))
+  })
+
+  app.get('/coop/challenge/:day', maybeAuth, async (c) => {
+    const day = c.req.param('day')
+    const size = parseTeamSize(c.req.query('size') ?? 'duo')
+    const friends = c.req.query('friends') === '1'
+    if (!isDayKey(day) || size === null) return c.json({ error: 'unknown board' }, 400)
+    if (friends && !c.var.userId) return c.json({ error: 'unauthorized' }, 401)
+    return c.json(await coop.challengeBoard(day, size, friends, c.var.userId))
   })
 
   app.get('/profiles/:handle', maybeAuth, async (c) => {
@@ -720,6 +751,16 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const r = parseArenaReport(signed.body)
     if (!r || r.endedAt > Date.now() + ARENA_CLOCK_SKEW_MS) return c.json({ error: 'invalid report' }, 400)
     return c.json(await arena.report(r))
+  })
+
+  app.post('/coop/report', bodyLimit({ maxSize: 32 * 1024 }), async (c) => {
+    const signed = await relayBody(c)
+    if ('error' in signed) return signed.error
+    const r = parseCoopReport(signed.body)
+    if (!r || r.endedAt > Date.now() + ARENA_CLOCK_SKEW_MS) return c.json({ error: 'invalid report' }, 400)
+    // A run that doesn't list is still taken (200), so the relay's outbox lets it go.
+    const listing = coopListing(r)
+    return c.json(listing ? await coop.report(r, listing) : { run: null, duplicate: false })
   })
 
   app.post('/arena/tickets', smallBody, async (c) => {

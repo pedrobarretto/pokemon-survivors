@@ -99,7 +99,7 @@ export const LIMITS = {
   inputString: 24,
   build: 40,
   hash: 32,
-  /** An Arena match's result riding on `over` (`ArenaResult` as JSON, opaque to the relay). */
+  /** A run's result riding on `over` (an Arena match's `ArenaResult`, a co-op run's `CoopResult`, as JSON, opaque to the relay). */
   result: 2048,
   /** A Clerk session token. */
   token: 4096,
@@ -259,9 +259,10 @@ export type BatchedMessage =
   /** The full-state hash at `tick` (a multiple of `HASH_EVERY`). */
   | { t: 'hash'; tick: number; h: string }
   /**
-   * The run ended in this client's simulation at `tick`, with this state hash. An Arena match adds its
-   * `result` (`ArenaResult` from `game/arenaRank.ts`, as JSON): the relay reports the one the end's
-   * majority agrees on (string equality) to the API. A relay before it drops `result`.
+   * The run ended in this client's simulation at `tick`, with this state hash, and its `result` as
+   * JSON (an Arena match's `ArenaResult` from `game/arenaRank.ts`, a co-op run's `CoopResult` from
+   * `game/coopBoard.ts`): the relay reports the one the end's majority agrees on (string equality)
+   * to the API. A relay before it drops `result`.
    */
   | { t: 'over'; tick: number; h: string; result?: string }
   /**
