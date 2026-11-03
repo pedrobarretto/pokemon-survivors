@@ -15,7 +15,7 @@ import { canvasLosses, canvasRestored, checkCanvases, context2d, dropLobbyArt, h
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
-import { BIOME_ORDER, BIOMES, type BiomeId, type WeatherId } from './data/biomes'
+import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
 import { MEGA_LINES, MEGAS, megasOf, type MegaId } from './data/megas'
 import { isRiftLegend } from './data/rifts'
@@ -52,7 +52,7 @@ import { shopIcon, tmPicture } from './ui/shopIcons'
 import { CONSUMABLES } from './game/consumables'
 import { depositEggs, EGG_TIERS, EGGS, freeSlots, grantEgg, hatchEgg, incubatorSlots, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
 import { useQuick } from './game/incubator'
-import { setBiome } from './game/biomes'
+import { biomeDevTools } from './ui/biomeDev'
 import { addCandies, HAUNT_DEX, recordHunt } from './game/halloween'
 import { HALLOWEEN, isNightBoss, NIGHT_BOSSES } from './data/halloween'
 import { jackIcon, treatIcon } from './render/halloweenArt'
@@ -585,7 +585,7 @@ describeWith(() => {
       time: Math.floor(g.time),
       level: localPlayer(g).level,
       phase: g.phase,
-      biome: g.biome.id,
+      biome: localPlayer(g).biome,
       enemies: g.enemies.length,
       projectiles: g.attacks.length + g.hazards.length,
       wave: EVENTS[g.nextEvent - 1]?.kind ?? '',
@@ -2004,11 +2004,12 @@ const handleEvent = (r: Run, e: GameEvent) => {
       wonLastRun = true
       return playSfx('evolve')
     case 'biome': {
-      const w = t().world
+      // Its name, and the types that live there (the horde leans to them).
+      const m = t()
       playSfx('item')
       return banner(
         ui,
-        h('span', { class: 'biome-banner' }, h('small', {}, w.area(BIOME_ORDER.indexOf(e.biome) + 1, BIOME_ORDER.length)), h('b', {}, w.biomes[e.biome])),
+        h('span', { class: 'biome-banner' }, h('small', {}, BIOMES[e.biome].affinity.map((type) => m.types[type]).join(' · ')), h('b', {}, m.world.biomes[e.biome])),
         2800,
       )
     }
@@ -2187,7 +2188,7 @@ const themeFor = (r: Run | null): ThemeId | null => {
   // A wave legendary plays its own theme from its entrance on.
   const boss = r.game.bossId === null ? undefined : r.game.enemies.find((e) => e.id === r.game.bossId)
   if (boss && isWaveLegend(boss.kind)) return LEGEND_THEME[boss.kind]
-  return r.game.bossId !== null || r.game.rift.arena !== null ? 'boss' : inside ? PLACES[inside.id].theme : BIOMES[r.game.biome.id].theme
+  return r.game.bossId !== null || r.game.rift.arena !== null ? 'boss' : inside ? PLACES[inside.id].theme : BIOMES[localPlayer(r.game).biome].theme
 }
 
 /* ---------------- Global keys ---------------- */
@@ -3471,7 +3472,7 @@ const hasIdle = 'requestIdleCallback' in window
  * Sculpts terrain sprites (`warmScenery`) and makes the level-up icons (`warmIcon`)
  * in the browser's idle time, as many as the frame's slack allows, so neither
  * stalls a frame the first time it shows. Once all are made it checks again
- * every second (the run moves on to new biomes). Without `requestIdleCallback`
+ * every second (the player walks into new biomes). Without `requestIdleCallback`
  * (Safari), one per timer.
  */
 const pumpWarmUp = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => {
@@ -3916,9 +3917,9 @@ const devOtherDevice = (coins = 1000, time = 754) => {
 
 /**
  * Dev: walks the player to the nearest piece of terrain of a kind (`rock`,
- * `tree`, `cliff`, `tower` or `lake`), standing `dy` px south of it, e.g. `ps.terrain('cliff')`.
+ * `tree`, `cliff`, `tower` or `lake`; in a cell of `biome` when given), standing `dy` px south of it, e.g. `ps.terrain('cliff')`.
  */
-const devTerrain = (g: Game, kind: SolidKind | 'lake' = 'cliff', dy = 70) => {
+const devTerrain = (g: Game, kind: SolidKind | 'lake' = 'cliff', dy = 70, biome?: BiomeId) => {
   const C = TERRAIN.cell
   const pcx = Math.floor(localPlayer(g).x / C)
   const pcy = Math.floor(localPlayer(g).y / C)
@@ -3927,6 +3928,7 @@ const devTerrain = (g: Game, kind: SolidKind | 'lake' = 'cliff', dy = 70) => {
       for (let cx = pcx - r; cx <= pcx + r; cx++) {
         if (Math.max(Math.abs(cx - pcx), Math.abs(cy - pcy)) !== r) continue
         const f = featureAt(g.terrain.seed, cx, cy)
+        if (biome && f?.biome !== biome) continue
         const spot = kind === 'lake' ? f?.lake : f?.solids.find((s) => s.kind === kind)
         if (!spot) continue
         const at = clearSpot(g, { x: spot.x, y: spot.y + dy }, localPlayer(g).radius + 2)
@@ -4197,7 +4199,7 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
   return "ps.arena('hub', tab) · ('fake', scenario?) · ('queue', 'ranked' | 'casual', 'match' | 'downgrade' | 'hold' | 'blocked') · ('end', kind) · ('season', 'pre' | 'on')"
 }
 
-// `ps.biome('cave')` and `ps.weather('rain')` stage a run for screenshots (they hold until the next scheduled change).
+// `ps.biome('cave')` walks to the nearest cave region and `ps.weather('rain')` stages the sky for screenshots (it holds until the next scheduled change).
 if (import.meta.env.DEV) {
   const withRun = (fn: (g: Game) => void) => (run ? fn(run.game) : console.warn('ps: start a run first'))
   Object.assign(window, {
@@ -4363,8 +4365,9 @@ if (import.meta.env.DEV) {
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
       card: (partner: PlayableId = loadSave().partner) => (endRun(), setScreen(sharePreview(ui, input, trainerShare(partner), () => showTitle()))),
-      biome: (id: BiomeId) => withRun((g) => setBiome(g, id)),
-      terrain: (kind?: SolidKind | 'lake', dy?: number) => (run ? devTerrain(run.game, kind, dy) : console.warn('ps: start a run first')),
+      ...biomeDevTools(() => run?.game),
+      /** `ps.terrain('tower', 70, 'desert')` walks you to the nearest tower in a desert cell (any biome without the third argument). */
+      terrain: (kind?: SolidKind | 'lake', dy?: number, biome?: BiomeId) => (run ? devTerrain(run.game, kind, dy, biome) : console.warn('ps: start a run first')),
       /** `ps.landmark('maze')` walks you to the nearest maze (`cottage`, `tunnel`, `ruins`, `camp`; any without an argument), 60 px south of it. */
       landmark: (id?: LandmarkId, dy?: number) => (run ? devLandmark(run.game, id, dy) : console.warn('ps: start a run first')),
       weather: (id: WeatherId) => withRun((g) => setWeather(g, id)),

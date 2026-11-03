@@ -1,8 +1,10 @@
+import type { BiomeId } from './biomes'
+
 /**
  * Scenery that gets in the way: rocks, trees, bushes, fallen logs, mountains
  * and towers block whoever walks, lakes slow them. Every shape here is a union of ellipses on
  * the ground (world px, relative to the feature's anchor), the same in every
- * biome: the biome only dresses it (`render/terrain.ts`). Placement and
+ * biome but a tower's (`TOWER_FEET`): the biome only dresses it (`render/terrain.ts`). Placement and
  * collision live in `game/terrain.ts`.
  */
 
@@ -22,6 +24,19 @@ export const SOLID_FOOT = {
   log: { x: 0, y: -2, rx: 19, ry: 5 },
   tower: { x: 0, y: -1, rx: 15, ry: 7 },
 } as const satisfies Record<Exclude<SolidKind, 'cliff'>, Ellipse>
+
+/**
+ * A biome's signature structure takes a tower's cell, on its own footprint
+ * (one per variant, drawn from the seed): the desert's pyramids, Mt. Chimney's
+ * cone, the Power Plant's generator hall beside its smokestack, a wreck on the
+ * beach beside the lighthouse. Other biomes raise a tower on `SOLID_FOOT.tower`.
+ */
+export const TOWER_FEET: Partial<Record<BiomeId, readonly (readonly Ellipse[])[]>> = {
+  beach: [[SOLID_FOOT.tower], [{ x: 0, y: -8, rx: 50, ry: 12 }]],
+  plant: [[SOLID_FOOT.tower], [{ x: -26, y: -12, rx: 32, ry: 14 }, { x: 26, y: -12, rx: 32, ry: 14 }]],
+  desert: [[{ x: 0, y: -14, rx: 58, ry: 18 }], [{ x: 0, y: -14, rx: 54, ry: 17 }]],
+  volcano: [[{ x: 0, y: -14, rx: 54, ry: 18 }]],
+}
 
 /** Mountains, as terraced footprints. Kept close to convex so the horde slides around them instead of getting stuck. */
 export const CLIFFS: readonly (readonly Tier[])[] = [

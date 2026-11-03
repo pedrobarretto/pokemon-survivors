@@ -100,7 +100,7 @@ const zonesAlive = (g: Game) => {
 /** Fires one world attack of `pattern` at a player (they take turns, `anchorPlayer`). Exported for the dev console (`ps.hazard`). */
 export const fireWorldHazard = (g: Game, pattern: WorldPatternId) => {
   const p = anchorPlayer(g)
-  const flavor = hazardFlavor(weatherHere(g), g.biome.id)
+  const flavor = hazardFlavor(weatherHere(g), p.biome)
   const delay = hazardTelegraph(g.difficulty)
   const damage = hazardDamage(g.difficulty, g.time)
   switch (pattern) {

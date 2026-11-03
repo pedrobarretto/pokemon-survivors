@@ -1,6 +1,7 @@
 import { context2d, createCanvas, fromStrings, lazy, blitPacked, textSprite, type Palette, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
+import { biomeAt } from '../game/biomeMap'
 import type { ArenaShape, FloorPlan } from '../data/arenas'
 import type { LandmarkId } from '../data/landmarks'
 import type { PlaceId } from '../data/places'
@@ -63,6 +64,10 @@ const LOOKS: Record<BiomeId, Look> = {
   cave: { ground: '#5a4c4e', dither: '#625456', bush: '#504446', tree: '#3e3436', rock: '#9a8e8a', cliff: '#3a2e2e', cliffTop: '#7a6a62', water: '#3a6aa0', shore: '#7aa0c8' },
   snow: { ground: '#a8b8cc', dither: '#b4c4d6', bush: '#8aa0b4', tree: '#4a6a62', rock: '#6a7480', cliff: '#5a6474', cliffTop: '#8a96a6', water: '#5a90d0', shore: '#c8e8f8' },
   tower: { ground: '#4c4460', dither: '#544c68', bush: '#423a56', tree: '#2e2840', rock: '#8a84a0', cliff: '#2a2438', cliffTop: '#6a6284', water: '#40508c', shore: '#8a98d0' },
+  beach: { ground: '#c8b07c', dither: '#d4bc88', bush: '#7ca050', tree: '#3c7c34', rock: '#a09080', cliff: '#9c7850', cliffTop: '#8cb860', water: '#2c90c8', shore: '#88d8f0' },
+  plant: { ground: '#6c7078', dither: '#747880', bush: '#a08848', tree: '#4c5058', rock: '#9ca4b0', cliff: '#3c4048', cliffTop: '#7c8490', water: '#18807a', shore: '#60d0c0' },
+  desert: { ground: '#c49460', dither: '#cc9c68', bush: '#7c7c38', tree: '#3c7834', rock: '#a87c50', cliff: '#8c4c2c', cliffTop: '#c89458', water: '#2c8cc0', shore: '#78c8e8' },
+  volcano: { ground: '#3c3234', dither: '#443a3c', bush: '#2c2224', tree: '#1c1416', rock: '#7c6c6c', cliff: '#2a2022', cliffTop: '#6a6262', water: '#3c9cac', shore: '#e0a868' },
 }
 
 const ROOM_LOOK = { void: '#141020', floor: '#5a5270', dither: '#625a7a', edge: '#8a82a8', water: '#2c4c90', shallow: '#4a74b8', lava: '#e05020' } as const
@@ -304,7 +309,7 @@ const drawFeature = (ctx: Ctx, v: View, f: Feature, look: Look) => {
 
 /* ---------------- Ground ---------------- */
 
-/** The ground drawn last and where (`key`): painted again only when the map scrolls a pixel or the biome changes, since `putImageData` is slow on phones. */
+/** The ground drawn last and where (`key`): painted again only when the map scrolls a pixel, since `putImageData` is slow on phones. */
 const GROUND = lazy(() => {
   const canvas = createCanvas(S, S)
   const ctx = context2d(canvas)
@@ -313,17 +318,39 @@ const GROUND = lazy(() => {
 
 const rgb = (hex: string) => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)] as const
 
-/** The ground, a sparse dither fixed to the world so it scrolls with the player. */
-const drawGround = (ctx: Ctx, v: View, base: string, dither: string, seed: number) => {
+/** Each biome's two ground colors on the map. */
+const groundRgb = new Map<BiomeId, readonly [ReturnType<typeof rgb>, ReturnType<typeof rgb>]>()
+const colorsOf = (biome: BiomeId) => {
+  let c = groundRgb.get(biome)
+  if (!c) groundRgb.set(biome, (c = [rgb(LOOKS[biome].ground), rgb(LOOKS[biome].dither)]))
+  return c
+}
+
+/** The biome under each map px, by its place on the world's map grid: scrolling a px only looks up the new row or column. */
+const pixelBiomes = new Map<number, BiomeId>()
+let pixelSeed = -1
+
+const biomeOfPixel = (seed: number, scale: number, gx: number, gy: number) => {
+  if (seed !== pixelSeed || pixelBiomes.size > 16000) {
+    pixelBiomes.clear()
+    pixelSeed = seed
+  }
+  const key = (gx & 0xffff) * 0x10000 + (gy & 0xffff)
+  let b = pixelBiomes.get(key)
+  if (!b) pixelBiomes.set(key, (b = biomeAt(seed, (gx + 0.5) * scale, (gy + 0.5) * scale)))
+  return b
+}
+
+/** The ground, each map px in its biome's colors with a sparse dither fixed to the world, so it scrolls with the player. */
+const drawGround = (ctx: Ctx, v: View, seed: number) => {
   const ground = GROUND()
-  const key = `${v.ox},${v.oy},${base},${dither},${seed}`
+  const key = `${v.ox},${v.oy},${v.scale},${seed}`
   if (ground.key !== key) {
     ground.key = key
     const data = ground.img.data
-    const a = rgb(base)
-    const b = rgb(dither)
     for (let y = 0; y < S; y++) {
       for (let x = 0; x < S; x++) {
+        const [a, b] = colorsOf(biomeOfPixel(seed, v.scale, x + v.ox, y + v.oy))
         const c = hash2(x + v.ox, y + v.oy, seed) < 0.12 ? b : a
         const i = (y * S + x) * 4
         data[i] = c[0]
@@ -501,8 +528,7 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     if (inside?.id === 'cave' && inside.state.chest && !inside.state.chest.open) marker(ctx, v, shape, art.events.chest, inside.x + inside.state.chest.x, inside.y + inside.state.chest.y, true)
     if (inside?.id === 'graveyard') marker(ctx, v, shape, art.keystone, inside.x + inside.state.keystone[0], inside.y + inside.state.keystone[1], true)
   } else {
-    const look = LOOKS[g.biome.id]
-    drawGround(ctx, v, look.ground, look.dither, g.terrain.seed)
+    drawGround(ctx, v, g.terrain.seed)
     const cell = TERRAIN.cell
     const x0 = Math.floor((v.ox * scale) / cell)
     const y0 = Math.floor((v.oy * scale) / cell)
@@ -513,11 +539,11 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
       for (let cx = x0; cx <= x1; cx++) {
         const f = featureFor(g.terrain.seed, cx, cy)
         if (!f) continue
-        drawFeature(ctx, v, f, look)
+        drawFeature(ctx, v, f, LOOKS[f.biome ?? localPlayer(g).biome])
         if (f.landmark) marks.push(f)
       }
     }
-    if (g.place.entrance) drawFeature(ctx, v, g.place.entrance.terrain, look)
+    if (g.place.entrance) drawFeature(ctx, v, g.place.entrance.terrain, LOOKS[g.place.entrance.terrain.biome ?? localPlayer(g).biome])
     drawViewBox(ctx, v, g)
     for (const f of marks) {
       const lm = f.landmark!

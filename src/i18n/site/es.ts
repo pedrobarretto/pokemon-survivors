@@ -386,12 +386,13 @@ export const siteEs: SiteMessages = {
       bossTrio: (names: string) => `Jefe: el trío legendario de la partida (${names})`,
     },
     world: {
-      paragraphs: (count, minutes, odds) => [
-        `La partida atraviesa ${count} biomas, ${n(minutes)} minutos en cada uno, sin pantalla de carga: el suelo se disuelve en el escenario siguiente y cada bioma tiene su propia música. Los objetos rompibles también cambian de aspecto (en la cueva, la hierba alta se vuelve una roca y el árbol de bayas, un hongo gigante).`,
-        `Cada bioma inclina la horda hacia sus tipos: las especies nuevas de cada fase tienen ${n(odds)}x más probabilidad de ser de un tipo local (más Planta y Bicho en el bosque, más Roca y Tierra en la cueva), sin dejar de lado a los demás.`,
-        'El clima cambia algunas veces por partida y afecta a todos: a tus movimientos y a los ataques de los enemigos. Cada bioma tiene sus climas más probables, y el ícono del clima aparece junto al reloj.',
+      paragraphs: (count, odds) => [
+        `El mapa es un mosaico de ${count} biomas, al estilo Minecraft: cada región mide varias pantallas de ancho y, caminando, sales de una y entras en la siguiente sin pantalla de carga. En la frontera el suelo se mezcla poco a poco y, al entrar en un bioma nuevo, su nombre aparece en pantalla y la música cambia. La partida siempre empieza en la Ruta 1; cerca están los biomas tranquilos, más allá la cueva, la central y el desierto, lejos la nieve, el volcán y la torre, y mucho más lejos todo se mezcla. Cada partida sortea dónde queda cada región. El terreno, los objetos rompibles y los puntos de interés se visten con el bioma donde están (pirámides en el desierto, un faro en la playa, chimeneas en la central).`,
+        `Cada bioma inclina la horda hacia sus tipos: a tu alrededor, las especies de la fase con un tipo local aparecen ${n(odds)}x más (más Planta y Bicho en el bosque, más Roca y Tierra en la cueva), sin dejar de lado las demás. La dificultad y las fases siguen el reloj, estés donde estés.`,
+        'El clima cambia algunas veces por partida y afecta a todos: a tus movimientos y a los ataques de los enemigos. Sigue el bioma donde estás (en cooperativo, el de quien lidera el equipo), y el ícono del clima aparece junto al reloj.',
       ],
-      timeHead: 'Desde',
+      ringHead: 'Dónde',
+      rings: ['Cerca del inicio', 'Más allá', 'Lejos'],
       biomeHead: 'Bioma',
       hordeHead: 'Tipos de la horda',
       weatherHead: 'Climas (del más al menos común)',

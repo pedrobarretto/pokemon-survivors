@@ -40,7 +40,7 @@ export const PLACES = {
     time: 100,
     species: ['zubat', 'diglett', 'geodude', 'roggenrola', 'sableye', 'aron', 'graveler', 'golbat', 'dugtrio', 'golem', 'crobat', 'excadrill'],
     spawn: { rate: 0.9, max: 14 },
-    biomes: { cave: 3, meadow: 1.5 },
+    biomes: { cave: 3, meadow: 1.5, desert: 1.5, volcano: 1.5 },
     door: 12,
     theme: 'cave',
   },
@@ -58,7 +58,7 @@ export const PLACES = {
     time: 50,
     species: ['pidgey', 'spearow', 'starly', 'taillow', 'swablu', 'staravia', 'pidgeotto', 'swellow', 'fearow', 'skarmory', 'staraptor', 'pidgeot', 'altaria'],
     spawn: { rate: 1.1, max: 14 },
-    biomes: {},
+    biomes: { beach: 1.5 },
     flyers: true,
     // The whole updraft lifts: walking across its middle is enough.
     door: 22,

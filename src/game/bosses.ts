@@ -54,8 +54,8 @@ const fire = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | nul
 
 /** Launches a boss's attack at player `p`, pressed by its fight's difficulty (`attackCount`, `telegraph`); a rift legendary in the old arena passes no fight. */
 const launch = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | null, p: Player) => {
-  // Judgment takes the biome's plate.
-  const pattern = written.plate && 'visual' in written ? { ...written, visual: JUDGMENT_PLATE[g.biome.id] } : written
+  // Judgment takes the plate of the biome its target stands in.
+  const pattern = written.plate && 'visual' in written ? { ...written, visual: JUDGMENT_PLATE[p.biome] } : written
   switch (pattern.kind) {
     case 'strikes': {
       const center = pattern.target === 'player' ? p : boss

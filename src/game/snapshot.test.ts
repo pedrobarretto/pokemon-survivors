@@ -125,8 +125,8 @@ describe('snapshot and restore', () => {
       for (const m of r.covered) covered.add(m)
     }
     expect(checkpoints).toBeGreaterThan(20)
-    // A legend's awakening, a whole domain, the places and a tunnel come up along the way (`moments`).
-    expect([...covered].sort()).toEqual(expect.arrayContaining(['awakening', 'boss', 'domain:battle', 'domain:capture', 'domain:crossing', 'evolving', 'levelup', 'place:cave', 'place:graveyard', 'tunnel']))
+    // A legend's awakening, a whole domain, a place and the pick screens come up along the way (`moments`); the graveyard and a tunnel have cases of their own below.
+    expect([...covered].sort()).toEqual(expect.arrayContaining(['ability', 'awakening', 'boss', 'domain:battle', 'domain:capture', 'domain:crossing', 'domain:encounter', 'evolving', 'levelup', 'place:cave', 'pokeball', 'tm']))
   }, 120_000)
 
   it.each([

@@ -9,6 +9,7 @@ import { notifyPlace, solidAt } from './placeKit'
 import { teamFlies } from './sky'
 import { isOpen } from './terrain'
 import { anchorPlayer } from './players'
+import { biomeOf } from './biomeMap'
 import { coopLocked } from '../data/coop'
 import type { Game } from './types'
 import * as dm from '../engine/dmath'
@@ -41,7 +42,7 @@ const entranceSpot = (g: Game) => {
 }
 
 /** Opens place `id`'s entrance at (x, y), or at a free spot past the screen's edge; tries again shortly if there's none. */
-export const openEntrance = (g: Game, id: PlaceId = pickPlace(g.rng, { offered: g.place.offered, biome: g.biome.id, flyer: teamFlies(g) }), at?: { x: number; y: number }) => {
+export const openEntrance = (g: Game, id: PlaceId = pickPlace(g.rng, { offered: g.place.offered, biome: anchorPlayer(g).biome, flyer: teamFlies(g) }), at?: { x: number; y: number }) => {
   const spot = at ?? entranceSpot(g)
   if (!spot) {
     g.place.nextAt = g.time + 3
@@ -49,7 +50,7 @@ export const openEntrance = (g: Game, id: PlaceId = pickPlace(g.rng, { offered: 
   }
   const { x, y } = spot
   const solids = ENTRANCE_PIECES[id].map(([piece, dx, dy], i) => solidAt(piece, PLACE_FEET[piece], x + dx, y + dy, i))
-  g.place.entrance = { id, x, y, left: PLACE.openTime, charge: 0, open: true, terrain: { solids, lake: null } }
+  g.place.entrance = { id, x, y, left: PLACE.openTime, charge: 0, open: true, terrain: { solids, lake: null, biome: biomeOf(g, x, y) } }
   g.place.offered.push(id)
   g.place.nextAt = nextPlaceAt(g.place.nextAt, g.time, g.rng)
   // Breakables that stood where the entrance now is make room for it.

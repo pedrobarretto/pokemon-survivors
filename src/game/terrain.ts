@@ -2,7 +2,7 @@ import { hash2, weightedPick } from '../engine/rng'
 import { abilityImmune } from './abilities'
 import { playerForm } from './branch'
 import type { ArenaPiece } from '../data/arenas'
-import { CLIFFS, CLUSTER_SLOTS, LAKES, SOLID_FOOT, TERRAIN, type Ellipse, type FeatureKind, type SolidKind } from '../data/terrain'
+import { CLIFFS, CLUSTER_SLOTS, LAKES, SOLID_FOOT, TERRAIN, TOWER_FEET, type Ellipse, type FeatureKind, type SolidKind } from '../data/terrain'
 import type { PlacePiece } from '../data/places'
 import { LANDMARK, LANDMARK_IDS, type LandmarkGround, type LandmarkId, type LandmarkPiece } from '../data/landmarks'
 import { LANDMARK_VARIANTS, landmarkPlan } from './landmarkLayout'
@@ -13,6 +13,8 @@ import { isAirborne } from './traits'
 import { nearestPlayer } from './players'
 import type { Enemy, Game, Pickup } from './types'
 import * as dm from '../engine/dmath'
+import type { BiomeId } from '../data/biomes'
+import { biomeAt } from './biomeMap'
 
 /**
  * Terrain on the map: each world cell deterministically holds at most one
@@ -51,7 +53,8 @@ export type Landmark = {
   mouths: readonly Pos[]
 }
 
-export type Feature = { solids: readonly Solid[]; lake: Lake | null; landmark?: Landmark }
+/** `biome`: the biome of the map cell it stands in (`biomeMap.ts`), which dresses it and freezes its lake in the snow; a room's or an entrance's may go without. */
+export type Feature = { solids: readonly Solid[]; lake: Lake | null; landmark?: Landmark; biome?: BiomeId }
 
 /** The run's terrain seed and the cells built so far (a pure cache: dropping a cell rebuilds it the same). */
 export type TerrainState = { seed: number; cells: Map<number, Feature | null> }
@@ -75,7 +78,7 @@ const CLUSTERS = {
   bushes: { solid: 'bush', min: 2, spread: 4, variants: TERRAIN.bushVariants },
 } as const
 
-const draft = (kind: Exclude<FeatureKind, 'none'>, h: (salt: number) => number): Draft => {
+const draft = (kind: Exclude<FeatureKind, 'none'>, h: (salt: number) => number, biome: BiomeId): Draft => {
   switch (kind) {
     case 'rocks':
     case 'grove':
@@ -109,8 +112,12 @@ const draft = (kind: Exclude<FeatureKind, 'none'>, h: (salt: number) => number):
       const variant = Math.floor(h(3) * LAKES.length)
       return { lake: { variant, foot: LAKES[variant]! }, solids: [] }
     }
-    case 'tower':
-      return { lake: null, solids: [{ kind: 'tower', x: 0, y: 0, variant: 0, foot: [SOLID_FOOT.tower] }] }
+    case 'tower': {
+      // A biome's own structure, on its own footprint (`TOWER_FEET`).
+      const feet = TOWER_FEET[biome]
+      const variant = feet ? Math.floor(h(10) * feet.length) : 0
+      return { lake: null, solids: [{ kind: 'tower', x: 0, y: 0, variant, foot: feet?.[variant] ?? [SOLID_FOOT.tower] }] }
+    }
   }
 }
 
@@ -169,13 +176,15 @@ export const featureAt = (seed: number, cx: number, cy: number): Feature | null 
   const ny = Math.max(oy, Math.min(0, oy + C))
   if (nx * nx + ny * ny < TERRAIN.clearStart * TERRAIN.clearStart) return null
   const h = (salt: number) => hash2(cx, cy, seed + salt)
+  // One biome per cell: its middle's.
+  const biome = biomeAt(seed, ox + C / 2, oy + C / 2)
   const mark = landmarkCell(seed, cx, cy) ? draftLandmark(h) : null
   const kind = mark ? null : weightedPick(() => h(0), KINDS)
   if (kind === 'none') {
     const strewn = scatter(h, ox, oy, [])
-    return strewn.length > 0 ? { solids: strewn, lake: null } : null
+    return strewn.length > 0 ? { solids: strewn, lake: null, biome } : null
   }
-  const d = mark ?? draft(kind!, h)
+  const d = mark ?? draft(kind!, h, biome)
   const feet = [...d.solids.flatMap((s) => s.foot), ...(d.lake?.foot ?? [])]
   const minX = Math.min(...feet.map((e) => e.x - e.rx))
   const maxX = Math.max(...feet.map((e) => e.x + e.rx))
@@ -192,6 +201,7 @@ export const featureAt = (seed: number, cx: number, cy: number): Feature | null 
   return {
     solids: mark ? solids : [...solids, ...scatter(h, ox, oy, placed)],
     lake: d.lake && { x: ax, y: ay, variant: d.lake.variant, foot: d.lake.foot.map((e) => at(e, ax, ay)) },
+    biome,
     ...(mark && plan
       ? {
           landmark: {
@@ -398,11 +408,11 @@ export const isOpen = (g: Game, x: number, y: number, r: number) =>
 
 export type Ground = 'land' | 'water' | 'ice' | 'lava'
 
-/** What the ground is at (x, y): lakes are water, or ice in the snow; a room has its own (`arenaGround`). */
+/** What the ground is at (x, y): lakes are water, or ice in a snow cell; a room has its own (`arenaGround`). */
 export const groundAt = (g: Game, x: number, y: number): Ground => {
   const room = roomOf(g)
   if (room) return arenaGround(room.layout, x - room.x, y - room.y)
-  for (const f of featuresNear(g, x, y, 0)) if (f.lake && inside(f.lake.foot, x, y, 0)) return g.biome.id === 'snow' ? 'ice' : 'water'
+  for (const f of featuresNear(g, x, y, 0)) if (f.lake && inside(f.lake.foot, x, y, 0)) return f.biome === 'snow' ? 'ice' : 'water'
   return 'land'
 }
 

@@ -42,7 +42,7 @@ export const playerForm = (g: Game): EvolutionStage => {
 /** What nudges the draw: the weather where the player stands and the biome. */
 export type BranchContext = { weather: WeatherId; biome: BiomeId }
 
-export const branchContext = (g: Game): BranchContext => ({ weather: weatherHere(g), biome: g.biome.id })
+export const branchContext = (g: Game): BranchContext => ({ weather: weatherHere(g), biome: g.player.biome })
 
 /** Why a branch is offered: the weather or the biome favored its draw, or an evolution item the run holds unlocks it (null: drawn plainly). */
 export type BranchFavor = 'weather' | 'biome' | 'item' | null

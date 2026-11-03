@@ -65,7 +65,7 @@ const DEEP_CHILL: StatusSpec = { kind: 'slow', chance: 1, duration: 1.2, power: 
 const HELD: StatusSpec = { kind: 'freeze', chance: 1, duration: 1, power: 0 }
 
 /** The plate Judgment takes here: the biome's (`JUDGMENT_PLATES`). */
-export const judgmentType = (g: Game) => JUDGMENT_PLATES[g.biome.id]
+export const judgmentType = (g: Game) => JUDGMENT_PLATES[g.player.biome]
 
 /**
  * Burning Bulwark's eruption around (x, y): two rings of magma geysers, the

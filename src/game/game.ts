@@ -16,7 +16,8 @@ import { BAG_ITEMS, type BagItem } from './bag'
 import { branchContext, evolutionOffers, playerForm } from './branch'
 import { createAlphaClock, updateAlphas } from './alphas'
 import { updateAttacks } from './attacks'
-import { createBiome, updateBiome } from './biomes'
+import { updateBiomes } from './biomes'
+import { START_BIOME } from '../data/biomes'
 import { healPlayer } from './combat'
 import { createDexLog } from './dex'
 import { FRESH_LEVELUPS } from './learnsets'
@@ -207,6 +208,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     legend: createLegendState(setup.starter),
     wings: {},
     landmark: createPlayerLandmarks(),
+    biome: START_BIOME,
     round: 0,
     pickLeft: COOP.pick.time,
     away: false,
@@ -271,7 +273,6 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     terrain: createTerrain(seed),
     mapEvents: createMapEvents(),
     flash: 0,
-    biome: createBiome(),
     weather: createWeather(),
     traits: { seen: new Set(), nextIntro: 0 },
     rift: createRiftState(),
@@ -924,11 +925,11 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   g.now += dt
   if (clockRuns(g)) g.time += dt
   // Inside a room (a rift arena, a place) the horde and the map wait outside:
-  // no regular spawns, props, map events, weather or biome changes. A biome
-  // change that came due meanwhile plays on the way out.
+  // no regular spawns, props, map events, weather or biome changes (each
+  // player's biome is read again on the way out).
   const inArena = roomOf(g) !== null
   if (!inArena) {
-    updateBiome(g)
+    updateBiomes(g)
     updateWeather(g, dt)
   }
   const actor = g.player
