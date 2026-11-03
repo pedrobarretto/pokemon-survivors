@@ -5337,6 +5337,10 @@ export const fr: Messages = {
     legendNote: 'Les légendaires capturés s’entraînent ici aussi, avec leurs *éveils* des Nv 12 et 28 dans l’onglet Forme.',
     abilityLater: 'Le talent arrive avec la première évolution.',
     noAbility: 'Aucun',
+    /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
+    noMega: 'Aucune',
+    megaReady: 'Appuie sur *MEGA* (ou E) pour Méga-évoluer. La forme dure et se recharge comme en partie.',
+    megaLocked: 'Choisis la forme finale ci-dessus pour pouvoir Méga-évoluer.',
     count: 'Combien de cibles',
     countOf: (n) => `${n}`,
     target: 'Cible',

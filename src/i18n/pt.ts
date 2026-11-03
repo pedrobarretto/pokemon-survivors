@@ -5689,6 +5689,10 @@ export const pt = {
     /** The Lendários tab of the Dojo's partner select. */
     legendNote: 'Os lendários capturados também treinam aqui, com os *despertares* do Nv 12 e 28 na aba Forma.',
     noAbility: 'Nenhuma',
+    /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
+    noMega: 'Nenhuma',
+    megaReady: 'Aperte *MEGA* (ou E) para Mega Evoluir. A forma dura e recarrega como numa partida.',
+    megaLocked: 'Escolha a forma final na lista acima para poder Mega Evoluir.',
     count: 'Quantos alvos',
     countOf: (n: number) => `${n}`,
     target: 'Alvo',

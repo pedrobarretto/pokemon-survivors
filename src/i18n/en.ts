@@ -5341,6 +5341,10 @@ export const en: Messages = {
     legendNote: 'Captured legends train here too, with their Lv 12 and 28 *awakenings* on the Form tab.',
     abilityLater: 'The ability comes with the first evolution.',
     noAbility: 'None',
+    /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
+    noMega: 'None',
+    megaReady: 'Press *MEGA* (or E) to Mega Evolve. The form lasts and recharges as in a run.',
+    megaLocked: 'Pick the final form above to be able to Mega Evolve.',
     count: 'How many targets',
     countOf: (n) => `${n}`,
     target: 'Target',
