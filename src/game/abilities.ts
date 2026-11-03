@@ -386,8 +386,8 @@ export const updateAbility = (g: Game, dt: number) => {
     switch (e.kind) {
       case 'summon':
         // The weather lives outside: a room (rift arena, place) waits until the player is back.
-        if (s.biome !== g.biome.id && !roomOf(g)) {
-          s.biome = g.biome.id
+        if (s.biome !== g.player.biome && !roomOf(g)) {
+          s.biome = g.player.biome
           setWeather(g, e.weather)
           proc(g, e)
         }

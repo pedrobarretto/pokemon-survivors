@@ -384,12 +384,13 @@ export const siteFr: SiteMessages = {
       bossTrio: (names: string) => `Boss : le trio légendaire de la partie (${names})`,
     },
     world: {
-      paragraphs: (count, minutes, odds) => [
-        `Une partie traverse ${count} biomes, ${n(minutes)} minutes chacun, sans écran de chargement : le sol se fond dans le lieu suivant et chaque biome a sa propre musique. Les éléments destructibles changent aussi d’aspect (dans la grotte, les hautes herbes deviennent un rocher et l’arbre à baies un champignon géant).`,
-        `Chaque biome attire la horde vers ses types : les nouvelles espèces d’une étape ont ${n(odds)}x plus de chances d’avoir un type local (plus de Plante et d’Insecte dans la forêt, plus de Roche et de Sol dans la grotte), sans exclure les autres.`,
-        'La météo change quelques fois par partie et s’applique à tout le monde : tes capacités comme les attaques ennemies. Chaque biome a ses météos probables, et l’icône de la météo s’affiche à côté du chrono.',
+      paragraphs: (count, odds) => [
+        `La carte est un patchwork de ${count} biomes, façon Minecraft : chaque région fait plusieurs écrans de large et, en marchant, tu passes de l’une à l’autre sans écran de chargement. À la frontière, le sol se mélange peu à peu et, en entrant dans un nouveau biome, son nom s’affiche et la musique change. La partie commence toujours sur la Route 1 ; autour se trouvent les biomes paisibles, plus loin la grotte, la Centrale et le désert, au loin la neige, le volcan et la tour, et encore plus loin tout se mélange. Chaque partie tire où se trouve chaque région. Le terrain, les éléments destructibles et les points d’intérêt s’habillent selon leur biome (des pyramides dans le désert, un phare sur la plage, des cheminées à la Centrale).`,
+        `Chaque biome attire la horde vers ses types : autour de toi, les espèces de l’étape ayant un type local apparaissent ${n(odds)}x plus (plus de Plante et d’Insecte dans la forêt, plus de Roche et de Sol dans la grotte), sans écarter les autres. La difficulté et les étapes suivent l’horloge, où que tu sois.`,
+        'La météo change quelques fois par partie et s’applique à tout le monde : tes capacités comme les attaques ennemies. Elle suit le biome où tu te trouves (en coop, celui du chef d’équipe), et l’icône de la météo s’affiche à côté de l’horloge.',
       ],
-      timeHead: 'À partir de',
+      ringHead: 'Où',
+      rings: ['Près du départ', 'Plus loin', 'Au loin'],
       biomeHead: 'Biome',
       hordeHead: 'Types de la horde',
       weatherHead: 'Météo (de la plus à la moins fréquente)',

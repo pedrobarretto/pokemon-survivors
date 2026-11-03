@@ -80,15 +80,16 @@ describe('terrain collision', () => {
     expect(flyer.x).toBe(rock.x + 4)
   })
 
-  it('makes lakes water, and ice in the snow', () => {
+  it('makes lakes water, and ice in a snow cell', () => {
     const g = createGame('charmander', { w: 480, h: 270 }, 1234)
     g.terrain.archetype = 'route'
     g.terrain.cells.clear()
-    const lake = sweep(g.terrain.seed).find(({ f }) => f?.lake)!.f!.lake!
-    expect(groundAt(g, lake.x, lake.y)).toBe('water')
-    g.biome.id = 'snow'
-    expect(groundAt(g, lake.x, lake.y)).toBe('ice')
-    expect(groundAt(g, lake.x, lake.y - 200)).toBe('land')
+    const lakes = sweep(g.terrain.seed, 40).flatMap(({ f }) => (f?.lake ? [{ lake: f.lake, biome: f.biome }] : []))
+    const water = lakes.find((l) => l.biome !== 'snow')!.lake
+    const ice = lakes.find((l) => l.biome === 'snow')!.lake
+    expect(groundAt(g, water.x, water.y)).toBe('water')
+    expect(groundAt(g, ice.x, ice.y)).toBe('ice')
+    expect(groundAt(g, water.x, water.y - 200)).toBe('land')
   })
 })
 

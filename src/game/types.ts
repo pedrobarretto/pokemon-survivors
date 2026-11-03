@@ -19,7 +19,6 @@ import type { AbilityState } from './abilities'
 import type { LandmarkId } from '../data/landmarks'
 import type { LandmarkMoment, LandmarkState, PlayerLandmarks } from './landmarks'
 import type { BranchFavor } from './branch'
-import type { BiomeState } from './biomes'
 import type { Ranks } from './meta'
 import type { ConsumableId } from './consumables'
 import type { DexLog } from './dex'
@@ -205,6 +204,8 @@ export type Player = {
   wings: Partial<Record<WingId, number>>
   /** The treasure this player is opening and the tunnel they're stepping into or walking (`landmarks.ts`). */
   landmark: PlayerLandmarks
+  /** The biome of the map this player stands in (`game/biomes.ts`); held while they're in a room. */
+  biome: BiomeId
   /**
    * Co-op: counts this player's pick screens (and every change of their cards).
    * A pick quotes the round it was made on, so one that arrives after the timer
@@ -719,7 +720,7 @@ export type GameEvent =
   /** The Bag's Max Revive got the player back up. */
   | { kind: 'maxRevive' }
   | { kind: 'victory' }
-  /** The run walked into another biome. */
+  /** The acting player walked into another biome (`game/biomes.ts`): theirs to see. */
   | { kind: 'biome'; biome: BiomeId }
   | { kind: 'weather'; weather: WeatherId; prev: WeatherId }
   /** An enemy trait warned (fuse lit, beam aimed, leap started) or went off. */
@@ -877,8 +878,6 @@ export type Game = {
   mapEvents: MapEventsState
   /** Full-screen white flash strength (Explosion), decays to 0. */
   flash: number
-  /** Biome the run is in (`game/biomes.ts`). */
-  biome: BiomeState
   /** Weather in play (`game/weather.ts`). */
   weather: WeatherState
   /** Enemy traits already introduced this run (each gets one explainer toast), and the game time the next one may show. */

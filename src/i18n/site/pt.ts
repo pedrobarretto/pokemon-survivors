@@ -433,12 +433,13 @@ export const sitePt = {
       bossTrio: (names: string) => `Chefe: o trio lendário da partida (${names})`,
     },
     world: {
-      paragraphs: (count: number, minutes: number, odds: number) => [
-        `A partida atravessa ${count} biomas, ${n(minutes)} minutos em cada um, sem tela de carregamento: o chão se dissolve no cenário seguinte e cada bioma tem a sua música. Os itens quebráveis também mudam de cara (na caverna, a grama alta vira uma rocha e a árvore de frutas vira um cogumelo gigante).`,
-        `Cada bioma puxa a horda para os seus tipos: as espécies novas de cada fase têm ${n(odds)}x mais chance de ser de um tipo da casa (mais Planta e Inseto na floresta, mais Pedra e Terra na caverna), sem deixar de lado os outros.`,
-        'O clima muda algumas vezes por partida e vale para todo mundo: para os seus golpes e para os ataques dos inimigos. Cada bioma tem os seus climas mais prováveis, e o ícone do clima aparece ao lado do relógio.',
+      paragraphs: (count: number, odds: number) => [
+        `O mapa é uma colcha de ${count} biomas, como no Minecraft: cada região tem várias telas de largura e, andando, você sai de uma e entra na outra, sem tela de carregamento. Na divisa o chão se mistura aos poucos e, ao entrar num bioma novo, o nome dele aparece na tela e a música muda. A partida sempre começa na Rota 1; perto dela ficam os biomas calmos, mais adiante a caverna, a usina e o deserto, lá longe a neve, o vulcão e a torre, e bem mais longe tudo se mistura. Cada partida sorteia onde fica cada região. O terreno, os itens quebráveis e os pontos de interesse se vestem com o bioma de onde estão (no deserto há pirâmides, na praia um farol, na usina chaminés).`,
+        `Cada bioma puxa a horda para os seus tipos: perto de você, as espécies da fase que têm um tipo da casa aparecem ${n(odds)}x mais (mais Planta e Inseto na floresta, mais Pedra e Terra na caverna), sem deixar de lado as outras. A dificuldade e as fases seguem o relógio, onde quer que você esteja.`,
+        'O clima muda algumas vezes por partida e vale para todo mundo: para os seus golpes e para os ataques dos inimigos. Ele segue o bioma onde você está (no co-op, o de quem lidera o time), e o ícone do clima aparece ao lado do relógio.',
       ],
-      timeHead: 'A partir de',
+      ringHead: 'Onde fica',
+      rings: ['Perto do início', 'Mais adiante', 'Longe'],
       biomeHead: 'Bioma',
       hordeHead: 'Tipos da horda',
       weatherHead: 'Climas (do mais ao menos comum)',

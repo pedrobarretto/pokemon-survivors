@@ -383,12 +383,13 @@ export const siteEn: SiteMessages = {
       bossTrio: (names: string) => `Boss: the run's legendary trio (${names})`,
     },
     world: {
-      paragraphs: (count, minutes, odds) => [
-        `A run walks through ${count} biomes, ${n(minutes)} minutes each, with no loading screen: the ground dissolves into the next place and every biome has its own music. Breakables change their look too (in the cave, tall grass becomes a rock and the berry tree a giant mushroom).`,
-        `Each biome pulls the horde towards its types: a stage's new species are ${n(odds)}x likelier to have a local type (more Grass and Bug in the forest, more Rock and Ground in the cave), without leaving the others out.`,
-        'The weather changes a few times per run and applies to everyone: your moves and the enemies\' attacks alike. Each biome has its own likely weather, and the weather icon shows next to the clock.',
+      paragraphs: (count, odds) => [
+        `The map is a patchwork of ${count} biomes, Minecraft style: each region is several screens across, and walking takes you out of one and into the next with no loading screen. At the border the ground blends little by little, and entering a new biome shows its name and changes the music. A run always starts on Route 1; the calm biomes lie around it, the cave, the Power Plant and the desert further out, snow, the volcano and the tower far away, and farther still everything mixes. Each run draws where each region lies. Terrain, breakables and points of interest dress for the biome they stand in (pyramids in the desert, a lighthouse on the beach, smokestacks at the Power Plant).`,
+        `Each biome pulls the horde towards its types: around you, the stage's species with a local type show up ${n(odds)}x more (more Grass and Bug in the forest, more Rock and Ground in the cave), without leaving the others out. Difficulty and stages follow the clock, wherever you are.`,
+        'The weather changes a few times per run and applies to everyone: your moves and the enemies\' attacks alike. It follows the biome you stand in (in co-op, the team lead\'s), and the weather icon shows next to the clock.',
       ],
-      timeHead: 'From',
+      ringHead: 'Where',
+      rings: ['Near the start', 'Further out', 'Far away'],
       biomeHead: 'Biome',
       hordeHead: 'Horde types',
       weatherHead: 'Weather (most to least common)',
