@@ -733,6 +733,7 @@ export const pt = {
       join: 'Entrar',
       joining: 'Entrando na sala…',
       badCode: 'O código tem 5 letras e números, como K7QF2.',
+      challenge: 'Desafio co-op do dia: a sala que você criar já vem com ele.',
       friends: 'Amigos',
       back: 'Voltar',
       hintKeys: '↑ ↓ escolher · ENTER confirmar · ESC voltar',
@@ -772,7 +773,13 @@ export const pt = {
       /** Back in the room while the others still play (the endless mode). */
       playing: 'A equipe está numa partida.',
       rejoin: 'Voltar para a partida',
-      rules: 'Co-op é o modo normal: fora do ranking, sem Modo Lendário, Surto do dia, Noite das Bruxas, Mochila nem TMs da loja.',
+      rules: 'Co-op é o modo normal: sem Modo Lendário, Surto do dia, Noite das Bruxas, Mochila nem TMs da loja. As partidas entram no ranking de Duplas, Trios e Squads.',
+      /** The host's switch for the Desafio co-op do dia (run rooms): the day's seed and difficulty, upgrades off. */
+      challenge: 'Desafio do dia',
+      challengeModes: { off: 'Desligado', on: 'Ligado' },
+      challengeBadge: (date: string) => `Desafio co-op do dia · ${date}`,
+      challengeRules: 'Semente e dificuldade do dia, sem melhorias da Poké Mart. Vale a melhor partida do time.',
+      challengeFixed: 'a do desafio',
       hintKeys: '← → escolher · ENTER confirmar · ESC sair',
       hintTouch: 'Toque para escolher',
       /** The partner select, picking for the room. */
@@ -1129,6 +1136,18 @@ export const pt = {
     /** The boards' two sides (`RunMode`): the regular runs and the Legend mode's (a legend played). */
     modes: { standard: 'Padrão', legend: 'Lendário' },
     legendGroup: 'Lendários',
+    /** The Co-op side (a third mode): boards of teams by size (Duplas, Trios, Squads), and the Desafio co-op do dia's. */
+    coop: 'Co-op',
+    sizes: { duo: 'Duplas', trio: 'Trios', squad: 'Squads' },
+    coopOutcomes: { victory: 'Venceu', wipe: 'Desmaiaram' },
+    coopEmpty: 'Nenhum time neste quadro ainda. Chame a galera e seja o primeiro!',
+    coopChallengeEmpty: 'Nenhum time jogou o desafio co-op deste dia ainda.',
+    coopChallengeHead: (date: string, difficulty: string, n: number) => `${date} · Co-op · ${difficulty} · ${n === 1 ? '1 time' : `${n} times`}`,
+    coopChallengeResets: 'Tentativas livres: vale a melhor partida de cada time. Sem fitas.',
+    coopResets: 'Cada time (as mesmas contas) aparece uma vez, com a melhor partida. Hoje e Semana viram à meia-noite de Brasília.',
+    coopHint: '↑ ↓ treinador · ← → período · Q E dificuldade · M modo · T time · F amigos · ENTER perfil · ESC voltar',
+    coopChallengeHint: '↑ ↓ treinador · ← → dia · Q E quadro · M modo · T time · F amigos · ENTER perfil · ESC voltar',
+    team: (names: string) => `Time: ${names}`,
   },
 
   /** Public profiles and the profile editor. */
@@ -1704,6 +1723,18 @@ export const pt = {
     started: (date: string) => `*Desafio de ${date}*`,
     startedOfficial: 'Tentativa oficial: boa sorte!',
     startedPractice: 'Treino: não entra no ranking do desafio.',
+    /** The screen's two sides: the solo challenge and the Desafio co-op do dia (one seed and difficulty for every team). */
+    tabs: { solo: 'Solo', coop: 'Co-op' },
+    coopDay: (date: string) => `Desafio co-op de ${date}`,
+    coopName: 'Time contra a horda',
+    coopSame: 'A mesma semente e dificuldade para todos os times hoje. Cada treinador leva o Pokémon que quiser.',
+    coopOff: 'Sem melhorias da Poké Mart. Tentativas livres: vale a melhor partida de cada time.',
+    coopBoards: 'Um ranking para Duplas, Trios e Squads. Sem fitas.',
+    coopMine: (rank: number, time: string) => `Seu melhor time hoje: #${rank} · ${time}`,
+    coopPlay: 'Jogar em co-op',
+    coopOffline: 'Sem conexão com o ranking agora.',
+    coopEmpty: 'Nenhum time ainda hoje. Chame a galera!',
+    coopHintKeys: '← → escolher · Q E solo/co-op · T time · ENTER confirmar · ESC voltar',
   },
 
   /** Novidades: the lobby's button (a dot while an update is unread) and the newest update's highlights it opens. */
@@ -5879,6 +5910,8 @@ export const pt = {
       againHost: (ready: number, total: number) => `Começa quando todos estiverem prontos (${ready}/${total})`,
       againGuest: 'Pronto! Esperando o anfitrião começar…',
       playAgain: 'Jogar de novo',
+      /** Opens the co-op board of this run's team size and difficulty (the day's for a challenge run). */
+      board: 'Ranking',
       lobby: 'Voltar ao lobby',
       /** Superlatives, a distinct one for every player (`ui/teamAwards.ts`): the outright ones, then fallbacks (survivor on). */
       awards: { damage: 'Mais dano', kills: 'Mais derrotas', revives: 'Anjo da guarda', untouched: 'Intocável', tank: 'Tanque', comeback: 'Fênix', survivor: 'Sobrevivente', specialist: 'Especialista', collector: 'Colecionador', loyal: 'Parceiro fiel' },
