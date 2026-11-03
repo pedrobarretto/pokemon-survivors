@@ -4,6 +4,7 @@ import type { LandmarkMoment } from '../game/landmarks'
 import { t } from '../i18n'
 import { pokeballIcon } from '../render/art'
 import { h, setText } from './dom'
+import { dropMapSign } from './mapSign'
 import { runToast } from './toasts'
 
 /**
@@ -24,6 +25,7 @@ const signOf = (root: HTMLElement) => {
 
 const showSign = (root: HTMLElement, id: LandmarkId) => {
   const m = t().landmarks
+  dropMapSign(root)
   const sign = signOf(root)
   setText(sign.querySelector('b')!, m.names[id])
   setText(sign.querySelector('small')!, m.hints[id])

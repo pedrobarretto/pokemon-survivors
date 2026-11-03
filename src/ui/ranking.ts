@@ -10,10 +10,11 @@ import { brasiliaDay, previousDay, type DayKey } from '../game/day'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { pumpkinRow } from '../game/halloween'
 import { BOARD_PERIODS, isPlayable, RUN_MODES, runMode, type Board, type BoardEntry, type BoardPeriod, type RunMode } from '../game/ranking'
-import { fetchBoard, fetchChallengeBoard, type BoardFilter, type RankOutcome } from '../ranking'
+import { fetchBoard, fetchChallengeBoard, fetchCoopBoard, fetchCoopChallengeBoard, type BoardFilter, type RankOutcome } from '../ranking'
+import { dailyCoopChallenge, TEAM_SIZE_KEYS, TEAM_SIZES, type CoopBoard, type CoopBoardEntry, type CoopChallengeBoard, type TeamSize } from '../game/coopBoard'
 import { formatDay, t } from '../i18n'
 import { BAG_ITEMS, parseBagItems } from '../game/bag'
-import { flagIcon } from '../render/art'
+import { coopIcon, flagIcon } from '../render/art'
 import { jackIcon } from '../render/halloweenArt'
 import { today } from './save'
 import { h, later, rich } from './dom'
@@ -79,6 +80,34 @@ const pokemonSelect = (mode: RunMode, value: PlayableId | null, onPick: (id: Pla
   return select
 }
 
+/**
+ * A co-op team's line: position, each member (their Pokémon's portrait, name
+ * with their supporter badge, @handle) and the time with the outcome. The
+ * members wrap in a grid (two a line on a phone held upright, a Squad in two
+ * lines). With `open`, each member is a button that opens their profile (the
+ * screen's menu binds the clicks: `members` are its stops); without, the line
+ * only shows (the challenge screen's preview).
+ */
+export const teamRow = (e: CoopBoardEntry, me: boolean, interactive: boolean) => {
+  const m = t().ranking
+  const members = e.members.map((x) =>
+    h(
+      interactive ? 'button' : 'span',
+      { class: 'rank-member', ...(interactive && { type: 'button' }) },
+      h('img', { src: runPortrait(x), alt: runForm(x).name, title: runForm(x).name }),
+      h('span', { class: 'rank-who' }, h('b', {}, x.name, ...supporterBadges(x.supporter, null, x.og)), h('small', {}, `@${x.handle}`)),
+    ),
+  )
+  const el = h(
+    'div',
+    { class: `rank-row rank-team${me ? ' me' : ''}${e.rank <= 3 ? ` top${e.rank}` : ''}`, role: 'group', 'aria-label': m.team(e.members.map((x) => x.name).join(', ')) },
+    h('span', { class: 'rank-pos' }, `#${e.rank}`),
+    h('span', { class: `rank-members n${e.members.length}` }, ...members),
+    h('span', { class: 'rank-time' }, h('b', {}, formatTime(e.time)), h('small', {}, me ? `${m.coopOutcomes[e.outcome]} · ${m.you}` : m.coopOutcomes[e.outcome])),
+  )
+  return { el, members }
+}
+
 /** A board tab: a difficulty's boards, or the Desafio do dia's. */
 type Tab = Difficulty | 'challenge'
 
@@ -88,42 +117,68 @@ const CHALLENGE_DAYS = ['today', 'yesterday'] as const
 
 type ChallengeDay = (typeof CHALLENGE_DAYS)[number]
 
+/** The boards' sides: the regular runs, the Legend mode's, and the co-op teams'. */
+type Side = RunMode | 'coop'
+
+const SIDES: readonly Side[] = [...RUN_MODES, 'coop']
+
+/** The challenge has no Legend mode: its sides are the solo one and the co-op one. */
+const CHALLENGE_SIDES: readonly Side[] = ['standard', 'coop']
+
 /** The Brasília day a challenge tab shows (on the missions' clock, like the challenge screen). */
 const challengeDay = (d: ChallengeDay): DayKey => {
   const now = brasiliaDay(today())
   return d === 'today' ? now : previousDay(now)
 }
 
+/** The board on screen: a solo one (or the challenge's) or a co-op one (or the Desafio co-op's). */
+type Shown = { kind: 'solo'; board: Board } | { kind: 'coop'; board: CoopBoard | CoopChallengeBoard }
+
 /**
  * The boards: one per difficulty, each by day, week and all time, every player
  * once with their best run, for the regular runs or the Legend mode's (a
  * mode toggle, M), and the Desafio do dia's, today's and yesterday's,
- * every player once with their official attempt. Filters by Pokémon (not the
- * challenge's: it's one Pokémon) and by friends (who the player follows, plus
- * them). The player's own line stays in sight below the top when they're
- * further down. A row opens that trainer's profile over the board; signed
- * in, the flag beside someone else's row reports that run (`reportDialog`).
+ * every player once with their official attempt. The Co-op side (the mode
+ * toggle's third) has the same tabs for teams, by size (Duplas, Trios,
+ * Squads, T): every team once with its best run, and the Desafio co-op do
+ * dia's. Filters by Pokémon (not the challenge's: it's one Pokémon, nor
+ * co-op's) and by friends (who the player follows, plus them). The player's
+ * own line stays in sight below the top when they're further down. A row (a
+ * team's member) opens that trainer's profile over the board; signed in, the
+ * flag beside someone else's solo row reports that run (`reportDialog`).
  *
- * Keys: ↑/↓ rows and buttons, ←/→ period (or day), Q/E board, M mode, F friends, Enter
+ * Keys: ↑/↓ rows and buttons, ←/→ period (or day), Q/E board, M mode, T team size, F friends, Enter
  * opens, Esc goes back. `onClose` runs after the key dispatch.
- * `challenge` opens on the challenge's tab, `mode` on that mode's boards.
+ * `challenge` opens on the challenge's tab, `mode` on that mode's boards, `coop` on the co-op side at that team size.
  */
-export const rankingScreen = (root: HTMLElement, input: Input, onClose: () => void, opts: { difficulty?: Difficulty; mode?: RunMode; challenge?: boolean } = {}): Screen => {
+export const rankingScreen = (
+  root: HTMLElement,
+  input: Input,
+  onClose: () => void,
+  opts: { difficulty?: Difficulty; mode?: RunMode; challenge?: boolean; coop?: { size: TeamSize } } = {},
+): Screen => {
   const signedIn = () => accountState().kind === 'signedIn'
   const filter: BoardFilter = { mode: opts.mode ?? 'standard', difficulty: opts.difficulty ?? 'normal', period: 'day', starter: null, friends: false }
   let tab: Tab = opts.challenge ? 'challenge' : filter.difficulty
   let day: ChallengeDay = 'today'
-  /** Players on the challenge board shown. */
+  let coop = opts.coop !== undefined
+  let size: TeamSize = opts.coop?.size ?? 2
+  /** Players (or teams) on the challenge board shown. */
   let total = 0
   const el = h('div', { class: 'screen dim rank-screen' })
   let nav: ReturnType<typeof menu> | null = null
+  /** The menu's stops, for keeping the cursor in view. */
+  let stops: HTMLElement[] = []
   /** A profile open over the board. */
   let sub: Screen | null = null
   /** The board on screen: loading, unreachable, or the answer. */
-  let board: Board | 'loading' | 'offline' = 'loading'
+  let board: Shown | 'loading' | 'offline' = 'loading'
   let request = 0
   let closed = false
   let opening = true
+
+  /** The side on screen (the challenge's solo board for the Legend mode's, which has none). */
+  const side = (): Side => (coop ? 'coop' : tab === 'challenge' ? 'standard' : filter.mode)
 
   const openProfile = (handle: string) => {
     nav?.off()
@@ -154,6 +209,35 @@ export const rankingScreen = (root: HTMLElement, input: Input, onClose: () => vo
     return s.kind === 'signedIn' ? s.handle : null
   }
 
+  /** The solo board's lines: each row (with its report flag), the player's own below the top. */
+  const soloLines = (b: Board, rows: { el: HTMLElement; handle: string }[]) => {
+    const mine = b.me
+    const report = signedIn() ? openReport : null
+    const top = b.entries.map((e) => {
+      const me = e.handle === mine?.handle || e.handle === myHandle()
+      const row = entryRow(e, me)
+      rows.push({ el: row, handle: e.handle })
+      return entryLine(row, e, me ? null : report)
+    })
+    const below = mine && !b.entries.some((e) => e.handle === mine.handle) ? entryRow(mine, true) : null
+    if (below) rows.push({ el: below, handle: mine!.handle })
+    return { top, below }
+  }
+
+  /** The co-op board's lines: a team each, its members the menu's stops; the player's best team below the top. */
+  const teamLines = (b: CoopBoard | CoopChallengeBoard, rows: { el: HTMLElement; handle: string }[]) => {
+    const mine = b.me
+    const handle = myHandle()
+    const line = (e: CoopBoardEntry, me: boolean) => {
+      const row = teamRow(e, me, true)
+      row.members.forEach((el, i) => rows.push({ el, handle: e.members[i]!.handle }))
+      return row.el
+    }
+    const top = b.entries.map((e) => line(e, e.run === mine?.run || e.members.some((x) => x.handle === handle)))
+    const below = mine && !b.entries.some((e) => e.run === mine.run) ? line(mine, true) : null
+    return { top, below }
+  }
+
   const render = () => {
     const m = t().ranking
     const button = (label: string, selected: boolean, onclick: () => void) => h('button', { class: selected ? 'region-tab rank-tab selected' : 'region-tab rank-tab', onclick }, label)
@@ -163,8 +247,10 @@ export const rankingScreen = (root: HTMLElement, input: Input, onClose: () => vo
       ? CHALLENGE_DAYS.map((d) => button(m.days[d], d === day, () => setDay(d)))
       : BOARD_PERIODS.map((p) => button(m.periods[p], p === filter.period, () => set({ period: p })))
     const scope = [button(m.everyone, !filter.friends, () => set({ friends: false })), button(m.friends, filter.friends, () => set({ friends: true }))]
-    const modes = RUN_MODES.map((mode) => button(m.modes[mode], mode === filter.mode, () => setMode(mode)))
-    const shown = onChallenge ? dailyChallenge(challengeDay(day)) : null
+    const sides = (onChallenge ? CHALLENGE_SIDES : SIDES).map((s) => button(s === 'coop' ? m.coop : m.modes[s], s === side(), () => setSide(s)))
+    const sizes = TEAM_SIZES.map((n) => button(m.sizes[TEAM_SIZE_KEYS[n]], n === size, () => setSize(n)))
+    const solo = onChallenge && !coop ? dailyChallenge(challengeDay(day)) : null
+    const team = onChallenge && coop ? dailyCoopChallenge(challengeDay(day)) : null
 
     const rows: { el: HTMLElement; handle: string }[] = []
     const status = (text: string, cls = '') => h('p', { class: `rank-status ${cls}` }, text)
@@ -173,19 +259,9 @@ export const rankingScreen = (root: HTMLElement, input: Input, onClose: () => vo
     else if (board === 'loading') list = [status(m.loading, 'blink')]
     else if (board === 'offline') list = [status(m.offline)]
     else {
-      const mine = board.me
-      const report = signedIn() ? openReport : null
-      const top = board.entries.map((e) => {
-        const me = e.handle === mine?.handle || e.handle === myHandle()
-        const row = entryRow(e, me)
-        return { el: row, line: entryLine(row, e, me ? null : report), handle: e.handle }
-      })
-      const below = mine && !board.entries.some((e) => e.handle === mine.handle) ? [{ el: entryRow(mine, true), handle: mine.handle }] : []
-      rows.push(...top, ...below)
-      list =
-        rows.length === 0
-          ? [status(filter.friends ? m.emptyFriends : onChallenge ? m.challengeEmpty : m.empty)]
-          : [...top.map((r) => r.line), ...(below.length > 0 ? [h('div', { class: 'rank-gap', 'aria-hidden': 'true' }, '⋮'), below[0]!.el] : [])]
+      const { top, below } = board.kind === 'solo' ? soloLines(board.board, rows) : teamLines(board.board, rows)
+      const empty = filter.friends ? m.emptyFriends : coop ? (onChallenge ? m.coopChallengeEmpty : m.coopEmpty) : onChallenge ? m.challengeEmpty : m.empty
+      list = top.length === 0 && !below ? [status(empty)] : [...top, ...(below ? [h('div', { class: 'rank-gap', 'aria-hidden': 'true' }, '⋮'), below] : [])]
     }
 
     const handle = myHandle()
@@ -200,41 +276,43 @@ export const rankingScreen = (root: HTMLElement, input: Input, onClose: () => vo
       ...(handle ? [h('button', { class: 'btn' }, m.myProfile)] : []),
       h('button', { class: 'btn' }, m.back),
     ]
-    const buttons = [...rows.map((r) => r.el), ...footer]
+    stops = [...rows.map((r) => r.el), ...footer]
     // Keep the cursor on the player's own row, else the top, across reloads.
     const meAt = rows.findIndex((r) => r.handle === handle)
     nav?.off()
-    nav = menu(input, buttons, (i) => (playSfx('select'), later(actions[i]!)), { initial: Math.max(0, meAt) })
+    nav = menu(input, stops, (i) => (playSfx('select'), later(actions[i]!)), { initial: Math.max(0, meAt) })
 
+    const resets = coop ? (onChallenge ? m.coopChallengeResets : m.coopResets) : onChallenge ? m.challengeResets : filter.period !== 'all' ? m.resets : null
     el.replaceChildren(
       h(
         'div',
         { class: opening ? 'dialog box pop rank' : 'dialog box rank' },
         h('div', { class: 'dialog-title' }, m.title),
         h('div', { class: 'region-tabs rank-tabs', role: 'tablist' }, ...boards),
-        !onChallenge && h('div', { class: 'region-tabs rank-tabs rank-modes', role: 'tablist' }, ...modes),
+        h('div', { class: 'region-tabs rank-tabs rank-modes', role: 'tablist' }, ...sides),
         h(
           'div',
           { class: 'rank-filters' },
           h('div', { class: 'region-tabs rank-tabs', role: 'tablist' }, ...periods),
           h('div', { class: 'region-tabs rank-tabs', role: 'tablist' }, ...scope),
-          !onChallenge && pokemonSelect(filter.mode, filter.starter, (starter) => set({ starter })),
+          coop ? h('div', { class: 'region-tabs rank-tabs rank-sizes', role: 'tablist' }, ...sizes) : !onChallenge && pokemonSelect(filter.mode, filter.starter, (starter) => set({ starter })),
         ),
-        shown &&
+        solo &&
           h(
             'p',
             { class: 'rank-challenge' },
-            h('img', { src: runPortrait({ starter: shown.starter, stage: 0 }), alt: '' }),
-            m.challengeHead(formatDay(shown.day), PLAYABLE[shown.starter].name, t().difficulty.names[shown.difficulty], total),
+            h('img', { src: runPortrait({ starter: solo.starter, stage: 0 }), alt: '' }),
+            m.challengeHead(formatDay(solo.day), PLAYABLE[solo.starter].name, t().difficulty.names[solo.difficulty], total),
           ),
+        team && h('p', { class: 'rank-challenge' }, h('img', { src: coopIcon(), alt: '' }), m.coopChallengeHead(formatDay(team.day), t().difficulty.names[team.difficulty], total)),
         h('div', { class: 'rank-list' }, ...list),
-        onChallenge ? h('p', { class: 'rank-resets' }, m.challengeResets) : filter.period !== 'all' && h('p', { class: 'rank-resets' }, m.resets),
+        resets && h('p', { class: 'rank-resets' }, resets),
         h('div', { class: 'buttons' }, ...footer),
-        hint(onChallenge ? m.challengeHint : m.hintKeys, m.hintTouch),
+        hint(coop ? (onChallenge ? m.coopChallengeHint : m.coopHint) : onChallenge ? m.challengeHint : m.hintKeys, m.hintTouch),
       ),
     )
     opening = false
-    buttons[nav.index]?.scrollIntoView({ block: 'nearest' })
+    stops[nav.index]?.scrollIntoView({ block: 'nearest' })
   }
 
   const load = async () => {
@@ -242,12 +320,24 @@ export const rankingScreen = (root: HTMLElement, input: Input, onClose: () => vo
     board = 'loading'
     render()
     if (filter.friends && !signedIn()) return
-    const challenge = tab === 'challenge' ? await fetchChallengeBoard(challengeDay(day), filter.friends) : null
-    const next = tab === 'challenge' ? challenge : await fetchBoard(filter)
+    const next = await fetchShown()
     if (id !== request || closed) return
     board = next ?? 'offline'
-    total = challenge?.total ?? 0
+    total = next && 'total' in next.board ? next.board.total : 0
     render()
+  }
+
+  /** The board the tabs and filters point at, from the API (null: out of reach). */
+  const fetchShown = async (): Promise<Shown | null> => {
+    const onChallenge = tab === 'challenge'
+    if (coop) {
+      const b = onChallenge
+        ? await fetchCoopChallengeBoard(challengeDay(day), size, filter.friends)
+        : await fetchCoopBoard({ size, difficulty: filter.difficulty, period: filter.period, friends: filter.friends })
+      return b && { kind: 'coop', board: b }
+    }
+    const b = onChallenge ? await fetchChallengeBoard(challengeDay(day), filter.friends) : await fetchBoard(filter)
+    return b && { kind: 'solo', board: b }
   }
 
   const setTab = (next: Tab) => {
@@ -273,8 +363,24 @@ export const rankingScreen = (root: HTMLElement, input: Input, onClose: () => vo
     void load()
   }
 
-  /** The regular boards or the Legend mode's; a Pokémon filter of the other side goes. */
-  const setMode = (mode: RunMode) => set({ mode, starter: filter.starter && runMode(filter.starter) === mode ? filter.starter : null })
+  /** The regular boards, the Legend mode's (a Pokémon filter of the other side goes) or co-op's. */
+  const setSide = (next: Side) => {
+    if (next === side()) return
+    coop = next === 'coop'
+    if (next !== 'coop') {
+      filter.mode = next
+      filter.starter = filter.starter && runMode(filter.starter) === next ? filter.starter : null
+    }
+    playSfx('move')
+    void load()
+  }
+
+  const setSize = (next: TeamSize) => {
+    if (next === size) return
+    size = next
+    playSfx('move')
+    void load()
+  }
 
   const offKeys = input.onKey((key) => {
     if (sub || closed) return
@@ -286,9 +392,10 @@ export const rankingScreen = (root: HTMLElement, input: Input, onClose: () => vo
     if (key === 'KeyQ' || key === 'PageUp') return setTab(step(TABS, tab, -1))
     if (key === 'KeyE' || key === 'PageDown') return setTab(step(TABS, tab, 1))
     if (key === 'KeyF') return set({ friends: !filter.friends })
-    if (key === 'KeyM' && tab !== 'challenge') return setMode(filter.mode === 'legend' ? 'standard' : 'legend')
+    if (key === 'KeyM') return setSide(step(tab === 'challenge' ? CHALLENGE_SIDES : SIDES, side(), 1))
+    if (key === 'KeyT' && coop) return setSize(step(TEAM_SIZES, size, 1))
     // `menu` moved the cursor: keep it in view in the scrolling list.
-    if (nav) el.querySelectorAll('.rank-row, .buttons .btn')[nav.index]?.scrollIntoView({ block: 'nearest' })
+    if (nav) stops[nav.index]?.scrollIntoView({ block: 'nearest' })
   })
 
   const dispose = () => {

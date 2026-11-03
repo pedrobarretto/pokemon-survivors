@@ -1,10 +1,12 @@
 import type { ArenaReport } from '../../src/net/arena'
+import { COOP_REPORT_PATH, type CoopReport } from '../../src/net/coopReport'
 
 /**
- * What the relay posts to the API about the Arena (`net/arena.ts`): signed
- * with a secret both share (header `x-arena-signature`: hex HMAC-SHA256 of
- * the raw body), and for a match's report, kept in an outbox and retried with
- * backoff until the API takes it. WebCrypto only, so the Worker, the VPS
+ * What the relay posts to the API about the Arena (`net/arena.ts`) and the
+ * co-op boards (`net/coopReport.ts`): signed with a secret both share (header
+ * `x-arena-signature`: hex HMAC-SHA256 of the raw body), and for a match's or
+ * a run's report, kept in an outbox and retried with backoff until the API
+ * takes it. WebCrypto only, so the Worker, the VPS
  * relay and the tests run the same code; each shell keeps its outbox (the
  * shard's storage and alarm, the VPS relay's vault and a timer).
  */
@@ -40,14 +42,30 @@ export const postSigned = async (api: ArenaApi, path: string, body: string, fetc
     signal: AbortSignal.timeout(TIMEOUT_MS),
   })
 
-/** A report waiting in a shell's outbox: its body as posted, the attempts made and when the next is due (ms). */
-export type Outgoing = { id: string; body: string; attempts: number; at: number }
+/** Where an Arena match's report goes. */
+export const ARENA_REPORT_PATH = '/arena/report' as const
+
+/** A report for the outbox: an Arena match's or a co-op run's, with the API path it goes to. */
+export type Posting = { path: typeof ARENA_REPORT_PATH; report: ArenaReport } | { path: typeof COOP_REPORT_PATH; report: CoopReport }
+
+/** A report waiting in a shell's outbox: its body as posted, the path it goes to, the attempts made and when the next is due (ms). */
+export type Outgoing = { id: string; path: Posting['path']; body: string; attempts: number; at: number }
 
 /** Waits between attempts: the first goes at once, the last about 2 hours after the match. Past them the report is dropped (logged). */
 export const RETRY_MS = [0, 5_000, 30_000, 120_000, 600_000, 1_800_000, 3_600_000] as const
 
-/** A new report for the outbox, due now. Its id is the API's to deduplicate a retried post that had landed after all. */
-export const outgoing = (report: ArenaReport, now: number): Outgoing => ({ id: `${report.room}-${report.run}-${report.endedAt}`, body: JSON.stringify(report), attempts: 0, at: now })
+/**
+ * A new report for the outbox, due now. Its id keys it in the shell's storage
+ * (a co-op run's apart from an Arena match's); the API dedupes a retried post
+ * that had landed after all by room and run.
+ */
+export const outgoing = ({ path, report }: Posting, now: number): Outgoing => ({
+  id: `${path === COOP_REPORT_PATH ? 'coop-' : ''}${report.room}-${report.run}-${report.endedAt}`,
+  path,
+  body: JSON.stringify(report),
+  attempts: 0,
+  at: now,
+})
 
 export type Outcome = 'done' | 'retry' | 'drop'
 
@@ -71,7 +89,7 @@ export const afterAttempt = (o: Outgoing, outcome: Outcome, now: number): Outgoi
 
 /** One attempt at posting a report: what came of it and the status (null: no answer). */
 export const deliver = async (api: ArenaApi, o: Outgoing, fetcher: Fetcher = fetch): Promise<{ outcome: Outcome; status: number | null }> => {
-  const status = await postSigned(api, '/arena/report', o.body, fetcher).then(
+  const status = await postSigned(api, o.path, o.body, fetcher).then(
     (res) => res.status,
     () => null,
   )
@@ -80,9 +98,12 @@ export const deliver = async (api: ArenaApi, o: Outgoing, fetcher: Fetcher = fet
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
-/** An outbox entry kept as JSON (a shell's storage), or null. */
-export const parseOutgoing = (v: unknown): Outgoing | null =>
-  isRecord(v) && typeof v.id === 'string' && typeof v.body === 'string' && typeof v.attempts === 'number' && typeof v.at === 'number' ? { id: v.id, body: v.body, attempts: v.attempts, at: v.at } : null
+/** An outbox entry kept as JSON (a shell's storage), or null. One kept before entries had a path is an Arena report. */
+export const parseOutgoing = (v: unknown): Outgoing | null => {
+  if (!isRecord(v) || typeof v.id !== 'string' || typeof v.body !== 'string' || typeof v.attempts !== 'number' || typeof v.at !== 'number') return null
+  const path = v.path === COOP_REPORT_PATH ? COOP_REPORT_PATH : v.path === undefined || v.path === ARENA_REPORT_PATH ? ARENA_REPORT_PATH : null
+  return path === null ? null : { id: v.id, path, body: v.body, attempts: v.attempts, at: v.at }
+}
 
 export type OutboxDeps = {
   /** Null: the shell has no API configured (reports are logged and dropped). */
@@ -98,7 +119,7 @@ export type OutboxDeps = {
 }
 
 /**
- * A shell's outbox of match reports: `add` posts one at once, a failed post
+ * A shell's outbox of match and run reports: `add` posts one at once, a failed post
  * is kept and tried again at its due time (`flush`, from the shell's alarm or
  * timer, which `next` sets), `kept` are the entries the shell found in its
  * storage after a restart. Each report goes out at most once at a time.
@@ -121,14 +142,15 @@ export const createOutbox = (deps: OutboxDeps, kept: readonly Outgoing[] = []) =
       deps.remove(o.id)
     }
     const why = !api ? 'noApi' : outcome === 'done' ? null : next ? 'retry' : 'dropped'
-    deps.log(why === null ? 'arena.report.sent' : `arena.report.${why}`, { id: o.id, attempts: o.attempts + 1, status })
+    const kind = o.path === COOP_REPORT_PATH ? 'coop' : 'arena'
+    deps.log(why === null ? `${kind}.report.sent` : `${kind}.report.${why}`, { id: o.id, attempts: o.attempts + 1, status })
     deps.changed()
   }
 
   return {
-    /** Posts a match's report now, keeping it until the API takes it. */
-    add: (report: ArenaReport): Promise<void> => {
-      const o = outgoing(report, deps.now())
+    /** Posts a match's or a run's report now, keeping it until the API takes it. */
+    add: (posting: Posting): Promise<void> => {
+      const o = outgoing(posting, deps.now())
       items.set(o.id, o)
       deps.save(o)
       return attempt(o)

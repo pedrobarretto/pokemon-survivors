@@ -6,7 +6,7 @@ import { inPlay, localPlayer } from '../game/players'
 import { holdsCarry } from '../game/attacks'
 import { moveOf, TICK } from '../game/replay'
 import { predictSpecial, type SpecialState } from '../game/special'
-import { footOf, keepOut } from '../game/terrain'
+import { footOf, keepOut, phases } from '../game/terrain'
 import { aimVec } from '../game/versusKit'
 import { VERSUS_KIT } from '../data/versus'
 import type { Game, Player } from '../game/types'
@@ -192,7 +192,7 @@ export const createPrediction = (): Prediction => ({
   last: { x: 0, y: 0 },
   ghost: null,
   world: null,
-  terrain: { seed: 0, cells: new Map() },
+  terrain: { seed: 0, archetype: 'route', cells: new Map() },
   special: null,
   carried: [],
   look: null,
@@ -280,7 +280,7 @@ const stepGhost = (world: Game, ghost: Player, carried: Carried[], code: number,
     if (c.age < c.ttl) carried[k++] = c
   }
   carried.length = k
-  keepOut(world, ghost, footOf(ghost))
+  keepOut(world, ghost, footOf(ghost), phases(world, ghost))
 }
 
 /**
@@ -292,7 +292,7 @@ const stepGhost = (world: Game, ghost: Player, carried: Carried[], code: number,
 const walkAhead = (pr: Prediction, g: Game, p: Player, history: Uint8Array, presses: readonly number[], from: number, sample: number, at: number, aims?: ReadonlyMap<number, number>) => {
   const ghost = Object.assign((pr.ghost ??= { ...p }), p)
   ghost.special = Object.assign((pr.special ??= { ...p.special }), p.special)
-  if (pr.terrain.seed !== g.terrain.seed) pr.terrain = { seed: g.terrain.seed, cells: new Map() }
+  if (pr.terrain.seed !== g.terrain.seed || pr.terrain.archetype !== g.terrain.archetype) pr.terrain = { seed: g.terrain.seed, archetype: g.terrain.archetype, cells: new Map() }
   if (pr.terrain.cells.size > 4096) pr.terrain.cells.clear()
   // A copy of the game around the copy of the player, with its own terrain cache: the step reads `g.player`.
   const world = Object.assign((pr.world ??= { ...g }), g, { player: ghost, terrain: pr.terrain })
@@ -390,7 +390,7 @@ export const predict = (pr: Prediction, r: Runner, own: OwnInput, frac: number, 
   pr.lastSample = sample
   const drawn = { x: prev.x + (cur.x - prev.x) * frac + pr.err.x, y: prev.y + (cur.y - prev.y) * frac + pr.err.y }
   // The blend never draws the sprite inside a wall.
-  if (walked && pr.world) keepOut(pr.world, drawn, footOf(p))
+  if (walked && pr.world) keepOut(pr.world, drawn, footOf(p), phases(pr.world, p))
   pr.drawn = drawn
   return drawn
 }

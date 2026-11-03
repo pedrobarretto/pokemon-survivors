@@ -179,9 +179,11 @@ export type AgainState = { asked: boolean; host: boolean; ready: number; total: 
 
 /**
  * What the end screen does: vote on the endless offer (sent as a tick entry),
- * play again with the same team (`again` says how far that got), or back to the lobby.
+ * play again with the same team (`again` says how far that got), or back to
+ * the lobby. `board` (with a ranking) opens the co-op board of the run's
+ * team size over the results; closing it calls `back`.
  */
-export type EndActions = { vote: (endless: boolean) => void; playAgain: () => void; lobby: () => void; again: () => AgainState }
+export type EndActions = { vote: (endless: boolean) => void; playAgain: () => void; lobby: () => void; again: () => AgainState; board?: (back: () => void) => Screen }
 
 /** How long the end screen ignores confirms (the fight's last presses), as the solo results do. */
 const END_GUARD_MS = 900
@@ -323,7 +325,27 @@ const resultsView = (input: Input, g: Game, me: Player, actions: EndActions) => 
   const victory = g.phase === 'victory'
   const again = h('button', { class: 'btn confirm' }, m.playAgain)
   const lobby = h('button', { class: 'btn' }, m.lobby)
-  const nav = menu(input, [again, lobby], (i) => (playSfx('select'), later(i === 0 ? actions.playAgain : actions.lobby)), { horizontal: true, guard: END_GUARD_MS })
+  // A team of two or more is on a co-op board (a room of one never reports).
+  const openBoard = g.players.length >= 2 ? actions.board : undefined
+  const ranking = openBoard ? h('button', { class: 'btn' }, m.board) : null
+  const buttons = [again, lobby, ...(ranking ? [ranking] : [])]
+  /** The co-op board open over the results: they hide until it closes. */
+  let sub: Screen | null = null
+  const showBoard = () => {
+    if (!openBoard || sub) return
+    const end = el.closest<HTMLElement>('.team-end') ?? el
+    nav.off()
+    end.classList.add('hidden')
+    sub = openBoard(() => {
+      sub = null
+      if (!el.isConnected) return
+      end.classList.remove('hidden')
+      nav = bind(2)
+    })
+  }
+  const bind = (initial = 0, guard = 0) =>
+    menu(input, buttons, (i) => (playSfx('select'), later([actions.playAgain, actions.lobby, showBoard][i]!)), { horizontal: true, initial, guard })
+  let nav = bind(0, END_GUARD_MS)
   // After "Jogar de novo": who's ready, and who starts it.
   const status = h('p', { class: 'team-again hidden' })
   let said = ''
@@ -353,11 +375,11 @@ const resultsView = (input: Input, g: Game, me: Player, actions: EndActions) => 
     g.phase === 'gameover' && deathCause(me),
     h('div', { class: `team-grid n${stats.players.length}` }, ...stats.players.map((s, i) => resultCard(g, s, me, awards[i] ? names[awards[i]!] : null, stats.total.damage))),
     h('p', { class: 'team-split' }, h('img', { src: coinIcon(2), alt: '' }), m.split(formatPokeDollars(stats.coins), joined, formatPokeDollars(Math.floor(stats.coins / Math.max(1, joined))))),
-    h('div', { class: 'buttons result-buttons' }, again, lobby),
+    h('div', { class: 'buttons result-buttons' }, ...buttons),
     status,
   )
   update()
-  return { el, update, dispose: () => nav.off() }
+  return { el, update, dispose: () => (nav.off(), sub?.dispose()) }
 }
 
 /**

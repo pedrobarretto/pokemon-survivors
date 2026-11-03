@@ -25,6 +25,7 @@ import {
   setFork,
   setForm,
   setItem,
+  setMega,
   setMove,
   shelfMoves,
   trainingForms,
@@ -33,6 +34,9 @@ import {
   type TrainingForm,
 } from '../game/training'
 import { formAfter, innateAbility } from '../game/legend'
+import { MEGAS } from '../data/megas'
+import { isFinalStage, runMegas } from '../game/mega'
+import { megaIcon } from '../render/megaFx'
 import { formLocked } from '../game/communityGoal'
 import { AWAKEN_AT, isLegend, LEGENDS } from '../data/legends'
 import type { DamageSource, Game } from '../game/types'
@@ -41,7 +45,7 @@ import { abilityIcon } from '../render/abilityArt'
 import { itemIcon, moveIcon } from '../render/art'
 import { formPortraitUrl, portraitUrl } from '../render/sprites'
 import { specialIcon } from '../render/specialFx'
-import { h, setText } from './dom'
+import { h, rich, setText } from './dom'
 import { today } from './save'
 import { holdMoveCard, hoverMoveCard, moveCard } from './moveCard'
 import { typeBadge, type Screen } from './screens'
@@ -217,7 +221,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
           ...forks,
         ),
         blocked
-          ? h('small', { class: 'dojo-row-full' }, { full: m().movesFull, manual: m().manualFull, legendary: m().legendaryFull }[blocked])
+          ? h('small', { class: 'dojo-row-full' }, { full: m().movesFull, manual: m().manualFull, legendary: m().legendaryFull, duo: m().duoFull }[blocked])
           : o
             ? stepper(level, max, set, (lv) => (lv === 0 ? m().forget : m().level(lv)))
             : h('button', { class: 'dojo-learn', type: 'button', onclick: () => set(1) }, m().learn),
@@ -300,6 +304,24 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
             ),
           ]
     const ability = p.ability.id
+    const megas = runMegas(g)
+    const mega = megas.length === 0 ? [] : [
+      h('h3', { class: 'dojo-label' }, t().mega.section),
+      h(
+        'div',
+        { class: 'dojo-chips' },
+        h('button', { class: p.mega.stone === null ? 'dojo-chip on' : 'dojo-chip', type: 'button', onclick: () => (setMega(g, null), changed()) }, m().noMega),
+        ...megas.map((id) =>
+          h(
+            'button',
+            { class: p.mega.stone === id ? 'dojo-chip dojo-ability on' : 'dojo-chip dojo-ability', type: 'button', title: MEGAS[id].stone, onclick: () => (setMega(g, id), changed()) },
+            h('img', { src: megaIcon(), alt: '' }),
+            MEGAS[id].name,
+          ),
+        ),
+      ),
+      p.mega.stone !== null && h('p', { class: 'dojo-row-note' }, rich(isFinalStage(p.starter, p.stage) ? m().megaReady : m().megaLocked)),
+    ]
     return [
       h('h3', { class: 'dojo-label' }, m().form),
       h('div', { class: 'dojo-forms' }, ...forms),
@@ -308,6 +330,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
       innate && h('p', { class: 'dojo-innate' }, h('img', { src: abilityIcon(innate), alt: '' }), `${t().legend.innate}: ${ABILITIES[innate].name}`),
       h('div', { class: 'dojo-chips' }, ...abilities),
       ability && h('p', { class: 'dojo-row-note' }, t().abilities[ability]),
+      ...mega,
     ]
   }
 

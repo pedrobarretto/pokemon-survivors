@@ -1,11 +1,13 @@
-import { canvasCache, context2d, createCanvas, fromStrings, lazy, onCanvasReset, type Palette } from '../engine/pixelart'
+import { canvasCache, context2d, createCanvas, fromStrings, type Palette } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
+import type { BiomeSample } from '../game/biomeMap'
 
 /**
  * Infinite procedural ground, one look per biome, generated in cached chunks.
- * Everything is deterministic from world coordinates, so revisiting an area
- * looks the same. Biome changes cross-dissolve with an ordered dither.
+ * Everything is deterministic from world coordinates (and the run's biome
+ * map), so revisiting an area looks the same. Where two biomes meet, the
+ * ground dithers from one into the other across a band baked into the chunks.
  */
 const CHUNK = 256
 const TILE = 16
@@ -47,8 +49,16 @@ type GroundStyle = {
   path: Shades
   /** Fine noise peaks: sun dapples in the forest, drifts in the snow. */
   spots?: Shades
-  /** Paths become staggered stone tiles (graveyard walkways). */
+  /** Paths become staggered stone tiles (graveyard walkways, the Power Plant's catwalks). */
   tiles?: boolean
+  /** The lines between those tiles (dark purple mortar unless told). */
+  mortar?: string
+  /**
+   * Thin winding lines through the dense zones: lava in the volcano's crust,
+   * cracks in the Power Plant's concrete (`width` of the noise band; `glow`
+   * rims them a pixel wide).
+   */
+  veins?: { color: Shades; width: number; glow?: string }
   /** Noise level above which tiles are `dense` (thickets); lower means more of them. */
   thicket?: number
   /** Builds the biome's decor sprites once and returns how to dress a tile. */
@@ -207,6 +217,139 @@ const towerDecor = () => {
   }
 }
 
+/* ---------------- Beach (Route 109) ---------------- */
+
+const SHELL = ['.1.1.', '12121', '12221', '.111.']
+const STARFISH = ['..1..', '11211', '.121.', '1...1']
+const DUNE_GRASS = ['1...1.', '.1.1.1', '1.1.1.', '.1211.', '..11..']
+const DRIFTWOOD = ['.11111.', '1222221', '.13311.']
+const SAND_PEBBLES = ['1..', '..2', '.1.']
+
+const beachDecor = () => {
+  const shells = [sprite(SHELL, { 1: '#c86878', 2: '#f8c8c8' }), sprite(SHELL, { 1: '#a87848', 2: '#f8e8d0' })]
+  const star = sprite(STARFISH, { 1: '#e86830', 2: '#f8b058' })
+  const grass = sprite(DUNE_GRASS, { 1: '#6a9a40', 2: '#a8c868' })
+  const wood = sprite(DRIFTWOOD, { 1: '#6c5c48', 2: '#b0a088', 3: '#8c7c64' })
+  const pebbles = sprite(SAND_PEBBLES, { 1: '#b8a07c', 2: '#fff8e8' })
+  return (ctx: CanvasRenderingContext2D, s: Spot) => {
+    if (s.dense) {
+      // Dune grass on the high sand, low enough to walk through. Palms are real trees (`render/terrain.ts`).
+      ctx.drawImage(grass, s.x + (s.jx >> 1), s.y + (s.jy >> 1))
+      if (s.roll < 0.35) ctx.drawImage(grass, s.x + 8, s.y + 9)
+    } else if (s.roll < 0.04) {
+      ctx.drawImage(shells[s.jx % 2]!, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.055) {
+      ctx.drawImage(star, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.15) {
+      ctx.drawImage(pebbles, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.162) {
+      ctx.drawImage(wood, s.x + s.jx, s.y + s.jy)
+    }
+  }
+}
+
+/* ---------------- Power Plant (Kanto) ---------------- */
+
+const BOLTS = ['1....1', '......', '......', '1....1']
+const GRATE = ['1111111', '1.1.1.1', '1111111', '1.1.1.1', '1111111']
+const CABLE = ['.11......', '1..1.....', '....1.11.', '.....1..1']
+const OIL = ['..11...', '.12211.', '1223221', '.122211', '..111..']
+const WEEDS = ['1...1', '.1.1.', '.121.']
+const RUBBLE = ['..1..', '.121.', '12231', '.111.']
+const SCRAP = ['111..', '1221.', '.1111']
+
+const plantDecor = () => {
+  const bolts = sprite(BOLTS, { 1: '#6c727c' })
+  const grate = sprite(GRATE, { 1: '#5c626c' })
+  const cables = [sprite(CABLE, { 1: '#2c2c34' }), sprite(CABLE, { 1: '#9c3428' })]
+  const oil = sprite(OIL, { 1: '#4c525c', 2: '#2c3038', 3: '#6878a8' })
+  const weeds = sprite(WEEDS, { 1: '#5c7c40', 2: '#88a858' })
+  const rubble = sprite(RUBBLE, { 1: '#4c525c', 2: '#9ca4ae', 3: '#c4cad2' })
+  const scrap = sprite(SCRAP, { 1: '#5c3c28', 2: '#a8643c' })
+  return (ctx: CanvasRenderingContext2D, s: Spot) => {
+    if (s.dense) {
+      // Worn yard: weeds through the cracks (the ground's own `veins`), rubble and scrap.
+      if (s.roll < 0.35) ctx.drawImage(weeds, s.x + s.jx, s.y + s.jy)
+      else if (s.roll < 0.5) ctx.drawImage(rubble, s.x + s.jx, s.y + s.jy)
+      else if (s.roll < 0.58) ctx.drawImage(scrap, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.02) {
+      ctx.drawImage(grate, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.06) {
+      ctx.drawImage(bolts, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.085) {
+      ctx.drawImage(cables[s.jy % 2]!, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.1) {
+      ctx.drawImage(oil, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.13) {
+      ctx.drawImage(weeds, s.x + s.jx, s.y + s.jy)
+    }
+  }
+}
+
+/* ---------------- Desert (Route 111) ---------------- */
+
+const CACTUS = ['..1..', '1.1..', '1.1.1', '111.1', '..111', '..1..', '.111.']
+const BONES = ['1...1', '.111.', '1...1']
+const RIPPLE = ['11....', '..1111']
+const DRY_TUFT = ['1.1.1', '.1.1.', '.121.']
+
+const desertDecor = () => {
+  const cactus = sprite(CACTUS, { 1: '#4c8838' })
+  const bones = sprite(BONES, { 1: '#f8f0e0' })
+  const ripple = sprite(RIPPLE, { 1: '#c49058' })
+  const light = sprite(RIPPLE, { 1: '#f8dca8' })
+  const tuft = sprite(DRY_TUFT, { 1: '#a88848', 2: '#c8a860' })
+  const pebbles = sprite(SAND_PEBBLES, { 1: '#a07848', 2: '#f0d8a8' })
+  return (ctx: CanvasRenderingContext2D, s: Spot) => {
+    if (s.dense) {
+      // Dunes: wind ripples in rows, lit on one side.
+      ctx.drawImage(ripple, s.x + (s.jx >> 1), s.y + 3)
+      ctx.drawImage(light, s.x + (s.jx >> 1) + 1, s.y + 2)
+      ctx.drawImage(ripple, s.x + ((s.jx + 5) % 10), s.y + 10)
+      ctx.drawImage(light, s.x + ((s.jx + 5) % 10) + 1, s.y + 9)
+    } else if (s.roll < 0.02) {
+      ctx.drawImage(cactus, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.028) {
+      ctx.drawImage(bones, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.1) {
+      ctx.drawImage(pebbles, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.16) {
+      ctx.drawImage(tuft, s.x + s.jx, s.y + s.jy)
+    }
+  }
+}
+
+/* ---------------- Volcano (Mt. Chimney) ---------------- */
+
+const VENT = ['..1..', '.121.', '12321', '.111.']
+const OBSIDIAN = ['..1..', '.121.', '12231', '.111.']
+const ASH_PILE = ['..11..', '.1221.', '122221']
+const CINDERS = ['1..', '..2', '.1.']
+const SCORCH = ['1.1.1', '.1.1.']
+
+const volcanoDecor = () => {
+  const vent = sprite(VENT, { 1: '#2c2426', 2: '#c84818', 3: '#f8c040' })
+  const obsidian = sprite(OBSIDIAN, { 1: '#141018', 2: '#3c3450', 3: '#8c84b0' })
+  const ash = sprite(ASH_PILE, { 1: '#8c8684', 2: '#b4aeaa' })
+  const cinders = sprite(CINDERS, { 1: '#2c2426', 2: '#8c4430' })
+  const scorch = sprite(SCORCH, { 1: '#3a3236' })
+  return (ctx: CanvasRenderingContext2D, s: Spot) => {
+    if (s.dense) {
+      // Hot crust: the lava shows in its cracks (the ground's `veins`); a vent glows here and there.
+      if (s.roll < 0.12) ctx.drawImage(vent, s.x + s.jx, s.y + s.jy)
+      else if (s.roll < 0.4) ctx.drawImage(cinders, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.025) {
+      ctx.drawImage(obsidian, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.05) {
+      ctx.drawImage(ash, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.12) {
+      ctx.drawImage(cinders, s.x + s.jx, s.y + s.jy)
+    } else if (s.roll < 0.14) {
+      ctx.drawImage(scorch, s.x + s.jx, s.y + s.jy)
+    }
+  }
+}
+
 /* ---------------- Styles ---------------- */
 
 const STYLES: Record<BiomeId, GroundStyle> = {
@@ -247,6 +390,39 @@ const STYLES: Record<BiomeId, GroundStyle> = {
     thicket: 0.64,
     decor: towerDecor,
   },
+  beach: {
+    base: shades('#f0dca8', '#f6e4b4', '#e8d29c'),
+    alt: shades('#dcc48c', '#e2ca94', '#d4bc84'),
+    path: shades('#c8ac78', '#d0b480', '#c0a470'),
+    spots: shades('#fff0c8', '#fff6d8', '#f8e8bc'),
+    thicket: 0.66,
+    decor: beachDecor,
+  },
+  plant: {
+    base: shades('#9ca0a4', '#a4a8ac', '#94989c'),
+    alt: shades('#8a8e90', '#929698', '#84888a'),
+    path: shades('#74787e', '#7a7e84', '#6e7278'),
+    veins: { color: shades('#686c70', '#606468', '#707478'), width: 0.01 },
+    thicket: 0.66,
+    decor: plantDecor,
+  },
+  desert: {
+    base: shades('#e4bc7c', '#ecc488', '#dcb474'),
+    alt: shades('#d4a868', '#dcb070', '#cca060'),
+    path: shades('#c49460', '#cc9c68', '#bc8c58'),
+    spots: shades('#f4d498', '#f8dca4', '#ecca8c'),
+    thicket: 0.62,
+    decor: desertDecor,
+  },
+  volcano: {
+    base: shades('#4a4648', '#504c4e', '#444042'),
+    alt: shades('#3a3436', '#403a3c', '#343032'),
+    path: shades('#8c8682', '#948e8a', '#86807c'),
+    spots: shades('#5a5452', '#605a58', '#545050'),
+    veins: { color: shades('#f07020', '#f8a838', '#c84418'), width: 0.0075, glow: '#6a2a1e' },
+    thicket: 0.62,
+    decor: volcanoDecor,
+  },
 }
 
 const decorCache = canvasCache<BiomeId, (ctx: CanvasRenderingContext2D, s: Spot) => void>()
@@ -257,7 +433,7 @@ const decorFor = (biome: BiomeId) => {
   return decorate
 }
 
-const MORTAR = hex('#4c4458')
+const MORTAR = '#4c4458'
 
 /** Graveyard walkway: 12x8 stones in staggered rows, split by dark mortar lines. */
 const isMortar = (wx: number, wy: number) => {
@@ -300,61 +476,158 @@ const noiseRow = (out: Float64Array, wx0: number, wy: number, scale: number, see
 const pathRow = new Float64Array(CHUNK)
 const altRow = new Float64Array(CHUNK)
 const spotRow = new Float64Array(CHUNK)
+const veinRow = new Float64Array(CHUNK)
 
 /** One chunk's pixels, shared by every build: each build writes all of them. */
 let pixels: ImageData | null = null
 
-/** Paints chunk (cx, cy) of `biome` into `canvas` (a fresh one, or an evicted chunk's: the ground covers every pixel). */
-const buildChunk = (biome: BiomeId, cx: number, cy: number, canvas: HTMLCanvasElement) => {
+/* ---------------- Biome borders ---------------- */
+
+/**
+ * Where the ground comes from: `at` samples the map's biomes (`sampleBiome`,
+ * `game/biomeMap.ts`), `key` names the map in the chunk cache (a run's seed),
+ * `blend` is how far (px) each side of a border dithers into the other.
+ */
+export type GroundMap = { key: string; at: (x: number, y: number) => BiomeSample; blend: number }
+
+/** One biome everywhere (the title screen's meadow). */
+export const plainGround = (biome: BiomeId): GroundMap => {
+  const sample: BiomeSample = { a: biome, b: biome, t: Infinity }
+  return { key: biome, at: () => sample, blend: 0 }
+}
+
+const MEADOW_GROUND = plainGround('meadow')
+
+/** The map is sampled once per `BLOCK`×`BLOCK` px and dithered inside the block, so a chunk costs 1024 samples, not 65536. */
+const BLOCK = 8
+const PER = CHUNK / BLOCK
+
+/** 8x8 Bayer matrix: the order pixels switch to the other biome as a border nears. */
+const BAYER8 = (() => {
+  const m = new Uint8Array(64)
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < 8; x++) {
+      let v = 0
+      for (let bit = 0; bit < 3; bit++) {
+        const bx = (x >> bit) & 1
+        const by = (y >> bit) & 1
+        v |= ((bx ^ by) << (5 - bit * 2)) | (by << (4 - bit * 2))
+      }
+      m[y * 8 + x] = v
+    }
+  }
+  return m
+})()
+
+/** Per block of the chunk being built: its biome, the one across the border and how many of 64 pixels take that one. */
+const blockA = Array.from({ length: PER * PER }, (): BiomeId => 'meadow')
+const blockB = Array.from({ length: PER * PER }, (): BiomeId => 'meadow')
+const blockK = new Uint8Array(PER * PER)
+
+/** Samples the map once per block of chunk (cx, cy): half the pixels on the line, none `blend` px in. */
+const sampleBlocks = (map: GroundMap, ox: number, oy: number) => {
+  for (let by = 0; by < PER; by++) {
+    for (let bx = 0; bx < PER; bx++) {
+      const s = map.at(ox + bx * BLOCK + BLOCK / 2, oy + by * BLOCK + BLOCK / 2)
+      const i = by * PER + bx
+      blockA[i] = s.a
+      blockB[i] = s.b
+      blockK[i] = s.a === s.b || s.t >= map.blend ? 0 : Math.round(Math.max(0, Math.min(0.5, 0.5 - s.t / (2 * map.blend))) * 64)
+    }
+  }
+}
+
+/** The biome pixel (x, y) of the chunk being built shows. */
+const biomeOfPixel = (x: number, y: number, wx: number, wy: number) => {
+  const i = (y >> 3) * PER + (x >> 3)
+  return BAYER8[(wy & 7) * 8 + (wx & 7)]! < blockK[i]! ? blockB[i]! : blockA[i]!
+}
+
+/** Each biome's ground shades flattened (base, alt, path, spots; 3 shades of RGB each) and its mortar, out of the pixel loop. */
+type Flat = { rgb: readonly number[]; mortar: Rgb; tiles: boolean; spots: boolean; veins: readonly number[] | null; vein: number; glow: Rgb | null }
+const flats = new Map<BiomeId, Flat>()
+const flatOf = (biome: BiomeId): Flat => {
+  let f = flats.get(biome)
+  if (f) return f
   const style = STYLES[biome]
+  f = {
+    rgb: [style.base, style.alt, style.path, style.spots ?? style.base].flatMap((shades) => shades.flat()),
+    mortar: hex(style.mortar ?? MORTAR),
+    tiles: style.tiles === true,
+    spots: style.spots !== undefined,
+    veins: style.veins ? style.veins.color.flat() : null,
+    vein: style.veins?.width ?? 0,
+    glow: style.veins?.glow ? hex(style.veins.glow) : null,
+  }
+  flats.set(biome, f)
+  return f
+}
+
+/** Paints chunk (cx, cy) of `map` into `canvas` (a fresh one, or an evicted chunk's: the ground covers every pixel). */
+const buildChunk = (map: GroundMap, cx: number, cy: number, canvas: HTMLCanvasElement) => {
   const ctx = context2d(canvas)
   const img = (pixels ??= new ImageData(CHUNK, CHUNK))
   const data = img.data
   const ox = cx * CHUNK
   const oy = cy * CHUNK
+  sampleBlocks(map, ox, oy)
 
-  // The ground's shades flattened once (base, alt, path, spots; 3 shades of RGB each), out of the pixel loop.
-  const { tiles, spots } = style
-  const rgb = [style.base, style.alt, style.path, spots ?? style.base].flatMap((shades) => shades.flat())
   for (let y = 0; y < CHUNK; y++) {
     const wy = oy + y
     noiseRow(pathRow, ox, wy, 220, SEED + 7)
     noiseRow(altRow, ox, wy, 96, SEED)
-    if (spots) noiseRow(spotRow, ox, wy, 20, SEED + 9)
+    noiseRow(spotRow, ox, wy, 20, SEED + 9)
+    noiseRow(veinRow, ox, wy, 44, SEED + 11)
     for (let x = 0; x < CHUNK; x++) {
       const wx = ox + x
+      const flat = flatOf(biomeOfPixel(x, y, wx, wy))
       const path = Math.abs(pathRow[x]! - 0.5) < 0.025
       const r = hash2(wx, wy, SEED + 1)
-      const palette = path ? 2 : spots && spotRow[x]! > 0.76 ? 3 : altRow[x]! > 0.55 ? 1 : 0
+      const palette = path ? 2 : flat.spots && spotRow[x]! > 0.76 ? 3 : altRow[x]! > 0.55 ? 1 : 0
       // Ordered-ish dither: mostly the base shade with sparse lighter/darker pixels.
       const i = (y * CHUNK + x) * 4
-      if (path && tiles && isMortar(wx, wy)) {
-        data[i] = MORTAR[0]
-        data[i + 1] = MORTAR[1]
-        data[i + 2] = MORTAR[2]
+      // Veins wind through the dense zones only, off the paths.
+      const vein = flat.veins && !path && altRow[x]! > 0.57 ? Math.abs(veinRow[x]! - 0.5) : 1
+      if (vein < flat.vein) {
+        const c = r < 0.6 ? 0 : r < 0.85 ? 3 : 6
+        data[i] = flat.veins![c]!
+        data[i + 1] = flat.veins![c + 1]!
+        data[i + 2] = flat.veins![c + 2]!
+      } else if (flat.glow && vein < flat.vein * 2.2) {
+        data[i] = flat.glow[0]
+        data[i + 1] = flat.glow[1]
+        data[i + 2] = flat.glow[2]
+      } else if (path && flat.tiles && isMortar(wx, wy)) {
+        data[i] = flat.mortar[0]
+        data[i + 1] = flat.mortar[1]
+        data[i + 2] = flat.mortar[2]
       } else {
         const c = palette * 9 + (r < 0.7 ? 0 : r < 0.9 ? 3 : 6)
-        data[i] = rgb[c]!
-        data[i + 1] = rgb[c + 1]!
-        data[i + 2] = rgb[c + 2]!
+        data[i] = flat.rgb[c]!
+        data[i + 1] = flat.rgb[c + 1]!
+        data[i + 2] = flat.rgb[c + 2]!
       }
       data[i + 3] = 255
     }
   }
   ctx.putImageData(img, 0, 0)
 
-  const decorate = decorFor(biome)
   for (let ty = 0; ty < CHUNK / TILE; ty++) {
     for (let tx = 0; tx < CHUNK / TILE; tx++) {
       const wx = ox + tx * TILE
       const wy = oy + ty * TILE
       if (pathAt(wx, wy, 0.04)) continue // keep paths clean
-      decorate(ctx, {
+      // A tile wears the decor of the biome its middle shows; none right on a border, where the two grounds mix.
+      const i = (ty * 2) * PER + tx * 2 + PER + 1
+      const k = blockK[i]!
+      if (k > 16) continue
+      const biome = blockA[i]!
+      decorFor(biome)(ctx, {
         x: tx * TILE,
         y: ty * TILE,
         wx,
         wy,
-        dense: noise(wx, wy, 140, SEED + 3) > (style.thicket ?? 0.68),
+        dense: noise(wx, wy, 140, SEED + 3) > (STYLES[biome].thicket ?? 0.68),
         roll: hash2(tx + cx * 64, ty + cy * 64, SEED + 2),
         jx: Math.floor(hash2(wx, wy, SEED + 4) * 10),
         jy: Math.floor(hash2(wx, wy, SEED + 5) * 10),
@@ -366,17 +639,16 @@ const buildChunk = (biome: BiomeId, cx: number, cy: number, canvas: HTMLCanvasEl
 
 const chunks = canvasCache<string, HTMLCanvasElement>()
 
-const chunkKey = (biome: BiomeId, cx: number, cy: number) => `${biome}:${cx},${cy}`
+const chunkKey = (map: GroundMap, cx: number, cy: number) => `${map.key}:${cx},${cy}`
 
 /** Chunks a span of `size` px can touch along one axis. */
 const across = (size: number) => Math.ceil(size / CHUNK) + 1
 
 /**
- * How many chunks stay cached for a `w`×`h` view: the view and its lookahead in
- * the biome here, the view in the next one (warming, or the one dissolving out),
- * and a few spare, so walking back and forth doesn't rebuild. About 22 (5.5 MB) on a phone.
+ * How many chunks stay cached for a `w`×`h` view: the view and its lookahead,
+ * and a few spare, so walking back and forth doesn't rebuild. About 16 (4 MB) on a phone.
  */
-const capFor = (w: number, h: number) => across(w + GROUND_LOOKAHEAD * 2) * across(h + GROUND_LOOKAHEAD * 2) + across(w) * across(h) + 4
+const capFor = (w: number, h: number) => across(w + GROUND_LOOKAHEAD * 2) * across(h + GROUND_LOOKAHEAD * 2) + 4
 let cap = capFor(480, 270)
 
 /**
@@ -384,8 +656,8 @@ let cap = capFor(480, 270)
  * never evicted. A miss past the cap repaints the evicted chunk's canvas instead of making
  * another one, so a long run keeps the same few canvases (and their GPU textures).
  */
-const chunkAt = (biome: BiomeId, cx: number, cy: number) => {
-  const key = chunkKey(biome, cx, cy)
+const chunkAt = (map: GroundMap, cx: number, cy: number) => {
+  const key = chunkKey(map, cx, cy)
   let chunk = chunks.get(key)
   if (chunk) chunks.delete(key)
   else {
@@ -395,7 +667,7 @@ const chunkAt = (biome: BiomeId, cx: number, cy: number) => {
       spare ??= chunks.get(oldest)
       chunks.delete(oldest)
     }
-    chunk = buildChunk(biome, cx, cy, spare ?? createCanvas(CHUNK, CHUNK))
+    chunk = buildChunk(map, cx, cy, spare ?? createCanvas(CHUNK, CHUNK))
   }
   chunks.set(key, chunk)
   return chunk
@@ -409,90 +681,31 @@ const chunkSpan = (camX: number, camY: number, w: number, h: number) => ({
   y1: Math.floor((camY + h) / CHUNK),
 })
 
-const drawChunks = (ctx: CanvasRenderingContext2D, biome: BiomeId, camX: number, camY: number, w: number, h: number) => {
+/**
+ * Draws the ground under a camera whose top-left is (camX, camY): the map's
+ * biomes, each border a band of dithered pixels baked into the chunks, so a
+ * frame only blits (lean mode included).
+ */
+export const drawGround = (ctx: CanvasRenderingContext2D, camX: number, camY: number, w: number, h: number, map: GroundMap = MEADOW_GROUND) => {
+  cap = capFor(w, h)
   const { x0, y0, x1, y1 } = chunkSpan(camX, camY, w, h)
   for (let cy = y0; cy <= y1; cy++) {
-    for (let cx = x0; cx <= x1; cx++) ctx.drawImage(chunkAt(biome, cx, cy), cx * CHUNK - camX, cy * CHUNK - camY)
+    for (let cx = x0; cx <= x1; cx++) ctx.drawImage(chunkAt(map, cx, cy), cx * CHUNK - camX, cy * CHUNK - camY)
   }
 }
 
-/* ---------------- Biome dissolve ---------------- */
-
-/** 4x4 Bayer matrix: the order pixels switch over during a dissolve. */
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
-
-/** One dither mask per step: step `n` lets `n` of every 16 pixels through. */
-const masks = lazy(() =>
-  Array.from({ length: 17 }, (_, n) => {
-    const c = createCanvas(4, 4)
-    const mctx = context2d(c)
-    mctx.fillStyle = '#000'
-    BAYER.forEach((v, i) => v < n && mctx.fillRect(i % 4, Math.floor(i / 4), 1, 1))
-    return c
-  }),
-)
-
-let scratch: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; patterns: CanvasPattern[] } | null = null
-onCanvasReset(
-  () => (scratch = null),
-  () => scratch,
-)
-
-const scratchFor = (w: number, h: number) => {
-  if (!scratch || scratch.canvas.width !== w || scratch.canvas.height !== h) {
-    const canvas = createCanvas(w, h)
-    const ctx = context2d(canvas)
-    scratch = { canvas, ctx, patterns: masks().map((m) => ctx.createPattern(m, 'repeat')!) }
-  }
-  return scratch
-}
-
-const mod = (a: number, n: number) => ((a % n) + n) % n
-
 /**
- * Draws the ground under a camera whose top-left is (camX, camY). While `fade`
- * runs (k from 0 to 1), `fade.from` dissolves into `biome` in 16 dithered steps
- * locked to the world grid, so the pattern doesn't swim as the camera moves.
+ * Builds at most one missing chunk of `map` under the view grown by `margin`
+ * px on every side, so chunks are ready before they scroll in and never
+ * stall the frame that shows them. True if it built one.
  */
-export const drawGround = (
-  ctx: CanvasRenderingContext2D,
-  camX: number,
-  camY: number,
-  w: number,
-  h: number,
-  biome: BiomeId = 'meadow',
-  fade: { from: BiomeId; k: number } | null = null,
-) => {
-  cap = capFor(w, h)
-  const step = fade ? Math.max(0, Math.min(16, Math.floor(fade.k * 17))) : 16
-  if (!fade || step >= 16) return drawChunks(ctx, biome, camX, camY, w, h)
-  drawChunks(ctx, fade.from, camX, camY, w, h)
-  if (step === 0) return
-  const s = scratchFor(w, h)
-  drawChunks(s.ctx, biome, camX, camY, w, h)
-  s.ctx.globalCompositeOperation = 'destination-in'
-  s.ctx.fillStyle = s.patterns[step]!
-  s.ctx.save()
-  s.ctx.translate(-mod(camX, 4), -mod(camY, 4))
-  s.ctx.fillRect(0, 0, w + 4, h + 4)
-  s.ctx.restore()
-  s.ctx.globalCompositeOperation = 'source-over'
-  ctx.drawImage(s.canvas, 0, 0)
-}
-
-/**
- * Builds at most one missing chunk of `biome` under the view grown by `margin`
- * px on every side, so chunks are ready before they scroll in (and an upcoming
- * biome before its dissolve starts) and never stall the frame that shows them.
- * True if it built one.
- */
-export const warmGround = (biome: BiomeId, camX: number, camY: number, w: number, h: number, margin = 0) => {
+export const warmGround = (map: GroundMap, camX: number, camY: number, w: number, h: number, margin = 0) => {
   cap = capFor(w, h)
   const { x0, y0, x1, y1 } = chunkSpan(camX - margin, camY - margin, w + margin * 2, h + margin * 2)
   for (let cy = y0; cy <= y1; cy++) {
     for (let cx = x0; cx <= x1; cx++) {
-      if (chunks.has(chunkKey(biome, cx, cy))) continue
-      chunkAt(biome, cx, cy)
+      if (chunks.has(chunkKey(map, cx, cy))) continue
+      chunkAt(map, cx, cy)
       return true
     }
   }

@@ -7,6 +7,7 @@ import { createClerkClient } from '@clerk/backend'
 import { serve } from '@hono/node-server'
 import { adminStore } from './admin'
 import { arenaStore, createArenaRewards } from './arena'
+import { coopBoardStore } from './coopBoards'
 import { createApp } from './app'
 import { bugReportStore, createBugReports, discordBugForum } from './bugReports'
 import { clerkVerifier } from './auth'
@@ -95,6 +96,7 @@ const app = createApp({
   admin: adminStore(sql, clerk, env.adminEmails),
   moderation: moderationStore(sql),
   arena,
+  coop: coopBoardStore(sql),
   arenaReportSecret: env.arenaReportSecret,
   patreon: env.patreon ? patreonOAuth(env.patreon) : null,
   webhooks: {

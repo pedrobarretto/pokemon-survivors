@@ -6,6 +6,7 @@ import { BRANCHES, branchesAt, type BranchId } from '../data/branches'
 import { evolutionOf, evolvedFrom } from '../data/evolutions'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { ITEMS, type ItemId } from '../data/items'
+import type { MegaId } from '../data/megas'
 import { TRAINING, type TrainingTarget } from '../data/training'
 import type { Build } from './builds'
 import { spawnEnemy } from './enemies'
@@ -13,11 +14,14 @@ import { runLearnset } from './learnsets'
 import { MAX_ITEMS, MAX_MOVES, recomputeStats } from './leveling'
 import { LEGENDARY_MOVE_OF } from '../data/legendaryMoves'
 import { AWAKEN_AT, isLegend, legendSignature, type LegendId } from '../data/legends'
+import { DUO_RECIPES, isDuo } from './duoRules'
 import { learnable } from './kitRules'
+import { runMegas } from './mega'
 import { forkAt, isLegendary, isManual, maxMoveLevel, withBranch, type MoveId } from './moves'
 import { aimScreen, ownAttack } from './players'
 import { shelfTms } from './tmShelf'
 import { createTraitState } from './traits'
+import { setArchetype } from './terrain'
 import type { DamageSource, Enemy, Game } from './types'
 
 /**
@@ -79,9 +83,10 @@ const spawnDummy = (g: Game, target: TrainingTarget, at: Vec): Enemy => {
   return e
 }
 
-/** Turns the run into the Dojo, with `count` dummies of `target` around the player, along `aim`. */
+/** Turns the run into the Dojo, with `count` dummies of `target` around the player, along `aim`, on the classic route (no map archetype). */
 export const startTraining = (g: Game, target: TrainingTarget = TRAINING.target, count: number = TRAINING.counts[0], aim: Aim = AHEAD) => {
   const p = g.player
+  setArchetype(g, 'route')
   g.training = { target, posts: [], home: { x: p.x, y: p.y }, aim, lens: { x: 0, y: 0 }, shown: { x: 0, y: 0 } }
   setDummies(g, target, count)
 }
@@ -128,6 +133,8 @@ export const updateTraining = (g: Game, dt: number) => {
   const t = g.training
   if (!t) return
   for (const p of g.players) p.hp = p.stats.maxHp
+  // The screen flash (a Mega Evolution's burst) fades here: a run does it in `updateConsumables`, which the Dojo's tick skips.
+  g.flash = Math.max(0, g.flash - dt * 2.5)
   const k = Math.min(1, TRAINING.spring * dt)
   for (const post of t.posts) {
     let e = g.enemies.find((x) => x.id === post.id)
@@ -156,14 +163,15 @@ export const trainingMoves = (starter: PlayableId, branch: BranchId | null): Mov
   return out
 }
 
-/** The Dojo's shelves of moves: the family's own, every TM (the shop's too) and the legendaries' capstones. */
-export const MOVE_SHELVES = ['family', 'tms', 'legendary'] as const
+/** The Dojo's shelves of moves: the family's own, every TM (the shop's too), the legendaries' capstones and the duo moves. */
+export const MOVE_SHELVES = ['family', 'tms', 'legendary', 'duo'] as const
 export type MoveShelf = (typeof MOVE_SHELVES)[number]
 
 /** The moves on a shelf; `legends`: the legends the game shows today (`shownLegends`), so a festival's stays secret until announced. */
 export const shelfMoves = (shelf: MoveShelf, starter: PlayableId, branch: BranchId | null, legends: readonly LegendId[]): MoveId[] => {
   if (shelf === 'family') return trainingMoves(starter, branch)
   if (shelf === 'tms') return [...shelfTms()]
+  if (shelf === 'duo') return DUO_RECIPES.flatMap((r) => ('alt' in r ? [r.to, r.alt] : [r.to]))
   return legends.map((id) => LEGENDARY_MOVE_OF[id])
 }
 
@@ -175,16 +183,18 @@ const twinOf = (g: Game, id: MoveId) => {
 
 /**
  * Why a move the player doesn't carry can't be learned now, as in a run: every
- * slot taken, a second manual move (`learnable`) or a second legendary one (a
- * run teaches one legendary TM; a legend's own move doesn't count). Null when it can.
+ * slot taken, a second manual move (`learnable`), a second legendary one (a
+ * run teaches one legendary TM; a legend's own move doesn't count) or a second
+ * duo move (a run fuses at most one). Null when it can.
  */
-export const moveBlock = (g: Game, id: MoveId): 'full' | 'manual' | 'legendary' | null => {
+export const moveBlock = (g: Game, id: MoveId): 'full' | 'manual' | 'legendary' | 'duo' | null => {
   const p = g.player
   if (p.moves.some((m) => m.id === id)) return null
   const slot = twinOf(g, id)
   const others = p.moves.filter((m) => m !== slot).map((m) => m.id)
   if (!slot && others.length >= MAX_MOVES) return 'full'
   if (!learnable(others, id, isManual)) return 'manual'
+  if (isDuo(id) && others.some(isDuo)) return 'duo'
   const own = legendSignature(p.starter)
   if (isLegendary(id) && id !== own && others.some((m) => isLegendary(m) && m !== own)) return 'legendary'
   return null
@@ -268,12 +278,30 @@ export const trainingForms = (starter: PlayableId): TrainingForm[] =>
  */
 export const setForm = (g: Game, stage: number, branch: BranchId | null, awakened = 0) => {
   const p = g.player
+  // A form change ends a Mega in progress (it only fits the final stage).
+  p.mega.active = p.mega.intro = 0
   p.stage = stage
   p.branch = branch && BRANCHES[branch].line === p.starter && BRANCHES[branch].stage <= stage ? branch : null
+  // A branch's own Mega stone (Gallade's) no longer fits once the branch changes: it goes.
+  if (p.mega.stone && !runMegas(g).includes(p.mega.stone)) p.mega.stone = null
   if (p.legend) p.legend.awakened = Math.max(0, Math.min(AWAKEN_AT.length, awakened))
   const id = p.ability.id
   if (id && (!abilitySet(p.starter, p.branch).includes(id) || p.legend?.awakened === 0)) p.ability = createAbilityState()
   recomputeStats(g)
+}
+
+/**
+ * Holds the Mega Stone of `id` (null: none), as a run does once a rift drops
+ * it: the Mega button then works from the final stage on. Returns false for a
+ * Mega the Pokémon can't reach (another line's, or the other branch's).
+ */
+export const setMega = (g: Game, id: MegaId | null) => {
+  const p = g.player
+  if (id !== null && !runMegas(g).includes(id)) return false
+  p.mega.stone = id
+  p.mega.active = p.mega.intro = p.mega.charge = 0
+  recomputeStats(g)
+  return true
 }
 
 /** Sets the ability (null: none), one of the form's set. */

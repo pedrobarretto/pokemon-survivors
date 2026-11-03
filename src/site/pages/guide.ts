@@ -1,6 +1,6 @@
 import { ACHIEVEMENT_IDS, ACHIEVEMENTS, MEDAL_EGG, MEDAL_REWARD, MEDALS, TITLE_IDS, type AchievementDef, type AchievementId } from '../../data/achievements'
 import { DAILY_POOL, MISSION_SLOTS, WEEKLY_POOL, type MissionTemplate } from '../../data/missions'
-import { BIOME_LENGTH, BIOME_ORDER, BIOMES, WEATHER_IDS, type WeatherId } from '../../data/biomes'
+import { BIOME_IDS, BIOME_TIERS, BIOMES, WEATHER_IDS, type WeatherId } from '../../data/biomes'
 import { BOSS_DIFFICULTY, BOSS_PATTERNS, BOSS_RAGE } from '../../data/bosses'
 import { DROP_TABLES, ENEMY_BERRY_CHANCE, ENEMY_DROP_CHANCE, FLUTE_SLEEP, PROPS, type Drop, type DropSource } from '../../data/consumables'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../../data/enemies'
@@ -20,7 +20,7 @@ import { COOP } from '../../data/coop'
 import { AWAKEN_AT, LEGEND_IDS, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../../data/legends'
 import { legendSource } from '../../game/capture'
 import { legendMods } from '../../game/legend'
-import { CAVE, GRAVEYARD, PLACE, PLACE_IDS, PLACES, SKY, WING_IDS, WINGS } from '../../data/places'
+import { CAVE, GRAVEYARD, HIDDEN, PLACE, PLACES, REGULAR_PLACE_IDS, SKY, WING_IDS, WINGS } from '../../data/places'
 import { TIER_FLOORS, TIERS } from '../../data/roster'
 import { BOSS_FIGHT, bossCandidates, ELITE, EVENTS, FINALE, MYTHICALS, RUN_LENGTH, RUNNER, scaling, STAGES, stageStart, TRIO_IDS, TRIOS, type BossEvent } from '../../data/waves'
 import { createRng } from '../../engine/rng'
@@ -39,7 +39,7 @@ import { MAX_ITEMS, MAX_MOVES, OFFER_RARITY } from '../../game/leveling'
 import { COIN_VALUES, runBonus, UPGRADE_IDS, UPGRADES, upgradePrice } from '../../game/meta'
 import { maxMoveLevel, MOVE_IDS, MOVES, type MoveDef, type MoveId } from '../../game/moves'
 import { SHINY_BUFF, SHINY_ODDS } from '../../game/shiny'
-import { AFFINITY_ODDS, biomeWeight, drawRoster, TRAIT_ALIVE, TRAIT_CAP, TRAIT_FROM } from '../../game/roster'
+import { AFFINITY_ODDS, drawRoster, TRAIT_ALIVE, TRAIT_CAP, TRAIT_FROM } from '../../game/roster'
 import { MIN_SPECIAL_COOLDOWN, resolveSpecial, SPECIAL_IDS, specialOfType, SPECIALS } from '../../game/special'
 import { riftScale } from '../../game/rift'
 import { placeBossScale, wingAmount } from '../../game/place'
@@ -120,11 +120,13 @@ const world = (locale: Locale, m: SiteMessages) => {
   const w = m.guide.world
   const game = LOCALES[locale].messages.world
   const pct = (v: number) => Math.round(v * 1000) / 10
-  const biomes = BIOME_ORDER.map((id, i) => {
-    const odds: Partial<Record<WeatherId, number>> = BIOMES[id].weather
-    const likely = WEATHER_IDS.filter((wid) => (odds[wid] ?? 0) > 0).sort((a, b) => odds[b]! - odds[a]!)
-    return [clock(i * BIOME_LENGTH), game.biomes[id], html`${BIOMES[id].affinity.map((type) => typeBadge(type, m))}`, likely.map((wid) => game.weather[wid]).join(', ')]
-  })
+  const biomes = BIOME_TIERS.flatMap((tier, i) =>
+    tier.map((id) => {
+      const odds: Partial<Record<WeatherId, number>> = BIOMES[id].weather
+      const likely = WEATHER_IDS.filter((wid) => (odds[wid] ?? 0) > 0).sort((a, b) => odds[b]! - odds[a]!)
+      return [w.rings[i] ?? '', game.biomes[id], html`${BIOMES[id].affinity.map((type) => typeBadge(type, m))}`, likely.map((wid) => game.weather[wid]).join(', ')]
+    }),
+  )
   // Every effect is read from the weather rules, so the guide follows any rebalance.
   const effect = (id: Exclude<WeatherId, 'clear'>) => {
     const def = WEATHER[id]
@@ -141,8 +143,8 @@ const world = (locale: Locale, m: SiteMessages) => {
     return parts.join('; ')
   }
   const weather = WEATHER_IDS.flatMap((id) => (id === 'clear' ? [] : [[game.weather[id], effect(id)]]))
-  return html`${paragraphs(w.paragraphs(BIOME_ORDER.length, BIOME_LENGTH / 60, AFFINITY_ODDS))}
-    ${table([w.timeHead, w.biomeHead, w.hordeHead, w.weatherHead], biomes)}
+  return html`${paragraphs(w.paragraphs(BIOME_IDS.length, AFFINITY_ODDS))}
+    ${table([w.ringHead, w.biomeHead, w.hordeHead, w.weatherHead], biomes)}
     <h3>${w.weatherTitle}</h3>
     ${table([w.weatherCol, w.effectHead], weather)}`
 }
@@ -160,7 +162,7 @@ const spread = <T>(items: readonly T[], count: number) =>
 
 const horde = (locale: Locale, m: SiteMessages) => {
   const r = m.roster
-  const perRun = new Set(drawRoster(createRng(1), { weight: biomeWeight }).stages.flatMap((pool) => pool.map(([id]) => id))).size
+  const perRun = new Set(drawRoster(createRng(1)).stages.flatMap((pool) => pool.map(([id]) => id))).size
   const tiers = TIERS.map((tier, i) => [
     r.tierOf(tier),
     r.total(TIER_FLOORS[i - 1] ?? 0, TIER_FLOORS[i] === undefined ? null : TIER_FLOORS[i] - 1),
@@ -403,7 +405,8 @@ const places = (locale: Locale, m: SiteMessages) => {
   const p = m.guide.places
   const num = (v: number) => v.toLocaleString(m.lang.tag)
   const pct = (v: number) => Math.round(v * 100)
-  const rows = PLACE_IDS.map((id) => [
+  // Hidden zones stay a teaser (`p.hidden`): no table row, no species.
+  const rows = REGULAR_PLACE_IDS.map((id) => [
     p.names[id],
     p.seconds(PLACES[id].time),
     html`${PLACES[id].species.map((e) => html`<a class="with-mini" href="${dexLink(locale, ENEMIES[e].name)}" title="${ENEMIES[e].name}">${portrait(ENEMIES[e].dex)}</a>`)}`,
@@ -438,7 +441,9 @@ const places = (locale: Locale, m: SiteMessages) => {
     ${table([m.guide.bosses.bossHead, m.guide.bosses.attacksHead], [[bossName(locale, spiritomb), attacks]])}
     <h3>${p.names.sky}</h3>
     ${paragraphs(p.sky({ time: PLACES.sky.time, tailwind: pct(SKY.tailwind - 1), every: SKY.wings.every, flock: SKY.flock.every }))}
-    ${table([p.wingHead, p.effectHead], WING_IDS.map((id) => [WINGS[id].name, p.wings[id](wingAmount(id))]))}`
+    ${table([p.wingHead, p.effectHead], WING_IDS.map((id) => [WINGS[id].name, p.wings[id](wingAmount(id))]))}
+    <h3>${p.hiddenTitle}</h3>
+    ${paragraphs(p.hidden({ odds: pct(HIDDEN.odds), open: HIDDEN.openTime }))}`
 }
 
 /** The map's landmarks: how often they stand, what each one is and what its treasure holds (`data/landmarks.ts`). */

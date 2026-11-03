@@ -1,6 +1,6 @@
 import { weightedPick } from '../engine/rng'
 import type { Ellipse } from '../data/terrain'
-import { PLACE, PLACES, type PlaceId } from '../data/places'
+import { HIDDEN, hiddenOf, PLACE, PLACES, type PlaceId } from '../data/places'
 import { runMods } from './legend'
 import { spawnEnemy } from './enemies'
 import { placePool, type PlaceInterior, type PlaceNotice } from './place'
@@ -10,7 +10,7 @@ import type { Enemy, Game } from './types'
 import { shakeScreen } from './effects'
 
 /**
- * What every place's rules share (`cave.ts`, `graveyard.ts`, `sky.ts`): news
+ * What every place's rules share (`cave.ts`, `graveyard.ts`, `sky.ts`, the hidden zones'): news
  * for the shell, the spawner inside, scenery and the loot window.
  */
 
@@ -48,13 +48,15 @@ export const spawnInPlace = (g: Game, inside: PlaceInterior, dt: number, spotFor
   if (inside.spawnBudget < 1) return
   let alive = crowd(g)
   const pool = placePool(inside.id, g.time)
+  // Hidden zones shine brighter.
+  const shiny = SHINY_ODDS.enemy * g.shinyBoost * (hiddenOf(inside.id) ? HIDDEN.shinyBoost : 1)
   while (inside.spawnBudget >= 1) {
     inside.spawnBudget--
     if (alive >= def.max * more) continue
     const spot = spotFor(g)
     if (!spot) continue
     const e = spawnEnemy(g, weightedPick(g.rng, pool), spot.x, spot.y)
-    if (rollShiny(g.rng, SHINY_ODDS.enemy * g.shinyBoost)) makeShiny(g, e)
+    if (rollShiny(g.rng, shiny)) makeShiny(g, e)
     onSpawn?.(e)
     alive++
   }

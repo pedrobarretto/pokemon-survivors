@@ -5,14 +5,15 @@ import type { BiomeId } from '../data/biomes'
 import type { BranchId } from '../data/branches'
 import type { PlayableId } from '../data/hatchlings'
 import { POKE_TYPES, type PokeType } from '../data/types'
-import { playerForm } from './branch'
+import { formOf, playerForm } from './branch'
 import { healPlayer, killEnemy } from './combat'
 import { burst, damageText, floatText, shakeScreen } from './effects'
 import { dropCoins, dropPickup, dropXp } from './pickups'
 import { isAlive } from './queries'
 import type { StatDelta } from './stats'
+import { hasTag, MOVES, type MoveDef, type MoveId } from './moves'
 import { applyStatus, isAsleep } from './status'
-import type { Enemy, Game } from './types'
+import type { Enemy, Game, Player } from './types'
 import { setWeather, weatherHere } from './weather'
 import { roomOf } from './room'
 import { innateAbility, innateEffects } from './legend'
@@ -78,6 +79,39 @@ const effectsOf = (g: Game): readonly AbilityEffect[] => {
   let effects = joined.get(key)
   if (!effects) joined.set(key, (effects = [...innate, ...ABILITIES[id].effects]))
   return effects
+}
+
+/**
+ * Whether one of an ability's effects makes a move of the player's `types` hit
+ * harder: a kind it boosts (Sharpness's slicing moves), the player's own types
+ * (Adaptability) or the others (Protean), or the type it powers in a pinch (Torrent).
+ */
+export const effectBoosts = (e: AbilityEffect, move: MoveId, types: readonly PokeType[]) => {
+  const def: MoveDef = MOVES[move]
+  switch (e.kind) {
+    case 'tag':
+      return hasTag(def, e.tag)
+    case 'ownType':
+      return types.includes(def.type)
+    case 'offType':
+      return !types.includes(def.type)
+    case 'pinch':
+      return e.type === def.type
+    default:
+      return false
+  }
+}
+
+/**
+ * The ability that boosts player `p`'s move, if any, for the shell's mark on it:
+ * the one picked (none while a Mega form lasts), else a legend's innate.
+ */
+export const abilityBoosting = (g: Game, p: Player, move: MoveId): AbilityId | null => {
+  const types = formOf(g, p).types
+  const picked = p.mega.active > 0 ? null : p.ability.id
+  if (picked && ABILITIES[picked].effects.some((e) => effectBoosts(e, move, types))) return picked
+  const innate = innateAbility(p.starter)
+  return innate && innateEffects(p.starter).some((e) => effectBoosts(e, move, types)) ? innate : null
 }
 
 /** Tells the shell an effect did something, under the ability it belongs to: the one picked, else the innate. */
@@ -352,8 +386,8 @@ export const updateAbility = (g: Game, dt: number) => {
     switch (e.kind) {
       case 'summon':
         // The weather lives outside: a room (rift arena, place) waits until the player is back.
-        if (s.biome !== g.biome.id && !roomOf(g)) {
-          s.biome = g.biome.id
+        if (s.biome !== g.player.biome && !roomOf(g)) {
+          s.biome = g.player.biome
           setWeather(g, e.weather)
           proc(g, e)
         }

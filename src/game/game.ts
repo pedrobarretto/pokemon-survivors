@@ -1,3 +1,4 @@
+import type { DayKey } from './day'
 import { dir8, type Vec } from '../engine/math'
 import { createRng } from '../engine/rng'
 import { createGrid } from '../engine/spatial'
@@ -11,12 +12,13 @@ import type { EvolutionStage } from '../data/starters'
 import { runBoost } from './evoItems'
 import { evolutionFreed, missingEvoItems, runEvoItems, stepOpen } from './evoGate'
 import { isStarter, PLAYABLE, type PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
-import { abilityImmune, abilityLuck, abilitySet, createAbilityState, grantAbility, updateAbility } from './abilities'
+import { abilityLuck, abilitySet, createAbilityState, grantAbility, updateAbility } from './abilities'
 import { BAG_ITEMS, type BagItem } from './bag'
 import { branchContext, evolutionOffers, playerForm } from './branch'
 import { createAlphaClock, updateAlphas } from './alphas'
 import { updateAttacks } from './attacks'
-import { createBiome, updateBiome } from './biomes'
+import { updateBiomes } from './biomes'
+import { START_BIOME } from '../data/biomes'
 import { healPlayer } from './combat'
 import { createDexLog } from './dex'
 import { FRESH_LEVELUPS } from './learnsets'
@@ -53,7 +55,7 @@ import { rollShiny, SHINY_ODDS, shinyBoost } from './shiny'
 import { updateProps } from './props'
 import { withHoney, withOutbreak } from './outbreak'
 import { withHaunts } from './halloween'
-import { createTerrain, groundAt, playerWaterPace, updateTerrain } from './terrain'
+import { createTerrain, groundAt, groundPace, slidesOnIce, updateTerrain } from './terrain'
 import { createLandmarkState, createPlayerLandmarks, updateLandmarks, updateTunnel } from './landmarks'
 import { drawRoster, type Roster } from './roster'
 import { clockRuns, createRiftState } from './rift'
@@ -207,6 +209,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     legend: createLegendState(setup.starter),
     wings: {},
     landmark: createPlayerLandmarks(),
+    biome: START_BIOME,
     round: 0,
     pickLeft: COOP.pick.time,
     away: false,
@@ -271,11 +274,10 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     terrain: createTerrain(seed),
     mapEvents: createMapEvents(),
     flash: 0,
-    biome: createBiome(),
     weather: createWeather(),
     traits: { seen: new Set(), nextIntro: 0 },
     rift: createRiftState(),
-    place: createPlaceState(),
+    place: createPlaceState(seed),
     landmarks: createLandmarkState(),
     tutors: 0,
     endless: null,
@@ -343,8 +345,12 @@ export const createGame = (
  */
 export type CoopLoadout = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks; shiny: boolean; name: string }
 
-/** A co-op run's settings, the same on every client: the difficulty, the opening draft (on by default), the simulated view and a roster drawn ahead. */
-export type CoopOptions = { difficulty?: Difficulty; draft?: boolean; view?: Game['view']; roster?: Roster }
+/**
+ * A co-op run's settings, the same on every client: the difficulty, the opening draft (on by default), the simulated
+ * view, a roster drawn ahead and the Desafio co-op do dia it plays (`game/coopBoard.ts`; the caller deals its seed,
+ * difficulty and upgrades off).
+ */
+export type CoopOptions = { difficulty?: Difficulty; draft?: boolean; view?: Game['view']; roster?: Roster; challenge?: DayKey }
 
 /**
  * A fresh co-op run for 1 to `COOP.maxPlayers` loadouts (by slot). Every
@@ -360,6 +366,7 @@ export const createCoopGame = (seed: number, loadouts: readonly CoopLoadout[], o
   const view = { ...(options.view ?? COOP.view) }
   const g = createRun(view, seed, setups, options.roster, { difficulty: options.difficulty, draft: options.draft ?? true }, true)
   g.coop!.names = loadouts.map((l) => l.name)
+  g.coop!.challenge = options.challenge ?? null
   return g
 }
 
@@ -404,11 +411,11 @@ export const walkPlayer = (g: Game, input: Vec, dt: number) => {
   const ground = groundAt(g, p.x, p.y)
   const tailwind = g.place.inside?.id === 'sky' ? SKY.tailwind : 1
   // Versus: the role's pace, a slow on the Pokémon's avatar, its own goal's boost (`VersusSeat.pace`).
-  const pace = p.stats.speed * slow * tailwind * (ground === 'water' ? playerWaterPace(g) : 1) * (p.versus?.pace ?? 1)
+  const pace = p.stats.speed * slow * tailwind * groundPace(g, ground) * (p.versus?.pace ?? 1)
   const vx = moving ? input.x * pace : 0
   const vy = moving ? input.y * pace : 0
-  // On ice the player's speed only slowly follows the stick, so they slide.
-  const ice = ground === 'ice' && slow > 0 && !abilityImmune(g, 'terrain')
+  // On ice the player's speed only slowly follows the stick, so they slide (not a Flying or Ice type, nor Levitating).
+  const ice = ground === 'ice' && slow > 0 && slidesOnIce(g)
   if (ice) {
     const grip = 1 - dm.exp(-TERRAIN.iceGrip * dt)
     p.vx += (vx - p.vx) * grip
@@ -924,11 +931,11 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   g.now += dt
   if (clockRuns(g)) g.time += dt
   // Inside a room (a rift arena, a place) the horde and the map wait outside:
-  // no regular spawns, props, map events, weather or biome changes. A biome
-  // change that came due meanwhile plays on the way out.
+  // no regular spawns, props, map events, weather or biome changes (each
+  // player's biome is read again on the way out).
   const inArena = roomOf(g) !== null
   if (!inArena) {
-    updateBiome(g)
+    updateBiomes(g)
     updateWeather(g, dt)
   }
   const actor = g.player
