@@ -24,6 +24,82 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-02',
+    title: { pt: 'Zonas ocultas', en: 'Hidden zones', es: 'Zonas ocultas', fr: 'Zones cachées', zh: '隱藏區域' },
+    highlights: [
+      {
+        pt: 'Zonas ocultas: em algumas partidas, uma entrada secreta aparece no mapa sem seta e sem aviso. Fique de olho em folhas que se mexem e pedras que brilham.',
+        en: 'Hidden zones: in some runs, a secret way in shows up on the map with no arrow and no warning. Keep an eye out for rustling leaves and glinting rocks.',
+        es: 'Zonas ocultas: en algunas partidas, una entrada secreta aparece en el mapa sin flecha y sin aviso. Atento a las hojas que se mueven y a las rocas que brillan.',
+        fr: 'Zones cachées : dans certaines parties, une entrée secrète apparaît sur la carte sans flèche ni annonce. Guette les feuilles qui bougent et les rochers qui scintillent.',
+        zh: '隱藏區域：在某些對局中，地圖上會出現沒有箭頭、也沒有提示的秘密入口。留意晃動的樹葉和閃光的岩石。',
+      },
+      {
+        pt: 'A Gruta Oculta e o Subterrâneo: Audino saindo da grama, Diglett nas tocas e tesouros nas paredes, valendo muito mais EXP que a horda.',
+        en: 'The Hidden Grotto and the Underground: Audino popping out of the grass, Diglett in their holes and treasure in the walls, worth far more EXP than the horde.',
+        es: 'La Gruta Oculta y el Subsuelo: Audino saliendo de la hierba, Diglett en sus hoyos y tesoros en las paredes, que valen mucha más EXP que la horda.',
+        fr: 'La Grotte Cachée et le Souterrain : des Audino qui sortent des herbes, des Diglett dans leurs trous et des trésors dans les parois, bien plus riches en EXP que la horde.',
+        zh: '隱藏洞穴與地下通道：從草叢冒出的 Audino、洞裡的 Diglett 和牆裡的寶藏，經驗值遠高於怪群。',
+      },
+      {
+        pt: 'Às vezes um tufo de grama ou uma toca brilha: lá dentro tem um shiny garantido. Seja rápido, ele não fica muito tempo.',
+        en: 'Now and then a tuft of grass or a hole sparkles: there’s a sure shiny inside. Be quick, it doesn’t stay long.',
+        es: 'A veces un mechón de hierba o un hoyo brilla: adentro hay un shiny seguro. Sé rápido, no se queda mucho tiempo.',
+        fr: 'Parfois une touffe d’herbe ou un trou scintille : un chromatique garanti s’y cache. Fais vite, il ne reste pas longtemps.',
+        zh: '偶爾會有一叢草或一個洞閃閃發光：裡面一定是異色寶可夢。動作要快，牠不會久留。',
+      },
+      {
+        pt: 'Encontrar cada zona pela primeira vez dá um visual exclusivo no Presente: a moldura Gruta Oculta e o papel de parede Base Secreta.',
+        en: 'Finding each zone the first time brings an exclusive look as a Mystery Gift: the Hidden Grotto frame and the Secret Base wallpaper.',
+        es: 'Encontrar cada zona por primera vez trae un estilo exclusivo en el Regalo: el marco Gruta Oculta y el fondo Base Secreta.',
+        fr: 'Trouver chaque zone la première fois offre un style exclusif en Cadeau Mystère : le cadre Grotte Cachée et le fond Base Secrète.',
+        zh: '第一次找到每個區域，會在神秘禮物中獲得專屬外觀：隱藏洞穴邊框與秘密基地桌布。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Zonas ocultas', en: 'Hidden zones', es: 'Zonas ocultas', fr: 'Zones cachées', zh: '隱藏區域' },
+        notes: [
+          {
+            pt: 'Em mais ou menos uma partida a cada três, a entrada de uma zona oculta aparece logo à frente de onde você está indo, disfarçada de cenário. Não tem seta, aviso nem marca no minimapa: chegue perto para encontrá-la e fique na entrada para entrar.',
+            en: 'In about one run in three, the way into a hidden zone shows up just ahead of where you’re heading, dressed as scenery. There’s no arrow, no warning and no mark on the minimap: walk up to it to find it, and stand in its way in to enter.',
+            es: 'En más o menos una de cada tres partidas, la entrada a una zona oculta aparece justo delante de hacia donde vas, disfrazada de paisaje. No hay flecha, aviso ni marca en el minimapa: acércate para encontrarla y quédate en la entrada para entrar.',
+            fr: 'Dans environ une partie sur trois, l’entrée d’une zone cachée apparaît juste devant là où tu vas, déguisée en décor. Pas de flèche, pas d’annonce ni de marque sur la mini-carte : approche-toi pour la trouver, et reste dans l’entrée pour y aller.',
+            zh: '大約每三局就有一局，隱藏區域的入口會出現在你前進方向的前方，偽裝成風景。沒有箭頭、沒有提示，小地圖上也沒有標記：走近才能發現，站在入口就能進去。',
+          },
+          {
+            pt: 'Na Gruta Oculta, a grama balança e um Audino (às vezes um Chansey ou um Blissey) sai dela, tímido e fugindo: derrote antes que ele volte para o mato. No fundo da clareira tem um item na grama: uma Poké Ball, uma pilha de ₽, um Rare Candy ou o item de evolução que falta ao seu Pokémon.',
+            en: 'In the Hidden Grotto, the grass shakes and an Audino (sometimes a Chansey or a Blissey) pops out, shy and running: defeat it before it dives back in. At the back of the clearing an item lies in the grass: a Poké Ball, a pile of ₽, a Rare Candy or the evolution item your Pokémon is missing.',
+            es: 'En la Gruta Oculta, la hierba se mueve y sale un Audino (a veces un Chansey o un Blissey), tímido y huyendo: derrótalo antes de que vuelva a la maleza. Al fondo del claro hay un objeto en la hierba: una Poké Ball, un montón de ₽, un Rare Candy o el objeto evolutivo que le falta a tu Pokémon.',
+            fr: 'Dans la Grotte Cachée, les herbes bougent et un Audino (parfois un Chansey ou un Blissey) en sort, timide et en fuite : bats-le avant qu’il n’y retourne. Au fond de la clairière, un objet attend dans l’herbe : une Poké Ball, un tas de ₽, un Rare Candy ou l’objet d’évolution qui manque à ton Pokémon.',
+            zh: '在隱藏洞穴裡，草叢晃動後會跑出 Audino（有時是 Chansey 或 Blissey），牠們很膽小、會逃跑：在牠躲回草叢前打倒牠。空地深處的草叢裡有一個道具：Poké Ball、一堆 ₽、Rare Candy，或你的寶可夢缺少的進化道具。',
+          },
+          {
+            pt: 'No Subterrâneo, fique nos brilhos das paredes para cavar: Exp. Candy, Prism Sphere, Rare Candy, a pedra de evolução que falta ao seu Pokémon ou Old Amber com um ovo dentro. Cada escavação racha as paredes, e os Diglett só ficam um instante fora da toca.',
+            en: 'In the Underground, stand at the glints in the walls to dig: Exp. Candy, a Prism Sphere, a Rare Candy, the evolution stone your Pokémon is missing or Old Amber with an egg inside. Every dig cracks the walls, and the Diglett only peek out of their holes for a moment.',
+            es: 'En el Subsuelo, quédate en los destellos de las paredes para excavar: Exp. Candy, Prism Sphere, Rare Candy, la piedra evolutiva que le falta a tu Pokémon u Old Amber con un huevo dentro. Cada excavación agrieta las paredes, y los Diglett solo asoman un instante.',
+            fr: 'Dans le Souterrain, reste sur les éclats des parois pour creuser : Exp. Candy, Prism Sphere, Rare Candy, la pierre d’évolution qui manque à ton Pokémon ou de l’Old Amber avec un œuf dedans. Chaque fouille fissure les parois, et les Diglett ne sortent de leur trou qu’un instant.',
+            zh: '在地下通道裡，站在牆上的閃光處挖掘：Exp. Candy、Prism Sphere、Rare Candy、你的寶可夢缺少的進化石，或藏著蛋的 Old Amber。每挖一次牆壁就會龜裂，而 Diglett 只會探出洞口一下子。',
+          },
+          {
+            pt: 'Em cerca de uma visita a cada três, um tufo de grama ou uma toca começa a brilhar: o Pokémon que sai dali é shiny com certeza, vale cinco vezes mais EXP e deixa uma Poké Ball, ₽ e uma chance de ovo.',
+            en: 'In about one visit in three, a tuft of grass or a hole starts to sparkle: the Pokémon that comes out is a sure shiny, worth five times the EXP, and leaves a Poké Ball, ₽ and a shot at an egg.',
+            es: 'En más o menos una de cada tres visitas, un mechón de hierba o un hoyo empieza a brillar: el Pokémon que sale es shiny seguro, vale cinco veces más EXP y deja una Poké Ball, ₽ y una posibilidad de huevo.',
+            fr: 'Dans environ une visite sur trois, une touffe d’herbe ou un trou se met à scintiller : le Pokémon qui en sort est chromatique à coup sûr, vaut cinq fois plus d’EXP et laisse une Poké Ball, des ₽ et une chance d’œuf.',
+            zh: '大約每三次造訪就有一次，會有一叢草或一個洞開始閃閃發光：從那裡出來的寶可夢一定是異色，經驗值是五倍，還會留下 Poké Ball、₽ 和獲得蛋的機會。',
+          },
+          {
+            pt: 'A primeira vez que você entra em cada zona rende um Presente com um visual que não se compra: a moldura Gruta Oculta (verde-musgo, com folhas nos cantos) e o papel de parede Base Secreta (terra e esferas, como as bases do Subterrâneo). E tem medalha de ouro e título para quem encontrar todas.',
+            en: 'The first time you step into each zone brings a Mystery Gift with a look no shop sells: the Hidden Grotto frame (moss green, with leaves in the corners) and the Secret Base wallpaper (earth and spheres, like the Underground’s bases). There’s also a gold medal and a title for finding them all.',
+            es: 'La primera vez que entras en cada zona trae un Regalo con un estilo que no se vende: el marco Gruta Oculta (verde musgo, con hojas en las esquinas) y el fondo Base Secreta (tierra y esferas, como las bases del Subsuelo). Y hay medalla de oro y título para quien las encuentre todas.',
+            fr: 'La première fois que tu entres dans chaque zone, un Cadeau Mystère t’offre un style qu’aucune boutique ne vend : le cadre Grotte Cachée (vert mousse, des feuilles dans les coins) et le fond Base Secrète (terre et sphères, comme les bases du Souterrain). Et il y a une médaille d’or et un titre pour qui les trouve toutes.',
+            zh: '第一次進入每個區域，會獲得一份神秘禮物，裡面是商店買不到的外觀：隱藏洞穴邊框（苔綠色，四角有樹葉）與秘密基地桌布（泥土與寶珠，就像地下通道的基地）。找到所有區域還能獲得金牌與稱號。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-01',
     title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
     highlights: [

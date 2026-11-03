@@ -232,7 +232,7 @@ const SCENARIOS = {
       enterPlace(g, 'cave', g.player.x, g.player.y)
     },
   },
-  /** The Hidden Grotto at 5:00 (`hidden.ts`, `grotto.ts`): Shaymin out early, Audino popping out of the shaking grass, the item in the grass. */
+  /** The Hidden Grotto at 5:00 (`hidden.ts`, `grotto.ts`): a patch sparkling early, Audino popping out of the shaking grass, the item in the grass. */
   grotto: {
     start: { ...START, starter: 'charmander' },
     seconds: 40,
@@ -242,10 +242,10 @@ const SCENARIOS = {
       g.player.revives = 2
       gainXp(g, 1200)
       enterPlace(g, 'grotto', g.player.x, g.player.y)
-      if (g.place.inside?.id === 'grotto') g.place.inside.state.dwellers.rare.at = 3
+      if (g.place.inside?.id === 'grotto') g.place.inside.state.dwellers.sparkle.at = 3
     },
   },
-  /** The Underground at 8:00 (`underground.ts`): a glint under the player's feet dug up, the walls cracking, Diglett in their holes and Diancie early. */
+  /** The Underground at 8:00 (`underground.ts`): a glint under the player's feet dug up, the walls cracking, Diglett in their holes and a hole sparkling early. */
   underground: {
     start: { ...START, starter: 'geodude' },
     seconds: 40,
@@ -257,7 +257,7 @@ const SCENARIOS = {
       enterPlace(g, 'underground', g.player.x, g.player.y)
       const inside = g.place.inside
       if (inside?.id !== 'underground') return
-      inside.state.dwellers.rare.at = 4
+      inside.state.dwellers.sparkle.at = 4
       const glint = inside.state.glints[0]!
       Object.assign(g.player, { x: inside.x + glint.x, y: inside.y + glint.y })
     },
@@ -305,8 +305,8 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
     legend: '1100·51·14·cdbdb688',
     waveLegend: '1998·14·17·1fa0f40a',
     cave: '2188·16·12·d2d47594',
-    grotto: '2782·22·18·bca1fc3c',
-    underground: '2799·21·23·0aa0e181',
+    grotto: '2782·23·18·bb75df4d',
+    underground: '3084·23·37·100fda44',
     magicGuard: '1188·29·19·fddbed17',
   },
 }

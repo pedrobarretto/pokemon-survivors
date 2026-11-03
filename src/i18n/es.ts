@@ -1109,9 +1109,9 @@ export const es: Messages = {
       wallpaper: 'Fondo de pantalla de la Caja del PC.',
     },
     styles: {
-      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna', creator: 'Creador(a)' },
+      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna', creator: 'Creador(a)', grotto: 'Gruta Oculta' },
       background: { night: 'Noche estrellada', meadow: 'Ruta 1', forest: 'Bosque Verde', cave: 'Mt. Moon', snow: 'Monte Plateado', tower: 'Torre Lavanda', supporter: 'Cielo dorado', halloween: 'Noche de Brujas' },
-      wallpaper: { classic: 'Clásico', forest: 'Hojas', cave: 'Piedritas', snow: 'Copos de nieve', tower: 'Fantasmitas', supporter: 'Estrellas doradas', haunted: 'Casa Embrujada' },
+      wallpaper: { classic: 'Clásico', forest: 'Hojas', cave: 'Piedritas', snow: 'Copos de nieve', tower: 'Fantasmitas', supporter: 'Estrellas doradas', haunted: 'Casa Embrujada', secretBase: 'Base Secreta' },
     },
   },
 
@@ -1558,6 +1558,7 @@ export const es: Messages = {
     patron: (festival) => `Por ser Mecenas del ${festival} ♥`,
     og: 'Por apoyar el juego desde el principio ♥',
     arenaSeason: (season) => `Por tu mejor marca en la temporada ${season} de la Arena`,
+    hiddenZone: { grotto: 'Por encontrar la Gruta Oculta', underground: 'Por encontrar el Subsuelo' },
   },
 
   supporters: {
@@ -2336,13 +2337,12 @@ export const es: Messages = {
     wallSoon: '¡Las paredes se están agrietando!',
     grottoOut: 'La luz se apagó y saliste de la gruta.',
     collapse: '¡Las paredes se derrumbaron! Escapaste por poco.',
-    dweller: {
-      grotto: (name) => `¡*${name}* apareció entre las flores Gracidea! ¡Rápido, antes de que huya!`,
-      underground: (name) => `¡*${name}* brilla al fondo de la excavación! ¡Rápido, antes de que huya!`,
+    sparkle: {
+      grotto: 'Un mechón de hierba está *brillando*… ¡hay un _shiny_ ahí dentro!',
+      underground: 'Un hoyo está *brillando*… ¡hay un _shiny_ ahí dentro!',
     },
-    dwellerShiny: (name) => `¡Apareció un *${name}* _shiny_! ¡Rápido, antes de que huya!`,
-    dwellerFled: (name) => `${name} huyó…`,
-    dwellerDown: (name) => `¡*${name}* derrotado! Dejó una Poké Ball y un regalo.`,
+    sparkleFled: (name) => `El ${name} _shiny_ huyó…`,
+    sparkleDown: (name) => `¡*${name}* _shiny_ derrotado! Dejó una Poké Ball, ₽ y un regalo.`,
     finds: {
       expCandy: '¡Desenterraste un *Exp. Candy* enorme!',
       sphere: '¡Desenterraste una *Prism Sphere*! Vale ₽.',

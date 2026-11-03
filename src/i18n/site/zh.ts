@@ -107,7 +107,6 @@ export const siteZh: SiteMessages = {
     place: (name: string, from: string) => `住在${name}，從 ${from} 起（可選地點）`,
     placeBoss: (name: string, from: string) => `從${name}的 Odd Keystone 中衝出，從 ${from} 起`,
     lucky: (name: string, from: string) => `從${name}的草叢或洞裡冒出來，從 ${from} 起：很膽小、很快就跑掉，經驗值很多`,
-    rare: (name: string, from: string) => `${name}的稀有居民：從 ${from} 起偶爾出現幾秒，會留下 Poké Ball`,
     places: { cave: '黑暗洞窟', graveyard: '鬧鬼墓地', sky: '雲端之上（限飛行屬性）', grotto: '隱藏洞穴（稀有的隱藏區域）', underground: '地下通道（稀有的隱藏區域）' },
     reaper: (at: string) => `無盡模式的死神，從 ${at} 起`,
     attacks: '攻擊',
@@ -600,7 +599,7 @@ export const siteZh: SiteMessages = {
       hiddenTitle: '隱藏區域',
       hidden: (h: { odds: number; open: number }) => [
         `不是每個地點都有箭頭。大約 ${h.odds}% 的對局裡，隱藏區域的入口會毫無預警地出現在你前進方向的前方，偽裝成風景：樹叢裡一個葉子會晃動的缺口，或一塊偶爾閃光的裂開岩石。它會停留 ${h.open} 秒，在有人靠近之前不會出現在小地圖上。`,
-        '裡面住著在別處見不到的寶可夢，還有經驗值比怪群高得多的寶可夢。其他的就靠你自己發現了。',
+        '裡面住著經驗值比怪群高得多的寶可夢，牠們藏身的地方偶爾還會閃閃發光。第一次找到每個區域，能帶回商店買不到的外觀。其他的就靠你自己發現了。',
       ],
       wingHead: '羽毛',
       effectHead: '效果',

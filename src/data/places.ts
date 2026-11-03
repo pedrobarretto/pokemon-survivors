@@ -26,8 +26,8 @@ export type PlaceId = (typeof PLACE_IDS)[number]
 /** A hidden zone's lucky Pokémon: [species, weight, base EXP]. Shy, they pop out of the zone's spots and are worth far more than the horde (`luckyXp`). */
 export type LuckyEntry = readonly [EnemyId, number, number]
 
-/** What makes a place a hidden zone: who pops out of its spots, and its rare dweller, found nowhere else. */
-export type HiddenDef = { lucky: readonly LuckyEntry[]; rare: EnemyId }
+/** What makes a place a hidden zone: who pops out of its spots (and, sparkling, its sure shiny: `HIDDEN.sparkle`). */
+export type HiddenDef = { lucky: readonly LuckyEntry[] }
 
 export type PlaceDef = {
   /** Seconds inside before the place throws the player back out (the wind, the dawn, the calm). */
@@ -81,8 +81,8 @@ export const PLACES = {
   /**
    * Black 2 and White 2's Hidden Grotto: a gap in a thicket opens on a
    * clearing where Audino pop out of shaking grass (Black and White's best
-   * EXP), an item lies in the grass and, now and then, Shaymin walks among the
-   * Gracidea.
+   * EXP), an item lies in the grass and, now and then, a patch sparkles: a
+   * sure shiny inside.
    */
   grotto: {
     time: 45,
@@ -97,14 +97,13 @@ export const PLACES = {
         ['chansey', 15, 24],
         ['blissey', 5, 40],
       ],
-      rare: 'shaymin',
     },
   },
   /**
    * Diamond and Pearl's Underground: a crack in a boulder leads down to a dig
    * site where glints in the walls hide spheres, candies, evolution stones and
    * Old Amber, Diglett pop up out of their holes, and the walls crack with
-   * every dig. Deep inside, Diancie sparkles now and then.
+   * every dig. Now and then a hole sparkles: a sure shiny inside.
    */
   underground: {
     time: 45,
@@ -118,7 +117,6 @@ export const PLACES = {
         ['diglett', 75, 8],
         ['dugtrio', 25, 20],
       ],
-      rare: 'diancie',
     },
   },
 } as const satisfies Record<PlaceId, PlaceDef>
@@ -146,11 +144,8 @@ export const hiddenOf = (id: PlaceId): HiddenDef | undefined => {
   return def.hidden
 }
 
-/** A hidden zone's own Pokémon: its lucky ones and its rare dweller (none for a regular place). */
-export const hiddenCast = (id: PlaceId): EnemyId[] => {
-  const h = hiddenOf(id)
-  return h ? [...h.lucky.map(([e]) => e), h.rare] : []
-}
+/** A hidden zone's own Pokémon: its lucky ones (none for a regular place). */
+export const hiddenCast = (id: PlaceId): EnemyId[] => hiddenOf(id)?.lucky.map(([e]) => e) ?? []
 
 /**
  * Hidden zones' timing, odds and payouts, in seconds and world px.
@@ -179,8 +174,13 @@ export const HIDDEN = {
   xpRamp: 150,
   /** Shiny odds inside are this many times the horde's. */
   shinyBoost: 4,
-  /** The rare dweller: chance per visit, when it shows up (place age, drawn in [at0, at1]), how long it stays and its EXP (ramped like the lucky ones). */
-  rare: { chance: 0.4, at: [7, 17], stay: 15, xp: 70 },
+  /**
+   * The sparkle (the games' shaking grass that glitters): chance per visit
+   * that one spot sparkles, when (place age, drawn in [at0, at1]), for `warn`
+   * s before it pops; the lucky one inside is sure to be shiny, stays `stay` s, is worth `xp` times its
+   * EXP and leaves a Poké Ball, ₽ and an egg roll. About one run in ten sees one.
+   */
+  sparkle: { chance: 0.3, at: [6, 16], warn: 2, stay: 12, xp: 5 },
 } as const
 
 /** The Hidden Grotto: its shaking grass and Audino. */
@@ -205,6 +205,16 @@ export const UNDERGROUND = {
   digTime: 1.1,
   crack: 2,
 } as const
+
+/**
+ * The item lying in the Hidden Grotto's grass (Black 2 and White 2's grottoes
+ * hold one): weights of each. `pokeball` a prize Poké Ball, `nugget` a pile of
+ * ₽, `rareCandy` a Rare Candy, `stone` the evolution item the Pokémon lacks
+ * (only while it lacks one).
+ */
+export const GROTTO_FINDS = { pokeball: 40, nugget: 28, rareCandy: 17, stone: 15 } as const
+
+export type GrottoFind = keyof typeof GROTTO_FINDS
 
 /** What a glint gives (Diamond and Pearl's Underground): weights of each find. `stone` needs an item the player lacks; `fossil` (Old Amber, an egg inside) comes once a visit. */
 export const DIG_FINDS = { expCandy: 40, sphere: 28, rareCandy: 12, stone: 12, fossil: 8 } as const

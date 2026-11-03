@@ -22,8 +22,8 @@ import * as dm from '../engine/dmath'
  * ₽, a Rare Candy, the evolution stone the Pokémon lacks, or Old Amber with
  * an egg inside), but every dig cracks the walls (`UNDERGROUND.crack` off
  * the clock). Diglett pop up out of their holes for a moment, worth a pile
- * of EXP if whacked in time, and Diancie sparkles in the north pocket now and
- * then. When the walls give, the team scrambles back out.
+ * of EXP if whacked in time, and now and then a hole sparkles with a sure
+ * shiny inside. When the walls give, the team scrambles back out.
  */
 
 /** A glint in the wall, in room px: `progress` 0 → 1 while a player digs at it. */
@@ -58,11 +58,10 @@ const SITE = {
   holes: [[-28, -18], [30, -12], [0, 26], [-10, -120], [-118, 4], [118, -12]] as const satisfies readonly Pt[],
   glints: [[-50, -30], [52, -34], [-46, 36], [44, 40], [-20, -140], [18, -138], [-140, -10], [-128, 22], [138, -26], [130, 8]] as const satisfies readonly Pt[],
   rocks: [[18, 46], [-26, -44]] as const satisfies readonly Pt[],
-  rare: [8, -130] as Pt,
   start: [0, 80] as Pt,
 } as const
 
-const RULES: DwellerRules = { ...UNDERGROUND, leash: 0, rareLeash: 26, colors: ['#5a4430', '#8a6a48', '#b89470', '#3a2c20'] }
+const RULES: DwellerRules = { ...UNDERGROUND, leash: 0, colors: ['#5a4430', '#8a6a48', '#b89470', '#3a2c20'] }
 
 export const buildUnderground = (g: Game, x: number, y: number) => {
   const floor: ArenaShape[] = [
@@ -78,7 +77,7 @@ export const buildUnderground = (g: Game, x: number, y: number) => {
   }
   const solids = SITE.rocks.map(([rx, ry], i) => solidAt('caveRock', PLACE_FEET.caveRock, x + rx, y + ry, i))
   markCleared(g, 'underground')
-  const state: UndergroundState = { dwellers: createDwellers(g, SITE.holes, SITE.rare, UNDERGROUND.first), glints, dug: 0, fossil: false, warned: false }
+  const state: UndergroundState = { dwellers: createDwellers(g, SITE.holes, UNDERGROUND.first), glints, dug: 0, fossil: false, warned: false }
   return { layout: { floor }, solids, start: SITE.start, state, intro: HIDDEN.card }
 }
 
@@ -135,7 +134,7 @@ const dig = (g: Game, inside: UndergroundInside, dt: number) => {
   }
 }
 
-/** Every tick underground: the warning, the glints, the Diglett in their holes, Diancie, a few wild ones. */
+/** Every tick underground: the warning, the glints, the Diglett in their holes and the sparkle, a few wild ones. */
 export const updateUnderground = (g: Game, inside: UndergroundInside, dt: number) => {
   const s = inside.state
   if (!s.warned && inside.left <= 10) {

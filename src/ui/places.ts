@@ -38,21 +38,19 @@ export const placeFeedback = (root: HTMLElement, place: PlaceId, notice: PlaceNo
     case 'rustle':
       return playSfx('tick', 50)
     case 'lucky':
-      return playCry(cryUrl(ENEMIES[notice.enemy].dex), 0.45)
-    case 'dweller': {
+      if (notice.shiny) playSfx('shiny')
+      return playCry(cryUrl(ENEMIES[notice.enemy].dex), notice.shiny ? 0.8 : 0.45)
+    case 'sparkle':
+      if (!isHiddenPlace(place)) return
       playSfx('legendary')
-      playCry(cryUrl(ENEMIES[notice.enemy].dex), 0.8)
       flashScreen(root)
-      const name = ENEMIES[notice.enemy].name
-      const line = notice.shiny ? m.dwellerShiny(name) : isHiddenPlace(place) ? m.dweller[place](name) : ''
-      return banner(root, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(ENEMIES[notice.enemy].dex, notice.shiny), alt: '' }), rich(line)), 3600)
-    }
-    case 'dwellerFled':
+      return banner(root, h('span', { class: 'item-toast' }, h('img', { src: placeIcon(place), alt: '' }), rich(m.sparkle[place])), 3200)
+    case 'sparkleFled':
       playSfx('denied')
-      return runToast(root, 'minor', m.dwellerFled(ENEMIES[notice.enemy].name), 2600, 'place')
-    case 'dwellerDown':
+      return runToast(root, 'minor', rich(m.sparkleFled(ENEMIES[notice.enemy].name)), 2600, 'place')
+    case 'sparkleDown':
       playSfx('evolve')
-      return runToast(root, 'minor', h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(ENEMIES[notice.enemy].dex, notice.shiny), alt: '' }), rich(m.dwellerDown(ENEMIES[notice.enemy].name))), 3500)
+      return runToast(root, 'minor', h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(ENEMIES[notice.enemy].dex, true), alt: '' }), rich(m.sparkleDown(ENEMIES[notice.enemy].name))), 3500)
     case 'digTick':
       return playSfx('tick', 70)
     case 'dug':

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
 import { HIDDEN, HIDDEN_PLACE_IDS, isHiddenPlace } from '../data/places'
-import { hiddenDue, nextBossAt, pickHidden, rollDig, rollHidden } from './hiddenRules'
+import { hiddenDue, nextBossAt, pickHidden, rollDig, rollGrottoFind, rollHidden, rollSparkle } from './hiddenRules'
 
 describe('rollHidden', () => {
   it('gives about `HIDDEN.odds` of runs a hidden zone, due inside its window, the same for the same seed', () => {
@@ -51,5 +51,23 @@ describe('rollDig', () => {
     const finds = new Set(Array.from({ length: 500 }, () => rollDig(rng, { stone: false, fossil: false })))
     expect(finds.has('stone') || finds.has('fossil')).toBe(false)
     expect(new Set(Array.from({ length: 500 }, () => rollDig(rng, { stone: true, fossil: true })))).toEqual(new Set(['expCandy', 'sphere', 'rareCandy', 'stone', 'fossil']))
+  })
+})
+
+describe('rollGrottoFind', () => {
+  it('leaves an evolution item in the grass only when one is missing', () => {
+    const rng = createRng(5)
+    expect(new Set(Array.from({ length: 500 }, () => rollGrottoFind(rng, { stone: false })))).toEqual(new Set(['pokeball', 'nugget', 'rareCandy']))
+    expect(new Set(Array.from({ length: 500 }, () => rollGrottoFind(rng, { stone: true })))).toContain('stone')
+  })
+})
+
+describe('rollSparkle', () => {
+  it('sparkles in about `HIDDEN.sparkle.chance` of visits, inside its window', () => {
+    const rng = createRng(11)
+    const rolls = Array.from({ length: 4000 }, () => rollSparkle(rng))
+    const some = rolls.filter((at): at is number => at !== null)
+    expect(Math.abs(some.length / rolls.length - HIDDEN.sparkle.chance)).toBeLessThan(0.03)
+    expect(some.every((at) => at >= HIDDEN.sparkle.at[0] && at <= HIDDEN.sparkle.at[1])).toBe(true)
   })
 })

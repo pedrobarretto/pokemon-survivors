@@ -106,10 +106,8 @@ export const ENEMIES = {
   // A place's boss (`data/places.ts`): HP and contact damage are its 1:30 values, scaled by `placeBossScale`.
   spiritomb: { dex: 442, name: 'Spiritomb', types: ['ghost', 'dark'], hp: 1100, speed: 34, damage: 18, xp: 0, mass: 30, boss: true },
   // The hidden zones' own (`hidden` in `data/places.ts`), never in the horde (no tier): Audino out of the grotto's
-  // shaking grass, and the rare dwellers, shy and gone in a while. Their EXP is set as they come out (`luckyXp`).
+  // shaking grass, shy and gone in a while. Its EXP is set as it comes out (`luckyXp`).
   audino: { dex: 531, name: 'Audino', types: ['normal'], hp: 60, speed: 34, damage: 4, xp: 0, mass: 1.6 },
-  shaymin: { dex: 492, name: 'Shaymin', types: ['grass'], hp: 240, speed: 50, damage: 8, xp: 0, mass: 3 },
-  diancie: { dex: 719, name: 'Diancie', types: ['rock', 'fairy'], hp: 300, speed: 42, damage: 10, xp: 0, mass: 4 },
   // The Noite das Bruxas night bosses (`HALLOWEEN.bosses` in `data/halloween.ts`), apart from the horde's own of the species: one per slot each haunted run.
   mimikyuBoss: { dex: 778, name: 'Mimikyu', types: ['ghost', 'fairy'], speed: 40, ...NIGHT_SLOTS[0] },
   banetteBoss: { dex: 354, name: 'Banette', types: ['ghost'], speed: 38, ...NIGHT_SLOTS[0] },

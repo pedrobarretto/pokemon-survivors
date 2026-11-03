@@ -2,6 +2,7 @@ import { GIFT_TITLES, type GiftTitleId } from '../data/achievements'
 import { TIER_IDS, type TierId } from '../data/arenaRanked'
 import { isSpecialCompanion, type SpecialCompanionId } from '../data/companions'
 import { FESTIVALS, type FestivalId } from '../data/festivals'
+import { HIDDEN_PLACE_IDS, type HiddenPlaceId } from '../data/places'
 import { isLegend, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
 import { parseTitle } from './achievements'
 import { HATCHLING_IDS, HATCHLINGS, type HatchlingId } from '../data/hatchlings'
@@ -58,7 +59,7 @@ export type GiftKind = GiftContent['kind']
  * candy jar and Caça aos Fantasmas, supporting the game on the Noite das Bruxas,
  * the Kecleon Shop's loyalty card and Department Store, or a Festival da
  * Praça's pot reaching a milestone or making the player a Mecenas,
- * being an OG Supporter, or an Arena season's peak tier.
+ * being an OG Supporter, an Arena season's peak tier, or finding a hidden zone.
  */
 export type GiftReason =
   | { kind: 'welcome'; from: string | null }
@@ -84,6 +85,8 @@ export type GiftReason =
   | { kind: 'og' }
   /** The peak tier `tier` reached in the Arena's ranked season `season` (`game/arenaRewards.ts`). */
   | { kind: 'arenaSeason'; season: number; tier: TierId }
+  /** Hidden zone `zone` found for the first time (`game/hiddenGifts.ts`): made by the game too. */
+  | { kind: 'hiddenZone'; zone: HiddenPlaceId }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 
@@ -169,6 +172,7 @@ const parseReason = (v: unknown): GiftReason | null => {
   if (v.kind === 'patron' && isOneOf(v.festival, FESTIVAL_IDS)) return { kind: 'patron', festival: v.festival }
   if (v.kind === 'og') return { kind: 'og' }
   if (v.kind === 'arenaSeason' && isOneOf(v.tier, TIER_IDS)) return { kind: 'arenaSeason', season: wholeNumber(v.season), tier: v.tier }
+  if (v.kind === 'hiddenZone' && isOneOf(v.zone, HIDDEN_PLACE_IDS)) return { kind: 'hiddenZone', zone: v.zone }
   return null
 }
 

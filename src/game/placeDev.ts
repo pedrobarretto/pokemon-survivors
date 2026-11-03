@@ -8,7 +8,7 @@ import type { Game } from './types'
 /**
  * Dev-console shortcuts for staging places (`ps.place()`, `ps.enter()`,
  * `ps.floor()`, `ps.spirits()`) and hidden zones (`ps.hidden()`,
- * `ps.hiddenRoll()`, `ps.dweller()`). Wired in `main.ts` for dev builds only.
+ * `ps.hiddenRoll()`, `ps.sparkle()`). Wired in `main.ts` for dev builds only.
  */
 export const placeDevTools = (game: () => Game | undefined) => {
   const playing = (fn: (g: Game) => unknown) => {
@@ -47,15 +47,15 @@ export const placeDevTools = (game: () => Game | undefined) => {
         if (inSeconds !== undefined) g.place.hiddenAt = g.time + inSeconds
         return { dueAt: g.place.hiddenAt, now: g.time, entrance: g.place.entrance }
       }),
-    /** In a hidden zone, brings its rare dweller out now (Shaymin, Diancie), whatever this visit rolled. */
-    dweller: () =>
+    /** In a hidden zone, makes a spot sparkle now (its sure shiny pops out `HIDDEN.sparkle.warn` s later), whatever this visit rolled. */
+    sparkle: () =>
       playing((g) => {
         const inside = g.place.inside
         if (inside?.id !== 'grotto' && inside?.id !== 'underground') return 'ps: not in a hidden zone'
-        const rare = inside.state.dwellers.rare
-        if (rare.id !== null) return 'ps: the rare dweller came out already this visit'
-        rare.at = inside.age
-        return rare
+        const sp = inside.state.dwellers.sparkle
+        if (sp.id !== null) return 'ps: the sparkle came out already this visit'
+        sp.at = inside.age
+        return sp
       }),
     /** In the graveyard, sets the keystone's spirits (one short of waking Spiritomb by default). */
     spirits: (n = GRAVEYARD.spirits - 1) =>

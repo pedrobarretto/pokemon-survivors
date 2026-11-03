@@ -1,6 +1,6 @@
 import { hash2, weightedPick, type Rng } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
-import { DIG_FINDS, HIDDEN, HIDDEN_PLACE_IDS, PLACES, type DigFind, type LuckyEntry, type PlaceDef, type PlaceId } from '../data/places'
+import { DIG_FINDS, GROTTO_FINDS, HIDDEN, HIDDEN_PLACE_IDS, PLACES, type DigFind, type GrottoFind, type LuckyEntry, type PlaceDef, type PlaceId } from '../data/places'
 import { EVENTS } from '../data/waves'
 import * as dm from '../engine/dmath'
 
@@ -52,24 +52,29 @@ export const pickHidden = (rng: Rng, biome: BiomeId): PlaceId =>
     }),
   )
 
-/** A lucky one's (or the rare dweller's) EXP at run time `time`: far more than the horde, growing with the clock. */
+/** A lucky one's EXP at run time `time`: far more than the horde, growing with the clock. */
 export const luckyXp = (base: number, time: number) => base * (1 + time / HIDDEN.xpRamp)
 
 /** Which lucky one pops out. */
 export const rollLucky = (rng: Rng, lucky: readonly LuckyEntry[]): LuckyEntry => weightedPick(rng, lucky.map((entry) => [entry, entry[1]] as const))
 
-const DIG_IDS = Object.keys(DIG_FINDS) as DigFind[]
+/** One find from a weights table, among the ones `allowed`. */
+const rollFind = <F extends string>(rng: Rng, table: Readonly<Record<F, number>>, allowed: (f: F) => boolean): F =>
+  weightedPick(
+    rng,
+    (Object.keys(table) as F[]).filter(allowed).map((f) => [f, table[f]] as const),
+  )
 
 /** What a glint gives: an evolution stone only while the player lacks one (`stone`), Old Amber only once a visit (`fossil`). */
 export const rollDig = (rng: Rng, s: { stone: boolean; fossil: boolean }): DigFind =>
-  weightedPick(
-    rng,
-    DIG_IDS.filter((f) => (f !== 'stone' || s.stone) && (f !== 'fossil' || s.fossil)).map((f) => [f, DIG_FINDS[f]] as const),
-  )
+  rollFind(rng, DIG_FINDS, (f) => (f !== 'stone' || s.stone) && (f !== 'fossil' || s.fossil))
 
-/** When the rare dweller shows up this visit (place age), or null: it doesn't. */
-export const rollRare = (rng: Rng): number | null => {
-  if (rng() >= HIDDEN.rare.chance) return null
-  const [a, b] = HIDDEN.rare.at
+/** What lies in the grotto's grass: an evolution item only while the player lacks one (`stone`). */
+export const rollGrottoFind = (rng: Rng, s: { stone: boolean }): GrottoFind => rollFind(rng, GROTTO_FINDS, (f) => f !== 'stone' || s.stone)
+
+/** When a spot sparkles this visit (place age), or null: none does. */
+export const rollSparkle = (rng: Rng): number | null => {
+  if (rng() >= HIDDEN.sparkle.chance) return null
+  const [a, b] = HIDDEN.sparkle.at
   return a + rng() * (b - a)
 }

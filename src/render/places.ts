@@ -114,7 +114,14 @@ const ROCK_TILE = lazy(() => paint(ROCK, ROCK, wallTop))
  * floor's last px (`SOUTH_LIP`), and the floor itself, dirt with pebbles and a
  * few pits.
  */
-const bakeCave = (floor: readonly ArenaShape[]): Baked => {
+/** A dungeon floor's ground: its specks (dark, light) and three tones (dark, mid, light). The cave's is grey stone, the Underground's dug earth. */
+type CaveGround = { speck: readonly [string, string]; tones: readonly [string, string, string] }
+
+const CAVE_GROUND: CaveGround = { speck: ['#2a221e', '#8a7462'], tones: ['#3e342e', '#463b33', '#504438'] }
+/** The Underground's dug earth: warm, with pick marks (Diamond and Pearl's tunnels). */
+const UNDERGROUND_GROUND: CaveGround = { speck: ['#3a2a1c', '#c8a878'], tones: ['#5a4430', '#664e36', '#735a3e'] }
+
+const bakeCave = (floor: readonly ArenaShape[], ground: CaveGround = CAVE_GROUND): Baked => {
   const r = rasterize(floor, 40)
   const canvas = paint(r.w, r.h, (px, py) => {
     const x = px + r.x0
@@ -142,10 +149,10 @@ const bakeCave = (floor: readonly ArenaShape[]): Baked => {
     if (!r.at(px - 1, py) || !r.at(px + 1, py) || !r.at(px, py + 1)) return '#2a221c'
     if (!r.at(px - 2, py) || !r.at(px + 2, py) || !r.at(px, py + 2)) return '#352c26'
     const h = hash2(x, y, 6)
-    if (h < 0.018) return '#2a221e'
-    if (h > 0.993) return '#8a7462'
+    if (h < 0.018) return ground.speck[0]
+    if (h > 0.993) return ground.speck[1]
     const n = hash2(Math.floor((x + 400) / 9), Math.floor((y + 400) / 7), 1) * 0.6 + hash2(Math.floor((x + 400) / 4), Math.floor((y + 400) / 3), 2) * 0.4
-    return n > 0.6 ? '#504438' : n < 0.3 ? '#3e342e' : '#463b33'
+    return ground.tones[n > 0.6 ? 2 : n < 0.3 ? 0 : 1]
   })
   return { canvas, x: r.x0, y: r.y0 }
 }
@@ -298,7 +305,7 @@ const bakedFloor = (inside: PlaceInterior) => {
   } else if (inside.id === 'grotto') {
     baked = { layout: inside.layout, floor: bakeGrotto(inside.layout.floor), fence: null }
   } else {
-    baked = { layout: inside.layout, floor: bakeCave(inside.layout.floor), fence: null }
+    baked = { layout: inside.layout, floor: bakeCave(inside.layout.floor, inside.id === 'underground' ? UNDERGROUND_GROUND : CAVE_GROUND), fence: null }
   }
   return baked
 }

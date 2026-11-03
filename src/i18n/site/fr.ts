@@ -105,7 +105,6 @@ export const siteFr: SiteMessages = {
     place: (name: string, from: string) => `Vit dans ${name}, à partir de ${from} (lieu facultatif)`,
     placeBoss: (name: string, from: string) => `Jaillit de la Clé de voûte étrange dans ${name}, à partir de ${from}`,
     lucky: (name: string, from: string) => `Sort des herbes ou d’un trou dans ${name}, à partir de ${from} : timide, vite reparti et riche en EXP`,
-    rare: (name: string, from: string) => `Habitant rare de ${name} : se montre parfois quelques secondes, à partir de ${from}, et laisse une Poké Ball`,
     places: { cave: 'la Grotte Sombre', graveyard: 'le Cimetière Hanté', sky: 'le ciel au-dessus des nuages (types Vol uniquement)', grotto: 'la Grotte Cachée, une zone cachée rare', underground: 'le Souterrain, une zone cachée rare' },
     reaper: (at: string) => `Le faucheur du mode sans fin, à partir de ${at}`,
     attacks: 'Attaques',
@@ -594,7 +593,7 @@ export const siteFr: SiteMessages = {
       hiddenTitle: 'Zones cachées',
       hidden: (h: { odds: number; open: number }) => [
         `Tous les lieux n’ont pas de flèche. Dans environ ${h.odds} % des parties, l’entrée d’une zone cachée apparaît sans prévenir, juste devant là où tu vas, déguisée en décor : une trouée dans un fourré où les feuilles bougent, ou un rocher fendu qui scintille de temps en temps. Elle reste ${h.open} s et n’apparaît pas sur la mini-carte tant que personne ne s’en approche.`,
-        'À l’intérieur vivent des Pokémon qu’on ne voit nulle part ailleurs, et d’autres qui valent bien plus d’EXP que la horde. Le reste, c’est à toi de le découvrir.',
+        'À l’intérieur vivent des Pokémon qui valent bien plus d’EXP que la horde, et parfois quelque chose scintille là où ils se cachent. Trouver chaque zone la première fois rapporte un style qu’aucune boutique ne vend. Le reste, c’est à toi de le découvrir.',
       ],
       wingHead: 'Plume',
       effectHead: 'Effet',

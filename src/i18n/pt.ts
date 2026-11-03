@@ -1332,9 +1332,9 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)' } satisfies Record<FrameId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta' } satisfies Record<FrameId, string>,
       background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas' } satisfies Record<BackgroundId, string>,
-      wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada' } satisfies Record<WallpaperId, string>,
+      wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada', secretBase: 'Base Secreta' } satisfies Record<WallpaperId, string>,
     },
   },
 
@@ -1823,6 +1823,7 @@ export const pt = {
     patron: (festival: string) => `Por ser Mecenas do ${festival} ♥`,
     og: 'Por apoiar o jogo desde o começo ♥',
     arenaSeason: (season: number) => `Pelo seu pico na temporada ${season} da Arena`,
+    hiddenZone: { grotto: 'Por encontrar a Gruta Oculta', underground: 'Por encontrar o Subterrâneo' } satisfies Record<HiddenPlaceId, string>,
   },
 
   /**
@@ -2652,14 +2653,13 @@ export const pt = {
     wallSoon: 'As paredes estão rachando!',
     grottoOut: 'A luz se apagou e você saiu da gruta.',
     collapse: 'As paredes desabaram! Você escapou por um triz.',
-    /** The rare dweller shows up (its name), runs off, or falls. */
-    dweller: {
-      grotto: (name: string) => `*${name}* apareceu entre as flores Gracidea! Rápido, antes que fuja!`,
-      underground: (name: string) => `*${name}* brilha no fundo da escavação! Rápido, antes que fuja!`,
-    } satisfies Record<HiddenPlaceId, (name: string) => string>,
-    dwellerShiny: (name: string) => `Um *${name}* _shiny_ apareceu! Rápido, antes que fuja!`,
-    dwellerFled: (name: string) => `${name} fugiu…`,
-    dwellerDown: (name: string) => `*${name}* derrotado! Deixou uma Poké Ball e um presente.`,
+    /** A spot sparkles (a sure shiny inside), its shiny runs off, or falls. */
+    sparkle: {
+      grotto: 'Um tufo de grama está *brilhando*… tem um _shiny_ ali dentro!',
+      underground: 'Uma toca está *brilhando*… tem um _shiny_ ali dentro!',
+    } satisfies Record<HiddenPlaceId, string>,
+    sparkleFled: (name: string) => `O ${name} _shiny_ fugiu…`,
+    sparkleDown: (name: string) => `*${name}* _shiny_ derrotado! Deixou uma Poké Ball, ₽ e um presente.`,
     /** What a glint in the Underground's walls gave. */
     finds: {
       expCandy: 'Você desenterrou um *Exp. Candy* enorme!',

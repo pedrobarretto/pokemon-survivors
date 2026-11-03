@@ -53,12 +53,12 @@ export type PlaceNotice =
   | { kind: 'found' }
   /** A hidden zone's grass shakes or hole rumbles: something's about to pop out. */
   | { kind: 'rustle' }
-  /** A lucky one popped out of its spot. */
-  | { kind: 'lucky'; enemy: EnemyId }
-  /** The rare dweller showed up, ran off unbeaten, or fell. */
-  | { kind: 'dweller'; enemy: EnemyId; shiny: boolean }
-  | { kind: 'dwellerFled'; enemy: EnemyId }
-  | { kind: 'dwellerDown'; enemy: EnemyId; shiny: boolean }
+  /** A lucky one popped out of its spot (the sparkle's, always shiny). */
+  | { kind: 'lucky'; enemy: EnemyId; shiny: boolean }
+  /** A spot sparkles (a sure shiny inside); its shiny ran off unbeaten, or fell. */
+  | { kind: 'sparkle' }
+  | { kind: 'sparkleFled'; enemy: EnemyId }
+  | { kind: 'sparkleDown'; enemy: EnemyId }
   /** A pick at a glint, then what it gave. */
   | { kind: 'digTick' }
   | { kind: 'dug'; find: DigFind }

@@ -140,7 +140,6 @@ export const sitePt = {
     place: (name: string, from: string) => `Vive ${name}, a partir de ${from} (lugar opcional)`,
     placeBoss: (name: string, from: string) => `Desperta da Pedra Peculiar ${name}, a partir de ${from}`,
     lucky: (name: string, from: string) => `Sai da grama ou da toca ${name}, a partir de ${from}: tímido, foge rápido e vale muita EXP`,
-    rare: (name: string, from: string) => `Morador raro ${name}: às vezes aparece por alguns segundos, a partir de ${from}, e deixa uma Poké Ball`,
     places: { cave: 'na Caverna Escura', graveyard: 'no Cemitério Assombrado', sky: 'no céu, acima das nuvens (só para quem voa)', grotto: 'na Gruta Oculta, uma zona oculta rara', underground: 'no Subterrâneo, uma zona oculta rara' } satisfies Record<PlaceId, string>,
     reaper: (at: string) => `Ceifador do modo sem fim, a partir de ${at}`,
     attacks: 'Ataques',
@@ -646,7 +645,7 @@ export const sitePt = {
       hiddenTitle: 'Zonas ocultas',
       hidden: (h: { odds: number; open: number }) => [
         `Nem todo lugar aparece com seta. Em mais ou menos ${h.odds}% das partidas, a entrada de uma zona oculta surge sem aviso, logo à frente de onde você está indo, disfarçada de cenário: um vão num matagal onde as folhas se mexem, ou uma pedra rachada que brilha de vez em quando. Ela fica lá por ${h.open}s e não aparece no minimapa até alguém chegar perto.`,
-        'Lá dentro vivem Pokémon que não aparecem em nenhum outro lugar e outros que valem muito mais EXP do que a horda. O resto é com você.',
+        'Lá dentro vivem Pokémon que valem muito mais EXP do que a horda, e às vezes algo brilha onde eles se escondem. Quem encontra cada zona pela primeira vez leva para casa um visual que não se compra. O resto é com você.',
       ],
       wingHead: 'Asa',
       effectHead: 'Efeito',

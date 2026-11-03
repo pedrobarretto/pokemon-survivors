@@ -1,7 +1,8 @@
 import { blitCentered, blitEllipse, blitRotated, lazy } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { UNDERGROUND } from '../data/places'
-import type { PlaceEntrance } from '../game/place'
+import { sparkling, type Dwellers } from '../game/hidden'
+import type { PlaceEntrance, PlaceInterior } from '../game/place'
 import { localPlayer } from '../game/players'
 import type { Game } from '../game/types'
 import { art } from './art'
@@ -13,8 +14,8 @@ type Ctx = CanvasRenderingContext2D
  * Hidden zones on screen (`game/hidden.ts`): the tells on the map (leaves
  * rustling out of the grotto's hollow, a glint on the boulder's crack), the
  * "!" over the player who found one, and the insides' live parts: the
- * grotto's tall grass shaking and Shaymin's Gracidea, the Underground's holes
- * rumbling and the glints in its walls. Their floors are baked with the
+ * grotto's tall grass shaking, the Underground's holes rumbling and the
+ * glints in its walls, and the spot that sparkles (a sure shiny inside). Their floors are baked with the
  * places' (`render/places.ts`), their scenery sculpted in `placePieces.ts`.
  */
 
@@ -29,14 +30,6 @@ export const TALL_GRASS = lazy(() => {
   outline(g, '#0c2408')
   return toSprite(g)
 })
-
-/** Gracidea in bloom, where Shaymin comes out. */
-const GRACIDEA = lazy(() =>
-  art(
-    ['..11....11....11..', '.1221..1221..1221.', '.1231..1231..1231.', '..11.1..11.1..11..', '.1...414...41..1..', '.414.444.41441.41.', '.44444444444444444', '..4444444444444444.'],
-    { 1: '#c83878', 2: '#f890b8', 3: '#fff0a0', 4: '#3c8c2c' },
-  ),
-)
 
 /** A Diglett's hole: dark inside, a ring of loose dirt. */
 const HOLE = lazy(() =>
@@ -116,14 +109,27 @@ export const drawFoundMark = (ctx: Ctx, g: Game) => {
   blitRotated(ctx, MARK(), Math.round(p.x), Math.round(p.y - 44 - hop), 0, 2)
 }
 
-/** The grotto's tall grass (the shaking one jittering and shedding leaves) and Shaymin's Gracidea; the Underground's holes (rumbling) and glints (sparkling, or dug out). */
+/** A sparkling spot (`sparkling`): a shimmer on the ground and stars flickering over it, faster as its shiny nears. */
+const drawSparkle = (ctx: Ctx, inside: PlaceInterior, d: Dwellers, t: number) => {
+  if (!sparkling(d, inside.age)) return
+  const [sx, sy] = d.spots[d.sparkle.spot]!
+  const x = Math.round(inside.x + sx)
+  const y = Math.round(inside.y + sy)
+  const pulse = 0.4 + 0.2 * Math.sin(t * 8)
+  blitEllipse(ctx, 15, 7, `rgba(255,236,140,${pulse.toFixed(2)})`, x, y + 2)
+  blitEllipse(ctx, 9, 4, 'rgba(255,255,230,0.5)', x, y + 2)
+  for (let i = 0; i < 7; i++) {
+    const k = (t * 1.6 + i / 7) % 1
+    const a = hash2(i, Math.floor(t * 1.6 + i / 7), 5) * Math.PI * 2
+    sparkle(ctx, x + Math.cos(a) * 12, y - 8 + Math.sin(a) * 7 - k * 8, k < 0.5 ? k * 2 : (1 - k) * 2)
+  }
+}
+
+/** The grotto's tall grass (the shaking one jittering and shedding leaves); the Underground's holes (rumbling) and glints (sparkling, or dug out); the sparkling spot in either. */
 export const drawHiddenGround = (ctx: Ctx, g: Game, t: number, chargeArc: (ctx: Ctx, x: number, y: number, r: number, k: number) => void) => {
   const inside = g.place.inside
   if (inside?.id === 'grotto') {
     const d = inside.state.dwellers
-    const [fx, fy] = d.rare.spot
-    blitCentered(ctx, GRACIDEA(), Math.round(inside.x + fx), Math.round(inside.y + fy))
-    if (Math.floor(t * 3) % 5 === 0) sparkle(ctx, inside.x + fx + 6, inside.y + fy - 4, 0.4)
     d.spots.forEach(([sx, sy], i) => {
       const shaking = d.rustle?.spot === i
       const jx = shaking ? (Math.floor(t * 30) % 2 === 0 ? -1 : 1) : 0
@@ -137,6 +143,7 @@ export const drawHiddenGround = (ctx: Ctx, g: Game, t: number, chargeArc: (ctx: 
         ctx.fillRect(Math.round(x + Math.cos(a) * 7), Math.round(y - 6 - Math.abs(Math.sin(a)) * 6), 2, 1)
       }
     })
+    drawSparkle(ctx, inside, d, t)
     return
   }
   if (inside?.id !== 'underground') return
@@ -165,4 +172,5 @@ export const drawHiddenGround = (ctx: Ctx, g: Game, t: number, chargeArc: (ctx: 
     sparkle(ctx, x, y - 3, k < 1 ? k : 2 - k)
     if (gl.progress > 0) chargeArc(ctx, x, y, UNDERGROUND.digRadius, gl.progress)
   }
+  drawSparkle(ctx, inside, s.dwellers, t)
 }

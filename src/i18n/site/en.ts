@@ -104,7 +104,6 @@ export const siteEn: SiteMessages = {
     place: (name: string, from: string) => `Lives in the ${name}, from ${from} (optional place)`,
     placeBoss: (name: string, from: string) => `Breaks out of the Odd Keystone in the ${name}, from ${from}`,
     lucky: (name: string, from: string) => `Pops out of the grass or a hole in the ${name}, from ${from}: shy, quick to leave and worth a lot of EXP`,
-    rare: (name: string, from: string) => `Rare dweller of the ${name}: shows up now and then for a few seconds, from ${from}, and leaves a Poké Ball`,
     places: { cave: 'Dark Cave', graveyard: 'Haunted Graveyard', sky: 'sky above the clouds (Flying types only)', grotto: 'Hidden Grotto, a rare hidden zone', underground: 'Underground, a rare hidden zone' },
     reaper: (at: string) => `The endless mode's reaper, from ${at}`,
     attacks: 'Attacks',
@@ -593,7 +592,7 @@ export const siteEn: SiteMessages = {
       hiddenTitle: 'Hidden zones',
       hidden: (h: { odds: number; open: number }) => [
         `Not every place comes with an arrow. In about ${h.odds}% of runs, the way into a hidden zone shows up unannounced, just ahead of where you’re heading, dressed as scenery: a gap in a thicket where the leaves rustle, or a cracked rock that glints now and then. It stays for ${h.open}s and isn’t on the minimap until someone walks up to it.`,
-        'Inside live Pokémon found nowhere else, and others worth far more EXP than the horde. The rest is up to you.',
+        'Inside live Pokémon worth far more EXP than the horde, and now and then something sparkles where they hide. Finding each zone the first time brings home a look no shop sells. The rest is up to you.',
       ],
       wingHead: 'Wing',
       effectHead: 'Effect',

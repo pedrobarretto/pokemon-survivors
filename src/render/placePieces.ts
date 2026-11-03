@@ -3,7 +3,7 @@ import type { BiomeId } from '../data/biomes'
 import { PLACE_FEET, type PlacePiece } from '../data/places'
 import type { Tier } from '../data/terrain'
 import { cylinder, grid, lathe, limb, noise, outline, put, sculpt, shade, shard, stamp, toSprite, type Grid, type Ramp } from './sculpt'
-import { cliffOf, deadTree, ROCK_SKINS, stalagmites, TOWER_TREE, type Piece } from './terrain'
+import { cliffOf, deadTree, ROCK_SKINS, stalagmites, TOWER_TREE, type Piece, type RockSkin } from './terrain'
 
 /**
  * Places' scenery (`data/places.ts`), sculpted in code like the map's
@@ -282,8 +282,10 @@ const keystone = (variant: number): Piece => {
   return piece(g, cx, ground)
 }
 
-/** Leaves and earth of the grotto's hollow in each biome, so it hides among the biome's own thickets. */
-const HOLLOW: Record<BiomeId, { leaves: Ramp; earth: Ramp; outline: string; snow?: Ramp; bloom?: string }> = {
+type HollowSkin = { leaves: Ramp; earth: Ramp; outline: string; snow?: Ramp; bloom?: string }
+
+/** Leaves and earth of the grotto's hollow in each biome, so it hides among the biome's own thickets; a biome without one wears the meadow's (`hollowSkin`). */
+const HOLLOW: Partial<Record<BiomeId, HollowSkin>> & { meadow: HollowSkin } = {
   meadow: { leaves: ['#1a4c20', '#2c7030', '#45983a', '#69b84c', '#94d468'], earth: ['#2c1c10', '#4a3220', '#6a4a2c', '#8a6638'], outline: '#122a12', bloom: '#f8a0c8' },
   forest: { leaves: ['#0c2812', '#163e1c', '#24582a', '#387838', '#56984a'], earth: ['#1c120a', '#30200f', '#4a3218', '#644626'], outline: '#081408', bloom: '#f8e0d0' },
   cave: { leaves: ['#20283a', '#2e4a44', '#3e6a52', '#5a8a62', '#7aa872'], earth: ['#1c1416', '#342a2c', '#4e4244', '#6a5c5c'], outline: '#100a0c' },
@@ -297,8 +299,10 @@ const HOLLOW: Record<BiomeId, { leaves: Ramp; earth: Ramp; outline: string; snow
  * down at its front with roots hanging over it, a few flowers. From afar it
  * reads as one more thicket. Anchored at the hollow's foot.
  */
+const hollowSkin = (biome: BiomeId): HollowSkin => HOLLOW[biome] ?? HOLLOW.meadow
+
 const grottoHollow = (biome: BiomeId): Piece => {
-  const skin = HOLLOW[biome]
+  const skin = hollowSkin(biome)
   const g = grid(50, 36)
   const cx = 25
   const ground = 32
@@ -339,7 +343,9 @@ const grottoHollow = (biome: BiomeId): Piece => {
  * the crack's foot.
  */
 const crackedRock = (biome: BiomeId): Piece => {
-  const skin = ROCK_SKINS[biome]
+  // A biome the rock skins don't know yet wears the meadow's stone.
+  const skins: Partial<Record<BiomeId, RockSkin>> = ROCK_SKINS
+  const skin = skins[biome] ?? ROCK_SKINS.meadow
   const g = grid(48, 34)
   const cx = 24
   const ground = 30

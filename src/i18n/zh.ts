@@ -1107,9 +1107,9 @@ export const zh: Messages = {
       wallpaper: '電腦箱的桌布。',
     },
     styles: {
-      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者' },
+      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴' },
       background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜' },
-      wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋' },
+      wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋', secretBase: '秘密基地' },
     },
   },
 
@@ -1555,6 +1555,7 @@ export const zh: Messages = {
     patron: (festival) => `感謝你成為${festival}的贊助人 ♥`,
     og: '感謝你從一開始就支持遊戲 ♥',
     arenaSeason: (season) => `獎勵你在競技場第 ${season} 賽季的最高段位`,
+    hiddenZone: { grotto: '獎勵你找到隱藏洞穴', underground: '獎勵你找到地下通道' },
   },
 
   supporters: {
@@ -2332,13 +2333,12 @@ export const zh: Messages = {
     wallSoon: '牆壁正在龜裂！',
     grottoOut: '光熄滅了，你走出了洞穴。',
     collapse: '牆壁崩塌了！你千鈞一髮地逃了出來。',
-    dweller: {
-      grotto: (name) => `*${name}* 出現在 Gracidea 花叢之間！快，趁牠逃走之前！`,
-      underground: (name) => `*${name}* 在挖掘場深處閃閃發光！快，趁牠逃走之前！`,
+    sparkle: {
+      grotto: '有一叢草在*閃閃發光*…裡面有_異色_寶可夢！',
+      underground: '有一個洞在*閃閃發光*…裡面有_異色_寶可夢！',
     },
-    dwellerShiny: (name) => `_異色_的 *${name}* 出現了！快，趁牠逃走之前！`,
-    dwellerFled: (name) => `${name} 逃走了…`,
-    dwellerDown: (name) => `擊敗了 *${name}*！牠留下了一顆 Poké Ball 和一份禮物。`,
+    sparkleFled: (name) => `_異色_的 ${name} 逃走了…`,
+    sparkleDown: (name) => `擊敗了_異色_的 *${name}*！牠留下了 Poké Ball、₽ 和一份禮物。`,
     finds: {
       expCandy: '你挖到了一顆巨大的 *Exp. Candy*！',
       sphere: '你挖到了 *Prism Sphere*！可以換成₽。',

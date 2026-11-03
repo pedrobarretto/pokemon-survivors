@@ -104,7 +104,6 @@ export const siteEs: SiteMessages = {
     place: (name: string, from: string) => `Vive en ${name}, desde las ${from} (lugar opcional)`,
     placeBoss: (name: string, from: string) => `Sale de la Piedra Espíritu en ${name}, desde las ${from}`,
     lucky: (name: string, from: string) => `Sale de la hierba o de un hoyo en ${name}, desde las ${from}: tímido, se va rápido y vale mucha EXP`,
-    rare: (name: string, from: string) => `Habitante raro de ${name}: a veces aparece unos segundos, desde las ${from}, y deja una Poké Ball`,
     places: { cave: 'la Cueva Oscura', graveyard: 'el Cementerio Embrujado', sky: 'el cielo sobre las nubes (solo para voladores)', grotto: 'la Gruta Oculta, una zona oculta rara', underground: 'el Subsuelo, una zona oculta rara' },
     reaper: (at: string) => `Segador del modo infinito, desde las ${at}`,
     attacks: 'Ataques',
@@ -597,7 +596,7 @@ export const siteEs: SiteMessages = {
       hiddenTitle: 'Zonas ocultas',
       hidden: (h: { odds: number; open: number }) => [
         `No todos los lugares vienen con flecha. En más o menos el ${h.odds}% de las partidas, la entrada a una zona oculta aparece sin aviso, justo delante de hacia donde vas, disfrazada de paisaje: un hueco en la maleza donde las hojas se mueven, o una roca agrietada que brilla de vez en cuando. Se queda ${h.open}s y no aparece en el minimapa hasta que alguien se acerca.`,
-        'Adentro viven Pokémon que no aparecen en ningún otro lugar y otros que valen mucha más EXP que la horda. Lo demás depende de ti.',
+        'Adentro viven Pokémon que valen mucha más EXP que la horda, y a veces algo brilla donde se esconden. Quien encuentra cada zona por primera vez se lleva un estilo que no se vende. Lo demás depende de ti.',
       ],
       wingHead: 'Pluma',
       effectHead: 'Efecto',

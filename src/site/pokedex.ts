@@ -183,8 +183,8 @@ export type Appearance =
   | { kind: 'reaper'; at: number }
   /** Lives in a place (`data/places.ts`), coming out from `from`; `boss` for the place's own boss. */
   | { kind: 'place'; place: PlaceId; from: number; boss: boolean }
-  /** Pops out of a hidden zone's spots (`lucky`) or is its rare dweller (`rare`), from `from`. */
-  | { kind: 'hidden'; place: PlaceId; from: number; rare: boolean }
+  /** Pops out of a hidden zone's spots (its lucky ones), from `from`. */
+  | { kind: 'hidden'; place: PlaceId; from: number }
   /** Called in by a summoner (Nidoqueen's Nidoran). */
   | { kind: 'summoned'; by: EnemyId }
   /** Comes at the player in a legendary's domain (`by`'s rift): its crossing's retinue, adds it calls in or keepers of its barrier. */
@@ -228,9 +228,7 @@ export const appearances = (id: EnemyId): Appearance[] => {
     if (place === 'graveyard' && id === GRAVEYARD.boss) return [{ kind: 'place', place, from: PLACE.firstAt, boss: true }]
     const hidden = hiddenOf(place)
     const first = hidden ? HIDDEN.from : PLACE.firstAt
-    const own: Appearance[] = hidden
-      ? [...(hidden.rare === id ? [true] : []), ...(hidden.lucky.some(([e]) => e === id) ? [false] : [])].map((rare) => ({ kind: 'hidden', place, from: first, rare }))
-      : []
+    const own: Appearance[] = hidden?.lucky.some(([e]) => e === id) ? [{ kind: 'hidden', place, from: first }] : []
     const species: readonly EnemyId[] = PLACES[place].species
     if (!species.includes(id)) return own
     const stage = STAGES.findIndex((s) => s.cast.includes(def.tier ?? 1))
