@@ -1,3 +1,4 @@
+import type { DayKey } from './day'
 import { dir8, type Vec } from '../engine/math'
 import { createRng } from '../engine/rng'
 import { createGrid } from '../engine/spatial'
@@ -343,8 +344,12 @@ export const createGame = (
  */
 export type CoopLoadout = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks; shiny: boolean; name: string }
 
-/** A co-op run's settings, the same on every client: the difficulty, the opening draft (on by default), the simulated view and a roster drawn ahead. */
-export type CoopOptions = { difficulty?: Difficulty; draft?: boolean; view?: Game['view']; roster?: Roster }
+/**
+ * A co-op run's settings, the same on every client: the difficulty, the opening draft (on by default), the simulated
+ * view, a roster drawn ahead and the Desafio co-op do dia it plays (`game/coopBoard.ts`; the caller deals its seed,
+ * difficulty and upgrades off).
+ */
+export type CoopOptions = { difficulty?: Difficulty; draft?: boolean; view?: Game['view']; roster?: Roster; challenge?: DayKey }
 
 /**
  * A fresh co-op run for 1 to `COOP.maxPlayers` loadouts (by slot). Every
@@ -360,6 +365,7 @@ export const createCoopGame = (seed: number, loadouts: readonly CoopLoadout[], o
   const view = { ...(options.view ?? COOP.view) }
   const g = createRun(view, seed, setups, options.roster, { difficulty: options.difficulty, draft: options.draft ?? true }, true)
   g.coop!.names = loadouts.map((l) => l.name)
+  g.coop!.challenge = options.challenge ?? null
   return g
 }
 
