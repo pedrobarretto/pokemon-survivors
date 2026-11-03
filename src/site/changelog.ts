@@ -24,6 +24,21 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-02',
+    title: { pt: 'Shiny no minimapa', en: 'Shinies on the minimap', es: 'Shiny en el minimapa', fr: 'Shiny sur la mini-carte', zh: '小地圖顯示異色' },
+    highlights: [
+      { pt: 'Um Pokémon shiny selvagem agora aparece no minimapa como uma estrela piscando, presa na borda quando está longe: é só seguir a estrela para caçá-lo antes que ele suma.', en: 'A wild shiny Pokémon now shows on the minimap as a blinking star, pinned to the rim when it’s far away: follow the star to hunt it down before it’s gone.', es: 'Un Pokémon shiny salvaje ahora aparece en el minimapa como una estrella que parpadea, fija en el borde cuando está lejos: sigue la estrella para cazarlo antes de que se vaya.', fr: 'Un Pokémon chromatique sauvage apparaît désormais sur la mini-carte comme une étoile qui clignote, épinglée au bord quand il est loin : suivez l’étoile pour le traquer avant qu’il ne disparaisse.', zh: '野生異色寶可夢現在會以閃爍的星星顯示在小地圖上，距離較遠時固定在邊緣：跟著星星走，就能在牠消失前找到牠。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Minimapa', en: 'Minimap', es: 'Minimapa', fr: 'Mini-carte', zh: '小地圖' },
+        notes: [
+          { pt: 'Ao ver “Um Pokémon shiny apareceu!”, olhe o minimapa: o shiny é a estrela dourada piscando. Fora do alcance do mapa, ela fica na borda, apontando para onde ele está, como o chefe e os Alfas. Ideia do Zozup no Discord.', en: 'When you see “A shiny Pokémon appeared!”, check the minimap: the shiny is the blinking gold star. Out of the map’s range, it sits on the rim pointing where it is, like the boss and the Alphas. Idea by Zozup on Discord.', es: 'Cuando veas “¡Apareció un Pokémon shiny!”, mira el minimapa: el shiny es la estrella dorada que parpadea. Fuera del alcance del mapa, queda en el borde apuntando hacia donde está, como el jefe y los Alfa. Idea de Zozup en Discord.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-01',
     title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
     highlights: [
