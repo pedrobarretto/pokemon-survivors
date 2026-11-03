@@ -12,7 +12,7 @@ import type { EvolutionStage } from '../data/starters'
 import { runBoost } from './evoItems'
 import { evolutionFreed, missingEvoItems, runEvoItems, stepOpen } from './evoGate'
 import { isStarter, PLAYABLE, type PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
-import { abilityImmune, abilityLuck, abilitySet, createAbilityState, grantAbility, updateAbility } from './abilities'
+import { abilityLuck, abilitySet, createAbilityState, grantAbility, updateAbility } from './abilities'
 import { BAG_ITEMS, type BagItem } from './bag'
 import { branchContext, evolutionOffers, playerForm } from './branch'
 import { createAlphaClock, updateAlphas } from './alphas'
@@ -54,7 +54,7 @@ import { rollShiny, SHINY_ODDS, shinyBoost } from './shiny'
 import { updateProps } from './props'
 import { withHoney, withOutbreak } from './outbreak'
 import { withHaunts } from './halloween'
-import { createTerrain, groundAt, playerWaterPace, updateTerrain } from './terrain'
+import { createTerrain, groundAt, groundPace, slidesOnIce, updateTerrain } from './terrain'
 import { createLandmarkState, createPlayerLandmarks, updateLandmarks, updateTunnel } from './landmarks'
 import { drawRoster, type Roster } from './roster'
 import { clockRuns, createRiftState } from './rift'
@@ -410,11 +410,11 @@ export const walkPlayer = (g: Game, input: Vec, dt: number) => {
   const ground = groundAt(g, p.x, p.y)
   const tailwind = g.place.inside?.id === 'sky' ? SKY.tailwind : 1
   // Versus: the role's pace, a slow on the Pokémon's avatar, its own goal's boost (`VersusSeat.pace`).
-  const pace = p.stats.speed * slow * tailwind * (ground === 'water' ? playerWaterPace(g) : 1) * (p.versus?.pace ?? 1)
+  const pace = p.stats.speed * slow * tailwind * groundPace(g, ground) * (p.versus?.pace ?? 1)
   const vx = moving ? input.x * pace : 0
   const vy = moving ? input.y * pace : 0
-  // On ice the player's speed only slowly follows the stick, so they slide.
-  const ice = ground === 'ice' && slow > 0 && !abilityImmune(g, 'terrain')
+  // On ice the player's speed only slowly follows the stick, so they slide (not a Flying or Ice type, nor Levitating).
+  const ice = ground === 'ice' && slow > 0 && slidesOnIce(g)
   if (ice) {
     const grip = 1 - dm.exp(-TERRAIN.iceGrip * dt)
     p.vx += (vx - p.vx) * grip

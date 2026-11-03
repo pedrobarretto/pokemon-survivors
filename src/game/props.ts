@@ -7,6 +7,7 @@ import { burst } from './effects'
 import { crackPumpkin, isPumpkinCell } from './halloween'
 import { inView } from './queries'
 import { isOpen } from './terrain'
+import { MAP_ARCHETYPES } from '../data/mapArchetypes'
 import type { Attack, Game, Player } from './types'
 import * as dm from '../engine/dmath'
 
@@ -36,9 +37,13 @@ const KIND_WEIGHTS = (Object.keys(PROPS) as PropKind[]).flatMap((k) => (PROPS[k]
 
 const cellKey = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768)
 
-/** The prop living in world cell (cx, cy), if any; a haunted run (`game/halloween.ts`) turns some into jack-o'-lanterns. Pure and deterministic. */
-export const propAt = (cx: number, cy: number, haunted = false): { kind: PropKind; x: number; y: number } | null => {
-  if (hash2(cx, cy, SEED) >= DENSITY) return null
+/**
+ * The prop living in world cell (cx, cy), if any, at `density` (the map
+ * archetype's, `breakables`); a haunted run (`game/halloween.ts`) turns some
+ * into jack-o'-lanterns. Pure and deterministic.
+ */
+export const propAt = (cx: number, cy: number, haunted = false, density = DENSITY): { kind: PropKind; x: number; y: number } | null => {
+  if (hash2(cx, cy, SEED) >= density) return null
   const kind = haunted && isPumpkinCell(cx, cy) ? 'pumpkin' : weightedPick(() => hash2(cx, cy, SEED + 1), KIND_WEIGHTS)
   const span = PROP_CELL - MARGIN * 2
   return {
@@ -60,11 +65,12 @@ const materializeAround = (g: Game, p: Player) => {
   const reach = reachCells(g)
   const pcx = Math.floor(p.x / PROP_CELL)
   const pcy = Math.floor(p.y / PROP_CELL)
+  const density = DENSITY * MAP_ARCHETYPES[g.terrain.archetype].breakables
   for (let cy = pcy - reach; cy <= pcy + reach; cy++) {
     for (let cx = pcx - reach; cx <= pcx + reach; cx++) {
       const cell = cellKey(cx, cy)
       if (g.brokenProps.has(cell) || g.props.some((p) => p.cell === cell)) continue
-      const spot = propAt(cx, cy, g.halloween)
+      const spot = propAt(cx, cy, g.halloween, density)
       // Breakables never stand in a lake or inside a rock.
       if (spot && isOpen(g, spot.x, spot.y, 14)) g.props.push({ id: g.nextId++, cell, ...spot, hp: PROPS[spot.kind].hp, hitCooldown: 0, shake: 0 })
     }

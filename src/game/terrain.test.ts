@@ -13,12 +13,12 @@ import * as dm from '../engine/dmath'
 
 const SEED = createTerrain(1234).seed
 
-/** Every feature in a square of cells around the origin. */
+/** Every feature in a square of cells around the origin, on the classic route (`data/mapArchetypes.ts`: the other archetypes have their own tests). */
 const sweep = (seed: number, span = 12) =>
   Array.from({ length: (span * 2 + 1) ** 2 }, (_, i) => {
     const cx = (i % (span * 2 + 1)) - span
     const cy = Math.floor(i / (span * 2 + 1)) - span
-    return { cx, cy, f: featureAt(seed, cx, cy) }
+    return { cx, cy, f: featureAt(seed, cx, cy, 'route') }
   })
 
 /** The first solid of a kind on the map. */
@@ -67,6 +67,8 @@ describe('terrain collision', () => {
 
   it('keeps the player and walkers out of solids, while flyers and bosses go over them', () => {
     const g = createGame('charmander', { w: 480, h: 270 }, 1234)
+    g.terrain.archetype = 'route'
+    g.terrain.cells.clear()
     const rock = findSolid(g.terrain.seed, 'cliff')
     const walker = spawnEnemy(g, 'rattata', rock.x, rock.y)
     const flyer = spawnEnemy(g, 'pidgey', rock.x + 4, rock.y)
@@ -80,6 +82,8 @@ describe('terrain collision', () => {
 
   it('makes lakes water, and ice in the snow', () => {
     const g = createGame('charmander', { w: 480, h: 270 }, 1234)
+    g.terrain.archetype = 'route'
+    g.terrain.cells.clear()
     const lake = sweep(g.terrain.seed).find(({ f }) => f?.lake)!.f!.lake!
     expect(groundAt(g, lake.x, lake.y)).toBe('water')
     g.biome.id = 'snow'
