@@ -739,6 +739,7 @@ export const fr: Messages = {
     seconds: (s) => `${s}s`,
     evolves: 'Évolution',
     evolvedFrom: 'Évoluée de',
+    boosted: (ability) => `${ability} renforce cette capacité`,
   },
 
   settings: {
@@ -2022,7 +2023,7 @@ export const fr: Messages = {
     technician: 'Les capacités faibles (dégâts de base jusqu’à 10) font +40%.',
     ironFist: 'Les coups de poing font +35% (Mach Punch…).',
     strongJaw: 'Les morsures font +40% (Crunch…).',
-    sharpness: 'Les capacités tranchantes font +35% (Razor Leaf, Leaf Blade, Razor Shell, Water Shuriken…).',
+    sharpness: 'Les capacités tranchantes et leurs évolutions font +35% (Leaf Blade, Razor Shell, Aqua Cutter, Sacred Sword…).',
     sheerForce: 'Les capacités qui infligent des altérations (brûlure, poison…) font +25%.',
     liquidVoice: 'Les capacités sonores font +30% (Disarming Voice, Torch Song…), et capacités Eau +10%.',
     punkRock: 'Les capacités sonores font +35% (Disarming Voice…), et tu subis 5% de dégâts en moins.',

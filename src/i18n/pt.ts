@@ -925,6 +925,8 @@ export const pt = {
     seconds: (s: string) => `${s}s`,
     evolves: 'Evolução',
     evolvedFrom: 'Evoluiu de',
+    /** The line on a move an ability boosts (the ability's icon marks it on the slots and cards too). */
+    boosted: (ability: string) => `${ability} fortalece este golpe`,
   },
 
   settings: {
@@ -2317,7 +2319,7 @@ export const pt = {
     technician: 'Golpes fracos (dano base até 10) causam +40%.',
     ironFist: 'Socos causam +35% (Mach Punch…).',
     strongJaw: 'Mordidas causam +40% (Crunch…).',
-    sharpness: 'Golpes cortantes causam +35% (Razor Leaf, Leaf Blade, Razor Shell, Water Shuriken…).',
+    sharpness: 'Golpes cortantes e suas evoluções causam +35% (Leaf Blade, Razor Shell, Aqua Cutter, Sacred Sword…).',
     sheerForce: 'Golpes que causam condições (queimadura, veneno…) causam +25%.',
     liquidVoice: 'Golpes de som causam +30% (Disarming Voice, Torch Song…), e golpes de Água +10%.',
     punkRock: 'Golpes de som causam +35% (Disarming Voice…), e recebe 5% menos dano.',

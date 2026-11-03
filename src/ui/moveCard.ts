@@ -1,4 +1,7 @@
+import { ABILITIES } from '../data/abilities'
 import { evolutionOf, evolvedFrom } from '../data/evolutions'
+import { abilityBoosting } from '../game/abilities'
+import { abilityIcon } from '../render/abilityArt'
 import { ITEMS } from '../data/items'
 import { maxMoveLevel, MOVES, type MoveDef, type MoveId } from '../game/moves'
 import { moveSheet, type SheetRow } from '../game/moveSheet'
@@ -85,6 +88,12 @@ const evolutionLine = (owner: Player, id: MoveId, level: number) => {
   )
 }
 
+/** "[Sharpness] Sharpness boosts this move", when the owner's ability does (`abilityBoosting`). */
+const boostLine = (g: Game, owner: Player, id: MoveId) => {
+  const ability = abilityBoosting(g, owner, id)
+  return ability && h('div', { class: 'card-boost' }, h('img', { src: abilityIcon(ability), alt: '' }), t().moveCard.boosted(ABILITIES[ability].name))
+}
+
 /** The card's content: name, type, level, the stats with the player's modifiers and how the move evolves. */
 export const moveCard = (g: Game, id: MoveId, { level, from, path, describe = false, owner = localPlayer(g) }: CardOptions) => {
   const m = t()
@@ -121,6 +130,7 @@ export const moveCard = (g: Game, id: MoveId, { level, from, path, describe = fa
         ),
       ]),
     ),
+    boostLine(g, owner, id),
     evolutionLine(owner, id, level),
   )
 }

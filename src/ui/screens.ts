@@ -45,6 +45,7 @@ import { localPlayer } from '../game/players'
 import { surrenderGate, voters } from '../game/versusSocial'
 import { rulesOf } from '../game/versusRules'
 import { deathCause } from './deathCause'
+import { abilityMark } from './abilityMark'
 import { teamBuilds } from './teamHud'
 
 export type Screen = {
@@ -341,10 +342,13 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
     button.style.setProperty('--duo-a', TYPE_COLORS[MOVES[offer.from[0]].type])
     button.style.setProperty('--duo-b', TYPE_COLORS[MOVES[offer.from[1]].type])
   }
+  // The move the card gives, which wears the ability's icon when the ability boosts it.
+  const move = offer.kind === 'move' || offer.kind === 'branch' ? offer.id : offer.kind === 'evolution' || offer.kind === 'duo' ? offer.to : null
   const icon = h(
     'div',
     { class: 'offer-icon' },
     h('img', { src: v.icon, alt: '' }),
+    move && abilityMark(g, move, 'offer-ability'),
     v.mods.length > 0 && h('span', { class: 'offer-mods' }, ...v.mods.map((id) => h('img', { src: modIcon(id), alt: '' }))),
   )
   // The mouse opens the move card over the icon only, so it doesn't cover the other choices (a finger holds the whole card, see `levelUp`).
@@ -571,6 +575,7 @@ const moveList = (g: Game) =>
         { class: 'loadout-row' },
         h('img', { src: moveIcon(m.id), alt: '' }),
         MOVES[m.id].name,
+        abilityMark(g, m.id, 'loadout-ability'),
         // The mods of the fork branches taken.
         ...modsOf(moveStats(m.id, m.level, localPlayer(g).stats, m.path).mods).map((id) => h('img', { class: 'loadout-mod', src: modIcon(id), alt: '' })),
         loadoutHint(g, m.id),

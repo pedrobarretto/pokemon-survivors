@@ -739,6 +739,7 @@ export const en: Messages = {
     seconds: (s) => `${s}s`,
     evolves: 'Evolution',
     evolvedFrom: 'Evolved from',
+    boosted: (ability) => `${ability} boosts this move`,
   },
 
   settings: {
@@ -2024,7 +2025,7 @@ export const en: Messages = {
     technician: 'Weak moves (base damage up to 10) deal +40%.',
     ironFist: 'Punches deal +35% (Mach Punch…).',
     strongJaw: 'Bites deal +40% (Crunch…).',
-    sharpness: 'Slicing moves deal +35% (Razor Leaf, Leaf Blade, Razor Shell, Water Shuriken…).',
+    sharpness: 'Slicing moves and their evolutions deal +35% (Leaf Blade, Razor Shell, Aqua Cutter, Sacred Sword…).',
     sheerForce: 'Moves that inflict conditions (burn, poison…) deal +25%.',
     liquidVoice: 'Sound moves deal +30% (Disarming Voice, Torch Song…), and Water moves +10%.',
     punkRock: 'Sound moves deal +35% (Disarming Voice…), and you take 5% less damage.',

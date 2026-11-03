@@ -739,6 +739,7 @@ export const zh: Messages = {
     seconds: (s) => `${s}秒`,
     evolves: '進化',
     evolvedFrom: '進化自',
+    boosted: (ability) => `${ability} 強化此招式`,
   },
 
   settings: {
@@ -2022,7 +2023,7 @@ export const zh: Messages = {
     technician: '弱小的招式（基礎傷害10以下）傷害+40%。',
     ironFist: '拳類招式傷害+35%（Mach Punch…）。',
     strongJaw: '啃咬類招式傷害+40%（Crunch…）。',
-    sharpness: '切割類招式傷害+35%（Razor Leaf、Leaf Blade、Razor Shell、Water Shuriken…）。',
+    sharpness: '切割類招式及其進化招式傷害+35%（Leaf Blade、Razor Shell、Aqua Cutter、Sacred Sword…）。',
     sheerForce: '會造成異常狀態（灼傷、中毒…）的招式傷害+25%。',
     liquidVoice: '聲音類招式傷害+30%（Disarming Voice、Torch Song…），且水屬性招式+10%。',
     punkRock: '聲音類招式傷害+35%（Disarming Voice…），且受到的傷害減少5%。',

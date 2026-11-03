@@ -15378,6 +15378,60 @@ button.hall-tile:hover {
   gap: 4px;
 }
 
+/* A move the ability boosts (`ui/abilityMark.ts`): its line on the move card, and the ability's icon on the slots and cards. */
+.card-boost {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 2px solid var(--dk-line, #d0d4e0);
+  font-size: 18px;
+  color: color-mix(in srgb, #a05800 var(--dk-lift, 100%), #fff);
+}
+
+.card-boost img,
+.ability-mark {
+  image-rendering: pixelated;
+  background: var(--dk-glow-gold, #f8e090);
+  border-radius: 3px;
+}
+
+.card-boost img {
+  width: 18px;
+  height: 18px;
+  padding: 1px;
+}
+
+.ability-mark {
+  pointer-events: none;
+}
+
+.slot img.slot-ability {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #181818;
+}
+
+.offer-icon img.offer-ability {
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 20px;
+  height: 20px;
+  padding: 1px;
+  border: 2px solid var(--dk-surface-0, #fff);
+  border-radius: 4px;
+}
+
+.loadout-row img.loadout-ability {
+  width: 14px;
+  height: 14px;
+  padding: 1px;
+}
+
 /*
  * A landmark's name (`ui/landmarks.ts`): a wooden sign sliding in at the
  * top-left corner, under the move slots, the way the games name a route.

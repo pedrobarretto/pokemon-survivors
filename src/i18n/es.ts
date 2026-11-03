@@ -740,6 +740,7 @@ export const es: Messages = {
     seconds: (s) => `${s}s`,
     evolves: 'Evolución',
     evolvedFrom: 'Evolucionó de',
+    boosted: (ability) => `${ability} potencia este movimiento`,
   },
 
   settings: {
@@ -2026,7 +2027,7 @@ export const es: Messages = {
     technician: 'Los movimientos débiles (daño base hasta 10) hacen +40%.',
     ironFist: 'Los puñetazos hacen +35% (Mach Punch…).',
     strongJaw: 'Los mordiscos hacen +40% (Crunch…).',
-    sharpness: 'Los movimientos cortantes hacen +35% (Razor Leaf, Leaf Blade, Razor Shell, Water Shuriken…).',
+    sharpness: 'Los movimientos cortantes y sus evoluciones hacen +35% (Leaf Blade, Razor Shell, Aqua Cutter, Sacred Sword…).',
     sheerForce: 'Los movimientos que causan estados (quemadura, veneno…) hacen +25%.',
     liquidVoice: 'Los movimientos de sonido hacen +30% (Disarming Voice, Torch Song…), y movimientos de Agua +10%.',
     punkRock: 'Los movimientos de sonido hacen +35% (Disarming Voice…), y recibes 5% menos de daño.',

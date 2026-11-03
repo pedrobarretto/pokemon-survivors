@@ -672,6 +672,7 @@ export const MOVES = {
   meteorMash: {
     name: 'Meteor Mash',
     type: 'steel',
+    tags: ['punch'],
     base: stats({ damage: 16, cooldown: 1.8, amount: 1, knockback: 70 }),
     stacks: { grow: 'hit', max: MASH_MAX, reset: 'hurt' },
     upgrades: [
@@ -742,6 +743,7 @@ export const MOVES = {
   dynamicPunch: {
     name: 'Dynamic Punch',
     type: 'fighting',
+    tags: ['punch'],
     base: stats({ damage: 34, cooldown: 3.2, knockback: 180 }),
     status: { kind: 'confuse', chance: 1, duration: 2, power: 0 },
     upgrades: [
@@ -795,6 +797,7 @@ export const MOVES = {
   furyCutter: {
     name: 'Fury Cutter',
     type: 'bug',
+    tags: ['slice'],
     base: stats({ damage: 7, cooldown: 0.8, knockback: 25 }),
     upgrades: [
       { damage: 2 },
@@ -811,6 +814,7 @@ export const MOVES = {
   sacredSword: {
     name: 'Sacred Sword',
     type: 'fighting',
+    tags: ['slice'],
     base: stats({ damage: 16, cooldown: 1.9, amount: 1, knockback: 70 }),
     upgrades: [
       { damage: 5 },
@@ -843,6 +847,7 @@ export const MOVES = {
   snarl: {
     name: 'Snarl',
     type: 'dark',
+    tags: ['sound'],
     base: stats({ damage: 10, cooldown: 2, amount: 3, knockback: 40 }),
     upgrades: [
       { damage: 3 },
@@ -926,6 +931,7 @@ export const MOVES = {
   echoedVoice: {
     name: 'Echoed Voice',
     type: 'normal',
+    tags: ['sound'],
     base: stats({ damage: 7, cooldown: 1.5, knockback: 40 }),
     stacks: { grow: 'cast', max: ECHO_MAX, reset: 'hurt' },
     upgrades: [
@@ -1707,6 +1713,7 @@ export const MOVES = {
   focusPunch: {
     name: 'Focus Punch',
     type: 'fighting',
+    tags: ['punch'],
     base: stats({ damage: 70, cooldown: 0.2, knockback: 220 }),
     stacks: { grow: 'cast', max: FOCUS.charge, reset: 'hurt' },
     upgrades: [
@@ -1915,6 +1922,7 @@ export const MOVES = {
   leafStorm: {
     name: 'Leaf Storm',
     type: 'grass',
+    tags: ['slice'],
     base: stats({ damage: 15, cooldown: 1.8, amount: 10, speed: 240, duration: 1.8, area: 1.2, knockback: 35 }),
     upgrades: [
       { amount: 4 },
@@ -2142,6 +2150,7 @@ export const MOVES = {
   jawLock: {
     name: 'Jaw Lock',
     type: 'dark',
+    tags: ['bite'],
     base: stats({ damage: 17, cooldown: 1.5, amount: 3, area: 1.2, knockback: 40 }),
     status: { kind: 'slow', chance: 1, duration: 1, power: 0.8 },
     upgrades: [{ amount: 1 }, { damage: 8 }, { area: 0.25, cooldown: -0.15 }, { amount: 1, damage: 6 }],
@@ -2151,6 +2160,7 @@ export const MOVES = {
   superpower: {
     name: 'Superpower',
     type: 'fighting',
+    tags: ['punch'],
     base: stats({ damage: 44, cooldown: 1.3, amount: 6, area: 1.3, knockback: 110 }),
     upgrades: [{ damage: 10 }, { amount: 3 }, { area: 0.2 }, { cooldown: -0.25, damage: 8 }],
     fire: (g, s) => evo.superpower(g, s, { move: 'superpower', type: 'fighting', visual: 'superFist' }),
@@ -2202,6 +2212,7 @@ export const MOVES = {
   aquaCutter: {
     name: 'Aqua Cutter',
     type: 'water',
+    tags: ['slice'],
     base: stats({ damage: 15, cooldown: 1.4, amount: 3, speed: 260, area: 1.4, knockback: 40 }),
     upgrades: [{ amount: 1 }, { damage: 7 }, { area: 0.25 }, { amount: 1, speed: 60 }],
     fire: (g, s) => evo.aquaCutter(g, s, { move: 'aquaCutter', type: 'water', visual: 'aquaCutter' }),
@@ -2219,6 +2230,7 @@ export const MOVES = {
   gigaDrain: {
     name: 'Giga Drain',
     type: 'grass',
+    tags: ['sound'],
     base: stats({ damage: 13, cooldown: 1.7, amount: 4, duration: 1.5 }),
     status: { kind: 'slow', chance: 1, duration: 0.4, power: 0.5 },
     upgrades: [{ amount: 1 }, { damage: 4 }, { duration: 0.5 }, { amount: 2, damage: 3 }],
@@ -2228,6 +2240,7 @@ export const MOVES = {
   burningJealousy: {
     name: 'Burning Jealousy',
     type: 'fire',
+    tags: ['sound'],
     base: stats({ damage: 30, cooldown: 2.1, amount: 4, area: 1.2, knockback: 50 }),
     status: { kind: 'burn', chance: 0.8, duration: 3, power: 0.4 },
     upgrades: [{ amount: 2 }, { damage: 12 }, { area: 0.25, statusDamage: 0.25 }, { amount: 2, cooldown: -0.3 }],
@@ -2237,6 +2250,7 @@ export const MOVES = {
   trailblaze: {
     name: 'Trailblaze',
     type: 'grass',
+    tags: ['slice'],
     base: stats({ damage: 24, cooldown: 1.6, amount: 2, area: 1.2, duration: 0.45, knockback: 80 }),
     upgrades: [{ damage: 8 }, { area: 0.2 }, { amount: 1 }, { cooldown: -0.25, damage: 8 }],
     fire: (g, s) => evo.trailblaze(g, s, { move: 'trailblaze', type: 'grass', visual: 'trailblaze' }),
@@ -2245,6 +2259,7 @@ export const MOVES = {
   liquidation: {
     name: 'Liquidation',
     type: 'water',
+    tags: ['slice'],
     base: stats({ damage: 26, cooldown: 1.3, amount: 2, speed: 210, area: 1.3, knockback: 150 }),
     status: { kind: 'mark', chance: 0.5, duration: 4, power: 0.15 },
     upgrades: [{ amount: 1 }, { damage: 10 }, { area: 0.2, statusChance: 0.2 }, { amount: 1, cooldown: -0.2 }],
@@ -2254,6 +2269,7 @@ export const MOVES = {
   alluringVoice: {
     name: 'Alluring Voice',
     type: 'fairy',
+    tags: ['sound'],
     base: stats({ damage: 24, cooldown: 1.9, amount: 2, area: 1.2, duration: 0.75, knockback: 70 }),
     status: { kind: 'confuse', chance: 0.45, duration: 2.5, power: 0 },
     upgrades: [{ amount: 1 }, { damage: 8, statusChance: 0.15 }, { area: 0.2 }, { amount: 1, cooldown: -0.3 }],
