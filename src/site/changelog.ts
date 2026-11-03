@@ -24,6 +24,23 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-02',
+    title: { pt: 'Novos itens de coleta', en: 'New collector items', es: 'Nuevos objetos de recolección', fr: 'Nouveaux objets de collecte', zh: '新的收集道具' },
+    highlights: [
+      { pt: 'Coin Case: puxa todo o ₽ do mapa até você, como o Exp. Share faz com os Exp. Candies.', en: 'Coin Case: pulls every ₽ on the map to you, like Exp. Share does with Exp. Candies.', es: 'Coin Case: atrae hacia ti todo el ₽ del mapa, como el Exp. Share con los Exp. Candies.', fr: 'Coin Case : attire vers toi tous les ₽ de la carte, comme l’Exp. Share avec les Exp. Candies.', zh: 'Coin Case：把地圖上所有 ₽ 吸到你身邊，就像 Exp. Share 吸 Exp. Candy 一樣。' },
+      { pt: 'Berry Pouch: todas as Oran Berries do mapa vêm até você.', en: 'Berry Pouch: every Oran Berry on the map comes to you.', es: 'Berry Pouch: todas las Oran Berries del mapa vienen hacia ti.', fr: 'Berry Pouch : toutes les Oran Berries de la carte viennent à toi.', zh: 'Berry Pouch：地圖上所有 Oran Berry 都會飛到你身邊。' },
+      { pt: 'Super Rod: fisga todos os itens do chão (poções, Rare Candies e outros) de uma vez.', en: 'Super Rod: reels in every item on the ground (potions, Rare Candies and more) at once.', es: 'Super Rod: pesca todos los objetos del suelo (pociones, Rare Candies y más) de una vez.', fr: 'Super Rod : pêche d’un coup tous les objets au sol (potions, Rare Candies et plus).', zh: 'Super Rod：一次釣起地上所有道具（傷藥、Rare Candy 等）。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Itens', en: 'Items', es: 'Objetos', fr: 'Objets', zh: '道具' },
+        notes: [
+          { pt: 'Três itens novos caem de Item Balls, mato alto, árvores de berry e inimigos, e funcionam como o Exp. Share para outras coisas: Coin Case puxa o ₽, Berry Pouch puxa as Oran Berries e Super Rod puxa os itens do chão. Sugestão da comunidade no Discord.', en: 'Three new items drop from Item Balls, tall grass, berry trees and foes, and work like Exp. Share for other things: Coin Case pulls the ₽, Berry Pouch pulls the Oran Berries and Super Rod pulls the items on the ground. A community suggestion from Discord.', es: 'Tres objetos nuevos salen de Item Balls, hierba alta, árboles de bayas y enemigos, y funcionan como el Exp. Share para otras cosas: Coin Case atrae el ₽, Berry Pouch atrae las Oran Berries y Super Rod atrae los objetos del suelo. Sugerencia de la comunidad en Discord.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-01',
     title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
     highlights: [
