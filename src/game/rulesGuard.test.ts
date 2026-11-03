@@ -232,6 +232,36 @@ const SCENARIOS = {
       enterPlace(g, 'cave', g.player.x, g.player.y)
     },
   },
+  /** The Hidden Grotto at 5:00 (`hidden.ts`, `grotto.ts`): a patch sparkling early, Audino popping out of the shaking grass, the item in the grass. */
+  grotto: {
+    start: { ...START, starter: 'charmander' },
+    seconds: 40,
+    stage: (g) => {
+      g.time = 300
+      g.nextEvent = 99
+      g.player.revives = 2
+      gainXp(g, 1200)
+      enterPlace(g, 'grotto', g.player.x, g.player.y)
+      if (g.place.inside?.id === 'grotto') g.place.inside.state.dwellers.sparkle.at = 3
+    },
+  },
+  /** The Underground at 8:00 (`underground.ts`): a glint under the player's feet dug up, the walls cracking, Diglett in their holes and a hole sparkling early. */
+  underground: {
+    start: { ...START, starter: 'geodude' },
+    seconds: 40,
+    stage: (g) => {
+      g.time = 480
+      g.nextEvent = 99
+      g.player.revives = 2
+      gainXp(g, 2000)
+      enterPlace(g, 'underground', g.player.x, g.player.y)
+      const inside = g.place.inside
+      if (inside?.id !== 'underground') return
+      inside.state.dwellers.sparkle.at = 4
+      const glint = inside.state.glints[0]!
+      Object.assign(g.player, { x: inside.x + glint.x, y: inside.y + glint.y })
+    },
+  },
   /** Alakazam's Magic Guard on Nightmare at 6:00 with a Life Orb: poison puddles under it and the world's next attack due, only direct hits counting. */
   magicGuard: {
     start: { ...START, difficulty: 'nightmare', starter: 'abra' },
@@ -260,22 +290,24 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
-  43: {
-    levelUps: '2998·50·13·8c971102',
-    mega: '1892·30·2·c69736f1',
-    riftFall: '675·0·1·b7486277',
-    alphaHazards: '1002·6·19·93ff9daa',
-    nightBoss: '2098·46·17·c93d0636',
-    bag: '1077·9·3·d13820e7',
-    shop: '1521·66·19·fcbbb126',
-    shopTms2: '1787·47·17·3cba2f20',
-    evoGate: '1487·55·24·ea1fa054',
-    porygonGate: '2074·60·37·391ff3dc',
-    sketch: '1210·20·2·e776249d',
-    legend: '1100·51·14·cdbdb688',
-    waveLegend: '1998·14·17·1fa0f40a',
+  44: {
+    levelUps: '2998·45·12·78f86519',
+    mega: '1892·27·1·2d1d227c',
+    riftFall: '665·0·1·8722c904',
+    alphaHazards: '1002·2·19·4c8862d5',
+    nightBoss: '2093·36·17·04c2b2b6',
+    bag: '989·11·4·ebcf7333',
+    shop: '1521·113·20·051146de',
+    shopTms2: '1787·49·18·57c9b8dd',
+    evoGate: '1487·55·24·5f3f7264',
+    porygonGate: '2074·69·37·77df1acd',
+    sketch: '1210·22·1·d5a7050c',
+    legend: '1487·99·14·4ccd28a1',
+    waveLegend: '1998·22·17·db5ba4c3',
     cave: '2188·16·12·d2d47594',
-    magicGuard: '1188·29·19·fddbed17',
+    grotto: '2782·23·18·bb75df4d',
+    underground: '3084·23·37·100fda44',
+    magicGuard: '1188·51·20·285cf0b7',
   },
 }
 

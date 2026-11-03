@@ -82,7 +82,7 @@ export const COOP = {
  * and the server's replay checks are the shell's to skip.
  *
  * Switched off in the simulation while `g.coop !== null` (`coopLocked`):
- * - `places`: no place entrance opens (cave, graveyard, sky; `updatePlaceEntrance`).
+ * - `places`: no place entrance opens (cave, graveyard, sky, nor the hidden zones; `updatePlaceEntrance`).
  * - `landmarks`: landmarks are scenery only: no names, treasures or tunnels (`updateLandmarks`).
  * - `domains`: an epic rift's legendary is fought in its old arena
  *   (`data/arenas.ts`), not its domain (`riftDomain`): no omen sky or weather,

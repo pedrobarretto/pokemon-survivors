@@ -41,6 +41,14 @@ const buff = (id: BuffId) => (g: Game) => {
   burst(g, g.player.x, g.player.y - 10, { colors, count: 20, speed: 90, ttl: 0.6, gravity: -60 })
 }
 
+/**
+ * The vacuums (Exp. Share, Coin Case, Berry Pouch, Super Rod): every pickup of
+ * one kind on the map flies to the player, as if their magnet had caught it.
+ */
+const pullAll = (kind: 'xp' | 'coin' | 'berry' | 'consumable') => (g: Game) => {
+  for (const k of g.pickups) if (k.kind === kind) k.attracted = true
+}
+
 const FLUTE: StatusSpec = { kind: 'sleep', chance: 1, duration: FLUTE_SLEEP, power: 0 }
 
 const sleepOnScreen = (g: Game) => {
@@ -88,13 +96,10 @@ export const CONSUMABLES = {
       g.player = actor
     },
   },
-  expShare: {
-    name: 'Exp. Share',
-    sfx: 'item',
-    apply: (g) => {
-      for (const k of g.pickups) if (k.kind === 'xp') k.attracted = true
-    },
-  },
+  expShare: { name: 'Exp. Share', sfx: 'item', apply: pullAll('xp') },
+  coinCase: { name: 'Coin Case', sfx: 'item', apply: pullAll('coin') },
+  berryPouch: { name: 'Berry Pouch', sfx: 'item', apply: pullAll('berry') },
+  superRod: { name: 'Super Rod', sfx: 'item', apply: pullAll('consumable') },
   pokeFlute: { name: 'Poké Flute', sfx: 'flute', apply: sleepOnScreen },
   maxRepel: { name: 'Max Repel', sfx: 'item', apply: buff('maxRepel') },
   explosion: { name: 'Voltorb', sfx: 'explosion', apply: explode },

@@ -9890,6 +9890,59 @@ a.btn.dex-site {
   height: 32px;
 }
 
+/* A co-op team's line (ui/ranking.ts `teamRow`): position, the members two a line (a Trio three on wide screens), time. */
+/* Taller than a solo line: never squeezed by the scrolling list. */
+.rank-row.rank-team {
+  flex: none;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  padding: 4px 8px;
+}
+
+.rank-members {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 6px;
+  min-width: 0;
+}
+
+@media (min-width: 700px) {
+  .rank-members.n3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.rank-member {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 2px 4px;
+  text-align: left;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 4px;
+}
+
+.rank-member.selected {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: #e83838;
+}
+
+.rank-row .rank-member > img {
+  width: 28px;
+  height: 28px;
+}
+
+.rank-member .rank-who b {
+  font-size: 20px;
+}
+
+.rank-member .rank-who small {
+  font-size: 15px;
+}
+
 /* The Bag items the run took (ui/ranking.ts `runBag`): their official sprites overlapping, at whole pixels. */
 .rank-bag {
   display: flex;
@@ -10311,6 +10364,20 @@ a.btn.dex-site {
   .rank-row img {
     width: 28px;
     height: 28px;
+  }
+  .rank-row.rank-team {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 4px;
+    padding: 4px;
+  }
+  .rank-member {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 4px;
+    padding: 2px;
+  }
+  .rank-row .rank-member > img {
+    width: 24px;
+    height: 24px;
   }
   .rank-pos {
     font-size: 9px;
@@ -11056,6 +11123,65 @@ a.btn.dex-site {
   flex: 1;
 }
 
+/* The Desafio co-op do dia's side (ui/challenge.ts): the co-op balls for a head, the top of the day's board by team size. */
+.challenge-sides {
+  justify-content: center;
+  padding: 0;
+}
+
+/* The dialog scrolls when short (a phone held sideways): its rows keep their height instead of squeezing the tabs away. */
+.dialog.challenge > *,
+.challenge-teams > * {
+  flex-shrink: 0;
+}
+
+.challenge-coop {
+  --accent: #4898e8;
+}
+
+.challenge-coop-icon {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  margin: 8px 16px;
+  image-rendering: pixelated;
+}
+
+.challenge-teams {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.challenge-teams .rank-sizes {
+  justify-content: center;
+  padding: 0;
+}
+
+/* The preview grows with its few lines (the ranking's list scrolls in a fixed dialog). */
+.rank-list.challenge-preview {
+  flex: none;
+  min-height: 52px;
+  overflow: visible;
+}
+
+.challenge-preview .rank-status {
+  padding: 8px;
+  font-size: 18px;
+}
+
+.challenge-teams .challenge-attempt {
+  margin: 0;
+  font-size: 18px;
+  text-align: center;
+}
+
+.challenge-coop .challenge-note img {
+  width: 22px;
+  height: 22px;
+}
+
 /* The challenge board's head line: the day's Pokémon, difficulty and how many played. */
 .rank-challenge {
   display: flex;
@@ -11144,6 +11270,11 @@ a.btn.dex-site {
   .challenge-sprite {
     width: 64px;
     height: 64px;
+  }
+  .challenge-coop-icon {
+    width: 44px;
+    height: 44px;
+    margin: 4px 8px;
   }
   .challenge .buttons .btn {
     min-height: 36px;
@@ -13377,6 +13508,60 @@ button.hall-tile:hover {
   background: var(--dk-surface-1, #f8f8f8);
 }
 
+/* The run's map in the pause menu (`mapPanel`): its name, what it's good for and how the player crosses it. */
+.pause-map {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 10px;
+  background: var(--dk-surface-1, #e8f0e0);
+  border-radius: 6px;
+}
+
+.pause-map b {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: normal;
+}
+
+.pause-map b small {
+  font-size: 7px;
+  color: color-mix(in srgb, #5a7848 var(--dk-lift, 100%), #fff);
+}
+
+.pause-map .map-good-tip,
+.pause-map-ways {
+  font-size: 17px;
+  line-height: 1;
+  color: var(--dk-ink-2, #505068);
+}
+
+.pause-map-ways {
+  color: color-mix(in srgb, #2c6c8c var(--dk-lift, 100%), #fff);
+}
+
+/* A phone held sideways: one line (name, types, how the player crosses), so the stats and the six moves keep their room. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .pause-map {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 10px;
+    padding: 4px 10px;
+  }
+
+  .pause-map .map-good-tip {
+    display: none;
+  }
+
+  .pause-map-ways {
+    font-size: 15px;
+  }
+}
+
 /* The partner details: the abilities, and a branching evolution in the line. */
 .ability-row {
   grid-template-columns: 24px minmax(0, 1fr);
@@ -15247,6 +15432,60 @@ button.hall-tile:hover {
   gap: 4px;
 }
 
+/* A move the ability boosts (`ui/abilityMark.ts`): its line on the move card, and the ability's icon on the slots and cards. */
+.card-boost {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 2px solid var(--dk-line, #d0d4e0);
+  font-size: 18px;
+  color: color-mix(in srgb, #a05800 var(--dk-lift, 100%), #fff);
+}
+
+.card-boost img,
+.ability-mark {
+  image-rendering: pixelated;
+  background: var(--dk-glow-gold, #f8e090);
+  border-radius: 3px;
+}
+
+.card-boost img {
+  width: 18px;
+  height: 18px;
+  padding: 1px;
+}
+
+.ability-mark {
+  pointer-events: none;
+}
+
+.slot img.slot-ability {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #181818;
+}
+
+.offer-icon img.offer-ability {
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 20px;
+  height: 20px;
+  padding: 1px;
+  border: 2px solid var(--dk-surface-0, #fff);
+  border-radius: 4px;
+}
+
+.loadout-row img.loadout-ability {
+  width: 14px;
+  height: 14px;
+  padding: 1px;
+}
+
 /*
  * A landmark's name (`ui/landmarks.ts`): a wooden sign sliding in at the
  * top-left corner, under the move slots, the way the games name a route.
@@ -15321,6 +15560,48 @@ button.hall-tile:hover {
 
   .landmark-sign small {
     font-size: 16px;
+  }
+}
+
+/*
+ * The run's map (`ui/mapSign.ts`): the landmark's sign at the start of a run,
+ * held longer, with the types the map is good for and a line.
+ */
+.map-sign {
+  max-width: min(360px, calc(100 * var(--vw) - 24px));
+  animation-duration: 6.5s;
+}
+
+.map-good {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.map-good-label {
+  font-family: var(--title);
+  font-size: 8px;
+  color: #7c5430;
+}
+
+.map-good-tip {
+  flex-basis: 100%;
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1;
+  color: #3c2414;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-sign {
+    animation-duration: 6.5s;
+  }
+}
+
+@media (max-width: 600px) {
+  .map-good-tip {
+    font-size: 14px;
   }
 }
 
@@ -17695,6 +17976,48 @@ button.hall-tile:hover {
   color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
+.coop-challenge {
+  flex: 1;
+  min-width: 180px;
+}
+
+/* A run room set on the Desafio co-op do dia: every seat sees it, with what changes. */
+.coop-challenge-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--dk-wash-gold, #fff6d8);
+  border: 2px solid #e0a828;
+  border-radius: 6px;
+}
+
+.coop-challenge-badge img {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.coop-challenge-badge span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.1;
+}
+
+.coop-challenge-badge b {
+  font-family: var(--title);
+  font-size: 9px;
+  line-height: 1.4;
+  color: color-mix(in srgb, #b07010 var(--dk-lift, 100%), #fff);
+}
+
+.coop-challenge-badge small {
+  font-size: 16px;
+  color: var(--dk-ink-2, #505870);
+}
+
 .coop-rules {
   margin: 0;
 }
@@ -18227,24 +18550,22 @@ button.hall-tile:hover {
   padding-right: 2px;
 }
 
+/* The shelves' chips share the first line whole; the slot count wraps under them, at the right. */
 .dojo-shelves {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
 .dojo-shelves .dojo-chip {
-  flex: 1;
+  flex: 1 1 auto;
   justify-content: center;
-  min-width: 0;
-  overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .dojo-shelves .dojo-slots {
-  flex: none;
-  align-self: center;
-  margin-left: 2px;
+  flex: 1 0 100%;
+  text-align: right;
   white-space: nowrap;
 }
 

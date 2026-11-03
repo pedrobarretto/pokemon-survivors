@@ -11,7 +11,8 @@ import { drawLegendSky, drawOmenGround } from './legendSky'
 import { bossLook, drawDomainAir, drawDomainGround, drawDomainScreen, drawVortexAir, drawVortexGround } from './domainLooks'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
-import { BIOME_ORDER, BIOMES, biomeAt, type BiomeId } from '../data/biomes'
+import { BIOMES, START_BIOME, type BiomeId } from '../data/biomes'
+import { biomesNear, groundMapOf } from './biomeLook'
 import { ENEMIES, type EnemyDef } from '../data/enemies'
 import { TYPE_COLORS } from '../data/types'
 import { FLEE_TIME } from '../game/enemies'
@@ -19,7 +20,7 @@ import { EVOLUTION_TIME } from '../game/game'
 import { coinTier } from '../game/meta'
 import { xpTier } from '../game/pickups'
 import { isHeld } from '../game/status'
-import { inSolid, overTerrain, type Solid } from '../game/terrain'
+import { inSolid, overTerrain, phasingNow, type Solid } from '../game/terrain'
 import { isAirborne, traitPace } from '../game/traits'
 import type { Attack, Enemy, Game, Hazard, Player } from '../game/types'
 import { FX, HAZARD_FX, hostile, PICKUPS, SPARKLE, SPIT_FX } from './art'
@@ -620,8 +621,8 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g)
   // Invulnerable after a hit: blinking, or a steady see-through when calm.
   const faded = calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink
-  // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`).
-  const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : 1) * grassAlpha(g, viewer, p)
+  // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`); a Ghost type slipping through a tree or a rock (`phasingNow`) too.
+  const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : phasingNow(g, p) ? 0.55 : 1) * grassAlpha(g, viewer, p)
   if (alpha > 0) drawPokemon(ctx, s, anim, p.dir, p.animTime, p.x, p.y - (egg?.lift ?? 0), { alpha, flash, tint, outline: mega.outline })
   if (p.versus && g.versus) drawGrassFront(ctx, mapOf(g.versus).grass, p.x, p.y, s.bodyW, g.now, p.moving, p.slot)
   // The shiny entrance plays shortly after the run starts.
@@ -759,18 +760,18 @@ const isValeProp = (d: Drawable): d is ValeProp => typeof d === 'object' && 'pro
 
 /* ---------------- Biome ---------------- */
 
-/** Seconds the ground takes to dissolve into the next biome. */
-const BIOME_FADE = 2.4
-/** How far ahead (game seconds) the next biome's ground starts building in the background. */
-const BIOME_WARMUP = 10
+/** How far (px) past the screen the biomes' terrain stays built and is built ahead (`biomesNear`). */
+const TERRAIN_MARGIN = 600
+/** How far past the screen terrain is needed first: features whose cells reach into view. */
+const TERRAIN_SOON = 320
 
 /**
  * Builds at most one piece of scenery not built yet, most needed first: the
- * ground about to scroll in, this biome's terrain sprites, the next biome's
- * ground and terrain, the fog veil (in the `fog` setting's mode) where fog can roll in; and while `calm` (no
- * run, or a menu over it), every biome's terrain. True if it built one. The
- * shell calls it in idle time: a mountain or the veil takes longer than a frame
- * lasts, so building one the first time it shows would stall that frame.
+ * ground about to scroll in (borders and all, from the run's biome map), the
+ * terrain sprites of the biomes on and near the screen, the fog veil (in the
+ * `fog` setting's mode) where fog can roll in. True if it built one. The
+ * shell calls it in idle time: a mountain or the veil takes longer than a
+ * frame lasts, so building one the first time it shows would stall that frame.
  */
 export const warmScenery = (g: Game | null, calm: boolean, fog: FogMode) => {
   const keep = terrainBiomes(g)
@@ -780,46 +781,27 @@ export const warmScenery = (g: Game | null, calm: boolean, fog: FogMode) => {
   if (!g?.versus) dropVale()
   else if (warmVale(g.versus.map)) return true
   if (g && warmDomain(g)) return true
-  if (g && !roomOf(g)) {
+  if (g && !roomOf(g) && !g.versus) {
     const { w, h } = g.view
     const { x, y } = g.camera
-    const here = g.biome.id
-    const upcoming = biomeAt(g.time + BIOME_WARMUP)
-    if (warmGround(here, x, y, w, h, GROUND_LOOKAHEAD) || warmTerrain(here)) return true
-    if (upcoming !== here && (warmGround(upcoming, x, y, w, h) || warmTerrain(upcoming))) return true
-    if ('fog' in BIOMES[here].weather || 'fog' in BIOMES[upcoming].weather) {
+    if (warmGround(groundMapOf(g), x, y, w, h, GROUND_LOOKAHEAD)) return true
+    if (biomesNear(g, localPlayer(g).biome, TERRAIN_SOON).some((b) => warmTerrain(b))) return true
+    if (keep.some((b) => 'fog' in BIOMES[b].weather)) {
       if (warmFog(w, h, fog)) return true
     } else if (g.weather.id !== 'fog' && g.weather.prev !== 'fog') dropFog()
   }
-  return calm && keep.some((b) => warmTerrain(b))
+  return (calm || g !== null) && keep.some((b) => warmTerrain(b))
 }
 
 /**
- * How far ahead (game seconds) the next biome's terrain may be kept and built while a menu is
- * open: not from a run's first second, when the phone is still decoding the run's sheets (the
- * next biome's pieces weighed as much as the first's), but well before it comes.
- */
-const TERRAIN_LEAD = 60
-
-/**
- * The biomes whose terrain stays sculpted: the one here, the one dissolving out and the next
- * in order (a run only moves forward) once it's `TERRAIN_LEAD` away; before a run, the first.
- * The rest is dropped (`keepTerrain`).
+ * The biomes whose terrain stays sculpted: the ones within `TERRAIN_MARGIN`
+ * of the screen (two or three where regions meet); inside a room, the one
+ * left outside; before a run, the meadow. The rest is dropped (`keepTerrain`).
  */
 const terrainBiomes = (g: Game | null): BiomeId[] => {
-  if (!g) return [BIOME_ORDER[0]]
-  const here = g.biome.id
-  const after = BIOME_ORDER[BIOME_ORDER.indexOf(here) + 1]
-  const next = after && biomeAt(g.time + TERRAIN_LEAD) === after ? after : undefined
-  const fading = biomeFade(g)?.from
-  return [here, ...(next ? [next] : []), ...(fading && fading !== here ? [fading] : [])]
-}
-
-/** The ground dissolve in progress, if any. */
-const biomeFade = (g: Game) => {
-  const { prev, since } = g.biome
-  const k = (g.time - since) / BIOME_FADE
-  return prev && k < 1 ? { from: prev, k } : null
+  if (!g || g.versus) return [START_BIOME]
+  if (roomOf(g)) return [localPlayer(g).biome]
+  return biomesNear(g, localPlayer(g).biome, TERRAIN_MARGIN)
 }
 
 const TEXT_PASSES = [false, true] as const
@@ -912,13 +894,13 @@ const lifted: Game[] = []
  * see-through around this screen's player), behind the graveyard's fence or
  * in a fall's look.
  */
-const liftsOver = (g: Game, at: number, look: BiomeId) => {
+const liftsOver = (g: Game, at: number) => {
   if (g.place.inside?.id === 'graveyard' || riftFallLook(g) || placeFallLook(g)) return false
   const p = localPlayer(g)
   const s = playerSprites(g)
   for (let i = at + 1; i < inDepth.length; i++) {
     const d = inDepth[i]!
-    if (isSolid(d) && solidCovers(g, d, look, p.x, p.y, s.bodyW, s.bodyH)) return false
+    if (isSolid(d) && solidCovers(g, d, p.x, p.y, s.bodyW, s.bodyH)) return false
     if (isValeProp(d) && valePropCovers(g, d, p.x, p.y, s.bodyW, s.bodyH)) return false
   }
   return true
@@ -938,20 +920,14 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   const camX = Math.round(g.camera.x) + shakeX
   const camY = Math.round(g.camera.y) + shakeY
 
-  const fade = biomeFade(g)
   const inside = g.place.inside
   const indoors = roomOf(g) !== null
   if (g.rift.arena?.domain) drawDomainFloor(ctx, g.rift.arena, g.rift.arena.domain, camX, camY, w, h, t)
   else if (g.rift.arena) drawArena(ctx, g.rift.arena, camX, camY, w, h, t)
   else if (inside) drawPlaceFloor(ctx, inside, camX, camY, w, h, t)
   else if (g.versus) drawValeFloor(ctx, g.versus.map, camX, camY, w, h)
-  else drawGround(ctx, camX, camY, w, h, g.biome.id, fade)
-  const upcoming = biomeAt(g.time + BIOME_WARMUP)
-  // Scenery warms in idle time (`warmScenery`); in case that never comes, one of the next biome's chunks per frame.
-  if (upcoming !== g.biome.id && !g.versus) warmGround(upcoming, camX, camY, w, h)
+  else drawGround(ctx, camX, camY, w, h, groundMapOf(g))
   if (g.rift.arena && !g.rift.arena.domain) warmArena(g.rift.arena)
-  // Scenery changes outfit halfway through the dissolve, like the breakables.
-  const look = fade && fade.k < 0.5 ? fade.from : g.biome.id
   ctx.save()
   ctx.translate(-camX, -camY)
 
@@ -966,7 +942,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     return showsPlain(p) && visible(p.x, p.y) && !hiddenMate(mate)
   }
 
-  drawTerrainGround(ctx, g, look, camX, camY)
+  drawTerrainGround(ctx, g, camX, camY)
   // Versus: the spawn pads and the goal zones, under everything.
   if (g.versus) {
     drawValeZones(ctx, g, t)
@@ -997,8 +973,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawOmenGround(ctx, g)
   drawDomainGround(ctx, g)
   drawNightmareGround(ctx, g, t)
-  // Breakables change outfit halfway through the dissolve.
-  drawProps(ctx, g, t, look)
+  // Breakables, dressed by the biome each stands in.
+  drawProps(ctx, g, t)
   // Map events wait outside with the rest of the world while the player is in a room.
   if (!indoors) drawMapEvents(ctx, g, t, calm)
   if (g.rift.portal && !indoors) (riftDomain(g, g.rift.portal.legend) ? drawTear : drawRiftPortal)(ctx, g.rift.portal, t)
@@ -1053,8 +1029,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   lifted.length = 0
   for (let i = 0; i < n; i++) {
     const d = inDepth[i]!
-    if (d === 'player') liftMe = !hidden && (!g.coop || showsStanding(me)) && liftsOver(g, i, look)
-    else if (isMate(d) && showsPlain(localPlayer(d.mate)) && liftsOver(d.mate, i, look)) lifted.push(d.mate)
+    if (d === 'player') liftMe = !hidden && (!g.coop || showsStanding(me)) && liftsOver(g, i)
+    else if (isMate(d) && showsPlain(localPlayer(d.mate)) && liftsOver(d.mate, i)) lifted.push(d.mate)
   }
   for (const d of inDepth) {
     if (aloft) break
@@ -1086,7 +1062,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     if (d === 'player') !hidden && !liftMe && (g.coop && !showsStanding(me) ? drawTeammate(ctx, g, me, t, calm) : drawPlayer(ctx, g, calm))
     else if (d === 'companion') companion && drawCompanion(ctx, companion, t)
     else if (isMate(d)) !lifted.includes(d.mate) && (showsPlain(localPlayer(d.mate)) ? drawPlayer(ctx, d.mate, calm) : drawTeammate(ctx, d.mate, localPlayer(d.mate), t, calm))
-    else if (isSolid(d)) drawSolid(ctx, g, d, look)
+    else if (isSolid(d)) drawSolid(ctx, g, d)
     else if (isValeProp(d)) drawValeProp(ctx, g, d, t, playerSprites(g).bodyW, playerSprites(g).bodyH)
     else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d), !g.rift.arena)
   }

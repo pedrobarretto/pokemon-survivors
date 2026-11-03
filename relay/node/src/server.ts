@@ -72,7 +72,7 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
   const lock = await lockDataDir(config.dataDir, () => log('relay.waiting', { why: 'another relay holds the data dir' }))
   const vault = openVault(config.dataDir)
   vault.prune(Date.now(), RETENTION)
-  // Arena match reports: posted at once, and retried from the vault on a timer (as a shard's alarm does) until the API takes them.
+  // Arena match and co-op run reports: posted at once, and retried from the vault on a timer (as a shard's alarm does) until the API takes them.
   let retry: NodeJS.Timeout | null = null
   // A post still out when the relay stops finds the vault closed: the report waits in it as last saved (tried again at the next boot).
   let open = true

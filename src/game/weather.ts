@@ -10,6 +10,7 @@ import { killEnemy } from './combat'
 import { burst, floatText } from './effects'
 import type { Game } from './types'
 import { roomOf } from './room'
+import { anchorPlayer } from './players'
 import * as dm from '../engine/dmath'
 
 /**
@@ -77,6 +78,9 @@ export const rollWeather = (rng: Rng, biome: BiomeId, current: WeatherId): Weath
   const entries = WEATHER_IDS.flatMap((id) => (id !== current && (odds[id] ?? 0) > 0 ? [[id, odds[id]!] as const] : []))
   return entries.length > 0 ? weightedPick(rng, entries) : 'clear'
 }
+
+/** The biome whose sky the run has: the lead's (the first player in play, `anchorPlayer`), so a co-op team shares one weather. Solo, the player's. */
+export const leadBiome = (g: Game): BiomeId => anchorPlayer(g, 0).biome
 
 /** Can this weather happen in the biome? */
 export const weatherFits = (biome: BiomeId, weather: WeatherId) => {
@@ -169,11 +173,11 @@ export const updateWeather = (g: Game, dt: number) => {
   const w = g.weather
   if (g.time >= w.next) {
     // A move's call ends: the spell it held comes back, else the schedule rolls.
-    const back = w.held && releasedWeather(w, g.time, (id) => weatherFits(g.biome.id, id))
+    const back = w.held && releasedWeather(w, g.time, (id) => weatherFits(leadBiome(g), id))
     if (back) {
       g.weather = back
       if (back.id !== w.id) g.events.push({ kind: 'weather', weather: back.id, prev: w.id })
-    } else setWeather(g, rollWeather(g.rng, g.biome.id, w.id))
+    } else setWeather(g, rollWeather(g.rng, leadBiome(g), w.id))
   }
   if (WEATHER[g.weather.id].chip === undefined) return
   g.weather.chip += dt

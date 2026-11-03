@@ -169,9 +169,9 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   g.player.record.kills++
   noteKill(g, e)
   if (source === 'special' || g.player.special.chaining) g.player.special.kills++
-  countKill(g.tally, e, weatherHere(g), g.biome.id, g.outbreak)
+  countKill(g.tally, e, weatherHere(g), g.player.biome, g.outbreak)
   // Co-op: the killer's own count too, for their missions (`coopPayout`).
-  if (g.coop !== null) countKill(g.player.record.tally, e, weatherHere(g), g.biome.id, g.outbreak)
+  if (g.coop !== null) countKill(g.player.record.tally, e, weatherHere(g), g.player.biome, g.outbreak)
   abilityKill(g, e)
   const big = e.boss || e.shiny
   burst(g, e.x, e.y - e.radius, { colors: ['#ffffff', '#f8f8c8', '#c8d8f8'], count: big ? 60 : 8, speed: big ? 160 : 70, ttl: 0.45 })

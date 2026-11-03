@@ -107,7 +107,7 @@ const end = (d: Run): RunEnd => ({
   branch: d.g.player.branch,
   megas: d.g.player.mega.count,
   kills: d.g.kills,
-  biome: d.g.biome.id,
+  biome: d.g.players[0]!.biome,
   rifts: d.g.rift.cleared.length,
   endless: d.g.endless !== null,
 })

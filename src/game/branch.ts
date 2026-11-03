@@ -5,7 +5,7 @@ import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import type { EvoItemId } from '../data/shop'
 import type { EvolutionStage } from '../data/starters'
 import { branchNeeds, evoItemFor } from './evoItems'
-import type { Game } from './types'
+import type { Game, Player } from './types'
 import { legendStage } from './legend'
 import { weatherHere } from './weather'
 
@@ -34,15 +34,15 @@ export const formLine = (starter: PlayableId, branch: BranchId | null): readonly
   PLAYABLE[starter].line.map((_, i) => formAt(starter, branch, i))
 
 /** The form the acting player is in right now (before a Mega form): a legend's awakened form and Multitype's typing included (`legendStage`). */
-export const playerForm = (g: Game): EvolutionStage => {
-  const p = g.player
-  return p.legend ? legendStage(g, p.legend) : formAt(p.starter, p.branch, p.stage)
-}
+export const playerForm = (g: Game): EvolutionStage => formOf(g, g.player)
+
+/** A player's current form, for the shell reading a player that isn't acting (`localPlayer`). */
+export const formOf = (g: Game, p: Player): EvolutionStage => (p.legend ? legendStage(g, p.legend) : formAt(p.starter, p.branch, p.stage))
 
 /** What nudges the draw: the weather where the player stands and the biome. */
 export type BranchContext = { weather: WeatherId; biome: BiomeId }
 
-export const branchContext = (g: Game): BranchContext => ({ weather: weatherHere(g), biome: g.biome.id })
+export const branchContext = (g: Game): BranchContext => ({ weather: weatherHere(g), biome: g.player.biome })
 
 /** Why a branch is offered: the weather or the biome favored its draw, or an evolution item the run holds unlocks it (null: drawn plainly). */
 export type BranchFavor = 'weather' | 'biome' | 'item' | null

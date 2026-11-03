@@ -92,7 +92,7 @@ const branchCard = (g: Game, offer: Extract<Offer, { kind: 'form' }>, i: number)
   const item = offer.favor === 'item' ? evoItemFor(offer.id) : null
   const favor =
     offer.favor === 'weather' ? m.world.weather[weatherHere(g)]
-    : offer.favor === 'biome' ? m.world.biomes[g.biome.id]
+    : offer.favor === 'biome' ? m.world.biomes[localPlayer(g).biome]
     : null
   const [main, second] = def.types
   const card = h(

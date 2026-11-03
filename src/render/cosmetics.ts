@@ -80,6 +80,12 @@ const PLAY: BallArt = [
   { 1: '#300818', 2: '#e8306a', 4: '#ffffff' },
 ]
 
+/** A leaf with a dewdrop, for the Gruta Oculta frame's corners (1 outline, 2 the leaf, 3 its shade, 4 the vein, 5 the dew). */
+const LEAF: BallArt = [
+  ['....111', '..11221', '.122451', '1224221', '1242231', '1423331', '.1111..'],
+  { 1: '#0c2408', 2: '#69b84c', 3: '#2e7424', 4: '#c8f0a0', 5: '#f8f8ff' },
+]
+
 export const CARD_FRAMES = {
   /** The game's own dialog box: dark line, paper, blue. */
   classic: { edge: '#283040', light: '#f8f8f8', main: '#6878a8', shade: '#101830', accent: '#ffcb05' },
@@ -105,6 +111,8 @@ export const CARD_FRAMES = {
   lantern: { edge: '#140c28', light: '#ffd890', main: '#d84028', shade: '#2a1848', accent: '#f8d030', ball: LANTERN },
   /** For content creators (`data/creators.ts`): stream pink and cyan, play buttons in the corners. */
   creator: { edge: '#140c28', light: '#c8f8f8', main: '#e8306a', shade: '#3a0820', accent: '#25e8e8', ball: PLAY },
+  /** The Hidden Grotto, found (`game/hiddenGifts.ts`): moss and canopy green, Audino's cream and pink, a dewy leaf in each corner. */
+  grotto: { edge: '#0c2010', light: '#f8ecc8', main: '#3c8c34', shade: '#143c18', accent: '#f0a0b8', ball: LEAF },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */
@@ -286,6 +294,28 @@ export const PC_WALLPAPERS = {
       '1111111111111111',
     ],
     palette: { 1: '#3a2450', 2: '#7058a0', 3: '#c06428', 4: '#f0b048', 5: '#4a7a30', 6: '#24142e' },
+  },
+  /** Packed earth with spheres and a flag, like a Secret Base dug in Diamond and Pearl's Underground (`game/hiddenGifts.ts`). */
+  secretBase: {
+    tile: [
+      '1111111111111111',
+      '1112111111111211',
+      '1111111111111111',
+      '1111133311111111',
+      '1111344431111111',
+      '1111344531111111',
+      '1111133311111121',
+      '1211111111111111',
+      '1111111111611111',
+      '1111111111677711',
+      '1111111111677771',
+      '1111111111677711',
+      '1121111111611111',
+      '1111111111611111',
+      '1111111112222111',
+      '1111111111111111',
+    ],
+    palette: { 1: '#8a6a48', 2: '#6e5238', 3: '#2c4c88', 4: '#68b8f8', 5: '#ffffff', 6: '#3a2c20', 7: '#e03838' },
   },
 } as const satisfies Record<WallpaperId, Wallpaper>
 

@@ -13,6 +13,8 @@ import { cutReplay, STREAM, STREAM_START, type ReplayChunk } from './game/replay
 import { ROUTES, SITE_URL } from './site/routes'
 import { locale } from './i18n'
 import { timeoutSignal } from './net/timeout'
+import { TEAM_SIZE_KEYS, type CoopBoard, type CoopBoardEntry, type CoopChallengeBoard, type TeamSize } from './game/coopBoard'
+import { fakeCoopBoard, fakeCoopChallengeBoard } from './coopBoardFakes'
 
 /**
  * Ranked runs and the public side of accounts (boards, profiles, follows),
@@ -585,6 +587,48 @@ export const fetchBoard = async (f: BoardFilter): Promise<Board | null> => {
 export const fetchChallengeBoard = async (day: DayKey, friends = false): Promise<ChallengeBoard | null> => {
   const { body } = await read(`/challenge/${day}${friends ? '?friends=1' : ''}`, await sessionToken())
   return isRecord(body) && Array.isArray(body.entries) && typeof body.total === 'number' ? knownBoard(body as ChallengeBoard) : null
+}
+
+/* ---------------- Co-op boards ---------------- */
+
+/** A co-op board's filter: the team size (Duplas, Trios, Squads), difficulty, period and friends (teams with someone the player follows). */
+export type CoopBoardFilter = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; friends: boolean }
+
+/** Dev: the co-op reads answer made-up boards (`coopBoardFakes.ts`, `ps.coopBoard('fake')`). */
+let coopFaked = false
+
+export const fakeCoopBoards = (on: boolean) => {
+  coopFaked = on
+}
+
+export const coopBoardsFaked = () => coopFaked
+
+/** A team this build can draw: a record with two to four members, every Pokémon known (`knownRun`). */
+const knownTeam = (e: unknown): e is CoopBoardEntry =>
+  isRecord(e) && typeof e.rank === 'number' && typeof e.time === 'number' && Array.isArray(e.members) && e.members.length >= 2 && e.members.length <= 4 && e.members.every((m: unknown) => isRecord(m) && typeof m.handle === 'string' && typeof m.name === 'string' && isPlayable(m.starter))
+
+/** A co-op board from an untrusted body, without the teams this build can't draw; null when it isn't one. */
+const knownCoopBoard = <B extends CoopBoard | CoopChallengeBoard>(body: unknown): B | null => {
+  if (!isRecord(body) || !Array.isArray(body.entries)) return null
+  const board = body as B
+  return { ...board, entries: board.entries.filter(knownTeam), me: knownTeam(board.me) ? board.me : null }
+}
+
+/** A co-op board (`GET /coop/boards/:difficulty`), or null when the API can't be reached. Guests read the public ones; friends needs an account. */
+export const fetchCoopBoard = async (f: CoopBoardFilter): Promise<CoopBoard | null> => {
+  if (coopFaked) return fakeCoopBoard(f.size, f.difficulty, f.period)
+  const params = new URLSearchParams({ size: TEAM_SIZE_KEYS[f.size], period: f.period, ...(f.friends ? { friends: '1' } : {}) })
+  const { body } = await read(`/coop/boards/${f.difficulty}?${params}`, await sessionToken())
+  return knownCoopBoard<CoopBoard>(body)
+}
+
+/** A day's Desafio co-op board for one team size (`GET /coop/challenge/:day`), or null when the API can't be reached. */
+export const fetchCoopChallengeBoard = async (day: DayKey, size: TeamSize, friends = false): Promise<CoopChallengeBoard | null> => {
+  if (coopFaked) return fakeCoopChallengeBoard(day, size)
+  const params = new URLSearchParams({ size: TEAM_SIZE_KEYS[size], ...(friends ? { friends: '1' } : {}) })
+  const { body } = await read(`/coop/challenge/${day}?${params}`, await sessionToken())
+  const board = knownCoopBoard<CoopChallengeBoard>(body)
+  return board && typeof board.total === 'number' ? board : null
 }
 
 /** A public profile, `missing` when nobody has that handle, null when the API can't be reached. */

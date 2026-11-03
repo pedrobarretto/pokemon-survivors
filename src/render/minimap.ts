@@ -1,6 +1,7 @@
 import { context2d, createCanvas, fromStrings, lazy, blitPacked, textSprite, type Palette, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
+import { biomeAt } from '../game/biomeMap'
 import type { ArenaShape, FloorPlan } from '../data/arenas'
 import type { LandmarkId } from '../data/landmarks'
 import type { PlaceId } from '../data/places'
@@ -9,6 +10,7 @@ import { TERRAIN } from '../data/terrain'
 import { isMission } from '../game/fieldMissions'
 import type { DungeonFloor } from '../game/dungeon'
 import { MAP_EVENTS, type MapEventKind } from '../game/mapEvents'
+import { entranceShown } from '../game/place'
 import { localPlayer } from '../game/players'
 import { roomOf, type Room } from '../game/room'
 import { featureAt, type Feature } from '../game/terrain'
@@ -29,7 +31,7 @@ import { PING_KINDS, type PingKind } from '../game/versusSocial'
  * player, north up, drawn at `MINIMAP.size` px a side. On the map it shows
  * the terrain (lakes, cliffs, groves, rocks), the landmarks, the map events,
  * a place's entrance, a rift's portal, the important drops, the teammates,
- * the Alphas and the boss; the ones worth walking to stay pinned to the rim
+ * the Alphas, the boss and the wild shinies (so a shiny can be hunted down); the ones worth walking to stay pinned to the rim
  * when they're out of range. In a room (a rift's arena, a place's inside) it
  * shows the room's floor up close; a cave's floors only as far as the team
  * has lit them, stairs included (`caveFog`). The wild horde never shows. Presentation
@@ -63,6 +65,10 @@ const LOOKS: Record<BiomeId, Look> = {
   cave: { ground: '#5a4c4e', dither: '#625456', bush: '#504446', tree: '#3e3436', rock: '#9a8e8a', cliff: '#3a2e2e', cliffTop: '#7a6a62', water: '#3a6aa0', shore: '#7aa0c8' },
   snow: { ground: '#a8b8cc', dither: '#b4c4d6', bush: '#8aa0b4', tree: '#4a6a62', rock: '#6a7480', cliff: '#5a6474', cliffTop: '#8a96a6', water: '#5a90d0', shore: '#c8e8f8' },
   tower: { ground: '#4c4460', dither: '#544c68', bush: '#423a56', tree: '#2e2840', rock: '#8a84a0', cliff: '#2a2438', cliffTop: '#6a6284', water: '#40508c', shore: '#8a98d0' },
+  beach: { ground: '#c8b07c', dither: '#d4bc88', bush: '#7ca050', tree: '#3c7c34', rock: '#a09080', cliff: '#9c7850', cliffTop: '#8cb860', water: '#2c90c8', shore: '#88d8f0' },
+  plant: { ground: '#6c7078', dither: '#747880', bush: '#a08848', tree: '#4c5058', rock: '#9ca4b0', cliff: '#3c4048', cliffTop: '#7c8490', water: '#18807a', shore: '#60d0c0' },
+  desert: { ground: '#c49460', dither: '#cc9c68', bush: '#7c7c38', tree: '#3c7834', rock: '#a87c50', cliff: '#8c4c2c', cliffTop: '#c89458', water: '#2c8cc0', shore: '#78c8e8' },
+  volcano: { ground: '#3c3234', dither: '#443a3c', bush: '#2c2224', tree: '#1c1416', rock: '#7c6c6c', cliff: '#2a2022', cliffTop: '#6a6262', water: '#3c9cac', shore: '#e0a868' },
 }
 
 const ROOM_LOOK = { void: '#141020', floor: '#5a5270', dither: '#625a7a', edge: '#8a82a8', water: '#2c4c90', shallow: '#4a74b8', lava: '#e05020' } as const
@@ -102,15 +108,19 @@ const TUNNEL = ['.sss.', 'sssss', 'skkks', 'skkks']
 const MAZE = ['mmmmm', 'm...m', 'm.m.m', 'm.m..', 'mmmmm']
 const RUINS = ['sssss', '.s.s.', '.s.s.', 'sssss']
 const TENT = ['..o..', '.ooo.', 'oo.oo', 'oo.oo']
+const STAR = ['..y..', '.yyy.', 'yywyy', '.yyy.', '.y.y.']
 
 const GLYPHS = lazy(() => ({
   boss: [glyph(SKULL, { w: '#f8f0e0', k: DARK }), glyph(SKULL, { w: '#f86858', k: DARK })],
   alpha: [glyph(DIAMOND, { c: '#e02838', w: '#f8e0b0' }), glyph(DIAMOND, { c: '#f8a020', w: '#f8f0d0' })],
+  shiny: [glyph(STAR, { y: '#f8d030', w: '#ffffff' }), glyph(STAR, { y: '#fff4a8', w: '#f8d030' })],
   portal: [glyph(PORTAL, { p: '#7850c8', l: '#c8a8f8', w: '#ffffff' }), glyph(PORTAL, { p: '#c8a8f8', l: '#7850c8', w: '#ffffff' })],
   place: {
     cave: glyph(DOOR, { c: '#a87848', k: '#281810' }),
     graveyard: glyph(DOOR, { c: '#9888b0', k: '#201830' }),
     sky: glyph(DOOR, { c: '#a8d8f8', k: '#f8f8f8' }),
+    grotto: glyph(DOOR, { c: '#68b048', k: '#102808' }),
+    underground: glyph(DOOR, { c: '#b89470', k: '#281808' }),
   } satisfies Record<PlaceId, PixelSprite>,
   landmark: {
     cottage: glyph(HOUSE, { r: '#d05838', w: '#f0e0b8', k: '#583018' }),
@@ -227,15 +237,17 @@ const FRAMES = lazy(() => {
 /** Terrain cells built for the map, apart from the simulation's own cache (`featureAt` is pure). */
 const cells = new Map<number, Feature | null>()
 let cellsSeed = -1
+let cellsArchetype = ''
 
-const featureFor = (seed: number, cx: number, cy: number) => {
-  if (seed !== cellsSeed || cells.size > 900) {
+const featureFor = (terrain: Game['terrain'], cx: number, cy: number) => {
+  if (terrain.seed !== cellsSeed || terrain.archetype !== cellsArchetype || cells.size > 900) {
     cells.clear()
-    cellsSeed = seed
+    cellsSeed = terrain.seed
+    cellsArchetype = terrain.archetype
   }
   const key = (cx & 0xffff) * 0x10000 + (cy & 0xffff)
   let f = cells.get(key)
-  if (f === undefined) cells.set(key, (f = featureAt(seed, cx, cy)))
+  if (f === undefined) cells.set(key, (f = featureAt(terrain.seed, cx, cy, terrain.archetype)))
   return f
 }
 
@@ -287,6 +299,8 @@ const drawFeature = (ctx: Ctx, v: View, f: Feature, look: Look) => {
         break
       case 'rock':
       case 'tower':
+      case 'column':
+      case 'menhir':
         ctx.fillStyle = look.rock
         ctx.fillRect(mapX(v, s.x), mapY(v, s.y), s.kind === 'tower' ? 2 : 1, s.kind === 'tower' ? 2 : 1)
         break
@@ -304,7 +318,7 @@ const drawFeature = (ctx: Ctx, v: View, f: Feature, look: Look) => {
 
 /* ---------------- Ground ---------------- */
 
-/** The ground drawn last and where (`key`): painted again only when the map scrolls a pixel or the biome changes, since `putImageData` is slow on phones. */
+/** The ground drawn last and where (`key`): painted again only when the map scrolls a pixel, since `putImageData` is slow on phones. */
 const GROUND = lazy(() => {
   const canvas = createCanvas(S, S)
   const ctx = context2d(canvas)
@@ -313,17 +327,39 @@ const GROUND = lazy(() => {
 
 const rgb = (hex: string) => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)] as const
 
-/** The ground, a sparse dither fixed to the world so it scrolls with the player. */
-const drawGround = (ctx: Ctx, v: View, base: string, dither: string, seed: number) => {
+/** Each biome's two ground colors on the map. */
+const groundRgb = new Map<BiomeId, readonly [ReturnType<typeof rgb>, ReturnType<typeof rgb>]>()
+const colorsOf = (biome: BiomeId) => {
+  let c = groundRgb.get(biome)
+  if (!c) groundRgb.set(biome, (c = [rgb(LOOKS[biome].ground), rgb(LOOKS[biome].dither)]))
+  return c
+}
+
+/** The biome under each map px, by its place on the world's map grid: scrolling a px only looks up the new row or column. */
+const pixelBiomes = new Map<number, BiomeId>()
+let pixelSeed = -1
+
+const biomeOfPixel = (seed: number, scale: number, gx: number, gy: number) => {
+  if (seed !== pixelSeed || pixelBiomes.size > 16000) {
+    pixelBiomes.clear()
+    pixelSeed = seed
+  }
+  const key = (gx & 0xffff) * 0x10000 + (gy & 0xffff)
+  let b = pixelBiomes.get(key)
+  if (!b) pixelBiomes.set(key, (b = biomeAt(seed, (gx + 0.5) * scale, (gy + 0.5) * scale)))
+  return b
+}
+
+/** The ground, each map px in its biome's colors with a sparse dither fixed to the world, so it scrolls with the player. */
+const drawGround = (ctx: Ctx, v: View, seed: number) => {
   const ground = GROUND()
-  const key = `${v.ox},${v.oy},${base},${dither},${seed}`
+  const key = `${v.ox},${v.oy},${v.scale},${seed}`
   if (ground.key !== key) {
     ground.key = key
     const data = ground.img.data
-    const a = rgb(base)
-    const b = rgb(dither)
     for (let y = 0; y < S; y++) {
       for (let x = 0; x < S; x++) {
+        const [a, b] = colorsOf(biomeOfPixel(seed, v.scale, x + v.ox, y + v.oy))
         const c = hash2(x + v.ox, y + v.oy, seed) < 0.12 ? b : a
         const i = (y * S + x) * 4
         data[i] = c[0]
@@ -500,9 +536,9 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     }
     if (inside?.id === 'cave' && inside.state.chest && !inside.state.chest.open) marker(ctx, v, shape, art.events.chest, inside.x + inside.state.chest.x, inside.y + inside.state.chest.y, true)
     if (inside?.id === 'graveyard') marker(ctx, v, shape, art.keystone, inside.x + inside.state.keystone[0], inside.y + inside.state.keystone[1], true)
+    if (inside?.id === 'underground') for (const gl of inside.state.glints) if (!gl.dug) marker(ctx, v, shape, art.events.altar, inside.x + gl.x, inside.y + gl.y, false)
   } else {
-    const look = LOOKS[g.biome.id]
-    drawGround(ctx, v, look.ground, look.dither, g.terrain.seed)
+    drawGround(ctx, v, g.terrain.seed)
     const cell = TERRAIN.cell
     const x0 = Math.floor((v.ox * scale) / cell)
     const y0 = Math.floor((v.oy * scale) / cell)
@@ -511,13 +547,14 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     const marks: Feature[] = []
     for (let cy = y0; cy <= y1; cy++) {
       for (let cx = x0; cx <= x1; cx++) {
-        const f = featureFor(g.terrain.seed, cx, cy)
+        const f = featureFor(g.terrain, cx, cy)
         if (!f) continue
-        drawFeature(ctx, v, f, look)
+        drawFeature(ctx, v, f, LOOKS[f.biome ?? localPlayer(g).biome])
         if (f.landmark) marks.push(f)
       }
     }
-    if (g.place.entrance) drawFeature(ctx, v, g.place.entrance.terrain, look)
+    // A hidden zone's entrance stays off the map until found: its trees and rocks would give it away.
+    if (g.place.entrance && entranceShown(g.place.entrance)) drawFeature(ctx, v, g.place.entrance.terrain, LOOKS[g.place.entrance.terrain.biome ?? localPlayer(g).biome])
     drawViewBox(ctx, v, g)
     for (const f of marks) {
       const lm = f.landmark!
@@ -532,7 +569,7 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
       marker(ctx, v, shape, art.events[ev.kind], at.x, at.y, MAP_EVENTS[ev.kind].marker)
     }
     const door = g.place.entrance
-    if (door?.open) marker(ctx, v, shape, art.place[door.id], door.x, door.y, true)
+    if (door?.open && entranceShown(door)) marker(ctx, v, shape, art.place[door.id], door.x, door.y, true)
     const portal = g.rift.portal
     if (portal) marker(ctx, v, shape, art.portal[blink]!, portal.x, portal.y, true)
   }
@@ -545,6 +582,7 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     if (e.dying >= 0) continue
     if (e.alpha) marker(ctx, v, shape, art.alpha[e.alpha.enraged ? blink : 0]!, e.x, e.y, true)
     else if (e.boss) marker(ctx, v, shape, art.boss[blink]!, e.x, e.y, true)
+    else if (e.shiny) marker(ctx, v, shape, art.shiny[blink]!, e.x, e.y, true)
   }
   // Teammates, in their slot's color; a fainted one greyed.
   for (const p of g.players) {

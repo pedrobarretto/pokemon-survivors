@@ -1,13 +1,14 @@
 import { formatTime } from '../engine/math'
 import { GRAVEYARD } from '../data/places'
 import { overtime } from '../game/endless'
+import { entranceShown } from '../game/place'
 import type { Game } from '../game/types'
 import { t } from '../i18n'
 import { h, setText } from './dom'
 
 type Pill = { text: string; kind: 'portal' | 'arena' | 'endless' | 'reaper' | 'place'; urgent: boolean } | null
 
-/** A place the player is in: the dungeon's floor and wind, the keystone's spirits or the dawn, the wings and the calm. */
+/** A place the player is in: the dungeon's floor and wind, the keystone's spirits or the dawn, the wings and the calm, the Audino caught, the glints dug. */
 const insidePill = (g: Game): Pill => {
   const inside = g.place.inside
   if (!inside || inside.loot !== null) return null
@@ -23,6 +24,10 @@ const insidePill = (g: Game): Pill => {
     }
     case 'sky':
       return { text: m.hudSky(inside.state.got, time), kind: 'place', urgent }
+    case 'grotto':
+      return { text: m.hudGrotto(inside.state.dwellers.caught, time), kind: 'place', urgent }
+    case 'underground':
+      return { text: m.hudDig(inside.state.dug, time), kind: 'place', urgent }
   }
 }
 
@@ -44,7 +49,8 @@ const pillFor = (g: Game): Pill => {
   }
   if (portal) return { text: m.hudPortal(formatTime(Math.ceil(portal.left))), kind: 'portal', urgent: portal.left < 8 }
   const ent = g.place.entrance
-  if (ent?.open) {
+  // A hidden zone's entrance says nothing until found.
+  if (ent?.open && entranceShown(ent)) {
     const p = t().places
     return { text: p.hudOpen(p.hudNames[ent.id], formatTime(Math.ceil(ent.left))), kind: 'place', urgent: ent.left < 8 }
   }

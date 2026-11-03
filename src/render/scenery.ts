@@ -40,18 +40,50 @@ const SCENERY: Partial<Record<SceneryKind, (biome: BiomeId) => Looks>> = {
   keystone: () => ({ files: ['keystone', 'keystone-broken'] }),
 }
 
+/** Kinds whose pictures are shared by every biome. */
+const SHARED: ReadonlySet<SceneryKind> = new Set(['tombstone', 'windStone', 'keystone'])
+
+/** Biomes painted throughout: every kind in `SCENERY` has its pictures there. */
+const PAINTED: ReadonlySet<BiomeId> = new Set(['meadow', 'forest', 'cave', 'snow', 'tower'])
+
+/**
+ * The newer biomes paint only their towers (`TOWER_FEET`), by variant: the
+ * desert's pyramids, Mt. Chimney's cone, the wreck on the beach, the Power
+ * Plant's generator hall. A null keeps the sculpted piece (the lighthouse, the
+ * smokestack), as does every other kind there.
+ */
+const OWN_TOWERS: Partial<Record<BiomeId, readonly (string | null)[]>> = {
+  beach: [null, 'beach-tower-1'],
+  plant: [null, 'plant-tower-1'],
+  desert: ['desert-tower-0', 'desert-tower-1'],
+  volcano: ['volcano-tower-0'],
+}
+
 /** Pictures drawn on their own, outside the biome table: the altar event's pedestal. */
 const ONE_OFFS = ['pedestal'] as const
 
 /** Every scenery file, for the test that checks they all exist. */
 export const sceneryFiles = () => {
-  const biomes = Object.keys(BIOMES) as BiomeId[]
-  const looks = Object.values(SCENERY).flatMap((of) => biomes.map(of))
-  return [...new Set([...looks.flatMap((l) => [...l.files, ...(l.open ?? [])]), ...ONE_OFFS])]
+  const looks = Object.values(SCENERY).flatMap((of) => [...PAINTED].map(of))
+  const towers = Object.values(OWN_TOWERS).flatMap((files) => files.flatMap((f) => (f ? [f] : [])))
+  return [...new Set([...looks.flatMap((l) => [...l.files, ...(l.open ?? [])]), ...towers, ...ONE_OFFS])]
 }
 
-/** Whether `kind` has painted art (then it isn't sculpted ahead of time). */
-export const hasScenery = (kind: string): kind is SceneryKind => kind in SCENERY
+const isSceneryKind = (kind: string): kind is SceneryKind => kind in SCENERY
+
+/** The picture of a piece in `biome`, or null when it's sculpted there. */
+const fileOf = (biome: BiomeId, kind: string, variant: number, open: boolean): string | null => {
+  if (!isSceneryKind(kind)) return null
+  const own = kind === 'tower' ? OWN_TOWERS[biome] : undefined
+  if (own) return own[variant % own.length] ?? null
+  if (!PAINTED.has(biome) && !SHARED.has(kind)) return null
+  const looks = SCENERY[kind]!(biome)
+  const files = open && looks.open ? looks.open : looks.files
+  return files[variant % files.length]!
+}
+
+/** Whether a piece has painted art in `biome` (then it isn't sculpted ahead of time). */
+export const hasScenery = (kind: string, biome: BiomeId, variant = 0) => fileOf(biome, kind, variant, false) !== null
 
 const images = new Map<string, HTMLImageElement>()
 const pieces = canvasCache<string, ArtPiece>()
@@ -112,16 +144,14 @@ const pieceOfFile = (file: string) => {
 
 /** The painted look of a piece, or null when it has none or its picture is still on the way (it starts loading). */
 export const sceneryPiece = (biome: BiomeId, kind: string, variant: number, open = false): ArtPiece | null => {
-  if (!hasScenery(kind)) return null
-  const looks = SCENERY[kind]!(biome)
-  const files = open && looks.open ? looks.open : looks.files
-  return pieceOfFile(files[variant % files.length]!)
+  const file = fileOf(biome, kind, variant, open)
+  return file ? pieceOfFile(file) : null
 }
 
 /** A one-off picture outside the biome table (a map event's), or null while it loads. */
 export const sceneryArt = (file: (typeof ONE_OFFS)[number]) => pieceOfFile(file)
 
-/** Lets go of the pictures of every biome not in `keep` (shared ones stay): a run never walks back. */
+/** Lets go of the pictures of every biome not in `keep` (shared ones stay): walking back loads them again. */
 export const keepScenery = (keep: readonly BiomeId[]) => {
   const gone = BIOME_IDS.filter((b) => !keep.includes(b))
   for (const file of [...images.keys()]) {

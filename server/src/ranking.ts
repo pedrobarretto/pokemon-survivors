@@ -99,10 +99,10 @@ const toRun = (r: RunRow): ProfileRun => ({
   bag: parseBagItems(r.bag),
 })
 
-type SupporterRow = StandingRow & { supporter_public: boolean; supporter_since: Date | null }
+export type SupporterRow = StandingRow & { supporter_public: boolean; supporter_since: Date | null }
 
 /** A player's supporter badges (`badgesOf`: their tier and the OG plate), if they have them and show them. `self` always sees their own. */
-const badgeOf = (r: SupporterRow, self = false) => badgesOf(standingOf(r), self || r.supporter_public)
+export const badgeOf = (r: SupporterRow, self = false) => badgesOf(standingOf(r), self || r.supporter_public)
 
 type EntryRow = RunRow & SupporterRow & { id: string; user_id: string; handle: string; name: string; rank: number }
 

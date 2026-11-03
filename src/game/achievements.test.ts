@@ -54,6 +54,14 @@ describe('achievements', () => {
     expect(parseAchievements(JSON.parse(JSON.stringify(sky.achievements))).lifetime.places).toEqual(['cave', 'graveyard', 'sky'])
   })
 
+  it('count hidden zones for their own medal, never toward the explorer', () => {
+    const grotto = recordAchievements(NO_ACHIEVEMENTS, summary({ places: ['cave', 'graveyard', 'grotto'], placeClears: 3 }), null)
+    expect(grotto.unlocked).not.toContain('explorer')
+    expect(achievementProgress(grotto.achievements.lifetime, 'secrets')).toEqual({ value: 1, target: 2 })
+    const both = recordAchievements(grotto.achievements, summary({ places: ['underground'], placeClears: 1 }), null)
+    expect(both.unlocked).toEqual(['secrets'])
+  })
+
   it('pay missions and medals into the wallet', () => {
     const date = new Date(2026, 9, 13, 12)
     const r = recordRun(EMPTY_SAVE, summary({ kills: 100_000 }), null, date)

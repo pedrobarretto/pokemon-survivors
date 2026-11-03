@@ -74,11 +74,15 @@ export const WEATHER_FLAVOR: Partial<Record<WeatherId, HazardFlavor>> = {
   sun: { strike: 'fire', zone: 'fire' },
 }
 
-/** Clear skies and fog: meteors and Stealth Rock, or Toxic Spikes where poison feels at home. */
+/** Clear skies and fog: meteors and Stealth Rock, or Toxic Spikes where poison feels at home; spouts on the beach, sparks in the Power Plant, lava bombs on Mt. Chimney. */
 export const BIOME_FLAVOR: Record<BiomeId, HazardFlavor> = {
   meadow: { strike: 'rock', zone: 'rock' },
   forest: { strike: 'rock', zone: 'poison' },
   cave: { strike: 'rock', zone: 'rock' },
   snow: { strike: 'ice', zone: 'ice' },
   tower: { strike: 'rock', zone: 'poison' },
+  beach: { strike: 'water', zone: 'water' },
+  plant: { strike: 'thunder', zone: 'steel' },
+  desert: { strike: 'rock', zone: 'rock' },
+  volcano: { strike: 'fire', zone: 'fire' },
 }

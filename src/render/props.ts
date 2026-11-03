@@ -1,5 +1,6 @@
 import { blitCentered, blitEllipse, blitRing, canvasCache, fromStrings, type Palette, type PixelSprite } from '../engine/pixelart'
 import type { BiomeId } from '../data/biomes'
+import { biomeOf } from '../game/biomeMap'
 import { REPEL_RADIUS } from '../data/consumables'
 import type { ConsumableId } from '../game/consumables'
 import { isAsleep } from '../game/status'
@@ -31,6 +32,15 @@ const CONSUMABLE_ART: Record<ConsumableId, readonly [readonly string[], Palette]
   xSpeed: [BOTTLE, bottle('#184890', '#3880f0', '#a8d0ff', '#f8e030', '#f8e030')],
   rareCandy: [['1..222..1', '132422231', '132222231', '132222231', '1..222..1'], { 1: '#2850a8', 2: '#4878e0', 3: '#78a8f8', 4: '#ffffff' }],
   expShare: [['.....1.', '.....1.', '1111111', '1222221', '1233321', '1233321', '1222221', '1111111'], { 1: '#383848', 2: '#e84848', 3: '#f0f0f8' }],
+  coinCase: [['.111111.', '12222221', '11111111', '13344331', '13455431', '13344331', '.111111.'], { 1: '#383848', 2: '#e84848', 3: '#a8a8b8', 4: '#f8d030', 5: '#fff8a0' }],
+  berryPouch: [
+    ['..1..1..', '...11...', '..1221..', '.123321.', '12344321', '12333321', '.122221.', '..1111..'],
+    { 1: '#704010', 2: '#d89830', 3: '#f8c860', 4: '#3870d8' },
+  ],
+  superRod: [
+    ['.......11', '......123', '.....12.3', '....12..3', '...12...3', '.4412...3', '.4512..33', '.12......', '1........'],
+    { 1: '#404850', 2: '#f8d030', 3: '#c8c8d8', 4: '#e84848', 5: '#ffffff' },
+  ],
   pokeFlute: [['11111111111', '14444444441', '12232323221', '11111111111'], { 1: '#204890', 2: '#78b0f8', 3: '#102040', 4: '#c8e0ff' }],
   explosion: [
     ['..11111..', '.1611111.', '161111111', '114515411', '111111111', '222222222', '333333333', '.3333333.', '..33333..'],
@@ -70,6 +80,16 @@ const MUSHROOM = [
   '....145541....', '....145541....', '....145541....', '...11455411...',
 ]
 
+/** Power Plant stand-ins: a wooden crate instead of tall grass, Lt. Surge's trash can instead of a berry tree. */
+const CRATE = ['11111111111', '12222222221', '12111111121', '12131113121', '12113131121', '12111311121', '12222222221', '11111111111']
+const CRATE_SHAKE = CRATE.map((row) => `.${row}`)
+const TRASH_CAN = [
+  '...11111...', '.112222211.', '12233333221', '11111111111', '.145555541.', '.145656541.', '.145555541.',
+  '.145656541.', '.145555541.', '.145656541.', '.145555541.', '.144444441.', '..1111111..',
+]
+/** The desert's berry tree: a tall cactus in bloom. */
+const BIG_CACTUS = ['....131....', '....121....', '.1..121....', '121.121..1.', '121.121.121', '12111211121', '.122222221.', '....121....', '....121....', '....121....', '...11211...']
+
 type PropSkin = { berryTree: PixelSprite; grass: readonly [PixelSprite, PixelSprite] }
 
 const grass = (pal: Palette, outline: string) => [art(GRASS_REST, pal, outline), art(GRASS_RUSTLE, pal, outline)] as const
@@ -91,6 +111,22 @@ const PROP_SKINS = lazy((): Record<BiomeId, PropSkin> => ({
   tower: {
     berryTree: tree('#2c2038', '#584870', '#8070a0', '#160f1e', '#3c2c28', '#6c5048'),
     grass: grass({ 1: '#3c3448', 2: '#6c6080', 3: '#9890a8' }, '#1e1a28'),
+  },
+  beach: { berryTree: tree('#2c6c30', '#58a040', '#a8d068', '#1c3c18', '#8c6c40', '#c8a070'), grass: grass({ 1: '#4c8a38', 2: '#7cb858', 3: '#b8d888' }, '#2c5420') },
+  plant: {
+    berryTree: art(TRASH_CAN, { 1: '#30343c', 2: '#d8dce4', 3: '#a0a8b4', 4: '#6c7480', 5: '#a8b0bc', 6: '#f8d030' }, '#181a20'),
+    grass: [art(CRATE, { 1: '#5c3c20', 2: '#c8a060', 3: '#a07840' }, '#2c1c10'), art(CRATE_SHAKE, { 1: '#5c3c20', 2: '#c8a060', 3: '#a07840' }, '#2c1c10')],
+  },
+  desert: {
+    berryTree: art(BIG_CACTUS, { 1: '#2c5c28', 2: '#58a040', 3: '#f878a0' }, '#183018'),
+    grass: grass({ 1: '#8c6c38', 2: '#b89858', 3: '#d8c080' }, '#5c4424'),
+  },
+  volcano: {
+    berryTree: tree('#3c3438', '#6c6064', '#9c9094', '#1c1618', '#3c2820', '#6c4838'),
+    grass: [
+      art(SMASH_ROCK, { 1: '#241c1e', 2: '#5c4c4c', 3: '#8c7c78', 4: '#f86818' }, '#100808'),
+      art(SMASH_ROCK_SHAKE, { 1: '#241c1e', 2: '#5c4c4c', 3: '#8c7c78', 4: '#f86818' }, '#100808'),
+    ],
   },
 }))
 
@@ -129,10 +165,19 @@ const drawProp = (ctx: Ctx, prop: Prop, t: number, skin: PropSkin) => {
 const near = (g: Game, x: number, y: number, m = 32) =>
   x > g.camera.x - m && x < g.camera.x + g.view.w + m && y > g.camera.y - m && y < g.camera.y + g.view.h + m * 2
 
-/** Ground layer: item sources, dressed for `biome`, and the Max Repel aura. */
-export const drawProps = (ctx: Ctx, g: Game, t: number, biome: BiomeId) => {
-  const skin = PROP_SKINS()[biome]
-  for (const prop of g.props) if (near(g, prop.x, prop.y)) drawProp(ctx, prop, t, skin)
+/** Each prop's biome, looked up once (`biomeOf`): a prop never moves. */
+const propBiomes = new WeakMap<Prop, BiomeId>()
+
+const propBiome = (g: Game, prop: Prop) => {
+  let biome = propBiomes.get(prop)
+  if (!biome) propBiomes.set(prop, (biome = biomeOf(g, prop.x, prop.y)))
+  return biome
+}
+
+/** Ground layer: item sources, each dressed for the biome it stands in, and the Max Repel aura. */
+export const drawProps = (ctx: Ctx, g: Game, t: number) => {
+  const skins = PROP_SKINS()
+  for (const prop of g.props) if (near(g, prop.x, prop.y)) drawProp(ctx, prop, t, skins[propBiome(g, prop)])
 
   const repel = localPlayer(g).buffs.find((b) => b.id === 'maxRepel')
   if (repel && (repel.left > 1.5 || Math.floor(t * 8) % 2 === 0)) {
