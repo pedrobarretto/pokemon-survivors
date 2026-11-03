@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
 import { runLearnset } from '../game/learnsets'
 import { offerPool, rollOffers } from '../game/leveling'
-import { isManual, maxMoveLevel, MOVE_IDS, MOVES, moveStats, type MoveId } from '../game/moves'
+import { isManual, maxMoveLevel, MOVE_IDS, MOVES, moveStats, type MoveDef, type MoveId } from '../game/moves'
 import { applyDeltas, BASE_STATS } from '../game/stats'
 import type { OwnedItem, OwnedMove } from '../game/types'
 import { EVOLUTIONS, neverEvolves, readyEvolutions } from './evolutions'
@@ -11,6 +11,16 @@ import { ITEMS, type ItemDef } from './items'
 
 const maxed = (id: MoveId): OwnedMove => ({ id, level: maxMoveLevel(id), cooldown: 0 })
 const charcoal: OwnedItem = { id: 'charcoal', level: 1 }
+
+describe('evolved move kinds', () => {
+  it('keep the kind of the move they evolve from, so a Sharpness or Iron Fist build keeps its boost', () => {
+    const tags = (id: MoveId) => {
+      const def: MoveDef = MOVES[id]
+      return def.tags ?? []
+    }
+    for (const e of EVOLUTIONS) for (const tag of tags(e.from)) expect(tags(e.to), `${e.from} → ${e.to}`).toContain(tag)
+  })
+})
 
 describe('move evolution eligibility', () => {
   it('needs the move at max level and its paired item', () => {

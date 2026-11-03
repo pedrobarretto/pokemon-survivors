@@ -20,6 +20,7 @@ import { weatherIcon } from '../render/weather'
 import { treatIcon } from '../render/halloweenArt'
 import { portraitUrl } from '../render/sprites'
 import { abilityIcon } from '../render/abilityArt'
+import { abilityMark, abilityMarkKey } from './abilityMark'
 import { megaIcon } from '../render/megaFx'
 import { h, setStyle, setText } from './dom'
 import { createRiftHud } from './riftHud'
@@ -182,6 +183,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
           'div',
           { class: cls },
           m && h('img', { src: moveIcon(m.id), alt: '' }),
+          m && abilityMark(g, m.id, 'slot-ability'),
           m && h('span', { class: 'slot-level' }, evolvedFrom(m.id) ? `★${m.level}` : duo ? `✦${m.level}` : m.level),
         )
         if (m) withMoveCard(slot, () => moveCard(g, m.id, { level: m.level, path: m.path, describe: true }))
@@ -225,7 +227,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     mission.update(g, !rift.el.classList.contains('hidden'))
     minimap.update(g)
 
-    const key = [...p.moves.map((m) => `${m.id}${m.level}`), ...p.items.map((i) => `${i.id}${i.level}`)].join()
+    const key = [...p.moves.map((m) => `${m.id}${m.level}`), ...p.items.map((i) => `${i.id}${i.level}`), abilityMarkKey(p)].join()
     if (key !== loadoutKey) {
       loadoutKey = key
       renderSlots(g)
