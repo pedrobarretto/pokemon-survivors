@@ -311,6 +311,58 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
   },
 }
 
+/** Phases that wait on a pick, made by the script like a player's tap. */
+const PICKS: ReadonlySet<Game['phase']> = new Set(['levelup', 'branch', 'ability', 'tm', 'curse', 'pokeball'])
+
+/** What a run looks like at a moment: the clock, the player, every enemy and pickup, bit for bit. */
+const snapshot = (g: Game): Array<number | string> => {
+  const p = g.player
+  const values: Array<number | string> = [g.phase, g.time, g.kills, g.coins, g.player.revives, p.level, p.xp, p.hp, p.x, p.y, p.stage, g.enemies.length, g.pickups.length]
+  for (const e of g.enemies) values.push(e.kind, e.x, e.y, e.hp)
+  for (const k of g.pickups) values.push(k.kind, k.x, k.y)
+  return values
+}
+
+/** Ticks between the snapshots of a recording's trail: a change that moves the run for a while and then settles still shows. */
+const TRAIL_EVERY = 30
+
+/**
+ * Plays a scenario with a scripted player, recording it: the stick wanders
+ * through the 32 directions at full speed, the special every 4 s, the Mega
+ * button and the lunge on their own beats, a card at every pick and a
+ * rotation at 10 s. All from a seeded rng, so the replay is the same every
+ * time. `trail` is a snapshot every `TRAIL_EVERY` ticks.
+ */
+const record = ({ start, seconds, stage }: Scenario) => {
+  const view = { ...start.view }
+  const g = startGame(start, view)
+  stage(g)
+  const end = g.time + seconds
+  const rec = startRecording(start)
+  const bot = createRng(5)
+  const trail: Array<number | string> = []
+  let dir = 0
+  while (g.time < end && g.phase !== 'gameover' && g.phase !== 'victory') {
+    if (PICKS.has(g.phase)) {
+      const i = Math.floor(bot() * g.player.offers.length)
+      recordEvent(rec, ['offer', i])
+      chooseOffer(g, g.player.offers[i]!)
+      continue
+    }
+    if (rec.tick % TRAIL_EVERY === 0) trail.push(...snapshot(g))
+    if (rec.tick === 600) Object.assign(view, { w: 300, h: 520 })
+    dir = (dir + Math.floor(bot() * 3) + 31) % 32
+    const special = rec.tick % 240 === 0
+    const mega = rec.tick % 400 === 100
+    const lunge = rec.tick % 120 === 60
+    if (special) recordEvent(rec, ['special'])
+    if (mega) recordEvent(rec, ['mega'])
+    if (lunge) recordEvent(rec, ['lunge'])
+    step(g, { move: recordStep(rec, view, moveOf(1 + 6 * 32 + dir)), special, mega, lunge }, TICK)
+  }
+  return { live: g, trail, replay: JSON.parse(JSON.stringify(rec.replay)) as Replay }
+}
+
 /** FNV-1a over the bytes of each number's float64 bits and of each string's char codes: the same on every engine. */
 const fnv = (values: ReadonlyArray<number | string>) => {
   const view = new DataView(new ArrayBuffer(8))
