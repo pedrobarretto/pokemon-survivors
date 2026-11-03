@@ -1,6 +1,6 @@
 import { playCry, playSfx } from '../engine/audio'
-import { isLegend, LEGEND_IDS, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
-import { capturedCount, recordLegendWin, winsNeeded, type CaptureResult, type LegendWin } from '../game/capture'
+import { isLegend, LEGEND_IDS, LEGENDS, type LegendId } from '../data/legends'
+import { recordLegendWin, stillMissing, winsNeeded, type CaptureResult, type LegendWin } from '../game/capture'
 import { cryUrl, portraitUrl } from '../render/sprites'
 import { t } from '../i18n'
 import { h, rich } from './dom'
@@ -27,7 +27,7 @@ const captureToast = (root: HTMLElement, r: CaptureResult): boolean => {
   }
   if (r.outcome === 'escaped') {
     playSfx('pokeballOpen')
-    return say(m.escaped(name, r.wins, r.need), r.counted ? m.escapedHint(r.need - r.wins) : m.arceusHint(REGULAR_LEGENDS.length - 1 - capturedCount(loadSave().legends, REGULAR_LEGENDS)))
+    return say(m.escaped(name, r.wins, r.need), r.counted ? m.escapedHint(r.need - r.wins) : m.arceusHint(stillMissing(loadSave().legends, r.legend).map(legendName)))
   }
   if (r.outcome === 'owned' && !r.shiny) return false
   playSfx('unlock')

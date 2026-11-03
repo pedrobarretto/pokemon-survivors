@@ -74,6 +74,12 @@ const LANTERN: BallArt = [
   { 1: '#4a1008', 2: '#f05030', 3: '#a82818', 4: '#fff0a0', 5: '#f8d030' },
 ]
 
+/** A video's play button, for the Creator frame's corners: a rounded hot-pink tile with a white triangle (1 outline, 2 the tile, 4 the triangle). */
+const PLAY: BallArt = [
+  ['.11111.', '1222221', '1242221', '1244221', '1242221', '1222221', '.11111.'],
+  { 1: '#300818', 2: '#e8306a', 4: '#ffffff' },
+]
+
 export const CARD_FRAMES = {
   /** The game's own dialog box: dark line, paper, blue. */
   classic: { edge: '#283040', light: '#f8f8f8', main: '#6878a8', shade: '#101830', accent: '#ffcb05' },
@@ -97,6 +103,8 @@ export const CARD_FRAMES = {
   meowth: { edge: '#2c1c0c', light: '#fff4d8', main: '#e0c890', shade: '#7a5a30', accent: '#f8d030', ball: CHARM },
   /** The Festival das Lanternas' ₽30M milestone: dusk indigo and lantern red, a paper lantern in each corner. */
   lantern: { edge: '#140c28', light: '#ffd890', main: '#d84028', shade: '#2a1848', accent: '#f8d030', ball: LANTERN },
+  /** For content creators (`data/creators.ts`): stream pink and cyan, play buttons in the corners. */
+  creator: { edge: '#140c28', light: '#c8f8f8', main: '#e8306a', shade: '#3a0820', accent: '#25e8e8', ball: PLAY },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */

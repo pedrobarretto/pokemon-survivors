@@ -1,0 +1,30 @@
+name: IndexNow
+
+# After each production deploy (Vercel reports it to GitHub as a deployment), tell Bing and the other
+# IndexNow engines which pages changed (`scripts/indexnow.mjs`). Run it by hand with "all" after adding pages.
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      all:
+        description: Submit every URL in the sitemap
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    if: github.event_name == 'workflow_dispatch' || (github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: scripts/indexnow.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: node scripts/indexnow.mjs ${{ inputs.all && '--all' || '' }}

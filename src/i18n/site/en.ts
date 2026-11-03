@@ -22,6 +22,9 @@ export const siteEn: SiteMessages = {
     tierList: 'Tier list',
     legal: 'Legal',
     support: 'Support',
+    creators: 'Creators',
+    compare: 'Pokémon Survivors vs PokéSurvivor',
+    alternatives: 'Games like Vampire Survivors',
     language: 'Language',
   },
   footer: {
@@ -31,6 +34,9 @@ export const siteEn: SiteMessages = {
     credits: 'Credits',
     source: 'Source on GitHub',
     support: 'Support the project',
+    notThem: 'Pokémon Survivors (pokemonsurvivors.com) is not PokéSurvivor (pokesurvivor.com), another fan game with a similar name.',
+    compare: 'See the differences',
+    alternatives: 'More Pokémon games like Vampire Survivors',
   },
   home: 'Home',
   playCta: 'Play for free',
@@ -631,10 +637,10 @@ export const siteEn: SiteMessages = {
     eggs: {
       incubator: (m) =>
         `The Incubator tab at Kecleon's shop sells more slots, yours for good: ${m.slots.map((s) => `slot ${s.n} for ${s.price} (with the shop at ${s.level})`).join(' and ')}, up to ${m.max} slots. It also sells the Quick Incubator (${m.quick}): in the incubator, tap an egg to use it, and that egg walks ${m.speed}x as fast until it hatches.`,
-      paragraphs: (starters, families, slots, perRun, stepPx, shiny, weight) => [
+      paragraphs: (starters, families, slots, perRun, stepPx, shiny, weight, pity) => [
         `Besides the ${starters} starters, ${families} playable Pokémon families hatch from eggs, from every type and generation: ${starters + families} Pokémon to play in all. Each one has its own starting move, special, mid-run evolution and stats.`,
         `Bosses, locked chests and rifts sometimes leave an egg, at most ${perRun} per run. It goes to the incubator, which has ${slots} slots. Every ${stepPx} px walked in a run counts as a step, and every egg in the incubator walks along. An egg found mid-run already counts the steps taken after it.`,
-        `Once an egg is ready, it hatches when you leave the run or in the incubator (in the main menu and in the Eggs tab of the Pokémon select). Families you don't have yet come out ${weight}x more often. The hatchling has a 1 in ${shiny} chance to be shiny, and then it stays shiny in every run.`,
+        `Once an egg is ready, it hatches when you leave the run or in the incubator (in the main menu and in the Eggs tab of the Pokémon select). Families you don't have yet come out ${weight}x more often. The hatchling has a 1 in ${shiny} chance to be shiny, and then it stays shiny in every run. Guarantee: after ${pity} eggs of a kind with no new Pokémon, the next one is sure to bring one (the incubator shows the count).`,
         'A duplicate, or an egg found with the incubator full, becomes Poké Dollars. A player who never had an egg is sure to get the first one.',
         "The Friendship Egg never drops in runs: it comes as a Mystery Gift when you sign up through someone's invite, and when a friend you invited finishes 3 runs. Only Munchlax hatches from it. At 3 friends you get the Ambassador title and an exclusive frame, at 5 an Ultra rare egg, and at 10 a shiny Dratini. Your link and each friend's progress are on the Invite friends card, on the home screen.",
         "The Haunted Egg never drops in runs either: only Duskull's stall sells it, at the plaza, during Halloween Night (Oct 24 to Nov 2), one a day. Only Litwick, Phantump, Drifloon and Sandygast come out of it, 25% each, owned or not. After the event, it's back next year.",
@@ -816,9 +822,20 @@ export const siteEn: SiteMessages = {
         'A companion that follows them in runs.',
         'Their name on the wall below and in the victory thanks.',
         'A vote on the next egg Pokémon.',
-        'Gold, with R$ 50 or US$ 10 in all: a golden card background, PC Box wallpaper and badge.',
+        'Gold and Diamond are monthly now, on Patreon (see below): one-time donations don’t add up to Gold.',
       ],
       note: 'All cosmetic: nothing changes a run or the ranking. Rewards need an account in the game (signing in with Google is free).',
+    },
+    monthly: {
+      title: 'Monthly support on Patreon',
+      lead: 'Want to support every month? On Patreon, your tier follows the amount you keep active. Then link Patreon to your account from the game’s Hall of Fame.',
+      tiers: [
+        '<b>Supporter, US$ 5/month:</b> everything donors get, the Supporter role and the exclusive Discord channel, and the Hall of Fame while your support lasts.',
+        '<b>Gold, US$ 10/month:</b> everything a Supporter gets, the Gold badge and role, a golden card background and wallpaper, and the Hall of Fame for good.',
+        '<b>Diamond, US$ 20/month:</b> everything Gold gets, the Diamond badge and role, a legendary you captured as your companion (shiny if caught shiny), a monthly vote on a new ultra-rare Pokémon and diamond decorations on the Hall of Fame.',
+      ],
+      cta: 'Support on Patreon',
+      note: 'Everyone who donated before Patreon is an OG Supporter: they keep everything they have, for good, with their own section on the Hall of Fame.',
     },
     wall: { title: 'Supporters wall', empty: 'Nobody here yet. Your name could be the first!' },
     pick: 'Choose how to pay',
@@ -904,8 +921,7 @@ export const siteEn: SiteMessages = {
     privacyAfter: [
       'To delete this data, clear the site data in your browser settings.',
       'Sprites, sounds and fonts are served by this site, with no calls to third-party services. The site is hosted on Vercel which, like any web server, may log technical access data (such as IP addresses) to run and protect the service.',
-      'To know how many people visit, the site uses Vercel Web Analytics. It counts visits anonymously and in aggregate (page, country, browser, device and referring site), with no cookies and without identifying you or following you across sites.',
-      'In the game we also use PostHog (posthog.com, with data stored in the United States) to understand how it is played and to fix bugs. It receives a summary of each run (Pokémon, difficulty, moves, items, the minute and level you reached and how it ended), which menu screens you open and, when the game hits an error, the error message and the replay of the run in progress (its seed and your inputs, nothing personal). All of it is tied to the random id in ph_ps and, if you signed in, to your account id and username, never to your email or name. PostHog uses no cookies here and does not follow you across sites.',
+      'In the game we use PostHog (posthog.com, with data stored in the United States) to understand how it is played and to fix bugs. It receives a summary of each run (Pokémon, difficulty, moves, items, the minute and level you reached and how it ended), which menu screens you open and, when the game hits an error, the error message and the replay of the run in progress (its seed and your inputs, nothing personal). All of it is tied to the random id in ph_ps and, if you signed in, to your account id and username, never to your email or name. PostHog uses no cookies here and does not follow you across sites.',
       'Donations are paid on AbacatePay\'s pages (abacatepay.com: Pix and Brazilian cards) or Stripe\'s (stripe.com: cards from other countries, Apple Pay and Google Pay). Your payment details go straight to them, and the game never sees your card. They show us the amount and, as they would to anyone receiving a payment, details of who paid (such as name and email), which we use for nothing but recording the donation. If you give an @ (or redeem the donation\'s code), it\'s tied to that game account so the rewards reach it; the amount is never shown publicly, only the supporter badge, which you can hide.',
     ],
     contact: [
@@ -914,6 +930,190 @@ export const siteEn: SiteMessages = {
     ],
     issues: 'Open an issue on GitHub',
     source: 'View the source code',
+  },
+  creators: {
+    title: 'Creators: Pokémon Survivors videos and streams',
+    description:
+      'Pokémon Survivors videos and streams made by players, on YouTube and TikTok. Make yours, share it on Discord and get the Content Creator title and the creator frame in the game.',
+    h1: 'Creators',
+    lead: 'Videos and streams from people who play Pokémon Survivors. Watch them right here and follow who makes them.',
+    videos: 'Videos',
+    people: 'Who makes them',
+    play: (title: string) => `Watch: ${title}`,
+    watchOn: (platform: string) => `Watch on ${platform}`,
+    videoAbout: (name: string) => `A Pokémon Survivors video by ${name}.`,
+    langs: { pt: 'In Portuguese', en: 'In English', es: 'In Spanish', fr: 'In French', zh: 'In Chinese' },
+    join: {
+      title: 'Do you make videos of the game?',
+      lead: 'Gameplay, a stream, a guide, a Short or a TikTok, in any language: every video of the game can be here.',
+      steps: [
+        'Post your video on YouTube, TikTok or wherever you like.',
+        'Share the link in the #screenshots-and-clips channel of our Discord.',
+        'Tell us your in-game @: you get the Content Creator title and the creator frame.',
+      ],
+      cta: 'Share my video on Discord',
+    },
+  },
+  compare: {
+    title: 'Pokémon Survivors vs PokéSurvivor: are they the same game? The differences',
+    description:
+      'Pokémon Survivors (pokemonsurvivors.com) and PokéSurvivor (pokesurvivor.com) are two free Vampire Survivors-style Pokémon fan games by different people. Side by side: Pokémon, co-op, languages, rankings and source code.',
+    h1: 'Are Pokémon Survivors and PokéSurvivor the same game?',
+    lead: [
+      'No. They are two free Vampire Survivors-style Pokémon fan games with almost the same name, made by different people. Pokémon Survivors (pokemonsurvivors.com, this site) is made by Pedro Barretto in Brazil. PokéSurvivor (pokesurvivor.com) is made by JPTER78.',
+      'Both came out in October 2026, run in the browser and are free, so search engines and AI chats sometimes mix them up. Here is what sets them apart.',
+    ],
+    table: { title: 'Side by side', feature: 'Feature' },
+    rows: (f) => [
+      ['Made by', 'Pedro Barretto (Brazil)', 'JPTER78'],
+      ['Website', 'pokemonsurvivors.com', 'pokesurvivor.com'],
+      ['Where to play', 'Browser on PC and phone, portrait or landscape. Installs as an app.', 'Browser on PC and phone, landscape. Installs as an app.'],
+      ['Account', 'Optional: solo play needs no sign-up. An account adds cloud saves, the rankings and co-op.', 'Optional: guest or account (name and password, or Google). An account adds cloud saves, the rankings and co-op.'],
+      ['How you attack', `Every move fires on its own, up to ${f.moves} at once.`, 'You pick the active move (keys 1 to 4). Each legendary beaten lets you fuse moves into one slot.'],
+      ['Playable Pokémon', `${f.starters} starters with their full evolution lines, plus ${f.eggs} families that hatch from eggs and ${f.legends} legendaries in Legend Mode.`, '966 Pokémon from all 9 generations.'],
+      ['How you unlock Pokémon', 'Eggs that hatch with the steps you take in runs. Legendaries are caught by beating them as bosses.', 'A gacha per region, with tickets earned by playing.'],
+      ['A run', `${f.minutes} minutes up to Mewtwo, with legendary bosses and epic rifts on the way. Then an endless mode until Arceus.`, 'Timed hordes, with rifts that lead to an arena against a legendary.'],
+      ['Co-op', `Online, up to ${f.players} players. Rooms by link, code or friends list.`, 'Online, up to 4 players. Rooms by inviting friends.'],
+      ['Languages', `${f.languages}: Portuguese, English, Spanish, French and Traditional Chinese.`, '7: Spanish, English, French, Italian, Portuguese, and Simplified and Traditional Chinese.'],
+      ['Rankings', 'By time survived. Runs on the boards are checked: the server re-simulates each one from its replay.', 'By time survived, solo or as a group.'],
+      ['Source code', 'Open source, MIT license.', 'Public, PolyForm Noncommercial license (MIT until 2026-10-14).'],
+      ['Ads and purchases', 'None. Optional donations.', 'None. Optional donations.'],
+    ],
+    names: {
+      title: 'Similar names',
+      items: [
+        { name: 'Pokémon Survivors', text: 'This game, at pokemonsurvivors.com. "Survivors", plural.' },
+        { name: 'PokéSurvivor (or Poke Survivor)', text: "JPTER78's game, at pokesurvivor.com." },
+        { name: 'Poke Survivors (Android)', text: 'An unofficial Android port of PokéSurvivor, made in Godot. Not this game.' },
+        { name: 'pokesurvivor.games and pokesurvival.com', text: 'Fan sites with guides that send you to PokéSurvivor.' },
+        { name: 'Pokémon Survivor Burst', text: 'Another fan game, downloaded on PC, made by ClessioTV with Pokémon Essentials.' },
+      ],
+    },
+    pickOurs: {
+      title: 'Play Pokémon Survivors if you…',
+      items: (f) => [
+        `want a run with a beginning, middle and end: ${f.minutes} minutes up to Mewtwo, then the endless mode against Arceus;`,
+        'like theorycrafting: moves that fork into two paths at Lv 4 and Lv 7, Abilities, items, duo moves and Mega Evolution;',
+        `want to play as the legendaries: catch all ${f.legends} by beating them as bosses and play them in Legend Mode;`,
+        'want to play on your phone held upright, one-handed;',
+        'want a ranking where the top runs are checked by the server;',
+        'want open source under the MIT license, to study and reuse.',
+      ],
+    },
+    pickTheirs: {
+      title: 'Play PokéSurvivor if you…',
+      items: [
+        'want to collect: 966 Pokémon and a gacha per region;',
+        'would rather pick the attacking move yourself;',
+        'play in Italian or Simplified Chinese;',
+        'want the bigger community and more YouTube videos.',
+      ],
+    },
+    faq: {
+      title: 'FAQ',
+      items: (f) => [
+        {
+          q: 'Are Pokémon Survivors and PokéSurvivor the same game?',
+          a: 'No. They are two different free fan games by different people, released the same month with almost the same name. Pokémon Survivors is at pokemonsurvivors.com and made by Pedro Barretto. PokéSurvivor is at pokesurvivor.com and made by JPTER78.',
+        },
+        {
+          q: 'I searched for "Pokémon Survivors" and got PokéSurvivor. Did I get the name wrong?',
+          a: 'No. Pokémon Survivors, with "Survivors" in the plural, is this game, at pokemonsurvivors.com. Search engines and AI chats sometimes mix the two up.',
+        },
+        {
+          q: 'Which one is better?',
+          a: `It depends on what you want. PokéSurvivor has more Pokémon (966) and a gacha to collect them. Pokémon Survivors has ${f.minutes}-minute runs with legendary bosses, playable legendaries, Mega Evolution, moves that fork into paths and a server-checked ranking. Both are free, so you can play both.`,
+        },
+        {
+          q: 'Are both free and official?',
+          a: 'Both are free, with no ads or purchases, and run in the browser. Neither is official: they are fan games with no ties to Nintendo, The Pokémon Company, GAME FREAK or Creatures.',
+        },
+        {
+          q: 'Can I play Pokémon Survivors with friends?',
+          a: `Yes. Online co-op brings up to ${f.players} players into the same run, each with their own Pokémon. Create a room and invite friends by link, code or friends list. It needs an account.`,
+        },
+      ],
+    },
+    checked: (date) => `The facts about PokéSurvivor were checked on ${date} on its website and in its source code, and may have changed since.`,
+    report: 'Spotted something wrong? Tell us on GitHub',
+    alternatives: 'More Pokémon games like Vampire Survivors',
+    cta: 'Play Pokémon Survivors free',
+  },
+  alternatives: {
+    title: 'Pokémon games like Vampire Survivors: the free fan games (2026)',
+    description:
+      'The free Vampire Survivors-style Pokémon fan games: Pokémon Survivors, PokéSurvivor and Pokémon Survivor Burst, plus the roguelite PokeRogue. Where they run, co-op, how many Pokémon and who each one is for.',
+    h1: 'Pokémon games like Vampire Survivors',
+    lead: "There is no official Pokémon Vampire Survivors, but fans have made a few. These are the free Pokémon survivors-like (or bullet heaven) fan games, where you only move and your Pokémon attacks hordes on its own, plus a turn-based Pokémon roguelite if you'd like a different pace.",
+    disclosure: (date) =>
+      `Written by the maker of Pokémon Survivors, first on the list, so keep that in mind. The other games' facts were checked on ${date} on their own sites and may have changed.`,
+    glance: { title: 'At a glance', game: 'Game', plays: 'Where to play', style: 'Style', coop: 'Co-op', roster: 'Pokémon' },
+    madeBy: 'Made by',
+    bestFor: 'Best for',
+    visit: (name) => `Open ${name}`,
+    games: {
+      ours: {
+        plays: 'Browser, PC and phone',
+        style: 'Survivors-like',
+        coop: 'Up to 4 online',
+        roster: (f) => `${f.starters} starters, ${f.eggs} egg families, ${f.legends} legendaries`,
+        about: (f) => [
+          `Pick one of ${f.starters} starters from Kanto to Paldea and survive ${f.minutes} minutes of hordes: every move attacks on its own, you pick moves and items each level and evolve mid-run, until you face Mewtwo. Legendary bosses, epic rifts into each legendary's domain, Mega Evolution and an endless mode against Arceus.`,
+          `Eggs hatch ${f.eggs} more families, the legendaries you beat become playable in Legend Mode, and online co-op brings up to ${f.players} players together. In ${f.languages} languages, open source (MIT).`,
+        ],
+        bestFor: 'short runs with bosses, varied builds and playable legendaries, on PC or on a phone held upright.',
+      },
+      pokesurvivor: {
+        plays: 'Browser, PC and phone (landscape)',
+        style: 'Survivors-like',
+        coop: 'Up to 4 online',
+        roster: '966 Pokémon',
+        about: [
+          'The biggest cast in the genre: 966 Pokémon from all 9 generations, unlocked through a gacha per region with tickets earned by playing. You pick the attacking move, and rifts lead to an arena against a legendary. It has missions, achievements, rankings and co-op for up to 4 players, in 7 languages.',
+          'There is also an unofficial Android port called Poke Survivors, made in Godot.',
+        ],
+        bestFor: 'collecting as many Pokémon as possible.',
+      },
+      burst: {
+        plays: 'Download, Windows and Mac',
+        style: 'Survivors-like',
+        coop: 'No',
+        roster: 'Grows with each version',
+        about: [
+          'Made in Pokémon Essentials (RPG Maker XP), you download it and play on a computer. It has Classic, Rush and Tower modes, bosses and online leaderboards, in several languages. Its maker notes the phone version is untested.',
+        ],
+        bestFor: 'a downloaded game that looks like a classic Pokémon game.',
+      },
+      pokerogue: {
+        plays: 'Browser, PC and phone',
+        style: 'Turn-based roguelite',
+        coop: 'No',
+        roster: 'Every generation',
+        about: [
+          "Not a survivors-like: battles are turn-based, like the main series, wave after wave, catching Pokémon to build your team. It's the best-known Pokémon roguelite, free and open source.",
+        ],
+        bestFor: 'a Pokémon roguelite with turn-based battles instead of hordes.',
+      },
+    },
+    faq: {
+      title: 'FAQ',
+      items: (f) => [
+        {
+          q: 'Is there an official Pokémon Vampire Survivors?',
+          a: 'No. Pokémon has never released a game in this style. The ones that exist are free, unofficial fan games, like Pokémon Survivors, PokéSurvivor and Pokémon Survivor Burst.',
+        },
+        {
+          q: 'Which Pokémon game like Vampire Survivors has co-op?',
+          a: `Pokémon Survivors and PokéSurvivor, both with online co-op for up to ${f.players} players, in the browser.`,
+        },
+        {
+          q: 'Which one can I play on my phone without downloading anything?',
+          a: 'Pokémon Survivors, PokéSurvivor and PokeRogue run in the phone browser. Pokémon Survivors also plays with the phone held upright. Pokémon Survivor Burst is a download for computers.',
+        },
+      ],
+    },
+    compareLink: 'Pokémon Survivors and PokéSurvivor side by side',
+    cta: 'Play Pokémon Survivors free',
   },
   notFound: {
     title: 'Page not found · Pokémon Survivors',

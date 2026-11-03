@@ -18,6 +18,13 @@ import type { TraitId } from '../data/traits'
 import type { ConsumableId } from '../game/consumables'
 import type { FriendMilestone } from '../game/referral'
 import type { Difficulty } from '../game/difficulty'
+import type { Role } from '../data/versus'
+import type { MapId } from '../data/versusMaps'
+import type { ArenaFormat } from '../data/arenaFormats'
+import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
+import type { Priority } from '../game/versusKit'
+import type { AimAssist } from '../ui/arenaAim'
+import type { MatchKind, TierId } from '../data/arenaRanked'
 import type { SurveyAnswer } from '../data/survey'
 import type { BackgroundId, FrameId, StyleSlot, WallpaperId } from '../data/style'
 import type { BagItem } from '../game/bag'
@@ -127,6 +134,10 @@ export const pt = {
     eggs: 'Ovos',
     eggsReady: (n: number) => (n === 1 ? '1 ovo pronto para chocar' : `${n} ovos prontos para chocar`),
     mart: 'Loja',
+    /** The lobby's Dojo tile (`ui/training.ts`): Machoke's training hall, west of home. */
+    dojo: 'Dojo',
+    /** Its label for screen readers and the rail tile's long name. */
+    dojoLabel: 'Dojo: treine golpes e monte builds',
     ranking: 'Ranking',
     ideas: 'Ideias',
     /** Support chip (donations page), and the Hall da Fama card before it has names. */
@@ -167,7 +178,7 @@ export const pt = {
     createProfile: 'Criar perfil',
     viewProfile: 'Ver perfil público',
     share: 'Compartilhar cartão',
-    supporterSince: (gold: boolean, date: string) => `${gold ? 'Apoiador(a) Ouro' : 'Apoiador(a)'} desde ${date}`,
+    supporterSince: (tier: SupporterTier, date: string): string => `${{ supporter: 'Apoiador(a)', gold: 'Apoiador(a) Ouro', diamond: 'Apoiador(a) Diamante' }[tier]} desde ${date}`,
     missions: 'Missões e conquistas',
     join: 'Criar conta / Entrar',
     signOut: 'Sair da conta',
@@ -232,6 +243,432 @@ export const pt = {
     stances: { shield: 'Escudo', blade: 'Lâmina', normal: 'Normal', attack: 'Ataque', defense: 'Defesa', speed: 'Velocidade' } satisfies Record<Stance, string>,
     /** Jumps left in a running chain dash. */
     jumps: (n: number) => `×${n}`,
+  },
+
+  /** Arena (Versus, `game/versus.ts`): the lobby's tile, its screen, a match's HUD, toasts and pick tray, the end screen and the room in Arena mode. */
+  versus: {
+    entry: 'Arena',
+    fresh: 'NOVO',
+    title: 'Arena',
+    tagline: 'MOBA 4v4 · 3v3',
+    /** The Arena's maps' names (`data/versusMaps.ts`). */
+    maps: { vale: 'Vale', glade: 'Clareira', cove: 'Enseada', reef: 'Recife' } satisfies Record<MapId, string>,
+    /** The match formats (`data/arenaFormats.ts`): the name, the size, the clock and a line on the map. */
+    formats: {
+      standard: { name: 'Padrão', size: '4v4', clock: '7 min', text: 'No Vale ou na Enseada · 3 gols por equipe' },
+      quick: { name: 'Rápida', size: '3v3', clock: '3 min', text: 'Na Clareira ou no Recife · 2 gols por equipe' },
+    } satisfies Record<ArenaFormat, { name: string; size: string; clock: string; text: string }>,
+    intro: 'Duas equipes no Vale ou na Enseada (4v4), na Clareira ou no Recife (3v3). Derrote Pokémon selvagens, junte Energia e marque nos gols rivais.',
+    lobby: {
+      how: 'Como jogar',
+      /** The Como jogar strip, in order: each step's title and line. */
+      steps: [
+        { title: 'Derrote selvagens', text: 'Os acampamentos soltam orbes de Energia.' },
+        { title: 'Junte Energia', text: 'Cada Pokémon carrega até 30.' },
+        { title: 'Marque no gol rival', text: 'Fique dentro do gol até a barra encher.' },
+        { title: 'Reta final', text: 'No fim, pontos em dobro e Zapdos.' },
+      ],
+      stats: { damage: 'Dano', toughness: 'Resistência', speed: 'Velocidade', healing: 'Cura' },
+      roleInfo: {
+        attacker: 'Muito dano, pouca defesa. Fique atrás do time.',
+        speedster: 'Rápido: entra, marca e sai antes do rival chegar.',
+        allRounder: 'Luta bem e aguenta bem. Bom para começar.',
+        defender: 'Aguenta muito dano e segura a rota para o time.',
+        supporter: 'Cura os aliados por perto com sua aura.',
+      } satisfies Record<Role, string>,
+      all: 'Todos',
+      line: 'Evolui na partida',
+      quick: { title: 'Treino', text: 'Contra bots, sem conta. Começa na hora.' },
+      room: { title: 'Com amigos', text: 'Crie uma sala e mande o código. Vagas vazias viram bots.', account: 'Precisa de conta com @' },
+      offline: 'Indisponível nesta versão',
+      casual: { title: 'Casual', text: 'Fila pública com outros treinadores. Sem RP.' },
+      ranked: { title: 'Ranqueada', text: 'Vale RP na temporada. Da Poké à Master Ball.' },
+      /** The button to the Arena's hub (`ui/arenaHub.ts`). */
+      /** The format picker over the ways to play, and why Ranqueada is off in the 3v3. */
+      format: 'Formato',
+      rankedOnly: 'Ranqueada só no 4v4',
+      hub: 'Ranking',
+    },
+    pick: 'Escolha seu Pokémon',
+    free: 'Os 27 iniciais, liberados para todos.',
+    roles: { attacker: 'Atacante', speedster: 'Velocista', allRounder: 'Equilibrado', defender: 'Defensor', supporter: 'Suporte' } satisfies Record<Role, string>,
+    back: 'Voltar',
+    hintKeys: '← → ↑ ↓ escolher · ENTER treino · ESC voltar',
+    hintTouch: 'Toque num Pokémon e escolha como jogar',
+    /** Team names, Blue (0) then Red (1). */
+    teams: ['Azul', 'Vermelho'],
+    cpu: 'CPU',
+    you: 'Você',
+    starting: 'Preparando a partida…',
+    queue: {
+      searching: 'Procurando partida…',
+      found: 'Partida encontrada!',
+      honest: 'Fila pública em breve · por enquanto, completamos com bots',
+      seeking: 'Procurando…',
+      cancel: 'Cancelar',
+      hintKeys: 'ESC cancelar',
+      hintTouch: 'Toque em Cancelar para voltar',
+      /** The public queue (`arena/queue.ts`): its kind, the wait and how the match came out. */
+      kinds: { casual: 'Casual', ranked: 'Ranqueada' },
+      connecting: 'Conectando à fila…',
+      players: (found: number, of: number) => `${found}/${of} treinadores`,
+      botsIn: (s: number) => `Bots completam em ${s} s`,
+      botsNow: 'Completando com bots…',
+      rankedNote: 'A Ranqueada precisa de 2 ou mais treinadores: os bots só completam as vagas.',
+      casualNote: 'Partida sem RP. Se faltar gente, os bots completam.',
+      player: 'Treinador',
+      joining: 'Entrando na partida…',
+      downgraded: 'Poucos treinadores na fila: esta partida vale como Casual.',
+      lost: 'A conexão com a fila caiu.',
+      refused: { auth: 'Entre com sua conta para jogar na fila.', duplicate: 'Você já está na fila em outra aba.', build: 'Há uma versão nova do jogo: recarregue a página.', closed: 'A fila está fechada agora. Tente mais tarde.', fairPlay: 'Seu Fair Play está baixo para a Ranqueada.' },
+      /** Fair Play holds the ticket (`queued`'s `hold`): the time before the search starts. */
+      holding: (time: string) => `Fair Play baixo: a busca começa em ${time}`,
+      holdNote: 'Quem sai de partidas espera mais na fila. Termine partidas para recuperar o Fair Play.',
+      /** The Ranqueada refused for Fair Play (`refused` `fairPlay`). */
+      blocked: {
+        title: 'Ranqueada bloqueada',
+        score: (score: number, min: number) => `Seu Fair Play: ${score}/100. A Ranqueada pede ${min} ou mais.`,
+        how: (n: number) => `Termine ${n} ${n === 1 ? 'partida' : 'partidas'} de Casual até o fim para voltar.`,
+        casual: 'Jogar Casual',
+        back: 'Voltar',
+      },
+      /** Before season 1: ranked matches are kept unrated. `date`: when season 1 starts, in the player's time. */
+      preseason: (date: string) => `Pré-temporada: a Ranqueada fica no seu Histórico, mas só vale RP a partir de ${date}, quando começa a Temporada 1.`,
+    },
+    splash: {
+      loading: 'Carregando a arena…',
+      ready: 'Tudo pronto!',
+      tip: 'Dica',
+      tips: [
+        'Energia cheia? Vá marcar: se cair, você larga metade.',
+        'Cada aliado no mesmo gol acelera a marcação em 50%.',
+        'Um golpe rival interrompe quem está marcando.',
+        'No seu gol você se cura e corre 20% mais rápido.',
+        'No 4v4, o gol da base só abre depois que cai um gol de rota; o 3v3 não tem gol de base.',
+        'Derrotar o Drednaw dá escudo e Energia ao time todo.',
+        'No mato alto os rivais não te veem, mas seus ataques param: bom para emboscar e fugir.',
+        'As cartas de nível não pausam: toque numa ou use 1–4.',
+        'O ataque básico é automático: Q, E e R lançam o Golpe 1, o Golpe 2 e o Unite.',
+        'Clique ou toque num rival para travar o alvo; Tab troca. No celular, arraste o botão do golpe para mirar.',
+        'Cada evolução troca o Golpe 1, depois o Golpe 2, por um golpe da nova forma.',
+        'T abre o chat rápido, G marca o mapa e segurar ` mostra o placar completo.',
+        'Da metade da partida em diante, o time pode votar pela rendição: conta como derrota, não como abandono.',
+        'Terminar a partida devolve Fair Play; sair ou ficar parado custa, e abaixo de 80 não tem Ranqueada.',
+      ],
+    },
+    hud: {
+      blue: 'AZUL',
+      red: 'VERM',
+      double: 'x2',
+      energy: 'Energia',
+      respawn: (s: number) => `Volta em ${s}`,
+      blessing: (s: number) => `Bênção de Zapdos ${s}s`,
+      shield: 'Escudo',
+      go: 'Já!',
+      scoring: 'Marcando…',
+      blocked: 'Interrompido!',
+      full: 'MARQUE!',
+      down: 'Nocauteado',
+      downBy: (name: string) => `por ${name}`,
+      downNote: 'Metade da sua Energia ficou no chão.',
+      goals: { top: 'Gol da rota norte', base: 'Gol da base', bottom: 'Gol da rota sul' },
+    },
+    /** The coach's line under the score (`ui/versusCoach.ts`): what to do now. */
+    coach: {
+      farm: 'Derrote Pokémon *selvagens* para juntar Energia',
+      carry: 'Leve a Energia a um *gol rival*: siga a seta',
+      channel: 'Fique no gol para *marcar* · dano interrompe',
+      locked: 'Gol da base trancado: derrube antes um *gol de rota*',
+      full: 'Energia cheia! *Marque* antes de cair',
+      lowHp: 'HP baixo: volte a um *gol seu* para curar',
+      defend: 'Um rival está marcando no *seu gol*!',
+      grass: '*Mato alto*: rivais não te veem · seus ataques param',
+      drednaw: '*Drednaw* no centro: vença-o e ganhe um escudo',
+      zapdos: '*Zapdos* no centro: quem vencer marca na hora',
+      stretch: 'Reta final: pontos em *dobro*!',
+      /** The kit, in the opening seconds: the keys bound to Move 1, Move 2 and the Unite Move. */
+      kit: (q: string, e: string, r: string) => `Ataque básico *automático* · *${q}* e *${e}* lançam golpes, *${r}* o Unite`,
+      kitTouch: 'Ataque básico *automático* · toque nos *botões* para lançar, arraste para mirar',
+      /** A rival in reach and nothing locked: how to lock (the key that switches targets). */
+      aim: (tab: string) => `Clique num rival para *travar o alvo* · *${tab}* troca`,
+      aimTouch: 'Toque num rival para *travar o alvo*',
+    },
+    toast: {
+      weScored: (name: string) => `*${name}* marcou!`,
+      theyScored: (name: string) => `*${name}* marcou para os rivais`,
+      ourGoalBroke: 'Um gol nosso caiu!',
+      theirGoalBroke: 'Um gol rival caiu!',
+      youKo: (name: string) => `Você derrotou *${name}*!`,
+      koYou: (name: string) => `*${name}* derrotou você`,
+      wildKoYou: 'Você caiu',
+      allyKo: (by: string, name: string) => `*${by}* derrotou *${name}*`,
+      drednaw: 'Drednaw apareceu no centro!',
+      zapdos: 'Zapdos chegou ao centro!',
+      fellUs: (name: string) => `Nossa equipe derrotou *${name}*!`,
+      fellThem: (name: string) => `Os rivais derrotaram *${name}*`,
+      stretch: 'Reta final! Pontos em dobro',
+      back: 'De volta à luta!',
+      surrenderOpen: (name: string) => `*${name}* propôs a rendição: vote!`,
+    },
+    /** The Arena's kit on the HUD (`ui/arenaControls.ts`): the touch buttons and the desktop's key badges. */
+    kit: {
+      basic: 'Ataque básico',
+      move1: 'Golpe 1',
+      move2: 'Golpe 2',
+      unite: 'Golpe Unite',
+      /** The basic attack's badge, where the others show their key. */
+      auto: 'AUTO',
+      /** A move not learned yet: the level it comes at. */
+      learnAt: (level: number) => `Nv ${level}`,
+      /** Moves hold in tall grass. */
+      grass: 'MATO',
+    },
+    tray: {
+      first: 'Escolha um golpe',
+      levelup: (level: number) => `Nível ${level}!`,
+      branch: 'Evoluir para',
+      ability: 'Habilidade',
+      auto: 'escolha automática',
+      second: 'Seu Golpe 2',
+      upgrade: (n: number) => `Evoluiu! Novo Golpe ${n}`,
+    },
+    /** Quick chat (`game/versusSocial.ts`): each line by id, as each screen reads it. "Bom jogo!" reaches both teams; the rest only the sender's. */
+    chat: {
+      title: 'Chat rápido',
+      lines: { go: 'Vamos!', retreat: 'Recuar!', help: 'Ajuda!', objective: 'Peguem o objetivo!', defend: 'Defendam o gol!', jungle: 'Cuidado: mato alto!', thanks: 'Obrigado!', gg: 'Bom jogo!' } satisfies Record<QuickChat, string>,
+      /** Tag on a line both teams hear. */
+      all: 'TODOS',
+      wait: 'Espere um pouco para mandar outra',
+      muted: 'Chat rápido silenciado (Configurações)',
+    },
+    /** Pings on the map: what each says. */
+    ping: {
+      title: 'Marcar no mapa',
+      kinds: { attack: 'Atacar aqui', danger: 'Perigo!', omw: 'Estou indo', objective: 'Objetivo' } satisfies Record<PingKind, string>,
+      hint: 'Segure o minimapa ou escolha um ponto para marcar',
+    },
+    /** The surrender vote (`game/versusSocial.ts`): from the match's half on, two thirds of the team's humans. */
+    surrender: {
+      button: 'Render-se',
+      locked: (time: string) => `Render-se (com ${time} no relógio)`,
+      cooldown: (s: number) => `Render-se (em ${s} s)`,
+      running: 'Votação em andamento',
+      confirmSolo: 'Desistir da partida? Ela conta como derrota.',
+      confirmTeam: 'Propor ao time desistir? Se 2/3 aceitarem, a partida acaba em derrota.',
+      title: (name: string) => `${name} quer se render`,
+      mine: 'Você propôs a rendição',
+      tally: (yes: number, need: number) => `${yes}/${need} votos`,
+      yes: 'Render',
+      no: 'Continuar',
+      voted: 'Voto enviado',
+      failed: 'A rendição não passou: a partida continua',
+    },
+    /** The scoreboard (hold its key or tap the score) and the end screen's tables. */
+    board: {
+      title: 'Placar',
+      cols: { kos: 'KO', assists: 'AS', deaths: 'Q', scored: 'PTS', dealt: 'DANO', taken: 'SOFR', healed: 'CURA', interrupts: 'INT' } satisfies Record<BoardStat, string>,
+      full: {
+        kos: 'Nocautes',
+        assists: 'Assistências (acertou um rival nocauteado em até 8 s)',
+        deaths: 'Quedas',
+        scored: 'Pontos marcados',
+        dealt: 'Dano em Pokémon rivais',
+        taken: 'Dano sofrido de rivais',
+        healed: 'Cura (golpes, Habilidade e aura)',
+        interrupts: 'Marcações rivais interrompidas',
+      } satisfies Record<BoardStat, string>,
+      hintKeys: (key: string) => `Segure ${key} para ver o placar`,
+      down: (s: number) => `volta em ${s}`,
+    },
+    end: {
+      victory: 'Vitória!',
+      defeat: 'Derrota',
+      draw: 'Empate',
+      pokemon: 'Pokémon',
+      kos: 'KOs',
+      deaths: 'Quedas',
+      points: 'Pontos',
+      damage: 'Dano',
+      playAgain: 'Jogar de novo',
+      lobby: 'Voltar ao lobby',
+      again: 'Preparando a próxima…',
+      surrendered: 'Seu time se rendeu',
+      theySurrendered: 'Os rivais se renderam',
+      rematch: 'Revanche',
+      rematchTeam: 'Revanche com o time',
+      rematchNote: (s: number) => `Volta à fila com quem do time apertar em até ${s} s`,
+      readyCount: (ready: number, total: number) => `${ready}/${total} prontos para a revanche`,
+      mvp: 'MVP',
+      mvpLine: (points: number, kos: number, damage: number) => `${points} pontos · ${kos} KOs · ${damage} de dano`,
+      medals: { points: 'Artilheiro', kos: 'Caçador', damage: 'Mais dano' },
+      /** What the match did to the ranking, under the score. */
+      rank: {
+        practice: 'Treino: não conta para o ranking',
+        room: 'Partida entre amigos: fica no histórico, sem RP',
+        casual: 'Casual: sem RP',
+        calculating: 'Calculando RP…',
+        late: 'O RP aparece no Histórico em instantes.',
+        protected: 'Proteção usada! Esta derrota não custou RP.',
+        preseason: (date: string) => `Pré-temporada: a partida fica no Histórico, sem RP. A Temporada 1 começa em ${date}.`,
+      },
+    },
+    menu: { note: 'A partida segue com o menu aberto.', leave: 'Sair da partida', confirm: 'Sair da partida? Um CPU assume o seu lugar.' },
+    /** Arena ranqueada's sign-in gate: the public queue is for accounts. */
+    gate: {
+      title: 'ARENA',
+      pitch: 'Entre para jogar na fila pública.',
+      note: 'Casual e Ranqueada usam sua conta: os outros veem o seu @ e o seu RP fica salvo nela. Entrar também cria a conta.',
+    },
+    /** The Arena's hub (`ui/arenaHub.ts`): profile, season, board, history and rules. */
+    hub: {
+      title: 'Arena ranqueada',
+      tabs: { profile: 'Perfil', season: 'Temporada', ranking: 'Ranking', history: 'Histórico', rules: 'Regras' },
+      loading: 'Carregando…',
+      offline: 'O ranking está fora de alcance agora. Tente de novo em instantes.',
+      rp: (n: number) => `${n} RP`,
+      delta: (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : '±'}${Math.abs(n)} RP`,
+      signIn: {
+        title: 'Entre para jogar ranqueada',
+        text: 'Com uma conta e um @, você entra na fila pública, ganha RP e aparece no ranking da temporada.',
+        button: 'Entrar',
+      },
+      profile: {
+        toNext: (n: number, next: string) => `Faltam ${n} RP para ${next}`,
+        top: 'No topo da escada: cada vitória soma.',
+        place: (n: number) => `#${n} na temporada`,
+        unplaced: 'Sem posição ainda',
+        totals: { matches: 'Partidas', wins: 'Vitórias', losses: 'Derrotas', draws: 'Empates', winRate: '% vitórias', kos: 'KOs', scored: 'Pontos' },
+        favorites: 'Seus Pokémon na temporada',
+        favorite: (matches: number, wins: number) => `${matches} partidas · ${wins} vitórias`,
+        none: 'Nenhuma partida ranqueada nesta temporada ainda. Jogue uma Ranqueada para entrar no ranking!',
+        device: 'Neste aparelho',
+        deviceLine: (matches: number, wins: number) => `${matches} partidas de treino · ${wins} vitórias`,
+        /** Fair Play (`ARENA_RANKED.fairPlay`): the score, what it allows, what moves it and the latest penalties. */
+        fairPlay: {
+          title: 'Fair Play',
+          ok: 'Tudo certo: Casual e Ranqueada liberadas.',
+          noRanked: (min: number, n: number) => `Abaixo de ${min}: sem Ranqueada. Termine ${n} ${n === 1 ? 'partida' : 'partidas'} para voltar.`,
+          held: (s: number) => `A fila espera ${s} s a mais antes de procurar sua partida.`,
+          explain: (r: { left: number; afk: number; afkAfter: number; awayAfter: number; finish: number }) =>
+            `Sair antes do fim: −${r.left}. Ficar ${r.afkAfter} s sem jogar (andar, lançar, travar alvo), ou ${r.awayAfter} s ausente: −${r.afk}. Cada partida até o fim: +${r.finish}. Vale na Casual e na Ranqueada com outro treinador.`,
+          penalties: { left: 'Você saiu de uma partida', afk: 'Você ficou ausente numa partida' } satisfies Record<'left' | 'afk', string>,
+          penalty: (what: string, n: number) => `${what}: −${Math.abs(n)} Fair Play`,
+        },
+        /** The protection meter (`ARENA_RANKED.protection`). */
+        protection: {
+          title: 'Proteção',
+          ready: 'Pronta! Sua próxima derrota na Ranqueada não custa RP.',
+          filling: 'Boas partidas na Ranqueada enchem a barra. Cheia, ela segura uma derrota inteira.',
+        },
+        /** Before season 1 (`seasonAt` null): ranked matches are stored unrated. */
+        preseason: {
+          title: 'Pré-temporada',
+          text: (date: string) => `A Ranqueada já roda, mas o RP só conta a partir de ${date}, quando começa a Temporada 1.`,
+          played: (n: number) => (n === 1 ? 'Sua Ranqueada da pré-temporada está no Histórico, sem RP: nada se perdeu.' : `Suas ${n} Ranqueadas da pré-temporada estão no Histórico, sem RP: nada se perdeu.`),
+        },
+      },
+      season: {
+        title: (n: number) => `Temporada ${n}`,
+        ends: (left: string) => `Termina em ${left}`,
+        starts: (left: string) => `Começa em ${left}`,
+        left: (d: number, h: number, m: number) => (d > 0 ? `${d}d ${h}h` : `${h}h ${m}min`),
+        ladder: 'A escada',
+        range: (from: number, to: number | null) => (to === null ? `${from}+ RP` : `${from}–${to} RP`),
+        reward: (title: string) => `Título da temporada: ${title}`,
+        rewards: { poke: 'Desafiante', great: 'Competidor', ultra: 'Elite da Arena', master: 'Mestre da Arena' } satisfies Record<TierId, string>,
+        you: 'Você',
+        divisions: 'Cada tier tem 3 divisões (III, II e I) de 100 RP. A Master Ball não tem divisões.',
+        reset: (days: number) => `Uma temporada dura ${days} dias. Na virada, seu RP volta ao começo do tier abaixo de onde você terminou e o MMR se aproxima do padrão.`,
+      },
+      ranking: {
+        title: (n: number) => `Ranking da temporada ${n}`,
+        record: (wins: number, matches: number) => `${wins}V · ${matches} partidas`,
+        empty: 'Ninguém no ranking ainda. Seja o primeiro!',
+        you: 'você',
+      },
+      history: {
+        kinds: { ranked: 'Ranqueada', casual: 'Casual', room: 'Amigos', practice: 'Treino' } satisfies Record<MatchKind, string>,
+        outcomes: { win: 'Vitória', loss: 'Derrota', draw: 'Empate' },
+        line: (kos: number, points: number) => `${kos} KOs · ${points} pts`,
+        more: 'Carregar mais',
+        empty: 'Nenhuma partida ainda. Jogue na Arena!',
+        device: 'Partidas deste aparelho. Entre para guardar o histórico na sua conta.',
+        protected: 'Proteção',
+      },
+      rules: {
+        title: 'Como funciona a Ranqueada',
+        items: (r: {
+          win: number
+          loss: number
+          perf: number
+          casual: number
+          ranked: number
+          humans: number
+          days: number
+          /** Fair Play's numbers, as positive points. */
+          fair: { max: number; left: number; afk: number; afkAfter: number; awayAfter: number; finish: number; rankedMin: number; holdBelow: number }
+          /** When season 1 starts, in the player's time. */
+          season1: string
+          /** The clock when a team may vote to surrender (half-time), in the 4v4 and the 3v3. */
+          surrender: { standard: string; quick: string }
+        }) => [
+          'Dois formatos: 4v4 Padrão no Vale ou na Enseada (7 min, Casual e Ranqueada) e 3v3 Rápida na Clareira ou no Recife (3 min, só Casual, sem RP).',
+          `MMR e RP: o MMR é escondido e decide com quem você joga. O RP aparece no ranking: vitória +${r.win}, derrota ${r.loss}, e até +${r.perf} pelo seu desempenho.`,
+          `Se faltar gente, bots completam a partida: depois de ${r.casual} s na Casual e de ${r.ranked} s na Ranqueada.`,
+          `A Ranqueada precisa de pelo menos ${r.humans} treinadores na partida, com gente nos dois times. Senão, ela vale como Casual.`,
+          'Sair no meio da partida conta como derrota (um bot assume o seu lugar) e custa Fair Play.',
+          `As temporadas duram ${r.days} dias e viram à meia-noite de Brasília.`,
+          'Os treinos contra bots ficam no histórico, mas não contam para o ranking. Partidas com amigos também não valem RP.',
+          `Fair Play: todo mundo começa com ${r.fair.max}. Sair antes do fim custa ${r.fair.left}, ficar ${r.fair.afkAfter} s sem jogar (sem andar, lançar golpes nem travar alvo) ou ${r.fair.awayAfter} s ausente custa ${r.fair.afk} e cada partida terminada devolve ${r.fair.finish}. Abaixo de ${r.fair.rankedMin}, sem Ranqueada; abaixo de ${r.fair.holdBelow}, a fila espera mais.`,
+          `Proteção: boas partidas na Ranqueada enchem a barra. Cheia, a próxima derrota não custa RP (o MMR ainda se move) e a barra zera.`,
+          `Pré-temporada: até ${r.season1}, as Ranqueadas ficam no Histórico sem RP. O ranking começa com a Temporada 1.`,
+          `Render-se: da metade da partida em diante (${r.surrender.standard} no relógio no 4v4, ${r.surrender.quick} no 3v3), o time pode votar pela rendição. Passa com 2/3 dos treinadores do time (sozinho com bots, você decide) e conta como derrota normal, não como abandono.`,
+          'Revanche: entre amigos, a sala joga de novo com o mesmo time. Na fila pública, "Revanche com o time" volta à fila em grupo com quem do time também apertar.',
+        ],
+      },
+      /** The Arena's controls, under the rules: `keys` are the bound labels of Move 1, Move 2, the Unite Move and switching targets. */
+      controls: {
+        title: 'Controles da Arena',
+        items: (k: {
+          move1: string
+          move2: string
+          unite: string
+          target: string
+          chat: string
+          ping: string
+          board: string
+          /** The level Move 2 comes at, and each format's evolution levels. */
+          second: number
+          evo: { standard: readonly [number, number]; quick: readonly [number, number] }
+        }) => [
+          'Ataque básico: sai sozinho, no alvo travado ou no rival que a sua prioridade escolhe (Configurações → Controles: mais perto, menos HP % ou menos HP).',
+          `Golpe 1 (${k.move1}) e Golpe 2 (${k.move2}): você lança e mira. Golpe Unite (${k.unite}): o especial do seu tipo, com recarga.`,
+          `Trocar de alvo: clique ou toque num Pokémon, ou use ${k.target}. No controle: R, ZR e ZL lançam; o analógico direito mira e troca de alvo.`,
+          'No celular: toque no botão para lançar com mira assistida, arraste para mirar e volte ao botão para cancelar. Tocar no ataque básico troca de alvo.',
+          'Mira assistida (padrão) acerta o alvo travado ou o melhor rival por perto; a manual vai exatamente para onde o mouse ou o dedo apontar.',
+          `Golpe 1 vem no começo e o Golpe 2 no nível ${k.second}. Na Arena se evolui mais cedo: nos níveis ${k.evo.standard[0]} e ${k.evo.standard[1]} no 4v4, ${k.evo.quick[0]} e ${k.evo.quick[1]} no 3v3. Cada evolução troca um golpe por um da nova forma, no mesmo nível.`,
+          'No mato alto o Golpe 1 e o Golpe 2 param; o Unite funciona, mas te revela.',
+          `Chat rápido (${k.chat}) e marcações (${k.ping}, Alt+clique ou segurar o minimapa) chegam só ao seu time; "Bom jogo!" chega a todos. Segure ${k.board} (ou toque no placar do topo) para ver o placar completo. Dá para silenciar o chat em Configurações.`,
+        ],
+      },
+      hintKeys: '← → abas · ↑ ↓ rolar · ESC voltar',
+      hintTouch: 'Toque numa aba',
+    },
+    room: {
+      mode: 'Modo',
+      format: 'Formato',
+      map: 'Mapa',
+      random: 'Aleatório',
+      modes: { run: 'Horda', versus: 'Arena' },
+      team: 'Sua equipe',
+      fill: 'Vagas livres viram CPU (4 contra 4).',
+      pokemon: 'Pokémon',
+      pick: 'Escolher',
+      steps: ['Mande o código ou o link', 'Cada um escolhe o lado e o Pokémon', 'O anfitrião começa: vagas vazias viram bots'],
+      bot: 'Bot (CPU)',
+      open: 'Vaga livre',
+      switchTo: (team: string) => `Trocar para ${team}`,
+    },
   },
 
   /** Co-op: the connection pip, the overlays and notices in a run, the lobby's entry, the hub (create or join) and the room. */
@@ -495,23 +932,36 @@ export const pt = {
     screenShake: 'Tremor de tela',
     flashes: 'Clarões',
     flashModes: { normal: 'Normais', reduced: 'Reduzidos' },
+    /** The fog weather's veil (`render/weather.ts`): as designed, light or off. */
+    fog: 'Névoa',
+    fogModes: { normal: 'Normal', light: 'Leve', off: 'OFF' },
     runToasts: 'Avisos na partida',
     runToastModes: { all: 'Todos', important: 'Só importantes', none: 'Nenhum' },
     /** The HUD's mini map (`render/minimap.ts`): its shape, or off. */
     minimap: 'Mini mapa',
     minimapModes: { square: 'Quadrado', round: 'Redondo', off: 'OFF' },
+    /** The Arena's quick chat (`ui/versusTalk.ts`): off hides the other players' lines (pings still show). */
+    quickChat: 'Chat rápido da Arena',
+    /** Menus' and HUD's colors (`ui/theme.ts`): light, dark or the system's. */
+    theme: 'Tema',
+    themes: { system: 'Sistema', light: 'Claro', dark: 'Escuro' },
     /** How opaque your moves draw (and, in co-op, your teammates'): `render/attackLayers.ts`. */
     attackOpacity: 'Opacidade dos golpes',
     teamAttackOpacity: 'Opacidade do time',
     uiScale: 'Tamanho da interface',
     uiScaleAuto: 'Auto',
     /** Safe mode (`safeMode.ts`): lean drawing, on by itself after the game closed mid-run. */
+    fullscreen: 'Tela cheia',
     safeMode: 'Modo leve',
     joystick: 'Joystick',
     joystickModes: { floating: 'Segue o dedo', fixed: 'Fixo' },
     /** Touch only: the side of the special, lunge and Mega buttons (the fixed stick takes the other one). */
     buttonSide: 'Lado dos botões',
     buttonSides: { right: 'Direita', left: 'Esquerda' },
+    aimAssist: 'Mira na Arena',
+    aimAssists: { assist: 'Assistida', manual: 'Manual' } satisfies Record<AimAssist, string>,
+    targetPriority: 'Alvo na Arena',
+    priorities: { closest: 'Mais perto', lowestShare: 'Menos HP %', lowest: 'Menos HP' } satisfies Record<Priority, string>,
     /** Fixed stick only: how high it sits and how far from the side edge. */
     stickHeight: 'Altura do joystick',
     stickHeights: { low: 'Baixa', mid: 'Média', high: 'Alta' },
@@ -550,6 +1000,13 @@ export const pt = {
       pause: 'Pausar',
       confirm: 'Confirmar',
       back: 'Voltar',
+      move1: 'Arena: Golpe 1',
+      move2: 'Arena: Golpe 2',
+      unite: 'Arena: Golpe Unite',
+      target: 'Arena: trocar de alvo',
+      chat: 'Arena: chat rápido',
+      ping: 'Arena: marcar no mapa',
+      board: 'Arena: placar',
     } satisfies Record<Action, string>,
     press: (action: string) => `*${action}*: pressione uma tecla ou um botão do controle… (ESC cancela)`,
     reserved: 'As setas e o ESC são fixos. Escolha outra tecla.',
@@ -651,6 +1108,9 @@ export const pt = {
     rejected: 'Esta partida não entrou no ranking.',
     outdated: 'O jogo foi atualizado durante esta partida, então ela não pôde entrar no ranking. A próxima já é na versão nova.',
     unranked: 'Esta partida ficou fora do ranking: começou sem conexão ou com o jogo aberto em outra aba ou aparelho.',
+    /** Play waiting on the loading screen for the run's start token (`startRanked`), and the way out. */
+    connecting: 'Conectando ao ranking…',
+    playUnranked: 'Jogar sem ranking',
     unlisted: 'Esta partida ficou fora do ranking: a conexão caiu enquanto você jogava. Ela conta no seu perfil.',
     guest: 'Entre com uma conta para aparecer no ranking.',
     noHandle: 'Crie seu perfil na tela da conta para aparecer no ranking.',
@@ -874,7 +1334,7 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna' } satisfies Record<FrameId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)' } satisfies Record<FrameId, string>,
       background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas' } satisfies Record<BackgroundId, string>,
       wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada' } satisfies Record<WallpaperId, string>,
     },
@@ -1195,7 +1655,7 @@ export const pt = {
     treat: '*Doce!* A abóbora estava cheia de doces.',
     trick: (name: string) => `*Travessura!* Uma roda de ${name} apareceu!`,
     candies: 'Doces',
-    supporterBadge: (tier: SupporterTier): string => (tier === 'gold' ? 'Apoiador(a) Ouro · Noite das Bruxas 2026' : 'Apoiador(a) · Noite das Bruxas 2026'),
+    supporterBadge: (tier: SupporterTier): string => `${{ supporter: 'Apoiador(a)', gold: 'Apoiador(a) Ouro', diamond: 'Apoiador(a) Diamante' }[tier]} · Noite das Bruxas 2026`,
     perk: 'Abóbora',
     perkTitle: (date: string) => `Apoie até ${date}: seu coração vira esta abóbora para sempre, e o Pumpkaboo passa a te acompanhar`,
     supportYes: 'Obrigado por apoiar! Seu selo virou uma *abóbora* no ranking, no perfil e no Hall da Fama, para sempre. E o *Pumpkaboo*, só de apoiadores, te acompanha soltando brilhos de doce (*shiny* para quem é Ouro).',
@@ -1352,7 +1812,7 @@ export const pt = {
     welcome: (from: string | null) => (from ? `Por entrar com o convite de @${from}` : 'Por entrar com um convite'),
     friends: (n: number) => (n === 1 ? 'Por trazer seu primeiro amigo' : `Por trazer ${n} amigos`),
     shinyPick: 'Um *shiny à sua escolha*! Escolha agora ou depois, no Hall da Fama.',
-    support: (tier: SupporterTier): string => (tier === 'gold' ? 'Por chegar a Apoiador(a) Ouro ♥' : 'Por apoiar o projeto ♥'),
+    support: (tier: SupporterTier): string => ({ supporter: 'Por apoiar o projeto ♥', gold: 'Por chegar a Apoiador(a) Ouro ♥', diamond: 'Por chegar a Apoiador(a) Diamante ♥' })[tier],
     staff: (from: string | null) => (from ? `Um presente de @${from}, que faz o jogo ♥` : 'Um presente de quem faz o jogo ♥'),
     discord: 'Por entrar no nosso Discord ♥',
     halloween: 'Do pote de doces da Noite das Bruxas',
@@ -1363,6 +1823,8 @@ export const pt = {
     bag: (n: number, item: string) => `*${n}× ${item}* foram para a Mochila.`,
     festival: (festival: string, pot: string) => `A praça juntou ${pot} no ${festival}. Obrigado a todos os mecenas!`,
     patron: (festival: string) => `Por ser Mecenas do ${festival} ♥`,
+    og: 'Por apoiar o jogo desde o começo ♥',
+    arenaSeason: (season: number) => `Pelo seu pico na temporada ${season} da Arena`,
   },
 
   /**
@@ -1373,12 +1835,12 @@ export const pt = {
     title: 'HALL DA FAMA',
     lead: 'Quem mantém o jogo vivo. Obrigado! ♥',
     perks: { title: 'Título', frame: 'Moldura', shiny: 'Shiny', companion: 'Companheiro', vote: 'Voto' },
-    gold: '*Ouro* (R$ 50 ou US$ 10 somados): fundo, papel de parede e selo dourados',
+    gold: '*Ouro* e *Diamante*: apoio mensal no Patreon (US$ 10 e US$ 20 por mês)',
     legends: 'LENDAS',
-    goldFrom: 'R$ 50+',
+    goldFrom: 'Ouro e Diamante',
     fans: (n: number) => `APOIADORES · ${n}`,
     firstLegend: 'Seja a primeira Lenda',
-    you: (tier: SupporterTier): string => (tier === 'gold' ? 'Você é Apoiador(a) Ouro' : 'Você é Apoiador(a)'),
+    you: (tier: SupporterTier): string => ({ supporter: 'Você é Apoiador(a)', gold: 'Você é Apoiador(a) Ouro', diamond: 'Você é Apoiador(a) Diamante' })[tier],
     join: 'Entre para o Hall',
     yours: 'Seu apoio',
     cosmetic: 'Todo apoio é cosmético: nada de pay-to-win.',
@@ -1387,7 +1849,7 @@ export const pt = {
     none: 'Doe pela página de apoio com seu @: as recompensas chegam como Presente Misterioso.',
     loading: 'Carregando…',
     offline: 'Sem conexão com o servidor agora.',
-    since: (tier: SupporterTier, date: string) => (tier === 'gold' ? `Você é *Apoiador(a) Ouro* desde ${date}. Muito obrigado! ♥` : `Você é *Apoiador(a)* desde ${date}. Obrigado! ♥`),
+    since: (tier: SupporterTier, date: string): string => `Você é *${{ supporter: 'Apoiador(a)', gold: 'Apoiador(a) Ouro', diamond: 'Apoiador(a) Diamante' }[tier]}* desde ${date}. ${tier === 'supporter' ? 'Obrigado!' : 'Muito obrigado!'} ♥`,
     donate: 'APOIAR',
     signIn: 'Entrar',
     createProfile: 'Criar perfil',
@@ -1396,6 +1858,14 @@ export const pt = {
     vote: 'Votação',
     code: 'Tenho um código',
     codeShort: 'Código',
+    /** The Hall's OG Supporters: who supported before the Patreon tiers, there for good. */
+    og: { badge: 'Apoiador(a) OG', button: (n: number): string => `OG · ${n}`, title: 'APOIADORES OG', intro: 'Quem apoiou o jogo antes do Patreon. No Hall para sempre. Obrigado! ♥' },
+    /** The companion picker's section of captured legends, Diamond only. */
+    companionLegends: 'Lendários (Diamante)',
+    /** Diamond's monthly poll on a new ultra-rare Pokémon (`DIAMOND_POLL`): everyone sees it, only Diamond votes. `link` is the Hall's way there for non-supporters. */
+    diamondPoll: { tile: 'Diamante', title: 'ULTRARRARO DO MÊS', intro: 'Apoiadores Diamante escolhem qual Pokémon ultrarraro entra no jogo. Dá para mudar o voto quando quiser.', voteOnly: 'Só Apoiadores Diamante votam. Todo mundo vê o resultado.', link: 'Votação Diamante' },
+    /** The Hall's Patreon link: a linked Patreon's pledge sets the account's tier. */
+    patreon: { link: 'Vincular Patreon', unlink: '✓ Patreon · desvincular', linked: 'Patreon vinculado! Seu nível segue o seu apoio mensal.', unlinked: 'Patreon desvinculado.', failed: 'Não deu para vincular o Patreon. Tente de novo.' },
     show: (on: boolean): string => (on ? 'Selo e nome: visíveis' : 'Selo e nome: ocultos'),
     shown: (on: boolean): string => (on ? 'Visível' : 'Oculto'),
     back: 'Voltar',
@@ -1443,7 +1913,9 @@ export const pt = {
 
     credits: 'Obrigado aos treinadores que mantêm o jogo no ar',
     banner: 'Seu shiny te espera!',
-    badge: (tier: SupporterTier): string => (tier === 'gold' ? 'Apoiador(a) Ouro' : 'Apoiador(a)'),
+    /** The lobby's Hall card while a supporter hasn't voted in an open poll yet (`pollToVote`). */
+    voteWaiting: 'Votação aberta: dê seu voto!',
+    badge: (tier: SupporterTier): string => ({ supporter: 'Apoiador(a)', gold: 'Apoiador(a) Ouro', diamond: 'Apoiador(a) Diamante' })[tier],
     profileSince: (date: string) => `Apoiador(a) desde ${date}`,
   },
 
@@ -1790,7 +2262,7 @@ export const pt = {
     voltAbsorb: 'Ataques Elétricos te curam em vez de ferir.',
     lightningRod: 'Ataques Elétricos te curam em vez de ferir, e golpes Elétricos +15%.',
     bulletproof: 'Projéteis de chefes e explosões causam 60% menos dano.',
-    levitate: 'Você flutua: lava, armadilhas, água e gelo não te afetam.',
+    levitate: 'Você flutua: lava, armadilhas, poças e chamas no chão, água e gelo não te afetam.',
     magicGuard: 'Só golpes diretos te ferem: nada de lava, armadilhas, explosões, poças no chão, desgaste do clima ou mordidas de itens amaldiçoados.',
     magicBounce: 'A cada 12 s bloqueia um golpe e o devolve em dobro a quem encostou.',
     illusion: 'A cada 10 s bloqueia um golpe por completo.',
@@ -1918,6 +2390,12 @@ export const pt = {
       use: 'Usar',
       already: 'Este ovo já está numa Incubadora Rápida: anda o dobro até chocar.',
       none: (price: string) => `Sem Incubadora Rápida. A loja do Kecleon vende por ${price} (aba *Incubadora*).`,
+    },
+    /** The egg pity (`EGGS.pity` in `game/eggs.ts`): the incubator's line and the hatching scene's note. */
+    pity: {
+      rule: (n: number) => `Garantia: depois de ${n} ovos do mesmo tipo sem Pokémon novo, o próximo traz um.`,
+      count: (egg: string, n: number, max: number) => (n >= max ? `${egg}: *novo garantido!*` : `${egg} ${n}/${max}`),
+      hatched: (n: number) => `Garantia de ovo: depois de ${n} sem novidade, este veio novo!`,
     },
     hatching: 'Hã? O ovo está se mexendo!',
     hatched: (name: string) => `Saiu um *${name}*!`,
@@ -2274,7 +2752,7 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
       firstRun: 'Primeiros passos',
@@ -2364,6 +2842,12 @@ export const pt = {
       vipCustomer: 'Freguês VIP',
       tycoon: 'Magnata',
       patron: 'Mecenas',
+      ogSupporter: 'Apoiador(a) OG',
+      arenaPoke: 'Poké Ball da Arena',
+      arenaGreat: 'Great Ball da Arena',
+      arenaUltra: 'Ultra Ball da Arena',
+      arenaMaster: 'Master Ball da Arena',
+      creator: 'Criador(a) de Conteúdo',
     } satisfies Record<TitleId, string>,
     goals: {
       runs: (n: string) => (n === '1' ? 'Jogue uma partida' : `Jogue ${n} partidas`),
@@ -5167,6 +5651,79 @@ export const pt = {
     lanturn: ['Lan-turn! Cada moeda na fonte acende uma lanterna na praça. Vem ver o pote!'],
   },
 
+  /** The Dojo (`game/training.ts`, `ui/training.ts`): the training run's panel, the builds, and Machoke, its sensei in the lobby. */
+  training: {
+    title: 'Dojo',
+    /** The partner select's button when picking who trains. */
+    pickGo: 'Treinar',
+    tabs: { moves: 'Golpes', items: 'Itens', form: 'Forma', targets: 'Alvos' },
+    dps: 'DPS',
+    dpsHint: (s: number) => `dano por segundo nos últimos ${s} s`,
+    average: 'Média',
+    total: 'Total',
+    noDamage: 'Chegue perto dos alvos: cada golpe que acerta aparece aqui.',
+    ability: 'Habilidade',
+    slots: (n: number, max: number) => `${n}/${max} espaços`,
+    level: (n: number) => `Nv ${n}`,
+    learn: 'Aprender',
+    forget: 'Esquecer',
+    hold: 'Equipar',
+    remove: 'Tirar',
+    /** A fork's row under its move: the level it's at. */
+    forkAt: (n: number) => `Nv ${n}`,
+    evolvedFrom: (base: string, item: string) => `Evolução de ${base}: na partida, ${base} no nível máximo com ${item}.`,
+    movesFull: 'Sem espaço',
+    itemsFull: 'Sem espaço',
+    /** A new move a run wouldn't teach next to the ones carried: a second manual one, a second legendary one. */
+    manualFull: 'Já tem um manual',
+    legendaryFull: 'Já tem um lendário',
+    /** The moves tab's shelves: the family's own moves, every TM and the legendaries' capstones. */
+    shelves: { family: 'Família', tms: 'TMs', legendary: 'Lendários' },
+    /** Under a shelf's chips: where its moves come from in a run. */
+    shelfNote: {
+      tms: 'Nas partidas, as TMs caem dos chefes, vêm dos Tutores de Golpes e da prateleira da loja.',
+      legendary: 'Nas partidas, um lendário vencido deixa o disco dourado do seu golpe: só um por partida.',
+    },
+    form: 'Forma',
+    abilityLater: 'A habilidade chega na primeira evolução.',
+    abilityAwaken: 'A habilidade chega no primeiro despertar.',
+    /** The Lendários tab of the Dojo's partner select. */
+    legendNote: 'Os lendários capturados também treinam aqui, com os *despertares* do Nv 12 e 28 na aba Forma.',
+    noAbility: 'Nenhuma',
+    count: 'Quantos alvos',
+    countOf: (n: number) => `${n}`,
+    target: 'Alvo',
+    boss: 'chefe',
+    reset: 'Zerar',
+    save: 'Salvar build',
+    clear: 'Apagar build',
+    leave: 'Sair',
+    hide: 'Esconder',
+    show: 'Mostrar',
+    saved: (name: string) => `Build de *${name}* salva! Nas partidas, as cartas dela ganham ★ BUILD.`,
+    loaded: (name: string) => `A build salva de *${name}* já está equipada.`,
+    cleared: (name: string) => `Build de *${name}* apagada.`,
+    /** The tag on a level-up card that follows the build (Press Start 2P: keep it short). */
+    buildTag: 'BUILD',
+    buildHint: 'Faz parte da build que você montou no Dojo',
+    /** Machoke, the Dojo's sensei, before the partner select opens: the first visit, then one of these in turn. */
+    first: ['Bem-vindo ao Dojo! Aqui ninguém desmaia: escolha um Pokémon e teste golpes, itens e formas à vontade.', 'Gostou de uma combinação? Salve a build. Nas partidas, as cartas dela vão ter uma ★.'],
+    hello: ['Pronto pra treinar? Os alvos não revidam!', 'Um bom treinador conhece o próprio DPS.', 'O Wobbuffet aguenta tudo. Pode caprichar!', 'Fogo contra Água? Troque o alvo e veja a diferença.'],
+  },
+  /** The Estádio (`render/stadium.ts`), south of home: the Arena's place in the lobby. */
+  stadium: {
+    /** Its boards' names, on the talk bubble while the partner stands by one: Jogar opens the Arena, the rest its hub's tabs. */
+    boards: { play: 'Jogar', ranking: 'Ranking', season: 'Temporada', history: 'Histórico', rules: 'Regras' },
+    /** Ninjask, the Arena's judge, before the Arena opens: the first visit, then one of these in turn. */
+    first: [
+      'Bzzz! Bem-vindo ao Estádio! Eu sou o juiz da Arena: rápido demais para deixar qualquer lance passar.',
+      'Duas equipes se enfrentam: de quatro no Vale ou na Enseada, ou de três na Clareira ou no Recife para uma partida rápida. Derrote Pokémon selvagens, junte Energia e leve-a ao gol rival.',
+      'Partida rápida: contra bots, começa na hora. Casual: contra treinadores, sem pontos. Ranqueada: cada vitória sobe seu tier.',
+      'Cada temporada dura duas semanas. Os quadros do pátio mostram o ranking, a temporada, seu histórico e as regras.',
+    ],
+    hello: ['Bzzz! De volta à Arena? Que vença o melhor time!', 'Energia guardada não marca ponto. Leve-a ao gol!', 'Quatro cabeças pensam melhor que uma. Jogue com sua equipe.', 'O placar da temporada não espera. Vamos?'],
+  },
+
   /** Explainer toast the first time each enemy trait shows up in a run. */
   traits: {
     healer: (name: string) => `*${name}* cura os aliados por perto. Derrube primeiro!`,
@@ -5206,14 +5763,19 @@ export const pt = {
     /* Capturing legends (`game/capture.ts`, `ui/capture.ts`): the toasts as one falls, and the partner select's Lendários tab. */
     escaped: (name: string, wins: number, need: number) => `*${name}* escapou… _${wins}/${need}_`,
     escapedHint: (left: number) => (left === 1 ? 'Falta 1 vitória para a captura.' : `Faltam ${left} vitórias para a captura.`),
-    /** Arceus before it can count: the endless mode, after the other legends (`left` still to capture). */
-    arceusHint: (left: number) => (left > 0 ? `Só se deixa capturar no modo sem fim, depois dos outros lendários (faltam ${left}).` : 'Só se deixa capturar no modo sem fim.'),
+    /** Arceus before it can count: the endless mode, after the other legends (`missing`: the names still to capture). */
+    arceusHint: (missing: readonly string[]) =>
+      missing.length === 0 ? 'Só se deixa capturar no modo sem fim.'
+        : missing.length <= 3 ? `Só se deixa capturar no modo sem fim, depois de todos os outros lendários. Falta capturar: ${missing.join(', ')}.`
+        : `Só se deixa capturar no modo sem fim, depois de todos os outros lendários (faltam ${missing.length}: veja a aba Lendários).`,
     caught: (name: string) => `*${name}* capturado! Jogável no _Modo Lendário_.`,
     caughtShiny: (name: string) => `*${name}* _shiny_ capturado! Jogável no _Modo Lendário_.`,
     shinyUnlocked: (name: string) => `*${name}* _shiny_ liberado no _Modo Lendário_!`,
     caughtHint: 'Escolha-o na aba Lendários da seleção de parceiro.',
     tab: 'LENDÁRIOS',
     wins: (n: string) => `Vitórias: ${n}`,
+    /** Arceus' locked card: the regular legends still to capture before it counts. */
+    stillMissing: (missing: readonly string[]) => `Falta capturar (${missing.length}): ${missing.join(', ')}.`,
     lockedButton: 'Não capturado',
     /** Where each legend is beaten (`LegendSource`). */
     where: {
@@ -5225,7 +5787,7 @@ export const pt = {
       event: 'Só na _Noite das Bruxas_: vença-o na _fenda do Pesadelo_.',
       festival: 'Prêmio do _Festival da Praça_: chega como Presente Misterioso, nunca é enfrentada.',
     },
-    rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, em qualquer modo.' : `Para capturar, vença este lendário ${need} vezes como chefe, em qualquer modo.`),
+    rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.' : `Para capturar, vença este lendário ${need} vezes como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.`),
     shinyRule: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
     selectNote: 'Lendários jogam o *Modo Lendário*: ranking próprio, horda mais forte, despertares no Nv 12 e 28.',
     /** An event legend (`LegendUnlock.event`): its badge on the partner select, and its card before, during and after the event (dates as `formatDay`). */

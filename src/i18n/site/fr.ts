@@ -23,6 +23,9 @@ export const siteFr: SiteMessages = {
     tierList: 'Tier list',
     legal: 'Mentions légales',
     support: 'Soutenir',
+    creators: 'Créateurs',
+    compare: 'Pokémon Survivors vs PokéSurvivor',
+    alternatives: 'Jeux façon Vampire Survivors',
     language: 'Langue',
   },
   footer: {
@@ -32,6 +35,9 @@ export const siteFr: SiteMessages = {
     credits: 'Crédits',
     source: 'Code source sur GitHub',
     support: 'Soutenir le projet',
+    notThem: 'Pokémon Survivors (pokemonsurvivors.com) n’est pas PokéSurvivor (pokesurvivor.com), un autre fan game au nom proche.',
+    compare: 'Voir les différences',
+    alternatives: 'D’autres jeux Pokémon façon Vampire Survivors',
   },
   home: 'Accueil',
   playCta: 'Jouer gratuitement',
@@ -632,10 +638,10 @@ export const siteFr: SiteMessages = {
     eggs: {
       incubator: (m) =>
         `L’onglet Incubateur de la boutique de Kecleon vend des emplacements en plus, à toi pour de bon : ${m.slots.map((s) => `l’emplacement ${s.n} pour ${s.price} (avec la boutique au niveau ${s.level})`).join(' et ')}, jusqu’à ${m.max} emplacements. Il vend aussi l’Incubateur rapide (${m.quick}) : dans l’incubateur, touche un œuf pour l’utiliser, et cet œuf marche ${m.speed}x plus vite jusqu’à son éclosion.`,
-      paragraphs: (starters, families, slots, perRun, stepPx, shiny, weight) => [
+      paragraphs: (starters, families, slots, perRun, stepPx, shiny, weight, pity) => [
         `En plus des ${starters} starters, ${families} familles de Pokémon jouables éclosent des œufs, de tous les types et de toutes les générations : ${starters + families} Pokémon à jouer en tout. Chacun a sa capacité de départ, son attaque spéciale, son évolution en cours de partie et ses stats.`,
         `Les boss, les coffres verrouillés et les failles laissent parfois un œuf, au plus ${perRun} par partie. Il va dans l’incubateur, qui a ${slots} emplacements. Chaque tranche de ${stepPx} px parcourue en partie compte comme un pas, et chaque œuf de l’incubateur avance avec toi. Un œuf trouvé en cours de partie compte déjà les pas faits après sa découverte.`,
-        `Quand un œuf est prêt, il éclot à la fin de la partie ou dans l’incubateur (dans le menu principal et dans l’onglet Œufs du choix du Pokémon). Les familles que tu n’as pas encore sortent ${weight}x plus souvent. Le Pokémon éclos a 1 chance sur ${shiny} d’être chromatique, et il le reste alors dans toutes les parties.`,
+        `Quand un œuf est prêt, il éclot à la fin de la partie ou dans l’incubateur (dans le menu principal et dans l’onglet Œufs du choix du Pokémon). Les familles que tu n’as pas encore sortent ${weight}x plus souvent. Le Pokémon éclos a 1 chance sur ${shiny} d’être chromatique, et il le reste alors dans toutes les parties. Garantie : après ${pity} œufs du même type sans nouveau Pokémon, le suivant en apporte un à coup sûr (l’incubateur affiche le compte).`,
         'Un doublon, ou un œuf trouvé avec l’incubateur plein, se transforme en Pokédollars. Un joueur qui n’a jamais eu d’œuf est sûr d’obtenir le premier.',
         'L’Œuf de l’Amitié ne tombe jamais en partie : il arrive en Cadeau Mystère quand tu t’inscris via l’invitation de quelqu’un, et quand un ami que tu as invité termine 3 parties. Seul Munchlax en éclot. À 3 amis, tu obtiens le titre Ambassadeur et un cadre exclusif, à 5 un Œuf ultra rare, et à 10 un Dratini chromatique. Ton lien et la progression de chaque ami sont sur la carte Inviter des amis, sur l’écran d’accueil.',
         'L’Œuf Hanté ne tombe jamais en partie non plus : seul le stand de Duskull le vend, sur la place, pendant la Nuit des Sorcières (du 24 octobre au 2 novembre), un par jour. Seuls Litwick, Phantump, Drifloon et Sandygast en sortent, 25% chacun, déjà obtenus ou non. Après l’événement, il revient l’année suivante.',
@@ -817,9 +823,20 @@ export const siteFr: SiteMessages = {
         'Un compagnon qui les suit pendant les parties.',
         'Leur nom sur le mur ci-dessous et dans les remerciements de la victoire.',
         'Un vote pour le prochain Pokémon des œufs.',
-        'Or, avec R$ 50 ou US$ 10 au total : un fond de carte doré, un fond d’écran pour la Boîte PC et un badge.',
+        'Or et Diamant sont désormais mensuels, sur Patreon (voir plus bas) : les dons ponctuels ne s’additionnent plus pour l’Or.',
       ],
       note: 'Tout est cosmétique : rien ne change une partie ni le classement. Les récompenses demandent un compte dans le jeu (la connexion avec Google est gratuite).',
+    },
+    monthly: {
+      title: 'Soutien mensuel sur Patreon',
+      lead: 'Envie de soutenir chaque mois ? Sur Patreon, ton niveau suit le montant que tu gardes actif. Ensuite, lie Patreon à ton compte depuis le Panthéon du jeu.',
+      tiers: [
+        '<b>Soutien, 5 US$/mois :</b> tout ce que reçoivent les donateurs, le rôle Supporter et le salon exclusif sur Discord, et le Panthéon tant que ton soutien dure.',
+        '<b>Or, 10 US$/mois :</b> tout ce que reçoit un Soutien, le badge et le rôle Or, le fond de carte et le fond d’écran dorés, et le Panthéon pour toujours.',
+        '<b>Diamant, 20 US$/mois :</b> tout ce que reçoit l’Or, le badge et le rôle Diamant, un légendaire capturé comme compagnon (shiny s’il a été capturé shiny), un vote mensuel pour un nouveau Pokémon ultra-rare et une décoration diamant au Panthéon.',
+      ],
+      cta: 'Soutenir sur Patreon',
+      note: 'Celles et ceux qui ont donné avant Patreon sont des Soutiens OG : ils gardent tout ce qu’ils ont, pour toujours, avec leur propre section au Panthéon.',
     },
     wall: { title: 'Mur des soutiens', empty: 'Personne pour l’instant. Ton nom pourrait être le premier !' },
     pick: 'Choisis comment payer',
@@ -905,8 +922,7 @@ export const siteFr: SiteMessages = {
     privacyAfter: [
       'Pour supprimer ces données, efface les données du site dans les réglages de ton navigateur.',
       'Les sprites, sons et polices sont servis par ce site, sans appel à des services tiers. Le site est hébergé chez Vercel qui, comme tout serveur web, peut enregistrer des données techniques d’accès (comme les adresses IP) pour faire fonctionner et protéger le service.',
-      'Pour savoir combien de personnes le visitent, le site utilise Vercel Web Analytics. Il compte les visites de façon anonyme et agrégée (page, pays, navigateur, appareil et site d’origine), sans cookies et sans t’identifier ni te suivre d’un site à l’autre.',
-      'Dans le jeu, nous utilisons aussi PostHog (posthog.com, avec des données stockées aux États-Unis) pour comprendre comment on y joue et corriger les bugs. Il reçoit un résumé de chaque partie (Pokémon, difficulté, capacités, objets, minute et niveau atteints et la façon dont elle s’est terminée), les écrans de menu que tu ouvres et, quand le jeu rencontre une erreur, le message d’erreur et le replay de la partie en cours (sa graine et tes commandes, rien de personnel). Tout cela est lié à l’identifiant aléatoire de ph_ps et, si tu es connecté, à l’identifiant et au pseudo de ton compte, jamais à ton e-mail ou à ton nom. PostHog n’utilise pas de cookies ici et ne te suit pas d’un site à l’autre.',
+      'Dans le jeu, nous utilisons PostHog (posthog.com, avec des données stockées aux États-Unis) pour comprendre comment on y joue et corriger les bugs. Il reçoit un résumé de chaque partie (Pokémon, difficulté, capacités, objets, minute et niveau atteints et la façon dont elle s’est terminée), les écrans de menu que tu ouvres et, quand le jeu rencontre une erreur, le message d’erreur et le replay de la partie en cours (sa graine et tes commandes, rien de personnel). Tout cela est lié à l’identifiant aléatoire de ph_ps et, si tu es connecté, à l’identifiant et au pseudo de ton compte, jamais à ton e-mail ou à ton nom. PostHog n’utilise pas de cookies ici et ne te suit pas d’un site à l’autre.',
       'Les dons sont payés sur les pages d’AbacatePay (abacatepay.com : Pix et cartes brésiliennes) ou de Stripe (stripe.com : cartes d’autres pays, Apple Pay et Google Pay). Tes données de paiement vont directement chez eux, et le jeu ne voit jamais ta carte. Ils nous indiquent le montant et, comme ils le feraient pour quiconque reçoit un paiement, des informations sur la personne qui a payé (comme le nom et l’e-mail), que nous n’utilisons que pour enregistrer le don. Si tu indiques un @ (ou utilises le code du don), il est lié à ce compte de jeu pour que les récompenses y arrivent ; le montant n’est jamais affiché publiquement, seulement le badge de soutien, que tu peux masquer.',
     ],
     contact: [
@@ -915,6 +931,190 @@ export const siteFr: SiteMessages = {
     ],
     issues: 'Ouvrir une issue sur GitHub',
     source: 'Voir le code source',
+  },
+  creators: {
+    title: 'Créateurs : vidéos et lives de Pokémon Survivors',
+    description:
+      'Des vidéos et des lives de Pokémon Survivors faits par des joueurs, sur YouTube et TikTok. Faites la vôtre, partagez-la sur Discord et recevez dans le jeu le titre Créateur de contenu et le cadre de créateur.',
+    h1: 'Créateurs',
+    lead: 'Les vidéos et les lives de ceux qui jouent à Pokémon Survivors. Regardez-les ici et suivez ceux qui les font.',
+    videos: 'Vidéos',
+    people: 'Qui les fait',
+    play: (title: string) => `Regarder : ${title}`,
+    watchOn: (platform: string) => `Voir sur ${platform}`,
+    videoAbout: (name: string) => `Une vidéo de Pokémon Survivors par ${name}.`,
+    langs: { pt: 'En portugais', en: 'En anglais', es: 'En espagnol', fr: 'En français', zh: 'En chinois' },
+    join: {
+      title: 'Vous faites des vidéos du jeu ?',
+      lead: 'Gameplay, live, guide, Short ou TikTok, dans n’importe quelle langue : chaque vidéo du jeu peut figurer ici.',
+      steps: [
+        'Publiez votre vidéo sur YouTube, TikTok ou ailleurs.',
+        'Partagez le lien dans le salon #screenshots-and-clips de notre Discord.',
+        'Donnez-nous votre @ dans le jeu : vous recevez le titre Créateur de contenu et le cadre de créateur.',
+      ],
+      cta: 'Partager ma vidéo sur Discord',
+    },
+  },
+  compare: {
+    title: 'Pokémon Survivors vs PokéSurvivor : est-ce le même jeu ? Les différences',
+    description:
+      'Pokémon Survivors (pokemonsurvivors.com) et PokéSurvivor (pokesurvivor.com) sont deux fan games Pokémon gratuits façon Vampire Survivors, faits par des personnes différentes. Côte à côte : Pokémon, coop, langues, classement et code.',
+    h1: 'Pokémon Survivors et PokéSurvivor, est-ce le même jeu ?',
+    lead: [
+      "Non. Ce sont deux fan games Pokémon gratuits façon Vampire Survivors, aux noms presque identiques, faits par des personnes différentes. Pokémon Survivors (pokemonsurvivors.com, ce site) est fait par Pedro Barretto, au Brésil. PokéSurvivor (pokesurvivor.com) est fait par JPTER78.",
+      'Les deux sont sortis en octobre 2026, tournent dans le navigateur et sont gratuits, alors les moteurs de recherche et les IA les confondent parfois. Voici ce qui les distingue.',
+    ],
+    table: { title: 'Côte à côte', feature: 'Critère' },
+    rows: (f) => [
+      ['Fait par', 'Pedro Barretto (Brésil)', 'JPTER78'],
+      ['Site', 'pokemonsurvivors.com', 'pokesurvivor.com'],
+      ['Où jouer', 'Navigateur sur PC et mobile, en portrait ou en paysage. S’installe comme une app.', 'Navigateur sur PC et mobile, en paysage. S’installe comme une app.'],
+      ['Compte', 'Facultatif : le solo ne demande aucune inscription. Un compte ajoute la sauvegarde en ligne, le classement et la coop.', 'Facultatif : invité ou compte (nom et mot de passe, ou Google). Un compte ajoute la sauvegarde en ligne, le classement et la coop.'],
+      ['Comment on attaque', `Toutes les capacités attaquent seules, jusqu’à ${f.moves} à la fois.`, 'Vous choisissez la capacité active (touches 1 à 4). Chaque légendaire vaincu permet de fusionner des capacités dans un seul emplacement.'],
+      ['Pokémon jouables', `${f.starters} starters avec leur lignée d’évolution complète, plus ${f.eggs} familles qui éclosent d’œufs et ${f.legends} légendaires en mode Légende.`, '966 Pokémon des 9 générations.'],
+      ['Comment on les débloque', 'Des œufs qui éclosent avec les pas faits en partie. Les légendaires se capturent en les battant comme boss.', 'Un gacha par région, avec des tickets gagnés en jouant.'],
+      ['Une partie', `${f.minutes} minutes jusqu’à Mewtwo, avec des boss légendaires et des failles épiques en route. Ensuite, un mode sans fin jusqu’à Arceus.`, 'Des hordes chronométrées, avec des failles qui mènent à une arène contre un légendaire.'],
+      ['Coop', `En ligne, jusqu’à ${f.players} joueurs. Salon par lien, code ou liste d’amis.`, 'En ligne, jusqu’à 4 joueurs. Salon sur invitation d’amis.'],
+      ['Langues', `${f.languages} : portugais, anglais, espagnol, français et chinois traditionnel.`, '7 : espagnol, anglais, français, italien, portugais, et chinois simplifié et traditionnel.'],
+      ['Classement', 'Au temps survécu. Les parties qui apparaissent au classement sont vérifiées : le serveur rejoue chacune à partir de son replay.', 'Au temps survécu, en solo ou en groupe.'],
+      ['Code source', 'Ouvert, licence MIT.', 'Public, licence PolyForm Noncommercial (MIT jusqu’au 14/10/2026).'],
+      ['Pubs et achats', 'Aucun. Dons facultatifs.', 'Aucun. Dons facultatifs.'],
+    ],
+    names: {
+      title: 'Des noms qui se ressemblent',
+      items: [
+        { name: 'Pokémon Survivors', text: 'Ce jeu, sur pokemonsurvivors.com. « Survivors », au pluriel.' },
+        { name: 'PokéSurvivor (ou Poke Survivor)', text: 'Le jeu de JPTER78, sur pokesurvivor.com.' },
+        { name: 'Poke Survivors (Android)', text: 'Un portage Android non officiel de PokéSurvivor, fait avec Godot. Ce n’est pas ce jeu.' },
+        { name: 'pokesurvivor.games et pokesurvival.com', text: 'Des sites de fans avec des guides qui renvoient vers PokéSurvivor.' },
+        { name: 'Pokémon Survivor Burst', text: 'Un autre fan game, à télécharger sur PC, fait par ClessioTV avec Pokémon Essentials.' },
+      ],
+    },
+    pickOurs: {
+      title: 'Jouez à Pokémon Survivors si vous…',
+      items: (f) => [
+        `voulez une partie avec un début, un milieu et une fin : ${f.minutes} minutes jusqu’à Mewtwo, puis le mode sans fin contre Arceus ;`,
+        'aimez construire un build : des capacités qui bifurquent en deux voies au Nv 4 et au Nv 7, des talents, des objets, des capacités duo et la Méga-Évolution ;',
+        `voulez jouer les légendaires : capturez les ${f.legends} en les battant comme boss et jouez-les en mode Légende ;`,
+        'voulez jouer sur mobile tenu en portrait, d’une seule main ;',
+        'voulez un classement où le serveur vérifie les meilleures parties ;',
+        'voulez du code ouvert sous licence MIT, à étudier et à réutiliser.',
+      ],
+    },
+    pickTheirs: {
+      title: 'Jouez à PokéSurvivor si vous…',
+      items: [
+        'voulez collectionner : 966 Pokémon et un gacha par région ;',
+        'préférez choisir vous-même la capacité qui attaque ;',
+        'jouez en italien ou en chinois simplifié ;',
+        'voulez la plus grande communauté et plus de vidéos sur YouTube.',
+      ],
+    },
+    faq: {
+      title: 'Questions fréquentes',
+      items: (f) => [
+        {
+          q: 'Pokémon Survivors et PokéSurvivor, est-ce le même jeu ?',
+          a: 'Non. Ce sont deux fan games gratuits différents, faits par des personnes différentes, sortis le même mois avec des noms presque identiques. Pokémon Survivors est sur pokemonsurvivors.com et fait par Pedro Barretto. PokéSurvivor est sur pokesurvivor.com et fait par JPTER78.',
+        },
+        {
+          q: 'J’ai cherché « Pokémon Survivors » et je suis tombé sur PokéSurvivor. Je me suis trompé de nom ?',
+          a: 'Non. Pokémon Survivors, avec « Survivors » au pluriel, c’est ce jeu, sur pokemonsurvivors.com. Les moteurs de recherche et les IA confondent parfois les deux.',
+        },
+        {
+          q: 'Lequel est le meilleur ?',
+          a: `Ça dépend de ce que vous cherchez. PokéSurvivor a plus de Pokémon (966) et un gacha pour les collectionner. Pokémon Survivors a des parties de ${f.minutes} minutes avec des boss légendaires, des légendaires jouables, la Méga-Évolution, des capacités qui bifurquent et un classement vérifié par le serveur. Les deux sont gratuits : vous pouvez jouer aux deux.`,
+        },
+        {
+          q: 'Les deux sont-ils gratuits et officiels ?',
+          a: 'Les deux sont gratuits, sans pubs ni achats, et tournent dans le navigateur. Aucun n’est officiel : ce sont des fan games sans lien avec Nintendo, The Pokémon Company, GAME FREAK ou Creatures.',
+        },
+        {
+          q: 'Peut-on jouer à Pokémon Survivors entre amis ?',
+          a: `Oui. La coop en ligne réunit jusqu’à ${f.players} joueurs dans la même partie, chacun avec son Pokémon. Créez un salon et invitez vos amis par lien, code ou liste d’amis. Il faut un compte.`,
+        },
+      ],
+    },
+    checked: (date) => `Les informations sur PokéSurvivor ont été vérifiées le ${date} sur son site et dans son code, et ont pu changer depuis.`,
+    report: 'Une erreur ? Signalez-la sur GitHub',
+    alternatives: 'D’autres jeux Pokémon façon Vampire Survivors',
+    cta: 'Jouer gratuitement à Pokémon Survivors',
+  },
+  alternatives: {
+    title: 'Jeux Pokémon façon Vampire Survivors : les fan games gratuits (2026)',
+    description:
+      'Les fan games Pokémon gratuits façon Vampire Survivors : Pokémon Survivors, PokéSurvivor et Pokémon Survivor Burst, plus le roguelite PokeRogue. Où ils tournent, coop, combien de Pokémon et pour qui est chacun.',
+    h1: 'Jeux Pokémon façon Vampire Survivors',
+    lead: 'Il n’existe pas de Pokémon Vampire Survivors officiel, mais des fans en ont fait quelques-uns. Voici les fan games Pokémon gratuits de type survivors-like (ou bullet heaven), où vous vous déplacez seulement et votre Pokémon attaque les hordes tout seul, plus un roguelite Pokémon au tour par tour si vous voulez un autre rythme.',
+    disclosure: (date) =>
+      `Écrit par l’auteur de Pokémon Survivors, premier de la liste : gardez-le en tête. Les informations sur les autres jeux ont été vérifiées le ${date} sur leurs sites et ont pu changer.`,
+    glance: { title: 'En bref', game: 'Jeu', plays: 'Où jouer', style: 'Genre', coop: 'Coop', roster: 'Pokémon' },
+    madeBy: 'Fait par',
+    bestFor: 'Idéal pour',
+    visit: (name) => `Ouvrir ${name}`,
+    games: {
+      ours: {
+        plays: 'Navigateur, PC et mobile',
+        style: 'Survivors-like',
+        coop: 'Jusqu’à 4 en ligne',
+        roster: (f) => `${f.starters} starters, ${f.eggs} familles d’œufs, ${f.legends} légendaires`,
+        about: (f) => [
+          `Choisissez l’un des ${f.starters} starters, de Kanto à Paldea, et survivez ${f.minutes} minutes de hordes : toutes vos capacités attaquent seules, vous choisissez capacités et objets à chaque niveau et évoluez en pleine partie, jusqu’à affronter Mewtwo. Boss légendaires, failles épiques vers le domaine de chaque légendaire, Méga-Évolution et un mode sans fin contre Arceus.`,
+          `Les œufs font éclore ${f.eggs} familles de plus, les légendaires battus deviennent jouables en mode Légende, et la coop en ligne réunit jusqu’à ${f.players} joueurs. En ${f.languages} langues, en code ouvert (MIT).`,
+        ],
+        bestFor: 'des parties courtes avec des boss, des builds variés et des légendaires jouables, sur PC ou sur mobile en portrait.',
+      },
+      pokesurvivor: {
+        plays: 'Navigateur, PC et mobile (paysage)',
+        style: 'Survivors-like',
+        coop: 'Jusqu’à 4 en ligne',
+        roster: '966 Pokémon',
+        about: [
+          'Le plus grand casting du genre : 966 Pokémon des 9 générations, débloqués via un gacha par région avec des tickets gagnés en jouant. Vous choisissez la capacité qui attaque, et des failles mènent à une arène contre un légendaire. Il a des missions, des succès, un classement et une coop jusqu’à 4 joueurs, en 7 langues.',
+          'Il existe aussi un portage Android non officiel, appelé Poke Survivors, fait avec Godot.',
+        ],
+        bestFor: 'collectionner le plus de Pokémon possible.',
+      },
+      burst: {
+        plays: 'Téléchargement, Windows et Mac',
+        style: 'Survivors-like',
+        coop: 'Non',
+        roster: 'S’agrandit à chaque version',
+        about: [
+          'Fait avec Pokémon Essentials (RPG Maker XP), il se télécharge et se joue sur ordinateur. Il propose les modes Classique, Rush et Tour, des boss et un classement en ligne, en plusieurs langues. Son auteur précise que la version mobile n’est pas testée.',
+        ],
+        bestFor: 'un jeu téléchargé qui a l’allure d’un Pokémon classique.',
+      },
+      pokerogue: {
+        plays: 'Navigateur, PC et mobile',
+        style: 'Roguelite au tour par tour',
+        coop: 'Non',
+        roster: 'Toutes les générations',
+        about: [
+          'Ce n’est pas un survivors-like : les combats se font au tour par tour, comme dans la série principale, vague après vague, en capturant des Pokémon pour former son équipe. C’est le roguelite Pokémon le plus connu, gratuit et en code ouvert.',
+        ],
+        bestFor: 'un roguelite Pokémon avec des combats au tour par tour plutôt que des hordes.',
+      },
+    },
+    faq: {
+      title: 'Questions fréquentes',
+      items: (f) => [
+        {
+          q: 'Existe-t-il un Pokémon Vampire Survivors officiel ?',
+          a: 'Non. Pokémon n’a jamais sorti de jeu de ce genre. Ceux qui existent sont des fan games gratuits et non officiels, comme Pokémon Survivors, PokéSurvivor et Pokémon Survivor Burst.',
+        },
+        {
+          q: 'Quel jeu Pokémon façon Vampire Survivors a une coop ?',
+          a: `Pokémon Survivors et PokéSurvivor, tous deux avec une coop en ligne jusqu’à ${f.players} joueurs, dans le navigateur.`,
+        },
+        {
+          q: 'Lequel peut-on jouer sur mobile sans rien télécharger ?',
+          a: 'Pokémon Survivors, PokéSurvivor et PokeRogue tournent dans le navigateur du téléphone. Pokémon Survivors se joue aussi téléphone en portrait. Pokémon Survivor Burst se télécharge sur ordinateur.',
+        },
+      ],
+    },
+    compareLink: 'Pokémon Survivors et PokéSurvivor côte à côte',
+    cta: 'Jouer gratuitement à Pokémon Survivors',
   },
   notFound: {
     title: 'Page introuvable · Pokémon Survivors',

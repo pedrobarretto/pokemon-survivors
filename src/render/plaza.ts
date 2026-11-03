@@ -1,5 +1,5 @@
 import { clamp, dir8, type Dir8, type Vec } from '../engine/math'
-import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, drawable, ellipse, glow, lazy, onCanvasReset } from '../engine/pixelart'
+import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, drawable, ellipse, glow, lazy, onCanvasReset, readPixels } from '../engine/pixelart'
 import { EMOTES, type Emote } from './art'
 import { drawSparkles, shadow } from './draw'
 import { LANTERN_ART, lanternString, stringLanterns, type LanternKind, type LanternString } from './lanterns'
@@ -146,7 +146,8 @@ const measure = (img: HTMLImageElement): Art => {
   const canvas = createCanvas(img.width, img.height)
   const ctx = context2d(canvas)
   ctx.drawImage(img, 0, 0)
-  const data = ctx.getImageData(0, 0, img.width, img.height).data
+  // Unreadable (`readPixels`): the whole picture counts.
+  const data = readPixels(ctx, 0, 0, img.width, img.height)?.data ?? new Uint8ClampedArray(img.width * img.height * 4).fill(255)
   let minX = img.width
   let maxX = -1
   let minY = img.height
@@ -211,12 +212,13 @@ const put = (ctx: CanvasRenderingContext2D, art: Art, x: number, y: number, from
 
 /* ---------------- The purple brother ---------------- */
 
-/** PMD's purple Kecleon: green-dominant pixels move to a purple ramp; the red stripe and the dark outline stay. */
+/** PMD's purple Kecleon: green-dominant pixels move to a purple ramp; the red stripe and the dark outline stay. Null when the browser won't read the pixels back (`readPixels`). */
 export const purpleize = (src: CanvasImageSource & { width: number; height: number }) => {
   const canvas = createCanvas(src.width, src.height)
   const ctx = context2d(canvas)
   ctx.drawImage(src, 0, 0)
-  const image = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const image = readPixels(ctx, 0, 0, canvas.width, canvas.height)
+  if (!image) return null
   const a = image.data
   for (let i = 0; i < a.length; i += 4) {
     const r = a[i]!
@@ -232,12 +234,13 @@ export const purpleize = (src: CanvasImageSource & { width: number; height: numb
 }
 
 type Sheet = SpeciesSprites['anims']['Idle']
-const purpleSheet = (sheet: Sheet): Sheet => ({ ...sheet, img: purpleize(sheet.img), overlays: null })
+const purpleSheet = (sheet: Sheet): Sheet => ({ ...sheet, img: purpleize(sheet.img) ?? sheet.img, overlays: null })
 
 let brother: { from: SpeciesSprites; to: SpeciesSprites } | null = null
 onCanvasReset(
   () => (brother = null),
   () => brother?.to,
+  'lobby',
 )
 
 /** The purple brother's sprites, recolored once from the green Kecleon's. */
@@ -979,6 +982,7 @@ const cobbles = (() => {
   onCanvasReset(
     () => cache.clear(),
     () => cache,
+    'lobby',
   )
   return (rx: number, ry: number) => {
     const key = `${rx}x${ry}`
@@ -1113,7 +1117,7 @@ const ringFloor = lazy(() => {
   tufts(0, 0, w, h, inner, (x, y, c) => set(x, y, c))
   ctx.putImageData(image, 0, 0)
   return { canvas, x: x0, y: y0 }
-})
+}, 'lobby')
 
 /** The shadows' tint: a dark green that reads on the cobblestones and on the grass. */
 const SHADOW = 'rgba(30,40,30,0.3)'
@@ -1126,6 +1130,7 @@ const silhouette = (() => {
   onCanvasReset(
     () => cache.clear(),
     () => cache,
+    'lobby',
   )
   return (art: Art) => {
     const hit = cache.get(art)
@@ -1193,12 +1198,13 @@ const pieceCache = new WeakMap<Plaza, { layout: Layout; pieces: Piece[] }>()
 /** A gold leaf ramp, darkest first: each opaque pixel of Kecleon's sheet takes the step of its brightness. */
 const GOLD = ['#3a2408', '#6e4a10', '#a87418', '#d8a428', '#f4d050', '#fff2a8'].map(rgb)
 
-/** Kecleon's sheet cast in gold: the outline stays dark, the rest follows its brightness up the ramp. */
+/** Kecleon's sheet cast in gold: the outline stays dark, the rest follows its brightness up the ramp. Null when unreadable, like `purpleize`. */
 const goldize = (src: CanvasImageSource & { width: number; height: number }) => {
   const canvas = createCanvas(src.width, src.height)
   const ctx = context2d(canvas)
   ctx.drawImage(src, 0, 0)
-  const image = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const image = readPixels(ctx, 0, 0, canvas.width, canvas.height)
+  if (!image) return null
   const a = image.data
   for (let i = 0; i < a.length; i += 4) {
     if (a[i + 3] === 0) continue
@@ -1216,12 +1222,13 @@ let golden: { from: SpeciesSprites; to: SpeciesSprites } | null = null
 onCanvasReset(
   () => (golden = null),
   () => golden?.to,
+  'lobby',
 )
 
 /** The golden Kecleon's sprites, cast once from the green one's. */
 const goldenSprites = (green: SpeciesSprites) => {
   if (golden?.from !== green) {
-    const gild = (sheet: Sheet): Sheet => ({ ...sheet, img: goldize(sheet.img), overlays: null })
+    const gild = (sheet: Sheet): Sheet => ({ ...sheet, img: goldize(sheet.img) ?? sheet.img, overlays: null })
     golden = { from: green, to: { ...green, anims: { Walk: green.anims.Walk, Idle: gild(green.anims.Idle), Hurt: green.anims.Hurt } } }
   }
   return golden.to
@@ -1381,7 +1388,7 @@ const LIGHT = '#ffd678'
 
 /** A light's hard rings (`glow`), built once per size and strength. */
 const lightSprite = (() => {
-  const cache = canvasCache<string, HTMLCanvasElement>()
+  const cache = canvasCache<string, HTMLCanvasElement>('lobby')
   return (r: number, alpha: number) => {
     const key = `${r}:${alpha}`
     const hit = cache.get(key)
@@ -1508,7 +1515,7 @@ export const drawPlazaParty = (ctx: CanvasRenderingContext2D, plaza: Plaza, camX
 export type MarkerWho = 'keeper' | 'stall'
 
 /** A card's inner colour, its arrow's and how far (px) below the sprite's top its head shows, for the shop and each seasonal stall. */
-type MarkerLook = { card: string; arrow: string; headDy: number }
+export type MarkerLook = { card: string; arrow: string; headDy: number }
 const SHOP_MARKER: MarkerLook = { card: '#e0f0d0', arrow: '#5cb048', headDy: 0 }
 const STALL_MARKERS = {
   // Duskull's top is its hood: the card shows the skull under it.
@@ -1516,12 +1523,12 @@ const STALL_MARKERS = {
   christmas: { card: '#f8e0e0', arrow: '#d84838', headDy: 0 },
 } as const satisfies Record<StallId, MarkerLook>
 
-const markerCards = canvasCache<string, HTMLCanvasElement>()
+const markerCards = canvasCache<string, HTMLCanvasElement>('lobby')
 /** Stall keepers whose sheets were asked for, so the marker asks once. */
 const markerAsked = new Set<number>()
 
 /** An edge marker's box: a Pokémon's head (`dex`) on a white card. Null until its sheets are in. */
-const markerCard = (dex: number, look: MarkerLook) => {
+export const markerCard = (dex: number, look: MarkerLook) => {
   const key = `${dex}:${look.card}`
   const cached = markerCards.get(key)
   if (cached) return cached
@@ -1570,7 +1577,7 @@ export type ViewBox = { left: number; top: number; right: number; bottom: number
  * there, so the marker sits at that box's lower corner on the target's side,
  * where it shows whole and takes taps.
  */
-const edgeSpot = (target: Vec, w: number, h: number, bob: number, inside: ViewBox | null) => {
+export const edgeSpot = (target: Vec, w: number, h: number, bob: number, inside: ViewBox | null) => {
   const cx = w / 2
   const cy = h / 2
   const dx = target.x - cx
@@ -1593,7 +1600,7 @@ const edgeSpot = (target: Vec, w: number, h: number, bob: number, inside: ViewBo
 type EdgeSpot = ReturnType<typeof edgeSpot>
 
 /** Draws a marker's card at `at` and its arrow on the side facing its target: a dark triangle around a coloured one. */
-const drawMarker = (ctx: CanvasRenderingContext2D, box: HTMLCanvasElement, at: EdgeSpot, arrow: string) => {
+export const drawMarker = (ctx: CanvasRenderingContext2D, box: HTMLCanvasElement, at: EdgeSpot, arrow: string) => {
   const { x, y, dir } = at
   ctx.drawImage(box, x - 12, y - 9)
   const baseX = dir.x > 0 ? x + 12 : dir.x < 0 ? x - 13 : x

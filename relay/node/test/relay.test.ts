@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
 import { PROTOCOL, homeOf, type ClientMessage, type Hello, type ServerMessage } from '../../../src/net/protocol'
 import { configFrom } from '../src/config'
+import { SIGNATURE_HEADER, sign, type Fetcher } from '../../src/report'
 import { BOUND_REFRESH } from '../../src/room'
 import { RESTART_CLOSE } from '../src/rooms'
 import { startRelay, type Relay } from '../src/server'
@@ -164,6 +165,48 @@ describe('São Paulo relay', () => {
     roomy.setLoad({ loopP99Ms: 7, hostBusyPct: 40 })
     expect(homeOf(await createRoom(roomy))).toBe('sa')
     await roomy.close()
+    rmSync(own, { recursive: true, force: true })
+  })
+
+  it('seats eight in an Arena room and posts its agreed result to the API once, signed', async () => {
+    const own = mkdtempSync(join(tmpdir(), 'ps-relay-arena-'))
+    const posts: { url: string; body: string; signature: string | null }[] = []
+    const fetcher: Fetcher = async (url, init) => {
+      posts.push({ url, body: typeof init.body === 'string' ? init.body : '', signature: new Headers(init.headers).get(SIGNATURE_HEADER) })
+      return new Response(null, { status: 200 })
+    }
+    const config = { ...configFrom({ ARENA_API_URL: 'https://api.test/', ARENA_REPORT_SECRET: 's3cret' }), host: '127.0.0.1', port: 0, dataDir: own, allowGuests: true }
+    const relay = await startRelay(config, () => undefined, fetcher)
+    const code = await createRoom(relay)
+    const guests = Array.from({ length: 9 }, (_, i) => `guest-${i}-arenaxxxxxxxxx`)
+    const host = await open(relay, code)
+    say(host, hello(code, guests[0]!))
+    await waitFor(host, (m) => (m.t === 'welcome' ? true : null))
+    say(host, { t: 'settings', settings: { difficulty: 'normal', mode: 'versus' } })
+    await waitFor(host, (m) => (m.t === 'room' && m.room.settings.mode === 'versus' ? true : null))
+    const rest = await Promise.all(
+      guests.slice(1).map(async (g) => {
+        const c = await open(relay, code)
+        say(c, hello(code, g))
+        return { c, ok: await waitFor(c, (m) => (m.t === 'welcome' ? true : m.t === 'refused' ? false : null)) }
+      }),
+    )
+    expect(rest.filter((r) => r.ok)).toHaveLength(7)
+    const players = [host, ...rest.filter((r) => r.ok).map((r) => r.c)]
+    for (const c of players) say(c, { t: 'loadout', loadout: { starter: 'pikachu' } })
+    for (const c of players.slice(1)) say(c, { t: 'ready', ready: true })
+    await waitFor(host, (m) => (m.t === 'room' && m.room.members.filter((x) => x.ready).length === 7 ? true : null))
+    say(host, { t: 'start' })
+    await waitFor(host, (m) => (m.t === 'start' ? true : null))
+    const result = JSON.stringify({ v: 1, score: [12, 9], winner: 0, seconds: 600, objective: null, seats: [] })
+    for (const c of players) say(c, { t: 'over', tick: 600, h: 'end', result })
+    await waitFor(host, (m) => (m.t === 'ended' ? true : null))
+    await new Promise((r) => setTimeout(r, 200))
+    expect(posts).toHaveLength(1)
+    expect(posts[0]?.url).toBe('https://api.test/arena/report')
+    expect(posts[0]?.signature).toBe(await sign('s3cret', posts[0]?.body ?? ''))
+    expect(JSON.parse(posts[0]?.body ?? '')).toMatchObject({ v: 1, room: code, run: 1, kind: 'room', region: 'vps:sa', result: JSON.parse(result) })
+    await relay.close()
     rmSync(own, { recursive: true, force: true })
   })
 })

@@ -15,6 +15,6 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  // The relay shares one file with the game: the protocol, which imports nothing.
-  "include": ["src", "test", "worker-configuration.d.ts", "vitest.config.ts", "../src/net/protocol.ts"]
+  // The relay shares a few files with the game, none importing game code: the protocol and the Arena's wire, queue rules and numbers.
+  "include": ["src", "test", "worker-configuration.d.ts", "vitest.config.ts", "../src/net/protocol.ts", "../src/net/arena.ts", "../src/net/arenaQueue.ts", "../src/data/arenaRanked.ts"]
 }

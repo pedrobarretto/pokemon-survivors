@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-title" content="Survivors" />
     <meta name="format-detection" content="telephone=no" />
     <title>Pokémon Survivors – Jogo grátis estilo Vampire Survivors com Pokémon</title>
-    <meta name="description" content="Jogue grátis no navegador ou no celular, sem baixar nada: um roguelite estilo Vampire Survivors com Pokémon. Escolha entre 27 iniciais de todas as regiões (e mais 63 Pokémon que saem de ovos), evolua, derrote Mewtwo e capture os lendários para jogar com eles. Jogue sozinho ou em co-op online com até 3 amigos." />
+    <meta name="description" content="Jogue grátis no navegador ou no celular, sem baixar nada: um roguelite estilo Vampire Survivors com Pokémon. Escolha entre 27 iniciais de todas as regiões (e mais 63 Pokémon que saem de ovos), evolua, derrote Mewtwo e capture os lendários para jogar com eles. Jogue sozinho ou em co-op online com até 3 amigos. E tem a Arena, um MOBA 4v4 e 3v3 estilo Pokémon Unite, contra bots ou com amigos." />
     <link rel="canonical" href="https://www.pokemonsurvivors.com/" />
     <link rel="alternate" hreflang="pt-BR" href="https://www.pokemonsurvivors.com/" />
     <link rel="alternate" hreflang="en" href="https://www.pokemonsurvivors.com/en/" />
@@ -55,9 +55,10 @@
             "@type": "VideoGame",
             "@id": "https://www.pokemonsurvivors.com/#game",
             "name": "Pokémon Survivors",
-            "alternateName": ["Pokemon Survivors", "Pokémon Survival", "Vampire Survivors com Pokémon"],
+            "alternateName": ["Pokemon Survivors", "Vampire Survivors com Pokémon"],
             "url": "https://www.pokemonsurvivors.com/",
             "description": "Fan game gratuito e não oficial estilo Vampire Survivors com Pokémon. Escolha um dos 27 iniciais ou choque ovos para liberar mais 63 Pokémon, sobreviva 15 minutos de hordas selvagens de todas as gerações, monte sua build entre 207 golpes, evolua e derrote Mewtwo. Vença os lendários para capturá-los e jogar com eles no Modo Lendário. Roda no navegador e no celular, sem download. Jogue sozinho ou em co-op online com até 3 amigos.",
+            "disambiguatingDescription": "Não confundir com PokéSurvivor (pokesurvivor.com), outro fan game de Pokémon estilo Vampire Survivors, feito por JPTER78, nem com Pokémon Survivor Burst, feito por ClessioTV para baixar no PC.",
             "image": "https://www.pokemonsurvivors.com/og.png",
             "genre": ["Roguelite", "Roguelike", "Bullet heaven", "Survivors-like", "Ação"],
             "gamePlatform": ["Navegador", "Android", "iOS", "PC"],
@@ -75,6 +76,11 @@
           {
             "@type": "FAQPage",
             "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Pokémon Survivors é o mesmo jogo que o PokéSurvivor?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Não. Pokémon Survivors (pokemonsurvivors.com) e PokéSurvivor (pokesurvivor.com) são dois fan games diferentes, de autores diferentes, com nomes quase iguais. Pokémon Survivors é feito por Pedro Barretto; PokéSurvivor, por JPTER78." }
+              },
               {
                 "@type": "Question",
                 "name": "Pokémon Survivors é grátis?",
@@ -102,6 +108,11 @@
               },
               {
                 "@type": "Question",
+                "name": "Tem um modo MOBA parecido com Pokémon Unite?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Sim, a Arena: um MOBA 4v4 de 7 minutos no Vale ou na Enseada (uma praia de rotas curvas e uma ilha no centro, ligada por píeres), com duas rotas e a selva no meio, ou uma partida 3v3 rápida de 3 minutos na Clareira ou no Recife (um canal corta o mapa, cruzado por pontes estreitas), mapas compactos com dois gols por time; cada partida sorteia o mapa, e numa sala com amigos o anfitrião escolhe. Derrote Pokémon selvagens para juntar Energia (até 30), leve-a até um gol do time rival e fique lá dentro para marcar; um golpe de um rival interrompe. No 4v4, cada time tem três gols, e o da base só abre quando cai um gol de rota. Na reta final (os 2 últimos minutos no 4v4, o último no 3v3) os pontos valem em dobro e o Zapdos pousa no centro. Os controles são os do Unite: o ataque básico sai sozinho, e o Golpe 1, o Golpe 2 e o Golpe Unite você lança e mira (Q, E e R, ou os botões na tela, com mira assistida), travando o alvo com um clique ou um toque. O time combina por chat rápido com frases prontas e marcações no mapa, vê o placar completo (abates, assistências, dano e cura) e pode votar pela rendição a partir da metade da partida. Jogue com os 27 iniciais, cada um com seu papel (Atacante, Velocista, Equilibrado, Defensor ou Suporte), contra bots na hora, sem conta, ou numa sala com amigos, escolhendo Azul ou Vermelho; os lugares vazios ficam com bots. Com conta, entre na fila pública, Casual ou Ranqueada: a Ranqueada tem temporadas de duas semanas, tiers de Poké Ball a Master Ball, ranking da temporada e um título no fim (a temporada 1 começa em 2 de novembro); o 3v3 é só Casual. Sair no meio ou ficar parado custa Fair Play, e a Ranqueada pede Fair Play 80 ou mais. No lobby, a Arena fica no Estádio, ao sul da sua casa, com o Ninjask de juiz." }
+              },
+              {
+                "@type": "Question",
                 "name": "É um jogo oficial da Pokémon?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Não. É um fan game não oficial e sem fins lucrativos, sem ligação com Nintendo, The Pokémon Company, GAME FREAK ou Creatures." }
               }
@@ -110,8 +121,6 @@
         ]
       }
     </script>
-    <!-- Cookieless analytics: Vercel Web Analytics (page views). PostHog (game events and error reports) loads from src/analytics.ts. Both only count production domains. -->
-    <script defer vite-ignore src="/_vercel/insights/script.js"></script>
   </head>
   <body>
     <canvas id="game" aria-label="Pokémon Survivors"></canvas>
@@ -123,6 +132,7 @@
         Pokémon Survivors é um fan game gratuito e não oficial que mistura Pokémon com Vampire Survivors. É um roguelite
         de ação (bullet heaven) que roda no navegador e no celular, sem download e sem cadastro.
       </p>
+      <p>Pokémon Survivors (pokemonsurvivors.com) não é o PokéSurvivor (pokesurvivor.com): são dois fan games diferentes, de autores diferentes, com nomes quase iguais. <a href="/pokemon-survivors-vs-pokesurvivor/">Veja as diferenças</a>.</p>
       <h2>Como jogar</h2>
       <p>
         Escolha seu Pokémon inicial, ande pelo mapa e deixe ele atacar sozinho. Sobreviva 15 minutos de hordas de
@@ -135,6 +145,7 @@
       <ul>
         <li>27 iniciais de todas as regiões, de Kanto a Paldea (Charmander, Squirtle, Bulbasaur, Piplup, Froakie, Fuecoco, Sprigatito e mais), cada um com sua linha evolutiva completa.</li>
         <li>Co-op online para até 4 jogadores: crie uma sala e chame os amigos pelo link, pelo código de 5 letras ou pela lista de amigos, que mostra quem está online. Cada um joga com o seu Pokémon, a EXP é da equipe (todo mundo sobe de nível junto), a horda e os chefes crescem com o time, o ₽ é dividido entre todos e quem desmaia vira uma Poké Ball até um colega chegar perto para reanimar. Precisa de uma conta com @nome; por enquanto o co-op joga o modo normal, sem Modo Lendário, lugares, itens da loja, Noite das Bruxas e ranking.</li>
+        <li>Arena, um MOBA estilo Pokémon Unite em dois formatos, 4v4 de 7 minutos no Vale ou na Enseada e 3v3 rápido de 3 minutos na Clareira ou no Recife (os dois últimos, mapas de praia): dois times, Pokémon selvagens que soltam Energia, três gols por time (o da base abre quando um gol de rota cai), Drednaw no meio da partida e Zapdos nos 2 minutos finais, com pontos em dobro. Ataque básico automático e golpes mirados como no Unite, chat rápido, marcações, placar e rendição por votação. Contra bots na hora, sem conta, ou com amigos numa sala, escolhendo Azul ou Vermelho. Com conta, Casual e Ranqueada na fila pública, com temporadas de duas semanas de Poké Ball a Master Ball; no lobby, o Estádio fica ao sul da sua casa.</li>
         <li>Ovos que chocam com os passos dados nas partidas: chefes, baús e fendas deixam ovos que liberam mais 54 Pokémon jogáveis de todos os tipos e gerações (Pikachu, Eevee, Gastly, Magikarp, Riolu, Gible, Bagon, Deino, Dreepy e mais), com 1% de chance de sair shiny. E Munchlax, que evolui em Snorlax, só sai do Ovo da Amizade, e quatro fantasmas (Litwick, Phantump, Drifloon e Sandygast) só saem do Ovo Assombrado, que o Duskull vende na Noite das Bruxas, e Porygon, Exeggcute, Scraggy e Smeargle (que copia o golpe dos inimigos com o Sketch) só saem do Ovo do Kecleon, até 6 por dia na Vitrine: 90 Pokémon jogáveis no total.</li>
         <li>Convide amigos com o seu link: quem cria uma conta pelo convite ganha um Ovo da Amizade, e quem convida ganha presentes (Presente Misterioso) a cada amigo que joga de verdade: outro Ovo da Amizade, o título Embaixador(a) com uma moldura exclusiva, um Ovo ultra raro com 5 amigos e, com 10, um Dratini shiny.</li>
         <li>207 golpes e 32 itens: cada família tem um golpe assinatura e aprende golpes novos a cada evolução, com mais golpes do que espaços, então cada partida monta um time diferente. Maximize um golpe comum com o item certo e ele evolui (Ember + Charcoal vira Flamethrower), e os evoluídos continuam subindo de nível.</li>
@@ -160,14 +171,17 @@
         <li>Surto do dia: todo dia uma espécie selvagem toma conta de todas as partidas, a mesma para todo mundo, e o shiny dela aparece umas duas vezes por partida.</li>
         <li>Desafio do dia: uma partida por dia igual para todo mundo (mesma semente, Pokémon e dificuldade, sem melhorias nem itens). Só a primeira partida terminada conta no ranking do desafio, e quem participa ganha uma fita de ouro (10% melhores), prata (metade de cima) ou bronze.</li>
         <li>Loja do Kecleon: uma praça no lobby, a leste da casa do seu parceiro, onde o Kecleon atende e conversa com você. A Vitrine do dia é igual para todo mundo, com um brinde grátis por dia, o Ovo do Kecleon (₽ 10.000 o primeiro do dia, cada um depois pelo dobro do anterior, até 6 por dia), uma oferta com 30% off, o ovo do dia e um estilo; a Mochila leva consumíveis para a próxima partida (Lure, Incense, Rare Candy, Lucky Egg, Luck Incense, Honey, X Attack, Max Revive e Everstone); o irmão roxo do Kecleon vende TMs para sempre (incluindo 10 exclusivas: Pay Day, Thief, Protect, Hyper Beam, Rain Dance, Sunny Day, Swords Dance, Drain Punch, Thunder Wave e Fly), que você arma antes da partida, e itens de evolução, que abrem os caminhos que pedem um item (sem a Dawn Stone, nada de Gallade, e sem o Up-Grade, nada de Porygon2; sem itens, o Eevee vira Vaporeon, Jolteon ou Flareon, sorteado) e também podem cair dos chefes, só para a partida; o Treino tem as melhorias permanentes e as Tampinhas, +3% em tudo por nível para um Pokémon; o Estilo, molduras, fundos e papéis de parede; e na Expansão você investe para a loja crescer em 5 níveis, do Carrinho à Loja de Departamento, que dá o título Magnata e uma estátua dourada do Kecleon na praça. De sexta a domingo, a caravana do Meowth traz um ovo ultra, a Tampinha Dourada e TMs exclusivas, e aceita pechinchar; o cartão fidelidade dá um carimbo por dia de visita, com prêmios aos 7, 14, 30, 60 e 100 carimbos (um Ovo do Kecleon com shiny garantido); e nas datas especiais aparece uma barraca na praça, como a do Duskull na Noite das Bruxas, que vende o Ovo Assombrado, um por dia.</li>
+        <li>Dojo do Machoke: um lugar no lobby, a oeste da casa do seu parceiro, para treinar sem horda, sem relógio e sem desmaiar. Escolha qualquer Pokémon que você tem, suba e desça o nível de cada golpe (com os caminhos A e B), equipe itens, troque de forma e de habilidade e teste em 1, 3, 8 ou 24 alvos de 16 tipos (ou no Snorlax como chefe), com um medidor de DPS por golpe. Salve a build e, nas partidas, as cartas de nível, evolução e habilidade que seguem a build ganham a marca ★ BUILD.</li>
         <li>Festival da Praça: uma vez por mês, a fonte da praça do Kecleon vira um pote da comunidade. Todo mundo joga Poké Dollars na fonte (até ₽ 200 mil por dia), e cada marco do pote vira um Presente para todos os jogadores, mesmo quem não doou. O primeiro, o Festival das Lanternas, vai de 03/11 a 16/11, com Ovo raro, a moldura Lanterna, 3 Lures, um Ovo do Kecleon e um Togepi shiny; quem doa ₽ 50 mil ganha o título Mecenas e os 10 maiores doadores vão para a placa da fonte.</li>
         <li>Pokédex dentro do jogo com 584 espécies: registre cada uma que viu e derrotou, e capture os shinies que derrotar, os Pokémon que chocar e cada forma que jogar.</li>
         <li>Missões diárias e semanais e 63 conquistas com medalhas de bronze, prata e ouro, algumas com títulos para exibir, como Caçador de Shinies e Caçador de Alfas. Algumas semanais e toda medalha de ouro também dão um ovo.</li>
         <li>Eventos no mapa: altares de buff, fontes que curam, baús trancados com emboscada, armadilhas que ferem a horda e um Meowth fugindo com moedas. E missões de campo que pagam ₽ e cartas raras: defender um ovo no ninho, juntar Poké Balls perdidas contra o relógio e levar um Togepi perdido para casa.</li>
-        <li>Pixel art no estilo Pokémon Mystery Dungeon, em português, inglês e espanhol.</li>
+        <li>Pixel art no estilo Pokémon Mystery Dungeon, em português, inglês, espanhol, francês e chinês tradicional.</li>
         <li>Funciona no celular com joystick por toque e pode ser instalado como app.</li>
       </ul>
       <h2>Perguntas frequentes</h2>
+      <h3>Pokémon Survivors é o mesmo jogo que o PokéSurvivor?</h3>
+      <p>Não. Pokémon Survivors (pokemonsurvivors.com) e PokéSurvivor (pokesurvivor.com) são dois fan games diferentes, de autores diferentes, com nomes quase iguais. Pokémon Survivors é feito por Pedro Barretto; PokéSurvivor, por JPTER78.</p>
       <h3>Pokémon Survivors é grátis?</h3>
       <p>Sim. É gratuito, sem anúncios e sem compras. O código é aberto no GitHub.</p>
       <h3>Precisa baixar alguma coisa?</h3>
@@ -176,12 +190,15 @@
       <p>Sim, no Modo Lendário. Vença um lendário como chefe para capturá-lo (3 vezes para a maioria, 5 para Mewtwo, 1 para os míticos) e ele fica jogável, com despertares no Nv 12 e 28 e um ranking só dos lendários. Na Noite das Bruxas de 2026, o Darkrai também: vença-o 2 vezes na fenda do Pesadelo.</p>
       <h3>Dá para jogar com amigos?</h3>
       <p>Sim. O co-op online junta até 4 treinadores na mesma partida, cada um com o seu Pokémon: crie uma sala e chame os amigos pelo link, pelo código ou pela lista de amigos. A EXP é da equipe, o ₽ é dividido entre todos e quem desmaia pode ser reanimado por um colega. É preciso uma conta com @nome. Por enquanto o co-op é o modo normal: Modo Lendário, lugares, itens da loja, eventos e ranking ficam nas partidas solo.</p>
+      <h3>Tem um modo MOBA parecido com Pokémon Unite?</h3>
+      <p>Sim, a Arena: um MOBA 4v4 de 7 minutos no Vale ou na Enseada (uma praia de rotas curvas e uma ilha no centro, ligada por píeres), com duas rotas e a selva no meio, ou uma partida 3v3 rápida de 3 minutos na Clareira ou no Recife (um canal corta o mapa, cruzado por pontes estreitas), mapas compactos com dois gols por time; cada partida sorteia o mapa, e numa sala com amigos o anfitrião escolhe. Derrote Pokémon selvagens para juntar Energia (até 30), leve-a até um gol do time rival e fique lá dentro para marcar; um golpe de um rival interrompe. No 4v4, cada time tem três gols, e o da base só abre quando cai um gol de rota. Na reta final (os 2 últimos minutos no 4v4, o último no 3v3) os pontos valem em dobro e o Zapdos pousa no centro. Os controles são os do Unite: o ataque básico sai sozinho, e o Golpe 1, o Golpe 2 e o Golpe Unite você lança e mira (Q, E e R, ou os botões na tela, com mira assistida), travando o alvo com um clique ou um toque. O time combina por chat rápido com frases prontas e marcações no mapa, vê o placar completo (abates, assistências, dano e cura) e pode votar pela rendição a partir da metade da partida. Jogue com os 27 iniciais, cada um com seu papel (Atacante, Velocista, Equilibrado, Defensor ou Suporte), contra bots na hora, sem conta, ou numa sala com amigos, escolhendo Azul ou Vermelho; os lugares vazios ficam com bots. Com conta, entre na fila pública, Casual ou Ranqueada: a Ranqueada tem temporadas de duas semanas, tiers de Poké Ball a Master Ball, ranking da temporada e um título no fim (a temporada 1 começa em 2 de novembro); o 3v3 é só Casual. Sair no meio ou ficar parado custa Fair Play, e a Ranqueada pede Fair Play 80 ou mais. No lobby, a Arena fica no Estádio, ao sul da sua casa, com o Ninjask de juiz.</p>
       <h3>É um jogo oficial da Pokémon?</h3>
       <p>
         Não. É um fan game não oficial e sem fins lucrativos, sem ligação com Nintendo, The Pokémon Company, GAME FREAK ou
         Creatures. Feito por Pedro Barretto.
       </p>
       <p>
+        <a href="/pokemon-survivors-vs-pokesurvivor/">Pokémon Survivors vs PokéSurvivor</a> · <a href="/jogos-pokemon-estilo-vampire-survivors/">Jogos de Pokémon estilo Vampire Survivors</a> ·
         <a href="/pokedex/">Pokédex</a> · <a href="/guia/">Como jogar</a> · <a href="/novidades/">Novidades</a> ·
         <a href="/legal/">Legal e privacidade</a> ·
         <a href="https://www.pokemonsurvivors.com/en/" hreflang="en">Play in English</a> ·

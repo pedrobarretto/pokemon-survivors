@@ -3,7 +3,7 @@ import { range } from '../engine/rng'
 import { EVENT_RIFT, isEventRift, RIFT, type RiftLegend } from '../data/rifts'
 import { enterDomain } from './domain'
 import { burst } from './effects'
-import { chargePortal, endlessRiftAt, pickLegend, riftAt, riftDomain, riftDue } from './rift'
+import { chargePortal, endlessRiftAt, pickLegend, portalReach, riftAt, riftDomain, riftDue } from './rift'
 import { enterArena } from './riftArena'
 import { clearSpot } from './terrain'
 import { teamLegend } from './legend'
@@ -21,9 +21,6 @@ import * as dm from '../engine/dmath'
  */
 
 const PORTAL_COLORS = ['#7850c8', '#c8a8f8', '#ffffff'] as const
-
-/** How far a portal's step-in reaches: a domain's huge tear takes the player in from farther. */
-export const portalReach = (g: Game, legend: RiftLegend) => (riftDomain(g, legend) ? RIFT.tearRadius : RIFT.portalRadius)
 
 /** Opens `legend`'s portal at (x, y), or just past a player's screen edge (`anchorPlayer`) in a random direction. */
 export const openPortal = (g: Game, legend: RiftLegend, at?: { x: number; y: number }) => {

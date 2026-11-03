@@ -259,6 +259,8 @@ export type BoardEntry = ProfileName & {
   /** The player's supporter badge (`game/supporters.ts`), null when they have none or hide it, and since when (ISO). Missing from an older API. */
   supporter?: SupporterTier | null
   supporterSince?: string | null
+  /** Whether they wear the OG plate beside it (`badgesOf`). Missing from an older API. */
+  og?: boolean
   /** The run's id, to report it (`game/reports.ts`). Missing from an older API. */
   run?: string
   /** The Bag items the run took (`ReplayStart.bag`), for their icons. Missing from an older API. */
@@ -324,5 +326,7 @@ export type PublicProfile = ProfileName & {
   /** The supporter badge (always one's own, else only if shown) and since when (ISO). Missing from an older API. */
   supporter?: SupporterTier | null
   supporterSince?: string | null
+  /** Whether they wear the OG plate beside it (`badgesOf`, like `supporter`). Missing from an older API. */
+  og?: boolean
   self: boolean
 }

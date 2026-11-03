@@ -30,11 +30,21 @@ describe('parseBugReport', () => {
     const perf = { canvases: 412.6, canvasMb: 38.456, peakCanvases: -3, peakCanvasMb: 'lots', frameMs: Infinity }
     const run = { projectiles: 1e9, wave: 'boss', boss: 'onix‮', place: 'rift:kyogre' }
     const tech = parseBugReport({ text: 'It closed by itself', tech: { perf, run, crash: { perf, run } } })!.tech!
-    const parsed = { canvases: 412, canvasMb: 38.46, peakCanvases: 0, peakCanvasMb: 0, frameMs: null }
+    const parsed = { canvases: 412, canvasMb: 38.46, peakCanvases: 0, peakCanvasMb: 0, frameMs: null, wiped: 0, refused: 0 }
     expect(tech.perf).toEqual(parsed)
     expect(tech.crash?.perf).toEqual(parsed)
     expect(tech.run).toMatchObject({ projectiles: 100_000, wave: 'boss', boss: 'onix', place: 'rift:kyogre' })
     expect(parseBugReport({ text: 'Older client', tech: { crash: {} } })!.tech).toMatchObject({ perf: null, crash: { perf: null } })
+  })
+
+  it('rebuilds the input: a known kind or null, at most four pad ids, trimmed', () => {
+    const pads = ['  Xbox Wireless Controller (STANDARD GAMEPAD) ', '', 7, 'b', 'c', 'd', 'e']
+    expect(parseBugReport({ text: 'Keeps walking', tech: { input: { last: 'gamepad', pads } } })!.tech!.input).toEqual({
+      last: 'gamepad',
+      pads: ['Xbox Wireless Controller (STANDARD GAMEPAD)', 'b', 'c', 'd'],
+    })
+    expect(parseBugReport({ text: 'Keeps walking', tech: { input: { last: 'joystick' } } })!.tech!.input).toEqual({ last: null, pads: [] })
+    expect(parseBugReport({ text: 'Older client', tech: {} })!.tech!.input).toBeNull()
   })
 
   it('drops a tech that is not an object', () => {

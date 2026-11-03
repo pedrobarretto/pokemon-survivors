@@ -245,22 +245,22 @@ describe("the supporters' Pumpkaboo", () => {
     expect(halloweenGifts(supporter, '2026-10-31').map((g) => g.id)).toContain(PUMPKABOO_GIFT.id)
     expect(halloweenGifts(supporter, '2026-11-03').map((g) => g.id)).not.toContain(PUMPKABOO_GIFT.id)
     expect(halloweenGifts(EMPTY_SAVE, '2026-10-31').map((g) => g.id)).not.toContain(PUMPKABOO_GIFT.id)
-    expect(canWalkWith(supporter, pumpkaboo)).toBe(false)
+    expect(canWalkWith(supporter, pumpkaboo, 'supporter')).toBe(false)
     const out = applyGift(supporter, PUMPKABOO_GIFT)
     expect(out.status).toBe('applied')
     if (out.status !== 'applied') return
     expect(out.save.companion).toEqual(pumpkaboo)
-    expect(canWalkWith(out.save, pumpkaboo)).toBe(true)
-    expect(canWalkWith(out.save, { ...pumpkaboo, shiny: true })).toBe(false)
+    expect(canWalkWith(out.save, pumpkaboo, 'supporter')).toBe(true)
+    expect(canWalkWith(out.save, { ...pumpkaboo, shiny: true }, 'supporter')).toBe(false)
     expect(halloweenGifts(out.save, '2026-10-31').map((g) => g.id)).not.toContain(PUMPKABOO_GIFT.id)
   })
 
-  it('walks shiny only for a Gold supporter', () => {
+  it('walks shiny only for Gold and up', () => {
     const owned: Save = { ...supporter, companions: ['pumpkaboo'] }
-    const gold: Save = { ...owned, style: { ...owned.style, owned: { ...owned.style.owned, background: [...owned.style.owned.background, 'supporter'] } } }
-    expect(canWalkWith(owned, { ...pumpkaboo, shiny: true })).toBe(false)
-    expect(canWalkWith(gold, { ...pumpkaboo, shiny: true })).toBe(true)
-    expect(canWalkWith({ ...gold, companions: [] }, { ...pumpkaboo, shiny: true })).toBe(false)
+    expect(canWalkWith(owned, { ...pumpkaboo, shiny: true }, 'supporter')).toBe(false)
+    expect(canWalkWith(owned, { ...pumpkaboo, shiny: true }, 'gold')).toBe(true)
+    expect(canWalkWith(owned, { ...pumpkaboo, shiny: true }, 'diamond')).toBe(true)
+    expect(canWalkWith({ ...owned, companions: [] }, { ...pumpkaboo, shiny: true }, 'gold')).toBe(false)
   })
 
   it('stays owned when two saves merge', () => {

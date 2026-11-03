@@ -21,7 +21,7 @@ import { xpTier } from '../game/pickups'
 import { isHeld } from '../game/status'
 import { inSolid, overTerrain, phasingNow, type Solid } from '../game/terrain'
 import { isAirborne, traitPace } from '../game/traits'
-import type { Attack, Enemy, Game, Hazard } from '../game/types'
+import type { Attack, Enemy, Game, Hazard, Player } from '../game/types'
 import { FX, HAZARD_FX, hostile, PICKUPS, SPARKLE, SPIT_FX } from './art'
 import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawShard } from './evolved'
 import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
@@ -58,16 +58,23 @@ import { drawHeatAura, drawIronDefense, drawLegendary2Air, drawLegendary2Ground 
 import { drawSignatureAttack, drawSignatureGround, drawSignaturePlayer } from './signatureFx'
 import { drawTraitAir, drawTraitGround, traitLift, traitTint } from './traits'
 import { bolt, dashedRing } from './strokes'
-import { dropFog, drawWeather, warmFog } from './weather'
+import { dropFog, drawWeather, warmFog, type FogMode } from './weather'
 import { drawHauntedNight, drawTreat } from './halloweenArt'
 import { drawSolid, drawTerrainGround, drawWading, keepTerrain, solidCovers, solidsInView, warmTerrain } from './terrain'
 import { drawGround, GROUND_LOOKAHEAD, warmGround } from './world'
 import { damageBudget, showsText, textAlpha, type DamageNumbers } from './damageNumbers'
 import { CALM_PERIOD, HURT_TINT, type Flashes } from './flashes'
-import { detail } from './quality'
+import { detail, safeShare } from './quality'
 import { localPlayer } from '../game/players'
 import { riftDomain } from '../game/rift'
 import { drawTeamAir, drawTeamGround, drawTeammate, drawTeamMarkers, showsPlain, showsStanding } from './team'
+import { drawVersusGuide } from './versusGuide'
+import { mapOf } from '../game/versusRules'
+import { drawArenaAim, type ArenaOverlay } from './arenaAim'
+import { drawValeAir, drawValeFloor, drawValeGround, drawValeZones, dropVale, TEAM_COLORS, warmVale } from './vale'
+import { concealed, drawGrassFront, drawGrassPatches, grassAlpha } from './valeGrass'
+import { drawValeProp, valePropCovers, valePropsInView, type ValeProp } from './valeProps'
+import { drawValePings } from './valePings'
 import { paintAttacks, type AttackSide } from './attackLayers'
 import { drawImpacts, watchImpacts } from './impacts'
 import { drawCrunch, drawDragonBreath, drawEarthquake, drawEmber, drawPinMissile, drawFireSpin, drawWhirlpool, drawFlashCannon, drawPsyshock, drawPyroBall, drawGust, drawRazorLeaf, drawRockTombLanding, drawSludge, drawSludgeGround, drawSwift, drawThunder, drawThunderGround, drawVineWhip, drawWaterGun } from './baseMoveFx'
@@ -613,9 +620,10 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g)
   // Invulnerable after a hit: blinking, or a steady see-through when calm.
   const faded = calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink
-  // A Ghost type slipping through a tree or a rock (`phasingNow`) shows see-through.
-  const alpha = egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : phasingNow(g, p) ? 0.55 : 1
+  // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`); a Ghost type slipping through a tree or a rock (`phasingNow`) too.
+  const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : phasingNow(g, p) ? 0.55 : 1) * grassAlpha(g, viewer, p)
   if (alpha > 0) drawPokemon(ctx, s, anim, p.dir, p.animTime, p.x, p.y - (egg?.lift ?? 0), { alpha, flash, tint, outline: mega.outline })
+  if (p.versus && g.versus) drawGrassFront(ctx, mapOf(g.versus).grass, p.x, p.y, s.bodyW, g.now, p.moving, p.slot)
   // The shiny entrance plays shortly after the run starts.
   if (p.shiny) drawSparkles(ctx, p.x, p.y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), g.now - 0.3, 0)
   drawMegaAir(ctx, g, p.y - s.bodyH, p.animTime)
@@ -632,8 +640,9 @@ const drawHpBar = (ctx: Ctx, g: Game) => {
   ctx.fillRect(x - 1, y - 1, w + 2, 4)
   ctx.fillStyle = '#504848'
   ctx.fillRect(x, y, w, 2)
-  const ratio = p.hp / p.stats.maxHp
-  ctx.fillStyle = hpColor(ratio)
+  const ratio = Math.max(0, p.hp / p.stats.maxHp)
+  // Versus: everyone's bar in their team's color.
+  ctx.fillStyle = p.versus ? TEAM_COLORS[p.versus.team] : hpColor(ratio)
   ctx.fillRect(x, y, Math.ceil(w * ratio), 2)
 }
 
@@ -644,7 +653,8 @@ const drawPickups = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: numbe
   for (const k of g.pickups) {
     if (!visible(k.x, k.y)) continue
     const bob = k.attracted ? 0 : Math.round(Math.sin(t * 4 + k.id) * 1.2)
-    if (!k.attracted) blitEllipse(ctx, 3, 1, 'rgba(16,40,16,0.25)', k.x, k.y + 4)
+    // Drawing lean, loot goes without its shadow, like the horde: thousands of candies lie about in a long endless run.
+    if (!k.attracted && !detail.lean) blitEllipse(ctx, 3, 1, 'rgba(16,40,16,0.25)', k.x, k.y + 4)
     if (k.kind === 'consumable') {
       drawConsumable(ctx, k.item, k.x, k.y + bob, k.id, t)
       continue
@@ -728,7 +738,7 @@ const drawEvolution = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
 /** A co-op teammate, drawn from a copy of the game as that player (`coop/view.ts`). */
 type Mate = { mate: Game }
 
-type Drawable = Enemy | 'player' | 'companion' | Solid | Mate
+type Drawable = Enemy | 'player' | 'companion' | Solid | Mate | ValeProp
 const drawables: Drawable[] = []
 /** `drawables` in depth order, with each one's depth worked out once: the sort compares them thousands of times a frame. */
 const inDepth: Drawable[] = []
@@ -744,6 +754,8 @@ const byDepth = (a: number, b: number) => {
 /** How far a hitbox reaches from its center, to cull it off screen. */
 const reachOf = (shape: Attack['shape']) => (shape.kind === 'circle' ? shape.r : Math.max(shape.w, shape.h)) + 48
 const isSolid = (d: Drawable): d is Solid => d !== 'player' && d !== 'companion' && 'foot' in d
+/** Versus: a post, pillar or gate standing on the Vale (`render/valeProps.ts`). */
+const isValeProp = (d: Drawable): d is ValeProp => typeof d === 'object' && 'prop' in d
 
 /* ---------------- Biome ---------------- */
 
@@ -755,16 +767,18 @@ const BIOME_WARMUP = 10
 /**
  * Builds at most one piece of scenery not built yet, most needed first: the
  * ground about to scroll in, this biome's terrain sprites, the next biome's
- * ground and terrain, the fog veil where fog can roll in; and while `calm` (no
+ * ground and terrain, the fog veil (in the `fog` setting's mode) where fog can roll in; and while `calm` (no
  * run, or a menu over it), every biome's terrain. True if it built one. The
  * shell calls it in idle time: a mountain or the veil takes longer than a frame
  * lasts, so building one the first time it shows would stall that frame.
  */
-export const warmScenery = (g: Game | null, calm: boolean) => {
+export const warmScenery = (g: Game | null, calm: boolean, fog: FogMode) => {
   const keep = terrainBiomes(g)
   keepTerrain(keep)
   if (!g?.rift.arena || g.rift.arena.domain) dropArenas()
   if (!g?.place.inside) dropPlaceFloor()
+  if (!g?.versus) dropVale()
+  else if (warmVale(g.versus.map)) return true
   if (g && warmDomain(g)) return true
   if (g && !roomOf(g)) {
     const { w, h } = g.view
@@ -774,20 +788,29 @@ export const warmScenery = (g: Game | null, calm: boolean) => {
     if (warmGround(here, x, y, w, h, GROUND_LOOKAHEAD) || warmTerrain(here)) return true
     if (upcoming !== here && (warmGround(upcoming, x, y, w, h) || warmTerrain(upcoming))) return true
     if ('fog' in BIOMES[here].weather || 'fog' in BIOMES[upcoming].weather) {
-      if (warmFog(w, h)) return true
+      if (warmFog(w, h, fog)) return true
     } else if (g.weather.id !== 'fog' && g.weather.prev !== 'fog') dropFog()
   }
   return calm && keep.some((b) => warmTerrain(b))
 }
 
 /**
+ * How far ahead (game seconds) the next biome's terrain may be kept and built while a menu is
+ * open: not from a run's first second, when the phone is still decoding the run's sheets (the
+ * next biome's pieces weighed as much as the first's), but well before it comes.
+ */
+const TERRAIN_LEAD = 60
+
+/**
  * The biomes whose terrain stays sculpted: the one here, the one dissolving out and the next
- * in order (a run only moves forward); before a run, the first. The rest is dropped (`keepTerrain`).
+ * in order (a run only moves forward) once it's `TERRAIN_LEAD` away; before a run, the first.
+ * The rest is dropped (`keepTerrain`).
  */
 const terrainBiomes = (g: Game | null): BiomeId[] => {
   if (!g) return [BIOME_ORDER[0]]
   const here = g.biome.id
-  const next = BIOME_ORDER[BIOME_ORDER.indexOf(here) + 1]
+  const after = BIOME_ORDER[BIOME_ORDER.indexOf(here) + 1]
+  const next = after && biomeAt(g.time + TERRAIN_LEAD) === after ? after : undefined
   const fading = biomeFade(g)?.from
   return [here, ...(next ? [next] : []), ...(fading && fading !== here ? [fading] : [])]
 }
@@ -810,13 +833,19 @@ export type RenderOptions = {
   damageNumbers: DamageNumbers
   screenShake: boolean
   flashes: Flashes
+  fog: FogMode
   /** How opaque the moves draw, 0..1: this screen's player's, and in co-op the teammates' (`render/attackLayers.ts`). */
   attackOpacity: number
   teamAttackOpacity: number
   companion?: CompanionView | null
   mates?: readonly Game[]
   shakeOffset?: { x: number; y: number }
+  /** The Arena's lock-on and a touch button's aim (`render/arenaAim.ts`), this screen's. */
+  arena?: ArenaOverlay | null
 }
+
+/** The Arena's viewer (this screen's player, `render` sets it; null outside Versus): who the grass hides from and shows see-through. */
+let viewer: Player | null = null
 
 /** Reused lists of this screen's player's attacks and the teammates', refilled each co-op frame. */
 const ownAttacks: Attack[] = []
@@ -830,7 +859,12 @@ const teamAttacks: Attack[] = []
 const attackSides = (g: Game, slot: number, opts: RenderOptions): { side: AttackSide; alpha: number; game: Game }[] => {
   if (g.coop === null) return [{ side: 'own', alpha: opts.attackOpacity, game: g }]
   ownAttacks.length = teamAttacks.length = 0
-  for (const a of g.attacks) (a.owner === slot ? ownAttacks : teamAttacks).push(a)
+  const me = g.players[slot]
+  for (const a of g.attacks) {
+    if (a.owner === slot) ownAttacks.push(a)
+    // Versus: a rival hidden in the grass shows nothing of its own, its moves still out either.
+    else if (!me || !g.players[a.owner] || !concealed(me, g.players[a.owner]!)) teamAttacks.push(a)
+  }
   return [
     { side: 'own', alpha: opts.attackOpacity, game: { ...g, attacks: ownAttacks } },
     { side: 'team', alpha: opts.teamAttackOpacity, game: { ...g, attacks: teamAttacks } },
@@ -885,6 +919,7 @@ const liftsOver = (g: Game, at: number, look: BiomeId) => {
   for (let i = at + 1; i < inDepth.length; i++) {
     const d = inDepth[i]!
     if (isSolid(d) && solidCovers(g, d, look, p.x, p.y, s.bodyW, s.bodyH)) return false
+    if (isValeProp(d) && valePropCovers(g, d, p.x, p.y, s.bodyW, s.bodyH)) return false
   }
   return true
 }
@@ -909,10 +944,11 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   if (g.rift.arena?.domain) drawDomainFloor(ctx, g.rift.arena, g.rift.arena.domain, camX, camY, w, h, t)
   else if (g.rift.arena) drawArena(ctx, g.rift.arena, camX, camY, w, h, t)
   else if (inside) drawPlaceFloor(ctx, inside, camX, camY, w, h, t)
+  else if (g.versus) drawValeFloor(ctx, g.versus.map, camX, camY, w, h)
   else drawGround(ctx, camX, camY, w, h, g.biome.id, fade)
   const upcoming = biomeAt(g.time + BIOME_WARMUP)
   // Scenery warms in idle time (`warmScenery`); in case that never comes, one of the next biome's chunks per frame.
-  if (upcoming !== g.biome.id) warmGround(upcoming, camX, camY, w, h)
+  if (upcoming !== g.biome.id && !g.versus) warmGround(upcoming, camX, camY, w, h)
   if (g.rift.arena && !g.rift.arena.domain) warmArena(g.rift.arena)
   // Scenery changes outfit halfway through the dissolve, like the breakables.
   const look = fade && fade.k < 0.5 ? fade.from : g.biome.id
@@ -921,13 +957,21 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
 
   const visible = (x: number, y: number, m = 48) => x > camX - m && x < camX + w + m && y > camY - m && y < camY + h + m * 2
   const mates = opts.mates ?? []
+  viewer = g.versus ? localPlayer(g) : null
+  // Versus: a rival hidden in the grass draws nowhere.
+  const hiddenMate = (mate: Game) => viewer !== null && concealed(viewer, localPlayer(mate))
   // Teammates standing in view wear their own auras, as this screen's player does.
   const shown = (mate: Game) => {
     const p = localPlayer(mate)
-    return showsPlain(p) && visible(p.x, p.y)
+    return showsPlain(p) && visible(p.x, p.y) && !hiddenMate(mate)
   }
 
   drawTerrainGround(ctx, g, look, camX, camY)
+  // Versus: the spawn pads and the goal zones, under everything.
+  if (g.versus) {
+    drawValeZones(ctx, g, t)
+    drawGrassPatches(ctx, g, t, visible)
+  }
   const me = localPlayer(g)
   watchImpacts(g)
   // The moves go through see-through layers at the player's chosen opacity, your own first (`paintAttacks`).
@@ -966,17 +1010,19 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawTraitGround(ctx, g, visible)
   drawAlphaGround(ctx, g, t, visible)
   drawPickups(ctx, g, t, visible)
+  if (g.versus) drawValeGround(ctx, g, t, visible)
   if (g.coop) drawTeamGround(ctx, g, t)
 
   drawables.length = 0
   // A wave legendary's scene draws it itself (its arrival, its capture).
   const hiddenBoss = sceneHides(g)
-  for (const e of g.enemies) if (visible(e.x, e.y) && e.id !== hiddenBoss) drawables.push(e)
+  // Versus: a Pokémon's avatar (its body for the rivals' moves) never draws; its player does.
+  for (const e of g.enemies) if (visible(e.x, e.y) && e.id !== hiddenBoss && e.behavior.kind !== 'avatar') drawables.push(e)
   drawables.push('player')
   for (let i = 0; i < mates.length; i++) {
     const mate = mates[i]!
     const p = localPlayer(mate)
-    if (p.gone || !visible(p.x, p.y)) continue
+    if (p.gone || !visible(p.x, p.y) || hiddenMate(mate)) continue
     const slot = (mateSlots[i] ??= { mate })
     slot.mate = mate
     drawables.push(slot)
@@ -984,9 +1030,10 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   const companion = opts.companion
   if (companion) drawables.push('companion')
   solidsInView(g, camX, camY, w, h, drawables)
+  if (g.versus) valePropsInView(g.versus.map, visible, drawables)
   // Mid-jump leapers sort last so they fly over the horde, and so does a flyer over a rock or a mountain.
   const depth = (d: Drawable) =>
-    d === 'player' ? localPlayer(g).y : isMate(d) ? localPlayer(d.mate).y : d === 'companion' ? (companion?.y ?? 0) : isSolid(d) ? d.y : isAirborne(d) || (overTerrain(d) && inSolid(g, d.x, d.y, 4)) ? d.y + 4096 : d.y
+    d === 'player' ? localPlayer(g).y : isMate(d) ? localPlayer(d.mate).y : d === 'companion' ? (companion?.y ?? 0) : isSolid(d) || isValeProp(d) ? d.y : isAirborne(d) || (overTerrain(d) && inSolid(g, d.x, d.y, 4)) ? d.y + 4096 : d.y
   // Filled by index and cut to size (emptying them would drop their storage every frame).
   const n = drawables.length
   for (let i = 0; i < n; i++) {
@@ -1030,21 +1077,22 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
         shadow(ctx, m.x, m.y, body)
         drawWading(ctx, d.mate, body, t)
       }
-    } else if (!isSolid(d) && d.dying < 0 && (!lean || d.boss || d.alpha)) shadow(ctx, d.x, d.y, d.radius * 3)
+    } else if (!isSolid(d) && !isValeProp(d) && d.dying < 0 && (!lean || d.boss || d.alpha)) shadow(ctx, d.x, d.y, d.radius * 3)
   }
   drawAfterimages(ctx, g, calm)
-  for (const mate of mates) drawAfterimages(ctx, mate, calm)
+  for (const mate of mates) if (!hiddenMate(mate)) drawAfterimages(ctx, mate, calm)
   for (const d of inDepth) {
     // Co-op: a player fainted, away or wrapped up in a moment of their own draws its own way (`render/team.ts`); this one only when fainted (their screen says the rest).
     if (d === 'player') !hidden && !liftMe && (g.coop && !showsStanding(me) ? drawTeammate(ctx, g, me, t, calm) : drawPlayer(ctx, g, calm))
     else if (d === 'companion') companion && drawCompanion(ctx, companion, t)
     else if (isMate(d)) !lifted.includes(d.mate) && (showsPlain(localPlayer(d.mate)) ? drawPlayer(ctx, d.mate, calm) : drawTeammate(ctx, d.mate, localPlayer(d.mate), t, calm))
     else if (isSolid(d)) drawSolid(ctx, g, d, look)
+    else if (isValeProp(d)) drawValeProp(ctx, g, d, t, playerSprites(g).bodyW, playerSprites(g).bodyH)
     else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d), !g.rift.arena)
   }
   // Badges only on bosses: on a 300-enemy horde they'd bury the sprites (tint + particles carry it there).
   for (const d of inDepth) {
-    if (d !== 'player' && d !== 'companion' && !isMate(d) && !isSolid(d) && d.boss && d.dying < 0) {
+    if (d !== 'player' && d !== 'companion' && !isMate(d) && !isSolid(d) && !isValeProp(d) && d.boss && d.dying < 0) {
       const def: EnemyDef = ENEMIES[d.kind]
       drawStatusBadge(ctx, d.status, d.x, d.y - bodyOf(def.dex).bodyH * drawScale(d) - (d.alpha ? 14 : 5))
     }
@@ -1092,7 +1140,12 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     drawPlayer(ctx, g, calm)
     drawPlayerAir(ctx, g, t)
   }
-  // Teammates' name tags and bubbles, over everyone.
+  // Teammates' name tags and bubbles, over everyone (in Versus, the goals' points left under them).
+  if (g.versus) {
+    drawValeAir(ctx, g)
+    drawValePings(ctx, g, t)
+  }
+  if (g.versus && opts.arena) drawArenaAim(ctx, g, me, opts.arena, t)
   if (g.coop) drawTeamAir(ctx, g, me, t)
   // Roar of Time's clocks over the foes it stopped: a mark on them, not a move, so it stays opaque.
   drawStoppedFoes(ctx, g, t, visible)
@@ -1101,8 +1154,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     else if (hz.phantom === 0 && visible(hz.x, hz.y, 200)) drawHazard(ctx, hz)
   drawPhantoms(ctx, g, t)
 
-  // Drawing lean, a big burst shows every 2nd (3rd...) particle, about `LEAN_PARTICLES` in all.
-  const every = lean ? Math.max(1, Math.ceil(g.particles.length / LEAN_PARTICLES)) : 1
+  // Drawing lean, a big burst shows every 2nd (3rd...) particle, about `LEAN_PARTICLES` in all (fewer at safe mode level 2).
+  const every = lean ? Math.max(1, Math.ceil(g.particles.length / (LEAN_PARTICLES * safeShare(detail.safe)))) : 1
   for (let i = 0; i < g.particles.length; i += every) {
     const p = g.particles[i]!
     if (!visible(p.x, p.y, 8)) continue
@@ -1119,7 +1172,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawPlaceDark(ctx, g, camX, camY, t)
   drawNightmareDark(ctx, g, camX, camY, t)
   drawTunnelDark(ctx, g, camX, camY)
-  drawWeather(ctx, g, camX, camY, t)
+  drawWeather(ctx, g, camX, camY, t, opts.fog)
   drawLegendSky(ctx, g, camX, camY, t)
   drawBlasts(ctx, g, camX, camY, t)
   drawDomainScreen(ctx, g, camX, camY, t)
@@ -1144,6 +1197,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawAlphaMarkers(ctx, g, t, markerInsets())
   drawBossMarker(ctx, g, camX, camY, t)
   if (g.coop) drawTeamMarkers(ctx, g, me, camX, camY, t)
+  if (g.versus) drawVersusGuide(ctx, g, me, camX, camY, t)
   drawRiftFallOut(ctx, g)
   drawPlaceFallOut(ctx, g)
   // Explosions, rift jumps, a Mega's burst: white over the whole screen, unless flashes are reduced.

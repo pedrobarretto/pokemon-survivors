@@ -98,12 +98,13 @@ describe('hits taken', () => {
     expect(p.hp).toBeLessThan(50)
   })
 
-  it('Levitate floats over lava and traps, but not over a body', () => {
+  it('Levitate floats over lava, traps and patches on the ground, but not over a strike', () => {
     const g = withAbility('levitate')
     const p = g.player
     const full = p.hp
     hurtPlayer(g, 30, undefined, ['fire'], 'lava')
     hurtPlayer(g, 30, undefined, [], 'trap')
+    hurtPlayer(g, 30, undefined, ['fire'], hazardHit({ kind: 'zone' }))
     expect(p.hp).toBe(full)
     hurtPlayer(g, 30, undefined, [], 'hazard')
     expect(p.hp).toBeLessThan(full)

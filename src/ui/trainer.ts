@@ -4,11 +4,12 @@ import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { MEDALS } from '../data/achievements'
 import { RIBBON_TIERS, ribbonCounts } from '../game/ribbons'
-import { savedSupporterTier, trainerAvatar } from '../game/trainer'
+import type { SupporterTier } from '../game/supporters'
+import { trainerAvatar } from '../game/trainer'
 import { formatNumber, LOCALES, locale, t } from '../i18n'
-import { discordIcon, medalIcon, pokeballIcon, ribbonIcon, supporterIcon } from '../render/art'
+import { discordIcon, medalIcon, ogIcon, pokeballIcon, ribbonIcon, supporterIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
-import { fetchSupporterStatus } from '../supporters'
+import { fetchSupporterStatus, knownOg, knownTier } from '../supporters'
 import { adminScreen } from './admin'
 import { discordScreen } from './discord'
 import { h, later } from './dom'
@@ -27,17 +28,24 @@ import { backButton, gearButton, shellBody, topBar } from './shell'
 const avatar = (s: AccountState, size: 'small' | 'big') => {
   const save = loadSave()
   const signedIn = s.kind === 'signedIn'
-  const face = trainerAvatar(save)
-  const ring = signedIn && savedSupporterTier(save) ? ' supporter' : ''
+  const tier = knownTier(save)
+  const face = trainerAvatar(save, tier)
+  const ring = signedIn && tier ? ' supporter' : ''
   return h('span', { class: `trainer-avatar ${size}${ring}`, 'aria-hidden': 'true' }, signedIn ? h('img', { src: portraitUrl(face.dex, face.shiny), alt: '' }) : h('img', { class: 'ball', src: pokeballIcon(), alt: '' }))
 }
 
-/** The equipped title, with the supporter's heart before it, or null. */
+/** The equipped title, with the supporter's heart (and an OG's plate) before it, or null. */
 const titleLine = (cls: string) => {
   const save = loadSave()
   if (!save.title) return null
-  const tier = savedSupporterTier(save)
-  return h('span', { class: cls }, tier && h('img', { src: supporterIcon(tier), alt: '' }), h('span', {}, t().achievements.titles[save.title]))
+  const tier = knownTier(save)
+  return h(
+    'span',
+    { class: cls },
+    tier && h('img', { src: supporterIcon(tier), alt: '' }),
+    tier && knownOg() && h('img', { class: 'og', src: ogIcon(), alt: t().supporters.og.badge }),
+    h('span', {}, t().achievements.titles[save.title]),
+  )
 }
 
 /**
@@ -122,7 +130,7 @@ export const trainerCardScreen = (
     })
   }
 
-  const rowsFor = (s: AccountState, tier: ReturnType<typeof savedSupporterTier>): Row[] => {
+  const rowsFor = (s: AccountState, tier: SupporterTier | null): Row[] => {
     const m = t().trainer
     const share: Row = { label: m.share, run: () => openSub((back) => sharePreview(root, input, trainerShare(loadSave().partner), back)) }
     const missions: Row = { label: m.missions, run: () => openSub((back) => missionsScreen(root, input, back)) }
@@ -139,7 +147,7 @@ export const trainerCardScreen = (
       ...(handle ? [{ label: m.viewProfile, run: () => openSub((back) => profileScreen(root, input, handle, back)) }] : []),
       share,
       discord,
-      ...(tier ? [{ label: since ? m.supporterSince(tier === 'gold', monthYear(since)) : t().supporters.badge(tier), icon: supporterBadgeIcon(tier, since), run: () => openSub(opts.supporters) }] : []),
+      ...(tier ? [{ label: since ? m.supporterSince(tier, monthYear(since)) : t().supporters.badge(tier), icon: supporterBadgeIcon(tier, since), run: () => openSub(opts.supporters) }] : []),
       missions,
       // Admin only, so not translated (see `ui/admin.ts`).
       ...(admin ? [{ label: 'Painel admin', run: () => openSub((back) => adminScreen(root, input, back)) }] : []),
@@ -148,7 +156,7 @@ export const trainerCardScreen = (
   }
 
   /** Asks the API, once per card, what only it knows: admin, and the supporter's date. Each answer redraws. */
-  const askApi = (s: AccountState, tier: ReturnType<typeof savedSupporterTier>) => {
+  const askApi = (s: AccountState, tier: SupporterTier | null) => {
     if (s.kind !== 'signedIn') return
     if (admin === null) {
       admin = false
@@ -223,7 +231,7 @@ export const trainerCardScreen = (
   const build = (opening: boolean) => {
     if (sub || closed) return
     const s = accountState()
-    const tier = s.kind === 'signedIn' ? savedSupporterTier(loadSave()) : null
+    const tier = s.kind === 'signedIn' ? knownTier(loadSave()) : null
     askApi(s, tier)
     const a = t().account
     const sync = syncLine(s)

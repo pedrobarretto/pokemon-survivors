@@ -363,6 +363,20 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
   ...FIELD_MISSIONS,
 }
 
+/**
+ * Whether `p` stands in a ring that fills while they stay (a chest's lock, the
+ * Move Tutor's tent): a lunge stops there (`attacks.ts`), like at a doorway,
+ * so a move that keeps carrying the player (Aqua Step's dance) can't hop them out every time.
+ */
+export const inStandRing = (g: Pick<Game, 'mapEvents'>, p: Pick<Player, 'x' | 'y' | 'radius'>) => {
+  for (const ev of g.mapEvents.list) {
+    if (ev.gone >= 0 || (ev.kind !== 'chest' && ev.kind !== 'tutor')) continue
+    const r = ev.kind === 'chest' ? CHEST.radius : TUTOR.radius + p.radius
+    if (dm.sq(p.x - ev.x) + dm.sq(p.y - ev.y) < r * r) return true
+  }
+  return false
+}
+
 export const MAP_EVENT_KINDS = Object.keys(MAP_EVENTS) as MapEventKind[]
 
 /** Places an event of `kind` at (x, y). The director calls it; so does `ps.event()` in dev builds. */

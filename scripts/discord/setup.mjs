@@ -86,10 +86,15 @@ const TEAMS = ['grass', 'fire', 'water'].map((type) => {
   }
 })
 
-// Top of the list first. `staff` roles see the staff and supporter channels.
+// Top of the list first. `staff` roles see the staff and supporter channels; `supporter` roles (the API gives them
+// by tier, `SUPPORTER_ROLES` in server/src/discordLink.ts, and OG Supporter for good to whoever supported before
+// Patreon, `OG_ROLE`) see the 💛 Supporters category. OG goes under Diamond (staff drag it there: new roles land at the
+// bottom), so an OG shows among the OGs unless they're Diamond.
 const ROLES = [
   { name: 'Dev', color: 0xf8d030, hoist: true, staff: true },
   { name: 'Moderator', color: 0x6890f0, hoist: true, staff: true },
+  { name: 'Diamond Supporter', color: 0x58c8f8, hoist: true, supporter: true },
+  { name: 'OG Supporter', color: 0xa070f0, hoist: true, supporter: true },
   { name: 'Gold Supporter', color: 0xf0b000, hoist: true, supporter: true },
   { name: 'Supporter', color: 0xf85888, hoist: true, supporter: true },
   // Picked in Onboarding: the member's name takes the type's color.

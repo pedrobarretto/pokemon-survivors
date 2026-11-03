@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
 import { RIFT, RIFT_DRAWS, type RiftLegend } from '../data/rifts'
 import { EVENTS, RUN_LENGTH } from '../data/waves'
-import { chargePortal, createRiftState, endlessRiftAt, pickLegend, riftAt, riftDue, riftLoot, riftScale } from './rift'
+import { chargePortal, createRiftState, endlessRiftAt, inDoorway, pickLegend, riftAt, riftDue, riftLoot, riftScale } from './rift'
+import { createGame } from './game'
+import { openPortal } from './riftPortal'
+import { openEntrance } from './placeEntrance'
+import { holdsCarry } from './attacks'
+import { descendCave } from './cave'
+import { spawnMapEvent } from './mapEvents'
+import { enterPlace } from './placeInterior'
+import { CHEST } from './mapEventRules'
+import { CAVE } from '../data/places'
 
 const due = { time: 300, nextAt: 210, busy: false, bossAlive: false, endless: false }
 
@@ -72,6 +81,48 @@ describe('rift portal', () => {
     expect(charge).toBeCloseTo(RIFT.enterTime)
     expect(chargePortal(0.5, false, 0.4)).toBeCloseTo(0.4)
     expect(chargePortal(0.1, false, 1)).toBe(0)
+  })
+
+  it('a portal or an open place door holds a lunge where the step-in fills (inDoorway)', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1)
+    const at = (x: number, y: number) => ({ x, y, radius: g.player.radius })
+    expect(inDoorway(g, at(0, 0))).toBe(false)
+    openPortal(g, 'kyogre', { x: 200, y: 0 })
+    expect(inDoorway(g, at(200, 4))).toBe(true)
+    expect(inDoorway(g, at(320, 0))).toBe(false)
+    const door = openEntrance(g, 'cave', { x: -200, y: 0 })
+    expect(inDoorway(g, at(-200, 4))).toBe(true)
+    if (door) door.open = false
+    expect(inDoorway(g, at(-200, 4))).toBe(false)
+  })
+
+  it('holds a lunge at a shut chest and in the Move Tutor\'s tent, not once the chest opened (holdsCarry)', () => {
+    const g = createGame('quaxly', { w: 480, h: 270 }, 1)
+    const at = (x: number, y: number) => ({ x, y, radius: g.player.radius })
+    const chest = spawnMapEvent(g, 'chest', 300, 0)
+    expect(holdsCarry(g, at(300 + CHEST.radius - 2, 0))).toBe(true)
+    expect(holdsCarry(g, at(300 + CHEST.radius + 2, 0))).toBe(false)
+    chest.gone = 0
+    expect(holdsCarry(g, at(300, 4))).toBe(false)
+    spawnMapEvent(g, 'tutor', -300, 0)
+    expect(holdsCarry(g, at(-300, 10))).toBe(true)
+  })
+
+  it('holds a lunge at the cave\'s treasure chest until it opens', () => {
+    const g = createGame('quaxly', { w: 480, h: 270 }, 1)
+    enterPlace(g, 'cave', 0, 0)
+    for (let i = 0; i < CAVE.floors; i++) {
+      const inside = g.place.inside
+      if (inside?.id === 'cave') descendCave(g, inside)
+    }
+    const inside = g.place.inside
+    if (inside?.id !== 'cave' || !inside.state.chest) throw new Error('no treasure chamber')
+    const chest = inside.state.chest
+    const near = { x: inside.x + chest.x, y: inside.y + chest.y + CAVE.chestRadius, radius: g.player.radius }
+    expect(holdsCarry(g, near)).toBe(true)
+    expect(holdsCarry(g, { ...near, y: near.y + 40 })).toBe(false)
+    chest.open = true
+    expect(holdsCarry(g, near)).toBe(false)
   })
 
   it('lets in a player hopped out and back sooner than the enter time (Aqua Step swaying in place)', () => {

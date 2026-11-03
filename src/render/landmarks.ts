@@ -3,6 +3,7 @@ import { hash2 } from '../engine/rng'
 import { LANDMARK, TUNNEL } from '../data/landmarks'
 import { featuresNear } from '../game/terrain'
 import { roomOf } from '../game/room'
+import { treasureOpen } from '../game/landmarks'
 import { localPlayer } from '../game/players'
 import type { Game } from '../game/types'
 
@@ -26,21 +27,20 @@ const flames = FLAMES.map((rows) => lazy(() => fromStrings(rows, { 1: '#e83818',
 const GLINT = lazy(() => fromStrings(['..1..', '..1..', '11211', '..1..', '..1..'], { 1: '#fff8c0', 2: '#ffffff' }))
 const MOTE = lazy(() => fromStrings(['.1.', '121', '.1.'], { 1: '#68f0f8', 2: '#ffffff' }))
 
-/** Sparks and wisps of the camp's fire, a glint on closed treasures, motes over a woken altar, lantern flicker. */
+/** Sparks and wisps of the camp's fire, a glint on closed treasures (none in co-op, where they show open: `treasureOpen`), motes over a woken altar, lantern flicker. */
 export const drawLandmarkAir = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
   if (roomOf(g)) return
   const p = g.player
   for (const f of featuresNear(g, p.x, p.y, g.view.w / 2 + 60, g.view.h / 2 + 60)) {
     const lm = f.landmark
     if (!lm || !visible(lm.x, lm.y, 160)) continue
-    const looted = g.landmarks.looted.has(lm.cell)
     for (const s of f.solids) {
       if (s.kind === 'campfire') drawFire(ctx, s.x, s.y, t, lm.cell)
       if (s.kind === 'ridge') drawLanterns(ctx, s.x, s.y, t)
     }
     const chest = lm.treasure
     if (!chest) continue
-    if (!looted) {
+    if (!treasureOpen(g, lm.cell)) {
       // Every couple of seconds the treasure catches the light.
       const k = (t * 0.5 + hash2(lm.cell, 1, 3)) % 1
       if (k < 0.18) {
@@ -50,7 +50,7 @@ export const drawLandmarkAir = (ctx: Ctx, g: Game, t: number, visible: (x: numbe
       }
       const open = localPlayer(g).landmark.opening
       if (open?.cell === lm.cell) drawProgress(ctx, chest.x, chest.y - 22, open.t / LANDMARK.openTime)
-    } else if (lm.id === 'ruins') {
+    } else if (lm.id === 'ruins' && g.landmarks.looted.has(lm.cell)) {
       for (let i = 0; i < 4; i++) {
         const k = (t * 0.35 + i / 4) % 1
         ctx.globalAlpha = Math.sin(k * Math.PI)

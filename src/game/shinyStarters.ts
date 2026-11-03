@@ -3,7 +3,7 @@ import { LEGEND_IDS } from '../data/legends'
 import { isRecord } from './parse'
 
 /**
- * Shiny starters for good: rolling the 1/64 shiny on a Pokémon unlocks its
+ * Shiny starters for good: rolling the 1/64 shiny on a starter unlocks its
  * shiny form forever, and the select screen then offers Normal or Shiny.
  * Saved as `{ [id]: picked }`: a key means unlocked, its value whether the
  * next run plays it shiny. A family hatched shiny owns its shiny through

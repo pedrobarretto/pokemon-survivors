@@ -134,7 +134,8 @@ export type CoopEvent =
   | { kind: 'status'; status: Status }
   | { kind: 'room'; room: RoomView }
   /** A run began (tick 0 in `startsIn` ms), or this client joined one mid-way: `runner` holds its game. */
-  | { kind: 'run'; runner: Runner; why: 'start' | 'join' | 'seed' | 'heal' }
+  | { kind: 'run'; runner: Runner; why: 'start'; startsIn: number }
+  | { kind: 'run'; runner: Runner; why: 'join' | 'seed' | 'heal' }
   /** The runner's game object was replaced (a restore): re-link what the shell shares with it. */
   | { kind: 'game'; runner: Runner; why: 'join' | 'heal' | 'seed' }
   /** The relay is bringing this client to the run's present: from its own state (`resume`), the agreed snapshot (`base`) or the seed. */
@@ -154,6 +155,15 @@ export type SocketHandlers = { open: () => void; message: (data: unknown) => voi
 
 /** A socket, as the client uses it (`webSocket` wraps the browser's and Node's `WebSocket`). */
 export type SocketLike = { send: (data: string) => void; close: () => void; isOpen: () => boolean; buffered: () => number }
+
+/** This device's guest id on the relays (kept in `ps:coopGuest`, made once): co-op seats and the Arena's queue know a guest by it. */
+export const coopGuestId = (store: Store, random: () => number) => {
+  const kept = store.get('ps:coopGuest')
+  if (kept && /^[A-Za-z0-9_-]{16,64}$/.test(kept)) return kept
+  const id = Array.from({ length: 24 }, () => 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(random() * 36)]).join('')
+  store.set('ps:coopGuest', id)
+  return id
+}
 
 /** The standard `WebSocket` (browsers, Node 22+) as a `SocketLike`. */
 export const webSocket = (url: string, on: SocketHandlers): SocketLike => {
@@ -228,6 +238,8 @@ export type ClientState = {
   history: Uint8Array
   /** The samples the last special presses went out at (`SPECIALS_KEPT` of them, oldest first), for prediction to press them before the run does. */
   specials: number[]
+  /** The aim of each of those presses (an Arena Unite Move's direction code, -1 a plain press), for the ghost to turn that way. */
+  aims: number[]
   pace: StickPace
   anchoredAt: number
   /** Messages waiting to ride along with the next ones (the state hashes), and when each was queued (ms). */
@@ -289,6 +301,7 @@ export const createCoopClient = (deps: CoopDeps) => {
     sample: 0,
     history: new Uint8Array(HISTORY),
     specials: [],
+    aims: [],
     pace: createStickPace(),
     anchoredAt: -Infinity,
     later: [],
@@ -329,15 +342,7 @@ export const createCoopClient = (deps: CoopDeps) => {
   const relayUrl = (home: RelayHome) => base((home === 'cf' ? undefined : vps[home]) ?? deps.url)
   const wsUrl = (code: string) => `${base(relayFor(code, deps.url, vps)).replace(/^http/, 'ws')}/rooms/${code}/ws`
   const secretKey = (code: string) => `ps:coopSeat:${code}`
-  const GUEST_KEY = 'ps:coopGuest'
-
-  const guestId = () => {
-    const kept = deps.store.get(GUEST_KEY)
-    if (kept && /^[A-Za-z0-9_-]{16,64}$/.test(kept)) return kept
-    const id = Array.from({ length: 24 }, () => 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(deps.random() * 36)]).join('')
-    deps.store.set(GUEST_KEY, id)
-    return id
-  }
+  const guestId = () => coopGuestId(deps.store, deps.random)
 
   const send = (msg: ClientMessage) => {
     const ws = s.socket
@@ -544,7 +549,7 @@ export const createCoopClient = (deps: CoopDeps) => {
         const r = runnerFor(m.run)
         s.runner = r
         setStatus({ kind: 'playing' })
-        return emit({ kind: 'run', runner: r, why: 'start' })
+        return emit({ kind: 'run', runner: r, why: 'start', startsIn: m.startsIn })
       }
       case 'sync': {
         emit({ kind: 'sync', reason: m.reason, from: m.from, to: m.to, base: m.base?.tick ?? null })
@@ -866,9 +871,14 @@ export const createCoopClient = (deps: CoopDeps) => {
   /** Queues an input of the player's for the run. */
   const input = (i: Input) => {
     if (s.status.kind !== 'playing' || s.hidden) return 0
-    if (i.k === 'special') {
+    // The Arena's Unite Move presses the special too, aimed.
+    if (i.k === 'special' || (i.k === 'cast' && i.skill === 2)) {
       s.specials.push(i.sample)
-      if (s.specials.length > SPECIALS_KEPT) s.specials.shift()
+      s.aims.push(i.k === 'cast' ? i.dir : -1)
+      if (s.specials.length > SPECIALS_KEPT) {
+        s.specials.shift()
+        s.aims.shift()
+      }
     }
     return push(s.outbox, i, deps.now())
   }

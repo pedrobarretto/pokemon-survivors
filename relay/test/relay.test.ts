@@ -6,6 +6,7 @@ import { LOG_BATCH, TIMES } from '../src/room'
 import type { ShardObject } from '../src/shardObject'
 import { shardCode, shardName, shardOf } from '../src/shards'
 import { CLOSE_CODES, PROTOCOL, type ClientMessage, type CreateResponse, type Hello, type ServerMessage } from '../../src/net/protocol'
+import type { QueueClientMessage, QueueServerMessage } from '../../src/net/arena'
 
 type Client = { ws: WebSocket; inbox: ServerMessage[]; closed: Promise<number>; closedWith: number | null }
 
@@ -237,5 +238,47 @@ describe('relay', () => {
       expect(await waitFor(c, (m) => (m.t === 'refused' ? m.code : null))).toBe('unavailable')
       expect(await c.closed).toBe(CLOSE_CODES.refused)
     }
+  })
+
+  it('matches eight queued players into one locked Arena room, four a side, which starts once they are all in', async () => {
+    const queued = await Promise.all(
+      Array.from({ length: 8 }, async (_, i) => {
+        const res = await exports.default.fetch('https://relay.test/arena/queue', { headers: { Upgrade: 'websocket' } })
+        const ws = res.webSocket
+        if (!ws) throw new Error(`no socket: ${res.status}`)
+        ws.accept()
+        const matched = new Promise<Extract<QueueServerMessage, { t: 'matched' }>>((resolve, reject) => {
+          ws.addEventListener('message', (e) => {
+            const m = JSON.parse(String(e.data)) as QueueServerMessage
+            if (m.t === 'matched') resolve(m)
+            if (m.t === 'refused') reject(new Error(m.why))
+          })
+        })
+        const guest = `guest-${i}-arenaxxxxxxxxx`
+        ws.send(JSON.stringify({ t: 'queue', kind: 'casual', starter: 'pikachu', party: null, build: 'b1', auth: { kind: 'guest', id: guest } } satisfies QueueClientMessage))
+        return { guest, matched: await matched }
+      }),
+    )
+    const rooms = new Set(queued.map((q) => q.matched.room))
+    expect(rooms.size).toBe(1)
+    expect(queued.filter((q) => q.matched.team === 0)).toHaveLength(4)
+    expect(queued.every((q) => q.matched.humans === 8 && !q.matched.ranked)).toBe(true)
+    const code = queued[0]!.matched.room
+    const stranger = await open(code)
+    say(stranger, hello(code, C))
+    expect(await waitFor(stranger, (m) => (m.t === 'refused' ? m.code : null))).toBe('unavailable')
+    const clients = await Promise.all(
+      queued.map(async (q) => {
+        const c = await open(code)
+        say(c, hello(code, q.guest))
+        await waitFor(c, (m) => (m.t === 'welcome' ? true : null))
+        say(c, { t: 'loadout', loadout: { starter: 'pikachu', team: 0 } })
+        return c
+      }),
+    )
+    const start = await waitFor(clients[0]!, (m) => (m.t === 'start' ? m.run : null))
+    expect(start.players).toHaveLength(8)
+    expect(start.settings).toEqual({ difficulty: 'normal', mode: 'versus', queue: 'casual', locked: true })
+    expect(start.players.filter((p) => p.loadout.team === 1)).toHaveLength(4)
   })
 })

@@ -37,12 +37,15 @@ import { formatNumber, formatPokeDollars, locale, t } from '../i18n'
 import { ROUTES } from '../site/routes'
 import { treatIcon } from '../render/halloweenArt'
 import { h, later } from './dom'
+import { buildTag, followsBuild } from './buildMark'
 import { boundPadHint, glyphText } from './inputLabels'
 import { pressGuard } from './pressGuard'
 import { holdMoveCard, hoverMoveCard, moveCard, withMoveCard } from './moveCard'
 import { actAs, localPlayer } from '../game/players'
 import { crossings } from '../game/terrain'
 import { MAP_ARCHETYPES, type MapArchetypeId } from '../data/mapArchetypes'
+import { surrenderGate, voters } from '../game/versusSocial'
+import { rulesOf } from '../game/versusRules'
 import { deathCause } from './deathCause'
 import { teamBuilds } from './teamHud'
 
@@ -212,7 +215,8 @@ const stepLine = (id: MoveId, level: number) => {
   return typeof text === 'string' ? text : t().levelUp.forkHint(text.fork[0].name, text.fork[1].name)
 }
 
-const offerView = (g: Game, offer: Offer) => {
+/** What a card shows for an offer: its icon, name, tag (NEW, Lv, MAX…), line, type and the fork's mods. Versus's pick tray reads it too (`ui/versusTray.ts`). */
+export const offerView = (g: Game, offer: Offer) => {
   const m = t()
   const rare = rarityOf(offer) === 'rare'
   switch (offer.kind) {
@@ -315,6 +319,7 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
   const v = offerView(g, offer)
   const recipes = offerRecipes(g, offer)
   const rarity = rarityOf(offer)
+  const build = followsBuild(g, offer)
   // A move the evolution just unlocked, while it still comes up more often: tagged with the form that learns it.
   const fresh =
     offer.kind === 'move' && localPlayer(g).freshMoves > 0 && !localPlayer(g).moves.some((m) => m.id === offer.id) && unlockedAt(localPlayer(g).starter, localPlayer(g).branch, localPlayer(g).stage).includes(offer.id)
@@ -329,6 +334,7 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
     rarity && `offer-${rarity}`,
     !canBanish(offer) && 'offer-keep',
     fresh && 'offer-fresh',
+    build && 'offer-build',
   ]
   button.className = classes.filter(Boolean).join(' ')
   button.style.setProperty('--i', String(i))
@@ -363,6 +369,7 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
         v.fork && h('span', { class: 'tag tag-fork' }, m.forkTag),
         fresh && h('span', { class: 'tag tag-fresh' }, m.freshTag(playerForm(g).name)),
         rarity && h('span', { class: `tag tag-${rarity}` }, rarity === 'rare' ? m.rare : m.shiny),
+        build && buildTag(),
       ),
       h('div', { class: 'offer-desc' }, v.desc),
       rarity === 'shiny' && h('div', { class: 'offer-note' }, m.shinyNote),
@@ -687,6 +694,27 @@ export const confirmDialog = (
   return { el, dispose: () => (nav.off(), offEsc(), el.remove()) }
 }
 
+/** The Arena menu's "Render-se": live with the match (too early, the team's cooldown, a vote running), usable only when ready. */
+const surrenderButton = (g: Game) => {
+  const button = h('button', { class: 'btn' })
+  const sync = () => {
+    const m = t().versus.surrender
+    const gate = surrenderGate(g, localPlayer(g))
+    const text =
+      gate.state === 'early' ? m.locked(formatTime(rulesOf(g.versus!).length - gate.until))
+      : gate.state === 'cooldown' ? m.cooldown(Math.ceil(gate.until - g.time))
+      : gate.state === 'running' ? m.running
+      : m.button
+    if (button.textContent !== text) button.textContent = text
+    button.classList.toggle('off', gate.state !== 'ready')
+    button.setAttribute('aria-disabled', String(gate.state !== 'ready'))
+  }
+  sync()
+  // The match runs behind the menu: the label follows it until the menu goes.
+  const timer = setInterval(() => (button.isConnected ? sync() : clearInterval(timer)), 500)
+  return button
+}
+
 /**
  * What the pause menu does. `coop`: it's co-op's menu instead, over a run
  * that goes on: no pause in its title, a sound switch (`sound` toggles it and
@@ -698,6 +726,8 @@ type PauseActions = {
   settings: (back: () => void) => Screen
   report: ((back: () => void) => Screen) | null
   coop?: { sound: () => boolean; soundOn: boolean }
+  /** An Arena match: proposes the team's surrender (or gives up, alone with bots), once confirmed. */
+  surrender?: () => void
 }
 
 export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: PauseActions): Screen => {
@@ -731,7 +761,22 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
   const confirmLeave = (focus: number) => {
     const m = t().team.menu
     openSub((back) => {
-      const dialog = confirmDialog(root, input, m.confirm, (yes) => (dialog.dispose(), yes ? actions.quit() : back()), { yes: m.yes, no: m.no })
+      const dialog = confirmDialog(root, input, g.versus ? t().versus.menu.confirm : m.confirm, (yes) => (dialog.dispose(), yes ? actions.quit() : back()), { yes: m.yes, no: m.no })
+      return dialog
+    }, focus)
+  }
+
+  /** Arena: "Render-se?" first (alone with bots, giving up; with teammates, a vote); yes sends it and closes the menu, so the vote shows. */
+  const confirmSurrender = (focus: number) => {
+    const m = t().versus.surrender
+    const alone = voters(g, localPlayer(g).versus?.team ?? 0).length <= 1
+    openSub((back) => {
+      const dialog = confirmDialog(root, input, alone ? m.confirmSolo : m.confirmTeam, (yes) => {
+        dialog.dispose()
+        if (!yes) return back()
+        actions.surrender?.()
+        actions.resume()
+      }, { yes: m.yes, no: m.no })
       return dialog
     }, focus)
   }
@@ -745,8 +790,9 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
     const settingsButton = h('button', { class: 'btn' }, m.settings)
     const report = actions.report
     const reportButton = report && h('button', { class: 'btn' }, m.reportBug)
-    const quit = h('button', { class: 'btn' }, coop ? cm.leave : m.quit)
-    const buttons = [resume, ...(sound ? [sound] : []), settingsButton, ...(reportButton ? [reportButton] : []), quit]
+    const quit = h('button', { class: 'btn' }, g.versus ? t().versus.menu.leave : coop ? cm.leave : m.quit)
+    const giveUp = g.versus && actions.surrender ? surrenderButton(g) : null
+    const buttons = [resume, ...(sound ? [sound] : []), settingsButton, ...(reportButton ? [reportButton] : []), ...(giveUp ? [giveUp] : []), quit]
     // Co-op: the teammates' builds, to read and coordinate while the run goes on.
     const builds = coop && teamBuilds(g, localPlayer(g))
     nav?.off()
@@ -762,29 +808,34 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
       if (pressed === reportButton && report) later(() => openSub(report, i))
       // Quitting opens the partner select, which would take that same press as its pick and start the run again.
       if (pressed === quit) later(coop ? () => confirmLeave(i) : actions.quit)
+      if (pressed === giveUp && surrenderGate(g, localPlayer(g)).state === 'ready') later(() => confirmSurrender(i))
     }, { initial: focus })
     el.replaceChildren(
       h(
         'div',
         { class: opening ? 'dialog box pop wide pause' : 'dialog box wide pause' },
         h('div', { class: 'dialog-title' }, coop ? cm.title : m.title),
-        coop && h('p', { class: 'pause-note' }, cm.note),
-        difficultyTag(g.difficulty),
+        coop && h('p', { class: 'pause-note' }, g.versus ? t().versus.menu.note : cm.note),
+        // A match has no difficulty: everyone plays the same.
+        !g.versus && difficultyTag(g.difficulty),
         abilityPanel(g),
         mapPanel(g),
         h(
           'div',
           { class: 'pause-body' },
-          h(
-            'div',
-            { class: 'pause-grid' },
-            pauseSection(m.statsTitle, statTable(g)),
-            h('div', { class: 'pause-column' }, pauseSection(m.movesTitle, moveList(g)), pauseSection(m.itemsTitle, itemList(g))),
-          ),
-          pauseSection(m.damageTitle, damagePanel(g)),
+          // A match keeps running behind the menu: your moves and your team's builds, not the run's whole sheet.
+          g.versus
+            ? pauseSection(m.movesTitle, moveList(g))
+            : h(
+                'div',
+                { class: 'pause-grid' },
+                pauseSection(m.statsTitle, statTable(g)),
+                h('div', { class: 'pause-column' }, pauseSection(m.movesTitle, moveList(g)), pauseSection(m.itemsTitle, itemList(g))),
+              ),
+          !g.versus && pauseSection(m.damageTitle, damagePanel(g)),
           builds && pauseSection(cm.builds, builds),
-          duoPanel(g),
-          h('p', { class: 'evo-legend' }, m.evoLegend),
+          !g.versus && duoPanel(g),
+          !g.versus && h('p', { class: 'evo-legend' }, m.evoLegend),
           hint(m.cardHintKeys, m.cardHintTouch),
         ),
         h('div', { class: 'buttons' }, ...buttons),

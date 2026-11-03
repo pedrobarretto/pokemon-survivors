@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canvasCache, canvasRestored, heldCanvases, lazy, onCanvasReset, resetCanvases, sweepArt, weighCanvases } from './pixelart'
+import { canvasCache, canvasLosses, canvasRestored, canvasWatch, heldCanvases, lazy, onCanvasReset, resetCanvases, sweepArt, weighCanvases, type Probe } from './pixelart'
 
 describe('resetCanvases', () => {
   it('drops cached art so it is drawn again after a GPU reset', () => {
@@ -25,6 +25,53 @@ describe('resetCanvases', () => {
     expect(drops).toBe(0)
     await Promise.resolve()
     expect(drops).toBe(1)
+  })
+})
+
+/** A stand-in for the watched canvas: keeps its one pixel's alpha, which `wipe` clears as iOS does. */
+const pixel = () => {
+  const data = [0, 0, 0, 0]
+  const probe: Probe = { fillStyle: '', fillRect: () => (data[3] = 255), getImageData: () => ({ data }) }
+  return { probe, wipe: () => (data[3] = 0) }
+}
+
+describe('canvasWatch', () => {
+  it('drops the caches when the browser wipes the canvases without a word, on a new probe', async () => {
+    const made: ReturnType<typeof pixel>[] = []
+    const check = canvasWatch(() => made[made.push(pixel()) - 1]!.probe)
+    let drops = 0
+    onCanvasReset(() => drops++)
+    const wiped = canvasLosses.wiped
+
+    expect(check()).toBe(false)
+    expect(check()).toBe(false)
+    made[0]!.wipe()
+    expect(check()).toBe(true)
+    await Promise.resolve()
+    expect(drops).toBe(1)
+    expect(canvasLosses.wiped).toBe(wiped + 1)
+    expect(made).toHaveLength(2)
+    // The new probe is painted: no more drops until it's wiped too.
+    expect(check()).toBe(false)
+  })
+
+  it('takes a probe WebKit refuses to read (InvalidStateError) as lost, once in a row', () => {
+    const unreadable: Probe = {
+      fillStyle: '',
+      fillRect: () => {},
+      getImageData: () => {
+        throw new DOMException('The object is in an invalid state.', 'InvalidStateError')
+      },
+    }
+    const check = canvasWatch(() => unreadable)
+    const wiped = canvasLosses.wiped
+
+    expect(check()).toBe(false)
+    expect(check()).toBe(true)
+    // Still unreadable on the new probe: a page past its memory budget, not another wipe.
+    expect(check()).toBe(false)
+    expect(check()).toBe(false)
+    expect(canvasLosses.wiped).toBe(wiped + 1)
   })
 })
 

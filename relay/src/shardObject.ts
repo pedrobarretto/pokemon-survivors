@@ -15,11 +15,13 @@ import {
   reattach,
   running,
   tick,
+  type ArenaLock,
   type ConnId,
   type Effect,
   type Room,
   type State,
 } from './room'
+import { arenaApiOf, createOutbox, parseOutgoing, type Outbox } from './report'
 import { DELETE_MAX, HELLO_TIMEOUT_MS, LAZY, WHERE_WAIT_MS, identify, isRecord, log, noSuchRoom, whereOnce } from './shell'
 import { admits, capOf, createMeter, due, earliest, shardCode, shardName, shardOf, tally, weighs, type Shard } from './shards'
 import { dumpJson, parseRoom, persist, readBound, syncTexts, type DumpRequest, type Store, type Stored } from './store'
@@ -77,6 +79,8 @@ type Attachment = { id: ConnId; ua: string; seat: number | null; code: string }
 
 /** The key of a room's JSON (listed at boot); the rest of a room's keys are under `roomPrefix`. */
 const ROOM_KEY = 'room:'
+/** An Arena report waiting for the API (`report.ts`): outlives its room, retried by the shard's alarm. */
+const OUT_KEY = 'out:'
 const roomPrefix = (code: string) => `r:${code}:`
 
 /** The standard "service restart" close: not one of ours (`CLOSE_CODES`), so clients reconnect at once and resume. */
@@ -144,9 +148,23 @@ export class ShardObject extends DurableObject<Env> {
   private lastWindow: ReturnType<ShardObject['summary']> | null = null
   /** Inbound socket messages, all rooms together: a busy shard turns new rooms away (`INBOUND_BUDGET`). */
   private inbound = createMeter(Date.now())
+  /** The rooms' Arena match reports on their way to the API. */
+  private readonly outbox: Outbox
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
+    const kept = [...ctx.storage.kv.list<unknown>({ prefix: OUT_KEY })].flatMap(([, v]) => parseOutgoing(v) ?? [])
+    this.outbox = createOutbox(
+      {
+        api: arenaApiOf(env.ARENA_API_URL, env.ARENA_REPORT_SECRET),
+        save: (o) => void ctx.storage.put(OUT_KEY + o.id, o, LAZY),
+        remove: (id) => void ctx.storage.delete(OUT_KEY + id, LAZY),
+        log: (ev, data) => this.log({ ev, ...data }),
+        now: Date.now,
+        changed: () => this.scheduleAlarm(),
+      },
+      kept,
+    )
     void ctx.blockConcurrencyWhile(async () => {
       const now = Date.now()
       // Read whole first: one `kv.list` iterator at a time, and each room's load lists its log.
@@ -198,7 +216,7 @@ export class ShardObject extends DurableObject<Env> {
    * than `INBOUND_BUDGET`: the Worker tries the next index) or no free code
    * turned up.
    */
-  async create(init: { shard: Shard; build: string }): Promise<{ code: string; claim: string } | null> {
+  async create(init: { shard: Shard; build: string; lock?: Omit<ArenaLock, 'startBy'> }): Promise<{ code: string; claim: string } | null> {
     this.name ??= shardName(init.shard)
     const now = Date.now()
     tally(this.inbound, now)
@@ -207,7 +225,7 @@ export class ShardObject extends DurableObject<Env> {
       const code = shardCode(init.shard, randomBytes)
       if (this.rooms.has(code)) continue
       const shell = this.shellFor(code, null, now)
-      const r = createRoom(shell.state, { code, build: init.build, region: init.shard.region }, now)
+      const r = createRoom(shell.state, { code, build: init.build, region: init.shard.region, ...(init.lock && { lock: init.lock }) }, now)
       if (!r.ok) continue
       this.rooms.set(code, shell)
       this.step(shell, () => r.effects)
@@ -281,11 +299,12 @@ export class ShardObject extends DurableObject<Env> {
     this.dropSocket(ws, { closeCode: null, reason: 'error' })
   }
 
-  /** The earliest room deadline came: every room whose own did is ticked. */
+  /** The earliest room deadline came: every room whose own did is ticked, and the reports due are posted again. */
   async alarm() {
     this.alarmAt = null
     const now = Date.now()
     for (const shell of [...this.rooms.values()]) if (due(shell.deadline, now)) this.step(shell, () => tick(shell.state, now))
+    if (due(this.outbox.next(), now)) this.ctx.waitUntil(this.outbox.flush())
     this.scheduleAlarm()
   }
 
@@ -411,6 +430,7 @@ export class ShardObject extends DurableObject<Env> {
       else if (e.k === 'event') this.log({ ev: e.ev, ...e.data })
       else if (e.k === 'dump') this.ctx.waitUntil(this.dump(shell, e, room).catch((err: unknown) => this.log({ ev: 'dump.failed', code: shell.code, error: String(err) })))
       else if (e.k === 'wipe') wiped = true
+      else if (e.k === 'report') this.ctx.waitUntil(this.outbox.add(e.report))
     }
     if (wiped) return this.wipe(shell)
     for (const [id, a] of shell.attached) {
@@ -448,9 +468,9 @@ export class ShardObject extends DurableObject<Env> {
     this.scheduleAlarm()
   }
 
-  /** The shard's one alarm, at the earliest of its rooms' deadlines (lazy: it must not hold the frames either). */
+  /** The shard's one alarm, at the earliest of its rooms' deadlines and its reports' retries (lazy: it must not hold the frames either). */
   private scheduleAlarm() {
-    const at = earliest([...this.rooms.values()].map((s) => s.deadline))
+    const at = earliest([...[...this.rooms.values()].map((s) => s.deadline), this.outbox.next()])
     if (at === this.alarmAt) return
     this.alarmAt = at
     void (at === null ? this.ctx.storage.deleteAlarm(LAZY) : this.ctx.storage.setAlarm(at, LAZY))

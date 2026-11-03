@@ -124,7 +124,6 @@ export const notFoundPage = () => {
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="/src/site/site.css" />
     <script type="module" src="/src/site/client.ts"></script>
-    <script defer vite-ignore src="/_vercel/insights/script.js"></script>
   </head>
   <body>
   ${others.map((l) => html`<template data-locale="${l}" data-tag="${SITE_MESSAGES[l].lang.tag}" data-title="${SITE_MESSAGES[l].notFound.title}">${body(l)}</template>`).map((t) => t.__html).join('\n  ')}

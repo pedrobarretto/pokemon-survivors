@@ -1,6 +1,8 @@
 import { accountHandle } from '../account'
 import { fetchReports, findPlayers, moderate, sendGift, sentGifts } from '../admin'
+import { GIFT_TITLES, type GiftTitleId } from '../data/achievements'
 import { HATCHLING_IDS, HATCHLINGS } from '../data/hatchlings'
+import { styleIds, stylePrice, type FrameId } from '../data/style'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { formatTime } from '../engine/math'
@@ -29,7 +31,10 @@ const SEARCH_MS = 350
 /** A second tap on a button that asks within this long acts; after it, the button asks again. */
 const CONFIRM_MS = 4000
 
-const KINDS = { egg: 'Ovo', coins: 'Pokédólares (₽)', shinyHatch: 'Shiny de uma família', shinyPick: 'Shiny à escolha (ticket)' } as const
+const KINDS = { egg: 'Ovo', coins: 'Pokédólares (₽)', shinyHatch: 'Shiny de uma família', shinyPick: 'Shiny à escolha (ticket)', title: 'Título', frame: 'Moldura' } as const
+
+/** Frames that are never sold, only given (the Creator's, the Ambassador's…). */
+const GIFT_FRAMES = styleIds('frame').filter((id) => stylePrice('frame', id) === null)
 
 type Kind = keyof typeof KINDS
 
@@ -104,7 +109,8 @@ const runLine = (run: ReportedRun) =>
 /**
  * The panel, in two tabs. Presentes: search a player by handle or email,
  * pick one, then ban, unban or wipe their save, or choose a gift (an egg,
- * ₽, a family's shiny or a shiny ticket), see it as the player will and send
+ * ₽, a family's shiny, a shiny ticket, or a title or frame only given, like
+ * the Creator's), see it as the player will and send
  * it with a second tap; below, the latest gifts sent by hand. Denúncias
  * (with how many are open): the open reports grouped by run or player, each
  * with its numbers, notes, a link to the profile and its actions (take the
@@ -129,6 +135,10 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
   const tier = h('select', { class: 'field-input admin-select' }, ...EGG_TIER_IDS.map((id) => option(id, t().eggs.tiers[id])))
   const amount = h('input', { class: 'field-input', type: 'number', inputmode: 'numeric', min: 1, max: 100000, step: 100, value: 1000 })
   const family = h('select', { class: 'field-input admin-select' }, ...HATCHLING_IDS.map((id) => option(id, HATCHLINGS[id].name)))
+  const title = h('select', { class: 'field-input admin-select' }, ...GIFT_TITLES.map((id) => option(id, t().achievements.titles[id])))
+  const frame = h('select', { class: 'field-input admin-select' }, ...GIFT_FRAMES.map((id) => option(id, t().mart.styles.frame[id])))
+  /** The control that picks the gift's detail, per kind (none for a shiny ticket). */
+  const controls: Partial<Record<Kind, HTMLElement>> = { egg: tier, coins: amount, shinyHatch: family, title, frame }
   const detail = h('span', { class: 'field-box' })
   const preview = h('div', { class: 'admin-preview box' })
   const message = h('p', { class: 'field-message' })
@@ -194,6 +204,10 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
         return { kind: 'shinyHatch', family: HATCHLING_IDS.find((id) => id === family.value) ?? HATCHLING_IDS[0]! }
       case 'shinyPick':
         return { kind: 'shinyPick' }
+      case 'title':
+        return { kind: 'title', title: GIFT_TITLES.find((id): id is GiftTitleId => id === title.value) ?? GIFT_TITLES[0] }
+      case 'frame':
+        return { kind: 'style', style: { slot: 'frame', id: GIFT_FRAMES.find((id): id is FrameId => id === frame.value) ?? 'creator' } }
     }
   }
 
@@ -201,8 +215,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
   const refresh = () => {
     armed = 0
     send.textContent = 'Enviar presente'
-    const k = kind.value
-    const control = k === 'egg' ? tier : k === 'coins' ? amount : k === 'shinyHatch' ? family : null
+    const control = isKind(kind.value) ? (controls[kind.value] ?? null) : null
     detail.replaceChildren(...(control ? [control] : []))
     detail.parentElement?.classList.toggle('hidden', !control)
     const c = content()
@@ -343,7 +356,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     }
   })
 
-  for (const el of [kind, tier, amount, family]) el.addEventListener('input', refresh)
+  for (const el of [kind, tier, amount, family, title, frame]) el.addEventListener('input', refresh)
   query.addEventListener('input', () => {
     window.clearTimeout(timer)
     timer = window.setTimeout(() => void search(), SEARCH_MS)

@@ -6,9 +6,12 @@ import { TRANSLATORS } from '../data/translators'
 import { bugReportsEnabled } from '../bugReport'
 import { bugReportForm } from './bugReport'
 import { openControls } from './controls'
+import { AIM_ASSISTS } from './arenaAim'
+import { PRIORITIES } from '../game/versusKit'
 import { h, later } from './dom'
 import { DAMAGE_NUMBERS } from '../render/damageNumbers'
 import { FLASH_MODES } from '../render/flashes'
+import { FOG_MODES } from '../render/weather'
 import { RUN_TOASTS } from './toastQueue'
 import { loadSettings, MIN_ATTACK_OPACITY, MINIMAP_MODES, writeSettings, type Settings } from './save'
 import { coopUrl } from '../coopShell'
@@ -16,6 +19,7 @@ import { hint, menu, type Screen } from './screens'
 import { backButton, shellBody, tabStrip, topBar, segmented } from './shell'
 import { REPO_URL, ROUTES, SOCIAL_IDS, SOCIALS } from '../site/routes'
 import { applyUiScale, maxUiZoom, UI_SCALES, uiZoom, type UiScale } from './uiScale'
+import { applyTheme, THEMES } from './theme'
 import { safeModeOn, setSafeMode } from '../safeMode'
 import { currentInstallOffer, installHelpScreen, onInstallChange, promptInstall } from './install'
 
@@ -26,7 +30,7 @@ import { currentInstallOffer, installHelpScreen, onInstallChange, promptInstall 
  * HUD's CSS (the status box moves off the fixed stick), `data-hand`,
  * `data-stick-height` and `data-stick-edge` (the touch buttons' side and the
  * fixed stick's place), `data-flashes` (reduced hides the shell's white screen
- * flash), and the UI size.
+ * flash), the theme (`data-theme`) and the UI size.
  */
 const apply = (s: Settings) => {
   setMix(s)
@@ -36,6 +40,7 @@ const apply = (s: Settings) => {
   root.stickHeight = s.stickHeight
   root.stickEdge = s.stickEdge
   root.flashes = s.flashes
+  applyTheme(s.theme)
   applyUiScale(s.uiScale)
 }
 
@@ -124,6 +129,12 @@ const switchRow = (label: string, read: () => boolean, set: (on: boolean) => voi
   }
   return { el, adjust: flip, activate: flip, sync }
 }
+
+/** The page in the browser's fullscreen, where it has the Fullscreen API (Android, computers; not iPhone Safari). */
+const canFullscreen = () => document.fullscreenEnabled && typeof document.documentElement.requestFullscreen === 'function'
+const isFullscreen = () => document.fullscreenElement !== null
+/** Fullscreen on or off; the browser may refuse (no gesture, a policy), and the switch then stays as it was (`fullscreenchange` syncs it). */
+const setFullscreen = (on: boolean) => void (on ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : document.exitFullscreen()).catch(() => {})
 
 /** A switch over one of the settings. */
 const toggle = (label: string, read: (s: Settings) => boolean, write: (on: boolean) => Partial<Settings>): Row =>
@@ -219,7 +230,7 @@ let lastTab: Tab = 'sound'
 
 /**
  * Settings in four tabs: Som (music and effects volume, mute), Jogo
- * (language, damage numbers, screen shake, flashes, run alerts, the mini map, move opacity, UI size, safe mode), Controles
+ * (language, theme, damage numbers, screen shake, flashes, fog, run alerts, the mini map, move opacity, UI size, safe mode), Controles
  * (touch joystick, the buttons' side and the fixed stick's place on touchscreens, and the remap screen) and Sobre
  * (installing the app, what the game is, legal and
  * credits, GitHub, the official profiles, and the bug report form when there's an API to send it to).
@@ -273,15 +284,20 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
       case 'game':
         return [
           languageRow(pickLanguage),
+          choiceRow(m.theme, 'theme', THEMES, (mode) => m.themes[mode]),
           choiceRow(m.damageNumbers, 'damageNumbers', DAMAGE_NUMBERS, (mode) => m.damageModes[mode]),
           toggle(m.screenShake, (s) => s.screenShake, (on) => ({ screenShake: on })),
           choiceRow(m.flashes, 'flashes', FLASH_MODES, (mode) => m.flashModes[mode]),
+          choiceRow(m.fog, 'fog', FOG_MODES, (mode) => m.fogModes[mode]),
           choiceRow(m.runToasts, 'runToasts', RUN_TOASTS, (mode) => m.runToastModes[mode]),
           choiceRow(m.minimap, 'minimap', MINIMAP_MODES, (mode) => m.minimapModes[mode]),
+          toggle(m.quickChat, (s) => s.quickChat, (on) => ({ quickChat: on })),
           slider(m.attackOpacity, 'attackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS),
           // Teammates' moves only matter in a build with co-op.
           ...(coopUrl() ? [slider(m.teamAttackOpacity, 'teamAttackOpacity', undefined, MIN_ATTACK_OPACITY * SLIDER_STEPS)] : []),
           ...uiScaleRows(m.uiScale, m.uiScaleAuto),
+          // The browser's fullscreen is the page's, not a setting: Esc (or the phone's back) leaves it too.
+          ...(canFullscreen() ? [switchRow(m.fullscreen, isFullscreen, setFullscreen)] : []),
           // Safe mode is the device's, not a setting (`safeMode.ts`): a crash turns it on by itself.
           switchRow(m.safeMode, safeModeOn, (on) => setSafeMode(on ? 'on' : 'off')),
         ]
@@ -300,6 +316,9 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
                   : []),
               ]
             : []),
+          // The Arena's aim: how a cast picks where it goes, and which rival the basic attack and the assist go for.
+          choiceRow(m.aimAssist, 'aimAssist', AIM_ASSISTS, (mode) => m.aimAssists[mode]),
+          choiceRow(m.targetPriority, 'targetPriority', PRIORITIES, (prio) => m.priorities[prio]),
           openRow(t().controls.open, () => showSub(openControls)),
         ]
       case 'about':
@@ -375,12 +394,15 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
 
   // A prompt arriving or the app getting installed while Sobre is open shows or hides its row.
   const offInstall = onInstallChange(() => !away && tab === 'about' && build(nav?.index ?? 0, false))
+  // Fullscreen lands a moment after the switch asks for it, and the browser can leave it on its own.
+  document.addEventListener('fullscreenchange', sync)
 
   const dispose = () => {
     sub?.dispose()
     nav?.off()
     offKeys()
     offInstall()
+    document.removeEventListener('fullscreenchange', sync)
     el.remove()
     if (refresh === sync) refresh = null
   }

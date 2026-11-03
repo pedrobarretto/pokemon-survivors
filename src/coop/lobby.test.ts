@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { PLAYABLE_IDS } from '../data/hatchlings'
 import type { CoopInvite } from '../game/friends'
+import { NO_RANKS } from '../game/meta'
 import type { Member, RoomView } from '../net/protocol'
-import { buildAdvice, coopAccess, coopStarter, freshInvites, memberState, readiness } from './lobby'
+import { arenaLoadout, arenaSeat, buildAdvice, coopAccess, coopStarter, freshInvites, memberState, readiness } from './lobby'
 
 const member = (seat: number, o: Partial<Member> = {}): Member => ({
   seat,
@@ -91,5 +92,18 @@ describe('coopStarter', () => {
     expect(coopStarter('gible')).toBe('gible')
     expect(coopStarter('squirtle')).toBe('squirtle')
     expect(coopStarter('mewtwo')).toBe(PLAYABLE_IDS[0])
+  })
+})
+
+describe('arenaSeat', () => {
+  it("swaps a co-op loadout for the Arena pick, even when the lobby's partner is a roster starter", () => {
+    const partner = { starter: 'charmander', ranks: { ...NO_RANKS, hpUp: 3 }, shiny: true } as const
+    expect(arenaSeat(partner, 'fennekin')).toEqual(arenaLoadout('fennekin', 0))
+    expect(arenaSeat({ ...partner, starter: 'gible' }, 'piplup')).toEqual(arenaLoadout('piplup', 0))
+  })
+
+  it('keeps an Arena loadout; a seat with a side but no roster starter keeps its side', () => {
+    expect(arenaSeat(arenaLoadout('fennekin', 1), 'piplup')).toBeNull()
+    expect(arenaSeat({ starter: 'gible', ranks: NO_RANKS, shiny: false, team: 1 }, 'piplup')).toEqual(arenaLoadout('piplup', 1))
   })
 })

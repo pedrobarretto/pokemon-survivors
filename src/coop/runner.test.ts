@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { arenaResult } from '../game/arenaRank'
 import { NO_RANKS } from '../game/meta'
 import { deflate, restore, snapshot, stateHash } from '../game/snapshot'
 import type { ClientMessage, Entry, Frame, RunStart, ServerMessage } from '../net/protocol'
@@ -111,6 +112,38 @@ describe('the lockstep runner', () => {
     expect(r.known - r.next).toBeLessThanOrEqual(r.hold.hold + 2)
   })
 
+  it('catches up from a sync on a device whose ticks cost more than the budget, while the run goes on', () => {
+    // Every clock reading costs 10 ms (a heavy late-game tick on a phone), the display runs at 30 fps and 2 new ticks arrive per frame.
+    const h = harness(10)
+    const r = createRunner(START, 'ROOMS', 0)
+    let known = SYNC_FAR * 2
+    onFrame(r, frame(0, known), h.at(), () => {})
+    for (let i = 0; i < 1500 && (r.syncing || i === 0); i++) {
+      onFrame(r, frame(known, known + 2), h.at(), () => {})
+      known += 2
+      h.tick(1000 / 30)
+      advance(r, 1 / 30, h.deps)
+    }
+    expect(r.syncing).toBeNull()
+  })
+
+  it('keeps real time live on a slow phone whose frames bring more ticks than the floor, instead of falling into syncs', () => {
+    // 10 fps (6 ticks per frame) and every clock reading costs 5 ms (a busy fight's ticks on a cheap phone): over the budget every frame.
+    const h = harness(5)
+    const r = createRunner(START, 'ROOMS', 0)
+    let known = 0
+    let synced = 0
+    for (let i = 0; i < 600; i++) {
+      onFrame(r, frame(known, known + 6), h.at(), () => {})
+      known += 6
+      h.tick(100)
+      advance(r, 0.1, h.deps)
+      if (r.syncing) synced++
+    }
+    expect(synced).toBe(0)
+    expect(r.known - r.next).toBeLessThan(SYNC_FAR / 4)
+  })
+
   it('plays a snapshot only if it restores to the hash the team agreed on; a bad one is reported and never played', async () => {
     const h = harness()
     const source = createRunner(START, 'ROOMS', 0)
@@ -144,5 +177,16 @@ describe('the lockstep runner', () => {
     expect(onFrame(r, frame(5, 12), h.at(), () => {})).toBe(true)
     expect(r.known).toBe(12)
     expect(onFrame(r, frame(20, 21), h.at(), () => {})).toBe(false)
+  })
+
+  it("says an Arena match's result with its end, as the relay counts it", () => {
+    const h = harness()
+    const r = createRunner({ ...START, settings: { difficulty: 'normal', mode: 'versus' } }, 'ROOMS', 0)
+    r.ticks.set(0, [])
+    r.game.versus!.result = { winner: 1, surrender: null }
+    r.game.phase = 'gameover'
+    stepOne(r, h.deps)
+    const over = h.sent.find((m) => m.t === 'over')
+    expect(over).toMatchObject({ t: 'over', tick: 1, result: JSON.stringify(arenaResult(r.game)) })
   })
 })

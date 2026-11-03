@@ -1,9 +1,9 @@
 import { accountState, API_URL } from './account'
 import { isExpectedFailure, isOwnError } from './analytics'
 import { apiCall } from './api'
-import { BUG_REPORT, clip, parseBugCrash, type BugCrash, type BugError, type BugPerf, type BugReport, type BugRun, type BugTech } from './game/bugReport'
+import { BUG_REPORT, clip, parseBugCrash, type BugCrash, type BugError, type BugPerf, type BugInput, type BugReport, type BugRun, type BugTech } from './game/bugReport'
 import { isRecord } from './game/parse'
-import { parseCrumb, type Crumb, type CrumbMoment, type Memory } from './crumb'
+import { parseCrumb, type Crumb, type CrumbMoment, type LaunchStep, type Memory } from './crumb'
 import { locale } from './i18n'
 
 /**
@@ -16,7 +16,8 @@ import { locale } from './i18n'
  *   error of the game's own. A run that ends, or a page closed on purpose, clears it; a page the
  *   phone killed mid-run leaves it, and the next boot finds it (`takeCrash`).
  *   Its breadcrumb (`crumb.ts`) adds the memory held and the run's last key
- *   moment (`runMoment`), which writes the watch at once.
+ *   moment (`runMoment`), which writes the watch at once, and how far the run's
+ *   launch got (`launchStep`): the watch holds a launch from its first step, before the run exists.
  *   A page that went away while the player was away from it (in the background,
  *   or the window out of focus) isn't a crash: Android's Recents swipe kills
  *   Chrome with only a `blur` before it, no `visibilitychange` nor `pagehide`.
@@ -35,10 +36,10 @@ const MOMENT_GAP_MS = 1000
 
 const errors: BugError[] = []
 
-/** What the shell has on screen and how the device copes, set by `main.ts` (`describeWith`). */
-type Context = { view: string; run: BugRun | null; perf: BugPerf | null; memory: Memory | null }
+/** What the shell has on screen, how the device copes and what the player plays with (`Input.lastKind`, `Input.pads`), set by `main.ts` (`describeWith`). */
+type Context = { view: string; run: BugRun | null; perf: BugPerf | null; memory: Memory | null; input: { last: BugInput['last']; pads: readonly string[] } | null }
 
-let describe = (): Context => ({ view: '', run: null, perf: null, memory: null })
+let describe = (): Context => ({ view: '', run: null, perf: null, memory: null, input: null })
 
 /**
  * The crash watch as stored: the run, the session's last error, whether the page was in the
@@ -91,22 +92,28 @@ let moment: { kind: CrumbMoment; at: number } | null = null
 let pendingMoment: CrumbMoment | null = null
 let momentTimer: ReturnType<typeof setTimeout> | null = null
 let wroteAt = 0
+/** The launch's step (`launchStep`): set from Play on, null once no run is on its way nor on screen. */
+let launch: LaunchStep | null = null
+
+/** Whether a run is on its way and not set up yet: the watch holds it without a run. */
+const launching = () => launch === 'ticket' || launch === 'sheets'
 
 /**
- * Brings the crash watch up to date with the run on screen (`describeWith`):
- * written while one is on, cleared once it's over. `main.ts` calls it as a
- * run starts and ends; a timer keeps it fresh in between.
+ * Brings the crash watch up to date with the run on screen (`describeWith`), or
+ * the one on its way (`launchStep`): written while one is on, cleared once it's
+ * over. `main.ts` calls it as a run starts and ends; a timer keeps it fresh in between.
  */
 export const syncRunWatch = () => {
   const { run, perf, memory } = describe()
-  if (!run) {
+  if (!run && !launching()) {
     moment = null
+    launch = null
     return watch && writeWatch(null)
   }
-  if (pendingMoment) moment = { kind: pendingMoment, at: run.time }
+  if (run && pendingMoment) moment = { kind: pendingMoment, at: run.time }
   pendingMoment = null
   wroteAt = performance.now()
-  const crumb = memory && { ...memory, moment: moment?.kind ?? null, momentAt: moment?.at ?? null }
+  const crumb = memory && { ...memory, moment: moment?.kind ?? null, momentAt: moment?.at ?? null, launch }
   writeWatch({ at: new Date().toISOString(), version: __GAME_VERSION__, run, heapMb: heapMb(), perf, error: watch?.error ?? null, hidden: document.hidden, blurred, crumb })
 }
 
@@ -125,6 +132,16 @@ export const runMoment = (kind: CrumbMoment) => {
     },
     Math.max(0, wroteAt + MOMENT_GAP_MS - performance.now()),
   )
+}
+
+/**
+ * A step of a run's launch (`LaunchStep`), written to the watch at once: a page dying while
+ * the lobby hands over to the run says where. Null drops a launch that didn't make it to a run.
+ */
+export const launchStep = (step: LaunchStep | null) => {
+  if (launch === step) return
+  launch = step
+  syncRunWatch()
 }
 
 /**
@@ -223,7 +240,7 @@ const size = (w: number, h: number) => `${Math.round(w)}x${Math.round(h)}`
 
 /** The technical info right now, with the crashed run when the report is about one. */
 export const techInfo = (crash: BugCrash | null): BugTech => {
-  const { view, run, perf } = describe()
+  const { view, run, perf, input } = describe()
   return {
     version: __GAME_VERSION__,
     locale: locale(),
@@ -236,6 +253,7 @@ export const techInfo = (crash: BugCrash | null): BugTech => {
     heapMb: heapMb(),
     standalone: matchMedia('(display-mode: standalone)').matches,
     touch: navigator.maxTouchPoints > 0,
+    input: input && { last: input.last, pads: input.pads.slice(0, BUG_REPORT.pads).map((id) => id.trim()) },
     uptime: Math.round(performance.now() / 1000),
     perf,
     view,

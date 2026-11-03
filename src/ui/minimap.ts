@@ -46,7 +46,8 @@ export const createMinimap = (hud: HTMLElement) => {
     if (!row || !right) return
     let top = row.offsetTop + right.offsetTop + right.offsetHeight
     const team = hud.querySelector<HTMLElement>('.team-hud')
-    if (team && team.offsetWidth > hud.offsetWidth / 2) top = Math.max(top, team.offsetTop + team.offsetHeight)
+    // Only a row of cards (a phone held upright) runs under the map; a column on the left (the box is still full width) doesn't.
+    if (team && getComputedStyle(team).flexDirection === 'row' && team.offsetWidth > hud.offsetWidth / 2) top = Math.max(top, team.offsetTop + team.offsetHeight)
     el.style.top = `${top + 6}px`
     document.documentElement.style.setProperty('--minimap-bottom', `${top + 6 + canvas.offsetHeight}px`)
   }

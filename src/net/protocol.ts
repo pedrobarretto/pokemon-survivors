@@ -22,6 +22,13 @@ export const TICK_HZ = 60
 
 export const MAX_PLAYERS = 4
 
+/**
+ * Humans in an Arena room (settings `mode: 'versus'`): two teams of four
+ * (`ARENA_RANKED.queue.players`, which a relay test keeps equal). A co-op room
+ * stays at `MAX_PLAYERS`; a relay before this takes 4 everywhere.
+ */
+export const MAX_ARENA_PLAYERS = 8
+
 /** Clients send `hash` at every tick that is a multiple of this (once a second). */
 export const HASH_EVERY = 60
 
@@ -92,6 +99,8 @@ export const LIMITS = {
   inputString: 24,
   build: 40,
   hash: 32,
+  /** An Arena match's result riding on `over` (`ArenaResult` as JSON, opaque to the relay). */
+  result: 2048,
   /** A Clerk session token. */
   token: 4096,
 } as const
@@ -249,8 +258,12 @@ export type BatchedMessage =
   | { t: 'hb' }
   /** The full-state hash at `tick` (a multiple of `HASH_EVERY`). */
   | { t: 'hash'; tick: number; h: string }
-  /** The run ended in this client's simulation at `tick`, with this state hash. */
-  | { t: 'over'; tick: number; h: string }
+  /**
+   * The run ended in this client's simulation at `tick`, with this state hash. An Arena match adds its
+   * `result` (`ArenaResult` from `game/arenaRank.ts`, as JSON): the relay reports the one the end's
+   * majority agrees on (string equality) to the API. A relay before it drops `result`.
+   */
+  | { t: 'over'; tick: number; h: string; result?: string }
   /**
    * The agreed snapshot at `tick` (a `sync`'s base) didn't hash to its label once restored: its bytes are bad.
    * The relay drops it and stops taking snapshots from whoever uploaded it; the client joins afresh.
@@ -394,7 +407,8 @@ const parseBuild = (v: unknown) => (typeof v === 'string' && /^[\w.-]{1,40}$/.te
 
 const parseHash = (v: unknown) => (typeof v === 'string' && /^[0-9a-zA-Z_-]{1,32}$/.test(v) ? v : null)
 
-const parseAuth = (v: unknown): Auth | null => {
+/** A hello's (or the Arena queue's) auth, or null. */
+export const parseAuth = (v: unknown): Auth | null => {
   if (!isRecord(v)) return null
   if (v.kind === 'clerk') return typeof v.token === 'string' && v.token.length > 0 && v.token.length <= LIMITS.token ? { kind: 'clerk', token: v.token } : null
   if (v.kind === 'guest') return typeof v.id === 'string' && /^[A-Za-z0-9_-]{16,64}$/.test(v.id) ? { kind: 'guest', id: v.id } : null
@@ -459,7 +473,7 @@ const parseBatched = (m: Record<string, unknown>): BatchedMessage | null => {
       return settings ? { t: 'settings', settings } : null
     }
     case 'kick':
-      return isWhole(m.seat, MAX_PLAYERS - 1) ? { t: 'kick', seat: m.seat } : null
+      return isWhole(m.seat, MAX_ARENA_PLAYERS - 1) ? { t: 'kick', seat: m.seat } : null
     case 'in': {
       const k = m.k
       const d = m.d
@@ -473,7 +487,9 @@ const parseBatched = (m: Record<string, unknown>): BatchedMessage | null => {
     }
     case 'over': {
       const h = parseHash(m.h)
-      return h && isWhole(m.tick, MAX_TICK) ? { t: 'over', tick: m.tick, h } : null
+      if (!h || !isWhole(m.tick, MAX_TICK)) return null
+      const result = typeof m.result === 'string' && m.result.length > 0 && m.result.length <= LIMITS.result ? m.result : null
+      return { t: 'over', tick: m.tick, h, ...(result !== null && { result }) }
     }
     case 'badSnap':
       return isWhole(m.tick, MAX_TICK) && m.tick % SNAPSHOT_EVERY === 0 ? { t: 'badSnap', tick: m.tick } : null

@@ -8,7 +8,7 @@ import { handleProblem, normalizeHandle, parseDisplayName, runBranch, suggestHan
 import { RIBBON_TIERS, type RibbonTier } from '../game/ribbons'
 import { pumpkinSupporter } from '../game/halloween'
 import type { SupporterTier } from '../game/supporters'
-import { pokeballIcon, ribbonIcon, supporterIcon } from '../render/art'
+import { ogIcon, pokeballIcon, ribbonIcon, supporterIcon } from '../render/art'
 import { pumpkinHeartIcon } from '../render/halloweenArt'
 import { portraitUrl } from '../render/sprites'
 import { fetchProfile, profileUrl, setFollow } from '../ranking'
@@ -40,11 +40,14 @@ const runDay = (iso: string, long = false) => new Date(iso).toLocaleDateString(L
  */
 export const supporterBadgeIcon = (tier: SupporterTier, since?: string | null) => (pumpkinSupporter(since, today()) ? pumpkinHeartIcon(tier) : supporterIcon(tier))
 
-/** The supporter's badge by a name, or nothing. */
-export const supporterBadge = (tier: SupporterTier | null | undefined, since?: string | null) => {
-  if (!tier) return null
+/** The OG Supporters' plate, beside the heart (`badgesOf`). */
+export const ogBadge = (cls = 'og-badge') => h('img', { class: cls, src: ogIcon(), alt: t().supporters.og.badge, title: t().supporters.og.badge })
+
+/** The supporter's badges by a name (the heart, then the OG plate for an OG), or none. `og` is missing from an older API. */
+export const supporterBadges = (tier: SupporterTier | null | undefined, since?: string | null, og?: boolean): HTMLElement[] => {
+  if (!tier) return []
   const name = pumpkinSupporter(since, today()) ? t().halloween.supporterBadge(tier) : t().supporters.badge(tier)
-  return h('img', { class: 'supporter-badge', src: supporterBadgeIcon(tier, since), alt: name, title: name })
+  return [h('img', { class: 'supporter-badge', src: supporterBadgeIcon(tier, since), alt: name, title: name }), ...(og === true ? [ogBadge()] : [])]
 }
 
 type Action = { label: string; run: () => void }
@@ -181,7 +184,7 @@ export const profileScreen = (root: HTMLElement, input: Input, handle: string, o
           h(
             'div',
             { class: 'profile-id' },
-            h('b', { class: 'profile-name' }, p.name, supporterBadge(p.supporter, p.supporterSince)),
+            h('b', { class: 'profile-name' }, p.name, ...supporterBadges(p.supporter, p.supporterSince, p.og)),
             h('span', { class: 'profile-handle' }, `@${p.handle}`),
             titleBadge(p.title),
             p.supporter && p.supporterSince ? h('small', { class: 'profile-supporter' }, t().supporters.profileSince(runDay(p.supporterSince, true))) : null,

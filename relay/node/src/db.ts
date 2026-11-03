@@ -1,6 +1,7 @@
 import { mkdirSync, readdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync, type StatementSync } from 'node:sqlite'
+import { parseOutgoing, type Outgoing } from '../../src/report'
 import type { Room } from '../../src/room'
 import { parseRoom, parseStored, type DumpInfo, type Lazy, type Store } from '../../src/store'
 
@@ -138,6 +139,8 @@ export type Vault = {
   get: (id: string) => Uint8Array | null
   /** Drops dumps older than `days` or past the newest `max`. */
   prune: (now: number, keep: { days: number; max: number }) => void
+  /** Arena match reports waiting for the API (`report.ts`), kept across restarts. */
+  outbox: { put: (o: Outgoing) => void; delete: (id: string) => void; list: () => Outgoing[] }
   close: () => void
 }
 
@@ -149,6 +152,7 @@ export const openVault = (dataDir: string): Vault => {
   mkdirSync(dataDir, { recursive: true })
   const { db, sql } = open(join(dataDir, 'vault.db'))
   db.exec('CREATE TABLE IF NOT EXISTS dumps (id TEXT PRIMARY KEY, code TEXT NOT NULL, run INTEGER NOT NULL, tick INTEGER NOT NULL, at INTEGER NOT NULL, size INTEGER NOT NULL, data BLOB NOT NULL)')
+  db.exec('CREATE TABLE IF NOT EXISTS outbox (id TEXT PRIMARY KEY, v TEXT NOT NULL)')
   // Vaults made before dumps had a kind: theirs are all desyncs or bad snapshots.
   for (const column of ["kind TEXT NOT NULL DEFAULT 'desync'", 'score REAL NOT NULL DEFAULT 0']) {
     try {
@@ -169,6 +173,11 @@ export const openVault = (dataDir: string): Vault => {
     },
     prune: (now, keep) =>
       sql.run('DELETE FROM dumps WHERE at < ? OR id NOT IN (SELECT id FROM dumps ORDER BY at DESC LIMIT ?)', now - keep.days * 86_400_000, keep.max),
+    outbox: {
+      put: (o) => sql.run('INSERT OR REPLACE INTO outbox (id, v) VALUES (?, ?)', o.id, JSON.stringify(o)),
+      delete: (id) => sql.run('DELETE FROM outbox WHERE id = ?', id),
+      list: () => sql.all('SELECT v FROM outbox').flatMap((r) => (typeof r.v === 'string' ? (parseOutgoing(JSON.parse(r.v)) ?? []) : [])),
+    },
     close: () => db.close(),
   }
 }

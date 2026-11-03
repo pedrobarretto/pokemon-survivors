@@ -446,25 +446,48 @@ export const drawWings = (ctx: Ctx, g: Game, t: number) => {
 /* ---------------- The dark (cave) and the night (graveyard) ---------------- */
 
 const lights = canvasCache<number, PixelSprite>()
+/**
+ * Light discs kept, the least recently drawn going first: a light easing between
+ * two sizes (Darkrai's dark between phases, its capture) passes through every
+ * radius on the way, and would otherwise keep a canvas for each.
+ */
+const LIGHTS_KEPT = 40
+
+/** The radius a light is drawn at: whole px up close, even px past 96 and every 4 px past 160, so an easing light makes fewer discs. */
+const lightRadius = (r: number) => {
+  const step = r > 160 ? 4 : r > 96 ? 2 : 1
+  return Math.max(4, Math.round(r / step) * step)
+}
 
 /**
  * A light's cut-out: a solid core, then dithered rings that let less and
- * less through, so the dark ends in a hard-edged pixel falloff.
+ * less through, so the dark ends in a hard-edged pixel falloff. Painted as
+ * one image (a big one is tens of thousands of pixels: one `fillRect` each
+ * hitched weak phones every time a light took a new size).
  */
-export const lightDisc = (r: number) => {
+export const lightDisc = (radius: number) => {
+  const r = lightRadius(radius)
   let c = lights.get(r)
-  if (c) return c
-  c = createCanvas(r * 2 + 1, r * 2 + 1)
+  if (c) {
+    lights.delete(r)
+    lights.set(r, c)
+    return c
+  }
+  const size = r * 2 + 1
+  c = createCanvas(size, size)
   const ctx = context2d(c)
-  ctx.fillStyle = '#000'
+  const img = ctx.createImageData(size, size)
   for (let y = -r; y <= r; y++) {
     for (let x = -r; x <= r; x++) {
       const d = Math.sqrt(x * x + y * y) / r
       if (d > 1) continue
       const keep = d < 0.62 ? 1 : d < 0.76 ? 0.75 : d < 0.88 ? 0.45 : 0.18
-      if (bayer(x + r, y + r) < keep) ctx.fillRect(x + r, y + r, 1, 1)
+      // Opaque black: what `destination-out` cuts away.
+      if (bayer(x + r, y + r) < keep) img.data[((y + r) * size + x + r) * 4 + 3] = 255
     }
   }
+  ctx.putImageData(img, 0, 0)
+  if (lights.size >= LIGHTS_KEPT) lights.delete(lights.keys().next().value!)
   lights.set(r, c)
   return c
 }

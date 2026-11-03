@@ -16,7 +16,7 @@ import { halloweenStanding } from '../game/halloween'
 import { festivalIcon } from './festival'
 import { eventLegendIcon } from '../render/halloweenArt'
 import { ABILITIES } from '../data/abilities'
-import { canPlay, capturedCount, isCaptured, legendSource, winsNeeded } from '../game/capture'
+import { canPlay, capturedCount, isCaptured, legendSource, stillMissing, winsNeeded } from '../game/capture'
 import { armBlock, armedItems, armItem, BAG_ITEM_IDS, bagCount, type BagItem } from '../game/bag'
 import { SHOP_LEVELS } from '../data/shop'
 import { capLevel } from '../game/evoItems'
@@ -86,10 +86,14 @@ type SelectActions = {
  * `selected` reads the selected Pokémon, so a rebuilt screen (language switch, back from a sub-screen) keeps it.
  * `coop`: picking the Pokémon for a co-op room, which plays the normal mode (`COOP_LOCKS`): no
  * Lendários tab, no Bag, TMs or Bottle Caps, no Poké Mart, and the host sets the difficulty, so the
- * bar is just "Escolher".
+ * bar is just "Escolher". `dojo`: picking who trains at the Dojo, the same plain bar ("Treinar"),
+ * the captured legends included (they train with their awakenings).
  */
-export const starterSelect = (root: HTMLElement, input: Input, actions: SelectActions, initial: PlayableId = 'charmander', opts: { coop?: boolean } = {}): Screen & { selected: () => PlayableId } => {
+export const starterSelect = (root: HTMLElement, input: Input, actions: SelectActions, initial: PlayableId = 'charmander', opts: { coop?: boolean; dojo?: boolean } = {}): Screen & { selected: () => PlayableId } => {
   const m = t()
+  /** Co-op and the Dojo only pick a Pokémon: no Legend mode, Bag, difficulty or Poké Mart, and the partner stays. */
+  const plain = opts.coop === true || opts.dojo === true
+  const pickLabel = opts.dojo ? m.training.pickGo : m.coop.lobby.pick
   const save = loadSave()
   const unlocked = (id: PlayableId) => canPlay(save, id)
   /** The save with the Normal/Shiny picks made on this screen; any shiny owned (rolled once, a ticket, a shiny hatch) can be picked. */
@@ -185,7 +189,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     return level ? h('img', { class: 'partner-cell-clear', src: trophyIcon(level), alt: clearText(id) ?? '' }) : null
   }
   /** A Pokémon's Bottle Caps (`game/evoItems.ts`) as pips at the cell's foot, when it has any. */
-  const capTag = (id: PlayableId) => (!opts.coop && capLevel(save.caps, id) > 0 ? capPips(capLevel(save.caps, id)) : null)
+  const capTag = (id: PlayableId) => (!plain && capLevel(save.caps, id) > 0 ? capPips(capLevel(save.caps, id)) : null)
   const cellTitle = (id: PlayableId, name: string) => [name, clearText(id)].filter((s) => s !== null).join(' · ')
 
   const cells = new Map<PlayableId, HTMLElement>()
@@ -302,7 +306,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
 
   /** Lendários: every legend, captured or not, and what the mode is about. ↑ ↓ read the column count from the grid. */
   const legendGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...legendIds.map(legendCell))
-  const legendsPane = h('div', { class: 'partner-legends' }, legendGrid, h('p', { class: 'partner-legend-note' }, rich(m.legend.selectNote)))
+  const legendsPane = h('div', { class: 'partner-legends' }, legendGrid, h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)))
 
   const randomButton = h(
     'button',
@@ -340,6 +344,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const over = eventStanding(id) === 'after'
       // A festival legend is never fought: no wins to count, only its festival's line.
       const gift = legendFestival(id) !== null
+      // The last legend (Arceus) names the regular ones it still waits for.
+      const missing = legendSource(id) === 'endless' ? stillMissing(save.legends, id) : []
       hero.replaceChildren(
         h(
           'div',
@@ -352,6 +358,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             h('h3', { class: 'partner-name' }, form.name),
             !gift && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
             !over && !gift && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            missing.length > 0 && h('p', { class: 'partner-blurb locked-blurb' }, m.legend.stillMissing(missing.map((other) => LEGENDS[other].line[0].name))),
             eventLine(id, true),
           ),
         ),
@@ -527,7 +534,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   renderTms()
   }
 
-  const bar = opts.coop
+  const bar = plain
     ? actionBar(go)
     : actionBar(
         h('div', { class: 'partner-bag' }, bagLabel, ...slots, tmSlots),
@@ -535,13 +542,13 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
         go,
       )
   bar.classList.add('partner-bar')
-  if (opts.coop) bar.classList.add('coop')
+  if (plain) bar.classList.add('coop')
 
   /* ---------- State ---------- */
 
   const renderGo = () => {
     const id = current()
-    go.querySelector('.partner-go-label')!.textContent = unlocked(id) ? `${opts.coop ? m.coop.lobby.pick : m.partner.start} ▶` : isLegend(id) ? m.legend.lockedButton : m.eggs.lockedButton
+    go.querySelector('.partner-go-label')!.textContent = unlocked(id) ? `${plain ? pickLabel : m.partner.start} ▶` : isLegend(id) ? m.legend.lockedButton : m.eggs.lockedButton
     paintGo()
   }
 
@@ -569,7 +576,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     else cursor.starters = id
     tab = tabOf(id)
     stage = 0
-    if (!opts.coop && unlocked(id)) updateSave((s) => ({ ...s, partner: id }))
+    if (!plain && unlocked(id)) updateSave((s) => ({ ...s, partner: id }))
     render()
     reveal()
     playSfx('move')
@@ -664,7 +671,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       id,
       stage,
       shiny: shinyOf(id),
-      go: h('button', { class: 'partner-go', type: 'button', onclick: () => confirm() }, opts.coop ? m.coop.lobby.pick : m.partner.startWith(PLAYABLE[id].name)),
+      go: h('button', { class: 'partner-go', type: 'button', onclick: () => confirm() }, plain ? pickLabel : m.partner.startWith(PLAYABLE[id].name)),
       onStage: (i) => ((stage = i), renderHero()),
       onClose: closeDetails,
     })
@@ -674,14 +681,14 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
 
   /** Leaves for another screen after this press is done. */
   const leave = (fn: () => void) => (playSfx('select'), later(fn))
-  const mart = opts.coop ? undefined : actions.mart
+  const mart = plain ? undefined : actions.mart
   const back = () => (playSfx('move'), later(actions.back))
 
   const off = input.onKey((key) => {
     if (sheet?.onKey(key)) return
-    if (key === 'KeyX' && !opts.coop) return setDifficulty(DIFFICULTY_IDS[(DIFFICULTY_IDS.indexOf(difficulty) + 1) % DIFFICULTY_IDS.length]!)
+    if (key === 'KeyX' && !plain) return setDifficulty(DIFFICULTY_IDS[(DIFFICULTY_IDS.indexOf(difficulty) + 1) % DIFFICULTY_IDS.length]!)
     if (key === 'KeyZ') return setShiny(!shinyOf(current()))
-    const item = opts.coop ? undefined : BAG_ITEM_IDS.find((i) => BAG_KEYS[i] === key)
+    const item = plain ? undefined : BAG_ITEM_IDS.find((i) => BAG_KEYS[i] === key)
     if (item) return toggleBag(item)
     if (sheet) return
     if (key === 'ArrowLeft' || key === 'KeyA') step('left')

@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { ABACATE_REF, abacateDonation, ABACATEPAY_PUBLIC_KEY, stripeDonation, verifyAbacate, verifyStandard, verifyStripe } from './webhooks'
+import { ABACATE_REF, abacateDonation, ABACATEPAY_PUBLIC_KEY, patreonAmount, patreonCharge, patreonMember, stripeDonation, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
 
 const SECRET = 'whsec_test'
 
@@ -70,5 +70,87 @@ describe('Standard Webhooks (AbacatePay since 01/10/2026)', () => {
     expect(verifyStandard(`${body} `, { id: 'msg_1', timestamp: '1000', signature }, secret, 1010)).toBe(false)
     expect(verifyStandard(body, { id: 'msg_1', timestamp: '1000', signature }, secret, 2000)).toBe(false)
     expect(verifyStandard(body, { id: 'msg_1', timestamp: undefined, signature }, secret, 1010)).toBe(false)
+  })
+})
+
+describe('Patreon webhooks', () => {
+  const member = (attributes: Record<string, unknown> = {}, included: unknown[] = [], tiers: string[] = ['29913157']) => ({
+    data: {
+      type: 'member',
+      id: 'a1b2c3d4-0000-4000-8000-000000000001',
+      attributes: { last_charge_status: 'Paid', last_charge_date: '2026-11-01T08:15:00.000+00:00', currently_entitled_amount_cents: 500, campaign_lifetime_support_cents: 1500, ...attributes },
+      relationships: { user: { data: { id: '9876543', type: 'user' } }, currently_entitled_tiers: { data: tiers.map((id) => ({ id, type: 'tier' })) } },
+    },
+    included,
+  })
+
+  it('checks the HMAC-MD5 of the raw body', () => {
+    const body = JSON.stringify(member())
+    const signature = createHmac('md5', 'patreon-secret').update(body).digest('hex')
+    expect(verifyPatreon(body, signature, 'patreon-secret')).toBe(true)
+    expect(verifyPatreon(body, signature.toUpperCase(), 'patreon-secret')).toBe(true)
+    expect(verifyPatreon(`${body} `, signature, 'patreon-secret')).toBe(false)
+    expect(verifyPatreon(body, signature, 'other')).toBe(false)
+    expect(verifyPatreon(body, undefined, 'patreon-secret')).toBe(false)
+  })
+
+  it('reads a paid charge, the same ref for every event that repeats it', () => {
+    const charge = patreonCharge('members:pledge:create', member(), 'usd')
+    expect(charge).toEqual({
+      ref: 'patreon:a1b2c3d4-0000-4000-8000-000000000001:2026-11-01T08:15:00.000Z',
+      member: 'a1b2c3d4-0000-4000-8000-000000000001',
+      patron: '9876543',
+      lifetime: 1500,
+      entitled: 500,
+      currency: 'usd',
+    })
+    // A later update of the same member (a new address, say) names the same charge.
+    expect(patreonCharge('members:update', member({ last_charge_date: '2026-11-01T08:15:00Z' }), 'usd')?.ref).toBe(charge?.ref)
+  })
+
+  it('takes the campaign currency when the payload includes it', () => {
+    expect(patreonCharge('members:update', member({}, [{ type: 'campaign', id: '1', attributes: { currency: 'BRL' } }]), 'usd')?.currency).toBe('brl')
+  })
+
+  it('ignores charges that are not paid and events that are not about members', () => {
+    expect(patreonCharge('members:update', member({ last_charge_status: 'Declined' }), 'usd')).toBeNull()
+    expect(patreonCharge('members:create', member({ last_charge_status: null, last_charge_date: null }), 'usd')).toBeNull()
+    expect(patreonCharge('posts:publish', member(), 'usd')).toBeNull()
+    expect(patreonCharge(undefined, member(), 'usd')).toBeNull()
+  })
+
+  it("counts what the member's lifetime total grew past the charges already recorded", () => {
+    const charge = patreonCharge('members:update', member(), 'usd')!
+    expect(patreonAmount(charge, 1000)).toBe(500)
+    // The first charge recorded counts all they ever paid; one that adds nothing counts nothing.
+    expect(patreonAmount(charge, 0)).toBe(1500)
+    expect(patreonAmount(charge, 1500)).toBe(0)
+    expect(patreonAmount({ ...charge, lifetime: null }, 1000)).toBe(500)
+  })
+
+  it("reads the patron's tier from the tier they're entitled to, never from what they paid", () => {
+    expect(patreonMember('members:pledge:create', member({ patron_status: 'active_patron' }))).toEqual({ patron: '9876543', tier: 'supporter' })
+    // Months of US$ 5 add up in the lifetime total, the tier stays.
+    expect(patreonMember('members:update', member({ patron_status: 'active_patron', campaign_lifetime_support_cents: 9000 }))?.tier).toBe('supporter')
+    // A Brazilian's Supporter is R$ 32,50: their amounts come in reais, the tier is still Supporter.
+    expect(patreonMember('members:pledge:create', member({ patron_status: 'active_patron', currently_entitled_amount_cents: 3250 }))?.tier).toBe('supporter')
+    expect(patreonMember('members:pledge:update', member({ patron_status: 'active_patron' }, [], ['29913165']))?.tier).toBe('gold')
+    expect(patreonMember('members:pledge:update', member({ patron_status: 'active_patron' }, [], ['29913157', '29913169']))?.tier).toBe('diamond')
+  })
+
+  it("prices a tier it doesn't know by the tier's own price, and gives nothing for a free one", () => {
+    const tier = (id: string, amount: number) => ({ type: 'tier', id, attributes: { amount_cents: amount } })
+    expect(patreonMember('members:pledge:create', member({ patron_status: 'active_patron' }, [tier('1', 1000)], ['1']))?.tier).toBe('gold')
+    expect(patreonMember('members:pledge:create', member({ patron_status: 'active_patron' }, [tier('2', 0)], ['2']))?.tier).toBeNull()
+    expect(patreonMember('members:pledge:create', member({ patron_status: 'active_patron' }, [], ['3']))?.tier).toBeNull()
+    expect(patreonMember('members:create', member({ patron_status: 'active_patron' }, [], []))?.tier).toBeNull()
+  })
+
+  it('drops the tier once the pledge is declined, cancelled or the member is gone', () => {
+    expect(patreonMember('members:update', member({ patron_status: 'declined_patron' }))?.tier).toBeNull()
+    expect(patreonMember('members:update', member({ patron_status: 'former_patron' }))?.tier).toBeNull()
+    expect(patreonMember('members:pledge:delete', member({ patron_status: 'active_patron' }))?.tier).toBeNull()
+    expect(patreonMember('members:delete', member({ patron_status: 'active_patron' }))?.tier).toBeNull()
+    expect(patreonMember('posts:publish', member({ patron_status: 'active_patron' }))).toBeNull()
   })
 })

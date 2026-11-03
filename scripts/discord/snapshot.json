@@ -8,14 +8,15 @@
     "splash": null,
     "discovery_splash": null,
     "features": [
-      "WELCOME_SCREEN_ENABLED",
-      "GUILD_ONBOARDING",
-      "GUILD_ONBOARDING_EVER_ENABLED",
       "AUTO_MODERATION",
-      "GUILD_SERVER_GUIDE",
-      "COMMUNITY",
+      "GUILD_ONBOARDING",
       "NEWS",
-      "GUILD_ONBOARDING_HAS_PROMPTS"
+      "COMMUNITY",
+      "GUILD_ONBOARDING_EVER_ENABLED",
+      "AGE_VERIFICATION_LARGE_GUILD",
+      "GUILD_ONBOARDING_HAS_PROMPTS",
+      "GUILD_SERVER_GUIDE",
+      "WELCOME_SCREEN_ENABLED"
     ],
     "banner": null,
     "owner_id": "639620117239562251",
@@ -23,7 +24,7 @@
     "region": "japan",
     "afk_channel_id": null,
     "afk_timeout": 300,
-    "system_channel_id": "1562199981820084334",
+    "system_channel_id": null,
     "system_channel_flags": 0,
     "widget_enabled": false,
     "widget_channel_id": null,
@@ -62,7 +63,7 @@
       "name": "Pokémon Survivors",
       "description": null,
       "permissions": "8",
-      "position": 13,
+      "position": 15,
       "color": 0,
       "colors": {
         "primary_color": 0,
@@ -84,7 +85,7 @@
       "name": "Owner",
       "description": null,
       "permissions": "5892853606918",
-      "position": 12,
+      "position": 14,
       "color": 16306224,
       "colors": {
         "primary_color": 16306224,
@@ -103,7 +104,7 @@
       "name": "Dev",
       "description": null,
       "permissions": "5903322589878",
-      "position": 11,
+      "position": 13,
       "color": 16306224,
       "colors": {
         "primary_color": 16306224,
@@ -122,7 +123,7 @@
       "name": "Moderator",
       "description": null,
       "permissions": "5903322589878",
-      "position": 10,
+      "position": 12,
       "color": 6852848,
       "colors": {
         "primary_color": 6852848,
@@ -137,8 +138,46 @@
       "flags": 0
     },
     {
+      "id": "1564342411793277029",
+      "name": "『💎』Diamond Supporter",
+      "description": null,
+      "permissions": "0",
+      "position": 11,
+      "color": 9559549,
+      "colors": {
+        "primary_color": 9559549,
+        "secondary_color": null,
+        "tertiary_color": null
+      },
+      "hoist": true,
+      "managed": false,
+      "mentionable": false,
+      "icon": null,
+      "unicode_emoji": null,
+      "flags": 0
+    },
+    {
+      "id": "1564342412833329316",
+      "name": "『🏆』OG Supporter",
+      "description": null,
+      "permissions": "0",
+      "position": 10,
+      "color": 10514672,
+      "colors": {
+        "primary_color": 10514672,
+        "secondary_color": null,
+        "tertiary_color": null
+      },
+      "hoist": true,
+      "managed": false,
+      "mentionable": false,
+      "icon": null,
+      "unicode_emoji": null,
+      "flags": 0
+    },
+    {
       "id": "1561829009556381729",
-      "name": "Gold Supporter",
+      "name": "『💛』Gold Supporter",
       "description": null,
       "permissions": "0",
       "position": 9,
@@ -157,7 +196,7 @@
     },
     {
       "id": "1561829010953207861",
-      "name": "Supporter",
+      "name": "『🩷』Supporter",
       "description": null,
       "permissions": "0",
       "position": 8,
@@ -176,7 +215,7 @@
     },
     {
       "id": "1561835328057245756",
-      "name": "Team Grass",
+      "name": "『🌲』Team Grass",
       "description": null,
       "permissions": "0",
       "position": 7,
@@ -195,7 +234,7 @@
     },
     {
       "id": "1561835329294569573",
-      "name": "Team Fire",
+      "name": "『🔥』Team Fire",
       "description": null,
       "permissions": "0",
       "position": 6,
@@ -214,13 +253,13 @@
     },
     {
       "id": "1561835331756626073",
-      "name": "Team Water",
+      "name": "『💧』Team Water",
       "description": null,
       "permissions": "0",
       "position": 5,
-      "color": 6868976,
+      "color": 4629957,
       "colors": {
-        "primary_color": 6868976,
+        "primary_color": 4629957,
         "secondary_color": null,
         "tertiary_color": null
       },
@@ -233,17 +272,17 @@
     },
     {
       "id": "1561834689873051658",
-      "name": "Trainer",
+      "name": "『💥』Trainer",
       "description": null,
       "permissions": "4776006781440",
       "position": 4,
-      "color": 0,
+      "color": 16412268,
       "colors": {
-        "primary_color": 0,
+        "primary_color": 16412268,
         "secondary_color": null,
         "tertiary_color": null
       },
-      "hoist": false,
+      "hoist": true,
       "managed": false,
       "mentionable": false,
       "icon": null,
@@ -435,44 +474,6 @@
       "nsfw": false
     },
     {
-      "id": "1562199981820084334",
-      "type": 0,
-      "flags": 0,
-      "guild_id": "1561824253559709777",
-      "name": "📬》arrivals",
-      "parent_id": "1561829021996556560",
-      "rate_limit_per_user": 0,
-      "topic": "Who just landed. Join messages live here so the chat stays clean.",
-      "position": 3,
-      "permission_overwrites": [
-        {
-          "id": "1562199946545991730",
-          "type": 0,
-          "allow": "377957124096",
-          "deny": "0"
-        },
-        {
-          "id": "1561824253559709777",
-          "type": 0,
-          "allow": "0",
-          "deny": "377957124096"
-        },
-        {
-          "id": "1561827561837826199",
-          "type": 1,
-          "allow": "377957125120",
-          "deny": "0"
-        },
-        {
-          "id": "1561829008507928587",
-          "type": 0,
-          "allow": "377957124096",
-          "deny": "0"
-        }
-      ],
-      "nsfw": false
-    },
-    {
       "id": "1561829029667930215",
       "type": 5,
       "flags": 0,
@@ -481,7 +482,7 @@
       "parent_id": "1561829021996556560",
       "rate_limit_per_user": 0,
       "topic": "Big news, events and giveaways.",
-      "position": 4,
+      "position": 3,
       "permission_overwrites": [
         {
           "id": "1562199946545991730",
@@ -519,10 +520,10 @@
       "parent_id": "1561829021996556560",
       "rate_limit_per_user": 0,
       "topic": "Every update, posted automatically. Full history: https://www.pokemonsurvivors.com/en/changelog/",
-      "position": 5,
+      "position": 4,
       "permission_overwrites": [
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -540,7 +541,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -570,13 +571,19 @@
           "deny": "1024"
         },
         {
+          "id": "1562199946545991730",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        },
+        {
           "id": "1561827561837826199",
           "type": 1,
           "allow": "377957125120",
           "deny": "0"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -592,10 +599,10 @@
       "parent_id": "1561829073343352855",
       "rate_limit_per_user": 0,
       "topic": null,
-      "position": 6,
+      "position": 5,
       "permission_overwrites": [
         {
-          "id": "1562199946545991730",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -607,6 +614,56 @@
           "deny": "1024"
         },
         {
+          "id": "1561829008507928587",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        },
+        {
+          "id": "1561827561837826199",
+          "type": 1,
+          "allow": "377957125120",
+          "deny": "0"
+        },
+        {
+          "id": "1562199946545991730",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        }
+      ],
+      "nsfw": false
+    },
+    {
+      "id": "1563871710166650950",
+      "type": 0,
+      "flags": 0,
+      "guild_id": "1561824253559709777",
+      "name": "🐞》mod-bugs",
+      "parent_id": "1561829073343352855",
+      "rate_limit_per_user": 0,
+      "topic": null,
+      "position": 6,
+      "permission_overwrites": [
+        {
+          "id": "1561829006846730414",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        },
+        {
+          "id": "1561824253559709777",
+          "type": 0,
+          "allow": "0",
+          "deny": "1024"
+        },
+        {
+          "id": "1562199946545991730",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        },
+        {
           "id": "1561827561837826199",
           "type": 1,
           "allow": "377957125120",
@@ -614,6 +671,50 @@
         },
         {
           "id": "1561829008507928587",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        }
+      ],
+      "nsfw": false
+    },
+    {
+      "id": "1564302037930217572",
+      "type": 0,
+      "flags": 0,
+      "guild_id": "1561824253559709777",
+      "name": "💡》mod-ideas",
+      "parent_id": "1561829073343352855",
+      "rate_limit_per_user": 0,
+      "topic": null,
+      "position": 7,
+      "permission_overwrites": [
+        {
+          "id": "1561829008507928587",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        },
+        {
+          "id": "1561824253559709777",
+          "type": 0,
+          "allow": "0",
+          "deny": "1024"
+        },
+        {
+          "id": "1561829006846730414",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        },
+        {
+          "id": "1561827561837826199",
+          "type": 1,
+          "allow": "377957125120",
+          "deny": "0"
+        },
+        {
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -630,7 +731,7 @@
       "parent_id": "1561829073343352855",
       "rate_limit_per_user": 0,
       "topic": "Discord’s own community updates and safety alerts.",
-      "position": 7,
+      "position": 8,
       "permission_overwrites": [
         {
           "id": "1562199946545991730",
@@ -645,13 +746,19 @@
           "deny": "1024"
         },
         {
+          "id": "1561829008507928587",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        },
+        {
           "id": "1561827561837826199",
           "type": 1,
           "allow": "377957125120",
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -664,14 +771,14 @@
       "type": 0,
       "flags": 0,
       "guild_id": "1561824253559709777",
-      "name": "idea-review",
+      "name": "🔎》idea-review",
       "parent_id": "1561829073343352855",
       "rate_limit_per_user": 0,
       "topic": "Ideas posted in the game land here first. React ✅ (or 👍) to put one on the board’s Backlog, ❌ (or 👎) to hide it.",
-      "position": 27,
+      "position": 9,
       "permission_overwrites": [
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -683,13 +790,19 @@
           "deny": "1024"
         },
         {
+          "id": "1562199946545991730",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
+        },
+        {
           "id": "1561827561837826199",
           "type": 1,
           "allow": "377957125120",
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -707,7 +820,25 @@
       "position": 2,
       "permission_overwrites": [
         {
+          "id": "1561829010953207861",
+          "type": 0,
+          "allow": "4776006782464",
+          "deny": "0"
+        },
+        {
+          "id": "1561827561837826199",
+          "type": 1,
+          "allow": "377957125120",
+          "deny": "0"
+        },
+        {
           "id": "1561829008507928587",
+          "type": 0,
+          "allow": "4776006782464",
+          "deny": "0"
+        },
+        {
+          "id": "1564342411793277029",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -725,15 +856,9 @@
           "deny": "0"
         },
         {
-          "id": "1561829010953207861",
+          "id": "1564342412833329316",
           "type": 0,
           "allow": "4776006782464",
-          "deny": "0"
-        },
-        {
-          "id": "1561827561837826199",
-          "type": 1,
-          "allow": "377957125120",
           "deny": "0"
         },
         {
@@ -749,7 +874,7 @@
       "type": 2,
       "flags": 0,
       "guild_id": "1561824253559709777",
-      "name": "Supporters Voice",
+      "name": "🔊》Supporters Voice",
       "parent_id": "1561829063327350944",
       "rate_limit_per_user": 0,
       "bitrate": 64000,
@@ -758,7 +883,25 @@
       "position": 0,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1561829010953207861",
+          "type": 0,
+          "allow": "4776006782464",
+          "deny": "0"
+        },
+        {
+          "id": "1561827561837826199",
+          "type": 1,
+          "allow": "377957125120",
+          "deny": "0"
+        },
+        {
+          "id": "1564342411793277029",
+          "type": 0,
+          "allow": "4776006782464",
+          "deny": "0"
+        },
+        {
+          "id": "1564342412833329316",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -776,15 +919,9 @@
           "deny": "0"
         },
         {
-          "id": "1561829010953207861",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "4776006782464",
-          "deny": "0"
-        },
-        {
-          "id": "1561827561837826199",
-          "type": 1,
-          "allow": "377957125120",
           "deny": "0"
         },
         {
@@ -806,10 +943,28 @@
       "parent_id": "1561829063327350944",
       "rate_limit_per_user": 0,
       "topic": "Thank you for keeping the game alive 💛 Become a supporter: https://www.pokemonsurvivors.com/en/support/",
-      "position": 8,
+      "position": 10,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1561829010953207861",
+          "type": 0,
+          "allow": "4776006782464",
+          "deny": "0"
+        },
+        {
+          "id": "1561827561837826199",
+          "type": 1,
+          "allow": "377957125120",
+          "deny": "0"
+        },
+        {
+          "id": "1564342411793277029",
+          "type": 0,
+          "allow": "4776006782464",
+          "deny": "0"
+        },
+        {
+          "id": "1564342412833329316",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -827,15 +982,9 @@
           "deny": "0"
         },
         {
-          "id": "1561829010953207861",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "4776006782464",
-          "deny": "0"
-        },
-        {
-          "id": "1561827561837826199",
-          "type": 1,
-          "allow": "377957125120",
           "deny": "0"
         },
         {
@@ -866,7 +1015,7 @@
       "parent_id": "1561829033451462816",
       "rate_limit_per_user": 0,
       "topic": "Talk about anything Pokémon Survivors. English, please — other languages have their own rooms. · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 9,
+      "position": 11,
       "permission_overwrites": [],
       "nsfw": false,
       "icon_emoji": {
@@ -884,7 +1033,7 @@
       "parent_id": "1561829033451462816",
       "rate_limit_per_user": 0,
       "topic": "Crazy runs, huge hordes, funny deaths. · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 10,
+      "position": 12,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -897,7 +1046,7 @@
       "parent_id": "1561829033451462816",
       "rate_limit_per_user": 0,
       "topic": "New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 11,
+      "position": 13,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -906,11 +1055,11 @@
       "type": 0,
       "flags": 0,
       "guild_id": "1561824253559709777",
-      "name": "💬》off-topic",
+      "name": "📷》multimedia-fanarts",
       "parent_id": "1561829033451462816",
       "rate_limit_per_user": 0,
-      "topic": "Anything that is not the game. · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 12,
+      "topic": "Share all your artwork or anything like videos· New here? Say hi in <#1561834706339627159> to unlock chatting.",
+      "position": 14,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -933,8 +1082,39 @@
       "parent_id": "1561829040866861140",
       "rate_limit_per_user": 0,
       "topic": "Same seed for everyone, one official try a day. Post your time and build. Yesterday’s podium lands here. · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 13,
-      "permission_overwrites": [],
+      "position": 15,
+      "permission_overwrites": [
+        {
+          "id": "1562199946545991730",
+          "type": 0,
+          "allow": "377957173248",
+          "deny": "0"
+        },
+        {
+          "id": "1561824253559709777",
+          "type": 0,
+          "allow": "0",
+          "deny": "377957173248"
+        },
+        {
+          "id": "1561829008507928587",
+          "type": 0,
+          "allow": "377957173248",
+          "deny": "0"
+        },
+        {
+          "id": "1561828985829204060",
+          "type": 0,
+          "allow": "377957173248",
+          "deny": "0"
+        },
+        {
+          "id": "1561829006846730414",
+          "type": 0,
+          "allow": "377957173248",
+          "deny": "0"
+        }
+      ],
       "nsfw": false
     },
     {
@@ -946,8 +1126,39 @@
       "parent_id": "1561829040866861140",
       "rate_limit_per_user": 0,
       "topic": "Today’s outbreak: which Pokémon is everywhere and how to farm it. · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 14,
-      "permission_overwrites": [],
+      "position": 16,
+      "permission_overwrites": [
+        {
+          "id": "1561829008507928587",
+          "type": 0,
+          "allow": "377957173248",
+          "deny": "0"
+        },
+        {
+          "id": "1561824253559709777",
+          "type": 0,
+          "allow": "0",
+          "deny": "377957173248"
+        },
+        {
+          "id": "1562199946545991730",
+          "type": 0,
+          "allow": "377957173248",
+          "deny": "0"
+        },
+        {
+          "id": "1561828985829204060",
+          "type": 0,
+          "allow": "377957173248",
+          "deny": "0"
+        },
+        {
+          "id": "1561829006846730414",
+          "type": 0,
+          "allow": "377957173248",
+          "deny": "0"
+        }
+      ],
       "nsfw": false
     },
     {
@@ -959,7 +1170,7 @@
       "parent_id": "1561829040866861140",
       "rate_limit_per_user": 0,
       "topic": "Show off your shinies ✨ · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 15,
+      "position": 17,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -972,7 +1183,7 @@
       "parent_id": "1561829040866861140",
       "rate_limit_per_user": 60,
       "topic": "Follow us on TikTok (@pokemonsurvivors), post a screenshot that shows it with your in-game @handle, and a Dev sends you a rare egg. · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 16,
+      "position": 18,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -981,11 +1192,11 @@
       "type": 15,
       "flags": 0,
       "guild_id": "1561824253559709777",
-      "name": "builds-and-strategy",
+      "name": "💡》builds-strategy",
       "parent_id": "1561829040866861140",
       "rate_limit_per_user": 0,
       "topic": "One post per build or question. Tag the starter type and what it is about. · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 17,
+      "position": 19,
       "permission_overwrites": [],
       "nsfw": false,
       "available_tags": [
@@ -1065,11 +1276,11 @@
       "type": 15,
       "flags": 0,
       "guild_id": "1561824253559709777",
-      "name": "bug-reports",
+      "name": "🐞》bug-reports",
       "parent_id": "1561829047934132315",
       "rate_limit_per_user": 0,
       "topic": "One post per bug. Say what happened, what you expected, your device (phone or PC, browser) and add a screenshot or clip if you can. · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 18,
+      "position": 20,
       "permission_overwrites": [],
       "nsfw": false,
       "available_tags": [
@@ -1139,11 +1350,11 @@
       "type": 15,
       "flags": 0,
       "guild_id": "1561824253559709777",
-      "name": "suggestions",
+      "name": "✉️》suggestions",
       "parent_id": "1561829047934132315",
       "rate_limit_per_user": 0,
       "topic": "One idea per post. Vote with reactions. Ideas also live in the game, on the Ideas board. · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 19,
+      "position": 21,
       "permission_overwrites": [],
       "nsfw": false,
       "available_tags": [
@@ -1183,22 +1394,8 @@
           "emoji_name": null
         },
         {
-          "id": "1561829051772178579",
-          "name": "Planned",
-          "moderated": false,
-          "emoji_id": null,
-          "emoji_name": null
-        },
-        {
-          "id": "1561829051772178580",
-          "name": "Shipped",
-          "moderated": false,
-          "emoji_id": null,
-          "emoji_name": null
-        },
-        {
-          "id": "1561829051772178581",
-          "name": "Declined",
+          "id": "1563301450530947123",
+          "name": "Multiplayer",
           "moderated": false,
           "emoji_id": null,
           "emoji_name": null
@@ -1220,23 +1417,10 @@
       "type": 4,
       "flags": 0,
       "guild_id": "1561824253559709777",
-      "name": "🌎│International",
+      "name": "🌎│𝐈𝐍𝐓𝐄𝐑𝐍𝐀𝐓𝐈𝐎𝐍𝐀𝐋",
       "parent_id": null,
       "position": 6,
       "permission_overwrites": []
-    },
-    {
-      "id": "1561855509202473082",
-      "type": 0,
-      "flags": 0,
-      "guild_id": "1561824253559709777",
-      "name": "🇬🇧》english",
-      "parent_id": "1561829053017751613",
-      "rate_limit_per_user": 0,
-      "topic": null,
-      "position": 20,
-      "permission_overwrites": [],
-      "nsfw": false
     },
     {
       "id": "1561829054682898473",
@@ -1247,7 +1431,7 @@
       "parent_id": "1561829053017751613",
       "rate_limit_per_user": 0,
       "topic": "Papo em português 🇧🇷🇵🇹 · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 21,
+      "position": 23,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -1260,7 +1444,7 @@
       "parent_id": "1561829053017751613",
       "rate_limit_per_user": 0,
       "topic": "Charla en español 🇪🇸🇲🇽🇦🇷 · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 22,
+      "position": 24,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -1273,7 +1457,7 @@
       "parent_id": "1561829053017751613",
       "rate_limit_per_user": 0,
       "topic": "Discussion en français 🇫🇷 · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 23,
+      "position": 25,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -1286,7 +1470,7 @@
       "parent_id": "1561829053017751613",
       "rate_limit_per_user": 0,
       "topic": "Unterhaltung auf Deutsch 🇩🇪 · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 24,
+      "position": 26,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -1299,7 +1483,7 @@
       "parent_id": "1561829053017751613",
       "rate_limit_per_user": 0,
       "topic": "Chiacchiere in italiano 🇮🇹 · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 25,
+      "position": 27,
       "permission_overwrites": [],
       "nsfw": false
     },
@@ -1312,7 +1496,7 @@
       "parent_id": "1561829053017751613",
       "rate_limit_per_user": 0,
       "topic": "Any other language 🌐 · New here? Say hi in <#1561834706339627159> to unlock chatting.",
-      "position": 26,
+      "position": 28,
       "permission_overwrites": [],
       "nsfw": false
     },

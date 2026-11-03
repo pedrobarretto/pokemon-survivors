@@ -6,6 +6,7 @@ import { LIMITS as WIRE, PROTOCOL, parseRoomCode, type CreateResponse, type Regi
 import { jwksKeys, verifyClerkToken } from '../../src/auth'
 import { parseCreate } from '../../src/codes'
 import { allowedOrigin } from '../../src/origins'
+import { arenaApiOf, createOutbox, type Fetcher } from '../../src/report'
 import { RETENTION } from '../../src/store'
 import { fullWhy, type Load } from './capacity'
 import type { Config } from './config'
@@ -63,11 +64,37 @@ const refuseUpgrade = (socket: Duplex, status: number, text: string) =>
 /** One JSON line per event, as the Workers logs (Dokploy's Logs tab shows them). */
 export const jsonLog: Log = (ev, data = {}) => process.stdout.write(`${JSON.stringify({ ev, ...data })}\n`)
 
-/** Starts the relay: takes the data dir (waiting for any other relay on it to stop), loads its rooms, then listens. `close` is the graceful stop (a deploy). */
-export const startRelay = async (config: Config, log: Log = jsonLog) => {
+/**
+ * Starts the relay: takes the data dir (waiting for any other relay on it to stop), loads its rooms, then listens. `close` is the
+ * graceful stop (a deploy). `fetcher`: the Arena reports' HTTP client (tests pass their own).
+ */
+export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fetcher = fetch) => {
   const lock = await lockDataDir(config.dataDir, () => log('relay.waiting', { why: 'another relay holds the data dir' }))
   const vault = openVault(config.dataDir)
   vault.prune(Date.now(), RETENTION)
+  // Arena match reports: posted at once, and retried from the vault on a timer (as a shard's alarm does) until the API takes them.
+  let retry: NodeJS.Timeout | null = null
+  // A post still out when the relay stops finds the vault closed: the report waits in it as last saved (tried again at the next boot).
+  let open = true
+  const outbox = createOutbox(
+    {
+      api: arenaApiOf(config.arenaApiUrl ?? undefined, config.arenaReportSecret ?? undefined),
+      save: (o) => void (open && vault.outbox.put(o)),
+      remove: (id) => void (open && vault.outbox.delete(id)),
+      log,
+      now: Date.now,
+      fetcher,
+      changed: () => {
+        if (retry) clearTimeout(retry)
+        if (!open) return
+        const at = outbox.next()
+        retry = at === null ? null : setTimeout(() => void outbox.flush(), Math.max(0, at - Date.now()))
+        retry?.unref()
+      },
+    },
+    vault.outbox.list(),
+  )
+  if (outbox.size() > 0) void outbox.flush()
   const jwks = jwksKeys(`${config.clerkIssuer}/.well-known/jwks.json`)
   const origins = { ALLOWED_ORIGINS: config.allowedOrigins }
   const rooms = createRooms({
@@ -77,6 +104,7 @@ export const startRelay = async (config: Config, log: Log = jsonLog) => {
     log,
     guests: config.allowGuests,
     now: Date.now,
+    report: (r) => void outbox.add(r),
     identify: async (auth) => {
       if (auth.kind === 'guest') return { id: `g:${auth.id}`, account: false }
       const sub = await verifyClerkToken(auth.token, { keys: jwks, issuer: config.clerkIssuer, allowedParty: (o) => allowedOrigin(origins, o), now: Date.now() })
@@ -177,6 +205,8 @@ export const startRelay = async (config: Config, log: Log = jsonLog) => {
     stopping = true
     clearInterval(sweeps)
     clearInterval(prunes)
+    open = false
+    if (retry) clearTimeout(retry)
     server.close()
     const counts = rooms.counts()
     await rooms.shutdown()

@@ -2,8 +2,11 @@ import { accountHandle, accountsEnabled, sessionToken } from './account'
 import { track, type RunPerf } from './analytics'
 import { bank, bankKey, paysAnything, type BankDelta, type Store } from './coop/bank'
 import { createBot, botPick, type Bot } from './coop/bot'
-import { createCoopClient, webSocket, type CoopClient, type CoopDeps } from './coop/client'
-import type { VpsUrls } from './coop/relays'
+import { coopGuestId, createCoopClient, webSocket, type CoopClient, type CoopDeps } from './coop/client'
+import { measureRelay, type VpsUrls } from './coop/relays'
+import type { QueueDeps } from './arena/queue'
+import type { PingKind, QuickChat } from './game/versusSocial'
+import { createLocalRelay, LOCAL_RELAY_URL, type LocalRelay } from './coop/localRelay'
 import { buildAdvice } from './coop/lobby'
 import { netSummary, type NetStats } from './coop/netStats'
 import type { Runner } from './coop/runner'
@@ -132,6 +135,32 @@ const browserDeps = (url: string, store: Store, token: () => Promise<string | nu
 
 let client: CoopClient | null = null
 
+/**
+ * What the Arena's public queue (`arena/queue.ts`) needs from the browser:
+ * the relay's origin, co-op's token, the WebSocket, and the round trips to
+ * each relay home (Cloudflare's and the VPS relays'), measured as the ticket
+ * opens. Null without a relay.
+ */
+export const arenaQueueDeps = (): QueueDeps | null => {
+  const url = coopUrl()
+  if (!url) return null
+  const get = (u: string) => fetch(u, { signal: timeoutSignal(3000) }).then((r) => r.json() as Promise<unknown>)
+  const homes = [['cf', url] as const, ...Object.entries(coopVpsUrls())]
+  return {
+    relay: url,
+    build: __SIM_BUILD__,
+    auth: async () => {
+      const token = await coopToken().catch(() => null)
+      return token ? { kind: 'clerk', token } : { kind: 'guest', id: coopGuestId(local, Math.random) }
+    },
+    socket: webSocket,
+    rtts: async () => {
+      const probes = await Promise.all(homes.map(async ([home, u]) => [home, await measureRelay(u.replace(/\/+$/, ''), get, () => performance.now(), 3)] as const))
+      return Object.fromEntries(probes.flatMap(([home, p]) => (p ? [[home, Math.round(p.rtt)]] : [])))
+    },
+  }
+}
+
 /** This tab's co-op client (made on first use), or null without a relay. */
 export const coopClient = (): CoopClient | null => {
   const url = coopUrl()
@@ -139,6 +168,43 @@ export const coopClient = (): CoopClient | null => {
   client ??= createCoopClient(browserDeps(url, local, coopToken, coopName))
   return client
 }
+
+/** Arena against bots: a client on an in-page relay (`coop/localRelay.ts`), no network and no account. Null while none runs. */
+let arena: { relay: LocalRelay; client: CoopClient } | null = null
+
+/** The Arena's in-page client, while a match against bots is up. */
+export const arenaClient = (): CoopClient | null => arena?.client ?? null
+
+/** A fresh in-page relay with a guest client on it named `name` (one at a time: the last one closes). */
+export const openArenaClient = (name: string): CoopClient => {
+  closeArenaClient()
+  const relay = createLocalRelay({ now: () => Date.now(), random: Math.random })
+  const client = createCoopClient({
+    url: LOCAL_RELAY_URL,
+    build: __SIM_BUILD__,
+    socket: relay.socket,
+    fetch: relay.fetch,
+    store: memoryStore(),
+    token: async () => null,
+    name: () => name,
+    now: () => performance.now(),
+    random: Math.random,
+  })
+  arena = { relay, client }
+  return client
+}
+
+/** Leaves the Arena's match and drops its relay (its timers and sockets with it). */
+export const closeArenaClient = () => {
+  if (!arena) return
+  const { relay, client } = arena
+  arena = null
+  client.leave()
+  relay.dispose()
+}
+
+/** The client the shell steps and shows: the Arena's in-page one while it runs, else this tab's co-op client. */
+export const activeCoopClient = (): CoopClient | null => arenaClient() ?? coopClient()
 
 /** The room code in the page's link (`?sala=K7QF2`), if any. */
 export const linkedRoom = () => parseRoomCode(new URLSearchParams(location.search).get(ROOM_PARAM))
@@ -359,6 +425,17 @@ export const addBots = async (code: string, n: number) => {
     }, 16)
   }
   return joined
+}
+
+/** Dev: in an Arena match, each of the tab's bots says quick chat line `msg` and pings `ping` where it stands, to see both from a teammate's screen. */
+export const botsTalk = (msg: QuickChat, ping: PingKind) => {
+  for (const b of bots) {
+    const r = b.client.state().runner
+    const me = r?.game.players[r.slot]
+    b.client.input({ k: 'chat', msg })
+    if (me) b.client.input({ k: 'ping', ping, x: Math.round(me.x), y: Math.round(me.y) })
+  }
+  return bots.length
 }
 
 export const removeBots = () => {

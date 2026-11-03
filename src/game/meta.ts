@@ -5,7 +5,7 @@ import { NO_ACHIEVEMENTS, parseAchievements, parseGiftTitles, parseTitle, record
 import { addClear, mergeClears, parseClears, pastClears, type Clears } from './clears'
 import { EMPTY_DEX, parseDex, type Pokedex } from './dex'
 import { DEFAULT_DIFFICULTY, parseDifficulty, type Difficulty } from './difficulty'
-import { EGG_TIERS, EGGS, grantEgg, incubatorSlots, parseEggs, parseHatched, type Egg, type EggTier, type Hatched } from './eggs'
+import { EGG_TIERS, EGGS, grantEgg, incubatorSlots, parseEggPity, parseEggs, parseHatched, type Egg, type EggPity, type EggTier, type Hatched } from './eggs'
 import { NO_INCUBATOR, parseIncubator, type IncubatorSave } from './incubator'
 import { ENDLESS, overtime } from './endless'
 import { parseClaimedGifts } from './gifts'
@@ -16,6 +16,7 @@ import { NO_SHOP, parseShop, type ShopSave } from './shop'
 import { learnTms, NO_TMS, parseTms, type TmCase } from './tmShelf'
 import { parseCaps, parseEvoItems, type Caps } from './evoItems'
 import { parseCaravan, type CaravanSave } from './caravan'
+import { parseBuilds, type Builds } from './builds'
 import type { EvoItemId } from '../data/shop'
 import { isRecord, wholeNumber } from './parse'
 import { parseRibbons, type Ribbon } from './ribbons'
@@ -121,6 +122,8 @@ export type Save = {
   incubator: IncubatorSave
   /** Families unlocked from eggs (`game/eggs.ts`). */
   hatched: Hatched
+  /** The egg pity (`game/eggs.ts`): eggs of each kind hatched in a row with no new family. */
+  eggPity: EggPity
   /** Daily and weekly mission progress (`game/missions.ts`). */
   missions: MissionsSave
   /** Unlocked achievements and lifetime records (`game/achievements.ts`). */
@@ -171,6 +174,8 @@ export type Save = {
   caravan: CaravanSave
   /** The last official Desafio do dia attempt finished (`game/attempt.ts`): synced, so every device of the account shows practice after it. */
   attempt: Attempt | null
+  /** Builds planned at the Dojo (`game/builds.ts`), one per family: the level-up screen marks the cards that follow one. */
+  builds: Builds
 }
 
 /** The branch each branching family took in its latest run that got there. */
@@ -195,6 +200,7 @@ export const EMPTY_SAVE: Save = {
   eggs: [],
   incubator: NO_INCUBATOR,
   hatched: {},
+  eggPity: {},
   missions: NO_MISSIONS,
   achievements: NO_ACHIEVEMENTS,
   title: null,
@@ -221,6 +227,7 @@ export const EMPTY_SAVE: Save = {
   // Spelled out (not `NO_CARAVAN`): `game/caravan.ts` reaches this module back through the save's helpers.
   caravan: { week: '', bought: [], haggled: false },
   attempt: null,
+  builds: {},
 }
 
 /** Brings any older save shape up to the current version. Add a case per schema bump. */
@@ -266,6 +273,7 @@ export const parseSaveData = (json: unknown): Save => {
     eggs: parseEggs(data.eggs, incubatorSlots({ incubator })),
     incubator,
     hatched: parseHatched(data.hatched),
+    eggPity: parseEggPity(data.eggPity),
     missions: parseMissions(data.missions),
     achievements,
     title: parseTitle(data.title, achievements.unlocked, titles),
@@ -293,6 +301,7 @@ export const parseSaveData = (json: unknown): Save => {
     caps: parseCaps(data.caps),
     caravan: parseCaravan(data.caravan),
     attempt: parseAttempt(data.attempt),
+    builds: parseBuilds(data.builds),
   }
 }
 

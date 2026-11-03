@@ -28,13 +28,14 @@ import {
 import type { BranchId } from '../../src/data/branches'
 import type { PlayableId } from '../../src/data/hatchlings'
 import { RIBBON_TIERS, type RibbonTier } from '../../src/game/ribbons'
+import { badgesOf } from '../../src/game/supporters'
 import { RULES_VERSION, TICK, type Replay } from '../../src/game/replay'
 import { parseBagItems } from '../../src/game/bag'
 import { boardListed, commitLag, sameSegment, settleReport, STREAM, streamedInTime, type ReplayChunk } from '../../src/game/replayStream'
-import { supporterTier } from '../../src/game/supporters'
 import type { TransactionSql } from 'postgres'
 import { CHECKED, checkRank, rankOnShow, type BoardLine } from './checkRank'
 import type { Sql } from './db'
+import { standingOf, type StandingRow } from './supporters'
 import type { TokenRules } from './rulesGrace'
 
 /** Which board: a mode (regular or Legend), a difficulty and a period, optionally one Pokémon or only the friends of `viewer`. */
@@ -98,16 +99,16 @@ const toRun = (r: RunRow): ProfileRun => ({
   bag: parseBagItems(r.bag),
 })
 
-type SupporterRow = { supporter_points: number; supporter_public: boolean; supporter_since: Date | null }
+type SupporterRow = StandingRow & { supporter_public: boolean; supporter_since: Date | null }
 
-/** A player's supporter badge, if they donated and show it. */
-const badgeOf = (r: SupporterRow) => (r.supporter_public ? supporterTier(r.supporter_points) : null)
+/** A player's supporter badges (`badgesOf`: their tier and the OG plate), if they have them and show them. `self` always sees their own. */
+const badgeOf = (r: SupporterRow, self = false) => badgesOf(standingOf(r), self || r.supporter_public)
 
 type EntryRow = RunRow & SupporterRow & { id: string; user_id: string; handle: string; name: string; rank: number }
 
 const toEntry = (r: EntryRow): BoardEntry => {
-  const supporter = badgeOf(r)
-  return { ...toRun(r), rank: r.rank, handle: r.handle, name: r.name, supporter, supporterSince: supporter ? (r.supporter_since?.toISOString() ?? null) : null, run: r.id }
+  const { supporter, og } = badgeOf(r)
+  return { ...toRun(r), rank: r.rank, handle: r.handle, name: r.name, supporter, supporterSince: supporter ? (r.supporter_since?.toISOString() ?? null) : null, og, run: r.id }
 }
 
 /**
@@ -153,7 +154,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         ${friends && viewer ? q`and (r.user_id = ${viewer} or r.user_id in (select followee_id from follows where follower_id = ${viewer}))` : q``}
       order by r.user_id, r.survived desc, r.started_at
     )
-    select b.*, u.handle, u.name, u.supporter_points, u.supporter_public, u.supporter_since, (row_number() over (order by b.survived desc, b.started_at))::int as rank
+    select b.*, u.handle, u.name, u.supporter_points, u.og_tier, u.patreon_tier, u.patreon_best, u.supporter_public, u.supporter_since, (row_number() over (order by b.survived desc, b.started_at))::int as rank
     from best b join users u on u.id = b.user_id
     where (u.handle is not null ${self ? q`or u.id = ${self}` : q``}) and u.banned_at is null`
 
@@ -163,7 +164,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
    * how many are on it.
    */
   const challengeRanked = (day: DayKey, friends: boolean, viewer: string | null) => sql`
-    select r.id, r.user_id, r.starter, r.stage, r.branch, r.difficulty, r.survived, r.outcome, r.started_at, r.bag, u.handle, u.name, u.supporter_points, u.supporter_public, u.supporter_since,
+    select r.id, r.user_id, r.starter, r.stage, r.branch, r.difficulty, r.survived, r.outcome, r.started_at, r.bag, u.handle, u.name, u.supporter_points, u.og_tier, u.patreon_tier, u.patreon_best, u.supporter_public, u.supporter_since,
       (row_number() over (order by r.survived desc, r.started_at))::int as rank,
       (count(*) over ())::int as total
     from runs r join users u on u.id = r.user_id
@@ -550,11 +551,11 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
      */
     profile: async (handle: string, viewer: string | null): Promise<PublicProfile | null> => {
       const [user] = await sql<(SupporterRow & { id: string; handle: string; name: string | null })[]>`
-        select id, handle, name, supporter_points, supporter_public, supporter_since from users where handle = ${handle} and banned_at is null`
+        select id, handle, name, supporter_points, og_tier, patreon_tier, patreon_best, supporter_public, supporter_since from users where handle = ${handle} and banned_at is null`
       if (!user) return null
       const self = viewer === user.id
       // One's own badge shows even when hidden from others, so the profile says what they see.
-      const supporter = self ? supporterTier(user.supporter_points) : badgeOf(user)
+      const { supporter, og } = badgeOf(user, self)
       const [records, recent, [counts], [save], ribbons] = await Promise.all([
         sql<RecordRow[]>`
           select distinct on (mode, difficulty) mode, starter, stage, branch, difficulty, survived, outcome, started_at, bag
@@ -592,6 +593,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         ribbons: Object.fromEntries(RIBBON_TIERS.map((tier) => [tier, ribbons.find((r) => r.tier === tier)?.n ?? 0])) as Record<RibbonTier, number>,
         supporter,
         supporterSince: supporter ? (user.supporter_since?.toISOString() ?? null) : null,
+        og,
         self,
       }
     },

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { PROTOCOL, type ClientMessage, type Hello, type ServerMessage } from '../../src/net/protocol'
+import { ARENA_RANKED } from '../../src/data/arenaRanked'
+import { MAX_ARENA_PLAYERS, MAX_PLAYERS, PROTOCOL, type ClientMessage, type Hello, type ServerMessage } from '../../src/net/protocol'
 import {
   BOUND_AHEAD,
   BOUND_REFRESH,
@@ -15,6 +16,7 @@ import {
   message,
   reattach,
   tick,
+  type ArenaLock,
   type Effect,
   type Room,
   type State,
@@ -493,5 +495,219 @@ describe('moving the room', () => {
     const host = join(state, 'host', 'guest-0-xxxxxxxxxxxx', T0, { ...room, claim: 'claim-0000000000000' })
     expect(of(sent(host, 'host'), 'welcome')[0]?.room.members.find((m) => m.host)?.seat).toBe(2)
     expect(roomOf(state).claim).toBeNull()
+  })
+})
+
+describe('arena rooms', () => {
+  const guest = (i: number) => `guest-${i}-xxxxxxxxxxxx`
+  const reports = (effects: readonly Effect[]) => effects.flatMap((e) => (e.k === 'report' ? [e.report] : []))
+
+  /** A room made by the matchmaker for `players` (guest identities) on alternating teams (all on Blue: `oneSide`), in a 4v4 unless `format` says (a 3v3 is Casual). */
+  const matched = (players: number, ranked = true, { format, oneSide = false }: { format?: 'quick'; oneSide?: boolean } = {}) => {
+    let n = 0
+    const state = loadState(null, { secret: () => `secret-${String(++n).padStart(10, '0')}`, seed: () => 42 }, T0)
+    const lock: Omit<ArenaLock, 'startBy'> = {
+      queue: format ? 'casual' : 'ranked',
+      ...(format && { format }),
+      ranked: format ? false : ranked,
+      players: Array.from({ length: players }, (_, i) => ({ id: `g:${guest(i)}`, team: (oneSide ? 0 : i % 2) as 0 | 1 })),
+    }
+    createRoom(state, { code: 'ABCDE', build: 'b1', region: 'enam', lock }, T0)
+    return state
+  }
+
+  /** Everyone in a matched room joins with a loadout asking for Blue: the run starts by itself. */
+  const matchedPlaying = (players: number, ranked = true, opts: { format?: 'quick'; oneSide?: boolean } = {}) => {
+    const state = matched(players, ranked, opts)
+    for (let i = 0; i < players; i++) {
+      join(state, `c${i}`, guest(i))
+      say(state, `c${i}`, { t: 'loadout', loadout: { starter: 'pikachu', team: 0 } }, T0)
+    }
+    return state
+  }
+
+  const result = (winner: 0 | 1) => JSON.stringify({ v: 1, score: [10, 3], winner, seconds: 600, objective: null, seats: [] })
+
+  it('seats two teams in an Arena room and a party of four elsewhere', () => {
+    const coop = newState()
+    for (let i = 0; i < MAX_PLAYERS; i++) join(coop, `c${i}`, guest(i))
+    expect(of(sent(join(coop, 'c9', guest(9)), 'c9'), 'refused')).toEqual([{ t: 'refused', code: 'unavailable' }])
+
+    const arena = newState()
+    join(arena, 'c0', guest(0))
+    say(arena, 'c0', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus' } }, T0)
+    for (let i = 1; i < MAX_ARENA_PLAYERS; i++) expect(of(sent(join(arena, `c${i}`, guest(i)), `c${i}`), 'welcome')).toHaveLength(1)
+    expect(MAX_ARENA_PLAYERS).toBe(ARENA_RANKED.queue.players)
+    expect(of(sent(join(arena, 'c9', guest(9)), 'c9'), 'refused')).toEqual([{ t: 'refused', code: 'unavailable' }])
+    // A full Arena room can't become a co-op room of eight.
+    say(arena, 'c0', { t: 'settings', settings: { difficulty: 'normal' } }, T0)
+    expect(roomOf(arena).settings.mode).toBe('versus')
+  })
+
+  it('seats a 3v3 room six, and keeps a room of more on the 4v4', () => {
+    const quick = newState()
+    join(quick, 'c0', guest(0))
+    say(quick, 'c0', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus', format: 'quick' } }, T0)
+    for (let i = 1; i < 6; i++) expect(of(sent(join(quick, `c${i}`, guest(i)), `c${i}`), 'welcome')).toHaveLength(1)
+    expect(of(sent(join(quick, 'c6', guest(6)), 'c6'), 'refused')).toEqual([{ t: 'refused', code: 'unavailable' }])
+
+    const seven = newState()
+    join(seven, 'c0', guest(0))
+    say(seven, 'c0', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus' } }, T0)
+    for (let i = 1; i < 7; i++) join(seven, `c${i}`, guest(i))
+    say(seven, 'c0', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus', format: 'quick' } }, T0)
+    expect(roomOf(seven).settings.format).toBeUndefined()
+  })
+
+  it("carries a matched 3v3's format in its settings and reports its six seats", () => {
+    const state = matchedPlaying(2, false, { format: 'quick' })
+    expect(roomOf(state).settings).toEqual({ difficulty: 'normal', mode: 'versus', queue: 'casual', locked: true, format: 'quick' })
+    say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    const [report] = reports(say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000))
+    expect(report).toMatchObject({ kind: 'casual' })
+    expect(report?.seats).toHaveLength(6)
+  })
+
+  it('takes only the matched players, on their teams, and keeps its settings', () => {
+    const state = matched(2)
+    expect(of(sent(join(state, 'x', guest(7)), 'x'), 'refused')).toEqual([{ t: 'refused', code: 'unavailable' }])
+    join(state, 'c1', guest(1))
+    say(state, 'c1', { t: 'loadout', loadout: { starter: 'pikachu', team: 0 } }, T0)
+    expect(roomOf(state).seats[0]?.loadout).toEqual({ starter: 'pikachu', team: 1 })
+    say(state, 'c1', { t: 'settings', settings: { difficulty: 'hard' } }, T0)
+    say(state, 'c1', { t: 'start' }, T0)
+    expect(roomOf(state).settings).toEqual({ difficulty: 'normal', mode: 'versus', queue: 'ranked', locked: true })
+    expect(roomOf(state).phase).toBe('lobby')
+  })
+
+  it('starts by itself once everyone is in, or at the join timeout with whoever came, and goes when nobody did', () => {
+    const full = matchedPlaying(2)
+    expect(roomOf(full).phase).toBe('playing')
+    expect(roomOf(full).run?.start.players.map((p) => p.loadout.team)).toEqual([0, 1])
+
+    const late = matched(3)
+    join(late, 'c0', guest(0))
+    say(late, 'c0', { t: 'loadout', loadout: { starter: 'pikachu' } }, T0)
+    const startBy = T0 + ARENA_RANKED.queue.joinTimeout * 1000
+    expect(deadline(late)).toBe(startBy)
+    tick(late, startBy - 1)
+    expect(roomOf(late).phase).toBe('lobby')
+    const out = tick(late, startBy)
+    expect(roomOf(late).run?.start.players).toHaveLength(1)
+    expect(of(sent(out, 'c0'), 'start')).toHaveLength(1)
+
+    const empty = matched(2)
+    expect(tick(empty, startBy)).toContainEqual({ k: 'wipe' })
+  })
+
+  it('reports an agreed result once, with the accounts by slot, and never a co-op run', () => {
+    const state = matchedPlaying(3)
+    say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    const out = say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    const [report] = reports(out)
+    expect(reports(out)).toHaveLength(1)
+    expect(report).toMatchObject({ v: 1, room: 'ABCDE', run: 1, kind: 'ranked', region: 'enam', endedAt: T0 + 9000, result: JSON.parse(result(0)), confirmed: true })
+    expect(report?.seats).toHaveLength(ARENA_RANKED.queue.players)
+    // Guests have no account; the bots' slots follow the humans'.
+    expect(report?.seats.slice(0, 4)).toEqual([0, 1, 2, 3].map((slot) => ({ slot, userId: null, handle: null, left: false })))
+    expect(reports(say(state, 'c2', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9100))).toHaveLength(0)
+
+    const { state: coop, t0 } = playing(2)
+    say(coop, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, t0)
+    expect(reports(say(coop, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, t0))).toHaveLength(0)
+  })
+
+  it("trusts no lone client: a split result isn't reported, a ranked match one human finished goes unconfirmed", () => {
+    const split = matchedPlaying(2)
+    say(split, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    const out = say(split, 'c1', { t: 'over', tick: 900, h: 'end', result: result(1) }, T0 + 9000)
+    expect(roomOf(split).phase).toBe('ended')
+    expect(reports(out)).toHaveLength(0)
+
+    const left = matchedPlaying(2)
+    say(left, 'c1', { t: 'leave' }, T0 + 5000)
+    const [report] = reports(say(left, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000))
+    // Still ranked, so the API rates the leaver's loss; unconfirmed, so it rates nothing else.
+    expect(report).toMatchObject({ kind: 'ranked', confirmed: false })
+    expect(report?.seats[1]).toMatchObject({ slot: 1, left: true })
+
+    // A match the matchmaker didn't rate stays casual.
+    const unrated = matchedPlaying(2, false)
+    say(unrated, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    const [casual] = reports(say(unrated, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000))
+    expect(casual).toMatchObject({ kind: 'casual', confirmed: true })
+  })
+
+  it('counts a player who left the end screen after voting the agreed end as having finished, not left', () => {
+    const state = matchedPlaying(2)
+    say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    say(state, 'c1', { t: 'leave' }, T0 + 9100)
+    const [report] = reports(say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9300))
+    expect(report).toMatchObject({ kind: 'ranked', confirmed: true })
+    expect(report?.seats.slice(0, 2)).toMatchObject([{ slot: 0, left: false }, { slot: 1, left: false }])
+
+    // A vote for another end doesn't clear the leave.
+    const early = matchedPlaying(2)
+    say(early, 'c1', { t: 'over', tick: 400, h: 'early', result: result(1) }, T0 + 5000)
+    say(early, 'c1', { t: 'leave' }, T0 + 5100)
+    const [forged] = reports(say(early, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000))
+    expect(forged).toMatchObject({ confirmed: false })
+    expect(forged?.seats[1]).toMatchObject({ slot: 1, left: true })
+  })
+
+  it('ends a match a player abandoned (tab closed) once their seat goes away, and reports them as having left', () => {
+    const state = matchedPlaying(2)
+    disconnect(state, 'c1', T0 + 4000)
+    say(state, 'c0', { t: 'ping', at: 1 }, T0 + 8000)
+    expect(reports(say(state, 'c0', { t: 'over', tick: 300, h: 'end', result: result(0) }, T0 + 8000))).toHaveLength(0)
+    const [report] = reports(tick(state, T0 + 8000))
+    expect(roomOf(state).phase).toBe('ended')
+    expect(report).toMatchObject({ kind: 'ranked', confirmed: false })
+    expect(report?.seats.slice(0, 2)).toMatchObject([{ slot: 0, left: false }, { slot: 1, left: true }])
+  })
+
+  it('plays a ranked match whose humans are all on one team as casual', () => {
+    const state = matchedPlaying(2, true, { oneSide: true })
+    say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    const [report] = reports(say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000))
+    expect(report).toMatchObject({ kind: 'casual', confirmed: true })
+  })
+
+  it('reports a match its humans all left as abandoned when the room closes, and nothing for a finished one', () => {
+    const state = matchedPlaying(2)
+    say(state, 'c0', { t: 'leave' }, T0 + 5000)
+    const out = say(state, 'c1', { t: 'leave' }, T0 + 6000)
+    expect(out).toContainEqual({ k: 'wipe' })
+    const [report] = reports(out)
+    expect(report).toMatchObject({ v: 1, room: 'ABCDE', run: 1, kind: 'ranked', endedAt: T0 + 6000, result: null, abandoned: true })
+    expect(report?.seats.slice(0, 3)).toMatchObject([{ slot: 0, left: true }, { slot: 1, left: true }, { slot: 2, userId: null, left: false }])
+
+    // Tabs closed: the room idles out and says the same.
+    const quiet = matchedPlaying(2)
+    disconnect(quiet, 'c0', T0 + 5000)
+    disconnect(quiet, 'c1', T0 + 5000)
+    expect(reports(tick(quiet, T0 + 5000 + TIMES.idle))).toMatchObject([{ abandoned: true }])
+
+    const done = matchedPlaying(2)
+    say(done, 'c0', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    say(done, 'c1', { t: 'over', tick: 900, h: 'end', result: result(0) }, T0 + 9000)
+    say(done, 'c0', { t: 'leave' }, T0 + 9500)
+    expect(reports(say(done, 'c1', { t: 'leave' }, T0 + 9600))).toHaveLength(0)
+  })
+
+  it("reports a friends' Arena room as a room, and an account by its Clerk id and handle", () => {
+    const state = newState()
+    connect(state, 'a', 'ua', T0)
+    hello(state, 'a', helloMsg('x'.repeat(16), { auth: { kind: 'clerk', token: 'jwt' }, name: '@ash' }), { id: 'u:user_ash', account: true }, T0, { guests: false })
+    join(state, 'b', guest(1))
+    say(state, 'a', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus' } }, T0)
+    say(state, 'a', { t: 'loadout', loadout: { starter: 'pikachu' } }, T0)
+    say(state, 'b', { t: 'loadout', loadout: { starter: 'eevee' } }, T0)
+    say(state, 'b', { t: 'ready', ready: true }, T0)
+    say(state, 'a', { t: 'start' }, T0)
+    say(state, 'a', { t: 'over', tick: 900, h: 'end', result: result(1) }, T0 + 9000)
+    const [report] = reports(say(state, 'b', { t: 'over', tick: 900, h: 'end', result: result(1) }, T0 + 9000))
+    expect(report?.kind).toBe('room')
+    expect(report?.seats[0]).toEqual({ slot: 0, userId: 'user_ash', handle: 'ash', left: false })
   })
 })

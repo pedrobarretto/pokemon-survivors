@@ -35,6 +35,16 @@ describe('dailyChallenge', () => {
     // Pinned from before the exclusive eggs (Haunted, Kecleon): leaving their families out of the pool keeps every day's draw.
     expect(['2026-10-21', '2026-10-24', '2026-11-02'].map((d) => dailyChallenge(d).starter)).toEqual(['larvitar', 'roggenrola', 'honedge'])
   })
+
+  it('keeps the past Nightmares and draws none after `nightmareUntil`, every other day as it was', () => {
+    // Pinned: the days already played keep their difficulty, so their runs still check.
+    expect(['2026-10-26', '2026-10-27', '2026-10-28', '2026-10-30'].map((d) => dailyChallenge(d).difficulty)).toEqual(['nightmare', 'nightmare', 'hard', 'normal'])
+    let day = '2027-10-29'
+    const later: string[] = []
+    while ((day = previousDay(day)) > '2026-10-28') later.push(day)
+    expect(later.map((d) => dailyChallenge(d).difficulty)).not.toContain('nightmare')
+    expect(dailyChallenge('2026-10-31').difficulty).toBe('hard')
+  })
 })
 
 describe('challengeProblem', () => {

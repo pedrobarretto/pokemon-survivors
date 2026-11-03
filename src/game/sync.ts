@@ -11,7 +11,7 @@ import { mergeCaps, mergeEvoItems } from './evoItems'
 import { mergeCaravan } from './caravan'
 import { mergeStyle } from './style'
 import { mergeDex } from './dex'
-import { incubatorSlots, mergeEggs, mergeHatched } from './eggs'
+import { incubatorSlots, mergeEggPity, mergeEggs, mergeHatched } from './eggs'
 import { mergeIncubator, slotsInvested } from './incubator'
 import { SAVE_VERSION, totalSpent, UPGRADE_IDS, type Ranks, type Save, type UpgradeId } from './meta'
 import { mergeMissions } from './missions'
@@ -44,6 +44,7 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  *   unions; the incubator keeps the most eggs of each tier (`mergeEggs`), up
  *   to the merged slots. Its upgrades: the most slots bought, and the Quick
  *   Incubators' got and used counters at the larger side (`mergeIncubator`).
+ *   The egg pity: each kind's count at the larger side (`mergeEggPity`).
  * - Upgrades, records, counters and mission progress keep the larger value
  *   (missions of an older day or week give way to the current ones).
  * - ₽: the larger fortune (wallet plus upgrades, the shop's level, the
@@ -91,6 +92,7 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     eggs: mergeEggs(base.eggs, incoming.eggs, incubatorSlots({ incubator })),
     incubator,
     hatched: mergeHatched(base.hatched, incoming.hatched),
+    eggPity: mergeEggPity(base.eggPity, incoming.eggPity),
     missions: mergeMissions(base.missions, incoming.missions),
     achievements: mergeAchievements(base.achievements, incoming.achievements),
     title: incoming.title ?? base.title,
@@ -116,6 +118,8 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     caps: mergeCaps(base.caps, incoming.caps),
     caravan: mergeCaravan(base.caravan, incoming.caravan),
     attempt: mergeAttempts(base.attempt, incoming.attempt),
+    // A build saved again on another device replaces this one's for its family.
+    builds: { ...base.builds, ...incoming.builds },
   }
 }
 
@@ -126,10 +130,18 @@ export type Stored = { save: Save; revision: number }
 export type Push = { save: Save; base: number | null }
 
 /**
+ * A save behind `stored` on its lifetime runs, which only ever go up. A device
+ * pushing it on top of the latest revision lost its save (storage cleared or
+ * unreadable) but kept its account link, so it hasn't seen what's stored.
+ */
+const behind = (save: Save, stored: Save) => save.achievements.lifetime.runs < stored.achievements.lifetime.runs
+
+/**
  * What a push stores. A device that pushes on top of the latest revision has
  * seen everything stored, so its save is the newer one and replaces it as is:
  * that keeps ₽ spent, eggs hatched and refunds. Anything else (a first sign
- * in, another device pushed in between) merges both with `mergeSaves`.
+ * in, another device pushed in between, or a save `behind` the stored one,
+ * which would wipe the account) merges both with `mergeSaves`.
  *
  * `resetAt` is the revision a reset stored, when the account's save was wiped
  * (an edited save, see `server/README.md`). A device that hasn't seen it (its
@@ -140,7 +152,7 @@ export type Push = { save: Save; base: number | null }
 export const applyPush = (stored: Stored | null, push: Push, resetAt: number | null = null): Stored & { merged: boolean } => {
   if (!stored) return { save: push.save, revision: 1, merged: false }
   if (resetAt !== null && (push.base === null || push.base < resetAt)) return { ...stored, merged: true }
-  const merged = push.base !== stored.revision
+  const merged = push.base !== stored.revision || behind(push.save, stored.save)
   return { save: merged ? mergeSaves(stored.save, push.save) : push.save, revision: stored.revision + 1, merged }
 }
 

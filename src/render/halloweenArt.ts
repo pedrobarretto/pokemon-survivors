@@ -49,6 +49,7 @@ const PUMPKIN_HEART = ['....5....', '..11511..', '.1221221.', '132424221', '1244
 const PUMPKIN_HEART_COLORS = {
   supporter: { 1: '#b04808', 2: '#f08020', 3: '#ffb860', 4: '#ff5878', 5: '#407028' },
   gold: { 1: '#a86808', 2: '#f0b018', 3: '#fff0a0', 4: '#fffbe0', 5: '#407028' },
+  diamond: { 1: '#2870c0', 2: '#78d0f8', 3: '#e0f8ff', 4: '#ffffff', 5: '#407028' },
 } as const
 
 /** The Noite das Bruxas 2026 badge on an event legend (Darkrai): a jack-o'-lantern under a crescent moon. 1 the ridges, 2 the pumpkin, 4 its glow, 5 the stem, 6 the moon, 7 its shade. */
@@ -82,9 +83,9 @@ export const jackIcon = () => toIconUrl('halloween:jack', () => HALLOWEEN_ART.ja
 export const eventLegendIcon = () =>
   toIconUrl('halloween:eventLegend', () => art(EVENT_BADGE, { 1: '#b04808', 2: '#f08020', 4: '#ffe070', 5: '#407028', 6: '#f8f0b8', 7: '#c8b870' }, '#181818'))
 
-/** The supporters' jack-o'-lantern badge, golden for the gold tier (`game/halloween.ts`, `pumpkinSupporter`). */
+/** The supporters' jack-o'-lantern badge, golden for Gold, ice-blue for Diamond (`game/halloween.ts`, `pumpkinSupporter`). */
 export const pumpkinHeartIcon = (tier: SupporterTier) =>
-  toIconUrl(`halloween:heart:${tier}`, () => art(PUMPKIN_HEART, PUMPKIN_HEART_COLORS[tier], tier === 'gold' ? '#4a3008' : '#2a1008'))
+  toIconUrl(`halloween:heart:${tier}`, () => art(PUMPKIN_HEART, PUMPKIN_HEART_COLORS[tier], { supporter: '#2a1008', gold: '#4a3008', diamond: '#0c2448' }[tier]))
 
 /** How long a candy sparkle lasts, in seconds. */
 export const CANDY_SPARK_LIFE = 0.7

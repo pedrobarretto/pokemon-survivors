@@ -8,8 +8,8 @@ import { isRecord, wholeNumber } from './parse'
  * shared with the API, which trusts nothing the parser doesn't rebuild.
  */
 
-/** Lengths in characters (code points), how many errors ride along, and how many reports an IP or an account sends per hour. */
-export const BUG_REPORT = { text: { min: 5, max: 1000 }, errors: 5, message: 300, stack: 1200, field: 200, perHour: 5 } as const
+/** Lengths in characters (code points), how many errors and gamepad ids ride along, and how many reports an IP or an account sends per hour. */
+export const BUG_REPORT = { text: { min: 5, max: 1000 }, errors: 5, message: 300, stack: 1200, field: 200, pads: 4, perHour: 5 } as const
 
 /** An uncaught error or unhandled rejection the game caught (`window` `error` / `unhandledrejection`). */
 export type BugError = {
@@ -54,6 +54,9 @@ export type BugPerf = {
   peakCanvasMb: number
   /** Average time between frames (ms) over the last couple of seconds. */
   frameMs: number | null
+  /** Times this session the browser wiped every canvas unannounced, and refused a canvas its context (`canvasLosses`). */
+  wiped: number
+  refused: number
 }
 
 /** The run the game was in when the page died last time, as the crash watch last saw it. */
@@ -67,6 +70,18 @@ export type BugCrash = {
   perf: BugPerf | null
   /** The last error of that session, if any. */
   error: BugError | null
+}
+
+/** What the player plays with, as `engine/input.ts` names it. */
+export const INPUT_KINDS = ['keyboard', 'mouse', 'touch', 'gamepad'] as const
+export type InputKind = (typeof INPUT_KINDS)[number]
+
+/** How the player was playing: a drifting stick walks the Pokémon on its own, so the pads plugged in matter even when the keys were used last. */
+export type BugInput = {
+  /** The kind used last in a run (or anywhere, before the first run), null before any input. */
+  last: InputKind | null
+  /** `Gamepad.id` of each pad connected, at most `BUG_REPORT.pads`. */
+  pads: string[]
 }
 
 /** Everything a report carries besides the player's words. */
@@ -86,6 +101,8 @@ export type BugTech = {
   /** Installed as an app (PWA). */
   standalone: boolean
   touch: boolean
+  /** Null from clients older than the field. */
+  input: BugInput | null
   /** Seconds since the page loaded. */
   uptime: number
   perf: BugPerf | null
@@ -149,6 +166,16 @@ const parsePerf = (v: unknown): BugPerf | null =>
         peakCanvases: wholeNumber(v.peakCanvases, 1e6),
         peakCanvasMb: num(v.peakCanvasMb, 0, 1e6) ?? 0,
         frameMs: num(v.frameMs, 0, 1e4),
+        wiped: wholeNumber(v.wiped, 1e6),
+        refused: wholeNumber(v.refused, 1e6),
+      }
+    : null
+
+const parseInput = (v: unknown): BugInput | null =>
+  isRecord(v)
+    ? {
+        last: INPUT_KINDS.find((k) => k === v.last) ?? null,
+        pads: (Array.isArray(v.pads) ? v.pads : []).map((id) => line(id, 100)).filter(Boolean).slice(0, BUG_REPORT.pads),
       }
     : null
 
@@ -173,6 +200,7 @@ export const parseBugTech = (v: unknown): BugTech | null => {
     heapMb: num(v.heapMb, 0, 1e6),
     standalone: v.standalone === true,
     touch: v.touch === true,
+    input: parseInput(v.input),
     uptime: wholeNumber(v.uptime, 1e9),
     perf: parsePerf(v.perf),
     view: line(v.view, 60),

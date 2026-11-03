@@ -4,7 +4,7 @@
 import { mkdir, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { measureBody } from './body.mjs'
-import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, SHINY, pad } from './dex.mjs'
+import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, SHINY, pad } from './dex.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const OUT = join(ROOT, 'public/assets/pokemon')
@@ -101,13 +101,24 @@ const fetchFormCry = async (name, dest) => {
   return Boolean(url) && download(url, dest)
 }
 
-/** An alternate form (`FORMS`), with its portrait where `FORM_PORTRAITS` asks, and, for species that can roll shiny, its shiny under `<id>/0001`. */
+/** A hand-made form shiny (`HANDMADE_SHINIES`): the committed sheets, read with the form's own frame sizes and durations. */
+const handmadeShiny = async (form, dir) => {
+  const walk = form.anims.Walk
+  for (const name of Object.keys(form.anims)) if (!(await exists(join(dir, `${name}.png`)))) throw new Error(`${dir}: missing hand-made ${name}.png`)
+  return { anims: form.anims, body: await measureBody(join(dir, 'Walk.png'), walk.frameWidth, walk.frameHeight) }
+}
+
+/**
+ * An alternate form (`FORMS`), with its portrait where `FORM_PORTRAITS` asks, and, for species that can roll shiny,
+ * its shiny under `<id>/0001` (or the hand-made one in `HANDMADE_SHINIES` while SpriteCollab has none).
+ */
 const fetchForm = async (dex, key, id, dir) => {
-  const [form, shiny] = await Promise.all([
+  const [form, fetched] = await Promise.all([
     fetchVariant(dex, `/${id}`, join(dir, key), FORM_PORTRAITS[dex]?.includes(key) ?? false),
     SHINY.has(dex) ? fetchVariant(dex, `/${id}/0001`, join(dir, key, 'shiny'), false) : null,
   ])
   if (!form) throw new Error(`#${dex} form ${key}: missing AnimData.xml`)
+  const shiny = fetched ?? (SHINY.has(dex) && HANDMADE_SHINIES[dex]?.[key] ? await handmadeShiny(form, join(dir, key, 'shiny')) : null)
   return [key, { ...form, ...(shiny && { shiny }) }]
 }
 
