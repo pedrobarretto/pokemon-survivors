@@ -158,6 +158,12 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'Ao ver “Um Pokémon shiny apareceu!”, olhe o minimapa: o shiny é a estrela dourada piscando. Fora do alcance do mapa, ela fica na borda, apontando para onde ele está, como o chefe e os Alfas. Ideia do Zozup no Discord.', en: 'When you see “A shiny Pokémon appeared!”, check the minimap: the shiny is the blinking gold star. Out of the map’s range, it sits on the rim pointing where it is, like the boss and the Alphas. Idea by Zozup on Discord.', es: 'Cuando veas “¡Apareció un Pokémon shiny!”, mira el minimapa: el shiny es la estrella dorada que parpadea. Fuera del alcance del mapa, queda en el borde apuntando hacia donde está, como el jefe y los Alfa. Idea de Zozup en Discord.' },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          { pt: 'Um TM equipado na Loja do Kecleon sai do primeiro chefe derrotado no lugar do TM dele (é assim que ele chega na partida). A tela, porém, adivinhava quem o deixou pelo golpe: com Iron Head equipado, derrotar o Onix dizia "Registeel deixou um TM!", e um TM só da loja (como o Pay Day) aparecia como achado no chão. Agora ela diz que é o seu TM da loja.', en: 'A TM armed at the Kecleon Shop comes out of the first boss you defeat, in place of that boss’s own TM (that’s how it reaches the run). The screen, though, guessed who left it from the move: with Iron Head armed, defeating Onix said "Registeel left a TM!", and a shop-only TM (like Pay Day) showed up as found on the ground. Now it says it’s your shop TM.', es: 'Una MT equipada en la Tienda de Kecleon sale del primer jefe que derrotas, en lugar de la MT de ese jefe (así llega a la partida). Pero la pantalla adivinaba quién la dejó por el movimiento: con Iron Head equipado, derrotar a Onix decía "¡Registeel dejó una MT!", y una MT solo de la tienda (como Pay Day) aparecía como encontrada en el suelo. Ahora dice que es tu MT de la tienda.' },
+        ],
+      },
     ],
   },
   {

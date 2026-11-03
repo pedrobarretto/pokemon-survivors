@@ -102,13 +102,13 @@ describe('armed TMs in a run', () => {
   it('make the first boss discs and tutor lessons theirs, in order, then the run goes back to normal', () => {
     const g = run({ ...START, tms: ['payDay', 'iceBeam'] })
     killEnemy(g, spawnEnemy(g, 'onix', 40, 0))
-    expect(g.pickups.find((k) => k.kind === 'tm')).toMatchObject({ move: 'payDay', source: 'boss' })
+    expect(g.pickups.find((k) => k.kind === 'tm')).toMatchObject({ move: 'payDay', source: 'armed' })
     expect(openTutor(g)).toBe(true)
     expect(g.player.offers[0]).toMatchObject({ kind: 'tm', id: 'iceBeam', source: 'tutor' })
     g.phase = 'playing'
     g.pickups.length = 0
     killEnemy(g, spawnEnemy(g, 'snorlax', 40, 0))
-    expect(g.pickups.find((k) => k.kind === 'tm')).toMatchObject({ move: BOSS_TMS.snorlax })
+    expect(g.pickups.find((k) => k.kind === 'tm')).toMatchObject({ move: BOSS_TMS.snorlax, source: 'boss' })
   })
 
   it('ride in the replay, which rejects unknown, repeated or too many TMs, and re-simulate', () => {

@@ -1940,9 +1940,11 @@ export const en: Messages = {
   tm: {
     titleBoss: (boss: string) => `${boss} left a TM!`,
     titleFound: 'You found a TM!',
+    titleArmed: 'Your shop TM is here!',
     titleLegendary: (legend: string) => `${legend}'s legendary TM!`,
     titleTutor: 'Move Tutor',
     subBoss: 'A move from outside your learnset. Learn it?',
+    subArmed: 'The TM you armed at the Kecleon Shop. Learn it?',
     subLegendary: 'Only one legendary TM can be learned per run.',
     subTutor: (free: boolean) => (free ? 'I teach moves that suit your type, ones you’d never learn on your own. The first lesson is free!' : 'I teach moves that suit your type, ones you’d never learn on your own. I charge the run’s ₽.'),
     tag: 'TM',

@@ -1938,9 +1938,11 @@ export const zh: Messages = {
   tm: {
     titleBoss: (boss: string) => `${boss} 留下了一個TM！`,
     titleFound: '你找到了一個TM！',
+    titleArmed: '你在商店裝備的TM來了！',
     titleLegendary: (legend: string) => `${legend} 的傳說TM！`,
     titleTutor: '招式教學',
     subBoss: '這是你可學招式以外的招式。要學嗎？',
+    subArmed: '這是你在Kecleon商店裝備的TM。要學嗎？',
     subLegendary: '每局只能學會一個傳說TM。',
     subTutor: (free: boolean) => (free ? '我會教適合你屬性、但你自己永遠學不會的招式。第一堂課免費！' : '我會教適合你屬性、但你自己永遠學不會的招式。學費從本局的 ₽ 扣除。'),
     tag: 'TM',

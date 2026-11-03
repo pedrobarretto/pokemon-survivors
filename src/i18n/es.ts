@@ -1942,9 +1942,11 @@ export const es: Messages = {
   tm: {
     titleBoss: (boss: string) => `¡${boss} dejó una MT!`,
     titleFound: '¡Encontraste una MT!',
+    titleArmed: '¡Llegó tu MT de la tienda!',
     titleLegendary: (legend: string) => `¡MT legendaria de ${legend}!`,
     titleTutor: 'Tutor de Movimientos',
     subBoss: 'Un movimiento fuera de tu repertorio. ¿Aprenderlo?',
+    subArmed: 'La MT que equipaste en la Tienda de Kecleon. ¿Aprenderla?',
     subLegendary: 'Solo se puede aprender una MT legendaria por partida.',
     subTutor: (free: boolean) => (free ? 'Enseño movimientos que van con tu tipo y que no aprenderías por tu cuenta. ¡La primera clase es gratis!' : 'Enseño movimientos que van con tu tipo y que no aprenderías por tu cuenta. Cobro con ₽ de la partida.'),
     tag: 'MT',
