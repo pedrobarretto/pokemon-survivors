@@ -20,7 +20,7 @@ import { COOP } from '../../data/coop'
 import { AWAKEN_AT, LEGEND_IDS, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../../data/legends'
 import { legendSource } from '../../game/capture'
 import { legendMods } from '../../game/legend'
-import { CAVE, GRAVEYARD, PLACE, PLACE_IDS, PLACES, SKY, WING_IDS, WINGS } from '../../data/places'
+import { CAVE, GRAVEYARD, HIDDEN, PLACE, PLACES, REGULAR_PLACE_IDS, SKY, WING_IDS, WINGS } from '../../data/places'
 import { TIER_FLOORS, TIERS } from '../../data/roster'
 import { BOSS_FIGHT, bossCandidates, ELITE, EVENTS, FINALE, MYTHICALS, RUN_LENGTH, RUNNER, scaling, STAGES, stageStart, TRIO_IDS, TRIOS, type BossEvent } from '../../data/waves'
 import { createRng } from '../../engine/rng'
@@ -403,7 +403,8 @@ const places = (locale: Locale, m: SiteMessages) => {
   const p = m.guide.places
   const num = (v: number) => v.toLocaleString(m.lang.tag)
   const pct = (v: number) => Math.round(v * 100)
-  const rows = PLACE_IDS.map((id) => [
+  // Hidden zones stay a teaser (`p.hidden`): no table row, no species.
+  const rows = REGULAR_PLACE_IDS.map((id) => [
     p.names[id],
     p.seconds(PLACES[id].time),
     html`${PLACES[id].species.map((e) => html`<a class="with-mini" href="${dexLink(locale, ENEMIES[e].name)}" title="${ENEMIES[e].name}">${portrait(ENEMIES[e].dex)}</a>`)}`,
@@ -438,7 +439,9 @@ const places = (locale: Locale, m: SiteMessages) => {
     ${table([m.guide.bosses.bossHead, m.guide.bosses.attacksHead], [[bossName(locale, spiritomb), attacks]])}
     <h3>${p.names.sky}</h3>
     ${paragraphs(p.sky({ time: PLACES.sky.time, tailwind: pct(SKY.tailwind - 1), every: SKY.wings.every, flock: SKY.flock.every }))}
-    ${table([p.wingHead, p.effectHead], WING_IDS.map((id) => [WINGS[id].name, p.wings[id](wingAmount(id))]))}`
+    ${table([p.wingHead, p.effectHead], WING_IDS.map((id) => [WINGS[id].name, p.wings[id](wingAmount(id))]))}
+    <h3>${p.hiddenTitle}</h3>
+    ${paragraphs(p.hidden({ odds: pct(HIDDEN.odds), open: HIDDEN.openTime }))}`
 }
 
 /** The map's landmarks: how often they stand, what each one is and what its treasure holds (`data/landmarks.ts`). */

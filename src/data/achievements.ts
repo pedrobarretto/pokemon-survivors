@@ -1,5 +1,5 @@
 import type { EggTier } from '../game/eggs'
-import { PLACE_IDS } from './places'
+import { HIDDEN_PLACE_IDS, REGULAR_PLACE_IDS } from './places'
 import { RIFT_LEGENDS } from './rifts'
 
 /**
@@ -26,7 +26,7 @@ export type AchievementStat =
   | 'rifts' | 'legends' | 'overtimeMinutes' | 'reaperDefeats'
   | 'bossKills' | 'chests' | 'meowths' | 'altars' | 'coins' | 'moveEvolutions' | 'missions'
   | 'dexSeen' | 'starterLines' | 'hatches' | 'shinyHatches' | 'megas' | 'alphaKills'
-  | 'placeClears' | 'places' | 'landmarks'
+  | 'placeClears' | 'places' | 'hiddenZones' | 'landmarks'
 
 export type AchievementDef = {
   medal: Medal
@@ -89,7 +89,9 @@ export const ACHIEVEMENTS = {
   legends: { medal: 'gold', stat: 'legends', target: RIFT_LEGENDS.length, title: true },
   shinyLegend: { medal: 'gold', stat: 'shinyLegends', target: 1 },
   /** Every place cleared at least once: the cave's treasure, Spiritomb and a flight with a wing (which takes a Flying type). */
-  explorer: { medal: 'gold', stat: 'places', target: PLACE_IDS.length, title: true },
+  explorer: { medal: 'gold', stat: 'places', target: REGULAR_PLACE_IDS.length, title: true },
+  /** Every hidden zone found at least once (`hidden` in `data/places.ts`): they're rare, unannounced, and the medal is the only hint that there's more than one. */
+  secrets: { medal: 'gold', stat: 'hiddenZones', target: HIDDEN_PLACE_IDS.length, title: true },
   champion: { medal: 'silver', stat: 'wins', target: 1, title: true },
   wins10: { medal: 'gold', stat: 'wins', target: 10 },
   trio: { medal: 'silver', stat: 'trio', target: 3 },

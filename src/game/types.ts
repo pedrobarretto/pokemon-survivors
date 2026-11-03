@@ -246,6 +246,12 @@ export type EnemyBehavior =
   /** Walks to a field mission's nest at (x, y) and bites the egg there, turning on the player within `aggro` px (`fieldMissions.ts`). */
   | { kind: 'raid'; mission: number; x: number; y: number; aggro: number }
   /**
+   * A hidden zone's lucky one or rare dweller (`hidden.ts`): runs from the
+   * nearest player and never bites, kept within `leash` px of (x, y) (0: it
+   * sits in its hole) until place age `until`, when it ducks away unhurt.
+   */
+  | { kind: 'shy'; x: number; y: number; leash: number; until: number }
+  /**
    * Versus: the body of the player at `slot` that the rival team's moves hit
    * (`versusCombat.ts`). It never moves or bites on its own: it stands where
    * its player stands, and what hits it hurts them.

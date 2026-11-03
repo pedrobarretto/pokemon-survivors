@@ -1,9 +1,10 @@
 import { retain, TAU } from '../engine/math'
 import { range } from '../engine/rng'
-import { ENTRANCE_PIECES, PLACE, PLACE_FEET, PLACES, type PlaceDef, type PlaceId } from '../data/places'
+import { ENTRANCE_PIECES, entranceFeet, PLACE, PLACES, type PlaceDef, type PlaceId } from '../data/places'
 import { DIRECTOR } from './mapEventRules'
 import { chargePortal } from './rift'
-import { nextPlaceAt, pickPlace, placeDue } from './place'
+import { revealHidden, updateHiddenSchedule } from './hidden'
+import { entranceShown, nextPlaceAt, pickPlace, placeDue } from './place'
 import { enterPlace } from './placeInterior'
 import { notifyPlace, solidAt } from './placeKit'
 import { teamFlies } from './sky'
@@ -19,7 +20,8 @@ import * as dm from '../engine/dmath'
  * updraft between standing stones), with an arrow pointing at it. It stands
  * like any terrain and stays open for a while; standing in its door for
  * `PLACE.enterTime` steps the team in. Once used or closed it stays where it
- * is until it's off every screen.
+ * is until it's off every screen. A hidden zone's entrance (`hidden.ts`)
+ * shares the slot: it opens unannounced and says nothing until found.
  */
 
 /** How much clear ground an entrance needs around its door. */
@@ -48,8 +50,8 @@ export const openEntrance = (g: Game, id: PlaceId = pickPlace(g.rng, { offered: 
     return null
   }
   const { x, y } = spot
-  const solids = ENTRANCE_PIECES[id].map(([piece, dx, dy], i) => solidAt(piece, PLACE_FEET[piece], x + dx, y + dy, i))
-  g.place.entrance = { id, x, y, left: PLACE.openTime, charge: 0, open: true, terrain: { solids, lake: null } }
+  const solids = ENTRANCE_PIECES[id].map(([piece, dx, dy], i) => solidAt(piece, entranceFeet(piece), x + dx, y + dy, i))
+  g.place.entrance = { id, x, y, left: PLACE.openTime, charge: 0, open: true, terrain: { solids, lake: null }, hidden: false, foundAt: null }
   g.place.offered.push(id)
   g.place.nextAt = nextPlaceAt(g.place.nextAt, g.time, g.rng)
   // Breakables that stood where the entrance now is make room for it.
@@ -59,7 +61,11 @@ export const openEntrance = (g: Game, id: PlaceId = pickPlace(g.rng, { offered: 
   return g.place.entrance
 }
 
-/** Opens entrances on schedule, closes them when their time is up, drops them once out of everyone's sight and steps the team in. None in co-op (`COOP_LOCKS`). */
+/**
+ * Opens entrances on schedule (and the run's hidden zone, `updateHiddenSchedule`),
+ * closes them when their time is up, drops them once out of everyone's sight
+ * and steps the team in. None in co-op (`COOP_LOCKS`).
+ */
 export const updatePlaceEntrance = (g: Game, dt: number) => {
   if (coopLocked(g, 'places')) return
   const s = g.place
@@ -67,15 +73,18 @@ export const updatePlaceEntrance = (g: Game, dt: number) => {
   if (!ent) {
     const busy = s.inside !== null || g.rift.omen !== null || g.rift.portal !== null || g.rift.arena !== null
     if (placeDue({ time: g.time, nextAt: s.nextAt, busy, bossAlive: g.bossId !== null, endless: g.endless !== null })) openEntrance(g)
+    else updateHiddenSchedule(g)
     return
   }
   // It waits on the map while the team is inside (or in a rift).
   if (s.inside || g.rift.arena) return
   if (ent.open) {
+    revealHidden(g, ent)
     ent.left -= dt
     if (ent.left <= 0) {
       ent.open = false
-      notifyPlace(g, ent.id, { kind: 'sealed' })
+      // A hidden one nobody found just goes, as quietly as it came.
+      if (entranceShown(ent)) notifyPlace(g, ent.id, { kind: 'sealed' })
     }
   }
   if (!ent.open) {
