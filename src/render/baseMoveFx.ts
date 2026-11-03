@@ -1,5 +1,5 @@
 import { TAU } from '../engine/math'
-import { blitEllipse, blitRing, canvasCache, context2d, createCanvas, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, canvasCache, context2d, createCanvas, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import type { Attack } from '../game/types'
 import { FX } from './art'
@@ -862,21 +862,49 @@ const PYRO_COOLING = [
   ['#802010', '#b83018', '#e05818'],
 ] as const
 
-const PYRO: Comet = { head: 3.4, tail: 7, ramp: FIRE_RAMP, lick: 1, ragged: true, glint: null, front: 0.45, lit: 0, stretch: [1, 1.08, 0.95, 1.04] }
+/** The cooling puffs the ball sheds along its arc, newest first (radius, color). */
+const PYRO_TRAIL = [
+  [3, '#f8d050'],
+  [3, '#f07020'],
+  [2, '#c83818'],
+  [1, '#802010'],
+] as const
 
 /**
- * Pyro Ball: on its way, a blazing ball streaming flame back along its arc;
- * on landing, a white flash, then a dome of fire with flames shooting up
- * round its rim, and smoke rolling off as it dies down.
+ * Pyro Ball: on its way, Cinderace's kicked ball, round and spinning with its
+ * charred patches, shedding cooling puffs along its arc over its shadow on the
+ * ground; on landing, a white flash, then a dome of fire with flames shooting
+ * up round its rim, and smoke rolling off as it dies down.
  */
 export const drawPyroBall = (ctx: Ctx, a: Attack, t: number) => {
   if (a.age < a.activeFrom) {
+    const at = (k: number) => ({
+      x: a.from.x + (a.x - a.from.x) * k,
+      y: a.from.y + (a.y - a.from.y) * k,
+      lift: Math.sin(k * Math.PI) * 50,
+    })
     const k = a.age / a.activeFrom
-    const x = a.from.x + (a.x - a.from.x) * k
-    const y = a.from.y + (a.y - a.from.y) * k - Math.sin(k * Math.PI) * 50
-    // Its heading: the arc's slope at k.
-    const angle = Math.atan2(a.y - a.from.y - Math.cos(k * Math.PI) * Math.PI * 50, a.x - a.from.x)
-    blitCell(ctx, cometFrame('pyro', PYRO, dirOf(angle), Math.floor(t * 16 + a.id) % 4), x, y)
+    const ball = at(k)
+    // Its shadow, under the arc: smaller and fainter the higher the ball flies.
+    const high = ball.lift / 50
+    ctx.globalAlpha = 0.35 - high * 0.15
+    blitEllipse(ctx, Math.round(5 - high * 2), Math.round(2 - high), '#201008', ball.x, ball.y + 4)
+    ctx.globalAlpha = 1
+    const trail = detail.lean ? 2 : PYRO_TRAIL.length
+    for (let i = trail - 1; i >= 0; i--) {
+      const back = k - (i + 1) * 0.07
+      if (back < 0) continue
+      const p = at(back)
+      const [r, color] = PYRO_TRAIL[i]!
+      const jitter = (hash2(a.id, i, Math.floor(t * 20)) - 0.5) * 2
+      blitEllipse(ctx, r, r, color, p.x + jitter, p.y - p.lift - jitter)
+    }
+    // Its glow, then the ball.
+    ctx.globalAlpha = 0.35
+    blitEllipse(ctx, 9, 9, '#f8a030', ball.x, ball.y - ball.lift)
+    ctx.globalAlpha = 1
+    const spin = FX.pyroBall()[a.x >= a.from.x ? 'right' : 'left']
+    blitCentered(ctx, spin[Math.floor(t * 18 + a.id) % spin.length]!, ball.x, ball.y - ball.lift)
     return
   }
   const r = radiusOf(a, 20)

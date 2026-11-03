@@ -3,6 +3,7 @@ import { jwksKeys, verifyClerkToken } from './auth'
 import type { Env } from './env'
 import { allowedOrigin } from './origins'
 import type { Identity } from './room'
+import { shardName, type Shard } from './shards'
 import { parseTrace, type LogLine, type Where } from './telemetry'
 
 /** What the Worker and the shards (`ShardObject`) share: timeouts, logging, sign-in. */
@@ -59,3 +60,9 @@ export const noSuchRoom = (): Response => {
   server.close(CLOSE_CODES.refused, 'refused')
   return new Response(null, { status: 101, webSocket: client })
 }
+
+/** A shard's object, created (the first time only: an object stays where it was made) near its region. */
+export const shardStub = (env: Env, s: Shard) => env.SHARDS.getByName(shardName(s), s.region === 'auto' ? undefined : { locationHint: s.region })
+
+/** The location hint nearest the player (`hintFor`), set by the Worker on a request it hands the matchmaker. */
+export const HINT_HEADER = 'X-PS-Hint'

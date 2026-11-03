@@ -23,6 +23,9 @@ export type Config = {
   version: string
   /** Rooms held (`counts().live`) past which new rooms go to Cloudflare (`capacity.ts`); 0 takes none (a drain). */
   maxRooms: number
+  /** The API the Arena's match reports go to, and their signing secret (`ARENA_API_URL`, `ARENA_REPORT_SECRET`); either unset posts nothing. */
+  arenaApiUrl: string | null
+  arenaReportSecret: string | null
 }
 
 const maxRoomsOf = (v: string | undefined) => {
@@ -42,4 +45,6 @@ export const configFrom = (env: Record<string, string | undefined>): Config => (
   ipHeader: env.IP_HEADER?.toLowerCase() || null,
   version: env.RELAY_VERSION ?? 'dev',
   maxRooms: maxRoomsOf(env.MAX_ROOMS),
+  arenaApiUrl: env.ARENA_API_URL || null,
+  arenaReportSecret: env.ARENA_REPORT_SECRET || null,
 })

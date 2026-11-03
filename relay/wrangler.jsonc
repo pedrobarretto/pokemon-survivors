@@ -11,13 +11,15 @@
   "durable_objects": {
     "bindings": [
       { "name": "SHARDS", "class_name": "ShardObject" },
-      { "name": "VAULT", "class_name": "Vault" }
+      { "name": "VAULT", "class_name": "Vault" },
+      { "name": "MATCHMAKER", "class_name": "Matchmaker" }
     ]
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["RoomObject", "Vault"] },
     { "tag": "v2", "new_sqlite_classes": ["ShardObject"] },
-    { "tag": "v3", "deleted_classes": ["RoomObject"] }
+    { "tag": "v3", "deleted_classes": ["RoomObject"] },
+    { "tag": "v4", "new_sqlite_classes": ["Matchmaker"] }
   ],
   // Per IP, per Cloudflare location. Generous: a whole carrier NAT can sit behind one IP.
   "ratelimits": [
@@ -26,6 +28,9 @@
   ],
   // ALLOW_GUESTS: the dev relay and local `wrangler dev` seat guests (the soak, in-tab bots, dev builds); production doesn't.
   // ROOMS_PER_SHARD: the rooms one ShardObject holds at most (README, "Limits and costs").
+  // Matchmaker (v4): the Arena's queue. SIM_BUILD_URL (production only): the site's current build, the only one it takes;
+  // without it the dev relay's queue takes every build (Vercel previews share it).
+  // ARENA_API_URL (production only): where Arena reports and MMR lookups go, signed with the ARENA_REPORT_SECRET secret.
   "vars": {
     "CLERK_ISSUER": "https://clerk.pokemonsurvivors.com",
     "ALLOWED_ORIGINS": "https://www.pokemonsurvivors.com,https://pokemonsurvivors.com,https://*.vercel.app",
@@ -42,13 +47,15 @@
       "durable_objects": {
         "bindings": [
           { "name": "SHARDS", "class_name": "ShardObject" },
-          { "name": "VAULT", "class_name": "Vault" }
+          { "name": "VAULT", "class_name": "Vault" },
+          { "name": "MATCHMAKER", "class_name": "Matchmaker" }
         ]
       },
       "migrations": [
         { "tag": "v1", "new_sqlite_classes": ["RoomObject", "Vault"] },
         { "tag": "v2", "new_sqlite_classes": ["ShardObject"] },
-        { "tag": "v3", "deleted_classes": ["RoomObject"] }
+        { "tag": "v3", "deleted_classes": ["RoomObject"] },
+        { "tag": "v4", "new_sqlite_classes": ["Matchmaker"] }
       ],
       "ratelimits": [
         { "name": "CREATE_LIMIT", "namespace_id": "4201", "simple": { "limit": 30, "period": 60 } },
@@ -58,7 +65,9 @@
         "CLERK_ISSUER": "https://clerk.pokemonsurvivors.com",
         "ALLOWED_ORIGINS": "https://www.pokemonsurvivors.com,https://pokemonsurvivors.com",
         "ALLOW_GUESTS": "off",
-        "ROOMS_PER_SHARD": "24"
+        "ROOMS_PER_SHARD": "24",
+        "ARENA_API_URL": "https://api.pokemonsurvivors.com",
+        "SIM_BUILD_URL": "https://www.pokemonsurvivors.com/sim-build.json"
       }
     }
   }

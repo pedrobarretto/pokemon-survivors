@@ -333,7 +333,7 @@ export const playerLines = (p: PlayerProfile, now = Date.now()) =>
   [
     `**${playerName(p)}**${p.name && p.handle ? ` · ${escape(p.name)}` : ''}`,
     `Joined ${p.joined.slice(0, 10)} · last seen ${daysAgo(p.seen, now)}${p.discordId ? '' : ' · Discord not linked'}`,
-    p.supporter ? (p.supporter === 'gold' ? 'Gold Supporter' : 'Supporter') : 'Not a supporter',
+    p.supporter ? `${{ supporter: 'Supporter', gold: 'Gold Supporter', diamond: 'Diamond Supporter' }[p.supporter]}${p.og ? ' · OG' : ''}` : 'Not a supporter',
     p.banned ? `⛔ Banned ${p.banned.at.slice(0, 10)}${p.banned.reason ? `: ${escape(p.banned.reason)}` : ''}` : '',
     p.runs.length ? `Runs: ${p.runs.map((r) => `${difficultyName(r.difficulty)} ${r.runs} (${r.wins} won, best ${formatTime(r.best)})`).join(' · ')}` : 'No finished runs',
     p.handle ? `${PLAY_URL}?u=${p.handle}` : '',

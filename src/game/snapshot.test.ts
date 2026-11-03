@@ -1,3 +1,4 @@
+import { deflateSync, inflateSync } from 'fflate'
 import { describe, expect, it, vi } from 'vitest'
 import { createRng, rngFrom } from '../engine/rng'
 import { forkDriver, scenarios, startScenario, tickScenario, type Driver, type Scenario } from '../determinism/scenario'
@@ -282,6 +283,9 @@ describe('snapshot and restore', () => {
     const small = await deflate(bytes)
     expect(small.length).toBeLessThan(bytes.length * 0.7)
     expect(await inflate(small)).toEqual(bytes)
+    // An engine without raw deflate streams packs with fflate: the same format, so a room mixes them both ways.
+    expect(await inflate(deflateSync(bytes))).toEqual(bytes)
+    expect(inflateSync(small)).toEqual(bytes)
   })
 })
 

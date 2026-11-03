@@ -35,6 +35,11 @@ describe('parseSettings', () => {
     expect(parseSettings(JSON.stringify({ flashes: false })).flashes).toBe('normal')
   })
 
+  it('reads the fog mode, light unless it says normal or off', () => {
+    expect(parseSettings(JSON.stringify({ fog: 'off' })).fog).toBe('off')
+    expect(parseSettings(JSON.stringify({ fog: false })).fog).toBe('light')
+  })
+
   it('reads the run toasts level, all unless it says important or none', () => {
     expect(parseSettings(JSON.stringify({ runToasts: 'important' })).runToasts).toBe('important')
     expect(parseSettings(JSON.stringify({ runToasts: 'few' })).runToasts).toBe('all')

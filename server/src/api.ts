@@ -6,6 +6,7 @@
 import { createClerkClient } from '@clerk/backend'
 import { serve } from '@hono/node-server'
 import { adminStore } from './admin'
+import { arenaStore, createArenaRewards } from './arena'
 import { createApp } from './app'
 import { bugReportStore, createBugReports, discordBugForum } from './bugReports'
 import { clerkVerifier } from './auth'
@@ -21,6 +22,7 @@ import { abacatePay } from './donations'
 import { friendStore } from './friends'
 import { giftStore } from './gifts'
 import { moderationStore } from './moderation'
+import { patreonOAuth } from './patreon'
 import { rankingStore } from './ranking'
 import { staffDesk } from './staffDesk'
 import { supporterStore } from './supporters'
@@ -68,6 +70,15 @@ if (env.discord) {
   })
 }
 
+const supporters = supporterStore(sql, { onTierChange: (userId) => void discord.syncRoles(userId) })
+// The OG Supporters' title and Discord role, for the OGs who don't have them yet (safe on every boot and instance).
+void supporters.ogGifts().catch((err) => console.error('og gifts failed', err))
+void discord.settleOg().catch((err) => console.error('discord OG roles failed', err))
+
+// The Arena's ranked seasons: once one ends, its titles go out (safe on every instance: each gift has a key per season).
+const arena = arenaStore(sql)
+createArenaRewards(arena).start()
+
 const app = createApp({
   store: saveStore(sql),
   ranking,
@@ -75,7 +86,7 @@ const app = createApp({
   gifts,
   verify: clerkVerifier(env),
   donate: env.abacatePayKey ? abacatePay(env.abacatePayKey) : null,
-  supporters: supporterStore(sql, { onTierUp: (userId) => void discord.syncRoles(userId) }),
+  supporters,
   festival: festivalStore(sql),
   candyGoal: candyGoalStore(sql),
   discord,
@@ -83,7 +94,16 @@ const app = createApp({
   bugReports,
   admin: adminStore(sql, clerk, env.adminEmails),
   moderation: moderationStore(sql),
-  webhooks: { stripeSecret: env.stripeWebhookSecret, stripePaymentLink: env.stripePaymentLink, abacatePaySecret: env.abacatePayWebhookSecret },
+  arena,
+  arenaReportSecret: env.arenaReportSecret,
+  patreon: env.patreon ? patreonOAuth(env.patreon) : null,
+  webhooks: {
+    stripeSecret: env.stripeWebhookSecret,
+    stripePaymentLink: env.stripePaymentLink,
+    abacatePaySecret: env.abacatePayWebhookSecret,
+    patreonSecret: env.patreonWebhookSecret,
+    patreonCurrency: env.patreonCurrency,
+  },
   allowedOrigin: env.allowedOrigin,
   ping: () => sql`select 1`.then(() => true, () => false),
   report: errors.report,

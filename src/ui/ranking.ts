@@ -17,7 +17,7 @@ import { flagIcon } from '../render/art'
 import { jackIcon } from '../render/halloweenArt'
 import { today } from './save'
 import { h, later, rich } from './dom'
-import { profileScreen, runForm, runPortrait, supporterBadge } from './profile'
+import { profileScreen, runForm, runPortrait, supporterBadges } from './profile'
 import { reportDialog } from './report'
 import { shopIcon } from './shopIcons'
 import { hint, menu, type Screen } from './screens'
@@ -44,7 +44,7 @@ const entryRow = (e: BoardEntry, me: boolean) => {
     { class: `rank-row${me ? ' me' : ''}${e.rank <= 3 ? ` top${e.rank}` : ''}${lit ? ' pumpkin' : ''}` },
     h('span', { class: 'rank-pos' }, `#${e.rank}`),
     h('img', { src: runPortrait(e), alt: runForm(e).name, title: runForm(e).name }),
-    h('span', { class: 'rank-who' }, h('b', {}, e.name, supporterBadge(e.supporter, e.supporterSince)), h('small', {}, `@${e.handle}`, me && ` · ${t().ranking.you}`)),
+    h('span', { class: 'rank-who' }, h('b', {}, e.name, ...supporterBadges(e.supporter, e.supporterSince, e.og)), h('small', {}, `@${e.handle}`, me && ` · ${t().ranking.you}`)),
     runBag(e.bag) ?? h('span', {}),
     h('span', { class: 'rank-time' }, h('b', {}, formatTime(e.time)), h('small', {}, t().ranking.outcomes[e.outcome])),
     lit && h('img', { class: 'rank-jack', src: jackIcon(), alt: '' }),

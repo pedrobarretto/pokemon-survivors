@@ -1,3 +1,4 @@
+import { arenaResult } from '../game/arenaRank'
 import { coopOver } from '../game/coop'
 import { stepTick } from '../game/lockstep'
 import { setLocalSlot } from '../game/players'
@@ -40,8 +41,27 @@ const playbackRate = (excess: number) => {
   return excess < -SLOW_DOWN.under ? -SLOW_DOWN.rate : 0
 }
 
-/** CPU per display frame for simulation (ms): live, and while syncing. A tick that costs more still runs (one at least). */
+/** CPU per display frame for simulation (ms): live, and while syncing. Past it, the frame's floor (`floorOf`) still runs. */
 export const BUDGET = { live: 8, sync: 14 } as const
+
+/** Ticks a display frame runs when due, past the budget, at the least. */
+const BUDGET_FLOOR = 4
+
+/** Real time's own ticks a frame counts toward its floor, at most (~7 fps): a longer hitch is caught up on afterwards, not in one frame. */
+const OWN_MAX = 8
+
+/**
+ * Ticks a display frame of `dt` seconds runs when due, past the budget: live,
+ * the ones real time brought (a slow phone's frame brings more than
+ * `BUDGET_FLOOR`; dropping them would leave it slower than the run, falling
+ * into a sync every few seconds); syncing, those and `BUDGET_FLOOR` more, so a
+ * device whose ticks cost more than the budget (a phone late in a run, a busy
+ * fight) still syncs faster than the run goes on.
+ */
+const floorOf = (dt: number, syncing: boolean) => {
+  const own = Math.min(OWN_MAX, Math.round(dt / TICK))
+  return syncing ? own + BUDGET_FLOOR : Math.max(BUDGET_FLOOR, own)
+}
 
 export type Pending = {
   reason: 'join' | 'resume' | 'heal'
@@ -101,9 +121,10 @@ export type Runner = {
    * relay confirmed it. The runner keeps stepping (and hashing) after its
    * `over` until `ended`: a client that ended wrongly is still healed. Once
    * the relay confirms, a client still behind steps on to the end's tick
-   * (`endedAt`) and stops there.
+   * (`endedAt`) and stops there. An Arena match's `over` carries its result
+   * (`arenaResult`, as JSON): the relay reports the one most agree on.
    */
-  over: { tick: number; h: string } | null
+  over: { tick: number; h: string; result?: string } | null
   ended: boolean
   endedAt: number | null
   /** Events of the ticks simulated, in order, for the shell (drained after every tick, so the state hashes alike everywhere). */
@@ -357,6 +378,8 @@ export const stepOne = (r: Runner, deps: RunnerDeps) => {
       if (e[0] !== r.seat) continue
       if (e[1] === 'move' && typeof e[3] === 'number') r.anchor = { tick, sample: e[3] }
       else if (e[1] === 'special' && typeof e[2] === 'number') r.pressed = Math.max(r.pressed, e[2])
+      // An Arena Unite Move's cast carries its sample last (`inputValues`).
+      else if (e[1] === 'cast' && e[2] === 2 && typeof e[6] === 'number') r.pressed = Math.max(r.pressed, e[6])
     }
     stepTick(g, toTickEntries(entries, r.slots))
   } else stepTick(g, [])
@@ -377,7 +400,8 @@ export const stepOne = (r: Runner, deps: RunnerDeps) => {
     if (n % SNAPSHOT_EVERY === 0 && r.uploader) uploadSnapshot(r, h, deps)
   }
   if (!r.over && coopOver(g)) {
-    r.over = { tick: n, h: stateHash(g) }
+    const result = arenaResult(g)
+    r.over = { tick: n, h: stateHash(g), ...(result && { result: JSON.stringify(result) }) }
     deps.send({ t: 'over', ...r.over })
   }
   if (r.healing && n >= r.tailTo) {
@@ -428,10 +452,10 @@ export const advance = (r: Runner, dt: number, deps: RunnerDeps): number => {
     r.stats.underruns = r.hold.underruns
   } else if (run > 0) r.starving = false
   const budget = r.syncing ? BUDGET.sync : BUDGET.live
+  const floor = floorOf(dt, r.syncing !== null)
   const t0 = deps.now()
   let ran = 0
-  // Real time's own ticks always run (a few at most); the catch-up and the sync only within the budget.
-  const floor = r.syncing ? 1 : Math.min(due, 4)
+  // Real time's own ticks always run (`floorOf`); the catch-up and the sync past those only within the budget.
   for (; ran < run; ran++) {
     if (ran >= floor && deps.now() - t0 + r.tickMs > budget) break
     if (!r.syncing) rememberPositions(r)

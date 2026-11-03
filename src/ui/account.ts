@@ -104,3 +104,14 @@ export const coopGate = (root: HTMLElement, input: Input, where: { room: string 
   const lead = where.invitedBy ? [m.invited(`@${where.invitedBy}`)] : where.room ? [m.room(where.room)] : []
   return gate(root, input, { title: m.title, pitch: m.pitch, note: m.note, guestNote: null }, { ...actions, guest: null, ready: (s) => s.kind === 'signedIn' && s.handle !== undefined }, lead)
 }
+
+/**
+ * The Arena's public queue (Casual, Ranqueada) is for accounts with a
+ * handle, like co-op: a guest signs in here, with no guest option (the
+ * Partida rápida against bots stays open to guests). Goes on to `play` once
+ * the account is in and its handle is known.
+ */
+export const arenaGate = (root: HTMLElement, input: Input, actions: { play: () => void; back: () => void }): Screen => {
+  const m = t().versus.gate
+  return gate(root, input, { title: m.title, pitch: m.pitch, note: m.note, guestNote: null }, { ...actions, guest: null, ready: (s) => s.kind === 'signedIn' && s.handle !== undefined })
+}

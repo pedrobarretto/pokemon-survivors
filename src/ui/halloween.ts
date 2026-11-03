@@ -13,7 +13,7 @@ import { brasiliaDay } from '../game/day'
 import {
   candiesLeft, daysToHalloween, HALLOWEEN_CALENDAR, HALLOWEEN_REWARDS, halloweenDaysLeft, halloweenGiftId, huntDone, huntGiftId, HUNT_REWARDS, isHalloweenGift, nextHalloweenReward, pumpkinOfferOpen,
 } from '../game/halloween'
-import { savedSupporterTier } from '../game/trainer'
+import { knownTier } from '../supporters'
 import { formatDay, formatNumber, t } from '../i18n'
 import { jackIcon, pumpkinHeartIcon, treatIcon } from '../render/halloweenArt'
 import { eggIcon } from '../render/art'
@@ -230,7 +230,7 @@ export const halloweenScreen = (root: HTMLElement, input: Input, actions: Hallow
   ] as const
 
   // A supporter already wears the badge (from the first day on); anyone else is offered it.
-  const supporter = accountState().kind === 'signedIn' && savedSupporterTier(save) !== null
+  const supporter = accountState().kind === 'signedIn' && knownTier(save) !== null
   const offer = pumpkinOfferOpen(s.day)
   const pitch = offer && !supporter
   const badge =
@@ -238,7 +238,7 @@ export const halloweenScreen = (root: HTMLElement, input: Input, actions: Hallow
     h(
       'p',
       { class: 'halloween-supporter' },
-      h('img', { src: pumpkinHeartIcon(supporter ? (savedSupporterTier(save) ?? 'supporter') : 'supporter'), alt: '' }),
+      h('img', { src: pumpkinHeartIcon(supporter ? (knownTier(save) ?? 'supporter') : 'supporter'), alt: '' }),
       h('img', { class: 'halloween-pumpkaboo', src: portraitUrl(SPECIAL_COMPANIONS.pumpkaboo.dex), alt: SPECIAL_COMPANIONS.pumpkaboo.name }),
       rich(supporter ? m.supportYes : m.supportNo(formatDay(HALLOWEEN.to))),
     )

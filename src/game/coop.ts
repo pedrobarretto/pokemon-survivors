@@ -5,7 +5,7 @@ import type { HitKind } from '../data/abilities'
 import { burst } from './effects'
 import { toSteps, type EggTier } from './eggs'
 import { runBonus, wonRun } from './meta'
-import { inPlay, setPhase } from './players'
+import { inPlay, personal, setPhase } from './players'
 import { createTally, summarizeRun, type RunSummary } from './tally'
 import type { Game, Player, PlayerRecord } from './types'
 import type { DexLog } from './dex'
@@ -114,20 +114,29 @@ const holdsWorld = (g: Game, p: Player) => p.away && !p.gone && p.hp > 0 && (g.c
  * dropped connection doesn't cost the run at once). Returns whether it ended.
  */
 export const checkWipe = (g: Game, foe: EnemyId | null = null, hit: HitKind = 'hazard') => {
-  if (g.coop === null || g.phase === 'gameover' || g.phase === 'victory') return false
+  // A Versus match ends on its clock only.
+  if (g.coop === null || g.versus || g.phase === 'gameover' || g.phase === 'victory') return false
   for (const p of g.players) if (!p.gone && p.hp > 0 && (!p.away || holdsWorld(g, p))) return false
   g.phase = 'gameover'
   g.events.push({ kind: 'gameover', foe, hit })
   return true
 }
 
-/** No active player stands, but an away one does and still holds the world: it waits for them to come back. */
+/**
+ * Whether the world waits with the team's level-ups done: no active player is
+ * free to play, but one stands and is busy on a screen of their own (a TM, a
+ * Poké Ball's prize, an evolution and its picks: `personal`, which otherwise
+ * play on around them), or an away one still holds the world. So the last one
+ * standing never comes back from a pick into a horde that kept coming.
+ */
 export const worldHeld = (g: Game) => {
   if (g.coop === null) return false
   let held = false
   for (const p of g.players) {
-    if (!p.gone && !p.away && p.hp > 0) return false
-    if (holdsWorld(g, p)) held = true
+    if (!p.gone && !p.away && p.hp > 0) {
+      if (!g.versus && personal(p.phase)) held = true
+      else return false
+    } else if (holdsWorld(g, p)) held = true
   }
   return held
 }
@@ -212,10 +221,18 @@ export const setAway = (g: Game, p: Player, away: boolean) => {
 /**
  * A player left the run for good: their Pokémon leaves the field (no Poké Ball
  * to revive), their open picks close, and they stop counting for the horde.
- * The run ends if nobody is left to play.
+ * The run ends if nobody is left to play. In Versus a bot takes the seat over.
  */
 export const leaveRun = (g: Game, p: Player) => {
   if (p.gone || g.coop === null) return
+  // Versus: a bot plays the seat on, so the teams stay even.
+  if (p.versus) {
+    p.versus.bot = true
+    p.away = false
+    g.coop.held[p.slot] = 0
+    g.events.push({ kind: 'left', slot: p.slot })
+    return
+  }
   p.gone = true
   p.away = false
   p.hp = 0

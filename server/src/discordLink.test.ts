@@ -1,17 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { discordAccount, SUPPORTER_ROLES, supporterRoleChanges, type ExternalAccountInfo } from './discordLink'
+import { discordAccount, OG_ROLE, SUPPORTER_ROLES, supporterRoleChanges, type ExternalAccountInfo } from './discordLink'
 
 describe('supporterRoleChanges', () => {
-  it('gives Gold in place of Supporter', () => {
-    expect(supporterRoleChanges('gold')).toEqual({ add: [SUPPORTER_ROLES.gold], remove: [SUPPORTER_ROLES.supporter] })
+  const { supporter, gold, diamond } = SUPPORTER_ROLES
+
+  it("gives the tier's role in place of the others", () => {
+    expect(supporterRoleChanges('supporter', false)).toEqual({ add: [supporter], remove: [gold, diamond] })
+    expect(supporterRoleChanges('gold', false)).toEqual({ add: [gold], remove: [supporter, diamond] })
+    expect(supporterRoleChanges('diamond', false)).toEqual({ add: [diamond], remove: [supporter, gold] })
   })
 
-  it('gives Supporter to the first tier', () => {
-    expect(supporterRoleChanges('supporter')).toEqual({ add: [SUPPORTER_ROLES.supporter], remove: [] })
+  it('takes every supporter role back once the tier is gone (a pledge that ended)', () => {
+    expect(supporterRoleChanges(null, false)).toEqual({ add: [], remove: [supporter, gold, diamond] })
   })
 
-  it('leaves a player without a tier alone (a role given by hand stays)', () => {
-    expect(supporterRoleChanges(null)).toEqual({ add: [], remove: [] })
+  it("gives an OG the OG role beside their tier's, and never takes it back", () => {
+    expect(supporterRoleChanges('diamond', true)).toEqual({ add: [diamond, OG_ROLE], remove: [supporter, gold] })
+    expect(supporterRoleChanges(null, true).remove).not.toContain(OG_ROLE)
   })
 })
 

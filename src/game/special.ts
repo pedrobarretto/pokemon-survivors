@@ -6,8 +6,10 @@ import { MEGAS, type MegaId } from '../data/megas'
 import { TYPE_COLORS, type PokeType } from '../data/types'
 import { burst, shakeScreen } from './effects'
 import { recomputeStats } from './leveling'
-import { MOVES, moveStats, type MoveDef } from './moves'
+import { isManual, MOVES, moveStats, type MoveDef } from './moves'
 import { enemiesInView, inSight, isAlive } from './queries'
+import { unseen } from './versusRules'
+import { aimableById } from './versusKit'
 import { spawnAttack } from './spawn'
 import { firstStance, nextStance, STANCES, STANCE_CYCLES, type Stance, type StanceSpecial } from './stance'
 import type { StatusSpec } from './status'
@@ -944,12 +946,14 @@ export const comboCasts = (combo: number, chainGoesOn: boolean) => (chainGoesOn 
  * Metronome: fires `casts` different moves of the loadout (drawn with the
  * run's rng) from where the special landed, which is where the player stands.
  * Every move's `fire` is safe to call off-cycle (Whirlpool only refreshes its aura).
+ * A manual move (U-turn, Quick Attack) waits for its press, so it's never drawn.
  */
 const arrivalCombo = (g: Game, casts = g.player.stats.comboMoves) => {
   const p = g.player
-  const n = Math.min(casts, p.moves.length)
+  if (casts <= 0) return
+  const pool = p.moves.filter((m) => !isManual(m.id))
+  const n = Math.min(casts, pool.length)
   if (n <= 0) return
-  const pool = [...p.moves]
   for (let i = 0; i < n; i++) {
     const [owned] = pool.splice(Math.floor(g.rng() * pool.length), 1)
     const def: MoveDef | null = owned ? MOVES[owned.id] : null
@@ -960,13 +964,17 @@ const arrivalCombo = (g: Game, casts = g.player.stats.comboMoves) => {
 
 /* ---------------- Chain dash ---------------- */
 
-/** Nearest living foe on screen within reach of a jump, skipping the one the last jump went for. */
+/** Nearest living foe on screen within reach of a jump, skipping the one the last jump went for (in Versus, its own team and the rivals hidden in grass too). */
 const chainTarget = (g: Game, skip: number) => {
   const p = g.player
+  // An Arena cast jumps at its target while it's in reach (`versusKit.ts`).
+  const f = p.versus?.focus
+  const aimed = f && f.id !== skip ? aimableById(g, p, f.id, CHAIN_RANGE) : null
+  if (aimed) return aimed
   let best: Enemy | null = null
   let bestD = dm.sq(CHAIN_RANGE)
   for (const e of g.enemies) {
-    if (!isAlive(e) || e.id === skip || !inSight(g, e.x, e.y, -8)) continue
+    if (!isAlive(e) || e.id === skip || unseen(g, e) || !inSight(g, e.x, e.y, -8)) continue
     const d = dm.sq(e.x - p.x) + dm.sq(e.y - p.y)
     if (d < bestD) {
       bestD = d

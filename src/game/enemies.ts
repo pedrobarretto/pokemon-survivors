@@ -16,7 +16,7 @@ import { createTraitState, isAirborne, traitPace } from './traits'
 import { dungeonNav } from './dungeon'
 import { underground } from './landmarks'
 import { TRAITS } from '../data/traits'
-import { actAs, nearestPlayer, nearestSeen, onAnyScreen, ownerOf, standing } from './players'
+import { actAs, inPlay, nearestPlayer, nearestSeen, onAnyScreen, ownerOf, standing } from './players'
 import { coopScale } from './coop'
 import { COOP } from '../data/coop'
 import type { DamageSource, Enemy, EnemyBehavior, Game } from './types'
@@ -97,6 +97,9 @@ export const rebuildGrid = (g: Game) => {
     if (e.dying < 0) insert(g.grid, i, e.x, e.y)
   })
 }
+
+/** Share of its max HP a Versus camp's wild Pokémon heals per second back home. */
+const CAMP_REST = 0.2
 
 /** Pace of a foe that lost track of the player. */
 const LOST_PACE = 0.55
@@ -182,6 +185,8 @@ export const updateEnemies = (g: Game, dt: number) => {
       }
       continue
     }
+    // Versus: a Pokémon's avatar stands where its player does (`versusCombat.ts`), never on its own.
+    if (e.behavior.kind === 'avatar') continue
     // A hidden teammate (Dig, a tunnel) is passed over for one the foe can see.
     const p = nearestSeen(g, e.x, e.y)
     const lost = underground(g, p)
@@ -258,6 +263,19 @@ export const updateEnemies = (g: Game, dt: number) => {
       const speed = b.leash <= 0 && home < 2 ? 0 : near || home > b.leash ? pace : pace * 0.45
       vx = frozen ? 0 : dx * speed
       vy = frozen ? 0 : dy * speed
+    } else if (e.behavior.kind === 'camp') {
+      // Versus's wild: home until hit, then after whoever hit it within its leash; back home it rests and heals.
+      const b = e.behavior
+      const t = b.target >= 0 ? g.players[b.target] : undefined
+      const chasing = t !== undefined && inPlay(t) && dm.sq(t.x - b.x) + dm.sq(t.y - b.y) < b.leash * b.leash
+      if (!chasing) b.target = -1
+      const tx = chasing ? t.x : b.x
+      const ty = chasing ? t.y : b.y
+      const home = !chasing && dm.sq(b.x - e.x) + dm.sq(b.y - e.y) < 16
+      if (home) e.hp = Math.min(e.maxHp, e.hp + e.maxHp * CAMP_REST * dt)
+      const d = dirTo(e.x, e.y, tx, ty)
+      vx = home || frozen ? 0 : d.x * pace
+      vy = home || frozen ? 0 : d.y * pace
     } else {
       vx = frozen ? 0 : e.behavior.vx
       vy = frozen ? 0 : e.behavior.vy
@@ -290,7 +308,7 @@ export const updateEnemies = (g: Game, dt: number) => {
   const count = horde.length
   for (let i = 0; i < count; i++) {
     const e = horde[i]
-    if (e === undefined || e.dying >= 0 || isAirborne(e)) continue
+    if (e === undefined || e.dying >= 0 || isAirborne(e) || e.behavior.kind === 'avatar') continue
     for (const j of query(g.grid, e.x, e.y, e.radius * 2, neighbors)) {
       if (j === i) continue
       const o = g.enemies[j]!
@@ -320,7 +338,8 @@ export const updateEnemies = (g: Game, dt: number) => {
       e.x = p.x + (dx / d) * reach
       e.y = p.y + (dy / d) * reach
       const attack = e.behavior.kind === 'shy' ? 0 : statusAttack(e.status)
-      if (attack <= 0) continue
+      // A camp's wild Pokémon bites only the one it turned on.
+      if (attack <= 0 || (e.behavior.kind === 'camp' && e.behavior.target !== p.slot)) continue
       const before = actAs(g, p)
       hurtPlayer(g, e.damage * attack, e)
       actAs(g, before)

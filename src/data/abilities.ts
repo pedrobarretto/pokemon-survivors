@@ -175,7 +175,7 @@ export const ABILITIES = {
   voltAbsorb: { name: 'Volt Absorb', effects: [absorb('electric')] },
   lightningRod: { name: 'Lightning Rod', effects: [absorb('electric'), stats({ typeDamage: { electric: 0.15 } })] },
   bulletproof: { name: 'Bulletproof', effects: [{ kind: 'resist', hits: ['shot', 'blast'], factor: 0.4 }] },
-  levitate: { name: 'Levitate', effects: [{ kind: 'immune', to: ['lava', 'trap', 'terrain'] }] },
+  levitate: { name: 'Levitate', effects: [{ kind: 'immune', to: ['lava', 'trap', 'zone', 'terrain'] }] },
   magicGuard: { name: 'Magic Guard', effects: [{ kind: 'immune', to: ['lava', 'trap', 'blast', 'zone', 'chip', 'drain'] }] },
   magicBounce: { name: 'Magic Bounce', effects: [{ kind: 'guard', every: 12, reflect: true }] },
   illusion: { name: 'Illusion', effects: [{ kind: 'guard', every: 10 }] },

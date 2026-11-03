@@ -1,11 +1,12 @@
 # A VPS co-op relay (São Paulo first), as Dokploy builds it. From the repository root
-# (the relay bundles relay/src and src/net/protocol.ts, never game code):
+# (the relay bundles relay/src, src/net/protocol.ts and the Arena's import-free files, never game code):
 #   docker build -f relay/node/Dockerfile -t ps-relay .
 FROM node:24-alpine AS build
 WORKDIR /repo
 COPY relay/node/package.json relay/node/package-lock.json relay/node/
 RUN npm ci --prefix relay/node
-COPY src/net/protocol.ts src/net/protocol.ts
+COPY src/net/protocol.ts src/net/arena.ts src/net/arenaQueue.ts src/net/
+COPY src/data/arenaRanked.ts src/data/arenaFormats.ts src/data/
 COPY relay/src relay/src
 COPY relay/node relay/node
 # One file (ws included, node:sqlite is built in), and its hash: /health shows it as `version`.

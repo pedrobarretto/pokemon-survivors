@@ -30,15 +30,19 @@ import { alphaDown } from './alphas'
 import { disguiseTakes, holdsOn, phaseTaken } from './bossFight'
 import { legendFell } from './legendScene'
 import { hordeGrit } from './horde'
-import type { Attack, DamageSource, Enemy, Game } from './types'
+import type { Attack, DamageSource, Enemy, Game, Player } from './types'
 import { playerWeatherBoost, weatherHere, weatherPower } from './weather'
 import { dropForEach, faint, winRun } from './coop'
 import { inPlay } from './players'
+import { knockOut, strikeAvatar, tickAvatar, wildDown } from './versusCombat'
 import * as dm from '../engine/dmath'
 
 const TEXT_COLORS = { super: '#ffd830', normal: '#ffffff', weak: '#a8a8b8', warded: '#88b8f8' } as const
 
 export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
+  // Versus: a rival's body passes the hit on to its player; a camp's wild Pokémon turns on whoever hit it.
+  if (e.behavior.kind === 'avatar') return strikeAvatar(g, e, attack)
+  if (e.behavior.kind === 'camp' && e.behavior.target < 0) e.behavior.target = g.player.slot
   // A sure hit (Sacred Sword) lands resisted matchups as neutral and cuts through wards.
   const eff = attack.sure ? Math.max(1, effectiveness(attack.type, e.types)) : effectiveness(attack.type, e.types)
   // Conditional bonuses (Hex), a mark and a freeze multiply the hit; without them it's exactly ×1.
@@ -114,6 +118,7 @@ export const drainHeal = (g: Game, damage: number, fraction: number) => {
  * one bumping a neighbor): flash, white number, a hit sound, kill credit to `move`.
  */
 export const bumpDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null) => {
+  if (e.behavior.kind === 'avatar') return tickAvatar(g, e, amount, move, TEXT_COLORS.normal)
   const dmg = Math.max(1, dm.round(amount))
   e.hp -= dmg
   e.flash = 0.16
@@ -140,6 +145,7 @@ const spreadSeed = (g: Game, e: Enemy) => {
 
 /** Damage-over-time tick: no knockback or hit sound, number in the status color. */
 export const dotDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null, kind: StatusKind) => {
+  if (e.behavior.kind === 'avatar') return tickAvatar(g, e, amount, move, STATUS_RULES[kind].color)
   const dmg = Math.max(1, dm.round(amount))
   e.hp -= dmg
   if (move) g.player.damageByMove[move] = (g.player.damageByMove[move] ?? 0) + dmg
@@ -154,6 +160,8 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
     e.hp = 1
     return
   }
+  // A Versus match rewards with Energy and EXP for the team, nothing else (`wildDown`).
+  if (g.versus) return wildDown(g, e)
   if (e.status.seed.time > 0) spreadSeed(g, e)
   e.dying = 0
   e.hp = 0
@@ -235,7 +243,8 @@ export const hurtPlayer = (
   by: HarmBy | null = null,
 ) => {
   const p = g.player
-  if (p.iframes > 0 || p.hidden || isRepelled(g) || g.phase !== 'playing') return
+  // The Dojo never hurts (`training.ts`).
+  if (p.iframes > 0 || p.hidden || isRepelled(g) || g.phase !== 'playing' || g.training !== null) return
   // Co-op: fainted, away, gone or mid-evolution players can't be hurt.
   if (g.coop !== null && !inPlay(p)) return
   if (p.guard) return guardHit(g, p.guard, from)
@@ -272,6 +281,8 @@ export const hurtPlayer = (
   if (g.place.inside && (g.coop === null || !teammateStanding(g))) return fallInPlace(g)
   // Sturdy holds before a Max Revive (the Bag's), which goes before a held Revive.
   if (!abilityHolds(g) && !tryMaxRevive(g) && !tryRevive(g)) {
+    // Versus: knocked out until the respawn, by nobody (the wild, a boss's shot).
+    if (p.versus) return knockOut(g, p, -1)
     if (g.coop !== null) return faint(g, from?.kind ?? null, hit)
     p.hp = 0
     g.phase = 'gameover'
@@ -306,12 +317,15 @@ const BLIND_IFRAMES = 0.4
 /**
  * Heals the player by `amount`, cut or not by the difficulty, up to max HP.
  * Returns the HP actually restored. A fainted co-op player takes no heal: only
- * a teammate gets them back up (`coop.ts`).
+ * a teammate gets them back up (`coop.ts`). In the Arena the heal goes on
+ * `credit`'s scoreboard (`VersusSeat.healed`): the healed player's own by
+ * default, the Supporter's for its aura, nobody's for the map's (null).
  */
-export const healPlayer = (g: Game, amount: number) => {
+export const healPlayer = (g: Game, amount: number, credit: Player | null = g.player) => {
   const p = g.player
   if (g.coop !== null && p.hp <= 0) return 0
   const healed = Math.max(0, Math.min(amount * runMods(g).healing, p.stats.maxHp - p.hp))
   p.hp += healed
+  if (credit?.versus) credit.versus.healed += healed
   return healed
 }

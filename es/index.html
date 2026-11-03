@@ -15,7 +15,7 @@
     <meta name="apple-mobile-web-app-title" content="Survivors" />
     <meta name="format-detection" content="telephone=no" />
     <title>Pokémon Survivors – Juego de Pokémon gratis estilo Vampire Survivors</title>
-    <meta name="description" content="Juega gratis en el navegador o en el móvil, sin descargar: un roguelite de Pokémon estilo Vampire Survivors. Elige uno de 27 iniciales de todas las regiones (y 63 Pokémon más que salen de huevos), evoluciona en plena partida, derrota a Mewtwo y captura a los legendarios para jugar con ellos. Juega en solitario o en co-op en línea con hasta 3 amigos." />
+    <meta name="description" content="Juega gratis en el navegador o en el móvil, sin descargar: un roguelite de Pokémon estilo Vampire Survivors. Elige uno de 27 iniciales de todas las regiones (y 63 Pokémon más que salen de huevos), evoluciona en plena partida, derrota a Mewtwo y captura a los legendarios para jugar con ellos. Juega en solitario o en co-op en línea con hasta 3 amigos. Y la Arena, un MOBA 4v4 y 3v3 al estilo de Pokémon Unite, contra bots o con amigos." />
     <link rel="canonical" href="https://www.pokemonsurvivors.com/es/" />
     <link rel="alternate" hreflang="pt-BR" href="https://www.pokemonsurvivors.com/" />
     <link rel="alternate" hreflang="en" href="https://www.pokemonsurvivors.com/en/" />
@@ -56,9 +56,10 @@
             "@type": "VideoGame",
             "@id": "https://www.pokemonsurvivors.com/#game",
             "name": "Pokémon Survivors",
-            "alternateName": ["Pokemon Survivors", "Pokémon Survival", "Pokémon Vampire Survivors"],
+            "alternateName": ["Pokemon Survivors", "Pokémon Vampire Survivors"],
             "url": "https://www.pokemonsurvivors.com/es/",
             "description": "Un fan game de Pokémon gratis y no oficial estilo Vampire Survivors. Elige uno de los 27 iniciales o eclosiona huevos para desbloquear 63 Pokémon más, sobrevive 15 minutos de hordas salvajes de todas las generaciones, arma tu build entre 207 movimientos, evoluciona y derrota a Mewtwo. Vence a los legendarios para capturarlos y jugar con ellos en el Modo Legendario. Funciona en el navegador y en el móvil, sin descargar. Juega en solitario o en co-op en línea con hasta 3 amigos.",
+            "disambiguatingDescription": "No confundir con PokéSurvivor (pokesurvivor.com), otro fan game de Pokémon estilo Vampire Survivors, hecho por JPTER78, ni con Pokémon Survivor Burst, de ClessioTV, que se descarga en PC.",
             "image": "https://www.pokemonsurvivors.com/og.png",
             "genre": ["Roguelite", "Roguelike", "Bullet heaven", "Survivors-like", "Action"],
             "gamePlatform": ["Web browser", "Android", "iOS", "PC"],
@@ -76,6 +77,11 @@
           {
             "@type": "FAQPage",
             "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "¿Pokémon Survivors es el mismo juego que PokéSurvivor?",
+                "acceptedAnswer": { "@type": "Answer", "text": "No. Pokémon Survivors (pokemonsurvivors.com) y PokéSurvivor (pokesurvivor.com) son dos fan games distintos, de autores distintos, con nombres casi iguales. Pokémon Survivors lo hace Pedro Barretto; PokéSurvivor, JPTER78." }
+              },
               {
                 "@type": "Question",
                 "name": "¿Pokémon Survivors es gratis?",
@@ -103,6 +109,11 @@
               },
               {
                 "@type": "Question",
+                "name": "¿Hay un modo MOBA parecido a Pokémon Unite?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Sí, la Arena: un MOBA 4v4 de 7 minutos en el Valle o la Ensenada (una playa de rutas curvas y una isla en el centro, unida por muelles), con dos rutas y la selva en medio, o una partida 3v3 rápida de 3 minutos en el Claro o el Arrecife (un canal parte el mapa, cruzado por puentes estrechos), mapas compactos con dos porterías por equipo; cada partida sortea el mapa, y en una sala con amigos el anfitrión lo elige. Derrota Pokémon salvajes para juntar Energía (hasta 30), llévala a una portería del equipo rival y quédate dentro para anotar; un golpe de un rival lo interrumpe. En el 4v4 cada equipo tiene tres porterías, y la de la base solo se abre cuando cae una portería de ruta. En el tramo final (los últimos 2 minutos en el 4v4, el último en el 3v3) los puntos valen doble y Zapdos aterriza en el centro. Los controles son los de Unite: el ataque básico sale solo, y el Movimiento 1, el 2 y el Movimiento Unite los lanzas y apuntas tú (Q, E y R, o los botones en pantalla con mira asistida), fijando el objetivo con un clic o un toque. El equipo se coordina con chat rápido de frases listas y marcas en el mapa, ve el marcador completo (derribos, asistencias, daño y curación) y puede votar para rendirse desde la mitad del partido. Juega con cualquiera de los 27 iniciales, cada uno con su rol (Atacante, Veloz, Equilibrado, Defensor o Apoyo), contra bots al instante y sin cuenta, o en una sala con amigos eligiendo Azul o Rojo; los bots ocupan los lugares vacíos. Con cuenta, entra a la cola pública, Casual o Clasificatoria: la Clasificatoria tiene temporadas de dos semanas, niveles de Poké Ball a Master Ball, ranking de la temporada y un título al final (la temporada 1 empieza el 2 de noviembre); el 3v3 es solo Casual. Abandonar a mitad de partida o quedarse quieto cuesta Fair Play, y la Clasificatoria pide Fair Play de 80 o más. En el lobby, la Arena está en el Estadio, al sur de tu casa, con Ninjask de juez." }
+              },
+              {
+                "@type": "Question",
                 "name": "¿Es un juego oficial de Pokémon?",
                 "acceptedAnswer": { "@type": "Answer", "text": "No. Es un fan game no oficial y sin fines de lucro, sin relación con Nintendo, The Pokémon Company, GAME FREAK ni Creatures." }
               }
@@ -111,8 +122,6 @@
         ]
       }
     </script>
-    <!-- Cookieless analytics: Vercel Web Analytics (page views). PostHog (game events and error reports) loads from src/analytics.ts. Both only count production domains. -->
-    <script defer vite-ignore src="/_vercel/insights/script.js"></script>
   </head>
   <body>
     <canvas id="game" aria-label="Pokémon Survivors"></canvas>
@@ -124,6 +133,7 @@
         Pokémon Survivors es un fan game gratis y no oficial que mezcla Pokémon con Vampire Survivors. Es un roguelite
         de acción (bullet heaven) que se juega en el navegador o en el móvil, sin descargar y sin registrarte.
       </p>
+      <p>Pokémon Survivors (pokemonsurvivors.com) no es PokéSurvivor (pokesurvivor.com): son dos fan games distintos, de autores distintos, con nombres casi iguales. <a href="/es/pokemon-survivors-vs-pokesurvivor/">Mira las diferencias</a>.</p>
       <h2>Cómo jugar</h2>
       <p>
         Elige tu Pokémon inicial, muévete por el mapa y deja que ataque solo. Sobrevive 15 minutos de hordas de Pokémon
@@ -136,6 +146,7 @@
       <ul>
         <li>27 iniciales de todas las regiones, de Kanto a Paldea (Charmander, Squirtle, Bulbasaur, Piplup, Froakie, Fuecoco, Sprigatito y más), cada uno con su línea evolutiva completa.</li>
         <li>Co-op en línea para hasta 4 jugadores: crea una sala e invita a tus amigos con el enlace, el código de 5 caracteres o tu lista de amigos, que muestra quién está en línea. Cada uno juega con su Pokémon, la EXP es del equipo (todos suben de nivel juntos), la horda y los jefes crecen con el equipo, los ₽ se reparten entre todos y quien se debilita se vuelve una Poké Ball hasta que un compañero se acerque a reanimarlo. Necesita una cuenta con @nombre; por ahora el co-op es el modo normal, sin Modo Legendario, lugares, objetos de la tienda, Noche de Brujas ni ranking.</li>
+        <li>Arena, un MOBA al estilo de Pokémon Unite en dos formatos, 4v4 de 7 minutos en el Valle o la Ensenada y 3v3 rápido de 3 minutos en el Claro o el Arrecife (los dos últimos, en la playa): dos equipos, Pokémon salvajes que sueltan Energía, tres porterías por equipo (la de la base se abre cuando cae una de ruta), Drednaw a mitad de partida y Zapdos en los últimos 2 minutos, con puntos dobles. Ataque básico automático y movimientos apuntados como en Unite, chat rápido, marcas, marcador y rendición por votación. Contra bots al instante y sin cuenta, o con amigos en una sala eligiendo Azul o Rojo. Con cuenta, Casual y Clasificatoria en la cola pública, con temporadas de dos semanas de Poké Ball a Master Ball; en el lobby, el Estadio queda al sur de tu casa.</li>
         <li>Huevos que eclosionan con los pasos que das en las partidas: jefes, cofres y grietas dejan huevos que desbloquean 54 Pokémon jugables más de todos los tipos y generaciones (Pikachu, Eevee, Gastly, Magikarp, Riolu, Gible, Bagon, Deino, Dreepy y más), con un 1% de probabilidad de salir shiny. Y Munchlax, que evoluciona en Snorlax, solo sale del Huevo de la Amistad, y cuatro fantasmas (Litwick, Phantump, Drifloon y Sandygast) solo del Huevo Embrujado que Duskull vende en la Noche de Brujas, y Porygon, Exeggcute, Scraggy y Smeargle (que copia los movimientos de los enemigos con Sketch) solo del Huevo Kecleon, hasta 6 por día en la Vitrina: 90 Pokémon jugables en total.</li>
         <li>Invita a tus amigos con tu link: quien crea una cuenta con tu invitación recibe un Huevo de la Amistad, y tú recibes Regalos Misteriosos por cada amigo que juega de verdad: otro Huevo de la Amistad, el título Embajador(a) con un marco exclusivo para tu tarjeta, un Huevo Ultrarraro con 5 amigos y, con 10, un Dratini shiny.</li>
         <li>207 movimientos y 32 objetos equipables: cada familia tiene un movimiento firma y aprende movimientos nuevos en cada evolución, con más movimientos que espacios, así que cada partida arma un equipo distinto. Sube un movimiento común al máximo con el objeto correcto y evoluciona (Ember + Charcoal se convierte en Flamethrower), y los evolucionados siguen subiendo de nivel.</li>
@@ -161,14 +172,17 @@
         <li>Horda del día: cada día una especie salvaje invade todas las partidas, la misma para todos, y su shiny aparece unas dos veces por partida.</li>
         <li>Desafío del día: una partida al día igual para todos (misma semilla, Pokémon y dificultad, sin mejoras ni objetos). Solo tu primera partida terminada cuenta en el ranking del desafío, y todos los que participan ganan una cinta de oro (10% mejor), plata (mitad de arriba) o bronce.</li>
         <li>La Tienda Kecleon: una plaza en el lobby, al este de la casa de tu compañero, donde Kecleon te atiende y conversa contigo. La Vitrina del día es igual para todos, con un regalo gratis por día, el Huevo Kecleon (₽ 10.000 el primero del día, cada uno después por el doble del anterior, hasta 6 por día), una oferta con 30% de descuento, el huevo del día y un estilo; la Mochila lleva consumibles a tu próxima partida (Lure, Incense, Rare Candy, Lucky Egg, Luck Incense, Honey, X Attack, Max Revive y Everstone); el hermano morado de Kecleon vende MTs para siempre (10 exclusivas: Pay Day, Thief, Protect, Hyper Beam, Rain Dance, Sunny Day, Swords Dance, Drain Punch, Thunder Wave y Fly), que preparas antes de la partida, y objetos evolutivos, que abren los caminos que piden uno (sin Dawn Stone, no hay Gallade, y sin Up-Grade, no hay Porygon2; sin objetos, Eevee se vuelve Vaporeon, Jolteon o Flareon, al azar) y también pueden caer de los jefes, solo para la partida; el Entreno tiene las mejoras permanentes y las Chapas, +3% en todo por nivel para un Pokémon; el Estilo, marcos, fondos y fondos de pantalla; y en la Expansión inviertes para que la tienda crezca en 5 niveles, del Carrito al Gran Almacén, que trae el título Magnate y una estatua dorada de Kecleon en la plaza. De viernes a domingo, la caravana de Meowth trae un huevo ultra, la Chapa Dorada y MTs exclusivas, y acepta regatear; la tarjeta de cliente da un sello por día de visita, con premios a los 7, 14, 30, 60 y 100 sellos (un Huevo Kecleon con shiny garantizado); y en fechas especiales aparece un puesto en la plaza, como el de Duskull en la Noche de Brujas.</li>
+        <li>El Dojo de Machoke: un lugar en el lobby, al oeste de la casa de tu compañero, para entrenar sin horda, sin reloj y sin debilitarte. Elige cualquier Pokémon que tengas, sube y baja el nivel de cada movimiento (con sus caminos A y B), equipa objetos, cambia de forma y de habilidad y pruébalos en 1, 3, 8 o 24 blancos de 16 tipos (o en Snorlax como jefe), con un medidor de DPS por movimiento. Guarda la build y, en tus partidas, las cartas de nivel, evolución y habilidad que la siguen llevan la marca ★ BUILD.</li>
         <li>Festival de la Plaza: una vez al mes, la fuente de la plaza de Kecleon se vuelve un bote de la comunidad. Todos echan Poké Dólares en la fuente (hasta ₽ 200 mil por día), y cada meta del bote se vuelve un Regalo para todos los jugadores, incluso quien no donó. El primero, el Festival de las Linternas, va del 3/11 al 16/11, con Huevo Raro, el marco Linterna, 3 Lures, un Huevo Kecleon y un Togepi shiny; quien dona ₽ 50 mil gana el título Mecenas y los 10 mayores donantes van a la placa de la fuente.</li>
         <li>Una Pokédex dentro del juego con 584 especies: registra cada una que veas y derrotes, y captura los shinies que derrotes, los Pokémon que eclosiones y cada forma con la que juegues.</li>
         <li>Misiones diarias y semanales y 63 logros con medallas de bronce, plata y oro, algunos con títulos para presumir, como Cazador de Shinies y Cazador de Alfas. Algunas misiones semanales y todas las medallas de oro también dan un huevo.</li>
         <li>Eventos en el mapa: altares de mejoras, fuentes que curan, cofres cerrados custodiados por una emboscada, trampas que también lastiman a la horda y un Meowth que huye cargado de monedas. Y misiones de campo que pagan ₽ y cartas raras: defender un huevo en su nido, juntar Poké Balls perdidas contra el reloj y llevar a casa a un Togepi perdido.</li>
-        <li>Pixel art estilo Pokémon Mystery Dungeon, en español, inglés y portugués de Brasil.</li>
+        <li>Pixel art estilo Pokémon Mystery Dungeon, en español, inglés, portugués de Brasil, francés y chino tradicional.</li>
         <li>Funciona en el móvil con joystick táctil y se puede instalar como app.</li>
       </ul>
       <h2>Preguntas frecuentes</h2>
+      <h3>¿Pokémon Survivors es el mismo juego que PokéSurvivor?</h3>
+      <p>No. Pokémon Survivors (pokemonsurvivors.com) y PokéSurvivor (pokesurvivor.com) son dos fan games distintos, de autores distintos, con nombres casi iguales. Pokémon Survivors lo hace Pedro Barretto; PokéSurvivor, JPTER78.</p>
       <h3>¿Pokémon Survivors es gratis?</h3>
       <p>Sí. Es gratis, sin anuncios ni compras. El código es abierto y está en GitHub.</p>
       <h3>¿Tengo que descargar algo?</h3>
@@ -177,12 +191,15 @@
       <p>Sí, en el Modo Legendario. Vence a un legendario como jefe para capturarlo (3 veces la mayoría, 5 a Mewtwo, 1 a los míticos) y se vuelve jugable, con despertares en el Nv 12 y 28 y un ranking solo de legendarios. En la Noche de Brujas de 2026, también Darkrai: véncelo 2 veces en la grieta de la Pesadilla.</p>
       <h3>¿Se puede jugar con amigos?</h3>
       <p>Sí. El co-op en línea reúne hasta 4 entrenadores en la misma partida, cada uno con su Pokémon: crea una sala e invita a tus amigos con el enlace, el código o tu lista de amigos. La EXP es del equipo, los ₽ se reparten entre todos y un compañero puede reanimar a quien se debilita. Necesitas una cuenta con @nombre. Por ahora el co-op es el modo normal: el Modo Legendario, los lugares, los objetos de la tienda, los eventos y el ranking siguen en las partidas en solitario.</p>
+      <h3>¿Hay un modo MOBA parecido a Pokémon Unite?</h3>
+      <p>Sí, la Arena: un MOBA 4v4 de 7 minutos en el Valle o la Ensenada (una playa de rutas curvas y una isla en el centro, unida por muelles), con dos rutas y la selva en medio, o una partida 3v3 rápida de 3 minutos en el Claro o el Arrecife (un canal parte el mapa, cruzado por puentes estrechos), mapas compactos con dos porterías por equipo; cada partida sortea el mapa, y en una sala con amigos el anfitrión lo elige. Derrota Pokémon salvajes para juntar Energía (hasta 30), llévala a una portería del equipo rival y quédate dentro para anotar; un golpe de un rival lo interrumpe. En el 4v4 cada equipo tiene tres porterías, y la de la base solo se abre cuando cae una portería de ruta. En el tramo final (los últimos 2 minutos en el 4v4, el último en el 3v3) los puntos valen doble y Zapdos aterriza en el centro. Los controles son los de Unite: el ataque básico sale solo, y el Movimiento 1, el 2 y el Movimiento Unite los lanzas y apuntas tú (Q, E y R, o los botones en pantalla con mira asistida), fijando el objetivo con un clic o un toque. El equipo se coordina con chat rápido de frases listas y marcas en el mapa, ve el marcador completo (derribos, asistencias, daño y curación) y puede votar para rendirse desde la mitad del partido. Juega con cualquiera de los 27 iniciales, cada uno con su rol (Atacante, Veloz, Equilibrado, Defensor o Apoyo), contra bots al instante y sin cuenta, o en una sala con amigos eligiendo Azul o Rojo; los bots ocupan los lugares vacíos. Con cuenta, entra a la cola pública, Casual o Clasificatoria: la Clasificatoria tiene temporadas de dos semanas, niveles de Poké Ball a Master Ball, ranking de la temporada y un título al final (la temporada 1 empieza el 2 de noviembre); el 3v3 es solo Casual. Abandonar a mitad de partida o quedarse quieto cuesta Fair Play, y la Clasificatoria pide Fair Play de 80 o más. En el lobby, la Arena está en el Estadio, al sur de tu casa, con Ninjask de juez.</p>
       <h3>¿Es un juego oficial de Pokémon?</h3>
       <p>
         No. Es un fan game no oficial y sin fines de lucro, sin relación con Nintendo, The Pokémon Company, GAME FREAK
         ni Creatures. Hecho por Pedro Barretto.
       </p>
       <p>
+        <a href="/es/pokemon-survivors-vs-pokesurvivor/">Pokémon Survivors vs PokéSurvivor</a> · <a href="/es/juegos-pokemon-como-vampire-survivors/">Juegos de Pokémon como Vampire Survivors</a> ·
         <a href="/es/pokedex/">Pokédex</a> · <a href="/es/guia/">Cómo jugar</a> · <a href="/es/novedades/">Novedades</a> ·
         <a href="/es/legal/">Aviso legal y privacidad</a> ·
         <a href="https://www.pokemonsurvivors.com/" hreflang="pt-BR">Jogar em português</a> ·

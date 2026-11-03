@@ -6,7 +6,7 @@ import type { Game } from '../game/types'
 import { art, lazy, toIconUrl } from './art'
 import { roomOf } from '../game/room'
 import { localPlayer } from '../game/players'
-import { detail } from './quality'
+import { detail, safeShare } from './quality'
 
 /**
  * Weather overlays, drawn in screen space over the world. Every particle is a
@@ -23,8 +23,8 @@ const AREA = 480 * 270
 
 const mod = (a: number, n: number) => ((a % n) + n) % n
 
-/** Particles for a view; drawing lean (`render/quality.ts`), a quarter of them. */
-const count = (w: number, h: number, base: number) => Math.round((base * w * h * (detail.lean ? 0.25 : 1)) / AREA)
+/** Particles for a view; drawing lean (`render/quality.ts`), a quarter of them (a third of that at safe mode level 2). */
+const count = (w: number, h: number, base: number) => Math.round((base * w * h * (detail.lean ? 0.25 * safeShare(detail.safe) : 1)) / AREA)
 
 const DROP = lazy(() => fromStrings(['..1', '.1.', '.1.', '1..'], { 1: '#c8dcff' }))
 const SPLASH = lazy(() => [fromStrings(['1.1'], { 1: '#c8dcff' }), fromStrings(['1...1', '.....'], { 1: '#a8c0f0' })])
@@ -127,47 +127,65 @@ const sun = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: numb
 
 /* ---------------- Fog ---------------- */
 
+/**
+ * The Fog setting (Settings → Game). `normal` draws the fog as designed; `light`
+ * widens the clear circle and thins the veil, for eyes that tire of squinting
+ * through it; `off` drops the veil and keeps only the faint haze and wisps.
+ * Pure presentation: the simulation never reads it.
+ */
+export const FOG_MODES = ['normal', 'light', 'off'] as const
+
+export type FogMode = (typeof FOG_MODES)[number]
+
+/** The veil per mode: its clear circle (a fraction of the view's shorter side) and its opacity at the edge of the view. */
+const FOG_VEIL = {
+  normal: { sight: WEATHER.fog.sight ?? 0.42, max: 0.86 },
+  light: { sight: 0.62, max: 0.5 },
+} as const satisfies Record<Exclude<FogMode, 'off'>, { sight: number; max: number }>
+
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 const FOG_RGB = [200, 194, 216] as const
-/** Fog opacity at the edge of the view: the horde is still there, just hard to read. */
-const FOG_MAX = 0.86
 const FOG_LEVELS = 4
 
 /**
- * A view-sized veil twice as big as the screen with a clear hole in the middle.
- * Opacity comes in a few flat bands with a Bayer-dithered edge between them,
- * the GBA way to do a soft gradient. Built once per view size.
+ * A veil twice as big as the screen with a clear hole in the middle, kept as its bottom-right
+ * quarter (the hole's center at its top-left pixel) and drawn mirrored four ways (`drawVeil`):
+ * a quarter of the memory, in the biome where fog rolls in most. Opacity comes in a few flat
+ * bands with a Bayer-dithered edge between them, the GBA way to do a soft gradient. Built once
+ * per view size.
  */
 const fogVeil = (() => {
-  let cache: { w: number; h: number; sight: number; canvas: PixelSprite } | null = null
+  let cache: { w: number; h: number; mode: FogMode; canvas: PixelSprite } | null = null
   onCanvasReset(
     () => (cache = null),
     () => cache,
   )
-  const ready = (w: number, h: number, sight: number) => cache !== null && cache.w === w && cache.h === h && cache.sight === sight
-  const veil = (w: number, h: number, sight: number) => {
-    if (cache && ready(w, h, sight)) return cache.canvas
-    const cw = w * 2
-    const ch = h * 2
+  const ready = (w: number, h: number, mode: Exclude<FogMode, 'off'>) => cache !== null && cache.w === w && cache.h === h && cache.mode === mode
+  const veil = (w: number, h: number, mode: Exclude<FogMode, 'off'>) => {
+    if (cache && ready(w, h, mode)) return cache.canvas
+    const { sight, max } = FOG_VEIL[mode]
+    const cw = w + 1
+    const ch = h + 1
     const canvas = createCanvas(cw, ch)
     const vctx = context2d(canvas)
     const img = vctx.createImageData(cw, ch)
     const radius = Math.min(w, h) * sight
-    // The distance only depends on how far a pixel is from the center on each axis: one quarter's worth, mirrored.
+    // The distance only depends on how far a pixel is from the center on each axis.
     const dist = new Float64Array((w + 1) * (h + 1))
     for (let dy = 0; dy <= h; dy++) for (let dx = 0; dx <= w; dx++) dist[dy * (w + 1) + dx] = Math.hypot(dx, dy * 1.25) / radius
     // Each band's opacity, worked out once.
-    const alphas = Array.from({ length: FOG_LEVELS + 2 }, (_, band) => Math.round((Math.min(band, FOG_LEVELS) / FOG_LEVELS) * FOG_MAX * 255))
+    const alphas = Array.from({ length: FOG_LEVELS + 2 }, (_, band) => Math.round((Math.min(band, FOG_LEVELS) / FOG_LEVELS) * max * 255))
     const data = img.data
     const [r, gr, b] = FOG_RGB
     for (let y = 0; y < ch; y++) {
-      const row = Math.abs(y - h) * (w + 1)
-      const dither = (y % 4) * 4
+      const row = y * cw
+      // Dithered as the whole veil's bottom-right quarter was.
+      const dither = ((y + h) % 4) * 4
       for (let x = 0; x < cw; x++) {
-        const d = dist[row + Math.abs(x - w)]!
+        const d = dist[row + x]!
         const k = Math.min(1, Math.max(0, (d - 0.55) / 0.75))
         const level = k * FOG_LEVELS
-        const band = Math.floor(level) + ((level % 1) * 16 > BAYER[dither + (x % 4)]! ? 1 : 0)
+        const band = Math.floor(level) + ((level % 1) * 16 > BAYER[dither + ((x + w) % 4)]! ? 1 : 0)
         const i = (y * cw + x) * 4
         data[i] = r
         data[i + 1] = gr
@@ -176,7 +194,7 @@ const fogVeil = (() => {
       }
     }
     vctx.putImageData(img, 0, 0)
-    return (cache = { w, h, sight, canvas }).canvas
+    return (cache = { w, h, mode, canvas }).canvas
   }
   /** Lets the veil go (2 MB on a phone) until fog can roll in again. */
   const drop = () => {
@@ -189,15 +207,18 @@ const fogVeil = (() => {
 /** Frees the fog veil when no fog is in the air nor can come (`warmScenery`); the next fog builds it again. */
 export const dropFog = fogVeil.drop
 
-/** Builds the fog veil for a view ahead of time (it takes longer than a frame). True if it built it. */
-export const warmFog = (w: number, h: number) => {
-  const sight = WEATHER.fog.sight ?? 0.42
-  if (fogVeil.ready(w, h, sight)) return false
-  fogVeil(w, h, sight)
+/** Builds the fog veil for a view and mode ahead of time (it takes longer than a frame). True if it built it. */
+export const warmFog = (w: number, h: number, mode: FogMode) => {
+  if (mode === 'off') {
+    dropFog()
+    return false
+  }
+  if (fogVeil.ready(w, h, mode)) return false
+  fogVeil(w, h, mode)
   return true
 }
 
-const fog = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: number, px: number, py: number) => {
+const fog = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: number, px: number, py: number, mode: FogMode) => {
   ctx.fillStyle = 'rgba(184,176,208,0.12)'
   ctx.fillRect(0, 0, w, h)
   // Wisps drifting across the clearing.
@@ -211,27 +232,44 @@ const fog = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: numb
     drawPacked(ctx, ellipse(rx, Math.max(3, Math.round(rx * 0.22)), '#e8e4f0'), Math.round(x - rx), Math.round(y))
   }
   ctx.restore()
-  ctx.drawImage(fogVeil(w, h, WEATHER.fog.sight ?? 0.42), Math.round(px - w), Math.round(py - h))
+  if (mode !== 'off') drawVeil(ctx, fogVeil(w, h, mode), w, h, Math.round(px), Math.round(py))
+}
+
+/**
+ * Draws the veil's quarter (`fogVeil`) four ways around (x, y): as is to the bottom right,
+ * mirrored to the other sides without its first column or row, so the hole's center row and
+ * column draw once, and the four together cover the whole screen-sized veil the hole leaves.
+ */
+const drawVeil = (ctx: Ctx, quarter: PixelSprite, w: number, h: number, x: number, y: number) => {
+  for (const [fx, fy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]] as const) {
+    const sx = fx < 0 ? 1 : 0
+    const sy = fy < 0 ? 1 : 0
+    ctx.save()
+    ctx.translate(x + sx, y + sy)
+    ctx.scale(fx, fy)
+    ctx.drawImage(quarter, sx, sy, w, h, sx, sy, w, h)
+    ctx.restore()
+  }
 }
 
 const DRAW: Record<Exclude<WeatherId, 'clear' | 'fog'>, typeof rain> = { rain, snow, sand, sun }
 
-const drawOne = (ctx: Ctx, id: WeatherId, alpha: number, g: Game, camX: number, camY: number, t: number) => {
+const drawOne = (ctx: Ctx, id: WeatherId, alpha: number, g: Game, camX: number, camY: number, t: number, fogMode: FogMode) => {
   if (id === 'clear' || alpha <= 0) return
   const { w, h } = g.view
   ctx.save()
   ctx.globalAlpha = alpha
-  if (id === 'fog') fog(ctx, w, h, camX, camY, t, localPlayer(g).x - camX, localPlayer(g).y - 10 - camY)
+  if (id === 'fog') fog(ctx, w, h, camX, camY, t, localPlayer(g).x - camX, localPlayer(g).y - 10 - camY, fogMode)
   else DRAW[id](ctx, w, h, camX, camY, t)
   ctx.restore()
 }
 
 /** Weather overlay for the frame, in screen space. The outgoing weather fades as the new one rolls in. */
-export const drawWeather = (ctx: Ctx, g: Game, camX: number, camY: number, t: number) => {
+export const drawWeather = (ctx: Ctx, g: Game, camX: number, camY: number, t: number, fogMode: FogMode) => {
   if (roomOf(g)) return
   const k = Math.min(1, (g.time - g.weather.since) / FADE)
-  drawOne(ctx, g.weather.prev, 1 - k, g, camX, camY, t)
-  drawOne(ctx, g.weather.id, k, g, camX, camY, t)
+  drawOne(ctx, g.weather.prev, 1 - k, g, camX, camY, t, fogMode)
+  drawOne(ctx, g.weather.id, k, g, camX, camY, t, fogMode)
 }
 
 /* ---------------- Icons ---------------- */

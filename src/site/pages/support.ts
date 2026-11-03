@@ -1,12 +1,14 @@
 import { DONATION } from '../../data/donations'
+import { PATREON_URL } from '../../data/supporters'
 import type { Locale } from '../../i18n'
 import { SITE_MESSAGES } from '../../i18n/site'
-import { html } from '../html'
+import { html, raw } from '../html'
 import { layout } from '../layout'
 import { STRIPE_DONATION_URL } from '../routes'
 
 /**
- * `/apoie/`: donations, two ways side by side. From Brazil, a preset or any
+ * `/apoie/`: the monthly tiers on Patreon (`PATREON_URL`) up top, then one-time
+ * donations, two ways side by side. From Brazil, a preset or any
  * amount in reais opens an AbacatePay checkout (Pix or card) through the API;
  * from elsewhere, the Stripe Payment Link (card, Apple Pay, Google Pay in US$).
  * Portuguese lists Brazil first; `client.ts` reorders by the device's time zone
@@ -51,6 +53,14 @@ export const supportPage = (locale: Locale) => {
       <ul>${s.perks.items.map((item) => html`<li>${item}</li>`)}</ul>
       <p class="note">${s.perks.note}</p>
     </section>`
+  // The tiers' lines carry their own <b> (our copy, never a player's).
+  const monthly = html`<section class="box donate-perks donate-monthly" id="donate-monthly" aria-labelledby="donate-monthly-title">
+      <h2 id="donate-monthly-title">${s.monthly.title}</h2>
+      <p>${s.monthly.lead}</p>
+      <ul>${s.monthly.tiers.map((tier) => html`<li>${raw(tier)}</li>`)}</ul>
+      <p><a class="btn-play" href="${PATREON_URL}" target="_blank" rel="noopener">${s.monthly.cta}</a></p>
+      <p class="note">${s.monthly.note}</p>
+    </section>`
   const wall = html`<section class="box donate-wall" id="donate-wall" aria-labelledby="donate-wall-title" data-empty="${s.wall.empty}" hidden>
       <h2 id="donate-wall-title">${s.wall.title}</h2>
       <ul class="donate-wall-names"></ul>
@@ -63,6 +73,7 @@ export const supportPage = (locale: Locale) => {
       <p class="donate-status"></p>
       <div class="donate-code" hidden><p>${st.code}</p><p class="donate-code-row"><code></code><button class="btn-play" type="button">${st.copy}</button></p><p class="note">${st.codeHint}</p></div>
     </div>
+    ${monthly}
     ${account}
     <div class="donate-ways" id="donate-ways" role="group" aria-label="${s.pick}">
       ${locale === 'pt' ? [br, intl] : [intl, br]}

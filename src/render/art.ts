@@ -58,6 +58,13 @@ export const art = (rows: readonly string[], palette: Palette, outline?: string)
 /* ---------------- Projectiles ---------------- */
 
 const FIREBALL = ['..1221..', '.123321.', '12344321', '23444432', '23444432', '12344321', '.123321.', '..1221..']
+/** Pyro Ball: Cinderace's kicked ball of fire, its charred patches turning as it spins (4 frames, rolling right). */
+const PYRO_BALL = [
+  ['.....111.....', '...5555443...', '..555555443..', '.15555544431.', '.15555144331.', '4155511143312', '4444411133322', '3444444333222', '.34433333222.', '.31333332212.', '..111222111..', '...1122211...', '.....222.....'],
+  ['.....411.....', '...5555443...', '..555555443..', '.51155544432.', '.11155511332.', '4115554111321', '4444444111322', '3444444333222', '.34433333222.', '.33113332221.', '..211122221..', '...2112221...', '.....222.....'],
+  ['.....411.....', '...5555443...', '..555555443..', '.55115544432.', '.51115544112.', '4551154441122', '4444444431122', '1444444333222', '.34433333222.', '.13331132222.', '..231112222..', '...2211222...', '.....222.....'],
+  ['.....441.....', '...5555443...', '..555555443..', '.55511144432.', '.55511144331.', '4555111443112', '4444444433112', '3144444333222', '.14433333222.', '.13333112222.', '..233211122..', '...2221122...', '.....222.....'],
+] as const
 const FLAME = [
   '....1....', '...12....', '...121...', '..1221...', '..12321..', '.122321..',
   '.1233321.', '12334321.', '123443321', '123444321', '.1234321.', '..11111..',
@@ -180,6 +187,12 @@ export const FX = {
     return { top: art(JAW, pal), bottom: art([...JAW].reverse(), pal) }
   }),
   pyro: lazy(() => art(FIREBALL, { 1: '#a82010', 2: '#f07020', 3: '#f8c040', 4: '#ffffff' }, '#401008')),
+  /** Pyro Ball's spinning ball, rolling `right` or mirrored to roll `left`. */
+  pyroBall: lazy(() => {
+    const pal = { 1: '#8a2010', 2: '#e04818', 3: '#f88828', 4: '#ffc848', 5: '#fffbe0' }
+    const roll = (mirror: boolean) => PYRO_BALL.map((rows) => outlined(fromStrings(rows, pal, { mirror }), '#501008'))
+    return { right: roll(false), left: roll(true) }
+  }),
   psy: lazy(() => [
     art(ORB, { 1: '#a03068', 2: '#f85888', 3: '#ffd0e8' }),
     art(ORB, { 1: '#c04080', 2: '#f888b0', 3: '#ffffff' }),
@@ -675,7 +688,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   spiritShackle: () => FX.arrow(),
   waterShuriken: () => FX.shuriken(),
   crunch: () => art([...JAW, ...[...JAW].reverse()], { 1: '#281820', 2: '#705848', 3: '#ffffff' }, '#a89888'),
-  pyroBall: () => FX.pyro(),
+  pyroBall: () => FX.pyroBall().right[0]!,
   psyshock: () => outlined(FX.psy()[0]!),
   earthquake: () => art(CRACK, { 1: '#704820', 2: '#e0c068' }),
   drumBeating: () => art(DRUM, { 1: '#402010', 2: '#78c850', 3: '#a87840' }),
@@ -992,9 +1005,22 @@ const FLAG = ['11........', '141111111.', '1432222221', '1432222221', '143222222
 
 export const flagIcon = () => toIconUrl('flag', () => art(FLAG, { 1: '#402030', 2: '#e83838', 3: '#f88878', 4: '#c8d0e0' }))
 
-/** The supporter's badge by their names (`game/supporters.ts`): a rose heart, a gold one for the gold tier. */
+/** The Diamond tier's heart, cut like a gem: 1 its edges, 3 the glint, 4 the light facets, 5 the shaded ones. */
+const DIAMOND_HEART = ['.11.11.', '1341341', '1334441', '1444451', '.14551.', '..151..', '...1...']
+
+/** The supporter's badge by their names (`game/supporters.ts`): a rose heart, a gold one for Gold, a faceted ice-blue one for Diamond. */
 export const supporterIcon = (tier: SupporterTier) =>
-  tier === 'gold' ? toIconUrl('heart:gold', () => art(HEART, { 1: '#c88a10', 2: '#f8d030', 3: '#fffbe0' }, '#4a3008')) : heartIcon()
+  tier === 'diamond'
+    ? toIconUrl('heart:diamond', () => art(DIAMOND_HEART, { 1: '#2870c0', 3: '#ffffff', 4: '#a8ecff', 5: '#50b0f0' }, '#0c2448'))
+    : tier === 'gold'
+      ? toIconUrl('heart:gold', () => art(HEART, { 1: '#c88a10', 2: '#f8d030', 3: '#fffbe0' }, '#4a3008'))
+      : heartIcon()
+
+/** The OG plate: "OG" in gold on a purple tag. 1 its edge, 2 the plate, 3 the letters, 4 their shaded foot. */
+const OG_PLATE = ['.111111111.', '12332223331', '13223232221', '13223232331', '13223232231', '12442224421', '.111111111.']
+
+/** The OG Supporters' badge (`badgesOf`), worn beside the tier's heart. 11 px wide: shown at 1.5× or 2× its size, like the hearts beside it. */
+export const ogIcon = () => toIconUrl('og', () => art(OG_PLATE, { 1: '#201030', 2: '#6038a8', 3: '#ffe070', 4: '#e8a020' }))
 export const sparkleIcon = () => toIconUrl('sparkle', () => outlined(SPARKLE()[2]!, '#584010'))
 
 /** PlayStation's face buttons in their colors, the size of a Press Start 2P letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
@@ -1099,6 +1125,24 @@ const COOP_BALLS = [
 ]
 
 export const coopIcon = () => toIconUrl('coop', () => art(COOP_BALLS, { 1: '#202030', 2: '#e83850', 3: '#f8f8f8', 4: '#4898e8', 5: '#f8f8f8' }))
+
+/** Arena (Versus): a shield split Blue and Red with an Energy orb on the seam. 1 outline, 2 blue, 3 red, 4 the orb, 5 its shine. */
+const ARENA_SHIELD = [
+  '1111111111111',
+  '1222221333331',
+  '1222221333331',
+  '1222221333331',
+  '1222245433331',
+  '1222244433331',
+  '1222244433331',
+  '.12222133331.',
+  '..122213331..',
+  '...1221331...',
+  '....12131....',
+  '.....111.....',
+]
+
+export const arenaIcon = () => toIconUrl('arena', () => art(ARENA_SHIELD, { 1: '#202030', 2: '#4890f0', 3: '#f05858', 4: '#f8d030', 5: '#ffffff' }))
 
 /** The room's host: a small gold crown. 1 outline, 2 gold, 3 shine, 4 the gem. */
 const CROWN = [
@@ -1259,3 +1303,28 @@ export const teamArrow = (color: string) => {
 export const teamBallIcon = () => toIconUrl('teamBall', TEAM_FX.ball)
 /** The "Zz" as a HUD icon. */
 export const teamAwayIcon = () => toIconUrl('teamZz', TEAM_FX.zz)
+
+
+/* ---------------- The Arena's lock-on (`render/arenaAim.ts`) ---------------- */
+
+/** A lock-on bracket's top-left corner: an L two pixels thick, dark rimmed. */
+const LOCK_CORNER = ['111111', '122221', '121111', '121...', '121...', '111...']
+/** The pin over a locked target, pointing down at it. */
+const LOCK_PIN = ['1111111', '1222221', '.12221.', '..121..', '...1...']
+
+const lockArt = canvasCache<string, { corners: readonly [PixelSprite, PixelSprite, PixelSprite, PixelSprite]; pin: PixelSprite }>()
+
+/** The lock-on's four bracket corners (top-left, top-right, bottom-left, bottom-right) and its pin in `color`, cached per color. */
+export const lockOnArt = (color: string) => {
+  let made = lockArt.get(color)
+  if (!made) {
+    const palette = { 1: '#181018', 2: color }
+    const flipped = [...LOCK_CORNER].reverse()
+    made = {
+      corners: [fromStrings(LOCK_CORNER, palette), fromStrings(LOCK_CORNER, palette, { mirror: true }), fromStrings(flipped, palette), fromStrings(flipped, palette, { mirror: true })],
+      pin: fromStrings(LOCK_PIN, palette),
+    }
+    lockArt.set(color, made)
+  }
+  return made
+}

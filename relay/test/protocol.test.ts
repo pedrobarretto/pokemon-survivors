@@ -1,12 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import source from '../../src/net/protocol.ts?raw'
+import arenaSource from '../../src/net/arena.ts?raw'
+import queueSource from '../../src/net/arenaQueue.ts?raw'
+import rankedSource from '../../src/data/arenaRanked.ts?raw'
+import formatsSource from '../../src/data/arenaFormats.ts?raw'
 import { LIMITS, parseClientMessage } from '../../src/net/protocol'
+
+const importsOf = (text: string) => [...text.matchAll(/^\s*(?:import|export)\s[^;]*?\sfrom\s*['"]([^'"]+)['"]/gm)].map((m) => m[1])
 
 describe('protocol', () => {
   it('imports nothing, so the relay never bundles game code', () => {
     expect(source).not.toMatch(/^\s*import[\s{*'"]/m)
     expect(source).not.toMatch(/^\s*export\s[^;=]*\sfrom\s*['"]/m)
     expect(source).not.toMatch(/\brequire\(|\bimport\(/)
+  })
+
+  it("bundles nothing of the game's with the Arena: its wire, its queue rules and their numbers", () => {
+    expect(importsOf(arenaSource)).toEqual([])
+    expect(importsOf(rankedSource)).toEqual([])
+    expect(importsOf(formatsSource)).toEqual([])
+    expect(importsOf(queueSource)).toEqual(['../data/arenaRanked', '../data/arenaFormats'])
+  })
+
+  it("carries an Arena result on `over`, and drops one past its size rather than the vote", () => {
+    expect(parseClientMessage(JSON.stringify({ t: 'over', tick: 9, h: 'ab', result: '{"v":1}' }))).toEqual({ t: 'over', tick: 9, h: 'ab', result: '{"v":1}' })
+    expect(parseClientMessage(JSON.stringify({ t: 'over', tick: 9, h: 'ab', result: 'x'.repeat(LIMITS.result + 1) }))).toEqual({ t: 'over', tick: 9, h: 'ab' })
+    expect(parseClientMessage(JSON.stringify({ t: 'kick', seat: 7 }))).toEqual({ t: 'kick', seat: 7 })
   })
 
   it('refuses inputs posing as relay entries, and messages past their size', () => {

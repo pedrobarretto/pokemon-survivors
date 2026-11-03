@@ -22,8 +22,13 @@ import type { ReplayStart } from './replay'
  */
 
 export const CHALLENGE = {
-  /** How often each difficulty comes up: mostly Normal and Hard, a Nightmare now and then. */
+  /** How often each difficulty is drawn: mostly Normal and Hard, a Nightmare now and then (only until `nightmareUntil`). */
   difficulty: [['normal', 5], ['hard', 4], ['nightmare', 2]] as const satisfies ReadonlyArray<readonly [Difficulty, number]>,
+  /**
+   * The last day a Nightmare draw plays on Nightmare. With every upgrade off no one won one (0 in ~4.8k runs on
+   * 2026-10-26 and 27), so later days play it on Hard. The draw itself stays, so every other day keeps its difficulty.
+   */
+  nightmareUntil: '2026-10-28',
   /** A challenge run may still start this long after its day ended (the menus were open at midnight). */
   graceMs: 10 * 60_000,
   /** The ribbons of a day go out this long after it ended: runs that started late have finished, and their checks too. */
@@ -51,16 +56,17 @@ const cycleOrder = (cycle: number) => {
   return order
 }
 
-/** The challenge of a Brasília day. The Pokémon walk through seeded cycles, so none repeats within one. */
+/** The challenge of a Brasília day. The Pokémon walk through seeded cycles, so none repeats within one; no Nightmare after `CHALLENGE.nightmareUntil`. */
 export const dailyChallenge = (day: DayKey): Challenge => {
   const n = dayNumber(day)
   const size = POOL.length
   const rng = createRng(seedFrom(`challenge-day:${day}`))
+  const drawn = weightedPick(rng, CHALLENGE.difficulty)
   return {
     day,
     seed: seedFrom(`challenge-seed:${day}`),
     starter: cycleOrder(Math.floor(n / size))[((n % size) + size) % size]!,
-    difficulty: weightedPick(rng, CHALLENGE.difficulty),
+    difficulty: drawn === 'nightmare' && day > CHALLENGE.nightmareUntil ? 'hard' : drawn,
     outbreak: outbreakOf(day),
     halloween: isHalloweenDay(day),
   }

@@ -95,7 +95,7 @@ export const superpower = (g: Game, s: CastStats, look: Look) => {
     const dist = dm.hypot(dx, dy)
     // In front (within ~60° of the blow) and within its reach.
     if (dist > reach + r + e.radius || dx * d.x + dy * d.y < dist * 0.5) continue
-    throwFoe(e, dm.atan2(dy + d.y * 30, dx + d.x * 30), SUPER_THROW * e.mass, s.damage * SUPER_CRASH, look.move, g.player.slot)
+    throwFoe(g, e, dm.atan2(dy + d.y * 30, dx + d.x * 30), SUPER_THROW * e.mass, s.damage * SUPER_CRASH, look.move)
   }
   const at = fromAngle(angle, reach)
   spawnAttack(g, {

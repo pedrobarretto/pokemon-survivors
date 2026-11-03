@@ -20952,6 +20952,43 @@
           "bodyW": 29,
           "bodyH": 29,
           "footY": 5
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 40,
+              "frameHeight": 56,
+              "durations": [
+                10,
+                16,
+                10,
+                16
+              ]
+            },
+            "Idle": {
+              "frameWidth": 40,
+              "frameHeight": 56,
+              "durations": [
+                14,
+                24,
+                14,
+                24
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 48,
+              "frameHeight": 56,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 29,
+            "bodyH": 29,
+            "footY": 5
+          }
         }
       }
     },

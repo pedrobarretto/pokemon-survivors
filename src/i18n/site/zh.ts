@@ -25,6 +25,9 @@ export const siteZh: SiteMessages = {
     tierList: '強度排行',
     legal: '法律資訊',
     support: '贊助',
+    creators: '創作者',
+    compare: 'Pokémon Survivors 與 PokéSurvivor',
+    alternatives: '像《吸血鬼倖存者》的遊戲',
     language: '語言',
   },
   footer: {
@@ -34,6 +37,9 @@ export const siteZh: SiteMessages = {
     credits: '製作名單',
     source: 'GitHub 原始碼',
     support: '贊助本專案',
+    notThem: 'Pokémon Survivors（pokemonsurvivors.com）不是 PokéSurvivor（pokesurvivor.com），後者是另一款名字相近的同人遊戲。',
+    compare: '看看差別',
+    alternatives: '其他像《吸血鬼倖存者》的寶可夢遊戲',
   },
   home: '首頁',
   playCta: '免費開玩',
@@ -644,10 +650,10 @@ export const siteZh: SiteMessages = {
     eggs: {
       incubator: (m) =>
         `Kecleon商店的孵化器分頁販售更多欄位，永遠屬於你：${m.slots.map((s) => `第 ${s.n} 欄 ${s.price}（商店達到${s.level}時）`).join('；')}，最多 ${m.max} 欄。它也販售快速孵化器（${m.quick}）：在孵化器中點一下蛋即可使用，該顆蛋的步數會以 ${m.speed} 倍速累積，直到孵化。`,
-      paragraphs: (starters, families, slots, perRun, stepPx, shiny, weight) => [
+      paragraphs: (starters, families, slots, perRun, stepPx, shiny, weight, pity) => [
         `除了 ${starters} 隻初始寶可夢，還有 ${families} 個可使用的寶可夢家族會從蛋中孵化，涵蓋所有屬性與世代：總共有 ${starters + families} 隻寶可夢可以使用。每隻都有自己的初始招式、必殺技、對局中的進化與能力值。`,
         `首領、上鎖的寶箱與裂縫有時會留下蛋，每場對局最多 ${perRun} 顆。蛋會進入孵化器，孵化器有 ${slots} 個欄位。在對局中每走 ${stepPx} px 算一步，孵化器中的每顆蛋都會一起累積步數。對局中撿到的蛋，撿到之後走的步數就已經開始計算。`,
-        `蛋準備好後，會在你離開對局時或在孵化器中孵化（主選單與寶可夢選擇畫面的蛋分頁）。你還沒擁有的家族出現機率是 ${weight} 倍。孵出的寶可夢有 1/${shiny} 的機率是異色，之後在每場對局中都會保持異色。`,
+        `蛋準備好後，會在你離開對局時或在孵化器中孵化（主選單與寶可夢選擇畫面的蛋分頁）。你還沒擁有的家族出現機率是 ${weight} 倍。孵出的寶可夢有 1/${shiny} 的機率是異色，之後在每場對局中都會保持異色。保底：同一種蛋連續 ${pity} 顆沒孵出新寶可夢，下一顆必定是新的（孵化器會顯示計數）。`,
         '重複的蛋，或孵化器已滿時撿到的蛋，會變成寶可夢幣。從沒拿過蛋的玩家，第一顆一定拿得到。',
         '友情蛋絕不會在對局中掉落：透過別人的邀請註冊時，以及你邀請的好友完成 3 場對局時，會以神秘禮物的形式送達。只有 Munchlax 會從中孵化。邀請 3 位好友可獲得大使稱號與專屬外框，5 位可獲得超稀有蛋，10 位可獲得異色 Dratini。你的連結與每位好友的進度都在首頁的「邀請好友」卡片上。',
         '鬧鬼蛋也絕不會在對局中掉落：只有女巫之夜期間（10 月 24 日至 11 月 2 日）廣場上 Duskull 的攤位有賣，每天一顆。只有 Litwick、Phantump、Drifloon 與 Sandygast 會從中孵化，各 25%，不論是否已經擁有。活動結束後，明年再見。',
@@ -830,9 +836,20 @@ export const siteZh: SiteMessages = {
         '一隻在對局中跟著你的同伴。',
         '名字會出現在下方的贊助者之牆與勝利畫面的感謝名單中。',
         '投票決定下一個蛋寶可夢。',
-        '金色：累計 R$ 50 或 US$ 10，可獲得金色卡片背景、電腦箱桌布與徽章。',
+        '金級與鑽石級現在改為每月贊助，在 Patreon（見下方）：單次贊助不再累計成金級。',
       ],
       note: '全都是外觀：不會改變對局或排行榜。獎勵需要遊戲帳號（用 Google 登入，免費）。',
+    },
+    monthly: {
+      title: 'Patreon 每月贊助',
+      lead: '想每個月都支持？在 Patreon，你的等級會跟著你維持中的金額。之後在遊戲的名人堂把 Patreon 連結到你的帳號。',
+      tiers: [
+        '<b>贊助者，每月 US$ 5：</b>贊助者的所有回饋、Discord 的 Supporter 身分組與專屬頻道，以及贊助期間登上名人堂。',
+        '<b>金級，每月 US$ 10：</b>贊助者的全部內容、金級徽章與身分組、金色卡片背景與桌布，並永遠留在名人堂。',
+        '<b>鑽石級，每月 US$ 20：</b>金級的全部內容、鑽石徽章與身分組、以你捕捉到的傳說寶可夢作為同伴（捕捉到異色就能是異色）、每月投票決定新的超稀有寶可夢，以及名人堂的鑽石裝飾。',
+      ],
+      cta: '在 Patreon 贊助',
+      note: '在 Patreon 之前就贊助的人是 OG 贊助者：永遠保有現有的一切，並在名人堂擁有專屬區塊。',
     },
     wall: { title: '贊助者之牆', empty: '這裡還沒有人。你的名字可以是第一個！' },
     pick: '選擇付款方式',
@@ -918,8 +935,7 @@ export const siteZh: SiteMessages = {
     privacyAfter: [
       '若要刪除這些資料，請在瀏覽器設定中清除網站資料。',
       '圖像、聲音與字型都由本站提供，不會呼叫第三方服務。本站架設在 Vercel 上，和所有網頁伺服器一樣，Vercel 可能會記錄技術性的存取資料（例如 IP 位址），以運作並保護服務。',
-      '為了解有多少人造訪，本站使用 Vercel Web Analytics。它以匿名、彙總的方式計算造訪次數（頁面、國家、瀏覽器、裝置與來源網站），不使用 Cookie，也不會識別你的身分或跨網站追蹤你。',
-      '遊戲中我們也使用 PostHog（posthog.com，資料儲存在美國）來了解遊戲的遊玩方式並修正錯誤。它會收到每場對局的摘要（寶可夢、難度、招式、道具、到達的分鐘數與等級，以及結束方式）、你開啟了哪些選單畫面，以及遊戲發生錯誤時的錯誤訊息與進行中對局的重播（其種子與你的輸入，不含個人資料）。這些全都與 ph_ps 中的隨機 ID 綁定，若你已登入，也會與你的帳號 ID 及使用者名稱綁定，但絕不會與你的電子郵件或姓名綁定。PostHog 在這裡不使用 Cookie，也不會跨網站追蹤你。',
+      '遊戲中我們使用 PostHog（posthog.com，資料儲存在美國）來了解遊戲的遊玩方式並修正錯誤。它會收到每場對局的摘要（寶可夢、難度、招式、道具、到達的分鐘數與等級，以及結束方式）、你開啟了哪些選單畫面，以及遊戲發生錯誤時的錯誤訊息與進行中對局的重播（其種子與你的輸入，不含個人資料）。這些全都與 ph_ps 中的隨機 ID 綁定，若你已登入，也會與你的帳號 ID 及使用者名稱綁定，但絕不會與你的電子郵件或姓名綁定。PostHog 在這裡不使用 Cookie，也不會跨網站追蹤你。',
       '捐款是在 AbacatePay（abacatepay.com：Pix 與巴西信用卡）或 Stripe（stripe.com：其他國家的信用卡、Apple Pay 與 Google Pay）的頁面上付款。你的付款資料會直接交給他們，遊戲永遠看不到你的卡片資料。他們會告訴我們金額，以及（就像對任何收款方一樣）付款人的資料（例如姓名與電子郵件），我們只用來記錄這筆捐款。如果你提供了 @（或兌換了捐款的兌換碼），它會與該遊戲帳號綁定，讓獎勵能送達；金額永遠不會公開顯示，只會顯示贊助者徽章，而且你可以隱藏它。',
     ],
     contact: [
@@ -928,6 +944,180 @@ export const siteZh: SiteMessages = {
     ],
     issues: '在 GitHub 上開 issue',
     source: '查看原始碼',
+  },
+  creators: {
+    title: '創作者：Pokémon Survivors 的影片與直播',
+    description:
+      '玩家在 YouTube 和 TikTok 上製作的 Pokémon Survivors 影片與直播。拍下你的影片、分享到 Discord，就能在遊戲中獲得「內容創作者」稱號和創作者相框。',
+    h1: '創作者',
+    lead: '來自 Pokémon Survivors 玩家的影片與直播。直接在這裡觀看，並追蹤創作者。',
+    videos: '影片',
+    people: '創作者們',
+    play: (title: string) => `觀看：${title}`,
+    watchOn: (platform: string) => `在 ${platform} 觀看`,
+    videoAbout: (name: string) => `${name} 製作的 Pokémon Survivors 影片。`,
+    langs: { pt: '葡萄牙語', en: '英語', es: '西班牙語', fr: '法語', zh: '中文' },
+    join: {
+      title: '你有在拍這款遊戲的影片嗎？',
+      lead: '實況、直播、攻略、Short 或 TikTok，任何語言都可以：每一部遊戲影片都能出現在這裡。',
+      steps: [
+        '把影片發布到 YouTube、TikTok 或任何你喜歡的平台。',
+        '在我們 Discord 的 #screenshots-and-clips 頻道分享連結。',
+        '告訴我們你的遊戲 @：你會獲得「內容創作者」稱號和創作者相框。',
+      ],
+      cta: '到 Discord 分享我的影片',
+    },
+  },
+  compare: {
+    title: 'Pokémon Survivors 和 PokéSurvivor 是同一款遊戲嗎？兩者的差異',
+    description:
+      'Pokémon Survivors（pokemonsurvivors.com）和 PokéSurvivor（pokesurvivor.com）是兩款不同作者的免費寶可夢同人遊戲，玩法都像《吸血鬼倖存者》。並排比較：寶可夢、合作模式、語言、排行榜與原始碼。',
+    h1: 'Pokémon Survivors 和 PokéSurvivor 是同一款遊戲嗎？',
+    lead: [
+      '不是。這是兩款名字幾乎一樣、由不同人製作的免費寶可夢同人遊戲，玩法都像《吸血鬼倖存者》。Pokémon Survivors（pokemonsurvivors.com，也就是本站）由巴西的 Pedro Barretto 製作；PokéSurvivor（pokesurvivor.com）由 JPTER78 製作。',
+      '兩款都在 2026 年 10 月推出、都在瀏覽器上執行、也都免費，所以搜尋引擎和 AI 有時會把它們搞混。以下是兩者的差別。',
+    ],
+    table: { title: '並排比較', feature: '項目' },
+    rows: (f) => [
+      ['製作者', 'Pedro Barretto（巴西）', 'JPTER78'],
+      ['網站', 'pokemonsurvivors.com', 'pokesurvivor.com'],
+      ['在哪裡玩', '電腦和手機的瀏覽器，直向橫向都可以。可安裝成 App。', '電腦和手機的瀏覽器，手機需橫向。可安裝成 App。'],
+      ['帳號', '非必要：單人遊玩不必註冊。有帳號可雲端存檔、上排行榜和玩合作模式。', '非必要：可用訪客或帳號（名稱加密碼，或 Google）。有帳號可雲端存檔、上排行榜和玩合作模式。'],
+      ['怎麼攻擊', `所有招式都會自動攻擊，最多同時 ${f.moves} 招。`, '由你選擇主動招式（按鍵 1 到 4）。每擊敗一隻傳說寶可夢，就能把招式合併到同一格。'],
+      ['可玩的寶可夢', `${f.starters} 隻初始寶可夢與完整進化鏈，加上 ${f.eggs} 個從蛋孵出的家族，以及傳說模式中的 ${f.legends} 隻傳說寶可夢。`, '9 個世代共 966 隻寶可夢。'],
+      ['怎麼解鎖寶可夢', '靠在對局中走的步數孵蛋。傳說寶可夢要以首領身分擊敗才能捕捉。', '各地區的扭蛋，用遊玩獲得的票券抽。'],
+      ['一場對局', `${f.minutes} 分鐘一路打到超夢，途中有傳說首領和史詩裂縫。之後還有無盡模式，直到阿爾宙斯登場。`, '限時抵擋怪潮，裂縫會通往與傳說寶可夢對戰的競技場。'],
+      ['合作模式', `線上，最多 ${f.players} 人。用連結、房間代碼或好友名單開房。`, '線上，最多 4 人。邀請好友進房。'],
+      ['語言', `${f.languages} 種：葡萄牙文、英文、西班牙文、法文和繁體中文。`, '7 種：西班牙文、英文、法文、義大利文、葡萄牙文，以及簡體和繁體中文。'],
+      ['排行榜', '依存活時間排名。出現在排行榜上的對局會被驗證：伺服器會用回放把每一場重新模擬一次。', '依存活時間排名，單人或組隊。'],
+      ['原始碼', '開源，MIT 授權。', '公開，PolyForm Noncommercial 授權（2026-10-14 前為 MIT）。'],
+      ['廣告與付費', '都沒有。可自由贊助。', '都沒有。可自由贊助。'],
+    ],
+    names: {
+      title: '名字相似的遊戲',
+      items: [
+        { name: 'Pokémon Survivors', text: '本遊戲，網址是 pokemonsurvivors.com。「Survivors」是複數。' },
+        { name: 'PokéSurvivor（或 Poke Survivor）', text: 'JPTER78 的遊戲，網址是 pokesurvivor.com。' },
+        { name: 'Poke Survivors（Android）', text: 'PokéSurvivor 的非官方 Android 移植版，用 Godot 製作。不是本遊戲。' },
+        { name: 'pokesurvivor.games 與 pokesurvival.com', text: '粉絲做的攻略網站，會帶你到 PokéSurvivor。' },
+        { name: 'Pokémon Survivor Burst', text: '另一款同人遊戲，需下載到電腦，由 ClessioTV 以 Pokémon Essentials 製作。' },
+      ],
+    },
+    pickOurs: {
+      title: '適合玩 Pokémon Survivors，如果你……',
+      items: (f) => [
+        `想要有頭有尾的對局：${f.minutes} 分鐘打到超夢，之後在無盡模式對抗阿爾宙斯；`,
+        '喜歡研究配置：招式在 Lv 4 與 Lv 7 分成兩條路線，還有特性、道具、合體招式和超級進化；',
+        `想用傳說寶可夢來玩：以首領身分擊敗 ${f.legends} 隻傳說寶可夢來捕捉，並在傳說模式中使用牠們；`,
+        '想用手機直向、單手遊玩；',
+        '想要排名前段的對局都經過伺服器驗證的排行榜；',
+        '想要 MIT 授權的開源程式碼，可以研究和再利用。',
+      ],
+    },
+    pickTheirs: {
+      title: '適合玩 PokéSurvivor，如果你……',
+      items: ['想收集寶可夢：共有 966 隻，還有各地區的扭蛋；', '想自己決定用哪一招攻擊；', '用義大利文或簡體中文遊玩；', '想要更大的社群和更多 YouTube 影片。'],
+    },
+    faq: {
+      title: '常見問題',
+      items: (f) => [
+        {
+          q: 'Pokémon Survivors 和 PokéSurvivor 是同一款遊戲嗎？',
+          a: '不是。它們是兩款不同的免費同人遊戲，作者不同，在同一個月推出，名字幾乎一樣。Pokémon Survivors 的網址是 pokemonsurvivors.com，由 Pedro Barretto 製作；PokéSurvivor 的網址是 pokesurvivor.com，由 JPTER78 製作。',
+        },
+        {
+          q: '我搜尋「Pokémon Survivors」卻出現 PokéSurvivor，是我打錯名字了嗎？',
+          a: '沒有。Pokémon Survivors（「Survivors」是複數）就是本遊戲，網址是 pokemonsurvivors.com。搜尋引擎和 AI 有時會把兩者搞混。',
+        },
+        {
+          q: '哪一款比較好？',
+          a: `看你想要什麼。PokéSurvivor 的寶可夢比較多（966 隻），還有扭蛋可以收集。Pokémon Survivors 有 ${f.minutes} 分鐘的對局與傳說首領、可玩的傳說寶可夢、超級進化、會分支的招式，以及經伺服器驗證的排行榜。兩款都免費，可以都玩玩看。`,
+        },
+        {
+          q: '兩款都是免費又官方的嗎？',
+          a: '兩款都免費，沒有廣告也沒有付費內容，都在瀏覽器上執行。兩款都不是官方遊戲，而是與任天堂、The Pokémon Company、GAME FREAK 及 Creatures 無關的同人遊戲。',
+        },
+        {
+          q: '可以和朋友一起玩 Pokémon Survivors 嗎？',
+          a: `可以。線上合作模式最多 ${f.players} 人一起玩同一場，每人用自己的寶可夢。開一個房間，再用連結、代碼或好友名單邀請朋友。需要帳號。`,
+        },
+      ],
+    },
+    checked: (date) => `PokéSurvivor 的資料於 ${date} 依其網站與原始碼確認，之後可能有所變動。`,
+    report: '發現錯誤？到 GitHub 告訴我們',
+    alternatives: '其他像《吸血鬼倖存者》的寶可夢遊戲',
+    cta: '免費玩 Pokémon Survivors',
+  },
+  alternatives: {
+    title: '像《吸血鬼倖存者》的寶可夢遊戲：免費同人遊戲整理（2026）',
+    description:
+      '玩法像《吸血鬼倖存者》的免費寶可夢同人遊戲：Pokémon Survivors、PokéSurvivor 和 Pokémon Survivor Burst，再加上 Roguelite 遊戲 PokeRogue。在哪裡玩、有沒有合作模式、有多少寶可夢，以及各自適合誰。',
+    h1: '像《吸血鬼倖存者》的寶可夢遊戲',
+    lead: '寶可夢官方沒有推出過《吸血鬼倖存者》那樣的遊戲，但粉絲做了幾款。以下是免費的寶可夢「倖存者類」（bullet heaven）同人遊戲：你只負責移動，寶可夢會自動攻擊怪潮；另外也列出一款回合制的寶可夢 Roguelite，給想換個節奏的人。',
+    disclosure: (date) => `本文由 Pokémon Survivors 的作者撰寫，它排在清單第一，請自行斟酌。其他遊戲的資料於 ${date} 依其網站確認，之後可能有所變動。`,
+    glance: { title: '一覽', game: '遊戲', plays: '在哪裡玩', style: '類型', coop: '合作模式', roster: '寶可夢' },
+    madeBy: '製作者',
+    bestFor: '適合',
+    visit: (name) => `前往 ${name}`,
+    games: {
+      ours: {
+        plays: '瀏覽器，電腦和手機',
+        style: '倖存者類',
+        coop: '線上最多 4 人',
+        roster: (f) => `${f.starters} 隻初始寶可夢、${f.eggs} 個蛋家族、${f.legends} 隻傳說寶可夢`,
+        about: (f) => [
+          `從關都到帕底亞的 ${f.starters} 隻初始寶可夢中選一隻，撐過 ${f.minutes} 分鐘的怪潮：所有招式都會自動攻擊，每次升級挑選招式和道具，在對局中進化，最後迎戰超夢。還有傳說首領、通往各傳說寶可夢領域的史詩裂縫、超級進化，以及對抗阿爾宙斯的無盡模式。`,
+          `蛋能孵出另外 ${f.eggs} 個家族，擊敗的傳說寶可夢可在傳說模式中使用，線上合作模式最多 ${f.players} 人。支援 ${f.languages} 種語言，原始碼開源（MIT）。`,
+        ],
+        bestFor: '想在電腦或直拿手機上，玩有首領、配置多變、還能用傳說寶可夢的短對局的人。',
+      },
+      pokesurvivor: {
+        plays: '瀏覽器，電腦和手機（橫向）',
+        style: '倖存者類',
+        coop: '線上最多 4 人',
+        roster: '966 隻寶可夢',
+        about: [
+          '同類型中陣容最大：9 個世代共 966 隻寶可夢，用遊玩獲得的票券在各地區扭蛋解鎖。由你選擇攻擊的招式，裂縫會通往與傳說寶可夢對戰的競技場。有任務、成就、排行榜和最多 4 人的合作模式，支援 7 種語言。',
+          '另外還有一個用 Godot 製作、名叫 Poke Survivors 的非官方 Android 移植版。',
+        ],
+        bestFor: '想收集最多寶可夢的人。',
+      },
+      burst: {
+        plays: '下載，Windows 和 Mac',
+        style: '倖存者類',
+        coop: '無',
+        roster: '每個版本都在增加',
+        about: ['以 Pokémon Essentials（RPG Maker XP）製作，需下載到電腦上玩。有經典、Rush 和塔等模式，還有首領和線上排行榜，支援多種語言。作者表示手機版未經測試。'],
+        bestFor: '喜歡下載版、想要經典寶可夢遊戲風格的人。',
+      },
+      pokerogue: {
+        plays: '瀏覽器，電腦和手機',
+        style: '回合制 Roguelite',
+        coop: '無',
+        roster: '所有世代',
+        about: ['不是倖存者類：戰鬥是回合制，跟本傳系列一樣，一波接一波，邊捕捉寶可夢邊組隊伍。它是最知名的寶可夢 Roguelite，免費且開源。'],
+        bestFor: '想玩回合制戰鬥、而不是對抗怪潮的寶可夢 Roguelite 的人。',
+      },
+    },
+    faq: {
+      title: '常見問題',
+      items: (f) => [
+        {
+          q: '有官方的寶可夢版《吸血鬼倖存者》嗎？',
+          a: '沒有。寶可夢官方從未推出這類遊戲。現有的都是免費、非官方的同人遊戲，例如 Pokémon Survivors、PokéSurvivor 和 Pokémon Survivor Burst。',
+        },
+        {
+          q: '哪一款像《吸血鬼倖存者》的寶可夢遊戲有合作模式？',
+          a: `Pokémon Survivors 和 PokéSurvivor，兩款都在瀏覽器上提供最多 ${f.players} 人的線上合作模式。`,
+        },
+        {
+          q: '哪一款可以在手機上玩、不用下載？',
+          a: 'Pokémon Survivors、PokéSurvivor 和 PokeRogue 都能在手機瀏覽器上玩。Pokémon Survivors 也能直拿手機玩。Pokémon Survivor Burst 需要下載到電腦。',
+        },
+      ],
+    },
+    compareLink: 'Pokémon Survivors 與 PokéSurvivor 並排比較',
+    cta: '免費玩 Pokémon Survivors',
   },
   notFound: {
     title: '找不到頁面 · Pokémon Survivors',

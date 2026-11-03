@@ -117,6 +117,15 @@ export const FORMS = {
 }
 
 /**
+ * Form shinies SpriteCollab doesn't have yet, committed by hand at `public/assets/pokemon/<dex>/<key>/shiny/`
+ * (Walk, Idle and Hurt): palette swaps of the form's own sheets, so they share its frame sizes and durations.
+ * By dex and form key, the artist to credit in CREDITS.md. Drop an entry once SpriteCollab publishes that shiny.
+ */
+export const HANDMADE_SHINIES = {
+  248: { mega: 'JFain (shared on Discord as @JaiFain)' },
+}
+
+/**
  * Forms that ship their portrait too (`<dex>/<key>/portrait.png`, `portrait` in the manifest's form), for the
  * screens that show one: Mega Darkrai, the Noite das Bruxas' Meta da comunidade (`ui/halloween.ts`).
  */
@@ -186,6 +195,10 @@ export const EMOTIONS = {
   225: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
   // Lanturn, the Festival da Praça's Lantern Market keeper (render/plaza.ts).
   171: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
+  // Machoke, the Dojo's sensei (render/dojo.ts).
+  67: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
+  // Ninjask, the Estádio's judge (render/stadium.ts).
+  291: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
 }
 
 export const pad = (n) => String(n).padStart(4, '0')

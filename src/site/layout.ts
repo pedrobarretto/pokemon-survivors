@@ -18,9 +18,16 @@ export type PageMeta = {
 
 const pathsOf = ({ id, sub }: Pick<PageMeta, 'id' | 'sub'>): Paths => sub?.paths ?? ROUTES[id]
 
-const NAV: readonly RouteId[] = ['play', 'pokedex', 'tierList', 'guide', 'changelog']
+const NAV: readonly RouteId[] = ['play', 'pokedex', 'tierList', 'guide', 'changelog', 'creators']
 
 const others = (locale: Locale) => LOCALE_IDS.filter((l) => l !== locale)
+
+/**
+ * Paints the game's theme (Settings → Jogo → Tema, in `ps:settings`) on <html> before the page draws, by
+ * `ui/theme.ts`'s rule: `dark`, `light`, or the system's for `system` and no choice yet. Inline, so the cards
+ * never flash light, and standalone, since the site never loads game code.
+ */
+const THEME_SCRIPT = `try{var t=JSON.parse(localStorage.getItem('ps:settings')||'{}').theme;document.documentElement.dataset.theme=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}catch(e){}`
 
 const head = ({ id, locale, title, description, schema = [], css, sub }: PageMeta) => {
   const m = SITE_MESSAGES[locale]
@@ -70,11 +77,11 @@ const head = ({ id, locale, title, description, schema = [], css, sub }: PageMet
     ${others(locale).map((l) => html`<meta property="og:locale:alternate" content="${SITE_MESSAGES[l].lang.og}" />\n    `)}    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/assets/pokemon/4/portrait.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <script>${raw(THEME_SCRIPT)}</script>
     <link rel="stylesheet" href="/src/site/site.css" />
     ${css && html`<style>${raw(css)}</style>`}
     <script type="application/ld+json">${jsonLd({ '@context': 'https://schema.org', '@graph': graph })}</script>
     <script type="module" src="/src/site/client.ts"></script>
-    <script defer vite-ignore src="/_vercel/insights/script.js"></script>
   </head>`
 }
 
@@ -98,11 +105,12 @@ export const header = (locale: Locale, paths: Paths, current: RouteId | null) =>
   </header>`
 }
 
-/** The site's footer: the disclaimer and the legal, credits, source, social and support links. */
+/** The site's footer: the disclaimer, the line telling us apart from PokéSurvivor, and the legal, credits, source, social and support links. */
 export const footer = (locale: Locale) => {
   const m = SITE_MESSAGES[locale]
   return html`<footer class="site-footer">
     <p>${m.footer.disclaimer}</p>
+    <p>${m.footer.notThem} <a href="${ROUTES.compare[locale]}">${m.footer.compare}</a> · <a href="${ROUTES.alternatives[locale]}">${m.footer.alternatives}</a></p>
     <p class="footer-links">
       <a href="${ROUTES.legal[locale]}">${m.footer.legal}</a>
       <a href="${REPO_URL}/blob/main/CREDITS.md">${m.footer.credits}</a>

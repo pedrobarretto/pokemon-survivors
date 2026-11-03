@@ -2,6 +2,7 @@ import { canvasCache, context2d, createCanvas, dropKept, drawPacked, ellipse, ke
 import { BIOMES, type BiomeId } from '../data/biomes'
 import { CLIFF_CRESTS, CLIFFS, LAKES, TERRAIN as RULES, type SolidKind, type Tier } from '../data/terrain'
 import { featuresNear, groundAt, type Solid } from '../game/terrain'
+import { treasureOpen } from '../game/landmarks'
 import { roomOf } from '../game/room'
 import type { ArenaPiece } from '../data/arenas'
 import { ARENA_PIECES, ARENA_SHADOW, ARENA_TALL } from './arenaPieces'
@@ -863,11 +864,14 @@ const pieceOf = (biome: BiomeId, kind: AnyPiece, variant: number, open = false):
       ? keepPiece('arena', ARENA_PIECES[kind](variant))
       : keepPiece(
           biome,
-          isPlacePiece(kind)
-            ? PLACE_PIECES[kind](variant, biome)
-            : isLandmarkPiece(kind)
-              ? LANDMARK_PIECES[kind](variant, biome, open)
-              : build(biome, kind, variant),
+          // `chest` is both the dungeon's and the maze's: an open one is the maze's treasure, taken.
+          open && isLandmarkPiece(kind)
+            ? LANDMARK_PIECES[kind](variant, biome, true)
+            : isPlacePiece(kind)
+              ? PLACE_PIECES[kind](variant, biome)
+              : isLandmarkPiece(kind)
+                ? LANDMARK_PIECES[kind](variant, biome, false)
+                : build(biome, kind, variant),
         )
     pieces.set(key, piece)
   }
@@ -1078,15 +1082,15 @@ const tallOf = (kind: AnyPiece) =>
  */
 export const solidCovers = (g: Game, s: Solid, biome: BiomeId, x: number, y: number, w: number, h: number) => {
   if (y >= s.y) return false
-  const piece = pieceOf(biome, s.kind, s.variant, s.loot !== undefined && g.landmarks.looted.has(s.loot))
+  const piece = pieceOf(biome, s.kind, s.variant, s.loot !== undefined && treasureOpen(g, s.loot))
   const left = s.x - piece.ax
   const top = s.y - piece.ay
   return x + w / 2 > left && x - w / 2 < left + piece.packed.w && y > top && y - h < top + piece.packed.h
 }
 
-/** Draws one solid; a tall one goes see-through around the player when they walk behind it. A looted landmark treasure shows open. */
+/** Draws one solid; a tall one goes see-through around the player when they walk behind it. A looted landmark treasure shows open (and every one in co-op, `treasureOpen`). */
 export const drawSolid = (ctx: CanvasRenderingContext2D, g: Game, s: Solid, biome: BiomeId) => {
-  const piece = pieceOf(biome, s.kind, s.variant, s.loot !== undefined && g.landmarks.looted.has(s.loot))
+  const piece = pieceOf(biome, s.kind, s.variant, s.loot !== undefined && treasureOpen(g, s.loot))
   const x = Math.round(s.x - piece.ax)
   const y = Math.round(s.y - piece.ay)
   const p = localPlayer(g)

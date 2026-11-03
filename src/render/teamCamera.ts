@@ -42,8 +42,12 @@ const nextWatchable = (g: Game, me: Player, from: number, step: 1 | -1): Player 
   return fallback
 }
 
-/** Whether the client is spectating: their player is fainted or gone, and a teammate stands to watch. */
-export const spectating = (g: Game, me: Player) => g.coop !== null && (me.gone || fainted(me)) && nextWatchable(g, me, me.slot, 1) !== null
+/**
+ * Whether the client is spectating: their player is fainted or gone, and a
+ * teammate stands to watch. Never in Versus: a knocked out player's camera
+ * stays where they fell until they're back on their pad.
+ */
+export const spectating = (g: Game, me: Player) => g.coop !== null && !g.versus && (me.gone || fainted(me)) && nextWatchable(g, me, me.slot, 1) !== null
 
 /**
  * Who the camera follows: the client's own player while they stand; while

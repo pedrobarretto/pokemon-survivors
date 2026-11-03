@@ -1,7 +1,8 @@
 import type { GiftContent } from '../../src/game/gifts'
 import { parseHandle } from '../../src/game/ranking'
-import { supporterTier, type SupporterTier } from '../../src/game/supporters'
+import type { SupporterTier } from '../../src/game/supporters'
 import type { Sql } from './db'
+import { tierOfRow, type StandingRow } from './supporters'
 import { sendGift } from './gifts'
 import { giftRefusal, tally, type GiftRefusal, type StaffGift, type StaffRank } from './staffGifts'
 
@@ -34,6 +35,8 @@ export type PlayerProfile = {
   seen: string
   banned: { at: string; reason: string | null } | null
   supporter: SupporterTier | null
+  /** An OG supporter (`users.og_tier`). */
+  og: boolean
   /** Finished runs per difficulty: how many, wins and the longest survived (seconds). */
   runs: { difficulty: string; runs: number; wins: number; best: number }[]
 }
@@ -50,8 +53,7 @@ type UserRow = {
   seen_at: Date
   banned_at: Date | null
   banned_reason: string | null
-  supporter_points: number
-}
+} & StandingRow
 
 /** The day's keys of a staff member's gifts start with this: they count towards the allowance. */
 const keyPrefix = (staffDiscordId: string, day: string) => `dstaff:${staffDiscordId}:${day}:`
@@ -73,7 +75,8 @@ export const staffDesk = (sql: Sql) => {
       joined: u.created_at.toISOString(),
       seen: u.seen_at.toISOString(),
       banned: u.banned_at ? { at: u.banned_at.toISOString(), reason: u.banned_reason } : null,
-      supporter: supporterTier(u.supporter_points),
+      supporter: tierOfRow(u),
+      og: u.og_tier !== null,
       runs,
     }
   }
@@ -81,8 +84,8 @@ export const staffDesk = (sql: Sql) => {
   const find = async (who: Who): Promise<Found> => {
     const [row] =
       who.by === 'discord'
-        ? await sql<UserRow[]>`select id, handle, name, discord_id, created_at, seen_at, banned_at, banned_reason, supporter_points from users where discord_id = ${who.id}`
-        : await sql<UserRow[]>`select id, handle, name, discord_id, created_at, seen_at, banned_at, banned_reason, supporter_points from users where handle = ${who.handle}`
+        ? await sql<UserRow[]>`select id, handle, name, discord_id, created_at, seen_at, banned_at, banned_reason, supporter_points, og_tier, patreon_tier, patreon_best from users where discord_id = ${who.id}`
+        : await sql<UserRow[]>`select id, handle, name, discord_id, created_at, seen_at, banned_at, banned_reason, supporter_points, og_tier, patreon_tier, patreon_best from users where handle = ${who.handle}`
     if (row) return { ok: true, player: await profile(row) }
     if (who.by === 'discord') return { ok: false, similar: [] }
     const similar = await sql<{ handle: string }[]>`select handle from users where starts_with(handle, ${who.handle}) order by seen_at desc limit 5`

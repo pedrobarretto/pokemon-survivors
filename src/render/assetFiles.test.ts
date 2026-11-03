@@ -6,12 +6,15 @@ import { BAG_ITEMS } from '../game/bag'
 import { CONSUMABLES } from '../game/consumables'
 import { UPGRADES } from '../game/meta'
 import { tmArtId } from './art'
+import { ARENA_ICONS, valeArtFiles } from './arenaArt'
 import { sceneryFiles } from './scenery'
 
 const names = (paths: Record<string, unknown>) => new Set(Object.keys(paths).map((p) => p.slice(p.lastIndexOf('/') + 1, -4)))
 const items = names(import.meta.glob('../../public/assets/items/*.png'))
 const shopArt = names(import.meta.glob('../../public/assets/shop/icons/*.png'))
 const scenery = names(import.meta.glob('../../public/assets/scenery/*.png'))
+const arena = new Set([...names(import.meta.glob('../../public/assets/arena/*.png')), ...[...names(import.meta.glob('../../public/assets/arena/coast/*.png'))].map((n) => `coast/${n}`)])
+const arenaIcons = names(import.meta.glob('../../public/assets/arena/icons/*.png'))
 
 describe('picture files', () => {
   it('has an icon for every held item, upgrade, consumable and Bag item', () => {
@@ -29,5 +32,10 @@ describe('picture files', () => {
 
   it('has every painted scenery piece', () => {
     expect(sceneryFiles().filter((file) => !scenery.has(file))).toEqual([])
+  })
+
+  it('has every Arena picture and icon, and no stray ones', () => {
+    expect([...arena].sort()).toEqual(valeArtFiles().sort())
+    expect([...arenaIcons].sort()).toEqual(Object.values(ARENA_ICONS).sort())
   })
 })

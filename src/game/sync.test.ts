@@ -158,6 +158,13 @@ describe('applyPush', () => {
     expect(applyPush({ save: account, revision: 4 }, { save: refunded, base: 4 })).toEqual({ save: refunded, revision: 5, merged: false })
   })
 
+  it('merges a blank save pushed on top of the latest revision instead of wiping the account', () => {
+    // A device whose local save was lost but whose account link (and revision) survived.
+    const out = applyPush({ save: account, revision: 4 }, { save: EMPTY_SAVE, base: 4 })
+    expect(out).toEqual({ save: mergeSaves(account, EMPTY_SAVE), revision: 5, merged: true })
+    expect(out.save.hatched).toEqual(account.hatched)
+  })
+
   it('merges a push from an older revision', () => {
     const out = applyPush({ save: account, revision: 4 }, { save: guest, base: 2 })
     expect(out).toEqual({ save: mergeSaves(account, guest), revision: 5, merged: true })

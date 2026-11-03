@@ -2,10 +2,11 @@ import { PROTOCOL, parseRoomCode, type CreateResponse, type Region } from '../..
 import { parseCreate } from './codes'
 import type { Env } from './env'
 import { allowedOrigin } from './origins'
-import { log, noSuchRoom } from './shell'
+import { HINT_HEADER, log, noSuchRoom, shardStub } from './shell'
 import { SHARD_INDEXES, SHARD_REGIONS, shardName, shardOf, type Shard } from './shards'
 import { EDGE_HEADER, edgeOf } from './telemetry'
 
+export { Matchmaker } from './matchmakerObject'
 export { ShardObject } from './shardObject'
 export { Vault } from './vault'
 
@@ -16,6 +17,7 @@ export { Vault } from './vault'
  *
  * - `POST /rooms` `{ v, build, region? }` → `{ code, region, claim }`
  * - `GET /rooms/<code>/ws` → WebSocket (first message: `hello`)
+ * - `GET /arena/queue` → WebSocket to the Arena's matchmaker (`matchmakerObject.ts`; first message: `queue`)
  * - `GET /health`
  * - `GET /admin/dumps`, `GET /admin/dumps/<id>` (gzipped JSON), `GET /admin/shards/<region>:<index>` (its rooms and
  *   frame timer lateness), `Authorization: Bearer <ADMIN_TOKEN>`
@@ -55,9 +57,6 @@ const cors = (origin: string | null): Record<string, string> =>
   origin ? { 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Methods': 'GET, POST', 'Access-Control-Allow-Headers': 'Content-Type', Vary: 'Origin' } : {}
 
 const ipOf = (request: Request) => request.headers.get('CF-Connecting-IP') ?? 'unknown'
-
-/** A shard's object, created (the first time only: an object stays where it was made) near its region. */
-const shardStub = (env: Env, s: Shard) => env.SHARDS.getByName(shardName(s), s.region === 'auto' ? undefined : { locationHint: s.region })
 
 const createRoom = async (request: Request<unknown, IncomingRequestCfProperties>, env: Env, headers: Record<string, string>): Promise<Response> => {
   const reply = (body: CreateResponse, status = 200) => json(body, status, headers)
@@ -131,6 +130,14 @@ export default {
       const shard = shardOf(code)
       // A code naming no shard (a VPS relay's, or none of ours) has no room here.
       return shard ? shardStub(env, shard).fetch(new Request(request, { headers })) : noSuchRoom()
+    }
+    if (path === '/arena/queue' && request.method === 'GET') {
+      if (request.headers.get('Upgrade') !== 'websocket') return new Response('Expected a WebSocket', { status: 426 })
+      if (!(await env.CONNECT_LIMIT.limit({ key: ipOf(request) })).success) return new Response('Too many connections', { status: 429 })
+      const headers = new Headers(request.headers)
+      headers.set(HINT_HEADER, hintFor(request.cf) ?? '')
+      // One matchmaker for everyone in v1 (a small pool split by region would match nobody), on the US east coast like South America's rooms.
+      return env.MATCHMAKER.getByName('arena', { locationHint: 'enam' }).fetch(new Request(request, { headers }))
     }
     if ((path.startsWith('/admin/dumps') || path.startsWith('/admin/shards/')) && request.method === 'GET') return admin(request, env, path)
     return new Response('Not found', { status: 404, headers })

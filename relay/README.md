@@ -6,8 +6,9 @@ run's clock (60 Hz, ticks derived from elapsed time), stamps inputs into the
 next unsent tick, broadcasts frames without waiting on storage, writes the
 input log once a second, compares the players' state hashes, keeps the latest
 snapshot a majority agreed on, heals a diverged client and records a desync
-dump. It runs no game code: it imports only `../src/net/protocol.ts`, which
-imports nothing (a test checks it).
+dump. It runs no game code: it imports only `../src/net/protocol.ts` and the
+Arena's wire and queue rules (`src/net/arena.ts`, `src/net/arenaQueue.ts`,
+`src/data/arenaRanked.ts`), which import nothing else (a test checks it).
 
 **Why shards.** Cloudflare bills a Durable Object's wall-clock time at 128 MB,
 whatever it uses, and a room never sleeps (the relay owns its clock): one room
@@ -77,6 +78,7 @@ refusal does. The one-room `RoomObject` of the rooms made before shards is gone
 - `src/vault.ts`: one Durable Object keeping desync dumps after their room is gone (30 days, the newest 500, pruned by its alarm), and the lab's kept runs (below).
 - `src/telemetry.ts`: what makes every run diagnosable (below), kept out of the room's rules.
 - `src/index.ts`: the Worker routes; `src/auth.ts`: Clerk session tokens (RS256 against the JWKS).
+- `src/matchmaker.ts` / `src/matchmakerObject.ts`: the Arena's queue, its rules (pure, `test/matchmaker.test.ts`) and its Durable Object; `src/report.ts`: the signed posts to the API and the outbox of match reports (below, Arena).
 
 ```bash
 npm install
@@ -97,6 +99,7 @@ node scripts/probe.mjs --bots 3 --secs 40 --desync --rejoin   # bots against a d
   players (a Clerk session token in `hello.auth`): a guest hello is refused with `signIn`, except
   where `ALLOW_GUESTS` is `on` (the dev relay and local `wrangler dev`, for the soak, the in-tab
   bots and dev builds; `env.production` has it `off`).
+- `GET /arena/queue`: the WebSocket to the Arena's matchmaker (below, Arena).
 - `GET /health`: the Worker answering (no Durable Object is touched).
 - `GET /admin/dumps` (the last 100) and `GET /admin/dumps/<id>` (gzipped JSON), with
   `Authorization: Bearer <ADMIN_TOKEN>`. Without the token they answer 404.
@@ -119,6 +122,79 @@ A dump has `meta` (room, build, region, the run's start with seed and loadouts, 
 hashes reported at the diverged tick, seats with builds and user agents), `log`
 (`[tick, entries]` for every tick with inputs) and `hashes` (`[tick, {seat: hash}]`).
 Re-simulating `meta.run` with `log` reproduces the run.
+
+## Arena
+
+The Arena (a 4v4 or 3v3 match, `src/game/versus.ts`) rides the co-op pipeline: a room whose settings say
+`mode: 'versus'` and a deterministic match in which the seats nobody takes are bots. The relay adds
+four things, all additive (no `PROTOCOL` bump: a client or relay before them works as it did):
+
+- **Rooms of a format's size.** An Arena room seats both teams of its format (`settings.format`,
+  `src/data/arenaFormats.ts`: 8 for the standard 4v4, the default when absent, 6 for the `quick`
+  3v3; at most `MAX_ARENA_PLAYERS`); a co-op room stays at 4, and the host can't switch a room to
+  anything that seats fewer than it holds (back to co-op, a 4v4 of 7 to the 3v3: `seatCap` in
+  `src/room.ts`). A report's seats follow the format too (6 slots for a 3v3).
+- **Locked rooms.** The matchmaker makes a room with an `ArenaLock` (the queue, its format when not the standard, whether it's rated,
+  the matched identities and their teams): only those players sit down, each loadout's `team` is
+  forced to theirs, the settings are the match's (`MatchedSettings`) for good, the host can't kick,
+  move or start, and the run starts by itself once every matched player has a loadout in, or
+  `joinTimeout` (20 s) after the room was made with whoever did (the game plays the rest as bots;
+  nobody: the room goes).
+- **Result consensus and the report.** Each client's `over` of an Arena match carries its
+  `ArenaResult` as JSON (`result`, opaque here). When the run ends (the hash majority, as for
+  co-op), the result more than half of the end's voters sent is posted to the API as an
+  `ArenaReport` (`POST <ARENA_API_URL>/arena/report`, header `x-arena-signature`: hex HMAC-SHA256
+  of the raw body with `ARENA_REPORT_SECRET`): kind `room` for a friends' room, else its queue's,
+  `ranked` only when the matchmaker rated it and at least `minHumansRanked` humans played;
+  `confirmed` only when at least `minHumansRanked` of them agreed on the result (unconfirmed, the API
+  rates only who left, as a loss: no lone client rates a match, no leaver dodges one); seats by slot
+  (Clerk user id and handle, bots' slots null, `left` for a human who left the run). Once per run, never for co-op. It goes into an
+  outbox: posted at once, retried with backoff (5 s, 30 s, 2 min, 10 min, 30 min, 1 h) on a 5xx,
+  408, 429 or no answer, dropped on any other 4xx; the shard keeps it under `out:<id>` and its alarm
+  retries (it outlives the room); the VPS relay keeps it in `vault.db` (`outbox`) with a timer. The
+  id (`<room>-<run>-<endedAt>`) is the API's to deduplicate a retry that had landed.
+- **The matchmaker** (`GET /arena/queue`, one `Matchmaker` Durable Object for everyone, created on
+  the US east coast): the first message is `queue` (`QueueClientMessage` in `src/net/arena.ts`)
+  with its auth, checked like a room's hello (a guest only where `ALLOW_GUESTS` is `on`), and its
+  `format` (absent: the standard 4v4, as every client before formats; Ranked only in a format that
+  has it, else the message is dropped). Tickets pool by queue, format and build. One ticket
+  per account (`refused: duplicate`); a build other than the site's (`SIM_BUILD_URL`, its
+  `/sim-build.json`, read at most once a minute) is refused (`build`), and so are tickets waiting
+  on one after a deploy (not on the dev relay, which has no `SIM_BUILD_URL`: Vercel previews share
+  it); `ARENA_QUEUE=off` closes it (`closed`). New accounts' MMR comes from `POST
+  <ARENA_API_URL>/arena/tickets` (`{ userIds }`, signed the same way; no answer: `mmr.start`). Every
+  second (`formMatches`): pools by kind and build, the oldest party anchors a match within its MMR
+  window (`mmrWindow`), parties stay on one team and solo humans spread across both
+  (`splitTeams`), the match goes at 8 humans or once
+  its anchor waited `botsAfter` (bots fill the rest), a ranked match of fewer than
+  `minHumansRanked` humans plays unrated (`matched.ranked: false`). Its locked room is made in a
+  shard of the region most of its players are nearest, everyone gets `matched` (room, team) and the
+  socket closes; the rest get `queued` (waited, found, botsIn). Tickets live in memory: a restart
+  drops the sockets and clients queue again. **Cloudflare only in v1**: the VPS relay seats Arena
+  rooms of 8 and reports their results, but has no queue, so matchmade rooms are always
+  Cloudflare's.
+
+**Secrets and vars.** `ARENA_REPORT_SECRET` (`wrangler secret put ARENA_REPORT_SECRET --env
+production`; the API's `ARENA_REPORT_SECRET`, the same value) and `ARENA_API_URL` (a var:
+`https://api.pokemonsurvivors.com` in `env.production`, unset on the dev relay so dev matches never
+reach the production ladder). Without both, nothing is posted (`arena.report.noApi` in the logs)
+and every queued account matches at `mmr.start`. On the VPS relay they are env vars of the
+Dokploy app, and its watch paths need `src/net/arena.ts`, `src/net/arenaQueue.ts` and
+`src/data/arenaRanked.ts` too (the image bundles them).
+
+**Running it locally.** `npm run dev` (wrangler dev on :8791, guests on). For reports and MMR
+against a local API (`npm run dev --prefix server`, :3000), put in `relay/.dev.vars`:
+
+```
+ARENA_API_URL=http://localhost:3000
+ARENA_REPORT_SECRET=dev-arena-secret   # the same value as the API's ARENA_REPORT_SECRET
+```
+
+A client queues with `new WebSocket('ws://localhost:8791/arena/queue')`, sends
+`{ t: 'queue', kind: 'casual', starter: 'pikachu', party: null, build, auth: { kind: 'guest', id } }`
+(a guest id of 16 to 64 `[A-Za-z0-9_-]`; `build` the game's `__SIM_BUILD__`, which the room will
+require), waits for `matched` and joins `matched.room` on the same relay like any room (`hello`,
+then a loadout). Eight sockets match at once; fewer wait `botsAfter` (90 s in both queues).
 
 ## Telemetry
 
@@ -219,8 +295,9 @@ The same steps for each relay, with its row of the table above (`<home>`: `sa`).
    **Pokémon Survivors**, a new application `coop-<home>`:
    - Source: this GitHub repository, branch `main`. Build type **Dockerfile**, Dockerfile
      `relay/node/Dockerfile`, build context `.` (the repository root).
-   - Auto deploy on, with watch paths `relay/src/**`, `relay/node/**` and `src/net/protocol.ts`
-     (all the image bundles: game deploys never restart it).
+   - Auto deploy on, with watch paths `relay/src/**`, `relay/node/**`, `src/net/protocol.ts`,
+     `src/net/arena.ts`, `src/net/arenaQueue.ts` and `src/data/arenaRanked.ts` (all the image bundles:
+     game deploys never restart it).
    - **Volume** (Advanced → Mounts): a volume mount, name `ps-relay-<home>-data`, mount path `/data`.
      Without it every deploy loses the rooms in play.
    - **Rollout: stop-first** (Advanced → Swarm → Update config, `Order: stop-first`, Swarm's
@@ -232,6 +309,8 @@ The same steps for each relay, with its row of the table above (`<home>`: `sa`).
      ALLOWED_ORIGINS=https://www.pokemonsurvivors.com,https://pokemonsurvivors.com
      ALLOW_GUESTS=off
      ADMIN_TOKEN=<openssl rand -base64 32, kept in ~/.config/ps-coop/<home>-admin-token, mode 600>
+     ARENA_API_URL=https://api.pokemonsurvivors.com
+     ARENA_REPORT_SECRET=<the API's ARENA_REPORT_SECRET>
      ```
      (`CLERK_ISSUER` defaults to `https://clerk.pokemonsurvivors.com`; `PORT`, `DATA_DIR` and
      `IP_HEADER=x-real-ip` come from the image.)

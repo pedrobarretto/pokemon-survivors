@@ -434,10 +434,10 @@ export const SIGNATURE_MOVES = {
       { fork: [{ stats: { cooldown: -0.4 }, mods: ['burstOnKill'] }, { stats: { cooldown: -0.3 }, mods: ['drain'] }] },
       { damage: 8, area: 0.15 },
     ],
-    // Wrapped in flames, the player leaps onto the biggest crowd nearby and lands in a fiery crash. Bulk hits harder.
+    // Wrapped in flames, the player leaps onto the biggest crowd nearby (ahead, while walking) and lands in a fiery crash. Bulk hits harder.
     fire: (g, s, owned) => {
       const p = g.player
-      const t = densestFoe(g.enemies, p.x, p.y, CHARGE_RANGE, 40)
+      const t = densestFoe(g.enemies, p.x, p.y, CHARGE_RANGE, 40, p.moving ? p.facing : null)
       if (!t) {
         owned.cooldown -= s.cooldown - CHARGE_RETRY
         return

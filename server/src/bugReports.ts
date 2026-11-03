@@ -66,8 +66,11 @@ const runLine = (r: BugRun) =>
     .filter(Boolean)
     .join(' · ')
 
-/** Canvas memory and frame pace: `canvas: 412 (38.5 MB, peak 51.2 MB / 530) · frame 17.1 ms`. */
-const perfLine = (p: BugPerf) => `canvas: ${p.canvases} (${p.canvasMb} MB, peak ${p.peakCanvasMb} MB / ${p.peakCanvases}) · frame ${p.frameMs ?? '?'} ms`
+/** Canvas memory and frame pace: `canvas: 412 (38.5 MB, peak 51.2 MB / 530) · frame 17.1 ms`, then any canvases the browser wiped or refused. */
+const perfLine = (p: BugPerf) =>
+  [`canvas: ${p.canvases} (${p.canvasMb} MB, peak ${p.peakCanvasMb} MB / ${p.peakCanvases}) · frame ${p.frameMs ?? '?'} ms`, p.wiped > 0 && `wiped ${p.wiped}×`, p.refused > 0 && `refused ${p.refused}`]
+    .filter(Boolean)
+    .join(' · ')
 
 const errorMessage = (e: BugError, title: string) => {
   const head = `**${title}** (${e.kind}, ${e.at})\n`
@@ -83,6 +86,7 @@ const techLines = (tech: BugTech) =>
     `screen: ${tech.screen} @${tech.dpr}x · viewport ${tech.viewport}${tech.touch ? ' · touch' : ''}`,
     `memory: ${tech.memory ?? '?'} GB · cores: ${tech.cores ?? '?'} · heap: ${tech.heapMb ?? '?'} MB`,
     `locale: ${tech.locale} · up ${clock(tech.uptime)} · on ${tech.view || '?'}`,
+    tech.input && `input: ${tech.input.last ?? '?'}${tech.input.pads.length > 0 ? ` (${tech.input.pads.join(', ')})` : ''}`,
     tech.perf && perfLine(tech.perf),
     tech.run && `run: ${runLine(tech.run)}`,
     tech.crash && `closed mid-run (${tech.crash.at}, ${tech.crash.version}): ${tech.crash.run ? runLine(tech.crash.run) : '?'} · heap ${tech.crash.heapMb ?? '?'} MB`,

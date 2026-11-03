@@ -4,16 +4,26 @@ import type { BiomeId } from '../data/biomes'
 import type { ArenaShape, FloorPlan } from '../data/arenas'
 import type { LandmarkId } from '../data/landmarks'
 import type { PlaceId } from '../data/places'
+import { caveLight } from '../game/cave'
 import { TERRAIN } from '../data/terrain'
 import { isMission } from '../game/fieldMissions'
+import type { DungeonFloor } from '../game/dungeon'
 import { MAP_EVENTS, type MapEventKind } from '../game/mapEvents'
 import { entranceShown } from '../game/place'
 import { localPlayer } from '../game/players'
 import { roomOf, type Room } from '../game/room'
 import { featureAt, type Feature } from '../game/terrain'
+import { treasureOpen } from '../game/landmarks'
 import type { Game, Pickup } from '../game/types'
 import { missionSpot } from './fieldMissions'
 import { slotColor } from './team'
+import { goalOpen, mapOf } from '../game/versusRules'
+import type { VersusState } from '../game/versus'
+import { TEAM_COLORS } from './vale'
+import { laneYAt, type MapTheme } from '../data/versusMaps'
+import { concealed } from './valeGrass'
+import { PING_COLORS, seesPing } from './valePings'
+import { PING_KINDS, type PingKind } from '../game/versusSocial'
 
 /**
  * The HUD's mini map (`ui/minimap.ts`): a pixel-art map around the local
@@ -22,7 +32,8 @@ import { slotColor } from './team'
  * a place's entrance, a rift's portal, the important drops, the teammates,
  * the Alphas and the boss; the ones worth walking to stay pinned to the rim
  * when they're out of range. In a room (a rift's arena, a place's inside) it
- * shows the room's floor up close. The wild horde never shows. Presentation
+ * shows the room's floor up close; a cave's floors only as far as the team
+ * has lit them, stairs included (`caveFog`). The wild horde never shows. Presentation
  * only: it reads the game and builds terrain with the pure `featureAt`, so the
  * simulation's caches stay untouched.
  */
@@ -296,27 +307,37 @@ const drawFeature = (ctx: Ctx, v: View, f: Feature, look: Look) => {
 
 /* ---------------- Ground ---------------- */
 
-let groundBuffer: ImageData | null = null
+/** The ground drawn last and where (`key`): painted again only when the map scrolls a pixel or the biome changes, since `putImageData` is slow on phones. */
+const GROUND = lazy(() => {
+  const canvas = createCanvas(S, S)
+  const ctx = context2d(canvas)
+  return { canvas, ctx, img: ctx.createImageData(S, S), key: '' }
+})
 
 const rgb = (hex: string) => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)] as const
 
 /** The ground, a sparse dither fixed to the world so it scrolls with the player. */
 const drawGround = (ctx: Ctx, v: View, base: string, dither: string, seed: number) => {
-  groundBuffer ??= ctx.createImageData(S, S)
-  const data = groundBuffer.data
-  const a = rgb(base)
-  const b = rgb(dither)
-  for (let y = 0; y < S; y++) {
-    for (let x = 0; x < S; x++) {
-      const c = hash2(x + v.ox, y + v.oy, seed) < 0.12 ? b : a
-      const i = (y * S + x) * 4
-      data[i] = c[0]
-      data[i + 1] = c[1]
-      data[i + 2] = c[2]
-      data[i + 3] = 255
+  const ground = GROUND()
+  const key = `${v.ox},${v.oy},${base},${dither},${seed}`
+  if (ground.key !== key) {
+    ground.key = key
+    const data = ground.img.data
+    const a = rgb(base)
+    const b = rgb(dither)
+    for (let y = 0; y < S; y++) {
+      for (let x = 0; x < S; x++) {
+        const c = hash2(x + v.ox, y + v.oy, seed) < 0.12 ? b : a
+        const i = (y * S + x) * 4
+        data[i] = c[0]
+        data[i + 1] = c[1]
+        data[i + 2] = c[2]
+        data[i + 3] = 255
+      }
     }
+    ground.ctx.putImageData(ground.img, 0, 0)
   }
-  ctx.putImageData(groundBuffer, 0, 0)
+  ctx.drawImage(ground.canvas, 0, 0)
 }
 
 /* ---------------- Rooms ---------------- */
@@ -360,6 +381,43 @@ const drawRoom = (ctx: Ctx, v: View, room: Room) => {
   ctx.fillStyle = ROOM_LOOK.lava
   for (const s of plan.lavaFields ?? []) fillShape(ctx, v, room, s)
   for (const river of plan.lava ?? []) for (const [x, y] of river.pts) fillEllipse(ctx, v, room.x + x, room.y + y, river.w / 2, river.w / 2)
+}
+
+/* ---------------- Cave fog ---------------- */
+
+/** Map px each cave floor's team has lit so far, by the floor's layout (a new floor starts dark). */
+const caveSeen = new WeakMap<DungeonFloor, Set<number>>()
+
+const fogKey = (mx: number, my: number) => (mx & 0xffff) * 0x10000 + (my & 0xffff)
+
+/**
+ * The map px of the cave floor `plan` the team has seen: grows each draw by the
+ * light around every player (`caveLight`, as the screen draws it), kept here so the simulation never knows.
+ */
+const caveFog = (g: Game, plan: DungeonFloor, scale: number) => {
+  let seen = caveSeen.get(plan)
+  if (!seen) caveSeen.set(plan, (seen = new Set()))
+  const r = Math.ceil(caveLight(g) / scale)
+  for (const p of g.players) {
+    if (p.gone) continue
+    const px = Math.floor(p.x / scale)
+    const py = Math.floor(p.y / scale)
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (dx * dx + dy * dy <= r * r) seen.add(fogKey(px + dx, py + dy))
+  }
+  return seen
+}
+
+/** Covers every map px the team hasn't seen with the dark around the room. */
+const drawFog = (ctx: Ctx, v: View, seen: Set<number>) => {
+  ctx.fillStyle = ROOM_LOOK.void
+  for (let y = 0; y < S; y++) {
+    let from = -1
+    for (let x = 0; x <= S; x++) {
+      const dark = x < S && !seen.has(fogKey(x + v.ox, y + v.oy))
+      if (dark && from < 0) from = x
+      else if (!dark && from >= 0) (ctx.fillRect(from, y, x - from, 1), (from = -1))
+    }
+  }
 }
 
 /* ---------------- Markers ---------------- */
@@ -418,6 +476,10 @@ const heading = (fx: number, fy: number) => (Math.round(Math.atan2(fy, fx) / (Ma
  * clipped to `shape`. `t` is a clock in seconds, for the blinking.
  */
 export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) => {
+  if (g.versus) {
+    drawValeMap(ctx, g, shape, t)
+    return frame(ctx, shape)
+  }
   const me = localPlayer(g)
   const room = roomOf(g)
   const scale = room ? MINIMAP.roomScale : MINIMAP.scale
@@ -430,7 +492,15 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
   if (room) {
     drawRoom(ctx, v, room)
     const inside = g.place.inside
-    if (inside?.id === 'cave' && inside.state.stairs) marker(ctx, v, shape, art.stairs, inside.x + inside.state.stairs[0], inside.y + inside.state.stairs[1], true)
+    // A cave floor is a maze to find the way through: only what the team has lit shows, the stairs once seen.
+    const seen = inside?.id === 'cave' && inside.state.plan ? caveFog(g, inside.state.plan, scale) : null
+    if (seen) drawFog(ctx, v, seen)
+    const stairs = inside?.id === 'cave' ? inside.state.stairs : null
+    if (inside && stairs) {
+      const sx = inside.x + stairs[0]
+      const sy = inside.y + stairs[1]
+      if (!seen || seen.has(fogKey(Math.floor(sx / scale), Math.floor(sy / scale)))) marker(ctx, v, shape, art.stairs, sx, sy, true)
+    }
     if (inside?.id === 'cave' && inside.state.chest && !inside.state.chest.open) marker(ctx, v, shape, art.events.chest, inside.x + inside.state.chest.x, inside.y + inside.state.chest.y, true)
     if (inside?.id === 'graveyard') marker(ctx, v, shape, art.keystone, inside.x + inside.state.keystone[0], inside.y + inside.state.keystone[1], true)
     if (inside?.id === 'underground') for (const gl of inside.state.glints) if (!gl.dug) marker(ctx, v, shape, art.events.altar, inside.x + gl.x, inside.y + gl.y, false)
@@ -456,7 +526,7 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     drawViewBox(ctx, v, g)
     for (const f of marks) {
       const lm = f.landmark!
-      const spent = lm.treasure !== null && g.landmarks.looted.has(lm.cell)
+      const spent = lm.treasure !== null && treasureOpen(g, lm.cell)
       ctx.globalAlpha = spent ? 0.5 : 1
       marker(ctx, v, shape, art.landmark[lm.id], lm.x, lm.y, false)
     }
@@ -488,13 +558,105 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
   }
   const arrow = ARROWS()[heading(me.facing.x, me.facing.y)]!
   ctx.drawImage(arrow, C - 4, C - 4)
+  frame(ctx, shape)
+}
 
+/** Clips the map to its shape and puts the frame and the north mark over it. */
+const frame = (ctx: Ctx, shape: MinimapShape) => {
   ctx.globalCompositeOperation = 'destination-in'
   ctx.drawImage(MASKS()[shape], 0, 0)
   ctx.globalCompositeOperation = 'source-over'
   ctx.drawImage(FRAMES()[shape], 0, 0)
   // North, on the top rim.
   blitPacked(ctx, textSprite('N', '#f8f8f8', DARK), C, 3)
+}
+
+/* ---------------- Versus ---------------- */
+
+/** An Arena map's colors by its theme (its scale is the map's own, `look.minimap`: the whole map fits the round window). */
+const VALE_LOOKS = {
+  meadow: { wall: '#143820', edge: '#7ab060', ground: '#4f8c3e', jungle: '#356a32', path: '#a88258', tall: '#1e4a20', base: ['#3e5c88', '#884048'] },
+  coast: { wall: '#1d5f82', edge: '#d8f0ec', ground: '#d8c08c', jungle: '#a89470', path: '#8a5e3a', tall: '#3e6a48', base: ['#3e5c88', '#884048'] },
+} as const satisfies Record<MapTheme, { wall: string; edge: string; ground: string; jungle: string; path: string; tall: string; base: readonly [string, string] }>
+
+const VALE_GLYPHS = lazy(() => ({
+  goal: [0, 1].map((team) => glyph(['.c.', 'cwc', '.c.'], { c: TEAM_COLORS[team as 0 | 1], w: '#ffffff' })),
+  locked: [0, 1].map((team) => glyph(['.c.', 'ckc', '.c.'], { c: TEAM_COLORS[team as 0 | 1], k: DARK })),
+  broken: glyph(['.c.', 'c.c', '.c.'], { c: '#707078' }),
+}))
+
+/**
+ * A match's map: the whole of it at once, north up (its floor, the jungle, the
+ * lanes' paths, the bases in their team's color, the tall grass), the goals
+ * by team (shut ones dark, broken ones grey), every Pokémon on its feet as its
+ * team's dot (but rivals hidden in the grass),
+ * the objective in the center, and the local player as the arrow.
+ */
+const drawValeMap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) => {
+  const s = g.versus!
+  const map = mapOf(s)
+  const look = map.look
+  const v: View = { ox: -C, oy: -C, scale: look.minimap }
+  ctx.globalCompositeOperation = 'source-over'
+  ctx.globalAlpha = 1
+  const rect = (x0: number, y0: number, x1: number, y1: number, grow = 0) => {
+    const a = mapX(v, x0) - grow
+    const b = mapY(v, y0) - grow
+    ctx.fillRect(a, b, mapX(v, x1) - a + grow, mapY(v, y1) - b + grow)
+  }
+  const colors = VALE_LOOKS[look.theme]
+  ctx.fillStyle = colors.wall
+  ctx.fillRect(0, 0, S, S)
+  ctx.fillStyle = colors.edge
+  for (const r of map.rects) rect(r.x0, r.y0, r.x1, r.y1, 1)
+  ctx.fillStyle = colors.ground
+  for (const r of map.rects) rect(r.x0, r.y0, r.x1, r.y1)
+  ctx.fillStyle = colors.jungle
+  for (const j of look.jungles) rect(j.x0, j.y0, j.x1, j.y1)
+  // The lanes' paths, a map pixel's column at a time (they may bend).
+  ctx.fillStyle = colors.path
+  const step = look.minimap
+  for (let x = -look.baseX; x < look.baseX; x += step) {
+    const y = laneYAt(look.lane, Math.abs(x + step / 2))
+    for (const sy of [-1, 1]) rect(x, sy * y - 14, x + step, sy * y + 14)
+  }
+  map.rects.forEach((r) => {
+    if (r.x1 <= -look.baseX || r.x0 >= look.baseX) {
+      ctx.fillStyle = colors.base[r.x0 < 0 ? 0 : 1]
+      rect(r.x0, r.y0, r.x1, r.y1)
+    }
+  })
+  ctx.fillStyle = colors.tall
+  for (const r of map.grass) rect(r.x0, r.y0, r.x1, r.y1)
+  drawViewBox(ctx, v, g)
+  const art = VALE_GLYPHS()
+  for (const goal of s.goals) marker(ctx, v, shape, goal.broken ? art.broken : goalOpen(s, goal) ? art.goal[goal.team]! : art.locked[goal.team]!, goal.x, goal.y, true)
+  const objective = s.objective && g.enemies.find((e) => e.id === s.objective!.id && e.dying < 0)
+  if (objective) marker(ctx, v, shape, GLYPHS().boss[Math.floor(t * 4) % 2]!, objective.x, objective.y, true)
+  const me = localPlayer(g)
+  for (const p of g.players) {
+    if (p === me || p.gone || p.hp <= 0 || !p.versus || concealed(me, p)) continue
+    marker(ctx, v, shape, teammate(TEAM_COLORS[p.versus.team]), p.x, p.y, true)
+  }
+  if (me.hp > 0) ctx.drawImage(ARROWS()[heading(me.facing.x, me.facing.y)]!, mapX(v, me.x) - 4, mapY(v, me.y) - 4)
+  // The team's pings over everything, blinking as they land.
+  for (const ping of s.pings) {
+    if (!seesPing(g, ping) || (g.now - ping.at < 1.5 && Math.floor(t * 6) % 2 === 1)) continue
+    marker(ctx, v, shape, pingGlyph(ping.kind), ping.x, ping.y, true)
+  }
+}
+
+const PING_GLYPHS = lazy(() => Object.fromEntries(PING_KINDS.map((kind) => [kind, glyph(['.c.', 'cwc', 'cwc', '.c.'], { c: PING_COLORS[kind], w: '#ffffff' })])) as Record<PingKind, PixelSprite>)
+const pingGlyph = (kind: PingKind) => PING_GLYPHS()[kind]
+
+/**
+ * The world spot under a point of the Arena's mini map (map px, 0 to
+ * `MINIMAP.size`) for match `s`: the middle of the map pixel's patch of its
+ * map (`look.minimap` world px each). The shell pings there (`ui/versusTalk.ts`).
+ */
+export const arenaMapAt = (s: VersusState, mx: number, my: number) => {
+  const scale = mapOf(s).look.minimap
+  return { x: (Math.floor(mx) - C) * scale + scale / 2, y: (Math.floor(my) - C) * scale + scale / 2 }
 }
 
 const teammates = new Map<string, PixelSprite>()

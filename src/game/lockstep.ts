@@ -1,4 +1,8 @@
 import { COOP } from '../data/coop'
+import { VERSUS } from '../data/versus'
+import { driveBots } from './versusBots'
+import { stepVersus } from './versus'
+import { isPingKind, isQuickChat, pingAt, sayQuick, voteSurrender, type PingKind, type QuickChat } from './versusSocial'
 import { MEGAS, type MegaId } from '../data/megas'
 import { castVote, countAway, leaveRun, setAway, updateVote, worldHeld } from './coop'
 import { continueEndless } from './endlessSystem'
@@ -8,6 +12,7 @@ import { grantStone } from './mega'
 import { inPlay, setPhase } from './players'
 import { moveOf, TICK } from './replay'
 import type { Game, Offer, Player, PlayerPhase } from './types'
+import { AIM_DIRS, MAX_REACH, PRIORITIES, SKILLS, type Cast, type Skill } from './versusKit'
 
 /**
  * Co-op lockstep: every client applies the same tick entries (stamped into
@@ -44,20 +49,39 @@ export type TickEntry =
   | { slot: number; kind: 'away' | 'back' | 'leave' }
   /** A vote on the victory's endless offer. */
   | { slot: number; kind: 'endless'; vote: boolean }
+  /** Arena (`versusSocial.ts`): a quick chat line by id, a ping on the map, a vote on the team's surrender (a yes with none running proposes one). */
+  | { slot: number; kind: 'chat'; msg: QuickChat }
+  | { slot: number; kind: 'ping'; ping: PingKind; x: number; y: number }
+  | { slot: number; kind: 'surrender'; vote: boolean }
+  /**
+   * The Arena kit (`versusKit.ts`), ignored outside a match: a cast of Move 1,
+   * Move 2 or the Unite Move (`skill` 0..2) aimed on the client, a direction
+   * code (`dir`, 0..127), a reach in px (0..255) and the enemy it picked
+   * (`target`, -1 none); the enemy the player locked (-1 lets go); how the
+   * player ranks targets (`prio`, a `PRIORITIES` index).
+   */
+  | { slot: number; kind: 'cast'; skill: Skill; dir: number; reach: number; target: number }
+  | { slot: number; kind: 'lock'; target: number }
+  | { slot: number; kind: 'prio'; prio: number }
 
 const MAX_CODE = 224
 const SCREENS: ReadonlySet<string> = new Set<PickScreen>(['levelup', 'branch', 'ability', 'curse', 'tm', 'pokeball'])
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isIndex = (v: unknown, max: number): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= max
+/** A ping's map coordinate: whole px, well past any Arena map's edges either way (the simulation holds it to the map). */
+const isCoord = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && Math.abs(v) <= 4096
+/** An enemy id, or -1 for none. */
+const isTarget = (v: unknown): v is number => v === -1 || isIndex(v, Number.MAX_SAFE_INTEGER)
 
 /**
- * Reads a tick entry from untrusted JSON: a fresh, well-formed entry, or null
- * for anything else (a wrong kind, a missing field, a slot or code out of
- * range). Never throws.
+ * Reads a tick entry from untrusted JSON for a run of `players` slots (a
+ * co-op team, or an Arena match's 8 seats): a fresh, well-formed entry, or
+ * null for anything else (a wrong kind, a missing field, a slot the run
+ * doesn't have, a code out of range). Never throws.
  */
-export const parseTickEntry = (raw: unknown): TickEntry | null => {
-  if (!isRecord(raw) || !isIndex(raw.slot, COOP.maxPlayers - 1) || typeof raw.kind !== 'string') return null
+export const parseTickEntry = (raw: unknown, players: number): TickEntry | null => {
+  if (!isRecord(raw) || !isIndex(raw.slot, players - 1) || typeof raw.kind !== 'string') return null
   const { slot, kind } = raw
   switch (kind) {
     case 'move':
@@ -82,7 +106,21 @@ export const parseTickEntry = (raw: unknown): TickEntry | null => {
     case 'stone':
       return typeof raw.mega === 'string' && Object.hasOwn(MEGAS, raw.mega) ? { slot, kind, mega: raw.mega as MegaId } : null
     case 'endless':
+    case 'surrender':
       return typeof raw.vote === 'boolean' ? { slot, kind, vote: raw.vote } : null
+    case 'chat':
+      return isQuickChat(raw.msg) ? { slot, kind, msg: raw.msg } : null
+    case 'ping':
+      return isPingKind(raw.ping) && isCoord(raw.x) && isCoord(raw.y) ? { slot, kind, ping: raw.ping, x: raw.x, y: raw.y } : null
+    case 'cast': {
+      const { skill, dir, reach, target } = raw
+      if (!isIndex(skill, SKILLS.length - 1) || !isIndex(dir, AIM_DIRS - 1) || !isIndex(reach, MAX_REACH) || !isTarget(target)) return null
+      return { slot, kind, skill: skill as Skill, dir, reach, target }
+    }
+    case 'lock':
+      return isTarget(raw.target) ? { slot, kind, target: raw.target } : null
+    case 'prio':
+      return isIndex(raw.prio, PRIORITIES.length - 1) ? { slot, kind, prio: raw.prio } : null
     default:
       return null
   }
@@ -132,11 +170,11 @@ const updatePicks = (g: Game, dt: number) => {
   openPendingPicks(g)
   for (const p of g.players) {
     if (!onScreen(p)) {
-      p.pickLeft = COOP.pick.time
+      p.pickLeft = p.versus ? VERSUS.pickTime : COOP.pick.time
       continue
     }
-    // Away players pick at once, and so does a level-up with nothing to choose (only the Oran Berry).
-    if (p.away || (p.phase === 'levelup' && nothingToChoose(p.offers))) {
+    // Away players and Versus bots pick at once, and so does a level-up with nothing to choose (only the Oran Berry).
+    if (p.away || p.versus?.bot || (p.phase === 'levelup' && nothingToChoose(p.offers))) {
       autoPick(g, p)
       continue
     }
@@ -218,6 +256,31 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
       return leaveRun(g, p)
     case 'endless':
       return castVote(g, p, e.vote)
+    case 'chat':
+      return sayQuick(g, p, e.msg)
+    case 'ping':
+      return pingAt(g, p, e.ping, e.x, e.y)
+    case 'surrender':
+      return voteSurrender(g, p, e.vote)
+    case 'cast': {
+      if (p.away || !p.versus) return
+      // One cast per skill a tick (the latest); the Unite Move's presses the special too.
+      const casts = (input.casts ??= [])
+      const cast: Cast = { skill: e.skill, dir: e.dir, reach: e.reach, target: e.target }
+      const i = casts.findIndex((c) => c.skill === e.skill)
+      if (i >= 0) casts[i] = cast
+      else casts.push(cast)
+      if (e.skill === 2) input.special = true
+      return
+    }
+    case 'lock':
+      if (!p.versus) return
+      p.versus.lock = e.target
+      input.locked = true
+      return
+    case 'prio':
+      if (p.versus) p.versus.prio = e.prio
+      return
   }
 }
 
@@ -228,8 +291,9 @@ const inputsOf = (g: Game): StepInput[] => g.players.map(() => ({ move: moveOf(0
  * One co-op tick: applies `entries` in order (malformed or stale ones are
  * ignored), then plays the tick. Evolutions play for everyone, the world held
  * or not; while anyone has a pick screen open the world waits and the screens'
- * timers run; while nobody active stands (everyone left standing is away) the
- * world waits for them, up to `COOP.away.hold`; otherwise the team steps. At the victory the endless
+ * timers run; while nobody active is free to play (everyone left standing is
+ * away, up to `COOP.away.hold`, or busy on a screen of their own) the world
+ * waits for them (`worldHeld`); otherwise the team steps. At the victory the endless
  * vote runs instead. A no-op on a solo game.
  */
 export const stepTick = (g: Game, entries: readonly TickEntry[]) => {
@@ -237,11 +301,13 @@ export const stepTick = (g: Game, entries: readonly TickEntry[]) => {
   if (coop === null) return
   const inputs = inputsOf(g)
   for (const raw of entries) {
-    const e = parseTickEntry(raw)
+    const e = parseTickEntry(raw, g.players.length)
     if (e) applyEntry(g, e, inputs)
   }
   // `move` entries land in `held`; the step reads them this tick.
   for (const p of g.players) inputs[p.slot]!.move = moveOf(p.away || p.gone ? 0 : coop.held[p.slot] ?? 0)
+  // Versus: the simulation plays its bots (and the seats of humans away).
+  if (g.versus) driveBots(g, inputs)
   if (g.phase === 'gameover') return
   countAway(g)
   if (g.phase === 'victory') {
@@ -259,7 +325,9 @@ export const stepTick = (g: Game, entries: readonly TickEntry[]) => {
   updatePicks(g, TICK)
   if (g.phase !== 'playing') coop.paused += TICK
   else if (!worldHeld(g)) {
-    stepTeam(g, inputs, TICK)
+    // A Versus match runs its own step (`versus.ts`).
+    if (g.versus) stepVersus(g, inputs, TICK)
+    else stepTeam(g, inputs, TICK)
     // Screens the step opened for away players are picked at once.
     for (const p of g.players) if (p.away && onScreen(p)) autoPick(g, p)
   }

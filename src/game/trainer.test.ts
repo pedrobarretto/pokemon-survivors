@@ -1,22 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import { EMPTY_SAVE, parseSave, SAVE_VERSION, type Save } from './meta'
-import { hallPokemon, savedSupporterTier, trainerAvatar } from './trainer'
+import { savedSupporterTier } from './supporters'
+import { hallPokemon, trainerAvatar } from './trainer'
 
 const supporter: Save = { ...EMPTY_SAVE, titles: ['supporter'] }
 
 describe('trainerAvatar', () => {
   it('shows the partner at its final stage, shiny only when picked', () => {
-    expect(trainerAvatar({ ...EMPTY_SAVE, partner: 'squirtle' })).toEqual({ dex: 9, shiny: false })
-    expect(trainerAvatar(EMPTY_SAVE)).toEqual({ dex: 6, shiny: false })
-    expect(trainerAvatar({ ...EMPTY_SAVE, shinyStarters: { charmander: true } })).toEqual({ dex: 6, shiny: true })
-    expect(trainerAvatar({ ...EMPTY_SAVE, shinyStarters: { charmander: false } })).toEqual({ dex: 6, shiny: false })
+    expect(trainerAvatar({ ...EMPTY_SAVE, partner: 'squirtle' }, null)).toEqual({ dex: 9, shiny: false })
+    expect(trainerAvatar(EMPTY_SAVE, null)).toEqual({ dex: 6, shiny: false })
+    expect(trainerAvatar({ ...EMPTY_SAVE, shinyStarters: { charmander: true } }, null)).toEqual({ dex: 6, shiny: true })
+    expect(trainerAvatar({ ...EMPTY_SAVE, shinyStarters: { charmander: false } }, null)).toEqual({ dex: 6, shiny: false })
   })
 
   it("prefers a supporter's companion, if it can still walk along", () => {
-    expect(trainerAvatar({ ...supporter, companion: { id: 'squirtle', shiny: false } })).toEqual({ dex: 9, shiny: false })
-    // Not a supporter (signed out of the thank-you), or a shiny not owned: back to the partner.
-    expect(trainerAvatar({ ...EMPTY_SAVE, companion: { id: 'squirtle', shiny: false } }).dex).toBe(6)
-    expect(trainerAvatar({ ...supporter, companion: { id: 'squirtle', shiny: true } }).dex).toBe(6)
+    expect(trainerAvatar({ ...supporter, companion: { id: 'squirtle', shiny: false } }, 'supporter')).toEqual({ dex: 9, shiny: false })
+    // Not a supporter (any more), or a shiny not owned: back to the partner.
+    expect(trainerAvatar({ ...supporter, companion: { id: 'squirtle', shiny: false } }, null).dex).toBe(6)
+    expect(trainerAvatar({ ...supporter, companion: { id: 'squirtle', shiny: true } }, 'supporter').dex).toBe(6)
   })
 })
 
@@ -40,18 +41,18 @@ describe('savedSupporterTier', () => {
 describe('hallPokemon', () => {
   it('shows a shiny picked with a ticket first, then the companion, then the partner', () => {
     const picked: Save = { ...supporter, shinyPicks: [{ id: 'a', pick: 'gible' }, { id: 'b', pick: null }], companion: { id: 'squirtle', shiny: false } }
-    expect(hallPokemon(picked)).toEqual({ id: 'gible', shiny: true })
-    expect(hallPokemon({ ...picked, shinyStarters: { gible: false } })).toEqual({ id: 'gible', shiny: false })
-    expect(hallPokemon({ ...picked, shinyPicks: [{ id: 'b', pick: null }] })).toEqual({ id: 'squirtle', shiny: false })
-    expect(hallPokemon({ ...supporter, partner: 'bulbasaur', shinyStarters: { bulbasaur: true } })).toEqual({ id: 'bulbasaur', shiny: true })
+    expect(hallPokemon(picked, 'supporter')).toEqual({ id: 'gible', shiny: true })
+    expect(hallPokemon({ ...picked, shinyStarters: { gible: false } }, 'supporter')).toEqual({ id: 'gible', shiny: false })
+    expect(hallPokemon({ ...picked, shinyPicks: [{ id: 'b', pick: null }] }, 'supporter')).toEqual({ id: 'squirtle', shiny: false })
+    expect(hallPokemon({ ...supporter, partner: 'bulbasaur', shinyStarters: { bulbasaur: true } }, 'supporter')).toEqual({ id: 'bulbasaur', shiny: true })
   })
 
   it('skips a companion the save can no longer walk with', () => {
-    expect(hallPokemon({ ...supporter, companion: { id: 'squirtle', shiny: true } })).toEqual({ id: 'charmander', shiny: false })
+    expect(hallPokemon({ ...supporter, companion: { id: 'squirtle', shiny: true } }, 'supporter')).toEqual({ id: 'charmander', shiny: false })
   })
 
   it('reads a save the API trimmed to a few fields', () => {
     const trimmed = parseSave(JSON.stringify({ version: SAVE_VERSION, partner: 'pichu', shinyPicks: [{ id: 'x', pick: 'eevee' }] }))
-    expect(hallPokemon(trimmed)).toEqual({ id: 'eevee', shiny: true })
+    expect(hallPokemon(trimmed, 'supporter')).toEqual({ id: 'eevee', shiny: true })
   })
 })

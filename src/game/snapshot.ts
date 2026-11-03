@@ -581,8 +581,25 @@ export const stateHash = (g: Game): string => {
 const pipe = async (bytes: Uint8Array<ArrayBuffer>, stream: CompressionStream | DecompressionStream) =>
   new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer())
 
-/** Deflates a snapshot (raw deflate, which browsers, Node and Workers all have). Separate from `snapshot`, so callers choose. */
-export const deflate = (bytes: Uint8Array<ArrayBuffer>) => pipe(bytes, new CompressionStream('deflate-raw'))
+/** Whether this engine's streams do raw deflate both ways: Safari before 16.4 has no compression streams, Chrome before 103 no raw deflate. */
+const NATIVE = (() => {
+  try {
+    new CompressionStream('deflate-raw')
+    new DecompressionStream('deflate-raw')
+    return true
+  } catch {
+    return false
+  }
+})()
+
+/**
+ * Deflates a snapshot (raw deflate: the engine's streams, or fflate where they
+ * lack it, loaded only there; both write the same format, so a room mixes
+ * them). Separate from `snapshot`, so callers choose.
+ */
+export const deflate = async (bytes: Uint8Array<ArrayBuffer>) =>
+  NATIVE ? pipe(bytes, new CompressionStream('deflate-raw')) : (await import('fflate')).deflateSync(bytes)
 
 /** Inflates what `deflate` wrote. */
-export const inflate = (bytes: Uint8Array<ArrayBuffer>) => pipe(bytes, new DecompressionStream('deflate-raw'))
+export const inflate = async (bytes: Uint8Array<ArrayBuffer>) =>
+  NATIVE ? pipe(bytes, new DecompressionStream('deflate-raw')) : (await import('fflate')).inflateSync(bytes)
