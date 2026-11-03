@@ -2275,6 +2275,7 @@ export const pt = {
     sandVeil: 'Na tempestade de areia: recebe 25% menos dano, e a areia não te desgasta.',
     snowCloak: 'Na neve: recebe 25% menos dano, e a neve não te desgasta.',
     leafGuard: 'No sol forte: recebe 30% menos dano e regenera 0,5 HP/s.',
+    cloudNine: 'O clima não fortalece os inimigos nem te desgasta.',
     drought: 'Chama o sol forte ao ser escolhida e a cada bioma novo (fora das fendas): Fogo ×1,5.',
     sandStream: 'Levanta uma tempestade de areia ao ser escolhida e a cada bioma novo: desgasta a horda, não você.',
     static: 'Inimigos encostados em você podem ficar paralisados.',

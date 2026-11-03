@@ -851,7 +851,7 @@ export const hazardHit = (h: Pick<Hazard, 'kind'>): HitKind => (h.kind === 'shot
 
 /** Whether an armed hazard touches the acting player (`p`); Air Lock keeps the world's attacks (the weather's and the biome's) off them. */
 const hazardHits = (g: Game, h: Hazard, p: Player) => {
-  if (h.world && abilityImmune(g, 'weather')) return false
+  if (h.world && abilityImmune(g, 'world')) return false
   if (h.kind === 'beam') return beamDistance(h, p.x, p.y - 6) < h.r + p.radius * 0.6
   const reach = h.r + p.radius * 0.7
   return dm.sq(h.x - p.x) + dm.sq(h.y - p.y) < reach * reach

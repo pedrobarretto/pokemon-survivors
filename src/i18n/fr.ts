@@ -1979,6 +1979,7 @@ export const fr: Messages = {
     sandVeil: 'Dans une tempête de sable : tu subis 25% de dégâts en moins, et le sable ne t’use pas.',
     snowCloak: 'Sous la neige : tu subis 25% de dégâts en moins, et la neige ne t’use pas.',
     leafGuard: 'Au soleil intense : tu subis 30% de dégâts en moins et régénères 0,5 PV/s.',
+    cloudNine: 'La météo ne renforce pas les ennemis et ne t’use pas.',
     drought: 'Appelle le soleil intense quand il est choisi et dans chaque nouveau biome (hors des failles) : Feu ×1,5.',
     sandStream: 'Déclenche une tempête de sable quand il est choisi et dans chaque nouveau biome : elle use la horde, pas toi.',
     static: 'Les ennemis qui te touchent peuvent être paralysés.',

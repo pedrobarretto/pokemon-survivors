@@ -1981,6 +1981,7 @@ export const en: Messages = {
     sandVeil: 'In a sandstorm: you take 25% less damage, and the sand doesn’t wear you down.',
     snowCloak: 'In snow: you take 25% less damage, and the snow doesn’t wear you down.',
     leafGuard: 'In harsh sunlight: you take 30% less damage and regen 0.5 HP/s.',
+    cloudNine: 'The weather neither boosts foes nor wears you down.',
     drought: 'Calls harsh sunlight when picked and in every new biome (outside rifts): Fire ×1.5.',
     sandStream: 'Whips up a sandstorm when picked and in every new biome: it wears down the horde, not you.',
     static: 'Foes touching you may get paralyzed.',
