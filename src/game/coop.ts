@@ -9,6 +9,7 @@ import { inPlay, personal, setPhase } from './players'
 import { createTally, summarizeRun, type RunSummary } from './tally'
 import type { Game, Player, PlayerRecord } from './types'
 import type { DexLog } from './dex'
+import type { DayKey } from './day'
 import type { MoveId } from './moves'
 import { TICK } from './tick'
 import * as dm from '../engine/dmath'
@@ -48,6 +49,8 @@ export type CoopState = {
   awayTicks: number[]
   /** Each slot's own forms seen in the run (dex → shiny; `updateSightings`): what their Pokédex marks caught (`playerDexLog`). */
   own: Map<number, boolean>[]
+  /** The Desafio co-op do dia this run plays (`game/coopBoard.ts`), null for any other run. */
+  challenge: DayKey | null
 }
 
 export const createCoopState = (players: number): CoopState => ({
@@ -58,6 +61,7 @@ export const createCoopState = (players: number): CoopState => ({
   vote: null,
   awayTicks: Array.from({ length: players }, () => 0),
   own: Array.from({ length: players }, () => new Map<number, boolean>()),
+  challenge: null,
 })
 
 /**

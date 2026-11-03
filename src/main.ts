@@ -138,7 +138,7 @@ import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
-import { captureRef, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
+import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate } from './ui/account'
@@ -146,7 +146,7 @@ import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
 import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
-import { challengeScreen, challengeShiny } from './ui/challenge'
+import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
 import { martDevTools } from './ui/martDev'
@@ -208,6 +208,8 @@ import { joinQueue, type QueueHandle, type QueueParty } from './arena/queue'
 import { parseHeldVersus, versusReport, type HeldVersus, type VersusLeave } from './arena/report'
 import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked'
 import { arenaResult } from './game/arenaRank'
+import { dailyCoopChallenge, parseTeamSize } from './game/coopBoard'
+import type { Difficulty } from './game/difficulty'
 import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
@@ -723,16 +725,27 @@ const showPcBox = (back: () => void) =>
 
 const showMissions = () => setScreen(missionsScreen(ui, input, () => showTitle({ focus: 'missions' })))
 
-/** The Desafio do dia's screen (from the title); its board opens over it and comes back to it. */
-const showChallenge = () => {
+/**
+ * The Desafio do dia's screen (from the title), on its solo or co-op side; its boards open over it and come back to it.
+ * Its co-op side goes into co-op (past co-op's door) with the Desafio co-op do dia on.
+ */
+const showChallenge = (side: ChallengeSide = 'solo') => {
   endRun()
   prefetchRun(challengeToday().day)
+  const boards = rankingEnabled || coopBoardsFaked()
   setScreen(
-    challengeScreen(ui, input, {
-      play: (c, official) => setTimeout(() => void startRun(c.starter, { challenge: c, official }), 250),
-      board: rankingEnabled ? () => setScreen(rankingScreen(ui, input, () => showChallenge(), { challenge: true })) : undefined,
-      onClose: () => showTitle({ focus: 'challenge' }),
-    }),
+    challengeScreen(
+      ui,
+      input,
+      {
+        play: (c, official) => setTimeout(() => void startRun(c.starter, { challenge: c, official }), 250),
+        board: rankingEnabled ? () => setScreen(rankingScreen(ui, input, () => showChallenge(), { challenge: true })) : undefined,
+        coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null, challenge: true }) : undefined,
+        coopBoard: boards ? (size) => setScreen(rankingScreen(ui, input, () => showChallenge('coop'), { challenge: true, coop: { size } })) : undefined,
+        onClose: () => showTitle({ focus: 'challenge' }),
+      },
+      side,
+    ),
   )
 }
 
@@ -2301,6 +2314,10 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   syncRunWatch()
 }
 
+/** The co-op end's Ranking: the board of the run's team size and difficulty, the day's co-op board for a Desafio co-op run. */
+const coopEndBoard = (g: Game, back: () => void) =>
+  rankingScreen(ui, input, back, { difficulty: g.difficulty, challenge: g.coop?.challenge != null, coop: { size: parseTeamSize(g.players.length) ?? 2 } })
+
 /** This player's `coop_net` for the co-op run (`coopShell.ts`): at its end, or when the page hides or unloads mid-run. */
 const reportNet = (c: CoopRun, outcome: CoopNetOutcome) => !c.versus?.local && reportCoopNet(c.client, c.runner, c.net, outcome, runPerf())
 
@@ -2423,6 +2440,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
       playAgain: () => ((c.again = true), playAgain(c)),
       lobby: () => backToRoom(),
       again: () => againState(c),
+      board: rankingEnabled || coopBoardsFaked() ? (back) => coopEndBoard(c.runner.game, back) : undefined,
     }),
     menu: false,
     banked: { victory: false, over: false },
@@ -2758,8 +2776,8 @@ const coopRoomCode = () => {
 
 /* ---------------- Co-op's door: an account with a handle ---------------- */
 
-/** Where co-op is headed: the hub (`room` null), or a room's link, with the @handle that sent it. */
-type CoopDest = { room: string | null; invitedBy: string | null }
+/** Where co-op is headed: the hub (`room` null), or a room's link, with the @handle that sent it; `challenge`: the hub's room starts on the Desafio co-op do dia. */
+type CoopDest = { room: string | null; invitedBy: string | null; challenge?: boolean }
 
 /** Where co-op was headed when it left to sign in: the provider brings the player back to a bare page. Tab only (sessionStorage). */
 const COOP_RETURN = 'ps:coopReturn'
@@ -2779,7 +2797,7 @@ const takeCoopReturn = (): CoopDest | null => {
     const raw = sessionStorage.getItem(COOP_RETURN)
     sessionStorage.removeItem(COOP_RETURN)
     const v: unknown = raw ? JSON.parse(raw) : null
-    return isRecord(v) ? { room: parseRoomCode(v.room), invitedBy: parseHandle(v.invitedBy) } : null
+    return isRecord(v) ? { room: parseRoomCode(v.room), invitedBy: parseHandle(v.invitedBy), challenge: v.challenge === true } : null
   } catch {
     return null
   }
@@ -2787,7 +2805,7 @@ const takeCoopReturn = (): CoopDest | null => {
 
 /** Co-op past its door: the hub, or that room (joined and shown; in a run, entered by snapshot). */
 const openCoop = (dest: CoopDest) => {
-  if (!dest.room) return showCoopHub()
+  if (!dest.room) return showCoopHub(null, dest.challenge === true)
   void joinCoop(dest.room, 'link').then((res) => res.ok && res.room.phase !== 'playing' && !run && showRoom())
 }
 
@@ -2820,8 +2838,8 @@ const leaveCoopDoor = () => {
   showTitle({ focus: 'coop' })
 }
 
-/** Jogar junto from the lobby's tile: create a room or join one by code (`code` prefills it). */
-const showCoopHub = (code: string | null = null) => {
+/** Jogar junto from the lobby's tile: create a room or join one by code (`code` prefills it); `challenge`: the room made starts on the Desafio co-op do dia. */
+const showCoopHub = (code: string | null = null, challenge = false) => {
   const client = coopClient()
   if (!client) return toast(ui, t().coop.off, 4000, 'coopOff')
   endRun()
@@ -2853,7 +2871,7 @@ const showCoopHub = (code: string | null = null) => {
         }
         if (!res.ok) return closedText(res.why)
         track('coop', { step: 'create', relay: made.home, ...(made.overflow ? { overflow: made.overflow } : {}) })
-        client.setSettings({ difficulty: loadSave().difficulty })
+        client.setSettings({ difficulty: loadSave().difficulty, ...(challenge && { challenge: brasiliaDay(new Date()) }) })
         showRoom()
         return null
       },
@@ -2869,10 +2887,11 @@ const showCoopHub = (code: string | null = null) => {
         showRoom()
         return null
       },
-      friends: signedIn() ? () => showFriends(() => showCoopHub()) : null,
-      back: () => showTitle({ focus: 'coop' }),
+      friends: signedIn() ? () => showFriends(() => showCoopHub(null, challenge)) : null,
+      back: () => (challenge ? showChallenge('coop') : showTitle({ focus: 'coop' })),
     },
     code,
+    challenge,
   )
   setScreen(hub)
   coopShown = 'hub'
@@ -3904,6 +3923,31 @@ const devChallenge = (mode?: 'play' | 'done' | 'reset', time = 754) => {
 }
 
 /**
+ * Dev: the co-op boards. `ps.coopBoard('fake')` makes their reads answer
+ * made-up teams (`coopBoardFakes.ts`), `'off'` asks the API again;
+ * `ps.coopBoard('open', 3, 'hard')` opens the Ranking's Co-op side at that
+ * team size (2 to 4, or `duo`, `trio`, `squad`) and difficulty, `'daily'`
+ * its Desafio co-op tab and `'challenge'` the Desafio do dia's Co-op side.
+ */
+const devCoopBoard = (cmd?: 'fake' | 'off' | 'open' | 'daily' | 'challenge', size?: number | string, difficulty?: Difficulty) => {
+  if (cmd === 'fake' || cmd === 'off') {
+    fakeCoopBoards(cmd === 'fake')
+    return cmd === 'fake' ? 'Co-op boards: fake teams' : 'Co-op boards: the API again'
+  }
+  const teams = parseTeamSize(size) ?? 2
+  if (cmd === 'open' || cmd === 'daily') {
+    endRun()
+    setScreen(rankingScreen(ui, input, () => showTitle({ focus: 'ranking' }), { difficulty: difficulty ?? 'normal', challenge: cmd === 'daily', coop: { size: teams } }))
+    return `Co-op boards: ${cmd === 'daily' ? 'Desafio co-op' : difficulty ?? 'normal'}, ${teams} players${coopBoardsFaked() ? ' (fake)' : ''}`
+  }
+  if (cmd === 'challenge') {
+    showChallenge('coop')
+    return dailyCoopChallenge(brasiliaDay(new Date()))
+  }
+  return "ps.coopBoard('fake' | 'off') · ('open', size?, difficulty?) · ('daily', size?) · ('challenge')"
+}
+
+/**
  * Dev: lands a sync as if another device of the account played today's
  * challenge (`time` seconds, its official attempt) and earned `coins` ₽, so
  * the lobby shows it without a reload. Returns the save.
@@ -4258,6 +4302,7 @@ if (import.meta.env.DEV) {
       event: devEvent,
       field: devField,
       challenge: devChallenge,
+      coopBoard: devCoopBoard,
       otherDevice: devOtherDevice,
       dex: () => loadSave().dex,
       /** Plays an error report's `replay` (the JSON string from PostHog) again: a simulation error throws here at the same tick. */

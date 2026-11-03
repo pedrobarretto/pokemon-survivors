@@ -24,6 +24,25 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-02',
+    title: { pt: 'Ranking co-op', en: 'Co-op rankings', es: 'Ranking co-op', fr: 'Classements coop', zh: '合作排行榜' },
+    highlights: [
+      { pt: 'Ranking co-op: Duplas, Trios e Squads ganharam quadros próprios, por dificuldade, hoje, na semana e no total, com filtro de amigos. Cada time aparece com os Pokémon de todo mundo.', en: 'Co-op rankings: Duos, Trios and Squads get their own boards, by difficulty, today, this week and all time, with a friends filter. Each team shows everyone’s Pokémon.', es: 'Ranking co-op: Dúos, Tríos y Escuadras tienen sus propias tablas, por dificultad, hoy, en la semana y en total, con filtro de amigos. Cada equipo aparece con los Pokémon de todos.', fr: 'Classements coop : les Duos, les Trios et les Escouades ont leurs propres classements, par difficulté, aujourd’hui, cette semaine et au total, avec un filtre d’amis. Chaque équipe montre les Pokémon de tout le monde.', zh: '合作排行榜：雙人、三人與四人小隊有了各自的排行榜，可依難度、今日、本週與總計查看，還能篩選好友。每支隊伍都會顯示所有人的寶可夢。' },
+      { pt: 'Desafio co-op do dia: a mesma semente e dificuldade para todos os times, cada um com o Pokémon que quiser e sem melhorias da Poké Mart. Tentativas livres: vale a melhor partida do time.', en: 'Daily co-op challenge: the same seed and difficulty for every team, each trainer with any Pokémon and no Poké Mart upgrades. Unlimited tries: the team’s best run counts.', es: 'Desafío co-op del día: la misma semilla y dificultad para todos los equipos, cada uno con el Pokémon que quiera y sin mejoras del Poké Mart. Intentos libres: cuenta la mejor partida del equipo.', fr: 'Défi coop du jour : la même graine et la même difficulté pour toutes les équipes, chacun avec le Pokémon qu’il veut et sans les améliorations du Poké Mart. Essais illimités : la meilleure partie de l’équipe compte.', zh: '合作每日挑戰：所有隊伍使用相同的種子與難度，每個人帶自己想要的寶可夢，不使用寶可夢商店的強化。不限次數：以隊伍的最佳成績計算。' },
+      { pt: 'Na sala co-op, o anfitrião liga o Desafio do dia; no fim da partida, o botão Ranking mostra onde o time ficou.', en: 'In a co-op room, the host turns on the Daily challenge; at the end of the run, the Ranking button shows where the team landed.', es: 'En la sala co-op, el anfitrión activa el Desafío del día; al final de la partida, el botón Ranking muestra dónde quedó el equipo.', fr: 'Dans une salle coop, l’hôte active le Défi du jour ; en fin de partie, le bouton Classement montre la place de l’équipe.', zh: '在合作房間裡，房主可以開啟每日挑戰；對局結束時，按「排行榜」就能看到隊伍的名次。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Ranking co-op', en: 'Co-op rankings', es: 'Ranking co-op', fr: 'Classements coop', zh: '合作排行榜' },
+        notes: [
+          { pt: 'O Ranking tem um lado Co-op, ao lado de Padrão e Lendário: escolha Duplas, Trios ou Squads, a dificuldade e o período. Cada time (as mesmas contas) aparece uma vez, com a melhor partida, o tempo e se venceu ou desmaiou. Toque num treinador para ver o perfil.', en: 'The Ranking has a Co-op side, next to Standard and Legendary: pick Duos, Trios or Squads, the difficulty and the period. Each team (the same accounts) shows once, with its best run, its time and whether it won or wiped. Tap a trainer to see their profile.', es: 'El Ranking tiene un lado Co-op, junto a Estándar y Legendario: elige Dúos, Tríos o Escuadras, la dificultad y el período. Cada equipo (las mismas cuentas) aparece una vez, con su mejor partida, el tiempo y si ganó o cayó. Toca un entrenador para ver su perfil.' },
+          { pt: 'Desafio co-op do dia: no Desafio do dia, a aba Co-op mostra a dificuldade de hoje, os melhores times e o botão Jogar em co-op, que abre uma sala já com o desafio ligado. Um ranking para cada tamanho de time, sem fitas.', en: 'Daily co-op challenge: on the Daily Challenge screen, the Co-op tab shows today’s difficulty, the best teams and a Play co-op button that opens a room with the challenge already on. One board per team size, no ribbons.', es: 'Desafío co-op del día: en el Desafío del día, la pestaña Co-op muestra la dificultad de hoy, los mejores equipos y el botón Jugar en co-op, que abre una sala con el desafío ya activado. Una tabla por tamaño de equipo, sin cintas.' },
+          { pt: 'As partidas co-op passam a entrar no ranking: quem joga sozinho numa sala não entra, e as partidas da Arena continuam no ranking da Arena.', en: 'Co-op runs now count for the rankings: a room of one doesn’t, and Arena matches stay on the Arena’s own ranking.', es: 'Las partidas co-op ahora entran en el ranking: quien juega solo en una sala no entra, y las partidas de la Arena siguen en el ranking de la Arena.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-01',
     title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
     highlights: [

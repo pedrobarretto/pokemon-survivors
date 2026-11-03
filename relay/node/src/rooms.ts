@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto'
 import type { RawData, WebSocket } from 'ws'
-import type { ArenaReport } from '../../../src/net/arena'
 import { CLOSE_CODES, LIMITS, parseClientMessage, type Auth, type CloseReason, type ServerMessage, type VpsHome } from '../../../src/net/protocol'
 import { gen, randomCode, randomToken } from '../../src/codes'
 import { gzip } from '../../src/gzip'
@@ -23,6 +22,7 @@ import {
   type Room,
   type State,
 } from '../../src/room'
+import type { Posting } from '../../src/report'
 import { dumpJson, persist, readBound, syncTexts, type Store } from '../../src/store'
 import { openRoomDb, roomCodes, type RoomDb, type Vault } from './db'
 
@@ -71,8 +71,8 @@ export type RoomsDeps = {
   identify: (auth: Auth) => Promise<Identity | null>
   guests: boolean
   now: () => number
-  /** An Arena match's agreed result, for the API (`report.ts`'s outbox). */
-  report: (report: ArenaReport) => void
+  /** An Arena match's or a co-op run's agreed result, for the API (`report.ts`'s outbox). */
+  report: (posting: Posting) => void
 }
 
 /** The storage effects: a batch with none of them writes nothing (most frames). */
@@ -144,7 +144,7 @@ export const createRooms = (deps: RoomsDeps) => {
       else if (e.k === 'event') log(e.ev, e.data)
       else if (e.k === 'dump') void dump(shell, e).catch((err: unknown) => log('dump.failed', { code: shell.code, error: String(err) }))
       else if (e.k === 'wipe') wiped = true
-      else if (e.k === 'report') deps.report(e.report)
+      else if (e.k === 'report') deps.report(e)
     }
     if (wiped) return wipe(shell)
     schedule(shell)

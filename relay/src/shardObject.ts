@@ -79,7 +79,7 @@ type Attachment = { id: ConnId; ua: string; seat: number | null; code: string }
 
 /** The key of a room's JSON (listed at boot); the rest of a room's keys are under `roomPrefix`. */
 const ROOM_KEY = 'room:'
-/** An Arena report waiting for the API (`report.ts`): outlives its room, retried by the shard's alarm. */
+/** An Arena match's or a co-op run's report waiting for the API (`report.ts`): outlives its room, retried by the shard's alarm. */
 const OUT_KEY = 'out:'
 const roomPrefix = (code: string) => `r:${code}:`
 
@@ -148,7 +148,7 @@ export class ShardObject extends DurableObject<Env> {
   private lastWindow: ReturnType<ShardObject['summary']> | null = null
   /** Inbound socket messages, all rooms together: a busy shard turns new rooms away (`INBOUND_BUDGET`). */
   private inbound = createMeter(Date.now())
-  /** The rooms' Arena match reports on their way to the API. */
+  /** The rooms' Arena match and co-op run reports on their way to the API. */
   private readonly outbox: Outbox
 
   constructor(ctx: DurableObjectState, env: Env) {
@@ -430,7 +430,7 @@ export class ShardObject extends DurableObject<Env> {
       else if (e.k === 'event') this.log({ ev: e.ev, ...e.data })
       else if (e.k === 'dump') this.ctx.waitUntil(this.dump(shell, e, room).catch((err: unknown) => this.log({ ev: 'dump.failed', code: shell.code, error: String(err) })))
       else if (e.k === 'wipe') wiped = true
-      else if (e.k === 'report') this.ctx.waitUntil(this.outbox.add(e.report))
+      else if (e.k === 'report') this.ctx.waitUntil(this.outbox.add(e))
     }
     if (wiped) return this.wipe(shell)
     for (const [id, a] of shell.attached) {

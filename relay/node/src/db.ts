@@ -139,7 +139,7 @@ export type Vault = {
   get: (id: string) => Uint8Array | null
   /** Drops dumps older than `days` or past the newest `max`. */
   prune: (now: number, keep: { days: number; max: number }) => void
-  /** Arena match reports waiting for the API (`report.ts`), kept across restarts. */
+  /** Arena match and co-op run reports waiting for the API (`report.ts`), kept across restarts. */
   outbox: { put: (o: Outgoing) => void; delete: (id: string) => void; list: () => Outgoing[] }
   close: () => void
 }
