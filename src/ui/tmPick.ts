@@ -46,11 +46,13 @@ const ownerOf = (table: Partial<Record<string, MoveId>>, move: MoveId) => {
 /**
  * Who left the disc, for the title: the boss or the legendary whose TM it is.
  * A legendary TM is named after its move, not the last rift cleared: a pair's
- * rift (Latias and Latios) clears both and leaves Latias's Mist Ball.
+ * rift (Latias and Latios) clears both and leaves Latias's Mist Ball. A TM
+ * armed at the shop names no one: any boss may bring it.
  */
 const titleOf = (source: TmSource, move: MoveId) => {
   const m = t().tm
   if (source === 'tutor') return m.titleTutor
+  if (source === 'armed') return m.titleArmed
   const owner = ownerOf(source === 'legendary' ? LEGENDARY_TMS : BOSS_TMS, move)
   if (!owner) return m.titleFound
   return source === 'legendary' ? m.titleLegendary(owner.name) : m.titleBoss(owner.name)
@@ -148,6 +150,7 @@ export const tmPick = (root: HTMLElement, input: Input, g: Game, onChoose: (offe
     forgetting && tm ? (isManual(tm.id) && localPlayer(g).moves.some((mv) => isManual(mv.id)) ? m.forgetManual : m.forgetFull(who))
     : source === 'tutor' ? m.subTutor(tm?.price === 0)
     : source === 'legendary' ? m.subLegendary
+    : source === 'armed' ? m.subArmed
     : m.subBoss
   const title = forgetting && tm ? m.forgetTitle(who, MOVES[tm.id].name) : tm ? titleOf(source, tm.id) : m.titleFound
 

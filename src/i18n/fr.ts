@@ -1908,9 +1908,11 @@ export const fr: Messages = {
   tm: {
     titleBoss: (boss: string) => `${boss} a laissé une CT !`,
     titleFound: 'Tu as trouvé une CT !',
+    titleArmed: 'Ta CT de la boutique est là !',
     titleLegendary: (legend: string) => `La CT légendaire de ${legend} !`,
     titleTutor: 'Maître des capacités',
     subBoss: 'Une capacité hors de tes capacités apprises. L’apprendre ?',
+    subArmed: 'La CT que tu as équipée à la Boutique de Kecleon. L’apprendre ?',
     subLegendary: 'Une seule CT légendaire peut être apprise par partie.',
     subTutor: (free: boolean) => (free ? 'J’enseigne des capacités qui vont bien à ton type, que tu n’apprendrais jamais seul. La première leçon est gratuite !' : 'J’enseigne des capacités qui vont bien à ton type, que tu n’apprendrais jamais seul. Je me fais payer en ₽ de la partie.'),
     tag: 'CT',

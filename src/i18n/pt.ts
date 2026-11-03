@@ -2199,9 +2199,11 @@ export const pt = {
   tm: {
     titleBoss: (boss: string) => `${boss} deixou um TM!`,
     titleFound: 'Você achou um TM!',
+    titleArmed: 'Seu TM da loja chegou!',
     titleLegendary: (legend: string) => `TM lendário de ${legend}!`,
     titleTutor: 'Tutor de Golpes',
     subBoss: 'Um golpe de fora do seu repertório. Aprender?',
+    subArmed: 'O TM que você equipou na Loja do Kecleon. Aprender?',
     subLegendary: 'Só dá para aprender um TM lendário por partida.',
     subTutor: (free: boolean): string => (free ? 'Ensino golpes que combinam com o seu tipo e que você não aprenderia sozinho. A primeira aula é grátis!' : 'Ensino golpes que combinam com o seu tipo e que você não aprenderia sozinho. Cobro em ₽ da partida.'),
     tag: 'TM',

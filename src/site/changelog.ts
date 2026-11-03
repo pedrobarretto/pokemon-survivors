@@ -24,6 +24,21 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-03',
+    title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+    highlights: [
+      { pt: 'O TM que você equipa na Loja do Kecleon não diz mais que veio de outro chefe: ao derrotar o primeiro chefe, a tela agora avisa que é o seu TM da loja.', en: 'The TM you arm at the Kecleon Shop no longer claims it came from another boss: when the first boss falls, the screen now says it’s your shop TM.', es: 'La MT que equipas en la Tienda de Kecleon ya no dice que vino de otro jefe: al derrotar al primer jefe, la pantalla ahora avisa que es tu MT de la tienda.', fr: 'La CT équipée à la Boutique de Kecleon ne prétend plus venir d’un autre boss : quand le premier boss tombe, l’écran indique maintenant que c’est ta CT de la boutique.', zh: '在Kecleon商店裝備的TM不會再顯示成其他首領掉落的：擊敗第一個首領時，畫面現在會說明這是你在商店買的TM。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          { pt: 'Um TM equipado na Loja do Kecleon sai do primeiro chefe derrotado no lugar do TM dele (é assim que ele chega na partida). A tela, porém, adivinhava quem o deixou pelo golpe: com Iron Head equipado, derrotar o Onix dizia "Registeel deixou um TM!", e um TM só da loja (como o Pay Day) aparecia como achado no chão. Agora ela diz que é o seu TM da loja.', en: 'A TM armed at the Kecleon Shop comes out of the first boss you defeat, in place of that boss’s own TM (that’s how it reaches the run). The screen, though, guessed who left it from the move: with Iron Head armed, defeating Onix said "Registeel left a TM!", and a shop-only TM (like Pay Day) showed up as found on the ground. Now it says it’s your shop TM.', es: 'Una MT equipada en la Tienda de Kecleon sale del primer jefe que derrotas, en lugar de la MT de ese jefe (así llega a la partida). Pero la pantalla adivinaba quién la dejó por el movimiento: con Iron Head equipado, derrotar a Onix decía "¡Registeel dejó una MT!", y una MT solo de la tienda (como Pay Day) aparecía como encontrada en el suelo. Ahora dice que es tu MT de la tienda.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-01',
     title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
     highlights: [
