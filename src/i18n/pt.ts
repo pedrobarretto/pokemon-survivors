@@ -5674,12 +5674,14 @@ export const pt = {
     /** A new move a run wouldn't teach next to the ones carried: a second manual one, a second legendary one. */
     manualFull: 'Já tem um manual',
     legendaryFull: 'Já tem um lendário',
-    /** The moves tab's shelves: the family's own moves, every TM and the legendaries' capstones. */
-    shelves: { family: 'Família', tms: 'TMs', legendary: 'Lendários' },
+    duoFull: 'Já tem um duo',
+    /** The moves tab's shelves: the family's own moves, every TM, the legendaries' capstones and the duo moves. */
+    shelves: { family: 'Família', tms: 'TMs', legendary: 'Lendários', duo: 'Duo' },
     /** Under a shelf's chips: where its moves come from in a run. */
     shelfNote: {
       tms: 'Nas partidas, as TMs caem dos chefes, vêm dos Tutores de Golpes e da prateleira da loja.',
       legendary: 'Nas partidas, um lendário vencido deixa o disco dourado do seu golpe: só um por partida.',
+      duo: 'Nas partidas, dois golpes no nível máximo de tipos combinados se fundem num Duo Move (só um por partida). Aqui você escolhe direto.',
     },
     form: 'Forma',
     abilityLater: 'A habilidade chega na primeira evolução.',

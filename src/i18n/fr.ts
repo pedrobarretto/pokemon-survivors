@@ -5325,10 +5325,12 @@ export const fr: Messages = {
     itemsFull: 'Plus de place',
     manualFull: 'Déjà une manuelle',
     legendaryFull: 'Déjà une légendaire',
-    shelves: { family: 'Famille', tms: 'CT', legendary: 'Légendaires' },
+    duoFull: 'Déjà une capacité duo',
+    shelves: { family: 'Famille', tms: 'CT', legendary: 'Légendaires', duo: 'Duo' },
     shelfNote: {
       tms: 'En partie, les CT tombent des boss et viennent des Maîtres des capacités et du rayon de la boutique.',
       legendary: 'En partie, un légendaire vaincu laisse le disque doré de sa capacité : un seul par partie.',
+      duo: 'En partie, deux capacités au niveau max des bons types fusionnent en une capacité duo (une seule par partie). Ici, tu la choisis directement.',
     },
     form: 'Forme',
     abilityAwaken: 'Le talent arrive au premier éveil.',

@@ -5331,10 +5331,12 @@ export const es: Messages = {
     itemsFull: 'Sin espacio',
     manualFull: 'Ya tiene uno manual',
     legendaryFull: 'Ya tiene uno legendario',
-    shelves: { family: 'Familia', tms: 'MTs', legendary: 'Legendarios' },
+    duoFull: 'Ya tiene un dúo',
+    shelves: { family: 'Familia', tms: 'MTs', legendary: 'Legendarios', duo: 'Dúo' },
     shelfNote: {
       tms: 'En las partidas, las MTs caen de los jefes y vienen de los Tutores de Movimientos y del estante de la tienda.',
       legendary: 'En las partidas, un legendario vencido deja el disco dorado de su movimiento: solo uno por partida.',
+      duo: 'En las partidas, dos movimientos al nivel máximo de los tipos correctos se fusionan en un movimiento dúo (solo uno por partida). Aquí lo eliges directamente.',
     },
     form: 'Forma',
     abilityAwaken: 'La habilidad llega con el primer despertar.',
