@@ -125,8 +125,8 @@ describe('snapshot and restore', () => {
       for (const m of r.covered) covered.add(m)
     }
     expect(checkpoints).toBeGreaterThan(20)
-    // A legend's awakening, a whole domain, the places and a tunnel come up along the way (`moments`).
-    expect([...covered].sort()).toEqual(expect.arrayContaining(['awakening', 'boss', 'domain:battle', 'domain:capture', 'domain:crossing', 'evolving', 'levelup', 'place:cave', 'place:graveyard', 'tunnel']))
+    // A legend's awakening, a whole domain and the places come up along the way (`moments`); tunnels are rare, so 'a tunnel' below stages one.
+    expect([...covered].sort()).toEqual(expect.arrayContaining(['awakening', 'boss', 'domain:battle', 'domain:capture', 'domain:crossing', 'evolving', 'levelup', 'place:cave', 'place:graveyard']))
   }, 120_000)
 
   it.each([
