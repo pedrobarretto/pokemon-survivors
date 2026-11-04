@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  bonusMult, DRAIN_RATE, drainAmount, drainRefill, executes, learnable, LOW_HP, nearestFoes, nextStacks, scaleBy, WARD_GAP, wardOpens, type StackRule,
+  bonusMult, BURROW_SHARE, burrowTime, DRAIN_RATE, drainAmount, drainRefill, executes, learnable, LOW_HP, nearestFoes, nextStacks, scaleBy, WARD_GAP, wardOpens, type StackRule,
 } from './kitRules'
 import { HEX_BONUS } from './moveRules'
 import type { MoveId } from './moves'
@@ -174,5 +174,19 @@ describe('wardOpens', () => {
     expect(wardOpens({ move: 'fly', at: 5 }, null, 'protect', 5 + WARD_GAP - 0.01)).toBe(false)
     expect(wardOpens({ move: 'fly', at: 5 }, null, 'fly', 5.1)).toBe(true)
     expect(wardOpens({ move: 'fly', at: 5 }, null, 'protect', 5 + WARD_GAP)).toBe(true)
+  })
+})
+
+describe('burrowTime', () => {
+  it('keeps the full time under while the cycle has room', () => {
+    expect(burrowTime(0.9, 7, 0.35)).toBe(0.9)
+  })
+
+  it('leaves a gap before the next takeoff however much duration and haste stack', () => {
+    // The reported Fly build: 1.3 s aloft on a 1.63 s cooldown chained the landings forever.
+    const cooldown = 2
+    const under = burrowTime(1.3, cooldown, 0.35)
+    expect(under + 0.35).toBeLessThanOrEqual(cooldown * BURROW_SHARE)
+    expect(under).toBeGreaterThan(0)
   })
 })

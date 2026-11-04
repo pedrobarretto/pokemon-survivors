@@ -165,6 +165,19 @@ export const learnable = (owned: readonly MoveId[], id: MoveId, manual: (id: Mov
 /** Seconds after one move's immunity window (a guard, a burrow) closes before a different move can open one. */
 export const WARD_GAP = 0.75
 
+/** The most of its own cycle a burrowing move's immunity may cover: the time under plus the i-frames after it. */
+export const BURROW_SHARE = 0.5
+
+/**
+ * Seconds a burrow (Fly, Dig) lasts: its `duration`, cut so that it and the
+ * i-frames `after` it cover at most `BURROW_SHARE` of the move's `cooldown`.
+ * Without the cut, Light Clay and cooldown cuts chain one landing's i-frames
+ * into the next takeoff and the player is never hit. A burrowing move keeps a
+ * `minCooldown` of at least `after / BURROW_SHARE`, so some time under is left.
+ */
+export const burrowTime = (duration: number, cooldown: number, after: number) =>
+  Math.max(0, Math.min(duration, cooldown * BURROW_SHARE - after))
+
 /** The player's last immunity window: the move that held it and the last time it stood, on the never-paused clock (`g.now`). */
 export type Ward = { move: MoveId; at: number }
 
