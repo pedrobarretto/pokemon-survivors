@@ -62,6 +62,6 @@ export const formatSkin = (source) => {
   const grid = (g, pad) => `[\n${g.map((l) => `${pad}  ${JSON.stringify(l)}`).join(',\n')}\n${pad}]`
   const frame = (f, pad) => `${pad}{ "anim": ${JSON.stringify(f.anim)}, "row": ${f.row}, "frame": ${f.frame}, "grid": ${grid(f.grid, pad)} }`
   const variant = ([key, v]) =>
-    `    ${JSON.stringify(key)}: {\n      "palette": ${JSON.stringify(v.palette)},\n      "keys": [\n${v.keys.map((k) => frame(k, '        ')).join(',\n')}\n      ],\n      "fixes": [\n${v.fixes.map((k) => frame(k, '        ')).join(',\n')}\n      ]\n    }`
+    `    ${JSON.stringify(key)}: {\n      "palette": ${JSON.stringify(v.palette)},\n${v.recolor ? `      "recolor": ${JSON.stringify(v.recolor)},\n` : ''}      "keys": [\n${v.keys.map((k) => frame(k, '        ')).join(',\n')}\n      ],\n      "fixes": [\n${v.fixes.map((k) => frame(k, '        ')).join(',\n')}\n      ]\n    }`
   return `{\n  "id": ${JSON.stringify(source.id)},\n  "variants": {\n${Object.entries(source.variants).map(variant).join(',\n')}\n  }\n}\n`
 }

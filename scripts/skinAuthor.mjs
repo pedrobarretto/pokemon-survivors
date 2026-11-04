@@ -7,6 +7,7 @@
 //  key   <skin> <variant> <anim> <row> <frame> <patch.json>   the frame becomes a keyframe: its ORIGINAL plus the patches, in order:
 //          [line, col, "chars"] writes chars from col on that line ('_' keeps a pixel, '.' clears it);
 //          ["map", line0, line1, col0, col1, {"from": "to"}] swaps letters inside a box (recolors keeping the shading)
+//  recolor <skin> <variant> <map.json>   sets the variant's recolor ({"from": "to"} letters, swapped on every frame after the keyframes; a theme or season of colors only the recolored part uses needs no keyframes); {} removes it
 //  keys  <skin> <variant> <out.png> [scale] [cols]   every keyframe, original beside drawn
 //  sheet <skin> <variant> <out.png> [anims] [scale]  the whole bake beside the original (keyframes on a yellow ground)
 import { runnerImport } from 'vite'
@@ -33,6 +34,13 @@ if (cmd === 'new') {
   skin.variants[variant] ??= { palette, keys: [], fixes: [] }
   saveSkin()
   console.log(JSON.stringify(skin.variants[variant].palette))
+} else if (cmd === 'recolor') {
+  const map = JSON.parse(readFileSync(rest[0], 'utf8'))
+  const v = skin.variants[variant]
+  for (const ch of [...Object.keys(map), ...Object.values(map)]) if (!(ch in v.palette)) throw Error(`letter ${ch} not in palette`)
+  if (Object.keys(map).length) v.recolor = map
+  else delete v.recolor
+  saveSkin()
 } else if (cmd === 'show') {
   const [anim, row, frame, orig] = rest
   const { c, sheets } = await load()

@@ -26,6 +26,8 @@ export type FixSource = FrameRef & { grid: string[] }
 export type VariantSource = {
   /** Letter → `rrggbb`. The sprite's own colors and the skin's. */
   palette: Record<string, string>
+  /** Letter → letter, swapped on every frame after the keyframes and before the fixes: a recolor of colors only the recolored part uses (leaves, a palette theme) needs no keyframes. */
+  recolor?: Record<string, string>
   keys: KeySource[]
   fixes: FixSource[]
 }
@@ -119,6 +121,13 @@ export const textFromGrid = (g: Grid, palette: Record<string, string>, c: Colors
   return Array.from({ length: g.h }, (_, y) => Array.from({ length: g.w }, (_, x) => of(g.px[y * g.w + x]!)).join(''))
 }
 
+/** A frame with the variant's `recolor` swapped in (the same grid when it has none). */
+export const applyRecolor = (g: Grid, recolor: Record<string, string> | undefined, palette: Record<string, string>, c: Colors): Grid => {
+  if (!recolor) return g
+  const swap = new Map(Object.entries(recolor).map(([from, to]) => [letterId(palette, c, from), letterId(palette, c, to)]))
+  return { w: g.w, h: g.h, px: g.px.map((v) => swap.get(v) ?? v) }
+}
+
 /** Applies a fix's grid over a frame. */
 export const applyFix = (g: Grid, fix: readonly string[], palette: Record<string, string>, c: Colors): Grid => {
   const px = Int32Array.from(g.px)
@@ -158,7 +167,8 @@ type PreparedKey = Key & { mirrored: boolean; index: number }
 /**
  * Bakes a variant: each keyframe is its own frame as drawn; every other frame
  * follows the keyframe that fits it best (`pickKey`), from its direction or
- * the mirror across; then its fixes go over it. `only` limits the work to
+ * the mirror across; then the variant's `recolor` swaps colors and its fixes
+ * go over it. `only` limits the work to
  * some frames (the Ateliê re-bakes what an edit touched); the rest come back
  * from `prev`.
  */
@@ -192,6 +202,7 @@ export const bakeVariant = (sheets: Record<SkinAnim, SheetGrids>, src: VariantSo
             res = { grid: p.out, doubt: p.doubt, key: pick.key.index, own: false, fixed: false }
           }
         }
+        res.grid = applyRecolor(res.grid, src.recolor, src.palette, c)
         const fix = src.fixes.find((f) => sameFrame(f, ref))
         if (fix) {
           res.grid = applyFix(res.grid, fix.grid, src.palette, c)
