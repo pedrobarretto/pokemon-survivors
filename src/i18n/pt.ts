@@ -23,12 +23,13 @@ import type { MapId } from '../data/versusMaps'
 import type { WearableId } from '../data/wearables'
 import type { ArenaEffectId } from '../data/arenaEffects'
 import type { CosmeticSlot, Rarity } from '../data/cosmetics'
+import type { ShopFurnitureId } from '../data/furniture'
 import type { GemPackId } from '../data/gems'
 import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
 import type { Priority } from '../game/versusKit'
-import type { FurnitureId, FurnitureKind } from '../data/furniture'
+import type { FurnitureKind } from '../data/furniture'
 import type { BaseExterior, BaseVisibility } from '../data/secretBases'
 import type { AimAssist } from '../ui/arenaAim'
 import type { MatchKind, TierId } from '../data/arenaRanked'
@@ -80,8 +81,6 @@ export type ContentTexts = {
   abilities: Record<AbilityId, string>
 }
 
-/** The furniture the carpentry names one by one (the dolls are named from their legend). */
-type ShopFurnitureId = Exclude<FurnitureId, `doll:${string}`>
 
 const typeBoost = (type: string) => `+10% de dano em golpes do tipo ${type}.`
 
@@ -5951,18 +5950,36 @@ export const pt = {
   furniture: {
     names: {
       woodChair: 'Cadeira de madeira',
+      stool: 'Banquinho',
       woodTable: 'Mesa de madeira',
+      woodCrate: 'Caixote',
+      bookshelf: 'Estante de livros',
+      pottedPlant: 'Planta no vaso',
+      floorLamp: 'Abajur de pé',
       pokeBallRug: 'Tapete Poké Ball',
-      pottedPlant: 'Vaso de planta',
+      roundRug: 'Tapete redondo',
       candle: 'Vela',
+      flowerVase: 'Vaso de flores',
       regionMap: 'Mapa da região',
+      wallClock: 'Relógio de parede',
       plankFloor: 'Piso de tábuas',
-      leafWallpaper: 'Papel de folhas',
+      stoneTiles: 'Piso de pedra',
+      leafWallpaper: 'Papel de parede de folhas',
+      brickWallpaper: 'Parede de tijolos',
+      fireplace: 'Lareira',
+      pokeBallLamp: 'Luminária Poké Ball',
+      pcTerminal: 'PC de Pokémon',
+      tvSet: 'TV com videogame',
+      championBanner: 'Estandarte do Campeão',
       pikachuBed: 'Cama Pikachu',
-      snorlaxBeanbag: 'Puff Snorlax',
+      starryWallpaper: 'Papel de parede estrelado',
+      snorlaxBeanbag: 'Pufe Snorlax',
       aquarium: 'Aquário',
-      starryWallpaper: 'Papel estrelado',
+      jukebox: 'Jukebox',
+      cherryTree: 'Cerejeira no vaso',
+      crystalFloor: 'Piso de cristal',
       goldTrophyCase: 'Estante de troféus dourada',
+      masterBallStatue: 'Estátua Master Ball',
     } satisfies Record<ShopFurnitureId, string>,
     doll: (legend: string) => `Boneco de ${legend}`,
     kinds: { floor: 'Móvel', rug: 'Tapete', top: 'Enfeite', wall: 'Parede', wallpaper: 'Papel de parede', flooring: 'Piso' } satisfies Record<FurnitureKind, string>,
@@ -6258,6 +6275,11 @@ export const pt = {
       /** Superlatives, a distinct one for every player (`ui/teamAwards.ts`): the outright ones, then fallbacks (survivor on). */
       awards: { damage: 'Mais dano', kills: 'Mais derrotas', revives: 'Anjo da guarda', untouched: 'Intocável', tank: 'Tanque', comeback: 'Fênix', survivor: 'Sobrevivente', specialist: 'Especialista', collector: 'Colecionador', loyal: 'Parceiro fiel' },
     },
+  },
+  /** Bibarel, the carpentry's carpenter on the plaza's north-east, as the partner walks up: the first visit, then one of these in turn. */
+  carpenter: {
+    first: ['Opa, freguês novo! Eu sou Bibarel, o carpinteiro da praça.', 'Faço móveis para as bases secretas do Poké Realm: cadeiras, tapetes, estantes e umas peças bem especiais.', 'Pague em ₽ ou em gemas. E quem captura uma lenda ganha um bonequinho dela para enfeitar a base!'],
+    hello: ['Serrando e lixando, como sempre. Vai levar alguma coisa?', 'Madeira boa, preço justo. Dá uma olhada!', 'Base sem móvel é só um buraco na parede!', 'Acabei de envernizar umas peças novas.'],
   },
 } satisfies ContentTexts & Record<string, unknown>
 

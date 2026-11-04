@@ -23,7 +23,7 @@ import { isBoard, type BoardId } from '../render/stadium'
 import { stallGoods } from '../game/stalls'
 import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue, type Speaker } from './dialogue'
-import { judgeSpeaker, lanturnSpeaker, senseiSpeaker, stallSpeaker, stallToday, tailorSpeaker } from './visitors'
+import { carpenterSpeaker, judgeSpeaker, lanturnSpeaker, senseiSpeaker, stallSpeaker, stallToday, tailorSpeaker } from './visitors'
 import { boutiqueSeen, type BoutiqueTab } from './boutique'
 import { inviterName } from '../ranking'
 import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
@@ -147,6 +147,8 @@ export type TitleActions = {
   festival: (close: () => void, tab?: FestivalTab) => Screen
   /** Opens Leavanny's Boutique over the plaza once the camera got there (`openBoutique` in `ui/boutique.ts`), on `tab`; `close` goes home. */
   boutique: (close: () => void, tab: BoutiqueTab) => Screen
+  /** Opens Bibarel's carpentry over the plaza once the camera got there (`openCarpentry` in `ui/carpentry.ts`); `close` goes home. */
+  carpentry: (close: () => void) => Screen
   /** Opens the Trainer Card over the title (the Trainer chip, `C`, the invite banner), like `settings`. */
   trainer: (focus: LobbyFocus) => Screen
   /** Opens the boards over the title, like `settings`. No action (no API), no tile. */
@@ -747,6 +749,25 @@ const arenaSeen = () => {
   }
 }
 
+/** Set once Bibarel first said its long hello on this device (`greetAtCarpentry`). */
+const CARPENTRY_SEEN = 'ps:carpentrySeen'
+
+const carpentrySeen = () => {
+  try {
+    return localStorage.getItem(CARPENTRY_SEEN) !== null
+  } catch {
+    return true
+  }
+}
+
+const markCarpentrySeen = () => {
+  try {
+    localStorage.setItem(CARPENTRY_SEEN, '1')
+  } catch {
+    // Private modes may refuse: the long hello just plays again next time.
+  }
+}
+
 /** Set once the player first trains at the Dojo on this device: the tile's NOVO tag and Machoke's long hello go for good. */
 const DOJO_SEEN = 'ps:dojoSeen'
 
@@ -851,12 +872,14 @@ const BOARD_TABS = { play: null, ranking: 'ranking', season: 'season', history: 
  * `look` (dev, `ps.plaza()`) only goes there, for a look; Esc or Enter brings it back.
  * `boutique` (a talk with Leavanny, the shop's Boutique button, `?boutique`) goes to Leavanny's Boutique on the plaza's north-west and
  * opens it on Loja (`locker`: on Visual, the Trainer Card's row); walking there, Leavanny says hello first.
+ * `carpentry` (a talk with Bibarel) goes to Bibarel's carpentry on the plaza's north-east, where it says hello and opens its sheet.
  * `dojo` and `stadium` go west to the Dojo and south to the Estádio instead, where Machoke or Ninjask says hello.
  */
-export type ShopTrip = 'shop' | 'festival' | 'plaque' | 'look' | 'boutique' | 'locker' | 'dojo' | 'stadium'
+export type ShopTrip = 'shop' | 'festival' | 'plaque' | 'look' | 'boutique' | 'locker' | 'carpentry' | 'dojo' | 'stadium'
 
 /** The place a trip goes to. */
-const tripPlace = (mode: ShopTrip): Place => (mode === 'dojo' || mode === 'stadium' ? mode : mode === 'boutique' || mode === 'locker' ? 'boutique' : 'plaza')
+const tripPlace = (mode: ShopTrip): Place =>
+  mode === 'dojo' || mode === 'stadium' || mode === 'carpentry' ? mode : mode === 'boutique' || mode === 'locker' ? 'boutique' : 'plaza'
 
 /**
  * Title screen over the live meadow: the pixel logo and a blinking "press
@@ -1213,6 +1236,7 @@ export const titleScreen = (
     if (who === 'fountain') return visitShop('festival')
     if (who === 'plaque') return visitShop('plaque')
     if (who === 'tailor') return visitShop('boutique')
+    if (who === 'carpenter') return visitShop('carpentry')
     visitShop('shop', false, who === 'meowth' ? 'caravan' : undefined)
   }
 
@@ -1278,6 +1302,7 @@ export const titleScreen = (
     if (visit.mode === 'dojo') return greetAtDojo()
     if (visit.mode === 'stadium') return greetAtStadium()
     if (visit.mode === 'boutique' || visit.mode === 'locker') return greetAtBoutique(visit.mode === 'locker' ? 'locker' : 'shop', visit.instant)
+    if (visit.mode === 'carpentry') return greetAtCarpentry()
     if (visit.mode === 'festival' || visit.mode === 'plaque') overScreen = actions.festival(goHome, visit.mode === 'plaque' ? 'plaque' : 'fountain')
     else openShop(visit.shelf)
   }
@@ -1336,6 +1361,24 @@ export const titleScreen = (
           chat?.dispose()
           chat = null
           if (visit?.phase === 'shop') open()
+        }),
+    })
+  }
+
+  /** Bibarel's hello at the carpentry (the long one, about the furniture, the first time), then its sheet. */
+  function greetAtCarpentry() {
+    const m = t().carpenter
+    const lines = carpentrySeen() ? [m.hello[Math.floor(Math.random() * m.hello.length)]!] : m.first
+    chat = dialogue(root, input, {
+      speaker: carpenterSpeaker(),
+      // SpriteCollab draws Bibarel with one face only.
+      lines: lines.map((text) => ({ text, emotion: 'Normal' })),
+      onDone: () =>
+        later(() => {
+          chat?.dispose()
+          chat = null
+          markCarpentrySeen()
+          if (visit?.phase === 'shop') overScreen = actions.carpentry(goHome)
         }),
     })
   }

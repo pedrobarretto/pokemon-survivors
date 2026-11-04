@@ -46,25 +46,49 @@ export type FurnitureDef = {
 }
 
 /**
- * The catalog's first pieces (the art pass fills it to ~30, each with its
- * PNG): a cheap ₽ basic of every kind so a fresh base can be furnished
- * without gems, and gem pieces of every rarity.
+ * The carpentry's catalog, each piece with its PNG (`render/furnitureArt.ts`):
+ * ₽ basics of every kind, so a fresh base can be furnished without gems (a
+ * fireplace at the top, the ₽ sink's big ticket), and gem pieces of every
+ * rarity at the gem shop's prices (`RARITY_PRICE`, a lamp below it).
  */
 const SHOP = {
+  // ₽: the basics.
   woodChair: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 1500 }, blocks: true, turns: true },
+  stool: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 800 }, blocks: true },
   woodTable: { kind: 'floor', size: [2, 1], rarity: 'common', price: { coins: 3000 }, blocks: true, surface: true, turns: true },
-  pokeBallRug: { kind: 'rug', size: [3, 3], rarity: 'common', price: { coins: 4000 } },
+  woodCrate: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 1000 }, blocks: true, surface: true },
+  bookshelf: { kind: 'floor', size: [2, 1], rarity: 'common', price: { coins: 3500 }, blocks: true },
   pottedPlant: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 1200 }, blocks: true },
+  floorLamp: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 2000 }, blocks: true },
+  pokeBallRug: { kind: 'rug', size: [3, 3], rarity: 'common', price: { coins: 4000 } },
+  roundRug: { kind: 'rug', size: [2, 2], rarity: 'common', price: { coins: 2500 } },
   candle: { kind: 'top', size: [1, 1], rarity: 'common', price: { coins: 600 } },
+  flowerVase: { kind: 'top', size: [1, 1], rarity: 'common', price: { coins: 900 } },
   regionMap: { kind: 'wall', size: [2, 1], rarity: 'common', price: { coins: 2500 } },
+  wallClock: { kind: 'wall', size: [1, 1], rarity: 'common', price: { coins: 1800 } },
   plankFloor: { kind: 'flooring', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
+  stoneTiles: { kind: 'flooring', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
   leafWallpaper: { kind: 'wallpaper', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
+  brickWallpaper: { kind: 'wallpaper', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
+  fireplace: { kind: 'floor', size: [2, 1], rarity: 'rare', price: { coins: 12000 }, blocks: true },
+  // Gems, by rarity.
+  pokeBallLamp: { kind: 'top', size: [1, 1], rarity: 'common', price: { gems: 100 } },
+  pcTerminal: { kind: 'floor', size: [1, 1], rarity: 'rare', price: { gems: 250 }, blocks: true },
+  tvSet: { kind: 'floor', size: [2, 1], rarity: 'rare', price: { gems: 250 }, blocks: true },
+  championBanner: { kind: 'wall', size: [2, 1], rarity: 'rare', price: { gems: 250 } },
   pikachuBed: { kind: 'floor', size: [2, 3], rarity: 'rare', price: { gems: 250 }, blocks: true, turns: true },
+  starryWallpaper: { kind: 'wallpaper', size: [1, 1], rarity: 'rare', price: { gems: 250 } },
   snorlaxBeanbag: { kind: 'floor', size: [2, 2], rarity: 'epic', price: { gems: 550 }, blocks: true },
   aquarium: { kind: 'floor', size: [3, 1], rarity: 'epic', price: { gems: 550 }, blocks: true, surface: true },
-  starryWallpaper: { kind: 'wallpaper', size: [1, 1], rarity: 'rare', price: { gems: 250 } },
+  jukebox: { kind: 'floor', size: [1, 1], rarity: 'epic', price: { gems: 550 }, blocks: true },
+  cherryTree: { kind: 'floor', size: [2, 2], rarity: 'epic', price: { gems: 550 }, blocks: true },
+  crystalFloor: { kind: 'flooring', size: [1, 1], rarity: 'epic', price: { gems: 550 } },
   goldTrophyCase: { kind: 'floor', size: [3, 1], rarity: 'legendary', price: { gems: 1200 }, blocks: true, surface: true },
+  masterBallStatue: { kind: 'floor', size: [1, 1], rarity: 'legendary', price: { gems: 1200 }, blocks: true },
 } as const satisfies Record<string, FurnitureDef>
+
+/** A piece the carpentry sells (every piece but the dolls): named in i18n `furniture`. */
+export type ShopFurnitureId = keyof typeof SHOP
 
 /** A captured legend's doll, earned only: `doll:<legend>` (drawn from its sprite on a pedestal). */
 const DOLL: FurnitureDef = { kind: 'top', size: [1, 1], rarity: 'legendary', price: null, source: 'trophy' }
