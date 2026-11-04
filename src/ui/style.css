@@ -24565,6 +24565,66 @@ span.arena-hub-face {
   flex: 1 1 100%;
   font-family: var(--title);
   font-size: 9px;
+
+/* ---------------- Poké Realm (ui/realm.ts) ---------------- */
+
+/* On a phone on its side the way in is an icon in the top bar. */
+.lobby-realm-top {
+  position: relative;
+}
+
+/* The lobby's way in: a card under the Hall (a rail tile on phones held upright, `.rail-realm`). */
+.lobby-realm {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 12px 9px 10px;
+  border-color: #183858;
+  --frame: #48a0e0;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.lobby-realm:hover,
+.lobby-realm.selected {
+  --frame: #e83838;
+}
+
+.lobby-realm-icon {
+  width: 33px;
+  height: 39px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.rail-realm .lobby-realm-icon {
+  width: 28px;
+  height: 33px;
+}
+
+.lobby-realm-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.lobby-realm-text b {
+  font-family: var(--title);
+  font-size: 9px;
+  font-weight: normal;
+  color: color-mix(in srgb, #2878c0 var(--dk-lift, 100%), #fff);
+}
+
+.lobby-realm-text span {
+  font-size: 18px;
+  line-height: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -24625,6 +24685,27 @@ span.arena-hub-face {
   border: 2px solid transparent;
   border-radius: 6px;
   cursor: grab;
+
+/* Landscape phones: the side is short, so the card is one line. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .lobby-realm {
+    padding: 5px 10px 5px 8px;
+  }
+  .lobby-realm-icon {
+    width: 22px;
+    height: 26px;
+  }
+  .lobby-realm-text span {
+    display: none;
+  }
+}
+
+/* The screen: the town is the game's canvas; this is the HTML over it. */
+.screen.realm {
+  justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -24772,6 +24853,106 @@ span.arena-hub-face {
   font-family: var(--title);
   font-size: 10px;
   font-weight: 400;
+
+.realm img {
+  image-rendering: pixelated;
+}
+
+.realm-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.realm-plate,
+.realm-said {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.realm-plate {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(16, 24, 48, 0.62);
+  color: #f8f8f8;
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+.realm-plate b {
+  font-weight: normal;
+}
+
+.realm-plate.plated {
+  background: var(--plate-fill);
+  border: 2px solid var(--plate-edge);
+  box-shadow: inset 0 2px 0 var(--plate-light);
+  text-shadow: 1px 1px 0 #181818, -1px 0 0 #181818, 0 -1px 0 #181818;
+}
+
+.realm-plate .realm-badge {
+  width: 11px;
+  height: 11px;
+}
+
+.realm-plate .arena-seat-title {
+  font-size: 6px;
+}
+
+.realm-said {
+  max-width: 180px;
+  padding: 3px 8px;
+  border: 2px solid #283040;
+  border-radius: 8px;
+  background: #f8f8f8;
+  color: #182030;
+  font-size: 15px;
+  white-space: normal;
+  text-align: center;
+}
+
+.realm-top {
+  position: absolute;
+  top: max(8px, var(--safe-t));
+  left: max(8px, var(--safe-l));
+  right: max(8px, var(--safe-r));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.realm-top > * {
+  pointer-events: auto;
+}
+
+.realm-leave,
+.realm-decorate {
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.realm-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 12px 5px;
+  line-height: 1.3;
+}
+
+.realm-where {
+  font-family: var(--title);
+  font-size: 9px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -25033,5 +25214,384 @@ span.arena-hub-face {
   .carpentry-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 6px;
+
+.realm-count {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.realm-status {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: min(360px, 90vw);
+  padding: 10px 16px;
+  text-align: center;
+}
+
+.realm-party {
+  position: absolute;
+  top: calc(max(8px, var(--safe-t)) + 52px);
+  left: max(8px, var(--safe-l));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: min(420px, 70vw);
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+.realm-party b {
+  font-family: var(--title);
+  font-size: 8px;
+  font-weight: normal;
+}
+
+.realm-member.leader {
+  color: color-mix(in srgb, #a87000 var(--dk-lift, 100%), #fff);
+}
+
+.realm-party-leave {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.realm-use {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  font-family: var(--title);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.realm-use .key-hint {
+  position: static;
+}
+
+@media (hover: none) {
+  .realm-use {
+    padding: 8px 14px;
+    font-size: 10px;
+  }
+  .realm-use .key-hint {
+    display: none;
+  }
+}
+
+.realm-actions {
+  position: absolute;
+  right: max(10px, var(--safe-r));
+  bottom: max(10px, var(--safe-b));
+  display: flex;
+  gap: 8px;
+}
+
+.realm-talk,
+.realm-emote {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.realm-talk img,
+.realm-emote img {
+  width: 33px;
+  height: 39px;
+}
+
+.realm-wheel,
+.realm-emotes {
+  position: absolute;
+  right: max(10px, var(--safe-r));
+  bottom: calc(max(10px, var(--safe-b)) + 64px);
+  max-width: min(440px, calc(100vw - 20px));
+  max-height: calc(100% - 140px);
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.realm-wheel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: min(520px, calc(100vw - 20px));
+}
+
+.realm-emotes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: max-content;
+}
+
+.realm-wheel.hidden,
+.realm-emotes.hidden {
+  display: none;
+}
+
+.realm-line {
+  padding: 8px 4px;
+  line-height: 1.1;
+  border: 2px solid #283040;
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.realm-line:hover {
+  border-color: #e83838;
+}
+
+.realm-emote-pick {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 48px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.realm-emote-pick:hover {
+  background: rgba(40, 48, 64, 0.12);
+}
+
+.realm-emote-pick img {
+  width: 33px;
+  height: 39px;
+}
+
+.realm-emote-pick.hidden {
+  display: none;
+}
+
+.realm-card,
+.realm-invite {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: min(300px, calc(100vw - 24px));
+  padding: 12px;
+}
+
+.realm-card {
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+}
+
+.realm-invite {
+  bottom: calc(max(10px, var(--safe-b)) + 64px);
+}
+
+.realm-card.hidden,
+.realm-invite.hidden {
+  display: none;
+}
+
+.realm-card button.box,
+.realm-invite button.box {
+  padding: 8px;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.realm-card-head {
+  display: flex;
+  justify-content: center;
+  padding: 4px 24px 6px;
+}
+
+.realm-card-head .realm-plate {
+  position: static;
+  transform: none !important;
+  font-size: 16px;
+}
+
+.realm-card-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.realm-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.realm-reasons.hidden {
+  display: none;
+}
+
+.realm-invite p {
+  margin: 0 0 4px;
+  text-align: center;
+}
+
+/* The city picker and the board. */
+.realm-picker,
+.realm-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(520px, 100%);
+  margin: auto;
+  padding: 16px;
+}
+
+.screen.realm .realm-picker {
+  margin: max(16px, var(--safe-t)) auto max(16px, var(--safe-b));
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+.realm-picker h2,
+.realm-board h2 {
+  margin: 0;
+  font-family: var(--title);
+  font-size: 14px;
+  font-weight: normal;
+  text-align: center;
+}
+
+.realm-picker h3 {
+  margin: 8px 0 0;
+  font-family: var(--title);
+  font-size: 9px;
+  font-weight: normal;
+}
+
+.realm-picker-title {
+  margin: 0;
+  text-align: center;
+  font-size: 18px;
+}
+
+.realm-picker-hint,
+.realm-note {
+  margin: 0;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.realm-cities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.realm-city,
+.realm-friend {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.realm-city b,
+.realm-friend b {
+  font-weight: normal;
+  font-size: 16px;
+}
+
+.realm-city small,
+.realm-friend small {
+  opacity: 0.75;
+}
+
+.realm-city:hover,
+.realm-city:focus-visible,
+.realm-friend:hover {
+  --frame: #e83838;
+}
+
+.realm-city.full {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.realm-friends {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.realm-back {
+  align-self: center;
+  padding: 8px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.realm-board p {
+  margin: 0;
+}
+
+.realm-board button {
+  align-self: center;
+  padding: 8px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Landscape phones: the wheel takes more columns, shorter. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .realm-wheel {
+    width: min(560px, calc(100vw - 100px));
+  }
+  .realm-line {
+    padding: 5px 4px;
+    font-size: 13px;
+  }
+  .realm-party {
+    top: auto;
+    bottom: max(10px, var(--safe-b));
+  }
+}
+
+@media (max-width: 480px) {
+  .realm-line {
+    font-size: 13px;
   }
 }

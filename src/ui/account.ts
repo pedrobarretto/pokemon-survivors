@@ -105,6 +105,12 @@ export const coopGate = (root: HTMLElement, input: Input, where: { room: string 
   return gate(root, input, { title: m.title, pitch: m.pitch, note: m.note, guestNote: null }, { ...actions, guest: null, ready: (s) => s.kind === 'signedIn' && s.handle !== undefined }, lead)
 }
 
+/** "Entre para entrar no Poké Realm": the realm is for accounts with a @handle, like co-op; goes on to `play` once the account is in and its handle known. */
+export const realmGate = (root: HTMLElement, input: Input, actions: { play: () => void; back: () => void }): Screen => {
+  const m = t().realm
+  return gate(root, input, { title: m.name, pitch: m.gate.pitch, note: m.gate.text, guestNote: null }, { ...actions, guest: null, ready: (s) => s.kind === 'signedIn' && s.handle !== undefined })
+}
+
 /**
  * The Arena's public queue (Casual, Ranqueada) is for accounts with a
  * handle, like co-op: a guest signs in here, with no guest option (the

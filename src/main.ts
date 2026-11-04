@@ -144,7 +144,10 @@ import { setActivePad } from './ui/inputLabels'
 import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
-import { arenaGate, coopGate, playGate } from './ui/account'
+import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
+import { openRealm } from './ui/realm'
+import { realmClient, realmDevState, realmUrl, useLocalRealm } from './realmShell'
+import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
@@ -728,6 +731,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       supporters: (focus, open) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: () => showTitle({ focus }) }, open),
       invites: (focus) => invitesScreen(ui, input, () => showTitle({ focus })),
       coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
+      realm: realmUrl() ? () => enterRealm(null) : undefined,
       arena: () => showArena(),
       arenaHub: (tab) => showArenaHub(tab),
       dojo: () => showDojo(),
@@ -2937,6 +2941,97 @@ const leaveCoopDoor = () => {
   showTitle({ focus: 'coop' })
 }
 
+/* ---------------- The Poké Realm ---------------- */
+
+/** `?realm` (or `?realm=<city>`): the Poké Realm's own link; it stays on the address while a guest signs in, so the round trip comes back to it. */
+const REALM_PARAM = 'realm'
+
+const realmLink = (on: boolean) => {
+  const url = new URL(location.href)
+  if (on === url.searchParams.has(REALM_PARAM)) return
+  if (on) url.searchParams.set(REALM_PARAM, '')
+  else url.searchParams.delete(REALM_PARAM)
+  history.replaceState(null, '', `${url.pathname}${url.search.replace(/=(?=&|$)/g, '')}${url.hash}`)
+}
+
+/**
+ * Opens the Poké Realm (`ui/realm.ts`), at `city` or its picker. Like co-op
+ * it's for accounts with a @handle: a guest signs in first ("Entre para
+ * entrar no Poké Realm", `realmGate`) and an account without a handle picks
+ * one. The in-page realm (`ps.realm('local')`) skips the door.
+ */
+const enterRealm = (city: CityId | null) => {
+  const local = realmDevState().local
+  const access = local ? 'open' : coopAccess(accountsEnabled, accountState())
+  if (access === 'handle') return setScreen(profileEditor(ui, input, (saved) => (saved ? enterRealm(city) : showTitle({ focus: 'realm' }))))
+  if (access !== 'open') {
+    realmLink(true)
+    return setScreen(realmGate(ui, input, { play: () => enterRealm(city), back: () => (realmLink(false), showTitle({ focus: 'realm' })) }))
+  }
+  showRealm(city)
+}
+
+const showRealm = (city: CityId | null) => {
+  const client = realmClient()
+  if (!client) return toast(ui, t().realm.off, 4000, 'realmOff')
+  realmLink(false)
+  endRun()
+  setScreen(
+    openRealm(
+      ui,
+      input,
+      {
+        client,
+        scale: () => cssScale,
+        handle: accountHandle() ?? 'you',
+        back: () => showTitle({ focus: 'realm' }),
+        openRoom: (mode) => realmRoom(mode),
+        showRoom: () => showRoom(),
+        joinRoom: (_mode, code) => void joinCoop(code, 'link').then((res) => (res.ok ? showRoom() : (toast(ui, closedText(res.why), 4000, 'realmParty'), showRealm(null)))),
+      },
+      city,
+    ),
+  )
+}
+
+/** A portal's room: made and joined through co-op as the hub's "Criar sala" does (an Arena one in Arena mode, the player on Blue with the Arena's pick). The code, or null. */
+const realmRoom = async (mode: PartyMode): Promise<string | null> => {
+  const client = coopClient()
+  if (!client) return null
+  watchCoop(client)
+  const made = await client.create()
+  if (!made.ok) return null
+  const res = await joinCoop(made.code, null, mode === 'arena' ? arenaLoadout(arenaStart(), 0, equippedLook()) : undefined)
+  if (!res.ok) return null
+  track('coop', { step: 'create', relay: made.home, ...(made.overflow ? { overflow: made.overflow } : {}) })
+  client.setSettings(mode === 'arena' ? { difficulty: loadSave().difficulty, mode: 'versus', format: 'standard' } : { difficulty: loadSave().difficulty })
+  return made.code
+}
+
+/**
+ * Dev: `ps.realm('local')` opens the realm on the in-page host with bots and
+ * the faked API (`realmShell.ts`), `('off')` back to the relay, `('fake')`
+ * fakes only the API (`fakeRealm`), `('city', 'cerulean')` goes straight into
+ * a city; no argument prints the state.
+ */
+const devRealm = (cmd?: string, arg?: string) => {
+  switch (cmd) {
+    case 'local':
+      useLocalRealm(true)
+      return showRealm(isCityId(arg) ? arg : null)
+    case 'off':
+      useLocalRealm(false)
+      return realmDevState()
+    case 'fake':
+      fakeRealm(arg !== 'off', accountHandle() ?? 'you')
+      return realmDevState()
+    case 'city':
+      return isCityId(arg) ? enterRealm(arg) : 'ps.realm: city id (pallet, cerulean…)'
+    default:
+      return realmDevState()
+  }
+}
+
 /** Jogar junto from the lobby's tile: create a room or join one by code (`code` prefills it); `challenge`: the room made starts on the Desafio co-op do dia. */
 const showCoopHub = (code: string | null = null, challenge = false) => {
   const client = coopClient()
@@ -3570,11 +3665,15 @@ const frame = (now: number) => {
     scene.haunted = halloweenToday()
     scene.plaza.level = plazaLevel()
     refreshVisitors(performance.now())
-    stepTitleScene(scene, mdt, view.w, view.h)
-    drawTitleScene(ctx, scene, view.w, view.h)
-    ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
-    ctx.fillRect(0, 0, view.w, view.h)
-    if (meadowStick) drawJoystick(ctx, meadowStick, cssScale)
+    // The Poké Realm draws its town in the meadow's place.
+    if (screen?.scene) screen.scene(ctx, mdt, view.w, view.h)
+    else {
+      stepTitleScene(scene, mdt, view.w, view.h)
+      drawTitleScene(ctx, scene, view.w, view.h)
+      ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
+      ctx.fillRect(0, 0, view.w, view.h)
+      if (meadowStick) drawJoystick(ctx, meadowStick, cssScale)
+    }
     // The wild Pokémon the partner greets answer with their cry.
     for (const dex of scene.cries.splice(0)) playCry(cryUrl(dex), 0.3)
     // Menu news (what a quit run completed) shares the run's queue. Banners (Mystery Gifts) wait
@@ -3802,7 +3901,10 @@ const boot = () => {
   else if (rankingEnabled && new URLSearchParams(location.search).has(IDEAS_PARAM)) showIdeasLink()
   else if (new URLSearchParams(location.search).has(SHOP_PARAM)) showTitle({ shop: 'shop', instant: true })
   else if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) showBoutique('shop')
-  else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
+  else if (realmUrl() && new URLSearchParams(location.search).has(REALM_PARAM)) {
+    const city = new URLSearchParams(location.search).get(REALM_PARAM)
+    enterRealm(isCityId(city) ? city : null)
+  } else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
   // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack.
   else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
   else if (poll) showPollLink(poll)
@@ -4467,6 +4569,7 @@ if (import.meta.env.DEV) {
       // The canvases each cache holds now (`heldCanvasesBy`), heaviest first, and their sum (`heldCanvases`, the crash report's numbers).
       canvases: () => ({ total: heldCanvases(), by: heldCanvasesBy() }),
       coop: devCoop,
+      realm: devRealm,
       versus: devVersus,
       arena: devArena,
       /** The wearables (`ui/wearFitting.ts`, loaded on demand): `ps.wear('topHat')` on your Pokémon in a run or a match, `ps.wear('fit', 'topHat')` the gallery. */

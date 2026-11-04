@@ -40,6 +40,8 @@ import { hallFace, hallPortrait, type HallOpen } from './supporters'
 import { surveyWaiting, takeSurveyOffer } from './survey'
 import type { Screen } from './screens'
 import { gearButton, helpButton, iconButton, railTile, shellBody, topBar, walletChip } from './shell'
+import { realmSeen } from './realm'
+import { realmIconUrl } from '../render/realmScene'
 import { nearestInDirection, type Direction } from './spatial'
 import { toast } from './toasts'
 import { trainerChip } from './trainer'
@@ -69,6 +71,7 @@ export type LobbyFocus =
   | 'ranking'
   | 'ideas'
   | 'coop'
+  | 'realm'
   | 'arena'
   | 'play'
   | 'explore'
@@ -161,6 +164,8 @@ export type TitleActions = {
   invites: (focus: LobbyFocus) => Screen
   /** Jogar junto (co-op): the hub. No action (no relay in this build), no tile. */
   coop?: () => void
+  /** The Poké Realm (`ui/realm.ts`): its city picker. No action (no realm relay in this build), no tile. */
+  realm?: () => void
   /** Arena (Versus): its screen. Always there: against bots it needs no relay nor account. */
   arena: () => void
   /** The Arena's hub on one of its tabs: the Estádio's boards (all but Jogar, which is `arena`). */
@@ -829,6 +834,29 @@ const dojoTile = (rails: boolean) => {
   return el
 }
 
+/**
+ * The Poké Realm's way in, tagged NOVO until first opened (`realmSeen`): a
+ * rail tile on phones held upright, a card on the side under the Hall on
+ * wide screens, and an icon in the top bar on phones on their side (whose
+ * side and dock are full).
+ */
+const realmTopButton = (onClick: () => void) => {
+  const el = iconButton(realmIconUrl('wave'), t().realm.entryLabel, onClick, 'K')
+  el.classList.add('lobby-realm-top')
+  if (!realmSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
+  return el
+}
+
+const realmEntry = (rails: boolean) => {
+  const m = t().realm
+  const icon = h('img', { class: 'lobby-realm-icon', src: realmIconUrl('wave'), alt: '' })
+  const el = rails
+    ? railTile('realm', icon, m.entry, m.entryLabel)
+    : h('button', { class: 'lobby-realm box', type: 'button', 'aria-label': m.entryLabel }, icon, h('span', { class: 'lobby-realm-text' }, h('b', {}, m.name), h('span', {}, m.cities.title)), h('span', { class: 'key-hint' }, 'K'))
+  if (!realmSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
+  return el
+}
+
 /* ---------------- Keyboard and gamepad ---------------- */
 
 /** The arrows (and the pad) move between the lobby's buttons; the movement keys (WASD) walk the partner instead. */
@@ -853,7 +881,7 @@ const heldMove = (input: Input, arrows: boolean): Vec => {
 }
 
 /** Shortcuts, shown as key hints on what they press (`C` belongs to the Trainer chip; P, E and Space are taken by the run's controls, and E talks to a shopkeeper the partner stands by). */
-const HOTKEYS: Readonly<Record<string, LobbyFocus>> = { KeyF: 'festival', KeyJ: 'coop', KeyV: 'arena', KeyG: 'gifts', KeyN: 'news', KeyX: 'pokedex', KeyO: 'eggs', KeyL: 'mart', KeyT: 'dojo', KeyR: 'ranking', KeyI: 'ideas', KeyM: 'missions', KeyH: 'hall' }
+const HOTKEYS: Readonly<Record<string, LobbyFocus>> = { KeyF: 'festival', KeyJ: 'coop', KeyK: 'realm', KeyV: 'arena', KeyG: 'gifts', KeyN: 'news', KeyX: 'pokedex', KeyO: 'eggs', KeyL: 'mart', KeyT: 'dojo', KeyR: 'ranking', KeyI: 'ideas', KeyM: 'missions', KeyH: 'hall' }
 
 /** The "Falar · E" bubble over a shopkeeper while the strolling partner stands close (a tap on it talks too); `label` holds its word (`talkLabel`). */
 const talkPrompt = (onTalk: () => void, label: HTMLElement) => h('button', { class: 'plaza-talk box hidden', type: 'button', onclick: onTalk }, label, h('span', { class: 'key-hint' }, 'E'))
@@ -1035,7 +1063,7 @@ export const titleScreen = (
     overScreen = open(current)
   }
 
-  const { ranking, ideas, coop } = actions
+  const { ranking, ideas, coop, realm } = actions
   const runs: Record<Exclude<LobbyFocus, 'trainer' | 'hall'>, () => void> = {
     help: () => location.assign(ROUTES.guide[lang]),
     settings: () => openOver(actions.settings),
@@ -1057,6 +1085,7 @@ export const titleScreen = (
     ranking: () => ranking && openOver(ranking),
     ideas: () => ideas && openOver(ideas),
     coop: () => (markCoopSeen(), coop?.()),
+    realm: () => realm?.(),
     arena: () => visitShop('stadium'),
     play: actions.play,
     explore: () => enterExplore(),
@@ -1095,6 +1124,7 @@ export const titleScreen = (
       left: chip.el,
       right: [
         (wallet = walletChip(save.wallet)),
+        ...(landscape && actions.realm ? [navigable(realmTopButton(press('realm')), 'realm')] : []),
         ...(landscape ? [navigable(discordButton(press('discord')), 'discord'), ...SOCIAL_IDS.map((id) => navigable(socialButton(id, press(id)), id))] : []),
         ...(surveyWaiting() ? [navigable(surveyButton(press('survey')), 'survey')] : []),
         navigable(newsButton(press('news')), 'news'),
@@ -1126,7 +1156,8 @@ export const titleScreen = (
         ? []
         : [h('div', { class: 'lobby-community' }, pressable(discordCard(), 'discord'), ...SOCIAL_IDS.map((id) => pressable(socialCard(id), id)))]
     const dojo = rails ? [pressable(dojoTile(true), 'dojo')] : []
-    const side = h('div', { class: 'lobby-side' }, ...(rails ? [gift] : []), hall, ...invites, ...dojo, ...community, ...(rails ? [explore] : []))
+    const realmWay = realm && !landscape ? [pressable(realmEntry(rails), 'realm')] : []
+    const side = h('div', { class: 'lobby-side' }, ...(rails ? [gift] : []), hall, ...(rails ? [] : realmWay), ...invites, ...dojo, ...(rails ? realmWay : []), ...community, ...(rails ? [explore] : []))
     // A friend's invite needs the room of a banner: under the partner on the rails, under the Hall elsewhere.
     const notice = rails ? h('div', { class: 'lobby-notice' }) : side
     inviteBanner(notice, press('invite'), (banner) => navigable(banner, 'invite'))
