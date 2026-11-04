@@ -5725,6 +5725,8 @@ export const es: Messages = {
     },
     doll: (legend) => `Muñeco de ${legend}`,
     kinds: { floor: 'Mueble', rug: 'Alfombra', top: 'Adorno', wall: 'Pared', wallpaper: 'Papel tapiz', flooring: 'Piso' },
+    /** The carpentry's collections (`FURNITURE_SETS`). */
+    sets: { classic: 'Clásico', cozy: 'Acogedor', elegant: 'Elegante', modern: 'Moderno', pop: 'Pop', garden: 'Jardín', aqua: 'Acuático', arcade: 'Arcade', kitchen: 'Cocina', trainer: 'Entrenador', center: 'Centro Pokémon', gallery: 'Galería', trophies: 'Trofeos' },
   },
 
   bases: {

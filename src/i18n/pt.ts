@@ -29,7 +29,7 @@ import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
 import type { Priority } from '../game/versusKit'
-import type { FurnitureKind } from '../data/furniture'
+import type { FurnitureKind, FurnitureSet } from '../data/furniture'
 import type { BaseExterior, BaseVisibility } from '../data/secretBases'
 import type { AimAssist } from '../ui/arenaAim'
 import type { MatchKind, TierId } from '../data/arenaRanked'
@@ -6113,6 +6113,8 @@ export const pt = {
     } satisfies Record<ShopFurnitureId, string>,
     doll: (legend: string) => `Boneco de ${legend}`,
     kinds: { floor: 'Móvel', rug: 'Tapete', top: 'Enfeite', wall: 'Parede', wallpaper: 'Papel de parede', flooring: 'Piso' } satisfies Record<FurnitureKind, string>,
+    /** The carpentry's collections (`FURNITURE_SETS`). */
+    sets: { classic: 'Clássico', cozy: 'Aconchego', elegant: 'Elegante', modern: 'Moderno', pop: 'Pop', garden: 'Jardim', aqua: 'Aquático', arcade: 'Fliperama', kitchen: 'Cozinha', trainer: 'Treinador', center: 'Centro Pokémon', gallery: 'Galeria', trophies: 'Troféus' } satisfies Record<FurnitureSet, string>,
   },
 
   /** Secret bases: the editor (`ui/baseEditor.ts`) and the trail's board (`ui/baseBoard.ts`). */

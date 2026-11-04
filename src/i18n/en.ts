@@ -5723,6 +5723,8 @@ export const en: Messages = {
     },
     doll: (legend) => `${legend} Doll`,
     kinds: { floor: 'Furniture', rug: 'Rug', top: 'Ornament', wall: 'Wall', wallpaper: 'Wallpaper', flooring: 'Flooring' },
+    /** The carpentry's collections (`FURNITURE_SETS`). */
+    sets: { classic: 'Classic', cozy: 'Cozy', elegant: 'Elegant', modern: 'Modern', pop: 'Pop', garden: 'Garden', aqua: 'Aquatic', arcade: 'Arcade', kitchen: 'Kitchen', trainer: 'Trainer', center: 'Pokémon Center', gallery: 'Gallery', trophies: 'Trophies' },
   },
 
   bases: {

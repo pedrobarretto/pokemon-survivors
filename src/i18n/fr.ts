@@ -5719,6 +5719,8 @@ export const fr: Messages = {
     },
     doll: (legend) => `Poupée ${legend}`,
     kinds: { floor: 'Meuble', rug: 'Tapis', top: 'Bibelot', wall: 'Mur', wallpaper: 'Papier peint', flooring: 'Sol' },
+    /** The carpentry's collections (`FURNITURE_SETS`). */
+    sets: { classic: 'Classique', cozy: 'Cocooning', elegant: 'Élégant', modern: 'Moderne', pop: 'Pop', garden: 'Jardin', aqua: 'Aquatique', arcade: 'Arcade', kitchen: 'Cuisine', trainer: 'Dresseur', center: 'Centre Pokémon', gallery: 'Galerie', trophies: 'Trophées' },
   },
 
   bases: {

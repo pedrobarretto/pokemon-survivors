@@ -5719,6 +5719,8 @@ export const zh: Messages = {
     },
     doll: (legend) => `${legend}玩偶`,
     kinds: { floor: '家具', rug: '地毯', top: '擺飾', wall: '牆面', wallpaper: '壁紙', flooring: '地板' },
+    /** The carpentry's collections (`FURNITURE_SETS`). */
+    sets: { classic: '經典', cozy: '溫馨', elegant: '典雅', modern: '現代', pop: '繽紛', garden: '花園', aqua: '水族', arcade: '遊樂場', kitchen: '廚房', trainer: '訓練家', center: '寶可夢中心', gallery: '畫廊', trophies: '獎盃' },
   },
 
   bases: {

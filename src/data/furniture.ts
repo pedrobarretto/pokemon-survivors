@@ -1,5 +1,7 @@
 import { LEGEND_IDS, type LegendId } from './legends'
 import type { Rarity } from './cosmetics'
+import { HOME_FURNITURE } from './furnitureSets/home'
+import { POKEMON_FURNITURE } from './furnitureSets/pokemon'
 
 /**
  * Furniture for secret bases (`data/secretBases.ts`), placed on the base's
@@ -32,8 +34,18 @@ export type FurnitureKind = 'floor' | 'rug' | 'top' | 'wall' | 'wallpaper' | 'fl
 
 export type FurniturePrice = { gems: number } | { coins: number }
 
+/**
+ * The carpentry's collections, Club Penguin catalog style: every piece
+ * belongs to one, the carpentry filters by them and their names live in i18n
+ * `furniture.sets`. `trophies` holds the earned pieces (the dolls).
+ */
+export const FURNITURE_SETS = ['classic', 'cozy', 'elegant', 'modern', 'pop', 'garden', 'aqua', 'arcade', 'kitchen', 'trainer', 'center', 'gallery', 'trophies'] as const
+
+export type FurnitureSet = (typeof FURNITURE_SETS)[number]
+
 export type FurnitureDef = {
   kind: FurnitureKind
+  set: FurnitureSet
   size: readonly [w: number, h: number]
   rarity: Rarity
   price: FurniturePrice | null
@@ -53,49 +65,55 @@ export type FurnitureDef = {
  */
 const SHOP = {
   // ₽: the basics.
-  woodChair: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 1500 }, blocks: true, turns: true },
-  stool: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 800 }, blocks: true },
-  woodTable: { kind: 'floor', size: [2, 1], rarity: 'common', price: { coins: 3000 }, blocks: true, surface: true, turns: true },
-  woodCrate: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 1000 }, blocks: true, surface: true },
-  bookshelf: { kind: 'floor', size: [2, 1], rarity: 'common', price: { coins: 3500 }, blocks: true },
-  pottedPlant: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 1200 }, blocks: true },
-  floorLamp: { kind: 'floor', size: [1, 1], rarity: 'common', price: { coins: 2000 }, blocks: true },
-  pokeBallRug: { kind: 'rug', size: [3, 3], rarity: 'common', price: { coins: 4000 } },
-  roundRug: { kind: 'rug', size: [2, 2], rarity: 'common', price: { coins: 2500 } },
-  candle: { kind: 'top', size: [1, 1], rarity: 'common', price: { coins: 600 } },
-  flowerVase: { kind: 'top', size: [1, 1], rarity: 'common', price: { coins: 900 } },
-  regionMap: { kind: 'wall', size: [2, 1], rarity: 'common', price: { coins: 2500 } },
-  wallClock: { kind: 'wall', size: [1, 1], rarity: 'common', price: { coins: 1800 } },
-  plankFloor: { kind: 'flooring', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
-  stoneTiles: { kind: 'flooring', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
-  leafWallpaper: { kind: 'wallpaper', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
-  brickWallpaper: { kind: 'wallpaper', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
-  fireplace: { kind: 'floor', size: [2, 1], rarity: 'rare', price: { coins: 12000 }, blocks: true },
+  woodChair: { kind: 'floor', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 1500 }, blocks: true, turns: true },
+  stool: { kind: 'floor', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 800 }, blocks: true },
+  woodTable: { kind: 'floor', set: 'classic', size: [2, 1], rarity: 'common', price: { coins: 3000 }, blocks: true, surface: true, turns: true },
+  woodCrate: { kind: 'floor', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 1000 }, blocks: true, surface: true },
+  bookshelf: { kind: 'floor', set: 'classic', size: [2, 1], rarity: 'common', price: { coins: 3500 }, blocks: true },
+  pottedPlant: { kind: 'floor', set: 'garden', size: [1, 1], rarity: 'common', price: { coins: 1200 }, blocks: true },
+  floorLamp: { kind: 'floor', set: 'cozy', size: [1, 1], rarity: 'common', price: { coins: 2000 }, blocks: true },
+  pokeBallRug: { kind: 'rug', set: 'trainer', size: [3, 3], rarity: 'common', price: { coins: 4000 } },
+  roundRug: { kind: 'rug', set: 'cozy', size: [2, 2], rarity: 'common', price: { coins: 2500 } },
+  candle: { kind: 'top', set: 'cozy', size: [1, 1], rarity: 'common', price: { coins: 600 } },
+  flowerVase: { kind: 'top', set: 'garden', size: [1, 1], rarity: 'common', price: { coins: 900 } },
+  regionMap: { kind: 'wall', set: 'trainer', size: [2, 1], rarity: 'common', price: { coins: 2500 } },
+  wallClock: { kind: 'wall', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 1800 } },
+  plankFloor: { kind: 'flooring', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
+  stoneTiles: { kind: 'flooring', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
+  leafWallpaper: { kind: 'wallpaper', set: 'garden', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
+  brickWallpaper: { kind: 'wallpaper', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
+  fireplace: { kind: 'floor', set: 'cozy', size: [2, 1], rarity: 'rare', price: { coins: 12000 }, blocks: true },
   // Gems, by rarity.
-  pokeBallLamp: { kind: 'top', size: [1, 1], rarity: 'common', price: { gems: 100 } },
-  pcTerminal: { kind: 'floor', size: [1, 1], rarity: 'rare', price: { gems: 250 }, blocks: true },
-  tvSet: { kind: 'floor', size: [2, 1], rarity: 'rare', price: { gems: 250 }, blocks: true },
-  championBanner: { kind: 'wall', size: [2, 1], rarity: 'rare', price: { gems: 250 } },
-  pikachuBed: { kind: 'floor', size: [2, 3], rarity: 'rare', price: { gems: 250 }, blocks: true, turns: true },
-  starryWallpaper: { kind: 'wallpaper', size: [1, 1], rarity: 'rare', price: { gems: 250 } },
-  snorlaxBeanbag: { kind: 'floor', size: [2, 2], rarity: 'epic', price: { gems: 550 }, blocks: true },
-  aquarium: { kind: 'floor', size: [3, 1], rarity: 'epic', price: { gems: 550 }, blocks: true, surface: true },
-  jukebox: { kind: 'floor', size: [1, 1], rarity: 'epic', price: { gems: 550 }, blocks: true },
-  cherryTree: { kind: 'floor', size: [2, 2], rarity: 'epic', price: { gems: 550 }, blocks: true },
-  crystalFloor: { kind: 'flooring', size: [1, 1], rarity: 'epic', price: { gems: 550 } },
-  goldTrophyCase: { kind: 'floor', size: [3, 1], rarity: 'legendary', price: { gems: 1200 }, blocks: true, surface: true },
-  masterBallStatue: { kind: 'floor', size: [1, 1], rarity: 'legendary', price: { gems: 1200 }, blocks: true },
+  pokeBallLamp: { kind: 'top', set: 'trainer', size: [1, 1], rarity: 'common', price: { gems: 100 } },
+  pcTerminal: { kind: 'floor', set: 'center', size: [1, 1], rarity: 'rare', price: { gems: 250 }, blocks: true },
+  tvSet: { kind: 'floor', set: 'arcade', size: [2, 1], rarity: 'rare', price: { gems: 250 }, blocks: true },
+  championBanner: { kind: 'wall', set: 'trainer', size: [2, 1], rarity: 'rare', price: { gems: 250 } },
+  pikachuBed: { kind: 'floor', set: 'trainer', size: [2, 3], rarity: 'rare', price: { gems: 250 }, blocks: true, turns: true },
+  starryWallpaper: { kind: 'wallpaper', set: 'cozy', size: [1, 1], rarity: 'rare', price: { gems: 250 } },
+  snorlaxBeanbag: { kind: 'floor', set: 'cozy', size: [2, 2], rarity: 'epic', price: { gems: 550 }, blocks: true },
+  aquarium: { kind: 'floor', set: 'aqua', size: [3, 1], rarity: 'epic', price: { gems: 550 }, blocks: true, surface: true },
+  jukebox: { kind: 'floor', set: 'arcade', size: [1, 1], rarity: 'epic', price: { gems: 550 }, blocks: true },
+  cherryTree: { kind: 'floor', set: 'garden', size: [2, 2], rarity: 'epic', price: { gems: 550 }, blocks: true },
+  crystalFloor: { kind: 'flooring', set: 'elegant', size: [1, 1], rarity: 'epic', price: { gems: 550 } },
+  goldTrophyCase: { kind: 'floor', set: 'trainer', size: [3, 1], rarity: 'legendary', price: { gems: 1200 }, blocks: true, surface: true },
+  masterBallStatue: { kind: 'floor', set: 'trainer', size: [1, 1], rarity: 'legendary', price: { gems: 1200 }, blocks: true },
 } as const satisfies Record<string, FurnitureDef>
 
-/** A piece the carpentry sells (every piece but the dolls): named in i18n `furniture`. */
-export type ShopFurnitureId = keyof typeof SHOP
+/**
+ * Every piece the carpentry sells (all but the dolls), named in i18n
+ * `furniture.names`: the first catalog plus the collections that live in
+ * their own modules (`data/furnitureSets/`), spread in like `MOVES`'s tables.
+ */
+const CATALOG = { ...SHOP, ...HOME_FURNITURE, ...POKEMON_FURNITURE } as const satisfies Record<string, FurnitureDef>
+
+export type ShopFurnitureId = keyof typeof CATALOG
 
 /** A captured legend's doll, earned only: `doll:<legend>` (drawn from its sprite on a pedestal). */
-const DOLL: FurnitureDef = { kind: 'top', size: [1, 1], rarity: 'legendary', price: null, source: 'trophy' }
+const DOLL: FurnitureDef = { kind: 'top', set: 'trophies', size: [1, 1], rarity: 'legendary', price: null, source: 'trophy' }
 const DOLLS = {} as Record<`doll:${LegendId}`, FurnitureDef>
 for (const id of LEGEND_IDS) DOLLS[`doll:${id}`] = DOLL
 
-export const FURNITURE: Readonly<Record<keyof typeof SHOP | `doll:${LegendId}`, FurnitureDef>> = { ...SHOP, ...DOLLS }
+export const FURNITURE: Readonly<Record<ShopFurnitureId | `doll:${LegendId}`, FurnitureDef>> = { ...CATALOG, ...DOLLS }
 
 export type FurnitureId = keyof typeof FURNITURE & string
 
