@@ -612,8 +612,6 @@ export const en: Messages = {
     gate: {
       pitch: 'Sign in to enter the Poké Realm.',
       text: 'Stroll with your partner, meet trainers, form a party and visit secret bases.',
-      signIn: 'Sign in',
-      back: 'Back',
     },
     off: 'The Poké Realm isn’t available in this version of the game.',
     cities: {

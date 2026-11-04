@@ -612,8 +612,6 @@ export const fr: Messages = {
     gate: {
       pitch: 'Connecte-toi pour entrer dans le Poké Realm.',
       text: 'Promène-toi avec ton partenaire, rencontre des dresseurs, forme un groupe et visite des bases secrètes.',
-      signIn: 'Se connecter',
-      back: 'Retour',
     },
     off: 'Le Poké Realm n’est pas disponible dans cette version du jeu.',
     cities: {

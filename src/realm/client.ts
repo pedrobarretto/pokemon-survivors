@@ -69,6 +69,9 @@ const PING_EVERY_MS = 10_000
 /** Reconnect delays (ms) by attempt; the last repeats. */
 const RETRY_MS = [500, 1000, 2000, 4000, 8000] as const
 
+/** Refusals of a `go` that leave a seated trainer where it stands. */
+const STAYS: ReadonlySet<RealmRefusal> = new Set(['private', 'room', 'busy'])
+
 const REFUSALS: readonly RealmRefusal[] = ['version', 'signIn', 'profile', 'full', 'city', 'room', 'private', 'elsewhere', 'afk', 'banned', 'busy']
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -229,8 +232,8 @@ export const createRealmClient = (deps: RealmDeps): RealmClient => {
           status = { kind: 'open', you: m.you }
         } else if (m.t === 'room') room = m.room
         else if (m.t === 'pong') rtt = deps.now() - m.at
-        // A refused `go` (a private base, no such room) keeps the trainer seated where it was; any other refusal ends the connection.
-        else if (m.t === 'refused' && m.why !== 'private' && m.why !== 'room') {
+        // Seated, a refused `go` (a private base, no such base, the API busy) leaves the trainer where it was; any other refusal ends the connection.
+        else if (m.t === 'refused' && !(status.kind === 'open' && STAYS.has(m.why))) {
           status = { kind: 'refused', why: m.why }
           drop()
         }

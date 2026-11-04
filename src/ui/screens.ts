@@ -56,6 +56,8 @@ export type Screen = {
   dispose: () => void
   /** How much the attract-mode meadow behind the screen is darkened (0..1, default 0.35). */
   dim?: number
+  /** A screen that draws the game's canvas itself (the Poké Realm, `ui/realm.ts`), every menu frame in the meadow's place; `dt` in s, the view in world px. */
+  scene?: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number) => void
 }
 
 export const typeBadge = (type: PokeType) => h('span', { class: 'type-badge', style: `--type:${TYPE_COLORS[type]}` }, type.toUpperCase())

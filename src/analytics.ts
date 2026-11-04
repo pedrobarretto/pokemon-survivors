@@ -245,6 +245,8 @@ type AnalyticsEvents = {
   /** A checkout came back (`?gems=`): the gems landed (`ok`, how many and after how long) or the wait ran out first (`timeout`). */
   gems_return: { outcome: 'ok' | 'timeout'; gems: number; seconds: number }
   /** A cosmetic bought with gems. */
+  /** A Poké Realm visit, summed as it ends (`ui/realm.ts`): one event per city entered, never per line or step. */
+  realm_session: { city: string; seconds: number; rooms: number; lines: number; emotes: number; party: 0 | 1; portal: 'coop' | 'arena' | 'none' }
   cosmetic_buy: { id: CosmeticId; slot: CosmeticSlot; rarity: Rarity; price: number }
   /**
    * How a co-op run's link and pacing went for this player (`coop/netStats.ts`), one per player per run,

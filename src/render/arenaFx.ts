@@ -736,6 +736,12 @@ const emoteFrame = (dex: number, def: EffectOf<'emote'>, seconds: number): { she
   return null
 }
 
+/** What `dex` plays `seconds` into the emote cosmetic `id` outside a match (the Poké Realm's `look` emote, `ui/realm.ts`), or null: no such emote, or its sheet still loading. */
+export const lookEmoteFrame = (dex: number, id: string | undefined, seconds: number) => {
+  const def = effectIn('emote', id)
+  return def ? emoteFrame(dex, def, seconds) : null
+}
+
 /** Whether `p` and what's theirs show on this screen: in the match, standing, and not hidden from `viewer` in the grass. */
 const shows = (viewer: Player, p: Player | undefined): p is Player => !!p && !p.gone && p.hp > 0 && !concealed(viewer, p)
 

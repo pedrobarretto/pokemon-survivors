@@ -793,8 +793,6 @@ export const pt = {
     gate: {
       pitch: 'Entre para entrar no Poké Realm.',
       text: 'Passeie com seu parceiro, encontre treinadores, monte um grupo e visite bases secretas.',
-      signIn: 'Entrar',
-      back: 'Voltar',
     },
     off: 'O Poké Realm não está disponível nesta versão do jogo.',
     cities: {

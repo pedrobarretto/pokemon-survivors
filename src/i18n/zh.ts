@@ -612,8 +612,6 @@ export const zh: Messages = {
     gate: {
       pitch: '登入即可進入 Poké Realm。',
       text: '和夥伴一起散步、認識訓練家、組隊，並參觀秘密基地。',
-      signIn: '登入',
-      back: '返回',
     },
     off: '這個版本的遊戲無法使用 Poké Realm。',
     cities: {

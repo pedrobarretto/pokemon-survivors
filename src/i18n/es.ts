@@ -613,8 +613,6 @@ export const es: Messages = {
     gate: {
       pitch: 'Inicia sesión para entrar al Poké Realm.',
       text: 'Pasea con tu compañero, conoce entrenadores, arma un grupo y visita bases secretas.',
-      signIn: 'Iniciar sesión',
-      back: 'Volver',
     },
     off: 'El Poké Realm no está disponible en esta versión del juego.',
     cities: {
