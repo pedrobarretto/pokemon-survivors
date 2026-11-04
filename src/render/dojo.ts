@@ -1,5 +1,5 @@
 import { dir8, type Dir8, type Vec } from '../engine/math'
-import { blitCentered, blitPacked, context2d, createCanvas, drawable, ellipse, lazy } from '../engine/pixelart'
+import { blitCentered, blitPacked, context2d, createCanvas, drawable, drawLoaded, ellipse, lazy } from '../engine/pixelart'
 import { EMOTES } from './art'
 import { shadow } from './draw'
 import { drawMarker, edgeSpot, markerCard, type MarkerLook, type Piece, type ViewBox } from './plaza'
@@ -37,13 +37,19 @@ const loadDojoArt = () => {
   asked = true
   void loadSpecies(SENSEI.dex).catch(() => {})
   void loadSpecies(WOBBUFFET_DEX).catch(() => {})
-  for (const id of Object.keys(ART_FILES) as ArtId[]) {
-    const img = new Image()
-    img.src = `${import.meta.env.BASE_URL}assets/dojo/${ART_FILES[id]}.png`
-    const landed = () => void (drawable(img) && arts.set(id, { img, w: img.width, h: img.height }))
-    void img.decode().then(landed, landed)
-  }
+  for (const id of Object.keys(ART_FILES) as ArtId[]) loadArt(id)
 }
+
+/** Loads one of the hall's PNGs into `arts` (replacing the one there once it lands). */
+const loadArt = (id: ArtId) => {
+  const img = new Image()
+  img.src = `${import.meta.env.BASE_URL}assets/dojo/${ART_FILES[id]}.png`
+  const landed = () => void (drawable(img) && arts.set(id, { img, w: img.width, h: img.height }))
+  void img.decode().then(landed, landed)
+}
+
+/** Arts the browser called broken after they loaded, already loading again. */
+const lost = new WeakSet<Art>()
 
 /** Where everyone stands, relative to the hall's feet (world px). */
 const SPOTS = {
@@ -124,7 +130,13 @@ const yard = lazy(() => {
 const SHADOW = 'rgba(30,40,30,0.3)'
 
 /** Draws `art` with the bottom center of its box at (x, y), screen px. */
-const put = (ctx: CanvasRenderingContext2D, art: Art, x: number, y: number) => ctx.drawImage(art.img, Math.round(x - art.w / 2), Math.round(y - art.h))
+const put = (ctx: CanvasRenderingContext2D, art: Art, x: number, y: number) => {
+  if (lost.has(art) || drawLoaded(() => ctx.drawImage(art.img, Math.round(x - art.w / 2), Math.round(y - art.h)))) return
+  // Broken after it loaded (`drawLoaded`): skipped, and loaded again once.
+  lost.add(art)
+  const id = [...arts].find(([, a]) => a === art)?.[0]
+  if (id) loadArt(id)
+}
 
 /** The hall's box from its feet, world px (a guess until its PNG is in). */
 const hallBox = (d: Dojo) => {

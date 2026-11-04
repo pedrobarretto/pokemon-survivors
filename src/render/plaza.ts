@@ -1,5 +1,5 @@
 import { clamp, dir8, type Dir8, type Vec } from '../engine/math'
-import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, drawable, ellipse, glow, onCanvasReset, readPixels } from '../engine/pixelart'
+import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, drawable, drawLoaded, ellipse, glow, onCanvasReset, readPixels } from '../engine/pixelart'
 import { EMOTES, type Emote } from './art'
 import { drawSparkles, shadow } from './draw'
 import { LANTERN_ART, lanternString, stringLanterns, type LanternKind, type LanternString } from './lanterns'
@@ -215,13 +215,24 @@ const festivalArtReady = () => {
   return festivalLoaded
 }
 
+/** Arts the browser called broken after they loaded, already loading again (the new one replaces it in `arts`). */
+const lost = new WeakSet<Art>()
+
+/** Draws `art` through `draw`; a broken one is skipped and loaded again, once. */
+const drawArt = (art: Art, draw: (img: HTMLImageElement) => void) => {
+  if (lost.has(art) || drawLoaded(() => draw(art.img))) return
+  lost.add(art)
+  const id = [...arts].find(([, a]) => a === art)?.[0]
+  if (id) loadArt([id])
+}
+
 /** Draws `art` with the bottom center of its painted box at (x, y); `fromRow` draws only its rows from there down (a counter's front). */
 const put = (ctx: CanvasRenderingContext2D, art: Art, x: number, y: number, fromRow = 0) => {
   const dx = Math.round(x - (art.minX + art.w / 2))
   const dy = Math.round(y - art.maxY - 1)
-  if (fromRow === 0) return ctx.drawImage(art.img, dx, dy)
+  if (fromRow === 0) return drawArt(art, (img) => ctx.drawImage(img, dx, dy))
   const rows = art.img.height - fromRow
-  ctx.drawImage(art.img, 0, fromRow, art.img.width, rows, dx, dy + fromRow, art.img.width, rows)
+  drawArt(art, (img) => ctx.drawImage(img, 0, fromRow, img.width, rows, dx, dy + fromRow, img.width, rows))
 }
 
 /* ---------------- The purple brother ---------------- */
@@ -1499,7 +1510,8 @@ const silhouette = (() => {
     if (hit) return hit
     const canvas = createCanvas(art.img.width, Math.max(1, Math.round(art.h * SQUASH)))
     const ctx = context2d(canvas)
-    ctx.drawImage(art.img, 0, art.minY, art.img.width, art.h, 0, 0, canvas.width, canvas.height)
+    // A broken art leaves its shadow blank: the art loaded again is a new key.
+    drawArt(art, (img) => ctx.drawImage(img, 0, art.minY, img.width, art.h, 0, 0, canvas.width, canvas.height))
     ctx.globalCompositeOperation = 'source-in'
     ctx.fillStyle = SHADOW
     ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -1717,7 +1729,7 @@ const festivalPieces = (plaza: Plaza, f: FestivalLayout | null): Piece[] => {
           {
             y: plaza.y + bunting.y + LAMP_TIE - 0.5,
             // Its left tie is pixel (1, 1) of the PNG.
-            draw: (ctx, camX, camY) => ctx.drawImage(arts.get('bunting')!.img, Math.round(plaza.x + bunting.x - 1 - camX), Math.round(plaza.y + bunting.y - 1 - camY)),
+            draw: (ctx, camX, camY) => drawArt(arts.get('bunting')!, (img) => ctx.drawImage(img, Math.round(plaza.x + bunting.x - 1 - camX), Math.round(plaza.y + bunting.y - 1 - camY))),
           } satisfies Piece,
         ]
       : []),
