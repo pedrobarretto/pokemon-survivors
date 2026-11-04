@@ -703,6 +703,47 @@ export const donateToFestival = async (amount: number): Promise<FestivalDonation
   }
 }
 
+/** What an API call that spends ₽ out of the stored save answers: the save it stores now and its revision, with the call's own result. */
+export type SavePaid<T> = { ok: true; save: unknown; revision: number; value: T } | { ok: false; error: string }
+
+/** One spending call on top of this device's revision; keeps the save it brings back (or `local` of the device's, when that changed meanwhile). */
+const payOnce = async <T>(call: (base: number) => Promise<SavePaid<T>>, local: (save: Save) => Save): Promise<{ ok: true; value: T } | { ok: false; error: string }> => {
+  const link = readLink()
+  if (!link || link.revision === null) return { ok: false, error: 'nosave' }
+  const before = JSON.stringify(loadSave())
+  const done = await call(link.revision)
+  if (!done.ok) return done
+  const stored = isRecord(done.save) ? parseSaveData(done.save) : null
+  writeSave(stored && JSON.stringify(loadSave()) === before ? stored : local(loadSave()))
+  writeLink({ ...(readLink() ?? link), revision: done.revision })
+  savedListeners.forEach((fn) => fn())
+  return { ok: true, value: done.value }
+}
+
+/**
+ * Spends ₽ out of the account's stored save through `call` (one API request
+ * made on top of this device's save revision, `base`), the way a festival
+ * donation does: syncs first (₽ that never synced can't go), and once more if
+ * another device pushed in between (`stale`). The save the API answers with
+ * becomes the local one; if the local save changed while the call was out,
+ * `local` spends the same ₽ from it instead. `guest` without an account,
+ * `offline` when it couldn't ask. Never throws. Bibarel's carpentry
+ * (`ui/carpentry.ts`) buys furniture with it.
+ */
+export const payFromSave = async <T>(call: (base: number) => Promise<SavePaid<T>>, local: (save: Save) => Save): Promise<{ ok: true; value: T } | { ok: false; error: string }> => {
+  if (!accountsEnabled || !readLink()) return { ok: false, error: 'guest' }
+  try {
+    await synced()
+    const first = await payOnce(call, local)
+    if (first.ok || first.error !== 'stale') return first
+    await synced()
+    return await payOnce(call, local)
+  } catch (err) {
+    console.warn('payment from the save failed', err)
+    return { ok: false, error: 'offline' }
+  }
+}
+
 /* ---------------- Sign in and out ---------------- */
 
 /**

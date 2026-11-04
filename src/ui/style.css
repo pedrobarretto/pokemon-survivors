@@ -24484,3 +24484,554 @@ span.arena-hub-face {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Secret bases (ui/baseEditor.ts, ui/baseBoard.ts) and Bibarel's carpentry (ui/carpentry.ts) ---------- */
+
+/* The editor: the room on the left (on top in portrait), the tools and the tray beside it. */
+.base-editor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(10px, var(--safe-t)) max(10px, var(--safe-r)) max(10px, var(--safe-b)) max(10px, var(--safe-l));
+}
+
+.base-panel {
+  width: min(1120px, 100%);
+  height: min(720px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px;
+}
+
+.base-panel > * {
+  flex-shrink: 0;
+}
+
+.base-head .btn.base-visibility,
+.base-head .btn.base-save {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.base-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+}
+
+.base-stage {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #141a2c;
+  border-radius: 8px;
+}
+
+.base-canvas {
+  display: block;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+.base-side {
+  flex: 0 0 min(340px, 38%);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.base-side > :not(.base-tray) {
+  flex-shrink: 0;
+}
+
+.base-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.base-piece {
+  flex: 1 1 100%;
+  font-family: var(--title);
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn.base-tool {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 8px;
+}
+
+.base-count {
+  margin-left: auto;
+  font-family: var(--title);
+  font-size: 8px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.base-status {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 12px;
+  line-height: 1.4;
+  color: color-mix(in srgb, #287028 var(--dk-lift, 100%), #fff);
+}
+
+.base-status.bad {
+  color: color-mix(in srgb, #c02828 var(--dk-lift, 100%), #fff);
+}
+
+.base-tray {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  align-content: start;
+  gap: 6px;
+  padding: 2px;
+}
+
+.base-tray.style {
+  display: block;
+}
+
+.base-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  font: inherit;
+  color: inherit;
+  background: var(--dk-surface-2, #dce0ec);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.base-item:hover,
+.base-item:focus-visible {
+  border-color: #283048;
+}
+
+.base-icon {
+  width: 56px;
+  height: 46px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.base-item-name {
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.base-item-count {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-style: normal;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.base-row-title {
+  margin: 6px 0 4px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-weight: 400;
+}
+
+.base-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.base-swatch {
+  width: 74px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 3px;
+  font: inherit;
+  font-size: 8px;
+  line-height: 1.2;
+  color: inherit;
+  background: var(--dk-surface-2, #dce0ec);
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+
+.base-swatch canvas {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.base-swatch.on {
+  color: #f8d030;
+  background: #283048;
+}
+
+.base-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 4px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+/* The board of bases and the carpentry are the shop's panel (`.shop-sheet`). */
+.shop-sheet > .base-board-body,
+.shop-sheet > .carpentry-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 2px;
+}
+
+.base-board-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.base-board-sheet .shop-tabs[hidden] {
+  display: none;
+}
+
+.base-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: var(--dk-surface-2, #dce0ec);
+  border-left: 6px solid #8e6a4a;
+  border-radius: 8px;
+}
+
+.base-card.tree {
+  border-left-color: #865a36;
+}
+
+.base-card.bush {
+  border-left-color: #3e8038;
+}
+
+.base-card.sand {
+  border-left-color: #c2a066;
+}
+
+.base-card-face {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  background: #f8f8f0;
+  border: 2px solid #283048;
+  border-radius: 6px;
+}
+
+.base-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.base-card-handle {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.base-card-place,
+.base-card-stats {
+  font-size: 9px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.base-card-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+}
+
+.base-card-actions .btn,
+.base-preview-foot .btn {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 8px;
+}
+
+.btn.base-like.on {
+  color: #fff;
+  background: #e05080;
+}
+
+.base-preview {
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.base-preview-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #141a2c;
+  border-radius: 8px;
+}
+
+.base-preview-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.base-preview-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.base-preview-foot .base-card-stats {
+  flex: 1;
+}
+
+.carpentry-sheet .shop-head .gem-chip {
+  flex-shrink: 0;
+}
+
+.carpentry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
+}
+
+.carpentry-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  text-align: center;
+  background: var(--dk-surface-2, #dce0ec);
+  border: 2px solid transparent;
+  border-radius: 8px;
+}
+
+.carpentry-card.rare {
+  border-color: #58a8f8;
+}
+
+.carpentry-card.epic {
+  border-color: #b868f0;
+}
+
+.carpentry-card.legendary,
+.carpentry-card.trophy {
+  border-color: #e0b030;
+}
+
+.carpentry-art {
+  width: 100%;
+  height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, #283048 8%, transparent);
+  border-radius: 6px;
+}
+
+.carpentry-icon {
+  max-width: 92%;
+  height: 58px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.carpentry-card.locked .carpentry-icon {
+  filter: brightness(0) opacity(0.3);
+}
+
+.carpentry-name {
+  font-family: var(--title);
+  font-size: 8px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.carpentry-meta,
+.carpentry-owned {
+  min-height: 1.2em;
+  font-size: 9px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-card.trophy:not(.locked) .carpentry-owned {
+  color: color-mix(in srgb, #287028 var(--dk-lift, 100%), #fff);
+}
+
+.btn.carpentry-buy {
+  width: 100%;
+  min-height: 32px;
+  margin-top: auto;
+  padding: 4px 6px;
+  font-size: 9px;
+}
+
+.carpentry-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.carpentry-price img {
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+.carpentry-note {
+  margin: 0 0 8px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+/* Portrait phones: the editor takes the screen, the room on top and a sideways tray under it (drag a piece up into the room). */
+@media (max-width: 759px) and (orientation: portrait) {
+  .base-editor {
+    padding: 0;
+  }
+  .base-panel {
+    width: 100%;
+    height: 100%;
+    gap: 6px;
+    padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
+    border-radius: 0;
+  }
+  .base-head .shop-title {
+    font-size: 9px;
+  }
+  .base-head .btn.base-visibility,
+  .base-head .btn.base-save {
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+  .base-main {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .base-stage {
+    flex: 0 1 auto;
+    aspect-ratio: 4 / 3;
+    max-height: calc(48 * var(--dvh));
+  }
+  .base-side {
+    flex: 1 1 auto;
+  }
+  .base-piece {
+    flex: 1 1 auto;
+  }
+  .base-tray:not(.style) {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-template-rows: repeat(2, max-content);
+    grid-auto-columns: 92px;
+    align-content: start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+  }
+  .base-panel .shop-foot {
+    display: none;
+  }
+  .base-card {
+    flex-wrap: wrap;
+  }
+  .base-card-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .carpentry-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .carpentry-art {
+    height: 54px;
+  }
+  .carpentry-icon {
+    height: 46px;
+  }
+}
+
+/* Landscape phones: a smaller room beside a narrow side column. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .base-editor {
+    padding: max(4px, var(--safe-t)) max(6px, var(--safe-r)) max(4px, var(--safe-b)) max(6px, var(--safe-l));
+  }
+  .base-panel {
+    height: 100%;
+    gap: 5px;
+    padding: 6px 10px;
+  }
+  .base-main {
+    gap: 8px;
+  }
+  .base-side {
+    flex-basis: min(300px, 42%);
+    gap: 4px;
+  }
+  .base-panel .shop-foot {
+    display: none;
+  }
+  .base-tray {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  }
+  .base-icon {
+    width: 44px;
+    height: 36px;
+  }
+  .carpentry-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 6px;
+  }
+}

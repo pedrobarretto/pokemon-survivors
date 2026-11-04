@@ -204,6 +204,10 @@ import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaFormat, arenaPick, arenaScreen, keepArenaPick } from './ui/arena'
 import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn } from './gems'
 import { isGemPackId } from './data/gems'
+import { fakeRealm, realmFaked } from './realm/api'
+import { openBaseEditor } from './ui/baseEditor'
+import { openBaseBoard } from './ui/baseBoard'
+import { openCarpentry } from './ui/carpentry'
 import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
 import { arenaHub, isArenaHubTab, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaHub'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
@@ -4425,6 +4429,22 @@ const devGems = (cmd?: string, arg?: string | number) => {
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }
 
+/**
+ * Dev: the secret bases' screens over the lobby (`ui/baseEditor.ts`, `ui/baseBoard.ts`, `ui/carpentry.ts`), the realm's
+ * calls and the gems faked (`fakeRealm`: furnished demo bases, `realm/demoBases.ts`) unless `real`: `ps.base()` opens
+ * the editor, `ps.base('board')` the trail's board (Visitar shows the base on the board), `ps.base('carpentry')` Bibarel's.
+ */
+const devBase = (cmd: 'editor' | 'board' | 'carpentry' = 'editor', real = false) => {
+  if (!real && !realmFaked()) {
+    fakeRealm(true)
+    if (!gemsFaked()) fakeGems(true)
+  }
+  const back = () => showTitle()
+  if (cmd === 'board') setScreen(openBaseBoard(ui, input, { close: back, visit: null, city: null }))
+  else if (cmd === 'carpentry') setScreen(openCarpentry(ui, input, { close: back, signIn: accountsEnabled ? () => void signIn() : null }))
+  else setScreen(openBaseEditor(ui, input, { close: back }))
+}
+
 // `ps.biome('cave')` walks to the nearest cave region and `ps.weather('rain')` stages the sky for screenshots (it holds until the next scheduled change).
 /** Dev only (`ps.map`): the map archetype held for the runs started until a reload. */
 let devMap: MapArchetypeId | null = null
@@ -4536,6 +4556,8 @@ if (import.meta.env.DEV) {
        * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
        * `ps.boutique('open')` lands there with the sheet open at once (`'locker'` on Visual).
        */
+      /** The secret bases' screens with fakes: `ps.base()` the editor, `ps.base('board')`, `ps.base('carpentry')` (`devBase`). */
+      base: devBase,
       boutique: (cmd?: 'open' | 'locker') => (cmd ? showBoutique(cmd === 'locker' ? 'locker' : 'shop') : showTitle({ shop: 'boutique' })),
       /**
        * The Kecleon plaza: `ps.plaza(3)` shows the shop's building at that level (1 to 5, until the next reload; `ps.plaza(0)`
