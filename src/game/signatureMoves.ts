@@ -9,7 +9,7 @@ import {
   aquaSpeed, aquaStacks, chargeScale, densestFoe, eruptionScale, PETAL_CASTS, petalTempo,
 } from './signatureRules'
 import { spawnAttack } from './spawn'
-import type { DamageBonus } from './kitRules'
+import { guardSpan, type DamageBonus } from './kitRules'
 import type { StatDelta } from './stats'
 import { ownAttack } from './players'
 import type { Game } from './types'
@@ -473,9 +473,10 @@ export const SIGNATURE_MOVES = {
       { fork: [{ stats: { amount: 1, damage: -4 }, mods: ['burstOnKill'] }, { stats: { amount: 1, damage: 8 }, mods: ['echo'] }] },
       { duration: 0.4, damage: 4 },
     ],
-    // The quills bristle: needles fly out, and for `duration` any foe that touches the player is hurt and thrown back instead.
+    // The quills bristle: needles fly out, and for `duration` (at most half the cooldown, `guardSpan`) any foe that touches the player is hurt and thrown back instead.
     fire: (g, s) => {
       const p = g.player
+      const span = guardSpan(s.duration, s.cooldown)
       for (let i = 0; i < s.amount; i++) {
         const v = fromAngle(g.time * 1.3 + (i / s.amount) * TAU, 220)
         spawnAttack(g, {
@@ -487,9 +488,9 @@ export const SIGNATURE_MOVES = {
       spawnAttack(g, {
         ...look('needleArm', 'grass', 'needleArm'), x: p.x, y: p.y - 9,
         shape: { kind: 'circle', r: 16 }, motion: { kind: 'follow', ox: 0, oy: -9 },
-        damage: s.damage, knockback: s.knockback, ttl: s.duration, activeFrom: Infinity,
+        damage: s.damage, knockback: s.knockback, ttl: span, activeFrom: Infinity,
       })
-      guard(g, 'needleArm', s.duration)
+      guard(g, 'needleArm', span)
       cast(g, 'needleArm')
     },
     onGuard: (g, s, _owned, from) => {

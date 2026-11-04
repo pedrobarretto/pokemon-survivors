@@ -23,6 +23,7 @@ import { firstForm } from './arena'
 import { titleChip } from './arenaTitle'
 import { h, later } from './dom'
 import { today } from './save'
+import { celebrate } from './confetti'
 import { confirmDialog, type Screen } from './screens'
 
 /**
@@ -343,6 +344,7 @@ const returnSheet = (root: HTMLElement, input: Input, ref: string, onClose: () =
     waiting = false
     if (landed.outcome === 'ok') {
       playSfx('levelUp')
+      celebrate()
       s.box.classList.add('landed')
       s.box.replaceChildren(
         h('span', { class: 'gem-return-burst', 'aria-hidden': 'true' }, ...Array.from({ length: 8 }, (_, i) => h('img', { class: `gem-spark s${i}`, src: gemIconUrl(), alt: '' }))),
@@ -482,6 +484,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
             buying = false
             if (res.ok) {
               playSfx('buy')
+              celebrate()
               await saveLook(equip(res.status.look, id))
               return say(m.bought(itemName(id)))
             }
