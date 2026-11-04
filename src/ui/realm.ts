@@ -877,22 +877,24 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       for (const b of emoteButtons) if (b.id === 'look') b.b.classList.toggle('hidden', !lookEmote)
 
       near = seated ? (spotsOf(room).find((s) => Math.hypot(s.at.x - walker.x, s.at.y - walker.y) <= s.reach) ?? null) : null
-      /** A label over `at`, as a transform: floating over the piece it names, kept below the top bar. */
-      const pin = (at: Point) => {
+      /** A label (`el`) over `at`, as a transform: floating over the piece it names, kept below the top bar and inside the screen's sides. */
+      const pin = (at: Point, el: HTMLElement) => {
         const y = town ? labelTop(town, at, exterior) : at.y - 30
-        return `translate(${Math.round(((at.x - cam.x) * scale) / zoom)}px, ${Math.max(LABEL_FLOOR, Math.round(((y - cam.y) * scale) / zoom))}px) translate(-50%, -100%)`
+        const half = el.offsetWidth / 2 + 4
+        const x = Math.min(Math.max(Math.round(((at.x - cam.x) * scale) / zoom), half), (w * scale) / zoom - half)
+        return `translate(${Math.round(x)}px, ${Math.max(LABEL_FLOOR, Math.round(((y - cam.y) * scale) / zoom))}px) translate(-50%, -100%)`
       }
       useButton.classList.toggle('hidden', !near || sub !== null)
       if (near) {
         const label = m().spots[near.kind]
         if (useLabel.textContent !== label) useLabel.textContent = label
-        useButton.style.transform = pin(near.at)
+        useButton.style.transform = pin(near.at, useButton)
       }
       // The labels of what's around: the near spot's is its prompt instead.
       for (const l of labels) {
         const shown = seated && sub === null && l.spot !== near && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
         l.el.classList.toggle('shown', shown)
-        if (shown) l.el.style.transform = pin(l.at)
+        if (shown) l.el.style.transform = pin(l.at, l.el)
       }
     }
 
