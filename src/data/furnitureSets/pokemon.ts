@@ -20,7 +20,7 @@ import type { LegendId } from '../legends'
 const BED = { kind: 'floor', set: 'trainer', size: [2, 3], rarity: 'rare', price: { gems: 250 }, blocks: true, turns: true } as const satisfies FurnitureDef
 
 /** A tribute to a game's cover: its color field, its mascot (SpriteCollab) and a title band, framed; ₽, a collector's sink. */
-const COVER = { kind: 'wall', set: 'gallery', size: [2, 2], rarity: 'rare', price: { coins: 15000 }, from: '2026-11-04' } as const satisfies FurnitureDef
+const COVER = { kind: 'wall', set: 'gallery', size: [2, 2], rarity: 'rare', price: { coins: 15000 } } as const satisfies FurnitureDef
 
 /** A legend across the sky, framed in gold: earned with the legends it shows (`LEGEND_PAINTINGS`). */
 const PAINTING = { kind: 'wall', set: 'gallery', size: [3, 2], rarity: 'legendary', price: null, source: 'trophy' } as const satisfies FurnitureDef

@@ -30,11 +30,15 @@ export const payOf = (id: FurnitureId): 'coins' | 'gems' | null => {
   return price === null ? null : 'gems' in price ? 'gems' : 'coins'
 }
 
-/** Whether a piece is NOVO on `day`: on sale from a day less than `FRESH_DAYS` ago. */
-export const isFresh = (id: FurnitureId, day: DayKey): boolean => {
-  const from = FURNITURE[id].from
-  return from !== undefined && from <= day && dayNumber(day) - dayNumber(from) < FRESH_DAYS
-}
+/**
+ * Whether a drop dated `from` is NOVO on `day`: on sale from a day less than
+ * `FRESH_DAYS` ago. The launch catalog has no `from`, so it never is; only
+ * pieces added after it wear the tag.
+ */
+export const freshOn = (from: DayKey | undefined, day: DayKey): boolean =>
+  from !== undefined && from <= day && dayNumber(day) - dayNumber(from) < FRESH_DAYS
+
+export const isFresh = (id: FurnitureId, day: DayKey): boolean => freshOn(FURNITURE[id].from, day)
 
 /**
  * A collection's page on `day`: what it has on sale and what's earned in it

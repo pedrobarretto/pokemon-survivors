@@ -1,22 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { collectionsOn, filterPage, isFresh, pageOf } from './catalog'
+import { collectionsOn, filterPage, freshOn, isFresh, pageOf } from './catalog'
 
-describe('isFresh', () => {
-  it('marks a dated piece NOVO for two weeks from its day, and never before it', () => {
-    expect(isFresh('fireRedCover', '2026-11-03')).toBe(false)
-    expect(isFresh('fireRedCover', '2026-11-04')).toBe(true)
-    expect(isFresh('fireRedCover', '2026-11-17')).toBe(true)
-    expect(isFresh('fireRedCover', '2026-11-18')).toBe(false)
-    expect(isFresh('woodChair', '2026-11-04')).toBe(false)
+describe('freshOn', () => {
+  it('marks a drop NOVO for two weeks from its day, and never before it', () => {
+    expect(freshOn('2026-11-20', '2026-11-19')).toBe(false)
+    expect(freshOn('2026-11-20', '2026-11-20')).toBe(true)
+    expect(freshOn('2026-11-20', '2026-12-03')).toBe(true)
+    expect(freshOn('2026-11-20', '2026-12-04')).toBe(false)
+  })
+
+  it('never tags the launch catalog, which has no date', () => {
+    expect(freshOn(undefined, '2026-11-04')).toBe(false)
+    expect(isFresh('fireRedCover', '2026-11-04')).toBe(false)
   })
 })
 
 describe('pageOf', () => {
-  it("shows a collection's pieces on sale, its earned ones, and NOVO first", () => {
+  it("shows a collection's pieces on sale and its earned ones", () => {
     const gallery = pageOf('gallery', '2026-11-05')
-    expect(gallery[0]).toBe('fireRedCover')
+    expect(gallery).toContain('fireRedCover')
     expect(gallery).toContain('clashPainting')
-    expect(pageOf('gallery', '2026-11-01')).not.toContain('fireRedCover')
   })
 
   it('gathers every earned piece on the trophies page', () => {
