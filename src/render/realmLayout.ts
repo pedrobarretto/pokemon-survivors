@@ -14,10 +14,20 @@ import type { Dir8 } from '../engine/math'
  *   `flip` mirrors one.
  */
 
+/** The frames after the first of a portal's swirl turning (`realm/portal-<name>-<k>.png`, the swirl rotated k/12 of a turn). */
+const SWIRL = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const
+type SwirlFrame = (typeof SWIRL)[number]
+
+/** A portal's swirl frames as `TOWN_ART` entries: `<key><k>` → `<path>-<k>`. */
+const swirlArt = <K extends string>(key: K, path: string) =>
+  Object.fromEntries(SWIRL.map((k) => [`${key}${k}`, `${path}-${k}`])) as Record<`${K}${SwirlFrame}`, string>
+
 /** The PNGs the town draws: its own (`public/assets/realm/`), and the lobby's it reuses (`shop/`, `scenery/`). */
 export const TOWN_ART = {
   portalCoop: 'realm/portal-coop',
   portalArena: 'realm/portal-arena',
+  ...swirlArt('portalCoop', 'realm/portal-coop'),
+  ...swirlArt('portalArena', 'realm/portal-arena'),
   fountain: 'shop/festival-fountain-s0-f0',
   fountain1: 'shop/festival-fountain-s0-f1',
   fountain2: 'shop/festival-fountain-s0-f2',
@@ -66,8 +76,16 @@ export const TOWN_ART = {
 
 export type TownArt = keyof typeof TOWN_ART
 
-/** Pieces that play frames (the art named in a layout is the first; the others follow at `TOWN_FPS`): the plaza's fountain is the lobby's festival one, water running. */
-export const TOWN_FRAMES: Partial<Record<TownArt, readonly TownArt[]>> = { fountain: ['fountain', 'fountain1', 'fountain2'] }
+/**
+ * Pieces that play frames (the art named in a layout is the first; the
+ * others follow at `TOWN_FPS`): the plaza's fountain is the lobby's festival
+ * one, water running, and the portals' swirls turn (a turn every 12 frames).
+ */
+export const TOWN_FRAMES: Partial<Record<TownArt, readonly TownArt[]>> = {
+  fountain: ['fountain', 'fountain1', 'fountain2'],
+  portalCoop: ['portalCoop', ...SWIRL.map((k) => `portalCoop${k}` as const)],
+  portalArena: ['portalArena', ...SWIRL.map((k) => `portalArena${k}` as const)],
+}
 export const TOWN_FPS = 7
 
 /**
@@ -118,9 +136,10 @@ const oval = (x: number, y: number, rx: number, ry: number): Shape => ({ kind: '
 
 /**
  * The plaza, where everyone lands: a curbed oval square with the fountain in
- * the middle ringed by lamps, the co-op portal on the west and the Arena's on
- * the east, two blossoming flower beds and benches on the south, the café on
- * the north (its door is the café's; its own tables, chalkboard and plants
+ * the middle ringed by lamps, the co-op portal on the west (a sandstone gate
+ * hung with pennants, its swirl warm) and the Arena's on the east (slate, a
+ * blue swirl, the trophy on top), a matching pair on round daises, two
+ * blossoming flower beds and benches on the south, the café on the north (its door is the café's; its own tables, chalkboard and plants
  * stand out front) with the town's board beside it, and
  * dirt paths out west (the trail) and east (the pier), where the curb opens.
  */
