@@ -22,6 +22,9 @@ import { parseSaveData } from '../../src/game/meta'
 import { outbreakAt } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
 import type { LooksResponse } from '../../src/net/looks'
+import type { RealmCities, RealmFriends, RealmMe } from '../../src/net/realmApi'
+import type { IdentityRequest } from '../../src/net/realmRelay'
+import { parseRealmModeration } from '../../src/realm/moderation'
 import { isBoardPeriod, isPlayable, isRunMode, parseDisplayName, parseHandle, parseRunResult } from '../../src/game/ranking'
 import { parseReplay, RULES_VERSION, rulesStanding } from '../../src/game/replay'
 import { parseChunk } from '../../src/game/replayStream'
@@ -45,6 +48,7 @@ import type { GiftStore } from './gifts'
 import type { ModerationStore } from './moderation'
 import type { PatreonOAuth } from './patreon'
 import type { RankingStore } from './ranking'
+import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parsePresenceReport, parseRealmReport, type BuyError, type RealmStore } from './realm'
 import { checkoutLocale, type StripeCheckout } from './stripe'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
@@ -83,6 +87,8 @@ export type AppDeps = {
   arena: Pick<ArenaStore, 'report' | 'abandoned' | 'practice' | 'takePractice' | 'tickets' | 'profile' | 'history' | 'leaderboard'>
   /** The co-op boards and the Desafio co-op do dia's: the relay's run reports and the boards by team. */
   coop: Pick<CoopBoardStore, 'report' | 'board' | 'challengeBoard'>
+  /** The Poké Realm: identities, visits and presence for the relay; bases, furniture and reports for the game; bans for the admin. */
+  realm: Pick<RealmStore, 'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy'>
   /** The secret the relay signs Arena and co-op reports and ticket lookups with; unset, those routes answer 503. */
   arenaReportSecret: string | undefined
   /** Linking a Patreon account (its OAuth client), null when the server has none. */
@@ -131,6 +137,12 @@ const INVITE_ERRORS = { notFriend: 404, limit: 429 } as const
 
 /** What a festival donation answers when it's refused, by `DonateError`. */
 const DONATE_ERRORS = { closed: 409, profile: 403, runs: 403, cap: 409, funds: 409, nosave: 409, stale: 409 } as const satisfies Record<DonateError, number>
+
+/** What a furniture purchase answers when it's refused, by `BuyError`. */
+const BUY_ERRORS = { profile: 403, gems: 402, funds: 402, nosave: 409, stale: 409 } as const satisfies Record<BuyError, number>
+
+/** What a realm report answers when it's refused: only what's about the reporter. */
+const REALM_REPORT_ERRORS = { self: 400, limit: 429 } as const
 
 /** How far ahead of this clock a relay's `endedAt` (an Arena match's or a co-op run's) may be (its clock drifts a little). */
 const ARENA_CLOCK_SKEW_MS = 5 * 60_000
@@ -301,8 +313,14 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   each; challenge runs stay off it) and with a token the asker's best team (`me`). `size` 2 to 4 or its key (duo when
  *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
  * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
+ * - The Poké Realm (`src/realm.ts`): the game's routes as `src/net/realmApi.ts` lists them (`/realm/me`, `/realm/cities`,
+ *   `/realm/friends`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/report`), and the relay's, signed like
+ *   `/looks`, as `src/net/realmRelay.ts` lists them (`/realm/identity`, `/realm/visit`, `/realm/presence`). A realm-banned
+ *   account's realm writes get 403 `{ error: 'banned' }`. The desk's `GET /admin/realm`: `RealmDesk` (open realm reports
+ *   by trainer, bans in force); `POST /admin/realm/moderation` (`parseRealmModeration`) `{ userId, action, days?, reason? }`:
+ *   `ban` (days, or for good), `unban`, `dismiss`, resolving their realm reports. `{ resolved }`, 404 for an unknown player.
  */
-export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
 
@@ -894,6 +912,96 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     return c.json(await arena.leaderboard(season, limit, c.var.userId))
   })
 
+  /* ---------------- The Poké Realm ---------------- */
+
+  app.get('/realm/me', auth, async (c) => {
+    const me = await realm.me(c.var.userId)
+    if (!me.ok) return c.json({ error: me.error }, 403)
+    return c.json({ handle: me.handle, furniture: me.furniture, base: me.base } satisfies RealmMe)
+  })
+
+  app.get('/realm/cities', (c) => {
+    c.header('Cache-Control', 'public, max-age=5')
+    return c.json(realm.cities() satisfies RealmCities)
+  })
+
+  app.get('/realm/friends', auth, async (c) => c.json((await realm.friends(c.var.userId)) satisfies RealmFriends))
+
+  app.get('/realm/base/:handle', auth, async (c) => {
+    const got = await realm.base(c.var.userId, c.req.param('handle'))
+    if (!got.ok) return got.error === 'private' ? c.json({ error: 'private' }, 403) : c.json({ error: 'missing' }, 404)
+    return c.json(got.base)
+  })
+
+  app.put('/realm/base', auth, bodyLimit({ maxSize: 16 * 1024 }), async (c) => {
+    const next = parseBaseSave(await json(c))
+    if (!next) return c.json({ error: 'expected { layout, visibility }' }, 400)
+    if (!realm.takeSave(c.var.userId)) return c.json({ error: 'too many saves' }, 429)
+    const saved = await realm.save(c.var.userId, next)
+    if (saved.ok) return c.json({ base: saved.base })
+    if (saved.error === 'layout') return c.json({ error: saved.layout }, 400)
+    return c.json({ error: saved.error }, 403)
+  })
+
+  app.get('/realm/bases', auth, async (c) => {
+    const sort = c.req.query('sort') ?? 'top'
+    if (sort !== 'top' && sort !== 'new' && sort !== 'friends') return c.json({ error: 'unknown sort' }, 400)
+    return c.json({ bases: await realm.list(c.var.userId, sort) })
+  })
+
+  app.post('/realm/base/:handle/like', auth, async (c) => {
+    if (await realm.closed(c.var.userId)) return c.json({ error: 'banned' }, 403)
+    if (!realm.takeLike(c.var.userId)) return c.json({ error: 'too many likes' }, 429)
+    const liked = await realm.like(c.var.userId, c.req.param('handle'))
+    if (liked.ok) return c.json({ likes: liked.likes })
+    return c.json({ error: liked.error }, liked.error === 'private' ? 403 : liked.error === 'self' ? 400 : 404)
+  })
+
+  app.post('/realm/furniture/buy', auth, smallBody, async (c) => {
+    const buy = parseFurnitureBuy(await json(c))
+    if (!buy) return c.json({ error: 'expected { id, pay, base? }' }, 400)
+    const price = furniturePrice(buy.id, buy.pay, brasiliaDay(new Date()))
+    if (price === null) return c.json({ error: 'not sold' }, 404)
+    if (!realm.takeBuy(c.var.userId)) return c.json({ error: 'too many buys' }, 429)
+    const bought = await realm.buy(c.var.userId, buy, price)
+    if (!bought.ok) return c.json({ error: bought.error }, BUY_ERRORS[bought.error])
+    return c.json(bought.pay === 'gems' ? { furniture: bought.furniture, pay: 'gems', balance: bought.balance } : { furniture: bought.furniture, pay: 'coins', save: bought.save, revision: bought.revision })
+  })
+
+  app.post('/realm/report', auth, smallBody, async (c) => {
+    const report = parseRealmReport(await json(c))
+    if (!report) return c.json({ error: 'expected { handle, reason, city }' }, 400)
+    if (await realm.closed(c.var.userId)) return c.json({ error: 'banned' }, 403)
+    const reported = await realm.report(c.var.userId, report)
+    if (reported !== 'stored') return c.json({ error: reported }, REALM_REPORT_ERRORS[reported])
+    return c.json({ received: true })
+  })
+
+  app.post('/realm/identity', smallBody, async (c) => {
+    const signed = await relayBody(c)
+    if ('error' in signed) return signed.error
+    const ids: IdentityRequest['userIds'] | null = isRecord(signed.body) && Array.isArray(signed.body.userIds) ? signed.body.userIds : null
+    if (!ids || ids.length > IDENTITY_BATCH || !ids.every((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 64)) return c.json({ error: 'expected { userIds }' }, 400)
+    return c.json(await realm.identity(ids))
+  })
+
+  app.post('/realm/visit', smallBody, async (c) => {
+    const signed = await relayBody(c)
+    if ('error' in signed) return signed.error
+    const b = signed.body
+    if (!isRecord(b) || typeof b.visitor !== 'string' || !b.visitor || b.visitor.length > 64 || typeof b.owner !== 'string' || b.owner.length > 64) return c.json({ error: 'expected { visitor, owner, city }' }, 400)
+    return c.json(await realm.visit(b.visitor, b.owner))
+  })
+
+  app.post('/realm/presence', bodyLimit({ maxSize: 64 * 1024 }), async (c) => {
+    const signed = await relayBody(c)
+    if ('error' in signed) return signed.error
+    const report = parsePresenceReport(signed.body)
+    if (!report) return c.json({ error: 'invalid presence' }, 400)
+    realm.presence(report)
+    return c.json({ ok: true })
+  })
+
   /** The desk's routes, all behind a valid token whose user Clerk says is admin. Everyone else gets 403, whatever they send. */
   const desk = new Hono<Auth>()
 
@@ -947,6 +1055,15 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
   for (const action of ['approve', 'void'] as const) {
     desk.post(`/festival/:id/${action}`, async (c) => ((await festival.review(c.var.userId, c.req.param('id'), action)) ? c.json({ ok: true }) : c.json({ error: 'unknown' }, 404)))
   }
+
+  desk.get('/realm', async (c) => c.json(await realm.desk()))
+
+  desk.post('/realm/moderation', smallBody, async (c) => {
+    const m = parseRealmModeration(await json(c))
+    if (!m) return c.json({ error: 'expected { userId, action, days?, reason? }' }, 400)
+    const done = await realm.act(c.var.userId, m)
+    return done ? c.json(done) : c.json({ error: 'unknown' }, 404)
+  })
 
   app.route('/admin', desk)
 

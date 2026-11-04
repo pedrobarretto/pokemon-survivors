@@ -1,5 +1,5 @@
 import { accountHandle } from '../account'
-import { fetchReports, findPlayers, moderate, sendGift, sentGifts } from '../admin'
+import { fetchRealmDesk, fetchReports, findPlayers, moderate, moderateRealm, sendGift, sentGifts } from '../admin'
 import { GIFT_TITLES, type GiftTitleId } from '../data/achievements'
 import { HATCHLING_IDS, HATCHLINGS } from '../data/hatchlings'
 import { styleIds, stylePrice, type FrameId } from '../data/style'
@@ -11,6 +11,9 @@ import { EGG_TIER_IDS, type EggTier } from '../game/eggs'
 import type { GiftContent } from '../game/gifts'
 import { REPORT_REASONS, type Moderation, type ReportGroup, type ReportedRun, type ReportReason } from '../game/reports'
 import { formatNumber, locale, t } from '../i18n'
+import { REALM_CITIES } from '../net/realm'
+import { REPORT_REASONS as REALM_REASONS, type ReportReason as RealmReason } from '../net/realmApi'
+import { REALM_BAN_DAYS, type RealmBan, type RealmModeration, type RealmReportGroup } from '../realm/moderation'
 import { PROFILE_PARAM } from '../ranking'
 import { ROUTES } from '../site/routes'
 import { contentLine } from './gifts'
@@ -20,7 +23,7 @@ import type { Screen } from './screens'
 
 /*
  * The admin's panel: the gift desk, and the reports with what to do about
- * them. Only the admin ever sees it (the API answers 403 to anyone else,
+ * them, and the Poké Realm's reports and bans. Only the admin ever sees it (the API answers 403 to anyone else,
  * whatever the page shows), so its own words are in Portuguese only; what
  * the player will read comes from `t()`, as on their side.
  */
@@ -41,6 +44,10 @@ type Kind = keyof typeof KINDS
 const isKind = (v: string): v is Kind => v in KINDS
 
 const REASONS = { cheating: 'Trapaça', name: 'Nome ofensivo', other: 'Outro' } as const satisfies Record<ReportReason, string>
+
+const REALM_REASON_NAMES = { spam: 'Spam', name: 'Nome ofensivo', base: 'Base ofensiva', harassment: 'Assédio', other: 'Outro' } as const satisfies Record<RealmReason, string>
+
+const realmBanLine = (b: RealmBan) => `⛔ Fora do Realm ${b.until ? `até ${when(b.until)}` : 'para sempre'} · ${b.reason}`
 
 const VERDICT = { true: '✓ verificada', false: '✗ fora do ranking', null: '? não checada' } as const
 
@@ -125,7 +132,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
   let armed = 0
   let busy = false
   let closed = false
-  let tab: 'gifts' | 'reports' = 'gifts'
+  let tab: 'gifts' | 'reports' | 'realm' = 'gifts'
 
   const query = h('input', { class: 'field-input', type: 'search', maxlength: 100, autocapitalize: 'none', autocorrect: 'off', autocomplete: 'off', spellcheck: 'false', placeholder: '@handle ou e-mail', enterkeyhint: 'search' })
   const results = h('div', { class: 'admin-results' })
@@ -174,6 +181,11 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
   const reportsTab = h('button', { class: 'region-tab rank-tab', type: 'button' }, 'Denúncias')
   const giftsSection = h('div', { class: 'admin-section' })
   const reportsSection = h('div', { class: 'admin-section hidden' }, reportsSummary, reportsStatus, reportsList)
+  const realmTab = h('button', { class: 'region-tab rank-tab', type: 'button' }, 'Realm')
+  const realmSummary = h('p', { class: 'field-message' }, 'Carregando…')
+  const realmStatus = h('p', { class: 'field-message' })
+  const realmList = h('div', { class: 'admin-reports' })
+  const realmSection = h('div', { class: 'admin-section hidden' }, realmSummary, realmStatus, realmList)
 
   const setTab = (next: typeof tab) => {
     if (next === tab) return
@@ -183,10 +195,14 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     reportsTab.classList.toggle('selected', tab === 'reports')
     giftsSection.classList.toggle('hidden', tab !== 'gifts')
     reportsSection.classList.toggle('hidden', tab !== 'reports')
+    realmTab.classList.toggle('selected', tab === 'realm')
+    realmSection.classList.toggle('hidden', tab !== 'realm')
     if (tab === 'reports') void loadReports()
+    if (tab === 'realm') void loadRealm()
   }
   giftsTab.addEventListener('click', () => setTab('gifts'))
   reportsTab.addEventListener('click', () => setTab('reports'))
+  realmTab.addEventListener('click', () => setTab('realm'))
 
   /* ---------------- Gifts ---------------- */
 
@@ -420,6 +436,88 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     reportsList.replaceChildren(...got.groups.map(groupCard))
   }
 
+  /* ---------------- The Poké Realm ---------------- */
+
+  const actRealm = async (m: RealmModeration, done: string) => {
+    const out = await moderateRealm(m)
+    if (closed) return
+    playSfx(typeof out === 'number' ? 'unlock' : 'hurt')
+    say(realmStatus, moderated(out, done), typeof out !== 'number')
+    void loadRealm()
+  }
+
+  /** Ban for a few days or for good (a reason needed), or lift the ban, and `extra` buttons first. */
+  const realmControls = (userId: string, ban: RealmBan | null, reason: string, extra: HTMLElement[] = []) => {
+    if (ban) return h('div', { class: 'admin-actions' }, h('div', { class: 'buttons' }, ...extra, askingButton('Desbanir do Realm', 'Confirmar: desbanir?', () => actRealm({ action: 'unban', userId }, 'Desbanido do Realm.'))))
+    const why = h('input', { class: 'field-input', type: 'text', maxlength: 200, placeholder: 'Motivo (obrigatório)', value: reason })
+    const days = h('select', { class: 'field-input admin-select' }, ...REALM_BAN_DAYS.map((d) => option(String(d), `${d} dia(s)`)), option('', 'Para sempre'))
+    const banButton = askingButton(
+      'Banir do Realm',
+      'Confirmar: banir?',
+      async () => {
+        const text = why.value.trim()
+        if (!text) return (playSfx('denied'), say(realmStatus, 'Escreva o motivo do ban.', true), why.focus())
+        await actRealm({ action: 'ban', userId, days: days.value ? Number(days.value) : null, reason: text }, 'Fora do Realm.')
+      },
+      'danger',
+    )
+    return h(
+      'div',
+      { class: 'admin-actions' },
+      h('label', { class: 'field' }, h('span', { class: 'field-label' }, 'MOTIVO'), h('span', { class: 'field-box' }, why)),
+      h('label', { class: 'field' }, h('span', { class: 'field-label' }, 'POR'), h('span', { class: 'field-box' }, days)),
+      h('div', { class: 'buttons' }, ...extra, banButton),
+    )
+  }
+
+  /** One trainer's open realm reports: who, how many and why, where, who reported, and what to do. */
+  const realmCard = (g: RealmReportGroup) => {
+    const reasons = REALM_REASONS.filter((r) => (g.reasons[r] ?? 0) > 0)
+    const top = reasons.reduce<RealmReason>((a, b) => ((g.reasons[b] ?? 0) > (g.reasons[a] ?? 0) ? b : a), 'other')
+    const dismiss = askingButton('Descartar', 'Confirmar: descartar?', () => actRealm({ action: 'dismiss', userId: g.userId }, 'Descartado.'))
+    return h(
+      'article',
+      { class: 'admin-report box' },
+      h(
+        'div',
+        { class: 'admin-report-head' },
+        h('span', {}, h('b', {}, g.handle ? `@${g.handle}` : 'sem @')),
+        g.ban ? h('span', { class: 'admin-banned' }, 'FORA DO REALM') : null,
+        h('b', { class: 'admin-report-count' }, `${g.count}×`),
+      ),
+      h('p', { class: 'admin-report-line' }, `${reasons.map((r) => `${REALM_REASON_NAMES[r]} ×${g.reasons[r]}`).join(' · ')} · última em ${when(g.latest)}`),
+      h('p', { class: 'admin-report-line' }, `${g.cities.map((c) => REALM_CITIES[c].name).join(', ') || 'Cidade não informada'} · por ${g.reporters.map((r) => `@${r}`).join(', ') || 'sem @'}`),
+      g.ban ? h('p', { class: 'field-message' }, realmBanLine(g.ban)) : null,
+      g.handle ? h('a', { class: 'admin-report-link', href: profileHref(g.handle), target: '_blank', rel: 'noopener' }, `Ver perfil de @${g.handle} ↗`) : null,
+      realmControls(g.userId, g.ban, REALM_REASON_NAMES[top], [dismiss]),
+    )
+  }
+
+  /** A ban in force with nothing open on the trainer: lift it from here. */
+  const banCard = (b: RealmBan) =>
+    h(
+      'article',
+      { class: 'admin-report box' },
+      h('div', { class: 'admin-report-head' }, h('span', {}, h('b', {}, b.handle ? `@${b.handle}` : 'sem @')), h('span', { class: 'admin-banned' }, 'FORA DO REALM')),
+      h('p', { class: 'field-message' }, `${realmBanLine(b)} · desde ${when(b.at)}`),
+      realmControls(b.userId, b, ''),
+    )
+
+  let realmId = 0
+
+  /** Loads the realm's open reports and bans into the tab, and the open count into its label. */
+  const loadRealm = async () => {
+    const id = ++realmId
+    const got = await fetchRealmDesk()
+    if (id !== realmId || closed) return
+    if (!got) return say(realmSummary, 'Não deu para carregar o Realm.', true)
+    const open = got.groups.reduce((n, g) => n + g.count, 0)
+    realmTab.textContent = open > 0 ? `Realm (${open})` : 'Realm'
+    say(realmSummary, `${open === 0 ? 'Nenhuma denúncia aberta no Poké Realm.' : `${open} denúncia(s) aberta(s) sobre ${got.groups.length} treinador(es).`} ${got.bans.length} ban(s) em vigor.`)
+    const reported = new Set(got.groups.map((g) => g.userId))
+    realmList.replaceChildren(...got.groups.map(realmCard), ...got.bans.filter((b) => !reported.has(b.userId)).map(banCard))
+  }
+
   /* ---------------- The dialog ---------------- */
 
   const searchForm = h(
@@ -433,9 +531,10 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     'div',
     { class: 'dialog box pop admin' },
     h('div', { class: 'dialog-title' }, 'PAINEL ADMIN'),
-    h('div', { class: 'region-tabs rank-tabs', role: 'tablist' }, giftsTab, reportsTab),
+    h('div', { class: 'region-tabs rank-tabs', role: 'tablist' }, giftsTab, reportsTab, realmTab),
     giftsSection,
     reportsSection,
+    realmSection,
     back,
   )
   const el = h('div', { class: 'screen dim' }, dialog)

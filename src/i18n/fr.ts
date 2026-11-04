@@ -563,7 +563,7 @@ export const fr: Messages = {
       banned: 'Ce compte ne peut pas utiliser la boutique.',
       receipts: 'Reçus',
       receiptsEmpty: 'Rien pour l’instant.',
-      reasons: { pack: 'Pack de gemmes', patreon: 'Patreon', play: 'Match dans l’Arène', run: 'Partie du jour', week: 'Semaine de jeu', buy: 'Achat', refund: 'Remboursement', dispute: 'Litige', disputeWon: 'Litige annulé', grant: 'Cadeau de l’équipe' },
+      reasons: { pack: 'Pack de gemmes', patreon: 'Patreon', play: 'Match dans l’Arène', run: 'Partie du jour', week: 'Semaine de jeu', buy: 'Achat', refund: 'Remboursement', dispute: 'Litige', disputeWon: 'Litige annulé', grant: 'Cadeau de l’équipe', furniture: 'Meuble de la menuiserie' },
       signIn: { title: 'Connecte-toi pour utiliser la Boutique', text: 'Tes gemmes et tes styles restent sur ton compte, sur tous tes appareils.', button: 'Se connecter' },
       unavailable: 'La Boutique n’est pas disponible dans cette version du jeu.',
       onlyLooks: 'Les gemmes n’achètent que des styles.',

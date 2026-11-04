@@ -563,7 +563,7 @@ export const en: Messages = {
       banned: "This account can't use the shop.",
       receipts: 'Receipts',
       receiptsEmpty: 'Nothing here yet.',
-      reasons: { pack: 'Gem pack', patreon: 'Patreon', play: 'Arena match', run: 'Run of the day', week: 'Week of play', buy: 'Purchase', refund: 'Refund', dispute: 'Dispute', disputeWon: 'Dispute reversed', grant: 'Gift from the team' },
+      reasons: { pack: 'Gem pack', patreon: 'Patreon', play: 'Arena match', run: 'Run of the day', week: 'Week of play', buy: 'Purchase', refund: 'Refund', dispute: 'Dispute', disputeWon: 'Dispute reversed', grant: 'Gift from the team', furniture: 'Carpentry furniture' },
       signIn: { title: 'Sign in to use the Shop', text: 'Your gems and looks stay on your account, on any device.', button: 'Sign in' },
       unavailable: 'The Shop isn’t available in this version of the game.',
       onlyLooks: 'Gems only buy looks.',

@@ -660,47 +660,62 @@ const synced = async () => {
  */
 export type FestivalDonation = { ok: true; held: boolean; today: number } | { ok: false; error: string }
 
-/** One `POST /festival/donate` on top of this device's revision; keeps the save it brings back. */
-const donateOnce = async (amount: number): Promise<FestivalDonation> => {
+/** What spending ₽ of the stored save came to: the API's answer (its body, the save already kept), or why it didn't go. */
+type Spent = { ok: true; body: Record<string, unknown> } | { ok: false; error: string }
+
+/**
+ * One `POST path` that spends `amount` ₽ of the stored save, sent with
+ * `payload` on top of this device's revision (`base`); keeps the save it
+ * brings back (`{ save, revision }`).
+ */
+const spendOnce = async (path: string, payload: Record<string, unknown>, amount: number): Promise<Spent> => {
   const link = readLink()
   const token = await sessionToken()
   if (!link || !token) return { ok: false, error: 'offline' }
   const before = JSON.stringify(loadSave())
-  const res = await fetch(`${API_URL}/festival/donate`, {
+  const res = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount, base: link.revision }),
+    body: JSON.stringify({ ...payload, base: link.revision }),
     signal: timeoutSignal(TIMEOUT_MS),
   })
   const body: unknown = await res.json().catch(() => null)
   if (!res.ok) return { ok: false, error: res.status === 429 ? 'rate' : isRecord(body) && typeof body.error === 'string' ? body.error : 'offline' }
   const done = parsePushed(body)
   if (!done || !isRecord(body)) return { ok: false, error: 'offline' }
-  // The stored save was this device's as of `base`: kept as is, unless the save changed meanwhile, which then takes the same donation.
+  // The stored save was this device's as of `base`: kept as is, unless the save changed meanwhile, which then spends the same ₽.
   writeSave(JSON.stringify(loadSave()) === before ? done.save : donateFrom(loadSave(), amount))
   writeLink({ ...(readLink() ?? link), revision: done.revision })
   savedListeners.forEach((fn) => fn())
-  return { ok: true, held: body.held === true, today: typeof body.today === 'number' ? body.today : 0 }
+  return { ok: true, body }
 }
 
 /**
- * Puts `amount` ₽ in the Festival da Praça's pot (`POST /festival/donate`).
- * Only the API takes ₽, from the save it stores, so this syncs first (₽ that
- * never synced can't go) and once more if another device pushed in between
- * (`stale`). The API's answer becomes the local save. Never throws.
+ * Spends `amount` ₽ of the save through the API's `POST path` (a Festival
+ * donation, a piece of furniture): only the API takes ₽, from the save it
+ * stores, so this syncs first (₽ that never synced can't go) and once more if
+ * another device pushed in between (`stale`). The API's answer becomes the
+ * local save. `guest` without an account, `offline` when it couldn't ask,
+ * `rate` past the route's limit, else the API's error. Never throws.
  */
-export const donateToFestival = async (amount: number): Promise<FestivalDonation> => {
+export const spendFromSave = async (path: string, payload: Record<string, unknown>, amount: number): Promise<Spent> => {
   if (!accountsEnabled || !readLink()) return { ok: false, error: 'guest' }
   try {
     await synced()
-    const first = await donateOnce(amount)
+    const first = await spendOnce(path, payload, amount)
     if (first.ok || first.error !== 'stale') return first
     await synced()
-    return await donateOnce(amount)
+    return await spendOnce(path, payload, amount)
   } catch (err) {
-    console.warn('festival donation failed', err)
+    console.warn(`spending from the save (${path}) failed`, err)
     return { ok: false, error: 'offline' }
   }
+}
+
+/** Puts `amount` ₽ in the Festival da Praça's pot (`POST /festival/donate`, through `spendFromSave`). */
+export const donateToFestival = async (amount: number): Promise<FestivalDonation> => {
+  const done = await spendFromSave('/festival/donate', { amount }, amount)
+  return done.ok ? { ok: true, held: done.body.held === true, today: typeof done.body.today === 'number' ? done.body.today : 0 } : done
 }
 
 /* ---------------- Sign in and out ---------------- */

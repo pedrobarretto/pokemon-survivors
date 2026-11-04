@@ -741,7 +741,7 @@ export const pt = {
       banned: 'Esta conta não pode usar a Loja.',
       receipts: 'Recibos',
       receiptsEmpty: 'Nenhuma movimentação ainda.',
-      reasons: { pack: 'Pacote de gemas', patreon: 'Patreon', play: 'Partida na Arena', run: 'Partida do dia', week: 'Semana de jogo', buy: 'Compra', refund: 'Reembolso', dispute: 'Contestação', disputeWon: 'Contestação revertida', grant: 'Presente da equipe' } satisfies Record<GemReason, string>,
+      reasons: { pack: 'Pacote de gemas', patreon: 'Patreon', play: 'Partida na Arena', run: 'Partida do dia', week: 'Semana de jogo', buy: 'Compra', refund: 'Reembolso', dispute: 'Contestação', disputeWon: 'Contestação revertida', grant: 'Presente da equipe', furniture: 'Móvel da carpintaria' } satisfies Record<GemReason, string>,
       signIn: { title: 'Entre para usar a Loja', text: 'As gemas e os visuais ficam na sua conta, em qualquer aparelho.', button: 'Entrar' },
       unavailable: 'A Loja não está disponível nesta versão do jogo.',
       onlyLooks: 'Gemas compram só visuais.',
