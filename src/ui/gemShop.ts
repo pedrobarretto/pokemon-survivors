@@ -1,5 +1,5 @@
-import { catalogSections, currencyFor, equip, methodsFor, priceText, rarityOf, shopCatalog, shownPacks, unequip } from '../arena/gemShop'
-import { COSMETIC_SLOTS, WEARABLE_SLOTS, arenaOnly, cosmeticPrice, showsIn, slotOf, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
+import { catalogSections, currencyFor, equip, methodsFor, ownedSkinLines, priceText, rarityOf, shopCatalog, shownPacks, takeOff, unequip, wearing } from '../arena/gemShop'
+import { COSMETIC_SLOTS, WEARABLE_SLOTS, arenaOnly, cosmeticPrice, showsIn, skinFor, slotOf, type CatalogSlot, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
 import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PACKS, GEM_PLAY, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
 import { effectIn } from '../data/arenaEffects'
 import { VERSUS, VERSUS_PICKS, type VersusPick } from '../data/versus'
@@ -15,7 +15,7 @@ import { formatNumber, locale, LOCALES, t } from '../i18n'
 import { createFxPreview } from '../render/arenaFx'
 import { drawPlateBar, drawPlateTag } from '../render/arenaPlates'
 import { gemIconUrl, slotIconUrl } from '../render/gemArt'
-import { drawPokemon, loadSpecies, portraitUrl, type Dex, type SpeciesSprites } from '../render/sprites'
+import { drawPokemon, loadSpecies, portraitUrl, skinSprites, sprites, type Dex, type SpeciesSprites } from '../render/sprites'
 import { versusTag } from '../render/team'
 import { TEAM_COLORS, TEAM_LIGHT } from '../render/vale'
 import { drawDressed, fitsWearer, loadWearables, wearableIcon } from '../render/wearables'
@@ -42,7 +42,7 @@ import { confirmDialog, type Screen } from './screens'
  */
 
 /** A rarity's color: the item cards' background, the names' tint. */
-const RARITY_COLORS = { common: '#6a7890', rare: '#3878d0', epic: '#9048c8', legendary: '#d89020' } as const
+export const RARITY_COLORS = { common: '#6a7890', rare: '#3878d0', epic: '#9048c8', legendary: '#d89020' } as const
 
 /** Seconds a preview faces each direction while it turns. */
 const TURN = 0.9
@@ -50,12 +50,12 @@ const TURN = 0.9
 /** The preview's turn: clockwise on screen, from facing the camera. */
 const TURN_ORDER: readonly Dir8[] = [0, 7, 6, 5, 4, 3, 2, 1]
 
-const isWearable = (slot: CosmeticSlot): slot is WearableSlot => (WEARABLE_SLOTS as readonly CosmeticSlot[]).includes(slot)
+const isWearable = (slot: CatalogSlot): slot is WearableSlot => (WEARABLE_SLOTS as readonly CatalogSlot[]).includes(slot)
 
-const tag = () => LOCALES[locale()].tag
+export const tag = () => LOCALES[locale()].tag
 
 /** Children with the absent ones (null) left out, for `append` and `replaceChildren`. */
-const present = (...nodes: (Node | null)[]) => nodes.filter((n): n is Node => n !== null)
+export const present = (...nodes: (Node | null)[]) => nodes.filter((n): n is Node => n !== null)
 
 /** Who the previews dress: a species (by dex) and its name, for the plate and the misfit flags. */
 export type Wearer = { dex: Dex; name: string }
@@ -80,13 +80,13 @@ const iconUrl = (id: CosmeticId) => {
   return url
 }
 
-const itemName = (id: CosmeticId) => {
-  const names: Record<string, string> = { ...t().wearables, ...t().arenaEffects }
+export const itemName = (id: CosmeticId) => {
+  const names: Record<string, string> = { ...t().wearables, ...t().arenaEffects, ...t().skins }
   return names[id] ?? id
 }
 
 /** "1.250" with the gem beside it. */
-const gemAmount = (n: number, cls = '') => h('span', { class: `gem-amount ${cls}` }, h('img', { class: 'gem-icon', src: gemIconUrl(), alt: '' }), formatNumber(n))
+export const gemAmount = (n: number, cls = '') => h('span', { class: `gem-amount ${cls}` }, h('img', { class: 'gem-icon', src: gemIconUrl(), alt: '' }), formatNumber(n))
 
 /* ---------------- The preview ---------------- */
 
@@ -108,10 +108,11 @@ const BURST_SLOTS = ['spawn', 'ko', 'goal'] as const satisfies readonly Cosmetic
  * seconds it plays its emote, and its spawn, KO and goal effects take turns.
  * A plate frames its name and HP bar, and a title shows under the stage.
  * `focus()` is the item being shown off: an emote plays on and on, a spawn,
- * KO or goal effect replays. Draws while it's on the page; `start` again
+ * KO or goal effect replays, a skin dresses the species if it covers it
+ * (`skinFor`; `shiny()` picks the colors). Draws while it's on the page; `start` again
  * after it comes back (a tab switch), `dispose` with its screen.
  */
-const lookStage = (wearer: () => Wearer, look: () => Look, focus: () => CosmeticId | null, cls = '') => {
+export const lookStage = (wearer: () => Wearer, look: () => Look, focus: () => CosmeticId | null, cls = '', shiny: () => boolean = () => false) => {
   const canvas = h('canvas', { class: 'gem-stage-canvas', width: 96, height: 88 })
   const title = h('div', { class: 'gem-stage-title' })
   const el = h('div', { class: `gem-stage ${cls}` }, canvas, title)
@@ -167,7 +168,7 @@ const lookStage = (wearer: () => Wearer, look: () => Look, focus: () => Cosmetic
       at.y += step.y * STAGE.speed * dt
     }
     // Its spawn, KO and goal effects take turns (the one shown off, alone; none while showing off something else).
-    const bursts = showing === null ? BURST_SLOTS.flatMap((slot) => show[slot] ?? []) : (BURST_SLOTS as readonly CosmeticSlot[]).includes(showing) && shown ? [shown] : []
+    const bursts = showing === null ? BURST_SLOTS.flatMap((slot) => show[slot] ?? []) : (BURST_SLOTS as readonly CatalogSlot[]).includes(showing) && shown ? [shown] : []
     if (bursts.length > 0 && (burstIn -= dt) <= 0) {
       burstIn = STAGE.burst
       fx.burst(bursts[burstTurn++ % bursts.length], at.x, at.y)
@@ -188,7 +189,10 @@ const lookStage = (wearer: () => Wearer, look: () => Look, focus: () => Cosmetic
     // An emote's sheet plays bare: the wearables' anchors only cover Walk, Idle and Hurt (as in a match).
     if (emote) drawPokemon(ctx, s, 'Idle', 0, emote.seconds, x, y, { sheet: emote.sheet, loop: emote.loop })
     else {
-      drawDressed(ctx, s, show, 'Walk', dir, seconds, x, y)
+      // In the look's skin for the species when it has one (the species' own until its sheets land), as a run draws it.
+      const skin = skinFor(show, dex)
+      const body = (skin && skinSprites(skin, dex, shiny())) || (shiny() ? sprites(dex, true) : s)
+      drawDressed(ctx, body, show, 'Walk', dir, seconds, x, y)
     }
     fx.drawAir(ctx, seconds)
     ctx.restore()
@@ -396,7 +400,7 @@ const keepCurrency = (c: GemCurrency) => {
   }
 }
 
-const signInCard = (ctx: GemTabsContext) => {
+export const signInCard = (ctx: GemTabsContext) => {
   const m = t().gems.shop
   if (!ctx.signIn) return h('p', { class: 'arena-hub-note' }, m.unavailable)
   const signIn = ctx.signIn
@@ -504,10 +508,10 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       return signIn ? h('button', { class: 'btn confirm gem-act', type: 'button', onclick: () => (playSfx('select'), later(signIn)) }, t().gems.shop.signIn.button) : null
     }
     if (owned) {
-      const on = worn()[slotOf(id)] === id
+      const on = wearing(worn(), id)
       return h(
         'button',
-        { class: `btn gem-act${on ? '' : ' confirm'}`, type: 'button', onclick: () => (playSfx('select'), void saveLook(on ? unequip(worn(), slotOf(id)) : equip(worn(), id))) },
+        { class: `btn gem-act${on ? '' : ' confirm'}`, type: 'button', onclick: () => (playSfx('select'), void saveLook(on ? takeOff(worn(), id) : equip(worn(), id))) },
         on ? m.unequip : m.equip,
       )
     }
@@ -517,9 +521,8 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
 
   const itemCard = (id: CosmeticId) => {
     const m = t().gems.shop
-    const slot = slotOf(id)
     const owned = ownedSet(status).has(id)
-    const on = worn()[slot] === id
+    const on = wearing(worn(), id)
     const price = cosmeticPrice(id)
     const misfit = !fits(id, ctx.wearer().dex)
     return h(
@@ -755,6 +758,33 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
         h('div', { class: 'gem-slot-items' }, ...(mine.length === 0 ? [h('small', { class: 'gem-slot-empty' }, m.locker.slotEmpty)] : [chipFor(null), ...mine.map(chipFor)])),
       )
     })
+    // Skins: a row per line the player owns any of, one worn at a time (in every stage it covers).
+    const skinLines = ownedSkinLines(owned, look)
+    const skinRows = skinLines.map(({ line, dex, name, mine, on }) =>
+      h(
+        'div',
+        { class: 'gem-slot gem-skin-slot' },
+        h('span', { class: 'gem-slot-head' }, h('img', { class: 'gem-line-face', src: portraitUrl(dex), alt: '' }), h('b', {}, name)),
+        h(
+          'div',
+          { class: 'gem-slot-items' },
+          ...[null, ...mine].map((id) => {
+            const worn = on === id
+            return h(
+              'button',
+              {
+                class: `gem-wear${worn ? ' on' : ''}${id ? ` ${rarityOf(id)}` : ''}`,
+                type: 'button',
+                style: id ? `--rarity:${RARITY_COLORS[rarityOf(id)]}` : '',
+                'aria-pressed': String(worn),
+                onclick: () => !worn && wear(id ? equip(look, id) : unequip(look, { line })),
+              },
+              id ? itemName(id) : m.locker.none,
+            )
+          }),
+        ),
+      ),
+    )
     const toShop = h('button', { class: 'btn small', type: 'button', onclick: () => (playSfx('select'), ctx.goTab('shop')) }, m.locker.toShop)
     const saved = saving === 'idle' ? m.locker.note : saving === 'saving' ? m.locker.saving : saving === 'saved' ? m.locker.saved : m.locker.local
     const scroll = el.parentElement?.scrollTop ?? 0
@@ -768,6 +798,9 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
       ),
       owned.size === 0 ? h('div', { class: 'arena-hub-card gem-empty' }, h('p', {}, m.locker.empty), toShop) : null,
       h('div', { class: 'gem-slots' }, ...rows),
+      skinRows.length > 0
+        ? h('section', { class: 'gem-skin-slots' }, h('span', { class: 'gem-slot-head' }, h('img', { src: slotIconUrl('skin'), alt: '' }), h('b', {}, m.skinShop.locker)), h('small', { class: 'gem-slot-empty' }, m.skinShop.lockerNote), h('div', { class: 'gem-slots' }, ...skinRows))
+        : null,
       owned.size > 0 ? toShop : null,
       ),
     )

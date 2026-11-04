@@ -8,7 +8,8 @@ import { gemIconUrl, slotIconUrl } from '../render/gemArt'
 import { wearsLooks } from '../render/wearables'
 import { dialogue } from './dialogue'
 import { h, later } from './dom'
-import { gemChip, lockerTab, pickWearer, shopTab, type GemTab, type GemTabId, type GemTabsContext, type Wearer } from './gemShop'
+import { gemChip, lockerTab, pickWearer, shopTab, type GemTab, type GemTabsContext, type Wearer } from './gemShop'
+import { skinsTab } from './skinShop'
 import { loadSave } from './save'
 import { hint, type Screen } from './screens'
 import { tailorSpeaker } from './visitors'
@@ -35,7 +36,7 @@ export const markBoutiqueSeen = () => {
 /** A NOVO tag for the Boutique's ways in, until it's first opened (null after). */
 export const boutiqueFresh = () => (boutiqueSeen() ? null : h('em', { class: 'lobby-new boutique-new' }, t().coop.fresh))
 
-export const BOUTIQUE_TABS = ['shop', 'locker'] as const satisfies readonly GemTabId[]
+export const BOUTIQUE_TABS = ['shop', 'skins', 'locker'] as const
 export type BoutiqueTab = (typeof BOUTIQUE_TABS)[number]
 
 /**
@@ -58,7 +59,7 @@ export type BoutiqueOpts = {
  * Leavanny's Boutique over the plaza (`TitleActions.boutique`): the gem shop
  * as a standalone sheet laid out as the Kecleon shop's (`.shop-sheet`), with
  * its Loja and Visual tabs (`ui/gemShop.ts`, the same pages the Arena hub
- * leads to), the gem chip in its head, and Leavanny's passive box beside it.
+ * leads to) and Skins between them (`ui/skinShop.ts`), the gem chip in its head, and Leavanny's passive box beside it.
  * The previews dress the lobby's partner when it can wear looks, the Arena
  * pick otherwise; picking a Pokémon in Visual dresses that one instead.
  * Guests browse and try things on; buying or wearing asks them to sign in.
@@ -93,10 +94,10 @@ export const openBoutique = (root: HTMLElement, input: Input, opts: BoutiqueOpts
   }
   // Each page is made the first time it shows and kept (with its preview) across tab switches.
   const pages: Partial<Record<BoutiqueTab, GemTab>> = {}
-  const page = (id: BoutiqueTab) => (pages[id] ??= id === 'shop' ? shopTab(ctx, opts.checkout) : lockerTab(ctx))
-  const busy = () => pages.shop?.busy() === true || pages.locker?.busy() === true
+  const page = (id: BoutiqueTab) => (pages[id] ??= id === 'shop' ? shopTab(ctx, opts.checkout) : id === 'skins' ? skinsTab(ctx) : lockerTab(ctx))
+  const busy = () => BOUTIQUE_TABS.some((id) => pages[id]?.busy() === true)
 
-  const icons = { shop: gemIconUrl(), locker: slotIconUrl('head') } as const satisfies Record<BoutiqueTab, string>
+  const icons = { shop: gemIconUrl(), skins: slotIconUrl('skin'), locker: slotIconUrl('head') } as const satisfies Record<BoutiqueTab, string>
   const tabs = BOUTIQUE_TABS.map((id) =>
     h(
       'button',
@@ -170,8 +171,7 @@ export const openBoutique = (root: HTMLElement, input: Input, opts: BoutiqueOpts
       closed = true
       off()
       offGems()
-      pages.shop?.dispose()
-      pages.locker?.dispose()
+      for (const id of BOUTIQUE_TABS) pages[id]?.dispose()
       talk.dispose()
       el.remove()
     },

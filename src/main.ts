@@ -220,7 +220,9 @@ import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from '
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
 import { freeWearables, wearMemory } from './render/wearables'
-import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, type Look, type CosmeticSlot } from './data/cosmetics'
+import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkins, type Look, type CosmeticSlot } from './data/cosmetics'
+import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS } from './data/skinCatalog'
+import { equip } from './arena/gemShop'
 import { effectIn } from './data/arenaEffects'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
 import { createVersusTalk, type VersusTalk } from './ui/versusTalk'
@@ -591,7 +593,7 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
  */
 const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null) => {
   boutiqueCheckout = checkout
-  showTitle({ shop: tab === 'locker' ? 'locker' : 'boutique', instant: true, ...(back && { back }) })
+  showTitle({ shop: tab === 'shop' ? 'boutique' : tab, instant: true, ...(back && { back }) })
 }
 
 const queueMega = () => {
@@ -3630,7 +3632,7 @@ const showSharedProfile = (handle: string) => {
 const IDEAS_PARAM = 'ideias'
 /** `?loja`, the Kecleon's shop's own link: the lobby opens at the plaza, Kecleon says hello and the shop opens. */
 const SHOP_PARAM = 'loja'
-/** `?boutique`, Leavanny's Boutique's own link: the lobby opens on the plaza's north-west with the Boutique open on Loja. */
+/** `?boutique`, Leavanny's Boutique's own link: the lobby opens on the plaza's north-west with the Boutique open on Loja (`?boutique=skins`: on Skins). */
 const BOUTIQUE_PARAM = 'boutique'
 
 const showIdeasLink = () =>
@@ -3796,7 +3798,7 @@ const boot = () => {
   if (shared) showSharedProfile(shared)
   else if (rankingEnabled && new URLSearchParams(location.search).has(IDEAS_PARAM)) showIdeasLink()
   else if (new URLSearchParams(location.search).has(SHOP_PARAM)) showTitle({ shop: 'shop', instant: true })
-  else if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) showBoutique('shop')
+  else if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) showBoutique(new URLSearchParams(location.search).get(BOUTIQUE_PARAM) === 'skins' ? 'skins' : 'shop')
   else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
   // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack.
   else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
@@ -4383,6 +4385,8 @@ const devLook = (cmd?: Look | 'bots' | 'emote' | 'play' | 'clear', arg?: string 
         const ids = bySlot(slot)
         if (ids.length > 0 && Math.random() < 0.8) look[slot] = ids[Math.floor(Math.random() * ids.length)]!
       }
+      const skins = SKIN_LINES.map((line) => SKIN_IDS.filter((id) => SKINS[id].line === line)).map((ids) => ids[Math.floor(Math.random() * ids.length)]!)
+      looks[i] = withSkins(look, skins)
     })
   } else if (cmd === 'clear') looks[me] = {}
   else if (cmd) {
@@ -4395,6 +4399,27 @@ const devLook = (cmd?: Look | 'bots' | 'emote' | 'play' | 'clear', arg?: string 
 }
 
 /**
+ * Dev: `ps.skin('charmanderSuit')` wears a skin (`data/skinCatalog.ts`) on this player's seat in the running run or
+ * match (a seat number after it dresses that seat), in place of its line's other; the Pokémon shows it on every stage
+ * it covers (`ps.startRun('charmander')`, `ps.evolve()`; the shiny with `ps.unlockShiny('charmander')`). `ps.skin('off')`
+ * takes the seat's skins off; `ps.skin()` lists the skins and what each covers. Returns the seat's look.
+ */
+const devSkin = (id?: string, seat?: number) => {
+  if (id === undefined) return Object.fromEntries(SKIN_IDS.map((s) => [s, SKINS[s].dexes]))
+  const c = run?.coop
+  const g = c ? c.runner.game : run?.game
+  if (!run || !g) return "ps.skin: start a run or a match first (ps.startRun('charmander'), ps.versus('charmander'))"
+  if (id !== 'off' && !isSkinId(id)) return `ps.skin(id): one of ${SKIN_IDS.join(', ')}`
+  const me = c ? c.runner.slot : 0
+  const looks = g.players.map((p) => ({ ...lookOf(p.slot) }))
+  const at = seat !== undefined && looks[seat] ? seat : me
+  looks[at] = id === 'off' ? withSkins(looks[at] ?? {}, []) : equip(looks[at] ?? {}, id)
+  setLooks(looks)
+  if (at === me) setLocalLook(looks[me] ?? {})
+  return looks[at]
+}
+
+/**
  * Dev: the Arena's gem shop from the console (`gems.ts`, `ui/gemShop.ts`).
  * `ps.gems()` prints what the shop knows (and the look a match would carry);
  * `ps.gems('fake', 1250)` makes every call answer made-up data from that
@@ -4403,8 +4428,8 @@ const devLook = (cmd?: Look | 'bots' | 'emote' | 'play' | 'clear', arg?: string 
  * owns a cosmetic (all without one); `('return', 'chest')` comes back from a
  * checkout of that pack (`'never'`: the gems never land and the wait runs
  * out); `('refuse', 'cap')` turns every checkout down as the API would
- * (`'once'`: the welcome pack taken; no reason: none again); `('shop')` and
- * `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
+ * (`'once'`: the welcome pack taken; no reason: none again); `('shop')`,
+ * `('skins')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
  */
 const devGems = (cmd?: string, arg?: string | number) => {
   if (cmd === 'fake') {
@@ -4418,9 +4443,9 @@ const devGems = (cmd?: string, arg?: string | number) => {
   } else if (cmd === 'return') {
     showBoutique('shop', undefined, stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
   } else if (cmd === 'refuse') stageRefusal(arg === 'cap' || arg === 'once' ? arg : null)
-  else if (cmd === 'shop' || cmd === 'locker') showBoutique(cmd)
+  else if (cmd === 'shop' || cmd === 'skins' || cmd === 'locker') showBoutique(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
-  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('locker') · ('fetch')"
+  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch')"
   // In a run or a match, each seat's look as the shell holds it.
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }
@@ -4456,6 +4481,7 @@ if (import.meta.env.DEV) {
       /** The head rig tool (`ui/rigTool.ts`, loaded on demand): `ps.rig(152)` shows a variant's rig over its frame and fixes it by hand (`'6:megaX'`, `'502s'`; `ps.rig(25, { dir: 2, item: 'crown' })`). */
       rig: (variant?: unknown, opts?: Parameters<typeof import('./ui/rigTool').openRig>[1]) => import('./ui/rigTool').then((m) => m.openRig(variant, opts)),
       look: devLook,
+      skin: devSkin,
       gems: devGems,
       candyGoal: devCandyGoal,
       /**
@@ -4534,9 +4560,9 @@ if (import.meta.env.DEV) {
       /**
        * Leavanny's Boutique on the plaza's north-west: `ps.boutique()` walks the lobby there, Leavanny's hello included (the first
        * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
-       * `ps.boutique('open')` lands there with the sheet open at once (`'locker'` on Visual).
+       * `ps.boutique('open')` lands there with the sheet open at once (`'skins'` on Skins, `'locker'` on Visual).
        */
-      boutique: (cmd?: 'open' | 'locker') => (cmd ? showBoutique(cmd === 'locker' ? 'locker' : 'shop') : showTitle({ shop: 'boutique' })),
+      boutique: (cmd?: 'open' | 'skins' | 'locker') => (cmd ? showBoutique(cmd === 'open' ? 'shop' : cmd) : showTitle({ shop: 'boutique' })),
       /**
        * The Kecleon plaza: `ps.plaza(3)` shows the shop's building at that level (1 to 5, until the next reload; `ps.plaza(0)`
        * goes back to the save's) and the lobby pans there for a look, cards out; Esc or Enter comes back.

@@ -22,7 +22,8 @@ import type { Role } from '../data/versus'
 import type { MapId } from '../data/versusMaps'
 import type { WearableId } from '../data/wearables'
 import type { ArenaEffectId } from '../data/arenaEffects'
-import type { CosmeticSlot, Rarity } from '../data/cosmetics'
+import type { CatalogSlot, Rarity } from '../data/cosmetics'
+import type { Season, SkinId } from '../data/skinCatalog'
 import type { GemPackId } from '../data/gems'
 import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
@@ -677,6 +678,43 @@ export const pt = {
   },
 
   /** Co-op: the connection pip, the overlays and notices in a run, the lobby's entry, the hub (create or join) and the room. */
+  /** The skins (`data/skinCatalog.ts`), by id: the Pokémon's name stays in English. */
+  skins: {
+    charmanderSuit: 'Charmander de Terno',
+    squirtleNinja: 'Squirtle Ninja',
+    torchicGi: 'Torchic de Quimono',
+    gengarSuit: 'Gengar de Terno',
+    froakieDart: 'Froakie Rã-Flecha',
+    rayquazaCelestial: 'Rayquaza Celestial',
+    groudonObsidian: 'Groudon Obsidiana',
+    bulbasaurSakura: 'Bulbasaur Sakura',
+    bulbasaurAutumn: 'Bulbasaur Outono',
+    bulbasaurWinter: 'Bulbasaur Inverno',
+    chikoritaSakura: 'Chikorita Sakura',
+    chikoritaAutumn: 'Chikorita Outono',
+    chikoritaWinter: 'Chikorita Inverno',
+    treeckoSakura: 'Treecko Sakura',
+    treeckoAutumn: 'Treecko Outono',
+    treeckoWinter: 'Treecko Inverno',
+    turtwigSakura: 'Turtwig Sakura',
+    turtwigAutumn: 'Turtwig Outono',
+    turtwigWinter: 'Turtwig Inverno',
+    budewSakura: 'Budew Sakura',
+    budewAutumn: 'Budew Outono',
+    budewWinter: 'Budew Inverno',
+    rowletSakura: 'Rowlet Sakura',
+    rowletAutumn: 'Rowlet Outono',
+    rowletWinter: 'Rowlet Inverno',
+    sprigatitoSakura: 'Sprigatito Sakura',
+    sprigatitoAutumn: 'Sprigatito Outono',
+    sprigatitoWinter: 'Sprigatito Inverno',
+    shroomishSakura: 'Shroomish Sakura',
+    shroomishAutumn: 'Shroomish Outono',
+    shroomishWinter: 'Shroomish Inverno',
+    phantumpSakura: 'Phantump Sakura',
+    phantumpAutumn: 'Phantump Outono',
+    phantumpWinter: 'Phantump Inverno',
+  } satisfies Record<SkinId, string>,
   /** The Arena's worn cosmetics (`data/wearables.ts`), by id. */
   wearables: {
     strawHat: 'Chapéu de palha',
@@ -706,7 +744,7 @@ export const pt = {
     /** The gem chip's label, for screen readers and its tooltip. */
     chip: (n: string) => `${n} gemas`,
     gems: (n: string) => `${n} gemas`,
-    slots: { head: 'Cabeça', back: 'Costas', trail: 'Rastro', spawn: 'Entrada', ko: 'Nocaute', goal: 'Gol', emote: 'Emote', title: 'Título', plate: 'Placa' } satisfies Record<CosmeticSlot, string>,
+    slots: { head: 'Cabeça', back: 'Costas', trail: 'Rastro', spawn: 'Entrada', ko: 'Nocaute', goal: 'Gol', emote: 'Emote', title: 'Título', plate: 'Placa', skin: 'Skin' } satisfies Record<CatalogSlot, string>,
     rarities: { common: 'Comum', rare: 'Raro', epic: 'Épico', legendary: 'Lendário' } satisfies Record<Rarity, string>,
     /** The packs' names (`GEM_PACKS` in `data/gems.ts`). */
     packs: { welcome: 'Boas-vindas', pouch: 'Punhado', bag: 'Bolsa', chest: 'Baú', hoard: 'Tesouro', vault: 'Cofre' } satisfies Record<GemPackId, string>,
@@ -770,6 +808,35 @@ export const pt = {
       timeout: 'Pagamento a caminho',
       timeoutNote: 'Ainda estamos confirmando o pagamento. As gemas chegam à sua conta em alguns minutos (um Pix pode demorar um pouco mais), e você pode continuar jogando.',
       ok: 'Continuar',
+    },
+    /** The Skins page (`ui/skinShop.ts`): skins by line, the bundles and the launch offers. */
+    skinShop: {
+      pitch: 'Seu Pokémon redesenhado, em todos os estágios da linha. Aparece nas suas partidas, no co-op e na Arena.',
+      lines: 'Linhas',
+      normal: 'Normal',
+      shiny: 'Shiny',
+      /** What a skin dresses (Pokémon names, joined). */
+      covers: (names: string) => `Veste ${names}`,
+      forms: 'Megas e outras formas aparecem sem a skin.',
+      /** A seasonal line's bundle (`SKIN_BUNDLES`), by the line's first Pokémon, and its note. */
+      bundle: (line: string) => `Coleção das Estações: ${line}`,
+      bundleNote: (n: number) => `As ${n} estações juntas`,
+      /** The seasons' launch offers: the section, each offer's name and note (its last day). */
+      offers: 'Ofertas de lançamento',
+      offer: (season: string) => `Estação ${season} completa`,
+      offerNote: (n: number, day: string) => `As ${n} skins da estação, até ${day}`,
+      /** A bundle's price after what the player owns already, and what it saves on buying them one by one. */
+      less: (n: string) => `−${n} pelas que você já tem`,
+      saves: (n: string) => `Economize ${n}`,
+      complete: 'Completa',
+      confirmBundle: (name: string, n: number, price: string) => `Comprar ${name} (${n} ${n === 1 ? 'skin' : 'skins'}) por ${price} gemas?`,
+      boughtBundle: (name: string) => `${name} é sua! Escolha qual usar em cada linha.`,
+      /** Before the skins' launch day (`SKIN_LAUNCH`). */
+      soon: (day: string) => `À venda a partir de ${day}`,
+      seasons: { sakura: 'Sakura', autumn: 'Outono', winter: 'Inverno' } satisfies Record<Season, string>,
+      /** Visual's skins section: one per line. */
+      locker: 'Skins',
+      lockerNote: 'Uma skin por linha: ela aparece em todos os estágios que veste.',
     },
     locker: {
       pick: 'Pokémon da prévia',
@@ -5924,7 +5991,7 @@ export const pt = {
   boutique: {
     title: 'Boutique',
     /** Its tabs: the gem shop and the look worn. */
-    tabs: { shop: 'Loja', locker: 'Visual' },
+    tabs: { shop: 'Loja', skins: 'Skins', locker: 'Visual' },
     /** The Kecleon shop's button to it. */
     shopButton: 'Boutique',
     /** The Trainer Card's row to the look worn (the Boutique's Visual, without the walk). */

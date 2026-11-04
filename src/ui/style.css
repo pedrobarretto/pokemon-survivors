@@ -24484,3 +24484,164 @@ span.arena-hub-face {
     grid-template-columns: 1fr;
   }
 }
+
+/* The Boutique's Skins page (ui/skinShop.ts): line chips with faces, cards walking the skin on every stage, the bundles. */
+.gem-lines {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.gem-line {
+  flex: none;
+  padding-left: 2px;
+}
+
+.gem-filter img.gem-line-face,
+.gem-slot-head img.gem-line-face {
+  width: 24px;
+  height: 24px;
+  filter: none;
+  border-radius: 99px;
+  background: var(--dk-surface-0, #fff);
+}
+
+.gem-line-on {
+  font-style: normal;
+  color: #2f9a40;
+}
+
+.gem-skin-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.gem-skin-art {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  background: radial-gradient(ellipse 70% 20% at 50% 88%, #5aa848 98%, transparent), linear-gradient(180deg, var(--dk-wash-blue, #dfeefe), var(--dk-wash-green, #e2f4dc));
+  border-radius: 6px;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+}
+
+.gem-skin-canvas {
+  width: 240px;
+  max-width: 100%;
+  aspect-ratio: 120 / 56;
+  image-rendering: pixelated;
+}
+
+.gem-skin-covers {
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1;
+  text-align: center;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-bundles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.gem-bundle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  color: var(--dk-ink, #303040);
+  background: var(--dk-surface-0, #fff);
+  border: 3px solid #9048c8;
+  border-radius: 8px;
+}
+
+.gem-bundle.offer {
+  border-color: #d89020;
+  background: linear-gradient(135deg, rgba(248, 216, 112, 0.35), var(--dk-surface-0, #fff) 55%);
+}
+
+.gem-bundle.done {
+  opacity: 0.7;
+}
+
+.gem-bundle-art {
+  display: flex;
+}
+
+.gem-bundle-art img {
+  width: 28px;
+  height: 28px;
+  margin-left: -10px;
+  image-rendering: pixelated;
+  background: var(--dk-surface-2, #e8e8f0);
+  border: 2px solid var(--dk-surface-0, #fff);
+  border-radius: 99px;
+}
+
+.gem-bundle-art img:first-child {
+  margin-left: 0;
+}
+
+.gem-bundle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gem-bundle-text b {
+  font-family: var(--title);
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.gem-bundle-text small {
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-bundle-text .gem-bundle-save {
+  color: #2f9a40;
+}
+
+.gem-bundle-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gem-bundle-price s {
+  font-family: var(--body);
+  font-size: 15px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-bundle-done {
+  font-family: var(--title);
+  font-size: 8px;
+  color: #2f9a40;
+}
+
+.gem-skin-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 640px) {
+  .gem-skin-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  .gem-bundle {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .gem-bundle > .btn,
+  .gem-bundle > .gem-bundle-done {
+    grid-column: 1 / -1;
+  }
+}

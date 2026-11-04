@@ -853,10 +853,10 @@ const BOARD_TABS = { play: null, ranking: 'ranking', season: 'season', history: 
  * opens it on Loja (`locker`: on Visual, the Trainer Card's row); walking there, Leavanny says hello first.
  * `dojo` and `stadium` go west to the Dojo and south to the Estádio instead, where Machoke or Ninjask says hello.
  */
-export type ShopTrip = 'shop' | 'festival' | 'plaque' | 'look' | 'boutique' | 'locker' | 'dojo' | 'stadium'
+export type ShopTrip = 'shop' | 'festival' | 'plaque' | 'look' | 'boutique' | 'skins' | 'locker' | 'dojo' | 'stadium'
 
 /** The place a trip goes to. */
-const tripPlace = (mode: ShopTrip): Place => (mode === 'dojo' || mode === 'stadium' ? mode : mode === 'boutique' || mode === 'locker' ? 'boutique' : 'plaza')
+const tripPlace = (mode: ShopTrip): Place => (mode === 'dojo' || mode === 'stadium' ? mode : mode === 'boutique' || mode === 'skins' || mode === 'locker' ? 'boutique' : 'plaza')
 
 /**
  * Title screen over the live meadow: the pixel logo and a blinking "press
@@ -1277,7 +1277,7 @@ export const titleScreen = (
     visit.phase = 'shop'
     if (visit.mode === 'dojo') return greetAtDojo()
     if (visit.mode === 'stadium') return greetAtStadium()
-    if (visit.mode === 'boutique' || visit.mode === 'locker') return greetAtBoutique(visit.mode === 'locker' ? 'locker' : 'shop', visit.instant)
+    if (visit.mode === 'boutique' || visit.mode === 'skins' || visit.mode === 'locker') return greetAtBoutique(visit.mode === 'boutique' ? 'shop' : visit.mode, visit.instant)
     if (visit.mode === 'festival' || visit.mode === 'plaque') overScreen = actions.festival(goHome, visit.mode === 'plaque' ? 'plaque' : 'fountain')
     else openShop(visit.shelf)
   }
