@@ -24693,6 +24693,30 @@ span.arena-hub-face {
   image-rendering: pixelated;
 }
 
+/* An exterior's pick: its entrance as the grove draws it, a corner of its room tucked under it. */
+.base-entrance {
+  position: relative;
+  display: block;
+  width: 60px;
+  height: 46px;
+}
+
+.base-entrance img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.base-swatch .base-entrance canvas {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 18px;
+  height: 18px;
+}
+
 .base-swatch.on {
   color: #f8d030;
   background: #283048;
@@ -25133,6 +25157,58 @@ span.arena-hub-face {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+}
+
+/* The labels floating over the town's spots and doors as a trainer comes near: small wooden signs, a notch pointing down. */
+.realm-signs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.realm-sign {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin-top: -5px;
+  padding: 4px 7px 3px;
+  border: 2px solid #4a3020;
+  border-radius: 4px;
+  background: #fbf1d6;
+  box-shadow: 0 2px 0 rgba(16, 24, 16, 0.35);
+  color: #4a3020;
+  font-family: var(--title);
+  font-size: 8px;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.18s ease-out;
+  will-change: transform, opacity;
+}
+
+.realm-sign::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-right: 2px solid #4a3020;
+  border-bottom: 2px solid #4a3020;
+  background: #fbf1d6;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.realm-sign.shown {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .realm-sign {
+    transition: none;
+  }
 }
 
 .realm-plate,

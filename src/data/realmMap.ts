@@ -20,7 +20,7 @@ export type Point = { x: number; y: number }
 export type Shape = ({ kind: 'rect' } & Rect) | { kind: 'oval'; x: number; y: number; rx: number; ry: number }
 
 /** What a spot does when used. */
-export type SpotKind = 'coopPortal' | 'arenaPortal' | 'board' | 'bases' | 'myBase' | 'carpenter' | 'pool' | 'counter' | 'bench'
+export type SpotKind = 'coopPortal' | 'arenaPortal' | 'board' | 'bases' | 'myBase' | 'carpenter' | 'host' | 'pool' | 'counter' | 'bench'
 
 /** The town's rooms (their shapes are `REALM_ROOMS`). */
 export const TOWN_ROOMS = ['plaza', 'pier', 'cafe', 'trail'] as const
@@ -50,9 +50,11 @@ const post = (x: number, y: number) => oval(x, y - 1, 5, 3)
  * whose door is the café's, and the roads west to the trail and east to the
  * pier. The pier has the lagoon Water types swim in (it doesn't block: the
  * others wade) and a bench; the sea around it does block. The café has its
- * counter and two sofas, and the trail the secret bases: a way into your own
- * base at each of the four doors (cave, tree, bush, sand), the board of
- * public bases between them and Bibarel's carpentry to the south.
+ * counter and two sofas, and the trail is the Secret Base Grove: your own
+ * base's entrance at the head of its clearing (one `myBase` spot; the art
+ * shows the exterior your base wears), the board of public bases on the
+ * west, Bibarel's carpentry to the south and the grove's host (`host`),
+ * who explains it all, by the road in.
  */
 export const REALM_ROOMS = {
   plaza: {
@@ -97,23 +99,27 @@ export const REALM_ROOMS = {
     h: 480,
     spawn: { x: 40, y: 256 },
     solid: [
-      rect(574, 0, 66, 146),
-      rect(574, 194, 66, 286),
+      rect(574, 0, 66, 168),
+      rect(574, 216, 66, 264),
       rect(0, 446, 640, 34),
       oval(600, 470, 80, 60),
-      oval(506, 100, 24, 10),
-      oval(470, 106, 14, 7),
-      oval(540, 110, 14, 7),
-      rect(590, 158, 44, 14),
-      oval(220, 374, 20, 6),
-      oval(470, 394, 20, 6),
-      oval(296, 200, 8, 4),
-      oval(408, 180, 8, 4),
+      oval(514, 142, 28, 10),
+      oval(468, 150, 24, 8),
+      oval(558, 156, 20, 7),
+      rect(590, 180, 44, 14),
+      oval(452, 228, 14, 5),
+      oval(256, 398, 20, 6),
+      oval(548, 404, 20, 6),
+      oval(392, 236, 16, 6),
+      oval(252, 285, 24, 7),
+      oval(430, 290, 22, 8),
+      oval(410, 371, 20, 7),
       rect(76, 320, 32, 10),
       post(168, 222),
       post(168, 300),
       post(24, 216),
-      ...[trunk(40, 100), trunk(104, 70), shrub(160, 100), trunk(260, 64), shrub(330, 96), trunk(40, 430), shrub(100, 424)],
+      ...[trunk(252, 214), trunk(528, 300), trunk(180, 412)],
+      ...[trunk(40, 100), trunk(104, 70), shrub(160, 100), trunk(260, 64), shrub(330, 96), trunk(40, 430)],
     ],
     doors: [{ at: { x: 0, y: 226, w: 10, h: 60 }, to: 'plaza', spawn: { x: 600, y: 256 } }],
     spots: [
@@ -151,31 +157,30 @@ export const REALM_ROOMS = {
     h: 480,
     spawn: { x: 600, y: 256 },
     solid: [
-      oval(96, 146, 34, 12),
-      oval(222, 140, 42, 16),
-      rect(304, 150, 52, 12),
-      oval(442, 146, 34, 14),
-      oval(562, 150, 40, 12),
-      rect(222, 340, 100, 46),
-      rect(174, 380, 44, 14),
-      post(400, 238),
-      post(180, 292),
-      rect(404, 320, 32, 10),
-      post(616, 232),
+      oval(322, 166, 56, 14),
+      post(244, 196),
+      post(400, 196),
+      rect(100, 192, 92, 14),
+      post(500, 236),
+      post(364, 324),
+      rect(268, 366, 100, 38),
+      rect(214, 388, 44, 14),
+      rect(430, 300, 32, 10),
+      rect(180, 290, 32, 10),
+      oval(556, 289, 8, 4),
       oval(610, 324, 14, 7),
-      oval(360, 466, 14, 7),
-      ...[trunk(160, 96), trunk(286, 84), trunk(384, 92), trunk(502, 96), trunk(620, 120), shrub(30, 200), trunk(40, 380), trunk(112, 336)],
-      ...[shrub(150, 452), trunk(500, 372), trunk(566, 430), shrub(440, 452), trunk(620, 474), trunk(30, 476)],
+      oval(232, 466, 14, 7),
+      ...[trunk(160, 96), trunk(236, 70), trunk(404, 72), trunk(486, 104), trunk(600, 120), shrub(552, 170), shrub(70, 170), trunk(40, 110)],
+      ...[trunk(40, 380), trunk(112, 330), shrub(150, 452), trunk(500, 390), trunk(566, 440), shrub(440, 452), trunk(620, 474), trunk(30, 476)],
     ],
     doors: [{ at: { x: 630, y: 226, w: 10, h: 60 }, to: 'plaza', spawn: { x: 40, y: 256 } }],
     spots: [
-      { kind: 'myBase', at: { x: 96, y: 172 }, reach: 24 },
-      { kind: 'myBase', at: { x: 222, y: 170 }, reach: 24 },
-      { kind: 'bases', at: { x: 330, y: 176 }, reach: 24 },
-      { kind: 'myBase', at: { x: 442, y: 174 }, reach: 24 },
-      { kind: 'myBase', at: { x: 562, y: 176 }, reach: 24 },
-      { kind: 'carpenter', at: { x: 272, y: 404 }, reach: 28 },
-      { kind: 'bench', at: { x: 420, y: 344 }, reach: 20 },
+      { kind: 'myBase', at: { x: 318, y: 196 }, reach: 26 },
+      { kind: 'bases', at: { x: 146, y: 222 }, reach: 26 },
+      { kind: 'carpenter', at: { x: 318, y: 420 }, reach: 28 },
+      { kind: 'host', at: { x: 556, y: 310 }, reach: 24 },
+      { kind: 'bench', at: { x: 446, y: 324 }, reach: 20 },
+      { kind: 'bench', at: { x: 196, y: 314 }, reach: 20 },
     ],
   },
 } as const satisfies Record<TownRoomId, TownRoom>

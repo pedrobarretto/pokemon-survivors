@@ -2,7 +2,8 @@ import { track } from '../analytics'
 import { effectIn } from '../data/arenaEffects'
 import { lookIn, parseLook, type Look } from '../data/cosmetics'
 import { PLAYABLE } from '../data/hatchlings'
-import { BASE_GRID, BASE_ROOM, LANDING, REALM_ROOMS, isTownRoomId, type Door, type Rect, type Spot, type SpotKind } from '../data/realmMap'
+import { BASE_GRID, BASE_ROOM, LANDING, REALM_ROOMS, isTownRoomId, type Door, type Point, type Rect, type Spot, type SpotKind } from '../data/realmMap'
+import type { BaseExterior } from '../data/secretBases'
 import { playSfx } from '../engine/audio'
 import { joystick, type Input, type Stick } from '../engine/input'
 import type { Vec } from '../engine/math'
@@ -32,13 +33,15 @@ import type { RealmClient } from '../realm/client'
 import { createWalker, place, pushSample, report, sampleAt, snap, walk, type Ground, type Track } from '../realm/interp'
 import { baseSolids, drawBaseRoom } from '../render/base'
 import { drawJoystick } from '../render/joystick'
-import { drawTownGround, drawTownOverhead, townPieces } from '../render/realmArt'
+import { drawTownGround, drawTownOverhead, labelTop, townPieces } from '../render/realmArt'
+import { GROVE_HOST } from '../render/realmLayout'
 import { drawEmoteBubble, drawTrainer, emoting, headOf, realmIconUrl, type TrainerView } from '../render/realmScene'
-import { loadSpecies } from '../render/sprites'
+import { loadSpecies, portraitUrl } from '../render/sprites'
 import { titleChip } from './arenaTitle'
 import { openBaseBoard } from './baseBoard'
 import { openBaseEditor } from './baseEditor'
 import { openCarpentry } from './carpentry'
+import { dialogue, type Speaker } from './dialogue'
 import { h, later } from './dom'
 import { supporterBadgeIcon } from './profile'
 import type { Screen } from './screens'
@@ -51,7 +54,9 @@ import { uiZoom } from './uiScale'
  * of the lobby's meadow) with the HTML over it: name plates, quick-chat
  * bubbles, the talk wheel and the emote bar, the party, a trainer's card
  * (invite, mute, report), the spot prompt (portals, the board, the bases,
- * Bibarel's carpentry) and the connection's state.
+ * Bibarel's carpentry), the labels floating over the room's spots and doors
+ * as the trainer comes near (so the town explains itself), the grove's host
+ * and its first-visit talk, and the connection's state.
  *
  * The player's own trainer walks here (keys, the drag stick or a tap, like
  * the lobby's partner) and is reported to the relay (`realm/interp.ts`);
@@ -122,6 +127,34 @@ const markRealmSeen = () => {
   }
 }
 
+/* ---------------- The grove's host ---------------- */
+
+const GROVE_SEEN = 'ps:groveSeen'
+
+/** Whether this device heard Sudowoodo's first-visit talk about secret bases. */
+const groveSeen = () => {
+  try {
+    return localStorage.getItem(GROVE_SEEN) !== null
+  } catch {
+    return true
+  }
+}
+
+const markGroveSeen = () => {
+  try {
+    localStorage.setItem(GROVE_SEEN, '1')
+  } catch {
+    // It explains again next time.
+  }
+}
+
+/** Sudowoodo talking (SpriteCollab draws it with one face: its portrait). */
+const hostSpeaker = (): Speaker => ({
+  name: t().realm.spots.host,
+  color: '#7a8a2e',
+  portrait: () => h('img', { src: portraitUrl(GROVE_HOST.dex), alt: '', width: 40, height: 40 }),
+})
+
 /* ---------------- Rooms ---------------- */
 
 /** A trainer's species: its partner's first form (as the lobby's stage shows it). */
@@ -144,6 +177,35 @@ const doorsOf = (room: RoomKey): readonly Door[] => (isTownRoomId(room) ? REALM_
 const spotsOf = (room: RoomKey): readonly Spot[] => (isTownRoomId(room) ? REALM_ROOMS[room].spots : [])
 
 const inRect = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h
+
+/** Labels show over spots and doors this close (world px) to the trainer. */
+const LABEL_NEAR = 220
+/** How far down (CSS px) a label's bottom stays at least, so the top bar never hides it. */
+const LABEL_FLOOR = 84
+
+/** A label over a spot or a door: its text, where it stands, and the spot (null for a door), which the prompt replaces when in reach. */
+type Label = { text: string; at: Point; spot: Spot | null }
+
+/**
+ * A room's labels: every spot but the benches (`realm.spots`) and every door
+ * (the room it leads to, an arrow toward the edge it's on), anchored a little
+ * inside the room so an edge door's label shows.
+ */
+const labelsOf = (room: RoomKey): Label[] => {
+  const m = t().realm
+  const { w, h: hgt } = isTownRoomId(room) ? REALM_ROOMS[room] : BASE_ROOM
+  const spots = spotsOf(room)
+    .filter((s) => s.kind !== 'bench')
+    .map((s) => ({ text: m.spots[s.kind], at: s.at, spot: s }))
+  const doors = doorsOf(room).map((d) => {
+    const name = m.rooms[d.to]
+    const cx = d.at.x + d.at.w / 2
+    const cy = d.at.y + d.at.h / 2
+    const text = d.at.x <= 0 ? `← ${name}` : d.at.x + d.at.w >= w ? `${name} →` : d.at.y + d.at.h >= hgt ? `↓ ${name}` : name
+    return { text, at: { x: Math.min(Math.max(cx, 32), w - 32), y: Math.min(cy, hgt - 8) }, spot: null }
+  })
+  return [...spots, ...doors]
+}
 
 /** A press that travels less than this (CSS px) is a tap. */
 const TAP_SLOP = 12
@@ -269,10 +331,28 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
   const buildTown = (city: CityId) => {
     const where = h('span', { class: 'realm-where' })
     const count = h('small', { class: 'realm-count' })
-    const decorate = h('button', { class: 'realm-decorate box hidden', type: 'button', onclick: () => openSub((r) => openBaseEditor(r, input, { close: closeSub, saved: (v) => void (room === baseRoom(deps.handle) && (base = v)) })) }, '✎')
+    const decorate = h(
+      'button',
+      {
+        class: 'realm-decorate box hidden',
+        type: 'button',
+        onclick: () =>
+          openSub((r) =>
+            openBaseEditor(r, input, {
+              close: closeSub,
+              saved: (v) => {
+                exterior = v.layout.exterior
+                if (room === baseRoom(deps.handle)) base = v
+              },
+            }),
+          ),
+      },
+      '✎',
+    )
     const status = h('div', { class: 'realm-status box hidden' })
     const partyBar = h('div', { class: 'realm-party box hidden' })
     const layer = h('div', { class: 'realm-layer', 'aria-hidden': 'true' })
+    const signs = h('div', { class: 'realm-signs', 'aria-hidden': 'true' })
     const useLabel = h('span', {})
     const useButton = h('button', { class: 'realm-use box hidden', type: 'button', onclick: () => useSpot() }, useLabel, h('span', { class: 'key-hint' }, 'E'))
     const wheel = h('div', { class: 'realm-wheel box hidden' })
@@ -283,6 +363,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     const emoteButton = h('button', { class: 'realm-emote box', type: 'button', 'aria-label': m().emote, onclick: () => toggle(emotes) }, h('img', { src: realmIconUrl('heart'), alt: '' }), h('span', { class: 'key-hint' }, 'Y'))
     const leaveButton = h('button', { class: 'realm-leave box', type: 'button', onclick: () => (playSfx('select'), showPicker()) }, `← ${m().leave}`)
     el.replaceChildren(
+      signs,
       layer,
       h('div', { class: 'realm-top' }, leaveButton, h('div', { class: 'realm-title box' }, where, count), decorate),
       status,
@@ -304,6 +385,10 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     let me: Avatar | null = null
     let room: RoomKey | null = null
     let base: BaseView | null = null
+    /** The exterior the player's own base wears (the grove's entrance draws it), the cave until their base is known. */
+    let exterior: BaseExterior = 'cave'
+    /** The room's labels, their elements in `signs`. */
+    let labels: (Label & { el: HTMLElement })[] = []
     let party: PartyView | null = null
     const invites: number[] = []
     let going = false
@@ -312,6 +397,10 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     let near: Spot | null = null
     let cam = { x: 0, y: 0 }
     let clock = 0
+
+    void fetchBase(deps.handle).then((v) => {
+      if (!disposed && !isFailure(v)) exterior = v.layout.exterior
+    })
 
     /* Wheel and emote bar */
     for (const line of REALM_LINES) {
@@ -402,8 +491,18 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const mine = avatars.find((a) => a.id === you)
       if (mine) place(walker, mine.x, mine.y)
       const owner = baseOwner(key)
-      decorate.classList.toggle('hidden', owner !== deps.handle.toLowerCase())
-      if (owner) void fetchBase(owner).then((v) => !disposed && room === key && !isFailure(v) && (base = v))
+      const own = owner === deps.handle.toLowerCase()
+      decorate.classList.toggle('hidden', !own)
+      if (owner)
+        void fetchBase(owner).then((v) => {
+          if (disposed || room !== key || isFailure(v)) return
+          base = v
+          if (own) exterior = v.layout.exterior
+        })
+      labels = labelsOf(key).map((l) => ({ ...l, el: h('div', { class: 'realm-sign' }, l.text) }))
+      signs.replaceChildren(...labels.map((l) => l.el))
+      // The first time in the grove, its host comes over to explain what a secret base is.
+      if (key === 'trail' && !groveSeen()) later(() => !disposed && room === 'trail' && !sub && hostTalk(true))
       where.textContent = `${REALM_CITIES[city].name} · ${owner ? m().base(owner) : isTownRoomId(key) ? m().rooms[key] : key}`
     }
 
@@ -588,6 +687,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           return go(baseRoom(deps.handle), BASE_ROOM.spawn)
         case 'carpenter':
           return openSub((r) => openCarpentry(r, input, { close: closeSub, signIn: null }))
+        case 'host':
+          return hostTalk(!groveSeen())
         case 'counter':
           return void toast(root, m().counter, 2600, 'realmSpot')
         case 'pool':
@@ -597,6 +698,23 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           walker.facing = 0
           return
       }
+    }
+
+    /** Sudowoodo talks: all about secret bases the first time (`first`), else a line of its hellos. */
+    function hostTalk(first: boolean) {
+      const g = m().grove
+      const lines = first ? g.first : [g.hello[Math.floor(Math.random() * g.hello.length)]!]
+      openSub((r) =>
+        dialogue(r, input, {
+          speaker: hostSpeaker(),
+          lines: lines.map((text) => ({ text })),
+          onDone: () =>
+            later(() => {
+              markGroveSeen()
+              closeSub()
+            }),
+        }),
+      )
     }
 
     const portal = async (mode: PartyMode) => {
@@ -687,6 +805,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     const scene = (ctx: CanvasRenderingContext2D, dt: number, w: number, hgt: number) => {
       client.frame()
       clock += dt
+      sub?.tick?.(dt)
       const now = performance.now()
       const st = client.status()
       status.classList.toggle('hidden', st.kind === 'open' || st.kind === 'idle')
@@ -721,7 +840,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       ctx.fillRect(0, 0, w, hgt)
       if (!room) return
       const town = isTownRoomId(room) ? room : null
-      if (town) drawTownGround(ctx, town, cam.x, cam.y, w, hgt, clock)
+      if (town) drawTownGround(ctx, town, cam.x, cam.y, w, hgt, clock, exterior)
       else if (base) drawBaseRoom(ctx, base, cam.x, cam.y, clock)
 
       // Everyone where they stand now: the others behind, the trainer as walked.
@@ -734,7 +853,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         }
         views.push(tr)
       }
-      const pieces = [...(town ? townPieces(town) : []).map((p) => ({ y: p.y, draw: () => p.draw(ctx, cam.x, cam.y, clock) })), ...views.map((v) => ({ y: v.y, draw: () => drawTrainer(ctx, v, cam.x, cam.y, clock) }))]
+      const pieces = [...(town ? townPieces(town, exterior) : []).map((p) => ({ y: p.y, draw: () => p.draw(ctx, cam.x, cam.y, clock) })), ...views.map((v) => ({ y: v.y, draw: () => drawTrainer(ctx, v, cam.x, cam.y, clock) }))]
       pieces.sort((a, b) => a.y - b.y)
       for (const p of pieces) p.draw()
       if (town) drawTownOverhead(ctx, town, cam.x, cam.y, w, hgt, clock)
@@ -758,11 +877,22 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       for (const b of emoteButtons) if (b.id === 'look') b.b.classList.toggle('hidden', !lookEmote)
 
       near = seated ? (spotsOf(room).find((s) => Math.hypot(s.at.x - walker.x, s.at.y - walker.y) <= s.reach) ?? null) : null
+      /** A label over `at`, as a transform: floating over the piece it names, kept below the top bar. */
+      const pin = (at: Point) => {
+        const y = town ? labelTop(town, at, exterior) : at.y - 30
+        return `translate(${Math.round(((at.x - cam.x) * scale) / zoom)}px, ${Math.max(LABEL_FLOOR, Math.round(((y - cam.y) * scale) / zoom))}px) translate(-50%, -100%)`
+      }
       useButton.classList.toggle('hidden', !near || sub !== null)
       if (near) {
         const label = m().spots[near.kind]
         if (useLabel.textContent !== label) useLabel.textContent = label
-        useButton.style.transform = `${toUi(near.at.x, near.at.y - 30)} translate(-50%, -100%)`
+        useButton.style.transform = pin(near.at)
+      }
+      // The labels of what's around: the near spot's is its prompt instead.
+      for (const l of labels) {
+        const shown = seated && sub === null && l.spot !== near && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
+        l.el.classList.toggle('shown', shown)
+        if (shown) l.el.style.transform = pin(l.at)
       }
     }
 
