@@ -10,6 +10,7 @@ import { fetchMe, isFailure, saveBase } from '../realm/api'
 import { pieceName } from '../realm/furniture'
 import { clampSpot, firstSpot, fitsAt, trayCounts } from '../realm/placement'
 import { drawBaseRoom, exteriorSwatch, pieceIcon, type BaseOverlay } from '../render/base'
+import { entranceUrl } from '../render/realmArt'
 import { h, later, setText } from './dom'
 import { confirmDialog, hint, type Screen } from './screens'
 
@@ -211,8 +212,12 @@ export const openBaseEditor = (root: HTMLElement, input: Input, opts: BaseEditor
     return b
   }
 
-  const swatch = (art: HTMLCanvasElement, label: string, on: boolean, pick: () => void) =>
+  const swatch = (art: HTMLElement, label: string, on: boolean, pick: () => void) =>
     h('button', { class: `base-swatch${on ? ' on' : ''}`, type: 'button', 'aria-pressed': String(on), onclick: pick }, art, h('span', {}, label))
+
+  /** An exterior's pick: the entrance the grove draws for it, over a corner of its room. */
+  const entranceSwatch = (x: (typeof BASE_EXTERIORS)[number]) =>
+    h('span', { class: 'base-entrance' }, h('img', { src: entranceUrl(x), alt: '' }), exteriorSwatch(x))
 
   const styleRows = () => {
     const left = trayCounts(owned, layout)
@@ -224,7 +229,8 @@ export const openBaseEditor = (root: HTMLElement, input: Input, opts: BaseEditor
     }
     return [
       h('h3', { class: 'base-row-title' }, m.exterior),
-      h('div', { class: 'base-row' }, ...BASE_EXTERIORS.map((x) => swatch(exteriorSwatch(x), m.exteriors[x], layout.exterior === x, () => setStyle({ exterior: x })))),
+      // Each exterior as the grove shows its entrance, its walls and floor in a corner.
+      h('div', { class: 'base-row' }, ...BASE_EXTERIORS.map((x) => swatch(entranceSwatch(x), m.exteriors[x], layout.exterior === x, () => setStyle({ exterior: x })))),
       h('h3', { class: 'base-row-title' }, m.wallpaper),
       h('div', { class: 'base-row' }, swatch(none(), m.none, layout.wallpaper === null, () => setStyle({ wallpaper: null })), ...styles('wallpaper').map((id) => swatch(iconFor(id), pieceName(id), layout.wallpaper === id, () => setStyle({ wallpaper: id })))),
       h('h3', { class: 'base-row-title' }, m.flooring),

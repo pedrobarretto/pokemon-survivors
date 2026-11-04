@@ -1,4 +1,5 @@
 import type { Point, Shape, TownRoomId } from '../data/realmMap'
+import type { Dir8 } from '../engine/math'
 
 /**
  * Where the Poké Realm's town art stands, room by room (`render/realmArt.ts`
@@ -53,6 +54,14 @@ export const TOWN_ART = {
   palm: 'realm/palm',
   sandcastle: 'realm/sandcastle',
   beachball: 'realm/beachball',
+  palm2: 'realm/palm-2',
+  surfboards: 'realm/surfboards',
+  rocksRound: 'realm/rocks-00',
+  rocksTall: 'realm/rocks-03',
+  rocksWide: 'realm/rocks-06',
+  rocksFlat: 'realm/rocks-14',
+  mural: 'realm/mural',
+  groveSign: 'realm/grove-sign',
 } as const satisfies Record<string, string>
 
 export type TownArt = keyof typeof TOWN_ART
@@ -61,26 +70,48 @@ export type TownArt = keyof typeof TOWN_ART
 export const TOWN_FRAMES: Partial<Record<TownArt, readonly TownArt[]>> = { fountain: ['fountain', 'fountain1', 'fountain2'] }
 export const TOWN_FPS = 7
 
-export type Prop = { art: TownArt; x: number; y: number; flip?: true }
+/**
+ * A piece standing with the bottom middle of what it paints at (`x`, `y`).
+ * `mine`: the player's own secret base entrance, drawn in the exterior their
+ * base wears (`ENTRANCE_ART`), whatever `art` names (the one drawn until
+ * their base is known).
+ */
+export type Prop = { art: TownArt; x: number; y: number; flip?: true; mine?: true }
 
-/** A dirt path: a line through `points`, `r` px each side of it. */
+/** Each base exterior's entrance (`BASE_EXTERIORS`), and how far (px) to shift it so its opening lands on the spot in front of it. */
+export const ENTRANCE_ART = {
+  cave: { art: 'doorCave', dx: 14 },
+  tree: { art: 'doorTree', dx: 0 },
+  bush: { art: 'doorBush', dx: 0 },
+  sand: { art: 'doorSand', dx: 0 },
+} as const satisfies Record<string, { art: TownArt; dx: number }>
+
+/** A dirt path: a line through `points`, `r` px each side of it. A `dirt` surface is a patch of the same dirt in a shape. */
 type Path = { kind: 'path'; points: readonly Point[]; r: number }
 
 /**
  * What's painted over the grass: `paving` (cobblestones, a curb framing
  * them where they meet anything else and a band of darker stones inside it;
- * paving reaching the room's edge runs on past it), `path`, `sand`, `water` (`pool`: a lagoon, lighter,
- * with a stone rim), `boards` (a boardwalk's planks running across), and
+ * paving reaching the room's edge runs on past it), `path` and `dirt`,
+ * `sand`, `water` (`pool`: a lagoon, its shore wandering like the sea's, foam
+ * at its edge and shallows going deeper toward its middle; several pool
+ * shapes melt into one), `boards` (a boardwalk's planks running across), and
  * indoors, `floor` (wooden planks, sunlit below the windows, side walls at
  * its edges), a doormat (`mat`) and a `wall` (the room's back wall, windows
  * along it).
  */
 export type Surface =
   | Path
-  | { kind: 'paving' | 'sand' | 'water' | 'boards' | 'floor' | 'mat'; shape: Shape; pool?: true }
+  | { kind: 'paving' | 'dirt' | 'sand' | 'water' | 'boards' | 'floor' | 'mat'; shape: Shape; pool?: true }
   | { kind: 'wall'; h: number; windows: readonly number[] }
 
-export type RoomLayout = { indoor: boolean; ground: readonly Surface[]; props: readonly Prop[] }
+/** A Pokémon that stands in a room (its SpriteCollab sprite, idling) with its feet at (`x`, `y`), facing `facing`: the trail's host. */
+export type Host = { dex: number; x: number; y: number; facing: Dir8 }
+
+/** The grove's host: Sudowoodo, the Pokémon that passes for a tree, keeps the secret bases' grove. */
+export const GROVE_HOST = { dex: 185, x: 556, y: 292, facing: 7 } as const satisfies Host
+
+export type RoomLayout = { indoor: boolean; ground: readonly Surface[]; props: readonly Prop[]; hosts?: readonly Host[] }
 
 const rect = (x: number, y: number, w: number, h: number): Shape => ({ kind: 'rect', x, y, w, h })
 const oval = (x: number, y: number, rx: number, ry: number): Shape => ({ kind: 'oval', x, y, rx, ry })
@@ -137,8 +168,10 @@ const PLAZA: RoomLayout = {
 
 /**
  * The pier: the road from the plaza ends on a beach; a boardwalk runs east
- * over the sea to a jetty; the sheltered lagoon in the middle is the pool
- * Water types swim in; the lighthouse stands on the rocks up north.
+ * over the sea to a jetty under the lighthouse, which stands on the rocks of
+ * the north-east point; the lagoon in the middle, where Water types swim, is
+ * a tide pool the sea fills through a channel to the south, rocks on its rim;
+ * palms, parasols, a sandcastle and surfboards dot the sand.
  */
 const PIER: RoomLayout = {
   indoor: false,
@@ -150,32 +183,40 @@ const PIER: RoomLayout = {
     { kind: 'water', shape: rect(560, -20, 120, 520) },
     { kind: 'water', shape: rect(-20, 434, 680, 80) },
     { kind: 'water', shape: oval(600, 470, 90, 70) },
-    { kind: 'water', shape: oval(340, 304, 112, 66), pool: true },
-    { kind: 'boards', shape: rect(470, 148, 170, 44) },
+    { kind: 'water', shape: oval(326, 298, 92, 50), pool: true },
+    { kind: 'water', shape: oval(394, 322, 60, 38), pool: true },
+    { kind: 'water', shape: oval(444, 364, 30, 20), pool: true },
+    { kind: 'water', shape: oval(468, 398, 22, 24), pool: true },
+    { kind: 'water', shape: oval(482, 428, 22, 20), pool: true },
+    { kind: 'boards', shape: rect(470, 170, 170, 44) },
   ],
   props: [
     { art: 'signpost', x: 24, y: 216 },
     { art: 'bench', x: 92, y: 330 },
     { art: 'lamp', x: 168, y: 222 },
     { art: 'lamp', x: 168, y: 300 },
-    { art: 'lighthouse', x: 506, y: 108 },
-    { art: 'rock', x: 470, y: 112 },
-    { art: 'rock1', x: 540, y: 116 },
-    { art: 'crates', x: 612, y: 170 },
-    { art: 'boat', x: 600, y: 320 },
-    { art: 'umbrella', x: 220, y: 380 },
-    { art: 'umbrella', x: 470, y: 400 },
-    { art: 'palm', x: 296, y: 204 },
-    { art: 'palm', x: 408, y: 184 },
-    { art: 'sandcastle', x: 436, y: 240 },
-    { art: 'beachball', x: 516, y: 312 },
+    { art: 'lighthouse', x: 514, y: 150 },
+    { art: 'rocksWide', x: 468, y: 156 },
+    { art: 'rocksRound', x: 558, y: 162 },
+    { art: 'crates', x: 612, y: 192 },
+    { art: 'surfboards', x: 452, y: 232 },
+    { art: 'boat', x: 606, y: 334 },
+    { art: 'palm', x: 252, y: 214 },
+    { art: 'palm2', x: 528, y: 300, flip: true },
+    { art: 'palm2', x: 180, y: 412 },
+    { art: 'umbrella', x: 256, y: 404 },
+    { art: 'umbrella', x: 548, y: 410, flip: true },
+    { art: 'sandcastle', x: 392, y: 240 },
+    { art: 'beachball', x: 340, y: 408 },
+    { art: 'rocksFlat', x: 252, y: 290 },
+    { art: 'rocksTall', x: 430, y: 296 },
+    { art: 'rocksRound', x: 410, y: 376 },
     { art: 'tree1', x: 40, y: 100 },
     { art: 'tree0', x: 104, y: 70 },
     { art: 'bush', x: 160, y: 100 },
     { art: 'tree2', x: 260, y: 64 },
     { art: 'bush1', x: 330, y: 96 },
     { art: 'tree0', x: 40, y: 430 },
-    { art: 'bush', x: 100, y: 424 },
   ],
 }
 
@@ -205,64 +246,56 @@ const CAFE: RoomLayout = {
 }
 
 /**
- * The trail of secret bases: a dirt path from the plaza west through the
- * woods, the four ways into a base along its north side (Emerald's: a cave,
- * a tree, a bush, a sand mound), the board of public bases in their middle,
- * and Bibarel's carpentry with its porch to the south.
+ * The Secret Base Grove (the trail's room): the dirt road from the plaza
+ * comes in from the east past Sudowoodo, the grove's host (the room's
+ * `host` spot), and a signpost, into a clearing. At the clearing's head
+ * stands the player's own secret base entrance (`mine`: drawn in the
+ * exterior their base wears), flanked by two lanterns; the board of bases
+ * (the Mural de bases) stands on the west and Bibarel's carpentry down the
+ * path to the south, a second signpost at the fork.
  */
 const TRAIL: RoomLayout = {
   indoor: false,
   ground: [
-    {
-      kind: 'path',
-      r: 12,
-      points: [
-        { x: 650, y: 258 },
-        { x: 560, y: 250 },
-        { x: 470, y: 266 },
-        { x: 380, y: 258 },
-        { x: 290, y: 246 },
-        { x: 200, y: 260 },
-        { x: 140, y: 266 },
-      ],
-    },
-    { kind: 'path', r: 8, points: [{ x: 146, y: 266 }, { x: 118, y: 234 }, { x: 100, y: 192 }, { x: 96, y: 170 }] },
-    { kind: 'path', r: 8, points: [{ x: 196, y: 258 }, { x: 214, y: 216 }, { x: 222, y: 168 }] },
-    { kind: 'path', r: 8, points: [{ x: 312, y: 248 }, { x: 326, y: 210 }, { x: 330, y: 174 }] },
-    { kind: 'path', r: 8, points: [{ x: 470, y: 264 }, { x: 448, y: 220 }, { x: 442, y: 172 }] },
-    { kind: 'path', r: 8, points: [{ x: 520, y: 256 }, { x: 552, y: 214 }, { x: 562, y: 174 }] },
-    { kind: 'path', r: 9, points: [{ x: 340, y: 256 }, { x: 362, y: 310 }, { x: 352, y: 384 }, { x: 318, y: 406 }, { x: 272, y: 410 }] },
+    { kind: 'dirt', shape: oval(318, 226, 98, 40) },
+    { kind: 'path', r: 12, points: [{ x: 650, y: 258 }, { x: 590, y: 254 }, { x: 520, y: 262 }, { x: 460, y: 250 }, { x: 400, y: 236 }] },
+    { kind: 'path', r: 10, points: [{ x: 236, y: 230 }, { x: 190, y: 232 }, { x: 160, y: 224 }, { x: 146, y: 214 }] },
+    { kind: 'path', r: 10, points: [{ x: 318, y: 260 }, { x: 330, y: 316 }, { x: 322, y: 380 }, { x: 318, y: 412 }] },
   ],
+  hosts: [GROVE_HOST],
   props: [
-    { art: 'doorTree', x: 96, y: 158 },
-    { art: 'doorCave', x: 222, y: 156 },
-    { art: 'board', x: 330, y: 162 },
-    { art: 'doorBush', x: 442, y: 160 },
-    { art: 'doorSand', x: 562, y: 162 },
-    { art: 'carpentry', x: 272, y: 390 },
-    { art: 'crates', x: 182, y: 394 },
-    { art: 'flowers', x: 236, y: 420 },
-    { art: 'flowers', x: 310, y: 424 },
-    { art: 'lamp', x: 400, y: 238 },
-    { art: 'lamp', x: 180, y: 292 },
-    { art: 'benchW', x: 420, y: 330, flip: true },
-    { art: 'signpost', x: 616, y: 232, flip: true },
+    { art: 'doorCave', x: 318, y: 178, mine: true },
+    { art: 'lamp', x: 244, y: 196 },
+    { art: 'lamp', x: 400, y: 196 },
+    { art: 'mural', x: 146, y: 206 },
+    { art: 'groveSign', x: 500, y: 236 },
+    { art: 'groveSign', x: 364, y: 324, flip: true },
+    { art: 'carpentry', x: 318, y: 404 },
+    { art: 'crates', x: 222, y: 400 },
+    { art: 'flowers', x: 276, y: 424 },
+    { art: 'flowers', x: 362, y: 424 },
+    { art: 'benchW', x: 446, y: 310, flip: true },
+    { art: 'bench', x: 196, y: 300 },
+    { art: 'flowers', x: 216, y: 172 },
+    { art: 'flowers', x: 428, y: 172 },
     { art: 'tree0', x: 160, y: 96 },
-    { art: 'tree2', x: 286, y: 84 },
-    { art: 'tree1', x: 384, y: 92 },
-    { art: 'tree0', x: 502, y: 96 },
-    { art: 'tree2', x: 620, y: 120 },
-    { art: 'bush', x: 30, y: 200 },
+    { art: 'tree2', x: 236, y: 70 },
+    { art: 'tree1', x: 404, y: 72 },
+    { art: 'tree0', x: 486, y: 104 },
+    { art: 'tree2', x: 600, y: 120 },
+    { art: 'bush', x: 552, y: 170 },
+    { art: 'bush1', x: 70, y: 170 },
+    { art: 'tree1', x: 40, y: 110 },
     { art: 'tree1', x: 40, y: 380 },
-    { art: 'tree0', x: 112, y: 336 },
+    { art: 'tree0', x: 112, y: 330 },
     { art: 'bush1', x: 150, y: 452 },
-    { art: 'tree2', x: 500, y: 372 },
-    { art: 'tree0', x: 566, y: 430 },
+    { art: 'tree2', x: 500, y: 390 },
+    { art: 'tree0', x: 566, y: 440 },
     { art: 'bush', x: 440, y: 452 },
     { art: 'rock', x: 610, y: 330 },
     { art: 'tree1', x: 620, y: 474 },
     { art: 'tree0', x: 30, y: 476 },
-    { art: 'rock1', x: 360, y: 470 },
+    { art: 'rock1', x: 232, y: 470 },
   ],
 }
 

@@ -69,3 +69,28 @@ describe('the town matches its art', () => {
     }
   })
 })
+
+describe('the Secret Base Grove', () => {
+  const trail = REALM_ROOMS.trail
+
+  it('has one entrance of your own, its spot right in front of it', () => {
+    const mine = TOWN_LAYOUT.trail.props.filter((p) => p.mine)
+    const spots = trail.spots.filter((s) => s.kind === 'myBase')
+    expect(mine).toHaveLength(1)
+    expect(spots).toHaveLength(1)
+    const [p, s] = [mine[0]!, spots[0]!]
+    expect(Math.abs(s.at.x - p.x)).toBeLessThanOrEqual(8)
+    expect(s.at.y - p.y).toBeGreaterThan(0)
+    expect(s.at.y - p.y).toBeLessThanOrEqual(s.reach)
+  })
+
+  it('keeps every host standing by its spot, off the walk', () => {
+    const hosts = TOWN_LAYOUT.trail.hosts ?? []
+    const spots = trail.spots.filter((s) => s.kind === 'host')
+    expect(hosts).toHaveLength(spots.length)
+    for (const host of hosts) {
+      expect(spots.some((s) => Math.hypot(s.at.x - host.x, s.at.y - host.y) <= s.reach)).toBe(true)
+      expect(blocked('trail', host.x, host.y - 2)).toBe(true)
+    }
+  })
+})

@@ -1,7 +1,7 @@
 import { context2d } from '../engine/pixelart'
 import type { Dir8 } from '../engine/math'
 import { BASE_GRID, BASE_ROOM, REALM_ROOMS, TOWN_ROOMS, type TownRoomId } from '../data/realmMap'
-import { BASE_EXTERIORS } from '../data/secretBases'
+import { BASE_EXTERIORS, type BaseExterior } from '../data/secretBases'
 import { FURNITURE, FURNITURE_IDS, footprint, type FurnitureId, type ShopFurnitureId } from '../data/furniture'
 import { drawPokemon, loadSpecies, loadedSprites } from '../render/sprites'
 import { baseShell, drawTownGround, drawTownOverhead, townPieces } from '../render/realmArt'
@@ -11,8 +11,8 @@ import { pieceName } from '../realm/furniture'
 /**
  * Dev only (`ps.realmArt`): a look at the Poké Realm's art before the realm's
  * screen draws it. `ps.realmArt('plaza')` shows a town room (arrows pan,
- * `+`/`-` zoom, `g` the geometry from `REALM_ROOMS`), with a few Pokémon on
- * its spots for scale; `'bases'` the four base interiors furnished;
+ * `+`/`-` zoom, `g` the geometry from `REALM_ROOMS`, `x` the trail's own
+ * entrance's next exterior), with a few Pokémon on its spots for scale; `'bases'` the four base interiors furnished;
  * `'furniture'` the catalog's art on the base grid. Esc closes.
  */
 
@@ -24,7 +24,7 @@ const WALKERS = [25, 4, 7, 1, 133, 39] as const
 const isShop = (id: FurnitureId): id is ShopFurnitureId => FURNITURE[id].source !== 'trophy'
 
 /** Opens the viewer; `opts.cam` and `opts.scale` pin the view (for screenshots), `opts.geometry` overlays what blocks walking. */
-export const openRealmArt = (view: RealmArtView = 'plaza', opts: { cam?: { x: number; y: number }; scale?: number; geometry?: boolean } = {}) => {
+export const openRealmArt = (view: RealmArtView = 'plaza', opts: { cam?: { x: number; y: number }; scale?: number; geometry?: boolean; exterior?: BaseExterior } = {}) => {
   document.getElementById('realm-art-dev')?.remove()
   const canvas = document.createElement('canvas')
   canvas.id = 'realm-art-dev'
@@ -36,6 +36,7 @@ export const openRealmArt = (view: RealmArtView = 'plaza', opts: { cam?: { x: nu
   let scale = opts.scale ?? Math.max(1, Math.floor(Math.min(innerWidth / size.w, innerHeight / size.h) * devicePixelRatio))
   const cam = { x: opts.cam?.x ?? 0, y: opts.cam?.y ?? 0 }
   let geometry = opts.geometry ?? false
+  let exterior: BaseExterior = opts.exterior ?? 'cave'
   let live = true
   const keys = (e: KeyboardEvent) => {
     if (e.key === 'Escape') return close()
@@ -46,6 +47,7 @@ export const openRealmArt = (view: RealmArtView = 'plaza', opts: { cam?: { x: nu
     if (e.key === '+' || e.key === '=') scale++
     if (e.key === '-') scale = Math.max(1, scale - 1)
     if (e.key === 'g') geometry = !geometry
+    if (e.key === 'x') exterior = BASE_EXTERIORS[(BASE_EXTERIORS.indexOf(exterior) + 1) % BASE_EXTERIORS.length]!
     e.stopPropagation()
   }
   const close = () => {
@@ -60,9 +62,9 @@ export const openRealmArt = (view: RealmArtView = 'plaza', opts: { cam?: { x: nu
   }
   const drawRoom = (room: TownRoomId, w: number, h: number, time: number) => {
     const r = REALM_ROOMS[room]
-    drawTownGround(ctx, room, cam.x, cam.y, w, h, time)
+    drawTownGround(ctx, room, cam.x, cam.y, w, h, time, exterior)
     const people = [r.spawn, ...r.spots.map((s) => s.at)].slice(0, WALKERS.length).map((at, i) => ({ y: at.y, draw: () => walker(WALKERS[i]!, at.x - cam.x, at.y - cam.y, (i % 2 ? 1 : 0) as Dir8, time + i * 0.3) }))
-    for (const p of [...townPieces(room), ...people].sort((a, b) => a.y - b.y)) p.draw(ctx, cam.x, cam.y, time)
+    for (const p of [...townPieces(room, exterior), ...people].sort((a, b) => a.y - b.y)) p.draw(ctx, cam.x, cam.y, time)
     drawTownOverhead(ctx, room, cam.x, cam.y, w, h, time)
     if (!geometry) return
     ctx.strokeStyle = 'rgba(255,0,80,0.9)'

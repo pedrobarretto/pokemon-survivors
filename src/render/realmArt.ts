@@ -1,9 +1,10 @@
 import { canvasCache, context2d, createCanvas, drawable, readPixels } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
-import { BASE_GRID, BASE_ROOM, REALM_ROOMS, type Shape, type TownRoomId } from '../data/realmMap'
+import { BASE_GRID, BASE_ROOM, REALM_ROOMS, type Point, type Shape, type TownRoomId } from '../data/realmMap'
 import type { BaseExterior } from '../data/secretBases'
 import type { Piece } from './plaza'
-import { TOWN_ART, TOWN_FPS, TOWN_FRAMES, TOWN_LAYOUT, type Surface, type TownArt } from './realmLayout'
+import { ENTRANCE_ART, TOWN_ART, TOWN_FPS, TOWN_FRAMES, TOWN_LAYOUT, type Prop, type Surface, type TownArt } from './realmLayout'
+import { drawPokemon, loadSpecies, loadedSprites } from './sprites'
 
 /**
  * The Poké Realm's town, drawn like the lobby: grass in the meadow's palette
@@ -18,6 +19,10 @@ import { TOWN_ART, TOWN_FPS, TOWN_FRAMES, TOWN_LAYOUT, type Surface, type TownAr
  * water's glints), `townPieces` sorted by their feet among the walkers, and
  * `drawTownOverhead` over them (the dust in the café's sunbeams). Base interiors
  * (`baseShell`) are painted the same way, one per exterior.
+ *
+ * The trail's `mine` piece is the player's own secret base entrance: the
+ * caller passes the exterior their base wears (`exterior`, the cave until
+ * it's known) and it draws that one (`ENTRANCE_ART`).
  */
 
 type Rgb = readonly [number, number, number]
@@ -65,6 +70,9 @@ const loadArt = (id: TownArt, tries = 3) => {
   void img.decode().then(landed, landed)
 }
 
+/** An exterior's entrance PNG (the grove's centerpiece), for the base editor's exterior picker. */
+export const entranceUrl = (exterior: BaseExterior) => `${import.meta.env.BASE_URL}assets/${TOWN_ART[ENTRANCE_ART[exterior].art]}.png`
+
 /** Starts loading the town's PNGs (once): pieces show up as they arrive. */
 export const loadTownArt = () => {
   if (loading) return
@@ -99,9 +107,12 @@ const WET_SAND = shades('#dcc28c', '#e2c894', '#d4b884')
 const SEA = shades('#4c9ad8', '#5aa6e0', '#4290d0')
 const SEA_DEEP = shades('#3c86c8', '#4690d0', '#367cc0')
 const LAGOON = shades('#6cc4e4', '#7ccce8', '#62bcdc')
+/** The lagoon's water going deeper from its shore: the shallows over sand, then the lagoon, then its middle. */
+const SHALLOWS = shades('#9ce0e8', '#a8e6ec', '#8cd6e0')
+const LAGOON_DEEP = shades('#4cb0d8', '#56b8dc', '#44a6d0')
+/** The bank the lagoon's north shore drops by, its sand darker. */
+const BANK = shades('#c8aa74', '#c0a26c', '#d0b27c')
 const FOAM = rgb('#eef8fc')
-const RIM = { top: rgb('#e6dfcc'), line: rgb('#6e6454') }
-const RIM_STONES = { stones: shades('#c8bea6', '#bcb29a', '#d2c8b0'), mortar: rgb('#8e8470'), hi: rgb('#e0d8c4'), lo: rgb('#aaa088') }
 
 /** The plaza's cobblestones (`render/plaza.ts`), the band of darker ones inside the curb, and the curb. */
 const STONES = { stones: shades('#d8c8a0', '#cfbd94', '#e0d2ac', '#c8b68c', '#d4c49a'), mortar: rgb('#a89470'), hi: rgb('#ebe0c0'), lo: rgb('#bca880') }
@@ -149,9 +160,9 @@ const toSegment = (x: number, y: number, a: { x: number; y: number }, b: { x: nu
   return Math.hypot(x - a.x - t * dx, y - a.y - t * dy)
 }
 
-/** How far (px, ±`SHORE`) the sea's edge wanders from its shape at (a, b): a coast, never a ruler's line. */
+/** How far (px, ±`reach`) the sea's edge (or a lagoon's, nearer) wanders from its shape at (a, b): a coast, never a ruler's line. */
 const SHORE = 9
-const shore = (a: number, b: number, seed: number) => Math.round((noise(a, b, 46, seed) - 0.5) * 2 * SHORE)
+const shore = (a: number, b: number, seed: number, reach = SHORE, scale = 46) => Math.round((noise(a, b, scale, seed) - 0.5) * 2 * reach)
 
 /** Which material each pixel of a `w`×`h` room is: grass, then every surface in order over it. */
 const materials = (w: number, h: number, ground: readonly Surface[]) => {
@@ -161,13 +172,14 @@ const materials = (w: number, h: number, ground: readonly Surface[]) => {
       for (let y = 0; y < Math.min(h, s.h); y++) mat.fill(M.wall, y * w, y * w + w)
       continue
     }
-    const value: Material = s.kind === 'water' && s.pool ? M.pool : M[s.kind]
+    const value: Material = s.kind === 'water' && s.pool ? M.pool : s.kind === 'dirt' ? M.path : M[s.kind]
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         // A path's edge wobbles a pixel, as the meadow's do.
         const hit =
           s.kind === 'path' ? s.points.slice(1).some((b, i) => toSegment(x, y, s.points[i]!, b) < s.r + (hash2(x >> 2, y >> 2, 9) < 0.3 ? 1 : 0))
           : s.kind === 'water' && !s.pool ? inShape(s.shape, x + shore(y, x, 31), y + shore(x, y, 32))
+          : s.kind === 'water' || s.kind === 'dirt' ? inShape(s.shape, x + shore(y, x, 33, 5, 22), y + shore(x, y, 34, 4, 22))
           : inShape(s.shape, x, y)
         if (hit) mat[y * w + x] = value
       }
@@ -226,9 +238,9 @@ const paintRoom = (room: TownRoomId) => {
   const m = (x: number, y: number) => (x < 0 || y < 0 || x >= w || y >= h ? -1 : mat[y * w + x]!)
   // The curb runs where the paving meets anything but a path: a path arriving opens it.
   const paved = depthMap(mat, w, h, (v) => v === M.paving || v === M.path, 20)
-  const wet = depthMap(mat, w, h, (v) => v === M.water || v === M.pool, 6)
-  // How far from the water and from the grass the sand lies: wet near the sea, dithering into the grass at its edge.
-  const dry = depthMap(mat, w, h, (v) => v !== M.water, 6)
+  const wet = depthMap(mat, w, h, (v) => v === M.water || v === M.pool, 16)
+  // How far from the water and from the grass the sand lies: wet near the sea and the lagoon, dithering into the grass at its edge.
+  const dry = depthMap(mat, w, h, (v) => v !== M.water && v !== M.pool, 6)
   const ungrassed = depthMap(mat, w, h, (v) => v !== M.grass, 3)
   const canvas = createCanvas(w, h)
   const ctx = context2d(canvas)
@@ -263,12 +275,16 @@ const paintRoom = (room: TownRoomId) => {
       else if (v === M.water || v === M.pool) {
         const d = wet[y * w + x]!
         const pool = v === M.pool
-        if (pool && d <= 5) set(x, y, d === 1 || d === 5 ? RIM.line : d === 2 ? RIM.top : stoneAt(RIM_STONES, x, y, 6, 3))
+        // The lagoon's north shore is a bank: the sand drops a couple of px into the water, seen from above.
+        const bank = pool && d <= 3 && [1, 2, 3].some((k) => { const u = m(x, y - k); return u !== M.pool && u !== M.water })
+        if (bank) set(x, y, d === 1 && m(x, y - 1) !== M.pool ? BANK[1]! : dither(BANK, x, y, 7))
+        else if (pool && d <= 3) set(x, y, d === 1 || (d === 2 && hash2(x >> 1, y, 8) < 0.5) ? FOAM : dither(SHALLOWS, x, y, 6))
+        else if (pool && d <= 9) set(x, y, dither(d <= 5 && hash2(x, y, 15) < 0.4 ? SHALLOWS : LAGOON, x, y, 6))
         else if (!pool && d <= 2) set(x, y, d === 1 ? FOAM : dither(LAGOON, x, y, 6))
         else {
           // Wave crests: short light dashes along rows, drifting with the noise.
           const crest = (y + Math.floor(noise(x, y, 30, 5) * 8)) % 13 === 0 && hash2(x >> 3, y, 4) < 0.28
-          set(x, y, crest ? FOAM : dither(pool ? LAGOON : noise(x, y, 60, 8) > 0.55 ? SEA_DEEP : SEA, x, y, 6))
+          set(x, y, crest ? FOAM : dither(pool ? (d > 14 ? LAGOON_DEEP : LAGOON) : noise(x, y, 60, 8) > 0.55 ? SEA_DEEP : SEA, x, y, 6))
         }
       } else if (v === M.paving) {
         const d = paved[y * w + x]!
@@ -393,21 +409,36 @@ const silhouette = (art: Art) => {
 }
 
 /** Pieces lying flat or hanging on the wall cast no shadow. */
-const FLAT: ReadonlySet<TownArt> = new Set(['shelf', 'boat'])
+const FLAT: ReadonlySet<TownArt> = new Set(['shelf', 'boat', 'beachball'])
+
+/** What a prop draws and where its art's middle stands: the player's own entrance follows their base's exterior. */
+const resolve = (p: Prop, exterior: BaseExterior): { art: TownArt; x: number } => {
+  if (!p.mine) return { art: p.art, x: p.x }
+  const e = ENTRANCE_ART[exterior]
+  return { art: e.art, x: p.x + e.dx }
+}
 
 /**
  * Draws a town room's ground under everyone: the painted ground, the pieces'
- * shadows and, on the water, glints that come and go.
+ * shadows and, on the water, glints that come and go. `exterior`: the one
+ * the player's own base entrance wears (the trail's `mine` piece).
  */
-export const drawTownGround = (ctx: CanvasRenderingContext2D, room: TownRoomId, camX: number, camY: number, _w: number, _h: number, time: number) => {
+export const drawTownGround = (ctx: CanvasRenderingContext2D, room: TownRoomId, camX: number, camY: number, _w: number, _h: number, time: number, exterior: BaseExterior = 'cave') => {
   loadTownArt()
   const g = groundOf(room)
   ctx.drawImage(g.canvas, -Math.round(camX), -Math.round(camY))
   for (const p of TOWN_LAYOUT[room].props) {
-    const art = arts.get(p.art)
-    if (!art || FLAT.has(p.art)) continue
+    const { art: id, x } = resolve(p, exterior)
+    const art = arts.get(id)
+    if (!art || FLAT.has(id)) continue
     const mask = silhouette(art)
-    ctx.drawImage(mask, Math.round(p.x - camX - (art.minX + art.w / 2)) + 2, Math.round(p.y - camY - mask.height) + 2)
+    ctx.drawImage(mask, Math.round(x - camX - (art.minX + art.w / 2)) + 2, Math.round(p.y - camY - mask.height) + 2)
+  }
+  for (const host of TOWN_LAYOUT[room].hosts ?? []) {
+    ctx.fillStyle = 'rgba(30,40,30,0.3)'
+    ctx.beginPath()
+    ctx.ellipse(Math.round(host.x - camX), Math.round(host.y - camY), 8, 3, 0, 0, Math.PI * 2)
+    ctx.fill()
   }
   ctx.fillStyle = '#eef8fc'
   for (const s of g.glints) if ((time * 1.3 + s.phase) % 6 < 0.6) ctx.fillRect(Math.round(s.x - camX), Math.round(s.y - camY), 2, 1)
@@ -415,31 +446,68 @@ export const drawTownGround = (ctx: CanvasRenderingContext2D, room: TownRoomId, 
 
 /* ---------------- Pieces ---------------- */
 
-const pieceCache = new Map<TownRoomId, { count: number; pieces: Piece[] }>()
+const pieceCache = new Map<string, { count: number; pieces: Piece[] }>()
 
 /**
  * A town room's standing pieces, each sorted by its feet among the walkers
  * (like `plazaPieces`); only those whose PNG is in, so the list grows as the
- * art arrives.
+ * art arrives. The room's hosts (Pokémon standing at their spot, idling)
+ * come along. `exterior`: the one the player's own entrance wears.
  */
-export const townPieces = (room: TownRoomId): readonly Piece[] => {
+export const townPieces = (room: TownRoomId, exterior: BaseExterior = 'cave'): readonly Piece[] => {
   loadTownArt()
-  const cached = pieceCache.get(room)
+  const key = `${room}:${exterior}`
+  const cached = pieceCache.get(key)
   if (cached?.count === arts.size) return cached.pieces
   const pieces = TOWN_LAYOUT[room].props.flatMap((p): Piece[] => {
-    const art = arts.get(p.art)
+    const { art: id, x } = resolve(p, exterior)
+    const art = arts.get(id)
     if (!art) return []
-    const frames = (TOWN_FRAMES[p.art] ?? []).map((id) => arts.get(id) ?? art)
-    // The boat lies on the water: it sorts under everyone.
+    const frames = (TOWN_FRAMES[id] ?? []).map((f) => arts.get(f) ?? art)
+    // The boat and the towel lie flat: they sort under everyone.
     return [
       {
-        y: p.art === 'boat' ? -1 : p.y,
-        draw: (ctx, camX, camY, time) => put(ctx, frames.length ? frames[Math.floor(time * TOWN_FPS) % frames.length]! : art, p.x - camX, p.y - camY, p.flip),
+        y: id === 'boat' || id === 'beachball' ? -1 : p.y,
+        draw: (ctx, camX, camY, time) => put(ctx, frames.length ? frames[Math.floor(time * TOWN_FPS) % frames.length]! : art, x - camX, p.y - camY, p.flip),
       },
     ]
   })
-  pieceCache.set(room, { count: arts.size, pieces })
+  for (const host of TOWN_LAYOUT[room].hosts ?? []) {
+    void loadSpecies(host.dex).catch(() => {})
+    pieces.push({
+      y: host.y,
+      draw: (ctx, camX, camY, time) => {
+        const s = loadedSprites(host.dex)
+        if (s) drawPokemon(ctx, s, 'Idle', host.facing, time, Math.round(host.x - camX), Math.round(host.y - camY))
+      },
+    })
+  }
+  pieceCache.set(key, { count: arts.size, pieces })
   return pieces
+}
+
+/** How far (px) above a spot its label floats when no piece stands behind it. */
+const LABEL_LIFT = 34
+
+/**
+ * Where a label over a spot (or a door) at `at` floats: just over the top of
+ * the piece it belongs to (the nearest standing piece behind it, a host
+ * Pokémon too), else a little over the spot. World px, the label's bottom.
+ */
+export const labelTop = (room: TownRoomId, at: Point, exterior: BaseExterior = 'cave'): number => {
+  let best: { d: number; top: number } | null = null
+  for (const p of TOWN_LAYOUT[room].props) {
+    const { art: id, x } = resolve(p, exterior)
+    const art = arts.get(id)
+    if (!art || FLAT.has(id) || p.y > at.y + 4 || at.y - p.y > 64 || Math.abs(x - at.x) > Math.max(24, art.w / 2)) continue
+    const d = Math.hypot(x - at.x, p.y - at.y)
+    if (!best || d < best.d) best = { d, top: p.y - art.h - 3 }
+  }
+  for (const host of TOWN_LAYOUT[room].hosts ?? []) {
+    const d = Math.hypot(host.x - at.x, host.y - at.y)
+    if (d < 32 && (!best || d < best.d)) best = { d, top: host.y - 40 }
+  }
+  return best?.top ?? at.y - LABEL_LIFT
 }
 
 /* ---------------- Overhead ---------------- */
