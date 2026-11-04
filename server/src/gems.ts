@@ -1,7 +1,10 @@
 import type { TransactionSql } from 'postgres'
 import type { Look, CosmeticId } from '../../src/data/cosmetics'
 import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PLAY, oncePack, type GemCurrency, type GemPackId } from '../../src/data/gems'
+import type { SkinBundleId } from '../../src/data/skinCatalog'
 import {
+  bundleMissing,
+  bundlePrice,
   checkoutRefusal,
   knownOwned,
   playGems,
@@ -245,6 +248,29 @@ export const gemStore = (sql: Sql) => {
         await tx`insert into cosmetics_owned (user_id, cosmetic, source) values (${userId}, ${id}, 'buy')`
         const { balance, owned } = toStatus((await statusRows(tx, [userId]))[0])
         return { ok: true, balance, owned } as const
+      }),
+
+    /**
+     * Buys skin bundle `id` (`SKIN_BUNDLES`): the items the account lacks,
+     * for what they cost it now (`bundlePrice`), in one transaction behind
+     * the account's row lock, as `buy` does. The debit's ref names the items
+     * it brings, so a double click lands once (the second finds them owned).
+     * `owned` once it holds them all, `gems` when the balance is short.
+     */
+    buyBundle: (userId: string, id: SkinBundleId): Promise<BuyOutcome> =>
+      sql.begin(async (tx) => {
+        await tx`insert into users (id) values (${userId}) on conflict (id) do nothing`
+        const [u] = await tx<{ gems: number }[]>`select gems from users where id = ${userId} for update`
+        const rows = await tx<{ cosmetic: string }[]>`select cosmetic from cosmetics_owned where user_id = ${userId}`
+        const owned = new Set(rows.map((r) => r.cosmetic))
+        const price = bundlePrice(id, owned)
+        const missing = bundleMissing(id, owned)
+        if (price === null || missing.length === 0) return { ok: false, error: 'owned' } as const
+        if ((u?.gems ?? 0) < price) return { ok: false, error: 'gems' } as const
+        if (!(await moveGems(tx, userId, -price, 'buy', `bundle:${userId}:${id}:${missing.join('+')}`))) return { ok: false, error: 'owned' } as const
+        for (const item of missing) await tx`insert into cosmetics_owned (user_id, cosmetic, source) values (${userId}, ${item}, 'buy') on conflict do nothing`
+        const { balance, owned: now } = toStatus((await statusRows(tx, [userId]))[0])
+        return { ok: true, balance, owned: now } as const
       }),
 
     /** `PUT /gems/look`: stores the look the account may wear (`wearableLook`) and returns it. */

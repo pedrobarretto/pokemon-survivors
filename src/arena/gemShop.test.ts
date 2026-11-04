@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { catalogSections, currencyFor, equip, methodsFor, ownedOnly, shopCatalog, shownPacks, unequip } from './gemShop'
+import { catalogSections, currencyFor, equip, methodsFor, ownedOnly, sameLook, shopCatalog, shownPacks, takeOff, unequip } from './gemShop'
 
 describe('currencyFor', () => {
   it('shows reais in Brazilian Portuguese or a Brazilian time zone, dollars elsewhere', () => {
@@ -24,6 +24,15 @@ describe('looks', () => {
     expect(look).toEqual({ head: 'strawHat' })
     expect(unequip(equip(look, 'sparkTrail'), 'head')).toEqual({ trail: 'sparkTrail' })
     expect(ownedOnly(equip(look, 'sparkTrail'), new Set(['sparkTrail']))).toEqual({ trail: 'sparkTrail' })
+  })
+
+  it("wears one skin per line, in place of the line's other", () => {
+    const look = equip(equip({}, 'bulbasaurSakura'), 'charmanderSuit')
+    expect(equip(look, 'bulbasaurWinter').skins).toEqual(['charmanderSuit', 'bulbasaurWinter'])
+    expect(takeOff(look, 'bulbasaurSakura')).toEqual({ skins: ['charmanderSuit'] })
+    expect(unequip(look, { line: 'charmander' })).toEqual({ skins: ['bulbasaurSakura'] })
+    expect(ownedOnly(look, new Set(['charmanderSuit']))).toEqual({ skins: ['charmanderSuit'] })
+    expect(sameLook(look, equip(equip({}, 'bulbasaurSakura'), 'charmanderSuit'))).toBe(true)
   })
 })
 

@@ -1,6 +1,7 @@
 import { GEM_CHECKOUT, GEM_PACKS, GEM_PLAY, oncePack, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
-import { COSMETICS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, type Look, type CosmeticBase, type CosmeticId } from '../data/cosmetics'
-import type { DayKey } from './day'
+import { COSMETICS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, withSkins, type Look, type CosmeticBase, type CosmeticId } from '../data/cosmetics'
+import { bundleOf, SKIN_LAUNCH, type SkinBundleId } from '../data/skinCatalog'
+import { addDays, type DayKey } from './day'
 
 /**
  * The gem shop's rules, shared by the API (`server/src/gems.ts`, which keeps
@@ -95,7 +96,39 @@ export const wearableLook = (raw: unknown, owned: ReadonlySet<string>): Look => 
     const id = look[slot]
     if (id !== undefined && !owned.has(id) && !isFree(id)) delete look[slot]
   }
-  return look
+  return withSkins(look, (look.skins ?? []).filter((id) => owned.has(id) || isFree(id)))
+}
+
+/**
+ * What bundle `id` costs an account that owns `owned`: its price scaled by
+ * the share of its items' own prices still missing (owning a 550 skin of a
+ * 1200 bundle of three takes 400 off), rounded to 10 gems. So a bundle never
+ * costs more than its missing items bought one by one, and a line's
+ * Coleção das Estações comes out at exactly 400 (300 for a 2-stage line) less
+ * per season owned. Null once it's all owned (the shop stops offering it).
+ */
+export const bundlePrice = (id: SkinBundleId, owned: ReadonlySet<string>): number | null => {
+  const { items, price } = bundleOf(id)
+  const value = (ids: readonly CosmeticId[]) => ids.reduce((n, i) => n + (cosmeticPrice(i) ?? 0), 0)
+  const missing = items.filter((i) => !owned.has(i))
+  if (missing.length === 0) return null
+  const full = value(items)
+  return full <= 0 ? price : Math.round((price * value(missing)) / full / 10) * 10
+}
+
+/** The items of bundle `id` an account that owns `owned` would get from it. */
+export const bundleMissing = (id: SkinBundleId, owned: ReadonlySet<string>) => bundleOf(id).items.filter((i) => !owned.has(i))
+
+/** The last Brasília day bundle `id` is on sale (a launch offer's), or null when it stays. */
+export const bundleLastDay = (id: SkinBundleId): DayKey | null => {
+  const { days } = bundleOf(id)
+  return days === undefined ? null : addDays(SKIN_LAUNCH, days - 1)
+}
+
+/** Whether bundle `id` is on sale on Brasília `day`: from `SKIN_LAUNCH`, and a launch offer only for its days. */
+export const bundleOnSale = (id: SkinBundleId, day: DayKey) => {
+  const last = bundleLastDay(id)
+  return day >= SKIN_LAUNCH && (last === null || day <= last)
 }
 
 /** Owned ids the catalog still has (rows outlive entries), in a stable order. */

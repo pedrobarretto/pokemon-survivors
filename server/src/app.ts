@@ -14,7 +14,8 @@ import { GEM_PACKS, isGemPackId, packGems, type GemCurrency } from '../../src/da
 import { isPollOptionOf, type PollKind } from '../../src/data/supporters'
 import { brasiliaDay, isDayKey } from '../../src/game/day'
 import { parseDonationAmount } from '../../src/game/festival'
-import { isFree, onSale } from '../../src/game/gems'
+import { bundleOnSale, isFree, onSale } from '../../src/game/gems'
+import { isSkinBundleId } from '../../src/data/skinCatalog'
 import { isDifficulty } from '../../src/game/difficulty'
 import { halloweenAt } from '../../src/game/halloween'
 import { parseHandlePrefix, parsePresenceUpdate, parseRoomCode } from '../../src/game/friends'
@@ -62,7 +63,7 @@ export type AppDeps = {
   donate: Donate | null
   supporters: SupporterStore
   /** Gems: the ledger, packs bought with money, cosmetics bought with gems and the equipped Arena look. */
-  gems: Pick<GemStore, 'status' | 'ledger' | 'purchase' | 'buy' | 'setLook' | 'looks' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
+  gems: Pick<GemStore, 'status' | 'ledger' | 'purchase' | 'buy' | 'buyBundle' | 'setLook' | 'looks' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
   /** Gem pack checkouts: `card` Stripe Checkout, `pix` AbacatePay; null when the server has no key for one (it answers 503). */
   gemCheckout: { card: StripeCheckout | null; pix: GemPix | null }
   /** Festival da Praça: the pot, donations from the stored save and the plaque. */
@@ -240,6 +241,9 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   the webhook credits the pack. 400 invalid, 429 past the checkout limit, 503 without the method's key.
  * - `POST /gems/buy` (auth) `{ id }`: buys a cosmetic. `{ balance, owned }`; 402 `{ error: 'gems' }` short (or negative),
  *   409 owned already (a free one too), 404 unknown or not on sale. The debit and the ownership land together, once.
+ * - `POST /gems/bundle` (auth) `{ id }`: buys a skin bundle (`SKIN_BUNDLES`): the skins the account lacks, for what they cost
+ *   it now (`bundlePrice`). `{ balance, owned }`; 402 short, 409 all owned already, 404 unknown or not on sale (a launch
+ *   offer past its days). Once, like a buy.
  * - `PUT /gems/look` (auth) `{ look }`: stores the equipped look, keeping only what the account owns or what's free. `{ look }`.
  * - `GET /me/supporter` (auth): `SupporterStatus` (`patreon` null when the server has no Patreon client). `PUT /me/supporter` (auth) `{ public }`: shows or hides the badge and name.
  * - `GET /supporters`: `{ supporters, hidden }`, the wall (`WallEntry[]`, with each one's title and Hall da Fama Pokémon) and how many supporters per tier stay off it.
@@ -604,6 +608,16 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!id || price === null || !onSale(id, brasiliaDay(new Date()))) return c.json({ error: 'not sold' }, 404)
     if (!gems.takeBuy(c.var.userId)) return c.json({ error: 'too many buys' }, 429)
     const bought = await gems.buy(c.var.userId, id, price)
+    if (!bought.ok) return bought.error === 'gems' ? c.json({ error: 'gems' }, 402) : c.json({ error: 'owned' }, 409)
+    return c.json({ balance: bought.balance, owned: bought.owned })
+  })
+
+  app.post('/gems/bundle', auth, smallBody, async (c) => {
+    const body = await json(c)
+    const id = isRecord(body) && isSkinBundleId(body.id) ? body.id : null
+    if (!id || !bundleOnSale(id, brasiliaDay(new Date()))) return c.json({ error: 'not sold' }, 404)
+    if (!gems.takeBuy(c.var.userId)) return c.json({ error: 'too many buys' }, 429)
+    const bought = await gems.buyBundle(c.var.userId, id)
     if (!bought.ok) return bought.error === 'gems' ? c.json({ error: 'gems' }, 402) : c.json({ error: 'owned' }, 409)
     return c.json({ balance: bought.balance, owned: bought.owned })
   })
