@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GEM_CHECKOUT, GEM_PACKS, GEM_PATREON, GEM_PLAY, packGems } from '../data/gems'
 import { PATREON_TIERS } from '../data/supporters'
-import { checkoutRefusal, playGems, refundedGems, runEarnsGems, wearableLook } from './gems'
+import { checkoutRefusal, lockedCosmetics, playGems, refundedGems, runEarnsGems, wearableLook, type OwnedCosmetic } from './gems'
 
 describe('playGems', () => {
   it('gives the match and the win until the daily cap', () => {
@@ -56,5 +56,24 @@ describe('wearableLook', () => {
     expect(wearableLook({ head: 'strawHat', trail: 'sparkTrail' }, new Set(['strawHat']))).toEqual({ head: 'strawHat' })
     expect(wearableLook({ head: 'sparkTrail' }, new Set(['sparkTrail']))).toEqual({})
     expect(wearableLook('nope', new Set())).toEqual({})
+  })
+})
+
+describe('lockedCosmetics', () => {
+  const owned: OwnedCosmetic[] = [
+    { id: 'strawHat', source: 'buy', at: 100 },
+    { id: 'sparkTrail', source: 'buy', at: 200 },
+    { id: 'crown', source: 'gift', at: 300 },
+  ]
+
+  it('locks what gems bought from the taken-back pack on, while the balance is negative', () => {
+    expect(lockedCosmetics(-550, owned, 200)).toEqual(['sparkTrail'])
+    expect(lockedCosmetics(-550, owned, 50)).toEqual(['sparkTrail', 'strawHat'])
+  })
+
+  it('never locks a gift, nor anything once the balance is back to 0 or no pack was taken back', () => {
+    expect(lockedCosmetics(-1, owned, 0)).not.toContain('crown')
+    expect(lockedCosmetics(0, owned, 0)).toEqual([])
+    expect(lockedCosmetics(-1, owned, null)).toEqual([])
   })
 })

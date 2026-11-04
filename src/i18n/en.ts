@@ -544,6 +544,8 @@ export const en: Messages = {
       all: 'All',
       owned: 'Yours',
       equipped: 'Wearing',
+      lockedTag: 'Locked',
+      locked: 'Locked: your balance went negative after a refund or chargeback. It comes back once your balance is 0 or more.',
       unsold: 'Unavailable',
       misfit: (name: string) => `Doesn’t sit well on ${name}`,
       effect: 'Shows up in runs, co-op and the Arena.',

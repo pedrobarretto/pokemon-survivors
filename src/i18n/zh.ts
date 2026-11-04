@@ -544,6 +544,8 @@ export const zh: Messages = {
       all: '全部',
       owned: '已擁有',
       equipped: '使用中',
+      lockedTag: '已鎖定',
+      locked: '已鎖定：退款或爭議後，你的寶石餘額變成負數。餘額回到 0 或以上時就會恢復。',
       unsold: '未販售',
       misfit: (name: string) => `${name} 戴起來不太合適`,
       effect: '在對局、合作模式和競技場中出現。',

@@ -4400,7 +4400,9 @@ const devLook = (cmd?: Look | 'bots' | 'emote' | 'play' | 'clear', arg?: string 
  * `ps.gems('fake', 1250)` makes every call answer made-up data from that
  * balance, a third of the catalog owned, and the shop act as signed in
  * (`'off'` back to the API); `('balance', n)` sets the balance, `('own', id)`
- * owns a cosmetic (all without one); `('return', 'chest')` comes back from a
+ * owns a cosmetic (all without one), `('lock', id)` owns it locked, the
+ * balance negative as after a refund of spent gems (`('lock')` unlocks it all,
+ * the balance back to 0); `('return', 'chest')` comes back from a
  * checkout of that pack (`'never'`: the gems never land and the wait runs
  * out); `('refuse', 'cap')` turns every checkout down as the API would
  * (`'once'`: the welcome pack taken; no reason: none again); `('shop')` and
@@ -4415,12 +4417,15 @@ const devGems = (cmd?: string, arg?: string | number) => {
   else if (cmd === 'own') {
     if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
     stageGems({ own: arg === undefined ? 'all' : [arg] })
+  } else if (cmd === 'lock') {
+    if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
+    stageGems({ lock: arg === undefined ? [] : [arg] })
   } else if (cmd === 'return') {
     showBoutique('shop', undefined, stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
   } else if (cmd === 'refuse') stageRefusal(arg === 'cap' || arg === 'once' ? arg : null)
   else if (cmd === 'shop' || cmd === 'locker') showBoutique(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
-  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('locker') · ('fetch')"
+  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('locker') · ('fetch')"
   // In a run or a match, each seat's look as the shell holds it.
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }

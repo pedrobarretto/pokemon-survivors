@@ -23933,6 +23933,52 @@ span.arena-hub-face {
   color: #2f9a40;
 }
 
+/* Owned but locked while the balance is negative (`GemsStatus.locked`). */
+.gem-item.locked .gem-item-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #b07010;
+}
+
+.gem-item.locked .gem-item-art img {
+  opacity: 0.45;
+}
+
+.gem-lock {
+  width: 9px;
+  height: 11px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.gem-act .gem-lock,
+.gem-wear .gem-lock {
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+
+.gem-locked-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 10px;
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.15;
+  color: var(--dk-ink, #503810);
+  background: var(--dk-surface-1, #fff4d8);
+  border: 2px solid #e0a830;
+  border-radius: 6px;
+}
+
+.gem-locked-note .gem-lock {
+  width: 18px;
+  height: 22px;
+  margin-top: 1px;
+}
+
 .gem-item-misfit {
   position: absolute;
   top: 4px;
@@ -24143,6 +24189,12 @@ span.arena-hub-face {
   color: #fff;
   background: var(--rarity, #283040);
   border-color: var(--rarity, #283040);
+}
+
+.gem-wear.locked {
+  color: var(--dk-ink-3, #8088a0);
+  border-style: dashed;
+  cursor: not-allowed;
 }
 
 .gem-wear .gem-item-misfit {
