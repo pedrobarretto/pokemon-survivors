@@ -29,7 +29,7 @@ export const siteEs: SiteMessages = {
   },
   footer: {
     disclaimer:
-      'Pokémon Survivors es un fan game no oficial, gratuito y sin fines de lucro. No está afiliado a Nintendo, The Pokémon Company, GAME FREAK, Creatures ni Spike Chunsoft, ni cuenta con su respaldo. Pokémon y los nombres de los personajes son marcas registradas de Nintendo.',
+      'Pokémon Survivors es un fan game no oficial y gratuito. No está afiliado a Nintendo, The Pokémon Company, GAME FREAK, Creatures ni Spike Chunsoft, ni cuenta con su respaldo. Pokémon y los nombres de los personajes son marcas registradas de Nintendo.',
     legal: 'Legal y privacidad',
     credits: 'Créditos',
     source: 'Código en GitHub',
@@ -889,7 +889,7 @@ export const siteEs: SiteMessages = {
       contact: 'Contacto y retiro de contenido',
     },
     fanGame: [
-      'Pokémon Survivors es un fan game no oficial y sin fines de lucro, hecho por fans para fans por Pedro Barretto.',
+      'Pokémon Survivors es un fan game no oficial, hecho por fans para fans por Pedro Barretto. Es gratis para jugar; las gemas, opcionales, solo venden ítems cosméticos y ayudan a pagar los servidores y el desarrollo.',
       'No tiene ningún vínculo con Nintendo, The Pokémon Company, GAME FREAK inc., Creatures Inc. ni Spike Chunsoft, ni está respaldado, patrocinado o aprobado por ellas.',
       'Pokémon y los nombres de los personajes son marcas registradas de Nintendo. Pokémon © Nintendo, Creatures Inc. y GAME FREAK inc. Las demás marcas pertenecen a sus respectivos dueños.',
     ],
@@ -900,7 +900,7 @@ export const siteEs: SiteMessages = {
     ],
     gems: [
       'Las gemas son un ítem virtual del juego: solo compran ítems cosméticos (como sombreros, estelas y títulos), que aparecen en las partidas, el co-op y la Arena, nunca nada que cambie una partida o el ranking. No tienen valor en dinero, no se pueden cambiar por dinero ni pasar a otra cuenta y quedan ligadas a tu cuenta del juego.',
-      'Ganas gemas jugando la Arena (con un límite diario), apoyando en Patreon o comprando un paquete. Los paquetes se pagan en Stripe (tarjeta, Apple Pay y Google Pay) o en AbacatePay (Pix), y tus datos de pago van directo a ellos: el juego nunca ve tu tarjeta.',
+      'Ganas gemas jugando (la primera partida del día de 5 minutos o más, al jugar cinco días en la misma semana y en la Arena, con un límite diario), apoyando en Patreon o comprando un paquete. Cada cuenta compra hasta R$ 250 o US$ 50 en paquetes por día, y quien tiene menos de 18 años necesita el permiso de sus padres o tutores para comprar. Los paquetes se pagan en Stripe (tarjeta, Apple Pay y Google Pay) o en AbacatePay (Pix), y tus datos de pago van directo a ellos: el juego nunca ve tu tarjeta.',
       'Derecho de arrepentimiento: hasta 7 días después de comprar un paquete, puedes pedir el reembolso de las gemas de ese paquete que aún no gastaste (Código de Defensa del Consumidor de Brasil, art. 49). Pídelo por correo a pedro@wavyia.com.br, con la referencia de la compra. Las gemas ya gastadas y los ítems cosméticos comprados con ellas no son reembolsables.',
       'Un contracargo o disputa del pago (chargeback) quita de la cuenta las gemas de ese paquete, incluso las ya gastadas. El saldo puede quedar negativo y, mientras lo esté, no se puede comprar nada con gemas.',
     ],

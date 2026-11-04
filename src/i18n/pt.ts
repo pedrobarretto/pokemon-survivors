@@ -709,7 +709,7 @@ export const pt = {
     slots: { head: 'Cabeça', back: 'Costas', trail: 'Rastro', spawn: 'Entrada', ko: 'Nocaute', goal: 'Gol', emote: 'Emote', title: 'Título', plate: 'Placa' } satisfies Record<CosmeticSlot, string>,
     rarities: { common: 'Comum', rare: 'Raro', epic: 'Épico', legendary: 'Lendário' } satisfies Record<Rarity, string>,
     /** The packs' names (`GEM_PACKS` in `data/gems.ts`). */
-    packs: { pouch: 'Punhado', bag: 'Bolsa', chest: 'Baú', hoard: 'Tesouro', vault: 'Cofre' } satisfies Record<GemPackId, string>,
+    packs: { welcome: 'Boas-vindas', pouch: 'Punhado', bag: 'Bolsa', chest: 'Baú', hoard: 'Tesouro', vault: 'Cofre' } satisfies Record<GemPackId, string>,
     shop: {
       pitch: 'Visuais para o seu Pokémon nas partidas, no co-op e na Arena: todo mundo vê, e nenhum dá poder.',
       balance: 'Seu saldo',
@@ -727,6 +727,9 @@ export const pt = {
       /** An item whose slot shows only in the Arena (`SLOT_MODES`): its info, and the short tag on its card and locker row. */
       arenaOnly: 'Por enquanto, só aparece na Arena.',
       arenaTag: 'ARENA',
+      /** The catalog's own section for the Arena-only items, and its note. */
+      arenaFilter: 'Arena',
+      arenaNote: 'Efeitos de entrada, nocaute e gol, e emotes: aparecem só nas partidas da Arena.',
       buy: 'Comprar',
       equip: 'Usar',
       unequip: 'Tirar',
@@ -738,16 +741,25 @@ export const pt = {
       banned: 'Esta conta não pode usar a Loja.',
       receipts: 'Recibos',
       receiptsEmpty: 'Nenhuma movimentação ainda.',
-      reasons: { pack: 'Pacote de gemas', patreon: 'Patreon', play: 'Partida na Arena', buy: 'Compra', refund: 'Reembolso', dispute: 'Contestação', disputeWon: 'Contestação revertida', grant: 'Presente da equipe' } satisfies Record<GemReason, string>,
+      reasons: { pack: 'Pacote de gemas', patreon: 'Patreon', play: 'Partida na Arena', run: 'Partida do dia', week: 'Semana de jogo', buy: 'Compra', refund: 'Reembolso', dispute: 'Contestação', disputeWon: 'Contestação revertida', grant: 'Presente da equipe' } satisfies Record<GemReason, string>,
       signIn: { title: 'Entre para usar a Loja', text: 'As gemas e os visuais ficam na sua conta, em qualquer aparelho.', button: 'Entrar' },
       unavailable: 'A Loja não está disponível nesta versão do jogo.',
       onlyLooks: 'Gemas compram só visuais.',
+      /** The tag on a pack an account buys once (`once`). */
+      welcomeTag: 'SÓ UMA VEZ',
+      /** How gems come free (`GEM_PLAY`): the run gems, the week's, the Arena's daily cap. */
+      free: (run: string, minutes: string, week: string, days: string, cap: string) => `Gemas grátis: +${run} na primeira partida do dia de ${minutes} min ou mais, +${week} ao jogar ${days} dias na mesma semana, e na Arena (até ${cap} por dia).`,
     },
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} bônus`,
       pay: 'Pagar com',
       card: 'Cartão, Apple Pay ou Google Pay',
       pix: 'Pix',
+      /** The box the pay buttons need ticked. */
+      age: 'Tenho 18 anos ou mais, ou tenho a permissão dos meus pais ou responsáveis.',
+      /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
+      once: 'Esta conta já pegou o pacote de boas-vindas.',
+      cap: (limit: string) => `Por segurança, cada conta compra até ${limit} em gemas por dia, e um pagamento em aberto conta por meia hora. Tente de novo amanhã (o dia vira à meia-noite de Brasília).`,
       cancel: 'Cancelar',
       opening: 'Abrindo o pagamento…',
       failed: 'Não deu para abrir o pagamento. Tente de novo.',

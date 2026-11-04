@@ -45,7 +45,7 @@ import type { GiftStore } from './gifts'
 import type { ModerationStore } from './moderation'
 import type { PatreonOAuth } from './patreon'
 import type { RankingStore } from './ranking'
-import type { StripeCheckout } from './stripe'
+import { checkoutLocale, type StripeCheckout } from './stripe'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
 import { SUGGESTION_ID, type SuggestionStore } from './suggestions'
@@ -576,6 +576,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const method = isRecord(body) && (body.method === 'card' || body.method === 'pix') ? body.method : null
     const asked: GemCurrency | null = isRecord(body) && (body.currency === 'brl' || body.currency === 'usd') ? body.currency : null
     if (!pack || !method || !asked) return c.json({ error: 'expected { pack, method, currency }' }, 400)
+    const locale = isRecord(body) ? checkoutLocale(body.locale) : null
     // Pix is reais only.
     const currency = method === 'pix' ? 'brl' : asked
     const card = method === 'card' ? gemCheckout.card : null
@@ -586,9 +587,11 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const base = origin && allowedOrigin(origin) ? origin : SITE
     const ref = crypto.randomUUID()
     const back = `${base}/?gems=${ref}`
-    await gems.open({ ref, userId: c.var.userId, pack, gems: packGems(pack), provider: card ? 'stripe' : 'abacatepay', currency, amount: GEM_PACKS[pack][currency] })
+    // A once pack bought already, or past the day's limit: 409 with why (`GemCheckoutRefusal`), before any payment opens.
+    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems(pack), provider: card ? 'stripe' : 'abacatepay', currency, amount: GEM_PACKS[pack][currency] })
+    if (refused) return c.json({ error: refused }, 409)
     if (pix) return c.json({ url: await pix(pack, { completionUrl: back, returnUrl: `${base}/` }, `${ABACATE_GEMS_REF}${ref}`) })
-    const opened = await card!({ ref, userId: c.var.userId, pack, currency, successUrl: back, cancelUrl: `${base}/` })
+    const opened = await card!({ ref, userId: c.var.userId, pack, currency, locale: locale ?? (currency === 'brl' ? 'pt' : 'en'), successUrl: back, cancelUrl: `${base}/` })
     await gems.opened(ref, opened.session)
     return c.json({ url: opened.url })
   })

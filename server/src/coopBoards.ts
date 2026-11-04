@@ -14,13 +14,15 @@ import {
   type CoopResultPlayer,
   type TeamSize,
 } from '../../src/game/coopBoard'
-import type { DayKey } from '../../src/game/day'
+import { brasiliaDay, type DayKey } from '../../src/game/day'
 import type { Difficulty } from '../../src/game/difficulty'
 import { isRecord } from '../../src/game/parse'
 import { BOARD_SIZE, BOARD_TIME_ZONE, type BoardPeriod } from '../../src/game/ranking'
 import type { CoopReport, CoopReportResponse } from '../../src/net/coopReport'
 import type { Fragment } from 'postgres'
 import type { Sql } from './db'
+import { creditRun } from './gems'
+import { runEarnsGems } from '../../src/game/gems'
 import { badgeOf, type SupporterRow } from './ranking'
 
 /**
@@ -158,7 +160,8 @@ export const coopBoardStore = (sql: Sql) => {
     /**
      * Stores a listed run once per (room, run, end): a retry gets the stored
      * run back (`duplicate`). Members' accounts are made if new, so a run
-     * never waits on a save sync.
+     * never waits on a save sync. A run of 5 minutes or more brings the day's
+     * run gems (`creditRun`) to the members who didn't leave.
      */
     report: (r: CoopReport, l: CoopListing): Promise<CoopReportResponse> =>
       sql.begin(async (tx) => {
@@ -180,6 +183,8 @@ export const coopBoardStore = (sql: Sql) => {
             insert into coop_run_members (run_id, slot, user_id, starter, stage, branch, shiny, level, kills, "left")
             values (${row.id}, ${m.slot}, ${m.userId}, ${m.starter}, ${m.stage}, ${m.branch}, ${m.shiny}, ${m.level}, ${m.kills}, ${m.left})`
         }
+        // The day's run gems, to the seats that stayed to its end.
+        if (runEarnsGems(l.result.time)) await creditRun(tx, l.members.flatMap((m) => (m.left ? [] : [m.userId])), brasiliaDay(at))
         return { run: row.id, duplicate: false }
       }),
 

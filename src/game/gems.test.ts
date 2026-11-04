@@ -1,14 +1,44 @@
 import { describe, expect, it } from 'vitest'
-import { GEM_PLAY } from '../data/gems'
-import { playGems, refundedGems, wearableLook } from './gems'
+import { GEM_CHECKOUT, GEM_PACKS, GEM_PATREON, GEM_PLAY, packGems } from '../data/gems'
+import { PATREON_TIERS } from '../data/supporters'
+import { checkoutRefusal, playGems, refundedGems, runEarnsGems, wearableLook } from './gems'
 
 describe('playGems', () => {
   it('gives the match and the win until the daily cap', () => {
-    expect(playGems(false, 0)).toBe(GEM_PLAY.match)
-    expect(playGems(true, 0)).toBe(GEM_PLAY.match + GEM_PLAY.win)
-    expect(playGems(true, GEM_PLAY.daily - 3)).toBe(3)
-    expect(playGems(true, GEM_PLAY.daily)).toBe(0)
-    expect(playGems(false, GEM_PLAY.daily + 10)).toBe(0)
+    const { match, win, daily } = GEM_PLAY.arena
+    expect(playGems(false, 0)).toBe(match)
+    expect(playGems(true, 0)).toBe(match + win)
+    expect(playGems(true, daily - 3)).toBe(3)
+    expect(playGems(true, daily)).toBe(0)
+    expect(playGems(false, daily + 10)).toBe(0)
+  })
+
+  it('counts a run for the day only from its fifth minute', () => {
+    expect(runEarnsGems(GEM_PLAY.run.seconds - 1)).toBe(false)
+    expect(runEarnsGems(GEM_PLAY.run.seconds)).toBe(true)
+  })
+})
+
+describe('checkoutRefusal', () => {
+  it('sells a once pack once and stops at the day’s limit in each currency', () => {
+    expect(checkoutRefusal('welcome', 'brl', 0, false)).toBeNull()
+    expect(checkoutRefusal('welcome', 'brl', 0, true)).toBe('once')
+    expect(checkoutRefusal('pouch', 'brl', 0, true)).toBeNull()
+    expect(checkoutRefusal('vault', 'brl', 0, false)).toBeNull()
+    expect(checkoutRefusal('pouch', 'brl', GEM_PACKS.vault.brl, false)).toBe('cap')
+    expect(checkoutRefusal('vault', 'usd', 0, false)).toBeNull()
+    expect(checkoutRefusal('pouch', 'usd', GEM_CHECKOUT.daily.usd - GEM_PACKS.pouch.usd, false)).toBeNull()
+    expect(checkoutRefusal('pouch', 'usd', GEM_CHECKOUT.daily.usd - GEM_PACKS.pouch.usd + 1, false)).toBe('cap')
+  })
+})
+
+describe('Patreon gems', () => {
+  it('match the pack of the same price', () => {
+    for (const tier of ['supporter', 'gold', 'diamond'] as const) {
+      const pack = Object.values(GEM_PACKS).find((p) => p.usd === PATREON_TIERS[tier] - 1)
+      expect(pack && pack.gems + pack.bonus).toBe(GEM_PATREON[tier])
+    }
+    expect(packGems('bag')).toBe(GEM_PATREON.supporter)
   })
 })
 

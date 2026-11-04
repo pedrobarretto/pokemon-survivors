@@ -63,8 +63,8 @@ export const showsIn = (slot: CosmeticSlot, mode: CosmeticMode): boolean => SLOT
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary'
 
-/** Gems a cosmetic of each rarity costs, unless its entry sets its own `price`. */
-export const RARITY_PRICE = { common: 150, rare: 400, epic: 900, legendary: 1800 } as const satisfies Record<Rarity, number>
+/** Gems a cosmetic of each rarity costs, unless its entry sets its own `price`: an epic is the Bolsa, a legendary the Baú (`GEM_PACKS`). */
+export const RARITY_PRICE = { common: 100, rare: 250, epic: 550, legendary: 1200 } as const satisfies Record<Rarity, number>
 
 /**
  * What every catalog entry has. `price`: its own price in gems; `null` is

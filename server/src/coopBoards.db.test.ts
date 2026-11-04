@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { GEM_PLAY } from '../../src/data/gems'
 import { dailyCoopChallenge } from '../../src/game/coopBoard'
 import type { CoopReport } from '../../src/net/coopReport'
 import { coopBoardStore, coopListing } from './coopBoards'
@@ -64,6 +65,17 @@ describe.skipIf(!url)('co-op boards (Postgres)', () => {
     expect(x.run).toBe(y.run)
     // The room code came back for another group later: a new run.
     expect((await put(report(['c', 'd'], 300, NOON + 60_000))).duplicate).toBe(false)
+  })
+
+  it("brings the day's run gems to the seats that stayed through a run of 5 minutes or more", async () => {
+    const gems = async () => Object.fromEntries((await sql<{ id: string; gems: number }[]>`select id, gems from users where id in ('a', 'b', 'c')`).map((r) => [r.id, r.gems]))
+    await put(report(['a', 'b'], GEM_PLAY.run.seconds - 1, NOON, { run: 1 }))
+    expect(await gems()).toEqual({ a: 0, b: 0, c: 0 })
+    const left = report(['a', 'b', 'c'], GEM_PLAY.run.seconds, NOON, { run: 2 })
+    await put({ ...left, seats: left.seats.map((s) => (s.userId === 'c' ? { ...s, left: true } : s)) })
+    // The day's first only: another long run that day adds nothing.
+    await put(report(['a', 'b'], 900, NOON + 1000, { run: 3 }))
+    expect(await gems()).toEqual({ a: GEM_PLAY.run.gems, b: GEM_PLAY.run.gems, c: 0 })
   })
 
   it('ranks each team once by its best run, ties to the earlier, with its members by slot', async () => {

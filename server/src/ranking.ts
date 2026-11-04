@@ -1,6 +1,6 @@
 import { createHash, randomInt } from 'node:crypto'
 import { challengeProblem, dailyChallenge } from '../../src/game/challenge'
-import type { DayKey } from '../../src/game/day'
+import { brasiliaDay, type DayKey } from '../../src/game/day'
 import type { Difficulty } from '../../src/game/difficulty'
 import { dexCounts } from '../../src/game/dex'
 import { parseSaveData } from '../../src/game/meta'
@@ -36,6 +36,8 @@ import type { TransactionSql } from 'postgres'
 import { CHECKED, checkRank, rankOnShow, type BoardLine } from './checkRank'
 import type { Sql } from './db'
 import { standingOf, type StandingRow } from './supporters'
+import { creditRun } from './gems'
+import { runEarnsGems } from '../../src/game/gems'
 import type { TokenRules } from './rulesGrace'
 
 /** Which board: a mode (regular or Legend), a difficulty and a period, optionally one Pokémon or only the friends of `viewer`. */
@@ -348,7 +350,8 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
      * sample (`checkRank`, stored in `check_rank`, where the verifier finds it: `claimCheck`), and dropped
      * otherwise: off the boards now, it can't climb on later in the same period. The replay is still written
      * first, since `settleReport` pinned its ticks. A new report frees any claim on the run and its count of
-     * attempts, so the verifier takes the grown run again.
+     * attempts, so the verifier takes the grown run again. A run of 5 minutes or more brings the day's
+     * run gems (`creditRun`).
      */
     finishRun: (userId: string, token: string, result: RunResult, replay: Replay): Promise<Finished | { ok: false; error: FinishError }> =>
       sql.begin(async (tx) => {
@@ -414,6 +417,8 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
             ${fresh ? tx`, stream_at = now()` : tx``}
           where id = ${token}`
         await tx`delete from run_chunks where run_id = ${token} and to_tick <= ${settled.total}`
+        // The day's run gems, for a run the clock allowed this long (endless mode's later reports land on the same ref).
+        if (runEarnsGems(result.time)) await creditRun(tx, [userId], brasiliaDay(new Date()))
         // Decided at the door, on every report (endless mode reports again as it grows): the replay is kept only for a check.
         const standing = (await standingOf(tx, token))!
         const rank = checkRank(standing, rankOnShow(standing) === null && (await sampleDue(tx, token)))

@@ -202,7 +202,7 @@ import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaFormat, arenaPick, arenaScreen, keepArenaPick } from './ui/arena'
-import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, takeCheckoutReturn } from './gems'
+import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn } from './gems'
 import { isGemPackId } from './data/gems'
 import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
 import { arenaHub, isArenaHubTab, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaHub'
@@ -4402,7 +4402,9 @@ const devLook = (cmd?: Look | 'bots' | 'emote' | 'play' | 'clear', arg?: string 
  * (`'off'` back to the API); `('balance', n)` sets the balance, `('own', id)`
  * owns a cosmetic (all without one); `('return', 'chest')` comes back from a
  * checkout of that pack (`'never'`: the gems never land and the wait runs
- * out); `('shop')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
+ * out); `('refuse', 'cap')` turns every checkout down as the API would
+ * (`'once'`: the welcome pack taken; no reason: none again); `('shop')` and
+ * `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
  */
 const devGems = (cmd?: string, arg?: string | number) => {
   if (cmd === 'fake') {
@@ -4415,9 +4417,10 @@ const devGems = (cmd?: string, arg?: string | number) => {
     stageGems({ own: arg === undefined ? 'all' : [arg] })
   } else if (cmd === 'return') {
     showBoutique('shop', undefined, stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
-  } else if (cmd === 'shop' || cmd === 'locker') showBoutique(cmd)
+  } else if (cmd === 'refuse') stageRefusal(arg === 'cap' || arg === 'once' ? arg : null)
+  else if (cmd === 'shop' || cmd === 'locker') showBoutique(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
-  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('shop') · ('locker') · ('fetch')"
+  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('locker') · ('fetch')"
   // In a run or a match, each seat's look as the shell holds it.
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }

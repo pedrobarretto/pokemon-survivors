@@ -533,7 +533,7 @@ export const fr: Messages = {
     gems: (n: string) => `${n} gemmes`,
     slots: { head: 'Tête', back: 'Dos', trail: 'Traînée', spawn: 'Entrée', ko: 'K.O.', goal: 'But', emote: 'Emote', title: 'Titre', plate: 'Plaque' },
     rarities: { common: 'Commun', rare: 'Rare', epic: 'Épique', legendary: 'Légendaire' },
-    packs: { pouch: 'Poignée', bag: 'Sacoche', chest: 'Coffre', hoard: 'Trésor', vault: 'Chambre forte' },
+    packs: { welcome: 'Bienvenue', pouch: 'Poignée', bag: 'Sacoche', chest: 'Coffre', hoard: 'Trésor', vault: 'Chambre forte' },
     shop: {
       pitch: 'Des styles pour ton Pokémon dans tes parties, en coop et dans l’Arène : tout le monde les voit, et aucun ne donne de puissance.',
       balance: 'Ton solde',
@@ -549,6 +549,9 @@ export const fr: Messages = {
       effect: 'Apparaît dans tes parties, en coop et dans l’Arène.',
       arenaOnly: 'Pour l’instant, n’apparaît que dans l’Arène.',
       arenaTag: 'ARENE',
+      /** The catalog's own section for the Arena-only items, and its note. */
+      arenaFilter: 'Arène',
+      arenaNote: 'Effets d’entrée, de K.O. et de but, et emotes : ils n’apparaissent que dans les matchs de l’Arène.',
       buy: 'Acheter',
       equip: 'Porter',
       unequip: 'Retirer',
@@ -560,16 +563,25 @@ export const fr: Messages = {
       banned: 'Ce compte ne peut pas utiliser la boutique.',
       receipts: 'Reçus',
       receiptsEmpty: 'Rien pour l’instant.',
-      reasons: { pack: 'Pack de gemmes', patreon: 'Patreon', play: 'Match dans l’Arène', buy: 'Achat', refund: 'Remboursement', dispute: 'Litige', disputeWon: 'Litige annulé', grant: 'Cadeau de l’équipe' },
+      reasons: { pack: 'Pack de gemmes', patreon: 'Patreon', play: 'Match dans l’Arène', run: 'Partie du jour', week: 'Semaine de jeu', buy: 'Achat', refund: 'Remboursement', dispute: 'Litige', disputeWon: 'Litige annulé', grant: 'Cadeau de l’équipe' },
       signIn: { title: 'Connecte-toi pour utiliser la Boutique', text: 'Tes gemmes et tes styles restent sur ton compte, sur tous tes appareils.', button: 'Se connecter' },
       unavailable: 'La Boutique n’est pas disponible dans cette version du jeu.',
       onlyLooks: 'Les gemmes n’achètent que des styles.',
+      /** The tag on a pack an account buys once (`once`). */
+      welcomeTag: 'UNE SEULE FOIS',
+      /** How gems come free (`GEM_PLAY`): the run gems, the week's, the Arena's daily cap. */
+      free: (run: string, minutes: string, week: string, days: string, cap: string) => `Gemmes gratuites : +${run} pour la première partie du jour de ${minutes} min ou plus, +${week} pour avoir joué ${days} jours dans la même semaine, et dans l’Arène (jusqu’à ${cap} par jour).`,
     },
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} en bonus`,
       pay: 'Payer avec',
       card: 'Carte, Apple Pay ou Google Pay',
       pix: 'Pix',
+      /** The box the pay buttons need ticked. */
+      age: 'J’ai 18 ans ou plus, ou j’ai la permission de mes parents ou de mon tuteur.',
+      /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
+      once: 'Ce compte a déjà pris le pack de bienvenue.',
+      cap: (limit: string) => `Par sécurité, chaque compte achète jusqu’à ${limit} de gemmes par jour, et un paiement en cours compte pendant une demi-heure. Réessaie demain (le jour change à minuit, heure de Brasília).`,
       cancel: 'Annuler',
       opening: 'Ouverture du paiement…',
       failed: 'Impossible d’ouvrir le paiement. Réessaie.',
