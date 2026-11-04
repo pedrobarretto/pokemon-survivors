@@ -403,7 +403,7 @@ export const baseSolids = (layout: BaseLayout): Shape[] => [
 
 /**
  * A piece drawn alone on a canvas of its own size, for the editor's tray and
- * the carpentry's cards (CSS scales it, pixelated). `ready`: false while its
+ * the carpentry's collection covers (CSS scales it, pixelated). `ready`: false while its
  * art (the PNG, a doll's sprite) is still on its way, so the screen paints it
  * again later.
  */
@@ -436,6 +436,51 @@ export const pieceIcon = (id: FurnitureId, time = 0): { canvas: HTMLCanvasElemen
   if (img) drawArt(ctx, img, px, py, pw, ph, false)
   else drawStandIn(ctx, id, px, py, pw, ph)
   return { canvas, ready: img !== null }
+}
+
+/** The room a catalog preview stands in: the tree's warm wood, the plainest of the four. */
+const PREVIEW_EXTERIOR: BaseExterior = 'tree'
+
+/** What a piece that sits on a surface is shown on in a preview, by its width (wider ones stand on the floor). */
+const PREVIEW_STANDS: Partial<Record<number, FurnitureId>> = { 1: 'woodCrate', 2: 'woodTable' }
+
+/** Whether a piece's art is in (a doll's sprite, a PNG). */
+const artReady = (id: FurnitureId) => {
+  const legend = dollLegend(id)
+  return legend ? dollSprites(legend).variant !== undefined : furnitureImage(id) !== null
+}
+
+/**
+ * A piece as it would stand in a base, for the carpentry's catalog: a corner
+ * of a room (the back wall and a few floor tiles, the tree's own, or the
+ * piece itself laid over them when it's a wallpaper or a flooring) with the
+ * piece in it against the wall, on a crate or a table when it sits on one,
+ * cropped round it. Drawn by `drawBaseRoom`, so it looks as it will in the
+ * base. `ready` as `pieceIcon`'s.
+ */
+export const piecePreview = (id: FurnitureId, time = 0): { canvas: HTMLCanvasElement; ready: boolean } => {
+  const def = FURNITURE[id]
+  const style = def.kind === 'wallpaper' || def.kind === 'flooring'
+  const [w, h] = def.size
+  const x = Math.floor((COLS - w) / 2)
+  const stand = def.kind === 'top' && h === 1 ? PREVIEW_STANDS[w] : undefined
+  const items: Placed[] = style
+    ? []
+    : def.kind === 'wall'
+      ? [{ id, x, y: Math.max(0, WALL_ROWS - h), turned: false }]
+      : [...(stand ? [{ id: stand, x, y: WALL_ROWS, turned: false }] : []), { id, x, y: WALL_ROWS, turned: false }]
+  const layout: BaseLayout = { exterior: PREVIEW_EXTERIOR, wallpaper: def.kind === 'wallpaper' ? id : null, flooring: def.kind === 'flooring' ? id : null, items }
+  // Half a tile of room round the piece; above it, a strip of the wall over its art (all of the wall for the wall's pieces).
+  const cols = style ? 3 : w + 1
+  const left = style ? Math.floor((COLS - 3) / 2) * TILE : x * TILE - TILE / 2
+  const floorBottom = (WALL_ROWS + h) * TILE
+  const rises = (piece: FurnitureId | undefined) => (piece ? Math.max(furnitureImage(piece)?.height ?? 0, FURNITURE[piece].size[1] * TILE) : 0)
+  const art = def.kind === 'rug' ? h * TILE : dollLegend(id) ? 34 + SURFACE_RISE : Math.max(rises(stand), rises(id) + (stand ? SURFACE_RISE : 0))
+  const top = style || def.kind === 'wall' ? 0 : Math.max(0, Math.min(WALL_H - 10, floorBottom - art - 8))
+  const bottom = style ? WALL_H + 2 * TILE : def.kind === 'wall' ? WALL_H + TILE / 2 : floorBottom + TILE / 2
+  const canvas = createCanvas(cols * TILE, bottom - top)
+  drawBaseRoom(context2d(canvas), { layout }, left, top, time)
+  return { canvas, ready: artReady(id) && (stand === undefined || artReady(stand)) }
 }
 
 /** An exterior's look in small (its wall over its floor), for the editor's picker. */

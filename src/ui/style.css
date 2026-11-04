@@ -24839,61 +24839,201 @@ span.arena-hub-face {
   flex-shrink: 0;
 }
 
+/* The catalog's collections: a rail of covers (the most precious piece of each), Club Penguin catalog style. */
+.carpentry-rail {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  padding: 2px 2px 4px;
+}
+
+.carpentry-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.carpentry-set {
+  position: relative;
+  flex: 0 0 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 4px 6px;
+  color: color-mix(in srgb, #505870 var(--dk-lift, 100%), #fff);
+  background: var(--dk-surface-2, #dce0ec);
+  border: 3px solid transparent;
+  border-radius: 8px;
+}
+
+.carpentry-set.on {
+  color: #f8d030;
+  background: #283048;
+}
+
+.carpentry-set-art {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+}
+
+.carpentry-set-icon {
+  max-width: 100%;
+  max-height: 40px;
+  image-rendering: pixelated;
+}
+
+.carpentry-set-name {
+  font-family: var(--title);
+  font-size: 7px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* NOVO: on a fresh piece's card and on its collection's cover. */
+.carpentry-fresh {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  padding: 2px 4px 1px;
+  font-family: var(--title);
+  font-size: 6px;
+  color: #fff;
+  background: #e83838;
+  border-radius: 3px;
+  box-shadow: 0 1px 0 #801818;
+  pointer-events: none;
+}
+
+.carpentry-filters {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+}
+
+.carpentry-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.carpentry-chip {
+  min-height: 30px;
+  padding: 4px 9px;
+  font-family: var(--title);
+  font-size: 7px;
+  color: color-mix(in srgb, #505870 var(--dk-lift, 100%), #fff);
+  background: transparent;
+  border: 2px solid var(--dk-surface-2, #c8cee0);
+  border-radius: 999px;
+}
+
+.carpentry-chip.on {
+  color: #283048;
+  background: #f8d030;
+  border-color: #f8d030;
+}
+
+.carpentry-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0 0 8px;
+}
+
+.carpentry-page-name {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.carpentry-page-count {
+  margin-left: auto;
+  font-size: 9px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-page-blurb {
+  flex-basis: 100%;
+  order: 3;
+  font-size: 10px;
+  line-height: 1.4;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
 .carpentry-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
   gap: 8px;
 }
 
 .carpentry-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 6px;
+  padding: 6px 6px 8px;
   text-align: center;
+  color: inherit;
   background: var(--dk-surface-2, #dce0ec);
   border: 2px solid transparent;
   border-radius: 8px;
 }
 
+.carpentry-card:focus-visible,
+.carpentry-card:hover {
+  border-color: #f8d030;
+}
+
 .carpentry-card.rare {
-  border-color: #58a8f8;
+  box-shadow: inset 0 -3px 0 #58a8f8;
 }
 
 .carpentry-card.epic {
-  border-color: #b868f0;
+  box-shadow: inset 0 -3px 0 #b868f0;
 }
 
-.carpentry-card.legendary,
-.carpentry-card.trophy {
-  border-color: #e0b030;
+.carpentry-card.legendary {
+  box-shadow: inset 0 -3px 0 #e0b030;
 }
 
+/* The piece in its corner of a room (`piecePreview`), framed like a window into the base. */
 .carpentry-art {
-  width: 100%;
-  height: 66px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, #283048 8%, transparent);
+  width: 100%;
+  height: 78px;
+  overflow: hidden;
+  background: #43291a;
+  border: 2px solid #20263a;
   border-radius: 6px;
 }
 
 .carpentry-icon {
-  max-width: 92%;
-  height: 58px;
-  object-fit: contain;
+  max-width: 100%;
+  max-height: 100%;
   image-rendering: pixelated;
 }
 
-.carpentry-card.locked .carpentry-icon {
-  filter: brightness(0) opacity(0.3);
+.carpentry-card.locked .carpentry-icon,
+.carpentry-detail-box.locked .carpentry-detail-icon {
+  filter: grayscale(1) brightness(0.55);
 }
 
 .carpentry-name {
   font-family: var(--title);
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 400;
   line-height: 1.35;
 }
@@ -24909,12 +25049,10 @@ span.arena-hub-face {
   color: color-mix(in srgb, #287028 var(--dk-lift, 100%), #fff);
 }
 
-.btn.carpentry-buy {
-  width: 100%;
-  min-height: 32px;
+.carpentry-tag {
   margin-top: auto;
-  padding: 4px 6px;
-  font-size: 9px;
+  font-family: var(--title);
+  font-size: 8px;
 }
 
 .carpentry-price {
@@ -24934,6 +25072,123 @@ span.arena-hub-face {
   font-size: 10px;
   line-height: 1.5;
   color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-empty {
+  grid-column: 1 / -1;
+  padding: 12px 4px;
+}
+
+/* The close-up: over the sheet, the piece bigger beside what it is and its price. */
+.carpentry-detail {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: color-mix(in srgb, #10141f 55%, transparent);
+  border-radius: inherit;
+}
+
+.carpentry-detail[hidden] {
+  display: none;
+}
+
+.carpentry-detail-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: min(100%, 360px);
+  max-height: 100%;
+  overflow-y: auto;
+  margin: 0;
+  padding: 14px;
+}
+
+.carpentry-detail-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+  font-size: 10px;
+}
+
+.carpentry-detail-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: min(200px, 34cqh);
+  min-height: 120px;
+  background: #43291a;
+  border: 3px solid #20263a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.carpentry-detail-icon {
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.carpentry-detail-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
+.carpentry-detail-name {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.carpentry-detail-meta {
+  font-size: 10px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-rarity {
+  padding: 2px 8px 1px;
+  font-family: var(--title);
+  font-size: 7px;
+  color: #fff;
+  background: #8890a8;
+  border-radius: 999px;
+}
+
+.carpentry-rarity.rare {
+  background: #3888e0;
+}
+
+.carpentry-rarity.epic {
+  background: #9850d8;
+}
+
+.carpentry-rarity.legendary {
+  color: #3a2808;
+  background: #f0c038;
+}
+
+.btn.carpentry-buy {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 4px;
+  font-size: 9px;
+}
+
+.carpentry-detail-text .carpentry-note {
+  margin: 4px 0 0;
 }
 
 /* Portrait phones: the editor takes the screen, the room on top and a sideways tray under it (drag a piece up into the room). */
@@ -24996,10 +25251,19 @@ span.arena-hub-face {
     gap: 6px;
   }
   .carpentry-art {
-    height: 54px;
+    height: 64px;
   }
-  .carpentry-icon {
-    height: 46px;
+  .carpentry-card {
+    padding: 4px 4px 6px;
+  }
+  .carpentry-set {
+    flex-basis: 66px;
+  }
+  .carpentry-set-art {
+    height: 32px;
+  }
+  .carpentry-set-icon {
+    max-height: 32px;
   }
 }
 
@@ -25033,6 +25297,35 @@ span.arena-hub-face {
   .carpentry-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 6px;
+  }
+  .carpentry-art {
+    height: 60px;
+  }
+  .carpentry-set {
+    flex-basis: 64px;
+    padding: 3px 3px 4px;
+  }
+  .carpentry-set-art {
+    height: 26px;
+  }
+  .carpentry-set-icon {
+    max-height: 26px;
+  }
+  .carpentry-page-blurb {
+    display: none;
+  }
+  .carpentry-detail-box {
+    flex-direction: row;
+    align-items: center;
+    width: min(100%, 520px);
+  }
+  .carpentry-detail-art {
+    flex: 0 0 45%;
+    height: 150px;
+    min-height: 0;
+  }
+  .carpentry-detail-text {
+    flex: 1;
   }
 }
 

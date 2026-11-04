@@ -1,5 +1,5 @@
 import { drawable } from '../engine/pixelart'
-import { FURNITURE, type FurnitureId } from '../data/furniture'
+import type { FurnitureId } from '../data/furniture'
 
 /**
  * The furniture's art (`public/assets/furniture/<id>.png`, PixelLab pieces
@@ -20,7 +20,7 @@ const images = new Map<FurnitureId, HTMLImageElement>()
 const asked = new Set<FurnitureId>()
 
 /** Whether a piece has a PNG of its own (a doll doesn't). */
-export const hasFurnitureArt = (id: FurnitureId) => FURNITURE[id].source !== 'trophy'
+export const hasFurnitureArt = (id: FurnitureId) => !id.startsWith('doll:')
 
 const load = (id: FurnitureId, tries: number) => {
   const img = new Image()
