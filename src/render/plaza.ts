@@ -476,7 +476,7 @@ const LAMP_TIE = 40
  */
 const LOT_SHOPS = {
   boutique: { art: 'boutique', who: 'tailor', dex: TAILOR.dex, keeper: { x: 30, y: 16, dir: 1 }, spot: { x: 6, y: 24 } },
-  carpentry: { art: 'carpentry', who: 'carpenter', dex: CARPENTER.dex, keeper: { x: -66, y: 8, dir: 7 }, spot: { x: 4, y: 26 } },
+  carpentry: { art: 'carpentry', who: 'carpenter', dex: CARPENTER.dex, keeper: { x: -74, y: 10, dir: 7 }, spot: { x: 4, y: 26 } },
 } as const satisfies Record<string, { art: ArtId; who: PlazaNpc; dex: number; keeper: KeeperSpot; spot: Placed }>
 /** A shop on one of the square's lots, besides Kecleon's. */
 export type LotShop = keyof typeof LOT_SHOPS
@@ -493,14 +493,14 @@ const LOT_SHOP_IDS = Object.keys(LOT_SHOPS) as LotShop[]
  */
 /** How far (px) each side of its middle a lot reaches, and how far inside the curb its outer corner stands. */
 const LOT = { half: 56, inset: 12 } as const
-/** A lot's feet `x` px off the axis: low enough that the curb runs behind its outer corner. */
-const lotAt = (x: number): Placed => ({ x, y: Math.round(northCurb(Math.abs(x) + LOT.half) + LOT.inset) })
+/** A lot's feet `x` px off the axis: low enough that the curb runs behind its outer corner (`half` px out, a wider building's own). */
+const lotAt = (x: number, half: number = LOT.half): Placed => ({ x, y: Math.round(northCurb(Math.abs(x) + half) + LOT.inset) })
 /** A storefront on the square: its feet and the shop standing there, if any. */
 type Lot = Placed & { shop: 'kecleon' | LotShop | null }
 const LOTS: readonly [Lot, ...Lot[]] = [
   { x: 0, y: 0, shop: 'kecleon' },
   { ...lotAt(-206), shop: 'boutique' },
-  { ...lotAt(206), shop: 'carpentry' },
+  { ...lotAt(206, 64), shop: 'carpentry' },
 ]
 /** An empty lot's bench (facing the square's middle) and flower pots, from its middle. */
 const EMPTY_LOT = { bench: { x: 0, y: -2 }, pots: [-32, 32], potY: 4 } as const
