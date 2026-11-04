@@ -37,3 +37,8 @@ export const slotIconUrl = (slot: CosmeticSlot) => {
   if (url === undefined) slotIcons.set(slot, (url = fromStrings(SLOT_ROWS[slot], SLOT_PALETTE).toDataURL()))
   return url
 }
+
+const LOCK = ['..ooooo..', '.oogggoo.', '.og...go.', '.og...go.', 'ooooooooo', 'oyyyyyyyo', 'oyyyoyyyo', 'oyyyoyyyo', 'oyyyyyyyo', 'odddddddo', 'ooooooooo']
+
+/** A padlock, 9×11: an owned cosmetic locked while the balance is negative (`GemsStatus.locked`). */
+export const lockIconUrl = lazy(() => fromStrings(LOCK, { o: '#181828', g: '#c8d0e0', y: '#f0c040', d: '#b08020' }).toDataURL())

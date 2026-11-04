@@ -3,7 +3,7 @@ import { GEM_PATREON, GEM_PLAY, packGems } from '../../src/data/gems'
 import { seasonById, type ArenaResult } from '../../src/game/arenaRank'
 import { arenaStore, parseArenaReport } from './arena'
 import type { Sql } from './db'
-import { creditRun, gemStore } from './gems'
+import { creditRun, gemStore, moveGems } from './gems'
 import { supporterStore } from './supporters'
 
 /**
@@ -136,6 +136,44 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
     await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_test_1' }, share: 'all', key: 'refund:stripe:ch_1:2490' })
     expect(await balance('u_a')).toBe(-150)
     expect(await gems.buy('u_a', 'sparkTrail', 150)).toEqual({ ok: false, error: 'gems' })
+  })
+
+  it('locks what the taken-back gems bought until the balance is back to 0, and strips it from every look', async () => {
+    await bought()
+    await gems.buy('u_a', 'crown', 550)
+    await gems.setLook('u_a', { head: 'crown' })
+    await gems.event({ kind: 'refund', provider: 'stripe', purchase: { payment: 'pi_test_1' }, share: 'all', key: 'refund:stripe:ch_1:2490' })
+    expect(await balance('u_a')).toBe(-550)
+    const status = await gems.status('u_a')
+    expect([status.owned, status.locked, status.look]).toEqual([['crown'], ['crown'], {}])
+    expect((await arenaStore(sql).tickets(['u_a'])).ratings.u_a?.look).toEqual({})
+    expect(Object.fromEntries(await gems.looks(['u_a']))).toEqual({ u_a: {} })
+    // Equipping it now stores nothing; the look stored before comes back on its own once unlocked.
+    expect(await gems.setLook('u_a', { head: 'crown' })).toEqual({})
+    await sql`update users set arena_look = ${sql.json({ head: 'crown' })} where id = 'u_a'`
+    await sql.begin((tx) => creditRun(tx, ['u_a'], '2026-11-04'))
+    expect((await gems.status('u_a')).locked).toEqual(['crown'])
+    // A staff grant brings the balance to 0: unlocked.
+    await sql.begin((tx) => moveGems(tx, 'u_a', 550 - GEM_PLAY.run.gems, 'grant', 'grant:test'))
+    expect(await balance('u_a')).toBe(0)
+    expect(await gems.status('u_a')).toMatchObject({ locked: [], look: { head: 'crown' } })
+    expect(Object.fromEntries(await gems.looks(['u_a']))).toEqual({ u_a: { head: 'crown' } })
+  })
+
+  it('never locks what was bought before the taken-back pack was paid, nor a gift', async () => {
+    await sql`insert into users (id, gems) values ('u_a', 150)`
+    await gems.buy('u_a', 'strawHat', 150)
+    await sql`insert into cosmetics_owned (user_id, cosmetic, source) values ('u_a', 'sparkTrail', 'gift')`
+    await sql`update cosmetics_owned set at = now() - interval '1 day'`
+    await bought()
+    await gems.buy('u_a', 'crown', 550)
+    await gems.event({ kind: 'dispute', provider: 'stripe', purchase: { payment: 'pi_test_1' }, key: 'dispute:stripe:du_1' })
+    expect(await balance('u_a')).toBe(-550)
+    expect((await gems.status('u_a')).locked).toEqual(['crown'])
+    expect(await gems.setLook('u_a', { head: 'strawHat', trail: 'sparkTrail' })).toEqual({ head: 'strawHat', trail: 'sparkTrail' })
+    // The dispute won gives the gems back: nothing locked.
+    await gems.event({ kind: 'disputeWon', provider: 'stripe', purchase: { payment: 'pi_test_1' }, dispute: 'dispute:stripe:du_1', key: 'dispute-won:stripe:du_1' })
+    expect((await gems.status('u_a')).locked).toEqual([])
   })
 
   it('keeps only owned cosmetics in the stored look', async () => {
