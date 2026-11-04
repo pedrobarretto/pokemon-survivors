@@ -18,6 +18,7 @@ import { PLAYABLE_IDS } from '../data/hatchlings'
 import { REALM_ROOMS, isTownRoomId, type Door, type Point, type Shape, type TownRoomId } from '../data/realmMap'
 import { REALM, REALM_LINES, REALM_EMOTES, type CityId, type Facing, type RealmIdentity, type RealmServerMessage, type RoomKey } from '../net/realm'
 import type { SocketHandlers, SocketLike } from '../coop/client'
+import { dir8 } from '../engine/math'
 
 /**
  * The Poké Realm inside the tab: the relay's own machine (`relay/src/realm.ts`,
@@ -115,7 +116,7 @@ const clearPath = (room: TownRoomId, a: Point, b: Point) => {
 }
 
 /** The facing (`Dir8` rows: 0 down, clockwise) of a step. */
-const facingOf = (dx: number, dy: number): Facing => (((Math.round(Math.atan2(-dx, dy) / (Math.PI / 4)) % 8) + 8) % 8) as Facing
+const facingOf = (dx: number, dy: number): Facing => dir8(dx, dy)
 
 /** The in-page realm (`LocalRealm`). */
 export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
