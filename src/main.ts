@@ -41,6 +41,7 @@ import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import { openBoutique, type BoutiqueTab } from './ui/boutique'
+import { openCarpentry } from './ui/carpentry'
 import { identify, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
 import type { Crumb, CrumbMoment } from './crumb'
@@ -707,6 +708,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
         return openFestival(ui, input, () => ((scene.plaza.focus = 0), close()), tab)
       },
       boutique: openBoutiqueSheet,
+      carpentry: (close) => openCarpentry(ui, input, close),
       // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
       trainer: (focus) =>
         trainerCardScreen(
@@ -4456,6 +4458,9 @@ if (import.meta.env.DEV) {
       /** The head rig tool (`ui/rigTool.ts`, loaded on demand): `ps.rig(152)` shows a variant's rig over its frame and fixes it by hand (`'6:megaX'`, `'502s'`; `ps.rig(25, { dir: 2, item: 'crown' })`). */
       rig: (variant?: unknown, opts?: Parameters<typeof import('./ui/rigTool').openRig>[1]) => import('./ui/rigTool').then((m) => m.openRig(variant, opts)),
       look: devLook,
+      /** The Poké Realm's art (`ui/realmArtDev.ts`, loaded on demand): `ps.realmArt('plaza')` a town room (`'pier'`, `'cafe'`, `'trail'`; `g` its geometry), `'bases'` the base interiors, `'furniture'` the catalog. */
+      realmArt: (view?: import('./ui/realmArtDev').RealmArtView, opts?: Parameters<typeof import('./ui/realmArtDev').openRealmArt>[1]) =>
+        import('./ui/realmArtDev').then((m) => m.openRealmArt(view, opts)),
       gems: devGems,
       candyGoal: devCandyGoal,
       /**
@@ -4537,6 +4542,11 @@ if (import.meta.env.DEV) {
        * `ps.boutique('open')` lands there with the sheet open at once (`'locker'` on Visual).
        */
       boutique: (cmd?: 'open' | 'locker') => (cmd ? showBoutique(cmd === 'locker' ? 'locker' : 'shop') : showTitle({ shop: 'boutique' })),
+      /**
+       * Bibarel's carpentry on the plaza's north-east: `ps.carpentry()` walks the lobby there, Bibarel's hello included (the first
+       * visit's long one after `localStorage.removeItem('ps:carpentrySeen')`), then its sheet (`ui/carpentry.ts`).
+       */
+      carpentry: () => showTitle({ shop: 'carpentry' }),
       /**
        * The Kecleon plaza: `ps.plaza(3)` shows the shop's building at that level (1 to 5, until the next reload; `ps.plaza(0)`
        * goes back to the save's) and the lobby pans there for a look, cards out; Esc or Enter comes back.

@@ -22,6 +22,9 @@ import type { PokeType } from './types'
 /** Leavanny, the Boutique's tailor on the plaza's north-west (`render/plaza.ts`, `ui/boutique.ts`): it sews clothes from leaves, and lives only there. */
 export const TAILOR = { dex: 542, name: 'Leavanny', types: ['bug', 'grass'] } as const satisfies { dex: number; name: string; types: readonly PokeType[] }
 
+/** Bibarel, the carpenter on the plaza's north-east (`render/plaza.ts`, `ui/carpentry.ts`): it builds the Poké Realm's secret base furniture, and lives only there. */
+export const CARPENTER = { dex: 400, name: 'Bibarel', types: ['normal', 'water'] } as const satisfies { dex: number; name: string; types: readonly PokeType[] }
+
 export const CARAVAN = {
   dex: 52,
   name: 'Meowth',

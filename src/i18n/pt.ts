@@ -23,6 +23,7 @@ import type { MapId } from '../data/versusMaps'
 import type { WearableId } from '../data/wearables'
 import type { ArenaEffectId } from '../data/arenaEffects'
 import type { CosmeticSlot, Rarity } from '../data/cosmetics'
+import type { ShopFurnitureId } from '../data/furniture'
 import type { GemPackId } from '../data/gems'
 import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
@@ -6138,6 +6139,45 @@ export const pt = {
       /** Superlatives, a distinct one for every player (`ui/teamAwards.ts`): the outright ones, then fallbacks (survivor on). */
       awards: { damage: 'Mais dano', kills: 'Mais derrotas', revives: 'Anjo da guarda', untouched: 'Intocável', tank: 'Tanque', comeback: 'Fênix', survivor: 'Sobrevivente', specialist: 'Especialista', collector: 'Colecionador', loyal: 'Parceiro fiel' },
     },
+  },
+  /** The carpentry's furniture (`data/furniture.ts`), by id (dolls are named after their legend). */
+  furniture: {
+    woodChair: 'Cadeira de madeira',
+    stool: 'Banquinho',
+    woodTable: 'Mesa de madeira',
+    woodCrate: 'Caixote',
+    bookshelf: 'Estante de livros',
+    pottedPlant: 'Planta no vaso',
+    floorLamp: 'Abajur de pé',
+    pokeBallRug: 'Tapete Poké Ball',
+    roundRug: 'Tapete redondo',
+    candle: 'Vela',
+    flowerVase: 'Vaso de flores',
+    regionMap: 'Mapa da região',
+    wallClock: 'Relógio de parede',
+    plankFloor: 'Piso de tábuas',
+    stoneTiles: 'Piso de pedra',
+    leafWallpaper: 'Papel de parede de folhas',
+    brickWallpaper: 'Parede de tijolos',
+    fireplace: 'Lareira',
+    pokeBallLamp: 'Luminária Poké Ball',
+    pcTerminal: 'PC de Pokémon',
+    tvSet: 'TV com videogame',
+    championBanner: 'Estandarte do Campeão',
+    pikachuBed: 'Cama Pikachu',
+    starryWallpaper: 'Papel de parede estrelado',
+    snorlaxBeanbag: 'Pufe Snorlax',
+    aquarium: 'Aquário',
+    jukebox: 'Jukebox',
+    cherryTree: 'Cerejeira no vaso',
+    crystalFloor: 'Piso de cristal',
+    goldTrophyCase: 'Estante de troféus dourada',
+    masterBallStatue: 'Estátua Master Ball',
+  } satisfies Record<ShopFurnitureId, string>,
+  /** Bibarel, the carpentry's carpenter on the plaza's north-east, as the partner walks up: the first visit, then one of these in turn. */
+  carpenter: {
+    first: ['Opa, freguês novo! Eu sou Bibarel, o carpinteiro da praça.', 'Faço móveis para as bases secretas do Poké Realm: cadeiras, tapetes, estantes e umas peças bem especiais.', 'Pague em ₽ ou em gemas. E quem captura uma lenda ganha um bonequinho dela para enfeitar a base!'],
+    hello: ['Serrando e lixando, como sempre. Vai levar alguma coisa?', 'Madeira boa, preço justo. Dá uma olhada!', 'Base sem móvel é só um buraco na parede!', 'Acabei de envernizar umas peças novas.'],
   },
 } satisfies ContentTexts & Record<string, unknown>
 

@@ -8,7 +8,7 @@ import { drawPokemon, loadedSprites, loadSpecies, type SpeciesSprites } from './
 import { meadowPath, meadowPathRgb } from './world'
 import type { PlazaStage } from '../data/festivals'
 import type { ShopLevel, ShopProp } from '../data/shop'
-import { CARAVAN, STALLS, TAILOR, type StallId } from '../data/visitors'
+import { CARAVAN, CARPENTER, STALLS, TAILOR, type StallId } from '../data/visitors'
 
 /**
  * The Kecleon plaza: the lobby's town square, east of the partner's home.
@@ -17,8 +17,8 @@ import { CARAVAN, STALLS, TAILOR, type StallId } from '../data/visitors'
  * where a lane runs to the meadow's paths (`laneArt`), and wherever one of
  * those paths arrives. Its storefronts stand on lots along the north arc,
  * facing south (`LOTS`): the Kecleon shop's building at its level in the
- * middle, Leavanny's Boutique on the north-west, a lot waiting for a shop on
- * the north-east. A flower bed with a blossoming tree is its centerpiece,
+ * middle, Leavanny's Boutique on the north-west, Bibarel's carpentry on the
+ * north-east. A flower bed with a blossoming tree is its centerpiece,
  * ringed by lamps; a tree, town benches and Kecleon's crates keep the rim.
  * The buildings and the props are PixelLab PNGs (`public/assets/shop/`),
  * anchored by the bottom center of what they paint, with no ground of their
@@ -72,8 +72,8 @@ const FIREFLY_DEX = [313, 314] as const
 /** The species the festival puts on the plaza, for the sprite stream to keep. */
 export const festivalSprites = (f: PlazaFestival): number[] => (f.fountain && f.running ? [LANTURN.dex, ...(f.stage >= 3 ? FIREFLY_DEX : [])] : [])
 
-/** Who talks at the plaza: a shopkeeper (the shop), Meowth (his caravan), a seasonal stall's keeper, Lanturn (a word, then the festival's sheet), the festival's fountain or plaque (its sheet), or Leavanny (the Boutique). */
-export type PlazaNpc = 'keeper' | 'meowth' | 'stall' | 'lanturn' | 'fountain' | 'plaque' | 'tailor'
+/** Who talks at the plaza: a shopkeeper (the shop), Meowth (his caravan), a seasonal stall's keeper, Lanturn (a word, then the festival's sheet), the festival's fountain or plaque (its sheet), Leavanny (the Boutique) or Bibarel (the carpentry). */
+export type PlazaNpc = 'keeper' | 'meowth' | 'stall' | 'lanturn' | 'fountain' | 'plaque' | 'tailor' | 'carpenter'
 
 /** The plaza's PNGs (`public/assets/shop/`), by id. */
 const ART_FILES = {
@@ -91,6 +91,7 @@ const ART_FILES = {
   bench: 'prop-bench',
   'bench-w': 'prop-bench-w',
   boutique: 'boutique',
+  carpentry: 'carpentry',
   caravan: 'caravan-meowth',
   'stall-duskull': 'stall-duskull',
   'stall-delibird': 'stall-delibird',
@@ -475,6 +476,7 @@ const LAMP_TIE = 40
  */
 const LOT_SHOPS = {
   boutique: { art: 'boutique', who: 'tailor', dex: TAILOR.dex, keeper: { x: 30, y: 16, dir: 1 }, spot: { x: 6, y: 24 } },
+  carpentry: { art: 'carpentry', who: 'carpenter', dex: CARPENTER.dex, keeper: { x: -66, y: 8, dir: 7 }, spot: { x: 4, y: 26 } },
 } as const satisfies Record<string, { art: ArtId; who: PlazaNpc; dex: number; keeper: KeeperSpot; spot: Placed }>
 /** A shop on one of the square's lots, besides Kecleon's. */
 export type LotShop = keyof typeof LOT_SHOPS
@@ -485,19 +487,21 @@ const LOT_SHOP_IDS = Object.keys(LOT_SHOPS) as LotShop[]
  * relative to the Kecleon shop's, lower toward the sides as the arc is, so
  * the curb runs behind every base: Kecleon's own in the middle (its building
  * follows the shop's level, between its lamps), Leavanny's Boutique on the
- * north-west, and on the north-east a lot waiting for a shop, which a bench
- * between two flower pots keeps (`EMPTY_LOT`). They stand at the same spots
- * in every state.
+ * north-west and Bibarel's carpentry on the north-east. A lot waiting for a
+ * shop (`shop: null`) keeps a bench between two flower pots (`EMPTY_LOT`).
+ * They stand at the same spots in every state.
  */
 /** How far (px) each side of its middle a lot reaches, and how far inside the curb its outer corner stands. */
 const LOT = { half: 56, inset: 12 } as const
 /** A lot's feet `x` px off the axis: low enough that the curb runs behind its outer corner. */
 const lotAt = (x: number): Placed => ({ x, y: Math.round(northCurb(Math.abs(x) + LOT.half) + LOT.inset) })
-const LOTS = [
+/** A storefront on the square: its feet and the shop standing there, if any. */
+type Lot = Placed & { shop: 'kecleon' | LotShop | null }
+const LOTS: readonly [Lot, ...Lot[]] = [
   { x: 0, y: 0, shop: 'kecleon' },
   { ...lotAt(-206), shop: 'boutique' },
-  { ...lotAt(206), shop: null },
-] as const satisfies readonly (Placed & { shop: 'kecleon' | LotShop | null })[]
+  { ...lotAt(206), shop: 'carpentry' },
+]
 /** An empty lot's bench (facing the square's middle) and flower pots, from its middle. */
 const EMPTY_LOT = { bench: { x: 0, y: -2 }, pots: [-32, 32], potY: 4 } as const
 
