@@ -178,6 +178,17 @@ export const BURROW_SHARE = 0.5
 export const burrowTime = (duration: number, cooldown: number, after: number) =>
   Math.max(0, Math.min(duration, cooldown * BURROW_SHARE - after))
 
+/**
+ * The most of its cooldown a renewing guard (Protect's bubble, Needle Arm's
+ * quills: every hit is negated while it stands) may last. Without it, items on
+ * duration (Light Clay) and cooldown (Quick Claw) stacked past the point where
+ * the window outlasts the cooldown, and the player was never hit again.
+ */
+export const GUARD_UPTIME = 0.5
+
+/** Seconds a renewing guard stands: its `duration`, held to `GUARD_UPTIME` of its `cooldown`. */
+export const guardSpan = (duration: number, cooldown: number) => Math.min(duration, cooldown * GUARD_UPTIME)
+
 /** The player's last immunity window: the move that held it and the last time it stood, on the never-paused clock (`g.now`). */
 export type Ward = { move: MoveId; at: number }
 

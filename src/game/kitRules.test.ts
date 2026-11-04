@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
-  bonusMult, BURROW_SHARE, burrowTime, DRAIN_RATE, drainAmount, drainRefill, executes, learnable, LOW_HP, nearestFoes, nextStacks, scaleBy, WARD_GAP, wardOpens, type StackRule,
+  bonusMult, BURROW_SHARE, burrowTime, DRAIN_RATE, drainAmount, drainRefill, executes, GUARD_UPTIME, guardSpan, learnable, LOW_HP, nearestFoes, nextStacks, scaleBy, WARD_GAP, wardOpens, type StackRule,
 } from './kitRules'
 import { HEX_BONUS } from './moveRules'
-import type { MoveId } from './moves'
+import { MOVES, moveStats, type MoveId } from './moves'
+import { BASE_STATS } from './stats'
 import { applyStatus, breakOnHit, createStatus, FREEZE_SHATTER, hitTakenMult, statusAttack, statusPace } from './status'
 import { createTraitState } from './traits'
 import type { Enemy } from './types'
@@ -188,5 +189,20 @@ describe('burrowTime', () => {
     const under = burrowTime(1.3, cooldown, 0.35)
     expect(under + 0.35).toBeLessThanOrEqual(cooldown * BURROW_SHARE)
     expect(under).toBeGreaterThan(0)
+  })
+})
+
+describe('guardSpan', () => {
+  it('keeps a renewing guard from outlasting its cooldown, however duration and cooldown stack', () => {
+    // Maxed Light Clay (+60% duration) and Quick Claw (-40% cooldown) on a fast Pokémon.
+    const player = { ...BASE_STATS, duration: 1.6, cooldown: 0.5 }
+    for (const id of ['protect', 'needleArm'] as const) {
+      for (const path of [0, 1, 2, 3]) {
+        const s = moveStats(id, MOVES[id].upgrades.length + 1, player, path)
+        expect(guardSpan(s.duration, s.cooldown)).toBeLessThanOrEqual(s.cooldown * GUARD_UPTIME)
+      }
+    }
+    // A short window is left as it is.
+    expect(guardSpan(1, 12)).toBe(1)
   })
 })

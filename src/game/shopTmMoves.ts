@@ -5,7 +5,7 @@ import * as dm from '../engine/dmath'
 import { DROP_TABLES, rollDrop } from '../data/consumables'
 import { dropItem } from './consumables'
 import { burst } from './effects'
-import type { DamageBonus } from './kitRules'
+import { guardSpan, type DamageBonus } from './kitRules'
 import { guard, sweep } from './moveKit'
 import type { CastStats, Look, MoveDef, MoveId, MoveStats } from './moves'
 import { dropCoins } from './pickups'
@@ -139,19 +139,20 @@ const thiefHit = (g: Game, _a: Attack, e: Enemy) => {
 }
 
 /**
- * A bubble closes around you for `duration` s: nothing gets through (every
- * hit is negated, `onGuard` reopens the guard until the bubble pops), and it
- * shoves what touches it. It fails while another move's protection stands
- * or just fell (`wardOpens`).
+ * A bubble closes around you for `duration` s, at most half its cooldown
+ * (`guardSpan`): nothing gets through (every hit is negated, `onGuard`
+ * reopens the guard until the bubble pops), and it shoves what touches it.
+ * It fails while another move's protection stands or just fell (`wardOpens`).
  */
 const protect = (g: Game, s: CastStats) => {
   const p = g.player
+  const span = guardSpan(s.duration, s.cooldown)
   // Another move's protection stands or just fell: it fails, as Protect used twice in a row does.
-  if (!guard(g, 'protect', s.duration)) return
+  if (!guard(g, 'protect', span)) return
   spawnAttack(g, {
     ...look('protect', 'normal', 'protect'), x: p.x, y: p.y - 8,
     shape: { kind: 'circle', r: PROTECT.r * s.area }, motion: { kind: 'follow', ox: 0, oy: -8 },
-    damage: s.damage, knockback: s.knockback, hitInterval: PROTECT.hitInterval, ttl: s.duration,
+    damage: s.damage, knockback: s.knockback, hitInterval: PROTECT.hitInterval, ttl: span,
   })
   cast(g, 'protect')
 }
