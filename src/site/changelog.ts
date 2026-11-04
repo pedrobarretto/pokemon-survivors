@@ -24,6 +24,50 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-04',
+    title: { pt: 'Skins na Boutique', en: 'Skins in the Boutique', es: 'Skins en la Boutique', fr: 'Des skins à la Boutique', zh: '精品服飾店上架皮膚' },
+    highlights: [
+      {
+        pt: 'Skins chegaram à Boutique da Leavanny: seu Pokémon redesenhado, em todos os estágios da linha, com versão shiny. São 34: Charmander de Terno, Squirtle Ninja, Torchic de Quimono, Gengar de Terno, Rayquaza Celestial, Groudon Obsidiana e mais.',
+        en: 'Skins are in Leavanny’s Boutique: your Pokémon redrawn, in every stage of its line, shiny included. There are 34: Suited Charmander, Ninja Squirtle, Karate Gi Torchic, Suited Gengar, Celestial Rayquaza, Obsidian Groudon and more.',
+        es: 'Las skins llegaron a la Boutique de Leavanny: tu Pokémon redibujado, en todas las etapas de su línea, con versión shiny. Son 34: Charmander de Traje, Squirtle Ninja, Torchic de Karategi, Gengar de Traje, Rayquaza Celestial, Groudon Obsidiana y más.',
+        fr: 'Les skins arrivent à la Boutique de Leavanny : ton Pokémon redessiné, à chaque stade de sa lignée, chromatique compris. Il y en a 34 : Charmander en Costume, Squirtle Ninja, Torchic en Kimono de Karaté, Gengar en Costume, Rayquaza Céleste, Groudon Obsidienne et plus.',
+        zh: '皮膚登陸 Leavanny 的精品服飾店：重新繪製的寶可夢，整條進化線的每個階段都適用，異色也有。共 34 款：Charmander 西裝、Squirtle 忍者、Torchic 空手道服、Gengar 西裝、Rayquaza 天穹、Groudon 黑曜石等等。',
+      },
+      {
+        pt: 'Estações: Sakura, Outono e Inverno para Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish e Phantump, uma a uma ou na Coleção das Estações da linha (o que você já tem sai do preço).',
+        en: 'Seasons: Sakura, Autumn and Winter for Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish and Phantump, one by one or in the line’s Seasons Collection (what you own comes off the price).',
+        es: 'Estaciones: Sakura, Otoño e Invierno para Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish y Phantump, una a una o en la Colección de las Estaciones de la línea (lo que ya tienes se descuenta).',
+        fr: 'Saisons : Sakura, Automne et Hiver pour Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish et Phantump, à l’unité ou dans la Collection des Saisons de la lignée (ce que tu as déjà est déduit).',
+        zh: '四季系列：Bulbasaur、Chikorita、Treecko、Turtwig、Budew、Rowlet、Sprigatito、Shroomish 和 Phantump 的櫻花、秋季與冬季皮膚，可單買，也可買整條進化線的四季收藏（已擁有的會折抵）。',
+      },
+      {
+        pt: 'Ofertas de lançamento: cada estação completa, com as 9 skins, por 2.600 gemas, só até 18/11. A skin aparece nas suas partidas, no co-op, no Dojo e na Arena, e os chapéus continuam por cima.',
+        en: 'Launch offers: each full season, all 9 skins, for 2,600 gems, only until Nov 18. The skin shows in your runs, in co-op, in the Dojo and in the Arena, and hats still go on top.',
+        es: 'Ofertas de lanzamiento: cada estación completa, con las 9 skins, por 2.600 gemas, solo hasta el 18/11. La skin aparece en tus partidas, en el co-op, en el Dojo y en la Arena, y los sombreros siguen encima.',
+        fr: 'Offres de lancement : chaque saison complète, les 9 skins, pour 2 600 gemmes, seulement jusqu’au 18/11. Le skin apparaît dans tes parties, en coop, au Dojo et dans l’Arène, et les chapeaux se portent toujours par-dessus.',
+        zh: '上市優惠：每個季節的全系列 9 款皮膚只要 2,600 寶石，僅到 11/18。皮膚會出現在你的對局、合作模式、道場和競技場中，帽子也照樣能戴在上面。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Skins', en: 'Skins', es: 'Skins', fr: 'Skins', zh: '皮膚' },
+        notes: [
+          {
+            pt: 'A Boutique ganhou a aba Skins: escolha a linha, veja a skin andando em cada estágio (normal ou shiny) e prove no seu Pokémon antes de comprar. Uma compra vale para a linha toda.',
+            en: 'The Boutique has a new Skins tab: pick a line, watch the skin walk on every stage (normal or shiny) and try it on your Pokémon before buying. One buy covers the whole line.',
+            es: 'La Boutique tiene la pestaña Skins: elige la línea, mira la skin caminando en cada etapa (normal o shiny) y pruébala en tu Pokémon antes de comprar. Una compra vale para toda la línea.',
+          },
+          {
+            pt: 'Na aba Visual, escolha uma skin por linha. Megas e outras formas (como o Groudon Primitivo) aparecem sem a skin. Seus colegas no co-op e na Arena veem a sua skin.',
+            en: 'In the Look tab, pick one skin per line. Megas and other forms (like Primal Groudon) show without the skin. Your teammates in co-op and the Arena see your skin.',
+            es: 'En la pestaña Estilo, elige una skin por línea. Las Megas y otras formas (como Groudon Primigenio) aparecen sin la skin. Tus compañeros en el co-op y en la Arena ven tu skin.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-03',
     title: { pt: 'Biomas, mapas e a Boutique da Leavanny', en: 'Biomes, maps and Leavanny’s Boutique', es: 'Biomas, mapas y la Boutique de Leavanny', fr: 'Biomes, cartes et la Boutique de Leavanny', zh: '區域、地圖與 Leavanny 的精品服飾店' },
     highlights: [
