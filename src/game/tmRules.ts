@@ -8,7 +8,6 @@ import { learnable } from './kitRules'
 import { MAX_MOVES } from './leveling'
 import { isManual, maxMoveLevel, MOVE_IDS, MOVES, type MoveId } from './moves'
 import { isTmMove, tmMoveIds } from './tmMoves'
-import type { ItemId } from '../data/items'
 import { TUTOR_AFFINITY } from '../data/tms'
 import type { Offer, OwnedMove, TmOffer } from './types'
 
@@ -102,7 +101,7 @@ export type TutorLoadout = {
   branch: BranchId | null
   types: readonly PokeType[]
   moves: readonly OwnedMove[]
-  banished?: ReadonlySet<MoveId | ItemId>
+  banished?: ReadonlySet<MoveId>
 }
 
 /** The move types a tutor teaches a form: its own types and their `TUTOR_AFFINITY`. */

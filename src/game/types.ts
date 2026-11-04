@@ -159,8 +159,10 @@ export type Player = {
   skips: number
   /** Esquecer charges left (`banishOffer`): from the Poké Mart, plus one per boss defeated and per evolution. */
   banishes: number
-  /** Moves and items forgotten this run: they never come back as offers. */
-  banished: Set<MoveId | ItemId>
+  /** Moves forgotten this run (Esquecer, or fused into a duo): they never come back as offers. */
+  banished: Set<MoveId>
+  /** Items forgotten this run, apart from the moves: Metronome is both, and forgetting one must leave the other. */
+  banishedItems: Set<ItemId>
   /** Mods of the move being cast right now (`updateMoves`), stamped on every hitbox it spawns; 0 otherwise. */
   castMods: number
   damageByMove: Partial<Record<DamageSource, number>>
