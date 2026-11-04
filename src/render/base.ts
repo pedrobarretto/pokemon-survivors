@@ -281,10 +281,15 @@ const drawArt = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, px: numbe
     ctx.drawImage(img, Math.round(px + (pw - img.width) / 2), Math.round(py + ph - img.height))
     return
   }
+  // Turned, the art's height lies across the footprint: shrink it to fit when it would overhang (a bed's headboard), never grow it.
+  const fit = Math.min(1, pw / img.height, (ph + TILE / 2) / img.width)
+  const w = Math.round(img.width * fit)
+  const h = Math.round(img.height * fit)
   ctx.save()
-  ctx.translate(Math.round(px + pw / 2), Math.round(py + ph - img.width / 2))
+  ctx.imageSmoothingEnabled = false
+  ctx.translate(Math.round(px + pw / 2), Math.round(py + ph - w / 2))
   ctx.rotate(Math.PI / 2)
-  ctx.drawImage(img, -Math.round(img.width / 2), -Math.round(img.height / 2))
+  ctx.drawImage(img, -Math.round(w / 2), -Math.round(h / 2), w, h)
   ctx.restore()
 }
 
