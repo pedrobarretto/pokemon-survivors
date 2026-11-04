@@ -42,6 +42,7 @@ const stats = setInterval(() => {
   relay.setLoad({ loopP99Ms, hostBusyPct: machine?.busyPct ?? null })
   jsonLog('relay.stats', {
     ...relay.counts(),
+    realm: relay.realmCounts(),
     full: relay.full(),
     loopP50Ms: +(loop.percentile(50) / 1e6).toFixed(2),
     loopP99Ms,
