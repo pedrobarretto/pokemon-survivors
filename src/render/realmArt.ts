@@ -3,7 +3,7 @@ import { hash2 } from '../engine/rng'
 import { BASE_GRID, BASE_ROOM, REALM_ROOMS, type Shape, type TownRoomId } from '../data/realmMap'
 import type { BaseExterior } from '../data/secretBases'
 import type { Piece } from './plaza'
-import { TOWN_ART, TOWN_LAYOUT, type Surface, type TownArt } from './realmLayout'
+import { TOWN_ART, TOWN_FPS, TOWN_FRAMES, TOWN_LAYOUT, type Surface, type TownArt } from './realmLayout'
 
 /**
  * The Poké Realm's town, drawn like the lobby: grass in the meadow's palette
@@ -429,8 +429,14 @@ export const townPieces = (room: TownRoomId): readonly Piece[] => {
   const pieces = TOWN_LAYOUT[room].props.flatMap((p): Piece[] => {
     const art = arts.get(p.art)
     if (!art) return []
+    const frames = (TOWN_FRAMES[p.art] ?? []).map((id) => arts.get(id) ?? art)
     // The boat lies on the water: it sorts under everyone.
-    return [{ y: p.art === 'boat' ? -1 : p.y, draw: (ctx, camX, camY) => put(ctx, art, p.x - camX, p.y - camY, p.flip) }]
+    return [
+      {
+        y: p.art === 'boat' ? -1 : p.y,
+        draw: (ctx, camX, camY, time) => put(ctx, frames.length ? frames[Math.floor(time * TOWN_FPS) % frames.length]! : art, p.x - camX, p.y - camY, p.flip),
+      },
+    ]
   })
   pieceCache.set(room, { count: arts.size, pieces })
   return pieces

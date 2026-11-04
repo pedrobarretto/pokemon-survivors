@@ -17,7 +17,9 @@ import type { Point, Shape, TownRoomId } from '../data/realmMap'
 export const TOWN_ART = {
   portalCoop: 'realm/portal-coop',
   portalArena: 'realm/portal-arena',
-  fountain: 'realm/fountain',
+  fountain: 'shop/festival-fountain-s0-f0',
+  fountain1: 'shop/festival-fountain-s0-f1',
+  fountain2: 'shop/festival-fountain-s0-f2',
   board: 'realm/board',
   signpost: 'realm/signpost',
   cafe: 'realm/cafe',
@@ -55,6 +57,10 @@ export const TOWN_ART = {
 
 export type TownArt = keyof typeof TOWN_ART
 
+/** Pieces that play frames (the art named in a layout is the first; the others follow at `TOWN_FPS`): the plaza's fountain is the lobby's festival one, water running. */
+export const TOWN_FRAMES: Partial<Record<TownArt, readonly TownArt[]>> = { fountain: ['fountain', 'fountain1', 'fountain2'] }
+export const TOWN_FPS = 7
+
 export type Prop = { art: TownArt; x: number; y: number; flip?: true }
 
 /** A dirt path: a line through `points`, `r` px each side of it. */
@@ -83,7 +89,8 @@ const oval = (x: number, y: number, rx: number, ry: number): Shape => ({ kind: '
  * The plaza, where everyone lands: a curbed oval square with the fountain in
  * the middle ringed by lamps, the co-op portal on the west and the Arena's on
  * the east, two blossoming flower beds and benches on the south, the café on
- * the north (its door is the café's) with the town's board beside it, and
+ * the north (its door is the café's; its own tables, chalkboard and plants
+ * stand out front) with the town's board beside it, and
  * dirt paths out west (the trail) and east (the pier), where the curb opens.
  */
 const PLAZA: RoomLayout = {
@@ -95,10 +102,8 @@ const PLAZA: RoomLayout = {
     { kind: 'path', r: 12, points: [{ x: 320, y: 112 }, { x: 320, y: 146 }] },
   ],
   props: [
-    { art: 'cafe', x: 320, y: 116 },
+    { art: 'cafe', x: 333, y: 124 },
     { art: 'board', x: 196, y: 112 },
-    { art: 'flowers', x: 290, y: 126 },
-    { art: 'flowers', x: 350, y: 126 },
     { art: 'benchW', x: 448, y: 108, flip: true },
     { art: 'portalCoop', x: 150, y: 236 },
     { art: 'portalArena', x: 490, y: 236 },
@@ -235,7 +240,7 @@ const TRAIL: RoomLayout = {
     { art: 'doorBush', x: 442, y: 160 },
     { art: 'doorSand', x: 562, y: 162 },
     { art: 'carpentry', x: 272, y: 390 },
-    { art: 'crates', x: 196, y: 392 },
+    { art: 'crates', x: 182, y: 394 },
     { art: 'flowers', x: 236, y: 420 },
     { art: 'flowers', x: 310, y: 424 },
     { art: 'lamp', x: 400, y: 238 },
