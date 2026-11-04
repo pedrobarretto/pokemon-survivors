@@ -297,6 +297,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
 
     const muted = readMuted()
     const trainers = new Map<number, Trainer>()
+    /** Every handle met in this city by avatar id (a party member in another room keeps a name). */
+    const names = new Map<number, string>()
     const walker = createWalker(REALM_ROOMS[LANDING].spawn.x, REALM_ROOMS[LANDING].spawn.y)
     let you: number | null = null
     let me: Avatar | null = null
@@ -377,6 +379,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       pushSample(tr.track, { at: performance.now() - REALM.interpDelayMs, x: av.x, y: av.y, facing: av.facing, moving: av.moving })
       layer.append(tr.plate, tr.bubble)
       trainers.set(av.id, tr)
+      names.set(av.id, av.handle)
       if (av.id === you) me = av
     }
 
@@ -476,7 +479,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     }
 
     /* Party */
-    const handleOf = (id: number) => trainers.get(id)?.av.handle ?? (id === you ? deps.handle : '?')
+    const handleOf = (id: number) => names.get(id) ?? (id === you ? deps.handle : '?')
 
     function showParty() {
       const members = party && party.members.length > 1 ? party.members : null

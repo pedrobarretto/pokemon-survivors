@@ -815,8 +815,17 @@ const dojoTile = (rails: boolean) => {
 
 /**
  * The Poké Realm's way in, tagged NOVO until first opened (`realmSeen`): a
- * rail tile on phones held upright, else a card on the side under the Hall.
+ * rail tile on phones held upright, a card on the side under the Hall on
+ * wide screens, and an icon in the top bar on phones on their side (whose
+ * side and dock are full).
  */
+const realmTopButton = (onClick: () => void) => {
+  const el = iconButton(realmIconUrl('wave'), t().realm.entryLabel, onClick, 'K')
+  el.classList.add('lobby-realm-top')
+  if (!realmSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
+  return el
+}
+
 const realmEntry = (rails: boolean) => {
   const m = t().realm
   const icon = h('img', { class: 'lobby-realm-icon', src: realmIconUrl('wave'), alt: '' })
@@ -1092,6 +1101,7 @@ export const titleScreen = (
       left: chip.el,
       right: [
         (wallet = walletChip(save.wallet)),
+        ...(landscape && actions.realm ? [navigable(realmTopButton(press('realm')), 'realm')] : []),
         ...(landscape ? [navigable(discordButton(press('discord')), 'discord'), ...SOCIAL_IDS.map((id) => navigable(socialButton(id, press(id)), id))] : []),
         ...(surveyWaiting() ? [navigable(surveyButton(press('survey')), 'survey')] : []),
         navigable(newsButton(press('news')), 'news'),
@@ -1123,7 +1133,7 @@ export const titleScreen = (
         ? []
         : [h('div', { class: 'lobby-community' }, pressable(discordCard(), 'discord'), ...SOCIAL_IDS.map((id) => pressable(socialCard(id), id)))]
     const dojo = rails ? [pressable(dojoTile(true), 'dojo')] : []
-    const realmWay = realm ? [pressable(realmEntry(rails), 'realm')] : []
+    const realmWay = realm && !landscape ? [pressable(realmEntry(rails), 'realm')] : []
     const side = h('div', { class: 'lobby-side' }, ...(rails ? [gift] : []), hall, ...(rails ? [] : realmWay), ...invites, ...dojo, ...(rails ? realmWay : []), ...community, ...(rails ? [explore] : []))
     // A friend's invite needs the room of a banner: under the partner on the rails, under the Hall elsewhere.
     const notice = rails ? h('div', { class: 'lobby-notice' }) : side

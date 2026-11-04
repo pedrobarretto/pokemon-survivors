@@ -24487,6 +24487,11 @@ span.arena-hub-face {
 
 /* ---------------- Poké Realm (ui/realm.ts) ---------------- */
 
+/* On a phone on its side the way in is an icon in the top bar. */
+.lobby-realm-top {
+  position: relative;
+}
+
 /* The lobby's way in: a card under the Hall (a rail tile on phones held upright, `.rail-realm`). */
 .lobby-realm {
   position: relative;
