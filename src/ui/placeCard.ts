@@ -5,7 +5,8 @@ import { h, setText } from './dom'
 /**
  * Mystery Dungeon's floor card: the screen goes black with the dungeon's name
  * and floor ("Dark Cave", "B1F") while the floor's title card holds the
- * simulation still (`updatePlaceIntro`). Part of the HUD, so it follows the
+ * simulation still (`updatePlaceIntro`). A hidden zone gets one on the way in
+ * too ("Hidden Grotto", "Hidden zone"). Part of the HUD, so it follows the
  * game's own clock (pausing on it pauses the card).
  */
 export const createPlaceCard = () => {
@@ -15,10 +16,11 @@ export const createPlaceCard = () => {
   let shown = false
   const update = (g: Game) => {
     const inside = g.place.inside
-    const show = inside?.id === 'cave' && inside.intro > 0
-    if (show && inside?.id === 'cave') {
-      setText(name, t().places.names.cave)
-      setText(floor, t().places.floor(inside.state.floor + 1))
+    const show = inside !== null && inside.intro > 0
+    if (show) {
+      const m = t().places
+      setText(name, m.names[inside.id])
+      setText(floor, inside.id === 'cave' ? m.floor(inside.state.floor + 1) : m.hiddenTag)
     }
     if (show === shown) return
     shown = show

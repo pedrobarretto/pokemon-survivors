@@ -6,7 +6,7 @@ import { MEGAS, type MegaId } from '../data/megas'
 import { TYPE_COLORS, type PokeType } from '../data/types'
 import { burst, shakeScreen } from './effects'
 import { recomputeStats } from './leveling'
-import { MOVES, moveStats, type MoveDef } from './moves'
+import { isManual, MOVES, moveStats, type MoveDef } from './moves'
 import { enemiesInView, inSight, isAlive } from './queries'
 import { unseen } from './versusRules'
 import { aimableById } from './versusKit'
@@ -946,12 +946,14 @@ export const comboCasts = (combo: number, chainGoesOn: boolean) => (chainGoesOn 
  * Metronome: fires `casts` different moves of the loadout (drawn with the
  * run's rng) from where the special landed, which is where the player stands.
  * Every move's `fire` is safe to call off-cycle (Whirlpool only refreshes its aura).
+ * A manual move (U-turn, Quick Attack) waits for its press, so it's never drawn.
  */
 const arrivalCombo = (g: Game, casts = g.player.stats.comboMoves) => {
   const p = g.player
-  const n = Math.min(casts, p.moves.length)
+  if (casts <= 0) return
+  const pool = p.moves.filter((m) => !isManual(m.id))
+  const n = Math.min(casts, pool.length)
   if (n <= 0) return
-  const pool = [...p.moves]
   for (let i = 0; i < n; i++) {
     const [owned] = pool.splice(Math.floor(g.rng() * pool.length), 1)
     const def: MoveDef | null = owned ? MOVES[owned.id] : null

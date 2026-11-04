@@ -358,7 +358,7 @@ const PERSONAL: ReadonlySet<GameEvent['kind']> = new Set<GameEvent['kind']>([
   'cast', 'moveSound', 'heal', 'hurt', 'special', 'stance', 'megaChoice', 'megaStone', 'megaStart', 'mega', 'megaEnd', 'megaReady',
   'shinyPlayer', 'evolve', 'branchChoice', 'ability', 'evolved', 'moveEvolved', 'duoFused', 'curse', 'pokeball', 'shinyOffer',
   'tm', 'tmLearned', 'tmMastered', 'banish', 'consumable', 'revive', 'riftFall', 'guard',
-  'evoItem', 'evoHeld', 'maxRevive', 'stolen', 'awaken', 'awakened',
+  'evoItem', 'evoHeld', 'maxRevive', 'stolen', 'awaken', 'awakened', 'biome',
 ])
 
 /**
@@ -370,7 +370,7 @@ const SOLO_ONLY: ReadonlySet<GameEvent['kind']> = new Set<GameEvent['kind']>(['l
 
 /**
  * Whether an event of the simulation is this client's to see and hear: the
- * world's (a boss, the biome, the level-up the team shares) are everyone's;
+ * world's (a boss, the weather, the level-up the team shares) are everyone's;
  * a player's own (`PERSONAL`) only theirs, by `actor`, the slot acting when
  * the game pushed it.
  */

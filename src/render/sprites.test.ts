@@ -4,8 +4,10 @@ import { drawPokemon, overlayStats, OVERLAY_PAGES, type SpeciesSprites } from '.
 
 // Canvases are plain sized objects here: the test is about where silhouettes go, not their pixels.
 vi.mock('../engine/pixelart', () => {
-  const ctx = { drawImage: () => {}, clearRect: () => {}, fillRect: () => {}, globalAlpha: 1, globalCompositeOperation: '', fillStyle: '' }
-  const canvas = (width: number, height: number) => ({ width, height })
+  // Every pixel opaque, so a silhouette keeps its whole frame.
+  const getImageData = (_x: number, _y: number, w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4).fill(255) })
+  const ctx = { drawImage: () => {}, clearRect: () => {}, fillRect: () => {}, getImageData, globalAlpha: 1, globalCompositeOperation: '', fillStyle: '' }
+  const canvas = (width: number, height: number) => ({ width, height, getContext: () => ctx })
   return { createCanvas: canvas, context2d: () => ctx, fromStrings: () => canvas(1, 1), onCanvasReset: () => {}, drawable: () => true }
 })
 
@@ -24,7 +26,7 @@ const tintAll = (s: SpeciesSprites, n: number) => {
 }
 
 afterEach(() => {
-  detail.safe = false
+  detail.safe = 0
   vi.useRealTimers()
 })
 
@@ -35,7 +37,7 @@ describe('silhouette pages', () => {
     tintAll(species(255), OVERLAY_PAGES * 4)
     vi.runAllTimers()
     expect(overlayStats().pages).toBe(OVERLAY_PAGES)
-    detail.safe = true
+    detail.safe = 1
     // Shorter frames fit no shelf there and no evicted spot: only freeing whole pages makes room.
     tintAll(species(100), 3)
     expect(() => vi.runAllTimers()).not.toThrow()

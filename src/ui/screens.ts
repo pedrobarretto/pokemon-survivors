@@ -41,10 +41,13 @@ import { buildTag, followsBuild } from './buildMark'
 import { boundPadHint, glyphText } from './inputLabels'
 import { pressGuard } from './pressGuard'
 import { holdMoveCard, hoverMoveCard, moveCard, withMoveCard } from './moveCard'
-import { localPlayer } from '../game/players'
+import { actAs, localPlayer } from '../game/players'
+import { crossings } from '../game/terrain'
+import { MAP_ARCHETYPES, type MapArchetypeId } from '../data/mapArchetypes'
 import { surrenderGate, voters } from '../game/versusSocial'
 import { rulesOf } from '../game/versusRules'
 import { deathCause } from './deathCause'
+import { abilityMark } from './abilityMark'
 import { teamBuilds } from './teamHud'
 
 export type Screen = {
@@ -341,10 +344,13 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
     button.style.setProperty('--duo-a', TYPE_COLORS[MOVES[offer.from[0]].type])
     button.style.setProperty('--duo-b', TYPE_COLORS[MOVES[offer.from[1]].type])
   }
+  // The move the card gives, which wears the ability's icon when the ability boosts it.
+  const move = offer.kind === 'move' || offer.kind === 'branch' ? offer.id : offer.kind === 'evolution' || offer.kind === 'duo' ? offer.to : null
   const icon = h(
     'div',
     { class: 'offer-icon' },
     h('img', { src: v.icon, alt: '' }),
+    move && abilityMark(g, move, 'offer-ability'),
     v.mods.length > 0 && h('span', { class: 'offer-mods' }, ...v.mods.map((id) => h('img', { src: modIcon(id), alt: '' }))),
   )
   // The mouse opens the move card over the icon only, so it doesn't cover the other choices (a finger holds the whole card, see `levelUp`).
@@ -571,6 +577,7 @@ const moveList = (g: Game) =>
         { class: 'loadout-row' },
         h('img', { src: moveIcon(m.id), alt: '' }),
         MOVES[m.id].name,
+        abilityMark(g, m.id, 'loadout-ability'),
         // The mods of the fork branches taken.
         ...modsOf(moveStats(m.id, m.level, localPlayer(g).stats, m.path).mods).map((id) => h('img', { class: 'loadout-mod', src: modIcon(id), alt: '' })),
         loadoutHint(g, m.id),
@@ -620,6 +627,34 @@ const duoPanel = (g: Game) => {
     { class: 'duo-panel' },
     h('div', { class: 'duo-recipes' }, h('span', { class: 'duo-panel-title' }, h('img', { src: sparkleIcon(), alt: '' }), m.title), ...chips),
     !owned && h('p', { class: half ? 'duo-legend near' : 'duo-legend' }, m.legend),
+  )
+}
+
+/** What a map archetype is good for: the types its terrain rewards ("Bom para", when it has any) and a line (the run's sign, the pause menu). */
+export const mapGoodFor = (id: MapArchetypeId) => {
+  const types = MAP_ARCHETYPES[id].goodFor
+  return h(
+    'div',
+    { class: 'map-good' },
+    types.length > 0 && h('span', { class: 'map-good-label' }, t().maps.goodFor),
+    ...types.map(typeBadge),
+    h('span', { class: 'map-good-tip' }, t().maps.tips[id]),
+  )
+}
+
+/** The pause menu's map row: the run's map archetype, what it's good for and how the local player's types cross it. */
+const mapPanel = (g: Game) => {
+  const m = t().maps
+  const id = g.terrain.archetype
+  const before = actAs(g, localPlayer(g))
+  const ways = crossings(g)
+  actAs(g, before)
+  return h(
+    'div',
+    { class: 'pause-map' },
+    h('b', {}, h('small', {}, m.label), m.names[id]),
+    mapGoodFor(id),
+    h('span', { class: 'pause-map-ways' }, ways.length > 0 ? ways.map((w) => m.crossings[w]).join(' ') : m.noCrossing),
   )
 }
 
@@ -789,6 +824,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
         // A match has no difficulty: everyone plays the same.
         !g.versus && difficultyTag(g.difficulty),
         abilityPanel(g),
+        !g.versus && mapPanel(g),
         h(
           'div',
           { class: 'pause-body' },

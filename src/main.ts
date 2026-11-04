@@ -2,7 +2,7 @@ import '@fontsource/press-start-2p'
 import '@fontsource/vt323'
 import './ui/style.css'
 // First, so its error listeners catch what goes wrong while the rest loads.
-import { bugReportsEnabled, describeWith, deviceMemory, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
+import { bugReportsEnabled, describeWith, deviceMemory, launchStep, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
 import type { BugCrash } from './game/bugReport'
 
 import { playCry, playSfx, unlockAudio, type Sfx } from './engine/audio'
@@ -11,11 +11,11 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { canvasLosses, canvasRestored, checkCanvases, context2d, onCanvasReset, sweepArt, wipeCanvases } from './engine/pixelart'
+import { canvasLosses, canvasRestored, checkCanvases, context2d, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
-import { BIOME_ORDER, BIOMES, type BiomeId, type WeatherId } from './data/biomes'
+import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
 import { MEGA_LINES, MEGAS, megasOf, type MegaId } from './data/megas'
 import { isRiftLegend } from './data/rifts'
@@ -53,7 +53,7 @@ import { shopIcon, tmPicture } from './ui/shopIcons'
 import { CONSUMABLES } from './game/consumables'
 import { depositEggs, EGG_TIERS, EGGS, freeSlots, grantEgg, hatchEgg, incubatorSlots, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
 import { useQuick } from './game/incubator'
-import { setBiome } from './game/biomes'
+import { biomeDevTools } from './ui/biomeDev'
 import { addCandies, HAUNT_DEX, recordHunt } from './game/halloween'
 import { HALLOWEEN, isNightBoss, NIGHT_BOSSES } from './data/halloween'
 import { jackIcon, treatIcon } from './render/halloweenArt'
@@ -89,6 +89,8 @@ import { riftDevTools } from './game/riftDev'
 import { placeDevTools } from './game/placeDev'
 import { placeFeedback } from './ui/places'
 import { landmarkFeedback } from './ui/landmarks'
+import { announceMap } from './ui/mapSign'
+import { MAP_ARCHETYPE_IDS, type MapArchetypeId } from './data/mapArchetypes'
 import { PLACES } from './data/places'
 import { kitDevTools } from './game/kitDev'
 import { eggMoveDevTools } from './game/eggMovesDev'
@@ -104,7 +106,7 @@ import { pokeballPick } from './ui/pokeballPick'
 import { dropPickup } from './game/pickups'
 import { CURSES } from './data/curses'
 import { CAST_SFX } from './ui/castSfx'
-import { clearSpot, featureAt, featuresNear, footOf, inSolid } from './game/terrain'
+import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype, setArchetype } from './game/terrain'
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
 import { dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
@@ -123,8 +125,8 @@ import { MOVES } from './game/moves'
 import type { Game, GameEvent, Offer, Phase, Player } from './game/types'
 import { setWeather } from './game/weather'
 import { render, warmScenery } from './render/draw'
-import { createGovernor, detail, observeFrame } from './render/quality'
-import { loadSafeMode, noteCleanRun, noteCrash, safeModeOn, setSafeMode, takeSafeNotice, type SafeChoice } from './safeMode'
+import { createGovernor, detail, observeFrame, type SafeLevel } from './render/quality'
+import { loadSafeMode, noteCleanRun, noteCrash, safeModeLevel, safeModeOn, setSafeLevel, setSafeMode, takeSafeNotice, type SafeChoice } from './safeMode'
 import { drawJoystick } from './render/joystick'
 import { cryUrl, loadAll, loadSpecies, overlayStats, portraitUrl, preloadShinies, releaseSprites, spriteMemory, streamSprites, sweepSprites, type Dex, type Variant } from './render/sprites'
 import { castNeeds, runSprites, type SpriteNeed } from './render/spriteNeeds'
@@ -139,7 +141,7 @@ import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
-import { captureRef, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
+import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate } from './ui/account'
@@ -147,7 +149,7 @@ import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
 import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
-import { challengeScreen, challengeShiny } from './ui/challenge'
+import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
 import { martDevTools } from './ui/martDev'
@@ -211,6 +213,8 @@ import { joinQueue, type QueueHandle, type QueueParty } from './arena/queue'
 import { parseHeldVersus, versusReport, type HeldVersus, type VersusLeave } from './arena/report'
 import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked'
 import { arenaResult } from './game/arenaRank'
+import { dailyCoopChallenge, parseTeamSize } from './game/coopBoard'
+import type { Difficulty } from './game/difficulty'
 import { versusSplash } from './ui/versusSplash'
 import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
@@ -302,9 +306,47 @@ onCanvasReset(() => {
   context2d(canvas)
   dirty = true
 })
+/**
+ * Gives the game's canvas a new bitmap (setting its size, even to the same one, does) and draws
+ * it again. A browser may keep showing the canvas' last picture once the bitmap behind it went
+ * bad while the page was away: Firefox on Android, after its "Leave page?" was answered Stay,
+ * showed a run's world frozen while the HUD (the minimap too) kept moving. A lost context
+ * (`isContextLost`, where the browser has it) gets the same.
+ */
+const freshCanvas = () => {
+  canvas.width = view.w
+  canvas.height = view.h
+  context2d(canvas)
+  dirty = true
+}
 // iOS Safari wipes the canvases without that event (`checkCanvases`): look every few seconds, and on coming back (below).
 checkCanvases()
-setInterval(() => document.hidden || checkCanvases(), 3000)
+setInterval(() => {
+  if (document.hidden) return
+  checkCanvases()
+  if (ctx.isContextLost?.()) freshCanvas()
+}, 3000)
+
+/**
+ * A held frame (paused, a level-up, any menu over a run) draws only when something asks for it,
+ * and iOS may throw away the one drawn as the page comes back from a locked screen: the game's
+ * canvas then stayed blank behind the pause menu for good. So for `HELD_BACK` ms after coming
+ * back it redraws every frame, and while held it redraws at least every `HELD_KEEP` ms.
+ */
+const HELD_BACK = 1500
+const HELD_KEEP = 1000
+/** When the page last came back into view (`performance.now()` ms). */
+let backAt = -Infinity
+/** When the run's frame was last drawn. */
+let runDrawnAt = -Infinity
+
+/** The page is back in view (unlocked, another app or tab left): sizes, caches and the frame are checked and drawn again. */
+const cameBack = () => {
+  backAt = performance.now()
+  scheduleResize()
+  checkCanvases()
+  freshCanvas()
+}
 
 /* ---------------- App state ---------------- */
 
@@ -572,13 +614,15 @@ describeWith(() => {
   // The canvases the caches hold (`heldCanvases`) stand for the report's canvas memory.
   const memory = sampleMemory()
   const perf = { canvases: memory.canvases, canvasMb: memory.canvasMb, peakCanvases: memory.peakCanvases, peakCanvasMb: memory.peakCanvasMb, frameMs: recentFrameMs(frames), ...canvasLosses }
+  const played = { last: input.lastKind(), pads: input.pads() }
   const g = run && shownGame(run)
-  if (!g || g.phase === 'gameover' || g.phase === 'victory') return { view, run: null, perf, memory }
+  if (!g || g.phase === 'gameover' || g.phase === 'victory') return { view, run: null, perf, memory, input: played }
   const boss = g.bossId === null ? undefined : g.enemies.find((e) => e.id === g.bossId)
   return {
     view,
     perf,
     memory,
+    input: played,
     run: {
       partner: localPlayer(g).starter,
       form: playerName(g),
@@ -586,7 +630,7 @@ describeWith(() => {
       time: Math.floor(g.time),
       level: localPlayer(g).level,
       phase: g.phase,
-      biome: g.biome.id,
+      biome: localPlayer(g).biome,
       enemies: g.enemies.length,
       projectiles: g.attacks.length + g.hazards.length,
       wave: EVENTS[g.nextEvent - 1]?.kind ?? '',
@@ -754,16 +798,27 @@ const showPcBox = (back: () => void) =>
 
 const showMissions = () => setScreen(missionsScreen(ui, input, () => showTitle({ focus: 'missions' })))
 
-/** The Desafio do dia's screen (from the title); its board opens over it and comes back to it. */
-const showChallenge = () => {
+/**
+ * The Desafio do dia's screen (from the title), on its solo or co-op side; its boards open over it and come back to it.
+ * Its co-op side goes into co-op (past co-op's door) with the Desafio co-op do dia on.
+ */
+const showChallenge = (side: ChallengeSide = 'solo') => {
   endRun()
   prefetchRun(challengeToday().day)
+  const boards = rankingEnabled || coopBoardsFaked()
   setScreen(
-    challengeScreen(ui, input, {
-      play: (c, official) => setTimeout(() => void startRun(c.starter, { challenge: c, official }), 250),
-      board: rankingEnabled ? () => setScreen(rankingScreen(ui, input, () => showChallenge(), { challenge: true })) : undefined,
-      onClose: () => showTitle({ focus: 'challenge' }),
-    }),
+    challengeScreen(
+      ui,
+      input,
+      {
+        play: (c, official) => setTimeout(() => void startRun(c.starter, { challenge: c, official }), 250),
+        board: rankingEnabled ? () => setScreen(rankingScreen(ui, input, () => showChallenge(), { challenge: true })) : undefined,
+        coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null, challenge: true }) : undefined,
+        coopBoard: boards ? (size) => setScreen(rankingScreen(ui, input, () => showChallenge('coop'), { challenge: true, coop: { size } })) : undefined,
+        onClose: () => showTitle({ focus: 'challenge' }),
+      },
+      side,
+    ),
   )
 }
 
@@ -940,7 +995,8 @@ const reportRun = (r: Run, faint: Extract<GameEvent, { kind: 'gameover' }> | nul
     ...(g.halloween ? { candies: g.candies } : {}),
     rerolls,
     opened: takeOpened(),
-    safeMode: detail.safe,
+    safeMode: detail.safe > 0,
+    safeLevel: detail.safe,
   }, { beacon: left })
   rerolls = 0
   // The page dying would have left the run unreported: a long run that got here counts toward safe mode turning off.
@@ -1113,7 +1169,8 @@ const syncSprites = () => {
   if (startingRun) return
   sweepArt(ART_IDLE)
   if (run) {
-    const { stream, extras, keep } = runSprites(run.game, run.sprites.needs, run.sprites.always)
+    // At safe mode level 2 the cast streams only a little ahead: fewer sheets held at once.
+    const { stream, extras, keep } = runSprites(run.game, run.sprites.needs, run.sprites.always, detail.safe === 2)
     // The forms and shiny colors about to show up first, then the cast by when it comes.
     streamSprites([...extras, ...stream])
     // The results screen is a menu: its share card loads the run's shinies and legendaries to draw them.
@@ -1129,6 +1186,22 @@ const syncSprites = () => {
 /** True while a run swaps the lobby's sheets for its own (`loadRunSheets`): the meadow holds still and the menus' stream waits. */
 let startingRun = false
 
+/** Set as a run is set up, until the frame loop draws it: the crash watch then marks the launch done (`launchStep`). */
+let firstFrameDue = false
+
+/** The run is set up: the watch says so now, and again once its first frame is drawn (`firstFrameDrawn`). */
+const awaitFirstFrame = () => {
+  firstFrameDue = true
+  launchStep('firstFrame')
+}
+
+/** Called after each frame that drew a run: the first one ends its launch. */
+const firstFrameDrawn = () => {
+  if (!firstFrameDue) return
+  firstFrameDue = false
+  launchStep('running')
+}
+
 /** A player's whole family (branches included: the evolution scene can land on any of them) in the colors they play, not the normal ones as well. */
 const familySheets = (starter: PlayableId, shiny: boolean): Variant[] => familyDex(starter).map((dex) => ({ dex, shiny }))
 
@@ -1141,6 +1214,9 @@ const familySheets = (starter: PlayableId, shiny: boolean): Variant[] => familyD
  */
 const loadRunSheets = async (families: readonly Variant[], opening: readonly Dex[], progress?: (done: number, total: number) => void) => {
   startingRun = true
+  launchStep('sheets')
+  // The lobby's own art (the plaza, the Estádio, the Dojo, the logo) goes too: back there, it's drawn again.
+  dropLobbyArt()
   try {
     const sheets = [...families, ...opening.map((dex) => ({ dex, shiny: false }))]
     await releaseSprites({ species: new Set(sheets.map((v) => v.dex)), variants: new Set(families.flatMap((v) => (v.shiny ? [v.dex] : []))) })
@@ -1167,6 +1243,8 @@ const startRun = async (starter: PlayableId, daily: ChallengeRun | null = null) 
   launching = true
   try {
     await launchRun(starter, daily)
+    // A launch that didn't end in a run (a newer build reloading) leaves no watch behind.
+    if (!run) launchStep(null)
   } finally {
     launching = false
   }
@@ -1178,6 +1256,8 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   setScreen(null)
   endRun()
   wonLastRun = false
+  // The crash watch holds the launch from here: a page dying while the run loads says where (`launchStep`).
+  launchStep('ticket')
   const c = daily?.challenge ?? null
   // The Desafio do dia's Pokémon is the day's, not the player's pick.
   if (!c) updateSave((s) => ({ ...s, partner: starter }))
@@ -1232,6 +1312,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
   const game = startGame(start, view)
+  if (devMap) setDevMap(game, devMap)
   const me = localPlayer(game)
   // The 1/64 roll unlocks this Pokémon's shiny for good (Normal/Shiny on the select screen).
   if (me.luckyShiny) updateSave((s) => ({ ...s, shinyStarters: unlockShinyStarter(s.shinyStarters, starter) }))
@@ -1276,7 +1357,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // The crash watch holds the run from now on (`bugReport.ts`), and the run's own peaks and frames start here.
   resetMemoryPeaks()
   resetRunFrames(frames)
-  syncRunWatch()
+  awaitFirstFrame()
   announceRun(start, run.challenge)
 }
 
@@ -1427,7 +1508,7 @@ const startDojo = async (starter: PlayableId) => {
     syncSprites()
     resetMemoryPeaks()
     resetRunFrames(frames)
-    syncRunWatch()
+    awaitFirstFrame()
     if (build) aside(rich(t().training.loaded(name)), 3000, 'dojo')
   } finally {
     launching = false
@@ -1571,7 +1652,8 @@ const syncOverlay = (r: Run) => {
       }
       r.overlay = pauseMenu(ui, input, g, {
         // Only from the pause: a late press must never flip a level-up to playing (unrecorded) or end the run under it.
-        resume: () => g.phase === 'paused' && (g.phase = 'playing'),
+        // A fresh canvas too: the player's way out of a world that stopped drawing behind the pause (`freshCanvas`).
+        resume: () => g.phase === 'paused' && ((g.phase = 'playing'), freshCanvas()),
         quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : afterRun(() => showMenu())),
         settings: (back) => runSettings(r, back),
         report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
@@ -2015,11 +2097,12 @@ const handleEvent = (r: Run, e: GameEvent) => {
       wonLastRun = true
       return playSfx('evolve')
     case 'biome': {
-      const w = t().world
+      // Its name, and the types that live there (the horde leans to them).
+      const m = t()
       playSfx('item')
       return banner(
         ui,
-        h('span', { class: 'biome-banner' }, h('small', {}, w.area(BIOME_ORDER.indexOf(e.biome) + 1, BIOME_ORDER.length)), h('b', {}, w.biomes[e.biome])),
+        h('span', { class: 'biome-banner' }, h('small', {}, BIOMES[e.biome].affinity.map((type) => m.types[type]).join(' · ')), h('b', {}, m.world.biomes[e.biome])),
         2800,
       )
     }
@@ -2198,7 +2281,7 @@ const themeFor = (r: Run | null): ThemeId | null => {
   // A wave legendary plays its own theme from its entrance on.
   const boss = r.game.bossId === null ? undefined : r.game.enemies.find((e) => e.id === r.game.bossId)
   if (boss && isWaveLegend(boss.kind)) return LEGEND_THEME[boss.kind]
-  return r.game.bossId !== null || r.game.rift.arena !== null ? 'boss' : inside ? PLACES[inside.id].theme : BIOMES[r.game.biome.id].theme
+  return r.game.bossId !== null || r.game.rift.arena !== null ? 'boss' : inside ? PLACES[inside.id].theme : BIOMES[localPlayer(r.game).biome].theme
 }
 
 /* ---------------- Global keys ---------------- */
@@ -2246,12 +2329,11 @@ document.addEventListener('visibilitychange', () => {
   // An Arena match's report as it stands, for the next page load if this one never comes back (`gone`).
   if (document.hidden && run?.coop) holdVersus(run.coop)
   if (document.hidden && !run?.coop && run?.game.phase === 'playing') run.game.phase = 'paused'
-  // Back: the paused frame is drawn again, in case the browser dropped the canvas' pixels while hidden (its caches' too).
-  if (!document.hidden) {
-    checkCanvases()
-    dirty = true
-  }
+  if (!document.hidden) cameBack()
 })
+// iOS doesn't always say `visibilitychange` on unlocking or coming back from another app: these say it too.
+window.addEventListener('pageshow', () => cameBack())
+window.addEventListener('focus', () => cameBack())
 
 /**
  * Asks before closing or reloading the tab while a run is on (paused and
@@ -2314,6 +2396,10 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   run = null
   syncRunWatch()
 }
+
+/** The co-op end's Ranking: the board of the run's team size and difficulty, the day's co-op board for a Desafio co-op run. */
+const coopEndBoard = (g: Game, back: () => void) =>
+  rankingScreen(ui, input, back, { difficulty: g.difficulty, challenge: g.coop?.challenge != null, coop: { size: parseTeamSize(g.players.length) ?? 2 } })
 
 /** This player's `coop_net` for the co-op run (`coopShell.ts`): at its end, or when the page hides or unloads mid-run. */
 const reportNet = (c: CoopRun, outcome: CoopNetOutcome) => !c.versus?.local && reportCoopNet(c.client, c.runner, c.net, outcome, runPerf())
@@ -2409,10 +2495,11 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   if (splash) splash.dispose()
   else loading.remove()
   // Closed for good while loading (kicked, the room gone): the close already went back to the title.
-  if (client.state().status.kind === 'closed') return
+  if (client.state().status.kind === 'closed') return launchStep(null)
   // The run may have moved on while loading (a heal, a newer run): show the client's current one.
   const live = client.state().runner
-  if (!live || run?.coop?.runner === live) return
+  if (!live) return launchStep(null)
+  if (run?.coop?.runner === live) return awaitFirstFrame()
   if (run) endRun()
   const save = loadSave()
   const view = createDrawView(live.game)
@@ -2436,6 +2523,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
       playAgain: () => ((c.again = true), playAgain(c)),
       lobby: () => backToRoom(),
       again: () => againState(c),
+      board: rankingEnabled || coopBoardsFaked() ? (back) => coopEndBoard(c.runner.game, back) : undefined,
     }),
     menu: false,
     banked: { victory: false, over: false },
@@ -2498,7 +2586,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   syncSprites()
   resetMemoryPeaks()
   resetRunFrames(frames)
-  syncRunWatch()
+  awaitFirstFrame()
   leftRun = null
   syncPresence()
 }
@@ -2688,6 +2776,7 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   else if (c.versus && performance.now() - heldAt > HOLD_MS) holdVersus(c)
   syncOverlay(r)
   tickToasts(ui, dt, false)
+  if (!quiet && phaseOf(g, me) === 'playing') announceMap(ui, r, g)
   // The team's cards, the connection, the waits, and the camera: this player's, or a teammate's while fainted (`render/teamCamera.ts`).
   c.team.frame(shown, localPlayer(shown), dt, view, conn, runner.pending !== null)
   // This screen's own shake, its offset rolled once a tick (the draw would roll one every refresh).
@@ -2697,6 +2786,7 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   c.versus?.controls.frame(shown, localPlayer(shown))
   const drawAt = performance.now()
   render(ctx, shown, t, { ...settings(), companion: null, mates: c.view.mates, shakeOffset: c.shake, arena: c.versus?.controls.overlay() })
+  firstFrameDrawn()
   noteDraw(c.net, { renderMs: performance.now() - drawAt, dt, shake: shown.shake > 0, prediction: c.prediction })
   const stick = input.readStick()
   if (stick && shown.phase === 'playing') drawJoystick(ctx, stick, cssScale)
@@ -2780,8 +2870,8 @@ const coopRoomCode = () => {
 
 /* ---------------- Co-op's door: an account with a handle ---------------- */
 
-/** Where co-op is headed: the hub (`room` null), or a room's link, with the @handle that sent it. */
-type CoopDest = { room: string | null; invitedBy: string | null }
+/** Where co-op is headed: the hub (`room` null), or a room's link, with the @handle that sent it; `challenge`: the hub's room starts on the Desafio co-op do dia. */
+type CoopDest = { room: string | null; invitedBy: string | null; challenge?: boolean }
 
 /** Where co-op was headed when it left to sign in: the provider brings the player back to a bare page. Tab only (sessionStorage). */
 const COOP_RETURN = 'ps:coopReturn'
@@ -2801,7 +2891,7 @@ const takeCoopReturn = (): CoopDest | null => {
     const raw = sessionStorage.getItem(COOP_RETURN)
     sessionStorage.removeItem(COOP_RETURN)
     const v: unknown = raw ? JSON.parse(raw) : null
-    return isRecord(v) ? { room: parseRoomCode(v.room), invitedBy: parseHandle(v.invitedBy) } : null
+    return isRecord(v) ? { room: parseRoomCode(v.room), invitedBy: parseHandle(v.invitedBy), challenge: v.challenge === true } : null
   } catch {
     return null
   }
@@ -2809,7 +2899,7 @@ const takeCoopReturn = (): CoopDest | null => {
 
 /** Co-op past its door: the hub, or that room (joined and shown; in a run, entered by snapshot). */
 const openCoop = (dest: CoopDest) => {
-  if (!dest.room) return showCoopHub()
+  if (!dest.room) return showCoopHub(null, dest.challenge === true)
   void joinCoop(dest.room, 'link').then((res) => res.ok && res.room.phase !== 'playing' && !run && showRoom())
 }
 
@@ -2842,8 +2932,8 @@ const leaveCoopDoor = () => {
   showTitle({ focus: 'coop' })
 }
 
-/** Jogar junto from the lobby's tile: create a room or join one by code (`code` prefills it). */
-const showCoopHub = (code: string | null = null) => {
+/** Jogar junto from the lobby's tile: create a room or join one by code (`code` prefills it); `challenge`: the room made starts on the Desafio co-op do dia. */
+const showCoopHub = (code: string | null = null, challenge = false) => {
   const client = coopClient()
   if (!client) return toast(ui, t().coop.off, 4000, 'coopOff')
   endRun()
@@ -2875,7 +2965,7 @@ const showCoopHub = (code: string | null = null) => {
         }
         if (!res.ok) return closedText(res.why)
         track('coop', { step: 'create', relay: made.home, ...(made.overflow ? { overflow: made.overflow } : {}) })
-        client.setSettings({ difficulty: loadSave().difficulty })
+        client.setSettings({ difficulty: loadSave().difficulty, ...(challenge && { challenge: brasiliaDay(new Date()) }) })
         showRoom()
         return null
       },
@@ -2891,10 +2981,11 @@ const showCoopHub = (code: string | null = null) => {
         showRoom()
         return null
       },
-      friends: signedIn() ? () => showFriends(() => showCoopHub()) : null,
-      back: () => showTitle({ focus: 'coop' }),
+      friends: signedIn() ? () => showFriends(() => showCoopHub(null, challenge)) : null,
+      back: () => (challenge ? showChallenge('coop') : showTitle({ focus: 'coop' })),
     },
     code,
+    challenge,
   )
   setScreen(hub)
   coopShown = 'hub'
@@ -3368,7 +3459,7 @@ const governor = createGovernor((navigator as Navigator & { deviceMemory?: numbe
 /** `ps.quality()` pins the governor's choice for screenshots and tests. */
 let qualityPin: 'auto' | 'lean' | 'full' = 'auto'
 /** Lean drawing as the governor says, always in safe mode (`safeMode.ts`), unless `ps.quality` pins it. */
-const drawsLean = () => (qualityPin === 'auto' ? governor.lean || detail.safe : qualityPin === 'lean')
+const drawsLean = () => (qualityPin === 'auto' ? governor.lean || detail.safe > 0 : qualityPin === 'lean')
 /** When the last frame that advanced the run was drawn (NaN after one that didn't). */
 let lastDrawn = NaN
 /** Seconds of menu time not drawn yet: the menus' meadow and screens draw at most about 60 times a second. */
@@ -3436,17 +3527,21 @@ const frame = (now: number) => {
     const berries = takeBerryLevelUps(g, (i) => recordEvent(r.recorder, ['offer', i]))
     for (const e of g.events.splice(0)) handleEvent(r, e)
     if (berries > 0) berryToast(g, berries)
+    // The map's sign, once the run is under way (past the opening draft).
+    if (run === r && g.phase === 'playing') announceMap(ui, r, g)
     if (run === r) {
       syncOverlay(r)
       r.training?.panel.tick?.(t)
       // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped.
       tickToasts(ui, dt, g.phase !== 'playing')
       // Redraw only when the simulation advanced: halves the work on 120 Hz phones and
-      // idles the GPU while a menu is open over a frozen frame.
+      // idles the GPU while a menu is open over a frozen frame (but for `HELD_BACK` and `HELD_KEEP`).
       if (r.companion && steps > 0) stepCompanion(r.companion, localPlayer(g), steps * STEP)
-      if (steps > 0 || dirty) {
+      if (steps > 0 || dirty || now - backAt < HELD_BACK || now - runDrawnAt >= HELD_KEEP) {
         dirty = false
+        runDrawnAt = now
         render(ctx, g, t, { ...settings(), companion: r.companion })
+        firstFrameDrawn()
         const stick = input.readStick()
         if (stick && g.phase === 'playing') drawJoystick(ctx, stick, cssScale)
         r.hud.update(g)
@@ -3497,7 +3592,7 @@ const hasIdle = 'requestIdleCallback' in window
  * Sculpts terrain sprites (`warmScenery`) and makes the level-up icons (`warmIcon`)
  * in the browser's idle time, as many as the frame's slack allows, so neither
  * stalls a frame the first time it shows. Once all are made it checks again
- * every second (the run moves on to new biomes). Without `requestIdleCallback`
+ * every second (the player walks into new biomes). Without `requestIdleCallback`
  * (Safari), one per timer.
  */
 const pumpWarmUp = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => {
@@ -3616,7 +3711,7 @@ const watchDeploys = () => {
  * Counts a run the page died in, once, whether or not the player reports it: rare enough for an event of its own.
  * Waits for the device's Client Hints (2 s at most), which this boot asks for the same phone.
  */
-const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeMode: boolean) => {
+const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeLevel: SafeLevel) => {
   const device = await deviceInfo()
   track('run_crash', {
     version: c.version,
@@ -3634,6 +3729,7 @@ const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeMode: boolean) 
     biome: c.run?.biome || null,
     moment: crumb?.moment ?? null,
     momentAt: crumb?.momentAt ?? null,
+    launch: crumb?.launch ?? null,
     heapMb: c.heapMb,
     liveCanvasMb: crumb?.canvasMb ?? null,
     peakLiveCanvasMb: crumb?.peakCanvasMb ?? null,
@@ -3646,7 +3742,8 @@ const reportCrash = async (c: BugCrash, crumb: Crumb | null, safeMode: boolean) 
     deviceMemory: deviceMemory(),
     ...device,
     error: c.error?.message ?? null,
-    safeMode,
+    safeMode: safeLevel > 0,
+    safeLevel,
   })
 }
 
@@ -3674,8 +3771,8 @@ const askAboutCrash = () => {
   if (!found) return
   if (found.away) return void reportClosed(found.crash, found.away)
   const { crash, crumb } = found
-  // Whether safe mode was on for the run that died, then on from here (`safeMode.ts`).
-  void reportCrash(crash, crumb, safeModeOn())
+  // The safe mode level the run that died played at, then up a level from here (`safeMode.ts`).
+  void reportCrash(crash, crumb, safeModeLevel())
   noteCrash()
   if (!bugReportsEnabled || !screen?.el.classList.contains('title-home')) return
   crashPrompt(screen.el, () => setScreen(bugReportForm(ui, input, () => showTitle(), crash)))
@@ -3934,6 +4031,31 @@ const devChallenge = (mode?: 'play' | 'done' | 'reset', time = 754) => {
 }
 
 /**
+ * Dev: the co-op boards. `ps.coopBoard('fake')` makes their reads answer
+ * made-up teams (`coopBoardFakes.ts`), `'off'` asks the API again;
+ * `ps.coopBoard('open', 3, 'hard')` opens the Ranking's Co-op side at that
+ * team size (2 to 4, or `duo`, `trio`, `squad`) and difficulty, `'daily'`
+ * its Desafio co-op tab and `'challenge'` the Desafio do dia's Co-op side.
+ */
+const devCoopBoard = (cmd?: 'fake' | 'off' | 'open' | 'daily' | 'challenge', size?: number | string, difficulty?: Difficulty) => {
+  if (cmd === 'fake' || cmd === 'off') {
+    fakeCoopBoards(cmd === 'fake')
+    return cmd === 'fake' ? 'Co-op boards: fake teams' : 'Co-op boards: the API again'
+  }
+  const teams = parseTeamSize(size) ?? 2
+  if (cmd === 'open' || cmd === 'daily') {
+    endRun()
+    setScreen(rankingScreen(ui, input, () => showTitle({ focus: 'ranking' }), { difficulty: difficulty ?? 'normal', challenge: cmd === 'daily', coop: { size: teams } }))
+    return `Co-op boards: ${cmd === 'daily' ? 'Desafio co-op' : difficulty ?? 'normal'}, ${teams} players${coopBoardsFaked() ? ' (fake)' : ''}`
+  }
+  if (cmd === 'challenge') {
+    showChallenge('coop')
+    return dailyCoopChallenge(brasiliaDay(new Date()))
+  }
+  return "ps.coopBoard('fake' | 'off') · ('open', size?, difficulty?) · ('daily', size?) · ('challenge')"
+}
+
+/**
  * Dev: lands a sync as if another device of the account played today's
  * challenge (`time` seconds, its official attempt) and earned `coins` ₽, so
  * the lobby shows it without a reload. Returns the save.
@@ -3946,9 +4068,9 @@ const devOtherDevice = (coins = 1000, time = 754) => {
 
 /**
  * Dev: walks the player to the nearest piece of terrain of a kind (`rock`,
- * `tree`, `cliff`, `tower` or `lake`), standing `dy` px south of it, e.g. `ps.terrain('cliff')`.
+ * `tree`, `cliff` (a mountain or a ridge), `tower`, `column`, `menhir` or `lake`; in a cell of `biome` when given), standing `dy` px south of it, e.g. `ps.terrain('cliff')`.
  */
-const devTerrain = (g: Game, kind: SolidKind | 'lake' = 'cliff', dy = 70) => {
+const devTerrain = (g: Game, kind: SolidKind | 'column' | 'menhir' | 'lake' = 'cliff', dy = 70, biome?: BiomeId) => {
   const C = TERRAIN.cell
   const pcx = Math.floor(localPlayer(g).x / C)
   const pcy = Math.floor(localPlayer(g).y / C)
@@ -3956,7 +4078,8 @@ const devTerrain = (g: Game, kind: SolidKind | 'lake' = 'cliff', dy = 70) => {
     for (let cy = pcy - r; cy <= pcy + r; cy++) {
       for (let cx = pcx - r; cx <= pcx + r; cx++) {
         if (Math.max(Math.abs(cx - pcx), Math.abs(cy - pcy)) !== r) continue
-        const f = featureAt(g.terrain.seed, cx, cy)
+        const f = featureAt(g.terrain.seed, cx, cy, g.terrain.archetype)
+        if (biome && f?.biome !== biome) continue
         const spot = kind === 'lake' ? f?.lake : f?.solids.find((s) => s.kind === kind)
         if (!spot) continue
         const at = clearSpot(g, { x: spot.x, y: spot.y + dy }, localPlayer(g).radius + 2)
@@ -3978,7 +4101,7 @@ const devLandmark = (g: Game, id?: LandmarkId, dy = 60) => {
     for (let cy = pcy - r; cy <= pcy + r; cy++) {
       for (let cx = pcx - r; cx <= pcx + r; cx++) {
         if (Math.max(Math.abs(cx - pcx), Math.abs(cy - pcy)) !== r) continue
-        const lm = featureAt(g.terrain.seed, cx, cy)?.landmark
+        const lm = featureAt(g.terrain.seed, cx, cy, g.terrain.archetype)?.landmark
         if (!lm || (id && lm.id !== id)) continue
         const at = clearSpot(g, { x: lm.x, y: lm.y + dy }, g.player.radius + 2)
         g.player.x = at.x
@@ -4299,7 +4422,16 @@ const devGems = (cmd?: string, arg?: string | number) => {
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }
 
-// `ps.biome('cave')` and `ps.weather('rain')` stage a run for screenshots (they hold until the next scheduled change).
+// `ps.biome('cave')` walks to the nearest cave region and `ps.weather('rain')` stages the sky for screenshots (it holds until the next scheduled change).
+/** Dev only (`ps.map`): the map archetype held for the runs started until a reload. */
+let devMap: MapArchetypeId | null = null
+
+/** Dev only: rebuilds a run's map as archetype `id` (its cells, and the breakables, placed again around the new terrain). */
+const setDevMap = (g: Game, id: MapArchetypeId) => {
+  setArchetype(g, id)
+  g.props.length = 0
+}
+
 if (import.meta.env.DEV) {
   const withRun = (fn: (g: Game) => void) => (run ? fn(run.game) : console.warn('ps: start a run first'))
   Object.assign(window, {
@@ -4308,6 +4440,8 @@ if (import.meta.env.DEV) {
       startRun,
       // Sheets loaded (their decoded MB now and at peak; `true` starts a new peak) and frame silhouettes cached right now (`render/sprites.ts`).
       sprites: (resetPeak = false) => ({ ...spriteMemory(resetPeak), overlays: overlayStats(), dressed: wearMemory(resetPeak) }),
+      // The canvases each cache holds now (`heldCanvasesBy`), heaviest first, and their sum (`heldCanvases`, the crash report's numbers).
+      canvases: () => ({ total: heldCanvases(), by: heldCanvasesBy() }),
       coop: devCoop,
       versus: devVersus,
       arena: devArena,
@@ -4344,10 +4478,14 @@ if (import.meta.env.DEV) {
         detail.lean = drawsLean()
         return { pin: qualityPin, drawing: detail.lean ? 'lean' : 'full', safe: detail.safe, governor: { ...governor } }
       },
-      /** `ps.safeMode(true)` turns safe mode on as Ajustes would (`false` off, `'auto'` back to the crashes); returns its stored state. */
-      safeMode: (choice?: boolean | SafeChoice) => {
-        if (choice !== undefined) setSafeMode(choice === true ? 'on' : choice === false ? 'off' : choice)
-        return { on: safeModeOn(), ...loadSafeMode() }
+      /**
+       * `ps.safeMode(true)` turns safe mode on as Ajustes would (`false` off, `'auto'` back to the crashes);
+       * `ps.safeMode(2)` sets the crashes' level (0 to 2) as if they had come. Returns its stored state and the level drawn.
+       */
+      safeMode: (choice?: boolean | SafeChoice | SafeLevel) => {
+        if (typeof choice === 'number') setSafeLevel(choice)
+        else if (choice !== undefined) setSafeMode(choice === true ? 'on' : choice === false ? 'off' : choice)
+        return { on: safeModeOn(), drawn: safeModeLevel(), ...loadSafeMode() }
       },
       /** `ps.wipeCanvases()` blanks the caches' canvases and the screen as iOS does unannounced; the canvas watch redraws them within seconds. Returns its counts. */
       wipeCanvases: () => {
@@ -4363,6 +4501,7 @@ if (import.meta.env.DEV) {
       event: devEvent,
       field: devField,
       challenge: devChallenge,
+      coopBoard: devCoopBoard,
       otherDevice: devOtherDevice,
       dex: () => loadSave().dex,
       /** Plays an error report's `replay` (the JSON string from PostHog) again: a simulation error throws here at the same tick. */
@@ -4474,8 +4613,22 @@ if (import.meta.env.DEV) {
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
       card: (partner: PlayableId = loadSave().partner) => (endRun(), setScreen(sharePreview(ui, input, trainerShare(partner), () => showTitle()))),
-      biome: (id: BiomeId) => withRun((g) => setBiome(g, id)),
-      terrain: (kind?: SolidKind | 'lake', dy?: number) => (run ? devTerrain(run.game, kind, dy) : console.warn('ps: start a run first')),
+      ...biomeDevTools(() => run?.game),
+      /** `ps.terrain('tower', 70, 'desert')` walks you to the nearest tower in a desert cell (any biome without the third argument). */
+      terrain: (kind?: SolidKind | 'column' | 'menhir' | 'lake', dy?: number, biome?: BiomeId) => (run ? devTerrain(run.game, kind, dy, biome) : console.warn('ps: start a run first')),
+      /**
+       * `ps.map('archipelago')` rebuilds the running map as that archetype (and its sign shows again) and holds it
+       * for the runs started until a reload; `ps.map(null)` lets the seed draw again; `ps.map()` prints the run's and the next run's.
+       */
+      map: (id?: MapArchetypeId | null) => {
+        if (id === undefined) return { run: run?.game.terrain.archetype ?? null, next: runArchetype(upcoming.seed), held: devMap, all: MAP_ARCHETYPE_IDS }
+        devMap = id
+        if (id && run) {
+          setDevMap(run.game, id)
+          announceMap(ui, {}, run.game)
+        }
+        return id
+      },
       /** `ps.landmark('maze')` walks you to the nearest maze (`cottage`, `tunnel`, `ruins`, `camp`; any without an argument), 60 px south of it. */
       landmark: (id?: LandmarkId, dy?: number) => (run ? devLandmark(run.game, id, dy) : console.warn('ps: start a run first')),
       weather: (id: WeatherId) => withRun((g) => setWeather(g, id)),

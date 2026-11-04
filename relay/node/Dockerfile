@@ -5,7 +5,7 @@ FROM node:24-alpine AS build
 WORKDIR /repo
 COPY relay/node/package.json relay/node/package-lock.json relay/node/
 RUN npm ci --prefix relay/node
-COPY src/net/protocol.ts src/net/arena.ts src/net/arenaQueue.ts src/net/
+COPY src/net/protocol.ts src/net/arena.ts src/net/arenaQueue.ts src/net/coopReport.ts src/net/
 COPY src/data/arenaRanked.ts src/data/arenaFormats.ts src/data/
 COPY relay/src relay/src
 COPY relay/node relay/node

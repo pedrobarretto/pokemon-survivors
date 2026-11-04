@@ -15,8 +15,8 @@ export const stickActions = (axes: readonly number[]) => {
   return held
 }
 
-/** Left stick travel (0..1) the player's thumb rests in without moving: worn sticks drift a little. */
-const STICK_DEAD_ZONE = 0.2
+/** Stick travel (0..1) the player's thumb rests in without moving: worn sticks drift a little. Microsoft's recommended radius for Xbox pads (~0.24). */
+const STICK_DEAD_ZONE = 0.24
 /** Travel that already means full speed, so the rim (and a square gate's corners) isn't a precision target. */
 const STICK_FULL_AT = 0.9
 

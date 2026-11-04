@@ -54,6 +54,25 @@ describe('canvasWatch', () => {
     // The new probe is painted: no more drops until it's wiped too.
     expect(check()).toBe(false)
   })
+
+  it('takes a probe WebKit refuses to read (InvalidStateError) as lost, once in a row', () => {
+    const unreadable: Probe = {
+      fillStyle: '',
+      fillRect: () => {},
+      getImageData: () => {
+        throw new DOMException('The object is in an invalid state.', 'InvalidStateError')
+      },
+    }
+    const check = canvasWatch(() => unreadable)
+    const wiped = canvasLosses.wiped
+
+    expect(check()).toBe(false)
+    expect(check()).toBe(true)
+    // Still unreadable on the new probe: a page past its memory budget, not another wipe.
+    expect(check()).toBe(false)
+    expect(check()).toBe(false)
+    expect(canvasLosses.wiped).toBe(wiped + 1)
+  })
 })
 
 describe('sweepArt', () => {

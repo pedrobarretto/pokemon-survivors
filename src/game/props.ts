@@ -1,12 +1,14 @@
 import { retain } from '../engine/math'
 import { hash2, weightedPick } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
+import { biomeOf } from './biomeMap'
 import { DROP_TABLES, PROPS, rollDrop, type PropKind } from '../data/consumables'
 import { dropItem } from './consumables'
 import { burst } from './effects'
 import { crackPumpkin, isPumpkinCell } from './halloween'
 import { inView } from './queries'
 import { isOpen } from './terrain'
+import { MAP_ARCHETYPES } from '../data/mapArchetypes'
 import type { Attack, Game, Player } from './types'
 import * as dm from '../engine/dmath'
 
@@ -36,9 +38,13 @@ const KIND_WEIGHTS = (Object.keys(PROPS) as PropKind[]).flatMap((k) => (PROPS[k]
 
 const cellKey = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768)
 
-/** The prop living in world cell (cx, cy), if any; a haunted run (`game/halloween.ts`) turns some into jack-o'-lanterns. Pure and deterministic. */
-export const propAt = (cx: number, cy: number, haunted = false): { kind: PropKind; x: number; y: number } | null => {
-  if (hash2(cx, cy, SEED) >= DENSITY) return null
+/**
+ * The prop living in world cell (cx, cy), if any, at `density` (the map
+ * archetype's, `breakables`); a haunted run (`game/halloween.ts`) turns some
+ * into jack-o'-lanterns. Pure and deterministic.
+ */
+export const propAt = (cx: number, cy: number, haunted = false, density = DENSITY): { kind: PropKind; x: number; y: number } | null => {
+  if (hash2(cx, cy, SEED) >= density) return null
   const kind = haunted && isPumpkinCell(cx, cy) ? 'pumpkin' : weightedPick(() => hash2(cx, cy, SEED + 1), KIND_WEIGHTS)
   const span = PROP_CELL - MARGIN * 2
   return {
@@ -60,11 +66,12 @@ const materializeAround = (g: Game, p: Player) => {
   const reach = reachCells(g)
   const pcx = Math.floor(p.x / PROP_CELL)
   const pcy = Math.floor(p.y / PROP_CELL)
+  const density = DENSITY * MAP_ARCHETYPES[g.terrain.archetype].breakables
   for (let cy = pcy - reach; cy <= pcy + reach; cy++) {
     for (let cx = pcx - reach; cx <= pcx + reach; cx++) {
       const cell = cellKey(cx, cy)
       if (g.brokenProps.has(cell) || g.props.some((p) => p.cell === cell)) continue
-      const spot = propAt(cx, cy, g.halloween)
+      const spot = propAt(cx, cy, g.halloween, density)
       // Breakables never stand in a lake or inside a rock.
       if (spot && isOpen(g, spot.x, spot.y, 14)) g.props.push({ id: g.nextId++, cell, ...spot, hp: PROPS[spot.kind].hp, hitCooldown: 0, shake: 0 })
     }
@@ -86,19 +93,23 @@ const PROP_COLORS: Record<PropKind, readonly string[]> = {
   pumpkin: ['#f88820', '#ffc040', '#583010'],
 }
 
-/** Debris where a biome dresses a breakable differently (see `render/props.ts`): rock chips in the cave, snow on Mt. Silver… */
+/** Debris where a biome dresses a breakable differently (see `render/props.ts`): rock chips in the cave, snow on Mt. Silver, splinters in the Power Plant… */
 const BIOME_COLORS: Partial<Record<BiomeId, Partial<Record<PropKind, readonly string[]>>>> = {
   forest: { berryTree: ['#2f7a30', '#58a040', '#3870d8', '#a06838'], tallGrass: ['#3a7a38', '#5aa048', '#1c4c24'] },
   cave: { berryTree: ['#c04830', '#f8e8d0', '#e8d8c0'], tallGrass: ['#988870', '#c8b8a0', '#4a3e34'] },
   snow: { berryTree: ['#2f6a50', '#f0f8ff', '#3870d8'], tallGrass: ['#98b8d0', '#ffffff', '#587890'] },
   tower: { berryTree: ['#584870', '#8070a0', '#3870d8'], tallGrass: ['#6c6080', '#9890a8', '#3c3448'] },
+  beach: { berryTree: ['#58a040', '#a8d068', '#3870d8', '#c8a070'], tallGrass: ['#7cb858', '#b8d888', '#4c8a38'] },
+  plant: { berryTree: ['#a0a8b4', '#d8dce4', '#f8d030'], tallGrass: ['#c8a060', '#a07840', '#5c3c20'] },
+  desert: { berryTree: ['#58a040', '#2c5c28', '#f878a0'], tallGrass: ['#b89858', '#d8c080', '#8c6c38'] },
+  volcano: { berryTree: ['#6c6064', '#9c9094', '#3870d8'], tallGrass: ['#5c4c4c', '#8c7c78', '#f86818'] },
 }
 
 const hitProp = (g: Game, prop: Prop) => {
   prop.hp--
   prop.hitCooldown = 0.2
   prop.shake = 0.2
-  const colors = BIOME_COLORS[g.biome.id]?.[prop.kind] ?? PROP_COLORS[prop.kind]
+  const colors = BIOME_COLORS[biomeOf(g, prop.x, prop.y)]?.[prop.kind] ?? PROP_COLORS[prop.kind]
   burst(g, prop.x, prop.y - 6, { colors, count: 4, speed: 50, ttl: 0.3 })
   if (prop.hp > 0) return
   g.brokenProps.add(prop.cell)

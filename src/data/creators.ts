@@ -53,6 +53,12 @@ export const CREATORS = {
     partner: { dex: 248, name: 'Tyranitar' },
     links: { youtube: 'https://www.youtube.com/@SonTitanGames' },
   },
+  princeOfVeggies: {
+    name: 'Prince of Veggies',
+    lang: 'en',
+    partner: { dex: 495, name: 'Snivy' },
+    links: { youtube: 'https://www.youtube.com/@princeofveggies' },
+  },
 } as const satisfies Record<string, Creator>
 
 export type CreatorId = keyof typeof CREATORS
@@ -66,6 +72,7 @@ export const creatorOf = (id: CreatorId): Creator => CREATORS[id]
 export const CREATOR_VIDEOS: readonly { creator: CreatorId; url: string }[] = [
   { creator: 'weplayZ', url: 'https://www.youtube.com/watch?v=hQpzB5sl2xA' },
   { creator: 'sonTitanGames', url: 'https://www.youtube.com/watch?v=0hMWUF4FyCo' },
+  { creator: 'princeOfVeggies', url: 'https://www.youtube.com/watch?v=aosgYx_WIFQ' },
 ]
 
 /** A video as a platform knows it. `vertical` for Shorts and TikToks, which play 9:16. */

@@ -78,7 +78,7 @@ export const legendLook = (g: Game): LegendForm | undefined => {
 }
 
 /** Arceus's Multitype: the type of the biome it stands in (its first affinity). */
-const multitypeOf = (g: Game) => BIOMES[g.biome.id].affinity[0] ?? 'normal'
+const multitypeOf = (g: Game) => BIOMES[g.player.biome].affinity[0] ?? 'normal'
 
 const stages = new Map<string, EvolutionStage>()
 

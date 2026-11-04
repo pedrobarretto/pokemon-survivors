@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ABILITIES, ABILITY, ABILITY_IDS, BRANCH_ABILITIES, FAMILY_ABILITIES } from '../data/abilities'
 import { PLAYABLE_IDS } from '../data/hatchlings'
-import { abilityKey, grantAbility, updateAbility } from './abilities'
+import { abilityBoosting, abilityKey, grantAbility, updateAbility } from './abilities'
 import { hazardHit } from './bosses'
 import { hurtPlayer } from './combat'
 import { curseCast, updateCurses } from './curseSystem'
@@ -133,5 +133,16 @@ describe('hits taken', () => {
     g.player.curses.held.push('lifeOrb')
     curseCast(g)
     expect(p.hp).toBeLessThan(hurt)
+  })
+})
+
+describe('the ability mark on moves', () => {
+  it('names the ability that boosts a move, and none for the rest', () => {
+    const g = withAbility('sharpness', 'oshawott')
+    expect(abilityBoosting(g, g.player, 'aquaCutter')).toBe('sharpness')
+    expect(abilityBoosting(g, g.player, 'waterGun')).toBeNull()
+    const torrent = withAbility('torrent', 'oshawott')
+    expect(abilityBoosting(torrent, torrent.player, 'waterGun')).toBe('torrent')
+    expect(abilityBoosting(torrent, torrent.player, 'ember')).toBeNull()
   })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PLACE, PLACE_IDS } from '../data/places'
+import { isHiddenPlace, PLACE, PLACE_IDS } from '../data/places'
 import { hurtPlayer } from './combat'
 import { createGame, step } from './game'
 import { enterPlace } from './placeInterior'
@@ -14,7 +14,7 @@ describe('fainting in a place', () => {
     const door = { x: g.player.x, y: g.player.y }
     g.player.revives = 1
     enterPlace(g, id, door.x, door.y)
-    // The cave opens on its floor's title card.
+    // The cave (and a hidden zone) opens on its title card.
     for (let t = 0; t < 2; t += DT) step(g, still, DT)
     g.player.iframes = 0
     hurtPlayer(g, g.player.stats.maxHp * 100)
@@ -32,7 +32,8 @@ describe('fainting in a place', () => {
     expect(g.player.hp).toBe(Math.round(g.player.stats.maxHp * PLACE.fallHp))
     expect(g.player.x).toBe(door.x)
     expect(g.player.revives).toBe(1)
-    expect(g.place.cleared).toEqual([])
+    // A hidden zone counts as found (`cleared`) on the way in; the others need their goal.
+    expect(g.place.cleared).toEqual(isHiddenPlace(id) ? [id] : [])
     expect(g.events.some((e) => e.kind === 'place' && e.notice.kind === 'exit' && e.notice.outcome === 'fallen')).toBe(true)
   })
 })

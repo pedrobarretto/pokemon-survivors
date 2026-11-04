@@ -1,7 +1,9 @@
 import type { AchievementId, AchievementStat, GiftTitleId, TitleId } from '../data/achievements'
 import type { BiomeId } from '../data/biomes'
-import type { PlaceId, WingId } from '../data/places'
+import type { DigFind, HiddenPlaceId, PlaceId, WingId } from '../data/places'
 import type { LandmarkId, TreasureLandmark } from '../data/landmarks'
+import type { MapArchetypeId } from '../data/mapArchetypes'
+import type { Crossing } from '../game/terrain'
 import type { PokeType } from '../data/types'
 import type { HitKind } from '../data/abilities'
 import type { RiftLegend } from '../data/rifts'
@@ -832,6 +834,7 @@ export const pt = {
       join: 'Entrar',
       joining: 'Entrando na sala…',
       badCode: 'O código tem 5 letras e números, como K7QF2.',
+      challenge: 'Desafio co-op do dia: a sala que você criar já vem com ele.',
       friends: 'Amigos',
       back: 'Voltar',
       hintKeys: '↑ ↓ escolher · ENTER confirmar · ESC voltar',
@@ -871,7 +874,13 @@ export const pt = {
       /** Back in the room while the others still play (the endless mode). */
       playing: 'A equipe está numa partida.',
       rejoin: 'Voltar para a partida',
-      rules: 'Co-op é o modo normal: fora do ranking, sem Modo Lendário, Surto do dia, Noite das Bruxas, Mochila nem TMs da loja.',
+      rules: 'Co-op é o modo normal: sem Modo Lendário, Surto do dia, Noite das Bruxas, Mochila nem TMs da loja. As partidas entram no ranking de Duplas, Trios e Squads.',
+      /** The host's switch for the Desafio co-op do dia (run rooms): the day's seed and difficulty, upgrades off. */
+      challenge: 'Desafio do dia',
+      challengeModes: { off: 'Desligado', on: 'Ligado' },
+      challengeBadge: (date: string) => `Desafio co-op do dia · ${date}`,
+      challengeRules: 'Semente e dificuldade do dia, sem melhorias da Poké Mart. Vale a melhor partida do time.',
+      challengeFixed: 'a do desafio',
       hintKeys: '← → escolher · ENTER confirmar · ESC sair',
       hintTouch: 'Toque para escolher',
       /** The partner select, picking for the room. */
@@ -1017,6 +1026,8 @@ export const pt = {
     seconds: (s: string) => `${s}s`,
     evolves: 'Evolução',
     evolvedFrom: 'Evoluiu de',
+    /** The line on a move an ability boosts (the ability's icon marks it on the slots and cards too). */
+    boosted: (ability: string) => `${ability} fortalece este golpe`,
   },
 
   settings: {
@@ -1229,6 +1240,18 @@ export const pt = {
     /** The boards' two sides (`RunMode`): the regular runs and the Legend mode's (a legend played). */
     modes: { standard: 'Padrão', legend: 'Lendário' },
     legendGroup: 'Lendários',
+    /** The Co-op side (a third mode): boards of teams by size (Duplas, Trios, Squads), and the Desafio co-op do dia's. */
+    coop: 'Co-op',
+    sizes: { duo: 'Duplas', trio: 'Trios', squad: 'Squads' },
+    coopOutcomes: { victory: 'Venceu', wipe: 'Desmaiaram' },
+    coopEmpty: 'Nenhum time neste quadro ainda. Chame a galera e seja o primeiro!',
+    coopChallengeEmpty: 'Nenhum time jogou o desafio co-op deste dia ainda.',
+    coopChallengeHead: (date: string, difficulty: string, n: number) => `${date} · Co-op · ${difficulty} · ${n === 1 ? '1 time' : `${n} times`}`,
+    coopChallengeResets: 'Tentativas livres: vale a melhor partida de cada time. Sem fitas.',
+    coopResets: 'Cada time (as mesmas contas) aparece uma vez, com a melhor partida. Hoje e Semana viram à meia-noite de Brasília.',
+    coopHint: '↑ ↓ treinador · ← → período · Q E dificuldade · M modo · T time · F amigos · ENTER perfil · ESC voltar',
+    coopChallengeHint: '↑ ↓ treinador · ← → dia · Q E quadro · M modo · T time · F amigos · ENTER perfil · ESC voltar',
+    team: (names: string) => `Time: ${names}`,
   },
 
   /** Public profiles and the profile editor. */
@@ -1432,9 +1455,9 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)' } satisfies Record<FrameId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta' } satisfies Record<FrameId, string>,
       background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas' } satisfies Record<BackgroundId, string>,
-      wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada' } satisfies Record<WallpaperId, string>,
+      wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada', secretBase: 'Base Secreta' } satisfies Record<WallpaperId, string>,
     },
   },
 
@@ -1804,6 +1827,18 @@ export const pt = {
     started: (date: string) => `*Desafio de ${date}*`,
     startedOfficial: 'Tentativa oficial: boa sorte!',
     startedPractice: 'Treino: não entra no ranking do desafio.',
+    /** The screen's two sides: the solo challenge and the Desafio co-op do dia (one seed and difficulty for every team). */
+    tabs: { solo: 'Solo', coop: 'Co-op' },
+    coopDay: (date: string) => `Desafio co-op de ${date}`,
+    coopName: 'Time contra a horda',
+    coopSame: 'A mesma semente e dificuldade para todos os times hoje. Cada treinador leva o Pokémon que quiser.',
+    coopOff: 'Sem melhorias da Poké Mart. Tentativas livres: vale a melhor partida de cada time.',
+    coopBoards: 'Um ranking para Duplas, Trios e Squads. Sem fitas.',
+    coopMine: (rank: number, time: string) => `Seu melhor time hoje: #${rank} · ${time}`,
+    coopPlay: 'Jogar em co-op',
+    coopOffline: 'Sem conexão com o ranking agora.',
+    coopEmpty: 'Nenhum time ainda hoje. Chame a galera!',
+    coopHintKeys: '← → escolher · Q E solo/co-op · T time · ENTER confirmar · ESC voltar',
   },
 
   /** Novidades: the lobby's button (a dot while an update is unread) and the newest update's highlights it opens. */
@@ -1923,6 +1958,7 @@ export const pt = {
     patron: (festival: string) => `Por ser Mecenas do ${festival} ♥`,
     og: 'Por apoiar o jogo desde o começo ♥',
     arenaSeason: (season: number) => `Pelo seu pico na temporada ${season} da Arena`,
+    hiddenZone: { grotto: 'Por encontrar a Gruta Oculta', underground: 'Por encontrar o Subterrâneo' } satisfies Record<HiddenPlaceId, string>,
   },
 
   /**
@@ -2299,9 +2335,11 @@ export const pt = {
   tm: {
     titleBoss: (boss: string) => `${boss} deixou um TM!`,
     titleFound: 'Você achou um TM!',
+    titleArmed: 'Seu TM da loja chegou!',
     titleLegendary: (legend: string) => `TM lendário de ${legend}!`,
     titleTutor: 'Tutor de Golpes',
     subBoss: 'Um golpe de fora do seu repertório. Aprender?',
+    subArmed: 'O TM que você equipou na Loja do Kecleon. Aprender?',
     subLegendary: 'Só dá para aprender um TM lendário por partida.',
     subTutor: (free: boolean): string => (free ? 'Ensino golpes que combinam com o seu tipo e que você não aprenderia sozinho. A primeira aula é grátis!' : 'Ensino golpes que combinam com o seu tipo e que você não aprenderia sozinho. Cobro em ₽ da partida.'),
     tag: 'TM',
@@ -2342,6 +2380,7 @@ export const pt = {
     sandVeil: 'Na tempestade de areia: recebe 25% menos dano, e a areia não te desgasta.',
     snowCloak: 'Na neve: recebe 25% menos dano, e a neve não te desgasta.',
     leafGuard: 'No sol forte: recebe 30% menos dano e regenera 0,5 HP/s.',
+    cloudNine: 'O clima não fortalece os inimigos nem te desgasta.',
     drought: 'Chama o sol forte ao ser escolhida e a cada bioma novo (fora das fendas): Fogo ×1,5.',
     sandStream: 'Levanta uma tempestade de areia ao ser escolhida e a cada bioma novo: desgasta a horda, não você.',
     static: 'Inimigos encostados em você podem ficar paralisados.',
@@ -2386,7 +2425,7 @@ export const pt = {
     technician: 'Golpes fracos (dano base até 10) causam +40%.',
     ironFist: 'Socos causam +35% (Mach Punch…).',
     strongJaw: 'Mordidas causam +40% (Crunch…).',
-    sharpness: 'Golpes cortantes causam +35% (Razor Leaf, Leaf Blade, Razor Shell, Water Shuriken…).',
+    sharpness: 'Golpes cortantes e suas evoluções causam +35% (Leaf Blade, Razor Shell, Aqua Cutter, Sacred Sword…).',
     sheerForce: 'Golpes que causam condições (queimadura, veneno…) causam +25%.',
     liquidVoice: 'Golpes de som causam +30% (Disarming Voice, Torch Song…), e golpes de Água +10%.',
     punkRock: 'Golpes de som causam +35% (Disarming Voice…), e recebe 5% menos dano.',
@@ -2434,8 +2473,11 @@ export const pt = {
       cave: 'Monte Moon',
       snow: 'Monte Prateado',
       tower: 'Torre de Lavender',
+      beach: 'Rota 109',
+      plant: 'Usina Elétrica',
+      desert: 'Deserto da Rota 111',
+      volcano: 'Monte Chaminé',
     },
-    area: (n: number, total: number) => `Área ${n} de ${total}`,
     weather: { clear: 'Céu limpo', sun: 'Sol forte', rain: 'Chuva', sand: 'Tempestade de areia', snow: 'Neve', fog: 'Névoa' },
     weatherStart: {
       sun: 'O sol ficou *forte*!',
@@ -2687,19 +2729,55 @@ export const pt = {
     } satisfies Record<TreasureLandmark, string>,
     tunnelOut: 'Você saiu do outro lado do túnel!',
   },
+  /** The run's map archetype (`data/mapArchetypes.ts`): the sign at the start, the pause menu and the Desafio do dia. */
+  maps: {
+    names: { route: 'Rota Clássica', plains: 'Planície Aberta', archipelago: 'Arquipélago', canyon: 'Cânion', forest: 'Mata Fechada', ruins: 'Campo de Ruínas' } satisfies Record<MapArchetypeId, string>,
+    /** A line under the name: the places from the games it looks like. */
+    flavor: {
+      route: 'Um pouco de tudo, como a Rota 101.',
+      plains: 'Campo aberto, como a Rota 1 e a Zona Safári.',
+      archipelago: 'Lagos por toda parte, como as Ilhas Sevii.',
+      canyon: 'Paredões e passagens estreitas, como a Estrada Vitória.',
+      forest: 'Trilhas entre as árvores, como a Floresta de Viridian.',
+      ruins: 'Colunas antigas, como as Ruínas de Alph.',
+    } satisfies Record<MapArchetypeId, string>,
+    /** What the map rewards, after "Bom para". */
+    tips: {
+      route: 'Qualquer Pokémon se vira aqui.',
+      plains: 'A horda vem de todo lado: golpes em área e velocidade brilham.',
+      archipelago: 'Água surfa, Voador plana e Gelo patina no gelo. A horda atravessa a nado, devagar.',
+      canyon: 'Golpes que atravessam e em área varrem os corredores estreitos.',
+      forest: 'Fantasmas atravessam o mato; a horda se espreme nas trilhas.',
+      ruins: 'Colunas barram tiros inimigos, e Fantasmas passam por elas.',
+    } satisfies Record<MapArchetypeId, string>,
+    goodFor: 'Bom para',
+    label: 'Mapa',
+    /** How the player's types cross the terrain (`TRAVERSAL` in `game/terrain.ts`), in the pause menu. */
+    crossings: {
+      surf: 'Surfa nos lagos, mais rápido que a pé.',
+      hover: 'Plana sobre a água e o gelo, sem atolar nem escorregar.',
+      skate: 'Patina no gelo, mais rápido e sem escorregar.',
+      phase: 'Atravessa árvores, arbustos, pedras e colunas.',
+    } satisfies Record<Crossing, string>,
+    noCrossing: 'Anda devagar nos lagos e escorrega no gelo.',
+  },
   places: {
-    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens' } satisfies Record<PlaceId, string>,
+    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
     /** Short names for the HUD's pill while an entrance is open. */
-    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente' } satisfies Record<PlaceId, string>,
+    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente', grotto: 'Gruta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
     open: {
       cave: 'A entrada de uma *caverna* apareceu! Siga a seta.',
       graveyard: 'Um *cemitério* surgiu na névoa! Siga a seta.',
       sky: 'Uma *corrente de ar* sobe para o céu! Siga a seta e voe.',
+      grotto: 'Você achou uma *Gruta Oculta* escondida no mato!',
+      underground: 'Uma rachadura na pedra leva ao *Subterrâneo*!',
     } satisfies Record<PlaceId, string>,
     sealed: {
       cave: 'Pedras desabaram na entrada da caverna.',
       graveyard: 'O portão do cemitério se fechou.',
       sky: 'A corrente de ar se desfez.',
+      grotto: 'As folhas cobriram a entrada da gruta.',
+      underground: 'A rachadura na pedra desmoronou.',
     } satisfies Record<PlaceId, string>,
     blocked: 'Só um Pokémon do tipo *Voador* consegue subir nessa corrente de ar.',
     /** What to do, shown on the way in. */
@@ -2707,6 +2785,8 @@ export const pt = {
       cave: 'Ache as escadas no escuro e desça até o *tesouro*!',
       graveyard: 'Cada fantasma derrotado desperta a *Pedra Peculiar*…',
       sky: 'Pegue as *asas* que o vento traz antes que ele acalme!',
+      grotto: 'Derrote os *Audino* que saem da grama balançando!',
+      underground: 'Fique nos *brilhos* das paredes para cavar e acerte os *Diglett*!',
     } satisfies Record<PlaceId, string>,
     /** A dungeon floor, as Mystery Dungeon names them (B1F). */
     floor: (n: number) => `B${n}F`,
@@ -2740,6 +2820,29 @@ export const pt = {
     /** Fainting inside: a rescue brings the player back out instead of ending the run. */
     fall: 'Você desmaiou! Uma *equipe de resgate* está a caminho…',
     rescued: 'Você foi resgatado e voltou ao mapa. A corrida continua!',
+    /** Hidden zones (`game/hidden.ts`): the title card's line under the name. */
+    hiddenTag: 'Zona oculta',
+    grottoSoon: 'A luz da gruta está sumindo…',
+    wallSoon: 'As paredes estão rachando!',
+    grottoOut: 'A luz se apagou e você saiu da gruta.',
+    collapse: 'As paredes desabaram! Você escapou por um triz.',
+    /** A spot sparkles (a sure shiny inside), its shiny runs off, or falls. */
+    sparkle: {
+      grotto: 'Um tufo de grama está *brilhando*… tem um _shiny_ ali dentro!',
+      underground: 'Uma toca está *brilhando*… tem um _shiny_ ali dentro!',
+    } satisfies Record<HiddenPlaceId, string>,
+    sparkleFled: (name: string) => `O ${name} _shiny_ fugiu…`,
+    sparkleDown: (name: string) => `*${name}* _shiny_ derrotado! Deixou uma Poké Ball, ₽ e um presente.`,
+    /** What a glint in the Underground's walls gave. */
+    finds: {
+      expCandy: 'Você desenterrou um *Exp. Candy* enorme!',
+      sphere: 'Você desenterrou uma *Prism Sphere*! Vale ₽.',
+      rareCandy: 'Você desenterrou um *Rare Candy*!',
+      stone: 'Você desenterrou uma *pedra de evolução*!',
+      fossil: 'Você desenterrou *Old Amber*! Tinha um ovo dentro!',
+    } satisfies Record<DigFind, string>,
+    hudGrotto: (n: number, time: string) => `Audino ${n} · ${time}`,
+    hudDig: (n: number, time: string) => `Achados ${n} · parede ${time}`,
   },
 
   types: {
@@ -2785,6 +2888,10 @@ export const pt = {
         cave: (n: string) => `Derrote ${n} Pokémon no Monte Moon`,
         snow: (n: string) => `Derrote ${n} Pokémon no Monte Prateado`,
         tower: (n: string) => `Derrote ${n} Pokémon na Torre de Lavender`,
+        beach: (n: string) => `Derrote ${n} Pokémon na Rota 109`,
+        plant: (n: string) => `Derrote ${n} Pokémon na Usina Elétrica`,
+        desert: (n: string) => `Derrote ${n} Pokémon no Deserto da Rota 111`,
+        volcano: (n: string) => `Derrote ${n} Pokémon no Monte Chaminé`,
       } satisfies Record<BiomeId, (n: string) => string>,
       traitKills: (n: string) => `Derrote ${n} Pokémon com comportamento`,
       shinyKills: (n: string) => (n === '1' ? 'Derrote um Pokémon shiny' : `Derrote ${n} Pokémon shiny`),
@@ -2868,6 +2975,7 @@ export const pt = {
       legends: 'Domador de Lendas',
       shinyLegend: 'Lenda brilhante',
       explorer: 'Explorador',
+      secrets: 'Segredos da Trilha',
       champion: 'Campeão',
       wins10: 'Dinastia',
       trio: 'Trio inicial',
@@ -2897,6 +3005,7 @@ export const pt = {
       shinyHatch: 'Criador de Shinies',
       legends: 'Domador de Lendas',
       explorer: 'Explorador(a)',
+      secrets: 'Caçador(a) de Segredos',
       champion: 'Campeão',
       regions: 'Mestre das Regiões',
       reaperDown: 'Lenda Viva',
@@ -2948,6 +3057,7 @@ export const pt = {
       placeClears: (n: string) => (n === '1' ? 'Conclua um lugar: o tesouro da caverna, Spiritomb ou um voo com asas' : `Conclua ${n} lugares`),
       landmarks: (n: string) => (n === '1' ? 'Abra um tesouro escondido no mapa: na casa abandonada, no labirinto, nas ruínas ou no acampamento' : `Abra ${n} tesouros escondidos no mapa`),
       places: (n: string) => `Conclua os ${n} lugares: o tesouro da caverna, Spiritomb no cemitério e um voo acima das nuvens`,
+      hiddenZones: (n: string) => `Encontre as ${n} zonas ocultas (raras, sem aviso: fique de olho no mapa)`,
     } satisfies Record<AchievementStat, (n: string) => string>,
     region: (name: string) => `Vença o Mewtwo com um inicial de ${name}`,
   },
@@ -5411,6 +5521,9 @@ export const pt = {
     superPotion: 'Recuperou 60 HP.',
     rareCandy: 'Subiu de nível!',
     expShare: 'Todos os Exp. Candies vieram até você!',
+    coinCase: 'Todo o ₽ do mapa veio até você!',
+    berryPouch: 'Todas as berries do mapa vieram até você!',
+    superRod: 'Você fisgou todos os itens do mapa!',
     pokeFlute: 'Os Pokémon selvagens adormeceram!',
     maxRepel: 'Nenhum Pokémon selvagem se aproxima!',
     explosion: 'usou Explosion!',
@@ -5743,12 +5856,14 @@ export const pt = {
     /** A new move a run wouldn't teach next to the ones carried: a second manual one, a second legendary one. */
     manualFull: 'Já tem um manual',
     legendaryFull: 'Já tem um lendário',
-    /** The moves tab's shelves: the family's own moves, every TM and the legendaries' capstones. */
-    shelves: { family: 'Família', tms: 'TMs', legendary: 'Lendários' },
+    duoFull: 'Já tem um duo',
+    /** The moves tab's shelves: the family's own moves, every TM, the legendaries' capstones and the duo moves. */
+    shelves: { family: 'Família', tms: 'TMs', legendary: 'Lendários', duo: 'Duo' },
     /** Under a shelf's chips: where its moves come from in a run. */
     shelfNote: {
       tms: 'Nas partidas, as TMs caem dos chefes, vêm dos Tutores de Golpes e da prateleira da loja.',
       legendary: 'Nas partidas, um lendário vencido deixa o disco dourado do seu golpe: só um por partida.',
+      duo: 'Nas partidas, dois golpes no nível máximo de tipos combinados se fundem num Duo Move (só um por partida). Aqui você escolhe direto.',
     },
     form: 'Forma',
     abilityLater: 'A habilidade chega na primeira evolução.',
@@ -5756,6 +5871,10 @@ export const pt = {
     /** The Lendários tab of the Dojo's partner select. */
     legendNote: 'Os lendários capturados também treinam aqui, com os *despertares* do Nv 12 e 28 na aba Forma.',
     noAbility: 'Nenhuma',
+    /** The Form tab's Mega Evolution: no stone, then what the chosen one lets the player do. */
+    noMega: 'Nenhuma',
+    megaReady: 'Aperte *MEGA* (ou E) para Mega Evoluir. A forma dura e recarrega como numa partida.',
+    megaLocked: 'Escolha a forma final na lista acima para poder Mega Evoluir.',
     count: 'Quantos alvos',
     countOf: (n: number) => `${n}`,
     target: 'Alvo',
@@ -6001,6 +6120,8 @@ export const pt = {
       againHost: (ready: number, total: number) => `Começa quando todos estiverem prontos (${ready}/${total})`,
       againGuest: 'Pronto! Esperando o anfitrião começar…',
       playAgain: 'Jogar de novo',
+      /** Opens the co-op board of this run's team size and difficulty (the day's for a challenge run). */
+      board: 'Ranking',
       lobby: 'Voltar ao lobby',
       /** Superlatives, a distinct one for every player (`ui/teamAwards.ts`): the outright ones, then fallbacks (survivor on). */
       awards: { damage: 'Mais dano', kills: 'Mais derrotas', revives: 'Anjo da guarda', untouched: 'Intocável', tank: 'Tanque', comeback: 'Fênix', survivor: 'Sobrevivente', specialist: 'Especialista', collector: 'Colecionador', loyal: 'Parceiro fiel' },

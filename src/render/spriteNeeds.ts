@@ -1,6 +1,6 @@
 import { domainOf, partnerOf } from '../data/domains'
 import { ENEMIES, type EnemyId } from '../data/enemies'
-import { GRAVEYARD } from '../data/places'
+import { GRAVEYARD, hiddenCast } from '../data/places'
 import { isSummoner, SUMMONS } from '../data/traits'
 import { EVENTS, STAGES, stageIndexAt, stageStart } from '../data/waves'
 import { phasesOf } from '../game/bossFight'
@@ -54,9 +54,20 @@ export const castNeeds = (roster: Roster, extras: readonly { dex: Dex; at: numbe
   ...extras.map(({ dex, at }) => ({ dex, from: at, until: Infinity })),
 ]
 
-/** The needs due by the end of the stage after the one playing at `time` and not over yet, soonest first, each species once. */
-export const dueNeeds = (needs: readonly SpriteNeed[], time: number): Dex[] => {
-  const horizon = stageEnd(stageIndexAt(time) + 1)
+/** Seconds into a run before it streams what doesn't show yet: its first frames come while the phone still decodes the run's own sheets. */
+export const RUN_SETTLE = 8
+
+/** Seconds ahead the cast streams at safe mode level 2 (`render/quality.ts`), instead of the whole next stage. */
+const NEAR_LEAD = 20
+
+/**
+ * Up to which run second the cast streams at `time`: the end of the stage after the one playing,
+ * only what shows now in the run's first seconds (`RUN_SETTLE`), and `NEAR_LEAD` ahead when `near`.
+ */
+export const streamHorizon = (time: number, near = false) => (time < RUN_SETTLE ? time : near ? time + NEAR_LEAD : stageEnd(stageIndexAt(time) + 1))
+
+/** The needs due by `horizon` (by default the end of the stage after the one playing at `time`) and not over yet, soonest first, each species once. */
+export const dueNeeds = (needs: readonly SpriteNeed[], time: number, horizon = stageEnd(stageIndexAt(time) + 1)): Dex[] => {
   const due = needs.filter((n) => n.from <= horizon && n.until > time).sort((a, b) => a.from - b.from)
   return [...new Set(due.map((n) => n.dex))]
 }
@@ -77,12 +88,14 @@ const riftCameo = (g: Game): Dex[] => {
   return cameo ? [cameo.dex] : []
 }
 
-/** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, and the reaper as its hunt nears in the endless mode. */
+/** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, a hidden zone's own, and the reaper as its hunt nears in the endless mode. */
 const visitors = (g: Game): Dex[] => {
   const place = g.place.inside?.id ?? g.place.entrance?.id
   return [
     ...(place ? placePool(place, g.time).map(([id]) => ENEMIES[id].dex) : []),
     ...(place === 'graveyard' ? [ENEMIES[GRAVEYARD.boss].dex] : []),
+    // A hidden zone's lucky ones and rare dweller, from its entrance on (found or not: loading shows nothing).
+    ...(place ? hiddenCast(place).map((id) => ENEMIES[id].dex) : []),
     ...(g.endless && g.time >= ENDLESS.reaperAt - REAPER_LEAD ? [ENEMIES[REAPER].dex] : []),
   ]
 }
@@ -136,10 +149,11 @@ export const bossForms = (g: Game): Variant[] => {
  * (the base form, the normal colors). It keeps those, every enemy alive (on
  * screen or not), and with every variant (shiny, forms) `always` (the player's
  * line, the companion, the outbreak), the rift's legendary, shiny enemies and bosses.
+ * `near`: the cast streams only a little ahead (`streamHorizon`), for safe mode level 2.
  */
-export const runSprites = (g: Game, needs: readonly SpriteNeed[], always: readonly Dex[]): { stream: Variant[]; extras: Variant[]; keep: KeepSprites } => {
+export const runSprites = (g: Game, needs: readonly SpriteNeed[], always: readonly Dex[], near = false): { stream: Variant[]; extras: Variant[]; keep: KeepSprites } => {
   const legends = [...riftLegends(g).map((id) => ENEMIES[id].dex), ...riftCameo(g)]
-  const order = [...new Set([...legends, ...visitors(g), ...dueNeeds(needs, g.time)])]
+  const order = [...new Set([...legends, ...visitors(g), ...dueNeeds(needs, g.time, streamHorizon(g.time, near))])]
   const species = new Set(order)
   const variants = new Set([...always, ...legends])
   for (const e of g.enemies) {

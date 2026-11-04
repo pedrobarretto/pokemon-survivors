@@ -54,8 +54,8 @@ const fire = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | nul
 
 /** Launches a boss's attack at player `p`, pressed by its fight's difficulty (`attackCount`, `telegraph`); a rift legendary in the old arena passes no fight. */
 const launch = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | null, p: Player) => {
-  // Judgment takes the biome's plate.
-  const pattern = written.plate && 'visual' in written ? { ...written, visual: JUDGMENT_PLATE[g.biome.id] } : written
+  // Judgment takes the plate of the biome its target stands in.
+  const pattern = written.plate && 'visual' in written ? { ...written, visual: JUDGMENT_PLATE[p.biome] } : written
   switch (pattern.kind) {
     case 'strikes': {
       const center = pattern.target === 'player' ? p : boss
@@ -851,7 +851,7 @@ export const hazardHit = (h: Pick<Hazard, 'kind'>): HitKind => (h.kind === 'shot
 
 /** Whether an armed hazard touches the acting player (`p`); Air Lock keeps the world's attacks (the weather's and the biome's) off them. */
 const hazardHits = (g: Game, h: Hazard, p: Player) => {
-  if (h.world && abilityImmune(g, 'weather')) return false
+  if (h.world && abilityImmune(g, 'world')) return false
   if (h.kind === 'beam') return beamDistance(h, p.x, p.y - 6) < h.r + p.radius * 0.6
   const reach = h.r + p.radius * 0.7
   return dm.sq(h.x - p.x) + dm.sq(h.y - p.y) < reach * reach

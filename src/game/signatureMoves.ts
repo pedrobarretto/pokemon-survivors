@@ -575,6 +575,7 @@ export const SIGNATURE_MOVES = {
   sparklingAria: {
     name: 'Sparkling Aria',
     type: 'water',
+    tags: ['sound'],
     base: stats({ damage: 12, cooldown: 2.2, amount: 4, speed: 70, duration: 1.8, knockback: 50 }),
     upgrades: [
       { amount: 1 },

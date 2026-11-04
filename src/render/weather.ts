@@ -6,7 +6,7 @@ import type { Game } from '../game/types'
 import { art, lazy, toIconUrl } from './art'
 import { roomOf } from '../game/room'
 import { localPlayer } from '../game/players'
-import { detail } from './quality'
+import { detail, safeShare } from './quality'
 
 /**
  * Weather overlays, drawn in screen space over the world. Every particle is a
@@ -23,8 +23,8 @@ const AREA = 480 * 270
 
 const mod = (a: number, n: number) => ((a % n) + n) % n
 
-/** Particles for a view; drawing lean (`render/quality.ts`), a quarter of them. */
-const count = (w: number, h: number, base: number) => Math.round((base * w * h * (detail.lean ? 0.25 : 1)) / AREA)
+/** Particles for a view; drawing lean (`render/quality.ts`), a quarter of them (a third of that at safe mode level 2). */
+const count = (w: number, h: number, base: number) => Math.round((base * w * h * (detail.lean ? 0.25 * safeShare(detail.safe) : 1)) / AREA)
 
 const DROP = lazy(() => fromStrings(['..1', '.1.', '.1.', '1..'], { 1: '#c8dcff' }))
 const SPLASH = lazy(() => [fromStrings(['1.1'], { 1: '#c8dcff' }), fromStrings(['1...1', '.....'], { 1: '#a8c0f0' })])
@@ -148,9 +148,11 @@ const FOG_RGB = [200, 194, 216] as const
 const FOG_LEVELS = 4
 
 /**
- * A view-sized veil twice as big as the screen with a clear hole in the middle.
- * Opacity comes in a few flat bands with a Bayer-dithered edge between them,
- * the GBA way to do a soft gradient. Built once per view size.
+ * A veil twice as big as the screen with a clear hole in the middle, kept as its bottom-right
+ * quarter (the hole's center at its top-left pixel) and drawn mirrored four ways (`drawVeil`):
+ * a quarter of the memory, in the biome where fog rolls in most. Opacity comes in a few flat
+ * bands with a Bayer-dithered edge between them, the GBA way to do a soft gradient. Built once
+ * per view size.
  */
 const fogVeil = (() => {
   let cache: { w: number; h: number; mode: FogMode; canvas: PixelSprite } | null = null
@@ -162,13 +164,13 @@ const fogVeil = (() => {
   const veil = (w: number, h: number, mode: Exclude<FogMode, 'off'>) => {
     if (cache && ready(w, h, mode)) return cache.canvas
     const { sight, max } = FOG_VEIL[mode]
-    const cw = w * 2
-    const ch = h * 2
+    const cw = w + 1
+    const ch = h + 1
     const canvas = createCanvas(cw, ch)
     const vctx = context2d(canvas)
     const img = vctx.createImageData(cw, ch)
     const radius = Math.min(w, h) * sight
-    // The distance only depends on how far a pixel is from the center on each axis: one quarter's worth, mirrored.
+    // The distance only depends on how far a pixel is from the center on each axis.
     const dist = new Float64Array((w + 1) * (h + 1))
     for (let dy = 0; dy <= h; dy++) for (let dx = 0; dx <= w; dx++) dist[dy * (w + 1) + dx] = Math.hypot(dx, dy * 1.25) / radius
     // Each band's opacity, worked out once.
@@ -176,13 +178,14 @@ const fogVeil = (() => {
     const data = img.data
     const [r, gr, b] = FOG_RGB
     for (let y = 0; y < ch; y++) {
-      const row = Math.abs(y - h) * (w + 1)
-      const dither = (y % 4) * 4
+      const row = y * cw
+      // Dithered as the whole veil's bottom-right quarter was.
+      const dither = ((y + h) % 4) * 4
       for (let x = 0; x < cw; x++) {
-        const d = dist[row + Math.abs(x - w)]!
+        const d = dist[row + x]!
         const k = Math.min(1, Math.max(0, (d - 0.55) / 0.75))
         const level = k * FOG_LEVELS
-        const band = Math.floor(level) + ((level % 1) * 16 > BAYER[dither + (x % 4)]! ? 1 : 0)
+        const band = Math.floor(level) + ((level % 1) * 16 > BAYER[dither + ((x + w) % 4)]! ? 1 : 0)
         const i = (y * cw + x) * 4
         data[i] = r
         data[i + 1] = gr
@@ -229,7 +232,24 @@ const fog = (ctx: Ctx, w: number, h: number, camX: number, camY: number, t: numb
     drawPacked(ctx, ellipse(rx, Math.max(3, Math.round(rx * 0.22)), '#e8e4f0'), Math.round(x - rx), Math.round(y))
   }
   ctx.restore()
-  if (mode !== 'off') ctx.drawImage(fogVeil(w, h, mode), Math.round(px - w), Math.round(py - h))
+  if (mode !== 'off') drawVeil(ctx, fogVeil(w, h, mode), w, h, Math.round(px), Math.round(py))
+}
+
+/**
+ * Draws the veil's quarter (`fogVeil`) four ways around (x, y): as is to the bottom right,
+ * mirrored to the other sides without its first column or row, so the hole's center row and
+ * column draw once, and the four together cover the whole screen-sized veil the hole leaves.
+ */
+const drawVeil = (ctx: Ctx, quarter: PixelSprite, w: number, h: number, x: number, y: number) => {
+  for (const [fx, fy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]] as const) {
+    const sx = fx < 0 ? 1 : 0
+    const sy = fy < 0 ? 1 : 0
+    ctx.save()
+    ctx.translate(x + sx, y + sy)
+    ctx.scale(fx, fy)
+    ctx.drawImage(quarter, sx, sy, w, h, sx, sy, w, h)
+    ctx.restore()
+  }
 }
 
 const DRAW: Record<Exclude<WeatherId, 'clear' | 'fog'>, typeof rain> = { rain, snow, sand, sun }

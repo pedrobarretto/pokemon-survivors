@@ -130,10 +130,18 @@ export type Stored = { save: Save; revision: number }
 export type Push = { save: Save; base: number | null }
 
 /**
+ * A save behind `stored` on its lifetime runs, which only ever go up. A device
+ * pushing it on top of the latest revision lost its save (storage cleared or
+ * unreadable) but kept its account link, so it hasn't seen what's stored.
+ */
+const behind = (save: Save, stored: Save) => save.achievements.lifetime.runs < stored.achievements.lifetime.runs
+
+/**
  * What a push stores. A device that pushes on top of the latest revision has
  * seen everything stored, so its save is the newer one and replaces it as is:
  * that keeps ₽ spent, eggs hatched and refunds. Anything else (a first sign
- * in, another device pushed in between) merges both with `mergeSaves`.
+ * in, another device pushed in between, or a save `behind` the stored one,
+ * which would wipe the account) merges both with `mergeSaves`.
  *
  * `resetAt` is the revision a reset stored, when the account's save was wiped
  * (an edited save, see `server/README.md`). A device that hasn't seen it (its
@@ -144,7 +152,7 @@ export type Push = { save: Save; base: number | null }
 export const applyPush = (stored: Stored | null, push: Push, resetAt: number | null = null): Stored & { merged: boolean } => {
   if (!stored) return { save: push.save, revision: 1, merged: false }
   if (resetAt !== null && (push.base === null || push.base < resetAt)) return { ...stored, merged: true }
-  const merged = push.base !== stored.revision
+  const merged = push.base !== stored.revision || behind(push.save, stored.save)
   return { save: merged ? mergeSaves(stored.save, push.save) : push.save, revision: stored.revision + 1, merged }
 }
 

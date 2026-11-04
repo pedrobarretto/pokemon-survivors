@@ -1,12 +1,12 @@
 import { pick, weightedPick, type Rng } from '../engine/rng'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
-import { biomeAt, BIOMES, type BiomeId } from '../data/biomes'
+import { BIOMES, type BiomeId } from '../data/biomes'
 import type { Tier } from '../data/roster'
 import { isSummoner, SUMMONS } from '../data/traits'
 import { bossKit } from '../data/bosses'
 import type { PokeType } from '../data/types'
 import { hasFlavor, SPIT_FROM } from './spitters'
-import { bossOf, EVENTS, MYTHICALS, RUN_LENGTH, RUNNER, STAGES, stageIndexAt, stageStart, TRIO_IDS, TRIOS, type TrioId, type WaveEvent, type WaveStage } from '../data/waves'
+import { bossOf, EVENTS, MYTHICALS, RUNNER, STAGES, stageIndexAt, stageStart, TRIO_IDS, TRIOS, type TrioId, type WaveEvent, type WaveStage } from '../data/waves'
 
 /** Weighted spawn pool of one stage, as `weightedPick` takes it. */
 export type StagePool = ReadonlyArray<readonly [EnemyId, number]>
@@ -26,7 +26,7 @@ export type Roster = {
 }
 
 /**
- * Optional draw bias, such as a biome's type affinity: relative odds of `def`
+ * Optional draw bias, such as a type affinity (`byTypes`): relative odds of `def`
  * joining stage `stage` (index into `STAGES`). 1 = neutral, 0 = never (unless
  * nothing else of that tier is left).
  */
@@ -73,10 +73,32 @@ const FLAVOR_ODDS = 3
 
 const isFlyer = (def: EnemyDef) => def.types.includes('flying')
 
-/** One regular spawn from a stage's pool, skipping trait species while `traitsAlive` is at `TRAIT_ALIVE`. */
-export const pickSpawn = (rng: Rng, pool: StagePool, traitsAlive: number): EnemyId | null => {
-  const open = traitsAlive < TRAIT_ALIVE ? pool : pool.filter(([id]) => !hasTrait(id))
-  return open.length > 0 ? weightedPick(rng, open) : null
+/**
+ * One regular spawn from a stage's pool, skipping trait species while
+ * `traitsAlive` is at `TRAIT_ALIVE`, and leaning `AFFINITY_ODDS` towards the
+ * species at home in `biome` (where the player it spawns around stands): the
+ * horde matches the scenery from the cast already loaded. One rng draw, no allocation.
+ */
+export const pickSpawn = (rng: Rng, pool: StagePool, traitsAlive: number, biome: BiomeId | null = null): EnemyId | null => {
+  const home: readonly PokeType[] = biome ? BIOMES[biome].affinity : []
+  const weightOf = (id: EnemyId, w: number) => {
+    if (traitsAlive >= TRAIT_ALIVE && hasTrait(id)) return 0
+    const types: readonly PokeType[] = ENEMIES[id].types
+    return home.some((t) => types.includes(t)) ? w * AFFINITY_ODDS : w
+  }
+  let total = 0
+  for (const [id, w] of pool) total += weightOf(id, w)
+  if (total <= 0) return null
+  let roll = rng() * total
+  let last: EnemyId | null = null
+  for (const [id, w] of pool) {
+    const weight = weightOf(id, w)
+    if (weight <= 0) continue
+    last = id
+    roll -= weight
+    if (roll <= 0) return id
+  }
+  return last
 }
 
 /** Weighted pick of one entry; when every weight is 0 they all count the same. */
@@ -220,21 +242,8 @@ export const byTypes =
     return factors.length > 0 ? Math.max(...factors) : 1
   }
 
-/** Draw odds of a species with a type its stage's biome favors (`BIOMES[id].affinity`). */
+/** Spawn odds of a stage species with a type the biome around its player favors (`BIOMES[id].affinity`, `pickSpawn`). */
 export const AFFINITY_ODDS = 3
-
-/** Biome a stage mostly plays in: the one at the middle of its time window. */
-export const stageBiome = (stage: number): BiomeId => {
-  const start = stageStart(stage)
-  return biomeAt((start + Math.min(STAGES[stage]?.until ?? RUN_LENGTH, RUN_LENGTH)) / 2)
-}
-
-const AFFINITY = Object.fromEntries(
-  Object.entries(BIOMES).map(([id, biome]) => [id, byTypes(Object.fromEntries(biome.affinity.map((type) => [type, AFFINITY_ODDS])))]),
-) as Record<BiomeId, SpeciesWeight>
-
-/** The run's draw bias: each stage pulls its new species towards the types of the biome it plays in. */
-export const biomeWeight: SpeciesWeight = (def, stage) => AFFINITY[stageBiome(stage)](def, stage)
 
 /**
  * Every species a run needs (horde, swarms, rings, bosses, what its summoners and bosses call in) with the run time

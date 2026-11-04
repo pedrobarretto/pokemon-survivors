@@ -6,7 +6,9 @@ import { memberState, readiness } from '../coop/lobby'
 import { parseLoadout, parseSettings } from '../coop/start'
 import { roomLink } from '../coopShell'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
-import { t } from '../i18n'
+import { dailyCoopChallenge } from '../game/coopBoard'
+import { brasiliaDay, type DayKey } from '../game/day'
+import { formatDay, t } from '../i18n'
 import { parseRoomCode, ROOM_CODE_LENGTH, MAX_PLAYERS, type Member } from '../net/protocol'
 import { arenaIcon, coopIcon, crownIcon, pokeballIcon } from '../render/art'
 import { slotColor } from '../render/team'
@@ -86,8 +88,11 @@ export type HubActions = {
   back: () => void
 }
 
-/** Jogar junto (signed in: the team sees the account's @handle): create a room, or join one by its code (`code` prefills it). */
-export const coopHub = (root: HTMLElement, input: Input, actions: HubActions, code: string | null = null): Screen => {
+/**
+ * Jogar junto (signed in: the team sees the account's @handle): create a room, or join one by its code (`code` prefills it).
+ * `challenge` (from the Desafio do dia) says the room made here starts on the Desafio co-op do dia.
+ */
+export const coopHub = (root: HTMLElement, input: Input, actions: HubActions, code: string | null = null, challenge = false): Screen => {
   const m = t().coop.hub
   const codeInput = h('input', { class: 'field-input coop-code-input', type: 'text', maxlength: ROOM_CODE_LENGTH, autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', enterkeyhint: 'go', placeholder: 'K7QF2' })
   if (code) codeInput.value = code
@@ -140,6 +145,7 @@ export const coopHub = (root: HTMLElement, input: Input, actions: HubActions, co
         'div',
         { class: 'invite-body coop-body' },
         h('p', { class: 'invite-tip' }, m.intro),
+        challenge && h('p', { class: 'coop-challenge-badge' }, h('img', { src: coopIcon(), alt: '' }), h('small', {}, m.challenge)),
         navButton('create', m.create, () => void attempt(m.creating, actions.create), 'btn confirm coop-create'),
         h('p', { class: 'coop-or' }, m.or),
         h('div', { class: 'coop-join' }, field(m.code, codeInput), navButton('join', m.join, join)),
@@ -240,6 +246,13 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
   const confirmLeave = () => ask(t().coop.lobby.leaveConfirm, t().coop.lobby.leave, actions.leave)
 
   let nav = keyNav(input, el, confirmLeave)
+
+  /** The host's Start: a challenge room set on a day gone by (left open past midnight) plays today's. */
+  const startNow = (challenge: DayKey | null, difficulty: Difficulty) => {
+    const today = brasiliaDay(new Date())
+    if (challenge && challenge !== today) client.setSettings({ difficulty, challenge: today })
+    client.start()
+  }
 
   const render = () => {
     if (sub) return
@@ -381,19 +394,57 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
         })
       : null
 
-    const difficulty = host && lobby
+    /**
+     * A run room's Desafio co-op do dia (`settings.challenge`): the host's
+     * switch sets it to today (Brasília); while on, the difficulty is the
+     * day's and can't change, and every seat sees the badge.
+     */
+    const challenge = arena ? null : (settings.challenge ?? null)
+    const challengePick = host && lobby
       ? h(
           'div',
-          { class: 'shell-seg coop-difficulty', role: 'radiogroup', 'aria-label': m.difficulty },
-          ...DIFFICULTY_IDS.map((d: Difficulty) =>
+          { class: 'shell-seg coop-challenge', role: 'radiogroup', 'aria-label': m.challenge },
+          ...(['off', 'on'] as const).map((id) =>
             h(
               'button',
-              { class: `shell-seg-option ${d}${d === settings.difficulty ? ' on' : ''}`, type: 'button', 'data-nav': `diff:${d}`, 'aria-pressed': String(d === settings.difficulty), onclick: () => d !== settings.difficulty && (playSfx('move'), client.setSettings({ difficulty: d })) },
-              t().difficulty.names[d],
+              {
+                class: `shell-seg-option${(id === 'on') === (challenge !== null) ? ' on' : ''}`,
+                type: 'button',
+                'data-nav': `challenge:${id}`,
+                'aria-pressed': String((id === 'on') === (challenge !== null)),
+                onclick: () =>
+                  (id === 'on') !== (challenge !== null) &&
+                  (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, ...(id === 'on' && { challenge: brasiliaDay(new Date()) }) })),
+              },
+              m.challengeModes[id],
             ),
           ),
         )
-      : h('span', { class: 'coop-difficulty-read' }, difficultyTag(settings.difficulty), h('small', {}, m.hostPicks))
+      : h('span', { class: 'coop-difficulty-read' }, m.challengeModes[challenge ? 'on' : 'off'], h('small', {}, m.hostPicks))
+    const challengeBadge =
+      challenge &&
+      h(
+        'div',
+        { class: 'coop-challenge-badge', role: 'status' },
+        h('img', { src: coopIcon(), alt: '' }),
+        h('span', {}, h('b', {}, m.challengeBadge(formatDay(challenge))), h('small', {}, m.challengeRules)),
+      )
+
+    const difficulty = challenge
+      ? h('span', { class: 'coop-difficulty-read' }, difficultyTag(dailyCoopChallenge(challenge).difficulty), h('small', {}, m.challengeFixed))
+      : host && lobby
+        ? h(
+            'div',
+            { class: 'shell-seg coop-difficulty', role: 'radiogroup', 'aria-label': m.difficulty },
+            ...DIFFICULTY_IDS.map((d: Difficulty) =>
+              h(
+                'button',
+                { class: `shell-seg-option ${d}${d === settings.difficulty ? ' on' : ''}`, type: 'button', 'data-nav': `diff:${d}`, 'aria-pressed': String(d === settings.difficulty), onclick: () => d !== settings.difficulty && (playSfx('move'), client.setSettings({ difficulty: d })) },
+                t().difficulty.names[d],
+              ),
+            ),
+          )
+        : h('span', { class: 'coop-difficulty-read' }, difficultyTag(settings.difficulty), h('small', {}, m.hostPicks))
 
     const connecting = st.status.kind === 'connecting'
     // The room moving to the relay best for the group (the host's Start): a moment, then the run.
@@ -418,7 +469,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
     const main = !lobby
       ? actions.rejoin && navButton('rejoin', m.rejoin, actions.rejoin, 'btn confirm')
       : host
-        ? h('button', { class: 'btn confirm', type: 'button', 'data-nav': 'start', disabled: !ready.all || connecting || moving, onclick: () => (playSfx('select'), client.start()) }, m.start)
+        ? h('button', { class: 'btn confirm', type: 'button', 'data-nav': 'start', disabled: !ready.all || connecting || moving, onclick: () => (playSfx('select'), startNow(challenge, settings.difficulty)) }, m.start)
         : navButton('ready', me?.ready ? m.unready : m.ready, () => client.setReady(!me?.ready), me?.ready ? 'btn' : 'btn confirm')
 
     el.replaceChildren(
@@ -440,7 +491,9 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
           h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.mode), mode),
           arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.format), formatPick),
           arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.map), mapPick),
+          !arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, m.challenge), challengePick),
           !arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, m.difficulty), difficulty),
+          challengeBadge,
           arena
             ? h('ol', { class: 'arena-room-steps' }, ...v.room.steps.map((step, i) => h('li', {}, h('span', { class: 'arena-step-n' }, String(i + 1)), h('span', {}, step))))
             : h('p', { class: 'invite-tip coop-rules' }, `${t().coop.hub.intro} ${m.rules}`),

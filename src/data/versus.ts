@@ -54,6 +54,8 @@ export const VERSUS = {
     damage: 0.36,
     /** Rivals' hits don't stack i-frames; a hitbox still hits a body once per its own `hitInterval`. A rival's knockback pushes this many px per 100 knockback. */
     shove: 3,
+    /** The most a Pokémon is shoved in one tick (px), whatever moved its body: a knockback, a throw, a thrown foe crashing into it. */
+    shoveMax: 12,
     /** A versus Pokémon has this many times the HP it would have in a run. */
     hp: 2.2,
     /** Defeating a rival: EXP for the knocker's team (× the victim's level). */

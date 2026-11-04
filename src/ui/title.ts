@@ -1143,7 +1143,8 @@ export const titleScreen = (
       pressable(rails ? challengeTile() : challengeCard(), 'challenge'),
       pressable(rails ? missionsTile() : missionsCard(), 'missions'),
     )
-    const kind = ['lobby', rails ? 'rails' : '', tiles.length > 6 ? 'dock7' : tiles.length > 5 ? 'dock6' : ''].join(' ').trim()
+    // dock7 also covers eight tiles (its smaller labels); dock8 adds the eighth column on landscape phones, so Co-op never lands on JOGAR.
+    const kind = ['lobby', rails ? 'rails' : '', tiles.length > 6 ? 'dock7' : tiles.length > 5 ? 'dock6' : '', tiles.length > 7 ? 'dock8' : ''].join(' ').trim()
     const next = h(
       'div',
       { class: kind },

@@ -1,6 +1,7 @@
 import { ARENA_RANKED } from '../../src/data/arenaRanked'
 import { arenaPlayers, parseArenaFormat } from '../../src/data/arenaFormats'
 import type { ArenaReport, MatchedSettings } from '../../src/net/arena'
+import { COOP_REPORT_PATH, type CoopReport } from '../../src/net/coopReport'
 import { countsForRank, humansOnBothSides } from '../../src/net/arenaQueue'
 import {
   COALESCED_KINDS,
@@ -25,6 +26,7 @@ import {
   type TickEntries,
   type WireLook,
 } from '../../src/net/protocol'
+import { ARENA_REPORT_PATH, type Posting } from './report'
 
 /**
  * One co-op room as a pure state machine: no sockets, storage, timers, clock or
@@ -141,16 +143,16 @@ export type Run = {
   agreedBy: number | null
   /** Seats whose snapshot restored wrong for someone (`badSnap`): they upload only when nobody else can. */
   demoted: number[]
-  /** Where each seat's simulation said the run ended (an Arena match's `result` with it). */
+  /** Where each seat's simulation said the run ended (its `result` with it). */
   overs: Record<number, Over>
-  /** The end the majority agreed on; `result`: the Arena result a majority of them sent too, else null. */
+  /** The end the majority agreed on; `result`: the result (an Arena match's or a co-op run's) a majority of them sent too, else null. */
   ended: { tick: number; h: string; result?: string | null } | null
   dumps: number
-  /** The identity (`Identity.id`) of each of `start.players`, by slot: the Arena report's accounts (a seat that left is gone from the room). */
+  /** The identity (`Identity.id`) of each of `start.players`, by slot: the reports' accounts (a seat that left is gone from the room). */
   who: string[]
 }
 
-/** A seat's `over`: the tick and state hash its simulation ended at, and an Arena match's result (JSON, opaque here). */
+/** A seat's `over`: the tick and state hash its simulation ended at, and its result (an Arena match's `ArenaResult` or a co-op run's `CoopResult`, JSON, opaque here). */
 export type Over = { tick: number; h: string; result?: string }
 
 /**
@@ -267,8 +269,8 @@ export type Effect =
   | { k: 'event'; ev: string; data: Record<string, string | number | boolean | null> }
   /** The room is over: delete everything and close every socket. */
   | { k: 'wipe' }
-  /** An Arena match ended with an agreed result: post it to the API (`report.ts`), retrying until it lands. */
-  | { k: 'report'; report: ArenaReport }
+  /** An Arena match or a co-op run ended with an agreed result: post it to the API at its path (`report.ts`), retrying until it lands. */
+  | ({ k: 'report' } & Posting)
   /**
    * A friends' run (co-op or Arena) is about to start: ask the API for the looks of the account `ids` (`u:<clerk id>`,
    * `lookUpLooks`) and hand the answer to `looked` with this `ask` (an empty one when the API fails or isn't set).
@@ -490,7 +492,7 @@ const removeSeat = (state: State, room: Room, seat: Seat, now: number): Effect[]
 const wipe = (state: State, room: Room, why: string, now: number): Effect[] => {
   state.room = null
   const report = abandonedReport(room, now)
-  return [event(room, 'room.ended', { why, runs: room.runs }), ...(report ? [event(room, 'arena.abandoned', { run: report.run, kind: report.kind }), { k: 'report' as const, report }] : []), { k: 'wipe' }]
+  return [event(room, 'room.ended', { why, runs: room.runs }), ...(report ? [event(room, 'arena.abandoned', { run: report.run, kind: report.kind }), { k: 'report' as const, path: ARENA_REPORT_PATH, report }] : []), { k: 'wipe' }]
 }
 
 /* ---------------- Hello ---------------- */
@@ -898,7 +900,14 @@ const autoStart = (state: State, room: Room, now: number): Effect[] => {
   return room.seats.some((s) => s.loadout !== null) ? startRun(state, room, now) : wipe(state, room, 'unjoined', now)
 }
 
-/** The Arena result most of the end's voters sent (more than half of them), with its count, or null. */
+/** The log line of a run's report: its votes, and an Arena match's kind and confirmation. */
+const reportEvent = (room: Room, run: Run, posting: Posting, votes: number): Effect => {
+  const base = { run: run.start.id, votes, humans: run.start.players.length }
+  if (posting.path === COOP_REPORT_PATH) return event(room, 'coop.result', base)
+  return event(room, 'arena.result', { ...base, kind: posting.report.kind, confirmed: posting.report.confirmed !== false })
+}
+
+/** The result most of the end's voters sent (more than half of them), with its count, or null. */
 const agreedResult = (run: Run, voters: readonly number[]): { result: string; votes: number } | null => {
   const counts = new Map<string, number>()
   for (const seat of voters) {
@@ -965,10 +974,45 @@ export const abandonedReport = (room: Room, now: number): ArenaReport | null => 
 }
 
 /**
+ * What the relay tells the API about a co-op run for the boards
+ * (`CoopReport`): each slot that started it, by account (`userId` the Clerk
+ * id, null for a guest seat; `handle` from an account's `@name`), `left` for
+ * a seat that left before the end, and the agreed `CoopResult` as the clients
+ * built it, with how many sent it. Null for a run of one player, or a result
+ * that isn't JSON.
+ */
+export const coopReport = (room: Room, run: Run, agreed: { result: string; votes: number }, now: number): CoopReport | null => {
+  if (run.start.players.length < 2) return null
+  let result: unknown
+  try {
+    result = JSON.parse(agreed.result)
+  } catch {
+    return null
+  }
+  const seats = run.start.players.map((p, slot): CoopReport['seats'][number] => {
+    const id = run.who[slot] ?? ''
+    return { slot, userId: id.startsWith('u:') ? id.slice(2) : null, handle: p.account && p.name.startsWith('@') ? p.name.slice(1) : null, left: run.left.includes(p.seat) }
+  })
+  return { v: 1, room: room.code, run: run.start.id, region: room.region, endedAt: now, seats, result, votes: agreed.votes }
+}
+
+/** The report of a run that just ended on `agreed` (`arenaReport` or `coopReport`), or null. */
+const reportOf = (room: Room, run: Run, agreed: { result: string; votes: number } | null, now: number): Posting | null => {
+  if (!agreed) return null
+  if (isArena(room)) {
+    const report = arenaReport(room, run, agreed, now)
+    return report && { path: ARENA_REPORT_PATH, report }
+  }
+  const report = coopReport(room, run, agreed, now)
+  return report && { path: COOP_REPORT_PATH, report }
+}
+
+/**
  * Ends the run once a majority of the connected players report the same end
  * (tick and hash), and at least two of them while two are still in the run:
- * a lone client can't end it for everyone. An Arena match whose voters agree
- * on its result too is reported (`arenaReport`), once. An Arena match ends on
+ * a lone client can't end it for everyone. A run whose voters agree on its
+ * result too is reported, once: an Arena match's (`arenaReport`) or a co-op
+ * run's (`coopReport`, for the boards). An Arena match ends on
  * its clock, so a seat gone silent (`away`: tab closed, connection lost)
  * without voting has abandoned it: it doesn't hold the end, and it's
  * reported as having left. One that left after voting the agreed end
@@ -1002,10 +1046,10 @@ const evaluateOver = (state: State, room: Room, now: number): Effect[] => {
     return !!o && `${o.tick}:${o.h}` === best[0]
   }) : []
   run.left = run.left.filter((seat) => !finished.includes(seat))
-  const agreed = isArena(room) ? agreedResult(run, [...voters, ...finished]) : null
+  const agreed = agreedResult(run, [...voters, ...finished])
   run.left.push(...gone)
   run.ended = { tick: Number(tick), h, result: agreed?.result ?? null }
-  const report = agreed ? arenaReport(room, run, agreed, now) : null
+  const posting = reportOf(room, run, agreed, now)
   room.phase = 'ended'
   for (const s of room.seats) {
     s.ready = false
@@ -1019,7 +1063,7 @@ const evaluateOver = (state: State, room: Room, now: number): Effect[] => {
     event(room, 'run.over', { run: run.start.id, tick: run.ended.tick, votes: best[1], connected: connected.length }),
     ...toSeated(state, { t: 'ended', run: run.start.id, tick: run.ended.tick, h }),
     ...broadcastRoom(state, room),
-    ...(report ? [event(room, 'arena.result', { run: run.start.id, kind: report.kind, confirmed: report.confirmed !== false, votes: agreed?.votes ?? 0, humans: run.start.players.length }), { k: 'report' as const, report }] : []),
+    ...(posting ? [reportEvent(room, run, posting, agreed?.votes ?? 0), { k: 'report' as const, ...posting }] : []),
   ]
 }
 

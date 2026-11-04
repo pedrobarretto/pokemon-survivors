@@ -20,8 +20,12 @@ import type { Offer, OwnedMove, TmOffer } from './types'
  * (that's the point) but keep the one-manual-move rule.
  */
 
-/** Where a TM came from: a defeated wave boss's disc, a Move Tutor's lesson or a rift legendary's (gold) disc. */
-export type TmSource = 'boss' | 'tutor' | 'legendary'
+/**
+ * Where a TM came from: a defeated wave boss's own disc, the disc of a TM armed
+ * at the Kecleon Shop (any boss may leave it, so it isn't that boss's own), a
+ * Move Tutor's lesson or a rift legendary's (gold) disc.
+ */
+export type TmSource = 'boss' | 'armed' | 'tutor' | 'legendary'
 
 /** ₽ a disc turns into when its move is already mastered. */
 export const TM_REFUND = 250

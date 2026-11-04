@@ -5,10 +5,11 @@ import type { HitKind } from '../data/abilities'
 import { burst } from './effects'
 import { toSteps, type EggTier } from './eggs'
 import { runBonus, wonRun } from './meta'
-import { inPlay, setPhase } from './players'
+import { inPlay, personal, setPhase } from './players'
 import { createTally, summarizeRun, type RunSummary } from './tally'
 import type { Game, Player, PlayerRecord } from './types'
 import type { DexLog } from './dex'
+import type { DayKey } from './day'
 import type { MoveId } from './moves'
 import { TICK } from './tick'
 import * as dm from '../engine/dmath'
@@ -48,6 +49,8 @@ export type CoopState = {
   awayTicks: number[]
   /** Each slot's own forms seen in the run (dex → shiny; `updateSightings`): what their Pokédex marks caught (`playerDexLog`). */
   own: Map<number, boolean>[]
+  /** The Desafio co-op do dia this run plays (`game/coopBoard.ts`), null for any other run. */
+  challenge: DayKey | null
 }
 
 export const createCoopState = (players: number): CoopState => ({
@@ -58,6 +61,7 @@ export const createCoopState = (players: number): CoopState => ({
   vote: null,
   awayTicks: Array.from({ length: players }, () => 0),
   own: Array.from({ length: players }, () => new Map<number, boolean>()),
+  challenge: null,
 })
 
 /**
@@ -122,13 +126,21 @@ export const checkWipe = (g: Game, foe: EnemyId | null = null, hit: HitKind = 'h
   return true
 }
 
-/** No active player stands, but an away one does and still holds the world: it waits for them to come back. */
+/**
+ * Whether the world waits with the team's level-ups done: no active player is
+ * free to play, but one stands and is busy on a screen of their own (a TM, a
+ * Poké Ball's prize, an evolution and its picks: `personal`, which otherwise
+ * play on around them), or an away one still holds the world. So the last one
+ * standing never comes back from a pick into a horde that kept coming.
+ */
 export const worldHeld = (g: Game) => {
   if (g.coop === null) return false
   let held = false
   for (const p of g.players) {
-    if (!p.gone && !p.away && p.hp > 0) return false
-    if (holdsWorld(g, p)) held = true
+    if (!p.gone && !p.away && p.hp > 0) {
+      if (!g.versus && personal(p.phase)) held = true
+      else return false
+    } else if (holdsWorld(g, p)) held = true
   }
   return held
 }

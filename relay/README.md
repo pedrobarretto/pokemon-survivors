@@ -148,11 +148,18 @@ four things, all additive (no `PROTOCOL` bump: a client or relay before them wor
   `ranked` only when the matchmaker rated it and at least `minHumansRanked` humans played;
   `confirmed` only when at least `minHumansRanked` of them agreed on the result (unconfirmed, the API
   rates only who left, as a loss: no lone client rates a match, no leaver dodges one); seats by slot
-  (Clerk user id and handle, bots' slots null, `left` for a human who left the run). Once per run, never for co-op. It goes into an
+  (Clerk user id and handle, bots' slots null, `left` for a human who left the run). Once per run. It goes into an
   outbox: posted at once, retried with backoff (5 s, 30 s, 2 min, 10 min, 30 min, 1 h) on a 5xx,
   408, 429 or no answer, dropped on any other 4xx; the shard keeps it under `out:<id>` and its alarm
   retries (it outlives the room); the VPS relay keeps it in `vault.db` (`outbox`) with a timer. The
-  id (`<room>-<run>-<endedAt>`) is the API's to deduplicate a retry that had landed.
+  id is `<room>-<run>-<endedAt>` (`coop-` before it for a co-op run); the API dedupes a retry that
+  had landed by room and run. Each entry keeps its path (one stored before paths reads as `/arena/report`).
+- **Co-op boards' report.** A run-mode room's clients send their `CoopResult` on `over` the same way
+  (`src/game/coopBoard.ts`). A run of 2 to 4 players whose end's voters agree on it (more than half
+  of them) is posted as a `CoopReport` (`src/net/coopReport.ts`, `POST <ARENA_API_URL>/coop/report`,
+  signed and kept in the same outbox): seats by slot (Clerk id and handle, `left` for a leaver), the
+  result and its `votes`. The API decides what lists (accounts only, 2+ votes). A room of one, a
+  split result or a run its room closed on mid-run is never reported.
 - **The matchmaker** (`GET /arena/queue`, one `Matchmaker` Durable Object for everyone, created on
   the US east coast): the first message is `queue` (`QueueClientMessage` in `src/net/arena.ts`)
   with its auth, checked like a room's hello (a guest only where `ALLOW_GUESTS` is `on`), and its
@@ -179,7 +186,7 @@ production`; the API's `ARENA_REPORT_SECRET`, the same value) and `ARENA_API_URL
 `https://api.pokemonsurvivors.com` in `env.production`, unset on the dev relay so dev matches never
 reach the production ladder). Without both, nothing is posted (`arena.report.noApi` in the logs)
 and every queued account matches at `mmr.start`. On the VPS relay they are env vars of the
-Dokploy app, and its watch paths need `src/net/arena.ts`, `src/net/arenaQueue.ts` and
+Dokploy app, and its watch paths need `src/net/arena.ts`, `src/net/arenaQueue.ts`, `src/net/coopReport.ts` and
 `src/data/arenaRanked.ts` too (the image bundles them).
 
 **Running it locally.** `npm run dev` (wrangler dev on :8791, guests on). For reports and MMR

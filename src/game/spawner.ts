@@ -218,7 +218,8 @@ export const updateSpawner = (g: Game, dt: number) => {
       regular--
     }
     const spits = spitting && spitters < spit.alive && chance(g.rng, spit.share)
-    const kind = spits ? spitter : pickSpawn(g.rng, pool, traitsAlive)
+    // The horde leans to the biome around the player it spawns by (`offscreen` picks the same one: `anchorPlayer` turns on `nextId`).
+    const kind = spits ? spitter : pickSpawn(g.rng, pool, traitsAlive, anchorPlayer(g).biome)
     if (!kind) continue
     if (hasTrait(kind)) traitsAlive++
     if (rollShiny(g.rng, SHINY_ODDS.enemy * g.shinyBoost)) {

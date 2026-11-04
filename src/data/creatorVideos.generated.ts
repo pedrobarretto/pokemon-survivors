@@ -4,4 +4,5 @@ import type { VideoMeta } from './creators'
 export const VIDEO_META: Readonly<Record<string, VideoMeta>> = {
   "hQpzB5sl2xA": {"title":"O MELHOR JOGO DE POKÉMON LANÇADO EM 2026!!! JOGUE ANTES QUE A NINTENDO DERRUBE | Pokémon Survivors","date":"2026-10-23T08:00:04-07:00","duration":"PT38M28S","thumb":"/creators/youtube-hQpzB5sl2xA.jpg"},
   "0hMWUF4FyCo": {"title":"😱 ¡POKÉMON SURVIVORS ES MEJOR QUE POKESURVIVOR! 🔥 NUEVO JUEGAZO GRATIS","date":"2026-10-26T10:00:25-07:00","duration":"PT24M47S","thumb":"/creators/youtube-0hMWUF4FyCo.jpg"},
+  "aosgYx_WIFQ": {"title":"Pokémon Survivors | Putting Pokémon to sleep with Darkrai on Halloween 🎃💤","date":"2026-10-31T03:00:08-07:00","duration":"PT3M46S","thumb":"/creators/youtube-aosgYx_WIFQ.jpg"},
 }

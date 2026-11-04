@@ -5,7 +5,7 @@ import { forkDriver, scenarios, startScenario, tickScenario, type Driver, type S
 import { deflate, decodeSnapshot, inflate, restore, snapshot, stateHash } from './snapshot'
 import { diffGames, diffStates } from './stateDiff'
 import { RULES_VERSION } from './replay'
-import { enterDomain } from './domain'
+import { enterDomain, jumpToAct } from './domain'
 import { gainXp } from './leveling'
 import { maxMoveLevel } from './moves'
 import { enterPlace } from './placeInterior'
@@ -125,8 +125,8 @@ describe('snapshot and restore', () => {
       for (const m of r.covered) covered.add(m)
     }
     expect(checkpoints).toBeGreaterThan(20)
-    // A legend's awakening, a whole domain, the places and a tunnel come up along the way (`moments`).
-    expect([...covered].sort()).toEqual(expect.arrayContaining(['awakening', 'boss', 'domain:battle', 'domain:capture', 'domain:crossing', 'evolving', 'levelup', 'place:cave', 'place:graveyard', 'tunnel']))
+    // A legend's awakening, a domain, a place and the pick screens come up along the way (`moments`); the graveyard, a tunnel and a capture have cases of their own below.
+    expect([...covered].sort()).toEqual(expect.arrayContaining(['ability', 'awakening', 'boss', 'domain:battle', 'domain:crossing', 'domain:encounter', 'evolving', 'levelup', 'place:cave', 'pokeball', 'tm']))
   }, 120_000)
 
   it.each([
@@ -134,6 +134,10 @@ describe('snapshot and restore', () => {
     { name: 'the graveyard, haunted', s: { seed: 62, starter: 'gastly', halloween: true }, stage: (g: Game) => enterPlace(g, 'graveyard', g.player.x, g.player.y), covers: 'place:graveyard' },
     { name: 'the sky', s: { seed: 63, starter: 'pidgey' }, stage: (g: Game) => enterPlace(g, 'sky', g.player.x, g.player.y), covers: 'place:sky' },
     { name: "Dialga's domain", s: { seed: 64, starter: 'charmander' }, stage: (g: Game) => enterDomain(g, 'dialga', g.player.x, g.player.y), covers: 'domain:crossing' },
+    { name: "Kyogre's capture", s: { seed: 64, starter: 'charmander' }, stage: (g: Game) => {
+      enterDomain(g, 'kyogre', g.player.x, g.player.y)
+      jumpToAct(g, 'capture')
+    }, covers: 'domain:capture' },
     { name: 'a tunnel', s: { seed: 65, starter: 'squirtle' }, stage: (g: Game) => {
       const lm = tunnelNear(g)
       Object.assign(g.player, lm.mouths[0])
