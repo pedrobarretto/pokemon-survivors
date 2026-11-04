@@ -29,7 +29,7 @@ export const siteEn: SiteMessages = {
   },
   footer: {
     disclaimer:
-      'Pokémon Survivors is an unofficial, free, non-commercial fan game. It is not affiliated with, endorsed, sponsored or approved by Nintendo, The Pokémon Company, GAME FREAK, Creatures or Spike Chunsoft. Pokémon and Pokémon character names are trademarks of Nintendo.',
+      'Pokémon Survivors is an unofficial, free-to-play fan game. It is not affiliated with, endorsed, sponsored or approved by Nintendo, The Pokémon Company, GAME FREAK, Creatures or Spike Chunsoft. Pokémon and Pokémon character names are trademarks of Nintendo.',
     legal: 'Legal and privacy',
     credits: 'Credits',
     source: 'Source on GitHub',
@@ -885,7 +885,7 @@ export const siteEn: SiteMessages = {
       contact: 'Contact and takedown requests',
     },
     fanGame: [
-      'Pokémon Survivors is an unofficial, non-commercial fan game made by fans for fans by Pedro Barretto.',
+      'Pokémon Survivors is an unofficial fan game made by fans for fans by Pedro Barretto. It is free to play; the optional gems sell cosmetic items only and help pay for the servers and development.',
       'It is not affiliated with, endorsed, sponsored or approved by Nintendo, The Pokémon Company, GAME FREAK inc., Creatures Inc. or Spike Chunsoft.',
       'Pokémon and Pokémon character names are trademarks of Nintendo. Pokémon © Nintendo, Creatures Inc. and GAME FREAK inc. All other trademarks belong to their respective owners.',
     ],
@@ -896,7 +896,7 @@ export const siteEn: SiteMessages = {
     ],
     gems: [
       'Gems are a virtual item of the game: they buy cosmetic items only (such as hats, trails and titles), which show in runs, co-op and the Arena, never anything that changes a match or the ranking. They have no cash value, can\'t be exchanged for money or moved to another account, and stay tied to your game account.',
-      'You get gems by playing the Arena (up to a daily limit), by supporting on Patreon or by buying a pack. Packs are paid on Stripe (card, Apple Pay and Google Pay) or AbacatePay (Pix), and your payment details go straight to them: the game never sees your card.',
+      'You get gems by playing (the day’s first run of 5 minutes or more, five days of play in the same week, and the Arena, up to a daily limit), by supporting on Patreon or by buying a pack. Each account buys up to R$ 250 or US$ 50 of packs a day, and players under 18 need a parent’s or guardian’s permission to buy. Packs are paid on Stripe (card, Apple Pay and Google Pay) or AbacatePay (Pix), and your payment details go straight to them: the game never sees your card.',
       'Right of withdrawal: within 7 days of buying a pack, you can ask for a refund of its gems you haven\'t spent yet (Brazilian Consumer Protection Code, art. 49). Email pedro@wavyia.com.br with the purchase reference. Gems already spent and the cosmetic items bought with them are not refundable.',
       'A chargeback or payment dispute removes that pack\'s gems from the account, even spent ones. The balance can go negative, and while it is, nothing can be bought with gems.',
     ],

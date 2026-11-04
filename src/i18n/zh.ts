@@ -533,7 +533,7 @@ export const zh: Messages = {
     gems: (n: string) => `${n} 顆寶石`,
     slots: { head: '頭部', back: '背部', trail: '軌跡', spawn: '登場', ko: '擊倒', goal: '得分', emote: '表情', title: '稱號', plate: '名牌' },
     rarities: { common: '普通', rare: '稀有', epic: '史詩', legendary: '傳說' },
-    packs: { pouch: '一小把', bag: '一袋', chest: '寶箱', hoard: '寶藏', vault: '金庫' },
+    packs: { welcome: '新手禮包', pouch: '一小把', bag: '一袋', chest: '寶箱', hoard: '寶藏', vault: '金庫' },
     shop: {
       pitch: '寶可夢的造型，在對局、合作模式和競技場都會出現：所有人都看得到，而且都不會增加能力。',
       balance: '你的餘額',
@@ -549,6 +549,9 @@ export const zh: Messages = {
       effect: '在對局、合作模式和競技場中出現。',
       arenaOnly: '目前只在競技場中出現。',
       arenaTag: '競技場',
+      /** The catalog's own section for the Arena-only items, and its note. */
+      arenaFilter: '競技場',
+      arenaNote: '登場、擊倒和得分特效，以及表情動作：只會在競技場對局中出現。',
       buy: '購買',
       equip: '使用',
       unequip: '取下',
@@ -560,16 +563,25 @@ export const zh: Messages = {
       banned: '此帳號無法使用商店。',
       receipts: '收據',
       receiptsEmpty: '目前還沒有任何紀錄。',
-      reasons: { pack: '寶石組合', patreon: 'Patreon', play: '競技場對局', buy: '購買', refund: '退款', dispute: '爭議', disputeWon: '爭議撤回', grant: '團隊贈禮' },
+      reasons: { pack: '寶石組合', patreon: 'Patreon', play: '競技場對局', run: '每日對局', week: '每週遊玩', buy: '購買', refund: '退款', dispute: '爭議', disputeWon: '爭議撤回', grant: '團隊贈禮' },
       signIn: { title: '登入以使用商店', text: '寶石和造型都會保存在你的帳號，任何裝置都能使用。', button: '登入' },
       unavailable: '這個版本的遊戲沒有開放商店。',
       onlyLooks: '寶石只能購買造型。',
+      /** The tag on a pack an account buys once (`once`). */
+      welcomeTag: '限購一次',
+      /** How gems come free (`GEM_PLAY`): the run gems, the week's, the Arena's daily cap. */
+      free: (run: string, minutes: string, week: string, days: string, cap: string) => `免費寶石：每天第一場 ${minutes} 分鐘以上的對局 +${run}，同一週玩滿 ${days} 天 +${week}，競技場也能獲得（每天最多 ${cap}）。`,
     },
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} 加贈`,
       pay: '付款方式',
       card: '信用卡、Apple Pay 或 Google Pay',
       pix: 'Pix',
+      /** The box the pay buttons need ticked. */
+      age: '我已年滿 18 歲，或已取得父母或監護人的同意。',
+      /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
+      once: '這個帳號已經領過新手禮包。',
+      cap: (limit: string) => `為了安全，每個帳號每天最多購買 ${limit} 的寶石，未完成的付款會保留半小時。請明天再試（以巴西利亞時間午夜換日）。`,
       cancel: '取消',
       opening: '正在開啟付款頁面…',
       failed: '無法開啟付款頁面，請再試一次。',

@@ -1,16 +1,30 @@
 import type { TransactionSql } from 'postgres'
 import type { Look, CosmeticId } from '../../src/data/cosmetics'
-import type { GemCurrency, GemPackId } from '../../src/data/gems'
-import { knownOwned, playGems, purchaseStatus, refundedGems, wearableLook, type GemBuyResponse, type GemLedgerEntry, type GemPurchaseResponse, type GemReason, type GemsStatus, type PurchaseState } from '../../src/game/gems'
-import type { DayKey } from '../../src/game/day'
+import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PLAY, oncePack, type GemCurrency, type GemPackId } from '../../src/data/gems'
+import {
+  checkoutRefusal,
+  knownOwned,
+  playGems,
+  purchaseStatus,
+  refundedGems,
+  wearableLook,
+  type GemBuyResponse,
+  type GemCheckoutRefusal,
+  type GemLedgerEntry,
+  type GemPurchaseResponse,
+  type GemReason,
+  type GemsStatus,
+  type PurchaseState,
+} from '../../src/game/gems'
+import { addDays, DAY_TIME_ZONE, weekStart, type DayKey } from '../../src/game/day'
 import type { Sql } from './db'
 import { rateLimiter } from './rateLimit'
 
 /**
  * Gems: every account's ledger, the packs bought with money, the cosmetics
  * bought with gems and the equipped Arena look. The rules (prices, the play
- * cap, what a look keeps) are `../src/game/gems.ts`; this file stores what
- * they decide. Every credit and debit is a `gem_ledger` row with a unique
+ * gems and their cap, the checkout's brakes, what a look keeps) are
+ * `../src/game/gems.ts`; this file stores what they decide. Every credit and debit is a `gem_ledger` row with a unique
  * `ref` (`moveGems`), and `users.gems` moves with it in the same
  * transaction, so a webhook, a report or a click that comes twice lands once.
  */
@@ -40,9 +54,31 @@ const statusRows = (q: Q, userIds: readonly string[]) => q<StatusRow[]>`
   from users u left join cosmetics_owned c on c.user_id = u.id
   where u.id = any(${userIds}::text[]) group by u.id`
 
-const toStatus = (r: StatusRow | undefined): GemsStatus => {
+const toStatus = (r: StatusRow | undefined, taken: readonly GemPackId[] = []): GemsStatus => {
   const owned = knownOwned(r?.owned ?? [])
-  return { balance: r?.gems ?? 0, owned, look: wearableLook(r?.arena_look, new Set(owned)) }
+  return { balance: r?.gems ?? 0, owned, look: wearableLook(r?.arena_look, new Set(owned)), taken }
+}
+
+/** The `once` packs (`GEM_PACKS`), which the checkout sells an account once. */
+const ONCE_PACKS = GEM_PACK_IDS.filter(oncePack)
+
+/**
+ * Purchases that count against the checkout's brakes (`GEM_CHECKOUT`): paid
+ * (or held for their amount, money taken) and pending, an unpaid one only for
+ * `holdMinutes` after it opened (a checkout given up stops counting).
+ * Refunded and disputed ones count for a `once` pack (`ever`): it isn't sold
+ * again, so a refund can't be bought back, nor a chargeback repeated.
+ */
+const counting = (q: Q, ever: boolean) =>
+  q`(state in ${q(ever ? ['paid', 'mismatch', 'refunded', 'disputed'] : ['paid', 'mismatch'])}
+    or (state = 'open' and created_at > now() - make_interval(mins => ${GEM_CHECKOUT.holdMinutes})))`
+
+/** The `once` packs `userId` bought, or is paying for (`counting`). */
+const takenPacks = async (q: Q, userId: string): Promise<GemPackId[]> => {
+  if (ONCE_PACKS.length === 0) return []
+  const rows = await q<{ pack: string }[]>`
+    select distinct pack from gem_purchases where user_id = ${userId} and pack in ${q(ONCE_PACKS)} and ${counting(q, true)}`
+  return ONCE_PACKS.filter((p) => rows.some((r) => r.pack === p))
 }
 
 /**
@@ -59,8 +95,9 @@ export const vouchedLooks = async (q: Q, userIds: readonly string[]): Promise<Ma
 export type PlaySeat = { userId: string; won: boolean }
 
 /**
- * Credits each seat's play gems for match (`room`, `run`) ended on Brasília
- * `day` (`playGems`, capped per day by the day's play rows so far). The
+ * Credits each seat's play gems for public Arena match (`room`, `run`) ended
+ * on Brasília `day` (`playGems`, capped per day by the day's play rows so
+ * far; the caller leaves private rooms out). The
  * accounts' rows are locked in id order first, so two reports sharing a
  * player take turns and the cap holds.
  */
@@ -73,6 +110,27 @@ export const creditPlay = async (tx: TransactionSql, seats: readonly PlaySeat[],
   for (const s of seats) {
     const n = playGems(s.won, earned.find((e) => e.user_id === s.userId)?.n ?? 0)
     await moveGems(tx, s.userId, n, 'play', `play:${room}:${run}:${s.userId}`, day)
+  }
+}
+
+/**
+ * Credits the run gems (`GEM_PLAY.run`) to each of `userIds` for a long
+ * enough run (`runEarnsGems`, the caller's check) recorded on Brasília
+ * `day`: the day's first only (`run:<user>:<day>`), and, once its week
+ * (Monday to Sunday) holds `GEM_PLAY.week.days` such days, the week's gems
+ * (`week:<user>:<Monday>`). The accounts' rows must exist; they're locked in
+ * id order, so two reports of one account take turns and the week counts right.
+ */
+export const creditRun = async (tx: TransactionSql, userIds: readonly string[], day: DayKey) => {
+  const ids = [...new Set(userIds)].sort()
+  if (ids.length === 0) return
+  await tx`select id from users where id = any(${ids}::text[]) order by id for update`
+  const monday = weekStart(day)
+  for (const id of ids) {
+    if (!(await moveGems(tx, id, GEM_PLAY.run.gems, 'run', `run:${id}:${day}`, day))) continue
+    const [week] = await tx<{ days: number }[]>`
+      select count(distinct day)::int as days from gem_ledger where user_id = ${id} and reason = 'run' and day between ${monday} and ${addDays(monday, 6)}`
+    if ((week?.days ?? 0) >= GEM_PLAY.week.days) await moveGems(tx, id, GEM_PLAY.week.gems, 'week', `week:${id}:${monday}`, day)
   }
 }
 
@@ -142,7 +200,10 @@ export const gemStore = (sql: Sql) => {
 
   return {
     /** `GET /gems`. */
-    status: async (userId: string): Promise<GemsStatus> => toStatus((await statusRows(sql, [userId]))[0]),
+    status: async (userId: string): Promise<GemsStatus> => {
+      const [rows, taken] = await Promise.all([statusRows(sql, [userId]), takenPacks(sql, userId)])
+      return toStatus(rows[0], taken)
+    },
 
     /**
      * `GET /gems/purchase/:ref`: where the account's own pack `ref` stands
@@ -196,15 +257,29 @@ export const gemStore = (sql: Sql) => {
         return look
       }),
 
-    /** A checkout about to open: its purchase row, unpaid. */
-    open: async (o: GemOrder) => {
-      await sql.begin(async (tx) => {
+    /**
+     * A checkout about to open: its purchase row, unpaid, unless the brakes
+     * turn it down (`checkoutRefusal`): a `once` pack the account holds, or
+     * past the Brasília day's limit in the order's currency, paid and pending
+     * packs counted (`counting`). Behind the account's row lock, so two
+     * checkouts at once take turns. The refusal, or null once it's open.
+     */
+    open: (o: GemOrder): Promise<GemCheckoutRefusal | null> =>
+      sql.begin(async (tx) => {
         await tx`insert into users (id) values (${o.userId}) on conflict (id) do nothing`
+        await tx`select id from users where id = ${o.userId} for update`
+        const today = tx`(now() at time zone ${DAY_TIME_ZONE})::date`
+        const [spent] = await tx<{ cents: number }[]>`
+          select coalesce(sum(amount), 0)::int as cents from gem_purchases
+          where user_id = ${o.userId} and currency = ${o.currency} and (created_at at time zone ${DAY_TIME_ZONE})::date = ${today} and ${counting(tx, false)}`
+        const taken = oncePack(o.pack) && (await takenPacks(tx, o.userId)).includes(o.pack)
+        const refusal = checkoutRefusal(o.pack, o.currency, spent?.cents ?? 0, taken)
+        if (refusal) return refusal
         await tx`
           insert into gem_purchases (ref, user_id, pack, gems, provider, currency, amount)
           values (${o.ref}::uuid, ${o.userId}, ${o.pack}, ${o.gems}, ${o.provider}, ${o.currency}, ${o.amount})`
-      })
-    },
+        return null
+      }),
 
     /** The provider's session for purchase `ref` (Stripe's Checkout Session), once it's made. */
     opened: async (ref: string, session: string) => {

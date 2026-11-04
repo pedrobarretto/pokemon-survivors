@@ -3,8 +3,9 @@ import { track } from './analytics'
 import { apiCall } from './api'
 import { equip, ownedOnly, sameLook } from './arena/gemShop'
 import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, slotOf, type Look, type CosmeticId } from './data/cosmetics'
-import { packGems, type GemCurrency, type GemMethod, type GemPackId } from './data/gems'
-import { isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus } from './game/gems'
+import { isGemPackId, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from './data/gems'
+import { isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRefusal, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus } from './game/gems'
+import { locale } from './i18n'
 import { isRecord } from './game/parse'
 import { setLocalLook } from './render/looks'
 import type { WireLook } from './net/protocol'
@@ -25,7 +26,8 @@ import type { WireLook } from './net/protocol'
  *
  * `ps.gems('fake')` makes every call answer made-up data (and the shop act
  * as signed in), a checkout included: it comes back in the page, no money
- * moving (`fakeGems`, `stageCheckout`).
+ * moving (`fakeGems`, `stageCheckout`), or is turned down as the API would
+ * (`stageRefusal`).
  */
 
 /** The shop reads gems from the API: a build with one. */
@@ -33,19 +35,25 @@ export const gemsEnabled = Boolean(API_URL)
 
 /* ---------------- Fakes ---------------- */
 
-/** `landing`: the staged checkout's pack, landing at `at` (null: never) and whether it did. */
-type Fake = { status: GemsStatus; landing: { ref: string; gems: number; at: number | null; landed: boolean } | null; ledger: GemLedgerEntry[] }
+/** `landing`: the staged checkout's pack, landing at `at` (null: never) and whether it did. `refusal`: what every checkout answers instead (null: none). */
+type Fake = { status: GemsStatus; landing: { ref: string; gems: number; at: number | null; landed: boolean } | null; ledger: GemLedgerEntry[]; refusal: GemCheckoutRefusal | null }
 
 let fake: Fake | null = null
 
 const fakeStatus = (balance: number): GemsStatus => {
   const owned = COSMETIC_IDS.filter((_, i) => i % 3 === 1)
-  return { balance, owned, look: owned.reduce<Look>(equip, {}) }
+  return { balance, owned, look: owned.reduce<Look>(equip, {}), taken: [] }
 }
 
 /** Dev: every call answers made-up data, starting at `balance` gems with a third of the catalog owned (on), or the API again (off). */
 export const fakeGems = (on: boolean, balance = 1250) => {
-  fake = on ? { status: fakeStatus(balance), landing: null, ledger: [{ amount: 550, reason: 'pack', ref: 'bag', at: Date.now() - 86_400_000 }] } : null
+  const day = 86_400_000
+  const ledger: GemLedgerEntry[] = [
+    { amount: 35, reason: 'week', ref: 'week', at: Date.now() - day / 2 },
+    { amount: 15, reason: 'run', ref: 'run', at: Date.now() - day / 2 },
+    { amount: 550, reason: 'pack', ref: 'bag', at: Date.now() - day },
+  ]
+  fake = on ? { status: fakeStatus(balance), landing: null, ledger, refusal: null } : null
   notify()
 }
 
@@ -58,6 +66,12 @@ export const stageGems = (patch: { balance?: number; own?: readonly CosmeticId[]
   const owned = patch.own === 'all' ? COSMETIC_IDS : patch.own ? [...new Set([...f.status.owned, ...patch.own])] : f.status.owned
   f.status = { ...f.status, balance: patch.balance ?? f.status.balance, owned }
   remember(f.status)
+}
+
+/** Dev, faking: every checkout is turned down for `refusal` (null: none again). */
+export const stageRefusal = (refusal: GemCheckoutRefusal | null) => {
+  if (!fake) fakeGems(true)
+  fake!.refusal = refusal
 }
 
 /**
@@ -77,7 +91,9 @@ const landFake = (f: Fake) => {
   const land = f.landing
   if (!land || land.landed || land.at === null || Date.now() < land.at) return
   land.landed = true
-  f.status = { ...f.status, balance: f.status.balance + land.gems }
+  const pack = land.ref.slice('dev-'.length)
+  const taken = isGemPackId(pack) && oncePack(pack) ? [...f.status.taken, pack] : f.status.taken
+  f.status = { ...f.status, balance: f.status.balance + land.gems, taken }
   f.ledger.unshift({ amount: land.gems, reason: 'pack', ref: 'dev', at: Date.now() })
 }
 
@@ -90,7 +106,8 @@ type Mirror = { user: string; status: GemsStatus; pending: boolean }
 
 const parseStatus = (v: unknown): GemsStatus | null => {
   if (!isRecord(v) || typeof v.balance !== 'number' || !Number.isFinite(v.balance) || !Array.isArray(v.owned)) return null
-  return { balance: v.balance, owned: v.owned.filter(isCosmeticId), look: parseLook(v.look) }
+  // An API from before `taken` sends none: every pack shows.
+  return { balance: v.balance, owned: v.owned.filter(isCosmeticId), look: parseLook(v.look), taken: Array.isArray(v.taken) ? v.taken.filter(isGemPackId) : [] }
 }
 
 const readMirror = (): Mirror | null => {
@@ -194,21 +211,29 @@ export const fetchGems = async (): Promise<GemsStatus | null> => {
 }
 
 /** `staged`: faking, the checkout's ref, back at once in the page (null for a real one, which leaves for `url`). */
-export type CheckoutOpened = { ok: true; url: string; staged: string | null } | { ok: false; why: 'busy' | 'banned' | 'offline' }
+export type CheckoutOpened = { ok: true; url: string; staged: string | null } | { ok: false; why: GemCheckoutRefusal | 'busy' | 'banned' | 'offline' }
 
 /**
  * `POST /gems/checkout`: opens a pack's checkout and says where to send the
- * player (Stripe Checkout for `card`, AbacatePay for `pix`). Faking, the
+ * player (Stripe Checkout for `card`, AbacatePay for `pix`, in the game's
+ * language), or why the API turned it down (409: `once`, `cap`). A `once`
+ * pack refused is marked taken, so the shop stops offering it. Faking, the
  * checkout "comes back" at once in the page (`?gems=dev-<pack>`).
  */
 export const openCheckout = async (pack: GemPackId, method: GemMethod, currency: GemCurrency): Promise<CheckoutOpened> => {
+  if (fake?.refusal) return { ok: false, why: fake.refusal }
   if (fake) {
     track('gems_checkout', { pack, method, currency })
     const ref = stageCheckout(pack)
     return { ok: true, url: `?gems=${ref}`, staged: ref }
   }
-  const body: GemCheckoutRequest = { pack, method, currency }
+  const body: GemCheckoutRequest = { pack, method, currency, locale: locale() }
   const res = await apiCall('/gems/checkout', { method: 'POST', body, auth: true })
+  const refused = res.status === 409 && isRecord(res.body) && (res.body.error === 'once' || res.body.error === 'cap') ? res.body.error : null
+  if (refused) {
+    void fetchGems()
+    return { ok: false, why: refused }
+  }
   if (res.status === 429) return { ok: false, why: 'busy' }
   if (res.status === 403) return { ok: false, why: 'banned' }
   const url = isRecord(res.body) && typeof res.body.url === 'string' ? res.body.url : null

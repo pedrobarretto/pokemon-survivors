@@ -1,5 +1,5 @@
-import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, slotOf, type Look, type CosmeticBase, type CosmeticId, type CosmeticSlot, type Rarity } from '../data/cosmetics'
-import type { GemCurrency, GemMethod } from '../data/gems'
+import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, showsIn, slotOf, type Look, type CosmeticBase, type CosmeticId, type CosmeticSlot, type Rarity } from '../data/cosmetics'
+import { GEM_PACK_IDS, oncePack, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
 import type { DayKey } from '../game/day'
 
 /**
@@ -31,8 +31,15 @@ const BRAZIL_ZONES = new Set([
 /** The currency a buyer sees first: reais in Brazilian Portuguese or a Brazilian time zone, dollars elsewhere. */
 export const currencyFor = (tag: string, timeZone: string | undefined): GemCurrency => (tag === 'pt-BR' || (timeZone !== undefined && BRAZIL_ZONES.has(timeZone)) ? 'brl' : 'usd')
 
-/** How a pack can be paid in `currency`: card always (Apple Pay and Google Pay ride on it), Pix only in reais. */
-export const methodsFor = (currency: GemCurrency): readonly GemMethod[] => (currency === 'brl' ? ['card', 'pix'] : ['card'])
+/**
+ * How a pack can be paid in `currency`, the first one offered first: in
+ * reais Pix (almost never charged back, where a card's chargeback costs a fee
+ * on top), then card; elsewhere card (Apple Pay and Google Pay ride on it).
+ */
+export const methodsFor = (currency: GemCurrency): readonly GemMethod[] => (currency === 'brl' ? ['pix', 'card'] : ['card'])
+
+/** The packs the shop offers an account, in order: a `once` pack only while it isn't `taken`. */
+export const shownPacks = (taken: readonly GemPackId[]): GemPackId[] => GEM_PACK_IDS.filter((id) => !oncePack(id) || !taken.includes(id))
 
 /** A price in cents as the buyer's language writes it (`R$ 24,90`, `$4.99`). */
 export const priceText = (cents: number, currency: GemCurrency, tag: string) => new Intl.NumberFormat(tag, { style: 'currency', currency: currency.toUpperCase() }).format(cents / 100)
@@ -61,6 +68,16 @@ export const shopCatalog = (day: DayKey, owned: ReadonlySet<CosmeticId> = new Se
     return items.length > 0 ? [{ slot, items }] : []
   })
 }
+
+/**
+ * The catalog (`shopCatalog`) split where its items show: `main`, the slots
+ * that show in every mode, and `arena`, the ones only the Arena shows
+ * (`SLOT_MODES`), which the shop keeps in their own section.
+ */
+export const catalogSections = <G extends { slot: CosmeticSlot }>(catalog: readonly G[]) => ({
+  main: catalog.filter((g) => showsIn(g.slot, 'run')),
+  arena: catalog.filter((g) => !showsIn(g.slot, 'run')),
+})
 
 /** `look` with `id` on, in its own slot (replacing what was there). */
 export const equip = (look: Look, id: CosmeticId): Look => ({ ...look, [slotOf(id)]: id })

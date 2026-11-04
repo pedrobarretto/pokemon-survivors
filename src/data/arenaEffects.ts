@@ -107,7 +107,8 @@ export const ARENA_EFFECTS = {
   wallTitle: { slot: 'title', rarity: 'rare' },
   jungleTitle: { slot: 'title', rarity: 'rare' },
   unstoppableTitle: { slot: 'title', rarity: 'epic' },
-  legendTitle: { slot: 'title', rarity: 'legendary' },
+  // Not sold: kept in the catalog for a future ranked season's reward.
+  legendTitle: { slot: 'title', rarity: 'legendary', price: null },
 
   plateSteel: { slot: 'plate', rarity: 'common', plate: { fill: '#283038', edge: '#8890a8', light: '#c8d0e0', emblem: 'bolt', ink: ['#f8d030', '#fff8c0'] } },
   plateLeaf: { slot: 'plate', rarity: 'common', plate: { fill: '#183018', edge: '#58b838', light: '#a8e870', emblem: 'leaf', ink: ['#58b838', '#c8f8a0'] } },

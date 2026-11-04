@@ -533,7 +533,7 @@ export const en: Messages = {
     gems: (n: string) => `${n} gems`,
     slots: { head: 'Head', back: 'Back', trail: 'Trail', spawn: 'Entrance', ko: 'Knockout', goal: 'Goal', emote: 'Emote', title: 'Title', plate: 'Name plate' },
     rarities: { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' },
-    packs: { pouch: 'Handful', bag: 'Bag', chest: 'Chest', hoard: 'Hoard', vault: 'Vault' },
+    packs: { welcome: 'Welcome Pack', pouch: 'Handful', bag: 'Bag', chest: 'Chest', hoard: 'Hoard', vault: 'Vault' },
     shop: {
       pitch: 'Looks for your Pokémon in runs, co-op and the Arena: everyone sees them, and none of them give power.',
       balance: 'Your balance',
@@ -549,6 +549,9 @@ export const en: Messages = {
       effect: 'Shows up in runs, co-op and the Arena.',
       arenaOnly: 'Only shows up in the Arena, for now.',
       arenaTag: 'ARENA',
+      /** The catalog's own section for the Arena-only items, and its note. */
+      arenaFilter: 'Arena',
+      arenaNote: 'Entrance, knockout and goal effects, and emotes: they only show up in Arena matches.',
       buy: 'Buy',
       equip: 'Wear',
       unequip: 'Take off',
@@ -560,16 +563,25 @@ export const en: Messages = {
       banned: "This account can't use the shop.",
       receipts: 'Receipts',
       receiptsEmpty: 'Nothing here yet.',
-      reasons: { pack: 'Gem pack', patreon: 'Patreon', play: 'Arena match', buy: 'Purchase', refund: 'Refund', dispute: 'Dispute', disputeWon: 'Dispute reversed', grant: 'Gift from the team' },
+      reasons: { pack: 'Gem pack', patreon: 'Patreon', play: 'Arena match', run: 'Run of the day', week: 'Week of play', buy: 'Purchase', refund: 'Refund', dispute: 'Dispute', disputeWon: 'Dispute reversed', grant: 'Gift from the team' },
       signIn: { title: 'Sign in to use the Shop', text: 'Your gems and looks stay on your account, on any device.', button: 'Sign in' },
       unavailable: 'The Shop isn’t available in this version of the game.',
       onlyLooks: 'Gems only buy looks.',
+      /** The tag on a pack an account buys once (`once`). */
+      welcomeTag: 'ONCE ONLY',
+      /** How gems come free (`GEM_PLAY`): the run gems, the week's, the Arena's daily cap. */
+      free: (run: string, minutes: string, week: string, days: string, cap: string) => `Free gems: +${run} for the day’s first run of ${minutes} min or more, +${week} for playing ${days} days in the same week, and from the Arena (up to ${cap} a day).`,
     },
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} bonus`,
       pay: 'Pay with',
       card: 'Card, Apple Pay or Google Pay',
       pix: 'Pix',
+      /** The box the pay buttons need ticked. */
+      age: 'I’m 18 or older, or I have my parent’s or guardian’s permission.',
+      /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
+      once: 'This account already got the Welcome Pack.',
+      cap: (limit: string) => `To keep things safe, each account buys up to ${limit} of gems a day, and an open payment counts for half an hour. Try again tomorrow (the day turns at midnight, Brasília time).`,
       cancel: 'Cancel',
       opening: 'Opening checkout…',
       failed: 'Couldn’t open checkout. Try again.',

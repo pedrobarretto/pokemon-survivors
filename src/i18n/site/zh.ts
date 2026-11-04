@@ -32,7 +32,7 @@ export const siteZh: SiteMessages = {
   },
   footer: {
     disclaimer:
-      'Pokémon Survivors 是非官方、免費、非商業的粉絲自製遊戲，與 Nintendo、The Pokémon Company、GAME FREAK、Creatures 或 Spike Chunsoft 無關，也未經其背書、贊助或核准。Pokémon 及寶可夢角色名稱是 Nintendo 的商標。',
+      'Pokémon Survivors 是非官方、免費遊玩的粉絲自製遊戲，與 Nintendo、The Pokémon Company、GAME FREAK、Creatures 或 Spike Chunsoft 無關，也未經其背書、贊助或核准。Pokémon 及寶可夢角色名稱是 Nintendo 的商標。',
     legal: '法律與隱私',
     credits: '製作名單',
     source: 'GitHub 原始碼',
@@ -892,7 +892,7 @@ export const siteZh: SiteMessages = {
       contact: '聯絡與下架請求',
     },
     fanGame: [
-      'Pokémon Survivors 是由 Pedro Barretto 製作、由粉絲為粉絲打造的非官方、非商業粉絲遊戲。',
+      'Pokémon Survivors 是由 Pedro Barretto 製作、由粉絲為粉絲打造的非官方粉絲遊戲。遊戲免費遊玩；可選購的寶石只販售外觀道具，用來支付伺服器與開發費用。',
       '本遊戲與 Nintendo、The Pokémon Company、GAME FREAK inc.、Creatures Inc. 或 Spike Chunsoft 無關，也未經其背書、贊助或核准。',
       'Pokémon 及寶可夢角色名稱是 Nintendo 的商標。Pokémon © Nintendo、Creatures Inc. 與 GAME FREAK inc.。其他所有商標皆屬於其各自的擁有者。',
     ],
@@ -903,7 +903,7 @@ export const siteZh: SiteMessages = {
     ],
     gems: [
       '寶石是遊戲的虛擬物品：只能購買外觀道具（例如帽子、拖尾和稱號），會出現在對局、合作模式和競技場中，絕不會影響對戰或排行榜。寶石沒有現金價值，不能兌換成金錢，也不能轉移到其他帳號，只綁定在你的遊戲帳號上。',
-      '你可以透過遊玩競技場（每日有上限）、在 Patreon 上贊助或購買寶石包來獲得寶石。寶石包透過 Stripe（信用卡、Apple Pay 和 Google Pay）或 AbacatePay（Pix）付款，付款資料直接交給他們：遊戲永遠看不到你的卡片。',
+      '你可以透過遊玩（每天第一場 5 分鐘以上的對局、同一週玩滿五天，以及競技場，每日有上限）、在 Patreon 上贊助或購買寶石包來獲得寶石。每個帳號每天最多購買 R$ 250 或 US$ 50 的寶石包，未滿 18 歲的玩家需取得父母或監護人的同意才能購買。寶石包透過 Stripe（信用卡、Apple Pay 和 Google Pay）或 AbacatePay（Pix）付款，付款資料直接交給他們：遊戲永遠看不到你的卡片。',
       '退貨權：購買寶石包後 7 天內，你可以申請退還該寶石包中尚未使用的寶石（巴西消費者保護法第 49 條）。請附上購買編號，寄信至 pedro@wavyia.com.br 申請。已使用的寶石以及用寶石購買的外觀道具不予退款。',
       '付款被撤銷或爭議（chargeback）時，會從帳號中扣除該寶石包的寶石，包括已使用的部分。餘額可能變成負數，在餘額為負時無法用寶石購買任何東西。',
     ],

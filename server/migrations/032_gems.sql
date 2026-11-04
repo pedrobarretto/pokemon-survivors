@@ -2,14 +2,15 @@
 
 -- Every move of an account's gems, append-only. `ref` is unique across the whole ledger, so a webhook, a
 -- report or a click that comes twice lands once: `pack:<purchase ref>`, `patreon-gems:<member>:<YYYY-MM>` (Brasília),
--- `play:<room>:<run>:<user>`, `buy:<user>:<cosmetic>`, `refund:stripe:<charge>:<refunded cents>`, `refund:abacatepay:<checkout>`,
--- `dispute:<provider>:<id>`, `dispute-won:<provider>:<id>`. `day`: the Brasília day of a play credit (the
--- daily cap counts by it). `user_id` goes null when the account is deleted: the payments' trail stays.
+-- `play:<room>:<run>:<user>` (an Arena match), `run:<user>:<YYYY-MM-DD>` (the Brasília day's first long run),
+-- `week:<user>:<Monday YYYY-MM-DD>` (five such days in a week), `buy:<user>:<cosmetic>`, `refund:stripe:<charge>:<refunded cents>`, `refund:abacatepay:<checkout>`,
+-- `dispute:<provider>:<id>`, `dispute-won:<provider>:<id>`. `day`: the Brasília day of a play, run or week credit
+-- (the Arena's daily cap and the week's days count by it). `user_id` goes null when the account is deleted: the payments' trail stays.
 create table gem_ledger (
   id bigserial primary key,
   user_id text references users (id) on delete set null,
   amount integer not null check (amount <> 0),
-  reason text not null check (reason in ('pack', 'patreon', 'play', 'buy', 'refund', 'dispute', 'disputeWon', 'grant')),
+  reason text not null check (reason in ('pack', 'patreon', 'play', 'run', 'week', 'buy', 'refund', 'dispute', 'disputeWon', 'grant')),
   ref text not null unique,
   day date,
   at timestamptz not null default now()
@@ -17,7 +18,7 @@ create table gem_ledger (
 
 create index gem_ledger_user on gem_ledger (user_id, id desc);
 
-create index gem_ledger_play on gem_ledger (user_id, day) where reason = 'play';
+create index gem_ledger_day on gem_ledger (user_id, day) where day is not null;
 
 -- The balance, kept in step with the ledger in the same transaction (it may go negative after a refund of spent gems).
 alter table users add column gems integer not null default 0;
@@ -25,7 +26,8 @@ alter table users add column gems integer not null default 0;
 -- The equipped Arena look (`Look`), as the account last set it; read back through what it owns.
 alter table users add column arena_look jsonb not null default '{}';
 
--- Gem packs bought with money: opened at checkout (`ref`, the game's `?gems=<ref>`), paid by the webhook.
+-- Gem packs bought with money: opened at checkout (`ref`, the game's `?gems=<ref>`), paid by the webhook. The checkout
+-- reads them back for its brakes (`GEM_CHECKOUT`): the account's packs of the Brasília day, and a `once` pack ever.
 -- `payment`: what refunds and disputes name (Stripe's PaymentIntent, AbacatePay's checkout `bill_…`).
 -- `taken_back`: gems refunds and disputes took from this pack so far. `state`: `open` until paid, `paid` (credited),
 -- `mismatch` (the provider charged another amount or currency than `amount`/`currency`: held, never credited, for

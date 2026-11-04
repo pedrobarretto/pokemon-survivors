@@ -1,4 +1,4 @@
-import { GEM_PLAY, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
+import { GEM_CHECKOUT, GEM_PACKS, GEM_PLAY, oncePack, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
 import { COSMETICS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, type Look, type CosmeticBase, type CosmeticId } from '../data/cosmetics'
 import type { DayKey } from './day'
 
@@ -7,21 +7,49 @@ import type { DayKey } from './day'
  * the ledger) and the game. Pure: no clock, no storage.
  */
 
-/** Why the ledger moved: a pack bought, a Patreon charge, an Arena match, a cosmetic bought, a refund or dispute taking a pack back, a dispute won giving it back, a grant by hand. */
-export const GEM_REASONS = ['pack', 'patreon', 'play', 'buy', 'refund', 'dispute', 'disputeWon', 'grant'] as const
+/**
+ * Why the ledger moved: a pack bought, a Patreon charge, an Arena match
+ * (`play`), the day's first long run (`run`), five such days in a week
+ * (`week`), a cosmetic bought, a refund or dispute taking a pack back, a
+ * dispute won giving it back, a grant by hand.
+ */
+export const GEM_REASONS = ['pack', 'patreon', 'play', 'run', 'week', 'buy', 'refund', 'dispute', 'disputeWon', 'grant'] as const
 
 export type GemReason = (typeof GEM_REASONS)[number]
 
 export const isGemReason = (v: unknown): v is GemReason => typeof v === 'string' && (GEM_REASONS as readonly string[]).includes(v)
 
-/** `GET /gems`: the balance (negative after a refund of spent gems, which blocks buying), what the account owns and its equipped look. */
-export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; look: Look }
+/**
+ * `GET /gems`: the balance (negative after a refund of spent gems, which
+ * blocks buying), what the account owns, its equipped look and the `once`
+ * packs it can't buy again (`taken`: bought, or being paid).
+ */
+export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; look: Look; taken: readonly GemPackId[] }
 
 /** One line of `GET /gems/ledger`: `amount` signed, `at` in ms. */
 export type GemLedgerEntry = { amount: number; reason: GemReason; ref: string; at: number }
 
-/** `POST /gems/checkout`'s body. */
-export type GemCheckoutRequest = { pack: GemPackId; method: GemMethod; currency: GemCurrency }
+/** `POST /gems/checkout`'s body: `locale`, the game's language, picks the checkout page's (Stripe's). */
+export type GemCheckoutRequest = { pack: GemPackId; method: GemMethod; currency: GemCurrency; locale?: string }
+
+/**
+ * Why `POST /gems/checkout` turns a pack down before any payment opens:
+ * `once`, a one-per-account pack the account bought (or is paying for); `cap`,
+ * past the day's limit (`GEM_CHECKOUT.daily`). Both answer 409 with this as
+ * `error`.
+ */
+export type GemCheckoutRefusal = 'once' | 'cap'
+
+/**
+ * Whether an account may open a checkout of `pack` in `currency`, given
+ * `spentToday` (cents of that currency in its packs paid or pending this
+ * Brasília day) and whether it holds the pack already (`taken`, for a `once`
+ * pack). Null when it may.
+ */
+export const checkoutRefusal = (pack: GemPackId, currency: GemCurrency, spentToday: number, taken: boolean): GemCheckoutRefusal | null => {
+  if (oncePack(pack) && taken) return 'once'
+  return spentToday + GEM_PACKS[pack][currency] > GEM_CHECKOUT.daily[currency] ? 'cap' : null
+}
 
 /** `POST /gems/buy`'s answer. */
 export type GemBuyResponse = { balance: number; owned: readonly CosmeticId[] }
@@ -74,12 +102,17 @@ export const wearableLook = (raw: unknown, owned: ReadonlySet<string>): Look => 
 export const knownOwned = (ids: readonly string[]): CosmeticId[] => ids.filter(isCosmeticId).sort()
 
 /**
- * Gems an Arena match gives a player who played it out: `GEM_PLAY.match`,
- * plus `GEM_PLAY.win` for a win, never past `GEM_PLAY.daily` with what
- * `earnedToday` (the Brasília day's play gems so far) already holds.
+ * Gems an Arena match gives a player who played it out: `GEM_PLAY.arena.match`,
+ * plus `.win` for a win, never past `.daily` with what `earnedToday` (the
+ * Brasília day's Arena gems so far) already holds.
  */
-export const playGems = (won: boolean, earnedToday: number) =>
-  Math.max(0, Math.min(GEM_PLAY.match + (won ? GEM_PLAY.win : 0), GEM_PLAY.daily - earnedToday))
+export const playGems = (won: boolean, earnedToday: number) => {
+  const { match, win, daily } = GEM_PLAY.arena
+  return Math.max(0, Math.min(match + (won ? win : 0), daily - earnedToday))
+}
+
+/** Whether a run of `seconds` is long enough for the day's run gems (`GEM_PLAY.run`). */
+export const runEarnsGems = (seconds: number) => seconds >= GEM_PLAY.run.seconds
 
 /**
  * Gems a refund takes back from a pack of `gems` paid `amount` cents, once

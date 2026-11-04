@@ -3,7 +3,7 @@ import { GEM_PATREON, GEM_PLAY, packGems } from '../../src/data/gems'
 import { seasonById, type ArenaResult } from '../../src/game/arenaRank'
 import { arenaStore, parseArenaReport } from './arena'
 import type { Sql } from './db'
-import { gemStore } from './gems'
+import { creditRun, gemStore } from './gems'
 import { supporterStore } from './supporters'
 
 /**
@@ -150,20 +150,74 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
     expect(Object.fromEntries(await gems.looks(['u_a', 'u_z']))).toEqual({ u_a: { head: 'strawHat' } })
   })
 
-  it("credits play gems for confirmed reports, up to the day's cap", async () => {
+  it("credits play gems for confirmed public reports, up to the day's cap", async () => {
     const arena = arenaStore(sql)
+    const { match, win, daily } = GEM_PLAY.arena
     // Same Brasília day for every run: endedAt 10 minutes apart from the season's start.
-    for (let run = 1; run <= 6; run++) await arena.report(report(run))
+    for (let run = 1; run <= 4; run++) await arena.report(report(run))
     await arena.report(report(1))
-    expect(await balance('u_a')).toBe(GEM_PLAY.daily)
-    expect(await balance('u_b')).toBe(Math.min(GEM_PLAY.daily, 6 * GEM_PLAY.match))
+    expect(await balance('u_a')).toBe(Math.min(daily, 4 * (match + win)))
+    expect(await balance('u_b')).toBe(4 * match)
+    // A private room gives nothing.
+    await arena.report(report(5, { kind: 'room' }))
+    expect(await balance('u_b')).toBe(4 * match)
     // Unconfirmed, nobody earns; a leaver never does.
     await sql`truncate gem_ledger`
     await sql`update users set gems = 0`
     await arena.report(report(7, { confirmed: false }))
     await arena.report(report(8, { seats: [{ slot: 0, userId: 'u_a', handle: null, left: true }, { slot: 2, userId: 'u_b', handle: null, left: false }] }))
     expect(await balance('u_a')).toBe(0)
-    expect(await balance('u_b')).toBe(GEM_PLAY.match)
+    expect(await balance('u_b')).toBe(GEM_PLAY.arena.match)
+  })
+
+  it("credits the day's first long run once, and the week's once it holds five such days", async () => {
+    await sql`insert into users (id) values ('u_a'), ('u_b')`
+    const run = (users: string[], day: string) => sql.begin((tx) => creditRun(tx, users, day))
+    // 2026-11-02 is a Monday: four days, then a second report of the fourth, bring no week.
+    for (const day of ['2026-11-02', '2026-11-03', '2026-11-05', '2026-11-06', '2026-11-06']) await run(['u_a', 'u_a'], day)
+    expect(await balance('u_a')).toBe(4 * GEM_PLAY.run.gems)
+    // The fifth day (a Sunday) brings the week's; another run that day, nothing more.
+    await run(['u_a', 'u_b'], '2026-11-08')
+    await run(['u_a'], '2026-11-08')
+    expect(await balance('u_a')).toBe(5 * GEM_PLAY.run.gems + GEM_PLAY.week.gems)
+    expect(await balance('u_b')).toBe(GEM_PLAY.run.gems)
+    // Days of the next week count for that week alone.
+    for (const day of ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12']) await run(['u_a'], day)
+    expect(await balance('u_a')).toBe(9 * GEM_PLAY.run.gems + GEM_PLAY.week.gems)
+    expect((await sql<{ ref: string }[]>`select ref from gem_ledger where reason = 'week'`).map((r) => r.ref)).toEqual(['week:u_a:2026-11-02'])
+  })
+
+  it('sells the welcome pack once per account, a refunded one too; a checkout given up stops holding it', async () => {
+    const welcome = (ref: string) => gems.open({ ref, userId: 'u_a', pack: 'welcome', gems: packGems('welcome'), provider: 'abacatepay', currency: 'brl', amount: 990 })
+    expect(await welcome(REF)).toBeNull()
+    expect((await gems.status('u_a')).taken).toEqual(['welcome'])
+    // Pending, it holds the pack.
+    expect(await welcome('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a02')).toBe('once')
+    // Given up past the hold, it doesn't.
+    await sql`update gem_purchases set created_at = now() - interval '1 hour'`
+    expect((await gems.status('u_a')).taken).toEqual([])
+    expect(await welcome('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a03')).toBeNull()
+    await gems.event({ kind: 'paid', provider: 'abacatepay', ref: '8f14e45f-ceea-467f-a0e6-1b7a2c1c9a03', session: null, payment: 'bill_w', amount: 990, currency: 'brl' })
+    await gems.event({ kind: 'refund', provider: 'abacatepay', purchase: { payment: 'bill_w' }, share: 'all', key: 'refund:abacatepay:bill_w' })
+    await sql`update gem_purchases set created_at = now() - interval '1 hour'`
+    expect(await welcome('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a04')).toBe('once')
+    // Other packs still sell.
+    expect(await gems.open({ ref: '8f14e45f-ceea-467f-a0e6-1b7a2c1c9a05', userId: 'u_a', pack: 'pouch', gems: packGems('pouch'), provider: 'stripe', currency: 'brl', amount: 990 })).toBeNull()
+  })
+
+  it("stops checkouts past the day's limit, counting paid and pending packs but not refunded ones", async () => {
+    const vault = (ref: string, currency: 'brl' | 'usd' = 'brl') =>
+      gems.open({ ref, userId: 'u_a', pack: 'vault', gems: packGems('vault'), provider: 'stripe', currency, amount: currency === 'brl' ? 24990 : 4999 })
+    expect(await vault(REF)).toBeNull()
+    // Pending: a second one is past R$ 250.
+    expect(await vault('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a02')).toBe('cap')
+    // Dollars have their own limit.
+    expect(await vault('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a03', 'usd')).toBeNull()
+    // Refunded, it no longer counts; yesterday's never did.
+    await sql`update gem_purchases set state = 'refunded' where ref = ${REF}::uuid`
+    expect(await vault('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a04')).toBeNull()
+    await sql`update gem_purchases set state = 'paid', created_at = now() - interval '1 day 1 hour'`
+    expect(await vault('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a05')).toBeNull()
   })
 
   it("credits a Patreon charge's gems once, waiting for the patron to link", async () => {

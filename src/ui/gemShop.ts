@@ -1,6 +1,6 @@
-import { currencyFor, equip, methodsFor, priceText, rarityOf, shopCatalog, unequip } from '../arena/gemShop'
+import { catalogSections, currencyFor, equip, methodsFor, priceText, rarityOf, shopCatalog, shownPacks, unequip } from '../arena/gemShop'
 import { COSMETIC_SLOTS, WEARABLE_SLOTS, arenaOnly, cosmeticPrice, showsIn, slotOf, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
-import { GEM_PACK_IDS, GEM_PACKS, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
+import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PACKS, GEM_PLAY, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
 import { effectIn } from '../data/arenaEffects'
 import { VERSUS, VERSUS_PICKS, type VersusPick } from '../data/versus'
 import { isWearableId } from '../data/wearables'
@@ -34,7 +34,8 @@ import { confirmDialog, type Screen } from './screens'
  * a big preview walking and turning through its 8 directions, any roster
  * Pokémon wearing it), plus the gem chip the Arena screen, the hub's title
  * and the Boutique's sheet show. A pack opens its checkout in a sheet (card,
- * and Pix in reais) and leaves for it; back on `?gems=`, the Loja opens on
+ * and Pix in reais, behind the buyer's word on their age) and leaves for
+ * it; back on `?gems=`, the Loja opens on
  * the return sheet, which waits for the gems (`awaitCheckout`). Guests
  * browse and try things on; anything that needs the account leads to sign
  * in. The API lives in `gems.ts`, the rules in `arena/gemShop.ts`.
@@ -264,9 +265,12 @@ const sheet = (root: HTMLElement, input: Input, cls: string, closable: () => boo
 }
 
 /**
- * A pack's checkout sheet: what it gives and costs in `currency`, and a
- * button per way to pay; one opens the checkout and leaves for it. Faking
- * (`ps.gems('fake')`), the checkout comes back at once: `returned`, with its ref.
+ * A pack's checkout sheet: what it gives and costs in `currency`, the box
+ * the buyer ticks for their age (18, or a parent's or guardian's leave),
+ * which the pay buttons need, and a button per way to pay (`methodsFor`, Pix
+ * first in reais); one opens the checkout and leaves for it, or says why the
+ * API turned it down. Faking (`ps.gems('fake')`), the checkout comes back at
+ * once: `returned`, with its ref.
  */
 const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currency: GemCurrency, returned: (ref: string) => void, onClose: () => void) => {
   const m = t().gems
@@ -274,8 +278,11 @@ const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currenc
   let busy = false
   const s = sheet(root, input, 'gem-checkout', () => !busy, onClose)
   const status = h('p', { class: 'gem-sheet-status', role: 'status' })
+  const age = h('input', { type: 'checkbox', class: 'gem-age-box' })
+  const ready = () => buttons.forEach((b) => (b.disabled = busy || !age.checked))
+  age.addEventListener('change', () => (playSfx('move'), ready()))
   const pay = (method: GemMethod) => {
-    if (busy) return
+    if (busy || !age.checked) return
     busy = true
     playSfx('select')
     status.textContent = m.checkout.opening
@@ -291,12 +298,18 @@ const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currenc
       busy = false
       playSfx('denied')
       status.classList.remove('blink')
-      status.textContent = res.why === 'busy' ? m.shop.busy : res.why === 'banned' ? m.shop.banned : m.checkout.failed
-      buttons.forEach((b) => (b.disabled = false))
+      status.textContent = {
+        busy: m.shop.busy,
+        banned: m.shop.banned,
+        offline: m.checkout.failed,
+        once: m.checkout.once,
+        cap: m.checkout.cap(priceText(GEM_CHECKOUT.daily[currency], currency, tag())),
+      }[res.why]
+      ready()
     })
   }
   const buttons = methodsFor(currency).map((method) =>
-    h('button', { class: `btn gem-pay ${method}`, type: 'button', onclick: () => pay(method) }, method === 'pix' ? m.checkout.pix : m.checkout.card),
+    h('button', { class: `btn gem-pay ${method}`, type: 'button', disabled: true, onclick: () => pay(method) }, method === 'pix' ? m.checkout.pix : m.checkout.card),
   )
   s.box.append(
     ...present(
@@ -304,13 +317,14 @@ const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currenc
       h('b', { class: 'gem-sheet-gems' }, m.gems(formatNumber(packGems(pack)))),
       def.bonus > 0 ? h('small', { class: 'gem-sheet-split' }, m.checkout.split(formatNumber(def.gems), formatNumber(def.bonus))) : null,
       h('b', { class: 'gem-sheet-price' }, priceText(def[currency], currency, tag())),
+      h('label', { class: 'gem-age' }, age, h('span', {}, m.checkout.age)),
       h('span', { class: 'field-label' }, m.checkout.pay),
       h('div', { class: 'gem-pay-list' }, ...buttons),
       status,
       h('button', { class: 'btn small gem-sheet-cancel', type: 'button', onclick: () => !busy && (playSfx('select'), s.close()) }, m.checkout.cancel),
     ),
   )
-  later(() => buttons[0]?.focus())
+  later(() => age.focus())
 }
 
 /** Back from the checkout of pack `ref`: waits for that pack (`awaitCheckout`), then celebrates its gems, or says they're on their way. */
@@ -402,7 +416,8 @@ const when = (ms: number) => new Date(ms).toLocaleString(tag(), { day: '2-digit'
 export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab => {
   let status = knownGems()
   let currency: GemCurrency = savedCurrency() ?? currencyFor(tag(), Intl.DateTimeFormat().resolvedOptions().timeZone)
-  let filter: CosmeticSlot | null = null
+  /** The catalog's filter: a slot, every slot that shows in every mode (null), or the Arena-only section. */
+  let filter: CosmeticSlot | 'arena' | null = null
   let chosen: CosmeticId | null = null
   let note: { text: string; bad: boolean } | null = null
   let modal = false
@@ -525,7 +540,6 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       h('b', { class: 'gem-item-name' }, itemName(id)),
       h('small', { class: 'gem-item-tag' }, on ? m.equipped : owned ? m.owned : price === null ? m.unsold : gemAmount(price)),
       misfit ? h('em', { class: 'gem-item-misfit', title: m.misfit(ctx.wearer().name) }, '!') : null,
-      arenaOnly(id) ? h('em', { class: 'gem-item-arena', title: m.arenaOnly }, m.arenaTag) : null,
     )
   }
 
@@ -578,8 +592,11 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
   const paint = () => {
     const m = t().gems
     const owned = ownedSet(status)
-    const catalog = shopCatalog(brasiliaDay(today()), owned)
-    const items = catalog.filter((g) => filter === null || g.slot === filter).flatMap((g) => g.items)
+    const { main, arena } = catalogSections(shopCatalog(brasiliaDay(today()), owned))
+    // The Arena-only items show in their own section, a heading per slot; the rest by slot, or all of them.
+    const groups = filter === 'arena' ? arena : main.filter((g) => filter === null || g.slot === filter)
+    const packs = shownPacks(status?.taken ?? [])
+    const { run, week, arena: inArena } = GEM_PLAY
     const seg = (c: GemCurrency) =>
       h(
         'button',
@@ -590,27 +607,48 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       h('div', { class: 'gem-section-head' }, h('span', { class: 'field-label' }, m.shop.packs), h('div', { class: 'shell-seg gem-currency', role: 'group', 'aria-label': m.shop.currency }, seg('brl'), seg('usd'))),
       h(
         'div',
-        { class: 'gem-pack-grid' },
-        ...GEM_PACK_IDS.map((pack, i) =>
-          h(
+        { class: 'gem-pack-grid', style: `--packs:${packs.length}` },
+        ...packs.map((pack) => {
+          const once = oncePack(pack)
+          // The art grows with the regular packs' order; a once pack shows two.
+          const art = once ? 2 : Math.min(GEM_PACK_IDS.filter((id) => !oncePack(id)).indexOf(pack) + 1, 4)
+          return h(
             'button',
-            { class: `gem-pack tier${i}`, type: 'button', onclick: () => openPack(pack) },
-            h('span', { class: 'gem-pack-art' }, ...Array.from({ length: Math.min(i + 1, 4) }, () => h('img', { src: gemIconUrl(), alt: '' }))),
+            { class: `gem-pack${once ? ' once' : ''}`, type: 'button', onclick: () => openPack(pack) },
+            h('span', { class: 'gem-pack-art' }, ...Array.from({ length: art }, () => h('img', { src: gemIconUrl(), alt: '' }))),
             h('b', { class: 'gem-pack-gems' }, formatNumber(packGems(pack))),
             h('small', { class: 'gem-pack-name' }, m.packs[pack]),
-            GEM_PACKS[pack].bonus > 0 ? h('em', { class: 'gem-pack-bonus' }, m.shop.bonus(formatNumber(GEM_PACKS[pack].bonus))) : null,
+            once ? h('em', { class: 'gem-pack-bonus once' }, m.shop.welcomeTag) : GEM_PACKS[pack].bonus > 0 ? h('em', { class: 'gem-pack-bonus' }, m.shop.bonus(formatNumber(GEM_PACKS[pack].bonus))) : null,
             h('span', { class: 'gem-pack-price' }, priceText(GEM_PACKS[pack][currency], currency, tag())),
-          ),
-        ),
+          )
+        }),
       ),
+      h('p', { class: 'gem-free' }, m.shop.free(formatNumber(run.gems), formatNumber(run.seconds / 60), formatNumber(week.gems), formatNumber(week.days), formatNumber(inArena.daily))),
     )
-    const chip = (slot: CosmeticSlot | null) =>
+    const chip = (slot: CosmeticSlot | 'arena' | null) =>
       h(
         'button',
-        { class: `gem-filter${filter === slot ? ' on' : ''}`, type: 'button', 'aria-pressed': String(filter === slot), onclick: () => filter !== slot && (playSfx('move'), (filter = slot), paint()) },
-        slot ? h('img', { src: slotIconUrl(slot), alt: '' }) : null,
-        slot ? m.slots[slot] : m.shop.all,
+        {
+          class: `gem-filter${filter === slot ? ' on' : ''}${slot === 'arena' ? ' arena' : ''}`,
+          type: 'button',
+          'aria-pressed': String(filter === slot),
+          onclick: () => filter !== slot && (playSfx('move'), (filter = slot), (chosen = null), paint()),
+        },
+        slot && slot !== 'arena' ? h('img', { src: slotIconUrl(slot), alt: '' }) : null,
+        slot === 'arena' ? m.shop.arenaFilter : slot ? m.slots[slot] : m.shop.all,
       )
+    const itemsEl =
+      filter === 'arena'
+        ? h(
+            'div',
+            { class: 'gem-arena' },
+            h('p', { class: 'gem-arena-note' }, m.shop.arenaNote),
+            ...groups.flatMap((g) => [
+              h('span', { class: 'gem-group-head' }, h('img', { src: slotIconUrl(g.slot), alt: '' }), m.slots[g.slot]),
+              h('div', { class: 'gem-items' }, ...g.items.map(itemCard)),
+            ]),
+          )
+        : h('div', { class: 'gem-items' }, ...groups.flatMap((g) => g.items).map(itemCard))
     const scroll = el.parentElement?.scrollTop ?? 0
     el.replaceChildren(
       ...present(
@@ -626,7 +664,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
             'div',
             { class: 'gem-catalog-main' },
             h('div', { class: 'gem-try' }, stage.el, info(), note ? h('p', { class: `gem-note${note.bad ? ' bad' : ''}`, role: 'status' }, note.text) : null),
-            h('div', { class: 'gem-browse' }, h('div', { class: 'gem-filters' }, chip(null), ...catalog.map((g) => chip(g.slot))), h('div', { class: 'gem-items' }, ...items.map(itemCard))),
+            h('div', { class: 'gem-browse' }, h('div', { class: 'gem-filters' }, chip(null), ...main.map((g) => chip(g.slot)), arena.length > 0 ? chip('arena') : null), itemsEl),
           ),
       ),
       signedIn() ? receiptsEl() : null,

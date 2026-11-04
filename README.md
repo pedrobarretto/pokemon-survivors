@@ -21,7 +21,7 @@ Pick one of 27 starters (or hatch eggs for 55 more Pokémon, 82 in all), survive
 </div>
 
 > [!NOTE]
-> Pokémon Survivors is an unofficial, non-commercial fan game. It is **not affiliated with, endorsed, sponsored or approved by** Nintendo, The Pokémon Company, GAME FREAK or Creatures. See [Legal](#legal).
+> Pokémon Survivors is an unofficial, free-to-play fan game. It is **not affiliated with, endorsed, sponsored or approved by** Nintendo, The Pokémon Company, GAME FREAK or Creatures. See [Legal](#legal).
 
 The game is in Brazilian Portuguese 🇧🇷, English 🇺🇸, Spanish 🌎, French 🇫🇷 and Traditional Chinese 🇹🇼, picked from your browser language and switchable in Settings. Pokémon, move and item names use their official English names.
 
@@ -294,7 +294,7 @@ Bug reports and ideas are very welcome: [open an issue](https://github.com/pedro
 
 ## Legal
 
-Pokémon Survivors is an unofficial, free, non-commercial fan project made by fans for fans. It is not affiliated with, endorsed, sponsored or approved by Nintendo, The Pokémon Company, GAME FREAK inc., Creatures Inc. or Spike Chunsoft.
+Pokémon Survivors is an unofficial fan project made by fans for fans. It is free to play; the optional gems sell cosmetic items only and help pay for the servers and development. It is not affiliated with, endorsed, sponsored or approved by Nintendo, The Pokémon Company, GAME FREAK inc., Creatures Inc. or Spike Chunsoft.
 
 Pokémon and Pokémon character names are trademarks of Nintendo. Pokémon © Nintendo, Creatures Inc. and GAME FREAK inc. All other trademarks belong to their respective owners. The game has no ads, no paid content and no in-app purchases. Poké Dollars exist only inside the game.
 
@@ -302,4 +302,4 @@ The [MIT license](LICENSE) covers only the original source code of this reposito
 
 If you hold rights to any material used here and have concerns, please [open an issue](https://github.com/pedrobarretto/pokemon-survivors/issues) or contact [@pedrobarretto](https://github.com/pedrobarretto). It will be addressed promptly.
 
-<sub>🇧🇷 Pokémon Survivors é um fan game não oficial e sem fins lucrativos. Não tem nenhum vínculo com a Nintendo, The Pokémon Company, GAME FREAK ou Creatures, nem é endossado por elas. Pokémon e os nomes dos personagens são marcas registradas da Nintendo.</sub>
+<sub>🇧🇷 Pokémon Survivors é um fan game não oficial e gratuito. Não tem nenhum vínculo com a Nintendo, The Pokémon Company, GAME FREAK ou Creatures, nem é endossado por elas. Pokémon e os nomes dos personagens são marcas registradas da Nintendo.</sub>

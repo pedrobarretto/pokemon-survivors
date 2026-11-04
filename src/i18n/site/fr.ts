@@ -30,7 +30,7 @@ export const siteFr: SiteMessages = {
   },
   footer: {
     disclaimer:
-      'Pokémon Survivors est un fan game non officiel, gratuit et non commercial. Il n’est ni affilié à Nintendo, The Pokémon Company, GAME FREAK, Creatures ou Spike Chunsoft, ni approuvé, soutenu ou sponsorisé par eux. Pokémon et les noms des personnages Pokémon sont des marques déposées de Nintendo.',
+      'Pokémon Survivors est un fan game non officiel et gratuit. Il n’est ni affilié à Nintendo, The Pokémon Company, GAME FREAK, Creatures ou Spike Chunsoft, ni approuvé, soutenu ou sponsorisé par eux. Pokémon et les noms des personnages Pokémon sont des marques déposées de Nintendo.',
     legal: 'Mentions légales et confidentialité',
     credits: 'Crédits',
     source: 'Code source sur GitHub',
@@ -886,7 +886,7 @@ export const siteFr: SiteMessages = {
       contact: 'Contact et demandes de retrait',
     },
     fanGame: [
-      'Pokémon Survivors est un fan game non officiel et non commercial, fait par des fans pour des fans, par Pedro Barretto.',
+      'Pokémon Survivors est un fan game non officiel, fait par des fans pour des fans, par Pedro Barretto. Il est gratuit ; les gemmes, facultatives, ne vendent que des objets cosmétiques et aident à payer les serveurs et le développement.',
       'Il n’est ni affilié à Nintendo, The Pokémon Company, GAME FREAK inc., Creatures Inc. ou Spike Chunsoft, ni approuvé, soutenu ou sponsorisé par eux.',
       'Pokémon et les noms des personnages Pokémon sont des marques déposées de Nintendo. Pokémon © Nintendo, Creatures Inc. et GAME FREAK inc. Toutes les autres marques appartiennent à leurs propriétaires respectifs.',
     ],
@@ -897,7 +897,7 @@ export const siteFr: SiteMessages = {
     ],
     gems: [
       'Les gemmes sont un objet virtuel du jeu : elles n\'achètent que des objets cosmétiques (chapeaux, traînées, titres…), qui apparaissent dans les parties, en coop et dans l\'Arène, jamais rien qui change une partie ou le classement. Elles n\'ont aucune valeur monétaire, ne peuvent être ni échangées contre de l\'argent ni transférées à un autre compte, et restent liées à votre compte de jeu.',
-      'Vous gagnez des gemmes en jouant à l\'Arène (dans une limite par jour), en soutenant le jeu sur Patreon ou en achetant un pack. Les packs se paient sur Stripe (carte, Apple Pay et Google Pay) ou AbacatePay (Pix), et vos données de paiement vont directement chez eux : le jeu ne voit jamais votre carte.',
+      'Vous gagnez des gemmes en jouant (la première partie du jour de 5 minutes ou plus, cinq jours de jeu dans la même semaine et l\'Arène, dans une limite par jour), en soutenant le jeu sur Patreon ou en achetant un pack. Chaque compte achète jusqu\'à 250 R$ ou 50 US$ de packs par jour, et les moins de 18 ans ont besoin de la permission d\'un parent ou d\'un tuteur pour acheter. Les packs se paient sur Stripe (carte, Apple Pay et Google Pay) ou AbacatePay (Pix), et vos données de paiement vont directement chez eux : le jeu ne voit jamais votre carte.',
       'Droit de rétractation : dans les 7 jours suivant l\'achat d\'un pack, vous pouvez demander le remboursement de ses gemmes que vous n\'avez pas encore dépensées (Code de défense du consommateur brésilien, art. 49). Demandez-le par e-mail à pedro@wavyia.com.br, avec la référence de l\'achat. Les gemmes déjà dépensées et les objets cosmétiques achetés avec elles ne sont pas remboursables.',
       'Une rétrofacturation ou une contestation du paiement (chargeback) retire du compte les gemmes de ce pack, même celles déjà dépensées. Le solde peut devenir négatif et, tant qu\'il l\'est, rien ne peut être acheté avec des gemmes.',
     ],

@@ -347,7 +347,8 @@ export const arenaStore = (sql: Sql) => {
      * match back (`duplicate`). Rated when `ratingSeason` says so (only the
      * leavers when unconfirmed), in one transaction that locks the players'
      * season rows first. Lines are stored for history either way. A
-     * confirmed result credits play gems (`creditPlay`, `playSeats`).
+     * confirmed result of a public match (never a private room's) credits
+     * play gems (`creditPlay`, `playSeats`).
      */
     report: (r: ParsedReport): Promise<ArenaReportResponse> =>
       sql.begin(async (tx) => {
@@ -371,8 +372,8 @@ export const arenaStore = (sql: Sql) => {
         const lines = planMatch(r.result, r.seats, ratings, r.confirmed)
         await writeLines(tx, match.id, r.kind, season?.id ?? null, at, lines)
         if (r.kind !== 'room' && fairPlayCounts(r.kind, users.length)) await writeConduct(tx, r.room, r.run, r.kind, at, new Map(lines.map((l) => [l.userId, l.conduct])))
-        // Play gems only for a result the clients agreed on, to the seats that played it out.
-        if (r.confirmed) await creditPlay(tx, playSeats(lines), r.room, r.run, brasiliaDay(at))
+        // Play gems only for a public match's result the clients agreed on, to the seats that played it out: a private room gives none (two accounts and bots could farm it).
+        if (r.confirmed && r.kind !== 'room') await creditPlay(tx, playSeats(lines), r.room, r.run, brasiliaDay(at))
         return { match: match.id, rated, duplicate: false }
       }),
 

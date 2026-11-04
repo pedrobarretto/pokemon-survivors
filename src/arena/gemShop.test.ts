@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { currencyFor, equip, methodsFor, ownedOnly, shopCatalog, unequip } from './gemShop'
+import { catalogSections, currencyFor, equip, methodsFor, ownedOnly, shopCatalog, shownPacks, unequip } from './gemShop'
 
 describe('currencyFor', () => {
   it('shows reais in Brazilian Portuguese or a Brazilian time zone, dollars elsewhere', () => {
@@ -8,6 +8,13 @@ describe('currencyFor', () => {
     expect(currencyFor('es-419', 'America/Mexico_City')).toBe('usd')
     expect(currencyFor('fr-FR', undefined)).toBe('usd')
     expect(methodsFor('usd')).toEqual(['card'])
+    expect(methodsFor('brl')[0]).toBe('pix')
+  })
+
+  it('offers the welcome pack first, until the account has it', () => {
+    expect(shownPacks([])[0]).toBe('welcome')
+    expect(shownPacks(['welcome'])).not.toContain('welcome')
+    expect(shownPacks(['welcome'])).toContain('pouch')
   })
 })
 
@@ -25,5 +32,13 @@ describe('shopCatalog', () => {
     const slots = shopCatalog('2026-10-29')
     expect(slots.find((s) => s.slot === 'head')?.items).toContain('strawHat')
     expect(slots.every((s) => s.items.length > 0)).toBe(true)
+  })
+
+  it('never shows an unsold item the player lacks, and keeps the Arena-only slots apart', () => {
+    expect(shopCatalog('2026-11-25').flatMap((s) => s.items)).not.toContain('legendTitle')
+    expect(shopCatalog('2026-11-25', new Set(['legendTitle'])).flatMap((s) => s.items)).toContain('legendTitle')
+    const { main, arena } = catalogSections(shopCatalog('2026-11-25'))
+    expect(arena.map((s) => s.slot).sort()).toEqual(['emote', 'goal', 'ko', 'spawn'])
+    expect(main.map((s) => s.slot)).toContain('head')
   })
 })
