@@ -2,6 +2,7 @@ import { dirTo, fromAngle, TAU } from '../engine/math'
 import { ownAttack } from './players'
 import * as dm from '../engine/dmath'
 import { burst, shakeScreen } from './effects'
+import { burrowTime } from './kitRules'
 import { burrow, took } from './moveKit'
 import type { CastStats, Look, MoveDef, MoveId, MoveStats } from './moves'
 import { nearestEnemy } from './queries'
@@ -171,17 +172,19 @@ const thunderWave = (g: Game, s: CastStats) => {
 }
 
 /**
- * Takes off for `duration` s: invulnerable and lost to the foes (the kit's
+ * Takes off for `duration` s (at most half its cycle with the landing's
+ * i-frames, `burrowTime`): invulnerable and lost to the foes (the kit's
  * burrow), still steering, then `flySlam` where it lands. A player already
  * out of reach (Dig), or whose last protection from another move just fell
  * (`wardOpens`), stays put.
  */
 const fly = (g: Game, s: CastStats) => {
   const p = g.player
-  if (p.hidden || !burrow(g, 'fly', s.duration)) return
+  const aloft = burrowTime(s.duration, s.cooldown, FLY.iframes)
+  if (p.hidden || !burrow(g, 'fly', aloft)) return
   spawnAttack(g, {
     ...look('fly', 'flying', 'flyLift'), x: p.x, y: p.y, shape: { kind: 'circle', r: 1 }, motion: { kind: 'follow', ox: 0, oy: 0 },
-    damage: 0, ttl: s.duration, activeFrom: Infinity, mod: null,
+    damage: 0, ttl: aloft, activeFrom: Infinity, mod: null,
   })
   burst(g, p.x, p.y - 4, { colors: ['#ffffff', '#d8e0f0', '#a8b8d0'], count: 14, speed: 100, ttl: 0.4, gravity: -40 })
   cast(g, 'fly')
@@ -295,8 +298,9 @@ export const SHOP_TM_MOVES_2 = {
   fly: {
     name: 'Fly',
     type: 'flying',
-    // `duration` is the time aloft.
+    // `duration` is the time aloft (cut by `burrowTime`).
     base: stats({ damage: 30, cooldown: 7, duration: 0.9, knockback: 160 }),
+    minCooldown: 2,
     upgrades: [
       { damage: 6 },
       { cooldown: -0.7 },
