@@ -25977,3 +25977,14 @@ span.arena-hub-face {
     font-size: 13px;
   }
 }
+
+/* The purchase confetti (`ui/confetti.ts`): drawn small, upscaled hard-edged, over everything. */
+.confetti {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 1000;
+}
