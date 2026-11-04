@@ -563,7 +563,7 @@ export const zh: Messages = {
       banned: '此帳號無法使用商店。',
       receipts: '收據',
       receiptsEmpty: '目前還沒有任何紀錄。',
-      reasons: { pack: '寶石組合', patreon: 'Patreon', play: '競技場對局', run: '每日對局', week: '每週遊玩', buy: '購買', refund: '退款', dispute: '爭議', disputeWon: '爭議撤回', grant: '團隊贈禮' },
+      reasons: { pack: '寶石組合', patreon: 'Patreon', play: '競技場對局', run: '每日對局', week: '每週遊玩', buy: '購買', refund: '退款', dispute: '爭議', disputeWon: '爭議撤回', grant: '團隊贈禮', furniture: '木工坊家具' },
       signIn: { title: '登入以使用商店', text: '寶石和造型都會保存在你的帳號，任何裝置都能使用。', button: '登入' },
       unavailable: '這個版本的遊戲沒有開放商店。',
       onlyLooks: '寶石只能購買造型。',

@@ -564,7 +564,7 @@ export const es: Messages = {
       banned: 'Esta cuenta no puede usar la tienda.',
       receipts: 'Recibos',
       receiptsEmpty: 'Todavía no hay movimientos.',
-      reasons: { pack: 'Paquete de gemas', patreon: 'Patreon', play: 'Partida en la Arena', run: 'Partida del día', week: 'Semana de juego', buy: 'Compra', refund: 'Reembolso', dispute: 'Disputa', disputeWon: 'Disputa revertida', grant: 'Regalo del equipo' },
+      reasons: { pack: 'Paquete de gemas', patreon: 'Patreon', play: 'Partida en la Arena', run: 'Partida del día', week: 'Semana de juego', buy: 'Compra', refund: 'Reembolso', dispute: 'Disputa', disputeWon: 'Disputa revertida', grant: 'Regalo del equipo', furniture: 'Mueble de la carpintería' },
       signIn: { title: 'Inicia sesión para usar la Tienda', text: 'Tus gemas y estilos quedan en tu cuenta, en cualquier dispositivo.', button: 'Iniciar sesión' },
       unavailable: 'La Tienda no está disponible en esta versión del juego.',
       onlyLooks: 'Las gemas solo compran estilos.',

@@ -4,10 +4,11 @@ import { parseAdminSent, parseAdminUsers, type AdminSent, type AdminUser } from 
 import type { GiftContent } from './game/gifts'
 import { isRecord } from './game/parse'
 import type { Moderation, ReportGroup } from './game/reports'
+import { parseRealmDesk, type RealmDesk, type RealmModeration } from './realm/moderation'
 
 /**
  * The admin's panel, the game's side (`game/admin.ts`, `game/reports.ts`):
- * the gift desk, reports and bans. Only the API
+ * the gift desk, reports and bans (the game's and the Poké Realm's). Only the API
  * decides who is admin: this just asks, to show the desk's button, and every
  * call is checked again there.
  */
@@ -60,6 +61,19 @@ export const fetchReports = async (): Promise<{ groups: ReportGroup[]; open: num
 /** Acts on a player (`Moderation`): how many reports it resolved, `unknown` (no such player or run), or null when it didn't go. */
 export const moderate = async (m: Moderation): Promise<number | 'unknown' | null> => {
   const { status, body } = await apiCall('/admin/moderation', { method: 'POST', body: m, auth: true })
+  if (status === 404) return 'unknown'
+  return status === 200 && isRecord(body) && typeof body.resolved === 'number' ? body.resolved : null
+}
+
+/** The Poké Realm's open reports (by trainer) and the bans in force; null when the API can't be reached. */
+export const fetchRealmDesk = async (): Promise<RealmDesk | null> => {
+  const { status, body } = await apiCall('/admin/realm', { auth: true })
+  return status === 200 ? parseRealmDesk(body) : null
+}
+
+/** Acts on a trainer in the Poké Realm (`RealmModeration`): how many realm reports it resolved, `unknown`, or null when it didn't go. */
+export const moderateRealm = async (m: RealmModeration): Promise<number | 'unknown' | null> => {
+  const { status, body } = await apiCall('/admin/realm/moderation', { method: 'POST', body: m, auth: true })
   if (status === 404) return 'unknown'
   return status === 200 && isRecord(body) && typeof body.resolved === 'number' ? body.resolved : null
 }

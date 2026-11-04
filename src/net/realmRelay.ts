@@ -16,7 +16,7 @@ export type IdentityRequest = { userIds: string[] }
  */
 export type IdentityResponse = { identities: Record<string, RealmIdentity>; banned: string[] }
 
-/** `POST /realm/visit`: may `visitor` come into `owner`'s base (a handle)? The API counts the visit when it's someone else's. */
+/** `POST /realm/visit`: may `visitor` (its user id; a handle works too) come into `owner`'s base (a handle)? The API counts the visit when it's someone else's, once a Brasília day. */
 export type VisitRequest = { visitor: string; owner: string; city: CityId }
 
 /** `missing`: no such handle (or it has no base yet). */
