@@ -38,7 +38,7 @@ export const lookOf = (seat: number): Look => looks[seat] ?? NONE
 export const modeOf = (g: Pick<Game, 'versus'>): CosmeticMode => (g.versus ? 'arena' : 'run')
 
 /** Each look as its mode shows it, kept while the look is (looks change seldom; the drawing asks every frame). */
-const shown: Record<CosmeticMode, WeakMap<Look, Look>> = { run: new WeakMap(), arena: new WeakMap() }
+const shown: Record<CosmeticMode, WeakMap<Look, Look>> = { run: new WeakMap(), arena: new WeakMap(), realm: new WeakMap() }
 
 /** The part of a seat's look that shows in `g`'s mode: what everything drawn in a game reads. */
 export const shownLook = (g: Pick<Game, 'versus'>, seat: number): Look => {
