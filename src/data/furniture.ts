@@ -24,7 +24,7 @@ import type { Rarity } from './cosmetics'
  * `wallpaper` and `flooring` dress the whole room (one each, `BaseLayout`).
  * `size` is in tiles `[w, h]`; `turns` lets it rotate a quarter (w and h
  * swap). Names live in i18n (`furniture`), keyed by id; art in
- * `public/assets/furniture/<id>.png` (`render/furniture.ts`), dolls drawn from
+ * `public/assets/furniture/<id>.png` (`render/furnitureArt.ts`), dolls drawn from
  * the legend's own sprite.
  */
 

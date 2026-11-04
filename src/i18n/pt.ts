@@ -28,6 +28,8 @@ import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
 import type { Priority } from '../game/versusKit'
+import type { FurnitureId, FurnitureKind } from '../data/furniture'
+import type { BaseExterior, BaseVisibility } from '../data/secretBases'
 import type { AimAssist } from '../ui/arenaAim'
 import type { MatchKind, TierId } from '../data/arenaRanked'
 import type { SurveyAnswer } from '../data/survey'
@@ -77,6 +79,9 @@ export type ContentTexts = {
   /** Abilities: what each one does, by `ABILITIES` id. */
   abilities: Record<AbilityId, string>
 }
+
+/** The furniture the carpentry names one by one (the dolls are named from their legend). */
+type ShopFurnitureId = Exclude<FurnitureId, `doll:${string}`>
 
 const typeBoost = (type: string) => `+10% de dano em golpes do tipo ${type}.`
 
@@ -5941,6 +5946,121 @@ export const pt = {
     guest: 'Pode provar à vontade! Para comprar ou usar, é só entrar na sua conta.',
     hintKeys: 'Q E abas · ↑ ↓ rolar · ESC voltar',
     hintTouch: 'Toque numa peça para provar',
+  },
+  /** Secret bases' furniture (`data/furniture.ts`): each piece's name by id (a doll's from its legend, whose name stays English), and the kinds. */
+  furniture: {
+    names: {
+      woodChair: 'Cadeira de madeira',
+      woodTable: 'Mesa de madeira',
+      pokeBallRug: 'Tapete Poké Ball',
+      pottedPlant: 'Vaso de planta',
+      candle: 'Vela',
+      regionMap: 'Mapa da região',
+      plankFloor: 'Piso de tábuas',
+      leafWallpaper: 'Papel de folhas',
+      pikachuBed: 'Cama Pikachu',
+      snorlaxBeanbag: 'Puff Snorlax',
+      aquarium: 'Aquário',
+      starryWallpaper: 'Papel estrelado',
+      goldTrophyCase: 'Estante de troféus dourada',
+    } satisfies Record<ShopFurnitureId, string>,
+    doll: (legend: string) => `Boneco de ${legend}`,
+    kinds: { floor: 'Móvel', rug: 'Tapete', top: 'Enfeite', wall: 'Parede', wallpaper: 'Papel de parede', flooring: 'Piso' } satisfies Record<FurnitureKind, string>,
+  },
+
+  /** Secret bases: the editor (`ui/baseEditor.ts`) and the trail's board (`ui/baseBoard.ts`). */
+  bases: {
+    editor: {
+      title: 'Sua base secreta',
+      save: 'Salvar',
+      saving: 'Salvando…',
+      saved: 'Base salva! Já pode receber visitas.',
+      rotate: 'Girar',
+      remove: 'Guardar',
+      undo: 'Desfazer',
+      /** The tools' label while no piece is selected. */
+      pick: 'Toque numa peça',
+      tabs: { floor: 'Móveis', rug: 'Tapetes', top: 'Enfeites', wall: 'Parede', style: 'Estilo' },
+      empty: 'Nada aqui ainda. A carpintaria do Bibarel tem de tudo!',
+      loading: 'Abrindo sua base…',
+      loadFailed: 'Não deu para abrir sua base agora. Tente de novo.',
+      exterior: 'Lugar',
+      exteriors: { cave: 'Caverna', tree: 'Árvore', bush: 'Arbusto', sand: 'Areia' } satisfies Record<BaseExterior, string>,
+      wallpaper: 'Papel de parede',
+      flooring: 'Piso',
+      /** No wallpaper or flooring: the place's own walls and floor. */
+      none: 'Do lugar',
+      visibility: { public: 'Pública', friends: 'Amigos', private: 'Privada' } satisfies Record<BaseVisibility, string>,
+      visibilityHint: { public: 'Qualquer um pode visitar, e ela aparece no mural.', friends: 'Só seus amigos podem visitar.', private: 'Só você entra.' } satisfies Record<BaseVisibility, string>,
+      ok: 'Tudo no lugar. É só salvar!',
+      clean: 'Arraste as peças para decorar.',
+      count: (n: number, max: number) => `${n}/${max}`,
+      errors: {
+        unknown: 'Essa peça não vai aí.',
+        style: 'Esse papel de parede ou piso não é seu.',
+        tooMany: (max: number) => `Cabem no máximo ${max} peças.`,
+        owned: (name: string) => `Você não tem mais ${name}.`,
+        bounds: (name: string) => `${name} não fica aí: o que é de parede vai na parede, o resto no chão.`,
+        overlap: (name: string) => `${name} está em cima de outra peça.`,
+        support: (name: string) => `${name} precisa ficar em cima de uma mesa ou estante.`,
+        door: (name: string) => `${name} está na frente da porta.`,
+      },
+      failed: { rate: 'Calma! Espere um pouquinho para salvar de novo.', profile: 'Escolha seu @ no perfil para ter uma base.', offline: 'Não deu para salvar. Tente de novo.' },
+      leave: 'Sair sem salvar?',
+      hintKeys: 'Setas mover · R girar · DEL guardar · Z desfazer · ESC sair',
+      hintTouch: 'Toque numa peça para pôr · arraste para mover',
+    },
+    board: {
+      title: 'Mural das bases',
+      tabs: { top: 'Populares', new: 'Novas', friends: 'Amigos' },
+      visit: 'Visitar',
+      like: 'Curtir',
+      liked: 'Você curtiu',
+      report: 'Denunciar',
+      reported: 'Denúncia enviada',
+      reportConfirm: (handle: string) => `Denunciar a base de @${handle}?`,
+      empty: { top: 'Nenhuma base pública ainda. Que tal abrir a sua?', new: 'Nenhuma base nova por aqui.', friends: 'Nenhum amigo com a base aberta para você ainda.' },
+      loading: 'Lendo o mural…',
+      failed: 'Não deu para ler o mural agora.',
+      visits: (n: number) => (n === 1 ? '1 visita' : `${n} visitas`),
+      items: (n: number) => (n === 1 ? '1 peça' : `${n} peças`),
+      owner: (handle: string) => `Base de @${handle}`,
+      private: 'Essa base não está aberta para você.',
+      missing: 'Essa base não existe mais.',
+      hintKeys: 'Q E abas · ↑ ↓ rolar · ESC voltar',
+      hintTouch: 'Toque em Visitar para entrar',
+    },
+  },
+
+  /** Bibarel's carpentry (`ui/carpentry.ts`): the secret bases' furniture shop. */
+  carpentry: {
+    title: 'Carpintaria do Bibarel',
+    tabs: { floor: 'Móveis', rug: 'Tapetes', top: 'Enfeites', wall: 'Parede', style: 'Estilos', trophy: 'Troféus' },
+    /** Bibarel as the partner walks up (the plaza's talk). */
+    hello: ['Opa! Bem-vindo à carpintaria. Eu faço tudo com madeira boa e dente afiado.', 'Base secreta vazia é triste. Bora mobiliar?', 'Mesa, cadeira, tapete... é só escolher!'],
+    /** Bibarel beside the open sheet: signed in, and for a guest. */
+    browse: 'Tudo feito à mão, com a melhor madeira do rio!',
+    guest: 'Pode olhar à vontade! Para comprar, é só entrar na sua conta.',
+    thanks: (name: string) => `Prontinho! ${name} já está no baú da sua base.`,
+    confirm: (name: string, price: string) => `Comprar ${name} por ${price}?`,
+    gems: 'gemas',
+    owned: (n: number) => `Você tem ${n}`,
+    /** Bibarel's line for a refused purchase, by the API's word. */
+    errors: {
+      funds: 'Faltam ₽ para essa peça. Volte quando tiver juntado mais!',
+      gems: 'Faltam gemas para essa peça.',
+      guest: 'Para comprar, entre na sua conta.',
+      nosave: 'Sincronize seu progresso antes de comprar.',
+      stale: 'Seu progresso mudou em outro aparelho. Tente de novo.',
+      rate: 'Calma! Uma compra de cada vez.',
+      missing: 'Essa peça não está à venda hoje.',
+      offline: 'Não deu para comprar agora. Tente de novo.',
+    },
+    trophies: 'Bonecos dos lendários: cada um chega quando você captura o lendário. Não estão à venda!',
+    captured: 'Na sua coleção',
+    locked: (legend: string) => `Capture ${legend}`,
+    hintKeys: 'Q E prateleiras · ↑ ↓ rolar · ESC voltar',
+    hintTouch: 'Toque no preço para comprar',
   },
 
   /** Explainer toast the first time each enemy trait shows up in a run. */

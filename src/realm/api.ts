@@ -2,9 +2,11 @@ import { spendFromSave } from '../account'
 import { apiCall } from '../api'
 import { CITY_IDS, isCityId, type CityId } from '../net/realm'
 import type { BaseCard, BaseList, BaseSave, BaseView, FurnitureBought, FurnitureBuy, RealmCities, RealmFriends, RealmMe, RealmReport } from '../net/realmApi'
-import { BASE_EXTERIORS, EMPTY_BASE, isBaseExterior, isBaseVisibility, parseLayout, type LayoutError } from '../data/secretBases'
+import { BASE_EXTERIORS, isBaseExterior, isBaseVisibility, parseLayout, type BaseLayout, type LayoutError } from '../data/secretBases'
 import { FURNITURE, FURNITURE_IDS, isFurnitureId, type FurnitureCounts, type FurnitureId } from '../data/furniture'
+import { LEGEND_IDS } from '../data/legends'
 import { isRecord } from '../game/parse'
+import { DEMO_BASES } from './demoBases'
 
 /**
  * The Poké Realm's calls to the API (`net/realmApi.ts` lists the routes). The
@@ -24,23 +26,26 @@ type Fake = { me: RealmMe; bases: Map<string, BaseView> }
 
 let fake: Fake | null = null
 
-const fakeFurniture = (): FurnitureCounts => Object.fromEntries(FURNITURE_IDS.filter((_, i) => i % 2 === 0).map((id) => [id, 2]))
+/** Two of every piece on sale, and the dolls of half the legends (the ones `DEMO_BASES.mine` sets out among them). */
+const fakeFurniture = (): FurnitureCounts =>
+  Object.fromEntries(FURNITURE_IDS.flatMap((id) => (!id.startsWith('doll:') ? [[id, 2]] : LEGEND_IDS.findIndex((l) => `doll:${l}` === id) % 2 === 0 ? [[id, 1]] : [])))
 
-const fakeBase = (handle: string): BaseView => ({
+const fakeBase = (handle: string, layout: BaseLayout = DEMO_BASES.mine, partner = 'charmander', visits = 12, likes = 3): BaseView => ({
   handle,
-  partner: 'charmander',
+  partner,
   shiny: false,
-  layout: EMPTY_BASE,
+  layout,
   visibility: 'public',
-  visits: 12,
-  likes: 3,
+  visits,
+  likes,
   liked: false,
   updatedAt: Date.now(),
 })
 
 /** Dev: every call answers made-up data (on), or the API again (off). */
 export const fakeRealm = (on: boolean, handle = 'ash') => {
-  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map([['misty', fakeBase('misty')]]) } : null
+  const bases = [fakeBase('misty', DEMO_BASES.misty, 'squirtle', 87, 24), fakeBase('brock', DEMO_BASES.brock, 'geodude', 41, 9)]
+  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])) } : null
 }
 
 export const realmFaked = () => fake !== null
