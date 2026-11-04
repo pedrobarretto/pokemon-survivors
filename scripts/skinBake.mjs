@@ -26,12 +26,12 @@ const animMeta = (manifest, { dex, form }, anim) => {
 }
 
 /** A variant's original sheets as the propagation's grids. */
-export const loadSheets = async (S, manifest, key, colors) => {
+export const loadSheets = async (S, manifest, key, colors, shiny = false) => {
   const v = parseVariant(key)
   const sheets = {}
   for (const anim of S.SKIN_ANIMS) {
     const m = animMeta(manifest, v, anim)
-    const png = await readPng(join(SPRITES, String(v.dex), v.form ?? '', `${m.file}.png`))
+    const png = await readPng(join(SPRITES, String(v.dex), v.form ?? '', shiny ? 'shiny' : '', `${m.file}.png`))
     sheets[anim] = S.sheetGrids(png.rgba, png.width, m.fw, m.fh, m.frames, colors)
   }
   return sheets
@@ -47,11 +47,17 @@ export const bakeSkin = async (S, source) => {
     const baked = S.bakeVariant(sheets, variant, colors)
     const v = parseVariant(key)
     const dir = join(OUT, source.id, String(v.dex), v.form ?? '')
-    await mkdir(dir, { recursive: true })
-    for (const anim of S.SKIN_ANIMS) {
-      const img = S.bakedRgba(baked[anim], sheets[anim].fw, sheets[anim].fh, colors)
-      await writeFile(join(dir, `${anim}.png`), writePng(img.w, img.h, img.rgba))
+    const write = async (b, to) => {
+      await mkdir(to, { recursive: true })
+      for (const anim of S.SKIN_ANIMS) {
+        const img = S.bakedRgba(b[anim], sheets[anim].fw, sheets[anim].fh, colors)
+        await writeFile(join(to, `${anim}.png`), writePng(img.w, img.h, img.rgba))
+      }
     }
+    await write(baked, dir)
+    // The shiny wears the skin too, from its own sheets (same drawing, other colors).
+    const shiny = await loadSheets(S, manifest, key, colors, true).catch(() => null)
+    if (shiny) await write(S.shinyBaked(sheets, shiny, baked), join(dir, 'shiny'))
     report[key] = S.doubtCount(baked)
   }
   return report

@@ -12,6 +12,7 @@ import {
   paletteFor,
   sameFrame,
   sheetGrids,
+  shinyFrame,
   textFromGrid,
   type Baked,
   type Colors,
@@ -51,6 +52,9 @@ type Loaded = {
   baked: Baked
   art: Record<SkinAnim, HTMLCanvasElement[][]>
   original: Record<SkinAnim, HTMLCanvasElement[][]>
+  /** The shiny's own sheets (null when the species has none), for the shiny view. */
+  shiny: Record<SkinAnim, SheetGrids> | null
+  shinyOriginal: Record<SkinAnim, HTMLCanvasElement[][]> | null
 }
 
 const DIRS = ['↓', '↘', '→', '↗', '↑', '↖', '←', '↙'] as const
@@ -70,7 +74,7 @@ const state = {
   sel: { anim: 'Walk', row: 0, frame: 0 } as FrameRef,
   tool: 'pencil' as Tool,
   letter: '',
-  view: { original: false, doubts: true, changes: false, compare: false },
+  view: { original: false, doubts: true, changes: false, compare: false, shiny: false },
   undo: [] as string[],
   redo: [] as string[],
   dirty: false,
@@ -167,9 +171,29 @@ const loadVariant = async (key: string): Promise<Omit<Loaded, 'baked' | 'art'>> 
     sheets[anim] = sheetGrids(rgbaOf(img), img.width, meta.frameWidth, meta.frameHeight, meta.durations.length, colors)
     durations[anim] = meta.durations
   }
-  const original = {} as Record<SkinAnim, HTMLCanvasElement[][]>
-  for (const anim of SKIN_ANIMS) original[anim] = sheets[anim].frames.map((row) => row.map((g) => gridCanvas(g, colors)))
-  return { key, sheets, durations, colors, original }
+  const canvases = (s: Record<SkinAnim, SheetGrids>) => {
+    const out = {} as Record<SkinAnim, HTMLCanvasElement[][]>
+    for (const anim of SKIN_ANIMS) out[anim] = s[anim].frames.map((row) => row.map((g) => gridCanvas(g, colors)))
+    return out
+  }
+  // The shiny sheets are the same drawing recolored: the skin dresses them by itself (`shinyFrame`).
+  let shiny: Record<SkinAnim, SheetGrids> | null = {} as Record<SkinAnim, SheetGrids>
+  try {
+    for (const anim of SKIN_ANIMS) {
+      const { file, meta } = animMeta(key, anim)
+      const img = await loadImage(`/assets/pokemon/${dex}${form ? `/${form}` : ''}/shiny/${file}.png`)
+      shiny[anim] = sheetGrids(rgbaOf(img), img.width, meta.frameWidth, meta.frameHeight, meta.durations.length, colors)
+    }
+  } catch {
+    shiny = null
+  }
+  return { key, sheets, durations, colors, original: canvases(sheets), shiny, shinyOriginal: shiny && canvases(shiny) }
+}
+
+/** A baked frame as the view shows it: on the shiny when that view is on. */
+const shownGrid = (f: FrameRef, g: Grid) => {
+  const l = state.loaded!
+  return state.view.shiny && l.shiny ? shinyFrame(l.sheets[f.anim].frames[f.row]![f.frame]!, l.shiny[f.anim].frames[f.row]![f.frame]!, g) : g
 }
 
 /** Bakes the open variant again: every frame, or only those `only` names (what an edit could have changed). */
@@ -179,9 +203,19 @@ const rebake = (only?: (f: FrameRef) => boolean) => {
   const t = performance.now()
   l.baked = bakeVariant(l.sheets, vsrc(), l.colors, only, only ? l.baked : undefined)
   for (const anim of SKIN_ANIMS) {
-    l.art[anim] = l.baked[anim].map((row, r) => row.map((f, c) => (!only || only({ anim, row: r, frame: c }) || !l.art[anim]?.[r]?.[c] ? gridCanvas(f.grid, l.colors) : l.art[anim][r]![c]!)))
+    l.art[anim] = l.baked[anim].map((row, r) => row.map((f, c) => (!only || only({ anim, row: r, frame: c }) || !l.art[anim]?.[r]?.[c] ? gridCanvas(shownGrid({ anim, row: r, frame: c }, f.grid), l.colors) : l.art[anim][r]![c]!)))
   }
   state.message = `bake ${Math.round(performance.now() - t)} ms`
+}
+
+/** The sprite's own frames as the view shows them (the shiny's in the shiny view). */
+const originals = (l: Loaded) => (state.view.shiny && l.shinyOriginal) || l.original
+
+/** Turns the shiny view on or off (the art is drawn again on the other sheets). */
+const toggleShiny = () => {
+  state.view.shiny = !state.view.shiny
+  rebake()
+  render()
 }
 
 /** The frames a keyframe in `row` can reach: its direction and the mirror across. */
@@ -387,7 +421,7 @@ const drawEditor = () => {
   if (!editor || !l) return
   const stage = editor.parentElement!
   const f = state.sel
-  const shown = state.view.original ? l.sheets[f.anim].frames[f.row]![f.frame]! : current().grid
+  const shown = state.view.original ? (state.view.shiny && l.shiny ? l.shiny : l.sheets)[f.anim].frames[f.row]![f.frame]! : shownGrid(f, current().grid)
   const z = Math.max(4, Math.min(28, Math.floor(Math.min((stage.clientWidth - 20) / shown.w, (stage.clientHeight - 20) / shown.h))))
   editor.width = shown.w * z
   editor.height = shown.h * z
@@ -409,7 +443,7 @@ const drawEditor = () => {
     for (let i = 0; i < shown.px.length; i++) {
       const x = (i % shown.w) * z
       const y = Math.floor(i / shown.w) * z
-      if (state.view.changes && shown.px[i] !== original.px[i]) {
+      if (state.view.changes && current().grid.px[i] !== original.px[i]) {
         g.fillStyle = '#5ec4ffcc'
         g.fillRect(x + z / 2 - 1, y + z / 2 - 1, 3, 3)
       }
@@ -495,7 +529,7 @@ const describe = () => {
 
 const thumb = (f: FrameRef) => {
   const l = state.loaded!
-  const art = (state.view.original ? l.original : l.art)[f.anim][f.row]![f.frame]!
+  const art = (state.view.original ? originals(l) : l.art)[f.anim][f.row]![f.frame]!
   const s = sheet(f.anim)
   const scale = s.fw > 40 ? 1 : 2
   const c = h('canvas', { width: s.fw * scale, height: s.fh * scale })
@@ -626,6 +660,10 @@ const render = () => {
       const input = h('input', { type: 'checkbox', checked: state.view[k], onchange: () => ((state.view[k] = input.checked), render()) })
       return h('label', { class: 'check' }, input, label)
     }),
+    (() => {
+      const input = h('input', { type: 'checkbox', checked: state.view.shiny, disabled: !state.loaded?.shiny, onchange: toggleShiny })
+      return h('label', { class: 'check', title: 'A skin no shiny: o que ela não desenhou toma a cor shiny' }, input, 'Shiny (S)')
+    })(),
     h('h2', {}, 'Atalhos'),
     h(
       'div',
@@ -707,7 +745,7 @@ const tick = () => {
     let frame = 0
     while (frame < d.length - 1 && t >= d[frame]!) t -= d[frame++]!
     for (const p of previews) {
-      const art = (p.original ? l.original : l.art)[anim][p.row]?.[frame]
+      const art = (p.original ? originals(l) : l.art)[anim][p.row]?.[frame]
       if (!art) continue
       const g = p.c.getContext('2d')!
       g.clearRect(0, 0, p.c.width, p.c.height)
@@ -744,6 +782,7 @@ addEventListener('keydown', (e) => {
   if (k === 'o') return ((state.view.original = !state.view.original), render())
   if (k === 'd') return ((state.view.doubts = !state.view.doubts), render())
   if (k === 'c') return ((state.view.changes = !state.view.changes), render())
+  if (k === 's' && state.loaded.shiny) return toggleShiny()
 })
 addEventListener('resize', () => drawEditor())
 addEventListener('beforeunload', (e) => {

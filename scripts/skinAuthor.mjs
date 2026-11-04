@@ -9,7 +9,7 @@
 //          ["map", line0, line1, col0, col1, {"from": "to"}] swaps letters inside a box (recolors keeping the shading)
 //  recolor <skin> <variant> <map.json>   sets the variant's recolor ({"from": "to"} letters, swapped on every frame after the keyframes; a theme or season of colors only the recolored part uses needs no keyframes); {} removes it
 //  keys  <skin> <variant> <out.png> [scale] [cols]   every keyframe, original beside drawn
-//  sheet <skin> <variant> <out.png> [anims] [scale]  the whole bake beside the original (keyframes on a yellow ground)
+//  sheet <skin> <variant> <out.png> [anims] [scale] [shiny]  the whole bake beside the original (keyframes on a yellow ground); `shiny` shows both on the shiny sheets, which the skin dresses by itself
 import { runnerImport } from 'vite'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -78,11 +78,14 @@ if (cmd === 'new') {
   v.keys.push({ ...ref, grid: g })
   saveSkin()
 } else if (cmd === 'sheet') {
-  const [out, animsArg = 'Walk,Idle,Hurt', scArg = '5'] = rest
-  const { c, sheets } = await load()
+  const [out, animsArg = 'Walk,Idle,Hurt', scArg = '5', shinyArg] = rest
+  const { c, sheets: plain } = await load()
   const v = skin.variants[variant]
-  S.paletteFor(sheets, c, v.palette)
-  const b = S.bakeVariant(sheets, v, c)
+  S.paletteFor(plain, c, v.palette)
+  const baked = S.bakeVariant(plain, v, c)
+  const shiny = shinyArg === 'shiny' ? await loadSheets(S, man, variant, c, true) : null
+  const sheets = shiny ?? plain
+  const b = shiny ? S.shinyBaked(plain, shiny, baked) : baked
   const anims = animsArg.split(',')
   const sc = +scArg, gap = 3
   const blocks = anims.map((a) => ({ a, s: sheets[a] }))

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { bakeVariant, newColors, sheetGrids, textFromGrid, type SheetGrids } from './source'
+import { emptyGrid } from './propagate'
+import { bakeVariant, newColors, sheetGrids, shinyFrame, textFromGrid, type SheetGrids } from './source'
 
 const sheet = (c: ReturnType<typeof newColors>): SheetGrids => {
   // One 3×1 frame per row: green, green, black.
@@ -18,5 +19,13 @@ describe('bakeVariant recolor', () => {
     const baked = bakeVariant({ Walk: s, Idle: s, Hurt: s }, { palette, recolor: { g: 'p' }, keys: [], fixes: [{ anim: 'Idle', row: 2, frame: 0, grid: ['-w-'] }] }, c)
     expect(textFromGrid(baked.Walk[5]![0]!.grid, palette, c)).toEqual(['ppk'])
     expect(textFromGrid(baked.Idle[2]![0]!.grid, palette, c)).toEqual(['pwk'])
+  })
+})
+
+describe('shinyFrame', () => {
+  it('gives the shiny color where the skin kept the sprite, and keeps what the skin drew', () => {
+    const grid = (...px: number[]) => ({ ...emptyGrid(px.length, 1), px: Int32Array.from(px) })
+    // Sprite 1 1 0, shiny 2 2 0, skin: first pixel kept, second drawn as 5, a pixel drawn outside.
+    expect([...shinyFrame(grid(1, 1, 0), grid(2, 2, 0), grid(1, 5, 7)).px]).toEqual([2, 5, 7])
   })
 })

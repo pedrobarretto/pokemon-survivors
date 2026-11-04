@@ -215,6 +215,23 @@ export const bakeVariant = (sheets: Record<SkinAnim, SheetGrids>, src: VariantSo
   return out
 }
 
+/**
+ * A baked frame on the shiny: what the skin left as the sprite was takes the
+ * shiny's pixel, what it drew stays. The shiny sheets are the same drawing
+ * recolored, so a suit or a season's leaves dress the shiny as they dress the
+ * plain one, with no source of their own.
+ */
+export const shinyFrame = (T: Grid, shiny: Grid, out: Grid): Grid => ({ w: out.w, h: out.h, px: out.px.map((v, i) => (v === T.px[i] ? shiny.px[i]! : v)) })
+
+/** A whole bake on the shiny sheets (`shinyFrame` frame by frame). */
+export const shinyBaked = (sheets: Record<SkinAnim, SheetGrids>, shiny: Record<SkinAnim, SheetGrids>, b: Baked): Baked => {
+  const out = {} as Baked
+  for (const anim of SKIN_ANIMS) {
+    out[anim] = b[anim].map((row, r) => row.map((f, i) => ({ ...f, grid: shinyFrame(sheets[anim].frames[r]![i]!, shiny[anim].frames[r]![i]!, f.grid) })))
+  }
+  return out
+}
+
 /** How many propagated frames have several pixels the match wasn't sure of (worth a look), for the save's report. */
 export const doubtCount = (b: Baked, atLeast = 4) => {
   let n = 0
