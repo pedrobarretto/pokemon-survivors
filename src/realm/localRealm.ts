@@ -334,13 +334,14 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     later(() => {
       if (disposed) return on.close(REALM_CLOSE.refused)
       ws.open = true
-      on.open()
       if (city !== opts.city) {
+        on.open()
         later(() => ws.open && on.message(JSON.stringify({ t: 'refused', why: 'city' } satisfies RealmServerMessage)))
         return shut(ws, REALM_CLOSE.refused)
       }
       sockets.set(ws.id, ws)
       connect(state, ws.id, opts.city, now())
+      on.open()
     })
     return {
       send: (text) => {

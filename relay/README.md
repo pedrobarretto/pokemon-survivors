@@ -282,6 +282,18 @@ Cloudflare has no Durable Objects in South America, so a Brazilian room runs in 
   room's region, with no edge; the rest of the telemetry (`run.summary`, `conn.*`, kept runs)
   is Cloudflare's only for now.
 
+- **The Poké Realm (`node/src/realms.ts`):** the online town (`src/net/realm.ts`) runs only on the
+  VPS relays, never on Cloudflare (a city full of walkers would keep a Durable Object billed all
+  day). `GET /realm/<city>/ws` takes a city this relay is home to (`REALM_CITIES`; any other is a
+  404). It's one pure machine (`src/realm.ts`, no storage: a restart closes the sockets with 1012
+  and clients say hello again) for every city, beating at `REALM.moveHz`: each hello's Clerk token
+  is checked here, then the API says who the account is (`POST /realm/identity`, batched while an
+  ask is out), whether a base may be entered (`POST /realm/visit`) and hears who walks each city
+  every 15 s (`POST /realm/presence`), all signed with `ARENA_REPORT_SECRET` (`src/realmApi.ts`).
+  With `ALLOW_GUESTS`, a `guest:<id>` token walks as that handle with no API asked. `/health` adds
+  `realm` (sockets, trainers per city) and `relay.stats` the same. The game's in-page twin with
+  bots is `src/realm/localRealm.ts`.
+
 ```bash
 cd node && npm ci
 npm test && npm run typecheck   # the Node shell (restart, lock and rate-limit tests)

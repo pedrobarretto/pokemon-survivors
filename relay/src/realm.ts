@@ -54,9 +54,14 @@ export const REALM_ABUSE = { drops: 200, window: 10_000 } as const
  * walk a second, kept up to `bankS` seconds' worth (so jittery packets that
  * arrive bunched still pass), and each step spends its length; a step past
  * what's in the bank, or out of the room's bounds, is refused (`snap`).
+ * A trainer lands in a room with `startS` seconds' worth (its first report
+ * may come in quicker than it walked, behind the welcome's latency).
  * `epsilon`: px forgiven per step (positions are whole px).
  */
-export const MOVE = { bankS: 1, epsilon: 2 } as const
+export const MOVE = { bankS: 1, startS: 0.5, epsilon: 2 } as const
+
+/** The walk banked as a trainer lands in a room. */
+const startBank = () => REALM.speed * REALM.speedSlack * MOVE.startS
 
 /** How far from a door (px around its rect) a trainer may take it, and from its spawn it may land. */
 export const DOOR_REACH = 40
@@ -361,7 +366,7 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
     y: at.y,
     facing: 0,
     moving: false,
-    bank: 0,
+    bank: startBank(),
     bankAt: now,
     dirty: false,
     heard: now,
@@ -412,7 +417,7 @@ export const disconnect = (state: RealmState, connId: ConnId): RealmEffect[] => 
 
 /** Takes a token for a message; past the bucket it's dropped, and a flood closes the socket. */
 const admit = (conn: Conn, ok: boolean, now: number): { ok: boolean; effects: RealmEffect[] } => {
-  conn.tokens = Math.min(REALM_BUCKET.capacity, conn.tokens + ((now - conn.refilledAt) * REALM_BUCKET.perSecond) / 1000)
+  conn.tokens = Math.min(REALM_BUCKET.capacity, conn.tokens + (Math.max(0, now - conn.refilledAt) * REALM_BUCKET.perSecond) / 1000)
   conn.refilledAt = now
   if (ok && conn.tokens >= 1) {
     conn.tokens -= 1
@@ -476,7 +481,7 @@ const burst = (times: number[], now: number) => {
 
 const earn = (t: Trainer, now: number) => {
   const rate = REALM.speed * REALM.speedSlack
-  t.bank = Math.min(rate * MOVE.bankS, t.bank + ((now - t.bankAt) * rate) / 1000)
+  t.bank = Math.min(rate * MOVE.bankS, t.bank + (Math.max(0, now - t.bankAt) * rate) / 1000)
   t.bankAt = now
 }
 
@@ -532,7 +537,7 @@ const enter = (state: RealmState, t: Trainer, room: RoomKey, x: number, y: numbe
   t.y = y
   t.moving = false
   t.dirty = false
-  t.bank = 0
+  t.bank = startBank()
   out.push(send(t.conn, { t: 'room', room, avatars: inRoom(city, room).map(avatarOf) }), ...toRoom(city, room, { t: 'join', avatar: avatarOf(t) }, t.id))
   out.push(event('realm.room', { city: city.id, room: room.startsWith(BASE_PREFIX) ? 'base' : room }))
   return out
