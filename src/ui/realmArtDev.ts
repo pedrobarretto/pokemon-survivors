@@ -21,7 +21,7 @@ export type RealmArtView = TownRoomId | 'bases' | 'furniture'
 /** A few walkers for scale, by dex. */
 const WALKERS = [25, 4, 7, 1, 133, 39] as const
 
-const isShop = (id: FurnitureId): id is ShopFurnitureId => FURNITURE[id].source !== 'trophy'
+const isShop = (id: FurnitureId): id is ShopFurnitureId => !id.startsWith('doll:')
 
 /** Opens the viewer; `opts.cam` and `opts.scale` pin the view (for screenshots), `opts.geometry` overlays what blocks walking. */
 export const openRealmArt = (view: RealmArtView = 'plaza', opts: { cam?: { x: number; y: number }; scale?: number; geometry?: boolean; exterior?: BaseExterior } = {}) => {

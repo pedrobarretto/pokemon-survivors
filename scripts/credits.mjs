@@ -81,6 +81,13 @@ The emotion portraits in the dialogue box (Kecleon, Meowth, Duskull, Delibird, L
 are SpriteCollab portraits,
 credited in their rows above.
 
+## Furniture art
+
+The secret bases' furniture (\`public/assets/furniture/\`) was generated for this project with
+[PixelLab](https://www.pixellab.ai). Every Pokémon in it (the starters tucked into their beds, the gym statue's Rhydon,
+the gallery's paintings and cover tributes) is its SpriteCollab sprite composited into the piece, credited in its row
+above; Giratina's Origin Forme on the Platinum tribute is CHUNSOFT's original *Pokémon Mystery Dungeon* sprite.
+
 ## Cries
 
 Cries come from [PokéAPI/cries](https://github.com/PokeAPI/cries).
