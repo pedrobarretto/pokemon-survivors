@@ -227,7 +227,11 @@ export type RealmServerMessage =
   | { t: 'party'; party: PartyView | null }
   | { t: 'partyGo'; mode: PartyMode; code: string }
   | { t: 'pong'; at: number }
-  /** Sent away (or never seated): why. The socket closes after it. */
+  /**
+   * Sent away (or never seated): why. The socket closes after it, but for a
+   * base `go` the relay turned down (`private`, `room`: no such base, `busy`:
+   * the API didn't answer), which leaves the trainer where it stands.
+   */
   | { t: 'refused'; why: RealmRefusal }
 
 /** Limits on what a client may send. */
