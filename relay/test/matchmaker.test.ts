@@ -14,12 +14,14 @@ const many = (count: number, over: Partial<Ticket> = {}) => Array.from({ length:
 
 describe('matchmaking', () => {
   it('makes a match as soon as eight humans are close in MMR, four a side', () => {
-    const { matches, waiting } = formMatches([...many(SIZE), ticket({ mmr: 3000 })], T0 + 1000)
+    const { matches, waiting } = formMatches([...many(SIZE - 1), ticket({ look: { head: 'strawHat' } }), ticket({ mmr: 3000 })], T0 + 1000)
     expect(matches).toHaveLength(1)
     const [m] = matches
     expect(m?.players).toHaveLength(SIZE)
     expect(m?.players.filter((p) => p.team === 0)).toHaveLength(SIZE / 2)
     expect(m).toMatchObject({ kind: 'casual', format: 'standard', ranked: false, build: 'b1', hint: 'enam' })
+    // The look the API vouched for goes with its player into the room's lock.
+    expect(m?.players.filter((p) => p.look)).toEqual([expect.objectContaining({ look: { head: 'strawHat' } })])
     expect(waiting).toEqual([expect.objectContaining({ found: 1 })])
   })
 
@@ -144,6 +146,9 @@ describe('matchmaking', () => {
     expect(parseQueueMessage(JSON.stringify({ ...queue, format: 'quick' }))).toBeNull()
     expect(parseQueueMessage(JSON.stringify({ ...queue, kind: 'casual', format: 'blitz' }))).toBeNull()
     expect(parseTickets({ season: 1, ratings: { user_1: { mmr: 1200, rp: 30, games: 2, fairPlay: 55 }, user_2: { mmr: 'x' } } })).toEqual({ user_1: { mmr: 1200, rp: 30, games: 2, fairPlay: 55 } })
+    // The account's look rides along when it has a look's shape; an API before the gem shop sends none.
+    expect(parseTickets({ ratings: { user_1: { mmr: 1200, look: { head: 'strawHat' } }, user_2: { mmr: 1200, look: { head: 7 } } } })).toMatchObject({ user_1: { look: { head: 'strawHat' } }, user_2: { mmr: 1200 } })
+    expect(parseTickets({ ratings: { user_2: { mmr: 1200, look: { head: 7 } } } }).user_2).not.toHaveProperty('look')
     // An API from before Fair Play: a full score.
     expect(parseTickets({ ratings: { user_1: { mmr: 1200 } } }).user_1?.fairPlay).toBe(ARENA_RANKED.fairPlay.max)
   })

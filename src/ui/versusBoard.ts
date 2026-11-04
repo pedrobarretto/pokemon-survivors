@@ -7,11 +7,13 @@ import { portraitUrl } from '../render/sprites'
 import { teamColor } from './arena'
 import { h } from './dom'
 import { goalOrder, versusName } from './versusHud'
+import { titleChip } from './arenaTitle'
+import { lookOf } from '../render/looks'
 
 /**
  * The Arena's scoreboard: one table per team, each Pokémon with its KOs,
  * assists, falls, points, damage dealt to and taken from rivals, healing and
- * interrupts (`VersusSeat`, `BOARD_STATS`). The end screen shows it with the
+ * interrupts (`VersusSeat`, `BOARD_STATS`), and its player's Arena title. The end screen shows it with the
  * match's medals; during the match it opens over the field while its key is
  * held, or from the score bar (`createLiveBoard`).
  */
@@ -71,6 +73,7 @@ export const boardTable = (g: Game, me: Player, team: Team, opts: BoardOptions =
           'span',
           { class: 'vs-end-name' },
           h('span', {}, boardName(g, me, p)),
+          titleChip(lookOf(p.slot).title),
           ...(opts.live ? [h('small', { class: 'vs-board-level' }, down ? m.down(Math.ceil(p.versus?.respawn ?? 0)) : t().level(p.level))] : []),
           ...(opts.chips?.(p) ?? []),
         ),

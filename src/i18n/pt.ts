@@ -20,6 +20,11 @@ import type { FriendMilestone } from '../game/referral'
 import type { Difficulty } from '../game/difficulty'
 import type { Role } from '../data/versus'
 import type { MapId } from '../data/versusMaps'
+import type { WearableId } from '../data/wearables'
+import type { ArenaEffectId } from '../data/arenaEffects'
+import type { CosmeticSlot, Rarity } from '../data/cosmetics'
+import type { GemPackId } from '../data/gems'
+import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
 import type { Priority } from '../game/versusKit'
@@ -522,7 +527,7 @@ export const pt = {
     /** The Arena's hub (`ui/arenaHub.ts`): profile, season, board, history and rules. */
     hub: {
       title: 'Arena ranqueada',
-      tabs: { profile: 'Perfil', season: 'Temporada', ranking: 'Ranking', history: 'Histórico', rules: 'Regras' },
+      tabs: { profile: 'Perfil', shop: 'Loja', locker: 'Visual', season: 'Temporada', ranking: 'Ranking', history: 'Histórico', rules: 'Regras' },
       loading: 'Carregando…',
       offline: 'O ranking está fora de alcance agora. Tente de novo em instantes.',
       rp: (n: number) => `${n} RP`,
@@ -672,6 +677,112 @@ export const pt = {
   },
 
   /** Co-op: the connection pip, the overlays and notices in a run, the lobby's entry, the hub (create or join) and the room. */
+  /** The Arena's worn cosmetics (`data/wearables.ts`), by id. */
+  wearables: {
+    strawHat: 'Chapéu de palha',
+    cap: 'Boné',
+    partyHat: 'Chapéu de festa',
+    hairBow: 'Laço',
+    topHat: 'Cartola',
+    chefHat: 'Chapéu de chef',
+    cowboyHat: 'Chapéu de caubói',
+    gradCap: 'Capelo',
+    santaHat: 'Gorro de Papai Noel',
+    witchHat: 'Chapéu de bruxa',
+    pirateHat: 'Chapéu pirata',
+    vikingHelmet: 'Elmo viking',
+    bunnyEars: 'Orelhas de coelho',
+    propellerCap: 'Boné de hélice',
+    crown: 'Coroa',
+    halo: 'Auréola',
+    balloon: 'Balão',
+  } satisfies Record<WearableId, string>,
+  /** The cosmetics that aren't worn (`data/arenaEffects.ts`), by id. */
+  arenaEffects: { sparkTrail: 'Rastro de faíscas', petalTrail: 'Rastro de pétalas', bubbleTrail: 'Rastro de bolhas', emberTrail: 'Rastro de brasas', snowTrail: 'Rastro de neve', heartTrail: 'Rastro de corações', starTrail: 'Poeira estelar', rainbowTrail: 'Rastro arco-íris', spawnBeam: 'Feixe de luz', spawnLeaves: 'Redemoinho de folhas', spawnSplash: 'Chegada molhada', spawnThunder: 'Chegada trovejante', spawnPokeball: 'Saída da Poké Ball', koStars: 'Estrelinhas', koPuff: 'Nuvem de poeira', koGhost: 'Fantasminha', koLightning: 'Raio final', koSupernova: 'Supernova', goalConfetti: 'Confete', goalCoins: 'Chuva de moedas', goalBalloons: 'Balões', goalHearts: 'Explosão de corações', goalRainbow: 'Arco-íris triunfal', cheerEmote: 'Comemorar', spinEmote: 'Giro', napEmote: 'Soneca', powerEmote: 'Concentrar', danceEmote: 'Dança', victoryEmote: 'Pose da vitória', rookieTitle: 'Estreante', teamTitle: 'Espírito de equipe', goalTitle: 'Faro de gol', wallTitle: 'Muralha', jungleTitle: 'Terror da selva', unstoppableTitle: 'Imparável', legendTitle: 'Lenda da Arena', plateSteel: 'Placa de aço', plateLeaf: 'Placa folha', plateWave: 'Placa onda', plateFlame: 'Placa chama', plateGold: 'Placa dourada', plateMaster: 'Placa Master Ball' } satisfies Record<ArenaEffectId, string>,
+  /** The Arena's cosmetic effects' own copy (`render/arenaFx.ts`, `ui/versusTalk.ts`): the emote button and its wait. */
+  arenaFx: { emote: 'Emote', emoteWait: 'Espere para o próximo emote.' },
+  /** The gem shop (`ui/gemShop.ts`): the gem chip, the Loja and Visual tabs, a pack's checkout and its return. Gems buy looks for every mode. */
+  gems: {
+    /** The gem chip's label, for screen readers and its tooltip. */
+    chip: (n: string) => `${n} gemas`,
+    gems: (n: string) => `${n} gemas`,
+    slots: { head: 'Cabeça', back: 'Costas', trail: 'Rastro', spawn: 'Entrada', ko: 'Nocaute', goal: 'Gol', emote: 'Emote', title: 'Título', plate: 'Placa' } satisfies Record<CosmeticSlot, string>,
+    rarities: { common: 'Comum', rare: 'Raro', epic: 'Épico', legendary: 'Lendário' } satisfies Record<Rarity, string>,
+    /** The packs' names (`GEM_PACKS` in `data/gems.ts`). */
+    packs: { welcome: 'Boas-vindas', pouch: 'Punhado', bag: 'Bolsa', chest: 'Baú', hoard: 'Tesouro', vault: 'Cofre' } satisfies Record<GemPackId, string>,
+    shop: {
+      pitch: 'Visuais para o seu Pokémon nas partidas, no co-op e na Arena: todo mundo vê, e nenhum dá poder.',
+      balance: 'Seu saldo',
+      currency: 'Moeda',
+      packs: 'Pacotes de gemas',
+      bonus: (n: string) => `+${n} bônus`,
+      catalog: 'Visuais',
+      all: 'Tudo',
+      owned: 'Seu',
+      equipped: 'Usando',
+      unsold: 'Indisponível',
+      /** A wearable that doesn't sit right on the previewed Pokémon. */
+      misfit: (name: string) => `Não fica bem no ${name}`,
+      effect: 'Aparece nas partidas, no co-op e na Arena.',
+      /** An item whose slot shows only in the Arena (`SLOT_MODES`): its info, and the short tag on its card and locker row. */
+      arenaOnly: 'Por enquanto, só aparece na Arena.',
+      arenaTag: 'ARENA',
+      /** The catalog's own section for the Arena-only items, and its note. */
+      arenaFilter: 'Arena',
+      arenaNote: 'Efeitos de entrada, nocaute e gol, e emotes: aparecem só nas partidas da Arena.',
+      buy: 'Comprar',
+      equip: 'Usar',
+      unequip: 'Tirar',
+      confirm: (name: string, price: string) => `Comprar ${name} por ${price} gemas?`,
+      bought: (name: string) => `${name} é seu, e você já está usando!`,
+      short: (n: string) => `Faltam ${n} gemas. Que tal um pacote?`,
+      busy: 'Calma! Muitas compras seguidas. Tente de novo em um minuto.',
+      offline: 'A loja está fora de alcance agora. Tente de novo em instantes.',
+      banned: 'Esta conta não pode usar a Loja.',
+      receipts: 'Recibos',
+      receiptsEmpty: 'Nenhuma movimentação ainda.',
+      reasons: { pack: 'Pacote de gemas', patreon: 'Patreon', play: 'Partida na Arena', run: 'Partida do dia', week: 'Semana de jogo', buy: 'Compra', refund: 'Reembolso', dispute: 'Contestação', disputeWon: 'Contestação revertida', grant: 'Presente da equipe' } satisfies Record<GemReason, string>,
+      signIn: { title: 'Entre para usar a Loja', text: 'As gemas e os visuais ficam na sua conta, em qualquer aparelho.', button: 'Entrar' },
+      unavailable: 'A Loja não está disponível nesta versão do jogo.',
+      onlyLooks: 'Gemas compram só visuais.',
+      /** The tag on a pack an account buys once (`once`). */
+      welcomeTag: 'SÓ UMA VEZ',
+      /** How gems come free (`GEM_PLAY`): the run gems, the week's, the Arena's daily cap. */
+      free: (run: string, minutes: string, week: string, days: string, cap: string) => `Gemas grátis: +${run} na primeira partida do dia de ${minutes} min ou mais, +${week} ao jogar ${days} dias na mesma semana, e na Arena (até ${cap} por dia).`,
+    },
+    checkout: {
+      split: (gems: string, bonus: string) => `${gems} + ${bonus} bônus`,
+      pay: 'Pagar com',
+      card: 'Cartão, Apple Pay ou Google Pay',
+      pix: 'Pix',
+      /** The box the pay buttons need ticked. */
+      age: 'Tenho 18 anos ou mais, ou tenho a permissão dos meus pais ou responsáveis.',
+      /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
+      once: 'Esta conta já pegou o pacote de boas-vindas.',
+      cap: (limit: string) => `Por segurança, cada conta compra até ${limit} em gemas por dia, e um pagamento em aberto conta por meia hora. Tente de novo amanhã (o dia vira à meia-noite de Brasília).`,
+      cancel: 'Cancelar',
+      opening: 'Abrindo o pagamento…',
+      failed: 'Não deu para abrir o pagamento. Tente de novo.',
+      processing: 'Confirmando seu pagamento…',
+      processingNote: 'Leva alguns segundos. Pode deixar esta tela aberta.',
+      done: (n: string) => `+${n} gemas!`,
+      doneNote: (balance: string) => `Seu saldo agora é de ${balance} gemas. Obrigado por apoiar o jogo!`,
+      timeout: 'Pagamento a caminho',
+      timeoutNote: 'Ainda estamos confirmando o pagamento. As gemas chegam à sua conta em alguns minutos (um Pix pode demorar um pouco mais), e você pode continuar jogando.',
+      ok: 'Continuar',
+    },
+    locker: {
+      pick: 'Pokémon da prévia',
+      none: 'Nenhum',
+      empty: 'Você ainda não tem visuais. Que tal dar uma olhada na Loja?',
+      slotEmpty: 'Nada aqui ainda',
+      toShop: 'Ver na Loja',
+      saving: 'Salvando…',
+      saved: 'Salvo na sua conta.',
+      local: 'Salvo neste aparelho: vai para a conta quando a conexão voltar.',
+      note: 'Seu visual aparece nas suas partidas, no co-op e na Arena.',
+    },
+  },
   coop: {
     ping: (ms: number) => `${ms} ms`,
     reconnecting: 'Reconectando…',
@@ -1016,6 +1127,7 @@ export const pt = {
       chat: 'Arena: chat rápido',
       ping: 'Arena: marcar no mapa',
       board: 'Arena: placar',
+      emote: 'Arena: emote',
     } satisfies Record<Action, string>,
     press: (action: string) => `*${action}*: pressione uma tecla ou um botão do controle… (ESC cancela)`,
     reserved: 'As setas e o ESC são fixos. Escolha outra tecla.',
@@ -5807,6 +5919,28 @@ export const pt = {
       'Cada temporada dura duas semanas. Os quadros do pátio mostram o ranking, a temporada, seu histórico e as regras.',
     ],
     hello: ['Bzzz! De volta à Arena? Que vença o melhor time!', 'Energia guardada não marca ponto. Leve-a ao gol!', 'Quatro cabeças pensam melhor que uma. Jogue com sua equipe.', 'O placar da temporada não espera. Vamos?'],
+  },
+  /** The Boutique (`ui/boutique.ts`), Leavanny's on the plaza: the gem shop and the look the Pokémon wears. */
+  boutique: {
+    title: 'Boutique',
+    /** Its tabs: the gem shop and the look worn. */
+    tabs: { shop: 'Loja', locker: 'Visual' },
+    /** The Kecleon shop's button to it. */
+    shopButton: 'Boutique',
+    /** The Trainer Card's row to the look worn (the Boutique's Visual, without the walk). */
+    lockerRow: 'Visual do Pokémon',
+    /** Leavanny, the tailor, as the partner walks up: the first visit, then one of these in turn. */
+    first: [
+      'Ah, visita! Bem-vindo à Boutique. Eu sou Leavanny: costuro roupinhas com folhas e muito carinho.',
+      'Aqui as gemas compram visuais: chapéus, balões, rastros e mais. Eles mudam o visual, nunca o poder.',
+      'Na aba Visual você escolhe o que usar. Prove à vontade: o espelho é por minha conta!',
+    ],
+    hello: ['Que bom te ver! Vamos provar alguma coisa?', 'Acabei de costurar umas peças novas. Dê uma olhada!', 'Um bom visual começa pelo chapéu. Qual combina com você?', 'Cada ponto, uma folha. Cada folha, um carinho.'],
+    /** Leavanny beside the open sheet: signed in, and for a guest. */
+    browse: 'Escolha uma peça e seu Pokémon prova na hora.',
+    guest: 'Pode provar à vontade! Para comprar ou usar, é só entrar na sua conta.',
+    hintKeys: 'Q E abas · ↑ ↓ rolar · ESC voltar',
+    hintTouch: 'Toque numa peça para provar',
   },
 
   /** Explainer toast the first time each enemy trait shows up in a run. */

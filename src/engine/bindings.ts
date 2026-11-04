@@ -10,8 +10,8 @@ import { isRecord } from '../game/parse'
  * the current context (`scope`): menus hear confirm/back, a run the special,
  * Mega and lunge, so one button (A) can confirm in menus and fire the special.
  * An Arena match hears its kit instead of a run's buttons (`arena`: Move 1,
- * Move 2, the Unite Move, switching targets, quick chat, pings and the
- * scoreboard), so its keys may be a run's too
+ * Move 2, the Unite Move, switching targets, quick chat, pings, the
+ * scoreboard and the emote), so its keys may be a run's too
  * (E is Mega in a run and Move 2 in a match).
  */
 type Scope = 'both' | 'run' | 'menu' | 'arena'
@@ -39,6 +39,8 @@ export const ACTIONS = {
   chat: { key: 'KeyT', pad: null, code: 'KeyT', scope: 'arena' },
   ping: { key: 'KeyG', pad: null, code: 'KeyG', scope: 'arena' },
   board: { key: 'Backquote', pad: 8, code: 'Backquote', scope: 'arena' },
+  /** The Arena's equipped emote (`data/arenaEffects.ts`), when one is. */
+  emote: { key: 'KeyB', pad: null, code: 'KeyB', scope: 'arena' },
 } as const satisfies Record<string, { key: string; pad: number | null; code: string; scope: Scope }>
 
 export type Action = keyof typeof ACTIONS

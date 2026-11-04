@@ -5,7 +5,7 @@ import { NO_RANKS, UPGRADE_IDS } from '../game/meta'
 import { stateHash } from '../game/snapshot'
 import { COOP } from '../data/coop'
 import type { RunStart } from '../net/protocol'
-import { parseSettings, settingsOf, startGame } from './start'
+import { loadoutOf, parseLoadout, parseSettings, runLoadouts, settingsOf, startGame } from './start'
 
 const ranked = Object.fromEntries(UPGRADE_IDS.map((id) => [id, 1]))
 const loadout = { starter: 'pichu', ranks: ranked, shiny: false } as const
@@ -46,5 +46,16 @@ describe('the Desafio co-op do dia in a room', () => {
     expect(g.difficulty).toBe('nightmare')
     expect(g.coop?.challenge).toBeNull()
     expect(g.players[0]!.ranks).toMatchObject(ranked)
+  })
+})
+
+describe('the Arena look in a loadout', () => {
+  it('rides the wire, drops a malformed one and never reaches the run', () => {
+    const pick = { starter: 'charmander', ranks: NO_RANKS, shiny: false, team: 1, look: { head: 'strawHat' } } as const
+    expect(parseLoadout(loadoutOf(pick))).toEqual(pick)
+    expect(parseLoadout({ ...loadoutOf(pick), look: { head: 42 } })).not.toHaveProperty('look')
+    expect(loadoutOf({ ...pick, look: {} })).not.toHaveProperty('look')
+    const start: RunStart = { id: 1, seed: 7, build: 'b1', settings: { difficulty: 'normal' }, players: [{ seat: 0, name: 'Ash', account: true, loadout: loadoutOf(pick) }] }
+    expect(runLoadouts(start)).toEqual([{ starter: 'charmander', ranks: NO_RANKS, shiny: false, name: 'Ash' }])
   })
 })

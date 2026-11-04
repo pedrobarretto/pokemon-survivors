@@ -2,7 +2,7 @@ import { COOP } from '../data/coop'
 import { VERSUS } from '../data/versus'
 import { driveBots } from './versusBots'
 import { stepVersus } from './versus'
-import { isPingKind, isQuickChat, pingAt, sayQuick, voteSurrender, type PingKind, type QuickChat } from './versusSocial'
+import { isPingKind, isQuickChat, pingAt, playEmote, sayQuick, voteSurrender, type PingKind, type QuickChat } from './versusSocial'
 import { MEGAS, type MegaId } from '../data/megas'
 import { castVote, countAway, leaveRun, setAway, updateVote, worldHeld } from './coop'
 import { continueEndless } from './endlessSystem'
@@ -49,8 +49,13 @@ export type TickEntry =
   | { slot: number; kind: 'away' | 'back' | 'leave' }
   /** A vote on the victory's endless offer. */
   | { slot: number; kind: 'endless'; vote: boolean }
-  /** Arena (`versusSocial.ts`): a quick chat line by id, a ping on the map, a vote on the team's surrender (a yes with none running proposes one). */
+  /**
+   * Arena (`versusSocial.ts`): a quick chat line by id, a ping on the map, an
+   * emote (the seat's look picks which: the entry carries none), a vote on the
+   * team's surrender (a yes with none running proposes one).
+   */
   | { slot: number; kind: 'chat'; msg: QuickChat }
+  | { slot: number; kind: 'emote' }
   | { slot: number; kind: 'ping'; ping: PingKind; x: number; y: number }
   | { slot: number; kind: 'surrender'; vote: boolean }
   /**
@@ -89,6 +94,7 @@ export const parseTickEntry = (raw: unknown, players: number): TickEntry | null 
     case 'special':
     case 'mega':
     case 'lunge':
+    case 'emote':
     case 'away':
     case 'back':
     case 'leave':
@@ -260,6 +266,8 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
       return sayQuick(g, p, e.msg)
     case 'ping':
       return pingAt(g, p, e.ping, e.x, e.y)
+    case 'emote':
+      return playEmote(g, p)
     case 'surrender':
       return voteSurrender(g, p, e.vote)
     case 'cast': {

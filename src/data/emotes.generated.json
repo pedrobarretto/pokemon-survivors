@@ -1,0 +1,4970 @@
+{
+  "1": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "2": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "3": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "4": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "5": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "6": {
+    "Hop": {
+      "frameWidth": 48,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 40,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "7": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 72,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "8": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "9": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "152": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "153": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "154": {
+    "Hop": {
+      "frameWidth": 48,
+      "frameHeight": 104,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "155": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 72,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "156": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 72,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "157": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "158": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "159": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "160": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "252": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "253": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "254": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 48,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "255": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        12,
+        2,
+        1,
+        2,
+        1,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  "256": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "257": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 40,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "258": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "259": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 16,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "260": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "387": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "388": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "389": {
+    "Hop": {
+      "frameWidth": 48,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "390": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "391": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "392": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 104,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "393": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "394": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "395": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "495": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 72,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "496": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "497": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 48,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "498": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 72,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "499": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "500": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 40,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 40,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "501": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "502": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "503": {
+    "Hop": {
+      "frameWidth": 48,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 48,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "650": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "651": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "652": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 104,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 40,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 48,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "653": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 64,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 40,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "654": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "655": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "656": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 72,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "657": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 40,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "658": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "722": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "723": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "724": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "725": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 16,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "726": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 40,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "727": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 32,
+      "frameHeight": 56,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "728": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 72,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "729": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 16,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "730": {
+    "Hop": {
+      "frameWidth": 48,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 48,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 40,
+      "frameHeight": 48,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "810": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "811": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 104,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "812": {
+    "Hop": {
+      "frameWidth": 48,
+      "frameHeight": 104,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 48,
+      "frameHeight": 64,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 48,
+      "frameHeight": 64,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "813": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "814": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "815": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 96,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "816": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 72,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "817": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "818": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 112,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 40,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "906": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        8,
+        1,
+        3,
+        2,
+        8
+      ]
+    }
+  },
+  "907": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "908": {
+    "Hop": {
+      "frameWidth": 40,
+      "frameHeight": 104,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 40,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 40,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "909": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 80,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "910": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "911": {
+    "Hop": {
+      "frameWidth": 48,
+      "frameHeight": 104,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 48,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 48,
+      "frameHeight": 24,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 48,
+      "frameHeight": 56,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "912": {
+    "Hop": {
+      "frameWidth": 24,
+      "frameHeight": 72,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "durations": [
+        35,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Pose": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        12,
+        2,
+        8
+      ]
+    }
+  },
+  "913": {
+    "Hop": {
+      "frameWidth": 32,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "914": {
+    "Hop": {
+      "frameWidth": 64,
+      "frameHeight": 128,
+      "durations": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        4,
+        3,
+        2,
+        1,
+        2
+      ]
+    },
+    "Rotate": {
+      "frameWidth": 32,
+      "frameHeight": 64,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "Sleep": {
+      "frameWidth": 32,
+      "frameHeight": 40,
+      "durations": [
+        30,
+        35
+      ]
+    },
+    "Charge": {
+      "frameWidth": 56,
+      "frameHeight": 88,
+      "durations": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  }
+}

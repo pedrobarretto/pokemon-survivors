@@ -11,6 +11,8 @@ import { discordIcon, medalIcon, ogIcon, pokeballIcon, ribbonIcon, supporterIcon
 import { portraitUrl } from '../render/sprites'
 import { fetchSupporterStatus, knownOg, knownTier } from '../supporters'
 import { adminScreen } from './admin'
+import { boutiqueFresh } from './boutique'
+import { slotIconUrl } from '../render/gemArt'
 import { discordScreen } from './discord'
 import { h, later } from './dom'
 import { missionsScreen } from './missions'
@@ -78,27 +80,29 @@ export const trainerChip = (input: Input, opts: { onOpen: () => void }) => {
 /** Month and year of a date, in the current language (`10/2026`). */
 const monthYear = (iso: string) => new Date(iso).toLocaleDateString(LOCALES[locale()].tag, { month: '2-digit', year: 'numeric' })
 
-/** One row under the card: a label, maybe an icon (`wide`: Discord's, not square), and what it opens. `tone: 'out'` is the red sign out. */
-type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone?: 'out' }
+/** One row under the card: a label, maybe an icon (`wide`: Discord's, not square), and what it opens. `tone: 'out'` is the red sign out; `fresh`, a NOVO tag. */
+type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone?: 'out'; fresh?: boolean }
 
 /**
  * The Trainer Card (from the Trainer chip): avatar, name, @handle, title,
  * runs, wins, Pokédex and shinies, medals and ribbons, the linked Discord,
  * the sync state (a tap syncs), then rows to edit the profile, see it, share
  * the card image, Discord (link it, or the server once linked), Apoiadores
- * (supporters), missions and achievements, the admin's gift desk and sign
+ * (supporters), the Pokémon's look (Leavanny's Boutique on its Visual tab,
+ * without the walk), missions and achievements, the admin's gift desk and sign
  * out. Guests get the same card from the local save, with "Criar conta /
  * Entrar" and "Entrar com Discord" when accounts are on. It follows the account state.
  *
  * `supporters` opens Apoiadores over it (it can start a run, so the caller
- * builds it); every screen opened from here comes back to the card. The gear
+ * builds it); every screen opened from here comes back to the card, but the
+ * look's row (`locker`), which leaves for the Boutique. The gear
  * opens Settings. ◀, Esc or Backspace close it and call `onClose` after the
  * key dispatch.
  */
 export const trainerCardScreen = (
   root: HTMLElement,
   input: Input,
-  opts: { supporters: (back: () => void) => Screen },
+  opts: { supporters: (back: () => void) => Screen; locker: () => void },
   onClose: () => void,
 ): Screen => {
   const el = h('div', { class: 'screen shell dim trainer-screen' })
@@ -134,13 +138,14 @@ export const trainerCardScreen = (
     const m = t().trainer
     const share: Row = { label: m.share, run: () => openSub((back) => sharePreview(root, input, trainerShare(loadSave().partner), back)) }
     const missions: Row = { label: m.missions, run: () => openSub((back) => missionsScreen(root, input, back)) }
+    const look: Row = { label: t().boutique.lockerRow, icon: slotIconUrl('head'), fresh: true, run: () => close(opts.locker) }
     const discord: Row = {
       label: s.kind === 'signedIn' && s.discord ? t().discord.row(s.discord) : s.kind === 'signedIn' ? t().discord.link : t().discord.signIn,
       icon: discordIcon(),
       wide: true,
       run: () => openSub((back) => discordScreen(root, input, back)),
     }
-    if (s.kind !== 'signedIn') return [...(s.kind === 'guest' && accountsEnabled ? [{ label: m.join, run: () => void signIn() }, discord] : []), share, missions]
+    if (s.kind !== 'signedIn') return [...(s.kind === 'guest' && accountsEnabled ? [{ label: m.join, run: () => void signIn() }, discord] : []), share, look, missions]
     const handle = s.handle
     return [
       { label: handle === null ? m.createProfile : m.editProfile, run: () => openSub((back) => profileEditor(root, input, back)) },
@@ -148,6 +153,7 @@ export const trainerCardScreen = (
       share,
       discord,
       ...(tier ? [{ label: since ? m.supporterSince(tier, monthYear(since)) : t().supporters.badge(tier), icon: supporterBadgeIcon(tier, since), run: () => openSub(opts.supporters) }] : []),
+      look,
       missions,
       // Admin only, so not translated (see `ui/admin.ts`).
       ...(admin ? [{ label: 'Painel admin', run: () => openSub((back) => adminScreen(root, input, back)) }] : []),
@@ -237,7 +243,14 @@ export const trainerCardScreen = (
     const sync = syncLine(s)
     const rows = rowsFor(s, tier)
     const buttons = rows.map((r) =>
-      h('button', { class: `box trainer-row${r.tone ? ` ${r.tone}` : ''}`, type: 'button' }, r.icon && h('img', { src: r.icon, alt: '', class: r.wide ? 'wide' : '' }), h('span', {}, r.label), !r.tone && h('i', { 'aria-hidden': 'true' }, '▶')),
+      h(
+        'button',
+        { class: `box trainer-row${r.tone ? ` ${r.tone}` : ''}`, type: 'button' },
+        r.icon && h('img', { src: r.icon, alt: '', class: r.wide ? 'wide' : '' }),
+        h('span', {}, r.label),
+        r.fresh && boutiqueFresh(),
+        !r.tone && h('i', { 'aria-hidden': 'true' }, '▶'),
+      ),
     )
     const syncs = sync instanceof HTMLButtonElement
     const items = syncs ? [sync, ...buttons] : buttons
@@ -255,7 +268,7 @@ export const trainerCardScreen = (
     if (!opening) cardEl.classList.remove('pop')
     cardEl.append(sync)
     el.replaceChildren(
-      topBar({ left: backButton(close), title: t().trainer.title, right: [gearButton(() => openSub((back) => openSettings(root, input, back)))] }),
+      topBar({ left: backButton(() => close()), title: t().trainer.title, right: [gearButton(() => openSub((back) => openSettings(root, input, back)))] }),
       shellBody(h('div', { class: 'trainer-panel' }, cardEl, ...notes, h('div', { class: 'trainer-rows' }, ...buttons), hint(t().trainer.hintKeys, ''))),
     )
   }
@@ -272,11 +285,12 @@ export const trainerCardScreen = (
     el.remove()
   }
 
-  const close = () => {
+  /** Closes the card and goes back (`then`: somewhere else instead, the look's row). */
+  const close = (then: () => void = onClose) => {
     if (closed) return
     playSfx('select')
     dispose()
-    later(onClose)
+    later(then)
   }
 
   build(true)

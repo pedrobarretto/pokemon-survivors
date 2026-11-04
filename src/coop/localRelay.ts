@@ -1,4 +1,4 @@
-import { connect, createRoom, deadline, disconnect, hello, loadState, message, nextTickAt, reattach, running, tick, type ConnId, type Effect, type Gen, type Identity, type State } from '../../relay/src/room'
+import { connect, createRoom, deadline, disconnect, hello, loadState, looked, message, nextTickAt, reattach, running, tick, type ConnId, type Effect, type Gen, type Identity, type State } from '../../relay/src/room'
 import { parseCreate, randomCode } from '../../relay/src/codes'
 import { parseRoom, persist, readBound, syncTexts, type Store, type Stored } from '../../relay/src/store'
 import { CLOSE_CODES, parseClientMessage, parseRoomCode, type Auth, type CloseReason, type ServerMessage } from '../net/protocol'
@@ -177,6 +177,8 @@ export const createLocalRelay = (opts: LocalRelayOptions): LocalRelay => {
       } else if (e.k === 'event') log?.(e.ev, e.data)
       else if (e.k === 'dump') log?.('dump', { reason: e.reason, run: e.run, tick: e.tick, minority: e.minority })
       else if (e.k === 'wipe') wiped = true
+      // No API in the tab: nobody else's look is vouched (each client previews its own).
+      else if (e.k === 'looks') later(() => rooms.get(shell.code) === shell && step(shell, () => looked(shell.state, e.ask, {}, now())))
     }
     if (wiped) return wipe(shell)
     schedule(shell)

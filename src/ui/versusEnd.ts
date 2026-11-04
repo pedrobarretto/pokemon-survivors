@@ -16,11 +16,13 @@ import type { MatchKind } from '../data/arenaRanked'
 import type { RpChange } from '../arenaApi'
 import { preseason, season1Date, tierBadge, tierName } from './arenaHub'
 import { boardTables } from './versusBoard'
+import { victoryPose } from '../render/arenaFx'
 import { ARENA_RANKED } from '../data/arenaRanked'
 
 /**
  * A Versus match's end: Vitória, Derrota or Empate from this player's team
- * (and who surrendered, when a team did), the final score, the match's MVP,
+ * (a win with their equipped emote playing over it) and who surrendered,
+ * when a team did, the final score, the match's MVP,
  * and the scoreboard (`versusBoard.ts`), best scorer first, with the match's
  * medals. "Jogar de novo" starts the next match (the shell's: a new one
  * against bots, or the room's next run: "Revanche", with how many of the room
@@ -160,6 +162,8 @@ export const versusEnd = (root: HTMLElement, input: Input, g: Game, me: Player, 
     { horizontal: true, guard: 900 },
   )
   const { mvp, medals } = medalsOf(g)
+  // A win shows off the equipped emote (`render/arenaFx.ts`).
+  const pose = outcome === 'victory' ? victoryPose(me) : null
   countArenaMatch()
   const el = h(
     'div',
@@ -167,6 +171,7 @@ export const versusEnd = (root: HTMLElement, input: Input, g: Game, me: Player, 
     h(
       'div',
       { class: `dialog box pop vs-end-box ${outcome}`, style: `--team:${teamColor(mine)}` },
+      pose?.el,
       h('div', { class: 'vs-end-title' }, m[outcome]),
       surrenderLine(g, mine),
       h(
@@ -186,5 +191,5 @@ export const versusEnd = (root: HTMLElement, input: Input, g: Game, me: Player, 
   )
   root.append(el)
   readyLine()
-  return { el, dim: 0.6, dispose: () => (nav.off(), timer !== null && clearInterval(timer), el.remove()) }
+  return { el, dim: 0.6, dispose: () => (nav.off(), timer !== null && clearInterval(timer), pose?.dispose(), el.remove()) }
 }

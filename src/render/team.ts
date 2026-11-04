@@ -12,6 +12,7 @@ import { drawPokemon, hasSheets, sprites, type SpeciesSprites } from './sprites'
 import { dashedRing } from './strokes'
 import { orbGlyph, TEAM_COLORS, TEAM_LIGHT } from './vale'
 import { concealed } from './valeGrass'
+import { drawPlateTag, plateOf } from './arenaPlates'
 import { VERSUS } from '../data/versus'
 
 /**
@@ -259,7 +260,9 @@ export const drawTeamAir = (ctx: Ctx, g: Game, me: Player, t: number) => {
     const down = fainted(p)
     const top = down ? p.y - 12 : p.y - mateSprites(g, p).bodyH
     const tag = textSprite(tagOf(g, p.slot), slotColor(p.slot))
-    blitPacked(ctx, tag, p.x, top - 5)
+    // A name plate goes behind it, as in the Arena (`render/arenaPlates.ts`).
+    const plate = down ? null : plateOf(g, p.slot)
+    blitPacked(ctx, tag, plate ? drawPlateTag(ctx, plate, p.x, top - 5, tag.w, g.now) : p.x, top - 5)
     if (down) continue
     // Standing and here, `drawPlayer` drew their HP bar already.
     if (!showsPlain(p)) drawMateHp(ctx, p)
@@ -285,7 +288,7 @@ const energyText = (n: number) => (energies[n] ??= String(n))
 
 /**
  * Versus, over everyone: each other Pokémon's tag in its team's color (a
- * bot's form), and over every Pokémon carrying Energy (the local one too) a
+ * bot's form) on its name plate if it wears one, and over every Pokémon carrying Energy (the local one too) a
  * dark badge with the orb and how much, gold-rimmed when full. HP bars come
  * with `drawPlayer`. A rival hidden in the grass shows none.
  */
@@ -295,8 +298,11 @@ const drawVersusAir = (ctx: Ctx, g: Game, me: Player) => {
     const top = p.y - mateSprites(g, p).bodyH
     let above = top - 5
     if (p !== me) {
-      blitPacked(ctx, textSprite(versusTagOf(g, p), TEAM_LIGHT[p.versus.team]), p.x, above)
-      above -= 9
+      const tag = textSprite(versusTagOf(g, p), TEAM_LIGHT[p.versus.team])
+      // A name plate goes behind it (`render/arenaPlates.ts`).
+      const plate = plateOf(g, p.slot)
+      blitPacked(ctx, tag, plate ? drawPlateTag(ctx, plate, p.x, above, tag.w, g.now) : p.x, above)
+      above -= plate ? 11 : 9
     }
     const energy = Math.floor(p.versus.energy)
     if (energy <= 0) continue

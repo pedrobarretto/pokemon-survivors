@@ -6,7 +6,7 @@ import { LIMITS as WIRE, PROTOCOL, parseRoomCode, type CreateResponse, type Regi
 import { jwksKeys, verifyClerkToken } from '../../src/auth'
 import { parseCreate } from '../../src/codes'
 import { allowedOrigin } from '../../src/origins'
-import { arenaApiOf, createOutbox, type Fetcher } from '../../src/report'
+import { arenaApiOf, createOutbox, lookUpLooks, type Fetcher } from '../../src/report'
 import { RETENTION } from '../../src/store'
 import { fullWhy, type Load } from './capacity'
 import type { Config } from './config'
@@ -76,9 +76,10 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
   let retry: NodeJS.Timeout | null = null
   // A post still out when the relay stops finds the vault closed: the report waits in it as last saved (tried again at the next boot).
   let open = true
+  const api = arenaApiOf(config.arenaApiUrl ?? undefined, config.arenaReportSecret ?? undefined)
   const outbox = createOutbox(
     {
-      api: arenaApiOf(config.arenaApiUrl ?? undefined, config.arenaReportSecret ?? undefined),
+      api,
       save: (o) => void (open && vault.outbox.put(o)),
       remove: (id) => void (open && vault.outbox.delete(id)),
       log,
@@ -105,6 +106,7 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
     guests: config.allowGuests,
     now: Date.now,
     report: (r) => void outbox.add(r),
+    looks: (ids) => lookUpLooks(api, ids, fetcher),
     identify: async (auth) => {
       if (auth.kind === 'guest') return { id: `g:${auth.id}`, account: false }
       const sub = await verifyClerkToken(auth.token, { keys: jwks, issuer: config.clerkIssuer, allowedParty: (o) => allowedOrigin(origins, o), now: Date.now() })

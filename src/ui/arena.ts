@@ -12,6 +12,7 @@ import { portraitUrl } from '../render/sprites'
 import { h, later } from './dom'
 import { stepGrid } from './gridNav'
 import { hint, type Screen } from './screens'
+import { gemChip } from './gemShop'
 
 /**
  * Arena (Versus) outside a match: the screen the lobby's tile opens and, from
@@ -134,6 +135,8 @@ export type ArenaActions = {
   needsAccount?: boolean
   /** The Arena's hub: profile, season, ranking, history and rules. */
   hub?: () => void
+  /** The hub's Loja: the gem chip in the title opens it. */
+  shop?: () => void
   /** From a room: the pick goes back to it. */
   choose?: (id: VersusPick) => void
   back: () => void
@@ -375,6 +378,7 @@ export const arenaScreen = (root: HTMLElement, input: Input, pick: VersusPick, a
         h('img', { src: arenaIcon(), alt: '' }),
         h('span', {}, m.title),
         h('em', { class: 'arena-tagline' }, m.tagline),
+        actions.shop && !choose ? gemChip(actions.shop) : null,
         choose ? null : h('small', { class: 'arena-sub' }, m.intro),
       ),
       h(

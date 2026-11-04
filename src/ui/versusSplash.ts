@@ -9,11 +9,13 @@ import { arenaIcon } from '../render/art'
 import { teamColor } from './arena'
 import { lineupSeat } from './arenaQueue'
 import { h, setStyle } from './dom'
+import { titleChip } from './arenaTitle'
+import { lookOf } from '../render/looks'
 
 /**
  * A match's opening splash, while its sprites load (`startCoopRun`): both
- * lineups face each other (portraits, names, a bot's "CPU", roles, this
- * player lit), the map, format and clock ("Vale · 4v4 · 7:00"), a gameplay tip that changes every few seconds
+ * lineups face each other (portraits, names, a bot's "CPU", Arena titles,
+ * roles, this player lit), the map, format and clock ("Vale · 4v4 · 7:00"), a gameplay tip that changes every few seconds
  * and a bar that follows the real loading. It stays `HOLD` at least so it
  * reads; then the match's own countdown takes over. `note`: a line the match
  * needs said before it starts (a ranked ticket that plays as Casual), since
@@ -47,7 +49,7 @@ export const versusSplash = (root: HTMLElement, g: Game, mySlot: number, note: s
           const form = formAt(p.starter, p.branch, p.stage)
           const name = g.coop?.names[p.slot]?.trim()
           const me = p.slot === mySlot
-          return lineupSeat(team, { dex: form.dex, name: me ? m.you : name || `${form.name} ${m.cpu}`, pick: isVersusPick(p.starter) ? p.starter : undefined, me, cpu: !name })
+          return lineupSeat(team, { dex: form.dex, name: me ? m.you : name || `${form.name} ${m.cpu}`, pick: isVersusPick(p.starter) ? p.starter : undefined, me, cpu: !name, title: titleChip(lookOf(p.slot).title) })
         }),
     )
   const fill = h('i', { class: 'arena-splash-fill' })

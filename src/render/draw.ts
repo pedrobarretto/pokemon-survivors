@@ -40,9 +40,13 @@ import { drawEntranceAir, drawEntranceGround, drawPlaceArrow, drawPlaceDark, dra
 import { roomOf } from '../game/room'
 import { drawLandmarkAir, drawTunnelDark, playerUnderground } from './landmarks'
 import { drawPokemon, sprites, type AnimName, type SpeciesSprites } from './sprites'
+import { drawDressed } from './wearables'
+import { shownLook } from './looks'
 import { bodyOf } from '../data/bodies'
 import { drawDrainVines, drawTypeEvolvedAttack, drawTypeEvolvedGround } from './typeEvolved'
 import { drawCompanion, type CompanionView } from './companion'
+import { arenaEmote, drawArenaFxAir, drawArenaFxGround, stepArenaFx } from './arenaFx'
+import { drawPlateBar, plateOf } from './arenaPlates'
 import { drawStatusBadge, statusTint } from './status'
 import { drawGuard, drawKitStatus, drawTelegraph } from './kitFx'
 import { drawEggAttack, drawEggGround, drawEggPlayer, eggPlayerLook } from './eggMoveFx'
@@ -623,7 +627,18 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const faded = calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink
   // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`); a Ghost type slipping through a tree or a rock (`phasingNow`) too.
   const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : phasingNow(g, p) ? 0.55 : 1) * grassAlpha(g, viewer, p)
-  if (alpha > 0) drawPokemon(ctx, s, anim, p.dir, p.animTime, p.x, p.y - (egg?.lift ?? 0), { alpha, flash, tint, outline: mega.outline })
+  const feet = p.y - (egg?.lift ?? 0)
+  // Arena: an emote plays its own sheet, facing the camera (`render/arenaFx.ts`).
+  const emote = p.versus ? arenaEmote(g, p) : null
+  // The seat's look (its worn cosmetics) dressed into the sprite, in every mode. The rig only covers each
+  // variant's own Walk, Idle and Hurt (a Mega with sheets has its own; `render/wearFit.ts` checks the sheet),
+  // so the moments that swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega's transformation
+  // and a move's own look (Fly, Dig, a lunge).
+  const bare = emote !== null || egg !== null || p.mega.intro > 0
+  const look = bare ? null : shownLook(g, p.slot)
+  if (alpha > 0) {
+    drawDressed(ctx, s, look, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, { alpha, flash, tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
+  }
   if (p.versus && g.versus) drawGrassFront(ctx, mapOf(g.versus).grass, p.x, p.y, s.bodyW, g.now, p.moving, p.slot)
   // The shiny entrance plays shortly after the run starts.
   if (p.shiny) drawSparkles(ctx, p.x, p.y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), g.now - 0.3, 0)
@@ -637,10 +652,15 @@ const drawHpBar = (ctx: Ctx, g: Game) => {
   const w = 22
   const x = Math.round(p.x - w / 2)
   const y = Math.round(p.y + 4)
-  ctx.fillStyle = '#181818'
-  ctx.fillRect(x - 1, y - 1, w + 2, 4)
-  ctx.fillStyle = '#504848'
-  ctx.fillRect(x, y, w, 2)
+  // A name plate frames the bar in its colors (`render/arenaPlates.ts`).
+  const plate = plateOf(g, p.slot)
+  if (plate) drawPlateBar(ctx, plate, x, y, w, g.now)
+  else {
+    ctx.fillStyle = '#181818'
+    ctx.fillRect(x - 1, y - 1, w + 2, 4)
+    ctx.fillStyle = '#504848'
+    ctx.fillRect(x, y, w, 2)
+  }
   const ratio = Math.max(0, p.hp / p.stats.maxHp)
   // Versus: everyone's bar in their team's color.
   ctx.fillStyle = p.versus ? TEAM_COLORS[p.versus.team] : hpColor(ratio)
@@ -920,6 +940,8 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   const camX = Math.round(g.camera.x) + shakeX
   const camY = Math.round(g.camera.y) + shakeY
 
+  // The looks' effects step on the drawing clock (and let go of a game once another starts).
+  stepArenaFx(g, t)
   const inside = g.place.inside
   const indoors = roomOf(g) !== null
   if (g.rift.arena?.domain) drawDomainFloor(ctx, g.rift.arena, g.rift.arena.domain, camX, camY, w, h, t)
@@ -987,6 +1009,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawAlphaGround(ctx, g, t, visible)
   drawPickups(ctx, g, t, visible)
   if (g.versus) drawValeGround(ctx, g, t, visible)
+  drawArenaFxGround(ctx, g, t, visible)
   if (g.coop) drawTeamGround(ctx, g, t)
 
   drawables.length = 0
@@ -1117,6 +1140,7 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     drawPlayerAir(ctx, g, t)
   }
   // Teammates' name tags and bubbles, over everyone (in Versus, the goals' points left under them).
+  drawArenaFxAir(ctx, g, t, visible)
   if (g.versus) {
     drawValeAir(ctx, g)
     drawValePings(ctx, g, t)

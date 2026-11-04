@@ -47,6 +47,9 @@ export const addDays = (day: DayKey, n: number): DayKey => {
   return new Date(Date.UTC(y!, m! - 1, d! + n)).toISOString().slice(0, 10)
 }
 
+/** The Monday that starts `day`'s week (Monday to Sunday; calendar arithmetic, no time zone involved). */
+export const weekStart = (day: DayKey): DayKey => addDays(day, -((dayNumber(day) + 3) % 7))
+
 /** Milliseconds from `d` to the next midnight in Brasília (when the day's outbreak and Vitrine turn over). */
 export const msToNextDay = (d: Date) => (86_400 - clockAt(d).seconds) * 1000 - d.getMilliseconds()
 

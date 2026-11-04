@@ -38,7 +38,7 @@ export const formatChip = (format: ArenaFormat) => {
 }
 
 /** One seat of a lineup: a Pokémon's portrait (or a Poké Ball for a CPU still unknown), its name and role, in its team's color. */
-export const lineupSeat = (team: Team, seat: { dex?: number; name: string; pick?: VersusPick; me?: boolean; cpu?: boolean } | null) => {
+export const lineupSeat = (team: Team, seat: { dex?: number; name: string; pick?: VersusPick; me?: boolean; cpu?: boolean; title?: HTMLElement | null } | null) => {
   const q = t().versus.queue
   if (!seat) {
     return h('div', { class: 'arena-slot seeking', style: `--team:${teamColor(team)}` }, h('img', { class: 'arena-slot-face', src: pokeballIcon(), alt: '' }), h('span', { class: 'arena-slot-name' }, q.seeking))
@@ -47,7 +47,7 @@ export const lineupSeat = (team: Team, seat: { dex?: number; name: string; pick?
     'div',
     { class: `arena-slot${seat.me ? ' me' : ''}${seat.cpu ? ' cpu' : ''}`, style: `--team:${teamColor(team)}` },
     h('img', { class: 'arena-slot-face', src: seat.dex !== undefined ? portraitUrl(seat.dex) : pokeballIcon(), alt: '' }),
-    h('span', { class: 'arena-slot-text' }, h('b', { class: 'arena-slot-name' }, seat.name), seat.pick ? roleChip(VERSUS_ROSTER[seat.pick]) : null),
+    h('span', { class: 'arena-slot-text' }, h('b', { class: 'arena-slot-name' }, seat.name), seat.title ?? null, seat.pick ? roleChip(VERSUS_ROSTER[seat.pick]) : null),
   )
 }
 

@@ -24,8 +24,9 @@ export type Input =
   | { k: 'banish'; round: number; index: number }
   | { k: 'stone'; mega: MegaId }
   | { k: 'endless'; vote: boolean }
-  /** Arena: a quick chat line, a ping, a surrender vote (`game/versusSocial.ts`). */
+  /** Arena: a quick chat line, a ping, an emote, a surrender vote (`game/versusSocial.ts`). */
   | { k: 'chat'; msg: QuickChat }
+  | { k: 'emote' }
   | { k: 'ping'; ping: PingKind; x: number; y: number }
   | { k: 'surrender'; vote: boolean }
   /** The Arena kit (`game/versusKit.ts`): an aimed cast (the input sample last, for the Unite Move's prediction), the target locked, the priority. */
@@ -36,7 +37,7 @@ export type Input =
 /**
  * Inputs that must get through (resent until seen in a frame): picks, the
  * screen buttons, a stone, a vote (a surrender's too; a resent one counts
- * once), the Arena's lock and priority. A chat line, a ping or a cast lost on
+ * once), the Arena's lock and priority. A chat line, a ping, an emote or a cast lost on
  * a dropped link is just gone.
  */
 export type ReliableInput = Extract<Input, { k: 'pick' | 'reroll' | 'skip' | 'banish' | 'stone' | 'endless' | 'surrender' | 'lock' | 'prio' }>
@@ -53,6 +54,7 @@ export const inputValues = (i: Input, nonce = 0): Scalar[] => {
       return [i.sample]
     case 'mega':
     case 'lunge':
+    case 'emote':
       return []
     case 'pick':
       return [i.screen, i.round, i.index, nonce]

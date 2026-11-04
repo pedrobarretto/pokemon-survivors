@@ -10,7 +10,7 @@ const section = (id: string, title: string, body: Html) =>
 
 const paragraphs = (texts: readonly string[]) => texts.map((t) => html`<p>${t}</p>`)
 
-/** `/legal/`: fan-game disclaimer, licenses and credits, privacy (localStorage, optional accounts) and takedown contact. */
+/** `/legal/`: fan-game disclaimer, the Arena gems' terms, licenses and credits, privacy (localStorage, optional accounts) and takedown contact. */
 export const legalPage = (locale: Locale) => {
   const m = SITE_MESSAGES[locale]
   const l = m.legal
@@ -38,6 +38,7 @@ export const legalPage = (locale: Locale) => {
   <div class="doc-body narrow">
     ${section('fan-game', s.fanGame, html`${paragraphs(l.fanGame)}`)}
     ${section('free', s.free, html`${paragraphs(l.free)}`)}
+    ${section('gems', s.gems, html`${paragraphs(l.gems)}`)}
     ${section('licenses', s.licenses, licenses)}
     ${section('privacy', s.privacy, privacy)}
     ${section('contact', s.contact, contact)}
