@@ -123,6 +123,8 @@ export type Conn = {
   refilledAt: number
   drops: number[]
   heard: number
+  /** Sent away by `tick` (idle, AFK): only its close is awaited. */
+  bye: boolean
 }
 
 export type RealmState = {
@@ -286,7 +288,7 @@ const ownBase = (t: Trainer, room: RoomKey) => baseOwner(room) === t.identity.ha
 
 /** A socket opened on `/realm/<city>/ws`. */
 export const connect = (state: RealmState, id: ConnId, city: CityId, now: number): Conn => {
-  const conn: Conn = { id, city, avatar: null, waiting: null, tokens: REALM_BUCKET.capacity, refilledAt: now, drops: [], heard: now }
+  const conn: Conn = { id, city, avatar: null, waiting: null, tokens: REALM_BUCKET.capacity, refilledAt: now, drops: [], heard: now, bye: false }
   state.conns.set(id, conn)
   return conn
 }
@@ -629,9 +631,15 @@ const partyGo = (city: City, t: Trainer, mode: 'coop' | 'arena', code: string): 
 export const tick = (state: RealmState, now: number): RealmEffect[] => {
   const out: RealmEffect[] = []
   for (const conn of [...state.conns.values()]) {
+    if (conn.bye) continue
     const t = trainerOf(state, conn)
-    if (now - conn.heard >= REALM.idleDropMs) out.push(event('realm.idle', { seated: t !== null }), { k: 'close', to: conn.id, why: 'idle' })
-    else if (t && now - t.active >= REALM.afkMs) out.push(...refuse(conn.id, 'afk'))
+    if (now - conn.heard >= REALM.idleDropMs) {
+      conn.bye = true
+      out.push(event('realm.idle', { seated: t !== null }), { k: 'close', to: conn.id, why: 'idle' })
+    } else if (t && now - t.active >= REALM.afkMs) {
+      conn.bye = true
+      out.push(...refuse(conn.id, 'afk'))
+    }
   }
   for (const city of state.cities.values()) {
     const rooms = new Map<RoomKey, MoveRow[]>()
