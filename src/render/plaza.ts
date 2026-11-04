@@ -432,29 +432,35 @@ const LAMP_Y = 14
 
 /**
  * The Lantern Ring, the festival's dress for the square (relative to the
- * building's feet): the fountain stands in the bed's place (its strings tie
- * `crown` px up), the plaque west of it (the golden statue's spot mirrored),
- * the Togepi float on the axis (two `planters` hold its spot until it comes)
- * and the gate over the entrance (posts `post` px off its middle, their lamp
- * heads `head` px up). The square's tree becomes the wishing tree, with
- * Volbeat and Illumise beside it at dusk, Lanturn's Lantern Market takes the
+ * building's feet). Down the axis, as on the festival's first plaza: the
+ * fountain in the bed's place, a little further back than the bed so the
+ * float fits in front of it (its strings tie `crown` px up), the Togepi float
+ * just in front of the fountain (two `planters` hold the spot until it comes)
+ * and the gate over the entrance, its posts on the curb `post` px either side
+ * (their lamp heads `head` px up), the float's wheels just behind its arch.
+ * The plaque stands west of the fountain (the golden statue's spot
+ * mirrored). The square's tree becomes the wishing tree, with Volbeat and
+ * Illumise on its open side at dusk, Lanturn's Lantern Market takes the
  * bench's spot on the south-east (Lanturn west of it) and the sister stall
  * the stall spot. The square's lamps wear arms of lanterns and a wheel of
  * strings runs from the fountain's crown to them.
  */
+const FOUNTAIN = { x: CENTRE.x, y: CENTRE.y - 8 } as const
+const FLOAT = { x: CENTRE.x, y: FOUNTAIN.y + 106 } as const
 const RING = {
+  fountain: FOUNTAIN,
   crown: 74,
   plaque: { x: CENTRE.x - 74, y: CENTRE.y + 16 },
-  float: { x: CENTRE.x, y: CENTRE.y + 112 },
+  float: FLOAT,
   planters: [
-    [CENTRE.x - 18, CENTRE.y + 112],
-    [CENTRE.x + 18, CENTRE.y + 112],
+    [FLOAT.x - 18, FLOAT.y - 26],
+    [FLOAT.x + 18, FLOAT.y - 26],
   ],
-  gate: { x: OVAL.x, y: OVAL.y + OVAL.ry - 9 },
+  gate: { x: OVAL.x, y: OVAL.y + OVAL.ry - 2 },
   post: 49,
   head: 84,
-  volbeat: { x: TREE.x + 58, y: TREE.y + 12, dir: 1 },
-  illumise: { x: TREE.x + 18, y: TREE.y + 34, dir: 0 },
+  volbeat: { x: TREE.x + 64, y: TREE.y - 12, dir: 7 },
+  illumise: { x: TREE.x + 26, y: TREE.y + 30, dir: 0 },
   lanturn: { x: MARKET.x - 56, y: MARKET.y + 14, dir: 7 },
 } as const
 /** The bunting and the lantern strings tie on the lamp's cap, this high above its feet. */
@@ -592,7 +598,7 @@ const festivalSpots = (f: PlazaFestival, sister: boolean) => {
   const late = on && stage >= 3
   return {
     stage,
-    fountain: f.fountain ? SQUARE.centre : null,
+    fountain: f.fountain ? RING.fountain : null,
     plaque: on ? RING.plaque : null,
     gate: on ? RING.gate : null,
     tree: on ? SQUARE.tree : null,
@@ -650,10 +656,10 @@ const lotPeople = (lot: Placed, shop: LotShop) => {
  * The square in a state, from the data alone (relative to the building's
  * feet): the footprints walkers go around (`pads`: the buildings', sized from
  * their painted `halves`, every prop's that has one, the visitors' and the
- * festival's; the gate's are its two posts, so walkers pass under its arch;
- * the first `buildings` are the buildings'), the Pokémon standing there
- * besides Kecleon's shopkeepers (`people`) and where the partner stands to
- * shop (`spots`).
+ * festival's; the first `buildings` are the buildings', then the gate's
+ * `posts`, which stand on the curb either side of the entrance so walkers
+ * pass under its arch), the Pokémon standing there besides Kecleon's
+ * shopkeepers (`people`) and where the partner stands to shop (`spots`).
  */
 export const squarePlan = (level: ShopLevel, halves: Halves, v: PlazaVisitors, f: PlazaFestival) => {
   const depth = depthOf(level, halves.shop)
@@ -664,16 +670,17 @@ export const squarePlan = (level: ShopLevel, halves: Halves, v: PlazaVisitors, f
     const id = PROP_PADS[p.id]
     return id ? [padAt(id, p)] : []
   }
+  const posts = fest.gate ? [-1, 1].map((side) => padAt('post', { x: fest.gate!.x + side * RING.post, y: fest.gate!.y })) : []
   const pads: Pad[] = [
     { x: 0, y: -6 - depth, rx: halves.shop + 4 + (depth ? 6 : 0), ry: Math.round((halves.shop * 2) / 7) + depth, back: 1 },
     ...lots.map((l) => ({ x: l.x, y: l.y + LOT_FRONT, rx: halves.lots[l.shop] + 4, ry: 12, back: 1 })),
+    ...posts,
     ...props.flatMap(padOf),
     ...(v.caravan ? [padAt('wagon', SQUARE.wagon)] : []),
     ...(v.stall ? [padAt('stall', SQUARE.stall)] : []),
     ...(v.statue ? [padAt('statue', SQUARE.statue)] : []),
     ...(fest.fountain ? [padAt('fountain', fest.fountain)] : []),
     ...(fest.plaque ? [padAt('plaque', fest.plaque)] : []),
-    ...(fest.gate ? [-1, 1].map((side) => padAt('post', { x: fest.gate!.x + side * RING.post, y: fest.gate!.y })) : []),
     ...(fest.tree ? [padAt('tree', fest.tree)] : []),
     ...[fest.stall, fest.market].flatMap((at) => (at ? [padAt('counter', at)] : [])),
     ...(fest.float ? [padAt('float', fest.float)] : []),
@@ -685,7 +692,7 @@ export const squarePlan = (level: ShopLevel, halves: Halves, v: PlazaVisitors, f
     ...(fest.lanturn ? [fest.lanturn] : []),
     ...fest.guests,
   ]
-  return { pads, buildings: 1 + lots.length, people, spots: [SQUARE.spot, ...lots.map((l) => l.spot)] }
+  return { pads, buildings: 1 + lots.length, posts: posts.length, people, spots: [SQUARE.spot, ...lots.map((l) => l.spot)] }
 }
 
 /** Meowth stands on the east side of his wagon (feet at `wagon`), facing the square. */
@@ -699,7 +706,7 @@ const festivalLayout = (f: PlazaFestival, sister: boolean): FestivalLayout => {
   const { stage } = spots
   const frames = FOUNTAIN_FRAMES[stage].map((id) => arts.get(id)!)
   const standing = (id: ArtId, spot: Placed | null): Standing | null => (spot ? { x: spot.x, y: spot.y, art: arts.get(id)! } : null)
-  const fountain = { ...SQUARE.centre, frames }
+  const fountain = { ...RING.fountain, frames }
   const gate = standing(stage >= 2 ? 'gate' : 'gate-unlit', spots.gate)
   const tree = standing(TREE_ART[stage], spots.tree)
   const stall = standing('stall', spots.stall)

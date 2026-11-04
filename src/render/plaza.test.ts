@@ -4,6 +4,9 @@ import type { ShopLevel } from '../data/shop'
 import { STALL_IDS } from '../data/visitors'
 import { OVAL, squarePlan, type Halves, type Pad, type PlazaFestival, type PlazaVisitors } from './plaza'
 
+/** The painted height of `festival-gate.png`, posts to Poké Ball. */
+const GATE_H = 103
+
 /** The painted half widths of `shop-lv1.png` … `shop-lv5.png` and `boutique.png`, as `measure` finds them. */
 const SHOP_HALVES = { 1: 34, 2: 68, 3: 68, 4: 84, 5: 84 } as const satisfies Record<ShopLevel, number>
 const halvesAt = (level: ShopLevel): Halves => ({ shop: SHOP_HALVES[level], lots: { boutique: 53 } })
@@ -38,10 +41,24 @@ const overlap = (a: Pad, b: Pad) => onPad(a, b.x, b.y) || onPad(b, a.x, a.y) || 
 const name = (s: (typeof STATES)[number]) => `Lv ${s.level} ${JSON.stringify(s.v)} ${JSON.stringify(s.f)}`
 
 describe('squarePlan', () => {
-  it('keeps every footprint on the square, the buildings with their fronts on it', () => {
+  it('keeps every footprint on the square, the buildings with their fronts on it and the gate on the curb', () => {
     for (const s of STATES) {
-      for (const p of s.plan.pads.slice(0, s.plan.buildings)) expect([p.x - p.rx, p.x + p.rx].every((x) => onSquare(x, p.y)) && onSquare(p.x, p.y + p.ry), name(s)).toBe(true)
-      for (const p of s.plan.pads.slice(s.plan.buildings)) expect(rimOf(p).every((q) => onSquare(q.x, q.y, 3)), `${name(s)} ${JSON.stringify(p)}`).toBe(true)
+      const { pads, buildings, posts } = s.plan
+      for (const p of pads.slice(0, buildings)) expect([p.x - p.rx, p.x + p.rx].every((x) => onSquare(x, p.y)) && onSquare(p.x, p.y + p.ry), name(s)).toBe(true)
+      // The gate's posts stand on the curb either side of the entrance: their middles within its last few px, never out on the grass.
+      for (const p of pads.slice(buildings, buildings + posts)) expect(onSquare(p.x, p.y) && !onSquare(p.x, p.y, 8), `${name(s)} ${JSON.stringify(p)}`).toBe(true)
+      for (const p of pads.slice(buildings + posts)) expect(rimOf(p).every((q) => onSquare(q.x, q.y, 3)), `${name(s)} ${JSON.stringify(p)}`).toBe(true)
+    }
+  })
+
+  it("parks the festival's float in front of the gate, not under its arch", () => {
+    for (const s of STATES.filter((st) => st.f.running)) {
+      const posts = s.plan.pads.slice(s.plan.buildings, s.plan.buildings + s.plan.posts)
+      expect(posts.length, name(s)).toBe(2)
+      // The arch rises `GATE_H` px over the posts' feet: the float's wheels may tuck a few px behind its Poké Ball, no more.
+      const arch = Math.min(...posts.map((p) => p.y)) + 2 - GATE_H
+      const axis = s.plan.pads.slice(s.plan.buildings + s.plan.posts).filter((p) => p.x === 0 && p.y > OVAL.y + 40)
+      for (const p of axis) expect(p.y + p.ry, `${name(s)} ${JSON.stringify(p)}`).toBeLessThanOrEqual(arch + 10)
     }
   })
 
