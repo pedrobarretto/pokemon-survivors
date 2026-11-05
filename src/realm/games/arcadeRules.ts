@@ -52,6 +52,52 @@ export const berryPace = (t: number) => {
   return { every: 0.85 - 0.55 * k, fall: 0.22 + 0.33 * k, voltorb: 0.1 + 0.22 * k }
 }
 
+/** A box on a cabinet's screen (game px). */
+export type Rect = { x: number; y: number; w: number; h: number }
+
+/** Berry Rain's touch pads: the columns either side of a sideways field (px wide), the soil under an upright one (px deep). */
+export const BERRY_PADS = { side: 32, soil: 46 } as const
+
+/** How deep the soil under the field is without pads (px). */
+const SOIL = 18
+
+/**
+ * Where Berry Rain's field and its ← → pads sit on a screen whose field is
+ * `field`: the screen's size, the field's left edge and width, the ground's
+ * height and the pads (null without a touch screen: the field is the whole
+ * screen and the keys or the pointer steer). Upright, the pads sit in a
+ * deeper soil under the field, a half each; sideways, in columns either side
+ * of it, so the screen grows by them and the field keeps its width.
+ */
+export const berryLayout = (field: { w: number; h: number }, touch: boolean) => {
+  if (!touch) return { w: field.w, h: field.h, field: { x: 0, w: field.w }, ground: field.h - SOIL, pads: null }
+  if (field.h > field.w) {
+    const ground = field.h - BERRY_PADS.soil
+    const half = Math.floor(field.w / 2)
+    const band = { y: ground, h: field.h - ground }
+    return { w: field.w, h: field.h, field: { x: 0, w: field.w }, ground, pads: { left: { x: 0, w: half, ...band }, right: { x: half, w: field.w - half, ...band } } }
+  }
+  const side = BERRY_PADS.side
+  const col = { y: 0, w: side, h: field.h }
+  return { w: field.w + side * 2, h: field.h, field: { x: side, w: field.w }, ground: field.h - SOIL, pads: { left: { x: 0, ...col }, right: { x: side + field.w, ...col } } }
+}
+
+export type BerryLayout = ReturnType<typeof berryLayout>
+export type BerryPads = NonNullable<BerryLayout['pads']>
+
+/** Whether (x, y) falls in a box. */
+export const inRect = (r: Rect, x: number, y: number) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h
+
+/** Which way the pads steer from the pointers pressed now (oldest first): the newest one on a pad wins, -1 left, 1 right, 0 neither. */
+export const padSteer = (pointers: readonly { x: number; y: number }[], pads: BerryPads): -1 | 0 | 1 => {
+  for (let i = pointers.length - 1; i >= 0; i--) {
+    const p = pointers[i]!
+    if (inRect(pads.left, p.x, p.y)) return -1
+    if (inRect(pads.right, p.x, p.y)) return 1
+  }
+  return 0
+}
+
 /** Seconds between golden berries: one in a while, sooner as the round goes. */
 export const GOLDEN_EVERY = { from: 16, to: 9 } as const
 export const goldenGap = (t: number) => GOLDEN_EVERY.from - (GOLDEN_EVERY.from - GOLDEN_EVERY.to) * progress(t, BERRY_ROUND)

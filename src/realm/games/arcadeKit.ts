@@ -14,7 +14,8 @@ type Size = { w: number; h: number }
 /**
  * A cabinet's screen: `tall` when the window is (a phone held upright),
  * `wide` otherwise. Pick sizes that scale by a whole step on a phone either
- * way (the frame scales by whole steps): ≤ 176 wide upright for ×2, ≤ 124 for
+ * way (the frame scales by whole device pixels, so a screen a little short of
+ * a step still gets most of it): ≤ 176 wide upright for ×2, ≤ 124 for
  * ×3; ≤ 150 tall sideways for ×2, ≤ 104 for ×3.
  */
 export const arcadeSize = (tall: Size, wide: Size): Size => (typeof window !== 'undefined' && window.innerHeight > window.innerWidth ? tall : wide)

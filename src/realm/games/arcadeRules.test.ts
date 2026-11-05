@@ -7,9 +7,11 @@ import {
   WHACK_FEATS,
   WHACK_ROUND,
   berryFeats,
+  berryLayout,
   berryPace,
   comboMult,
   goldenGap,
+  padSteer,
   pickBerry,
   whackFeats,
   whackPace,
@@ -58,5 +60,22 @@ describe('the arcade games', () => {
     expect(coinsFor('whackDiglett', { score: 800 }, WHACK_ROUND * 1000)).toBe(80)
     expect(trophiesEarned('berryCatch', { plays: 1, wins: 0, best: 2500, feats: [] })).toEqual(['berryBasket'])
     expect(trophiesEarned('whackDiglett', { plays: 9, wins: 0, best: 2499, feats: [] })).toEqual([])
+  })
+
+  it("puts Berry Rain's pads under an upright field and beside a sideways one, steering by the newest finger on one", () => {
+    expect(berryLayout({ w: 176, h: 304 }, false).pads).toBeNull()
+    const tall = berryLayout({ w: 176, h: 304 }, true)
+    expect(tall.w).toBe(176)
+    expect(tall.pads!.left.y).toBe(tall.ground)
+    const wide = berryLayout({ w: 256, h: 150 }, true)
+    expect(wide.w).toBe(256 + 64)
+    expect(wide.field).toEqual({ x: 32, w: 256 })
+    const pads = wide.pads!
+    expect(padSteer([], pads)).toBe(0)
+    expect(padSteer([{ x: 100, y: 50 }], pads)).toBe(0)
+    expect(padSteer([{ x: 5, y: 100 }], pads)).toBe(-1)
+    // Rolling the thumbs: right pressed while left is still held turns right.
+    expect(padSteer([{ x: 5, y: 100 }, { x: 300, y: 100 }], pads)).toBe(1)
+    expect(padSteer([{ x: 5, y: 100 }, { x: 140, y: 60 }], pads)).toBe(-1)
   })
 })
