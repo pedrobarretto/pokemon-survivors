@@ -42,6 +42,9 @@ const CLEARING = {
 /** The glades, for spawning on the floor. */
 export const GROTTO_GLADES = CLEARING.glades
 
+/** Where the team comes in (room px). */
+export const GROTTO_START = CLEARING.start
+
 const RULES: DwellerRules = { ...GROTTO, leash: 220, colors: ['#3c8c34', '#68b048', '#a8d870', '#f8f8c8'] }
 
 /** Lays the grotto's find in the grass at world (x, y). */

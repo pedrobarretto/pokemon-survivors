@@ -50,10 +50,14 @@ const SITE = {
     { x: 122, y: -14, r: 30 },
     { x: 0, y: 70, r: 26 },
   ],
+  // A body keeps on the floor by fitting wholly inside one shape (`keepOn`), so each
+  // tunnel runs deep into the rooms at both ends: a foot as wide as `PLAYER_FOOT`
+  // must fit the tunnel and the room at once somewhere, or it can't cross. The extra
+  // length lies inside the rooms, so the floor drawn is the same.
   tunnels: [
-    [[-13, -56], [13, -56], [13, -104], [-13, -104]],
-    [[-56, -10], [-56, 14], [-104, 14], [-104, -10]],
-    [[56, -14], [104, -26], [104, -2], [56, 10]],
+    [[-13, -40], [13, -40], [13, -124], [-13, -124]],
+    [[-40, -10], [-40, 14], [-122, 14], [-122, -10]],
+    [[40, -10], [122, -30.5], [122, -6.5], [40, 14]],
   ] as const satisfies readonly (readonly Pt[])[],
   holes: [[-28, -18], [30, -12], [0, 26], [-10, -120], [-118, 4], [118, -12]] as const satisfies readonly Pt[],
   glints: [[-50, -30], [52, -34], [-46, 36], [44, 40], [-20, -140], [18, -138], [-140, -10], [-128, 22], [138, -26], [130, 8]] as const satisfies readonly Pt[],
@@ -63,11 +67,17 @@ const SITE = {
 
 const RULES: DwellerRules = { ...UNDERGROUND, leash: 0, colors: ['#5a4430', '#8a6a48', '#b89470', '#3a2c20'] }
 
+/** The dig site's floor (room px): its rooms and the tunnels between them. */
+export const UNDERGROUND_FLOOR: readonly ArenaShape[] = [
+  ...SITE.rooms.map((c): ArenaShape => ({ kind: 'circle', ...c })),
+  ...SITE.tunnels.map((pts): ArenaShape => ({ kind: 'poly', pts })),
+]
+
+/** Where the team comes in (room px). */
+export const UNDERGROUND_START = SITE.start
+
 export const buildUnderground = (g: Game, x: number, y: number) => {
-  const floor: ArenaShape[] = [
-    ...SITE.rooms.map((c): ArenaShape => ({ kind: 'circle', ...c })),
-    ...SITE.tunnels.map((pts): ArenaShape => ({ kind: 'poly', pts })),
-  ]
+  const floor = [...UNDERGROUND_FLOOR]
   // Six of the glint spots, drawn from the run's rng.
   const spots = [...SITE.glints]
   const glints: Glint[] = []

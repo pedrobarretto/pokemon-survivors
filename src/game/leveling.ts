@@ -55,8 +55,9 @@ export const gainXp = (g: Game, amount: number, growth = g.player.stats.growth) 
  * which unlocks its stages' moves (every stage when left out). `branch`: where
  * a branching evolution went, which adds its moves to the learnset. `fresh`:
  * whether the moves the last evolution unlocked still weigh double.
- * `banished`: moves and items forgotten this run (Esquecer) or fused into a
- * duo move, never offered again. `curses`: the cursed items held (Choice Band
+ * `banished`: moves forgotten this run (Esquecer) or fused into a duo move,
+ * and `banishedItems` the items forgotten, never offered again (kept apart:
+ * Metronome is a move and an item). `curses`: the cursed items held (Choice Band
  * stops new moves).
  */
 export type Loadout = {
@@ -66,7 +67,8 @@ export type Loadout = {
   stage?: number
   branch?: BranchId | null
   fresh?: boolean
-  banished?: ReadonlySet<MoveId | ItemId>
+  banished?: ReadonlySet<MoveId>
+  banishedItems?: ReadonlySet<ItemId>
   curses?: readonly CurseId[]
   /** The Arena's kit (`versusPacing.ts`): it learns new moves on its own screens, so the level-up offers none, nor duo fusions. */
   kit?: boolean
@@ -80,12 +82,13 @@ export const loadout = (g: Game): Loadout => ({
   branch: g.player.branch,
   fresh: g.player.freshMoves > 0,
   banished: g.player.banished,
+  banishedItems: g.player.banishedItems,
   curses: g.player.curses.held,
   kit: g.player.versus !== undefined,
 })
 
 /** Every upgrade the player could pick right now, with selection weights. */
-export const offerPool = ({ starter, moves, items, stage, branch = null, fresh, banished, curses, kit }: Loadout): Array<readonly [Offer, number]> => {
+export const offerPool = ({ starter, moves, items, stage, branch = null, fresh, banished, banishedItems, curses, kit }: Loadout): Array<readonly [Offer, number]> => {
   const ownedMoves = new Map(moves.map((m) => [m.id, m.level]))
   const ownedItems = new Map(items.map((i) => [i.id, i.level]))
   const learnset = runLearnset(starter, branch, stage)
@@ -111,7 +114,7 @@ export const offerPool = ({ starter, moves, items, stage, branch = null, fresh, 
   )
 
   const itemOffers = ITEM_IDS.flatMap((id: ItemId): Array<readonly [Offer, number]> => {
-    if (banished?.has(id)) return []
+    if (banishedItems?.has(id)) return []
     const level = ownedItems.get(id)
     const def: ItemDef = ITEMS[id]
     if (level === undefined && def.boosts && !learnsetTypes.has(def.boosts)) return []

@@ -52,6 +52,7 @@ node --env-file=.env.local scripts/tierlist.mjs   # refresh the site's tier list
 npm run typecheck --prefix server   # the accounts API (server/), typechecked with the shared game code
 node scripts/indexnow.mjs --all   # tell Bing and the other IndexNow engines about every sitemap URL (after adding pages; production deploys ping the newest update's pages on their own, .github/workflows/indexnow.yml)
 npm run determinism  # the same bot runs in Node, Chromium, Firefox and WebKit must hash the same (needs `npx playwright install`)
+npm run determinism -- late  # what a long endless run costs to simulate: ms per tick and the state's sizes at minutes 30, 90 and 150 of one bot run (--at=… for other minutes)
 ```
 
 - **Accounts are optional.** Guest play (the local save) is the default and must never wait on the network. `src/account.ts` loads Clerk on demand and syncs the save to the API in `server/` (Hono + Postgres, deployed on Dokploy, see `server/README.md`). The merge rules (`mergeSaves`, `applyPush` in `src/game/sync.ts`) are shared by both sides: when a save field is added, give it a merge rule there. Without `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_API_URL` the account button doesn't show.

@@ -22,8 +22,15 @@ const lastPlayed = new Map<string, number>()
 /** Sliders feel linear to the ear when the gain is squared. */
 const loudness = (v: number) => v * v
 
+/**
+ * Whether a context can take a schedule. Some iOS webviews hand out a context whose clock reads NaN
+ * or whose sample rate is 0 (seen in the field: every `setValueAtTime` threw "non-finite" and every
+ * noise buffer "Length must be at least 1"); sounds skip while it does instead of throwing.
+ */
+export const healthy = (ctx: BaseAudioContext) => Number.isFinite(ctx.currentTime) && ctx.sampleRate > 0
+
 const applyMix = () => {
-  if (!graph) return
+  if (!graph || !healthy(graph.ctx)) return
   const t = graph.ctx.currentTime
   graph.master.gain.setTargetAtTime(mix.muted ? 0 : MASTER_VOLUME, t, 0.02)
   graph.sfx.gain.setTargetAtTime(loudness(mix.sfxVolume), t, 0.02)
@@ -96,7 +103,7 @@ const audio = () => {
   const { ctx, sfx } = graph
   // iOS reports 'interrupted' after calls or app switches; anything but running needs a resume.
   if (ctx.state !== 'running') void ctx.resume().catch(() => {})
-  return { ctx, sfx }
+  return healthy(ctx) ? { ctx, sfx } : null
 }
 
 /** Updates bus volumes and mute. Safe to call before audio is unlocked. */
@@ -110,7 +117,7 @@ export const setMix = (next: Mix) => {
  * The music bus, only once the context is actually running (after a user
  * gesture), so music never creates or wakes the AudioContext by itself.
  */
-export const musicOutput = () => (graph?.ctx.state === 'running' ? { ctx: graph.ctx, bus: graph.music } : null)
+export const musicOutput = () => (graph?.ctx.state === 'running' && healthy(graph.ctx) ? { ctx: graph.ctx, bus: graph.music } : null)
 
 /** Calls `fn` every time the context starts running (unlock, or back from an iOS interruption). */
 export const onAudioRunning = (fn: () => void) => {

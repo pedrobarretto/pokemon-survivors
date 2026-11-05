@@ -1,5 +1,4 @@
 import { evolvedFrom } from '../data/evolutions'
-import type { ItemId } from '../data/items'
 import type { PokeType } from '../data/types'
 import type { DuoMoveId } from './duoMoves'
 import { maxMoveLevel, MOVES, moveStats, type MoveDef, type MoveId } from './moves'
@@ -63,7 +62,7 @@ export type ReadyDuo = { from: readonly [MoveId, MoveId]; to: DuoMoveId }
  * a duo move. `keep` never goes in (a legend's own legendary move, `legendSignature`);
  * recipes whose duo was forgotten (`banished`, Esquecer) are gone for the run.
  */
-export const readyDuos = (moves: readonly OwnedMove[], keep: MoveId | null = null, banished: ReadonlySet<MoveId | ItemId> = new Set()): ReadyDuo[] => {
+export const readyDuos = (moves: readonly OwnedMove[], keep: MoveId | null = null, banished: ReadonlySet<MoveId> = new Set()): ReadyDuo[] => {
   if (moves.some((m) => isDuo(m.id))) return []
   return DUO_RECIPES.flatMap((recipe: DuoRecipe): ReadyDuo[] => {
     if (banished.has(recipe.to)) return []
