@@ -124,9 +124,18 @@ export const MINIGAMES = {
     where: 'cafe',
     seats: 2,
     pay: { win: 150, draw: 60, loss: 30, daily: 600 },
-    minMs: 30_000,
-    feats: [],
-    trophies: [],
+    /**
+     * A best of three duels. The quickest 2–0 (3 rounds a duel, every card
+     * played the instant it can be) measured 15.8 s against the bot; a fast
+     * real player's 2–0 takes 20 s and more, most matches 30–90 s.
+     */
+    minMs: 15_000,
+    /** `perfectDuel`: the match won without the rival banking a single card in any duel. */
+    feats: ['perfectDuel'],
+    trophies: [
+      { furniture: 'duelCup', after: { stat: 'wins', at: 10 } },
+      { furniture: 'perfectDuelPennant', after: { feat: 'perfectDuel' } },
+    ],
   },
 } as const satisfies Record<string, MinigameDef>
 

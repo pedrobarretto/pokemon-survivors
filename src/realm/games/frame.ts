@@ -1,4 +1,4 @@
-import { MINIGAMES, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
+import { coinsFor, MINIGAMES, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
 import { playSfx } from '../../engine/audio'
 import { t } from '../../i18n'
 import type { RealmAct } from '../../net/realm'
@@ -98,8 +98,18 @@ export type TableRun = {
   dispose?: () => void
 }
 
-/** A table game's screen: its canvas size, how it starts, and how long (s) its end plays before the end sheet covers it (a winning line, a last reveal). */
-export type TableUi = { size: { w: number; h: number }; start: (ctx: TableCtx) => TableRun; outro?: number }
+/**
+ * A table game's screen: its canvas size, how it starts, how long (s) its
+ * end plays before the end sheet covers it (a winning line, a last reveal),
+ * and the feats a finished match earned `seat` (ids of its `feats`), read
+ * from the table's last view: claimed with the result and bragged to the room.
+ */
+export type TableUi = {
+  size: { w: number; h: number }
+  start: (ctx: TableCtx) => TableRun
+  outro?: number
+  feats?: (table: TableView, seat: number) => readonly string[]
+}
 
 /** What opening a game needs from where it opens (the realm, or the dev console). */
 export type FrameOpts = {
@@ -219,9 +229,12 @@ const loop = (frame: (dt: number, now: number) => void) => {
 /**
  * Claims a finished game and fills the end sheet: the ₽ paid (added to the
  * wallet), the day's cap reached, the trophies earned, or that it couldn't
- * be paid now. `again` restarts, `leave` closes.
+ * be paid now. A game that pays nothing as played (too short, or an outcome
+ * that doesn't fit, `coinsFor`) isn't claimed: the sheet says it was too
+ * short, as it does when the API refuses the outcome. `again` restarts,
+ * `leave` closes.
  */
-const endSheet = async (sheet: HTMLElement, headline: string, claim: Parameters<typeof claimGame>[0], again: () => void, leave: () => void) => {
+const endSheet = async (sheet: HTMLElement, headline: string, claim: Parameters<typeof claimGame>[0] | null, again: () => void, leave: () => void) => {
   const m = t().minigames
   const paid = h('p', { class: 'minigame-paid' }, m.end.claiming)
   sheet.replaceChildren(
@@ -230,10 +243,18 @@ const endSheet = async (sheet: HTMLElement, headline: string, claim: Parameters<
     h('div', { class: 'minigame-actions' }, h('button', { class: 'box', type: 'button', onclick: again }, m.end.again), h('button', { class: 'box', type: 'button', onclick: leave }, m.end.leave)),
   )
   sheet.classList.remove('hidden')
+  if (claim === null) {
+    paid.textContent = m.end.forfeit
+    return
+  }
+  if (coinsFor(claim.game, claim.outcome, claim.ms) === null) {
+    paid.textContent = m.end.tooShort
+    return
+  }
   const res = await claimGame(claim)
   if (!sheet.isConnected) return
   if (isFailure(res)) {
-    paid.textContent = m.end.unpaid
+    paid.textContent = res.status === 400 && res.error === 'outcome' ? m.end.tooShort : m.end.unpaid
     return
   }
   if (res.coins > 0) depositPokeDollars(res.coins)
@@ -329,7 +350,10 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
         const result = w === null ? 'draw' : w === seat ? 'win' : 'loss'
         // Again: ready for the next match (a person's table may wait for the other's ready: the game says so).
         const again = () => (source.ready(), s.sheet.classList.add('hidden'))
-        const claim: Parameters<typeof claimGame>[0] = { game, outcome: { result, vs: source.vs }, ms: performance.now() - startedAt, feats: [] }
+        const feats = ui.feats?.(table, seat) ?? []
+        for (const feat of feats) opts.realm?.brag(game, feat)
+        // A match this seat forfeited (its clock ran out, it stood up) pays nothing: idling at a table isn't playing.
+        const claim: Parameters<typeof claimGame>[0] | null = table.result.forfeit === seat ? null : { game, outcome: { result, vs: source.vs }, ms: performance.now() - startedAt, feats }
         outro = setTimeout(() => void endSheet(s.sheet, m.end[result], claim, again, close), (ui.outro ?? 0) * 1000)
       }
       phase = table.phase
