@@ -17,6 +17,11 @@ import { RIFT, RIFT_LEGENDS, type RiftLegend } from '../../data/rifts'
 import { DOMAINS, partnerOf } from '../../data/domains'
 import { ABILITIES } from '../../data/abilities'
 import { COOP } from '../../data/coop'
+import { FURNITURE, FURNITURE_IDS } from '../../data/furniture'
+import { BOT_PAY, FURNITURE_GAMES, MINIGAME_DAILY, MINIGAME_IDS, MINIGAMES, type MinigameDef } from '../../data/minigames'
+import { BASE_GRID } from '../../data/realmMap'
+import { BASE_MAX_ITEMS } from '../../data/secretBases'
+import { REALM, REALM_CITIES } from '../../net/realm'
 import { AWAKEN_AT, LEGEND_IDS, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../../data/legends'
 import { legendSource } from '../../game/capture'
 import { legendMods } from '../../game/legend'
@@ -401,6 +406,40 @@ const coop = (m: SiteMessages) => {
     ${table([c.whatHead, c.perHead], rows)}`
 }
 
+/** The Poké Realm: the town, its bases and furniture, and a table of the mini games' pay and trophies, all from the data. */
+const realm = (locale: Locale, m: SiteMessages) => {
+  const r = m.guide.realm
+  const game = LOCALES[locale].messages
+  const money = (v: number) => `₽${v.toLocaleString(m.lang.tag)}`
+  const sold = FURNITURE_IDS.filter((id) => FURNITURE[id].price !== null)
+  const coins = sold.filter((id) => FURNITURE[id].price !== null && 'coins' in FURNITURE[id].price).length
+  const inBases = new Set(Object.values(FURNITURE_GAMES).flat())
+  const pieces: Readonly<Record<string, string>> = game.furniture.names
+  const names = new Intl.ListFormat(m.lang.tag, { type: 'conjunction' })
+  const rows = MINIGAME_IDS.map((id) => {
+    const def: MinigameDef = MINIGAMES[id]
+    const where = def.where === null ? '' : r.where(game.realm.rooms[def.where], inBases.has(id))
+    const pay = def.kind === 'solo' ? r.solo(money(def.pay.perPlay)) : r.table(money(def.pay.win), money(def.pay.draw), money(def.pay.loss))
+    return [game.minigames.games[id].name, where, pay, money(def.pay.daily), names.format(def.trophies.map((t) => pieces[t.furniture] ?? t.furniture))]
+  })
+  return html`${paragraphs(
+      r.paragraphs({
+        cities: Object.values(REALM_CITIES).map((c) => c.name),
+        cap: REALM.cityCap,
+        party: REALM.partyCap,
+        items: BASE_MAX_ITEMS,
+        cols: BASE_GRID.cols,
+        rows: BASE_GRID.rows,
+        sold: sold.length,
+        coins,
+        gems: sold.length - coins,
+      }),
+    )}
+    <h3>${r.gamesTitle}</h3>
+    <p>${r.games({ daily: money(MINIGAME_DAILY), bot: Math.round(BOT_PAY * 100) })}</p>
+    ${table([r.gameHead, r.whereHead, r.payHead, r.dailyHead, r.trophiesHead], rows)}`
+}
+
 const places = (locale: Locale, m: SiteMessages) => {
   const p = m.guide.places
   const num = (v: number) => v.toLocaleString(m.lang.tag)
@@ -630,6 +669,7 @@ const SECTIONS: Record<Section, (locale: Locale, m: SiteMessages) => Html> = {
   rifts,
   legends,
   coop: (_, m) => coop(m),
+  realm,
   places,
   landmarks,
   megas,
