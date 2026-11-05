@@ -9,6 +9,7 @@ import type { Game } from '../game/types'
 import { art, itemArt, lazy } from './art'
 import { drawJack } from './halloweenArt'
 import { localPlayer } from '../game/players'
+import { detail } from './quality'
 
 /**
  * Pixel art and drawing for item sources (props), consumables on the floor,
@@ -206,9 +207,11 @@ export const ZZZ = lazy(() => [
 /** Floating "Zzz" over every visible sleeping enemy (Poké Flute). */
 export const drawSleep = (ctx: Ctx, g: Game, t: number) => {
   const [big, small] = ZZZ()
+  // Drawing lean, one Z each: a Yawn can put a whole horde to sleep.
+  const zs = detail.lean ? 1 : 2
   for (const e of g.enemies) {
     if (e.dying >= 0 || !isAsleep(e.status) || !near(g, e.x, e.y, 0)) continue
-    for (let k = 0; k < 2; k++) {
+    for (let k = 0; k < zs; k++) {
       const ph = (t * 0.7 + e.id * 0.31 + k * 0.5) % 1
       ctx.globalAlpha = Math.min(1, (1 - ph) * 2)
       blitCentered(ctx, k ? small! : big!, e.x + e.radius + ph * 6 + Math.sin(ph * 6) * 2, e.y - e.radius * 2 - 2 - ph * 12)

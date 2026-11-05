@@ -559,9 +559,18 @@ export const blitPacked = (ctx: CanvasRenderingContext2D, p: Packed, x: number, 
 
 /** Paints a hard-edged filled ellipse whose bounding box starts at (left, top). */
 const paintEllipse = (ctx: CanvasRenderingContext2D, left: number, top: number, rx: number, ry: number, color: string) => {
+  beginRects(ctx, color)
+  traceEllipse(ctx, left, top, rx, ry)
+  ctx.fill()
+}
+
+/**
+ * Adds a hard-edged ellipse's rows to the current path, its bounding box at (left, top): many
+ * small ones (the loot's shadows) fill as one path (`beginRects`) instead of a sprite drawn each.
+ */
+const traceEllipse = (ctx: CanvasRenderingContext2D, left: number, top: number, rx: number, ry: number) => {
   const w = Math.round(rx) * 2 + 1
   const h = Math.round(ry) * 2 + 1
-  ctx.fillStyle = color
   const cx = (w - 1) / 2
   const cy = (h - 1) / 2
   for (let y = 0; y < h; y++) {
@@ -569,9 +578,13 @@ const paintEllipse = (ctx: CanvasRenderingContext2D, left: number, top: number, 
     const span = Math.sqrt(Math.max(0, 1 - dy * dy)) * (rx + 0.5)
     const x0 = Math.round(cx - span)
     const x1 = Math.round(cx + span)
-    if (x1 > x0) ctx.fillRect(left + x0, top + y, x1 - x0, 1)
+    if (x1 > x0) ctx.rect(left + x0, top + y, x1 - x0, 1)
   }
 }
+
+/** Adds `ellipse(rx, ry)` centered at (x, y) to the current path, where `blitEllipse` would draw it. */
+export const traceEllipseAt = (ctx: CanvasRenderingContext2D, rx: number, ry: number, x: number, y: number) =>
+  traceEllipse(ctx, Math.round(x - (Math.round(rx) * 2 + 1) / 2), Math.round(y - (Math.round(ry) * 2 + 1) / 2), rx, ry)
 
 /** The rightmost x ≥ 0 on row `y` with `Math.hypot(x, y) <= lim` (-1 if none): the same test a pixel-by-pixel scan makes. */
 const reach = (lim: number, y: number) => {
@@ -717,6 +730,19 @@ export const blitRing = (ctx: CanvasRenderingContext2D, radius: number, thicknes
   bigShape(ctx, `r${r},${thickness},${color}`, size, size, x, y, (s) => paintRing(s, 0, 0, r, thickness, color))
 }
 
+/**
+ * Starts a batch of whole-pixel rects in one color: `ctx.rect(x, y, w, h)` each, then one
+ * `ctx.fill()`. A late run's moves plot ten thousand single pixels a frame (rings, beams,
+ * waves): one fill per color instead of a `fillRect` (and often a `fillStyle`) per pixel is
+ * less work for the page and far fewer draw calls for the GPU process. On whole pixels (the
+ * camera's translation is whole) the path covers exactly what `fillRect` would; rects that
+ * overlap fill once, so a see-through color doesn't darken where they cross.
+ */
+export const beginRects = (ctx: CanvasRenderingContext2D, color: string) => {
+  ctx.fillStyle = color
+  ctx.beginPath()
+}
+
 /** Draws a sprite centered at (x, y), snapped to whole pixels. */
 export const blitCentered = (ctx: CanvasRenderingContext2D, sprite: CanvasImageSource & { width: number; height: number }, x: number, y: number) =>
   ctx.drawImage(sprite, Math.round(x - sprite.width / 2), Math.round(y - sprite.height / 2))
@@ -761,6 +787,9 @@ const GLYPHS: Record<string, readonly string[]> = {
   Y: ['101', '101', '010', '010', '010'], Z: ['111', '001', '010', '100', '111'],
 }
 
+/** Where the in-world font's outline is stamped around each glyph. */
+const OUTLINE_NUDGES = [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1]] as const
+
 /**
  * Renders text with a 1px dark outline, on the shape atlas: a damage total changes with every
  * merged hit, so a canvas per text would pile up thousands of them. The text goes last (`packed3`).
@@ -770,18 +799,23 @@ const outlinedText = packed3((color: string, outline: string, text: string) => {
   const width = chars.reduce((w, g) => w + g[0]!.length + 1, 1)
   const canvas = createCanvas(width + 1, 7)
   const ctx = context2d(canvas)
-  const plot = (fill: string, dx: number, dy: number) => {
-    ctx.fillStyle = fill
+  // Painted as one path per color (`beginRects`): a late run's merged totals make dozens of new numbers a frame.
+  const plot = (dx: number, dy: number) => {
     let ox = 1
     for (const g of chars) {
-      g.forEach((row, y) => {
-        for (let x = 0; x < row.length; x++) if (row[x] === '1') ctx.fillRect(ox + x + dx, 1 + y + dy, 1, 1)
-      })
+      for (let y = 0; y < g.length; y++) {
+        const row = g[y]!
+        for (let x = 0; x < row.length; x++) if (row[x] === '1') ctx.rect(ox + x + dx, 1 + y + dy, 1, 1)
+      }
       ox += g[0]!.length + 1
     }
   }
-  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1]] as const) plot(outline, dx, dy)
-  plot(color, 0, 0)
+  beginRects(ctx, outline)
+  for (const [dx, dy] of OUTLINE_NUDGES) plot(dx, dy)
+  ctx.fill()
+  beginRects(ctx, color)
+  plot(0, 0)
+  ctx.fill()
   return canvas
 })
 
