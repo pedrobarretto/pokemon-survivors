@@ -333,7 +333,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
 
   const smallBody = bodyLimit({ maxSize: 4 * 1024 })
   // A run's result and its replay: an hour of play records up to ~450 KB, so this fits the longest run `RANKED.maxTime` allows.
-  const runBody = bodyLimit({ maxSize: 2 * 1024 * 1024 })
+  const runBody = bodyLimit({ maxSize: 4 * 1024 * 1024 })
 
   const json = (c: { req: { json: () => Promise<unknown> } }) => c.req.json().catch(() => null)
 

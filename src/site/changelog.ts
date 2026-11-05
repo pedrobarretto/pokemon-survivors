@@ -24,6 +24,21 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-05',
+    title: { pt: 'Partidas infinitas de mais de 4 horas no ranking', en: 'Endless runs past 4 hours on the ranking', es: 'Partidas infinitas de más de 4 horas en el ranking', fr: 'Parties infinies de plus de 4 heures au classement', zh: '超過 4 小時的無盡對局也能上排行榜' },
+    highlights: [
+      { pt: 'Partidas no modo infinito com mais de 4 horas agora entram no ranking: antes elas ficavam presas em "Sem conexão" para sempre.', en: 'Endless runs longer than 4 hours now make the ranking: they used to stay stuck on "Offline" forever.', es: 'Las partidas del modo infinito de más de 4 horas ahora entran en el ranking: antes se quedaban atascadas en "Sin conexión" para siempre.', fr: 'Les parties en mode infini de plus de 4 heures entrent maintenant au classement : avant, elles restaient bloquées sur « Hors ligne » pour toujours.', zh: '超過 4 小時的無盡模式對局現在會進入排行榜：之前它們會一直卡在「離線」。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Ranking', en: 'Ranking', es: 'Ranking' },
+        notes: [
+          { pt: 'O ranking aceitava partidas de até 4 horas, e uma partida infinita que passava disso nunca era enviada, nem o último ponto salvo antes das 4 horas. Agora o limite é de 8 horas, e uma partida que passar dele entra com o último ponto salvo que cabe.', en: 'The ranking took runs of up to 4 hours, and an endless run past that was never sent, not even its last save point before the 4 hours. The limit is now 8 hours, and a run past it joins with its last save point that fits.', es: 'El ranking aceptaba partidas de hasta 4 horas, y una partida infinita que pasaba de eso nunca se enviaba, ni siquiera su último punto guardado antes de las 4 horas. Ahora el límite es de 8 horas, y una partida que lo pase entra con su último punto guardado que quepa.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-04',
     title: { pt: 'Correções e partidas longas mais leves', en: 'Fixes and lighter long runs', es: 'Correcciones y partidas largas más ligeras', fr: 'Correctifs et longues parties plus légères', zh: '修正與更順暢的長時間對局' },
     highlights: [
