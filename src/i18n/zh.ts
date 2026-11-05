@@ -3069,7 +3069,7 @@ export const zh: Messages = {
       ],
     },
     needleArm: {
-      description: '全身尖刺豎起：針刺朝四面八方飛射，且在1.5秒內，碰到你的敵人不但無法造成傷害，反而會受傷並被彈開。',
+      description: '全身尖刺豎起：針刺朝四面八方飛射，且在1.5秒內（最多為冷卻時間的一半），碰到你的敵人不但無法造成傷害，反而會受傷並被彈開。',
       upgrades: [
         '傷害+3',
         '針刺+2',
@@ -3285,7 +3285,7 @@ export const zh: Messages = {
       ],
     },
     dig: {
-      description: '按下Shift或突進鍵：你鑽入地下（無敵，獸群會失去你的蹤影），然後從附近最大的敵人（優先首領）腳下竄出，引發地震。',
+      description: '按下Shift或突進鍵：你鑽入地下（無敵，獸群會失去你的蹤影），然後從附近最大的敵人（優先首領）腳下竄出，引發地震。地下時間連同竄出後的保護，最多只占冷卻時間的一半。',
       upgrades: [
         '傷害+10',
         '地震範圍擴大20%',
@@ -4629,7 +4629,7 @@ export const zh: Messages = {
       ],
     },
     protect: {
-      description: '每12秒一個泡泡保護你1秒：任何攻擊都穿不過，碰到它的東西都會被推開。',
+      description: '每12秒一個泡泡保護你1秒：任何攻擊都穿不過，碰到它的東西都會被推開。泡泡最多只持續冷卻時間的一半，所以 Light Clay 和 Quick Claw 也無法讓泡泡接連不斷。',
       upgrades: [
         '持續時間+0.2秒',
         '冷卻縮短1秒',
@@ -4713,7 +4713,7 @@ export const zh: Messages = {
       ],
     },
     fly: {
-      description: '每7秒你會短暫起飛：任何攻擊都打不到你，敵人也會失去你的蹤影。你可以繼續移動，落地時重重砸下，傷害並推開周圍所有敵人。',
+      description: '每7秒你會短暫起飛：任何攻擊都打不到你，敵人也會失去你的蹤影。你可以繼續移動，落地時重重砸下，傷害並推開周圍所有敵人。滯空時間連同落地保護，最多只占冷卻時間的一半。',
       upgrades: [
         '傷害+6',
         '冷卻縮短0.7秒',
@@ -5340,9 +5340,9 @@ export const zh: Messages = {
   },
   items: {
     muscleBand: '所有招式傷害+10%。',
-    quickClaw: '招式冷卻速度加快8%。',
+    quickClaw: '招式冷卻速度加快8%。保護類招式（Protect、Needle Arm、Fly、Dig）最多只持續冷卻時間的一半，因此也可能跟著變短。',
     wideLens: '招式範圍+10%。',
-    lightClay: '效果持續時間延長12%。',
+    lightClay: '效果持續時間延長12%。保護類招式（Protect、Needle Arm、Fly、Dig）最多仍只持續該招式冷卻時間的一半。',
     loadedDice: '多段攻擊招式的投射物+1。',
     leftovers: '每秒回復0.3 HP。',
     choiceScarf: '移動速度+8%。',

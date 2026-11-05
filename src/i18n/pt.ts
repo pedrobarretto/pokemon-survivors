@@ -3435,7 +3435,7 @@ export const pt = {
       ],
     },
     needleArm: {
-      description: 'Seus espinhos se eriçam: agulhas voam para todos os lados e, por 1.5s, quem encostar em você não causa dano e ainda é ferido e arremessado.',
+      description: 'Seus espinhos se eriçam: agulhas voam para todos os lados e, por 1.5s (no máximo metade da recarga), quem encostar em você não causa dano e ainda é ferido e arremessado.',
       upgrades: [
         '+3 de dano',
         '+2 agulhas',
@@ -3651,7 +3651,7 @@ export const pt = {
       ],
     },
     dig: {
-      description: 'Aperte Shift ou o botão de bote: você se enterra (invulnerável, a horda perde você de vista) e sai debaixo do maior inimigo por perto, chefe primeiro, num tremor de terra.',
+      description: 'Aperte Shift ou o botão de bote: você se enterra (invulnerável, a horda perde você de vista) e sai debaixo do maior inimigo por perto, chefe primeiro, num tremor de terra. O tempo embaixo da terra, somado à saída, cobre no máximo metade da recarga.',
       upgrades: [
         '+10 de dano',
         'Tremor 20% maior',
@@ -4995,7 +4995,7 @@ export const pt = {
       ],
     },
     protect: {
-      description: 'A cada 12s uma bolha te protege por 1s: nenhum golpe passa, e quem encosta é empurrado para longe.',
+      description: 'A cada 12s uma bolha te protege por 1s: nenhum golpe passa, e quem encosta é empurrado para longe. Ela dura no máximo metade da recarga, então Light Clay e Quick Claw nunca emendam uma bolha na seguinte.',
       upgrades: [
         'Dura +0.2s',
         'Recarga 1s mais rápida',
@@ -5079,7 +5079,7 @@ export const pt = {
       ],
     },
     fly: {
-      description: 'A cada 7s você levanta voo por um instante: nada te atinge e os inimigos te perdem de vista. Você continua se movendo e, ao pousar, cai com tudo, ferindo e empurrando quem está em volta.',
+      description: 'A cada 7s você levanta voo por um instante: nada te atinge e os inimigos te perdem de vista. Você continua se movendo e, ao pousar, cai com tudo, ferindo e empurrando quem está em volta. O tempo no ar, somado ao pouso, cobre no máximo metade da recarga.',
       upgrades: [
         '+6 de dano',
         'Recarga 0.7s mais rápida',
@@ -5707,9 +5707,9 @@ export const pt = {
 
   items: {
     muscleBand: '+10% de dano em todos os golpes.',
-    quickClaw: 'Golpes recarregam 8% mais rápido.',
+    quickClaw: 'Golpes recarregam 8% mais rápido. Uma proteção (Protect, Needle Arm, Fly, Dig) dura no máximo metade da recarga, então pode ficar mais curta também.',
     wideLens: '+10% de área dos golpes.',
-    lightClay: 'Efeitos duram 12% a mais.',
+    lightClay: 'Efeitos duram 12% a mais. Uma proteção (Protect, Needle Arm, Fly, Dig) continua durando no máximo metade da recarga do golpe.',
     loadedDice: '+1 projétil em golpes com múltiplos acertos.',
     leftovers: 'Recupera 0.3 HP por segundo.',
     choiceScarf: '+8% de velocidade de movimento.',

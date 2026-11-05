@@ -5,7 +5,7 @@ import * as dm from '../engine/dmath'
 import { DROP_TABLES, rollDrop } from '../data/consumables'
 import { dropItem } from './consumables'
 import { burst } from './effects'
-import { guardSpan, type DamageBonus } from './kitRules'
+import { guardWard, type DamageBonus } from './kitRules'
 import { guard, sweep } from './moveKit'
 import type { CastStats, Look, MoveDef, MoveId, MoveStats } from './moves'
 import { dropCoins } from './pickups'
@@ -140,13 +140,13 @@ const thiefHit = (g: Game, _a: Attack, e: Enemy) => {
 
 /**
  * A bubble closes around you for `duration` s, at most half its cooldown
- * (`guardSpan`): nothing gets through (every hit is negated, `onGuard`
+ * (`guardWard`): nothing gets through (every hit is negated, `onGuard`
  * reopens the guard until the bubble pops), and it shoves what touches it.
  * It fails while another move's protection stands or just fell (`wardOpens`).
  */
 const protect = (g: Game, s: CastStats) => {
   const p = g.player
-  const span = guardSpan(s.duration, s.cooldown)
+  const span = guardWard(s)
   // Another move's protection stands or just fell: it fails, as Protect used twice in a row does.
   if (!guard(g, 'protect', span)) return
   spawnAttack(g, {
@@ -246,6 +246,7 @@ export const SHOP_TM_MOVES = {
       { fork: [{ stats: { damage: 6 }, mods: ['drain'] }, { stats: { cooldown: -1.5, area: 0.2 }, mods: ['arc'] }] },
       { duration: 0.3, cooldown: -1 },
     ],
+    ward: guardWard,
     fire: (g, s) => protect(g, s),
     onGuard: (g) => protectHolds(g),
   },

@@ -3074,7 +3074,7 @@ export const es: Messages = {
       ],
     },
     needleArm: {
-      description: 'Tus púas se erizan: agujas salen hacia todos lados y, durante 1.5s, quien te toque no te hace daño y además sale herido y despedido.',
+      description: 'Tus púas se erizan: agujas salen hacia todos lados y, durante 1.5s (como máximo la mitad de la recarga), quien te toque no te hace daño y además sale herido y despedido.',
       upgrades: [
         '+3 de daño',
         '+2 agujas',
@@ -3290,7 +3290,7 @@ export const es: Messages = {
       ],
     },
     dig: {
-      description: 'Presiona Shift o el botón de embestida: te entierras (invulnerable, la horda te pierde de vista) y sales debajo del enemigo más grande cercano, jefe primero, en un temblor.',
+      description: 'Presiona Shift o el botón de embestida: te entierras (invulnerable, la horda te pierde de vista) y sales debajo del enemigo más grande cercano, jefe primero, en un temblor. El tiempo bajo tierra, sumado a la salida, cubre como máximo la mitad de la recarga.',
       upgrades: [
         '+10 de daño',
         'Temblor 20% más grande',
@@ -4634,7 +4634,7 @@ export const es: Messages = {
       ],
     },
     protect: {
-      description: 'Cada 12s una burbuja te protege 1s: ningún golpe pasa, y lo que la toca sale empujado.',
+      description: 'Cada 12s una burbuja te protege 1s: ningún golpe pasa, y lo que la toca sale empujado. Dura como máximo la mitad de la recarga, así que Light Clay y Quick Claw nunca encadenan una burbuja con la siguiente.',
       upgrades: [
         'Dura +0.2s',
         'Recarga 1s más rápida',
@@ -4718,7 +4718,7 @@ export const es: Messages = {
       ],
     },
     fly: {
-      description: 'Cada 7s alzas el vuelo un instante: nada te alcanza y los enemigos te pierden de vista. Sigues moviéndote y, al aterrizar, caes con todo, hiriendo y empujando a quien está alrededor.',
+      description: 'Cada 7s alzas el vuelo un instante: nada te alcanza y los enemigos te pierden de vista. Sigues moviéndote y, al aterrizar, caes con todo, hiriendo y empujando a quien está alrededor. El tiempo en el aire, sumado al aterrizaje, cubre como máximo la mitad de la recarga.',
       upgrades: [
         '+6 de daño',
         'Recarga 0.7s más rápida',
@@ -5346,9 +5346,9 @@ export const es: Messages = {
 
   items: {
     muscleBand: '+10% de daño a todos los movimientos.',
-    quickClaw: 'Los movimientos recargan 8% más rápido.',
+    quickClaw: 'Los movimientos recargan 8% más rápido. Una protección (Protect, Needle Arm, Fly, Dig) dura como máximo la mitad de su recarga, así que también puede acortarse.',
     wideLens: '+10% de área de los movimientos.',
-    lightClay: 'Los efectos duran 12% más.',
+    lightClay: 'Los efectos duran 12% más. Una protección (Protect, Needle Arm, Fly, Dig) sigue durando como máximo la mitad de la recarga del movimiento.',
     loadedDice: '+1 proyectil en movimientos de varios golpes.',
     leftovers: 'Recupera 0.3 HP por segundo.',
     choiceScarf: '+8% de velocidad de movimiento.',
