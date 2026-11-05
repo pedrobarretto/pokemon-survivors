@@ -1,6 +1,7 @@
 import type { BaseExterior, BaseLayout, BaseVisibility } from '../data/secretBases'
 import type { FurnitureCounts, FurnitureId } from '../data/furniture'
 import type { CityId } from './realm'
+import type { GameOutcome, MinigameId } from '../data/minigames'
 
 /**
  * The Poké Realm's API (game → `server/`, Clerk-authenticated like the rest).
@@ -23,6 +24,11 @@ import type { CityId } from './realm'
  *   `furniture:<uuid>`) or ₽ (out of the stored save at revision `base`, like `POST /festival/donate`).
  *   `FurnitureBought`; 402 `{ error: 'gems' | 'funds' }`, 404 not sold, 409 `nosave`/`stale` (sync first).
  * - `POST /realm/report` (auth) `RealmReport`: reports a trainer (to the moderation queue and the staff's Discord channel).
+ * - `POST /realm/game/claim` (auth) `GameClaim`: a finished mini game (`data/minigames.ts`). The API
+ *   prices it (`coinsFor`), caps it for the Brasília day (`capped`, kept per account and game), updates
+ *   the game's stats (`GameStats`) and grants the trophies they reach (`trophiesEarned`, into
+ *   `furniture_owned` with source `game`). `GameClaimed`; 400 for an outcome that doesn't fit the game,
+ *   429 past the route's rate limit. The client adds `coins` to the wallet like a run's ₽.
  *
  * And the relay's (signed), `net/realmRelay.ts`: `POST /realm/identity`, `POST /realm/visit`, `POST /realm/presence`.
  */
@@ -64,3 +70,16 @@ export const REPORT_REASONS = ['spam', 'name', 'base', 'harassment', 'other'] as
 export type ReportReason = (typeof REPORT_REASONS)[number]
 
 export type RealmReport = { handle: string; reason: ReportReason; city: CityId | null }
+
+/**
+ * A finished mini game: which, how it ended, how long it took (ms) and the
+ * feats it hit (ids of the game's `feats`; unknown ones are ignored).
+ */
+export type GameClaim = { game: MinigameId; outcome: GameOutcome; ms: number; feats: readonly string[] }
+
+/**
+ * What the game paid (₽ after the caps), what the account's mini games paid
+ * today in all (`today`, out of `MINIGAME_DAILY`), the trophies it just
+ * earned (new furniture ids) and, when it earned any, the new furniture counts.
+ */
+export type GameClaimed = { coins: number; today: number; trophies: readonly FurnitureId[]; furniture: FurnitureCounts | null }

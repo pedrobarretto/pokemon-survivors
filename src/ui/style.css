@@ -25988,3 +25988,111 @@ span.arena-hub-face {
   pointer-events: none;
   z-index: 1000;
 }
+
+/* ---------------- Poké Realm: mini game frame (`realm/games/frame.ts`) ---------------- */
+
+.screen.minigame-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: rgba(16, 20, 32, 0.92);
+  padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
+  touch-action: none;
+}
+
+.minigame-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #fff;
+  padding: 0 4px 8px;
+}
+
+.minigame-head h2 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.minigame-close {
+  min-width: 40px;
+  min-height: 40px;
+  font-size: 16px;
+}
+
+.minigame-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minigame-canvas {
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+.minigame-sheet {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: min(320px, calc(100% - 16px));
+  padding: 16px;
+  text-align: center;
+}
+
+.minigame-sheet h3 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.minigame-paid {
+  margin: 0;
+  font-size: 12px;
+  color: var(--dk-ink, #303040);
+}
+
+.minigame-trophy {
+  margin: 0;
+  font-size: 10px;
+  background: var(--dk-wash-gold, #fff8d8);
+  padding: 4px 6px;
+}
+
+.minigame-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.minigame-actions button,
+.minigame-choose button {
+  min-height: 40px;
+}
+
+.screen.minigame-choose {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 20, 32, 0.6);
+}
+
+.minigame-choose .minigame-sheet {
+  position: static;
+}
+
+.minigame-choose button span {
+  display: block;
+  font-size: 9px;
+  opacity: 0.8;
+  margin-top: 4px;
+}

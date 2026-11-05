@@ -1,7 +1,8 @@
 import { spendFromSave } from '../account'
 import { apiCall } from '../api'
 import { CITY_IDS, isCityId, type CityId } from '../net/realm'
-import type { BaseCard, BaseList, BaseSave, BaseView, FurnitureBought, FurnitureBuy, RealmCities, RealmFriends, RealmMe, RealmReport } from '../net/realmApi'
+import type { BaseCard, BaseList, BaseSave, BaseView, FurnitureBought, FurnitureBuy, GameClaim, GameClaimed, RealmCities, RealmFriends, RealmMe, RealmReport } from '../net/realmApi'
+import { MINIGAME_DAILY, capped, coinsFor, trophiesEarned, type GameStats, type MinigameId } from '../data/minigames'
 import { BASE_EXTERIORS, isBaseExterior, isBaseVisibility, parseLayout, type BaseLayout, type LayoutError } from '../data/secretBases'
 import { FURNITURE, FURNITURE_IDS, isFurnitureId, type FurnitureCounts, type FurnitureId } from '../data/furniture'
 import { LEGEND_IDS } from '../data/legends'
@@ -22,7 +23,7 @@ import { DEMO_BASES } from './demoBases'
 /** Why a call didn't go: the API's `error` (`offline` when it couldn't ask), its status, and for a refused layout which piece (`LayoutError`). */
 export type Failure = { error: string; status: number; item?: number }
 
-type Fake = { me: RealmMe; bases: Map<string, BaseView> }
+type Fake = { me: RealmMe; bases: Map<string, BaseView>; games: { day: Partial<Record<MinigameId, number>>; stats: Partial<Record<MinigameId, GameStats>> } }
 
 let fake: Fake | null = null
 
@@ -45,7 +46,7 @@ const fakeBase = (handle: string, layout: BaseLayout = DEMO_BASES.mine, partner 
 /** Dev: every call answers made-up data (on), or the API again (off). */
 export const fakeRealm = (on: boolean, handle = 'ash') => {
   const bases = [fakeBase('misty', DEMO_BASES.misty, 'squirtle', 87, 24), fakeBase('brock', DEMO_BASES.brock, 'geodude', 41, 9)]
-  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])) } : null
+  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])), games: { day: {}, stats: {} } } : null
 }
 
 export const realmFaked = () => fake !== null
@@ -215,6 +216,46 @@ export const reportTrainer = async (report: RealmReport): Promise<boolean> => {
   if (fake) return true
   const { status } = await apiCall('/realm/report', { method: 'POST', body: report, auth: true })
   return status === 200
+}
+
+/**
+ * Claims a finished mini game's ₽ and trophies (`POST /realm/game/claim`).
+ * Faking, it prices and caps it here the way the API does, from a day kept
+ * in memory. The caller adds `coins` to the wallet.
+ */
+export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure> => {
+  if (fake) {
+    const g = fake.games
+    const coins = coinsFor(claim.game, claim.outcome, claim.ms)
+    if (coins === null) return { error: 'outcome', status: 400 }
+    const paidAll = Object.values(g.day).reduce((a, b) => a + (b ?? 0), 0)
+    const paid = capped(claim.game, coins, g.day[claim.game] ?? 0, paidAll)
+    g.day[claim.game] = (g.day[claim.game] ?? 0) + paid
+    const was = g.stats[claim.game] ?? { plays: 0, wins: 0, best: 0, feats: [] }
+    const o = claim.outcome
+    const stats: GameStats = {
+      plays: was.plays + 1,
+      wins: was.wins + ('result' in o && o.result === 'win' ? 1 : 0),
+      best: Math.max(was.best, 'score' in o ? o.score : 0),
+      feats: [...new Set([...was.feats, ...claim.feats])],
+    }
+    g.stats[claim.game] = stats
+    const before = new Set(trophiesEarned(claim.game, was))
+    const trophies = trophiesEarned(claim.game, stats).filter((id): id is FurnitureId => !before.has(id) && isFurnitureId(id))
+    if (trophies.length > 0) fake.me = { ...fake.me, furniture: { ...fake.me.furniture, ...Object.fromEntries(trophies.map((id) => [id, (fake?.me.furniture[id] ?? 0) + 1])) } }
+    return { coins: paid, today: Math.min(MINIGAME_DAILY, paidAll + paid), trophies, furniture: trophies.length > 0 ? fake.me.furniture : null }
+  }
+  const { status, body } = await apiCall('/realm/game/claim', { method: 'POST', body: claim, auth: true })
+  if (status !== 200 || !isRecord(body)) return failed(status, body)
+  const coins = count(body.coins)
+  const today = count(body.today)
+  if (coins === null || today === null) return failed(0, null)
+  return {
+    coins,
+    today,
+    trophies: Array.isArray(body.trophies) ? body.trophies.filter(isFurnitureId) : [],
+    furniture: isRecord(body.furniture) ? parseFurnitureCounts(body.furniture) : null,
+  }
 }
 
 export const isFailure = (v: unknown): v is Failure => typeof v === 'object' && v !== null && 'error' in v && 'status' in v

@@ -4583,6 +4583,19 @@ if (import.meta.env.DEV) {
       /** The Poké Realm's art (`ui/realmArtDev.ts`, loaded on demand): `ps.realmArt('plaza')` a town room (`'pier'`, `'cafe'`, `'trail'`; `g` its geometry), `'bases'` the base interiors, `'furniture'` the catalog. */
       realmArt: (view?: import('./ui/realmArtDev').RealmArtView, opts?: Parameters<typeof import('./ui/realmArtDev').openRealmArt>[1]) =>
         import('./ui/realmArtDev').then((m) => m.openRealmArt(view, opts)),
+      /**
+       * A Poké Realm mini game on its own, over whatever is on screen (`realm/games/registry.ts`): `ps.minigame('fishing')`,
+       * a table game against the bot (`'fourInRow'`, `'typeDuel'`). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
+       */
+      minigame: async (game: unknown) => {
+        const { isMinigameId, MINIGAME_IDS } = await import('./data/minigames')
+        if (!isMinigameId(game)) return `ps.minigame: ${MINIGAME_IDS.join(', ')}`
+        const { openGame } = await import('./realm/games/registry')
+        const save = loadSave()
+        let screen: { dispose: () => void } | null = null
+        screen = await openGame(document.body, game, { partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
+        return screen
+      },
       gems: devGems,
       candyGoal: devCandyGoal,
       /**

@@ -7,6 +7,7 @@ import {
   baseOwner,
   baseRoom,
   isCityId,
+  isRealmAct,
   isRealmEmote,
   isRealmLine,
   type Avatar,
@@ -14,6 +15,7 @@ import {
   type Facing,
   type MoveRow,
   type PartyView,
+  type RealmAct,
   type RealmClientMessage,
   type RealmHome,
   type RealmIdentity,
@@ -21,6 +23,8 @@ import {
   type RealmServerMessage,
   type RoomKey,
 } from '../../src/net/realm'
+import { isFeat, isMinigameId } from '../../src/data/minigames'
+import { isTableId } from '../../src/net/realmTables'
 import { PRESENCE_EVERY_MS, type IdentityResponse, type PresenceReport, type VisitRequest, type VisitResponse } from '../../src/net/realmRelay'
 
 /**
@@ -82,6 +86,8 @@ export type Trainer = {
   y: number
   facing: Facing
   moving: boolean
+  /** What the trainer is busy at (`act`), shown to the room. */
+  act: RealmAct | null
   /** Walk banked (px), as of `bankAt`. */
   bank: number
   bankAt: number
@@ -93,6 +99,8 @@ export type Trainer = {
   /** When the last lines and emotes went out (the burst limit). */
   said: number[]
   emoted: number[]
+  /** When the last brags went out (the talk burst limit, on its own count). */
+  bragged: number[]
   /** A base visit waiting on the API (`visit` effect), or null. */
   going: { ask: number; room: RoomKey; x: number; y: number } | null
   party: Party | null
@@ -228,6 +236,18 @@ export const parseRealmMessage = (text: string): RealmClientMessage | null => {
       return (m.mode === 'coop' || m.mode === 'arena') && typeof m.code === 'string' && CODE.test(m.code) ? { t: 'partyGo', mode: m.mode, code: m.code } : null
     case 'ping':
       return typeof m.at === 'number' && Number.isFinite(m.at) ? { t: 'ping', at: m.at } : null
+    case 'act':
+      return m.act === null || isRealmAct(m.act) ? { t: 'act', act: m.act } : null
+    case 'brag':
+      return isFeat(m.game, m.feat) && typeof m.game === 'string' && typeof m.feat === 'string' ? { t: 'brag', game: m.game, feat: m.feat } : null
+    case 'sit':
+      return isTableId(m.table) && isMinigameId(m.game) ? { t: 'sit', table: m.table, game: m.game } : null
+    case 'stand':
+      return { t: 'stand' }
+    case 'play':
+      return 'move' in m ? { t: 'play', move: m.move } : null
+    case 'ready':
+      return { t: 'ready' }
     default:
       return null
   }
@@ -265,6 +285,7 @@ export const avatarOf = (t: Trainer): Avatar => ({
   y: t.y,
   facing: t.facing,
   moving: t.moving,
+  act: t.act,
 })
 
 const inRoom = (city: City, room: RoomKey): Trainer[] => [...city.trainers.values()].filter((t) => t.room === room)
@@ -368,6 +389,7 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
     y: at.y,
     facing: 0,
     moving: false,
+    act: null,
     bank: startBank(),
     bankAt: now,
     dirty: false,
@@ -375,6 +397,7 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
     active: now,
     said: [],
     emoted: [],
+    bragged: [],
     going: null,
     party: null,
   }
@@ -470,6 +493,21 @@ export const message = (state: RealmState, connId: ConnId, msg: RealmClientMessa
     case 'partyGo':
       t.active = now
       return partyGo(city, t, msg.mode, msg.code)
+    case 'act':
+      t.active = now
+      if (t.act === msg.act) return []
+      t.act = msg.act
+      return toRoom(city, t.room, { t: 'acted', id: t.id, act: t.act })
+    case 'brag':
+      t.active = now
+      return burst(t.bragged, now) ? toRoom(city, t.room, { t: 'bragged', id: t.id, game: msg.game, feat: msg.feat }) : []
+    // The tables: seats, matches and their moves (`net/realmTables.ts`).
+    case 'sit':
+    case 'stand':
+    case 'play':
+    case 'ready':
+      t.active = now
+      return []
   }
 }
 
@@ -538,6 +576,7 @@ const enter = (state: RealmState, t: Trainer, room: RoomKey, x: number, y: numbe
   t.x = x
   t.y = y
   t.moving = false
+  t.act = null
   t.dirty = false
   t.bank = startBank()
   out.push(send(t.conn, { t: 'room', room, avatars: inRoom(city, room).map(avatarOf) }), ...toRoom(city, room, { t: 'join', avatar: avatarOf(t) }, t.id))

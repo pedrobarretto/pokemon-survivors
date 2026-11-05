@@ -20,7 +20,21 @@ export type Point = { x: number; y: number }
 export type Shape = ({ kind: 'rect' } & Rect) | { kind: 'oval'; x: number; y: number; rx: number; ry: number }
 
 /** What a spot does when used. */
-export type SpotKind = 'coopPortal' | 'arenaPortal' | 'board' | 'bases' | 'myBase' | 'carpenter' | 'host' | 'pool' | 'counter' | 'bench'
+export type SpotKind =
+  | 'coopPortal'
+  | 'arenaPortal'
+  | 'board'
+  | 'bases'
+  | 'myBase'
+  | 'carpenter'
+  | 'host'
+  | 'pool'
+  | 'counter'
+  | 'bench'
+  /** Mini games (`data/minigames.ts`): a fishing spot, a game table (its `id` is the table's, `games` what it plays), an arcade cabinet. */
+  | 'fishing'
+  | 'gameTable'
+  | 'cabinet'
 
 /** The town's rooms (their shapes are `REALM_ROOMS`). */
 export const TOWN_ROOMS = ['plaza', 'pier', 'cafe', 'trail'] as const
@@ -31,7 +45,12 @@ export const isTownRoomId = (v: unknown): v is TownRoomId => typeof v === 'strin
 
 export type Door = { at: Rect; to: TownRoomId; spawn: Point }
 
-export type Spot = { kind: SpotKind; at: Point; reach: number }
+/**
+ * `id`: a game table's id (`net/realmTables.ts`, unique in its room).
+ * `games`: the mini games it opens (`MinigameId`s; one opens at once, more
+ * ask which): a cabinet's or a table's.
+ */
+export type Spot = { kind: SpotKind; at: Point; reach: number; id?: string; games?: readonly string[] }
 
 export type TownRoom = { w: number; h: number; spawn: Point; solid: readonly Shape[]; doors: readonly Door[]; spots: readonly Spot[] }
 

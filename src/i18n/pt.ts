@@ -874,6 +874,9 @@ export const pt = {
       pool: 'Piscina',
       counter: 'Balcão',
       bench: 'Sentar',
+      fishing: 'Pescar',
+      gameTable: 'Mesa de jogos',
+      cabinet: 'Fliperama',
     } satisfies Record<SpotKind, string>,
     use: 'Usar',
     board: {
@@ -6586,6 +6589,31 @@ export const pt = {
     },
   },
   /** Bibarel, the carpentry's carpenter on the plaza's north-east, as the partner walks up: the first visit, then one of these in turn. */
+  minigames: {
+    close: 'Sair',
+    choose: 'Qual jogo?',
+    games: {
+      fishing: { name: 'Pesca no Píer', blurb: 'Jogue a linha e fisgue o que morder.' },
+      berryCatch: { name: 'Chuva de Frutas', blurb: 'Pegue as frutas e fuja dos Voltorb.' },
+      whackDiglett: { name: 'Acerte o Diglett', blurb: 'Bata nos Diglett antes que se escondam.' },
+      fourInRow: { name: 'Quatro em Linha', blurb: 'Alinhe quatro Poké Balls antes do outro.' },
+      typeDuel: { name: 'Duelo de Tipos', blurb: 'Fogo vence Planta, Planta vence Água, Água vence Fogo.' },
+    },
+    feats: { fishing: {}, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: {} },
+    end: {
+      score: (n: number) => `${n} pontos`,
+      win: 'Vitória!',
+      draw: 'Empate',
+      loss: 'Derrota',
+      claiming: 'Contando...',
+      paid: (n: number) => `+₽${n}`,
+      capped: 'Os mini games já pagaram o limite de ₽ de hoje. Jogue por diversão!',
+      unpaid: 'Não deu pra receber o ₽ agora.',
+      trophy: (name: string) => `Troféu novo: ${name}!`,
+      again: 'Jogar de novo',
+      leave: 'Sair',
+    },
+  },
   carpenter: {
     first: ['Opa, freguês novo! Eu sou Bibarel, o carpinteiro da praça.', 'Faço móveis para as bases secretas do Poké Realm: cadeiras, tapetes, estantes e umas peças bem especiais.', 'Pague em ₽ ou em gemas. E quem captura uma lenda ganha um bonequinho dela para enfeitar a base!'],
     hello: ['Serrando e lixando, como sempre. Vai levar alguma coisa?', 'Madeira boa, preço justo. Dá uma olhada!', 'Base sem móvel é só um buraco na parede!', 'Acabei de envernizar umas peças novas.'],
