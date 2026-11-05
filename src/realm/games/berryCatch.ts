@@ -92,6 +92,14 @@ const backdrop = (w: number, h: number, ground: number) => {
     g.fillStyle = col
     g.fillRect(0, i * band, w, band)
   })
+  // The sun, low over the far hills on the right.
+  const sx = w - 34
+  const sy = ground - 50
+  for (let dy = -9; dy <= 9; dy++) {
+    const span = Math.round(Math.sqrt(81 - dy * dy))
+    g.fillStyle = Math.abs(dy) > 7 || span > 7 ? '#f8e8a0' : '#fff4c8'
+    g.fillRect(sx - span, sy + dy, span * 2, 1)
+  }
   // Two rows of rolling hills, the far one paler.
   for (const [base, amp, period, col, edge] of [
     [ground - 30, 10, 70, '#9cd488', '#84c070'],
@@ -162,7 +170,7 @@ const start = (ctx: SoloCtx): GameRun => {
     bragged.add(feat)
     ctx.brag(feat)
   }
-  const clouds = Array.from({ length: 4 }, (_, i) => ({ x: (i * w) / 3 + Math.random() * 30, y: 10 + Math.random() * (ground * 0.35), v: 3 + Math.random() * 4 }))
+  const clouds = Array.from({ length: 6 }, (_, i) => ({ x: (i * w) / 5 + Math.random() * 30, y: 18 + ((i * 37) % Math.max(1, Math.round(ground * 0.5))), v: 3 + Math.random() * 4 }))
 
   const spawn = (kind: Drop['kind']) => {
     const margin = 12
@@ -193,7 +201,7 @@ const start = (ctx: SoloCtx): GameRun => {
     const pts = BERRIES[kind].points * mult
     score += pts
     burst(parts, d.x, d.y, JUICE[kind], kind === 'golden' ? 22 : 9, kind === 'golden' ? 90 : 60)
-    pops.push({ x: d.x, y: d.y - 10, text: `+${pts}`, color: TINT[kind], age: 0, big: kind === 'golden' })
+    pops.push({ x: d.x, y: d.y - 10, text: `+${pts}`, color: TINT[kind], age: 0, big: kind === 'golden' || pts >= 30 })
     if (kind === 'golden') {
       goldens += 1
       freeze = 0.08

@@ -136,7 +136,7 @@ export type Surface =
   /** A round rug woven as a Poké Ball (its top red, its bottom white, the band and the button dark), lying on the floor. */
   | { kind: 'ballRug'; shape: Shape }
 
-/** The arcade's prize clerk: Porygon, the Pokémon made of code, behind the counter (no spot: the counter is the prizes'). */
+/** The arcade's prize clerk: Porygon, the Pokémon made of code, by the till at the counter's west end (no spot of its own: the counter is the prizes'). */
 export const PRIZE_CLERK = { dex: 137, x: 264, y: 112, facing: 1 } as const
 
 /** A Pokémon that stands in a room (its SpriteCollab sprite, idling) with its feet at (`x`, `y`), facing `facing`: the trail's host. */

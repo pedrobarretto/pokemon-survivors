@@ -52,13 +52,25 @@ const KEY_ROWS = [
 /** The toy mallet (a red head with a white band on a wooden handle), seen from the side: it strikes with the head's bottom face. */
 const MALLET = lazy(() =>
   fromStrings(
-    ['.111111.........', '12222221........', '1244442111111111', '1244442155555551', '1244442155555551', '1244442111111111', '12222221........', '13333331........', '.111111.........'],
-    { 1: '#382020', 2: '#e85048', 3: '#a82828', 4: '#f8f0e8', 5: '#c89058' },
+    [
+      '.11111111..........',
+      '1222222221.........',
+      '1222222221.........',
+      '1444444441111111111',
+      '1444444441555555551',
+      '1444444441566666651',
+      '1444444441111111111',
+      '1222222221.........',
+      '1333333331.........',
+      '1333333331.........',
+      '.11111111..........',
+    ],
+    { 1: '#382020', 2: '#e85048', 3: '#a82828', 4: '#f8f0e8', 5: '#d8a068', 6: '#a87040' },
   ),
 )
 
 /** The lines of a whack's impact, either side of the head. */
-const IMPACT = lazy(() => fromStrings(['1.......1', '.1.....1.', '.........', '11.....11'], { 1: '#ffffff' }))
+const IMPACT = lazy(() => fromStrings(['1..........1', '.1........1.', '............', '11........11'], { 1: '#ffffff' }))
 
 /** Little stars circling a whacked Diglett's head. */
 const STAR = lazy(() => fromStrings(['.1.', '121', '.1.'], { 1: '#f8d030', 2: '#ffffff' }))
@@ -326,8 +338,8 @@ const start = (ctx: SoloCtx): GameRun => {
     if (mallet) {
       // Raised for a blink, then down on the hole with its impact lines.
       const down = mallet.age >= 0.05
-      g.drawImage(MALLET(), Math.round(mallet.x - 3), Math.round(mallet.y + (down ? 0 : -9)))
-      if (down && mallet.age < 0.14) g.drawImage(IMPACT(), Math.round(mallet.x - 4), Math.round(mallet.y + 6))
+      g.drawImage(MALLET(), Math.round(mallet.x - 5), Math.round(mallet.y + (down ? -3 : -12)))
+      if (down && mallet.age < 0.14) g.drawImage(IMPACT(), Math.round(mallet.x - 6), Math.round(mallet.y + 6))
     }
     g.restore()
 
@@ -356,8 +368,8 @@ const start = (ctx: SoloCtx): GameRun => {
       // The hint: the mallet bouncing over the middle hole.
       const mid = holes[Math.floor(holes.length / 2)]!
       const down = Math.floor(clock * 2.5) % 2 === 0
-      g.drawImage(MALLET(), mid.x - 3, mid.y - (down ? 8 : 17))
-      if (down) g.drawImage(IMPACT(), mid.x - 4, mid.y - 2)
+      g.drawImage(MALLET(), mid.x - 5, mid.y - (down ? 11 : 20))
+      if (down) g.drawImage(IMPACT(), mid.x - 6, mid.y - 2)
       drawCount(g, clock, w, h)
     }
     if (flash > 0) {

@@ -494,10 +494,12 @@ const drawArcadeLights = (ctx: CanvasRenderingContext2D, camX: number, camY: num
     ctx.globalAlpha = 1
   })
   for (const [i, g] of SCREEN_GLOW.entries()) {
-    const a = 0.1 + 0.05 * Math.sin(time * 3.1 + i * 2)
-    ctx.fillStyle = `rgba(${g.color},${a.toFixed(3)})`
-    // A pool of light in steps (no gradient): widest at the cabinet's foot.
-    for (let k = 0; k < 4; k++) ctx.fillRect(Math.round(g.x - 12 + k * 2 - camX), Math.round(100 + k * 4 - camY), 24 - k * 4, 4)
+    // A pool of light in steps (no gradient), brightest at the cabinet's foot, flickering with the game on screen.
+    const flicker = 0.75 + 0.25 * Math.sin(time * 7.3 + i * 2.1) * Math.sin(time * 3.1 + i)
+    for (let k = 0; k < 3; k++) {
+      ctx.fillStyle = `rgba(${g.color},${((0.3 - k * 0.08) * flicker).toFixed(3)})`
+      ctx.fillRect(Math.round(g.x - 9 - k * 2 - camX), Math.round(101 + k * 4 - camY), 18 + k * 4, 4)
+    }
   }
 }
 

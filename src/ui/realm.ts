@@ -992,7 +992,9 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       }
       // The labels of what's around: the near spot's is its prompt instead.
       for (const l of labels) {
-        const shown = seated && sub === null && l.spot !== near && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
+        // Only what's on screen: a label pinned to the edge for something off it would pile onto the others there.
+        const onScreen = l.at.x >= cam.x && l.at.x <= cam.x + w
+        const shown = seated && sub === null && l.spot !== near && onScreen && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
         l.el.classList.toggle('shown', shown)
         if (shown) l.el.style.transform = pin(l.at, l.el)
       }
