@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MINIGAMES } from '../../data/minigames'
-import { BIG_HAUL, CATCHES, CATCH_IDS, featsOf, fightStep, inZone, logOf, rollCatch, scoreOf, startFight, zoneOf, zoneWidth, ZONES, type CatchId, type Fight, type FightEnd, type Rng } from './fishing.rules'
+import { BIG_HAUL, CATCHES, CATCH_IDS, featsOf, fightStep, inZone, logOf, rollCatch, scoreOf, startFight, widthOf, zoneOf, zoneWidth, ZONES, type CatchId, type Fight, type FightEnd, type Rng } from './fishing.rules'
 
 /** A seeded rng (mulberry32). */
 const seeded = (seed: number): Rng => () => {
@@ -24,7 +24,7 @@ const fight = (id: CatchId, hold: (f: Fight) => boolean, seed = 1, max = 60): Fi
 }
 
 /** A good angler: keeps the zone's middle on the fish, and lets go while it runs. */
-const angler = (f: Fight) => f.runs === 0 && f.fish > f.zone + zoneWidth(f.catchId) / 2 - f.speed * 0.12
+const angler = (f: Fight) => f.runs === 0 && f.fish > f.zone + widthOf(f) / 2 - f.speed * 0.12
 
 describe('casting', () => {
   it('lands further out the longer the cast is held', () => {
@@ -66,6 +66,15 @@ describe('the fight', () => {
     expect(fight('wailmer', () => true, 4)).toBe('snapped')
   })
 
+  it('ends every fight, however it is played: the fish tires', () => {
+    for (const id of CATCH_IDS)
+      for (const seed of [1, 2, 3]) {
+        const coin = seeded(seed * 31)
+        expect(fight(id, angler, seed, 45), `${id} followed`).not.toBeNull()
+        expect(fight(id, () => coin() < 0.5, seed, 45), `${id} mashed`).not.toBeNull()
+      }
+  })
+
   it('makes the zone narrower for a tougher fish', () => {
     expect(zoneWidth('shinyGyarados')).toBeLessThan(zoneWidth('wailmer'))
     expect(zoneWidth('wailmer')).toBeLessThan(zoneWidth('magikarp'))
@@ -79,7 +88,7 @@ describe('the fight', () => {
       expect(f.fish).toBeGreaterThanOrEqual(0)
       expect(f.fish).toBeLessThanOrEqual(1)
       expect(f.zone).toBeGreaterThanOrEqual(0)
-      expect(f.zone + zoneWidth(f.catchId)).toBeLessThanOrEqual(1 + 1e-9)
+      expect(f.zone + widthOf(f)).toBeLessThanOrEqual(1 + 1e-9)
       if (f.progress <= 0 || f.progress >= 1 || f.tension >= 1) break
     }
   })

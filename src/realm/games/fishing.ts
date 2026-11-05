@@ -17,7 +17,7 @@ import {
   scoreOf,
   startFight,
   zoneOf,
-  zoneWidth,
+  widthOf,
   type CatchDef,
   type CatchId,
   type Fight,
@@ -451,7 +451,7 @@ export const fishing: SoloGame = {
           return
         case 'fight': {
           const f = phase.fight
-          const hold = fishingDev.auto ? f.runs === 0 && f.fish > f.zone + zoneWidth(f.catchId) / 2 - f.speed * 0.12 : holding(input)
+          const hold = fishingDev.auto ? f.runs === 0 && f.fish > f.zone + widthOf(f) / 2 - f.speed * 0.12 : holding(input)
           const end = fightStep(f, hold, dt, Math.random)
           // The fish on the line: pulled toward the dock as the catch comes in, thrashing.
           const fish = phase.fish
@@ -872,7 +872,7 @@ export const fishing: SoloGame = {
       g.fillRect(x - 2, y - 2, w + 4, h + 4)
       g.fillStyle = '#1c4c80'
       g.fillRect(x - 1, y - 1, w + 2, h + 2)
-      const zw = Math.round(zoneWidth(f.catchId) * w)
+      const zw = Math.round(widthOf(f) * w)
       const zx = at(f.zone) - zw
       const inside = inZone(f)
       g.fillStyle = inside ? '#60d060' : '#3a9a48'

@@ -142,9 +142,20 @@ export const FIGHT = {
   pinned: 0.55,
   hold: 0.05,
   ease: 0.7,
+  /** The fish starts to tire after this many seconds of fight, and is spent this many seconds later. */
+  tires: 8,
+  spent: 10,
+  /** How much wider the zone gets on a spent fish. */
+  widen: 0.18,
 } as const
 
 export const zoneWidth = (id: CatchId) => FIGHT.zoneWidth - FIGHT.zoneNarrow * CATCHES[id].fight
+
+/** How tired the fish is (0 fresh … 1 spent): past `FIGHT.tires` s it slows, stops running and the zone widens, so every fight ends. */
+export const fatigue = (f: Fight) => Math.min(1, Math.max(0, (f.time - FIGHT.tires) / FIGHT.spent))
+
+/** The zone's width now: the catch's, widened as the fish tires. */
+export const widthOf = (f: Fight) => zoneWidth(f.catchId) + FIGHT.widen * fatigue(f)
 
 /** A fight with `id` just hooked: the fish mid-bar, the zone under it. */
 export const startFight = (id: CatchId): Fight => {
@@ -152,13 +163,13 @@ export const startFight = (id: CatchId): Fight => {
   return { catchId: id, fish: 0.6, target: 0.6, retarget: 0.6, runs: 0, zone: 0.6 - w / 2, speed: 0, progress: FIGHT.start, tension: 0, time: 0 }
 }
 
-/** The fish keeps to the bar from here up, clear of where the zone rests when let go: idling never lands it. */
+/** The fish keeps to the bar from here up, clear of where the zone rests when let go: idling never lands it (the zone widened on a spent fish may reach it: by then the fight has been fought). */
 const SWIMS = 0.44
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
 /** Whether the fish is inside the zone now. */
-export const inZone = (f: Fight) => f.fish >= f.zone && f.fish <= f.zone + zoneWidth(f.catchId)
+export const inZone = (f: Fight) => f.fish >= f.zone && f.fish <= f.zone + widthOf(f)
 
 /**
  * One step of the fight (`dt` s) with the button `holding` or not; mutates
@@ -169,12 +180,12 @@ export const inZone = (f: Fight) => f.fish >= f.zone && f.fish <= f.zone + zoneW
  */
 export const fightStep = (f: Fight, holding: boolean, dt: number, rng: Rng): FightEnd | null => {
   const d = CATCHES[f.catchId].fight
-  const w = zoneWidth(f.catchId)
   f.time += dt
-
+  const w = widthOf(f)
+  const tired = fatigue(f)
   // The fish: swims toward a spot it picks now and then, sometimes runs.
   if (f.runs > 0) f.runs = Math.max(0, f.runs - dt)
-  else if (rng() < (FIGHT.runChance + FIGHT.runFight * d) * dt) {
+  else if (rng() < (FIGHT.runChance + FIGHT.runFight * d) * (1 - tired) * dt) {
     f.runs = 0.45 + rng() * 0.45
     f.target = f.fish < 0.7 ? 0.88 + rng() * 0.12 : SWIMS + rng() * 0.08
   }
@@ -183,7 +194,7 @@ export const fightStep = (f: Fight, holding: boolean, dt: number, rng: Rng): Fig
     f.retarget = 0.35 + rng() * (1.1 - 0.6 * d)
     f.target = SWIMS + rng() * (1 - SWIMS)
   }
-  const pace = f.runs > 0 ? FIGHT.run : FIGHT.swim + FIGHT.swimFight * d
+  const pace = (f.runs > 0 ? FIGHT.run : FIGHT.swim + FIGHT.swimFight * d) * (1 - 0.7 * tired)
   const gap = f.target - f.fish
   f.fish = clamp01(f.fish + Math.sign(gap) * Math.min(Math.abs(gap), pace * dt))
 
