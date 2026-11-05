@@ -11,8 +11,8 @@ import { pieceName } from '../furniture'
 
 /**
  * The Poké Realm's mini game frame: an overlay holding the game's canvas at
- * its own low resolution, scaled up by whole steps (pixel art, like the
- * world), with one pointer (mouse or a finger) and the keys mapped into it,
+ * its own low resolution, scaled up by whole device pixels (pixel art, like
+ * the world), with one pointer (mouse or a finger) and the keys mapped into it,
  * a close button and the end sheet (the score, the ₽ the API paid, the
  * trophies earned, play again). Every game, solo or at a table, draws
  * through it, so they all look and behave alike on a phone and a desktop.
@@ -26,8 +26,13 @@ import { pieceName } from '../furniture'
 /** The pointer in the game's own pixels: where it is, whether it's down, and whether it went down or up this step. */
 export type Pointer = { x: number; y: number; down: boolean; pressed: boolean; released: boolean }
 
-/** What a game reads each step: the pointer and the keys (`KeyboardEvent.code`s), held or pressed this step. */
-export type GameInput = { pointer: Pointer; held: (code: string) => boolean; pressed: (code: string) => boolean }
+/**
+ * What a game reads each step: the pointer, every finger (or the mouse)
+ * pressed on the canvas now, oldest first (for on-screen pads held while
+ * another finger moves), and the keys (`KeyboardEvent.code`s), held or
+ * pressed this step.
+ */
+export type GameInput = { pointer: Pointer; pointers: readonly { x: number; y: number }[]; held: (code: string) => boolean; pressed: (code: string) => boolean }
 
 /** A line of a solo game's log on the end sheet: an icon (an image URL, or null), what it was, how many and the points they made. */
 export type LogLine = { icon: string | null; label: string; count: number; points: number }
@@ -143,7 +148,7 @@ type Shell = {
   dispose: () => void
 }
 
-/** The overlay, its canvas fitted to the screen by whole steps, and the input mapped into the game's pixels. */
+/** The overlay, its canvas fitted to the screen by whole device pixels, and the input mapped into the game's pixels. */
 const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number }, close: () => void): Shell => {
   const m = t().minigames
   const canvas = h('canvas', { class: 'minigame-canvas', width: size.w, height: size.h })
@@ -162,8 +167,10 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   const fit = () => {
     const stage = canvas.parentElement
     if (!stage) return
+    // Whole device pixels per game pixel, so a phone's 1.9 is ×5/3 on a 3× screen rather than ×1.
     const s = Math.min(stage.clientWidth / size.w, stage.clientHeight / size.h)
-    const scale = s >= 1 ? Math.floor(s) : s
+    const dpr = window.devicePixelRatio || 1
+    const scale = s * dpr >= 1 ? Math.floor(s * dpr) / dpr : s
     canvas.style.width = `${size.w * scale}px`
     canvas.style.height = `${size.h * scale}px`
   }
@@ -172,14 +179,18 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   fit()
 
   const pointer: Pointer = { x: -1, y: -1, down: false, pressed: false, released: false }
+  /** The pointers pressed now, by id, in the order they went down. */
+  const pressing = new Map<number, { x: number; y: number }>()
   const toGame = (e: PointerEvent) => {
     const r = canvas.getBoundingClientRect()
     pointer.x = Math.floor(((e.clientX - r.left) / r.width) * size.w)
     pointer.y = Math.floor(((e.clientY - r.top) / r.height) * size.h)
+    if (pressing.has(e.pointerId)) pressing.set(e.pointerId, { x: pointer.x, y: pointer.y })
   }
   const onDown = (e: PointerEvent) => {
     e.preventDefault()
     canvas.setPointerCapture(e.pointerId)
+    pressing.set(e.pointerId, { x: 0, y: 0 })
     toGame(e)
     pointer.down = true
     pointer.pressed = true
@@ -187,8 +198,9 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   const onMove = (e: PointerEvent) => toGame(e)
   const onUp = (e: PointerEvent) => {
     toGame(e)
-    if (pointer.down) pointer.released = true
-    pointer.down = false
+    pressing.delete(e.pointerId)
+    if (pointer.down && pressing.size === 0) pointer.released = true
+    pointer.down = pressing.size > 0
   }
   canvas.addEventListener('pointerdown', onDown)
   canvas.addEventListener('pointermove', onMove)
@@ -207,7 +219,7 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   window.addEventListener('keydown', onKeyDown)
   window.addEventListener('keyup', onKeyUp)
 
-  const input = (): GameInput => ({ pointer: { ...pointer }, held: (c) => held.has(c), pressed: (c) => pressed.has(c) })
+  const input = (): GameInput => ({ pointer: { ...pointer }, pointers: [...pressing.values()], held: (c) => held.has(c), pressed: (c) => pressed.has(c) })
   const endStep = () => {
     pointer.pressed = false
     pointer.released = false

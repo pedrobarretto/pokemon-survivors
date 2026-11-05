@@ -159,6 +159,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           { pt: 'O ranking aceitava partidas de até 4 horas, e uma partida infinita que passava disso nunca era enviada, nem o último ponto salvo antes das 4 horas. Agora o limite é de 8 horas, e uma partida que passar dele entra com o último ponto salvo que cabe.', en: 'The ranking took runs of up to 4 hours, and an endless run past that was never sent, not even its last save point before the 4 hours. The limit is now 8 hours, and a run past it joins with its last save point that fits.', es: 'El ranking aceptaba partidas de hasta 4 horas, y una partida infinita que pasaba de eso nunca se enviaba, ni siquiera su último punto guardado antes de las 4 horas. Ahora el límite es de 8 horas, y una partida que lo pase entra con su último punto guardado que quepa.' },
         ],
       },
+      {
+        title: { pt: 'Chuva de Frutas no celular', en: 'Berry Rain on phones', es: 'Lluvia de Bayas en el celular' },
+        notes: [
+          {
+            pt: 'No celular, a Chuva de Frutas ganhou botões ← → para correr (embaixo da tela em pé, dos lados deitado), e o dedo não cobre mais o seu Pokémon nem as frutas. Os mini games também ficam maiores na tela do celular.',
+            en: 'On phones, Berry Rain has ← → buttons to run (under the screen held upright, on the sides held sideways), so your finger no longer covers your Pokémon or the berries. The mini games also show bigger on phone screens.',
+            es: 'En el celular, la Lluvia de Bayas tiene botones ← → para correr (debajo de la pantalla en vertical, a los lados en horizontal), y el dedo ya no tapa a tu Pokémon ni las bayas. Los minijuegos también se ven más grandes en la pantalla del celular.',
+          },
+        ],
+      },
     ],
   },
   {

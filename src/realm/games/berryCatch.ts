@@ -27,11 +27,16 @@ import {
   BERRY_LIVES,
   BERRY_ROUND,
   berryFeats,
+  berryLayout,
   berryPace,
   comboMult,
   goldenGap,
+  inRect,
+  padSteer,
   pickBerry,
   type BerryKind,
+  type BerryLayout,
+  type Rect,
 } from './arcadeRules'
 import type { GameRun, SoloCtx, SoloGame } from './frame'
 
@@ -43,8 +48,10 @@ import type { GameRun, SoloCtx, SoloGame } from './frame'
  * 90 s go by, a golden berry now and then is the jackpot, and catches in a
  * row raise a multiplier that a missed berry drops.
  *
- * Touch: hold anywhere and the partner runs under your finger (drag to steer,
- * tap a side to dash there). Keys: ←/→ or A/D.
+ * Touch: hold the ← → pads (in the soil upright, in columns either side
+ * sideways, `berryLayout`) to run, so no thumb covers the partner or what
+ * falls on it; holding the field still pulls the partner under the finger.
+ * Keys: ←/→ or A/D.
  */
 
 const VOLTORB = 100
@@ -130,15 +137,56 @@ const backdrop = (w: number, h: number, ground: number) => {
   return c
 }
 
-/** Berry Rain's screen, ×2 on a phone: tall for the falls, wide for the runs. */
+/** The pads' arrows (pointing right; mirrored for left). */
+const PAD_ARROW = lazy(() => fromStrings(['1.....', '11....', '111...', '1111..', '11111.', '111111', '11111.', '1111..', '111...', '11....', '1.....'], { 1: '#283040' }))
+const PAD_ARROW_L = lazy(() => fromStrings(['1.....', '11....', '111...', '1111..', '11111.', '111111', '11111.', '1111..', '111...', '11....', '1.....'], { 1: '#283040' }, { mirror: true }))
+
+/** A box with its corners cut, the HUD plates' shape. */
+const rounded = (g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) => {
+  g.fillStyle = color
+  g.fillRect(x + 1, y, w - 2, h)
+  g.fillRect(x, y + 1, w, h - 2)
+}
+
+/**
+ * A ← or → pad: a cream key with a lip under it that sinks while held, and
+ * blinks gold while counting in (these steer). Sideways it sits in a dark
+ * column the height of the screen, upright on the soil.
+ */
+const drawPad = (g: CanvasRenderingContext2D, r: Rect, dir: -1 | 1, down: boolean, glow: boolean, column: boolean) => {
+  if (column) {
+    g.fillStyle = '#1c2234'
+    g.fillRect(r.x, r.y, r.w, r.h)
+    g.fillStyle = '#323a52'
+    g.fillRect(dir < 0 ? r.x + r.w - 1 : r.x, r.y, 1, r.h)
+  }
+  const kw = column ? r.w - 8 : r.w - 10
+  const kh = column ? 46 : r.h - 13
+  const kx = r.x + Math.round((r.w - kw) / 2)
+  const ky = column ? Math.round(r.y + r.h * 0.58 - kh / 2) : r.y + 9
+  const sink = down ? 3 : 0
+  rounded(g, kx - 1, ky - 1 + sink, kw + 2, kh + 2 - sink, '#283040')
+  rounded(g, kx, ky + sink, kw, kh - sink, '#7a6a58')
+  rounded(g, kx, ky + sink, kw, kh - 3, glow ? '#f8d030' : down ? '#b8d878' : '#f0e8d8')
+  g.fillStyle = glow ? '#fff4b0' : down ? '#d8f0a8' : '#ffffff'
+  g.fillRect(kx + 2, ky + sink + 1, kw - 4, 1)
+  const arrow = dir < 0 ? PAD_ARROW_L() : PAD_ARROW()
+  g.drawImage(arrow, Math.round(kx + kw / 2 - arrow.width / 2), Math.round(ky + sink + (kh - 3) / 2 - arrow.height / 2))
+}
+
+/** Berry Rain's field, ×2 on a phone: tall for the falls, wide for the runs (a touch screen adds the pads, `berryLayout`). */
 const SIZES = { tall: { w: 176, h: 304 }, wide: { w: 256, h: 150 } } as const
 
-/** The size the frame opened the screen at (read once as it opens), which every round started in it plays at. */
-let shown = arcadeSize(SIZES.tall, SIZES.wide)
+/** Whether the screen is touched rather than pointed at (a phone or a tablet): it gets the pads. */
+const touchScreen = () => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true
+
+/** The layout the frame opened the screen at (read once as it opens), which every round started in it plays at. */
+let shown: BerryLayout = berryLayout(arcadeSize(SIZES.tall, SIZES.wide), touchScreen())
 
 const start = (ctx: SoloCtx): GameRun => {
-  const { w, h } = shown
-  const ground = h - 18
+  const layout = shown
+  const { h, ground, pads } = layout
+  const { x: fx, w } = layout.field
   const dex = partnerDex(ctx.partner)
   void loadSpecies(dex, ctx.shiny).catch(() => {})
   void loadSpecies(VOLTORB).catch(() => {})
@@ -163,6 +211,8 @@ const start = (ctx: SoloCtx): GameRun => {
   let shake = 0
   let flash = 0
   let lastTick = -1
+  /** The way the pads steer now (-1, 0, 1), drawn as the key held. */
+  let steer: -1 | 0 | 1 = 0
   let ended: number | null = null
   const bragged = new Set<string>()
   const brag = (feat: string) => {
@@ -239,18 +289,21 @@ const start = (ctx: SoloCtx): GameRun => {
     me.hurt = Math.max(0, me.hurt - dt)
     me.safe = Math.max(0, me.safe - dt)
 
-    // Steering: keys run, a held finger pulls the partner under it.
-    const left = input.held('ArrowLeft') || input.held('KeyA')
-    const right = input.held('ArrowRight') || input.held('KeyD')
-    if (input.pointer.down) me.target = input.pointer.x
-    else if (input.pointer.released) me.target = input.pointer.x
+    // Steering: keys and pads run, a finger held on the field pulls the partner under it.
+    steer = pads ? padSteer(input.pointers, pads) : 0
+    const onPad = (p: { x: number; y: number }) => pads !== null && (inRect(pads.left, p.x, p.y) || inRect(pads.right, p.x, p.y))
+    const left = input.held('ArrowLeft') || input.held('KeyA') || steer < 0
+    const right = input.held('ArrowRight') || input.held('KeyD') || steer > 0
+    const held = input.pointers.findLast((p) => !onPad(p))
+    if (held) me.target = held.x - fx
+    else if (input.pointer.released && !onPad(input.pointer)) me.target = input.pointer.x - fx
     let want = 0
     if (left !== right) {
       me.target = null
       want = right ? speed : -speed
     } else if (me.target !== null) {
       const dx = me.target - me.x
-      if (Math.abs(dx) < 2) me.target = input.pointer.down ? me.target : null
+      if (Math.abs(dx) < 2) me.target = held ? me.target : null
       else want = Math.sign(dx) * Math.min(speed, Math.abs(dx) * 12)
     }
     if (me.hurt > 0) want *= 0.3
@@ -344,7 +397,8 @@ const start = (ctx: SoloCtx): GameRun => {
     }
   }
 
-  const draw = (g: CanvasRenderingContext2D) => {
+  /** The field: the world, its HUD and the count, in the field's own pixels. */
+  const drawField = (g: CanvasRenderingContext2D) => {
     const off = shakeOffset(shake, 3)
     g.save()
     g.translate(off.x, off.y)
@@ -399,21 +453,38 @@ const start = (ctx: SoloCtx): GameRun => {
     for (let i = 0; i < BERRY_LIVES; i++) drawIcon(g, i < lives ? 'heart' : 'empty', w - 4 - (BERRY_LIVES - i) * 8, 5)
 
     if (clock < COUNT_IN) {
-      // Which way to go: arrows blinking either side of the partner.
-      if (Math.floor(clock * 3) % 2 === 0) {
+      // Which way to go: arrows blinking either side of the partner (the pads blink themselves).
+      if (!pads && Math.floor(clock * 3) % 2 === 0) {
         g.drawImage(ARROW_L(), Math.round(me.x - 24), ground - 16)
         g.drawImage(ARROW(), Math.round(me.x + 20), ground - 16)
       }
       drawCount(g, clock, w, h)
     }
+  }
+
+  const draw = (g: CanvasRenderingContext2D) => {
+    g.save()
+    if (fx > 0) {
+      g.beginPath()
+      g.rect(fx, 0, w, h)
+      g.clip()
+      g.translate(fx, 0)
+    }
+    drawField(g)
+    g.restore()
+    if (pads) {
+      const glow = clock < COUNT_IN && Math.floor(clock * 3) % 2 === 0
+      drawPad(g, pads.left, -1, steer < 0 && ended === null, glow, fx > 0)
+      drawPad(g, pads.right, 1, steer > 0 && ended === null, glow, fx > 0)
+    }
     if (flash > 0) {
       g.fillStyle = `rgba(255,255,255,${(flash / 0.12) * 0.6})`
-      g.fillRect(0, 0, w, h)
+      g.fillRect(0, 0, layout.w, h)
     }
     if (ended !== null) {
       g.fillStyle = `rgba(16,20,32,${Math.min(0.5, ended)})`
-      g.fillRect(0, 0, w, h)
-      drawText(g, lives <= 0 ? 'KO!' : 'TIME!', w / 2, h / 2 - 10, lives <= 0 ? '#ff6060' : '#f8d030', 'center', 3)
+      g.fillRect(0, 0, layout.w, h)
+      drawText(g, lives <= 0 ? 'KO!' : 'TIME!', layout.w / 2, h / 2 - 10, lives <= 0 ? '#ff6060' : '#f8d030', 'center', 3)
     }
   }
 
@@ -424,10 +495,11 @@ const start = (ctx: SoloCtx): GameRun => {
   }
 }
 
-/** Berry Rain at the arcade's cabinets (`MINIGAMES.berryCatch`); its screen fits the way the phone is held. */
+/** Berry Rain at the arcade's cabinets (`MINIGAMES.berryCatch`); its screen fits the way the phone is held, with pads on a touch screen. */
 export const berryCatch: SoloGame = {
   get size() {
-    return (shown = arcadeSize(SIZES.tall, SIZES.wide))
+    shown = berryLayout(arcadeSize(SIZES.tall, SIZES.wide), touchScreen())
+    return { w: shown.w, h: shown.h }
   },
   start,
 }
