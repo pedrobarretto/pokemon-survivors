@@ -626,7 +626,7 @@ export const zh: Messages = {
       offline: '目前無法載入城市。你仍然可以進入。',
       back: '返回',
     },
-    rooms: { plaza: '廣場', pier: '碼頭', cafe: '咖啡館', trail: '秘密基地樹林' },
+    rooms: { plaza: '廣場', pier: '碼頭', cafe: '咖啡館', trail: '秘密基地樹林', arcade: '遊樂場' },
     base: (handle: string) => `@${handle} 的基地`,
     status: {
       connecting: '連線中…',
@@ -692,6 +692,7 @@ export const zh: Messages = {
       fishing: '釣魚',
       gameTable: '遊戲桌',
       cabinet: '街機',
+      prizes: '獎品',
     },
     use: '使用',
     board: {
@@ -706,6 +707,7 @@ export const zh: Messages = {
     },
     counter: '咖啡館還在布置櫃檯，敬請期待！',
     pool: '水屬性寶可夢之後會在這裡游泳，敬請期待！',
+    prizes: '在遊戲機刷新紀錄，贏得獎盃來布置你的秘密基地！',
     grove: {
       first: [
         '噓！我只是一棵樹……好啦，我是 Sudowoodo。歡迎來到秘密基地樹林！',
@@ -5869,6 +5871,9 @@ export const zh: Messages = {
       monstera: '龜背芋',
       bonsai: '盆景',
       hangingPlant: '吊掛植物',
+      // The arcade's trophies (data/furnitureSets/games.ts).
+      berryBasket: '樹果籃',
+      goldenMallet: '黃金木槌',
     },
     doll: (legend) => `${legend}玩偶`,
     kinds: { floor: '家具', rug: '地毯', top: '擺飾', wall: '牆面', wallpaper: '壁紙', flooring: '地板' },
@@ -6165,7 +6170,7 @@ export const zh: Messages = {
       fourInRow: { name: '四子連線', blurb: '比對手先連成四顆精靈球。' },
       typeDuel: { name: '屬性對決', blurb: '火剋草，草剋水，水剋火。' },
     },
-    feats: { fishing: {}, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: {} },
+    feats: { fishing: {}, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: {} },
     end: {
       score: (n) => `${n} 分`,
       win: '勝利！',

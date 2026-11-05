@@ -35,9 +35,11 @@ export type SpotKind =
   | 'fishing'
   | 'gameTable'
   | 'cabinet'
+  /** The arcade's prize counter: what the games' trophies are. */
+  | 'prizes'
 
 /** The town's rooms (their shapes are `REALM_ROOMS`). */
-export const TOWN_ROOMS = ['plaza', 'pier', 'cafe', 'trail'] as const
+export const TOWN_ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade'] as const
 
 export type TownRoomId = (typeof TOWN_ROOMS)[number]
 
@@ -141,9 +143,13 @@ export const REALM_ROOMS = {
       post(168, 300),
       post(24, 216),
       ...[trunk(252, 214), trunk(528, 300), trunk(180, 412)],
-      ...[trunk(40, 100), trunk(104, 70), shrub(160, 100), trunk(260, 64), shrub(330, 96), trunk(40, 430)],
+      ...[trunk(40, 100), trunk(104, 70), shrub(160, 100), trunk(260, 64), shrub(298, 112), trunk(40, 430)],
+      rect(332, 96, 120, 38),
     ],
-    doors: [{ at: { x: 0, y: 226, w: 10, h: 60 }, to: 'plaza', spawn: { x: 600, y: 256 } }],
+    doors: [
+      { at: { x: 0, y: 226, w: 10, h: 60 }, to: 'plaza', spawn: { x: 600, y: 256 } },
+      { at: { x: 371, y: 134, w: 24, h: 6 }, to: 'arcade', spawn: { x: 200, y: 268 } },
+    ],
     spots: [
       { kind: 'pool', at: { x: 340, y: 304 }, reach: 120 },
       { kind: 'bench', at: { x: 92, y: 344 }, reach: 20 },
@@ -204,6 +210,35 @@ export const REALM_ROOMS = {
       { kind: 'host', at: { x: 556, y: 310 }, reach: 24 },
       { kind: 'bench', at: { x: 446, y: 324 }, reach: 20 },
       { kind: 'bench', at: { x: 196, y: 314 }, reach: 20 },
+    ],
+  },
+  arcade: {
+    w: 400,
+    h: 300,
+    spawn: { x: 200, y: 268 },
+    solid: [
+      rect(0, 0, 400, 64),
+      ...[52, 92, 132, 172].map((x) => rect(x - 11, 84, 22, 16)),
+      rect(278, 64, 88, 56),
+      oval(264, 110, 9, 5),
+      oval(28, 160, 14, 6),
+      oval(28, 206, 14, 6),
+      oval(380, 160, 9, 5),
+      rect(296, 196, 48, 10),
+      oval(22, 92, 9, 5),
+      oval(22, 292, 9, 5),
+      oval(378, 292, 9, 5),
+      rect(0, 64, 6, 236),
+      rect(394, 64, 6, 236),
+    ],
+    doors: [{ at: { x: 170, y: 290, w: 60, h: 10 }, to: 'pier', spawn: { x: 383, y: 154 } }],
+    spots: [
+      { kind: 'cabinet', at: { x: 52, y: 114 }, reach: 16, games: ['berryCatch'] },
+      { kind: 'cabinet', at: { x: 92, y: 114 }, reach: 16, games: ['berryCatch'] },
+      { kind: 'cabinet', at: { x: 132, y: 114 }, reach: 16, games: ['whackDiglett'] },
+      { kind: 'cabinet', at: { x: 172, y: 114 }, reach: 16, games: ['whackDiglett'] },
+      { kind: 'prizes', at: { x: 322, y: 134 }, reach: 22 },
+      { kind: 'bench', at: { x: 320, y: 214 }, reach: 20 },
     ],
   },
 } as const satisfies Record<TownRoomId, TownRoom>

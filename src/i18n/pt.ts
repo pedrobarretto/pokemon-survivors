@@ -811,7 +811,7 @@ export const pt = {
       offline: 'Não deu para ver as cidades agora. Você ainda pode entrar.',
       back: 'Voltar',
     },
-    rooms: { plaza: 'Praça', pier: 'Píer', cafe: 'Café', trail: 'Bosque das Bases' },
+    rooms: { plaza: 'Praça', pier: 'Píer', cafe: 'Café', trail: 'Bosque das Bases', arcade: 'Fliperama' },
     base: (handle: string) => `Base de @${handle}`,
     status: {
       connecting: 'Conectando…',
@@ -877,6 +877,7 @@ export const pt = {
       fishing: 'Pescar',
       gameTable: 'Mesa de jogos',
       cabinet: 'Fliperama',
+      prizes: 'Prêmios',
     } satisfies Record<SpotKind, string>,
     use: 'Usar',
     board: {
@@ -891,6 +892,7 @@ export const pt = {
     },
     counter: 'O café ainda está arrumando o balcão. Volte em breve!',
     pool: 'Pokémon de Água nadam aqui. Em breve!',
+    prizes: 'Bata recordes nos fliperamas e ganhe troféus para enfeitar a sua base secreta!',
     grove: {
       first: [
         'Psiu! Eu sou só uma árvore... Tá bom, eu sou o Sudowoodo. Bem-vindo ao Bosque das Bases!',
@@ -6264,6 +6266,9 @@ export const pt = {
       monstera: 'Costela-de-adão',
       bonsai: 'Bonsai',
       hangingPlant: 'Planta pendente',
+      // The arcade's trophies (data/furnitureSets/games.ts).
+      berryBasket: 'Cesta de frutas',
+      goldenMallet: 'Marreta de ouro',
     } satisfies Record<ShopFurnitureId, string>,
     doll: (legend: string) => `Boneco de ${legend}`,
     kinds: { floor: 'Móvel', rug: 'Tapete', top: 'Enfeite', wall: 'Parede', wallpaper: 'Papel de parede', flooring: 'Piso' } satisfies Record<FurnitureKind, string>,
@@ -6599,7 +6604,7 @@ export const pt = {
       fourInRow: { name: 'Quatro em Linha', blurb: 'Alinhe quatro Poké Balls antes do outro.' },
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fogo vence Planta, Planta vence Água, Água vence Fogo.' },
     },
-    feats: { fishing: {}, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: {} },
+    feats: { fishing: {}, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: {} },
     end: {
       score: (n: number) => `${n} pontos`,
       win: 'Vitória!',

@@ -26003,6 +26003,7 @@ span.arena-hub-face {
 }
 
 .minigame-head {
+  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26023,6 +26024,7 @@ span.arena-hub-face {
 }
 
 .minigame-stage {
+  align-self: stretch;
   position: relative;
   flex: 1;
   min-height: 0;

@@ -111,3 +111,19 @@ export const drawEmoteBubble = (ctx: Ctx, t: TrainerView, camX: number, camY: nu
   const pop = age < 0.1 ? 2 : 0
   blitCentered(ctx, BUBBLES()[t.emote.id], Math.round(t.x - camX), Math.round(t.y - camY - headOf(t) - 9 - pop))
 }
+
+/** The colors an arcade screen flashes through while someone plays it. */
+const SCREEN_COLORS = ['rgba(255,110,170,0.35)', 'rgba(90,230,250,0.35)', 'rgba(250,220,90,0.35)', 'rgba(130,240,130,0.35)'] as const
+
+/**
+ * The glow of the screen a trainer busy at a cabinet (`act === 'arcade'`)
+ * stares into: a pool of flickering light at their feet and a lit rim
+ * ahead of them, the colors changing with the game. Drawn under the trainer.
+ */
+export const drawScreenGlow = (ctx: Ctx, t: TrainerView, camX: number, camY: number, now: number) => {
+  const x = Math.round(t.x - camX)
+  const y = Math.round(t.y - camY)
+  const color = SCREEN_COLORS[Math.floor(now * 3 + t.x) % SCREEN_COLORS.length]!
+  blitEllipse(ctx, 11, 4, color, x, y - 4)
+  if (Math.floor(now * 8) % 3 !== 0) blitEllipse(ctx, 7, 2, color, x, y - 9)
+}

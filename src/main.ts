@@ -145,7 +145,8 @@ import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, 
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
-import { openRealm } from './ui/realm'
+import { devRealmRoom, openRealm } from './ui/realm'
+import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { realmClient, realmDevState, realmUrl, useLocalRealm } from './realmShell'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
@@ -3012,7 +3013,8 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * Dev: `ps.realm('local')` opens the realm on the in-page host with bots and
  * the faked API (`realmShell.ts`), `('off')` back to the relay, `('fake')`
  * fakes only the API (`fakeRealm`), `('city', 'cerulean')` goes straight into
- * a city; no argument prints the state.
+ * a city, `('room', 'arcade')` walks the open town's trainer into a room;
+ * no argument prints the state.
  */
 const devRealm = (cmd?: string, arg?: string) => {
   switch (cmd) {
@@ -3027,6 +3029,8 @@ const devRealm = (cmd?: string, arg?: string) => {
       return realmDevState()
     case 'city':
       return isCityId(arg) ? enterRealm(arg) : 'ps.realm: city id (pallet, cerulean…)'
+    case 'room':
+      return isTownRoomId(arg) ? devRealmRoom(arg) : `ps.realm: room (${TOWN_ROOMS.join(', ')})`
     default:
       return realmDevState()
   }
