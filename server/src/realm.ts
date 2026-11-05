@@ -9,7 +9,8 @@ import { parseHandle } from '../../src/game/ranking'
 import { REPORT } from '../../src/game/reports'
 import { playsShiny } from '../../src/game/shinyPicks'
 import { CITY_IDS, isCityId, REALM, REALM_CITIES, type CityId, type RealmHome, type RealmIdentity } from '../../src/net/realm'
-import { REPORT_REASONS, type BaseCard, type BaseSave, type BaseView, type FurnitureBuy, type RealmReport, type ReportReason } from '../../src/net/realmApi'
+import { REPORT_REASONS, type BaseCard, type BaseSave, type BaseView, type FurnitureBuy, type GameClaim, type RealmReport, type ReportReason } from '../../src/net/realmApi'
+import { capped, isMinigameId, MINIGAME_DAILY, MINIGAMES, trophiesEarned, type GameOutcome, type GameStats, type MinigameId } from '../../src/data/minigames'
 import { PRESENCE_STALE_MS, type IdentityResponse, type PresenceReport, type VisitResponse } from '../../src/net/realmRelay'
 import type { RealmBan, RealmDesk, RealmModeration, RealmReportGroup } from '../../src/realm/moderation'
 import { addFurniture, trophyFurniture } from '../../src/realm/trophies'
@@ -27,14 +28,15 @@ import { tierOfRow, type StandingRow } from './supporters'
  * Brasília day), the cities' presence (kept in memory, the newest report per
  * relay), the bases (`bases`), furniture bought at Bibarel's carpentry with
  * gems (the gem ledger) or ₽ (out of the stored save, like a Festival
- * donation) plus what the save earned (`trophyFurniture`), and the realm's
- * own reports and bans. Nothing here reaches `src/game`'s rules.
+ * donation) plus what the save earned (`trophyFurniture`), the mini games'
+ * claims (₽ under the daily caps, stats, trophies), and the realm's own
+ * reports and bans. Nothing here reaches `src/game`'s rules.
  */
 
 type Q = Sql | TransactionSql
 
-/** Brakes per account, per instance: base saves, likes and buys a minute (a script's, never a player's). */
-const LIMITS = { save: { n: 20, ms: 60_000 }, like: { n: 60, ms: 60_000 }, buy: { n: 30, ms: 60_000 } } as const
+/** Brakes per account, per instance: base saves, likes, buys and mini game claims a minute (a script's, never a player's). */
+const LIMITS = { save: { n: 20, ms: 60_000 }, like: { n: 60, ms: 60_000 }, buy: { n: 30, ms: 60_000 }, game: { n: 12, ms: 60_000 } } as const
 
 /** Bases a board answers at most. */
 export const BASE_LIST = 30
@@ -105,6 +107,51 @@ export const furniturePrice = (id: FurnitureId, pay: FurnitureBuy['pay'], day: D
   if (!f.price || (f.from !== undefined && day < f.from)) return null
   if (pay === 'gems') return 'gems' in f.price ? f.price.gems : null
   return 'coins' in f.price ? f.price.coins : null
+}
+
+/** A game the API takes as lasting at most this long (ms): a claim past it is made up. */
+const GAME_MAX_MS = 3_600_000
+
+/** Feats a claim names at most, and how long each may be. */
+const CLAIM_FEATS = { n: 16, len: 32 } as const
+
+/** A claimed outcome: a solo score (a whole number of points), or a table result against a person or the bot. */
+const parseOutcome = (v: unknown): GameOutcome | null => {
+  if (!isRecord(v)) return null
+  if ('score' in v) return typeof v.score === 'number' && Number.isSafeInteger(v.score) && v.score >= 0 ? { score: v.score } : null
+  const result = (['win', 'draw', 'loss'] as const).find((r) => r === v.result)
+  const vs = (['human', 'bot'] as const).find((w) => w === v.vs)
+  return result && vs ? { result, vs } : null
+}
+
+/**
+ * `POST /realm/game/claim`'s body, or null: a known game, an outcome of
+ * either shape, how long it took (ms) and the feats it hit (strings; the ones
+ * the game doesn't declare are dropped later, `statsAfter`). Whether the
+ * outcome fits the game is `coinsFor`'s call.
+ */
+export const parseGameClaim = (v: unknown): GameClaim | null => {
+  if (!isRecord(v) || !isMinigameId(v.game) || typeof v.ms !== 'number' || !Number.isFinite(v.ms) || v.ms < 0 || v.ms > GAME_MAX_MS) return null
+  const outcome = parseOutcome(v.outcome)
+  const feats = v.feats === undefined ? [] : v.feats
+  if (!outcome || !Array.isArray(feats) || feats.length > CLAIM_FEATS.n) return null
+  const named = feats.filter((f): f is string => typeof f === 'string' && f.length > 0 && f.length <= CLAIM_FEATS.len)
+  return named.length === feats.length ? { game: v.game, outcome, ms: Math.round(v.ms), feats: named } : null
+}
+
+/**
+ * A game's stats after one more finished game: a play, a win when it was
+ * one, the best score, and the feats it hit that the game declares (never
+ * one it doesn't, so a made-up feat can't open a trophy).
+ */
+export const statsAfter = (game: MinigameId, was: GameStats, outcome: GameOutcome, feats: readonly string[]): GameStats => {
+  const known: readonly string[] = MINIGAMES[game].feats
+  return {
+    plays: was.plays + 1,
+    wins: was.wins + ('result' in outcome && outcome.result === 'win' ? 1 : 0),
+    best: Math.max(was.best, 'score' in outcome ? outcome.score : 0),
+    feats: [...new Set([...was.feats, ...feats.filter((f) => known.includes(f))])],
+  }
 }
 
 /** `PUT /realm/base`'s body, or null. The layout's pieces go through `parseLayout`; one that doesn't parse is refused, never dropped quietly. */
@@ -225,6 +272,9 @@ export type LikeOutcome = { ok: true; likes: number } | { ok: false; error: 'pri
 
 export type BuyError = 'profile' | 'gems' | 'funds' | 'nosave' | 'stale'
 
+/** What a mini game claim came to (`GameClaimed`), or why it was refused: no @handle, or kept out of the realm. */
+export type ClaimOutcome = { ok: true; coins: number; today: number; trophies: FurnitureId[]; furniture: FurnitureCounts | null } | { ok: false; error: 'profile' | 'banned' }
+
 export type FurnitureOutcome =
   | { ok: true; furniture: FurnitureCounts; pay: 'gems'; balance: number }
   | { ok: true; furniture: FurnitureCounts; pay: 'coins'; save: Save; revision: number }
@@ -262,7 +312,12 @@ export const discordStaffChannel = (config: { token: string; guildId: string }):
 
 export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: () => Date } = {}) => {
   const now = deps.now ?? (() => new Date())
-  const limits = { save: rateLimiter(LIMITS.save.n, LIMITS.save.ms), like: rateLimiter(LIMITS.like.n, LIMITS.like.ms), buy: rateLimiter(LIMITS.buy.n, LIMITS.buy.ms) }
+  const limits = {
+    save: rateLimiter(LIMITS.save.n, LIMITS.save.ms),
+    like: rateLimiter(LIMITS.like.n, LIMITS.like.ms),
+    buy: rateLimiter(LIMITS.buy.n, LIMITS.buy.ms),
+    game: rateLimiter(LIMITS.game.n, LIMITS.game.ms),
+  }
   const presence = new Map<RealmHome, HeldPresence>()
 
   /** Whether `userId` is kept out of the realm now (a realm ban in force, or banned from the game). */
@@ -447,6 +502,48 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
       }),
 
     /**
+     * `POST /realm/game/claim`: one finished mini game worth `coins` (its
+     * `coinsFor`, priced by the route), in one transaction behind the
+     * account's row lock: the Brasília `day`'s caps (`capped`: the game's and
+     * all games'), the game's stats (`statsAfter`) and the trophies they
+     * reach for the first time (`trophiesEarned`, into `furniture_owned` as
+     * source `game`). The ₽ goes to the wallet on the device, like a run's.
+     */
+    claim: (userId: string, claim: GameClaim, coins: number, day: DayKey): Promise<ClaimOutcome> =>
+      sql.begin(async (tx): Promise<ClaimOutcome> => {
+        const [user] = await tx<{ handle: string | null }[]>`select handle from users where id = ${userId} for update`
+        if (!user?.handle) return { ok: false, error: 'profile' }
+        if (await closed(tx, userId)) return { ok: false, error: 'banned' }
+        const days = await tx<{ game: string; paid: number }[]>`select game, paid from realm_game_days where user_id = ${userId} and day = ${day}::date`
+        const paidAll = days.reduce((sum, d) => sum + d.paid, 0)
+        const paid = capped(claim.game, coins, days.find((d) => d.game === claim.game)?.paid ?? 0, paidAll)
+        await tx`
+          insert into realm_game_days (user_id, day, game, paid, plays) values (${userId}, ${day}::date, ${claim.game}, ${paid}, 1)
+          on conflict (user_id, day, game) do update set paid = realm_game_days.paid + excluded.paid, plays = realm_game_days.plays + 1`
+        const [row] = await tx<{ plays: number; wins: number; best: number; feats: string[] }[]>`
+          select plays, wins, best, feats from realm_game_stats where user_id = ${userId} and game = ${claim.game}`
+        const was: GameStats = row ?? { plays: 0, wins: 0, best: 0, feats: [] }
+        const stats = statsAfter(claim.game, was, claim.outcome, claim.feats)
+        await tx`
+          insert into realm_game_stats (user_id, game, plays, wins, best, feats, updated_at)
+          values (${userId}, ${claim.game}, ${stats.plays}, ${stats.wins}, ${stats.best}, ${[...stats.feats]}::text[], now())
+          on conflict (user_id, game) do update set plays = excluded.plays, wins = excluded.wins, best = excluded.best, feats = excluded.feats, updated_at = now()`
+        const before = new Set(trophiesEarned(claim.game, was))
+        const trophies = trophiesEarned(claim.game, stats).filter((id): id is FurnitureId => !before.has(id) && isFurnitureId(id))
+        for (const id of trophies) {
+          await tx`insert into furniture_owned (user_id, furniture, source, count) values (${userId}, ${id}, 'game', 1) on conflict (user_id, furniture, source) do nothing`
+        }
+        if (trophies.length > 0) console.log(`realm: ${userId} earned ${trophies.join(', ')} at ${claim.game}`)
+        return {
+          ok: true,
+          coins: paid,
+          today: Math.min(MINIGAME_DAILY, paidAll + paid),
+          trophies,
+          furniture: trophies.length > 0 ? await ownedBy(tx, userId, await slimOf(tx, userId)) : null,
+        }
+      }),
+
+    /**
      * `POST /realm/report`: stores the report (one open per reporter and
      * target) and posts it to the staff's channel. Nothing about the target
      * comes back: only reporting oneself and the daily limit (`REPORT.perDay`).
@@ -525,6 +622,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
     takeLike: (userId: string) => limits.like.take([userId], now().getTime()),
     /** Counts a buy against the account's limit; false past it. */
     takeBuy: (userId: string) => limits.buy.take([userId], now().getTime()),
+    /** Counts a mini game claim against the account's limit; false past it. */
+    takeGame: (userId: string) => limits.game.take([userId], now().getTime()),
   }
 }
 

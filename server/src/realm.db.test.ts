@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { winsNeeded } from '../../src/game/capture'
 import type { BaseLayout } from '../../src/data/secretBases'
+import { MINIGAME_DAILY, MINIGAMES } from '../../src/data/minigames'
+import type { GameClaim } from '../../src/net/realmApi'
 import type { Sql } from './db'
 import { realmStore } from './realm'
 
@@ -25,7 +27,7 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
   })
 
   beforeEach(async () => {
-    await sql`truncate furniture_owned, furniture_buys, bases, base_likes, base_visits, realm_bans, realm_reports, gem_ledger, cosmetics_owned, follows, saves, users cascade`
+    await sql`truncate realm_game_days, realm_game_stats, furniture_owned, furniture_buys, bases, base_likes, base_visits, realm_bans, realm_reports, gem_ledger, cosmetics_owned, follows, saves, users cascade`
     posted = []
     realm = realmStore(sql, { staff: { post: async (line) => void posted.push(line) } })
     for (const [id, handle] of [['u_ash', 'ash'], ['u_misty', 'misty'], ['u_brock', 'brock']] as const) {
@@ -128,5 +130,54 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
     realm.presence({ home: 'sa', at: 5, cities: { pallet: [] } })
     expect(realm.cities().cities).toEqual({ pallet: 2 })
     expect((await realm.friends('u_ash')).friends).toEqual([{ handle: 'misty', city: 'pallet' }])
+  })
+
+  /** The mini games' claims (`POST /realm/game/claim`). */
+  describe('mini games', () => {
+    const DAY = '2026-11-05'
+    const fished = (score: number, feats: string[] = []): GameClaim => ({ game: 'fishing', outcome: { score }, ms: 90_000, feats })
+
+    it('pays under the game\'s daily cap and counts the stats', async () => {
+      const cap = MINIGAMES.fishing.pay.daily
+      const perPlay = MINIGAMES.fishing.pay.perPlay
+      let paid = 0
+      for (let i = 0; i < 5; i++) {
+        const got = await realm.claim('u_ash', fished(perPlay), perPlay, DAY)
+        expect(got.ok).toBe(true)
+        if (got.ok) paid += got.coins
+      }
+      expect(paid).toBe(cap)
+      const [stats] = await sql<{ plays: number; best: number }[]>`select plays, best from realm_game_stats where user_id = 'u_ash' and game = 'fishing'`
+      expect(stats).toEqual({ plays: 5, best: perPlay })
+      // A new Brasília day pays again.
+      expect(await realm.claim('u_ash', fished(100), 100, '2026-11-06')).toMatchObject({ ok: true, coins: 100, today: 100 })
+    })
+
+    it('caps every game together at the day\'s total', async () => {
+      await sql`insert into realm_game_days (user_id, day, game, paid) values ('u_ash', ${DAY}::date, 'berryCatch', ${MINIGAME_DAILY - 30})`
+      expect(await realm.claim('u_ash', fished(200), 200, DAY)).toMatchObject({ ok: true, coins: 30, today: MINIGAME_DAILY })
+      expect(await realm.claim('u_ash', fished(200), 200, DAY)).toMatchObject({ ok: true, coins: 0, today: MINIGAME_DAILY })
+    })
+
+    it('grants a trophy once, when the stats first reach it, as game furniture', async () => {
+      const first = await realm.claim('u_ash', fished(150, ['shinyGyarados', 'madeUp']), 150, DAY)
+      expect(first).toMatchObject({ ok: true, trophies: ['shinyGyaradosTrophy'] })
+      expect(first.ok && first.furniture?.shinyGyaradosTrophy).toBe(1)
+      expect(await realm.claim('u_ash', fished(80, ['shinyGyarados']), 80, DAY)).toMatchObject({ ok: true, trophies: [], furniture: null })
+      const [stats] = await sql<{ feats: string[] }[]>`select feats from realm_game_stats where user_id = 'u_ash'`
+      expect(stats?.feats).toEqual(['shinyGyarados'])
+      const owned = await sql<{ furniture: string; source: string; count: number }[]>`select furniture, source, count from furniture_owned where user_id = 'u_ash'`
+      expect(owned).toEqual([{ furniture: 'shinyGyaradosTrophy', source: 'game', count: 1 }])
+      // The best score's plaque.
+      expect(await realm.claim('u_ash', fished(520), 250, DAY)).toMatchObject({ ok: true, trophies: ['goldenMagikarpPlaque'] })
+      expect((await realm.me('u_ash')).ok && (await realm.me('u_ash'))).toMatchObject({ furniture: { shinyGyaradosTrophy: 1, goldenMagikarpPlaque: 1 } })
+    })
+
+    it('refuses an account without a handle, and one kept out of the realm', async () => {
+      expect(await realm.claim('u_nohandle', fished(10), 10, DAY)).toEqual({ ok: false, error: 'profile' })
+      await realm.act('u_admin', { action: 'ban', userId: 'u_misty', days: 3, reason: 'spam' })
+      expect(await realm.claim('u_misty', fished(10), 10, DAY)).toEqual({ ok: false, error: 'banned' })
+      expect(await sql`select 1 from realm_game_days where user_id = 'u_misty'`).toHaveLength(0)
+    })
   })
 })
