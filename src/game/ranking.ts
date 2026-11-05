@@ -54,8 +54,13 @@ export type RunResult = {
  */
 export const RANKED = {
   slack: 30,
-  /** Longer than any endless run Arceus allows. */
-  maxTime: 4 * 3600,
+  /**
+   * A sanity bound on a run's clock, endless mode included: Arceus only
+   * stops a run that can't beat him, and a 266-min endless run (2026-11-05)
+   * outlived the old 4 h cap. A replay records ~200-450 KB an hour, so the
+   * API's run body limit (`runBody`) is sized from this.
+   */
+  maxTime: 8 * 3600,
   /** A sanity bound, not a game rule: long endless runs pass Lv 1000 (Lv 1045 at 169 min), so a cap at 999 refused them as implausible. */
   maxLevel: 9999,
   /**
