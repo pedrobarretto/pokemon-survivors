@@ -10,8 +10,13 @@ import type { TableRules } from '../../net/realmTables'
  * the cards turn: the type triangle decides (Fire beats Grass, Grass beats
  * Water, Water beats Fire), the same type goes to the higher power, and an
  * equal card wins for nobody. The winner banks its own card by type. Three
- * banked of one type, or one of each, wins the match; after `ROUNDS` rounds
- * without that, the most banked wins (equal: a draw).
+ * banked of one type, or one of each, wins the duel; after `DUEL.rounds`
+ * rounds without that, the most banked wins it (equal: nobody).
+ *
+ * A match is a best of three duels: the first seat to win `DUEL.toWin` duels
+ * wins it. A drawn duel counts for nobody; after `DUEL.duels` duels the most
+ * duels won takes the match (equal: a draw). Every duel deals both seats
+ * fresh decks from the seed.
  *
  * A seat's view hides the rival's hand and pick until they turn; the last
  * reveal is shown to both seats and to whoever watches.
@@ -23,12 +28,35 @@ export type DuelType = (typeof DUEL_TYPES)[number]
 /** A card: `id` is unique within its seat's deck (a move names it). `dex` is the Pokémon on it. */
 export type DuelCard = { id: number; type: DuelType; power: number; dex: number }
 
-/** One reveal: the card each seat turned, and who won it (null: nobody). */
-export type DuelReveal = { round: number; cards: readonly [DuelCard, DuelCard]; winner: number | null }
+type Banks = readonly [readonly DuelCard[], readonly DuelCard[]]
+
+/**
+ * One reveal: the duel and round it closed, the card each seat turned, and
+ * who won it (null: nobody). `end` is set when it settled the duel: who won
+ * the duel (null: nobody) and both banks as they ended (the view's banks are
+ * the next duel's by then).
+ */
+export type DuelReveal = { duel: number; round: number; cards: readonly [DuelCard, DuelCard]; winner: number | null; end: { winner: number | null; banks: Banks } | null }
 
 type Seat = { deck: readonly DuelCard[]; hand: readonly DuelCard[]; pick: DuelCard | null; bank: readonly DuelCard[] }
 
-export type DuelState = { seats: readonly [Seat, Seat]; round: number; last: DuelReveal | null; winner: number | null; over: boolean }
+/**
+ * A match: its seed, the duel being played (1-based) and its round, the duels won per
+ * seat (`score`), the cards each seat banked over the whole match
+ * (`banked`, for the perfect duel), the last reveal and the match's end.
+ */
+export type DuelState = {
+  /** The match's seed: the next duel's decks are dealt from it (never in a view). */
+  seed: number
+  seats: readonly [Seat, Seat]
+  duel: number
+  round: number
+  score: readonly [number, number]
+  banked: readonly [number, number]
+  last: DuelReveal | null
+  winner: number | null
+  over: boolean
+}
 
 /**
  * What a seat (or a spectator, `you: null`) sees: its own hand and pick, how
@@ -37,7 +65,10 @@ export type DuelState = { seats: readonly [Seat, Seat]; round: number; last: Due
  */
 export type DuelView = {
   you: number | null
+  duel: number
   round: number
+  score: readonly [number, number]
+  banked: readonly [number, number]
   hand: readonly DuelCard[]
   pick: DuelCard | null
   picked: readonly [boolean, boolean]
@@ -51,8 +82,12 @@ export type DuelView = {
 export const DUEL = {
   hand: 5,
   deck: 20,
-  /** Rounds before the match is settled by the most banked. */
+  /** Rounds before a duel is settled by the most banked. */
   rounds: 15,
+  /** Duels a seat must win to take the match (a best of three). */
+  toWin: 2,
+  /** Duels before the match is settled by the most won (drawn duels count for nobody). */
+  duels: 5,
   power: { min: 2, max: 12 },
 } as const
 
@@ -146,15 +181,44 @@ const seatOf = (seed: number): Seat => {
   return { deck: deck.slice(DUEL.hand), hand: deck.slice(0, DUEL.hand), pick: null, bank: [] }
 }
 
-const startDuel = (seed: number): DuelState => ({
-  seats: [seatOf(seed ^ 0x51ed), seatOf((seed ^ 0xa3c5) + 7919)],
+/** Both seats' fresh decks for duel `duel` of the match seeded `seed` (duel 1 deals what a single duel always dealt). */
+const dealSeats = (seed: number, duel: number): readonly [Seat, Seat] => {
+  const s = (seed + Math.imul(duel - 1, 0x9e3779b1)) | 0
+  return [seatOf(s ^ 0x51ed), seatOf((s ^ 0xa3c5) + 7919)]
+}
+
+const startMatch = (seed: number): DuelState => ({
+  seed,
+  seats: dealSeats(seed, 1),
+  duel: 1,
   round: 1,
+  score: [0, 0],
+  banked: [0, 0],
   last: null,
   winner: null,
   over: false,
 })
 
-/** Turns both picks: the winner banks its card, both draw, and the match ends on a winning bank or after the last round. */
+/**
+ * Settles a duel won by `winner` (null: nobody): counts it, and ends the
+ * match on `DUEL.toWin` duels or after `DUEL.duels`, else deals the next.
+ */
+const settle = (s: DuelState, seats: readonly [Seat, Seat], turned: Omit<DuelReveal, 'end'>, winner: number | null): DuelState => {
+  const score = [s.score[0] + (winner === 0 ? 1 : 0), s.score[1] + (winner === 1 ? 1 : 0)] as const
+  const last: DuelReveal = { ...turned, end: { winner, banks: [seats[0].bank, seats[1].bank] } }
+  const decided = score[0] >= DUEL.toWin ? 0 : score[1] >= DUEL.toWin ? 1 : null
+  if (decided !== null) return { ...s, seats, duel: s.duel, round: s.round, score, last, winner: decided, over: true }
+  if (s.duel >= DUEL.duels) {
+    const d = score[0] - score[1]
+    return { ...s, seats, duel: s.duel, round: s.round, score, last, winner: d > 0 ? 0 : d < 0 ? 1 : null, over: true }
+  }
+  return { ...s, seats: dealSeats(s.seed, s.duel + 1), duel: s.duel + 1, round: 1, score, last, winner: null, over: false }
+}
+
+/**
+ * Turns both picks: the winner banks its card and both draw; a winning bank,
+ * or the duel's last round, settles the duel.
+ */
 const reveal = (s: DuelState, a: Seat, b: Seat): DuelState => {
   const pa = a.pick!
   const pb = b.pick!
@@ -165,14 +229,15 @@ const reveal = (s: DuelState, a: Seat, b: Seat): DuelState => {
     return { deck, hand: draw ? [...hand, draw] : hand, pick: null, bank: won ? [...seat.bank, card] : seat.bank }
   }
   const seats = [after(a, pa, winner === 0), after(b, pb, winner === 1)] as const
-  const last: DuelReveal = { round: s.round, cards: [pa, pb], winner }
-  if (winner !== null && bankWins(seats[winner].bank)) return { seats, round: s.round, last, winner, over: true }
+  const turned = { duel: s.duel, round: s.round, cards: [pa, pb] as const, winner }
+  const next = { ...s, banked: [s.banked[0] + (winner === 0 ? 1 : 0), s.banked[1] + (winner === 1 ? 1 : 0)] as const }
+  if (winner !== null && bankWins(seats[winner].bank)) return settle(next, seats, turned, winner)
   const outOfCards = seats.some((x) => x.hand.length === 0)
   if (s.round >= DUEL.rounds || outOfCards) {
     const d = seats[0].bank.length - seats[1].bank.length
-    return { seats, round: s.round, last, winner: d > 0 ? 0 : d < 0 ? 1 : null, over: true }
+    return settle(next, seats, turned, d > 0 ? 0 : d < 0 ? 1 : null)
   }
-  return { seats, round: s.round + 1, last, winner: null, over: false }
+  return { ...next, seats, round: s.round + 1, last: { ...turned, end: null } }
 }
 
 const play = (s: DuelState, seat: number, id: number): DuelState | null => {
@@ -260,27 +325,39 @@ const parsePair = <T>(v: unknown, read: (x: unknown) => T | null): readonly [T, 
   return a === null || b === null ? null : [a, b]
 }
 
-const parseReveal = (v: unknown): DuelReveal | null => {
-  if (!isRecord(v) || !isInt(v.round) || !isSeatOrNull(v.winner)) return null
-  const cards = parsePair(v.cards, parseCard)
-  return cards ? { round: v.round, cards, winner: v.winner } : null
+const parseEnd = (v: unknown): DuelReveal['end'] | undefined => {
+  if (v === null) return null
+  if (!isRecord(v) || !isSeatOrNull(v.winner)) return undefined
+  const banks = parsePair(v.banks, (x) => parseCards(x, DUEL.deck))
+  return banks ? { winner: v.winner, banks } : undefined
 }
 
+const parseReveal = (v: unknown): DuelReveal | null => {
+  if (!isRecord(v) || !isInt(v.duel) || !isInt(v.round) || !isSeatOrNull(v.winner)) return null
+  const cards = parsePair(v.cards, parseCard)
+  const end = parseEnd(v.end)
+  return cards && end !== undefined ? { duel: v.duel, round: v.round, cards, winner: v.winner, end } : null
+}
+
+const count = (max: number) => (x: unknown) => (isInt(x) && x >= 0 && x <= max ? x : null)
+
 const parseView = (v: unknown): DuelView | null => {
-  if (!isRecord(v) || !isSeatOrNull(v.you) || !isInt(v.round) || !isSeatOrNull(v.winner) || typeof v.over !== 'boolean') return null
+  if (!isRecord(v) || !isSeatOrNull(v.you) || !isInt(v.duel) || !isInt(v.round) || !isSeatOrNull(v.winner) || typeof v.over !== 'boolean') return null
+  const score = parsePair(v.score, count(DUEL.duels))
+  const banked = parsePair(v.banked, count(DUEL.duels * DUEL.rounds))
   const hand = parseCards(v.hand, DUEL.hand)
   const pick = v.pick === null ? null : parseCard(v.pick)
   const picked = parsePair(v.picked, (x) => (typeof x === 'boolean' ? x : null))
-  const held = parsePair(v.held, (x) => (isInt(x) && x >= 0 && x <= DUEL.hand ? x : null))
+  const held = parsePair(v.held, count(DUEL.hand))
   const banks = parsePair(v.banks, (x) => parseCards(x, DUEL.deck))
   const last = v.last === null ? null : parseReveal(v.last)
-  if (!hand || (v.pick !== null && !pick) || !picked || !held || !banks || (v.last !== null && !last)) return null
-  return { you: v.you, round: v.round, hand, pick, picked, held, banks, last, winner: v.winner, over: v.over }
+  if (!score || !banked || !hand || (v.pick !== null && !pick) || !picked || !held || !banks || (v.last !== null && !last)) return null
+  return { you: v.you, duel: v.duel, round: v.round, score, banked, hand, pick, picked, held, banks, last, winner: v.winner, over: v.over }
 }
 
 export const typeDuelRules: TableRules<DuelState, number, DuelView> = {
   seats: 2,
-  start: startDuel,
+  start: startMatch,
   parseMove: (v) => (isInt(v) && v >= 0 && v < DUEL.deck ? v : null),
   play,
   pending: (s) => (s.over ? [] : [0, 1].filter((i) => s.seats[i]!.pick === null)),
@@ -289,7 +366,10 @@ export const typeDuelRules: TableRules<DuelState, number, DuelView> = {
     const mine = seat === 0 || seat === 1 ? s.seats[seat] : null
     return {
       you: mine ? seat : null,
+      duel: s.duel,
       round: s.round,
+      score: s.score,
+      banked: s.banked,
       hand: mine ? mine.hand : [],
       pick: mine ? mine.pick : null,
       picked: [s.seats[0].pick !== null, s.seats[1].pick !== null],

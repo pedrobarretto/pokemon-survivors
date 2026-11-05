@@ -14,7 +14,10 @@ import { bankCounts, bankWins, DUEL, DUEL_TYPES, duelWinner, typeDuelRules, type
  * to lift it, tap it again (or Jogar, or drag it up) to play it; keys 1–5,
  * arrows and Enter on a desktop. Each reveal plays out locally (the flip,
  * the clash, the card flying to its bank) while the next round's view is
- * already in, so the screen trails the table by under two seconds.
+ * already in, so the screen trails the table by under two seconds. A match
+ * is a best of three duels: the duels won show as two pips per side on the
+ * felt's left, and between duels a short beat shows the score and deals the
+ * next hands.
  *
  * Sized so a phone shows it at twice its pixels held either way (184 × 160).
  */
@@ -29,6 +32,8 @@ const FELT = { x: 2, y: 17, w: W - 4, h: 80 } as const
 
 /** The reveal's beats (s): the flip, the clash, the result line, the card flying to its bank, the end. */
 const BEAT = { flip: 0.2, flipEnd: 0.5, clash: 0.8, say: 1.05, fly: 1.55, end: 1.95 } as const
+/** The beat between two duels (s): the duel's result and the score, then the next duel's number. */
+const GAP = { next: 1.2, end: 2.1 } as const
 /** How long a played card takes from the hand to the felt (s). */
 const FLIGHT = 0.18
 
@@ -64,12 +69,13 @@ const DIGITS: readonly (readonly string[])[] = [
   ['0110', '1001', '1001', '0110', '1001', '1001', '0110'],
   ['0110', '1001', '1001', '0111', '0001', '0001', '0110'],
 ]
-/** A ">" in the same font, for "9 > 5" and "Fire > Grass". */
+/** A ">" in the same font, for "9 > 5" and "Fire > Grass", and a "-" for the score. */
 const GT = ['1000', '1100', '0110', '0011', '0110', '1100', '1000']
+const DASH = ['000', '000', '000', '111', '000', '000', '000']
 
 /** A number (or ">") in the big digits, outlined, 2 px wide strokes so it reads at a glance. */
 const bigText = (text: string, color: string) => {
-  const glyphs = [...text].map((c) => (c === '>' ? GT : DIGITS[Number(c)] ?? DIGITS[0]!))
+  const glyphs = [...text].map((c) => (c === '>' ? GT : c === '-' ? DASH : DIGITS[Number(c)] ?? DIGITS[0]!))
   const w = glyphs.reduce((s, g) => s + g[0]!.length + 2, 0) + 2
   const canvas = createCanvas(w, 9)
   const g = context2d(canvas)
@@ -218,6 +224,26 @@ const miniBack = lazy(() => {
   return canvas
 })
 
+/** A duel pip: a Poké Ball, gold once the duel is won, dark while it isn't. */
+const pips = lazy(() => {
+  const draw = (won: boolean) => {
+    const canvas = createCanvas(9, 9)
+    const g = context2d(canvas)
+    box(g, 0, 0, 9, 9, INK)
+    box(g, 1, 1, 7, 7, won ? '#f8c040' : '#2c3c30')
+    g.fillStyle = won ? '#fff0a0' : '#3c5444'
+    g.fillRect(2, 2, 2, 1)
+    g.fillStyle = INK
+    g.fillRect(1, 4, 7, 1)
+    g.fillStyle = won ? '#fff8e0' : '#4a6454'
+    g.fillRect(3, 3, 3, 3)
+    g.fillStyle = INK
+    g.fillRect(4, 4, 1, 1)
+    return canvas
+  }
+  return { won: draw(true), empty: draw(false) }
+})
+
 /** The felt: a wooden table with a green top and the type triangle printed faintly in the middle. */
 const table = lazy(() => {
   const canvas = createCanvas(W, H)
@@ -267,6 +293,8 @@ const handX = (i: number) => i * (CARD.w + 1)
 const bankAt = (bottom: boolean, type: DuelType) => ({ x: 4 + DUEL_TYPES.indexOf(type) * 25, y: bottom ? 100 : 3 })
 
 const PLAY_BTN = { x: 62, y: 80, w: 60, h: 14 } as const
+/** Where a side's duel pips sit on the felt's left: the rival's near the top, yours lower. */
+const PIPS = { theirs: { x: 9, y: 24 }, mine: { x: 9, y: 64 } } as const
 /** The line under the picks: what to do, the verdict, the round's result. */
 const LINE_Y = 80
 
@@ -285,10 +313,13 @@ const cardOf = (r: DuelReveal, seat: number) => (seat === 0 ? r.cards[0] : r.car
 
 const parse = (table: TableView | null) => (table && table.view !== null ? typeDuelRules.parseView(table.view) : null)
 
-/** What the end sheet claims for a seat: a 3-0 sweep is the perfect duel. */
+/** A card's key on the screen: ids repeat from one duel to the next. */
+const keyOf = (v: DuelView, c: DuelCard) => v.duel * 100 + c.id
+
+/** What the end sheet claims for a seat: the match won without the rival banking a single card in any duel is the perfect duel. */
 const featsOf = (table: TableView, seat: number): readonly string[] => {
   const v = parse(table)
-  return v && v.over && v.winner === seat && v.banks[1 - seat]!.length === 0 ? ['perfectDuel'] : []
+  return v && v.over && v.winner === seat && v.banked[1 - seat] === 0 ? ['perfectDuel'] : []
 }
 
 export const typeDuel: TableUi = {
@@ -304,7 +335,10 @@ export const typeDuel: TableUi = {
     /** Where each hand card is drawn: it slides to its place when the hand changes. */
     const shownX = new Map<number, number>()
     let reveal: Reveal | null = null
-    let seenRound = 0
+    /** The last reveal played (its duel × 100 + round). */
+    let seen = 0
+    /** The beat between two duels: its clock, the duel just settled and who won it. */
+    let gap: { t: number; next: number; winner: number | null } | null = null
     /** Hand cards already shown; a new one is dealt in (it slides up) once the reveal is done. */
     const known = new Map<number, number>()
     let intro = -1
@@ -333,12 +367,12 @@ export const typeDuel: TableUi = {
     const handOf = (v: DuelView) => {
       const pick = v.pick?.id ?? sent?.id
       const hidden = reveal !== null
-      return v.hand.filter((c) => c.id !== pick && (!hidden || known.has(c.id)))
+      return v.hand.filter((c) => c.id !== pick && (!hidden || known.has(keyOf(v, c))))
     }
 
     const canPick = (v: DuelView, table: TableView) => {
       const seat = mySeat()
-      return seat !== null && !v.over && reveal === null && intro < 0 && sent === null && v.pick === null && table.pending.includes(seat) && table.phase === 'playing'
+      return seat !== null && !v.over && reveal === null && gap === null && intro < 0 && sent === null && v.pick === null && table.pending.includes(seat) && table.phase === 'playing'
     }
 
     const send = (v: DuelView, id: number) => {
@@ -359,7 +393,7 @@ export const typeDuel: TableUi = {
       // A card still flying to the felt lands before the cards turn.
       const lead = flying ? Math.max(0, FLIGHT - (clock - flying.t0)) : 0
       reveal = { r, t: -lead, me: bottomSeat(v), done: new Set(), from: flying }
-      seenRound = r.round
+      seen = r.duel * 100 + r.round
       sent = null
       flying = null
       sel = null
@@ -391,15 +425,16 @@ export const typeDuel: TableUi = {
 
       // A new match: deal the hand in and count down.
       if (v.over) armed = true
-      else if (armed && v.round === 1 && !v.last) {
+      else if (armed && v.duel === 1 && v.round === 1 && !v.last) {
         armed = false
         intro = 0
         known.clear()
         reveal = null
-        seenRound = 0
+        seen = 0
+        gap = null
         sent = null
         endSaid = false
-        v.hand.forEach((c, i) => known.set(c.id, clock + 0.5 + i * 0.09))
+        v.hand.forEach((c, i) => known.set(keyOf(v, c), clock + 0.5 + i * 0.09))
       }
       if (intro >= 0) {
         const before = intro
@@ -409,7 +444,7 @@ export const typeDuel: TableUi = {
         if (intro > 1.8) intro = -1
       }
 
-      if (v.last && v.last.round > seenRound) onReveal(v, v.last)
+      if (v.last && v.last.duel * 100 + v.last.round > seen) onReveal(v, v.last)
       if (reveal) {
         if (freeze > 0) freeze -= dt
         else reveal.t += dt
@@ -452,24 +487,39 @@ export const typeDuel: TableUi = {
         })
         if (r.t >= BEAT.end) {
           reveal = null
-          v.hand.forEach((c, i) => {
-            if (!known.has(c.id)) {
-              known.set(c.id, clock + 0.05 + i * 0.05)
-              playSfx('move')
-            }
-          })
+          // A duel settled mid-match: the beat before the next one.
+          if (r.r.end && !v.over) {
+            gap = { t: 0, next: r.r.duel + 1, winner: r.r.end.winner }
+            const seat = mySeat()
+            playSfx(r.r.end.winner === null ? 'thud' : seat === null ? 'select' : r.r.end.winner === seat ? 'levelUp' : 'denied')
+          } else
+            v.hand.forEach((c, i) => {
+              if (!known.has(keyOf(v, c))) {
+                known.set(keyOf(v, c), clock + 0.05 + i * 0.05)
+                playSfx('move')
+              }
+            })
         }
       }
-      for (const c of v.hand) if (!known.has(c.id) && reveal === null) known.set(c.id, clock)
+      if (gap) {
+        const before = gap.t
+        gap.t += dt
+        if (before < GAP.next && gap.t >= GAP.next) playSfx('shing')
+        if (gap.t >= GAP.end) {
+          gap = null
+          v.hand.forEach((c, i) => known.set(keyOf(v, c), clock + 0.1 + i * 0.09))
+        }
+      }
+      for (const c of v.hand) if (!known.has(keyOf(v, c)) && reveal === null && gap === null) known.set(keyOf(v, c), clock)
       // A pick the table never took (refused, or lost on the way) goes back to the hand.
-      if (sent && v.pick === null && reveal === null && clock - sentAt > 3) sent = null
+      if (sent && v.pick === null && reveal === null && gap === null && clock - sentAt > 3) sent = null
 
       // The turn's clock, counted down here between the table's updates.
       if (table !== timer.of) timer = { ms: table.leftMs ?? 0, at: clock, of: table }
       const seat = mySeat()
       const myTurn = seat !== null && table.pending.includes(seat) && !v.over && v.pick === null && sent === null
       const left = Math.ceil((timer.ms - (clock - timer.at) * 1000) / 1000)
-      if (myTurn && reveal === null && left <= 5 && left > 0 && left !== lastTick) {
+      if (myTurn && reveal === null && gap === null && left <= 5 && left > 0 && left !== lastTick) {
         lastTick = left
         playSfx('tick')
       }
@@ -487,8 +537,8 @@ export const typeDuel: TableUi = {
       if (seat !== null)
         handOf(v).forEach((c, i) => {
           const to = handX(i)
-          const from = shownX.get(c.id) ?? to
-          shownX.set(c.id, Math.abs(to - from) < 0.5 ? to : from + (to - from) * Math.min(1, dt * 16))
+          const from = shownX.get(keyOf(v, c)) ?? to
+          shownX.set(keyOf(v, c), Math.abs(to - from) < 0.5 ? to : from + (to - from) * Math.min(1, dt * 16))
         })
 
       // Input.
@@ -684,9 +734,21 @@ export const typeDuel: TableUi = {
       const r = reveal
       const banking = r && r.t < BEAT.fly + 0.35 && r.r.winner !== null ? cardOf(r.r, r.r.winner) : null
 
-      // The HUDs: banks and names, the rival's hand face down.
-      drawBanks(g, v.banks[rival]!, false, banking && r?.r.winner === rival ? banking : null, !v.over)
-      drawBanks(g, v.banks[me]!, true, banking && r?.r.winner === me ? banking : null, !v.over)
+      // The HUDs: banks and names, the rival's hand face down. A reveal that settled a duel shows the banks it ended with.
+      const banks = r?.r.end ? r.r.end.banks : gap ? ([[], []] as const) : v.banks
+      const live = !v.over && !r?.r.end && gap === null
+      drawBanks(g, banks[rival]!, false, banking && r?.r.winner === rival ? banking : null, live)
+      drawBanks(g, banks[me]!, true, banking && r?.r.winner === me ? banking : null, live)
+
+      // The duels won, two pips a side; the duel a reveal settles counts once the beat starts.
+      const settling = r?.r.end?.winner ?? null
+      for (const [side, at] of [[rival, PIPS.theirs], [me, PIPS.mine]] as const) {
+        const won = v.score[side]! - (settling === side ? 1 : 0)
+        for (let k = 0; k < DUEL.toWin; k++) {
+          const pop = gap && gap.winner === side && k === won - 1 && gap.t < 0.3 ? -1 : 0
+          g.drawImage(k < won ? pips().won : pips().empty, at.x + k * 11, at.y + pop)
+        }
+      }
       const rivalName = seat === null ? d.seat(rival + 1) : d.rival
       const meName = seat === null ? d.seat(me + 1) : d.you
       const rn = label(rivalName, '#f8b8a8')
@@ -700,7 +762,22 @@ export const typeDuel: TableUi = {
 
       // The felt: the picks, or the reveal playing out.
       if (r) drawReveal(g, r)
-      else if (!v.over && intro < 0) {
+      else if (gap) {
+        // Between duels: the duel's result and the score, then the next duel.
+        g.fillStyle = 'rgba(16,10,6,0.75)'
+        g.fillRect(FELT.x + 3, FELT.y + 3, FELT.w - 6, FELT.h - 6)
+        if (gap.t < GAP.next) {
+          const text = gap.winner === null ? d.duelTie : seat === null ? d.seatWon(gap.winner + 1) : gap.winner === seat ? d.duelWon : d.duelLost
+          centered(g, label(text, gap.winner === null || gap.winner === seat || seat === null ? '#f8d040' : '#f8a0a0'), W / 2, 30)
+          const img = big(`${v.score[me]}-${v.score[rival]}`, '#fff8e0')
+          const s = 3
+          g.drawImage(img, Math.round(W / 2 - (img.width * s) / 2), 46, img.width * s, img.height * s)
+        } else {
+          const img = label(d.next(gap.next), '#f8d040')
+          g.drawImage(img, Math.round(W / 2 - img.width), 38, img.width * 2, img.height * 2)
+          centered(g, label(d.goal, '#e8f0e0'), W / 2, 70)
+        }
+      } else if (!v.over && intro < 0) {
         const mine = v.pick ?? sent
         if (flying) {
           const k = Math.min(1, (clock - flying.t0) / FLIGHT)
@@ -725,8 +802,8 @@ export const typeDuel: TableUi = {
       }
 
       // The line under the picks: what to do now, or the turn's clock.
-      const myTurn = seat !== null && tv.pending.includes(seat) && !v.over && v.pick === null && sent === null && !r && intro < 0
-      if (!r && intro < 0) {
+      const myTurn = seat !== null && tv.pending.includes(seat) && !v.over && v.pick === null && sent === null && !r && !gap && intro < 0
+      if (!r && !gap && intro < 0) {
         if (v.over) {
           const text = seat === null ? (v.winner === null ? d.tie : d.seatWon(v.winner + 1)) : v.winner === seat ? t().minigames.end.win : v.winner === null ? t().minigames.end.draw : t().minigames.end.loss
           const pulse = Math.floor(clock * 3) % 2 === 0
@@ -760,10 +837,11 @@ export const typeDuel: TableUi = {
         const hand = handOf(v)
         const live = myTurn
         hand.forEach((c, i) => {
-          const at = known.get(c.id) ?? clock
+          const at = known.get(keyOf(v, c))
+          if (at === undefined) return
           const k = Math.min(1, Math.max(0, (clock - at) / 0.22))
           if (k <= 0) return
-          let x = Math.round(shownX.get(c.id) ?? handX(i))
+          let x = Math.round(shownX.get(keyOf(v, c)) ?? handX(i))
           let y = HAND_Y + Math.round((1 - k) * (1 - k) * 50)
           if (c.id === sel) y -= LIFT
           // A mouse over a card lifts it a little (a finger never hovers).

@@ -121,9 +121,13 @@ export const MINIGAMES = {
     where: 'cafe',
     seats: 2,
     pay: { win: 150, draw: 60, loss: 30, daily: 600 },
-    /** A sweep at a quick pace takes about 15 s (3 rounds), most matches 20–60 s. */
-    minMs: 12_000,
-    /** `perfectDuel`: a win with the rival's bank empty (3–0 or one of each, unanswered). */
+    /**
+     * A best of three duels. The quickest 2–0 (3 rounds a duel, every card
+     * played the instant it can be) measured 15.8 s against the bot; a fast
+     * real player's 2–0 takes 20 s and more, most matches 30–90 s.
+     */
+    minMs: 15_000,
+    /** `perfectDuel`: the match won without the rival banking a single card in any duel. */
     feats: ['perfectDuel'],
     trophies: [
       { furniture: 'duelCup', after: { stat: 'wins', at: 10 } },

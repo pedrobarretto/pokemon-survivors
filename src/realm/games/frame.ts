@@ -1,4 +1,4 @@
-import { MINIGAMES, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
+import { coinsFor, MINIGAMES, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
 import { playSfx } from '../../engine/audio'
 import { t } from '../../i18n'
 import type { RealmAct } from '../../net/realm'
@@ -203,7 +203,10 @@ const loop = (frame: (dt: number, now: number) => void) => {
 /**
  * Claims a finished game and fills the end sheet: the ₽ paid (added to the
  * wallet), the day's cap reached, the trophies earned, or that it couldn't
- * be paid now. `again` restarts, `leave` closes.
+ * be paid now. A game that pays nothing as played (too short, or an outcome
+ * that doesn't fit, `coinsFor`) isn't claimed: the sheet says it was too
+ * short, as it does when the API refuses the outcome. `again` restarts,
+ * `leave` closes.
  */
 const endSheet = async (sheet: HTMLElement, headline: string, claim: Parameters<typeof claimGame>[0], again: () => void, leave: () => void) => {
   const m = t().minigames
@@ -214,10 +217,14 @@ const endSheet = async (sheet: HTMLElement, headline: string, claim: Parameters<
     h('div', { class: 'minigame-actions' }, h('button', { class: 'box', type: 'button', onclick: again }, m.end.again), h('button', { class: 'box', type: 'button', onclick: leave }, m.end.leave)),
   )
   sheet.classList.remove('hidden')
+  if (coinsFor(claim.game, claim.outcome, claim.ms) === null) {
+    paid.textContent = m.end.tooShort
+    return
+  }
   const res = await claimGame(claim)
   if (!sheet.isConnected) return
   if (isFailure(res)) {
-    paid.textContent = m.end.unpaid
+    paid.textContent = res.status === 400 && res.error === 'outcome' ? m.end.tooShort : m.end.unpaid
     return
   }
   if (res.coins > 0) depositPokeDollars(res.coins)

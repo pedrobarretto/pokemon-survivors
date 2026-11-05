@@ -6182,6 +6182,10 @@ export const zh: Messages = {
       rival: '對手',
       seat: (n: number) => `玩家${n}`,
       seatWon: (n: number) => `玩家${n}獲勝!`,
+      duelWon: '本局獲勝!',
+      duelLost: '本局落敗',
+      duelTie: '本局平手',
+      next: (n: number) => `第${n}局`,
     },
     end: {
       score: (n) => `${n} 分`,
@@ -6192,6 +6196,7 @@ export const zh: Messages = {
       paid: (n) => `+₽${n}`,
       capped: '今天迷你遊戲的 ₽ 已達上限，純粹玩樂吧！',
       unpaid: '目前無法領取 ₽。',
+      tooShort: '這局太短，無法獲得 ₽。',
       trophy: (name) => `新獎盃：${name}！`,
       again: '再玩一次',
       leave: '離開',

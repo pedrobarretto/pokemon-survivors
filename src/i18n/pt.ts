@@ -6616,6 +6616,10 @@ export const pt = {
       rival: 'Rival',
       seat: (n: number) => `J${n}`,
       seatWon: (n: number) => `J${n} venceu!`,
+      duelWon: 'Duelo seu!',
+      duelLost: 'Duelo do rival',
+      duelTie: 'Duelo empatado',
+      next: (n: number) => `Duelo ${n}`,
     },
     end: {
       score: (n: number) => `${n} pontos`,
@@ -6626,6 +6630,7 @@ export const pt = {
       paid: (n: number) => `+₽${n}`,
       capped: 'Os mini games já pagaram o limite de ₽ de hoje. Jogue por diversão!',
       unpaid: 'Não deu pra receber o ₽ agora.',
+      tooShort: 'Rodada curta demais para valer ₽.',
       trophy: (name: string) => `Troféu novo: ${name}!`,
       again: 'Jogar de novo',
       leave: 'Sair',

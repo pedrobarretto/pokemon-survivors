@@ -6182,6 +6182,10 @@ export const fr: Messages = {
       rival: 'Rival',
       seat: (n: number) => `J${n}`,
       seatWon: (n: number) => `J${n} gagne !`,
+      duelWon: 'Duel gagné !',
+      duelLost: 'Duel perdu',
+      duelTie: 'Duel nul',
+      next: (n: number) => `Duel ${n}`,
     },
     end: {
       score: (n) => `${n} points`,
@@ -6192,6 +6196,7 @@ export const fr: Messages = {
       paid: (n) => `+₽${n}`,
       capped: 'Les mini-jeux ont déjà payé la limite de ₽ du jour. Joue pour le plaisir !',
       unpaid: 'Impossible de toucher les ₽ pour l\'instant.',
+      tooShort: 'Partie trop courte pour gagner des ₽.',
       trophy: (name) => `Nouveau trophée : ${name} !`,
       again: 'Rejouer',
       leave: 'Quitter',

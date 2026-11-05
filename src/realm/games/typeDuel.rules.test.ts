@@ -49,35 +49,67 @@ describe('type duel', () => {
     expect(R.play(s1, 0, s0.seats[0].hand[1]!.id)).toBeNull()
     const b = s1.seats[1].hand[0]!
     const s2 = R.play(s1, 1, b.id)!
-    expect(s2.last).toEqual({ round: 1, cards: [a, b], winner: duelWinner(a, b) })
+    expect(s2.last).toEqual({ duel: 1, round: 1, cards: [a, b], winner: duelWinner(a, b), end: null })
     expect(s2.round).toBe(2)
     expect(s2.seats[0].hand).toHaveLength(DUEL.hand)
     expect(s2.seats[0].hand.some((c) => c.id === a.id)).toBe(false)
     expect(R.pending(s2)).toEqual([0, 1])
   })
 
-  it('banks only the winner’s card and ends on a winning bank', () => {
+  it('settles a duel on a winning bank and deals both seats fresh hands', () => {
     for (let seed = 0; seed < 40; seed++) {
-      const { s } = playOut(R.start(seed))
-      const res = R.result(s)!
-      expect(res).not.toBeNull()
-      if (res.winner !== null && s.round < DUEL.rounds) expect(bankWins(s.seats[res.winner === 0 ? 0 : 1].bank)).toBe(true)
-      const banked = s.seats[0].bank.length + s.seats[1].bank.length
-      expect(banked).toBeLessThanOrEqual(s.round)
+      let s = R.start(seed)
+      while (s.duel === 1 && !s.over) s = R.play(R.play(s, 0, s.seats[0].hand[0]!.id)!, 1, s.seats[1].hand[0]!.id)!
+      const end = s.last!.end!
+      expect(end).not.toBeNull()
+      if (end.winner !== null && s.last!.round < DUEL.rounds) expect(bankWins(end.banks[end.winner === 0 ? 0 : 1])).toBe(true)
+      expect(s.score[0] + s.score[1]).toBe(end.winner === null ? 0 : 1)
+      if (!s.over) {
+        expect(s.duel).toBe(2)
+        expect(s.round).toBe(1)
+        for (const seat of s.seats) expect(seat.bank).toEqual([]), expect(seat.hand).toHaveLength(DUEL.hand)
+      }
     }
   })
 
-  it('settles by the most banked after the last round', () => {
-    // Both seats mirror the same type each round, so only power decides and banks grow slowly.
-    let s = R.start(3)
-    const settled = playOut(s, (x, seat) => [...x.seats[seat]!.hand].sort((p, q) => p.power - q.power)[0]!.id).s
-    expect(settled.over).toBe(true)
-    s = settled
-    if (!bankWins(s.seats[0].bank) && !bankWins(s.seats[1].bank)) {
-      const d = s.seats[0].bank.length - s.seats[1].bank.length
-      expect(s.winner).toBe(d > 0 ? 0 : d < 0 ? 1 : null)
-      expect(s.round).toBe(DUEL.rounds)
+  it('wins the match at two duels, within the cap', () => {
+    for (let seed = 0; seed < 60; seed++) {
+      const { s } = playOut(R.start(seed))
+      const res = R.result(s)!
+      expect(s.duel).toBeLessThanOrEqual(DUEL.duels)
+      expect(s.score[0] + s.score[1]).toBeLessThanOrEqual(s.duel)
+      if (s.duel < DUEL.duels) expect(Math.max(...s.score)).toBe(DUEL.toWin)
+      if (res.winner !== null) expect(s.score[res.winner === 0 ? 0 : 1]).toBeGreaterThan(s.score[res.winner === 0 ? 1 : 0])
     }
+  })
+
+  /** A match on its duel's last round with one card each in hand, `banks` already banked. */
+  const lastRound = (a: DuelCard, b: DuelCard, over: Partial<DuelState>, banks: readonly [DuelCard[], DuelCard[]] = [[], []]): DuelState => {
+    const s = R.start(5)
+    const seat = (c: DuelCard, bank: DuelCard[]) => ({ deck: [], hand: [c], pick: null, bank })
+    return { ...s, seats: [seat(a, banks[0]), seat(b, banks[1])], round: DUEL.rounds, ...over }
+  }
+  const turn = (s: DuelState) => R.play(R.play(s, 0, s.seats[0].hand[0]!.id)!, 1, s.seats[1].hand[0]!.id)!
+
+  it('counts a drawn duel for nobody and deals the next', () => {
+    const s = turn(lastRound(card('fire', 5), card('fire', 5), { score: [1, 0] }))
+    expect(s.last!.end).toEqual({ winner: null, banks: [[], []] })
+    expect(s.score).toEqual([1, 0])
+    expect(s.over).toBe(false)
+    expect(s.duel).toBe(2)
+  })
+
+  it('ends the match on a second duel won', () => {
+    const s = turn(lastRound(card('fire', 9), card('fire', 3, 1), { duel: 2, score: [1, 0] }, [[card('fire', 4, 5), card('fire', 6, 6)], []]))
+    expect(s.score).toEqual([2, 0])
+    expect(R.result(s)).toEqual({ winner: 0, forfeit: null })
+  })
+
+  it('settles the match after the last duel: most duels won, else a draw', () => {
+    const drawn = turn(lastRound(card('water', 5), card('water', 5), { duel: DUEL.duels, score: [1, 1] }))
+    expect(R.result(drawn)).toEqual({ winner: null, forfeit: null })
+    const ahead = turn(lastRound(card('water', 5), card('water', 5), { duel: DUEL.duels, score: [0, 1] }))
+    expect(R.result(ahead)).toEqual({ winner: 1, forfeit: null })
   })
 
   it('hides the rival’s hand and pick until the reveal', () => {
@@ -92,6 +124,7 @@ describe('type duel', () => {
     expect(watcher.hand).toEqual([])
     expect(watcher.you).toBeNull()
     expect(R.view(s1, 1).pick).toEqual(s0.seats[1].hand[2])
+    expect(Object.keys(watcher)).not.toContain('seed')
     // Through the wire and back.
     expect(R.parseView(JSON.parse(JSON.stringify(mine)))).toEqual(mine)
     expect(R.parseView({ ...mine, hand: [{ id: 0, type: 'dark', power: 3, dex: 1 }] })).toBeNull()
