@@ -584,6 +584,8 @@ export const es: Messages = {
       all: 'Todo',
       owned: 'Tuyo',
       equipped: 'En uso',
+      lockedTag: 'Bloqueado',
+      locked: 'Bloqueado: tu saldo quedó negativo después de un reembolso o una disputa. Vuelve cuando el saldo sea 0 o más.',
       unsold: 'No disponible',
       misfit: (name: string) => `No le queda bien a ${name}`,
       effect: 'Aparece en las partidas, el co-op y la Arena.',

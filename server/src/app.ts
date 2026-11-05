@@ -14,7 +14,7 @@ import { GEM_PACKS, isGemPackId, packGems, type GemCurrency } from '../../src/da
 import { isPollOptionOf, type PollKind } from '../../src/data/supporters'
 import { brasiliaDay, isDayKey } from '../../src/game/day'
 import { parseDonationAmount } from '../../src/game/festival'
-import { bundleOnSale, isFree, onSale } from '../../src/game/gems'
+import { bundleOnSale, isFree, onSale, type GemBuyResponse } from '../../src/game/gems'
 import { isSkinBundleId } from '../../src/data/skinCatalog'
 import { isDifficulty } from '../../src/game/difficulty'
 import { halloweenAt } from '../../src/game/halloween'
@@ -233,18 +233,19 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   game's origin. `GET /patreon/callback` (Patreon sends the player there) links the account, gives it the patron's tier
  *   and files their waiting charges, then redirects to the game with `?patreon=linked` (or `failed`). `DELETE /patreon/link` (auth):
  *   forgets it, `{ unlinked: true }`. 503 without the Patreon client.
- * - `GET /gems` (auth): `GemsStatus` `{ balance, owned, look }`. `GET /gems/ledger` (auth): the latest 50 `GemLedgerEntry`, newest first.
+ * - `GET /gems` (auth): `GemsStatus` `{ balance, owned, locked, look, taken }` (`locked`: owned but not wearable while the balance is
+ *   negative, `lockedCosmetics`; the look leaves them out). `GET /gems/ledger` (auth): the latest 50 `GemLedgerEntry`, newest first.
  * - `GET /gems/purchase/:ref` (auth): `GemPurchaseResponse` `{ status, gems, balance }`, where the account's own pack `ref` (the
  *   checkout's `?gems=<ref>`) stands; 404 for anyone else's or an unknown one.
  * - `POST /gems/checkout` (auth) `{ pack, method, currency }`: `{ url }`, a checkout for a gem pack: `card` Stripe Checkout in
  *   `currency`, `pix` AbacatePay in reais (whatever `currency` says). Paid, it comes back to the game with `?gems=<ref>`, and
  *   the webhook credits the pack. 400 invalid, 429 past the checkout limit, 503 without the method's key.
- * - `POST /gems/buy` (auth) `{ id }`: buys a cosmetic. `{ balance, owned }`; 402 `{ error: 'gems' }` short (or negative),
+ * - `POST /gems/buy` (auth) `{ id }`: buys a cosmetic. `{ balance, owned, locked }`; 402 `{ error: 'gems' }` short (or negative),
  *   409 owned already (a free one too), 404 unknown or not on sale. The debit and the ownership land together, once.
  * - `POST /gems/bundle` (auth) `{ id }`: buys a skin bundle (`SKIN_BUNDLES`): the skins the account lacks, for what they cost
- *   it now (`bundlePrice`). `{ balance, owned }`; 402 short, 409 all owned already, 404 unknown or not on sale (a launch
+ *   it now (`bundlePrice`). `{ balance, owned, locked }`; 402 short, 409 all owned already, 404 unknown or not on sale (a launch
  *   offer past its days). Once, like a buy.
- * - `PUT /gems/look` (auth) `{ look }`: stores the equipped look, keeping only what the account owns or what's free. `{ look }`.
+ * - `PUT /gems/look` (auth) `{ look }`: stores the equipped look, keeping only what the account owns (and isn't locked) or what's free. `{ look }`.
  * - `GET /me/supporter` (auth): `SupporterStatus` (`patreon` null when the server has no Patreon client). `PUT /me/supporter` (auth) `{ public }`: shows or hides the badge and name.
  * - `GET /supporters`: `{ supporters, hidden }`, the wall (`WallEntry[]`, with each one's title and Hall da Fama Pokémon) and how many supporters per tier stay off it.
  * - `GET /poll`: `Poll`. `PUT /poll` (auth) `{ choice }`: a supporter's vote, 403 for anyone else. `GET /poll/diamond`,
@@ -609,7 +610,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!gems.takeBuy(c.var.userId)) return c.json({ error: 'too many buys' }, 429)
     const bought = await gems.buy(c.var.userId, id, price)
     if (!bought.ok) return bought.error === 'gems' ? c.json({ error: 'gems' }, 402) : c.json({ error: 'owned' }, 409)
-    return c.json({ balance: bought.balance, owned: bought.owned })
+    return c.json({ balance: bought.balance, owned: bought.owned, locked: bought.locked } satisfies GemBuyResponse)
   })
 
   app.post('/gems/bundle', auth, smallBody, async (c) => {
@@ -619,7 +620,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!gems.takeBuy(c.var.userId)) return c.json({ error: 'too many buys' }, 429)
     const bought = await gems.buyBundle(c.var.userId, id)
     if (!bought.ok) return bought.error === 'gems' ? c.json({ error: 'gems' }, 402) : c.json({ error: 'owned' }, 409)
-    return c.json({ balance: bought.balance, owned: bought.owned })
+    return c.json({ balance: bought.balance, owned: bought.owned, locked: bought.locked } satisfies GemBuyResponse)
   })
 
   app.put('/gems/look', auth, smallBody, async (c) => {

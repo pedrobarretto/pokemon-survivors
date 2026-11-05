@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRotated } from '../engine/pixelart'
+import { beginRects, blitCentered, blitEllipse, blitRotated } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { bodyOf } from '../data/bodies'
@@ -30,16 +30,17 @@ export const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 /** 1 while it lives, easing to 0 over its last `window` seconds. */
 export const fadeOut = (a: Attack, window: number) => clamp01((a.ttl - a.age) / window)
 
-/** Square-brush line from (x0, y0) to (x1, y1), `w` px thick. Drawing lean, a brush 2 px or wider stamps every other step: the squares still overlap. */
+/** Square-brush line from (x0, y0) to (x1, y1), `w` px thick, as one path. Drawing lean, a brush 2 px or wider stamps every other step: the squares still overlap. */
 export const thickLine = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, w: number, color: string) => {
   const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0)))
   const half = Math.floor(w / 2)
   const stride = detail.lean && w >= 2 ? 2 : 1
-  ctx.fillStyle = color
+  beginRects(ctx, color)
   for (let i = 0; i <= n; i = i < n && i + stride > n ? n : i + stride) {
     const k = i / n
-    ctx.fillRect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
+    ctx.rect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
   }
+  ctx.fill()
 }
 
 /** A 4-point twinkle. */
@@ -49,28 +50,35 @@ export const twinkle = (ctx: Ctx, x: number, y: number, size: number, color: str
 }
 
 /**
- * A solid ring `thick` px wide at radius `r` (squashed by `squash`), in one color. Drawing lean,
- * a ring 2 px or thicker is plotted in 2 px squares, every other step: a quarter of the calls.
+ * A solid ring `thick` px wide at radius `r` (squashed by `squash`), in one color, as one path.
+ * Drawing lean, a ring 2 px or thicker is plotted in 2 px squares, every other step: a quarter of the rects.
  */
 export const band = (ctx: Ctx, x: number, y: number, r: number, thick: number, color: string, squash = 1) => {
   const steps = Math.max(24, Math.ceil(r * TAU))
   const size = detail.lean && thick >= 2 ? 2 : 1
-  ctx.fillStyle = color
+  beginRects(ctx, color)
   for (let i = 0; i < steps; i += size) {
     const a = (i / steps) * TAU
-    for (let d = 0; d < thick; d += size) ctx.fillRect(Math.round(x + Math.cos(a) * (r - d)), Math.round(y + Math.sin(a) * (r - d) * squash), size, size)
+    const c = Math.cos(a)
+    const s = Math.sin(a) * squash
+    for (let d = 0; d < thick; d += size) ctx.rect(Math.round(x + c * (r - d)), Math.round(y + s * (r - d)), size, size)
   }
+  ctx.fill()
 }
 
-/** Rays from (x, y), `count` of them from `inner` to `outer`, alternating long and short. */
+/** Rays from (x, y), `count` of them from `inner` to `outer`, alternating long and short; each color as one path (the rays' pixels don't overlap). */
 export const spokes = (ctx: Ctx, x: number, y: number, inner: number, outer: number, count: number, colors: readonly string[], turn = 0, squash = 1) => {
-  for (let i = 0; i < count; i++) {
-    const a = turn + (i / count) * TAU
-    const len = i % 2 === 0 ? outer : inner + (outer - inner) * 0.55
-    for (let d = inner; d <= len; d++) {
-      const k = (d - inner) / Math.max(1, len - inner)
-      px(ctx, x + Math.cos(a) * d, y + Math.sin(a) * d * squash, colors[Math.min(colors.length - 1, Math.floor(k * colors.length))]!)
+  for (let c = 0; c < colors.length; c++) {
+    beginRects(ctx, colors[c]!)
+    for (let i = 0; i < count; i++) {
+      const a = turn + (i / count) * TAU
+      const len = i % 2 === 0 ? outer : inner + (outer - inner) * 0.55
+      for (let d = inner; d <= len; d++) {
+        const k = (d - inner) / Math.max(1, len - inner)
+        if (Math.min(colors.length - 1, Math.floor(k * colors.length)) === c) ctx.rect(Math.round(x + Math.cos(a) * d), Math.round(y + Math.sin(a) * d * squash), 1, 1)
+      }
     }
+    ctx.fill()
   }
 }
 
@@ -549,6 +557,8 @@ const drawTimeSnap = (ctx: Ctx, a: Attack) => {
 
 /** Foes Roar of Time froze carry a little stopped clock over their heads. */
 export const drawStoppedFoes = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
+  // Drawing lean, the frozen tint alone marks them: a stopped horde is hundreds of clocks.
+  if (detail.lean) return
   const clock = LEGEND_FX.tinyClock()
   for (const e of g.enemies) {
     const f = e.status.freeze

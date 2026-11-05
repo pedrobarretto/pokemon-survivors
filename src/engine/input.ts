@@ -143,6 +143,17 @@ export const gripMove = (grip: Grip | null, id: number, at: Vec): Grip | null =>
 export const gripUp = (grip: Grip | null, id: number): Grip | null => (grip && grip.id === id ? null : grip)
 
 /**
+ * Hands `key` to the handlers listening when it came, and not to one removed
+ * meanwhile: a handler that opens a screen (whose own handler would hear the
+ * same press) or closes one must not chain. Walking the live set looped
+ * forever on the co-op room's Esc (its confirm opened, heard the Esc, closed
+ * and gave the room a new handler, which heard it again…).
+ */
+export const dispatchKey = (handlers: Set<(key: string) => void>, key: string) => {
+  for (const h of [...handlers]) if (handlers.has(h)) h(key)
+}
+
+/**
  * `bindings` is read on every press, so a remap applies at once. `fixedStick`
  * returns the fixed joystick's center (CSS px) while that mode is on, or null
  * for the floating one. It's read on every touch, so the setting and a
@@ -152,7 +163,7 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   /** Keys held down, by physical code, with the code they typed (the bindings may change while one is held). */
   const held = new Map<string, string>()
   const handlers = new Set<(key: string) => void>()
-  const dispatch = (key: string) => handlers.forEach((h) => h(key))
+  const dispatch = (key: string) => dispatchKey(handlers, key)
   let capturing: ((press: RawPress) => void) | null = null
   /** The pointer holding the stick, or null (`gripDown`). */
   let grip: Grip | null = null
@@ -212,6 +223,10 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   // (touch is captured anyway), and every way a pointer can end lets go of the stick.
   target.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return
+    // A stick whose finger the page no longer holds is stale: its end got lost (an app's webview
+    // over the game ate it). The browser then calls every new touch non-primary and the stick
+    // ignored them all: the Pokémon stood still for good while the buttons kept casting.
+    if (grip && !target.hasPointerCapture(grip.id)) grip = null
     grip = gripDown(grip, { id: e.pointerId, at: { x: e.clientX, y: e.clientY }, primary: e.isPrimary }, fixedStick())
     if (grip?.id !== e.pointerId) return
     try {

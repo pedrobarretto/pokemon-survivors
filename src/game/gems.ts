@@ -22,10 +22,12 @@ export const isGemReason = (v: unknown): v is GemReason => typeof v === 'string'
 
 /**
  * `GET /gems`: the balance (negative after a refund of spent gems, which
- * blocks buying), what the account owns, its equipped look and the `once`
- * packs it can't buy again (`taken`: bought, or being paid).
+ * blocks buying), what the account owns, what of it is locked while the
+ * balance is negative (`locked`, `lockedCosmetics`: owned, not wearable), its
+ * equipped look (without the locked) and the `once` packs it can't buy again
+ * (`taken`: bought, or being paid).
  */
-export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; look: Look; taken: readonly GemPackId[] }
+export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; locked: readonly CosmeticId[]; look: Look; taken: readonly GemPackId[] }
 
 /** One line of `GET /gems/ledger`: `amount` signed, `at` in ms. */
 export type GemLedgerEntry = { amount: number; reason: GemReason; ref: string; at: number }
@@ -52,8 +54,8 @@ export const checkoutRefusal = (pack: GemPackId, currency: GemCurrency, spentTod
   return spentToday + GEM_PACKS[pack][currency] > GEM_CHECKOUT.daily[currency] ? 'cap' : null
 }
 
-/** `POST /gems/buy`'s answer. */
-export type GemBuyResponse = { balance: number; owned: readonly CosmeticId[] }
+/** `POST /gems/buy`'s answer (`locked` as in `GemsStatus`: a buy leaves the balance at 0 or more, so none). */
+export type GemBuyResponse = { balance: number; owned: readonly CosmeticId[]; locked: readonly CosmeticId[] }
 
 /**
  * A pack's row on the API (`gem_purchases.state`): `open` until paid; `paid`
@@ -130,6 +132,25 @@ export const bundleOnSale = (id: SkinBundleId, day: DayKey) => {
   const last = bundleLastDay(id)
   return day >= SKIN_LAUNCH && (last === null || day <= last)
 }
+
+/** A cosmetic an account owns, as the API keeps it: bought with gems (`buy`) or given (`gift`), `at` ms. */
+export type OwnedCosmetic = { id: CosmeticId; source: 'buy' | 'gift'; at: number }
+
+/**
+ * The owned cosmetics an account may not wear now: while its `balance` is
+ * negative, those it bought with gems at or after `since` (ms), when the
+ * earliest pack a refund or dispute took gems from was paid (null: none was).
+ * So the gems a chargeback took back can't keep what they bought. Gifts and
+ * free items never lock, nor anything bought before that pack; back at 0 or
+ * more (a pack, play gems, a grant, a dispute won), nothing is locked.
+ */
+export const lockedCosmetics = (balance: number, owned: readonly OwnedCosmetic[], since: number | null): CosmeticId[] =>
+  balance >= 0 || since === null
+    ? []
+    : owned
+        .filter((c) => c.source === 'buy' && c.at >= since && !isFree(c.id))
+        .map((c) => c.id)
+        .sort()
 
 /** Owned ids the catalog still has (rows outlive entries), in a stable order. */
 export const knownOwned = (ids: readonly string[]): CosmeticId[] => ids.filter(isCosmeticId).sort()

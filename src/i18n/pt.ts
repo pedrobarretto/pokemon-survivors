@@ -761,6 +761,9 @@ export const pt = {
       all: 'Tudo',
       owned: 'Seu',
       equipped: 'Usando',
+      /** An owned item locked while the balance is negative (`GemsStatus.locked`): its card's tag, and why and how it unlocks. */
+      lockedTag: 'Bloqueado',
+      locked: 'Bloqueado: seu saldo ficou negativo depois de um reembolso ou contestação. Volta quando o saldo for 0 ou mais.',
       unsold: 'Indisponível',
       /** A wearable that doesn't sit right on the previewed Pokémon. */
       misfit: (name: string) => `Não fica bem no ${name}`,

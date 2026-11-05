@@ -1,5 +1,5 @@
 import { drawEvoItem } from './evoItemArt'
-import { blitCentered, blitPacked, blitEllipse, blitRing, blitRotated, context2d, createCanvas, lazy, textSprite } from '../engine/pixelart'
+import { beginRects, blitCentered, blitPacked, blitEllipse, blitRing, blitRotated, context2d, createCanvas, lazy, textSprite, traceEllipseAt } from '../engine/pixelart'
 import { HAZARD_COLORS } from './hazardColors'
 import { drawCapture } from './capture'
 import { drawNightmareAir, drawNightmareDark, drawNightmareGround, shadeAlpha, SLEEP_TINT } from './darkrai'
@@ -19,7 +19,7 @@ import { FLEE_TIME } from '../game/enemies'
 import { EVOLUTION_TIME } from '../game/game'
 import { coinTier } from '../game/meta'
 import { xpTier } from '../game/pickups'
-import { isHeld } from '../game/status'
+import { isFrozen, isHeld } from '../game/status'
 import { inSolid, overTerrain, phasingNow, type Solid } from '../game/terrain'
 import { isAirborne, traitPace } from '../game/traits'
 import type { Attack, Enemy, Game, Hazard, Player } from '../game/types'
@@ -491,10 +491,14 @@ const drawEnemy = (ctx: Ctx, e: Enemy, time: number, t: number, calm: boolean, a
   const size = Math.max(s.bodyW, s.bodyH) * scale
   const rage = e.fight?.enraged === true
   const anim = enemyAnim(e, s, aloft)
-  if (e.runner && (anim === 'Walk' || anim === 'Fly') && e.status.stun <= 0) drawSpeedLines(ctx, e, y - Math.round((s.bodyH * scale) / 2), s.bodyW * scale, t)
+  // Drawing lean, a runner goes without its speed lines, like the horde without its shadow.
+  if (e.runner && !detail.lean && (anim === 'Walk' || anim === 'Fly') && e.status.stun <= 0) drawSpeedLines(ctx, e, y - Math.round((s.bodyH * scale) / 2), s.bodyW * scale, t)
   if (rage) RAGE_TINT.amount = 0.15 + 0.15 * pulse(t, 3)
   const hit = e.flash > 0.08
-  const tint = traitTint(e) ?? statusTint(e.status, t, e.id) ?? (calm && hit ? HURT_TINT : rage ? RAGE_TINT : clone ? CLONE_TINT : undefined)
+  // Drawing lean, the regular horde keeps only the tints that say it stands still (frozen, stunned; a sleeper has its Z): a late build
+  // poisons, burns or lulls every foe on screen, and each tint is one more sprite drawn.
+  const shownStatus = !detail.lean || e.boss || e.elite || e.alpha || e.status.stun > 0 || isFrozen(e.status)
+  const tint = traitTint(e) ?? (shownStatus ? statusTint(e.status, t, e.id) : undefined) ?? (calm && hit ? HURT_TINT : rage ? RAGE_TINT : clone ? CLONE_TINT : undefined)
   if (look?.alpha === 0) return
   const outline = outlineOf(e, t, calm) ?? (clone ? CLONE_OUTLINE : ringed && e.boss ? bossOutline(e, t, calm) : undefined)
   drawPokemon(ctx, s, anim, e.dir, e.animTime, e.x, y, { flash: Math.max(look?.flash ?? 0, hit && !calm ? 0.85 : 0), tint: look?.tint ?? tint, scale, outline, outlineAlpha: outline === ELITE_OUTLINE ? eliteThrob(e, t) : 1, alpha: look?.alpha ?? shadeAlpha(e.kind, e.id, t) })
@@ -671,11 +675,16 @@ const drawHpBar = (ctx: Ctx, g: Game) => {
 const drawPickups = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number) => boolean) => {
   const candies = PICKUPS.candy()
   const coins = PICKUPS.coins()
+  // The shadows first, all as one path: a long endless run leaves a thousand pieces of loot lying in view, and a sprite each
+  // was as many draws again. Drawing lean, loot goes without its shadow, like the horde.
+  if (!detail.lean) {
+    beginRects(ctx, 'rgba(16,40,16,0.25)')
+    for (const k of g.pickups) if (!k.attracted && visible(k.x, k.y)) traceEllipseAt(ctx, 3, 1, k.x, k.y + 4)
+    ctx.fill()
+  }
   for (const k of g.pickups) {
     if (!visible(k.x, k.y)) continue
     const bob = k.attracted ? 0 : Math.round(Math.sin(t * 4 + k.id) * 1.2)
-    // Drawing lean, loot goes without its shadow, like the horde: thousands of candies lie about in a long endless run.
-    if (!k.attracted && !detail.lean) blitEllipse(ctx, 3, 1, 'rgba(16,40,16,0.25)', k.x, k.y + 4)
     if (k.kind === 'consumable') {
       drawConsumable(ctx, k.item, k.x, k.y + bob, k.id, t)
       continue

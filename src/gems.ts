@@ -43,7 +43,7 @@ let fake: Fake | null = null
 
 const fakeStatus = (balance: number): GemsStatus => {
   const owned = COSMETIC_IDS.filter((_, i) => i % 3 === 1)
-  return { balance, owned, look: owned.reduce<Look>(equip, {}), taken: [] }
+  return { balance, owned, locked: [], look: owned.reduce<Look>(equip, {}), taken: [] }
 }
 
 /** Dev: every call answers made-up data, starting at `balance` gems with a third of the catalog owned (on), or the API again (off). */
@@ -60,12 +60,22 @@ export const fakeGems = (on: boolean, balance = 1250) => {
 
 export const gemsFaked = () => fake !== null
 
-/** Dev, faking: sets the balance, or owns `ids` (the whole catalog without them). */
-export const stageGems = (patch: { balance?: number; own?: readonly CosmeticId[] | 'all' }) => {
+/**
+ * Dev, faking: sets the balance, owns `ids` (the whole catalog without them),
+ * or locks `lock` (owned with it, the balance made negative, as a refund of
+ * spent gems leaves it: `lockedCosmetics`; `[]` unlocks, the balance back to 0).
+ */
+export const stageGems = (patch: { balance?: number; own?: readonly CosmeticId[] | 'all'; lock?: readonly CosmeticId[] }) => {
   if (!fake) fakeGems(true)
   const f = fake!
-  const owned = patch.own === 'all' ? COSMETIC_IDS : patch.own ? [...new Set([...f.status.owned, ...patch.own])] : f.status.owned
-  f.status = { ...f.status, balance: patch.balance ?? f.status.balance, owned }
+  const lock = patch.lock ?? []
+  const owned = patch.own === 'all' ? COSMETIC_IDS : [...new Set([...f.status.owned, ...(patch.own ?? []), ...lock])]
+  const locked = patch.lock === undefined ? f.status.locked : lock.length > 0 ? [...new Set([...f.status.locked, ...lock])] : []
+  const debt = locked.reduce((n, id) => n + (cosmeticPrice(id) ?? 0), 0)
+  const balance = patch.balance ?? (patch.lock === undefined ? f.status.balance : locked.length > 0 ? Math.min(f.status.balance, -debt) : Math.max(0, f.status.balance))
+  const status = { ...f.status, balance, owned, locked: balance < 0 ? locked : [] }
+  // As the API answers it: the look leaves the locked out.
+  f.status = { ...status, look: ownedOnly(status.look, wearableSet(status)) }
   remember(f.status)
 }
 
@@ -107,8 +117,9 @@ type Mirror = { user: string; status: GemsStatus; pending: boolean }
 
 const parseStatus = (v: unknown): GemsStatus | null => {
   if (!isRecord(v) || typeof v.balance !== 'number' || !Number.isFinite(v.balance) || !Array.isArray(v.owned)) return null
-  // An API from before `taken` sends none: every pack shows.
-  return { balance: v.balance, owned: v.owned.filter(isCosmeticId), look: parseLook(v.look), taken: Array.isArray(v.taken) ? v.taken.filter(isGemPackId) : [] }
+  // An API from before `taken` (or `locked`) sends none: every pack shows, nothing locks.
+  const list = (u: unknown) => (Array.isArray(u) ? u.filter(isCosmeticId) : [])
+  return { balance: v.balance, owned: list(v.owned), locked: list(v.locked), look: parseLook(v.look), taken: Array.isArray(v.taken) ? v.taken.filter(isGemPackId) : [] }
 }
 
 const readMirror = (): Mirror | null => {
@@ -137,7 +148,7 @@ const listeners = new Set<(s: GemsStatus | null) => void>()
 /** Tells the listeners, and keeps the hub's own look (`localLook`: its profile shows the title) on what the account wears. */
 const notify = () => {
   const s = knownGems()
-  setLocalLook(s ? ownedOnly(s.look, ownedSet(s)) : {})
+  setLocalLook(s ? ownedOnly(s.look, wearableSet(s)) : {})
   for (const fn of listeners) fn(s)
 }
 
@@ -172,9 +183,15 @@ const FREE = COSMETIC_IDS.filter((id) => cosmeticPrice(id) === 0)
 /** What the player owns, the free ones included. */
 export const ownedSet = (s: GemsStatus | null): ReadonlySet<CosmeticId> => new Set([...(s?.owned ?? []), ...FREE])
 
+/** What the player may wear: what it owns but the locked (`GemsStatus.locked`, while the balance is negative). */
+export const wearableSet = (s: GemsStatus | null): ReadonlySet<CosmeticId> => {
+  const locked = new Set(s?.locked ?? [])
+  return new Set([...ownedSet(s)].filter((id) => !locked.has(id)))
+}
+
 /**
  * The look this player brings into an Arena match (its loadout's `look`):
- * the account's, owned items only; nothing for a guest. Only this screen
+ * the account's, owned items only and none locked; nothing for a guest. Only this screen
  * draws it: everyone else sees the look the API vouched for (the relay asks
  * it), or none.
  */
@@ -182,7 +199,7 @@ export const equippedLook = (): WireLook => {
   const s = knownGems()
   const out: Record<string, string | readonly string[]> = {}
   if (!s) return out
-  const look = ownedOnly(s.look, ownedSet(s))
+  const look = ownedOnly(s.look, wearableSet(s))
   for (const slot of COSMETIC_SLOTS) {
     const id = look[slot]
     if (id) out[slot] = id
@@ -248,7 +265,9 @@ export type Bought = { ok: true; status: GemsStatus } | { ok: false; why: 'gems'
 
 /** A `POST /gems/buy` answer, or null. */
 const parseBought = (v: unknown): GemBuyResponse | null =>
-  isRecord(v) && typeof v.balance === 'number' && Array.isArray(v.owned) ? { balance: v.balance, owned: v.owned.filter(isCosmeticId) } : null
+  isRecord(v) && typeof v.balance === 'number' && Array.isArray(v.owned)
+    ? { balance: v.balance, owned: v.owned.filter(isCosmeticId), locked: Array.isArray(v.locked) ? v.locked.filter(isCosmeticId) : [] }
+    : null
 
 /**
  * `POST /gems/buy`: buys a cosmetic with gems. As the API answers: `gems`
@@ -262,7 +281,7 @@ export const buyCosmetic = async (id: CosmeticId): Promise<Bought> => {
     const s = fake.status
     if (s.owned.includes(id)) return { ok: false, why: 'owned' }
     if (s.balance < price) return { ok: false, why: 'gems' }
-    fake.status = { ...s, balance: s.balance - price, owned: [...s.owned, id] }
+    fake.status = { ...s, balance: s.balance - price, owned: [...s.owned, id], locked: [] }
     fake.ledger.unshift({ amount: -price, reason: 'buy', ref: id, at: Date.now() })
     bought()
     notify()
@@ -298,7 +317,7 @@ export const buyBundle = async (id: SkinBundleId): Promise<Bought> => {
     const missing = bundleMissing(id, ownedSet(s))
     if (missing.length === 0) return { ok: false, why: 'owned' }
     if (s.balance < price) return { ok: false, why: 'gems' }
-    fake.status = { ...s, balance: s.balance - price, owned: [...s.owned, ...missing] }
+    fake.status = { ...s, balance: s.balance - price, owned: [...s.owned, ...missing], locked: [] }
     fake.ledger.unshift({ amount: -price, reason: 'buy', ref: id, at: Date.now() })
     bought(missing.length)
     notify()
@@ -331,7 +350,7 @@ export const saveLook = async (look: Look): Promise<boolean> => {
   const was = knownGems()
   if (!was) return false
   if (fake) {
-    fake.status = { ...fake.status, look }
+    fake.status = { ...fake.status, look: ownedOnly(look, wearableSet(fake.status)) }
     notify()
     return true
   }

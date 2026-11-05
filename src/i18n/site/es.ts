@@ -694,7 +694,7 @@ export const siteEs: SiteMessages = {
         expShare: 'Atrae hacia ti todos los Exp. Candies del mapa.',
         coinCase: 'Atrae hacia ti todo el ₽ del mapa.',
         berryPouch: 'Atrae hacia ti todas las Oran Berries del mapa.',
-        superRod: 'Pesca todos los objetos del mapa (pociones, Rare Candies y más).',
+        superRod: 'Pesca todo lo que hay en el suelo del mapa: objetos, Exp. Candies, ₽, bayas y Poké Balls.',
         pokeFlute: 'Duerme a los Pokémon salvajes en pantalla.',
         maxRepel: 'Invulnerable por unos segundos, empujando a los enemigos lejos.',
         explosion: 'Voltorb usa Explosion: derriba a todos los enemigos comunes en pantalla y les quita el 10% del HP a los jefes.',

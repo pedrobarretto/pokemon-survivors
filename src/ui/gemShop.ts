@@ -14,7 +14,7 @@ import type { GemLedgerEntry, GemsStatus } from '../game/gems'
 import { formatNumber, locale, LOCALES, t } from '../i18n'
 import { createFxPreview } from '../render/arenaFx'
 import { drawPlateBar, drawPlateTag } from '../render/arenaPlates'
-import { gemIconUrl, slotIconUrl } from '../render/gemArt'
+import { gemIconUrl, lockIconUrl, slotIconUrl } from '../render/gemArt'
 import { drawPokemon, loadSpecies, portraitUrl, skinSprites, sprites, type Dex, type SpeciesSprites } from '../render/sprites'
 import { versusTag } from '../render/team'
 import { TEAM_COLORS, TEAM_LIGHT } from '../render/vale'
@@ -87,6 +87,15 @@ export const itemName = (id: CosmeticId) => {
 }
 
 /** "1.250" with the gem beside it. */
+/** Whether the player owns `id` but may not wear it now (`GemsStatus.locked`: the balance went negative after a refund or dispute). */
+export const isLocked = (s: GemsStatus | null, id: CosmeticId) => s?.locked.includes(id) ?? false
+
+/** The padlock beside a locked item's name or tag. */
+export const lockIcon = () => h('img', { class: 'gem-lock', src: lockIconUrl(), alt: '' })
+
+/** Why the locked items are locked and how they come back, with its padlock. */
+export const lockedNote = () => h('p', { class: 'gem-locked-note', role: 'note' }, lockIcon(), t().gems.shop.locked)
+
 export const gemAmount = (n: number, cls = '') => h('span', { class: `gem-amount ${cls}` }, h('img', { class: 'gem-icon', src: gemIconUrl(), alt: '' }), formatNumber(n))
 
 /* ---------------- The preview ---------------- */
@@ -510,6 +519,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       const signIn = ctx.signIn
       return signIn ? h('button', { class: 'btn confirm gem-act', type: 'button', onclick: () => (playSfx('select'), later(signIn)) }, t().gems.shop.signIn.button) : null
     }
+    if (owned && isLocked(status, id)) return h('button', { class: 'btn gem-act', type: 'button', disabled: true }, lockIcon(), m.lockedTag)
     if (owned) {
       const on = wearing(worn(), id)
       return h(
@@ -525,13 +535,14 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
   const itemCard = (id: CosmeticId) => {
     const m = t().gems.shop
     const owned = ownedSet(status).has(id)
+    const locked = owned && isLocked(status, id)
     const on = wearing(worn(), id)
     const price = cosmeticPrice(id)
     const misfit = !fits(id, ctx.wearer().dex)
     return h(
       'button',
       {
-        class: `gem-item ${rarityOf(id)}${chosen === id ? ' chosen' : ''}${owned ? ' owned' : ''}`,
+        class: `gem-item ${rarityOf(id)}${chosen === id ? ' chosen' : ''}${owned ? ' owned' : ''}${locked ? ' locked' : ''}`,
         type: 'button',
         style: `--rarity:${RARITY_COLORS[rarityOf(id)]}`,
         'aria-pressed': String(chosen === id),
@@ -544,7 +555,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       },
       h('span', { class: 'gem-item-art' }, h('img', { src: iconUrl(id), alt: '' })),
       h('b', { class: 'gem-item-name' }, itemName(id)),
-      h('small', { class: 'gem-item-tag' }, on ? m.equipped : owned ? m.owned : price === null ? m.unsold : gemAmount(price)),
+      h('small', { class: 'gem-item-tag' }, ...(locked ? [lockIcon(), m.lockedTag] : [on ? m.equipped : owned ? m.owned : price === null ? m.unsold : gemAmount(price)])),
       misfit ? h('em', { class: 'gem-item-misfit', title: m.misfit(ctx.wearer().name) }, '!') : null,
     )
   }
@@ -560,6 +571,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       h('b', { class: 'gem-info-name' }, itemName(id)),
       h('small', { class: 'gem-info-kind' }, `${m.rarities[rarityOf(id)]} · ${m.slots[slot]}`),
       isWearable(slot) ? (fits(id, ctx.wearer().dex) ? null : h('small', { class: 'gem-info-misfit' }, m.shop.misfit(ctx.wearer().name))) : h('small', {}, arenaOnly(id) ? m.shop.arenaOnly : m.shop.effect),
+      ownedSet(status).has(id) && isLocked(status, id) ? lockedNote() : null,
       act(id),
     )
   }
@@ -741,15 +753,19 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
       const mine = [...owned].filter((id) => slotOf(id) === slot)
       const chipFor = (id: CosmeticId | null) => {
         const on = (look[slot] ?? null) === id
+        const locked = id !== null && isLocked(status, id)
         return h(
           'button',
           {
-            class: `gem-wear${on ? ' on' : ''}${id ? ` ${rarityOf(id)}` : ''}`,
+            class: `gem-wear${on ? ' on' : ''}${id ? ` ${rarityOf(id)}` : ''}${locked ? ' locked' : ''}`,
             type: 'button',
             style: id ? `--rarity:${RARITY_COLORS[rarityOf(id)]}` : '',
             'aria-pressed': String(on),
-            onclick: () => !on && wear(id ? equip(look, id) : unequip(look, slot)),
+            disabled: locked,
+            title: locked ? m.shop.locked : undefined,
+            onclick: () => !on && !locked && wear(id ? equip(look, id) : unequip(look, slot)),
           },
+          locked ? lockIcon() : null,
           id ? itemName(id) : m.locker.none,
           id && !fits(id, ctx.wearer().dex) ? h('em', { class: 'gem-item-misfit', title: m.shop.misfit(ctx.wearer().name) }, '!') : null,
         )
@@ -773,15 +789,19 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
           { class: 'gem-slot-items' },
           ...[null, ...mine].map((id) => {
             const worn = on === id
+            const locked = id !== null && isLocked(status, id)
             return h(
               'button',
               {
-                class: `gem-wear${worn ? ' on' : ''}${id ? ` ${rarityOf(id)}` : ''}`,
+                class: `gem-wear${worn ? ' on' : ''}${id ? ` ${rarityOf(id)}` : ''}${locked ? ' locked' : ''}`,
                 type: 'button',
                 style: id ? `--rarity:${RARITY_COLORS[rarityOf(id)]}` : '',
                 'aria-pressed': String(worn),
-                onclick: () => !worn && wear(id ? equip(look, id) : unequip(look, { line })),
+                disabled: locked,
+                title: locked ? m.shop.locked : undefined,
+                onclick: () => !worn && !locked && wear(id ? equip(look, id) : unequip(look, { line })),
               },
+              locked ? lockIcon() : null,
               id ? itemName(id) : m.locker.none,
             )
           }),
@@ -800,6 +820,7 @@ export const lockerTab = (ctx: GemTabsContext): GemTab => {
           h('div', { class: 'gem-locker-picks' }, h('span', { class: 'field-label' }, m.locker.pick), h('div', { class: 'gem-pick-list' }, ...picks)),
       ),
       owned.size === 0 ? h('div', { class: 'arena-hub-card gem-empty' }, h('p', {}, m.locker.empty), toShop) : null,
+      (status?.locked.length ?? 0) > 0 ? lockedNote() : null,
       h('div', { class: 'gem-slots' }, ...rows),
       skinRows.length > 0
         ? h('section', { class: 'gem-skin-slots' }, h('span', { class: 'gem-slot-head' }, h('img', { src: slotIconUrl('skin'), alt: '' }), h('b', {}, m.skinShop.locker)), h('small', { class: 'gem-slot-empty' }, m.skinShop.lockerNote), h('div', { class: 'gem-slots' }, ...skinRows))

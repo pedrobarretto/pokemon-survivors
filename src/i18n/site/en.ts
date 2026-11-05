@@ -690,7 +690,7 @@ export const siteEn: SiteMessages = {
         expShare: 'Pulls every Exp. Candy on the map to you.',
         coinCase: 'Pulls every ₽ on the map to you.',
         berryPouch: 'Pulls every Oran Berry on the map to you.',
-        superRod: 'Reels in every item on the map (potions, Rare Candies and more).',
+        superRod: 'Reels in everything on the ground across the map: items, Exp. Candies, ₽, berries and Poké Balls.',
         pokeFlute: 'Puts the wild Pokémon on screen to sleep.',
         maxRepel: 'Invulnerable for a few seconds, pushing enemies away.',
         explosion: 'Voltorb uses Explosion: faints every regular enemy on screen and takes 10% of a boss\'s HP.',

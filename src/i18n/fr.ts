@@ -583,6 +583,8 @@ export const fr: Messages = {
       all: 'Tout',
       owned: 'À toi',
       equipped: 'Porté',
+      lockedTag: 'Bloqué',
+      locked: 'Bloqué : ton solde est passé en négatif après un remboursement ou une contestation. Il revient dès que ton solde est à 0 ou plus.',
       unsold: 'Indisponible',
       misfit: (name: string) => `Ne va pas bien à ${name}`,
       effect: 'Apparaît dans tes parties, en coop et dans l’Arène.',

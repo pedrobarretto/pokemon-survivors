@@ -9,7 +9,7 @@ import { buyBundle, buyCosmetic, fetchGems, gemsEnabled, gemsFaked, gemsSignedIn
 import { formatNumber, t } from '../i18n'
 import { drawPokemon, fitSprites, portraitUrl, skinSprites } from '../render/sprites'
 import { h, later } from './dom'
-import { gemAmount, itemName, lookStage, present, RARITY_COLORS, signInCard, tag, type GemTab, type GemTabsContext, type Wearer } from './gemShop'
+import { gemAmount, isLocked, itemName, lockedNote, lockIcon, lookStage, present, RARITY_COLORS, signInCard, tag, type GemTab, type GemTabsContext, type Wearer } from './gemShop'
 import { today } from './save'
 import { confirmDialog, type Screen } from './screens'
 
@@ -171,6 +171,7 @@ export const skinsTab = (ctx: GemTabsContext): GemTab => {
       const signIn = ctx.signIn
       return signIn ? h('button', { class: 'btn confirm gem-act', type: 'button', onclick: () => (playSfx('select'), later(signIn)) }, m.signIn.button) : null
     }
+    if (owned().has(id) && isLocked(status, id)) return h('button', { class: 'btn gem-act', type: 'button', disabled: true }, lockIcon(), m.lockedTag)
     if (owned().has(id)) {
       const on = wearing(worn(), id)
       return h(
@@ -196,6 +197,7 @@ export const skinsTab = (ctx: GemTabsContext): GemTab => {
       h('small', {}, coversText(id)),
       h('small', {}, m.skinShop.forms),
       act(id),
+      owned().has(id) && isLocked(status, id) ? lockedNote() : null,
     )
   }
 
@@ -206,11 +208,12 @@ export const skinsTab = (ctx: GemTabsContext): GemTab => {
     const price = cosmeticPrice(id)
     const canvas = h('canvas', { class: 'gem-skin-canvas', width: CARD.w, height: CARD.h })
     cards.set(canvas, id)
-    const tagText = on ? m.equipped : mine ? m.owned : !onSaleNow(id) ? t().gems.skinShop.soon(dayText(SKIN_LAUNCH)) : price === null ? m.unsold : gemAmount(price)
+    const locked = mine && isLocked(status, id)
+    const tagText = locked ? [lockIcon(), m.lockedTag] : on ? m.equipped : mine ? m.owned : !onSaleNow(id) ? t().gems.skinShop.soon(dayText(SKIN_LAUNCH)) : price === null ? m.unsold : gemAmount(price)
     return h(
       'button',
       {
-        class: `gem-item gem-skin ${rarityOf(id)}${chosen === id ? ' chosen' : ''}${mine ? ' owned' : ''}`,
+        class: `gem-item gem-skin ${rarityOf(id)}${chosen === id ? ' chosen' : ''}${mine ? ' owned' : ''}${locked ? ' locked' : ''}`,
         type: 'button',
         style: `--rarity:${RARITY_COLORS[rarityOf(id)]}`,
         'aria-pressed': String(chosen === id),
@@ -224,7 +227,7 @@ export const skinsTab = (ctx: GemTabsContext): GemTab => {
       h('span', { class: 'gem-skin-art' }, canvas),
       h('b', { class: 'gem-item-name' }, itemName(id)),
       h('small', { class: 'gem-skin-covers' }, coversText(id)),
-      h('small', { class: 'gem-item-tag' }, tagText),
+      h('small', { class: 'gem-item-tag' }, ...(Array.isArray(tagText) ? tagText : [tagText])),
     )
   }
 

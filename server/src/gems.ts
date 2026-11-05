@@ -1,5 +1,5 @@
 import type { TransactionSql } from 'postgres'
-import type { Look, CosmeticId } from '../../src/data/cosmetics'
+import { isCosmeticId, type Look, type CosmeticId } from '../../src/data/cosmetics'
 import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PLAY, oncePack, type GemCurrency, type GemPackId } from '../../src/data/gems'
 import type { SkinBundleId } from '../../src/data/skinCatalog'
 import {
@@ -7,6 +7,7 @@ import {
   bundlePrice,
   checkoutRefusal,
   knownOwned,
+  lockedCosmetics,
   playGems,
   purchaseStatus,
   refundedGems,
@@ -49,18 +50,32 @@ export const moveGems = async (tx: TransactionSql, userId: string, amount: numbe
   return true
 }
 
-type StatusRow = { id: string; gems: number; arena_look: unknown; owned: string[] }
+/** `owned`: each cosmetic's id, source and `at` (ms); `since`: when the earliest pack a refund or dispute took gems from was paid (ms), or null. */
+type StatusRow = { id: string; gems: number; arena_look: unknown; owned: { id: string; source: 'buy' | 'gift'; at: number }[]; since: number | null }
 
-/** Each account's balance, owned cosmetics and stored look, by user id (absent: no row yet). */
+/** Each account's balance, owned cosmetics, stored look and what `lockedCosmetics` needs, by user id (absent: no row yet). */
 const statusRows = (q: Q, userIds: readonly string[]) => q<StatusRow[]>`
-  select u.id, u.gems, u.arena_look, coalesce(array_agg(c.cosmetic) filter (where c.cosmetic is not null), '{}') as owned
-  from users u left join cosmetics_owned c on c.user_id = u.id
-  where u.id = any(${userIds}::text[]) group by u.id`
+  select u.id, u.gems, u.arena_look,
+    coalesce((select json_agg(json_build_object('id', c.cosmetic, 'source', c.source, 'at', extract(epoch from c.at) * 1000)) from cosmetics_owned c where c.user_id = u.id), '[]') as owned,
+    (select extract(epoch from min(p.paid_at)) * 1000 from gem_purchases p
+      where p.user_id = u.id and p.taken_back > 0 and p.state in ('refunded', 'disputed'))::float8 as since
+  from users u where u.id = any(${userIds}::text[])`
 
+/**
+ * An account's gems as `GET /gems` answers them: the locked cosmetics
+ * (`lockedCosmetics`) are owned but left out of the look, so nothing that
+ * reads a look through here (the matchmaker's tickets, `POST /looks`) shows them.
+ */
 const toStatus = (r: StatusRow | undefined, taken: readonly GemPackId[] = []): GemsStatus => {
-  const owned = knownOwned(r?.owned ?? [])
-  return { balance: r?.gems ?? 0, owned, look: wearableLook(r?.arena_look, new Set(owned)), taken }
+  const rows = (r?.owned ?? []).flatMap((c) => (isCosmeticId(c.id) ? [{ ...c, id: c.id }] : []))
+  const owned = knownOwned(rows.map((c) => c.id))
+  const balance = r?.gems ?? 0
+  const locked = lockedCosmetics(balance, rows, r?.since ?? null)
+  return { balance, owned, locked, look: wearableLook(r?.arena_look, wearable(owned, locked)), taken }
 }
+
+/** What of `owned` may be worn: all but the `locked`. */
+const wearable = (owned: readonly string[], locked: readonly string[]) => new Set(owned.filter((id) => !locked.includes(id)))
 
 /** The `once` packs (`GEM_PACKS`), which the checkout sells an account once. */
 const ONCE_PACKS = GEM_PACK_IDS.filter(oncePack)
@@ -246,8 +261,8 @@ export const gemStore = (sql: Sql) => {
         if ((u?.gems ?? 0) < price) return { ok: false, error: 'gems' } as const
         if (!(await moveGems(tx, userId, -price, 'buy', `buy:${userId}:${id}`))) return { ok: false, error: 'owned' } as const
         await tx`insert into cosmetics_owned (user_id, cosmetic, source) values (${userId}, ${id}, 'buy')`
-        const { balance, owned } = toStatus((await statusRows(tx, [userId]))[0])
-        return { ok: true, balance, owned } as const
+        const { balance, owned, locked } = toStatus((await statusRows(tx, [userId]))[0])
+        return { ok: true, balance, owned, locked } as const
       }),
 
     /**
@@ -269,16 +284,16 @@ export const gemStore = (sql: Sql) => {
         if ((u?.gems ?? 0) < price) return { ok: false, error: 'gems' } as const
         if (!(await moveGems(tx, userId, -price, 'buy', `bundle:${userId}:${id}:${missing.join('+')}`))) return { ok: false, error: 'owned' } as const
         for (const item of missing) await tx`insert into cosmetics_owned (user_id, cosmetic, source) values (${userId}, ${item}, 'buy') on conflict do nothing`
-        const { balance, owned: now } = toStatus((await statusRows(tx, [userId]))[0])
-        return { ok: true, balance, owned: now } as const
+        const { balance, owned: now, locked } = toStatus((await statusRows(tx, [userId]))[0])
+        return { ok: true, balance, owned: now, locked } as const
       }),
 
-    /** `PUT /gems/look`: stores the look the account may wear (`wearableLook`) and returns it. */
+        /** `PUT /gems/look`: stores the look the account may wear (`wearableLook`: owned, not locked) and returns it. */
     setLook: (userId: string, raw: unknown): Promise<Look> =>
       sql.begin(async (tx) => {
         await tx`insert into users (id) values (${userId}) on conflict (id) do nothing`
-        const owned = await tx<{ cosmetic: string }[]>`select cosmetic from cosmetics_owned where user_id = ${userId}`
-        const look = wearableLook(raw, new Set(owned.map((o) => o.cosmetic)))
+        const { owned, locked } = toStatus((await statusRows(tx, [userId]))[0])
+        const look = wearableLook(raw, wearable(owned, locked))
         await tx`update users set arena_look = ${tx.json(look)} where id = ${userId}`
         return look
       }),

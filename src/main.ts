@@ -11,7 +11,7 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { canvasLosses, canvasRestored, checkCanvases, context2d, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, sweepArt, wipeCanvases } from './engine/pixelart'
+import { canvasLosses, canvasRestored, checkCanvases, context2d, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, readPixels, resetCanvases, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView } from './engine/viewport'
 import { createRng } from './engine/rng'
@@ -321,12 +321,32 @@ const freshCanvas = () => {
   context2d(canvas)
   dirty = true
 }
+/** The last read of the game's canvas threw: it got a fresh one for that already. */
+let gameUnreadable = false
+/**
+ * A run's world is drawn opaque, so its canvas read back clear (or not at all) right after a frame
+ * means the bitmap behind it went: an iPhone (inside an app's webview, mid-run, nothing paused or
+ * hidden) showed black everywhere but the minimap and the buttons, which live on their own canvas
+ * and in the DOM. `checkCanvases` watches the caches, not this one, and Safari has no
+ * `isContextLost` for 2D. Like the caches' watch, an unreadable canvas gets one fresh bitmap in a row.
+ */
+const checkGameCanvas = () => {
+  if (!run || performance.now() - runDrawnAt > HELD_KEEP * 2) return
+  const px = readPixels(ctx, view.w >> 1, view.h >> 1, 1, 1)
+  if (px && px.data[3] === 255) return void (gameUnreadable = false)
+  const again = !px && gameUnreadable
+  gameUnreadable = !px
+  if (again) return
+  canvasLosses.wiped++
+  freshCanvas()
+}
 // iOS Safari wipes the canvases without that event (`checkCanvases`): look every few seconds, and on coming back (below).
 checkCanvases()
 setInterval(() => {
   if (document.hidden) return
   checkCanvases()
   if (ctx.isContextLost?.()) freshCanvas()
+  else checkGameCanvas()
 }, 3000)
 
 /**
@@ -341,6 +361,18 @@ const HELD_KEEP = 1000
 let backAt = -Infinity
 /** When the run's frame was last drawn. */
 let runDrawnAt = -Infinity
+
+/**
+ * Hidden outside co-op (a solo run paused, the lobby, a menu), the page lets go of what it can
+ * build again: every cache of drawn canvases and the idle lazy art. A phone discards the
+ * backgrounded tab with the most memory first, and a discarded tab reloads to the title, losing the
+ * paused run; back in view, the frame draws them again (`cameBack`). Co-op skips it: it catches up
+ * on its way back and shouldn't redraw everything meanwhile.
+ */
+const letGoWhileHidden = () => {
+  resetCanvases()
+  sweepArt(0)
+}
 
 /** The page is back in view (unlocked, another app or tab left): sizes, caches and the frame are checked and drawn again. */
 const cameBack = () => {
@@ -2331,6 +2363,7 @@ document.addEventListener('visibilitychange', () => {
   // An Arena match's report as it stands, for the next page load if this one never comes back (`gone`).
   if (document.hidden && run?.coop) holdVersus(run.coop)
   if (document.hidden && !run?.coop && run?.game.phase === 'playing') run.game.phase = 'paused'
+  if (document.hidden && !run?.coop) letGoWhileHidden()
   if (!document.hidden) cameBack()
 })
 // iOS doesn't always say `visibilitychange` on unlocking or coming back from another app: these say it too.
@@ -4425,7 +4458,9 @@ const devSkin = (id?: string, seat?: number) => {
  * `ps.gems('fake', 1250)` makes every call answer made-up data from that
  * balance, a third of the catalog owned, and the shop act as signed in
  * (`'off'` back to the API); `('balance', n)` sets the balance, `('own', id)`
- * owns a cosmetic (all without one); `('return', 'chest')` comes back from a
+ * owns a cosmetic (all without one), `('lock', id)` owns it locked, the
+ * balance negative as after a refund of spent gems (`('lock')` unlocks it all,
+ * the balance back to 0); `('return', 'chest')` comes back from a
  * checkout of that pack (`'never'`: the gems never land and the wait runs
  * out); `('refuse', 'cap')` turns every checkout down as the API would
  * (`'once'`: the welcome pack taken; no reason: none again); `('shop')`,
@@ -4440,12 +4475,15 @@ const devGems = (cmd?: string, arg?: string | number) => {
   else if (cmd === 'own') {
     if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
     stageGems({ own: arg === undefined ? 'all' : [arg] })
+  } else if (cmd === 'lock') {
+    if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
+    stageGems({ lock: arg === undefined ? [] : [arg] })
   } else if (cmd === 'return') {
     showBoutique('shop', undefined, stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
   } else if (cmd === 'refuse') stageRefusal(arg === 'cap' || arg === 'once' ? arg : null)
   else if (cmd === 'shop' || cmd === 'skins' || cmd === 'locker') showBoutique(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
-  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch')"
+  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch')"
   // In a run or a match, each seat's look as the shell holds it.
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }

@@ -11,6 +11,7 @@
  *   npm run determinism -- --shard=2/4          a quarter of the runs (CI plays the four side by side)
  *   npm run determinism -- diff a.bin b.bin     diff two saved snapshots
  *   npm run determinism -- bench               snapshot sizes and costs at minutes 5, 10, 15 and 25 (Node; --engines=… for browsers)
+ *   npm run determinism -- late                ms per tick and the state's sizes deep into endless mode, at minutes 30, 90 and 150 (--at=15,60,120 for others; Node, --engines=… for browsers)
  *
  * On a mismatch both snapshots of the first differing tick land in
  * `determinism-out/` (`npm run determinism -- diff` reads them back).
@@ -237,4 +238,21 @@ const benchmark = async () => {
   await Promise.all(engines.map((e) => e.close()))
 }
 
-await (args[0] === 'diff' ? diff(args.slice(1)) : args[0] === 'bench' ? benchmark() : check())
+/** The late game's simulation cost (`lateBench`): one long endless run, a row per minute asked. */
+const late = async () => {
+  const code = await bundle()
+  const H = await loadHarness()
+  const at = (flag('at') ?? '30,90,150').split(',').map(Number)
+  const engines = [nodeEngine(), ...(await Promise.all((flag('engines')?.split(',') ?? []).filter((e) => e !== 'node').map((name) => browserEngine(name, code))))]
+  await Promise.all(
+    engines.map(async (e) => {
+      const rows = await e.call('lateBench', H.LATE_SCENARIO, at)
+      console.log(`${e.name} ${e.version}, seed ${H.LATE_SCENARIO.seed} ${H.LATE_SCENARIO.starter}:`)
+      console.table(rows)
+    }),
+  )
+  await Promise.all(engines.map((e) => e.close()))
+}
+
+const COMMANDS = { diff: () => diff(args.slice(1)), bench: benchmark, late }
+await (COMMANDS[args[0]] ?? check)()
