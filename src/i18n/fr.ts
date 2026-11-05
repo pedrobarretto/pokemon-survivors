@@ -1158,6 +1158,19 @@ export const fr: Messages = {
     playAsGuest: 'Jouer en invité',
     gateGuestNote: 'En invité, ta progression reste sur cet appareil uniquement et tes parties ne comptent pas pour le classement.',
   },
+  onboarding: {
+    moveKeys: '*ZQSD*, *WASD* ou *flèches* pour bouger',
+    movePad: '*Stick gauche* pour bouger',
+    moveTouch: '*Glisse le doigt* pour bouger',
+    auto: 'Tes attaques partent toutes seules : esquive et monte de niveau !',
+    saveTitle: 'SAUVEGARDE TA PROGRESSION',
+    saveText: (money: string, dex: number) => `Crée ton compte gratuit et garde tes *${money}*, les *${dex}* Pokémon de ton Pokédex et ta place au *classement*, sur tous tes appareils.`,
+    inAppTitle: 'Ouvre dans ton navigateur pour sauvegarder ta progression',
+    inAppOpen: 'Ouvrir dans Chrome',
+    inAppIos: 'Touche *...* puis *Ouvrir dans le navigateur*',
+    inAppSignIn: "Google refuse la connexion depuis cette appli. Ouvre le jeu dans ton navigateur pour te connecter.",
+    close: 'Fermer',
+  },
 
   socials: {
     follow: (name: string) => `Suis-nous sur ${name}`,

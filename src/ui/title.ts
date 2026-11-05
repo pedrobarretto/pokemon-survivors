@@ -120,6 +120,8 @@ export type TitleActions = {
   gifts: () => void
   /** The lobby is up: after the "press start" gesture, so the browser lets audio play. */
   ready: () => void
+  /** Set, "press start" calls it instead of opening the lobby (a device's first run, `startFirstRun` in main.ts). */
+  start?: () => void
   /**
    * Opens Settings over the title (the gear). Closing them must rebuild the
    * title (the language may have changed), highlighting `focus`.
@@ -1615,7 +1617,7 @@ export const titleScreen = (
     const start = () => {
       if (!offIntro) return
       playSfx('select')
-      later(enterLobby)
+      later(actions.start ?? enterLobby)
       offIntro()
       offIntro = null
     }

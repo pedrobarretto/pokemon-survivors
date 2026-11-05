@@ -1158,6 +1158,19 @@ export const zh: Messages = {
     playAsGuest: '以訪客身分遊玩',
     gateGuestNote: '以訪客身分遊玩時，進度只會留在這台裝置上，對局也不會計入排行榜。',
   },
+  onboarding: {
+    moveKeys: '用 *WASD* 或 *方向鍵* 移動',
+    movePad: '用 *左搖桿* 移動',
+    moveTouch: '*拖曳手指* 移動',
+    auto: '招式會自動施放：閃避並升級吧！',
+    saveTitle: '保存你的進度',
+    saveText: (money: string, dex: number) => `免費建立帳號，在任何裝置上保留你的 *${money}*、圖鑑裡的 *${dex}* 隻寶可夢和你在 *排行榜* 上的名次。`,
+    inAppTitle: '在瀏覽器中開啟，才能保存進度',
+    inAppOpen: '用 Chrome 開啟',
+    inAppIos: '點 *...*，再選 *在瀏覽器中開啟*',
+    inAppSignIn: 'Google 不允許在這個 App 內登入。請在瀏覽器中開啟遊戲再登入。',
+    close: '關閉',
+  },
 
   socials: {
     follow: (name: string) => `在 ${name} 上追蹤我們`,
