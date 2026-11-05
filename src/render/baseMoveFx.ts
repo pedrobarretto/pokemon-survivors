@@ -1,5 +1,5 @@
 import { TAU } from '../engine/math'
-import { blitCentered, blitEllipse, blitRing, canvasCache, context2d, createCanvas, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, canvasCache, context2d, createCanvas, fillPlotted, plot, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import type { Attack } from '../game/types'
 import { FX } from './art'
@@ -384,14 +384,15 @@ const drawSpun = (ctx: Ctx, sprite: PixelSprite, x: number, y: number, angle: nu
 /** How high the bolt starts above its target, px. */
 const BOLT_HEIGHT = 190
 
+/** `glow` is the pale halo (as dense as the see-through squares once built up, one on another, before the bolt drew as paths). */
 type BoltStyle = { glow: string; edge: string; core: string }
-const THUNDER_STYLE: BoltStyle = { glow: 'rgba(248,240,128,0.35)', edge: '#f8d030', core: '#ffffff' }
+const THUNDER_STYLE: BoltStyle = { glow: 'rgba(248,240,128,0.9)', edge: '#f8d030', core: '#ffffff' }
 
-/** A run of pixels from (x0, y0) to (x1, y1), `w` wide, in one color. */
-const line = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, w: number) => {
+/** Plots (`plot`) a run of `w`×`w` squares from (x0, y0) to (x1, y1) in `color`. */
+const line = (color: string, x0: number, y0: number, x1: number, y1: number, w: number) => {
   const n = Math.max(1, Math.round(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))))
   const h = Math.floor(w / 2)
-  for (let s = 0; s <= n; s++) ctx.fillRect(Math.round(x0 + ((x1 - x0) * s) / n) - h, Math.round(y0 + ((y1 - y0) * s) / n) - h, w, w)
+  for (let s = 0; s <= n; s++) plot(color, Math.round(x0 + ((x1 - x0) * s) / n) - h, Math.round(y0 + ((y1 - y0) * s) / n) - h, w, w)
 }
 
 /**
@@ -425,22 +426,18 @@ const forkedBolt = (ctx: Ctx, x: number, y: number, height: number, seed: number
     }
     branches.push({ x0: at.x, y0: at.y, pts: bp })
   }
-  const stroke = (list: readonly { x: number; y: number }[], w: number) => {
-    for (let i = 1; i < list.length; i++) line(ctx, list[i - 1]!.x, list[i - 1]!.y, list[i]!.x, list[i]!.y, w)
+  const stroke = (color: string, list: readonly { x: number; y: number }[], w: number) => {
+    for (let i = 1; i < list.length; i++) line(color, list[i - 1]!.x, list[i - 1]!.y, list[i]!.x, list[i]!.y, w)
   }
-  if (!detail.lean) {
-    ctx.fillStyle = style.glow
-    stroke(pts, width + 4)
-  }
-  ctx.fillStyle = style.edge
-  stroke(pts, width + 2)
+  if (!detail.lean && style.glow !== 'transparent') stroke(style.glow, pts, width + 4)
+  stroke(style.edge, pts, width + 2)
   for (const br of branches) {
-    stroke(br.pts.slice(0, 3), Math.max(1, width - 1))
-    stroke(br.pts.slice(2), 1)
+    stroke(style.edge, br.pts.slice(0, 3), Math.max(1, width - 1))
+    stroke(style.edge, br.pts.slice(2), 1)
   }
-  ctx.fillStyle = style.core
-  stroke(pts, width)
-  for (const br of branches) stroke(br.pts.slice(0, 3), 1)
+  stroke(style.core, pts, width)
+  for (const br of branches) stroke(style.core, br.pts.slice(0, 3), 1)
+  fillPlotted(ctx)
 }
 
 /**
@@ -481,15 +478,16 @@ export const drawThunder = (ctx: Ctx, a: Attack) => {
   // Sparks thrown out of the impact, zigzagging as they go.
   if (since < 0.22 && !detail.lean) {
     const k = since / 0.22
-    ctx.fillStyle = k < 0.5 ? '#ffffff' : '#f8d030'
+    const color = k < 0.5 ? '#ffffff' : '#f8d030'
     for (let i = 0; i < 7; i++) {
       const ang = (i / 7) * TAU + hash2(a.id, i, 7)
       const d = r * (0.4 + k * 1.1)
       const jag = (hash2(a.id, i, Math.floor(since * 30)) - 0.5) * 3
       const x = a.x + Math.cos(ang) * d - Math.sin(ang) * jag
       const y = a.y + Math.sin(ang) * d * 0.55 + Math.cos(ang) * jag - (1 - k) * 3
-      line(ctx, x, y, x - Math.cos(ang) * 3, y - Math.sin(ang) * 2, 1)
+      line(color, x, y, x - Math.cos(ang) * 3, y - Math.sin(ang) * 2, 1)
     }
+    fillPlotted(ctx)
   }
 }
 
@@ -510,7 +508,7 @@ export const drawThunderGround = (ctx: Ctx, a: Attack) => {
   const since = a.age - a.activeFrom
   ctx.globalAlpha = Math.max(0, Math.min(1, (a.ttl - a.age) / 0.15)) * 0.8
   blitEllipse(ctx, Math.round(r * 0.75), Math.max(1, Math.round(r * 0.36)), 'rgba(40,32,24,0.55)', a.x, a.y)
-  ctx.fillStyle = since < 0.12 ? '#fff8c0' : '#383020'
+  const crack = since < 0.12 ? '#fff8c0' : '#383020'
   for (let i = 0; i < 5; i++) {
     const ang = (i / 5) * TAU + a.id
     let x = a.x
@@ -518,11 +516,12 @@ export const drawThunderGround = (ctx: Ctx, a: Attack) => {
     for (let s = 0; s < 3; s++) {
       const nx = x + Math.cos(ang + (hash2(a.id, i * 3 + s, 8) - 0.5)) * r * 0.3
       const ny = y + Math.sin(ang + (hash2(a.id, i * 3 + s, 8) - 0.5)) * r * 0.16
-      line(ctx, x, y, nx, ny, 1)
+      line(crack, x, y, nx, ny, 1)
       x = nx
       y = ny
     }
   }
+  fillPlotted(ctx)
   ctx.globalAlpha = 1
 }
 
@@ -651,19 +650,17 @@ export const drawGust = (ctx: Ctx, a: Attack) => {
       const y = Math.round(a.y + Math.sin(ang) * rr * 0.6)
       const thick = f < 0.2 ? 3 : f < 0.5 ? 2 : 1
       // A cool shadow under each stroke keeps the white readable on pale ground.
-      ctx.fillStyle = '#7080a8'
-      ctx.fillRect(x, y + thick, thick, 1)
-      ctx.fillStyle = f < 0.2 ? '#ffffff' : f < 0.6 ? '#e8f0ff' : '#b8c8e8'
-      ctx.fillRect(x, y, thick, thick)
+      plot('#7080a8', x, y + thick, thick, 1)
+      plot(f < 0.2 ? '#ffffff' : f < 0.6 ? '#e8f0ff' : '#b8c8e8', x, y, thick, thick)
     }
   }
   // An inner swirl turning the other way.
-  ctx.fillStyle = '#ffffff'
   for (let i = 0; i < 10; i++) {
     const ang = -spin * 1.4 + i * 0.35
     const rr = r * 0.45 * (1 - i / 14)
-    ctx.fillRect(Math.round(a.x + Math.cos(ang) * rr), Math.round(a.y + Math.sin(ang) * rr * 0.6), 1, 1)
+    plot('#ffffff', a.x + Math.cos(ang) * rr, a.y + Math.sin(ang) * rr * 0.6)
   }
+  fillPlotted(ctx)
   if (!detail.lean) {
     for (let i = 0; i < 3; i++) {
       const ang = spin * 0.8 + i * 2.1
@@ -1136,14 +1133,13 @@ export const drawEarthquake = (ctx: Ctx, a: Attack) => {
       heading += (base - heading) * 0.3
       const nx = x + Math.cos(heading) * 3
       const ny = y + Math.sin(heading) * 3
-      ctx.fillStyle = EARTH.light
-      line(ctx, x, y + 1, nx, ny + 1, 1)
-      ctx.fillStyle = EARTH.deep
-      line(ctx, x, y, nx, ny, d < reach * 0.5 ? 2 : 1)
+      line(EARTH.light, x, y + 1, nx, ny + 1, 1)
+      line(EARTH.deep, x, y, nx, ny, d < reach * 0.5 ? 2 : 1)
       x = nx
       y = ny
     }
   }
+  fillPlotted(ctx)
   // The ridge: earth heaved up along the front, a shadow under it and its top catching the light.
   const rr = Math.round(r)
   const tall = k < 0.5 ? 2 : 1

@@ -1,4 +1,4 @@
-import { blitCentered, blitPacked, context2d, createCanvas, ellipse, fromStrings, lazy, ring, type Palette, type PixelSprite } from '../engine/pixelart'
+import { beginRects, blitCentered, blitPacked, context2d, createCanvas, ellipse, fromStrings, lazy, ring, type Palette, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { HYPER_BEAM, type ShopTmMoveId } from '../game/shopTmMoves'
@@ -21,15 +21,16 @@ export const px = (ctx: Ctx, x: number, y: number, color: string, w = 1, h = 1) 
   ctx.fillRect(Math.round(x), Math.round(y), w, h)
 }
 
-/** Square-brush line from (x0, y0) to (x1, y1), `w` px thick. */
+/** Square-brush line from (x0, y0) to (x1, y1), `w` px thick, as one path. */
 export const thickLine = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, w: number, color: string) => {
   const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0)))
   const half = Math.floor(w / 2)
-  ctx.fillStyle = color
+  beginRects(ctx, color)
   for (let i = 0; i <= n; i++) {
     const k = i / n
-    ctx.fillRect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
+    ctx.rect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
   }
+  ctx.fill()
 }
 
 const radiusOf = (a: Attack) => (a.shape.kind === 'circle' ? a.shape.r : 8)

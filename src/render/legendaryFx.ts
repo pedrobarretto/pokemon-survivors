@@ -1,4 +1,4 @@
-import { beginRects, blitCentered, blitEllipse, blitRotated } from '../engine/pixelart'
+import { beginRects, blitCentered, blitEllipse, blitRotated, fillPlotted, plot } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { bodyOf } from '../data/bodies'
@@ -115,21 +115,26 @@ const drawWhirlwind = (ctx: Ctx, a: Attack, t: number) => {
     const sway = Math.sin(t * 3 + a.id + f * 3) * 4 * f
     blitEllipse(ctx, Math.max(1, Math.round(w)), Math.max(1, Math.round(w * 0.3)), 'rgba(200,214,240,0.22)', a.x + sway, a.y - f * height)
   }
-  for (let i = 0; i < layers; i++) {
-    const f = i / (layers - 1)
-    const w = r * (0.25 + 1.0 * f ** 1.3)
-    const sway = Math.sin(t * 3 + a.id + f * 3) * 4 * f
-    const cy = a.y - f * height
-    const spin = t * (13 - f * 5) + i * 0.55
-    const n = Math.max(12, Math.round(w * 2.4))
-    for (let j = 0; j < n; j += thin) {
-      const ang = spin + (j / n) * TAU
-      const front = Math.sin(ang) > 0
-      // Long streaks with short gaps; the back half is dimmer.
-      if (Math.cos(ang * 3 + f * 7 + t * 2) < -0.55) continue
-      const c = front ? (Math.cos(ang) > 0.4 ? '#ffffff' : WHIRL_COLORS[(j + i) % 2]!) : WHIRL_COLORS[2 + ((j + i) % 2)]!
-      px(ctx, a.x + sway + Math.cos(ang) * w, cy + Math.sin(ang) * w * 0.3, c, 2, front ? 2 : 1)
+  // The streaks: the back half's, then the front half's over them, each color one path.
+  for (let pass = 0; pass < 2; pass++) {
+    for (let i = 0; i < layers; i++) {
+      const f = i / (layers - 1)
+      const w = r * (0.25 + 1.0 * f ** 1.3)
+      const sway = Math.sin(t * 3 + a.id + f * 3) * 4 * f
+      const cy = a.y - f * height
+      const spin = t * (13 - f * 5) + i * 0.55
+      const n = Math.max(12, Math.round(w * 2.4))
+      for (let j = 0; j < n; j += thin) {
+        const ang = spin + (j / n) * TAU
+        const front = Math.sin(ang) > 0
+        if (front !== (pass === 1)) continue
+        // Long streaks with short gaps; the back half is dimmer.
+        if (Math.cos(ang * 3 + f * 7 + t * 2) < -0.55) continue
+        const c = front ? (Math.cos(ang) > 0.4 ? '#ffffff' : WHIRL_COLORS[(j + i) % 2]!) : WHIRL_COLORS[2 + ((j + i) % 2)]!
+        plot(c, a.x + sway + Math.cos(ang) * w, cy + Math.sin(ang) * w * 0.3, 2, front ? 2 : 1)
+      }
     }
+    fillPlotted(ctx)
   }
   // Debris and Lugia's feathers whirling up the funnel.
   for (let i = 0; i < 16; i++) {
@@ -139,10 +144,11 @@ const drawWhirlwind = (ctx: Ctx, a: Attack, t: number) => {
     const x = a.x + Math.cos(ang) * w
     const y = a.y - ph * height + Math.sin(ang) * w * 0.3
     if (i % 4 === 0) {
-      px(ctx, x, y, '#ffffff', 3, 1)
-      px(ctx, x + 1, y + 1, '#7890c8', 3, 1)
-    } else px(ctx, x, y, i % 2 ? '#a08868' : '#c8b898', 2, 2)
+      plot('#ffffff', x, y, 3, 1)
+      plot('#7890c8', x + 1, y + 1, 3, 1)
+    } else plot(i % 2 ? '#a08868' : '#c8b898', x, y, 2, 2)
   }
+  fillPlotted(ctx)
   ctx.globalAlpha = 1
 }
 
@@ -317,9 +323,11 @@ const drawSandWave = (ctx: Ctx, a: Attack, t: number) => {
       for (let d = 0; d < h; d += 2) {
         const top = d >= h - 2
         const c = top && depth === 0 ? SAND[0] : top ? SAND[1] : d < 3 ? SAND[4] : depth > 2 ? SAND[3] : SAND[2 + ((i + d + depth) % 2)]!
-        px(ctx, x, y + 4 - d, c, 2, 2)
+        plot(c, x, y + 4 - d, 2, 2)
       }
     }
+    // A row at a time, each color one path: the rows in front still stand over the ones behind.
+    fillPlotted(ctx)
   }
   // Grains thrown ahead of the crest.
   for (let i = 0; i < 20; i++) {
@@ -327,8 +335,9 @@ const drawSandWave = (ctx: Ctx, a: Attack, t: number) => {
     const ang = heading + (f - 0.5) * span
     const ph = (t * 3 + hash2(a.id, i, 1)) % 1
     const d = r + 4 + ph * 18
-    px(ctx, a.x + Math.cos(ang) * d, a.y + Math.sin(ang) * d * 0.75 - tall * (1 - ph * ph), i % 3 === 0 ? '#f87020' : SAND[1], i % 4 === 0 ? 2 : 1, i % 4 === 0 ? 2 : 1)
+    plot(i % 3 === 0 ? '#f87020' : SAND[1], a.x + Math.cos(ang) * d, a.y + Math.sin(ang) * d * 0.75 - tall * (1 - ph * ph), i % 4 === 0 ? 2 : 1, i % 4 === 0 ? 2 : 1)
   }
+  fillPlotted(ctx)
   ctx.globalAlpha = 1
 }
 
@@ -345,17 +354,18 @@ const drawHotSand = (ctx: Ctx, a: Attack, t: number) => {
     const ang = hash2(a.id, i) * TAU
     for (let d = 2; d < r * 0.9; d += 1) {
       const jag = Math.sin(d * 0.8 + i * 5) * 1.2
-      px(ctx, a.x + Math.cos(ang) * d - Math.sin(ang) * jag, a.y + (Math.sin(ang) * d + Math.cos(ang) * jag) * 0.45, d < r * 0.5 ? '#f8d030' : '#e04810')
+      plot(d < r * 0.5 ? '#f8d030' : '#e04810', a.x + Math.cos(ang) * d - Math.sin(ang) * jag, a.y + (Math.sin(ang) * d + Math.cos(ang) * jag) * 0.45)
     }
   }
   // Sand grains and embers.
   for (let i = 0; i < 6; i++) {
     const gx = a.x + (hash2(a.id, i, 2) - 0.5) * r * 1.8
     const gy = a.y + (hash2(a.id, i, 3) - 0.5) * r * 0.8
-    px(ctx, gx, gy, SAND[i % 3]!)
+    plot(SAND[i % 3]!, gx, gy)
     const ph = (t * 1.3 + hash2(a.id, i, 4)) % 1
-    if (i % 2 === 0) px(ctx, gx, gy - ph * 14, ph < 0.5 ? '#f8a030' : '#c03010')
+    if (i % 2 === 0) plot(ph < 0.5 ? '#f8a030' : '#c03010', gx, gy - ph * 14)
   }
+  fillPlotted(ctx)
   ctx.globalAlpha = 1
 }
 

@@ -1,4 +1,4 @@
-import { blitPacked, blitEllipse, blitRotated, textSprite } from '../engine/pixelart'
+import { blitPacked, blitEllipse, blitRotated, fillPlotted, plot, textSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { TAU } from '../engine/math'
 import { HAMMER_WINDUP, HEAVY_HOP, HEAVY_LIFT, PERISH_TIME } from '../game/eggMove3Rules'
@@ -8,6 +8,7 @@ import { EGG3_FX } from './eggMove3Art'
 import { bodyOf } from '../data/bodies'
 import { dashedRing } from './strokes'
 import { localPlayer } from '../game/players'
+import { detail } from './quality'
 
 /**
  * Visuals of the third batch of egg signatures (`game/eggMoves3.ts`). Both
@@ -45,8 +46,9 @@ const rays = (ctx: Ctx, x: number, y: number, size: number, count: number, color
   for (let i = 0; i < count; i++) {
     const angle = (i / count) * TAU + spin
     const len = i % 2 === 0 ? size : size * 0.6
-    for (let d = 2; d <= len; d++) px(ctx, x + Math.cos(angle) * d, y + Math.sin(angle) * d * squash, d < len * 0.5 ? colors[0] : colors[1])
+    for (let d = 2; d <= len; d++) plot(d < len * 0.5 ? colors[0] : colors[1], x + Math.cos(angle) * d, y + Math.sin(angle) * d * squash)
   }
+  fillPlotted(ctx)
 }
 
 /** Cracks running out of an impact on the ground. */
@@ -144,8 +146,9 @@ const NOTE = ['.1111', '.1..1', '.1..1', '11.11', '11.11']
 /** A small music note (`NOTE` rows) at (x, y). */
 const note = (ctx: Ctx, x: number, y: number, color: string) => {
   NOTE.forEach((row, j) => {
-    for (let i = 0; i < row.length; i++) if (row[i] === '1') px(ctx, x + i, y + j, color)
+    for (let i = 0; i < row.length; i++) if (row[i] === '1') plot(color, x + i, y + j)
   })
+  fillPlotted(ctx)
 }
 
 /** Air layer (over Pokémon): the flames, rings, hammer, blades, bites and the rest. */
@@ -338,16 +341,20 @@ const drawRiff = (ctx: Ctx, a: Attack, t: number, r: number) => {
   ctx.globalAlpha = Math.max(0, 1 - e * e)
   const steps = Math.max(24, Math.round(r * TAU * 0.8))
   const amp = down ? 3 : 2
-  for (let i = 0; i < steps; i++) {
+  // Drawing lean, every other step in 2 px squares: half the rects, the ring still closed.
+  const stride = detail.lean ? 2 : 1
+  const size = down || detail.lean ? 2 : 1
+  for (let i = 0; i < steps; i += stride) {
     const angle = (i / steps) * TAU
     // A sawtooth zigzag: the riff's waveform bent into a ring.
     const zig = (((i % 6) / 6) * 2 - 1) * amp
     const rr = r + zig
-    const x = a.x + Math.cos(angle) * rr
-    const y = a.y + Math.sin(angle) * rr * 0.8
-    px(ctx, x, y, i % 6 === 5 ? '#ffffff' : '#f8e030', down ? 2 : 1, down ? 2 : 1)
-    px(ctx, a.x + Math.cos(angle) * (rr - 2), a.y + Math.sin(angle) * (rr - 2) * 0.8, down ? '#a058c8' : '#c8a020')
+    const c = Math.cos(angle)
+    const s = Math.sin(angle) * 0.8
+    plot(i % 6 === 5 || (stride === 2 && i % 6 === 4) ? '#ffffff' : '#f8e030', a.x + c * rr, a.y + s * rr, size, size)
+    plot(down ? '#a058c8' : '#c8a020', a.x + c * (rr - 2), a.y + s * (rr - 2), stride, stride)
   }
+  fillPlotted(ctx)
   if (down) {
     for (let i = 0; i < 4; i++) {
       const angle = (i / 4) * TAU + a.id

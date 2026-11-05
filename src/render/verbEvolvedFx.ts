@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRotated } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRotated, fillPlotted, plot } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { driftLinks } from '../game/verbEvolvedRules'
@@ -7,6 +7,7 @@ import type { Attack, Game } from '../game/types'
 import { dashedRing } from './strokes'
 import { VE } from './verbEvolvedArt'
 import { ownerOf } from '../game/players'
+import { detail } from './quality'
 
 /**
  * Art of the verb moves' evolutions (`game/verbEvolutions.ts`). `draw.ts`
@@ -27,15 +28,21 @@ const px = (ctx: Ctx, x: number, y: number, color: string, w = 1, h = 1) => {
 const fadeOut = (a: Attack, window: number) => Math.max(0, Math.min(1, (a.ttl - a.age) / window))
 const radiusOf = (a: Attack) => (a.shape.kind === 'circle' ? a.shape.r : 8)
 
-/** Square-brush line from (x0, y0) to (x1, y1), `w` px thick. */
-const thickLine = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, w: number, color: string) => {
+/** Plots (`plot`) a square-brush line from (x0, y0) to (x1, y1), `w` px thick. Drawing lean, a brush 2 px or wider stamps every other step (the squares still overlap). */
+const plotLine = (x0: number, y0: number, x1: number, y1: number, w: number, color: string) => {
   const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0)))
   const half = Math.floor(w / 2)
-  ctx.fillStyle = color
-  for (let i = 0; i <= n; i++) {
+  const stride = detail.lean && w >= 2 ? 2 : 1
+  for (let i = 0; i <= n; i = i < n && i + stride > n ? n : i + stride) {
     const k = i / n
-    ctx.fillRect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
+    plot(color, Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
   }
+}
+
+/** Square-brush line from (x0, y0) to (x1, y1), `w` px thick. */
+const thickLine = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, w: number, color: string) => {
+  plotLine(x0, y0, x1, y1, w, color)
+  fillPlotted(ctx)
 }
 
 /** Impact spokes around (x, y): `count` rays from `inner` to `outer`, alternating long and short. */
@@ -43,8 +50,9 @@ const spokes = (ctx: Ctx, x: number, y: number, inner: number, outer: number, co
   for (let i = 0; i < count; i++) {
     const a = rot + (i / count) * TAU
     const len = i % 2 === 0 ? outer : inner + (outer - inner) * 0.55
-    for (let d = inner; d <= len; d++) px(ctx, x + Math.cos(a) * d, y + Math.sin(a) * d, colors[Math.min(colors.length - 1, Math.floor(((d - inner) / Math.max(1, len - inner)) * colors.length))]!)
+    for (let d = inner; d <= len; d++) plot(colors[Math.min(colors.length - 1, Math.floor(((d - inner) / Math.max(1, len - inner)) * colors.length))]!, x + Math.cos(a) * d, y + Math.sin(a) * d)
   }
+  fillPlotted(ctx)
 }
 
 /** A thick crescent: `thick` rings at radius `r` around (x, y), from angle `from` through `span`, colors from the outer edge in. */
@@ -54,23 +62,27 @@ const crescent = (ctx: Ctx, x: number, y: number, r: number, from: number, span:
     const k = i / steps
     const a = from + span * k
     const t = Math.max(1, Math.round(Math.sin(k * Math.PI) * thick))
-    for (let j = 0; j < t; j++) px(ctx, x + Math.cos(a) * (r - j), y + Math.sin(a) * (r - j) * squash, colors[Math.min(colors.length - 1, Math.floor((j / t) * colors.length))]!, 2, 2)
+    for (let j = 0; j < t; j++) plot(colors[Math.min(colors.length - 1, Math.floor((j / t) * colors.length))]!, x + Math.cos(a) * (r - j), y + Math.sin(a) * (r - j) * squash, 2, 2)
   }
+  fillPlotted(ctx)
 }
 
 /**
  * A thick ring `thick` px deep at radius `r`, its rim wobbling with `wave`
  * (a rolling crest): colors from the outer edge in, plotted in 2×2 pixels.
+ * Drawing lean, every other step in 4×4 pixels: a quarter of the rects, still closed.
  */
 const band = (ctx: Ctx, x: number, y: number, r: number, thick: number, colors: readonly string[], wave: number, squash = 1) => {
   const steps = Math.max(16, Math.ceil(r * TAU * 0.55))
-  for (let i = 0; i < steps; i++) {
+  const size = detail.lean ? 4 : 2
+  for (let i = 0; i < steps; i += size / 2) {
     const a = (i / steps) * TAU
     const rim = r + Math.sin(a * 9 + wave) * 1.5 + Math.sin(a * 4 - wave * 0.7) * 1
     const ca = Math.cos(a)
     const sa = Math.sin(a) * squash
-    for (let j = 0; j < thick; j += 2) px(ctx, x + ca * (rim - j), y + sa * (rim - j), colors[Math.min(colors.length - 1, Math.floor((j / thick) * colors.length))]!, 2, 2)
+    for (let j = 0; j < thick; j += size) plot(colors[Math.min(colors.length - 1, Math.floor((j / thick) * colors.length))]!, x + ca * (rim - j), y + sa * (rim - j), size, size)
   }
+  fillPlotted(ctx)
 }
 
 /** A flickering lightning line from a to b, its jags reseeded 20 times a second. */
@@ -87,12 +99,13 @@ const lightning = (ctx: Ctx, ax: number, ay: number, bx: number, by: number, see
     const jag = i === n ? 0 : (hash2(seed, i, tick) - 0.5) * 9
     const x1 = ax + (bx - ax) * k + nx * jag
     const y1 = ay + (by - ay) * k + ny * jag
-    thickLine(ctx, x0, y0, x1, y1, 3, colors[0])
-    thickLine(ctx, x0, y0, x1, y1, 1, colors[1])
+    plotLine(x0, y0, x1, y1, 3, colors[0])
+    plotLine(x0, y0, x1, y1, 1, colors[1])
     x0 = x1
     y0 = y1
   }
-  if (tick % 3 === 0) px(ctx, ax + (bx - ax) * 0.5 + nx * 4, ay + (by - ay) * 0.5 + ny * 4, colors[2])
+  if (tick % 3 === 0) plot(colors[2], ax + (bx - ax) * 0.5 + nx * 4, ay + (by - ay) * 0.5 + ny * 4)
+  fillPlotted(ctx)
 }
 
 /* ======================= Ground pass ======================= */
@@ -177,10 +190,11 @@ const drawSludgeWave = (ctx: Ctx, a: Attack, t: number) => {
     const x = a.x + Math.cos(ang) * (r + 1)
     const y = a.y + Math.sin(ang) * (r + 1) - 1 + bob
     const big = (i + a.id) % 3 === 0
-    px(ctx, x - 1, y - 1, '#381040', big ? 4 : 3, big ? 4 : 3)
-    px(ctx, x, y, big ? '#d080e0' : '#9038a0', big ? 2 : 1, big ? 2 : 1)
-    if (big) px(ctx, x, y, '#ffffff')
+    plot('#381040', x - 1, y - 1, big ? 4 : 3, big ? 4 : 3)
+    plot(big ? '#d080e0' : '#9038a0', x, y, big ? 2 : 1, big ? 2 : 1)
+    if (big) plot('#ffffff', x, y)
   }
+  fillPlotted(ctx)
   ctx.globalAlpha = 1
 }
 
@@ -554,8 +568,9 @@ const drawSludgeGeyser = (ctx: Ctx, a: Attack) => {
   for (let i = 0; i < 6; i++) {
     const ang = -Math.PI / 2 + (hash2(a.id, i) - 0.5) * 2.6
     const sp = 14 + hash2(a.id, i, 1) * 20
-    px(ctx, a.x + Math.cos(ang) * sp * e * 1.3, a.y - 4 + Math.sin(ang) * sp * e * 1.3 + 50 * e * e, i % 3 === 0 ? '#b8f060' : '#d080e0', 2, 2)
+    plot(i % 3 === 0 ? '#b8f060' : '#d080e0', a.x + Math.cos(ang) * sp * e * 1.3, a.y - 4 + Math.sin(ang) * sp * e * 1.3 + 50 * e * e, 2, 2)
   }
+  fillPlotted(ctx)
   ctx.globalAlpha = 1
 }
 
