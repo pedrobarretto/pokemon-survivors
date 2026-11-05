@@ -41,7 +41,8 @@ import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import { openBoutique, type BoutiqueTab } from './ui/boutique'
-import { identify, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
+import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
+import { firstGate, firstRunClock, firstStep, startFirstSession } from './firstSession'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
 import type { Crumb, CrumbMoment } from './crumb'
 import { BAG_ITEMS, useArmed, type BagItem } from './game/bag'
@@ -611,6 +612,7 @@ let boutiqueCheckout: string | null = null
 const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
   const checkout = boutiqueCheckout
   boutiqueCheckout = null
+  lobbyPress('boutique')
   return openBoutique(ui, input, {
     tab,
     checkout,
@@ -720,14 +722,15 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   // Every Play in the lobby (the partner select, the challenge, a hatch, a shiny pick) finds its ticket in hand.
   prefetchRun()
   prefetchRun(challengeToday().day)
+  if (opts.intro) firstStep('intro')
   setScreen(
     titleScreen(ui, input, {
-      play: () => (accountsEnabled && !playingAsGuest && accountState().kind === 'guest' ? showPlayGate() : showMenu()),
+      play: () => (firstStep('play'), accountsEnabled && !playingAsGuest && accountState().kind === 'guest' ? showPlayGate() : showMenu()),
       challenge: () => showChallenge(),
       incubator: () => showIncubator(() => showTitle({ focus: 'eggs' })),
       gifts: showGifts,
       missions: () => showMissions(),
-      ready: () => (pressedStart = true),
+      ready: () => ((pressedStart = true), firstStep('lobby')),
       // The language may change inside Settings, so closing them rebuilds the title on the same entry.
       settings: (focus) => openSettings(ui, input, () => showTitle({ focus })),
       news: (focus) => newsScreen(ui, input, () => showTitle({ focus })),
@@ -779,18 +782,22 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
 let playingAsGuest = false
 
 /** Sign in or play as a guest, asked when a guest taps Play. */
-const showPlayGate = () =>
+const showPlayGate = () => {
+  firstStep('gate')
   setScreen(
     playGate(ui, input, {
-      play: () => showMenu(),
-      guest: () => ((playingAsGuest = true), showMenu()),
-      back: () => showTitle({ focus: 'play' }),
+      play: () => (firstGate('signIn'), showMenu()),
+      guest: () => (firstGate('guest'), (playingAsGuest = true), showMenu()),
+      back: () => (firstGate('back'), showTitle({ focus: 'play' })),
+      signingIn: () => firstGate('signIn'),
     }),
   )
+}
 
 /** The partner select; its top bar leads back to the title, to the Poké Mart (the wallet) and to Settings, which come back to it on the same Pokémon. */
 const showMenu = (initial: PlayableId = loadSave().partner) => {
   endRun()
+  firstStep('select')
   prefetchRun()
   const select = starterSelect(ui, input, {
     pick: (id) => setTimeout(() => void startRun(id), 250),
@@ -1244,6 +1251,7 @@ const firstFrameDrawn = () => {
   if (!firstFrameDue) return
   firstFrameDue = false
   launchStep('running')
+  firstStep('firstFrame')
 }
 
 /** A player's whole family (branches included: the evolution scene can land on any of them) in the colors they play, not the normal ones as well. */
@@ -1302,6 +1310,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   wonLastRun = false
   // The crash watch holds the launch from here: a page dying while the run loads says where (`launchStep`).
   launchStep('ticket')
+  firstStep('loading')
   const c = daily?.challenge ?? null
   // The Desafio do dia's Pokémon is the day's, not the player's pick.
   if (!c) updateSave((s) => ({ ...s, partner: starter }))
@@ -3697,6 +3706,7 @@ const frame = (now: number) => {
         runDrawnAt = now
         render(ctx, g, t, { ...settings(), companion: r.companion })
         firstFrameDrawn()
+        firstRunClock(g.time)
         const stick = input.readStick()
         if (stick && g.phase === 'playing') drawJoystick(ctx, stick, cssScale)
         r.hud.update(g)
@@ -3940,6 +3950,8 @@ const askAboutCrash = () => {
 const boot = () => {
   loadSafeMode()
   startAnalytics(errorContext)
+  // A new device's first visit: where it gets to, sent as one event (`firstSession.ts`).
+  startFirstSession(loadSave().achievements.lifetime.runs)
   sendHeldVersus()
   watchDeploys()
   // Events and errors tie to the account on this device, known from its link before Clerk loads.
