@@ -5886,6 +5886,10 @@ export const es: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Cesta de bayas',
       goldenMallet: 'Mazo dorado',
+      // The fishing trophies (`MINIGAMES.fishing.trophies`).
+      fishingRodRack: 'Soporte de cañas',
+      goldenMagikarpPlaque: 'Placa del Magikarp Dorado',
+      shinyGyaradosTrophy: 'Trofeo del Gyarados Shiny',
     },
     doll: (legend) => `Muñeco de ${legend}`,
     kinds: { floor: 'Mueble', rug: 'Alfombra', top: 'Adorno', wall: 'Pared', wallpaper: 'Papel tapiz', flooring: 'Piso' },
@@ -6182,7 +6186,7 @@ export const es: Messages = {
       fourInRow: { name: 'Cuatro en Línea', blurb: 'Alinea cuatro Poké Balls antes que tu rival.' },
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fuego vence a Planta, Planta a Agua, Agua a Fuego.' },
     },
-    feats: { fishing: {}, berryCatch: { flawless: '¡Lluvia de Bayas sin perder una vida!', goldRush: '¡Tres bayas doradas en una ronda!', combo50: '¡Combo de 50 bayas!' }, whackDiglett: { combo30: '¡Combo de 30 golpes!', dugtrio: '¡Golpeó a 5 Dugtrio en una ronda!' }, fourInRow: {}, typeDuel: { perfectDuel: '¡Duelo perfecto, sin perder una ronda!' } },
+    feats: { fishing: { feebas: '¡Pesqué un Feebas!', shinyGyarados: '¡¡Pesqué un Gyarados shiny!!', bigHaul: '¡Pesca de 300 puntos!' }, berryCatch: { flawless: '¡Lluvia de Bayas sin perder una vida!', goldRush: '¡Tres bayas doradas en una ronda!', combo50: '¡Combo de 50 bayas!' }, whackDiglett: { combo30: '¡Combo de 30 golpes!', dugtrio: '¡Golpeó a 5 Dugtrio en una ronda!' }, fourInRow: {}, typeDuel: { perfectDuel: '¡Duelo perfecto, sin perder una ronda!' } },
     duel: {
       pick: 'Elige una carta',
       play: 'Jugar',
@@ -6242,6 +6246,21 @@ export const es: Messages = {
       tap: 'Toca una columna',
       four: '¡Cuatro en línea!',
       draw: '¡Empate!',
+    },
+    fishing: {
+      hold: 'Mantén para lanzar',
+      wait: 'Espera la picada...',
+      bite: '¡Ya!',
+      reel: 'Mantén: tira · Suelta: afloja',
+      ease: '¡Suelta!',
+      early: '¡Muy pronto!',
+      away: 'Se escapó...',
+      snapped: '¡Se rompió el sedal!',
+      lastCast: '¡Último lance!',
+      time: '¡Tiempo!',
+      go: '¡Ya!',
+      log: 'Tu pesca',
+      junk: { boot: 'Bota vieja', can: 'Lata', seaweed: 'Alga' },
     },
   },
   carpenter: {

@@ -5880,6 +5880,10 @@ export const fr: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Panier de baies',
       goldenMallet: 'Maillet doré',
+      // The fishing trophies (`MINIGAMES.fishing.trophies`).
+      fishingRodRack: 'Râtelier à cannes',
+      goldenMagikarpPlaque: 'Plaque du Magikarp doré',
+      shinyGyaradosTrophy: 'Trophée Gyarados shiny',
     },
     doll: (legend) => `Poupée ${legend}`,
     kinds: { floor: 'Meuble', rug: 'Tapis', top: 'Bibelot', wall: 'Mur', wallpaper: 'Papier peint', flooring: 'Sol' },
@@ -6176,7 +6180,7 @@ export const fr: Messages = {
       fourInRow: { name: 'Puissance Quatre', blurb: 'Aligne quatre Poké Balls avant ton rival.' },
       typeDuel: { name: 'Duel de Types', blurb: 'Feu bat Plante, Plante bat Eau, Eau bat Feu.' },
     },
-    feats: { fishing: {}, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' } },
+    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' } },
     duel: {
       pick: 'Choisis une carte',
       play: 'Jouer',
@@ -6236,6 +6240,21 @@ export const fr: Messages = {
       tap: 'Touche une colonne',
       four: 'Quatre alignés !',
       draw: 'Égalité !',
+    },
+    fishing: {
+      hold: 'Maintiens pour lancer',
+      wait: 'Attends une touche...',
+      bite: 'Vite !',
+      reel: 'Maintiens : tire · Lâche : détends',
+      ease: 'Lâche !',
+      early: 'Trop tôt !',
+      away: 'Il s\'est échappé...',
+      snapped: 'La ligne a cassé !',
+      lastCast: 'Dernier lancer !',
+      time: 'Temps écoulé !',
+      go: 'Partez !',
+      log: 'Ta pêche',
+      junk: { boot: 'Vieille botte', can: 'Canette', seaweed: 'Algue' },
     },
   },
   carpenter: {

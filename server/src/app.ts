@@ -22,7 +22,8 @@ import { parseSaveData } from '../../src/game/meta'
 import { outbreakAt } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
 import type { LooksResponse } from '../../src/net/looks'
-import type { RealmCities, RealmFriends, RealmMe } from '../../src/net/realmApi'
+import type { GameClaimed, RealmCities, RealmFriends, RealmMe } from '../../src/net/realmApi'
+import { coinsFor } from '../../src/data/minigames'
 import type { IdentityRequest } from '../../src/net/realmRelay'
 import { parseRealmModeration } from '../../src/realm/moderation'
 import { isBoardPeriod, isPlayable, isRunMode, parseDisplayName, parseHandle, parseRunResult } from '../../src/game/ranking'
@@ -48,7 +49,7 @@ import type { GiftStore } from './gifts'
 import type { ModerationStore } from './moderation'
 import type { PatreonOAuth } from './patreon'
 import type { RankingStore } from './ranking'
-import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parsePresenceReport, parseRealmReport, type BuyError, type RealmStore } from './realm'
+import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parseGameClaim, parsePresenceReport, parseRealmReport, type BuyError, type RealmStore } from './realm'
 import { checkoutLocale, type StripeCheckout } from './stripe'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
@@ -88,7 +89,10 @@ export type AppDeps = {
   /** The co-op boards and the Desafio co-op do dia's: the relay's run reports and the boards by team. */
   coop: Pick<CoopBoardStore, 'report' | 'board' | 'challengeBoard'>
   /** The Poké Realm: identities, visits and presence for the relay; bases, furniture and reports for the game; bans for the admin. */
-  realm: Pick<RealmStore, 'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy'>
+  realm: Pick<
+    RealmStore,
+    'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'claim' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy' | 'takeGame'
+  >
   /** The secret the relay signs Arena and co-op reports and ticket lookups with; unset, those routes answer 503. */
   arenaReportSecret: string | undefined
   /** Linking a Patreon account (its OAuth client), null when the server has none. */
@@ -314,7 +318,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
  * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
  * - The Poké Realm (`src/realm.ts`): the game's routes as `src/net/realmApi.ts` lists them (`/realm/me`, `/realm/cities`,
- *   `/realm/friends`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/report`), and the relay's, signed like
+ *   `/realm/friends`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/report`), and the relay's, signed like
  *   `/looks`, as `src/net/realmRelay.ts` lists them (`/realm/identity`, `/realm/visit`, `/realm/presence`). A realm-banned
  *   account's realm writes get 403 `{ error: 'banned' }`. The desk's `GET /admin/realm`: `RealmDesk` (open realm reports
  *   by trainer, bans in force); `POST /admin/realm/moderation` (`parseRealmModeration`) `{ userId, action, days?, reason? }`:
@@ -966,6 +970,17 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const bought = await realm.buy(c.var.userId, buy, price)
     if (!bought.ok) return c.json({ error: bought.error }, BUY_ERRORS[bought.error])
     return c.json(bought.pay === 'gems' ? { furniture: bought.furniture, pay: 'gems', balance: bought.balance } : { furniture: bought.furniture, pay: 'coins', save: bought.save, revision: bought.revision })
+  })
+
+  app.post('/realm/game/claim', auth, smallBody, async (c) => {
+    const claim = parseGameClaim(await json(c))
+    if (!claim) return c.json({ error: 'expected { game, outcome, ms, feats }' }, 400)
+    const coins = coinsFor(claim.game, claim.outcome, claim.ms)
+    if (coins === null) return c.json({ error: 'outcome' }, 400)
+    if (!realm.takeGame(c.var.userId)) return c.json({ error: 'too many claims' }, 429)
+    const got = await realm.claim(c.var.userId, claim, coins, brasiliaDay(new Date()))
+    if (!got.ok) return c.json({ error: got.error }, 403)
+    return c.json({ coins: got.coins, today: got.today, trophies: got.trophies, furniture: got.furniture } satisfies GameClaimed)
   })
 
   app.post('/realm/report', auth, smallBody, async (c) => {

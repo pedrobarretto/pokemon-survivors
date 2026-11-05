@@ -6275,6 +6275,10 @@ export const pt = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Cesta de frutas',
       goldenMallet: 'Marreta de ouro',
+      // The fishing trophies (`MINIGAMES.fishing.trophies`).
+      fishingRodRack: 'Suporte de varas',
+      goldenMagikarpPlaque: 'Placa do Magikarp Dourado',
+      shinyGyaradosTrophy: 'Troféu do Gyarados Shiny',
     } satisfies Record<ShopFurnitureId, string>,
     doll: (legend: string) => `Boneco de ${legend}`,
     kinds: { floor: 'Móvel', rug: 'Tapete', top: 'Enfeite', wall: 'Parede', wallpaper: 'Papel de parede', flooring: 'Piso' } satisfies Record<FurnitureKind, string>,
@@ -6610,7 +6614,7 @@ export const pt = {
       fourInRow: { name: 'Quatro em Linha', blurb: 'Alinhe quatro Poké Balls antes do outro.' },
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fogo vence Planta, Planta vence Água, Água vence Fogo.' },
     },
-    feats: { fishing: {}, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' } },
+    feats: { fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', bigHaul: 'Pescaria de 300 pontos!' }, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' } },
     duel: {
       pick: 'Escolha uma carta',
       play: 'Jogar',
@@ -6670,6 +6674,22 @@ export const pt = {
       tap: 'Toque numa coluna',
       four: 'Quatro em linha!',
       draw: 'Empate!',
+    },
+    /** Fishing's own words (`realm/games/fishing.ts`), drawn in its canvas: keep each about 20 letters. */
+    fishing: {
+      hold: 'Segure para lançar',
+      wait: 'Espere a fisgada...',
+      bite: 'Agora!',
+      reel: 'Segure: puxa · Solte: folga',
+      ease: 'Solte!',
+      early: 'Cedo demais!',
+      away: 'Escapou...',
+      snapped: 'A linha arrebentou!',
+      lastCast: 'Último lance!',
+      time: 'Tempo!',
+      go: 'Já!',
+      log: 'Sua pescaria',
+      junk: { boot: 'Bota velha', can: 'Lata', seaweed: 'Alga' },
     },
   },
   carpenter: {

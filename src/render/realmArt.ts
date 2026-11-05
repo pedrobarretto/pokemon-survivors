@@ -310,11 +310,12 @@ const paintRoom = (room: TownRoomId) => {
         else if (d < 3 + BAND_W) set(x, y, stoneAt(BAND, x, y, 8, 4))
         else set(x, y, stoneAt(STONES, x, y))
       } else if (v === M.boards) {
-        // Planks across the walk, 6 px wide, with a dark edge along each side.
+        // Planks across the walk, 6 px wide, with a dark edge along each side (and its ends inside the room: a platform's sides).
         const top = m(x, y - 1) !== M.boards
         const bottom = m(x, y + 1) !== M.boards
+        const end = (m(x - 1, y) !== M.boards && m(x - 1, y) !== -1) || (m(x + 1, y) !== M.boards && m(x + 1, y) !== -1)
         const lx = x % 6
-        set(x, y, top || bottom ? PLANKS.edge : lx === 0 ? PLANKS.gap : y % 14 === 3 && lx === 3 ? PLANKS.edge : lx === 1 ? PLANKS.hi : PLANKS.wood[(Math.floor(x / 6) * 7) % 3]!)
+        set(x, y, top || bottom || end ? PLANKS.edge : lx === 0 ? PLANKS.gap : y % 14 === 3 && lx === 3 ? PLANKS.edge : lx === 1 ? PLANKS.hi : PLANKS.wood[(Math.floor(x / 6) * 7) % 3]!)
       } else if (v === M.floor) {
         const row = Math.floor(y / 8)
         const lx = (x + (row % 3) * 21) % 48

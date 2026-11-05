@@ -219,8 +219,11 @@ const LABEL_FLOOR = 84
 /** A label over a spot or a door: its text, where it stands, and the spot (null for a door), which the prompt replaces when in reach. */
 type Label = { text: string; at: Point; spot: Spot | null }
 
+/** Spots of a kind standing side by side (the pier's fishing places): one label names them all. */
+const sideBySide = (a: Spot, b: Spot) => a.kind === b.kind && Math.hypot(a.at.x - b.at.x, a.at.y - b.at.y) < 40
+
 /**
- * A room's labels: every spot but the benches (`realm.spots`) and every door
+ * A room's labels: every spot but the benches (one for spots side by side) (`realm.spots`) and every door
  * (the room it leads to, an arrow toward the edge it's on), anchored a little
  * inside the room so an edge door's label shows.
  */
@@ -230,7 +233,7 @@ const labelsOf = (room: RoomKey): Label[] => {
   // Cabinets side by side playing the same game share one label, between them.
   const shared = (s: Spot) => spotsOf(room).filter((o) => o.kind === 'cabinet' && s.kind === 'cabinet' && String(o.games) === String(s.games) && Math.abs(o.at.y - s.at.y) < 8 && Math.abs(o.at.x - s.at.x) <= 48)
   const spots = spotsOf(room)
-    .filter((s) => s.kind !== 'bench' && (s.kind !== 'cabinet' || shared(s)[0] === s))
+    .filter((s, i, all) => s.kind !== 'bench' && (s.kind !== 'cabinet' || shared(s)[0] === s) && (s.kind === 'cabinet' || !all.slice(0, i).some((o) => sideBySide(o, s))))
     .map((s) => {
       const row = shared(s)
       const at = row.length > 1 ? { x: row.reduce((sum, o) => sum + o.at.x, 0) / row.length, y: s.at.y } : s.at
@@ -805,6 +808,11 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const live = id ? tables.get(id) : undefined
       const games = spot.kind === 'fishing' ? ['fishing' as const] : live && isMinigameId(live.game) ? [live.game] : (spot.games ?? []).filter(isMinigameId)
       if (games.length === 0) return
+      // A fishing spot stands the trainer at the edge, facing the water, so the room sees them fish there.
+      if (spot.kind === 'fishing') {
+        place(walker, spot.at.x, spot.at.y)
+        walker.facing = spot.face ?? walker.facing
+      }
       const avatar = you
       const source =
         id && avatar !== null && client.status().kind === 'open'
@@ -981,6 +989,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const sitting = tables.size > 0 ? seatedAt(tables, spots, town !== null) : null
       const views: (TrainerView & { sortY?: number })[] = []
       for (const tr of trainers.values()) {
+        tr.act = tr.av.act
         const seat = sitting?.get(tr.av.id)
         if (seat) Object.assign(tr, { x: seat.x, y: seat.y, facing: seat.facing, moving: false })
         else if (tr.av.id === you) Object.assign(tr, { x: walker.x, y: walker.y, facing: walker.facing, moving: walker.moving })
@@ -1044,7 +1053,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       for (const l of labels) {
         // Only what's on screen: a label pinned to the edge for something off it would pile onto the others there.
         const onScreen = l.at.x >= cam.x && l.at.x <= cam.x + w
-        const shown = seated && sub === null && l.spot !== near && onScreen && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
+        const shown = seated && sub === null && !(l.spot && near && (l.spot === near || sideBySide(l.spot, near))) && onScreen && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
         l.el.classList.toggle('shown', shown)
         if (shown && l.spot?.kind === 'gameTable' && l.spot.id) {
           // A game table's label says whether a match is on there, or a seat waits for someone.

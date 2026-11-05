@@ -5880,6 +5880,10 @@ export const zh: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: '樹果籃',
       goldenMallet: '黃金木槌',
+      // The fishing trophies (`MINIGAMES.fishing.trophies`).
+      fishingRodRack: '釣竿架',
+      goldenMagikarpPlaque: '黃金 Magikarp 獎牌',
+      shinyGyaradosTrophy: '異色 Gyarados 獎盃',
     },
     doll: (legend) => `${legend}玩偶`,
     kinds: { floor: '家具', rug: '地毯', top: '擺飾', wall: '牆面', wallpaper: '壁紙', flooring: '地板' },
@@ -6176,7 +6180,7 @@ export const zh: Messages = {
       fourInRow: { name: '四子連線', blurb: '比對手先連成四顆精靈球。' },
       typeDuel: { name: '屬性對決', blurb: '火剋草，草剋水，水剋火。' },
     },
-    feats: { fishing: {}, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' } },
+    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' } },
     duel: {
       pick: '選一張牌',
       play: '出牌',
@@ -6236,6 +6240,21 @@ export const zh: Messages = {
       tap: '點一下直行',
       four: '四子連線！',
       draw: '平手！',
+    },
+    fishing: {
+      hold: '按住拋竿',
+      wait: '等待上鉤……',
+      bite: '快拉！',
+      reel: '按住收線・放開放線',
+      ease: '放開！',
+      early: '太早了！',
+      away: '跑掉了……',
+      snapped: '釣線斷了！',
+      lastCast: '最後一竿！',
+      time: '時間到！',
+      go: '開始！',
+      log: '這輪的漁獲',
+      junk: { boot: '舊靴子', can: '空罐', seaweed: '海藻' },
     },
   },
   carpenter: {

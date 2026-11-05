@@ -8,7 +8,12 @@ import type { FurnitureDef } from '../furniture'
  * here that's sold). One block per game, so each game's pieces stay together.
  */
 
-const FISHING = {} as const satisfies Record<string, FurnitureDef>
+/** Fishing (`MINIGAMES.fishing.trophies`): the rod rack for 20 rounds, the golden Magikarp plaque for a round of 500, the shiny Gyarados on its pedestal for hooking one. */
+const FISHING = {
+  fishingRodRack: { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'rare', price: null, source: 'trophy', blocks: true },
+  goldenMagikarpPlaque: { kind: 'wall', set: 'trophies', size: [2, 1], rarity: 'epic', price: null, source: 'trophy' },
+  shinyGyaradosTrophy: { kind: 'floor', set: 'trophies', size: [2, 1], rarity: 'legendary', price: null, source: 'trophy', blocks: true },
+} as const satisfies Record<string, FurnitureDef>
 
 /**
  * The game tables' pieces: the table a base hosts matches at (sold at the

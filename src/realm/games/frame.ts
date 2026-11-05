@@ -29,8 +29,15 @@ export type Pointer = { x: number; y: number; down: boolean; pressed: boolean; r
 /** What a game reads each step: the pointer and the keys (`KeyboardEvent.code`s), held or pressed this step. */
 export type GameInput = { pointer: Pointer; held: (code: string) => boolean; pressed: (code: string) => boolean }
 
-/** How a solo game ended: its score and the feats it hit (ids of its `feats`). */
-export type SoloEnd = { score: number; feats: readonly string[] }
+/** A line of a solo game's log on the end sheet: an icon (an image URL, or null), what it was, how many and the points they made. */
+export type LogLine = { icon: string | null; label: string; count: number; points: number }
+
+/**
+ * How a solo game ended: its score, the feats it hit (ids of its `feats`)
+ * and, optionally, a log the end sheet lists under its title (what a round
+ * of fishing caught).
+ */
+export type SoloEnd = { score: number; feats: readonly string[]; log?: { title: string; lines: readonly LogLine[] } }
 
 /** What the frame gives a solo game: the player's partner (to draw it), and a way to tell the room about a feat as it happens. */
 export type SoloCtx = { partner: string; shiny: boolean; brag: (feat: string) => void }
@@ -226,6 +233,21 @@ const loop = (frame: (dt: number, now: number) => void) => {
   return () => cancelAnimationFrame(id)
 }
 
+/** A solo game's log as the end sheet lists it: icon, name, how many, points. */
+const logList = (log: NonNullable<SoloEnd['log']>) =>
+  h(
+    'div',
+    { class: 'minigame-log' },
+    h('h4', {}, log.title),
+    h(
+      'ul',
+      {},
+      ...log.lines.map((l) =>
+        h('li', {}, l.icon ? h('img', { src: l.icon, alt: '', width: 24, height: 24 }) : h('span', {}), h('span', { class: 'minigame-log-name' }, l.label), h('span', {}, `×${l.count}`), h('b', {}, `${l.points}`)),
+      ),
+    ),
+  )
+
 /**
  * Claims a finished game and fills the end sheet: the ₽ paid (added to the
  * wallet), the day's cap reached, the trophies earned, or that it couldn't
@@ -234,11 +256,12 @@ const loop = (frame: (dt: number, now: number) => void) => {
  * short, as it does when the API refuses the outcome. `again` restarts,
  * `leave` closes.
  */
-const endSheet = async (sheet: HTMLElement, headline: string, claim: Parameters<typeof claimGame>[0] | null, again: () => void, leave: () => void) => {
+const endSheet = async (sheet: HTMLElement, headline: string, claim: Parameters<typeof claimGame>[0] | null, again: () => void, leave: () => void, log?: SoloEnd['log']) => {
   const m = t().minigames
   const paid = h('p', { class: 'minigame-paid' }, m.end.claiming)
   sheet.replaceChildren(
     h('h3', {}, headline),
+    ...(log && log.lines.length > 0 ? [logList(log)] : []),
     paid,
     h('div', { class: 'minigame-actions' }, h('button', { class: 'box', type: 'button', onclick: again }, m.end.again), h('button', { class: 'box', type: 'button', onclick: leave }, m.end.leave)),
   )
@@ -302,7 +325,7 @@ export const openSoloGame = (root: HTMLElement, game: SoloGameId, def: SoloGame,
     const end = ended ? null : run.over()
     if (end) {
       ended = true
-      void endSheet(s.sheet, m.end.score(end.score), { game, outcome: { score: end.score }, ms: performance.now() - startedAt, feats: end.feats }, start, close)
+      void endSheet(s.sheet, m.end.score(end.score), { game, outcome: { score: end.score }, ms: performance.now() - startedAt, feats: end.feats }, start, close, end.log)
     }
   })
   return { el: s.el, dispose: close }

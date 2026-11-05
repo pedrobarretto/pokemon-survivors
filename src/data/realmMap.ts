@@ -52,7 +52,15 @@ export type Door = { at: Rect; to: TownRoomId; spawn: Point }
  * `games`: the mini games it opens (`MinigameId`s; one opens at once, more
  * ask which): a cabinet's or a table's.
  */
-export type Spot = { kind: SpotKind; at: Point; reach: number; id?: string; games?: readonly string[] }
+export type Spot = {
+  kind: SpotKind
+  at: Point
+  reach: number
+  id?: string
+  games?: readonly string[]
+  /** Where a trainer using it faces (a `Facing`, 0 down … 4 up): a fishing spot, toward the water. */
+  face?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+}
 
 export type TownRoom = { w: number; h: number; spawn: Point; solid: readonly Shape[]; doors: readonly Door[]; spots: readonly Spot[] }
 
@@ -70,7 +78,8 @@ const post = (x: number, y: number) => oval(x, y - 1, 5, 3)
  * the east, the board (today's Desafio, the Festival, events) by the café,
  * whose door is the café's, and the roads west to the trail and east to the
  * pier. The pier has the lagoon Water types swim in (it doesn't block: the
- * others wade) and a bench; the sea around it does block. The café has its
+ * others wade), a bench and, off the boardwalk's end, a fishing platform with
+ * two fishing spots; the sea around it does block. The café has its
  * counter and two sofas, and the trail is the Secret Base Grove: your own
  * base's entrance at the head of its clearing (one `myBase` spot; the art
  * shows the exterior your base wears), the board of public bases on the
@@ -124,7 +133,10 @@ export const REALM_ROOMS = {
     spawn: { x: 40, y: 256 },
     solid: [
       rect(574, 0, 66, 168),
-      rect(574, 216, 66, 264),
+      // The sea south of the boardwalk, around the fishing platform.
+      rect(574, 216, 14, 264),
+      rect(632, 216, 8, 264),
+      rect(588, 262, 44, 218),
       rect(0, 446, 640, 34),
       oval(600, 470, 80, 60),
       oval(514, 142, 28, 10),
@@ -142,6 +154,8 @@ export const REALM_ROOMS = {
       post(168, 222),
       post(168, 300),
       post(24, 216),
+      post(591, 258),
+      post(629, 258),
       ...[trunk(252, 214), trunk(528, 300), trunk(180, 412)],
       ...[trunk(40, 100), trunk(104, 70), shrub(160, 100), trunk(260, 64), shrub(298, 112), trunk(40, 430)],
       rect(332, 96, 120, 38),
@@ -153,6 +167,9 @@ export const REALM_ROOMS = {
     spots: [
       { kind: 'pool', at: { x: 340, y: 304 }, reach: 120 },
       { kind: 'bench', at: { x: 92, y: 344 }, reach: 20 },
+      // The fishing platform off the boardwalk's end (`MINIGAMES.fishing`): two places at its edge, facing the sea.
+      { kind: 'fishing', at: { x: 603, y: 254 }, reach: 12, face: 0 },
+      { kind: 'fishing', at: { x: 618, y: 254 }, reach: 12, face: 0 },
     ],
   },
   cafe: {
