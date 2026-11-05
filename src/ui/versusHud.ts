@@ -13,7 +13,8 @@ import type { Game, GameEvent, Player } from '../game/types'
 import { timeLeft } from '../game/versus'
 import { t } from '../i18n'
 import { cryUrl, portraitUrl } from '../render/sprites'
-import { energyIcon, teamColor } from './arena'
+import { energyIcon } from './arena'
+import { teamColor, versusName } from './arenaBits'
 import { h, rich, setStyle, setText } from './dom'
 import { banner, runToast } from './toasts'
 import { settings } from './settings'
@@ -27,14 +28,6 @@ import { settings } from './settings'
  * Plus the match's toasts (`versusFeedback`). Reads the draw copy every frame; touches only what changed.
  */
 
-/** The name a seat goes by in a match: a human's, or a bot's Pokémon with "CPU" (a human who left keeps theirs). */
-export const versusName = (g: Game, slot: number) => {
-  const p = g.players[slot]
-  if (!p) return '?'
-  const name = g.coop?.names[slot]?.trim()
-  if (name) return name
-  return `${formAt(p.starter, p.branch, p.stage).name} ${t().versus.cpu}`
-}
 
 /** A seat's name for this screen: "Você" for the local player. */
 const shownName = (g: Game, me: Player, slot: number) => (slot === me.slot ? t().versus.you : versusName(g, slot))
@@ -313,4 +306,3 @@ export const versusFeedback = (root: HTMLElement, g: Game, e: GameEvent) => {
 }
 
 /** The events `versusFeedback` speaks for. */
-export const isVersusEvent = (e: GameEvent): e is Extract<GameEvent, { kind: `versus${string}` }> => e.kind.startsWith('versus')

@@ -1,21 +1,34 @@
-import { en } from './en'
-import { es } from './es'
-import { fr } from './fr'
-import { pt, type Messages } from './pt'
-import { zh } from './zh'
+import type { Messages } from './pt'
 
 export type { Messages }
 
 /** Supported languages, in menu order. `name` is always shown in its own language. */
 export const LOCALES = {
-  pt: { name: 'Português', short: 'PT', tag: 'pt-BR', messages: pt },
-  en: { name: 'English', short: 'EN', tag: 'en-US', messages: en },
-  es: { name: 'Español', short: 'ES', tag: 'es-419', messages: es },
-  fr: { name: 'Français', short: 'FR', tag: 'fr-FR', messages: fr },
-  zh: { name: '繁體中文', short: '中文', tag: 'zh-TW', messages: zh },
-} as const satisfies Record<string, { name: string; short: string; tag: string; messages: Messages }>
+  pt: { name: 'Português', short: 'PT', tag: 'pt-BR' },
+  en: { name: 'English', short: 'EN', tag: 'en-US' },
+  es: { name: 'Español', short: 'ES', tag: 'es-419' },
+  fr: { name: 'Français', short: 'FR', tag: 'fr-FR' },
+  zh: { name: '繁體中文', short: '中文', tag: 'zh-TW' },
+} as const satisfies Record<string, { name: string; short: string; tag: string }>
 
 export type Locale = keyof typeof LOCALES
+
+/**
+ * Each language's messages in a chunk of its own: the game downloads only the
+ * one it shows (the site's build-time pages read them all from `./messages`).
+ */
+const CATALOGS: Record<Locale, () => Promise<Messages>> = {
+  pt: () => import('./pt').then((m) => m.pt),
+  en: () => import('./en').then((m) => m.en),
+  es: () => import('./es').then((m) => m.es),
+  fr: () => import('./fr').then((m) => m.fr),
+  zh: () => import('./zh').then((m) => m.zh),
+}
+
+const loaded: Partial<Record<Locale, Messages>> = {}
+
+/** Loads a language's messages once (a failed load, a stale chunk after a deploy, can be retried). */
+export const loadLocale = async (l: Locale): Promise<Messages> => (loaded[l] ??= await CATALOGS[l]())
 
 export const LOCALE_IDS = Object.keys(LOCALES) as Locale[]
 
@@ -46,13 +59,17 @@ const preferredLanguages = (): readonly string[] => {
 
 let current: Locale = detectLocale(readSaved(), preferredLanguages())
 
+// Every importer waits for the shown language, so `t()` is ready by the time any code runs.
+await loadLocale(current)
+
 export const locale = () => current
 
 /** Messages of the current language. Call it at render time, so a language switch shows up on the next render. */
-export const t = (): Messages => LOCALES[current].messages
+export const t = (): Messages => loaded[current]!
 
-/** Switches language and remembers it. Screens re-render themselves (see `main.ts`). */
-export const setLocale = (next: Locale) => {
+/** Loads a language, then switches to it and remembers it. Screens re-render themselves (see `main.ts`). */
+export const setLocale = async (next: Locale) => {
+  await loadLocale(next)
   current = next
   document.documentElement.lang = LOCALES[next].tag
   try {

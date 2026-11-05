@@ -19,7 +19,8 @@ import { unlockedAt } from '../../game/learnsets'
 import { starterStats } from '../../game/leveling'
 import { MOVES, type MoveId } from '../../game/moves'
 import { resolveSpecial } from '../../game/special'
-import { LOCALES, type Locale } from '../../i18n'
+import type { Locale } from '../../i18n'
+import { MESSAGES } from '../../i18n/messages'
 import { SITE_MESSAGES, type SiteMessages } from '../../i18n/site'
 import { STAT_BARS, statRatio } from '../../ui/statBars'
 import { html, type Html } from '../html'
@@ -63,7 +64,7 @@ const stage = (entry: DexEntry, css: SpriteCss, m: SiteMessages) => {
 
 const statBars = (entry: DexEntry & { source: { kind: 'starter' } }, locale: Locale) => {
   const stats = starterStats(entry.source.id, entry.source.stage, entry.source.branch ?? null)
-  const labels = LOCALES[locale].messages.stats
+  const labels = MESSAGES[locale].stats
   return html`<dl class="bars">${STAT_BARS.map(
     (b) =>
       html`<div><dt>${labels[b.label]}</dt><dd><span class="bar"><i style="width:${Math.round(statRatio(b.get(stats), b.min, b.max) * 100)}%"></i></span><b>${b.fmt(b.get(stats))}</b></dd></div>`,
@@ -90,7 +91,7 @@ const learnRows = (source: DexEntry['source'] & { kind: 'starter' }, locale: Loc
     if (options.length === 0) return row(st.name, when, unlockedAt(source.id, branch, k))
     const shared = unlockedAt(source.id, null, k)
     return [
-      row(options.length > 2 ? LOCALES[locale].messages.branch.choose(options.length) : options.map((b) => BRANCHES[b].name).join(' / '), when, shared),
+      row(options.length > 2 ? MESSAGES[locale].branch.choose(options.length) : options.map((b) => BRANCHES[b].name).join(' / '), when, shared),
       options.map((b) => {
         // A branch that needs an item names it beside the level.
         const item = branchNeeds(b)
@@ -102,14 +103,14 @@ const learnRows = (source: DexEntry['source'] & { kind: 'starter' }, locale: Loc
 
 /** A family's (or branch's) abilities, the Hidden one marked, with what each does in a run. */
 const abilityList = (set: AbilitySet, locale: Locale) => {
-  const a = LOCALES[locale].messages
+  const a = MESSAGES[locale]
   return html`<ul class="list">${set.map((id, i) => html`<li><b>${ABILITIES[id].name}</b>${isHidden(set, i) && html` <small>(${a.ability.hiddenLong})</small>`}: ${a.abilities[id]}</li>`)}</ul>
     <p class="note">${a.ability.note}</p>`
 }
 
 const starterBody = (entry: DexEntry & { source: { kind: 'starter' } }, locale: Locale) => {
   const m = SITE_MESSAGES[locale]
-  const game = LOCALES[locale].messages
+  const game = MESSAGES[locale]
   const { id, stage: i, wild, branch = null } = entry.source
   const s: PlayableDef = PLAYABLE[id]
   const signature = MOVES[s.signature]

@@ -15,7 +15,8 @@ import type { VersusPick } from '../data/versus'
 import { gemChip, lockerTab, pickWearer, type GemTab, type GemTabsContext } from './gemShop'
 import { onGems } from '../gems'
 import { portraitUrl } from '../render/sprites'
-import { firstForm, teamColor } from './arena'
+import { firstForm } from './arena'
+import { ARENA_HUB_TABS, preseason, teamColor, type ArenaHubTab } from './arenaBits'
 import { h, later } from './dom'
 import { boundKey } from './inputLabels'
 import { hint, type Screen } from './screens'
@@ -45,9 +46,6 @@ const AWAY_AFTER = Math.round(ARENA_RANKED.fairPlay.afkAfter / ARENA_RANKED.fair
  * scroll, Enter presses the tab's button, Esc goes back.
  */
 
-export const ARENA_HUB_TABS = ['profile', 'shop', 'locker', 'season', 'ranking', 'history', 'rules'] as const
-export type ArenaHubTab = (typeof ARENA_HUB_TABS)[number]
-export const isArenaHubTab = (x: unknown): x is ArenaHubTab => typeof x === 'string' && (ARENA_HUB_TABS as readonly string[]).includes(x)
 /** The tabs the hub shows itself: Loja leads into the Boutique. */
 type ShownTab = Exclude<ArenaHubTab, 'shop'>
 
@@ -86,15 +84,6 @@ const PAGE = 20
 /** A match's moment, short: day, month and time in this language. */
 const when = (ms: number) => new Date(ms).toLocaleString(LOCALES[locale()].tag, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
-let staged: boolean | null = null
-
-/** Dev (`ps.arena('season', …)`): the screens act as in the pre-season (true) or in a season (false) whatever the date; null goes back to the clock. */
-export const stagePreseason = (on: boolean | null) => {
-  staged = on
-}
-
-/** Whether it's still the pre-season: before season 1 starts, ranked matches are stored unrated. */
-export const preseason = (now = Date.now()) => staged ?? seasonAt(now) === null
 
 /** When season 1 starts, in this player's own time and language ("02/11, 00:00"). */
 export const season1Date = () => when(seasonById(1).startMs)

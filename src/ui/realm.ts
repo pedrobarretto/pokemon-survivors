@@ -55,6 +55,7 @@ import { supporterBadgeIcon } from './profile'
 import type { Screen } from './screens'
 import { toast } from './toasts'
 import { uiZoom } from './uiScale'
+import { markRealmSeen } from './realmSeen'
 
 /**
  * The Poké Realm's screen (`net/realm.ts`): the city picker, then the town
@@ -116,26 +117,6 @@ const keepMuted = (muted: ReadonlySet<string>) => {
     localStorage.setItem(MUTED, JSON.stringify([...muted]))
   } catch {
     // Storage blocked: muted for this visit.
-  }
-}
-
-/* ---------------- Seen (the lobby tile's NOVO tag) ---------------- */
-
-const SEEN = 'ps:realmSeen'
-
-export const realmSeen = () => {
-  try {
-    return localStorage.getItem(SEEN) !== null
-  } catch {
-    return true
-  }
-}
-
-const markRealmSeen = () => {
-  try {
-    localStorage.setItem(SEEN, '1')
-  } catch {
-    // The tag just shows again next time.
   }
 }
 

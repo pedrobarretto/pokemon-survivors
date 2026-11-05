@@ -221,11 +221,12 @@ src/
   ui/       title screen, HUD, Pokémon select (with the egg box), incubator and hatching scene, level-up, pause, settings, results, missions and achievements, toasts, Pokédex, the menus' shared shell (`ui/shell.ts`: top bar, Trainer chip, wallet, gear, action bar) and the Trainer Card
             co-op outside a run: coopRoom.ts (the hub: create or join; the room: seats, ready, the host's start) · friends.ts (Amigos and the invite banner)
             co-op in a run: teamLayer.ts → teamHud.ts (teammates' cards), coopHud.ts (connection pip, reconnect veil), teamScreens.ts (team waits, spectator, endless vote, end screen), teamAwards.ts; render/team.ts + teamCamera.ts draw teammates and follow them
-  i18n/     every player-facing string: pt.ts (reference), en.ts, es.ts, fr.ts and zh.ts; site/ has the website copy
+  i18n/     every player-facing string: pt.ts (reference), en.ts, es.ts, fr.ts and zh.ts, each a chunk the game loads alone (`loadLocale`; the site's pages read them all from messages.ts); site/ has the website copy
   site/     static pages rendered at build time from data/: Pokédex, guide, changelog, legal
   account.ts  optional accounts: Clerk loaded on demand, save sync with the API
   analytics.ts  events and error reports: PostHog (loaded once the game is up, through the /ingest proxy)
   realmShell.ts  the Poké Realm's browser glue: its connection to the VPS relay, or the in-page realm with bots in dev (the screens: ui/realm.ts, ui/baseEditor.ts, ui/baseBoard.ts, ui/carpentry.ts)
+  realmMode.ts, arenaMode.ts  chunks loaded on demand (`ui/lazy.ts`: a loading line while they download): the Poké Realm's screens and shell, and the Arena's screens (picker, hub, queue, a match's HUD and end screen); the Boutique, the Kecleon shop and the admin desk load the same way. What the lobby needs of them stays light: realmUrl.ts, ui/realmSeen.ts, ui/arenaBits.ts, ui/boutiqueSeen.ts
   coopShell.ts  co-op's browser glue: the tab's client, the room link (`?sala=`), banking a run once, dev bots
   ranking.ts  ranked runs (start token, offline queue), boards, profiles and follows through the API
 server/     accounts API (Hono + Postgres, Clerk tokens), deployed with Docker: see server/README.md

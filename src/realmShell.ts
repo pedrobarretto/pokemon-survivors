@@ -1,12 +1,12 @@
 import { accountHandle, sessionToken } from './account'
 import { webSocket, type SocketHandlers, type SocketLike } from './coop/client'
-import { coopVpsUrls } from './coopShell'
 import { playsShiny } from './game/shinyPicks'
 import { equippedLook } from './gems'
 import { isCityId, type CityId } from './net/realm'
 import { fakeRealm, realmFaked } from './realm/api'
 import { createRealmClient, type RealmClient } from './realm/client'
-import { LOCAL_REALM_URL, startLocalRealm, type LocalRealm } from './realm/localRealm'
+import { startLocalRealm, type LocalRealm } from './realm/localRealm'
+import { isLocalRealm, realmUrl, setLocalRealm } from './realmUrl'
 import { loadSave } from './ui/save'
 
 /**
@@ -15,20 +15,15 @@ import { loadSave } from './ui/save'
  * signed in with Clerk. A dev build can swap in the in-page realm with bots
  * (`ps.realm('local')`, `realm/localRealm.ts`) and the faked API (`fakeRealm`),
  * and does on its own without a VPS relay (as co-op falls back to the dev relay).
+ * Its own chunk with the realm's screens (`realmMode.ts`); where the realm is
+ * lives in `realmUrl.ts`, for the lobby.
  */
 
 /** Bots the in-page realm fills a city with. */
 const LOCAL_BOTS = 14
 
-/** The in-page realm on (true), off (false), or as the build has it (null: a dev build without a VPS relay). */
-let local: boolean | null = null
 let host: { city: CityId; realm: LocalRealm } | null = null
 let client: RealmClient | null = null
-
-const isLocal = () => local ?? (import.meta.env.DEV && !coopVpsUrls().sa)
-
-/** The relay the realm is on, or null in a build without one. */
-export const realmUrl = (): string | null => (isLocal() ? LOCAL_REALM_URL : (coopVpsUrls().sa ?? null))
 
 /** The in-page realm for the city a socket asks for (one at a time: another city starts it over). */
 const localSocket = (url: string, on: SocketHandlers): SocketLike => {
@@ -53,7 +48,7 @@ const localSocket = (url: string, on: SocketHandlers): SocketLike => {
 export const realmClient = (): RealmClient | null => {
   const url = realmUrl()
   if (!url) return null
-  const inPage = isLocal()
+  const inPage = isLocalRealm()
   if (inPage && !realmFaked()) fakeRealm(true, accountHandle() ?? 'you')
   client ??= createRealmClient({
     url,
@@ -70,7 +65,7 @@ export const useLocalRealm = (on: boolean) => {
   client = null
   host?.realm.dispose()
   host = null
-  local = on
+  setLocalRealm(on)
   fakeRealm(on, accountHandle() ?? 'you')
 }
 
@@ -78,4 +73,4 @@ export const useLocalRealm = (on: boolean) => {
 export const stageRealmTable = (table: string, game?: string) => (host ? host.realm.stage(table, game) : 0)
 
 /** Dev: what the realm's shell is on now. */
-export const realmDevState = () => ({ local: isLocal(), faked: realmFaked(), url: realmUrl(), city: client?.city() ?? null, room: client?.room() ?? null, status: client?.status() ?? null, rtt: client?.rtt() ?? null })
+export const realmDevState = () => ({ local: isLocalRealm(), faked: realmFaked(), url: realmUrl(), city: client?.city() ?? null, room: client?.room() ?? null, status: client?.status() ?? null, rtt: client?.rtt() ?? null })

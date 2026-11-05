@@ -210,6 +210,17 @@ button {
   font-size: 16px;
 }
 
+/* A screen whose code is still downloading (`lazyScreen`): its loading line shows only after a moment, so a quick load doesn't flash. */
+.lazy-wait {
+  animation: lazy-wait 0.3s steps(1, end);
+}
+
+@keyframes lazy-wait {
+  from {
+    visibility: hidden;
+  }
+}
+
 /* Play still waiting for the ranking's ticket (`startRanked`): the way to go on without it. */
 .btn.loading-skip {
   color: var(--dk-ink, #303040);

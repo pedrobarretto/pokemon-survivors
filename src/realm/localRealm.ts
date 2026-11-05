@@ -38,7 +38,7 @@ import { dir8 } from '../engine/math'
  * bot (`TableRules.bot`).
  */
 
-export const LOCAL_REALM_URL = 'local://realm'
+export { LOCAL_REALM_URL } from './localUrl'
 
 /** Timers, injected for tests (the globals by default). */
 export type RealmTimers = { set: (fn: () => void, ms: number) => unknown; clear: (handle: unknown) => void; every: (fn: () => void, ms: number) => unknown; stop: (handle: unknown) => void }

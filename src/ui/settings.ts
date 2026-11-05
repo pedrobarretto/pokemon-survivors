@@ -257,10 +257,12 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
 
   const pickLanguage = (next: Locale) => {
     if (next === locale()) return
-    setLocale(next)
     playSfx('select')
-    // Rebuild after this key dispatch, or the new rows would receive the same press.
-    later(() => build(nav?.index ?? 0, false))
+    // Its messages load first (their own chunk; a failed load keeps the language). The rebuild lands after this key dispatch either way, so the new rows never receive the same press.
+    void setLocale(next).then(
+      () => later(() => !away && el.isConnected && build(nav?.index ?? 0, false)),
+      () => {},
+    )
   }
 
   const showTab = (next: Tab, focus: number) => {

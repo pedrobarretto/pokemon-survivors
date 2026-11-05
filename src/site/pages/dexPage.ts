@@ -6,7 +6,8 @@ import { STARTER_IDS, type PlayableDef } from '../../data/starters'
 import { formLine } from '../../game/branch'
 import { branchNeeds } from '../../game/evoItems'
 import { MOVES } from '../../game/moves'
-import { LOCALES, type Locale } from '../../i18n'
+import type { Locale } from '../../i18n'
+import { MESSAGES } from '../../i18n/messages'
 import { SITE_MESSAGES, type SiteMessages } from '../../i18n/site'
 import { html, type Html } from '../html'
 import { layout } from '../layout'
@@ -59,7 +60,7 @@ const tierQa = (id: FamilyId, name: string, m: SiteMessages): Qa => {
 
 const familyFaq = (id: FamilyId, base: DexEntry, m: SiteMessages, locale: Locale): Qa[] => {
   const name = base.name
-  const game = LOCALES[locale].messages
+  const game = MESSAGES[locale]
   const steps = evolutionSteps(id, m)
   const needsItem = formLine(id, null).some((st) => st.item) || branchesOf(id).some((b) => branchNeeds(b))
   const megas = megasOf(id).map((mega) => MEGAS[mega].name)
@@ -88,7 +89,7 @@ const legendFaq = (id: LegendId, entry: DexEntry, m: SiteMessages): Qa[] => {
 /** The page's opening: what the Pokémon is in the game, in one sentence, then its blurb from the game. */
 const intro = (page: DexPage, m: SiteMessages, locale: Locale) => {
   const base = page.entries[0]!
-  const blurb = LOCALES[locale].messages.blurbs[page.id]
+  const blurb = MESSAGES[locale].blurbs[page.id]
   if (page.kind === 'legend') {
     const what = legendEvent(page.id) ? m.dexPage.eventLegend(base.name, typesOf(base, m)) : m.dexPage.legend(base.name, typesOf(base, m), REGULAR_LEGENDS.length)
     return `${what} ${blurb}`
