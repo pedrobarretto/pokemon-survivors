@@ -25,32 +25,119 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-05',
-    title: { pt: 'Skins na Boutique e partidas infinitas de mais de 4 horas no ranking', en: 'Skins in the Boutique and endless runs past 4 hours on the ranking', es: 'Skins en la Boutique y partidas infinitas de más de 4 horas en el ranking', fr: 'Des skins à la Boutique et les parties infinies de plus de 4 heures au classement', zh: '精品服飾店上架皮膚，超過 4 小時的無盡對局也能上排行榜' },
+    title: { pt: 'Poké Realm, a cidade online, e skins na Boutique', en: 'Poké Realm, the online town, and skins in the Boutique', es: 'Poké Realm, la ciudad en línea, y skins en la Boutique', fr: 'Poké Realm, la ville en ligne, et des skins à la Boutique', zh: 'Poké Realm 線上城鎮登場，精品服飾店上架皮膚' },
     highlights: [
       {
-        pt: 'Skins chegaram à Boutique da Leavanny: seu Pokémon redesenhado, em todos os estágios da linha, com versão shiny. São 37: Charmander de Terno, Froakie de Terno, Scorbunny de Terno, Squirtle Ninja, Torchic de Quimono, Gengar de Terno, Rayquaza Celestial, Groudon Obsidiana e mais.',
-        en: 'Skins are in Leavanny’s Boutique: your Pokémon redrawn, in every stage of its line, shiny included. There are 37: Suited Charmander, Suited Froakie, Suited Scorbunny, Ninja Squirtle, Karate Gi Torchic, Suited Gengar, Celestial Rayquaza, Obsidian Groudon and more.',
-        es: 'Las skins llegaron a la Boutique de Leavanny: tu Pokémon redibujado, en todas las etapas de su línea, con versión shiny. Son 37: Charmander de Traje, Froakie de Traje, Scorbunny de Traje, Squirtle Ninja, Torchic de Karategi, Gengar de Traje, Rayquaza Celestial, Groudon Obsidiana y más.',
-        fr: 'Les skins arrivent à la Boutique de Leavanny : ton Pokémon redessiné, à chaque stade de sa lignée, chromatique compris. Il y en a 37 : Charmander en Costume, Froakie en Costume, Scorbunny en Costume, Squirtle Ninja, Torchic en Kimono de Karaté, Gengar en Costume, Rayquaza Céleste, Groudon Obsidienne et plus.',
-        zh: '皮膚登陸 Leavanny 的精品服飾店：重新繪製的寶可夢，整條進化線的每個階段都適用，異色也有。共 37 款：Charmander 西裝、Froakie 西裝、Scorbunny 西裝、Squirtle 忍者、Torchic 空手道服、Gengar 西裝、Rayquaza 天穹、Groudon 黑曜石等等。',
+        pt: 'Chegou o Poké Realm, a cidade online do jogo: passeie como o seu parceiro, com o seu visual e a sua skin, pela praça, o café, o píer, o fliperama e o Bosque das Bases, em 10 cidades com nomes de cidades Pokémon. Fale por frases rápidas e emotes, monte um grupo de até 4 e entre junto pelo portal do Co-op ou da Arena. Toque em Realm no lobby (precisa de conta com @nome).',
+        en: 'The Poké Realm is here, the game’s online town: walk around as your partner, in your look and your skin, through the plaza, the café, the pier, the arcade and the Secret Base Grove, in 10 cities named after Pokémon towns. Talk with quick chat and emotes, form a party of up to 4 and go in together through the Co-op or Arena portal. Tap Realm in the lobby (it needs an account with a @handle).',
+        es: 'Llegó el Poké Realm, la ciudad en línea del juego: pasea como tu compañero, con tu estilo y tu skin, por la plaza, el café, el muelle, el arcade y el Bosque de Bases, en 10 ciudades con nombres de ciudades Pokémon. Habla con frases rápidas y emotes, arma un grupo de hasta 4 y entren juntos por el portal del Co-op o de la Arena. Toca Realm en el lobby (necesitas una cuenta con @nombre).',
+        fr: 'Le Poké Realm arrive, la ville en ligne du jeu : promène-toi avec ton partenaire, ton look et ton skin, sur la place, au café, sur la jetée, à la salle d’arcade et au Bosquet des bases, dans 10 villes aux noms de villes Pokémon. Parle par phrases rapides et emotes, forme un groupe de 4 au plus et entrez ensemble par le portail de la Coop ou de l’Arène. Touche Realm dans le lobby (il faut un compte avec un @pseudo).',
+        zh: 'Poké Realm 來了，這是遊戲的線上城鎮：以你的夥伴、穿著你的造型和皮膚，逛逛廣場、咖啡館、碼頭、遊樂場和秘密基地樹林，共有 10 座以寶可夢城鎮命名的城市。用快速對話和表情交流，組成最多 4 人的隊伍，一起從合作模式或競技場的傳送門出發。在大廳點 Realm 即可進入（需要有 @帳號名稱的帳號）。',
       },
       {
-        pt: 'Estações: Sakura, Outono e Inverno para Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish e Phantump, uma a uma ou na Coleção das Estações da linha (o que você já tem sai do preço).',
-        en: 'Seasons: Sakura, Autumn and Winter for Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish and Phantump, one by one or in the line’s Seasons Collection (what you own comes off the price).',
-        es: 'Estaciones: Sakura, Otoño e Invierno para Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish y Phantump, una a una o en la Colección de las Estaciones de la línea (lo que ya tienes se descuenta).',
-        fr: 'Saisons : Sakura, Automne et Hiver pour Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish et Phantump, à l’unité ou dans la Collection des Saisons de la lignée (ce que tu as déjà est déduit).',
-        zh: '四季系列：Bulbasaur、Chikorita、Treecko、Turtwig、Budew、Rowlet、Sprigatito、Shroomish 和 Phantump 的櫻花、秋季與冬季皮膚，可單買，也可買整條進化線的四季收藏（已擁有的會折抵）。',
+        pt: 'Todo treinador tem uma base secreta. Decore com os 160 móveis da Carpintaria do Bibarel, na praça do Kecleon e no Bosque, por ₽ ou gemas, escolha a entrada e quem pode entrar, e visite e curta as bases dos outros no Mural de bases.',
+        en: 'Every trainer has a secret base. Furnish it from the 160 pieces at Bibarel’s Carpentry, on the Kecleon plaza and in the Grove, for ₽ or gems, pick its entrance and who may come in, and visit and like other trainers’ bases on the Base board.',
+        es: 'Cada entrenador tiene una base secreta. Decórala con los 160 muebles de la Carpintería de Bibarel, en la plaza de Kecleon y en el Bosque, por ₽ o gemas, elige la entrada y quién puede entrar, y visita y dale like a las bases de los demás en el Mural de bases.',
+        fr: 'Chaque dresseur a une base secrète. Meuble-la avec les 160 pièces de la Menuiserie de Bibarel, sur la place de Kecleon et au Bosquet, contre des ₽ ou des gemmes, choisis l’entrée et qui peut entrer, et visite et aime les bases des autres sur le Tableau des bases.',
+        zh: '每位訓練家都有一座秘密基地。用 Bibarel的木工坊的 160 件家具來佈置（在 Kecleon 廣場和樹林裡都有，可用 ₽ 或寶石購買），選擇入口和誰能進來，還能在基地佈告欄參觀其他人的基地並按讚。',
       },
       {
-        pt: 'Ofertas de lançamento: cada estação completa, com as 9 skins, por 2.600 gemas, só até 18/11. A skin aparece nas suas partidas, no co-op, no Dojo e na Arena, e os chapéus continuam por cima.',
-        en: 'Launch offers: each full season, all 9 skins, for 2,600 gems, only until Nov 18. The skin shows in your runs, in co-op, in the Dojo and in the Arena, and hats still go on top.',
-        es: 'Ofertas de lanzamiento: cada estación completa, con las 9 skins, por 2.600 gemas, solo hasta el 18/11. La skin aparece en tus partidas, en el co-op, en el Dojo y en la Arena, y los sombreros siguen encima.',
-        fr: 'Offres de lancement : chaque saison complète, les 9 skins, pour 2 600 gemmes, seulement jusqu’au 18/11. Le skin apparaît dans tes parties, en coop, au Dojo et dans l’Arène, et les chapeaux se portent toujours par-dessus.',
-        zh: '上市優惠：每個季節的全系列 9 款皮膚只要 2,600 寶石，僅到 11/18。皮膚會出現在你的對局、合作模式、道場和競技場中，帽子也照樣能戴在上面。',
+        pt: 'Mini games: Pesca no Píer, Chuva de Frutas e Acerte o Diglett no fliperama, e Quatro em Linha e Duelo de Tipos nas mesas do café, contra outro treinador ou contra o bot. Eles pagam ₽ (até ₽ 2.000 por dia) e dão troféus para a base, que só se ganham jogando.',
+        en: 'Mini games: Pier Fishing, Berry Rain and Whack-a-Diglett at the arcade, and Four in a Row and Type Duel at the café’s tables, against another trainer or the bot. They pay ₽ (up to ₽2,000 a day) and give trophies for your base that can only be earned.',
+        es: 'Minijuegos: Pesca en el Muelle, Lluvia de Bayas y Golpea al Diglett en el arcade, y Cuatro en Línea y Duelo de Tipos en las mesas del café, contra otro entrenador o contra el bot. Pagan ₽ (hasta ₽ 2.000 por día) y dan trofeos para tu base que solo se ganan jugando.',
+        fr: 'Mini-jeux : Pêche au Ponton, Pluie de Baies et Tape-Diglett à la salle d’arcade, et Puissance Quatre et Duel de Types aux tables du café, contre un autre dresseur ou le bot. Ils rapportent des ₽ (jusqu’à 2 000 ₽ par jour) et des trophées pour ta base, qui ne se gagnent qu’en jouant.',
+        zh: '小遊戲：碼頭釣魚、遊樂場的樹果雨和敲敲 Diglett，還有咖啡館桌上的四子連線和屬性對決，可以和其他訓練家或機器人對戰。玩小遊戲能賺 ₽（每天最多 ₽2,000），還能贏得只能靠遊玩取得的基地獎盃。',
+      },
+      {
+        pt: 'Skins na Boutique da Leavanny: 37 skins que redesenham o seu Pokémon em todos os estágios da linha, com shiny, como Charmander de Terno, Rayquaza Celestial e as estações Sakura, Outono e Inverno. Cada estação completa sai por 2.600 gemas, só até 18/11.',
+        en: 'Skins in Leavanny’s Boutique: 37 skins that redraw your Pokémon in every stage of its line, shiny included, like Suited Charmander, Celestial Rayquaza and the Sakura, Autumn and Winter seasons. Each full season is 2,600 gems, only until Nov 18.',
+        es: 'Skins en la Boutique de Leavanny: 37 skins que redibujan tu Pokémon en todas las etapas de su línea, con shiny, como Charmander de Traje, Rayquaza Celestial y las estaciones Sakura, Otoño e Invierno. Cada estación completa cuesta 2.600 gemas, solo hasta el 18/11.',
+        fr: 'Des skins à la Boutique de Leavanny : 37 skins qui redessinent ton Pokémon à chaque stade de sa lignée, chromatique compris, comme Charmander en Costume, Rayquaza Céleste et les saisons Sakura, Automne et Hiver. Chaque saison complète coûte 2 600 gemmes, seulement jusqu’au 18/11.',
+        zh: 'Leavanny 的精品服飾店上架皮膚：37 款皮膚重新繪製你的寶可夢，整條進化線每個階段都適用，異色也有，例如 Charmander 西裝、Rayquaza 天穹，以及櫻花、秋季與冬季系列。每個季節全系列 2,600 寶石，僅到 11/18。',
       },
       { pt: 'Partidas no modo infinito com mais de 4 horas agora entram no ranking: antes elas ficavam presas em "Sem conexão" para sempre.', en: 'Endless runs longer than 4 hours now make the ranking: they used to stay stuck on "Offline" forever.', es: 'Las partidas del modo infinito de más de 4 horas ahora entran en el ranking: antes se quedaban atascadas en "Sin conexión" para siempre.', fr: 'Les parties en mode infini de plus de 4 heures entrent maintenant au classement : avant, elles restaient bloquées sur « Hors ligne » pour toujours.', zh: '超過 4 小時的無盡模式對局現在會進入排行榜：之前它們會一直卡在「離線」。' },
     ],
     changes: [
+      {
+        title: { pt: 'Poké Realm', en: 'Poké Realm', es: 'Poké Realm', fr: 'Poké Realm', zh: 'Poké Realm' },
+        notes: [
+          {
+            pt: 'No lobby, o botão Realm abre a escolha de cidade: são 10, de Pallet Town a Jubilife City, cada uma uma cópia da mesma vila com até 40 treinadores. Os amigos que estão passeando aparecem ali, e dá para ir direto até eles.',
+            en: 'In the lobby, the Realm button opens the city picker: there are 10, from Pallet Town to Jubilife City, each a copy of the same town with up to 40 trainers. Friends who are walking around show there, and you can go straight to them.',
+            es: 'En el lobby, el botón Realm abre la elección de ciudad: son 10, de Pallet Town a Jubilife City, cada una una copia del mismo pueblo con hasta 40 entrenadores. Los amigos que están paseando aparecen ahí, y puedes ir directo con ellos.',
+          },
+          {
+            pt: 'Você chega na praça, com o portal do Co-op a oeste, o da Arena a leste, o mural e a porta do café. Pela estrada, a leste fica o píer, com o fliperama e a plataforma de pesca, e a oeste o Bosque das Bases.',
+            en: 'You land on the plaza, with the Co-op portal to the west, the Arena’s to the east, the board and the café’s door. Down the road, the pier lies east, with the arcade and the fishing platform, and the Secret Base Grove west.',
+            es: 'Llegas a la plaza, con el portal del Co-op al oeste, el de la Arena al este, el mural y la puerta del café. Por el camino, al este está el muelle, con el arcade y la plataforma de pesca, y al oeste el Bosque de Bases.',
+          },
+          {
+            pt: 'Você anda como o seu parceiro, com os chapéus, o rastro, o título, a skin e o emote que usa. A conversa é só por frases rápidas e emotes, nunca texto livre, e cada um lê no próprio idioma. Toque num treinador para chamar para o grupo, silenciar ou denunciar.',
+            en: 'You walk as your partner, wearing your hats, trail, title, skin and emote. Talk is quick chat and emotes only, never free text, and everyone reads it in their own language. Tap a trainer to invite them to your party, mute or report them.',
+            es: 'Caminas como tu compañero, con los sombreros, el rastro, el título, la skin y el emote que usas. La charla es solo con frases rápidas y emotes, nunca texto libre, y cada uno la lee en su idioma. Toca a un entrenador para invitarlo al grupo, silenciarlo o denunciarlo.',
+          },
+          {
+            pt: 'Grupos de até 4: o líder entra num portal e leva todo mundo para uma sala de Co-op ou da Arena.',
+            en: 'Parties of up to 4: the leader walks into a portal and takes everyone to a Co-op or Arena room.',
+            es: 'Grupos de hasta 4: el líder entra en un portal y lleva a todos a una sala de Co-op o de la Arena.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Bases secretas e a Carpintaria do Bibarel', en: 'Secret bases and Bibarel’s Carpentry', es: 'Bases secretas y la Carpintería de Bibarel', fr: 'Bases secrètes et la Menuiserie de Bibarel', zh: '秘密基地與 Bibarel的木工坊' },
+        notes: [
+          {
+            pt: 'Toda conta com @nome tem uma base secreta, com a entrada no alto da clareira do Bosque das Bases. O Sudowoodo explica tudo na primeira visita.',
+            en: 'Every account with a @handle has a secret base, its entrance at the head of the Secret Base Grove’s clearing. Sudowoodo explains it all on your first visit.',
+            es: 'Toda cuenta con @nombre tiene una base secreta, con la entrada en lo alto del claro del Bosque de Bases. Sudowoodo lo explica todo en la primera visita.',
+          },
+          {
+            pt: 'Lá dentro, toque em ✎ para arrumar até 60 peças: móveis no chão, tapetes, enfeites sobre mesas e estantes, quadros na parede, papel de parede e piso. Escolha a entrada (caverna, árvore, arbusto ou areia) e quem pode entrar: todo mundo, só amigos ou ninguém.',
+            en: 'Inside, tap ✎ to arrange up to 60 pieces: furniture on the floor, rugs, ornaments on tables and shelves, pictures on the wall, wallpaper and flooring. Pick the entrance (cave, tree, bush or sand) and who may come in: everyone, friends only or no one.',
+            es: 'Adentro, toca ✎ para acomodar hasta 60 piezas: muebles en el piso, alfombras, adornos sobre mesas y estantes, cuadros en la pared, papel tapiz y piso. Elige la entrada (cueva, árbol, arbusto o arena) y quién puede entrar: todos, solo amigos o nadie.',
+          },
+          {
+            pt: 'A Carpintaria do Bibarel fica no lote nordeste da praça do Kecleon, no lobby, e no Bosque das Bases: 160 móveis em 12 coleções estilo catálogo, 116 por ₽ e 44 por gemas.',
+            en: 'Bibarel’s Carpentry stands on the Kecleon plaza’s north-east lot, in the lobby, and in the Secret Base Grove: 160 pieces in 12 catalog-style collections, 116 for ₽ and 44 for gems.',
+            es: 'La Carpintería de Bibarel está en el lote noreste de la plaza de Kecleon, en el lobby, y en el Bosque de Bases: 160 muebles en 12 colecciones estilo catálogo, 116 por ₽ y 44 por gemas.',
+          },
+          {
+            pt: 'Alguns móveis não estão à venda: o boneco de cada lendário que você capturou, os quadros dos lendários e os troféus dos mini games.',
+            en: 'Some pieces aren’t for sale: a doll of each legendary you captured, the legendaries’ paintings and the mini games’ trophies.',
+            es: 'Algunos muebles no están a la venta: el muñeco de cada legendario que capturaste, los cuadros de los legendarios y los trofeos de los minijuegos.',
+          },
+          {
+            pt: 'No Mural de bases, veja as bases públicas mais curtidas, as mais novas e as dos amigos, entre para visitar e deixe uma curtida.',
+            en: 'On the Base board, browse the most liked public bases, the newest and your friends’, walk in for a visit and leave a like.',
+            es: 'En el Mural de bases, mira las bases públicas con más likes, las más nuevas y las de tus amigos, entra de visita y deja un like.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Mini games', en: 'Mini games', es: 'Minijuegos', fr: 'Mini-jeux', zh: '小遊戲' },
+        notes: [
+          {
+            pt: 'Pesca no Píer, na plataforma do fim do calçadão: segure para lançar, toque no "!" para fisgar e segure para puxar. São 12 Pokémon da água, com um Feebas raro e um Gyarados shiny mais raro ainda (e uma bota velha de vez em quando).',
+            en: 'Pier Fishing, on the platform at the boardwalk’s end: hold to cast, tap at the "!" to hook and hold to reel. There are 12 Water Pokémon, with a rare Feebas and an even rarer shiny Gyarados (and an old boot now and then).',
+            es: 'Pesca en el Muelle, en la plataforma al final del paseo: mantén para lanzar, toca en el "!" para enganchar y mantén para recoger. Son 12 Pokémon de agua, con un Feebas raro y un Gyarados shiny más raro aún (y una bota vieja de vez en cuando).',
+          },
+          {
+            pt: 'No fliperama do píer, Chuva de Frutas (pegue as frutas e fuja dos Voltorb) e Acerte o Diglett. Um fliperama na sua base também joga os dois.',
+            en: 'At the pier’s arcade, Berry Rain (catch the berries and dodge the Voltorb) and Whack-a-Diglett. An arcade cabinet in your base plays both too.',
+            es: 'En el arcade del muelle, Lluvia de Bayas (atrapa las bayas y esquiva a los Voltorb) y Golpea al Diglett. Una máquina arcade en tu base también juega los dos.',
+          },
+          {
+            pt: 'Nas duas mesas do café, Quatro em Linha e Duelo de Tipos (cartas de Fogo, Água e Planta com força, melhor de 3): sente com outro treinador, ou sozinho contra o bot, e quem estiver no café pode assistir. A Mesa de jogos (₽ 6.000) leva os dois para a sua base.',
+            en: 'At the café’s two tables, Four in a Row and Type Duel (Fire, Water and Grass cards with a power, best of 3): sit down with another trainer, or alone against the bot, and anyone in the café can watch. The Game table (₽6,000) brings both to your base.',
+            es: 'En las dos mesas del café, Cuatro en Línea y Duelo de Tipos (cartas de Fuego, Agua y Planta con fuerza, al mejor de 3): siéntate con otro entrenador, o solo contra el bot, y quien esté en el café puede mirar. La Mesa de juegos (₽ 6.000) lleva los dos a tu base.',
+          },
+          {
+            pt: 'Cada partida paga ₽, até um teto por jogo e ₽ 2.000 por dia somando todos (no horário de Brasília); contra o bot, paga a metade. Recordes e vitórias dão troféus para a base, como a Placa do Magikarp Dourado, a Marreta de ouro e a Taça do Quatro em Linha.',
+            en: 'Every game pays ₽, up to a cap per game and ₽2,000 a day across all of them (Brasília time); against the bot it pays half. Records and wins give trophies for your base, like the Golden Magikarp Plaque, the Golden Mallet and the Four in a Row cup.',
+            es: 'Cada partida paga ₽, hasta un tope por juego y ₽ 2.000 por día sumando todos (hora de Brasilia); contra el bot paga la mitad. Récords y victorias dan trofeos para tu base, como la Placa del Magikarp Dorado, el Mazo dorado y la Copa del Cuatro en Línea.',
+          },
+        ],
+      },
       {
         title: { pt: 'Skins', en: 'Skins', es: 'Skins', fr: 'Skins', zh: '皮膚' },
         notes: [

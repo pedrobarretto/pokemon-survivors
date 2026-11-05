@@ -339,6 +339,7 @@ export const siteEs: SiteMessages = {
       megas: 'Megaevolución',
       legends: 'Modo Legendario',
       coop: 'Co-op en línea',
+      realm: 'Poké Realm: ciudad, bases y minijuegos',
       shinies: 'Shinies',
       eggs: 'Huevos e incubadora',
       items: 'Objetos en el mapa',
@@ -499,6 +500,25 @@ export const siteEs: SiteMessages = {
       whatHead: 'Qué',
       perHead: 'Por jugador extra',
       scale: { spawn: 'Ritmo de la horda', cap: 'Tamaño máximo de la horda', hp: 'PS de los enemigos', bossHp: 'PS de jefes, Alfas y legendarios', coins: 'Poké Dollars recogidos' },
+    },
+    realm: {
+      paragraphs: (m) => [
+        `En el lobby, el botón Realm (tecla K) abre el Poké Realm, la ciudad en línea del juego. Elige una de las ${m.cities.length} ciudades (${list(m.cities)}): cada una es una copia del mismo pueblo, con hasta ${m.cap} entrenadores. Caminas como tu compañero, con el estilo que usas (sombreros, rastro, título, skin y emote), y ves a los otros entrenadores caminando a tu lado. Necesitas una cuenta con @nombre.`,
+        `Todos llegan a la Plaza, con el portal del Co-op, el de la Arena, el mural y la puerta del Café, que tiene dos mesas de juegos. Al este está el Muelle, con el arcade y la plataforma de pesca, y al oeste el Bosque de Bases. La charla es solo con frases rápidas y emotes, nunca texto libre, y cada uno la lee en su idioma. Toca a un entrenador para invitarlo al grupo (hasta ${m.party}), silenciarlo o denunciarlo; cuando el líder entra en un portal, todo el grupo va con él a una sala de Co-op o de la Arena.`,
+        `Toda cuenta con @nombre tiene una base secreta, con la entrada en lo alto del Bosque de Bases, donde Sudowoodo lo explica todo. Adentro, toca ✎ para acomodar hasta ${m.items} piezas en una sala de ${m.cols}×${m.rows} casillas, elegir la entrada (cueva, árbol, arbusto o arena) y quién puede entrar: todos, solo amigos o nadie. En el Mural de bases ves las bases públicas con más likes, las más nuevas y las de tus amigos, entras de visita y dejas un like.`,
+        `Los muebles vienen de la Carpintería de Bibarel, en la plaza de Kecleon (en el lobby) y en el Bosque: ${m.sold} piezas a la venta, ${m.coins} por ₽ y ${m.gems} por gemas. Otras solo se ganan: el muñeco de cada legendario capturado, los cuadros de los legendarios y los trofeos de los minijuegos. Como los estilos, los muebles no cambian nada en las partidas.`,
+      ],
+      gamesTitle: 'Minijuegos',
+      games: (m) =>
+        `Cada partida terminada paga ₽, hasta un tope por juego y ${m.daily} por día sumando todos (hora de Brasilia); una partida demasiado corta no paga. En las mesas, contra el bot, el pago es el ${m.bot}% del mismo resultado contra una persona. Récords, victorias y hazañas raras dan trofeos para tu base.`,
+      gameHead: 'Juego',
+      whereHead: 'Dónde',
+      payHead: 'Paga por partida',
+      dailyHead: 'Tope por día',
+      trophiesHead: 'Trofeos',
+      where: (room, base) => (base ? `${room} y bases secretas` : room),
+      solo: (max) => `hasta ${max}`,
+      table: (win, draw, loss) => `victoria ${win}, empate ${draw}, derrota ${loss}`,
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
@@ -899,7 +919,7 @@ export const siteEs: SiteMessages = {
       'Si quieres, puedes donar en la página Apoya el proyecto. Las donaciones son voluntarias y, con una cuenta, solo dan un agradecimiento cosmético (título, marco, sello, un shiny a tu elección, un compañero), nada que cambie una partida o el ranking.',
     ],
     gems: [
-      'Las gemas son un ítem virtual del juego: solo compran ítems cosméticos (como sombreros, estelas y títulos), que aparecen en las partidas, el co-op y la Arena, nunca nada que cambie una partida o el ranking. No tienen valor en dinero, no se pueden cambiar por dinero ni pasar a otra cuenta y quedan ligadas a tu cuenta del juego.',
+      'Las gemas son un ítem virtual del juego: solo compran ítems cosméticos (como sombreros, estelas, títulos y muebles para la base secreta), que aparecen en las partidas, el co-op, la Arena y el Poké Realm, nunca nada que cambie una partida o el ranking. No tienen valor en dinero, no se pueden cambiar por dinero ni pasar a otra cuenta y quedan ligadas a tu cuenta del juego.',
       'Ganas gemas jugando (la primera partida del día de 5 minutos o más, al jugar cinco días en la misma semana y en la Arena, con un límite diario), apoyando en Patreon o comprando un paquete. Cada cuenta compra hasta R$ 250 o US$ 50 en paquetes por día, y quien tiene menos de 18 años necesita el permiso de sus padres o tutores para comprar. Los paquetes se pagan en Stripe (tarjeta, Apple Pay y Google Pay) o en AbacatePay (Pix), y tus datos de pago van directo a ellos: el juego nunca ve tu tarjeta.',
       'Derecho de arrepentimiento: hasta 7 días después de comprar un paquete, puedes pedir el reembolso de las gemas de ese paquete que aún no gastaste (Código de Defensa del Consumidor de Brasil, art. 49). Pídelo por correo a pedro@wavyia.com.br, con la referencia de la compra. Las gemas ya gastadas y los ítems cosméticos comprados con ellas no son reembolsables.',
       'Un contracargo o disputa del pago (chargeback) quita de la cuenta las gemas de ese paquete, incluso las ya gastadas. El saldo puede quedar negativo y, mientras lo esté, no se puede comprar nada con gemas.',
@@ -991,16 +1011,17 @@ export const siteEs: SiteMessages = {
       ['Hecho por', 'Pedro Barretto (Brasil)', 'JPTER78'],
       ['Sitio', 'pokemonsurvivors.com', 'pokesurvivor.com'],
       ['Dónde se juega', 'Navegador en PC y celular, en vertical u horizontal. Se instala como app.', 'Navegador en PC y celular, en horizontal. Se instala como app.'],
-      ['Cuenta', 'Opcional: el modo solo no pide registro. Con cuenta, guardas en la nube, entras al ranking y juegas co-op.', 'Opcional: invitado o cuenta (nombre y contraseña, o Google). Con cuenta, guardas en la nube, entras al ranking y juegas co-op.'],
+      ['Cuenta', 'Opcional: el modo solo no pide registro. Con cuenta, guardas en la nube, entras al ranking, juegas co-op y entras al Poké Realm.', 'Opcional: invitado o cuenta (nombre y contraseña, o Google). Con cuenta, guardas en la nube, entras al ranking y juegas co-op.'],
       ['Cómo ataca', `Todos los movimientos atacan solos, hasta ${f.moves} a la vez.`, 'Eliges el movimiento activo (teclas 1 a 4). Cada legendario vencido deja fusionar movimientos en un solo hueco.'],
       ['Pokémon jugables', `${f.starters} iniciales con su línea evolutiva completa, más ${f.eggs} familias que salen de huevos y ${f.legends} legendarios en el Modo Legendario.`, '966 Pokémon de las 9 generaciones.'],
       ['Cómo se desbloquean', 'Huevos que eclosionan con los pasos que das en las partidas. Los legendarios se capturan venciéndolos como jefes.', 'Gacha por región, con tickets que ganas jugando.'],
       ['Partida', `${f.minutes} minutos hasta Mewtwo, con jefes legendarios y grietas épicas en el camino. Después, modo sin fin hasta Arceus.`, 'Hordas por tiempo, con grietas que llevan a una arena contra un legendario.'],
       ['Co-op', `En línea, hasta ${f.players} jugadores. Sala por enlace, código o lista de amigos.`, 'En línea, hasta 4 jugadores. Sala invitando a amigos.'],
+      ['Otros modos', 'La Arena, un MOBA 4v4 y 3v3 estilo Pokémon Unite, y el Poké Realm, una ciudad en línea con bases secretas para decorar y minijuegos.', 'No: las partidas, solo o en co-op.'],
       ['Idiomas', `${f.languages}: portugués, inglés, español, francés y chino tradicional.`, '7: español, inglés, francés, italiano, portugués y chino simplificado y tradicional.'],
       ['Ranking', 'Por tiempo sobrevivido. Las partidas que aparecen en el ranking se verifican: el servidor juega cada una de nuevo a partir del replay.', 'Por tiempo sobrevivido, solo o en grupo.'],
       ['Código', 'Abierto, licencia MIT.', 'Público, licencia PolyForm Noncommercial (MIT hasta el 14/10/2026).'],
-      ['Anuncios y compras', 'Sin anuncios. Solo gemas opcionales, para estilos (nunca poder), y donaciones.', 'Ninguno. Donaciones opcionales.'],
+      ['Anuncios y compras', 'Sin anuncios. Solo gemas opcionales, para estilos y muebles de la base (nunca poder), y donaciones.', 'Ninguno. Donaciones opcionales.'],
     ],
     names: {
       title: 'Nombres parecidos',
@@ -1018,6 +1039,7 @@ export const siteEs: SiteMessages = {
         `quieres una partida con principio, medio y final: ${f.minutes} minutos hasta Mewtwo y después el modo sin fin contra Arceus;`,
         'te gusta armar builds: movimientos que se dividen en dos caminos en el Nv 4 y el Nv 7, Habilidades, objetos, movimientos dúo y Megaevolución;',
         `quieres jugar con los legendarios: captura los ${f.legends} venciéndolos como jefes y juega con ellos en el Modo Legendario;`,
+        'quieres encontrar a otros entrenadores en una ciudad en línea, decorar tu base secreta y jugar minijuegos;',
         'quieres jugar con el celular en vertical, con una mano;',
         'quieres un ranking en el que el servidor verifica las mejores partidas;',
         'quieres código abierto con licencia MIT, para estudiarlo y reutilizarlo.',
@@ -1049,7 +1071,7 @@ export const siteEs: SiteMessages = {
         },
         {
           q: '¿Los dos son gratis y oficiales?',
-          a: 'Los dos son gratis, sin anuncios, y funcionan en el navegador: Pokémon Survivors solo vende gemas opcionales, para estilos, y PokéSurvivor no tiene compras. Ninguno es oficial: son fan games sin relación con Nintendo, The Pokémon Company, GAME FREAK ni Creatures.',
+          a: 'Los dos son gratis, sin anuncios, y funcionan en el navegador: Pokémon Survivors solo vende gemas opcionales, para estilos y muebles, y PokéSurvivor no tiene compras. Ninguno es oficial: son fan games sin relación con Nintendo, The Pokémon Company, GAME FREAK ni Creatures.',
         },
         {
           q: '¿Puedo jugar Pokémon Survivors con amigos?',
@@ -1082,7 +1104,7 @@ export const siteEs: SiteMessages = {
         roster: (f) => `${f.starters} iniciales, ${f.eggs} familias de huevos, ${f.legends} legendarios`,
         about: (f) => [
           `Elige uno de los ${f.starters} iniciales de Kanto a Paldea y sobrevive ${f.minutes} minutos de hordas: todos tus movimientos atacan solos, eliges movimientos y objetos en cada nivel y evolucionas a mitad de partida, hasta enfrentar a Mewtwo. Jefes legendarios, grietas épicas al dominio de cada legendario, Megaevolución y un modo sin fin contra Arceus.`,
-          `Los huevos traen ${f.eggs} familias más, los legendarios que vences quedan jugables en el Modo Legendario y el co-op en línea junta hasta ${f.players} jugadores. En ${f.languages} idiomas, con código abierto (MIT).`,
+          `Los huevos traen ${f.eggs} familias más, los legendarios que vences quedan jugables en el Modo Legendario el co-op en línea junta hasta ${f.players} jugadores, la Arena es un MOBA estilo Pokémon Unite y el Poké Realm es una ciudad en línea con bases secretas y minijuegos. En ${f.languages} idiomas, con código abierto (MIT).`,
         ],
         bestFor: 'partidas cortas con jefes, builds variadas y legendarios jugables, en PC o con el celular en vertical.',
       },

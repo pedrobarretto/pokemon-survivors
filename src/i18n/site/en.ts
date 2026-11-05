@@ -335,6 +335,7 @@ export const siteEn: SiteMessages = {
       megas: 'Mega Evolution',
       legends: 'Legend Mode',
       coop: 'Online co-op',
+      realm: 'Poké Realm: town, bases and mini games',
       shinies: 'Shinies',
       eggs: 'Eggs and the incubator',
       items: 'Map items',
@@ -495,6 +496,25 @@ export const siteEn: SiteMessages = {
       whatHead: 'What',
       perHead: 'Per extra player',
       scale: { spawn: 'Horde spawn rate', cap: 'Horde size cap', hp: 'Enemy HP', bossHp: 'Boss, Alpha and legendary HP', coins: 'Poké Dollars collected' },
+    },
+    realm: {
+      paragraphs: (m) => [
+        `In the lobby, the Realm button (K) opens the Poké Realm, the game’s online town. Pick one of the ${m.cities.length} cities (${list(m.cities)}): each is a copy of the same town, with up to ${m.cap} trainers. You walk as your partner, in the look you wear (hats, trail, title, skin and emote), and see the other trainers walking beside you. It needs an account with a @handle.`,
+        `Everyone lands on the Plaza, with the Co-op portal, the Arena’s, the board and the door of the Café, which has two game tables. East lies the Pier, with the arcade and the fishing platform, and west the Secret Base Grove. Talk is quick chat and emotes only, never free text, and everyone reads it in their own language. Tap a trainer to invite them to your party (up to ${m.party}), mute or report them; when the leader walks into a portal, the whole party goes along to a Co-op or Arena room.`,
+        `Every account with a @handle has a secret base, its entrance at the head of the Secret Base Grove, where Sudowoodo explains it all. Inside, tap ✎ to arrange up to ${m.items} pieces in a room of ${m.cols}×${m.rows} tiles, pick the entrance (cave, tree, bush or sand) and who may come in: everyone, friends only or no one. The Base board lists the most liked public bases, the newest and your friends’, to walk in for a visit and leave a like.`,
+        `Furniture comes from Bibarel’s Carpentry, on the Kecleon plaza (in the lobby) and in the Grove: ${m.sold} pieces for sale, ${m.coins} for ₽ and ${m.gems} for gems. Others can only be earned: a doll of each legendary you captured, the legendaries’ paintings and the mini games’ trophies. Like the looks, furniture changes nothing in a run.`,
+      ],
+      gamesTitle: 'Mini games',
+      games: (m) =>
+        `Every finished game pays ₽, up to a cap per game and ${m.daily} a day across all of them (Brasília time); a game that ends too quickly pays nothing. At the tables, against the bot, the pay is ${m.bot}% of the same result against a person. Records, wins and rare feats give trophies for your base.`,
+      gameHead: 'Game',
+      whereHead: 'Where',
+      payHead: 'Pays per game',
+      dailyHead: 'Cap per day',
+      trophiesHead: 'Trophies',
+      where: (room, base) => (base ? `${room} and secret bases` : room),
+      solo: (max) => `up to ${max}`,
+      table: (win, draw, loss) => `win ${win}, draw ${draw}, loss ${loss}`,
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
@@ -895,7 +915,7 @@ export const siteEn: SiteMessages = {
       'If you want, you can donate on the Support the project page. Donations are voluntary and, with an account, only bring a cosmetic thank-you (a title, a card frame, a badge, a shiny of your choice, a companion), nothing that changes a run or the ranking.',
     ],
     gems: [
-      'Gems are a virtual item of the game: they buy cosmetic items only (such as hats, trails and titles), which show in runs, co-op and the Arena, never anything that changes a match or the ranking. They have no cash value, can\'t be exchanged for money or moved to another account, and stay tied to your game account.',
+      'Gems are a virtual item of the game: they buy cosmetic items only (such as hats, trails, titles and secret base furniture), which show in runs, co-op, the Arena and the Poké Realm, never anything that changes a match or the ranking. They have no cash value, can\'t be exchanged for money or moved to another account, and stay tied to your game account.',
       'You get gems by playing (the day’s first run of 5 minutes or more, five days of play in the same week, and the Arena, up to a daily limit), by supporting on Patreon or by buying a pack. Each account buys up to R$ 250 or US$ 50 of packs a day, and players under 18 need a parent’s or guardian’s permission to buy. Packs are paid on Stripe (card, Apple Pay and Google Pay) or AbacatePay (Pix), and your payment details go straight to them: the game never sees your card.',
       'Right of withdrawal: within 7 days of buying a pack, you can ask for a refund of its gems you haven\'t spent yet (Brazilian Consumer Protection Code, art. 49). Email pedro@wavyia.com.br with the purchase reference. Gems already spent and the cosmetic items bought with them are not refundable.',
       'A chargeback or payment dispute removes that pack\'s gems from the account, even spent ones. The balance can go negative, and while it is, nothing can be bought with gems.',
@@ -987,16 +1007,17 @@ export const siteEn: SiteMessages = {
       ['Made by', 'Pedro Barretto (Brazil)', 'JPTER78'],
       ['Website', 'pokemonsurvivors.com', 'pokesurvivor.com'],
       ['Where to play', 'Browser on PC and phone, portrait or landscape. Installs as an app.', 'Browser on PC and phone, landscape. Installs as an app.'],
-      ['Account', 'Optional: solo play needs no sign-up. An account adds cloud saves, the rankings and co-op.', 'Optional: guest or account (name and password, or Google). An account adds cloud saves, the rankings and co-op.'],
+      ['Account', 'Optional: solo play needs no sign-up. An account adds cloud saves, the rankings, co-op and the Poké Realm.', 'Optional: guest or account (name and password, or Google). An account adds cloud saves, the rankings and co-op.'],
       ['How you attack', `Every move fires on its own, up to ${f.moves} at once.`, 'You pick the active move (keys 1 to 4). Each legendary beaten lets you fuse moves into one slot.'],
       ['Playable Pokémon', `${f.starters} starters with their full evolution lines, plus ${f.eggs} families that hatch from eggs and ${f.legends} legendaries in Legend Mode.`, '966 Pokémon from all 9 generations.'],
       ['How you unlock Pokémon', 'Eggs that hatch with the steps you take in runs. Legendaries are caught by beating them as bosses.', 'A gacha per region, with tickets earned by playing.'],
       ['A run', `${f.minutes} minutes up to Mewtwo, with legendary bosses and epic rifts on the way. Then an endless mode until Arceus.`, 'Timed hordes, with rifts that lead to an arena against a legendary.'],
       ['Co-op', `Online, up to ${f.players} players. Rooms by link, code or friends list.`, 'Online, up to 4 players. Rooms by inviting friends.'],
+      ['Other modes', 'The Arena, a 4v4 and 3v3 Pokémon Unite–style MOBA, and the Poké Realm, an online town with secret bases to furnish and mini games.', 'No: the runs, solo or in co-op.'],
       ['Languages', `${f.languages}: Portuguese, English, Spanish, French and Traditional Chinese.`, '7: Spanish, English, French, Italian, Portuguese, and Simplified and Traditional Chinese.'],
       ['Rankings', 'By time survived. Runs on the boards are checked: the server re-simulates each one from its replay.', 'By time survived, solo or as a group.'],
       ['Source code', 'Open source, MIT license.', 'Public, PolyForm Noncommercial license (MIT until 2026-10-14).'],
-      ['Ads and purchases', 'No ads. Only optional gems, for looks (never power), and donations.', 'None. Optional donations.'],
+      ['Ads and purchases', 'No ads. Only optional gems, for looks and base furniture (never power), and donations.', 'None. Optional donations.'],
     ],
     names: {
       title: 'Similar names',
@@ -1014,6 +1035,7 @@ export const siteEn: SiteMessages = {
         `want a run with a beginning, middle and end: ${f.minutes} minutes up to Mewtwo, then the endless mode against Arceus;`,
         'like theorycrafting: moves that fork into two paths at Lv 4 and Lv 7, Abilities, items, duo moves and Mega Evolution;',
         `want to play as the legendaries: catch all ${f.legends} by beating them as bosses and play them in Legend Mode;`,
+        'want to meet other trainers in an online town, furnish your own secret base and play mini games;',
         'want to play on your phone held upright, one-handed;',
         'want a ranking where the top runs are checked by the server;',
         'want open source under the MIT license, to study and reuse.',
@@ -1045,7 +1067,7 @@ export const siteEn: SiteMessages = {
         },
         {
           q: 'Are both free and official?',
-          a: 'Both are free, with no ads, and run in the browser: Pokémon Survivors only sells optional gems, for looks, and PokéSurvivor has no purchases. Neither is official: they are fan games with no ties to Nintendo, The Pokémon Company, GAME FREAK or Creatures.',
+          a: 'Both are free, with no ads, and run in the browser: Pokémon Survivors only sells optional gems, for looks and furniture, and PokéSurvivor has no purchases. Neither is official: they are fan games with no ties to Nintendo, The Pokémon Company, GAME FREAK or Creatures.',
         },
         {
           q: 'Can I play Pokémon Survivors with friends?',
@@ -1078,7 +1100,7 @@ export const siteEn: SiteMessages = {
         roster: (f) => `${f.starters} starters, ${f.eggs} egg families, ${f.legends} legendaries`,
         about: (f) => [
           `Pick one of ${f.starters} starters from Kanto to Paldea and survive ${f.minutes} minutes of hordes: every move attacks on its own, you pick moves and items each level and evolve mid-run, until you face Mewtwo. Legendary bosses, epic rifts into each legendary's domain, Mega Evolution and an endless mode against Arceus.`,
-          `Eggs hatch ${f.eggs} more families, the legendaries you beat become playable in Legend Mode, and online co-op brings up to ${f.players} players together. In ${f.languages} languages, open source (MIT).`,
+          `Eggs hatch ${f.eggs} more families, the legendaries you beat become playable in Legend Mode, online co-op brings up to ${f.players} players together, the Arena is a Pokémon Unite–style MOBA and the Poké Realm is an online town with secret bases and mini games. In ${f.languages} languages, open source (MIT).`,
         ],
         bestFor: 'short runs with bosses, varied builds and playable legendaries, on PC or on a phone held upright.',
       },
