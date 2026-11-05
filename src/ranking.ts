@@ -448,6 +448,14 @@ export type RankedStart = TicketPlan & { ranked: RankedRun }
 
 const unranked: RankedRun = { stream: () => {}, submit: () => Promise.resolve({ kind: 'unranked' }), checkpoint: () => {} }
 
+/**
+ * Whether the API could take `result` at all (`parseRunResult`'s bounds, such
+ * as `RANKED.maxTime`). The queue keeps nothing the API would refuse, which
+ * `readQueue` drops anyway: a result past the bounds must never push out the
+ * run's last one that fits.
+ */
+const reportable = (result: RunResult) => parseRunResult(result) !== null
+
 /** Seconds of play between two checkpoints of a run going on past its report (endless mode). */
 const CHECKPOINT_S = 60
 
@@ -528,8 +536,10 @@ export const startRanked = async (challenge: DayKey | null = null, slow: (skip: 
         const recorded: unknown = JSON.parse(JSON.stringify(replay))
         last = live.then(async (ok): Promise<RankOutcome> => {
           if (!ok) return { kind: 'unranked' }
-          writeQueue([...readQueue().filter((q) => q.token !== token), { userId, token, result, replay: recorded, day: challenge, streamed: stream.streamed() }])
-          return (await flushRuns()).get(token) ?? { kind: 'queued' }
+          // Past the bounds (an endless run longer than `RANKED.maxTime`), the run's last checkpoint that fits reports instead.
+          const fits = reportable(result)
+          if (fits) writeQueue([...readQueue().filter((q) => q.token !== token), { userId, token, result, replay: recorded, day: challenge, streamed: stream.streamed() }])
+          return (await flushRuns()).get(token) ?? { kind: fits ? 'queued' : 'rejected' }
         })
         // A run the API took no chunk of yet holds up the next ticket of its kind until its result is in.
         if (challenge || !stream.streamed()) reporting[kind] = Promise.all([reporting[kind], last])
@@ -540,7 +550,7 @@ export const startRanked = async (challenge: DayKey | null = null, slow: (skip: 
       checkpoint: (time, report, replay) => {
         if (!alive || !checkpointDue(time, sent, kept)) return
         const result = report()
-        if (!rankable(result)) return
+        if (!rankable(result) || !reportable(result)) return
         kept = result.time
         // Storage too full even for this one leaves the queue as it was (its last checkpoint).
         storeQueue([...readQueue().filter((q) => q.token !== token), { userId, token, result, replay, day: challenge, streamed: stream.streamed() }])
