@@ -147,7 +147,7 @@ import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { devRealmRoom, openRealm } from './ui/realm'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
-import { realmClient, realmDevState, realmUrl, stageRealmTable, useLocalRealm } from './realmShell'
+import { realmClient, realmDevState, realmInviteFrom, realmUrl, stageRealmTable, useLocalRealm } from './realmShell'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
@@ -208,7 +208,7 @@ import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaFormat, arenaPick, arenaScreen, keepArenaPick } from './ui/arena'
 import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn } from './gems'
 import { isGemPackId } from './data/gems'
-import { fakeRealm, realmFaked } from './realm/api'
+import { fakeRealm, fetchFriends as fetchRealmFriends, realmFaked } from './realm/api'
 import { openBaseEditor } from './ui/baseEditor'
 import { openBaseBoard } from './ui/baseBoard'
 import { openCarpentry } from './ui/carpentry'
@@ -767,6 +767,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       invites: (focus) => invitesScreen(ui, input, () => showTitle({ focus })),
       coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
       realm: realmUrl() ? () => enterRealm(null) : undefined,
+      realmFriends: realmUrl() ? realmFriendsNow : undefined,
       arena: () => showArena(),
       arenaHub: (tab) => showArenaHub(tab),
       dojo: () => showDojo(),
@@ -2979,6 +2980,16 @@ const leaveCoopDoor = () => {
 
 /* ---------------- The Poké Realm ---------------- */
 
+/** Friends walking the realm now (seen or hiding where), for the lobby's way in: asked at most once a minute, signed in (or faked) only. */
+let realmPals: { at: number; n: Promise<number> } | null = null
+
+const realmFriendsNow = (): Promise<number> | null => {
+  if (!realmFaked() && accountState().kind !== 'signedIn') return null
+  if (!realmPals || performance.now() - realmPals.at > 60_000)
+    realmPals = { at: performance.now(), n: fetchRealmFriends().then((got) => got?.friends.filter((f) => f.state === 'realm' || f.state === 'hidden').length ?? 0) }
+  return realmPals.n
+}
+
 /** `?realm` (or `?realm=<city>`): the Poké Realm's own link; it stays on the address while a guest signs in, so the round trip comes back to it. */
 const REALM_PARAM = 'realm'
 
@@ -3054,7 +3065,9 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * a city, `('walk', '110,280')` walks the trainer to a point of its room (as a
  * tap would: scripted shots get to a spot, like the café's game tables),
  * `('table', 'cafe-2 fourInRow')` sends two bots to play at a game table (the game optional); no argument
- * prints the state; `('room', 'arcade')` walks the open town's trainer into a room.
+ * prints the state; `('room', 'arcade')` walks the open town's trainer into a room; `('friends')` opens
+ * Amigos no Realm (the faked friends: the in-page realm's Misty, Brock and Dawn where they walk, May
+ * in a full arcade, `realm/api.ts`); `('invite', 'misty')` has that bot invite you to its base.
  */
 const devRealm = (cmd?: string, arg?: string) => {
   switch (cmd) {
@@ -3082,6 +3095,11 @@ const devRealm = (cmd?: string, arg?: string) => {
     }
     case 'room':
       return isTownRoomId(arg) ? devRealmRoom(arg) : `ps.realm: room (${TOWN_ROOMS.join(', ')})`
+    case 'friends':
+      return screen === realmShown && realmShown ? realmShown.friends() : 'ps.realm: open the realm first'
+    case 'invite':
+      // `ps.realm('invite', 'misty')`: that bot of the in-page realm invites you to its base.
+      return realmInviteFrom(arg ?? 'misty') ? 'invited' : 'ps.realm: no such bot in the in-page realm'
     default:
       return realmDevState()
   }

@@ -18,6 +18,7 @@ import type { TraitId } from '../data/traits'
 import type { ConsumableId } from '../game/consumables'
 import type { FriendMilestone } from '../game/referral'
 import type { Difficulty } from '../game/difficulty'
+import type { Activity } from '../game/friends'
 import type { Role } from '../data/versus'
 import type { MapId } from '../data/versusMaps'
 import type { WearableId } from '../data/wearables'
@@ -903,6 +904,7 @@ export const pt = {
       afk: 'Você ficou parado por muito tempo e voltou para a escolha de cidade.',
       banned: 'Sua conta está suspensa do Poké Realm.',
       busy: 'O servidor do Realm está cheio. Tente de novo em instantes.',
+      roomFull: 'Essa sala está cheia agora. Tente de novo daqui a pouco.',
     } satisfies Record<RealmRefusal, string>,
     talk: 'Falar',
     emote: 'Emote',
@@ -1008,6 +1010,31 @@ export const pt = {
       profile: 'Ver perfil',
       close: 'Fechar',
       you: 'Você',
+    },
+    friends: {
+      open: 'Amigos',
+      title: 'Amigos no Realm',
+      all: 'Ver todos os amigos',
+      showWhere: (on: boolean) => `Mostrar onde estou para amigos: ${on ? 'sim' : 'não'}`,
+      showWhereHint: 'Só quem segue você de volta vê a cidade e a sala em que você está.',
+      states: { hidden: 'No Realm · local oculto', offline: 'Offline', pending: 'Ainda não segue você de volta' },
+      activity: { lobby: 'No jogo, fora do Realm', room: 'Numa sala de Co-op', run: 'Numa partida' } satisfies Record<Activity, string>,
+      yourBase: 'Sua base',
+      here: 'Você está aqui',
+      go: 'Ir até',
+      roomFull: 'Sala cheia',
+      goCity: 'Ir à cidade',
+      cityFull: 'Cidade lotada',
+      invite: 'Convidar para minha base',
+      sent: (handle: string) => `Convite enviado para @${handle}`,
+      privateBase: 'Sua base está fechada para visitas. Abra para amigos (✎ dentro dela) para convidar.',
+      noBase: 'Arrume sua base (✎ dentro dela) antes de convidar alguém.',
+      empty: 'Você ainda não segue ninguém. Siga treinadores pelo Ranking ou pelo perfil deles.',
+      failed: 'Não deu para ver seus amigos agora.',
+      invited: (handle: string) => `@${handle} convidou você para a base secreta`,
+      accept: 'Ir',
+      decline: 'Agora não',
+      lobby: (n: number) => (n === 1 ? '1 amigo no Realm' : `${n} amigos no Realm`),
     },
   },
   coop: {

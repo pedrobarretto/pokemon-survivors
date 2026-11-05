@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { REALM_ROOMS } from '../../src/data/realmMap'
-import { REALM, REALM_LIMITS, REALM_PROTOCOL, type RealmClientMessage, type RealmIdentity, type RealmServerMessage } from '../../src/net/realm'
+import { REALM_ROOMS, ROOM_CAP } from '../../src/data/realmMap'
+import { REALM, REALM_LIMITS, REALM_PROTOCOL, type CityId, type RealmClientMessage, type RealmIdentity, type RealmServerMessage } from '../../src/net/realm'
 import { PRESENCE_EVERY_MS } from '../../src/net/realmRelay'
 import { connect, createRealm, disconnect, hello, identified, message, parseRealmMessage, tick, visited, type RealmEffect, type RealmState } from '../src/realm'
 
@@ -16,13 +16,13 @@ const closed = (effects: readonly RealmEffect[], to: string) => effects.some((e)
 
 const helloMsg = (over: Partial<Extract<RealmClientMessage, { t: 'hello' }>> = {}) => ({ t: 'hello', v: REALM_PROTOCOL, city: 'pallet', token: 'tok', room: 'plaza', ...over }) as const
 
-/** Opens `conn` in Pallet and seats account `user` (its identity answered at once); returns the seating effects. */
-const join = (state: RealmState, conn: string, user: string, now = T0, over: Partial<RealmIdentity> = {}, room = 'plaza') => {
-  connect(state, conn, 'pallet', now)
-  const asked = hello(state, conn, helloMsg({ room }), user, now)
+/** Opens `conn` in `city` (Pallet) and seats account `user` (its identity and mutual `friends` answered at once); returns the seating effects. */
+const join = (state: RealmState, conn: string, user: string, now = T0, over: Partial<RealmIdentity> = {}, room = 'plaza', city: CityId = 'pallet', friends: string[] = []) => {
+  connect(state, conn, city, now)
+  const asked = hello(state, conn, helloMsg({ room, city }), user, now)
   const ask = asked.find((e) => e.k === 'identify')
   if (ask?.k !== 'identify') throw new Error('no identify ask')
-  return identified(state, ask.ask, { identities: { [user]: ident(user, over) }, banned: [] }, now)
+  return identified(state, ask.ask, { identities: { [user]: ident(user, over) }, banned: [], friends: { [user]: friends } }, now)
 }
 
 const youOf = (effects: readonly RealmEffect[], conn: string) => of(sent(effects, conn), 'welcome')[0]!.you
@@ -32,6 +32,8 @@ describe('parseRealmMessage', () => {
     expect(parseRealmMessage(JSON.stringify({ t: 'move', x: 10.4, y: 20.6, facing: 3, moving: true }))).toEqual({ t: 'move', x: 10, y: 21, facing: 3, moving: true })
     expect(parseRealmMessage(JSON.stringify({ t: 'go', room: 'BASE:Misty', x: 1, y: 2 }))).toEqual({ t: 'go', room: 'base:misty', x: 1, y: 2 })
     expect(parseRealmMessage(JSON.stringify({ t: 'partyGo', mode: 'coop', code: 'ABC23' }))).toEqual({ t: 'partyGo', mode: 'coop', code: 'ABC23' })
+    expect(parseRealmMessage(JSON.stringify({ t: 'baseInvite', handle: 'Misty' }))).toEqual({ t: 'baseInvite', handle: 'misty' })
+    expect(parseRealmMessage(JSON.stringify({ t: 'baseInvite', handle: 'mis ty' }))).toBeNull()
   })
 
   it('refuses malformed, unknown and oversized messages', () => {
@@ -206,6 +208,58 @@ describe('rooms and bases', () => {
     if (ask?.k !== 'visit') throw new Error('no visit')
     expect(of(sent(visited(state, ask.ask, { allowed: true }, T0), 'a'), 'room')[0]).toMatchObject({ room: 'base:misty' })
   })
+
+  it('keeps a base to its cap, but never out of its owner', () => {
+    const state = createRealm('sa', T0)
+    join(state, 'm', 'misty')
+    for (let i = 0; i < ROOM_CAP.base; i++) {
+      join(state, `v${i}`, `u${i}`)
+      const ask = message(state, `v${i}`, { t: 'go', room: 'base:misty', x: 100, y: 100 }, T0 + 100).find((e) => e.k === 'visit')
+      if (ask?.k !== 'visit') throw new Error('no visit')
+      expect(of(sent(visited(state, ask.ask, { allowed: true }, T0 + 100), `v${i}`), 'room')).toHaveLength(1)
+    }
+    join(state, 'late', 'late')
+    const out = message(state, 'late', { t: 'go', room: 'base:misty', x: 100, y: 100 }, T0 + 200)
+    expect(out.some((e) => e.k === 'visit')).toBe(false)
+    expect(of(sent(out, 'late'), 'refused')).toEqual([{ t: 'refused', why: 'roomFull' }])
+    expect(closed(out, 'late')).toBe(false)
+    expect(of(sent(message(state, 'm', { t: 'go', room: 'base:misty', x: 100, y: 100 }, T0 + 200), 'm'), 'room')[0]).toMatchObject({ room: 'base:misty' })
+  })
+
+  it('lands a hello to a full town room in the plaza, told so', () => {
+    const state = createRealm('sa', T0)
+    for (let i = 0; i < ROOM_CAP.town; i++) expect(of(sent(join(state, `c${i}`, `u${i}`, T0, {}, 'cafe'), `c${i}`), 'welcome')[0]).toMatchObject({ room: 'cafe' })
+    const out = sent(join(state, 'late', 'late', T0, {}, 'cafe'), 'late')
+    expect(of(out, 'welcome')[0]).toMatchObject({ room: 'plaza' })
+    expect(of(out, 'refused')).toEqual([{ t: 'refused', why: 'roomFull' }])
+    // The plaza, where everyone lands, has no cap of its own.
+    expect(state.cities.get('pallet')?.trainers.size).toBe(ROOM_CAP.town + 1)
+  })
+})
+
+describe('base invites', () => {
+  it('reach a mutual friend in another city of the relay, once a while each, and tell the inviter nothing', () => {
+    const state = createRealm('sa', T0)
+    join(state, 'a', 'ash', T0, {}, 'base:ash', 'pallet', ['misty'])
+    join(state, 'm', 'misty', T0, {}, 'plaza', 'cerulean', ['ash'])
+    join(state, 'b', 'brock', T0, {}, 'plaza', 'pallet', [])
+    const out = message(state, 'a', { t: 'baseInvite', handle: 'misty' }, T0 + 100)
+    expect(sent(out, 'm')).toEqual([{ t: 'baseInvited', from: 'ash', city: 'pallet' }])
+    expect(sent(out, 'a')).toEqual([])
+    // Again before `REALM.inviteMs`: nothing; after it, again.
+    expect(sent(message(state, 'a', { t: 'baseInvite', handle: 'misty' }, T0 + 200), 'm')).toEqual([])
+    expect(sent(message(state, 'a', { t: 'baseInvite', handle: 'misty' }, T0 + 100 + REALM.inviteMs), 'm')).toHaveLength(1)
+    // Not a friend (as the API listed them at the hello), or yourself: nothing goes.
+    expect(message(state, 'a', { t: 'baseInvite', handle: 'brock' }, T0 + 300).filter((e) => e.k === 'send')).toEqual([])
+    expect(message(state, 'b', { t: 'baseInvite', handle: 'ash' }, T0 + 300).filter((e) => e.k === 'send')).toEqual([])
+    expect(message(state, 'a', { t: 'baseInvite', handle: 'ash' }, T0 + 300).filter((e) => e.k === 'send')).toEqual([])
+  })
+
+  it('send nothing for a friend who isn’t walking the realm', () => {
+    const state = createRealm('sa', T0)
+    join(state, 'a', 'ash', T0, {}, 'plaza', 'pallet', ['misty'])
+    expect(message(state, 'a', { t: 'baseInvite', handle: 'misty' }, T0 + 100).filter((e) => e.k === 'send')).toEqual([])
+  })
 })
 
 describe('talk', () => {
@@ -309,7 +363,7 @@ describe('time', () => {
     const state = createRealm('sa', T0)
     join(state, 'a', 'ash')
     expect(tick(state, T0 + 1).filter((e) => e.k === 'presence')).toEqual([])
-    expect(tick(state, T0 + PRESENCE_EVERY_MS).find((e) => e.k === 'presence')).toEqual({ k: 'presence', report: { home: 'sa', at: T0 + PRESENCE_EVERY_MS, cities: { pallet: ['ash'] } } })
+    expect(tick(state, T0 + PRESENCE_EVERY_MS).find((e) => e.k === 'presence')).toEqual({ k: 'presence', report: { home: 'sa', at: T0 + PRESENCE_EVERY_MS, cities: { pallet: ['ash'] }, rooms: { pallet: ['plaza'] } } })
     disconnect(state, 'a', T0)
     expect(tick(state, T0 + PRESENCE_EVERY_MS + 1).find((e) => e.k === 'presence')).toMatchObject({ report: { cities: {} } })
   })

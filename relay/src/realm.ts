@@ -1,4 +1,4 @@
-import { BASE_ROOM, LANDING, REALM_ROOMS, isTownRoomId, roomBounds, type Point, type Rect, type TownRoomId } from '../../src/data/realmMap'
+import { BASE_ROOM, LANDING, REALM_ROOMS, isTownRoomId, roomBounds, roomCap, type Point, type Rect, type TownRoomId } from '../../src/data/realmMap'
 import {
   BASE_PREFIX,
   REALM,
@@ -108,6 +108,11 @@ export type Trainer = {
   party: Party | null
   /** The table it sits at (its key in `City.tables`), or null. */
   table: string | null
+  /** Its mutual friends' handles (lower case, the API's at its hello): the ones it may invite to its base. */
+  friends: ReadonlySet<string>
+  /** Base invites it sent: the friend's handle → when it may invite them again; and when the last went out (the talk burst limit). */
+  baseInvites: Map<string, number>
+  invitedAt: number[]
 }
 
 /** A party: its leader and members (avatar ids, the leader among them), all in one city. */
@@ -255,6 +260,8 @@ export const parseRealmMessage = (text: string): RealmClientMessage | null => {
       return 'move' in m ? { t: 'play', move: m.move } : null
     case 'ready':
       return { t: 'ready' }
+    case 'baseInvite':
+      return typeof m.handle === 'string' && HANDLE.test(m.handle.toLowerCase()) ? { t: 'baseInvite', handle: m.handle.toLowerCase() } : null
     default:
       return null
   }
@@ -365,13 +372,17 @@ export const identified = (state: RealmState, ask: number, res: IdentityResponse
     if (!res) out.push(...refuse(conn.id, 'busy'))
     else if (res.banned.includes(w.userId)) out.push(...refuse(conn.id, 'banned'))
     else if (!identity || identity.userId !== w.userId) out.push(...refuse(conn.id, 'profile'))
-    else out.push(...seat(state, conn, identity, w.room, now))
+    else out.push(...seat(state, conn, identity, w.room, now, res.friends?.[w.userId] ?? []))
   }
   return [...out, ...askIdentities(state)]
 }
 
-/** Seats a verified trainer: one seat per account (an older one is sent `elsewhere`), the city's cap, then the room it asked for. */
-const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: RoomKey, now: number): RealmEffect[] => {
+/**
+ * Seats a verified trainer: one seat per account (an older one is sent
+ * `elsewhere`), the city's cap, then the room it asked for (a town room at
+ * its cap lands it in the landing instead, told `roomFull`).
+ */
+const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: RoomKey, now: number, friends: readonly string[]): RealmEffect[] => {
   const out: RealmEffect[] = []
   for (const city of state.cities.values())
     for (const old of [...city.trainers.values()])
@@ -383,7 +394,9 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
   const city = cityOf(state, conn.city)
   if (city.trainers.size >= REALM.cityCap) return [...out, ...refuse(conn.id, 'full')]
   // Someone else's base is entered through a visit (the API's say), from the landing room.
-  const direct = isTownRoomId(asked) || baseOwner(asked) === identity.handle.toLowerCase()
+  const own = baseOwner(asked) === identity.handle.toLowerCase()
+  const crowded = isTownRoomId(asked) && full(city, asked)
+  const direct = (isTownRoomId(asked) && !crowded) || own
   const room = direct ? asked : LANDING
   const at = spawnOf(room)
   const t: Trainer = {
@@ -408,6 +421,9 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
     going: null,
     party: null,
     table: null,
+    friends: new Set(friends.map((f) => f.toLowerCase())),
+    baseInvites: new Map(),
+    invitedAt: [],
   }
   city.trainers.set(t.id, t)
   conn.avatar = t.id
@@ -417,8 +433,15 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
     ...toRoom(city, room, { t: 'join', avatar: avatarOf(t) }, t.id),
     event('realm.seated', { city: city.id, room, trainers: city.trainers.size }),
   )
-  if (!direct) out.push(...go(state, t, asked, BASE_ROOM.spawn.x, BASE_ROOM.spawn.y, now))
+  if (crowded) out.push(send(conn.id, { t: 'refused', why: 'roomFull' }))
+  else if (!direct) out.push(...go(state, t, asked, BASE_ROOM.spawn.x, BASE_ROOM.spawn.y, now))
   return out
+}
+
+/** Whether `room` of `city` holds its cap already (`roomCap`; the landing has none of its own). */
+const full = (city: City, room: RoomKey) => {
+  const cap = roomCap(room)
+  return cap !== null && inRoom(city, room).length >= cap
 }
 
 /** Takes a trainer out of its city: its room told `gone`, its party left, its invites forgotten. */
@@ -524,7 +547,29 @@ export const message = (state: RealmState, connId: ConnId, msg: RealmClientMessa
     case 'ready':
       t.active = now
       return ready(city, t, now)
+    case 'baseInvite':
+      t.active = now
+      return baseInvite(state, t, msg.handle, now)
   }
+}
+
+/**
+ * Invites a mutual friend to the trainer's base, wherever they walk on this
+ * relay: they hear `baseInvited` (with the city, so they can come). Only a
+ * friend the API listed at the hello, once per `REALM.inviteMs` each, within
+ * the talk burst; nothing goes back to the inviter either way, so an invite
+ * never tells whether someone is online.
+ */
+const baseInvite = (state: RealmState, t: Trainer, handle: string, now: number): RealmEffect[] => {
+  const to = handle.toLowerCase()
+  if (to === t.identity.handle.toLowerCase() || !t.friends.has(to) || (t.baseInvites.get(to) ?? 0) > now) return []
+  for (const [h, until] of t.baseInvites) if (until <= now) t.baseInvites.delete(h)
+  if (!burst(t.invitedAt, now)) return []
+  t.baseInvites.set(to, now + REALM.inviteMs)
+  for (const city of state.cities.values())
+    for (const o of city.trainers.values())
+      if (o.identity.handle.toLowerCase() === to) return [send(o.conn, { t: 'baseInvited', from: t.identity.handle, city: t.city }), event('realm.baseInvite', { city: t.city, across: o.city !== t.city })]
+  return []
 }
 
 /** Whether one more line (or emote) fits the burst limit; takes it if so. */
@@ -561,19 +606,24 @@ const move = (t: Trainer, m: Extract<RealmClientMessage, { t: 'move' }>, now: nu
 /**
  * Through a door or into a base. Town to town takes a door of the room the
  * trainer stands in (within `DOOR_REACH`) and lands near its spawn; a base
- * lands inside its bounds. Someone else's base asks the API first (`visit`);
- * a refused `go` leaves the trainer where it stands (`snap`, or `refused`
- * `private`/`room`/`busy` for a base, which keep the socket open).
+ * lands inside its bounds. A room at its cap (`roomCap`) is refused
+ * (`roomFull`), but a base to its owner. Someone else's base asks the API
+ * first (`visit`); a refused `go` leaves the trainer where it stands
+ * (`snap`, or `refused` `roomFull`/`private`/`room`/`busy`, which keep the
+ * socket open).
  */
 const go = (state: RealmState, t: Trainer, room: RoomKey, x: number, y: number, now: number): RealmEffect[] => {
   const stay = [send(t.conn, { t: 'snap', x: t.x, y: t.y })]
   if (t.going || room === t.room || !inBounds(room, x, y)) return stay
+  const city = state.cities.get(t.city)
+  const crowded = city !== undefined && !ownBase(t, room) && full(city, room)
   if (isTownRoomId(room) && isTownRoomId(t.room)) {
     const here: TownRoomId = t.room
     const door = REALM_ROOMS[here].doors.find((d) => d.to === room && near(d.at, t.x, t.y, DOOR_REACH))
     if (!door || Math.hypot(x - door.spawn.x, y - door.spawn.y) > DOOR_REACH) return stay
-    return enter(state, t, room, x, y, now)
+    return crowded ? [...stay, send(t.conn, { t: 'refused', why: 'roomFull' })] : enter(state, t, room, x, y, now)
   }
+  if (crowded) return [...stay, send(t.conn, { t: 'refused', why: 'roomFull' })]
   if (isTownRoomId(room) || ownBase(t, room)) return enter(state, t, room, x, y, now)
   const owner = baseOwner(room)
   if (owner === null) return stay
@@ -612,6 +662,9 @@ export const visited = (state: RealmState, ask: number, res: VisitResponse | nul
   t.going = null
   if (!res) return [send(t.conn, { t: 'refused', why: 'busy' })]
   if (!res.allowed) return [send(t.conn, { t: 'refused', why: res.why === 'private' ? 'private' : 'room' })]
+  // The base may have filled while the API answered.
+  const city = state.cities.get(t.city)
+  if (city && full(city, room)) return [send(t.conn, { t: 'refused', why: 'roomFull' })]
   return enter(state, t, room, x, y, now)
 }
 
@@ -726,12 +779,16 @@ export const tick = (state: RealmState, now: number): RealmEffect[] => {
   return out
 }
 
-/** Who walks each city now (handles), for the API's city picker and friends list. */
-export const presence = (state: RealmState, now: number): PresenceReport => ({
-  home: state.home,
-  at: now,
-  cities: Object.fromEntries([...state.cities.values()].filter((c) => c.trainers.size > 0).map((c) => [c.id, [...c.trainers.values()].map((t) => t.identity.handle)])),
-})
+/** Who walks each city now (handles) and in which room (lined up with them), for the API's city picker and friends list. */
+export const presence = (state: RealmState, now: number): PresenceReport => {
+  const walking = [...state.cities.values()].filter((c) => c.trainers.size > 0).map((c) => [c.id, [...c.trainers.values()]] as const)
+  return {
+    home: state.home,
+    at: now,
+    cities: Object.fromEntries(walking.map(([id, ts]) => [id, ts.map((t) => t.identity.handle)])),
+    rooms: Object.fromEntries(walking.map(([id, ts]) => [id, ts.map((t) => t.room)])),
+  }
+}
 
 /** Trainers per city and sockets, for `/health` and the stats. */
 export const realmCounts = (state: RealmState) => ({

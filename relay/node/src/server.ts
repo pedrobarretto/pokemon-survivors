@@ -136,7 +136,7 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
       const accounts = userIds.filter((id) => !guest(id))
       const asked = accounts.length === 0 ? { identities: {}, banned: [] } : api ? await lookUpIdentities(api, accounts, fetcher) : null
       if (!asked) return guests.length === 0 ? null : { identities: Object.fromEntries(guests.map((id) => [id, guestIdentity(id)])), banned: [] }
-      return { identities: { ...asked.identities, ...Object.fromEntries(guests.map((id) => [id, guestIdentity(id)])) }, banned: asked.banned }
+      return { identities: { ...asked.identities, ...Object.fromEntries(guests.map((id) => [id, guestIdentity(id)])) }, banned: asked.banned, ...(asked.friends ? { friends: asked.friends } : {}) }
     },
     visit: async (req) => (api ? askVisit(api, req, fetcher) : config.allowGuests ? { allowed: true } : null),
     presence: (report) => {

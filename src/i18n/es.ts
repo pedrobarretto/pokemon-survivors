@@ -1,4 +1,5 @@
 import type { Messages } from './pt'
+import type { Activity } from '../game/friends'
 
 const typeBoost = (type: string) => `+10% de daño a los movimientos de tipo ${type}.`
 
@@ -709,6 +710,7 @@ export const es: Messages = {
       afk: 'Estuviste quieto demasiado tiempo y volviste a la elección de ciudad.',
       banned: 'Tu cuenta está suspendida del Poké Realm.',
       busy: 'El servidor del Realm está lleno. Inténtalo de nuevo en un momento.',
+      roomFull: 'Esa sala está llena ahora. Inténtalo de nuevo en un rato.',
     },
     talk: 'Hablar',
     emote: 'Emote',
@@ -814,6 +816,31 @@ export const es: Messages = {
       profile: 'Ver perfil',
       close: 'Cerrar',
       you: 'Tú',
+    },
+    friends: {
+      open: 'Amigos',
+      title: 'Amigos en el Realm',
+      all: 'Ver todos los amigos',
+      showWhere: (on: boolean) => `Mostrar a mis amigos dónde estoy: ${on ? 'sí' : 'no'}`,
+      showWhereHint: 'Solo quien te sigue de vuelta ve la ciudad y la sala donde estás.',
+      states: { hidden: 'En el Realm · ubicación oculta', offline: 'Desconectado', pending: 'Aún no te sigue de vuelta' },
+      activity: { lobby: 'En el juego, fuera del Realm', room: 'En una sala de Co-op', run: 'En una partida' } satisfies Record<Activity, string>,
+      yourBase: 'Tu base',
+      here: 'Estás aquí',
+      go: 'Ir con',
+      roomFull: 'Sala llena',
+      goCity: 'Ir a la ciudad',
+      cityFull: 'Ciudad llena',
+      invite: 'Invitar a mi base',
+      sent: (handle: string) => `Invitación enviada a @${handle}`,
+      privateBase: 'Tu base está cerrada a las visitas. Ábrela a tus amigos (✎ dentro de ella) para invitar.',
+      noBase: 'Arregla tu base (✎ dentro de ella) antes de invitar a alguien.',
+      empty: 'Aún no sigues a nadie. Sigue a entrenadores desde el Ranking o su perfil.',
+      failed: 'No se pudo ver a tus amigos ahora.',
+      invited: (handle: string) => `@${handle} te invitó a su base secreta`,
+      accept: 'Ir',
+      decline: 'Ahora no',
+      lobby: (n: number) => (n === 1 ? '1 amigo en el Realm' : `${n} amigos en el Realm`),
     },
   },
   coop: {

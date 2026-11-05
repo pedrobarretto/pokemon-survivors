@@ -4,7 +4,7 @@ import { coopVpsUrls } from './coopShell'
 import { playsShiny } from './game/shinyPicks'
 import { equippedLook } from './gems'
 import { isCityId, type CityId } from './net/realm'
-import { fakeRealm, realmFaked } from './realm/api'
+import { fakeFriendsFrom, fakeRealm, realmFaked } from './realm/api'
 import { createRealmClient, type RealmClient } from './realm/client'
 import { LOCAL_REALM_URL, startLocalRealm, type LocalRealm } from './realm/localRealm'
 import { loadSave } from './ui/save'
@@ -19,6 +19,9 @@ import { loadSave } from './ui/save'
 
 /** Bots the in-page realm fills a city with. */
 const LOCAL_BOTS = 14
+
+/** Where the faked friends among the bots start (`realm/api.ts`'s `FAKE_FOLLOWED`), so "Ir até" has somewhere to go. */
+const LOCAL_START = { misty: 'cafe', brock: 'arcade', dawn: 'pier' } as const
 
 /** The in-page realm on (true), off (false), or as the build has it (null: a dev build without a VPS relay). */
 let local: boolean | null = null
@@ -42,6 +45,7 @@ const localSocket = (url: string, on: SocketHandlers): SocketLike => {
       realm: startLocalRealm({
         city,
         bots: LOCAL_BOTS,
+        start: LOCAL_START,
         me: { handle: accountHandle() ?? 'you', partner: save.partner, shiny: playsShiny(save, save.partner), look: equippedLook() },
       }),
     }
@@ -55,6 +59,8 @@ export const realmClient = (): RealmClient | null => {
   if (!url) return null
   const inPage = isLocal()
   if (inPage && !realmFaked()) fakeRealm(true, accountHandle() ?? 'you')
+  // The faked friends among the bots walk where the in-page realm has them.
+  if (inPage) fakeFriendsFrom(() => host?.realm.presence() ?? null)
   client ??= createRealmClient({
     url,
     socket: inPage ? localSocket : webSocket,
@@ -76,6 +82,9 @@ export const useLocalRealm = (on: boolean) => {
 
 /** Dev: sends two of the in-page realm's bots to play at a town game table (`ps.realm('table', 'cafe-2')`, or `'cafe-2 fourInRow'` for a game), to watch or join. */
 export const stageRealmTable = (table: string, game?: string) => (host ? host.realm.stage(table, game) : 0)
+
+/** Dev: a bot of the in-page realm invites the player to its base (`ps.realm('invite', 'misty')`); whether one did. */
+export const realmInviteFrom = (handle: string) => host?.realm.inviteFrom(handle) ?? false
 
 /** Dev: what the realm's shell is on now. */
 export const realmDevState = () => ({ local: isLocal(), faked: realmFaked(), url: realmUrl(), city: client?.city() ?? null, room: client?.room() ?? null, status: client?.status() ?? null, rtt: client?.rtt() ?? null })
