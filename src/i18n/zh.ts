@@ -6278,6 +6278,21 @@ export const zh: Messages = {
       again: '再玩一次',
       leave: '離開',
     },
+    board: {
+      title: '排行榜',
+      open: '排行榜',
+      see: '查看排行榜',
+      periods: { day: '今日', week: '本週' },
+      dayCaption: '今日紀錄 · 巴西利亞時間午夜重置',
+      weekCaption: (from, to) => `${from} – ${to} 這週`,
+      tableNote: '只計算對其他訓練家的勝場。',
+      points: (n) => `${n} 分`,
+      wins: (n) => `${n} 勝`,
+      total: (n) => `排行榜上有 ${n} 位訓練家`,
+      empty: '還沒有人玩過，搶先登上排行榜吧！',
+      loading: '載入中...',
+      offline: '現在無法載入排行榜。',
+    },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {
       waiting: '等待對手中……',

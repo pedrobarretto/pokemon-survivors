@@ -4680,6 +4680,18 @@ if (import.meta.env.DEV) {
         return screen
       },
       /**
+       * A mini game's Placar (`realm/games/board.ts`) over whatever is on screen: `ps.realmBoard('fishing')`, `('arcade')`
+       * the arcade's games in tabs, a second `'week'` on the week. `ps.realm('fake')` first fakes the boards.
+       */
+      realmBoard: async (game?: unknown, period?: unknown) => {
+        const { isMinigameId, MINIGAME_IDS, MINIGAMES } = await import('./data/minigames')
+        const { isGameBoardPeriod } = await import('./realm/boards')
+        const games = game === 'arcade' ? MINIGAME_IDS.filter((g) => MINIGAMES[g].where === 'arcade') : isMinigameId(game) ? [game] : game === undefined ? MINIGAME_IDS : null
+        if (!games) return `ps.realmBoard: ${['arcade', ...MINIGAME_IDS].join(', ')}`
+        const { openGameBoard } = await import('./realm/games/board')
+        return openGameBoard(document.body, games, { period: isGameBoardPeriod(period) ? period : 'day', close: () => {} })
+      },
+      /**
        * Fishing's staging (`realm/games/fishing.ts`, open it with `ps.minigame('fishing')`): `ps.fishing('feebas')` makes
        * that the next bite, at once (`shinyGyarados`, `wailmer`, `boot`…); a second `true` turns on the autopilot (casts,
        * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too).

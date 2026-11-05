@@ -6278,6 +6278,21 @@ export const fr: Messages = {
       again: 'Rejouer',
       leave: 'Quitter',
     },
+    board: {
+      title: 'Classement',
+      open: 'Scores',
+      see: 'Voir le classement',
+      periods: { day: "Aujourd'hui", week: 'Semaine' },
+      dayCaption: "Records du jour · remis à zéro à minuit (Brasília)",
+      weekCaption: (from, to) => `Semaine du ${from} au ${to}`,
+      tableNote: 'Seules les victoires contre d’autres dresseurs comptent.',
+      points: (n) => `${n} pts`,
+      wins: (n) => (n <= 1 ? `${n} victoire` : `${n} victoires`),
+      total: (n) => (n <= 1 ? `${n} dresseur au classement` : `${n} dresseurs au classement`),
+      empty: 'Personne n’a encore joué. Soyez le premier !',
+      loading: 'Chargement...',
+      offline: 'Impossible de charger le classement pour le moment.',
+    },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {
       waiting: 'En attente d’un adversaire...',

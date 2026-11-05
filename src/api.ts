@@ -8,10 +8,11 @@ const TIMEOUT_MS = 10_000
  * it: its status and JSON body. Never throws: offline (or a guest asking for
  * `auth`) is status 0, so callers just say the API is out of reach.
  */
-export const apiCall = async (path: string, init: { method?: string; body?: unknown; auth?: boolean } = {}) => {
+export const apiCall = async (path: string, init: { method?: string; body?: unknown; auth?: boolean | 'maybe' } = {}) => {
   try {
     const token = init.auth ? await sessionToken() : null
-    if (init.auth && !token) return { status: 0, body: null }
+    // `maybe`: signed in when there is an account (a public read with the player's own line), as a guest otherwise.
+    if (init.auth === true && !token) return { status: 0, body: null }
     const res = await fetch(`${API_URL}${path}`, {
       method: init.method ?? 'GET',
       headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.body ? { 'Content-Type': 'application/json' } : {}) },

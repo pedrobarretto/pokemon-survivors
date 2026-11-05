@@ -24,9 +24,10 @@ import { outbreakAt } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
 import type { LooksResponse } from '../../src/net/looks'
 import type { GameClaimed, RealmCities, RealmFriends, RealmMe } from '../../src/net/realmApi'
-import { coinsFor } from '../../src/data/minigames'
+import { coinsFor, isMinigameId } from '../../src/data/minigames'
 import type { IdentityRequest } from '../../src/net/realmRelay'
 import { parseRealmModeration } from '../../src/realm/moderation'
+import { isGameBoardPeriod, type GameBoard } from '../../src/realm/boards'
 import { isBoardPeriod, isPlayable, isRunMode, parseDisplayName, parseHandle, parseRunResult } from '../../src/game/ranking'
 import { parseReplay, RULES_VERSION, rulesStanding } from '../../src/game/replay'
 import { parseChunk } from '../../src/game/replayStream'
@@ -92,7 +93,7 @@ export type AppDeps = {
   /** The Poké Realm: identities, visits and presence for the relay; bases, furniture and reports for the game; bans for the admin. */
   realm: Pick<
     RealmStore,
-    'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'claim' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy' | 'takeGame'
+    'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'claim' | 'board' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy' | 'takeGame'
   >
   /** The secret the relay signs Arena and co-op reports and ticket lookups with; unset, those routes answer 503. */
   arenaReportSecret: string | undefined
@@ -323,7 +324,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
  * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
  * - The Poké Realm (`src/realm.ts`): the game's routes as `src/net/realmApi.ts` lists them (`/realm/me`, `/realm/cities`,
- *   `/realm/friends`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/report`), and the relay's, signed like
+ *   `/realm/friends`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/boards/:game`, `/realm/report`), and the relay's, signed like
  *   `/looks`, as `src/net/realmRelay.ts` lists them (`/realm/identity`, `/realm/visit`, `/realm/presence`). A realm-banned
  *   account's realm writes get 403 `{ error: 'banned' }`. The desk's `GET /admin/realm`: `RealmDesk` (open realm reports
  *   by trainer, bans in force); `POST /admin/realm/moderation` (`parseRealmModeration`) `{ userId, action, days?, reason? }`:
@@ -996,6 +997,15 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const got = await realm.claim(c.var.userId, claim, coins, brasiliaDay(new Date()))
     if (!got.ok) return c.json({ error: got.error }, 403)
     return c.json({ coins: got.coins, today: got.today, trophies: got.trophies, furniture: got.furniture } satisfies GameClaimed)
+  })
+
+  app.get('/realm/boards/:game', maybeAuth, async (c) => {
+    const game = c.req.param('game')
+    const period = c.req.query('period') ?? 'day'
+    if (!isMinigameId(game) || !isGameBoardPeriod(period)) return c.json({ error: 'unknown board' }, 400)
+    // Signed in, never from the browser's cache: "Ver placar" right after a claim must show it.
+    c.header('Cache-Control', c.var.userId ? 'private, no-store' : 'public, max-age=30')
+    return c.json((await realm.board(game, period, brasiliaDay(new Date()), c.var.userId)) satisfies GameBoard)
   })
 
   app.post('/realm/report', auth, smallBody, async (c) => {

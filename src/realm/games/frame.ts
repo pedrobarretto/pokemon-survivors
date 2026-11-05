@@ -7,14 +7,16 @@ import { h } from '../../ui/dom'
 import { depositPokeDollars } from '../../ui/save'
 import type { Screen } from '../../ui/screens'
 import { claimGame, isFailure } from '../api'
+import { openGameBoard } from './board'
 import { pieceName } from '../furniture'
 
 /**
  * The Poké Realm's mini game frame: an overlay holding the game's canvas at
  * its own low resolution, scaled up by whole device pixels (pixel art, like
  * the world), with one pointer (mouse or a finger) and the keys mapped into it,
- * a close button and the end sheet (the score, the ₽ the API paid, the
- * trophies earned, play again). Every game, solo or at a table, draws
+ * a close button, the game's Placar (`board.ts`, from the header and the
+ * end sheet) and the end sheet (the score, the ₽ the API paid, the trophies
+ * earned, play again). Every game, solo or at a table, draws
  * through it, so they all look and behave alike on a phone and a desktop.
  *
  * A game is plain functions over its own state (`SoloGame`, `TableUi`):
@@ -145,6 +147,10 @@ type Shell = {
   sheet: HTMLElement
   input: () => GameInput
   endStep: () => void
+  /** Opens the game's Placar over the frame (`after` first: a claim on its way, so the board shows it). */
+  board: (after?: Promise<unknown>) => void
+  /** Whether the Placar covers the game now (a solo game holds still under it). */
+  covered: () => boolean
   dispose: () => void
 }
 
@@ -153,10 +159,26 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   const m = t().minigames
   const canvas = h('canvas', { class: 'minigame-canvas', width: size.w, height: size.h })
   const sheet = h('div', { class: 'minigame-sheet box hidden' })
+  let boardOpen: Screen | null = null
+  const board = (after?: Promise<unknown>) => {
+    if (boardOpen) return
+    playSfx('select')
+    boardOpen = { el: h('div'), dispose: () => {} }
+    void (after ?? Promise.resolve()).then(() => {
+      if (!el.isConnected) return void (boardOpen = null)
+      boardOpen = openGameBoard(root, [game], { close: () => (boardOpen = null) })
+    })
+  }
   const el = h(
     'div',
     { class: 'screen minigame-screen' },
-    h('header', { class: 'minigame-head' }, h('h2', {}, m.games[game].name), h('button', { class: 'minigame-close box', type: 'button', 'aria-label': m.close, onclick: close }, '×')),
+    h(
+      'header',
+      { class: 'minigame-head' },
+      h('h2', {}, m.games[game].name),
+      h('button', { class: 'minigame-board box', type: 'button', onclick: () => board() }, m.board.open),
+      h('button', { class: 'minigame-close box', type: 'button', 'aria-label': m.close, onclick: close }, '×'),
+    ),
     h('div', { class: 'minigame-stage' }, canvas, sheet),
   )
   root.append(el)
@@ -226,12 +248,13 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
     pressed.clear()
   }
   const dispose = () => {
+    boardOpen?.dispose()
     resize.disconnect()
     window.removeEventListener('keydown', onKeyDown)
     window.removeEventListener('keyup', onKeyUp)
     el.remove()
   }
-  return { el, canvas, g, sheet, input, endStep, dispose }
+  return { el, canvas, g, sheet, input, endStep, board, covered: () => boardOpen !== null, dispose }
 }
 
 /** Runs `frame(dt, now)` every animation frame until the returned stop. */
@@ -268,14 +291,18 @@ const logList = (log: NonNullable<SoloEnd['log']>) =>
  * short, as it does when the API refuses the outcome. `again` restarts,
  * `leave` closes.
  */
-const endSheet = async (sheet: HTMLElement, headline: string, claim: Parameters<typeof claimGame>[0] | null, again: () => void, leave: () => void, log?: SoloEnd['log']) => {
+const endSheet = async (s: Shell, headline: string, claim: Parameters<typeof claimGame>[0] | null, again: () => void, leave: () => void, log?: SoloEnd['log']) => {
   const m = t().minigames
+  const sheet = s.sheet
   const paid = h('p', { class: 'minigame-paid' }, m.end.claiming)
+  /** The claim on its way: "Ver placar" waits for it, so the board shows this game. */
+  let claimed: Promise<unknown> = Promise.resolve()
   sheet.replaceChildren(
     h('h3', {}, headline),
     ...(log && log.lines.length > 0 ? [logList(log)] : []),
     paid,
     h('div', { class: 'minigame-actions' }, h('button', { class: 'box', type: 'button', onclick: again }, m.end.again), h('button', { class: 'box', type: 'button', onclick: leave }, m.end.leave)),
+    h('button', { class: 'minigame-see-board', type: 'button', onclick: () => s.board(claimed) }, m.board.see),
   )
   sheet.classList.remove('hidden')
   if (claim === null) {
@@ -286,7 +313,9 @@ const endSheet = async (sheet: HTMLElement, headline: string, claim: Parameters<
     paid.textContent = m.end.tooShort
     return
   }
-  const res = await claimGame(claim)
+  const asked = claimGame(claim)
+  claimed = asked
+  const res = await asked
   if (!sheet.isConnected) return
   if (isFailure(res)) {
     paid.textContent = res.status === 400 && res.error === 'outcome' ? m.end.tooShort : m.end.unpaid
@@ -331,13 +360,15 @@ export const openSoloGame = (root: HTMLElement, game: SoloGameId, def: SoloGame,
   stop = loop((dt) => {
     if (!run) return
     clock += dt
+    // Under the Placar a round holds still (its clock too), so a look at the board costs nothing.
+    if (s.covered()) return void s.endStep()
     if (!ended) run.step(dt, s.input())
     s.endStep()
     run.draw(s.g, clock)
     const end = ended ? null : run.over()
     if (end) {
       ended = true
-      void endSheet(s.sheet, m.end.score(end.score), { game, outcome: { score: end.score }, ms: performance.now() - startedAt, feats: end.feats }, start, close, end.log)
+      void endSheet(s, m.end.score(end.score), { game, outcome: { score: end.score }, ms: performance.now() - startedAt, feats: end.feats }, start, close, end.log)
     }
   })
   return { el: s.el, dispose: close }
@@ -389,7 +420,7 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
         for (const feat of feats) opts.realm?.brag(game, feat)
         // A match this seat forfeited (its clock ran out, it stood up) pays nothing: idling at a table isn't playing.
         const claim: Parameters<typeof claimGame>[0] | null = table.result.forfeit === seat ? null : { game, outcome: { result, vs: source.vs }, ms: performance.now() - startedAt, feats }
-        outro = setTimeout(() => void endSheet(s.sheet, m.end[result], claim, again, close), (ui.outro ?? 0) * 1000)
+        outro = setTimeout(() => void endSheet(s, m.end[result], claim, again, close), (ui.outro ?? 0) * 1000)
       }
       phase = table.phase
     }
@@ -412,7 +443,7 @@ const lobbyBar = (shell: Shell, source: TableSource) => {
   const card = h('div', { class: 'minigame-lobby box hidden' })
   const tag = h('div', { class: 'minigame-tag hidden' })
   shell.sheet.before(card)
-  shell.el.querySelector('.minigame-close')?.before(tag)
+  shell.el.querySelector('.minigame-board')?.before(tag)
   let shown: TableLobby | null = null
   const button = (text: string, act: (() => void) | undefined) => h('button', { class: 'box', type: 'button', onclick: () => (playSfx('select'), act?.()) }, text)
   return () => {

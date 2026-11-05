@@ -5,9 +5,10 @@ import { PLAYABLE } from '../data/hatchlings'
 import { BASE_GRID, BASE_ROOM, LANDING, REALM_ROOMS, isTownRoomId, type Door, type Point, type Rect, type Spot, type SpotKind, type TownRoomId } from '../data/realmMap'
 import type { BaseExterior, BaseLayout } from '../data/secretBases'
 import { footprint } from '../data/furniture'
-import { FURNITURE_GAMES, isMinigameId, isTableGame, type TableGameId } from '../data/minigames'
+import { FURNITURE_GAMES, isMinigameId, isTableGame, MINIGAME_IDS, MINIGAMES, type MinigameId, type TableGameId } from '../data/minigames'
 import { baseTableId, type TableView } from '../net/realmTables'
 import { localTable } from '../realm/games/localTable'
+import { openGameBoard } from '../realm/games/board'
 import { chooseGame } from '../realm/games/registry'
 import { relayTable } from '../realm/games/relayTable'
 import { TABLE_GAMES } from '../realm/games/tables'
@@ -210,6 +211,16 @@ const spotLabel = (s: Spot) => {
   const game = s.kind === 'cabinet' && s.games?.length === 1 ? s.games[0] : undefined
   return game !== undefined && isMinigameId(game) ? t().minigames.games[game].name : t().realm.spots[s.kind]
 }
+
+/** The games whose Placar a spot opens: a game spot's (a fishing spot fishes), every arcade game at the arcade's prizes counter. */
+const spotBoards = (s: Spot): MinigameId[] =>
+  s.kind === 'fishing'
+    ? ['fishing']
+    : s.kind === 'prizes'
+      ? MINIGAME_IDS.filter((g) => MINIGAMES[g].where === 'arcade')
+      : s.kind === 'cabinet' || s.kind === 'gameTable'
+        ? (s.games ?? []).filter(isMinigameId)
+        : []
 
 /** Labels show over spots and doors this close (world px) to the trainer. */
 const LABEL_NEAR = 220
@@ -419,7 +430,10 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     const layer = h('div', { class: 'realm-layer', 'aria-hidden': 'true' })
     const signs = h('div', { class: 'realm-signs', 'aria-hidden': 'true' })
     const useLabel = h('span', {})
-    const useButton = h('button', { class: 'realm-use box hidden', type: 'button', onclick: () => useSpot() }, useLabel, h('span', { class: 'key-hint' }, 'E'))
+    const useButton = h('button', { class: 'realm-use box', type: 'button', onclick: () => useSpot() }, useLabel, h('span', { class: 'key-hint' }, 'E'))
+    // Beside a game spot's prompt: its games' Placar (P).
+    const boardButton = h('button', { class: 'realm-use realm-use-board box', type: 'button', onclick: () => boardAt(near) }, t().minigames.board.open, h('span', { class: 'key-hint' }, 'P'))
+    const usePrompt = h('div', { class: 'realm-use-row hidden' }, useButton, boardButton)
     const wheel = h('div', { class: 'realm-wheel box hidden' })
     const emotes = h('div', { class: 'realm-emotes box hidden' })
     const card = h('div', { class: 'realm-card box hidden' })
@@ -433,7 +447,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       h('div', { class: 'realm-top' }, leaveButton, h('div', { class: 'realm-title box' }, where, count), decorate),
       status,
       partyBar,
-      useButton,
+      usePrompt,
       h('div', { class: 'realm-actions' }, talkButton, emoteButton),
       wheel,
       emotes,
@@ -784,7 +798,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         case 'counter':
           return void toast(root, m().counter, 2600, 'realmSpot')
         case 'prizes':
-          return void toast(root, m().prizes, 3200, 'realmSpot')
+          return boardAt(spot)
         case 'pool':
           return void toast(root, m().pool, 2600, 'realmSpot')
         case 'bench':
@@ -836,6 +850,17 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           you: you ?? 0,
         }),
       )
+    }
+
+    /**
+     * Opens the Placar of a spot's games: a game spot's own, or for the
+     * arcade's prizes counter every arcade game's. Nothing for other spots.
+     */
+    function boardAt(spot: Spot | null) {
+      const games = spot ? spotBoards(spot) : []
+      if (games.length === 0) return
+      playSfx('select')
+      openSub((r) => openGameBoard(r, games, { close: closeSub, ...(spot?.kind === 'prizes' ? { note: m().prizes } : {}) }))
     }
 
     /** Sudowoodo talks: all about secret bases the first time (`first`), else a line of its hellos. */
@@ -908,6 +933,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         return open ? open.classList.add('hidden') : showPicker()
       }
       if (key === 'KeyE' || key === 'Enter') return useSpot()
+      if (key === 'KeyP') return boardAt(near)
       if (key === 'KeyT') return toggle(wheel)
       if (key === 'KeyY') return toggle(emotes)
       const n = Number(/^Digit(\d)$/.exec(key)?.[1] ?? NaN)
@@ -1042,12 +1068,13 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         const x = Math.min(Math.max(Math.round(((at.x - cam.x) * scale) / zoom), half), (w * scale) / zoom - half)
         return `translate(${Math.round(x)}px, ${Math.max(LABEL_FLOOR, Math.round(((y - cam.y) * scale) / zoom))}px) translate(-50%, -100%)`
       }
-      useButton.classList.toggle('hidden', !near || sub !== null)
+      usePrompt.classList.toggle('hidden', !near || sub !== null)
       if (near) {
+        boardButton.classList.toggle('hidden', near.kind === 'prizes' || spotBoards(near).length === 0)
         const tb = near.kind === 'gameTable' && near.id ? tables.get(near.id) : undefined
         const label = tb && !tb.seats.includes(null) ? t().minigames.tables.watch : spotLabel(near)
         if (useLabel.textContent !== label) useLabel.textContent = label
-        useButton.style.transform = pin(near.at, useButton)
+        usePrompt.style.transform = pin(near.at, usePrompt)
       }
       // The labels of what's around: the near spot's is its prompt instead.
       for (const l of labels) {
