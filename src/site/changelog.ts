@@ -25,22 +25,7 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-05',
-    title: { pt: 'Partidas infinitas de mais de 4 horas no ranking', en: 'Endless runs past 4 hours on the ranking', es: 'Partidas infinitas de más de 4 horas en el ranking', fr: 'Parties infinies de plus de 4 heures au classement', zh: '超過 4 小時的無盡對局也能上排行榜' },
-    highlights: [
-      { pt: 'Partidas no modo infinito com mais de 4 horas agora entram no ranking: antes elas ficavam presas em "Sem conexão" para sempre.', en: 'Endless runs longer than 4 hours now make the ranking: they used to stay stuck on "Offline" forever.', es: 'Las partidas del modo infinito de más de 4 horas ahora entran en el ranking: antes se quedaban atascadas en "Sin conexión" para siempre.', fr: 'Les parties en mode infini de plus de 4 heures entrent maintenant au classement : avant, elles restaient bloquées sur « Hors ligne » pour toujours.', zh: '超過 4 小時的無盡模式對局現在會進入排行榜：之前它們會一直卡在「離線」。' },
-    ],
-    changes: [
-      {
-        title: { pt: 'Ranking', en: 'Ranking', es: 'Ranking' },
-        notes: [
-          { pt: 'O ranking aceitava partidas de até 4 horas, e uma partida infinita que passava disso nunca era enviada, nem o último ponto salvo antes das 4 horas. Agora o limite é de 8 horas, e uma partida que passar dele entra com o último ponto salvo que cabe.', en: 'The ranking took runs of up to 4 hours, and an endless run past that was never sent, not even its last save point before the 4 hours. The limit is now 8 hours, and a run past it joins with its last save point that fits.', es: 'El ranking aceptaba partidas de hasta 4 horas, y una partida infinita que pasaba de eso nunca se enviaba, ni siquiera su último punto guardado antes de las 4 horas. Ahora el límite es de 8 horas, y una partida que lo pase entra con su último punto guardado que quepa.' },
-        ],
-      },
-    ],
-  },
-  {
-    date: '2026-11-04',
-    title: { pt: 'Skins na Boutique e partidas longas mais leves', en: 'Skins in the Boutique and lighter long runs', es: 'Skins en la Boutique y partidas largas más ligeras', fr: 'Des skins à la Boutique et des longues parties plus légères', zh: '精品服飾店上架皮膚，長時間對局更順暢' },
+    title: { pt: 'Skins na Boutique e partidas infinitas de mais de 4 horas no ranking', en: 'Skins in the Boutique and endless runs past 4 hours on the ranking', es: 'Skins en la Boutique y partidas infinitas de más de 4 horas en el ranking', fr: 'Des skins à la Boutique et les parties infinies de plus de 4 heures au classement', zh: '精品服飾店上架皮膚，超過 4 小時的無盡對局也能上排行榜' },
     highlights: [
       {
         pt: 'Skins chegaram à Boutique da Leavanny: seu Pokémon redesenhado, em todos os estágios da linha, com versão shiny. São 37: Charmander de Terno, Froakie de Terno, Scorbunny de Terno, Squirtle Ninja, Torchic de Quimono, Gengar de Terno, Rayquaza Celestial, Groudon Obsidiana e mais.',
@@ -63,8 +48,7 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Offres de lancement : chaque saison complète, les 9 skins, pour 2 600 gemmes, seulement jusqu’au 18/11. Le skin apparaît dans tes parties, en coop, au Dojo et dans l’Arène, et les chapeaux se portent toujours par-dessus.',
         zh: '上市優惠：每個季節的全系列 9 款皮膚只要 2,600 寶石，僅到 11/18。皮膚會出現在你的對局、合作模式、道場和競技場中，帽子也照樣能戴在上面。',
       },
-      { pt: 'Partidas longas no modo infinito ficaram mais leves: os efeitos dos golpes custam bem menos para desenhar, e o Modo leve corta ainda mais quando o aparelho aperta.', en: 'Long endless runs got lighter: move effects cost much less to draw, and Lean mode cuts even more when the device struggles.', es: 'Las partidas largas del modo infinito son más ligeras: los efectos de los movimientos cuestan mucho menos de dibujar, y el Modo ligero recorta aún más cuando el aparato no da abasto.', fr: 'Les longues parties en mode infini sont plus légères : les effets des capacités coûtent bien moins cher à dessiner, et le mode léger en retire encore plus quand l’appareil peine.', zh: '無盡模式的長時間對局更順暢了：招式特效的繪製成本大幅降低，裝置吃力時輕量模式也會再省下更多。' },
-      { pt: 'Apertar Esc numa sala co-op não trava mais o site, e no celular a tela do jogo se refaz sozinha se ficar preta.', en: 'Pressing Esc in a co-op room no longer freezes the site, and on phones the game screen redraws itself if it goes black.', es: 'Presionar Esc en una sala cooperativa ya no congela el sitio, y en el celular la pantalla del juego se rehace sola si se pone negra.', fr: 'Appuyer sur Échap dans un salon coop ne fige plus le site, et sur mobile l’écran du jeu se redessine tout seul s’il devient noir.', zh: '在合作房間按 Esc 不會再讓網站卡住；在手機上，如果遊戲畫面變黑，它會自己重新繪製。' },
+      { pt: 'Partidas no modo infinito com mais de 4 horas agora entram no ranking: antes elas ficavam presas em "Sem conexão" para sempre.', en: 'Endless runs longer than 4 hours now make the ranking: they used to stay stuck on "Offline" forever.', es: 'Las partidas del modo infinito de más de 4 horas ahora entran en el ranking: antes se quedaban atascadas en "Sin conexión" para siempre.', fr: 'Les parties en mode infini de plus de 4 heures entrent maintenant au classement : avant, elles restaient bloquées sur « Hors ligne » pour toujours.', zh: '超過 4 小時的無盡模式對局現在會進入排行榜：之前它們會一直卡在「離線」。' },
     ],
     changes: [
       {
@@ -82,6 +66,24 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Ranking', en: 'Ranking', es: 'Ranking' },
+        notes: [
+          { pt: 'O ranking aceitava partidas de até 4 horas, e uma partida infinita que passava disso nunca era enviada, nem o último ponto salvo antes das 4 horas. Agora o limite é de 8 horas, e uma partida que passar dele entra com o último ponto salvo que cabe.', en: 'The ranking took runs of up to 4 hours, and an endless run past that was never sent, not even its last save point before the 4 hours. The limit is now 8 hours, and a run past it joins with its last save point that fits.', es: 'El ranking aceptaba partidas de hasta 4 horas, y una partida infinita que pasaba de eso nunca se enviaba, ni siquiera su último punto guardado antes de las 4 horas. Ahora el límite es de 8 horas, y una partida que lo pase entra con su último punto guardado que quepa.' },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-04',
+    title: { pt: 'Correções e partidas longas mais leves', en: 'Fixes and lighter long runs', es: 'Correcciones y partidas largas más ligeras', fr: 'Correctifs et longues parties plus légères', zh: '修正與更順暢的長時間對局' },
+    highlights: [
+      { pt: 'Partidas longas no modo infinito ficaram mais leves: os efeitos dos golpes custam bem menos para desenhar, e o Modo leve corta ainda mais quando o aparelho aperta.', en: 'Long endless runs got lighter: move effects cost much less to draw, and Lean mode cuts even more when the device struggles.', es: 'Las partidas largas del modo infinito son más ligeras: los efectos de los movimientos cuestan mucho menos de dibujar, y el Modo ligero recorta aún más cuando el aparato no da abasto.', fr: 'Les longues parties en mode infini sont plus légères : les effets des capacités coûtent bien moins cher à dessiner, et le mode léger en retire encore plus quand l’appareil peine.', zh: '無盡模式的長時間對局更順暢了：招式特效的繪製成本大幅降低，裝置吃力時輕量模式也會再省下更多。' },
+      { pt: 'A Super Rod agora puxa tudo do chão: Frutinhas Oran, moedas, Exp. Candies e as Poké Balls dos shinies também.', en: 'The Super Rod now reels in everything on the ground: Oran Berries, coins, Exp. Candies and the shinies’ Poké Balls too.', es: 'La Super Rod ahora atrae todo lo que hay en el suelo: Bayas Aranja, monedas, Exp. Candies y también las Poké Balls de los shinies.', fr: 'La Super Rod attire maintenant tout ce qui est au sol : Baies Oran, pièces, Exp. Candies et aussi les Poké Balls des chromatiques.', zh: '超級釣竿現在會把地上的東西全部拉過來：橙橙果、金幣、經驗糖果，還有異色寶可夢掉落的精靈球。' },
+      { pt: 'Esquecer o item Metronome não apaga mais o golpe Metronome do Mew, e Pokémon grandes como Chesnaught passam pelos túneis do Subterrâneo.', en: 'Forgetting the Metronome item no longer wipes Mew’s Metronome move, and big Pokémon like Chesnaught fit through the Underground’s tunnels.', es: 'Olvidar el objeto Metronome ya no borra el movimiento Metronome de Mew, y los Pokémon grandes como Chesnaught pasan por los túneles del Subterráneo.', fr: 'Oublier l’objet Metronome n’efface plus la capacité Metronome de Mew, et les gros Pokémon comme Chesnaught passent dans les tunnels du Souterrain.', zh: '遺忘道具「節拍器」不會再連帶抹掉夢幻的招式「揮指」，像布里卡隆這樣的大型寶可夢也能通過地下區域的隧道了。' },
+      { pt: 'Apertar Esc numa sala co-op não trava mais o site, e no celular a tela do jogo se refaz sozinha se ficar preta.', en: 'Pressing Esc in a co-op room no longer freezes the site, and on phones the game screen redraws itself if it goes black.', es: 'Presionar Esc en una sala cooperativa ya no congela el sitio, y en el celular la pantalla del juego se rehace sola si se pone negra.', fr: 'Appuyer sur Échap dans un salon coop ne fige plus le site, et sur mobile l’écran du jeu se redessine tout seul s’il devient noir.', zh: '在合作房間按 Esc 不會再讓網站卡住；在手機上，如果遊戲畫面變黑，它會自己重新繪製。' },
+    ],
+    changes: [
       {
         title: { pt: 'Partidas longas', en: 'Long runs', es: 'Partidas largas', fr: 'Longues parties', zh: '長時間對局' },
         notes: [
