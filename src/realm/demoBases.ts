@@ -24,6 +24,7 @@ export const DEMO_BASES = {
       at('doll:groudon', 8, 2),
       at('doll:hoOh', 10, 2),
       at('pokeBallRug', 5, 4),
+      at('gameTable', 6, 4),
       at('woodTable', 1, 5),
       at('candle', 1, 5),
       at('woodChair', 1, 6),

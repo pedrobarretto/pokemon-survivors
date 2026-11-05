@@ -26026,6 +26026,7 @@ span.arena-hub-face {
   position: relative;
   flex: 1;
   min-height: 0;
+  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26095,4 +26096,76 @@ span.arena-hub-face {
   font-size: 9px;
   opacity: 0.8;
   margin-top: 4px;
+}
+
+/* Mini games: the word over a relay table's game (`lobbyBar` in `realm/games/frame.ts`): the card while waiting for an opponent, the header's tag (the bot meanwhile, watching, an opponent sat). */
+.minigame-lobby {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: min(300px, calc(100% - 24px));
+  padding: 16px;
+  text-align: center;
+  translate: -50% -50%;
+}
+
+.minigame-lobby b {
+  font-size: 12px;
+}
+
+.minigame-lobby small {
+  font-size: 9px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.minigame-lobby button,
+.minigame-tag button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 10px;
+}
+
+.minigame-head .minigame-tag {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 4px 8px;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.minigame-head .minigame-tag.hidden {
+  display: none;
+}
+
+.minigame-tag-arrived {
+  background: var(--dk-wash-gold, #fff8d8);
+  animation: minigame-tag-pop 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+
+@keyframes minigame-tag-pop {
+  from {
+    scale: 0.6;
+    opacity: 0;
+  }
+}
+
+/* The realm's game tables in use: their label (`ui/realm.ts`) turns gold while a match is on or a seat waits. */
+.realm-sign.busy,
+.realm-sign.busy::after {
+  border-color: #8a5410;
+  background: #ffe9a0;
+}
+
+.realm-sign.busy {
+  color: #5a3408;
 }

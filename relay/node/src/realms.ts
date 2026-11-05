@@ -71,7 +71,7 @@ export const createRealms = (deps: RealmsDeps) => {
         ws.send(text)
       } else if (e.k === 'close') sockets.get(e.to)?.close(REALM_CLOSE[e.why], e.why)
       else if (e.k === 'identify') void deps.identities(e.userIds).then((res) => step(() => identified(state, e.ask, res, now())))
-      else if (e.k === 'visit') void deps.visit(e.req).then((res) => step(() => visited(state, e.ask, res)))
+      else if (e.k === 'visit') void deps.visit(e.req).then((res) => step(() => visited(state, e.ask, res, now())))
       else if (e.k === 'presence') deps.presence(e.report)
       else log(e.ev, e.data)
     }
@@ -121,7 +121,7 @@ export const createRealms = (deps: RealmsDeps) => {
       clearTimeout(timeout)
       sockets.delete(id)
       verifying.delete(id)
-      step(() => disconnect(state, id))
+      step(() => disconnect(state, id, now()))
     })
     ws.on('error', () => ws.terminate())
   }

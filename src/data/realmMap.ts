@@ -172,6 +172,9 @@ export const REALM_ROOMS = {
       { kind: 'counter', at: { x: 200, y: 112 }, reach: 24 },
       { kind: 'bench', at: { x: 70, y: 166 }, reach: 20 },
       { kind: 'bench', at: { x: 330, y: 166 }, reach: 20 },
+      // The game tables by the door (`net/realmTables.ts`): a trainer plays from in front, seated on a stool by the relay.
+      { kind: 'gameTable', at: { x: 110, y: 280 }, reach: 26, id: 'cafe-1', games: ['fourInRow', 'typeDuel'] },
+      { kind: 'gameTable', at: { x: 290, y: 280 }, reach: 26, id: 'cafe-2', games: ['fourInRow', 'typeDuel'] },
     ],
   },
   trail: {

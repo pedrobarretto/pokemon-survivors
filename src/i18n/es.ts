@@ -5875,6 +5875,10 @@ export const es: Messages = {
       monstera: 'Costilla de Adán',
       bonsai: 'Bonsái',
       hangingPlant: 'Planta colgante',
+      // The realm’s game tables: the table sold for bases and Four in a Row’s trophies.
+      gameTable: 'Mesa de juegos',
+      fourInRowCup: 'Copa del Cuatro en Línea',
+      fourInRowGiant: 'Cuatro en Línea gigante',
     },
     doll: (legend) => `Muñeco de ${legend}`,
     kinds: { floor: 'Mueble', rug: 'Alfombra', top: 'Adorno', wall: 'Pared', wallpaper: 'Papel tapiz', flooring: 'Piso' },
@@ -6184,6 +6188,32 @@ export const es: Messages = {
       trophy: (name) => `¡Trofeo nuevo: ${name}!`,
       again: 'Jugar de nuevo',
       leave: 'Salir',
+    },
+    /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
+    tables: {
+      waiting: 'Esperando a un rival...',
+      waitingHint: 'Quien se siente en la otra silla juega contigo.',
+      playBot: 'Jugar contra el bot mientras tanto',
+      botMeanwhile: 'Práctica contra el bot · esperando a un rival',
+      arrived: '¡Llegó un rival!',
+      watching: 'Mirando',
+      takeSeat: 'Sentarse',
+      watch: 'Mirar',
+      seatWaiting: '¡Falta un jugador!',
+      playing: 'Partida en juego',
+    },
+    /** Four in a Row's screen (`realm/games/fourInRow.ts`), drawn on its canvas. */
+    fourInRow: {
+      you: 'Tú',
+      bot: 'Bot',
+      youStart: '¡Empiezas tú!',
+      starts: (name: string) => `¡Empieza ${name}!`,
+      yourTurn: '¡Tu turno!',
+      theirTurn: (name: string) => `Turno de ${name}`,
+      waitingReady: (name: string) => `Esperando a ${name}...`,
+      tap: 'Toca una columna',
+      four: '¡Cuatro en línea!',
+      draw: '¡Empate!',
     },
   },
   carpenter: {

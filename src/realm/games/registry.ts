@@ -25,9 +25,10 @@ const TABLES: Record<TableGameId, () => Promise<TableUi>> = {
 
 /**
  * How a table game gets its table: the realm relay's (sat at by id, with
- * others) when the realm hands one in, else a match against the bot here.
+ * others) when the realm hands one in (made once the game is known, as a
+ * cabinet's sheet may ask which), else a match against the bot here.
  */
-export type TableOpen = { id: string; source: TableSource | null }
+export type TableOpen = { id: string; source: ((game: TableGameId) => TableSource) | null }
 
 export type OpenGameOpts = FrameOpts & {
   /** For a table game: the table (null: a match against the bot on a table of its own). */
@@ -40,7 +41,7 @@ export type OpenGameOpts = FrameOpts & {
 export const openGame = async (root: HTMLElement, game: MinigameId, opts: OpenGameOpts): Promise<Screen> => {
   if (isSoloGame(game)) return openSoloGame(root, game, await SOLO[game](), opts)
   const table = opts.table
-  const source = table?.source ?? localTable(table?.id ?? 'solo', game, TABLE_GAMES[game], opts.you, Date.now())
+  const source = table?.source?.(game) ?? localTable(table?.id ?? 'solo', game, TABLE_GAMES[game], opts.you, Date.now())
   return openTableGame(root, game, await TABLES[game](), source, opts)
 }
 

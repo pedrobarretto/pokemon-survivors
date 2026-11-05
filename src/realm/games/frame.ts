@@ -51,10 +51,20 @@ export type GameRun = {
 export type SoloGame = { size: { w: number; h: number }; start: (ctx: SoloCtx) => GameRun }
 
 /**
+ * Where a seat at a relay table stands, for the frame's word over the game
+ * (`TableSource.lobby`): waiting for an opponent (it offers the bot
+ * meanwhile), playing that bot, an opponent just sat down (back to the
+ * table), watching a full table, or watching one with a seat free.
+ */
+export type TableLobby = 'opponent' | 'bot' | 'arrived' | 'watching' | 'seatFree'
+
+/**
  * Where a table's state comes from: the realm relay's table (sat at with
- * others) or a match against the bot on this device (`localTable`). `table`
- * is the latest view (null before the first), `seat` this player's seat in
- * it (null while only watching).
+ * others, `relayTable`) or a match against the bot on this device
+ * (`localTable`). `table` is the latest view (null before the first), `seat`
+ * this player's seat in it (null while only watching). A relay table also
+ * says where its seat stands (`lobby`), plays the bot while it waits
+ * (`playBot`) and sits down at a seat that frees up (`takeSeat`).
  */
 export type TableSource = {
   vs: 'human' | 'bot'
@@ -66,10 +76,20 @@ export type TableSource = {
   frame: (now: number) => void
   /** Stands up and lets go of the table. */
   leave: () => void
+  lobby?: () => TableLobby | null
+  playBot?: () => void
+  takeSeat?: () => void
 }
 
-/** What a table game's screen gets: the source of its table. */
-export type TableCtx = { source: TableSource; partner: string; shiny: boolean }
+/** Who sits in a seat, as the table's screen draws them: the trainer's @handle and partner. */
+export type Sitter = { handle: string; partner: string; shiny: boolean }
+
+/**
+ * What a table game's screen gets: the source of its table, the player's
+ * partner, and who an avatar id of a seat is (null: unknown here, like the
+ * local table's bot, whose ids are negative).
+ */
+export type TableCtx = { source: TableSource; partner: string; shiny: boolean; who: (avatar: number) => Sitter | null }
 
 /** A table game's screen in progress: the table drawn and played from `source.table()`, moves sent with `source.play`. */
 export type TableRun = {
@@ -78,14 +98,15 @@ export type TableRun = {
   dispose?: () => void
 }
 
-export type TableUi = { size: { w: number; h: number }; start: (ctx: TableCtx) => TableRun }
+/** A table game's screen: its canvas size, how it starts, and how long (s) its end plays before the end sheet covers it (a winning line, a last reveal). */
+export type TableUi = { size: { w: number; h: number }; start: (ctx: TableCtx) => TableRun; outro?: number }
 
 /** What opening a game needs from where it opens (the realm, or the dev console). */
 export type FrameOpts = {
   partner: string
   shiny: boolean
   /** Sends what the trainer is busy at and its brags to the room; null outside the realm. */
-  realm: { act: (act: RealmAct | null) => void; brag: (game: MinigameId, feat: string) => void } | null
+  realm: { act: (act: RealmAct | null) => void; brag: (game: MinigameId, feat: string) => void; who: (avatar: number) => Sitter | null } | null
   close: () => void
 }
 
@@ -276,6 +297,7 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
     if (closed) return
     closed = true
     stop()
+    clearTimeout(outro)
     run.dispose?.()
     source.leave()
     opts.realm?.act(null)
@@ -283,11 +305,14 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
     opts.close()
   }
   const s = shell(root, game, ui.size, close)
-  const run = ui.start({ source, partner: opts.partner, shiny: opts.shiny })
+  const run = ui.start({ source, partner: opts.partner, shiny: opts.shiny, who: (id) => opts.realm?.who(id) ?? null })
+  const lobby = lobbyBar(s, source)
   opts.realm?.act(actOf(game))
   let clock = 0
   let phase: TableView['phase'] | null = null
   let startedAt = performance.now()
+  /** The end sheet waiting for the game's outro. */
+  let outro: ReturnType<typeof setTimeout> | undefined
   stop = loop((dt, now) => {
     clock += dt
     source.frame(now)
@@ -296,18 +321,51 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
     if (table && table.phase !== phase) {
       if (table.phase === 'playing') {
         startedAt = performance.now()
+        clearTimeout(outro)
         s.sheet.classList.add('hidden')
       }
       if (table.phase === 'over' && phase === 'playing' && seat !== null && table.result) {
         const w = table.result.winner
         const result = w === null ? 'draw' : w === seat ? 'win' : 'loss'
-        void endSheet(s.sheet, m.end[result], { game, outcome: { result, vs: source.vs }, ms: performance.now() - startedAt, feats: [] }, () => source.ready(), close)
+        // Again: ready for the next match (a person's table may wait for the other's ready: the game says so).
+        const again = () => (source.ready(), s.sheet.classList.add('hidden'))
+        const claim: Parameters<typeof claimGame>[0] = { game, outcome: { result, vs: source.vs }, ms: performance.now() - startedAt, feats: [] }
+        outro = setTimeout(() => void endSheet(s.sheet, m.end[result], claim, again, close), (ui.outro ?? 0) * 1000)
       }
       phase = table.phase
     }
+    lobby()
     run.step(dt, s.input())
     s.endStep()
     run.draw(s.g, clock)
   })
   return { el: s.el, dispose: close }
+}
+
+/**
+ * The word over a relay table's game (`TableSource.lobby`), kept in step
+ * every frame: a card over the game while the seat waits for an opponent
+ * (with the bot meanwhile), and a slim tag in the header while the bot plays,
+ * a trainer only watches (with a free seat to take) or an opponent just sat.
+ */
+const lobbyBar = (shell: Shell, source: TableSource) => {
+  const m = t().minigames.tables
+  const card = h('div', { class: 'minigame-lobby box hidden' })
+  const tag = h('div', { class: 'minigame-tag hidden' })
+  shell.sheet.before(card)
+  shell.el.querySelector('.minigame-close')?.before(tag)
+  let shown: TableLobby | null = null
+  const button = (text: string, act: (() => void) | undefined) => h('button', { class: 'box', type: 'button', onclick: () => (playSfx('select'), act?.()) }, text)
+  return () => {
+    const now = source.lobby?.() ?? null
+    if (now === shown) return
+    shown = now
+    if (now === 'arrived') playSfx('select')
+    card.classList.toggle('hidden', now !== 'opponent')
+    if (now === 'opponent') card.replaceChildren(h('b', {}, m.waiting), h('small', {}, m.waitingHint), button(m.playBot, source.playBot))
+    tag.className = now && now !== 'opponent' ? `minigame-tag minigame-tag-${now} box` : 'minigame-tag hidden'
+    tag.replaceChildren(
+      ...(now === 'bot' ? [m.botMeanwhile] : now === 'arrived' ? [m.arrived] : now === 'watching' ? [m.watching] : now === 'seatFree' ? [m.watching, button(m.takeSeat, source.takeSeat)] : []),
+    )
+  }
 }

@@ -146,7 +146,7 @@ import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from '
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { openRealm } from './ui/realm'
-import { realmClient, realmDevState, realmUrl, useLocalRealm } from './realmShell'
+import { realmClient, realmDevState, realmUrl, stageRealmTable, useLocalRealm } from './realmShell'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
@@ -2971,13 +2971,16 @@ const enterRealm = (city: CityId | null) => {
   showRealm(city)
 }
 
+/** The realm's screen while it's up (the dev console's `ps.realm('walk', …)` walks it). */
+let realmShown: ReturnType<typeof openRealm> | null = null
+
 const showRealm = (city: CityId | null) => {
   const client = realmClient()
   if (!client) return toast(ui, t().realm.off, 4000, 'realmOff')
   realmLink(false)
   endRun()
   setScreen(
-    openRealm(
+    (realmShown = openRealm(
       ui,
       input,
       {
@@ -2990,7 +2993,7 @@ const showRealm = (city: CityId | null) => {
         joinRoom: (_mode, code) => void joinCoop(code, 'link').then((res) => (res.ok ? showRoom() : (toast(ui, closedText(res.why), 4000, 'realmParty'), showRealm(null)))),
       },
       city,
-    ),
+    )),
   )
 }
 
@@ -3012,7 +3015,10 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * Dev: `ps.realm('local')` opens the realm on the in-page host with bots and
  * the faked API (`realmShell.ts`), `('off')` back to the relay, `('fake')`
  * fakes only the API (`fakeRealm`), `('city', 'cerulean')` goes straight into
- * a city; no argument prints the state.
+ * a city, `('walk', '110,280')` walks the trainer to a point of its room (as a
+ * tap would: scripted shots get to a spot, like the café's game tables),
+ * `('table', 'cafe-2 fourInRow')` sends two bots to play at a game table (the game optional); no argument
+ * prints the state.
  */
 const devRealm = (cmd?: string, arg?: string) => {
   switch (cmd) {
@@ -3027,6 +3033,17 @@ const devRealm = (cmd?: string, arg?: string) => {
       return realmDevState()
     case 'city':
       return isCityId(arg) ? enterRealm(arg) : 'ps.realm: city id (pallet, cerulean…)'
+    case 'table': {
+      // `ps.realm('table', 'cafe-2 fourInRow')`: two bots go and play there (to watch, or take a seat when one stands); the game is optional.
+      const [table, game] = (arg ?? 'cafe-2').split(' ')
+      return `${stageRealmTable(table ?? 'cafe-2', game)} bots on their way`
+    }
+    case 'walk': {
+      // `ps.realm('walk', '110,280')`: the trainer walks there as a tap would (a straight walk, sliding along what's in the way).
+      const [x, y] = (arg ?? '').split(',').map(Number)
+      if (screen !== realmShown || !realmShown || !Number.isFinite(x) || !Number.isFinite(y)) return 'ps.realm: walk "x,y" in the realm'
+      return realmShown.walkTo(x!, y!)
+    }
     default:
       return realmDevState()
   }
