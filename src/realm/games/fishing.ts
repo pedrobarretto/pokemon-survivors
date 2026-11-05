@@ -73,14 +73,14 @@ const T = {
   swing: 1.5,
   flight: 0.55,
   /** A shadow swims to the hook this fast (px/s). */
-  approach: 22,
+  approach: 30,
   /** Seconds before a fresh shadow comes when none swims near the cast. */
-  arrive: [0.8, 2.2],
-  nibbleGap: [0.45, 1.05],
+  arrive: [0.6, 1.8],
+  nibbleGap: [0.35, 0.85],
   dip: 0.16,
   lost: 1.2,
   reelIn: 0.35,
-  reveal: { rise: 0.5, hover: 1.5, dive: 0.45 },
+  reveal: { rise: 0.45, hover: 1.3, dive: 0.4 },
   over: 1.8,
   /** A cast draws a fish from this far around where it landed (px). */
   reach: 34,

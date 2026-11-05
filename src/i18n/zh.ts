@@ -6169,7 +6169,7 @@ export const zh: Messages = {
       fourInRow: { name: '四子連線', blurb: '比對手先連成四顆精靈球。' },
       typeDuel: { name: '屬性對決', blurb: '火剋草，草剋水，水剋火。' },
     },
-    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', bigHaul: '一輪釣到 400 分！' }, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: {} },
+    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', bigHaul: '一輪釣到 300 分！' }, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: {} },
     end: {
       score: (n) => `${n} 分`,
       win: '勝利！',

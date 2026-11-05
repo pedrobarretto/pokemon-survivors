@@ -6175,7 +6175,7 @@ export const es: Messages = {
       fourInRow: { name: 'Cuatro en Línea', blurb: 'Alinea cuatro Poké Balls antes que tu rival.' },
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fuego vence a Planta, Planta a Agua, Agua a Fuego.' },
     },
-    feats: { fishing: { feebas: '¡Pesqué un Feebas!', shinyGyarados: '¡¡Pesqué un Gyarados shiny!!', bigHaul: '¡Pesca de 400 puntos!' }, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: {} },
+    feats: { fishing: { feebas: '¡Pesqué un Feebas!', shinyGyarados: '¡¡Pesqué un Gyarados shiny!!', bigHaul: '¡Pesca de 300 puntos!' }, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: {} },
     end: {
       score: (n) => `${n} puntos`,
       win: '¡Victoria!',

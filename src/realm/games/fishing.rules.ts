@@ -219,7 +219,7 @@ export type Haul = readonly CatchId[]
 export const scoreOf = (haul: Haul) => haul.reduce((sum, id) => sum + CATCHES[id].value, 0)
 
 /** The score that makes a round a `bigHaul`. */
-export const BIG_HAUL = 400
+export const BIG_HAUL = 300
 
 /**
  * The feats (`MINIGAMES.fishing.feats`) a haul hit: hooking a Feebas, the
