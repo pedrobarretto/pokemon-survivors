@@ -130,6 +130,8 @@ export const CARD_BACKGROUNDS = {
   supporter: { sky: ['#0c0814', '#180e22', '#26142a', '#341c2c', '#44262c'], stars: 120, starColors: ['#f8d030', '#fff4b0', '#ffffff', '#c89038'] },
   /** Noite das Bruxas: a witching-hour dusk, purple into a pumpkin glow, with orange embers among the stars. */
   halloween: { sky: ['#0c0614', '#180a24', '#26102e', '#3a1430', '#5a2028'], stars: 80, starColors: ['#ffa030', '#ffffff', '#c080ff', '#ff6020'] },
+  /** Bringing 10 friends (`game/referral.ts`): a rose dusk with pink and gold stars, the Ambassador frame's colors. */
+  friendship: { sky: ['#140818', '#220c26', '#341232', '#481a3a', '#5c2440'], stars: 100, starColors: ['#f8a0c8', '#f8e098', '#ffffff', '#e05888'] },
 } as const satisfies Record<BackgroundId, CardBackground>
 
 /** What a card wears. */

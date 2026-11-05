@@ -3455,6 +3455,15 @@ button {
   height: 39px;
 }
 
+/* The lobby's own install offer (`installNudgeScreen`): the app's icon over the pitch. */
+.install-nudge-icon {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 2px auto 6px;
+  border-radius: 14px;
+}
+
 .install-step b {
   color: color-mix(in srgb, #3878f0 var(--dk-lift, 100%), #fff);
 }
@@ -4652,6 +4661,15 @@ button {
   background: #ffb040;
 }
 
+/* The invites tile's count toward the next milestone (`2/3`), in the Friendship Egg's pink. */
+.lobby-rail-tile .rail-friends {
+  min-width: 0;
+  padding: 0 3px;
+  font-size: 6px;
+  color: #fff;
+  background: #e05888;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lobby-rail-tile .rail-sparkle {
     animation: none;
@@ -5234,6 +5252,49 @@ button {
   .dialogue-name {
     font-size: 8px;
   }
+}
+
+/* The results' invite after a win or a new best (`resultsInvite`): the Friendship Egg, why now, and its button. */
+.result-invite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin: 10px 0 2px;
+  padding: 8px 10px;
+  background: var(--dk-wash-red, #fde8f0);
+  border: 2px solid #e05888;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.result-invite > img {
+  width: 28px;
+  height: 32px;
+  flex: none;
+}
+
+.result-invite-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.result-invite-next:empty {
+  display: none;
+}
+
+.result-invite-next {
+  font-size: 16px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.result-invite-button {
+  flex: none;
 }
 
 /* Support page link under a victory's buttons. */

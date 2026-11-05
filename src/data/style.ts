@@ -6,7 +6,8 @@
  */
 export const STYLE_SHELF = {
   /**
-   * The Ambassador frame comes with bringing 3 friends (`game/referral.ts`);
+   * The Ambassador frame comes with bringing 3 friends, the Friendship
+   * background with 10 (`game/referral.ts`);
    * the Supporter frame with a donation, its background and wallpaper with
    * the gold tier (`game/supporters.ts`); the pumpkin ones with the Noite
    * das Bruxas candy jar, the spectral frame with its Caça aos Fantasmas
@@ -19,7 +20,7 @@ export const STYLE_SHELF = {
    * Hidden Grotto and the Underground (`game/hiddenGifts.ts`).
    */
   frame: { classic: 0, poke: 1000, great: 2000, ultra: 3500, master: 5000, ambassador: null, supporter: null, pumpkin: null, spectral: null, regular: null, kecleon: null, meowth: null, lantern: null, creator: null, grotto: null },
-  background: { night: 0, meadow: 1500, forest: 1500, cave: 1500, snow: 1500, tower: 2000, supporter: null, halloween: null },
+  background: { night: 0, meadow: 1500, forest: 1500, cave: 1500, snow: 1500, tower: 2000, supporter: null, halloween: null, friendship: null },
   wallpaper: { classic: 0, forest: 1000, cave: 1000, snow: 1000, tower: 1500, supporter: null, haunted: null, secretBase: null },
 } as const satisfies Record<string, Record<string, number | null>>
 

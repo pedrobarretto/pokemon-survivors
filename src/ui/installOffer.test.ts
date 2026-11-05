@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { installOffer, isIos } from './installOffer'
+import { countVisit, INSTALL_NUDGE, installNudgeDue, installOffer, isInAppBrowser, isIos } from './installOffer'
 
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1'
 const MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Safari/605.1.15'
@@ -27,5 +27,44 @@ describe('isIos', () => {
   it('leaves out Macs and Android', () => {
     expect(isIos(MAC, 0)).toBe(false)
     expect(isIos(ANDROID, 5)).toBe(false)
+  })
+})
+
+describe('isInAppBrowser', () => {
+  it("spots the social apps' browsers and Android WebViews", () => {
+    expect(isInAppBrowser(`${IPHONE} Instagram 350.0.0.0 (iPhone15,2; iOS 18_5)`)).toBe(true)
+    expect(isInAppBrowser(`${IPHONE} [FBAN/FBIOS;FBAV/480.0]`)).toBe(true)
+    expect(isInAppBrowser(ANDROID.replace('Pixel 8)', 'Pixel 8; wv)'))).toBe(true)
+  })
+
+  it('leaves the browsers alone', () => {
+    expect(isInAppBrowser(IPHONE)).toBe(false)
+    expect(isInAppBrowser(ANDROID)).toBe(false)
+    expect(isInAppBrowser(MAC)).toBe(false)
+  })
+})
+
+describe('the lobby install offer', () => {
+  const gap = INSTALL_NUDGE.gapMinutes * 60_000
+
+  it('counts a new visit only after a while away', () => {
+    expect(countVisit(null, 0)).toEqual({ count: 1, last: 0 })
+    expect(countVisit({ count: 1, last: 0 }, gap - 1)).toEqual({ count: 1, last: gap - 1 })
+    expect(countVisit({ count: 1, last: 0 }, gap)).toEqual({ count: 2, last: gap })
+  })
+
+  const due = { offer: 'prompt' as const, inApp: false, asked: false, sessions: 1, runs: 0 }
+
+  it('asks once the player came back or played a few runs', () => {
+    expect(installNudgeDue(due)).toBe(false)
+    expect(installNudgeDue({ ...due, sessions: INSTALL_NUDGE.sessions })).toBe(true)
+    expect(installNudgeDue({ ...due, runs: INSTALL_NUDGE.runs })).toBe(true)
+  })
+
+  it('never asks twice, in an app, or with nothing to offer', () => {
+    const ready = { ...due, runs: 10 }
+    expect(installNudgeDue({ ...ready, asked: true })).toBe(false)
+    expect(installNudgeDue({ ...ready, inApp: true })).toBe(false)
+    expect(installNudgeDue({ ...ready, offer: null })).toBe(false)
   })
 })
