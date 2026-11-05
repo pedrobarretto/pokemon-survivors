@@ -9,9 +9,7 @@ import type { ArenaFormat } from '../data/arenaFormats'
 import type { MapId } from '../data/versusMaps'
 import { stepTick } from '../game/lockstep'
 import type { Game } from '../game/types'
-import { jumpToAct } from '../game/domain'
-import { phasesOf } from '../game/bossFight'
-import { killEnemy } from '../game/combat'
+import { exitArena } from '../game/riftArena'
 
 /** An Arena match: the humans' seats (standing still: no entries come for them, so the match is the bots' and the PvP's), in a format (the 4v4 without one), on a map (drawn from the seed without one). */
 export type VersusScenario = { seed: number; versus: readonly VersusLoadout[]; format?: ArenaFormat; map?: MapId }
@@ -189,25 +187,14 @@ export const bench = async (s: Scenario, minutes: readonly number[], n = 30) => 
   return rows
 }
 
-/** Seconds the late bench lets its bot fight inside a rift before the legendary falls by the harness's hand (`endRift`). */
-const RIFT_HAND = 180
-
 /**
- * Knocks out a rift's legendary, past its phases, so its capture plays and the
- * run clock goes on: the bot can't win every rift, and stuck in one (the run
- * clock stopped) it would never reach the late game. The harness's hand, like
- * the scenario's guardian, never a rule.
+ * Seconds the late bench lets its bot stay inside a rift before the rift
+ * collapses by the harness's hand (`exitArena`): the bot can't win every rift
+ * nor walk out of a domain, and stuck in one (the run clock stopped) it would
+ * never reach the late game. The harness's hand, like the scenario's
+ * guardian, never a rule.
  */
-const endRift = (g: Game) => {
-  const arena = g.rift.arena
-  if (!arena) return
-  if (arena.domain) return jumpToAct(g, 'capture')
-  const boss = g.enemies.find((e) => e.id === arena.bossId)
-  if (!boss || boss.dying >= 0) return
-  const phases = phasesOf(boss.kind)
-  if (boss.fight && phases) Object.assign(boss.fight, { phase: phases.length - 1, shift: 0 })
-  killEnemy(g, boss)
-}
+const RIFT_HAND = 180
 
 /** The late-game run `npm run determinism -- late` plays: one that reaches deep into endless mode without stalling in a rift. */
 export const LATE_SCENARIO: Scenario = { seed: 4242, starter: 'charmander', difficulty: 'normal', maxRanks: true }
@@ -221,14 +208,14 @@ export const LATE_SCENARIO: Scenario = { seed: 4242, starter: 'charmander', diff
 export const lateBench = (s: Scenario, minutes: readonly number[]) => {
   const d = startScenario(s)
   const last = Math.max(...minutes)
-  // Inside a rift the run clock stops: past `endRift`, the cap keeps a bot stuck elsewhere from playing forever.
+  // Inside a rift the run clock stops: past `RIFT_HAND`, the cap keeps a bot stuck elsewhere from playing forever.
   const cap = (last * 1.5 + 10) * 60
   const rows = []
   let riftAt = -1
   const tick = () => {
     if (!d.g.rift.arena) riftAt = -1
     else if (riftAt < 0) riftAt = d.g.now
-    else if (d.g.now - riftAt > RIFT_HAND) endRift(d.g)
+    else if (d.g.now - riftAt > RIFT_HAND) exitArena(d.g, 'collapse')
     return tickScenario(d)
   }
   for (const m of [...minutes].sort((a, b) => a - b)) {
