@@ -6200,6 +6200,8 @@ export const zh: Messages = {
     fourInRow: {
       you: '你',
       bot: '電腦',
+      youStart: '你先手！',
+      starts: (name: string) => `${name} 先手！`,
       yourTurn: '輪到你了！',
       theirTurn: (name: string) => `輪到 ${name}`,
       waitingReady: (name: string) => `等待 ${name}……`,

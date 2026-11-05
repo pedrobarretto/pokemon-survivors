@@ -6206,6 +6206,8 @@ export const es: Messages = {
     fourInRow: {
       you: 'Tú',
       bot: 'Bot',
+      youStart: '¡Empiezas tú!',
+      starts: (name: string) => `¡Empieza ${name}!`,
       yourTurn: '¡Tu turno!',
       theirTurn: (name: string) => `Turno de ${name}`,
       waitingReady: (name: string) => `Esperando a ${name}...`,

@@ -6634,6 +6634,8 @@ export const pt = {
     fourInRow: {
       you: 'Você',
       bot: 'Bot',
+      youStart: 'Você começa!',
+      starts: (name: string) => `${name} começa!`,
       yourTurn: 'Sua vez!',
       theirTurn: (name: string) => `Vez de ${name}`,
       waitingReady: (name: string) => `Esperando ${name}...`,

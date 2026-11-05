@@ -3017,7 +3017,7 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * fakes only the API (`fakeRealm`), `('city', 'cerulean')` goes straight into
  * a city, `('walk', '110,280')` walks the trainer to a point of its room (as a
  * tap would: scripted shots get to a spot, like the café's game tables),
- * `('table', 'cafe-2')` sends two bots to play at a game table; no argument
+ * `('table', 'cafe-2 fourInRow')` sends two bots to play at a game table (the game optional); no argument
  * prints the state.
  */
 const devRealm = (cmd?: string, arg?: string) => {
@@ -3033,9 +3033,11 @@ const devRealm = (cmd?: string, arg?: string) => {
       return realmDevState()
     case 'city':
       return isCityId(arg) ? enterRealm(arg) : 'ps.realm: city id (pallet, cerulean…)'
-    case 'table':
-      // `ps.realm('table', 'cafe-2')`: two bots go and play there (to watch, or take a seat when one stands).
-      return `${stageRealmTable(arg ?? 'cafe-2')} bots on their way`
+    case 'table': {
+      // `ps.realm('table', 'cafe-2 fourInRow')`: two bots go and play there (to watch, or take a seat when one stands); the game is optional.
+      const [table, game] = (arg ?? 'cafe-2').split(' ')
+      return `${stageRealmTable(table ?? 'cafe-2', game)} bots on their way`
+    }
     case 'walk': {
       // `ps.realm('walk', '110,280')`: the trainer walks there as a tap would (a straight walk, sliding along what's in the way).
       const [x, y] = (arg ?? '').split(',').map(Number)

@@ -61,8 +61,8 @@ export type LocalRealm = {
   socket: (url: string, on: SocketHandlers) => SocketLike
   /** The bots' avatar ids (once seated), for a test or a dev hook. */
   bots: () => number[]
-  /** Dev: sends two bots (of the table's room or the rooms next door) to sit at a town game table (`ps.realm('table', 'cafe-2')`); how many went. */
-  stage: (table: string) => number
+  /** Dev: sends two bots (of the table's room or the rooms next door) to sit at a town game table (`ps.realm('table', 'cafe-2')`), at `game` if it's free (one of the spot's at random by default); how many went. */
+  stage: (table: string, game?: string) => number
   /** Stops the bots and the beat, and closes every socket. */
   dispose: () => void
 }
@@ -95,8 +95,11 @@ type Bot = {
   actAt: number | null
   /** When it sat down at a table nobody else sits at (it gives up waiting after a while). */
   aloneSince: number | null
-  /** A table it was sent to (`stage`), through the rooms on the way. */
+  /** A table it was sent to (`stage`), through the rooms on the way, and the game it opens there. */
   stage: string | null
+  stageGame: string | null
+  /** The game it opens a free table with. */
+  sitGame: string | null
 }
 
 type FakeSocket = { id: ConnId; on: SocketHandlers; open: boolean }
@@ -324,6 +327,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
       }
     }
     const table = staged ? staged.spot : tableToSit(bot)
+    bot.sitGame = staged ? bot.stageGame : null
     if (staged) bot.stage = null
     if (table?.id && clearPath(bot.room, from, table.at)) {
       bot.target = { ...table.at }
@@ -436,7 +440,8 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
       if (door) step(() => message(state, bot.conn, { t: 'go', room: door.to, x: door.spawn.x, y: door.spawn.y }, t))
       const table = bot.sitAt
       bot.sitAt = null
-      if (table && !door) step(() => message(state, bot.conn, { t: 'sit', table, game: pick(['fourInRow', 'typeDuel'] as const) }, t))
+      const game = bot.sitGame ?? pick(['fourInRow', 'typeDuel'] as const)
+      if (table && !door) step(() => message(state, bot.conn, { t: 'sit', table, game }, t))
       return
     }
     bot.x = Math.round(bot.x + (dx / dist) * stride)
@@ -452,7 +457,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     identities.set(userId, { userId, handle, partner: pick(PLAYABLE_IDS), shiny: random() < 0.1, look: look(), supporter: random() < 0.15 ? pick(['supporter', 'gold', 'diamond']) : null })
     const conn = `bot-${nextConn++}`
     const t = now()
-    bots.set(conn, { conn, userId, id: null, room: 'plaza', x: 0, y: 0, facing: 0, moving: false, target: null, door: null, restUntil: t + between(0, 3_000), talkAt: t + between(2_000, 20_000), emoteAt: t + between(4_000, 25_000), pingAt: t + 10_000, tables: new Map(), sitAt: null, actAt: null, aloneSince: null, stage: null })
+    bots.set(conn, { conn, userId, id: null, room: 'plaza', x: 0, y: 0, facing: 0, moving: false, target: null, door: null, restUntil: t + between(0, 3_000), talkAt: t + between(2_000, 20_000), emoteAt: t + between(4_000, 25_000), pingAt: t + 10_000, tables: new Map(), sitAt: null, actAt: null, aloneSince: null, stage: null, stageGame: null, sitGame: null })
     connect(state, conn, opts.city, t)
     step(() => hello(state, conn, { t: 'hello', v: 1, city: opts.city, token: userId, room: 'plaza' }, userId, t))
   }
@@ -511,12 +516,12 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     disposed = true
   }
 
-  const stage = (table: string) => {
+  const stage = (table: string, game?: string) => {
     const at = stagedSpot(table)
     if (!at) return 0
     const near = (b: Bot) => b.room === at.room || (isTownRoomId(b.room) && REALM_ROOMS[b.room].doors.some((d) => d.to === at.room))
     const sent = [...bots.values()].filter((b) => b.id !== null && !seatedAt(b) && near(b)).sort((a, b) => Number(b.room === at.room) - Number(a.room === at.room)).slice(0, 2)
-    for (const b of sent) Object.assign(b, { stage: table, target: null, door: null, restUntil: 0 })
+    for (const b of sent) Object.assign(b, { stage: table, stageGame: game ?? null, target: null, door: null, restUntil: 0 })
     return sent.length
   }
 

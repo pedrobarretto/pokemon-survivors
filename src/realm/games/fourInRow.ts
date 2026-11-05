@@ -42,6 +42,8 @@ const TABLE_Y = BOARD_Y + BOARD_H + RIM + 2
 /** The drop: px/s² down, how much of its speed a bounce keeps, and the bounce that settles it. */
 const FALL = { gravity: 1500, bounce: 0.28, rest: 40 }
 const HIT_PAUSE = 0.05
+/** How long a match's opening word shows who drops first (s). */
+const START_SECONDS = 1.6
 const SHAKE = 0.14
 
 /* ---------------- Art ---------------- */
@@ -229,6 +231,9 @@ const label = (text: string, color: string): PixelSprite => {
 
 const centered = (g: CanvasRenderingContext2D, s: PixelSprite, x: number, y: number) => g.drawImage(s, Math.round(x - s.width / 2), Math.round(y - s.height / 2))
 
+/** A line of text centered at (`x`, `y`), kept whole inside the canvas (Chinese is drawn taller). */
+const banner = (g: CanvasRenderingContext2D, s: PixelSprite, x: number, y: number) => centered(g, s, x, Math.min(Math.max(y, s.height / 2), H - s.height / 2))
+
 /* ---------------- The screen ---------------- */
 
 /** A token on its way down: its cell, seat, height (center y) and speed; `sure` once the table shows it. */
@@ -265,6 +270,8 @@ const start = (ctx: TableCtx): TableRun => {
   /** When the line was first seen (s), for the flash and the confetti. */
   let wonAt: number | null = null
   let turnAt: number | null = null
+  /** When this match's first drop was announced (s), and the match it was for (its view). */
+  let startAt: number | null = null
   let ticked = -1
   let lastPhase: TableView['phase'] | null = null
   const loaded = new Set<number>()
@@ -319,6 +326,10 @@ const start = (ctx: TableCtx): TableRun => {
     if (!next || next.moves === 0) {
       fall = null
       wonAt = null
+      if (next && tb.phase === 'playing') {
+        startAt = clock
+        sound('select')
+      }
       return
     }
     if (fall && board[fall.cell] === fall.seat) fall.sure = true
@@ -529,16 +540,23 @@ const start = (ctx: TableCtx): TableRun => {
       g.fillRect(Math.round(b.x), Math.round(b.y), b.size, b.size)
     }
 
-    // The word of the moment: your turn (as it comes), the four, waiting on the other's rematch.
-    const banner = (text: string, color: string, y: number) => centered(g, label(text, color), W / 2, y)
-    if (turnAt !== null && time - turnAt < 1.4 && Math.floor((time - turnAt) * 8) % 8 !== 7) banner(ft().yourTurn, '#f8e070', BOARD_Y + BOARD_H / 2 - Math.max(0, Math.round((0.12 - (time - turnAt)) * 80)))
-    if (wonAt !== null && state?.line && time - wonAt < 1.6) banner(ft().four, '#f8e070', BOARD_Y + BOARD_H / 2)
-    if (wonAt !== null && tb?.phase === 'over' && !state?.line && tb.result?.winner === null && time - wonAt < 1.6) banner(ft().draw, '#f8f8f8', BOARD_Y + BOARD_H / 2)
+    const say = (text: string, color: string, y: number) => banner(g, label(text, color), W / 2, y)
+    // The word of the moment: who starts, your turn (as it comes), the four, waiting on the other's rematch.
+    const opening = startAt !== null && time - startAt < START_SECONDS && state !== null && state.moves === 0
+    if (opening && state) {
+      const first = sitter(tb, state.first)
+      const mine = seat === state.first
+      const name = first === BOT ? ft().bot : first?.handle ? `@${first.handle}` : ft().you
+      if (Math.floor((time - (startAt ?? 0)) * 8) % 10 !== 9) say(mine ? ft().youStart : ft().starts(name), '#f8e070', BOARD_Y + BOARD_H / 2)
+    }
+    if (!opening && turnAt !== null && time - turnAt < 1.4 && Math.floor((time - turnAt) * 8) % 8 !== 7) say(ft().yourTurn, '#f8e070', BOARD_Y + BOARD_H / 2 - Math.max(0, Math.round((0.12 - (time - turnAt)) * 80)))
+    if (wonAt !== null && state?.line && time - wonAt < 1.6) say(ft().four, '#f8e070', BOARD_Y + BOARD_H / 2)
+    if (wonAt !== null && tb?.phase === 'over' && !state?.line && tb.result?.winner === null && time - wonAt < 1.6) say(ft().draw, '#f8f8f8', BOARD_Y + BOARD_H / 2)
     if (tb?.phase === 'over' && seat !== null && tb.seats[seat] !== null && tb.ready.includes(tb.seats[seat]!)) {
       const other = sitter(tb, 1 - seat)
-      if (other) banner(ft().waitingReady(other === BOT ? ft().bot : other.handle ? `@${other.handle}` : ft().you), '#f8f8f8', BOARD_Y + BOARD_H / 2)
+      if (other) say(ft().waitingReady(other === BOT ? ft().bot : other.handle ? `@${other.handle}` : ft().you), '#f8f8f8', BOARD_Y + BOARD_H / 2)
     }
-    if (myTurn() && state && state.moves < 2 && (turnAt === null || time - turnAt >= 1.4)) banner(ft().tap, '#f8f8f8', TABLE_Y + 9)
+    if (myTurn() && state && state.moves < 2 && (turnAt === null || time - turnAt >= 1.4)) say(ft().tap, '#f8f8f8', TABLE_Y + 9)
   }
 
   return { step, draw }
