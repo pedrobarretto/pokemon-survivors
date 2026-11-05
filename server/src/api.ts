@@ -27,6 +27,7 @@ import { giftStore } from './gifts'
 import { moderationStore } from './moderation'
 import { patreonOAuth } from './patreon'
 import { rankingStore } from './ranking'
+import { discordStaffChannel, realmStore } from './realm'
 import { staffDesk } from './staffDesk'
 import { supporterStore } from './supporters'
 import { suggestionStore } from './suggestions'
@@ -103,6 +104,8 @@ const app = createApp({
   moderation: moderationStore(sql),
   arena,
   coop: coopBoardStore(sql),
+  // Realm reports go to the staff's #mod-chat when the bot is set up (stored either way).
+  realm: realmStore(sql, { staff: env.discord ? discordStaffChannel(env.discord) : null }),
   arenaReportSecret: env.arenaReportSecret,
   patreon: env.patreon ? patreonOAuth(env.patreon) : null,
   webhooks: {

@@ -12,9 +12,10 @@ import { addDays, type DayKey } from './day'
  * Why the ledger moved: a pack bought, a Patreon charge, an Arena match
  * (`play`), the day's first long run (`run`), five such days in a week
  * (`week`), a cosmetic bought, a refund or dispute taking a pack back, a
- * dispute won giving it back, a grant by hand.
+ * dispute won giving it back, a grant by hand, a piece of furniture bought
+ * at the Poké Realm's carpentry (`furniture`).
  */
-export const GEM_REASONS = ['pack', 'patreon', 'play', 'run', 'week', 'buy', 'refund', 'dispute', 'disputeWon', 'grant'] as const
+export const GEM_REASONS = ['pack', 'patreon', 'play', 'run', 'week', 'buy', 'refund', 'dispute', 'disputeWon', 'grant', 'furniture'] as const
 
 export type GemReason = (typeof GEM_REASONS)[number]
 

@@ -36,8 +36,8 @@ export const WEARABLE_SLOTS = ['head', 'back'] as const satisfies readonly Cosme
 
 export type WearableSlot = (typeof WEARABLE_SLOTS)[number]
 
-/** The modes a look shows in: a run (solo or co-op, the Dojo and Legend mode too) and the Arena. A new mode is a new entry here and in `SLOT_MODES`. */
-export const COSMETIC_MODES = ['run', 'arena'] as const
+/** The modes a look shows in: a run (solo or co-op, the Dojo and Legend mode too), the Arena and the Poké Realm (`net/realm.ts`). A new mode is a new entry here and in `SLOT_MODES`. */
+export const COSMETIC_MODES = ['run', 'arena', 'realm'] as const
 
 export type CosmeticMode = (typeof COSMETIC_MODES)[number]
 
@@ -46,9 +46,10 @@ const EVERYWHERE = COSMETIC_MODES
 /**
  * Where each slot shows. What's worn, the trail, the title and the plate go
  * everywhere; the spawn, KO and goal effects and the emote need
- * moments only the Arena has (a respawn, a knock-out of a rival, a goal, the
- * emote's tick entry), so they show there alone for now. The shop says so on
- * an item whose slot doesn't show everywhere (`arenaOnly`).
+ * moments only the Arena has (a respawn, a knock-out of a rival, a goal), so
+ * they show there alone for now; the emote also plays in the Poké Realm (its
+ * `emote` message, `look`). The shop says so on an item whose slot doesn't
+ * show in a run (`arenaOnly`).
  */
 export const SLOT_MODES: Readonly<Record<CosmeticSlot, readonly CosmeticMode[]>> = {
   head: EVERYWHERE,
@@ -59,7 +60,7 @@ export const SLOT_MODES: Readonly<Record<CosmeticSlot, readonly CosmeticMode[]>>
   spawn: ['arena'],
   ko: ['arena'],
   goal: ['arena'],
-  emote: ['arena'],
+  emote: ['arena', 'realm'],
 }
 
 /** What a catalog entry is: a slot's, or a skin (`Look.skins`, which shows in every mode). */

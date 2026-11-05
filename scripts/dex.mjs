@@ -63,8 +63,8 @@ export const COMPANIONS = [710]
  * wave bosses, they never roll shiny (the ones the horde has come with its shinies).
  */
 export const HALLOWEEN_BOSSES = [778, 354, 302, 426, 429, 229, 94, 609, 711, 709, 430, 477]
-/** The lobby's shopkeepers (render/plaza.ts): Kecleon (and its purple brother, recolored from the same sheets), and Leavanny, the Boutique's tailor. */
-export const SHOPKEEPERS = [352, 542]
+/** The lobby's shopkeepers (render/plaza.ts): Kecleon (and its purple brother, recolored from the same sheets), Leavanny, the Boutique's tailor, and Bibarel, the carpentry's carpenter. */
+export const SHOPKEEPERS = [352, 542, 400]
 export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
@@ -210,6 +210,8 @@ export const EMOTIONS = {
   291: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
   // Leavanny, the Boutique's tailor (render/plaza.ts).
   542: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
+  // Bibarel, the carpentry's carpenter (render/plaza.ts): SpriteCollab only has its Normal portrait.
+  400: ['Normal'],
 }
 
 export const pad = (n) => String(n).padStart(4, '0')

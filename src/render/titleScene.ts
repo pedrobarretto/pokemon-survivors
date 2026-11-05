@@ -3,7 +3,7 @@ import { blitCentered, blitEllipse } from '../engine/pixelart'
 import { chance, createRng, pick, range, weightedPick, type Rng } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
 import { STARTER_IDS, starterDex } from '../data/starters'
-import { TAILOR } from '../data/visitors'
+import { CARPENTER, TAILOR } from '../data/visitors'
 import { EMOTES, type Emote } from './art'
 import { createCompanion, drawCompanion, stepCompanion, type CompanionView } from './companion'
 import { drawSparkles, shadow } from './draw'
@@ -136,7 +136,7 @@ export type Partner = {
 }
 
 /** Where the camera rests when nobody strolls: the partner's home, the Kecleon plaza (the shop, or Leavanny's Boutique on its north-west), the Dojo or the Estádio. */
-export type Place = 'home' | 'plaza' | 'boutique' | 'dojo' | 'stadium'
+export type Place = 'home' | 'plaza' | 'boutique' | 'carpentry' | 'dojo' | 'stadium'
 
 /** Who the partner can talk to in the meadow: the plaza's keepers and visitors, Machoke at the Dojo, or Ninjask and the boards at the Estádio. */
 export type LobbyNpc = PlazaNpc | 'sensei' | StadiumNpc
@@ -336,6 +336,7 @@ export const exploreMeadow = (s: TitleScene, on: boolean, w: number, h: number) 
 const restCam = (s: TitleScene, place: Place, w: number, h: number): Vec =>
   place === 'plaza' ? plazaFrame(s.plaza, w, h)
   : place === 'boutique' ? lotFrame(s.plaza, 'boutique', w, h)
+  : place === 'carpentry' ? lotFrame(s.plaza, 'carpentry', w, h)
   : place === 'dojo' ? dojoFrame(s.dojo, w, h)
   : place === 'stadium' ? stadiumFrame(s.stadium, w, h)
   : { x: Math.round(s.home.x - w / 2), y: Math.round(s.home.y - h / 2) }
@@ -346,6 +347,7 @@ const easeInOut = (k: number) => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 
 const tripGoal = (s: TitleScene, p: Partner, place: Place) =>
   place === 'plaza' ? shopSpot(s.plaza)
   : place === 'boutique' ? lotSpot(s.plaza, 'boutique')
+  : place === 'carpentry' ? lotSpot(s.plaza, 'carpentry')
   : place === 'dojo' ? senseiSpot(s.dojo)
   : place === 'stadium' ? judgeSpot(s.stadium)
   : p.home
@@ -400,6 +402,10 @@ const arrive = (s: TitleScene, to: Place) => {
   if (to === 'boutique') {
     greetShopkeeper(s.plaza, 'boutique', s.time)
     cry(s, TAILOR.dex)
+  }
+  if (to === 'carpentry') {
+    greetShopkeeper(s.plaza, 'carpentry', s.time)
+    cry(s, CARPENTER.dex)
   }
   // A camouflaged Kecleon keeps still and quiet until it's talked to (`revealShopkeeper`).
   if (to === 'plaza' && !s.plaza.hidden) {

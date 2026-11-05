@@ -7,9 +7,9 @@ import { OVAL, squarePlan, type Halves, type Pad, type PlazaFestival, type Plaza
 /** The painted height of `festival-gate.png`, posts to Poké Ball. */
 const GATE_H = 103
 
-/** The painted half widths of `shop-lv1.png` … `shop-lv5.png` and `boutique.png`, as `measure` finds them. */
+/** The painted half widths of `shop-lv1.png` … `shop-lv5.png`, `boutique.png` and `carpentry.png`, as `measure` finds them. */
 const SHOP_HALVES = { 1: 34, 2: 68, 3: 68, 4: 84, 5: 84 } as const satisfies Record<ShopLevel, number>
-const halvesAt = (level: ShopLevel): Halves => ({ shop: SHOP_HALVES[level], lots: { boutique: 53 } })
+const halvesAt = (level: ShopLevel): Halves => ({ shop: SHOP_HALVES[level], lots: { boutique: 53, carpentry: 60 } })
 
 const LEVELS: readonly ShopLevel[] = [1, 2, 3, 4, 5]
 const STAGES: readonly PlazaStage[] = [0, 1, 2, 3, 4]

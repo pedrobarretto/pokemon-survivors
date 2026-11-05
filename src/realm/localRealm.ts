@@ -1,0 +1,583 @@
+import {
+  REALM_CLOSE,
+  connect,
+  createRealm,
+  disconnect,
+  hello,
+  message,
+  parseRealmMessage,
+  tick,
+  visited,
+  identified,
+  type ConnId,
+  type RealmEffect,
+  type RealmState,
+} from '../../relay/src/realm'
+import { COSMETIC_IDS, slotOf, type CosmeticSlot } from '../data/cosmetics'
+import { PLAYABLE_IDS } from '../data/hatchlings'
+import { REALM_ROOMS, isTownRoomId, type Door, type Point, type Shape, type Spot, type TownRoomId } from '../data/realmMap'
+import { tableAt } from '../../relay/src/realmTables'
+import type { TableView } from '../net/realmTables'
+import { REALM, REALM_LINES, REALM_EMOTES, type CityId, type Facing, type RealmIdentity, type RealmServerMessage, type RoomKey } from '../net/realm'
+import type { SocketHandlers, SocketLike } from '../coop/client'
+import { dir8 } from '../engine/math'
+
+/**
+ * The Poké Realm inside the tab: the relay's own machine (`relay/src/realm.ts`,
+ * the one the VPS relay runs) behind a fake socket, with bots that walk, talk,
+ * emote and answer party invites, and made-up identities (the API's part), so
+ * the realm's screen works with no relay and no API (`ps.realm('local')`).
+ *
+ * `startLocalRealm({ city, bots })` → `{ socket, dispose }`: open the client's
+ * socket with `socket(url, handlers)` (any url ending in `realmPath(city)`,
+ * e.g. `LOCAL_REALM_URL + realmPath(city)`), as `coop/localRelay.ts`'s. Its
+ * hello's token is read unverified (a Clerk token's `sub`, or the token
+ * itself): the player is `me` (handle, partner, look), every other account a
+ * bot. Every base may be visited. The bots sit at the rooms' game tables too
+ * (they come over to a seat someone waits at) and play with the game's own
+ * bot (`TableRules.bot`).
+ */
+
+export const LOCAL_REALM_URL = 'local://realm'
+
+/** Timers, injected for tests (the globals by default). */
+export type RealmTimers = { set: (fn: () => void, ms: number) => unknown; clear: (handle: unknown) => void; every: (fn: () => void, ms: number) => unknown; stop: (handle: unknown) => void }
+
+export type LocalRealmOptions = {
+  city: CityId
+  /** Bots walking the town, at most `REALM.cityCap - 1`. */
+  bots: number
+  /** The player's identity (what the API would vouch for); a made-up trainer by default. */
+  me?: Partial<Omit<RealmIdentity, 'userId'>>
+  /** Uniform in [0, 1): the bots' names, looks and walks. */
+  random?: () => number
+  now?: () => number
+  timers?: RealmTimers
+  /** The machine's events (`realm.seated`…), for the console; dropped by default. */
+  log?: (ev: string, data: Record<string, unknown>) => void
+}
+
+export type LocalRealm = {
+  socket: (url: string, on: SocketHandlers) => SocketLike
+  /** The bots' avatar ids (once seated), for a test or a dev hook. */
+  bots: () => number[]
+  /** Dev: sends two bots (of the table's room or the rooms next door) to sit at a town game table (`ps.realm('table', 'cafe-2')`), at `game` if it's free (one of the spot's at random by default); how many went. */
+  stage: (table: string, game?: string) => number
+  /** Stops the bots and the beat, and closes every socket. */
+  dispose: () => void
+}
+
+const BOT_NAMES = ['misty', 'brock', 'dawn', 'gary', 'iris', 'cilan', 'serena', 'clemont', 'lillie', 'hop', 'nemona', 'arven', 'may', 'max', 'tracey', 'bea', 'marnie', 'leon', 'kiawe', 'mallow']
+
+/** A bot's walk, as a fraction of `REALM.speed`. */
+const BOT_PACE = 0.55
+
+/** A bot's mind: where it is, where it's headed and when it next speaks. */
+type Bot = {
+  conn: ConnId
+  userId: string
+  id: number | null
+  room: RoomKey
+  x: number
+  y: number
+  facing: Facing
+  moving: boolean
+  target: Point | null
+  /** A door it's walking to (its room and spawn), or null. */
+  door: { to: TownRoomId; spawn: Point } | null
+  restUntil: number
+  /** Walking to an arcade cabinet (`cabinet` spot) to play it there, or playing it (`at`). */
+  arcade: 'going' | 'at' | null
+  talkAt: number
+  emoteAt: number
+  pingAt: number
+  /** The game tables of its room as it last heard them, the table spot it's walking to, and when it next acts at the one it sits at. */
+  tables: Map<string, TableView>
+  sitAt: string | null
+  actAt: number | null
+  /** When it sat down at a table nobody else sits at (it gives up waiting after a while). */
+  aloneSince: number | null
+  /** A table it was sent to (`stage`), through the rooms on the way, and the game it opens there. */
+  stage: string | null
+  stageGame: string | null
+  /** The game it opens a free table with. */
+  sitGame: string | null
+  /** A fishing spot it's walking to, and whether it stands fishing there now (`act`) until its rest ends. */
+  fishAt?: Spot | null
+  fishing?: boolean
+}
+
+type FakeSocket = { id: ConnId; on: SocketHandlers; open: boolean }
+
+/** A Clerk session token's `sub`, unverified (nobody to keep out of the player's own tab), else the token itself. */
+const userIdOf = (token: string): string | null => {
+  try {
+    const part = token.split('.')[1]
+    if (part) {
+      const payload: unknown = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/')))
+      if (typeof payload === 'object' && payload !== null && 'sub' in payload && typeof payload.sub === 'string') return payload.sub
+    }
+  } catch {
+    /* not a JWT: the token itself names the player */
+  }
+  return token.length > 0 ? token : null
+}
+
+const inShape = (s: Shape, x: number, y: number, pad: number) =>
+  s.kind === 'rect' ? x >= s.x - pad && x <= s.x + s.w + pad && y >= s.y - pad && y <= s.y + s.h + pad : ((x - s.x) / (s.rx + pad)) ** 2 + ((y - s.y) / (s.ry + pad)) ** 2 <= 1
+
+/** Whether a straight walk from `a` to `b` in a town room stays clear of its solids. */
+const clearPath = (room: TownRoomId, a: Point, b: Point) => {
+  const steps = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 6)
+  for (let i = 0; i <= steps; i++) {
+    const x = a.x + ((b.x - a.x) * i) / Math.max(1, steps)
+    const y = a.y + ((b.y - a.y) * i) / Math.max(1, steps)
+    if (REALM_ROOMS[room].solid.some((s) => inShape(s, x, y, 8))) return false
+  }
+  return true
+}
+
+/**
+ * A door's mouth: its middle, and the point a little inside the room before
+ * it (what a bot checks its walk to, since a door's middle may sit against
+ * the wall it's cut in).
+ */
+const mouth = (room: TownRoomId, door: Door) => {
+  const to = { x: door.at.x + door.at.w / 2, y: door.at.y + door.at.h / 2 }
+  const { w, h } = REALM_ROOMS[room]
+  const dx = w / 2 - to.x
+  const dy = h / 2 - to.y
+  const d = Math.hypot(dx, dy) || 1
+  return { to, front: { x: to.x + (dx / d) * 18, y: to.y + (dy / d) * 18 } }
+}
+
+/** The facing (`Dir8` rows: 0 down, clockwise) of a step. */
+const facingOf = (dx: number, dy: number): Facing => dir8(dx, dy)
+
+/** The in-page realm (`LocalRealm`). */
+export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
+  const random = opts.random ?? Math.random
+  const now = opts.now ?? Date.now
+  const timers: RealmTimers = opts.timers ?? {
+    set: (fn, ms) => setTimeout(fn, ms),
+    clear: (h) => clearTimeout(h as ReturnType<typeof setTimeout>),
+    every: (fn, ms) => setInterval(fn, ms),
+    stop: (h) => clearInterval(h as ReturnType<typeof setInterval>),
+  }
+  const pick = <T>(xs: readonly T[]): T => xs[Math.floor(random() * xs.length)]!
+  const between = (a: number, b: number) => a + random() * (b - a)
+
+  const state: RealmState = createRealm('sa', now())
+  const sockets = new Map<ConnId, FakeSocket>()
+  const identities = new Map<string, RealmIdentity>()
+  const bots = new Map<ConnId, Bot>()
+  let nextConn = 1
+  let disposed = false
+
+  /* ---------- Delivery: one ordered queue, flushed on a later task ---------- */
+
+  const queue: (() => void)[] = []
+  let flushing: unknown = null
+  const later = (fn: () => void) => {
+    queue.push(fn)
+    flushing ??= timers.set(() => {
+      flushing = null
+      for (const fn of queue.splice(0)) {
+        try {
+          fn()
+        } catch (err) {
+          console.error('[localRealm] handler failed', err)
+        }
+      }
+    }, 0)
+  }
+
+  const shut = (ws: FakeSocket, code: number) => {
+    sockets.delete(ws.id)
+    later(() => {
+      if (!ws.open) return
+      ws.open = false
+      ws.on.close(code)
+    })
+  }
+
+  /* ---------- The machine's effects ---------- */
+
+  const look = (): RealmIdentity['look'] => {
+    const out: Partial<Record<CosmeticSlot, string>> = {}
+    for (const slot of ['head', 'back', 'emote', 'title', 'plate', 'trail'] as const) {
+      if (random() < (slot === 'head' ? 0.5 : 0.2)) out[slot] = pick(COSMETIC_IDS.filter((id) => slotOf(id) === slot))
+    }
+    return out
+  }
+
+  const meFor = (userId: string): RealmIdentity => ({
+    userId,
+    handle: opts.me?.handle ?? 'you',
+    partner: opts.me?.partner ?? 'charmander',
+    shiny: opts.me?.shiny ?? false,
+    look: opts.me?.look ?? {},
+    supporter: opts.me?.supporter ?? null,
+  })
+
+  const apply = (effects: readonly RealmEffect[]) => {
+    const texts = new Map<RealmServerMessage, string>()
+    for (const e of effects) {
+      if (e.k === 'send') {
+        const bot = bots.get(e.to)
+        if (bot) hear(bot, e.msg)
+        const ws = sockets.get(e.to)
+        if (!ws) continue
+        const text = texts.get(e.msg) ?? JSON.stringify(e.msg)
+        texts.set(e.msg, text)
+        later(() => ws.open && ws.on.message(text))
+      } else if (e.k === 'close') {
+        const ws = sockets.get(e.to)
+        bots.delete(e.to)
+        if (ws) shut(ws, REALM_CLOSE[e.why])
+        later(() => step(() => disconnect(state, e.to, now())))
+      } else if (e.k === 'identify') {
+        const identities_ = Object.fromEntries(e.userIds.map((id) => [id, identities.get(id) ?? meFor(id)]))
+        later(() => step(() => identified(state, e.ask, { identities: identities_, banned: [] }, now())))
+      } else if (e.k === 'visit') later(() => step(() => visited(state, e.ask, { allowed: true }, now())))
+      else if (e.k === 'event') opts.log?.(e.ev, e.data)
+      // `presence`: no API in the tab.
+    }
+  }
+
+  const step = (fn: () => readonly RealmEffect[]) => {
+    if (!disposed) apply(fn())
+  }
+
+  /* ---------- Bots ---------- */
+
+  /** What a bot hears from the machine: where it stands, the tables, and invites to answer. */
+  const hear = (bot: Bot, msg: RealmServerMessage) => {
+    if (msg.t === 'tables') {
+      bot.tables = new Map(msg.tables.map((tb) => [tb.id, tb]))
+      return
+    }
+    if (msg.t === 'table') {
+      if (msg.table.seats.every((s) => s === null)) bot.tables.delete(msg.table.id)
+      else bot.tables.set(msg.table.id, msg.table)
+      return
+    }
+    if (msg.t === 'welcome' || msg.t === 'room') {
+      bot.id = msg.t === 'welcome' ? msg.you : bot.id
+      bot.room = msg.room
+      const me = msg.avatars.find((a) => a.id === bot.id)
+      if (me) {
+        bot.x = me.x
+        bot.y = me.y
+      }
+      bot.target = null
+      bot.door = null
+      bot.sitAt = null
+    } else if (msg.t === 'snap') {
+      bot.x = msg.x
+      bot.y = msg.y
+      bot.target = null
+      bot.door = null
+      bot.sitAt = null
+    } else if (msg.t === 'invited') {
+      const yes = random() < 0.7
+      timers.set(() => step(() => message(state, bot.conn, { t: 'answer', from: msg.from, yes }, now())), between(800, 2500))
+    }
+  }
+
+  /** A town game table's spot and room, by its id. */
+  const stagedSpot = (id: string): { room: TownRoomId; spot: Spot } | null => {
+    for (const room of Object.keys(REALM_ROOMS).filter(isTownRoomId)) {
+      const spots: readonly Spot[] = REALM_ROOMS[room].spots
+      const spot = spots.find((s) => s.kind === 'gameTable' && s.id === id)
+      if (spot) return { room, spot }
+    }
+    return null
+  }
+
+  /** The table the bot sits at (its id and view), if any. */
+  const seatedAt = (bot: Bot): TableView | null => [...bot.tables.values()].find((tb) => bot.id !== null && tb.seats.includes(bot.id)) ?? null
+
+  /**
+   * A game table to walk to: one where someone waits for an opponent (most
+   * of the time), or now and then a free one to wait at.
+   */
+  const tableToSit = (bot: Bot): Spot | null => {
+    if (!isTownRoomId(bot.room)) return null
+    const spots: readonly Spot[] = REALM_ROOMS[bot.room].spots
+    const tables = spots.filter((s) => s.kind === 'gameTable' && s.id)
+    const waiting = tables.filter((s) => {
+      const tb = bot.tables.get(s.id ?? '')
+      return tb !== undefined && tb.seats.includes(null) && tb.seats.some((x) => x !== null)
+    })
+    if (waiting.length > 0 && random() < 0.6) return pick(waiting)
+    const free = tables.filter((s) => !bot.tables.has(s.id ?? ''))
+    return free.length > 0 && random() < 0.06 ? pick(free) : null
+  }
+
+  /** A new place to walk to in the bot's room: a game table, a free spot, or (now and then) a door out. */
+  const aim = (bot: Bot) => {
+    if (!isTownRoomId(bot.room)) return
+    const room = REALM_ROOMS[bot.room]
+    const doors: readonly Door[] = room.doors
+    const from = { x: bot.x, y: bot.y }
+    if (bot.arcade === 'at') step(() => message(state, bot.conn, { t: 'act', act: null }, now()))
+    bot.arcade = null
+    const staged = bot.stage ? stagedSpot(bot.stage) : null
+    if (staged && staged.room !== bot.room) {
+      const door = doors.find((d) => d.to === staged.room)
+      if (door) {
+        const { to } = mouth(bot.room, door)
+        bot.target = to
+        bot.door = { to: door.to, spawn: door.spawn }
+        return
+      }
+    }
+    const table = staged ? staged.spot : tableToSit(bot)
+    bot.sitGame = staged ? bot.stageGame : null
+    if (staged) bot.stage = null
+    if (table?.id && clearPath(bot.room, from, table.at)) {
+      bot.target = { ...table.at }
+      bot.sitAt = table.id
+      return
+    }
+    // Someone waits at a table next door: it heads over, more often than not.
+    const tables = [...(state.cities.get(opts.city)?.tables.values() ?? [])]
+    const calling = doors.filter((d) => tables.some((tb) => tb.room === d.to && tb.seats.includes(null)))
+    if (calling.length > 0 && random() < 0.5) {
+      const door = pick(calling)
+      const { to, front } = mouth(bot.room, door)
+      if (clearPath(bot.room, from, front)) {
+        bot.target = to
+        bot.door = { to: door.to, spawn: door.spawn }
+        return
+      }
+    }
+    // Now and then a fishing spot, to fish a while: straight there, or by the way in behind it (the pier's boardwalk).
+    const rods = room.spots.filter((s) => s.kind === 'fishing')
+    if (rods.length > 0 && random() < 0.3) {
+      const spot: Spot = pick(rods)
+      const behind = { x: spot.at.x, y: spot.at.y + (spot.face === 4 ? 58 : -58) }
+      const first = clearPath(bot.room, from, spot.at) ? spot.at : clearPath(bot.room, from, behind) && clearPath(bot.room, behind, spot.at) ? behind : null
+      if (first) {
+        bot.target = { ...first }
+        bot.fishAt = spot
+        return
+      }
+    }
+    // In the arcade, a bot often goes to play a cabinet.
+    const cabinets: readonly Spot[] = room.spots.filter((s) => s.kind === 'cabinet')
+    const cabinet = cabinets.length > 0 ? pick(cabinets) : null
+    if (cabinet && random() < 0.5 && clearPath(bot.room, from, cabinet.at)) {
+      bot.target = cabinet.at
+      bot.arcade = 'going'
+      return
+    }
+    if (doors.length > 0 && random() < 0.12) {
+      const door = pick(doors)
+      const { to, front } = mouth(bot.room, door)
+      if (clearPath(bot.room, from, front)) {
+        bot.target = to
+        bot.door = { to: door.to, spawn: door.spawn }
+        return
+      }
+    }
+    for (let i = 0; i < 12; i++) {
+      const to = { x: Math.round(between(24, room.w - 24)), y: Math.round(between(24, room.h - 24)) }
+      if (clearPath(bot.room, from, to)) {
+        bot.target = to
+        return
+      }
+    }
+  }
+
+  /**
+   * A bot at a table: plays its turn after a think (the game's own bot,
+   * through the machine's match), takes a rematch or stands after one, and
+   * gives up a table nobody comes to.
+   */
+  const playTable = (bot: Bot, tb: TableView, t: number) => {
+    const seat = bot.id === null ? -1 : tb.seats.indexOf(bot.id)
+    const city = state.cities.get(opts.city)
+    if (seat < 0 || !city) return
+    const alone = tb.seats.some((s) => s === null)
+    bot.aloneSince = alone ? (bot.aloneSince ?? t) : null
+    if (alone && t - (bot.aloneSince ?? t) > 45_000) {
+      bot.aloneSince = null
+      bot.restUntil = t + between(2_000, 6_000)
+      return step(() => message(state, bot.conn, { t: 'stand' }, t))
+    }
+    const due = (tb.phase === 'playing' && tb.pending.includes(seat)) || (tb.phase === 'over' && bot.id !== null && !tb.ready.includes(bot.id))
+    if (!due) {
+      bot.actAt = null
+      return
+    }
+    if (bot.actAt === null) bot.actAt = t + (tb.phase === 'over' ? between(2_500, 5_000) : between(900, 2_600))
+    if (t < bot.actAt) return
+    bot.actAt = null
+    if (tb.phase === 'over') return step(() => message(state, bot.conn, random() < 0.75 ? { t: 'ready' } : { t: 'stand' }, t))
+    const match = tableAt(city, bot.room, tb.id)?.match
+    if (match) step(() => message(state, bot.conn, { t: 'play', move: match.bot(seat, Math.floor(random() * 2 ** 31)) }, t))
+  }
+
+  /** One beat of a bot: its table's turn, a step of its walk (or a rest), and now and then a line or an emote. */
+  const think = (bot: Bot, t: number) => {
+    if (bot.id === null) return
+    if (t >= bot.talkAt) {
+      bot.talkAt = t + between(8_000, 25_000)
+      step(() => message(state, bot.conn, { t: 'say', line: pick(REALM_LINES) }, t))
+    }
+    if (t >= bot.emoteAt) {
+      bot.emoteAt = t + between(10_000, 30_000)
+      step(() => message(state, bot.conn, { t: 'emote', emote: pick(REALM_EMOTES.filter((e) => e !== 'look')) }, t))
+    }
+    if (bot.fishing && t >= bot.restUntil) {
+      bot.fishing = false
+      step(() => message(state, bot.conn, { t: 'act', act: null }, t))
+      if (random() < 0.15) step(() => message(state, bot.conn, { t: 'brag', game: 'fishing', feat: pick(['feebas', 'bigHaul']) }, t))
+    }
+    const at = seatedAt(bot)
+    if (at) {
+      bot.target = null
+      if (t >= bot.pingAt) {
+        bot.pingAt = t + 10_000
+        step(() => message(state, bot.conn, { t: 'ping', at: t }, t))
+      }
+      return playTable(bot, at, t)
+    }
+    if (t < bot.restUntil) {
+      if (t >= bot.pingAt) {
+        bot.pingAt = t + 10_000
+        step(() => message(state, bot.conn, { t: 'ping', at: t }, t))
+      }
+      return
+    }
+    if (!bot.target) aim(bot)
+    const target = bot.target
+    if (!target) return
+    const stride = (REALM.speed * BOT_PACE) / REALM.moveHz
+    const dx = target.x - bot.x
+    const dy = target.y - bot.y
+    const dist = Math.hypot(dx, dy)
+    if (dist <= stride) {
+      bot.x = Math.round(target.x)
+      bot.y = Math.round(target.y)
+      bot.target = null
+      bot.moving = false
+      bot.restUntil = t + between(1_000, 6_000)
+      bot.pingAt = t + 10_000
+      if (bot.arcade === 'going') {
+        // At the cabinet: facing it, playing a while.
+        bot.arcade = 'at'
+        bot.facing = 4
+        bot.restUntil = t + between(12_000, 35_000)
+        step(() => message(state, bot.conn, { t: 'act', act: 'arcade' }, t))
+      }
+      step(() => message(state, bot.conn, { t: 'move', x: bot.x, y: bot.y, facing: bot.facing, moving: false }, t))
+      const door = bot.door
+      bot.door = null
+      if (door) step(() => message(state, bot.conn, { t: 'go', room: door.to, x: door.spawn.x, y: door.spawn.y }, t))
+      const table = bot.sitAt
+      bot.sitAt = null
+      const game = bot.sitGame ?? pick(['fourInRow', 'typeDuel'] as const)
+      if (table && !door) step(() => message(state, bot.conn, { t: 'sit', table, game }, t))
+      const fish = bot.fishAt
+      if (fish && (bot.x !== fish.at.x || bot.y !== fish.at.y)) {
+        // Only the way in: on to the spot itself.
+        bot.target = { ...fish.at }
+        bot.restUntil = t
+        return
+      }
+      bot.fishAt = null
+      if (fish) {
+        bot.facing = fish.face ?? bot.facing
+        bot.fishing = true
+        bot.restUntil = t + between(15_000, 40_000)
+        step(() => message(state, bot.conn, { t: 'move', x: bot.x, y: bot.y, facing: bot.facing, moving: false }, t))
+        step(() => message(state, bot.conn, { t: 'act', act: 'fishing' }, t))
+      }
+      return
+    }
+    bot.x = Math.round(bot.x + (dx / dist) * stride)
+    bot.y = Math.round(bot.y + (dy / dist) * stride)
+    bot.facing = facingOf(dx, dy)
+    bot.moving = true
+    step(() => message(state, bot.conn, { t: 'move', x: bot.x, y: bot.y, facing: bot.facing, moving: true }, t))
+  }
+
+  const addBot = (i: number) => {
+    const userId = `bot-${i}`
+    const handle = `${BOT_NAMES[i % BOT_NAMES.length]}${i >= BOT_NAMES.length ? Math.floor(i / BOT_NAMES.length) : ''}`
+    identities.set(userId, { userId, handle, partner: pick(PLAYABLE_IDS), shiny: random() < 0.1, look: look(), supporter: random() < 0.15 ? pick(['supporter', 'gold', 'diamond']) : null })
+    const conn = `bot-${nextConn++}`
+    const t = now()
+    bots.set(conn, { conn, userId, id: null, room: 'plaza', x: 0, y: 0, facing: 0, moving: false, target: null, door: null, arcade: null, restUntil: t + between(0, 3_000), talkAt: t + between(2_000, 20_000), emoteAt: t + between(4_000, 25_000), pingAt: t + 10_000, tables: new Map(), sitAt: null, actAt: null, aloneSince: null, stage: null, stageGame: null, sitGame: null })
+    connect(state, conn, opts.city, t)
+    step(() => hello(state, conn, { t: 'hello', v: 1, city: opts.city, token: userId, room: 'plaza' }, userId, t))
+  }
+
+  for (let i = 0; i < Math.min(opts.bots, REALM.cityCap - 1); i++) addBot(i)
+
+  const beat = timers.every(() => {
+    if (disposed) return
+    const t = now()
+    for (const bot of [...bots.values()]) think(bot, t)
+    step(() => tick(state, t))
+  }, 1000 / REALM.moveHz)
+
+  /* ---------- The socket ---------- */
+
+  const socket = (url: string, on: SocketHandlers): SocketLike => {
+    const city = /\/realm\/([^/]+)\/ws$/.exec(url)?.[1]
+    const ws: FakeSocket = { id: `local-${nextConn++}`, on, open: false }
+    later(() => {
+      if (disposed) return on.close(REALM_CLOSE.refused)
+      ws.open = true
+      if (city !== opts.city) {
+        on.open()
+        later(() => ws.open && on.message(JSON.stringify({ t: 'refused', why: 'city' } satisfies RealmServerMessage)))
+        return shut(ws, REALM_CLOSE.refused)
+      }
+      // Seated before `open`: a client says hello from its open handler, as on a real socket.
+      sockets.set(ws.id, ws)
+      connect(state, ws.id, opts.city, now())
+      on.open()
+    })
+    return {
+      send: (text) => {
+        if (!ws.open || !sockets.has(ws.id)) return
+        const msg = parseRealmMessage(text)
+        const conn = state.conns.get(ws.id)
+        if (msg?.t === 'hello' && conn && conn.avatar === null) return step(() => hello(state, ws.id, msg, userIdOf(msg.token), now()))
+        step(() => message(state, ws.id, msg, now()))
+      },
+      close: () => {
+        if (!ws.open) return
+        const known = sockets.delete(ws.id)
+        ws.open = false
+        if (known) step(() => disconnect(state, ws.id, now()))
+        later(() => on.close(1000))
+      },
+      isOpen: () => ws.open,
+      buffered: () => 0,
+    }
+  }
+
+  const dispose = () => {
+    if (disposed) return
+    timers.stop(beat)
+    for (const ws of [...sockets.values()]) shut(ws, 1001)
+    disposed = true
+  }
+
+  const stage = (table: string, game?: string) => {
+    const at = stagedSpot(table)
+    if (!at) return 0
+    const near = (b: Bot) => b.room === at.room || (isTownRoomId(b.room) && REALM_ROOMS[b.room].doors.some((d) => d.to === at.room))
+    const sent = [...bots.values()].filter((b) => b.id !== null && !seatedAt(b) && near(b)).sort((a, b) => Number(b.room === at.room) - Number(a.room === at.room)).slice(0, 2)
+    for (const b of sent) Object.assign(b, { stage: table, stageGame: game ?? null, target: null, door: null, restUntil: 0 })
+    return sent.length
+  }
+
+  return { socket, bots: () => [...bots.values()].flatMap((b) => (b.id === null ? [] : [b.id])), stage, dispose }
+}

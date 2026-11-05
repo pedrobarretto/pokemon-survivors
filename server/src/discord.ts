@@ -78,7 +78,7 @@ const EPHEMERAL = 1 << 6
 /** How often the daily posts are looked for. */
 const EVERY_MS = 15 * 60_000
 
-const NAMES = {
+export const NAMES = {
   introductions: 'introductions',
   patchNotes: 'patch-notes',
   challenge: 'daily-challenge',

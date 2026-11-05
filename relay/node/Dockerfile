@@ -5,8 +5,9 @@ FROM node:24-alpine AS build
 WORKDIR /repo
 COPY relay/node/package.json relay/node/package-lock.json relay/node/
 RUN npm ci --prefix relay/node
-COPY src/net/protocol.ts src/net/arena.ts src/net/arenaQueue.ts src/net/coopReport.ts src/net/
-COPY src/data/arenaRanked.ts src/data/arenaFormats.ts src/data/
+COPY src/net/protocol.ts src/net/arena.ts src/net/arenaQueue.ts src/net/coopReport.ts src/net/realm.ts src/net/realmRelay.ts src/net/realmTables.ts src/net/
+COPY src/data/arenaRanked.ts src/data/arenaFormats.ts src/data/minigames.ts src/data/realmMap.ts src/data/
+COPY src/realm/games/tables.ts src/realm/games/fourInRow.rules.ts src/realm/games/typeDuel.rules.ts src/realm/games/
 COPY relay/src relay/src
 COPY relay/node relay/node
 # One file (ws included, node:sqlite is built in), and its hash: /health shows it as `version`.

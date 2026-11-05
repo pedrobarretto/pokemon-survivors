@@ -24537,6 +24537,1499 @@ span.arena-hub-face {
   }
 }
 
+/* ---------- Secret bases (ui/baseEditor.ts, ui/baseBoard.ts) and Bibarel's carpentry (ui/carpentry.ts) ---------- */
+
+/* The editor: the room on the left (on top in portrait), the tools and the tray beside it. */
+.base-editor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(10px, var(--safe-t)) max(10px, var(--safe-r)) max(10px, var(--safe-b)) max(10px, var(--safe-l));
+}
+
+.base-panel {
+  width: min(1120px, 100%);
+  height: min(720px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px;
+}
+
+.base-panel > * {
+  flex-shrink: 0;
+}
+
+.base-head .btn.base-visibility,
+.base-head .btn.base-save {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.base-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+}
+
+.base-stage {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #141a2c;
+  border-radius: 8px;
+}
+
+.base-canvas {
+  display: block;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+.base-side {
+  flex: 0 0 min(340px, 38%);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.base-side > :not(.base-tray) {
+  flex-shrink: 0;
+}
+
+.base-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.base-piece {
+  flex: 1 1 100%;
+  font-family: var(--title);
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn.base-tool {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 8px;
+}
+
+.base-count {
+  margin-left: auto;
+  font-family: var(--title);
+  font-size: 8px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.base-status {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 12px;
+  line-height: 1.4;
+  color: color-mix(in srgb, #287028 var(--dk-lift, 100%), #fff);
+}
+
+.base-status.bad {
+  color: color-mix(in srgb, #c02828 var(--dk-lift, 100%), #fff);
+}
+
+.base-tray {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  align-content: start;
+  gap: 6px;
+  padding: 2px;
+}
+
+.base-tray.style {
+  display: block;
+}
+
+.base-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  font: inherit;
+  color: inherit;
+  background: var(--dk-surface-2, #dce0ec);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.base-item:hover,
+.base-item:focus-visible {
+  border-color: #283048;
+}
+
+.base-icon {
+  width: 56px;
+  height: 46px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.base-item-name {
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.base-item-count {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-style: normal;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.base-row-title {
+  margin: 6px 0 4px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-weight: 400;
+}
+
+.base-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.base-swatch {
+  width: 74px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 3px;
+  font: inherit;
+  font-size: 8px;
+  line-height: 1.2;
+  color: inherit;
+  background: var(--dk-surface-2, #dce0ec);
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+
+.base-swatch canvas {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+/* An exterior's pick: its entrance as the grove draws it, a corner of its room tucked under it. */
+.base-entrance {
+  position: relative;
+  display: block;
+  width: 60px;
+  height: 46px;
+}
+
+.base-entrance img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.base-swatch .base-entrance canvas {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 18px;
+  height: 18px;
+}
+
+.base-swatch.on {
+  color: #f8d030;
+  background: #283048;
+}
+
+.base-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 4px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+/* The board of bases and the carpentry are the shop's panel (`.shop-sheet`). */
+.shop-sheet > .base-board-body,
+.shop-sheet > .carpentry-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 2px;
+}
+
+.base-board-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.base-board-sheet .shop-tabs[hidden] {
+  display: none;
+}
+
+.base-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: var(--dk-surface-2, #dce0ec);
+  border-left: 6px solid #8e6a4a;
+  border-radius: 8px;
+}
+
+.base-card.tree {
+  border-left-color: #865a36;
+}
+
+.base-card.bush {
+  border-left-color: #3e8038;
+}
+
+.base-card.sand {
+  border-left-color: #c2a066;
+}
+
+.base-card-face {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  background: #f8f8f0;
+  border: 2px solid #283048;
+  border-radius: 6px;
+}
+
+.base-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.base-card-handle {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.base-card-place,
+.base-card-stats {
+  font-size: 9px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.base-card-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+}
+
+.base-card-actions .btn,
+.base-preview-foot .btn {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 8px;
+}
+
+.btn.base-like.on {
+  color: #fff;
+  background: #e05080;
+}
+
+.base-preview {
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.base-preview-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #141a2c;
+  border-radius: 8px;
+}
+
+.base-preview-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.base-preview-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.base-preview-foot .base-card-stats {
+  flex: 1;
+}
+
+.carpentry-sheet .shop-head .gem-chip {
+  flex-shrink: 0;
+}
+
+/* The catalog's collections: a rail of covers (the most precious piece of each), Club Penguin catalog style. */
+.carpentry-rail {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  padding: 2px 2px 4px;
+}
+
+.carpentry-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.carpentry-set {
+  position: relative;
+  flex: 0 0 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 4px 6px;
+  color: color-mix(in srgb, #505870 var(--dk-lift, 100%), #fff);
+  background: var(--dk-surface-2, #dce0ec);
+  border: 3px solid transparent;
+  border-radius: 8px;
+}
+
+.carpentry-set.on {
+  color: #f8d030;
+  background: #283048;
+}
+
+.carpentry-set-art {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+}
+
+.carpentry-set-icon {
+  max-width: 100%;
+  max-height: 40px;
+  image-rendering: pixelated;
+}
+
+.carpentry-set-name {
+  font-family: var(--title);
+  font-size: 7px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* NOVO: on a fresh piece's card and on its collection's cover. */
+.carpentry-fresh {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  padding: 2px 4px 1px;
+  font-family: var(--title);
+  font-size: 6px;
+  color: #fff;
+  background: #e83838;
+  border-radius: 3px;
+  box-shadow: 0 1px 0 #801818;
+  pointer-events: none;
+}
+
+.carpentry-filters {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+}
+
+.carpentry-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.carpentry-chip {
+  min-height: 30px;
+  padding: 4px 9px;
+  font-family: var(--title);
+  font-size: 7px;
+  color: color-mix(in srgb, #505870 var(--dk-lift, 100%), #fff);
+  background: transparent;
+  border: 2px solid var(--dk-surface-2, #c8cee0);
+  border-radius: 999px;
+}
+
+.carpentry-chip.on {
+  color: #283048;
+  background: #f8d030;
+  border-color: #f8d030;
+}
+
+.carpentry-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0 0 8px;
+}
+
+.carpentry-page-name {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.carpentry-page-count {
+  margin-left: auto;
+  font-size: 9px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-page-blurb {
+  flex-basis: 100%;
+  order: 3;
+  font-size: 10px;
+  line-height: 1.4;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
+}
+
+.carpentry-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 6px 8px;
+  text-align: center;
+  color: inherit;
+  background: var(--dk-surface-2, #dce0ec);
+  border: 2px solid transparent;
+  border-radius: 8px;
+}
+
+.carpentry-card:focus-visible,
+.carpentry-card:hover {
+  border-color: #f8d030;
+}
+
+.carpentry-card.rare {
+  box-shadow: inset 0 -3px 0 #58a8f8;
+}
+
+.carpentry-card.epic {
+  box-shadow: inset 0 -3px 0 #b868f0;
+}
+
+.carpentry-card.legendary {
+  box-shadow: inset 0 -3px 0 #e0b030;
+}
+
+/* The piece in its corner of a room (`piecePreview`), framed like a window into the base. */
+.carpentry-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 78px;
+  overflow: hidden;
+  background: #43291a;
+  border: 2px solid #20263a;
+  border-radius: 6px;
+}
+
+.carpentry-icon {
+  max-width: 100%;
+  max-height: 100%;
+  image-rendering: pixelated;
+}
+
+.carpentry-card.locked .carpentry-icon,
+.carpentry-detail-box.locked .carpentry-detail-icon {
+  filter: grayscale(1) brightness(0.55);
+}
+
+.carpentry-name {
+  font-family: var(--title);
+  font-size: 7px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.carpentry-meta,
+.carpentry-owned {
+  min-height: 1.2em;
+  font-size: 9px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-card.trophy:not(.locked) .carpentry-owned {
+  color: color-mix(in srgb, #287028 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-tag {
+  margin-top: auto;
+  font-family: var(--title);
+  font-size: 8px;
+}
+
+.carpentry-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.carpentry-price img {
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+.carpentry-note {
+  margin: 0 0 8px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-empty {
+  grid-column: 1 / -1;
+  padding: 12px 4px;
+}
+
+/* The close-up: over the sheet, the piece bigger beside what it is and its price. */
+.carpentry-detail {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: color-mix(in srgb, #10141f 55%, transparent);
+  border-radius: inherit;
+}
+
+.carpentry-detail[hidden] {
+  display: none;
+}
+
+.carpentry-detail-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: min(100%, 360px);
+  max-height: 100%;
+  overflow-y: auto;
+  margin: 0;
+  padding: 14px;
+}
+
+.carpentry-detail-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+  font-size: 10px;
+}
+
+.carpentry-detail-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: min(200px, 34cqh);
+  min-height: 120px;
+  background: #43291a;
+  border: 3px solid #20263a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.carpentry-detail-icon {
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.carpentry-detail-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
+.carpentry-detail-name {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.carpentry-detail-meta {
+  font-size: 10px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+.carpentry-rarity {
+  padding: 2px 8px 1px;
+  font-family: var(--title);
+  font-size: 7px;
+  color: #fff;
+  background: #8890a8;
+  border-radius: 999px;
+}
+
+.carpentry-rarity.rare {
+  background: #3888e0;
+}
+
+.carpentry-rarity.epic {
+  background: #9850d8;
+}
+
+.carpentry-rarity.legendary {
+  color: #3a2808;
+  background: #f0c038;
+}
+
+.btn.carpentry-buy {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 4px;
+  font-size: 9px;
+}
+
+.carpentry-detail-text .carpentry-note {
+  margin: 4px 0 0;
+}
+
+/* Portrait phones: the editor takes the screen, the room on top and a sideways tray under it (drag a piece up into the room). */
+@media (max-width: 759px) and (orientation: portrait) {
+  .base-editor {
+    padding: 0;
+  }
+  .base-panel {
+    width: 100%;
+    height: 100%;
+    gap: 6px;
+    padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
+    border-radius: 0;
+  }
+  .base-head .shop-title {
+    font-size: 9px;
+  }
+  .base-head .btn.base-visibility,
+  .base-head .btn.base-save {
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+  .base-main {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .base-stage {
+    flex: 0 1 auto;
+    aspect-ratio: 4 / 3;
+    max-height: calc(48 * var(--dvh));
+  }
+  .base-side {
+    flex: 1 1 auto;
+  }
+  .base-piece {
+    flex: 1 1 auto;
+  }
+  .base-tray:not(.style) {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-template-rows: repeat(2, max-content);
+    grid-auto-columns: 92px;
+    align-content: start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+  }
+  .base-panel .shop-foot {
+    display: none;
+  }
+  .base-card {
+    flex-wrap: wrap;
+  }
+  .base-card-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .carpentry-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .carpentry-art {
+    height: 64px;
+  }
+  .carpentry-card {
+    padding: 4px 4px 6px;
+  }
+  .carpentry-set {
+    flex-basis: 66px;
+  }
+  .carpentry-set-art {
+    height: 32px;
+  }
+  .carpentry-set-icon {
+    max-height: 32px;
+  }
+}
+
+/* Landscape phones: a smaller room beside a narrow side column. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .base-editor {
+    padding: max(4px, var(--safe-t)) max(6px, var(--safe-r)) max(4px, var(--safe-b)) max(6px, var(--safe-l));
+  }
+  .base-panel {
+    height: 100%;
+    gap: 5px;
+    padding: 6px 10px;
+  }
+  .base-main {
+    gap: 8px;
+  }
+  .base-side {
+    flex-basis: min(300px, 42%);
+    gap: 4px;
+  }
+  .base-panel .shop-foot {
+    display: none;
+  }
+  .base-tray {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  }
+  .base-icon {
+    width: 44px;
+    height: 36px;
+  }
+  .carpentry-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 6px;
+  }
+  .carpentry-art {
+    height: 60px;
+  }
+  .carpentry-set {
+    flex-basis: 64px;
+    padding: 3px 3px 4px;
+  }
+  .carpentry-set-art {
+    height: 26px;
+  }
+  .carpentry-set-icon {
+    max-height: 26px;
+  }
+  .carpentry-page-blurb {
+    display: none;
+  }
+  .carpentry-detail-box {
+    flex-direction: row;
+    align-items: center;
+    width: min(100%, 520px);
+  }
+  .carpentry-detail-art {
+    flex: 0 0 45%;
+    height: 150px;
+    min-height: 0;
+  }
+  .carpentry-detail-text {
+    flex: 1;
+  }
+}
+
+/* ---------------- Poké Realm (ui/realm.ts) ---------------- */
+
+/* On a phone on its side the way in is an icon in the top bar. */
+.lobby-realm-top {
+  position: relative;
+}
+
+/* The lobby's way in: a card under the Hall (a rail tile on phones held upright, `.rail-realm`). */
+.lobby-realm {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 12px 9px 10px;
+  border-color: #183858;
+  --frame: #48a0e0;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.lobby-realm:hover,
+.lobby-realm.selected {
+  --frame: #e83838;
+}
+
+.lobby-realm-icon {
+  width: 33px;
+  height: 39px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.rail-realm .lobby-realm-icon {
+  width: 28px;
+  height: 33px;
+}
+
+.lobby-realm-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.lobby-realm-text b {
+  font-family: var(--title);
+  font-size: 9px;
+  font-weight: normal;
+  color: color-mix(in srgb, #2878c0 var(--dk-lift, 100%), #fff);
+}
+
+.lobby-realm-text span {
+  font-size: 18px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Landscape phones: the side is short, so the card is one line. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .lobby-realm {
+    padding: 5px 10px 5px 8px;
+  }
+  .lobby-realm-icon {
+    width: 22px;
+    height: 26px;
+  }
+  .lobby-realm-text span {
+    display: none;
+  }
+}
+
+/* The screen: the town is the game's canvas; this is the HTML over it. */
+.screen.realm {
+  justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.realm img {
+  image-rendering: pixelated;
+}
+
+.realm-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The labels floating over the town's spots and doors as a trainer comes near: small wooden signs, a notch pointing down. */
+.realm-signs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.realm-sign {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin-top: -5px;
+  padding: 4px 7px 3px;
+  border: 2px solid #4a3020;
+  border-radius: 4px;
+  background: #fbf1d6;
+  box-shadow: 0 2px 0 rgba(16, 24, 16, 0.35);
+  color: #4a3020;
+  font-family: var(--title);
+  font-size: 8px;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.18s ease-out;
+  will-change: transform, opacity;
+}
+
+.realm-sign::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-right: 2px solid #4a3020;
+  border-bottom: 2px solid #4a3020;
+  background: #fbf1d6;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.realm-sign.shown {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .realm-sign {
+    transition: none;
+  }
+}
+
+.realm-plate,
+.realm-said {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.realm-plate {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(16, 24, 48, 0.62);
+  color: #f8f8f8;
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+.realm-plate b {
+  font-weight: normal;
+}
+
+.realm-plate.plated {
+  background: var(--plate-fill);
+  border: 2px solid var(--plate-edge);
+  box-shadow: inset 0 2px 0 var(--plate-light);
+  text-shadow: 1px 1px 0 #181818, -1px 0 0 #181818, 0 -1px 0 #181818;
+}
+
+.realm-plate .realm-badge {
+  width: 11px;
+  height: 11px;
+}
+
+.realm-plate .arena-seat-title {
+  font-size: 6px;
+}
+
+.realm-said {
+  max-width: 180px;
+  padding: 3px 8px;
+  border: 2px solid #283040;
+  border-radius: 8px;
+  background: #f8f8f8;
+  color: #182030;
+  font-size: 15px;
+  white-space: normal;
+  text-align: center;
+}
+
+.realm-top {
+  position: absolute;
+  top: max(8px, var(--safe-t));
+  left: max(8px, var(--safe-l));
+  right: max(8px, var(--safe-r));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.realm-top > * {
+  pointer-events: auto;
+}
+
+.realm-leave,
+.realm-decorate {
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.realm-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 12px 5px;
+  line-height: 1.3;
+}
+
+.realm-where {
+  font-family: var(--title);
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.realm-count {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.realm-status {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: min(360px, 90vw);
+  padding: 10px 16px;
+  text-align: center;
+}
+
+.realm-party {
+  position: absolute;
+  top: calc(max(8px, var(--safe-t)) + 52px);
+  left: max(8px, var(--safe-l));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: min(420px, 70vw);
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+.realm-party b {
+  font-family: var(--title);
+  font-size: 8px;
+  font-weight: normal;
+}
+
+.realm-member.leader {
+  color: color-mix(in srgb, #a87000 var(--dk-lift, 100%), #fff);
+}
+
+.realm-party-leave {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.realm-use {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  font-family: var(--title);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.realm-use .key-hint {
+  position: static;
+}
+
+@media (hover: none) {
+  .realm-use {
+    padding: 8px 14px;
+    font-size: 10px;
+  }
+  .realm-use .key-hint {
+    display: none;
+  }
+}
+
+.realm-actions {
+  position: absolute;
+  right: max(10px, var(--safe-r));
+  bottom: max(10px, var(--safe-b));
+  display: flex;
+  gap: 8px;
+}
+
+.realm-talk,
+.realm-emote {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.realm-talk img,
+.realm-emote img {
+  width: 33px;
+  height: 39px;
+}
+
+.realm-wheel,
+.realm-emotes {
+  position: absolute;
+  right: max(10px, var(--safe-r));
+  bottom: calc(max(10px, var(--safe-b)) + 64px);
+  max-width: min(440px, calc(100vw - 20px));
+  max-height: calc(100% - 140px);
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.realm-wheel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: min(520px, calc(100vw - 20px));
+}
+
+.realm-emotes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: max-content;
+}
+
+.realm-wheel.hidden,
+.realm-emotes.hidden {
+  display: none;
+}
+
+.realm-line {
+  padding: 8px 4px;
+  line-height: 1.1;
+  border: 2px solid #283040;
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.realm-line:hover {
+  border-color: #e83838;
+}
+
+.realm-emote-pick {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 48px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.realm-emote-pick:hover {
+  background: rgba(40, 48, 64, 0.12);
+}
+
+.realm-emote-pick img {
+  width: 33px;
+  height: 39px;
+}
+
+.realm-emote-pick.hidden {
+  display: none;
+}
+
+.realm-card,
+.realm-invite {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: min(300px, calc(100vw - 24px));
+  padding: 12px;
+}
+
+.realm-card {
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+}
+
+.realm-invite {
+  bottom: calc(max(10px, var(--safe-b)) + 64px);
+}
+
+.realm-card.hidden,
+.realm-invite.hidden {
+  display: none;
+}
+
+.realm-card button.box,
+.realm-invite button.box {
+  padding: 8px;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.realm-card-head {
+  display: flex;
+  justify-content: center;
+  padding: 4px 24px 6px;
+}
+
+.realm-card-head .realm-plate {
+  position: static;
+  transform: none !important;
+  font-size: 16px;
+}
+
+.realm-card-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.realm-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.realm-reasons.hidden {
+  display: none;
+}
+
+.realm-invite p {
+  margin: 0 0 4px;
+  text-align: center;
+}
+
+/* The city picker and the board. */
+.realm-picker,
+.realm-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(520px, 100%);
+  margin: auto;
+  padding: 16px;
+}
+
+.screen.realm .realm-picker {
+  margin: max(16px, var(--safe-t)) auto max(16px, var(--safe-b));
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+.realm-picker h2,
+.realm-board h2 {
+  margin: 0;
+  font-family: var(--title);
+  font-size: 14px;
+  font-weight: normal;
+  text-align: center;
+}
+
+.realm-picker h3 {
+  margin: 8px 0 0;
+  font-family: var(--title);
+  font-size: 9px;
+  font-weight: normal;
+}
+
+.realm-picker-title {
+  margin: 0;
+  text-align: center;
+  font-size: 18px;
+}
+
+.realm-picker-hint,
+.realm-note {
+  margin: 0;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.realm-cities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.realm-city,
+.realm-friend {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.realm-city b,
+.realm-friend b {
+  font-weight: normal;
+  font-size: 16px;
+}
+
+.realm-city small,
+.realm-friend small {
+  opacity: 0.75;
+}
+
+.realm-city:hover,
+.realm-city:focus-visible,
+.realm-friend:hover {
+  --frame: #e83838;
+}
+
+.realm-city.full {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.realm-friends {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.realm-back {
+  align-self: center;
+  padding: 8px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.realm-board p {
+  margin: 0;
+}
+
+.realm-board button {
+  align-self: center;
+  padding: 8px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Landscape phones: the wheel takes more columns, shorter. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .realm-wheel {
+    width: min(560px, calc(100vw - 100px));
+  }
+  .realm-line {
+    padding: 5px 4px;
+    font-size: 13px;
+  }
+  .realm-party {
+    top: auto;
+    bottom: max(10px, var(--safe-b));
+  }
+}
+
+@media (max-width: 480px) {
+  .realm-line {
+    font-size: 13px;
+  }
+}
+
 /* The Boutique's Skins page (ui/skinShop.ts): line chips with faces, cards walking the skin on every stage, the bundles. */
 .gem-lines {
   flex-wrap: nowrap;
@@ -24707,4 +26200,222 @@ span.arena-hub-face {
   image-rendering: pixelated;
   pointer-events: none;
   z-index: 1000;
+}
+
+/* ---------------- Poké Realm: mini game frame (`realm/games/frame.ts`) ---------------- */
+
+.screen.minigame-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  /* Stretched, so the stage's size (not the canvas's) sets the scale. */
+  align-items: stretch;
+  gap: 0;
+  background: rgba(16, 20, 32, 0.92);
+  padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
+  touch-action: none;
+}
+
+.minigame-head {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #fff;
+  padding: 0 4px 8px;
+}
+
+.minigame-head h2 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.minigame-close {
+  min-width: 40px;
+  min-height: 40px;
+  font-size: 16px;
+}
+
+.minigame-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  /* Stretched, so the stage's size (not the canvas's) sets the scale. */
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minigame-canvas {
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+.minigame-sheet {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: min(320px, calc(100% - 16px));
+  padding: 16px;
+  text-align: center;
+}
+
+.minigame-sheet h3 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.minigame-paid {
+  margin: 0;
+  font-size: 12px;
+  color: var(--dk-ink, #303040);
+}
+
+.minigame-trophy {
+  margin: 0;
+  font-size: 10px;
+  background: var(--dk-wash-gold, #fff8d8);
+  padding: 4px 6px;
+}
+
+.minigame-log h4 {
+  margin: 0 0 4px;
+  font-size: 10px;
+}
+
+.minigame-log ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 168px;
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+}
+
+.minigame-log li {
+  display: grid;
+  grid-template-columns: 24px 1fr auto 4ch;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  text-align: left;
+}
+
+.minigame-log li img {
+  image-rendering: pixelated;
+}
+
+.minigame-log li b {
+  text-align: right;
+}
+
+.minigame-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.minigame-actions button,
+.minigame-choose button {
+  min-height: 40px;
+}
+
+.screen.minigame-choose {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 20, 32, 0.6);
+}
+
+.minigame-choose .minigame-sheet {
+  position: static;
+}
+
+.minigame-choose button span {
+  display: block;
+  font-size: 9px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+/* Mini games: the word over a relay table's game (`lobbyBar` in `realm/games/frame.ts`): the card while waiting for an opponent, the header's tag (the bot meanwhile, watching, an opponent sat). */
+.minigame-lobby {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: min(300px, calc(100% - 24px));
+  padding: 16px;
+  text-align: center;
+  translate: -50% -50%;
+}
+
+.minigame-lobby b {
+  font-size: 12px;
+}
+
+.minigame-lobby small {
+  font-size: 9px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.minigame-lobby button,
+.minigame-tag button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 10px;
+}
+
+.minigame-head .minigame-tag {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 4px 8px;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.minigame-head .minigame-tag.hidden {
+  display: none;
+}
+
+.minigame-tag-arrived {
+  background: var(--dk-wash-gold, #fff8d8);
+  animation: minigame-tag-pop 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+
+@keyframes minigame-tag-pop {
+  from {
+    scale: 0.6;
+    opacity: 0;
+  }
+}
+
+/* The realm's game tables in use: their label (`ui/realm.ts`) turns gold while a match is on or a seat waits. */
+.realm-sign.busy,
+.realm-sign.busy::after {
+  border-color: #8a5410;
+  background: #ffe9a0;
+}
+
+.realm-sign.busy {
+  color: #5a3408;
 }

@@ -144,7 +144,11 @@ import { setActivePad } from './ui/inputLabels'
 import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
-import { arenaGate, coopGate, playGate } from './ui/account'
+import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
+import { devRealmRoom, openRealm } from './ui/realm'
+import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
+import { realmClient, realmDevState, realmUrl, stageRealmTable, useLocalRealm } from './realmShell'
+import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
@@ -204,6 +208,10 @@ import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaFormat, arenaPick, arenaScreen, keepArenaPick } from './ui/arena'
 import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn } from './gems'
 import { isGemPackId } from './data/gems'
+import { fakeRealm, realmFaked } from './realm/api'
+import { openBaseEditor } from './ui/baseEditor'
+import { openBaseBoard } from './ui/baseBoard'
+import { openCarpentry } from './ui/carpentry'
 import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
 import { arenaHub, isArenaHubTab, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaHub'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
@@ -741,6 +749,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
         return openFestival(ui, input, () => ((scene.plaza.focus = 0), close()), tab)
       },
       boutique: openBoutiqueSheet,
+      carpentry: (close) => openCarpentry(ui, input, { close, signIn: accountsEnabled ? () => void signIn() : null }),
       // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
       trainer: (focus) =>
         trainerCardScreen(
@@ -757,6 +766,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       supporters: (focus, open) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: () => showTitle({ focus }) }, open),
       invites: (focus) => invitesScreen(ui, input, () => showTitle({ focus })),
       coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
+      realm: realmUrl() ? () => enterRealm(null) : undefined,
       arena: () => showArena(),
       arenaHub: (tab) => showArenaHub(tab),
       dojo: () => showDojo(),
@@ -2967,6 +2977,116 @@ const leaveCoopDoor = () => {
   showTitle({ focus: 'coop' })
 }
 
+/* ---------------- The Poké Realm ---------------- */
+
+/** `?realm` (or `?realm=<city>`): the Poké Realm's own link; it stays on the address while a guest signs in, so the round trip comes back to it. */
+const REALM_PARAM = 'realm'
+
+const realmLink = (on: boolean) => {
+  const url = new URL(location.href)
+  if (on === url.searchParams.has(REALM_PARAM)) return
+  if (on) url.searchParams.set(REALM_PARAM, '')
+  else url.searchParams.delete(REALM_PARAM)
+  history.replaceState(null, '', `${url.pathname}${url.search.replace(/=(?=&|$)/g, '')}${url.hash}`)
+}
+
+/**
+ * Opens the Poké Realm (`ui/realm.ts`), at `city` or its picker. Like co-op
+ * it's for accounts with a @handle: a guest signs in first ("Entre para
+ * entrar no Poké Realm", `realmGate`) and an account without a handle picks
+ * one. The in-page realm (`ps.realm('local')`) skips the door.
+ */
+const enterRealm = (city: CityId | null) => {
+  const local = realmDevState().local
+  const access = local ? 'open' : coopAccess(accountsEnabled, accountState())
+  if (access === 'handle') return setScreen(profileEditor(ui, input, (saved) => (saved ? enterRealm(city) : showTitle({ focus: 'realm' }))))
+  if (access !== 'open') {
+    realmLink(true)
+    return setScreen(realmGate(ui, input, { play: () => enterRealm(city), back: () => (realmLink(false), showTitle({ focus: 'realm' })) }))
+  }
+  showRealm(city)
+}
+
+/** The realm's screen while it's up (the dev console's `ps.realm('walk', …)` walks it). */
+let realmShown: ReturnType<typeof openRealm> | null = null
+
+const showRealm = (city: CityId | null) => {
+  const client = realmClient()
+  if (!client) return toast(ui, t().realm.off, 4000, 'realmOff')
+  realmLink(false)
+  endRun()
+  setScreen(
+    (realmShown = openRealm(
+      ui,
+      input,
+      {
+        client,
+        scale: () => cssScale,
+        handle: accountHandle() ?? 'you',
+        back: () => showTitle({ focus: 'realm' }),
+        openRoom: (mode) => realmRoom(mode),
+        showRoom: () => showRoom(),
+        joinRoom: (_mode, code) => void joinCoop(code, 'link').then((res) => (res.ok ? showRoom() : (toast(ui, closedText(res.why), 4000, 'realmParty'), showRealm(null)))),
+      },
+      city,
+    )),
+  )
+}
+
+/** A portal's room: made and joined through co-op as the hub's "Criar sala" does (an Arena one in Arena mode, the player on Blue with the Arena's pick). The code, or null. */
+const realmRoom = async (mode: PartyMode): Promise<string | null> => {
+  const client = coopClient()
+  if (!client) return null
+  watchCoop(client)
+  const made = await client.create()
+  if (!made.ok) return null
+  const res = await joinCoop(made.code, null, mode === 'arena' ? arenaLoadout(arenaStart(), 0, equippedLook()) : undefined)
+  if (!res.ok) return null
+  track('coop', { step: 'create', relay: made.home, ...(made.overflow ? { overflow: made.overflow } : {}) })
+  client.setSettings(mode === 'arena' ? { difficulty: loadSave().difficulty, mode: 'versus', format: 'standard' } : { difficulty: loadSave().difficulty })
+  return made.code
+}
+
+/**
+ * Dev: `ps.realm('local')` opens the realm on the in-page host with bots and
+ * the faked API (`realmShell.ts`), `('off')` back to the relay, `('fake')`
+ * fakes only the API (`fakeRealm`), `('city', 'cerulean')` goes straight into
+ * a city, `('walk', '110,280')` walks the trainer to a point of its room (as a
+ * tap would: scripted shots get to a spot, like the café's game tables),
+ * `('table', 'cafe-2 fourInRow')` sends two bots to play at a game table (the game optional); no argument
+ * prints the state; `('room', 'arcade')` walks the open town's trainer into a room.
+ */
+const devRealm = (cmd?: string, arg?: string) => {
+  switch (cmd) {
+    case 'local':
+      useLocalRealm(true)
+      return showRealm(isCityId(arg) ? arg : null)
+    case 'off':
+      useLocalRealm(false)
+      return realmDevState()
+    case 'fake':
+      fakeRealm(arg !== 'off', accountHandle() ?? 'you')
+      return realmDevState()
+    case 'city':
+      return isCityId(arg) ? enterRealm(arg) : 'ps.realm: city id (pallet, cerulean…)'
+    case 'table': {
+      // `ps.realm('table', 'cafe-2 fourInRow')`: two bots go and play there (to watch, or take a seat when one stands); the game is optional.
+      const [table, game] = (arg ?? 'cafe-2').split(' ')
+      return `${stageRealmTable(table ?? 'cafe-2', game)} bots on their way`
+    }
+    case 'walk': {
+      // `ps.realm('walk', '110,280')`: the trainer walks there as a tap would (a straight walk, sliding along what's in the way).
+      const [x, y] = (arg ?? '').split(',').map(Number)
+      if (screen !== realmShown || !realmShown || !Number.isFinite(x) || !Number.isFinite(y)) return 'ps.realm: walk "x,y" in the realm'
+      return realmShown.walkTo(x!, y!)
+    }
+    case 'room':
+      return isTownRoomId(arg) ? devRealmRoom(arg) : `ps.realm: room (${TOWN_ROOMS.join(', ')})`
+    default:
+      return realmDevState()
+  }
+}
+
 /** Jogar junto from the lobby's tile: create a room or join one by code (`code` prefills it); `challenge`: the room made starts on the Desafio co-op do dia. */
 const showCoopHub = (code: string | null = null, challenge = false) => {
   const client = coopClient()
@@ -3600,11 +3720,15 @@ const frame = (now: number) => {
     scene.haunted = halloweenToday()
     scene.plaza.level = plazaLevel()
     refreshVisitors(performance.now())
-    stepTitleScene(scene, mdt, view.w, view.h)
-    drawTitleScene(ctx, scene, view.w, view.h)
-    ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
-    ctx.fillRect(0, 0, view.w, view.h)
-    if (meadowStick) drawJoystick(ctx, meadowStick, cssScale)
+    // The Poké Realm draws its town in the meadow's place.
+    if (screen?.scene) screen.scene(ctx, mdt, view.w, view.h)
+    else {
+      stepTitleScene(scene, mdt, view.w, view.h)
+      drawTitleScene(ctx, scene, view.w, view.h)
+      ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
+      ctx.fillRect(0, 0, view.w, view.h)
+      if (meadowStick) drawJoystick(ctx, meadowStick, cssScale)
+    }
     // The wild Pokémon the partner greets answer with their cry.
     for (const dex of scene.cries.splice(0)) playCry(cryUrl(dex), 0.3)
     // Menu news (what a quit run completed) shares the run's queue. Banners (Mystery Gifts) wait
@@ -3832,7 +3956,10 @@ const boot = () => {
   else if (rankingEnabled && new URLSearchParams(location.search).has(IDEAS_PARAM)) showIdeasLink()
   else if (new URLSearchParams(location.search).has(SHOP_PARAM)) showTitle({ shop: 'shop', instant: true })
   else if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) showBoutique(new URLSearchParams(location.search).get(BOUTIQUE_PARAM) === 'skins' ? 'skins' : 'shop')
-  else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
+  else if (realmUrl() && new URLSearchParams(location.search).has(REALM_PARAM)) {
+    const city = new URLSearchParams(location.search).get(REALM_PARAM)
+    enterRealm(isCityId(city) ? city : null)
+  } else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
   // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack.
   else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
   else if (poll) showPollLink(poll)
@@ -4488,6 +4615,22 @@ const devGems = (cmd?: string, arg?: string | number) => {
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }
 
+/**
+ * Dev: the secret bases' screens over the lobby (`ui/baseEditor.ts`, `ui/baseBoard.ts`, `ui/carpentry.ts`), the realm's
+ * calls and the gems faked (`fakeRealm`: furnished demo bases, `realm/demoBases.ts`) unless `real`: `ps.base()` opens
+ * the editor, `ps.base('board')` the trail's board (Visitar shows the base on the board), `ps.base('carpentry')` Bibarel's.
+ */
+const devBase = (cmd: 'editor' | 'board' | 'carpentry' = 'editor', real = false) => {
+  if (!real && !realmFaked()) {
+    fakeRealm(true)
+    if (!gemsFaked()) fakeGems(true)
+  }
+  const back = () => showTitle()
+  if (cmd === 'board') setScreen(openBaseBoard(ui, input, { close: back, visit: null, city: null }))
+  else if (cmd === 'carpentry') setScreen(openCarpentry(ui, input, { close: back, signIn: accountsEnabled ? () => void signIn() : null }))
+  else setScreen(openBaseEditor(ui, input, { close: back }))
+}
+
 // `ps.biome('cave')` walks to the nearest cave region and `ps.weather('rain')` stages the sky for screenshots (it holds until the next scheduled change).
 /** Dev only (`ps.map`): the map archetype held for the runs started until a reload. */
 let devMap: MapArchetypeId | null = null
@@ -4509,6 +4652,7 @@ if (import.meta.env.DEV) {
       // The canvases each cache holds now (`heldCanvasesBy`), heaviest first, and their sum (`heldCanvases`, the crash report's numbers).
       canvases: () => ({ total: heldCanvases(), by: heldCanvasesBy() }),
       coop: devCoop,
+      realm: devRealm,
       versus: devVersus,
       arena: devArena,
       /** The wearables (`ui/wearFitting.ts`, loaded on demand): `ps.wear('topHat')` on your Pokémon in a run or a match, `ps.wear('fit', 'topHat')` the gallery. */
@@ -4519,6 +4663,35 @@ if (import.meta.env.DEV) {
       /** The head rig tool (`ui/rigTool.ts`, loaded on demand): `ps.rig(152)` shows a variant's rig over its frame and fixes it by hand (`'6:megaX'`, `'502s'`; `ps.rig(25, { dir: 2, item: 'crown' })`). */
       rig: (variant?: unknown, opts?: Parameters<typeof import('./ui/rigTool').openRig>[1]) => import('./ui/rigTool').then((m) => m.openRig(variant, opts)),
       look: devLook,
+      /** The Poké Realm's art (`ui/realmArtDev.ts`, loaded on demand): `ps.realmArt('plaza')` a town room (`'pier'`, `'cafe'`, `'trail'`; `g` its geometry), `'bases'` the base interiors, `'furniture'` the catalog. */
+      realmArt: (view?: import('./ui/realmArtDev').RealmArtView, opts?: Parameters<typeof import('./ui/realmArtDev').openRealmArt>[1]) =>
+        import('./ui/realmArtDev').then((m) => m.openRealmArt(view, opts)),
+      /**
+       * A Poké Realm mini game on its own, over whatever is on screen (`realm/games/registry.ts`): `ps.minigame('fishing')`,
+       * a table game against the bot (`'fourInRow'`, `'typeDuel'`). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
+       */
+      minigame: async (game: unknown) => {
+        const { isMinigameId, MINIGAME_IDS } = await import('./data/minigames')
+        if (!isMinigameId(game)) return `ps.minigame: ${MINIGAME_IDS.join(', ')}`
+        const { openGame } = await import('./realm/games/registry')
+        const save = loadSave()
+        let screen: { dispose: () => void } | null = null
+        screen = await openGame(document.body, game, { partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
+        return screen
+      },
+      /**
+       * Fishing's staging (`realm/games/fishing.ts`, open it with `ps.minigame('fishing')`): `ps.fishing('feebas')` makes
+       * that the next bite, at once (`shinyGyarados`, `wailmer`, `boot`…); a second `true` turns on the autopilot (casts,
+       * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too).
+       */
+      fishing: async (next?: unknown, auto?: boolean) => {
+        const { fishingDev } = await import('./realm/games/fishing')
+        const { CATCH_IDS, isCatchId } = await import('./realm/games/fishing.rules')
+        if (next !== undefined && next !== null && !isCatchId(next)) return `ps.fishing: ${CATCH_IDS.join(', ')}`
+        if (next !== undefined) fishingDev.next = next
+        if (auto !== undefined) fishingDev.auto = auto
+        return fishingDev
+      },
       skin: devSkin,
       gems: devGems,
       candyGoal: devCandyGoal,
@@ -4600,7 +4773,14 @@ if (import.meta.env.DEV) {
        * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
        * `ps.boutique('open')` lands there with the sheet open at once (`'skins'` on Skins, `'locker'` on Visual).
        */
+      /** The secret bases' screens with fakes: `ps.base()` the editor, `ps.base('board')`, `ps.base('carpentry')` (`devBase`). */
+      base: devBase,
       boutique: (cmd?: 'open' | 'skins' | 'locker') => (cmd ? showBoutique(cmd === 'open' ? 'shop' : cmd) : showTitle({ shop: 'boutique' })),
+      /**
+       * Bibarel's carpentry on the plaza's north-east: `ps.carpentry()` walks the lobby there, Bibarel's hello included (the first
+       * visit's long one after `localStorage.removeItem('ps:carpentrySeen')`), then its sheet (`ui/carpentry.ts`).
+       */
+      carpentry: () => showTitle({ shop: 'carpentry' }),
       /**
        * The Kecleon plaza: `ps.plaza(3)` shows the shop's building at that level (1 to 5, until the next reload; `ps.plaza(0)`
        * goes back to the save's) and the lobby pans there for a look, cards out; Esc or Enter comes back.

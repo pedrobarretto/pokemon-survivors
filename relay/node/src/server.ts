@@ -6,12 +6,15 @@ import { LIMITS as WIRE, PROTOCOL, parseRoomCode, type CreateResponse, type Regi
 import { jwksKeys, verifyClerkToken } from '../../src/auth'
 import { parseCreate } from '../../src/codes'
 import { allowedOrigin } from '../../src/origins'
+import { REALM_CITIES, REALM_LIMITS, isCityId } from '../../../src/net/realm'
+import { guestIdentity, guestUserId, askVisit, lookUpIdentities, postPresence } from '../../src/realmApi'
 import { arenaApiOf, createOutbox, lookUpLooks, type Fetcher } from '../../src/report'
 import { RETENTION } from '../../src/store'
 import { fullWhy, type Load } from './capacity'
 import type { Config } from './config'
 import { lockDataDir, openVault } from './db'
 import { LIMITS, clientIp, createLimiter } from './limits'
+import { createRealms } from './realms'
 import { createRooms, type Log } from './rooms'
 
 /**
@@ -20,7 +23,10 @@ import { createRooms, type Log } from './rooms'
  * - `POST /rooms` `{ v, build, region? }` → `{ code, region, claim }` (codes of this relay's home, `RELAY_HOMES`),
  *   or `{ error: 'full' }` (503) past its capacity (`capacity.ts`): the game then creates on Cloudflare
  * - `GET /rooms/<code>/ws` → WebSocket (first message: `hello`)
- * - `GET /health` → `{ ok, protocol, home, version, rooms, full }` (`rooms`: those its capacity counts; `full`: it takes no new one)
+ * - `GET /realm/<city>/ws` → WebSocket into the Poké Realm (`realms.ts`; first message: `hello`), for the cities this
+ *   relay is home to (`REALM_CITIES`); any other city answers 404
+ * - `GET /health` → `{ ok, protocol, home, version, rooms, full, realm }` (`rooms`: those its capacity counts; `full`: it takes no
+ *   new one; `realm`: sockets and trainers per city)
  * - `GET /admin/dumps`, `GET /admin/dumps/<id>` (gzipped JSON), `Authorization: Bearer <ADMIN_TOKEN>`
  */
 
@@ -114,6 +120,32 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
     },
   })
   rooms.boot()
+  // A dev relay's guests (`guest:<id>` tokens) walk with made-up identities, never asking the API about them.
+  const guest = (userId: string) => config.allowGuests && userId.startsWith('guest-')
+  const realms = createRealms({
+    home: config.home,
+    log,
+    now: Date.now,
+    verify: async (token) => {
+      const g = config.allowGuests ? guestUserId(token) : null
+      if (g) return g
+      return verifyClerkToken(token, { keys: jwks, issuer: config.clerkIssuer, allowedParty: (o) => allowedOrigin(origins, o), now: Date.now() })
+    },
+    identities: async (userIds) => {
+      const guests = userIds.filter(guest)
+      const accounts = userIds.filter((id) => !guest(id))
+      const asked = accounts.length === 0 ? { identities: {}, banned: [] } : api ? await lookUpIdentities(api, accounts, fetcher) : null
+      if (!asked) return guests.length === 0 ? null : { identities: Object.fromEntries(guests.map((id) => [id, guestIdentity(id)])), banned: [] }
+      return { identities: { ...asked.identities, ...Object.fromEntries(guests.map((id) => [id, guestIdentity(id)])) }, banned: asked.banned }
+    },
+    visit: async (req) => (api ? askVisit(api, req, fetcher) : config.allowGuests ? { allowed: true } : null),
+    presence: (report) => {
+      if (!api) return
+      void postPresence(api, report, fetcher).then((status) => {
+        if (status !== 200) log('realm.presence.failed', { status })
+      })
+    },
+  })
   // The last minute's load (`setLoad`, from `main.ts`'s stats): none known yet is no starvation.
   let load: Load = { loopP99Ms: null, hostBusyPct: null }
   const full = () => fullWhy(rooms.counts().live, config.maxRooms, load)
@@ -137,7 +169,7 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
       res.writeHead(204, headers)
       return res.end()
     }
-    if (path === '/health' && req.method === 'GET') return json(res, { ok: true, protocol: PROTOCOL, home: config.home, version: config.version, rooms: rooms.counts().live, full: full() !== null }, 200, headers)
+    if (path === '/health' && req.method === 'GET') return json(res, { ok: true, protocol: PROTOCOL, home: config.home, version: config.version, rooms: rooms.counts().live, full: full() !== null, realm: realms.counts() }, 200, headers)
     if (path === '/rooms' && req.method === 'POST') {
       const reply = (body: CreateResponse, status = 200) => json(res, body, status, headers)
       if (!createLimit.hit(ipOf(req), Date.now())) return reply({ error: 'rate' }, 429)
@@ -152,7 +184,7 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
       const made = rooms.create(body.build)
       return made ? reply({ ...made, region: REGION_OF[config.home] }) : reply({ error: 'busy' }, 503)
     }
-    if (/^\/rooms\/[^/]+\/ws$/.test(path)) return json(res, { error: 'Expected a WebSocket' }, 426, headers)
+    if (/^\/(rooms|realm)\/[^/]+\/ws$/.test(path)) return json(res, { error: 'Expected a WebSocket' }, 426, headers)
     if (path.startsWith('/admin/dumps') && req.method === 'GET') {
       if (!isAdmin(config, req.headers.authorization)) return json(res, { error: 'Not found' }, 404, {})
       if (path === '/admin/dumps') return json(res, vault.list(100), 200, {})
@@ -177,15 +209,22 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
 
   // Far past any message of ours (a snapshot chunk is ~270 KB): bigger frames are cut by the library.
   const wss = new WebSocketServer({ noServer: true, maxPayload: WIRE.chunkMessage * 4, perMessageDeflate: false })
+  // The realm's messages are small (`REALM_LIMITS.message` UTF-16 units at most).
+  const realmWss = new WebSocketServer({ noServer: true, maxPayload: REALM_LIMITS.message * 4, perMessageDeflate: false })
   let stopping = false
   server.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
     const path = new URL(req.url ?? '/', 'http://relay').pathname
     const match = path.match(/^\/rooms\/([^/]+)\/ws$/)
-    if (!match || req.method !== 'GET') return refuseUpgrade(socket, 404, 'Not Found')
+    const realm = path.match(/^\/realm\/([^/]+)\/ws$/)
+    const city = realm?.[1]
+    if ((!match && !realm) || req.method !== 'GET') return refuseUpgrade(socket, 404, 'Not Found')
+    if (realm && !(isCityId(city) && REALM_CITIES[city].home === config.home)) return refuseUpgrade(socket, 404, 'Not Found')
     if (stopping) return refuseUpgrade(socket, 503, 'Service Unavailable')
     const origin = req.headers.origin
     if (origin !== undefined && !allowedOrigin(origins, origin)) return refuseUpgrade(socket, 403, 'Forbidden')
     if (!connectLimit.hit(ipOf(req), Date.now())) return refuseUpgrade(socket, 429, 'Too Many Requests')
+    if (isCityId(city)) return realmWss.handleUpgrade(req, socket, head, (ws) => realms.accept(city, ws))
+    if (!match) return refuseUpgrade(socket, 404, 'Not Found')
     const code = parseRoomCode(match[1])
     if (!code) return refuseUpgrade(socket, 400, 'Bad Request')
     wss.handleUpgrade(req, socket, head, (ws) => rooms.accept(code, ws, (req.headers['user-agent'] ?? '').toString()))
@@ -211,8 +250,10 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
     if (retry) clearTimeout(retry)
     server.close()
     const counts = rooms.counts()
+    realms.shutdown()
     await rooms.shutdown()
     wss.close()
+    realmWss.close()
     vault.close()
     lock.release()
     server.closeAllConnections()
@@ -224,7 +265,7 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
     load = next
   }
 
-  return { port, close, counts: rooms.counts, setLoad, full }
+  return { port, close, counts: rooms.counts, realmCounts: realms.counts, setLoad, full }
 }
 
 export type Relay = Awaited<ReturnType<typeof startRelay>>
