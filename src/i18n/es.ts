@@ -6199,6 +6199,8 @@ export const es: Messages = {
       watching: 'Mirando',
       takeSeat: 'Sentarse',
       watch: 'Mirar',
+      seatWaiting: '¡Falta un jugador!',
+      playing: 'Partida en juego',
     },
     /** Four in a Row's screen (`realm/games/fourInRow.ts`), drawn on its canvas. */
     fourInRow: {

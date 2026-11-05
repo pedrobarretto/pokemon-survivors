@@ -146,7 +146,7 @@ import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from '
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { openRealm } from './ui/realm'
-import { realmClient, realmDevState, realmUrl, useLocalRealm } from './realmShell'
+import { realmClient, realmDevState, realmUrl, stageRealmTable, useLocalRealm } from './realmShell'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
@@ -3016,8 +3016,9 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * the faked API (`realmShell.ts`), `('off')` back to the relay, `('fake')`
  * fakes only the API (`fakeRealm`), `('city', 'cerulean')` goes straight into
  * a city, `('walk', '110,280')` walks the trainer to a point of its room (as a
- * tap would: scripted shots get to a spot, like the café's game tables); no
- * argument prints the state.
+ * tap would: scripted shots get to a spot, like the café's game tables),
+ * `('table', 'cafe-2')` sends two bots to play at a game table; no argument
+ * prints the state.
  */
 const devRealm = (cmd?: string, arg?: string) => {
   switch (cmd) {
@@ -3032,6 +3033,9 @@ const devRealm = (cmd?: string, arg?: string) => {
       return realmDevState()
     case 'city':
       return isCityId(arg) ? enterRealm(arg) : 'ps.realm: city id (pallet, cerulean…)'
+    case 'table':
+      // `ps.realm('table', 'cafe-2')`: two bots go and play there (to watch, or take a seat when one stands).
+      return `${stageRealmTable(arg ?? 'cafe-2')} bots on their way`
     case 'walk': {
       // `ps.realm('walk', '110,280')`: the trainer walks there as a tap would (a straight walk, sliding along what's in the way).
       const [x, y] = (arg ?? '').split(',').map(Number)

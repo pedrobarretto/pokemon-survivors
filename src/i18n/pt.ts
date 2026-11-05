@@ -6627,6 +6627,8 @@ export const pt = {
       watching: 'Assistindo',
       takeSeat: 'Sentar',
       watch: 'Assistir',
+      seatWaiting: 'Falta um jogador!',
+      playing: 'Partida rolando',
     },
     /** Four in a Row's screen (`realm/games/fourInRow.ts`), drawn on its canvas. */
     fourInRow: {

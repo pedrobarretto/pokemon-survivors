@@ -74,5 +74,8 @@ export const useLocalRealm = (on: boolean) => {
   fakeRealm(on, accountHandle() ?? 'you')
 }
 
+/** Dev: sends two of the in-page realm's bots to play at a town game table (`ps.realm('table', 'cafe-2')`), to watch or join. */
+export const stageRealmTable = (table: string) => (host ? host.realm.stage(table) : 0)
+
 /** Dev: what the realm's shell is on now. */
 export const realmDevState = () => ({ local: isLocal(), faked: realmFaked(), url: realmUrl(), city: client?.city() ?? null, room: client?.room() ?? null, status: client?.status() ?? null, rtt: client?.rtt() ?? null })

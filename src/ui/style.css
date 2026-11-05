@@ -26158,3 +26158,14 @@ span.arena-hub-face {
     opacity: 0;
   }
 }
+
+/* The realm's game tables in use: their label (`ui/realm.ts`) turns gold while a match is on or a seat waits. */
+.realm-sign.busy,
+.realm-sign.busy::after {
+  border-color: #8a5410;
+  background: #ffe9a0;
+}
+
+.realm-sign.busy {
+  color: #5a3408;
+}

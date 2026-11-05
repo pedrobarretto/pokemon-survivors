@@ -958,10 +958,12 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       pieces.sort((a, b) => a.y - b.y)
       for (const p of pieces) p.draw()
       if (town) drawTownOverhead(ctx, town, cam.x, cam.y, w, hgt, clock)
-      for (const spot of spots) {
-        const tb = spot.kind === 'gameTable' && spot.id ? tables.get(spot.id) : undefined
-        if (tb) drawTableMarker(ctx, spot, tb, town !== null, cam.x, cam.y, clock)
-      }
+      // A base's tables in use wear a bubble (a town room's say so in their labels).
+      if (!town)
+        for (const spot of spots) {
+          const tb = spot.kind === 'gameTable' && spot.id ? tables.get(spot.id) : undefined
+          if (tb) drawTableMarker(ctx, spot, tb, false, cam.x, cam.y, clock)
+        }
       for (const v of views) drawEmoteBubble(ctx, v, cam.x, cam.y, clock)
       if (drag?.stick) drawJoystick(ctx, drag.stick, scale)
 
@@ -1000,6 +1002,13 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       for (const l of labels) {
         const shown = seated && sub === null && l.spot !== near && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
         l.el.classList.toggle('shown', shown)
+        if (shown && l.spot?.kind === 'gameTable' && l.spot.id) {
+          // A game table's label says whether a match is on there, or a seat waits for someone.
+          const tb = tables.get(l.spot.id)
+          const text = !tb ? l.text : tb.seats.includes(null) ? t().minigames.tables.seatWaiting : t().minigames.tables.playing
+          if (l.el.textContent !== text) l.el.textContent = text
+          l.el.classList.toggle('busy', tb !== undefined)
+        }
         if (shown) l.el.style.transform = pin(l.at, l.el)
       }
     }

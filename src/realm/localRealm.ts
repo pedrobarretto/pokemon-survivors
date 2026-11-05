@@ -61,6 +61,8 @@ export type LocalRealm = {
   socket: (url: string, on: SocketHandlers) => SocketLike
   /** The bots' avatar ids (once seated), for a test or a dev hook. */
   bots: () => number[]
+  /** Dev: sends two bots (of the table's room or the rooms next door) to sit at a town game table (`ps.realm('table', 'cafe-2')`); how many went. */
+  stage: (table: string) => number
   /** Stops the bots and the beat, and closes every socket. */
   dispose: () => void
 }
@@ -93,6 +95,8 @@ type Bot = {
   actAt: number | null
   /** When it sat down at a table nobody else sits at (it gives up waiting after a while). */
   aloneSince: number | null
+  /** A table it was sent to (`stage`), through the rooms on the way. */
+  stage: string | null
 }
 
 type FakeSocket = { id: ConnId; on: SocketHandlers; open: boolean }
@@ -273,6 +277,16 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     }
   }
 
+  /** A town game table's spot and room, by its id. */
+  const stagedSpot = (id: string): { room: TownRoomId; spot: Spot } | null => {
+    for (const room of Object.keys(REALM_ROOMS).filter(isTownRoomId)) {
+      const spots: readonly Spot[] = REALM_ROOMS[room].spots
+      const spot = spots.find((s) => s.kind === 'gameTable' && s.id === id)
+      if (spot) return { room, spot }
+    }
+    return null
+  }
+
   /** The table the bot sits at (its id and view), if any. */
   const seatedAt = (bot: Bot): TableView | null => [...bot.tables.values()].find((tb) => bot.id !== null && tb.seats.includes(bot.id)) ?? null
 
@@ -299,7 +313,18 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     const room = REALM_ROOMS[bot.room]
     const doors: readonly Door[] = room.doors
     const from = { x: bot.x, y: bot.y }
-    const table = tableToSit(bot)
+    const staged = bot.stage ? stagedSpot(bot.stage) : null
+    if (staged && staged.room !== bot.room) {
+      const door = doors.find((d) => d.to === staged.room)
+      if (door) {
+        const { to } = mouth(bot.room, door)
+        bot.target = to
+        bot.door = { to: door.to, spawn: door.spawn }
+        return
+      }
+    }
+    const table = staged ? staged.spot : tableToSit(bot)
+    if (staged) bot.stage = null
     if (table?.id && clearPath(bot.room, from, table.at)) {
       bot.target = { ...table.at }
       bot.sitAt = table.id
@@ -427,7 +452,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     identities.set(userId, { userId, handle, partner: pick(PLAYABLE_IDS), shiny: random() < 0.1, look: look(), supporter: random() < 0.15 ? pick(['supporter', 'gold', 'diamond']) : null })
     const conn = `bot-${nextConn++}`
     const t = now()
-    bots.set(conn, { conn, userId, id: null, room: 'plaza', x: 0, y: 0, facing: 0, moving: false, target: null, door: null, restUntil: t + between(0, 3_000), talkAt: t + between(2_000, 20_000), emoteAt: t + between(4_000, 25_000), pingAt: t + 10_000, tables: new Map(), sitAt: null, actAt: null, aloneSince: null })
+    bots.set(conn, { conn, userId, id: null, room: 'plaza', x: 0, y: 0, facing: 0, moving: false, target: null, door: null, restUntil: t + between(0, 3_000), talkAt: t + between(2_000, 20_000), emoteAt: t + between(4_000, 25_000), pingAt: t + 10_000, tables: new Map(), sitAt: null, actAt: null, aloneSince: null, stage: null })
     connect(state, conn, opts.city, t)
     step(() => hello(state, conn, { t: 'hello', v: 1, city: opts.city, token: userId, room: 'plaza' }, userId, t))
   }
@@ -486,5 +511,14 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     disposed = true
   }
 
-  return { socket, bots: () => [...bots.values()].flatMap((b) => (b.id === null ? [] : [b.id])), dispose }
+  const stage = (table: string) => {
+    const at = stagedSpot(table)
+    if (!at) return 0
+    const near = (b: Bot) => b.room === at.room || (isTownRoomId(b.room) && REALM_ROOMS[b.room].doors.some((d) => d.to === at.room))
+    const sent = [...bots.values()].filter((b) => b.id !== null && !seatedAt(b) && near(b)).sort((a, b) => Number(b.room === at.room) - Number(a.room === at.room)).slice(0, 2)
+    for (const b of sent) Object.assign(b, { stage: table, target: null, door: null, restUntil: 0 })
+    return sent.length
+  }
+
+  return { socket, bots: () => [...bots.values()].flatMap((b) => (b.id === null ? [] : [b.id])), stage, dispose }
 }

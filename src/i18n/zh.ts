@@ -6193,6 +6193,8 @@ export const zh: Messages = {
       watching: '觀戰中',
       takeSeat: '入座',
       watch: '觀戰',
+      seatWaiting: '還缺一位玩家！',
+      playing: '對戰中',
     },
     /** Four in a Row's screen (`realm/games/fourInRow.ts`), drawn on its canvas. */
     fourInRow: {
