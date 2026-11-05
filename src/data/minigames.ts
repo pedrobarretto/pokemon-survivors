@@ -85,25 +85,33 @@ export const MINIGAMES = {
     feats: [],
     trophies: [],
   },
-  /** The arcade's cabinets (agent D): catch falling berries, keep clear of Voltorb. */
+  /**
+   * Berry Rain at the arcade's cabinets (`realm/games/berryCatch.ts`): catch
+   * falling berries, keep clear of Voltorb, 90 s. A good round scores 1500–
+   * 3000 (berries 5–15, the golden one 50, times a combo up to ×4).
+   */
   berryCatch: {
     kind: 'solo',
     where: 'arcade',
-    pay: { perPoint: 1, perPlay: 200, daily: 600 },
-    maxScore: 5000,
+    pay: { perPoint: 0.1, perPlay: 200, daily: 600 },
+    maxScore: 9000,
     minMs: 20_000,
-    feats: [],
-    trophies: [],
+    feats: ['flawless', 'goldRush', 'combo50'],
+    trophies: [{ furniture: 'berryBasket', after: { stat: 'best', at: 2500 } }],
   },
-  /** The arcade's cabinets (agent D): whack the Diglett that pop up. */
+  /**
+   * Whack-a-Diglett at the arcade's cabinets (`realm/games/whackDiglett.ts`):
+   * 60 s of pop-ups. A good round scores 1500–3000 (a Diglett 10, a Dugtrio
+   * 40, times a combo up to ×5; a Voltorb costs 50).
+   */
   whackDiglett: {
     kind: 'solo',
     where: 'arcade',
-    pay: { perPoint: 1, perPlay: 200, daily: 600 },
-    maxScore: 5000,
+    pay: { perPoint: 0.1, perPlay: 200, daily: 600 },
+    maxScore: 9000,
     minMs: 20_000,
-    feats: [],
-    trophies: [],
+    feats: ['combo30', 'dugtrio'],
+    trophies: [{ furniture: 'goldenMallet', after: { stat: 'best', at: 2500 } }],
   },
   /** Four in a row with Poké Balls and Great Balls (agent B), at the café's tables and a base's game table. */
   fourInRow: {

@@ -627,7 +627,7 @@ export const es: Messages = {
       offline: 'No se pudieron cargar las ciudades. Igual puedes entrar.',
       back: 'Volver',
     },
-    rooms: { plaza: 'Plaza', pier: 'Muelle', cafe: 'Café', trail: 'Bosque de Bases' },
+    rooms: { plaza: 'Plaza', pier: 'Muelle', cafe: 'Café', trail: 'Bosque de Bases', arcade: 'Arcade' },
     base: (handle: string) => `Base de @${handle}`,
     status: {
       connecting: 'Conectando…',
@@ -693,6 +693,7 @@ export const es: Messages = {
       fishing: 'Pescar',
       gameTable: 'Mesa de juegos',
       cabinet: 'Arcade',
+      prizes: 'Premios',
     },
     use: 'Usar',
     board: {
@@ -707,6 +708,7 @@ export const es: Messages = {
     },
     counter: 'El café todavía está armando el mostrador. ¡Vuelve pronto!',
     pool: 'Aquí nadarán los Pokémon de tipo Agua. ¡Pronto!',
+    prizes: '¡Rompe récords en las máquinas y gana trofeos para tu base secreta!',
     grove: {
       first: [
         '¡Psst! Solo soy un árbol... Vale, soy Sudowoodo. ¡Bienvenido al Bosque de Bases!',
@@ -5881,6 +5883,9 @@ export const es: Messages = {
       gameTable: 'Mesa de juegos',
       fourInRowCup: 'Copa del Cuatro en Línea',
       fourInRowGiant: 'Cuatro en Línea gigante',
+      // The arcade's trophies (data/furnitureSets/games.ts).
+      berryBasket: 'Cesta de bayas',
+      goldenMallet: 'Mazo dorado',
     },
     doll: (legend) => `Muñeco de ${legend}`,
     kinds: { floor: 'Mueble', rug: 'Alfombra', top: 'Adorno', wall: 'Pared', wallpaper: 'Papel tapiz', flooring: 'Piso' },
@@ -6177,7 +6182,7 @@ export const es: Messages = {
       fourInRow: { name: 'Cuatro en Línea', blurb: 'Alinea cuatro Poké Balls antes que tu rival.' },
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fuego vence a Planta, Planta a Agua, Agua a Fuego.' },
     },
-    feats: { fishing: {}, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: { perfectDuel: '¡Duelo perfecto, sin perder una ronda!' } },
+    feats: { fishing: {}, berryCatch: { flawless: '¡Lluvia de Bayas sin perder una vida!', goldRush: '¡Tres bayas doradas en una ronda!', combo50: '¡Combo de 50 bayas!' }, whackDiglett: { combo30: '¡Combo de 30 golpes!', dugtrio: '¡Golpeó a 5 Dugtrio en una ronda!' }, fourInRow: {}, typeDuel: { perfectDuel: '¡Duelo perfecto, sin perder una ronda!' } },
     duel: {
       pick: 'Elige una carta',
       play: 'Jugar',

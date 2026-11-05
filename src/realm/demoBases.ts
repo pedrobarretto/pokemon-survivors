@@ -20,6 +20,8 @@ export const DEMO_BASES = {
       at('pottedPlant', 11, 2),
       at('aquarium', 3, 2),
       at('doll:mewtwo', 4, 2),
+      at('arcadeCabinet', 6, 2),
+      at('arcadeCabinetTeal', 7, 2),
       at('goldTrophyCase', 8, 2),
       at('doll:groudon', 8, 2),
       at('doll:hoOh', 10, 2),

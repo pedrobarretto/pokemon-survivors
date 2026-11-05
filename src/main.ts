@@ -145,7 +145,8 @@ import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, 
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
-import { openRealm } from './ui/realm'
+import { devRealmRoom, openRealm } from './ui/realm'
+import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { realmClient, realmDevState, realmUrl, stageRealmTable, useLocalRealm } from './realmShell'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
@@ -3018,7 +3019,7 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * a city, `('walk', '110,280')` walks the trainer to a point of its room (as a
  * tap would: scripted shots get to a spot, like the café's game tables),
  * `('table', 'cafe-2 fourInRow')` sends two bots to play at a game table (the game optional); no argument
- * prints the state.
+ * prints the state; `('room', 'arcade')` walks the open town's trainer into a room.
  */
 const devRealm = (cmd?: string, arg?: string) => {
   switch (cmd) {
@@ -3044,6 +3045,8 @@ const devRealm = (cmd?: string, arg?: string) => {
       if (screen !== realmShown || !realmShown || !Number.isFinite(x) || !Number.isFinite(y)) return 'ps.realm: walk "x,y" in the realm'
       return realmShown.walkTo(x!, y!)
     }
+    case 'room':
+      return isTownRoomId(arg) ? devRealmRoom(arg) : `ps.realm: room (${TOWN_ROOMS.join(', ')})`
     default:
       return realmDevState()
   }

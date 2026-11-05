@@ -626,7 +626,7 @@ export const fr: Messages = {
       offline: 'Impossible de charger les villes. Tu peux quand même entrer.',
       back: 'Retour',
     },
-    rooms: { plaza: 'Place', pier: 'Jetée', cafe: 'Café', trail: 'Bosquet des bases' },
+    rooms: { plaza: 'Place', pier: 'Jetée', cafe: 'Café', trail: 'Bosquet des bases', arcade: "Salle d'arcade" },
     base: (handle: string) => `Base de @${handle}`,
     status: {
       connecting: 'Connexion…',
@@ -692,6 +692,7 @@ export const fr: Messages = {
       fishing: 'Pêcher',
       gameTable: 'Table de jeux',
       cabinet: 'Borne d\'arcade',
+      prizes: 'Prix',
     },
     use: 'Utiliser',
     board: {
@@ -706,6 +707,7 @@ export const fr: Messages = {
     },
     counter: 'Le café installe encore son comptoir. Reviens bientôt !',
     pool: 'Les Pokémon Eau nageront ici. Bientôt !',
+    prizes: 'Battez des records aux bornes et gagnez des trophées pour votre base secrète !',
     grove: {
       first: [
         'Psst ! Je ne suis qu’un arbre... Bon, d’accord, je suis Sudowoodo. Bienvenue au Bosquet des bases !',
@@ -5875,6 +5877,9 @@ export const fr: Messages = {
       gameTable: 'Table de jeux',
       fourInRowCup: 'Coupe du Puissance Quatre',
       fourInRowGiant: 'Puissance Quatre géant',
+      // The arcade's trophies (data/furnitureSets/games.ts).
+      berryBasket: 'Panier de baies',
+      goldenMallet: 'Maillet doré',
     },
     doll: (legend) => `Poupée ${legend}`,
     kinds: { floor: 'Meuble', rug: 'Tapis', top: 'Bibelot', wall: 'Mur', wallpaper: 'Papier peint', flooring: 'Sol' },
@@ -6171,7 +6176,7 @@ export const fr: Messages = {
       fourInRow: { name: 'Puissance Quatre', blurb: 'Aligne quatre Poké Balls avant ton rival.' },
       typeDuel: { name: 'Duel de Types', blurb: 'Feu bat Plante, Plante bat Eau, Eau bat Feu.' },
     },
-    feats: { fishing: {}, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' } },
+    feats: { fishing: {}, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' } },
     duel: {
       pick: 'Choisis une carte',
       play: 'Jouer',

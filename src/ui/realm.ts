@@ -2,7 +2,7 @@ import { track } from '../analytics'
 import { effectIn } from '../data/arenaEffects'
 import { lookIn, parseLook, type Look } from '../data/cosmetics'
 import { PLAYABLE } from '../data/hatchlings'
-import { BASE_GRID, BASE_ROOM, LANDING, REALM_ROOMS, isTownRoomId, type Door, type Point, type Rect, type Spot, type SpotKind } from '../data/realmMap'
+import { BASE_GRID, BASE_ROOM, LANDING, REALM_ROOMS, isTownRoomId, type Door, type Point, type Rect, type Spot, type SpotKind, type TownRoomId } from '../data/realmMap'
 import type { BaseExterior, BaseLayout } from '../data/secretBases'
 import { footprint } from '../data/furniture'
 import { FURNITURE_GAMES, isMinigameId, isTableGame, type TableGameId } from '../data/minigames'
@@ -43,7 +43,7 @@ import { baseSolids, drawBaseRoom } from '../render/base'
 import { drawJoystick } from '../render/joystick'
 import { drawTownGround, drawTownOverhead, labelTop, townPieces } from '../render/realmArt'
 import { GROVE_HOST } from '../render/realmLayout'
-import { drawEmoteBubble, drawTrainer, emoting, headOf, realmIconUrl, type TrainerView } from '../render/realmScene'
+import { drawEmoteBubble, drawScreenGlow, drawTrainer, emoting, headOf, realmIconUrl, type TrainerView } from '../render/realmScene'
 import { loadSpecies, portraitUrl } from '../render/sprites'
 import { titleChip } from './arenaTitle'
 import { openBaseBoard } from './baseBoard'
@@ -205,6 +205,12 @@ const spotsOf = (room: RoomKey, base: BaseView | null = null): readonly Spot[] =
 
 const inRect = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h
 
+/** What a spot's label says: a cabinet with one game is named after it, everything else by its kind. */
+const spotLabel = (s: Spot) => {
+  const game = s.kind === 'cabinet' && s.games?.length === 1 ? s.games[0] : undefined
+  return game !== undefined && isMinigameId(game) ? t().minigames.games[game].name : t().realm.spots[s.kind]
+}
+
 /** Labels show over spots and doors this close (world px) to the trainer. */
 const LABEL_NEAR = 220
 /** How far down (CSS px) a label's bottom stays at least, so the top bar never hides it. */
@@ -221,9 +227,15 @@ type Label = { text: string; at: Point; spot: Spot | null }
 const labelsOf = (room: RoomKey): Label[] => {
   const m = t().realm
   const { w, h: hgt } = isTownRoomId(room) ? REALM_ROOMS[room] : BASE_ROOM
+  // Cabinets side by side playing the same game share one label, between them.
+  const shared = (s: Spot) => spotsOf(room).filter((o) => o.kind === 'cabinet' && s.kind === 'cabinet' && String(o.games) === String(s.games) && Math.abs(o.at.y - s.at.y) < 8 && Math.abs(o.at.x - s.at.x) <= 48)
   const spots = spotsOf(room)
-    .filter((s) => s.kind !== 'bench')
-    .map((s) => ({ text: m.spots[s.kind], at: s.at, spot: s }))
+    .filter((s) => s.kind !== 'bench' && (s.kind !== 'cabinet' || shared(s)[0] === s))
+    .map((s) => {
+      const row = shared(s)
+      const at = row.length > 1 ? { x: row.reduce((sum, o) => sum + o.at.x, 0) / row.length, y: s.at.y } : s.at
+      return { text: spotLabel(s), at, spot: s }
+    })
   const doors = doorsOf(room).map((d) => {
     const name = m.rooms[d.to]
     const cx = d.at.x + d.at.w / 2
@@ -249,6 +261,28 @@ type Trainer = TrainerView & {
   said: { at: number } | null
   plate: HTMLElement
   bubble: HTMLElement
+}
+
+/** Dev (`ps.realm('room', 'arcade')`): sends the open town's trainer walking to a room through its doors (straight lines, so it can snag on the way). */
+let devGo: ((room: TownRoomId) => void) | null = null
+let devDest: TownRoomId | null = null
+export const devRealmRoom = (room: TownRoomId) => (devGo ? (devGo(room), room) : 'ps.realm: no town open')
+
+/** The middle of the door out of `from` that leads toward `to` (the first hop of the fewest), or null. */
+const doorToward = (from: TownRoomId, to: TownRoomId): Point | null => {
+  const queue: { room: TownRoomId; first: Door | null }[] = [{ room: from, first: null }]
+  const seen = new Set<TownRoomId>([from])
+  while (queue.length) {
+    const { room, first } = queue.shift()!
+    for (const d of REALM_ROOMS[room].doors) {
+      if (seen.has(d.to)) continue
+      const hop = first ?? d
+      if (d.to === to) return { x: hop.at.x + hop.at.w / 2, y: hop.at.y + hop.at.h / 2 }
+      seen.add(d.to)
+      queue.push({ room: d.to, first: hop })
+    }
+  }
+  return null
 }
 
 /** What a session did, summed into one `realm_session` event when it ends. */
@@ -746,6 +780,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           return hostTalk(!groveSeen())
         case 'counter':
           return void toast(root, m().counter, 2600, 'realmSpot')
+        case 'prizes':
+          return void toast(root, m().prizes, 3200, 'realmSpot')
         case 'pool':
           return void toast(root, m().pool, 2600, 'realmSpot')
         case 'bench':
@@ -918,6 +954,9 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           else walker.target = at
           tap = null
         }
+        // Dev: walking on its own toward `ps.realm('room', …)`'s room, door after door.
+        if (devDest && (devDest === room || !isTownRoomId(room))) devDest = null
+        if (devDest && !going && walker.target === null && isTownRoomId(room)) walker.target = doorToward(room, devDest)
         if (!going) walk(walker, move, dt, ground)
         const sent = report(walker, now)
         if (sent) client.send({ t: 'move', ...sent })
@@ -949,11 +988,14 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           const at = sampleAt(tr.track, now)
           if (at) Object.assign(tr, at)
         }
+        // A trainer playing a cabinet stands facing it (the cabinets stand on the back wall).
+        if (tr.av.act === 'arcade' && !tr.moving) tr.facing = 4
         views.push(seat ? { ...tr, sortY: seat.sortY } : tr)
       }
       const pieces = [
         ...(town ? townPieces(town, exterior) : []).map((p) => ({ y: p.y, draw: () => p.draw(ctx, cam.x, cam.y, clock) })),
         ...views.map((v) => ({ y: v.sortY ?? v.y, draw: () => drawTrainer(ctx, v, cam.x, cam.y, clock) })),
+        ...[...trainers.values()].filter((tr) => tr.av.act === 'arcade').map((tr) => ({ y: tr.y - 0.5, draw: () => drawScreenGlow(ctx, tr, cam.x, cam.y, clock) })),
       ]
       pieces.sort((a, b) => a.y - b.y)
       for (const p of pieces) p.draw()
@@ -994,13 +1036,15 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       useButton.classList.toggle('hidden', !near || sub !== null)
       if (near) {
         const tb = near.kind === 'gameTable' && near.id ? tables.get(near.id) : undefined
-        const label = tb && !tb.seats.includes(null) ? t().minigames.tables.watch : m().spots[near.kind]
+        const label = tb && !tb.seats.includes(null) ? t().minigames.tables.watch : spotLabel(near)
         if (useLabel.textContent !== label) useLabel.textContent = label
         useButton.style.transform = pin(near.at, useButton)
       }
       // The labels of what's around: the near spot's is its prompt instead.
       for (const l of labels) {
-        const shown = seated && sub === null && l.spot !== near && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
+        // Only what's on screen: a label pinned to the edge for something off it would pile onto the others there.
+        const onScreen = l.at.x >= cam.x && l.at.x <= cam.x + w
+        const shown = seated && sub === null && l.spot !== near && onScreen && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
         l.el.classList.toggle('shown', shown)
         if (shown && l.spot?.kind === 'gameTable' && l.spot.id) {
           // A game table's label says whether a match is on there, or a seat waits for someone.
@@ -1013,7 +1057,9 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       }
     }
 
+    devGo = (to) => (devDest = to)
     const dispose = () => {
+      devGo = null
       offMessages()
       offKeys()
       el.removeEventListener('pointerdown', onDown)

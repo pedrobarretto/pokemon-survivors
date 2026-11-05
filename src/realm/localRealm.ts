@@ -86,6 +86,8 @@ type Bot = {
   /** A door it's walking to (its room and spawn), or null. */
   door: { to: TownRoomId; spawn: Point } | null
   restUntil: number
+  /** Walking to an arcade cabinet (`cabinet` spot) to play it there, or playing it (`at`). */
+  arcade: 'going' | 'at' | null
   talkAt: number
   emoteAt: number
   pingAt: number
@@ -316,6 +318,8 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     const room = REALM_ROOMS[bot.room]
     const doors: readonly Door[] = room.doors
     const from = { x: bot.x, y: bot.y }
+    if (bot.arcade === 'at') step(() => message(state, bot.conn, { t: 'act', act: null }, now()))
+    bot.arcade = null
     const staged = bot.stage ? stagedSpot(bot.stage) : null
     if (staged && staged.room !== bot.room) {
       const door = doors.find((d) => d.to === staged.room)
@@ -345,6 +349,14 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
         bot.door = { to: door.to, spawn: door.spawn }
         return
       }
+    }
+    // In the arcade, a bot often goes to play a cabinet.
+    const cabinets: readonly Spot[] = room.spots.filter((s) => s.kind === 'cabinet')
+    const cabinet = cabinets.length > 0 ? pick(cabinets) : null
+    if (cabinet && random() < 0.5 && clearPath(bot.room, from, cabinet.at)) {
+      bot.target = cabinet.at
+      bot.arcade = 'going'
+      return
     }
     if (doors.length > 0 && random() < 0.12) {
       const door = pick(doors)
@@ -434,6 +446,13 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
       bot.moving = false
       bot.restUntil = t + between(1_000, 6_000)
       bot.pingAt = t + 10_000
+      if (bot.arcade === 'going') {
+        // At the cabinet: facing it, playing a while.
+        bot.arcade = 'at'
+        bot.facing = 4
+        bot.restUntil = t + between(12_000, 35_000)
+        step(() => message(state, bot.conn, { t: 'act', act: 'arcade' }, t))
+      }
       step(() => message(state, bot.conn, { t: 'move', x: bot.x, y: bot.y, facing: bot.facing, moving: false }, t))
       const door = bot.door
       bot.door = null
@@ -457,7 +476,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     identities.set(userId, { userId, handle, partner: pick(PLAYABLE_IDS), shiny: random() < 0.1, look: look(), supporter: random() < 0.15 ? pick(['supporter', 'gold', 'diamond']) : null })
     const conn = `bot-${nextConn++}`
     const t = now()
-    bots.set(conn, { conn, userId, id: null, room: 'plaza', x: 0, y: 0, facing: 0, moving: false, target: null, door: null, restUntil: t + between(0, 3_000), talkAt: t + between(2_000, 20_000), emoteAt: t + between(4_000, 25_000), pingAt: t + 10_000, tables: new Map(), sitAt: null, actAt: null, aloneSince: null, stage: null, stageGame: null, sitGame: null })
+    bots.set(conn, { conn, userId, id: null, room: 'plaza', x: 0, y: 0, facing: 0, moving: false, target: null, door: null, arcade: null, restUntil: t + between(0, 3_000), talkAt: t + between(2_000, 20_000), emoteAt: t + between(4_000, 25_000), pingAt: t + 10_000, tables: new Map(), sitAt: null, actAt: null, aloneSince: null, stage: null, stageGame: null, sitGame: null })
     connect(state, conn, opts.city, t)
     step(() => hello(state, conn, { t: 'hello', v: 1, city: opts.city, token: userId, room: 'plaza' }, userId, t))
   }

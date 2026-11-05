@@ -626,7 +626,7 @@ export const en: Messages = {
       offline: 'Couldn’t load the cities right now. You can still enter.',
       back: 'Back',
     },
-    rooms: { plaza: 'Plaza', pier: 'Pier', cafe: 'Café', trail: 'Secret Base Grove' },
+    rooms: { plaza: 'Plaza', pier: 'Pier', cafe: 'Café', trail: 'Secret Base Grove', arcade: 'Arcade' },
     base: (handle: string) => `@${handle}’s base`,
     status: {
       connecting: 'Connecting…',
@@ -692,6 +692,7 @@ export const en: Messages = {
       fishing: 'Fish',
       gameTable: 'Game table',
       cabinet: 'Arcade',
+      prizes: 'Prizes',
     },
     use: 'Use',
     board: {
@@ -706,6 +707,7 @@ export const en: Messages = {
     },
     counter: 'The café is still setting up its counter. Come back soon!',
     pool: 'Water types will swim here. Coming soon!',
+    prizes: 'Beat records at the cabinets to win trophies for your secret base!',
     grove: {
       first: [
         'Psst! I’m just a tree... Fine, I’m Sudowoodo. Welcome to the Secret Base Grove!',
@@ -5879,6 +5881,9 @@ export const en: Messages = {
       gameTable: 'Game table',
       fourInRowCup: 'Four in a Row cup',
       fourInRowGiant: 'Giant Four in a Row',
+      // The arcade's trophies (data/furnitureSets/games.ts).
+      berryBasket: 'Berry Basket',
+      goldenMallet: 'Golden Mallet',
     },
     doll: (legend) => `${legend} Doll`,
     kinds: { floor: 'Furniture', rug: 'Rug', top: 'Ornament', wall: 'Wall', wallpaper: 'Wallpaper', flooring: 'Flooring' },
@@ -6175,7 +6180,7 @@ export const en: Messages = {
       fourInRow: { name: 'Four in a Row', blurb: 'Line up four Poké Balls before your rival.' },
       typeDuel: { name: 'Type Duel', blurb: 'Fire beats Grass, Grass beats Water, Water beats Fire.' },
     },
-    feats: { fishing: {}, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: { perfectDuel: 'A perfect duel, not a round lost!' } },
+    feats: { fishing: {}, berryCatch: { flawless: 'A flawless Berry Rain!', goldRush: 'Three golden berries in one round!', combo50: 'A 50-berry combo!' }, whackDiglett: { combo30: 'A 30-bonk combo!', dugtrio: 'Bonked 5 Dugtrio in one round!' }, fourInRow: {}, typeDuel: { perfectDuel: 'A perfect duel, not a round lost!' } },
     duel: {
       pick: 'Pick a card',
       play: 'Play',

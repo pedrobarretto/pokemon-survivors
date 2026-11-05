@@ -74,6 +74,16 @@ export const TOWN_ART = {
   rocksFlat: 'realm/rocks-14',
   mural: 'realm/mural',
   groveSign: 'realm/grove-sign',
+  arcade: 'realm/arcade',
+  cabinetBerry: 'realm/arcade/cabinet-berry',
+  cabinetBerry2: 'realm/arcade/cabinet-berry-2',
+  cabinetDiglett: 'realm/arcade/cabinet-diglett',
+  cabinetDiglett2: 'realm/arcade/cabinet-diglett-2',
+  prizeCounter: 'realm/arcade/prize-counter',
+  prizeShelf: 'realm/arcade/prize-shelf',
+  claw: 'realm/arcade/claw',
+  claw2: 'realm/arcade/claw-2',
+  jukebox: 'furniture/jukebox',
 } as const satisfies Record<string, string>
 
 export type TownArt = keyof typeof TOWN_ART
@@ -123,7 +133,13 @@ type Path = { kind: 'path'; points: readonly Point[]; r: number }
 export type Surface =
   | Path
   | { kind: 'paving' | 'dirt' | 'sand' | 'water' | 'boards' | 'floor' | 'mat'; shape: Shape; pool?: true }
-  | { kind: 'wall'; h: number; windows: readonly number[] }
+  | { kind: 'wall'; h: number; windows: readonly number[]; neon?: true }
+  | { kind: 'carpet'; shape: Shape }
+  /** A round rug woven as a Poké Ball (its top red, its bottom white, the band and the button dark), lying on the floor. */
+  | { kind: 'ballRug'; shape: Shape }
+
+/** The arcade's prize clerk: Porygon, the Pokémon made of code, by the till at the counter's west end (no spot of its own: the counter is the prizes'). */
+export const PRIZE_CLERK = { dex: 137, x: 264, y: 112, facing: 1 } as const
 
 /** A Pokémon that stands in a room (its SpriteCollab sprite, idling) with its feet at (`x`, `y`), facing `facing`: the trail's host. */
 export type Host = { dex: number; x: number; y: number; facing: Dir8 }
@@ -192,7 +208,9 @@ const PLAZA: RoomLayout = {
  * over the sea to a jetty under the lighthouse, which stands on the rocks of
  * the north-east point; the lagoon in the middle, where Water types swim, is
  * a tide pool the sea fills through a channel to the south, rocks on its rim;
- * palms, parasols, a sandcastle and surfboards dot the sand.
+ * palms, parasols, a sandcastle and surfboards dot the sand. The arcade
+ * stands on the north shore on a deck of boards, its double doors the way
+ * in (the `arcade` door).
  */
 const PIER: RoomLayout = {
   indoor: false,
@@ -210,6 +228,7 @@ const PIER: RoomLayout = {
     { kind: 'water', shape: oval(468, 398, 22, 24), pool: true },
     { kind: 'water', shape: oval(482, 428, 22, 20), pool: true },
     { kind: 'boards', shape: rect(470, 170, 170, 44) },
+    { kind: 'boards', shape: rect(334, 134, 116, 20) },
   ],
   props: [
     { art: 'signpost', x: 24, y: 216 },
@@ -236,7 +255,8 @@ const PIER: RoomLayout = {
     { art: 'tree0', x: 104, y: 70 },
     { art: 'bush', x: 160, y: 100 },
     { art: 'tree2', x: 260, y: 64 },
-    { art: 'bush1', x: 330, y: 96 },
+    { art: 'bush1', x: 298, y: 112 },
+    { art: 'arcade', x: 392, y: 138 },
     { art: 'tree0', x: 40, y: 430 },
   ],
 }
@@ -260,7 +280,6 @@ const CAFE: RoomLayout = {
     { art: 'gameTable', x: 290, y: 262 },
     { art: 'menu', x: 150, y: 300 },
     { art: 'plant', x: 22, y: 96 },
-    { art: 'plant', x: 378, y: 96 },
     { art: 'plant', x: 22, y: 296 },
     { art: 'plant', x: 378, y: 296 },
   ],
@@ -320,4 +339,38 @@ const TRAIL: RoomLayout = {
   ],
 }
 
-export const TOWN_LAYOUT = { plaza: PLAZA, pier: PIER, cafe: CAFE, trail: TRAIL } as const satisfies Record<TownRoomId, RoomLayout>
+/**
+ * The arcade (its door on the pier's boardwalk): the neon-lit back wall, a
+ * row of four cabinets along it (two Berry Rain, two Whack-a-Diglett: the
+ * room's `cabinet` spots), the prize counter on the east with its shelf of
+ * prizes on the wall and Porygon minding it by the till, a Poké Ball rug in
+ * the middle, two claw machines by the west
+ * wall, a jukebox and a sofa on the east, on the arcade's star-strewn carpet.
+ */
+const ARCADE: RoomLayout = {
+  indoor: true,
+  ground: [
+    { kind: 'carpet', shape: rect(0, 0, 400, 300) },
+    { kind: 'ballRug', shape: oval(200, 196, 50, 25) },
+    { kind: 'mat', shape: rect(176, 286, 48, 14) },
+    { kind: 'wall', h: 64, windows: [], neon: true },
+  ],
+  hosts: [PRIZE_CLERK],
+  props: [
+    { art: 'cabinetBerry', x: 52, y: 100 },
+    { art: 'cabinetBerry2', x: 92, y: 100 },
+    { art: 'cabinetDiglett', x: 132, y: 100 },
+    { art: 'cabinetDiglett2', x: 172, y: 100 },
+    { art: 'prizeShelf', x: 322, y: 60 },
+    { art: 'prizeCounter', x: 322, y: 120 },
+    { art: 'claw', x: 28, y: 162 },
+    { art: 'claw2', x: 28, y: 208 },
+    { art: 'jukebox', x: 380, y: 162 },
+    { art: 'sofa', x: 320, y: 206 },
+    { art: 'plant', x: 22, y: 96 },
+    { art: 'plant', x: 22, y: 296 },
+    { art: 'plant', x: 378, y: 296 },
+  ],
+}
+
+export const TOWN_LAYOUT = { plaza: PLAZA, pier: PIER, cafe: CAFE, trail: TRAIL, arcade: ARCADE } as const satisfies Record<TownRoomId, RoomLayout>
