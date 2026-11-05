@@ -307,8 +307,8 @@ const drawPiece = (ctx: CanvasRenderingContext2D, p: Placed, ox: number, oy: num
   else drawStandIn(ctx, p.id, px, py, pw, ph)
 }
 
-/** How far a top piece is lifted: onto its surface, or not at all when there's none (the editor flags it). */
-const liftOf = (items: readonly Placed[], i: number) => (FURNITURE[items[i]!.id].kind === 'top' && supportOf(items, i) >= 0 ? SURFACE_RISE : 0)
+/** How far a top piece is lifted: onto its surface, or not at all when there's none (the editor flags it); a lit lamp's glow rises with it (`render/furnitureUse.ts`). */
+export const liftOf = (items: readonly Placed[], i: number) => (FURNITURE[items[i]!.id].kind === 'top' && supportOf(items, i) >= 0 ? SURFACE_RISE : 0)
 
 /**
  * The editor's marks over a base (`ui/baseEditor.ts`): the tile grid, the

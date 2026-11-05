@@ -1,5 +1,5 @@
 import { skinFor, type Look } from '../data/cosmetics'
-import type { RealmAct, RealmEmote } from '../net/realm'
+import { isPerchAct, type PerchAct, type RealmAct, type RealmEmote } from '../net/realm'
 import { blitCentered, blitEllipse, context2d, fromStrings, lazy, type Palette, type PixelSprite } from '../engine/pixelart'
 import { lookEmoteFrame } from './arenaFx'
 import { skinSprites, sprites } from './sprites'
@@ -11,7 +11,9 @@ import type { Facing } from '../net/realm'
  * and the HTML over it): each one's partner Pokémon dressed in its look
  * (`drawDressed`), a shadow, and the PMD-style bubble of an emote over its
  * head; the `look` emote plays the trainer's emote cosmetic's animation, as
- * in the Arena (`lookEmoteFrame`).
+ * in the Arena (`lookEmoteFrame`). A trainer on a seat (`PerchAct`) sinks
+ * into it: its idle drawn lower, cut off at the seat's front edge (its `y`),
+ * so no new art is needed for sitting, lying in a bed or soaking in a tub.
  */
 
 type Ctx = CanvasRenderingContext2D
@@ -29,9 +31,19 @@ export type TrainerView = {
   facing: Facing
   moving: boolean
   emote: { id: RealmEmote; at: number } | null
-  /** What the trainer is busy at (a mini game, `RealmAct`): fishing draws the rod, its line and the bobber. */
+  /**
+   * What the trainer is busy at (a mini game, `RealmAct`): fishing draws the
+   * rod, its line and the bobber; on a seat (a `PerchAct`), `y` is the seat's
+   * front edge and the trainer sinks behind it (`sinkOf`).
+   */
   act?: RealmAct | null
 }
+
+/** How much of a trainer's body each pose hides behind the seat's edge: the legs on a chair, up to the chest in a bed or a tub. */
+const SINK: Record<PerchAct, number> = { sit: 0.3, lie: 0.55, soak: 0.5 }
+
+/** The px of a trainer's body hidden behind its seat's front edge (0 standing). */
+export const sinkOf = (t: TrainerView) => (isPerchAct(t.act) ? Math.round(sprites(t.dex, t.shiny).bodyH * SINK[t.act]) : 0)
 
 /** The bubble every emote's icon sits in (as the lobby's, `render/art.ts`). */
 const BUBBLE = [
@@ -90,8 +102,8 @@ export const realmIconUrl = (id: RealmEmote | 'talk'): string => {
 /** Whether an emote still shows at `now` (s). */
 export const emoting = (t: TrainerView, now: number) => t.emote !== null && now - t.emote.at < EMOTE_SECONDS
 
-/** A trainer's height over its feet (world px), for what goes over its head. */
-export const headOf = (t: TrainerView) => sprites(t.dex, t.shiny).bodyH
+/** A trainer's height over its feet (world px; over the seat's edge when seated), for what goes over its head. */
+export const headOf = (t: TrainerView) => sprites(t.dex, t.shiny).bodyH - sinkOf(t)
 
 /** Each facing's step (`Facing`: 0 down, then clockwise as seen from above: 2 right, 4 up, 6 left). */
 const STEPS = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]] as const
@@ -177,6 +189,7 @@ const drawFishingGear = (ctx: Ctx, t: TrainerView, x: number, y: number, now: nu
 export const drawTrainer = (ctx: Ctx, t: TrainerView, camX: number, camY: number, now: number) => {
   const x = Math.round(t.x - camX)
   const y = Math.round(t.y - camY)
+  if (isPerchAct(t.act)) return drawPerched(ctx, t, t.act, x, y, now)
   blitEllipse(ctx, 7, 3, 'rgba(16,24,16,0.3)', x, y)
   // The rod goes behind a trainer facing away, in front of one facing the water below.
   const fishing = t.act === 'fishing' && !t.moving
@@ -186,6 +199,46 @@ export const drawTrainer = (ctx: Ctx, t: TrainerView, camX: number, camY: number
     return drawFishingGear(ctx, t, x, y, now)
   }
   drawBody(ctx, t, x, y, now)
+}
+
+/**
+ * A trainer on a seat, its seat's front edge at screen (`x`, `y`): its idle
+ * drawn `sinkOf` px lower and cut off at the edge (the piece under it shows
+ * through below), water lapping at a soaker, and z's rising over a sleeper.
+ */
+const drawPerched = (ctx: Ctx, t: TrainerView, pose: PerchAct, x: number, y: number, now: number) => {
+  const sink = sinkOf(t)
+  const body = sprites(t.dex, t.shiny).bodyH
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(x - 64, y - body - 64, 128, body + 64)
+  ctx.clip()
+  drawBody(ctx, t, x, y + sink, now)
+  ctx.restore()
+  if (pose === 'soak') {
+    // The water's edge across the body, bobbing a pixel.
+    const bob = Math.round(Math.sin(now * 2 + t.x) * 0.6)
+    ctx.fillStyle = 'rgba(200,240,255,0.85)'
+    ctx.fillRect(x - 7, y - 1 + bob, 14, 1)
+    ctx.fillStyle = 'rgba(120,200,240,0.6)'
+    ctx.fillRect(x - 5, y + bob, 10, 1)
+  }
+  if (pose === 'lie') drawZs(ctx, x + 6, y - (body - sink) - 2, now + t.x * 0.13)
+}
+
+/** Three z's drifting up and fading over a sleeper's head, one after another. */
+const drawZs = (ctx: Ctx, x: number, y: number, now: number) => {
+  for (let i = 0; i < 3; i++) {
+    const k = (now * 0.5 + i / 3) % 1
+    ctx.globalAlpha = 1 - k
+    ctx.fillStyle = '#f8f8f8'
+    const zx = Math.round(x + k * 6 + i)
+    const zy = Math.round(y - k * 12)
+    ctx.fillRect(zx, zy, 3, 1)
+    ctx.fillRect(zx + 1, zy + 1, 1, 1)
+    ctx.fillRect(zx, zy + 2, 3, 1)
+  }
+  ctx.globalAlpha = 1
 }
 
 /** The trainer's partner in its look's skin for it, if any (the species' own until the skin's sheets land). */

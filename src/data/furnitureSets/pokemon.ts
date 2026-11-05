@@ -1,5 +1,5 @@
-import type { FurnitureDef } from '../furniture'
-import type { LegendId } from '../legends'
+import type { FurnitureDef } from '../furnitureDef'
+import { USE, light } from '../furnitureUse'
 
 /**
  * The Pokémon collections (`trainer`, `center`, `gallery`): starter beds,
@@ -13,11 +13,12 @@ import type { LegendId } from '../legends'
  * room is built from (chairs, rugs, shelves, the counters, the cover
  * tributes) costs ₽, the economy's sink. The legends' paintings are never
  * sold: each comes with the legends it shows, once captured
- * (`LEGEND_PAINTINGS`, counted by `trophyFurniture` like the dolls).
+ * (`LEGEND_PAINTINGS`, `furnitureSets/paintings.ts`, counted by
+ * `trophyFurniture` like the dolls).
  */
 
 /** A starter bed: the starter tucked in on the pillow (its SpriteCollab sprite), the frame and blanket in its colors. */
-const BED = { kind: 'floor', set: 'trainer', size: [2, 3], rarity: 'rare', price: { gems: 250 }, blocks: true, turns: true } as const satisfies FurnitureDef
+const BED = { kind: 'floor', set: 'trainer', size: [2, 3], rarity: 'rare', price: { gems: 250 }, blocks: true, turns: true, use: USE.bed } as const satisfies FurnitureDef
 
 /** A tribute to a game's cover: its color field, its mascot (SpriteCollab) and a title band, framed; ₽, a collector's sink. */
 const COVER = { kind: 'wall', set: 'gallery', size: [2, 2], rarity: 'rare', price: { coins: 15000 } } as const satisfies FurnitureDef
@@ -37,18 +38,18 @@ export const POKEMON_FURNITURE = {
   torchicBed: BED,
   mudkipBed: BED,
   // Trainer: Poké Balls and a trainer's things.
-  pokeBallChair: { kind: 'floor', set: 'trainer', size: [1, 1], rarity: 'common', price: { coins: 2500 }, blocks: true },
+  pokeBallChair: { kind: 'floor', set: 'trainer', size: [1, 1], rarity: 'common', price: { coins: 2500 }, blocks: true, use: USE.chair },
   greatBallRug: { kind: 'rug', set: 'trainer', size: [3, 3], rarity: 'common', price: { coins: 6000 } },
   ultraBallRug: { kind: 'rug', set: 'trainer', size: [3, 3], rarity: 'rare', price: { coins: 9000 } },
   masterBallRug: { kind: 'rug', set: 'trainer', size: [3, 3], rarity: 'epic', price: { gems: 550 } },
   badgeCase: { kind: 'wall', set: 'trainer', size: [2, 1], rarity: 'rare', price: { gems: 250 } },
   capRack: { kind: 'floor', set: 'trainer', size: [1, 1], rarity: 'common', price: { coins: 2200 }, blocks: true },
-  pokedexLamp: { kind: 'top', set: 'trainer', size: [1, 1], rarity: 'common', price: { coins: 1500 } },
+  pokedexLamp: { kind: 'top', set: 'trainer', size: [1, 1], rarity: 'common', price: { coins: 1500 }, use: light('lamp', -4, -22) },
   berryPlanter: { kind: 'floor', set: 'trainer', size: [2, 1], rarity: 'common', price: { coins: 3000 }, blocks: true, turns: true },
   gymStatue: { kind: 'floor', set: 'trainer', size: [1, 1], rarity: 'epic', price: { gems: 550 }, blocks: true },
   // The Pokémon Center and the Mart.
   healingMachine: { kind: 'floor', set: 'center', size: [2, 1], rarity: 'epic', price: { gems: 550 }, blocks: true },
-  centerSofa: { kind: 'floor', set: 'center', size: [2, 1], rarity: 'common', price: { coins: 4000 }, blocks: true, turns: true },
+  centerSofa: { kind: 'floor', set: 'center', size: [2, 1], rarity: 'common', price: { coins: 4000 }, blocks: true, turns: true, use: USE.sofa },
   martCounter: { kind: 'floor', set: 'center', size: [3, 1], rarity: 'rare', price: { coins: 9000 }, blocks: true, surface: true, turns: true },
   martShelf: { kind: 'floor', set: 'center', size: [2, 1], rarity: 'common', price: { coins: 5000 }, blocks: true },
   vendingMachine: { kind: 'floor', set: 'center', size: [1, 1], rarity: 'rare', price: { gems: 250 }, blocks: true },
@@ -68,14 +69,3 @@ export const POKEMON_FURNITURE = {
   clashPainting: PAINTING,
   mewtwoPainting: PAINTING,
 } as const satisfies Record<string, FurnitureDef>
-
-/** The legends' paintings and who each shows: earned once every one of them is captured (`trophyFurniture`). */
-export const LEGEND_PAINTINGS = {
-  rayquazaPainting: ['rayquaza'],
-  lugiaPainting: ['lugia'],
-  hoOhPainting: ['hoOh'],
-  clashPainting: ['kyogre', 'groudon'],
-  mewtwoPainting: ['mewtwo'],
-} as const satisfies Partial<Record<keyof typeof POKEMON_FURNITURE, readonly LegendId[]>>
-
-export type LegendPaintingId = keyof typeof LEGEND_PAINTINGS

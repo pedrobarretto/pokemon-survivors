@@ -171,8 +171,17 @@ export const parseRealmMessage = (text: unknown): RealmServerMessage | null => {
       return isNum(v.id) && isRealmLine(v.line) ? { t: 'said', id: v.id, line: v.line } : null
     case 'emoted':
       return isNum(v.id) && isRealmEmote(v.emote) ? { t: 'emoted', id: v.id, emote: v.emote } : null
-    case 'acted':
-      return isNum(v.id) && (v.act === null || isRealmAct(v.act)) ? { t: 'acted', id: v.id, act: v.act } : null
+    case 'acted': {
+      if (!isNum(v.id) || (v.act !== null && !isRealmAct(v.act))) return null
+      const at = Array.isArray(v.at) && v.at.length === 3 && isNum(v.at[0]) && isNum(v.at[1]) && isFacing(v.at[2]) ? ([v.at[0], v.at[1], v.at[2]] as const) : null
+      return at ? { t: 'acted', id: v.id, act: v.act, at } : { t: 'acted', id: v.id, act: v.act }
+    }
+    case 'furniture': {
+      const f = isRecord(v.state) ? v.state : null
+      if (!f || !Array.isArray(f.lit)) return null
+      const music = isRecord(f.music) && isStr(f.music.piece, 64) && isNum(f.music.track) ? { piece: f.music.piece, track: f.music.track } : null
+      return { t: 'furniture', state: { lit: f.lit.filter((k): k is string => isStr(k, 64)), music } }
+    }
     case 'bragged':
       return isNum(v.id) && isStr(v.game, 32) && isStr(v.feat, 32) ? { t: 'bragged', id: v.id, game: v.game, feat: v.feat } : null
     case 'tables': {

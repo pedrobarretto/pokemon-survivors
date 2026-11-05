@@ -1,5 +1,5 @@
 import { dollOf, FURNITURE_IDS, type FurnitureCounts } from '../data/furniture'
-import { LEGEND_PAINTINGS, type LegendPaintingId } from '../data/furnitureSets/pokemon'
+import { LEGEND_PAINTINGS, type LegendPaintingId } from '../data/furnitureSets/paintings'
 import { LEGEND_IDS } from '../data/legends'
 import { isCaptured } from '../game/capture'
 import type { Save } from '../game/meta'

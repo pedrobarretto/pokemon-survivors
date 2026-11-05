@@ -141,7 +141,8 @@ export const fetchFriends = async (): Promise<RealmFriends | null> => {
 }
 
 export const fetchBase = async (handle: string): Promise<BaseView | Failure> => {
-  if (fake) return (handle === fake.me.handle ? fake.me.base : fake.bases.get(handle)) ?? { error: 'missing', status: 404 }
+  // Faked, every other handle has the demo base (two tabs on a dev relay visit each other's).
+  if (fake) return (handle === fake.me.handle ? fake.me.base : fake.bases.get(handle)) ?? fakeBase(handle)
   const { status, body } = await apiCall(`/realm/base/${encodeURIComponent(handle)}`, { auth: true })
   return (status === 200 ? parseBaseView(body) : null) ?? failed(status, body)
 }

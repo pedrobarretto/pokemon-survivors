@@ -758,6 +758,19 @@ export const fr: Messages = {
       prizes: 'Prix',
     },
     use: 'Utiliser',
+    pieces: {
+      sit: "S'asseoir",
+      lie: "S'allonger",
+      soak: 'Entrer',
+      stand: 'Se lever',
+      taken: 'Occupé',
+      on: 'Allumer',
+      off: 'Éteindre',
+      play: 'Lancer la musique',
+      next: 'Morceau suivant',
+      stop: 'Couper la musique',
+      track: (n: number, total: number) => `♪ Morceau ${n} sur ${total}`,
+    },
     board: {
       title: 'Panneau de la place',
       lines: [

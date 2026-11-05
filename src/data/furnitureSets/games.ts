@@ -1,4 +1,4 @@
-import type { FurnitureDef } from '../furniture'
+import type { FurnitureDef } from '../furnitureDef'
 
 /**
  * The mini games' trophies (`MINIGAMES[game].trophies` in `data/minigames.ts`):

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { REALM_ROOMS } from '../../src/data/realmMap'
+import { BASE_ROOM, REALM_ROOMS } from '../../src/data/realmMap'
+import { JUKEBOX, pieceKey } from '../../src/data/furnitureUse'
 import { REALM, REALM_LIMITS, REALM_PROTOCOL, type RealmClientMessage, type RealmIdentity, type RealmServerMessage } from '../../src/net/realm'
 import { PRESENCE_EVERY_MS } from '../../src/net/realmRelay'
 import { connect, createRealm, disconnect, hello, identified, message, parseRealmMessage, tick, visited, type RealmEffect, type RealmState } from '../src/realm'
@@ -42,6 +43,14 @@ describe('parseRealmMessage', () => {
     expect(parseRealmMessage(JSON.stringify({ t: 'partyGo', mode: 'coop', code: 'abc' }))).toBeNull()
     expect(parseRealmMessage(JSON.stringify({ t: 'hello', v: 1, city: 'pallet', token: 'x'.repeat(REALM_LIMITS.token + 1), room: 'plaza' }))).toBeNull()
     expect(parseRealmMessage(JSON.stringify({ t: 'ping', at: 1, pad: 'x'.repeat(REALM_LIMITS.message) }))).toBeNull()
+  })
+
+  it('reads furniture uses of known pieces only, and never a pose said as an act', () => {
+    expect(parseRealmMessage(JSON.stringify({ t: 'perch', piece: { spot: 3 }, seat: 1 }))).toEqual({ t: 'perch', piece: { spot: 3 }, seat: 1 })
+    expect(parseRealmMessage(JSON.stringify({ t: 'use', piece: { id: 'floorLamp', x: 2, y: 3 } }))).toEqual({ t: 'use', piece: { id: 'floorLamp', x: 2, y: 3, turned: false } })
+    expect(parseRealmMessage(JSON.stringify({ t: 'use', piece: { id: 'moonLamp', x: 2, y: 3 } }))).toBeNull()
+    expect(parseRealmMessage(JSON.stringify({ t: 'perch', piece: { id: 'cozySofa', x: 1.5, y: 3 }, seat: 0 }))).toBeNull()
+    expect(parseRealmMessage(JSON.stringify({ t: 'act', act: 'sit' }))).toBeNull()
   })
 })
 
@@ -312,5 +321,103 @@ describe('time', () => {
     expect(tick(state, T0 + PRESENCE_EVERY_MS).find((e) => e.k === 'presence')).toEqual({ k: 'presence', report: { home: 'sa', at: T0 + PRESENCE_EVERY_MS, cities: { pallet: ['ash'] } } })
     disconnect(state, 'a', T0)
     expect(tick(state, T0 + PRESENCE_EVERY_MS + 1).find((e) => e.k === 'presence')).toMatchObject({ report: { cities: {} } })
+  })
+})
+
+describe('furniture', () => {
+  /** Walks `conn` in steps it may take from `from` to `to`, starting at `t`; returns the time it got there. */
+  const walkTo = (state: RealmState, conn: string, from: { x: number; y: number }, to: { x: number; y: number }, t: number) => {
+    let { x, y } = from
+    while (x !== to.x || y !== to.y) {
+      t += 200
+      x += Math.sign(to.x - x) * Math.min(20, Math.abs(to.x - x))
+      y += Math.sign(to.y - y) * Math.min(20, Math.abs(to.y - y))
+      message(state, conn, { t: 'move', x, y, facing: 0, moving: true }, t)
+    }
+    return t
+  }
+  const benchIndex = REALM_ROOMS.plaza.spots.findIndex((s) => s.kind === 'bench')
+  const bench = REALM_ROOMS.plaza.spots[benchIndex]!
+  const seats = (bench as { seats: readonly { x: number; y: number; face: number }[] }).seats
+  const front = { x: bench.at.x, y: bench.at.y + 10 }
+
+  it('sits a trainer on a free bench seat within reach, for the whole room to see, and a step stands it up', () => {
+    const state = createRealm('sa', T0)
+    const a = youOf(join(state, 'a', 'u1'), 'a')
+    const b = youOf(join(state, 'b', 'u2'), 'b')
+    const far = message(state, 'a', { t: 'perch', piece: { spot: benchIndex }, seat: 0 }, T0 + 100)
+    expect(far).toEqual([])
+    let t = walkTo(state, 'a', REALM_ROOMS.plaza.spawn, front, T0)
+    t = walkTo(state, 'b', REALM_ROOMS.plaza.spawn, front, t)
+    const sat = message(state, 'a', { t: 'perch', piece: { spot: benchIndex }, seat: 0 }, t + 100)
+    const seen = { t: 'acted', id: a, act: 'sit', at: [seats[0]!.x, seats[0]!.y, seats[0]!.face] }
+    expect(of(sent(sat, 'b'), 'acted')).toEqual([seen])
+    expect(of(sent(sat, 'a'), 'acted')).toEqual([seen])
+    // Taken: the other trainer gets the bench's other seat, never this one.
+    expect(message(state, 'b', { t: 'perch', piece: { spot: benchIndex }, seat: 0 }, t + 200)).toEqual([])
+    expect(of(sent(message(state, 'b', { t: 'perch', piece: { spot: benchIndex }, seat: 1 }, t + 300), 'a'), 'acted')).toEqual([{ t: 'acted', id: b, act: 'sit', at: [seats[1]!.x, seats[1]!.y, seats[1]!.face] }])
+    // A report from the seat itself keeps it seated; a step off stands it up, and the seat is free again.
+    expect(message(state, 'a', { t: 'move', x: seats[0]!.x, y: seats[0]!.y, facing: 4, moving: false }, t + 400)).toEqual([])
+    const up = message(state, 'a', { t: 'move', x: front.x, y: front.y, facing: 0, moving: true }, t + 600)
+    expect(of(sent(up, 'b'), 'acted')).toEqual([{ t: 'acted', id: a, act: null }])
+    expect(of(sent(message(state, 'b', { t: 'perch', piece: { spot: benchIndex }, seat: 0 }, t + 4600), 'a'), 'acted')).toHaveLength(1)
+  })
+
+  /** Seats `user` on `conn` and lets it into u1's base (the API says yes), at its spawn; what it heard coming in. */
+  const visit = (state: RealmState, conn: string, user: string, t: number) => {
+    join(state, conn, user, t)
+    const asked = message(state, conn, { t: 'go', room: 'base:u1', x: BASE_ROOM.spawn.x, y: BASE_ROOM.spawn.y }, t)
+    const ask = asked.find((e) => e.k === 'visit')
+    if (ask?.k !== 'visit') throw new Error('no visit')
+    return visited(state, ask.ask, { allowed: true }, t)
+  }
+  /** Two trainers in u1's base, at its spawn. */
+  const inBase = () => {
+    const state = createRealm('sa', T0)
+    const a = youOf(join(state, 'a', 'u1', T0, {}, 'base:u1'), 'a')
+    visit(state, 'b', 'u2', T0 + 100)
+    return { state, a }
+  }
+  /** Tiles just above the base's spawn (12 × 9 tiles of 24 px, the spawn on the bottom row's middle). */
+  const near = { x: 5, y: 6 }
+
+  it('seats on a base piece that seats, in its pose, and refuses what doesn’t seat or isn’t within reach', () => {
+    const { state, a } = inBase()
+    expect(message(state, 'a', { t: 'perch', piece: { id: 'woodTable', ...near, turned: false }, seat: 0 }, T0 + 200)).toEqual([])
+    expect(message(state, 'a', { t: 'perch', piece: { id: 'cozySofa', x: 1, y: 2, turned: false }, seat: 0 }, T0 + 300)).toEqual([])
+    expect(message(state, 'a', { t: 'perch', piece: { id: 'cozySofa', x: 11, y: 6, turned: false }, seat: 0 }, T0 + 400)).toEqual([])
+    const lie = message(state, 'a', { t: 'perch', piece: { id: 'pikachuBed', x: 5, y: 4, turned: false }, seat: 0 }, T0 + 500)
+    expect(of(sent(lie, 'b'), 'acted')).toEqual([{ t: 'acted', id: a, act: 'lie', at: [5 * 24 + 24, 4 * 24 + 24, 0] }])
+  })
+
+  it('switches a base’s lights and plays its music track by track for the room, and forgets them once it empties', () => {
+    const { state } = inBase()
+    const lamp = { id: 'floorLamp', ...near, turned: false }
+    const on = message(state, 'a', { t: 'use', piece: lamp }, T0 + 200)
+    expect(of(sent(on, 'b'), 'furniture')).toEqual([{ t: 'furniture', state: { lit: [pieceKey(lamp)], music: null } }])
+    expect(of(sent(message(state, 'b', { t: 'use', piece: lamp }, T0 + 300), 'a'), 'furniture')).toEqual([{ t: 'furniture', state: { lit: [], music: null } }])
+    const box = { id: 'jukebox', x: 6, y: 6, turned: false }
+    const piano = { id: 'piano', x: 3, y: 6, turned: false }
+    const musicOf = (e: RealmEffect[]) => of(sent(e, 'b'), 'furniture')[0]?.state.music
+    let t = T0 + 1000
+    for (let track = 0; track < JUKEBOX.length; track++) {
+      t += 1100
+      expect(musicOf(message(state, 'a', { t: 'use', piece: box }, t))).toEqual({ piece: pieceKey(box), track })
+    }
+    expect(musicOf(message(state, 'a', { t: 'use', piece: box }, (t += 1100)))).toBeNull()
+    message(state, 'a', { t: 'use', piece: box }, (t += 1100))
+    // One source at a time: another piece takes over from its first track.
+    expect(musicOf(message(state, 'a', { t: 'use', piece: piano }, (t += 1100)))).toEqual({ piece: pieceKey(piano), track: 0 })
+    // A newcomer hears what's on; once everyone's gone it's forgotten.
+    expect(of(sent(visit(state, 'c', 'u3', t), 'c'), 'furniture')).toEqual([{ t: 'furniture', state: { lit: [], music: { piece: pieceKey(piano), track: 0 } } }])
+    for (const conn of ['a', 'b', 'c']) disconnect(state, conn, t)
+    expect(of(sent(join(state, 'd', 'u1', t, {}, 'base:u1'), 'd'), 'furniture')).toEqual([])
+  })
+
+  it('holds furniture uses to their burst limit', () => {
+    const { state } = inBase()
+    const lamp = { id: 'floorLamp', ...near, turned: false }
+    const heard = Array.from({ length: REALM.useBurst + 2 }, (_, i) => of(sent(message(state, 'a', { t: 'use', piece: lamp }, T0 + 200 + i), 'b'), 'furniture').length)
+    expect(heard.filter((n) => n > 0)).toHaveLength(REALM.useBurst)
   })
 })

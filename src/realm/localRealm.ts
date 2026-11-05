@@ -35,7 +35,7 @@ import { dir8 } from '../engine/math'
  * itself): the player is `me` (handle, partner, look), every other account a
  * bot. Every base may be visited. The bots sit at the rooms' game tables too
  * (they come over to a seat someone waits at) and play with the game's own
- * bot (`TableRules.bot`).
+ * bot (`TableRules.bot`), and on the town's benches a while.
  */
 
 export const LOCAL_REALM_URL = 'local://realm'
@@ -105,6 +105,8 @@ type Bot = {
   /** A fishing spot it's walking to, and whether it stands fishing there now (`act`) until its rest ends. */
   fishAt?: Spot | null
   fishing?: boolean
+  /** A bench it's walking to (its spot's index in the room), to sit a while (`perch`). */
+  benchAt?: number | null
 }
 
 type FakeSocket = { id: ConnId; on: SocketHandlers; open: boolean }
@@ -365,6 +367,15 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
         return
       }
     }
+    // Now and then a bench, to sit a while (any step after stands it up).
+    const spots: readonly Spot[] = room.spots
+    const benches = spots.flatMap((s, i) => (s.seats ? [{ s, i }] : []))
+    const bench = benches.length > 0 && random() < 0.25 ? pick(benches) : null
+    if (bench && clearPath(bot.room, from, bench.s.at)) {
+      bot.target = { ...bench.s.at }
+      bot.benchAt = bench.i
+      return
+    }
     // In the arcade, a bot often goes to play a cabinet.
     const cabinets: readonly Spot[] = room.spots.filter((s) => s.kind === 'cabinet')
     const cabinet = cabinets.length > 0 ? pick(cabinets) : null
@@ -481,6 +492,12 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
       bot.sitAt = null
       const game = bot.sitGame ?? pick(['fourInRow', 'typeDuel'] as const)
       if (table && !door) step(() => message(state, bot.conn, { t: 'sit', table, game }, t))
+      const bench = bot.benchAt
+      bot.benchAt = null
+      if (bench !== null && bench !== undefined && !door) {
+        bot.restUntil = t + between(10_000, 30_000)
+        step(() => message(state, bot.conn, { t: 'perch', piece: { spot: bench }, seat: random() < 0.5 ? 0 : 1 }, t))
+      }
       const fish = bot.fishAt
       if (fish && (bot.x !== fish.at.x || bot.y !== fish.at.y)) {
         // Only the way in: on to the spot itself.

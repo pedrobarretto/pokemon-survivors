@@ -758,6 +758,19 @@ export const en: Messages = {
       prizes: 'Prizes',
     },
     use: 'Use',
+    pieces: {
+      sit: 'Sit',
+      lie: 'Lie down',
+      soak: 'Get in',
+      stand: 'Stand up',
+      taken: 'Taken',
+      on: 'Turn on',
+      off: 'Turn off',
+      play: 'Play music',
+      next: 'Next song',
+      stop: 'Stop music',
+      track: (n: number, total: number) => `♪ Song ${n} of ${total}`,
+    },
     board: {
       title: 'Plaza board',
       lines: [
