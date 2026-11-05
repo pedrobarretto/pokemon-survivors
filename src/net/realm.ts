@@ -21,8 +21,15 @@
  * typed ever reaches another player. The game draws each line in the
  * reader's own language.
  *
- * This file must import nothing: the relay bundles it alone.
+ * Mini games (`data/minigames.ts`): a trainer busy at one shows it (`act`,
+ * `RealmAct`) and brags about its feats (`brag`, ids only, checked by the
+ * relay); the table games' seats and moves go through here too (`sit`,
+ * `play`, …; the tables' own types are `net/realmTables.ts`).
+ *
+ * This file must import nothing but `net/realmTables.ts` (import-free too): the relay bundles it alone.
  */
+
+import type { TableView } from './realmTables'
 
 /** Bumped with any incompatible change; a client and relay of different versions refuse each other. */
 export const REALM_PROTOCOL = 1
@@ -137,6 +144,16 @@ export type RealmEmote = (typeof REALM_EMOTES)[number]
 
 export const isRealmEmote = (v: unknown): v is RealmEmote => typeof v === 'string' && (REALM_EMOTES as readonly string[]).includes(v)
 
+/**
+ * What a trainer is busy at, for the others to draw (a rod in the water, the
+ * glow of a cabinet, sitting at a table); null when just walking around.
+ */
+export const REALM_ACTS = ['fishing', 'arcade', 'table'] as const
+
+export type RealmAct = (typeof REALM_ACTS)[number]
+
+export const isRealmAct = (v: unknown): v is RealmAct => typeof v === 'string' && (REALM_ACTS as readonly string[]).includes(v)
+
 /** Where a party is headed when its leader walks into a portal. */
 export type PartyMode = 'coop' | 'arena'
 
@@ -167,6 +184,7 @@ export type Avatar = {
   y: number
   facing: Facing
   moving: boolean
+  act: RealmAct | null
 }
 
 /** One trainer's position in a `moves` batch: `[id, x, y, facing, moving (0/1)]`, whole px. */
@@ -191,6 +209,17 @@ export type RealmClientMessage =
   | { t: 'partyGo'; mode: PartyMode; code: string }
   /** Keeps an idle connection alive (and measures the round trip: echoed as `pong`). */
   | { t: 'ping'; at: number }
+  /** What the trainer is busy at now (null: done). */
+  | { t: 'act'; act: RealmAct | null }
+  /** A mini game's feat to tell the room about (`game`, `feat`: ids of `data/minigames.ts`, the relay drops unknown ones); the talk burst limit applies. */
+  | { t: 'brag'; game: string; feat: string }
+  /** Sits at a table of the room (`table`: its id), choosing its game if the table is free; stands up from any other first. */
+  | { t: 'sit'; table: string; game: string }
+  | { t: 'stand' }
+  /** A move at the table the trainer sits at (the game's rules parse it). */
+  | { t: 'play'; move: unknown }
+  /** After a match: ready for another. */
+  | { t: 'ready' }
 
 /* ---------------- Relay → client ---------------- */
 
@@ -227,6 +256,11 @@ export type RealmServerMessage =
   | { t: 'party'; party: PartyView | null }
   | { t: 'partyGo'; mode: PartyMode; code: string }
   | { t: 'pong'; at: number }
+  | { t: 'acted'; id: number; act: RealmAct | null }
+  | { t: 'bragged'; id: number; game: string; feat: string }
+  /** Every table of the room in use, as this trainer sees them (after `welcome` and `room`), and one table's change (all seats free: it's gone). */
+  | { t: 'tables'; tables: readonly TableView[] }
+  | { t: 'table'; table: TableView }
   /**
    * Sent away (or never seated): why. The socket closes after it, but for a
    * base `go` the relay turned down (`private`, `room`: no such base, `busy`:

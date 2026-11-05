@@ -1,7 +1,9 @@
 import type { SocketHandlers, SocketLike } from '../coop/client'
+import { isTableId, type TableResult, type TableView } from '../net/realmTables'
 import {
   REALM_LIMITS,
   REALM_PROTOCOL,
+  isRealmAct,
   isRealmEmote,
   isRealmLine,
   realmPath,
@@ -87,7 +89,7 @@ const parseLookWire = (v: unknown): Partial<Record<string, string>> => {
 
 export const parseAvatar = (v: unknown): Avatar | null => {
   if (!isRecord(v)) return null
-  const { id, handle, partner, shiny, look, supporter, x, y, facing, moving } = v
+  const { id, handle, partner, shiny, look, supporter, x, y, facing, moving, act } = v
   if (!isNum(id) || !isStr(handle, 32) || !isStr(partner, 32) || !isNum(x) || !isNum(y) || !isFacing(facing)) return null
   return {
     id,
@@ -100,6 +102,7 @@ export const parseAvatar = (v: unknown): Avatar | null => {
     y,
     facing,
     moving: moving === true,
+    act: isRealmAct(act) ? act : null,
   }
 }
 
@@ -114,6 +117,26 @@ const parseRow = (v: unknown): MoveRow | null => {
 const parseParty = (v: unknown): PartyView | null => {
   if (!isRecord(v) || !isNum(v.leader) || !Array.isArray(v.members)) return null
   return { leader: v.leader, members: v.members.filter(isNum) }
+}
+
+const parseResult = (v: unknown): TableResult | null =>
+  isRecord(v) && (v.winner === null || isNum(v.winner)) && (v.forfeit === null || isNum(v.forfeit)) ? { winner: v.winner, forfeit: v.forfeit } : null
+
+/** A table from the wire; its game's `view` stays unknown (the game's `parseView` reads it). */
+export const parseTableView = (v: unknown): TableView | null => {
+  if (!isRecord(v) || !isTableId(v.id) || !isStr(v.game, 32) || !Array.isArray(v.seats) || !Array.isArray(v.pending) || !Array.isArray(v.ready)) return null
+  if (v.phase !== 'waiting' && v.phase !== 'playing' && v.phase !== 'over') return null
+  return {
+    id: v.id,
+    game: v.game,
+    seats: v.seats.map((s) => (isNum(s) ? s : null)),
+    phase: v.phase,
+    view: v.view,
+    pending: v.pending.filter(isNum),
+    leftMs: isNum(v.leftMs) ? v.leftMs : null,
+    result: parseResult(v.result),
+    ready: v.ready.filter(isNum),
+  }
 }
 
 const isRoomKey = (v: unknown): v is RoomKey => isStr(v, REALM_LIMITS.room) && v.length > 0
@@ -152,6 +175,18 @@ export const parseRealmMessage = (text: unknown): RealmServerMessage | null => {
       return isNum(v.id) && isRealmLine(v.line) ? { t: 'said', id: v.id, line: v.line } : null
     case 'emoted':
       return isNum(v.id) && isRealmEmote(v.emote) ? { t: 'emoted', id: v.id, emote: v.emote } : null
+    case 'acted':
+      return isNum(v.id) && (v.act === null || isRealmAct(v.act)) ? { t: 'acted', id: v.id, act: v.act } : null
+    case 'bragged':
+      return isNum(v.id) && isStr(v.game, 32) && isStr(v.feat, 32) ? { t: 'bragged', id: v.id, game: v.game, feat: v.feat } : null
+    case 'tables': {
+      const tables = Array.isArray(v.tables) ? v.tables.map(parseTableView).filter((x): x is TableView => x !== null) : null
+      return tables ? { t: 'tables', tables } : null
+    }
+    case 'table': {
+      const table = parseTableView(v.table)
+      return table ? { t: 'table', table } : null
+    }
     case 'invited':
       return isNum(v.from) ? { t: 'invited', from: v.from } : null
     case 'party': {

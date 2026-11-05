@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PRESENCE_STALE_MS } from '../../src/net/realmRelay'
-import { cityCounts, furniturePrice, groupRealmReports, parseBaseSave, parsePresenceReport, parseRealmReport, walkingIn } from './realm'
+import { cityCounts, furniturePrice, groupRealmReports, parseBaseSave, parseGameClaim, parsePresenceReport, parseRealmReport, statsAfter, walkingIn } from './realm'
 
 describe('presence', () => {
   it('takes a relay report of its own cities, handles cleaned', () => {
@@ -42,6 +42,26 @@ describe('request bodies', () => {
     expect(parseRealmReport({ handle: 'Misty', reason: 'spam', city: 'cerulean' })).toEqual({ handle: 'misty', reason: 'spam', city: 'cerulean' })
     expect(parseRealmReport({ handle: 'misty', reason: 'rude', city: null })).toBeNull()
     expect(parseRealmReport({ handle: 'misty', reason: 'name', city: 'atlantis' })).toBeNull()
+  })
+})
+
+describe('mini game claims', () => {
+  it('reads a claim of either outcome, and nothing malformed', () => {
+    expect(parseGameClaim({ game: 'fishing', outcome: { score: 120 }, ms: 90_000.4, feats: ['feebas'] })).toEqual({ game: 'fishing', outcome: { score: 120 }, ms: 90_000, feats: ['feebas'] })
+    expect(parseGameClaim({ game: 'fourInRow', outcome: { result: 'win', vs: 'bot' }, ms: 40_000 })).toEqual({ game: 'fourInRow', outcome: { result: 'win', vs: 'bot' }, ms: 40_000, feats: [] })
+    expect(parseGameClaim({ game: 'chess', outcome: { score: 1 }, ms: 1, feats: [] })).toBeNull()
+    expect(parseGameClaim({ game: 'fishing', outcome: { score: 1.5 }, ms: 90_000, feats: [] })).toBeNull()
+    expect(parseGameClaim({ game: 'fishing', outcome: { score: -1 }, ms: 90_000, feats: [] })).toBeNull()
+    expect(parseGameClaim({ game: 'fourInRow', outcome: { result: 'win', vs: 'cat' }, ms: 40_000, feats: [] })).toBeNull()
+    expect(parseGameClaim({ game: 'fishing', outcome: { score: 1 }, ms: Number.NaN, feats: [] })).toBeNull()
+    expect(parseGameClaim({ game: 'fishing', outcome: { score: 1 }, ms: 90_000, feats: [7] })).toBeNull()
+  })
+
+  it('counts a play, a win and the best score, and keeps only the game\'s own feats', () => {
+    const was = { plays: 2, wins: 0, best: 300, feats: ['feebas'] }
+    expect(statsAfter('fishing', was, { score: 120 }, ['shinyGyarados', 'made-up', 'feebas'])).toEqual({ plays: 3, wins: 0, best: 300, feats: ['feebas', 'shinyGyarados'] })
+    expect(statsAfter('fishing', was, { score: 450 }, []).best).toBe(450)
+    expect(statsAfter('fourInRow', { plays: 0, wins: 0, best: 0, feats: [] }, { result: 'win', vs: 'human' }, [])).toEqual({ plays: 1, wins: 1, best: 0, feats: [] })
   })
 })
 

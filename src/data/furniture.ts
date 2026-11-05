@@ -2,6 +2,7 @@ import { LEGEND_IDS, type LegendId } from './legends'
 import type { Rarity } from './cosmetics'
 import { HOME_FURNITURE } from './furnitureSets/home'
 import { POKEMON_FURNITURE } from './furnitureSets/pokemon'
+import { GAME_FURNITURE } from './furnitureSets/games'
 
 /**
  * Furniture for secret bases (`data/secretBases.ts`), placed on the base's
@@ -100,11 +101,11 @@ const SHOP = {
 } as const satisfies Record<string, FurnitureDef>
 
 /**
- * Every piece the carpentry sells (all but the dolls), named in i18n
+ * Every piece the carpentry shows (all but the dolls; the mini games' trophies are earned, `GAME_FURNITURE`), named in i18n
  * `furniture.names`: the first catalog plus the collections that live in
  * their own modules (`data/furnitureSets/`), spread in like `MOVES`'s tables.
  */
-const CATALOG = { ...SHOP, ...HOME_FURNITURE, ...POKEMON_FURNITURE } as const satisfies Record<string, FurnitureDef>
+const CATALOG = { ...SHOP, ...HOME_FURNITURE, ...POKEMON_FURNITURE, ...GAME_FURNITURE } as const satisfies Record<string, FurnitureDef>
 
 export type ShopFurnitureId = keyof typeof CATALOG
 

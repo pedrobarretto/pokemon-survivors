@@ -95,7 +95,7 @@ const put = (ctx: CanvasRenderingContext2D, art: Art, x: number, y: number, flip
 /* ---------------- Ground ---------------- */
 
 /** What a ground pixel is made of, the later surfaces painting over the earlier. */
-const M = { grass: 0, paving: 1, path: 2, sand: 3, water: 4, pool: 5, boards: 6, floor: 7, wall: 8, mat: 9 } as const
+const M = { grass: 0, paving: 1, path: 2, sand: 3, water: 4, pool: 5, boards: 6, floor: 7, wall: 8, mat: 9, carpet: 10, ballRug: 11 } as const
 type Material = (typeof M)[keyof typeof M]
 
 /** The meadow's grass (`render/world.ts`), its dense zones, the paths' dirt, the beach's sand. */
@@ -124,6 +124,22 @@ const BAND_W = 8
 const PLANKS = { wood: shades('#b98a58', '#c4945e', '#ad7f50'), gap: rgb('#6e4a2c'), edge: rgb('#4a3020'), hi: rgb('#d4a874') }
 const FLOOR = { wood: shades('#c99a64', '#d2a46e', '#bf905c', '#cb9f6a'), gap: rgb('#8a5f38'), hi: rgb('#deb482') }
 const WALL = { paper: shades('#f2e6c8', '#ece0c0'), stripe: rgb('#e6d6b0'), wood: rgb('#9a6a3e'), woodHi: rgb('#b8844e'), woodLo: rgb('#6e4828'), line: rgb('#4a3020') }
+/** The arcade: its carpet (a night blue strewn with neon shapes, as arcade carpets are), its plum brick wall and its neon tubes. */
+const CARPET = { base: shades('#2a2450', '#2e2856', '#26204a'), shapes: shades('#ff5ab4', '#4ae0f0', '#f8d848', '#78e070') }
+const NEON_WALL = { brick: shades('#46305e', '#4c3466', '#402a56'), mortar: rgb('#2c1e3e'), top: rgb('#1e1430'), panel: rgb('#30203f'), trim: rgb('#c84898'), trimHi: rgb('#f070c0'), line: rgb('#140c20') }
+const TUBES = [
+  { y: 16, core: rgb('#ffd0ec'), glow: rgb('#ff5ab4') },
+  { y: 40, core: rgb('#d8fcff'), glow: rgb('#4ae0f0') },
+] as const
+
+/** The carpet's shapes, one maybe per 20 px tile: a star, a zigzag, a ring, a dot cluster. */
+const CARPET_SHAPES = [
+  ['..1..', '.111.', '11111', '.1.1.'],
+  ['1...1', '.1.1.', '..1..'],
+  ['.11.', '1..1', '1..1', '.11.'],
+  ['1.1', '...', '.1.'],
+] as const
+
 const WINDOW = { frame: rgb('#6e4828'), sky: rgb('#9ad4f4'), skyHi: rgb('#c8ecfc'), sill: rgb('#b8844e') }
 
 const smooth = (t: number) => t * t * (3 - 2 * t)
@@ -294,21 +310,55 @@ const paintRoom = (room: TownRoomId) => {
         else if (d < 3 + BAND_W) set(x, y, stoneAt(BAND, x, y, 8, 4))
         else set(x, y, stoneAt(STONES, x, y))
       } else if (v === M.boards) {
-        // Planks across the walk, 6 px wide, with a dark edge along each side.
+        // Planks across the walk, 6 px wide, with a dark edge along each side (and its ends inside the room: a platform's sides).
         const top = m(x, y - 1) !== M.boards
         const bottom = m(x, y + 1) !== M.boards
+        const end = (m(x - 1, y) !== M.boards && m(x - 1, y) !== -1) || (m(x + 1, y) !== M.boards && m(x + 1, y) !== -1)
         const lx = x % 6
-        set(x, y, top || bottom ? PLANKS.edge : lx === 0 ? PLANKS.gap : y % 14 === 3 && lx === 3 ? PLANKS.edge : lx === 1 ? PLANKS.hi : PLANKS.wood[(Math.floor(x / 6) * 7) % 3]!)
+        set(x, y, top || bottom || end ? PLANKS.edge : lx === 0 ? PLANKS.gap : y % 14 === 3 && lx === 3 ? PLANKS.edge : lx === 1 ? PLANKS.hi : PLANKS.wood[(Math.floor(x / 6) * 7) % 3]!)
       } else if (v === M.floor) {
         const row = Math.floor(y / 8)
         const lx = (x + (row % 3) * 21) % 48
         const ly = y % 8
         set(x, y, ly === 0 || lx === 0 ? FLOOR.gap : ly === 1 ? FLOOR.hi : FLOOR.wood[(Math.floor((x + (row % 3) * 21) / 48) + row) % 4]!)
+      } else if (v === M.carpet) {
+        // Night blue, and in some 20 px tiles a neon shape in one of four colors.
+        const tx = Math.floor(x / 20)
+        const ty = Math.floor(y / 20)
+        const pick = hash2(tx, ty, 51)
+        const shape = CARPET_SHAPES[Math.floor(hash2(tx, ty, 52) * CARPET_SHAPES.length)]!
+        const ox = tx * 20 + 3 + Math.floor(hash2(tx, ty, 53) * 10)
+        const oy = ty * 20 + 3 + Math.floor(hash2(tx, ty, 54) * 10)
+        const row = shape[y - oy]
+        const on = pick < 0.62 && row !== undefined && row[x - ox] === '1'
+        set(x, y, on ? CARPET.shapes[Math.floor(hash2(tx, ty, 55) * CARPET.shapes.length)]! : dither(CARPET.base, x, y, 56))
+      } else if (v === M.ballRug) {
+        // A Poké Ball: the rim dark, the top half red, the bottom white, a dark band across with the button in its middle.
+        const rug = ground.find((g) => g.kind === 'ballRug')
+        const o = rug && rug.kind === 'ballRug' && rug.shape.kind === 'oval' ? rug.shape : { x, y, rx: 1, ry: 1 }
+        const edge = m(x - 1, y) !== M.ballRug || m(x + 1, y) !== M.ballRug || m(x, y - 1) !== M.ballRug || m(x, y + 1) !== M.ballRug
+        const dy = y + 0.5 - o.y
+        const button = ((x + 0.5 - o.x) / 9) ** 2 + (dy / 5) ** 2
+        // Its weave: every few rows a slightly darker one.
+        const weave = y % 3 === 0
+        set(x, y, edge || (Math.abs(dy) < 2 && button > 1) || (button > 0.6 && button <= 1) ? rgb('#281c30') : button <= 0.6 ? rgb('#f4f0f8') : dy < 0 ? rgb(weave ? '#c83038' : '#d83840') : rgb(weave ? '#d4d0dc' : '#e4e0ec'))
       } else if (v === M.mat) {
         // A woven doormat: red with a cream border, its weave in rows.
         const edge = m(x - 1, y) !== M.mat || m(x + 1, y) !== M.mat || m(x, y - 1) !== M.mat
         const rim = m(x - 2, y) !== M.mat || m(x + 2, y) !== M.mat || m(x, y - 2) !== M.mat
         set(x, y, edge ? WALL.line : rim ? rgb('#f0e0b8') : (x + y) % 3 === 0 ? rgb('#a83a30') : rgb('#c84a3a'))
+      } else if (v === M.wall && wall?.kind === 'wall' && wall.neon) {
+        // Plum bricks under a dark cornice, two neon tubes along them, a dark panel with a magenta trim at the foot.
+        const tube = TUBES.find((t) => Math.abs(y - t.y) <= 1)
+        const course = Math.floor(y / 6)
+        const lx = (x + (course % 2) * 8) % 16
+        if (y >= wall.h - 2) set(x, y, NEON_WALL.line)
+        else if (y < 4) set(x, y, NEON_WALL.top)
+        else if (tube) set(x, y, y === tube.y ? tube.core : tube.glow)
+        else if (y >= wall.h - 14) set(x, y, y === wall.h - 14 ? NEON_WALL.trimHi : y === wall.h - 13 ? NEON_WALL.trim : x % 24 === 0 ? NEON_WALL.line : NEON_WALL.panel)
+        else set(x, y, y % 6 === 0 || lx === 0 ? NEON_WALL.mortar : NEON_WALL.brick[(Math.floor((x + (course % 2) * 8) / 16) + course) % 3]!)
+        // The tubes' glow on the bricks round them.
+        for (const t of TUBES) if (Math.abs(y - t.y) >= 2 && Math.abs(y - t.y) <= 4 && !tube && y < wall.h - 14) set(x, y, t.glow, 70 - Math.abs(y - t.y) * 12)
       } else if (v === M.wall && wall?.kind === 'wall') {
         const wainscot = y >= wall.h - 18
         const win = wall.windows.find((wx) => x >= wx - 18 && x < wx + 18 && y >= 12 && y < 38)
@@ -340,7 +390,8 @@ const paintRoom = (room: TownRoomId) => {
     for (let y = wall.h; y < h; y++) {
       for (const x of [0, 1, 2, 3, 4, 5, w - 6, w - 5, w - 4, w - 3, w - 2, w - 1]) {
         const k = Math.min(x, w - 1 - x)
-        set(x, y, k === 5 ? WALL.line : k === 4 ? WALL.woodHi : WALL.wood)
+        if (wall.neon) set(x, y, k === 5 ? NEON_WALL.line : k === 4 ? NEON_WALL.trim : NEON_WALL.panel)
+        else set(x, y, k === 5 ? WALL.line : k === 4 ? WALL.woodHi : WALL.wood)
       }
       for (const wx of wall.windows) {
         const run = y - wall.h
@@ -354,7 +405,7 @@ const paintRoom = (room: TownRoomId) => {
     for (let x = 0; x < w; x++) {
       const v = m(x, y)
       if ((v === M.water || v === M.pool) && (m(x, y - 1) === M.boards || m(x, y - 2) === M.boards || m(x, y - 3) === M.boards)) set(x, y, [10, 40, 80], 90)
-      if (v === M.floor && (m(x, y - 1) === M.wall || m(x, y - 2) === M.wall || m(x, y - 3) === M.wall)) set(x, y, [40, 20, 10], 60)
+      if ((v === M.floor || v === M.carpet) && (m(x, y - 1) === M.wall || m(x, y - 2) === M.wall || m(x, y - 3) === M.wall)) set(x, y, [40, 20, 10], 60)
     }
   }
   // The meadow's decor on the grass, one roll per 16 px tile, kept off everything else.
@@ -388,6 +439,71 @@ const groundOf = (room: TownRoomId) => {
   return g
 }
 
+/* ---------------- The arcade's lights ---------------- */
+
+/**
+ * The arcade's neon signs on its back wall, each a glyph of tube (`1`, its
+ * core lighter `2`) with a halo: a berry over the Berry Rain cabinets, a
+ * mallet over the Whack-a-Diglett ones, a Poké Ball between the cabinets and
+ * the prize counter. They hum (a slow pulse) and now and then one flickers.
+ */
+const NEON_SIGNS = [
+  { x: 72, y: 21, color: '#ff5ab4', core: '#ffd0ec', rows: ['......1.11...', '......11..1..', '....1111111..', '...1.......1.', '..1.2.......1', '..1.2.......1', '..1.........1', '..1.........1', '...1.......1.', '....1111111..'] },
+  { x: 152, y: 22, color: '#f8d848', core: '#fff8c8', rows: ['1111111......', '1.....1......', '1.2...11111111', '1.....1......1', '1.....11111111', '1.....1......', '1111111......'] },
+  { x: 228, y: 20, color: '#4ae0f0', core: '#d8fcff', rows: ['....11111....', '..11.....11..', '.1.........1.', '.1.2.......1.', '1....111....1', '11111.2.11111', '1....111....1', '.1.........1.', '.1.........1.', '..11.....11..', '....11111....'] },
+] as const
+
+/** A sign's art: its tube on a halo of its color, two px round. */
+const neonSign = (sign: (typeof NEON_SIGNS)[number]) => {
+  const w = Math.max(...sign.rows.map((r) => r.length)) + 6
+  const h = sign.rows.length + 6
+  const canvas = createCanvas(w, h)
+  const ctx = context2d(canvas)
+  const plot = (color: string, alpha: number, dx: number, dy: number) => {
+    ctx.globalAlpha = alpha
+    ctx.fillStyle = color
+    sign.rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== '.' && ctx.fillRect(x + 3 + dx, y + 3 + dy, 1, 1)))
+  }
+  for (let r = 2; r >= 1; r--) for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r], [r, r], [-r, -r], [r, -r], [-r, r]] as const) plot(sign.color, r === 2 ? 0.12 : 0.25, dx, dy)
+  plot(sign.color, 1, 0, 0)
+  ctx.globalAlpha = 1
+  ctx.fillStyle = sign.core
+  sign.rows.forEach((row, y) => [...row].forEach((ch, x) => ch === '2' && ctx.fillRect(x + 3, y + 3, 1, 1)))
+  return canvas
+}
+const neonSigns = canvasCache<number, HTMLCanvasElement>()
+
+/** The cabinets' screens throw their light on the carpet in front of them: where, and the screen's color. */
+const SCREEN_GLOW = [
+  { x: 52, color: '255,120,140' },
+  { x: 92, color: '255,150,120' },
+  { x: 132, color: '140,240,140' },
+  { x: 172, color: '120,220,255' },
+] as const
+
+/** Draws the arcade's lights over its painted ground: the neon signs humming and the screens' glow pooling on the carpet. */
+const drawArcadeLights = (ctx: CanvasRenderingContext2D, camX: number, camY: number, time: number) => {
+  NEON_SIGNS.forEach((sign, i) => {
+    let art = neonSigns.get(i)
+    if (!art) neonSigns.set(i, (art = neonSign(sign)))
+    // A flicker: each sign, once in a while, blinks off for a beat or two.
+    const beat = Math.floor(time * 10)
+    const off = hash2(beat, i, 61) < 0.025 || (hash2(Math.floor(beat / 2), i, 62) < 0.012 && beat % 2 === 0)
+    if (off) return
+    ctx.globalAlpha = 0.85 + 0.15 * Math.sin(time * 2.3 + i * 1.7)
+    ctx.drawImage(art, Math.round(sign.x - art.width / 2 - camX), Math.round(sign.y - 3 - camY))
+    ctx.globalAlpha = 1
+  })
+  for (const [i, g] of SCREEN_GLOW.entries()) {
+    // A pool of light in steps (no gradient), brightest at the cabinet's foot, flickering with the game on screen.
+    const flicker = 0.75 + 0.25 * Math.sin(time * 7.3 + i * 2.1) * Math.sin(time * 3.1 + i)
+    for (let k = 0; k < 3; k++) {
+      ctx.fillStyle = `rgba(${g.color},${((0.3 - k * 0.08) * flicker).toFixed(3)})`
+      ctx.fillRect(Math.round(g.x - 9 - k * 2 - camX), Math.round(101 + k * 4 - camY), 18 + k * 4, 4)
+    }
+  }
+}
+
 /* ---------------- Shadows ---------------- */
 
 const SHADOW = 'rgba(30,40,30,0.3)'
@@ -409,7 +525,7 @@ const silhouette = (art: Art) => {
 }
 
 /** Pieces lying flat or hanging on the wall cast no shadow. */
-const FLAT: ReadonlySet<TownArt> = new Set(['shelf', 'boat', 'beachball'])
+const FLAT: ReadonlySet<TownArt> = new Set(['shelf', 'boat', 'beachball', 'prizeShelf'])
 
 /** What a prop draws and where its art's middle stands: the player's own entrance follows their base's exterior. */
 const resolve = (p: Prop, exterior: BaseExterior): { art: TownArt; x: number } => {
@@ -427,6 +543,7 @@ export const drawTownGround = (ctx: CanvasRenderingContext2D, room: TownRoomId, 
   loadTownArt()
   const g = groundOf(room)
   ctx.drawImage(g.canvas, -Math.round(camX), -Math.round(camY))
+  if (room === 'arcade') drawArcadeLights(ctx, camX, camY, time)
   for (const p of TOWN_LAYOUT[room].props) {
     const { art: id, x } = resolve(p, exterior)
     const art = arts.get(id)

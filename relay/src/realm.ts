@@ -7,6 +7,7 @@ import {
   baseOwner,
   baseRoom,
   isCityId,
+  isRealmAct,
   isRealmEmote,
   isRealmLine,
   type Avatar,
@@ -14,6 +15,7 @@ import {
   type Facing,
   type MoveRow,
   type PartyView,
+  type RealmAct,
   type RealmClientMessage,
   type RealmHome,
   type RealmIdentity,
@@ -21,7 +23,10 @@ import {
   type RealmServerMessage,
   type RoomKey,
 } from '../../src/net/realm'
+import { isFeat, isMinigameId } from '../../src/data/minigames'
+import { isTableId } from '../../src/net/realmTables'
 import { PRESENCE_EVERY_MS, type IdentityResponse, type PresenceReport, type VisitRequest, type VisitResponse } from '../../src/net/realmRelay'
+import { play, ready, sit, stand, tablesFor, tickTables, type Table } from './realmTables'
 
 /**
  * The Poké Realm as a pure state machine (`net/realm.ts` is its wire): every
@@ -35,7 +40,8 @@ import { PRESENCE_EVERY_MS, type IdentityResponse, type PresenceReport, type Vis
  * room's bounds and a speed budget (`MOVE`), batches the positions out per
  * room at `REALM.moveHz` (`tick`), and asks the API who a trainer is
  * (`identify` effect, batched) and whether it may enter a base (`visit`).
- * The shell answers those with `identified` and `visited`.
+ * The shell answers those with `identified` and `visited`. The rooms' game
+ * tables are `realmTables.ts`'s, wired in here.
  *
  * Shells: the VPS relay (`relay/node/src/realms.ts`) and the in-page host
  * (`src/realm/localRealm.ts`). The shell calls `tick` at `REALM.moveHz`.
@@ -82,6 +88,8 @@ export type Trainer = {
   y: number
   facing: Facing
   moving: boolean
+  /** What the trainer is busy at (`act`), shown to the room. */
+  act: RealmAct | null
   /** Walk banked (px), as of `bankAt`. */
   bank: number
   bankAt: number
@@ -93,9 +101,13 @@ export type Trainer = {
   /** When the last lines and emotes went out (the burst limit). */
   said: number[]
   emoted: number[]
+  /** When the last brags went out (the talk burst limit, on its own count). */
+  bragged: number[]
   /** A base visit waiting on the API (`visit` effect), or null. */
   going: { ask: number; room: RoomKey; x: number; y: number } | null
   party: Party | null
+  /** The table it sits at (its key in `City.tables`), or null. */
+  table: string | null
 }
 
 /** A party: its leader and members (avatar ids, the leader among them), all in one city. */
@@ -108,6 +120,9 @@ export type City = {
   trainers: Map<number, Trainer>
   /** Party invites waiting: invitee id → inviter id → when it expires. */
   invites: Map<number, Map<number, number>>
+  /** The game tables in use, by room and id (`realmTables.ts`), and how many matches started here (their seeds count them). */
+  tables: Map<string, Table>
+  matches: number
 }
 
 /** A socket, as the realm knows it. */
@@ -228,6 +243,18 @@ export const parseRealmMessage = (text: string): RealmClientMessage | null => {
       return (m.mode === 'coop' || m.mode === 'arena') && typeof m.code === 'string' && CODE.test(m.code) ? { t: 'partyGo', mode: m.mode, code: m.code } : null
     case 'ping':
       return typeof m.at === 'number' && Number.isFinite(m.at) ? { t: 'ping', at: m.at } : null
+    case 'act':
+      return m.act === null || isRealmAct(m.act) ? { t: 'act', act: m.act } : null
+    case 'brag':
+      return isFeat(m.game, m.feat) && typeof m.game === 'string' && typeof m.feat === 'string' ? { t: 'brag', game: m.game, feat: m.feat } : null
+    case 'sit':
+      return isTableId(m.table) && isMinigameId(m.game) ? { t: 'sit', table: m.table, game: m.game } : null
+    case 'stand':
+      return { t: 'stand' }
+    case 'play':
+      return 'move' in m ? { t: 'play', move: m.move } : null
+    case 'ready':
+      return { t: 'ready' }
     default:
       return null
   }
@@ -245,7 +272,7 @@ const refuse = (conn: ConnId, why: RealmRefusal): RealmEffect[] => [send(conn, {
 const cityOf = (state: RealmState, id: CityId): City => {
   let city = state.cities.get(id)
   if (!city) {
-    city = { id, next: 1, trainers: new Map(), invites: new Map() }
+    city = { id, next: 1, trainers: new Map(), invites: new Map(), tables: new Map(), matches: 0 }
     state.cities.set(id, city)
   }
   return city
@@ -265,6 +292,7 @@ export const avatarOf = (t: Trainer): Avatar => ({
   y: t.y,
   facing: t.facing,
   moving: t.moving,
+  act: t.act,
 })
 
 const inRoom = (city: City, room: RoomKey): Trainer[] => [...city.trainers.values()].filter((t) => t.room === room)
@@ -348,7 +376,7 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
   for (const city of state.cities.values())
     for (const old of [...city.trainers.values()])
       if (old.identity.userId === identity.userId) {
-        out.push(...unseat(state, city, old), ...refuse(old.conn, 'elsewhere'))
+        out.push(...unseat(state, city, old, now), ...refuse(old.conn, 'elsewhere'))
         const oc = state.conns.get(old.conn)
         if (oc) oc.avatar = null
       }
@@ -368,6 +396,7 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
     y: at.y,
     facing: 0,
     moving: false,
+    act: null,
     bank: startBank(),
     bankAt: now,
     dirty: false,
@@ -375,23 +404,27 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
     active: now,
     said: [],
     emoted: [],
+    bragged: [],
     going: null,
     party: null,
+    table: null,
   }
   city.trainers.set(t.id, t)
   conn.avatar = t.id
   out.push(
     send(conn.id, { t: 'welcome', you: t.id, room, avatars: inRoom(city, room).map(avatarOf) }),
+    tablesFor(city, t, now),
     ...toRoom(city, room, { t: 'join', avatar: avatarOf(t) }, t.id),
     event('realm.seated', { city: city.id, room, trainers: city.trainers.size }),
   )
-  if (!direct) out.push(...go(state, t, asked, BASE_ROOM.spawn.x, BASE_ROOM.spawn.y))
+  if (!direct) out.push(...go(state, t, asked, BASE_ROOM.spawn.x, BASE_ROOM.spawn.y, now))
   return out
 }
 
 /** Takes a trainer out of its city: its room told `gone`, its party left, its invites forgotten. */
-const unseat = (state: RealmState, city: City, t: Trainer): RealmEffect[] => {
-  const out = leaveParty(city, t)
+const unseat = (state: RealmState, city: City, t: Trainer, now: number): RealmEffect[] => {
+  // A match it sat at is forfeited first, while its room still holds it.
+  const out = [...stand(city, t, now), ...leaveParty(city, t)]
   city.trainers.delete(t.id)
   city.invites.delete(t.id)
   for (const from of city.invites.values()) from.delete(t.id)
@@ -405,14 +438,14 @@ const unseat = (state: RealmState, city: City, t: Trainer): RealmEffect[] => {
 }
 
 /** The socket closed (or the shell gave up on it). */
-export const disconnect = (state: RealmState, connId: ConnId): RealmEffect[] => {
+export const disconnect = (state: RealmState, connId: ConnId, now: number): RealmEffect[] => {
   const conn = state.conns.get(connId)
   if (!conn) return []
   state.conns.delete(connId)
   if (conn.waiting) state.queued.delete(conn.waiting.userId)
   const t = trainerOf(state, conn)
   const city = state.cities.get(conn.city)
-  return t && city ? unseat(state, city, t) : []
+  return t && city ? unseat(state, city, t, now) : []
 }
 
 /* ---------------- Messages ---------------- */
@@ -449,7 +482,7 @@ export const message = (state: RealmState, connId: ConnId, msg: RealmClientMessa
       return move(t, msg, now)
     case 'go':
       t.active = now
-      return go(state, t, msg.room, msg.x, msg.y)
+      return go(state, t, msg.room, msg.x, msg.y, now)
     case 'say':
       t.active = now
       return burst(t.said, now) ? toRoom(city, t.room, { t: 'said', id: t.id, line: msg.line }) : []
@@ -470,6 +503,27 @@ export const message = (state: RealmState, connId: ConnId, msg: RealmClientMessa
     case 'partyGo':
       t.active = now
       return partyGo(city, t, msg.mode, msg.code)
+    case 'act':
+      t.active = now
+      if (t.act === msg.act) return []
+      t.act = msg.act
+      return toRoom(city, t.room, { t: 'acted', id: t.id, act: t.act })
+    case 'brag':
+      t.active = now
+      return burst(t.bragged, now) ? toRoom(city, t.room, { t: 'bragged', id: t.id, game: msg.game, feat: msg.feat }) : []
+    // The tables: seats, matches and their moves (`net/realmTables.ts`).
+    case 'sit':
+      t.active = now
+      return sit(city, t, msg.table, msg.game, now)
+    case 'stand':
+      t.active = now
+      return stand(city, t, now)
+    case 'play':
+      t.active = now
+      return play(city, t, msg.move, now)
+    case 'ready':
+      t.active = now
+      return ready(city, t, now)
   }
 }
 
@@ -511,16 +565,16 @@ const move = (t: Trainer, m: Extract<RealmClientMessage, { t: 'move' }>, now: nu
  * a refused `go` leaves the trainer where it stands (`snap`, or `refused`
  * `private`/`room`/`busy` for a base, which keep the socket open).
  */
-const go = (state: RealmState, t: Trainer, room: RoomKey, x: number, y: number): RealmEffect[] => {
+const go = (state: RealmState, t: Trainer, room: RoomKey, x: number, y: number, now: number): RealmEffect[] => {
   const stay = [send(t.conn, { t: 'snap', x: t.x, y: t.y })]
   if (t.going || room === t.room || !inBounds(room, x, y)) return stay
   if (isTownRoomId(room) && isTownRoomId(t.room)) {
     const here: TownRoomId = t.room
     const door = REALM_ROOMS[here].doors.find((d) => d.to === room && near(d.at, t.x, t.y, DOOR_REACH))
     if (!door || Math.hypot(x - door.spawn.x, y - door.spawn.y) > DOOR_REACH) return stay
-    return enter(state, t, room, x, y)
+    return enter(state, t, room, x, y, now)
   }
-  if (isTownRoomId(room) || ownBase(t, room)) return enter(state, t, room, x, y)
+  if (isTownRoomId(room) || ownBase(t, room)) return enter(state, t, room, x, y, now)
   const owner = baseOwner(room)
   if (owner === null) return stay
   const ask = ++state.asks
@@ -530,23 +584,25 @@ const go = (state: RealmState, t: Trainer, room: RoomKey, x: number, y: number):
 }
 
 /** Moves a trainer into another room of its city: the old room told `gone`, the trainer `room`, the new one `join`. */
-const enter = (state: RealmState, t: Trainer, room: RoomKey, x: number, y: number): RealmEffect[] => {
+const enter = (state: RealmState, t: Trainer, room: RoomKey, x: number, y: number, now: number): RealmEffect[] => {
   const city = state.cities.get(t.city)
   if (!city) return []
-  const out = toRoom(city, t.room, { t: 'gone', id: t.id }, t.id)
+  // Leaving the room stands it up from its table (a match in play is forfeited).
+  const out = [...stand(city, t, now), ...toRoom(city, t.room, { t: 'gone', id: t.id }, t.id)]
   t.room = room
   t.x = x
   t.y = y
   t.moving = false
+  t.act = null
   t.dirty = false
   t.bank = startBank()
-  out.push(send(t.conn, { t: 'room', room, avatars: inRoom(city, room).map(avatarOf) }), ...toRoom(city, room, { t: 'join', avatar: avatarOf(t) }, t.id))
+  out.push(send(t.conn, { t: 'room', room, avatars: inRoom(city, room).map(avatarOf) }), tablesFor(city, t, now), ...toRoom(city, room, { t: 'join', avatar: avatarOf(t) }, t.id))
   out.push(event('realm.room', { city: city.id, room: room.startsWith(BASE_PREFIX) ? 'base' : room }))
   return out
 }
 
 /** The API's answer to a base visit (null: it failed). */
-export const visited = (state: RealmState, ask: number, res: VisitResponse | null): RealmEffect[] => {
+export const visited = (state: RealmState, ask: number, res: VisitResponse | null, now: number): RealmEffect[] => {
   const v = state.visits.get(ask)
   state.visits.delete(ask)
   const conn = v ? state.conns.get(v.conn) : undefined
@@ -556,7 +612,7 @@ export const visited = (state: RealmState, ask: number, res: VisitResponse | nul
   t.going = null
   if (!res) return [send(t.conn, { t: 'refused', why: 'busy' })]
   if (!res.allowed) return [send(t.conn, { t: 'refused', why: res.why === 'private' ? 'private' : 'room' })]
-  return enter(state, t, room, x, y)
+  return enter(state, t, room, x, y, now)
 }
 
 /* ---------------- Parties ---------------- */
@@ -626,7 +682,8 @@ const partyGo = (city: City, t: Trainer, mode: 'coop' | 'arena', code: string): 
 /**
  * The shell's beat, at `REALM.moveHz`: each room's moves batch (to the room,
  * only the trainers who moved), idle sockets dropped, AFK trainers sent
- * away, invites expired, and the presence report when due.
+ * away, invites expired, the tables' turn clocks, and the presence report
+ * when due.
  */
 export const tick = (state: RealmState, now: number): RealmEffect[] => {
   const out: RealmEffect[] = []
@@ -659,6 +716,7 @@ export const tick = (state: RealmState, now: number): RealmEffect[] => {
       for (const [id, until] of from) if (until <= now) from.delete(id)
       if (from.size === 0) city.invites.delete(to)
     }
+    out.push(...tickTables(city, now))
   }
   if (now >= state.presenceAt || state.presenceDirty) {
     state.presenceAt = now + PRESENCE_EVERY_MS

@@ -20,10 +20,26 @@ export type Point = { x: number; y: number }
 export type Shape = ({ kind: 'rect' } & Rect) | { kind: 'oval'; x: number; y: number; rx: number; ry: number }
 
 /** What a spot does when used. */
-export type SpotKind = 'coopPortal' | 'arenaPortal' | 'board' | 'bases' | 'myBase' | 'carpenter' | 'host' | 'pool' | 'counter' | 'bench'
+export type SpotKind =
+  | 'coopPortal'
+  | 'arenaPortal'
+  | 'board'
+  | 'bases'
+  | 'myBase'
+  | 'carpenter'
+  | 'host'
+  | 'pool'
+  | 'counter'
+  | 'bench'
+  /** Mini games (`data/minigames.ts`): a fishing spot, a game table (its `id` is the table's, `games` what it plays), an arcade cabinet. */
+  | 'fishing'
+  | 'gameTable'
+  | 'cabinet'
+  /** The arcade's prize counter: what the games' trophies are. */
+  | 'prizes'
 
 /** The town's rooms (their shapes are `REALM_ROOMS`). */
-export const TOWN_ROOMS = ['plaza', 'pier', 'cafe', 'trail'] as const
+export const TOWN_ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade'] as const
 
 export type TownRoomId = (typeof TOWN_ROOMS)[number]
 
@@ -31,7 +47,20 @@ export const isTownRoomId = (v: unknown): v is TownRoomId => typeof v === 'strin
 
 export type Door = { at: Rect; to: TownRoomId; spawn: Point }
 
-export type Spot = { kind: SpotKind; at: Point; reach: number }
+/**
+ * `id`: a game table's id (`net/realmTables.ts`, unique in its room).
+ * `games`: the mini games it opens (`MinigameId`s; one opens at once, more
+ * ask which): a cabinet's or a table's.
+ */
+export type Spot = {
+  kind: SpotKind
+  at: Point
+  reach: number
+  id?: string
+  games?: readonly string[]
+  /** Where a trainer using it faces (a `Facing`, 0 down … 4 up): a fishing spot, toward the water. */
+  face?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+}
 
 export type TownRoom = { w: number; h: number; spawn: Point; solid: readonly Shape[]; doors: readonly Door[]; spots: readonly Spot[] }
 
@@ -49,7 +78,8 @@ const post = (x: number, y: number) => oval(x, y - 1, 5, 3)
  * the east, the board (today's Desafio, the Festival, events) by the café,
  * whose door is the café's, and the roads west to the trail and east to the
  * pier. The pier has the lagoon Water types swim in (it doesn't block: the
- * others wade) and a bench; the sea around it does block. The café has its
+ * others wade), a bench and, off the boardwalk's end, a fishing platform with
+ * two fishing spots; the sea around it does block. The café has its
  * counter and two sofas, and the trail is the Secret Base Grove: your own
  * base's entrance at the head of its clearing (one `myBase` spot; the art
  * shows the exterior your base wears), the board of public bases on the
@@ -103,7 +133,10 @@ export const REALM_ROOMS = {
     spawn: { x: 40, y: 256 },
     solid: [
       rect(574, 0, 66, 168),
-      rect(574, 216, 66, 264),
+      // The sea south of the boardwalk, around the fishing platform.
+      rect(574, 216, 14, 264),
+      rect(632, 216, 8, 264),
+      rect(588, 262, 44, 218),
       rect(0, 446, 640, 34),
       oval(600, 470, 80, 60),
       oval(514, 142, 28, 10),
@@ -121,13 +154,22 @@ export const REALM_ROOMS = {
       post(168, 222),
       post(168, 300),
       post(24, 216),
+      post(591, 258),
+      post(629, 258),
       ...[trunk(252, 214), trunk(528, 300), trunk(180, 412)],
-      ...[trunk(40, 100), trunk(104, 70), shrub(160, 100), trunk(260, 64), shrub(330, 96), trunk(40, 430)],
+      ...[trunk(40, 100), trunk(104, 70), shrub(160, 100), trunk(260, 64), shrub(298, 112), trunk(40, 430)],
+      rect(332, 96, 120, 38),
     ],
-    doors: [{ at: { x: 0, y: 226, w: 10, h: 60 }, to: 'plaza', spawn: { x: 600, y: 256 } }],
+    doors: [
+      { at: { x: 0, y: 226, w: 10, h: 60 }, to: 'plaza', spawn: { x: 600, y: 256 } },
+      { at: { x: 371, y: 134, w: 24, h: 6 }, to: 'arcade', spawn: { x: 200, y: 268 } },
+    ],
     spots: [
       { kind: 'pool', at: { x: 340, y: 304 }, reach: 120 },
       { kind: 'bench', at: { x: 92, y: 344 }, reach: 20 },
+      // The fishing platform off the boardwalk's end (`MINIGAMES.fishing`): two places at its edge, facing the sea.
+      { kind: 'fishing', at: { x: 603, y: 254 }, reach: 12, face: 0 },
+      { kind: 'fishing', at: { x: 618, y: 254 }, reach: 12, face: 0 },
     ],
   },
   cafe: {
@@ -153,6 +195,9 @@ export const REALM_ROOMS = {
       { kind: 'counter', at: { x: 200, y: 112 }, reach: 24 },
       { kind: 'bench', at: { x: 70, y: 166 }, reach: 20 },
       { kind: 'bench', at: { x: 330, y: 166 }, reach: 20 },
+      // The game tables by the door (`net/realmTables.ts`): a trainer plays from in front, seated on a stool by the relay.
+      { kind: 'gameTable', at: { x: 110, y: 280 }, reach: 26, id: 'cafe-1', games: ['fourInRow', 'typeDuel'] },
+      { kind: 'gameTable', at: { x: 290, y: 280 }, reach: 26, id: 'cafe-2', games: ['fourInRow', 'typeDuel'] },
     ],
   },
   trail: {
@@ -185,6 +230,35 @@ export const REALM_ROOMS = {
       { kind: 'host', at: { x: 556, y: 310 }, reach: 24 },
       { kind: 'bench', at: { x: 446, y: 324 }, reach: 20 },
       { kind: 'bench', at: { x: 196, y: 314 }, reach: 20 },
+    ],
+  },
+  arcade: {
+    w: 400,
+    h: 300,
+    spawn: { x: 200, y: 268 },
+    solid: [
+      rect(0, 0, 400, 64),
+      ...[52, 92, 132, 172].map((x) => rect(x - 11, 84, 22, 16)),
+      rect(278, 64, 88, 56),
+      oval(264, 110, 9, 5),
+      oval(28, 160, 14, 6),
+      oval(28, 206, 14, 6),
+      oval(380, 160, 9, 5),
+      rect(296, 196, 48, 10),
+      oval(22, 92, 9, 5),
+      oval(22, 292, 9, 5),
+      oval(378, 292, 9, 5),
+      rect(0, 64, 6, 236),
+      rect(394, 64, 6, 236),
+    ],
+    doors: [{ at: { x: 170, y: 290, w: 60, h: 10 }, to: 'pier', spawn: { x: 383, y: 154 } }],
+    spots: [
+      { kind: 'cabinet', at: { x: 52, y: 114 }, reach: 16, games: ['berryCatch'] },
+      { kind: 'cabinet', at: { x: 92, y: 114 }, reach: 16, games: ['berryCatch'] },
+      { kind: 'cabinet', at: { x: 132, y: 114 }, reach: 16, games: ['whackDiglett'] },
+      { kind: 'cabinet', at: { x: 172, y: 114 }, reach: 16, games: ['whackDiglett'] },
+      { kind: 'prizes', at: { x: 322, y: 134 }, reach: 22 },
+      { kind: 'bench', at: { x: 320, y: 214 }, reach: 20 },
     ],
   },
 } as const satisfies Record<TownRoomId, TownRoom>
