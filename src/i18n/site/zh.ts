@@ -697,7 +697,7 @@ export const siteZh: SiteMessages = {
         expShare: '把地圖上所有 Exp. Candy 吸到你身邊。',
         coinCase: '把地圖上所有 ₽ 吸到你身邊。',
         berryPouch: '把地圖上所有 Oran Berry 吸到你身邊。',
-        superRod: '釣起地圖上所有道具（傷藥、Rare Candy 等）。',
+        superRod: '釣起地圖上地面的一切：道具、Exp. Candy、₽、樹果和 Poké Ball。',
         pokeFlute: '讓畫面上的野生寶可夢睡著。',
         maxRepel: '數秒內無敵，並把敵人推開。',
         explosion: 'Voltorb 使用 Explosion：擊倒畫面上所有一般敵人，並削去首領 10% 的 HP。',

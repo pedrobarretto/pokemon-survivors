@@ -4,6 +4,7 @@ import { dropXp, LOOT, MAX_XP_PICKUPS, pokeballAsks, updatePickups } from './pic
 import type { Game } from './types'
 import * as dm from '../engine/dmath'
 import { setPhase } from './players'
+import { CONSUMABLES } from './consumables'
 
 const DT = 1 / 60
 
@@ -111,5 +112,28 @@ describe('Poké Ball prizes', () => {
     ball()
     chooseOffer(g, g.player.offers[0]!)
     expect(g.player.items).toEqual([{ id: 'muscleBand', level: 1 }])
+  })
+})
+
+describe('Super Rod', () => {
+  it('reels in everything on the ground but a choice of Mega Stones', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1)
+    g.pickups.length = 0
+    const far = { x: g.player.x + 1500, y: g.player.y, vx: 0, vy: 0, attracted: false, age: 5 } as const
+    g.pickups.push(
+      { ...far, id: 1, kind: 'xp', value: 3 },
+      { ...far, id: 2, kind: 'coin', value: 5 },
+      { ...far, id: 3, kind: 'berry' },
+      { ...far, id: 4, kind: 'pokeball' },
+      { ...far, id: 5, kind: 'consumable', item: 'potion' },
+      { ...far, id: 6, kind: 'alphaPrize' },
+      { ...far, id: 7, kind: 'megaStone', mega: 'charizardX' },
+      { ...far, id: 8, kind: 'megaStone', mega: 'charizardY' },
+    )
+    CONSUMABLES.superRod.apply(g)
+    expect(g.pickups.filter((k) => k.attracted).map((k) => k.id)).toEqual([1, 2, 3, 4, 5, 6])
+    g.pickups.length = 7
+    CONSUMABLES.superRod.apply(g)
+    expect(g.pickups.every((k) => k.attracted)).toBe(true)
   })
 })

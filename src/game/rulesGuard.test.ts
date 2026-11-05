@@ -297,7 +297,7 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
     alphaHazards: '1002·2·19·4c8862d5',
     nightBoss: '2093·36·17·04c2b2b6',
     bag: '989·11·4·ebcf7333',
-    shop: '1521·113·20·051146de',
+    shop: '1521·114·21·1cecb29a',
     shopTms2: '1787·49·18·57c9b8dd',
     evoGate: '1487·55·24·5f3f7264',
     porygonGate: '2074·69·37·77df1acd',

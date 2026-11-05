@@ -301,6 +301,20 @@ const shotsHeld = (g: Game) => {
   return boss !== undefined && boss.dying < 0 && holdsShots(boss.fight)
 }
 
+/**
+ * Entries a run-long hitbox's hit list (an aura, a cloak, a trail's carrier:
+ * `ttl` Infinity) holds before the foes off their cooldown are forgotten
+ * (`forgetCooled`). Without it the list keeps every foe the aura ever touched:
+ * tens of thousands in a long endless run, all carried by every snapshot and
+ * co-op hash.
+ */
+const HIT_LIST = 256
+
+/** Drops the hits whose cooldown ran out by `now`: a forgotten foe is hit as if it never was, as the cooldown already lets it be. Once-only hits (Infinity) stay. */
+export const forgetCooled = (hits: Map<number, number>, now: number) => {
+  for (const [id, until] of hits) if (until <= now) hits.delete(id)
+}
+
 /** Moves every hitbox and lands its hits, each as the player who cast it (`Attack.owner`). */
 export const updateAttacks = (g: Game, dt: number) => {
   const held = shotsHeld(g)
@@ -322,6 +336,7 @@ export const updateAttacks = (g: Game, dt: number) => {
     const active = a.age >= a.activeFrom && a.age <= a.activeUntil
     if (a.pull > 0 && active) pullFoes(g, a, dt)
     if (active && (a.blast === 0 || mineArmed(a.age))) collide(g, a)
+    if (a.ttl === Infinity && a.hits.size > HIT_LIST) forgetCooled(a.hits, g.now)
     if (a.blast > 0 && a.pierce > 0 && a.age >= a.ttl) detonate(g, a, true)
   }
   g.player = actor

@@ -216,6 +216,9 @@ const megaStones = (g: Game) => {
   return n
 }
 
+/** Whether `k` is one of a choice of Mega Stones (two or more for its owner): touched, never pulled. */
+export const stoneChoice = (g: Game, k: Pickup) => k.kind === 'megaStone' && stonesFor(g, k.owner) > 1
+
 export const updatePickups = (g: Game, dt: number) => {
   if (g.coop !== null) return updateTeamPickups(g, dt)
   const p = g.player

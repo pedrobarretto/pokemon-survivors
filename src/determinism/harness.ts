@@ -9,6 +9,7 @@ import type { ArenaFormat } from '../data/arenaFormats'
 import type { MapId } from '../data/versusMaps'
 import { stepTick } from '../game/lockstep'
 import type { Game } from '../game/types'
+import { exitArena } from '../game/riftArena'
 
 /** An Arena match: the humans' seats (standing still: no entries come for them, so the match is the bots' and the PvP's), in a format (the 4v4 without one), on a map (drawn from the seed without one). */
 export type VersusScenario = { seed: number; versus: readonly VersusLoadout[]; format?: ArenaFormat; map?: MapId }
@@ -182,6 +183,75 @@ export const bench = async (s: Scenario, minutes: readonly number[], n = 30) => 
       restoreMs: median(() => restore(bytes), n),
       hashMs: median(() => stateHash(d.g), n),
     })
+  }
+  return rows
+}
+
+/**
+ * Seconds the late bench lets its bot stay inside a rift before the rift
+ * collapses by the harness's hand (`exitArena`): the bot can't win every rift
+ * nor walk out of a domain, and stuck in one (the run clock stopped) it would
+ * never reach the late game. The harness's hand, like the scenario's
+ * guardian, never a rule.
+ */
+const RIFT_HAND = 180
+
+/** The late-game run `npm run determinism -- late` plays: one that reaches deep into endless mode without stalling in a rift. */
+export const LATE_SCENARIO: Scenario = { seed: 4242, starter: 'charmander', difficulty: 'normal', maxRanks: true }
+
+/**
+ * What a long endless run costs to simulate: plays `s` on into endless mode
+ * and, at each of `minutes` (run clock), the mean ms per tick over the minute
+ * before it and what the state holds then. A tick past 500 ms is the machine
+ * (a busy host), not the run: it's left out and counted (`stalls`).
+ */
+export const lateBench = (s: Scenario, minutes: readonly number[]) => {
+  const d = startScenario(s)
+  const last = Math.max(...minutes)
+  // Inside a rift the run clock stops: past `RIFT_HAND`, the cap keeps a bot stuck elsewhere from playing forever.
+  const cap = (last * 1.5 + 10) * 60
+  const rows = []
+  let riftAt = -1
+  const tick = () => {
+    if (!d.g.rift.arena) riftAt = -1
+    else if (riftAt < 0) riftAt = d.g.now
+    else if (d.g.now - riftAt > RIFT_HAND) exitArena(d.g, 'collapse')
+    return tickScenario(d)
+  }
+  for (const m of [...minutes].sort((a, b) => a - b)) {
+    while (d.g.time < (m - 1) * 60 && d.g.now < cap && tick());
+    let spent = 0
+    let ticks = 0
+    let stalls = 0
+    let worst = 0
+    while (d.g.time < m * 60 && d.g.now < cap) {
+      const t = performance.now()
+      if (!tick()) break
+      const ms = performance.now() - t
+      if (ms > 500) stalls++
+      else {
+        spent += ms
+        ticks++
+        worst = Math.max(worst, ms)
+      }
+    }
+    const g = d.g
+    rows.push({
+      minute: m,
+      reached: +(g.time / 60).toFixed(1),
+      msTick: +(spent / Math.max(1, ticks)).toFixed(3),
+      worstMs: +worst.toFixed(1),
+      stalls,
+      level: g.player.level,
+      kills: g.kills,
+      enemies: g.enemies.length,
+      attacks: g.attacks.length,
+      hitEntries: g.attacks.reduce((n, a) => n + a.hits.size, 0),
+      pickups: g.pickups.length,
+      particles: g.particles.length,
+      texts: g.texts.length,
+    })
+    if (d.over || d.g.now >= cap) break
   }
   return rows
 }
