@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRotated } from '../engine/pixelart'
+import { beginRects, blitCentered, blitEllipse, blitRotated } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { TYPE_COLORS } from '../data/types'
@@ -9,6 +9,7 @@ import type { Attack, Game, Pickup } from '../game/types'
 import { tmDisc, TM_FX } from './tmArt'
 import { dashedRing } from './strokes'
 import { localPlayer, ownerOf } from '../game/players'
+import { detail } from './quality'
 
 /**
  * Art of the TM moves (`game/tmMoves.ts`) and the TM discs on the ground.
@@ -34,11 +35,12 @@ const radiusOf = (a: Attack) => (a.shape.kind === 'circle' ? a.shape.r : 8)
 const thickLine = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, w: number, color: string) => {
   const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0)))
   const half = Math.floor(w / 2)
-  ctx.fillStyle = color
+  beginRects(ctx, color)
   for (let i = 0; i <= n; i++) {
     const k = i / n
-    ctx.fillRect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
+    ctx.rect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
   }
+  ctx.fill()
 }
 
 /** A jagged bolt from (x0, y0) to (x1, y1): `kinks` zigzags, seeded by `seed` so it holds for a frame or two. */
@@ -64,10 +66,17 @@ const zigzag = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, kinks:
 
 /** Eight thin rays around (x, y), `len` px long: a sparkle. */
 const spokes = (ctx: Ctx, x: number, y: number, len: number, colors: readonly string[], rot: number) => {
-  for (let i = 0; i < 8; i++) {
-    const a = rot + (i / 8) * TAU
-    const l = i % 2 === 0 ? len : len * 0.55
-    for (let d = 1; d <= l; d++) px(ctx, x + Math.cos(a) * d, y + Math.sin(a) * d, colors[Math.min(colors.length - 1, Math.floor((d / (l + 1)) * colors.length))]!)
+  // One path per color: the spokes' pixels never overlap, so the order between colors doesn't show.
+  for (let c = 0; c < colors.length; c++) {
+    beginRects(ctx, colors[c]!)
+    for (let i = 0; i < 8; i++) {
+      const a = rot + (i / 8) * TAU
+      const l = i % 2 === 0 ? len : len * 0.55
+      for (let d = 1; d <= l; d++) {
+        if (Math.min(colors.length - 1, Math.floor((d / (l + 1)) * colors.length)) === c) ctx.rect(Math.round(x + Math.cos(a) * d), Math.round(y + Math.sin(a) * d), 1, 1)
+      }
+    }
+    ctx.fill()
   }
 }
 
@@ -349,15 +358,24 @@ const drawDischarge = (ctx: Ctx, a: Attack, t: number) => {
 /** A solid 2-px ring (outer color, inner color), squashed to `ry`, with gaps turning by `rot`. */
 const ringPx = (ctx: Ctx, x: number, y: number, rx: number, ry: number, colors: readonly [string, string], rot: number) => {
   const steps = Math.ceil(rx * TAU * 1.4)
-  for (let i = 0; i < steps; i++) {
-    const ang = (i / steps) * TAU
-    if (Math.floor((ang + rot) * 3) % 5 === 0) continue
-    px(ctx, x + Math.cos(ang) * rx, y + Math.sin(ang) * ry, colors[0])
-    px(ctx, x + Math.cos(ang) * (rx - 1), y + Math.sin(ang) * (ry - 1), colors[1])
+  // The outer pixels, then the inner ones a pixel in, each as one path. Drawing lean, the outer color alone in 2 px squares every other step.
+  const size = detail.lean ? 2 : 1
+  for (let c = 0; c < 3 - size; c++) {
+    beginRects(ctx, colors[c]!)
+    for (let i = 0; i < steps; i += size) {
+      const ang = (i / steps) * TAU
+      if (Math.floor((ang + rot) * 3) % 5 === 0) continue
+      ctx.rect(Math.round(x + Math.cos(ang) * (rx - c)), Math.round(y + Math.sin(ang) * (ry - c)), size, size)
+    }
+    ctx.fill()
   }
 }
 
 const HEAT = ['#801008', '#c02010', '#f06018', '#f8a030', '#f8d860', '#fff8d0'] as const
+
+/** Where each slice of the Heat Wave being drawn sits (its front edge), reused from wave to wave. */
+const heatX: number[] = []
+const heatY: number[] = []
 
 const drawHeatWave = (ctx: Ctx, a: Attack, t: number) => {
   const m = a.motion
@@ -370,16 +388,34 @@ const drawHeatWave = (ctx: Ctx, a: Attack, t: number) => {
   const fy = Math.sin(dir)
   ctx.globalAlpha = Math.min(1, (a.ttl - a.age) / 0.35)
   const span = Math.round(r * 1.25)
+  const last = HEAT.length - 1
   // Each slice is a curved band: white-hot at the front edge, darker behind, with heat shimmering off it.
   for (let s = -span; s <= span; s++) {
     const bow = -((s / span) ** 2) * 2
     const wav = Math.sin(t * 18 + s * 0.6 + a.id) * 1
-    const x = a.x + nx * s + fx * (bow + wav)
-    const y = a.y + ny * s + fy * (bow + wav)
-    const core = Math.abs(s) < span * 0.7
-    for (let d = 0; d < HEAT.length; d++) px(ctx, x - fx * (HEAT.length - 1 - d), y - fy * (HEAT.length - 1 - d), d === HEAT.length - 1 && !core ? HEAT[3] : HEAT[d]!)
-    if ((s + Math.floor(t * 20)) % 3 === 0) px(ctx, x - fx * (8 + (s & 3) * 2), y - fy * (8 + (s & 3) * 2), 'rgba(248,176,48,0.55)')
-    if ((s * 7 + Math.floor(t * 12)) % 11 === 0) px(ctx, x - fx * (12 + (s & 7)), y - fy * (12 + (s & 7)) - 2, '#f8d860')
+    heatX[s + span] = a.x + nx * s + fx * (bow + wav)
+    heatY[s + span] = a.y + ny * s + fy * (bow + wav)
+  }
+  // Drawing lean, every other slice in 2 px squares (a quarter of the rects) and no shimmer: a late run throws dozens of these at once.
+  const size = detail.lean ? 2 : 1
+  // Drawn a color at a time, each as one path (a wide wave is thousands of pixels); the hotter colors land on top.
+  for (let d = 0; d < (detail.lean ? HEAT.length : HEAT.length + 2); d++) {
+    beginRects(ctx, d < HEAT.length ? HEAT[d]! : d === HEAT.length ? 'rgba(248,176,48,0.55)' : HEAT[4])
+    for (let s = -span; s <= span; s += size) {
+      const core = Math.abs(s) < span * 0.7
+      const x = heatX[s + span]!
+      const y = heatY[s + span]!
+      if (d === HEAT.length) {
+        if ((s + Math.floor(t * 20)) % 3 === 0) ctx.rect(Math.round(x - fx * (8 + (s & 3) * 2)), Math.round(y - fy * (8 + (s & 3) * 2)), 1, 1)
+      } else if (d === HEAT.length + 1) {
+        if ((s * 7 + Math.floor(t * 12)) % 11 === 0) ctx.rect(Math.round(x - fx * (12 + (s & 7))), Math.round(y - fy * (12 + (s & 7)) - 2), 1, 1)
+      } else if (d === 3) {
+        ctx.rect(Math.round(x - fx * (last - 3)), Math.round(y - fy * (last - 3)), size, size)
+        // Outside the core the front edge cools to this color.
+        if (!core) ctx.rect(Math.round(x), Math.round(y), size, size)
+      } else if (d !== last || core) ctx.rect(Math.round(x - fx * (last - d)), Math.round(y - fy * (last - d)), size, size)
+    }
+    ctx.fill()
   }
   ctx.globalAlpha = 1
 }

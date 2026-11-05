@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRing, canvasCache, context2d, createCanvas } from '../engine/pixelart'
+import { beginRects, blitCentered, blitEllipse, blitRing, canvasCache, context2d, createCanvas } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import type { PokeType } from '../data/types'
@@ -118,19 +118,38 @@ const drawBurst = (ctx: Ctx, a: Attack) => {
   blitRing(ctx, r, 2, body, a.x, a.y)
   blitRing(ctx, Math.max(1, r - 3), 1, light, a.x, a.y)
   dashedRing(ctx, a.x, a.y, r + 2, a.id, [dark, body], 0.4)
-  for (let i = 0; i < 8; i++) {
-    const angle = (i / 8) * TAU + (a.id % 7) * 0.2
-    const from = r * 0.6
-    const to = r + 3 + (i % 2) * 3
-    for (let d = from; d < to; d += 1) {
-      ctx.fillStyle = d > to - 2 ? light : body
-      ctx.fillRect(Math.round(a.x + Math.cos(angle) * d), Math.round(a.y + Math.sin(angle) * d), 1, 1)
+  // The rays' bodies, then their light tips, each as one path (the rays don't cross).
+  for (let tip = 0; tip < 2; tip++) {
+    beginRects(ctx, tip ? light : body)
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * TAU + (a.id % 7) * 0.2
+      const from = r * 0.6
+      const to = r + 3 + (i % 2) * 3
+      for (let d = from; d < to; d += 1) if (d > to - 2 === (tip === 1)) ctx.rect(Math.round(a.x + Math.cos(angle) * d), Math.round(a.y + Math.sin(angle) * d), 1, 1)
     }
+    ctx.fill()
   }
   ctx.globalAlpha = 1
 }
 
-/** An Arc: a jagged, crackling line of the move's colors from the foe hit to the next one. */
+/** The points of the Arc being drawn, reused from arc to arc. */
+const arcX: number[] = []
+const arcY: number[] = []
+/** How many later points can still reach back over a point's core: the line steps at most a pixel each way per point. */
+const ARC_REACH = 4
+
+/** Whether a later point's dark 3×3 square (within `ARC_REACH`) covers (x, y), as drawing them one after another would. */
+const arcCovered = (k: number, n: number, x: number, y: number) => {
+  for (let j = k + 1; j < n && j <= k + ARC_REACH; j++) if (Math.abs(arcX[j]! - x) <= 1 && Math.abs(arcY[j]! - y) <= 1) return true
+  return false
+}
+
+/**
+ * An Arc: a jagged, crackling line of the move's colors from the foe hit to the next one. Each
+ * point is a dark 3×3 square with a body and a light pixel in it, the next point's square laid
+ * over it; drawn as three paths (a chain of arcs is thousands of points late in a run), with the
+ * core pixels a later square covers left out, so it looks as drawing them one by one did.
+ */
 const drawArc = (ctx: Ctx, a: Attack, t: number) => {
   const [dark, body, light] = palette(a.type)
   const dx = a.x - a.from.x
@@ -143,25 +162,31 @@ const drawArc = (ctx: Ctx, a: Attack, t: number) => {
   ctx.globalAlpha = Math.max(0, Math.min(1, (a.ttl - a.age) / 0.12))
   let px = a.from.x
   let py = a.from.y
+  let n = 0
   for (let i = 1; i <= steps; i++) {
     const k = i / steps
     const jag = i === steps ? 0 : (hash2(i, seed) - 0.5) * 9
     const qx = a.from.x + dx * k + nx * jag
     const qy = a.from.y + dy * k + ny * jag
-    const n = Math.max(1, Math.round(Math.hypot(qx - px, qy - py)))
-    for (let s = 0; s < n; s++) {
-      const x = Math.round(px + ((qx - px) * s) / n)
-      const y = Math.round(py + ((qy - py) * s) / n)
-      ctx.fillStyle = dark
-      ctx.fillRect(x - 1, y - 1, 3, 3)
-      ctx.fillStyle = body
-      ctx.fillRect(x, y - 1, 1, 2)
-      ctx.fillStyle = light
-      ctx.fillRect(x, y, 1, 1)
+    const m = Math.max(1, Math.round(Math.hypot(qx - px, qy - py)))
+    for (let s = 0; s < m; s++) {
+      arcX[n] = Math.round(px + ((qx - px) * s) / m)
+      arcY[n] = Math.round(py + ((qy - py) * s) / m)
+      n++
     }
     px = qx
     py = qy
   }
+  beginRects(ctx, dark)
+  for (let k = 0; k < n; k++) ctx.rect(arcX[k]! - 1, arcY[k]! - 1, 3, 3)
+  ctx.fill()
+  // The body's top pixel, then the light one under it (it took the body's lower pixel's place).
+  beginRects(ctx, body)
+  for (let k = 0; k < n; k++) if (!arcCovered(k, n, arcX[k]!, arcY[k]! - 1)) ctx.rect(arcX[k]!, arcY[k]! - 1, 1, 1)
+  ctx.fill()
+  beginRects(ctx, light)
+  for (let k = 0; k < n; k++) if (!arcCovered(k, n, arcX[k]!, arcY[k]!)) ctx.rect(arcX[k]!, arcY[k]!, 1, 1)
+  ctx.fill()
   blitRing(ctx, 2 + Math.round(a.age * 16), 1, light, a.x, a.y)
   ctx.globalAlpha = 1
 }
