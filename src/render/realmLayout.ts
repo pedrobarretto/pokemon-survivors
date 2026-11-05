@@ -40,6 +40,8 @@ export const TOWN_ART = {
   counter: 'realm/cafe-counter',
   shelf: 'realm/cafe-shelf',
   table: 'realm/cafe-table',
+  /** The café's two game tables (`gameTable` spots): its round table with a Four in a Row stand and two Type Duel cards on top. */
+  gameTable: 'realm/cafe-gametable',
   sofa: 'realm/cafe-sofa',
   menu: 'realm/cafe-menu',
   doorCave: 'realm/door-cave',
@@ -239,7 +241,7 @@ const PIER: RoomLayout = {
   ],
 }
 
-/** The café inside: the counter along the back wall, two sofas with tables by the side walls, two more tables by the door. */
+/** The café inside: the counter along the back wall, two sofas with tables by the side walls, and by the door the two game tables (Four in a Row, Type Duel). */
 const CAFE: RoomLayout = {
   indoor: true,
   ground: [
@@ -254,8 +256,8 @@ const CAFE: RoomLayout = {
     { art: 'table', x: 70, y: 196 },
     { art: 'sofa', x: 330, y: 150 },
     { art: 'table', x: 330, y: 196 },
-    { art: 'table', x: 110, y: 262 },
-    { art: 'table', x: 290, y: 262 },
+    { art: 'gameTable', x: 110, y: 262 },
+    { art: 'gameTable', x: 290, y: 262 },
     { art: 'menu', x: 150, y: 300 },
     { art: 'plant', x: 22, y: 96 },
     { art: 'plant', x: 378, y: 96 },

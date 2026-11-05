@@ -195,8 +195,8 @@ describe('rooms and bases', () => {
     expect(of(sent(message(state, 'a', { t: 'go', room: 'base:ash', x: 100, y: 100 }, T0 + 100), 'a'), 'room')[0]).toMatchObject({ room: 'base:ash' })
     const out = message(state, 'a', { t: 'go', room: 'base:misty', x: 100, y: 100 }, T0 + 200)
     expect(out).toEqual([{ k: 'visit', ask: 2, req: { visitor: 'ash', owner: 'misty', city: 'pallet' } }])
-    expect(sent(visited(state, 2, { allowed: false, why: 'private' }), 'a')).toEqual([{ t: 'refused', why: 'private' }])
-    expect(closed(visited(state, 2, { allowed: true }), 'a')).toBe(false)
+    expect(sent(visited(state, 2, { allowed: false, why: 'private' }, T0), 'a')).toEqual([{ t: 'refused', why: 'private' }])
+    expect(closed(visited(state, 2, { allowed: true }, T0), 'a')).toBe(false)
   })
 
   it('walks into a base the API allows', () => {
@@ -204,7 +204,7 @@ describe('rooms and bases', () => {
     join(state, 'a', 'ash')
     const ask = message(state, 'a', { t: 'go', room: 'base:misty', x: 100, y: 100 }, T0 + 100).find((e) => e.k === 'visit')
     if (ask?.k !== 'visit') throw new Error('no visit')
-    expect(of(sent(visited(state, ask.ask, { allowed: true }), 'a'), 'room')[0]).toMatchObject({ room: 'base:misty' })
+    expect(of(sent(visited(state, ask.ask, { allowed: true }, T0), 'a'), 'room')[0]).toMatchObject({ room: 'base:misty' })
   })
 })
 
@@ -273,7 +273,7 @@ describe('parties', () => {
     const out = message(state, 'a', { t: 'leaveParty' }, T0)
     expect(of(sent(out, 'a'), 'party')).toEqual([{ t: 'party', party: null }])
     expect(of(sent(out, 'c'), 'party')).toEqual([{ t: 'party', party: { leader: ids[1], members: [ids[1], ids[2]] } }])
-    const gone = disconnect(state, 'c')
+    const gone = disconnect(state, 'c', T0)
     expect(of(sent(gone, 'b'), 'party')).toEqual([{ t: 'party', party: null }])
   })
 
@@ -310,7 +310,7 @@ describe('time', () => {
     join(state, 'a', 'ash')
     expect(tick(state, T0 + 1).filter((e) => e.k === 'presence')).toEqual([])
     expect(tick(state, T0 + PRESENCE_EVERY_MS).find((e) => e.k === 'presence')).toEqual({ k: 'presence', report: { home: 'sa', at: T0 + PRESENCE_EVERY_MS, cities: { pallet: ['ash'] } } })
-    disconnect(state, 'a')
+    disconnect(state, 'a', T0)
     expect(tick(state, T0 + PRESENCE_EVERY_MS + 1).find((e) => e.k === 'presence')).toMatchObject({ report: { cities: {} } })
   })
 })

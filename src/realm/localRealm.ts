@@ -199,11 +199,11 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
         const ws = sockets.get(e.to)
         bots.delete(e.to)
         if (ws) shut(ws, REALM_CLOSE[e.why])
-        later(() => step(() => disconnect(state, e.to)))
+        later(() => step(() => disconnect(state, e.to, now())))
       } else if (e.k === 'identify') {
         const identities_ = Object.fromEntries(e.userIds.map((id) => [id, identities.get(id) ?? meFor(id)]))
         later(() => step(() => identified(state, e.ask, { identities: identities_, banned: [] }, now())))
-      } else if (e.k === 'visit') later(() => step(() => visited(state, e.ask, { allowed: true })))
+      } else if (e.k === 'visit') later(() => step(() => visited(state, e.ask, { allowed: true }, now())))
       else if (e.k === 'event') opts.log?.(e.ev, e.data)
       // `presence`: no API in the tab.
     }
@@ -357,7 +357,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
         if (!ws.open) return
         const known = sockets.delete(ws.id)
         ws.open = false
-        if (known) step(() => disconnect(state, ws.id))
+        if (known) step(() => disconnect(state, ws.id, now()))
         later(() => on.close(1000))
       },
       isOpen: () => ws.open,
