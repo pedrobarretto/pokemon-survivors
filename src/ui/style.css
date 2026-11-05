@@ -25997,6 +25997,9 @@ span.arena-hub-face {
   z-index: 60;
   display: flex;
   flex-direction: column;
+  /* The stage takes the whole width (.screen centers its children), so the canvas scales up to fit. */
+  align-items: stretch;
+  gap: 0;
   background: rgba(16, 20, 32, 0.92);
   padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
   touch-action: none;
@@ -26063,6 +26066,38 @@ span.arena-hub-face {
   font-size: 10px;
   background: var(--dk-wash-gold, #fff8d8);
   padding: 4px 6px;
+}
+
+.minigame-log h4 {
+  margin: 0 0 4px;
+  font-size: 10px;
+}
+
+.minigame-log ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 168px;
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+}
+
+.minigame-log li {
+  display: grid;
+  grid-template-columns: 24px 1fr auto 4ch;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  text-align: left;
+}
+
+.minigame-log li img {
+  image-rendering: pixelated;
+}
+
+.minigame-log li b {
+  text-align: right;
 }
 
 .minigame-actions {

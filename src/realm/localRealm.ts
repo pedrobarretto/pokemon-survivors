@@ -15,7 +15,7 @@ import {
 } from '../../relay/src/realm'
 import { COSMETIC_IDS, slotOf, type CosmeticSlot } from '../data/cosmetics'
 import { PLAYABLE_IDS } from '../data/hatchlings'
-import { REALM_ROOMS, isTownRoomId, type Door, type Point, type Shape, type TownRoomId } from '../data/realmMap'
+import { REALM_ROOMS, isTownRoomId, type Door, type Point, type Shape, type Spot, type TownRoomId } from '../data/realmMap'
 import { REALM, REALM_LINES, REALM_EMOTES, type CityId, type Facing, type RealmIdentity, type RealmServerMessage, type RoomKey } from '../net/realm'
 import type { SocketHandlers, SocketLike } from '../coop/client'
 import { dir8 } from '../engine/math'
@@ -83,6 +83,9 @@ type Bot = {
   talkAt: number
   emoteAt: number
   pingAt: number
+  /** A fishing spot it's walking to, and whether it stands fishing there now (`act`) until its rest ends. */
+  fishAt?: Spot | null
+  fishing?: boolean
 }
 
 type FakeSocket = { id: ConnId; on: SocketHandlers; open: boolean }
@@ -244,6 +247,18 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     const room = REALM_ROOMS[bot.room]
     const doors: readonly Door[] = room.doors
     const from = { x: bot.x, y: bot.y }
+    // Now and then a fishing spot, to fish a while: straight there, or by the way in behind it (the pier's boardwalk).
+    const rods = room.spots.filter((s) => s.kind === 'fishing')
+    if (rods.length > 0 && random() < 0.3) {
+      const spot: Spot = pick(rods)
+      const behind = { x: spot.at.x, y: spot.at.y + (spot.face === 4 ? 58 : -58) }
+      const first = clearPath(bot.room, from, spot.at) ? spot.at : clearPath(bot.room, from, behind) && clearPath(bot.room, behind, spot.at) ? behind : null
+      if (first) {
+        bot.target = { ...first }
+        bot.fishAt = spot
+        return
+      }
+    }
     if (doors.length > 0 && random() < 0.12) {
       const door = pick(doors)
       const to = { x: door.at.x + door.at.w / 2, y: door.at.y + door.at.h / 2 }
@@ -273,6 +288,11 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
       bot.emoteAt = t + between(10_000, 30_000)
       step(() => message(state, bot.conn, { t: 'emote', emote: pick(REALM_EMOTES.filter((e) => e !== 'look')) }, t))
     }
+    if (bot.fishing && t >= bot.restUntil) {
+      bot.fishing = false
+      step(() => message(state, bot.conn, { t: 'act', act: null }, t))
+      if (random() < 0.15) step(() => message(state, bot.conn, { t: 'brag', game: 'fishing', feat: pick(['feebas', 'bigHaul']) }, t))
+    }
     if (t < bot.restUntil) {
       if (t >= bot.pingAt) {
         bot.pingAt = t + 10_000
@@ -298,6 +318,21 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
       const door = bot.door
       bot.door = null
       if (door) step(() => message(state, bot.conn, { t: 'go', room: door.to, x: door.spawn.x, y: door.spawn.y }, t))
+      const fish = bot.fishAt
+      if (fish && (bot.x !== fish.at.x || bot.y !== fish.at.y)) {
+        // Only the way in: on to the spot itself.
+        bot.target = { ...fish.at }
+        bot.restUntil = t
+        return
+      }
+      bot.fishAt = null
+      if (fish) {
+        bot.facing = fish.face ?? bot.facing
+        bot.fishing = true
+        bot.restUntil = t + between(15_000, 40_000)
+        step(() => message(state, bot.conn, { t: 'move', x: bot.x, y: bot.y, facing: bot.facing, moving: false }, t))
+        step(() => message(state, bot.conn, { t: 'act', act: 'fishing' }, t))
+      }
       return
     }
     bot.x = Math.round(bot.x + (dx / dist) * stride)

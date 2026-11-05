@@ -205,8 +205,11 @@ const LABEL_FLOOR = 84
 /** A label over a spot or a door: its text, where it stands, and the spot (null for a door), which the prompt replaces when in reach. */
 type Label = { text: string; at: Point; spot: Spot | null }
 
+/** Spots of a kind standing side by side (the pier's fishing places): one label names them all. */
+const sideBySide = (a: Spot, b: Spot) => a.kind === b.kind && Math.hypot(a.at.x - b.at.x, a.at.y - b.at.y) < 40
+
 /**
- * A room's labels: every spot but the benches (`realm.spots`) and every door
+ * A room's labels: every spot but the benches (one for spots side by side) (`realm.spots`) and every door
  * (the room it leads to, an arrow toward the edge it's on), anchored a little
  * inside the room so an edge door's label shows.
  */
@@ -214,7 +217,7 @@ const labelsOf = (room: RoomKey): Label[] => {
   const m = t().realm
   const { w, h: hgt } = isTownRoomId(room) ? REALM_ROOMS[room] : BASE_ROOM
   const spots = spotsOf(room)
-    .filter((s) => s.kind !== 'bench')
+    .filter((s, i, all) => s.kind !== 'bench' && !all.slice(0, i).some((o) => sideBySide(o, s)))
     .map((s) => ({ text: m.spots[s.kind], at: s.at, spot: s }))
   const doors = doorsOf(room).map((d) => {
     const name = m.rooms[d.to]
@@ -747,6 +750,11 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     function playAt(spot: Spot) {
       const games = spot.kind === 'fishing' ? ['fishing' as const] : (spot.games ?? []).filter(isMinigameId)
       if (games.length === 0) return
+      // A fishing spot stands the trainer at the edge, facing the water, so the room sees them fish there.
+      if (spot.kind === 'fishing') {
+        place(walker, spot.at.x, spot.at.y)
+        walker.facing = spot.face ?? walker.facing
+      }
       openSub((r) =>
         chooseGame(r, games, {
           partner: me?.partner ?? 'pikachu',
@@ -905,6 +913,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       // Everyone where they stand now: the others behind, the trainer as walked.
       const views: TrainerView[] = []
       for (const tr of trainers.values()) {
+        tr.act = tr.av.act
         if (tr.av.id === you) Object.assign(tr, { x: walker.x, y: walker.y, facing: walker.facing, moving: walker.moving })
         else {
           const at = sampleAt(tr.track, now)
@@ -951,7 +960,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       }
       // The labels of what's around: the near spot's is its prompt instead.
       for (const l of labels) {
-        const shown = seated && sub === null && l.spot !== near && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
+        const shown = seated && sub === null && !(l.spot && near && (l.spot === near || sideBySide(l.spot, near))) && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
         l.el.classList.toggle('shown', shown)
         if (shown) l.el.style.transform = pin(l.at, l.el)
       }

@@ -75,15 +75,24 @@ export type MinigameDef = SoloDef | TableDef
  * good run's ₽.
  */
 export const MINIGAMES = {
-  /** Fishing off the pier (agent A): cast, wait for the bite, reel. */
+  /**
+   * Fishing off the pier (`realm/games/fishing.ts`): cast, wait for the bite,
+   * reel. Feats: a Feebas, the shiny Gyarados, a round of 400 points
+   * (`BIG_HAUL`). Trophies: the rod rack after 20 rounds, the golden Magikarp
+   * plaque for a round of 500, the shiny Gyarados trophy for hooking it.
+   */
   fishing: {
     kind: 'solo',
     where: 'pier',
     pay: { perPoint: 1, perPlay: 250, daily: 800 },
     maxScore: 2000,
     minMs: 30_000,
-    feats: [],
-    trophies: [],
+    feats: ['feebas', 'shinyGyarados', 'bigHaul'],
+    trophies: [
+      { furniture: 'fishingRodRack', after: { stat: 'plays', at: 20 } },
+      { furniture: 'goldenMagikarpPlaque', after: { stat: 'best', at: 500 } },
+      { furniture: 'shinyGyaradosTrophy', after: { feat: 'shinyGyarados' } },
+    ],
   },
   /** The arcade's cabinets (agent D): catch falling berries, keep clear of Voltorb. */
   berryCatch: {

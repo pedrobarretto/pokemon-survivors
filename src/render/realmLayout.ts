@@ -187,7 +187,8 @@ const PLAZA: RoomLayout = {
 
 /**
  * The pier: the road from the plaza ends on a beach; a boardwalk runs east
- * over the sea to a jetty under the lighthouse, which stands on the rocks of
+ * over the sea to a jetty under the lighthouse (a fishing platform juts south
+ * off its end, lanterns at its corners), which stands on the rocks of
  * the north-east point; the lagoon in the middle, where Water types swim, is
  * a tide pool the sea fills through a channel to the south, rocks on its rim;
  * palms, parasols, a sandcastle and surfboards dot the sand.
@@ -208,6 +209,7 @@ const PIER: RoomLayout = {
     { kind: 'water', shape: oval(468, 398, 22, 24), pool: true },
     { kind: 'water', shape: oval(482, 428, 22, 20), pool: true },
     { kind: 'boards', shape: rect(470, 170, 170, 44) },
+    { kind: 'boards', shape: rect(588, 210, 44, 52) },
   ],
   props: [
     { art: 'signpost', x: 24, y: 216 },
@@ -218,6 +220,8 @@ const PIER: RoomLayout = {
     { art: 'rocksWide', x: 468, y: 156 },
     { art: 'rocksRound', x: 558, y: 162 },
     { art: 'crates', x: 612, y: 192 },
+    { art: 'lamp', x: 591, y: 258 },
+    { art: 'lamp', x: 629, y: 258 },
     { art: 'surfboards', x: 452, y: 232 },
     { art: 'boat', x: 606, y: 334 },
     { art: 'palm', x: 252, y: 214 },

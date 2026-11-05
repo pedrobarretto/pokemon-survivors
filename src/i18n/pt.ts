@@ -6264,6 +6264,10 @@ export const pt = {
       monstera: 'Costela-de-adão',
       bonsai: 'Bonsai',
       hangingPlant: 'Planta pendente',
+      // The fishing trophies (`MINIGAMES.fishing.trophies`).
+      fishingRodRack: 'Suporte de varas',
+      goldenMagikarpPlaque: 'Placa do Magikarp Dourado',
+      shinyGyaradosTrophy: 'Troféu do Gyarados Shiny',
     } satisfies Record<ShopFurnitureId, string>,
     doll: (legend: string) => `Boneco de ${legend}`,
     kinds: { floor: 'Móvel', rug: 'Tapete', top: 'Enfeite', wall: 'Parede', wallpaper: 'Papel de parede', flooring: 'Piso' } satisfies Record<FurnitureKind, string>,
@@ -6599,7 +6603,7 @@ export const pt = {
       fourInRow: { name: 'Quatro em Linha', blurb: 'Alinhe quatro Poké Balls antes do outro.' },
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fogo vence Planta, Planta vence Água, Água vence Fogo.' },
     },
-    feats: { fishing: {}, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: {} },
+    feats: { fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', bigHaul: 'Pescaria de 400 pontos!' }, berryCatch: {}, whackDiglett: {}, fourInRow: {}, typeDuel: {} },
     end: {
       score: (n: number) => `${n} pontos`,
       win: 'Vitória!',
@@ -6612,6 +6616,22 @@ export const pt = {
       trophy: (name: string) => `Troféu novo: ${name}!`,
       again: 'Jogar de novo',
       leave: 'Sair',
+    },
+    /** Fishing's own words (`realm/games/fishing.ts`), drawn in its canvas: keep each about 20 letters. */
+    fishing: {
+      hold: 'Segure para lançar',
+      wait: 'Espere a fisgada...',
+      bite: 'Agora!',
+      reel: 'Segure: puxa · Solte: folga',
+      ease: 'Solte!',
+      early: 'Cedo demais!',
+      away: 'Escapou...',
+      snapped: 'A linha arrebentou!',
+      lastCast: 'Último lance!',
+      time: 'Tempo!',
+      go: 'Já!',
+      log: 'Sua pescaria',
+      junk: { boot: 'Bota velha', can: 'Lata', seaweed: 'Alga' },
     },
   },
   carpenter: {
