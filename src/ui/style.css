@@ -25997,6 +25997,9 @@ span.arena-hub-face {
   z-index: 60;
   display: flex;
   flex-direction: column;
+  /* Stretched, so the stage's size (not the canvas's) sets the scale. */
+  align-items: stretch;
+  gap: 0;
   background: rgba(16, 20, 32, 0.92);
   padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
   touch-action: none;

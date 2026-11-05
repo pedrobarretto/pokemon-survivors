@@ -78,7 +78,12 @@ export type TableRun = {
   dispose?: () => void
 }
 
-export type TableUi = { size: { w: number; h: number }; start: (ctx: TableCtx) => TableRun }
+/**
+ * A table game's screen: its canvas size, how to start it, and the feats a
+ * finished match earned `seat` (ids of its `feats`), read from the table's
+ * last view: claimed with the result and bragged to the room.
+ */
+export type TableUi = { size: { w: number; h: number }; start: (ctx: TableCtx) => TableRun; feats?: (table: TableView, seat: number) => readonly string[] }
 
 /** What opening a game needs from where it opens (the realm, or the dev console). */
 export type FrameOpts = {
@@ -301,7 +306,9 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
       if (table.phase === 'over' && phase === 'playing' && seat !== null && table.result) {
         const w = table.result.winner
         const result = w === null ? 'draw' : w === seat ? 'win' : 'loss'
-        void endSheet(s.sheet, m.end[result], { game, outcome: { result, vs: source.vs }, ms: performance.now() - startedAt, feats: [] }, () => source.ready(), close)
+        const feats = ui.feats?.(table, seat) ?? []
+        for (const feat of feats) opts.realm?.brag(game, feat)
+        void endSheet(s.sheet, m.end[result], { game, outcome: { result, vs: source.vs }, ms: performance.now() - startedAt, feats }, () => source.ready(), close)
       }
       phase = table.phase
     }

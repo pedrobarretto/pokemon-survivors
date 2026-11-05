@@ -121,9 +121,14 @@ export const MINIGAMES = {
     where: 'cafe',
     seats: 2,
     pay: { win: 150, draw: 60, loss: 30, daily: 600 },
-    minMs: 30_000,
-    feats: [],
-    trophies: [],
+    /** A sweep at a quick pace takes about 15 s (3 rounds), most matches 20–60 s. */
+    minMs: 12_000,
+    /** `perfectDuel`: a win with the rival's bank empty (3–0 or one of each, unanswered). */
+    feats: ['perfectDuel'],
+    trophies: [
+      { furniture: 'duelCup', after: { stat: 'wins', at: 10 } },
+      { furniture: 'perfectDuelPennant', after: { feat: 'perfectDuel' } },
+    ],
   },
 } as const satisfies Record<string, MinigameDef>
 
