@@ -22,14 +22,14 @@ const FISHING = {
  */
 const TABLES = {
   gameTable: { kind: 'floor', set: 'arcade', size: [2, 1], rarity: 'common', price: { coins: 6000 }, blocks: true },
-  fourInRowCup: { kind: 'top', set: 'trophies', size: [1, 1], rarity: 'epic', price: null, source: 'trophy' },
+  fourInRowCup: { kind: 'top', set: 'trophies', size: [1, 1], rarity: 'epic', price: null, source: 'trophy', turn: 'still' },
   fourInRowGiant: { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'legendary', price: null, source: 'trophy', blocks: true },
 } as const satisfies Record<string, FurnitureDef>
 
 /** The type duel's: a cup after 10 wins, a pennant for a perfect duel (a win the rival banked nothing in). */
 const DUEL = {
-  duelCup: { kind: 'top', set: 'trophies', size: [1, 1], rarity: 'epic', price: null, source: 'trophy' },
-  perfectDuelPennant: { kind: 'wall', set: 'trophies', size: [2, 1], rarity: 'legendary', price: null, source: 'trophy' },
+  duelCup: { kind: 'top', set: 'trophies', size: [1, 1], rarity: 'epic', price: null, source: 'trophy', turn: 'still' },
+  perfectDuelPennant: { kind: 'wall', set: 'trophies', size: [2, 1], rarity: 'legendary', price: null, source: 'trophy', turn: 'still' },
 } as const satisfies Record<string, FurnitureDef>
 
 /** The arcade's: a basket of berries for a 2500 at Berry Rain, a golden mallet for a 2500 at Whack-a-Diglett. */

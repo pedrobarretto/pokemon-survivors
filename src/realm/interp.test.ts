@@ -46,6 +46,23 @@ describe('walk', () => {
     expect(w.y).toBeGreaterThan(100)
   })
 
+  it('rounds the corner into a doorway a few px aside of a straight walk', () => {
+    // Two blocks with a 24 px gap between them (x 100..124), walked straight down from 6 px left of it.
+    const ground: Ground = { w: 400, h: 300, solid: [{ kind: 'rect', x: 40, y: 100, w: 60, h: 24 }, { kind: 'rect', x: 124, y: 100, w: 60, h: 24 }] }
+    const w = createWalker(98, 80)
+    for (let i = 0; i < 90; i++) walk(w, { x: 0, y: 1 }, 1 / 60, ground)
+    expect(w.y).toBeGreaterThan(130)
+    expect(w.x).toBeGreaterThanOrEqual(104)
+  })
+
+  it('stays put against a wide wall with no way past it near', () => {
+    const ground: Ground = { w: 400, h: 300, solid: [{ kind: 'rect', x: 0, y: 100, w: 400, h: 24 }] }
+    const w = createWalker(200, 80)
+    for (let i = 0; i < 60; i++) walk(w, { x: 0, y: 1 }, 1 / 60, ground)
+    expect(w.x).toBe(200)
+    expect(w.y).toBeLessThan(100)
+  })
+
   it('walks to a tap and stops there', () => {
     const w = createWalker(100, 100)
     w.target = { x: 110, y: 100 }

@@ -21,8 +21,9 @@ describe('checkLayout', () => {
     expect(checkLayout(base([at('woodTable', BASE_GRID.cols - 1, 3)]), { woodTable: 1 })).toEqual({ error: 'bounds', item: 0 })
   })
 
-  it('turns a piece that turns', () => {
+  it('turns a piece that turns a quarter, and keeps the footprint of one that mirrors', () => {
     expect(checkLayout(base([at('woodTable', BASE_GRID.cols - 1, 3, true)]), { woodTable: 1 })).toBeNull()
+    expect(checkLayout(base([at('centerSofa', BASE_GRID.cols - 1, 3, true)]), { centerSofa: 1 })).toEqual({ error: 'bounds', item: 0 })
   })
 
   it('refuses floors on floors, but lets a rug lie under them', () => {
@@ -38,6 +39,13 @@ describe('checkLayout', () => {
   it('keeps the door clear', () => {
     expect(checkLayout(base([at('pottedPlant', DOOR.x, DOOR.y - 1)]), { pottedPlant: 1 })).toEqual({ error: 'door', item: 0 })
     expect(checkLayout(base([at('pokeBallRug', DOOR.x - 1, DOOR.y - 2)]), { pokeBallRug: 1 })).toBeNull()
+  })
+
+  it('keeps the doorway open onto the room, blaming the piece that shut it', () => {
+    const owned = { woodChair: 5 }
+    const sides = [at('woodChair', DOOR.x - 1, DOOR.y), at('woodChair', DOOR.x + 1, DOOR.y), at('woodChair', DOOR.x - 1, DOOR.y - 1), at('woodChair', DOOR.x + 1, DOOR.y - 1)]
+    expect(checkLayout(base(sides), owned)).toBeNull()
+    expect(checkLayout(base([...sides, at('woodChair', DOOR.x, DOOR.y - 2)]), owned)).toEqual({ error: 'door', item: 4 })
   })
 
   it('only dresses the room with an owned style of the right kind', () => {

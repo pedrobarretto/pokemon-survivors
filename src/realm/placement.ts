@@ -1,14 +1,15 @@
 import { FURNITURE, FURNITURE_IDS, footprint, type FurnitureCounts, type FurnitureId } from '../data/furniture'
 import { LEGEND_IDS, type LegendId } from '../data/legends'
-import { BASE_GRID } from '../data/realmMap'
-import { checkLayout, type BaseLayout, type Placed } from '../data/secretBases'
+import { BASE_GRID, type Point } from '../data/realmMap'
+import { DOOR, checkLayout, walksInto, type BaseLayout, type Placed } from '../data/secretBases'
 import type { DayKey } from '../game/day'
 
 /**
  * Where a secret base's pieces go, as pure rules over the data (the editor,
  * `ui/baseEditor.ts`, and the drawing, `render/base.ts`): what the carpentry
  * sells today, what's left in the tray, the tiles a dragged piece may take,
- * the first free spot for a new one, and the order pieces are drawn in.
+ * the first free spot for a new one, the order pieces are drawn in, and
+ * where a trainer stuck in a piece is set down (`nearestReachable`).
  */
 
 /** The legend a doll stands for, or null for any other piece. */
@@ -109,3 +110,48 @@ export const drawOrder = (items: readonly Placed[]): number[] => {
   return items.map((p, i) => ({ i, k: key(p, i) })).sort((a, b) => a.k - b.k).map((e) => e.i)
 }
 
+
+/**
+ * The floor tiles a trainer can walk to from the door (indices `y * cols + x`):
+ * those no piece walks into (`walksInto`), joined to the door's tile.
+ */
+export const reachableTiles = (layout: BaseLayout): Set<number> => {
+  const { cols, rows, wallRows } = BASE_GRID
+  const taken = new Set<number>()
+  for (const p of layout.items) {
+    if (!walksInto(p)) continue
+    const b = boxOf(p)
+    for (let y = b.y; y < b.y + b.h; y++) for (let x = b.x; x < b.x + b.w; x++) taken.add(y * cols + x)
+  }
+  const seen = new Set([DOOR.y * cols + DOOR.x])
+  const queue = [...seen]
+  while (queue.length > 0) {
+    const at = queue.shift()!
+    const x = at % cols
+    const y = Math.floor(at / cols)
+    for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]] as const) {
+      const next = ny * cols + nx
+      if (nx < 0 || nx >= cols || ny < wallRows || ny >= rows || taken.has(next) || seen.has(next)) continue
+      seen.add(next)
+      queue.push(next)
+    }
+  }
+  return seen
+}
+
+/**
+ * Where a trainer standing inside a piece (world px: a layout that came in
+ * under its feet) is set down: the middle of the tile it can walk to from the
+ * door that's nearest, so it's never stuck and the door stays in reach.
+ */
+export const nearestReachable = (layout: BaseLayout, x: number, y: number): Point => {
+  const { cols, tile } = BASE_GRID
+  let best: Point = { x: (DOOR.x + 0.5) * tile, y: (DOOR.y + 0.5) * tile }
+  let d = Infinity
+  for (const i of reachableTiles(layout)) {
+    const at = { x: ((i % cols) + 0.5) * tile, y: (Math.floor(i / cols) + 0.5) * tile }
+    const dd = Math.hypot(at.x - x, at.y - y)
+    if (dd < d) [best, d] = [at, dd]
+  }
+  return best
+}

@@ -70,6 +70,8 @@ export type Ground = { w: number; h: number; solid: readonly Shape[] }
 const FEET = 4
 /** A tap's target is reached this close (world px). */
 const ARRIVE = 0.5
+/** How far aside (world px) a step straight into something looks for a way past it, to round the corner (a doorway on a phone's stick). */
+const CORNER = 10
 
 const sq = (v: number) => v * v
 
@@ -86,8 +88,9 @@ const inside = (ground: Ground, x: number, y: number) => x >= FEET && y >= FEET 
 /**
  * Walks the trainer for `dt` seconds: `move` (keys or stick, length ≤ 1)
  * wins over a tap's target. A step into something solid slides along it (each
- * axis on its own) and the room's edges hold it in. At `REALM.speed`, so the
- * relay's speed check never refuses an honest walk.
+ * axis on its own), or, walking straight at its edge with a way past it
+ * within `CORNER` px aside, rounds that corner; the room's edges hold it in.
+ * At `REALM.speed`, so the relay's speed check never refuses an honest walk.
  */
 export const walk = (w: Walker, move: { x: number; y: number }, dt: number, ground: Ground) => {
   let mx = move.x
@@ -118,7 +121,19 @@ export const walk = (w: Walker, move: { x: number; y: number }, dt: number, grou
   const ny = w.y + my * step
   const free = (x: number, y: number) => inside(ground, x, y) && !blocked(ground, x, y)
   const was = { x: w.x, y: w.y }
-  if (free(nx, ny)) Object.assign(w, { x: nx, y: ny })
+  /** How far aside to get past an edge walked straight into: the nearer offset within `CORNER` px where the step goes through, capped at a step, else 0. */
+  const aside = (through: (o: number) => boolean) => {
+    for (let o = 1; o <= CORNER; o++)
+      for (const side of [-o, o]) if (through(side)) return Math.sign(side) * Math.min(step, o)
+    return 0
+  }
+  const straight = (a: number, b: number) => Math.abs(a) > 2 * Math.abs(b)
+  const blockedAhead = !free(nx, ny)
+  const dy = blockedAhead && straight(mx, my) ? aside((o) => free(w.x, w.y + o) && free(nx, w.y + o)) : 0
+  const dx = blockedAhead && straight(my, mx) ? aside((o) => free(w.x + o, w.y) && free(w.x + o, ny)) : 0
+  if (!blockedAhead) Object.assign(w, { x: nx, y: ny })
+  else if (dy !== 0 && free(w.x, w.y + dy)) w.y += dy
+  else if (dx !== 0 && free(w.x + dx, w.y)) w.x += dx
   else if (free(nx, w.y)) w.x = nx
   else if (free(w.x, ny)) w.y = ny
   else {

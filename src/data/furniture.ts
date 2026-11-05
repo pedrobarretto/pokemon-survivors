@@ -25,10 +25,9 @@ import { GAME_FURNITURE } from './furnitureSets/games'
  * when `blocks`), `rug` lies under everything and never blocks, `top` sits on
  * a `surface` (a table, a shelf), `wall` hangs on the back wall's rows,
  * `wallpaper` and `flooring` dress the whole room (one each, `BaseLayout`).
- * `size` is in tiles `[w, h]`; `turns` lets it rotate a quarter (w and h
- * swap). Names live in i18n (`furniture`), keyed by id; art in
- * `public/assets/furniture/<id>.png` (`render/furnitureArt.ts`), dolls drawn from
- * the legend's own sprite.
+ * `size` is in tiles `[w, h]`; how it turns is `turnOf`. Names live in i18n
+ * (`furniture`), keyed by id; art in `public/assets/furniture/<id>.png`
+ * (`render/furnitureArt.ts`), dolls drawn from the legend's own sprite.
  */
 
 export type FurnitureKind = 'floor' | 'rug' | 'top' | 'wall' | 'wallpaper' | 'flooring'
@@ -52,7 +51,8 @@ export type FurnitureDef = {
   price: FurniturePrice | null
   blocks?: true
   surface?: true
-  turns?: true
+  /** How it turns, when not its kind's way (`turnOf`): `quarter` for art seen from above (a bed), `still` for art a turn wouldn't change (symmetric, or with text). */
+  turn?: 'quarter' | 'still'
   source?: 'trophy' | 'event'
   /** The day (`YYYY-MM-DD`, Brasília) it shows at the carpentry, for drops. */
   from?: string
@@ -66,38 +66,38 @@ export type FurnitureDef = {
  */
 const SHOP = {
   // ₽: the basics.
-  woodChair: { kind: 'floor', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 1500 }, blocks: true, turns: true },
-  stool: { kind: 'floor', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 800 }, blocks: true },
-  woodTable: { kind: 'floor', set: 'classic', size: [2, 1], rarity: 'common', price: { coins: 3000 }, blocks: true, surface: true, turns: true },
+  woodChair: { kind: 'floor', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 1500 }, blocks: true },
+  stool: { kind: 'floor', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 800 }, blocks: true, turn: 'still' },
+  woodTable: { kind: 'floor', set: 'classic', size: [2, 1], rarity: 'common', price: { coins: 3000 }, blocks: true, surface: true, turn: 'quarter' },
   woodCrate: { kind: 'floor', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 1000 }, blocks: true, surface: true },
   bookshelf: { kind: 'floor', set: 'classic', size: [2, 1], rarity: 'common', price: { coins: 3500 }, blocks: true },
   pottedPlant: { kind: 'floor', set: 'garden', size: [1, 1], rarity: 'common', price: { coins: 1200 }, blocks: true },
-  floorLamp: { kind: 'floor', set: 'cozy', size: [1, 1], rarity: 'common', price: { coins: 2000 }, blocks: true },
+  floorLamp: { kind: 'floor', set: 'cozy', size: [1, 1], rarity: 'common', price: { coins: 2000 }, blocks: true, turn: 'still' },
   pokeBallRug: { kind: 'rug', set: 'trainer', size: [3, 3], rarity: 'common', price: { coins: 4000 } },
-  roundRug: { kind: 'rug', set: 'cozy', size: [2, 2], rarity: 'common', price: { coins: 2500 } },
-  candle: { kind: 'top', set: 'cozy', size: [1, 1], rarity: 'common', price: { coins: 600 } },
+  roundRug: { kind: 'rug', set: 'cozy', size: [2, 2], rarity: 'common', price: { coins: 2500 }, turn: 'still' },
+  candle: { kind: 'top', set: 'cozy', size: [1, 1], rarity: 'common', price: { coins: 600 }, turn: 'still' },
   flowerVase: { kind: 'top', set: 'garden', size: [1, 1], rarity: 'common', price: { coins: 900 } },
-  regionMap: { kind: 'wall', set: 'trainer', size: [2, 1], rarity: 'common', price: { coins: 2500 } },
-  wallClock: { kind: 'wall', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 1800 } },
+  regionMap: { kind: 'wall', set: 'trainer', size: [2, 1], rarity: 'common', price: { coins: 2500 }, turn: 'still' },
+  wallClock: { kind: 'wall', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 1800 }, turn: 'still' },
   plankFloor: { kind: 'flooring', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
   stoneTiles: { kind: 'flooring', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
   leafWallpaper: { kind: 'wallpaper', set: 'garden', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
   brickWallpaper: { kind: 'wallpaper', set: 'classic', size: [1, 1], rarity: 'common', price: { coins: 5000 } },
-  fireplace: { kind: 'floor', set: 'cozy', size: [2, 1], rarity: 'rare', price: { coins: 12000 }, blocks: true },
+  fireplace: { kind: 'floor', set: 'cozy', size: [2, 1], rarity: 'rare', price: { coins: 12000 }, blocks: true, turn: 'still' },
   // Gems, by rarity.
-  pokeBallLamp: { kind: 'top', set: 'trainer', size: [1, 1], rarity: 'common', price: { gems: 100 } },
+  pokeBallLamp: { kind: 'top', set: 'trainer', size: [1, 1], rarity: 'common', price: { gems: 100 }, turn: 'still' },
   pcTerminal: { kind: 'floor', set: 'center', size: [1, 1], rarity: 'rare', price: { gems: 250 }, blocks: true },
   tvSet: { kind: 'floor', set: 'arcade', size: [2, 1], rarity: 'rare', price: { gems: 250 }, blocks: true },
-  championBanner: { kind: 'wall', set: 'trainer', size: [2, 1], rarity: 'rare', price: { gems: 250 } },
-  pikachuBed: { kind: 'floor', set: 'trainer', size: [2, 3], rarity: 'rare', price: { gems: 250 }, blocks: true, turns: true },
+  championBanner: { kind: 'wall', set: 'trainer', size: [2, 1], rarity: 'rare', price: { gems: 250 }, turn: 'still' },
+  pikachuBed: { kind: 'floor', set: 'trainer', size: [2, 3], rarity: 'rare', price: { gems: 250 }, blocks: true, turn: 'quarter' },
   starryWallpaper: { kind: 'wallpaper', set: 'cozy', size: [1, 1], rarity: 'rare', price: { gems: 250 } },
-  snorlaxBeanbag: { kind: 'floor', set: 'cozy', size: [2, 2], rarity: 'epic', price: { gems: 550 }, blocks: true },
+  snorlaxBeanbag: { kind: 'floor', set: 'cozy', size: [2, 2], rarity: 'epic', price: { gems: 550 }, blocks: true, turn: 'still' },
   aquarium: { kind: 'floor', set: 'aqua', size: [3, 1], rarity: 'epic', price: { gems: 550 }, blocks: true, surface: true },
-  jukebox: { kind: 'floor', set: 'arcade', size: [1, 1], rarity: 'epic', price: { gems: 550 }, blocks: true },
+  jukebox: { kind: 'floor', set: 'arcade', size: [1, 1], rarity: 'epic', price: { gems: 550 }, blocks: true, turn: 'still' },
   cherryTree: { kind: 'floor', set: 'garden', size: [2, 2], rarity: 'epic', price: { gems: 550 }, blocks: true },
   crystalFloor: { kind: 'flooring', set: 'elegant', size: [1, 1], rarity: 'epic', price: { gems: 550 } },
   goldTrophyCase: { kind: 'floor', set: 'trainer', size: [3, 1], rarity: 'legendary', price: { gems: 1200 }, blocks: true, surface: true },
-  masterBallStatue: { kind: 'floor', set: 'trainer', size: [1, 1], rarity: 'legendary', price: { gems: 1200 }, blocks: true },
+  masterBallStatue: { kind: 'floor', set: 'trainer', size: [1, 1], rarity: 'legendary', price: { gems: 1200 }, blocks: true, turn: 'still' },
 } as const satisfies Record<string, FurnitureDef>
 
 /**
@@ -130,10 +130,23 @@ export const tradable = (id: FurnitureId): boolean => {
   return f.source !== 'trophy' && !(f.price !== null && 'gems' in f.price)
 }
 
-/** A piece's footprint in tiles, turned or not. */
+/**
+ * How a piece turns (the editor's Girar, `Placed.turned`): `quarter` turns its
+ * footprint and art a quarter (art seen from above: beds, rugs), `mirror`
+ * faces it the other way (art drawn in 3/4 from the front, the most of it:
+ * the footprint stays), null when it doesn't turn (a wallpaper, a flooring,
+ * art that looks the same turned or carries text, `turn: 'still'`).
+ */
+export const turnOf = (id: FurnitureId): 'quarter' | 'mirror' | null => {
+  const def = FURNITURE[id]
+  if (def.kind === 'wallpaper' || def.kind === 'flooring' || def.turn === 'still') return null
+  return def.turn ?? (def.kind === 'rug' ? 'quarter' : 'mirror')
+}
+
+/** A piece's footprint in tiles, turned or not (only a quarter turn swaps w and h). */
 export const footprint = (id: FurnitureId, turned: boolean): readonly [w: number, h: number] => {
   const [w, h] = FURNITURE[id].size
-  return turned && FURNITURE[id].turns ? [h, w] : [w, h]
+  return turned && turnOf(id) === 'quarter' ? [h, w] : [w, h]
 }
 
 /** How many of each piece an account has (the API's word, `GET /realm/me`). */
