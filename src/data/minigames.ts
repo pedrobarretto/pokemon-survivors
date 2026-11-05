@@ -113,7 +113,10 @@ export const MINIGAMES = {
     pay: { win: 150, draw: 60, loss: 30, daily: 600 },
     minMs: 20_000,
     feats: [],
-    trophies: [],
+    trophies: [
+      { furniture: 'fourInRowCup', after: { stat: 'wins', at: 10 } },
+      { furniture: 'fourInRowGiant', after: { stat: 'wins', at: 50 } },
+    ],
   },
   /** The type duel (agent C): Fire, Water and Grass cards with a power, played at once. */
   typeDuel: {
@@ -191,4 +194,5 @@ export const trophiesEarned = (game: MinigameId, stats: GameStats): string[] =>
 export const FURNITURE_GAMES: Readonly<Record<string, readonly MinigameId[]>> = {
   arcadeCabinet: ['berryCatch', 'whackDiglett'],
   arcadeCabinetTeal: ['berryCatch', 'whackDiglett'],
+  gameTable: ['fourInRow', 'typeDuel'],
 }

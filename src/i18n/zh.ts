@@ -5869,6 +5869,10 @@ export const zh: Messages = {
       monstera: '龜背芋',
       bonsai: '盆景',
       hangingPlant: '吊掛植物',
+      // The realm’s game tables: the table sold for bases and Four in a Row’s trophies.
+      gameTable: '遊戲桌',
+      fourInRowCup: '四子連線獎盃',
+      fourInRowGiant: '巨型四子連線',
     },
     doll: (legend) => `${legend}玩偶`,
     kinds: { floor: '家具', rug: '地毯', top: '擺飾', wall: '牆面', wallpaper: '壁紙', flooring: '地板' },
@@ -6178,6 +6182,28 @@ export const zh: Messages = {
       trophy: (name) => `新獎盃：${name}！`,
       again: '再玩一次',
       leave: '離開',
+    },
+    /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
+    tables: {
+      waiting: '等待對手中……',
+      waitingHint: '坐到另一張椅子的人會和你對戰。',
+      playBot: '先和電腦對戰',
+      botMeanwhile: '和電腦練習中・等待對手',
+      arrived: '對手入座了！',
+      watching: '觀戰中',
+      takeSeat: '入座',
+      watch: '觀戰',
+    },
+    /** Four in a Row's screen (`realm/games/fourInRow.ts`), drawn on its canvas. */
+    fourInRow: {
+      you: '你',
+      bot: '電腦',
+      yourTurn: '輪到你了！',
+      theirTurn: (name: string) => `輪到 ${name}`,
+      waitingReady: (name: string) => `等待 ${name}……`,
+      tap: '點一下直行',
+      four: '四子連線！',
+      draw: '平手！',
     },
   },
   carpenter: {

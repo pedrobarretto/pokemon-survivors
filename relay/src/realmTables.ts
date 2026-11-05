@@ -218,3 +218,6 @@ export const tickTables = (city: City, now: number): RealmEffect[] => {
   }
   return out
 }
+
+/** A city's table at `id` of `room`, if one is in use (the in-page realm's bots read their match through it). */
+export const tableAt = (city: City, room: RoomKey, id: string): Table | null => city.tables.get(keyOf(room, id)) ?? null

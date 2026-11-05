@@ -6264,6 +6264,10 @@ export const pt = {
       monstera: 'Costela-de-adão',
       bonsai: 'Bonsai',
       hangingPlant: 'Planta pendente',
+      // The realm’s game tables: the table sold for bases and Four in a Row’s trophies.
+      gameTable: 'Mesa de jogos',
+      fourInRowCup: 'Taça do Quatro em Linha',
+      fourInRowGiant: 'Quatro em Linha gigante',
     } satisfies Record<ShopFurnitureId, string>,
     doll: (legend: string) => `Boneco de ${legend}`,
     kinds: { floor: 'Móvel', rug: 'Tapete', top: 'Enfeite', wall: 'Parede', wallpaper: 'Papel de parede', flooring: 'Piso' } satisfies Record<FurnitureKind, string>,
@@ -6612,6 +6616,28 @@ export const pt = {
       trophy: (name: string) => `Troféu novo: ${name}!`,
       again: 'Jogar de novo',
       leave: 'Sair',
+    },
+    /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
+    tables: {
+      waiting: 'Esperando um oponente...',
+      waitingHint: 'Quem sentar na outra cadeira joga com você.',
+      playBot: 'Jogar contra o bot enquanto isso',
+      botMeanwhile: 'Treino contra o bot · esperando um oponente',
+      arrived: 'Chegou um oponente!',
+      watching: 'Assistindo',
+      takeSeat: 'Sentar',
+      watch: 'Assistir',
+    },
+    /** Four in a Row's screen (`realm/games/fourInRow.ts`), drawn on its canvas. */
+    fourInRow: {
+      you: 'Você',
+      bot: 'Bot',
+      yourTurn: 'Sua vez!',
+      theirTurn: (name: string) => `Vez de ${name}`,
+      waitingReady: (name: string) => `Esperando ${name}...`,
+      tap: 'Toque numa coluna',
+      four: 'Quatro em linha!',
+      draw: 'Empate!',
     },
   },
   carpenter: {
