@@ -3,6 +3,8 @@ import { track, type RunPerf } from './analytics'
 import { bank, bankKey, paysAnything, type BankDelta, type Store } from './coop/bank'
 import { createBot, botPick, type Bot } from './coop/bot'
 import { COSMETIC_IDS, slotOf, type CosmeticSlot } from './data/cosmetics'
+import { SKIN_LINES } from './data/skinCatalog'
+import { skinsOf } from './arena/gemShop'
 import { coopGuestId, createCoopClient, webSocket, type CoopClient, type CoopDeps } from './coop/client'
 import { measureRelay, type VpsUrls } from './coop/relays'
 import type { QueueDeps } from './arena/queue'
@@ -401,16 +403,20 @@ const botLooks = new Map<Bot, WireLook>()
 /** The slots a dev bot dresses: worn, a trail and a plate, so a room or a run shows every kind arriving. */
 const BOT_SLOTS = ['head', 'back', 'trail', 'plate'] as const satisfies readonly CosmeticSlot[]
 
-/** Dev: bot `k`'s look, a different item of each slot per bot, every slot but one in turn (the Arena's moments too, its emote and effects). */
+/** Dev: bot `k`'s look, a different item of each slot per bot, every slot but one in turn (the Arena's moments too, its emote and effects), and a skin on every line. */
 const botLook = (k: number): WireLook => {
-  const look: Record<string, string> = {}
+  const look: Record<string, string | readonly string[]> = {}
   BOT_SLOTS.forEach((slot, i) => {
     const ids = COSMETIC_IDS.filter((id) => slotOf(id) === slot)
     if (ids.length > 0 && (k + i) % BOT_SLOTS.length !== 0) look[slot] = ids[(k * 7 + i * 3) % ids.length]!
   })
-  const arena = COSMETIC_IDS.filter((id) => !(BOT_SLOTS as readonly string[]).includes(slotOf(id)))
+  const arena = COSMETIC_IDS.filter((id) => slotOf(id) !== 'skin' && !(BOT_SLOTS as readonly string[]).includes(slotOf(id)))
   const extra = arena[k % arena.length]
   if (extra) look[slotOf(extra)] = extra
+  look.skins = SKIN_LINES.map((line) => {
+    const ids = skinsOf(line)
+    return ids[k % ids.length]!
+  })
   return look
 }
 

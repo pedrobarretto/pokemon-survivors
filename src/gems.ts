@@ -4,11 +4,12 @@ import { apiCall } from './api'
 import { equip, ownedOnly, sameLook } from './arena/gemShop'
 import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, slotOf, type Look, type CosmeticId } from './data/cosmetics'
 import { isGemPackId, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from './data/gems'
-import { isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRefusal, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus } from './game/gems'
+import { bundleMissing, bundlePrice, isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRefusal, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus } from './game/gems'
 import { locale } from './i18n'
 import { isRecord } from './game/parse'
 import { setLocalLook } from './render/looks'
 import type { WireLook } from './net/protocol'
+import type { SkinBundleId } from './data/skinCatalog'
 
 /**
  * The Arena's gem shop through the API (`server/`): the balance, what the
@@ -196,13 +197,14 @@ export const wearableSet = (s: GemsStatus | null): ReadonlySet<CosmeticId> => {
  */
 export const equippedLook = (): WireLook => {
   const s = knownGems()
-  const out: Record<string, string> = {}
+  const out: Record<string, string | readonly string[]> = {}
   if (!s) return out
   const look = ownedOnly(s.look, wearableSet(s))
   for (const slot of COSMETIC_SLOTS) {
     const id = look[slot]
     if (id) out[slot] = id
   }
+  if (look.skins) out.skins = [...look.skins]
   return out
 }
 
@@ -299,6 +301,42 @@ export const buyCosmetic = async (id: CosmeticId): Promise<Bought> => {
   if (!body || !was) return { ok: false, why: 'offline' }
   bought()
   remember({ ...was, ...body }, mirror?.pending ?? false)
+  return { ok: true, status: knownGems()! }
+}
+
+/**
+ * `POST /gems/bundle`: buys a skin bundle (the skins the account lacks, for
+ * what they cost it now, `bundlePrice`). As `buyCosmetic` answers.
+ */
+export const buyBundle = async (id: SkinBundleId): Promise<Bought> => {
+  const was = knownGems()
+  const price = bundlePrice(id, ownedSet(was)) ?? 0
+  const bought = (n: number) => track('bundle_buy', { id, price, items: n })
+  if (fake) {
+    const s = fake.status
+    const missing = bundleMissing(id, ownedSet(s))
+    if (missing.length === 0) return { ok: false, why: 'owned' }
+    if (s.balance < price) return { ok: false, why: 'gems' }
+    fake.status = { ...s, balance: s.balance - price, owned: [...s.owned, ...missing], locked: [] }
+    fake.ledger.unshift({ amount: -price, reason: 'buy', ref: id, at: Date.now() })
+    bought(missing.length)
+    notify()
+    return { ok: true, status: fake.status }
+  }
+  const res = await apiCall('/gems/bundle', { method: 'POST', body: { id }, auth: true })
+  if (res.status === 402) return { ok: false, why: 'gems' }
+  if (res.status === 409) {
+    void fetchGems()
+    return { ok: false, why: 'owned' }
+  }
+  if (res.status === 404) return { ok: false, why: 'unsold' }
+  if (res.status === 429) return { ok: false, why: 'busy' }
+  if (res.status === 403) return { ok: false, why: 'banned' }
+  const body = res.status === 200 ? parseBought(res.body) : null
+  const now = knownGems()
+  if (!body || !now) return { ok: false, why: 'offline' }
+  bought(bundleMissing(id, ownedSet(was)).length)
+  remember({ ...now, ...body }, mirror?.pending ?? false)
   return { ok: true, status: knownGems()! }
 }
 

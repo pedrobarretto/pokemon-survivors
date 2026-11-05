@@ -130,6 +130,19 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
     expect((await gems.status('u_a')).owned).toEqual(['strawHat'])
   })
 
+  it("sells a skin bundle once, at what it costs the account now, granting only the skins it lacks", async () => {
+    await sql`insert into users (id) values ('u_a')`
+    await sql.begin((tx) => moveGems(tx, 'u_a', 1500, 'grant', 'grant:test'))
+    await gems.buy('u_a', 'bulbasaurSakura', 550)
+    const [one, two] = await Promise.all([gems.buyBundle('u_a', 'bulbasaurSeasons'), gems.buyBundle('u_a', 'bulbasaurSeasons')])
+    expect([one.ok, two.ok].sort()).toEqual([false, true])
+    expect(await balance('u_a')).toBe(1500 - 550 - 800)
+    expect((await gems.status('u_a')).owned).toEqual(['bulbasaurAutumn', 'bulbasaurSakura', 'bulbasaurWinter'])
+    expect(await gems.buyBundle('u_a', 'bulbasaurSeasons')).toEqual({ ok: false, error: 'owned' })
+    expect(await gems.buyBundle('u_a', 'phantumpSeasons')).toEqual({ ok: false, error: 'gems' })
+    expect(await gems.setLook('u_a', { skins: ['bulbasaurWinter', 'charmanderSuit'] })).toEqual({ skins: ['bulbasaurWinter'] })
+  })
+
   it('blocks buying once a refund of spent gems leaves the balance negative', async () => {
     await bought()
     await gems.buy('u_a', 'strawHat', 150)

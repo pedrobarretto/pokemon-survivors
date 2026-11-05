@@ -8,7 +8,9 @@ import { actAs, localPlayer } from '../game/players'
 import type { Game, Player } from '../game/types'
 import { TEAM_FX, teamArrow, type TeamIcon } from './art'
 import { markerInsets, type MarkerInsets } from './mapEvents'
-import { drawPokemon, hasSheets, sprites, type SpeciesSprites } from './sprites'
+import { drawPokemon, hasSheets, skinSprites, sprites, type SpeciesSprites } from './sprites'
+import { skinFor } from '../data/cosmetics'
+import { shownLook } from './looks'
 import { dashedRing } from './strokes'
 import { orbGlyph, TEAM_COLORS, TEAM_LIGHT } from './vale'
 import { concealed } from './valeGrass'
@@ -111,10 +113,11 @@ export const busyWith = (p: Player): TeamIcon | null => {
   }
 }
 
-/** The sheets a player wears: their stage (or branch) and, while it lasts, their Mega form. */
+/** The sheets a player wears: their stage (or branch) in their look's skin for it, if any, and, while it lasts, their Mega form. */
 const mateSprites = (g: Game, p: Player): SpeciesSprites => {
   const dex = formAt(p.starter, p.branch, p.stage).dex
-  if (p.mega.active <= 0) return sprites(dex, p.shiny)
+  const skin = skinFor(shownLook(g, p.slot), dex)
+  if (p.mega.active <= 0) return (skin && skinSprites(skin, dex, p.shiny)) || sprites(dex, p.shiny)
   const before = actAs(g, p)
   const def = heldMega(g)
   actAs(g, before)

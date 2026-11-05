@@ -17,7 +17,8 @@ import type { CrumbMoment, LaunchStep, Quality } from './crumb'
 import type { SafeLevel } from './render/quality'
 import type { DeviceInfo } from './telemetry'
 import type { ArenaFormat } from './data/arenaFormats'
-import type { CosmeticId, CosmeticSlot, Rarity } from './data/cosmetics'
+import type { CatalogSlot, CosmeticId, Rarity } from './data/cosmetics'
+import type { SkinBundleId } from './data/skinCatalog'
 import type { GemCurrency, GemMethod, GemPackId } from './data/gems'
 
 /**
@@ -244,8 +245,10 @@ type AnalyticsEvents = {
   gems_checkout: { pack: GemPackId; method: GemMethod; currency: GemCurrency }
   /** A checkout came back (`?gems=`): the gems landed (`ok`, how many and after how long) or the wait ran out first (`timeout`). */
   gems_return: { outcome: 'ok' | 'timeout'; gems: number; seconds: number }
-  /** A cosmetic bought with gems. */
-  cosmetic_buy: { id: CosmeticId; slot: CosmeticSlot; rarity: Rarity; price: number }
+  /** A cosmetic bought with gems (a skin's `slot` is `skin`). */
+  cosmetic_buy: { id: CosmeticId; slot: CatalogSlot; rarity: Rarity; price: number }
+  /** A skin bundle bought with gems (`SKIN_BUNDLES`): what it cost the buyer and how many skins it brought. */
+  bundle_buy: { id: SkinBundleId; price: number; items: number }
   /**
    * How a co-op run's link and pacing went for this player (`coop/netStats.ts`), one per player per run,
    * flat: where the relay ran and this player met Cloudflare, round trip, frame jitter, the hold, underruns,

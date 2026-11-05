@@ -4,8 +4,10 @@ import { PLAYABLE } from '../data/hatchlings'
 import { playerDex } from '../game/game'
 import { legendLook } from '../game/legend'
 import type { Game } from '../game/types'
+import { skinFor } from '../data/cosmetics'
+import { shownLook } from './looks'
 import { STANCE_FORMS } from './specialFx'
-import { fitSprites, sprites, type FormKey, type SpeciesSprites } from './sprites'
+import { fitSprites, skinSprites, sprites, type FormKey, type SpeciesSprites } from './sprites'
 
 /**
  * How the Legend mode looks (`game/legend.ts`): a legend wears its form and
@@ -28,13 +30,17 @@ export const LEGEND_MIN_HEIGHT = 30
 /**
  * The acting player's sprites (the shell's own between ticks): a Mega's form,
  * else a legend's (Primal Kyogre, Deoxys's forme), else a stance's
- * (Aegislash's Blade); a legend's fitted to `LEGEND_BODY` and `LEGEND_MIN_HEIGHT`.
+ * (Aegislash's Blade); else its seat's skin for the species, if its look
+ * wears one (`skinFor`; the species' own until the skin's sheets land); a
+ * legend's fitted to `LEGEND_BODY` and `LEGEND_MIN_HEIGHT`.
  */
 export const playerSprites = (g: Game, megaForm?: FormKey): SpeciesSprites => {
   const p = g.player
   const stance = p.special.stance
   const form = megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined)
-  const s = sprites(playerDex(g), p.shiny, form)
+  const dex = playerDex(g)
+  const skin = form === undefined ? skinFor(shownLook(g, p.slot), dex) : null
+  const s = (skin && skinSprites(skin, dex, p.shiny)) || sprites(dex, p.shiny, form)
   return p.legend ? fitSprites(s, LEGEND_BODY, LEGEND_MIN_HEIGHT) : s
 }
 

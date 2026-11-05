@@ -25,11 +25,47 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-05',
-    title: { pt: 'Partidas infinitas de mais de 4 horas no ranking', en: 'Endless runs past 4 hours on the ranking', es: 'Partidas infinitas de más de 4 horas en el ranking', fr: 'Parties infinies de plus de 4 heures au classement', zh: '超過 4 小時的無盡對局也能上排行榜' },
+    title: { pt: 'Skins na Boutique e partidas infinitas de mais de 4 horas no ranking', en: 'Skins in the Boutique and endless runs past 4 hours on the ranking', es: 'Skins en la Boutique y partidas infinitas de más de 4 horas en el ranking', fr: 'Des skins à la Boutique et les parties infinies de plus de 4 heures au classement', zh: '精品服飾店上架皮膚，超過 4 小時的無盡對局也能上排行榜' },
     highlights: [
+      {
+        pt: 'Skins chegaram à Boutique da Leavanny: seu Pokémon redesenhado, em todos os estágios da linha, com versão shiny. São 37: Charmander de Terno, Froakie de Terno, Scorbunny de Terno, Squirtle Ninja, Torchic de Quimono, Gengar de Terno, Rayquaza Celestial, Groudon Obsidiana e mais.',
+        en: 'Skins are in Leavanny’s Boutique: your Pokémon redrawn, in every stage of its line, shiny included. There are 37: Suited Charmander, Suited Froakie, Suited Scorbunny, Ninja Squirtle, Karate Gi Torchic, Suited Gengar, Celestial Rayquaza, Obsidian Groudon and more.',
+        es: 'Las skins llegaron a la Boutique de Leavanny: tu Pokémon redibujado, en todas las etapas de su línea, con versión shiny. Son 37: Charmander de Traje, Froakie de Traje, Scorbunny de Traje, Squirtle Ninja, Torchic de Karategi, Gengar de Traje, Rayquaza Celestial, Groudon Obsidiana y más.',
+        fr: 'Les skins arrivent à la Boutique de Leavanny : ton Pokémon redessiné, à chaque stade de sa lignée, chromatique compris. Il y en a 37 : Charmander en Costume, Froakie en Costume, Scorbunny en Costume, Squirtle Ninja, Torchic en Kimono de Karaté, Gengar en Costume, Rayquaza Céleste, Groudon Obsidienne et plus.',
+        zh: '皮膚登陸 Leavanny 的精品服飾店：重新繪製的寶可夢，整條進化線的每個階段都適用，異色也有。共 37 款：Charmander 西裝、Froakie 西裝、Scorbunny 西裝、Squirtle 忍者、Torchic 空手道服、Gengar 西裝、Rayquaza 天穹、Groudon 黑曜石等等。',
+      },
+      {
+        pt: 'Estações: Sakura, Outono e Inverno para Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish e Phantump, uma a uma ou na Coleção das Estações da linha (o que você já tem sai do preço).',
+        en: 'Seasons: Sakura, Autumn and Winter for Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish and Phantump, one by one or in the line’s Seasons Collection (what you own comes off the price).',
+        es: 'Estaciones: Sakura, Otoño e Invierno para Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish y Phantump, una a una o en la Colección de las Estaciones de la línea (lo que ya tienes se descuenta).',
+        fr: 'Saisons : Sakura, Automne et Hiver pour Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish et Phantump, à l’unité ou dans la Collection des Saisons de la lignée (ce que tu as déjà est déduit).',
+        zh: '四季系列：Bulbasaur、Chikorita、Treecko、Turtwig、Budew、Rowlet、Sprigatito、Shroomish 和 Phantump 的櫻花、秋季與冬季皮膚，可單買，也可買整條進化線的四季收藏（已擁有的會折抵）。',
+      },
+      {
+        pt: 'Ofertas de lançamento: cada estação completa, com as 9 skins, por 2.600 gemas, só até 18/11. A skin aparece nas suas partidas, no co-op, no Dojo e na Arena, e os chapéus continuam por cima.',
+        en: 'Launch offers: each full season, all 9 skins, for 2,600 gems, only until Nov 18. The skin shows in your runs, in co-op, in the Dojo and in the Arena, and hats still go on top.',
+        es: 'Ofertas de lanzamiento: cada estación completa, con las 9 skins, por 2.600 gemas, solo hasta el 18/11. La skin aparece en tus partidas, en el co-op, en el Dojo y en la Arena, y los sombreros siguen encima.',
+        fr: 'Offres de lancement : chaque saison complète, les 9 skins, pour 2 600 gemmes, seulement jusqu’au 18/11. Le skin apparaît dans tes parties, en coop, au Dojo et dans l’Arène, et les chapeaux se portent toujours par-dessus.',
+        zh: '上市優惠：每個季節的全系列 9 款皮膚只要 2,600 寶石，僅到 11/18。皮膚會出現在你的對局、合作模式、道場和競技場中，帽子也照樣能戴在上面。',
+      },
       { pt: 'Partidas no modo infinito com mais de 4 horas agora entram no ranking: antes elas ficavam presas em "Sem conexão" para sempre.', en: 'Endless runs longer than 4 hours now make the ranking: they used to stay stuck on "Offline" forever.', es: 'Las partidas del modo infinito de más de 4 horas ahora entran en el ranking: antes se quedaban atascadas en "Sin conexión" para siempre.', fr: 'Les parties en mode infini de plus de 4 heures entrent maintenant au classement : avant, elles restaient bloquées sur « Hors ligne » pour toujours.', zh: '超過 4 小時的無盡模式對局現在會進入排行榜：之前它們會一直卡在「離線」。' },
     ],
     changes: [
+      {
+        title: { pt: 'Skins', en: 'Skins', es: 'Skins', fr: 'Skins', zh: '皮膚' },
+        notes: [
+          {
+            pt: 'A Boutique ganhou a aba Skins: escolha a linha, veja a skin andando em cada estágio (normal ou shiny) e prove no seu Pokémon antes de comprar. Uma compra vale para a linha toda.',
+            en: 'The Boutique has a new Skins tab: pick a line, watch the skin walk on every stage (normal or shiny) and try it on your Pokémon before buying. One buy covers the whole line.',
+            es: 'La Boutique tiene la pestaña Skins: elige la línea, mira la skin caminando en cada etapa (normal o shiny) y pruébala en tu Pokémon antes de comprar. Una compra vale para toda la línea.',
+          },
+          {
+            pt: 'Na aba Visual, escolha uma skin por linha. Megas e outras formas (como o Groudon Primitivo) aparecem sem a skin. Seus colegas no co-op e na Arena veem a sua skin.',
+            en: 'In the Look tab, pick one skin per line. Megas and other forms (like Primal Groudon) show without the skin. Your teammates in co-op and the Arena see your skin.',
+            es: 'En la pestaña Estilo, elige una skin por línea. Las Megas y otras formas (como Groudon Primigenio) aparecen sin la skin. Tus compañeros en el co-op y en la Arena ven tu skin.',
+          },
+        ],
+      },
       {
         title: { pt: 'Ranking', en: 'Ranking', es: 'Ranking' },
         notes: [

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GEM_CHECKOUT, GEM_PACKS, GEM_PATREON, GEM_PLAY, packGems } from '../data/gems'
 import { PATREON_TIERS } from '../data/supporters'
-import { checkoutRefusal, lockedCosmetics, playGems, refundedGems, runEarnsGems, wearableLook, type OwnedCosmetic } from './gems'
+import { bundleLastDay, bundleOnSale, bundlePrice, checkoutRefusal, lockedCosmetics, playGems, refundedGems, runEarnsGems, wearableLook, type OwnedCosmetic } from './gems'
 
 describe('playGems', () => {
   it('gives the match and the win until the daily cap', () => {
@@ -56,6 +56,41 @@ describe('wearableLook', () => {
     expect(wearableLook({ head: 'strawHat', trail: 'sparkTrail' }, new Set(['strawHat']))).toEqual({ head: 'strawHat' })
     expect(wearableLook({ head: 'sparkTrail' }, new Set(['sparkTrail']))).toEqual({})
     expect(wearableLook('nope', new Set())).toEqual({})
+  })
+
+  it('keeps only owned skins', () => {
+    expect(wearableLook({ skins: ['charmanderSuit', 'bulbasaurAutumn'] }, new Set(['bulbasaurAutumn']))).toEqual({ skins: ['bulbasaurAutumn'] })
+    expect(wearableLook({ head: 'strawHat', skins: ['charmanderSuit'] }, new Set(['strawHat']))).toEqual({ head: 'strawHat' })
+  })
+})
+
+describe('bundlePrice', () => {
+  it("takes the owned seasons' share off a line's collection, and stops once it's all owned", () => {
+    expect(bundlePrice('bulbasaurSeasons', new Set())).toBe(1200)
+    expect(bundlePrice('bulbasaurSeasons', new Set(['bulbasaurSakura']))).toBe(800)
+    expect(bundlePrice('bulbasaurSeasons', new Set(['bulbasaurSakura', 'bulbasaurWinter', 'charmanderSuit']))).toBe(400)
+    expect(bundlePrice('bulbasaurSeasons', new Set(['bulbasaurSakura', 'bulbasaurAutumn', 'bulbasaurWinter']))).toBeNull()
+    expect(bundlePrice('phantumpSeasons', new Set())).toBe(900)
+    expect(bundlePrice('phantumpSeasons', new Set(['phantumpAutumn']))).toBe(600)
+    expect(bundlePrice('phantumpSeasons', new Set(['phantumpAutumn', 'phantumpSakura']))).toBe(300)
+  })
+
+  it("scales a season's launch offer by its missing skins' own prices, never above them", () => {
+    expect(bundlePrice('autumnLaunch', new Set())).toBe(2600)
+    // 2600 × (4650 − 550) / 4650, to 10 gems; 2600 × (4650 − 400) / 4650.
+    expect(bundlePrice('autumnLaunch', new Set(['bulbasaurAutumn']))).toBe(2290)
+    expect(bundlePrice('autumnLaunch', new Set(['shroomishAutumn']))).toBe(2380)
+    const allButOne = new Set(['bulbasaurAutumn', 'chikoritaAutumn', 'treeckoAutumn', 'turtwigAutumn', 'budewAutumn', 'rowletAutumn', 'sprigatitoAutumn', 'shroomishAutumn'])
+    expect(bundlePrice('autumnLaunch', allButOne)).toBeLessThan(400)
+  })
+
+  it('sells the launch offers for their 14 days only, and the collections from launch on', () => {
+    expect(bundleLastDay('sakuraLaunch')).toBe('2026-11-18')
+    expect(bundleOnSale('sakuraLaunch', '2026-11-04')).toBe(false)
+    expect(bundleOnSale('sakuraLaunch', '2026-11-05')).toBe(true)
+    expect(bundleOnSale('sakuraLaunch', '2026-11-18')).toBe(true)
+    expect(bundleOnSale('sakuraLaunch', '2026-11-19')).toBe(false)
+    expect(bundleOnSale('bulbasaurSeasons', '2027-03-01')).toBe(true)
   })
 })
 

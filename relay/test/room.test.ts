@@ -565,8 +565,9 @@ describe('arena rooms', () => {
     expect(roomOf(state).phase).toBe('lobby')
     // An answer to an ask that's gone changes nothing.
     expect(looked(state, 7, {}, T0)).toEqual([])
-    const started = of(sent(looked(state, 1, { 'u:ash': { head: 'strawHat' } }, T0 + 200), 'b'), 'start')[0]
-    expect(started?.run.players.map((p) => p.loadout.look)).toEqual([{ head: 'strawHat' }, undefined, undefined])
+    // A vouched look carries its skins; a malformed one (a skin list of numbers) plays bare.
+    const started = of(sent(looked(state, 1, { 'u:ash': { head: 'strawHat', skins: ['charmanderSuit'] }, 'u:brock': { skins: [7] as unknown as string[] } }, T0 + 200), 'b'), 'start')[0]
+    expect(started?.run.players.map((p) => p.loadout.look)).toEqual([{ head: 'strawHat', skins: ['charmanderSuit'] }, undefined, undefined])
   })
 
   it('asks for the looks of a co-op room\'s accounts too, as its run starts', () => {

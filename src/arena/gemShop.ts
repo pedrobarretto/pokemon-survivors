@@ -1,4 +1,6 @@
-import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, showsIn, slotOf, type Look, type CosmeticBase, type CosmeticId, type CosmeticSlot, type Rarity } from '../data/cosmetics'
+import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, showsIn, slotOf, withSkins, type Look, type CosmeticBase, type CosmeticId, type CosmeticSlot, type Rarity } from '../data/cosmetics'
+import { PLAYABLE } from '../data/hatchlings'
+import { isSkinId, lineOf, SKIN_IDS, SKIN_LINES, SKINS, type SkinId, type SkinLine } from '../data/skinCatalog'
 import { GEM_PACK_IDS, oncePack, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
 import type { DayKey } from '../game/day'
 
@@ -54,14 +56,17 @@ const fromOf = (id: CosmeticId): DayKey | undefined => {
   return from
 }
 
+/** Whether the shop shows `id` on `day`: on sale (a price) and out by then (`from`), or owned already. */
+export const shownOn = (id: CosmeticId, day: DayKey, owned: ReadonlySet<CosmeticId>) => owned.has(id) || (cosmeticPrice(id) !== null && (fromOf(id) ?? '') <= day)
+
 /**
- * What the shop shows on `day` (Brasília), by slot: the items on sale (a
+ * What the shop shows on `day` (Brasília), by slot (skins have their own page, `ui/skinShop.ts`): the items on sale (a
  * price) that are out by then (`from`), plainest first, plus anything the
  * player owns already (a gift, an item off sale), so it still shows as
  * theirs. Slots with nothing are left out.
  */
 export const shopCatalog = (day: DayKey, owned: ReadonlySet<CosmeticId> = new Set()) => {
-  const shown = COSMETIC_IDS.filter((id) => owned.has(id) || (cosmeticPrice(id) !== null && (fromOf(id) ?? '') <= day))
+  const shown = COSMETIC_IDS.filter((id) => shownOn(id, day, owned))
   const rank = (id: CosmeticId) => RARITIES.indexOf(rarityOf(id))
   return COSMETIC_SLOTS.flatMap((slot) => {
     const items = shown.filter((id) => slotOf(id) === slot).sort((a, b) => rank(a) - rank(b) || (cosmeticPrice(a) ?? 0) - (cosmeticPrice(b) ?? 0))
@@ -79,13 +84,32 @@ export const catalogSections = <G extends { slot: CosmeticSlot }>(catalog: reado
   arena: catalog.filter((g) => !showsIn(g.slot, 'run')),
 })
 
-/** `look` with `id` on, in its own slot (replacing what was there). */
-export const equip = (look: Look, id: CosmeticId): Look => ({ ...look, [slotOf(id)]: id })
+/** `look` with `id` on, in its own slot (replacing what was there); a skin in place of its line's. */
+export const equip = (look: Look, id: CosmeticId): Look => {
+  if (isSkinId(id)) return withSkins(look, [...(look.skins ?? []).filter((s) => lineOf(s) !== lineOf(id)), id])
+  const slot = slotOf(id)
+  return slot === 'skin' ? look : { ...look, [slot]: id }
+}
 
-/** `look` with `slot` empty. */
-export const unequip = (look: Look, slot: CosmeticSlot): Look => {
+/** `look` with `slot` empty, or without a skin on `line`. */
+export const unequip = (look: Look, slot: CosmeticSlot | { line: SkinLine }): Look => {
+  if (typeof slot === 'object') return withSkins(look, (look.skins ?? []).filter((s) => lineOf(s) !== slot.line))
   const { [slot]: _off, ...rest } = look
   return rest
+}
+
+/** `look` without `id`'s place filled: its slot, or its line's skin. */
+export const takeOff = (look: Look, id: CosmeticId): Look => {
+  if (isSkinId(id)) return unequip(look, { line: lineOf(id) })
+  const slot = slotOf(id)
+  return slot === 'skin' ? look : unequip(look, slot)
+}
+
+/** Whether `look` wears `id` (in its slot, or among its skins). */
+export const wearing = (look: Look, id: CosmeticId) => {
+  if (isSkinId(id)) return look.skins?.includes(id) === true
+  const slot = slotOf(id)
+  return slot !== 'skin' && look[slot] === id
 }
 
 /** `look` keeping only what the player owns (as the API's `PUT /gems/look` does). */
@@ -95,8 +119,29 @@ export const ownedOnly = (look: Look, owned: ReadonlySet<CosmeticId>): Look => {
     const id = look[slot]
     if (id !== undefined && owned.has(id)) out[slot] = id
   }
-  return out
+  return withSkins(out, (look.skins ?? []).filter((id) => owned.has(id)))
 }
 
 /** Whether two looks wear the same items. */
-export const sameLook = (a: Look, b: Look) => COSMETIC_SLOTS.every((slot) => a[slot] === b[slot])
+export const sameLook = (a: Look, b: Look) =>
+  COSMETIC_SLOTS.every((slot) => a[slot] === b[slot]) && (a.skins ?? []).join() === (b.skins ?? []).join()
+
+/** A skin line's stage `dex` by name (the line's own, in English); a dex the line lacks reads as its number. */
+export const stageName = (line: SkinLine, dex: number) => PLAYABLE[line].line.find((st) => st.dex === dex)?.name ?? `#${dex}`
+
+/** The skins of a line, in the catalog's order. */
+export const skinsOf = (line: SkinLine) => SKIN_IDS.filter((id) => lineOf(id) === line)
+
+/**
+ * The lines the player owns skins of, as Visual lists them: the line, its
+ * first covered stage (its name and portrait), the skins owned and the one
+ * `look` wears on it (null: none).
+ */
+export const ownedSkinLines = (owned: ReadonlySet<CosmeticId>, look: Look) =>
+  SKIN_LINES.flatMap((line) => {
+    const mine = skinsOf(line).filter((id) => owned.has(id))
+    if (mine.length === 0) return []
+    const dex = SKINS[mine[0]!].dexes[0]!
+    const on: SkinId | null = look.skins?.find((id) => lineOf(id) === line) ?? null
+    return [{ line, dex, name: stageName(line, dex), mine, on }]
+  })
