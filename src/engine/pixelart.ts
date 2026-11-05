@@ -76,6 +76,21 @@ export const drawable = (img: HTMLImageElement) => {
   return ok
 }
 
+/**
+ * Draws a loaded image (`draw`), or says false when the browser calls it broken now: Chrome threw
+ * "The HTMLImageElement provided is in the 'broken' state" every frame from lobby art that had
+ * passed `drawable` as it loaded. Only that error is taken; any other still throws.
+ */
+export const drawLoaded = (draw: () => void) => {
+  try {
+    draw()
+    return true
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'InvalidStateError') return false
+    throw e
+  }
+}
+
 export const fromStrings = (rows: readonly string[], palette: Palette, opts: { mirror?: boolean } = {}): PixelSprite => {
   const width = Math.max(...rows.map((r) => r.length))
   const canvas = createCanvas(width, rows.length)

@@ -237,15 +237,21 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
     sub = confirmDialog(root, input, text, (ok) => {
       sub?.dispose()
       sub = null
-      nav = keyNav(input, el, confirmLeave)
+      nav = keyNav(input, el, escape)
       render()
       if (ok) then()
     }, { yes, no: t().mart.no })
   }
 
   const confirmLeave = () => ask(t().coop.lobby.leaveConfirm, t().coop.lobby.leave, actions.leave)
+  /** Esc and Backspace: alone in the room there's nobody to ask for, so they leave at once; with others they ask first. */
+  const escape = () => {
+    const room = client.state().room
+    if (room && room.members.length <= 1) (playSfx('select'), later(actions.leave))
+    else confirmLeave()
+  }
 
-  let nav = keyNav(input, el, confirmLeave)
+  let nav = keyNav(input, el, escape)
 
   /** The host's Start: a challenge room set on a day gone by (left open past midnight) plays today's. */
   const startNow = (challenge: DayKey | null, difficulty: Difficulty) => {
