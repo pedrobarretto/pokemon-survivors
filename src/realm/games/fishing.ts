@@ -42,9 +42,10 @@ type Pt = { x: number; y: number }
 
 /**
  * Dev only (`ps.fishing`): the next catch to bite at once, and an autopilot
- * that casts far, hooks and reels on its own, to stage every moment.
+ * that casts far, hooks and reels on its own, to stage every moment; `phase`
+ * reads the round's (for a script waiting on a moment).
  */
-export const fishingDev: { next: CatchId | null; auto: boolean } = { next: null, auto: false }
+export const fishingDev: { next: CatchId | null; auto: boolean; phase: string } = { next: null, auto: false, phase: '' }
 
 /** A fish's shadow under the water: what it is (rolled for the stretch it swims in) and where it's going. */
 type Shadow = { x: number; y: number; vx: number; catchId: CatchId; zone: Zone; turn: number; goal: Pt | null; flee: boolean; wiggle: number }
@@ -263,6 +264,7 @@ export const fishing: SoloGame = {
 
     const step = (dt: number, input: GameInput) => {
       clock += dt
+      fishingDev.phase = phase.kind
       for (const p of particles) {
         p.x += p.vx * dt
         p.y += p.vy * dt
@@ -747,9 +749,14 @@ export const fishing: SoloGame = {
       if (!shown) return
       // The name on the card's plate (official names in the pixel font, junk in the player's language).
       const plateY = CARD.y + CARD.h - 14
+      // The plate spans the card, or the name when it's longer (junk, named in the player's language).
+      const junkName = c.junk ? pixelText(catchName(phase.catchId), '#ffffff') : null
+      const pw = Math.max(CARD.w - 4, (junkName?.width ?? 0) + 4)
+      g.fillStyle = '#181820'
+      g.fillRect(Math.round(feet.x - pw / 2) - 1, plateY - 1, pw + 2, 14)
       g.fillStyle = '#283048'
-      g.fillRect(CARD.x + 2, plateY, CARD.w - 4, 12)
-      if (c.junk) center(g, pixelText(catchName(phase.catchId), '#ffffff'), feet.x, plateY + 6)
+      g.fillRect(Math.round(feet.x - pw / 2), plateY, pw, 12)
+      if (junkName) center(g, junkName, feet.x, plateY + 6)
       else {
         const name = `${c.shiny ? 'SHINY ' : ''}${catchName(phase.catchId).toUpperCase()}`
         const fits = textSprite(name, '#ffffff').w * 2 <= CARD.w - 6
