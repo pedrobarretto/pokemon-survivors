@@ -28,11 +28,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Skins na Boutique', en: 'Skins in the Boutique', es: 'Skins en la Boutique', fr: 'Des skins à la Boutique', zh: '精品服飾店上架皮膚' },
     highlights: [
       {
-        pt: 'Skins chegaram à Boutique da Leavanny: seu Pokémon redesenhado, em todos os estágios da linha, com versão shiny. São 34: Charmander de Terno, Squirtle Ninja, Torchic de Quimono, Gengar de Terno, Rayquaza Celestial, Groudon Obsidiana e mais.',
-        en: 'Skins are in Leavanny’s Boutique: your Pokémon redrawn, in every stage of its line, shiny included. There are 34: Suited Charmander, Ninja Squirtle, Karate Gi Torchic, Suited Gengar, Celestial Rayquaza, Obsidian Groudon and more.',
-        es: 'Las skins llegaron a la Boutique de Leavanny: tu Pokémon redibujado, en todas las etapas de su línea, con versión shiny. Son 34: Charmander de Traje, Squirtle Ninja, Torchic de Karategi, Gengar de Traje, Rayquaza Celestial, Groudon Obsidiana y más.',
-        fr: 'Les skins arrivent à la Boutique de Leavanny : ton Pokémon redessiné, à chaque stade de sa lignée, chromatique compris. Il y en a 34 : Charmander en Costume, Squirtle Ninja, Torchic en Kimono de Karaté, Gengar en Costume, Rayquaza Céleste, Groudon Obsidienne et plus.',
-        zh: '皮膚登陸 Leavanny 的精品服飾店：重新繪製的寶可夢，整條進化線的每個階段都適用，異色也有。共 34 款：Charmander 西裝、Squirtle 忍者、Torchic 空手道服、Gengar 西裝、Rayquaza 天穹、Groudon 黑曜石等等。',
+        pt: 'Skins chegaram à Boutique da Leavanny: seu Pokémon redesenhado, em todos os estágios da linha, com versão shiny. São 37: Charmander de Terno, Froakie de Terno, Scorbunny de Terno, Squirtle Ninja, Torchic de Quimono, Gengar de Terno, Rayquaza Celestial, Groudon Obsidiana e mais.',
+        en: 'Skins are in Leavanny’s Boutique: your Pokémon redrawn, in every stage of its line, shiny included. There are 37: Suited Charmander, Suited Froakie, Suited Scorbunny, Ninja Squirtle, Karate Gi Torchic, Suited Gengar, Celestial Rayquaza, Obsidian Groudon and more.',
+        es: 'Las skins llegaron a la Boutique de Leavanny: tu Pokémon redibujado, en todas las etapas de su línea, con versión shiny. Son 37: Charmander de Traje, Froakie de Traje, Scorbunny de Traje, Squirtle Ninja, Torchic de Karategi, Gengar de Traje, Rayquaza Celestial, Groudon Obsidiana y más.',
+        fr: 'Les skins arrivent à la Boutique de Leavanny : ton Pokémon redessiné, à chaque stade de sa lignée, chromatique compris. Il y en a 37 : Charmander en Costume, Froakie en Costume, Scorbunny en Costume, Squirtle Ninja, Torchic en Kimono de Karaté, Gengar en Costume, Rayquaza Céleste, Groudon Obsidienne et plus.',
+        zh: '皮膚登陸 Leavanny 的精品服飾店：重新繪製的寶可夢，整條進化線的每個階段都適用，異色也有。共 37 款：Charmander 西裝、Froakie 西裝、Scorbunny 西裝、Squirtle 忍者、Torchic 空手道服、Gengar 西裝、Rayquaza 天穹、Groudon 黑曜石等等。',
       },
       {
         pt: 'Estações: Sakura, Outono e Inverno para Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish e Phantump, uma a uma ou na Coleção das Estações da linha (o que você já tem sai do preço).',

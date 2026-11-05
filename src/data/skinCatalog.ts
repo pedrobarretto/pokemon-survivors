@@ -38,10 +38,13 @@ export const SKINS = {
   charmanderSuit: { ...at, rarity: 'legendary', line: 'charmander', dexes: [4, 5, 6] },
   squirtleNinja: { ...at, rarity: 'legendary', line: 'squirtle', dexes: [7, 8, 9] },
   torchicGi: { ...at, rarity: 'legendary', line: 'torchic', dexes: [255, 256, 257] },
+  froakieSuit: { ...at, rarity: 'legendary', line: 'froakie', dexes: [656, 657, 658] },
+  scorbunnySuit: { ...at, rarity: 'legendary', line: 'scorbunny', dexes: [813, 814, 815] },
 
   /* ---------- Epic ---------- */
   gengarSuit: { ...at, rarity: 'epic', price: 750, line: 'gastly', dexes: [94] },
   froakieDart: { ...at, rarity: 'epic', price: 750, line: 'froakie', dexes: [656, 657, 658] },
+  rioluSuit: { ...at, rarity: 'epic', price: 750, line: 'riolu', dexes: [447, 448] },
   rayquazaCelestial: { ...at, rarity: 'epic', line: 'rayquaza', dexes: [384] },
   groudonObsidian: { ...at, rarity: 'epic', line: 'groudon', dexes: [383] },
 
