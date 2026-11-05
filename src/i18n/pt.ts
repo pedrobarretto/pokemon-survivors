@@ -851,6 +851,24 @@ export const pt = {
       locker: 'Skins',
       lockerNote: 'Uma skin por linha: ela aparece em todos os estágios que veste.',
     },
+    /** The Boutique's Vitrine do dia (`dailyPicks`): its heading and note, what a pick lacks (the gems missing, the pack that covers them) and the welcome pack's card (`welcome`: how many times the Punhado's gems it gives for the same price; `once` when the prices differ). */
+    vitrine: {
+      title: 'Vitrine do dia',
+      note: 'Muda à meia-noite de Brasília',
+      missing: (n: string) => `Faltam ${n} gemas`,
+      covers: (pack: string) => `O pacote ${pack} cobre`,
+      welcome: (times: string) => `${times}× as gemas do Punhado pelo mesmo preço. Só uma vez por conta.`,
+      once: 'Só uma vez por conta.',
+    },
+    /** The partner select's skins row: its label, the line's own look, and each skin's button (worn, wear it, or to the Boutique with its price). */
+    partner: {
+      label: 'Skins',
+      normal: 'Normal',
+      wear: (name: string) => `Usar ${name}`,
+      see: (name: string) => `${name}: ver na Boutique`,
+    },
+    /** The gem chip for a guest (no balance): the way to the Boutique. */
+    chipGuest: 'Boutique: visuais com gemas',
     locker: {
       pick: 'Pokémon da prévia',
       none: 'Nenhum',

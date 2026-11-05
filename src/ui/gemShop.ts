@@ -1,9 +1,10 @@
-import { catalogSections, currencyFor, equip, methodsFor, ownedSkinLines, priceText, rarityOf, shopCatalog, shownPacks, takeOff, unequip, wearing } from '../arena/gemShop'
+import { catalogSections, currencyFor, dailyPicks, equip, methodsFor, ownedSkinLines, packFor, priceText, rarityOf, shopCatalog, shownPacks, stageName, takeOff, unequip, wearing } from '../arena/gemShop'
 import { COSMETIC_SLOTS, WEARABLE_SLOTS, arenaOnly, cosmeticPrice, showsIn, skinFor, slotOf, type CatalogSlot, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
 import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PACKS, GEM_PLAY, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
 import { effectIn } from '../data/arenaEffects'
 import { VERSUS, VERSUS_PICKS, type VersusPick } from '../data/versus'
 import { isWearableId } from '../data/wearables'
+import { isSkinId, lineOf, SKINS } from '../data/skinCatalog'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import type { Dir8 } from '../engine/math'
@@ -63,6 +64,13 @@ export type Wearer = { dex: Dex; name: string }
 
 /** A roster pick's first form as a wearer. */
 export const pickWearer = (id: VersusPick): Wearer => ({ dex: firstForm(id).dex, name: firstForm(id).name })
+
+/** Who tries `id` on: `base` itself, unless `id` is a skin that doesn't dress it, then the skin's last stage. */
+export const dressedBy = (base: Wearer, id: CosmeticId | null): Wearer => {
+  if (id === null || !isSkinId(id) || (SKINS[id].dexes as readonly number[]).includes(base.dex)) return base
+  const dex = SKINS[id].dexes[SKINS[id].dexes.length - 1]!
+  return { dex, name: stageName(lineOf(id), dex) }
+}
 
 /** Whether a wearable sits right on the species `dex` (`data/wearFits.ts`); the shop flags the ones that don't. Effects fit everyone. */
 const fits = (id: CosmeticId, dex: Dex) => !isWearableId(id) || fitsWearer(dex, id)
@@ -243,11 +251,15 @@ export const gemChip = (open: () => void) => {
   if (!gemsEnabled && !gemsFaked()) return null
   const count = h('span', { class: 'gem-chip-count' })
   const chip = h('button', { class: 'gem-chip', type: 'button', onclick: () => (playSfx('select'), later(open)) }, h('img', { class: 'gem-icon', src: gemIconUrl(), alt: '' }), count)
+  // A guest has no balance: the chip is just the gem, the way to the shop.
   const paint = (s: GemsStatus | null) => {
+    const guest = !gemsSignedIn()
     const text = s ? formatNumber(s.balance) : '—'
-    count.textContent = text
-    chip.setAttribute('aria-label', t().gems.chip(text))
-    chip.title = t().gems.chip(text)
+    const label = guest ? t().gems.chipGuest : t().gems.chip(text)
+    count.textContent = guest ? '' : text
+    chip.classList.toggle('bare', guest)
+    chip.setAttribute('aria-label', label)
+    chip.title = label
   }
   paint(knownGems())
   // It follows the balance while it's on the page; once it leaves, it stops listening.
@@ -443,6 +455,10 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
 
   const worn = () => status?.look ?? {}
   const stage = lookStage(ctx.wearer, worn, () => chosen)
+  // The Vitrine do dia, drawn as the page opens (what the player owns then): one bought stays in place, as theirs, until the next visit.
+  // Each pick tries itself on alone, so the worn title and plate don't crowd its little stage.
+  const bare: Look = {}
+  const featured = dailyPicks(brasiliaDay(today()), ownedSet(status)).map((id) => ({ id, stage: lookStage(() => dressedBy(ctx.wearer(), id), () => bare, () => id, 'vitrine') }))
   const el = h('div', { class: 'gem-shop' })
   const packsEl = h('section', { class: 'gem-packs' })
 
@@ -560,6 +576,75 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
     )
   }
 
+  /** A pack as a card (the packs' grid, the Vitrine's welcome pack): its gems, name, bonus or once tag and price; `note` under it. */
+  const packCard = (pack: GemPackId, note: string | null = null) => {
+    const m = t().gems
+    const once = oncePack(pack)
+    // The art grows with the regular packs' order; a once pack shows two.
+    const art = once ? 2 : Math.min(GEM_PACK_IDS.filter((id) => !oncePack(id)).indexOf(pack) + 1, 4)
+    return h(
+      'button',
+      { class: `gem-pack${once ? ' once' : ''}`, type: 'button', onclick: () => openPack(pack) },
+      h('span', { class: 'gem-pack-art' }, ...Array.from({ length: art }, () => h('img', { src: gemIconUrl(), alt: '' }))),
+      h('b', { class: 'gem-pack-gems' }, formatNumber(packGems(pack))),
+      h('small', { class: 'gem-pack-name' }, m.packs[pack]),
+      once ? h('em', { class: 'gem-pack-bonus once' }, m.shop.welcomeTag) : GEM_PACKS[pack].bonus > 0 ? h('em', { class: 'gem-pack-bonus' }, m.shop.bonus(formatNumber(GEM_PACKS[pack].bonus))) : null,
+      note ? h('small', { class: 'gem-pack-note' }, note) : null,
+      h('span', { class: 'gem-pack-price' }, priceText(GEM_PACKS[pack][currency], currency, tag())),
+    )
+  }
+
+  /**
+   * The Vitrine do dia: the day's two picks, each trying itself on in its own
+   * preview with its button (`act`); one the balance can't reach says how many
+   * gems are missing and offers the cheapest pack that covers them
+   * (`packFor`). The welcome pack sits beside them while the account hasn't
+   * bought it, saying what it gives against the Punhado (no made-up discounts).
+   */
+  const vitrine = () => {
+    const m = t().gems
+    if (featured.length === 0) return null
+    const card = ({ id, stage: preview }: (typeof featured)[number]) => {
+      const owned = ownedSet(status).has(id)
+      const price = cosmeticPrice(id) ?? 0
+      const missing = signedIn() && !owned ? price - (status?.balance ?? 0) : 0
+      const pack = missing > 0 ? packFor(missing, status?.taken ?? [], currency) : null
+      return h(
+        'div',
+        { class: `gem-vitrine-item ${rarityOf(id)}${owned ? ' owned' : ''}`, style: `--rarity:${RARITY_COLORS[rarityOf(id)]}` },
+        preview.el,
+        h(
+          'div',
+          { class: 'gem-vitrine-text' },
+          h('b', { class: 'gem-info-name' }, itemName(id)),
+          h('small', { class: 'gem-info-kind' }, `${m.rarities[rarityOf(id)]} · ${m.slots[slotOf(id)]}`),
+          h('span', { class: 'gem-item-tag' }, wearing(worn(), id) ? m.shop.equipped : owned ? m.shop.owned : gemAmount(price)),
+          ...(pack
+            ? [
+                h('small', { class: 'gem-vitrine-missing' }, m.vitrine.missing(formatNumber(missing))),
+                h(
+                  'button',
+                  { class: 'btn confirm gem-act gem-vitrine-pack', type: 'button', onclick: () => openPack(pack) },
+                  m.vitrine.covers(m.packs[pack]),
+                  ' ',
+                  h('span', { class: 'gem-vitrine-pack-price' }, priceText(GEM_PACKS[pack][currency], currency, tag())),
+                ),
+              ]
+            : [act(id)]),
+        ),
+      )
+    }
+    const welcome = shownPacks(status?.taken ?? []).includes('welcome')
+    const { welcome: w, pouch } = GEM_PACKS
+    const times = w[currency] === pouch[currency] && packGems('welcome') > packGems('pouch') ? packGems('welcome') / packGems('pouch') : null
+    return h(
+      'section',
+      { class: `gem-vitrine${welcome ? ' with-pack' : ''}` },
+      h('div', { class: 'gem-section-head' }, h('span', { class: 'field-label' }, m.vitrine.title), h('small', { class: 'gem-vitrine-note' }, m.vitrine.note)),
+      h('div', { class: 'gem-vitrine-grid' }, ...featured.map(card), welcome ? packCard('welcome', times ? m.vitrine.welcome(formatNumber(times)) : m.vitrine.once) : null),
+    )
+  }
+
   const info = () => {
     const m = t().gems
     if (!chosen) return h('p', { class: 'gem-info-hint' }, m.shop.pitch)
@@ -626,20 +711,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       h(
         'div',
         { class: 'gem-pack-grid', style: `--packs:${packs.length}` },
-        ...packs.map((pack) => {
-          const once = oncePack(pack)
-          // The art grows with the regular packs' order; a once pack shows two.
-          const art = once ? 2 : Math.min(GEM_PACK_IDS.filter((id) => !oncePack(id)).indexOf(pack) + 1, 4)
-          return h(
-            'button',
-            { class: `gem-pack${once ? ' once' : ''}`, type: 'button', onclick: () => openPack(pack) },
-            h('span', { class: 'gem-pack-art' }, ...Array.from({ length: art }, () => h('img', { src: gemIconUrl(), alt: '' }))),
-            h('b', { class: 'gem-pack-gems' }, formatNumber(packGems(pack))),
-            h('small', { class: 'gem-pack-name' }, m.packs[pack]),
-            once ? h('em', { class: 'gem-pack-bonus once' }, m.shop.welcomeTag) : GEM_PACKS[pack].bonus > 0 ? h('em', { class: 'gem-pack-bonus' }, m.shop.bonus(formatNumber(GEM_PACKS[pack].bonus))) : null,
-            h('span', { class: 'gem-pack-price' }, priceText(GEM_PACKS[pack][currency], currency, tag())),
-          )
-        }),
+        ...packs.map((pack) => packCard(pack)),
       ),
       h('p', { class: 'gem-free' }, m.shop.free(formatNumber(run.gems), formatNumber(run.seconds / 60), formatNumber(week.gems), formatNumber(week.days), formatNumber(inArena.daily))),
     )
@@ -670,6 +742,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
     const scroll = el.parentElement?.scrollTop ?? 0
     el.replaceChildren(
       ...present(
+        vitrine(),
         signedIn()
           ? h('div', { class: 'gem-balance' }, h('small', {}, m.shop.balance), gemAmount(status?.balance ?? 0, 'big'), h('small', { class: 'gem-balance-note' }, m.shop.onlyLooks))
           : signInCard(ctx),
@@ -690,6 +763,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
     )
     if (el.parentElement) el.parentElement.scrollTop = scroll
     stage.start()
+    for (const f of featured) f.stage.start()
   }
 
   const off = onGems((s) => {
@@ -699,7 +773,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
 
   return {
     el,
-    dispose: () => (off(), stage.dispose(), dialog?.dispose()),
+    dispose: () => (off(), stage.dispose(), featured.forEach((f) => f.stage.dispose()), dialog?.dispose()),
     enter: () => {
       paint()
       // The cards draw the wearables themselves once their engine is in.

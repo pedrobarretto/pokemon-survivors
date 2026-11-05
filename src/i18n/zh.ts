@@ -656,6 +656,21 @@ export const zh: Messages = {
       locker: '皮膚',
       lockerNote: '每條進化線一款皮膚：會套用到它適用的所有階段。',
     },
+    vitrine: {
+      title: '今日精選',
+      note: '巴西利亞時間午夜更換',
+      missing: (n: string) => `還差 ${n} 顆寶石`,
+      covers: (pack: string) => `「${pack}」就夠了`,
+      welcome: (times: string) => `同樣價格，寶石是「一小把」的 ${times} 倍。每個帳號限購一次。`,
+      once: '每個帳號限購一次。',
+    },
+    partner: {
+      label: '皮膚',
+      normal: '原版',
+      wear: (name: string) => `穿上${name}`,
+      see: (name: string) => `${name}：到服飾店看看`,
+    },
+    chipGuest: '服飾店：用寶石換外觀',
     locker: {
       pick: '預覽寶可夢',
       none: '無',

@@ -9,7 +9,7 @@ import { buyBundle, buyCosmetic, fetchGems, gemsEnabled, gemsFaked, gemsSignedIn
 import { formatNumber, t } from '../i18n'
 import { drawPokemon, fitSprites, portraitUrl, skinSprites } from '../render/sprites'
 import { h, later } from './dom'
-import { gemAmount, isLocked, itemName, lockedNote, lockIcon, lookStage, present, RARITY_COLORS, signInCard, tag, type GemTab, type GemTabsContext, type Wearer } from './gemShop'
+import { dressedBy, gemAmount, isLocked, itemName, lockedNote, lockIcon, lookStage, present, RARITY_COLORS, signInCard, tag, type GemTab, type GemTabsContext } from './gemShop'
 import { today } from './save'
 import { confirmDialog, type Screen } from './screens'
 
@@ -62,15 +62,16 @@ const drawCard = (canvas: HTMLCanvasElement, id: SkinId, seconds: number, shiny:
   })
 }
 
-export const skinsTab = (ctx: GemTabsContext): GemTab => {
+/** The Skins page; `item`: a skin to open on, chosen on its line (the partner select's way in), else the wearer's line. */
+export const skinsTab = (ctx: GemTabsContext, item: SkinId | null = null): GemTab => {
   let status = knownGems()
   let shiny = false
-  let chosen: SkinId | null = null
+  let chosen: SkinId | null = item
   let note: { text: string; bad: boolean } | null = null
   let dialog: Screen | null = null
   let buying = false
   // The line the previews' wearer belongs to, else the first.
-  let line: SkinLine = SKIN_LINES.find((l) => skinsOf(l).some((id) => (SKINS[id].dexes as readonly number[]).includes(ctx.wearer().dex))) ?? SKIN_LINES[0]!
+  let line: SkinLine = item ? lineOf(item) : SKIN_LINES.find((l) => skinsOf(l).some((id) => (SKINS[id].dexes as readonly number[]).includes(ctx.wearer().dex))) ?? SKIN_LINES[0]!
   const cards = new Map<HTMLCanvasElement, SkinId>()
   let raf = 0
 
@@ -80,14 +81,8 @@ export const skinsTab = (ctx: GemTabsContext): GemTab => {
   const signedIn = () => gemsSignedIn() && (gemsEnabled || gemsFaked())
   const onSaleNow = (id: SkinId) => shownOn(id, day(), new Set()) && cosmeticPrice(id) !== null
 
-  /** Who the stage dresses: the wearer when the chosen skin covers it, else the skin's last stage. */
-  const stageWearer = (): Wearer => {
-    const base = ctx.wearer()
-    if (!chosen || (SKINS[chosen].dexes as readonly number[]).includes(base.dex)) return base
-    const dex = SKINS[chosen].dexes[SKINS[chosen].dexes.length - 1]!
-    return { dex, name: stageName(lineOf(chosen), dex) }
-  }
-  const stage = lookStage(stageWearer, worn, () => chosen, '', () => shiny)
+  // The stage dresses the wearer when the chosen skin covers it, else the skin's last stage.
+  const stage = lookStage(() => dressedBy(ctx.wearer(), chosen), worn, () => chosen, '', () => shiny)
   const el = h('div', { class: 'gem-shop gem-skins' })
 
   const say = (text: string, bad = false) => {

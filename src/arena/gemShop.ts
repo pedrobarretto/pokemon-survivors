@@ -1,7 +1,8 @@
 import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, showsIn, slotOf, withSkins, type Look, type CosmeticBase, type CosmeticId, type CosmeticSlot, type Rarity } from '../data/cosmetics'
 import { PLAYABLE } from '../data/hatchlings'
 import { isSkinId, lineOf, SKIN_IDS, SKIN_LINES, SKINS, type SkinId, type SkinLine } from '../data/skinCatalog'
-import { GEM_PACK_IDS, oncePack, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
+import { GEM_PACK_IDS, GEM_PACKS, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
+import { createRng, pick, seedFrom } from '../engine/rng'
 import type { DayKey } from '../game/day'
 
 /**
@@ -43,6 +44,16 @@ export const methodsFor = (currency: GemCurrency): readonly GemMethod[] => (curr
 /** The packs the shop offers an account, in order: a `once` pack only while it isn't `taken`. */
 export const shownPacks = (taken: readonly GemPackId[]): GemPackId[] => GEM_PACK_IDS.filter((id) => !oncePack(id) || !taken.includes(id))
 
+/**
+ * The pack that covers `missing` gems for the least money in `currency`
+ * among the ones offered (`shownPacks`): the welcome pack while it's there,
+ * else the smallest that's enough; the biggest when none is.
+ */
+export const packFor = (missing: number, taken: readonly GemPackId[], currency: GemCurrency): GemPackId => {
+  const packs = shownPacks(taken).sort((a, b) => GEM_PACKS[a][currency] - GEM_PACKS[b][currency] || packGems(b) - packGems(a))
+  return packs.find((id) => packGems(id) >= missing) ?? packs.reduce((a, b) => (packGems(b) > packGems(a) ? b : a))
+}
+
 /** A price in cents as the buyer's language writes it (`R$ 24,90`, `$4.99`). */
 export const priceText = (cents: number, currency: GemCurrency, tag: string) => new Intl.NumberFormat(tag, { style: 'currency', currency: currency.toUpperCase() }).format(cents / 100)
 
@@ -72,6 +83,27 @@ export const shopCatalog = (day: DayKey, owned: ReadonlySet<CosmeticId> = new Se
     const items = shown.filter((id) => slotOf(id) === slot).sort((a, b) => rank(a) - rank(b) || (cosmeticPrice(a) ?? 0) - (cosmeticPrice(b) ?? 0))
     return items.length > 0 ? [{ slot, items }] : []
   })
+}
+
+/**
+ * The Boutique's Vitrine do dia on `day` (Brasília): a look (anything a run
+ * shows but a skin) and a skin, drawn from the day alone, so everyone sees
+ * the same pair until midnight and no server is asked. Only what's on sale
+ * that day, and what `owned` lacks while there's any, so a player who owns
+ * the day's draw sees the next one. Without a skin on sale, two looks of
+ * different slots.
+ */
+export const dailyPicks = (day: DayKey, owned: ReadonlySet<CosmeticId> = new Set()): CosmeticId[] => {
+  const onSale = COSMETIC_IDS.filter((id) => (cosmeticPrice(id) ?? 0) > 0 && shownOn(id, day, new Set()) && showsIn(slotOf(id), 'run'))
+  const rng = createRng(seedFrom(`vitrine:${day}`))
+  const draw = (pool: readonly CosmeticId[]) => {
+    const fresh = pool.filter((id) => !owned.has(id))
+    const from = fresh.length > 0 ? fresh : pool
+    return from.length > 0 ? pick(rng, from) : null
+  }
+  const look = draw(onSale.filter((id) => !isSkinId(id)))
+  const skin = draw(onSale.filter(isSkinId)) ?? draw(onSale.filter((id) => !isSkinId(id) && look !== null && slotOf(id) !== slotOf(look)))
+  return [look, skin].filter((id): id is CosmeticId => id !== null)
 }
 
 /**
