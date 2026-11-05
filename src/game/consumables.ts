@@ -8,7 +8,7 @@ import { addBuff, hasBuff, tickBuffs } from './buffs'
 import { healPlayer, killEnemy } from './combat'
 import { burst, damageText, floatText, setScreenShake } from './effects'
 import { gainXp, recomputeStats } from './leveling'
-import { dropPickup } from './pickups'
+import { dropPickup, stoneChoice } from './pickups'
 import { inSight, isAlive } from './queries'
 import { eachPlayer } from './players'
 import { applyStatus, type StatusSpec } from './status'
@@ -42,11 +42,20 @@ const buff = (id: BuffId) => (g: Game) => {
 }
 
 /**
- * The vacuums (Exp. Share, Coin Case, Berry Pouch, Super Rod): every pickup of
- * one kind on the map flies to the player, as if their magnet had caught it.
+ * The vacuums (Exp. Share, Coin Case, Berry Pouch): every pickup of one kind
+ * on the map flies to the player, as if their magnet had caught it.
  */
-const pullAll = (kind: 'xp' | 'coin' | 'berry' | 'consumable') => (g: Game) => {
+const pullAll = (kind: 'xp' | 'coin' | 'berry') => (g: Game) => {
   for (const k of g.pickups) if (k.kind === kind) k.attracted = true
+}
+
+/**
+ * The Super Rod reels in everything on the ground: items, Exp. Candies, ₽,
+ * berries, Poké Balls and the rest, but for a choice of Mega Stones, which is
+ * the player's to walk up to (`stoneChoice`).
+ */
+const reelAll = (g: Game) => {
+  for (const k of g.pickups) if (!stoneChoice(g, k)) k.attracted = true
 }
 
 const FLUTE: StatusSpec = { kind: 'sleep', chance: 1, duration: FLUTE_SLEEP, power: 0 }
@@ -99,7 +108,7 @@ export const CONSUMABLES = {
   expShare: { name: 'Exp. Share', sfx: 'item', apply: pullAll('xp') },
   coinCase: { name: 'Coin Case', sfx: 'item', apply: pullAll('coin') },
   berryPouch: { name: 'Berry Pouch', sfx: 'item', apply: pullAll('berry') },
-  superRod: { name: 'Super Rod', sfx: 'item', apply: pullAll('consumable') },
+  superRod: { name: 'Super Rod', sfx: 'item', apply: reelAll },
   pokeFlute: { name: 'Poké Flute', sfx: 'flute', apply: sleepOnScreen },
   maxRepel: { name: 'Max Repel', sfx: 'item', apply: buff('maxRepel') },
   explosion: { name: 'Voltorb', sfx: 'explosion', apply: explode },

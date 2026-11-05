@@ -290,14 +290,14 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
-  44: {
+  46: {
     levelUps: '2998·45·12·78f86519',
     mega: '1892·27·1·2d1d227c',
     riftFall: '665·0·1·8722c904',
     alphaHazards: '1002·2·19·4c8862d5',
     nightBoss: '2093·36·17·04c2b2b6',
     bag: '989·11·4·ebcf7333',
-    shop: '1521·113·20·051146de',
+    shop: '1521·114·21·1cecb29a',
     shopTms2: '1787·49·18·57c9b8dd',
     evoGate: '1487·55·24·5f3f7264',
     porygonGate: '2074·69·37·77df1acd',
@@ -306,7 +306,7 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
     waveLegend: '1998·22·17·db5ba4c3',
     cave: '2188·16·12·d2d47594',
     grotto: '2782·23·18·bb75df4d',
-    underground: '3084·23·37·100fda44',
+    underground: '3084·27·30·ddb45396',
     magicGuard: '1188·51·20·285cf0b7',
   },
 }

@@ -1,5 +1,6 @@
 import type { SocketHandlers, SocketLike } from '../coop/client'
 import { isTableId, type TableResult, type TableView } from '../net/realmTables'
+import { parseWireLook } from '../net/protocol'
 import {
   REALM_LIMITS,
   REALM_PROTOCOL,
@@ -82,11 +83,6 @@ const isStr = (v: unknown, max: number): v is string => typeof v === 'string' &&
 const isFacing = (v: unknown): v is Facing => Number.isInteger(v) && isNum(v) && v >= 0 && v <= 7
 
 /** A look from the wire: slot to id strings only (the game's `parseLook` keeps the known ones). */
-const parseLookWire = (v: unknown): Partial<Record<string, string>> => {
-  if (!isRecord(v)) return {}
-  return Object.fromEntries(Object.entries(v).filter((e): e is [string, string] => isStr(e[1], 64)))
-}
-
 export const parseAvatar = (v: unknown): Avatar | null => {
   if (!isRecord(v)) return null
   const { id, handle, partner, shiny, look, supporter, x, y, facing, moving, act } = v
@@ -96,7 +92,7 @@ export const parseAvatar = (v: unknown): Avatar | null => {
     handle,
     partner,
     shiny: shiny === true,
-    look: parseLookWire(look),
+    look: parseWireLook(look) ?? {},
     supporter: isStr(supporter, 32) ? supporter : null,
     x,
     y,

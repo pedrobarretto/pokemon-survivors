@@ -103,9 +103,10 @@ export const LIMITS = {
   result: 2048,
   /** A Clerk session token. */
   token: 4096,
-  /** An Arena look (`WireLook`): its slots, and the characters of a slot's name or a cosmetic's id. */
+  /** An Arena look (`WireLook`): its slots, the characters of a slot's name or a cosmetic's id, and its skins. */
   lookSlots: 16,
   lookId: 32,
+  lookSkins: 32,
 } as const
 
 /* ---------------- Shared shapes ---------------- */
@@ -409,25 +410,31 @@ export const parseName = (v: unknown): string | null => {
 
 /**
  * An Arena look on the wire, in a loadout's `look` (`Look` in
- * `data/cosmetics.ts`): slot to cosmetic id. Shell side only: the
- * simulation never reads it, the relay only checks its shape.
+ * `data/cosmetics.ts`): slot to cosmetic id, and `skins`, a list of skin
+ * ids. Shell side only: the simulation never reads it, the relay only
+ * checks its shape.
  */
-export type WireLook = { readonly [slot: string]: string }
+export type WireLook = { readonly [slot: string]: string | readonly string[] }
 
 const LOOK_KEY = /^[a-zA-Z0-9]+$/
 
+const lookId = (id: unknown): id is string => typeof id === 'string' && id.length <= LIMITS.lookId && LOOK_KEY.test(id)
+
 /**
  * A look's shape, or null: a plain object of at most `LIMITS.lookSlots`
- * short alphanumeric names to short alphanumeric ids. The relay drops
- * anything else; which ids exist and who owns them are the game's and the
- * API's to say (`parseLook`, `PUT /gems/look`).
+ * short alphanumeric names to short alphanumeric ids, `skins` to a list of
+ * at most `LIMITS.lookSkins` of them. The relay drops anything else; which
+ * ids exist and who owns them are the game's and the API's to say
+ * (`parseLook`, `PUT /gems/look`).
  */
 export const parseWireLook = (v: unknown): WireLook | null => {
   if (!isRecord(v)) return null
   const entries = Object.entries(v)
   if (entries.length > LIMITS.lookSlots) return null
   for (const [slot, id] of entries) {
-    if (slot.length > LIMITS.lookId || !LOOK_KEY.test(slot) || typeof id !== 'string' || id.length > LIMITS.lookId || !LOOK_KEY.test(id)) return null
+    if (slot.length > LIMITS.lookId || !LOOK_KEY.test(slot)) return null
+    const ok = slot === 'skins' ? Array.isArray(id) && id.length <= LIMITS.lookSkins && id.every(lookId) : lookId(id)
+    if (!ok) return null
   }
   return v as WireLook
 }

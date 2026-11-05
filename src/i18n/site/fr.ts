@@ -691,7 +691,7 @@ export const siteFr: SiteMessages = {
         expShare: 'Attire vers toi tous les Bonbons Exp. de la carte.',
         coinCase: 'Attire vers toi tous les ₽ de la carte.',
         berryPouch: 'Attire vers toi toutes les Oran Berries de la carte.',
-        superRod: 'Pêche tous les objets de la carte (potions, Rare Candies et plus).',
+        superRod: 'Pêche tout ce qui traîne au sol sur la carte : objets, Exp. Candies, ₽, baies et Poké Balls.',
         pokeFlute: 'Endort les Pokémon sauvages à l’écran.',
         maxRepel: 'Invulnérable pendant quelques secondes, en repoussant les ennemis.',
         explosion: 'Voltorb utilise Explosion : met K.O. tous les ennemis normaux à l’écran et retire 10% des PV d’un boss.',

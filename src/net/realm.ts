@@ -30,6 +30,7 @@
  */
 
 import type { TableView } from './realmTables'
+import type { WireLook } from './protocol'
 
 /** Bumped with any incompatible change; a client and relay of different versions refuse each other. */
 export const REALM_PROTOCOL = 1
@@ -159,8 +160,8 @@ export type PartyMode = 'coop' | 'arena'
 
 /**
  * Who a trainer is, as the API vouches for them (`POST /realm/identity`):
- * never what the client says. `look` is the cosmetic look (slot to id, the
- * game's `parseLook` reads it), `partner` the save's partner (a `PlayableId`)
+ * never what the client says. `look` is the cosmetic look (slot to id plus
+ * `skins`, a `WireLook`; the game's `parseLook` reads it), `partner` the save's partner (a `PlayableId`)
  * and whether it's shiny, `supporter` the tier for the badge, if any.
  */
 export type RealmIdentity = {
@@ -168,7 +169,7 @@ export type RealmIdentity = {
   handle: string
   partner: string
   shiny: boolean
-  look: Partial<Record<string, string>>
+  look: WireLook
   supporter: string | null
 }
 
@@ -178,7 +179,7 @@ export type Avatar = {
   handle: string
   partner: string
   shiny: boolean
-  look: Partial<Record<string, string>>
+  look: WireLook
   supporter: string | null
   x: number
   y: number

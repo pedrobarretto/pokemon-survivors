@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
 import { banishOffer, canBanish, chooseOffer, createGame, step } from './game'
-import { gainXp, offerSubject, OFFER_RARITY, rollOffers, withRarity, type Loadout } from './leveling'
+import { gainXp, offerPool, offerSubject, OFFER_RARITY, rollOffers, withRarity, type Loadout } from './leveling'
 import { NO_RANKS } from './meta'
 import { createModState, hasMod, inheritMods, MOD, modBits, refreshMods, stampMods } from './mods'
 import { took } from './kitRules'
@@ -59,10 +59,24 @@ const LOADOUT: Loadout = { starter: 'charmander', moves: [{ id: 'ember', level: 
 
 describe('rollOffers', () => {
   it('never offers what was forgotten', () => {
-    const banished = new Set(['ember', 'fireSpin', 'charcoal'] as const)
+    const banished = new Set(['ember', 'fireSpin'] as const)
+    const banishedItems = new Set(['charcoal'] as const)
     for (let seed = 1; seed < 200; seed++) {
-      for (const o of rollOffers({ ...LOADOUT, banished }, createRng(seed), 3)) expect(banished.has(offerSubject(o) as never)).toBe(false)
+      for (const o of rollOffers({ ...LOADOUT, banished, banishedItems }, createRng(seed), 3)) {
+        if (o.kind === 'item') expect(banishedItems.has(o.id as never)).toBe(false)
+        else expect(banished.has(offerSubject(o) as never)).toBe(false)
+      }
     }
+  })
+
+  it('keeps a move offered when only the item of the same name was forgotten, and the other way round', () => {
+    // Metronome is both a move (Togepi's signature) and an item.
+    const togepi: Loadout = { starter: 'togepi', moves: [{ id: 'metronome', level: 1, cooldown: 0 }], items: [{ id: 'metronome', level: 1 }] }
+    const pool = (l: Loadout) => offerPool(l).map(([o]) => `${o.kind}:${offerSubject(o)}`)
+    expect(pool({ ...togepi, banishedItems: new Set(['metronome'] as const) })).toContain('move:metronome')
+    expect(pool({ ...togepi, banishedItems: new Set(['metronome'] as const) })).not.toContain('item:metronome')
+    expect(pool({ ...togepi, banished: new Set(['metronome'] as const) })).toContain('item:metronome')
+    expect(pool({ ...togepi, banished: new Set(['metronome'] as const) })).not.toContain('move:metronome')
   })
 
   it('leaves out the cards already on the table when drawing one slot again', () => {
@@ -136,10 +150,11 @@ describe('Esquecer', () => {
   it('spends a charge, forgets the card and draws its slot again', () => {
     const g = startGame(START)
     expect(g.phase).toBe('levelup')
-    const forgotten = offerSubject(g.player.offers[0]!)
+    const card = g.player.offers[0]!
+    const forgotten = offerSubject(card)
     banishOffer(g, 0)
     expect(g.player.banishes).toBe(1)
-    expect(g.player.banished.has(forgotten!)).toBe(true)
+    expect(card.kind === 'item' ? g.player.banishedItems.has(card.id) : g.player.banished.has(forgotten as never)).toBe(true)
     expect(g.player.offers.map(offerSubject)).not.toContain(forgotten)
   })
 

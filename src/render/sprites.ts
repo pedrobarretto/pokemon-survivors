@@ -44,6 +44,8 @@ export type SpeciesSprites = {
   variant?: { shiny: boolean; form?: FormKey }
   /** Set on sprites `fitSprites` shrank: the downloaded ones and the scale, so the wearables pin to the anchors they measured and shrink with the sprite. */
   fitted?: { from: SpeciesSprites; scale: number }
+  /** The skin these sheets are (`skinSprites`): the wearables dress them apart from the species' own. */
+  skin?: string
 }
 
 type ManifestAnims = Partial<Record<AnimName, { frameWidth: number; frameHeight: number; durations: number[] }>>
@@ -539,8 +541,11 @@ const failed = new Set<Key>()
  * Loads (once) every sheet and the cry URL of a species variant. Concurrent calls share one request;
  * a more urgent one moves its images up the queue (`Urgency`).
  */
-export const loadSpecies = (dex: Dex, shiny = false, form?: FormKey, urgency: Urgency = 'shown'): Promise<SpeciesSprites> => {
-  const key = cacheKey(dex, shiny, form)
+export const loadSpecies = (dex: Dex, shiny = false, form?: FormKey, urgency: Urgency = 'shown'): Promise<SpeciesSprites> =>
+  loadKeyed(cacheKey(dex, shiny, form), urgency, (key, rank) => fetchSpecies(dex, shiny, form, key, rank))
+
+/** Loads (once) the sprites cached under `key` with `fetch`, sharing a request in flight and moving it up for a more urgent ask. */
+const loadKeyed = (key: Key, urgency: Urgency, fetch: (key: Key, rank: number) => Promise<SpeciesSprites>): Promise<SpeciesSprites> => {
   const cached = cache.get(key)
   if (cached) return Promise.resolve(cached)
   const rank = RANK[urgency]
@@ -549,7 +554,7 @@ export const loadSpecies = (dex: Dex, shiny = false, form?: FormKey, urgency: Ur
     for (const job of waiting) if (job.key === key) job.rank = Math.min(job.rank, rank)
     return inFlight
   }
-  const fresh = fetchSpecies(dex, shiny, form, key, rank)
+  const fresh = fetch(key, rank)
     .then(
       (s) => {
         cache.set(key, s)
@@ -608,6 +613,65 @@ const fetchSpecies = async (dex: Dex, shiny: boolean, form: FormKey | undefined,
     // A form's own body only places its sheets; hitboxes keep the species' `bodyOf`.
     ...((form && variant.body) || bodyOf(dex, shiny)),
   }
+}
+
+/* ---------------- Skins ---------------- */
+
+const skinKey = (skin: string, dex: Dex, shiny: boolean): Key => `skin:${skin}:${dex}${shiny ? 's' : ''}`
+
+/**
+ * A skin's sheets for species `dex` (`public/assets/skins/<skin>/<dex>/`, the
+ * shiny's in `shiny/` below), laid out as the species' own (`npm run skins`
+ * bakes them so): its Walk, Idle and Hurt, and the species' own Fly (the sky
+ * draws it bare). Its body and portrait are the species'; `variant` too, so
+ * the wearables dress it on the species' rig.
+ */
+const fetchSkin = async (skin: string, dex: Dex, shiny: boolean, key: Key, rank: number): Promise<SpeciesSprites> => {
+  const anims = manifestVariant(dex, false)?.anims
+  const walkMeta = anims?.Walk
+  if (!anims || !walkMeta) throw new Error(`Missing sprites for #${dex}`)
+  const dir = `${import.meta.env.BASE_URL}assets/skins/${skin}/${dex}${shiny ? '/shiny' : ''}`
+  const load = async (src: string, meta: { frameWidth: number; frameHeight: number; durations: number[] }) =>
+    sheetOf(await loadImage(src, key, rank), meta.frameWidth, meta.frameHeight, meta.durations)
+  // The sky's Fly is the species' own: the shiny's when SpriteCollab has it, else the normal colors'.
+  const shinyFly = shiny ? manifestVariant(dex, true)?.anims.Fly : undefined
+  const fly = shinyFly ?? anims.Fly
+  const [Walk, Idle, Hurt, Fly] = await Promise.allSettled([
+    load(`${dir}/Walk.png`, walkMeta),
+    load(`${dir}/Idle.png`, anims.Idle ?? walkMeta),
+    load(`${dir}/Hurt.png`, anims.Hurt ?? walkMeta),
+    fly ? load(`${variantBase(dex, shinyFly !== undefined)}/Fly.png`, fly) : null,
+  ])
+  if (Walk.status === 'rejected' || Idle.status === 'rejected' || Hurt.status === 'rejected' || Fly.status === 'rejected') {
+    for (const r of [Walk, Idle, Hurt, Fly]) if (r.status === 'fulfilled' && r.value) freeImage(r.value.img)
+    throw new Error(`Failed to load ${dir}`)
+  }
+  return {
+    dex,
+    anims: { Walk: Walk.value, Idle: Idle.value, Hurt: Hurt.value, ...(Fly.value && { Fly: Fly.value }) },
+    portrait: portraitUrl(dex, shiny),
+    cry: cryUrl(dex),
+    variant: { shiny },
+    skin,
+    ...bodyOf(dex, shiny),
+  }
+}
+
+/** Loads (once) skin `skin`'s sheets for `dex` (`fetchSkin`). */
+export const loadSkin = (skin: string, dex: Dex, shiny = false, urgency: Urgency = 'shown') =>
+  loadKeyed(skinKey(skin, dex, shiny), urgency, (key, rank) => fetchSkin(skin, dex, shiny, key, rank))
+
+/**
+ * A skin's sprites for `dex` if loaded (asking keeps them, as `sprites` does);
+ * otherwise starts (once) loading them and returns undefined, so the species'
+ * own draw meanwhile. Cheap enough to call every frame.
+ */
+export const skinSprites = (skin: string, dex: Dex, shiny = false): SpeciesSprites | undefined => {
+  const key = skinKey(skin, dex, shiny)
+  const s = cache.get(key)
+  if (s) s.anims.Walk.seen = epoch
+  else if (!pending.has(key) && !failed.has(key)) void loadSkin(skin, dex, shiny).catch(() => {})
+  return s
 }
 
 /**

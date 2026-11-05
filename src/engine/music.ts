@@ -1,5 +1,5 @@
 import { THEMES, type ThemeId } from '../data/music'
-import { musicOutput, onAudioRunning } from './audio'
+import { healthy, musicOutput, onAudioRunning } from './audio'
 import { isDrum, midiToFreq, noteToMidi, parseTrack, VOICES, type Drum, type Duty, type Score, type Voice } from './score'
 
 /**
@@ -159,10 +159,10 @@ const note = (k: Kit, p: Playing, e: Event, t: number) => {
 /** Books every note that starts within the lookahead window. */
 const schedule = () => {
   const p = playing
-  if (!p || !kit || kit.ctx.state !== 'running') return
+  if (!p || !kit || kit.ctx.state !== 'running' || !healthy(kit.ctx)) return
   const now = kit.ctx.currentTime
-  // Throttled background timers or a suspended context leave us behind: skip ahead instead of bursting.
-  if (p.time < now) p.time = now + 0.02
+  // Throttled background timers or a suspended context leave us behind: skip ahead instead of bursting (a NaN start too).
+  if (!(p.time >= now)) p.time = now + 0.02
   while (p.time < now + LOOKAHEAD) {
     for (const e of p.song.steps[p.step]!) note(kit, p, e, p.time)
     p.time += p.song.stepDur
@@ -226,7 +226,7 @@ export const currentTheme = () => playing?.id ?? null
 export const duckMusic = (on: boolean) => {
   if (on === ducked) return
   ducked = on
-  if (kit) kit.duck.gain.setTargetAtTime(on ? DUCK_LEVEL : 1, kit.ctx.currentTime, 0.15)
+  if (kit && healthy(kit.ctx)) kit.duck.gain.setTargetAtTime(on ? DUCK_LEVEL : 1, kit.ctx.currentTime, 0.15)
 }
 
 export type { ThemeId }

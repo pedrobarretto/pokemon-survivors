@@ -24,6 +24,90 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-05',
+    title: { pt: 'Skins na Boutique e partidas infinitas de mais de 4 horas no ranking', en: 'Skins in the Boutique and endless runs past 4 hours on the ranking', es: 'Skins en la Boutique y partidas infinitas de más de 4 horas en el ranking', fr: 'Des skins à la Boutique et les parties infinies de plus de 4 heures au classement', zh: '精品服飾店上架皮膚，超過 4 小時的無盡對局也能上排行榜' },
+    highlights: [
+      {
+        pt: 'Skins chegaram à Boutique da Leavanny: seu Pokémon redesenhado, em todos os estágios da linha, com versão shiny. São 37: Charmander de Terno, Froakie de Terno, Scorbunny de Terno, Squirtle Ninja, Torchic de Quimono, Gengar de Terno, Rayquaza Celestial, Groudon Obsidiana e mais.',
+        en: 'Skins are in Leavanny’s Boutique: your Pokémon redrawn, in every stage of its line, shiny included. There are 37: Suited Charmander, Suited Froakie, Suited Scorbunny, Ninja Squirtle, Karate Gi Torchic, Suited Gengar, Celestial Rayquaza, Obsidian Groudon and more.',
+        es: 'Las skins llegaron a la Boutique de Leavanny: tu Pokémon redibujado, en todas las etapas de su línea, con versión shiny. Son 37: Charmander de Traje, Froakie de Traje, Scorbunny de Traje, Squirtle Ninja, Torchic de Karategi, Gengar de Traje, Rayquaza Celestial, Groudon Obsidiana y más.',
+        fr: 'Les skins arrivent à la Boutique de Leavanny : ton Pokémon redessiné, à chaque stade de sa lignée, chromatique compris. Il y en a 37 : Charmander en Costume, Froakie en Costume, Scorbunny en Costume, Squirtle Ninja, Torchic en Kimono de Karaté, Gengar en Costume, Rayquaza Céleste, Groudon Obsidienne et plus.',
+        zh: '皮膚登陸 Leavanny 的精品服飾店：重新繪製的寶可夢，整條進化線的每個階段都適用，異色也有。共 37 款：Charmander 西裝、Froakie 西裝、Scorbunny 西裝、Squirtle 忍者、Torchic 空手道服、Gengar 西裝、Rayquaza 天穹、Groudon 黑曜石等等。',
+      },
+      {
+        pt: 'Estações: Sakura, Outono e Inverno para Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish e Phantump, uma a uma ou na Coleção das Estações da linha (o que você já tem sai do preço).',
+        en: 'Seasons: Sakura, Autumn and Winter for Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish and Phantump, one by one or in the line’s Seasons Collection (what you own comes off the price).',
+        es: 'Estaciones: Sakura, Otoño e Invierno para Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish y Phantump, una a una o en la Colección de las Estaciones de la línea (lo que ya tienes se descuenta).',
+        fr: 'Saisons : Sakura, Automne et Hiver pour Bulbasaur, Chikorita, Treecko, Turtwig, Budew, Rowlet, Sprigatito, Shroomish et Phantump, à l’unité ou dans la Collection des Saisons de la lignée (ce que tu as déjà est déduit).',
+        zh: '四季系列：Bulbasaur、Chikorita、Treecko、Turtwig、Budew、Rowlet、Sprigatito、Shroomish 和 Phantump 的櫻花、秋季與冬季皮膚，可單買，也可買整條進化線的四季收藏（已擁有的會折抵）。',
+      },
+      {
+        pt: 'Ofertas de lançamento: cada estação completa, com as 9 skins, por 2.600 gemas, só até 18/11. A skin aparece nas suas partidas, no co-op, no Dojo e na Arena, e os chapéus continuam por cima.',
+        en: 'Launch offers: each full season, all 9 skins, for 2,600 gems, only until Nov 18. The skin shows in your runs, in co-op, in the Dojo and in the Arena, and hats still go on top.',
+        es: 'Ofertas de lanzamiento: cada estación completa, con las 9 skins, por 2.600 gemas, solo hasta el 18/11. La skin aparece en tus partidas, en el co-op, en el Dojo y en la Arena, y los sombreros siguen encima.',
+        fr: 'Offres de lancement : chaque saison complète, les 9 skins, pour 2 600 gemmes, seulement jusqu’au 18/11. Le skin apparaît dans tes parties, en coop, au Dojo et dans l’Arène, et les chapeaux se portent toujours par-dessus.',
+        zh: '上市優惠：每個季節的全系列 9 款皮膚只要 2,600 寶石，僅到 11/18。皮膚會出現在你的對局、合作模式、道場和競技場中，帽子也照樣能戴在上面。',
+      },
+      { pt: 'Partidas no modo infinito com mais de 4 horas agora entram no ranking: antes elas ficavam presas em "Sem conexão" para sempre.', en: 'Endless runs longer than 4 hours now make the ranking: they used to stay stuck on "Offline" forever.', es: 'Las partidas del modo infinito de más de 4 horas ahora entran en el ranking: antes se quedaban atascadas en "Sin conexión" para siempre.', fr: 'Les parties en mode infini de plus de 4 heures entrent maintenant au classement : avant, elles restaient bloquées sur « Hors ligne » pour toujours.', zh: '超過 4 小時的無盡模式對局現在會進入排行榜：之前它們會一直卡在「離線」。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Skins', en: 'Skins', es: 'Skins', fr: 'Skins', zh: '皮膚' },
+        notes: [
+          {
+            pt: 'A Boutique ganhou a aba Skins: escolha a linha, veja a skin andando em cada estágio (normal ou shiny) e prove no seu Pokémon antes de comprar. Uma compra vale para a linha toda.',
+            en: 'The Boutique has a new Skins tab: pick a line, watch the skin walk on every stage (normal or shiny) and try it on your Pokémon before buying. One buy covers the whole line.',
+            es: 'La Boutique tiene la pestaña Skins: elige la línea, mira la skin caminando en cada etapa (normal o shiny) y pruébala en tu Pokémon antes de comprar. Una compra vale para toda la línea.',
+          },
+          {
+            pt: 'Na aba Visual, escolha uma skin por linha. Megas e outras formas (como o Groudon Primitivo) aparecem sem a skin. Seus colegas no co-op e na Arena veem a sua skin.',
+            en: 'In the Look tab, pick one skin per line. Megas and other forms (like Primal Groudon) show without the skin. Your teammates in co-op and the Arena see your skin.',
+            es: 'En la pestaña Estilo, elige una skin por línea. Las Megas y otras formas (como Groudon Primigenio) aparecen sin la skin. Tus compañeros en el co-op y en la Arena ven tu skin.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ranking', en: 'Ranking', es: 'Ranking' },
+        notes: [
+          { pt: 'O ranking aceitava partidas de até 4 horas, e uma partida infinita que passava disso nunca era enviada, nem o último ponto salvo antes das 4 horas. Agora o limite é de 8 horas, e uma partida que passar dele entra com o último ponto salvo que cabe.', en: 'The ranking took runs of up to 4 hours, and an endless run past that was never sent, not even its last save point before the 4 hours. The limit is now 8 hours, and a run past it joins with its last save point that fits.', es: 'El ranking aceptaba partidas de hasta 4 horas, y una partida infinita que pasaba de eso nunca se enviaba, ni siquiera su último punto guardado antes de las 4 horas. Ahora el límite es de 8 horas, y una partida que lo pase entra con su último punto guardado que quepa.' },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-04',
+    title: { pt: 'Correções e partidas longas mais leves', en: 'Fixes and lighter long runs', es: 'Correcciones y partidas largas más ligeras', fr: 'Correctifs et longues parties plus légères', zh: '修正與更順暢的長時間對局' },
+    highlights: [
+      { pt: 'Partidas longas no modo infinito ficaram mais leves: os efeitos dos golpes custam bem menos para desenhar, e o Modo leve corta ainda mais quando o aparelho aperta.', en: 'Long endless runs got lighter: move effects cost much less to draw, and Lean mode cuts even more when the device struggles.', es: 'Las partidas largas del modo infinito son más ligeras: los efectos de los movimientos cuestan mucho menos de dibujar, y el Modo ligero recorta aún más cuando el aparato no da abasto.', fr: 'Les longues parties en mode infini sont plus légères : les effets des capacités coûtent bien moins cher à dessiner, et le mode léger en retire encore plus quand l’appareil peine.', zh: '無盡模式的長時間對局更順暢了：招式特效的繪製成本大幅降低，裝置吃力時輕量模式也會再省下更多。' },
+      { pt: 'A Super Rod agora puxa tudo do chão: Frutinhas Oran, moedas, Exp. Candies e as Poké Balls dos shinies também.', en: 'The Super Rod now reels in everything on the ground: Oran Berries, coins, Exp. Candies and the shinies’ Poké Balls too.', es: 'La Super Rod ahora atrae todo lo que hay en el suelo: Bayas Aranja, monedas, Exp. Candies y también las Poké Balls de los shinies.', fr: 'La Super Rod attire maintenant tout ce qui est au sol : Baies Oran, pièces, Exp. Candies et aussi les Poké Balls des chromatiques.', zh: '超級釣竿現在會把地上的東西全部拉過來：橙橙果、金幣、經驗糖果，還有異色寶可夢掉落的精靈球。' },
+      { pt: 'Esquecer o item Metronome não apaga mais o golpe Metronome do Mew, e Pokémon grandes como Chesnaught passam pelos túneis do Subterrâneo.', en: 'Forgetting the Metronome item no longer wipes Mew’s Metronome move, and big Pokémon like Chesnaught fit through the Underground’s tunnels.', es: 'Olvidar el objeto Metronome ya no borra el movimiento Metronome de Mew, y los Pokémon grandes como Chesnaught pasan por los túneles del Subterráneo.', fr: 'Oublier l’objet Metronome n’efface plus la capacité Metronome de Mew, et les gros Pokémon comme Chesnaught passent dans les tunnels du Souterrain.', zh: '遺忘道具「節拍器」不會再連帶抹掉夢幻的招式「揮指」，像布里卡隆這樣的大型寶可夢也能通過地下區域的隧道了。' },
+      { pt: 'Apertar Esc numa sala co-op não trava mais o site, e no celular a tela do jogo se refaz sozinha se ficar preta.', en: 'Pressing Esc in a co-op room no longer freezes the site, and on phones the game screen redraws itself if it goes black.', es: 'Presionar Esc en una sala cooperativa ya no congela el sitio, y en el celular la pantalla del juego se rehace sola si se pone negra.', fr: 'Appuyer sur Échap dans un salon coop ne fige plus le site, et sur mobile l’écran du jeu se redessine tout seul s’il devient noir.', zh: '在合作房間按 Esc 不會再讓網站卡住；在手機上，如果遊戲畫面變黑，它會自己重新繪製。' },
+    ],
+    changes: [
+      {
+        title: { pt: 'Partidas longas', en: 'Long runs', es: 'Partidas largas', fr: 'Longues parties', zh: '長時間對局' },
+        notes: [
+          { pt: 'Os efeitos dos golpes (Heat Wave, anéis, raios, explosões, Arc) e os números de dano agora são desenhados em lote, e não pixel por pixel: no fim de uma partida de duas horas, desenhar a tela custa de 20% a 40% menos, com a mesma aparência.', en: 'Move effects (Heat Wave, rings, spokes, bursts, Arc) and damage numbers are now drawn in batches instead of pixel by pixel: late in a two-hour run, drawing the screen costs 20% to 40% less, with the same look.', es: 'Los efectos de los movimientos (Heat Wave, anillos, rayos, explosiones, Arc) y los números de daño ahora se dibujan en lote y no píxel por píxel: al final de una partida de dos horas, dibujar la pantalla cuesta de un 20% a un 40% menos, con el mismo aspecto.' },
+          { pt: 'No Modo leve, a horda comum deixa de mostrar as cores de veneno, queimadura e lentidão, os corredores perdem o rastro de velocidade e o relógio do Roar of Time sobre cada inimigo some. Chefes, Alfas e inimigos congelados ou atordoados continuam marcados.', en: 'In Lean mode, the regular horde stops showing poison, burn and slow tints, runners lose their speed lines and Roar of Time’s clock over each foe goes away. Bosses, Alphas and frozen or stunned foes stay marked.', es: 'En el Modo ligero, la horda común deja de mostrar los colores de veneno, quemadura y lentitud, los corredores pierden su estela de velocidad y desaparece el reloj de Roar of Time sobre cada enemigo. Los jefes, los Alfas y los enemigos congelados o aturdidos siguen marcados.' },
+          { pt: 'Golpes que ficam a partida toda (auras, rastros, Raging Fury) lembravam cada inimigo que já tinham acertado, e essa lista só crescia. Agora ela esquece os que já podem ser acertados de novo.', en: 'Moves that last the whole run (auras, trails, Raging Fury) remembered every foe they had ever hit, and that list only grew. Now it forgets the ones that can already be hit again.', es: 'Los movimientos que duran toda la partida (auras, estelas, Raging Fury) recordaban a cada enemigo que habían golpeado, y esa lista solo crecía. Ahora olvida a los que ya pueden ser golpeados de nuevo.' },
+          { pt: 'Com o jogo pausado e a aba em segundo plano, o jogo libera a memória de imagem e a refaz ao voltar, para o navegador não fechar a aba (e a partida) com tanta frequência.', en: 'While the game is paused and the tab is in the background, it frees its image memory and rebuilds it on return, so the browser closes the tab (and the run) less often.', es: 'Con el juego en pausa y la pestaña en segundo plano, el juego libera su memoria de imagen y la rehace al volver, para que el navegador no cierre la pestaña (y la partida) tan seguido.' },
+        ],
+      },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          { pt: 'A Super Rod puxava quase tudo, mas deixava no chão as Frutinhas Oran, as moedas, as Exp. Candies e as Poké Balls que os shinies soltam. Agora puxa tudo, menos uma escolha entre duas ou mais Mega Stones.', en: 'The Super Rod pulled in almost everything but left Oran Berries, coins, Exp. Candies and the Poké Balls shinies drop on the ground. Now it pulls in everything except a choice between two or more Mega Stones.', es: 'La Super Rod atraía casi todo, pero dejaba en el suelo las Bayas Aranja, las monedas, las Exp. Candies y las Poké Balls que sueltan los shinies. Ahora atrae todo, menos una elección entre dos o más Mega Stones.' },
+          { pt: 'Metronome é ao mesmo tempo golpe e item. Esquecer o item também bloqueava o golpe, que ficava preso no Nv 1. Agora um não afeta o outro.', en: 'Metronome is both a move and an item. Forgetting the item also blocked the move, which stayed stuck at Lv 1. Now one doesn’t affect the other.', es: 'Metronome es a la vez movimiento y objeto. Olvidar el objeto también bloqueaba el movimiento, que se quedaba en el Nv 1. Ahora uno no afecta al otro.' },
+          { pt: 'No Subterrâneo, Pokémon grandes como Chesnaught não passavam pelos túneis até as três salas redondas. Os túneis agora entram nas salas e qualquer Pokémon passa.', en: 'In the Underground, big Pokémon like Chesnaught couldn’t get through the tunnels to the three round rooms. The tunnels now reach into the rooms, and any Pokémon fits.', es: 'En el Subterráneo, los Pokémon grandes como Chesnaught no pasaban por los túneles hasta las tres salas redondas. Ahora los túneles entran en las salas y cualquier Pokémon pasa.' },
+          { pt: 'As ruínas ficavam cinza por um instante quando despertavam. Agora a arte acesa carrega junto com a apagada.', en: 'The ruins turned grey for a moment when they woke up. Now their lit art loads together with the unlit one.', es: 'Las ruinas se ponían grises un instante al despertar. Ahora el arte encendido carga junto con el apagado.' },
+          { pt: 'Numa sala co-op, Esc abria e fechava a janela de sair sem parar e travava o site. Agora Esc sai da sala na hora quando você está sozinho, e pergunta antes quando há mais alguém.', en: 'In a co-op room, Esc opened and closed the leave dialog endlessly and froze the site. Now Esc leaves at once when you’re alone, and asks first when someone else is there.', es: 'En una sala cooperativa, Esc abría y cerraba sin parar la ventana de salir y congelaba el sitio. Ahora Esc sale de la sala al instante cuando estás solo, y pregunta antes cuando hay alguien más.' },
+          { pt: 'iPhone: a tela do jogo podia ficar preta (só o minimapa e os botões de golpe aparecendo) e o Pokémon parava de andar. Agora a tela se refaz sozinha, e um toque novo assume o direcional se o dedo anterior se perdeu.', en: 'iPhone: the game screen could go black (only the minimap and the move buttons showing) and the Pokémon stopped walking. Now the screen redraws itself, and a new touch takes over the joystick if the previous finger was lost.', es: 'iPhone: la pantalla del juego podía ponerse negra (solo se veían el minimapa y los botones de movimientos) y el Pokémon dejaba de caminar. Ahora la pantalla se rehace sola, y un toque nuevo toma el control si el dedo anterior se perdió.' },
+          { pt: 'Erros raros de som (no iPhone) e de arte do lobby que não carregava não interrompem mais o jogo.', en: 'Rare sound errors (on iPhone) and lobby art that failed to load no longer interrupt the game.', es: 'Los errores raros de sonido (en iPhone) y el arte del lobby que no cargaba ya no interrumpen el juego.' },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-03',
     title: { pt: 'Biomas, mapas e a Boutique da Leavanny', en: 'Biomes, maps and Leavanny’s Boutique', es: 'Biomas, mapas y la Boutique de Leavanny', fr: 'Biomes, cartes et la Boutique de Leavanny', zh: '區域、地圖與 Leavanny 的精品服飾店' },
     highlights: [
@@ -168,9 +252,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         ],
       },
       {
+        title: { pt: 'Balanceamento', en: 'Balance', es: 'Balance', fr: 'Équilibrage', zh: '平衡調整' },
+        notes: [
+          { pt: 'Protect e Needle Arm deixavam você intocável para sempre: com Light Clay e Quick Claw no máximo (e um Pokémon rápido como Mew ou Mewtwo), a bolha durava mais do que a recarga e voltava antes de estourar. Agora a proteção dura no máximo metade da recarga do golpe, então sempre sobra uma janela para os inimigos acertarem. Valeu ao Kitiara no Discord pelo aviso.', en: 'Protect and Needle Arm could keep you untouchable forever: with Light Clay and Quick Claw maxed (and a fast Pokémon like Mew or Mewtwo), the bubble lasted longer than the cooldown and came back before it popped. Now the protection lasts at most half the move’s cooldown, so there’s always a window for foes to land a hit. Thanks to Kitiara on Discord for the report.', es: 'Protect y Needle Arm podían dejarte intocable para siempre: con Light Clay y Quick Claw al máximo (y un Pokémon rápido como Mew o Mewtwo), la burbuja duraba más que la recarga y volvía antes de romperse. Ahora la protección dura como máximo la mitad de la recarga del movimiento, así que siempre queda una ventana para que los enemigos acierten. Gracias a Kitiara en Discord por el aviso.' },
+        ],
+      },
+      {
         title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
         notes: [
           { pt: 'Um TM equipado na Loja do Kecleon sai do primeiro chefe derrotado no lugar do TM dele (é assim que ele chega na partida). A tela, porém, adivinhava quem o deixou pelo golpe: com Iron Head equipado, derrotar o Onix dizia "Registeel deixou um TM!", e um TM só da loja (como o Pay Day) aparecia como achado no chão. Agora ela diz que é o seu TM da loja.', en: 'A TM armed at the Kecleon Shop comes out of the first boss you defeat, in place of that boss’s own TM (that’s how it reaches the run). The screen, though, guessed who left it from the move: with Iron Head armed, defeating Onix said "Registeel left a TM!", and a shop-only TM (like Pay Day) showed up as found on the ground. Now it says it’s your shop TM.', es: 'Una MT equipada en la Tienda de Kecleon sale del primer jefe que derrotas, en lugar de la MT de ese jefe (así llega a la partida). Pero la pantalla adivinaba quién la dejó por el movimiento: con Iron Head equipado, derrotar a Onix decía "¡Registeel dejó una MT!", y una MT solo de la tienda (como Pay Day) aparecía como encontrada en el suelo. Ahora dice que es tu MT de la tienda.' },
+          { pt: 'Fly não deixa mais o Pokémon invencível para sempre: com muita Light Clay e recarga curta, um pouso emendava no voo seguinte e nada acertava. Agora o tempo no ar (e o do Dig embaixo da terra), somado à proteção do pouso, cobre no máximo metade da recarga, e o Fly tem recarga mínima de 2 s, como o Dig. Builds comuns não mudam. Valeu pelo aviso no Discord!', en: 'Fly no longer makes your Pokémon invincible forever: with lots of Light Clay and a short cooldown, one landing ran into the next takeoff and nothing could hit you. Now the time in the air (and Dig’s time underground), plus the landing’s protection, covers at most half the cooldown, and Fly has a 2 s minimum cooldown, like Dig. Ordinary builds don’t change. Thanks for the report on Discord!', es: 'Fly ya no deja al Pokémon invencible para siempre: con mucha Light Clay y recarga corta, un aterrizaje se encadenaba con el siguiente vuelo y nada te golpeaba. Ahora el tiempo en el aire (y el de Dig bajo tierra), sumado a la protección del aterrizaje, cubre como máximo la mitad de la recarga, y Fly tiene una recarga mínima de 2 s, como Dig. Las builds comunes no cambian. ¡Gracias por el aviso en Discord!' },
         ],
       },
     ],

@@ -1,8 +1,8 @@
-import type { Look } from '../data/cosmetics'
+import { skinFor, type Look } from '../data/cosmetics'
 import type { RealmAct, RealmEmote } from '../net/realm'
 import { blitCentered, blitEllipse, context2d, fromStrings, lazy, type Palette, type PixelSprite } from '../engine/pixelart'
 import { lookEmoteFrame } from './arenaFx'
-import { sprites } from './sprites'
+import { skinSprites, sprites } from './sprites'
 import { drawDressed } from './wearables'
 import type { Facing } from '../net/realm'
 
@@ -188,9 +188,15 @@ export const drawTrainer = (ctx: Ctx, t: TrainerView, camX: number, camY: number
   drawBody(ctx, t, x, y, now)
 }
 
+/** The trainer's partner in its look's skin for it, if any (the species' own until the skin's sheets land). */
+const bodySprites = (t: TrainerView) => {
+  const skin = skinFor(t.look, t.dex)
+  return (skin && skinSprites(skin, t.dex, t.shiny)) || sprites(t.dex, t.shiny)
+}
+
 /** The trainer's partner, dressed in its look, playing its walk, idle or the look's emote. */
 const drawBody = (ctx: Ctx, t: TrainerView, x: number, y: number, now: number) => {
-  const s = sprites(t.dex, t.shiny)
+  const s = bodySprites(t)
   // The look's emote faces the camera on its own sheet (the Arena's), the walk cut short by it.
   const own = t.emote?.id === 'look' && emoting(t, now) && !t.moving ? lookEmoteFrame(t.dex, t.look.emote, now - t.emote.at) : null
   if (own) return drawDressed(ctx, s, t.look, 'Idle', 0, own.seconds, x, y, { sheet: own.sheet, loop: own.loop })

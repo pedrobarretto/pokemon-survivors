@@ -19,7 +19,9 @@
     "soak": "node scripts/coop/soak.mjs",
     "rig": "node scripts/rig.mjs",
     "rig:migrate": "node scripts/rig-migrate.mjs",
-    "fit-check": "node scripts/fit-check.mjs"
+    "fit-check": "node scripts/fit-check.mjs",
+    "skins": "node scripts/skins.mjs",
+    "skin": "node scripts/skinAuthor.mjs"
   },
   "devDependencies": {
     "@posthog/cli": "^0.19.0",

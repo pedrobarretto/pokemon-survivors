@@ -97,7 +97,7 @@ export const playerDex = (g: Game) => playerForm(g).dex
 export const LEGEND_RADIUS = 8
 
 /** The player's hitbox from its sprite's body (data, so every device agrees); a legend's is capped (`LEGEND_RADIUS`). */
-const playerRadius = (dex: number, legend: boolean) => {
+export const playerRadius = (dex: number, legend: boolean) => {
   const r = Math.max(6, dm.round(bodyOf(dex).bodyW * 0.3))
   return legend ? Math.min(LEGEND_RADIUS, r) : r
 }
@@ -186,6 +186,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     mega: createMegaState(),
     ...runCharges(setup.ranks),
     banished: new Set(),
+    banishedItems: new Set(),
     castMods: 0,
     damageByMove: {},
     pendingLevelUps: 0,
@@ -775,13 +776,15 @@ export const canBanish = (offer: Offer) => offer.kind === 'move' || offer.kind =
 export const banishOffer = (g: Game, index: number, p: Player = g.player) => {
   const offer = p.offers[index]
   if (phaseOf(g, p) !== 'levelup' || p.banishes <= 0 || !offer || !canBanish(offer)) return
-  const id = offerSubject(offer)
-  if (id === null) return
   const before = actAs(g, p)
   p.banishes--
-  p.banished.add(id)
-  const recipe = offer.kind === 'duo' ? recipeOf(offer.to) : undefined
-  if (recipe) p.banished.add(recipe.to)
+  if (offer.kind === 'item') p.banishedItems.add(offer.id)
+  else if (offer.kind === 'move') p.banished.add(offer.id)
+  else if (offer.kind === 'duo') {
+    p.banished.add(offer.to)
+    const recipe = recipeOf(offer.to)
+    if (recipe) p.banished.add(recipe.to)
+  }
   const shown = p.offers.filter((_, i) => i !== index)
   const ids = new Set(shown.map(offerSubject))
   const fresh = drafting(g)

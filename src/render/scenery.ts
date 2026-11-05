@@ -142,10 +142,17 @@ const pieceOfFile = (file: string) => {
   return piece
 }
 
-/** The painted look of a piece, or null when it has none or its picture is still on the way (it starts loading). */
+/**
+ * The painted look of a piece, or null when it has none or its picture is still on the way (it starts loading).
+ * A treasure's woken look starts loading with its plain one, and until it arrives the plain picture stands in:
+ * falling back to the sculpted piece flashed a ruin grey the moment it woke.
+ */
 export const sceneryPiece = (biome: BiomeId, kind: string, variant: number, open = false): ArtPiece | null => {
-  const file = fileOf(biome, kind, variant, open)
-  return file ? pieceOfFile(file) : null
+  const plain = fileOf(biome, kind, variant, false)
+  if (!plain) return null
+  const woken = fileOf(biome, kind, variant, true)
+  if (woken && woken !== plain) image(woken)
+  return (open && woken ? pieceOfFile(woken) : null) ?? pieceOfFile(plain)
 }
 
 /** A one-off picture outside the biome table (a map event's), or null while it loads. */

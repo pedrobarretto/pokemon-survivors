@@ -1,5 +1,6 @@
 import type { RealmIdentity } from '../../src/net/realm'
 import { REALM_API_PATHS, type IdentityRequest, type IdentityResponse, type PresenceReport, type VisitRequest, type VisitResponse } from '../../src/net/realmRelay'
+import { parseWireLook } from '../../src/net/protocol'
 import { postSigned, type ArenaApi, type Fetcher } from './report'
 
 /**
@@ -13,16 +14,13 @@ const ASK_TIMEOUT_MS = 4000
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
-const stringMap = (v: unknown): Partial<Record<string, string>> =>
-  isRecord(v) ? Object.fromEntries(Object.entries(v).flatMap(([k, s]) => (typeof s === 'string' && k.length <= 16 && s.length <= 64 ? [[k, s] as const] : []))) : {}
-
 /** One identity from the API, or null when a field is missing or the wrong type. */
 export const parseIdentity = (v: unknown): RealmIdentity | null => {
   if (!isRecord(v)) return null
   const { userId, handle, partner, shiny, supporter } = v
   if (typeof userId !== 'string' || typeof handle !== 'string' || handle.length === 0 || typeof partner !== 'string' || typeof shiny !== 'boolean') return null
   if (supporter !== null && supporter !== undefined && typeof supporter !== 'string') return null
-  return { userId, handle, partner, shiny, look: stringMap(v.look), supporter: supporter ?? null }
+  return { userId, handle, partner, shiny, look: parseWireLook(v.look) ?? {}, supporter: supporter ?? null }
 }
 
 /** `POST /realm/identity`'s answer, keeping only the asked accounts whose identity is well formed. */

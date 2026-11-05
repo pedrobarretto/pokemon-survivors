@@ -744,7 +744,7 @@ export const sitePt = {
         expShare: 'Puxa todos os Exp. Candies do mapa até você.',
         coinCase: 'Puxa todo o ₽ do mapa até você.',
         berryPouch: 'Puxa todas as Oran Berries do mapa até você.',
-        superRod: 'Fisga todos os itens do mapa (poções, Rare Candies e outros) até você.',
+        superRod: 'Fisga tudo o que está no chão do mapa até você: itens, Exp. Candies, ₽, berries e Poké Balls.',
         pokeFlute: 'Põe para dormir os Pokémon selvagens na tela.',
         maxRepel: 'Invulnerável por alguns segundos, empurrando os inimigos para longe.',
         explosion: 'Voltorb usa Explosion: derruba todos os inimigos comuns na tela e tira 10% do HP de chefes.',

@@ -283,8 +283,8 @@ const itemsOf = (look: Look, w: Wearer, dir: Dir8) =>
     return layer === 'hidden' ? [] : [{ id, layer }]
   })
 
-/** A look's key: its worn items. */
-const lookKey = (look: Look) => `${look.head ?? ''},${look.back ?? ''}`
+/** A look's key: its worn items, and the skin the sheets are (`SpeciesSprites.skin`: a skin's rows are dressed apart from the species' own). */
+const lookKey = (look: Look, skin: string | undefined) => `${look.head ?? ''},${look.back ?? ''},${skin ?? ''}`
 
 const rowKey = (w: Wearer, look: string, anim: RigAnim, dir: Dir8, scale: number) => `${w.key}|${look}|${anim}|${dir}|${scale}`
 
@@ -357,7 +357,7 @@ export const drawDressed = (
   if (!sheet) return bare()
   const frame = place.frame
   const scale = s.fitted?.scale ?? 1
-  const key = lookKey(look)
+  const key = lookKey(look, src.skin)
   const rk = rowKey(w, key, sheet, dir, scale)
   const first = !shown.has(`${w.key}|${key}`)
   shown.set(`${w.key}|${key}`, tick)

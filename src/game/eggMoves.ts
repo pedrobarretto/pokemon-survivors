@@ -11,7 +11,7 @@ import {
   SLAM_HOP, SLAM_LEAP, SLAM_R, SLAM_REACH, SNARL_RAMP, SNARL_TIME, splitDarts, strongestFirst, SWORD_ARC, SWORD_TIME,
   TWISTER_PULL, ZEN_HOP, ZEN_SEEK, ZEN_TIME,
 } from './eggMoveRules'
-import { hpFraction, stacksOf, type DamageBonus } from './kitRules'
+import { burrowTime, hpFraction, stacksOf, type DamageBonus } from './kitRules'
 import { burrow, sweep, wanderer } from './moveKit'
 import { chainTargets, lungeTarget } from './moveRules'
 import { maxMoveLevel, MOVE_IDS, MOVES, moveStats, type CastStats, type MoveDef, type MoveId } from './moves'
@@ -147,13 +147,14 @@ export const forcePalm = (g: Game, s: CastStats) => {
 
 /* ---------------- Gible: Dig ---------------- */
 
-/** Manual: burrows for `duration` (no damage, the horde loses you; you can still move), then `digEmerge`. Fails right after another move's protection (`wardOpens`). */
+/** Manual: burrows for `duration` (at most half its cycle with the i-frames after, `burrowTime`; no damage, the horde loses you; you can still move), then `digEmerge`. Fails right after another move's protection (`wardOpens`). */
 export const dig = (g: Game, s: CastStats) => {
   const p = g.player
-  if (!burrow(g, 'dig', s.duration)) return
+  const under = burrowTime(s.duration, s.cooldown, DIG_IFRAMES)
+  if (!burrow(g, 'dig', under)) return
   spawnAttack(g, {
     ...look('dig', 'ground', 'digMound'), x: p.x, y: p.y,
-    shape: { kind: 'circle', r: 8 }, motion: { kind: 'follow', ox: 0, oy: 0 }, damage: 0, ttl: s.duration, activeFrom: Infinity,
+    shape: { kind: 'circle', r: 8 }, motion: { kind: 'follow', ox: 0, oy: 0 }, damage: 0, ttl: under, activeFrom: Infinity,
   })
   burst(g, p.x, p.y - 2, { colors: ['#a07840', '#d8b070', '#604020'], count: 16, speed: 90, ttl: 0.45, gravity: 220, size: 2 })
   sound(g, 'dig')

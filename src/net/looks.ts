@@ -8,5 +8,5 @@
 /** `POST /looks`: the accounts in a room about to start. */
 export type LooksRequest = { userIds: string[] }
 
-/** What `POST /looks` answers: each asked account's vouched look (slot to cosmetic id, `parseLook`; `{}` for none), by user id. */
-export type LooksResponse = { looks: Record<string, Partial<Record<string, string>>> }
+/** What `POST /looks` answers: each asked account's vouched look (slot to cosmetic id, and `skins`, a list of skin ids; `parseLook`; `{}` for none), by user id. */
+export type LooksResponse = { looks: Record<string, Partial<Record<string, string | readonly string[]>>> }

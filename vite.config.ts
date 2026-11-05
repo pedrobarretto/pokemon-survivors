@@ -149,9 +149,51 @@ const simBuildFile = (): Plugin => {
   }
 }
 
+/**
+ * The Ateliê's file access, in dev only (`/atelier/`, `src/atelier`): lists
+ * and reads the skins' sources (`src/data/skins`), and on save writes one and
+ * bakes its sheets (`scripts/skinBake.mjs`). The page itself is never built.
+ */
+const atelier = (): Plugin => ({
+  name: 'atelier',
+  apply: 'serve',
+  configureServer(server) {
+    const dir = resolve(import.meta.dirname, 'src/data/skins')
+    const send = (res: import('node:http').ServerResponse, status: number, body: unknown) => {
+      res.statusCode = status
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify(body))
+    }
+    server.middlewares.use('/__atelier', async (req, res) => {
+      try {
+        const path = (req.url ?? '/').split('?')[0] ?? '/'
+        const { readdir, readFile, writeFile } = await import('node:fs/promises')
+        if (req.method === 'GET' && path === '/skins') {
+          const files = (await readdir(dir).catch(() => [])).filter((f) => f.endsWith('.json'))
+          return send(res, 200, await Promise.all(files.map(async (f) => JSON.parse(await readFile(resolve(dir, f), 'utf8')) as unknown)))
+        }
+        const id = /^\/skin\/([A-Za-z0-9_-]+)$/.exec(path)?.[1]
+        if (req.method === 'POST' && id) {
+          const chunks: Buffer[] = []
+          for await (const chunk of req) chunks.push(chunk as Buffer)
+          const source = JSON.parse(Buffer.concat(chunks).toString('utf8')) as { id: string }
+          if (source.id !== id) return send(res, 400, { error: 'id mismatch' })
+          const bake = await import('./scripts/skinBake.mjs')
+          await writeFile(resolve(dir, `${id}.json`), bake.formatSkin(source))
+          const S = await server.ssrLoadModule('/src/skins/source.ts')
+          return send(res, 200, { doubts: await bake.bakeSkin(S, source) })
+        }
+        send(res, 404, { error: 'not found' })
+      } catch (error) {
+        send(res, 500, { error: String(error) })
+      }
+    })
+  },
+})
+
 // One page per language for the game (index.html, en/, es/, fr/ and zh-tw/index.html); the site pages are added by `sitePages`.
 export default defineConfig({
-  plugins: [sitePages(), simBuildFile()],
+  plugins: [sitePages(), simBuildFile(), atelier()],
   // The co-op relay (`relay/`) is its own package with its own Workers test runner.
   test: { exclude: ['**/node_modules/**', '**/.git/**', 'relay/**'] },
   define: { __GAME_VERSION__: JSON.stringify(gameVersion()), __SIM_BUILD__: JSON.stringify(SIM_BUILD) },

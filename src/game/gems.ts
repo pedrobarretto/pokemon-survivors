@@ -1,6 +1,7 @@
 import { GEM_CHECKOUT, GEM_PACKS, GEM_PLAY, oncePack, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
-import { COSMETICS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, type Look, type CosmeticBase, type CosmeticId } from '../data/cosmetics'
-import type { DayKey } from './day'
+import { COSMETICS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, withSkins, type Look, type CosmeticBase, type CosmeticId } from '../data/cosmetics'
+import { bundleOf, SKIN_LAUNCH, type SkinBundleId } from '../data/skinCatalog'
+import { addDays, type DayKey } from './day'
 
 /**
  * The gem shop's rules, shared by the API (`server/src/gems.ts`, which keeps
@@ -22,10 +23,12 @@ export const isGemReason = (v: unknown): v is GemReason => typeof v === 'string'
 
 /**
  * `GET /gems`: the balance (negative after a refund of spent gems, which
- * blocks buying), what the account owns, its equipped look and the `once`
- * packs it can't buy again (`taken`: bought, or being paid).
+ * blocks buying), what the account owns, what of it is locked while the
+ * balance is negative (`locked`, `lockedCosmetics`: owned, not wearable), its
+ * equipped look (without the locked) and the `once` packs it can't buy again
+ * (`taken`: bought, or being paid).
  */
-export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; look: Look; taken: readonly GemPackId[] }
+export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; locked: readonly CosmeticId[]; look: Look; taken: readonly GemPackId[] }
 
 /** One line of `GET /gems/ledger`: `amount` signed, `at` in ms. */
 export type GemLedgerEntry = { amount: number; reason: GemReason; ref: string; at: number }
@@ -52,8 +55,8 @@ export const checkoutRefusal = (pack: GemPackId, currency: GemCurrency, spentTod
   return spentToday + GEM_PACKS[pack][currency] > GEM_CHECKOUT.daily[currency] ? 'cap' : null
 }
 
-/** `POST /gems/buy`'s answer. */
-export type GemBuyResponse = { balance: number; owned: readonly CosmeticId[] }
+/** `POST /gems/buy`'s answer (`locked` as in `GemsStatus`: a buy leaves the balance at 0 or more, so none). */
+export type GemBuyResponse = { balance: number; owned: readonly CosmeticId[]; locked: readonly CosmeticId[] }
 
 /**
  * A pack's row on the API (`gem_purchases.state`): `open` until paid; `paid`
@@ -96,8 +99,59 @@ export const wearableLook = (raw: unknown, owned: ReadonlySet<string>): Look => 
     const id = look[slot]
     if (id !== undefined && !owned.has(id) && !isFree(id)) delete look[slot]
   }
-  return look
+  return withSkins(look, (look.skins ?? []).filter((id) => owned.has(id) || isFree(id)))
 }
+
+/**
+ * What bundle `id` costs an account that owns `owned`: its price scaled by
+ * the share of its items' own prices still missing (owning a 550 skin of a
+ * 1200 bundle of three takes 400 off), rounded to 10 gems. So a bundle never
+ * costs more than its missing items bought one by one, and a line's
+ * Coleção das Estações comes out at exactly 400 (300 for a 2-stage line) less
+ * per season owned. Null once it's all owned (the shop stops offering it).
+ */
+export const bundlePrice = (id: SkinBundleId, owned: ReadonlySet<string>): number | null => {
+  const { items, price } = bundleOf(id)
+  const value = (ids: readonly CosmeticId[]) => ids.reduce((n, i) => n + (cosmeticPrice(i) ?? 0), 0)
+  const missing = items.filter((i) => !owned.has(i))
+  if (missing.length === 0) return null
+  const full = value(items)
+  return full <= 0 ? price : Math.round((price * value(missing)) / full / 10) * 10
+}
+
+/** The items of bundle `id` an account that owns `owned` would get from it. */
+export const bundleMissing = (id: SkinBundleId, owned: ReadonlySet<string>) => bundleOf(id).items.filter((i) => !owned.has(i))
+
+/** The last Brasília day bundle `id` is on sale (a launch offer's), or null when it stays. */
+export const bundleLastDay = (id: SkinBundleId): DayKey | null => {
+  const { days } = bundleOf(id)
+  return days === undefined ? null : addDays(SKIN_LAUNCH, days - 1)
+}
+
+/** Whether bundle `id` is on sale on Brasília `day`: from `SKIN_LAUNCH`, and a launch offer only for its days. */
+export const bundleOnSale = (id: SkinBundleId, day: DayKey) => {
+  const last = bundleLastDay(id)
+  return day >= SKIN_LAUNCH && (last === null || day <= last)
+}
+
+/** A cosmetic an account owns, as the API keeps it: bought with gems (`buy`) or given (`gift`), `at` ms. */
+export type OwnedCosmetic = { id: CosmeticId; source: 'buy' | 'gift'; at: number }
+
+/**
+ * The owned cosmetics an account may not wear now: while its `balance` is
+ * negative, those it bought with gems at or after `since` (ms), when the
+ * earliest pack a refund or dispute took gems from was paid (null: none was).
+ * So the gems a chargeback took back can't keep what they bought. Gifts and
+ * free items never lock, nor anything bought before that pack; back at 0 or
+ * more (a pack, play gems, a grant, a dispute won), nothing is locked.
+ */
+export const lockedCosmetics = (balance: number, owned: readonly OwnedCosmetic[], since: number | null): CosmeticId[] =>
+  balance >= 0 || since === null
+    ? []
+    : owned
+        .filter((c) => c.source === 'buy' && c.at >= since && !isFree(c.id))
+        .map((c) => c.id)
+        .sort()
 
 /** Owned ids the catalog still has (rows outlive entries), in a stable order. */
 export const knownOwned = (ids: readonly string[]): CosmeticId[] => ids.filter(isCosmeticId).sort()
