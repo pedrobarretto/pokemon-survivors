@@ -1,14 +1,17 @@
-import { accountHandle, accountState, signIn } from '../account'
+import { accountHandle, accountsEnabled, accountState, signIn } from '../account'
 import { track } from '../analytics'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
-import { FRIEND_MILESTONES, REFERRAL, type InvitedFriend } from '../game/referral'
+import { formatTime } from '../engine/math'
+import { dayKey } from '../game/missions'
+import { FRIEND_MILESTONES, inviteMomentDue, nextMilestone, REFERRAL, type InvitedFriend } from '../game/referral'
 import { formatNumber, t } from '../i18n'
 import { eggIcon } from '../render/art'
 import { fetchInvites, gameUrl } from '../ranking'
 import { h, later, rich } from './dom'
 import { contentLine } from './gifts'
 import { profileEditor } from './profile'
+import { today } from './save'
 import { hint, menu, type Screen } from './screens'
 import { toast } from './toasts'
 
@@ -32,21 +35,36 @@ export const loadInvites = (fresh = false) => {
 /** How many friends counted, out of a list from `loadInvites`. */
 export const countedFriends = (friends: readonly InvitedFriend[] | null) => friends?.filter((f) => f.counted).length ?? 0
 
+/**
+ * The lobby's line for the invites (card and tile): how many friends counted
+ * toward the next milestone, or the friends still playing their first runs
+ * before any counted (`short`: the count alone, for the phone's tile). Null
+ * while there's nothing to show past `cardFirst`.
+ */
+export const invitesLine = (friends: readonly InvitedFriend[] | null) => {
+  const m = t().invites
+  const counted = countedFriends(friends)
+  const pending = (friends?.length ?? 0) - counted
+  if (counted === 0) return pending > 0 ? { text: m.cardPending(pending), next: nextMilestone(0), short: null } : null
+  const next = nextMilestone(counted)
+  return { text: next ? m.cardNext(counted, next.friends) : m.cardAll(counted), next, short: next ? `${formatNumber(counted)}/${formatNumber(next.friends)}` : null }
+}
+
 /** The link without its scheme, as it reads on screen. */
 const shownUrl = (url: string) => url.replace(/^https?:\/\//, '')
 
 /** Phones and tablets share through the system sheet; computers copy. */
 const sheet = () => typeof navigator.share === 'function' && matchMedia('(pointer: coarse)').matches
 
-/** Sends the link out: the share sheet on phones, the clipboard elsewhere. */
-const shareLink = async (root: HTMLElement, url: string) => {
+/** Sends the link out with `text` before it: the share sheet on phones, the clipboard elsewhere. */
+const shareLink = async (root: HTMLElement, url: string, text = t().invites.shareText) => {
   const m = t().invites
   try {
     if (sheet()) {
-      await navigator.share({ text: `${m.shareText} ${url}` })
+      await navigator.share({ text: `${text} ${url}` })
       return track('share', { kind: 'invite', method: 'share' })
     }
-    await navigator.clipboard.writeText(`${m.shareText} ${url}`)
+    await navigator.clipboard.writeText(`${text} ${url}`)
     toast(root, m.copied, 2600)
     track('share', { kind: 'invite', method: 'copy' })
   } catch {
@@ -188,4 +206,58 @@ export const invitesScreen = (root: HTMLElement, input: Input, onClose: () => vo
   root.append(el)
   void load()
   return { el, dispose, dim: 0.5 }
+}
+
+/* ---------------- The results' nudge ---------------- */
+
+/** The local day the results last asked for an invite (`inviteMomentDue`). */
+const ASKED = 'ps:inviteAsked'
+
+const askedOn = () => {
+  try {
+    return localStorage.getItem(ASKED)
+  } catch {
+    // Nowhere to remember it: better never to ask than to ask every run.
+    return dayKey(today())
+  }
+}
+
+/** The results' invite, built by `resultsInvite`: its card, its button and what pressing it does (`open` shows a screen over the results). */
+export type ResultsInvite = { card: HTMLElement; button: HTMLButtonElement; press: (open: (screen: (back: () => void) => Screen) => void) => void }
+
+/**
+ * The results' invite after a win or a new best (`inviteMomentDue`, once a
+ * day): what the friend gets and, signed in, the way to the next milestone.
+ * Its button shares the link with the run's time as a dare; a guest or a
+ * player without a handle gets the Convide amigos screen instead (sign in,
+ * make a profile). Null when it isn't the moment; asking marks the day.
+ */
+export const resultsInvite = (root: HTMLElement, input: Input, run: { won: boolean; time: number; bestBefore: number }): ResultsInvite | null => {
+  const day = dayKey(today())
+  if (!accountsEnabled || !inviteMomentDue({ ...run, day, askedOn: askedOn() })) return null
+  try {
+    localStorage.setItem(ASKED, day)
+  } catch {}
+  const m = t().invites
+  const progress = h('small', { class: 'result-invite-next' })
+  const button = h('button', { class: 'btn result-invite-button' }, m.endButton)
+  const card = h(
+    'div',
+    { class: 'result-invite' },
+    h('img', { src: eggIcon('friend'), alt: '' }),
+    h('span', { class: 'result-invite-text' }, rich(run.won ? m.endWin : m.endBest), progress),
+    button,
+  )
+  void loadInvites().then((list) => {
+    if (!list) return
+    const counted = countedFriends(list)
+    const next = nextMilestone(counted)
+    if (next) progress.textContent = m.endNext(counted, next.friends, m.reward[next.friends])
+  })
+  const press: ResultsInvite['press'] = (open) => {
+    const handle = accountState().kind === 'signedIn' ? accountHandle() : null
+    if (handle) return void shareLink(root, gameUrl(handle), m.dareText(formatTime(run.time)))
+    open((back) => invitesScreen(root, input, back))
+  }
+  return { card, button, press }
 }

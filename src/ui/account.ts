@@ -17,6 +17,8 @@ type GateActions = {
   back: () => void
   /** Whether a signed-in account can go on (co-op waits for its @handle); until then the gate says it's busy. */
   ready?: (s: AccountState) => boolean
+  /** A Google or Discord button pressed, before leaving for the provider. */
+  signingIn?: () => void
 }
 
 /**
@@ -38,8 +40,8 @@ const gate = (root: HTMLElement, input: Input, text: GateText, actions: GateActi
     const all: Action[] = busy
       ? [{ label: m.back, run: () => leave(actions.back) }]
       : [
-          { label: m.google, run: () => void signIn() },
-          { label: t().discord.signIn, run: () => void signIn('discord') },
+          { label: m.google, run: () => (actions.signingIn?.(), void signIn()) },
+          { label: t().discord.signIn, run: () => (actions.signingIn?.(), void signIn('discord')) },
           ...(guest ? [{ label: m.playAsGuest, run: () => leave(guest) }] : []),
         ]
     const buttons = all.map((a) => h('button', { class: 'btn' }, a.label))
@@ -85,9 +87,9 @@ const gate = (root: HTMLElement, input: Input, text: GateText, actions: GateActi
  * Asked when a guest taps Play (accounts on): sign in with Google or Discord,
  * which also creates the account, or play as a guest. Signing in leaves for the provider; an
  * account already open in another tab links right away and goes on to `play`.
- * Back, Esc or Backspace call `onBack`.
+ * Back, Esc or Backspace call `onBack`; `signingIn` hears a sign in start.
  */
-export const playGate = (root: HTMLElement, input: Input, actions: { play: () => void; guest: () => void; back: () => void }): Screen => {
+export const playGate = (root: HTMLElement, input: Input, actions: { play: () => void; guest: () => void; back: () => void; signingIn?: () => void }): Screen => {
   const m = t().account
   return gate(root, input, { title: m.gateTitle, pitch: m.gatePitch, note: m.gateNewAccount, guestNote: m.gateGuestNote }, actions)
 }

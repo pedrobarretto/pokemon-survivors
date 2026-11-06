@@ -20,6 +20,8 @@ import type { ArenaFormat } from './data/arenaFormats'
 import type { CatalogSlot, CosmeticId, Rarity } from './data/cosmetics'
 import type { SkinBundleId } from './data/skinCatalog'
 import type { GemCurrency, GemMethod, GemPackId } from './data/gems'
+import type { FirstStep, GateAnswer, StepTimes } from './firstSteps'
+import type { InAppApp, OnboardingStep } from './onboarding'
 
 /**
  * Analytics and error reports. Events go to PostHog (product analytics and
@@ -48,6 +50,12 @@ export type RunPerf = {
   frameP95: number | null
   longFrames: number
 } & DeviceInfo
+
+/**
+ * What `run_end.opened` lists: the lobby's entries (`lobbyPress`), the Boutique's sheet however it was
+ * reached (the plaza, the shop's button, the Arena, the Trainer Card, a link), and a gem pack opened in its Loja.
+ */
+export type Opened = LobbyFocus | 'boutique' | 'gemPack'
 
 /** How a public queue attempt resolved, for `arena_queue`. */
 export type QueueEnd =
@@ -94,11 +102,31 @@ type AnalyticsEvents = {
     /** Runs quit in their first minute since the last report (restarts hunting for a good start). */
     rerolls: number
     /** The lobby entries opened since the last report (`lobbyPress`), each once. */
-    opened: LobbyFocus[]
+    opened: Opened[]
     /** Whether the device played it in safe mode (`safeMode.ts`, on after a crash), and at which level (2 after crashes again). */
     safeMode: boolean
     safeLevel: SafeLevel
   } & RunPerf
+  /**
+   * A new device's first visit (`firstSession.ts`): one per page load, only while the device has banked no run
+   * and for its first `FIRST_LOADS` loads. The furthest step reached (`FIRST_STEPS`, and its index there), the
+   * seconds into the load each step was first reached, how the sign-in gate was answered, which load this was,
+   * the social app's browser it opened in, whether an account was linked, whether it was recorded (replay), and
+   * the device. Sent a minute into the first run (`minute`) or as the page hides (`hidden`), whichever is first.
+   */
+  first_session: {
+    step: FirstStep | null
+    stepIndex: number
+    seconds: StepTimes
+    gate: GateAnswer | null
+    load: number
+    sent: 'minute' | 'hidden'
+    inApp: InAppApp | null
+    /** The onboarding moments the load went through (`OnboardingStep`), each once. */
+    moments: OnboardingStep[]
+    account: 0 | 1
+    replay: 0 | 1
+  } & DeviceInfo
   /**
    * A Dojo session ended (`game/training.ts`), one per visit: who trained, for how long, and the
    * loadout it left with (`id:level`, as `run_end`), saved as a build or not. Says which builds
@@ -330,13 +358,13 @@ export const track = <E extends keyof AnalyticsEvents>(event: E, data: Analytics
 }
 
 /** The lobby entries opened since the last run report (`takeOpened`). */
-const opened = new Set<LobbyFocus>()
+const opened = new Set<Opened>()
 
 /**
- * An entry pressed in the lobby: what players open. A press per event would be a third of
- * PostHog's budget, so the set goes along on the next `run_end`.
+ * An entry pressed in the lobby (or the Boutique, a gem pack): what players open. A press per event
+ * would be a third of PostHog's budget, so the set goes along on the next `run_end`.
  */
-export const lobbyPress = (entry: LobbyFocus) => {
+export const lobbyPress = (entry: Opened) => {
   opened.add(entry)
 }
 
@@ -346,6 +374,13 @@ export const takeOpened = () => {
   opened.clear()
   return list
 }
+
+/**
+ * Records this page load (session replay, inputs masked) or stops recording. Recording is off for
+ * everyone else (`disable_session_recording`): only the new devices `firstSession.ts` samples call it.
+ * `true` overrides the project's sampling and linked flag, so the sample here is the only one.
+ */
+export const recordReplay = (on: boolean) => withPosthog((ph) => (on ? ph.startSessionRecording(true) : ph.stopSessionRecording()))
 
 let identity: { userId: string | null; handle: string | null } | null = null
 
@@ -466,15 +501,19 @@ export const startAnalytics = (context: () => ErrorContext) => {
           ui_host: 'https://us.posthog.com',
           persistence: 'localStorage',
           persistence_name: 'ps',
-          // The game is a canvas: clicks, scrolls and replays of the DOM say little and cost events.
+          // The game is a canvas: clicks, scrolls and replays of the DOM say little and cost events (replays: a sample of new devices only).
           autocapture: false,
           capture_pageleave: false,
           capture_dead_clicks: false,
           capture_performance: false,
+          // Remote config may turn heatmaps on; they'd cost events.
+          enable_heatmaps: false,
+          // Replays only for the sampled new devices (`recordReplay`). They wait for the remote config
+          // (`/array/<key>/config.js`), which says recording is on for the project: feature flags
+          // (`/flags/?v=2`) and remote config load, both through `/ingest` (vercel.json).
           disable_session_recording: true,
+          session_recording: { maskAllInputs: true },
           disable_surveys: true,
-          // No feature flags, and so no remote config: its `/array/<key>/config` would get Vercel's trailing slash and a 404.
-          advanced_disable_flags: true,
           // Our listeners above report errors, with the run's context.
           capture_exceptions: false,
         })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canRefer, creditDue, firstTouch, landingRef, milestonesReached, nextMilestone, parseInvites, REFERRAL } from './referral'
+import { canRefer, creditDue, firstTouch, inviteMomentDue, landingRef, milestonesReached, nextMilestone, parseInvites, REFERRAL } from './referral'
 
 describe('landingRef', () => {
   it('reads ?ref= first, then the profile link, and drops invalid handles', () => {
@@ -45,13 +45,29 @@ describe('invite rewards', () => {
     expect(milestonesReached(0)).toEqual([])
     expect(milestonesReached(1).map((m) => m.friends)).toEqual([1])
     expect(milestonesReached(6).map((m) => m.friends)).toEqual([1, 3, 5])
-    expect(milestonesReached(10).at(-1)?.gifts).toEqual([{ kind: 'shinyHatch', family: 'dratini' }])
+    expect(milestonesReached(10).at(-1)?.gifts[0]).toEqual({ kind: 'shinyHatch', family: 'dratini' })
   })
 
   it('point at the next milestone, none past the last', () => {
     expect(nextMilestone(0)?.friends).toBe(1)
     expect(nextMilestone(3)?.friends).toBe(5)
     expect(nextMilestone(10)).toBeNull()
+  })
+})
+
+describe('inviteMomentDue', () => {
+  const run = { won: false, time: 300, bestBefore: 200, day: '2026-11-05', askedOn: null }
+
+  it('asks after a win or a new best, never after a first run or an ordinary one', () => {
+    expect(inviteMomentDue(run)).toBe(true)
+    expect(inviteMomentDue({ ...run, won: true, time: 100 })).toBe(true)
+    expect(inviteMomentDue({ ...run, time: 150 })).toBe(false)
+    expect(inviteMomentDue({ ...run, bestBefore: 0 })).toBe(false)
+  })
+
+  it('asks at most once a day', () => {
+    expect(inviteMomentDue({ ...run, won: true, askedOn: '2026-11-05' })).toBe(false)
+    expect(inviteMomentDue({ ...run, askedOn: '2026-11-04' })).toBe(true)
   })
 })
 

@@ -37,6 +37,7 @@ import { formatNumber, formatPokeDollars, locale, t } from '../i18n'
 import { ROUTES } from '../site/routes'
 import { treatIcon } from '../render/halloweenArt'
 import { h, later } from './dom'
+import type { ResultsInvite } from './invites'
 import { buildTag, followsBuild } from './buildMark'
 import { boundPadHint, glyphText } from './inputLabels'
 import { pressGuard } from './pressGuard'
@@ -49,6 +50,7 @@ import { rulesOf } from '../game/versusRules'
 import { deathCause } from './deathCause'
 import { abilityMark } from './abilityMark'
 import { teamBuilds } from './teamHud'
+import type { SaveCard } from './onboarding'
 
 export type Screen = {
   el: HTMLElement
@@ -954,6 +956,10 @@ type ResultsExtras = {
   share: ResultsShare | null
   /** A victory's thanks to the supporters (`creditsLine`), above the support link. */
   credits?: HTMLElement | null
+  /** A guest's first runs: the "save your progress" card (`ui/onboarding.ts`), its buttons joining the row's keys. */
+  save?: SaveCard | null
+  /** After a win or a new best, the nudge to invite a friend (`resultsInvite`), under the run's news. */
+  invite?: ResultsInvite | null
 }
 
 const NO_EXTRAS: ResultsExtras = { badge: null, report: null, medals: [], eggs: { converted: { full: [], cap: [] }, ready: 0 }, news: { species: 0, shinies: 0 }, ranking: null, share: null }
@@ -987,7 +993,7 @@ const runNews = ({ eggs, news, medals }: ResultsExtras) => {
  * The steps walked and eggs found feed the incubator (`extras.eggs`), and
  * `extras.news` adds a one-line Pokédex summary when the run found something new.
  * A victory also links the support page, under the buttons (only then, so it never nags); a faint
- * says what landed the last hit (`deathCause`).
+ * says what landed the last hit (`deathCause`). A guest's first runs add the "save your progress" card (`extras.save`) above the buttons.
  * `onLobby` goes straight home (Trocar Pokémon opens the partner select instead).
  */
 export const results = (
@@ -1035,7 +1041,11 @@ export const results = (
       nav = bindNav(buttons.indexOf(button))
     })
   }
-  const buttons = [goOn, retry, back, lobby, share, boards].filter((b) => b !== null)
+  const saved = extras.save?.buttons ?? []
+  const invite = extras.invite ?? null
+  const row = [goOn, retry, back, lobby, share, boards].filter((b) => b !== null)
+  // The invite's and the save card's buttons sit in their cards, but the keys reach them after the row.
+  const buttons = [...row, ...(invite ? [invite.button] : []), ...saved.map((b) => b.button)]
   const actions = [
     goOn && onContinue,
     onRetry,
@@ -1043,6 +1053,8 @@ export const results = (
     onLobby,
     share && (() => openSub(extras.share?.open, share)),
     boards && (() => openSub(ranking?.open, boards)),
+    invite && (() => invite.press((open) => openSub(open, invite.button))),
+    ...saved.map((b) => b.run),
   ].filter((a) => typeof a === 'function')
   // Every button acts after the key dispatch: the screen it opens (Menu's partner select) would take the same press as its own.
   // Space is the special: pressed every second or so while it recharges, it picked Retry (or Continue) the moment the run ended,
@@ -1086,6 +1098,8 @@ export const results = (
           h('div', {}, h('span', {}, e.eggs), h('b', { class: 'result-legends' }, ...g.eggs.found.map((egg) => h('img', { src: eggIcon(egg.tier), alt: e.tiers[egg.tier], title: e.tiers[egg.tier] })))),
       ),
       runNews(extras),
+      // Right under the run's news, where a phone held upright sees it before scrolling.
+      invite?.card,
       ranking?.panel,
       goOn && h('p', { class: 'endless-hint' }, r.continueHint),
       h(
@@ -1097,7 +1111,8 @@ export const results = (
       ),
       extras.report,
       damageList(g),
-      h('div', { class: 'buttons result-buttons' }, ...buttons),
+      extras.save?.el,
+      h('div', { class: 'buttons result-buttons' }, ...row),
       victory && extras.credits,
       victory && h('a', { class: 'support-link result-support', href: ROUTES.support[locale()], target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
     ),

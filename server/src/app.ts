@@ -40,7 +40,7 @@ import type { BugReports } from './bugReports'
 import { coopListing, parseCoopReport, type CoopBoardStore } from './coopBoards'
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
-import type { Report } from './errors'
+import type { Report, TellRevenue } from './errors'
 import type { Donate, GemPix } from './donations'
 import type { CandyGoalStore } from './candyGoal'
 import type { DonateError, FestivalStore } from './festival'
@@ -49,6 +49,7 @@ import type { GemStore } from './gems'
 import type { GiftStore } from './gifts'
 import type { ModerationStore } from './moderation'
 import type { PatreonOAuth } from './patreon'
+import type { Revenue } from './revenue'
 import type { RankingStore } from './ranking'
 import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parseGameClaim, parsePresenceReport, parseRealmReport, type BuyError, type RealmStore } from './realm'
 import { checkoutLocale, type StripeCheckout } from './stripe'
@@ -105,6 +106,8 @@ export type AppDeps = {
   ping: () => Promise<boolean>
   /** Error tracking for the 500s (`errors.ts`). */
   report: Report
+  /** A payment the webhooks just confirmed, for PostHog's revenue analytics (`errorReports`); none in tests. */
+  revenue?: TellRevenue
 }
 
 type Auth = { Variables: { userId: string } }
@@ -241,7 +244,8 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   404 for an unknown code, 409 for one already used.
  * - `POST /webhooks/stripe`, `POST /webhooks/abacatepay`: the payment providers say a donation or a gem pack is paid (or a pack refunded or disputed)
  *   (signed: `webhooks.ts`; AbacatePay's the Standard Webhooks way, or with `?webhookSecret=` for an
- *   older webhook). 401 for a bad signature, 503 without the secret.
+ *   older webhook). 401 for a bad signature, 503 without the secret. A payment confirmed for the first time (a pack credited,
+ *   a donation or a Patreon charge recorded) goes to PostHog as `payment` (`revenue.ts`), on the account's distinct id.
  * - `POST /webhooks/patreon`: a patron's `members:` event (signed with the webhook's secret: `verifyPatreon`): their
  *   tier from the active pledge (`patreonMember`), applied to the account that linked them (or kept until one does),
  *   and a paid charge recorded as history. 401 for a bad signature, 503 without the secret.
@@ -329,7 +333,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   by trainer, bans in force); `POST /admin/realm/moderation` (`parseRealmModeration`) `{ userId, action, days?, reason? }`:
  *   `ban` (days, or for good), `unban`, `dismiss`, resolving their realm reports. `{ resolved }`, 404 for an unknown player.
  */
-export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report, revenue = () => {} }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
 
@@ -653,6 +657,14 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
   })
 
   const hookBody = bodyLimit({ maxSize: 64 * 1024 })
+  /** A payment a webhook just confirmed (null: a retry, or nothing paid) goes to `revenue`; telling it never fails the webhook. */
+  const tell = (r: Revenue | null) => {
+    try {
+      if (r) revenue(r)
+    } catch (err) {
+      console.error('revenue capture failed', err)
+    }
+  }
 
   app.post('/webhooks/stripe', hookBody, async (c) => {
     if (!webhooks.stripeSecret) return c.json({ error: 'webhook off' }, 503)
@@ -662,11 +674,11 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     // A gem pack's payment, refund or dispute; anything else may be a donation.
     const gem = stripeGems(event)
     if (gem) {
-      await gems.event(gem)
+      tell(await gems.event(gem))
       return c.json({ received: true })
     }
     const paid = stripeDonation(event, webhooks.stripePaymentLink)
-    if (paid) await supporters.paid(paid)
+    if (paid) tell(await supporters.paid(paid))
     // A paid session dropped only for its link is usually a mistyped STRIPE_PAYMENT_LINK (ids are case-sensitive).
     const dropped = paid ? null : stripeDonation(event, null)
     if (dropped) console.warn(`stripe session ${dropped.ref} is paid but ignored: its payment link isn't STRIPE_PAYMENT_LINK (${webhooks.stripePaymentLink})`)
@@ -685,9 +697,9 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!ok) return c.json({ error: 'bad signature' }, 401)
     const event: unknown = JSON.parse(raw)
     const gem = abacateGems(event)
-    if (gem) await gems.event(gem)
+    if (gem) tell(await gems.event(gem))
     const paid = abacateDonation(event)
-    if (paid) await supporters.paid(paid)
+    if (paid) tell(await supporters.paid(paid))
     return c.json({ received: true })
   })
 
@@ -700,7 +712,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const member = patreonMember(event, body)
     if (member) await supporters.patreonPledge(member)
     const charge = patreonCharge(event, body, webhooks.patreonCurrency)
-    if (charge) await supporters.patreonCharge(charge)
+    if (charge) tell(await supporters.patreonCharge(charge))
     return c.json({ received: true })
   })
 

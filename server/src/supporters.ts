@@ -8,6 +8,7 @@ import { hallPokemon } from '../../src/game/trainer'
 import type { Sql } from './db'
 import { GEM_PATREON } from '../../src/data/gems'
 import { moveGems } from './gems'
+import type { Revenue } from './revenue'
 import { sendGift } from './gifts'
 import { patreonAmount, patreonGemsRef, type PaidDonation, type PatreonCharge, type PatreonMember } from './webhooks'
 
@@ -100,19 +101,26 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
       return true
     },
 
-    /** A webhook said `d` is paid: records it (once, however often the webhook retries) and credits it. */
-    paid: async (d: PaidDonation) => {
-      const raised = await sql.begin(async (tx) => {
+    /**
+     * A webhook said `d` is paid: records it (once, however often the webhook retries) and credits it.
+     * The payment when this is the first word of it (`Revenue`), else null.
+     */
+    paid: async (d: PaidDonation): Promise<Revenue | null> => {
+      const { raised, revenue } = await sql.begin(async (tx) => {
         const points = donationPoints(d.amount, d.currency)
-        const [row] = await tx<{ id: string }[]>`
+        const [before] = await tx<{ paid: boolean }[]>`select paid_at is not null as paid from donations where ref = ${d.ref} for update`
+        const [row] = await tx<{ id: string; user_id: string | null }[]>`
           insert into donations (provider, ref, handle, user_id, amount, currency, points, paid_at)
           values (${d.provider}, ${d.ref}, ${d.handle}, (select id from users where handle = ${d.handle}), ${d.amount}, ${d.currency.toLowerCase()}, ${points}, now())
           on conflict (ref) do update
           set amount = excluded.amount, currency = excluded.currency, points = excluded.points, paid_at = coalesce(donations.paid_at, excluded.paid_at)
-          returning id`
-        return row ? await credit(tx, row.id) : null
+          returning id, user_id`
+        const revenue: Revenue | null =
+          row && !before?.paid ? { source: 'donation', provider: d.provider, amount: d.amount, currency: d.currency, pack: null, userId: row.user_id, ref: d.ref } : null
+        return { raised: row ? await credit(tx, row.id) : null, revenue }
       })
       changed([raised])
+      return revenue
     },
 
     /**
@@ -140,17 +148,17 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
      * tier) go to the linked account under the month's ref (`patreonGemsRef`:
      * a later charge that month brings none), or wait on the row
      * (`donations.gems`) until the patron links. A yearly pledge's charge
-     * brings one month's gems.
+     * brings one month's gems. The charge when this recorded it (`Revenue`), else null.
      */
-    patreonCharge: async (c: PatreonCharge) => {
-      await sql.begin(async (tx) => {
+    patreonCharge: (c: PatreonCharge): Promise<Revenue | null> =>
+      sql.begin(async (tx) => {
         await tx`select pg_advisory_xact_lock(hashtext(${`patreon:${c.member}`}))`
         const [known] = await tx<{ id: string }[]>`select id from donations where ref = ${c.ref}`
-        if (known) return
+        if (known) return null
         const [prior] = await tx<{ cents: number }[]>`
           select coalesce(sum(amount), 0)::int as cents from donations where provider = 'patreon' and ref like ${`patreon:${c.member}:%`}`
         const amount = patreonAmount(c, prior?.cents ?? 0)
-        if (amount <= 0) return
+        if (amount <= 0) return null
         const [user] = await tx<{ id: string }[]>`select id from users where patreon_id = ${c.patron}`
         const gems = c.tier ? GEM_PATREON[c.tier] : null
         await tx`
@@ -159,8 +167,8 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
           on conflict (ref) do nothing`
         const ref = patreonGemsRef(c.ref)
         if (user && gems && ref) await moveGems(tx, user.id, gems, 'patreon', ref)
-      })
-    },
+        return { source: 'patreon', provider: 'patreon', amount, currency: c.currency, pack: null, userId: user?.id ?? null, ref: c.ref }
+      }),
 
     /**
      * Links the Patreon user `patronId` to `userId` (one game account per

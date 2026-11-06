@@ -4,6 +4,7 @@
   "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ]",
   "rewrites": [
     { "source": "/ingest/static/:path(.*)", "destination": "https://us-assets.i.posthog.com/static/:path" },
+    { "source": "/ingest/array/:token/config/", "destination": "https://us-assets.i.posthog.com/array/:token/config" },
     { "source": "/ingest/array/:path(.*)", "destination": "https://us-assets.i.posthog.com/array/:path" },
     { "source": "/ingest/:path(.*)", "destination": "https://us.i.posthog.com/:path" }
   ]

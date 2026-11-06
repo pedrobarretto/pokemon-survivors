@@ -41,7 +41,8 @@ import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import { openBoutique, type BoutiqueTab } from './ui/boutique'
-import { identify, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
+import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
+import { firstGate, firstRunClock, firstStep, startFirstSession } from './firstSession'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
 import type { Crumb, CrumbMoment } from './crumb'
 import { BAG_ITEMS, useArmed, type BagItem } from './game/bag'
@@ -109,7 +110,7 @@ import { CAST_SFX } from './ui/castSfx'
 import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype, setArchetype } from './game/terrain'
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
-import { dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
+import { dexCounts, dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
 import { runEarnings, wonRun, type ConvertedEggs } from './game/meta'
 import { missionStatus, type MissionStatus } from './game/missions'
 import { summarizeRun, type RunSummary } from './game/tally'
@@ -176,7 +177,10 @@ import { mapEventFeedback } from './ui/mapEvents'
 import { runShare, sharePreview, trainerShare } from './ui/share'
 import { shop, type ShopPlaza, type VisitorShelf } from './ui/shop'
 import { starterSelect } from './ui/starterSelect'
-import { invitesScreen } from './ui/invites'
+import { firstRunDue, guestChosenAt, guestGateDue, hostApp, onboardingStep, onOnboarding, rememberGuest, savePromptDue } from './onboarding'
+import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboarding'
+import { invitesScreen, resultsInvite } from './ui/invites'
+import { forgetInstallNudge, installNudgeScreen } from './ui/install'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
 import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
@@ -190,7 +194,7 @@ import { isQuickChat } from './game/versusSocial'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
 import { arenaLoadout, arenaSeat, coopAccess, coopStarter, freshInvites } from './coop/lobby'
-import { REF_PARAM } from './game/referral'
+import { FRIEND_MILESTONES, REF_PARAM, type FriendMilestone } from './game/referral'
 import { PROTOCOL, VPS_HOMES, parseRoomCode, type RoomView } from './net/protocol'
 import { isRecord } from './game/parse'
 import type { CoopInvite } from './game/friends'
@@ -229,7 +233,7 @@ import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/ar
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
 import { freeWearables, wearMemory } from './render/wearables'
 import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkins, type Look, type CosmeticSlot } from './data/cosmetics'
-import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS } from './data/skinCatalog'
+import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS, type SkinId } from './data/skinCatalog'
 import { equip } from './arena/gemShop'
 import { effectIn } from './data/arenaEffects'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
@@ -607,13 +611,20 @@ const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void
 /** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
 let boutiqueCheckout: string | null = null
 
+/** The skin the Boutique's Skins opens on (the partner select's skins row), once. */
+let boutiqueItem: SkinId | null = null
+
 /** Leavanny's Boutique over the plaza's north-west (`ui/boutique.ts`); closing it leaves `?boutique` behind too. */
 const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
   const checkout = boutiqueCheckout
+  const item = boutiqueItem
   boutiqueCheckout = null
+  boutiqueItem = null
+  lobbyPress('boutique')
   return openBoutique(ui, input, {
     tab,
     checkout,
+    item,
     signIn: accountsEnabled ? () => void signIn() : null,
     pick: arenaStart(),
     keepPick: keepArenaPick,
@@ -629,10 +640,11 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
  * Card's look, `?boutique`, a checkout's return): the lobby lands on the
  * plaza's north-west with the sheet open on `tab`; leaving it calls `back`
  * when given (where it came from), else pans home. `checkout`: the
- * `?gems=<ref>` the Loja waits on.
+ * `?gems=<ref>` the Loja waits on; `item`, the skin Skins opens on.
  */
-const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null) => {
+const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null, item: SkinId | null = null) => {
   boutiqueCheckout = checkout
+  boutiqueItem = item
   showTitle({ shop: tab === 'shop' ? 'boutique' : tab, instant: true, ...(back && { back }) })
 }
 
@@ -720,19 +732,23 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   // Every Play in the lobby (the partner select, the challenge, a hatch, a shiny pick) finds its ticket in hand.
   prefetchRun()
   prefetchRun(challengeToday().day)
+  if (opts.intro) firstStep('intro')
   setScreen(
     titleScreen(ui, input, {
-      play: () => (accountsEnabled && !playingAsGuest && accountState().kind === 'guest' ? showPlayGate() : showMenu()),
+      play: () => (firstStep('play'), playFromLobby()),
+      // A device that never played: "press start" goes straight into its first run.
+      start: opts.intro && firstRun() ? () => ((pressedStart = true), firstStep('play'), startFirstRun()) : undefined,
       challenge: () => showChallenge(),
       incubator: () => showIncubator(() => showTitle({ focus: 'eggs' })),
       gifts: showGifts,
       missions: () => showMissions(),
-      ready: () => (pressedStart = true),
+      ready: () => ((pressedStart = true), firstStep('lobby'), hideInAppHint()),
       // The language may change inside Settings, so closing them rebuilds the title on the same entry.
       settings: (focus) => openSettings(ui, input, () => showTitle({ focus })),
       news: (focus) => newsScreen(ui, input, () => showTitle({ focus })),
       // Closed unanswered, the lobby highlights the survey's clipboard; answered, it's gone and JOGAR is.
       survey: () => surveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
+      install: (offer, focus) => installNudgeScreen(ui, input, offer, () => showTitle({ focus })),
       halloween: (focus) =>
         halloweenScreen(ui, input, {
           gifts: showGifts,
@@ -749,6 +765,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
         return openFestival(ui, input, () => ((scene.plaza.focus = 0), close()), tab)
       },
       boutique: openBoutiqueSheet,
+      gems: () => showBoutique('shop'),
       carpentry: (close) => openCarpentry(ui, input, { close, signIn: accountsEnabled ? () => void signIn() : null }),
       // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
       trainer: (focus) =>
@@ -773,24 +790,52 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       meadow,
     }, opts),
   )
+  // Inside an app's browser: over the intro, the way to a real one to sign in and keep the progress (the lobby takes it down; closed once, gone for the visit).
+  const app = hostApp()
+  if (app && opts.intro && screen) showInAppHint(screen.el, app)
 }
 
-/** Set once the player picks "play as a guest": the gate doesn't ask again until the page reloads. */
-let playingAsGuest = false
+/** No run finished on this device and no account linked to it: the next Play is the first run (`startFirstRun`). */
+const firstRun = () => firstRunDue(loadSave().achievements.lifetime.runs, accountUserId() !== null)
+
+/** The first run: the saved partner (Charmander on a new save) on the saved difficulty (Normal), past the gate and the partner select. */
+const startFirstRun = () => {
+  onboardingStep('fastLane')
+  void startRun(loadSave().partner)
+}
+
+/**
+ * JOGAR: the first run starts at once; after it, a guest sees the sign-in gate
+ * now and then (`guestGateDue`: not again for a while after "Jogar como
+ * convidado"), never inside an app's browser, where Google won't sign in; then the partner select.
+ */
+const playFromLobby = () => {
+  if (firstRun()) return startFirstRun()
+  if (!accountsEnabled || accountState().kind !== 'guest') return showMenu()
+  if (hostApp()) {
+    onboardingStep('gateSkipped')
+    return showMenu()
+  }
+  return guestGateDue(guestChosenAt(), Date.now()) ? showPlayGate() : showMenu()
+}
 
 /** Sign in or play as a guest, asked when a guest taps Play. */
-const showPlayGate = () =>
+const showPlayGate = () => {
+  firstStep('gate')
   setScreen(
     playGate(ui, input, {
-      play: () => showMenu(),
-      guest: () => ((playingAsGuest = true), showMenu()),
-      back: () => showTitle({ focus: 'play' }),
+      play: () => (firstGate('signIn'), showMenu()),
+      guest: () => (firstGate('guest'), rememberGuest(), onboardingStep('gateGuest'), showMenu()),
+      back: () => (firstGate('back'), showTitle({ focus: 'play' })),
+      signingIn: () => firstGate('signIn'),
     }),
   )
+}
 
 /** The partner select; its top bar leads back to the title, to the Poké Mart (the wallet) and to Settings, which come back to it on the same Pokémon. */
 const showMenu = (initial: PlayableId = loadSave().partner) => {
   endRun()
+  firstStep('select')
   prefetchRun()
   const select = starterSelect(ui, input, {
     pick: (id) => setTimeout(() => void startRun(id), 250),
@@ -798,6 +843,8 @@ const showMenu = (initial: PlayableId = loadSave().partner) => {
     mart: () => showShop(),
     settings: () => setScreen(openSettings(ui, input, () => showMenu(select.selected()))),
     incubator: () => showIncubator(() => showMenu(select.selected())),
+    // A skin not owned yet: the Boutique's Skins on it, then back here on the same Pokémon.
+    boutique: (skin) => showBoutique('skins', () => showMenu(select.selected()), null, skin),
   }, initial)
   setScreen(select)
 }
@@ -1244,6 +1291,7 @@ const firstFrameDrawn = () => {
   if (!firstFrameDue) return
   firstFrameDue = false
   launchStep('running')
+  firstStep('firstFrame')
 }
 
 /** A player's whole family (branches included: the evolution scene can land on any of them) in the colors they play, not the normal ones as well. */
@@ -1302,6 +1350,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   wonLastRun = false
   // The crash watch holds the launch from here: a page dying while the run loads says where (`launchStep`).
   launchStep('ticket')
+  firstStep('loading')
   const c = daily?.challenge ?? null
   // The Desafio do dia's Pokémon is the day's, not the player's pick.
   if (!c) updateSave((s) => ({ ...s, partner: starter }))
@@ -1412,6 +1461,8 @@ const aside = (content: HTMLElement | string, ms?: number, key: string | null = 
 
 /** The run's first toasts: safe mode coming on after a crash, the challenge it plays, the day's outbreak, then each bag item it used and each TM it armed. */
 const announceRun = (start: ReplayStart, challenge: Run['challenge']) => {
+  // The first run on this device: how to move, before anything else.
+  if (!challenge && loadSave().achievements.lifetime.runs === 0) news(firstRunTip(input.lastKind(), matchMedia('(pointer: coarse)').matches), 7000, 'firstRun')
   if (takeSafeNotice()) news(h('span', { class: 'item-toast' }, h('span', {}, rich(t().toast.safeMode), h('small', {}, t().toast.safeModeHint))), 5200, 'safeMode')
   if (challenge) {
     const m = t().challenge
@@ -1742,12 +1793,21 @@ const syncOverlay = (r: Run) => {
             glow: me.shiny || g.dexLog.shinies.size > 0 || wonRun(g) || g.time > r.bestBefore,
           },
           credits: g.phase === 'victory' && rankingEnabled ? creditsLine() : null,
+          save: guestSaveCard(),
+          invite: rankingEnabled ? resultsInvite(ui, input, { won: wonRun(g), time: g.time, bestBefore: r.bestBefore }) : null,
         },
       )
       break
   }
   // Co-op pick screens wear the auto-pick clock (and the level-up who already picked).
   if (c && r.overlay) c.team.decorate(r.overlay, g, me, phase)
+}
+
+/** A guest's first runs (`savePromptDue`, this one banked): the results' card for what an account keeps, or null. */
+const guestSaveCard = () => {
+  const save = loadSave()
+  if (!accountsEnabled || accountState().kind !== 'guest' || !savePromptDue(save.achievements.lifetime.runs)) return null
+  return saveCard(formatPokeDollars(save.wallet), dexCounts(save.dex).seen, hostApp(), (provider) => void signIn(provider))
 }
 
 /** Level-ups that took the Oran Berry on their own (`takeBerryLevelUps`): the level reached and how many at once. */
@@ -3697,6 +3757,7 @@ const frame = (now: number) => {
         runDrawnAt = now
         render(ctx, g, t, { ...settings(), companion: r.companion })
         firstFrameDrawn()
+        firstRunClock(g.time)
         const stick = input.readStick()
         if (stick && g.phase === 'playing') drawJoystick(ctx, stick, cssScale)
         r.hud.update(g)
@@ -3940,6 +4001,8 @@ const askAboutCrash = () => {
 const boot = () => {
   loadSafeMode()
   startAnalytics(errorContext)
+  // A new device's first visit: where it gets to, sent as one event (`firstSession.ts`).
+  startFirstSession(loadSave().achievements.lifetime.runs)
   sendHeldVersus()
   watchDeploys()
   // Events and errors tie to the account on this device, known from its link before Clerk loads.
@@ -3976,6 +4039,11 @@ const boot = () => {
   watchSupporterStatus()
   // Coming back to the game syncs again, but not mid-run: a run syncs when it ends.
   startAccount(() => run === null)
+  // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it.
+  onOnboarding((step) => {
+    const app = hostApp()
+    if (step === 'inAppSignInHeld' && app) showInAppHint(ui, app, true)
+  })
   // The Festival da Praça's pot, in the background (its gifts join the gift box).
   startFestival()
   // The Meta da comunidade's candies, in the background: reaching the goal opens Mega Darkrai, with a banner the first time.
@@ -4150,6 +4218,12 @@ const devGifts = {
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
     const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : why ? { kind: 'welcome', from: why } : null
     return stageGifts([{ id: `dev-${Date.now()}`, content, reason }])
+  },
+  /** Puts one invite milestone's gifts in the gift box as the API sends them (`FRIEND_MILESTONES`): `ps.friendGifts(10)` the shiny Dratini, the Friendship Legend title and background. */
+  friendGifts: (friends: FriendMilestone['friends'] = 10) => {
+    const milestone = FRIEND_MILESTONES.find((m) => m.friends === friends)
+    if (!milestone) return `Milestones: ${FRIEND_MILESTONES.map((m) => m.friends).join(', ')}`
+    return stageGifts(milestone.gifts.map((content, i) => ({ id: `dev-friends-${friends}-${i}-${Date.now()}`, content, reason: { kind: 'friends', count: friends } })))
   },
   /** Puts the thank-you for joining the Discord (`DISCORD_GIFT`) in the gift box, as if linking brought it. */
   discordGift: () => stageGifts([{ id: `dev-discord-${Date.now()}`, content: DISCORD_GIFT, reason: { kind: 'discord' } }]),
@@ -4856,6 +4930,15 @@ if (import.meta.env.DEV) {
         endRun()
         if (mode === 'reset') return (forgetSurvey(), showTitle())
         setScreen(surveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
+      },
+      /**
+       * The lobby's install offer now, as Chromium's prompt or the iOS how-to (`'ios'`), whatever the browser
+       * (with no prompt held, Instalar just closes it); `ps.install('reset')` forgets it was offered, so the next lobby asks by itself where it can.
+       */
+      install: (mode: 'prompt' | 'ios' | 'reset' = 'prompt') => {
+        endRun()
+        if (mode === 'reset') return (forgetInstallNudge(), showTitle())
+        setScreen(installNudgeScreen(ui, input, mode, () => showTitle()))
       },
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
