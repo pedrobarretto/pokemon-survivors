@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { moveSheet, sheetStats } from './moveSheet'
+import { MOVES, moveStats } from './moves'
 import { BASE_STATS } from './stats'
 
 describe('move sheet', () => {
@@ -23,5 +24,14 @@ describe('move sheet', () => {
     expect(rows.find((r) => r.stat === 'damage')).toEqual({ stat: 'damage', value: 14, before: 10 })
     expect(rows.find((r) => r.stat === 'status')?.before).toBeCloseTo(0.3)
     expect(rows.find((r) => r.stat === 'amount')).toEqual({ stat: 'amount', value: 2 })
+  })
+
+  it("shows how long a protection really stands, not its raw duration (Light Clay past half the cooldown)", () => {
+    const player = { ...BASE_STATS, duration: 2.5, cooldown: 0.3 }
+    const row = (id: 'protect' | 'dig') => moveSheet(id, 8, player).find((r) => r.stat === 'duration')
+    const cast = moveStats('protect', 8, player)
+    expect(cast.duration).toBeGreaterThan(cast.cooldown)
+    expect(row('protect')?.value).toBeCloseTo(cast.cooldown / 2)
+    expect(row('dig')?.value).toBe(MOVES.dig.ward(moveStats('dig', 8, player)))
   })
 })

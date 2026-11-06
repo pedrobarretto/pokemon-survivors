@@ -3107,7 +3107,7 @@ export const fr: Messages = {
       ],
     },
     needleArm: {
-      description: 'Tes épines se hérissent : des aiguilles volent dans tous les sens, et pendant 1.5s, tout ennemi qui te touche n’inflige aucun dégât et se blesse en étant repoussé.',
+      description: 'Tes épines se hérissent : des aiguilles volent dans tous les sens, et pendant 1.5s (au plus la moitié de la recharge), tout ennemi qui te touche n’inflige aucun dégât et se blesse en étant repoussé.',
       upgrades: [
         '+3 dégâts',
         '+2 aiguilles',
@@ -3323,7 +3323,7 @@ export const fr: Messages = {
       ],
     },
     dig: {
-      description: 'Appuie sur Shift ou sur le bouton Ruée : tu t’enterres (invulnérable, la horde te perd de vue) et ressors sous le plus gros ennemi proche, un boss en priorité, dans un séisme.',
+      description: 'Appuie sur Shift ou sur le bouton Ruée : tu t’enterres (invulnérable, la horde te perd de vue) et ressors sous le plus gros ennemi proche, un boss en priorité, dans un séisme. Le temps sous terre, sortie comprise, couvre au plus la moitié de la recharge.',
       upgrades: [
         '+10 dégâts',
         'Séisme 20% plus grand',
@@ -4667,7 +4667,7 @@ export const fr: Messages = {
       ],
     },
     protect: {
-      description: 'Toutes les 12s, une bulle te protège pendant 1s : aucun coup ne passe, et tout ce qui la touche est repoussé.',
+      description: 'Toutes les 12s, une bulle te protège pendant 1s : aucun coup ne passe, et tout ce qui la touche est repoussé. Elle dure au plus la moitié de la recharge : Light Clay et Quick Claw n’enchaînent jamais une bulle sur la suivante.',
       upgrades: [
         'Dure +0.2s',
         'Recharge −1s',
@@ -4751,7 +4751,7 @@ export const fr: Messages = {
       ],
     },
     fly: {
-      description: 'Toutes les 7s, tu décolles un instant : rien ne te touche et les ennemis te perdent de vue. Tu continues d’avancer et, à l’atterrissage, tu retombes lourdement, blessant et repoussant tout le monde autour.',
+      description: 'Toutes les 7s, tu décolles un instant : rien ne te touche et les ennemis te perdent de vue. Tu continues d’avancer et, à l’atterrissage, tu retombes lourdement, blessant et repoussant tout le monde autour. Le temps en l’air, atterrissage compris, couvre au plus la moitié de la recharge.',
       upgrades: [
         '+6 dégâts',
         'Recharge −0.7s',
@@ -5378,9 +5378,9 @@ export const fr: Messages = {
   },
   items: {
     muscleBand: '+10% de dégâts pour toutes les capacités.',
-    quickClaw: 'Les capacités se rechargent 8% plus vite.',
+    quickClaw: 'Les capacités se rechargent 8% plus vite. Une protection (Protect, Needle Arm, Fly, Dig) dure au plus la moitié de sa recharge : elle peut donc raccourcir aussi.',
     wideLens: '+10% de zone des capacités.',
-    lightClay: 'Les effets durent 12% plus longtemps.',
+    lightClay: 'Les effets durent 12% plus longtemps. Une protection (Protect, Needle Arm, Fly, Dig) dure toujours au plus la moitié de la recharge de sa capacité.',
     loadedDice: '+1 projectile pour les capacités à coups multiples.',
     leftovers: 'Rend 0,3 PV par seconde.',
     choiceScarf: '+8% de vitesse de déplacement.',

@@ -3110,7 +3110,7 @@ export const en: Messages = {
       ],
     },
     needleArm: {
-      description: 'Your quills bristle: needles fly every way, and for 1.5s any foe that touches you deals no damage and gets hurt and thrown back instead.',
+      description: 'Your quills bristle: needles fly every way, and for 1.5s (at most half the cooldown) any foe that touches you deals no damage and gets hurt and thrown back instead.',
       upgrades: [
         '+3 damage',
         '+2 needles',
@@ -3326,7 +3326,7 @@ export const en: Messages = {
       ],
     },
     dig: {
-      description: 'Press Shift or the lunge button: you burrow (invulnerable, the horde loses you) and come up under the biggest foe nearby, a boss first, in a quake.',
+      description: 'Press Shift or the lunge button: you burrow (invulnerable, the horde loses you) and come up under the biggest foe nearby, a boss first, in a quake. The time underground, coming out included, covers at most half the cooldown.',
       upgrades: [
         '+10 damage',
         '20% bigger quake',
@@ -4670,7 +4670,7 @@ export const en: Messages = {
       ],
     },
     protect: {
-      description: 'Every 12s a bubble shields you for 1s: no hit gets through, and whatever touches it gets shoved away.',
+      description: 'Every 12s a bubble shields you for 1s: no hit gets through, and whatever touches it gets shoved away. It lasts at most half the cooldown, so Light Clay and Quick Claw never chain one bubble into the next.',
       upgrades: [
         'Lasts +0.2s',
         'Cooldown 1s faster',
@@ -4754,7 +4754,7 @@ export const en: Messages = {
       ],
     },
     fly: {
-      description: 'Every 7s you take off for a moment: nothing hits you and the foes lose sight of you. You keep moving and, when you land, you come down hard, hurting and shoving everyone around.',
+      description: 'Every 7s you take off for a moment: nothing hits you and the foes lose sight of you. You keep moving and, when you land, you come down hard, hurting and shoving everyone around. The time aloft, landing included, covers at most half the cooldown.',
       upgrades: [
         '+6 damage',
         'Cooldown 0.7s faster',
@@ -5382,9 +5382,9 @@ export const en: Messages = {
 
   items: {
     muscleBand: '+10% damage to all moves.',
-    quickClaw: 'Moves cool down 8% faster.',
+    quickClaw: 'Moves cool down 8% faster. A protection (Protect, Needle Arm, Fly, Dig) lasts at most half its cooldown, so it can get shorter too.',
     wideLens: '+10% move area.',
-    lightClay: 'Effects last 12% longer.',
+    lightClay: 'Effects last 12% longer. A protection (Protect, Needle Arm, Fly, Dig) still lasts at most half its move’s cooldown.',
     loadedDice: '+1 projectile for multi-hit moves.',
     leftovers: 'Restores 0.3 HP per second.',
     choiceScarf: '+8% movement speed.',

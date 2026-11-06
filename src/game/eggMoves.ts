@@ -11,7 +11,7 @@ import {
   SLAM_HOP, SLAM_LEAP, SLAM_R, SLAM_REACH, SNARL_RAMP, SNARL_TIME, splitDarts, strongestFirst, SWORD_ARC, SWORD_TIME,
   TWISTER_PULL, ZEN_HOP, ZEN_SEEK, ZEN_TIME,
 } from './eggMoveRules'
-import { burrowTime, hpFraction, stacksOf, type DamageBonus } from './kitRules'
+import { burrowWard, hpFraction, stacksOf, type DamageBonus } from './kitRules'
 import { burrow, sweep, wanderer } from './moveKit'
 import { chainTargets, lungeTarget } from './moveRules'
 import { maxMoveLevel, MOVE_IDS, MOVES, moveStats, type CastStats, type MoveDef, type MoveId } from './moves'
@@ -147,10 +147,13 @@ export const forcePalm = (g: Game, s: CastStats) => {
 
 /* ---------------- Gible: Dig ---------------- */
 
-/** Manual: burrows for `duration` (at most half its cycle with the i-frames after, `burrowTime`; no damage, the horde loses you; you can still move), then `digEmerge`. Fails right after another move's protection (`wardOpens`). */
+/** Seconds Dig keeps you under: its `duration`, at most half its cycle with the i-frames after (`burrowWard`). */
+export const digUnder = burrowWard(DIG_IFRAMES)
+
+/** Manual: burrows for `digUnder` (no damage, the horde loses you; you can still move), then `digEmerge`. Fails right after another move's protection (`wardOpens`). */
 export const dig = (g: Game, s: CastStats) => {
   const p = g.player
-  const under = burrowTime(s.duration, s.cooldown, DIG_IFRAMES)
+  const under = digUnder(s)
   if (!burrow(g, 'dig', under)) return
   spawnAttack(g, {
     ...look('dig', 'ground', 'digMound'), x: p.x, y: p.y,

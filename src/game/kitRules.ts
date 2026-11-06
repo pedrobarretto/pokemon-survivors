@@ -1,5 +1,5 @@
 import * as dm from '../engine/dmath'
-import type { MoveId } from './moves'
+import type { MoveId, MoveStats } from './moves'
 import { isAfflicted } from './status'
 import { isAirborne } from './traits'
 import type { Enemy, OwnedMove, Player } from './types'
@@ -188,6 +188,15 @@ export const GUARD_UPTIME = 0.5
 
 /** Seconds a renewing guard stands: its `duration`, held to `GUARD_UPTIME` of its `cooldown`. */
 export const guardSpan = (duration: number, cooldown: number) => Math.min(duration, cooldown * GUARD_UPTIME)
+
+/** What a move's protection is timed from: its `duration`, cut by its `cooldown`. */
+type WardStats = Pick<MoveStats, 'duration' | 'cooldown'>
+
+/** A renewing guard's `ward` (`MoveDef`): the seconds it stands for a cast's stats (`guardSpan`). */
+export const guardWard = (s: WardStats) => guardSpan(s.duration, s.cooldown)
+
+/** A burrowing move's `ward` (`MoveDef`), its i-frames `after` it: the seconds it stays out of reach for a cast's stats (`burrowTime`). */
+export const burrowWard = (after: number) => (s: WardStats) => burrowTime(s.duration, s.cooldown, after)
 
 /** The player's last immunity window: the move that held it and the last time it stood, on the never-paused clock (`g.now`). */
 export type Ward = { move: MoveId; at: number }

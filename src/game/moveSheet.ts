@@ -30,18 +30,21 @@ export const sheetStats = (id: MoveId): SheetStat[] => {
   return ['damage', 'cooldown', ...optional, ...(def.status ? ['status' as const] : [])]
 }
 
-const valueOf = (s: CastStats, stat: SheetStat) => (stat === 'status' ? (s.status?.chance ?? 0) : s[stat])
+/** A stat's value on the card; a protection's duration is the time it really stands (`ward`), not the raw stat. */
+const valueOf = (def: MoveDef, s: CastStats, stat: SheetStat) =>
+  stat === 'status' ? (s.status?.chance ?? 0) : stat === 'duration' && def.ward ? def.ward(s) : s[stat]
 
 /**
  * The card's lines for `id` at `level` with the player's modifiers, along the
  * fork branches in `path`; `from` (a lower level, for level-up offers) fills `before`.
  */
 export const moveSheet = (id: MoveId, level: number, player: PlayerStats, from?: number, path = 0): SheetRow[] => {
+  const def: MoveDef = MOVES[id]
   const now = moveStats(id, level, player, path)
   const prev = from !== undefined ? moveStats(id, from, player, path) : null
   return sheetStats(id).map((stat) => {
-    const value = valueOf(now, stat)
-    const before = prev ? valueOf(prev, stat) : value
+    const value = valueOf(def, now, stat)
+    const before = prev ? valueOf(def, prev, stat) : value
     return before !== value ? { stat, value, before } : { stat, value }
   })
 }

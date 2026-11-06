@@ -198,8 +198,9 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
     }
     const code = keyCode(bindings().key, e.code, context)
     if (code === null) return
-    // Tab switches targets in a match, not the browser's focus.
-    if (code in MOVE_KEYS || code !== e.code || (code === 'Tab' && context === 'arena')) e.preventDefault()
+    // Tab switches targets in a match, not the browser's focus. Space is the special while playing: never also
+    // the browser's own press of whatever holds the focus, nor a scroll of the page.
+    if (code in MOVE_KEYS || code !== e.code || (code === 'Tab' && context === 'arena') || (code === 'Space' && context !== 'menu')) e.preventDefault()
     held.set(e.code, code)
     if (!e.repeat) dispatch(code)
   })
