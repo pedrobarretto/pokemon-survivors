@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRing, blitRotated } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, blitRotated, fillPlotted, plot } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { TAU } from '../engine/math'
 import { playerDex } from '../game/game'
@@ -38,8 +38,9 @@ const crescent = (ctx: Ctx, x: number, y: number, r: number, dir: number, span: 
     const k = sweep >= 0 ? i / steps : 1 - i / steps
     const angle = dir - span / 2 + span * k
     const thick = Math.sin(k * Math.PI) * colors.length
-    for (let j = 0; j < thick; j++) px(ctx, x + Math.cos(angle) * (r - j), y + Math.sin(angle) * (r - j), colors[j]!)
+    for (let j = 0; j < thick; j++) plot(colors[j]!, x + Math.cos(angle) * (r - j), y + Math.sin(angle) * (r - j))
   }
+  fillPlotted(ctx)
 }
 
 /** Speed lines from `a.from` to the hitbox, fading after `until` (the flaming leap, the dance dash). */

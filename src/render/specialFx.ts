@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRotated, canvasCache, context2d, createCanvas, fromStrings, lazy, type PixelSprite } from '../engine/pixelart'
+import { beginRects, blitCentered, blitEllipse, blitRotated, canvasCache, context2d, createCanvas, fromStrings, lazy, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { TYPE_COLORS, type PokeType } from '../data/types'
 import { gameSpecial, SPECIALS, specialOfType, specialReach, type SpecialId } from '../game/special'
@@ -20,18 +20,19 @@ const ROOT_PALETTE = { 1: '#20140c', 2: '#6a4020', 3: '#a87038', 4: '#58a838', 5
 
 const ROOTS = lazy(() => [fromStrings(ROOT, ROOT_PALETTE), fromStrings(ROOT, ROOT_PALETTE, { mirror: true })])
 
-/** Hard-edged circle outline plotted point by point (cheap for big, growing rings). */
+/** Hard-edged circle outline plotted point by point (cheap for big, growing rings), as one path. */
 const pixelRing = (ctx: Ctx, x: number, y: number, r: number, thickness: number, color: string) => {
-  ctx.fillStyle = color
+  beginRects(ctx, color)
   for (let k = 0; k < thickness; k++) {
     const rr = r - k
-    if (rr <= 0) return
+    if (rr <= 0) break
     const steps = Math.max(8, Math.ceil(rr * TAU))
     for (let i = 0; i < steps; i++) {
       const a = (i / steps) * TAU
-      ctx.fillRect(Math.round(x + Math.cos(a) * rr), Math.round(y + Math.sin(a) * rr), 1, 1)
+      ctx.rect(Math.round(x + Math.cos(a) * rr), Math.round(y + Math.sin(a) * rr), 1, 1)
     }
   }
+  ctx.fill()
 }
 
 const slabCache = canvasCache<string, PixelSprite>()

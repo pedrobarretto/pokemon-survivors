@@ -1,4 +1,4 @@
-import { beginRects, blitCentered, blitEllipse, blitRotated } from '../engine/pixelart'
+import { beginRects, blitCentered, blitEllipse, blitRotated, fillPlotted, plot } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { TYPE_COLORS } from '../data/types'
@@ -521,15 +521,16 @@ const drawIcyWind = (ctx: Ctx, a: Attack, t: number) => {
     for (let i = 0; i < len; i++) {
       const d = i - len / 2
       const wave = Math.sin(i * 0.5 + t * 14 + a.memo) * 1.2
-      px(ctx, a.x + fx * d + nx * (off + wave), a.y + fy * d + ny * (off + wave), i > len - 4 ? '#ffffff' : '#d8f4ff')
+      plot(i > len - 4 ? '#ffffff' : '#d8f4ff', a.x + fx * d + nx * (off + wave), a.y + fy * d + ny * (off + wave))
     }
     const tipX = a.x + fx * (len / 2) + nx * off
     const tipY = a.y + fy * (len / 2) + ny * off
     for (let i = 0; i < 4; i++) {
       const ang = dir - Math.PI / 2 + (s ? -1 : 1) * i * 0.7
-      px(ctx, tipX + Math.cos(ang) * 2, tipY + Math.sin(ang) * 2, '#ffffff')
+      plot('#ffffff', tipX + Math.cos(ang) * 2, tipY + Math.sin(ang) * 2)
     }
   }
+  fillPlotted(ctx)
   // Snowflakes riding it.
   for (let i = 0; i < 3; i++) {
     const ph = (t * 2 + hash2(a.id, i)) % 1

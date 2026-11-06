@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRing } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, fillPlotted, plot } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { LUNGE_TIME, MINE_ARM } from '../game/moveRules'
 import type { Attack } from '../game/types'
@@ -23,7 +23,11 @@ const BLAST_COLORS = {
   barbsBlast: ['rgba(150,70,190,0.5)', '#b058d0', '#c8f080'],
 } as const
 
-/** Jagged arc between two points, re-rolled a few times a second so it crackles. */
+/**
+ * Jagged arc between two points, re-rolled a few times a second so it crackles. Each point is an
+ * edge square with a core pixel, the next point's square laid over it: plotted as two paths, with
+ * the core pixels the next square covers left out, so it looks as drawing them one by one did.
+ */
 export const arc = (ctx: Ctx, a: Attack, t: number, style: { edge: string; core: string; width: number }, strand = 0) => {
   const dx = a.x - a.from.x
   const dy = a.y - a.from.y
@@ -32,8 +36,12 @@ export const arc = (ctx: Ctx, a: Attack, t: number, style: { edge: string; core:
   const nx = -dy / (len || 1)
   const ny = dx / (len || 1)
   const seed = a.id * 7 + strand * 131 + Math.floor(t * 24)
+  const w = style.width
   let px = a.from.x
   let py = a.from.y
+  // The last point's core, waiting to see whether the next square covers it (none yet).
+  let cx = Infinity
+  let cy = Infinity
   for (let i = 1; i <= steps; i++) {
     const k = i / steps
     const jag = i === steps ? 0 : (hash2(i, seed) - 0.5) * 10
@@ -43,14 +51,16 @@ export const arc = (ctx: Ctx, a: Attack, t: number, style: { edge: string; core:
     for (let s = 0; s < n; s++) {
       const x = Math.round(px + ((qx - px) * s) / n)
       const y = Math.round(py + ((qy - py) * s) / n)
-      ctx.fillStyle = style.edge
-      ctx.fillRect(x - style.width, y - style.width, 1 + style.width * 2, 1 + style.width * 2)
-      ctx.fillStyle = style.core
-      ctx.fillRect(x, y, 1, 1)
+      if (cx !== Infinity && !(Math.abs(x - cx) <= w && Math.abs(y - cy) <= w)) plot(style.core, cx, cy)
+      plot(style.edge, x - w, y - w, 1 + w * 2, 1 + w * 2)
+      cx = x
+      cy = y
     }
     px = qx
     py = qy
   }
+  plot(style.core, cx, cy)
+  fillPlotted(ctx)
 }
 
 /** Speed lines from where the lunge started to the player, fading once it lands. */

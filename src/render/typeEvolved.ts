@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRing, blitRotated, fromStrings, lazy, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, blitRotated, fillPlotted, fromStrings, lazy, plot, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { JAW_BEAT, JAW_BITES, JAW_RISE } from '../game/typeEvolutions'
 import type { Attack, Game } from '../game/types'
@@ -6,6 +6,7 @@ import { art, FX } from './art'
 import { dashedRing } from './strokes'
 import * as A from './typeEvolvedArt'
 import { ownerOf } from '../game/players'
+import { detail } from './quality'
 
 /**
  * Visuals of the moves the newer type items (and a few generic ones) evolve
@@ -66,22 +67,24 @@ const crescent = (ctx: Ctx, x: number, y: number, r: number, dir: number, span: 
     const k = i / steps
     const angle = dir - span / 2 + span * k
     const thick = Math.max(1, Math.round(Math.sin(k * Math.PI) * colors.length))
-    for (let j = 0; j < thick; j++) px(ctx, x + Math.cos(angle) * (r - j), y + Math.sin(angle) * (r - j), colors[j]!)
+    for (let j = 0; j < thick; j++) plot(colors[j]!, x + Math.cos(angle) * (r - j), y + Math.sin(angle) * (r - j))
   }
+  fillPlotted(ctx)
 }
 
-/** An outlined heart `r` px tall around (x, y), dashed and turning with `rot` (Alluring Voice). */
+/** An outlined heart `r` px tall around (x, y), dashed and turning with `rot` (Alluring Voice). Drawing lean, every other step. */
 const heartLine = (ctx: Ctx, x: number, y: number, r: number, rot: number, colors: readonly string[]) => {
   const steps = Math.max(24, Math.round(r * 7))
   const s = r / 16
-  for (let i = 0; i < steps; i++) {
+  for (let i = 0; i < steps; i += detail.lean ? 2 : 1) {
     const u = (i / steps) * Math.PI * 2
     // Skip the dashes and the dip between the lobes, where every wave's outline would bunch up.
     if (Math.sin(u * 9 + rot) < -0.55 || Math.cos(u) > 0.93) continue
     const hx = 16 * Math.sin(u) ** 3
     const hy = -(13 * Math.cos(u) - 5 * Math.cos(2 * u) - 2 * Math.cos(3 * u) - Math.cos(4 * u))
-    px(ctx, x + hx * s, y + hy * s + r * 0.15, colors[i % colors.length]!, 2, 2)
+    plot(colors[i % colors.length]!, x + hx * s, y + hy * s + r * 0.15, 2, 2)
   }
+  fillPlotted(ctx)
 }
 
 /** Sprite stretched along a line from (x, y) toward `angle` (Steel Beam's slices). */

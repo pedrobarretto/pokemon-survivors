@@ -745,6 +745,9 @@ export const blitRing = (ctx: CanvasRenderingContext2D, radius: number, thicknes
   bigShape(ctx, `r${r},${thickness},${color}`, size, size, x, y, (s) => paintRing(s, 0, 0, r, thickness, color))
 }
 
+/** What filling rects as paths needs of a 2D context. */
+export type RectSink = Pick<CanvasRenderingContext2D, 'fillStyle' | 'beginPath' | 'rect' | 'fill'>
+
 /**
  * Starts a batch of whole-pixel rects in one color: `ctx.rect(x, y, w, h)` each, then one
  * `ctx.fill()`. A late run's moves plot ten thousand single pixels a frame (rings, beams,
@@ -753,9 +756,63 @@ export const blitRing = (ctx: CanvasRenderingContext2D, radius: number, thicknes
  * camera's translation is whole) the path covers exactly what `fillRect` would; rects that
  * overlap fill once, so a see-through color doesn't darken where they cross.
  */
-export const beginRects = (ctx: CanvasRenderingContext2D, color: string) => {
+export const beginRects = (ctx: RectSink, color: string) => {
   ctx.fillStyle = color
   ctx.beginPath()
+}
+
+/** The rects `plot` holds for one color until `fillPlotted`: x, y, w, h each, in a buffer kept from frame to frame. */
+type Plotted = { rects: Int32Array; n: number }
+const plotted = new Map<string, Plotted>()
+/** Colors plotted since the last fill, in the order they were first plotted. */
+const plotOrder: Plotted[] = []
+const plotColors: string[] = []
+
+/**
+ * Queues a whole-pixel rect in `color`, where a `fillStyle` + `fillRect` pair would draw it,
+ * for `fillPlotted` to fill. A move's art that plots its pixels in a loop of mixed colors
+ * (a ring's rim and its glints, a crescent's bands) goes from a draw call per pixel to one
+ * per color. Colors fill in the order they were first plotted, so a loop that draws its dark
+ * edge before its bright core still layers the same way; same-color rects that overlap
+ * fill once (see `beginRects`).
+ */
+export const plot = (color: string, x: number, y: number, w = 1, h = 1) => {
+  let p = plotted.get(color)
+  if (!p) {
+    p = { rects: new Int32Array(256), n: 0 }
+    plotted.set(color, p)
+  }
+  if (p.n === 0) {
+    plotOrder.push(p)
+    plotColors.push(color)
+  }
+  if (p.n + 4 > p.rects.length) {
+    const grown = new Int32Array(p.rects.length * 2)
+    grown.set(p.rects)
+    p.rects = grown
+  }
+  const r = p.rects
+  r[p.n] = Math.round(x)
+  r[p.n + 1] = Math.round(y)
+  r[p.n + 2] = w
+  r[p.n + 3] = h
+  p.n += 4
+}
+
+/** Fills everything `plot` queued, one path per color, at the context's current alpha, and empties the queue. */
+export const fillPlotted = (ctx: RectSink) => {
+  for (let c = 0; c < plotOrder.length; c++) {
+    const p = plotOrder[c]!
+    const r = p.rects
+    beginRects(ctx, plotColors[c]!)
+    for (let i = 0; i < p.n; i += 4) ctx.rect(r[i]!, r[i + 1]!, r[i + 2]!, r[i + 3]!)
+    ctx.fill()
+    p.n = 0
+  }
+  plotOrder.length = 0
+  plotColors.length = 0
+  // Colors made up on the fly (an rgba per alpha) would pile up: start over now and then.
+  if (plotted.size > 256) plotted.clear()
 }
 
 /** Draws a sprite centered at (x, y), snapped to whole pixels. */
