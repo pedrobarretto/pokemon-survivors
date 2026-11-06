@@ -342,11 +342,11 @@ export const FOE_COINS = {
   boss: [COIN_VALUES[1], COIN_VALUES[1], COIN_VALUES[1], COIN_VALUES[1], COIN_VALUES[1]],
 } as const
 
-/** Coins dropped by a fainted enemy (`FOE_COINS`); `endless` once the run went on past Mewtwo. */
-export const coinDrops = (rng: Rng, enemy: { boss: boolean; xp: number; shiny?: boolean }, endless = false): readonly number[] => {
+/** Coins dropped by a fainted enemy (`FOE_COINS`); `endless` once the run went on past Mewtwo. A foe standing for `weight` (`ENDLESS_HORDE`) drops as often as that many. */
+export const coinDrops = (rng: Rng, enemy: { boss: boolean; xp: number; shiny?: boolean; weight?: number }, endless = false): readonly number[] => {
   if (enemy.boss) return FOE_COINS.boss
   if (enemy.shiny) return FOE_COINS.shiny
-  if (!chance(rng, (FOE_COINS.chance + enemy.xp * FOE_COINS.perXp) * (endless ? FOE_COINS.endless : 1))) return []
+  if (!chance(rng, (FOE_COINS.chance + enemy.xp * FOE_COINS.perXp) * (endless ? FOE_COINS.endless : 1) * (enemy.weight ?? 1))) return []
   return [chance(rng, FOE_COINS.pile) ? COIN_VALUES[1] : COIN_VALUES[0]]
 }
 
@@ -370,7 +370,7 @@ export const wonRun = (g: Game) => g.phase === 'victory' || g.endless !== null
 
 /** What a finished run pays out. Coins were already scaled by greed when collected. */
 export const runEarnings = (g: Game) => {
-  const bonus = runBonus({ time: g.time, kills: g.kills, victory: wonRun(g), greed: g.player.stats.greed, reaperDefeats: g.endless?.reaperDefeats })
+  const bonus = runBonus({ time: g.time, kills: g.kills + g.player.record.folded, victory: wonRun(g), greed: g.player.stats.greed, reaperDefeats: g.endless?.reaperDefeats })
   return { coins: g.coins, bonus, total: g.coins + bonus }
 }
 

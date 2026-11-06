@@ -122,6 +122,16 @@ describe('earning ₽', () => {
     expect(sum(coinDrops(rng, { boss: false, xp: 1, shiny: true }))).toBeGreaterThan(0)
   })
 
+  it('a foe standing for many past the endless ceiling drops as often as they would', () => {
+    const drops = (weight: number) => {
+      const rng = createRng(5)
+      let n = 0
+      for (let i = 0; i < 4000; i++) n += coinDrops(rng, { boss: false, xp: 2, weight }, true).length
+      return n
+    }
+    expect(drops(4) / drops(1)).toBeCloseTo(4, 0)
+  })
+
   it('regular enemies drop coins only occasionally', () => {
     const rng = createRng(7)
     const drops = Array.from({ length: 2000 }, () => coinDrops(rng, { boss: false, xp: 1 }).length)

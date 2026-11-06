@@ -25,6 +25,7 @@ const enemy = (over: Partial<Enemy> = {}): Enemy => ({
   fled: false,
   thrown: null,
   alpha: null,
+  weight: 1,
   ...over,
 })
 

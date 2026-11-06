@@ -1,4 +1,4 @@
-import { ELITE, RUN_LENGTH, RUNNER } from '../data/waves'
+import { ELITE, ENDLESS_HORDE, RUN_LENGTH, RUNNER } from '../data/waves'
 import type { Difficulty } from './difficulty'
 import type { Enemy } from './types'
 import * as dm from '../engine/dmath'
@@ -13,6 +13,17 @@ export const makeElite = (e: Pick<Enemy, 'elite' | 'hp' | 'maxHp' | 'xp' | 'dama
   e.xp *= ELITE.xp
   e.damage *= ELITE.damage
   e.radius *= ELITE.size
+}
+
+/** How many foes each regular spawn stands for when the endless mode asks for a horde of `want` (`ENDLESS_HORDE`): 1 up to the ceiling. */
+export const hordeWeight = (want: number) => Math.max(1, want / ENDLESS_HORDE.ceiling)
+
+/** Makes a fresh regular spawn stand for `weight` foes (`ENDLESS_HORDE`): HP times it, damage times its `damage` power. Its faint pays as all of them (`killEnemy`, `PlayerRecord.folded`). */
+export const weighSpawn = (e: Pick<Enemy, 'hp' | 'maxHp' | 'damage' | 'weight'>, weight: number) => {
+  if (weight <= 1) return
+  e.weight = weight
+  e.hp = e.maxHp = dm.round(e.maxHp * weight)
+  e.damage *= dm.pow(weight, ENDLESS_HORDE.damage)
 }
 
 /** Turns a fresh regular spawn into a runner (`RUNNER`): faster but capped under the player's pace, and frailer. */

@@ -7,7 +7,7 @@ import { runMods } from './legend'
 import { endlessPressure } from './endless'
 import { despawnEnemy, spawnEnemy } from './enemies'
 import { legendEntrance } from './legendScene'
-import { eliteSpawn, makeElite, makeRunner } from './horde'
+import { eliteSpawn, hordeWeight, makeElite, makeRunner, weighSpawn } from './horde'
 import { oldestRenewable, RENEWAL } from './renewal'
 import { hasTrait, pickSpawn, type StagePool } from './roster'
 import { makeShiny, rollShiny, SHINY_ODDS } from './shiny'
@@ -40,18 +40,18 @@ const offscreen = (g: Game, near = 0) => {
   return pos
 }
 
-/** A closing circle of `count` × `species` around a player (`anchorPlayer`). The endless mode reuses it. */
-export const spawnRing = (g: Game, species: EnemyId, count: number) => {
+/** A closing circle of `count` × `species` around a player (`anchorPlayer`). The endless mode reuses it, each foe standing for `weight` (`weighSpawn`). */
+export const spawnRing = (g: Game, species: EnemyId, count: number, weight = 1) => {
   const p = anchorPlayer(g)
   const d = ringDistance(g) - 20
   for (let i = 0; i < count; i++) {
     const a = (i / count) * TAU
-    spawnEnemy(g, species, p.x + dm.cos(a) * d, p.y + dm.sin(a) * d)
+    weighSpawn(spawnEnemy(g, species, p.x + dm.cos(a) * d, p.y + dm.sin(a) * d), weight)
   }
 }
 
-/** A flock of `count` × `species` that enters from one side and crosses the screen through a player's area (`anchorPlayer`). The endless mode reuses it. */
-export const spawnSwarm = (g: Game, species: EnemyId, count: number) => {
+/** A flock of `count` × `species` that enters from one side and crosses the screen through a player's area (`anchorPlayer`). The endless mode reuses it, each foe standing for `weight` (`weighSpawn`). */
+export const spawnSwarm = (g: Game, species: EnemyId, count: number, weight = 1) => {
   const p = anchorPlayer(g)
   const heading = range(g.rng, 0, TAU)
   const d = ringDistance(g)
@@ -61,13 +61,14 @@ export const spawnSwarm = (g: Game, species: EnemyId, count: number) => {
   for (let i = 0; i < count; i++) {
     const spread = range(g.rng, -70, 70)
     const back = range(g.rng, 0, 60)
-    spawnEnemy(
+    const e = spawnEnemy(
       g,
       species,
       p.x - dm.cos(heading) * (d + back) - dm.sin(heading) * spread,
       p.y - dm.sin(heading) * (d + back) + dm.cos(heading) * spread,
       { kind: 'flyby', vx, vy, ttl: (d * 2 + 120) / speed },
     )
+    weighSpawn(e, weight)
   }
 }
 
@@ -123,6 +124,16 @@ const CALM = { rate: 1, max: 1 } as const
 const pressureOf = (g: Game, finale: boolean, bossNear: boolean) =>
   g.endless ? endlessPressure(g.time) : finale ? FINALE : bossNear ? BOSS_FIGHT : CALM
 
+/** The regular cap a run asks for before the endless ceiling: the stage's, times the difficulty, the pressure, the tension and the team. */
+const askedCap = (g: Game, max: number, tension: number) => stageAt(g.time).max * max * runMods(g).spawnRate * tension * coopScale(g, COOP.scale.cap)
+
+/**
+ * How many foes each endless regular spawn stands for now (`hordeWeight`, 1
+ * outside endless mode). The tension leaves the cap alone in endless mode, so
+ * this is the spawner's own. The endless events weigh theirs by it too.
+ */
+export const endlessWeight = (g: Game) => (g.endless ? hordeWeight(askedCap(g, endlessPressure(g.time).max, 1)) : 1)
+
 /**
  * A surge of the pressure director: a ring or a swarm (alternating) of a
  * species of the stage's pool, without traits, as big as the tension asks.
@@ -154,7 +165,9 @@ const retireOld = (g: Game) => {
  * splits the loot of every regular faint by its rate multiplier
  * (`TensionState.share`, so a dominant build doesn't snowball) and banks
  * toward surges, which wait out a wave boss's first minute and the endless
- * mode (it has its own).
+ * mode (it has its own). Past the endless ceiling (`ENDLESS_HORDE`) the cap
+ * stops at it and every spawn stands for `weight` foes, coming that many
+ * times fewer.
  */
 export const updateSpawner = (g: Game, dt: number) => {
   const stage = stageAt(g.time)
@@ -189,8 +202,10 @@ export const updateSpawner = (g: Game, dt: number) => {
   const level = finale ? 0 : g.tension.level
   const peak = TENSION_PEAK[g.difficulty]
   const tension = tensionMods(level, peak, g.endless !== null)
-  // Co-op: a denser horde for a bigger team (`coopScale`; exactly 1 solo).
-  const cap = stage.max * pressure.max * more * tension.cap * coopScale(g, COOP.scale.cap)
+  // Co-op: a denser horde for a bigger team (`coopScale`; exactly 1 solo). Endless: past the ceiling, heavier foes instead of more (`ENDLESS_HORDE`).
+  const want = askedCap(g, pressure.max, tension.cap)
+  const weight = g.endless ? hordeWeight(want) : 1
+  const cap = want / weight
   // Tension brings pressure, not power: the faster horde splits the same loot.
   g.tension.share = 1 / tension.rate
   const spitting = spitter !== null && !finale && g.time >= spit.from
@@ -203,7 +218,7 @@ export const updateSpawner = (g: Game, dt: number) => {
     }
   }
 
-  g.spawnBudget += stage.rate * pressure.rate * more * tension.rate * coopScale(g, COOP.scale.spawn) * dt
+  g.spawnBudget += (stage.rate * pressure.rate * more * tension.rate * coopScale(g, COOP.scale.spawn) * dt) / weight
   while (g.spawnBudget >= 1) {
     g.spawnBudget--
     if (regular >= cap) {
@@ -216,21 +231,27 @@ export const updateSpawner = (g: Game, dt: number) => {
       if (isSpitter(gone)) spitters--
       despawnEnemy(gone)
       regular--
+      // Past the endless ceiling an event's flock that overflowed it drains the same way, a spawn's room at a time, so the ceiling holds.
+      if (weight > 1 && regular >= cap) continue
     }
     const spits = spitting && spitters < spit.alive && chance(g.rng, spit.share)
     // The horde leans to the biome around the player it spawns by (`offscreen` picks the same one: `anchorPlayer` turns on `nextId`).
     const kind = spits ? spitter : pickSpawn(g.rng, pool, traitsAlive, anchorPlayer(g).biome)
     if (!kind) continue
     if (hasTrait(kind)) traitsAlive++
-    if (rollShiny(g.rng, SHINY_ODDS.enemy * g.shinyBoost)) {
+    // A foe standing for `weight` is shiny as often as that many would be one (`ENDLESS_HORDE`).
+    if (rollShiny(g.rng, SHINY_ODDS.enemy * g.shinyBoost * weight)) {
       // Shinies pop in just inside the screen edge so their sparkle entrance is seen (in co-op, inside every client's screen).
       const a = range(g.rng, 0, TAU)
       const d = g.coop !== null ? COOP.inSight : Math.min(g.view.w, g.view.h) / 2 - 16
       const p = anchorPlayer(g)
-      makeShiny(g, spawnEnemy(g, kind, p.x + dm.cos(a) * d, p.y + dm.sin(a) * d))
+      const e = spawnEnemy(g, kind, p.x + dm.cos(a) * d, p.y + dm.sin(a) * d)
+      weighSpawn(e, weight)
+      makeShiny(g, e)
     } else {
       const pos = offscreen(g, tension.near)
       const e = spawnEnemy(g, kind, pos.x, pos.y)
+      weighSpawn(e, weight)
       e.speed *= tension.speed
       const tense = tension.elite > 0 && elites < cap * ELITE.share && chance(g.rng, tension.elite)
       if (!finale && (eliteSpawn(regular, elites, cap) || tense)) {
