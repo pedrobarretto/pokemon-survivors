@@ -26,6 +26,7 @@ import {
   REALM_LINES,
   baseOwner,
   baseRoom,
+  isPerchAct,
   type Avatar,
   type CityId,
   type PartyMode,
@@ -34,6 +35,7 @@ import {
   type RealmLine,
   type RealmRefusal,
   type RealmServerMessage,
+  type RoomFurniture,
   type RoomKey,
 } from '../net/realm'
 import { REPORT_REASONS, type BaseView, type ReportReason } from '../net/realmApi'
@@ -41,7 +43,12 @@ import { fetchBase, fetchCities, fetchFriends, fetchMe, isFailure, reportTrainer
 import type { RealmClient } from '../realm/client'
 import { blocked, createWalker, place, pushSample, report, sampleAt, snap, walk, type Ground, type Track } from '../realm/interp'
 import { nearestReachable } from '../realm/placement'
-import { baseSolids, drawBaseRoom } from '../render/base'
+import { baseSolids, drawBaseRoom, liftOf } from '../render/base'
+import { drawFurnitureUse } from '../render/furnitureUse'
+import { furnitureImage } from '../render/furnitureArt'
+import { actionOf, freeSeat, onASeat, pieceAt, pieceNear, reaches, roomTheme, usePieces, type UsePiece } from '../realm/pieces'
+import { JUKEBOX } from '../data/furnitureUse'
+import type { ThemeId } from '../engine/music'
 import { drawJoystick } from '../render/joystick'
 import { drawTownGround, drawTownOverhead, labelTop, townPieces } from '../render/realmArt'
 import { GROVE_HOST } from '../render/realmLayout'
@@ -69,7 +76,11 @@ import { uiZoom } from './uiScale'
  * the spot prompt (portals, the board, the bases,
  * Bibarel's carpentry), the labels floating over the room's spots and doors
  * as the trainer comes near (so the town explains itself), the grove's host
- * and its first-visit talk, and the connection's state.
+ * and its first-visit talk, and the connection's state. Furniture is used
+ * Habbo style (`realm/pieces.ts`): walk up and press E, or tap the piece,
+ * to sit on a bench, a sofa or a bed (a step stands up), or, in a base,
+ * switch a light or play music on a jukebox for everyone there
+ * (`realmJukebox` hands the shell the theme to play).
  *
  * The player's own trainer walks here (keys, the drag stick or a tap, like
  * the lobby's partner) and is reported to the relay (`realm/interp.ts`);
@@ -99,14 +110,24 @@ export type RealmDeps = {
 /**
  * The screen, plus the canvas pass the shell calls every menu frame in the
  * meadow's place, and (for the dev console, `ps.realm('walk', 'x,y')`) a walk
- * toward a point of the room, as a tap there would.
+ * toward a point of the room, as a tap there would, and (`ps.realm('visit', 'ash')`)
+ * a visit to a base, as the board's would.
  */
 export type RealmScreen = Screen & {
   scene: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number) => void
   walkTo: (x: number, y: number) => void
   /** Dev (`ps.realm('friends')`): the friends panel, over the town or the picker. */
   friends: () => void
+  /** Dev (`ps.realm('visit', 'ash')`): into a base, as the board's Visit would. */
+  visit: (handle: string) => void
 }
+
+/* ---------------- The base's music ---------------- */
+
+/** The theme a base's music piece plays for this trainer now (null: the realm's usual music); the shell's music reads it. */
+let jukebox: ThemeId | null = null
+
+export const realmJukebox = () => jukebox
 
 /* ---------------- Muted trainers (this device) ---------------- */
 
@@ -275,6 +296,8 @@ const TAP_SLOP = 12
 const SAID_SECONDS = 4.5
 /** Taps this close (world px) to a trainer's body pick them. */
 const PICK = 12
+/** How long a trainer that asked to sit waits for the relay to seat it before it walks (and reports its walk) again (ms). */
+const PERCH_WAIT_MS = 600
 
 /** A trainer of the room as the screen keeps them. */
 type Trainer = TrainerView & {
@@ -507,11 +530,15 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     /**
      * A base's layout came in (on arrival, or the owner's edit saved): a
      * trainer standing where a piece now is gets set down on the nearest spot
-     * it can walk to the door from, and the relay hears it.
+     * it can walk to the door from, and the relay hears it (a step off a seat
+     * stands it up). One seated on a piece the new layout still holds stays:
+     * its seat lies inside the piece's footprint.
      */
     const setBase = (v: BaseView) => {
       base = v
       if (room === null || !blocked(groundOf(room, v), walker.x, walker.y)) return
+      if (isPerchAct(me?.act) && onASeat(usePieces(room, v.layout), walker.x, walker.y)) return
+      standAt = null
       const at = nearestReachable(v.layout, walker.x, walker.y)
       place(walker, at.x, at.y)
       client.send({ t: 'move', x: Math.round(at.x), y: Math.round(at.y), facing: walker.facing, moving: false })
@@ -529,6 +556,16 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     let drag: { id: number; origin: Vec; stick: Stick | null; mouse: boolean } | null = null
     let tap: Vec | null = null
     let near: Spot | null = null
+    /** The room's usable furniture (`realm/pieces.ts`), for the room and base layout it was made from; the piece in reach. */
+    let usable: { room: RoomKey | null; base: BaseView | null; all: UsePiece[] } = { room: null, base: null, all: [] }
+    let nearPiece: UsePiece | null = null
+    /** A base room's lights and music (the relay's `furniture`), null until anything's on. */
+    let furniture: RoomFurniture | null = null
+    /** Where the trainer stood before it sat down (it stands back up there), and when it asked to sit (its walk waits for the relay a beat). */
+    let standAt: Point | null = null
+    let perching = -Infinity
+    /** A piece tapped from afar: the trainer walks over and uses it on arrival. */
+    let pending: UsePiece | null = null
     let cam = { x: 0, y: 0 }
     let clock = 0
 
@@ -621,6 +658,9 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       room = key
       going = false
       base = null
+      furniture = null
+      standAt = null
+      pending = null
       session?.rooms.add(key)
       for (const av of avatars) addTrainer(av)
       const mine = avatars.find((a) => a.id === you)
@@ -681,9 +721,27 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         }
         case 'acted': {
           const tr = trainers.get(msg.id)
-          if (tr) tr.av = { ...tr.av, act: msg.act }
+          if (!tr) return
+          tr.av = { ...tr.av, act: msg.act }
+          if (msg.id === you) me = tr.av
+          // Sat down: on the seat at once (the trainer's own walker too), not sliding there behind the others' moves.
+          if (msg.at) {
+            const [x, y, facing] = msg.at
+            if (msg.id === you) {
+              place(walker, x, y)
+              walker.facing = facing
+              walker.sent = { x, y, moving: false }
+              perching = -Infinity
+            } else {
+              tr.track.length = 0
+              pushSample(tr.track, { at: now - REALM.interpDelayMs, x, y, facing, moving: false })
+            }
+          }
           return
         }
+        case 'furniture':
+          furniture = msg.state
+          return
         // The tables of the room (a table's screen reads them too, `realm/games/relayTable.ts`).
         case 'tables':
           tables.clear()
@@ -883,9 +941,51 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       void reportTrainer({ handle, reason, city }).then((ok) => toast(root, ok ? m().trainer.reported : m().trainer.reportFailed, 2600, 'realmReport'))
     }
 
+    /* Furniture */
+    /** Whether the trainer sits on a seat now (the relay said so). */
+    const perched = () => isPerchAct(me?.act)
+
+    /** Where the room's seated trainers are (but the trainer itself): the seats taken. */
+    const taken = () => [...trainers.values()].filter((tr) => tr.av.id !== you && isPerchAct(tr.av.act)).map((tr) => ({ x: tr.x, y: tr.y }))
+
+    /** Uses a piece in reach: sits on its nearest free seat, or (in a base) switches it or plays its music. */
+    function usePiece(piece: UsePiece) {
+      if (!room || client.status().kind !== 'open') return
+      const action = actionOf(piece, furniture, taken(), walker.x, walker.y)
+      if (action === 'taken') return void toast(root, m().pieces.taken, 1800, 'realmPiece')
+      playSfx('select')
+      if (action === 'sit' || action === 'lie' || action === 'soak') {
+        const seat = freeSeat(piece, taken(), walker.x, walker.y)
+        if (seat === null) return
+        standAt = { x: walker.x, y: walker.y }
+        perching = performance.now()
+        walker.target = null
+        return client.send({ t: 'perch', piece: piece.ref, seat })
+      }
+      client.send({ t: 'use', piece: piece.ref })
+      if (action === 'play' || action === 'next') {
+        const track = action === 'play' ? 1 : (furniture?.music?.track ?? 0) + 2
+        toast(root, m().pieces.track(track, JUKEBOX.length), 1800, 'realmPiece')
+      }
+    }
+
+    /** Stands the trainer up from its seat, back where it stood before (the relay hears the step and frees the seat). */
+    function standUp() {
+      const at = standAt ?? { x: walker.x, y: walker.y + 16 }
+      standAt = null
+      if (me) me = { ...me, act: null }
+      const tr = you !== null ? trainers.get(you) : undefined
+      if (tr) tr.av = { ...tr.av, act: null }
+      place(walker, Math.round(at.x), Math.round(at.y))
+      walker.sent = { x: Math.round(at.x), y: Math.round(at.y), moving: false }
+      client.send({ t: 'move', x: Math.round(at.x), y: Math.round(at.y), facing: walker.facing, moving: false })
+    }
+
     /* Spots */
     function useSpot() {
+      if (perched()) return (playSfx('select'), standUp())
       const spot = near
+      if (!spot && nearPiece) return usePiece(nearPiece)
       if (!spot || !room) return
       playSfx('select')
       switch (spot.kind) {
@@ -909,8 +1009,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         case 'pool':
           return void toast(root, m().pool, 2600, 'realmSpot')
         case 'bench':
-          place(walker, spot.at.x, spot.at.y + 6)
-          walker.facing = 0
+          // A bench is furniture: its seats are `usePieces`'.
           return
         case 'fishing':
         case 'gameTable':
@@ -1092,15 +1191,29 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         if (tap) {
           const at = { x: cam.x + tap.x / scale, y: cam.y + tap.y / scale }
           const who = pickAt(at.x, at.y)
+          const piece = who ? null : pieceAt(usable.all, at.x, at.y)
           if (who) openCard(who)
-          else walker.target = at
+          else {
+            // Seated, a tap elsewhere stands up and walks there; a tap on a piece walks over to use it.
+            if (perched()) standUp()
+            walker.target = piece ? piece.at : at
+            pending = piece
+          }
           tap = null
         }
+        if (perched() && (move.x !== 0 || move.y !== 0)) standUp()
+        if (move.x !== 0 || move.y !== 0) pending = null
         // Dev: walking on its own toward `ps.realm('room', …)`'s room, door after door.
         if (devDest && (devDest === room || !isTownRoomId(room))) devDest = null
         if (devDest && !going && walker.target === null && isTownRoomId(room)) walker.target = doorToward(room, devDest)
-        if (!going) walk(walker, move, dt, ground)
-        const sent = report(walker, now)
+        // On a seat (or waiting a beat for the relay to seat it), the trainer stays put, and says nothing a step would stand it up with.
+        const still = perched() || now - perching < PERCH_WAIT_MS
+        if (!going && !still) walk(walker, move, dt, ground)
+        if (pending && reaches(pending, walker.x, walker.y)) {
+          usePiece(pending)
+          pending = null
+        } else if (pending && walker.target === null) pending = null
+        const sent = still || now - perching < PERCH_WAIT_MS ? null : report(walker, now)
         if (sent) client.send({ t: 'move', ...sent })
         const door = going ? null : doorsOf(room).find((d) => inRect(d.at, walker.x, walker.y))
         if (door) go(door.to, door.spawn)
@@ -1117,6 +1230,12 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const town = isTownRoomId(room) ? room : null
       if (town) drawTownGround(ctx, town, cam.x, cam.y, w, hgt, clock, exterior)
       else if (base) drawBaseRoom(ctx, base, cam.x, cam.y, clock)
+      if (usable.room !== room || usable.base !== base) {
+        const items = base?.layout.items ?? []
+        usable = { room, base, all: usePieces(room, base?.layout ?? null, (i) => liftOf(items, i)) }
+      }
+      if (!town) drawFurnitureUse(ctx, usable.all, furniture, cam.x, cam.y, clock)
+      jukebox = town ? null : roomTheme(usable.all, furniture)
 
       // Everyone where they stand now: the others behind, the trainer as walked, whoever sits at a table on its seat.
       const spots = spotsOf(room, base)
@@ -1133,7 +1252,9 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         }
         // A trainer playing a cabinet stands facing it (the cabinets stand on the back wall).
         if (tr.av.act === 'arcade' && !tr.moving) tr.facing = 4
-        views.push(seat ? { ...tr, sortY: seat.sortY } : tr)
+        // Seated on a town bench, it sorts in front of the bench's art (standing at its feet's y).
+        const benched = town !== null && isPerchAct(tr.av.act) ? tr.y + 24 : undefined
+        views.push(seat ? { ...tr, sortY: seat.sortY } : benched !== undefined ? { ...tr, sortY: benched } : tr)
       }
       const pieces = [
         ...(town ? townPieces(town, exterior) : []).map((p) => ({ y: p.y, draw: () => p.draw(ctx, cam.x, cam.y, clock) })),
@@ -1168,7 +1289,9 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const lookEmote = me?.look.emote !== undefined
       for (const b of emoteButtons) if (b.id === 'look') b.b.classList.toggle('hidden', !lookEmote)
 
-      near = seated ? (spots.find((s) => Math.hypot(s.at.x - walker.x, s.at.y - walker.y) <= s.reach) ?? null) : null
+      const onSeat = seated && perched()
+      near = seated && !onSeat ? (spots.find((s) => s.kind !== 'bench' && Math.hypot(s.at.x - walker.x, s.at.y - walker.y) <= s.reach) ?? null) : null
+      nearPiece = seated && !onSeat && !near ? pieceNear(usable.all, walker.x, walker.y) : null
       /** A label (`el`) over `at`, as a transform: floating over the piece it names, kept below the top bar and inside the screen's sides. */
       const pin = (at: Point, el: HTMLElement) => {
         const y = town ? labelTop(town, at, exterior) : at.y - 30
@@ -1176,13 +1299,26 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         const x = Math.min(Math.max(Math.round(((at.x - cam.x) * scale) / zoom), half), (w * scale) / zoom - half)
         return `translate(${Math.round(x)}px, ${Math.max(LABEL_FLOOR, Math.round(((y - cam.y) * scale) / zoom))}px) translate(-50%, -100%)`
       }
-      usePrompt.classList.toggle('hidden', !near || sub !== null)
+      // One prompt for a spot, a usable piece or the seat the trainer is on; the spot's games add their Placar beside it.
+      usePrompt.classList.toggle('hidden', (!near && !nearPiece && !onSeat) || sub !== null)
+      boardButton.classList.toggle('hidden', !near || near.kind === 'prizes' || spotBoards(near).length === 0)
       if (near) {
         boardButton.classList.toggle('hidden', near.kind === 'prizes' || spotBoards(near).length === 0)
         const tb = near.kind === 'gameTable' && near.id ? tables.get(near.id) : undefined
         const label = tb && !tb.seats.includes(null) ? t().minigames.tables.watch : spotLabel(near)
         if (useLabel.textContent !== label) useLabel.textContent = label
         usePrompt.style.transform = pin(near.at, usePrompt)
+      } else if (onSeat || nearPiece) {
+        const label = onSeat || !nearPiece ? m().pieces.stand : m().pieces[actionOf(nearPiece, furniture, taken(), walker.x, walker.y)]
+        if (useLabel.textContent !== label) useLabel.textContent = label
+        // Over the trainer's head while seated, else over the piece.
+        const mine = you !== null ? trainers.get(you) : undefined
+        const ax = onSeat || !nearPiece ? walker.x : nearPiece.at.x
+        const art = nearPiece?.id ? (furnitureImage(nearPiece.id)?.height ?? nearPiece.box.h) : 34
+        const top = onSeat || !nearPiece ? walker.y - (mine ? headOf(mine) : 24) - 4 : nearPiece.box.y + nearPiece.box.h - nearPiece.lift - art - 2
+        const half = usePrompt.offsetWidth / 2 + 4
+        const x = Math.min(Math.max(Math.round(((ax - cam.x) * scale) / zoom), half), (w * scale) / zoom - half)
+        usePrompt.style.transform = `translate(${x}px, ${Math.max(LABEL_FLOOR, Math.round(((top - cam.y) * scale) / zoom))}px) translate(-50%, -100%)`
       }
       // The labels of what's around: the near spot's is its prompt instead.
       for (const l of labels) {
@@ -1204,6 +1340,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     devGo = (to) => (devDest = to)
     const dispose = () => {
       devGo = null
+      jukebox = null
       offMessages()
       offKeys()
       el.removeEventListener('pointerdown', onDown)
@@ -1212,7 +1349,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       window.removeEventListener('pointercancel', onUp)
     }
 
-    return { scene, dispose, walkTo: (x: number, y: number) => void (walker.target = { x, y }), friends: friendsPanel }
+    return { scene, dispose, walkTo: (x: number, y: number) => void (walker.target = { x, y }), friends: friendsPanel, visit: (handle: string) => go(baseRoom(handle), BASE_ROOM.spawn) }
   }
 
   /* ---------- Sheets over the town ---------- */
@@ -1247,6 +1384,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     dim: 0,
     walkTo: (x, y) => town?.walkTo(x, y),
     friends: () => (town ? town.friends() : openFriends(null)),
+    visit: (handle) => town?.visit(handle),
     scene: (ctx, dt, w, hgt) => {
       if (town) return town.scene(ctx, dt, w, hgt)
       // The picker sits over the plaza, quiet, the client not yet in a city.

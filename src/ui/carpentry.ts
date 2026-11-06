@@ -1,7 +1,7 @@
 import { accountState } from '../account'
 import { RARITY_PRICE } from '../data/cosmetics'
 import { FURNITURE, type FurnitureCounts, type FurnitureId, type FurnitureSet } from '../data/furniture'
-import { LEGEND_PAINTINGS } from '../data/furnitureSets/pokemon'
+import { LEGEND_PAINTINGS } from '../data/furnitureSets/paintings'
 import { LEGENDS, type LegendId } from '../data/legends'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'

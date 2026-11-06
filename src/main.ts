@@ -146,7 +146,7 @@ import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, 
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
-import { devRealmRoom, openRealm } from './ui/realm'
+import { devRealmRoom, openRealm, realmJukebox } from './ui/realm'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { realmClient, realmDevState, realmInviteFrom, realmUrl, stageRealmTable, useLocalRealm } from './realmShell'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
@@ -2376,6 +2376,9 @@ const weatherToast = (next: WeatherId, prev: WeatherId) => {
 /** Silence until "press start", then menus play the village theme, a run its biome's theme, and a living boss takes over until it falls. */
 const themeFor = (r: Run | null): ThemeId | null => {
   if (!pressedStart) return null
+  // A secret base's jukebox (or piano, or DJ booth) plays its track for everyone there (`ui/realm.ts`).
+  const base = r ? null : realmJukebox()
+  if (base) return base
   // The Noite das Bruxas swaps the village for Lavender Tower's tune.
   if (!r || r.game.phase === 'gameover' || r.game.phase === 'victory') return halloweenToday() ? BIOMES.tower.theme : 'menu'
   // A legendary's domain plays its crossing's theme, then its own from the moment it shows itself.
@@ -3127,7 +3130,8 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * `('table', 'cafe-2 fourInRow')` sends two bots to play at a game table (the game optional); no argument
  * prints the state; `('room', 'arcade')` walks the open town's trainer into a room; `('friends')` opens
  * Amigos no Realm (the faked friends: the in-page realm's Misty, Brock and Dawn where they walk, May
- * in a full arcade, `realm/api.ts`); `('invite', 'misty')` has that bot invite you to its base.
+ * in a full arcade, `realm/api.ts`); `('invite', 'misty')` has that bot invite you to its base;
+ * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`).
  */
 const devRealm = (cmd?: string, arg?: string) => {
   switch (cmd) {
@@ -3160,6 +3164,10 @@ const devRealm = (cmd?: string, arg?: string) => {
     case 'invite':
       // `ps.realm('invite', 'misty')`: that bot of the in-page realm invites you to its base.
       return realmInviteFrom(arg ?? 'misty') ? 'invited' : 'ps.realm: no such bot in the in-page realm'
+    case 'visit':
+      // `ps.realm('visit', 'ash')`: into @ash's base, as the board's Visit would.
+      if (screen !== realmShown || !realmShown || !arg) return 'ps.realm: visit "handle" in the realm'
+      return realmShown.visit(arg)
     default:
       return realmDevState()
   }

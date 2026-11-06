@@ -1,7 +1,7 @@
 import { coinsFor, MINIGAMES, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
 import { playSfx } from '../../engine/audio'
 import { t } from '../../i18n'
-import type { RealmAct } from '../../net/realm'
+import type { BusyAct } from '../../net/realm'
 import type { TableView } from '../../net/realmTables'
 import { h } from '../../ui/dom'
 import { depositPokeDollars } from '../../ui/save'
@@ -130,7 +130,7 @@ export type FrameOpts = {
   partner: string
   shiny: boolean
   /** Sends what the trainer is busy at and its brags to the room; null outside the realm. */
-  realm: { act: (act: RealmAct | null) => void; brag: (game: MinigameId, feat: string) => void; who: (avatar: number) => Sitter | null } | null
+  realm: { act: (act: BusyAct | null) => void; brag: (game: MinigameId, feat: string) => void; who: (avatar: number) => Sitter | null } | null
   close: () => void
 }
 
@@ -138,7 +138,7 @@ export type FrameOpts = {
 const MAX_DT = 0.05
 
 /** The act a game shows its trainer busy at. */
-const actOf = (game: MinigameId): RealmAct => (MINIGAMES[game].kind === 'table' ? 'table' : game === 'fishing' ? 'fishing' : 'arcade')
+const actOf = (game: MinigameId): BusyAct => (MINIGAMES[game].kind === 'table' ? 'table' : game === 'fishing' ? 'fishing' : 'arcade')
 
 type Shell = {
   el: HTMLElement

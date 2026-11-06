@@ -973,6 +973,19 @@ export const pt = {
       prizes: 'Prêmios',
     } satisfies Record<SpotKind, string>,
     use: 'Usar',
+    pieces: {
+      sit: 'Sentar',
+      lie: 'Deitar',
+      soak: 'Entrar',
+      stand: 'Levantar',
+      taken: 'Ocupado',
+      on: 'Ligar',
+      off: 'Desligar',
+      play: 'Tocar música',
+      next: 'Próxima música',
+      stop: 'Desligar música',
+      track: (n: number, total: number) => `♪ Faixa ${n} de ${total}`,
+    },
     board: {
       title: 'Mural da praça',
       lines: [

@@ -775,6 +775,19 @@ export const zh: Messages = {
       prizes: '獎品',
     },
     use: '使用',
+    pieces: {
+      sit: '坐下',
+      lie: '躺下',
+      soak: '泡進去',
+      stand: '站起來',
+      taken: '有人了',
+      on: '打開',
+      off: '關掉',
+      play: '播放音樂',
+      next: '下一首',
+      stop: '停止音樂',
+      track: (n: number, total: number) => `♪ 第 ${n} 首，共 ${total} 首`,
+    },
     board: {
       title: '廣場告示板',
       lines: [

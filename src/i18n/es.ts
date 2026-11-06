@@ -776,6 +776,19 @@ export const es: Messages = {
       prizes: 'Premios',
     },
     use: 'Usar',
+    pieces: {
+      sit: 'Sentarse',
+      lie: 'Acostarse',
+      soak: 'Entrar',
+      stand: 'Levantarse',
+      taken: 'Ocupado',
+      on: 'Encender',
+      off: 'Apagar',
+      play: 'Poner música',
+      next: 'Siguiente canción',
+      stop: 'Quitar música',
+      track: (n: number, total: number) => `♪ Canción ${n} de ${total}`,
+    },
     board: {
       title: 'Tablón de la plaza',
       lines: [
