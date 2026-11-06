@@ -11,6 +11,7 @@ import { withBranch } from './moves'
 import { OUTBREAK_SPECIES } from './outbreak'
 import { moveOf, recordEvent, recordStep, resimulate, RULES_VERSION, startGame, startRecording, TICK, type Replay, type ReplayStart } from './replay'
 import { enterPlace } from './placeInterior'
+import { startEndless } from './endless'
 import { enterArena } from './riftArena'
 import { spawnWaveBoss } from './spawner'
 import { EVENTS } from '../data/waves'
@@ -280,6 +281,18 @@ const SCENARIOS = {
       }
     },
   },
+  /** Endless mode at 120:00, past the horde's ceiling (`ENDLESS_HORDE`): fewer, heavier regular spawns and an endless ring of them. */
+  endlessCeiling: {
+    start: { ...START, starter: 'charmander' },
+    seconds: 12,
+    stage: (g) => {
+      g.time = 120 * 60
+      g.nextEvent = 99
+      g.endless = { ...startEndless(g.time), nextEvent: g.time + 2 }
+      g.player.revives = 3
+      gainXp(g, 3000)
+    },
+  },
 } as const satisfies Record<string, Scenario>
 
 type ScenarioId = keyof typeof SCENARIOS
@@ -290,7 +303,7 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
-  46: {
+  47: {
     levelUps: '2998·45·12·78f86519',
     mega: '1892·27·1·2d1d227c',
     riftFall: '665·0·1·8722c904',
@@ -308,6 +321,7 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
     grotto: '2782·23·18·bb75df4d',
     underground: '3084·27·30·ddb45396',
     magicGuard: '1188·51·20·285cf0b7',
+    endlessCeiling: '845·0·26·f8ec4480',
   },
 }
 

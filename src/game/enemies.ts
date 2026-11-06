@@ -75,6 +75,7 @@ export const spawnEnemy = (g: Game, kind: EnemyId, x: number, y: number, behavio
     fled: false,
     thrown: null,
     alpha: null,
+    weight: 1,
   }
   g.enemies.push(enemy)
   return enemy

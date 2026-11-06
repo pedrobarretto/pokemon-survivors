@@ -314,7 +314,7 @@ export const strikeBonus = (g: Game, e: Enemy) => {
   return hunter && (e.boss || e.elite) ? 1 + hunter.bonus : 1
 }
 
-/** A foe fainted: onKill stacks (Moxie, Battle Bond) and drops (Pickup, Magician, Frisk). */
+/** A foe fainted: onKill stacks (Moxie, Battle Bond) and drops (Pickup, Magician, Frisk), as likely as from the foes it stands for (`Enemy.weight`). */
 export const abilityKill = (g: Game, e: Enemy) => {
   for (const effect of effectsOf(g)) {
     if (effect.kind === 'onKill') {
@@ -325,7 +325,7 @@ export const abilityKill = (g: Game, e: Enemy) => {
       s.stacks = Math.min(effect.max, s.stacks + 1)
       // A milestone (Battle Bond's) is news; Moxie's one-kill stacks just show on the HUD.
       if (effect.per > 1) proc(g, effect)
-    } else if (effect.kind === 'drop' && chance(g.rng, effect.chance)) {
+    } else if (effect.kind === 'drop' && chance(g.rng, effect.chance * e.weight)) {
       if (effect.drop === 'berry') dropPickup(g, e.x + 4, e.y, 'berry')
       else if (effect.drop === 'coin') dropCoins(g, e.x, e.y, [10])
       else dropXp(g, e.x, e.y, Math.max(3, e.xp * 3))

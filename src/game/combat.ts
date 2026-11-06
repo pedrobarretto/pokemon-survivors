@@ -184,10 +184,13 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   if (fresh) g.events.push({ kind: 'caught', enemy: e.kind })
 
   // Under tension a regular's faint gives a share of its loot (`tension.ts`); a boss's never shrinks.
+  // Past the endless ceiling a foe pays as the ones it stands for (`weighSpawn`): their EXP, its rolls that many times as likely.
   const share = e.boss ? 1 : g.tension.share
-  if (e.xp > 0) dropXp(g, e.x, e.y, e.xp * share)
+  const odds = share * e.weight
+  if (e.xp > 0) dropXp(g, e.x, e.y, e.xp * odds)
+  if (e.weight > 1) g.player.record.folded += e.weight - 1
   dropCoins(g, e.x, e.y, coinDrops(g.rng, e, g.endless !== null))
-  faintCandies(g, e, share)
+  faintCandies(g, e, odds)
   if (e.shiny) dropPickup(g, e.x + 6, e.y, 'pokeball')
   if (e.alpha) {
     alphaDown(g, e)
@@ -215,10 +218,10 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
       if (captured && g.legendScene) g.legendScene.then = 'victory'
       else winRun(g)
     }
-  } else if (chance(g.rng, ENEMY_BERRY_CHANCE * share)) {
+  } else if (chance(g.rng, ENEMY_BERRY_CHANCE * odds)) {
     dropPickup(g, e.x + 6, e.y, 'berry')
   } else {
-    enemyDrop(g, e, share)
+    enemyDrop(g, e, odds)
   }
 }
 

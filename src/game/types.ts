@@ -239,6 +239,8 @@ export type PlayerRecord = {
   revives: number
   /** Times this player fainted (co-op). */
   faints: number
+  /** Foes past the endless ceiling that fell inside heavier ones: a weighted foe's faint adds its weight − 1, so the run bonus pays them as kills. */
+  folded: number
   tally: RunTally
 }
 
@@ -311,6 +313,8 @@ export type Enemy = {
   thrown: Thrown | null
   /** An Alpha's charge cycle (`alphas.ts`); null for everyone else. An Alpha is also `boss` to the combat rules. */
   alpha: AlphaState | null
+  /** How many foes it stands for past the endless horde's ceiling (`weighSpawn`, `ENDLESS_HORDE`); 1 for everyone else. */
+  weight: number
 }
 
 /** `by`: slot of the player whose move threw it (its blows are theirs). */
