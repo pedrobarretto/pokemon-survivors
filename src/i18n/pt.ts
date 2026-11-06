@@ -18,6 +18,7 @@ import type { TraitId } from '../data/traits'
 import type { ConsumableId } from '../game/consumables'
 import type { FriendMilestone } from '../game/referral'
 import type { Difficulty } from '../game/difficulty'
+import type { Activity } from '../game/friends'
 import type { Role } from '../data/versus'
 import type { MapId } from '../data/versusMaps'
 import type { WearableId } from '../data/wearables'
@@ -98,6 +99,8 @@ export type DomainLines = { place: string; epithet: string; omen: string; crossi
 
 export const pt = {
   loading: 'Carregando…',
+  /** A screen whose code loads on demand (`lazyScreen`) couldn't download it. */
+  loadFailed: 'Não deu para abrir. Confira a conexão e tente de novo.',
   level: (n: number) => `Nv ${n}`,
   levelShort: (n: number) => `Nv${n}`,
   max: 'MAX',
@@ -921,6 +924,7 @@ export const pt = {
       afk: 'Você ficou parado por muito tempo e voltou para a escolha de cidade.',
       banned: 'Sua conta está suspensa do Poké Realm.',
       busy: 'O servidor do Realm está cheio. Tente de novo em instantes.',
+      roomFull: 'Essa sala está cheia agora. Tente de novo daqui a pouco.',
     } satisfies Record<RealmRefusal, string>,
     talk: 'Falar',
     emote: 'Emote',
@@ -971,6 +975,19 @@ export const pt = {
       prizes: 'Prêmios',
     } satisfies Record<SpotKind, string>,
     use: 'Usar',
+    pieces: {
+      sit: 'Sentar',
+      lie: 'Deitar',
+      soak: 'Entrar',
+      stand: 'Levantar',
+      taken: 'Ocupado',
+      on: 'Ligar',
+      off: 'Desligar',
+      play: 'Tocar música',
+      next: 'Próxima música',
+      stop: 'Desligar música',
+      track: (n: number, total: number) => `♪ Faixa ${n} de ${total}`,
+    },
     board: {
       title: 'Mural da praça',
       lines: [
@@ -1026,6 +1043,31 @@ export const pt = {
       profile: 'Ver perfil',
       close: 'Fechar',
       you: 'Você',
+    },
+    friends: {
+      open: 'Amigos',
+      title: 'Amigos no Realm',
+      all: 'Ver todos os amigos',
+      showWhere: (on: boolean) => `Mostrar onde estou para amigos: ${on ? 'sim' : 'não'}`,
+      showWhereHint: 'Só quem segue você de volta vê a cidade e a sala em que você está.',
+      states: { hidden: 'No Realm · local oculto', offline: 'Offline', pending: 'Ainda não segue você de volta' },
+      activity: { lobby: 'No jogo, fora do Realm', room: 'Numa sala de Co-op', run: 'Numa partida' } satisfies Record<Activity, string>,
+      yourBase: 'Sua base',
+      here: 'Você está aqui',
+      go: 'Ir até',
+      roomFull: 'Sala cheia',
+      goCity: 'Ir à cidade',
+      cityFull: 'Cidade lotada',
+      invite: 'Convidar para minha base',
+      sent: (handle: string) => `Convite enviado para @${handle}`,
+      privateBase: 'Sua base está fechada para visitas. Abra para amigos (✎ dentro dela) para convidar.',
+      noBase: 'Arrume sua base (✎ dentro dela) antes de convidar alguém.',
+      empty: 'Você ainda não segue ninguém. Siga treinadores pelo Ranking ou pelo perfil deles.',
+      failed: 'Não deu para ver seus amigos agora.',
+      invited: (handle: string) => `@${handle} convidou você para a base secreta`,
+      accept: 'Ir',
+      decline: 'Agora não',
+      lobby: (n: number) => (n === 1 ? '1 amigo no Realm' : `${n} amigos no Realm`),
     },
   },
   coop: {
@@ -3484,7 +3526,7 @@ export const pt = {
       ],
     },
     needleArm: {
-      description: 'Seus espinhos se eriçam: agulhas voam para todos os lados e, por 1.5s, quem encostar em você não causa dano e ainda é ferido e arremessado.',
+      description: 'Seus espinhos se eriçam: agulhas voam para todos os lados e, por 1.5s (no máximo metade da recarga), quem encostar em você não causa dano e ainda é ferido e arremessado.',
       upgrades: [
         '+3 de dano',
         '+2 agulhas',
@@ -3700,7 +3742,7 @@ export const pt = {
       ],
     },
     dig: {
-      description: 'Aperte Shift ou o botão de bote: você se enterra (invulnerável, a horda perde você de vista) e sai debaixo do maior inimigo por perto, chefe primeiro, num tremor de terra.',
+      description: 'Aperte Shift ou o botão de bote: você se enterra (invulnerável, a horda perde você de vista) e sai debaixo do maior inimigo por perto, chefe primeiro, num tremor de terra. O tempo embaixo da terra, somado à saída, cobre no máximo metade da recarga.',
       upgrades: [
         '+10 de dano',
         'Tremor 20% maior',
@@ -5044,7 +5086,7 @@ export const pt = {
       ],
     },
     protect: {
-      description: 'A cada 12s uma bolha te protege por 1s: nenhum golpe passa, e quem encosta é empurrado para longe.',
+      description: 'A cada 12s uma bolha te protege por 1s: nenhum golpe passa, e quem encosta é empurrado para longe. Ela dura no máximo metade da recarga, então Light Clay e Quick Claw nunca emendam uma bolha na seguinte.',
       upgrades: [
         'Dura +0.2s',
         'Recarga 1s mais rápida',
@@ -5128,7 +5170,7 @@ export const pt = {
       ],
     },
     fly: {
-      description: 'A cada 7s você levanta voo por um instante: nada te atinge e os inimigos te perdem de vista. Você continua se movendo e, ao pousar, cai com tudo, ferindo e empurrando quem está em volta.',
+      description: 'A cada 7s você levanta voo por um instante: nada te atinge e os inimigos te perdem de vista. Você continua se movendo e, ao pousar, cai com tudo, ferindo e empurrando quem está em volta. O tempo no ar, somado ao pouso, cobre no máximo metade da recarga.',
       upgrades: [
         '+6 de dano',
         'Recarga 0.7s mais rápida',
@@ -5756,9 +5798,9 @@ export const pt = {
 
   items: {
     muscleBand: '+10% de dano em todos os golpes.',
-    quickClaw: 'Golpes recarregam 8% mais rápido.',
+    quickClaw: 'Golpes recarregam 8% mais rápido. Uma proteção (Protect, Needle Arm, Fly, Dig) dura no máximo metade da recarga, então pode ficar mais curta também.',
     wideLens: '+10% de área dos golpes.',
-    lightClay: 'Efeitos duram 12% a mais.',
+    lightClay: 'Efeitos duram 12% a mais. Uma proteção (Protect, Needle Arm, Fly, Dig) continua durando no máximo metade da recarga do golpe.',
     loadedDice: '+1 projétil em golpes com múltiplos acertos.',
     leftovers: 'Recupera 0.3 HP por segundo.',
     choiceScarf: '+8% de velocidade de movimento.',
@@ -6770,6 +6812,22 @@ export const pt = {
       trophy: (name: string) => `Troféu novo: ${name}!`,
       again: 'Jogar de novo',
       leave: 'Sair',
+    },
+    /** The mini games' Placar (`realm/games/board.ts`): each game's best of the Brasília day and week. */
+    board: {
+      title: 'Placar',
+      open: 'Placar',
+      see: 'Ver placar',
+      periods: { day: 'Hoje', week: 'Semana' },
+      dayCaption: 'Recordes de hoje · zera à meia-noite (Brasília)',
+      weekCaption: (from: string, to: string) => `Semana de ${from} a ${to}`,
+      tableNote: 'Valem as vitórias contra outros treinadores.',
+      points: (n: number) => `${n} pts`,
+      wins: (n: number) => (n === 1 ? '1 vitória' : `${n} vitórias`),
+      total: (n: number) => (n === 1 ? '1 treinador no placar' : `${n} treinadores no placar`),
+      empty: 'Ninguém jogou ainda. Seja o primeiro!',
+      loading: 'Carregando...',
+      offline: 'Não deu pra carregar o placar agora.',
     },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {

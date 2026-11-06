@@ -21,6 +21,12 @@
  * typed ever reaches another player. The game draws each line in the
  * reader's own language.
  *
+ * Furniture (`data/furnitureUse.ts`): a trainer sits on a bench, a sofa or a
+ * bed (`perch`: the relay checks the seat and that it's free, then shows it
+ * sitting, `acted` with a `PerchAct`), and in a base switches lights and plays
+ * music on a jukebox (`use`: the room's `furniture` state, kept while anyone
+ * is in it).
+ *
  * Mini games (`data/minigames.ts`): a trainer busy at one shows it (`act`,
  * `RealmAct`) and brags about its feats (`brag`, ids only, checked by the
  * relay); the table games' seats and moves go through here too (`sit`,
@@ -53,9 +59,14 @@ export const REALM = {
   /** Quick-chat lines a trainer may say in any `talkWindowMs`, and emotes the same. */
   talkBurst: 3,
   talkWindowMs: 5_000,
+  /** Furniture uses (sitting down, a light, the music) a trainer may make in any `useWindowMs`. */
+  useBurst: 4,
+  useWindowMs: 4_000,
+  /** How far (px) from a base piece's footprint a trainer may use it. */
+  useReach: 30,
   /** A party's size (a co-op room's `MAX_PLAYERS`). */
   partyCap: 4,
-  /** A party invite waits this long for an answer. */
+  /** A party invite waits this long for an answer; a base invite to the same friend goes out again only after it. */
   inviteMs: 30_000,
 } as const
 
@@ -148,12 +159,44 @@ export const isRealmEmote = (v: unknown): v is RealmEmote => typeof v === 'strin
 /**
  * What a trainer is busy at, for the others to draw (a rod in the water, the
  * glow of a cabinet, sitting at a table); null when just walking around.
+ * A client says these itself (`act`).
  */
-export const REALM_ACTS = ['fishing', 'arcade', 'table'] as const
+export const BUSY_ACTS = ['fishing', 'arcade', 'table'] as const
+
+export type BusyAct = (typeof BUSY_ACTS)[number]
+
+export const isBusyAct = (v: unknown): v is BusyAct => typeof v === 'string' && (BUSY_ACTS as readonly string[]).includes(v)
+
+/**
+ * How a trainer sits on a piece of furniture (`perch`), the poses of
+ * `data/furnitureUse.ts`'s `SEAT_POSES` (repeated here: this file imports
+ * nothing): on a chair or a bench, tucked into a bed, soaking in a tub. Only
+ * the relay sets these, once it seated the trainer.
+ */
+export const PERCH_ACTS = ['sit', 'lie', 'soak'] as const
+
+export type PerchAct = (typeof PERCH_ACTS)[number]
+
+export const isPerchAct = (v: unknown): v is PerchAct => typeof v === 'string' && (PERCH_ACTS as readonly string[]).includes(v)
+
+/** What a trainer is doing, as the room sees it (`Avatar.act`). */
+export const REALM_ACTS = [...BUSY_ACTS, ...PERCH_ACTS] as const
 
 export type RealmAct = (typeof REALM_ACTS)[number]
 
-export const isRealmAct = (v: unknown): v is RealmAct => typeof v === 'string' && (REALM_ACTS as readonly string[]).includes(v)
+export const isRealmAct = (v: unknown): v is RealmAct => isBusyAct(v) || isPerchAct(v)
+
+/**
+ * A piece of furniture to use (`perch`, `use`): a town room's spot (its index
+ * in the room's `spots`, a bench), or a base's piece as placed (its id, top
+ * left tile and turn, `Placed`; the relay can't see a base's layout, so it
+ * checks the piece against the catalog and the trainer's reach, and the room's
+ * clients only draw what their own copy of the layout holds).
+ */
+export type PieceRef = { spot: number } | { id: string; x: number; y: number; turned: boolean }
+
+/** A base room's furniture state while anyone is in it: the pieces lit (`pieceKey`s), and the music piece playing and its track (`JUKEBOX`'s index). */
+export type RoomFurniture = { lit: readonly string[]; music: { piece: string; track: number } | null }
 
 /** Where a party is headed when its leader walks into a portal. */
 export type PartyMode = 'coop' | 'arena'
@@ -211,7 +254,11 @@ export type RealmClientMessage =
   /** Keeps an idle connection alive (and measures the round trip: echoed as `pong`). */
   | { t: 'ping'; at: number }
   /** What the trainer is busy at now (null: done). */
-  | { t: 'act'; act: RealmAct | null }
+  | { t: 'act'; act: BusyAct | null }
+  /** Sits on seat `seat` of a piece within reach (`PieceRef`), if it's free. Any step stands the trainer up. */
+  | { t: 'perch'; piece: PieceRef; seat: number }
+  /** Uses a base's piece within reach: a light goes on or off, a music piece plays its next track (the last one stops it). */
+  | { t: 'use'; piece: PieceRef }
   /** A mini game's feat to tell the room about (`game`, `feat`: ids of `data/minigames.ts`, the relay drops unknown ones); the talk burst limit applies. */
   | { t: 'brag'; game: string; feat: string }
   /** Sits at a table of the room (`table`: its id), choosing its game if the table is free; stands up from any other first. */
@@ -221,6 +268,8 @@ export type RealmClientMessage =
   | { t: 'play'; move: unknown }
   /** After a match: ready for another. */
   | { t: 'ready' }
+  /** Invites a mutual friend (`handle`, wherever on this relay) to the inviter's base; the relay never says whether it reached them. */
+  | { t: 'baseInvite'; handle: string }
 
 /* ---------------- Relay → client ---------------- */
 
@@ -237,6 +286,8 @@ export type RealmRefusal =
   | 'afk'
   | 'banned'
   | 'busy'
+  /** The room asked for holds its cap (`roomCap`, `data/realmMap.ts`): a `go` stays, a hello lands in the landing. */
+  | 'roomFull'
 
 export type PartyView = { leader: number; members: readonly number[] }
 
@@ -257,15 +308,21 @@ export type RealmServerMessage =
   | { t: 'party'; party: PartyView | null }
   | { t: 'partyGo'; mode: PartyMode; code: string }
   | { t: 'pong'; at: number }
-  | { t: 'acted'; id: number; act: RealmAct | null }
+  /** What a trainer does now; sitting down (a `PerchAct`), it's moved onto the seat at once: `at`. */
+  | { t: 'acted'; id: number; act: RealmAct | null; at?: readonly [x: number, y: number, facing: Facing] }
+  /** A base room's lights and music (after `welcome` and `room` into a base, and on every change). */
+  | { t: 'furniture'; state: RoomFurniture }
   | { t: 'bragged'; id: number; game: string; feat: string }
   /** Every table of the room in use, as this trainer sees them (after `welcome` and `room`), and one table's change (all seats free: it's gone). */
   | { t: 'tables'; tables: readonly TableView[] }
   | { t: 'table'; table: TableView }
+  /** A mutual friend invites you to their base (`city`: where it is), answered by walking there or not. */
+  | { t: 'baseInvited'; from: string; city: CityId }
   /**
    * Sent away (or never seated): why. The socket closes after it, but for a
-   * base `go` the relay turned down (`private`, `room`: no such base, `busy`:
-   * the API didn't answer), which leaves the trainer where it stands.
+   * `go` the relay turned down (`private`, `room`: no such base, `busy`: the
+   * API didn't answer, `roomFull`), which leaves the trainer where it stands,
+   * and a `roomFull` right after a `welcome` (seated in the landing instead).
    */
   | { t: 'refused'; why: RealmRefusal }
 

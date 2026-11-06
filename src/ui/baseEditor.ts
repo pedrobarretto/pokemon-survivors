@@ -1,4 +1,4 @@
-import { FURNITURE, footprint, type FurnitureCounts, type FurnitureId, type FurnitureKind } from '../data/furniture'
+import { FURNITURE, footprint, turnOf, type FurnitureCounts, type FurnitureId, type FurnitureKind } from '../data/furniture'
 import { BASE_GRID, BASE_ROOM } from '../data/realmMap'
 import { BASE_EXTERIORS, BASE_MAX_ITEMS, BASE_VISIBILITY, EMPTY_BASE, checkLayout, type BaseLayout, type BaseVisibility, type LayoutError, type Placed } from '../data/secretBases'
 import { context2d } from '../engine/pixelart'
@@ -154,7 +154,7 @@ export const openBaseEditor = (root: HTMLElement, input: Input, opts: BaseEditor
   const rotate = () => {
     if (selected === null) return
     const p = layout.items[selected]!
-    if (FURNITURE[p.id].turns !== true) return
+    if (turnOf(p.id) === null) return
     playSfx('move')
     const turned = !p.turned
     const at = clampSpot(p.id, turned, p.x, p.y)
@@ -265,7 +265,9 @@ export const openBaseEditor = (root: HTMLElement, input: Input, opts: BaseEditor
     paintTray()
     const piece = selected !== null ? layout.items[selected] : undefined
     setText(pieceLabel, piece ? pieceName(piece.id) : m.pick)
-    rotateBtn.toggleAttribute('disabled', !piece || FURNITURE[piece.id].turns !== true)
+    // Girar shows only for a piece that turns (`turnOf`), held while none is picked.
+    rotateBtn.toggleAttribute('disabled', !piece)
+    rotateBtn.classList.toggle('hidden', piece !== undefined && turnOf(piece.id) === null)
     removeBtn.toggleAttribute('disabled', !piece)
     undoBtn.toggleAttribute('disabled', undo.length === 0)
     setText(count, m.count(layout.items.length, BASE_MAX_ITEMS))

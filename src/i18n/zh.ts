@@ -1,10 +1,12 @@
 import type { Messages } from './pt'
+import type { Activity } from '../game/friends'
 
 const typeBoost = (type: string) => `${type}屬性招式傷害+10%。`
 
 /** Traditional Chinese (Taiwan, Hong Kong). Must match `pt` key for key (enforced by the `Messages` type). */
 export const zh: Messages = {
   loading: '載入中…',
+  loadFailed: '無法開啟。請檢查網路連線後再試一次。',
   level: (n) => `Lv ${n}`,
   levelShort: (n) => `Lv${n}`,
   max: 'MAX',
@@ -723,6 +725,7 @@ export const zh: Messages = {
       afk: '你太久沒有動作，已回到城市選擇。',
       banned: '你的帳號已被暫停使用 Poké Realm。',
       busy: 'Realm 的伺服器已滿，請稍後再試。',
+      roomFull: '這個房間目前已滿，請稍後再試。',
     },
     talk: '說話',
     emote: '表情',
@@ -773,6 +776,19 @@ export const zh: Messages = {
       prizes: '獎品',
     },
     use: '使用',
+    pieces: {
+      sit: '坐下',
+      lie: '躺下',
+      soak: '泡進去',
+      stand: '站起來',
+      taken: '有人了',
+      on: '打開',
+      off: '關掉',
+      play: '播放音樂',
+      next: '下一首',
+      stop: '停止音樂',
+      track: (n: number, total: number) => `♪ 第 ${n} 首，共 ${total} 首`,
+    },
     board: {
       title: '廣場告示板',
       lines: [
@@ -828,6 +844,31 @@ export const zh: Messages = {
       profile: '查看個人檔案',
       close: '關閉',
       you: '你',
+    },
+    friends: {
+      open: '好友',
+      title: 'Realm 裡的好友',
+      all: '查看所有好友',
+      showWhere: (on: boolean) => `讓好友看到我在哪裡：${on ? '開' : '關'}`,
+      showWhereHint: '只有互相追蹤的好友能看到你所在的城市與房間。',
+      states: { hidden: '在 Realm 中・位置隱藏', offline: '離線', pending: '尚未追蹤你' },
+      activity: { lobby: '在遊戲中，不在 Realm', room: '在合作房間中', run: '正在對戰中' } satisfies Record<Activity, string>,
+      yourBase: '你的基地',
+      here: '你在這裡',
+      go: '前往',
+      roomFull: '房間已滿',
+      goCity: '前往城市',
+      cityFull: '城市已滿',
+      invite: '邀請到我的基地',
+      sent: (handle: string) => `已邀請 @${handle}`,
+      privateBase: '你的基地不開放參觀。請在基地內按 ✎ 開放給好友後再邀請。',
+      noBase: '請先布置你的基地（在基地內按 ✎）再邀請別人。',
+      empty: '你還沒有追蹤任何人。可以從排行榜或個人檔案追蹤訓練家。',
+      failed: '目前無法載入好友。',
+      invited: (handle: string) => `@${handle} 邀請你到秘密基地`,
+      accept: '前往',
+      decline: '先不要',
+      lobby: (n: number) => `${n} 位好友在 Realm`,
     },
   },
   coop: {
@@ -3107,7 +3148,7 @@ export const zh: Messages = {
       ],
     },
     needleArm: {
-      description: '全身尖刺豎起：針刺朝四面八方飛射，且在1.5秒內，碰到你的敵人不但無法造成傷害，反而會受傷並被彈開。',
+      description: '全身尖刺豎起：針刺朝四面八方飛射，且在1.5秒內（最多為冷卻時間的一半），碰到你的敵人不但無法造成傷害，反而會受傷並被彈開。',
       upgrades: [
         '傷害+3',
         '針刺+2',
@@ -3323,7 +3364,7 @@ export const zh: Messages = {
       ],
     },
     dig: {
-      description: '按下Shift或突進鍵：你鑽入地下（無敵，獸群會失去你的蹤影），然後從附近最大的敵人（優先首領）腳下竄出，引發地震。',
+      description: '按下Shift或突進鍵：你鑽入地下（無敵，獸群會失去你的蹤影），然後從附近最大的敵人（優先首領）腳下竄出，引發地震。地下時間連同竄出後的保護，最多只占冷卻時間的一半。',
       upgrades: [
         '傷害+10',
         '地震範圍擴大20%',
@@ -4667,7 +4708,7 @@ export const zh: Messages = {
       ],
     },
     protect: {
-      description: '每12秒一個泡泡保護你1秒：任何攻擊都穿不過，碰到它的東西都會被推開。',
+      description: '每12秒一個泡泡保護你1秒：任何攻擊都穿不過，碰到它的東西都會被推開。泡泡最多只持續冷卻時間的一半，所以 Light Clay 和 Quick Claw 也無法讓泡泡接連不斷。',
       upgrades: [
         '持續時間+0.2秒',
         '冷卻縮短1秒',
@@ -4751,7 +4792,7 @@ export const zh: Messages = {
       ],
     },
     fly: {
-      description: '每7秒你會短暫起飛：任何攻擊都打不到你，敵人也會失去你的蹤影。你可以繼續移動，落地時重重砸下，傷害並推開周圍所有敵人。',
+      description: '每7秒你會短暫起飛：任何攻擊都打不到你，敵人也會失去你的蹤影。你可以繼續移動，落地時重重砸下，傷害並推開周圍所有敵人。滯空時間連同落地保護，最多只占冷卻時間的一半。',
       upgrades: [
         '傷害+6',
         '冷卻縮短0.7秒',
@@ -5378,9 +5419,9 @@ export const zh: Messages = {
   },
   items: {
     muscleBand: '所有招式傷害+10%。',
-    quickClaw: '招式冷卻速度加快8%。',
+    quickClaw: '招式冷卻速度加快8%。保護類招式（Protect、Needle Arm、Fly、Dig）最多只持續冷卻時間的一半，因此也可能跟著變短。',
     wideLens: '招式範圍+10%。',
-    lightClay: '效果持續時間延長12%。',
+    lightClay: '效果持續時間延長12%。保護類招式（Protect、Needle Arm、Fly、Dig）最多仍只持續該招式冷卻時間的一半。',
     loadedDice: '多段攻擊招式的投射物+1。',
     leftovers: '每秒回復0.3 HP。',
     choiceScarf: '移動速度+8%。',
@@ -6315,6 +6356,21 @@ export const zh: Messages = {
       trophy: (name) => `新獎盃：${name}！`,
       again: '再玩一次',
       leave: '離開',
+    },
+    board: {
+      title: '排行榜',
+      open: '排行榜',
+      see: '查看排行榜',
+      periods: { day: '今日', week: '本週' },
+      dayCaption: '今日紀錄 · 巴西利亞時間午夜重置',
+      weekCaption: (from, to) => `${from} – ${to} 這週`,
+      tableNote: '只計算對其他訓練家的勝場。',
+      points: (n) => `${n} 分`,
+      wins: (n) => `${n} 勝`,
+      total: (n) => `排行榜上有 ${n} 位訓練家`,
+      empty: '還沒有人玩過，搶先登上排行榜吧！',
+      loading: '載入中...',
+      offline: '現在無法載入排行榜。',
     },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {

@@ -51,7 +51,8 @@ import { placeBossScale, wingAmount } from '../../game/place'
 import { LANDMARK, LANDMARK_IDS, LANDMARK_LOOT, TUNNEL, type LandmarkLoot, type TreasureLandmark } from '../../data/landmarks'
 import { BURN_ATTACK, FREEZE_SHATTER, SEED_HEAL, STATUS_KINDS, STATUS_RULES, type StatusKind } from '../../game/status'
 import { SEED_JUMPS } from '../../game/kitRules'
-import { LOCALES, type Locale } from '../../i18n'
+import type { Locale } from '../../i18n'
+import { MESSAGES } from '../../i18n/messages'
 import { SITE_MESSAGES, type SiteMessages } from '../../i18n/site'
 import { html, type Child, type Html } from '../html'
 import { layout } from '../layout'
@@ -106,7 +107,7 @@ const run = (locale: Locale, m: SiteMessages) => {
     const text = 'trio' in e ? r.bossTrio(m.trios.either(names)) : e.chance !== undefined ? r.bossChance(m.trios.either(names), e.chance * 100) : r.boss(names[0]!)
     return [clock(e.at), names.length > 1 ? text : html`<a href="${dexLink(locale, names[0]!)}">${text}</a>`]
   })
-  const names = LOCALES[locale].messages.difficulty.names
+  const names = MESSAGES[locale].difficulty.names
   const times = (v: number) => `${num(v)}x`
   const levels = DIFFICULTY_IDS.map((id) => {
     const d = DIFFICULTIES[id]
@@ -123,7 +124,7 @@ const run = (locale: Locale, m: SiteMessages) => {
 
 const world = (locale: Locale, m: SiteMessages) => {
   const w = m.guide.world
-  const game = LOCALES[locale].messages.world
+  const game = MESSAGES[locale].world
   const pct = (v: number) => Math.round(v * 1000) / 10
   const biomes = BIOME_TIERS.flatMap((tier, i) =>
     tier.map((id) => {
@@ -194,7 +195,7 @@ const horde = (locale: Locale, m: SiteMessages) => {
 
 const levels = (locale: Locale, m: SiteMessages) => {
   const l = m.guide.levels
-  const game = LOCALES[locale].messages
+  const game = MESSAGES[locale]
   const [first, second] = STARTERS.charmander.line
   const baseMove = MOVE_IDS.find((id) => MOVES[id].upgrades.length > 0) ?? 'ember'
   const items = ITEM_IDS.map((id) => [ITEMS[id].name, game.items[id], ITEMS[id].levels.length])
@@ -208,9 +209,9 @@ const levels = (locale: Locale, m: SiteMessages) => {
 
 const moveEvolutions = (locale: Locale, m: SiteMessages) => {
   const e = m.guide.moveEvolutions
-  const game = LOCALES[locale].messages
+  const game = MESSAGES[locale]
   const rows = EVOLUTIONS.map((evo) => [
-    html`${MOVES[evo.from].name} <small>(${LOCALES[locale].messages.level(maxMoveLevel(evo.from))})</small>`,
+    html`${MOVES[evo.from].name} <small>(${MESSAGES[locale].level(maxMoveLevel(evo.from))})</small>`,
     ITEMS[evo.item].name,
     html`<b>${MOVES[evo.to].name}</b> ${typeBadge(MOVES[evo.to].type, m)}<br /><small>${game.moves[evo.to].description}</small>`,
   ])
@@ -239,7 +240,7 @@ const moveEvolutions = (locale: Locale, m: SiteMessages) => {
 
 const special = (locale: Locale, m: SiteMessages) => {
   const s = m.guide.special
-  const game = LOCALES[locale].messages
+  const game = MESSAGES[locale]
   // One special per type (a Pokémon uses its first type's, so some have no user yet), then the per-species ones.
   const byType = POKE_TYPES.map(specialOfType)
   const ids = [...byType, ...SPECIAL_IDS.filter((id) => !byType.includes(id))]
@@ -335,7 +336,7 @@ const bosses = (locale: Locale, m: SiteMessages) => {
 
 const rifts = (locale: Locale, m: SiteMessages) => {
   const r = m.guide.rifts
-  const places: Partial<Record<RiftLegend, { place: string }>> = LOCALES[locale].messages.rifts.domains
+  const places: Partial<Record<RiftLegend, { place: string }>> = MESSAGES[locale].rifts.domains
   const num = (v: number) => v.toLocaleString(m.lang.tag)
   const attacks = (id: keyof typeof ENEMIES) => bossAttacks(id, m)
   /** Latios fights in Latias's domain, so his row names hers. */
@@ -381,7 +382,7 @@ const legends = (locale: Locale, m: SiteMessages) => {
     ABILITIES[LEGENDS[id].innate.ability].name,
     MOVES[LEGENDS[id].signature].name,
   ])
-  const names = LOCALES[locale].messages.difficulty.names
+  const names = MESSAGES[locale].difficulty.names
   const times = (v: number) => `${v.toLocaleString(m.lang.tag, { maximumFractionDigits: 2 })}x`
   const pressure = DIFFICULTY_IDS.map((id) => {
     const d = legendMods(id)
@@ -409,7 +410,7 @@ const coop = (m: SiteMessages) => {
 /** The Poké Realm: the town, its bases and furniture, and a table of the mini games' pay and trophies, all from the data. */
 const realm = (locale: Locale, m: SiteMessages) => {
   const r = m.guide.realm
-  const game = LOCALES[locale].messages
+  const game = MESSAGES[locale]
   const money = (v: number) => `₽${v.toLocaleString(m.lang.tag)}`
   const sold = FURNITURE_IDS.filter((id) => FURNITURE[id].price !== null)
   const coins = sold.filter((id) => FURNITURE[id].price !== null && 'coins' in FURNITURE[id].price).length
@@ -505,7 +506,7 @@ const landmarks = (_locale: Locale, m: SiteMessages) => {
 
 const megas = (locale: Locale, m: SiteMessages) => {
   const g = m.guide.megas
-  const game = LOCALES[locale].messages
+  const game = MESSAGES[locale]
   const rows = MEGA_IDS.map((id) => {
     const def: MegaDef = MEGAS[id]
     const final = PLAYABLE[def.line].line.at(-1)!
@@ -546,7 +547,7 @@ const shinies = (locale: Locale, m: SiteMessages) => {
 
 const eggs = (locale: Locale, m: SiteMessages) => {
   const e = m.guide.eggs
-  const tiers = LOCALES[locale].messages.eggs.tiers
+  const tiers = MESSAGES[locale].eggs.tiers
   const num = (v: number) => v.toLocaleString(m.lang.tag)
   const pct = (v: number) => `${Math.round(v * 100)}%`
   const tierRows = EGG_TIER_IDS.map((tier) => [
@@ -563,7 +564,7 @@ const eggs = (locale: Locale, m: SiteMessages) => {
     const chance = source === 'mission' ? DIFFICULTY_IDS.map((d) => pct(FIELD_TUNING[d].reward.egg)).join(' / ') : pct(EGG_SOURCES[source].chance)
     return [e.sources[source], chance, rarity]
   })
-  const shop = LOCALES[locale].messages.shop
+  const shop = MESSAGES[locale].shop
   const upgrades = e.incubator({
     max: MAX_SLOTS,
     slots: INCUBATOR.slots.map((s, i) => ({ n: EGGS.slots + i + 1, price: `₽${num(s.price)}`, level: shop.level(shop.levels[s.minLevel], s.minLevel) })),
@@ -612,7 +613,7 @@ const mapEvents = (m: SiteMessages) => {
 
 const mart = (locale: Locale, m: SiteMessages) => {
   const k = m.guide.mart
-  const game = LOCALES[locale].messages
+  const game = MESSAGES[locale]
   const bonus = (run: Partial<Parameters<typeof runBonus>[0]>) => runBonus({ time: 0, kills: 0, victory: false, greed: 1, ...run })
   const perKill = bonus({ kills: 1000 }) / 1000
   const rows = UPGRADE_IDS.map((id) => [
@@ -626,7 +627,7 @@ const mart = (locale: Locale, m: SiteMessages) => {
 
 const missions = (locale: Locale, m: SiteMessages) => {
   const k = m.guide.missions
-  const a = LOCALES[locale].messages.achievements
+  const a = MESSAGES[locale].achievements
   const money = (v: number) => `₽${v.toLocaleString(m.lang.tag)}`
   const rewards = (pool: readonly MissionTemplate[]) => {
     const all = pool.flatMap((t) => t.tiers.map(([, reward]) => reward))
@@ -634,7 +635,7 @@ const missions = (locale: Locale, m: SiteMessages) => {
   }
   const medals = MEDALS.map((medal) => {
     const egg = MEDAL_EGG[medal]
-    return `${k.medals[medal]} ${money(MEDAL_REWARD[medal])}${egg ? ` + ${LOCALES[locale].messages.eggs.tiers[egg]}` : ''}`
+    return `${k.medals[medal]} ${money(MEDAL_REWARD[medal])}${egg ? ` + ${MESSAGES[locale].eggs.tiers[egg]}` : ''}`
   }).join(', ')
   const goal = (id: AchievementId) => {
     const def: AchievementDef = ACHIEVEMENTS[id]

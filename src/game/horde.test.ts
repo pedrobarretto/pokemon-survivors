@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { ELITE, RUNNER } from '../data/waves'
-import { eliteSpawn, leadTime, makeElite, makeRunner } from './horde'
+import { ELITE, ENDLESS_HORDE, RUNNER } from '../data/waves'
+import { eliteSpawn, hordeWeight, leadTime, makeElite, makeRunner, weighSpawn } from './horde'
 
 const stats = (over: { hp?: number; maxHp?: number; speed?: number } = {}) => ({
-  elite: false, runner: false, hp: 100, maxHp: 100, speed: 50, xp: 2, damage: 10, radius: 8, ...over,
+  elite: false, runner: false, hp: 100, maxHp: 100, speed: 50, xp: 2, damage: 10, radius: 8, weight: 1, ...over,
 })
 
 describe('horde spawn modifiers', () => {
@@ -31,5 +31,25 @@ describe('horde spawn modifiers', () => {
     expect(leadTime(30, 60)).toBe(0.5)
     expect(leadTime(300, 60)).toBe(RUNNER.lead)
     expect(leadTime(30, 0)).toBe(0)
+  })
+
+  it('caps the endless horde in bodies and grows it in weight past the ceiling', () => {
+    const { ceiling } = ENDLESS_HORDE
+    expect(hordeWeight(ceiling / 2)).toBe(1)
+    expect(hordeWeight(ceiling)).toBe(1)
+    expect(hordeWeight(ceiling * 2.5)).toBe(2.5)
+    // As many bodies as the ceiling, carrying the whole asked horde's HP.
+    const asked = ceiling * 3
+    const w = hordeWeight(asked)
+    const e = stats()
+    weighSpawn(e, w)
+    expect((asked / w) * e.maxHp).toBe(asked * 100)
+    expect(e).toMatchObject({ hp: 300, maxHp: 300, weight: 3, xp: 2 })
+    // Each hit leans harder than before, never softer.
+    expect(e.damage).toBeGreaterThan(10)
+    expect(e.damage).toBeLessThanOrEqual(10 * w)
+    const light = stats()
+    weighSpawn(light, 1)
+    expect(light).toEqual(stats())
   })
 })

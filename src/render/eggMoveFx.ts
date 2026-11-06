@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRing, blitRotated } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, blitRotated, fillPlotted, plot } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { TAU } from '../engine/math'
 import { DREAM_WINDUP, FOUL_WINDUP, MASH_FALL, MASH_MAX, PUNCH_WINDUP, SLAM_LEAP, SLAM_LIFT } from '../game/eggMoveRules'
@@ -8,6 +8,7 @@ import { moveIconSprite } from './art'
 import { EGG_FX } from './eggMoveArt'
 import { dashedRing } from './strokes'
 import { localPlayer } from '../game/players'
+import { detail } from './quality'
 
 /**
  * Visuals of the egg families' signature moves (`game/eggMoves.ts`). Like
@@ -41,11 +42,14 @@ const heading = (a: Attack) => {
  */
 const crescent = (ctx: Ctx, x: number, y: number, r: number, dir: number, span: number, sweep: number, colors: readonly string[], squash = 1) => {
   const steps = Math.max(6, Math.ceil(r * span * 1.3))
-  for (let i = 0; i <= steps * sweep; i++) {
+  // Drawing lean, a big one plots every other step in 2 px squares.
+  const size = detail.lean && steps >= 16 ? 2 : 1
+  for (let i = 0; i <= steps * sweep; i += size) {
     const angle = dir - span / 2 + (span * i) / steps
     const thick = Math.max(1, Math.round(Math.sin((i / steps) * Math.PI) * colors.length))
-    for (let k = 0; k < thick; k++) px(ctx, x + Math.cos(angle) * (r - k), y + Math.sin(angle) * (r - k) * squash, colors[k]!)
+    for (let k = 0; k < thick; k += size) plot(colors[k]!, x + Math.cos(angle) * (r - k), y + Math.sin(angle) * (r - k) * squash, size, size)
   }
+  fillPlotted(ctx)
 }
 
 /** Short rays of light around (x, y): an impact. */
@@ -53,8 +57,9 @@ const rays = (ctx: Ctx, x: number, y: number, size: number, count: number, color
   for (let i = 0; i < count; i++) {
     const angle = (i / count) * TAU + spin
     const len = i % 2 === 0 ? size : size * 0.6
-    for (let d = 2; d <= len; d++) px(ctx, x + Math.cos(angle) * d, y + Math.sin(angle) * d, d < len * 0.5 ? colors[0] : colors[1])
+    for (let d = 2; d <= len; d++) plot(d < len * 0.5 ? colors[0] : colors[1], x + Math.cos(angle) * d, y + Math.sin(angle) * d)
   }
+  fillPlotted(ctx)
 }
 
 /* ---------------- Ground layer ---------------- */

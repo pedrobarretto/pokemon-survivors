@@ -27,7 +27,7 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
   })
 
   beforeEach(async () => {
-    await sql`truncate realm_game_days, realm_game_stats, furniture_owned, furniture_buys, bases, base_likes, base_visits, realm_bans, realm_reports, gem_ledger, cosmetics_owned, follows, saves, users cascade`
+    await sql`truncate realm_game_days, realm_game_stats, realm_game_boards, furniture_owned, furniture_buys, bases, base_likes, base_visits, realm_bans, realm_reports, gem_ledger, cosmetics_owned, follows, saves, users cascade`
     posted = []
     realm = realmStore(sql, { staff: { post: async (line) => void posted.push(line) } })
     for (const [id, handle] of [['u_ash', 'ash'], ['u_misty', 'misty'], ['u_brock', 'brock']] as const) {
@@ -52,6 +52,8 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
     expect(got.banned).toEqual(['u_brock'])
     await realm.act('u_admin', { action: 'unban', userId: 'u_brock' })
     expect(Object.keys((await realm.identity(['u_brock'])).identities)).toEqual(['u_brock'])
+    // Each one's mutual friends, the ones it may invite to its base: Brock's follow of Ash isn't returned.
+    expect((await realm.identity(['u_ash', 'u_brock'])).friends).toEqual({ u_ash: ['misty'], u_brock: [] })
   })
 
   it('buys with gems through the ledger and with ₽ out of the stored save', async () => {
@@ -125,11 +127,16 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
     expect(await realm.act('u_admin', { action: 'ban', userId: 'u_ghost', days: 1, reason: 'x' })).toBeNull()
   })
 
-  it('tells the city counts and friends walking from the newest presence', async () => {
-    realm.presence({ home: 'sa', at: 10, cities: { pallet: ['misty', 'brock'] } })
+  it('tells the city counts and where friends walk from the newest presence, as far as they let them see', async () => {
+    realm.presence({ home: 'sa', at: 10, cities: { pallet: ['misty', 'brock', 'ash'] }, rooms: { pallet: ['cafe', 'plaza', 'plaza'] } })
     realm.presence({ home: 'sa', at: 5, cities: { pallet: [] } })
-    expect(realm.cities().cities).toEqual({ pallet: 2 })
-    expect((await realm.friends('u_ash')).friends).toEqual([{ handle: 'misty', city: 'pallet' }])
+    expect(realm.cities().cities).toEqual({ pallet: 3 })
+    expect(await realm.friends('u_ash')).toEqual({ friends: [{ handle: 'misty', name: 'misty', state: 'realm', city: 'pallet', room: 'cafe', full: null }], showWhere: true })
+    await realm.settings('u_misty', { showWhere: false })
+    expect((await realm.friends('u_ash')).friends).toEqual([{ handle: 'misty', name: 'misty', state: 'hidden' }])
+    expect((await realm.friends('u_misty')).showWhere).toBe(false)
+    // Brock follows Ash, who doesn't follow back: nothing shows of Ash, not even that they walk the realm.
+    expect((await realm.friends('u_brock')).friends).toEqual([{ handle: 'ash', name: 'ash', state: 'pending' }])
   })
 
   /** The mini games' claims (`POST /realm/game/claim`). */
@@ -178,6 +185,35 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
       await realm.act('u_admin', { action: 'ban', userId: 'u_misty', days: 3, reason: 'spam' })
       expect(await realm.claim('u_misty', fished(10), 10, DAY)).toEqual({ ok: false, error: 'banned' })
       expect(await sql`select 1 from realm_game_days where user_id = 'u_misty'`).toHaveLength(0)
+    })
+
+    it("ranks a solo game's best of the day and of the week, the earlier first on a tie, with the viewer's line", async () => {
+      await realm.claim('u_misty', fished(300), 250, DAY)
+      await realm.claim('u_ash', fished(300), 250, DAY)
+      await realm.claim('u_ash', fished(120), 120, DAY)
+      // Thursday's best still leads the week on Friday, while Friday's day board starts over.
+      await realm.claim('u_brock', fished(90), 90, '2026-11-06')
+      const day = await realm.board('fishing', 'day', DAY, 'u_ash')
+      expect(day.entries).toEqual([
+        { rank: 1, handle: 'misty', score: 300 },
+        { rank: 2, handle: 'ash', score: 300 },
+      ])
+      expect(day.me).toEqual({ rank: 2, handle: 'ash', score: 300 })
+      expect((await realm.board('fishing', 'day', '2026-11-06', null)).entries).toEqual([{ rank: 1, handle: 'brock', score: 90 }])
+      const week = await realm.board('fishing', 'week', '2026-11-06', 'u_brock')
+      expect(week).toMatchObject({ start: '2026-11-02', total: 3, me: { rank: 3, handle: 'brock', score: 90 } })
+      // A realm ban takes the trainer off.
+      await realm.act('u_admin', { action: 'ban', userId: 'u_misty', days: 3, reason: 'spam' })
+      expect((await realm.board('fishing', 'day', DAY, 'u_ash')).entries.map((e) => e.handle)).toEqual(['ash'])
+    })
+
+    it('counts a table game\'s wins against people only', async () => {
+      const played = (result: 'win' | 'loss', vs: 'human' | 'bot'): GameClaim => ({ game: 'fourInRow', outcome: { result, vs }, ms: 60_000, feats: [] })
+      await realm.claim('u_ash', played('win', 'human'), 150, DAY)
+      await realm.claim('u_ash', played('win', 'human'), 150, DAY)
+      await realm.claim('u_ash', played('win', 'bot'), 75, DAY)
+      await realm.claim('u_misty', played('loss', 'human'), 30, DAY)
+      expect((await realm.board('fourInRow', 'week', DAY, 'u_misty'))).toMatchObject({ entries: [{ rank: 1, handle: 'ash', score: 2 }], me: null, total: 1 })
     })
   })
 })

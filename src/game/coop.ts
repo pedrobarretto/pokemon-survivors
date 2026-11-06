@@ -71,7 +71,7 @@ export const createCoopState = (players: number): CoopState => ({
  */
 export const playerDexLog = (g: Game, slot: number): DexLog => (g.coop === null ? g.dexLog : { ...g.dexLog, own: g.coop.own[slot] ?? new Map() })
 
-export const createRecord = (): PlayerRecord => ({ kills: 0, taken: 0, revives: 0, faints: 0, tally: createTally() })
+export const createRecord = (): PlayerRecord => ({ kills: 0, taken: 0, revives: 0, faints: 0, folded: 0, tally: createTally() })
 
 /** Players who count for the horde: not away and still in the run (fainted ones count, they'll be back). At least 1. */
 export const teamSize = (g: Game) => {
@@ -452,6 +452,6 @@ export const coopPayout = (g: Game, slot: number): CoopPayout => {
     nightBosses: [],
     tms: [...t.tms],
   }
-  const bonus = runBonus({ time: g.time, kills: p.record.kills, victory: wonRun(g), greed: p.stats.greed, reaperDefeats: g.endless?.reaperDefeats })
+  const bonus = runBonus({ time: g.time, kills: p.record.kills + p.record.folded, victory: wonRun(g), greed: p.stats.greed, reaperDefeats: g.endless?.reaperDefeats })
   return { coins, bonus, steps, eggs, summary }
 }

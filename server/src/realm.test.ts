@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PRESENCE_STALE_MS } from '../../src/net/realmRelay'
-import { cityCounts, furniturePrice, groupRealmReports, parseBaseSave, parseGameClaim, parsePresenceReport, parseRealmReport, statsAfter, walkingIn } from './realm'
+import { furniturePrice, groupRealmReports, parseBaseSave, parseGameClaim, parsePresenceReport, parseRealmReport, parseRealmSettings, statsAfter } from './realm'
 
 describe('presence', () => {
   it('takes a relay report of its own cities, handles cleaned', () => {
@@ -9,15 +8,24 @@ describe('presence', () => {
     expect(parsePresenceReport({ home: 'sa', at: 1, cities: { atlantis: ['ash'] } })).toBeNull()
   })
 
-  it('counts and finds trainers only from relays heard from lately', () => {
-    const report = { home: 'sa', at: 0, cities: { pallet: ['ash', 'misty'], cerulean: ['brock'] } } as const
-    const held = [{ report: { ...report, cities: { pallet: [...report.cities.pallet], cerulean: [...report.cities.cerulean] } }, at: 1000 }]
-    expect(cityCounts(held, 2000)).toEqual({ pallet: 2, cerulean: 1 })
-    expect(walkingIn(held, 2000, ['brock', 'gary', 'ash'])).toEqual([
-      { handle: 'brock', city: 'cerulean' },
-      { handle: 'ash', city: 'pallet' },
-    ])
-    expect(cityCounts(held, 1000 + PRESENCE_STALE_MS)).toEqual({})
+  it('keeps each handle\'s room when the relay sends them lined up, and none when they don\'t', () => {
+    expect(parsePresenceReport({ home: 'sa', at: 1, cities: { pallet: ['Ash', 'ash', 'misty'] }, rooms: { pallet: ['cafe', 'plaza', 'base:Brock'] } })).toEqual({
+      home: 'sa',
+      at: 1,
+      cities: { pallet: ['ash', 'misty'] },
+    })
+    expect(parsePresenceReport({ home: 'sa', at: 1, cities: { pallet: ['Ash', 'ash', 'misty'] }, rooms: { pallet: ['cafe', 'plaza', 'base:brock'] } })).toEqual({
+      home: 'sa',
+      at: 1,
+      cities: { pallet: ['ash', 'misty'] },
+      rooms: { pallet: ['cafe', 'base:brock'] },
+    })
+    expect(parsePresenceReport({ home: 'sa', at: 1, cities: { pallet: ['ash', 'misty'] }, rooms: { pallet: ['cafe'] } })).toEqual({ home: 'sa', at: 1, cities: { pallet: ['ash', 'misty'] } })
+  })
+
+  it('reads the realm settings', () => {
+    expect(parseRealmSettings({ showWhere: false })).toEqual({ showWhere: false })
+    expect(parseRealmSettings({ showWhere: 'no' })).toBeNull()
   })
 })
 

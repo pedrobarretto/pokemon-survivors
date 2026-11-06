@@ -1,6 +1,7 @@
 import { PLAYABLE } from '../../data/hatchlings'
 import { TIER_SNAPSHOT } from '../../data/tierRuns'
-import { LOCALES, type Locale } from '../../i18n'
+import type { Locale } from '../../i18n'
+import { MESSAGES } from '../../i18n/messages'
 import { SITE_MESSAGES, type SiteMessages } from '../../i18n/site'
 import { html, type Html } from '../html'
 import { layout } from '../layout'
@@ -47,7 +48,7 @@ const board = (locale: Locale, m: SiteMessages) => {
 const numbers = (locale: Locale, m: SiteMessages) => {
   const { ranked } = currentTierList()
   const fmt = (v: number, digits: number) => v.toLocaleString(m.lang.tag, { minimumFractionDigits: digits, maximumFractionDigits: digits })
-  const difficulty = LOCALES[locale].messages.difficulty.names
+  const difficulty = MESSAGES[locale].difficulty.names
   const h = m.tierList.head
   const row = (f: RankedFamily, i: number) => html`<tr>
     <td>${i + 1}</td>

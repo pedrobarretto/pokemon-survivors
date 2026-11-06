@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { FURNITURE } from '../data/furniture'
+import { FURNITURE, footprint, turnOf } from '../data/furniture'
 import { BASE_GRID } from '../data/realmMap'
-import { EMPTY_BASE, checkLayout, type BaseLayout, type Placed } from '../data/secretBases'
-import { clampSpot, dollLegend, drawOrder, firstSpot, onSale, trayCounts } from './placement'
+import { BASE_ROOM } from '../data/realmMap'
+import { DOOR, EMPTY_BASE, checkLayout, type BaseLayout, type Placed } from '../data/secretBases'
+import { baseSolids } from '../render/base'
+import { blocked } from './interp'
+import { clampSpot, dollLegend, drawOrder, firstSpot, nearestReachable, onSale, reachableTiles, trayCounts } from './placement'
 
 const at = (id: Placed['id'], x: number, y: number, turned = false): Placed => ({ id, x, y, turned })
 const room = (items: Placed[]): BaseLayout => ({ ...EMPTY_BASE, items })
@@ -58,5 +61,45 @@ describe('onSale', () => {
     expect(sold.length).toBeGreaterThan(0)
     expect(sold.every((id) => FURNITURE[id].price !== null && dollLegend(id) === null)).toBe(true)
     expect(dollLegend('doll:kyogre')).toBe('kyogre')
+  })
+})
+
+describe('a trainer in a base', () => {
+  const T = BASE_GRID.tile
+  const tile = (x: number, y: number) => y * BASE_GRID.cols + x
+
+  it('lands clear of pieces standing beside the door', () => {
+    const layout = room([at('pottedPlant', DOOR.x - 1, DOOR.y), at('pottedPlant', DOOR.x - 1, DOOR.y - 1), at('pottedPlant', DOOR.x + 1, DOOR.y), at('pottedPlant', DOOR.x + 1, DOOR.y - 1)])
+    expect(checkLayout(layout, { pottedPlant: 4 })).toBeNull()
+    expect(blocked({ w: BASE_ROOM.w, h: BASE_ROOM.h, solid: baseSolids(layout) }, BASE_ROOM.spawn.x, BASE_ROOM.spawn.y)).toBe(false)
+  })
+
+  it('walks through a piece a layout left on the doorway, so the door never shuts', () => {
+    const layout = room([at('pottedPlant', DOOR.x, DOOR.y)])
+    expect(reachableTiles(layout).has(tile(DOOR.x, DOOR.y))).toBe(true)
+    expect(blocked({ w: BASE_ROOM.w, h: BASE_ROOM.h, solid: baseSolids(layout) }, BASE_ROOM.spawn.x, BASE_ROOM.spawn.y)).toBe(false)
+  })
+
+  it('reaches only the floor joined to the door', () => {
+    // A wall of bookshelves across row 4 cuts the room's top off.
+    const shelves = Array.from({ length: BASE_GRID.cols / 2 }, (_, i) => at('bookshelf', i * 2, 4))
+    const reach = reachableTiles(room(shelves))
+    expect(reach.has(tile(0, 3))).toBe(false)
+    expect(reach.has(tile(0, 5))).toBe(true)
+    expect(reach.has(tile(0, 4))).toBe(false)
+  })
+
+  it('sets a trainer standing in a piece down on the nearest tile it can walk to the door from', () => {
+    const shelves = Array.from({ length: BASE_GRID.cols / 2 }, (_, i) => at('bookshelf', i * 2, 4))
+    // Inside the shelf at (2, 4): above it is closer, but cut off, so it lands below.
+    expect(nearestReachable(room(shelves), 2.5 * T, 4.4 * T)).toEqual({ x: 2.5 * T, y: 5.5 * T })
+  })
+})
+
+describe('turnOf', () => {
+  it('turns art seen from above a quarter, mirrors 3/4 art in place, and leaves out what a turn would not change', () => {
+    expect([turnOf('pikachuBed'), turnOf('pokeBallRug'), turnOf('centerSofa'), turnOf('doll:kyogre')]).toEqual(['quarter', 'quarter', 'mirror', 'mirror'])
+    expect([turnOf('fireRedCover'), turnOf('roundRug'), turnOf('plankFloor')]).toEqual([null, null, null])
+    expect([footprint('pikachuBed', true), footprint('centerSofa', true)]).toEqual([[3, 2], [2, 1]])
   })
 })

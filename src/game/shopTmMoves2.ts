@@ -2,7 +2,7 @@ import { dirTo, fromAngle, TAU } from '../engine/math'
 import { ownAttack } from './players'
 import * as dm from '../engine/dmath'
 import { burst, shakeScreen } from './effects'
-import { burrowTime } from './kitRules'
+import { burrowWard } from './kitRules'
 import { burrow, took } from './moveKit'
 import type { CastStats, Look, MoveDef, MoveId, MoveStats } from './moves'
 import { nearestEnemy } from './queries'
@@ -70,6 +70,9 @@ export const DRAIN_PUNCH = { reach: 64, ahead: 16, r: 13, share: 0.35, spread: 0
 export const THUNDER_WAVE = { reach: 220, circles: 4, cone: 0.32, widen: 0.1, r: 11, ttl: 0.6 } as const
 /** Fly: how high the player rises, the slam's radius (× area) and the i-frames after landing. */
 export const FLY = { lift: 34, slam: 38, grow: 0.12, iframes: 0.35 } as const
+
+/** Seconds Fly keeps you aloft: its `duration`, at most half its cycle with the landing's i-frames (`burrowWard`). */
+const flyAloft = burrowWard(FLY.iframes)
 
 /* ---------------- Pure rules ---------------- */
 
@@ -172,15 +175,14 @@ const thunderWave = (g: Game, s: CastStats) => {
 }
 
 /**
- * Takes off for `duration` s (at most half its cycle with the landing's
- * i-frames, `burrowTime`): invulnerable and lost to the foes (the kit's
+ * Takes off for `flyAloft` s: invulnerable and lost to the foes (the kit's
  * burrow), still steering, then `flySlam` where it lands. A player already
  * out of reach (Dig), or whose last protection from another move just fell
  * (`wardOpens`), stays put.
  */
 const fly = (g: Game, s: CastStats) => {
   const p = g.player
-  const aloft = burrowTime(s.duration, s.cooldown, FLY.iframes)
+  const aloft = flyAloft(s)
   if (p.hidden || !burrow(g, 'fly', aloft)) return
   spawnAttack(g, {
     ...look('fly', 'flying', 'flyLift'), x: p.x, y: p.y, shape: { kind: 'circle', r: 1 }, motion: { kind: 'follow', ox: 0, oy: 0 },
@@ -298,9 +300,10 @@ export const SHOP_TM_MOVES_2 = {
   fly: {
     name: 'Fly',
     type: 'flying',
-    // `duration` is the time aloft (cut by `burrowTime`).
+    // `duration` is the time aloft, cut by `flyAloft`.
     base: stats({ damage: 30, cooldown: 7, duration: 0.9, knockback: 160 }),
     minCooldown: 2,
+    ward: flyAloft,
     upgrades: [
       { damage: 6 },
       { cooldown: -0.7 },

@@ -1,13 +1,20 @@
 import { spendFromSave } from '../account'
 import { apiCall } from '../api'
-import { CITY_IDS, isCityId, type CityId } from '../net/realm'
-import type { BaseCard, BaseList, BaseSave, BaseView, FurnitureBought, FurnitureBuy, GameClaim, GameClaimed, RealmCities, RealmFriends, RealmMe, RealmReport } from '../net/realmApi'
-import { MINIGAME_DAILY, capped, coinsFor, trophiesEarned, type GameStats, type MinigameId } from '../data/minigames'
+import { CITY_IDS, isCityId } from '../net/realm'
+import type { BaseCard, BaseList, BaseSave, BaseView, FurnitureBought, FurnitureBuy, GameClaim, GameClaimed, RealmCities, RealmFriend, RealmFriends, RealmMe, RealmReport } from '../net/realmApi'
+import type { PresenceReport } from '../net/realmRelay'
+import { ACTIVITIES } from '../game/friends'
+import { ROOM_CAP } from '../data/realmMap'
+import { friendsFrom, parseReportRoom, type Followed, type HeldPresence } from './friends'
+import { MINIGAME_DAILY, capped, coinsFor, isMinigameId, trophiesEarned, type GameStats, type MinigameId } from '../data/minigames'
 import { BASE_EXTERIORS, isBaseExterior, isBaseVisibility, parseLayout, type BaseLayout, type LayoutError } from '../data/secretBases'
 import { FURNITURE, FURNITURE_IDS, isFurnitureId, type FurnitureCounts, type FurnitureId } from '../data/furniture'
 import { LEGEND_IDS } from '../data/legends'
 import { isRecord } from '../game/parse'
 import { DEMO_BASES } from './demoBases'
+import { fakeGameBoard } from './boardFakes'
+import { boardKeeps, boardPoints, isGameBoardPeriod, type GameBoard, type GameBoardEntry, type GameBoardPeriod } from './boards'
+import { isDayKey } from '../game/day'
 
 /**
  * The Poké Realm's calls to the API (`net/realmApi.ts` lists the routes). The
@@ -16,16 +23,55 @@ import { DEMO_BASES } from './demoBases'
  * Every answer is parsed, never trusted as is.
  *
  * `ps.realm('fake')` makes every call answer made-up data from `fake` (a
- * base, owned furniture, busy cities, two friends), so the realm's screens
- * work without an API.
+ * base, owned furniture, busy cities, a few friends: `FAKE_FOLLOWED`, the
+ * mini games' boards with this session's claims on them), so the realm's
+ * screens work without an API.
  */
 
 /** Why a call didn't go: the API's `error` (`offline` when it couldn't ask), its status, and for a refused layout which piece (`LayoutError`). */
 export type Failure = { error: string; status: number; item?: number }
 
-type Fake = { me: RealmMe; bases: Map<string, BaseView>; games: { day: Partial<Record<MinigameId, number>>; stats: Partial<Record<MinigameId, GameStats>> } }
+type Fake = {
+  me: RealmMe
+  bases: Map<string, BaseView>
+  /** What the faked claims paid today and counted, and what they put on the boards (`boardPoints`, the same for the day and the week). */
+  games: { day: Partial<Record<MinigameId, number>>; stats: Partial<Record<MinigameId, GameStats>>; board: Partial<Record<MinigameId, number>> }
+  showWhere: boolean
+}
 
 let fake: Fake | null = null
+
+/**
+ * The faked friends: the players followed, before the privacy rules. Misty,
+ * Brock and Dawn are the in-page realm's bots (`fakeFriendsFrom` says where
+ * they walk; Dawn hides it), May walks a full arcade in Vermilion, Tracey is
+ * in a run, Red offline and Leon doesn't follow back.
+ */
+const FAKE_FOLLOWED: readonly Omit<Followed, 'walking'>[] = [
+  { handle: 'misty', name: 'Misty', followsBack: true, appearOffline: false, showWhere: true, activity: null, ago: null },
+  { handle: 'brock', name: 'Brock', followsBack: true, appearOffline: false, showWhere: true, activity: null, ago: null },
+  { handle: 'dawn', name: 'Dawn', followsBack: true, appearOffline: false, showWhere: false, activity: null, ago: null },
+  { handle: 'may', name: 'May', followsBack: true, appearOffline: false, showWhere: true, activity: null, ago: null },
+  { handle: 'tracey', name: 'Tracey', followsBack: true, appearOffline: false, showWhere: true, activity: 'run', ago: 1000 },
+  { handle: 'red', name: 'Red', followsBack: true, appearOffline: false, showWhere: true, activity: null, ago: null },
+  { handle: 'leon', name: 'Leon', followsBack: false, appearOffline: false, showWhere: true, activity: 'lobby', ago: 1000 },
+]
+
+/** Where the faked friends walk outside the in-page realm: May in a Vermilion arcade at its cap. */
+const fakeElsewhere = (at: number): PresenceReport => {
+  const crowd = Array.from({ length: ROOM_CAP.town - 1 }, (_, i) => `trainer${i}`)
+  return { home: 'sa', at, cities: { vermilion: ['may', ...crowd] }, rooms: { vermilion: ['arcade', ...crowd.map(() => 'arcade')] } }
+}
+
+/** Where the bots of the in-page realm walk (its presence report), when one runs; set by `realmShell.ts`. */
+let fakeHere: (() => PresenceReport | null) | null = null
+
+export const fakeFriendsFrom = (fn: (() => PresenceReport | null) | null) => {
+  fakeHere = fn
+}
+
+/** Without an in-page realm: Misty in Pallet's café, Brock and Dawn in Brock's base. */
+const fakeDefault = (at: number): PresenceReport => ({ home: 'sa', at, cities: { pallet: ['misty', 'brock', 'dawn'] }, rooms: { pallet: ['cafe', 'base:brock', 'base:brock'] } })
 
 /** Two of every piece on sale, and the dolls of half the legends (the ones `DEMO_BASES.mine` sets out among them). */
 const fakeFurniture = (): FurnitureCounts =>
@@ -46,7 +92,7 @@ const fakeBase = (handle: string, layout: BaseLayout = DEMO_BASES.mine, partner 
 /** Dev: every call answers made-up data (on), or the API again (off). */
 export const fakeRealm = (on: boolean, handle = 'ash') => {
   const bases = [fakeBase('misty', DEMO_BASES.misty, 'squirtle', 87, 24), fakeBase('brock', DEMO_BASES.brock, 'geodude', 41, 9)]
-  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])), games: { day: {}, stats: {} } } : null
+  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])), games: { day: {}, stats: {}, board: {} }, showWhere: true } : null
 }
 
 export const realmFaked = () => fake !== null
@@ -106,12 +152,30 @@ const parseCities = (v: unknown): RealmCities | null => {
   return { cities: Object.fromEntries(cities), at: v.at }
 }
 
-const parseFriends = (v: unknown): RealmFriends | null => {
-  if (!isRecord(v) || !Array.isArray(v.friends)) return null
-  return {
-    friends: v.friends.flatMap((f): { handle: string; city: CityId }[] => (isRecord(f) && typeof f.handle === 'string' && isCityId(f.city) ? [{ handle: f.handle, city: f.city }] : [])),
+const parseFriend = (f: unknown): RealmFriend | null => {
+  if (!isRecord(f) || typeof f.handle !== 'string' || typeof f.name !== 'string') return null
+  const who = { handle: f.handle, name: f.name }
+  switch (f.state) {
+    case 'realm': {
+      if (!isCityId(f.city)) return null
+      const full = f.full === 'city' || f.full === 'room' ? f.full : null
+      return { ...who, state: 'realm', city: f.city, room: parseReportRoom(f.room), full }
+    }
+    case 'game': {
+      const activity = ACTIVITIES.find((a) => a === f.activity)
+      return activity ? { ...who, state: 'game', activity } : null
+    }
+    case 'hidden':
+    case 'offline':
+    case 'pending':
+      return { ...who, state: f.state }
+    default:
+      return null
   }
 }
+
+export const parseRealmFriends = (v: unknown): RealmFriends | null =>
+  isRecord(v) && Array.isArray(v.friends) ? { friends: v.friends.flatMap((f) => parseFriend(f) ?? []), showWhere: v.showWhere !== false } : null
 
 const parseBought = (v: unknown): FurnitureBought | null => {
   if (!isRecord(v)) return null
@@ -134,14 +198,29 @@ export const fetchCities = async (): Promise<RealmCities | null> => {
   return status === 200 ? parseCities(body) : null
 }
 
+/** The players followed and where each is, as far as they let the player see (`realm/friends.ts`), or null (offline, or asked too often). */
 export const fetchFriends = async (): Promise<RealmFriends | null> => {
-  if (fake) return { friends: [{ handle: 'misty', city: 'cerulean' }, { handle: 'brock', city: 'pewter' }] }
+  if (fake) {
+    const at = Date.now()
+    const held: HeldPresence[] = [fakeHere?.() ?? fakeDefault(at), fakeElsewhere(at)].map((report) => ({ report, at }))
+    return { friends: friendsFrom(FAKE_FOLLOWED, held, at), showWhere: fake.showWhere }
+  }
   const { status, body } = await apiCall('/realm/friends', { auth: true })
-  return status === 200 ? parseFriends(body) : null
+  return status === 200 ? parseRealmFriends(body) : null
+}
+
+/** Turns "Mostrar onde estou para amigos" on or off. Whether it went through. */
+export const setShowWhere = async (showWhere: boolean): Promise<boolean> => {
+  if (fake) {
+    fake.showWhere = showWhere
+    return true
+  }
+  return (await apiCall('/realm/settings', { method: 'PUT', body: { showWhere }, auth: true })).status === 200
 }
 
 export const fetchBase = async (handle: string): Promise<BaseView | Failure> => {
-  if (fake) return (handle === fake.me.handle ? fake.me.base : fake.bases.get(handle)) ?? { error: 'missing', status: 404 }
+  // Faked, every other handle has the demo base (two tabs on a dev relay visit each other's).
+  if (fake) return (handle === fake.me.handle ? fake.me.base : fake.bases.get(handle)) ?? fakeBase(handle)
   const { status, body } = await apiCall(`/realm/base/${encodeURIComponent(handle)}`, { auth: true })
   return (status === 200 ? parseBaseView(body) : null) ?? failed(status, body)
 }
@@ -240,6 +319,9 @@ export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure
       feats: [...new Set([...was.feats, ...claim.feats])],
     }
     g.stats[claim.game] = stats
+    const points = boardPoints(claim.game, claim.outcome)
+    const had = g.board[claim.game]
+    if (points !== null) g.board[claim.game] = had === undefined ? points : boardKeeps(claim.game) === 'best' ? Math.max(had, points) : had + points
     const before = new Set(trophiesEarned(claim.game, was))
     const trophies = trophiesEarned(claim.game, stats).filter((id): id is FurnitureId => !before.has(id) && isFurnitureId(id))
     if (trophies.length > 0) fake.me = { ...fake.me, furniture: { ...fake.me.furniture, ...Object.fromEntries(trophies.map((id) => [id, (fake?.me.furniture[id] ?? 0) + 1])) } }
@@ -259,3 +341,28 @@ export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure
 }
 
 export const isFailure = (v: unknown): v is Failure => typeof v === 'object' && v !== null && 'error' in v && 'status' in v
+
+const parseBoardEntry = (v: unknown): GameBoardEntry | null => {
+  if (!isRecord(v) || typeof v.handle !== 'string') return null
+  const rank = count(v.rank)
+  const score = count(v.score)
+  return rank && score !== null ? { rank, handle: v.handle, score } : null
+}
+
+export const parseGameBoard = (v: unknown): GameBoard | null => {
+  if (!isRecord(v) || !isMinigameId(v.game) || !isGameBoardPeriod(v.period) || !isDayKey(v.start) || !Array.isArray(v.entries)) return null
+  const total = count(v.total)
+  const me = v.me === null || v.me === undefined ? null : parseBoardEntry(v.me)
+  if (total === null) return null
+  return { game: v.game, period: v.period, start: v.start, entries: v.entries.flatMap((e) => parseBoardEntry(e) ?? []), me, total }
+}
+
+/**
+ * A mini game's board for the period (`GET /realm/boards/:game`): public, with
+ * the player's own line when signed in. Null when the API can't be reached.
+ */
+export const fetchGameBoard = async (game: MinigameId, period: GameBoardPeriod): Promise<GameBoard | null> => {
+  if (fake) return fakeGameBoard(game, period, { handle: fake.me.handle, score: fake.games.board[game] ?? null })
+  const { status, body } = await apiCall(`/realm/boards/${game}?period=${period}`, { auth: 'maybe' })
+  return status === 200 ? parseGameBoard(body) : null
+}

@@ -1,4 +1,4 @@
-import { blitEllipse, blitRing } from '../engine/pixelart'
+import { beginRects, blitEllipse, blitRing, fillPlotted, plot } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import type { Attack, Game } from '../game/types'
@@ -27,15 +27,16 @@ const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 /** 1 while it lasts, easing to 0 over its last `window` seconds. */
 const fadeOut = (a: Attack, window: number) => clamp01((a.ttl - a.age) / window)
 
-/** Square-brush line from (x0, y0) to (x1, y1), `w` px thick. */
+/** Square-brush line from (x0, y0) to (x1, y1), `w` px thick, as one path. */
 const line = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, w: number, color: string) => {
   const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0)))
   const half = Math.floor(w / 2)
-  ctx.fillStyle = color
+  beginRects(ctx, color)
   for (let i = 0; i <= n; i++) {
     const k = i / n
-    ctx.fillRect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
+    ctx.rect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
   }
+  ctx.fill()
 }
 
 /** A jagged arc from (x0, y0) to (x1, y1), `width` px: `kinks` corners jittered by `jag` px, reshuffled `rate` times a second. */
@@ -58,15 +59,15 @@ const zap = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, seed: num
   }
 }
 
-/** A small flame tongue, 2–5 px tall, flickering with `t`. */
-const tongue = (ctx: Ctx, x: number, y: number, size: number, seed: number, t: number, shades: readonly string[]) => {
+/** Plots (`plot`) a small flame tongue, 2–5 px tall, flickering with `t`: a sea of them fills as one path per shade. */
+const tongue = (x: number, y: number, size: number, seed: number, t: number, shades: readonly string[]) => {
   const flick = Math.floor(t * 14 + seed * 10) % 3
   const h = Math.max(2, Math.round(size + flick - 1))
   for (let i = 0; i < h; i++) {
     const k = i / h
     const color = shades[Math.min(shades.length - 1, Math.floor(k * shades.length))]!
     const w = i < h - 1 ? (k < 0.5 ? 3 : 2) : 1
-    px(ctx, x - Math.floor(w / 2) + (i === h - 1 && flick === 1 ? 1 : 0), y - i, color, w, 1)
+    plot(color, x - Math.floor(w / 2) + (i === h - 1 && flick === 1 ? 1 : 0), y - i, w, 1)
   }
 }
 
@@ -94,14 +95,16 @@ const seaOfFire = (ctx: Ctx, a: Attack, t: number) => {
     // Each tongue lives its own short life, so the sea keeps churning.
     const life = (t * 1.6 + hash2(a.id, i, 3)) % 1
     if (life > 0.85) continue
-    tongue(ctx, a.x + Math.cos(ang) * d, a.y + Math.sin(ang) * d * 0.66, 2 + 4 * Math.sin(life * Math.PI) * fade, hash2(a.id, i, 4), t, FIRE)
+    tongue(a.x + Math.cos(ang) * d, a.y + Math.sin(ang) * d * 0.66, 2 + 4 * Math.sin(life * Math.PI) * fade, hash2(a.id, i, 4), t, FIRE)
   }
+  fillPlotted(ctx)
   // A wall of taller flames along the rim.
   const rim = Math.round(r * 0.9)
   for (let i = 0; i < rim; i++) {
     const ang = (i / rim) * TAU
-    tongue(ctx, a.x + Math.cos(ang) * r, a.y + Math.sin(ang) * r * 0.66, (4 + 3 * hash2(a.id, i, 9)) * fade * (0.5 + 0.5 * grow), hash2(a.id, i, 10), t, FIRE)
+    tongue(a.x + Math.cos(ang) * r, a.y + Math.sin(ang) * r * 0.66, (4 + 3 * hash2(a.id, i, 9)) * fade * (0.5 + 0.5 * grow), hash2(a.id, i, 10), t, FIRE)
   }
+  fillPlotted(ctx)
   ctx.globalAlpha = 1
 }
 
@@ -273,14 +276,16 @@ const geyser = (ctx: Ctx, a: Attack, t: number, height: number, width: number, l
     const k = i / Math.max(1, height)
     const wave = Math.round(Math.sin(i * 0.45 - t * 18) * 1.2)
     const half = Math.max(2, Math.round((width / 2) * (1.15 - k * 0.35) + (i < 4 ? 4 - i : 0)))
-    px(ctx, a.x - half + wave, a.y - i, WATER[0], half * 2 + 1, 1)
-    px(ctx, a.x - half + 1 + wave, a.y - i, WATER[1], half * 2 - 1, 1)
-    px(ctx, a.x - Math.round(half * 0.5) + wave, a.y - i, WATER[2], Math.max(1, half), 1)
+    // Rows don't overlap, and each color is plotted narrower than the one before: one path per color layers the same.
+    plot(WATER[0], a.x - half + wave, a.y - i, half * 2 + 1, 1)
+    plot(WATER[1], a.x - half + 1 + wave, a.y - i, half * 2 - 1, 1)
+    plot(WATER[2], a.x - Math.round(half * 0.5) + wave, a.y - i, Math.max(1, half), 1)
     // Foam streaks racing up the column.
     for (let s = 0; s < 3; s++) {
-      if ((i + Math.floor(t * 60) + s * 7 + a.id) % 11 < 3) px(ctx, a.x - half + 2 + s * Math.max(1, Math.floor(half / 1.5)) + wave, a.y - i, WATER[3])
+      if ((i + Math.floor(t * 60) + s * 7 + a.id) % 11 < 3) plot(WATER[3], a.x - half + 2 + s * Math.max(1, Math.floor(half / 1.5)) + wave, a.y - i)
     }
   }
+  fillPlotted(ctx)
   const top = a.y - height
   blitEllipse(ctx, Math.round(width * 0.8), Math.round(width * 0.45), WATER[3], a.x, top)
   blitEllipse(ctx, Math.round(width * 0.55), Math.round(width * 0.3), WATER[2], a.x, top + 1)
@@ -289,13 +294,14 @@ const geyser = (ctx: Ctx, a: Attack, t: number, height: number, width: number, l
     const side = i % 2 ? 1 : -1
     const spread = (3 + (i >> 1)) * side
     const k = clamp01(life * 1.8 + hash2(a.id, i, 1) * 0.3)
-    px(ctx, a.x + spread * (1 + k * 2), top + k * k * 26 - 2, i % 3 ? WATER[3] : WATER[2], 2, 2)
+    plot(i % 3 ? WATER[3] : WATER[2], a.x + spread * (1 + k * 2), top + k * k * 26 - 2, 2, 2)
   }
   // The splash ring at the foot.
   for (let i = 0; i < 10; i++) {
     const ang = Math.PI + (i / 9) * Math.PI
-    px(ctx, a.x + Math.cos(ang) * (width + 3), a.y + Math.sin(ang) * 4 - 1, WATER[3], 2, 2)
+    plot(WATER[3], a.x + Math.cos(ang) * (width + 3), a.y + Math.sin(ang) * 4 - 1, 2, 2)
   }
+  fillPlotted(ctx)
 }
 
 /** How tall a Pledge pillar stands, by type: water geysers highest, vines lowest. */
@@ -508,7 +514,8 @@ const rainbow = (ctx: Ctx, g: Game, t: number) => {
   const cx = Math.round(localPlayer(g).x)
   const cy = Math.round(localPlayer(g).y + g.view.h * 0.25)
   const r0 = Math.round(Math.max(g.view.w * 0.5, g.view.h * 0.75))
-  ctx.globalAlpha = alpha
+  // Each band is one path, so its overlapping dots fill once: as opaque as they built up drawn one by one.
+  ctx.globalAlpha = alpha * 1.6
   // The arc is wider than the screen: only the dots in view (with room for the screen shake) are drawn, most of them on a phone held upright.
   const margin = 8 + Math.ceil(g.shake)
   const left = Math.round(g.camera.x) - margin
@@ -518,13 +525,14 @@ const rainbow = (ctx: Ctx, g: Game, t: number) => {
   RAINBOW.forEach((color, band) => {
     const r = r0 - band * 3
     const steps = Math.round(Math.PI * r)
-    ctx.fillStyle = color
+    beginRects(ctx, color)
     for (let i = 0; i <= steps; i++) {
       const ang = Math.PI + (i / steps) * Math.PI
       const x = Math.round(cx + Math.cos(ang) * r)
       const y = Math.round(cy + Math.sin(ang) * r * 0.7)
-      if (x >= left && x <= right && y >= top && y <= bottom) ctx.fillRect(x, y, 2, 3)
+      if (x >= left && x <= right && y >= top && y <= bottom) ctx.rect(x, y, 2, 3)
     }
+    ctx.fill()
   })
   // A few twinkles riding the arc.
   ctx.globalAlpha = alpha * 1.6

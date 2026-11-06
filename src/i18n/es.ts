@@ -1,10 +1,12 @@
 import type { Messages } from './pt'
+import type { Activity } from '../game/friends'
 
 const typeBoost = (type: string) => `+10% de daño a los movimientos de tipo ${type}.`
 
 /** Spanish (Latin America). Must match `pt` key for key (enforced by the `Messages` type). */
 export const es: Messages = {
   loading: 'Cargando…',
+  loadFailed: 'No se pudo abrir. Revisa tu conexión e inténtalo de nuevo.',
   level: (n) => `Nv ${n}`,
   levelShort: (n) => `Nv${n}`,
   max: 'MÁX',
@@ -724,6 +726,7 @@ export const es: Messages = {
       afk: 'Estuviste quieto demasiado tiempo y volviste a la elección de ciudad.',
       banned: 'Tu cuenta está suspendida del Poké Realm.',
       busy: 'El servidor del Realm está lleno. Inténtalo de nuevo en un momento.',
+      roomFull: 'Esa sala está llena ahora. Inténtalo de nuevo en un rato.',
     },
     talk: 'Hablar',
     emote: 'Emote',
@@ -774,6 +777,19 @@ export const es: Messages = {
       prizes: 'Premios',
     },
     use: 'Usar',
+    pieces: {
+      sit: 'Sentarse',
+      lie: 'Acostarse',
+      soak: 'Entrar',
+      stand: 'Levantarse',
+      taken: 'Ocupado',
+      on: 'Encender',
+      off: 'Apagar',
+      play: 'Poner música',
+      next: 'Siguiente canción',
+      stop: 'Quitar música',
+      track: (n: number, total: number) => `♪ Canción ${n} de ${total}`,
+    },
     board: {
       title: 'Tablón de la plaza',
       lines: [
@@ -829,6 +845,31 @@ export const es: Messages = {
       profile: 'Ver perfil',
       close: 'Cerrar',
       you: 'Tú',
+    },
+    friends: {
+      open: 'Amigos',
+      title: 'Amigos en el Realm',
+      all: 'Ver todos los amigos',
+      showWhere: (on: boolean) => `Mostrar a mis amigos dónde estoy: ${on ? 'sí' : 'no'}`,
+      showWhereHint: 'Solo quien te sigue de vuelta ve la ciudad y la sala donde estás.',
+      states: { hidden: 'En el Realm · ubicación oculta', offline: 'Desconectado', pending: 'Aún no te sigue de vuelta' },
+      activity: { lobby: 'En el juego, fuera del Realm', room: 'En una sala de Co-op', run: 'En una partida' } satisfies Record<Activity, string>,
+      yourBase: 'Tu base',
+      here: 'Estás aquí',
+      go: 'Ir con',
+      roomFull: 'Sala llena',
+      goCity: 'Ir a la ciudad',
+      cityFull: 'Ciudad llena',
+      invite: 'Invitar a mi base',
+      sent: (handle: string) => `Invitación enviada a @${handle}`,
+      privateBase: 'Tu base está cerrada a las visitas. Ábrela a tus amigos (✎ dentro de ella) para invitar.',
+      noBase: 'Arregla tu base (✎ dentro de ella) antes de invitar a alguien.',
+      empty: 'Aún no sigues a nadie. Sigue a entrenadores desde el Ranking o su perfil.',
+      failed: 'No se pudo ver a tus amigos ahora.',
+      invited: (handle: string) => `@${handle} te invitó a su base secreta`,
+      accept: 'Ir',
+      decline: 'Ahora no',
+      lobby: (n: number) => (n === 1 ? '1 amigo en el Realm' : `${n} amigos en el Realm`),
     },
   },
   coop: {
@@ -3112,7 +3153,7 @@ export const es: Messages = {
       ],
     },
     needleArm: {
-      description: 'Tus púas se erizan: agujas salen hacia todos lados y, durante 1.5s, quien te toque no te hace daño y además sale herido y despedido.',
+      description: 'Tus púas se erizan: agujas salen hacia todos lados y, durante 1.5s (como máximo la mitad de la recarga), quien te toque no te hace daño y además sale herido y despedido.',
       upgrades: [
         '+3 de daño',
         '+2 agujas',
@@ -3328,7 +3369,7 @@ export const es: Messages = {
       ],
     },
     dig: {
-      description: 'Presiona Shift o el botón de embestida: te entierras (invulnerable, la horda te pierde de vista) y sales debajo del enemigo más grande cercano, jefe primero, en un temblor.',
+      description: 'Presiona Shift o el botón de embestida: te entierras (invulnerable, la horda te pierde de vista) y sales debajo del enemigo más grande cercano, jefe primero, en un temblor. El tiempo bajo tierra, sumado a la salida, cubre como máximo la mitad de la recarga.',
       upgrades: [
         '+10 de daño',
         'Temblor 20% más grande',
@@ -4672,7 +4713,7 @@ export const es: Messages = {
       ],
     },
     protect: {
-      description: 'Cada 12s una burbuja te protege 1s: ningún golpe pasa, y lo que la toca sale empujado.',
+      description: 'Cada 12s una burbuja te protege 1s: ningún golpe pasa, y lo que la toca sale empujado. Dura como máximo la mitad de la recarga, así que Light Clay y Quick Claw nunca encadenan una burbuja con la siguiente.',
       upgrades: [
         'Dura +0.2s',
         'Recarga 1s más rápida',
@@ -4756,7 +4797,7 @@ export const es: Messages = {
       ],
     },
     fly: {
-      description: 'Cada 7s alzas el vuelo un instante: nada te alcanza y los enemigos te pierden de vista. Sigues moviéndote y, al aterrizar, caes con todo, hiriendo y empujando a quien está alrededor.',
+      description: 'Cada 7s alzas el vuelo un instante: nada te alcanza y los enemigos te pierden de vista. Sigues moviéndote y, al aterrizar, caes con todo, hiriendo y empujando a quien está alrededor. El tiempo en el aire, sumado al aterrizaje, cubre como máximo la mitad de la recarga.',
       upgrades: [
         '+6 de daño',
         'Recarga 0.7s más rápida',
@@ -5384,9 +5425,9 @@ export const es: Messages = {
 
   items: {
     muscleBand: '+10% de daño a todos los movimientos.',
-    quickClaw: 'Los movimientos recargan 8% más rápido.',
+    quickClaw: 'Los movimientos recargan 8% más rápido. Una protección (Protect, Needle Arm, Fly, Dig) dura como máximo la mitad de su recarga, así que también puede acortarse.',
     wideLens: '+10% de área de los movimientos.',
-    lightClay: 'Los efectos duran 12% más.',
+    lightClay: 'Los efectos duran 12% más. Una protección (Protect, Needle Arm, Fly, Dig) sigue durando como máximo la mitad de la recarga del movimiento.',
     loadedDice: '+1 proyectil en movimientos de varios golpes.',
     leftovers: 'Recupera 0.3 HP por segundo.',
     choiceScarf: '+8% de velocidad de movimiento.',
@@ -6321,6 +6362,21 @@ export const es: Messages = {
       trophy: (name) => `¡Trofeo nuevo: ${name}!`,
       again: 'Jugar de nuevo',
       leave: 'Salir',
+    },
+    board: {
+      title: 'Marcador',
+      open: 'Marcador',
+      see: 'Ver marcador',
+      periods: { day: 'Hoy', week: 'Semana' },
+      dayCaption: 'Récords de hoy · se reinicia a medianoche (Brasilia)',
+      weekCaption: (from, to) => `Semana del ${from} al ${to}`,
+      tableNote: 'Cuentan las victorias contra otros entrenadores.',
+      points: (n) => `${n} pts`,
+      wins: (n) => (n === 1 ? '1 victoria' : `${n} victorias`),
+      total: (n) => (n === 1 ? '1 entrenador en el marcador' : `${n} entrenadores en el marcador`),
+      empty: 'Nadie ha jugado todavía. ¡Sé el primero!',
+      loading: 'Cargando...',
+      offline: 'No se pudo cargar el marcador ahora.',
     },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {

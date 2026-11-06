@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canvasCache, canvasLosses, canvasRestored, canvasWatch, heldCanvases, lazy, onCanvasReset, resetCanvases, sweepArt, weighCanvases, type Probe } from './pixelart'
+import { canvasCache, canvasLosses, canvasRestored, canvasWatch, fillPlotted, heldCanvases, lazy, onCanvasReset, plot, resetCanvases, sweepArt, weighCanvases, type Probe, type RectSink } from './pixelart'
 
 describe('resetCanvases', () => {
   it('drops cached art so it is drawn again after a GPU reset', () => {
@@ -124,5 +124,44 @@ describe('heldCanvases', () => {
     expect(heldCanvases()).toEqual({ canvases: before.canvases + 1, bytes: before.bytes + 256 })
     cache.clear()
     expect(heldCanvases()).toEqual(before)
+  })
+})
+
+describe('plot', () => {
+  /** A context that writes down the path calls it gets. */
+  const recorder = () => {
+    const calls: string[] = []
+    const sink: RectSink = {
+      set fillStyle(c: string) {
+        calls.push(`style ${c}`)
+      },
+      get fillStyle() {
+        return ''
+      },
+      beginPath: () => calls.push('begin'),
+      rect: (x: number, y: number, w: number, h: number) => calls.push(`rect ${x},${y},${w},${h}`),
+      fill: () => calls.push('fill'),
+    }
+    return { calls, sink }
+  }
+
+  it('fills each color as one path, in the order the colors were first plotted', () => {
+    const { calls, sink } = recorder()
+    plot('#dark', 1.4, 2.6, 3, 3)
+    plot('#core', 2, 3)
+    plot('#dark', 5, 5)
+    fillPlotted(sink)
+    expect(calls).toEqual(['style #dark', 'begin', 'rect 1,3,3,3', 'rect 5,5,1,1', 'fill', 'style #core', 'begin', 'rect 2,3,1,1', 'fill'])
+    calls.length = 0
+    fillPlotted(sink)
+    expect(calls).toEqual([])
+  })
+
+  it('keeps every rect of a color past its first buffer', () => {
+    const { calls, sink } = recorder()
+    for (let i = 0; i < 500; i++) plot('#ring', i, 0)
+    fillPlotted(sink)
+    expect(calls.filter((c) => c.startsWith('rect'))).toHaveLength(500)
+    expect(calls.at(-2)).toBe('rect 499,0,1,1')
   })
 })

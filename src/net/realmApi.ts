@@ -1,6 +1,7 @@
 import type { BaseExterior, BaseLayout, BaseVisibility } from '../data/secretBases'
 import type { FurnitureCounts, FurnitureId } from '../data/furniture'
-import type { CityId } from './realm'
+import type { Activity } from '../game/friends'
+import type { CityId, RoomKey } from './realm'
 import type { GameOutcome, MinigameId } from '../data/minigames'
 
 /**
@@ -11,7 +12,9 @@ import type { GameOutcome, MinigameId } from '../data/minigames'
  *   403 `{ error: 'profile' }` without a @handle.
  * - `GET /realm/cities`: `RealmCities`, each city's trainers now (from the
  *   relays' presence). Public, cached a few seconds.
- * - `GET /realm/friends` (auth): `RealmFriends`, the mutual friends walking a city now.
+ * - `GET /realm/friends` (auth): `RealmFriends`, the players the asker follows and where each is, as
+ *   far as they let them see (`friendWhere`, `realm/friends.ts`); 429 past the route's rate limit.
+ * - `PUT /realm/settings` (auth) `RealmSettings`: "Mostrar onde estou para amigos". `RealmSettings`; 429 past the rate limit.
  * - `GET /realm/base/:handle` (auth): `BaseView`; 403 `{ error: 'private' }`
  *   when the player may not come in, 404 for no such base.
  * - `PUT /realm/base` (auth) `BaseSave`: saves the player's base after
@@ -29,6 +32,8 @@ import type { GameOutcome, MinigameId } from '../data/minigames'
  *   the game's stats (`GameStats`) and grants the trophies they reach (`trophiesEarned`, into
  *   `furniture_owned` with source `game`). `GameClaimed`; 400 for an outcome that doesn't fit the game,
  *   429 past the route's rate limit. The client adds `coins` to the wallet like a run's ₽.
+ * - `GET /realm/boards/:game?period=day|week` (public; signed in adds the player's line): `GameBoard`
+ *   (`realm/boards.ts`), the game's best of the Brasília day or week, from the claims. Cached a few seconds.
  *
  * And the relay's (signed), `net/realmRelay.ts`: `POST /realm/identity`, `POST /realm/visit`, `POST /realm/presence`.
  */
@@ -38,7 +43,27 @@ export type RealmMe = { handle: string; furniture: FurnitureCounts; base: BaseVi
 
 export type RealmCities = { cities: Partial<Record<CityId, number>>; at: number }
 
-export type RealmFriends = { friends: { handle: string; city: CityId }[] }
+/**
+ * A player the asker follows, as far as they let them see: `realm` walking a
+ * city (its room, null from an older relay, and `full`: the city or the room
+ * holds its cap), `hidden` in the Realm but showing nobody where, `game`
+ * online in the game outside it, `offline` (or appearing so), `pending` not
+ * following back (nothing shown: following needs no consent). Flat, so a
+ * client that only reads `handle` and `city` still lists who walks where.
+ */
+export type RealmFriend = { handle: string; name: string } & (
+  | { state: 'realm'; city: CityId; room: RoomKey | null; full: 'city' | 'room' | null }
+  | { state: 'game'; activity: Activity }
+  | { state: 'hidden' | 'offline' | 'pending' }
+)
+
+export type FriendState = RealmFriend['state']
+
+/** The followed players (mutual friends first, then by where they are, `sortFriends`) and the asker's own setting. */
+export type RealmFriends = { friends: RealmFriend[]; showWhere: boolean }
+
+/** The realm's own settings: whether mutual friends see where the player walks (on by default). */
+export type RealmSettings = { showWhere: boolean }
 
 /** A base as a visitor sees it. `liked`: whether the asking player likes it. */
 export type BaseView = {

@@ -116,6 +116,27 @@ export const BOSS_FIGHT = { rate: 0.3, max: 1, duration: 60 } as const
 export const ELITE = { fill: 0.9, share: 0.3, hp: 1.6, xp: 1.6, damage: 1.25, size: 1.15 } as const
 
 /**
+ * The endless horde's ceiling. The endless pressure grows the regular cap
+ * every minute (`endlessPressure`), past 4000 live foes by 150:00 on Normal,
+ * and the frame's cost follows the count (drawing, collisions, memory). Past
+ * `ceiling` the horde stops growing in bodies and grows in weight instead:
+ * each regular spawn stands for `weight` = asked cap / `ceiling` foes
+ * (`hordeWeight`), so spawns and endless events come `weight` times fewer,
+ * with `weight` times the HP and `weight` ^ `damage` times the damage, and
+ * each pays as `weight` foes: shiny `weight` times as often, `weight` times
+ * the EXP, its drops (₽, berries, items, an Ability's) `weight` times as
+ * likely and as many kills to the run bonus. The HP and the spawns cancel
+ * out (the same horde HP comes at the player every second) and the damage
+ * leans harder, so the capped run never plays easier; the late bench's bot
+ * ends 150:00 within a few % of its uncapped level and ₽. An endless event
+ * keeps at least `minEvent` foes. 1200 from measuring a full horde at 150:00: about
+ * 1 ms per tick and 8 ms to draw on a 4×-throttled phone, against 6 ms and
+ * 60 ms uncapped; it binds from about 52:00 on Normal. Bosses, Alphas, rift
+ * and mission spawns are none of it.
+ */
+export const ENDLESS_HORDE = { ceiling: 1200, damage: 0.25, minEvent: 12 } as const
+
+/**
  * Runners: from stage `from` on, one of each stage's new species (drawn with the
  * roster) spawns as runners, with spawn `weight` (a fresh species has 4), so
  * about one spawn in eight: `speed` times faster (never above `maxSpeed` px/s,

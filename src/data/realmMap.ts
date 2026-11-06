@@ -60,7 +60,29 @@ export type Spot = {
   games?: readonly string[]
   /** Where a trainer using it faces (a `Facing`, 0 down … 4 up): a fishing spot, toward the water. */
   face?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+  /** A bench's seats (`perch`, `net/realm.ts`): where a trainer sitting there goes (the seat's front edge) and faces. */
+  seats?: readonly TownSeat[]
 }
+
+export type TownSeat = { x: number; y: number; face: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
+
+/** The two seats of a park bench (`shop/prop-bench`) standing at (x, y), its seat facing down-left; mirrored (`prop-bench-w`), down-right. */
+const benchSeats = (x: number, y: number, mirrored = false): readonly TownSeat[] =>
+  mirrored
+    ? [
+        { x: x + 7, y: y - 8, face: 1 },
+        { x: x - 6, y: y - 13, face: 1 },
+      ]
+    : [
+        { x: x - 7, y: y - 8, face: 7 },
+        { x: x + 6, y: y - 13, face: 7 },
+      ]
+
+/** The two seats of the café's sofa (`realm/cafe-sofa`) standing at (x, y), facing the room. */
+const sofaSeats = (x: number, y: number): readonly TownSeat[] => [
+  { x: x - 12, y: y - 9, face: 0 },
+  { x: x + 12, y: y - 9, face: 0 },
+]
 
 export type TownRoom = { w: number; h: number; spawn: Point; solid: readonly Shape[]; doors: readonly Door[]; spots: readonly Spot[] }
 
@@ -123,8 +145,8 @@ export const REALM_ROOMS = {
       { kind: 'coopPortal', at: { x: 150, y: 252 }, reach: 28 },
       { kind: 'arenaPortal', at: { x: 490, y: 252 }, reach: 28 },
       { kind: 'board', at: { x: 196, y: 128 }, reach: 24 },
-      { kind: 'bench', at: { x: 172, y: 314 }, reach: 20 },
-      { kind: 'bench', at: { x: 468, y: 314 }, reach: 20 },
+      { kind: 'bench', at: { x: 172, y: 314 }, reach: 20, seats: benchSeats(172, 300) },
+      { kind: 'bench', at: { x: 468, y: 314 }, reach: 20, seats: benchSeats(468, 300, true) },
     ],
   },
   pier: {
@@ -166,7 +188,7 @@ export const REALM_ROOMS = {
     ],
     spots: [
       { kind: 'pool', at: { x: 340, y: 304 }, reach: 120 },
-      { kind: 'bench', at: { x: 92, y: 344 }, reach: 20 },
+      { kind: 'bench', at: { x: 92, y: 344 }, reach: 20, seats: benchSeats(92, 330) },
       // The fishing platform off the boardwalk's end (`MINIGAMES.fishing`): two places at its edge, facing the sea.
       { kind: 'fishing', at: { x: 603, y: 254 }, reach: 12, face: 0 },
       { kind: 'fishing', at: { x: 618, y: 254 }, reach: 12, face: 0 },
@@ -193,8 +215,8 @@ export const REALM_ROOMS = {
     doors: [{ at: { x: 170, y: 290, w: 60, h: 10 }, to: 'plaza', spawn: { x: 320, y: 136 } }],
     spots: [
       { kind: 'counter', at: { x: 200, y: 112 }, reach: 24 },
-      { kind: 'bench', at: { x: 70, y: 166 }, reach: 20 },
-      { kind: 'bench', at: { x: 330, y: 166 }, reach: 20 },
+      { kind: 'bench', at: { x: 70, y: 166 }, reach: 20, seats: sofaSeats(70, 150) },
+      { kind: 'bench', at: { x: 330, y: 166 }, reach: 20, seats: sofaSeats(330, 150) },
       // The game tables by the door (`net/realmTables.ts`): a trainer plays from in front, seated on a stool by the relay.
       { kind: 'gameTable', at: { x: 110, y: 280 }, reach: 26, id: 'cafe-1', games: ['fourInRow', 'typeDuel'] },
       { kind: 'gameTable', at: { x: 290, y: 280 }, reach: 26, id: 'cafe-2', games: ['fourInRow', 'typeDuel'] },
@@ -228,8 +250,8 @@ export const REALM_ROOMS = {
       { kind: 'bases', at: { x: 146, y: 222 }, reach: 26 },
       { kind: 'carpenter', at: { x: 318, y: 420 }, reach: 28 },
       { kind: 'host', at: { x: 556, y: 310 }, reach: 24 },
-      { kind: 'bench', at: { x: 446, y: 324 }, reach: 20 },
-      { kind: 'bench', at: { x: 196, y: 314 }, reach: 20 },
+      { kind: 'bench', at: { x: 446, y: 324 }, reach: 20, seats: benchSeats(446, 310) },
+      { kind: 'bench', at: { x: 196, y: 314 }, reach: 20, seats: benchSeats(196, 300) },
     ],
   },
   arcade: {
@@ -258,7 +280,7 @@ export const REALM_ROOMS = {
       { kind: 'cabinet', at: { x: 132, y: 114 }, reach: 16, games: ['whackDiglett'] },
       { kind: 'cabinet', at: { x: 172, y: 114 }, reach: 16, games: ['whackDiglett'] },
       { kind: 'prizes', at: { x: 322, y: 134 }, reach: 22 },
-      { kind: 'bench', at: { x: 320, y: 214 }, reach: 20 },
+      { kind: 'bench', at: { x: 320, y: 214 }, reach: 20, seats: sofaSeats(320, 206) },
     ],
   },
 } as const satisfies Record<TownRoomId, TownRoom>
@@ -267,17 +289,31 @@ export const REALM_ROOMS = {
 export const LANDING: TownRoomId = 'plaza'
 
 /**
+ * How many trainers a room holds: a town room `town`, a secret base `base`
+ * (its owner always gets in). The landing has no cap of its own (the city's,
+ * `REALM.cityCap`): it's where a trainer lands when a room is full.
+ */
+export const ROOM_CAP = { town: 20, base: 8 } as const
+
+/** A room's cap (`ROOM_CAP`), or null for the landing. */
+export const roomCap = (room: string): number | null => (room.startsWith('base:') ? ROOM_CAP.base : room === LANDING ? null : ROOM_CAP.town)
+
+/**
  * A secret base's interior as a grid (`data/secretBases.ts` places furniture
  * on it): `cols` × `rows` tiles of `tile` px, the top `wallRows` the back wall
  * (wall furniture only), the door on the bottom row's middle tile.
  */
 export const BASE_GRID = { cols: 12, rows: 9, tile: 24, wallRows: 2 } as const
 
-/** A base room's bounds and where a visitor lands (just inside the door). */
+/**
+ * A base room's bounds and where a visitor lands: just inside the door, in the
+ * middle of the doorway's column (`DOORWAY` in `data/secretBases.ts`, which
+ * nothing blocks), so pieces beside it never touch the trainer's feet.
+ */
 export const BASE_ROOM = {
   w: BASE_GRID.cols * BASE_GRID.tile,
   h: BASE_GRID.rows * BASE_GRID.tile,
-  spawn: { x: (BASE_GRID.cols * BASE_GRID.tile) / 2, y: (BASE_GRID.rows - 1) * BASE_GRID.tile },
+  spawn: { x: (Math.floor(BASE_GRID.cols / 2) + 0.5) * BASE_GRID.tile, y: (BASE_GRID.rows - 1) * BASE_GRID.tile },
 } as const
 
 /** A room's bounds (w × h, from 0,0), for a town room id or a base. */

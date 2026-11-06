@@ -1,10 +1,12 @@
 import type { Messages } from './pt'
+import type { Activity } from '../game/friends'
 
 const typeBoost = (type: string) => `+10% de dégâts aux capacités de type ${type}.`
 
 /** French. Must match `pt` key for key (enforced by the `Messages` type). */
 export const fr: Messages = {
   loading: 'Chargement…',
+  loadFailed: "Impossible d'ouvrir. Vérifie ta connexion et réessaie.",
   level: (n) => `Nv ${n}`,
   levelShort: (n) => `Nv${n}`,
   max: 'MAX',
@@ -723,6 +725,7 @@ export const fr: Messages = {
       afk: 'Tu es resté immobile trop longtemps et tu es revenu au choix de ville.',
       banned: 'Ton compte est suspendu du Poké Realm.',
       busy: 'Le serveur du Realm est plein. Réessaie dans un instant.',
+      roomFull: 'Cette salle est pleine pour l’instant. Réessaie dans un moment.',
     },
     talk: 'Parler',
     emote: 'Emote',
@@ -773,6 +776,19 @@ export const fr: Messages = {
       prizes: 'Prix',
     },
     use: 'Utiliser',
+    pieces: {
+      sit: "S'asseoir",
+      lie: "S'allonger",
+      soak: 'Entrer',
+      stand: 'Se lever',
+      taken: 'Occupé',
+      on: 'Allumer',
+      off: 'Éteindre',
+      play: 'Lancer la musique',
+      next: 'Morceau suivant',
+      stop: 'Couper la musique',
+      track: (n: number, total: number) => `♪ Morceau ${n} sur ${total}`,
+    },
     board: {
       title: 'Panneau de la place',
       lines: [
@@ -828,6 +844,31 @@ export const fr: Messages = {
       profile: 'Voir le profil',
       close: 'Fermer',
       you: 'Toi',
+    },
+    friends: {
+      open: 'Amis',
+      title: 'Amis dans le Realm',
+      all: 'Voir tous les amis',
+      showWhere: (on: boolean) => `Montrer où je suis à mes amis : ${on ? 'oui' : 'non'}`,
+      showWhereHint: 'Seuls ceux qui te suivent en retour voient ta ville et ta salle.',
+      states: { hidden: 'Dans le Realm · lieu masqué', offline: 'Hors ligne', pending: 'Ne te suit pas encore en retour' },
+      activity: { lobby: 'Dans le jeu, hors du Realm', room: 'Dans un salon coop', run: 'En partie' } satisfies Record<Activity, string>,
+      yourBase: 'Ta base',
+      here: 'Tu es ici',
+      go: 'Rejoindre',
+      roomFull: 'Salle pleine',
+      goCity: 'Aller dans la ville',
+      cityFull: 'Ville pleine',
+      invite: 'Inviter dans ma base',
+      sent: (handle: string) => `Invitation envoyée à @${handle}`,
+      privateBase: 'Ta base est fermée aux visites. Ouvre-la à tes amis (✎ à l’intérieur) pour inviter.',
+      noBase: 'Aménage ta base (✎ à l’intérieur) avant d’inviter quelqu’un.',
+      empty: 'Tu ne suis encore personne. Suis des dresseurs depuis le Classement ou leur profil.',
+      failed: 'Impossible d’afficher tes amis pour l’instant.',
+      invited: (handle: string) => `@${handle} t’invite dans sa base secrète`,
+      accept: 'Y aller',
+      decline: 'Pas maintenant',
+      lobby: (n: number) => (n === 1 ? '1 ami dans le Realm' : `${n} amis dans le Realm`),
     },
   },
   coop: {
@@ -3107,7 +3148,7 @@ export const fr: Messages = {
       ],
     },
     needleArm: {
-      description: 'Tes épines se hérissent : des aiguilles volent dans tous les sens, et pendant 1.5s, tout ennemi qui te touche n’inflige aucun dégât et se blesse en étant repoussé.',
+      description: 'Tes épines se hérissent : des aiguilles volent dans tous les sens, et pendant 1.5s (au plus la moitié de la recharge), tout ennemi qui te touche n’inflige aucun dégât et se blesse en étant repoussé.',
       upgrades: [
         '+3 dégâts',
         '+2 aiguilles',
@@ -3323,7 +3364,7 @@ export const fr: Messages = {
       ],
     },
     dig: {
-      description: 'Appuie sur Shift ou sur le bouton Ruée : tu t’enterres (invulnérable, la horde te perd de vue) et ressors sous le plus gros ennemi proche, un boss en priorité, dans un séisme.',
+      description: 'Appuie sur Shift ou sur le bouton Ruée : tu t’enterres (invulnérable, la horde te perd de vue) et ressors sous le plus gros ennemi proche, un boss en priorité, dans un séisme. Le temps sous terre, sortie comprise, couvre au plus la moitié de la recharge.',
       upgrades: [
         '+10 dégâts',
         'Séisme 20% plus grand',
@@ -4667,7 +4708,7 @@ export const fr: Messages = {
       ],
     },
     protect: {
-      description: 'Toutes les 12s, une bulle te protège pendant 1s : aucun coup ne passe, et tout ce qui la touche est repoussé.',
+      description: 'Toutes les 12s, une bulle te protège pendant 1s : aucun coup ne passe, et tout ce qui la touche est repoussé. Elle dure au plus la moitié de la recharge : Light Clay et Quick Claw n’enchaînent jamais une bulle sur la suivante.',
       upgrades: [
         'Dure +0.2s',
         'Recharge −1s',
@@ -4751,7 +4792,7 @@ export const fr: Messages = {
       ],
     },
     fly: {
-      description: 'Toutes les 7s, tu décolles un instant : rien ne te touche et les ennemis te perdent de vue. Tu continues d’avancer et, à l’atterrissage, tu retombes lourdement, blessant et repoussant tout le monde autour.',
+      description: 'Toutes les 7s, tu décolles un instant : rien ne te touche et les ennemis te perdent de vue. Tu continues d’avancer et, à l’atterrissage, tu retombes lourdement, blessant et repoussant tout le monde autour. Le temps en l’air, atterrissage compris, couvre au plus la moitié de la recharge.',
       upgrades: [
         '+6 dégâts',
         'Recharge −0.7s',
@@ -5378,9 +5419,9 @@ export const fr: Messages = {
   },
   items: {
     muscleBand: '+10% de dégâts pour toutes les capacités.',
-    quickClaw: 'Les capacités se rechargent 8% plus vite.',
+    quickClaw: 'Les capacités se rechargent 8% plus vite. Une protection (Protect, Needle Arm, Fly, Dig) dure au plus la moitié de sa recharge : elle peut donc raccourcir aussi.',
     wideLens: '+10% de zone des capacités.',
-    lightClay: 'Les effets durent 12% plus longtemps.',
+    lightClay: 'Les effets durent 12% plus longtemps. Une protection (Protect, Needle Arm, Fly, Dig) dure toujours au plus la moitié de la recharge de sa capacité.',
     loadedDice: '+1 projectile pour les capacités à coups multiples.',
     leftovers: 'Rend 0,3 PV par seconde.',
     choiceScarf: '+8% de vitesse de déplacement.',
@@ -6315,6 +6356,21 @@ export const fr: Messages = {
       trophy: (name) => `Nouveau trophée : ${name} !`,
       again: 'Rejouer',
       leave: 'Quitter',
+    },
+    board: {
+      title: 'Classement',
+      open: 'Scores',
+      see: 'Voir le classement',
+      periods: { day: "Aujourd'hui", week: 'Semaine' },
+      dayCaption: "Records du jour · remis à zéro à minuit (Brasília)",
+      weekCaption: (from, to) => `Semaine du ${from} au ${to}`,
+      tableNote: 'Seules les victoires contre d’autres dresseurs comptent.',
+      points: (n) => `${n} pts`,
+      wins: (n) => (n <= 1 ? `${n} victoire` : `${n} victoires`),
+      total: (n) => (n <= 1 ? `${n} dresseur au classement` : `${n} dresseurs au classement`),
+      empty: 'Personne n’a encore joué. Soyez le premier !',
+      loading: 'Chargement...',
+      offline: 'Impossible de charger le classement pour le moment.',
     },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {

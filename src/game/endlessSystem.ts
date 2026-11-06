@@ -1,13 +1,13 @@
 import { weightedPick } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
-import { stageIndexAt } from '../data/waves'
+import { ENDLESS_HORDE, stageIndexAt } from '../data/waves'
 import { burst, setScreenShake } from './effects'
 import { ENDLESS, endlessEventSize, REAPER, reaperDue, reaperHp, reaperSpeed, startEndless, type EndlessState } from './endless'
 import { runMods } from './legend'
 import { blastHorde, spawnEnemy } from './enemies'
 import { dropCoins, dropPickup } from './pickups'
 import { hasTrait } from './roster'
-import { spawnRing, spawnSwarm } from './spawner'
+import { endlessWeight, spawnRing, spawnSwarm } from './spawner'
 import { anchorPlayer, nearestPlayer } from './players'
 import { coopScale } from './coop'
 import { COOP } from '../data/coop'
@@ -74,8 +74,10 @@ export const updateEndless = (g: Game) => {
   if (g.time >= s.nextEvent) {
     // Trait species stay seasoning: a ring of 40 Nidoqueen would be the whole horde.
     const pool = (g.roster.stages[stageIndexAt(g.time)] ?? []).filter(([id]) => !hasTrait(id))
-    const count = endlessEventSize(g.time)
-    if (pool.length > 0) (s.events % 2 === 0 ? spawnRing : spawnSwarm)(g, weightedPick(g.rng, pool), count)
+    // Past the horde's ceiling an event comes in fewer, heavier foes, like the spawner's (`ENDLESS_HORDE`).
+    const weight = endlessWeight(g)
+    const count = Math.max(ENDLESS_HORDE.minEvent, dm.round(endlessEventSize(g.time) / weight))
+    if (pool.length > 0) (s.events % 2 === 0 ? spawnRing : spawnSwarm)(g, weightedPick(g.rng, pool), count, weight)
     s.events++
     s.nextEvent = g.time + ENDLESS.eventEvery
   }

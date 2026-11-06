@@ -92,6 +92,12 @@ export type MoveDef = {
   duo?: true
   /** Fires on the player's press (Shift, the lunge button) instead of on its own, once recharged (`updateMoves`). */
   manual?: true
+  /**
+   * Seconds the immunity it opens really lasts (Protect's bubble, Fly's time
+   * aloft): its `duration`, cut by the uptime rules (`guardWard`,
+   * `burrowWard` in `kitRules.ts`). `fire` casts with it and its card shows it.
+   */
+  ward?: (s: MoveStats) => number
   /** A legendary's capstone move (`legendaryMoves.ts`): evolved-tier, it never evolves and comes from the legendaries, not a learnset. */
   legendary?: true
   /** What kind of move it is, for the abilities that boost a kind (Iron Fist, Strong Jaw, Sharpness, Liquid Voice). */
@@ -632,6 +638,7 @@ export const MOVES = {
       { fork: [{ stats: { cooldown: -0.5 }, mods: ['burstOnKill'] }, { stats: { cooldown: -0.5, damage: 18 }, mods: ['execute'] }] },
       { damage: 14, area: 0.25 },
     ],
+    ward: egg.digUnder,
     fire: (g, s) => egg.dig(g, s),
     emerge: (g, s) => egg.digEmerge(g, s),
   },

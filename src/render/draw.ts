@@ -1,5 +1,5 @@
 import { drawEvoItem } from './evoItemArt'
-import { beginRects, blitCentered, blitPacked, blitEllipse, blitRing, blitRotated, context2d, createCanvas, lazy, textSprite, traceEllipseAt } from '../engine/pixelart'
+import { beginRects, blitCentered, blitPacked, blitEllipse, blitRing, blitRotated, context2d, createCanvas, fillPlotted, lazy, plot, textSprite, traceEllipseAt } from '../engine/pixelart'
 import { HAZARD_COLORS } from './hazardColors'
 import { drawCapture } from './capture'
 import { drawNightmareAir, drawNightmareDark, drawNightmareGround, shadeAlpha, SLEEP_TINT } from './darkrai'
@@ -22,7 +22,7 @@ import { xpTier } from '../game/pickups'
 import { isFrozen, isHeld } from '../game/status'
 import { inSolid, overTerrain, phasingNow, type Solid } from '../game/terrain'
 import { isAirborne, traitPace } from '../game/traits'
-import type { Attack, Enemy, Game, Hazard, Player } from '../game/types'
+import type { Attack, Enemy, Game, Hazard, Particle, Player } from '../game/types'
 import { FX, HAZARD_FX, hostile, PICKUPS, SPARKLE, SPIT_FX } from './art'
 import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawShard } from './evolved'
 import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
@@ -937,6 +937,10 @@ const liftsOver = (g: Game, at: number) => {
 
 /** Particles a lean frame draws at most (`render/quality.ts`). */
 const LEAN_PARTICLES = 120
+/** Alpha steps a particle fades out in (opaque for the first third of its life). */
+const PARTICLE_FADES = 4
+/** A particle's alpha step now, 0 (gone) to `PARTICLE_FADES`. */
+const particleFade = (p: Particle) => Math.ceil(Math.min(1, (1 - p.life / p.ttl) * 1.5) * PARTICLE_FADES)
 
 export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   const { w, h } = g.view
@@ -1165,12 +1169,15 @@ export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
 
   // Drawing lean, a big burst shows every 2nd (3rd...) particle, about `LEAN_PARTICLES` in all (fewer at safe mode level 2).
   const every = lean ? Math.max(1, Math.ceil(g.particles.length / (LEAN_PARTICLES * safeShare(detail.safe)))) : 1
-  for (let i = 0; i < g.particles.length; i += every) {
-    const p = g.particles[i]!
-    if (!visible(p.x, p.y, 8)) continue
-    ctx.globalAlpha = Math.min(1, (1 - p.life / p.ttl) * 1.5)
-    ctx.fillStyle = p.color
-    ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size)
+  // They fade out in `PARTICLE_FADES` steps, faintest first: each step's particles go as one path per color.
+  for (let f = 1; f <= PARTICLE_FADES; f++) {
+    for (let i = 0; i < g.particles.length; i += every) {
+      const p = g.particles[i]!
+      if (particleFade(p) !== f || !visible(p.x, p.y, 8)) continue
+      plot(p.color, p.x, p.y, p.size, p.size)
+    }
+    ctx.globalAlpha = f / PARTICLE_FADES
+    fillPlotted(ctx)
   }
   ctx.globalAlpha = 1
   ctx.restore()

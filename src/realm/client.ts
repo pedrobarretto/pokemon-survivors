@@ -4,6 +4,7 @@ import { parseWireLook } from '../net/protocol'
 import {
   REALM_LIMITS,
   REALM_PROTOCOL,
+  isCityId,
   isRealmAct,
   isRealmEmote,
   isRealmLine,
@@ -73,9 +74,9 @@ const PING_EVERY_MS = 10_000
 const RETRY_MS = [500, 1000, 2000, 4000, 8000] as const
 
 /** Refusals of a `go` that leave a seated trainer where it stands. */
-const STAYS: ReadonlySet<RealmRefusal> = new Set(['private', 'room', 'busy'])
+const STAYS: ReadonlySet<RealmRefusal> = new Set(['private', 'room', 'busy', 'roomFull'])
 
-const REFUSALS: readonly RealmRefusal[] = ['version', 'signIn', 'profile', 'full', 'city', 'room', 'private', 'elsewhere', 'afk', 'banned', 'busy']
+const REFUSALS: readonly RealmRefusal[] = ['version', 'signIn', 'profile', 'full', 'city', 'room', 'private', 'elsewhere', 'afk', 'banned', 'busy', 'roomFull']
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -171,8 +172,17 @@ export const parseRealmMessage = (text: unknown): RealmServerMessage | null => {
       return isNum(v.id) && isRealmLine(v.line) ? { t: 'said', id: v.id, line: v.line } : null
     case 'emoted':
       return isNum(v.id) && isRealmEmote(v.emote) ? { t: 'emoted', id: v.id, emote: v.emote } : null
-    case 'acted':
-      return isNum(v.id) && (v.act === null || isRealmAct(v.act)) ? { t: 'acted', id: v.id, act: v.act } : null
+    case 'acted': {
+      if (!isNum(v.id) || (v.act !== null && !isRealmAct(v.act))) return null
+      const at = Array.isArray(v.at) && v.at.length === 3 && isNum(v.at[0]) && isNum(v.at[1]) && isFacing(v.at[2]) ? ([v.at[0], v.at[1], v.at[2]] as const) : null
+      return at ? { t: 'acted', id: v.id, act: v.act, at } : { t: 'acted', id: v.id, act: v.act }
+    }
+    case 'furniture': {
+      const f = isRecord(v.state) ? v.state : null
+      if (!f || !Array.isArray(f.lit)) return null
+      const music = isRecord(f.music) && isStr(f.music.piece, 64) && isNum(f.music.track) ? { piece: f.music.piece, track: f.music.track } : null
+      return { t: 'furniture', state: { lit: f.lit.filter((k): k is string => isStr(k, 64)), music } }
+    }
     case 'bragged':
       return isNum(v.id) && isStr(v.game, 32) && isStr(v.feat, 32) ? { t: 'bragged', id: v.id, game: v.game, feat: v.feat } : null
     case 'tables': {
@@ -193,6 +203,8 @@ export const parseRealmMessage = (text: unknown): RealmServerMessage | null => {
       return (v.mode === 'coop' || v.mode === 'arena') && isCode(v.code) ? { t: 'partyGo', mode: v.mode, code: v.code } : null
     case 'pong':
       return isNum(v.at) ? { t: 'pong', at: v.at } : null
+    case 'baseInvited':
+      return isStr(v.from, 32) && /^[A-Za-z0-9_]+$/.test(v.from) && isCityId(v.city) ? { t: 'baseInvited', from: v.from, city: v.city } : null
     case 'refused': {
       const why = REFUSALS.find((r) => r === v.why)
       return why ? { t: 'refused', why } : null

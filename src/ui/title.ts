@@ -11,7 +11,7 @@ import { isReady } from '../game/eggs'
 import { DISCORD_GIFT } from '../game/gifts'
 import { dayKey, missionStatus } from '../game/missions'
 import { pendingPicks, playsShiny } from '../game/shinyPicks'
-import type { ArenaHubTab } from './arenaHub'
+import type { ArenaHubTab } from './arenaBits'
 import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/supporters'
 import { formatNumber, locale, t } from '../i18n'
 import { arenaIcon, bulbIcon, coinIcon, coopIcon, discordIcon, eggIcon, giftIcon, heartIcon, itemIcon, medalIcon, newsIcon, pawIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
@@ -23,8 +23,8 @@ import { stallGoods } from '../game/stalls'
 import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue, type Speaker } from './dialogue'
 import { carpenterSpeaker, judgeSpeaker, lanturnSpeaker, senseiSpeaker, stallSpeaker, stallToday, tailorSpeaker } from './visitors'
-import { boutiqueSeen, type BoutiqueTab } from './boutique'
-import { gemChip } from './gemShop'
+import { boutiqueSeen, type BoutiqueTab } from './boutiqueSeen'
+import { gemChip } from './gemBits'
 import { inviterName } from '../ranking'
 import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
 import { fetchWall, knownStatus } from '../supporters'
@@ -42,7 +42,7 @@ import { takeInstallNudge } from './install'
 import type { InstallOffer } from './installOffer'
 import type { Screen } from './screens'
 import { gearButton, helpButton, iconButton, railTile, shellBody, topBar, walletChip } from './shell'
-import { realmSeen } from './realm'
+import { realmSeen } from './realmSeen'
 import { realmIconUrl } from '../render/realmScene'
 import { nearestInDirection, type Direction } from './spatial'
 import { toast } from './toasts'
@@ -175,6 +175,8 @@ export type TitleActions = {
   coop?: () => void
   /** The Poké Realm (`ui/realm.ts`): its city picker. No action (no realm relay in this build), no tile. */
   realm?: () => void
+  /** How many friends walk the Poké Realm now (`realm/friends.ts`), for its way in; null when nobody can be asked (a guest). */
+  realmFriends?: () => Promise<number> | null
   /** Arena (Versus): its screen. Always there: against bots it needs no relay nor account. */
   arena: () => void
   /** The Arena's hub on one of its tabs: the Estádio's boards (all but Jogar, which is `arena`). */
@@ -847,20 +849,34 @@ const dojoTile = (rails: boolean) => {
  * wide screens, and an icon in the top bar on phones on their side (whose
  * side and dock are full).
  */
-const realmTopButton = (onClick: () => void) => {
+const realmTopButton = (onClick: () => void, friends: Promise<number> | null) => {
   const el = iconButton(realmIconUrl('wave'), t().realm.entryLabel, onClick, 'K')
   el.classList.add('lobby-realm-top')
   if (!realmSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
+  palsBadge(el, friends)
   return el
 }
 
-const realmEntry = (rails: boolean) => {
+/** Friends walking the realm, once known: a count on the way in (`lobby-realm-pals`), and the card's line says it. */
+const palsBadge = (el: HTMLElement, friends: Promise<number> | null, line: HTMLElement | null = null) =>
+  void friends?.then((n) => {
+    if (n <= 0 || !el.isConnected) return
+    const text = t().realm.friends.lobby(n)
+    if (line) line.textContent = text
+    else el.append(h('em', { class: 'lobby-realm-pals', title: text, 'aria-label': text }, String(n)))
+    el.classList.add('pals')
+  })
+
+const realmEntry = (rails: boolean, friends: Promise<number> | null) => {
   const m = t().realm
   const icon = h('img', { class: 'lobby-realm-icon', src: realmIconUrl('wave'), alt: '' })
+  const line = h('span', {}, m.cities.title)
   const el = rails
     ? railTile('realm', icon, m.entry, m.entryLabel)
-    : h('button', { class: 'lobby-realm box', type: 'button', 'aria-label': m.entryLabel }, icon, h('span', { class: 'lobby-realm-text' }, h('b', {}, m.name), h('span', {}, m.cities.title)), h('span', { class: 'key-hint' }, 'K'))
+    : h('button', { class: 'lobby-realm box', type: 'button', 'aria-label': m.entryLabel }, icon, h('span', { class: 'lobby-realm-text' }, h('b', {}, m.name), line), h('span', { class: 'key-hint' }, 'K'))
   if (!realmSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
+  // The tile's built before it's in the page: the answer lands after.
+  palsBadge(el, friends, rails ? null : line)
   return el
 }
 
@@ -1135,7 +1151,7 @@ export const titleScreen = (
       right: [
         (wallet = walletChip(save.wallet)),
         ...(gems ? [navigable(gems, 'gems')] : []),
-        ...(landscape && actions.realm ? [navigable(realmTopButton(press('realm')), 'realm')] : []),
+        ...(landscape && actions.realm ? [navigable(realmTopButton(press('realm'), actions.realmFriends?.() ?? null), 'realm')] : []),
         ...(landscape ? [navigable(discordButton(press('discord')), 'discord'), ...SOCIAL_IDS.map((id) => navigable(socialButton(id, press(id)), id))] : []),
         ...(surveyWaiting() ? [navigable(surveyButton(press('survey')), 'survey')] : []),
         navigable(newsButton(press('news')), 'news'),
@@ -1167,7 +1183,7 @@ export const titleScreen = (
         ? []
         : [h('div', { class: 'lobby-community' }, pressable(discordCard(), 'discord'), ...SOCIAL_IDS.map((id) => pressable(socialCard(id), id)))]
     const dojo = rails ? [pressable(dojoTile(true), 'dojo')] : []
-    const realmWay = realm && !landscape ? [pressable(realmEntry(rails), 'realm')] : []
+    const realmWay = realm && !landscape ? [pressable(realmEntry(rails, actions.realmFriends?.() ?? null), 'realm')] : []
     const side = h('div', { class: 'lobby-side' }, ...(rails ? [gift] : []), hall, ...(rails ? [] : realmWay), ...invites, ...dojo, ...(rails ? realmWay : []), ...community, ...(rails ? [explore] : []))
     // A friend's invite needs the room of a banner: under the partner on the rails, under the Hall elsewhere.
     const notice = rails ? h('div', { class: 'lobby-notice' }) : side

@@ -9,16 +9,18 @@ import {
   tick,
   visited,
   identified,
+  presence,
   type ConnId,
   type RealmEffect,
   type RealmState,
 } from '../../relay/src/realm'
 import { COSMETIC_IDS, slotOf, type CosmeticSlot } from '../data/cosmetics'
 import { PLAYABLE_IDS } from '../data/hatchlings'
-import { REALM_ROOMS, isTownRoomId, type Door, type Point, type Shape, type Spot, type TownRoomId } from '../data/realmMap'
+import { BASE_ROOM, REALM_ROOMS, isTownRoomId, type Door, type Point, type Shape, type Spot, type TownRoomId } from '../data/realmMap'
 import { tableAt } from '../../relay/src/realmTables'
 import type { TableView } from '../net/realmTables'
-import { REALM, REALM_LINES, REALM_EMOTES, type CityId, type Facing, type RealmIdentity, type RealmServerMessage, type RoomKey } from '../net/realm'
+import { REALM, REALM_LINES, REALM_EMOTES, baseRoom, type CityId, type Facing, type RealmIdentity, type RealmServerMessage, type RoomKey } from '../net/realm'
+import type { PresenceReport } from '../net/realmRelay'
 import type { SocketHandlers, SocketLike } from '../coop/client'
 import { dir8 } from '../engine/math'
 
@@ -35,10 +37,10 @@ import { dir8 } from '../engine/math'
  * itself): the player is `me` (handle, partner, look), every other account a
  * bot. Every base may be visited. The bots sit at the rooms' game tables too
  * (they come over to a seat someone waits at) and play with the game's own
- * bot (`TableRules.bot`).
+ * bot (`TableRules.bot`), and on the town's benches a while.
  */
 
-export const LOCAL_REALM_URL = 'local://realm'
+export { LOCAL_REALM_URL } from './localUrl'
 
 /** Timers, injected for tests (the globals by default). */
 export type RealmTimers = { set: (fn: () => void, ms: number) => unknown; clear: (handle: unknown) => void; every: (fn: () => void, ms: number) => unknown; stop: (handle: unknown) => void }
@@ -55,6 +57,8 @@ export type LocalRealmOptions = {
   timers?: RealmTimers
   /** The machine's events (`realm.seated`…), for the console; dropped by default. */
   log?: (ev: string, data: Record<string, unknown>) => void
+  /** Bots (by handle) that land in another town room than the plaza, to stage a friend somewhere. */
+  start?: Readonly<Record<string, TownRoomId>>
 }
 
 export type LocalRealm = {
@@ -63,6 +67,10 @@ export type LocalRealm = {
   bots: () => number[]
   /** Dev: sends two bots (of the table's room or the rooms next door) to sit at a town game table (`ps.realm('table', 'cafe-2')`), at `game` if it's free (one of the spot's at random by default); how many went. */
   stage: (table: string, game?: string) => number
+  /** Who walks the city now and where, as the relay would report it to the API (the faked API's friends read it). */
+  presence: () => PresenceReport
+  /** Dev: the bot with `handle` invites the player to its base (`ps.realm('invite', 'misty')`); whether one did. */
+  inviteFrom: (handle: string) => boolean
   /** Stops the bots and the beat, and closes every socket. */
   dispose: () => void
 }
@@ -105,6 +113,8 @@ type Bot = {
   /** A fishing spot it's walking to, and whether it stands fishing there now (`act`) until its rest ends. */
   fishAt?: Spot | null
   fishing?: boolean
+  /** A bench it's walking to (its spot's index in the room), to sit a while (`perch`). */
+  benchAt?: number | null
 }
 
 type FakeSocket = { id: ConnId; on: SocketHandlers; open: boolean }
@@ -238,7 +248,10 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
         later(() => step(() => disconnect(state, e.to, now())))
       } else if (e.k === 'identify') {
         const identities_ = Object.fromEntries(e.userIds.map((id) => [id, identities.get(id) ?? meFor(id)]))
-        later(() => step(() => identified(state, e.ask, { identities: identities_, banned: [] }, now())))
+        // Every bot is the player's friend, and the player every bot's.
+        const me = (opts.me?.handle ?? 'you').toLowerCase()
+        const friends = Object.fromEntries(e.userIds.map((id) => [id, identities.has(id) ? [me] : [...identities.values()].map((b) => b.handle.toLowerCase())]))
+        later(() => step(() => identified(state, e.ask, { identities: identities_, banned: [], friends }, now())))
       } else if (e.k === 'visit') later(() => step(() => visited(state, e.ask, { allowed: true }, now())))
       else if (e.k === 'event') opts.log?.(e.ev, e.data)
       // `presence`: no API in the tab.
@@ -282,6 +295,12 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     } else if (msg.t === 'invited') {
       const yes = random() < 0.7
       timers.set(() => step(() => message(state, bot.conn, { t: 'answer', from: msg.from, yes }, now())), between(800, 2500))
+    } else if (msg.t === 'baseInvited' && msg.city === opts.city) {
+      // Invited to the player's base: it comes over a moment later, and stays a while there.
+      timers.set(() => {
+        Object.assign(bot, { target: null, door: null, sitAt: null, restUntil: now() + 60_000 })
+        step(() => message(state, bot.conn, { t: 'go', room: baseRoom(msg.from), x: BASE_ROOM.spawn.x, y: BASE_ROOM.spawn.y }, now()))
+      }, between(1200, 2500))
     }
   }
 
@@ -364,6 +383,15 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
         bot.fishAt = spot
         return
       }
+    }
+    // Now and then a bench, to sit a while (any step after stands it up).
+    const spots: readonly Spot[] = room.spots
+    const benches = spots.flatMap((s, i) => (s.seats ? [{ s, i }] : []))
+    const bench = benches.length > 0 && random() < 0.25 ? pick(benches) : null
+    if (bench && clearPath(bot.room, from, bench.s.at)) {
+      bot.target = { ...bench.s.at }
+      bot.benchAt = bench.i
+      return
     }
     // In the arcade, a bot often goes to play a cabinet.
     const cabinets: readonly Spot[] = room.spots.filter((s) => s.kind === 'cabinet')
@@ -454,7 +482,14 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     }
     if (!bot.target) aim(bot)
     const target = bot.target
-    if (!target) return
+    if (!target) {
+      // Nowhere to walk (a base it was invited to): it keeps its socket alive there.
+      if (t >= bot.pingAt) {
+        bot.pingAt = t + 10_000
+        step(() => message(state, bot.conn, { t: 'ping', at: t }, t))
+      }
+      return
+    }
     const stride = (REALM.speed * BOT_PACE) / REALM.moveHz
     const dx = target.x - bot.x
     const dy = target.y - bot.y
@@ -481,6 +516,12 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
       bot.sitAt = null
       const game = bot.sitGame ?? pick(['fourInRow', 'typeDuel'] as const)
       if (table && !door) step(() => message(state, bot.conn, { t: 'sit', table, game }, t))
+      const bench = bot.benchAt
+      bot.benchAt = null
+      if (bench !== null && bench !== undefined && !door) {
+        bot.restUntil = t + between(10_000, 30_000)
+        step(() => message(state, bot.conn, { t: 'perch', piece: { spot: bench }, seat: random() < 0.5 ? 0 : 1 }, t))
+      }
       const fish = bot.fishAt
       if (fish && (bot.x !== fish.at.x || bot.y !== fish.at.y)) {
         // Only the way in: on to the spot itself.
@@ -511,9 +552,10 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     identities.set(userId, { userId, handle, partner: pick(PLAYABLE_IDS), shiny: random() < 0.1, look: look(), supporter: random() < 0.15 ? pick(['supporter', 'gold', 'diamond']) : null })
     const conn = `bot-${nextConn++}`
     const t = now()
-    bots.set(conn, { conn, userId, id: null, room: 'plaza', x: 0, y: 0, facing: 0, moving: false, target: null, door: null, arcade: null, restUntil: t + between(0, 3_000), talkAt: t + between(2_000, 20_000), emoteAt: t + between(4_000, 25_000), pingAt: t + 10_000, tables: new Map(), sitAt: null, actAt: null, aloneSince: null, stage: null, stageGame: null, sitGame: null })
+    const room: TownRoomId = opts.start?.[handle] ?? 'plaza'
+    bots.set(conn, { conn, userId, id: null, room, x: 0, y: 0, facing: 0, moving: false, target: null, door: null, arcade: null, restUntil: t + between(0, 3_000), talkAt: t + between(2_000, 20_000), emoteAt: t + between(4_000, 25_000), pingAt: t + 10_000, tables: new Map(), sitAt: null, actAt: null, aloneSince: null, stage: null, stageGame: null, sitGame: null })
     connect(state, conn, opts.city, t)
-    step(() => hello(state, conn, { t: 'hello', v: 1, city: opts.city, token: userId, room: 'plaza' }, userId, t))
+    step(() => hello(state, conn, { t: 'hello', v: 1, city: opts.city, token: userId, room }, userId, t))
   }
 
   for (let i = 0; i < Math.min(opts.bots, REALM.cityCap - 1); i++) addBot(i)
@@ -579,5 +621,19 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     return sent.length
   }
 
-  return { socket, bots: () => [...bots.values()].flatMap((b) => (b.id === null ? [] : [b.id])), stage, dispose }
+  const inviteFrom = (handle: string) => {
+    const bot = [...bots.values()].find((b) => identities.get(b.userId)?.handle === handle && b.id !== null)
+    if (!bot) return false
+    step(() => message(state, bot.conn, { t: 'baseInvite', handle: opts.me?.handle ?? 'you' }, now()))
+    return true
+  }
+
+  return {
+    socket,
+    bots: () => [...bots.values()].flatMap((b) => (b.id === null ? [] : [b.id])),
+    stage,
+    presence: () => presence(state, now()),
+    inviteFrom,
+    dispose,
+  }
 }

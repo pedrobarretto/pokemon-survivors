@@ -4,6 +4,7 @@ import { t } from '../../i18n'
 import { h } from '../../ui/dom'
 import type { Screen } from '../../ui/screens'
 import { openSoloGame, openTableGame, type FrameOpts, type SoloGame, type TableSource, type TableUi } from './frame'
+import { openGameBoard } from './board'
 import { localTable } from './localTable'
 import { TABLE_GAMES } from './tables'
 
@@ -47,7 +48,8 @@ export const openGame = async (root: HTMLElement, game: MinigameId, opts: OpenGa
 
 /**
  * Opens one of `games`: at once when it's one, else a small sheet asking
- * which (a cabinet's games). Returns the screen (the sheet, then the game).
+ * which (a cabinet's games), each with its Placar beside it. Returns the
+ * screen (the sheet, then the game).
  */
 export const chooseGame = (root: HTMLElement, games: readonly MinigameId[], opts: OpenGameOpts): Screen => {
   let current: Screen | null = null
@@ -80,7 +82,14 @@ export const chooseGame = (root: HTMLElement, games: readonly MinigameId[], opts
       'div',
       { class: 'minigame-sheet box' },
       h('h3', {}, m.choose),
-      ...games.map((g) => h('button', { class: 'box', type: 'button', onclick: () => (sheet.remove(), open(g)) }, h('strong', {}, m.games[g].name), h('span', {}, m.games[g].blurb))),
+      ...games.map((g) =>
+        h(
+          'div',
+          { class: 'minigame-choice' },
+          h('button', { class: 'box', type: 'button', onclick: () => (sheet.remove(), open(g)) }, h('strong', {}, m.games[g].name), h('span', {}, m.games[g].blurb)),
+          h('button', { class: 'box minigame-choice-board', type: 'button', onclick: () => (playSfx('select'), openGameBoard(root, games, { game: g, close: () => {} })) }, m.board.open),
+        ),
+      ),
       h('button', { class: 'box', type: 'button', onclick: close }, m.close),
     ),
   )

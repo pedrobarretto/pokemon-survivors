@@ -4,7 +4,8 @@ import type { BaseLayout, Placed } from '../data/secretBases'
  * Furnished bases for `fakeRealm` (`ps.realm('fake')`, `ps.base`): the
  * player's own (made only of what the fake owns, so the editor opens on a
  * valid room) and two neighbors' for the board, so the screens show
- * something lived in without an API.
+ * something lived in without an API, with pieces to sit on, switch on and
+ * play music on (`data/furnitureUse.ts`).
  */
 
 const at = (id: Placed['id'], x: number, y: number, turned = false): Placed => ({ id, x, y, turned })
@@ -33,6 +34,12 @@ export const DEMO_BASES = {
       at('woodChair', 2, 6),
       at('pikachuBed', 9, 5, true),
       at('snorlaxBeanbag', 9, 7),
+      // What a visitor can use: a sofa and a lamp to switch, a TV, a chandelier, a jukebox.
+      at('chandelier', 5, 0),
+      at('jukebox', 11, 4),
+      at('tvSet', 3, 4),
+      at('cozySofa', 3, 7),
+      at('floorLamp', 2, 7),
     ],
   },
   misty: {

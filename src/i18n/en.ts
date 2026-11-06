@@ -1,10 +1,12 @@
 import type { Messages } from './pt'
+import type { Activity } from '../game/friends'
 
 const typeBoost = (type: string) => `+10% damage to ${type}-type moves.`
 
 /** English. Must match `pt` key for key (enforced by the `Messages` type). */
 export const en: Messages = {
   loading: 'Loading…',
+  loadFailed: "Couldn't open it. Check your connection and try again.",
   level: (n) => `Lv ${n}`,
   levelShort: (n) => `Lv${n}`,
   max: 'MAX',
@@ -723,6 +725,7 @@ export const en: Messages = {
       afk: 'You stood still for too long and went back to the city picker.',
       banned: 'Your account is suspended from the Poké Realm.',
       busy: 'The Realm’s server is full. Try again in a moment.',
+      roomFull: 'That room is full right now. Try again in a bit.',
     },
     talk: 'Talk',
     emote: 'Emote',
@@ -773,6 +776,19 @@ export const en: Messages = {
       prizes: 'Prizes',
     },
     use: 'Use',
+    pieces: {
+      sit: 'Sit',
+      lie: 'Lie down',
+      soak: 'Get in',
+      stand: 'Stand up',
+      taken: 'Taken',
+      on: 'Turn on',
+      off: 'Turn off',
+      play: 'Play music',
+      next: 'Next song',
+      stop: 'Stop music',
+      track: (n: number, total: number) => `♪ Song ${n} of ${total}`,
+    },
     board: {
       title: 'Plaza board',
       lines: [
@@ -828,6 +844,31 @@ export const en: Messages = {
       profile: 'View profile',
       close: 'Close',
       you: 'You',
+    },
+    friends: {
+      open: 'Friends',
+      title: 'Friends in the Realm',
+      all: 'See all friends',
+      showWhere: (on: boolean) => `Show friends where I am: ${on ? 'on' : 'off'}`,
+      showWhereHint: 'Only players who follow you back see your city and room.',
+      states: { hidden: 'In the Realm · location hidden', offline: 'Offline', pending: 'Doesn’t follow you back yet' },
+      activity: { lobby: 'In the game, outside the Realm', room: 'In a co-op room', run: 'In a run' } satisfies Record<Activity, string>,
+      yourBase: 'Your base',
+      here: 'You’re here',
+      go: 'Go to',
+      roomFull: 'Room full',
+      goCity: 'Go to the city',
+      cityFull: 'City full',
+      invite: 'Invite to my base',
+      sent: (handle: string) => `Invite sent to @${handle}`,
+      privateBase: 'Your base is closed to visitors. Open it to friends (✎ inside it) to invite someone.',
+      noBase: 'Set up your base (✎ inside it) before inviting anyone.',
+      empty: 'You don’t follow anyone yet. Follow trainers from the Ranking or their profile.',
+      failed: 'Couldn’t load your friends right now.',
+      invited: (handle: string) => `@${handle} invited you to their secret base`,
+      accept: 'Go',
+      decline: 'Not now',
+      lobby: (n: number) => (n === 1 ? '1 friend in the Realm' : `${n} friends in the Realm`),
     },
   },
   coop: {
@@ -3110,7 +3151,7 @@ export const en: Messages = {
       ],
     },
     needleArm: {
-      description: 'Your quills bristle: needles fly every way, and for 1.5s any foe that touches you deals no damage and gets hurt and thrown back instead.',
+      description: 'Your quills bristle: needles fly every way, and for 1.5s (at most half the cooldown) any foe that touches you deals no damage and gets hurt and thrown back instead.',
       upgrades: [
         '+3 damage',
         '+2 needles',
@@ -3326,7 +3367,7 @@ export const en: Messages = {
       ],
     },
     dig: {
-      description: 'Press Shift or the lunge button: you burrow (invulnerable, the horde loses you) and come up under the biggest foe nearby, a boss first, in a quake.',
+      description: 'Press Shift or the lunge button: you burrow (invulnerable, the horde loses you) and come up under the biggest foe nearby, a boss first, in a quake. The time underground, coming out included, covers at most half the cooldown.',
       upgrades: [
         '+10 damage',
         '20% bigger quake',
@@ -4670,7 +4711,7 @@ export const en: Messages = {
       ],
     },
     protect: {
-      description: 'Every 12s a bubble shields you for 1s: no hit gets through, and whatever touches it gets shoved away.',
+      description: 'Every 12s a bubble shields you for 1s: no hit gets through, and whatever touches it gets shoved away. It lasts at most half the cooldown, so Light Clay and Quick Claw never chain one bubble into the next.',
       upgrades: [
         'Lasts +0.2s',
         'Cooldown 1s faster',
@@ -4754,7 +4795,7 @@ export const en: Messages = {
       ],
     },
     fly: {
-      description: 'Every 7s you take off for a moment: nothing hits you and the foes lose sight of you. You keep moving and, when you land, you come down hard, hurting and shoving everyone around.',
+      description: 'Every 7s you take off for a moment: nothing hits you and the foes lose sight of you. You keep moving and, when you land, you come down hard, hurting and shoving everyone around. The time aloft, landing included, covers at most half the cooldown.',
       upgrades: [
         '+6 damage',
         'Cooldown 0.7s faster',
@@ -5382,9 +5423,9 @@ export const en: Messages = {
 
   items: {
     muscleBand: '+10% damage to all moves.',
-    quickClaw: 'Moves cool down 8% faster.',
+    quickClaw: 'Moves cool down 8% faster. A protection (Protect, Needle Arm, Fly, Dig) lasts at most half its cooldown, so it can get shorter too.',
     wideLens: '+10% move area.',
-    lightClay: 'Effects last 12% longer.',
+    lightClay: 'Effects last 12% longer. A protection (Protect, Needle Arm, Fly, Dig) still lasts at most half its move’s cooldown.',
     loadedDice: '+1 projectile for multi-hit moves.',
     leftovers: 'Restores 0.3 HP per second.',
     choiceScarf: '+8% movement speed.',
@@ -6319,6 +6360,21 @@ export const en: Messages = {
       trophy: (name) => `New trophy: ${name}!`,
       again: 'Play again',
       leave: 'Leave',
+    },
+    board: {
+      title: 'Leaderboard',
+      open: 'Scores',
+      see: 'See leaderboard',
+      periods: { day: 'Today', week: 'Week' },
+      dayCaption: "Today's best · resets at midnight (Brasília)",
+      weekCaption: (from, to) => `Week of ${from} – ${to}`,
+      tableNote: 'Only wins against other trainers count.',
+      points: (n) => `${n} pts`,
+      wins: (n) => (n === 1 ? '1 win' : `${n} wins`),
+      total: (n) => (n === 1 ? '1 trainer on the board' : `${n} trainers on the board`),
+      empty: 'Nobody has played yet. Be the first!',
+      loading: 'Loading...',
+      offline: "Couldn't load the leaderboard right now.",
     },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {
