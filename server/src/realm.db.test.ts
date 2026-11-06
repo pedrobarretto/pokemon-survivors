@@ -52,6 +52,8 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
     expect(got.banned).toEqual(['u_brock'])
     await realm.act('u_admin', { action: 'unban', userId: 'u_brock' })
     expect(Object.keys((await realm.identity(['u_brock'])).identities)).toEqual(['u_brock'])
+    // Each one's mutual friends, the ones it may invite to its base: Brock's follow of Ash isn't returned.
+    expect((await realm.identity(['u_ash', 'u_brock'])).friends).toEqual({ u_ash: ['misty'], u_brock: [] })
   })
 
   it('buys with gems through the ledger and with ₽ out of the stored save', async () => {
@@ -125,11 +127,16 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
     expect(await realm.act('u_admin', { action: 'ban', userId: 'u_ghost', days: 1, reason: 'x' })).toBeNull()
   })
 
-  it('tells the city counts and friends walking from the newest presence', async () => {
-    realm.presence({ home: 'sa', at: 10, cities: { pallet: ['misty', 'brock'] } })
+  it('tells the city counts and where friends walk from the newest presence, as far as they let them see', async () => {
+    realm.presence({ home: 'sa', at: 10, cities: { pallet: ['misty', 'brock', 'ash'] }, rooms: { pallet: ['cafe', 'plaza', 'plaza'] } })
     realm.presence({ home: 'sa', at: 5, cities: { pallet: [] } })
-    expect(realm.cities().cities).toEqual({ pallet: 2 })
-    expect((await realm.friends('u_ash')).friends).toEqual([{ handle: 'misty', city: 'pallet' }])
+    expect(realm.cities().cities).toEqual({ pallet: 3 })
+    expect(await realm.friends('u_ash')).toEqual({ friends: [{ handle: 'misty', name: 'misty', state: 'realm', city: 'pallet', room: 'cafe', full: null }], showWhere: true })
+    await realm.settings('u_misty', { showWhere: false })
+    expect((await realm.friends('u_ash')).friends).toEqual([{ handle: 'misty', name: 'misty', state: 'hidden' }])
+    expect((await realm.friends('u_misty')).showWhere).toBe(false)
+    // Brock follows Ash, who doesn't follow back: nothing shows of Ash, not even that they walk the realm.
+    expect((await realm.friends('u_brock')).friends).toEqual([{ handle: 'ash', name: 'ash', state: 'pending' }])
   })
 
   /** The mini games' claims (`POST /realm/game/claim`). */

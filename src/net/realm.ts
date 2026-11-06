@@ -55,7 +55,7 @@ export const REALM = {
   talkWindowMs: 5_000,
   /** A party's size (a co-op room's `MAX_PLAYERS`). */
   partyCap: 4,
-  /** A party invite waits this long for an answer. */
+  /** A party invite waits this long for an answer; a base invite to the same friend goes out again only after it. */
   inviteMs: 30_000,
 } as const
 
@@ -221,6 +221,8 @@ export type RealmClientMessage =
   | { t: 'play'; move: unknown }
   /** After a match: ready for another. */
   | { t: 'ready' }
+  /** Invites a mutual friend (`handle`, wherever on this relay) to the inviter's base; the relay never says whether it reached them. */
+  | { t: 'baseInvite'; handle: string }
 
 /* ---------------- Relay → client ---------------- */
 
@@ -237,6 +239,8 @@ export type RealmRefusal =
   | 'afk'
   | 'banned'
   | 'busy'
+  /** The room asked for holds its cap (`roomCap`, `data/realmMap.ts`): a `go` stays, a hello lands in the landing. */
+  | 'roomFull'
 
 export type PartyView = { leader: number; members: readonly number[] }
 
@@ -262,10 +266,13 @@ export type RealmServerMessage =
   /** Every table of the room in use, as this trainer sees them (after `welcome` and `room`), and one table's change (all seats free: it's gone). */
   | { t: 'tables'; tables: readonly TableView[] }
   | { t: 'table'; table: TableView }
+  /** A mutual friend invites you to their base (`city`: where it is), answered by walking there or not. */
+  | { t: 'baseInvited'; from: string; city: CityId }
   /**
    * Sent away (or never seated): why. The socket closes after it, but for a
-   * base `go` the relay turned down (`private`, `room`: no such base, `busy`:
-   * the API didn't answer), which leaves the trainer where it stands.
+   * `go` the relay turned down (`private`, `room`: no such base, `busy`: the
+   * API didn't answer, `roomFull`), which leaves the trainer where it stands,
+   * and a `roomFull` right after a `welcome` (seated in the landing instead).
    */
   | { t: 'refused'; why: RealmRefusal }
 

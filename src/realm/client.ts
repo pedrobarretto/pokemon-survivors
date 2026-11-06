@@ -4,6 +4,7 @@ import { parseWireLook } from '../net/protocol'
 import {
   REALM_LIMITS,
   REALM_PROTOCOL,
+  isCityId,
   isRealmAct,
   isRealmEmote,
   isRealmLine,
@@ -73,9 +74,9 @@ const PING_EVERY_MS = 10_000
 const RETRY_MS = [500, 1000, 2000, 4000, 8000] as const
 
 /** Refusals of a `go` that leave a seated trainer where it stands. */
-const STAYS: ReadonlySet<RealmRefusal> = new Set(['private', 'room', 'busy'])
+const STAYS: ReadonlySet<RealmRefusal> = new Set(['private', 'room', 'busy', 'roomFull'])
 
-const REFUSALS: readonly RealmRefusal[] = ['version', 'signIn', 'profile', 'full', 'city', 'room', 'private', 'elsewhere', 'afk', 'banned', 'busy']
+const REFUSALS: readonly RealmRefusal[] = ['version', 'signIn', 'profile', 'full', 'city', 'room', 'private', 'elsewhere', 'afk', 'banned', 'busy', 'roomFull']
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -193,6 +194,8 @@ export const parseRealmMessage = (text: unknown): RealmServerMessage | null => {
       return (v.mode === 'coop' || v.mode === 'arena') && isCode(v.code) ? { t: 'partyGo', mode: v.mode, code: v.code } : null
     case 'pong':
       return isNum(v.at) ? { t: 'pong', at: v.at } : null
+    case 'baseInvited':
+      return isStr(v.from, 32) && /^[A-Za-z0-9_]+$/.test(v.from) && isCityId(v.city) ? { t: 'baseInvited', from: v.from, city: v.city } : null
     case 'refused': {
       const why = REFUSALS.find((r) => r === v.why)
       return why ? { t: 'refused', why } : null

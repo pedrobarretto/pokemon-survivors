@@ -1,4 +1,5 @@
 import type { Messages } from './pt'
+import type { Activity } from '../game/friends'
 
 const typeBoost = (type: string) => `${type}屬性招式傷害+10%。`
 
@@ -723,6 +724,7 @@ export const zh: Messages = {
       afk: '你太久沒有動作，已回到城市選擇。',
       banned: '你的帳號已被暫停使用 Poké Realm。',
       busy: 'Realm 的伺服器已滿，請稍後再試。',
+      roomFull: '這個房間目前已滿，請稍後再試。',
     },
     talk: '說話',
     emote: '表情',
@@ -828,6 +830,31 @@ export const zh: Messages = {
       profile: '查看個人檔案',
       close: '關閉',
       you: '你',
+    },
+    friends: {
+      open: '好友',
+      title: 'Realm 裡的好友',
+      all: '查看所有好友',
+      showWhere: (on: boolean) => `讓好友看到我在哪裡：${on ? '開' : '關'}`,
+      showWhereHint: '只有互相追蹤的好友能看到你所在的城市與房間。',
+      states: { hidden: '在 Realm 中・位置隱藏', offline: '離線', pending: '尚未追蹤你' },
+      activity: { lobby: '在遊戲中，不在 Realm', room: '在合作房間中', run: '正在對戰中' } satisfies Record<Activity, string>,
+      yourBase: '你的基地',
+      here: '你在這裡',
+      go: '前往',
+      roomFull: '房間已滿',
+      goCity: '前往城市',
+      cityFull: '城市已滿',
+      invite: '邀請到我的基地',
+      sent: (handle: string) => `已邀請 @${handle}`,
+      privateBase: '你的基地不開放參觀。請在基地內按 ✎ 開放給好友後再邀請。',
+      noBase: '請先布置你的基地（在基地內按 ✎）再邀請別人。',
+      empty: '你還沒有追蹤任何人。可以從排行榜或個人檔案追蹤訓練家。',
+      failed: '目前無法載入好友。',
+      invited: (handle: string) => `@${handle} 邀請你到秘密基地`,
+      accept: '前往',
+      decline: '先不要',
+      lobby: (n: number) => `${n} 位好友在 Realm`,
     },
   },
   coop: {

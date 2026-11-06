@@ -267,6 +267,16 @@ export const REALM_ROOMS = {
 export const LANDING: TownRoomId = 'plaza'
 
 /**
+ * How many trainers a room holds: a town room `town`, a secret base `base`
+ * (its owner always gets in). The landing has no cap of its own (the city's,
+ * `REALM.cityCap`): it's where a trainer lands when a room is full.
+ */
+export const ROOM_CAP = { town: 20, base: 8 } as const
+
+/** A room's cap (`ROOM_CAP`), or null for the landing. */
+export const roomCap = (room: string): number | null => (room.startsWith('base:') ? ROOM_CAP.base : room === LANDING ? null : ROOM_CAP.town)
+
+/**
  * A secret base's interior as a grid (`data/secretBases.ts` places furniture
  * on it): `cols` × `rows` tiles of `tile` px, the top `wallRows` the back wall
  * (wall furniture only), the door on the bottom row's middle tile.

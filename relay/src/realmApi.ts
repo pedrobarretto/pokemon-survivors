@@ -33,7 +33,25 @@ export const parseIdentityResponse = (v: unknown, asked: readonly string[]): Ide
     if (identity && identity.userId === id) identities[id] = identity
   }
   const banned = Array.isArray(v.banned) ? v.banned.filter((id): id is string => typeof id === 'string' && asked.includes(id)) : []
-  return { identities, banned }
+  return { identities, banned, friends: parseFriendLists(v.friends, asked) }
+}
+
+/** Mutual friends a trainer keeps at most (the API's `FRIENDS.list`), and a handle's longest. */
+const FRIEND_LISTS = { n: 200, handle: 32 } as const
+
+/** Each asked account's mutual friends (handles, lower case), from the identity answer; none for an API from before them. */
+export const parseFriendLists = (v: unknown, asked: readonly string[]): Record<string, string[]> => {
+  if (!isRecord(v)) return {}
+  const lists: Record<string, string[]> = {}
+  for (const id of asked) {
+    const list = v[id]
+    if (Array.isArray(list))
+      lists[id] = list
+        .filter((h): h is string => typeof h === 'string' && h.length > 0 && h.length <= FRIEND_LISTS.handle)
+        .slice(0, FRIEND_LISTS.n)
+        .map((h) => h.toLowerCase())
+  }
+  return lists
 }
 
 /** `POST /realm/visit`'s answer, or null. */

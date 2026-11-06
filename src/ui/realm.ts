@@ -37,7 +37,7 @@ import {
   type RoomKey,
 } from '../net/realm'
 import { REPORT_REASONS, type BaseView, type ReportReason } from '../net/realmApi'
-import { fetchBase, fetchCities, fetchFriends, isFailure, reportTrainer } from '../realm/api'
+import { fetchBase, fetchCities, fetchFriends, fetchMe, isFailure, reportTrainer } from '../realm/api'
 import type { RealmClient } from '../realm/client'
 import { blocked, createWalker, place, pushSample, report, sampleAt, snap, walk, type Ground, type Track } from '../realm/interp'
 import { nearestReachable } from '../realm/placement'
@@ -51,6 +51,7 @@ import { titleChip } from './arenaTitle'
 import { openBaseBoard } from './baseBoard'
 import { openBaseEditor } from './baseEditor'
 import { openCarpentry } from './carpentry'
+import { openRealmFriends, roomName } from './realmFriends'
 import { dialogue, type Speaker } from './dialogue'
 import { h, later } from './dom'
 import { supporterBadgeIcon } from './profile'
@@ -63,7 +64,9 @@ import { uiZoom } from './uiScale'
  * drawn on the game's canvas (`scene`, called by the shell's frame instead
  * of the lobby's meadow) with the HTML over it: name plates, quick-chat
  * bubbles, the talk wheel and the emote bar, the party, a trainer's card
- * (invite, mute, report), the spot prompt (portals, the board, the bases,
+ * (invite, mute, report), the friends panel (`ui/realmFriends.ts`: where
+ * friends walk, "Ir até", base invites) and the base invites that come in,
+ * the spot prompt (portals, the board, the bases,
  * Bibarel's carpentry), the labels floating over the room's spots and doors
  * as the trainer comes near (so the town explains itself), the grove's host
  * and its first-visit talk, and the connection's state.
@@ -98,7 +101,12 @@ export type RealmDeps = {
  * meadow's place, and (for the dev console, `ps.realm('walk', 'x,y')`) a walk
  * toward a point of the room, as a tap there would.
  */
-export type RealmScreen = Screen & { scene: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number) => void; walkTo: (x: number, y: number) => void }
+export type RealmScreen = Screen & {
+  scene: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number) => void
+  walkTo: (x: number, y: number) => void
+  /** Dev (`ps.realm('friends')`): the friends panel, over the town or the picker. */
+  friends: () => void
+}
 
 /* ---------------- Muted trainers (this device) ---------------- */
 
@@ -384,23 +392,48 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         r.b.toggleAttribute('disabled', full)
       }
     })
+    const all = h('button', { class: 'realm-friend realm-friend-all box', type: 'button', onclick: () => (playSfx('select'), openFriends(null)) }, h('b', {}, m().friends.all))
     void fetchFriends().then((got) => {
       if (disposed || !picker) return
-      const walking = got?.friends ?? []
+      const walking = (got?.friends ?? []).flatMap((f) => (f.state === 'realm' && f.full !== 'city' ? [f] : []))
       friends.replaceChildren(
         ...(walking.length === 0
           ? [h('small', {}, m().cities.noFriends)]
-          : walking.map((f) => h('button', { class: 'realm-friend box', type: 'button', onclick: () => enter(f.city) }, h('b', {}, m().cities.joinFriend(f.handle)), h('small', {}, REALM_CITIES[f.city].name)))),
+          : walking.map((f) => {
+              const room = f.full === 'room' ? null : roomName(f.room, deps.handle)
+              return h(
+                'button',
+                { class: 'realm-friend box', type: 'button', onclick: () => (playSfx('select'), showTown(f.city, f.full === 'room' ? LANDING : (f.room ?? LANDING))) },
+                h('b', {}, m().cities.joinFriend(f.handle)),
+                h('small', {}, room ? `${REALM_CITIES[f.city].name} · ${room}` : REALM_CITIES[f.city].name),
+              )
+            })),
+        all,
       )
     })
   }
 
-  const showTown = (id: CityId) => {
+  /** Into `id`, landing in `room` (a friend's, through "Ir até" or an invite; the relay lands a full room's in the landing). */
+  const showTown = (id: CityId, room: RoomKey = LANDING) => {
     picker = null
+    closeSub()
     town?.dispose()
     session = { city: id, started: performance.now(), rooms: new Set([LANDING]), lines: 0, emotes: 0, party: false, portal: null }
     town = buildTown(id)
-    client.join(id, LANDING)
+    client.join(id, room)
+  }
+
+  /** The friends panel, over the town (`town`: where the player walks and how it invites) or the picker (null). */
+  function openFriends(at: { here: () => { city: CityId; room: RoomKey | null }; go: (city: CityId, room: RoomKey | null) => void; invite: (handle: string) => Promise<void> } | null) {
+    openSub((r) =>
+      openRealmFriends(r, input, {
+        handle: deps.handle,
+        here: at?.here ?? (() => null),
+        go: at?.go ?? ((city, room) => showTown(city, room ?? LANDING)),
+        invite: at?.invite ?? null,
+        close: closeSub,
+      }),
+    )
   }
 
   /* ---------- The town ---------- */
@@ -441,6 +474,12 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     const invite = h('div', { class: 'realm-invite box hidden' })
     const talkButton = h('button', { class: 'realm-talk box', type: 'button', 'aria-label': m().talk, onclick: () => toggle(wheel) }, h('img', { src: realmIconUrl('talk'), alt: '' }), h('span', { class: 'key-hint' }, 'T'))
     const emoteButton = h('button', { class: 'realm-emote box', type: 'button', 'aria-label': m().emote, onclick: () => toggle(emotes) }, h('img', { src: realmIconUrl('heart'), alt: '' }), h('span', { class: 'key-hint' }, 'Y'))
+    const friendsButton = h(
+      'button',
+      { class: 'realm-talk realm-pals-open box', type: 'button', 'aria-label': m().friends.open, title: m().friends.open, onclick: () => (playSfx('select'), friendsPanel()) },
+      h('img', { src: realmIconUrl('friends'), alt: '' }),
+      h('span', { class: 'key-hint' }, 'F'),
+    )
     const leaveButton = h('button', { class: 'realm-leave box', type: 'button', onclick: () => (playSfx('select'), showPicker()) }, `← ${m().leave}`)
     el.replaceChildren(
       signs,
@@ -449,7 +488,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       status,
       partyBar,
       usePrompt,
-      h('div', { class: 'realm-actions' }, talkButton, emoteButton),
+      h('div', { class: 'realm-actions' }, friendsButton, talkButton, emoteButton),
       wheel,
       emotes,
       card,
@@ -484,7 +523,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     let party: PartyView | null = null
     /** The room's game tables in use (`tables`/`table`), by id: drawn with their sitters, and handed to a table's screen. */
     const tables = new Map<string, TableView>()
-    const invites: number[] = []
+    /** Invites waiting for an answer, oldest first: a party's (an avatar of the room) or a friend's to their base (until it lapses). */
+    const invites: ({ kind: 'party'; from: number } | { kind: 'base'; from: string; city: CityId })[] = []
     let going = false
     let drag: { id: number; origin: Vec; stick: Stick | null; mouse: boolean } | null = null
     let tap: Vec | null = null
@@ -662,7 +702,23 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           const tr = trainers.get(msg.from)
           // A muted trainer's invite is turned down without a word.
           if (tr && muted.has(tr.av.handle)) return client.send({ t: 'answer', from: msg.from, yes: false })
-          invites.push(msg.from)
+          invites.push({ kind: 'party', from: msg.from })
+          return showInvite()
+        }
+        case 'baseInvited': {
+          // A muted trainer's base invite never shows; a newer one from the same friend replaces theirs.
+          if (muted.has(msg.from)) return
+          const call = { kind: 'base' as const, from: msg.from, city: msg.city }
+          const old = invites.findIndex((i) => i.kind === 'base' && i.from === msg.from)
+          if (old >= 0) invites.splice(old, 1)
+          invites.push(call)
+          playSfx('select')
+          setTimeout(() => {
+            const at = invites.indexOf(call)
+            if (disposed || at < 0) return
+            invites.splice(at, 1)
+            showInvite()
+          }, REALM.inviteMs)
           return showInvite()
         }
         case 'party':
@@ -712,19 +768,57 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     }
 
     function showInvite() {
-      const from = invites[0]
-      invite.classList.toggle('hidden', from === undefined)
-      if (from === undefined) return
+      const first = invites[0]
+      invite.classList.toggle('hidden', first === undefined)
+      if (first === undefined) return
       const answer = (yes: boolean) => {
-        client.send({ t: 'answer', from, yes })
         invites.shift()
+        if (first.kind === 'party') client.send({ t: 'answer', from: first.from, yes })
+        else if (yes) visitFriend(first.city, baseRoom(first.from))
         showInvite()
       }
+      const text =
+        first.kind === 'party'
+          ? m().party.invited(handleOf(first.from))
+          : first.city === city
+            ? m().friends.invited(first.from)
+            : `${m().friends.invited(first.from)} · ${REALM_CITIES[first.city].name}`
       invite.replaceChildren(
-        h('p', {}, m().party.invited(handleOf(from))),
-        h('button', { class: 'box', type: 'button', onclick: () => answer(true) }, m().party.accept),
-        h('button', { class: 'box', type: 'button', onclick: () => answer(false) }, m().party.decline),
+        h('p', {}, text),
+        h('button', { class: 'box', type: 'button', onclick: () => answer(true) }, first.kind === 'party' ? m().party.accept : m().friends.accept),
+        h('button', { class: 'box', type: 'button', onclick: () => answer(false) }, first.kind === 'party' ? m().party.decline : m().friends.decline),
       )
+    }
+
+    /* Friends */
+    function friendsPanel() {
+      for (const p of [wheel, emotes, card]) p.classList.add('hidden')
+      openFriends({ here: () => ({ city, room }), go: visitFriend, invite: inviteFriend })
+    }
+
+    /**
+     * Walks to a friend's room of `to` (null: the city's landing, when theirs
+     * is full). In this city a base, or a town room from a base, is a `go`;
+     * town to town (no door to walk through) and another city are a fresh hello there.
+     */
+    function visitFriend(to: CityId, at: RoomKey | null) {
+      closeSub()
+      if (to !== city) return showTown(to, at ?? LANDING)
+      if (at === null || at === room) return
+      if (baseOwner(at) !== null) return go(at, BASE_ROOM.spawn)
+      if (room !== null && !isTownRoomId(room) && isTownRoomId(at)) return go(at, REALM_ROOMS[at].spawn)
+      showTown(to, at)
+    }
+
+    /** Invites a friend to the player's base, once it's saved and open to friends (else a toast says what to do). */
+    async function inviteFriend(handle: string) {
+      const mine = await fetchMe()
+      if (disposed) return
+      const base = isFailure(mine) ? null : mine.base
+      if (!isFailure(mine) && base === null) return void toast(root, m().friends.noBase, 3600, 'realmFriends')
+      if (base?.visibility === 'private') return void toast(root, m().friends.privateBase, 4200, 'realmFriends')
+      client.send({ t: 'baseInvite', handle })
+      toast(root, m().friends.sent(handle), 2200, 'realmFriends')
     }
 
     /* A trainer's card */
@@ -949,6 +1043,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       if (key === 'KeyP') return boardAt(near)
       if (key === 'KeyT') return toggle(wheel)
       if (key === 'KeyY') return toggle(emotes)
+      if (key === 'KeyF') return friendsPanel()
       const n = Number(/^Digit(\d)$/.exec(key)?.[1] ?? NaN)
       if (n >= 1 && n <= 9) emote(REALM_EMOTES[n - 1]!)
     }
@@ -1117,7 +1212,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       window.removeEventListener('pointercancel', onUp)
     }
 
-    return { scene, dispose, walkTo: (x: number, y: number) => void (walker.target = { x, y }) }
+    return { scene, dispose, walkTo: (x: number, y: number) => void (walker.target = { x, y }), friends: friendsPanel }
   }
 
   /* ---------- Sheets over the town ---------- */
@@ -1151,6 +1246,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     el,
     dim: 0,
     walkTo: (x, y) => town?.walkTo(x, y),
+    friends: () => (town ? town.friends() : openFriends(null)),
     scene: (ctx, dt, w, hgt) => {
       if (town) return town.scene(ctx, dt, w, hgt)
       // The picker sits over the plaza, quiet, the client not yet in a city.

@@ -8,10 +8,23 @@ import { isRecord } from '../../src/game/parse'
 import { parseHandle } from '../../src/game/ranking'
 import { REPORT } from '../../src/game/reports'
 import { playsShiny } from '../../src/game/shinyPicks'
-import { CITY_IDS, isCityId, REALM, REALM_CITIES, type CityId, type RealmHome, type RealmIdentity } from '../../src/net/realm'
-import { REPORT_REASONS, type BaseCard, type BaseSave, type BaseView, type FurnitureBuy, type GameClaim, type RealmReport, type ReportReason } from '../../src/net/realmApi'
+import { FRIENDS, type Activity } from '../../src/game/friends'
+import { isCityId, REALM, REALM_CITIES, type CityId, type RealmHome, type RealmIdentity, type RoomKey } from '../../src/net/realm'
+import {
+  REPORT_REASONS,
+  type BaseCard,
+  type BaseSave,
+  type BaseView,
+  type FurnitureBuy,
+  type GameClaim,
+  type RealmFriends,
+  type RealmReport,
+  type RealmSettings,
+  type ReportReason,
+} from '../../src/net/realmApi'
+import { cityCounts, friendsFrom, parseReportRoom, type HeldPresence } from '../../src/realm/friends'
 import { capped, isMinigameId, MINIGAME_DAILY, MINIGAMES, trophiesEarned, type GameOutcome, type GameStats, type MinigameId } from '../../src/data/minigames'
-import { PRESENCE_STALE_MS, type IdentityResponse, type PresenceReport, type VisitResponse } from '../../src/net/realmRelay'
+import type { IdentityResponse, PresenceReport, VisitResponse } from '../../src/net/realmRelay'
 import type { RealmBan, RealmDesk, RealmModeration, RealmReportGroup } from '../../src/realm/moderation'
 import { addFurniture, trophyFurniture } from '../../src/realm/trophies'
 import { boardKeeps, boardPoints, GAME_BOARD_PERIODS, GAME_BOARD_SIZE, periodStart, type GameBoard, type GameBoardPeriod } from '../../src/realm/boards'
@@ -40,7 +53,15 @@ type Q = Sql | TransactionSql
 /** How long a guest's read of a mini game board is kept (`board`). */
 const BOARD_CACHE_MS = 15_000
 
-const LIMITS = { save: { n: 20, ms: 60_000 }, like: { n: 60, ms: 60_000 }, buy: { n: 30, ms: 60_000 }, game: { n: 12, ms: 60_000 } } as const
+const LIMITS = {
+  save: { n: 20, ms: 60_000 },
+  like: { n: 60, ms: 60_000 },
+  buy: { n: 30, ms: 60_000 },
+  game: { n: 12, ms: 60_000 },
+  // The friends panel asks every `FRIENDS_POLL_MS` while open; the picker and the lobby's tile once each.
+  friends: { n: 12, ms: 60_000 },
+  settings: { n: 10, ms: 60_000 },
+} as const
 
 /** Bases a board answers at most. */
 export const BASE_LIST = 30
@@ -63,40 +84,34 @@ const wireHandle = (v: unknown) => (typeof v === 'string' && v.length <= 32 ? pa
 /**
  * A relay's presence report, or null when it's malformed: a known home, and
  * only cities that home hosts, each with at most `REALM.cityCap` handles (a
- * little slack for one landing as another leaves).
+ * little slack for one landing as another leaves). Each handle's room comes
+ * along when the relay sends them, one per handle (`rooms`); a city whose
+ * rooms don't line up with its handles keeps none.
  */
 export const parsePresenceReport = (v: unknown): PresenceReport | null => {
   if (!isRecord(v) || !isRealmHome(v.home) || typeof v.at !== 'number' || !Number.isFinite(v.at) || !isRecord(v.cities)) return null
   const home = v.home
+  const sentRooms = isRecord(v.rooms) ? v.rooms : {}
   const cities: Partial<Record<CityId, string[]>> = {}
+  const rooms: Partial<Record<CityId, RoomKey[]>> = {}
   for (const [city, list] of Object.entries(v.cities)) {
     if (!isCityId(city) || REALM_CITIES[city].home !== home || !Array.isArray(list) || list.length > REALM.cityCap * 2) return null
-    cities[city] = [...new Set(list.flatMap((h) => wireHandle(h) ?? []))]
+    const where = sentRooms[city]
+    const paired = Array.isArray(where) && where.length === list.length ? where : null
+    const seen = new Map<string, RoomKey | null>()
+    list.forEach((h, i) => {
+      const handle = wireHandle(h)
+      if (handle && !seen.has(handle)) seen.set(handle, paired ? parseReportRoom(paired[i]) : null)
+    })
+    cities[city] = [...seen.keys()]
+    const known = [...seen.values()]
+    if (paired && known.every((r) => r !== null)) rooms[city] = known.filter((r) => r !== null)
   }
-  return { home, at: v.at, cities }
+  return Object.keys(rooms).length > 0 ? { home, at: v.at, cities, rooms } : { home, at: v.at, cities }
 }
 
-/** A presence report as the API keeps it: when it arrived (the API's clock, so a relay's drift doesn't matter). */
-export type HeldPresence = { report: PresenceReport; at: number }
-
-const live = (held: Iterable<HeldPresence>, now: number) => [...held].filter((h) => now - h.at < PRESENCE_STALE_MS)
-
-/** Trainers in each city now, from every relay's newest report (a silent relay's count as empty). */
-export const cityCounts = (held: Iterable<HeldPresence>, now: number): Partial<Record<CityId, number>> => {
-  const counts: Partial<Record<CityId, number>> = {}
-  for (const { report } of live(held, now)) for (const city of CITY_IDS) if (report.cities[city]) counts[city] = (counts[city] ?? 0) + report.cities[city].length
-  return counts
-}
-
-/** Where each of `handles` walks now, if anywhere (by handle, in their order). */
-export const walkingIn = (held: Iterable<HeldPresence>, now: number, handles: readonly string[]): { handle: string; city: CityId }[] => {
-  const where = new Map<string, CityId>()
-  for (const { report } of live(held, now)) for (const city of CITY_IDS) for (const h of report.cities[city] ?? []) where.set(h, city)
-  return handles.flatMap((handle) => {
-    const city = where.get(handle)
-    return city ? [{ handle, city }] : []
-  })
-}
+/** `PUT /realm/settings`'s body, or null. */
+export const parseRealmSettings = (v: unknown): RealmSettings | null => (isRecord(v) && typeof v.showWhere === 'boolean' ? { showWhere: v.showWhere } : null)
 
 /** `POST /realm/furniture/buy`'s body, or null. */
 export const parseFurnitureBuy = (v: unknown): FurnitureBuy | null => {
@@ -321,6 +336,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
     like: rateLimiter(LIMITS.like.n, LIMITS.like.ms),
     buy: rateLimiter(LIMITS.buy.n, LIMITS.buy.ms),
     game: rateLimiter(LIMITS.game.n, LIMITS.game.ms),
+    friends: rateLimiter(LIMITS.friends.n, LIMITS.friends.ms),
+    settings: rateLimiter(LIMITS.settings.n, LIMITS.settings.ms),
   }
   const presence = new Map<RealmHome, HeldPresence>()
   /** The boards as a guest reads them, by game, period and start, kept `BOARD_CACHE_MS` (a signed-in read asks for its own line). */
@@ -351,12 +368,27 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
         from users u left join saves s on s.user_id = u.id
         where u.id = any(${ids}::text[])`
       const open = rows.flatMap((r) => (!r.closed && r.handle !== null ? [{ ...r, handle: r.handle }] : []))
-      const looks = await vouchedLooks(sql, open.map((r) => r.id))
+      const openIds = open.map((r) => r.id)
+      const [looks, mutuals] = await Promise.all([
+        vouchedLooks(sql, openIds),
+        // Each one's mutual friends (who it may invite to its base), `FRIENDS.list` at most.
+        sql<{ id: string; handle: string }[]>`
+          select a.follower_id as id, u.handle from follows a
+          join follows b on b.follower_id = a.followee_id and b.followee_id = a.follower_id
+          join users u on u.id = a.followee_id
+          where a.follower_id = any(${openIds}::text[]) and u.handle is not null`,
+      ])
       const identities: Record<string, RealmIdentity> = {}
+      const friends: Record<string, string[]> = {}
       for (const r of open) {
         identities[r.id] = { userId: r.id, handle: r.handle, ...partnerOf(parseSaveData(r.save)), look: looks.get(r.id) ?? {}, supporter: r.supporter_public ? tierOfRow(r) : null }
+        friends[r.id] = []
       }
-      return { identities, banned: rows.filter((r) => r.closed).map((r) => r.id) }
+      for (const m of mutuals) {
+        const list = friends[m.id]
+        if (list && list.length < FRIENDS.list) list.push(m.handle.toLowerCase())
+      }
+      return { identities, banned: rows.filter((r) => r.closed).map((r) => r.id), friends }
     },
 
     /**
@@ -386,17 +418,38 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
       if (!held || held.report.at <= report.at) presence.set(report.home, { report, at: now().getTime() })
     },
 
+    /** Takes one `GET /realm/friends` from the player's budget, and one `PUT /realm/settings`. */
+    takeFriends: (userId: string) => limits.friends.take([userId], now().getTime()),
+    takeSettings: (userId: string) => limits.settings.take([userId], now().getTime()),
+
     /** `GET /realm/cities`: trainers in each city now. */
     cities: () => ({ cities: cityCounts(presence.values(), now().getTime()), at: now().getTime() }),
 
-    /** `GET /realm/friends`: `userId`'s mutual friends walking a city now (not those appearing offline). */
-    friends: async (userId: string) => {
-      const rows = await sql<{ handle: string }[]>`
-        select u.handle from follows a
-        join follows b on b.follower_id = a.followee_id and b.followee_id = a.follower_id
-        join users u on u.id = a.followee_id
-        where a.follower_id = ${userId} and u.handle is not null and not u.appear_offline`
-      return { friends: walkingIn(presence.values(), now().getTime(), rows.map((r) => r.handle)) }
+    /**
+     * `GET /realm/friends`: the players `userId` follows, each as far as they
+     * let them see (`friendWhere`: a one-way follow shows nothing, appearing
+     * offline reads offline, a hidden one is in the Realm somewhere), with
+     * the asker's own "show where I am".
+     */
+    friends: async (userId: string): Promise<RealmFriends> => {
+      const [rows, me] = await Promise.all([
+        sql<{ handle: string; name: string; follows_back: boolean; appear_offline: boolean; realm_show_where: boolean; activity: Activity | null; ago: number | null }[]>`
+          select u.handle, coalesce(u.name, u.handle) as name, u.appear_offline, u.realm_show_where,
+            exists (select 1 from follows b where b.follower_id = u.id and b.followee_id = ${userId}) as follows_back,
+            p.activity, (extract(epoch from (now() - p.seen_at)) * 1000)::float8 as ago
+          from follows a join users u on u.id = a.followee_id left join presence p on p.user_id = u.id
+          where a.follower_id = ${userId} and u.handle is not null and u.banned_at is null
+          order by u.handle limit ${FRIENDS.list}`,
+        sql<{ realm_show_where: boolean }[]>`select realm_show_where from users where id = ${userId}`,
+      ])
+      const followed = rows.map((r) => ({ handle: r.handle, name: r.name, followsBack: r.follows_back, appearOffline: r.appear_offline, showWhere: r.realm_show_where, activity: r.activity, ago: r.ago }))
+      return { friends: friendsFrom(followed, presence.values(), now().getTime()), showWhere: me[0]?.realm_show_where ?? true }
+    },
+
+    /** `PUT /realm/settings`: stores "show where I am" for friends. */
+    settings: async (userId: string, next: RealmSettings): Promise<RealmSettings> => {
+      await sql`insert into users (id, realm_show_where) values (${userId}, ${next.showWhere}) on conflict (id) do update set realm_show_where = ${next.showWhere}`
+      return next
     },
 
     /** `GET /realm/me`: the player's handle, furniture and base (null before the first save); `profile` without a handle. */

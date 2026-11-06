@@ -1,4 +1,5 @@
 import type { Messages } from './pt'
+import type { Activity } from '../game/friends'
 
 const typeBoost = (type: string) => `+10% de dégâts aux capacités de type ${type}.`
 
@@ -723,6 +724,7 @@ export const fr: Messages = {
       afk: 'Tu es resté immobile trop longtemps et tu es revenu au choix de ville.',
       banned: 'Ton compte est suspendu du Poké Realm.',
       busy: 'Le serveur du Realm est plein. Réessaie dans un instant.',
+      roomFull: 'Cette salle est pleine pour l’instant. Réessaie dans un moment.',
     },
     talk: 'Parler',
     emote: 'Emote',
@@ -828,6 +830,31 @@ export const fr: Messages = {
       profile: 'Voir le profil',
       close: 'Fermer',
       you: 'Toi',
+    },
+    friends: {
+      open: 'Amis',
+      title: 'Amis dans le Realm',
+      all: 'Voir tous les amis',
+      showWhere: (on: boolean) => `Montrer où je suis à mes amis : ${on ? 'oui' : 'non'}`,
+      showWhereHint: 'Seuls ceux qui te suivent en retour voient ta ville et ta salle.',
+      states: { hidden: 'Dans le Realm · lieu masqué', offline: 'Hors ligne', pending: 'Ne te suit pas encore en retour' },
+      activity: { lobby: 'Dans le jeu, hors du Realm', room: 'Dans un salon coop', run: 'En partie' } satisfies Record<Activity, string>,
+      yourBase: 'Ta base',
+      here: 'Tu es ici',
+      go: 'Rejoindre',
+      roomFull: 'Salle pleine',
+      goCity: 'Aller dans la ville',
+      cityFull: 'Ville pleine',
+      invite: 'Inviter dans ma base',
+      sent: (handle: string) => `Invitation envoyée à @${handle}`,
+      privateBase: 'Ta base est fermée aux visites. Ouvre-la à tes amis (✎ à l’intérieur) pour inviter.',
+      noBase: 'Aménage ta base (✎ à l’intérieur) avant d’inviter quelqu’un.',
+      empty: 'Tu ne suis encore personne. Suis des dresseurs depuis le Classement ou leur profil.',
+      failed: 'Impossible d’afficher tes amis pour l’instant.',
+      invited: (handle: string) => `@${handle} t’invite dans sa base secrète`,
+      accept: 'Y aller',
+      decline: 'Pas maintenant',
+      lobby: (n: number) => (n === 1 ? '1 ami dans le Realm' : `${n} amis dans le Realm`),
     },
   },
   coop: {

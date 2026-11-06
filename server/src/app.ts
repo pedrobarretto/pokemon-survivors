@@ -23,7 +23,7 @@ import { parseSaveData } from '../../src/game/meta'
 import { outbreakAt } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
 import type { LooksResponse } from '../../src/net/looks'
-import type { GameClaimed, RealmCities, RealmFriends, RealmMe } from '../../src/net/realmApi'
+import type { GameClaimed, RealmCities, RealmFriends, RealmMe, RealmSettings } from '../../src/net/realmApi'
 import { coinsFor, isMinigameId } from '../../src/data/minigames'
 import type { IdentityRequest } from '../../src/net/realmRelay'
 import { parseRealmModeration } from '../../src/realm/moderation'
@@ -52,7 +52,7 @@ import type { ModerationStore } from './moderation'
 import type { PatreonOAuth } from './patreon'
 import type { Revenue } from './revenue'
 import type { RankingStore } from './ranking'
-import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parseGameClaim, parsePresenceReport, parseRealmReport, type BuyError, type RealmStore } from './realm'
+import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parseGameClaim, parsePresenceReport, parseRealmReport, parseRealmSettings, type BuyError, type RealmStore } from './realm'
 import { checkoutLocale, type StripeCheckout } from './stripe'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
@@ -94,7 +94,7 @@ export type AppDeps = {
   /** The Poké Realm: identities, visits and presence for the relay; bases, furniture and reports for the game; bans for the admin. */
   realm: Pick<
     RealmStore,
-    'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'claim' | 'board' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy' | 'takeGame'
+    'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'settings' | 'takeFriends' | 'takeSettings' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'claim' | 'board' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy' | 'takeGame'
   >
   /** The secret the relay signs Arena and co-op reports and ticket lookups with; unset, those routes answer 503. */
   arenaReportSecret: string | undefined
@@ -328,7 +328,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
  * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
  * - The Poké Realm (`src/realm.ts`): the game's routes as `src/net/realmApi.ts` lists them (`/realm/me`, `/realm/cities`,
- *   `/realm/friends`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/boards/:game`, `/realm/report`), and the relay's, signed like
+ *   `/realm/friends`, `/realm/settings`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/boards/:game`, `/realm/report`), and the relay's, signed like
  *   `/looks`, as `src/net/realmRelay.ts` lists them (`/realm/identity`, `/realm/visit`, `/realm/presence`). A realm-banned
  *   account's realm writes get 403 `{ error: 'banned' }`. The desk's `GET /admin/realm`: `RealmDesk` (open realm reports
  *   by trainer, bans in force); `POST /admin/realm/moderation` (`parseRealmModeration`) `{ userId, action, days?, reason? }`:
@@ -957,7 +957,17 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     return c.json(realm.cities() satisfies RealmCities)
   })
 
-  app.get('/realm/friends', auth, async (c) => c.json((await realm.friends(c.var.userId)) satisfies RealmFriends))
+  app.get('/realm/friends', auth, async (c) => {
+    if (!realm.takeFriends(c.var.userId)) return c.json({ error: 'too many asks' }, 429)
+    return c.json((await realm.friends(c.var.userId)) satisfies RealmFriends)
+  })
+
+  app.put('/realm/settings', auth, smallBody, async (c) => {
+    const next = parseRealmSettings(await json(c))
+    if (!next) return c.json({ error: 'expected { showWhere }' }, 400)
+    if (!realm.takeSettings(c.var.userId)) return c.json({ error: 'too many changes' }, 429)
+    return c.json((await realm.settings(c.var.userId, next)) satisfies RealmSettings)
+  })
 
   app.get('/realm/base/:handle', auth, async (c) => {
     const got = await realm.base(c.var.userId, c.req.param('handle'))

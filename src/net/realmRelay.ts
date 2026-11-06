@@ -1,4 +1,4 @@
-import type { CityId, RealmHome, RealmIdentity } from './realm'
+import type { CityId, RealmHome, RealmIdentity, RoomKey } from './realm'
 
 /**
  * What the realm relay asks the API (relay → API, signed like the Arena's
@@ -12,9 +12,11 @@ export type IdentityRequest = { userIds: string[] }
 /**
  * Each asked account that may walk the realm, by user id. An account without
  * a @handle, or banned from the realm, is left out (the relay refuses it:
- * `profile`, `banned`; `banned` lists those).
+ * `profile`, `banned`; `banned` lists those). `friends`: each account's mutual
+ * friends' handles (lower case), the ones it may invite to its base (an API
+ * from before it: nobody).
  */
-export type IdentityResponse = { identities: Record<string, RealmIdentity>; banned: string[] }
+export type IdentityResponse = { identities: Record<string, RealmIdentity>; banned: string[]; friends?: Record<string, string[]> }
 
 /** `POST /realm/visit`: may `visitor` (its user id; a handle works too) come into `owner`'s base (a handle)? The API counts the visit when it's someone else's, once a Brasília day. */
 export type VisitRequest = { visitor: string; owner: string; city: CityId }
@@ -27,9 +29,10 @@ export type VisitResponse = { allowed: true } | { allowed: false; why: 'private'
  * `PRESENCE_EVERY_MS` (and once a city empties). The API keeps the newest
  * report per relay for the city picker's counts and the friends list
  * (`GET /realm/cities`, `GET /realm/friends`); a relay silent for
- * `PRESENCE_STALE_MS` counts as empty.
+ * `PRESENCE_STALE_MS` counts as empty. `rooms[city][i]`: the room of
+ * `cities[city][i]` (a relay from before it sends none).
  */
-export type PresenceReport = { home: RealmHome; at: number; cities: Partial<Record<CityId, string[]>> }
+export type PresenceReport = { home: RealmHome; at: number; cities: Partial<Record<CityId, string[]>>; rooms?: Partial<Record<CityId, RoomKey[]>> }
 
 export const PRESENCE_EVERY_MS = 15_000
 

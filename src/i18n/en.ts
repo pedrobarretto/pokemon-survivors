@@ -1,4 +1,5 @@
 import type { Messages } from './pt'
+import type { Activity } from '../game/friends'
 
 const typeBoost = (type: string) => `+10% damage to ${type}-type moves.`
 
@@ -723,6 +724,7 @@ export const en: Messages = {
       afk: 'You stood still for too long and went back to the city picker.',
       banned: 'Your account is suspended from the Poké Realm.',
       busy: 'The Realm’s server is full. Try again in a moment.',
+      roomFull: 'That room is full right now. Try again in a bit.',
     },
     talk: 'Talk',
     emote: 'Emote',
@@ -828,6 +830,31 @@ export const en: Messages = {
       profile: 'View profile',
       close: 'Close',
       you: 'You',
+    },
+    friends: {
+      open: 'Friends',
+      title: 'Friends in the Realm',
+      all: 'See all friends',
+      showWhere: (on: boolean) => `Show friends where I am: ${on ? 'on' : 'off'}`,
+      showWhereHint: 'Only players who follow you back see your city and room.',
+      states: { hidden: 'In the Realm · location hidden', offline: 'Offline', pending: 'Doesn’t follow you back yet' },
+      activity: { lobby: 'In the game, outside the Realm', room: 'In a co-op room', run: 'In a run' } satisfies Record<Activity, string>,
+      yourBase: 'Your base',
+      here: 'You’re here',
+      go: 'Go to',
+      roomFull: 'Room full',
+      goCity: 'Go to the city',
+      cityFull: 'City full',
+      invite: 'Invite to my base',
+      sent: (handle: string) => `Invite sent to @${handle}`,
+      privateBase: 'Your base is closed to visitors. Open it to friends (✎ inside it) to invite someone.',
+      noBase: 'Set up your base (✎ inside it) before inviting anyone.',
+      empty: 'You don’t follow anyone yet. Follow trainers from the Ranking or their profile.',
+      failed: 'Couldn’t load your friends right now.',
+      invited: (handle: string) => `@${handle} invited you to their secret base`,
+      accept: 'Go',
+      decline: 'Not now',
+      lobby: (n: number) => (n === 1 ? '1 friend in the Realm' : `${n} friends in the Realm`),
     },
   },
   coop: {
