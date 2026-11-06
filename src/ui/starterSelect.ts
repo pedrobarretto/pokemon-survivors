@@ -25,7 +25,13 @@ import { armedTms, armTm, tmLimit, type ShelfTm } from '../game/tmShelf'
 import { ownsShiny, pickShinyForm, playsShiny } from '../game/shinyPicks'
 import { dieIcon, eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
 import { capPips, shopIcon } from './shopIcons'
-import { cryUrl, drawPokemon, loadedSprites, loadSpecies, portraitUrl, walkSheet } from '../render/sprites'
+import { cryUrl, drawPokemon, fitSprites, loadedSprites, loadSpecies, portraitUrl, skinSprites, walkSheet } from '../render/sprites'
+import { equip, shownOn, skinsOf, takeOff, wearing } from '../arena/gemShop'
+import { cosmeticPrice, skinFor } from '../data/cosmetics'
+import { SKIN_LINES, SKINS, type SkinId, type SkinLine } from '../data/skinCatalog'
+import { fetchGems, gemsEnabled, gemsFaked, gemsSignedIn, knownGems, onGems, ownedSet, saveLook, wearableSet } from '../gems'
+import { localLook } from '../render/looks'
+import { gemAmount, itemName } from './gemShop'
 import { formatDay, formatPokeDollarsShort, t } from '../i18n'
 import { h, later, rich } from './dom'
 import { loadSave, today, updateSave } from './save'
@@ -67,6 +73,8 @@ type SelectActions = {
   mart?: () => void
   settings: () => void
   incubator: () => void
+  /** The Boutique's Skins on a skin not owned yet (the skins row); without it (co-op, the Dojo) the row doesn't show. */
+  boutique?: (skin: SkinId) => void
 }
 
 /**
@@ -325,6 +333,65 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     !opts.coop && legendsPane,
   )
 
+  /* ---------- Skins ---------- */
+
+  /**
+   * The line's skins (`data/skinCatalog.ts`) under the partner's name, when it
+   * has any on sale or owned: Normal and each skin, drawn on the stage shown.
+   * One owned is worn (or taken off) here, through the account's look
+   * (`saveLook`), and the pedestal wears it; one not owned shows its price and
+   * opens the Boutique on it.
+   */
+  const skinChips = new Map<HTMLCanvasElement, SkinId>()
+  const isLine = (id: PlayableId): id is SkinLine => (SKIN_LINES as readonly string[]).includes(id)
+  const lineSkins = (id: PlayableId): SkinId[] => {
+    if (!actions.boutique || !(gemsEnabled || gemsFaked()) || !isLine(id)) return []
+    const owned = ownedSet(knownGems())
+    return skinsOf(id).filter((skin) => shownOn(skin, brasiliaDay(today()), owned))
+  }
+  const skinsRow = (id: PlayableId) => {
+    skinChips.clear()
+    const skins = lineSkins(id)
+    const toBoutique = actions.boutique
+    if (skins.length === 0 || !toBoutique) return null
+    const g = t().gems.partner
+    const status = knownGems()
+    const look = status?.look ?? {}
+    const wearable = wearableSet(status)
+    const worn = skins.find((skin) => wearing(look, skin) && wearable.has(skin)) ?? null
+    const chip = (skin: SkinId | null) => {
+      const mine = skin === null || wearable.has(skin)
+      const on = skin === worn
+      const name = skin ? itemName(skin) : g.normal
+      const canvas = skin ? h('canvas', { class: 'partner-skin-art', width: 32, height: 32 }) : null
+      if (canvas && skin) skinChips.set(canvas, skin)
+      const price = skin && !mine ? cosmeticPrice(skin) : null
+      return h(
+        'button',
+        {
+          class: `partner-skin${on ? ' on' : ''}${mine ? '' : ' locked'}${skin ? '' : ' normal'}`,
+          type: 'button',
+          'aria-pressed': String(on),
+          'aria-label': skin === null || mine ? (on ? name : g.wear(name)) : g.see(name),
+          title: skin === null || mine ? name : g.see(name),
+          onclick: () => {
+            if (skin && !mine) return leave(() => toBoutique(skin))
+            if (on || !status) return
+            playSfx('select')
+            void saveLook(skin ? equip(look, skin) : worn ? takeOff(look, worn) : look)
+          },
+        },
+        canvas ?? h('span', { class: 'partner-skin-normal' }, g.normal),
+        price !== null ? h('small', { class: 'partner-skin-price' }, gemAmount(price)) : null,
+      )
+    }
+    return h('div', { class: 'partner-skins', role: 'group', 'aria-label': g.label }, h('small', { class: 'partner-skins-label' }, g.label), h('div', { class: 'partner-skins-list' }, chip(null), ...skins.map(chip)))
+  }
+  /** The skin the pedestal wears for `dex`: the account's look, owned and unlocked (`localLook`). */
+  const wornSkin = (dex: number) => skinFor(localLook(), dex)
+  // The row follows the account (a buy in the Boutique, a sign in, a wear here).
+  const offGems = onGems(() => renderHero())
+
   /* ---------- Partner panel ---------- */
 
   const sprite = h('canvas', { width: 72, height: 72, class: 'partner-sprite' })
@@ -417,6 +484,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true)),
         ),
       ),
+      ...[skinsRow(id)].filter((row) => row !== null),
       h('div', { class: 'partner-stats' }, statBars(id, 4)),
       h('div', { class: 'partner-evo' }, evoLine(id, stage, onStage)),
       more(false),
@@ -725,6 +793,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   renderTms()
   render()
   requestAnimationFrame(reveal)
+  if (gemsSignedIn() && lineSkins(current()).length > 0) void fetchGems()
 
   /** Draws the selected Pokémon idling on its pedestal: a bobbing Poké Ball while it loads, a dark silhouette while still in its egg. */
   const tick = (time: number) => {
@@ -733,10 +802,19 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     const locked = !unlocked(id)
     const ctx = context2d(sprite)
     ctx.clearRect(0, 0, sprite.width, sprite.height)
-    const s = (shinyOf(id) && loadedSprites(dex, true)) || loadedSprites(dex)
+    const skin = locked ? null : wornSkin(dex)
+    const s = (skin && skinSprites(skin, dex, shinyOf(id))) || (shinyOf(id) && loadedSprites(dex, true)) || loadedSprites(dex)
+    // Each skin chip idles on the stage shown (or the skin's first one, when it doesn't dress that stage).
+    for (const [canvas, chipSkin] of skinChips) {
+      const ctx = context2d(canvas)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      const covers = SKINS[chipSkin].dexes as readonly number[]
+      const art = skinSprites(chipSkin, covers.includes(dex) ? dex : covers[0]!, shinyOf(id))
+      if (art) drawPokemon(ctx, fitSprites(art, canvas.width - 4, 0), 'Idle', 0, time, canvas.width / 2, canvas.height - 3)
+    }
     if (s) drawPokemon(ctx, s, 'Idle', 0, locked ? 0 : time, sprite.width / 2, sprite.height - 6, { tint: locked ? { color: '#283048', amount: 1 } : undefined })
     else blitCentered(ctx, PICKUPS.pokeball(), sprite.width / 2, sprite.height / 2 + Math.round(Math.sin(time * 6) * 2))
   }
 
-  return { el, tick, selected: current, dispose: () => (off(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), el.remove()) }
+  return { el, tick, selected: current, dispose: () => (off(), offGems(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), el.remove()) }
 }

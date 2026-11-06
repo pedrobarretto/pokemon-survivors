@@ -656,6 +656,21 @@ export const fr: Messages = {
       locker: 'Skins',
       lockerNote: 'Un skin par lignée : il apparaît à chaque stade qu’il habille.',
     },
+    vitrine: {
+      title: 'Vitrine du jour',
+      note: 'Change à minuit, heure de Brasília',
+      missing: (n: string) => `Il manque ${n} gemmes`,
+      covers: (pack: string) => `Le pack ${pack} suffit`,
+      welcome: (times: string) => `${times}× les gemmes de la Poignée pour le même prix. Une seule fois par compte.`,
+      once: 'Une seule fois par compte.',
+    },
+    partner: {
+      label: 'Skins',
+      normal: 'Normal',
+      wear: (name: string) => `Porter ${name}`,
+      see: (name: string) => `${name} : voir à la Boutique`,
+    },
+    chipGuest: 'Boutique : des looks contre des gemmes',
     locker: {
       pick: 'Pokémon de l’aperçu',
       none: 'Aucun',

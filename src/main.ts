@@ -232,7 +232,7 @@ import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/ar
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
 import { freeWearables, wearMemory } from './render/wearables'
 import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkins, type Look, type CosmeticSlot } from './data/cosmetics'
-import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS } from './data/skinCatalog'
+import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS, type SkinId } from './data/skinCatalog'
 import { equip } from './arena/gemShop'
 import { effectIn } from './data/arenaEffects'
 import { createVersusTray, type VersusTray } from './ui/versusTray'
@@ -610,14 +610,20 @@ const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void
 /** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
 let boutiqueCheckout: string | null = null
 
+/** The skin the Boutique's Skins opens on (the partner select's skins row), once. */
+let boutiqueItem: SkinId | null = null
+
 /** Leavanny's Boutique over the plaza's north-west (`ui/boutique.ts`); closing it leaves `?boutique` behind too. */
 const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
   const checkout = boutiqueCheckout
+  const item = boutiqueItem
   boutiqueCheckout = null
+  boutiqueItem = null
   lobbyPress('boutique')
   return openBoutique(ui, input, {
     tab,
     checkout,
+    item,
     signIn: accountsEnabled ? () => void signIn() : null,
     pick: arenaStart(),
     keepPick: keepArenaPick,
@@ -633,10 +639,11 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
  * Card's look, `?boutique`, a checkout's return): the lobby lands on the
  * plaza's north-west with the sheet open on `tab`; leaving it calls `back`
  * when given (where it came from), else pans home. `checkout`: the
- * `?gems=<ref>` the Loja waits on.
+ * `?gems=<ref>` the Loja waits on; `item`, the skin Skins opens on.
  */
-const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null) => {
+const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null, item: SkinId | null = null) => {
   boutiqueCheckout = checkout
+  boutiqueItem = item
   showTitle({ shop: tab === 'shop' ? 'boutique' : tab, instant: true, ...(back && { back }) })
 }
 
@@ -756,6 +763,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
         return openFestival(ui, input, () => ((scene.plaza.focus = 0), close()), tab)
       },
       boutique: openBoutiqueSheet,
+      gems: () => showBoutique('shop'),
       carpentry: (close) => openCarpentry(ui, input, { close, signIn: accountsEnabled ? () => void signIn() : null }),
       // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
       trainer: (focus) =>
@@ -833,6 +841,8 @@ const showMenu = (initial: PlayableId = loadSave().partner) => {
     mart: () => showShop(),
     settings: () => setScreen(openSettings(ui, input, () => showMenu(select.selected()))),
     incubator: () => showIncubator(() => showMenu(select.selected())),
+    // A skin not owned yet: the Boutique's Skins on it, then back here on the same Pokémon.
+    boutique: (skin) => showBoutique('skins', () => showMenu(select.selected()), null, skin),
   }, initial)
   setScreen(select)
 }

@@ -13,6 +13,7 @@ import { skinsTab } from './skinShop'
 import { loadSave } from './save'
 import { hint, type Screen } from './screens'
 import { tailorSpeaker } from './visitors'
+import type { SkinId } from '../data/skinCatalog'
 
 /** Set once the player first opens the Boutique on this device: its NOVO tags (the Kecleon shop's button, the Trainer Card's row) and Leavanny's long hello go for good. */
 const SEEN = 'ps:boutiqueSeen'
@@ -45,6 +46,7 @@ export type BoutiqueTab = (typeof BOUTIQUE_TABS)[number]
  * the previews when the partner can't (no anchors), and `keepPick` saves the
  * one Visual's picker takes. `checkout`: the ref the page came back from a gem
  * pack's checkout with (`?gems=<ref>`), so Loja opens on its return sheet.
+ * `item`: the skin Skins opens on (the partner select's skins row), or null.
  */
 export type BoutiqueOpts = {
   close: () => void
@@ -53,6 +55,7 @@ export type BoutiqueOpts = {
   pick: VersusPick
   keepPick: (id: VersusPick) => void
   checkout: string | null
+  item: SkinId | null
 }
 
 /**
@@ -94,7 +97,7 @@ export const openBoutique = (root: HTMLElement, input: Input, opts: BoutiqueOpts
   }
   // Each page is made the first time it shows and kept (with its preview) across tab switches.
   const pages: Partial<Record<BoutiqueTab, GemTab>> = {}
-  const page = (id: BoutiqueTab) => (pages[id] ??= id === 'shop' ? shopTab(ctx, opts.checkout) : id === 'skins' ? skinsTab(ctx) : lockerTab(ctx))
+  const page = (id: BoutiqueTab) => (pages[id] ??= id === 'shop' ? shopTab(ctx, opts.checkout) : id === 'skins' ? skinsTab(ctx, opts.item) : lockerTab(ctx))
   const busy = () => BOUTIQUE_TABS.some((id) => pages[id]?.busy() === true)
 
   const icons = { shop: gemIconUrl(), skins: slotIconUrl('skin'), locker: slotIconUrl('head') } as const satisfies Record<BoutiqueTab, string>

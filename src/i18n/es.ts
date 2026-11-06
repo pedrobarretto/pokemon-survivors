@@ -657,6 +657,21 @@ export const es: Messages = {
       locker: 'Skins',
       lockerNote: 'Una skin por línea: aparece en todas las etapas que viste.',
     },
+    vitrine: {
+      title: 'Vitrina del día',
+      note: 'Cambia a medianoche (hora de Brasilia)',
+      missing: (n: string) => `Te faltan ${n} gemas`,
+      covers: (pack: string) => `El paquete ${pack} alcanza`,
+      welcome: (times: string) => `${times}× las gemas del Puñado por el mismo precio. Solo una vez por cuenta.`,
+      once: 'Solo una vez por cuenta.',
+    },
+    partner: {
+      label: 'Skins',
+      normal: 'Normal',
+      wear: (name: string) => `Usar ${name}`,
+      see: (name: string) => `${name}: ver en la Boutique`,
+    },
+    chipGuest: 'Boutique: visuales con gemas',
     locker: {
       pick: 'Pokémon de la vista previa',
       none: 'Ninguno',

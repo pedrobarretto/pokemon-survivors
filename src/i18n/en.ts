@@ -656,6 +656,21 @@ export const en: Messages = {
       locker: 'Skins',
       lockerNote: 'One skin per line: it shows on every stage it dresses.',
     },
+    vitrine: {
+      title: 'Today’s picks',
+      note: 'Changes at midnight, Brasília time',
+      missing: (n: string) => `${n} gems short`,
+      covers: (pack: string) => `${pack} covers it`,
+      welcome: (times: string) => `${times}× the Handful’s gems for the same price. Once per account.`,
+      once: 'Once per account.',
+    },
+    partner: {
+      label: 'Skins',
+      normal: 'Normal',
+      wear: (name: string) => `Wear ${name}`,
+      see: (name: string) => `${name}: see it at the Boutique`,
+    },
+    chipGuest: 'Boutique: looks for gems',
     locker: {
       pick: 'Preview Pokémon',
       none: 'None',

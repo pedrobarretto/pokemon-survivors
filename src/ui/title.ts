@@ -25,6 +25,7 @@ import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue, type Speaker } from './dialogue'
 import { carpenterSpeaker, judgeSpeaker, lanturnSpeaker, senseiSpeaker, stallSpeaker, stallToday, tailorSpeaker } from './visitors'
 import { boutiqueSeen, type BoutiqueTab } from './boutique'
+import { gemChip } from './gemShop'
 import { inviterName } from '../ranking'
 import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
 import { fetchWall, knownStatus } from '../supporters'
@@ -67,6 +68,7 @@ export type LobbyFocus =
   | 'pokedex'
   | 'eggs'
   | 'mart'
+  | 'gems'
   | 'dojo'
   | 'ranking'
   | 'ideas'
@@ -152,6 +154,8 @@ export type TitleActions = {
   festival: (close: () => void, tab?: FestivalTab) => Screen
   /** Opens Leavanny's Boutique over the plaza once the camera got there (`openBoutique` in `ui/boutique.ts`), on `tab`; `close` goes home. */
   boutique: (close: () => void, tab: BoutiqueTab) => Screen
+  /** The top bar's gem chip: the Boutique's Loja without the walk (`showBoutique`), back to the lobby. */
+  gems: () => void
   /** Opens Bibarel's carpentry over the plaza once the camera got there (`openCarpentry` in `ui/carpentry.ts`); `close` goes home. */
   carpentry: (close: () => void) => Screen
   /** Opens the Trainer Card over the title (the Trainer chip, `C`, the invite banner), like `settings`. */
@@ -1083,6 +1087,7 @@ export const titleScreen = (
     pokedex: () => openOver(actions.pokedex),
     eggs: actions.incubator,
     mart: () => visitShop('shop'),
+    gems: actions.gems,
     dojo: () => visitShop('dojo'),
     ranking: () => ranking && openOver(ranking),
     ideas: () => ideas && openOver(ideas),
@@ -1122,10 +1127,13 @@ export const titleScreen = (
     const chip = trainerChip(input, { onOpen: () => (lobbyPress('trainer'), openOver(actions.trainer)) })
     closeChip = chip.dispose
     navigable(chip.el, 'trainer')
+    // Beside the ₽, the gems (a guest's chip, only the gem): the Boutique's Loja, where guests browse too. Null in a build without the API.
+    const gems = gemChip(() => (lobbyPress('gems'), runs.gems()))
     const nextBar = topBar({
       left: chip.el,
       right: [
         (wallet = walletChip(save.wallet)),
+        ...(gems ? [navigable(gems, 'gems')] : []),
         ...(landscape && actions.realm ? [navigable(realmTopButton(press('realm')), 'realm')] : []),
         ...(landscape ? [navigable(discordButton(press('discord')), 'discord'), ...SOCIAL_IDS.map((id) => navigable(socialButton(id, press(id)), id))] : []),
         ...(surveyWaiting() ? [navigable(surveyButton(press('survey')), 'survey')] : []),
