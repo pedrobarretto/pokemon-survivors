@@ -6771,6 +6771,22 @@ export const pt = {
       again: 'Jogar de novo',
       leave: 'Sair',
     },
+    /** The mini games' Placar (`realm/games/board.ts`): each game's best of the Brasília day and week. */
+    board: {
+      title: 'Placar',
+      open: 'Placar',
+      see: 'Ver placar',
+      periods: { day: 'Hoje', week: 'Semana' },
+      dayCaption: 'Recordes de hoje · zera à meia-noite (Brasília)',
+      weekCaption: (from: string, to: string) => `Semana de ${from} a ${to}`,
+      tableNote: 'Valem as vitórias contra outros treinadores.',
+      points: (n: number) => `${n} pts`,
+      wins: (n: number) => (n === 1 ? '1 vitória' : `${n} vitórias`),
+      total: (n: number) => (n === 1 ? '1 treinador no placar' : `${n} treinadores no placar`),
+      empty: 'Ninguém jogou ainda. Seja o primeiro!',
+      loading: 'Carregando...',
+      offline: 'Não deu pra carregar o placar agora.',
+    },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {
       waiting: 'Esperando um oponente...',

@@ -2,12 +2,15 @@ import { spendFromSave } from '../account'
 import { apiCall } from '../api'
 import { CITY_IDS, isCityId, type CityId } from '../net/realm'
 import type { BaseCard, BaseList, BaseSave, BaseView, FurnitureBought, FurnitureBuy, GameClaim, GameClaimed, RealmCities, RealmFriends, RealmMe, RealmReport } from '../net/realmApi'
-import { MINIGAME_DAILY, capped, coinsFor, trophiesEarned, type GameStats, type MinigameId } from '../data/minigames'
+import { MINIGAME_DAILY, capped, coinsFor, isMinigameId, trophiesEarned, type GameStats, type MinigameId } from '../data/minigames'
 import { BASE_EXTERIORS, isBaseExterior, isBaseVisibility, parseLayout, type BaseLayout, type LayoutError } from '../data/secretBases'
 import { FURNITURE, FURNITURE_IDS, isFurnitureId, type FurnitureCounts, type FurnitureId } from '../data/furniture'
 import { LEGEND_IDS } from '../data/legends'
 import { isRecord } from '../game/parse'
 import { DEMO_BASES } from './demoBases'
+import { fakeGameBoard } from './boardFakes'
+import { boardKeeps, boardPoints, isGameBoardPeriod, type GameBoard, type GameBoardEntry, type GameBoardPeriod } from './boards'
+import { isDayKey } from '../game/day'
 
 /**
  * The Poké Realm's calls to the API (`net/realmApi.ts` lists the routes). The
@@ -16,14 +19,20 @@ import { DEMO_BASES } from './demoBases'
  * Every answer is parsed, never trusted as is.
  *
  * `ps.realm('fake')` makes every call answer made-up data from `fake` (a
- * base, owned furniture, busy cities, two friends), so the realm's screens
- * work without an API.
+ * base, owned furniture, busy cities, two friends, the mini games' boards
+ * with this session's claims on them), so the realm's screens work without
+ * an API.
  */
 
 /** Why a call didn't go: the API's `error` (`offline` when it couldn't ask), its status, and for a refused layout which piece (`LayoutError`). */
 export type Failure = { error: string; status: number; item?: number }
 
-type Fake = { me: RealmMe; bases: Map<string, BaseView>; games: { day: Partial<Record<MinigameId, number>>; stats: Partial<Record<MinigameId, GameStats>> } }
+type Fake = {
+  me: RealmMe
+  bases: Map<string, BaseView>
+  /** What the faked claims paid today and counted, and what they put on the boards (`boardPoints`, the same for the day and the week). */
+  games: { day: Partial<Record<MinigameId, number>>; stats: Partial<Record<MinigameId, GameStats>>; board: Partial<Record<MinigameId, number>> }
+}
 
 let fake: Fake | null = null
 
@@ -46,7 +55,7 @@ const fakeBase = (handle: string, layout: BaseLayout = DEMO_BASES.mine, partner 
 /** Dev: every call answers made-up data (on), or the API again (off). */
 export const fakeRealm = (on: boolean, handle = 'ash') => {
   const bases = [fakeBase('misty', DEMO_BASES.misty, 'squirtle', 87, 24), fakeBase('brock', DEMO_BASES.brock, 'geodude', 41, 9)]
-  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])), games: { day: {}, stats: {} } } : null
+  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])), games: { day: {}, stats: {}, board: {} } } : null
 }
 
 export const realmFaked = () => fake !== null
@@ -240,6 +249,9 @@ export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure
       feats: [...new Set([...was.feats, ...claim.feats])],
     }
     g.stats[claim.game] = stats
+    const points = boardPoints(claim.game, claim.outcome)
+    const had = g.board[claim.game]
+    if (points !== null) g.board[claim.game] = had === undefined ? points : boardKeeps(claim.game) === 'best' ? Math.max(had, points) : had + points
     const before = new Set(trophiesEarned(claim.game, was))
     const trophies = trophiesEarned(claim.game, stats).filter((id): id is FurnitureId => !before.has(id) && isFurnitureId(id))
     if (trophies.length > 0) fake.me = { ...fake.me, furniture: { ...fake.me.furniture, ...Object.fromEntries(trophies.map((id) => [id, (fake?.me.furniture[id] ?? 0) + 1])) } }
@@ -259,3 +271,28 @@ export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure
 }
 
 export const isFailure = (v: unknown): v is Failure => typeof v === 'object' && v !== null && 'error' in v && 'status' in v
+
+const parseBoardEntry = (v: unknown): GameBoardEntry | null => {
+  if (!isRecord(v) || typeof v.handle !== 'string') return null
+  const rank = count(v.rank)
+  const score = count(v.score)
+  return rank && score !== null ? { rank, handle: v.handle, score } : null
+}
+
+export const parseGameBoard = (v: unknown): GameBoard | null => {
+  if (!isRecord(v) || !isMinigameId(v.game) || !isGameBoardPeriod(v.period) || !isDayKey(v.start) || !Array.isArray(v.entries)) return null
+  const total = count(v.total)
+  const me = v.me === null || v.me === undefined ? null : parseBoardEntry(v.me)
+  if (total === null) return null
+  return { game: v.game, period: v.period, start: v.start, entries: v.entries.flatMap((e) => parseBoardEntry(e) ?? []), me, total }
+}
+
+/**
+ * A mini game's board for the period (`GET /realm/boards/:game`): public, with
+ * the player's own line when signed in. Null when the API can't be reached.
+ */
+export const fetchGameBoard = async (game: MinigameId, period: GameBoardPeriod): Promise<GameBoard | null> => {
+  if (fake) return fakeGameBoard(game, period, { handle: fake.me.handle, score: fake.games.board[game] ?? null })
+  const { status, body } = await apiCall(`/realm/boards/${game}?period=${period}`, { auth: 'maybe' })
+  return status === 200 ? parseGameBoard(body) : null
+}

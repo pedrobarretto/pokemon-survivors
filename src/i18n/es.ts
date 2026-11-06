@@ -6322,6 +6322,21 @@ export const es: Messages = {
       again: 'Jugar de nuevo',
       leave: 'Salir',
     },
+    board: {
+      title: 'Marcador',
+      open: 'Marcador',
+      see: 'Ver marcador',
+      periods: { day: 'Hoy', week: 'Semana' },
+      dayCaption: 'Récords de hoy · se reinicia a medianoche (Brasilia)',
+      weekCaption: (from, to) => `Semana del ${from} al ${to}`,
+      tableNote: 'Cuentan las victorias contra otros entrenadores.',
+      points: (n) => `${n} pts`,
+      wins: (n) => (n === 1 ? '1 victoria' : `${n} victorias`),
+      total: (n) => (n === 1 ? '1 entrenador en el marcador' : `${n} entrenadores en el marcador`),
+      empty: 'Nadie ha jugado todavía. ¡Sé el primero!',
+      loading: 'Cargando...',
+      offline: 'No se pudo cargar el marcador ahora.',
+    },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {
       waiting: 'Esperando a un rival...',

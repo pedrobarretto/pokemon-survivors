@@ -29,6 +29,8 @@ import type { GameOutcome, MinigameId } from '../data/minigames'
  *   the game's stats (`GameStats`) and grants the trophies they reach (`trophiesEarned`, into
  *   `furniture_owned` with source `game`). `GameClaimed`; 400 for an outcome that doesn't fit the game,
  *   429 past the route's rate limit. The client adds `coins` to the wallet like a run's ₽.
+ * - `GET /realm/boards/:game?period=day|week` (public; signed in adds the player's line): `GameBoard`
+ *   (`realm/boards.ts`), the game's best of the Brasília day or week, from the claims. Cached a few seconds.
  *
  * And the relay's (signed), `net/realmRelay.ts`: `POST /realm/identity`, `POST /realm/visit`, `POST /realm/presence`.
  */

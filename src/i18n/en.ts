@@ -6320,6 +6320,21 @@ export const en: Messages = {
       again: 'Play again',
       leave: 'Leave',
     },
+    board: {
+      title: 'Leaderboard',
+      open: 'Scores',
+      see: 'See leaderboard',
+      periods: { day: 'Today', week: 'Week' },
+      dayCaption: "Today's best · resets at midnight (Brasília)",
+      weekCaption: (from, to) => `Week of ${from} – ${to}`,
+      tableNote: 'Only wins against other trainers count.',
+      points: (n) => `${n} pts`,
+      wins: (n) => (n === 1 ? '1 win' : `${n} wins`),
+      total: (n) => (n === 1 ? '1 trainer on the board' : `${n} trainers on the board`),
+      empty: 'Nobody has played yet. Be the first!',
+      loading: 'Loading...',
+      offline: "Couldn't load the leaderboard right now.",
+    },
     /** The realm relay's game tables (`realm/games/relayTable.ts`): the word over a table's game, and the prompt at a full table. */
     tables: {
       waiting: 'Waiting for an opponent...',

@@ -14,6 +14,7 @@ import { capped, isMinigameId, MINIGAME_DAILY, MINIGAMES, trophiesEarned, type G
 import { PRESENCE_STALE_MS, type IdentityResponse, type PresenceReport, type VisitResponse } from '../../src/net/realmRelay'
 import type { RealmBan, RealmDesk, RealmModeration, RealmReportGroup } from '../../src/realm/moderation'
 import { addFurniture, trophyFurniture } from '../../src/realm/trophies'
+import { boardKeeps, boardPoints, GAME_BOARD_PERIODS, GAME_BOARD_SIZE, periodStart, type GameBoard, type GameBoardPeriod } from '../../src/realm/boards'
 import type { Sql } from './db'
 import { bareName, idsByName, NAMES, restClient } from './discord'
 import { moveGems, vouchedLooks } from './gems'
@@ -29,13 +30,16 @@ import { tierOfRow, type StandingRow } from './supporters'
  * relay), the bases (`bases`), furniture bought at Bibarel's carpentry with
  * gems (the gem ledger) or ₽ (out of the stored save, like a Festival
  * donation) plus what the save earned (`trophyFurniture`), the mini games'
- * claims (₽ under the daily caps, stats, trophies), and the realm's own
- * reports and bans. Nothing here reaches `src/game`'s rules.
+ * claims (₽ under the daily caps, stats, trophies, the boards), and the
+ * realm's own reports and bans. Nothing here reaches `src/game`'s rules.
  */
 
 type Q = Sql | TransactionSql
 
 /** Brakes per account, per instance: base saves, likes, buys and mini game claims a minute (a script's, never a player's). */
+/** How long a guest's read of a mini game board is kept (`board`). */
+const BOARD_CACHE_MS = 15_000
+
 const LIMITS = { save: { n: 20, ms: 60_000 }, like: { n: 60, ms: 60_000 }, buy: { n: 30, ms: 60_000 }, game: { n: 12, ms: 60_000 } } as const
 
 /** Bases a board answers at most. */
@@ -319,6 +323,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
     game: rateLimiter(LIMITS.game.n, LIMITS.game.ms),
   }
   const presence = new Map<RealmHome, HeldPresence>()
+  /** The boards as a guest reads them, by game, period and start, kept `BOARD_CACHE_MS` (a signed-in read asks for its own line). */
+  const boardCache = new Map<string, { board: GameBoard; until: number }>()
 
   /** Whether `userId` is kept out of the realm now (a realm ban in force, or banned from the game). */
   const closed = async (q: Q, userId: string) => {
@@ -534,6 +540,20 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
           await tx`insert into furniture_owned (user_id, furniture, source, count) values (${userId}, ${id}, 'game', 1) on conflict (user_id, furniture, source) do nothing`
         }
         if (trophies.length > 0) console.log(`realm: ${userId} earned ${trophies.join(', ')} at ${claim.game}`)
+        const points = boardPoints(claim.game, claim.outcome)
+        if (points !== null) {
+          for (const period of GAME_BOARD_PERIODS) {
+            const start = periodStart(period, day)
+            // A solo game keeps the period's best (and when it was set); a table game adds a win.
+            await (boardKeeps(claim.game) === 'best'
+              ? tx`
+                insert into realm_game_boards (game, period, start, user_id, score) values (${claim.game}, ${period}, ${start}::date, ${userId}, ${points})
+                on conflict (game, period, start, user_id) do update set score = excluded.score, at = now() where realm_game_boards.score < excluded.score`
+              : tx`
+                insert into realm_game_boards (game, period, start, user_id, score) values (${claim.game}, ${period}, ${start}::date, ${userId}, ${points})
+                on conflict (game, period, start, user_id) do update set score = realm_game_boards.score + excluded.score, at = now()`)
+          }
+        }
         return {
           ok: true,
           coins: paid,
@@ -542,6 +562,36 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
           furniture: trophies.length > 0 ? await ownedBy(tx, userId, await slimOf(tx, userId)) : null,
         }
       }),
+
+    /**
+     * `GET /realm/boards/:game`: the game's board for the period holding the
+     * Brasília `day` (`GameBoard`): the top `GAME_BOARD_SIZE`, best first and
+     * the earlier first on a tie, and `viewer`'s own line wherever it is.
+     * Trainers without a handle, banned or kept out of the realm don't show.
+     */
+    board: async (game: MinigameId, period: GameBoardPeriod, day: DayKey, viewer: string | null): Promise<GameBoard> => {
+      const start = periodStart(period, day)
+      const key = `${game}:${period}:${start}`
+      const kept = viewer ? undefined : boardCache.get(key)
+      if (kept && kept.until > now().getTime()) return kept.board
+      const rows = await sql<{ user_id: string; handle: string; score: number; rank: number; total: number }[]>`
+        select * from (
+          select b.user_id, u.handle, b.score,
+            (row_number() over (order by b.score desc, b.at, b.user_id))::int as rank,
+            (count(*) over ())::int as total
+          from realm_game_boards b join users u on u.id = b.user_id
+          where b.game = ${game} and b.period = ${period} and b.start = ${start}::date
+            and u.handle is not null and u.banned_at is null
+            and not exists (select 1 from realm_bans rb where rb.user_id = b.user_id and ${banInForce(sql)})
+        ) x
+        where x.rank <= ${GAME_BOARD_SIZE} or x.user_id = ${viewer ?? ''}
+        order by x.rank`
+      const line = (r: (typeof rows)[number]) => ({ rank: r.rank, handle: r.handle, score: r.score })
+      const mine = viewer ? rows.find((r) => r.user_id === viewer) : undefined
+      const board: GameBoard = { game, period, start, entries: rows.filter((r) => r.rank <= GAME_BOARD_SIZE).map(line), me: mine ? line(mine) : null, total: rows[0]?.total ?? 0 }
+      if (!viewer) boardCache.set(key, { board, until: now().getTime() + BOARD_CACHE_MS })
+      return board
+    },
 
     /**
      * `POST /realm/report`: stores the report (one open per reporter and

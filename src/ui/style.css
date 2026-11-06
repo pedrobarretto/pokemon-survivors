@@ -26790,6 +26790,356 @@ span.arena-hub-face {
   }
 }
 
+/* Mini games: the Placar button in a game's header and under its end sheet (`realm/games/frame.ts`), and beside each game in a cabinet's chooser (`registry.ts`). */
+.minigame-board {
+  margin-left: auto;
+  min-height: 44px;
+  padding: 0 12px;
+  font-family: var(--title);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.minigame-see-board {
+  align-self: center;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 19px;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.minigame-choice {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.minigame-choice > button:first-child {
+  flex: 1 1 auto;
+}
+
+.minigame-choose .minigame-choice-board {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  font-family: var(--title);
+  font-size: 9px;
+}
+
+/* The realm's spot prompt: Use, and beside a game spot its Placar (`ui/realm.ts`). */
+.realm-use-row {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+}
+
+.realm-use-row .realm-use {
+  position: static;
+}
+
+.realm-use-row .hidden {
+  display: none;
+}
+
+/* Mini games' Placar (`realm/games/board.ts`): a sheet over the realm or a game, the top three on a podium. */
+.screen.mgb-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
+  background: rgba(16, 20, 32, 0.66);
+  font-size: 18px;
+}
+
+.mgb-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(440px, 100%);
+  max-height: 100%;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.mgb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mgb-head h3 {
+  margin: 0;
+  font-family: var(--title);
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.mgb-close {
+  min-width: 40px;
+  min-height: 40px;
+  font-size: 22px;
+}
+
+.mgb-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.mgb-tab {
+  flex: 1 1 0;
+  min-height: 40px;
+  padding: 4px 8px;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mgb-games .mgb-tab {
+  font-family: var(--title);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.mgb-tab.on {
+  background: #ffcb05;
+  color: #283040;
+}
+
+.mgb-game {
+  font-family: var(--title);
+  font-size: 10px;
+  font-weight: normal;
+  line-height: 1.4;
+  color: var(--dk-ink-2, #505870);
+}
+
+.mgb-caption,
+.mgb-note,
+.mgb-empty {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.1;
+  color: var(--dk-ink-3, #707088);
+}
+
+.mgb-note.hidden {
+  display: none;
+}
+
+.mgb-empty {
+  padding: 24px 8px;
+  text-align: center;
+  font-size: 19px;
+}
+
+.mgb-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.mgb-podium {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+}
+
+.mgb-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 4px 10px;
+  border-radius: 6px 6px 0 0;
+  background: var(--dk-surface-2, #e4e8f0);
+  border-bottom: 4px solid #8a96b8;
+  text-align: center;
+}
+
+.mgb-step-1 {
+  padding-top: 14px;
+  padding-bottom: 20px;
+  background: var(--dk-wash-gold, #fff8d8);
+  border-bottom-color: #d8a020;
+}
+
+.mgb-step-2 {
+  border-bottom-color: #a8b0c8;
+}
+
+.mgb-step-3 {
+  padding-bottom: 6px;
+  border-bottom-color: #c07838;
+}
+
+.mgb-medal {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-family: var(--title);
+  font-size: 11px;
+  color: #283040;
+  background: #c8d0e0;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.6),
+    0 0 0 2px #283040;
+}
+
+.mgb-step-1 .mgb-medal {
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+  background: #ffcb05;
+}
+
+.mgb-step-3 .mgb-medal {
+  background: #e09858;
+}
+
+.mgb-step .mgb-handle {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: normal;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.mgb-step .mgb-score {
+  font-size: 17px;
+  line-height: 1;
+  color: var(--dk-ink-2, #505870);
+}
+
+.mgb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.mgb-line {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.mgb-line:nth-child(odd) {
+  background: var(--dk-surface-2, #eef0f6);
+}
+
+.mgb-rank {
+  text-align: right;
+  color: var(--dk-ink-3, #707088);
+}
+
+.mgb-line .mgb-handle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mgb-line .mgb-score {
+  font-weight: normal;
+}
+
+/* The player's own line, on the podium or the list. */
+.mgb-line.mgb-me,
+.mgb-step.mgb-me {
+  background: var(--dk-wash-blue, #dce8ff);
+  box-shadow: inset 0 0 0 2px #2a5aa8;
+}
+
+/* The player's own line under the top: kept in sight at the foot of the list while it scrolls. */
+.mgb-line.mgb-below {
+  position: sticky;
+  bottom: 0;
+  background: var(--dk-wash-blue, #dce8ff);
+}
+
+.mgb-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mgb-gap {
+  text-align: center;
+  line-height: 0.8;
+  color: var(--dk-ink-3, #707088);
+}
+
+/* Short screens (a phone on its side): the podium beside the list, both in sight. */
+@media (max-height: 520px) and (min-width: 560px) {
+  .mgb-sheet {
+    width: min(720px, 100%);
+    padding: 10px 12px;
+    gap: 6px;
+  }
+  .mgb-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-content: start;
+    column-gap: 10px;
+  }
+  .mgb-podium {
+    position: sticky;
+    top: 0;
+    align-self: start;
+  }
+  .mgb-bar {
+    flex-direction: row;
+  }
+  .mgb-bar .mgb-tabs {
+    flex: 1 1 0;
+  }
+  .mgb-empty {
+    grid-column: 1 / -1;
+  }
+  .mgb-tab {
+    min-height: 36px;
+  }
+}
+
+/* Phones held upright: a slimmer header. */
+@media (max-width: 480px) {
+  .minigame-board {
+    padding: 0 8px;
+    font-size: 8px;
+  }
+  .mgb-sheet {
+    padding: 12px 10px;
+  }
+}
+
 /* The realm's game tables in use: their label (`ui/realm.ts`) turns gold while a match is on or a seat waits. */
 .realm-sign.busy,
 .realm-sign.busy::after {
