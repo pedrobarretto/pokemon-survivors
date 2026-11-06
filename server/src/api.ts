@@ -118,6 +118,7 @@ const app = createApp({
   allowedOrigin: env.allowedOrigin,
   ping: () => sql`select 1`.then(() => true, () => false),
   report: errors.report,
+  revenue: errors.revenue,
 })
 
 const server = serve({ fetch: app.fetch, port: env.port }, (info) => console.log(`api listening on :${info.port}`))

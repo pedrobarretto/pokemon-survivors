@@ -1,3 +1,4 @@
+import { lobbyPress } from '../analytics'
 import { catalogSections, currencyFor, equip, methodsFor, ownedSkinLines, priceText, rarityOf, shopCatalog, shownPacks, takeOff, unequip, wearing } from '../arena/gemShop'
 import { COSMETIC_SLOTS, WEARABLE_SLOTS, arenaOnly, cosmeticPrice, showsIn, skinFor, slotOf, type CatalogSlot, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
 import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PACKS, GEM_PLAY, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
@@ -454,6 +455,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
   }
 
   const openPack = (pack: GemPackId) => {
+    lobbyPress('gemPack')
     if (!signedIn()) return ctx.signIn?.()
     playSfx('select')
     modal = true
