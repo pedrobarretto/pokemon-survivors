@@ -1,6 +1,6 @@
 import { spendFromSave } from '../account'
 import { apiCall } from '../api'
-import { CITY_IDS, isCityId, type CityId } from '../net/realm'
+import { CITY_IDS, isCityId } from '../net/realm'
 import type { BaseCard, BaseList, BaseSave, BaseView, FurnitureBought, FurnitureBuy, GameClaim, GameClaimed, RealmCities, RealmFriend, RealmFriends, RealmMe, RealmReport } from '../net/realmApi'
 import type { PresenceReport } from '../net/realmRelay'
 import { ACTIVITIES } from '../game/friends'
