@@ -59,6 +59,61 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     ],
     changes: [
       {
+        title: { pt: 'Realm: amigos, móveis que funcionam e placares', en: 'Realm: friends, working furniture and leaderboards', es: 'Realm: amigos, muebles que funcionan y marcadores', fr: 'Realm : amis, meubles utilisables et classements', zh: 'Realm：好友、可互動的家具與排行榜' },
+        notes: [
+          {
+            pt: 'Novo painel de Amigos no Realm (tecla F): veja quais amigos estão online, em que cidade e sala, e vá até eles com Ir até. Convide um amigo para a sua base com um toque. Só amigos que se seguem de volta veem onde você está, e dá para esconder isso.',
+            en: 'New Friends panel in the Realm (F key): see which friends are online, in which city and room, and join them with Go to. Invite a friend to your base with one tap. Only friends who follow you back see where you are, and you can hide it.',
+            es: 'Nuevo panel de Amigos en el Realm (tecla F): mira qué amigos están en línea, en qué ciudad y sala, y ve con ellos con Ir hacia. Invita a un amigo a tu base con un toque. Solo los amigos que te siguen de vuelta ven dónde estás, y puedes ocultarlo.',
+          },
+          {
+            pt: 'Os móveis agora servem para algo: sente em cadeiras, sofás, pufes e nos bancos da cidade, deite na cama ou na rede, entre na banheira, acenda abajures, TVs e lareiras e toque música no jukebox, no piano ou na mesa de DJ. Todo mundo na sala vê.',
+            en: 'Furniture does things now: sit on chairs, sofas, bean bags and the town’s benches, lie in a bed or a hammock, get in the tub, switch lamps, TVs and fireplaces on and play music on the jukebox, the piano or the DJ booth. Everyone in the room sees it.',
+            es: 'Los muebles ahora sirven para algo: siéntate en sillas, sofás, puffs y en las bancas de la ciudad, acuéstate en la cama o la hamaca, métete en la bañera, enciende lámparas, televisores y chimeneas y pon música en la rocola, el piano o la cabina de DJ. Todos en la sala lo ven.',
+          },
+          {
+            pt: 'Cada mini game ganhou um Placar do dia e da semana (tecla P, ou Ver placar no fim da rodada). Nos jogos de mesa, contam as vitórias contra outros treinadores.',
+            en: 'Every mini game has a Leaderboard for the day and the week (P key, or See leaderboard at the end of a round). At the tables, wins against other trainers count.',
+            es: 'Cada minijuego tiene un Marcador del día y de la semana (tecla P, o Ver marcador al final de la ronda). En las mesas cuentan las victorias contra otros entrenadores.',
+          },
+          {
+            pt: 'No celular, entrar numa base com móveis perto da porta não prende mais o treinador, e o joystick desliza nos cantos. O botão de girar funciona em todos os móveis que o mostram: camas e tapetes giram, os outros viram para o outro lado.',
+            en: 'On phones, entering a base with furniture next to the door no longer traps your trainer, and the joystick slides around corners. The turn button works on every piece that shows it: beds and rugs turn, the rest face the other way.',
+            es: 'En el celular, entrar a una base con muebles junto a la puerta ya no atrapa a tu entrenador, y el joystick se desliza en las esquinas. El botón de girar funciona en todos los muebles que lo muestran: camas y alfombras giran, los demás miran al otro lado.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Partidas mais leves e correções', en: 'Lighter runs and fixes', es: 'Partidas más ligeras y correcciones', fr: 'Parties plus légères et corrections', zh: '更流暢的遊戲與修正' },
+        notes: [
+          {
+            pt: 'No modo infinito, a horda para de crescer em 1.200 inimigos: depois disso, cada inimigo novo é mais forte e vale mais (XP, ₽, itens e chance de shiny), em vez de vir em maior número. Partidas longas ficam bem mais leves, principalmente no celular.',
+            en: 'In endless mode, the horde stops growing at 1,200 foes: past that, each new foe is tougher and worth more (EXP, ₽, items and shiny odds) instead of coming in greater numbers. Long runs get much lighter, especially on phones.',
+            es: 'En el modo infinito, la horda deja de crecer en 1.200 enemigos: después de eso, cada enemigo nuevo es más fuerte y vale más (EXP, ₽, objetos y probabilidad de shiny), en vez de venir en mayor número. Las partidas largas se vuelven mucho más ligeras, sobre todo en el celular.',
+          },
+          {
+            pt: 'Golpes de ondas, anéis e pulsos (como os do Toxtricity) ficaram muito mais leves de desenhar, principalmente no Modo leve.',
+            en: 'Wave, ring and pulse moves (like Toxtricity’s) are much lighter to draw, especially in Lean mode.',
+            es: 'Los movimientos de ondas, anillos y pulsos (como los de Toxtricity) son mucho más ligeros de dibujar, sobre todo en el Modo ligero.',
+          },
+          {
+            pt: 'O jogo abre mais rápido: cada idioma, o Realm, a Arena e a Boutique só são baixados quando você precisa deles.',
+            en: 'The game opens faster: each language, the Realm, the Arena and the Boutique only download when you need them.',
+            es: 'El juego abre más rápido: cada idioma, el Realm, la Arena y la Boutique solo se descargan cuando los necesitas.',
+          },
+          {
+            pt: 'O card do Protect, Needle Arm, Fly e Dig agora mostra quanto a proteção dura de verdade (no máximo metade da recarga), e a Light Clay e a Quick Claw avisam disso. Valeu ao frogknight no Discord!',
+            en: 'Protect, Needle Arm, Fly and Dig’s cards now show how long the protection really lasts (at most half the cooldown), and Light Clay and Quick Claw say so. Thanks to frogknight on Discord!',
+            es: 'La tarjeta de Protect, Needle Arm, Fly y Dig ahora muestra cuánto dura de verdad la protección (como máximo la mitad de la recarga), y Light Clay y Quick Claw lo avisan. ¡Gracias a frogknight en Discord!',
+          },
+          {
+            pt: 'Durante a partida, a barra de espaço não aciona mais botões da tela nem rola a página.',
+            en: 'During a run, the Space bar no longer presses on-screen buttons or scrolls the page.',
+            es: 'Durante la partida, la barra espaciadora ya no presiona botones de la pantalla ni desplaza la página.',
+          },
+        ],
+      },
+      {
         title: { pt: 'Poké Realm', en: 'Poké Realm', es: 'Poké Realm', fr: 'Poké Realm', zh: 'Poké Realm' },
         notes: [
           {
