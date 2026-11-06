@@ -12,13 +12,12 @@ import { arenaMapAt, MINIMAP } from '../render/minimap'
 import { PING_COLORS, pingIconUrl, seesPing } from '../render/valePings'
 import { fullBucket, PING_KINDS, QUICK_CHAT, surrenderNeed, takeToken, TO_ALL, voters, type PingKind, type QuickChat } from '../game/versusSocial'
 import { t } from '../i18n'
-import { teamColor } from './arena'
+import { teamColor, versusName } from './arenaBits'
 import { h, setStyle, setText } from './dom'
 import { boundLabel } from './inputLabels'
 import { settings } from './settings'
 import { uiZoom } from './uiScale'
 import { createLiveBoard } from './versusBoard'
-import { versusName } from './versusHud'
 
 /**
  * A match's social layer over the field (`game/versusSocial.ts` holds the

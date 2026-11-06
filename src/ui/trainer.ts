@@ -10,8 +10,8 @@ import { formatNumber, LOCALES, locale, t } from '../i18n'
 import { discordIcon, medalIcon, ogIcon, pokeballIcon, ribbonIcon, supporterIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
 import { fetchSupporterStatus, knownOg, knownTier } from '../supporters'
-import { adminScreen } from './admin'
-import { boutiqueFresh } from './boutique'
+import { lazyScreen } from './lazy'
+import { boutiqueFresh } from './boutiqueSeen'
 import { slotIconUrl } from '../render/gemArt'
 import { discordScreen } from './discord'
 import { h, later } from './dom'
@@ -156,7 +156,7 @@ export const trainerCardScreen = (
       look,
       missions,
       // Admin only, so not translated (see `ui/admin.ts`).
-      ...(admin ? [{ label: 'Painel admin', run: () => openSub((back) => adminScreen(root, input, back)) }] : []),
+      ...(admin ? [{ label: 'Painel admin', run: () => openSub((back) => lazyScreen(root, () => import('./admin'), (m) => m.adminScreen(root, input, back), back)) }] : []),
       { label: m.signOut, tone: 'out' as const, run: () => void signOut() },
     ]
   }

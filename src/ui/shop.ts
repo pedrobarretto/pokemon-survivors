@@ -61,7 +61,7 @@ import { caravanDay, caravanOpen, meowthSpeaker, stallDay, stallSelling, stallSp
 import { dialogue, type Dialogue, type DialogueLine } from './dialogue'
 import { h, later, setText } from './dom'
 import { festivalIcon } from './festival'
-import { boutiqueFresh } from './boutique'
+import { boutiqueFresh } from './boutiqueSeen'
 import { gemIconUrl } from '../render/gemArt'
 import { emptyCounter, kecleonSpeaker, levelUpLine, pickTrigger, thanks, visitLine, weekdayOf, type VisitContext } from './kecleon'
 import { loadSave, today, vitrineToday, writeSave } from './save'

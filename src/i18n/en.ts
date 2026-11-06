@@ -6,6 +6,7 @@ const typeBoost = (type: string) => `+10% damage to ${type}-type moves.`
 /** English. Must match `pt` key for key (enforced by the `Messages` type). */
 export const en: Messages = {
   loading: 'Loading…',
+  loadFailed: "Couldn't open it. Check your connection and try again.",
   level: (n) => `Lv ${n}`,
   levelShort: (n) => `Lv${n}`,
   max: 'MAX',

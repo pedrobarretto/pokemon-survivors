@@ -99,6 +99,8 @@ export type DomainLines = { place: string; epithet: string; omen: string; crossi
 
 export const pt = {
   loading: 'Carregando…',
+  /** A screen whose code loads on demand (`lazyScreen`) couldn't download it. */
+  loadFailed: 'Não deu para abrir. Confira a conexão e tente de novo.',
   level: (n: number) => `Nv ${n}`,
   levelShort: (n: number) => `Nv${n}`,
   max: 'MAX',

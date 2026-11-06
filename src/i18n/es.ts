@@ -6,6 +6,7 @@ const typeBoost = (type: string) => `+10% de daño a los movimientos de tipo ${t
 /** Spanish (Latin America). Must match `pt` key for key (enforced by the `Messages` type). */
 export const es: Messages = {
   loading: 'Cargando…',
+  loadFailed: 'No se pudo abrir. Revisa tu conexión e inténtalo de nuevo.',
   level: (n) => `Nv ${n}`,
   levelShort: (n) => `Nv${n}`,
   max: 'MÁX',

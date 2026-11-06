@@ -48,7 +48,7 @@ import { drawFurnitureUse } from '../render/furnitureUse'
 import { furnitureImage } from '../render/furnitureArt'
 import { actionOf, freeSeat, onASeat, pieceAt, pieceNear, reaches, roomTheme, usePieces, type UsePiece } from '../realm/pieces'
 import { JUKEBOX } from '../data/furnitureUse'
-import type { ThemeId } from '../engine/music'
+import { setRealmJukebox } from '../realmJukebox'
 import { drawJoystick } from '../render/joystick'
 import { drawTownGround, drawTownOverhead, labelTop, townPieces } from '../render/realmArt'
 import { GROVE_HOST } from '../render/realmLayout'
@@ -65,6 +65,7 @@ import { supporterBadgeIcon } from './profile'
 import type { Screen } from './screens'
 import { toast } from './toasts'
 import { uiZoom } from './uiScale'
+import { markRealmSeen } from './realmSeen'
 
 /**
  * The Poké Realm's screen (`net/realm.ts`): the city picker, then the town
@@ -80,7 +81,7 @@ import { uiZoom } from './uiScale'
  * Habbo style (`realm/pieces.ts`): walk up and press E, or tap the piece,
  * to sit on a bench, a sofa or a bed (a step stands up), or, in a base,
  * switch a light or play music on a jukebox for everyone there
- * (`realmJukebox` hands the shell the theme to play).
+ * (`realmJukebox.ts` hands the shell the theme to play).
  *
  * The player's own trainer walks here (keys, the drag stick or a tap, like
  * the lobby's partner) and is reported to the relay (`realm/interp.ts`);
@@ -122,13 +123,6 @@ export type RealmScreen = Screen & {
   visit: (handle: string) => void
 }
 
-/* ---------------- The base's music ---------------- */
-
-/** The theme a base's music piece plays for this trainer now (null: the realm's usual music); the shell's music reads it. */
-let jukebox: ThemeId | null = null
-
-export const realmJukebox = () => jukebox
-
 /* ---------------- Muted trainers (this device) ---------------- */
 
 const MUTED = 'ps:realmMuted'
@@ -147,26 +141,6 @@ const keepMuted = (muted: ReadonlySet<string>) => {
     localStorage.setItem(MUTED, JSON.stringify([...muted]))
   } catch {
     // Storage blocked: muted for this visit.
-  }
-}
-
-/* ---------------- Seen (the lobby tile's NOVO tag) ---------------- */
-
-const SEEN = 'ps:realmSeen'
-
-export const realmSeen = () => {
-  try {
-    return localStorage.getItem(SEEN) !== null
-  } catch {
-    return true
-  }
-}
-
-const markRealmSeen = () => {
-  try {
-    localStorage.setItem(SEEN, '1')
-  } catch {
-    // The tag just shows again next time.
   }
 }
 
@@ -1235,7 +1209,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         usable = { room, base, all: usePieces(room, base?.layout ?? null, (i) => liftOf(items, i)) }
       }
       if (!town) drawFurnitureUse(ctx, usable.all, furniture, cam.x, cam.y, clock)
-      jukebox = town ? null : roomTheme(usable.all, furniture)
+      setRealmJukebox(town ? null : roomTheme(usable.all, furniture))
 
       // Everyone where they stand now: the others behind, the trainer as walked, whoever sits at a table on its seat.
       const spots = spotsOf(room, base)
@@ -1340,7 +1314,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     devGo = (to) => (devDest = to)
     const dispose = () => {
       devGo = null
-      jukebox = null
+      setRealmJukebox(null)
       offMessages()
       offKeys()
       el.removeEventListener('pointerdown', onDown)

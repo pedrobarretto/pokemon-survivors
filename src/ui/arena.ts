@@ -2,17 +2,18 @@ import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { ENEMIES } from '../data/enemies'
 import { STARTERS } from '../data/starters'
-import { isVersusPick, ROLES, VERSUS_PICKS, VERSUS_ROSTER, type Role, type VersusPick } from '../data/versus'
+import { ROLES, VERSUS_PICKS, VERSUS_ROSTER, type Role, type VersusPick } from '../data/versus'
 import { t } from '../i18n'
 import type { QueueKind } from '../data/arenaRanked'
-import { ARENA_FORMAT_IDS, ARENA_FORMATS, parseArenaFormat, type ArenaFormat } from '../data/arenaFormats'
+import { ARENA_FORMAT_IDS, ARENA_FORMATS, type ArenaFormat } from '../data/arenaFormats'
 import { arenaIcon, coopIcon } from '../render/art'
-import { arenaIconUrl, loadValeArt, ROLE_ICONS, tierBallUrl } from '../render/arenaArt'
+import { arenaIconUrl, loadValeArt, tierBallUrl } from '../render/arenaArt'
 import { portraitUrl } from '../render/sprites'
 import { h, later } from './dom'
 import { stepGrid } from './gridNav'
 import { hint, type Screen } from './screens'
 import { gemChip } from './gemShop'
+import { arenaFormat, keepArenaFormat, keepArenaPick, ROLE_COLORS, ROLE_IDS, roleChip, roleIcon } from './arenaBits'
 
 /**
  * Arena (Versus) outside a match: the screen the lobby's tile opens and, from
@@ -27,65 +28,8 @@ import { gemChip } from './gemShop'
  * `ps:arenaFormat`).
  */
 
-/** Each team's color, the world's (`render/vale.ts`): the HUD, the room and the end screen use the same. */
-export { teamColor } from '../render/vale'
 
-/** Unite's role colors, for the chips. */
-export const ROLE_COLORS = {
-  attacker: '#f08030',
-  speedster: '#3898f8',
-  allRounder: '#a060e0',
-  defender: '#48b040',
-  supporter: '#e0a818',
-} as const satisfies Record<Role, string>
 
-const ROLE_IDS = Object.keys(ROLE_COLORS) as Role[]
-
-/** A role's icon, for an `<img>` beside its name. */
-export const roleIcon = (role: Role, cls = 'arena-role-icon') => h('img', { class: cls, src: arenaIconUrl(ROLE_ICONS[role]), alt: '' })
-
-/** A role as a colored chip: its icon and its name in this language. */
-export const roleChip = (role: Role) => h('span', { class: 'arena-role', style: `--role:${ROLE_COLORS[role]}` }, roleIcon(role), t().versus.roles[role])
-
-const PICK_KEY = 'ps:arenaPick'
-
-/** The Pokémon this device last took into the Arena; `fallback` (the lobby's partner, when it's a starter) the first time. */
-export const arenaPick = (fallback: string): VersusPick => {
-  try {
-    const kept = localStorage.getItem(PICK_KEY)
-    if (kept && isVersusPick(kept)) return kept
-  } catch {
-    // Storage blocked: the fallback.
-  }
-  return isVersusPick(fallback) ? fallback : 'charmander'
-}
-
-export const keepArenaPick = (id: VersusPick) => {
-  try {
-    localStorage.setItem(PICK_KEY, id)
-  } catch {
-    // Storage blocked: the pick lasts this page.
-  }
-}
-
-const FORMAT_KEY = 'ps:arenaFormat'
-
-/** The format this device last picked on the Arena screen (the standard 4v4 the first time). */
-export const arenaFormat = (): ArenaFormat => {
-  try {
-    return parseArenaFormat(localStorage.getItem(FORMAT_KEY))
-  } catch {
-    return 'standard'
-  }
-}
-
-const keepArenaFormat = (format: ArenaFormat) => {
-  try {
-    localStorage.setItem(FORMAT_KEY, format)
-  } catch {
-    // Storage blocked: the format lasts this page.
-  }
-}
 
 /** A starter's first form: its portrait's dex and its name. */
 export const firstForm = (id: VersusPick) => STARTERS[id].line[0]!

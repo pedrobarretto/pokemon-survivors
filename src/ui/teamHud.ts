@@ -17,7 +17,7 @@ import { TEAM_COLORS } from '../render/vale'
 import { titleChip } from './arenaTitle'
 import { h, setStyle, setText } from './dom'
 import { moveCard, withMoveCard } from './moveCard'
-import { versusName } from './versusHud'
+import { versusName } from './arenaBits'
 
 /** The name the team sees for a seat: the one it joined with, or "Jogador 2" (in Versus, a bot's Pokémon with "CPU"). */
 export const seatName = (g: Game, slot: number) => (g.versus ? versusName(g, slot) : g.coop?.names[slot]?.trim() || t().team.player(slot + 1))

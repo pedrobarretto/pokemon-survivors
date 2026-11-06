@@ -6,6 +6,7 @@ const typeBoost = (type: string) => `${type}屬性招式傷害+10%。`
 /** Traditional Chinese (Taiwan, Hong Kong). Must match `pt` key for key (enforced by the `Messages` type). */
 export const zh: Messages = {
   loading: '載入中…',
+  loadFailed: '無法開啟。請檢查網路連線後再試一次。',
   level: (n) => `Lv ${n}`,
   levelShort: (n) => `Lv${n}`,
   max: 'MAX',

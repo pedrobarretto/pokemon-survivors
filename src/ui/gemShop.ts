@@ -24,6 +24,7 @@ import { drawDressed, fitsWearer, loadWearables, wearableIcon } from '../render/
 import { firstForm } from './arena'
 import { titleChip } from './arenaTitle'
 import { h, later } from './dom'
+import { gemAmount, itemName } from './gemBits'
 import { today } from './save'
 import { celebrate } from './confetti'
 import { confirmDialog, type Screen } from './screens'
@@ -90,12 +91,6 @@ const iconUrl = (id: CosmeticId) => {
   return url
 }
 
-export const itemName = (id: CosmeticId) => {
-  const names: Record<string, string> = { ...t().wearables, ...t().arenaEffects, ...t().skins }
-  return names[id] ?? id
-}
-
-/** "1.250" with the gem beside it. */
 /** Whether the player owns `id` but may not wear it now (`GemsStatus.locked`: the balance went negative after a refund or dispute). */
 export const isLocked = (s: GemsStatus | null, id: CosmeticId) => s?.locked.includes(id) ?? false
 
@@ -105,7 +100,6 @@ export const lockIcon = () => h('img', { class: 'gem-lock', src: lockIconUrl(), 
 /** Why the locked items are locked and how they come back, with its padlock. */
 export const lockedNote = () => h('p', { class: 'gem-locked-note', role: 'note' }, lockIcon(), t().gems.shop.locked)
 
-export const gemAmount = (n: number, cls = '') => h('span', { class: `gem-amount ${cls}` }, h('img', { class: 'gem-icon', src: gemIconUrl(), alt: '' }), formatNumber(n))
 
 /* ---------------- The preview ---------------- */
 
@@ -243,36 +237,8 @@ export const lookStage = (wearer: () => Wearer, look: () => Look, focus: () => C
 
 /* ---------------- The gem chip ---------------- */
 
-/**
- * The balance as a chip (the gem and the number; a dash before the API
- * answers), following every change. `open` takes the player to the Loja.
- * Null in a build without the API.
- */
-export const gemChip = (open: () => void) => {
-  if (!gemsEnabled && !gemsFaked()) return null
-  const count = h('span', { class: 'gem-chip-count' })
-  const chip = h('button', { class: 'gem-chip', type: 'button', onclick: () => (playSfx('select'), later(open)) }, h('img', { class: 'gem-icon', src: gemIconUrl(), alt: '' }), count)
-  // A guest has no balance: the chip is just the gem, the way to the shop.
-  const paint = (s: GemsStatus | null) => {
-    const guest = !gemsSignedIn()
-    const text = s ? formatNumber(s.balance) : '—'
-    const label = guest ? t().gems.chipGuest : t().gems.chip(text)
-    count.textContent = guest ? '' : text
-    chip.classList.toggle('bare', guest)
-    chip.setAttribute('aria-label', label)
-    chip.title = label
-  }
-  paint(knownGems())
-  // It follows the balance while it's on the page; once it leaves, it stops listening.
-  let shown = false
-  const off = onGems((s) => {
-    shown ||= chip.isConnected
-    if (shown && !chip.isConnected) off()
-    else paint(s)
-  })
-  if (gemsSignedIn()) void fetchGems()
-  return chip
-}
+/** The balance as a chip: in the light module the lobby and the partner select share (`ui/gemBits.ts`). */
+export { gemAmount, gemChip, itemName } from './gemBits'
 
 /* ---------------- Sheets ---------------- */
 

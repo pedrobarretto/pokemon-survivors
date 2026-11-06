@@ -6,6 +6,7 @@ const typeBoost = (type: string) => `+10% de dégâts aux capacités de type ${t
 /** French. Must match `pt` key for key (enforced by the `Messages` type). */
 export const fr: Messages = {
   loading: 'Chargement…',
+  loadFailed: "Impossible d'ouvrir. Vérifie ta connexion et réessaie.",
   level: (n) => `Nv ${n}`,
   levelShort: (n) => `Nv${n}`,
   max: 'MAX',

@@ -40,7 +40,7 @@ import { devFestival, festivalView, startFestival } from './festival'
 import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
-import { openBoutique, type BoutiqueTab } from './ui/boutique'
+import type { BoutiqueTab } from './ui/boutiqueSeen'
 import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
 import { firstGate, firstRunClock, firstStep, startFirstSession } from './firstSession'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
@@ -146,9 +146,11 @@ import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, 
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
-import { devRealmRoom, openRealm, realmJukebox } from './ui/realm'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
-import { realmClient, realmDevState, realmInviteFrom, realmUrl, stageRealmTable, useLocalRealm } from './realmShell'
+import { isLocalRealm, realmUrl } from './realmUrl'
+import { realmJukebox } from './realmJukebox'
+import { realmFriendsCount } from './realm/friendsCount'
+import { lazyScreen, lazyStep } from './ui/lazy'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
@@ -175,7 +177,7 @@ import { tmPick } from './ui/tmPick'
 import { isSettingsOpen, openSettings, settings, toggleMute } from './ui/settings'
 import { mapEventFeedback } from './ui/mapEvents'
 import { runShare, sharePreview, trainerShare } from './ui/share'
-import { shop, type ShopPlaza, type VisitorShelf } from './ui/shop'
+import type { ShopPlaza, VisitorShelf } from './ui/shop'
 import { starterSelect } from './ui/starterSelect'
 import { firstRunDue, guestChosenAt, guestGateDue, hostApp, onboardingStep, onOnboarding, rememberGuest, savePromptDue } from './onboarding'
 import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboarding'
@@ -209,15 +211,9 @@ import type { Runner } from './coop/runner'
 import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
-import { arenaFormat, arenaPick, arenaScreen, keepArenaPick } from './ui/arena'
+import { arenaFormat, arenaPick, isArenaHubTab, isVersusEvent, keepArenaPick, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaBits'
 import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn } from './gems'
 import { isGemPackId } from './data/gems'
-import { fakeRealm, fetchFriends as fetchRealmFriends, realmFaked } from './realm/api'
-import { openBaseEditor } from './ui/baseEditor'
-import { openBaseBoard } from './ui/baseBoard'
-import { openCarpentry } from './ui/carpentry'
-import { arenaQueue, arenaQueueLive } from './ui/arenaQueue'
-import { arenaHub, isArenaHubTab, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaHub'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
 import { isFakeScenario } from './arena/fakes'
 import { historyEntry } from './arena/history'
@@ -227,8 +223,7 @@ import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked
 import { arenaResult } from './game/arenaRank'
 import { dailyCoopChallenge, parseTeamSize } from './game/coopBoard'
 import type { Difficulty } from './game/difficulty'
-import { versusSplash } from './ui/versusSplash'
-import { createVersusHud, isVersusEvent, versusFeedback, type VersusHud } from './ui/versusHud'
+import type { VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
 import { freeWearables, wearMemory } from './render/wearables'
@@ -236,10 +231,9 @@ import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkin
 import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS, type SkinId } from './data/skinCatalog'
 import { equip } from './arena/gemShop'
 import { effectIn } from './data/arenaEffects'
-import { createVersusTray, type VersusTray } from './ui/versusTray'
-import { createVersusTalk, type VersusTalk } from './ui/versusTalk'
-import { createArenaControls, type ArenaControls } from './ui/arenaControls'
-import { versusEnd } from './ui/versusEnd'
+import type { VersusTray } from './ui/versusTray'
+import type { VersusTalk } from './ui/versusTalk'
+import type { ArenaControls } from './ui/arenaControls'
 import { VERSUS, VERSUS_PICKS, isVersusPick, type Team, type VersusPick } from './data/versus'
 import { MAPS, type MapId } from './data/versusMaps'
 import { ARENA_FORMAT_IDS, ARENA_FORMATS, parseArenaFormat, type ArenaFormat } from './data/arenaFormats'
@@ -478,7 +472,7 @@ type CoopRun = {
    * analytics, where it came from (`kind`: practice against bots, a public queue's, a friends' room) and, for a ranked one,
    * the RP its end moved once the API rated it. Null in a co-op run.
    */
-  versus: { hud: VersusHud; tray: VersusTray; talk: VersusTalk; controls: ArenaControls; local: boolean; reported: boolean; kind: MatchKind; rp: Promise<RpChange | null> | null } | null
+  versus: { ui: ArenaMode; hud: VersusHud; tray: VersusTray; talk: VersusTalk; controls: ArenaControls; local: boolean; reported: boolean; kind: MatchKind; rp: Promise<RpChange | null> | null } | null
 }
 
 let screen: Screen | null = null
@@ -595,17 +589,17 @@ const refreshVisitors = (now: number) => {
 const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void, boutique?: () => void) => {
   const won = wonLastRun
   wonLastRun = false
-  return shop(ui, input, {
-    plaza: shopPlaza,
-    wonLastRun: won,
-    shelf,
-    festival,
-    boutique,
-    close: () => {
-      if (new URLSearchParams(location.search).has(SHOP_PARAM)) history.replaceState(null, '', location.pathname)
-      close()
-    },
-  })
+  const leave = () => {
+    if (new URLSearchParams(location.search).has(SHOP_PARAM)) history.replaceState(null, '', location.pathname)
+    close()
+  }
+  // Its own chunk, like the Boutique's.
+  return lazyScreen(
+    ui,
+    () => import('./ui/shop'),
+    (m) => m.shop(ui, input, { plaza: shopPlaza, wonLastRun: won, shelf, festival, boutique, close: leave }),
+    leave,
+  )
 }
 
 /** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
@@ -621,18 +615,17 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
   boutiqueCheckout = null
   boutiqueItem = null
   lobbyPress('boutique')
-  return openBoutique(ui, input, {
-    tab,
-    checkout,
-    item,
-    signIn: accountsEnabled ? () => void signIn() : null,
-    pick: arenaStart(),
-    keepPick: keepArenaPick,
-    close: () => {
-      if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) history.replaceState(null, '', location.pathname)
-      close()
-    },
-  })
+  const leave = () => {
+    if (new URLSearchParams(location.search).has(BOUTIQUE_PARAM)) history.replaceState(null, '', location.pathname)
+    close()
+  }
+  // Its own chunk (the gem shop's pages, the previews' wearables): most players never open it.
+  return lazyScreen(
+    ui,
+    () => import('./ui/boutique'),
+    (m) => m.openBoutique(ui, input, { tab, checkout, item, signIn: accountsEnabled ? () => void signIn() : null, pick: arenaStart(), keepPick: keepArenaPick, close: leave }),
+    leave,
+  )
 }
 
 /**
@@ -766,7 +759,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       },
       boutique: openBoutiqueSheet,
       gems: () => showBoutique('shop'),
-      carpentry: (close) => openCarpentry(ui, input, { close, signIn: accountsEnabled ? () => void signIn() : null }),
+      carpentry: (close) => lazyScreen(ui, realmMode, (m) => m.openCarpentry(ui, input, { close, signIn: accountsEnabled ? () => void signIn() : null }), close),
       // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
       trainer: (focus) =>
         trainerCardScreen(
@@ -1762,7 +1755,7 @@ const syncOverlay = (r: Run) => {
         clearToasts(ui)
         // Against bots, "Jogar de novo"; a friends' room's "Revanche" shows who's ready; a public queue's adds "Revanche com o time".
         const room = c.versus.local ? {} : { ready: () => againState(c) }
-        r.overlay = versusEnd(ui, input, g, me, queueMatchEnd(c, me) ?? { again: () => ((c.again = true), playAgain(c)), lobby: () => backToRoom(), ...room }, { kind: c.versus.kind, rp: c.versus.rp })
+        r.overlay = c.versus.ui.versusEnd(ui, input, g, me, queueMatchEnd(c, me) ?? { again: () => ((c.again = true), playAgain(c)), lobby: () => backToRoom(), ...room }, { kind: c.versus.kind, rp: c.versus.rp })
         break
       }
       if (c) {
@@ -2591,10 +2584,17 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   setScreen(null)
   endRun()
   const g = runner.game
+  // A match's screens are the Arena's chunk: usually here already (the Arena's screen or the room loaded it).
+  const arena = g.versus ? await loadArena().catch(() => null) : null
+  if (g.versus && !arena) {
+    toast(ui, t().loadFailed, 4000, 'lazyFailed')
+    return backToRoom()
+  }
+  if (run?.coop?.runner === runner) return
   // A match opens on its lineups (`ui/versusSplash.ts`), held a moment so they read; a run on the plain loading line.
   // A ranked ticket matched as Casual says so here: its room starts at once, so the queue screen's note barely shows.
   const downgraded = queueMatch?.room === runner.room && queueMatch.asked === 'ranked' && queueMatch.kind === 'casual'
-  const splash = g.versus ? versusSplash(ui, g, runner.slot, downgraded ? t().versus.queue.downgraded : null) : null
+  const splash = arena ? arena.versusSplash(ui, g, runner.slot, downgraded ? t().versus.queue.downgraded : null) : null
   const loading = splash?.el ?? loadingScreen()
   if (!splash) ui.append(loading)
   // A match's wild are its camps and objectives, not a run's waves.
@@ -2614,8 +2614,8 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   const view = createDrawView(live.game)
   const driver = coopDriver(client, () => backToRoom())
   // A match's social layer maps the field through the drawn camera (`view.camera`, refreshed in place every frame).
-  const talk = live.game.versus
-    ? createVersusTalk(ui, input, {
+  const talk = arena
+    ? arena.createVersusTalk(ui, input, {
         send: (e) => driver.send(e),
         toScreen: (x, y) => ({ x: (x - Math.round(view.camera.x)) * cssScale, y: (y - Math.round(view.camera.y)) * cssScale }),
         toWorld: (x, y) => ({ x: Math.round(view.camera.x) + x / cssScale, y: Math.round(view.camera.y) + y / cssScale }),
@@ -2639,18 +2639,20 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     shake: createScreenShake(),
     again: false,
     net: client.state().net,
-    versus: live.game.versus
-      ? {
-          hud: createVersusHud(ui, client === arenaClient(), goAt),
-          tray: createVersusTray(ui, input, (offer) => c.team.pick(localPlayer(c.view.game), offer), () => talk?.busy() ?? false),
-          talk: talk!,
-          controls: createArenaControls(ui, input, canvas, (e) => driver.send(e), () => c.menu),
-          local: client === arenaClient(),
-          reported: false,
-          kind: matchKindOf(client, live.room),
-          rp: null,
-        }
-      : null,
+    versus:
+      arena && talk
+        ? {
+            ui: arena,
+            hud: arena.createVersusHud(ui, client === arenaClient(), goAt),
+            tray: arena.createVersusTray(ui, input, (offer) => c.team.pick(localPlayer(c.view.game), offer), () => talk.busy()),
+            talk,
+            controls: arena.createArenaControls(ui, input, canvas, (e) => driver.send(e), () => c.menu),
+            local: client === arenaClient(),
+            reported: false,
+            kind: matchKindOf(client, live.room),
+            rp: null,
+          }
+        : null,
   }
   const me = localPlayer(live.game)
   // Each seat's look, in a co-op run as in the Arena, as the relay vouched for it; this player's own previews what it
@@ -2740,7 +2742,7 @@ const versusEvent = (r: Run, g: Game, e: GameEvent, actor: number) => {
   if (isVersusEvent(e)) {
     // The seats' cosmetic effects (spawn, KO, goal) play from the same moments (`render/arenaFx.ts`).
     arenaFxEvent(g, e)
-    return versusFeedback(ui, g, e)
+    return r.coop?.versus?.ui.versusFeedback(ui, g, e)
   }
   const me = localPlayer(g)
   switch (e.kind) {
@@ -3043,13 +3045,20 @@ const leaveCoopDoor = () => {
 
 /* ---------------- The Poké Realm ---------------- */
 
+/** The realm's chunk once it's loaded (`realmMode`). */
+let realmLoaded: typeof import('./realmMode') | null = null
+
 /** Friends walking the realm now (seen or hiding where), for the lobby's way in: asked at most once a minute, signed in (or faked) only. */
 let realmPals: { at: number; n: Promise<number> } | null = null
 
 const realmFriendsNow = (): Promise<number> | null => {
-  if (!realmFaked() && accountState().kind !== 'signedIn') return null
-  if (!realmPals || performance.now() - realmPals.at > 60_000)
-    realmPals = { at: performance.now(), n: fetchRealmFriends().then((got) => got?.friends.filter((f) => f.state === 'realm' || f.state === 'hidden').length ?? 0) }
+  // The faked API (dev) lives in the realm's chunk: it answers once that's loaded; otherwise the API's word, read light.
+  const faked = realmLoaded?.realmFaked() === true ? realmLoaded : null
+  if (!faked && accountState().kind !== 'signedIn') return null
+  if (!realmPals || performance.now() - realmPals.at > 60_000) {
+    const n = faked ? faked.fetchFriends().then((got) => got?.friends.filter((f) => f.state === 'realm' || f.state === 'hidden').length ?? null) : realmFriendsCount()
+    realmPals = { at: performance.now(), n: n.then((k) => k ?? 0) }
+  }
   return realmPals.n
 }
 
@@ -3071,7 +3080,7 @@ const realmLink = (on: boolean) => {
  * one. The in-page realm (`ps.realm('local')`) skips the door.
  */
 const enterRealm = (city: CityId | null) => {
-  const local = realmDevState().local
+  const local = isLocalRealm()
   const access = local ? 'open' : coopAccess(accountsEnabled, accountState())
   if (access === 'handle') return setScreen(profileEditor(ui, input, (saved) => (saved ? enterRealm(city) : showTitle({ focus: 'realm' }))))
   if (access !== 'open') {
@@ -3081,30 +3090,39 @@ const enterRealm = (city: CityId | null) => {
   showRealm(city)
 }
 
-/** The realm's screen while it's up (the dev console's `ps.realm('walk', …)` walks it). */
-let realmShown: ReturnType<typeof openRealm> | null = null
+/** The Poké Realm's code (`realmMode.ts`), a chunk of its own: it loads as a player goes in (and is kept, for the lobby's dev fakes). */
+const realmMode = () => import('./realmMode').then((m) => (realmLoaded = m))
+
+/** The realm's screen once it's up (the dev console's `ps.realm('walk', …)` walks it). */
+let realmShown: ReturnType<typeof import('./ui/realm').openRealm> | null = null
 
 const showRealm = (city: CityId | null) => {
-  const client = realmClient()
-  if (!client) return toast(ui, t().realm.off, 4000, 'realmOff')
+  if (!realmUrl()) return toast(ui, t().realm.off, 4000, 'realmOff')
   realmLink(false)
   endRun()
-  setScreen(
-    (realmShown = openRealm(
-      ui,
-      input,
-      {
-        client,
-        scale: () => cssScale,
-        handle: accountHandle() ?? 'you',
-        back: () => showTitle({ focus: 'realm' }),
-        openRoom: (mode) => realmRoom(mode),
-        showRoom: () => showRoom(),
-        joinRoom: (_mode, code) => void joinCoop(code, 'link').then((res) => (res.ok ? showRoom() : (toast(ui, closedText(res.why), 4000, 'realmParty'), showRealm(null)))),
-      },
-      city,
-    )),
-  )
+  const back = () => showTitle({ focus: 'realm' })
+  const go = (m: Awaited<ReturnType<typeof realmMode>>) => {
+    // A realm URL always makes a client; the check keeps the types honest.
+    const client = m.realmClient()
+    if (!client) return back()
+    setScreen(
+      (realmShown = m.openRealm(
+        ui,
+        input,
+        {
+          client,
+          scale: () => cssScale,
+          handle: accountHandle() ?? 'you',
+          back,
+          openRoom: (mode) => realmRoom(mode),
+          showRoom: () => showRoom(),
+          joinRoom: (_mode, code) => void joinCoop(code, 'link').then((res) => (res.ok ? showRoom() : (toast(ui, closedText(res.why), 4000, 'realmParty'), showRealm(null)))),
+        },
+        city,
+      )),
+    )
+  }
+  setScreen(lazyStep(ui, realmMode, go, back))
 }
 
 /** A portal's room: made and joined through co-op as the hub's "Criar sala" does (an Arena one in Arena mode, the player on Blue with the Arena's pick). The code, or null. */
@@ -3133,7 +3151,8 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * in a full arcade, `realm/api.ts`); `('invite', 'misty')` has that bot invite you to its base;
  * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`).
  */
-const devRealm = (cmd?: string, arg?: string) => {
+const devRealm = async (cmd?: string, arg?: string) => {
+  const { devRealmRoom, fakeRealm, realmDevState, realmInviteFrom, stageRealmTable, useLocalRealm } = await realmMode()
   switch (cmd) {
     case 'local':
       useLocalRealm(true)
@@ -3154,7 +3173,7 @@ const devRealm = (cmd?: string, arg?: string) => {
     case 'walk': {
       // `ps.realm('walk', '110,280')`: the trainer walks there as a tap would (a straight walk, sliding along what's in the way).
       const [x, y] = (arg ?? '').split(',').map(Number)
-      if (screen !== realmShown || !realmShown || !Number.isFinite(x) || !Number.isFinite(y)) return 'ps.realm: walk "x,y" in the realm'
+      if (!realmShown?.el.isConnected || !Number.isFinite(x) || !Number.isFinite(y)) return 'ps.realm: walk "x,y" in the realm'
       return realmShown.walkTo(x!, y!)
     }
     case 'room':
@@ -3317,6 +3336,17 @@ const offerInvites = (invites: readonly CoopInvite[]) => {
 
 /* ---------------- Arena (Versus) ---------------- */
 
+/** The Arena's screens (`arenaMode.ts`), a chunk of their own: loaded as a player opens the Arena or a match starts, kept after. */
+type ArenaMode = typeof import('./arenaMode')
+let arenaMode: ArenaMode | null = null
+const loadArena = async () => (arenaMode ??= await import('./arenaMode'))
+
+/** Goes on with the Arena's screens: at once when they're here, else over the loading line once they land (a failed load: the lobby). */
+const withArena = (go: (a: ArenaMode) => void) => {
+  if (arenaMode) return go(arenaMode)
+  setScreen(lazyStep(ui, loadArena, go, () => showTitle({ focus: 'arena' })))
+}
+
 /** The Pokémon the Arena opens on: the last one taken there, else the lobby's partner when it's a starter. */
 const arenaStart = () => arenaPick(loadSave().partner)
 
@@ -3336,22 +3366,23 @@ const reportArenaOpen = (screen: 'arena' | 'hub') => {
 }
 
 /** The Arena's screen (the lobby's tile): pick a Pokémon and a format, then bots (at once, no account), the public queue (Casual, Ranqueada) or friends (an Arena room); or its hub. */
-const showArena = () => {
-  endRun()
-  reportArenaOpen('arena')
-  const relay = coopUrl() !== null
-  setScreen(
-    arenaScreen(ui, input, arenaStart(), {
-      bots: (id, format) => void playArenaBots(id, format),
-      queue: relay ? (id, kind, format) => enterArenaQueue(id, kind, format) : null,
-      friends: relay ? (id, format) => void openArenaRoom(id, format) : null,
-      needsAccount: coopAccess(accountsEnabled, accountState()) !== 'open',
-      hub: () => showArenaHub('profile'),
-      shop: () => showBoutique('shop', () => showArena()),
-      back: () => showTitle({ focus: 'arena' }),
-    }),
-  )
-}
+const showArena = () =>
+  withArena((a) => {
+    endRun()
+    reportArenaOpen('arena')
+    const relay = coopUrl() !== null
+    setScreen(
+      a.arenaScreen(ui, input, arenaStart(), {
+        bots: (id, format) => void playArenaBots(id, format),
+        queue: relay ? (id, kind, format) => enterArenaQueue(id, kind, format) : null,
+        friends: relay ? (id, format) => void openArenaRoom(id, format) : null,
+        needsAccount: coopAccess(accountsEnabled, accountState()) !== 'open',
+        hub: () => showArenaHub('profile'),
+        shop: () => showBoutique('shop', () => showArena()),
+        back: () => showTitle({ focus: 'arena' }),
+      }),
+    )
+  })
 
 /**
  * The Arena's hub (`ui/arenaHub.ts`) on `tab`: profile, season, ranking,
@@ -3361,17 +3392,19 @@ const showArena = () => {
  */
 const showArenaHub = (tab: ArenaHubTab = 'profile') => {
   if (tab === 'shop') return showBoutique('shop', () => showArenaHub('profile'))
-  endRun()
-  reportArenaOpen('hub')
-  setScreen(
-    arenaHub(ui, input, tab, {
-      back: () => showArena(),
-      signIn: accountsEnabled ? () => setScreen(arenaGate(ui, input, { play: () => showArenaHub(tab), back: () => showArenaHub(tab) })) : null,
-      pick: arenaStart(),
-      keepPick: keepArenaPick,
-      shop: (from) => showBoutique('shop', () => showArenaHub(from)),
-    }),
-  )
+  withArena((a) => {
+    endRun()
+    reportArenaOpen('hub')
+    setScreen(
+      a.arenaHub(ui, input, tab, {
+        back: () => showArena(),
+        signIn: accountsEnabled ? () => setScreen(arenaGate(ui, input, { play: () => showArenaHub(tab), back: () => showArenaHub(tab) })) : null,
+        pick: arenaStart(),
+        keepPick: keepArenaPick,
+        shop: (from) => showBoutique('shop', () => showArenaHub(from)),
+      }),
+    )
+  })
 }
 
 /** The public queue's match this tab was sent to (`matched`): its room, how it counts (for the end screen and analytics), the queue it was asked from and its format. */
@@ -3465,53 +3498,54 @@ const MATCH_START_MS = (ARENA_RANKED.queue.joinTimeout + 15) * 1000
  * player's Pokémon on the side it was given, ready; the relay starts the
  * match by itself and its `run` event brings it in (`startCoopRun`).
  */
-const playArenaQueue = (id: VersusPick, asked: QueueKind, format: ArenaFormat, party: QueueParty | null = null) => {
-  // Ranqueada is only in a ranked format: a 3v3 ticket queues Casual.
-  const kind: QueueKind = ARENA_FORMATS[format].ranked ? asked : 'casual'
-  const client = coopClient()
-  const deps = arenaQueueDeps()
-  if (!client || !deps) return toast(ui, t().coop.off, 4000, 'coopOff')
-  leaveQueue()
-  closeArenaClient()
-  // A co-op room this tab was still in: left, the queue makes the next one.
-  if (coopRoomCode() !== null) {
-    client.leave()
-    linkRoom(null)
-  }
-  watchCoop(client)
-  const back = (why: string | null) => {
+const playArenaQueue = (id: VersusPick, asked: QueueKind, format: ArenaFormat, party: QueueParty | null = null) =>
+  withArena((a) => {
+    // Ranqueada is only in a ranked format: a 3v3 ticket queues Casual.
+    const kind: QueueKind = ARENA_FORMATS[format].ranked ? asked : 'casual'
+    const client = coopClient()
+    const deps = arenaQueueDeps()
+    if (!client || !deps) return toast(ui, t().coop.off, 4000, 'coopOff')
     leaveQueue()
-    if (why) toast(ui, why, 4000, 'arenaQueue')
-    showArena()
-  }
-  const waiting = arenaQueueLive(ui, input, { name: arenaName(), pick: id }, kind, format, () => back(null))
-  setScreen(waiting)
-  queueAttempt = { kind, format, at: performance.now(), found: 1 }
-  const ticket = joinQueue(deps, { kind, format, starter: id, party }, (e) => {
-    if (queueTicket !== ticket) return
-    const q = t().versus.queue
-    if (e.t === 'queued') {
-      if (queueAttempt) queueAttempt.found = Math.max(queueAttempt.found, e.found)
-      return waiting.update(e)
+    closeArenaClient()
+    // A co-op room this tab was still in: left, the queue makes the next one.
+    if (coopRoomCode() !== null) {
+      client.leave()
+      linkRoom(null)
     }
-    queueTicket = null
-    if (e.t === 'lost') {
-      endQueueAttempt({ result: 'lost' })
-      return back(q.lost)
+    watchCoop(client)
+    const back = (why: string | null) => {
+      leaveQueue()
+      if (why) toast(ui, why, 4000, 'arenaQueue')
+      showArena()
     }
-    if (e.t === 'refused') {
-      endQueueAttempt({ result: 'refused', why: e.why })
-      // Fair Play shut the Ranqueada: the screen says why and offers a Casual instead.
-      if (e.why === 'fairPlay') return waiting.blocked(e.fairPlay, () => enterArenaQueue(id, 'casual', format))
-      return back(q.refused[e.why])
-    }
-    endQueueAttempt({ result: 'matched', downgraded: kind === 'ranked' && !e.ranked ? 1 : 0 }, e.humans)
-    waiting.found(e)
-    queueMatch = { room: e.room, kind: e.ranked ? 'ranked' : 'casual', asked: kind, format }
-    void joinQueueMatch(client, e.room, id, e.team, waiting)
+    const waiting = a.arenaQueueLive(ui, input, { name: arenaName(), pick: id }, kind, format, () => back(null))
+    setScreen(waiting)
+    queueAttempt = { kind, format, at: performance.now(), found: 1 }
+    const ticket = joinQueue(deps, { kind, format, starter: id, party }, (e) => {
+      if (queueTicket !== ticket) return
+      const q = t().versus.queue
+      if (e.t === 'queued') {
+        if (queueAttempt) queueAttempt.found = Math.max(queueAttempt.found, e.found)
+        return waiting.update(e)
+      }
+      queueTicket = null
+      if (e.t === 'lost') {
+        endQueueAttempt({ result: 'lost' })
+        return back(q.lost)
+      }
+      if (e.t === 'refused') {
+        endQueueAttempt({ result: 'refused', why: e.why })
+        // Fair Play shut the Ranqueada: the screen says why and offers a Casual instead.
+        if (e.why === 'fairPlay') return waiting.blocked(e.fairPlay, () => enterArenaQueue(id, 'casual', format))
+        return back(q.refused[e.why])
+      }
+      endQueueAttempt({ result: 'matched', downgraded: kind === 'ranked' && !e.ranked ? 1 : 0 }, e.humans)
+      waiting.found(e)
+      queueMatch = { room: e.room, kind: e.ranked ? 'ranked' : 'casual', asked: kind, format }
+      void joinQueueMatch(client, e.room, id, e.team, waiting)
   })
   queueTicket = ticket
-}
+  })
 
 /** Joins the room a queue match was made in, ready, and waits for its start; one that doesn't start in time shows its room. */
 const joinQueueMatch = async (client: CoopClient, room: string, id: VersusPick, team: Team, waiting: Screen) => {
@@ -3536,7 +3570,9 @@ const joinQueueMatch = async (client: CoopClient, room: string, id: VersusPick, 
  * Blue; once its seats have filled, "Partida encontrada!" and the start; the
  * `run` event brings the match in. Cancel drops the relay.
  */
-const playArenaBots = async (id: VersusPick, format: ArenaFormat, map: MapId | null = null) => {
+const playArenaBots = (id: VersusPick, format: ArenaFormat, map: MapId | null = null) => withArena((a) => void botsMatch(a, id, format, map))
+
+const botsMatch = async (a: ArenaMode, id: VersusPick, format: ArenaFormat, map: MapId | null) => {
   // A co-op room this tab was still in: left, the Arena runs alone.
   const net = coopClient()
   if (net && coopRoomCode() !== null) {
@@ -3545,7 +3581,7 @@ const playArenaBots = async (id: VersusPick, format: ArenaFormat, map: MapId | n
   }
   const client = openArenaClient(arenaName())
   watchCoop(client)
-  const queue = arenaQueue(ui, input, { name: arenaName(), pick: id }, format, () => {
+  const queue = a.arenaQueue(ui, input, { name: arenaName(), pick: id }, format, () => {
     closeArenaClient()
     showArena()
   })
@@ -3604,14 +3640,16 @@ const showArenaRoomPick = () => {
   const st = client?.state()
   const loadout = st?.room?.members.find((m) => m.seat === st.seat)?.loadout
   const team = loadout ? (parseLoadout(loadout).team ?? 0) : 0
-  setScreen(
-    arenaScreen(ui, input, arenaStart(), {
-      choose: (id) => {
-        client?.setLoadout(arenaLoadout(id, team, equippedLook()))
-        setTimeout(showRoom, 150)
-      },
-      back: () => showRoom(),
-    }),
+  withArena((a) =>
+    setScreen(
+      a.arenaScreen(ui, input, arenaStart(), {
+        choose: (id) => {
+          client?.setLoadout(arenaLoadout(id, team, equippedLook()))
+          setTimeout(showRoom, 150)
+        },
+        back: () => showRoom(),
+      }),
+    ),
   )
 }
 
@@ -3622,6 +3660,8 @@ const showArenaRoomPick = () => {
  */
 const syncArenaLoadout = (client: CoopClient, room: RoomView) => {
   if (parseSettings(room.settings).mode !== 'versus') return
+  // The match's screens, ahead of its start (`startCoopRun` waits for them otherwise).
+  void loadArena().catch(() => {})
   const me = room.members.find((m) => m.seat === client.state().seat)
   if (!me?.loadout) return
   const next = arenaSeat(parseLoadout(me.loadout), arenaStart(), equippedLook())
@@ -4505,15 +4545,16 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
  * on to "Partida encontrada!"), and `ps.versus('splash')` puts the running
  * match's opening splash up again (again takes it down).
  */
-let devSplash: ReturnType<typeof versusSplash> | null = null
-const devVersus = (cmd?: string, arg?: number | string, third?: string) => {
+let devSplash: ReturnType<ArenaMode['versusSplash']> | null = null
+const devVersus = async (cmd?: string, arg?: number | string, third?: string) => {
+  const a = await loadArena()
   const num = typeof arg === 'number' ? arg : undefined
   const g = run?.coop?.runner.game
   const me = g ? g.players[run!.coop!.runner.slot] : undefined
   if (cmd === 'arena') return showArena()
   if (cmd === 'queue') {
     endRun()
-    const queue = arenaQueue(ui, input, { name: arenaName(), pick: arenaStart() }, arenaFormat(), () => showArena())
+    const queue = a.arenaQueue(ui, input, { name: arenaName(), pick: arenaStart() }, arenaFormat(), () => showArena())
     setScreen(queue)
     if (arg) void queue.filled().then(() => queue.found())
     return 'Arena: matchmaking screen'
@@ -4521,7 +4562,7 @@ const devVersus = (cmd?: string, arg?: number | string, third?: string) => {
   if (cmd === 'splash') {
     if (devSplash) return (devSplash.dispose(), (devSplash = null), 'splash down')
     if (!g?.versus) return 'ps.versus: start a match first (ps.versus())'
-    devSplash = versusSplash(ui, g, run!.coop!.runner.slot)
+    devSplash = a.versusSplash(ui, g, run!.coop!.runner.slot)
     devSplash.progress(Math.round(num ?? 6), 10)
     return 'splash up'
   }
@@ -4559,7 +4600,8 @@ const devVersus = (cmd?: string, arg?: number | string, third?: string) => {
  * `ps.arena('season', 'pre' | 'on')` shows the screens as in the pre-season
  * or in a season whatever the date (no argument: the clock again).
  */
-const devArena = (cmd?: string, arg?: string, then?: string) => {
+const devArena = async (cmd?: string, arg?: string, then?: string): Promise<unknown> => {
+  const a = await loadArena()
   if (cmd === 'hub') {
     showArenaHub(isArenaHubTab(arg) ? arg : 'profile')
     return `Arena hub: ${isArenaHubTab(arg) ? arg : 'profile'}`
@@ -4576,7 +4618,7 @@ const devArena = (cmd?: string, arg?: string, then?: string) => {
     const kind: QueueKind = arg === 'casual' ? 'casual' : 'ranked'
     endRun()
     let timer = 0
-    const waiting = arenaQueueLive(ui, input, { name: arenaName(), pick: arenaStart() }, kind, kind === 'ranked' ? 'standard' : arenaFormat(), () => (clearInterval(timer), showArena()))
+    const waiting = a.arenaQueueLive(ui, input, { name: arenaName(), pick: arenaStart() }, kind, kind === 'ranked' ? 'standard' : arenaFormat(), () => (clearInterval(timer), showArena()))
     setScreen(waiting)
     let waited = 0
     const bots = ARENA_RANKED.queue.botsAfter[kind]
@@ -4720,7 +4762,8 @@ const devGems = (cmd?: string, arg?: string | number) => {
  * calls and the gems faked (`fakeRealm`: furnished demo bases, `realm/demoBases.ts`) unless `real`: `ps.base()` opens
  * the editor, `ps.base('board')` the trail's board (Visitar shows the base on the board), `ps.base('carpentry')` Bibarel's.
  */
-const devBase = (cmd: 'editor' | 'board' | 'carpentry' = 'editor', real = false) => {
+const devBase = async (cmd: 'editor' | 'board' | 'carpentry' = 'editor', real = false) => {
+  const { fakeRealm, openBaseBoard, openBaseEditor, openCarpentry, realmFaked } = await realmMode()
   if (!real && !realmFaked()) {
     fakeRealm(true)
     if (!gemsFaked()) fakeGems(true)
