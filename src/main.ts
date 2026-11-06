@@ -110,7 +110,7 @@ import { CAST_SFX } from './ui/castSfx'
 import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype, setArchetype } from './game/terrain'
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
-import { dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
+import { dexCounts, dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
 import { runEarnings, wonRun, type ConvertedEggs } from './game/meta'
 import { missionStatus, type MissionStatus } from './game/missions'
 import { summarizeRun, type RunSummary } from './game/tally'
@@ -177,6 +177,8 @@ import { mapEventFeedback } from './ui/mapEvents'
 import { runShare, sharePreview, trainerShare } from './ui/share'
 import { shop, type ShopPlaza, type VisitorShelf } from './ui/shop'
 import { starterSelect } from './ui/starterSelect'
+import { firstRunDue, guestChosenAt, guestGateDue, hostApp, onboardingStep, onOnboarding, rememberGuest, savePromptDue } from './onboarding'
+import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboarding'
 import { invitesScreen } from './ui/invites'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
 import { creditsLine, supportersScreen } from './ui/supporters'
@@ -725,12 +727,14 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   if (opts.intro) firstStep('intro')
   setScreen(
     titleScreen(ui, input, {
-      play: () => (firstStep('play'), accountsEnabled && !playingAsGuest && accountState().kind === 'guest' ? showPlayGate() : showMenu()),
+      play: () => (firstStep('play'), playFromLobby()),
+      // A device that never played: "press start" goes straight into its first run.
+      start: opts.intro && firstRun() ? () => ((pressedStart = true), firstStep('play'), startFirstRun()) : undefined,
       challenge: () => showChallenge(),
       incubator: () => showIncubator(() => showTitle({ focus: 'eggs' })),
       gifts: showGifts,
       missions: () => showMissions(),
-      ready: () => ((pressedStart = true), firstStep('lobby')),
+      ready: () => ((pressedStart = true), firstStep('lobby'), hideInAppHint()),
       // The language may change inside Settings, so closing them rebuilds the title on the same entry.
       settings: (focus) => openSettings(ui, input, () => showTitle({ focus })),
       news: (focus) => newsScreen(ui, input, () => showTitle({ focus })),
@@ -776,10 +780,34 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       meadow,
     }, opts),
   )
+  // Inside an app's browser: over the intro, the way to a real one to sign in and keep the progress (the lobby takes it down; closed once, gone for the visit).
+  const app = hostApp()
+  if (app && opts.intro && screen) showInAppHint(screen.el, app)
 }
 
-/** Set once the player picks "play as a guest": the gate doesn't ask again until the page reloads. */
-let playingAsGuest = false
+/** No run finished on this device and no account linked to it: the next Play is the first run (`startFirstRun`). */
+const firstRun = () => firstRunDue(loadSave().achievements.lifetime.runs, accountUserId() !== null)
+
+/** The first run: the saved partner (Charmander on a new save) on the saved difficulty (Normal), past the gate and the partner select. */
+const startFirstRun = () => {
+  onboardingStep('fastLane')
+  void startRun(loadSave().partner)
+}
+
+/**
+ * JOGAR: the first run starts at once; after it, a guest sees the sign-in gate
+ * now and then (`guestGateDue`: not again for a while after "Jogar como
+ * convidado"), never inside an app's browser, where Google won't sign in; then the partner select.
+ */
+const playFromLobby = () => {
+  if (firstRun()) return startFirstRun()
+  if (!accountsEnabled || accountState().kind !== 'guest') return showMenu()
+  if (hostApp()) {
+    onboardingStep('gateSkipped')
+    return showMenu()
+  }
+  return guestGateDue(guestChosenAt(), Date.now()) ? showPlayGate() : showMenu()
+}
 
 /** Sign in or play as a guest, asked when a guest taps Play. */
 const showPlayGate = () => {
@@ -787,7 +815,7 @@ const showPlayGate = () => {
   setScreen(
     playGate(ui, input, {
       play: () => (firstGate('signIn'), showMenu()),
-      guest: () => (firstGate('guest'), (playingAsGuest = true), showMenu()),
+      guest: () => (firstGate('guest'), rememberGuest(), onboardingStep('gateGuest'), showMenu()),
       back: () => (firstGate('back'), showTitle({ focus: 'play' })),
       signingIn: () => firstGate('signIn'),
     }),
@@ -1421,6 +1449,8 @@ const aside = (content: HTMLElement | string, ms?: number, key: string | null = 
 
 /** The run's first toasts: safe mode coming on after a crash, the challenge it plays, the day's outbreak, then each bag item it used and each TM it armed. */
 const announceRun = (start: ReplayStart, challenge: Run['challenge']) => {
+  // The first run on this device: how to move, before anything else.
+  if (!challenge && loadSave().achievements.lifetime.runs === 0) news(firstRunTip(input.lastKind(), matchMedia('(pointer: coarse)').matches), 7000, 'firstRun')
   if (takeSafeNotice()) news(h('span', { class: 'item-toast' }, h('span', {}, rich(t().toast.safeMode), h('small', {}, t().toast.safeModeHint))), 5200, 'safeMode')
   if (challenge) {
     const m = t().challenge
@@ -1751,12 +1781,20 @@ const syncOverlay = (r: Run) => {
             glow: me.shiny || g.dexLog.shinies.size > 0 || wonRun(g) || g.time > r.bestBefore,
           },
           credits: g.phase === 'victory' && rankingEnabled ? creditsLine() : null,
+          save: guestSaveCard(),
         },
       )
       break
   }
   // Co-op pick screens wear the auto-pick clock (and the level-up who already picked).
   if (c && r.overlay) c.team.decorate(r.overlay, g, me, phase)
+}
+
+/** A guest's first runs (`savePromptDue`, this one banked): the results' card for what an account keeps, or null. */
+const guestSaveCard = () => {
+  const save = loadSave()
+  if (!accountsEnabled || accountState().kind !== 'guest' || !savePromptDue(save.achievements.lifetime.runs)) return null
+  return saveCard(formatPokeDollars(save.wallet), dexCounts(save.dex).seen, hostApp(), (provider) => void signIn(provider))
 }
 
 /** Level-ups that took the Oran Berry on their own (`takeBerryLevelUps`): the level reached and how many at once. */
@@ -3988,6 +4026,11 @@ const boot = () => {
   watchSupporterStatus()
   // Coming back to the game syncs again, but not mid-run: a run syncs when it ends.
   startAccount(() => run === null)
+  // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it.
+  onOnboarding((step) => {
+    const app = hostApp()
+    if (step === 'inAppSignInHeld' && app) showInAppHint(ui, app, true)
+  })
   // The Festival da Praça's pot, in the background (its gifts join the gift box).
   startFestival()
   // The Meta da comunidade's candies, in the background: reaching the goal opens Mega Darkrai, with a banner the first time.

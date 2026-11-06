@@ -26476,3 +26476,105 @@ span.arena-hub-face {
 .realm-sign.busy {
   color: #5a3408;
 }
+
+/* ---------- A new visitor's onboarding (ui/onboarding.ts) ---------- */
+
+/* Inside an app's browser: a strip across the top that never blocks play; × closes it. */
+.inapp-hint {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--safe-t) + 6px);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: min(440px, calc(100 * var(--vw) - 16px));
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 12px;
+  font-family: var(--body);
+  font-size: 19px;
+  line-height: 1.1;
+  pointer-events: auto;
+}
+
+.inapp-text {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-width: 0;
+}
+
+.inapp-text > b {
+  flex: 1 1 200px;
+}
+
+.inapp-open {
+  color: var(--ink);
+  padding: 6px 10px;
+  font-size: 10px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.inapp-how {
+  color: var(--dk-ink-2, #505870);
+}
+
+.inapp-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-family: var(--title);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* A guest's first results: what an account keeps, and the ways to sign in. */
+.save-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  background: var(--dk-wash-blue, #e4ecff);
+  border: var(--px) solid var(--dk-line, #b8c8e8);
+  border-radius: calc(var(--px) * 3);
+  text-align: center;
+}
+
+.save-title {
+  font-family: var(--title);
+  font-size: 10px;
+  color: color-mix(in srgb, #2a5aa8 var(--dk-lift, 100%), #fff);
+}
+
+.save-text {
+  font-family: var(--body);
+  font-size: 19px;
+  line-height: 1.1;
+  max-width: 440px;
+}
+
+.save-buttons,
+.save-inapp {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--body);
+  font-size: 18px;
+}
+
+.save-inapp {
+  flex-direction: column;
+  gap: 4px;
+}

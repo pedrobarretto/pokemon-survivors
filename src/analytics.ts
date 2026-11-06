@@ -21,7 +21,7 @@ import type { CatalogSlot, CosmeticId, Rarity } from './data/cosmetics'
 import type { SkinBundleId } from './data/skinCatalog'
 import type { GemCurrency, GemMethod, GemPackId } from './data/gems'
 import type { FirstStep, GateAnswer, StepTimes } from './firstSteps'
-import type { InAppBrowser } from './inApp'
+import type { InAppApp, OnboardingStep } from './onboarding'
 
 /**
  * Analytics and error reports. Events go to PostHog (product analytics and
@@ -121,7 +121,9 @@ type AnalyticsEvents = {
     gate: GateAnswer | null
     load: number
     sent: 'minute' | 'hidden'
-    inApp: InAppBrowser | null
+    inApp: InAppApp | null
+    /** The onboarding moments the load went through (`OnboardingStep`), each once. */
+    moments: OnboardingStep[]
     account: 0 | 1
     replay: 0 | 1
   } & DeviceInfo

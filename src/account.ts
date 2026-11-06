@@ -12,6 +12,7 @@ import { gameGifts as madeByGame, isGameGift } from './game/gameGifts'
 import { donateFrom } from './game/festival'
 import { loadSave, today, writeSave } from './ui/save'
 import { timeoutSignal } from './net/timeout'
+import { hostApp, onboardingStep } from './onboarding'
 
 /**
  * Optional player accounts (Google or Discord through Clerk). Playing as a guest stays
@@ -726,6 +727,8 @@ export const donateToFestival = async (amount: number): Promise<FestivalDonation
  * in to Clerk (another tab), it just links this device.
  */
 export const signIn = async (provider: 'google' | 'discord' = 'google') => {
+  // Google refuses to sign in inside an app's WebView (`disallowed_useragent`): the shell shows the way to a real browser instead.
+  if (provider === 'google' && hostApp()) return onboardingStep('inAppSignInHeld')
   setState({ kind: 'busy' })
   try {
     const c = await loadClerk()

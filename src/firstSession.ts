@@ -1,7 +1,7 @@
 import { accountUserId } from './account'
 import { recordReplay, track } from './analytics'
 import { answerGate, furthest, isFirstLoad, NO_STEPS, reach, REPLAY_RATE, type FirstStep, type FirstSteps, type GateAnswer } from './firstSteps'
-import { inAppBrowser } from './inApp'
+import { hostApp, onOnboarding, type OnboardingStep } from './onboarding'
 import { deviceNow } from './telemetry'
 
 /**
@@ -18,6 +18,8 @@ const LOADS_KEY = 'ps:firstLoads'
 let steps: FirstSteps | null = null
 let load = 0
 let replay = false
+/** The onboarding moments (`onboarding.ts`: the fast lane, the gate skipped, the save card, the in-app hint) this load went through, each once. */
+let moments: OnboardingStep[] = []
 
 const loadsBefore = () => {
   try {
@@ -48,7 +50,6 @@ const send = (sent: 'minute' | 'hidden') => {
   if (!s) return
   steps = null
   if (replay) recordReplay(false)
-  const standalone = Reflect.get(navigator, 'standalone') === true
   track(
     'first_session',
     {
@@ -57,7 +58,8 @@ const send = (sent: 'minute' | 'hidden') => {
       gate: s.gate,
       load,
       sent,
-      inApp: inAppBrowser(navigator.userAgent, standalone),
+      inApp: hostApp()?.app ?? null,
+      moments,
       account: accountUserId() ? 1 : 0,
       replay: replay ? 1 : 0,
       ...deviceNow(),
@@ -73,6 +75,9 @@ export const startFirstSession = (runs: number) => {
   load = before + 1
   countLoad(load)
   steps = NO_STEPS
+  onOnboarding((m) => {
+    if (steps && !moments.includes(m)) moments = [...moments, m]
+  })
   addEventListener('pagehide', () => send('hidden'))
   document.addEventListener('visibilitychange', () => document.visibilityState === 'hidden' && send('hidden'))
   // Only a device's very first load, so a recording is one per device (PostHog's free tier holds 5k a month).

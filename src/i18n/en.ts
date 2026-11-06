@@ -1159,6 +1159,19 @@ export const en: Messages = {
     playAsGuest: 'Play as a guest',
     gateGuestNote: "As a guest, your progress stays on this device only and your runs don't count for the ranking.",
   },
+  onboarding: {
+    moveKeys: '*WASD* or *arrow keys* to move',
+    movePad: '*Left stick* to move',
+    moveTouch: '*Drag your finger* to move',
+    auto: 'Your moves fire on their own: dodge and level up!',
+    saveTitle: 'SAVE YOUR PROGRESS',
+    saveText: (money: string, dex: number) => `Create a free account to keep your *${money}*, the *${dex}* Pokémon in your Pokédex and your spot on the *ranking*, on any device.`,
+    inAppTitle: 'Open in your browser to save your progress',
+    inAppOpen: 'Open in Chrome',
+    inAppIos: 'Tap *...* and choose *Open in browser*',
+    inAppSignIn: "Google won't sign in from inside this app. Open the game in your browser to sign in.",
+    close: 'Close',
+  },
 
   socials: {
     follow: (name: string) => `Follow us on ${name}`,

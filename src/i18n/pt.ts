@@ -1389,6 +1389,23 @@ export const pt = {
     playAsGuest: 'Jogar como convidado',
     gateGuestNote: 'Como convidado, o progresso fica só neste aparelho e suas partidas não entram no ranking.',
   },
+  /** A new visitor's first run and the sign-in asks around it (`src/onboarding.ts`, `ui/onboarding.ts`). */
+  onboarding: {
+    /** The first run's opening toast: how to move (keys, stick or finger); the moves fire on their own. */
+    moveKeys: '*WASD* ou *setas* para andar',
+    movePad: '*Analógico* para andar',
+    moveTouch: '*Arraste o dedo* para andar',
+    auto: 'Os golpes saem sozinhos: desvie e suba de nível!',
+    /** The results' card in a guest's first runs: what an account keeps. */
+    saveTitle: 'GUARDE SEU PROGRESSO',
+    saveText: (money: string, dex: number) => `Crie sua conta grátis e guarde seus *${money}*, os *${dex}* Pokémon da sua Pokédex e seu lugar no *ranking*, em qualquer aparelho.`,
+    /** Inside an app's browser (Instagram, TikTok…), where Google won't sign in. */
+    inAppTitle: 'Abra no navegador para salvar seu progresso',
+    inAppOpen: 'Abrir no Chrome',
+    inAppIos: 'Toque em *...* e escolha *Abrir no navegador*',
+    inAppSignIn: 'O Google não deixa entrar por dentro deste app. Abra o jogo no navegador para entrar com sua conta.',
+    close: 'Fechar',
+  },
 
   /** The game's official profiles (`SOCIALS`): the lobby's cards and Ajustes → Sobre. Network names stay as they are. */
   socials: {

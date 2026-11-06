@@ -49,6 +49,7 @@ import { rulesOf } from '../game/versusRules'
 import { deathCause } from './deathCause'
 import { abilityMark } from './abilityMark'
 import { teamBuilds } from './teamHud'
+import type { SaveCard } from './onboarding'
 
 export type Screen = {
   el: HTMLElement
@@ -954,6 +955,8 @@ type ResultsExtras = {
   share: ResultsShare | null
   /** A victory's thanks to the supporters (`creditsLine`), above the support link. */
   credits?: HTMLElement | null
+  /** A guest's first runs: the "save your progress" card (`ui/onboarding.ts`), its buttons joining the row's keys. */
+  save?: SaveCard | null
 }
 
 const NO_EXTRAS: ResultsExtras = { badge: null, report: null, medals: [], eggs: { converted: { full: [], cap: [] }, ready: 0 }, news: { species: 0, shinies: 0 }, ranking: null, share: null }
@@ -987,7 +990,7 @@ const runNews = ({ eggs, news, medals }: ResultsExtras) => {
  * The steps walked and eggs found feed the incubator (`extras.eggs`), and
  * `extras.news` adds a one-line Pokédex summary when the run found something new.
  * A victory also links the support page, under the buttons (only then, so it never nags); a faint
- * says what landed the last hit (`deathCause`).
+ * says what landed the last hit (`deathCause`). A guest's first runs add the "save your progress" card (`extras.save`) above the buttons.
  * `onLobby` goes straight home (Trocar Pokémon opens the partner select instead).
  */
 export const results = (
@@ -1035,7 +1038,8 @@ export const results = (
       nav = bindNav(buttons.indexOf(button))
     })
   }
-  const buttons = [goOn, retry, back, lobby, share, boards].filter((b) => b !== null)
+  const saved = extras.save?.buttons ?? []
+  const buttons = [goOn, retry, back, lobby, share, boards, ...saved.map((b) => b.button)].filter((b) => b !== null)
   const actions = [
     goOn && onContinue,
     onRetry,
@@ -1043,6 +1047,7 @@ export const results = (
     onLobby,
     share && (() => openSub(extras.share?.open, share)),
     boards && (() => openSub(ranking?.open, boards)),
+    ...saved.map((b) => b.run),
   ].filter((a) => typeof a === 'function')
   // Every button acts after the key dispatch: the screen it opens (Menu's partner select) would take the same press as its own.
   // Space is the special: pressed every second or so while it recharges, it picked Retry (or Continue) the moment the run ended,
@@ -1097,7 +1102,8 @@ export const results = (
       ),
       extras.report,
       damageList(g),
-      h('div', { class: 'buttons result-buttons' }, ...buttons),
+      extras.save?.el,
+      h('div', { class: 'buttons result-buttons' }, ...buttons.slice(0, buttons.length - saved.length)),
       victory && extras.credits,
       victory && h('a', { class: 'support-link result-support', href: ROUTES.support[locale()], target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
     ),
