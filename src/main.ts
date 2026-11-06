@@ -179,7 +179,8 @@ import { shop, type ShopPlaza, type VisitorShelf } from './ui/shop'
 import { starterSelect } from './ui/starterSelect'
 import { firstRunDue, guestChosenAt, guestGateDue, hostApp, onboardingStep, onOnboarding, rememberGuest, savePromptDue } from './onboarding'
 import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboarding'
-import { invitesScreen } from './ui/invites'
+import { invitesScreen, resultsInvite } from './ui/invites'
+import { forgetInstallNudge, installNudgeScreen } from './ui/install'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
 import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
@@ -193,7 +194,7 @@ import { isQuickChat } from './game/versusSocial'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
 import { arenaLoadout, arenaSeat, coopAccess, coopStarter, freshInvites } from './coop/lobby'
-import { REF_PARAM } from './game/referral'
+import { FRIEND_MILESTONES, REF_PARAM, type FriendMilestone } from './game/referral'
 import { PROTOCOL, VPS_HOMES, parseRoomCode, type RoomView } from './net/protocol'
 import { isRecord } from './game/parse'
 import type { CoopInvite } from './game/friends'
@@ -747,6 +748,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       news: (focus) => newsScreen(ui, input, () => showTitle({ focus })),
       // Closed unanswered, the lobby highlights the survey's clipboard; answered, it's gone and JOGAR is.
       survey: () => surveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
+      install: (offer, focus) => installNudgeScreen(ui, input, offer, () => showTitle({ focus })),
       halloween: (focus) =>
         halloweenScreen(ui, input, {
           gifts: showGifts,
@@ -1792,6 +1794,7 @@ const syncOverlay = (r: Run) => {
           },
           credits: g.phase === 'victory' && rankingEnabled ? creditsLine() : null,
           save: guestSaveCard(),
+          invite: rankingEnabled ? resultsInvite(ui, input, { won: wonRun(g), time: g.time, bestBefore: r.bestBefore }) : null,
         },
       )
       break
@@ -4216,6 +4219,12 @@ const devGifts = {
     const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : why ? { kind: 'welcome', from: why } : null
     return stageGifts([{ id: `dev-${Date.now()}`, content, reason }])
   },
+  /** Puts one invite milestone's gifts in the gift box as the API sends them (`FRIEND_MILESTONES`): `ps.friendGifts(10)` the shiny Dratini, the Friendship Legend title and background. */
+  friendGifts: (friends: FriendMilestone['friends'] = 10) => {
+    const milestone = FRIEND_MILESTONES.find((m) => m.friends === friends)
+    if (!milestone) return `Milestones: ${FRIEND_MILESTONES.map((m) => m.friends).join(', ')}`
+    return stageGifts(milestone.gifts.map((content, i) => ({ id: `dev-friends-${friends}-${i}-${Date.now()}`, content, reason: { kind: 'friends', count: friends } })))
+  },
   /** Puts the thank-you for joining the Discord (`DISCORD_GIFT`) in the gift box, as if linking brought it. */
   discordGift: () => stageGifts([{ id: `dev-discord-${Date.now()}`, content: DISCORD_GIFT, reason: { kind: 'discord' } }]),
   /**
@@ -4921,6 +4930,15 @@ if (import.meta.env.DEV) {
         endRun()
         if (mode === 'reset') return (forgetSurvey(), showTitle())
         setScreen(surveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
+      },
+      /**
+       * The lobby's install offer now, as Chromium's prompt or the iOS how-to (`'ios'`), whatever the browser
+       * (with no prompt held, Instalar just closes it); `ps.install('reset')` forgets it was offered, so the next lobby asks by itself where it can.
+       */
+      install: (mode: 'prompt' | 'ios' | 'reset' = 'prompt') => {
+        endRun()
+        if (mode === 'reset') return (forgetInstallNudge(), showTitle())
+        setScreen(installNudgeScreen(ui, input, mode, () => showTitle()))
       },
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),

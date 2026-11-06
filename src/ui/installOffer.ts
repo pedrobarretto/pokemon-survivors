@@ -14,3 +14,28 @@ export const installOffer = (env: InstallEnv): InstallOffer => (env.installed ? 
 
 /** iPhone, iPod and iPad, iPadOS's Safari included: it says Macintosh, but Macs have no touch screen. */
 export const isIos = (userAgent: string, touchPoints: number) => /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && touchPoints > 1)
+
+/** The lobby's own install offer: proactive, once per device, never in a run (`installNudgeDue`). */
+export const INSTALL_NUDGE = {
+  /** Visits to the game (`countVisit`) before it may ask… */
+  sessions: 2,
+  /** …or runs played, whichever comes first. */
+  runs: 3,
+  /** Minutes away from the game that make the next page load a new visit. */
+  gapMinutes: 30,
+} as const
+
+/** The device's visits, as `countVisit` keeps them: how many, and when the game was last opened (ms). */
+export type Visits = { count: number; last: number }
+
+/** The visits after a page load at `now`: a new one after `gapMinutes` away, else the same one going on. */
+export const countVisit = (v: Visits | null, now: number): Visits =>
+  !v ? { count: 1, last: now } : { count: now - v.last >= INSTALL_NUDGE.gapMinutes * 60_000 ? v.count + 1 : v.count, last: now }
+
+/**
+ * Whether the lobby offers to install by itself: something to offer
+ * (`installOffer`), not in an app's browser, never asked on this device, and
+ * the player came back (`sessions`) or played a few runs.
+ */
+export const installNudgeDue = (n: { offer: InstallOffer; inApp: boolean; asked: boolean; sessions: number; runs: number }) =>
+  n.offer !== null && !n.inApp && !n.asked && (n.sessions >= INSTALL_NUDGE.sessions || n.runs >= INSTALL_NUDGE.runs)

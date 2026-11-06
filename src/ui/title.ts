@@ -9,7 +9,6 @@ import { ENEMIES } from '../data/enemies'
 import { HATCHLINGS, PLAYABLE } from '../data/hatchlings'
 import { isReady } from '../game/eggs'
 import { DISCORD_GIFT } from '../game/gifts'
-import { nextMilestone } from '../game/referral'
 import { dayKey, missionStatus } from '../game/missions'
 import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import type { ArenaHubTab } from './arenaHub'
@@ -35,10 +34,12 @@ import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, t
 import { festivalCard, festivalCardShows, festivalTile, type FestivalTab } from './festival'
 import { fillHalloweenCard, halloweenCard, halloweenCardShows, halloweenTile } from './halloween'
 import { contentLine } from './gifts'
-import { countedFriends, loadInvites } from './invites'
+import { invitesLine, loadInvites } from './invites'
 import { isUnread, latestUpdate } from './news'
 import { hallFace, hallPortrait, type HallOpen } from './supporters'
 import { surveyWaiting, takeSurveyOffer } from './survey'
+import { takeInstallNudge } from './install'
+import type { InstallOffer } from './installOffer'
 import type { Screen } from './screens'
 import { gearButton, helpButton, iconButton, railTile, shellBody, topBar, walletChip } from './shell'
 import { realmSeen } from './realm'
@@ -135,6 +136,8 @@ export type TitleActions = {
   news: (focus: LobbyFocus) => Screen
   /** Opens the difficulty survey over the title, like `settings`; the lobby also opens it by itself once (`takeSurveyOffer`). */
   survey: (focus: LobbyFocus) => Screen
+  /** Opens the install offer over the title, like `settings`: the lobby opens it by itself, once per device (`takeInstallNudge`). */
+  install: (offer: Exclude<InstallOffer, null>, focus: LobbyFocus) => Screen
   /** Opens the Discord screen (the community server, linking a Discord account) over the title, like `settings`. */
   discord: (focus: LobbyFocus) => Screen
   /** Opens the in-game Pokédex over the title; closing it rebuilds the title on `focus`, like `settings`. */
@@ -599,27 +602,25 @@ const invitesCard = () => {
     prize,
   )
   void loadInvites().then((list) => {
-    const friends = countedFriends(list)
-    if (friends === 0) return
-    const next = nextMilestone(friends)
-    const text = next ? m.cardNext(friends, next.friends) : m.cardAll(friends)
-    row.textContent = text
-    el.setAttribute('aria-label', `${m.title}: ${text}`)
-    if (next) prize.src = contentLine({ content: next.gifts[0] }).src
+    const line = invitesLine(list)
+    if (!line) return
+    row.textContent = line.text
+    el.setAttribute('aria-label', `${m.title}: ${line.text}`)
+    if (line.next) prize.src = contentLine({ content: line.next.gifts[0] }).src
     else prize.remove()
   })
   return el
 }
 
-/** Convide amigos as a rail tile: the Friendship Egg, and in full for screen readers how far the next milestone is. */
+/** Convide amigos as a rail tile: the Friendship Egg, the count toward the next milestone on its corner (`2/3`), and in full for screen readers. */
 const invitesTile = () => {
   const m = t().invites
   const el = railTile('invites', h('img', { class: 'lobby-invites-icon', src: eggIcon('friend'), alt: '' }), t().home.rail.invites, `${m.title}: ${m.cardFirst}`)
   void loadInvites().then((list) => {
-    const friends = countedFriends(list)
-    if (friends === 0) return
-    const next = nextMilestone(friends)
-    el.setAttribute('aria-label', `${m.title}: ${next ? m.cardNext(friends, next.friends) : m.cardAll(friends)}`)
+    const line = invitesLine(list)
+    if (!line) return
+    el.setAttribute('aria-label', `${m.title}: ${line.text}`)
+    if (line.short) el.append(h('em', { class: 'lobby-badge rail-friends' }, line.short))
   })
   return el
 }
@@ -1599,6 +1600,11 @@ export const titleScreen = (
     if (trip) requestAnimationFrame(() => visitShop(trip, opts.instant, opts.shelf))
     // Otherwise the survey asks by itself once; closed unanswered, its clipboard in the top bar keeps asking.
     else if (takeSurveyOffer()) openOver(actions.survey)
+    // Or the app's install, once per device, after a few runs or a second visit.
+    else {
+      const offer = takeInstallNudge()
+      if (offer) openOver((focus) => actions.install(offer, focus))
+    }
   }
 
   /**

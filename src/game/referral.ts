@@ -26,9 +26,15 @@ export const REFERRAL = {
   /**
    * Runs the friend must finish before the invite counts for whoever brought
    * them. A run counts as soon as it's reported, unless its check failed
-   * (like the boards).
+   * (like the boards), and only if it lasted `minSeconds`.
    */
   runs: 3,
+  /**
+   * Seconds a run must last, in the game and on the API's clock (start to
+   * report), to count: an alt account can't farm invites with runs that end
+   * at once.
+   */
+  minSeconds: 60,
   /** How old an account may be for its sign up to credit an invite. */
   newAccountHours: 48,
 } as const
@@ -61,7 +67,15 @@ export const FRIEND_MILESTONES = [
   { friends: 1, gifts: [{ kind: 'egg', tier: 'friend' }] },
   { friends: 3, gifts: [{ kind: 'title', title: 'ambassador' }, { kind: 'style', style: { slot: 'frame', id: 'ambassador' } }] },
   { friends: 5, gifts: [{ kind: 'egg', tier: 'ultra' }] },
-  { friends: 10, gifts: [{ kind: 'shinyHatch', family: 'dratini' }] },
+  // Gifts only ever add at the end of a milestone: each one's key is its index (`friends:10:1`), so whoever passed it gets the new ones.
+  {
+    friends: 10,
+    gifts: [
+      { kind: 'shinyHatch', family: 'dratini' },
+      { kind: 'title', title: 'friendLegend' },
+      { kind: 'style', style: { slot: 'background', id: 'friendship' } },
+    ],
+  },
 ] as const satisfies readonly { friends: number; gifts: readonly GiftContent[] }[]
 
 export type FriendMilestone = (typeof FRIEND_MILESTONES)[number]
@@ -75,6 +89,26 @@ export const milestonesReached = (friends: number): readonly FriendMilestone[] =
 
 /** The next milestone to reach, null past the last. */
 export const nextMilestone = (friends: number): FriendMilestone | null => FRIEND_MILESTONES.find((m) => m.friends > friends) ?? null
+
+/* ---------------- Asking at the right moment ---------------- */
+
+/** A finished run, as the results judge whether to ask for an invite. */
+export type RunMoment = {
+  won: boolean
+  /** Seconds survived, and the player's best before this run (0 before any). */
+  time: number
+  bestBefore: number
+  /** The local day now, and the day the results last asked (null never). */
+  day: string
+  askedOn: string | null
+}
+
+/**
+ * Whether the results ask the player to invite a friend: after a win or a
+ * new personal best (the first run's doesn't count: every first run is one),
+ * at most once a day, so it rides a high and never nags.
+ */
+export const inviteMomentDue = (r: RunMoment) => r.askedOn !== r.day && (r.won || (r.bestBefore > 0 && r.time > r.bestBefore))
 
 /* ---------------- The inviter's view ---------------- */
 

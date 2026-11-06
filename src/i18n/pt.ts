@@ -1458,6 +1458,10 @@ export const pt = {
     addHome: 'Escolha *Adicionar à Tela de Início* e toque em *Adicionar*.',
     iosStorage: 'O app guarda o progresso separado do Safari: entre na sua conta para levar tudo junto.',
     ok: 'Entendi',
+    /** The lobby's own offer, once (`installNudgeDue`): after a few runs or a second visit. */
+    nudge: 'Gostando? Instale o jogo e volte com um toque, em tela cheia, direto da Tela de Início.',
+    install: 'Instalar',
+    later: 'Agora não',
   },
 
   /** Boards (title menu, end of a run). Day and week follow Brasília's clock. */
@@ -1730,7 +1734,7 @@ export const pt = {
     } satisfies Record<StyleSlot, string>,
     styles: {
       frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta' } satisfies Record<FrameId, string>,
-      background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas' } satisfies Record<BackgroundId, string>,
+      background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas', friendship: 'Amizade' } satisfies Record<BackgroundId, string>,
       wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada', secretBase: 'Base Secreta' } satisfies Record<WallpaperId, string>,
     },
   },
@@ -2159,8 +2163,17 @@ export const pt = {
     cardFirst: 'Ganhe um Ovo da Amizade',
     cardNext: (friends: number, next: number) => `${friends}/${next} amigos`,
     cardAll: (friends: number) => (friends === 1 ? '1 amigo trazido' : `${friends} amigos trazidos`),
+    /** The lobby card while friends came through the link but none counted yet (they're still playing their runs). */
+    cardPending: (n: number) => (n === 1 ? '1 amigo a caminho' : `${n} amigos a caminho`),
+    /** The results' nudge after a win or a personal best (`inviteMomentDue`): why now, what the friend gets, and the way to the next milestone. */
+    endWin: 'Que vitória! Chame um amigo para jogar: ele ganha um *Ovo da Amizade*.',
+    endBest: 'Novo recorde! Desafie um amigo a bater: ele ganha um *Ovo da Amizade*.',
+    endNext: (friends: number, next: number, reward: string) => `${friends}/${next} amigos: ${reward}`,
+    endButton: 'Convidar',
+    /** Shared from the results: the run's time as a dare, then the link. */
+    dareText: (time: string) => `Sobrevivi ${time} no Pokémon Survivors! Consegue me bater? Entra pelo meu link e ganha um Ovo da Amizade:`,
     how: 'Como funciona',
-    steps: ['Seu amigo abre o *seu link*.', 'Entra com uma conta e já ganha um *Ovo da Amizade*.', 'Quando ele terminar *3 partidas*, conta para você.'],
+    steps: ['Seu amigo abre o *seu link*.', 'Entra com uma conta e já ganha um *Ovo da Amizade*.', 'Quando ele terminar *3 partidas* de pelo menos 1 minuto, conta para você.'],
     /** The in-app browsers of X and Instagram don't let Google sign in: the friend must move to the browser, and the link goes along. */
     tip: 'Se o link abrir dentro do X ou do Instagram, seu amigo deve tocar em "Abrir no navegador" antes de entrar.',
     link: 'Seu link',
@@ -2170,7 +2183,7 @@ export const pt = {
     shareText: 'Bora jogar Pokémon Survivors comigo? Entra pelo meu link e ganha um Ovo da Amizade:',
     rewards: 'Recompensas',
     /** What each milestone pays (`FRIEND_MILESTONES`). */
-    reward: { 1: 'Ovo da Amizade', 3: 'Título e moldura Embaixador(a)', 5: 'Ovo ultra raro', 10: 'Dratini shiny' } satisfies Record<FriendMilestone['friends'], string>,
+    reward: { 1: 'Ovo da Amizade', 3: 'Título e moldura Embaixador(a)', 5: 'Ovo ultra raro', 10: 'Dratini shiny, título e fundo' } satisfies Record<FriendMilestone['friends'], string>,
     milestone: (friends: number) => (friends === 1 ? '1 amigo' : `${friends} amigos`),
     friends: 'Seus amigos',
     noFriends: 'Ninguém entrou pelo seu link ainda.',
@@ -3199,7 +3212,7 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
       firstRun: 'Primeiros passos',
@@ -3297,6 +3310,7 @@ export const pt = {
       arenaUltra: 'Ultra Ball da Arena',
       arenaMaster: 'Master Ball da Arena',
       creator: 'Criador(a) de Conteúdo',
+      friendLegend: 'Lenda da Amizade',
     } satisfies Record<TitleId, string>,
     goals: {
       runs: (n: string) => (n === '1' ? 'Jogue uma partida' : `Jogue ${n} partidas`),
