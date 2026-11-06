@@ -1,7 +1,7 @@
-import { FURNITURE, footprint, type FurnitureId } from '../data/furniture'
+import { FURNITURE, footprint, turnOf, type FurnitureId } from '../data/furniture'
 import { LEGENDS, type LegendId } from '../data/legends'
 import { BASE_GRID, BASE_ROOM, type Shape } from '../data/realmMap'
-import { DOOR, type BaseExterior, type BaseLayout, type Placed } from '../data/secretBases'
+import { DOOR, walksInto, type BaseExterior, type BaseLayout, type Placed } from '../data/secretBases'
 import { canvasCache, context2d, createCanvas } from '../engine/pixelart'
 import type { BaseView } from '../net/realmApi'
 import { boxOf, dollLegend, drawOrder, supportOf, type Box } from '../realm/placement'
@@ -275,13 +275,13 @@ const drawStandIn = (ctx: CanvasRenderingContext2D, id: FurnitureId, px: number,
   }
 }
 
-/** A piece's PNG, bottom-aligned on its footprint and centered across it; a turned piece is drawn a quarter turned. */
-const drawArt = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, px: number, py: number, pw: number, ph: number, turned: boolean) => {
-  if (!turned) {
+/** A piece's PNG, bottom-aligned on its footprint and centered across it; quarter turned (`turnOf`), its art lies across the footprint. */
+const drawArt = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, px: number, py: number, pw: number, ph: number, quarter: boolean) => {
+  if (!quarter) {
     ctx.drawImage(img, Math.round(px + (pw - img.width) / 2), Math.round(py + ph - img.height))
     return
   }
-  // Turned, the art's height lies across the footprint: shrink it to fit when it would overhang (a bed's headboard), never grow it.
+  // The art's height lies across the footprint: shrink it to fit when it would overhang (a bed's headboard), never grow it.
   const fit = Math.min(1, pw / img.height, (ph + TILE / 2) / img.width)
   const w = Math.round(img.width * fit)
   const h = Math.round(img.height * fit)
@@ -293,18 +293,25 @@ const drawArt = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, px: numbe
   ctx.restore()
 }
 
-/** Draws one piece at its footprint (px), lifted by `lift` px (what sits on a table). */
+/** Draws one piece at its footprint (px), lifted by `lift` px (what sits on a table); turned, as `turnOf` says (a mirrored piece flips about its middle). */
 const drawPiece = (ctx: CanvasRenderingContext2D, p: Placed, ox: number, oy: number, lift: number, time: number) => {
   const [w, h] = footprint(p.id, p.turned)
   const px = ox + p.x * TILE
   const py = oy + p.y * TILE - lift
   const pw = w * TILE
   const ph = h * TILE
+  const turn = p.turned ? turnOf(p.id) : null
+  if (turn === 'mirror') {
+    ctx.save()
+    ctx.translate(Math.round(2 * px + pw), 0)
+    ctx.scale(-1, 1)
+  }
   const legend = dollLegend(p.id)
-  if (legend) return drawDoll(ctx, legend, px + pw / 2, py + ph - 4, time)
-  const img = furnitureImage(p.id)
-  if (img) drawArt(ctx, img, px, py, pw, ph, p.turned && FURNITURE[p.id].turns === true)
+  const img = legend ? null : furnitureImage(p.id)
+  if (legend) drawDoll(ctx, legend, px + pw / 2, py + ph - 4, time)
+  else if (img) drawArt(ctx, img, px, py, pw, ph, turn === 'quarter')
   else drawStandIn(ctx, p.id, px, py, pw, ph)
+  if (turn === 'mirror') ctx.restore()
 }
 
 /** How far a top piece is lifted: onto its surface, or not at all when there's none (the editor flags it). */
@@ -387,13 +394,13 @@ export const drawBaseRoom = (ctx: CanvasRenderingContext2D, view: Pick<BaseView,
 
 /**
  * What a walker can't walk through in a base (world px, from the room's
- * top-left): the back wall's band and every piece that `blocks`. The door's
- * tiles are always clear (`checkLayout`).
+ * top-left): the back wall's band and every piece that blocks (`walksInto`:
+ * never on the doorway, so the door is always open).
  */
 export const baseSolids = (layout: BaseLayout): Shape[] => [
   { kind: 'rect', x: 0, y: 0, w: BASE_ROOM.w, h: WALL_H },
   ...layout.items.flatMap((p): Shape[] => {
-    if (FURNITURE[p.id].blocks !== true) return []
+    if (!walksInto(p)) return []
     const b = boxOf(p)
     return [{ kind: 'rect', x: b.x * TILE, y: b.y * TILE, w: b.w * TILE, h: b.h * TILE }]
   }),

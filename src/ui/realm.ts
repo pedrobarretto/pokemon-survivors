@@ -38,7 +38,8 @@ import {
 import { REPORT_REASONS, type BaseView, type ReportReason } from '../net/realmApi'
 import { fetchBase, fetchCities, fetchFriends, isFailure, reportTrainer } from '../realm/api'
 import type { RealmClient } from '../realm/client'
-import { createWalker, place, pushSample, report, sampleAt, snap, walk, type Ground, type Track } from '../realm/interp'
+import { blocked, createWalker, place, pushSample, report, sampleAt, snap, walk, type Ground, type Track } from '../realm/interp'
+import { nearestReachable } from '../realm/placement'
 import { baseSolids, drawBaseRoom } from '../render/base'
 import { drawJoystick } from '../render/joystick'
 import { drawTownGround, drawTownOverhead, labelTop, townPieces } from '../render/realmArt'
@@ -407,7 +408,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
               close: closeSub,
               saved: (v) => {
                 exterior = v.layout.exterior
-                if (room === baseRoom(deps.handle)) base = v
+                if (room === baseRoom(deps.handle)) setBase(v)
               },
             }),
           ),
@@ -450,6 +451,18 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     let me: Avatar | null = null
     let room: RoomKey | null = null
     let base: BaseView | null = null
+    /**
+     * A base's layout came in (on arrival, or the owner's edit saved): a
+     * trainer standing where a piece now is gets set down on the nearest spot
+     * it can walk to the door from, and the relay hears it.
+     */
+    const setBase = (v: BaseView) => {
+      base = v
+      if (room === null || !blocked(groundOf(room, v), walker.x, walker.y)) return
+      const at = nearestReachable(v.layout, walker.x, walker.y)
+      place(walker, at.x, at.y)
+      client.send({ t: 'move', x: Math.round(at.x), y: Math.round(at.y), facing: walker.facing, moving: false })
+    }
     /** The exterior the player's own base wears (the grove's entrance draws it), the cave until their base is known. */
     let exterior: BaseExterior = 'cave'
     /** The room's labels, their elements in `signs`. */
@@ -564,7 +577,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       if (owner)
         void fetchBase(owner).then((v) => {
           if (disposed || room !== key || isFailure(v)) return
-          base = v
+          setBase(v)
           if (own) exterior = v.layout.exterior
         })
       labels = labelsOf(key).map((l) => ({ ...l, el: h('div', { class: 'realm-sign' }, l.text) }))

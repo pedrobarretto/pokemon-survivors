@@ -39,6 +39,18 @@ export const BASE_MAX_ITEMS = 60
 /** The door tile (bottom row, middle) and the one above it stay clear, so a visitor always gets in. */
 export const DOOR = { x: Math.floor(BASE_GRID.cols / 2), y: BASE_GRID.rows - 1 } as const
 
+/** The doorway: the door's tile and the one above it (tiles), where a visitor lands (`BASE_ROOM.spawn`) and leaves. */
+export const DOORWAY = { x: DOOR.x, y: DOOR.y - 1, w: 1, h: 2 } as const
+
+/** The tiles around the doorway: beside both of its tiles and above it. One of them stays free, so the door opens onto the room. */
+const DOOR_SIDES = [
+  { x: DOOR.x - 1, y: DOOR.y },
+  { x: DOOR.x + 1, y: DOOR.y },
+  { x: DOOR.x - 1, y: DOOR.y - 1 },
+  { x: DOOR.x + 1, y: DOOR.y - 1 },
+  { x: DOOR.x, y: DOOR.y - 2 },
+] as const
+
 /** Why a layout is refused, and which item (its index in `items`) when it's one. */
 export type LayoutError =
   | { error: 'unknown' | 'kind' | 'owned' | 'bounds' | 'overlap' | 'support' | 'door'; item: number }
@@ -55,12 +67,16 @@ const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y <
 
 const inside = (inner: Box, outer: Box) => inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.w <= outer.x + outer.w && inner.y + inner.h <= outer.y + outer.h
 
+/** Whether a piece keeps walkers off its tiles: it `blocks` and stands off the doorway (one a layout put on it never does, so no base can shut its door). */
+export const walksInto = (p: Placed) => FURNITURE[p.id].blocks === true && !overlaps(boxOf(p), DOORWAY)
+
 /**
  * Whether a layout may be saved by an account owning `owned`: every piece
  * known and owned (counting repeats), each where its kind may go (`wall` on
  * the wall rows, `floor`, `rug` below them, a `top` wholly on one `surface`),
  * inside the grid, floors not overlapping floors, rugs not rugs, tops not
- * tops, the door clear of anything that blocks, and at most `BASE_MAX_ITEMS`.
+ * tops, the doorway clear of anything that blocks and opening onto the room
+ * (`DOOR_SIDES`: not all of them blocked), and at most `BASE_MAX_ITEMS`.
  * Null when it's fine. Shared by the API (`PUT /realm/base`) and the editor.
  */
 export const checkLayout = (layout: BaseLayout, owned: FurnitureCounts): LayoutError | null => {
@@ -71,7 +87,6 @@ export const checkLayout = (layout: BaseLayout, owned: FurnitureCounts): LayoutE
   const grid: Box = { x: 0, y: 0, w: BASE_GRID.cols, h: BASE_GRID.rows }
   const wall: Box = { x: 0, y: 0, w: BASE_GRID.cols, h: BASE_GRID.wallRows }
   const room: Box = { x: 0, y: BASE_GRID.wallRows, w: BASE_GRID.cols, h: BASE_GRID.rows - BASE_GRID.wallRows }
-  const door: Box = { x: DOOR.x, y: DOOR.y - 1, w: 1, h: 2 }
   const boxes = layout.items.map(boxOf)
   for (const [i, p] of layout.items.entries()) {
     if (!isFurnitureId(p.id) || !Number.isInteger(p.x) || !Number.isInteger(p.y)) return { error: 'unknown', item: i }
@@ -82,7 +97,7 @@ export const checkLayout = (layout: BaseLayout, owned: FurnitureCounts): LayoutE
     if (count > (owned[p.id] ?? 0)) return { error: 'owned', item: i }
     const box = boxes[i]!
     if (!inside(box, grid) || !inside(box, def.kind === 'wall' ? wall : room)) return { error: 'bounds', item: i }
-    if (def.blocks && overlaps(box, door)) return { error: 'door', item: i }
+    if (def.blocks && overlaps(box, DOORWAY)) return { error: 'door', item: i }
     for (let j = 0; j < i; j++) {
       const other = layout.items[j]!
       if (FURNITURE[other.id].kind === def.kind && overlaps(box, boxes[j]!)) return { error: 'overlap', item: i }
@@ -92,6 +107,9 @@ export const checkLayout = (layout: BaseLayout, owned: FurnitureCounts): LayoutE
       if (!on) return { error: 'support', item: i }
     }
   }
+  // The doorway opens onto the room: the last piece to shut its last side is the one to move.
+  const shut = DOOR_SIDES.map((t) => layout.items.findLastIndex((p, i) => FURNITURE[p.id].blocks === true && overlaps({ ...t, w: 1, h: 1 }, boxes[i]!)))
+  if (shut.every((i) => i >= 0)) return { error: 'door', item: Math.max(...shut) }
   return null
 }
 

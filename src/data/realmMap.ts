@@ -273,11 +273,15 @@ export const LANDING: TownRoomId = 'plaza'
  */
 export const BASE_GRID = { cols: 12, rows: 9, tile: 24, wallRows: 2 } as const
 
-/** A base room's bounds and where a visitor lands (just inside the door). */
+/**
+ * A base room's bounds and where a visitor lands: just inside the door, in the
+ * middle of the doorway's column (`DOORWAY` in `data/secretBases.ts`, which
+ * nothing blocks), so pieces beside it never touch the trainer's feet.
+ */
 export const BASE_ROOM = {
   w: BASE_GRID.cols * BASE_GRID.tile,
   h: BASE_GRID.rows * BASE_GRID.tile,
-  spawn: { x: (BASE_GRID.cols * BASE_GRID.tile) / 2, y: (BASE_GRID.rows - 1) * BASE_GRID.tile },
+  spawn: { x: (Math.floor(BASE_GRID.cols / 2) + 0.5) * BASE_GRID.tile, y: (BASE_GRID.rows - 1) * BASE_GRID.tile },
 } as const
 
 /** A room's bounds (w × h, from 0,0), for a town room id or a base. */

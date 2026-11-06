@@ -8,7 +8,7 @@ import type { FurnitureId } from '../data/furniture'
  * of its footprint (`footprint`, `BASE_GRID.tile` px a tile), about as wide;
  * a rug's image covers its footprint from above; a wallpaper or a flooring is
  * one tile (`BASE_GRID.tile` px square) the room repeats. A turned piece
- * draws the same image (its footprint turns, its art stays front-facing).
+ * draws the same image, mirrored or a quarter turned (`turnOf`).
  * Dolls have no file: they're drawn from the legend's own sprite.
  */
 
