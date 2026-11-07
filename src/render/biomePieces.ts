@@ -1,4 +1,4 @@
-import { cone, cylinder, grid, limb, noise, outline, put, sculpt, shade, stamp, toSprite, type Grid, type Ramp } from './sculpt'
+import { cone, cylinder, grid, limb, noise, outline, put, sculpt, shade, stamp, toSprite, type Blob, type Grid, type Ramp } from './sculpt'
 import type { Piece } from './terrain'
 
 /**
@@ -174,6 +174,72 @@ export const barrels = (variant: number): Piece => {
   return piece(g, 15, ground)
 }
 
+const RUST: Ramp = ['#3c1c10', '#6c3418', '#9c5424', '#c47838', '#e09c58']
+const WEEDS: Ramp = ['#1c2c14', '#2c4420', '#40602c', '#5c7c38', '#7c9848']
+
+/** Weeds sprouting around a piece's foot, `n` tufts across `span` px (the plant gone wild). */
+const weeds = (g: Grid, cx: number, ground: number, span: number, n: number, seed: number) => {
+  for (let i = 0; i < n; i++) {
+    const x = cx - span / 2 + (span * (i + 0.5)) / n + (noise(i, seed, 3) - 0.5) * 3
+    const tall = 4 + noise(i, seed, 4) * 6
+    limb(g, x, ground, x + (noise(i, seed, 5) - 0.5) * 4, ground - tall, 1.1, 0.4, WEEDS)
+  }
+}
+
+/** A heap of scrap: rusted plates and drums, pipes and a girder sticking out (the Power Plant's overgrown thickets). */
+export const scrapHeap = (seed: number): Piece => {
+  const g = grid(42, 38)
+  const cx = 21
+  const ground = 34
+  const flip = noise(seed, 1, 13) < 0.5 ? -1 : 1
+  // What sticks out goes in first, so the heap covers its foot.
+  limb(g, cx - 6 * flip, ground - 8, cx - 15 * flip, ground - 27, 1.6, 1.4, STEEL)
+  limb(g, cx + 4 * flip, ground - 10, cx + 16 * flip, ground - 22, 2.2, 2.2, RUST)
+  stamp(g, ['11', '22'], { 1: STEEL[1]!, 2: STEEL[0]! }, cx + 15 * flip - 1, ground - 24)
+  const blobs: Blob[] = [
+    { x: cx - 9, y: ground - 6, rx: 9, ry: 6.5 },
+    { x: cx + 9, y: ground - 6, rx: 9, ry: 6 },
+    { x: cx + 1, y: ground - 13, rx: 9, ry: 8 },
+    { x: cx - 4, y: ground - 3, rx: 11, ry: 4.5 },
+    { x: cx + 7, y: ground - 3, rx: 9, ry: 4 },
+  ]
+  sculpt(g, blobs, RUST, {
+    tag: 10,
+    seed,
+    facets: 2,
+    rough: 0.25,
+    // Some plates still steel, the rest rusted through.
+    paint: (x, y, _n, light, i) => (noise(i, seed, 7) < 0.4 ? shade(STEEL, light, x, y) : null),
+  })
+  // A drum lying on the heap and a tire half sunk in it.
+  cylinder(g, cx - 7 * flip, ground - 9, 4, 7, ['#6c4c08', '#a87810', '#e0b020', '#f8d850'], { top: STEEL_TOP })
+  stamp(g, ['.111.', '1...1', '1...1', '.111.'], { 1: '#1c1c24' }, cx + 4 * flip - 2, ground - 9)
+  weeds(g, cx, ground + 1, 34, 6, seed)
+  outline(g, '#14161c')
+  return piece(g, cx, ground)
+}
+
+/** A run of pipes up out of the ground and over in elbows, a valve wheel on one, weeds at their feet. */
+export const pipeRun = (seed: number): Piece => {
+  const g = grid(40, 50)
+  const cx = 20
+  const ground = 46
+  const paint: Ramp = noise(seed, 2, 13) < 0.5 ? ['#1c3c34', '#2c5c4c', '#3c7c64', '#5c9c80', '#84bca0'] : STEEL
+  const legs = [[-9, 30], [0, 38], [9, 24]] as const
+  for (const [dx, tall] of legs) {
+    cylinder(g, cx + dx, ground, 3.4, tall, paint, { top: null, paint: (x, y, _nx, e, l) => (e < 3 ? shade(RUST, l, x, y) : e % 9 === 4 ? shade(paint, l - 0.3, x, y) : null) })
+  }
+  // Elbows and the run across the tops.
+  limb(g, cx - 9, ground - 31, cx - 9, ground - 36, 3.4, 3.4, paint)
+  limb(g, cx - 9, ground - 37, cx + 1, ground - 39, 3.2, 3.2, paint)
+  limb(g, cx + 9, ground - 25, cx + 14, ground - 25, 3, 3, paint)
+  // The valve wheel.
+  stamp(g, ['.111.', '1.1.1', '11211', '1.1.1', '.111.'], { 1: '#c03430', 2: '#f0d0c0' }, cx - 2, ground - 22)
+  weeds(g, cx, ground + 1, 30, 7, seed + 4)
+  outline(g, '#14161c')
+  return piece(g, cx, ground)
+}
+
 /** A concrete smokestack with warning bands and a red lamp, a bolt painted on its side (the Power Plant's tower). */
 export const smokestack = (): Piece => {
   const g = grid(40, 120)
@@ -214,6 +280,32 @@ export const saguaro = (seed: number): Piece => {
     cylinder(g, ax, ground - at, 2.6, up, CACTUS, { top: CACTUS, paint: ribs })
   }
   stamp(g, ['1.1', '.2.'], { 1: '#f878a0', 2: '#f8d030' }, cx - 1, ground - tall - 3)
+  outline(g, '#102010')
+  return piece(g, cx, ground)
+}
+
+const PAD: Ramp = ['#1c3c1c', '#2c5c28', '#3c7834', '#58a040', '#80c058']
+
+/** A prickly pear: flat pads grown one on another, spined, fruit on their rims (the desert's scrub in a thicket). */
+export const pricklyPear = (seed: number): Piece => {
+  const g = grid(36, 38)
+  const cx = 18
+  const ground = 34
+  const lean = noise(seed, 1, 17) < 0.5 ? -1 : 1
+  const pads: Blob[] = [
+    { x: cx - 7, y: ground - 7, rx: 5.5, ry: 7 },
+    { x: cx + 6, y: ground - 8, rx: 5.5, ry: 7.5 },
+    { x: cx, y: ground - 17, rx: 6, ry: 7.5 },
+    { x: cx - 9 * lean, y: ground - 21, rx: 4.5, ry: 6 },
+    { x: cx + 5 * lean, y: ground - 27, rx: 4.5, ry: 5.5 },
+  ]
+  sculpt(g, pads, PAD, {
+    tag: 10,
+    seed,
+    rough: 0.15,
+    paint: (x, y, n, light) => (noise(x, y, seed + 2) < 0.05 && n.z > 0.3 ? '#e8f0c8' : shade(PAD, light, x, y)),
+  })
+  for (const b of pads.slice(2)) stamp(g, ['1', '2'], { 1: '#f878a0', 2: '#c83c68' }, b.x + 2, b.y - b.ry)
   outline(g, '#102010')
   return piece(g, cx, ground)
 }
