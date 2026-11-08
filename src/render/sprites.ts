@@ -936,13 +936,19 @@ export const fitSprites = (s: SpeciesSprites, maxW: number, minH = 0): SpeciesSp
   let fit = fits.get(s)
   if (!fit) {
     const { Walk, Idle, Hurt, Fly } = s.anims
-    fit = {
-      ...s,
-      anims: { Walk: shrinkSheet(Walk, k), Idle: shrinkSheet(Idle, k), Hurt: shrinkSheet(Hurt, k), ...(Fly && { Fly: shrinkSheet(Fly, k) }) },
-      footY: Math.round(s.footY * k),
-      bodyW: Math.round(s.bodyW * k),
-      bodyH: Math.round(s.bodyH * k),
-      fitted: { from: s, scale: k },
+    try {
+      fit = {
+        ...s,
+        anims: { Walk: shrinkSheet(Walk, k), Idle: shrinkSheet(Idle, k), Hurt: shrinkSheet(Hurt, k), ...(Fly && { Fly: shrinkSheet(Fly, k) }) },
+        footY: Math.round(s.footY * k),
+        bodyW: Math.round(s.bodyW * k),
+        bodyH: Math.round(s.bodyH * k),
+        fitted: { from: s, scale: k },
+      }
+    } catch {
+      // A broken sheet: dropped for its stand-in, like one that throws as it's drawn.
+      forgetBroken(Walk)
+      return s
     }
     fits.set(s, fit)
   }

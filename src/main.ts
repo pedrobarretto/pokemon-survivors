@@ -11,9 +11,9 @@ import { createInput, type Stick } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
-import { canvasLosses, canvasRestored, checkCanvases, context2d, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, readPixels, resetCanvases, sweepArt, wipeCanvases } from './engine/pixelart'
+import { canvasLosses, canvasRestored, checkCanvases, context2d, drawThrew, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, readPixels, resetCanvases, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
-import { fitView } from './engine/viewport'
+import { fitView, pickViewport } from './engine/viewport'
 import { createRng } from './engine/rng'
 import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
@@ -142,6 +142,7 @@ import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
+import { detectKeyLayout } from './ui/keyLayout'
 import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
@@ -274,6 +275,15 @@ let cssScale = 4
 /** Set when the canvas was cleared and must be redrawn even if the game is paused. */
 let dirty = true
 
+/** The canvas' fit for the viewport now, or null while the browser reports no screen to fit (`pickViewport`). */
+const fitNow = () => {
+  const visual = window.visualViewport
+  const size = pickViewport(visual, { width: window.innerWidth, height: window.innerHeight })
+  if (visual && size !== visual) canvasLosses.badViewport++
+  return size && fitView(size.width, size.height, window.devicePixelRatio || 1)
+}
+const fitted = (fit: ReturnType<typeof fitView>) => fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale
+
 /**
  * Sizes the low-res canvas to the visible viewport. Runs on resize, rotation
  * and iOS toolbar changes (visualViewport), and only touches the canvas when
@@ -285,10 +295,8 @@ const resize = () => {
   stickCenter = null
   // The HUD may have moved (a new viewport or UI size): re-measure it after layout (and after module init, so `run` exists by then).
   requestAnimationFrame(() => run && syncMarkerInsets())
-  const width = window.visualViewport?.width ?? window.innerWidth
-  const height = window.visualViewport?.height ?? window.innerHeight
-  const fit = fitView(width, height, window.devicePixelRatio || 1)
-  if (fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale) return
+  const fit = fitNow()
+  if (!fit || fitted(fit)) return
   view.w = fit.w
   view.h = fit.h
   cssScale = fit.cssScale
@@ -351,6 +359,12 @@ checkCanvases()
 setInterval(() => {
   if (document.hidden) return
   checkCanvases()
+  // No event says when a viewport misread on the way back comes right, and a canvas the wrong size hides the world and takes the touches with it.
+  const fit = fitNow()
+  if (fit && !fitted(fit)) {
+    canvasLosses.badViewport++
+    scheduleResize()
+  }
   if (ctx.isContextLost?.()) freshCanvas()
   else checkGameCanvas()
 }, 3000)
@@ -380,9 +394,10 @@ const letGoWhileHidden = () => {
   sweepArt(0)
 }
 
-/** The page is back in view (unlocked, another app or tab left): sizes, caches and the frame are checked and drawn again. */
+/** The page is back in view (unlocked, another app or tab left): held input is let go, and sizes, caches and the frame are checked and drawn again. */
 const cameBack = () => {
   backAt = performance.now()
+  input.releaseOnReturn()
   scheduleResize()
   checkCanvases()
   freshCanvas()
@@ -3848,13 +3863,18 @@ const frame = (now: number) => {
     scene.plaza.level = plazaLevel()
     refreshVisitors(performance.now())
     // The Poké Realm draws its town in the meadow's place.
-    if (screen?.scene) screen.scene(ctx, mdt, view.w, view.h)
-    else {
-      stepTitleScene(scene, mdt, view.w, view.h)
-      drawTitleScene(ctx, scene, view.w, view.h)
-      ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
-      ctx.fillRect(0, 0, view.w, view.h)
-      if (meadowStick) drawJoystick(ctx, meadowStick, cssScale)
+    try {
+      if (screen?.scene) screen.scene(ctx, mdt, view.w, view.h)
+      else {
+        stepTitleScene(scene, mdt, view.w, view.h)
+        drawTitleScene(ctx, scene, view.w, view.h)
+        ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
+        ctx.fillRect(0, 0, view.w, view.h)
+        if (meadowStick) drawJoystick(ctx, meadowStick, cssScale)
+      }
+    } catch (error) {
+      // The menus share the run's canvas: what they leave on it would follow the player into the next run.
+      drawThrew(ctx, error)
     }
     // The wild Pokémon the partner greets answer with their cry.
     for (const dex of scene.cries.splice(0)) playCry(cryUrl(dex), 0.3)
@@ -4130,6 +4150,7 @@ const boot = () => {
   if (accountState().kind === 'signedIn') setTimeout(() => void flushRuns(), 5000)
 }
 
+detectKeyLayout()
 // Nothing reads `t()` until the shown language has landed (see `src/i18n`).
 void loadLocale(locale()).then(boot)
 

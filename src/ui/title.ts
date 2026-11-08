@@ -29,7 +29,7 @@ import { inviterName } from '../ranking'
 import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
 import { fetchWall, knownStatus } from '../supporters'
 import { h, later, rich } from './dom'
-import { boundKey } from './inputLabels'
+import { boundKey, printedKeys } from './inputLabels'
 import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, today } from './save'
 import { festivalCard, festivalCardShows, festivalTile, type FestivalTab } from './festival'
 import { fillHalloweenCard, halloweenCard, halloweenCardShows, halloweenTile } from './halloween'
@@ -230,7 +230,7 @@ const todayCard = (key: LobbyFocus, label: string, badge: Node | null, hotkey: s
   h(
     'button',
     { class: `lobby-card box ${key}`, type: 'button' },
-    h('small', { class: 'lobby-card-label' }, h('span', {}, label), badge, hotkey && h('span', { class: 'key-hint' }, hotkey)),
+    h('small', { class: 'lobby-card-label' }, h('span', {}, label), badge, hotkey && h('span', { class: 'key-hint' }, printedKeys(hotkey))),
     h('span', { class: 'lobby-card-row' }, ...row),
   )
 
@@ -723,7 +723,7 @@ const dockTile = (key: LobbyFocus, icon: string, label: string, hotkey: string, 
     h('img', { src: icon, alt: '' }),
     h('span', {}, label),
     count > 0 && h('em', { class: 'lobby-badge' }, formatNumber(count)),
-    h('span', { class: 'key-hint' }, hotkey),
+    h('span', { class: 'key-hint' }, printedKeys(hotkey)),
   )
 
 /** Set once the player opens Co-op on this device: the tile's NOVO tag goes for good. */

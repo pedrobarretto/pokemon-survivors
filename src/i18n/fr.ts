@@ -221,7 +221,7 @@ export const fr: Messages = {
       loading: 'Chargement de l’arène…',
       ready: 'Tout est prêt !',
       tip: 'Astuce',
-      tips: [
+      tips: (k) => [
         'Plein d’Énergie ? Allez marquer : si vous tombez, vous en perdez la moitié.',
         'Chaque allié dans le même but accélère le marquage de 50 %.',
         'Un coup adverse interrompt celui qui marque.',
@@ -230,10 +230,10 @@ export const fr: Messages = {
         'Battre Drednaw donne un bouclier et de l’Énergie à toute l’équipe.',
         'Dans les hautes herbes, les adversaires ne vous voient pas, mais vos attaques s’arrêtent : idéal pour les embuscades et les fuites.',
         'Les cartes de niveau ne mettent pas en pause : touchez-en une ou utilisez 1–4.',
-        'L’attaque de base est automatique : Q, E et R lancent la Capacité 1, la 2 et l’Unite.',
+        `L’attaque de base est automatique : ${k.move1}, ${k.move2} et ${k.unite} lancent la Capacité 1, la 2 et l’Unite.`,
         'Cliquez ou touchez un rival pour le verrouiller ; Tab change de cible. Sur mobile, glissez le bouton d’une capacité pour viser.',
         'Chaque évolution échange la Capacité 1, puis la 2, contre une de la nouvelle forme.',
-        'T ouvre le chat rapide, G marque la carte et maintenir ` affiche le tableau des scores.',
+        `${k.chat} ouvre le chat rapide, ${k.ping} marque la carte et maintenir ${k.board} affiche le tableau des scores.`,
         'Dès la mi-temps, l’équipe peut voter l’abandon : ça compte comme une défaite, pas comme un départ.',
         'Finir ses matchs rend du Fair Play ; partir ou rester inactif en coûte, et sous 80, pas de Classé.',
       ],
@@ -1215,7 +1215,7 @@ export const fr: Messages = {
     gateGuestNote: 'En invité, ta progression reste sur cet appareil uniquement et tes parties ne comptent pas pour le classement.',
   },
   onboarding: {
-    moveKeys: '*ZQSD*, *WASD* ou *flèches* pour bouger',
+    moveKeys: (keys) => `*${keys}* ou *flèches* pour bouger`,
     movePad: '*Stick gauche* pour bouger',
     moveTouch: '*Glisse le doigt* pour bouger',
     auto: 'Tes attaques partent toutes seules : esquive et monte de niveau !',

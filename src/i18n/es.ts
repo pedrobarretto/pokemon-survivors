@@ -221,7 +221,7 @@ export const es: Messages = {
       loading: 'Cargando la arena…',
       ready: '¡Todo listo!',
       tip: 'Consejo',
-      tips: [
+      tips: (k) => [
         '¿Energía llena? Ve a anotar: si caes, sueltas la mitad.',
         'Cada aliado en la misma portería acelera la anotación un 50%.',
         'Un golpe rival interrumpe a quien está anotando.',
@@ -230,10 +230,10 @@ export const es: Messages = {
         'Derrotar a Drednaw da escudo y Energía a todo el equipo.',
         'En la hierba alta los rivales no te ven, pero tus ataques se detienen: ideal para emboscar y escapar.',
         'Las cartas de nivel no pausan: toca una o usa 1–4.',
-        'El ataque básico es automático: Q, E y R lanzan el Movimiento 1, el 2 y el Unite.',
+        `El ataque básico es automático: ${k.move1}, ${k.move2} y ${k.unite} lanzan el Movimiento 1, el 2 y el Unite.`,
         'Haz clic o toca un rival para fijar el objetivo; Tab cambia. En el celular, arrastra el botón del movimiento para apuntar.',
         'Cada evolución cambia el Movimiento 1, y luego el 2, por uno de la nueva forma.',
-        'T abre el chat rápido, G marca el mapa y mantener ` muestra el marcador completo.',
+        `${k.chat} abre el chat rápido, ${k.ping} marca el mapa y mantener ${k.board} muestra el marcador completo.`,
         'Desde la mitad del partido, el equipo puede votar para rendirse: cuenta como derrota, no como abandono.',
         'Terminar partidas devuelve Fair Play; abandonar o quedarte quieto cuesta, y debajo de 80 no hay Clasificatoria.',
       ],
@@ -1217,7 +1217,7 @@ export const es: Messages = {
     gateGuestNote: 'Como invitado, el progreso queda solo en este dispositivo y tus partidas no entran al ranking.',
   },
   onboarding: {
-    moveKeys: '*WASD* o *flechas* para moverte',
+    moveKeys: (keys) => `*${keys}* o *flechas* para moverte`,
     movePad: '*Stick izquierdo* para moverte',
     moveTouch: '*Desliza el dedo* para moverte',
     auto: 'Los ataques salen solos: ¡esquiva y sube de nivel!',

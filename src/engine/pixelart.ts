@@ -16,8 +16,8 @@ export const createCanvas = (w: number, h: number) => {
   return c
 }
 
-/** This session's blank canvases, for bug reports: times `canvasWatch` found them all wiped, and contexts `context2d` was refused. */
-export const canvasLosses = { wiped: 0, refused: 0 }
+/** This session's blank canvases, for bug reports: times `canvasWatch` found them all wiped, contexts `context2d` was refused, and viewport readings the game wouldn't fit or had to repair late (`main.ts`). */
+export const canvasLosses = { wiped: 0, refused: 0, badViewport: 0 }
 
 /** A 1×1 context made with the first one, for when a canvas gets none. */
 let spare: CanvasRenderingContext2D | null = null
@@ -89,6 +89,85 @@ export const drawLoaded = (draw: () => void) => {
     if (e instanceof DOMException && e.name === 'InvalidStateError') return false
     throw e
   }
+}
+
+/** A canvas copy of a loaded picture, or null when the browser calls it broken (`drawLoaded`). The copy can't go broken later. */
+const copyLoaded = (img: HTMLImageElement) => {
+  const copy = createCanvas(img.naturalWidth, img.naturalHeight)
+  const ctx = context2d(copy)
+  return drawLoaded(() => ctx.drawImage(img, 0, 0)) ? copy : null
+}
+
+/** After each failure, how long a picture waits before it's fetched again; past the last, its stand-in stays for the session. */
+const ART_RETRY_MS = [3_000, 15_000, 60_000] as const
+
+/**
+ * Pictures loaded by key, once each, that a cache copies to canvases as they land (`copy`). One that
+ * fails to load, or that the browser calls broken even after it loaded, is fetched again a few times
+ * (`?retry=n`, past the HTTP cache, which may hold the bad copy); the caller's stand-in shows meanwhile.
+ */
+export const artImages = <K>(src: (key: K) => string) => {
+  const images = new Map<K, HTMLImageElement>()
+  const failures = new Map<K, { tries: number; at: number }>()
+  /** The picture, started if need be; null while a failed one waits for its next try, or after its last. */
+  const get = (key: K) => {
+    const held = images.get(key)
+    if (held) return held
+    const failed = failures.get(key)
+    if (failed && (failed.tries > ART_RETRY_MS.length || performance.now() - failed.at < ART_RETRY_MS[failed.tries - 1]!)) return null
+    const img = new Image()
+    img.src = failed ? `${src(key)}?retry=${failed.tries}` : src(key)
+    images.set(key, img)
+    return img
+  }
+  return {
+    get,
+    /** A fresh canvas copy of the picture, or null while it's on its way or failed. Never throws. */
+    copy: (key: K) => {
+      const img = get(key)
+      if (!img?.complete) return null
+      const copy = drawable(img) ? copyLoaded(img) : null
+      if (copy) {
+        failures.delete(key)
+        return copy
+      }
+      images.delete(key)
+      failures.set(key, { tries: (failures.get(key)?.tries ?? 0) + 1, at: performance.now() })
+      return null
+    },
+    /** Lets go of a picture, and of its failures: asking again starts over. */
+    forget: (key: K) => {
+      images.delete(key)
+      failures.delete(key)
+    },
+    keys: () => images.keys(),
+  }
+}
+
+/** More `save`s than any drawing nests. A `restore` with none left does nothing. */
+const MAX_SAVES = 64
+
+/** Errors `drawThrew` already passed on: a throw repeated every frame is told once. */
+const toldDraws = new Set<string>()
+
+/** Sends an error to the page's error report (`analytics.ts`), as if nothing had caught it. */
+const rethrowLater = (error: unknown) => queueMicrotask(() => { throw error })
+
+/**
+ * Cleans up after a throw while drawing a frame, and reports it once. Without this the `save` and
+ * `translate` the frame had made stay on the context, which lives as long as the page: from then on
+ * the world draws off the screen, in every run, while the simulation and the HUD carry on.
+ * The rest of that frame is lost; the next one starts clean.
+ */
+export const drawThrew = (ctx: Pick<CanvasRenderingContext2D, 'restore' | 'setTransform' | 'globalAlpha' | 'globalCompositeOperation'>, error: unknown, report: (error: unknown) => void = rethrowLater) => {
+  for (let i = 0; i < MAX_SAVES; i++) ctx.restore()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalAlpha = 1
+  ctx.globalCompositeOperation = 'source-over'
+  const key = String(error)
+  if (toldDraws.has(key)) return
+  toldDraws.add(key)
+  report(error)
 }
 
 export const fromStrings = (rows: readonly string[], palette: Palette, opts: { mirror?: boolean } = {}): PixelSprite => {

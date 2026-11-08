@@ -43,6 +43,8 @@ describe('bugThread', () => {
     const wiped = bugThread(report('Screen went black', { userAgent: ANDROID, perf: { ...perf, wiped: 2, refused: 0 } }), 'a guest')
     expect(wiped.messages[0]).toContain('frame 17.1 ms · wiped 2×')
     expect(wiped.messages[0]).not.toContain('refused')
+    const misread = bugThread(report('Screen went black', { userAgent: ANDROID, perf: { ...perf, badViewport: 3 } }), 'a guest')
+    expect(misread.messages[0]).toContain('bad viewport 3×')
   })
 
   it('says what the player plays with, pads included, and nothing for clients older than the field', () => {

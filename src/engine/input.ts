@@ -34,6 +34,8 @@ export type Input = {
    * and `onKey`, until the returned function is called (the remap screen).
    */
   capture: (take: (press: RawPress) => void) => () => void
+  /** The page is back in view: forgets what was held before it left, as iOS needn't have said so (`gripOnReturn`). */
+  releaseOnReturn: () => void
 }
 
 /** A press before the bindings: a `KeyboardEvent.code` or a standard-mapping button. */
@@ -142,6 +144,16 @@ export const gripMove = (grip: Grip | null, id: number, at: Vec): Grip | null =>
 /** A pointer ended (up, cancel, lost capture): the stick lets go only if it was the owner. */
 export const gripUp = (grip: Grip | null, id: number): Grip | null => (grip && grip.id === id ? null : grip)
 
+/** The touch that brings a page back can land just before its `focus`: a stick grabbed this recently (ms) is that touch. */
+const RETURN_TOUCH = 300
+
+/**
+ * The stick when the page comes back, held for `heldFor` ms. An older grip belongs to a finger from
+ * before the page left: swiping home starts as a touch on the canvas, and iOS may never end it.
+ * Kept, it would hold the stick still and leave every new touch non-primary, so ignored (`gripDown`).
+ */
+export const gripOnReturn = (grip: Grip | null, heldFor: number): Grip | null => (heldFor > RETURN_TOUCH ? null : grip)
+
 /**
  * Hands `key` to the handlers listening when it came, and not to one removed
  * meanwhile: a handler that opens a screen (whose own handler would hear the
@@ -167,6 +179,8 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   let capturing: ((press: RawPress) => void) | null = null
   /** The pointer holding the stick, or null (`gripDown`). */
   let grip: Grip | null = null
+  /** When `grip` was taken (`performance.now()`). */
+  let grippedAt = 0
   /** Last frame's pads, for edge detection. */
   let pads: PadState[] = []
   let activePad: string | null = null
@@ -230,6 +244,7 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
     if (grip && !target.hasPointerCapture(grip.id)) grip = null
     grip = gripDown(grip, { id: e.pointerId, at: { x: e.clientX, y: e.clientY }, primary: e.isPrimary }, fixedStick())
     if (grip?.id !== e.pointerId) return
+    grippedAt = performance.now()
     try {
       target.setPointerCapture(e.pointerId)
     } catch {
@@ -243,6 +258,11 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   window.addEventListener('pointerup', release)
   window.addEventListener('pointercancel', release)
   target.addEventListener('lostpointercapture', release)
+
+  const releaseOnReturn = () => {
+    held.clear()
+    grip = gripOnReturn(grip, performance.now() - grippedAt)
+  }
 
   /** Touch wins, then the keys and the D-pad, then the pad's stick: a stick that drifts never locks the keyboard out. */
   const readMove = (): Vec => {
@@ -309,5 +329,6 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
     pads: () => pads.map((p) => p.id),
     lastKind: () => lastPlay ?? lastAny,
     capture,
+    releaseOnReturn,
   }
 }

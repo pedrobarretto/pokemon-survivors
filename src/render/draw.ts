@@ -1,5 +1,5 @@
 import { drawEvoItem } from './evoItemArt'
-import { beginRects, blitCentered, blitPacked, blitEllipse, blitRing, blitRotated, context2d, createCanvas, fillPlotted, lazy, plot, textSprite, traceEllipseAt } from '../engine/pixelart'
+import { beginRects, blitCentered, blitPacked, blitEllipse, blitRing, blitRotated, context2d, createCanvas, drawThrew, fillPlotted, lazy, plot, textSprite, traceEllipseAt } from '../engine/pixelart'
 import { HAZARD_COLORS } from './hazardColors'
 import { drawCapture } from './capture'
 import { drawNightmareAir, drawNightmareDark, drawNightmareGround, shadeAlpha, SLEEP_TINT } from './darkrai'
@@ -942,7 +942,16 @@ const PARTICLE_FADES = 4
 /** A particle's alpha step now, 0 (gone) to `PARTICLE_FADES`. */
 const particleFade = (p: Particle) => Math.ceil(Math.min(1, (1 - p.life / p.ttl) * 1.5) * PARTICLE_FADES)
 
+/** Draws a frame of the game. A throw loses what was left of this frame, never the frames after it (`drawThrew`). */
 export const render = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
+  try {
+    paintFrame(ctx, g, t, opts)
+  } catch (error) {
+    drawThrew(ctx, error)
+  }
+}
+
+const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   const { w, h } = g.view
   const lean = detail.lean
   const calm = opts.flashes === 'reduced'

@@ -1,7 +1,7 @@
 import type { TierId } from '../data/arenaRanked'
 import type { Role, Team } from '../data/versus'
 import type { MapTheme } from '../data/versusMaps'
-import { canvasCache, context2d, createCanvas, drawable } from '../engine/pixelart'
+import { artImages, canvasCache, context2d, createCanvas } from '../engine/pixelart'
 
 /**
  * The Arena's painted art (made with PixelLab, `public/assets/arena/`): each
@@ -51,25 +51,31 @@ export const valeArtFiles = () => THEMES.flatMap((theme) => VALE_ART.map((id) =>
 /** A team's file name in the art's names. */
 export const teamFile = (team: Team): TeamFile => TEAM_FILES[team]
 
-const images = new Map<MapTheme, Map<ValeArt, HTMLImageElement>>()
+const pictures = artImages((file: string) => `${import.meta.env.BASE_URL}assets/arena/${file}.png`)
+const started = new Set<MapTheme>()
 
 /** Starts loading a scenery's pictures (once each): about 60 KB, a match's or the Arena screen's first frame asks. */
 export const loadValeArt = (theme: MapTheme) => {
-  if (images.has(theme)) return
-  const set = new Map<ValeArt, HTMLImageElement>()
-  for (const id of VALE_ART) {
-    const img = new Image()
-    img.src = `${import.meta.env.BASE_URL}assets/arena/${folderOf(theme)}${id}.png`
-    set.set(id, img)
-  }
-  images.set(theme, set)
+  if (started.has(theme)) return
+  started.add(theme)
+  for (const id of VALE_ART) pictures.get(`${folderOf(theme)}${id}`)
 }
 
-/** A world picture of `theme`, or null while it loads (it starts loading the lot). */
-export const valeArt = (id: ValeArt, theme: MapTheme): HTMLImageElement | null => {
-  loadValeArt(theme)
-  const img = images.get(theme)!.get(id)!
-  return drawable(img) ? img : null
+/** The world pictures copied to canvases so far, by scenery: what a frame draws. */
+const copies = canvasCache<MapTheme, Map<ValeArt, HTMLCanvasElement>>()
+
+/** A world picture of `theme`, or null while it loads (it starts loading the lot) or after it failed. */
+export const valeArt = (id: ValeArt, theme: MapTheme): HTMLCanvasElement | null => {
+  let set = copies.get(theme)
+  if (!set) {
+    loadValeArt(theme)
+    copies.set(theme, (set = new Map()))
+  }
+  const hit = set.get(id)
+  if (hit) return hit
+  const art = pictures.copy(`${folderOf(theme)}${id}`)
+  if (art) set.set(id, art)
+  return art
 }
 
 const mirrored = canvasCache<string, HTMLCanvasElement>()

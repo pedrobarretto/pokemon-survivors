@@ -54,9 +54,10 @@ export type BugPerf = {
   peakCanvasMb: number
   /** Average time between frames (ms) over the last couple of seconds. */
   frameMs: number | null
-  /** Times this session the browser wiped every canvas unannounced, and refused a canvas its context (`canvasLosses`). */
+  /** Times this session the browser wiped every canvas unannounced, refused a canvas its context, and read a viewport the game wouldn't fit or left the canvas the wrong size (`canvasLosses`). */
   wiped: number
   refused: number
+  badViewport: number
 }
 
 /** The run the game was in when the page died last time, as the crash watch last saw it. */
@@ -168,6 +169,7 @@ const parsePerf = (v: unknown): BugPerf | null =>
         frameMs: num(v.frameMs, 0, 1e4),
         wiped: wholeNumber(v.wiped, 1e6),
         refused: wholeNumber(v.refused, 1e6),
+        badViewport: wholeNumber(v.badViewport, 1e6),
       }
     : null
 

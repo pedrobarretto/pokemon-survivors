@@ -355,7 +355,7 @@ export const pt = {
       loading: 'Carregando a arena…',
       ready: 'Tudo pronto!',
       tip: 'Dica',
-      tips: [
+      tips: (k: { move1: string; move2: string; unite: string; chat: string; ping: string; board: string }) => [
         'Energia cheia? Vá marcar: se cair, você larga metade.',
         'Cada aliado no mesmo gol acelera a marcação em 50%.',
         'Um golpe rival interrompe quem está marcando.',
@@ -364,10 +364,10 @@ export const pt = {
         'Derrotar o Drednaw dá escudo e Energia ao time todo.',
         'No mato alto os rivais não te veem, mas seus ataques param: bom para emboscar e fugir.',
         'As cartas de nível não pausam: toque numa ou use 1–4.',
-        'O ataque básico é automático: Q, E e R lançam o Golpe 1, o Golpe 2 e o Unite.',
+        `O ataque básico é automático: ${k.move1}, ${k.move2} e ${k.unite} lançam o Golpe 1, o Golpe 2 e o Unite.`,
         'Clique ou toque num rival para travar o alvo; Tab troca. No celular, arraste o botão do golpe para mirar.',
         'Cada evolução troca o Golpe 1, depois o Golpe 2, por um golpe da nova forma.',
-        'T abre o chat rápido, G marca o mapa e segurar ` mostra o placar completo.',
+        `${k.chat} abre o chat rápido, ${k.ping} marca o mapa e segurar ${k.board} mostra o placar completo.`,
         'Da metade da partida em diante, o time pode votar pela rendição: conta como derrota, não como abandono.',
         'Terminar a partida devolve Fair Play; sair ou ficar parado custa, e abaixo de 80 não tem Ranqueada.',
       ],
@@ -1452,7 +1452,7 @@ export const pt = {
   /** A new visitor's first run and the sign-in asks around it (`src/onboarding.ts`, `ui/onboarding.ts`). */
   onboarding: {
     /** The first run's opening toast: how to move (keys, stick or finger); the moves fire on their own. */
-    moveKeys: '*WASD* ou *setas* para andar',
+    moveKeys: (keys: string) => `*${keys}* ou *setas* para andar`,
     movePad: '*Analógico* para andar',
     moveTouch: '*Arraste o dedo* para andar',
     auto: 'Os golpes saem sozinhos: desvie e suba de nível!',
