@@ -59,12 +59,13 @@ const preferredLanguages = (): readonly string[] => {
 
 let current: Locale = detectLocale(readSaved(), preferredLanguages())
 
-// Every importer waits for the shown language, so `t()` is ready by the time any code runs.
-await loadLocale(current)
-
 export const locale = () => current
 
-/** Messages of the current language. Call it at render time, so a language switch shows up on the next render. */
+/**
+ * Messages of the current language. Call it at render time, so a language switch shows up on the next render.
+ * Empty until `loadLocale(locale())` lands: `main.ts` waits for it before booting. Never wait for it with a
+ * top-level `await` here: Safari 26 ran the importers while this module was still suspended, with its exports undefined.
+ */
 export const t = (): Messages => loaded[current]!
 
 /** Loads a language, then switches to it and remembers it. Screens re-render themselves (see `main.ts`). */
