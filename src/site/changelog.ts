@@ -24,6 +24,47 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-08',
+    title: { pt: 'O jogo volta a abrir no Safari 26', en: 'The game opens again on Safari 26', es: 'El juego vuelve a abrir en Safari 26', fr: 'Le jeu s’ouvre de nouveau sur Safari 26', zh: '遊戲在 Safari 26 上恢復開啟' },
+    highlights: [
+      {
+        pt: 'Corrigimos a tela preta ao abrir o jogo no iPhone, iPad e Mac com Safari 26.',
+        en: 'We fixed the black screen when opening the game on iPhone, iPad and Mac with Safari 26.',
+        es: 'Corregimos la pantalla negra al abrir el juego en iPhone, iPad y Mac con Safari 26.',
+        fr: 'Nous avons corrigé l’écran noir à l’ouverture du jeu sur iPhone, iPad et Mac avec Safari 26.',
+        zh: '修正了在搭載 Safari 26 的 iPhone、iPad 和 Mac 上開啟遊戲時出現黑畫面的問題。',
+      },
+      {
+        pt: 'No iPhone e no iPad, a correção vale também para o Chrome e os outros navegadores.',
+        en: 'On iPhone and iPad, the fix also covers Chrome and the other browsers.',
+        es: 'En iPhone y iPad, la corrección también vale para Chrome y los demás navegadores.',
+        fr: 'Sur iPhone et iPad, le correctif vaut aussi pour Chrome et les autres navigateurs.',
+        zh: '在 iPhone 和 iPad 上，這項修正也適用於 Chrome 及其他瀏覽器。',
+      },
+      {
+        pt: 'Se o jogo ainda não abrir, recarregue a página.',
+        en: 'If the game still doesn’t open, reload the page.',
+        es: 'Si el juego aún no abre, recarga la página.',
+        fr: 'Si le jeu ne s’ouvre toujours pas, recharge la page.',
+        zh: '如果遊戲仍然無法開啟，請重新載入頁面。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Tela preta ao abrir', en: 'Black screen on opening', es: 'Pantalla negra al abrir', fr: 'Écran noir à l’ouverture', zh: '開啟時黑畫面' },
+        notes: [
+          {
+            pt: 'Desde a atualização de 05/11, o jogo podia ficar em tela preta ao abrir no Safari 26 e nos navegadores do iPhone e do iPad que usam o mesmo motor. Agora ele espera o idioma carregar antes de começar.',
+            en: 'Since the 11/05 update, the game could stay on a black screen when opening on Safari 26 and on the iPhone and iPad browsers that share its engine. It now waits for the language to load before it starts.',
+            es: 'Desde la actualización del 05/11, el juego podía quedarse en pantalla negra al abrir en Safari 26 y en los navegadores de iPhone y iPad que usan el mismo motor. Ahora espera a que cargue el idioma antes de empezar.',
+            fr: 'Depuis la mise à jour du 05/11, le jeu pouvait rester sur un écran noir à l’ouverture sur Safari 26 et sur les navigateurs d’iPhone et d’iPad qui utilisent le même moteur. Il attend maintenant que la langue soit chargée avant de démarrer.',
+            zh: '自 11/05 更新以來，遊戲在 Safari 26 以及使用相同引擎的 iPhone、iPad 瀏覽器上開啟時可能停留在黑畫面。現在遊戲會等語言載入完成後才開始。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-05',
     title: { pt: 'Poké Realm, a cidade online, e skins na Boutique', en: 'Poké Realm, the online town, and skins in the Boutique', es: 'Poké Realm, la ciudad en línea, y skins en la Boutique', fr: 'Poké Realm, la ville en ligne, et des skins à la Boutique', zh: 'Poké Realm 線上城鎮登場，精品服飾店上架皮膚' },
     highlights: [

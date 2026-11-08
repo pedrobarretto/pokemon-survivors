@@ -139,7 +139,7 @@ import { megaStoneIcon } from './render/megaFx'
 import { celebrateShop, createTitleScene, drawTitleScene, exploreMeadow, meetPartner, revealShopkeeper, sceneAt, steerPartner, stepTitleScene, talkSpot, tapsPlaza, visitPlaza } from './render/titleScene'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
-import { formatDay, formatPokeDollars, locale, LOCALES, t } from './i18n'
+import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
 import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
@@ -4130,7 +4130,8 @@ const boot = () => {
   if (accountState().kind === 'signedIn') setTimeout(() => void flushRuns(), 5000)
 }
 
-boot()
+// Nothing reads `t()` until the shown language has landed (see `src/i18n`).
+void loadLocale(locale()).then(boot)
 
 /** Dev: places a map event `dx`, `dy` px from the player, e.g. `ps.event('chest')`. */
 const devEvent = (kind: MapEventKind, dx = 70, dy = 0) => {
