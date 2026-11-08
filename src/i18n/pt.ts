@@ -1,3 +1,4 @@
+import type { GameModeId } from '../data/gameModes'
 import type { AchievementId, AchievementStat, GiftTitleId, TitleId } from '../data/achievements'
 import type { BiomeId } from '../data/biomes'
 import type { DigFind, HiddenPlaceId, PlaceId, WingId } from '../data/places'
@@ -6870,6 +6871,39 @@ export const pt = {
       go: 'Já!',
       log: 'Sua pescaria',
       junk: { boot: 'Bota velha', can: 'Lata', seaweed: 'Alga' },
+    },
+  },
+  /** The Modos de jogo screen (`ui/gameModes.ts`). The kit's text is Jersey 10 / 15, which has accented capitals: French all-caps keeps its accents here. */
+  gameModes: {
+    title: 'MODOS DE JOGO',
+    close: 'Fechar',
+    names: { survivors: 'Survivors', legends: 'Lendas', challenge: 'Desafio do dia', coop: 'Co-op', arena: 'Arena', dojo: 'Dojo', realm: 'Poké Realm' } satisfies Record<GameModeId, string>,
+    /** One team format on the Arena's card: its size and minutes. */
+    arenaFormat: (size: number, minutes: number) => `${size}v${size} (${minutes} min)`,
+    blurbs: {
+      survivors: 'Sobreviva às hordas até o fim',
+      legends: 'Jogue com um lendário',
+      challenge: 'O mesmo Pokémon para todos',
+      coop: 'Sobreviva junto com amigos',
+      arena: (formats: readonly string[]) => `Times ${formats.join(' ou ')}`,
+      dojo: 'Treine builds e veja o seu dano',
+      realm: 'Cidade online: bases e mini games',
+    },
+    tags: {
+      solo: 'Solo',
+      minutes: (n: number) => `${n} min`,
+      endless: '+ modo sem fim',
+      legends: (n: number) => `${n} lendários`,
+      today: (name: string) => `hoje: ${name}`,
+      oneTry: '1 tentativa oficial',
+      players: (min: number, max: number) => `${min} a ${max} jogadores`,
+      bots: 'contra bots',
+      casual: 'casual',
+      ranked: 'ranqueada',
+      training: 'Treino livre',
+      builds: 'salva builds',
+      needsAccount: 'precisa de conta',
+      fresh: 'NOVO',
     },
   },
   carpenter: {

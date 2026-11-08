@@ -1235,6 +1235,18 @@ export const ribbonIcon = (tier: RibbonTier) => toIconUrl(`ribbon:${tier}`, () =
 
 export const medalIcon = (medal: Medal, locked = false) => toIconUrl(`medal:${locked ? 'locked' : medal}`, () => medalSprite(medal, locked))
 
+/* ---------------- The kit (ui/gameModes.ts) ---------------- */
+
+/** The tick in a selected card's gold disc. Ink on gold in both themes. */
+const KIT_CHECK = ['........11', '.......111', '......111.', '1....111..', '11..111...', '111111....', '.1111.....', '..11......']
+
+/** The kit's close button. One color: `.ink-icon` lights it in the dark theme. */
+const KIT_CLOSE = ['11.....11', '111...111', '.111.111.', '..11111..', '...111...', '..11111..', '.111.111.', '111...111', '11.....11']
+
+export const checkIcon = () => toIconUrl('kit:check', () => art(KIT_CHECK, { 1: '#1b2040' }))
+
+export const closeIcon = () => toIconUrl('kit:close', () => art(KIT_CLOSE, { 1: '#1b2040' }))
+
 /* ---------------- Clears ---------------- */
 
 /** A clear's trophy (`game/clears.ts`), on the Pokédex and the partner select. 1 outline, 2 shade, 3 metal, 4 shine. */

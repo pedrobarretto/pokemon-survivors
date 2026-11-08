@@ -27440,3 +27440,406 @@ span.arena-hub-face {
   flex-direction: column;
   gap: 4px;
 }
+
+/*
+ * ---------- Arcade adesivo: the kit (lobby redesign) ----------
+ * Thick dark outline, hard shadow, one color per mode (`data/gameModes.ts`). Jersey 10 for titles, buttons and numbers,
+ * Jersey 15 for running text, 16 px at least, Cubic 11 for CJK. Both have accented capitals, so the French all-caps rule
+ * (Press Start 2P's missing glyphs) doesn't apply to text in the kit. Set `--mode` on the element or an ancestor:
+ *   .arc-btn (.arc-btn-small)       the 3D button: an `.arc-outline` label, an optional <small> line
+ *   .arc-card                       white paper with a hard shadow
+ *   .arc-chip                       wallet, the selected mode: an <img> and a label
+ *   .arc-icon-btn                   square paper button, 44 px at least
+ *   .arc-badge                      notification count; the parent needs `position: relative`
+ *   .arc-tag (.new, .hot)           small pill
+ *   .arc-outline                    white display text with a blocky dark outline
+ * `.selected` is the gold frame; `.arc-cursor` is the arrows' cursor for a pad (the same ring as `:focus-visible`).
+ * Paper and ink follow the dark theme through the `--dk-*` roles; `--kit-tinta` stays dark as the outline in both.
+ */
+:root {
+  --kit-title: 'Jersey 10', 'Cubic 11', monospace;
+  --kit-body: 'Jersey 15', 'Cubic 11', monospace;
+  --kit-survivors: #e8402f;
+  --kit-legends: #7b55e0;
+  --kit-challenge: #f2b417;
+  --kit-coop: #16a596;
+  --kit-arena: #2f6fe0;
+  --kit-dojo: #ef7d22;
+  --kit-realm: #1aa9e0;
+  --kit-tinta: #1b2040;
+  --kit-papel: #fffdf6;
+  --kit-ouro: #ffc531;
+  --kit-evento: #222a5a;
+  --kit-paper: var(--dk-surface-2, var(--kit-papel));
+  --kit-ink: var(--dk-ink, var(--kit-tinta));
+  --kit-ink-2: var(--dk-ink-2, #5c6189);
+  --kit-tag: var(--dk-surface-3, #ece8da);
+  --kit-stage: var(--dk-surface-0, var(--kit-evento));
+  --kit-wash-mix: 100%;
+  --kit-edge: 3px;
+  --kit-lip: 5px;
+  --kit-radius: 14px;
+  --mode: var(--kit-survivors);
+}
+
+.arc-outline {
+  --kit-o: 2px;
+  color: #fff;
+  font-family: var(--kit-title);
+  line-height: 1;
+  text-shadow:
+    calc(var(--kit-o) * -1) calc(var(--kit-o) * -1) 0 var(--kit-tinta),
+    0 calc(var(--kit-o) * -1) 0 var(--kit-tinta),
+    var(--kit-o) calc(var(--kit-o) * -1) 0 var(--kit-tinta),
+    calc(var(--kit-o) * -1) 0 0 var(--kit-tinta),
+    var(--kit-o) 0 0 var(--kit-tinta),
+    calc(var(--kit-o) * -1) var(--kit-o) 0 var(--kit-tinta),
+    0 var(--kit-o) 0 var(--kit-tinta),
+    var(--kit-o) var(--kit-o) 0 var(--kit-tinta),
+    calc(var(--kit-o) * -1) calc(var(--kit-o) * 2) 0 var(--kit-tinta),
+    0 calc(var(--kit-o) * 2) 0 var(--kit-tinta),
+    var(--kit-o) calc(var(--kit-o) * 2) 0 var(--kit-tinta);
+}
+
+.arc-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 180px;
+  min-height: 72px;
+  padding: 8px 28px 16px;
+  color: #fff;
+  font-family: var(--kit-title);
+  font-size: 44px;
+  line-height: 1;
+  background: var(--mode);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow:
+    inset 0 3px 0 color-mix(in srgb, var(--mode) 62%, #fff),
+    inset 0 -9px 0 color-mix(in srgb, var(--mode) 74%, #000),
+    0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.arc-btn small {
+  font-family: var(--kit-body);
+  font-size: 18px;
+  color: #fff;
+  opacity: 0.9;
+}
+
+.arc-btn-small {
+  min-width: 120px;
+  min-height: 52px;
+  padding: 4px 18px 10px;
+  font-size: 30px;
+  box-shadow:
+    inset 0 2px 0 color-mix(in srgb, var(--mode) 62%, #fff),
+    inset 0 -6px 0 color-mix(in srgb, var(--mode) 74%, #000),
+    0 4px 0 var(--kit-tinta);
+}
+
+.arc-btn-small .arc-outline {
+  --kit-o: 1.5px;
+}
+
+.arc-card {
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.arc-chip,
+.arc-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--kit-ink);
+  font-family: var(--kit-title);
+  font-size: 24px;
+  line-height: 1;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+}
+
+.arc-chip {
+  padding: 4px 14px;
+}
+
+.arc-chip img,
+.arc-icon-btn img {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.arc-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  color: #fff;
+  font-family: var(--kit-title);
+  font-size: 20px;
+  line-height: 1;
+  background: var(--kit-survivors);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 14px;
+}
+
+.arc-tag {
+  display: inline-block;
+  padding: 2px 6px 3px;
+  color: var(--kit-ink);
+  font-family: var(--kit-body);
+  font-size: 17px;
+  line-height: 1;
+  white-space: nowrap;
+  background: var(--kit-tag);
+  border-radius: 7px;
+}
+
+.arc-tag.new {
+  color: #fff;
+  font-family: var(--kit-title);
+  background: var(--mode);
+}
+
+.arc-tag.hot {
+  color: color-mix(in srgb, #c02818 var(--dk-lift, 100%), #fff);
+  background: var(--dk-wash-red, #ffe2dc);
+}
+
+.arc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+:is(.arc-btn, .arc-chip, .arc-icon-btn, button.arc-card):focus-visible,
+.arc-cursor {
+  outline: 3px solid #fff;
+  outline-offset: 6px;
+}
+
+:is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card).selected {
+  box-shadow: 0 0 0 4px var(--kit-ouro);
+}
+
+button:is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card):active {
+  translate: 0 3px;
+}
+
+@media (hover: hover) {
+  button:is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card):hover {
+    filter: brightness(1.06);
+  }
+}
+
+/* The Modos de jogo screen (ui/gameModes.ts). */
+:root[data-theme='dark'] {
+  --kit-wash-mix: 40%;
+}
+
+.arc-modes {
+  --kit-panel-w: 102px;
+  justify-content: safe center;
+  gap: 12px;
+  padding: max(12px, var(--safe-t)) max(8px, var(--safe-r)) 0 max(8px, var(--safe-l));
+  overflow: hidden;
+  background: var(--kit-stage);
+}
+
+.arc-modes-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(1360px, 100%);
+  padding: 0 6px;
+}
+
+.arc-modes-title {
+  --kit-o: 2px;
+  margin: 0;
+  font-size: 42px;
+  font-weight: 400;
+}
+
+.arc-modes-scroll {
+  flex: 0 1 auto;
+  width: min(1360px, 100%);
+  min-height: 0;
+  padding: 6px 6px max(16px, var(--safe-b));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.arc-modes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 11px;
+}
+
+.arc-mode-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--kit-panel-w) minmax(0, 1fr);
+  min-height: 98px;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+}
+
+.arc-mode-art {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--wash) var(--kit-wash-mix), var(--dk-surface-0, #fff));
+  border-right: var(--kit-edge) solid var(--kit-tinta);
+}
+
+.arc-mode-card[data-mode='arena'] .arc-mode-art {
+  --rival: color-mix(in srgb, #ffb4a8 var(--kit-wash-mix), var(--dk-surface-0, #fff));
+  background: linear-gradient(90deg, transparent 50%, var(--rival) 50%), color-mix(in srgb, var(--wash) var(--kit-wash-mix), var(--dk-surface-0, #fff));
+}
+
+.arc-mode-figures {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.arc-mode-ribbon,
+.arc-mode-dummy,
+.arc-mode-scene {
+  position: absolute;
+  image-rendering: pixelated;
+}
+
+.arc-mode-ribbon {
+  top: 6px;
+  left: 8px;
+  width: 40px;
+  height: 40px;
+}
+
+.arc-mode-dummy {
+  right: 8px;
+  bottom: 0;
+  width: 32px;
+  height: 60px;
+}
+
+.arc-mode-scene {
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+}
+
+.arc-mode-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 5px 10px 7px 12px;
+}
+
+.arc-mode-name {
+  font-family: var(--kit-title);
+  font-size: 32px;
+  line-height: 1;
+  padding-right: 34px;
+}
+
+.arc-mode-blurb {
+  color: var(--kit-ink-2);
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.05;
+  margin-bottom: 4px;
+}
+
+.arc-mode-check {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  display: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  background: var(--kit-ouro);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 50%;
+}
+
+.arc-mode-check img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+.arc-mode-card.selected .arc-mode-check {
+  display: grid;
+}
+
+/* A phone on its side: every row counts. */
+@media (max-height: 480px) {
+  .arc-modes-title {
+    font-size: 32px;
+  }
+}
+
+/* Three columns on a wide screen: bigger panels, and the odd seventh card centered. */
+@media (min-width: 1100px) and (min-height: 640px) {
+  .arc-modes {
+    --kit-panel-w: 153px;
+  }
+
+  .arc-modes-title {
+    font-size: 56px;
+  }
+
+  .arc-mode-card {
+    min-height: 144px;
+  }
+
+  .arc-mode-name {
+    font-size: 40px;
+  }
+
+  .arc-mode-blurb {
+    font-size: 20px;
+  }
+
+  .arc-mode-card:last-child:nth-child(3n + 1) {
+    grid-column: 2;
+  }
+
+  .arc-mode-scene {
+    top: auto;
+    bottom: 0;
+  }
+
+  .arc-mode-dummy {
+    width: 48px;
+    height: 90px;
+  }
+}

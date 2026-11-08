@@ -1,5 +1,7 @@
 import '@fontsource/press-start-2p'
 import '@fontsource/vt323'
+import '@fontsource/jersey-10'
+import '@fontsource/jersey-15'
 import './ui/style.css'
 // First, so its error listeners catch what goes wrong while the rest loads.
 import { bugReportsEnabled, describeWith, deviceMemory, launchStep, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
@@ -156,6 +158,8 @@ import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
+import { openGameModes } from './ui/gameModes'
+import { loadLobbyMode, saveLobbyMode } from './ui/lobbyMode'
 import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
@@ -4950,6 +4954,8 @@ if (import.meta.env.DEV) {
        * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
        * `ps.boutique('open')` lands there with the sheet open at once (`'skins'` on Skins, `'locker'` on Visual).
        */
+      /** Modos de jogo on its own (`ui/gameModes.ts`), until the lobby opens it: a pick is only recorded (`ps:lobbyMode`). */
+      modes: () => setScreen(openGameModes(ui, input, { current: loadLobbyMode(), onPick: saveLobbyMode, close: () => showTitle() })),
       /** The secret bases' screens with fakes: `ps.base()` the editor, `ps.base('board')`, `ps.base('carpentry')` (`devBase`). */
       base: devBase,
       boutique: (cmd?: 'open' | 'skins' | 'locker') => (cmd ? showBoutique(cmd === 'open' ? 'shop' : cmd) : showTitle({ shop: 'boutique' })),
