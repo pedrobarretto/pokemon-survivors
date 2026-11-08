@@ -142,6 +142,7 @@ import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
+import { detectKeyLayout } from './ui/keyLayout'
 import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { giftScreen } from './ui/gifts'
@@ -4130,6 +4131,7 @@ const boot = () => {
   if (accountState().kind === 'signedIn') setTimeout(() => void flushRuns(), 5000)
 }
 
+detectKeyLayout()
 // Nothing reads `t()` until the shown language has landed (see `src/i18n`).
 void loadLocale(locale()).then(boot)
 

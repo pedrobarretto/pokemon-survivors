@@ -3,6 +3,7 @@ import { padFamily, type PadFamily } from '../engine/gamepad'
 import { t } from '../i18n'
 import { isPadGlyph, padGlyphIcon } from '../render/art'
 import { h } from './dom'
+import { keyLayout, printedOn } from './keyLayout'
 import { padHint } from './padHint'
 import { settings } from './settings'
 
@@ -39,9 +40,11 @@ const KEY_NAMES: Partial<Record<string, string>> = {
   Slash: '/',
 }
 
-/** A `KeyboardEvent.code` as printed on the key (`KeyW` → W, `Numpad8` → NUM 8). */
+/** A `KeyboardEvent.code` as printed on the player's key (`KeyW` → W, or Z on AZERTY; `Numpad8` → NUM 8). */
 export const keyLabel = (code: string) => {
   if (code === 'Space') return t().spaceKey
+  const printed = printedOn(keyLayout(), code)
+  if (printed) return printed
   const letter = /^(?:Key|Digit)(.)$/.exec(code)?.[1]
   if (letter) return letter
   if (code.startsWith('Numpad')) return `NUM ${code.slice(6).toUpperCase()}`
@@ -53,6 +56,19 @@ export const boundKey = (action: Action) => {
   const code = settings().controls.key[action]
   return code === null ? t().controls.unbound : keyLabel(code)
 }
+
+/** The four movement keys in a row, as bound and printed (WASD, or ZQSD on AZERTY): the first run's tip. */
+export const boundMoveKeys = () => (['up', 'left', 'down', 'right'] as const).map(boundKey).join('')
+
+/**
+ * Written shortcuts as the player's keyboard prints them: every lone capital
+ * of a hint ("Q E tab · M mode") or chip is the physical key of that name.
+ */
+export const printedKeys = (text: string) =>
+  text
+    .split(' ')
+    .map((word) => (/^[A-Z]$/.test(word) ? keyLabel(`Key${word}`) : word))
+    .join(' ')
 
 /* ---------------- Gamepad buttons ---------------- */
 
