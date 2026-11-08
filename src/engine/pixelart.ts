@@ -16,8 +16,8 @@ export const createCanvas = (w: number, h: number) => {
   return c
 }
 
-/** This session's blank canvases, for bug reports: times `canvasWatch` found them all wiped, and contexts `context2d` was refused. */
-export const canvasLosses = { wiped: 0, refused: 0 }
+/** This session's blank canvases, for bug reports: times `canvasWatch` found them all wiped, contexts `context2d` was refused, and viewport readings the game wouldn't fit or had to repair late (`main.ts`). */
+export const canvasLosses = { wiped: 0, refused: 0, badViewport: 0 }
 
 /** A 1×1 context made with the first one, for when a canvas gets none. */
 let spare: CanvasRenderingContext2D | null = null

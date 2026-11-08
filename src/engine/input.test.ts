@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { dispatchKey } from './input'
+import { dispatchKey, gripOnReturn, type Grip } from './input'
+
+describe('gripOnReturn', () => {
+  const at = { x: 40, y: 500 }
+  const grip: Grip = { id: 3, anchor: null, stick: { origin: at, knob: at, vec: { x: 0, y: 0 } } }
+
+  it('lets go of a finger from before the page left', () => {
+    expect(gripOnReturn(grip, 60_000)).toBeNull()
+  })
+
+  it('keeps the touch that brought the page back', () => {
+    expect(gripOnReturn(grip, 40)).toBe(grip)
+  })
+})
 
 describe('dispatchKey', () => {
   it("doesn't hand the press to a handler added while it's dispatched (a screen opened by it)", () => {

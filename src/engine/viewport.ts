@@ -19,6 +19,24 @@ export const deviceScale = (cssW: number, cssH: number, dpr: number) => {
 /** A side of the internal canvas: at least 1 px, as webviews can report a 0 (or negative) viewport while they lay out. */
 const side = (px: number) => (px >= 1 ? Math.ceil(px) : 1)
 
+/** Below this (CSS px) a side is no screen the game could be on: even a landscape phone under its keyboard keeps more. */
+const MIN_VIEWPORT = 100
+
+/** A viewport's size in CSS px: `window.visualViewport` is one. */
+export type ViewportSize = { width: number; height: number }
+
+const onScreen = (s: ViewportSize) => s.width >= MIN_VIEWPORT && s.height >= MIN_VIEWPORT
+
+/**
+ * The size to fit the game to: the visual viewport (it follows iOS' toolbars and the keyboard), or
+ * the layout viewport when that one reads as no screen at all, or null when neither does and the
+ * game should stay as it is. A page coming back from the background can read 0: fitted, the canvas
+ * shrank to under a pixel, so the world was gone and no touch could land on it, and nothing said so
+ * once the browser's numbers came right, which it does without a `resize`.
+ */
+export const pickViewport = <V extends ViewportSize>(visual: V | null, layout: ViewportSize): V | ViewportSize | null =>
+  visual && onScreen(visual) ? visual : onScreen(layout) ? layout : null
+
 /** Internal canvas size (world px) and the CSS px per world px for a viewport. */
 export const fitView = (cssW: number, cssH: number, dpr: number) => {
   const scale = deviceScale(cssW, cssH, dpr)

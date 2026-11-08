@@ -1,4 +1,4 @@
-import { fitView } from '../engine/viewport'
+import { fitView, pickViewport } from '../engine/viewport'
 
 /**
  * UI size (Settings → Jogo): the menus and the HUD are drawn in fixed CSS px,
@@ -50,10 +50,11 @@ export const uiZoom = () => zoom
 export const uiDpr = () => (window.devicePixelRatio || 1) * zoom
 
 /** The visible viewport in `#ui`'s CSS px (the zoom leaves the UI that much less). */
-export const uiViewport = () => ({
-  w: (window.visualViewport?.width ?? window.innerWidth) / zoom,
-  h: (window.visualViewport?.height ?? window.innerHeight) / zoom,
-})
+export const uiViewport = () => {
+  const layout = { width: window.innerWidth, height: window.innerHeight }
+  const { width, height } = pickViewport(window.visualViewport, layout) ?? layout
+  return { w: width / zoom, h: height / zoom }
+}
 
 /**
  * Sets the zoom for `choice` and the current viewport on `--ui-zoom`. When it
