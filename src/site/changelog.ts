@@ -25,7 +25,7 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-08',
-    title: { pt: 'O jogo volta a abrir no Safari 26', en: 'The game opens again on Safari 26', es: 'El juego vuelve a abrir en Safari 26', fr: 'Le jeu s’ouvre de nouveau sur Safari 26', zh: '遊戲在 Safari 26 上恢復開啟' },
+    title: { pt: 'Fim da tela preta e do mundo invisível', en: 'No more black screen or invisible world', es: 'Adiós a la pantalla negra y al mundo invisible', fr: 'Fini l’écran noir et le monde invisible', zh: '修正黑畫面與世界消失問題' },
     highlights: [
       {
         pt: 'Corrigimos a tela preta ao abrir o jogo no iPhone, iPad e Mac com Safari 26.',
@@ -35,11 +35,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '修正了在搭載 Safari 26 的 iPhone、iPad 和 Mac 上開啟遊戲時出現黑畫面的問題。',
       },
       {
-        pt: 'No iPhone e no iPad, a correção vale também para o Chrome e os outros navegadores.',
-        en: 'On iPhone and iPad, the fix also covers Chrome and the other browsers.',
-        es: 'En iPhone y iPad, la corrección también vale para Chrome y los demás navegadores.',
-        fr: 'Sur iPhone et iPad, le correctif vaut aussi pour Chrome et les autres navigateurs.',
-        zh: '在 iPhone 和 iPad 上，這項修正也適用於 Chrome 及其他瀏覽器。',
+        pt: 'Ao voltar para o jogo no iPhone, a tela não fica mais preta e o direcional volta a responder.',
+        en: 'Coming back to the game on iPhone no longer leaves a black screen and a dead joystick.',
+        es: 'Al volver al juego en iPhone, la pantalla ya no queda negra y el joystick vuelve a responder.',
+        fr: 'En revenant au jeu sur iPhone, l’écran ne reste plus noir et le joystick répond de nouveau.',
+        zh: '在 iPhone 上回到遊戲時，不會再出現黑畫面，搖桿也能正常操作。',
+      },
+      {
+        pt: 'Uma imagem com defeito não faz mais o seu Pokémon e o mundo sumirem da tela.',
+        en: 'A faulty image no longer makes your Pokémon and the world vanish from the screen.',
+        es: 'Una imagen defectuosa ya no hace desaparecer a tu Pokémon y al mundo de la pantalla.',
+        fr: 'Une image défectueuse ne fait plus disparaître ton Pokémon et le monde de l’écran.',
+        zh: '圖片出錯時，你的寶可夢和世界不會再從畫面上消失。',
+      },
+      {
+        pt: 'Em teclados AZERTY, o jogo agora mostra as teclas certas: Z Q S D.',
+        en: 'On AZERTY keyboards, the game now shows the right keys: Z Q S D.',
+        es: 'En teclados AZERTY, el juego ahora muestra las teclas correctas: Z Q S D.',
+        fr: 'Sur les claviers AZERTY, le jeu affiche maintenant les bonnes touches : Z Q S D.',
+        zh: '使用 AZERTY 鍵盤時，遊戲現在會顯示正確的按鍵：Z Q S D。',
       },
       {
         pt: 'Se o jogo ainda não abrir, recarregue a página.',
@@ -59,6 +73,42 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Desde la actualización del 05/11, el juego podía quedarse en pantalla negra al abrir en Safari 26 y en los navegadores de iPhone y iPad que usan el mismo motor. Ahora espera a que cargue el idioma antes de empezar.',
             fr: 'Depuis la mise à jour du 05/11, le jeu pouvait rester sur un écran noir à l’ouverture sur Safari 26 et sur les navigateurs d’iPhone et d’iPad qui utilisent le même moteur. Il attend maintenant que la langue soit chargée avant de démarrer.',
             zh: '自 11/05 更新以來，遊戲在 Safari 26 以及使用相同引擎的 iPhone、iPad 瀏覽器上開啟時可能停留在黑畫面。現在遊戲會等語言載入完成後才開始。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Voltar para o jogo no iPhone', en: 'Coming back to the game on iPhone', es: 'Volver al juego en iPhone', fr: 'Revenir au jeu sur iPhone', zh: '在 iPhone 上回到遊戲' },
+        notes: [
+          {
+            pt: 'Ao minimizar e voltar, a tela podia ficar preta com o HUD visível e o direcional parado. Agora o jogo recusa as medidas erradas de tela, se ajusta sozinho e solta o direcional que tinha ficado preso.',
+            en: 'After minimizing and coming back, the screen could stay black with the HUD showing and the joystick dead. The game now rejects wrong screen sizes, fixes itself and lets go of a joystick that got stuck.',
+            es: 'Al minimizar y volver, la pantalla podía quedar negra con el HUD visible y el joystick sin responder. Ahora el juego rechaza las medidas de pantalla erróneas, se ajusta solo y suelta el joystick que se había quedado trabado.',
+            fr: 'Après avoir réduit puis rouvert le jeu, l’écran pouvait rester noir avec le HUD visible et le joystick inactif. Le jeu refuse maintenant les mauvaises tailles d’écran, se corrige tout seul et relâche un joystick resté bloqué.',
+            zh: '將遊戲縮小再回來時，畫面可能變黑，只剩介面顯示，搖桿也無法操作。現在遊戲會拒絕錯誤的螢幕尺寸、自動修正，並放開卡住的搖桿。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Mundo invisível', en: 'Invisible world', es: 'Mundo invisible', fr: 'Monde invisible', zh: '世界消失' },
+        notes: [
+          {
+            pt: 'Se uma imagem falhasse no meio da partida, o seu Pokémon, os inimigos e as árvores podiam sumir até fechar o jogo. Agora o jogo se recupera no quadro seguinte e tenta baixar a imagem de novo.',
+            en: 'If an image failed mid-run, your Pokémon, the foes and the trees could vanish until you closed the game. The game now recovers on the next frame and tries to download the image again.',
+            es: 'Si una imagen fallaba en plena partida, tu Pokémon, los enemigos y los árboles podían desaparecer hasta cerrar el juego. Ahora el juego se recupera en el siguiente cuadro e intenta descargar la imagen de nuevo.',
+            fr: 'Si une image échouait en pleine partie, ton Pokémon, les ennemis et les arbres pouvaient disparaître jusqu’à la fermeture du jeu. Le jeu se rétablit maintenant dès l’image suivante et retélécharge l’image en cause.',
+            zh: '如果圖片在遊戲途中出錯，你的寶可夢、敵人和樹木可能會消失，直到關閉遊戲為止。現在遊戲會在下一格畫面恢復，並重新下載該圖片。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Teclados AZERTY', en: 'AZERTY keyboards', es: 'Teclados AZERTY', fr: 'Claviers AZERTY', zh: 'AZERTY 鍵盤' },
+        notes: [
+          {
+            pt: 'As teclas sempre funcionaram pela posição, mas o jogo mostrava W A S D. Agora os controles e as dicas mostram o que está impresso no seu teclado.',
+            en: 'The keys always worked by position, but the game showed W A S D. The controls and hints now show what’s printed on your keyboard.',
+            es: 'Las teclas siempre funcionaron por su posición, pero el juego mostraba W A S D. Ahora los controles y las pistas muestran lo que está impreso en tu teclado.',
+            fr: 'Les touches ont toujours fonctionné selon leur position, mais le jeu affichait W A S D. Les commandes et les astuces indiquent maintenant ce qui est imprimé sur ton clavier.',
+            zh: '按鍵一直是依位置運作，但遊戲卻顯示 W A S D。現在操作設定和提示會顯示你鍵盤上印的按鍵。',
           },
         ],
       },
