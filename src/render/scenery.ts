@@ -2,7 +2,7 @@ import { BIOMES, type BiomeId } from '../data/biomes'
 import type { LandmarkPiece } from '../data/landmarks'
 import type { PlacePiece } from '../data/places'
 import type { SolidKind } from '../data/terrain'
-import { canvasCache, context2d, createCanvas, drawable, dropKept, keepPacked, readPixels, type Packed } from '../engine/pixelart'
+import { artImages, canvasCache, context2d, dropKept, keepPacked, readPixels, type Packed } from '../engine/pixelart'
 
 /**
  * Painted scenery (made with PixelLab) standing in for pieces sculpted in
@@ -85,31 +85,19 @@ const fileOf = (biome: BiomeId, kind: string, variant: number, open: boolean): s
 /** Whether a piece has painted art in `biome` (then it isn't sculpted ahead of time). */
 export const hasScenery = (kind: string, biome: BiomeId, variant = 0) => fileOf(biome, kind, variant, false) !== null
 
-const images = new Map<string, HTMLImageElement>()
+const pictures = artImages((file: string) => `${import.meta.env.BASE_URL}assets/scenery/${file}.png`)
 const pieces = canvasCache<string, ArtPiece>()
-
-const image = (file: string) => {
-  let img = images.get(file)
-  if (!img) {
-    img = new Image()
-    img.src = `${import.meta.env.BASE_URL}assets/scenery/${file}.png`
-    images.set(file, img)
-  }
-  return img
-}
 
 /** Rows at the bottom of the art that make its foot, the part that meets the ground. */
 const FOOT_ROWS = 6
 
 /**
- * Copies a loaded picture to a canvas and finds its foot: the span its lowest
- * rows cover. The anchor is the foot's middle on the bottom row, so a lopsided
- * tree stands on its trunk and its shadow sits under the part touching the ground.
+ * Finds a picture's foot, on its canvas copy: the span its lowest rows cover.
+ * The anchor is the foot's middle on the bottom row, so a lopsided tree stands
+ * on its trunk and its shadow sits under the part touching the ground.
  */
-const toPiece = (img: HTMLImageElement, group: string): ArtPiece => {
-  const sprite = createCanvas(img.naturalWidth, img.naturalHeight)
+const toPiece = (sprite: HTMLCanvasElement, group: string): ArtPiece => {
   const ctx = context2d(sprite)
-  ctx.drawImage(img, 0, 0)
   const { width: w, height: h } = sprite
   const rows = Math.min(FOOT_ROWS, h)
   // Unreadable (`readPixels`): no foot found, so the whole width stands on the ground.
@@ -132,13 +120,13 @@ const BIOME_IDS = Object.keys(BIOMES) as BiomeId[]
 /** The atlas group of a biome's pictures (by their file's prefix), or of the shared ones. */
 const groupOf = (file: string) => `scenery:${BIOME_IDS.find((b) => file.startsWith(`${b}-`)) ?? 'shared'}`
 
-/** A picture by file, or null while it loads. */
+/** A picture by file, or null while it loads or after it failed (`artImages`). */
 const pieceOfFile = (file: string) => {
   let piece = pieces.get(file)
   if (piece) return piece
-  const img = image(file)
-  if (!drawable(img)) return null
-  pieces.set(file, (piece = toPiece(img, groupOf(file))))
+  const sprite = pictures.copy(file)
+  if (!sprite) return null
+  pieces.set(file, (piece = toPiece(sprite, groupOf(file))))
   return piece
 }
 
@@ -151,7 +139,7 @@ export const sceneryPiece = (biome: BiomeId, kind: string, variant: number, open
   const plain = fileOf(biome, kind, variant, false)
   if (!plain) return null
   const woken = fileOf(biome, kind, variant, true)
-  if (woken && woken !== plain) image(woken)
+  if (woken && woken !== plain) pictures.get(woken)
   return (open && woken ? pieceOfFile(woken) : null) ?? pieceOfFile(plain)
 }
 
@@ -161,9 +149,9 @@ export const sceneryArt = (file: (typeof ONE_OFFS)[number]) => pieceOfFile(file)
 /** Lets go of the pictures of every biome not in `keep` (shared ones stay): walking back loads them again. */
 export const keepScenery = (keep: readonly BiomeId[]) => {
   const gone = BIOME_IDS.filter((b) => !keep.includes(b))
-  for (const file of [...images.keys()]) {
+  for (const file of [...pictures.keys()]) {
     if (!gone.some((b) => file.startsWith(`${b}-`))) continue
-    images.delete(file)
+    pictures.forget(file)
     pieces.delete(file)
   }
   for (const b of gone) dropKept(`scenery:${b}`)

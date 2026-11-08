@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, canvasCache, context2d, createCanvas, drawable, type PixelSprite } from '../engine/pixelart'
+import { artImages, blitCentered, blitEllipse, canvasCache, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import type { EvoItemId } from '../data/shop'
 import type { Pickup } from '../game/types'
@@ -7,26 +7,18 @@ import { px } from './shopTmFx'
 
 type Ctx = CanvasRenderingContext2D
 
-/** The items' official sprites, loaded once each (decoded or not): the ground sprite is copied from them. */
-const images = new Map<EvoItemId, HTMLImageElement>()
+/** The items' official sprites: the ground sprite is copied from them. */
+const pictures = artImages<EvoItemId>(itemArt)
 
 /** The ground sprites, the official sprites at 1× (15 to 23 px, a bit over a TM disc). */
 const sprites = canvasCache<EvoItemId, PixelSprite>()
 
-/** The ground sprite of an item, or null while its sprite loads (the first call starts it). */
+/** The ground sprite of an item, or null while its sprite loads (the first call starts it) or after it failed. */
 const groundSprite = (id: EvoItemId): PixelSprite | null => {
   const cached = sprites.get(id)
   if (cached) return cached
-  let img = images.get(id)
-  if (!img) {
-    img = new Image()
-    img.src = itemArt(id)
-    images.set(id, img)
-  }
-  if (!drawable(img)) return null
-  const sprite = createCanvas(img.naturalWidth, img.naturalHeight)
-  context2d(sprite).drawImage(img, 0, 0)
-  sprites.set(id, sprite)
+  const sprite = pictures.copy(id)
+  if (sprite) sprites.set(id, sprite)
   return sprite
 }
 

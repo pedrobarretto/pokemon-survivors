@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { canvasCache, canvasLosses, canvasRestored, canvasWatch, fillPlotted, heldCanvases, lazy, onCanvasReset, plot, resetCanvases, sweepArt, weighCanvases, type Probe, type RectSink } from './pixelart'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { artImages, canvasCache, canvasLosses, canvasRestored, canvasWatch, drawThrew, fillPlotted, heldCanvases, lazy, onCanvasReset, plot, resetCanvases, sweepArt, weighCanvases, type Probe, type RectSink } from './pixelart'
 
 describe('resetCanvases', () => {
   it('drops cached art so it is drawn again after a GPU reset', () => {
@@ -163,5 +163,101 @@ describe('plot', () => {
     fillPlotted(sink)
     expect(calls.filter((c) => c.startsWith('rect'))).toHaveLength(500)
     expect(calls.at(-2)).toBe('rect 499,0,1,1')
+  })
+})
+
+describe('drawThrew', () => {
+  /** A context down to what a throw leaves behind: its transform and the `save` stack over it. */
+  const fakeContext = () => {
+    let x = 0
+    const saved: number[] = []
+    return {
+      globalAlpha: 1,
+      globalCompositeOperation: 'source-over' as GlobalCompositeOperation,
+      save: () => void saved.push(x),
+      translate: (dx: number) => void (x += dx),
+      restore: () => void (x = saved.pop() ?? x),
+      setTransform: () => void (x = 0),
+      offset: () => x,
+      depth: () => saved.length,
+    }
+  }
+
+  it('leaves nothing of the failed frame on the context, however deep it threw', () => {
+    const ctx = fakeContext()
+    ctx.save()
+    ctx.translate(-320)
+    ctx.save()
+    ctx.translate(40)
+    ctx.globalAlpha = 0.3
+    ctx.globalCompositeOperation = 'lighter'
+
+    drawThrew(ctx, new Error('nested throw'), () => {})
+
+    expect(ctx.offset()).toBe(0)
+    expect(ctx.depth()).toBe(0)
+    expect(ctx.globalAlpha).toBe(1)
+    expect(ctx.globalCompositeOperation).toBe('source-over')
+  })
+
+  it('reports an error repeated every frame once', () => {
+    const report = vi.fn()
+    for (let i = 0; i < 3; i++) drawThrew(fakeContext(), new Error('every frame'), report)
+    drawThrew(fakeContext(), new Error('another one'), report)
+    expect(report).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('artImages', () => {
+  /** Images made so far: each ends loaded with nothing to draw, as a failed download does. */
+  let made: { src: string; complete: boolean; naturalWidth: number; naturalHeight: number }[] = []
+  let clock = 0
+
+  const failing = () => {
+    made = []
+    clock = 0
+    vi.spyOn(performance, 'now').mockImplementation(() => clock)
+    vi.stubGlobal(
+      'Image',
+      vi.fn(function fake() {
+        const img = { src: '', complete: true, naturalWidth: 0, naturalHeight: 0 }
+        made.push(img)
+        return img
+      }),
+    )
+    return artImages((file: string) => `/art/${file}.png`)
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('fetches a failed picture again past the HTTP cache, and only once its wait is over', () => {
+    const art = failing()
+    expect(art.copy('tree')).toBeNull()
+    expect(art.copy('tree')).toBeNull()
+    expect(made.map((m) => m.src)).toEqual(['/art/tree.png'])
+
+    clock = 3_000
+    expect(art.copy('tree')).toBeNull()
+    expect(made.map((m) => m.src)).toEqual(['/art/tree.png', '/art/tree.png?retry=1'])
+  })
+
+  it('gives up after its last try, for the stand-in to stay', () => {
+    const art = failing()
+    for (const wait of [0, 3_000, 15_000, 60_000, 600_000]) {
+      clock += wait
+      art.copy('tree')
+    }
+    expect(made).toHaveLength(4)
+  })
+
+  it('starts over once a picture is forgotten', () => {
+    const art = failing()
+    art.copy('tree')
+    art.forget('tree')
+    art.copy('tree')
+    expect(made.map((m) => m.src)).toEqual(['/art/tree.png', '/art/tree.png'])
   })
 })
