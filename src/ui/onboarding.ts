@@ -3,6 +3,7 @@ import type { InputKind } from '../game/bugReport'
 import { t } from '../i18n'
 import { chromeIntent, onboardingStep, type InAppBrowser } from '../onboarding'
 import { h, rich } from './dom'
+import { boundMoveKeys } from './inputLabels'
 
 /** Closed once, the lobby's in-app hint stays away for the rest of the visit (a sign in held back still shows it). */
 const DISMISSED = 'ps:inAppHint'
@@ -62,7 +63,7 @@ export const hideInAppHint = () => {
 /** The first run's opening toast: how to move with the input at hand, and that the moves fire on their own. */
 export const firstRunTip = (kind: InputKind | null, touch: boolean) => {
   const m = t().onboarding
-  const move = kind === 'gamepad' ? m.movePad : kind === 'touch' || (kind === null && touch) ? m.moveTouch : m.moveKeys
+  const move = kind === 'gamepad' ? m.movePad : kind === 'touch' || (kind === null && touch) ? m.moveTouch : m.moveKeys(boundMoveKeys())
   return h('span', { class: 'item-toast first-run-tip' }, h('span', {}, rich(move), h('small', {}, m.auto)))
 }
 

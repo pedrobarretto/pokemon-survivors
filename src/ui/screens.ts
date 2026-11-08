@@ -39,7 +39,7 @@ import { treatIcon } from '../render/halloweenArt'
 import { h, later } from './dom'
 import type { ResultsInvite } from './invites'
 import { buildTag, followsBuild } from './buildMark'
-import { boundPadHint, glyphText } from './inputLabels'
+import { boundPadHint, glyphText, printedKeys } from './inputLabels'
 import { pressGuard } from './pressGuard'
 import { holdMoveCard, hoverMoveCard, moveCard, withMoveCard } from './moveCard'
 import { actAs, localPlayer } from '../game/players'
@@ -81,7 +81,7 @@ export const hint = (keys: string, touch: string) =>
   h(
     'p',
     { class: 'hint' },
-    h('span', { class: 'keys-only' }, ...glyphText(keys)),
+    h('span', { class: 'keys-only' }, ...glyphText(printedKeys(keys))),
     h('span', { class: 'pad-only' }, ...glyphText(boundPadHint(keys))),
     h('span', { class: 'touch-only' }, touch),
   )

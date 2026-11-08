@@ -221,7 +221,7 @@ export const en: Messages = {
       loading: 'Loading the arena…',
       ready: 'All set!',
       tip: 'Tip',
-      tips: [
+      tips: (k) => [
         'Full of Energy? Go score: if you fall, you drop half.',
         'Each ally in the same goal speeds up scoring by 50%.',
         'A rival’s hit interrupts whoever is scoring.',
@@ -230,10 +230,10 @@ export const en: Messages = {
         'Defeating Drednaw gives the whole team a shield and Energy.',
         'In tall grass rivals can’t see you, but your attacks stop: good for ambushes and escapes.',
         'Level-up cards don’t pause: tap one or press 1–4.',
-        'Your basic attack is automatic: Q, E and R cast Move 1, Move 2 and the Unite Move.',
+        `Your basic attack is automatic: ${k.move1}, ${k.move2} and ${k.unite} cast Move 1, Move 2 and the Unite Move.`,
         'Click or tap a rival to lock on; Tab switches. On a phone, drag a move’s button to aim.',
         'Each evolution swaps Move 1, then Move 2, for a move of the new form.',
-        'T opens quick chat, G pings the map and holding ` shows the full scoreboard.',
+        `${k.chat} opens quick chat, ${k.ping} pings the map and holding ${k.board} shows the full scoreboard.`,
         'From half-time on, your team can vote to surrender: it counts as a loss, not as leaving.',
         'Finishing matches gives Fair Play back; leaving or idling costs it, and below 80 there’s no Ranked.',
       ],
@@ -1216,7 +1216,7 @@ export const en: Messages = {
     gateGuestNote: "As a guest, your progress stays on this device only and your runs don't count for the ranking.",
   },
   onboarding: {
-    moveKeys: '*WASD* or *arrow keys* to move',
+    moveKeys: (keys) => `*${keys}* or *arrow keys* to move`,
     movePad: '*Left stick* to move',
     moveTouch: '*Drag your finger* to move',
     auto: 'Your moves fire on their own: dodge and level up!',

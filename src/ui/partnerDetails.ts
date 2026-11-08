@@ -18,7 +18,7 @@ import { moveIcon, sparkleIcon } from '../render/art'
 import { specialIcon } from '../render/specialFx'
 import { portraitUrl } from '../render/sprites'
 import { t } from '../i18n'
-import { boundLabel, glyphText } from './inputLabels'
+import { boundLabel, glyphText, printedKeys } from './inputLabels'
 import { h } from './dom'
 import { tabStrip } from './shell'
 import { STAT_BARS, statRatio } from './statBars'
@@ -238,7 +238,7 @@ export const shinyPicker = (shiny: boolean, set: (shiny: boolean) => void) => {
     { class: 'shiny-picker', role: 'radiogroup', 'aria-label': m.shinyPick },
     option(false, m.normal),
     option(true, h('span', {}, h('img', { src: sparkleIcon(), alt: '' }), m.shiny)),
-    h('span', { class: 'key-hint' }, 'Z'),
+    h('span', { class: 'key-hint' }, printedKeys('Z')),
   )
 }
 

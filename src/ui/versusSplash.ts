@@ -9,6 +9,7 @@ import { arenaIcon } from '../render/art'
 import { teamColor } from './arenaBits'
 import { lineupSeat } from './arenaQueue'
 import { h, setStyle } from './dom'
+import { boundKey } from './inputLabels'
 import { titleChip } from './arenaTitle'
 import { lookOf } from '../render/looks'
 
@@ -54,7 +55,7 @@ export const versusSplash = (root: HTMLElement, g: Game, mySlot: number, note: s
     )
   const fill = h('i', { class: 'arena-splash-fill' })
   const status = h('span', { class: 'arena-splash-status' }, s.loading)
-  const tips = s.tips
+  const tips = s.tips({ move1: boundKey('move1'), move2: boundKey('move2'), unite: boundKey('unite'), chat: boundKey('chat'), ping: boundKey('ping'), board: boundKey('board') })
   let tipAt = Math.floor(Math.random() * tips.length)
   const tip = h('p', { class: 'arena-splash-tip' }, h('b', {}, s.tip), h('span', {}, tips[tipAt]!))
   const mine = g.players[mySlot]?.versus?.team ?? 0
