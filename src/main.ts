@@ -13,7 +13,7 @@ import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
 import { canvasLosses, canvasRestored, checkCanvases, context2d, drawThrew, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, readPixels, resetCanvases, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
-import { fitView } from './engine/viewport'
+import { fitView, pickViewport } from './engine/viewport'
 import { createRng } from './engine/rng'
 import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
@@ -274,6 +274,15 @@ let cssScale = 4
 /** Set when the canvas was cleared and must be redrawn even if the game is paused. */
 let dirty = true
 
+/** The canvas' fit for the viewport now, or null while the browser reports no screen to fit (`pickViewport`). */
+const fitNow = () => {
+  const visual = window.visualViewport
+  const size = pickViewport(visual, { width: window.innerWidth, height: window.innerHeight })
+  if (visual && size !== visual) canvasLosses.badViewport++
+  return size && fitView(size.width, size.height, window.devicePixelRatio || 1)
+}
+const fitted = (fit: ReturnType<typeof fitView>) => fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale
+
 /**
  * Sizes the low-res canvas to the visible viewport. Runs on resize, rotation
  * and iOS toolbar changes (visualViewport), and only touches the canvas when
@@ -285,10 +294,8 @@ const resize = () => {
   stickCenter = null
   // The HUD may have moved (a new viewport or UI size): re-measure it after layout (and after module init, so `run` exists by then).
   requestAnimationFrame(() => run && syncMarkerInsets())
-  const width = window.visualViewport?.width ?? window.innerWidth
-  const height = window.visualViewport?.height ?? window.innerHeight
-  const fit = fitView(width, height, window.devicePixelRatio || 1)
-  if (fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale) return
+  const fit = fitNow()
+  if (!fit || fitted(fit)) return
   view.w = fit.w
   view.h = fit.h
   cssScale = fit.cssScale
@@ -351,6 +358,12 @@ checkCanvases()
 setInterval(() => {
   if (document.hidden) return
   checkCanvases()
+  // No event says when a viewport misread on the way back comes right, and a canvas the wrong size hides the world and takes the touches with it.
+  const fit = fitNow()
+  if (fit && !fitted(fit)) {
+    canvasLosses.badViewport++
+    scheduleResize()
+  }
   if (ctx.isContextLost?.()) freshCanvas()
   else checkGameCanvas()
 }, 3000)
@@ -380,9 +393,10 @@ const letGoWhileHidden = () => {
   sweepArt(0)
 }
 
-/** The page is back in view (unlocked, another app or tab left): sizes, caches and the frame are checked and drawn again. */
+/** The page is back in view (unlocked, another app or tab left): held input is let go, and sizes, caches and the frame are checked and drawn again. */
 const cameBack = () => {
   backAt = performance.now()
+  input.releaseOnReturn()
   scheduleResize()
   checkCanvases()
   freshCanvas()

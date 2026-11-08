@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FIXED_STICK_REACH, fixedJoystick, gripDown, gripMove, gripUp, joystick, STICK_RADIUS } from './input'
-import { deviceScale, fitView } from './viewport'
+import { deviceScale, fitView, pickViewport } from './viewport'
 
 describe('joystick', () => {
   it('ignores jitter inside the dead zone', () => {
@@ -75,5 +75,23 @@ describe('viewport', () => {
   it('never sizes a side below 1 px, whatever a laying-out webview reports', () => {
     expect(fitView(390, 0, 3)).toMatchObject({ h: 1 })
     expect(fitView(-20, Number.NaN, 2)).toMatchObject({ w: 1, h: 1 })
+  })
+
+  const layout = { width: 390, height: 844 }
+
+  it('fits the visual viewport, a keyboard over a landscape phone included', () => {
+    const keyboard = { width: 852, height: 150 }
+    expect(pickViewport(keyboard, { width: 852, height: 393 })).toBe(keyboard)
+  })
+
+  it('falls back to the layout viewport when the visual one reads as no screen', () => {
+    expect(pickViewport({ width: 0, height: 0 }, layout)).toBe(layout)
+    expect(pickViewport({ width: 390, height: 12 }, layout)).toBe(layout)
+    expect(pickViewport({ width: Number.NaN, height: 844 }, layout)).toBe(layout)
+    expect(pickViewport(null, layout)).toBe(layout)
+  })
+
+  it('stays as it is when neither viewport is a screen', () => {
+    expect(pickViewport({ width: 0, height: 0 }, { width: 0, height: 0 })).toBeNull()
   })
 })
