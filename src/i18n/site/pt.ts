@@ -582,7 +582,7 @@ export const sitePt = {
       opensHead: 'Golpe lendário',
       pressureTitle: 'Dificuldades no Modo Lendário',
       pressure: 'A Pressão soma-se a cada dificuldade: os multiplicadores do Modo Lendário ficam assim.',
-      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)' },
+      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10, sobe a cada final sem mítico)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Na Noite das Bruxas de 2026 (24 de outubro a 2 de novembro), o Darkrai chega como lenda de evento: ele só aparece na fenda do Pesadelo, que pode tomar o lugar de uma fenda numa partida assombrada, e é capturado com 2 vitórias. Joga com o Dark Void, que faz as multidões dormirem, e a inata Bad Dreams, que fere quem dorme perto dele. Depois do evento ele volta para as sombras, mas quem o capturou segue jogando com ele. Ele não conta para o Arceus.',
     },
@@ -691,7 +691,7 @@ export const sitePt = {
       ],
       trios: (times: readonly string[], trios: readonly string[], mythicals: string, percent: number) => [
         `Às ${list(times)} chegam os três membros de um trio lendário, sorteado no começo de cada partida: ${list(trios)}. HP, dano de contato e velocidade são do horário, não do Pokémon, então nenhum sorteio é mais fácil que outro; o que muda são os ataques.`,
-        `No fim, com ${n(percent)}% de chance, um Pokémon mítico chega junto com o Mewtwo: ${mythicals}, também sorteado por partida.`,
+        `No fim, com ${n(percent)}% de chance, um Pokémon mítico chega junto com o Mewtwo: ${mythicals}, também sorteado por partida. Depois de 5 finais sem derrotar um mítico a chance sobe a cada final, até ser garantida na 21ª, e vem um que você ainda não tem.`,
       ],
       timeHead: 'Tempo',
       bossHead: 'Chefe',

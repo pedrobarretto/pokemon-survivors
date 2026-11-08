@@ -31,6 +31,7 @@ import type { Game, Player } from './types'
 /** The fixed simulation step, the same in the shell and here. */
 export { TICK } from './tick'
 import { TICK } from './tick'
+import { parseHunt, type MythicalHunt } from './mythicalHunt'
 
 /**
  * Version of the rules a replay plays by. Bump it with any change that makes
@@ -42,7 +43,7 @@ import { TICK } from './tick'
  * and run `npm run rules:freeze` so the API keeps the previous rules' simulator
  * for the runs that straddle the deploy (`server/sims/README.md`).
  */
-export const RULES_VERSION = 47
+export const RULES_VERSION = 48
 
 /**
  * How this build stands to a replay's rules: it can judge the `same`; a
@@ -76,6 +77,8 @@ export type ReplayStart = {
   evo?: readonly EvoItemId[]
   /** The Pokémon's Bottle Cap level, 0..`MAX_CAPS` (`runBoost`). 0 when absent. */
   caps?: number
+  /** The mythicals' bad-luck protection from the save (`game/mythicalHunt.ts`). The plain odds when absent: co-op, the Desafio do dia, every mythical captured. */
+  mythical?: MythicalHunt
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
@@ -219,6 +222,8 @@ export const parseReplay = (raw: unknown): Replay | null => {
   if (s.tms !== undefined && (!Array.isArray(s.tms) || tms.length !== s.tms.length || tms.length > MAX_ARMED_TMS)) return null
   if (s.evo !== undefined && (!Array.isArray(s.evo) || evo.length !== s.evo.length)) return null
   if (s.caps !== undefined && (!isWhole(s.caps) || s.caps > MAX_CAPS)) return null
+  const mythical = s.mythical === undefined ? undefined : parseHunt(s.mythical)
+  if (mythical === null) return null
   return {
     rules: isWhole(raw.rules) && raw.rules > 0 ? raw.rules : 1,
     start: {
@@ -234,6 +239,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
       tms,
       evo,
       caps: isWhole(s.caps) ? s.caps : 0,
+      ...(mythical ? { mythical } : {}),
       view,
     },
     moves: raw.moves,
@@ -267,6 +273,7 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     tms: start.tms ?? [],
     evo: start.evo ?? [],
     caps: start.caps ?? 0,
+    mythical: start.mythical,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {

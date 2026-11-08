@@ -6196,7 +6196,7 @@ export const es: Messages = {
     where: {
       rift: 'Espera en una _grieta legendaria_: entra al portal y véncelo allí.',
       trio: 'Llega como jefe con el _trío legendario_ de la partida.',
-      mythical: 'A veces (1 partida de cada 10) aparece junto a *Mewtwo* al final.',
+      mythical: 'A veces (1 partida de cada 10, más tras cada final sin mítico) aparece junto a *Mewtwo* al final.',
       finale: 'Es el jefe final: gana una partida.',
       endless: 'El último trofeo: después de capturar a los otros 22, véncelo en el _modo infinito_.',
       event: 'Solo en la _Noche de Brujas_: véncelo en la _grieta de la Pesadilla_.',
