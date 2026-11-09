@@ -419,6 +419,8 @@ export const BRANCH_ABILITIES = {
   kleavor: ['swarm', 'sheerForce', 'sharpness'],
   armarouge: ['flashFire', 'magicGuard', 'weakArmor'],
   ceruledge: ['flashFire', 'cursedBody', 'sharpness'],
+  flapple: ['overgrow', 'hustle', 'moxie'],
+  appletun: ['overgrow', 'thickFat', 'regenerator'],
 } as const satisfies Partial<Record<BranchId, AbilitySet>>
 
 /** The Hidden Ability of a set: the last of three (a lone ability is no Hidden one). */

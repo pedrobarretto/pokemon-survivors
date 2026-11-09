@@ -22,9 +22,9 @@ import { weatherHere } from './weather'
 export const formAt = (starter: PlayableId, branch: BranchId | null, stage: number): EvolutionStage => {
   const line: readonly EvolutionStage[] = PLAYABLE[starter].line
   const at = Math.min(stage, line.length - 1)
-  const b = branch ? BRANCHES[branch] : null
-  if (!b || b.line !== starter || at < b.stage) return line[at]!
-  // The branch keeps the line's evolution level, for a branch that evolves on (none yet).
+  const b: BranchDef | null = branch ? BRANCHES[branch] : null
+  if (!b || b.line !== starter || at < b.stage || (b.rejoins && at > b.stage)) return line[at]!
+  // The branch keeps the line's evolution level, for a branch that evolves on (Dipplin, `rejoins`).
   const own = line[at]!
   return own.evolveAt === undefined ? branchStage(branch!) : { ...branchStage(branch!), evolveAt: own.evolveAt }
 }

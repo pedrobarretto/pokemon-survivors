@@ -756,6 +756,17 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   alluringVoice: () => compose(15, 15, [[art(TE.heartRing(15), TE.HEART_PAL, '#401020'), 0, 0], [FX.heart(), 3, 3]]),
   ...EGG_MOVE_2_ICONS,
   ...DUO_ICONS,
+  powderSnow: () => FX.snowflake(),
+  electroweb: () => art(CHAIN, { 2: '#c8e830', 3: '#ffffff' }, '#383810'),
+  corrosiveGas: () => VERB_FX.glob(),
+  magicCoat: () => FX.heart(),
+  appleAcid: () => FX.leaf(),
+  icicleSpear: () => FX.icicle(),
+  headSmash: () => FX.boulder(),
+  ironDefense: () => VERB_FX.gear()[0]!,
+  dualWingbeat: () => VERB_FX.feather(),
+  bite: () => FX.jaws().top,
+  auroraVeil: () => art(FROST_RING, { 1: '#a8f0ff' }, '#3878a8'),
 }
 
 /* ---------------- Item icons ---------------- */

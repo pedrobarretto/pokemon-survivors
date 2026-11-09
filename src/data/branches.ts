@@ -35,6 +35,8 @@ export type BranchDef = {
   favors?: { weather?: readonly WeatherId[]; biome?: readonly BiomeId[] }
   /** Its special, when it isn't the one of its first type (`resolveSpecial`). */
   special?: SpecialId
+  /** The line's own form, listed so it stands beside the item branches: the line goes on from it (Applin's Dipplin into Hydrapple). A branch without it holds the form to the line's end. */
+  rejoins?: true
   /** Free even though an item names it (Eevee's Water, Thunder and Fire Stones): the item only adds it to the choice. */
   free?: true
 }
@@ -143,6 +145,24 @@ export const BRANCHES = {
     line: 'charcadet', stage: 1, name: 'Ceruledge', dex: 937, types: ['fire', 'ghost'],
     bonus: { maxHp: 55, might: 0.3, speed: 4 },
     moves: ['solarBeam', 'spiritShackle', 'leafBlade'],
+  },
+
+  /* ---------- Applin: the free Dipplin goes on to Hydrapple, the Apples end the line early ---------- */
+  dipplin: {
+    line: 'applin', stage: 1, rejoins: true, name: 'Dipplin', dex: 1011, types: ['grass', 'dragon'],
+    bonus: { maxHp: 25, might: 0.1 },
+    moves: [],
+  },
+  flapple: {
+    line: 'applin', stage: 1, name: 'Flapple', dex: 841, types: ['grass', 'dragon'],
+    bonus: { maxHp: 40, might: 0.3, speed: 5, cooldown: -0.04 },
+    moves: ['dragonTail', 'uTurn', 'gust', 'solarBeam'],
+    special: 'dragonClaw',
+  },
+  appletun: {
+    line: 'applin', stage: 1, name: 'Appletun', dex: 842, types: ['grass', 'dragon'],
+    bonus: { maxHp: 75, armor: 1, regen: 0.3, might: 0.14 },
+    moves: ['earthquake', 'gyroBall', 'flashCannon', 'solarBeam'],
   },
 } as const satisfies Record<string, BranchDef>
 
