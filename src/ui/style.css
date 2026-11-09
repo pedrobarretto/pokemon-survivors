@@ -4977,6 +4977,22 @@ button {
   background: color-mix(in srgb, #5a2c88 90%, transparent);
 }
 
+/* The narrowest phones keep the name in the chip, a size down. */
+@media (max-width: 370px) {
+  .title-home .trainer-chip .trainer-chip-who {
+    display: flex;
+  }
+
+  .title-home .trainer-chip {
+    flex: 0 1 auto;
+    padding-right: 10px;
+  }
+
+  .title-home .trainer-chip-who b {
+    font-size: 22px;
+  }
+}
+
 /* A short phone held upright: every row gives some so the stage keeps its room. */
 @media (max-height: 720px) and (max-width: 899px) and (min-height: 501px) {
   .lobby-narrow {
