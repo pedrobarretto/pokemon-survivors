@@ -159,6 +159,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Correções visuais', en: 'Visual fixes', es: 'Correcciones visuales', fr: 'Corrections visuelles', zh: '畫面修正' },
+        notes: [
+          {
+            pt: 'A barra do X Attack e do X Speed agora enche quando você pega outro com um ainda ativo. A duração sempre esteve certa, só a barra enganava.',
+            en: 'The X Attack and X Speed bar now fills when you pick up another while one is still active. The duration was always right; only the bar was misleading.',
+            es: 'La barra de X Attack y X Speed ahora se llena cuando recoges otro con uno aún activo. La duración siempre estuvo bien, solo la barra engañaba.',
+            fr: 'La barre d’X Attack et d’X Speed se remplit maintenant quand tu en ramasses un autre alors qu’un est encore actif. La durée a toujours été bonne, seule la barre trompait.',
+            zh: '在 X Attack 或 X Speed 仍生效時再撿到一個，效果條現在會填滿。持續時間一直是正確的，只是效果條顯示有誤。',
+          },
+          {
+            pt: 'O marcador de Alfa fora da tela agora mostra um A, em vez de um símbolo que parecia um Ω.',
+            en: 'The off-screen Alpha marker now shows an A instead of a symbol that looked like an Ω.',
+            es: 'El marcador de Alfa fuera de la pantalla ahora muestra una A, en lugar de un símbolo que parecía una Ω.',
+            fr: 'Le marqueur d’Alpha hors de l’écran affiche maintenant un A, au lieu d’un symbole qui ressemblait à un Ω.',
+            zh: '畫面外的頭目標記現在顯示 A，不再是看起來像 Ω 的符號。',
+          },
+        ],
+      },
     ],
   },
   {
