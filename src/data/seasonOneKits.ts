@@ -38,12 +38,12 @@ export const SEASON_ONE_KITS = {
   },
   tandemaus: {
     name: 'Tandemaus', color: '#e8e0d0', egg: 'found', stats: { speed: 5, maxHp: -5, might: -0.04 }, signature: 'populationBomb',
-    learnset: [['populationBomb', 'quickAttack', 'swift', 'selfDestruct'], ['uTurn', 'disarmingVoice', 'shockWave', 'electroBall', 'gust']],
+    learnset: [['populationBomb', 'quickAttack', 'swift', 'selfDestruct'], ['machPunch', 'disarmingVoice', 'shockWave', 'electroBall', 'gust']],
     line: line2(['Tandemaus', 924, ['normal']], ['Maushold', 925, ['normal']], { maxHp: 45, speed: 3, might: 0.2 }),
   },
   finizen: {
     name: 'Finizen', color: '#58b0e8', egg: 'rare', stats: { speed: 5, maxHp: -10, might: -0.05 }, signature: 'jetPunch',
-    learnset: [['jetPunch', 'waterGun', 'brine', 'machPunch'], ['whirlpool', 'razorShell', 'quickAttack', 'uTurn', 'focusPunch']],
+    learnset: [['jetPunch', 'waterGun', 'brine', 'machPunch'], ['whirlpool', 'razorShell', 'quickAttack', 'waterShuriken', 'focusPunch']],
     line: line2(['Finizen', 963, ['water']], ['Palafin', 964, ['water']], { maxHp: 45, speed: 3, might: 0.22 }),
   },
   morpeko: {
@@ -63,7 +63,7 @@ export const SEASON_ONE_KITS = {
   },
   darumaka: {
     name: 'Darumaka', color: '#e06838', egg: 'rare', stats: { might: 0.08, speed: -2 }, signature: 'firePunch',
-    learnset: [['firePunch', 'ember', 'flameWheel', 'fireSpin'], ['focusPunch', 'drumBeating', 'futureSight', 'psyshock', 'earthquake']],
+    learnset: [['firePunch', 'ember', 'flameWheel', 'fireSpin'], ['focusPunch', 'drumBeating', 'futureSight', 'psyshock', 'willOWisp']],
     line: line2(['Darumaka', 554, ['fire']], ['Darmanitan', 555, ['fire']], { maxHp: 50, might: 0.26 }),
   },
   wimpod: {
