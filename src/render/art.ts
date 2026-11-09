@@ -830,6 +830,9 @@ export const candyIcon = (tier: number) => toIconUrl(`candy:${tier}`, () => PICK
 export const berryIcon = () => toIconUrl('berry', PICKUPS.berry)
 export const pokeballIcon = () => toIconUrl('pokeball', PICKUPS.pokeball)
 export const heartIcon = () => toIconUrl('heart', FX.heart)
+const ZOOM_LENS = ['..1111......', '.122221.....', '12222221....', '12333321....', '12222221....', '.122221.....', '..11111.....', '......111...', '.......111..', '........111.', '.........11.']
+/** The camera zoom button's lens (`ui/cameraZoom.ts`). */
+export const zoomIcon = () => toIconUrl('zoom', () => art(ZOOM_LENS, { 1: '#f8f8f0', 2: '#78b8e8', 3: '#303848' }, '#181828'))
 export const gearIcon = () => toIconUrl('gear', () => art(GEAR, { 1: '#303040' }))
 export const helpIcon = () => toIconUrl('help', () => art(HELP, { 1: '#303040' }))
 

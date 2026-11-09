@@ -24,6 +24,54 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-09',
+    title: { pt: 'Zoom da câmera', en: 'Camera zoom', es: 'Zoom de cámara', fr: 'Zoom de la caméra', zh: '鏡頭縮放' },
+    highlights: [
+      {
+        pt: 'Afaste a câmera nas partidas para ver mais do mapa e da horda.',
+        en: 'Pull the camera back in your runs to see more of the map and the horde.',
+        es: 'Aleja la cámara en tus partidas para ver más del mapa y de la horda.',
+        fr: 'Reculez la caméra pendant vos parties pour voir plus de la carte et de la horde.',
+        zh: '在遊戲中拉遠鏡頭，看見更多地圖與敵群。',
+      },
+      {
+        pt: 'No PC, use a roda do mouse ou as teclas + e -. No celular, faça pinça com dois dedos ou toque na lupa.',
+        en: 'On PC, use the mouse wheel or the + and - keys. On phones, pinch with two fingers or tap the magnifier.',
+        es: 'En PC, usa la rueda del ratón o las teclas + y -. En el celular, pellizca con dos dedos o toca la lupa.',
+        fr: 'Sur PC, utilisez la molette ou les touches + et -. Sur mobile, pincez à deux doigts ou touchez la loupe.',
+        zh: '電腦上使用滑鼠滾輪或 + 與 - 鍵；手機上用雙指縮放或點選放大鏡。',
+      },
+      {
+        pt: 'O zoom também funciona no Poké Realm. A Arena continua com a câmera de sempre.',
+        en: 'Zoom works in the Poké Realm too. The Arena keeps its usual camera.',
+        es: 'El zoom también funciona en el Poké Realm. La Arena mantiene su cámara de siempre.',
+        fr: 'Le zoom fonctionne aussi dans le Poké Realm. L’Arène garde sa caméra habituelle.',
+        zh: '縮放也能在 Poké Realm 使用；競技場維持原本的鏡頭。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Zoom da câmera nas partidas e no Poké Realm', en: 'Camera zoom in runs and the Poké Realm', es: 'Zoom de cámara en las partidas y en el Poké Realm', fr: 'Zoom de la caméra en partie et dans le Poké Realm', zh: '遊戲與 Poké Realm 的鏡頭縮放' },
+        notes: [
+          {
+            pt: 'A lupa ao lado do botão de pausa afasta a câmera, com níveis que dependem da sua tela. O jogo lembra o nível escolhido neste aparelho.',
+            en: 'The magnifier beside the pause button pulls the camera back, with levels that depend on your screen. The game remembers your choice on this device.',
+            es: 'La lupa junto al botón de pausa aleja la cámara, con niveles que dependen de tu pantalla. El juego recuerda tu elección en este dispositivo.',
+            fr: 'La loupe à côté du bouton pause recule la caméra, avec des niveaux qui dépendent de votre écran. Le jeu retient votre choix sur cet appareil.',
+            zh: '暫停按鈕旁的放大鏡可拉遠鏡頭，可用層級依螢幕而定。遊戲會在此裝置上記住你的選擇。',
+          },
+          {
+            pt: 'Com a câmera mais longe, os inimigos também nascem mais longe, fora da tela. No co-op, o zoom só vai até onde ninguém aparece do nada, então algumas telas não têm essa opção lá.',
+            en: 'With the camera farther out, foes also spawn farther away, off screen. In co-op, zoom only goes as far as nobody pops into view, so some screens don’t get it there.',
+            es: 'Con la cámara más lejos, los enemigos también aparecen más lejos, fuera de la pantalla. En co-op, el zoom solo llega hasta donde nadie aparece de la nada, así que algunas pantallas no lo tienen allí.',
+            fr: 'Avec la caméra plus loin, les ennemis apparaissent aussi plus loin, hors de l’écran. En co-op, le zoom s’arrête là où personne ne surgit à l’écran, donc certains écrans n’y ont pas droit.',
+            zh: '鏡頭拉遠時，敵人也會在更遠的畫面外出現。合作模式中，縮放僅限於敵人不會憑空出現的範圍，因此部分螢幕無法使用。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-08',
     title: { pt: 'Fim da tela preta e do mundo invisível', en: 'No more black screen or invisible world', es: 'Adiós a la pantalla negra y al mundo invisible', fr: 'Fini l’écran noir et le monde invisible', zh: '修正黑畫面與世界消失問題' },
     highlights: [

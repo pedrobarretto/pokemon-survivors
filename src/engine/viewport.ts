@@ -37,9 +37,31 @@ const onScreen = (s: ViewportSize) => s.width >= MIN_VIEWPORT && s.height >= MIN
 export const pickViewport = <V extends ViewportSize>(visual: V | null, layout: ViewportSize): V | ViewportSize | null =>
   visual && onScreen(visual) ? visual : onScreen(layout) ? layout : null
 
-/** Internal canvas size (world px) and the CSS px per world px for a viewport. */
-export const fitView = (cssW: number, cssH: number, dpr: number) => {
-  const scale = deviceScale(cssW, cssH, dpr)
+/**
+ * How far the camera zooms out (`zoomScales`): at most `farthest` times the
+ * resting view, and never past `maxShort` world px across the short side, as
+ * spawns and despawns follow the view (`replay.ts`, `VIEW_LIMIT`): a zoom keeps
+ * a run inside what big monitors already played.
+ */
+export const ZOOM = { farthest: 1.7, maxShort: 500, levels: 3 } as const
+
+/**
+ * The upscale factors a screen can zoom through, closest first (the first is
+ * always `deviceScale`). Whole device px only, so the zoom stays pixel-perfect:
+ * a 1080p monitor has few, a phone's dense screen more, up to `ZOOM.levels`.
+ * `reach` caps the view's half diagonal (co-op simulates a fixed view, and past
+ * its spawn ring the horde would pop in on screen).
+ */
+export const zoomScales = (cssW: number, cssH: number, dpr: number, reach = Infinity): readonly number[] => {
+  const rest = deviceScale(cssW, cssH, dpr)
+  const fits = (s: number) => rest / s <= ZOOM.farthest && (Math.min(cssW, cssH) * dpr) / s <= ZOOM.maxShort && Math.hypot(cssW * dpr, cssH * dpr) / s / 2 <= reach
+  const scales = [rest]
+  for (let s = rest - 1; s >= 2 && fits(s); s--) scales.push(s)
+  return scales.length <= ZOOM.levels ? scales : [scales[0]!, scales[(scales.length - 1) >> 1]!, scales[scales.length - 1]!]
+}
+
+/** Internal canvas size (world px) and the CSS px per world px for a viewport, at `scale` device px per world px (a zoom's, `zoomScales`). */
+export const fitView = (cssW: number, cssH: number, dpr: number, scale = deviceScale(cssW, cssH, dpr)) => {
   return {
     w: side((cssW * dpr) / scale),
     h: side((cssH * dpr) / scale),

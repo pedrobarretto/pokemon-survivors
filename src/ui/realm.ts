@@ -93,6 +93,8 @@ export type RealmDeps = {
   client: RealmClient
   /** CSS px per world px of the game's canvas. */
   scale: () => number
+  /** The camera zoom's button (`ui/cameraZoom.ts`), for the actions' row. */
+  zoom: () => { el: HTMLElement; refresh: () => void }
   /** The signed-in player's @handle (the base the trail's door opens). */
   handle: string
   /** Back to the lobby (the client already left). */
@@ -477,6 +479,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       h('img', { src: realmIconUrl('friends'), alt: '' }),
       h('span', { class: 'key-hint' }, 'F'),
     )
+    const zoomControl = deps.zoom()
+    zoomControl.el.classList.add('realm-talk')
     const leaveButton = h('button', { class: 'realm-leave box', type: 'button', onclick: () => (playSfx('select'), showPicker()) }, `← ${m().leave}`)
     el.replaceChildren(
       signs,
@@ -485,7 +489,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       status,
       partyBar,
       usePrompt,
-      h('div', { class: 'realm-actions' }, friendsButton, talkButton, emoteButton),
+      h('div', { class: 'realm-actions' }, zoomControl.el, friendsButton, talkButton, emoteButton),
       wheel,
       emotes,
       card,
@@ -1159,6 +1163,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const seated = st.kind === 'open' && room !== null
       const ground = room ? groundOf(room, base) : REALM_ROOMS[LANDING]
       const scale = deps.scale()
+      zoomControl.refresh()
 
       if (seated && room && !sub) {
         const move = drag?.stick?.vec ?? held()

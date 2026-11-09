@@ -35,6 +35,7 @@ import { createMovePad } from './movePad'
 import { createSpecialControls } from './specialButton'
 import { localPlayer } from '../game/players'
 import { createMinimap } from './minimap'
+import type { zoomButton } from './cameraZoom'
 
 const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-mid' : 'hp-low')
 
@@ -45,7 +46,7 @@ const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-
  * lights the desktop WASD keys. Hovering or holding a move slot opens its card (`withMoveCard`). Labels are
  * read at creation: rebuild the HUD after a language switch.
  */
-export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onLunge: () => void, onPause: () => void, isHeld: (code: string) => boolean, menu = false) => {
+export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onLunge: () => void, onPause: () => void, isHeld: (code: string) => boolean, menu = false, zoom: ReturnType<typeof zoomButton> | null = null) => {
   const movePad = createMovePad(isHeld)
   const special = createSpecialControls(onSpecial)
   const mega = createMegaControls(onMega)
@@ -116,6 +117,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
           h('div', { class: 'kills coins' }, h('img', { src: coinIcon(0), alt: '' }), coins),
           candyCounter,
         ),
+        zoom?.el ?? null,
         pause,
       ),
     ),
@@ -217,6 +219,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
       candyCounter.classList.remove('hidden')
       setText(candies, String(g.candies))
     }
+    zoom?.refresh()
     movePad.update()
     special.update(g)
     mega.update(g)

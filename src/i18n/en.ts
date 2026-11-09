@@ -129,6 +129,7 @@ export const en: Messages = {
 
   hud: {
     pause: 'Pause',
+    zoom: 'Camera zoom (mouse wheel or + and -)',
     specialAttack: 'Special attack',
     specialTitle: (name) => `${name} (Space)`,
     lunge: 'Lunge',

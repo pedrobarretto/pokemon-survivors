@@ -13,7 +13,7 @@ import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
 import { canvasLosses, canvasRestored, checkCanvases, context2d, drawThrew, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, readPixels, resetCanvases, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
-import { fitView, pickViewport } from './engine/viewport'
+import { deviceScale, fitView, pickViewport, zoomScales } from './engine/viewport'
 import { createRng } from './engine/rng'
 import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
@@ -175,7 +175,9 @@ import { rankingScreen, rankPanel } from './ui/ranking'
 import { confirmDialog, flashScreen, levelUp, pauseMenu, results, textBox, type Screen } from './ui/screens'
 import { abilityPick, branchPick } from './ui/abilityPick'
 import { tmPick } from './ui/tmPick'
-import { isSettingsOpen, openSettings, settings, toggleMute } from './ui/settings'
+import { COOP } from './data/coop'
+import { isSettingsOpen, openSettings, settings, toggleMute, updateSettings } from './ui/settings'
+import { wireZoomGestures, zoomButton, zoomShown } from './ui/cameraZoom'
 import { mapEventFeedback } from './ui/mapEvents'
 import { runShare, sharePreview, trainerShare } from './ui/share'
 import type { ShopPlaza, VisitorShelf } from './ui/shop'
@@ -275,12 +277,27 @@ let cssScale = 4
 /** Set when the canvas was cleared and must be redrawn even if the game is paused. */
 let dirty = true
 
-/** The canvas' fit for the viewport now, or null while the browser reports no screen to fit (`pickViewport`). */
+/** What the camera's zoom applies to now (`ui/cameraZoom.ts`): a run, a co-op run (its simulation's view is fixed), the Poké Realm, or nothing. */
+type ZoomScope = 'run' | 'coop' | 'realm' | null
+let zoomScope: ZoomScope = null
+/** How far a co-op view may reach: its simulation's spawn ring (`ringDistance`), so the horde never pops in on screen. */
+const COOP_ZOOM_REACH = Math.hypot(COOP.view.w, COOP.view.h) / 2 + 12
+/** CSS px per world px with no zoom: the UI's pixel frames stay this size whatever the camera does. */
+let restScale = 4
+
+/** The canvas' fit for the viewport now, zoomed as the scope allows (a crash's safe mode keeps the resting view), or null while the browser reports no screen to fit (`pickViewport`). */
 const fitNow = () => {
   const visual = window.visualViewport
   const size = pickViewport(visual, { width: window.innerWidth, height: window.innerHeight })
   if (visual && size !== visual) canvasLosses.badViewport++
-  return size && fitView(size.width, size.height, window.devicePixelRatio || 1)
+  if (!size) return null
+  const dpr = window.devicePixelRatio || 1
+  const rest = deviceScale(size.width, size.height, dpr)
+  const scales = zoomScope && !safeModeOn() ? zoomScales(size.width, size.height, dpr, zoomScope === 'coop' ? COOP_ZOOM_REACH : Infinity) : [rest]
+  restScale = rest / dpr
+  zoomShown.levels = scales.length
+  zoomShown.level = Math.min(settings().cameraZoom, scales.length - 1)
+  return fitView(size.width, size.height, dpr, scales[zoomShown.level])
 }
 const fitted = (fit: ReturnType<typeof fitView>) => fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale
 
@@ -305,7 +322,7 @@ const resize = () => {
   canvas.style.width = `${view.w * cssScale}px`
   canvas.style.height = `${view.h * cssScale}px`
   // One world pixel, for the UI's pixel frames (style.css turns it into #ui's zoomed px as `--px`).
-  document.documentElement.style.setProperty('--world-px', `${Math.max(2, Math.round(cssScale))}px`)
+  document.documentElement.style.setProperty('--world-px', `${Math.max(2, Math.round(restScale))}px`)
   context2d(canvas)
   dirty = true
 }
@@ -315,6 +332,24 @@ window.addEventListener('resize', scheduleResize)
 window.addEventListener('orientationchange', scheduleResize)
 window.visualViewport?.addEventListener('resize', scheduleResize)
 resize()
+
+/** Moves the zoom to `scope`, fitting the canvas again when that changes it (leaving a run goes back to the resting view). */
+const setZoomScope = (scope: ZoomScope) => {
+  if (scope === zoomScope) return
+  zoomScope = scope
+  resize()
+}
+/** Sets the zoom level, kept on this device (`Settings.cameraZoom`) and applied at once: a solo run records the new view like a rotation. */
+const setZoom = (level: number) => {
+  updateSettings({ cameraZoom: level })
+  resize()
+}
+const stepZoom = (dir: -1 | 1) => {
+  const level = Math.max(0, Math.min(zoomShown.levels - 1, zoomShown.level + dir))
+  if (zoomScope && level !== zoomShown.level) setZoom(level)
+}
+const cycleZoom = () => setZoom((zoomShown.level + 1) % zoomShown.levels)
+wireZoomGestures(() => zoomScope !== null, stepZoom)
 // After a GPU reset every canvas comes back blank, cached art included: redraw it all, settings too
 // (the frame held behind a menu as well: a paused run draws only when `dirty`).
 canvas.addEventListener('contextrestored', canvasRestored)
@@ -1423,6 +1458,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // The outbreak's shiny can show up in the first minute (in safe mode it loads when one does).
   if (!detail.safe) void preloadShinies([ENEMIES[plan.outbreak].dex])
   loading.remove()
+  setZoomScope('run')
   run = {
     game,
     hud: runHud(game),
@@ -1608,6 +1644,7 @@ const startDojo = async (starter: PlayableId) => {
     })
     const dojo: DojoRun = { panel, startedAt: performance.now(), saved: false }
     r.training = dojo
+    setZoomScope('run')
     run = r
     syncSprites()
     resetMemoryPeaks()
@@ -1647,7 +1684,7 @@ const endDojo = (r: Run, dojo: DojoRun) => {
 
 /** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
 const runHud = (game: Game, onPause: () => void = () => game.phase === 'playing' && (game.phase = 'paused'), menu = false) => {
-  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, input.isHeld, menu)
+  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, input.isHeld, menu, game.versus ? null : zoomButton(cycleZoom))
   requestAnimationFrame(syncMarkerInsets)
   return hud
 }
@@ -2405,6 +2442,8 @@ const themeFor = (r: Run | null): ThemeId | null => {
 input.onKey((key) => {
   unlockAudio()
   if (key === 'KeyM') toggleMute()
+  if (key === 'Equal' || key === 'NumpadAdd') stepZoom(-1)
+  if (key === 'Minus' || key === 'NumpadSubtract') stepZoom(1)
   if (!run) return
   const g = run.game
   // Co-op never pauses the world: the menu opens over it.
@@ -2676,6 +2715,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     i === me.slot ? equippedLook() : (p.loadout.look ?? (import.meta.env.DEV ? tabBotLook(p.seat) : null))
   setLooks(live.start.players.map((p, i) => parseLook(seatLook(p, i))))
   setLooksGame(`${live.room}:${live.start.id}`)
+  setZoomScope(live.game.versus ? null : 'coop')
   run = {
     game: live.game,
     hud: coopRunHud(c),
@@ -3127,6 +3167,7 @@ const showRealm = (city: CityId | null) => {
         {
           client,
           scale: () => cssScale,
+          zoom: () => zoomButton(cycleZoom),
           handle: accountHandle() ?? 'you',
           back,
           openRoom: (mode) => realmRoom(mode),
@@ -3854,6 +3895,8 @@ const frame = (now: number) => {
     menuAcc += dt
   }
   const menuFrame = menuAcc >= STEP * 0.6
+  // Out of a run the camera rests, but in the Poké Realm, which draws in the meadow's place.
+  if (!run) setZoomScope(screen?.scene ? 'realm' : null)
   // While a run loads (`loadRunSheets`) the meadow holds its last frame: its sheets are gone, and drawing would ask for them again.
   if (!run && menuFrame && !startingRun) {
     const mdt = Math.min(0.1, menuAcc)
