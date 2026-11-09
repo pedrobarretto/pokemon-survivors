@@ -4350,26 +4350,6 @@ button {
   margin-bottom: calc(23 * var(--px));
 }
 
-/* The rest screen's clouds drift a device pixel at a time (render/lobbyStage.ts): behind the logo, over the canvas. */
-.title-home {
-  isolation: isolate;
-}
-
-.stage-clouds {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.stage-clouds img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  image-rendering: pixelated;
-}
-
 .lobby-cast {
   position: absolute;
   left: 50%;
@@ -4539,7 +4519,7 @@ button {
   font-style: normal;
 }
 
-.lobby-mode-pals {
+.lobby-mode-chip .arc-badge.lobby-mode-pals {
   top: -6px;
   right: auto;
   left: -4px;
@@ -27732,6 +27712,7 @@ span.arena-hub-face {
 
 .arc-badge {
   position: absolute;
+  font-style: normal;
   top: -10px;
   right: -10px;
   display: grid;

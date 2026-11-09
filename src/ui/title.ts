@@ -18,7 +18,6 @@ import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/su
 import { formatNumber, LOCALES, locale, t } from '../i18n'
 import { arenaIcon, bulbIcon, chevronIcon, coinIcon, coopIcon, discordIcon, eggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
-import { loadStage, stageHorizonRise, stageRidgeReach, type StageAnchor, type StageClouds, type StageSpan } from '../render/lobbyStage'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
 import type { Cover, Place } from '../render/titleScene'
@@ -91,10 +90,9 @@ export type LobbyFocus =
   | SocialId
 
 /**
- * The title's world: the side-view stage (`render/lobbyStage.ts`) on the rest
- * screen, and the top-down meadow (`render/titleScene.ts`) the lobby stands on,
- * under its cards and under a trip to the Kecleon plaza, the Boutique, the Dojo
- * or the Estádio.
+ * The title's world: the top-down meadow (`render/titleScene.ts`) behind the
+ * rest screen and the lobby's cards, and under a trip to the Kecleon plaza, the
+ * Boutique, the Dojo or the Estádio.
  */
 export type Meadow = {
   /**
@@ -106,12 +104,7 @@ export type Meadow = {
   visit: (to: Place, instant?: boolean) => void
   /** Where the meadow rests, or `moving` during a trip. */
   at: () => Place | 'moving'
-  /** Draws the rest screen's side-view stage this frame, standing on `at` (view px). */
-  stage: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number, at: StageAnchor) => void
-  /** The stage's clouds as images, placed each frame by `tickClouds`. */
-  clouds: StageClouds['el']
-  tickClouds: (w: number, horizon: number) => void
-  /** Steps and draws the top-down meadow this frame: `covers` is what the lobby covers at home (the wild keep clear of it and the cast stands in for the partner), null on a trip. */
+  /** Steps and draws the top-down meadow this frame: `covers` is what the lobby covers at home (the wild keep clear of it and the cast stands in for the partner), null on the rest screen and on a trip. */
   draw: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number, covers: readonly Cover[] | null) => void
   /** CSS px per world px: how the DOM over the canvas lines up with it. */
   scale: () => number
@@ -660,8 +653,8 @@ const modeIcon = (id: GameModeId) =>
 const playLine = (id: GameModeId, facts: ModeFacts) => [t().gameModes.names[id], facts.tags.at(0)?.text].filter(Boolean).join(' · ')
 
 /**
- * Title screen: the pixel logo and a blinking "press start" on the side-view
- * stage, then the lobby on the top-down meadow. The top bar holds the Trainer chip, the wallet, the
+ * Title screen: the pixel logo and a blinking "press start", then the lobby,
+ * both on the top-down meadow. The top bar holds the Trainer chip, the wallet, the
  * gems, a survey while one waits for an answer (each opens by itself once),
  * Novidades and the gear. Hoje has the day's cards (Presentes, Desafio, Ovos,
  * Missões, Surto; events too), Na Praça the Festival, the Kecleon shop, the
@@ -701,7 +694,7 @@ export const titleScreen = (
   const intro = shellBody(h('h1', { class: 'sr-only' }, 'Pokémon Survivors'), logo, prompt)
   const wipeEl = h('div', { class: 'lobby-wipe hidden', 'aria-hidden': 'true' })
   // The Noite das Bruxas dresses the lobby in orange and purple (`style.css`).
-  const el = h('div', { class: halloweenToday() ? 'screen shell title-home haunted' : 'screen shell title-home' }, actions.meadow.clouds, bar, intro, wipeEl)
+  const el = h('div', { class: halloweenToday() ? 'screen shell title-home haunted' : 'screen shell title-home' }, bar, intro, wipeEl)
 
   let lobby: HTMLElement | null = null
   let tickers: ((time: number) => void)[] = []
@@ -738,15 +731,12 @@ export const titleScreen = (
   let measureAge = 0
   /** The cast's size (local CSS px), for `covers`. */
   let castBox = { half: 0, tall: 0 }
-  /** What walkers on the rest screen's ridge keep out of: the logo. */
-  let restStanding: readonly StageSpan[] = []
   /** The circle wiping in and out of a trip: closing, `mid` swaps what's behind it, then it opens and `done` runs. */
   let wipe: { t: number; closing: boolean; mid: () => void; done: () => void } | null = null
 
   const hiddenModes = [...(actions.coop ? [] : (['coop'] as const)), ...(actions.realm ? [] : (['realm'] as const))]
   const modes = shownModes(hiddenModes)
   let mode = lobbyModeIn(loadLobbyMode(), modes)
-  if (opts.intro) loadStage()
   /** Set by `buildLobby`: repaints what follows the selected mode (its name, its pills, the cast, the arrows, the bar, JOGAR). */
   let paintMode: () => void = () => {}
 
@@ -1536,30 +1526,16 @@ export const titleScreen = (
     dim: 0,
     scene: (ctx, dt, w, vh) => {
       stepWipe(dt)
-      const meadowUp = lobby !== null
-      if (actions.meadow.clouds.hidden !== meadowUp) actions.meadow.clouds.hidden = meadowUp
-      if (meadowUp) {
-        // Layout reads, and they only change with the layout or the mode: a few times a second is plenty (never while it's hidden, every box would read 0).
-        if (!onTrip && !el.classList.contains('hidden') && slot && measureAge++ % 20 === 0) {
-          const next = lobbyCovers(el, slot.getBoundingClientRect(), castBox, uiZoom(), actions.meadow.scale())
-          const key = next.map((c) => `${c.left},${c.top},${c.right},${c.bottom}`).join(' ')
-          if (key !== coversKey) {
-            coversKey = key
-            covers = next
-          }
+      // Layout reads, and they only change with the layout or the mode: a few times a second is plenty (never while it's hidden, every box would read 0).
+      if (lobby && !onTrip && !el.classList.contains('hidden') && slot && measureAge++ % 20 === 0) {
+        const next = lobbyCovers(el, slot.getBoundingClientRect(), castBox, uiZoom(), actions.meadow.scale())
+        const key = next.map((c) => `${c.left},${c.top},${c.right},${c.bottom}`).join(' ')
+        if (key !== coversKey) {
+          coversKey = key
+          covers = next
         }
-        return actions.meadow.draw(ctx, dt, w, vh, onTrip ? null : covers)
       }
-      if (measureAge++ % 20 === 0) {
-        // Walkers on the ridge keep out from behind the logo where it comes down that far.
-        const scale = actions.meadow.scale()
-        const box = logo.getBoundingClientRect()
-        const reaches = box.height > 0 && box.bottom / scale > vh * 0.72 - stageHorizonRise - stageRidgeReach
-        restStanding = reaches ? [{ from: box.left / scale - w / 2, to: box.right / scale - w / 2 }] : []
-      }
-      const at: StageAnchor = { x: Math.round(w / 2), feet: Math.round(vh * 0.72), standing: restStanding }
-      actions.meadow.stage(ctx, dt, w, vh, at)
-      actions.meadow.tickClouds(w, at.feet - stageHorizonRise)
+      actions.meadow.draw(ctx, dt, w, vh, lobby && !onTrip ? covers : null)
     },
     tick: (time: number) => {
       overScreen?.tick?.(time)
