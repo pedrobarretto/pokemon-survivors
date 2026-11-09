@@ -27446,3 +27446,59 @@ span.arena-hub-face {
 .research-head img { width: 24px; height: 24px; image-rendering: pixelated; }
 .research-later { opacity: 0.55; }
 .research-note { margin: 4px 0; font-size: 0.85em; opacity: 0.85; }
+/* The Máquina de Pelúcias' words (`realm/games/claw.ts`): under the machine upright, beside it sideways. */
+.claw-panel {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.claw-panel h3 {
+  margin: 0;
+  font-family: var(--title);
+  font-size: 11px;
+  font-weight: normal;
+  line-height: 1.5;
+}
+
+.claw-panel p {
+  margin: 0;
+}
+
+.claw-panel small {
+  opacity: 0.75;
+}
+
+.claw-panel-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.claw-panel-actions button {
+  flex: 1;
+  min-height: 40px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+@media (orientation: landscape) {
+  .claw-panel {
+    left: auto;
+    right: max(8px, calc(50% - 300px));
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    width: min(240px, 42%);
+    max-height: calc(100% - 16px);
+    overflow-y: auto;
+  }
+}

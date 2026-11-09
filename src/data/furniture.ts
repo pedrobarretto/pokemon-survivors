@@ -1,4 +1,5 @@
 import { LEGEND_IDS, type LegendId } from './legends'
+import { PLUSH_POOL, isExclusivePlush, plushPiece, type PlushPiece } from './plushes'
 import { CATALOG } from './furnitureCatalog'
 import { placedTurn, turnMode, type FurnitureDef, type TurnMode } from './furnitureDef'
 import { turnedSize } from './furnitureUse'
@@ -16,8 +17,10 @@ import { turnedSize } from './furnitureUse'
  *   its own (`trophyFurniture`): a legend's doll once it's captured, and so on.
  *   Never sold: a Pokémon is never for sale.
  * - `source: 'event'`: an event's reward (a gift), dated by `from`.
+ * - `source: 'claw'`: a plush won at the arcade's Máquina de Pelúcias
+ *   (`data/plushes.ts`, granted by the API into `furniture_owned`). Never sold.
  *
- * Gem-bought and trophy furniture is never tradable (`tradable`); the trade
+ * Gem-bought, trophy and claw furniture is never tradable (`tradable`); the trade
  * window comes in a later wave and only moves what `tradable` allows.
  *
  * `kind` says where it goes: `floor` stands on the floor (it blocks walkers
@@ -41,7 +44,12 @@ const DOLL: FurnitureDef = { kind: 'top', set: 'trophies', size: [1, 1], rarity:
 const DOLLS = {} as Record<`doll:${LegendId}`, FurnitureDef>
 for (const id of LEGEND_IDS) DOLLS[`doll:${id}`] = DOLL
 
-export const FURNITURE: Readonly<Record<ShopFurnitureId | `doll:${LegendId}`, FurnitureDef>> = { ...CATALOG, ...DOLLS }
+/** A plush won at the claw machine, one piece per family (drawn from the family's sprite, `render/plush.ts`). */
+const PLUSHES = Object.fromEntries(
+  PLUSH_POOL.map((family): [PlushPiece, FurnitureDef] => [plushPiece(family), { kind: 'floor', set: 'trophies', size: [1, 1], rarity: isExclusivePlush(family) ? 'epic' : 'common', price: null, blocks: true, source: 'claw' }]),
+) as Record<PlushPiece, FurnitureDef>
+
+export const FURNITURE: Readonly<Record<ShopFurnitureId | `doll:${LegendId}` | PlushPiece, FurnitureDef>> = { ...CATALOG, ...DOLLS, ...PLUSHES }
 
 export type FurnitureId = keyof typeof FURNITURE & string
 
@@ -51,10 +59,10 @@ export const isFurnitureId = (v: unknown): v is FurnitureId => typeof v === 'str
 
 export const dollOf = (legend: LegendId): FurnitureId => `doll:${legend}`
 
-/** Whether a piece can change hands in a trade: only what's neither bought with gems nor earned by the account itself. */
+/** Whether a piece can change hands in a trade: only what's neither bought with gems nor earned by the account itself (a trophy, a plush). */
 export const tradable = (id: FurnitureId): boolean => {
   const f = FURNITURE[id]
-  return f.source !== 'trophy' && !(f.price !== null && 'gems' in f.price)
+  return f.source !== 'trophy' && f.source !== 'claw' && !(f.price !== null && 'gems' in f.price)
 }
 
 /** How a piece turns (the editor's Girar, `Placed.turned`): a quarter, mirrored, or not at all (`turnMode`). */

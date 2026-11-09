@@ -725,6 +725,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
 
     /** Whether `userId` is kept out of the realm now (the realm's writes ask). */
     closed: (userId: string) => closed(sql, userId),
+    /** The same inside a transaction (the claw machine's). */
+    closedIn: closed,
 
     /** Counts a base save against the account's limit; false past it. */
     takeSave: (userId: string) => limits.save.take([userId], now().getTime()),

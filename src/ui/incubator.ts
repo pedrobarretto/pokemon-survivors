@@ -161,7 +161,7 @@ const WISP = { flame: '#78f0a8', core: '#e0fff0', tail: 'rgba(120,240,168,0.5)',
  * The Haunted Egg hatches at night: a dusk backdrop, will-o'-wisps circling
  * and a violet burst. `holdAt` freezes the animation at that second (dev screenshots).
  */
-export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, actions: { play: () => void; done: () => void }, holdAt?: number): Screen => {
+export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, actions: { play?: () => void; done: () => void; look?: { egg: HTMLCanvasElement; text: string; reveal: string } }, holdAt?: number): Screen => {
   const m = t().eggs
   const def = HATCHLINGS[hatch.id]
   const dex = def.line[0].dex
@@ -170,7 +170,7 @@ export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, action
   if (hatch.shiny) void loadSpecies(dex, true).catch(() => {})
 
   const canvas = h('canvas', { class: 'hatch-canvas', width: W, height: H })
-  const text = h('p', { class: 'hatch-text' }, m.hatching)
+  const text = h('p', { class: 'hatch-text' }, actions.look?.text ?? m.hatching)
   const buttons = h('div', { class: 'buttons hidden' })
   const skipHint = h('p', { class: 'hint' }, m.skip)
   let start = -1
@@ -187,15 +187,16 @@ export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, action
     playCry(cryUrl(dex), 0.5)
     const unlocked = hatch.duplicate ? m.duplicate(name, formatPokeDollars(hatch.refund)) : hatch.shiny ? m.shinyUnlocked : m.unlocked
     const note = hatch.guaranteed ? `${m.pity.hatched(EGGS.pity)} ${unlocked}` : unlocked
-    text.replaceChildren(rich(hatch.shiny ? m.hatchedShiny(name) : m.hatched(name)), h('small', {}, note))
-    const play = h('button', { class: 'btn' }, m.play(name))
+    text.replaceChildren(rich(actions.look?.reveal ?? (hatch.shiny ? m.hatchedShiny(name) : m.hatched(name))), h('small', {}, note))
+    // Without `play` (a hatch away from the lobby) OK is the only way on.
+    const play = actions.play ? h('button', { class: 'btn' }, m.play(name)) : null
     const ok = h('button', { class: 'btn' }, m.ok)
-    buttons.replaceChildren(play, ok)
+    buttons.replaceChildren(...(play ? [play, ok] : [ok]))
     buttons.classList.remove('hidden')
     skipHint.remove()
     // OK is the default and the first picks wait (`REVEAL_GUARD_MS`): the key that skipped the hatch, held or
     // repeating, must not land on "Play with" and start a run nobody asked for.
-    nav = menu(input, [play, ok], (i) => later(i === 0 ? actions.play : actions.done), { horizontal: true, initial: 1, guard: REVEAL_GUARD_MS })
+    nav = menu(input, play ? [play, ok] : [ok], (i) => later(play && i === 0 && actions.play ? actions.play : actions.done), { horizontal: true, initial: play ? 1 : 0, guard: REVEAL_GUARD_MS })
   }
 
   // Before the reveal, any key or tap skips the animation.
@@ -207,7 +208,8 @@ export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, action
   root.append(el)
 
   const ctx = context2d(canvas)
-  const egg = eggSprite(hatch.tier)
+  // `look`: something else that comes to life in the egg's place (a plush from the claw machine), uncracked.
+  const egg = actions.look?.egg ?? eggSprite(hatch.tier)
   const cx = W / 2
   const floor = H - 18
 
@@ -218,7 +220,7 @@ export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, action
     const y = floor + 2 - egg.height * EGG_SCALE
     ctx.drawImage(egg, x, y, egg.width * EGG_SCALE, egg.height * EGG_SCALE)
     const stage = HATCH.cracks.filter((at) => k >= at).length
-    if (stage > 0) ctx.drawImage(eggCrack(hatch.tier, stage), x, y, egg.width * EGG_SCALE, egg.height * EGG_SCALE)
+    if (stage > 0 && !actions.look) ctx.drawImage(eggCrack(hatch.tier, stage), x, y, egg.width * EGG_SCALE, egg.height * EGG_SCALE)
     // Sounds follow the animation: a tap per wobble, a crunch per crack.
     const w = shake ? HATCH.wobbles.indexOf(shake) : -1
     if (w > wobble) (wobble = w), playSfx('move')

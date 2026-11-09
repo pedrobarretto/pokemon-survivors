@@ -4,6 +4,8 @@ import { BASE_GRID, BASE_ROOM, type Shape } from '../data/realmMap'
 import { DOOR, walksInto, type BaseExterior, type BaseLayout, type Placed } from '../data/secretBases'
 import { canvasCache, context2d, createCanvas } from '../engine/pixelart'
 import type { BaseView } from '../net/realmApi'
+import { plushFamily, plushForm } from '../data/plushes'
+import { plushArt } from './plush'
 import { boxOf, dollLegend, drawOrder, supportOf, type Box } from '../realm/placement'
 import { furnitureImage } from './furnitureArt'
 import { drawPokemon, fitSprites, sprites } from './sprites'
@@ -232,6 +234,9 @@ const roomCanvas = (layout: BaseLayout) => {
 
 /* ---------------- Furniture ---------------- */
 
+/** A plush's width on a base's floor (px). */
+const PLUSH_SIZE = 20
+
 const RARITY_ACCENT = { common: null, rare: '#58a8f8', epic: '#b868f0', legendary: '#f8c838' } as const
 
 /** A doll's legend sprite, shrunk to doll size. */
@@ -242,6 +247,13 @@ const drawDoll = (ctx: CanvasRenderingContext2D, legend: LegendId, x: number, y:
   box(ctx, '#b08830', x - 7, y - 4, 14, 4)
   rect(ctx, '#f0d070', x - 7, y - 4, 14, 1)
   drawPokemon(ctx, dollSprites(legend), 'Idle', 0, time, x, y - 4)
+}
+
+/** A plush standing on the floor: `x` its center, `y` its feet. Nothing until its sprite is in. */
+const drawPlush = (ctx: CanvasRenderingContext2D, dex: number, x: number, y: number) => {
+  const art = plushArt(dex, PLUSH_SIZE)
+  if (art) ctx.drawImage(art, Math.round(x - art.width / 2), Math.round(y - art.height))
+  return art !== null
 }
 
 /** A piece's code-made stand-in in its footprint (`px`, `py`: its top-left, `pw`, `ph`: its size, all px). */
@@ -308,7 +320,9 @@ const drawPiece = (ctx: CanvasRenderingContext2D, p: Placed, ox: number, oy: num
   }
   const legend = dollLegend(p.id)
   const img = legend ? null : furnitureImage(p.id)
+  const plush = plushFamily(p.id)
   if (legend) drawDoll(ctx, legend, px + pw / 2, py + ph - 4, time)
+  else if (plush) drawPlush(ctx, plushForm(plush).dex, px + pw / 2, py + ph - 2)
   else if (img) drawArt(ctx, img, px, py, pw, ph, turn === 'quarter')
   else drawStandIn(ctx, p.id, px, py, pw, ph)
   if (turn === 'mirror') ctx.restore()
@@ -422,6 +436,12 @@ export const pieceIcon = (id: FurnitureId, time = 0): { canvas: HTMLCanvasElemen
     const ctx = context2d(canvas)
     drawDoll(ctx, legend, 14, 32, time)
     return { canvas, ready: dollSprites(legend).variant !== undefined }
+  }
+  const plush = plushFamily(id)
+  if (plush) {
+    const canvas = createCanvas(28, 34)
+    const ready = drawPlush(context2d(canvas), plushForm(plush).dex, 14, 32)
+    return { canvas, ready }
   }
   if (def.kind === 'wallpaper' || def.kind === 'flooring') {
     const canvas = createCanvas(36, 36)
