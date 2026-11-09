@@ -22,7 +22,6 @@ import { h, later, rich } from './dom'
 import { contentLine } from './gifts'
 import { loadSave, today } from './save'
 import { hint, menu, type Screen } from './screens'
-import { railTile } from './shell'
 
 /**
  * Noite das Bruxas in the lobby (`game/halloween.ts`): the Hoje card, from
@@ -83,15 +82,6 @@ export const fillHalloweenCard = (el: HTMLElement) => {
   const count = next ? m.jarCount(formatNumber(candies)) : m.toSpend(formatNumber(candiesLeft(jar)))
   el.setAttribute('aria-label', `${m.name}: ${s.countdown !== null ? m.countdown(s.countdown) : count.replaceAll('*', '')}`)
   return el
-}
-
-/** The Hoje card as a rail tile (phones held upright): the jack-o'-lantern, with the days left on its corner once the night is on. */
-export const halloweenTile = () => {
-  const m = t().halloween
-  const s = standing()
-  const aria = `${m.name}: ${s.countdown !== null ? m.countdown(s.countdown) : s.left !== null ? m.daysLeftShort(s.left) : ''}`
-  const days = s.left !== null && h('em', { class: 'lobby-badge rail-days' }, t().home.rail.days(s.left))
-  return railTile('halloween', h('img', { class: 'lobby-jack', src: jackIcon(), alt: '' }), t().home.rail.halloween, aria, days)
 }
 
 /** A reward's short name, for its tile: the style's, the egg's, the title's or the shiny's. */

@@ -25,8 +25,15 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-08',
-    title: { pt: 'Fim da tela preta e do mundo invisível', en: 'No more black screen or invisible world', es: 'Adiós a la pantalla negra y al mundo invisible', fr: 'Fini l’écran noir et le monde invisible', zh: '修正黑畫面與世界消失問題' },
+    title: { pt: 'Lobby novo: escolha o modo e jogue', en: 'A new lobby: pick a mode and play', es: 'Un lobby nuevo: elige el modo y juega', fr: 'Un nouvel accueil : choisis ton mode et joue', zh: '全新大廳：選好模式就開打' },
     highlights: [
+      {
+        pt: 'Lobby novo: os 7 modos à vista, cada um com seu palco, e o JOGAR faz o modo escolhido.',
+        en: 'A new lobby: all 7 modes in view, each with its own stage, and PLAY starts the one you picked.',
+        es: 'Lobby nuevo: los 7 modos a la vista, cada uno con su escenario, y JUGAR inicia el que elegiste.',
+        fr: 'Nouvel accueil : les 7 modes en vue, chacun avec sa scène, et JOUER lance celui que tu as choisi.',
+        zh: '全新大廳：7 種模式一目了然，各有專屬舞台，按下「開始」就進入選好的模式。',
+      },
       {
         pt: 'Corrigimos a tela preta ao abrir o jogo no iPhone, iPad e Mac com Safari 26.',
         en: 'We fixed the black screen when opening the game on iPhone, iPad and Mac with Safari 26.',
@@ -55,15 +62,28 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Sur les claviers AZERTY, le jeu affiche maintenant les bonnes touches : Z Q S D.',
         zh: '使用 AZERTY 鍵盤時，遊戲現在會顯示正確的按鍵：Z Q S D。',
       },
-      {
-        pt: 'Se o jogo ainda não abrir, recarregue a página.',
-        en: 'If the game still doesn’t open, reload the page.',
-        es: 'Si el juego aún no abre, recarga la página.',
-        fr: 'Si le jeu ne s’ouvre toujours pas, recharge la page.',
-        zh: '如果遊戲仍然無法開啟，請重新載入頁面。',
-      },
     ],
     changes: [
+      {
+        title: { pt: 'Lobby novo', en: 'A new lobby', es: 'Lobby nuevo', fr: 'Nouvel accueil', zh: '全新大廳' },
+        notes: [
+          {
+            pt: 'Os 7 modos ficam numa barra sempre à vista. Escolha um e o palco muda: a horda no Survivors, um lendário em Lendas, dois times na Arena. O JOGAR ganha a cor do modo e faz o que ele faz.',
+            en: 'The 7 modes sit on a bar that is always in view. Pick one and the stage changes: the horde in Survivors, a legend in Legends, two teams in the Arena. PLAY takes the mode\'s color and starts it.',
+            es: 'Los 7 modos están en una barra siempre a la vista. Elige uno y el escenario cambia: la horda en Survivors, un legendario en Leyendas, dos equipos en la Arena. JUGAR toma el color del modo y lo inicia.',
+          },
+          {
+            pt: 'O dia vem primeiro, em Hoje: Presentes, Desafio do dia, Ovos, Missões e Surto. Na Praça ficam o Festival, as lojas e o Hall da Fama. Discord, redes e Ideias foram para a Comunidade.',
+            en: 'Your day comes first, under Today: Gifts, Daily Challenge, Eggs, Missions and Outbreak. At the Plaza you find the Festival, the shops and the Hall of Fame. Discord, socials and Ideas moved to Community.',
+            es: 'Tu día va primero, en Hoy: Regalos, Desafío del día, Huevos, Misiones y Brote. En la Plaza están el Festival, las tiendas y el Salón de la Fama. Discord, redes e Ideas pasaron a Comunidad.',
+          },
+          {
+            pt: 'O botão Passear saiu: tudo o que ele alcançava agora tem o seu botão. No celular, cinco abas embaixo guardam o resto.',
+            en: 'The Explore button is gone: everything it reached now has its own button. On phones, five tabs at the bottom hold the rest.',
+            es: 'El botón Pasear ya no está: todo lo que alcanzaba ahora tiene su botón. En el celular, cinco pestañas abajo guardan el resto.',
+          },
+        ],
+      },
       {
         title: { pt: 'Tela preta ao abrir', en: 'Black screen on opening', es: 'Pantalla negra al abrir', fr: 'Écran noir à l’ouverture', zh: '開啟時黑畫面' },
         notes: [

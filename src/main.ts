@@ -9,7 +9,7 @@ import type { BugCrash } from './game/bugReport'
 
 import { playCry, playSfx, unlockAudio, type Sfx } from './engine/audio'
 import { castSound } from './ui/castSounds'
-import { createInput, type Stick } from './engine/input'
+import { createInput } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
@@ -138,7 +138,8 @@ import { consumableIcon } from './render/props'
 import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
-import { celebrateShop, createTitleScene, drawTitleScene, exploreMeadow, meetPartner, revealShopkeeper, sceneAt, steerPartner, stepTitleScene, talkSpot, tapsPlaza, visitPlaza } from './render/titleScene'
+import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
+import { createLobbyStage, drawLobbyStage, stageDex } from './render/lobbyStage'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
@@ -511,28 +512,19 @@ let megaQueued = false
 let lungeQueued = false
 /** The meadow with wandering Pokémon behind every menu. Lives across screens, so it never pops. */
 const scene = createTitleScene(Date.now())
-/** The joystick a drag on the lobby's meadow steers the partner with, drawn over it. */
-let meadowStick: Stick | null = null
-
-/** A CSS px point on screen, in the meadow's world px (the canvas sits at the viewport's corner). */
-const meadowAt = (at: Vec): Vec => ({ x: Math.round(scene.cam.x) + at.x / cssScale, y: Math.round(scene.cam.y) + at.y / cssScale })
-
-/** A meadow point (world px) on screen, in CSS px. */
-const meadowToScreen = (at: Vec): Vec => ({ x: (at.x - Math.round(scene.cam.x)) * cssScale, y: (at.y - Math.round(scene.cam.y)) * cssScale })
+/** The lobby's side-view stage (`render/lobbyStage.ts`). */
+const lobbyStage = createLobbyStage()
 
 /** Lobbies that met the partner so far: only the latest one may send it away (the next title is built before the last one goes). */
 let meetings = 0
 
-/** The lobby's handle on the meadow: its partner walks there, with the supporter's companion, and visits the Kecleon plaza. */
+/** The lobby's handle on its world: the side-view stage, and the top-down meadow its partner hops through on a trip, with the supporter's companion. */
 const meadow: Meadow = {
   meet: (partner) => {
     const id = ++meetings
     meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }))
     return () => void (id === meetings && meetPartner(scene, null))
   },
-  steer: (move, tap, home) => steerPartner(scene, move, tap && meadowAt(tap), meadowAt(home)),
-  out: () => scene.partner !== null && scene.partner.state !== 'home',
-  stick: (stick) => (meadowStick = stick),
   visit: (to, instant) => {
     // 1 visit in 20 from afar, the counter looks empty: Kecleon is camouflaged until talked to (`ShopPlaza.reveal`).
     const offView = Math.abs(scene.plaza.x - (scene.cam.x + view.w / 2)) > view.w / 2 + 60
@@ -542,14 +534,12 @@ const meadow: Meadow = {
     visitPlaza(scene, to, view.w, view.h, instant)
   },
   at: () => sceneAt(scene),
-  explore: (on) => exploreMeadow(scene, on, view.w, view.h),
-  talkSpot: () => {
-    const at = talkSpot(scene)
-    return at && { ...meadowToScreen(at), who: at.who }
+  stage: (draw, dt, w, h, at, mode) => drawLobbyStage(draw, lobbyStage, w, h, at, mode, halloweenToday(), dt),
+  draw: (draw, dt, w, h) => {
+    stepTitleScene(scene, dt, w, h)
+    drawTitleScene(draw, scene, w, h)
   },
-  tapsShop: (at) => tapsPlaza(scene, meadowAt(at)),
-  // The canvas sits at the viewport's corner: CSS px over the scale are view px.
-  stageBox: (box) => (scene.stageBox = box && { left: box.left / cssScale, top: box.top / cssScale, right: box.right / cssScale, bottom: box.bottom / cssScale }),
+  scale: () => cssScale,
 }
 
 /** Dev: the plaza's building level (`ps.plaza(n)`), over the shop's own. */
@@ -748,6 +738,9 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   setScreen(
     titleScreen(ui, input, {
       play: () => (firstStep('play'), playFromLobby()),
+      partner: () => showMenu(),
+      legends: () => showMenu(loadSave().partner, 'legends'),
+      modes: (focus, shown) => openGameModes(ui, input, { current: loadLobbyMode(), shown, onPick: (id) => (saveLobbyMode(id), showTitle({ focus: 'play' })), close: () => showTitle({ focus }) }),
       // A device that never played: "press start" goes straight into its first run.
       start: opts.intro && firstRun() ? () => ((pressedStart = true), firstStep('play'), startFirstRun()) : undefined,
       challenge: () => showChallenge(),
@@ -798,7 +791,6 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       realm: realmUrl() ? () => enterRealm(null) : undefined,
       realmFriends: realmUrl() ? realmFriendsNow : undefined,
       arena: () => showArena(),
-      arenaHub: (tab) => showArenaHub(tab),
       dojo: () => showDojo(),
       meadow,
     }, opts),
@@ -846,7 +838,7 @@ const showPlayGate = () => {
 }
 
 /** The partner select; its top bar leads back to the title, to the Poké Mart (the wallet) and to Settings, which come back to it on the same Pokémon. */
-const showMenu = (initial: PlayableId = loadSave().partner) => {
+const showMenu = (initial: PlayableId = loadSave().partner, tab?: 'legends') => {
   endRun()
   firstStep('select')
   prefetchRun()
@@ -858,7 +850,7 @@ const showMenu = (initial: PlayableId = loadSave().partner) => {
     incubator: () => showIncubator(() => showMenu(select.selected())),
     // A skin not owned yet: the Boutique's Skins on it, then back here on the same Pokémon.
     boutique: (skin) => showBoutique('skins', () => showMenu(select.selected()), null, skin),
-  }, initial)
+  }, initial, tab ? { tab } : undefined)
   setScreen(select)
 }
 
@@ -1232,6 +1224,8 @@ const lobbySprites = (): Variant[] => {
     ...(c && canWalkWith(save, c, knownTier(save)) ? [{ dex: companionForm(c.id).dex, shiny: c.shiny }] : []),
     { dex: outbreak, shiny: false },
     { dex: outbreak, shiny: true },
+    // The stage's mode: its wild Pokémon around the platform.
+    ...stageDex(loadLobbyMode()).map((dex) => ({ dex, shiny: false })),
   ]
 }
 
@@ -3405,8 +3399,7 @@ const showArena = () =>
 
 /**
  * The Arena's hub (`ui/arenaHub.ts`) on `tab`: profile, season, ranking,
- * history, rules or the look worn (Visual). The Arena screen opens it, and so
- * do the lobby's Stadium boards; Voltar goes back to the Arena screen. Its
+ * history, rules or the look worn (Visual). The Arena screen opens it; Voltar goes back to the Arena screen. Its
  * Loja is the Boutique's (`showBoutique`), which comes back to the hub.
  */
 const showArenaHub = (tab: ArenaHubTab = 'profile') => {
@@ -3874,7 +3867,6 @@ const frame = (now: number) => {
         drawTitleScene(ctx, scene, view.w, view.h)
         ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
         ctx.fillRect(0, 0, view.w, view.h)
-        if (meadowStick) drawJoystick(ctx, meadowStick, cssScale)
       }
     } catch (error) {
       // The menus share the run's canvas: what they leave on it would follow the player into the next run.
@@ -4933,7 +4925,7 @@ if (import.meta.env.DEV) {
         if (rulesStanding(replay.rules) !== 'same') console.warn(`ps: the replay plays by rules ${replay.rules}, this build by ${RULES_VERSION}: it may end elsewhere`)
         return resimulate(replay)
       },
-      /** The lobby's meadow: its wanderers, the partner and the camera, to stage greetings (`ps.meadow().partner`). */
+      /** The top-down meadow a trip goes through: its wanderers, the partner and the camera. */
       meadow: () => scene,
       /**
        * The Dojo: `ps.dojo('charmander')` starts a training session with that Pokémon at once (its saved build on), and
@@ -4944,9 +4936,8 @@ if (import.meta.env.DEV) {
         showTitle({ shop: 'dojo' })
       },
       /**
-       * The Estádio: `ps.stadium()` walks the lobby there, south of home, Ninjask's hello included (the first visit's long one
-       * after `localStorage.removeItem('ps:stadiumSeen')`), then the Arena's screen. Its boards (Jogar, Ranking, Temporada,
-       * Histórico, Regras) open with E or a tap while the partner strolls by them.
+       * The Estádio: `ps.stadium()` goes there, south of home, Ninjask's hello included (the first visit's long one
+       * after `localStorage.removeItem('ps:stadiumSeen')`), then the Arena's screen.
        */
       stadium: () => showTitle({ shop: 'stadium' }),
       /**
@@ -4954,8 +4945,8 @@ if (import.meta.env.DEV) {
        * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
        * `ps.boutique('open')` lands there with the sheet open at once (`'skins'` on Skins, `'locker'` on Visual).
        */
-      /** Modos de jogo on its own (`ui/gameModes.ts`), until the lobby opens it: a pick is only recorded (`ps:lobbyMode`). */
-      modes: () => setScreen(openGameModes(ui, input, { current: loadLobbyMode(), onPick: saveLobbyMode, close: () => showTitle() })),
+      /** Modos de jogo (`ui/gameModes.ts`): a pick lands back on the lobby with that mode. */
+      modes: () => setScreen(openGameModes(ui, input, { current: loadLobbyMode(), onPick: (id) => (saveLobbyMode(id), showTitle()), close: () => showTitle() })),
       /** The secret bases' screens with fakes: `ps.base()` the editor, `ps.base('board')`, `ps.base('carpentry')` (`devBase`). */
       base: devBase,
       boutique: (cmd?: 'open' | 'skins' | 'locker') => (cmd ? showBoutique(cmd === 'open' ? 'shop' : cmd) : showTitle({ shop: 'boutique' })),
@@ -4995,7 +4986,7 @@ if (import.meta.env.DEV) {
       },
       /**
        * Puts a seasonal stall on the plaza (`ps.stall('halloween')`, `'christmas'`; `null` none; no argument: the calendar's) and
-       * goes there; `ps.stall('halloween', true)` opens its shelf in the shop, as a talk with Duskull does.
+       * goes there; `ps.stall('halloween', true)` opens its shelf in the shop.
        */
       stall: (id?: StallId | null, shop = false) => {
         if (id && !STALL_IDS.includes(id)) return `Stalls: ${STALL_IDS.join(', ')}`

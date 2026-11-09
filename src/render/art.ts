@@ -1247,6 +1247,17 @@ export const checkIcon = () => toIconUrl('kit:check', () => art(KIT_CHECK, { 1: 
 
 export const closeIcon = () => toIconUrl('kit:close', () => art(KIT_CLOSE, { 1: '#1b2040' }))
 
+/** A chunky arrow head for the lobby's round arrows (`dir`: which way it points). */
+const KIT_ARROW = ['1.......', '111.....', '11111...', '1111111.', '11111111', '1111111.', '11111...', '111.....', '1.......']
+
+export const chevronIcon = (dir: 'left' | 'right') =>
+  toIconUrl(`kit:chevron:${dir}`, () => art(dir === 'right' ? KIT_ARROW : KIT_ARROW.map((row) => [...row].reverse().join('')), { 1: '#1b2040' }))
+
+/** Four panels in a square: all the modes. */
+const KIT_GRID = ['111.111', '111.111', '111.111', '.......', '111.111', '111.111', '111.111']
+
+export const gridIcon = () => toIconUrl('kit:grid', () => art(KIT_GRID, { 1: '#1b2040' }))
+
 /* ---------------- Clears ---------------- */
 
 /** A clear's trophy (`game/clears.ts`), on the Pokédex and the partner select. 1 outline, 2 shade, 3 metal, 4 shine. */

@@ -43,7 +43,6 @@ import type { ShopLevel, ShopProp } from '../data/shop'
 import type { VitrineBlock } from '../game/shop'
 import type { CaravanBlock } from '../game/caravan'
 import type { StallBlock } from '../game/stalls'
-import type { StallId } from '../data/visitors'
 import type { FestivalId } from '../data/festivals'
 import type { RibbonTier } from '../game/ribbons'
 import type { SupporterTier } from '../game/supporters'
@@ -127,50 +126,46 @@ export const pt = {
     pressTouch: 'Toque para começar',
     play: 'JOGAR',
     today: 'HOJE',
-    outbreak: 'SURTO DO DIA',
-    challenge: 'DESAFIO DO DIA',
+    /** Na Praça's column head and the note beside it. */
+    plaza: 'NA PRAÇA',
+    plazaNote: 'evento + lojas',
+    outbreakName: (name: string) => `Surto: ${name}`,
+    outbreakLine: 'shiny mais fácil hoje',
+    challengeName: 'Desafio do dia',
+    challengeLine: (name: string) => `${name} · vale fita de ouro`,
     /** The Desafio do dia card once today's attempt was made: its time. */
     challengeDone: (time: string) => `Feito: ${time}`,
     challengeOpen: 'Ainda não jogado hoje',
     missions: 'Missões',
     missionsLeft: (n: number) => (n === 1 ? '1 missão de hoje por fazer' : `${n} missões de hoje por fazer`),
-    hall: 'HALL DA FAMA',
-    /** The Hall da Fama card's ticker: the newest supporter. */
-    hallJoined: (handle: string, today: boolean) => (today ? `@${handle} entrou hoje` : `@${handle} entrou no Hall`),
+    hallName: 'Hall da Fama',
     /** The name plate under the partner: tapping it opens the Pokémon select. */
     change: 'Trocar',
-    /** Over the partner until its first walk: after the movement keys, and on touch screens. */
-    stroll: 'passear',
-    strollTouch: 'Toque na grama para passear',
-    /** Passear: the button by the partner that puts the lobby's cards away to walk the meadow and the plaza, its label for screen readers, and the hint while walking. */
-    explore: 'Passear',
-    exploreLabel: 'Passear pelo campo e pela praça',
-    exploreTouch: 'Toque ou arraste para andar',
-    exploreKeys: 'andar',
     pokedex: 'Pokédex',
     eggs: 'Ovos',
     eggsReady: (n: number) => (n === 1 ? '1 ovo pronto para chocar' : `${n} ovos prontos para chocar`),
+    eggsWalking: (n: number) => (n === 1 ? '1 a caminho' : `${n} a caminho`),
+    eggsNone: 'Incubadora vazia',
+    gifts: 'Presentes',
+    giftsToOpen: (n: number) => (n === 1 ? '1 para abrir' : `${n} para abrir`),
     mart: 'Loja',
-    /** The lobby's Dojo tile (`ui/training.ts`): Machoke's training hall, west of home. */
-    dojo: 'Dojo',
-    /** Its label for screen readers and the rail tile's long name. */
-    dojoLabel: 'Dojo: treine golpes e monte builds',
     ranking: 'Ranking',
     ideas: 'Ideias',
     /** Support chip (donations page), and the Hall da Fama card before it has names. */
     support: 'Apoie o projeto',
-    /** Phones held upright: the lobby's side rails, an icon over a short label (Press Start 2P at 6 px: keep them to about 9 letters), and the days an event has left on its corner. */
-    rail: {
-      halloween: 'Bruxas',
-      festival: 'Festival',
-      outbreak: 'Surto',
-      challenge: 'Desafio',
-      missions: 'Missões',
-      hall: 'Hall',
-      invites: 'Convidar',
-      discord: 'Discord',
-      days: (n: number) => `${n}d`,
-    },
+    /** Na Praça's shop rows. */
+    shopName: 'Loja do Kecleon',
+    shopLine: 'Vitrine do dia · Ovo Kecleon',
+    boutiqueName: 'Boutique',
+    boutiqueLine: 'Chapéus e efeitos novos',
+    carpentryName: 'Marcenaria',
+    carpentryLine: 'Móveis para a sua base',
+    /** Over the partner pill, before its name. */
+    partner: 'Parceiro',
+    community: 'Comunidade',
+    friends: 'Amigos',
+    /** The bottom tabs on a phone (and the rail on a phone on its side). */
+    tabs: { home: 'Início', collection: 'Coleção', plaza: 'Praça', social: 'Social', profile: 'Perfil' },
   },
 
   /** The menus' top bar (`ui/shell.ts`). Press Start 2P has no uppercase accented glyphs: titles stay unaccented or mixed case. */
@@ -2059,6 +2054,9 @@ export const pt = {
     },
     /** The lobby's Hoje card and the shop's button. */
     card: 'FESTIVAL',
+    /** Na Praça's card: what a donation does, and the next milestone. */
+    cardLine: 'Doe ₽ e acenda a praça',
+    nextPot: (pot: string) => `próximo: ${pot}`,
     daysLeftShort: (days: number) => (days === 1 ? 'ÚLTIMO DIA' : `${days} DIAS`),
     shopButton: 'Festival',
   },
@@ -6089,8 +6087,6 @@ export const pt = {
   },
   /** The Kecleon plaza in the lobby (render/plaza.ts, ui/title.ts) and its dialogue box (ui/dialogue.ts). */
   plaza: {
-    /** The prompt over a shopkeeper when the strolling partner stands close (E on a keyboard, a tap on touch). */
-    talk: 'Falar',
     /** The dialogue box's "next" arrow, for screen readers. */
     next: 'Continuar',
     /** Kecleon's greeting when the partner arrives, by the local time of day. */
@@ -6152,13 +6148,6 @@ export const pt = {
       hello: ['Ovos Assombrados, por ₽ ou por doces. O que sai deles? Fantasmas que não aparecem em nenhum outro ovo.', 'Buu... Esses ovos não chocam no calor. Chocam no medo. Leva um?', 'Quatro fantasmas, um ovo. Qual vai sair? Nem eu sei... hehehe.'],
       thanks: ['Buu... Boa escolha. Cuidado com ele à meia-noite.', 'Hehehe... Ele já está olhando pra você.', 'Volte amanhã. Se tiver coragem.'],
     },
-    /** The seasonal stalls' keepers (`STALLS` in data/visitors.ts), line by line. */
-    stalls: {
-      halloween: ['Buu... A Noite das Bruxas chegou à praça.', 'Os doces das partidas vão pro pote, lá no lobby. Aqui eu vendo outra coisa...'],
-      christmas: ['Deli! A Delibird Presentes chegou à praça!', 'Ainda tô embrulhando tudo. Volta no Natal que o saco vai estar cheio!'],
-    } satisfies Record<StallId, readonly string[]>,
-    /** Lanturn at the festival's Lantern Market (`render/plaza.ts`), before the festival's sheet opens. */
-    lanturn: ['Lan-turn! Cada moeda na fonte acende uma lanterna na praça. Vem ver o pote!'],
   },
 
   /** The Dojo (`game/training.ts`, `ui/training.ts`): the training run's panel, the builds, and Machoke, its sensei in the lobby. */
@@ -6228,8 +6217,6 @@ export const pt = {
   },
   /** The Estádio (`render/stadium.ts`), south of home: the Arena's place in the lobby. */
   stadium: {
-    /** Its boards' names, on the talk bubble while the partner stands by one: Jogar opens the Arena, the rest its hub's tabs. */
-    boards: { play: 'Jogar', ranking: 'Ranking', season: 'Temporada', history: 'Histórico', rules: 'Regras' },
     /** Ninjask, the Arena's judge, before the Arena opens: the first visit, then one of these in turn. */
     first: [
       'Bzzz! Bem-vindo ao Estádio! Eu sou o juiz da Arena: rápido demais para deixar qualquer lance passar.',

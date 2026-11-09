@@ -3534,1648 +3534,1692 @@ button {
 }
 
 /*
- * The lobby. Wide screens are the base: Hoje on the left rail, the Hall da
- * Fama on the right, the partner in the middle under the logo, and JOGAR in
- * the middle of the dock. The two media queries further down (narrow screens,
- * phones in landscape) must match `NARROW` and `LANDSCAPE` in ui/title.ts.
+ * The lobby ("palco de modos"): the world behind it is drawn on the game's
+ * canvas (`render/lobbyStage.ts`), so the page itself stays see-through. Three
+ * layouts, in sync with `LANDSCAPE` and `NARROW` in ui/title.ts: `.lobby-wide`
+ * (Hoje, the stage, Na Praça, the mode bar and the dock), `.lobby-narrow` (one
+ * column over the bottom tabs) and `.lobby-landscape` (a rail of tabs, the
+ * stage and Hoje beside JOGAR). Nothing in it scrolls but Hoje's row and the
+ * mode bar, sideways.
  */
-.lobby {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr) minmax(220px, 290px);
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  grid-template-areas:
-    'today logo side'
-    'today stage side'
-    'bottom bottom bottom';
-  gap: 10px 16px;
-}
-
-.lobby-logo {
-  grid-area: logo;
-  display: flex;
-  justify-content: center;
-}
-
-.lobby-today {
-  grid-area: today;
-  align-self: start;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-  padding-top: 24px;
-}
-
-.lobby-rail-label {
-  margin: 0 0 0 2px;
-  font-family: var(--title);
-  font-size: 9px;
-  font-weight: 400;
-  color: #fff;
-  text-shadow: 2px 2px 0 #283040;
-}
-
-.lobby-side {
-  grid-area: side;
-  align-self: start;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-  padding-top: 24px;
-}
-
-.lobby-side .invite-banner {
-  max-width: none;
-}
-
-.lobby-stage {
-  grid-area: stage;
-  position: relative;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.title-home {
+  padding: max(10px, var(--safe-t)) max(14px, var(--safe-r)) max(10px, var(--safe-b)) max(14px, var(--safe-l));
   overflow: hidden;
+  touch-action: manipulation;
 }
 
-.lobby-bottom {
-  grid-area: bottom;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: end;
-  gap: 10px;
+.title-home .shell-top {
+  width: 100%;
+  min-height: 56px;
 }
 
-/* The dock's halves either side of JOGAR, which stays centered however many tiles each has. On phones they're `display: contents`: the tiles join the tab bar's grid. */
-.lobby-dock {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
+/* The chips of the top bar wear the kit. */
+.title-home .shell-chip,
+.title-home .shell-icon,
+.title-home .gem-chip {
+  min-height: 48px;
+  color: var(--kit-ink);
+  font-family: var(--kit-title);
+  font-size: 26px;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+  --frame: var(--kit-tinta);
 }
 
-.lobby-dock.left {
-  justify-content: flex-end;
+.title-home .shell-chip b {
+  font-family: var(--kit-title);
+  font-size: 26px;
+  font-weight: 400;
 }
 
-/* Highlighted by the arrows (or under the mouse). */
-.lobby-card:hover,
-.lobby-card.selected,
-.lobby-tile:hover,
-.lobby-tile.selected,
+.title-home .gem-chip {
+  padding: 4px 12px;
+}
+
+.title-home .gem-chip-count {
+  font-family: var(--kit-title);
+  font-size: 26px;
+}
+
+.title-home .shell-slot .gem-chip {
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.title-home .gem-chip.bare {
+  padding: 4px 10px;
+}
+
+.title-home .shell-icon {
+  width: 48px;
+  padding: 0;
+}
+
+.title-home .trainer-chip {
+  min-height: 60px;
+  max-width: min(280px, 46 * var(--vw));
+  padding: 3px 14px 3px 4px;
+  border-radius: 30px;
+}
+
+.title-home .trainer-chip-who b {
+  font-family: var(--kit-title);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.title-home .trainer-chip-sub {
+  font-family: var(--kit-body);
+  color: var(--kit-ink-2);
+}
+
 .title-home .shell-btn.selected,
 .title-home .trainer-chip.selected,
+.title-home .gem-chip.selected,
 .title-home .invite-banner.selected {
-  --frame: #e83838;
+  outline: 3px solid var(--kit-ouro);
+  outline-offset: 2px;
 }
 
-/* Hoje: a card per daily thing, a colored label over one line of live state. */
-.lobby-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  padding: 9px 11px;
-  text-align: left;
-  pointer-events: auto;
+.title-home :is(.shell-icon, .gem-chip, .shell-chip) .key-hint {
+  display: none;
 }
 
-.lobby-card-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  font-family: var(--title);
-  font-size: 8px;
-  line-height: 1.3;
-}
-
-.lobby-card.outbreak .lobby-card-label {
-  color: color-mix(in srgb, #c03878 var(--dk-lift, 100%), #fff);
-}
-
-.lobby-card.challenge .lobby-card-label {
-  color: color-mix(in srgb, #3868c0 var(--dk-lift, 100%), #fff);
-}
-
-.lobby-card.missions .lobby-card-label {
-  color: color-mix(in srgb, #389048 var(--dk-lift, 100%), #fff);
-}
-
-.lobby-card-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  min-height: 30px;
-}
-
-.lobby-card-row b {
-  min-width: 0;
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* The outbreak's walkers: sized in whole device pixels by `outbreakCard`. */
-.lobby-walker {
-  display: block;
-  flex: none;
-  margin: -6px -2px -4px;
-}
-
-.lobby-sparkle {
-  flex: none;
-  width: 14px;
-  height: 14px;
-}
-
-.lobby-icon {
-  flex: none;
-  width: 22px;
-  height: 28px;
-}
-
-.lobby-progress {
-  flex: 1 1 auto;
-  min-width: 24px;
-  height: 12px;
-  overflow: hidden;
-  background: var(--dk-surface-3, #d8dce8);
-  border: 2px solid #283040;
-  border-radius: 3px;
-}
-
-.lobby-card.missions .lobby-card-row b {
-  flex: none;
-}
-
-.lobby-progress span {
-  display: block;
-  height: 100%;
-  background: #58b858;
-}
-
-.lobby-badge {
-  flex: none;
-  display: inline-grid;
-  place-items: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  font-family: var(--title);
-  font-size: 8px;
-  font-style: normal;
-  line-height: 1;
-  color: #fff;
-  background: #e83030;
-  border: 2px solid #fff;
-  border-radius: 9px;
-}
-
-.lobby-badge.done {
-  background: #389048;
-}
-
-/* Discord in the top bar (its icon is wider than tall), with a green ✓ once linked. */
-.lobby-discord {
-  position: relative;
-}
-
-.lobby-discord img {
-  width: 36px;
-  height: 30px;
-}
-
-.lobby-discord .lobby-badge {
-  position: absolute;
-  top: -7px;
-  right: -7px;
-}
-
-/* Novidades in the top bar: while an update is unread, a "!" pulses on its corner and the page hops now and then. The survey's clipboard does the same while it waits for an answer. */
 .lobby-news,
 .lobby-survey {
   position: relative;
 }
 
-.lobby-news .lobby-badge,
-.lobby-survey .lobby-badge {
-  position: absolute;
-  top: -7px;
-  right: -7px;
-  animation: news-badge 1s steps(2, jump-none) infinite alternate;
-}
-
 .lobby-news.unread img,
 .lobby-survey img {
-  animation: news-hop 2.6s steps(1) infinite;
+  animation: lobby-wiggle 1.6s steps(1) infinite;
 }
 
-@keyframes news-badge {
-  to {
-    transform: scale(1.2);
-  }
-}
-
-@keyframes news-hop {
-  0%,
-  70%,
-  100% {
-    transform: none;
-  }
-  74%,
-  86% {
-    transform: translateY(-4px);
-  }
-  80%,
-  92% {
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lobby-news .lobby-badge,
-  .lobby-news.unread img,
-  .lobby-survey .lobby-badge,
-  .lobby-survey img {
-    animation: none;
-  }
-}
-
-.lobby-card .key-hint {
-  margin-left: auto;
-  font-size: 6px;
-  padding: 2px 3px;
-}
-
-/* Hall da Fama: gold frame, slowly turning rays, the first supporters' faces and the newest one. */
-.lobby-hall {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  font: inherit;
-  color: #fff;
-  text-align: left;
-  text-decoration: none;
-  background: linear-gradient(160deg, #3a2470, #1c1440 70%);
-  border: 3px solid #f8d030;
-  border-radius: 8px;
-  box-shadow:
-    inset 0 0 0 2px #7a5a10,
-    0 4px 0 rgba(0, 0, 0, 0.35),
-    0 0 18px rgba(248, 208, 48, 0.45);
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-.lobby-hall:hover,
-.lobby-hall.selected {
-  box-shadow:
-    inset 0 0 0 2px #7a5a10,
-    0 4px 0 rgba(0, 0, 0, 0.35),
-    0 0 0 3px #fff,
-    0 0 24px rgba(248, 208, 48, 0.7);
-}
-
-/* A shiny ticket waits for its pick. */
-.lobby-hall.waiting {
-  animation: share-glow 1.4s steps(2, start) infinite;
-}
-
-/*
- * A square centered on the card, its side twice the card's width (margins in %
- * resolve against the width too), so its rotation always covers the corners.
- */
-.hall-rays {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200%;
-  aspect-ratio: 1;
-  margin: -100% 0 0 -100%;
-  background: repeating-conic-gradient(from 0deg, rgba(248, 208, 48, 0.16) 0 10deg, transparent 10deg 20deg);
-  animation: hall-spin 18s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes hall-spin {
-  to {
-    transform: rotate(1turn);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hall-rays {
-    animation: none;
-  }
-}
-
-.hall-top {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  font-family: var(--title);
-  font-size: 10px;
-  line-height: 1.3;
-  color: #f8d030;
-  text-shadow: 2px 2px 0 #4a3008;
-}
-
-.hall-top b {
-  min-width: 0;
-  font-weight: 400;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.hall-top img {
-  flex: none;
-  width: 16px;
-  height: 16px;
-}
-
-.lobby-hall.waiting .hall-sparkle {
-  animation: blink 0.7s steps(2, start) infinite;
-}
-
-.hall-stack {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.lobby-hall:not(.filled) .hall-stack {
-  display: none;
-}
-
-.hall-face {
-  flex: none;
-  display: grid;
-  place-items: center;
-  /* The 40 px portrait is wider than the circle: center its track too (see `.trainer-avatar`). */
-  place-content: center;
-  width: 32px;
-  height: 32px;
-  margin-right: -8px;
-  font-family: var(--title);
-  font-size: 11px;
-  color: #ffd8ec;
-  background: #2c2050;
-  border: 2px solid #f0a0c8;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px #1c1440;
-}
-
-.hall-face.gold {
-  color: #f8d030;
-  border-color: #f8d030;
-}
-
-/* A portrait is 40 px: shown 1:1, cropped to the circle. */
-.hall-face.portrait {
-  overflow: hidden;
-  background: #3a2878;
-}
-
-.hall-face img {
-  flex: none;
-  width: 40px;
-  height: 40px;
-}
-
-.hall-face img.ball {
-  width: 16px;
-  height: 16px;
-}
-
-.hall-stack em {
-  margin-left: 16px;
-  font-family: var(--title);
-  font-size: 9px;
-  font-style: normal;
-  color: #f8d030;
-}
-
-.hall-ticker {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  font-size: 19px;
-  line-height: 1;
-  color: #ffd8ec;
-}
-
-.hall-ticker img {
-  flex: none;
-  width: 14px;
-  height: 14px;
-}
-
-.hall-ticker span {
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lobby-hall .key-hint {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 6px;
-  padding: 2px 3px;
-}
-
-/* Convide amigos, under the Hall: the Friendship Egg, the way to the next milestone and what it pays. */
-.lobby-invites {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 9px 12px 9px 10px;
-  border-color: #581830;
-  --frame: #e05888;
-  font: inherit;
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.lobby-invites:hover,
-.lobby-invites.selected {
-  --frame: #e83838;
-}
-
-.lobby-invites-icon {
-  width: 28px;
-  height: 32px;
-  flex: none;
-}
-
-.lobby-invites-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-}
-
-.lobby-invites-text b {
-  font-family: var(--title);
-  font-size: 9px;
-  font-weight: normal;
-  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
-}
-
-.lobby-invites-row {
-  font-size: 18px;
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lobby-invites-prize {
-  width: 24px;
-  height: 24px;
-  flex: none;
-  object-fit: contain;
-  animation: invite-bob 1.2s steps(2, start) infinite;
-}
-
-@keyframes invite-bob {
+@keyframes lobby-wiggle {
   50% {
     transform: translateY(-2px);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .lobby-invites-prize {
-    animation: none;
-  }
+.title-home [hidden] {
+  display: none !important;
 }
 
-/* Discord under Convide amigos, in Discord's blurple. */
-.lobby-discord-card {
-  border-color: #283070;
-  --frame: #5865f2;
-}
-
-.lobby-discord-card:hover,
-.lobby-discord-card.selected {
-  --frame: #e83838;
-}
-
-.lobby-discord-card .lobby-invites-text b {
-  color: color-mix(in srgb, #5865f2 var(--dk-lift, 100%), #fff);
-}
-
-.lobby-discord-icon {
-  width: 36px;
-  height: 30px;
-  flex: none;
-}
-
-/* Discord and the official profiles (`SOCIALS`), stacked under the Hall; a row of Discord and icons on portrait phones. */
-.lobby-community {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-}
-
-.lobby-social-icon {
-  width: 32px;
-  height: 32px;
-  flex: none;
-}
-
-/* TikTok: black, with the logo's cyan and red echoes on its name. */
-.lobby-social.tiktok {
-  border-color: #161823;
-  --frame: #25f4ee;
-}
-
-.lobby-social.tiktok:hover,
-.lobby-social.tiktok.selected {
-  --frame: #e83838;
-}
-
-.lobby-social.tiktok .lobby-invites-text b {
-  color: var(--dk-ink, #161823);
-  text-transform: uppercase;
-  text-shadow: -1px -1px 0 #25f4ee, 1px 1px 0 #fe2c55;
-}
-
-/* YouTube: its red on the name, its near-black on the frame (red there would hide the lobby's red selection). */
-.lobby-social.youtube {
-  border-color: #0f0f0f;
-  --frame: #282828;
-}
-
-/* YouTube's dark look: a light frame where the black one would vanish. */
-[data-theme='dark'] .lobby-social.youtube {
-  --frame: #e8e8e8;
-}
-
-.lobby-social.youtube:hover,
-.lobby-social.youtube.selected {
-  --frame: #e83838;
-}
-
-.lobby-social.youtube .lobby-invites-text b {
-  color: color-mix(in srgb, #ff0033 var(--dk-lift, 100%), #fff);
-  text-transform: uppercase;
-}
-
-/* Instagram: its purple on the frame, its pink on the name with the gradient's orange as an echo. */
-.lobby-social.instagram {
-  border-color: #4a1248;
-  --frame: #833ab4;
-}
-
-.lobby-social.instagram:hover,
-.lobby-social.instagram.selected {
-  --frame: #e83838;
-}
-
-.lobby-social.instagram .lobby-invites-text b {
-  color: color-mix(in srgb, #c13584 var(--dk-lift, 100%), #fff);
-  text-transform: uppercase;
-  text-shadow: 1px 1px 0 #fcaf45;
-}
-
-/* The partner on stage, over its name plate (canvas sized by `partnerStage`). */
-.lobby-partner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  background: none;
-  border: 0;
-  pointer-events: auto;
-}
-
-.lobby-partner-sprite {
-  display: block;
-}
-
-/* Drags on the lobby's grass walk the partner (ui/title.ts), so they don't scroll it. */
-.title-home.screen {
-  touch-action: none;
-}
-
-/* Out for a walk, the meadow draws the partner (render/titleScene.ts) and its spot waits empty. */
-.lobby-partner.out .lobby-partner-sprite {
-  visibility: hidden;
-}
-
-/* Back from its walk, it hops onto the stage. */
-.lobby-partner.landed .lobby-partner-sprite {
-  animation: land 0.3s steps(3);
-}
-
-@keyframes land {
-  33% {
-    transform: translateY(calc(var(--px) * -3));
-  }
-  66% {
-    transform: translateY(calc(var(--px) * -2));
-  }
-}
-
-/* Over the partner's head until its first walk: the movement keys, or "tap the grass" on touch screens. */
-.lobby-stroll-hint {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: max-content;
-  margin: 0 auto;
-  padding: 5px 8px;
-  font-size: 16px;
-  color: #fff;
-  white-space: nowrap;
-  background: rgba(40, 48, 64, 0.85);
-  border-radius: 10px;
-  pointer-events: none;
-  animation: bob 1.2s steps(1) infinite;
-}
-
-.lobby-stroll-hint .keys-only {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.lobby-stroll-hint b {
-  margin-left: 5px;
-  font-weight: 400;
-}
-
-.lobby-partner {
+.lobby {
   position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  --kit-edge: 3px;
 }
 
-/* Presente!: the gift box on the grass beside the partner while Mystery Gifts wait (ui/title.ts), hopping, with a sparkle that blinks. */
-.lobby-gift {
-  position: absolute;
-  top: 50%;
-  left: calc(50% + 56px);
-  transform: translateY(-50%);
-  z-index: 2;
+.lobby-wide {
+  display: grid;
+  grid-template-columns: clamp(232px, 21 * var(--vw), 290px) minmax(0, 1fr) clamp(232px, 21 * var(--vw), 290px);
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'today center plaza'
+    'bar bar bar'
+    'bottom bottom bottom';
+  gap: 12px 14px;
+}
+
+.lobby-narrow {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 10px 6px;
-  border-color: #581830;
-  --frame: #f8d030;
-  font: inherit;
-  color: var(--ink);
-  pointer-events: auto;
+  gap: 9px;
 }
 
-.lobby-gift[hidden] {
-  display: none;
+.lobby-landscape {
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr) clamp(148px, 26 * var(--vw), 220px);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'tabs center today'
+    'tabs bar play';
+  gap: 6px 8px;
 }
 
-/* Passear, across the partner from the gift box. */
-.lobby-explore {
-  position: absolute;
-  top: 50%;
-  right: calc(50% + 56px);
-  transform: translateY(-50%);
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 10px 6px;
-  border-color: #402818;
-  --frame: #a86838;
-  font: inherit;
-  color: var(--ink);
-  pointer-events: auto;
-}
-
-.lobby-explore img {
-  width: 26px;
-  height: 26px;
-  image-rendering: pixelated;
-}
-
-.lobby-explore b {
-  font-family: var(--title);
-  font-size: 7px;
-  font-weight: 400;
-}
-
-.lobby-explore:hover,
-.lobby-explore.selected {
-  --frame: #f8d030;
-}
-
-.lobby-gift:hover,
-.lobby-gift.selected {
-  --frame: #e83838;
-}
-
-.lobby-gift-box {
-  width: 48px;
-  height: 44px;
-  animation: gift-hop 0.9s steps(2, start) infinite;
-}
-
-.lobby-gift-sparkle {
-  position: absolute;
-  top: 2px;
-  left: 4px;
-  width: 16px;
-  height: 16px;
-  animation: blink 1.2s steps(2) infinite;
-}
-
-.lobby-gift b {
-  font-family: var(--title);
-  font-size: 8px;
-  font-weight: normal;
-  color: color-mix(in srgb, #c02838 var(--dk-lift, 100%), #fff);
-}
-
-.lobby-gift .lobby-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-}
-
-.lobby-gift .key-hint {
-  position: absolute;
-  bottom: -6px;
-  left: -6px;
-}
-
-@media (min-width: 900px) and (min-height: 600px) {
-  .lobby-gift {
-    left: calc(50% + 96px);
-    padding: 10px 14px 8px;
-  }
-  .lobby-gift-box {
-    width: 72px;
-    height: 66px;
-  }
-  .lobby-gift b {
-    font-size: 10px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lobby-gift-box,
-  .lobby-gift-sparkle {
-    animation: none;
-  }
-}
-
-/* Only the partner's body and its plate take taps: the rest of the stage is grass to walk on. */
-.title-home .lobby-partner {
-  pointer-events: none;
-}
-
-.lobby-partner-hit,
-.lobby-plate {
-  pointer-events: auto;
-}
-
-.lobby-partner-hit {
-  position: absolute;
-}
-
-.lobby-partner.out .lobby-partner-hit {
-  display: none;
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .lobby-stroll-hint .keys-only {
-    display: none;
-  }
-}
-
-.lobby-plate {
+/* The columns' heads. */
+.lobby-col-head {
   display: flex;
   align-items: baseline;
+  justify-content: space-between;
   gap: 8px;
-  padding: 6px 12px;
-  font-family: var(--title);
-  font-size: 9px;
-  color: #fff;
-  white-space: nowrap;
-  background: rgba(40, 48, 64, 0.85);
-  border-radius: 12px;
+  padding: 0 2px;
 }
 
-.lobby-plate b {
+.lobby-col-head h2 {
+  flex: none;
+  margin: 0;
+  font-size: 34px;
   font-weight: 400;
+  --kit-o: 1.5px;
 }
 
-.lobby-plate small {
-  font-family: var(--body);
-  font-size: 17px;
-  color: #c8d0ff;
+.title-home.haunted .lobby-col-head h2 {
+  color: #ffc060;
 }
 
-.lobby-partner:hover .lobby-plate {
-  background: rgba(200, 48, 48, 0.9);
-}
-
-/* JOGAR: one chunky red button with a ledge under it. */
-.lobby-play {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-width: 280px;
-  height: 78px;
-  padding: 0 24px 4px;
-  font-family: var(--title);
-  font-size: 24px;
-  color: #fff;
-  text-shadow: 3px 3px 0 #801010;
-  background: linear-gradient(#ff5a4a, #e02a2a);
-  border: 3px solid #283040;
-  border-radius: 10px;
-  box-shadow:
-    inset 0 -6px 0 #a81818,
-    inset 0 3px 0 rgba(255, 255, 255, 0.35),
-    0 4px 0 rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
-}
-
-.lobby-play:hover,
-.lobby-play.selected {
-  background: linear-gradient(#ff6e5e, #ea3434);
-  box-shadow:
-    inset 0 -6px 0 #a81818,
-    inset 0 3px 0 rgba(255, 255, 255, 0.35),
-    0 4px 0 rgba(0, 0, 0, 0.4),
-    0 0 0 3px #fff;
-}
-
-.lobby-play:active {
-  transform: translateY(3px);
-  box-shadow:
-    inset 0 -3px 0 #a81818,
-    inset 0 3px 0 rgba(255, 255, 255, 0.35),
-    0 1px 0 rgba(0, 0, 0, 0.4);
-}
-
-.lobby-play .key-hint {
-  font-size: 7px;
-  text-shadow: none;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-/* The collection dock: Pokédex, Ovos, Loja, Ranking, Ideias. */
-.lobby-tile {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 88px;
-  height: 68px;
-  padding: 4px;
-  pointer-events: auto;
-}
-
-.lobby-tile img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-}
-
-.lobby-tile > span:not(.key-hint) {
-  max-width: 100%;
+.lobby-col-note {
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: var(--title);
-  font-size: 8px;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #fff;
+  font-family: var(--kit-body);
+  font-size: 20px;
+  text-shadow: 0 2px 0 var(--kit-tinta);
 }
 
-.lobby-tile .lobby-badge {
-  position: absolute;
-  top: -9px;
-  right: -9px;
-}
-
-.lobby-tile .key-hint {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  font-size: 6px;
-  padding: 2px 3px;
-}
-
-/* The side rails' tiles (`railTile`, phones held upright): an icon over a short label, a badge on the corner. They shrink to fit a short screen. */
-.lobby-rail-tile {
+/* Hoje. */
+.lobby-today {
+  grid-area: today;
   position: relative;
-  flex: 0 1 60px;
-  min-height: 46px;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 4px 2px;
-  font: inherit;
-  color: var(--ink);
-  pointer-events: auto;
+  gap: 8px;
+  min-height: 0;
 }
 
-.lobby-rail-tile:hover,
-.lobby-rail-tile.selected {
-  --frame: #e83838;
+.lobby-today-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-height: 0;
+  padding: 0 6px 6px 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
 }
 
-.rail-icon {
+.lobby-day {
   position: relative;
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 12px;
+  width: 100%;
+  min-height: 70px;
+  padding: 7px 12px 8px 9px;
+  text-align: left;
+}
+
+.lobby-day-icon {
+  flex: none;
   display: grid;
   place-items: center;
-  height: 28px;
+  width: 50px;
+  height: 50px;
+  background: var(--kit-tag);
+  border: 2px solid var(--kit-tinta);
+  border-radius: 10px;
 }
 
-.rail-icon img {
-  width: 26px;
-  height: 26px;
-  object-fit: contain;
+.lobby-icon {
+  width: 32px;
+  height: 32px;
   image-rendering: pixelated;
 }
 
-.rail-icon .lobby-walker {
-  margin: -4px 0 0;
+.lobby-day-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.rail-icon .lobby-discord-icon {
-  width: 32px;
-  height: 27px;
+.lobby-day-text b {
+  overflow: hidden;
+  font-family: var(--kit-title);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.rail-icon .lobby-invites-icon {
-  width: 24px;
-  height: 27px;
+.lobby-day-text small {
+  overflow: hidden;
+  color: var(--kit-ink-2);
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.05;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.rail-count {
-  font-size: 22px;
+.lobby-day-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lobby-progress {
+  position: relative;
+  flex: 1 1 auto;
+  height: 10px;
+  overflow: hidden;
+  background: var(--kit-tag);
+  border: 2px solid var(--kit-tinta);
+  border-radius: 6px;
+}
+
+.lobby-progress span {
+  display: block;
+  height: 100%;
+  background: var(--kit-ouro);
+}
+
+.lobby-walker {
+  image-rendering: pixelated;
+}
+
+.lobby-day-spark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  image-rendering: pixelated;
+}
+
+.lobby-day .key-hint {
+  display: none;
+}
+
+.lobby-day.selected,
+.lobby-tile.selected,
+.lobby-hall.selected,
+.lobby-shop-row.selected {
+  outline: 3px solid var(--kit-ouro);
+  outline-offset: 1px;
+}
+
+/* A plain Hoje event card (the Noite das Bruxas keeps this layout). */
+.lobby-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  gap: 5px;
+  width: 100%;
+  min-height: 62px;
+  padding: 8px 12px 9px;
+  color: var(--kit-ink);
+  text-align: left;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.lobby-card-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: var(--kit-title);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.lobby-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lobby-card-row b {
+  font-family: var(--kit-title);
+  font-size: 20px;
   font-weight: 400;
   line-height: 1;
 }
 
-.rail-label {
-  align-self: stretch;
+.lobby-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  color: #fff;
+  font-family: var(--kit-title);
+  font-size: 16px;
+  font-style: normal;
+  line-height: 1;
+  background: var(--kit-survivors);
+  border-radius: 10px;
+}
+
+.lobby-badge.done {
+  background: #30a058;
+}
+
+/* Na Praça. */
+.lobby-plaza {
+  grid-area: plaza;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 0;
+}
+
+.arc-card.lobby-fest {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 14px 12px;
+  color: #fff;
+  text-align: left;
+  background: var(--kit-evento);
+  border-color: var(--kit-tinta);
+}
+
+.lobby-fest-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lobby-fest-days {
+  padding: 2px 8px 3px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 20px;
+  font-style: normal;
+  line-height: 1;
+  background: var(--kit-ouro);
+  border-radius: 6px;
+}
+
+.lobby-fest-lantern {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.lobby-fest-name {
+  color: var(--kit-ouro);
+  font-family: var(--kit-title);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.lobby-fest-line {
+  font-family: var(--kit-body);
+  font-size: 19px;
+  line-height: 1.05;
+  opacity: 0.92;
+}
+
+.lobby-fest-bar {
+  display: block;
+  height: 10px;
+  margin-top: 5px;
   overflow: hidden;
-  text-align: center;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 5px;
+}
+
+.lobby-fest-bar span {
+  display: block;
+  height: 100%;
+  background: var(--kit-ouro);
+}
+
+.lobby-fest-pot {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--kit-title);
+  font-size: 19px;
+  line-height: 1;
+}
+
+.lobby-fest-pot b {
+  font-weight: 400;
+}
+
+.lobby-fest .key-hint {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+}
+
+.arc-card.lobby-banner {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  padding: 4px 12px;
+  color: #fff;
+  font-family: var(--kit-title);
+  font-size: 22px;
+  line-height: 1;
+  text-align: left;
+  background: var(--kit-evento);
+}
+
+.lobby-banner b {
+  overflow: hidden;
+  color: var(--kit-ouro);
+  font-weight: 400;
+  white-space: nowrap;
   text-overflow: ellipsis;
-  font-family: var(--title);
-  font-size: 6px;
-  line-height: 1.2;
+}
+
+.lobby-banner-days {
+  flex: none;
+}
+
+.lobby-banner-go {
+  margin-left: auto;
+  font-size: 16px;
+}
+
+.lobby-shops {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2px 12px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.lobby-shop-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 62px;
+  padding: 3px 0;
+  color: var(--kit-ink);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 2px dashed var(--kit-tag);
+}
+
+.lobby-shop-row:last-child {
+  border-bottom: 0;
+}
+
+.lobby-shop-art {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 52px;
+}
+
+.lobby-shop-img {
+  max-width: 100%;
+  max-height: 100%;
+  image-rendering: pixelated;
+}
+
+.arc-card.lobby-hall {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 52px;
+  padding: 4px 12px;
+  color: var(--kit-tinta);
+  text-decoration: none;
+  background: var(--kit-ouro);
+}
+
+.lobby-hall > b {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--kit-title);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lobby-hall .key-hint {
+  display: none;
+}
+
+.hall-heart {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.hall-stack {
+  display: flex;
+  flex: none;
+}
+
+.hall-stack:empty {
+  display: none;
+}
+
+.hall-face {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-right: -9px;
+  overflow: hidden;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 18px;
+  background: #fff;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 50%;
+}
+
+.hall-face.portrait img {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+.hall-face.gold {
+  border-color: #c89000;
+}
+
+.lobby-hall.waiting {
+  animation: lobby-wiggle 1.6s steps(1) infinite;
+}
+
+.lobby-notice:empty {
+  display: none;
+}
+
+.lobby-wide .lobby-notice {
+  grid-area: plaza;
+  align-self: end;
+  justify-self: stretch;
+}
+
+.lobby-landscape .lobby-notice {
+  display: none;
+}
+
+/* The mode on stage. */
+.lobby-center {
+  grid-area: center;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.lobby-mode-title,
+.lobby-pills {
+  position: relative;
+  z-index: 2;
+}
+
+.lobby-mode-title {
+  max-width: 100%;
+  padding: 0 8px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.lobby-mode-title.selected .lobby-mode-name {
+  text-decoration: underline;
+  text-decoration-color: var(--kit-ouro);
+  text-decoration-thickness: 3px;
+}
+
+.lobby-mode-name {
+  display: block;
+  --kit-o: 4px;
+  font-size: clamp(56px, 7.4 * var(--vw), 108px);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.lobby-rail-tile > .lobby-badge {
+.lobby-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.lobby-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 3px 12px 5px;
+  color: #fff;
+  font-family: var(--kit-body);
+  font-size: 20px;
+  line-height: 1;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--kit-tinta) 88%, transparent);
+  border: 0;
+  border-radius: 9px;
+}
+
+.lobby-pill[hidden] {
+  display: none;
+}
+
+.lobby-pill-go {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.lobby-pill-go b {
+  font-weight: 400;
+}
+
+.lobby-pill-go.selected {
+  outline: 3px solid var(--kit-ouro);
+}
+
+.lobby-stage {
+  position: relative;
+  flex: 1 1 0;
+  width: 100%;
+  min-height: 0;
+  /* The feet line is the slot's bottom: the platform and the horde stand below it, on the grass. */
+  margin-bottom: calc(23 * var(--px));
+}
+
+.lobby-horizon {
   position: absolute;
-  top: -7px;
-  right: -7px;
+  left: 50%;
+  right: auto;
+  width: 0;
+  pointer-events: none;
 }
 
-.lobby-rail-tile .rail-days {
-  min-width: 0;
-  padding: 0 3px;
-  font-size: 6px;
-}
-
-.lobby-rail-tile .rail-sparkle {
+.lobby-place {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  width: 12px;
-  height: 12px;
-  animation: blink 1.2s steps(2) infinite;
+  bottom: 0;
+  translate: -50% 0;
+  image-rendering: pixelated;
+  user-select: none;
 }
 
-/* On the left corner: Discord's tile stands on the right rail, by the screen's edge. */
-.lobby-rail-tile .rail-prize {
+.lobby-cast {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  translate: -50% 0;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.lobby-cast-hit {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 96px;
+  height: 104px;
+  background: none;
+  border: 0;
+  translate: -50% 0;
+  cursor: pointer;
+}
+
+.lobby-cast-hit[hidden] {
+  display: none;
+}
+
+.lobby-arrow {
+  position: absolute;
+  top: 40%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 6px 18px;
+  color: var(--kit-ink);
+  font-family: var(--kit-title);
+  font-size: 28px;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 26px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.lobby-arrow.prev {
+  left: 2%;
+}
+
+.lobby-arrow.next {
+  right: 2%;
+  flex-direction: row-reverse;
+}
+
+.lobby-arrow-icon {
+  width: 16px;
+  height: 18px;
+  image-rendering: pixelated;
+}
+
+.lobby-arrow .key-hint {
   position: absolute;
   top: -8px;
-  left: -8px;
+  right: -6px;
+}
+
+.lobby-arrow.selected {
+  outline: 3px solid var(--kit-ouro);
+  outline-offset: 2px;
+}
+
+:root[data-theme='dark'] .lobby-arrow-icon,
+.lobby-mode-all .ink-icon {
+  filter: none;
+}
+
+/* The mode bar. */
+.lobby-modes {
+  grid-area: bar;
+  justify-self: center;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  max-width: 100%;
+  padding: 6px;
+  background: var(--kit-evento);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 14px;
+}
+
+.lobby-modes-scroll {
+  display: flex;
+  gap: 3px;
+  min-width: 0;
+  /* Room above the chips for the NOVO tag. */
+  margin-top: -12px;
+  padding-top: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.lobby-modes-scroll::-webkit-scrollbar,
+.lobby-today-cards::-webkit-scrollbar,
+.lobby-shops::-webkit-scrollbar {
+  display: none;
+}
+
+.lobby-mode-chip {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 3px 10px;
+  color: #fff;
+  font-family: var(--kit-title);
+  font-size: 26px;
+  line-height: 1;
+  white-space: nowrap;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.lobby-mode-chip.on {
+  color: var(--kit-tinta);
+  background: var(--kit-papel);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.lobby-mode-chip.selected {
+  outline: 3px solid var(--kit-ouro);
+}
+
+.lobby-mode-chip-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  background: var(--mode);
+  border: 2px solid var(--kit-tinta);
+  border-radius: 8px;
+}
+
+.lobby-mode-chip-img {
+  width: 22px;
+  height: 22px;
+  image-rendering: pixelated;
+}
+
+.lobby-mode-chip .arc-tag.new {
+  position: absolute;
+  top: -8px;
+  right: -2px;
+  font-size: 15px;
+  font-style: normal;
+}
+
+.lobby-mode-pals {
+  top: -6px;
+  right: auto;
+  left: -4px;
+  min-width: 20px;
+  height: 20px;
+  font-size: 15px;
+}
+
+.lobby-mode-all {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  background: var(--kit-papel);
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.lobby-mode-all.selected {
+  outline: 3px solid var(--kit-ouro);
+}
+
+.lobby-mode-all img {
+  width: 21px;
+  height: 21px;
+  image-rendering: pixelated;
+}
+
+/* JOGAR and the dock. */
+.lobby-bottom {
+  grid-area: bottom;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px) minmax(0, 1fr);
+  align-items: end;
+  gap: 16px;
+}
+
+.lobby-play {
+  position: relative;
+  min-height: 90px;
+  width: 100%;
+  padding: 7px 28px 15px;
+  font-size: 58px;
+  cursor: pointer;
+}
+
+.lobby-play .arc-outline {
+  --kit-o: 3px;
+}
+
+.lobby-play small {
+  font-size: 22px;
+}
+
+.lobby-play .key-hint {
+  position: absolute;
+  right: 14px;
+  bottom: 17px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.lobby-play.selected {
+  outline: 3px solid var(--kit-ouro);
+  outline-offset: 2px;
+}
+
+.lobby-dock {
+  display: flex;
+  gap: 8px;
+}
+
+.lobby-dock.right {
+  justify-content: flex-end;
+}
+
+.lobby-tile {
+  position: relative;
+  flex: 0 1 104px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 84px;
+  padding: 4px 3px;
+  font-family: var(--kit-title);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.lobby-tile-icon {
+  display: grid;
+  place-items: center;
+  height: 34px;
+}
+
+.lobby-tile-pair {
+  display: flex;
+  gap: 2px;
+}
+
+.lobby-tile-pair img {
+  width: 26px;
+  height: 26px;
+  image-rendering: pixelated;
+}
+
+.lobby-tile-icon > img {
+  width: 34px;
+  height: 34px;
+  image-rendering: pixelated;
+}
+
+.lobby-tile-name {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lobby-tile .key-hint {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+/* Bottom tabs: phones held upright, and the rail on phones on their side. */
+.lobby-tabs {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  background: var(--kit-papel);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 14px 14px 0 0;
+}
+
+.lobby-narrow .lobby-tabs {
+  flex: none;
+  margin: 0 calc(-1 * max(14px, var(--safe-r))) calc(-1 * max(10px, var(--safe-b))) calc(-1 * max(14px, var(--safe-l)));
+  padding: 3px 3px max(3px, var(--safe-b));
+  border-width: var(--kit-edge) 0 0;
+  border-radius: 0;
+}
+
+.lobby-tab {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 2px 0;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 19px;
+  line-height: 1;
+  white-space: nowrap;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.lobby-tab-icon {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+.lobby-tab.home::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  width: 44px;
+  height: 4px;
+  background: var(--kit-survivors);
+  border-radius: 0 0 4px 4px;
+}
+
+.lobby-tab .arc-badge {
+  top: -2px;
+  right: 8px;
+  min-width: 20px;
+  height: 20px;
+  font-size: 15px;
+}
+
+.lobby-tab.selected {
+  outline: 3px solid var(--kit-ouro);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* An upright phone or a tablet: one column. */
+.lobby-narrow .lobby-today {
+  flex: none;
+  margin: 0 calc(-1 * max(14px, var(--safe-r))) 0 calc(-1 * max(14px, var(--safe-l)));
+}
+
+.lobby-narrow .lobby-col-head {
+  display: none;
+}
+
+.lobby-narrow .lobby-today-cards {
+  flex-direction: row;
+  padding: 8px max(14px, var(--safe-l));
+  overflow: auto hidden;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+}
+
+.lobby-narrow .lobby-day {
+  width: clamp(184px, 48 * var(--vw), 240px);
+  min-height: 62px;
+  padding: 4px 10px 6px 6px;
+  gap: 8px;
+}
+
+.lobby-narrow .lobby-day-icon {
+  width: 42px;
+  height: 42px;
+}
+
+.lobby-narrow .lobby-day-text b {
+  font-size: 23px;
+}
+
+.lobby-narrow .lobby-day-text small {
+  font-size: 16px;
+}
+
+.lobby-narrow .lobby-card {
+  width: clamp(190px, 50 * var(--vw), 260px);
+}
+
+.lobby-narrow .lobby-center {
+  flex: 1 1 auto;
+  gap: 5px;
+}
+
+.lobby-narrow .lobby-mode-title {
+  min-height: 44px;
+}
+
+.lobby-narrow .lobby-mode-name {
+  --kit-o: 3px;
+  font-size: clamp(50px, 14.6 * var(--vw), 96px);
+}
+
+.lobby-narrow .lobby-pill-blurb {
+  display: none;
+}
+
+.lobby-narrow .lobby-pill {
+  min-height: 30px;
+  font-size: 19px;
+}
+
+.lobby-narrow .lobby-pill-go {
+  min-height: 44px;
+}
+
+.lobby-narrow .lobby-arrow,
+.lobby-landscape .lobby-arrow {
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.lobby-narrow .lobby-arrow-icon,
+.lobby-landscape .lobby-arrow-icon {
+  box-sizing: content-box;
+  width: 16px;
+  height: 18px;
+  padding: 14px 14px 14px 12px;
+  background: var(--kit-papel);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 50%;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+}
+
+.lobby-narrow .lobby-arrow.prev,
+.lobby-landscape .lobby-arrow.prev {
+  left: 0;
+}
+
+.lobby-narrow .lobby-arrow.next,
+.lobby-landscape .lobby-arrow.next {
+  right: 0;
+  flex-direction: column;
+}
+
+.lobby-narrow .lobby-arrow-name,
+.lobby-landscape .lobby-arrow-name {
+  color: #fff;
+  font-size: 20px;
+  text-shadow: 1px 1px 0 var(--kit-tinta), -1px 1px 0 var(--kit-tinta), 0 2px 0 var(--kit-tinta);
+}
+
+.lobby-narrow .lobby-modes {
+  flex: none;
+  width: auto;
+  max-width: none;
+  margin: 0 calc(-1 * max(14px, var(--safe-r))) 0 calc(-1 * max(14px, var(--safe-l)));
+  padding: 6px 14px;
+  border-width: var(--kit-edge) 0;
+  border-radius: 0;
+}
+
+.lobby-narrow .lobby-mode-chip {
+  font-size: 24px;
+}
+
+.lobby-narrow .lobby-play {
+  flex: none;
+  min-height: 72px;
+  padding: 4px 20px 13px;
+  font-size: 50px;
+}
+
+.lobby-narrow .lobby-play small {
+  font-size: 20px;
+}
+
+/* A phone on its side: every row counts. */
+.lobby-landscape .lobby-today {
+  grid-area: today;
+}
+
+.lobby-landscape .lobby-today .lobby-col-head {
+  display: none;
+}
+
+.lobby-landscape .lobby-today-cards {
+  gap: 6px;
+  padding: 0 2px 2px 0;
+}
+
+.lobby-landscape .lobby-day {
+  min-height: 48px;
+  padding: 2px 8px 3px 4px;
+  gap: 6px;
+}
+
+.lobby-landscape .lobby-day-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.lobby-landscape .lobby-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.lobby-landscape .lobby-day-text b {
+  font-size: 20px;
+}
+
+.lobby-landscape .lobby-day-text small {
+  font-size: 15px;
+}
+
+.lobby-landscape .arc-badge {
+  top: -6px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  font-size: 15px;
+}
+
+.lobby-landscape .arc-card.lobby-banner {
+  min-height: 44px;
+  font-size: 18px;
+  padding: 2px 8px;
+}
+
+.lobby-landscape .lobby-center {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'title pills'
+    'stage stage';
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 0;
+}
+
+.lobby-landscape .lobby-mode-title {
+  grid-area: title;
+  min-height: 44px;
+  padding: 0;
+}
+
+.lobby-landscape .lobby-mode-name {
+  --kit-o: 2px;
+  font-size: 38px;
+}
+
+.lobby-landscape .lobby-pills {
+  grid-area: pills;
+  min-width: 0;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.lobby-landscape .lobby-pill {
+  flex: 0 1 auto;
+  min-height: 26px;
+  padding: 2px 8px 3px;
+  font-size: 17px;
+}
+
+.lobby-landscape .lobby-pill-go {
+  min-height: 44px;
+}
+
+.lobby-landscape .lobby-pill-blurb {
+  display: none;
+}
+
+.lobby-landscape .lobby-stage {
+  grid-area: stage;
+  align-self: stretch;
+}
+
+.lobby-landscape .lobby-modes {
+  grid-area: bar;
+  justify-self: stretch;
+  min-width: 0;
+  padding: 3px;
+}
+
+.lobby-landscape .lobby-mode-chip {
+  min-height: 44px;
+  font-size: 21px;
+  padding: 2px 6px;
+}
+
+.lobby-landscape .lobby-mode-chip-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.lobby-landscape .lobby-mode-all {
+  width: 44px;
+}
+
+.lobby-landscape .lobby-play {
+  grid-area: play;
+  justify-self: stretch;
+  min-width: 0;
+  min-height: 50px;
+  padding: 2px 8px 8px;
+  font-size: 32px;
+}
+
+.lobby-landscape .lobby-play small {
+  font-size: 15px;
+}
+
+.lobby-landscape .lobby-play .key-hint {
+  display: none;
+}
+
+.title-home .shell-top {
+  position: relative;
+  z-index: 3;
+}
+
+.lobby-landscape .lobby-tabs {
+  grid-area: tabs;
+  flex-direction: column;
+  margin-left: calc(-1 * max(8px, var(--safe-l)));
+  padding-left: var(--safe-l);
+  border-radius: 0 14px 14px 0;
+  border-width: var(--kit-edge) var(--kit-edge) var(--kit-edge) 0;
+}
+
+.lobby-landscape .lobby-tab {
+  font-size: 15px;
+  min-height: 44px;
+}
+
+.lobby-landscape .lobby-tab.home::before {
+  display: none;
+}
+
+.lobby-landscape .lobby-tab-icon {
   width: 22px;
   height: 22px;
 }
 
-.rail-outbreak .rail-label {
-  color: color-mix(in srgb, #c03878 var(--dk-lift, 100%), #fff);
-}
-
-.rail-challenge .rail-label {
-  color: color-mix(in srgb, #3868c0 var(--dk-lift, 100%), #fff);
-}
-
-.rail-missions .rail-label {
-  color: color-mix(in srgb, #389048 var(--dk-lift, 100%), #fff);
-}
-
-.rail-invites {
-  --frame: #e05888;
-}
-
-.rail-invites .rail-label {
-  color: color-mix(in srgb, #c04890 var(--dk-lift, 100%), #fff);
-}
-
-.rail-discord {
-  --frame: #5865f2;
-}
-
-.rail-discord .rail-label {
-  color: color-mix(in srgb, #5865f2 var(--dk-lift, 100%), #fff);
-}
-
-/* The Hall's tile: the card's gold frame and turning rays, small. */
-.lobby-rail-tile.rail-hall {
-  overflow: hidden;
-  color: #f8d030;
-  background: linear-gradient(160deg, #3a2470, #1c1440 70%);
-  border: 3px solid #f8d030;
-  box-shadow:
-    inset 0 0 0 2px #7a5a10,
-    0 4px 0 rgba(0, 0, 0, 0.35),
-    0 0 12px rgba(248, 208, 48, 0.45);
-}
-
-.lobby-rail-tile.rail-hall:hover,
-.lobby-rail-tile.rail-hall.selected {
-  box-shadow:
-    inset 0 0 0 2px #7a5a10,
-    0 0 0 3px #fff,
-    0 0 16px rgba(248, 208, 48, 0.7);
-}
-
-.lobby-rail-tile.rail-hall.waiting {
-  animation: share-glow 1.4s steps(2, start) infinite;
-}
-
-.rail-hall .rail-icon,
-.rail-hall .rail-label {
-  position: relative;
-}
-
-.rail-hall .rail-label {
-  text-shadow: 1px 1px 0 #4a3008;
-}
-
-/* The night's and the festival's tiles wear their cards' colors. */
-.lobby-rail-tile.rail-halloween {
-  --paper: #2c1440;
-  --frame: #f07818;
-  color: #ffb040;
-}
-
-.lobby-rail-tile.rail-festival {
-  --frame: #f0b020;
-}
-
-.rail-festival .rail-label {
-  color: color-mix(in srgb, #c03820 var(--dk-lift, 100%), #fff);
-}
-
-.lobby-rail-tile .rail-days {
-  color: #2c1440;
-  background: #ffb040;
-}
-
-/* The invites tile's count toward the next milestone (`2/3`), in the Friendship Egg's pink. */
-.lobby-rail-tile .rail-friends {
-  min-width: 0;
-  padding: 0 3px;
-  font-size: 6px;
-  color: #fff;
-  background: #e05888;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lobby-rail-tile .rail-sparkle {
-    animation: none;
+@media (max-height: 500px) and (orientation: landscape) {
+  .title-home {
+    padding: max(4px, var(--safe-t)) max(8px, var(--safe-r)) max(4px, var(--safe-b)) max(8px, var(--safe-l));
   }
-}
 
-/*
- * Narrow screens (phones held upright): the lobby of a mobile game. The logo
- * on top, the partner in the middle between two rails of tiles (`railTile`:
- * Hoje on the left; the gift box, the Hall, Convide amigos, Discord and
- * Passear on the right), a friend's invite under it, JOGAR right above a tab
- * bar. Rows are spaced by margins, so an empty invite slot leaves no gap.
- */
-@media (max-width: 759px) and (min-height: 501px), (max-width: 759px) and (orientation: portrait) {
-  .lobby.rails {
-    grid-template-columns: 68px minmax(0, 1fr) 68px;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
-    grid-template-areas:
-      'logo logo logo'
-      'today stage side'
-      'notice notice notice'
-      'bottom bottom bottom';
-    gap: 0 8px;
+  .title-home .shell-top {
+    min-height: 46px;
   }
-  .lobby.rails .lobby-logo {
-    margin-bottom: 8px;
+
+  .title-home .shell-chip,
+  .title-home .shell-icon,
+  .title-home .shell-slot .gem-chip {
+    min-height: 44px;
+    font-size: 22px;
   }
-  .lobby.rails .lobby-today,
-  .lobby.rails .lobby-side {
-    align-self: stretch;
-    justify-content: flex-start;
-    gap: 8px;
-    min-height: 0;
-    padding: 4px 0 0;
+
+  .title-home .trainer-chip {
+    min-height: 44px;
+    padding: 1px 10px 1px 2px;
   }
-  .lobby.rails .lobby-rail-label {
+
+  .title-home .trainer-chip-sub {
     display: none;
   }
-  .lobby.rails .lobby-stage {
-    margin-bottom: 8px;
+}
+
+@media (max-width: 899px) and (min-height: 501px), (orientation: portrait) and (max-width: 1100px) {
+  .title-home {
+    padding: max(8px, var(--safe-t)) max(14px, var(--safe-r)) max(10px, var(--safe-b)) max(14px, var(--safe-l));
   }
-  .lobby-notice {
-    grid-area: notice;
-    display: flex;
-    justify-content: center;
+
+  .title-home .shell-top {
+    min-height: 52px;
   }
-  .lobby-notice:not(:empty) {
-    margin-bottom: 8px;
+
+  .title-home .trainer-chip-sub {
+    display: none;
   }
-  /* The gift box and Passear join the right rail as tiles of their own. */
-  .lobby.rails .lobby-gift,
-  .lobby.rails .lobby-explore {
-    position: relative;
-    top: auto;
-    left: auto;
-    right: auto;
-    transform: none;
-    flex: 0 1 60px;
+
+  .title-home .trainer-chip {
+    min-height: 52px;
+  }
+}
+
+/* The Noite das Bruxas: the pills show against the night sky. */
+.title-home.haunted .lobby-pill {
+  background: color-mix(in srgb, #5a2c88 90%, transparent);
+}
+
+/* A short phone held upright: every row gives some so the stage keeps its room. */
+@media (max-height: 720px) and (max-width: 899px) and (min-height: 501px) {
+  .lobby-narrow {
+    gap: 5px;
+  }
+
+  .lobby-narrow .lobby-today-cards {
+    padding-top: 5px;
+    padding-bottom: 6px;
+  }
+
+  .lobby-narrow .lobby-day {
+    min-height: 50px;
+    padding: 1px 8px 3px 5px;
+  }
+
+  .lobby-narrow .lobby-day-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .lobby-narrow .lobby-mode-name {
+    --kit-o: 2px;
+    font-size: 40px;
+  }
+
+  .lobby-narrow .lobby-center {
+    gap: 2px;
+  }
+
+  .lobby-narrow .lobby-stage {
+    margin-bottom: calc(15 * var(--px));
+  }
+
+  .lobby-narrow .lobby-modes {
+    padding: 3px 14px;
+  }
+
+  .lobby-narrow .lobby-play {
+    min-height: 58px;
+    padding: 2px 20px 9px;
+    font-size: 40px;
+  }
+
+  .lobby-narrow .lobby-tab {
     min-height: 46px;
-    justify-content: center;
-    gap: 3px;
-    padding: 4px 2px;
   }
-  .lobby.rails .lobby-gift-box {
-    width: 30px;
-    height: 28px;
-  }
-  .lobby.rails .lobby-gift b,
-  .lobby.rails .lobby-explore b {
-    font-size: 6px;
-  }
-  .lobby.rails .lobby-gift .lobby-badge {
-    top: -7px;
-    right: -7px;
-  }
-  .lobby.rails .lobby-gift-sparkle {
-    width: 12px;
-    height: 12px;
-  }
-  .lobby.rails .lobby-explore img {
+
+  .lobby-narrow .lobby-tab-icon {
     width: 24px;
     height: 24px;
   }
-  /* Between the rails, the name plate puts Trocar under the name when both don't fit. */
-  .lobby.rails .lobby-plate {
-    flex-wrap: wrap;
-    justify-content: center;
-    row-gap: 2px;
-    max-width: 100%;
+}
+
+/* A short desktop window: the title and the cards tighten so the stage keeps its room. */
+@media (min-width: 900px) and (max-height: 780px) and (min-height: 501px) {
+  .lobby-wide .lobby-mode-name {
+    font-size: clamp(44px, 9 * var(--vh), 76px);
   }
-  /* The stroll hint wraps over the partner instead of running under the rails. */
-  .lobby.rails .lobby-stroll-hint {
-    max-width: 100%;
-    white-space: normal;
-    text-align: center;
+
+  .lobby-wide .lobby-day {
+    min-height: 58px;
+    padding: 3px 10px 4px 6px;
   }
-  .lobby-bottom {
-    display: grid;
-    grid-template-columns: repeat(var(--tiles), minmax(0, 1fr));
+
+  .lobby-wide .lobby-day-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lobby-wide .lobby-today-cards {
     gap: 8px;
   }
-  .lobby-dock {
-    display: contents;
+
+  .lobby-wide .lobby-fest-name {
+    font-size: 26px;
   }
-  .lobby-play {
-    grid-row: 1;
-    grid-column: 1 / -1;
-    min-width: 0;
-    height: 68px;
-    margin-bottom: 8px;
+
+  .lobby-wide .lobby-shop-row {
+    min-height: 50px;
   }
-  .lobby-tile {
-    grid-row: 2;
-    width: auto;
-    height: 60px;
+
+  .lobby-wide .lobby-play {
+    min-height: 74px;
+    font-size: 46px;
   }
-  /* Five tiles share a phone's width: the labels take a step down to fit (Pokédex, Ranking). */
-  .lobby-tile > span:not(.key-hint) {
-    font-size: 7px;
+
+  .lobby-wide .lobby-tile {
+    height: 70px;
+    font-size: 19px;
   }
-  .lobby-tile {
-    padding: 4px 1px;
+
+  .lobby-wide .lobby-tile-icon > img {
+    width: 28px;
+    height: 28px;
   }
-  /* The tab bar's strip, from edge to edge under the tiles. */
-  .lobby-bottom::before {
-    content: '';
-    grid-row: 2;
-    grid-column: 1 / -1;
-    margin: -8px calc(-1 * max(10px, var(--safe-r))) calc(-1 * max(10px, var(--safe-b))) calc(-1 * max(10px, var(--safe-l)));
-    background: rgba(24, 30, 48, 0.82);
-    border-top: 2px solid #283040;
+
+  .lobby-wide .lobby-modes {
+    padding: 4px;
+  }
+
+  .lobby-wide .lobby-mode-chip {
+    font-size: 22px;
   }
 }
 
-/* Small phones in landscape hold Discord and the profiles in the top bar: the wallet drops its coin (₽ says it) and the buttons sit closer. */
-@media (max-height: 500px) and (orientation: landscape) and (max-width: 620px) {
-  .title-home .shell-top,
-  .title-home .shell-slot {
-    gap: 6px;
-  }
-  .title-home .shell-wallet img {
-    display: none;
-  }
-}
-
-/* With Discord and three profiles in the top bar, phones up to 700 px in landscape show the Trainer chip as its avatar (as the narrowest portrait phones do), so the wallet never rides over it. */
-@media (max-height: 500px) and (orientation: landscape) and (max-width: 700px) {
-  .title-home .trainer-chip .trainer-chip-who {
-    display: none;
-  }
-  .title-home .trainer-chip {
-    min-width: 0;
-  }
-}
-
-/* The Hall da Fama as a strip (phones in landscape; upright ones show it as a rail tile): title and ticker on the left, the faces on the right. The dock's tiles keep their order on every phone. */
-@media (max-width: 759px), (max-height: 500px) and (orientation: landscape) {
-  .lobby-hall {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'top stack'
-      'tick stack';
-    align-items: center;
-    gap: 4px 10px;
-    padding: 8px 12px;
-  }
-  .hall-top {
-    grid-area: top;
-    gap: 6px;
-    font-size: 8px;
-  }
-  /* The sparkle only shows for a waiting shiny ticket: the title needs the room. */
-  .lobby-hall:not(.waiting) .hall-sparkle {
-    display: none;
-  }
-  .hall-stack {
-    grid-area: stack;
-  }
-  .hall-ticker {
-    grid-area: tick;
-    font-size: 16px;
-  }
-  .hall-face {
-    width: 26px;
-    height: 26px;
-    font-size: 9px;
-  }
-  .lobby-tile.pokedex {
-    grid-column: 1;
-  }
-  .lobby-tile.eggs {
-    grid-column: 2;
-  }
-  .lobby-tile.mart {
-    grid-column: 3;
-  }
-  .lobby-tile.ranking {
-    grid-column: 4;
-  }
-  .lobby-tile.ideas {
-    grid-column: 5;
-  }
-}
-
-/* Phones in landscape: two columns. Logo, partner and dock on the left; Hoje, the Hall and JOGAR on the right. */
-@media (max-height: 500px) and (orientation: landscape) {
-  .title-home.screen.shell {
-    gap: 6px;
-  }
-  .title-home .shell-top {
-    min-height: 44px;
-  }
-  .lobby {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 5.5fr);
-    /* The second row is `1fr` (not `minmax(0, 1fr)`) so it grows to fit Hoje, which spans it. */
-    grid-template-rows: auto 1fr auto auto;
-    grid-template-areas:
-      'logo logo logo logo logo today'
-      'stage stage stage stage stage today'
-      'stage stage stage stage stage side'
-      'd1 d2 d3 d4 d5 play';
-    gap: 6px 12px;
-  }
-  .lobby-rail-label,
-  .lobby-card .key-hint {
-    display: none;
-  }
-  .lobby-today,
-  .lobby-side {
-    gap: 6px;
-    padding: 0;
-  }
-  .lobby-card {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 3px 10px;
-    min-height: 38px;
-  }
-  .lobby-card-row {
-    justify-content: flex-end;
-    min-height: 0;
-  }
-  .lobby-card-row b {
-    font-size: 18px;
-  }
-  .lobby-card .lobby-progress {
-    flex: 0 1 80px;
-  }
-  .lobby-icon {
-    width: 16px;
-    height: 20px;
-  }
-  .lobby-bottom,
-  .lobby-dock {
-    display: contents;
-  }
-  .lobby-tile {
-    width: auto;
-    height: 54px;
-    align-self: end;
-  }
-  .lobby-tile.pokedex {
-    grid-area: d1;
-  }
-  .lobby-tile.eggs {
-    grid-area: d2;
-  }
-  .lobby-tile.mart {
-    grid-area: d3;
-  }
-  .lobby-tile.ranking {
-    grid-area: d4;
-  }
-  .lobby-tile.ideas {
-    grid-area: d5;
-  }
-  .lobby-play {
-    grid-area: play;
-    align-self: end;
-    min-width: 0;
-    height: 58px;
-    font-size: 20px;
-  }
-  .lobby-invites {
-    padding: 4px 10px 4px 8px;
-    gap: 8px;
-  }
-  .lobby-invites-icon {
-    width: 20px;
-    height: 23px;
-  }
-  .lobby-invites-text {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  .lobby-invites-text b {
-    font-size: 8px;
-  }
-  .lobby-side .invite-banner {
-    padding: 5px 10px 5px 8px;
-  }
-  .lobby-side .invite-banner img {
-    width: 20px;
-    height: 23px;
-  }
-  .lobby-side .invite-blurb {
-    display: none;
-  }
-}
-
-/* ---------- The trip to the Kecleon's shop (ui/title.ts) ---------- */
-
-/* Going shopping or for a walk (Passear) (`translate`, so the buttons keep `transform` for their press), the lobby's cards slide off the edges (left ones left, right ones right, the dock down) and come back in the same way. */
-.title-home .shell-top,
-.lobby-logo,
-.lobby-today,
-.lobby-side,
-.lobby-stage,
-.lobby-bottom {
-  transition:
-    translate 0.45s cubic-bezier(0.65, 0, 0.35, 1),
-    opacity 0.45s;
-}
-
-.title-home.visiting {
+/* The wipe between the stage and the meadow (ui/title.ts). */
+.lobby-wipe {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background: var(--kit-tinta);
   pointer-events: none;
 }
 
-.title-home:is(.visiting, .exploring) .shell-top {
-  translate: 0 calc(-100% - 24px);
+.title-home .shell-top,
+.lobby {
+  transition: opacity 0.16s linear;
 }
 
-.title-home:is(.visiting, .exploring) .lobby-logo {
-  translate: 0 -60%;
+.title-home.visiting .shell-top,
+.title-home.visiting .lobby {
   opacity: 0;
+  pointer-events: none;
 }
 
-.title-home:is(.visiting, .exploring) .lobby-today {
-  translate: calc(-100% - 40px);
-}
-
-.title-home:is(.visiting, .exploring) .lobby-side {
-  translate: calc(100% + 40px);
-}
-
-.title-home:is(.visiting, .exploring) .lobby-stage {
-  opacity: 0;
-}
-
-.title-home:is(.visiting, .exploring) .lobby-bottom {
-  translate: 0 calc(100% + 40px);
-}
-
-/* Portrait phones stack Hoje and the Hall on top: they leave upwards with the bar. */
-@media (max-width: 759px) and (min-height: 501px), (max-width: 759px) and (orientation: portrait) {
-  .title-home:is(.visiting, .exploring) .lobby-today,
-  .title-home:is(.visiting, .exploring) .lobby-side {
-    translate: 0 -140%;
-    opacity: 0;
-  }
-}
-
-/* Landscape phones: Hoje and the Hall are the right column, and the dock's tiles and JOGAR sit straight in the grid. */
-@media (max-height: 500px) and (orientation: landscape) {
-  .title-home:is(.visiting, .exploring) .lobby-today,
-  .title-home:is(.visiting, .exploring) .lobby-side {
-    translate: calc(100% + 40px);
-  }
-  .lobby-tile,
-  .lobby-play {
-    transition: translate 0.45s cubic-bezier(0.65, 0, 0.35, 1);
-  }
-  .title-home:is(.visiting, .exploring) .lobby-tile,
-  .title-home:is(.visiting, .exploring) .lobby-play {
-    translate: 0 calc(100% + 40px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lobby-tile,
-  .lobby-play,
-  .title-home .shell-top,
-  .lobby-logo,
-  .lobby-today,
-  .lobby-side,
-  .lobby-stage,
-  .lobby-bottom {
-    transition-duration: 0.01s;
-  }
-}
-
-/* "Falar · E" over a shopkeeper while the strolling partner stands by: its bottom center at the head (left/top from ui/title.ts). */
-.plaza-talk {
-  position: absolute;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 9px;
-  transform: translate(-50%, -100%);
-  font-family: var(--title);
-  font-size: 9px;
-  pointer-events: auto;
-  animation: bob 1.2s steps(1) infinite;
-}
-
-.plaza-talk b {
-  font-weight: 400;
-}
-
-.plaza-talk .key-hint {
-  position: static;
-}
-
-/* On touch the prompt is the way to talk: a bigger target, "Falar" alone. */
-@media (hover: none) {
-  .plaza-talk {
-    min-height: 40px;
-    padding: 8px 16px;
-    font-size: 11px;
-  }
-}
-
-/* While the lobby's cards are away (`setAway` in ui/title.ts makes them inert), none of them takes a tap, whatever its own pointer-events say. */
 .title-home [inert],
 .title-home [inert] * {
   pointer-events: none;
 }
 
-/* Passear (ui/title.ts): the cards are away; the back button waits in the top-left corner and a hint at the bottom until the first step. */
-.explore-hud {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
+/* The Bottom sheets (Comunidade, a phone's tabs). */
+.lobby-sheet {
+  z-index: 9;
+  align-items: center;
+  justify-content: center;
+  padding: max(10px, var(--safe-t)) max(10px, var(--safe-r)) max(10px, var(--safe-b)) max(10px, var(--safe-l));
+  background: rgba(16, 20, 48, 0.55);
 }
 
-.title-home:not(.exploring) .explore-hud,
-.title-home.visiting .explore-hud {
-  display: none;
+.lobby-sheet-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(460px, 100%);
+  max-height: 100%;
+  padding: 12px;
+  background: var(--kit-evento);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 16px;
 }
 
-.explore-back {
-  position: absolute;
-  top: max(12px, var(--safe-t));
-  left: max(12px, var(--safe-l));
-  font-family: var(--title);
-  font-size: 9px;
-  pointer-events: auto;
-  animation: pop 0.25s steps(5) both;
-}
-
-.explore-back b {
-  font-weight: 400;
-}
-
-.explore-back .key-hint {
-  position: static;
-}
-
-.explore-hint {
-  position: absolute;
-  left: 50%;
-  bottom: max(24px, calc(var(--safe-b) + 12px));
-  translate: -50%;
+.lobby-sheet-head {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lobby-sheet-head h2 {
   margin: 0;
-  padding: 6px 14px;
-  font-size: 18px;
-  color: #fff;
-  white-space: nowrap;
-  background: rgba(40, 48, 64, 0.85);
-  border-radius: 12px;
-}
-
-.explore-hint .key-hint {
-  position: static;
-  margin-right: 4px;
-}
-
-/* A gamepad has no words here (both hints step aside): no empty pill. */
-:root[data-input='pad'] .explore-hint {
-  display: none;
-}
-
-.explore-hint b {
-  margin-left: 4px;
+  font-size: 36px;
   font-weight: 400;
+}
+
+.lobby-sheet-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 2px 2px 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.lobby-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  width: 100%;
+  min-height: 56px;
+  padding: 4px 12px 5px 8px;
+  text-align: left;
+}
+
+.lobby-sheet-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.lobby-sheet-text b {
+  font-family: var(--kit-title);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.lobby-sheet-text small {
+  overflow: hidden;
+  color: var(--kit-ink-2);
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.05;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lobby-sheet-icon,
+.lobby-sheet-row > .lobby-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+}
+
+.lobby-sheet-prize {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+  animation: lobby-wiggle 1.6s steps(1) infinite;
+}
+
+.lobby-sheet-row .arc-badge {
+  position: static;
+}
+
+@media (max-width: 899px) and (min-height: 501px), (orientation: portrait) and (max-width: 1100px) {
+  .lobby-sheet {
+    justify-content: flex-end;
+    padding: 0 0 max(0px, var(--safe-b));
+  }
+
+  .lobby-sheet-panel {
+    width: 100%;
+    max-height: 80%;
+    border-width: var(--kit-edge) 0 0;
+    border-radius: 16px 16px 0 0;
+    padding-bottom: max(12px, var(--safe-b));
+  }
 }
 
 /* ---------- Dialogue box (ui/dialogue.ts) ---------- */
@@ -6886,50 +6930,13 @@ button {
 }
 
 /* The lobby's Hoje card while a festival runs (`festivalCard`): dusk indigo with a lantern-red frame. */
-.lobby-card.festival {
-  --paper: #1c1438;
-  --frame: #d84028;
-  color: #fff4d8;
-}
 
-.lobby-card.festival:hover,
-.lobby-card.festival.selected {
-  --frame: #f8d030;
-}
 
-.lobby-card.festival .lobby-card-label {
-  color: #ffd890;
-}
 
-.lobby-card.festival .lobby-badge.festival-left {
-  margin-left: auto;
-  font-family: var(--title);
-  font-size: 7px;
-  color: #1c1438;
-  background: #ffd890;
-}
 
-.lobby-card.festival .lobby-card-row b {
-  flex: none;
-  font-size: 18px;
-}
 
-.lobby-lantern {
-  flex: none;
-  width: 28px;
-  height: 28px;
-  image-rendering: pixelated;
-  animation: halloween-bob 1.6s steps(2) infinite;
-}
 
-.lobby-progress.festival-pot-bar {
-  background: #0e0a20;
-  border-color: #d84028;
-}
 
-.lobby-progress.festival-pot-bar span {
-  background: repeating-linear-gradient(90deg, #f8c838 0 6px, #f0b020 6px 8px);
-}
 
 
 /* ---------- Small screens ---------- */
@@ -16076,10 +16083,6 @@ button.hall-tile:hover {
     0 1px 0 rgba(0, 0, 0, 0.4);
 }
 
-.title-home.haunted .lobby-rail-label {
-  color: #ffc060;
-  text-shadow: 2px 2px 0 #3a1450;
-}
 
 /* The Hoje card: a night-purple box with a pumpkin frame. */
 .lobby-card.halloween {
@@ -17760,35 +17763,7 @@ button.hall-tile:hover {
   background: #4898e8;
   border: 2px solid var(--dk-surface-0, #fff);
   border-radius: 6px;
-}
-
-@media (max-width: 759px) and (min-height: 501px), (max-width: 759px) and (orientation: portrait) {
-  .lobby-tile.coop {
-    grid-column: var(--tiles);
-  }
-}
-
-@media (max-height: 500px) and (orientation: landscape) {
-  .lobby-tile.coop {
-    grid-area: auto;
-    grid-row: 4;
-    grid-column: var(--tiles);
-  }
-  /* Six tiles (Ranking and Ideias too): one more column for the dock. */
-  .lobby.dock6 {
-    grid-template-columns: repeat(6, minmax(0, 1fr)) minmax(0, 6.5fr);
-    grid-template-areas:
-      'logo logo logo logo logo logo today'
-      'stage stage stage stage stage stage today'
-      'stage stage stage stage stage stage side'
-      'd1 d2 d3 d4 d5 d6 play';
-  }
-  .lobby.dock6 .lobby-tile > span:not(.key-hint) {
-    font-size: 7px;
-  }
-}
-
-/* The partner select picking for a room: just "Escolher". */
+}/* The partner select picking for a room: just "Escolher". */
 .shell-actions.partner-bar.coop {
   justify-content: center;
 }
@@ -18394,9 +18369,6 @@ button.hall-tile:hover {
 /* ---------- Arena (Versus): the lobby's tile, its screen, the room, a match's HUD, pick tray and end (ui/arena.ts, ui/versus*.ts) ---------- */
 
 /* The Arena's NOVO tag in the Arena's red, beside co-op's blue. */
-.lobby-new.arena-new {
-  background: #f05858;
-}
 
 @media (max-width: 759px) and (min-height: 501px), (max-width: 759px) and (orientation: portrait) {
   .lobby-tile.arena {
@@ -18406,17 +18378,7 @@ button.hall-tile:hover {
   .lobby.dock7 .lobby-tile > span:not(.key-hint) {
     font-size: 6px;
   }
-}
-
-@media (max-height: 500px) and (orientation: landscape) {
-  .lobby-tile.arena {
-    grid-area: auto;
-    grid-row: 4;
-    grid-column: var(--arena-col);
-  }
-}
-
-/* ---------- The Dojo (ui/training.ts) ---------- */
+}/* ---------- The Dojo (ui/training.ts) ---------- */
 
 /* A card that follows the build planned at the Dojo: a gold ★ tag, and a gold corner on the level-up card. */
 .tag-build {
@@ -24618,34 +24580,6 @@ span.arena-hub-face {
   display: none;
 }
 
-/* The lobby's top bar: the gem chip stands as tall as the wallet beside it. */
-.title-home .shell-top .gem-chip {
-  min-height: 40px;
-  flex: none;
-}
-
-/* Phones up to 430 px with the gem chip in the bar: the Trainer chip shows its avatar (as the narrowest phones do), so its name never gets cut. */
-@media (max-width: 430px) {
-  .title-home .shell-top:has(.gem-chip) .trainer-chip .trainer-chip-who {
-    display: none;
-  }
-  .title-home .shell-top:has(.gem-chip) .trainer-chip {
-    min-width: 0;
-    flex: none;
-  }
-}
-
-/* Narrow phones: the gems' number keeps the pill, its gem goes (the purple says it), as the wallet drops its coin. */
-@media (max-width: 400px) {
-  .title-home .shell-top .gem-chip:not(.bare) .gem-icon {
-    display: none;
-  }
-  .title-home .shell-top .gem-chip {
-    padding: 4px 6px;
-    font-size: 9px;
-  }
-}
-
 /* ---------- The Vitrine do dia (the Boutique's Loja, `dailyPicks`) ---------- */
 
 .gem-vitrine .gem-section-head {
@@ -25739,85 +25673,6 @@ span.arena-hub-face {
     flex: 1;
   }
 }
-
-/* ---------------- Poké Realm (ui/realm.ts) ---------------- */
-
-/* On a phone on its side the way in is an icon in the top bar. */
-.lobby-realm-top {
-  position: relative;
-}
-
-/* The lobby's way in: a card under the Hall (a rail tile on phones held upright, `.rail-realm`). */
-.lobby-realm {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 9px 12px 9px 10px;
-  border-color: #183858;
-  --frame: #48a0e0;
-  font: inherit;
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.lobby-realm:hover,
-.lobby-realm.selected {
-  --frame: #e83838;
-}
-
-.lobby-realm-icon {
-  width: 33px;
-  height: 39px;
-  flex: none;
-  image-rendering: pixelated;
-}
-
-.rail-realm .lobby-realm-icon {
-  width: 28px;
-  height: 33px;
-}
-
-.lobby-realm-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-}
-
-.lobby-realm-text b {
-  font-family: var(--title);
-  font-size: 9px;
-  font-weight: normal;
-  color: color-mix(in srgb, #2878c0 var(--dk-lift, 100%), #fff);
-}
-
-.lobby-realm-text span {
-  font-size: 18px;
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Landscape phones: the side is short, so the card is one line. */
-@media (max-height: 500px) and (orientation: landscape) {
-  .lobby-realm {
-    padding: 5px 10px 5px 8px;
-  }
-  .lobby-realm-icon {
-    width: 22px;
-    height: 26px;
-  }
-  .lobby-realm-text span {
-    display: none;
-  }
-}
-
 /* The screen: the town is the game's canvas; this is the HTML over it. */
 .screen.realm {
   justify-content: flex-start;
@@ -26474,25 +26329,7 @@ span.arena-hub-face {
 }
 
 /* The lobby's way in counts the friends walking the realm (a badge on the rail tile and the top icon; the card says it). */
-.lobby-realm-pals {
-  position: absolute;
-  bottom: -6px;
-  right: -6px;
-  min-width: 18px;
-  padding: 2px 4px 1px;
-  font-family: var(--title);
-  font-size: 8px;
-  font-style: normal;
-  text-align: center;
-  color: #fff;
-  background: #40a060;
-  border: 2px solid var(--dk-surface-0, #fff);
-  border-radius: 9px;
-}
 
-.lobby-realm.pals .lobby-realm-text span {
-  color: color-mix(in srgb, #308050 var(--dk-lift, 100%), #fff);
-}
 
 @media (max-width: 480px) {
   .realm-pals {
@@ -27841,5 +27678,12 @@ button:is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card):active {
   .arc-mode-dummy {
     width: 48px;
     height: 90px;
+  }
+}
+
+/* A small phone on its side: the partner pill alone keeps the title's row. */
+@media (max-height: 500px) and (orientation: landscape) and (max-width: 640px) {
+  .lobby-landscape .lobby-pills > .lobby-pill:not(.lobby-pill-go) {
+    display: none;
   }
 }
