@@ -66,7 +66,7 @@ describe('presence', () => {
   it('takes a relay report of its own cities, handles cleaned', () => {
     expect(parsePresenceReport({ home: 'sa', at: 1, cities: { pallet: ['Ash', 'ash', 'misty'], cerulean: [] } })).toEqual({ home: 'sa', at: 1, cities: { pallet: ['ash', 'misty'], cerulean: [] } })
     expect(parsePresenceReport({ home: 'eu', at: 1, cities: {} })).toBeNull()
-    expect(parsePresenceReport({ home: 'sa', at: 1, cities: { atlantis: ['ash'] } })).toBeNull()
+    expect(parsePresenceReport({ home: 'sa', at: 1, cities: { atlantis: ['ash'], pallet: ['misty'] } })).toEqual({ home: 'sa', at: 1, cities: { pallet: ['misty'] } })
   })
 
   it('keeps each handle\'s room when the relay sends them lined up, and none when they don\'t', () => {

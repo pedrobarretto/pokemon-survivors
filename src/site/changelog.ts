@@ -24,6 +24,118 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-09',
+    title: { pt: 'O Realm ganhou vida', en: 'The Realm comes alive', es: 'El Realm cobra vida', fr: 'Le Realm prend vie', zh: 'Realm 熱鬧起來了' },
+    highlights: [
+      {
+        pt: 'O Poké Realm agora tem 4 cidades e você entra direto na primeira com vaga, para encontrar mais gente.',
+        en: 'The Poké Realm now has 4 cities and you go straight into the first with room, so you meet more people.',
+        es: 'El Poké Realm ahora tiene 4 ciudades y entras directo en la primera con lugar, para encontrar a más gente.',
+        fr: 'Le Poké Realm compte maintenant 4 villes et tu entres directement dans la première qui a de la place, pour croiser plus de monde.',
+        zh: 'Poké Realm 現在有 4 座城市，你會直接進入第一座還有空位的城市，更容易遇到其他人。',
+      },
+      {
+        pt: 'Novo Livro de Estampas: 40 para colecionar, algumas escondidas, com móveis, moldura e título de recompensa.',
+        en: 'New Stamp Book: 40 to collect, some of them hidden, with furniture, a frame and a title as rewards.',
+        es: 'Nuevo Libro de Estampas: 40 para coleccionar, algunas ocultas, con muebles, un marco y un título de recompensa.',
+        fr: 'Nouveau Livre de Timbres : 40 à collectionner, certains cachés, avec des meubles, un cadre et un titre en récompense.',
+        zh: '全新郵票冊：共 40 枚可以收集，部分是隱藏的，還能獲得家具、頭像框和稱號。',
+      },
+      {
+        pt: 'Todo dia, 3 Recados no mural da praça pagam ₽, e todos dá para fazer sozinho.',
+        en: 'Every day, 3 Errands on the plaza board pay ₽, and you can do all of them alone.',
+        es: 'Cada día, 3 Recados en el tablón de la plaza pagan ₽, y todos se pueden hacer en solitario.',
+        fr: 'Chaque jour, 3 Courses au panneau de la place rapportent des ₽, et tu peux toutes les faire seul.',
+        zh: '廣場佈告欄每天有 3 項跑腿任務可以賺 ₽，一個人也能全部完成。',
+      },
+      {
+        pt: 'A Hora do Realm acontece três vezes ao dia: 15 minutos com mini games pagando em dobro e cenário especial.',
+        en: 'The Realm Hour happens three times a day: 15 minutes of double-pay mini games and special scenery.',
+        es: 'La Hora del Realm ocurre tres veces al día: 15 minutos con minijuegos que pagan el doble y un escenario especial.',
+        fr: 'L’Heure du Realm a lieu trois fois par jour : 15 minutes de mini-jeux qui paient double, dans un décor spécial.',
+        zh: 'Realm 時刻每天舉辦三次：15 分鐘內小遊戲獎勵加倍，還有特別場景。',
+      },
+      {
+        pt: 'Jogar mini games com outro treinador na sala agora rende 25% a mais.',
+        en: 'Playing mini games with another trainer in the room now pays 25% more.',
+        es: 'Jugar minijuegos con otro entrenador en la sala ahora paga un 25 % más.',
+        fr: 'Jouer aux mini-jeux avec un autre dresseur dans la salle rapporte maintenant 25 % de plus.',
+        zh: '和其他訓練家在同一個房間玩小遊戲，獎勵增加 25%。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Cidades mais cheias', en: 'Fuller cities', es: 'Ciudades más llenas', fr: 'Des villes plus animées', zh: '城市更熱鬧' },
+        notes: [
+          {
+            pt: 'De 10 cidades passamos para 4, e o Realm coloca todo mundo na primeira com vaga. Para escolher outra, toque no nome da cidade.',
+            en: 'We went from 10 cities to 4, and the Realm puts everyone in the first with room. To pick another, tap the city’s name.',
+            es: 'Pasamos de 10 ciudades a 4, y el Realm pone a todos en la primera con lugar. Para elegir otra, toca el nombre de la ciudad.',
+            fr: 'Nous sommes passés de 10 villes à 4, et le Realm place tout le monde dans la première qui a de la place. Pour en choisir une autre, touche le nom de la ville.',
+            zh: '城市從 10 座減少為 4 座，Realm 會讓大家進入第一座還有空位的城市。想換城市，點一下城市名稱即可。',
+          },
+          {
+            pt: 'O lobby mostra quantos treinadores estão no Realm quando há movimento.',
+            en: 'The lobby shows how many trainers are in the Realm when it’s busy.',
+            es: 'El lobby muestra cuántos entrenadores hay en el Realm cuando hay movimiento.',
+            fr: 'Le lobby indique combien de dresseurs sont dans le Realm quand il y a du monde.',
+            zh: '當 Realm 有人氣時，大廳會顯示目前的訓練家人數。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Estampas', en: 'Stamps', es: 'Estampas', fr: 'Timbres', zh: '郵票' },
+        notes: [
+          {
+            pt: 'Explore a cidade, visite bases, jogue e encontre outros treinadores para ganhar Estampas. As escondidas só revelam o que são depois de conquistadas.',
+            en: 'Explore the town, visit bases, play and meet other trainers to earn Stamps. Hidden ones only reveal themselves once earned.',
+            es: 'Explora la ciudad, visita bases, juega y encuentra a otros entrenadores para ganar Estampas. Las ocultas solo se revelan al conseguirlas.',
+            fr: 'Explore la ville, visite des bases, joue et rencontre d’autres dresseurs pour gagner des Timbres. Les timbres cachés ne se révèlent qu’une fois gagnés.',
+            zh: '探索城鎮、參觀基地、玩小遊戲和遇見其他訓練家，就能獲得郵票。隱藏郵票要到手後才會揭曉。',
+          },
+          {
+            pt: 'Com 5, 12, 20, 30 e 38 Estampas você ganha móveis exclusivos, uma moldura e um título. O total aparece no cartão do treinador.',
+            en: 'At 5, 12, 20, 30 and 38 Stamps you earn exclusive furniture, a frame and a title. Your total shows on your trainer card.',
+            es: 'Con 5, 12, 20, 30 y 38 Estampas ganas muebles exclusivos, un marco y un título. El total aparece en tu tarjeta de entrenador.',
+            fr: 'À 5, 12, 20, 30 et 38 Timbres, tu gagnes des meubles exclusifs, un cadre et un titre. Ton total s’affiche sur ta carte de dresseur.',
+            zh: '收集到 5、12、20、30 和 38 枚郵票時，可以獲得專屬家具、頭像框和稱號。總數會顯示在訓練家卡片上。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Recados do dia', en: 'Daily Errands', es: 'Recados del día', fr: 'Courses du jour', zh: '每日跑腿' },
+        notes: [
+          {
+            pt: 'São três por dia, os mesmos para todo mundo. Colete cada um no mural da praça; terminar os três dá um bônus de ₽.',
+            en: 'There are three a day, the same for everyone. Collect each one at the plaza board; finishing all three gives a ₽ bonus.',
+            es: 'Son tres por día, los mismos para todos. Cobra cada uno en el tablón de la plaza; terminar los tres da un bono de ₽.',
+            fr: 'Il y en a trois par jour, les mêmes pour tous. Récupère chacune au panneau de la place ; finir les trois donne un bonus de ₽.',
+            zh: '每天三項，大家都一樣。到廣場佈告欄領取獎勵，全部完成還有額外的 ₽。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Hora do Realm', en: 'Realm Hour', es: 'Hora del Realm', fr: 'Heure du Realm', zh: 'Realm 時刻' },
+        notes: [
+          {
+            pt: 'Às 0h, 12h e 20h (UTC), o píer, o fliperama ou o café mudam por 15 minutos: Maré Alta, Chuva de Frutas ou Noite das Mesas, sempre com Estampas próprias.',
+            en: 'At 00:00, 12:00 and 20:00 UTC, the pier, the arcade or the café change for 15 minutes: High Tide, Berry Storm or Table Night, each with its own Stamps.',
+            es: 'A las 0:00, 12:00 y 20:00 UTC, el muelle, el arcade o el café cambian por 15 minutos: Marea Alta, Lluvia de Bayas o Noche de Mesas, siempre con Estampas propias.',
+            fr: 'À 0 h, 12 h et 20 h UTC, la jetée, la salle d’arcade ou le café changent pendant 15 minutes : Marée Haute, Pluie de Baies ou Soirée Jeux, chacune avec ses Timbres.',
+            zh: '每天 UTC 0:00、12:00 和 20:00，碼頭、遊樂場或咖啡館會變身 15 分鐘：大滿潮、樹果雨或桌遊之夜，各有專屬郵票。',
+          },
+          {
+            pt: 'Na Maré Alta, peixes raros mordem mais. Uma faixa mostra a contagem regressiva e leva você até lá.',
+            en: 'During High Tide, rare fish bite more often. A banner shows the countdown and takes you there.',
+            es: 'En la Marea Alta, los peces raros pican más. Una franja muestra la cuenta regresiva y te lleva hasta allí.',
+            fr: 'Pendant la Marée Haute, les poissons rares mordent plus souvent. Une bannière affiche le compte à rebours et t’y emmène.',
+            zh: '大滿潮期間，稀有的魚更容易上鉤。橫幅會顯示倒數，並帶你前往現場。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-08',
     title: { pt: 'Fim da tela preta e do mundo invisível', en: 'No more black screen or invisible world', es: 'Adiós a la pantalla negra y al mundo invisible', fr: 'Fini l’écran noir et le monde invisible', zh: '修正黑畫面與世界消失問題' },
     highlights: [

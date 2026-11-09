@@ -91,7 +91,7 @@ const wireHandle = (v: unknown) => (typeof v === 'string' && v.length <= 32 ? pa
 
 /**
  * A relay's presence report, or null when it's malformed: a known home, and
- * only cities that home hosts, each with at most `REALM.cityCap` handles (a
+ * known cities only from that home, each with at most `REALM.cityCap` handles (a
  * little slack for one landing as another leaves). Each handle's room comes
  * along when the relay sends them, one per handle (`rooms`); a city whose
  * rooms don't line up with its handles keeps none.
@@ -103,7 +103,9 @@ export const parsePresenceReport = (v: unknown): PresenceReport | null => {
   const cities: Partial<Record<CityId, string[]>> = {}
   const rooms: Partial<Record<CityId, RoomKey[]>> = {}
   for (const [city, list] of Object.entries(v.cities)) {
-    if (!isCityId(city) || REALM_CITIES[city].home !== home || !Array.isArray(list) || list.length > REALM.cityCap * 2) return null
+    // A city this API doesn't list is skipped, not refused: a relay deployed before it may still hold trainers in one that was retired.
+    if (!isCityId(city)) continue
+    if (REALM_CITIES[city].home !== home || !Array.isArray(list) || list.length > REALM.cityCap * 2) return null
     const where = sentRooms[city]
     const paired = Array.isArray(where) && where.length === list.length ? where : null
     const seen = new Map<string, RoomKey | null>()
