@@ -24,6 +24,10 @@ describe('pokedex', () => {
 })
 
 describe('regionOf', () => {
+  it('puts a regional form in the region of the form', () => {
+    expect(regionOf(10162).name).toBe('Galar')
+  })
+
   it('maps national dex numbers to the generation they debuted in', () => {
     expect([1, 151, 152, 386, 387, 809, 810, 906].map((dex) => regionOf(dex).name)).toEqual([
       'Kanto', 'Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Alola', 'Galar', 'Paldea',

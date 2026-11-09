@@ -9,7 +9,7 @@
 // node_modules/.cache/ps-offsets, never committed.
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { FORMS, PLAYERS, pad } from './dex.mjs'
+import { FORMS, PLAYERS, pad, shinyPath } from './dex.mjs'
 import { readPng } from './png.mjs'
 
 export const ROOT = new URL('..', import.meta.url).pathname
@@ -55,7 +55,7 @@ export const fetchOffsets = async (v, shiny) => {
   const variant = sheetsOf(v, shiny)
   const dir = cacheDir(v, shiny)
   // A shiny lives under `0000/0001` (a form's under its own `<id>/0001`).
-  const path = shiny ? `${v.path}/${v.form ? '' : '0000/'}0001` : v.path
+  const path = shiny ? (v.form ? `${v.path}/0001` : `${v.path}${shinyPath(v.dex)}`) : v.path
   await mkdir(dir, { recursive: true })
   if (!(await download(`${REMOTE}/${path}/AnimData.xml`, join(dir, 'AnimData.xml')))) return false
   const xml = await readFile(join(dir, 'AnimData.xml'), 'utf8')

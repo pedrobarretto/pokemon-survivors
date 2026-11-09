@@ -175,6 +175,7 @@ export const ABILITIES = {
 
   /* ---------- Taking hits ---------- */
   thickFat: { name: 'Thick Fat', effects: [{ kind: 'resist', types: ['fire', 'ice'], factor: 0.5 }] },
+  pastelVeil: { name: 'Pastel Veil', effects: [{ kind: 'resist', types: ['poison'], factor: 0.4 }, stats({ regen: 0.4 })] },
   flashFire: { name: 'Flash Fire', effects: [{ kind: 'resist', types: ['fire'], factor: 0.4 }, stats({ typeDamage: { fire: 0.15 } })] },
   waterAbsorb: { name: 'Water Absorb', effects: [absorb('water')] },
   voltAbsorb: { name: 'Volt Absorb', effects: [absorb('electric')] },

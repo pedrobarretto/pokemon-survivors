@@ -37,8 +37,11 @@ const artists = (credit) =>
   [...new Set([credit.primary, ...credit.secondary].filter(Boolean).map(person))].join(', ') || '—'
 
 const rows = DEX.flatMap((dex) => {
-  const entry = tracker[pad(dex)]
-  const shiny = manifest[dex]?.shiny && entry.subgroups['0000']?.subgroups['0001']
+  // A regional form's folder is `<dex>/<form>`, so its entry is one level down and its shiny right under it.
+  const [folder, regional] = pad(dex).split('/')
+  const base = tracker[folder]
+  const entry = regional ? { ...base.subgroups[regional], name: `${base.name} (${base.subgroups[regional].name})` } : base
+  const shiny = manifest[dex]?.shiny && (regional ? entry.subgroups['0001'] : entry.subgroups['0000']?.subgroups['0001'])
   const row = (label, node, portrait = true) =>
     `| ${dex} | ${label} | ${artists(node.sprite_credit)} | ${portrait ? artists(node.portrait_credit) : '—'} |`
   // Alternate forms ship sprites, and a portrait only where the manifest says so; their shiny sits under `<id>/0001`.

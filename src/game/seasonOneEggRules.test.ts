@@ -12,7 +12,7 @@ import { killEnemy } from './combat'
 import { spawnEnemy } from './enemies'
 import { applyStatus } from './status'
 import { reflectShots } from './seasonOneEggMoves'
-import { biteMult, reflectedVelocity, shieldAnswer, veilFreeze, veilRadius, VEIL, venomJump, VENOM } from './seasonOneEggRules'
+import { BLITZ, blitzPower, biteMult, reflectedVelocity, shieldAnswer, veilFreeze, veilRadius, VEIL, venomJump, VENOM } from './seasonOneEggRules'
 
 describe('venom spread', () => {
   it('jumps weaker, lasts at least its minimum, and dies out', () => {
@@ -105,5 +105,14 @@ describe('in a run', () => {
     killEnemy(g, a, 'corrosiveGas')
     expect(b.status.poison.time).toBeGreaterThan(0)
     expect(b.status.poison.power).toBeCloseTo(4 * VENOM.decay)
+  })
+})
+
+describe('Flare Blitz', () => {
+  it('burns harder the faster you run, up to its cap, and barely standing still', () => {
+    expect(blitzPower(BLITZ.walk, true)).toBe(1)
+    expect(blitzPower(BLITZ.walk + 20, true)).toBeCloseTo(1.4)
+    expect(blitzPower(500, true)).toBe(BLITZ.max)
+    expect(blitzPower(500, false)).toBe(BLITZ.still)
   })
 })

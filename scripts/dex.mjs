@@ -37,6 +37,7 @@ export const HATCHLINGS = [
   872, 873, 595, 596, 757, 758, 856, 857, 858, 840, 841, 842, 1011, 1019, 996, 997, 998, // eggs
   408, 409, 410, 411, 566, 567, 696, 697, 698, 699, // fossils
   56, 57, 979, 624, 625, 983, 704, 705, 706, 746, 924, 925, 963, 964, 877, 479, 351, 554, 555, 767, 768, 778, 978, 977,
+  77, 78, 10162, 10163, // Ponyta's line and its Galarian form's (`REGIONAL`)
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -226,4 +227,12 @@ export const EMOTIONS = {
   400: ['Normal'],
 }
 
-export const pad = (n) => String(n).padStart(4, '0')
+/**
+ * Regional forms played as species of their own (keep in sync with `src/data/regionalForms.ts`), by PokeAPI's id
+ * for the form (its cry is there under that id): their SpriteCollab folder. Everything keyed by dex then just works.
+ */
+export const REGIONAL = { 10162: '0077/0001', 10163: '0078/0001' }
+/** A species' SpriteCollab folder. */
+export const pad = (n) => REGIONAL[n] ?? String(n).padStart(4, '0')
+/** Where a species' shiny sits below its folder: a regional form's is directly under the form, like any form's. */
+export const shinyPath = (dex) => (REGIONAL[dex] ? '/0001' : '/0000/0001')

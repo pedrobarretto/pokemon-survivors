@@ -13,6 +13,7 @@ import { cryUrl, drawPokemon, loadedSprites, loadSpecies } from '../render/sprit
 import { t } from '../i18n'
 import { h, later } from './dom'
 import { loadSave } from './save'
+import { nationalDex } from '../data/regionalForms'
 import { hint, typeBadge, type Screen } from './screens'
 
 /** Slots per box, as in the games' PC: 6 columns, 5 rows. Keep in sync with `.pc-grid` in CSS. */
@@ -113,7 +114,7 @@ export const pcBoxScreen = (root: HTMLElement, input: Input, actions: PcActions,
       return
     }
     name.classList.remove('empty')
-    name.replaceChildren(h('small', {}, `#${String(e.dex).padStart(4, '0')}`), e.name, h('img', { src: sparkleIcon(), alt: 'Shiny' }))
+    name.replaceChildren(h('small', {}, `#${String(nationalDex(e.dex)).padStart(4, '0')}`), e.name, h('img', { src: sparkleIcon(), alt: 'Shiny' }))
     types.replaceChildren(...e.types.map(typeBadge))
   }
 
