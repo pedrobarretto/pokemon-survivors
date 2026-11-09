@@ -63,7 +63,7 @@ export const SEASON_ONE_EGGS = {
   },
   tyrunt: {
     name: 'Tyrunt', color: '#a07858', egg: 'fossil', stats: { might: 0.08, speed: -2 }, signature: 'bite',
-    learnset: [['bite', 'rockTomb', 'dragonBreath', 'crunch'], ['stealthRock', 'dragonTail', 'earthquake', 'focusPunch', 'flashCannon']],
+    learnset: [['bite', 'rockTomb', 'dragonBreath', 'crunch'], ['stealthRock', 'dragonTail', 'earthquake', 'focusPunch', 'pyroBall']],
     line: line2(['Tyrunt', 696, ['rock', 'dragon']], ['Tyrantrum', 697, ['rock', 'dragon']], { maxHp: 50, might: 0.24 }),
   },
   amaura: {

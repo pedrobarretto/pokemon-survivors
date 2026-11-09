@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
 import { branchesAt } from '../data/branches'
 import { evolutionOffers, formAt } from './branch'
-import { guardWard } from './kitRules'
+import { guardWard, GUARD_UPTIME } from './kitRules'
 import { pendingEvolution } from './leveling'
 import { NO_RANKS } from './meta'
 import { MOVES } from './moves'
@@ -44,9 +44,9 @@ describe('bite and veil', () => {
 })
 
 describe('protective windows', () => {
-  it('stand at most half the cooldown however long the duration gets', () => {
-    expect(guardWard({ duration: 99, cooldown: MOVES.ironDefense.base.cooldown })).toBe(MOVES.ironDefense.base.cooldown / 2)
-    expect(guardWard({ duration: 99, cooldown: MOVES.magicCoat.base.cooldown })).toBe(MOVES.magicCoat.base.cooldown / 2)
+  it('stand at most the guard share of the cooldown however long the duration gets', () => {
+    expect(guardWard({ duration: 99, cooldown: MOVES.ironDefense.base.cooldown })).toBe(MOVES.ironDefense.base.cooldown * GUARD_UPTIME)
+    expect(guardWard({ duration: 99, cooldown: MOVES.magicCoat.base.cooldown })).toBe(MOVES.magicCoat.base.cooldown * GUARD_UPTIME)
   })
   it('answers harder with armor, never less without it', () => {
     expect(shieldAnswer(10, 2)).toBeGreaterThan(10)
