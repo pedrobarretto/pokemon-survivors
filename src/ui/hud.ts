@@ -58,7 +58,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
   const xpLabel = h('div', { class: 'xp-label' })
   const clock = h('span')
   const weather = h('img', { class: 'weather-icon hidden', alt: '' })
-  const timer = h('div', { class: 'timer' }, weather, clock)
+  const timer = h('div', { class: 'timer arc-outline' }, weather, clock)
   const kills = h('span')
   const coins = h('span')
   const candies = h('span')

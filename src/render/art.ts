@@ -1023,7 +1023,7 @@ const OG_PLATE = ['.111111111.', '12332223331', '13223232221', '13223232331', '1
 export const ogIcon = () => toIconUrl('og', () => art(OG_PLATE, { 1: '#201030', 2: '#6038a8', 3: '#ffe070', 4: '#e8a020' }))
 export const sparkleIcon = () => toIconUrl('sparkle', () => outlined(SPARKLE()[2]!, '#584010'))
 
-/** PlayStation's face buttons in their colors, the size of a Press Start 2P letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
+/** PlayStation's face buttons in their colors, the size of a capital letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
 const PAD_GLYPHS = {
   '✕': [['11....11', '111..111', '.111111.', '..1111..', '..1111..', '.111111.', '111..111', '11....11'], '#4a80e0'],
   '○': [['..1111..', '.111111.', '111..111', '11....11', '11....11', '111..111', '.111111.', '..1111..'], '#e04850'],

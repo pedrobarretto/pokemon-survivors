@@ -120,7 +120,7 @@ export const pt = {
     regen: 'Regeneração',
   },
 
-  /** The title screen: the "press start" intro, then the lobby (`ui/title.ts`). Press Start 2P has no uppercase accented glyphs: its labels stay unaccented or mixed case. */
+  /** The title screen: the "press start" intro, then the lobby (`ui/title.ts`). Older capital labels stay unaccented from when the font had no accented capitals. */
   home: {
     pressKeys: 'Pressione qualquer tecla',
     pressTouch: 'Toque para começar',
@@ -168,7 +168,7 @@ export const pt = {
     tabs: { home: 'Início', collection: 'Coleção', plaza: 'Praça', social: 'Social', profile: 'Perfil' },
   },
 
-  /** The menus' top bar (`ui/shell.ts`). Press Start 2P has no uppercase accented glyphs: titles stay unaccented or mixed case. */
+  /** The menus' top bar (`ui/shell.ts`). Older capital titles stay unaccented from when the font had no accented capitals. */
   shell: {
     back: 'Voltar',
     settings: 'Ajustes',
@@ -212,7 +212,7 @@ export const pt = {
     credits: 'Fan game não oficial · Sprites: PMD SpriteCollab · Cries: PokéAPI · Pokémon © Nintendo/Creatures/GAME FREAK',
   },
 
-  /** The partner select: roster tabs, the partner panel, its details sheet and the start bar. Press Start 2P labels: unaccented capitals or mixed case. */
+  /** The partner select: roster tabs, the partner panel, its details sheet and the start bar. Older capital labels stay unaccented from when the font had no accented capitals. */
   partner: {
     title: 'ESCOLHA SEU PARCEIRO',
     titleShort: 'PARCEIRO',
@@ -6208,7 +6208,7 @@ export const pt = {
     saved: (name: string) => `Build de *${name}* salva! Nas partidas, as cartas dela ganham ★ BUILD.`,
     loaded: (name: string) => `A build salva de *${name}* já está equipada.`,
     cleared: (name: string) => `Build de *${name}* apagada.`,
-    /** The tag on a level-up card that follows the build (Press Start 2P: keep it short). */
+    /** The tag on a level-up card that follows the build (keep it short). */
     buildTag: 'BUILD',
     buildHint: 'Faz parte da build que você montou no Dojo',
     /** Machoke, the Dojo's sensei, before the partner select opens: the first visit, then one of these in turn. */

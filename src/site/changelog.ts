@@ -78,6 +78,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Tu día va primero, en Hoy: Regalos, Desafío del día, Huevos, Misiones y Brote. En la Plaza están el Festival, las tiendas y el Salón de la Fama. Discord, redes e Ideas pasaron a Comunidad.',
           },
           {
+            pt: 'O jogo inteiro ganhou o mesmo visual: letras novas, mais fáceis de ler, e cartões e botões de contorno grosso, nos menus e na partida.',
+            en: 'The whole game got the same look: new, easier-to-read lettering and bold-outlined cards and buttons, in the menus and in a run.',
+            es: 'Todo el juego tiene el mismo aspecto: letras nuevas, más fáciles de leer, y tarjetas y botones de contorno grueso, en los menús y en la partida.',
+          },
+          {
             pt: 'O botão Passear saiu: tudo o que ele alcançava agora tem o seu botão. No celular, cinco abas embaixo guardam o resto.',
             en: 'The Explore button is gone: everything it reached now has its own button. On phones, five tabs at the bottom hold the rest.',
             es: 'El botón Pasear ya no está: todo lo que alcanzaba ahora tiene su botón. En el celular, cinco pestañas abajo guardan el resto.',

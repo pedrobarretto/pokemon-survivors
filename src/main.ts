@@ -709,7 +709,11 @@ const queueLunge = () => {
   if (run?.game.phase === 'playing') lungeQueued = true
 }
 
+/** The mode whose wild cast stands on the stage behind the menus; read on a new screen, not from storage every frame. */
+let menuMode = loadLobbyMode()
+
 const setScreen = (next: Screen | null) => {
+  menuMode = loadLobbyMode()
   screen?.dispose()
   screen = next
   coopShown = null
@@ -3855,7 +3859,7 @@ const frame = (now: number) => {
   if (!run && menuFrame && !startingRun) {
     const mdt = Math.min(0.1, menuAcc)
     menuAcc = 0
-    // Attract mode: wild Pokémon stroll through the meadow behind the menus (haunted on the Noite das Bruxas).
+    // The meadow holds the plaza's trips; the Noite das Bruxas haunts it and the stage.
     scene.haunted = halloweenToday()
     scene.plaza.level = plazaLevel()
     refreshVisitors(performance.now())
@@ -3863,8 +3867,8 @@ const frame = (now: number) => {
     try {
       if (screen?.scene) screen.scene(ctx, mdt, view.w, view.h)
       else {
-        stepTitleScene(scene, mdt, view.w, view.h)
-        drawTitleScene(ctx, scene, view.w, view.h)
+        // Every menu keeps the lobby's stage behind it, so leaving the lobby is no jump to another world.
+        drawLobbyStage(ctx, lobbyStage, view.w, view.h, { x: Math.round(view.w / 2), feet: Math.round(view.h * 0.72) }, menuMode, halloweenToday(), mdt)
         ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
         ctx.fillRect(0, 0, view.w, view.h)
       }
