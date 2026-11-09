@@ -340,4 +340,17 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   957: { rig: { S: { eyesAt: [[-2, 5], [2, 5]], neck: [0, 3] }, SE: { eyesAt: [[0, 5], [4, 5]], neck: [-1, 3] }, E: { eyesAt: [[2, 5]], neck: [0, 3] }, N: { seat: [-2, 4, 4] } } }, // Tinkatink: its small dark eyes, under the hair's tuft, aren't found, and its mouth marker sits between them, so the neck is read at their line; from behind the seat perches on the tuft's tip
   958: { rig: { S: { eyesAt: [[-2, 7], [2, 7]] }, E: { eyesAt: [[6, 6]] }, 'S:Hurt': { neck: [0, 1] } } }, // Tinkatuff: facing us and in profile the eyes are read off its hood's rim, over the small dark ones; hurt, facing us, the neck is read at its mouth
   959: { rig: { 'S:Hurt': { seat: [-2, 4] }, 'SE:Hurt': { seat: [3, 5] } }, no: ['back'] }, // Tinkaton: the hammer on its back; hurt, the seat lands on the hammer's head over its own
+  // Temporada 1: the new species the fit check failed most (140+ failing checks each); no hats until they're fitted by hand.
+  856: { no: ['head'] }, // Hatenna
+  857: { no: ['head'] }, // Hattrem
+  925: { no: ['head'] }, // Maushold
+  567: { no: ['head'] }, // Archeops
+  758: { no: ['head'] }, // Salazzle
+  595: { no: ['head'] }, // Joltik
+  998: { no: ['head'] }, // Baxcalibur
+  757: { no: ['head'] }, // Salandit
+  696: { no: ['head'] }, // Tyrunt
+  746: { no: ['head'] }, // Wishiwashi
+  997: { no: ['head'] }, // Arctibax
+  351: { no: ['head'] }, // Castform
 }
