@@ -1510,7 +1510,7 @@ export const fr: Messages = {
       wallpaper: 'Fond d’écran de la Boîte PC.',
     },
     styles: {
-      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée' },
+      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes' },
       background: { night: 'Nuit étoilée', meadow: 'Route 1', forest: 'Forêt de Jade', cave: 'Mont Sélénite', snow: 'Mont Argenté', tower: 'Tour Pokémon de Lavanville', supporter: 'Ciel doré', halloween: 'Nuit des Sorcières', friendship: 'Amitié' },
       wallpaper: { classic: 'Classique', forest: 'Feuilles', cave: 'Cailloux', snow: 'Flocons', tower: 'Petits fantômes', supporter: 'Étoiles dorées', haunted: 'Maison hantée', secretBase: 'Base Secrète' },
     },
@@ -2881,7 +2881,7 @@ export const fr: Messages = {
     noTitle: 'aucun',
     titleTag: 'TITRE',
     equipped: 'AFFICHE',
-    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu' },
+    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm' },
     newMedals: 'Nouvelles médailles',
     names: {
       firstRun: 'Premiers pas',
@@ -2980,6 +2980,7 @@ export const fr: Messages = {
       arenaMaster: 'Master Ball de l’Arène',
       creator: 'Créateur de contenu',
       friendLegend: 'Légende de l’Amitié',
+      stampCollector: 'Collectionneur d’Estampes',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Joue une partie' : `Joue ${n} parties`),

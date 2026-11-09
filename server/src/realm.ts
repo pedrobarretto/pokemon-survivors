@@ -17,14 +17,16 @@ import {
   type BaseView,
   type FurnitureBuy,
   type GameClaim,
+  type RealmBook,
   type RealmFriends,
   type RealmReport,
   type RealmSettings,
   type ReportReason,
 } from '../../src/net/realmApi'
-import { cityCounts, friendsFrom, parseReportRoom, type HeldPresence } from '../../src/realm/friends'
+import { cityCounts, friendsFrom, parseReportRoom, walking, type HeldPresence } from '../../src/realm/friends'
 import { capped, isMinigameId, MINIGAME_DAILY, MINIGAMES, trophiesEarned, type GameOutcome, type GameStats, type MinigameId } from '../../src/data/minigames'
-import type { IdentityResponse, PresenceReport, VisitResponse } from '../../src/net/realmRelay'
+import type { DeedsAnswer, IdentityResponse, PresenceReport, VisitResponse } from '../../src/net/realmRelay'
+import { FURNISHED, isDeed, type Deed } from '../../src/data/realmStamps'
 import type { RealmBan, RealmDesk, RealmModeration, RealmReportGroup } from '../../src/realm/moderation'
 import { addFurniture, trophyFurniture } from '../../src/realm/trophies'
 import { boardKeeps, boardPoints, GAME_BOARD_PERIODS, GAME_BOARD_SIZE, periodStart, type GameBoard, type GameBoardPeriod } from '../../src/realm/boards'
@@ -32,6 +34,7 @@ import type { Sql } from './db'
 import { bareName, idsByName, NAMES, restClient } from './discord'
 import { moveGems, vouchedLooks } from './gems'
 import { rateLimiter } from './rateLimit'
+import { applyDeeds, bookOf, claimPay, collectErrand, groupDeeds, hasCompany, NOTHING, type DeedEntry, type Earned, type ErrandOutcome } from './realmDeeds'
 import { tierOfRow, type StandingRow } from './supporters'
 
 /**
@@ -43,8 +46,9 @@ import { tierOfRow, type StandingRow } from './supporters'
  * relay), the bases (`bases`), furniture bought at Bibarel's carpentry with
  * gems (the gem ledger) or ₽ (out of the stored save, like a Festival
  * donation) plus what the save earned (`trophyFurniture`), the mini games'
- * claims (₽ under the daily caps, stats, trophies, the boards), and the
- * realm's own reports and bans. Nothing here reaches `src/game`'s rules.
+ * claims (₽ under the daily caps, stats, trophies, the boards), the Estampas
+ * and Recados (`realmDeeds.ts`), and the realm's own reports and bans. Nothing
+ * here reaches `src/game`'s rules.
  */
 
 type Q = Sql | TransactionSql
@@ -58,6 +62,7 @@ const LIMITS = {
   like: { n: 60, ms: 60_000 },
   buy: { n: 30, ms: 60_000 },
   game: { n: 12, ms: 60_000 },
+  errand: { n: 30, ms: 60_000 },
   // The friends panel asks every `FRIENDS_POLL_MS` while open; the picker and the lobby's tile once each.
   friends: { n: 12, ms: 60_000 },
   settings: { n: 10, ms: 60_000 },
@@ -71,6 +76,9 @@ const DESK_LIST = { reports: 500, bans: 200 } as const
 
 /** Identities one lookup answers at most (a city's worth arriving together). */
 export const IDENTITY_BATCH = 64
+
+/** Accounts whose API-seen stamps and errands wait at most for the relay's next ask: without a relay asking they'd pile up. */
+const EARNED_HELD = 2000
 
 /* ---------------- Pure rules ---------------- */
 
@@ -289,6 +297,12 @@ export type SaveOutcome = { ok: true; base: BaseView } | { ok: false; error: 'pr
 
 export type LikeOutcome = { ok: true; likes: number } | { ok: false; error: 'private' | 'missing' | 'self' }
 
+/** The book (`GET /realm/book`), or `profile` without a @handle. */
+export type BookOutcome = { ok: true; book: RealmBook } | { ok: false; error: 'profile' }
+
+/** A claimed errand, or why not: no @handle, kept out of the realm, or `collectErrand`'s refusals. */
+export type ErrandClaimOutcome = ErrandOutcome | { ok: false; error: 'profile' | 'banned' }
+
 export type BuyError = 'profile' | 'gems' | 'funds' | 'nosave' | 'stale'
 
 /** What a mini game claim came to (`GameClaimed`), or why it was refused: no @handle, or kept out of the realm. */
@@ -336,6 +350,7 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
     like: rateLimiter(LIMITS.like.n, LIMITS.like.ms),
     buy: rateLimiter(LIMITS.buy.n, LIMITS.buy.ms),
     game: rateLimiter(LIMITS.game.n, LIMITS.game.ms),
+    errand: rateLimiter(LIMITS.errand.n, LIMITS.errand.ms),
     friends: rateLimiter(LIMITS.friends.n, LIMITS.friends.ms),
     settings: rateLimiter(LIMITS.settings.n, LIMITS.settings.ms),
   }
@@ -354,6 +369,28 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
 
   const slimOf = async (q: Q, userId: string) => parseSaveData((await q<{ save: unknown }[]>`select ${slimSave(q)} as save from saves s where s.user_id = ${userId}`)[0]?.save ?? {})
 
+  /** What the API's own routes earned (a claim, a like, a saved base), waiting for the relay's next ask to reach the trainer's room. */
+  const heldEarned = new Map<string, Earned>()
+
+  const holdEarned = (userId: string, earned: Earned) => {
+    if ((earned.stamps.length === 0 && earned.errands.length === 0) || (heldEarned.size >= EARNED_HELD && !heldEarned.has(userId))) return
+    const was = heldEarned.get(userId) ?? NOTHING
+    heldEarned.set(userId, { stamps: [...was.stamps, ...earned.stamps], errands: [...was.errands, ...earned.errands] })
+  }
+
+  /**
+   * Deeds the API saw itself, once the route's own work is committed, in a
+   * transaction of their own: a failure here is logged and costs only the deed,
+   * never the claim or the like that caused it.
+   */
+  const earn = async (userId: string, deeds: ReadonlyMap<Deed, number>, day: DayKey = brasiliaDay(now())) => {
+    try {
+      holdEarned(userId, await sql.begin((tx) => applyDeeds(tx, userId, deeds, day)))
+    } catch (err) {
+      console.error(`realm: deeds of ${userId} not applied`, err)
+    }
+  }
+
   return {
     /**
      * `POST /realm/identity`: each account that may walk the realm, by user
@@ -369,8 +406,9 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
         where u.id = any(${ids}::text[])`
       const open = rows.flatMap((r) => (!r.closed && r.handle !== null ? [{ ...r, handle: r.handle }] : []))
       const openIds = open.map((r) => r.id)
-      const [looks, mutuals] = await Promise.all([
+      const [looks, stamps, mutuals] = await Promise.all([
         vouchedLooks(sql, openIds),
+        sql<{ user_id: string; n: number }[]>`select user_id, count(*)::int as n from realm_stamps where user_id = any(${openIds}::text[]) group by user_id`,
         // Each one's mutual friends (who it may invite to its base), `FRIENDS.list` at most.
         sql<{ id: string; handle: string }[]>`
           select a.follower_id as id, u.handle from follows a
@@ -381,7 +419,7 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
       const identities: Record<string, RealmIdentity> = {}
       const friends: Record<string, string[]> = {}
       for (const r of open) {
-        identities[r.id] = { userId: r.id, handle: r.handle, ...partnerOf(parseSaveData(r.save)), look: looks.get(r.id) ?? {}, supporter: r.supporter_public ? tierOfRow(r) : null }
+        identities[r.id] = { userId: r.id, handle: r.handle, ...partnerOf(parseSaveData(r.save)), look: looks.get(r.id) ?? {}, supporter: r.supporter_public ? tierOfRow(r) : null, stamps: stamps.find((s) => s.user_id === r.id)?.n ?? 0 }
         friends[r.id] = []
       }
       for (const m of mutuals) {
@@ -417,6 +455,45 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
       const held = presence.get(report.home)
       if (!held || held.report.at <= report.at) presence.set(report.home, { report, at: now().getTime() })
     },
+
+    /**
+     * `POST /realm/deeds`: applies what a relay saw, each account in its own
+     * transaction (one that fails is logged and the others land), and answers
+     * what they earned, plus what the API's own routes earned since the last
+     * ask. The relay never retries, so a report counts once.
+     */
+    deeds: async (entries: readonly DeedEntry[]): Promise<DeedsAnswer> => {
+      const day = brasiliaDay(now())
+      for (const [userId, deeds] of groupDeeds(entries)) {
+        try {
+          holdEarned(userId, await sql.begin(async (tx) => ((await closed(tx, userId)) ? NOTHING : applyDeeds(tx, userId, deeds, day))))
+        } catch (err) {
+          console.error(`realm: deeds of ${userId} not applied`, err)
+        }
+      }
+      const answer: DeedsAnswer = { stamps: {}, errands: {} }
+      for (const [userId, earned] of heldEarned) {
+        if (earned.stamps.length > 0) answer.stamps[userId] = earned.stamps
+        if (earned.errands.length > 0) answer.errands[userId] = earned.errands
+      }
+      heldEarned.clear()
+      return answer
+    },
+
+    /** `GET /realm/book`: the player's Estampas and the day's Recados; `profile` without a handle. */
+    book: async (userId: string): Promise<BookOutcome> => {
+      if (!(await handleOf(sql, userId))) return { ok: false, error: 'profile' }
+      return { ok: true, book: await bookOf(sql, userId, brasiliaDay(now())) }
+    },
+
+    /** `POST /realm/errands/claim`: collects a finished errand of the Brasília day, once, behind the account's row lock. */
+    claimErrand: (userId: string, id: string): Promise<ErrandClaimOutcome> =>
+      sql.begin(async (tx): Promise<ErrandClaimOutcome> => {
+        const [user] = await tx<{ handle: string | null }[]>`select handle from users where id = ${userId} for update`
+        if (!user?.handle) return { ok: false, error: 'profile' }
+        if (await closed(tx, userId)) return { ok: false, error: 'banned' }
+        return collectErrand(tx, userId, id, brasiliaDay(now()))
+      }),
 
     /** Takes one `GET /realm/friends` from the player's budget, and one `PUT /realm/settings`. */
     takeFriends: (userId: string) => limits.friends.take([userId], now().getTime()),
@@ -475,8 +552,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
      * against what it owns now, behind the account's row lock (a buy and a
      * save take turns).
      */
-    save: (userId: string, next: BaseSave): Promise<SaveOutcome> =>
-      sql.begin(async (tx): Promise<SaveOutcome> => {
+    save: async (userId: string, next: BaseSave): Promise<SaveOutcome> => {
+      const saved = await sql.begin(async (tx): Promise<SaveOutcome> => {
         const [user] = await tx<{ handle: string | null }[]>`select handle from users where id = ${userId} for update`
         if (!user?.handle) return { ok: false, error: 'profile' }
         if (await closed(tx, userId)) return { ok: false, error: 'banned' }
@@ -488,7 +565,10 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
           values (${userId}, ${tx.json(layout)}, ${visibility}, ${layout.exterior}, ${layout.items.length}, now())
           on conflict (user_id) do update set layout = excluded.layout, visibility = excluded.visibility, exterior = excluded.exterior, items = excluded.items, updated_at = now()`
         return { ok: true, base: toView((await ownerOf(tx, user.handle, userId))!) }
-      }),
+      })
+      if (saved.ok && next.layout.items.length >= FURNISHED) await earn(userId, new Map([['furnish', 1]]))
+      return saved
+    },
 
     /**
      * `GET /realm/bases`: the board. `top` and `new`, public bases with
@@ -510,19 +590,24 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
     },
 
     /** `POST /realm/base/:handle/like`: likes a base the viewer may enter, or takes the like back. */
-    like: (viewer: string, handle: string): Promise<LikeOutcome> =>
-      sql.begin(async (tx): Promise<LikeOutcome> => {
+    like: async (viewer: string, handle: string): Promise<LikeOutcome> => {
+      const done = await sql.begin(async (tx) => {
         const h = wireHandle(handle)
         const o = h ? await ownerOf(tx, h, viewer, true) : null
-        if (!o || o.visibility === null) return { ok: false, error: 'missing' }
-        if (o.id === viewer) return { ok: false, error: 'self' }
+        if (!o || o.visibility === null) return { ok: false, error: 'missing' } as const
+        if (o.id === viewer) return { ok: false, error: 'self' } as const
         const may = mayEnter(o, viewer)
-        if (!may.allowed) return { ok: false, error: may.why }
+        if (!may.allowed) return { ok: false, error: may.why } as const
         const taken = await tx`delete from base_likes where base_id = ${o.id} and user_id = ${viewer} returning base_id`
         if (taken.length === 0) await tx`insert into base_likes (base_id, user_id) values (${o.id}, ${viewer})`
         const [b] = await tx<{ likes: number }[]>`update bases set likes = greatest(0, likes + ${taken.length > 0 ? -1 : 1}) where user_id = ${o.id} returning likes`
-        return { ok: true, likes: b?.likes ?? 0 }
-      }),
+        return { ok: true, likes: b?.likes ?? 0, added: taken.length === 0 } as const
+      })
+      if (!done.ok) return done
+      // Its own transaction, after this one: here the owner's row is locked, and two players liking each other's bases must not wait on each other.
+      if (done.added) await earn(viewer, new Map([['like', 1]]))
+      return { ok: true, likes: done.likes }
+    },
 
     /**
      * `POST /realm/furniture/buy`: one piece of `id` for `price`, in one
@@ -566,16 +651,21 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
      * account's row lock: the Brasília `day`'s caps (`capped`: the game's and
      * all games'), the game's stats (`statsAfter`) and the trophies they
      * reach for the first time (`trophiesEarned`, into `furniture_owned` as
-     * source `game`). The ₽ goes to the wallet on the device, like a run's.
+     * source `game`). The price grows before the caps with company in the
+     * room (the relays' presence, never the client's word) and during the
+     * game's Hora do Realm (`claimPay`). The ₽ goes to the wallet on the
+     * device, like a run's. Then the game's deeds (`game:*`, `feat:*`).
      */
-    claim: (userId: string, claim: GameClaim, coins: number, day: DayKey): Promise<ClaimOutcome> =>
-      sql.begin(async (tx): Promise<ClaimOutcome> => {
+    claim: async (userId: string, claim: GameClaim, coins: number, day: DayKey): Promise<ClaimOutcome> => {
+      const claimed = await sql.begin(async (tx): Promise<ClaimOutcome> => {
         const [user] = await tx<{ handle: string | null }[]>`select handle from users where id = ${userId} for update`
         if (!user?.handle) return { ok: false, error: 'profile' }
         if (await closed(tx, userId)) return { ok: false, error: 'banned' }
         const days = await tx<{ game: string; paid: number }[]>`select game, paid from realm_game_days where user_id = ${userId} and day = ${day}::date`
         const paidAll = days.reduce((sum, d) => sum + d.paid, 0)
-        const paid = capped(claim.game, coins, days.find((d) => d.game === claim.game)?.paid ?? 0, paidAll)
+        const at = now().getTime()
+        const priced = claimPay(coins, claim.game, hasCompany(walking(presence.values(), at), user.handle), at)
+        const paid = capped(claim.game, priced, days.find((d) => d.game === claim.game)?.paid ?? 0, paidAll)
         await tx`
           insert into realm_game_days (user_id, day, game, paid, plays) values (${userId}, ${day}::date, ${claim.game}, ${paid}, 1)
           on conflict (user_id, day, game) do update set paid = realm_game_days.paid + excluded.paid, plays = realm_game_days.plays + 1`
@@ -614,7 +704,13 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
           trophies,
           furniture: trophies.length > 0 ? await ownedBy(tx, userId, await slimOf(tx, userId)) : null,
         }
-      }),
+      })
+      if (claimed.ok) {
+        const feats = claim.feats.flatMap((f) => [`feat:${claim.game}:${f}`].filter(isDeed))
+        await earn(userId, new Map<Deed, number>([[`game:${claim.game}`, 1], ...feats.map((f) => [f, 1] as const)]), day)
+      }
+      return claimed
+    },
 
     /**
      * `GET /realm/boards/:game`: the game's board for the period holding the
@@ -727,6 +823,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
     takeBuy: (userId: string) => limits.buy.take([userId], now().getTime()),
     /** Counts a mini game claim against the account's limit; false past it. */
     takeGame: (userId: string) => limits.game.take([userId], now().getTime()),
+    /** Counts an errand claim against the account's limit; false past it. */
+    takeErrand: (userId: string) => limits.errand.take([userId], now().getTime()),
   }
 }
 

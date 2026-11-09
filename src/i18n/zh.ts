@@ -1510,7 +1510,7 @@ export const zh: Messages = {
       wallpaper: '電腦箱的桌布。',
     },
     styles: {
-      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴' },
+      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊' },
       background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜', friendship: '友情' },
       wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋', secretBase: '秘密基地' },
     },
@@ -2881,7 +2881,7 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章' },
     newMedals: '新獎牌',
     names: {
       firstRun: '第一步',
@@ -2980,6 +2980,7 @@ export const zh: Messages = {
       arenaMaster: '競技場 Master Ball',
       creator: '內容創作者',
       friendLegend: '友情傳奇',
+      stampCollector: '印章收藏家',
     },
     goals: {
       runs: (n) => `玩 ${n} 局`,

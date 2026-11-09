@@ -200,7 +200,8 @@ export type PartyMode = 'coop' | 'arena'
  * Who a trainer is, as the API vouches for them (`POST /realm/identity`):
  * never what the client says. `look` is the cosmetic look (slot to id plus
  * `skins`, a `WireLook`; the game's `parseLook` reads it), `partner` the save's partner (a `PlayableId`)
- * and whether it's shiny, `supporter` the tier for the badge, if any.
+ * and whether it's shiny, `supporter` the tier for the badge, if any, `stamps`
+ * how many Estampas it earned (`data/realmStamps.ts`; an API from before them: 0).
  */
 export type RealmIdentity = {
   userId: string
@@ -209,6 +210,7 @@ export type RealmIdentity = {
   shiny: boolean
   look: WireLook
   supporter: string | null
+  stamps: number
 }
 
 /** A trainer as others see them: `id` is per city and connection (never the user id), the rest their identity. */
@@ -219,6 +221,7 @@ export type Avatar = {
   shiny: boolean
   look: WireLook
   supporter: string | null
+  stamps: number
   x: number
   y: number
   facing: Facing

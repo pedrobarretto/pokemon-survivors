@@ -2,7 +2,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { winsNeeded } from '../../src/game/capture'
 import type { BaseLayout } from '../../src/data/secretBases'
 import { MINIGAME_DAILY, MINIGAMES } from '../../src/data/minigames'
+import { nextHour } from '../../src/data/realmEvents'
+import type { Deed } from '../../src/data/realmStamps'
+import { brasiliaDay } from '../../src/game/day'
 import type { GameClaim } from '../../src/net/realmApi'
+import { ERRANDS_BONUS, drawErrands } from '../../src/realm/errands'
 import type { Sql } from './db'
 import { realmStore } from './realm'
 
@@ -12,6 +16,9 @@ import { realmStore } from './realm'
  * without it, like `gems.db.test.ts`.
  */
 const url = process.env.REALM_TEST_DATABASE_URL
+
+/** A moment outside every Hora do Realm (`hourPay` follows the store's clock), ahead of the database's own for bans. */
+const QUIET = new Date('2030-03-04T05:00:00Z')
 
 const chairs = (n: number): BaseLayout => ({ exterior: 'tree', wallpaper: null, flooring: null, items: Array.from({ length: n }, (_, i) => ({ id: 'woodChair', x: i, y: 4, turned: false })) })
 
@@ -27,9 +34,9 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
   })
 
   beforeEach(async () => {
-    await sql`truncate realm_game_days, realm_game_stats, realm_game_boards, furniture_owned, furniture_buys, bases, base_likes, base_visits, realm_bans, realm_reports, gem_ledger, cosmetics_owned, follows, saves, users cascade`
+    await sql`truncate realm_deeds, realm_stamps, realm_errand_days, realm_stamp_milestones, gifts, realm_game_days, realm_game_stats, realm_game_boards, furniture_owned, furniture_buys, bases, base_likes, base_visits, realm_bans, realm_reports, gem_ledger, cosmetics_owned, follows, saves, users cascade`
     posted = []
-    realm = realmStore(sql, { staff: { post: async (line) => void posted.push(line) } })
+    realm = realmStore(sql, { staff: { post: async (line) => void posted.push(line) }, now: () => QUIET })
     for (const [id, handle] of [['u_ash', 'ash'], ['u_misty', 'misty'], ['u_brock', 'brock']] as const) {
       await sql`insert into users (id, handle, name, gems) values (${id}, ${handle}, ${handle}, 1000)`
     }
@@ -214,6 +221,129 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
       await realm.claim('u_ash', played('win', 'bot'), 75, DAY)
       await realm.claim('u_misty', played('loss', 'human'), 30, DAY)
       expect((await realm.board('fourInRow', 'week', DAY, 'u_misty'))).toMatchObject({ entries: [{ rank: 1, handle: 'ash', score: 2 }], me: null, total: 1 })
+    })
+  })
+  describe('Estampas and Recados', () => {
+    const day = brasiliaDay(QUIET)
+    const report = (userId: string, deed: Deed, n = 1) => realm.deeds(Array.from({ length: n }, () => ({ userId, deed })))
+
+    it('counts deeds, grants a stamp once and shows it in the book and the identity', async () => {
+      expect(await report('u_ash', 'room:plaza')).toEqual({ stamps: { u_ash: ['firstSteps'] }, errands: {} })
+      expect(await report('u_ash', 'room:plaza')).toEqual({ stamps: {}, errands: {} })
+      const got = await realm.book('u_ash')
+      expect(got.ok && got.book).toMatchObject({ day, counts: { 'room:plaza': 2 }, milestones: [], stamps: [{ id: 'firstSteps' }] })
+      expect((await realm.identity(['u_ash', 'u_misty'])).identities).toMatchObject({ u_ash: { stamps: 1 }, u_misty: { stamps: 0 } })
+      expect(await realm.book('u_nohandle')).toEqual({ ok: false, error: 'profile' })
+    })
+
+    it('grants a stamp once when the same deed lands many times at once', async () => {
+      const answers = await Promise.all(Array.from({ length: 16 }, () => report('u_ash', 'say')))
+      expect(answers.flatMap((a) => a.stamps.u_ash ?? [])).toEqual(['hello'])
+      const [count] = await sql<{ count: number }[]>`select count from realm_deeds where user_id = 'u_ash' and deed = 'say'`
+      expect(count!.count).toBe(16)
+      expect(await sql`select 1 from realm_stamps where user_id = 'u_ash'`).toHaveLength(1)
+    })
+
+    it('ignores what it should not count, and one bad account never stops the others', async () => {
+      await realm.act('u_admin', { action: 'ban', userId: 'u_brock', days: 7, reason: 'spam' })
+      const answer = await realm.deeds([{ userId: 'u_ghost', deed: 'say' }, { userId: 'u_brock', deed: 'say' }, { userId: 'u_misty', deed: 'say' }])
+      expect(answer.stamps).toEqual({ u_misty: ['hello'] })
+      expect(await sql`select 1 from realm_deeds where user_id in ('u_ghost', 'u_brock')`).toHaveLength(0)
+    })
+
+    it('pays a milestone once: furniture as game, title and frame as gifts by their key', async () => {
+      await sql`insert into realm_stamps (user_id, stamp) select 'u_ash', 'old' || n from generate_series(1, 29) n`
+      const answers = await Promise.all(Array.from({ length: 8 }, () => report('u_ash', 'room:plaza')))
+      expect(answers.flatMap((a) => a.stamps.u_ash ?? [])).toEqual(['firstSteps'])
+      const got = await realm.book('u_ash')
+      expect(got.ok && got.book.milestones).toEqual([5, 12, 20, 30])
+      const furniture = await sql<{ furniture: string; source: string; count: number }[]>`select furniture, source, count from furniture_owned where user_id = 'u_ash' order by furniture`
+      expect(furniture).toEqual([
+        { furniture: 'stampCabinet', source: 'game', count: 1 },
+        { furniture: 'stampDesk', source: 'game', count: 1 },
+      ])
+      const gifts = await sql<{ key: string; payload: unknown }[]>`select key, payload from gifts where user_id = 'u_ash' order by key`
+      expect(gifts).toEqual([
+        { key: 'realmStamps:12', payload: { kind: 'style', style: { slot: 'frame', id: 'stampFrame' } } },
+        { key: 'realmStamps:30', payload: { kind: 'title', title: 'stampCollector' } },
+      ])
+      await report('u_ash', 'say')
+      expect(await sql`select 1 from gifts where user_id = 'u_ash'`).toHaveLength(2)
+    })
+
+    const finish = async (userId: string, i: number) => {
+      const e = drawErrands(day)[i]!
+      return report(userId, e.deed, e.target)
+    }
+
+    it('finishes errands, counts errands:all once, and pays each once with the bonus on the last', async () => {
+      const list = drawErrands(day)
+      expect(await realm.claimErrand('u_ash', list[0]!.id)).toEqual({ ok: false, error: 'unfinished' })
+      const first = await finish('u_ash', 0)
+      expect(first.errands).toEqual({ u_ash: [list[0]!.id] })
+      await finish('u_ash', 1)
+      const last = await finish('u_ash', 2)
+      expect(last.stamps.u_ash).toContain('errandRunner')
+      await finish('u_ash', 2)
+      const book = await realm.book('u_ash')
+      expect(book.ok && book.book.counts['errands:all']).toBe(1)
+      expect(book.ok && book.book.errands.map((e) => e.progress)).toEqual(list.map((e) => e.target))
+
+      const one = await realm.claimErrand('u_ash', list[0]!.id)
+      expect(one).toMatchObject({ ok: true, coins: list[0]!.reward })
+      expect(await realm.claimErrand('u_ash', list[0]!.id)).toEqual({ ok: false, error: 'claimed' })
+      expect(await realm.claimErrand('u_ash', list[1]!.id)).toMatchObject({ ok: true, coins: list[1]!.reward })
+      const three = await realm.claimErrand('u_ash', list[2]!.id)
+      expect(three).toMatchObject({ ok: true, coins: list[2]!.reward + ERRANDS_BONUS, book: { errands: [{ claimed: true }, { claimed: true }, { claimed: true }] } })
+      expect(await realm.claimErrand('u_ash', 'not-today:1')).toEqual({ ok: false, error: 'unfinished' })
+    })
+
+    it('pays one claim of an errand asked for many times at once', async () => {
+      const e = drawErrands(day)[0]!
+      await finish('u_ash', 0)
+      const claims = await Promise.all(Array.from({ length: 8 }, () => realm.claimErrand('u_ash', e.id)))
+      expect(claims.filter((c) => c.ok)).toHaveLength(1)
+      expect(claims.filter((c) => !c.ok)).toEqual(Array.from({ length: 7 }, () => ({ ok: false, error: 'claimed' })))
+    })
+
+    const fishing = (score: number): GameClaim => ({ game: 'fishing', outcome: { score }, ms: 60_000, feats: [] })
+
+    it('pays company from the relays’ presence and never a claim’s word, before the caps', async () => {
+      realm.presence({ home: 'sa', at: 1, cities: { pallet: ['ash', 'misty', 'brock'] }, rooms: { pallet: ['pier', 'pier', 'cafe'] } })
+      expect(await realm.claim('u_ash', fishing(200), 200, day)).toMatchObject({ coins: 250 })
+      expect(await realm.claim('u_brock', fishing(200), 200, day)).toMatchObject({ coins: 200 })
+      // The game's daily cap still decides (800, 250 of it gone).
+      expect(await realm.claim('u_ash', fishing(640), 640, day)).toMatchObject({ coins: 550 })
+    })
+
+    it('doubles a game during its Hora do Realm', async () => {
+      let hour = nextHour(QUIET.getTime())
+      while (hour.kind !== 'tide') hour = nextHour(hour.end)
+      const during = realmStore(sql, { now: () => new Date(hour.start + 1000) })
+      expect(await during.claim('u_ash', fishing(200), 200, day)).toMatchObject({ coins: 400 })
+    })
+
+    it('counts a claim, a like and a furnished base, and hands what they earned to the relay’s next ask, once', async () => {
+      await realm.claim('u_ash', { ...fishing(10), feats: ['feebas', 'made-up'] }, 10, day)
+      await sql`insert into bases (user_id, layout, visibility, exterior, items) values ('u_misty', ${sql.json(chairs(0))}, 'public', 'tree', 1)`
+      await realm.like('u_ash', 'misty')
+      await realm.like('u_ash', 'misty')
+      const book = await realm.book('u_ash')
+      expect(book.ok && book.book.counts).toEqual({ 'game:fishing': 1, 'feat:fishing:feebas': 1, like: 1 })
+      const first = await realm.deeds([])
+      expect([...(first.stamps.u_ash ?? [])].sort()).toEqual(['fanMail', 'goneFishing', 'ugliestFish'])
+      expect(await realm.deeds([])).toEqual({ stamps: {}, errands: {} })
+      await sql`insert into furniture_owned (user_id, furniture, source, count) values ('u_ash', 'woodChair', 'buy', 12)`
+      expect(await realm.save('u_ash', { layout: chairs(9), visibility: 'public' })).toMatchObject({ ok: true })
+      expect((await realm.deeds([])).stamps).toEqual({})
+      expect(await realm.save('u_ash', { layout: chairs(10), visibility: 'public' })).toMatchObject({ ok: true })
+      expect((await realm.deeds([])).stamps).toEqual({ u_ash: ['decorator'] })
+    })
+
+    it('refuses an errand to an account without a handle or kept out of the realm', async () => {
+      expect(await realm.claimErrand('u_nohandle', drawErrands(day)[0]!.id)).toEqual({ ok: false, error: 'profile' })
+      await realm.act('u_admin', { action: 'ban', userId: 'u_misty', days: 7, reason: 'spam' })
+      expect(await realm.claimErrand('u_misty', drawErrands(day)[0]!.id)).toEqual({ ok: false, error: 'banned' })
     })
   })
 })
