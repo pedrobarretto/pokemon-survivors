@@ -1,3 +1,4 @@
+import { SEASON_ONE } from '../../src/data/seasons'
 import type { BranchId } from '../../src/data/branches'
 import type { PlayableId } from '../../src/data/hatchlings'
 import {
@@ -190,7 +191,7 @@ export const coopBoardStore = (sql: Sql) => {
 
     /** `GET /coop/boards/:difficulty`: a size and difficulty's regular runs (never the challenge's) of the period, by team. */
     board: async ({ size, difficulty, period, friends, viewer }: CoopBoardQuery): Promise<CoopBoard> => {
-      const since = period === 'all' ? sql`` : sql`and r.ended_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`
+      const since = period === 'all' ? sql`and r.ended_at >= ${SEASON_ONE.start}::timestamptz` : period === 'era1' ? sql`and r.ended_at < ${SEASON_ONE.start}::timestamptz` : sql`and r.ended_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`
       const { entries, me } = await read(size, sql`r.challenge is null and r.difficulty = ${difficulty} ${since}`, friends, viewer)
       return { size, difficulty, period, entries, me }
     },

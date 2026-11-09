@@ -327,6 +327,7 @@ export const LEGENDARY_MOVES = {
     type: 'dragon',
     legendary: true,
     base: stats({ damage: 140, cooldown: 5.4, duration: 1.3, knockback: 0 }),
+    minCooldown: 4,
     // Time stops: the foes freeze where they stand, and the next hit on them lands twice as hard.
     status: { kind: 'freeze', chance: 1, duration: 1.3, power: 0 },
     upgrades: [

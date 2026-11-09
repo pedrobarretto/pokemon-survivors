@@ -1,3 +1,4 @@
+import { SEASON_ONE } from '../../src/data/seasons'
 import { createHash, randomInt } from 'node:crypto'
 import { challengeProblem, dailyChallenge } from '../../src/game/challenge'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
@@ -5,7 +6,7 @@ import type { Difficulty } from '../../src/game/difficulty'
 import { dexCounts } from '../../src/game/dex'
 import { parseSaveData } from '../../src/game/meta'
 import {
-  BOARD_PERIODS,
+  LIVE_PERIODS,
   BOARD_SIZE,
   BOARD_TIME_ZONE,
   clockAllows,
@@ -151,7 +152,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
       select distinct on (r.user_id) r.id, r.user_id, r.starter, r.stage, r.branch, r.difficulty, r.survived, r.outcome, r.started_at, r.bag
       from runs r
       where r.finished_at is not null and r.verified is not false and not r.unlisted and r.mode = ${mode} and r.difficulty = ${difficulty}
-        ${period === 'all' ? q`` : q`and r.started_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`}
+        ${period === 'all' ? q`and r.started_at >= ${SEASON_ONE.start}::timestamptz` : period === 'era1' ? q`and r.started_at < ${SEASON_ONE.start}::timestamptz` : q`and r.started_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`}
         ${starter ? q`and r.starter = ${starter}` : q``}
         ${friends && viewer ? q`and (r.user_id = ${viewer} or r.user_id in (select followee_id from follows where follower_id = ${viewer}))` : q``}
       order by r.user_id, r.survived desc, r.started_at
@@ -185,7 +186,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
       from runs r join users u on u.id = r.user_id where r.id = ${id} and r.finished_at is not null`
     if (!run) return null
     const lines = await Promise.all(
-      BOARD_PERIODS.flatMap((period) =>
+      LIVE_PERIODS.flatMap((period) =>
         (['global', 'starter'] as const).map(async (board): Promise<BoardLine & { period: BoardPeriod }> => {
           const query = { mode: run.mode, difficulty: run.difficulty, period, starter: board === 'starter' ? run.starter : null, friends: false, viewer: null }
           const [line] = await q<{ rank: number; id: string }[]>`select rank, id from (${ranked(query, q, run.user_id)}) board where user_id = ${run.user_id}`

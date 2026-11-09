@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  bonusMult, BURROW_SHARE, burrowTime, DRAIN_RATE, drainAmount, drainRefill, executes, GUARD_UPTIME, guardSpan, learnable, LOW_HP, nearestFoes, nextStacks, scaleBy, WARD_GAP, wardOpens, type StackRule,
+  bonusMult, COOLDOWN_SOFT, softCooldown, BURROW_SHARE, burrowTime, DRAIN_RATE, drainAmount, drainRefill, executes, GUARD_UPTIME, guardSpan, learnable, LOW_HP, nearestFoes, nextStacks, scaleBy, WARD_GAP, wardOpens, type StackRule,
 } from './kitRules'
 import { HEX_BONUS } from './moveRules'
 import { MOVES, moveStats, type MoveId } from './moves'
@@ -190,6 +190,14 @@ describe('burrowTime', () => {
     const under = burrowTime(1.3, cooldown, 0.35)
     expect(under + 0.35).toBeLessThanOrEqual(cooldown * BURROW_SHARE)
     expect(under).toBeGreaterThan(0)
+  })
+})
+
+describe('softCooldown', () => {
+  it('counts cuts in full down to the threshold and for half past it', () => {
+    expect(softCooldown(1)).toBe(1)
+    expect(softCooldown(COOLDOWN_SOFT)).toBe(COOLDOWN_SOFT)
+    expect(softCooldown(0.5)).toBeCloseTo(0.6, 10)
   })
 })
 

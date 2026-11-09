@@ -9,7 +9,7 @@ import { dailyChallenge } from '../game/challenge'
 import { brasiliaDay, previousDay, type DayKey } from '../game/day'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { pumpkinRow } from '../game/halloween'
-import { BOARD_PERIODS, isPlayable, RUN_MODES, runMode, type Board, type BoardEntry, type BoardPeriod, type RunMode } from '../game/ranking'
+import { BOARD_PERIODS, isPlayable, LIVE_PERIODS, RUN_MODES, runMode, type Board, type BoardEntry, type BoardPeriod, type RunMode } from '../game/ranking'
 import { fetchBoard, fetchChallengeBoard, fetchCoopBoard, fetchCoopChallengeBoard, type BoardFilter, type RankOutcome } from '../ranking'
 import { dailyCoopChallenge, TEAM_SIZE_KEYS, TEAM_SIZES, type CoopBoard, type CoopBoardEntry, type CoopChallengeBoard, type TeamSize } from '../game/coopBoard'
 import { formatDay, t } from '../i18n'
@@ -282,7 +282,7 @@ export const rankingScreen = (
     nav?.off()
     nav = menu(input, stops, (i) => (playSfx('select'), later(actions[i]!)), { initial: Math.max(0, meAt) })
 
-    const resets = coop ? (onChallenge ? m.coopChallengeResets : m.coopResets) : onChallenge ? m.challengeResets : filter.period !== 'all' ? m.resets : null
+    const resets = coop ? (onChallenge ? m.coopChallengeResets : m.coopResets) : onChallenge ? m.challengeResets : filter.period === 'day' || filter.period === 'week' ? m.resets : null
     el.replaceChildren(
       h(
         'div',
@@ -423,7 +423,7 @@ export const rankingScreen = (
 const outcomeLine = (o: RankOutcome) => {
   const m = t().ranking
   if (o.kind !== 'ranked') return h('span', {}, m[o.kind])
-  const places = BOARD_PERIODS.flatMap((p) => {
+  const places = LIVE_PERIODS.flatMap((p) => {
     const rank = o.ranks[p]
     return rank === null ? [] : [h('span', { class: 'rank-place' }, h('b', {}, `#${rank}`), ` ${m.place[p]}`)]
   })

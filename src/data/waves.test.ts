@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { bossKit, type BossStance } from './bosses'
 import { ENEMIES, type EnemyDef, type EnemyId } from './enemies'
 import { RIFT_LEGENDS } from './rifts'
-import { bossWaveAt, fleesFrom, MYTHICALS, TRIO_IDS, TRIOS } from './waves'
+import { bossWaveAt, fleesFrom, LATE_PRESSURE, latePressure, MYTHICALS, scaling, TRIO_IDS, TRIOS } from './waves'
 
 const at = (enemy: Parameters<typeof bossWaveAt>[0]) => bossWaveAt(enemy)!
 
@@ -51,5 +51,20 @@ describe('legendary trios', () => {
 
   it('every trio member and mythical fights in both stances', () => {
     for (const id of [...TRIO_IDS.flatMap((t) => TRIOS[t]), ...MYTHICALS]) expect(stances(id)).toEqual(new Set(['close', 'ranged']))
+  })
+})
+
+describe('late pressure', () => {
+  it('leaves every regular minute alone and compounds past the threshold', () => {
+    expect(latePressure(0)).toBe(1)
+    expect(latePressure(LATE_PRESSURE.from)).toBe(1)
+    expect(latePressure(LATE_PRESSURE.from + 10)).toBeCloseTo(LATE_PRESSURE.growth ** 10, 6)
+    expect(latePressure(1e6)).toBe(LATE_PRESSURE.max)
+  })
+
+  it('reaches the damage the longest run survived about an hour in', () => {
+    const longest = scaling(479 * 60).damage / latePressure(479)
+    expect(scaling(45 * 60).damage).toBeLessThan(longest)
+    expect(scaling(65 * 60).damage).toBeGreaterThan(longest)
   })
 })

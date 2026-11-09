@@ -4,7 +4,7 @@ import type { PokeType } from '../data/types'
 import { spawnAttack } from './spawn'
 import { damageEnemy } from './combat'
 import { enemiesInView, nearestEnemy } from './queries'
-import { NO_BONUS, type DamageBonus, type StackRule } from './kitRules'
+import { NO_BONUS, softCooldown, type DamageBonus, type StackRule } from './kitRules'
 import {
   CHAIN_JUMP, CHAIN_RANGE, chainDamage, chainTargets, HEX_BONUS, LUNGE_IFRAMES, LUNGE_MIN_COOLDOWN, LUNGE_OVERSHOOT,
   LUNGE_SEEK, LUNGE_TIME, lungeLength, lungeTarget, mineCap,
@@ -2358,7 +2358,7 @@ export const moveStats = (id: MoveId, level: number, player: PlayerStats, path =
     ...s,
     mods,
     damage: Math.max(0, s.damage) * player.might * (1 + (player.typeDamage[def.type] ?? 0) + tagBonus(def, player)),
-    cooldown: Math.max(def.minCooldown ?? 0.1, s.cooldown * player.cooldown),
+    cooldown: Math.max(def.minCooldown ?? 0.1, s.cooldown * softCooldown(player.cooldown)),
     area: Math.max(0.35, s.area) * player.area,
     amount: Math.max(1, s.amount) + player.amount,
     speed: s.speed * player.projectileSpeed,

@@ -1,3 +1,4 @@
+import * as dm from '../engine/dmath'
 import type { EnemyId } from './enemies'
 import { HALLOWEEN } from './halloween'
 import type { Tier } from './roster'
@@ -199,9 +200,19 @@ export const stageAt = (time: number) => STAGES[stageIndexAt(time)]!
  * comes from spawn density, not sponges. Damage steepens after 8:00 too, so
  * late contact (and every trait hit, which scale off it) still hurts a
  * built-up player. `ramp` steepens both slopes (the difficulty's `ramp`).
+ * Past `LATE_PRESSURE.from` both compound (`latePressure`): a straight line
+ * can't catch a build whose damage multiplies, and it let runs last 8 hours.
  */
 export const scaling = (time: number, ramp = 1) => {
   const minutes = time / 60
   const late = Math.max(0, minutes - 8)
-  return { hp: 1 + (minutes * 0.24 + late * 0.6) * ramp, damage: 1 + (minutes * 0.07 + late * 0.12) * ramp }
+  const pressure = latePressure(minutes)
+  return { hp: (1 + (minutes * 0.24 + late * 0.6) * ramp) * pressure, damage: (1 + (minutes * 0.07 + late * 0.12) * ramp) * pressure }
 }
+
+/** The endless's compounding: from minute `from`, enemies multiply by `growth` a minute, up to `max`. Tuned so the best builds fall around minutes 45 to 60. */
+export const LATE_PRESSURE = { from: 30, growth: 1.08, max: 1e4 } as const
+
+/** What `scaling` multiplies by at `minutes`: exactly 1 until `LATE_PRESSURE.from`, so a regular run never feels it. */
+export const latePressure = (minutes: number) =>
+  minutes <= LATE_PRESSURE.from ? 1 : Math.min(LATE_PRESSURE.max, dm.pow(LATE_PRESSURE.growth, minutes - LATE_PRESSURE.from))

@@ -68,7 +68,7 @@ export const HATCHLINGS = {
     name: 'Starly',
     color: '#a08868',
     egg: 'common',
-    stats: { speed: 8, magnet: 10, maxHp: -10 },
+    stats: { speed: 8, magnet: 10, maxHp: 5 },
     signature: 'braveBird',
     learnset: [['braveBird', 'gust', 'electroBall', 'swift', 'roost', 'uTurn'], ['gyroBall', 'flashCannon'], ['focusPunch', 'selfDestruct']],
     line: line3(['Starly', 396, ['normal', 'flying']], ['Staravia', 397, ['normal', 'flying']], ['Staraptor', 398, ['normal', 'flying']], [
@@ -127,7 +127,7 @@ export const HATCHLINGS = {
     name: 'Zubat',
     color: '#5878c8',
     egg: 'common',
-    stats: { speed: 6, statusDamage: 0.1, maxHp: -10 },
+    stats: { speed: 6, statusDamage: 0.1, maxHp: 5 },
     signature: 'crossPoison',
     learnset: [['crossPoison', 'crunch', 'gust', 'venoshock', 'swift', 'sludgeBomb'], ['uTurn', 'hex'], ['roost', 'toxicSpikes', 'pinMissile']],
     line: line3(['Zubat', 41, ['poison', 'flying']], ['Golbat', 42, ['poison', 'flying']], ['Crobat', 169, ['poison', 'flying']], [
@@ -514,7 +514,7 @@ export const HATCHLINGS = {
     name: 'Larvitar',
     color: '#88a058',
     egg: 'ultra',
-    stats: { maxHp: 30, armor: 2, speed: -7 },
+    stats: { maxHp: 20, armor: 1, speed: -7 },
     signature: 'sandTomb',
     learnset: [['sandTomb', 'crunch', 'rockTomb', 'earthquake', 'stealthRock', 'focusPunch'], ['suckerPunch', 'pyroBall'], ['thunder', 'dragonTail']],
     line: line3(['Larvitar', 246, ['rock', 'ground']], ['Pupitar', 247, ['rock', 'ground']], ['Tyranitar', 248, ['rock', 'dark']], [

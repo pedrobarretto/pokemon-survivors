@@ -225,9 +225,13 @@ export type ProfileName = { handle: string; name: string }
  */
 export const BOARD_TIME_ZONE = DAY_TIME_ZONE
 
-export const BOARD_PERIODS = ['day', 'week', 'all'] as const
+/** The boards a player can read: today's, the week's, the running season's (`all`) and the closed Era 1's, every run from before `SEASON_ONE`. */
+export const BOARD_PERIODS = ['day', 'week', 'all', 'era1'] as const
 
 export type BoardPeriod = (typeof BOARD_PERIODS)[number]
+
+/** The boards a run can still place on: Era 1 is closed. */
+export const LIVE_PERIODS = ['day', 'week', 'all'] as const satisfies readonly BoardPeriod[]
 
 export const isBoardPeriod = (v: unknown): v is BoardPeriod => BOARD_PERIODS.some((p) => p === v)
 
@@ -276,7 +280,7 @@ export type BoardEntry = ProfileName & {
 export type Board = { entries: BoardEntry[]; me: BoardEntry | null }
 
 /** Where a run's player stands on its difficulty's boards, after it. Null on a board they're not on. */
-export type RunRanks = Record<BoardPeriod, number | null>
+export type RunRanks = Record<(typeof LIVE_PERIODS)[number], number | null>
 
 /* ---------------- Desafio do dia ---------------- */
 

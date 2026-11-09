@@ -2,7 +2,7 @@ import { dirTo, fromAngle, TAU } from '../engine/math'
 import { range } from '../engine/rng'
 import * as dm from '../engine/dmath'
 import { burst, shakeScreen } from './effects'
-import type { DamageBonus } from './kitRules'
+import { guardWard, type DamageBonus } from './kitRules'
 import { guard, sweep, walkedSince } from './moveKit'
 import type { CastStats, Look, MoveDef, MoveId, MoveStats } from './moves'
 import { clusterSpots } from './moveVerbRules'
@@ -283,8 +283,9 @@ const ironHead = (g: Game, s: CastStats) => {
     shape: { kind: 'circle', r: IRON_HEAD.r * s.area }, motion: { kind: 'follow', ox: 0, oy: -6 },
     damage: s.damage * IRON_HEAD.share, knockback: s.knockback, status: s.status, hitInterval: 0.5, ttl: s.duration,
   })
-  guard(g, 'ironHead', s.duration)
-  addMoveBuff(g, 'ironHead', s.duration, { armor: IRON_HEAD.armor })
+  const span = guardWard(s)
+  guard(g, 'ironHead', span)
+  addMoveBuff(g, 'ironHead', span, { armor: IRON_HEAD.armor })
   cast(g, 'ironHead')
 }
 
@@ -518,6 +519,7 @@ export const TM_MOVES = {
       { fork: [{ stats: { damage: 8, area: 0.2 }, mods: ['arc'] }, { stats: { statusChance: 0.25, amount: 2 }, mods: ['trail'] }] },
       { damage: 10, cooldown: -0.5 },
     ],
+    ward: guardWard,
     fire: (g, s) => ironHead(g, s),
     onGuard: (g, s) => ironShards(g, s),
   },

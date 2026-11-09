@@ -162,6 +162,13 @@ export const learnable = (owned: readonly MoveId[], id: MoveId, manual: (id: Mov
 
 /* ---------------- Immunity windows ---------------- */
 
+/** The cooldown multiplier past which reductions count for half (`softCooldown`). */
+export const COOLDOWN_SOFT = 0.7
+
+/** The cooldown multiplier a move sees: full down to `COOLDOWN_SOFT`, half as much past it, so stacking cooldown cuts stops paying as much. */
+export const softCooldown = (multiplier: number) =>
+  multiplier >= COOLDOWN_SOFT ? multiplier : COOLDOWN_SOFT - (COOLDOWN_SOFT - multiplier) * 0.5
+
 /** Seconds after one move's immunity window (a guard, a burrow) closes before a different move can open one. */
 export const WARD_GAP = 0.75
 
@@ -184,7 +191,7 @@ export const burrowTime = (duration: number, cooldown: number, after: number) =>
  * duration (Light Clay) and cooldown (Quick Claw) stacked past the point where
  * the window outlasts the cooldown, and the player was never hit again.
  */
-export const GUARD_UPTIME = 0.5
+export const GUARD_UPTIME = 0.4
 
 /** Seconds a renewing guard stands: its `duration`, held to `GUARD_UPTIME` of its `cooldown`. */
 export const guardSpan = (duration: number, cooldown: number) => Math.min(duration, cooldown * GUARD_UPTIME)

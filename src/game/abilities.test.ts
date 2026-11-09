@@ -110,11 +110,14 @@ describe('hits taken', () => {
     expect(p.hp).toBeLessThan(full)
   })
 
-  it('Magic Guard takes only direct hits: no lingering patch, no cursed item bite', () => {
+  it('Magic Guard halves a lingering patch and spares the cursed items’ bite', () => {
     const g = withAbility('magicGuard', 'abra')
     const p = g.player
     const full = p.hp
-    hurtPlayer(g, 30, undefined, ['poison'], hazardHit({ kind: 'zone' }))
+    hurtPlayer(g, 30, undefined, [], hazardHit({ kind: 'zone' }))
+    expect(p.hp).toBe(full - 15)
+    p.hp = full
+    p.iframes = 0
     g.player.curses.held.push('lifeOrb', 'flameOrb')
     curseCast(g)
     updateCurses(g)
