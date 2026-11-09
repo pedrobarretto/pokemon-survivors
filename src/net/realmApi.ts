@@ -3,6 +3,7 @@ import type { FurnitureCounts, FurnitureId } from '../data/furniture'
 import type { Activity } from '../game/friends'
 import type { CityId, RoomKey } from './realm'
 import type { GameOutcome, MinigameId } from '../data/minigames'
+import type { PlushFamily } from '../data/plushes'
 
 /**
  * The Poké Realm's API (game → `server/`, Clerk-authenticated like the rest).
@@ -32,6 +33,12 @@ import type { GameOutcome, MinigameId } from '../data/minigames'
  *   the game's stats (`GameStats`) and grants the trophies they reach (`trophiesEarned`, into
  *   `furniture_owned` with source `game`). `GameClaimed`; 400 for an outcome that doesn't fit the game,
  *   429 past the route's rate limit. The client adds `coins` to the wallet like a run's ₽.
+ * - `GET /realm/claw` (auth): `ClawState`, the Máquina de Pelúcias as the player sees it. 403 `profile` without a @handle.
+ * - `POST /realm/claw/insert` (auth) `{ base? }`: a credit (`creditPrice`: free, or ₽ out of the stored save at revision
+ *   `base`, like `POST /realm/furniture/buy`). `ClawInserted`, with `{ save, revision }` when it spent; an open credit
+ *   comes back uncharged. 402 `funds`, 403 `profile`/`banned`/`cap`, 409 `nosave`/`stale`, 429 past the route's limit.
+ * - `POST /realm/claw/drop` (auth) `{ id, x, y }`: the API decides the credit (`realm/games/claw.rules.ts`). `ClawDropped`;
+ *   the same drop again answers the same. 404 for a credit that isn't this player's.
  * - `GET /realm/boards/:game?period=day|week` (public; signed in adds the player's line): `GameBoard`
  *   (`realm/boards.ts`), the game's best of the Brasília day or week, from the claims. Cached a few seconds.
  *
@@ -108,3 +115,14 @@ export type GameClaim = { game: MinigameId; outcome: GameOutcome; ms: number; fe
  * earned (new furniture ids) and, when it earned any, the new furniture counts.
  */
 export type GameClaimed = { coins: number; today: number; trophies: readonly FurnitureId[]; furniture: FurnitureCounts | null }
+
+/** A credit in play: the seed that shakes the plushes and the week it was put in on. */
+export type ClawPlay = { id: string; seed: number; week: string }
+
+/** The machine for this account: the week's plushes, the misses on each (in that order), the credits used today and the credit left open, if any. */
+export type ClawState = { week: string; prizes: PlushFamily[]; misses: number[]; used: number; open: ClawPlay | null }
+
+export type ClawInserted = { play: ClawPlay; used: number }
+
+/** What a drop came to: the plush it went for (its place in `prizes`), the grip, whether it held and every plush's misses after it. */
+export type ClawDropped = { target: number; grip: number; won: boolean; family: PlushFamily; misses: number[] }

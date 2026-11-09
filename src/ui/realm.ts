@@ -5,7 +5,7 @@ import { PLAYABLE } from '../data/hatchlings'
 import { BASE_GRID, BASE_ROOM, LANDING, REALM_ROOMS, isTownRoomId, type Door, type Point, type Rect, type Spot, type SpotKind, type TownRoomId } from '../data/realmMap'
 import type { BaseExterior, BaseLayout } from '../data/secretBases'
 import { footprint } from '../data/furniture'
-import { FURNITURE_GAMES, isMinigameId, isTableGame, MINIGAME_IDS, MINIGAMES, type MinigameId, type TableGameId } from '../data/minigames'
+import { FURNITURE_GAMES, hasBoard, isMinigameId, isTableGame, MINIGAME_IDS, MINIGAMES, type MinigameId, type TableGameId } from '../data/minigames'
 import { baseTableId, type TableView } from '../net/realmTables'
 import { localTable } from '../realm/games/localTable'
 import { openGameBoard } from '../realm/games/board'
@@ -221,10 +221,13 @@ const spotBoards = (s: Spot): MinigameId[] =>
   s.kind === 'fishing'
     ? ['fishing']
     : s.kind === 'prizes'
-      ? MINIGAME_IDS.filter((g) => MINIGAMES[g].where === 'arcade')
+      ? MINIGAME_IDS.filter((g) => MINIGAMES[g].where === 'arcade' && hasBoard(g))
       : s.kind === 'cabinet' || s.kind === 'gameTable'
-        ? (s.games ?? []).filter(isMinigameId)
+        ? (s.games ?? []).filter(isMinigameId).filter(hasBoard)
         : []
+
+/** South of this row (world px) a trainer at an arcade game is at the claw machines by the west wall, not a cabinet on the back wall. */
+const CLAW_ROW = 135
 
 /** Labels show over spots and doors this close (world px) to the trainer. */
 const LABEL_NEAR = 220
@@ -1015,6 +1018,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           : null
       openSub((r) =>
         chooseGame(r, games, {
+          input,
           partner: me?.partner ?? 'pikachu',
           shiny: me?.shiny ?? false,
           realm: {
@@ -1224,8 +1228,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           const at = sampleAt(tr.track, now)
           if (at) Object.assign(tr, at)
         }
-        // A trainer playing a cabinet stands facing it (the cabinets stand on the back wall).
-        if (tr.av.act === 'arcade' && !tr.moving) tr.facing = 4
+        // A trainer playing a cabinet stands facing it: the back wall's, or the claw machines on the arcade's west wall.
+        if (tr.av.act === 'arcade' && !tr.moving) tr.facing = town === 'arcade' && tr.y > CLAW_ROW ? 6 : 4
         // Seated on a town bench, it sorts in front of the bench's art (standing at its feet's y).
         const benched = town !== null && isPerchAct(tr.av.act) ? tr.y + 24 : undefined
         views.push(seat ? { ...tr, sortY: seat.sortY } : benched !== undefined ? { ...tr, sortY: benched } : tr)

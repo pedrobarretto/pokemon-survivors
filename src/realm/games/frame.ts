@@ -1,5 +1,6 @@
-import { coinsFor, MINIGAMES, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
+import { coinsFor, hasBoard, MINIGAMES, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
 import { playSfx } from '../../engine/audio'
+import type { Input } from '../../engine/input'
 import { t } from '../../i18n'
 import type { BusyAct } from '../../net/realm'
 import type { TableView } from '../../net/realmTables'
@@ -46,8 +47,13 @@ export type LogLine = { icon: string | null; label: string; count: number; point
  */
 export type SoloEnd = { score: number; feats: readonly string[]; log?: { title: string; lines: readonly LogLine[] } }
 
-/** What the frame gives a solo game: the player's partner (to draw it), and a way to tell the room about a feat as it happens. */
-export type SoloCtx = { partner: string; shiny: boolean; brag: (feat: string) => void }
+/**
+ * What the frame gives a solo game: the player's partner (to draw it), a way
+ * to tell the room about a feat as it happens, the stage over its canvas (for
+ * words the in-world font can't write) and what a scene of the shell needs
+ * (a root over the game, and the input).
+ */
+export type SoloCtx = { partner: string; shiny: boolean; brag: (feat: string) => void; stage: HTMLElement; root: HTMLElement; input: Input }
 
 /** A solo game in progress. `step`'s `dt` is in seconds (capped, so a hidden tab doesn't jump). */
 export type GameRun = {
@@ -131,6 +137,7 @@ export type FrameOpts = {
   shiny: boolean
   /** Sends what the trainer is busy at and its brags to the room; null outside the realm. */
   realm: { act: (act: BusyAct | null) => void; brag: (game: MinigameId, feat: string) => void; who: (avatar: number) => Sitter | null } | null
+  input: Input
   close: () => void
 }
 
@@ -142,6 +149,7 @@ const actOf = (game: MinigameId): BusyAct => (MINIGAMES[game].kind === 'table' ?
 
 type Shell = {
   el: HTMLElement
+  stage: HTMLElement
   canvas: HTMLCanvasElement
   g: CanvasRenderingContext2D
   sheet: HTMLElement
@@ -159,6 +167,7 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   const m = t().minigames
   const canvas = h('canvas', { class: 'minigame-canvas', width: size.w, height: size.h })
   const sheet = h('div', { class: 'minigame-sheet box hidden' })
+  const stage = h('div', { class: 'minigame-stage' }, canvas, sheet)
   let boardOpen: Screen | null = null
   const board = (after?: Promise<unknown>) => {
     if (boardOpen) return
@@ -176,10 +185,10 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
       'header',
       { class: 'minigame-head' },
       h('h2', {}, m.games[game].name),
-      h('button', { class: 'minigame-board box', type: 'button', onclick: () => board() }, m.board.open),
+      hasBoard(game) && h('button', { class: 'minigame-board box', type: 'button', onclick: () => board() }, m.board.open),
       h('button', { class: 'minigame-close box', type: 'button', 'aria-label': m.close, onclick: close }, '×'),
     ),
-    h('div', { class: 'minigame-stage' }, canvas, sheet),
+    stage,
   )
   root.append(el)
   const g = canvas.getContext('2d')
@@ -254,7 +263,7 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
     window.removeEventListener('keyup', onKeyUp)
     el.remove()
   }
-  return { el, canvas, g, sheet, input, endStep, board, covered: () => boardOpen !== null, dispose }
+  return { el, stage, canvas, g, sheet, input, endStep, board, covered: () => boardOpen !== null, dispose }
 }
 
 /** Runs `frame(dt, now)` every animation frame until the returned stop. */
@@ -343,7 +352,7 @@ export const openSoloGame = (root: HTMLElement, game: SoloGameId, def: SoloGame,
     opts.close()
   }
   const s = shell(root, game, def.size, close)
-  const ctx: SoloCtx = { partner: opts.partner, shiny: opts.shiny, brag: (feat) => opts.realm?.brag(game, feat) }
+  const ctx: SoloCtx = { partner: opts.partner, shiny: opts.shiny, brag: (feat) => opts.realm?.brag(game, feat), stage: s.stage, root: s.el, input: opts.input }
   let run: GameRun | null = null
   let startedAt = 0
   let ended = false

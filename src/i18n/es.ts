@@ -1,5 +1,6 @@
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -6042,6 +6043,7 @@ export const es: Messages = {
       shinyGyaradosTrophy: 'Trofeo del Gyarados Shiny',
     },
     doll: (legend) => `Muñeco de ${legend}`,
+    plush: SEASON_ONE_CLAW_WORDS.es.plush,
     kinds: { floor: 'Mueble', rug: 'Alfombra', top: 'Adorno', wall: 'Pared', wallpaper: 'Papel tapiz', flooring: 'Piso' },
     /** The carpentry's collections (`FURNITURE_SETS`). */
     sets: { classic: 'Clásico', cozy: 'Acogedor', elegant: 'Elegante', modern: 'Moderno', pop: 'Pop', garden: 'Jardín', aqua: 'Acuático', arcade: 'Arcade', kitchen: 'Cocina', trainer: 'Entrenador', center: 'Centro Pokémon', gallery: 'Galería', trophies: 'Trofeos' },
@@ -6327,6 +6329,7 @@ export const es: Messages = {
     },
   },
   minigames: {
+    claw: SEASON_ONE_CLAW_WORDS.es.words,
     close: 'Salir',
     choose: '¿Qué juego?',
     games: {
@@ -6335,8 +6338,9 @@ export const es: Messages = {
       whackDiglett: { name: 'Golpea al Diglett', blurb: 'Golpea a los Diglett antes de que se escondan.' },
       fourInRow: { name: 'Cuatro en Línea', blurb: 'Alinea cuatro Poké Balls antes que tu rival.' },
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fuego vence a Planta, Planta a Agua, Agua a Fuego.' },
+      claw: SEASON_ONE_CLAW_WORDS.es.game,
     },
-    feats: { fishing: { feebas: '¡Pesqué un Feebas!', shinyGyarados: '¡¡Pesqué un Gyarados shiny!!', bigHaul: '¡Pesca de 300 puntos!' }, berryCatch: { flawless: '¡Lluvia de Bayas sin perder una vida!', goldRush: '¡Tres bayas doradas en una ronda!', combo50: '¡Combo de 50 bayas!' }, whackDiglett: { combo30: '¡Combo de 30 golpes!', dugtrio: '¡Golpeó a 5 Dugtrio en una ronda!' }, fourInRow: {}, typeDuel: { perfectDuel: '¡Duelo perfecto, sin perder una ronda!' } },
+    feats: { fishing: { feebas: '¡Pesqué un Feebas!', shinyGyarados: '¡¡Pesqué un Gyarados shiny!!', bigHaul: '¡Pesca de 300 puntos!' }, berryCatch: { flawless: '¡Lluvia de Bayas sin perder una vida!', goldRush: '¡Tres bayas doradas en una ronda!', combo50: '¡Combo de 50 bayas!' }, whackDiglett: { combo30: '¡Combo de 30 golpes!', dugtrio: '¡Golpeó a 5 Dugtrio en una ronda!' }, fourInRow: {}, typeDuel: { perfectDuel: '¡Duelo perfecto, sin perder una ronda!' }, claw: SEASON_ONE_CLAW_WORDS.es.feats },
     duel: {
       pick: 'Elige una carta',
       play: 'Jugar',
