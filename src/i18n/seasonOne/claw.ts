@@ -6,7 +6,7 @@
 export const SEASON_ONE_CLAW_WORDS = {
   pt: {
     game: { name: 'Máquina de Pelúcias', blurb: 'Mire a garra e leve uma pelúcia para a sua base.' },
-    feats: { plush: 'Tirei uma pelúcia da máquina!', exclusive: 'Tirei uma pelúcia exclusiva da máquina!!' },
+    feats: { plush: 'Tirei uma pelúcia da máquina!' },
     plush: (name: string) => `Pelúcia de ${name}`,
     words: {
       title: 'Pelúcias da semana',
@@ -25,14 +25,11 @@ export const SEASON_ONE_CLAW_WORDS = {
       sure: 'Na próxima ficha ela é sua!',
       won: (name: string) => `Você ganhou: ${name}!`,
       wonNote: 'Já está nos móveis da sua base secreta.',
-      alive: (name: string) => `Espera... ${name} se mexeu!`,
-      came: (name: string) => `*${name}* ganhou vida!`,
-      open: 'Ver o que houve',
     },
   },
   en: {
     game: { name: 'Plush Claw Machine', blurb: 'Aim the claw and take a plush home to your base.' },
-    feats: { plush: 'I won a plush at the claw machine!', exclusive: 'I won an exclusive plush at the claw machine!!' },
+    feats: { plush: 'I won a plush at the claw machine!' },
     plush: (name: string) => `${name} Plush`,
     words: {
       title: "This week's plushes",
@@ -51,14 +48,11 @@ export const SEASON_ONE_CLAW_WORDS = {
       sure: "Your next credit gets it!",
       won: (name: string) => `You won: ${name}!`,
       wonNote: "It's in your secret base furniture now.",
-      alive: (name: string) => `Wait... ${name} moved!`,
-      came: (name: string) => `*${name}* came to life!`,
-      open: 'See what happened',
     },
   },
   es: {
     game: { name: 'Máquina de Peluches', blurb: 'Apunta la garra y llévate un peluche a tu base.' },
-    feats: { plush: '¡Saqué un peluche de la máquina!', exclusive: '¡¡Saqué un peluche exclusivo de la máquina!!' },
+    feats: { plush: '¡Saqué un peluche de la máquina!' },
     plush: (name: string) => `Peluche de ${name}`,
     words: {
       title: 'Peluches de la semana',
@@ -77,14 +71,11 @@ export const SEASON_ONE_CLAW_WORDS = {
       sure: '¡Con la próxima ficha es tuyo!',
       won: (name: string) => `Ganaste: ¡${name}!`,
       wonNote: 'Ya está en los muebles de tu base secreta.',
-      alive: (name: string) => `Espera... ¡${name} se movió!`,
-      came: (name: string) => `¡*${name}* cobró vida!`,
-      open: 'Ver qué pasó',
     },
   },
   fr: {
     game: { name: 'Machine à Peluches', blurb: 'Vise avec la pince et rapporte une peluche à ta base.' },
-    feats: { plush: "J'ai gagné une peluche à la machine !", exclusive: "J'ai gagné une peluche exclusive à la machine !!" },
+    feats: { plush: "J'ai gagné une peluche à la machine !" },
     plush: (name: string) => `Peluche ${name}`,
     words: {
       title: 'Peluches de la semaine',
@@ -103,14 +94,11 @@ export const SEASON_ONE_CLAW_WORDS = {
       sure: 'Au prochain jeton, elle est à toi !',
       won: (name: string) => `Gagné : ${name} !`,
       wonNote: 'Elle est dans les meubles de ta base secrète.',
-      alive: (name: string) => `Attends... ${name} a bougé !`,
-      came: (name: string) => `*${name}* a pris vie !`,
-      open: 'Voir ce qui se passe',
     },
   },
   zh: {
     game: { name: '玩偶夾娃娃機', blurb: '瞄準夾子,把玩偶帶回你的基地。' },
-    feats: { plush: '我從機台夾到玩偶了!', exclusive: '我夾到限定玩偶了!!' },
+    feats: { plush: '我從機台夾到玩偶了!' },
     plush: (name: string) => `${name}玩偶`,
     words: {
       title: '本週玩偶',
@@ -129,9 +117,6 @@ export const SEASON_ONE_CLAW_WORDS = {
       sure: '下一枚代幣一定到手!',
       won: (name: string) => `你獲得了:${name}!`,
       wonNote: '已放進你的秘密基地家具。',
-      alive: (name: string) => `等等……${name} 動了!`,
-      came: (name: string) => `*${name}* 活過來了!`,
-      open: '看看發生什麼事',
     },
   },
 }

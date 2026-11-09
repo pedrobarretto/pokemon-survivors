@@ -1,5 +1,5 @@
 import { LEGEND_IDS, type LegendId } from './legends'
-import { PLUSH_POOL, isExclusivePlush, plushPiece, type PlushPiece } from './plushes'
+import { PLUSH_POOL, plushPiece, type PlushPiece } from './plushes'
 import { CATALOG } from './furnitureCatalog'
 import { placedTurn, turnMode, type FurnitureDef, type TurnMode } from './furnitureDef'
 import { turnedSize } from './furnitureUse'
@@ -46,7 +46,7 @@ for (const id of LEGEND_IDS) DOLLS[`doll:${id}`] = DOLL
 
 /** A plush won at the claw machine, one piece per family (drawn from the family's sprite, `render/plush.ts`). */
 const PLUSHES = Object.fromEntries(
-  PLUSH_POOL.map((family): [PlushPiece, FurnitureDef] => [plushPiece(family), { kind: 'floor', set: 'trophies', size: [1, 1], rarity: isExclusivePlush(family) ? 'epic' : 'common', price: null, blocks: true, source: 'claw' }]),
+  PLUSH_POOL.map((family): [PlushPiece, FurnitureDef] => [plushPiece(family), { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'common', price: null, blocks: true, source: 'claw' }]),
 ) as Record<PlushPiece, FurnitureDef>
 
 export const FURNITURE: Readonly<Record<ShopFurnitureId | `doll:${LegendId}` | PlushPiece, FurnitureDef>> = { ...CATALOG, ...DOLLS, ...PLUSHES }
