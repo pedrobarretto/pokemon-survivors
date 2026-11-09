@@ -206,6 +206,10 @@ export const parseRealmMessage = (text: unknown): RealmServerMessage | null => {
       return isNum(v.at) ? { t: 'pong', at: v.at } : null
     case 'baseInvited':
       return isStr(v.from, 32) && /^[A-Za-z0-9_]+$/.test(v.from) && isCityId(v.city) ? { t: 'baseInvited', from: v.from, city: v.city } : null
+    case 'stamped':
+      return isNum(v.id) && Array.isArray(v.stamps) ? { t: 'stamped', id: v.id, stamps: v.stamps.filter((s): s is string => isStr(s, 32)) } : null
+    case 'errands':
+      return Array.isArray(v.done) ? { t: 'errands', done: v.done.filter((d): d is string => isStr(d, 64)) } : null
     case 'refused': {
       const why = REFUSALS.find((r) => r === v.why)
       return why ? { t: 'refused', why } : null

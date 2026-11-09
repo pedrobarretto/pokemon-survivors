@@ -3,7 +3,8 @@ import { webSocket, type SocketHandlers, type SocketLike } from './coop/client'
 import { playsShiny } from './game/shinyPicks'
 import { equippedLook } from './gems'
 import { isCityId, type CityId } from './net/realm'
-import { fakeFriendsFrom, fakeRealm, realmFaked } from './realm/api'
+import { fakeErrandsDone, fakeFriendsFrom, fakeRealm, fakeStamp, realmFaked } from './realm/api'
+import { STAMP_IDS, STAMPS, isStampId } from './data/realmStamps'
 import { createRealmClient, type RealmClient } from './realm/client'
 import { startLocalRealm, type LocalRealm } from './realm/localRealm'
 import { isLocalRealm, realmUrl, setLocalRealm } from './realmUrl'
@@ -80,6 +81,34 @@ export const stageRealmTable = (table: string, game?: string) => (host ? host.re
 
 /** Dev: a bot of the in-page realm invites the player to its base (`ps.realm('invite', 'misty')`); whether one did. */
 export const realmInviteFrom = (handle: string) => host?.realm.inviteFrom(handle) ?? false
+
+/**
+ * Dev (`ps.realm('stamp', id)`): the player earns a stamp, in the faked book
+ * and out loud in the in-page town; the next unheld one without an id, and
+ * `'bot'` for a bot of the room (a hidden one half the time, for its notice).
+ */
+export const devStamp = (arg?: string) => {
+  if (arg === 'bot') {
+    const hidden = STAMP_IDS.filter((id) => 'hidden' in STAMPS[id])
+    const id = Math.random() < 0.5 ? hidden[Math.floor(Math.random() * hidden.length)]! : STAMP_IDS[Math.floor(Math.random() * STAMP_IDS.length)]!
+    return host?.realm.botStamped([id]) ? id : 'ps.realm: no bot in your room'
+  }
+  if (arg !== undefined && !isStampId(arg)) return `ps.realm: stamp id (${STAMP_IDS.join(', ')}) or 'bot'`
+  if (!realmFaked()) fakeRealm(true, accountHandle() ?? 'you')
+  const id = arg ?? STAMP_IDS.find((s) => fakeStamp(s) !== null)
+  if (!id) return 'ps.realm: every stamp held'
+  if (arg !== undefined) fakeStamp(arg)
+  host?.realm.stamped([id])
+  return id
+}
+
+/** Dev (`ps.realm('errands')`): today's faked errands all finish; the board and the toast hear it as they'd hear the relay. */
+export const devErrands = () => {
+  if (!realmFaked()) fakeRealm(true, accountHandle() ?? 'you')
+  const done = fakeErrandsDone()
+  host?.realm.errandsDone(done)
+  return done
+}
 
 /** Dev: what the realm's shell is on now. */
 export const realmDevState = () => ({ local: isLocalRealm(), faked: realmFaked(), url: realmUrl(), city: client?.city() ?? null, room: client?.room() ?? null, status: client?.status() ?? null, rtt: client?.rtt() ?? null })

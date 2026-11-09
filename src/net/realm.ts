@@ -221,6 +221,7 @@ export type Avatar = {
   shiny: boolean
   look: WireLook
   supporter: string | null
+  /** How many Estampas the trainer holds (`data/realmStamps.ts`), for its card. */
   stamps: number
   x: number
   y: number

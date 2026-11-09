@@ -9,6 +9,7 @@ import { trainerAvatar } from '../game/trainer'
 import { formatNumber, LOCALES, locale, t } from '../i18n'
 import { discordIcon, medalIcon, ogIcon, pokeballIcon, ribbonIcon, supporterIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
+import { realmIconUrl } from '../render/realmScene'
 import { fetchSupporterStatus, knownOg, knownTier } from '../supporters'
 import { lazyScreen } from './lazy'
 import { boutiqueFresh } from './boutiqueSeen'
@@ -89,7 +90,7 @@ type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone
  * the sync state (a tap syncs), then rows to edit the profile, see it, share
  * the card image, Discord (link it, or the server once linked), Apoiadores
  * (supporters), the Pokémon's look (Leavanny's Boutique on its Visual tab,
- * without the walk), missions and achievements, the admin's gift desk and sign
+ * without the walk), the Livro de Estampas (with a @handle), missions and achievements, the admin's gift desk and sign
  * out. Guests get the same card from the local save, with "Criar conta /
  * Entrar" and "Entrar com Discord" when accounts are on. It follows the account state.
  *
@@ -102,7 +103,7 @@ type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone
 export const trainerCardScreen = (
   root: HTMLElement,
   input: Input,
-  opts: { supporters: (back: () => void) => Screen; locker: () => void },
+  opts: { supporters: (back: () => void) => Screen; locker: () => void; book: ((back: () => void) => Screen) | null },
   onClose: () => void,
 ): Screen => {
   const el = h('div', { class: 'screen shell dim trainer-screen' })
@@ -154,6 +155,7 @@ export const trainerCardScreen = (
       discord,
       ...(tier ? [{ label: since ? m.supporterSince(tier, monthYear(since)) : t().supporters.badge(tier), icon: supporterBadgeIcon(tier, since), run: () => openSub(opts.supporters) }] : []),
       look,
+      ...(handle && opts.book ? [{ label: t().realm.stamps.title, icon: realmIconUrl('book'), run: () => openSub(opts.book!) }] : []),
       missions,
       // Admin only, so not translated (see `ui/admin.ts`).
       ...(admin ? [{ label: 'Painel admin', run: () => openSub((back) => lazyScreen(root, () => import('./admin'), (m) => m.adminScreen(root, input, back), back)) }] : []),

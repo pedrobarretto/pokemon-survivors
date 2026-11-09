@@ -71,6 +71,12 @@ export type LocalRealm = {
   presence: () => PresenceReport
   /** Dev: the bot with `handle` invites the player to its base (`ps.realm('invite', 'misty')`); whether one did. */
   inviteFrom: (handle: string) => boolean
+  /** Dev: tells the room the player just earned stamps (`stamped`), as the relay does when the API answers its deeds. */
+  stamped: (stamps: readonly string[]) => void
+  /** Dev: a bot of the player's room earned these (one at random when it's alone: for `ps.realm('stamp', 'bot')`); whether one did. */
+  botStamped: (stamps: readonly string[]) => boolean
+  /** Dev: tells the player its errands `done` are waiting at the board (`errands`). */
+  errandsDone: (done: readonly string[]) => void
   /** Stops the bots and the beat, and closes every socket. */
   dispose: () => void
 }
@@ -231,6 +237,14 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     stamps: opts.me?.stamps ?? 0,
   })
 
+  /** Dev: each trainer's made-up Estampas count, kept here so the card shows one before the relay sends its own (`Avatar.stamps`). */
+  const stampsOf = (handle: string) => (handle === (opts.me?.handle ?? 'you') ? 12 : (handle.charCodeAt(0) * 7) % 41)
+  const withStamps = (msg: RealmServerMessage): RealmServerMessage => {
+    const dress = <A extends { handle: string; stamps?: number }>(a: A): A => ({ ...a, stamps: a.stamps ?? stampsOf(a.handle) })
+    if (msg.t === 'welcome' || msg.t === 'room') return { ...msg, avatars: msg.avatars.map(dress) }
+    return msg.t === 'join' ? { ...msg, avatar: dress(msg.avatar) } : msg
+  }
+
   const apply = (effects: readonly RealmEffect[]) => {
     const texts = new Map<RealmServerMessage, string>()
     for (const e of effects) {
@@ -239,7 +253,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
         if (bot) hear(bot, e.msg)
         const ws = sockets.get(e.to)
         if (!ws) continue
-        const text = texts.get(e.msg) ?? JSON.stringify(e.msg)
+        const text = texts.get(e.msg) ?? JSON.stringify(withStamps(e.msg))
         texts.set(e.msg, text)
         later(() => ws.open && ws.on.message(text))
       } else if (e.k === 'close') {
@@ -629,8 +643,27 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     return true
   }
 
+  /** The player's connections with their avatar ids, to tell them what the API would. */
+  const players = () => [...sockets.values()].flatMap((ws) => {
+    const id = state.conns.get(ws.id)?.avatar
+    return id === null || id === undefined ? [] : [{ ws, id }]
+  })
+  const tell = (ws: FakeSocket, msg: RealmServerMessage) => later(() => ws.open && ws.on.message(JSON.stringify(msg)))
+
   return {
     socket,
+    stamped: (stamps) => {
+      for (const { ws, id } of players()) tell(ws, { t: 'stamped', id, stamps })
+    },
+    botStamped: (stamps) => {
+      const bot = [...bots.values()].find((b) => b.id !== null && players().some((p) => state.cities.get(opts.city)?.trainers.get(p.id)?.room === b.room))
+      if (!bot || bot.id === null) return false
+      for (const { ws } of players()) tell(ws, { t: 'stamped', id: bot.id, stamps })
+      return true
+    },
+    errandsDone: (done) => {
+      for (const { ws } of players()) tell(ws, { t: 'errands', done })
+    },
     bots: () => [...bots.values()].flatMap((b) => (b.id === null ? [] : [b.id])),
     stage,
     presence: () => presence(state, now()),

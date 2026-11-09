@@ -1,3 +1,4 @@
+import { realmBookZh as realmBook } from './realmStamps/zh'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -686,6 +687,7 @@ export const zh: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm：線上城鎮',

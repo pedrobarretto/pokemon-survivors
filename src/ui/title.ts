@@ -177,6 +177,8 @@ export type TitleActions = {
   coop?: () => void
   /** The Poké Realm (`ui/realm.ts`), straight into a city. No action (no realm relay in this build), no tile. */
   realm?: () => void
+  /** Today's Recados not collected yet (`realm/errands.ts`), for the Poké Realm's way in; null when nobody can be asked. */
+  realmErrands?: () => Promise<number> | null
   /** How many friends walk the Poké Realm now (`realm/friends.ts`), for its way in; null when nobody can be asked (a guest). */
   realmFriends?: () => Promise<number> | null
   /** How many trainers walk the Poké Realm now, for its way in; resolves to null offline. */
@@ -853,15 +855,25 @@ const dojoTile = (rails: boolean) => {
  * wide screens, and an icon in the top bar on phones on their side (whose
  * side and dock are full).
  */
-const realmTopButton = (onClick: () => void, friends: Promise<number> | null, crowd: Promise<number | null> | null) => {
+const realmTopButton = (onClick: () => void, friends: Promise<number> | null, crowd: Promise<number | null> | null, errands: Promise<number> | null) => {
   const el = iconButton(realmIconUrl('wave'), t().realm.entryLabel, onClick, 'K')
   el.classList.add('lobby-realm-top')
   if (!realmSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
   crowdBadge(el, crowd)
   palsBadge(el, friends)
   realmHourTag(el, false)
+  errandsBadge(el, errands, null)
   return el
 }
+
+/** Recados left today, once known: a line on the card, a count in the corner of a tile or the top button (`lobby-realm-errands`). */
+const errandsBadge = (el: HTMLElement, errands: Promise<number> | null, lines: HTMLElement | null) =>
+  void errands?.then((n) => {
+    if (n <= 0 || !el.isConnected) return
+    const text = t().realm.errands.lobby(n)
+    if (lines) lines.append(h('span', { class: 'lobby-realm-errand-line' }, text))
+    else el.append(h('em', { class: 'lobby-realm-errands', title: text, 'aria-label': text }, String(n)))
+  })
 
 /** Friends walking the realm, once known: a count on the way in (`lobby-realm-pals`), and the card's line says it. */
 const palsBadge = (el: HTMLElement, friends: Promise<number> | null, line: HTMLElement | null = null) =>
@@ -882,18 +894,20 @@ const crowdBadge = (el: HTMLElement, crowd: Promise<number | null> | null, line:
     else if (!el.classList.contains('pals')) line.textContent = text
   })
 
-const realmEntry = (rails: boolean, friends: Promise<number> | null, crowd: Promise<number | null> | null) => {
+const realmEntry = (rails: boolean, friends: Promise<number> | null, crowd: Promise<number | null> | null, errands: Promise<number> | null) => {
   const m = t().realm
   const icon = h('img', { class: 'lobby-realm-icon', src: realmIconUrl('wave'), alt: '' })
   const line = h('span', {}, m.cities.lobbyLine)
+  const lines = h('span', { class: 'lobby-realm-text' }, h('b', {}, m.name), line)
   const el = rails
     ? railTile('realm', icon, m.entry, m.entryLabel)
-    : h('button', { class: 'lobby-realm box', type: 'button', 'aria-label': m.entryLabel }, icon, h('span', { class: 'lobby-realm-text' }, h('b', {}, m.name), line), h('span', { class: 'key-hint' }, 'K'))
+    : h('button', { class: 'lobby-realm box', type: 'button', 'aria-label': m.entryLabel }, icon, lines, h('span', { class: 'key-hint' }, 'K'))
   if (!realmSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
   // The tile's built before it's in the page: the answer lands after.
   palsBadge(el, friends, rails ? null : line)
   crowdBadge(el, crowd, rails ? null : line)
   realmHourTag(el, !rails)
+  errandsBadge(el, errands, rails ? null : lines)
   return el
 }
 
@@ -1168,7 +1182,7 @@ export const titleScreen = (
       right: [
         (wallet = walletChip(save.wallet)),
         ...(gems ? [navigable(gems, 'gems')] : []),
-        ...(landscape && actions.realm ? [navigable(realmTopButton(press('realm'), actions.realmFriends?.() ?? null, actions.realmCrowd?.() ?? null), 'realm')] : []),
+        ...(landscape && actions.realm ? [navigable(realmTopButton(press('realm'), actions.realmFriends?.() ?? null, actions.realmCrowd?.() ?? null, actions.realmErrands?.() ?? null), 'realm')] : []),
         ...(landscape ? [navigable(discordButton(press('discord')), 'discord'), ...SOCIAL_IDS.map((id) => navigable(socialButton(id, press(id)), id))] : []),
         ...(surveyWaiting() ? [navigable(surveyButton(press('survey')), 'survey')] : []),
         navigable(newsButton(press('news')), 'news'),
@@ -1200,7 +1214,7 @@ export const titleScreen = (
         ? []
         : [h('div', { class: 'lobby-community' }, pressable(discordCard(), 'discord'), ...SOCIAL_IDS.map((id) => pressable(socialCard(id), id)))]
     const dojo = rails ? [pressable(dojoTile(true), 'dojo')] : []
-    const realmWay = realm && !landscape ? [pressable(realmEntry(rails, actions.realmFriends?.() ?? null, actions.realmCrowd?.() ?? null), 'realm')] : []
+    const realmWay = realm && !landscape ? [pressable(realmEntry(rails, actions.realmFriends?.() ?? null, actions.realmCrowd?.() ?? null, actions.realmErrands?.() ?? null), 'realm')] : []
     const side = h('div', { class: 'lobby-side' }, ...(rails ? [gift] : []), hall, ...(rails ? [] : realmWay), ...invites, ...dojo, ...(rails ? realmWay : []), ...community, ...(rails ? [explore] : []))
     // A friend's invite needs the room of a banner: under the partner on the rails, under the Hall elsewhere.
     const notice = rails ? h('div', { class: 'lobby-notice' }) : side
