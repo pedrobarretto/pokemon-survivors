@@ -3715,7 +3715,12 @@ button {
   color: #fff;
   font-family: var(--kit-body);
   font-size: 20px;
-  text-shadow: 0 2px 0 var(--kit-tinta);
+  /* Round every side: a cloud drifts behind this white text. */
+  text-shadow:
+    -1px 0 0 var(--kit-tinta),
+    1px 0 0 var(--kit-tinta),
+    0 -1px 0 var(--kit-tinta),
+    0 2px 0 var(--kit-tinta);
 }
 
 /* Hoje. */
@@ -4297,7 +4302,7 @@ button {
 /* Where a small or short desktop leaves the places no sky to spare, the arrows stand on the grass beside the partner. */
 @media (max-width: 1199px), (max-height: 780px) {
   .lobby-wide .lobby-arrow {
-    top: 80%;
+    top: 88%;
   }
 }
 
@@ -4669,6 +4674,11 @@ button {
   border: var(--kit-edge) solid var(--kit-tinta);
   border-radius: 50%;
   box-shadow: 0 4px 0 var(--kit-tinta);
+}
+
+/* High on a phone in portrait, so the arrows and their names leave the horizon's places room on both sides. */
+.lobby-narrow .lobby-arrow {
+  top: 8%;
 }
 
 .lobby-narrow .lobby-arrow.prev,

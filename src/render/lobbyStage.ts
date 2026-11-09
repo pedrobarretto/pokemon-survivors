@@ -553,14 +553,12 @@ const drawRidge = (ctx: CanvasRenderingContext2D, s: LobbyStage, horizon: number
   }
 }
 
-/** The V a flock flies in (from the leader, world px, flying right; mirrored flying left). */
 /** How far under the title the flock's lowest line starts: its bodies and formation stand over it. */
 const FLOCK_HEADROOM = 30
 /** How far over the places' roofs the flock's line stays: the formation's low wing, its bob and a Fly sheet's wings, which hang past the measured body. */
 const FLOCK_CLEAR = 22
-/** The band it flies in up top when there's no sky left under the title (world px from the view's top). */
-const FLOCK_HIGH = [36, 46] as const
 
+/** The V a flock flies in (from the leader, world px, flying right; mirrored flying left). */
 const FORMATION = [
   [0, 0],
   [-20, -7],
@@ -572,13 +570,16 @@ const stepFlock = (s: LobbyStage, w: number, h: number, at: StageAnchor, night: 
   const horizon = at.feet - HORIZON_RISE
   const low = at.roof !== undefined ? at.roof - FLOCK_CLEAR : horizon - 44
   const high = at.top !== undefined ? at.top + FLOCK_HEADROOM : h * 0.12
-  // Where the roofs leave no sky under the title, the flock flies high over the title instead: never through the roofs or its see-through pills.
-  const [top, bottom] = low < high ? FLOCK_HIGH : [high, low]
+  // Where the roofs leave no sky under the title there's no flock at all: it would cross the title, its pills or the roofs.
+  if (low < high) {
+    s.flock = null
+    return
+  }
   if (s.flock) {
     const f = s.flock
     f.x += f.way * f.speed * dt
     // A flock already flying when the layout changes (the rest screen into the lobby) keeps to the new band.
-    f.y = Math.min(bottom, Math.max(top, f.y))
+    f.y = Math.min(low, Math.max(high, f.y))
     if (f.x < -50 || f.x > w + 50) ((s.flock = null), (s.flockIn = range(s.rng, 3, 9)))
     return
   }
@@ -586,7 +587,7 @@ const stepFlock = (s: LobbyStage, w: number, h: number, at: StageAnchor, night: 
   if (s.flockIn > 0) return
   const flock = night ? FLOCK_NIGHT : FLOCK_DAY
   const way = s.rng() < 0.5 ? -1 : 1
-  s.flock = { dex: flock[Math.floor(s.rng() * flock.length)]!, x: way > 0 ? -40 : w + 40, y: range(s.rng, top, bottom), way, n: detail.lean ? 1 : 1 + Math.floor(s.rng() * FORMATION.length), speed: range(s.rng, 26, 40), phase: s.rng() * 6 }
+  s.flock = { dex: flock[Math.floor(s.rng() * flock.length)]!, x: way > 0 ? -40 : w + 40, y: range(s.rng, high, low), way, n: detail.lean ? 1 : 1 + Math.floor(s.rng() * FORMATION.length), speed: range(s.rng, 26, 40), phase: s.rng() * 6 }
 }
 
 const drawFlock = (ctx: CanvasRenderingContext2D, s: LobbyStage) => {

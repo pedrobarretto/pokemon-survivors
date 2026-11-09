@@ -87,6 +87,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             en: 'The Explore button is gone: everything it reached now has its own button. On phones, five tabs at the bottom hold the rest.',
             es: 'El botón Pasear ya no está: todo lo que alcanzaba ahora tiene su botón. En el celular, cinco pestañas abajo guardan el resto.',
           },
+          {
+            pt: 'Em alguns tamanhos de janela, a tela tremia um pouco enquanto o seu Pokémon andava. Não treme mais.',
+            en: 'At some window sizes, the screen shook a little while your Pokémon walked. It no longer does.',
+            es: 'En algunos tamaños de ventana, la pantalla temblaba un poco mientras tu Pokémon caminaba. Ya no tiembla.',
+          },
         ],
       },
       {
