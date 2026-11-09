@@ -25,6 +25,8 @@ const fake = {
   plays: 0,
   /** What the next wall is forced to be (`ps.dig`). */
   force: {} as { golden?: boolean; fossil?: FossilFamily },
+  /** Dev: the next wall is one layer deep and holds far more crack, to stage a whole dig (`ps.dig('soft')`). */
+  soft: false,
   /** Dev: whose powers the next wall gets, whatever the partner is (`ps.dig('partner', id)`). */
   partner: null as string | null,
 }
@@ -32,7 +34,7 @@ const fake = {
 const thisWeek = () => weekStart(brasiliaDay(new Date()))
 
 /** Dev (`ps.dig`): forces the next faked wall, the walls used today, the dry streak and the fossils lacked. */
-export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null; used?: number; dry?: number; lacking?: readonly FossilFamily[]; partner?: string | null }) => {
+export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null; used?: number; dry?: number; lacking?: readonly FossilFamily[]; partner?: string | null; soft?: boolean }) => {
   if (patch.golden !== undefined) fake.force.golden = patch.golden
   if (patch.fossil !== undefined) {
     if (patch.fossil === null) delete fake.force.fossil
@@ -42,11 +44,12 @@ export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null
   if (patch.dry !== undefined) fake.dry = patch.dry
   if (patch.lacking !== undefined) fake.lacking = [...patch.lacking]
   if (patch.partner !== undefined) fake.partner = patch.partner
+  if (patch.soft !== undefined) fake.soft = patch.soft
   return { used: fake.used, dry: fake.dry, lacking: fake.lacking, force: fake.force, open: fake.open !== null }
 }
 
-/** Dev: where the open faked wall hides things, for staging screenshots. */
-export const peekFakeWall = () => fake.open?.wall.treasures ?? null
+/** Dev: where the open faked wall hides things and how many layers are left, for staging screenshots. */
+export const peekFakeWall = () => (fake.open ? { treasures: fake.open.wall.treasures, left: fake.open.progress.left } : null)
 
 /** Dev: fills the open wall's crack to one hit short, and moves the seq along so the next hit brings it down. */
 export const crackFakeWall = () => {
@@ -131,7 +134,9 @@ export const startWall = async (used: number, partner: string, resuming: boolean
       fake.plays += 1
       const week = thisWeek()
       const powers = fakePartnerPowers(fake.partner ?? partner)
-      const wall = buildWall(1000 + fake.plays * 37 + (Date.now() & 0xffff), { week, powers, lacking: fake.lacking, due: fake.dry >= DIG.fossilGuarantee && fake.lacking.length > 0, force: Object.keys(fake.force).length > 0 ? { ...fake.force } : undefined })
+      const built = buildWall(1000 + fake.plays * 37 + (Date.now() & 0xffff), { week, powers, lacking: fake.lacking, due: fake.dry >= DIG.fossilGuarantee && fake.lacking.length > 0, force: Object.keys(fake.force).length > 0 ? { ...fake.force } : undefined })
+      const wall = fake.soft ? { ...built, depths: built.depths.map(() => 1), cap: built.cap + 200 } : built
+      fake.soft = false
       fake.force = {}
       fake.open = { id: `fake-${fake.plays}`, week, wall, powers, progress: startProgress(wall), seq: 0, answers: [], lacking: [...fake.lacking] }
     }

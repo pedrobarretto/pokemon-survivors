@@ -4857,9 +4857,9 @@ if (import.meta.env.DEV) {
       /**
        * The Escavação on fakes (`realm/digApi.ts`): `ps.dig()` opens it with the faked API. `ps.dig('golden')` forces the next wall golden,
        * `ps.dig('fossil', 'cranidos')` a fossil of that family, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
-       * today, `ps.dig('lacking', [])` the fossils lacked (all five by default), `ps.dig('crack')` the open wall one hit short of collapse, `ps.dig('peek')` where the open wall hides things, `ps.dig('partner', 'ralts')` a partner's powers for the next wall.
+       * today, `ps.dig('lacking', [])` the fossils lacked (all five by default), `ps.dig('crack')` the open wall one hit short of collapse, `ps.dig('peek')` where the open wall hides things and the layers left, `ps.dig('partner', 'ralts')` a partner's powers for the next wall, `ps.dig('soft')` a next wall one layer deep with far more crack, to stage a whole dig.
        */
-      dig: async (what?: 'golden' | 'fossil' | 'dry' | 'used' | 'lacking' | 'crack' | 'peek' | 'partner', arg?: unknown) => {
+      dig: async (what?: 'golden' | 'fossil' | 'dry' | 'used' | 'lacking' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
         const { stageDig, crackFakeWall, peekFakeWall } = await import('./realm/digApi')
         const { DIG_FOSSIL_FAMILIES } = await import('./data/digTreasures')
         if (what === 'golden') return stageDig({ golden: true })
@@ -4867,6 +4867,7 @@ if (import.meta.env.DEV) {
         if (what === 'dry') return stageDig({ dry: Number(arg ?? 10) })
         if (what === 'used') return stageDig({ used: Number(arg ?? 0) })
         if (what === 'lacking') return stageDig({ lacking: Array.isArray(arg) ? DIG_FOSSIL_FAMILIES.filter((f) => (arg as unknown[]).includes(f)) : DIG_FOSSIL_FAMILIES })
+        if (what === 'soft') return stageDig({ soft: true })
         if (what === 'partner') return stageDig({ partner: typeof arg === 'string' ? arg : null })
         if (what === 'crack') return crackFakeWall()
         if (what === 'peek') return peekFakeWall()

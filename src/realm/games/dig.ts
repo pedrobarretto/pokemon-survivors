@@ -135,6 +135,8 @@ const start = (ctx: SoloCtx): GameRun => {
   /** Cells that just took a hit: how long ago, for the little jolt. */
   const jolts = new Map<number, number>()
   const swings: { tool: DigTool; x: number; y: number; age: number }[] = []
+  /** How long the golden wall's headline stays up (s). */
+  let goldenBanner = 0
   let cracks: Seg[] = []
   let crackDirty = true
   let wallDirty = true
@@ -423,6 +425,8 @@ const start = (ctx: SoloCtx): GameRun => {
       tries = 0
       queue.shift()
       absorb(got.cells, got.freed)
+      // With nothing else in flight the API's crack is the truth, whatever this device predicted.
+      if (queue.length === 0) crack = got.crack
       if (got.end) {
         sending = false
         return endWall(got.end)
@@ -495,11 +499,14 @@ const start = (ctx: SoloCtx): GameRun => {
     view = { ...view, used: got.used, open: got.wall }
     restore(got.wall)
     playSfx('coin')
+    go('dig')
     if (got.wall.golden) {
       playSfx('legendary')
       ctx.brag('golden')
+      flash = 0.22
+      goldenBanner = 1.5
+      say([h('h3', {}, m().goldenStart)])
     }
-    go('dig')
   }
 
   /** The local step of a hit (sent to the API right after), or nothing if it would do nothing. */
@@ -629,7 +636,7 @@ const start = (ctx: SoloCtx): GameRun => {
     const price = view ? wallPrice(view.used) : null
     say(
       [
-        h('h3', {}, e.outcome === 'collapse' ? (e.kept.length > 0 ? m().collapsedKept : m().collapsedNothing) : m().leftWith),
+        h('h3', {}, e.outcome === 'collapse' ? (e.kept.length > 0 ? m().collapsedKept : m().collapsedNothing) : e.kept.length > 0 ? m().leftWith : m().leftNothing),
         e.kept.length > 0 ? h('ul', { class: 'dig-loot' }, ...e.kept.map((r) => h('li', {}, h('img', { src: `${import.meta.env.BASE_URL}assets/${DIG_TREASURES[r.id].art}.png`, alt: '', width: 24, height: 24 }), h('span', {}, treasureName(r.id))))) : false,
         coins > 0 ? h('p', {}, m().coinsTotal(formatPokeDollars(coins))) : false,
         e.buried.length > 0 ? h('div', { class: 'dig-buried' }, h('small', {}, m().buried), h('span', {}, ...e.buried.map((b) => h('img', { src: `${import.meta.env.BASE_URL}assets/${DIG_TREASURES[b.id].art}.png`, alt: treasureName(b.id), title: treasureName(b.id), width: 18, height: 18 })))) : false,
@@ -675,6 +682,10 @@ const start = (ctx: SoloCtx): GameRun => {
     const px = input.pointer.x
     const py = input.pointer.y
     const onGrid = cellAt(px, py)
+    if (goldenBanner > 0) {
+      goldenBanner -= dt
+      if (goldenBanner <= 0 && phase === 'dig') say([])
+    }
     switch (phase) {
       case 'dig': {
         if (input.pressed('Digit1') || input.pressed('KeyQ')) tool = 'pick'

@@ -16,6 +16,7 @@ type DigWords = {
     groups: Record<'coins' | 'bag' | 'stone' | 'furniture' | 'fossil', string>
     pct: (share: number) => string
     golden: string
+    goldenStart: string
     oneIn: (n: number) => string
     oddsNote: string
     fossilsDone: string
@@ -48,6 +49,7 @@ type DigWords = {
     collapsedKept: string
     collapsedNothing: string
     leftWith: string
+    leftNothing: string
     coinsTotal: (price: string) => string
     buried: string
     close: string
@@ -68,6 +70,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       groups: { coins: 'Pepitas (₽)', bag: 'Itens da Mochila', stone: 'Pedras de evolução', furniture: 'Móveis raros', fossil: 'Fósseis' },
       pct: (share) => `${Math.max(1, Math.round(share * 100))}%`,
       golden: 'Parede dourada, muito mais rica',
+      goldenStart: 'Uma parede dourada!',
       oneIn: (n) => `1 em ${n}`,
       oddsNote: 'Chance de cada tesouro enterrado ser desse tipo, com o veio desta semana.',
       fossilsDone: 'Você já tem os cinco fósseis da mina.',
@@ -100,6 +103,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       collapsedKept: 'A parede desabou, mas você salvou isso:',
       collapsedNothing: 'A parede desabou e soterrou tudo.',
       leftWith: 'Você saiu com:',
+      leftNothing: 'Você saiu de mãos vazias.',
       coinsTotal: (price) => `Pepitas: +${price}`,
       buried: 'Ficou soterrado:',
       close: 'Sair',
@@ -118,6 +122,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       groups: { coins: 'Nuggets (₽)', bag: 'Bag items', stone: 'Evolution stones', furniture: 'Rare furniture', fossil: 'Fossils' },
       pct: (share) => `${Math.max(1, Math.round(share * 100))}%`,
       golden: 'Golden wall, far richer',
+      goldenStart: 'A golden wall!',
       oneIn: (n) => `1 in ${n}`,
       oddsNote: 'Chance each buried treasure is this kind, with this week’s vein.',
       fossilsDone: 'You already have all five of the mine’s fossils.',
@@ -150,6 +155,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       collapsedKept: 'The wall came down, but you saved this:',
       collapsedNothing: 'The wall came down and buried everything.',
       leftWith: 'You left with:',
+      leftNothing: 'You left empty-handed.',
       coinsTotal: (price) => `Nuggets: +${price}`,
       buried: 'Left buried:',
       close: 'Leave',
@@ -168,6 +174,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       groups: { coins: 'Pepitas (₽)', bag: 'Objetos de la Mochila', stone: 'Piedras evolutivas', furniture: 'Muebles raros', fossil: 'Fósiles' },
       pct: (share) => `${Math.max(1, Math.round(share * 100))}%`,
       golden: 'Pared dorada, mucho más rica',
+      goldenStart: '¡Una pared dorada!',
       oneIn: (n) => `1 de ${n}`,
       oddsNote: 'Probabilidad de que cada tesoro enterrado sea de este tipo, con la veta de esta semana.',
       fossilsDone: 'Ya tienes los cinco fósiles de la mina.',
@@ -200,6 +207,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       collapsedKept: 'La pared se derrumbó, pero salvaste esto:',
       collapsedNothing: 'La pared se derrumbó y lo enterró todo.',
       leftWith: 'Saliste con:',
+      leftNothing: 'Saliste con las manos vacías.',
       coinsTotal: (price) => `Pepitas: +${price}`,
       buried: 'Quedó enterrado:',
       close: 'Salir',
@@ -218,6 +226,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       groups: { coins: 'Pépites (₽)', bag: 'Objets du Sac', stone: 'Pierres d’évolution', furniture: 'Meubles rares', fossil: 'Fossiles' },
       pct: (share) => `${Math.max(1, Math.round(share * 100))} %`,
       golden: 'Paroi dorée, bien plus riche',
+      goldenStart: 'Une paroi dorée !',
       oneIn: (n) => `1 sur ${n}`,
       oddsNote: 'Chance que chaque trésor enfoui soit de ce type, avec le filon de la semaine.',
       fossilsDone: 'Tu as déjà les cinq fossiles de la mine.',
@@ -250,6 +259,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       collapsedKept: 'La paroi s’est écroulée, mais tu as sauvé ça :',
       collapsedNothing: 'La paroi s’est écroulée et a tout enfoui.',
       leftWith: 'Tu repars avec :',
+      leftNothing: 'Tu repars les mains vides.',
       coinsTotal: (price) => `Pépites : +${price}`,
       buried: 'Resté enfoui :',
       close: 'Sortir',
@@ -268,6 +278,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       groups: { coins: '金塊（₽）', bag: '背包道具', stone: '進化石', furniture: '稀有家具', fossil: '化石' },
       pct: (share) => `${Math.max(1, Math.round(share * 100))}%`,
       golden: '黃金岩壁，寶物多得多',
+      goldenStart: '黃金岩壁！',
       oneIn: (n) => `${n} 分之 1`,
       oddsNote: '每件埋藏的寶物屬於這一類的機率（已計入本週礦脈）。',
       fossilsDone: '礦坑的五種化石你都有了。',
@@ -300,6 +311,7 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       collapsedKept: '岩壁崩塌了，但你救出了這些：',
       collapsedNothing: '岩壁崩塌，全都被埋住了。',
       leftWith: '你帶走了：',
+      leftNothing: '你空手離開了。',
       coinsTotal: (price) => `金塊：+${price}`,
       buried: '被埋住的：',
       close: '離開',
