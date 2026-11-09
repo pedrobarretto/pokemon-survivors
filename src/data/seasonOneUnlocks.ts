@@ -13,7 +13,7 @@ export const FIND_IDS = ['rotom', 'castform'] as const satisfies readonly Hatchl
 export type FindId = (typeof FIND_IDS)[number]
 
 /** Odds a run brings each encounter, drawn once from its seed: the old TV flickers, or Castform comes out with the weather. */
-export const FIND_ODDS = { rotom: 0.22, castform: 0.3 } as const satisfies Record<FindId, number>
+export const FIND_ODDS = { rotom: 0.2, castform: 0.2 } as const satisfies Record<FindId, number>
 
 /** The old TV on a cottage's table: how close counts (px, plus the body) and the seconds to stand there before Rotom leaves it. */
 export const TV_FIND = { radius: 16, stand: 1.6 } as const
