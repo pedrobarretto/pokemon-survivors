@@ -167,7 +167,8 @@ const isWhole = (v: unknown): v is number => typeof v === 'number' && Number.isI
  * a boss's reach scale with the view's diagonal, so a made-up giant screen
  * would keep the horde out of reach and still re-simulate faithfully. The
  * largest seen in play is 960 × 439 (`fitView` in `engine/viewport.ts`, under a
- * browser's zoom and visual viewport); the limits leave room above it, and the
+ * browser's zoom and visual viewport), and the camera's zoom stops at 500 across
+ * the short side (`ZOOM` in `engine/viewport.ts`); the limits leave room above it, and the
  * long side for ultrawide and stretched windows.
  */
 export const VIEW_LIMIT = { short: 600, long: 2048 } as const

@@ -250,6 +250,7 @@ export const pt = {
 
   hud: {
     pause: 'Pausar',
+    zoom: 'Zoom da câmera (roda do mouse ou + e -)',
     specialAttack: 'Ataque especial',
     specialTitle: (name: string) => `${name} (Espaço)`,
     /** The manual lunge button (Quick Attack, Extreme Speed). */

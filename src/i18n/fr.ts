@@ -129,6 +129,7 @@ export const fr: Messages = {
 
   hud: {
     pause: 'Pause',
+    zoom: 'Zoom de la caméra (molette ou + et -)',
     specialAttack: 'Attaque spéciale',
     specialTitle: (name) => `${name} (Espace)`,
     lunge: 'Ruée',

@@ -208,6 +208,8 @@ export type Settings = {
   /** The Arena: how a cast aims (`ui/arenaAim.ts`), and how the basic attack and the assist rank the rivals in reach (`game/versusKit.ts`). */
   aimAssist: AimAssist
   targetPriority: Priority
+  /** The camera's zoom level in runs and the Poké Realm (`ui/cameraZoom.ts`): 0 is the resting view, each one farther out. Per device, like the screen it fits. */
+  cameraZoom: number
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -232,6 +234,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   aimAssist: 'assist',
   targetPriority: 'closest',
+  cameraZoom: 0,
 }
 
 const volume = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback)
@@ -274,6 +277,7 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     theme: THEMES.find((m) => m === data.theme) ?? defaults.theme,
     aimAssist: AIM_ASSISTS.find((m) => m === data.aimAssist) ?? defaults.aimAssist,
     targetPriority: PRIORITIES.find((m) => m === data.targetPriority) ?? defaults.targetPriority,
+    cameraZoom: typeof data.cameraZoom === 'number' && Number.isInteger(data.cameraZoom) && data.cameraZoom >= 0 ? data.cameraZoom : defaults.cameraZoom,
   }
 }
 

@@ -129,6 +129,7 @@ export const zh: Messages = {
 
   hud: {
     pause: '暫停',
+    zoom: '鏡頭縮放（滑鼠滾輪或 + 與 -）',
     specialAttack: '必殺技',
     specialTitle: (name) => `${name}（空白鍵）`,
     lunge: '突進',

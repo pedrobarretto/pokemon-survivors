@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { FIXED_STICK_REACH, fixedJoystick, gripDown, gripMove, gripUp, joystick, STICK_RADIUS } from './input'
-import { deviceScale, fitView, pickViewport } from './viewport'
+import { deviceScale, fitView, pickViewport, ZOOM, zoomScales } from './viewport'
+import { pinchStep, wheelStep } from './zoomGesture'
 
 describe('joystick', () => {
   it('ignores jitter inside the dead zone', () => {
@@ -75,6 +76,41 @@ describe('viewport', () => {
   it('never sizes a side below 1 px, whatever a laying-out webview reports', () => {
     expect(fitView(390, 0, 3)).toMatchObject({ h: 1 })
     expect(fitView(-20, Number.NaN, 2)).toMatchObject({ w: 1, h: 1 })
+  })
+
+  it('zooms out in whole device px, from the resting scale, inside the limits', () => {
+    for (const [w, h, dpr] of [[1920, 1080, 1], [1920, 950, 1], [1440, 900, 2], [390, 844, 3], [412, 915, 2.625], [3840, 2000, 1]] as const) {
+      const scales = zoomScales(w, h, dpr)
+      expect(scales[0]).toBe(deviceScale(w, h, dpr))
+      expect(scales.length).toBeLessThanOrEqual(ZOOM.levels)
+      for (const s of scales.slice(1)) {
+        expect(Number.isInteger(s)).toBe(true)
+        expect(s).toBeLessThan(scales[0]!)
+        expect(Math.min(fitView(w, h, dpr, s).w, fitView(w, h, dpr, s).h)).toBeLessThanOrEqual(ZOOM.maxShort + 1)
+      }
+    }
+  })
+
+  it('gives a windowed 1080p monitor a zoom, and co-op only what stays inside its reach', () => {
+    expect(zoomScales(1920, 950, 1)).toEqual([3, 2])
+    expect(zoomScales(1920, 950, 1, 363)).toEqual([3])
+    expect(zoomScales(1920, 1080, 1, 363).length).toBe(1 + Number(Math.hypot(640, 360) / 2 <= 363))
+  })
+
+  it('spends a wheel step only once enough has scrolled, down meaning out', () => {
+    expect(wheelStep(0, 30, false)).toEqual({ acc: 30, step: 0 })
+    expect(wheelStep(70, 30, false)).toEqual({ acc: 0, step: 1 })
+    expect(wheelStep(0, -100, false)).toEqual({ acc: 0, step: -1 })
+    expect(wheelStep(0, 10, true).step).toBe(1)
+  })
+
+  it('reads a pinch only when both fingers move', () => {
+    const a = { x: 100, y: 100 }
+    const b = { x: 200, y: 100 }
+    expect(pinchStep([a, b], [{ x: 70, y: 100 }, { x: 230, y: 100 }])).toBe(-1)
+    expect(pinchStep([a, b], [{ x: 125, y: 100 }, { x: 175, y: 100 }])).toBe(1)
+    // A thumb steering away from a finger that rests is no pinch.
+    expect(pinchStep([a, b], [{ x: 40, y: 100 }, b])).toBe(0)
   })
 
   const layout = { width: 390, height: 844 }

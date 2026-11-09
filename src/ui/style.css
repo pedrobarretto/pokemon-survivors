@@ -2497,6 +2497,45 @@ button {
   background: var(--ink);
 }
 
+/* The camera's zoom (`ui/cameraZoom.ts`): the lens, and a pip per level. */
+.zoom-btn {
+  pointer-events: auto;
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-btn img {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.zoom-pips {
+  position: absolute;
+  bottom: 3px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.zoom-pips i {
+  width: 4px;
+  height: 4px;
+  background: var(--ink);
+  opacity: 0.3;
+}
+
+.zoom-pips i.on {
+  opacity: 1;
+}
+
 .kills {
   display: flex;
   align-items: center;
