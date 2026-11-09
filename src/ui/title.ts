@@ -860,7 +860,7 @@ export const titleScreen = (
   }
 
   /** A sheet row that closes the sheet and presses `key` (`lobbyPress` counts it). */
-  const entry = (key: keyof typeof runs, icon: string, label: string, sub?: string): SheetEntry => ({ icon: iconImg(icon), label, sub, run: press(key) })
+  const entry = (key: keyof typeof runs, icon: string, label: string, sub?: string, cls?: string): SheetEntry => ({ icon: iconImg(icon, cls), label, sub, run: press(key) })
 
   const hallEntry = (): SheetEntry => ({
     icon: iconImg(supporterIcon('gold')),
@@ -889,7 +889,7 @@ export const titleScreen = (
     discordEntry(),
     ...SOCIAL_IDS.map(socialEntry),
     ...(ideas ? [entry('ideas', bulbIcon(), m.ideas)] : []),
-    entry('help', helpIcon(), t().shell.help),
+    entry('help', helpIcon(), t().shell.help, undefined, 'lobby-icon ink-icon'),
   ]
   const openCommunity = () => openSheet(m.community, communityEntries())
 
@@ -1110,6 +1110,7 @@ export const titleScreen = (
     paintMode = () => {
       const color = GAME_MODES[mode].color
       el.style.setProperty('--mode', color)
+      play.dataset.mode = mode
       const f = facts[mode]
       titleText.textContent = names[mode]
       blurb.textContent = f.blurb

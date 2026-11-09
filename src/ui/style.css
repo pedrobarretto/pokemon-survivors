@@ -1986,14 +1986,6 @@ button {
     0 4px 0 var(--kit-tinta);
 }
 
-.btn.confirm.selected {
-  box-shadow:
-    inset 0 2px 0 color-mix(in srgb, var(--mode) 62%, #fff),
-    inset 0 -6px 0 color-mix(in srgb, var(--mode) 74%, #000),
-    0 4px 0 var(--kit-tinta),
-    0 0 0 3px var(--kit-ouro);
-}
-
 @media (max-width: 520px) {
   .inspect-sprite {
     width: 96px;
@@ -2067,11 +2059,7 @@ button {
   box-shadow: 0 4px 0 var(--kit-tinta);
 }
 
-.offer.selected {
-  box-shadow: 0 4px 0 var(--kit-tinta), 0 0 0 4px var(--kit-ouro);
-}
-
-.offer.selected .offer-key {
+:root[data-cursor='keys'] .offer.selected .offer-key {
   color: var(--kit-tinta);
   background: var(--kit-ouro);
 }
@@ -2154,20 +2142,6 @@ button {
   border: var(--kit-edge) solid var(--kit-tinta);
   border-radius: 12px;
   box-shadow: 0 4px 0 var(--kit-tinta);
-}
-
-.btn.selected {
-  box-shadow: 0 4px 0 var(--kit-tinta), 0 0 0 3px var(--kit-ouro);
-}
-
-button.btn:active:not(:disabled) {
-  translate: 0 3px;
-}
-
-@media (hover: hover) {
-  button.btn:hover:not(:disabled) {
-    filter: brightness(1.06);
-  }
 }
 
 /* The pause sheet: title and buttons stay put, the body scrolls when a phone can't fit it. Tall enough to reach the HUD, so it covers it. */
@@ -2662,7 +2636,6 @@ button.btn:active:not(:disabled) {
 
 .offer-evo.selected {
   background: linear-gradient(180deg, var(--dk-wash-gold, #fffbe0), var(--dk-glow-gold, #f8e8a8));
-  border-color: #e83838;
 }
 
 /* A level-up for an evolved move: gold like an evolution, without the blinking. */
@@ -3654,14 +3627,6 @@ button.btn:active:not(:disabled) {
   color: var(--kit-ink-2);
 }
 
-.title-home .shell-btn.selected,
-.title-home .trainer-chip.selected,
-.title-home .gem-chip.selected,
-.title-home .invite-banner.selected {
-  outline: 3px solid var(--kit-ouro);
-  outline-offset: 2px;
-}
-
 .title-home :is(.shell-icon, .gem-chip, .shell-chip) .key-hint {
   display: none;
 }
@@ -3769,7 +3734,9 @@ button.btn:active:not(:disabled) {
   flex-direction: column;
   gap: 11px;
   min-height: 0;
-  padding: 0 6px 6px 0;
+  /* The room a card's badge pokes out into, taken back from the column so the cards stay where they were. */
+  margin: -12px -6px 0 0;
+  padding: 12px 12px 6px 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
@@ -3867,14 +3834,6 @@ button.btn:active:not(:disabled) {
 
 .lobby-day .key-hint {
   display: none;
-}
-
-.lobby-day.selected,
-.lobby-tile.selected,
-.lobby-hall.selected,
-.lobby-shop-row.selected {
-  outline: 3px solid var(--kit-ouro);
-  outline-offset: 1px;
 }
 
 .lobby-badge {
@@ -4172,7 +4131,7 @@ button.btn:active:not(:disabled) {
   cursor: pointer;
 }
 
-.lobby-mode-title.selected .lobby-mode-name {
+:root[data-cursor='keys'] .lobby-mode-title.selected .lobby-mode-name {
   text-decoration: underline;
   text-decoration-color: var(--kit-ouro);
   text-decoration-thickness: 3px;
@@ -4222,10 +4181,6 @@ button.btn:active:not(:disabled) {
 
 .lobby-pill-go b {
   font-weight: 400;
-}
-
-.lobby-pill-go.selected {
-  outline: 3px solid var(--kit-ouro);
 }
 
 .lobby-stage {
@@ -4309,7 +4264,7 @@ button.btn:active:not(:disabled) {
 
 .lobby-arrow-icon {
   width: 16px;
-  height: 18px;
+  height: 22px;
   image-rendering: pixelated;
 }
 
@@ -4326,14 +4281,13 @@ button.btn:active:not(:disabled) {
   }
 }
 
-.lobby-arrow.selected {
-  outline: 3px solid var(--kit-ouro);
-  outline-offset: 2px;
+/* The bar's grid button stays paper in the dark, so its ink stays dark; the arrow's pill follows the theme. */
+:root[data-theme='dark'] .lobby-mode-all .ink-icon {
+  filter: none;
 }
 
-:root[data-theme='dark'] .lobby-arrow-icon,
-.lobby-mode-all .ink-icon {
-  filter: none;
+:root[data-theme='dark'] .lobby-arrow-icon {
+  filter: brightness(0) invert(0.93);
 }
 
 /* The mode bar. */
@@ -4393,10 +4347,6 @@ button.btn:active:not(:disabled) {
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
 }
 
-.lobby-mode-chip.selected {
-  outline: 3px solid var(--kit-ouro);
-}
-
 .lobby-mode-chip-icon {
   flex: none;
   display: grid;
@@ -4442,13 +4392,9 @@ button.btn:active:not(:disabled) {
   cursor: pointer;
 }
 
-.lobby-mode-all.selected {
-  outline: 3px solid var(--kit-ouro);
-}
-
 .lobby-mode-all img {
-  width: 21px;
-  height: 21px;
+  width: 24px;
+  height: 24px;
   image-rendering: pixelated;
 }
 
@@ -4484,11 +4430,6 @@ button.btn:active:not(:disabled) {
   bottom: 17px;
   color: #fff;
   background: rgba(0, 0, 0, 0.35);
-}
-
-.lobby-play.selected {
-  outline: 3px solid var(--kit-ouro);
-  outline-offset: 2px;
 }
 
 .lobby-dock {
@@ -4615,12 +4556,6 @@ button.btn:active:not(:disabled) {
   font-size: 15px;
 }
 
-.lobby-tab.selected {
-  outline: 3px solid var(--kit-ouro);
-  outline-offset: -2px;
-  border-radius: 8px;
-}
-
 /* An upright phone or a tablet: one column. */
 .lobby-narrow .lobby-today {
   flex: none;
@@ -4633,7 +4568,8 @@ button.btn:active:not(:disabled) {
 
 .lobby-narrow .lobby-today-cards {
   flex-direction: row;
-  padding: 8px max(14px, var(--safe-l));
+  margin: -4px 0 0;
+  padding: 12px max(14px, var(--safe-l)) 8px;
   overflow: auto hidden;
   overscroll-behavior-x: contain;
   touch-action: pan-x;
@@ -4697,12 +4633,18 @@ button.btn:active:not(:disabled) {
   box-shadow: none;
 }
 
+/* The round arrows are paper in both themes (the name sits outside, over the scenery). */
+:root[data-theme] .lobby-narrow .lobby-arrow-icon,
+:root[data-theme] .lobby-landscape .lobby-arrow-icon {
+  filter: none;
+}
+
 .lobby-narrow .lobby-arrow-icon,
 .lobby-landscape .lobby-arrow-icon {
   box-sizing: content-box;
   width: 16px;
-  height: 18px;
-  padding: 14px 14px 14px 12px;
+  height: 22px;
+  padding: 12px 15px;
   background: var(--kit-papel);
   border: var(--kit-edge) solid var(--kit-tinta);
   border-radius: 50%;
@@ -4763,7 +4705,8 @@ button.btn:active:not(:disabled) {
 
 .lobby-landscape .lobby-today-cards {
   gap: 6px;
-  padding: 0 2px 2px 0;
+  margin: -12px -10px 0 0;
+  padding: 12px 12px 2px 0;
 }
 
 .lobby-landscape .lobby-day {
@@ -5001,7 +4944,7 @@ button.btn:active:not(:disabled) {
   }
 
   .lobby-narrow .lobby-today-cards {
-    padding-top: 5px;
+    margin-top: -7px;
     padding-bottom: 6px;
   }
 
@@ -7701,10 +7644,6 @@ button.btn:active:not(:disabled) {
   border: var(--kit-edge) solid var(--kit-tinta);
   border-radius: 12px;
   pointer-events: auto;
-}
-
-.shell-tabs.selected {
-  box-shadow: 0 0 0 3px var(--kit-ouro);
 }
 
 .shell-tab {
@@ -13942,7 +13881,6 @@ button.hall-tile:hover {
 
 .offer-rare.selected {
   background: linear-gradient(180deg, var(--dk-surface-1, #f4f8ff), var(--dk-wash-blue, #dce8ff));
-  box-shadow: 0 4px 0 var(--kit-tinta), 0 0 0 4px var(--kit-ouro);
 }
 
 .tag-rare {
@@ -14114,7 +14052,6 @@ button.hall-tile:hover {
 
 .levelup .offer-branch.selected {
   background: linear-gradient(180deg, var(--dk-surface-0, #fff), var(--dk-surface-1, #f0eaff));
-  border-color: #e83838;
 }
 
 .offer-branch .offer-key {
@@ -14182,7 +14119,6 @@ button.hall-tile:hover {
 .levelup .offers.banishing .offer.selected {
   background: linear-gradient(180deg, var(--dk-surface-1, #fff0ee), var(--dk-wash-red, #ffd8d0));
   border-color: #b01818;
-  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 0 0 4px #e83838;
 }
 
 .offers.banishing .offer::after {
@@ -14428,7 +14364,6 @@ button.hall-tile:hover {
   background:
     linear-gradient(90deg, var(--duo-a, #f8d030) 0 50%, var(--duo-b, #f8d030) 50%) top / 100% 4px no-repeat,
     linear-gradient(180deg, var(--dk-surface-1, #fffdf0), var(--dk-wash-gold, #fbecc0));
-  border-color: #e83838;
 }
 
 @keyframes duo-frame {
@@ -14727,10 +14662,6 @@ button.hall-tile:hover {
   border-color: #2a0840;
 }
 
-.curse-pick .btn.curse-take.selected {
-  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 0 12px #c070f8;
-}
-
 .curse-pick .btn.picked {
   transform: scale(1.08);
 }
@@ -14898,10 +14829,6 @@ button.hall-tile:hover {
   background: #d03030;
   color: #fff;
   border-color: #401010;
-}
-
-.ball-pick .btn.ball-take.selected {
-  box-shadow: 0 0 0 2px var(--dk-surface-0, #fff), 0 0 12px #f86060;
 }
 
 .ball-pick .btn.picked {
@@ -16097,8 +16024,7 @@ button.hall-tile:hover {
   box-shadow:
     inset 0 -6px 0 #a84008,
     inset 0 3px 0 rgba(255, 255, 255, 0.35),
-    0 4px 0 rgba(0, 0, 0, 0.4),
-    0 0 0 3px #fff;
+    0 4px 0 rgba(0, 0, 0, 0.4);
 }
 
 .title-home.haunted .lobby-play:active {
@@ -21322,10 +21248,6 @@ button.hall-tile:hover {
   width: 18px;
   height: 18px;
   image-rendering: pixelated;
-}
-
-.arena-foot .btn.selected {
-  box-shadow: 0 0 0 3px #e83838;
 }
 
 /* The tier badges: the official ball (18 px, drawn at whole multiples) and the division on a plate under it. */
@@ -27324,7 +27246,7 @@ span.arena-hub-face {
  *   .arc-badge                      notification count; the parent needs `position: relative`
  *   .arc-tag (.new, .hot)           small pill
  *   .arc-outline                    white display text with a blocky dark outline
- * `.selected` is the gold frame; `.arc-cursor` is the arrows' cursor for a pad (the same ring as `:focus-visible`).
+ * The cursor is the sticker's own border turning gold (`--kit-cursor`, see "The cursor" below), so it can't float off the shape or be clipped.
  * Paper and ink follow the dark theme through the `--dk-*` roles; `--kit-tinta` stays dark as the outline in both.
  */
 :root {
@@ -27340,6 +27262,8 @@ span.arena-hub-face {
   --kit-tinta: #1b2040;
   --kit-papel: #fffdf6;
   --kit-ouro: #ffc531;
+  --kit-cursor: var(--kit-ouro);
+  --kit-hover: color-mix(in srgb, var(--kit-tinta) 45%, var(--kit-ouro));
   --kit-evento: #222a5a;
   --kit-paper: var(--dk-surface-2, var(--kit-papel));
   --kit-ink: var(--dk-ink, var(--kit-tinta));
@@ -27500,23 +27424,74 @@ span.arena-hub-face {
   gap: 3px;
 }
 
-:is(.arc-btn, .arc-chip, .arc-icon-btn, button.arc-card):focus-visible,
-.arc-cursor {
-  outline: 3px solid #fff;
-  outline-offset: 6px;
-}
-
-:is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card).selected {
-  box-shadow: 0 0 0 4px var(--kit-ouro);
-}
-
-button:is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card):active {
+:is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card, .btn):is(a, button):active:not(:disabled) {
   translate: 0 3px;
 }
 
+/*
+ * ---------- The cursor ----------
+ * `data-cursor` on <html> (ui/cursorMode.ts) says what's steering the menus: `keys` (arrows, a pad) draws `.selected`
+ * and `.arc-cursor`, `tab` draws `:focus-visible`, so one gold thing shows at a time, and `pointer` draws neither:
+ * `.selected` follows the mouse and marks a screen's first item, which a mouse or a finger doesn't need told.
+ */
+:root[data-cursor='keys'] :is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card:not(.arc-mode-card), .btn, .offer, .shell-btn, .shell-chip, .shell-icon, .shell-tabs, .trainer-chip, .gem-chip, .invite-banner, .lobby-arrow, .lobby-pill-go).selected,
+:root[data-cursor='keys'] .arc-cursor,
+:root[data-cursor='tab'] :is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card, .btn, .offer, .shell-btn, .shell-chip, .shell-icon, .trainer-chip, .gem-chip, .invite-banner, .lobby-arrow, .lobby-pill-go):focus-visible {
+  --frame: var(--kit-cursor);
+  border-color: var(--kit-cursor);
+}
+
+/* Gold on gold wouldn't show: a sticker filled with it takes a white cursor. */
+.lobby-hall,
+.lobby-play[data-mode='challenge'] {
+  --kit-cursor: #fff;
+}
+
+/* A round arrow's sticker is its icon: the button around it has no border to light. */
+:root[data-cursor='keys'] :is(.lobby-narrow, .lobby-landscape) .lobby-arrow.selected .lobby-arrow-icon,
+:root[data-cursor='tab'] :is(.lobby-narrow, .lobby-landscape) .lobby-arrow:focus-visible .lobby-arrow-icon {
+  border-color: var(--kit-cursor);
+}
+
 @media (hover: hover) {
-  button:is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card):hover {
+  :root[data-cursor='pointer'] :is(.lobby-narrow, .lobby-landscape) .lobby-arrow:hover .lobby-arrow-icon {
+    border-color: var(--kit-hover);
+  }
+}
+
+/* What has no border of its own takes the same frame inside its edge. */
+:root[data-cursor='keys'] :is(.lobby-mode-chip, .lobby-mode-all, .lobby-tab, .lobby-shop-row).selected,
+:root[data-cursor='tab'] :is(.lobby-mode-chip, .lobby-mode-all, .lobby-tab, .lobby-shop-row):focus-visible {
+  box-shadow: inset 0 0 0 var(--kit-edge) var(--kit-cursor);
+}
+
+:root[data-cursor='keys'] .lobby-mode-chip.on.selected,
+:root[data-cursor='tab'] .lobby-mode-chip.on:focus-visible {
+  box-shadow: inset 0 0 0 var(--kit-edge) var(--kit-cursor), 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+:is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card, .btn, .offer, .shell-btn, .shell-chip, .shell-icon, .trainer-chip, .gem-chip, .invite-banner, .lobby-arrow, .lobby-pill-go, .lobby-mode-chip, .lobby-mode-all, .lobby-tab, .lobby-shop-row):focus-visible {
+  outline: none;
+}
+
+/* The mouse: the same border, only warmer, and a touch of light. No frame, and a finger never gets it. */
+@media (hover: hover) {
+  :root[data-cursor='pointer'] :is(a, button):is(.arc-btn, .arc-chip, .arc-icon-btn, .arc-card, .btn, .offer, .shell-btn, .shell-chip, .shell-icon, .trainer-chip, .gem-chip, .invite-banner, .lobby-arrow, .lobby-pill-go):hover:not(:disabled) {
+    --frame: var(--kit-hover);
+    border-color: var(--kit-hover);
     filter: brightness(1.06);
+  }
+
+  :root[data-cursor='pointer'] .lobby-mode-chip:not(.on):hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  :root[data-cursor='pointer'] :is(.lobby-tab, .lobby-shop-row):hover {
+    background: color-mix(in srgb, var(--kit-ouro) 18%, transparent);
+  }
+
+  :root[data-cursor='pointer'] .lobby-mode-all:hover {
+    box-shadow: inset 0 0 0 var(--kit-edge) var(--kit-hover);
   }
 }
 

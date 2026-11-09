@@ -145,6 +145,7 @@ import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
+import { watchCursorMode } from './ui/cursorMode'
 import { detectKeyLayout } from './ui/keyLayout'
 import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
@@ -272,6 +273,7 @@ const fixedStickCenter = (): Vec | null => {
   return stickCenter
 }
 const input = createInput(canvas, () => settings().controls, fixedStickCenter)
+watchCursorMode(input)
 readRunToasts(() => settings().runToasts)
 /** Internal canvas size in world px. Shared by reference with the running game. */
 const view = { w: 480, h: 270 }
