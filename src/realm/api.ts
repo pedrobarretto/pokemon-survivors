@@ -57,10 +57,10 @@ const FAKE_FOLLOWED: readonly Omit<Followed, 'walking'>[] = [
   { handle: 'leon', name: 'Leon', followsBack: false, appearOffline: false, showWhere: true, activity: 'lobby', ago: 1000 },
 ]
 
-/** Where the faked friends walk outside the in-page realm: May in a Vermilion arcade at its cap. */
+/** Where the faked friends walk outside the in-page realm: May in a Goldenrod arcade at its cap. */
 const fakeElsewhere = (at: number): PresenceReport => {
   const crowd = Array.from({ length: ROOM_CAP.town - 1 }, (_, i) => `trainer${i}`)
-  return { home: 'sa', at, cities: { vermilion: ['may', ...crowd] }, rooms: { vermilion: ['arcade', ...crowd.map(() => 'arcade')] } }
+  return { home: 'sa', at, cities: { goldenrod: ['may', ...crowd] }, rooms: { goldenrod: ['arcade', ...crowd.map(() => 'arcade')] } }
 }
 
 /** Where the bots of the in-page realm walk (its presence report), when one runs; set by `realmShell.ts`. */

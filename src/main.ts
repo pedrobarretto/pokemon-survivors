@@ -150,7 +150,7 @@ import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
 import { realmJukebox } from './realmJukebox'
-import { realmFriendsCount } from './realm/friendsCount'
+import { realmFriendsCount, realmTrainersCount } from './realm/friendsCount'
 import { lazyScreen, lazyStep } from './ui/lazy'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
@@ -793,6 +793,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
       realm: realmUrl() ? () => enterRealm(null) : undefined,
       realmFriends: realmUrl() ? realmFriendsNow : undefined,
+      realmCrowd: realmUrl() ? realmCrowdNow : undefined,
       arena: () => showArena(),
       arenaHub: (tab) => showArenaHub(tab),
       dojo: () => showDojo(),
@@ -3077,6 +3078,18 @@ const realmFriendsNow = (): Promise<number> | null => {
   return realmPals.n
 }
 
+/** Trainers in the Realm now, for the lobby's way in: asked a moment after the lobby is up (the boot never waits on it) and at most once a minute. */
+let realmCrowd: { at: number; n: Promise<number | null> } | null = null
+
+const realmCrowdNow = (): Promise<number | null> => {
+  if (!realmCrowd || performance.now() - realmCrowd.at > 60_000) {
+    const faked = realmLoaded?.realmFaked() === true ? realmLoaded : null
+    const asked = new Promise<void>((done) => setTimeout(done, 2500)).then(() => (faked ? faked.fetchCities().then((got) => (got ? Object.values(got.cities).reduce((sum, n) => sum + n, 0) : null)) : realmTrainersCount()))
+    realmCrowd = { at: performance.now(), n: asked }
+  }
+  return realmCrowd.n
+}
+
 /** `?realm` (or `?realm=<city>`): the Poké Realm's own link; it stays on the address while a guest signs in, so the round trip comes back to it. */
 const REALM_PARAM = 'realm'
 
@@ -3089,7 +3102,7 @@ const realmLink = (on: boolean) => {
 }
 
 /**
- * Opens the Poké Realm (`ui/realm.ts`), at `city` or its picker. Like co-op
+ * Opens the Poké Realm (`ui/realm.ts`), at `city` or the first with room. Like co-op
  * it's for accounts with a @handle: a guest signs in first ("Entre para
  * entrar no Poké Realm", `realmGate`) and an account without a handle picks
  * one. The in-page realm (`ps.realm('local')`) skips the door.

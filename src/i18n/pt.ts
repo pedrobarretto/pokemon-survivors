@@ -895,7 +895,11 @@ export const pt = {
     off: 'O Poké Realm não está disponível nesta versão do jogo.',
     cities: {
       title: 'Escolha uma cidade',
-      hint: 'Cada cidade é uma cópia da mesma vila, com até 40 treinadores.',
+      hint: 'Você entra na primeira com vaga. Todas são a mesma vila, com até 40 treinadores.',
+      switch: 'Trocar de cidade',
+      here: 'Você está aqui',
+      lobbyLine: 'Passeie com seu parceiro',
+      crowd: (n: number) => `${n} treinadores agora`,
       trainers: (n: number) => (n === 1 ? '1 treinador' : `${n} treinadores`),
       full: 'Lotada',
       enter: 'Entrar',

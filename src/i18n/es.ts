@@ -697,7 +697,11 @@ export const es: Messages = {
     off: 'El Poké Realm no está disponible en esta versión del juego.',
     cities: {
       title: 'Elige una ciudad',
-      hint: 'Cada ciudad es una copia del mismo pueblo, con hasta 40 entrenadores.',
+      hint: 'Entras en la primera con lugar. Todas son el mismo pueblo, con hasta 40 entrenadores.',
+      switch: 'Cambiar de ciudad',
+      here: 'Estás aquí',
+      lobbyLine: 'Pasea con tu compañero',
+      crowd: (n: number) => `${n} entrenadores ahora`,
       trainers: (n: number) => (n === 1 ? '1 entrenador' : `${n} entrenadores`),
       full: 'Llena',
       enter: 'Entrar',

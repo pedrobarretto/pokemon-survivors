@@ -3,7 +3,7 @@ import { furniturePrice, groupRealmReports, parseBaseSave, parseGameClaim, parse
 
 describe('presence', () => {
   it('takes a relay report of its own cities, handles cleaned', () => {
-    expect(parsePresenceReport({ home: 'sa', at: 1, cities: { pallet: ['Ash', 'ash', 'misty'], pewter: [] } })).toEqual({ home: 'sa', at: 1, cities: { pallet: ['ash', 'misty'], pewter: [] } })
+    expect(parsePresenceReport({ home: 'sa', at: 1, cities: { pallet: ['Ash', 'ash', 'misty'], cerulean: [] } })).toEqual({ home: 'sa', at: 1, cities: { pallet: ['ash', 'misty'], cerulean: [] } })
     expect(parsePresenceReport({ home: 'eu', at: 1, cities: {} })).toBeNull()
     expect(parsePresenceReport({ home: 'sa', at: 1, cities: { atlantis: ['ash'] } })).toBeNull()
   })

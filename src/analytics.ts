@@ -274,7 +274,7 @@ type AnalyticsEvents = {
   /** A checkout came back (`?gems=`): the gems landed (`ok`, how many and after how long) or the wait ran out first (`timeout`). */
   gems_return: { outcome: 'ok' | 'timeout'; gems: number; seconds: number }
   /** A Poké Realm visit, summed as it ends (`ui/realm.ts`): one event per city entered, never per line or step. */
-  realm_session: { city: string; seconds: number; rooms: number; lines: number; emotes: number; party: 0 | 1; portal: 'coop' | 'arena' | 'none' }
+  realm_session: { city: string; seconds: number; rooms: number; peers: number; lines: number; emotes: number; party: 0 | 1; portal: 'coop' | 'arena' | 'none' }
   /** A cosmetic bought with gems (a skin's `slot` is `skin`). */
   cosmetic_buy: { id: CosmeticId; slot: CatalogSlot; rarity: Rarity; price: number }
   /** A skin bundle bought with gems (`SKIN_BUNDLES`): what it cost the buyer and how many skins it brought. */

@@ -82,18 +82,13 @@ export type RealmHome = 'sa'
  * The cities: each is one instance of the whole town (its rooms) with up to
  * `REALM.cityCap` trainers, named after a Pokémon town (official English
  * names, every language). `home`: the relay that hosts it. A new city is an
- * entry here; order is the picker's.
+ * entry here; order is the way in's (`firstOpenCity`, the first with room) and
+ * the list's. Few on purpose: the realm feels alive when trainers land together.
  */
 export const REALM_CITIES = {
   pallet: { home: 'sa', name: 'Pallet Town' },
-  viridian: { home: 'sa', name: 'Viridian City' },
-  pewter: { home: 'sa', name: 'Pewter City' },
   cerulean: { home: 'sa', name: 'Cerulean City' },
-  vermilion: { home: 'sa', name: 'Vermilion City' },
-  celadon: { home: 'sa', name: 'Celadon City' },
   goldenrod: { home: 'sa', name: 'Goldenrod City' },
-  ecruteak: { home: 'sa', name: 'Ecruteak City' },
-  lilycove: { home: 'sa', name: 'Lilycove City' },
   jubilife: { home: 'sa', name: 'Jubilife City' },
 } as const satisfies Record<string, { home: RealmHome; name: string }>
 

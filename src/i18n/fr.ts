@@ -696,7 +696,11 @@ export const fr: Messages = {
     off: 'Le Poké Realm n’est pas disponible dans cette version du jeu.',
     cities: {
       title: 'Choisis une ville',
-      hint: 'Chaque ville est une copie du même village, avec jusqu’à 40 dresseurs.',
+      hint: 'Tu arrives dans la première qui a de la place. C’est partout la même ville, avec jusqu’à 40 dresseurs.',
+      switch: 'Changer de ville',
+      here: 'Tu es ici',
+      lobbyLine: 'Promène-toi avec ton partenaire',
+      crowd: (n: number) => `${n} dresseurs en ligne`,
       trainers: (n: number) => (n === 1 ? '1 dresseur' : `${n} dresseurs`),
       full: 'Pleine',
       enter: 'Entrer',

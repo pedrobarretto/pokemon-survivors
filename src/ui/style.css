@@ -25968,12 +25968,36 @@ span.arena-hub-face {
 }
 
 .realm-title {
+  position: relative;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 3px;
   min-width: 0;
-  padding: 7px 12px 5px;
+  padding: 7px 26px 5px 12px;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
   line-height: 1.3;
+  cursor: pointer;
+}
+
+/* The city's name is the way to change it: a small mark says it opens. */
+.realm-title::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  margin-top: -2px;
+  border: 5px solid transparent;
+  border-bottom: 0;
+  border-top-color: currentColor;
+  opacity: 0.55;
+}
+
+.realm-title:hover,
+.realm-title:focus-visible {
+  --frame: #e83838;
 }
 
 .realm-where {
@@ -26246,7 +26270,8 @@ span.arena-hub-face {
   font-size: 18px;
 }
 
-.screen.realm .realm-picker {
+.screen.realm .realm-picker,
+.realm-sheet-screen .realm-picker {
   width: min(640px, calc(100% - 32px));
   max-height: calc(100% - 32px - var(--safe-t) - var(--safe-b));
   overflow-y: auto;
@@ -26284,7 +26309,7 @@ span.arena-hub-face {
 
 .realm-cities {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -26318,7 +26343,7 @@ span.arena-hub-face {
   --frame: #e83838;
 }
 
-.realm-city.full {
+.realm-city:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -26473,6 +26498,31 @@ span.arena-hub-face {
   font-size: 10px;
 }
 
+/* Trainers online on the way in: on the tile and the top icon, a dot and the number (the card says it in words). */
+.lobby-realm-crowd {
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 4px 1px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-style: normal;
+  color: #fff;
+  background: #304058;
+  border: 2px solid var(--dk-surface-0, #fff);
+  border-radius: 9px;
+}
+
+.lobby-realm-crowd::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: #60d880;
+}
+
 /* The lobby's way in counts the friends walking the realm (a badge on the rail tile and the top icon; the card says it). */
 .lobby-realm-pals {
   position: absolute;
@@ -26544,9 +26594,6 @@ span.arena-hub-face {
 @media (max-width: 480px) {
   .realm-line {
     font-size: 16px;
-  }
-  .realm-cities {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
   .realm-city b,
   .realm-friend b {
