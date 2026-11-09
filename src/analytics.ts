@@ -89,6 +89,9 @@ type AnalyticsEvents = {
     moves: string[]
     items: string[]
     bosses: number
+    /** The finale's mythical: who came, `none` when it rolled and missed, null when the run never got there; and the finales without one it played under (null: the plain odds). */
+    mythical: EnemyId | 'none' | null
+    mythicalDry: number | null
     /** What landed the last hit of a faint: the foe's species (null for a hazard) and the kind of hit. */
     foe: EnemyId | null
     hit: HitKind | null

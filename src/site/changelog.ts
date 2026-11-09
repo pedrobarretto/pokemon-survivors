@@ -56,11 +56,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: 'Realm 時刻每天舉辦三次：15 分鐘內小遊戲獎勵加倍，還有特別場景。',
       },
       {
-        pt: 'Jogar mini games com outro treinador na sala agora rende 25% a mais.',
-        en: 'Playing mini games with another trainer in the room now pays 25% more.',
-        es: 'Jugar minijuegos con otro entrenador en la sala ahora paga un 25 % más.',
-        fr: 'Jouer aux mini-jeux avec un autre dresseur dans la salle rapporte maintenant 25 % de plus.',
-        zh: '和其他訓練家在同一個房間玩小遊戲，獎勵增加 25%。',
+        pt: 'No celular, o novo cadeado na caixa do seu Pokémon fixa o joystick no canto, sem sair da partida.',
+        en: 'On phones, the new padlock on your Pokémon’s box fixes the joystick in its corner without leaving the run.',
+        es: 'En el celular, el nuevo candado en el recuadro de tu Pokémon fija el joystick en su esquina sin salir de la partida.',
+        fr: 'Sur téléphone, le nouveau cadenas sur l’encart de ton Pokémon fixe le joystick dans son coin sans quitter la partie.',
+        zh: '手機上，寶可夢狀態框的新鎖頭可把搖桿固定在角落，不必離開遊戲。',
       },
     ],
     changes: [
@@ -80,6 +80,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'El lobby muestra cuántos entrenadores hay en el Realm cuando hay movimiento.',
             fr: 'Le lobby indique combien de dresseurs sont dans le Realm quand il y a du monde.',
             zh: '當 Realm 有人氣時，大廳會顯示目前的訓練家人數。',
+          },
+          {
+            pt: 'Jogar mini games com outro treinador na sala agora rende 25% a mais.',
+            en: 'Playing mini games with another trainer in the room now pays 25% more.',
+            es: 'Jugar minijuegos con otro entrenador en la sala ahora paga un 25 % más.',
+            fr: 'Jouer aux mini-jeux avec un autre dresseur dans la salle rapporte maintenant 25 % de plus.',
+            zh: '和其他訓練家在同一個房間玩小遊戲，獎勵增加 25%。',
           },
         ],
       },
@@ -133,6 +140,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Cadeado do joystick na partida', en: 'Joystick padlock in the run', es: 'Candado del joystick en la partida', fr: 'Cadenas du joystick en partie', zh: '遊戲中的搖桿鎖頭' },
+        notes: [
+          {
+            pt: 'Em telas de toque, um cadeado na caixa do seu Pokémon alterna entre o joystick fixo no canto e o que segue o dedo, em qualquer modo. A escolha fica salva e é a mesma de Ajustes → Controles.',
+            en: 'On touchscreens, a padlock on your Pokémon’s box switches between the joystick fixed in its corner and the one that follows your finger, in every mode. The choice is saved and is the same one as in Settings → Controls.',
+            es: 'En pantallas táctiles, un candado en el recuadro de tu Pokémon alterna entre el joystick fijo en su esquina y el que sigue tu dedo, en todos los modos. La elección se guarda y es la misma de Ajustes → Controles.',
+            fr: 'Sur écran tactile, un cadenas sur l’encart de ton Pokémon alterne entre le joystick fixe dans son coin et celui qui suit ton doigt, dans tous les modes. Le choix est gardé et c’est le même que dans Réglages → Commandes.',
+            zh: '在觸控螢幕上，寶可夢狀態框的鎖頭可在固定於角落的搖桿與跟隨手指的搖桿之間切換，所有模式皆可使用。選擇會保存，與「設定 → 操作」中的設定相同。',
+          },
+          {
+            pt: 'A altura e a distância da borda do joystick fixo ficam em Ajustes → Controles.',
+            en: 'The fixed joystick’s height and distance from the edge are in Settings → Controls.',
+            es: 'La altura y la distancia al borde del joystick fijo están en Ajustes → Controles.',
+            fr: 'La hauteur du joystick fixe et sa distance au bord se règlent dans Réglages → Commandes.',
+            zh: '固定搖桿的高度與離邊緣的距離可在「設定 → 操作」調整。',
+          },
+        ],
+      },
     ],
   },
   {
@@ -168,14 +194,26 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '使用 AZERTY 鍵盤時，遊戲現在會顯示正確的按鍵：Z Q S D。',
       },
       {
-        pt: 'Se o jogo ainda não abrir, recarregue a página.',
-        en: 'If the game still doesn’t open, reload the page.',
-        es: 'Si el juego aún no abre, recarga la página.',
-        fr: 'Si le jeu ne s’ouvre toujours pas, recharge la page.',
-        zh: '如果遊戲仍然無法開啟，請重新載入頁面。',
+        pt: 'Mew, Celebi e Jirachi agora têm garantia por azar: a chance sobe a cada final sem um mítico.',
+        en: 'Mew, Celebi and Jirachi now have bad-luck protection: the chance rises with each finale without a mythical.',
+        es: 'Mew, Celebi y Jirachi ahora tienen protección contra la mala suerte: la probabilidad sube con cada final sin un mítico.',
+        fr: 'Mew, Celebi et Jirachi ont maintenant une protection contre la malchance : les chances montent à chaque finale sans Pokémon fabuleux.',
+        zh: 'Mew、Celebi 和 Jirachi 現在有保底機制：每場沒有幻之寶可夢的決戰後，機率都會提高。',
       },
     ],
     changes: [
+      {
+        title: { pt: 'Garantia por azar dos míticos', en: 'Bad-luck protection for mythicals', es: 'Protección contra la mala suerte de los míticos', fr: 'Protection contre la malchance des fabuleux', zh: '幻之寶可夢保底機制' },
+        notes: [
+          {
+            pt: 'Depois de 5 finais sem derrotar um mítico, a chance de ele aparecer junto do Mewtwo sobe a cada final, até ser garantida na 21ª. Enquanto faltar algum, o que aparece é sempre um que você ainda não capturou.',
+            en: 'After 5 finales without beating a mythical, the chance of one joining Mewtwo rises with each finale, up to a sure thing on the 21st. While you still miss any, the one that comes is always one you have not captured.',
+            es: 'Tras 5 finales sin derrotar a un mítico, la probabilidad de que aparezca junto a Mewtwo sube con cada final, hasta ser segura en la 21.ª. Mientras te falte alguno, siempre aparece uno que aún no capturaste.',
+            fr: 'Après 5 finales sans battre de Pokémon fabuleux, les chances d’en voir un aux côtés de Mewtwo montent à chaque finale, jusqu’à être certaines à la 21e. Tant qu’il vous en manque, celui qui vient est toujours un que vous n’avez pas capturé.',
+            zh: '連續 5 場決戰沒有打倒幻之寶可夢後，牠與 Mewtwo 一同出現的機率會逐場提高，第 21 場必定出現。只要還有缺少的，出現的一定是你尚未捕捉的那一隻。',
+          },
+        ],
+      },
       {
         title: { pt: 'Tela preta ao abrir', en: 'Black screen on opening', es: 'Pantalla negra al abrir', fr: 'Écran noir à l’ouverture', zh: '開啟時黑畫面' },
         notes: [

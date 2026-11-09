@@ -32,6 +32,7 @@ import { createLungeControls } from './lungeButton'
 import { createMegaControls } from './megaButton'
 import { moveCard, withMoveCard } from './moveCard'
 import { createMovePad } from './movePad'
+import { createStickLock } from './stickLock'
 import { createSpecialControls } from './specialButton'
 import { localPlayer } from '../game/players'
 import { createMinimap } from './minimap'
@@ -41,12 +42,13 @@ const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-
 /**
  * In-run heads-up display. `update` is called every frame and only touches what changed.
  * `onSpecial`, `onMega` and `onLunge` fire when the touch special, Mega and lunge buttons are pressed;
- * `onPause` backs the on-screen pause button (phones have no Esc key; `menu`: co-op's menu button); `isHeld` (the input's)
+ * `onPause` backs the on-screen pause button (phones have no Esc key; `menu`: co-op's menu button); `onStickMode` runs when the padlock changes the joystick mode (the status box moves); `isHeld` (the input's)
  * lights the desktop WASD keys. Hovering or holding a move slot opens its card (`withMoveCard`). Labels are
  * read at creation: rebuild the HUD after a language switch.
  */
-export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onLunge: () => void, onPause: () => void, isHeld: (code: string) => boolean, menu = false) => {
+export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onLunge: () => void, onPause: () => void, onStickMode: () => void, isHeld: (code: string) => boolean, menu = false) => {
   const movePad = createMovePad(isHeld)
+  const stickLock = createStickLock(root, onStickMode)
   const special = createSpecialControls(onSpecial)
   const mega = createMegaControls(onMega)
   const lunge = createLungeControls(onLunge)
@@ -135,6 +137,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
         h('div', { class: 'status-hp' }, h('span', { class: 'hp-tag' }, 'HP'), h('div', { class: 'hp-bar' }, hpFill)),
         h('div', { class: 'status-foot' }, ability, hpText),
       ),
+      stickLock.button,
     ),
     movePad.el,
     special.button,
@@ -218,6 +221,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
       setText(candies, String(g.candies))
     }
     movePad.update()
+    stickLock.update()
     special.update(g)
     mega.update(g)
     lunge.update(g)

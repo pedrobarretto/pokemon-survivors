@@ -530,7 +530,7 @@ export const siteFr: SiteMessages = {
       opensHead: 'Capacité légendaire',
       pressureTitle: 'Difficultés en Mode Légendaire',
       pressure: 'La Pression s’ajoute à chaque difficulté : voici les multiplicateurs du Mode Légendaire.',
-      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier', event: 'Nuit des Sorcières 2026 (événement)', festival: 'Festival des Lanternes 2026 (prix)' },
+      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10, plus après chaque finale sans fabuleux)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier', event: 'Nuit des Sorcières 2026 (événement)', festival: 'Festival des Lanternes 2026 (prix)' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Pendant la Nuit des Sorcières 2026 (du 24 octobre au 2 novembre), Darkrai arrive comme légendaire d’événement : il n’apparaît que dans la faille du Cauchemar, qui peut remplacer une faille lors d’une partie hantée, et 2 victoires le capturent. Il joue avec Dark Void, qui endort les foules, et l’inné Bad Dreams, qui blesse ceux qui dorment près de lui. Après l’événement, il retourne dans l’ombre, mais qui l’a capturé continue de le jouer. Il ne compte pas pour Arceus.',
     },
@@ -638,7 +638,7 @@ export const siteFr: SiteMessages = {
       ],
       trios: (times, trios, mythicals, percent) => [
         `À ${list(times)} arrivent les trois membres d’un trio légendaire, tiré au début de chaque partie : ${list(trios)}. Les PV, les dégâts au contact et la vitesse dépendent du créneau, pas du Pokémon, donc aucun tirage n’est plus facile qu’un autre ; ce qui change, ce sont les attaques.`,
-        `À la fin, avec ${n(percent)}% de chances, un Pokémon fabuleux rejoint Mewtwo : ${mythicals}, lui aussi tiré à chaque partie.`,
+        `À la fin, avec ${n(percent)}% de chances, un Pokémon fabuleux rejoint Mewtwo : ${mythicals}, lui aussi tiré à chaque partie. Après 5 finales sans battre de Pokémon fabuleux, les chances montent à chaque finale, jusqu’à être certaines à la 21e, et celui qui vient est un que vous n’avez pas encore.`,
       ],
       timeHead: 'Temps',
       bossHead: 'Boss',

@@ -256,6 +256,10 @@ export const pt = {
     /** The manual lunge button (Quick Attack, Extreme Speed). */
     lunge: 'Bote',
     lungeTitle: (name: string) => `${name} (Shift)`,
+    /** The padlock on the status box (touch): the joystick fixed in its corner or following the thumb, and what it says when pressed. */
+    stickLock: 'Joystick fixo',
+    stickLocked: 'Joystick fixo! Mude o lugar em Ajustes → Controles.',
+    stickFree: 'Joystick solto: ele segue o dedo.',
     /** Aegislash's forme, shown on the special button (Stance Change). */
     stances: { shield: 'Escudo', blade: 'Lâmina', normal: 'Normal', attack: 'Ataque', defense: 'Defesa', speed: 'Velocidade' } satisfies Record<Stance, string>,
     /** Jumps left in a running chain dash. */
@@ -6647,7 +6651,7 @@ export const pt = {
     where: {
       rift: 'Espera numa _fenda lendária_: entre no portal e vença-o lá dentro.',
       trio: 'Vem como chefe com o _trio lendário_ sorteado na partida.',
-      mythical: 'Às vezes (1 partida em 10) aparece junto do *Mewtwo* no final.',
+      mythical: 'Às vezes (1 partida em 10, mais a cada final sem mítico) aparece junto do *Mewtwo* no final.',
       finale: 'É o chefe final: vença uma partida.',
       endless: 'O último troféu: depois de capturar os outros 22, vença-o no _modo sem fim_.',
       event: 'Só na _Noite das Bruxas_: vença-o na _fenda do Pesadelo_.',

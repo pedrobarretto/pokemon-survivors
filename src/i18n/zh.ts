@@ -134,6 +134,9 @@ export const zh: Messages = {
     specialTitle: (name) => `${name}（空白鍵）`,
     lunge: '突進',
     lungeTitle: (name) => `${name}（Shift）`,
+    stickLock: '固定搖桿',
+    stickLocked: '搖桿已固定！可在「設定 → 操作」調整位置。',
+    stickFree: '搖桿已解除固定：會跟隨手指。',
     stances: { shield: '盾', blade: '劍', normal: '一般', attack: '攻擊', defense: '防禦', speed: '速度' },
     jumps: (n) => `×${n}`,
   },
@@ -6209,7 +6212,7 @@ export const zh: Messages = {
     where: {
       rift: '在_傳說裂縫_中等待：穿過傳送門，在那裡擊敗它。',
       trio: '會以首領身分和這局的_傳說三神_一同出現。',
-      mythical: '偶爾（每10局1次）會在最後與 *Mewtwo* 一同出現。',
+      mythical: '偶爾（每10局1次，每場沒有幻之寶可夢的決戰後機率提高）會在最後與 *Mewtwo* 一同出現。',
       finale: '它是最終首領：贏下一局。',
       endless: '最後的戰利品：收服其他22隻後，在_無盡模式_中擊敗它。',
       event: '只在_女巫之夜_：在_夢魘裂縫_中擊敗它。',

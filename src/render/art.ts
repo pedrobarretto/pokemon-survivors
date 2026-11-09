@@ -1023,6 +1023,28 @@ const OG_PLATE = ['.111111111.', '12332223331', '13223232221', '13223232331', '1
 export const ogIcon = () => toIconUrl('og', () => art(OG_PLATE, { 1: '#201030', 2: '#6038a8', 3: '#ffe070', 4: '#e8a020' }))
 export const sparkleIcon = () => toIconUrl('sparkle', () => outlined(SPARKLE()[2]!, '#584010'))
 
+/** The joystick's padlock (`ui/stickLock.ts`): the stick's ring and knob with a padlock on its shoulder, gold and shut when the stick is fixed, gray and open when it follows the thumb. */
+const STICK_LOCK = (fixed: boolean) => [
+  '...........ooo..',
+  '..........o...o.',
+  `..........${fixed ? 'o' : '.'}...o.`,
+  '.........ooooooo',
+  '.........obbbbbo',
+  '...ooooo.obbobbo',
+  '.oo.....oobbobbo',
+  '.o.......obbbbbo',
+  'o...nnn..ooooooo',
+  'o..nNNNn..o.....',
+  'o..nNNNn..o.....',
+  'o..nNNNn..o.....',
+  'o...nnn...o.....',
+  '.o.......o......',
+  '.oo.....oo......',
+  '...ooooo........',
+]
+export const stickLockIcon = (fixed: boolean) =>
+  toIconUrl(`stickLock:${fixed}`, () => art(STICK_LOCK(fixed), { o: '#283040', b: fixed ? '#f8c030' : '#a8a8c0', n: '#5868a0', N: '#98a8d8' }))
+
 /** PlayStation's face buttons in their colors, the size of a Press Start 2P letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
 const PAD_GLYPHS = {
   '✕': [['11....11', '111..111', '.111111.', '..1111..', '..1111..', '.111111.', '111..111', '11....11'], '#4a80e0'],

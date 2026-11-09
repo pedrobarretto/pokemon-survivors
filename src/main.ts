@@ -242,6 +242,8 @@ import { MAPS, type MapId } from './data/versusMaps'
 import { ARENA_FORMAT_IDS, ARENA_FORMATS, parseArenaFormat, type ArenaFormat } from './data/arenaFormats'
 import { formatPlays, rulesOf } from './game/versusRules'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
+import { countFinale, mythicalHunt } from './game/mythicalHunt'
+import { MYTHICAL_PITY } from './data/waves'
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
 const STEP = TICK
@@ -447,6 +449,8 @@ type Run = {
    * device keeps (`saveAttempt`). Null for any other run.
    */
   challenge: { day: DayKey; official: boolean; attempt: boolean } | null
+  /** What the finale's mythical slot rolled, for `run_end`: who came, `none`, or null before the finale. */
+  mythical: EnemyId | 'none' | null
   /** The supporter's companion walking along, drawn only (`render/companion.ts`). */
   companion: CompanionView | null
   /** Which sheets the run streams and keeps (`syncSprites`): its cast's windows, and what it keeps in every variant. */
@@ -1091,6 +1095,8 @@ const reportRun = (r: Run, faint: Extract<GameEvent, { kind: 'gameover' }> | nul
     moves: p.moves.map((m) => `${m.id}:${m.level}`),
     items: p.items.map((i) => `${i.id}:${i.level}`),
     bosses: g.tally.bossKills,
+    mythical: r.mythical,
+    mythicalDry: g.mythicalHunt?.dry ?? null,
     foe: faint?.foe ?? null,
     hit: faint?.hit ?? null,
     coins: r.paid,
@@ -1415,6 +1421,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     tms: armedTms(save.tms, tmLimit(save.shop.level)),
     evo: [...save.evo],
     caps: capLevel(save.caps, starter),
+    mythical: mythicalHunt(save),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
@@ -1436,6 +1443,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     closeText: null,
     paid: 0,
     candies: 0,
+    mythical: null,
     reported: false,
     missionsBefore: missionStatus(save.missions, today()),
     recorded: null,
@@ -1554,6 +1562,7 @@ const startDojo = async (starter: PlayableId) => {
       closeText: null,
       paid: 0,
       candies: 0,
+      mythical: null,
       reported: true,
       missionsBefore: [],
       recorded: null,
@@ -1652,7 +1661,7 @@ const endDojo = (r: Run, dojo: DojoRun) => {
 
 /** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
 const runHud = (game: Game, onPause: () => void = () => game.phase === 'playing' && (game.phase = 'paused'), menu = false) => {
-  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, input.isHeld, menu)
+  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, () => requestAnimationFrame(syncMarkerInsets), input.isHeld, menu)
   requestAnimationFrame(syncMarkerInsets)
   return hud
 }
@@ -2106,6 +2115,11 @@ const handleEvent = (r: Run, e: GameEvent) => {
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
       return bankCapture(e.legend, e.shiny, g.endless !== null)
+    // The Desafio do dia plays the same for everyone: its finales don't count toward the protection.
+    case 'mythicalRoll':
+      r.mythical = e.enemy ?? 'none'
+      if (!r.challenge) updateSave((s) => ({ ...s, mythicalPity: countFinale(s.mythicalPity) }))
+      return
     case 'evolve': {
       playCry(cryUrl(e.from))
       r.closeText?.()
@@ -2688,6 +2702,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     shown: null,
     closeText: null,
     paid: 0,
+    mythical: null,
     reported: false,
     missionsBefore: missionStatus(save.missions, today()),
     recorded: null,
@@ -4325,6 +4340,12 @@ const devEggs = {
     const eggPity = { ...save.eggPity, [tier]: n }
     writeSave({ ...save, eggPity })
     return eggPity
+  },
+  /** Sets the finales since a mythical last fell (one short of the guarantee by default), for the next run. */
+  mythicalPity: (dry = MYTHICAL_PITY.sure - 1) => {
+    const save = loadSave()
+    writeSave({ ...save, mythicalPity: { finales: save.mythicalPity.beaten + dry, beaten: save.mythicalPity.beaten } })
+    return mythicalHunt(loadSave()) ?? 'every mythical captured: the plain odds'
   },
   /** Unlocks the shiny of a Pokémon (every one without an argument), as if its 1/64 roll hit. */
   unlockShiny: (id?: PlayableId) => {

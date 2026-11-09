@@ -134,6 +134,9 @@ export const fr: Messages = {
     specialTitle: (name) => `${name} (Espace)`,
     lunge: 'Ruée',
     lungeTitle: (name) => `${name} (Maj)`,
+    stickLock: 'Joystick fixe',
+    stickLocked: 'Joystick fixe ! Change sa place dans Réglages → Commandes.',
+    stickFree: 'Joystick libre : il suit ton doigt.',
     stances: { shield: 'Bouclier', blade: 'Lame', normal: 'Normal', attack: 'Attaque', defense: 'Défense', speed: 'Vitesse' },
     jumps: (n) => `×${n}`,
   },
@@ -6209,7 +6212,7 @@ export const fr: Messages = {
     where: {
       rift: 'Attend dans une _faille légendaire_ : franchis le portail et bats-le là-bas.',
       trio: 'Arrive comme boss avec le _trio légendaire_ de la partie.',
-      mythical: 'Parfois (1 partie sur 10), apparaît aux côtés de *Mewtwo* à la fin.',
+      mythical: 'Parfois (1 partie sur 10, plus après chaque finale sans fabuleux), apparaît aux côtés de *Mewtwo* à la fin.',
       finale: 'C’est le boss final : gagne une partie.',
       endless: 'Le dernier trophée : une fois les 22 autres capturés, bats-le en _mode sans fin_.',
       event: 'Seulement pendant la _Nuit des Sorcières_ : bats-le dans la _faille du Cauchemar_.',

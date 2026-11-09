@@ -533,7 +533,7 @@ export const siteEs: SiteMessages = {
       opensHead: 'Movimiento legendario',
       pressureTitle: 'Dificultades en el Modo Legendario',
       pressure: 'La Presión se suma a cada dificultad: así quedan los multiplicadores del Modo Legendario.',
-      where: { rift: 'Grieta legendaria', trio: 'Trío legendario', mythical: 'Junto a Mewtwo (1 de cada 10)', finale: 'Jefe final', endless: 'Modo infinito, al final', event: 'Noche de Brujas 2026 (evento)', festival: 'Festival de las Linternas 2026 (premio)' },
+      where: { rift: 'Grieta legendaria', trio: 'Trío legendario', mythical: 'Junto a Mewtwo (1 de cada 10, sube tras cada final sin mítico)', finale: 'Jefe final', endless: 'Modo infinito, al final', event: 'Noche de Brujas 2026 (evento)', festival: 'Festival de las Linternas 2026 (premio)' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'En la Noche de Brujas de 2026 (del 24 de octubre al 2 de noviembre), Darkrai llega como legendario de evento: solo aparece en la grieta de la Pesadilla, que puede tomar el lugar de una grieta en una partida embrujada, y se captura con 2 victorias. Juega con Dark Void, que duerme a las multitudes, y la innata Bad Dreams, que hiere a quien duerme cerca de él. Después del evento vuelve a las sombras, pero quien lo capturó sigue jugando con él. No cuenta para Arceus.',
     },
@@ -641,7 +641,7 @@ export const siteEs: SiteMessages = {
       ],
       trios: (times, trios, mythicals, percent) => [
         `A las ${list(times)} llegan los tres miembros de un trío legendario, sorteado al comienzo de cada partida: ${list(trios)}. El HP, el daño por contacto y la velocidad dependen del horario, no del Pokémon, así que ningún sorteo es más fácil que otro; lo que cambia son los ataques.`,
-        `Al final, con un ${n(percent)}% de probabilidad, un Pokémon mítico llega junto con Mewtwo: ${mythicals}, también sorteado en cada partida.`,
+        `Al final, con un ${n(percent)}% de probabilidad, un Pokémon mítico llega junto con Mewtwo: ${mythicals}, también sorteado en cada partida. Tras 5 finales sin derrotar a un mítico la probabilidad sube con cada una, hasta ser segura en la 21.ª, y llega uno que aún no tienes.`,
       ],
       timeHead: 'Tiempo',
       bossHead: 'Jefe',
