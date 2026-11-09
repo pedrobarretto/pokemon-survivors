@@ -151,6 +151,7 @@ import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
 import { realmJukebox } from './realmJukebox'
 import { realmFriendsCount } from './realm/friendsCount'
+import { forceHour, isHourKind } from './realm/hours'
 import { lazyScreen, lazyStep } from './ui/lazy'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
@@ -3164,9 +3165,10 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * prints the state; `('room', 'arcade')` walks the open town's trainer into a room; `('friends')` opens
  * Amigos no Realm (the faked friends: the in-page realm's Misty, Brock and Dawn where they walk, May
  * in a full arcade, `realm/api.ts`); `('invite', 'misty')` has that bot invite you to its base;
- * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`).
+ * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`);
+ * `('hour', 'tide')` runs a Hora do Realm on this screen only (`null` back to the clock).
  */
-const devRealm = async (cmd?: string, arg?: string) => {
+const devRealm = async (cmd?: string, arg?: string | null) => {
   const { devRealmRoom, fakeRealm, realmDevState, realmInviteFrom, stageRealmTable, useLocalRealm } = await realmMode()
   switch (cmd) {
     case 'local':
@@ -3190,6 +3192,12 @@ const devRealm = async (cmd?: string, arg?: string) => {
       const [x, y] = (arg ?? '').split(',').map(Number)
       if (!realmShown?.el.isConnected || !Number.isFinite(x) || !Number.isFinite(y)) return 'ps.realm: walk "x,y" in the realm'
       return realmShown.walkTo(x!, y!)
+    }
+    case 'hour': {
+      // `ps.realm('hour', 'tide')` runs that Hora do Realm on this screen only, `('hour', 'tide soon')` counts down to one 12 minutes away, `('hour', null)` back to the clock.
+      const [kind = '', soon] = (arg ?? '').split(' ')
+      if (kind !== '' && !isHourKind(kind)) return 'ps.realm: hour (tide, storm, tables, or null)'
+      return forceHour(kind === '' ? null : kind, soon ? 12 * 60_000 : 0)
     }
     case 'room':
       return isTownRoomId(arg) ? devRealmRoom(arg) : `ps.realm: room (${TOWN_ROOMS.join(', ')})`

@@ -803,6 +803,15 @@ export const es: Messages = {
     counter: 'El café todavía está armando el mostrador. ¡Vuelve pronto!',
     pool: 'Aquí nadarán los Pokémon de tipo Agua. ¡Pronto!',
     prizes: '¡Rompe récords en las máquinas y gana trofeos para tu base secreta!',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'Marea Alta', storm: 'Lluvia de Bayas', tables: 'Noche de Mesas' },
+      perks: { tide: 'Pesca doble y peces más raros', storm: 'Arcade doble', tables: 'Juegos de mesa dobles' },
+      go: 'Ir',
+      starts: (c: string) => `en ${c}`,
+      ends: (c: string) => `quedan ${c}`,
+      tideChip: '¡Marea alta!',
+    },
     grove: {
       first: [
         '¡Psst! Solo soy un árbol... Vale, soy Sudowoodo. ¡Bienvenido al Bosque de Bases!',
@@ -6028,6 +6037,9 @@ export const es: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Cesta de bayas',
       goldenMallet: 'Mazo dorado',
+      stampDesk: 'Escritorio de Estampas',
+      stampCabinet: 'Archivador de Estampas',
+      goldenStampPress: 'Prensa dorada de Estampas',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Soporte de cañas',
       goldenMagikarpPlaque: 'Placa del Magikarp Dorado',

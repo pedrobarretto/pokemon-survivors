@@ -27440,3 +27440,108 @@ span.arena-hub-face {
   flex-direction: column;
   gap: 4px;
 }
+
+/* The Hora do Realm: the city's banner and the lobby's countdown. */
+.realm-hour {
+  position: absolute;
+  top: max(8px, var(--safe-t));
+  right: max(8px, var(--safe-r));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(460px, calc(100% - 16px));
+  padding: 5px 8px;
+  line-height: 1.25;
+}
+
+.realm-hour.on {
+  border-color: #f0b830;
+  box-shadow: 0 0 0 2px #f0b83066;
+}
+
+.realm-hour-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.realm-hour-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.realm-hour-text b {
+  font-family: var(--title);
+  font-size: 9px;
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.realm-hour-text small {
+  font-size: 15px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.realm-hour-clock {
+  flex: none;
+  margin-left: 4px;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.realm-hour.on .realm-hour-clock {
+  color: color-mix(in srgb, #b06000 var(--dk-lift, 100%), #ffd870);
+}
+
+.realm-hour-go {
+  flex: none;
+  min-height: 34px;
+  padding: 2px 12px;
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Under the top bar where they don't fit side by side. */
+@media (max-width: 720px) {
+  .realm-hour {
+    top: calc(max(8px, var(--safe-t)) + 52px);
+    left: max(8px, var(--safe-l));
+    right: max(8px, var(--safe-r));
+    max-width: none;
+  }
+
+  .realm-hour-clock {
+    margin-left: auto;
+  }
+}
+
+.lobby-realm-hour {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  padding: 2px 4px 1px;
+  font-family: var(--title);
+  font-size: 7px;
+  font-style: normal;
+  white-space: nowrap;
+  color: #fff;
+  background: #3070c0;
+  border: 2px solid var(--dk-surface-0, #fff);
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+.lobby-realm-hour.on {
+  background: #d08018;
+}

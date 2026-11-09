@@ -1,3 +1,4 @@
+import { realmHourTag } from './realmHour'
 import { accountState, accountsEnabled, giftInbox, onAccountChange, onInbox, onSaveSynced, type AccountState } from '../account'
 import { lobbyPress } from '../analytics'
 import { playSfx } from '../engine/audio'
@@ -854,6 +855,7 @@ const realmTopButton = (onClick: () => void, friends: Promise<number> | null) =>
   el.classList.add('lobby-realm-top')
   if (!realmSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
   palsBadge(el, friends)
+  realmHourTag(el, false)
   return el
 }
 
@@ -877,6 +879,7 @@ const realmEntry = (rails: boolean, friends: Promise<number> | null) => {
   if (!realmSeen()) el.append(h('em', { class: 'lobby-new' }, t().coop.fresh))
   // The tile's built before it's in the page: the answer lands after.
   palsBadge(el, friends, rails ? null : line)
+  realmHourTag(el, !rails)
   return el
 }
 
