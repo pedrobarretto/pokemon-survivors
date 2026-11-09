@@ -24,12 +24,13 @@ import { drawPokemon, loadedSprites, loadSpecies, type Dex } from './sprites'
  * Where the stage stands in view px. The lobby also says what surrounds it, so
  * the Pokémon keep out of the way: `floor`, the top of what covers the grass
  * below; `left` and `right`, how far from `x` the grass stays uncovered at the
- * feet line; `top`, where the sky under the mode's title starts; `roof`, the top of
+ * feet line; `half`, the slot's half width (world px), which the ridge's walkers stay inside; `top`, where the sky under the mode's title starts; `roof`, the top of
  * the tallest place on the horizon; `standing`, the ranges (from `x`) a walker on the
- * ridge keeps out of, so nobody peeks from behind a building or an arrow. None of
+ * ridge keeps out of, so nobody peeks from behind a building or an arrow; `grounded`,
+ * the same for the arrows that stand as low as the grass lanes (roamers keep to the wider side of one). None of
  * them on the rest screen and the menus.
  */
-export type StageAnchor = { x: number; feet: number; floor?: number; left?: number; right?: number; top?: number; roof?: number; standing?: readonly StageSpan[] }
+export type StageAnchor = { x: number; feet: number; floor?: number; left?: number; right?: number; half?: number; top?: number; roof?: number; standing?: readonly StageSpan[]; grounded?: readonly StageSpan[] }
 
 /** A stretch of the view, in view px from the stage's middle. */
 export type StageSpan = { from: number; to: number }
@@ -391,6 +392,22 @@ export const PLACE_SINK = 5
 /** Where a far place's base sits over the horizon, on the near ridge (world px). */
 export const PLACE_LIFT = 6
 
+/** What `sideZone` found: the distances from the platform's middle a roamer keeps between. */
+const zone = { near: 0, far: 0 }
+
+/** The stretch of a side a roamer of half width `body` may walk: between `inner` and `reach`, on the wider side of any arrow standing on the grass. */
+const sideZone = (side: -1 | 1, inner: number, reach: number, grounded: readonly StageSpan[] | undefined, body: number) => {
+  zone.near = inner
+  zone.far = reach - body
+  if (!grounded) return
+  for (const span of grounded) {
+    const [nearEdge, farEdge] = side < 0 ? [-span.to, -span.from] : [span.from, span.to]
+    if (farEdge <= zone.near || nearEdge >= zone.far) continue
+    if (nearEdge - zone.near >= zone.far - farEdge) zone.far = nearEdge - body
+    else zone.near = farEdge + body
+  }
+}
+
 const roamerFor = (wild: Wild, i: number): Roamer => ({ wild, x: 0, y: 0, tx: 0, ty: 0, wait: 0, dir: wild.side > 0 ? 6 : 2, placed: false, shown: false, phase: i * 0.37 })
 
 /** The back rows first. */
@@ -399,28 +416,27 @@ const byDepth = (a: Roamer, b: Roamer) => a.y - b.y
 /** Walks the roamers on their side of the platform; those a layout can't fit don't show. */
 const stepRoamers = (s: LobbyStage, w: number, h: number, at: StageAnchor, dt: number) => {
   const lobby = at.floor !== undefined
-  // Every roamer's slot in its side, so a tight side sends the extra ones away.
+  // Counts a side's roamers, so a tight side sends the extra ones away.
   let left = 0
   let right = 0
   const reachL = at.left ?? w / 2 - 10
   const reachR = at.right ?? w / 2 - 10
   const inner = PLATFORM.rx + ZONE_GAP
-  const fitL = reachL - inner < ZONE_MIN ? 0 : Math.max(1, Math.floor((reachL - inner) / ROAMER_ROOM))
-  const fitR = reachR - inner < ZONE_MIN ? 0 : Math.max(1, Math.floor((reachR - inner) / ROAMER_ROOM))
   for (const r of s.roamers) {
     const sprite = loadedSprites(r.wild.dex)
     const side = r.wild.side
     const nth = side < 0 ? left++ : right++
     r.shown = false
-    if (!sprite || nth >= (side < 0 ? fitL : fitR)) continue
+    if (!sprite) continue
+    sideZone(side, inner, side < 0 ? reachL : reachR, at.grounded, sprite.bodyW / 2 + 4)
+    const room = zone.far - zone.near
+    if (room < ZONE_MIN || nth >= Math.max(1, Math.floor(room / ROAMER_ROOM))) continue
     const air = r.wild.air ?? 0
     // On the lobby a lane starts where this body's head clears the places' bases; on the rest screen, on the grass.
     const top = lobby ? PLACE_SINK - HORIZON_RISE + sprite.bodyH + air + 4 : air + 12 - HORIZON_RISE
     const bottom = (at.floor ?? h) - at.feet - (lobby ? 3 : 10)
     if (bottom < top) continue
-    const near = inner * side
-    const far = (side < 0 ? reachL : reachR) * side
-    const [lo, hi] = side < 0 ? [far, near] : [near, far]
+    const [lo, hi] = side < 0 ? [-zone.far, -zone.near] : [zone.near, zone.far]
     if (!r.placed || r.x < lo - 1 || r.x > hi + 1 || r.y < top - 1 || r.y > bottom + 1) {
       r.x = r.tx = range(s.rng, lo, hi)
       r.y = r.ty = range(s.rng, top, bottom)
@@ -465,6 +481,8 @@ const drawRoamers = (ctx: CanvasRenderingContext2D, s: LobbyStage, at: StageAnch
 const RIDGE_DEEP = 30
 const RIDGE_RISE = 16
 const RIDGE_SPEED = 10
+/** How far over the horizon the heads of the ridge's walkers can reach (world px). */
+export const stageRidgeReach = 52
 /** Margin from a place's sides for a walker's body, and how far ahead it looks before going down (world px). */
 const RIDGE_CLEAR = 14
 const RIDGE_LOOK = 16
@@ -475,6 +493,9 @@ const ridgeCount = (scene: StageScene) => (detail.lean ? 1 : scene === 'rest' ? 
 /** Comes up behind the crest, walks along it (stopping to look around) and goes down again, elsewhere next time. */
 const stepRidge = (s: LobbyStage, w: number, at: StageAnchor, count: number, dt: number) => {
   const standing = at.standing
+  // In the lobby they keep to the stage's column: past it the side cards would cut them in half.
+  const minX = at.half !== undefined ? at.x - at.half + 10 : 8
+  const maxX = at.half !== undefined ? at.x + at.half - 10 : w - 8
   const blocked = (x: number) => {
     if (!standing) return false
     for (const span of standing) if (x - at.x > span.from - RIDGE_CLEAR && x - at.x < span.to + RIDGE_CLEAR) return true
@@ -491,7 +512,7 @@ const stepRidge = (s: LobbyStage, w: number, at: StageAnchor, count: number, dt:
     if (r.state === 'away') {
       if (r.timer > 0) continue
       r.dex = RIDGE[Math.floor(s.rng() * RIDGE.length)]!
-      r.x = range(s.rng, w * 0.08, w * 0.92)
+      r.x = range(s.rng, minX, maxX)
       r.way = s.rng() < 0.5 ? -1 : 1
       // Behind a building it would only peek out: try again in a moment.
       if (blocked(r.x)) {
@@ -516,7 +537,7 @@ const stepRidge = (s: LobbyStage, w: number, at: StageAnchor, count: number, dt:
     if (r.state === 'rise' || r.state === 'walk' || r.state === 'set') {
       r.x += r.way * RIDGE_SPEED * dt
       // About to reach a building or the view's edge: goes down the far side instead.
-      if (r.state !== 'set' && (blocked(r.x + r.way * RIDGE_LOOK) || r.x < 8 || r.x > w - 8)) r.state = 'set'
+      if (r.state !== 'set' && (blocked(r.x + r.way * RIDGE_LOOK) || r.x < minX || r.x > maxX)) r.state = 'set'
     }
   }
 }
@@ -534,9 +555,11 @@ const drawRidge = (ctx: CanvasRenderingContext2D, s: LobbyStage, horizon: number
 
 /** The V a flock flies in (from the leader, world px, flying right; mirrored flying left). */
 /** How far under the title the flock's lowest line starts: its bodies and formation stand over it. */
-const FLOCK_HEADROOM = 34
-/** How far over the places' roofs the flock's line stays: enough for the formation's low wing and its bob. */
-const FLOCK_CLEAR = 14
+const FLOCK_HEADROOM = 30
+/** How far over the places' roofs the flock's line stays: the formation's low wing, its bob and a Fly sheet's wings, which hang past the measured body. */
+const FLOCK_CLEAR = 22
+/** The band it flies in up top when there's no sky left under the title (world px from the view's top). */
+const FLOCK_HIGH = [36, 46] as const
 
 const FORMATION = [
   [0, 0],
@@ -547,9 +570,10 @@ const FORMATION = [
 const stepFlock = (s: LobbyStage, w: number, h: number, at: StageAnchor, night: boolean, dt: number) => {
   // Under the title and over the places' roofs; on the rest screen, in the sky around the logo.
   const horizon = at.feet - HORIZON_RISE
-  const bottom = at.roof !== undefined ? at.roof - FLOCK_CLEAR : horizon - 44
-  // Where the roofs leave no sky under the title, it flies over them anyway: behind the title's pills is fine, behind a building isn't.
-  const top = Math.min(bottom, at.top !== undefined ? at.top + FLOCK_HEADROOM : h * 0.12)
+  const low = at.roof !== undefined ? at.roof - FLOCK_CLEAR : horizon - 44
+  const high = at.top !== undefined ? at.top + FLOCK_HEADROOM : h * 0.12
+  // Where the roofs leave no sky under the title, the flock flies high over the title instead: never through the roofs or its see-through pills.
+  const [top, bottom] = low < high ? FLOCK_HIGH : [high, low]
   if (s.flock) {
     const f = s.flock
     f.x += f.way * f.speed * dt

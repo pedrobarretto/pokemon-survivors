@@ -50,14 +50,40 @@ export const cafePose = (patron: Patron, time: number, out: CafePose) => {
   out.bubble = key.bubble ?? null
 }
 
-const HEART = ['.r.r.', 'rrrrr', 'rrrrr', '.rrr.', '..r..']
-const NOTE = ['..kk', '..k.', '..k.', 'kkk.', 'kk..']
+/** A speech bubble with what's being said inside: white and outlined, so it reads over the café's busy art. */
+const HEART = [
+  '.kkkkkkkkk.',
+  'kwwwwwwwwwk',
+  'kwwwrwrwwwk',
+  'kwwrrrrrwwk',
+  'kwwrrrrrwwk',
+  'kwwwrrrwwwk',
+  'kwwwwrwwwwk',
+  'kwwwwwwwwwk',
+  '.kkkkkwkkk.',
+  '....kwk....',
+  '.....k.....',
+]
+const NOTE = [
+  '.kkkkkkkkk.',
+  'kwwwwwwwwwk',
+  'kwwwwkkwwwk',
+  'kwwwwkwwwwk',
+  'kwwwwkwwwwk',
+  'kwwkkkwwwwk',
+  'kwwkkwwwwwk',
+  'kwwwwwwwwwk',
+  '.kkkkkwkkk.',
+  '....kwk....',
+  '.....k.....',
+]
+const BUBBLE_COLORS = { k: '#2b2748', w: '#fffdf2', r: '#e8506a' } as const
 
 /** The little heart and note that pop over a patron talking. */
 export const cafeBubbles = lazy(
   (): Record<CafeBubble, HTMLCanvasElement> => ({
-    heart: fromStrings(HEART, { r: '#e8506a' }),
-    note: fromStrings(NOTE, { k: '#2b2748' }),
+    heart: fromStrings(HEART, BUBBLE_COLORS),
+    note: fromStrings(NOTE, BUBBLE_COLORS),
   }),
   'lobby',
 )

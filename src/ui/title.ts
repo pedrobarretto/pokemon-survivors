@@ -17,7 +17,7 @@ import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/su
 import { formatNumber, LOCALES, locale, t } from '../i18n'
 import { arenaIcon, bulbIcon, chevronIcon, coinIcon, coopIcon, discordIcon, eggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
-import { loadStage, stageHorizonRise, type StageAnchor, type StageClouds, type StageScene, type StageSpan } from '../render/lobbyStage'
+import { loadStage, stageHorizonRise, stageRidgeReach, type StageAnchor, type StageClouds, type StageScene, type StageSpan } from '../render/lobbyStage'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
 import type { Place } from '../render/titleScene'
@@ -555,7 +555,7 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
         const x = mid + Math.round(pose.x)
         blitPacked(ctx, ellipse(Math.max(6, Math.round(s.bodyW * 0.45)), 2, 'rgba(16,24,16,0.3)'), x, feet)
         drawPokemon(ctx, s, pose.anim, pose.dir, time, x, feet)
-        if (pose.bubble) blitCentered(ctx, cafeBubbles()[pose.bubble], x, feet - s.bodyH - 8)
+        if (pose.bubble) blitCentered(ctx, cafeBubbles()[pose.bubble], x, feet - s.bodyH - 9 - (Math.floor(time * 2.5) % 2))
       }
     }
     if (cast.ribbon && ribbon.complete) {
@@ -714,6 +714,10 @@ export const titleScreen = (
   let placesAge = 0
   /** What walkers on the ridge keep out of (world px from the stage's middle): the places, and the arrows that reach down that far. */
   let standing: readonly StageSpan[] = []
+  /** The same on the rest screen: the logo. */
+  let restStanding: readonly StageSpan[] = []
+  /** The arrows that stand as low as the grass lanes (world px from the stage's middle). */
+  let grounded: readonly StageSpan[] = []
   /** How far the grass stays uncovered around the slot (view px from its middle, `floor` from the top); measured a few times a second. */
   let around = { left: 0, right: 0, floor: 0 }
   let aroundAge = 0
@@ -1188,7 +1192,9 @@ export const titleScreen = (
         const roof = places.tick({ rise: Math.round(stageHorizonRise * scale), world: scale, dpr, full, width: rect.width / zoom, height: rect.height / zoom, cast: painter.half(), blocks })
         placesRoof = roof > 0 ? roof / scale : null
         // The ridge's heads reach this high over the slot's bottom: an arrow lower than that stands in their way.
-        const ridgeTop = (stageHorizonRise + 52) * scale
+        const ridgeTop = (stageHorizonRise + stageRidgeReach) * scale
+        // A roamer's head reaches this high: an arrow lower than that stands on its lane.
+        grounded = blocks.filter((b) => b.bottom < 40 * scale).map((b) => ({ from: b.left / scale, to: b.right / scale }))
         standing = [...places.spans(), ...blocks.filter((b) => b.bottom < ridgeTop).map((b) => ({ from: b.left, to: b.right }))].map((b) => ({ from: b.from / scale, to: b.to / scale }))
       },
     ]
@@ -1528,9 +1534,15 @@ export const titleScreen = (
       if (rect && rect.width > 0 && lobby) {
         if (aroundAge++ % 20 === 0) around = surroundings(lobby, rect, scale, w, vh)
         const feet = Math.round(rect.bottom / scale)
-        anchor = { x: Math.round((rect.left + rect.width / 2) / scale), feet, ...around, top: Math.round(rect.top / scale), standing, ...(placesRoof !== null && { roof: feet - stageHorizonRise - placesRoof }) }
+        anchor = { x: Math.round((rect.left + rect.width / 2) / scale), feet, ...around, half: Math.floor(rect.width / 2 / scale), top: Math.round(rect.top / scale), standing, grounded, ...(placesRoof !== null && { roof: feet - stageHorizonRise - placesRoof }) }
       }
-      const at = anchor ?? { x: Math.round(w / 2), feet: Math.round(vh * 0.72) }
+      if (!lobby && aroundAge++ % 20 === 0) {
+        // On the rest screen, walkers on the ridge keep out from behind the logo where it comes down that far.
+        const box = logo.getBoundingClientRect()
+        const reaches = box.height > 0 && box.bottom / scale > vh * 0.72 - stageHorizonRise - stageRidgeReach
+        restStanding = reaches ? [{ from: box.left / scale - w / 2, to: box.right / scale - w / 2 }] : []
+      }
+      const at = anchor ?? { x: Math.round(w / 2), feet: Math.round(vh * 0.72), standing: restStanding }
       actions.meadow.stage(ctx, dt, w, vh, at, slot ? mode : 'rest')
       actions.meadow.tickClouds(w, at.feet - stageHorizonRise)
     },
