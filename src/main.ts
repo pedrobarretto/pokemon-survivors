@@ -3159,6 +3159,16 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
   return made.code
 }
 
+const devMinigame = async (game: unknown) => {
+  const { isMinigameId, MINIGAME_IDS } = await import('./data/minigames')
+  if (!isMinigameId(game)) return `ps.minigame: ${MINIGAME_IDS.join(', ')}`
+  const { openGame } = await import('./realm/games/registry')
+  const save = loadSave()
+  let screen: { dispose: () => void } | null = null
+  screen = await openGame(document.body, game, { input, partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
+  return screen
+}
+
 /**
  * Dev: `ps.realm('local')` opens the realm on the in-page host with bots and
  * the faked API (`realmShell.ts`), `('off')` back to the relay, `('fake')`
@@ -4840,20 +4850,25 @@ if (import.meta.env.DEV) {
        * A Poké Realm mini game on its own, over whatever is on screen (`realm/games/registry.ts`): `ps.minigame('fishing')`,
        * a table game against the bot (`'fourInRow'`, `'typeDuel'`). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
        */
-      minigame: async (game: unknown) => {
-        const { isMinigameId, MINIGAME_IDS } = await import('./data/minigames')
-        if (!isMinigameId(game)) return `ps.minigame: ${MINIGAME_IDS.join(', ')}`
-        const { openGame } = await import('./realm/games/registry')
-        const save = loadSave()
-        let screen: { dispose: () => void } | null = null
-        screen = await openGame(document.body, game, { input, partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
-        return screen
-      },
+      minigame: devMinigame,
       /**
        * The claw machine's faked state (after `ps.realm('fake')`, open it with `ps.minigame('claw')`): `ps.claw()` puts the week's
-       * exclusive plush one miss short of sure, `ps.claw(2, 4)` 4 misses on the week's third plush, `ps.claw(2, 4, 9)` also 9 credits used today.
+       * first plush one miss short of sure, `ps.claw(2, 4)` 4 misses on the week's third plush, `ps.claw(2, 4, 9)` also 9 credits used today.
        */
       claw: async (index?: number, misses?: number, used?: number) => (await import('./realm/clawApi')).stageClaw(index, misses, used),
+      /**
+       * The Zona Safári with the faked API (`ps.realm('fake')` on, then its screen): `ps.safari()`. `ps.safari('sure')` puts the guarantee's bush in the next
+       * session, `ps.safari('catch')` makes every ball hold and `ps.safari('flee')` every ball break and its Pokémon run (`'real'` back to the dice), `ps.safari('dry', 3)` sets the sessions without a new family and `ps.safari('used', 2)` the sessions used today.
+       */
+      safari: async (what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used', n?: number) => {
+        await devRealm('fake')
+        if (what === undefined) return devMinigame('safari')
+        const { stageSafari } = await import('./realm/safariApi')
+        if (what === 'sure') return stageSafari({ sure: true })
+        if (what === 'dry') return stageSafari({ dry: n ?? 0 })
+        if (what === 'used') return stageSafari({ used: n ?? 0 })
+        return stageSafari({ catches: what === 'catch', flees: what === 'flee' })
+      },
       /**
        * A mini game's Placar (`realm/games/board.ts`) over whatever is on screen: `ps.realmBoard('fishing')`, `('arcade')`
        * the arcade's games in tabs, a second `'week'` on the week. `ps.realm('fake')` first fakes the boards.

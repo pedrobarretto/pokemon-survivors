@@ -2,6 +2,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
+import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -6331,6 +6332,7 @@ export const en: Messages = {
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.en,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.en.words,
+    safari: SEASON_ONE_SAFARI_WORDS.en.words,
     close: 'Leave',
     choose: 'Which game?',
     games: {
@@ -6340,8 +6342,9 @@ export const en: Messages = {
       fourInRow: { name: 'Four in a Row', blurb: 'Line up four Poké Balls before your rival.' },
       typeDuel: { name: 'Type Duel', blurb: 'Fire beats Grass, Grass beats Water, Water beats Fire.' },
       claw: SEASON_ONE_CLAW_WORDS.en.game,
+      safari: SEASON_ONE_SAFARI_WORDS.en.game,
     },
-    feats: { fishing: { feebas: 'I caught a Feebas!', shinyGyarados: 'I caught a shiny Gyarados!!', wishiwashi: 'I caught a Wishiwashi!', bigHaul: 'A 300-point catch!' }, berryCatch: { flawless: 'A flawless Berry Rain!', goldRush: 'Three golden berries in one round!', combo50: 'A 50-berry combo!' }, whackDiglett: { combo30: 'A 30-bonk combo!', dugtrio: 'Bonked 5 Dugtrio in one round!' }, fourInRow: {}, typeDuel: { perfectDuel: 'A perfect duel, not a round lost!' }, claw: SEASON_ONE_CLAW_WORDS.en.feats },
+    feats: { fishing: { feebas: 'I caught a Feebas!', shinyGyarados: 'I caught a shiny Gyarados!!', wishiwashi: 'I caught a Wishiwashi!', bigHaul: 'A 300-point catch!' }, berryCatch: { flawless: 'A flawless Berry Rain!', goldRush: 'Three golden berries in one round!', combo50: 'A 50-berry combo!' }, whackDiglett: { combo30: 'A 30-bonk combo!', dugtrio: 'Bonked 5 Dugtrio in one round!' }, fourInRow: {}, typeDuel: { perfectDuel: 'A perfect duel, not a round lost!' }, claw: SEASON_ONE_CLAW_WORDS.en.feats, safari: SEASON_ONE_SAFARI_WORDS.en.feats },
     duel: {
       pick: 'Pick a card',
       play: 'Play',
