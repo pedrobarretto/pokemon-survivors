@@ -405,7 +405,8 @@ export const sitePt = {
         ['Navegar nos menus', 'Setas, Enter confirma, Esc volta', 'D-pad ou analógico esquerdo, A confirma, B volta', 'Toque'],
         ['Escolher upgrade', '1 a 3, ou ↑ ↓ e Enter', 'D-pad e A', 'Toque na opção'],
         ['Escolher o parceiro', 'Setas na grade, Tab Iniciais/Ovos, 1 a 9 região, I detalhes, Enter começa', 'D-pad (↓ na última linha leva aos Ovos) e A', 'Toque para ver, toque de novo (ou Começar) para jogar'],
-        ['Ir à Loja do Kecleon', 'L no lobby (ou na escolha de parceiro), ou ande até a praça e aperte E', 'D-pad até Loja e A', 'Toque em Loja, no Kecleon ou na plaquinha que aponta para a praça'],
+        ['Trocar de modo no lobby', 'Q e E, ou 1 a 7', 'D-pad até a barra de modos e A', 'Setas redondas ou barra de modos'],
+        ['Ir à Loja do Kecleon', 'L no lobby (ou na escolha de parceiro)', 'D-pad até Loja e A', 'Toque em Loja, no lobby ou na aba Praça'],
         ['Som liga/desliga', 'M', 'Ajustes', 'Ajustes'],
         ['Idioma', 'I na tela de título, ou Ajustes', 'Ajustes', 'PT | EN | ES na tela de título, ou Ajustes'],
       ],
@@ -552,7 +553,7 @@ export const sitePt = {
     /** The Poké Realm: the online town, its secret bases and mini games (`REALM` in `net/realm.ts`, `data/secretBases.ts`, `data/furniture.ts`, `data/minigames.ts`). */
     realm: {
       paragraphs: (m: { cities: readonly string[]; cap: number; party: number; items: number; cols: number; rows: number; sold: number; coins: number; gems: number }) => [
-        `No lobby, o botão Realm (tecla K) abre o Poké Realm, a cidade online do jogo. Escolha uma das ${m.cities.length} cidades (${list(m.cities)}): cada uma é uma cópia da mesma vila, com até ${m.cap} treinadores. Você anda como o seu parceiro, com o visual que usa (chapéus, rastro, título, skin e emote), e vê os outros treinadores andando ao seu lado. Precisa de uma conta com @nome.`,
+        `No lobby, o botão Realm (tecla K) abre o Poké Realm, a cidade online do jogo. Você entra direto na primeira das ${m.cities.length} cidades com vaga (${list(m.cities)}) e pode trocar lá dentro, ou ir até um amigo: cada uma é uma cópia da mesma vila, com até ${m.cap} treinadores. Você anda como o seu parceiro, com o visual que usa (chapéus, rastro, título, skin e emote), e vê os outros treinadores andando ao seu lado. Precisa de uma conta com @nome.`,
         `Todos chegam na Praça, com o portal do Co-op, o da Arena, o mural e a porta do Café, que tem duas mesas de jogos. A leste fica o Píer, com o fliperama e a plataforma de pesca, e a oeste o Bosque das Bases. A conversa é só por frases rápidas e emotes, nunca texto livre, e cada um lê no próprio idioma. Toque num treinador para chamá-lo para o grupo (até ${m.party}), silenciar ou denunciar; quando o líder entra num portal, o grupo inteiro vai junto para uma sala de Co-op ou da Arena.`,
         `Toda conta com @nome tem uma base secreta, com a entrada no alto do Bosque das Bases, onde o Sudowoodo explica tudo. Lá dentro, toque em ✎ para arrumar até ${m.items} peças numa sala de ${m.cols}×${m.rows} quadrados, escolher a entrada (caverna, árvore, arbusto ou areia) e quem pode entrar: todo mundo, só amigos ou ninguém. No Mural de bases você vê as bases públicas mais curtidas, as mais novas e as dos amigos, entra para visitar e deixa uma curtida.`,
         `Os móveis vêm da Carpintaria do Bibarel, na praça do Kecleon (no lobby) e no Bosque: ${m.sold} peças à venda, ${m.coins} por ₽ e ${m.gems} por gemas. Outras só se ganham: o boneco de cada lendário capturado, os quadros dos lendários e os troféus dos mini games. Como os visuais, os móveis não mudam nada nas partidas.`,
@@ -582,7 +583,7 @@ export const sitePt = {
       opensHead: 'Golpe lendário',
       pressureTitle: 'Dificuldades no Modo Lendário',
       pressure: 'A Pressão soma-se a cada dificuldade: os multiplicadores do Modo Lendário ficam assim.',
-      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)' },
+      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10, sobe a cada final sem mítico)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Na Noite das Bruxas de 2026 (24 de outubro a 2 de novembro), o Darkrai chega como lenda de evento: ele só aparece na fenda do Pesadelo, que pode tomar o lugar de uma fenda numa partida assombrada, e é capturado com 2 vitórias. Joga com o Dark Void, que faz as multidões dormirem, e a inata Bad Dreams, que fere quem dorme perto dele. Depois do evento ele volta para as sombras, mas quem o capturou segue jogando com ele. Ele não conta para o Arceus.',
     },
@@ -691,7 +692,7 @@ export const sitePt = {
       ],
       trios: (times: readonly string[], trios: readonly string[], mythicals: string, percent: number) => [
         `Às ${list(times)} chegam os três membros de um trio lendário, sorteado no começo de cada partida: ${list(trios)}. HP, dano de contato e velocidade são do horário, não do Pokémon, então nenhum sorteio é mais fácil que outro; o que muda são os ataques.`,
-        `No fim, com ${n(percent)}% de chance, um Pokémon mítico chega junto com o Mewtwo: ${mythicals}, também sorteado por partida.`,
+        `No fim, com ${n(percent)}% de chance, um Pokémon mítico chega junto com o Mewtwo: ${mythicals}, também sorteado por partida. Depois de 5 finais sem derrotar um mítico a chance sobe a cada final, até ser garantida na 21ª, e vem um que você ainda não tem.`,
       ],
       timeHead: 'Tempo',
       bossHead: 'Chefe',

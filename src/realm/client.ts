@@ -86,7 +86,7 @@ const isFacing = (v: unknown): v is Facing => Number.isInteger(v) && isNum(v) &&
 /** A look from the wire: slot to id strings only (the game's `parseLook` keeps the known ones). */
 export const parseAvatar = (v: unknown): Avatar | null => {
   if (!isRecord(v)) return null
-  const { id, handle, partner, shiny, look, supporter, x, y, facing, moving, act } = v
+  const { id, handle, partner, shiny, look, supporter, stamps, x, y, facing, moving, act } = v
   if (!isNum(id) || !isStr(handle, 32) || !isStr(partner, 32) || !isNum(x) || !isNum(y) || !isFacing(facing)) return null
   return {
     id,
@@ -95,6 +95,7 @@ export const parseAvatar = (v: unknown): Avatar | null => {
     shiny: shiny === true,
     look: parseWireLook(look) ?? {},
     supporter: isStr(supporter, 32) ? supporter : null,
+    stamps: isNum(stamps) ? stamps : 0,
     x,
     y,
     facing,
@@ -205,6 +206,10 @@ export const parseRealmMessage = (text: unknown): RealmServerMessage | null => {
       return isNum(v.at) ? { t: 'pong', at: v.at } : null
     case 'baseInvited':
       return isStr(v.from, 32) && /^[A-Za-z0-9_]+$/.test(v.from) && isCityId(v.city) ? { t: 'baseInvited', from: v.from, city: v.city } : null
+    case 'stamped':
+      return isNum(v.id) && Array.isArray(v.stamps) ? { t: 'stamped', id: v.id, stamps: v.stamps.filter((s): s is string => isStr(s, 32)) } : null
+    case 'errands':
+      return Array.isArray(v.done) ? { t: 'errands', done: v.done.filter((d): d is string => isStr(d, 64)) } : null
     case 'refused': {
       const why = REFUSALS.find((r) => r === v.why)
       return why ? { t: 'refused', why } : null
@@ -280,7 +285,8 @@ export const createRealmClient = (deps: RealmDeps): RealmClient => {
           status = { kind: 'refused', why: m.why }
           drop()
         }
-        for (const fn of listeners) fn(m)
+        // A copy: a listener may swap the screen, and the new one must not hear this message too.
+        for (const fn of [...listeners]) fn(m)
       },
       close: () => {
         if (!mine()) return

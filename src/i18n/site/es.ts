@@ -359,7 +359,8 @@ export const siteEs: SiteMessages = {
         ['Navegar por los menús', 'Flechas, Enter confirma, Esc vuelve', 'D-pad o stick izquierdo, A confirma, B vuelve', 'Toca'],
         ['Elegir mejora', '1 a 3, o ↑ ↓ y Enter', 'D-pad y A', 'Toca la opción'],
         ['Elegir al compañero', 'Flechas en la cuadrícula, Tab Iniciales/Huevos, 1 a 9 región, I detalles, Enter empieza', 'D-pad (↓ en la última fila lleva a Huevos) y A', 'Toca para ver, toca otra vez (o Empezar) para jugar'],
-        ['Ir a la Tienda Kecleon', 'L en el lobby (o en la selección de compañero), o camina hasta la plaza y pulsa E', 'D-pad hasta Tienda y A', 'Toca Tienda, a Kecleon o el letrerito que apunta a la plaza'],
+        ['Cambiar de modo en el lobby', 'Q y E, o 1 a 7', 'D-pad hasta la barra de modos y A', 'Flechas redondas o la barra de modos'],
+        ['Ir a la Tienda Kecleon', 'L en el lobby (o en la selección de compañero)', 'D-pad hasta Tienda y A', 'Toca Tienda, en el lobby o en la pestaña Plaza'],
         ['Activar/desactivar sonido', 'M', 'Ajustes', 'Ajustes'],
         ['Idioma', 'I en la pantalla de título, o Ajustes', 'Ajustes', 'PT | EN | ES en la pantalla de título, o Ajustes'],
       ],
@@ -503,7 +504,7 @@ export const siteEs: SiteMessages = {
     },
     realm: {
       paragraphs: (m) => [
-        `En el lobby, el botón Realm (tecla K) abre el Poké Realm, la ciudad en línea del juego. Elige una de las ${m.cities.length} ciudades (${list(m.cities)}): cada una es una copia del mismo pueblo, con hasta ${m.cap} entrenadores. Caminas como tu compañero, con el estilo que usas (sombreros, rastro, título, skin y emote), y ves a los otros entrenadores caminando a tu lado. Necesitas una cuenta con @nombre.`,
+        `En el lobby, el botón Realm (tecla K) abre el Poké Realm, la ciudad en línea del juego. Entras directo en la primera de las ${m.cities.length} ciudades con lugar (${list(m.cities)}) y puedes cambiar desde allí, o ir hasta un amigo: cada una es una copia del mismo pueblo, con hasta ${m.cap} entrenadores. Caminas como tu compañero, con el estilo que usas (sombreros, rastro, título, skin y emote), y ves a los otros entrenadores caminando a tu lado. Necesitas una cuenta con @nombre.`,
         `Todos llegan a la Plaza, con el portal del Co-op, el de la Arena, el mural y la puerta del Café, que tiene dos mesas de juegos. Al este está el Muelle, con el arcade y la plataforma de pesca, y al oeste el Bosque de Bases. La charla es solo con frases rápidas y emotes, nunca texto libre, y cada uno la lee en su idioma. Toca a un entrenador para invitarlo al grupo (hasta ${m.party}), silenciarlo o denunciarlo; cuando el líder entra en un portal, todo el grupo va con él a una sala de Co-op o de la Arena.`,
         `Toda cuenta con @nombre tiene una base secreta, con la entrada en lo alto del Bosque de Bases, donde Sudowoodo lo explica todo. Adentro, toca ✎ para acomodar hasta ${m.items} piezas en una sala de ${m.cols}×${m.rows} casillas, elegir la entrada (cueva, árbol, arbusto o arena) y quién puede entrar: todos, solo amigos o nadie. En el Mural de bases ves las bases públicas con más likes, las más nuevas y las de tus amigos, entras de visita y dejas un like.`,
         `Los muebles vienen de la Carpintería de Bibarel, en la plaza de Kecleon (en el lobby) y en el Bosque: ${m.sold} piezas a la venta, ${m.coins} por ₽ y ${m.gems} por gemas. Otras solo se ganan: el muñeco de cada legendario capturado, los cuadros de los legendarios y los trofeos de los minijuegos. Como los estilos, los muebles no cambian nada en las partidas.`,
@@ -533,7 +534,7 @@ export const siteEs: SiteMessages = {
       opensHead: 'Movimiento legendario',
       pressureTitle: 'Dificultades en el Modo Legendario',
       pressure: 'La Presión se suma a cada dificultad: así quedan los multiplicadores del Modo Legendario.',
-      where: { rift: 'Grieta legendaria', trio: 'Trío legendario', mythical: 'Junto a Mewtwo (1 de cada 10)', finale: 'Jefe final', endless: 'Modo infinito, al final', event: 'Noche de Brujas 2026 (evento)', festival: 'Festival de las Linternas 2026 (premio)' },
+      where: { rift: 'Grieta legendaria', trio: 'Trío legendario', mythical: 'Junto a Mewtwo (1 de cada 10, sube tras cada final sin mítico)', finale: 'Jefe final', endless: 'Modo infinito, al final', event: 'Noche de Brujas 2026 (evento)', festival: 'Festival de las Linternas 2026 (premio)' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'En la Noche de Brujas de 2026 (del 24 de octubre al 2 de noviembre), Darkrai llega como legendario de evento: solo aparece en la grieta de la Pesadilla, que puede tomar el lugar de una grieta en una partida embrujada, y se captura con 2 victorias. Juega con Dark Void, que duerme a las multitudes, y la innata Bad Dreams, que hiere a quien duerme cerca de él. Después del evento vuelve a las sombras, pero quien lo capturó sigue jugando con él. No cuenta para Arceus.',
     },
@@ -641,7 +642,7 @@ export const siteEs: SiteMessages = {
       ],
       trios: (times, trios, mythicals, percent) => [
         `A las ${list(times)} llegan los tres miembros de un trío legendario, sorteado al comienzo de cada partida: ${list(trios)}. El HP, el daño por contacto y la velocidad dependen del horario, no del Pokémon, así que ningún sorteo es más fácil que otro; lo que cambia son los ataques.`,
-        `Al final, con un ${n(percent)}% de probabilidad, un Pokémon mítico llega junto con Mewtwo: ${mythicals}, también sorteado en cada partida.`,
+        `Al final, con un ${n(percent)}% de probabilidad, un Pokémon mítico llega junto con Mewtwo: ${mythicals}, también sorteado en cada partida. Tras 5 finales sin derrotar a un mítico la probabilidad sube con cada una, hasta ser segura en la 21.ª, y llega uno que aún no tienes.`,
       ],
       timeHead: 'Tiempo',
       bossHead: 'Jefe',

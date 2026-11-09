@@ -28,10 +28,10 @@ const ARROWS: Partial<Record<string, Step>> = { ArrowLeft: 'left', KeyA: 'left',
 /** A Pokémon on a mode's panel: `at` is its share of the panel's width, `small` draws it a pixel size down, `dir` is its facing. */
 type Figure = { dex: Dex; at: number; small?: boolean; dir?: 0 | 2 | 6 }
 type Tag = { text: string; kind?: 'new' | 'hot' }
-type ModeFacts = { blurb: string; tags: Tag[]; figures: Figure[]; pic?: { src: string; class: string } }
+export type ModeFacts = { blurb: string; tags: Tag[]; figures: Figure[]; pic?: { src: string; class: string } }
 
 /** What each card says and shows, read when the screen opens: the counts and the day's Pokémon come from the data. */
-const modeFacts = (): Record<GameModeId, ModeFacts> => {
+export const modeFacts = (): Record<GameModeId, ModeFacts> => {
   const m = t().gameModes
   const challenge = challengeToday()
   const formats = ARENA_FORMAT_IDS.map((f) => m.arenaFormat(VERSUS_FORMATS[f].teamSize, VERSUS_FORMATS[f].length / 60))
@@ -110,20 +110,21 @@ const paintFigures = (canvas: HTMLCanvasElement, figures: readonly Figure[], tim
  * `onPick`; the screen stays up until `close` or the caller's next `setScreen`, so the caller decides whether a pick
  * also leaves.
  */
-export const openGameModes = (root: HTMLElement, input: Input, opts: { current: GameModeId; onPick: (id: GameModeId) => void; close: () => void }): Screen => {
+export const openGameModes = (root: HTMLElement, input: Input, opts: { current: GameModeId; shown?: readonly GameModeId[]; onPick: (id: GameModeId) => void; close: () => void }): Screen => {
   const m = t().gameModes
   const facts = modeFacts()
+  const ids = opts.shown ?? GAME_MODE_IDS
   let selected = opts.current
-  let at = GAME_MODE_IDS.indexOf(selected)
+  let at = ids.indexOf(selected)
   /** The arrows' cursor only shows once they're used: the gold frame already says where the list starts. */
   let cursorShown = false
   let keyedAt = -Infinity
   let closed = false
 
-  for (const id of GAME_MODE_IDS) for (const f of facts[id].figures) void loadSpecies(f.dex).catch(() => {})
+  for (const id of ids) for (const f of facts[id].figures) void loadSpecies(f.dex).catch(() => {})
 
-  const canvases = GAME_MODE_IDS.map(() => h('canvas', { class: 'arc-mode-figures', 'aria-hidden': 'true' }))
-  const cards = GAME_MODE_IDS.map((id, i) => {
+  const canvases = ids.map(() => h('canvas', { class: 'arc-mode-figures', 'aria-hidden': 'true' }))
+  const cards = ids.map((id, i) => {
     const { blurb, pic } = facts[id]
     const card = h(
       'button',
@@ -163,14 +164,14 @@ export const openGameModes = (root: HTMLElement, input: Input, opts: { current: 
 
   const paint = () =>
     cards.forEach((card, i) => {
-      const on = GAME_MODE_IDS[i] === selected
+      const on = ids[i] === selected
       card.classList.toggle('selected', on)
       card.setAttribute('aria-pressed', String(on))
       card.classList.toggle('arc-cursor', cursorShown && i === at)
     })
 
   const pick = (i: number) => {
-    selected = GAME_MODE_IDS[i]!
+    selected = ids[i]!
     at = i
     playSfx('select')
     paint()
@@ -196,7 +197,7 @@ export const openGameModes = (root: HTMLElement, input: Input, opts: { current: 
       paint()
       cards[at]!.scrollIntoView({ block: 'nearest' })
     } else if ((key === 'Enter' || key === 'Space') && document.activeElement !== closeButton) pick(at)
-    else if (/^Digit[1-7]$/.test(key)) pick(Number(key.slice(5)) - 1)
+    else if (/^Digit[1-7]$/.test(key) && Number(key.slice(5)) <= cards.length) pick(Number(key.slice(5)) - 1)
   })
 
   const dispose = () => {
@@ -212,7 +213,7 @@ export const openGameModes = (root: HTMLElement, input: Input, opts: { current: 
     later(opts.close)
   }
 
-  const tick = (time: number) => GAME_MODE_IDS.forEach((id, i) => facts[id].figures.length > 0 && paintFigures(canvases[i]!, facts[id].figures, time))
+  const tick = (time: number) => ids.forEach((id, i) => facts[id].figures.length > 0 && paintFigures(canvases[i]!, facts[id].figures, time))
 
   paint()
   root.append(el)

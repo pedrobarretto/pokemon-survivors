@@ -2,6 +2,7 @@ import { PLAYABLE } from '../../data/hatchlings'
 import { playCry, playSfx } from '../../engine/audio'
 import { blitEllipse, textSprite } from '../../engine/pixelart'
 import { t } from '../../i18n'
+import { runningHour } from '../hours'
 import { cryUrl, drawPokemon, fitSprites, loadSpecies, portraitUrl, sprites } from '../../render/sprites'
 import {
   BIG_HAUL,
@@ -117,9 +118,12 @@ const SHADOW_R = [
 
 const ZONE_X: Record<Zone, readonly [number, number]> = { near: [castX(0), castX(0.38)], mid: [castX(0.38), castX(0.72)], far: [castX(0.72), castX(1)] }
 
+/** Whether the Hora do Realm's high tide is on (`TIDE_ODDS`). */
+const tideNow = () => runningHour(Date.now())?.kind === 'tide'
+
 /** A new shadow somewhere in `zone`, swimming at a depth that fits its size. */
 const newShadow = (zone: Zone): Shadow => {
-  const id = rollCatch(zone, Math.random)
+  const id = rollCatch(zone, Math.random, tideNow())
   const [x0, x1] = ZONE_X[zone]
   const deep = CATCHES[id].size === 2 ? 0.75 : 0.35
   return {
@@ -145,12 +149,14 @@ export const fishing: SoloGame = {
   size: { w: W, h: H },
   start: (ctx: SoloCtx): GameRun => {
     const words = () => t().minigames.fishing
-    void loadFonts(words().hold)
+    void loadFonts(words().hold + t().realm.hours.tideChip)
     void loadSpecies(dexOf(ctx.partner), ctx.shiny).catch(() => {})
     for (const v of CATCH_DEX) if (!v.shiny) void loadSpecies(v.dex).catch(() => {})
 
     let phase: Phase = { kind: 'countdown', t: 0 }
     let left = ROUND_SECONDS
+    /** Read once as the round starts, for the countdown's chip. */
+    const tideOn = tideNow()
     let clock = 0
     let pause = 0
     let shake = 0
@@ -787,6 +793,7 @@ export const fishing: SoloGame = {
       g.fillRect(W - tw - 15, 2, tw + 13, 16)
       g.drawImage(CLOCK(), W - tw - 14, 7)
       bigText(g, secs, left <= 10 ? '#ff7070' : '#ffffff', W - 3 - tw / 2, 3, 2)
+      if (tideOn && phase.kind === 'countdown') say(g, t().realm.hours.tideChip, W / 2, 22, '#a8e8f8')
 
       if (phase.kind === 'countdown') {
         const n = Math.ceil(T.countdown - 0.6 - phase.t)

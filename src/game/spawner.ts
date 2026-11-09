@@ -3,6 +3,7 @@ import { chance, range, weightedPick } from '../engine/rng'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BOSS_FIGHT, bossCandidates, bossWaveAt, ELITE, EVENTS, FINALE, stageAt, stageIndexAt, type WaveEvent } from '../data/waves'
 import { bossReach, chaseOffBosses, finaleEntrance } from './bosses'
+import { mythicalChance } from './mythicalHunt'
 import { runMods } from './legend'
 import { endlessPressure } from './endless'
 import { despawnEnemy, spawnEnemy } from './enemies'
@@ -94,10 +95,15 @@ export const spawnWaveBoss = (g: Game, enemy: EnemyId, at: number, finale = fals
 const runEvent = (g: Game, event: WaveEvent, index: number) => {
   const species = g.roster.events[index]
   switch (event.kind) {
-    case 'boss':
-      if (!species || (event.chance !== undefined && !chance(g.rng, event.chance))) break
-      spawnWaveBoss(g, species, event.at, event.finale)
+    case 'boss': {
+      if (!species) break
+      const mythical = 'mythical' in event
+      const odds = mythical && g.mythicalHunt && event.chance !== undefined ? mythicalChance(event.chance, g.mythicalHunt.dry) : event.chance
+      const comes = odds === undefined || chance(g.rng, odds)
+      if (mythical && g.coop === null) g.events.push({ kind: 'mythicalRoll', enemy: comes ? species : null })
+      if (comes) spawnWaveBoss(g, species, event.at, event.finale)
       break
+    }
     case 'ring':
       if (species) spawnRing(g, species, event.count)
       break

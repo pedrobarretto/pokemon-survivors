@@ -21,3 +21,12 @@ export const saveLobbyMode = (id: GameModeId) => {
     // Storage blocked: the pick lasts until the page closes.
   }
 }
+
+/** The modes this build can play, in the bar's order: one whose action is missing (no relay, no API) doesn't show. */
+export const shownModes = (hidden: readonly GameModeId[]) => GAME_MODE_IDS.filter((id) => !hidden.includes(id))
+
+/** The mode the lobby stands on: the saved one, or the default when this build hides it. */
+export const lobbyModeIn = (saved: GameModeId, shown: readonly GameModeId[]): GameModeId => (shown.includes(saved) ? saved : DEFAULT_GAME_MODE)
+
+/** The mode `step` places away in `shown`, wrapping at both ends (`-1` the previous one, `1` the next). */
+export const modeBeside = (shown: readonly GameModeId[], current: GameModeId, step: -1 | 1): GameModeId => shown[(shown.indexOf(current) + step + shown.length) % shown.length]!

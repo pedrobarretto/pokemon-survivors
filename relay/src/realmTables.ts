@@ -3,6 +3,7 @@ import { REALM_ROOMS, isTownRoomId, type Spot } from '../../src/data/realmMap'
 import { BASE_PREFIX, type RealmServerMessage, type RoomKey } from '../../src/net/realm'
 import { TABLE, type TableMatch, type TableResult, type TableView } from '../../src/net/realmTables'
 import { TABLE_GAMES } from '../../src/realm/games/tables'
+import { noteDeed } from './realmDeeds'
 import type { City, RealmEffect, Trainer } from './realm'
 
 /**
@@ -125,13 +126,20 @@ const start = (city: City, tb: Table, now: number): RealmEffect[] => {
   return [event('realm.table', { city: city.id, game: tb.game, start: true })]
 }
 
-/** Ends the match if its rules (or a forfeit) say it's over. */
-const settle = (city: City, tb: Table): RealmEffect[] => {
+/** Ends the match if its rules (or a forfeit) say it's over. A match played out counts for both seats (`table:human`, `table:win`); a forfeit for neither, or sitting and standing would farm them. */
+const settle = (city: City, tb: Table, now: number): RealmEffect[] => {
   const result = tb.match?.result() ?? null
   if (tb.phase !== 'playing' || !result) return []
   tb.phase = 'over'
   tb.result = result
   tb.awaited = []
+  if (result.forfeit === null)
+    tb.seats.forEach((id, seat) => {
+      const t = id === null ? undefined : city.trainers.get(id)
+      if (!t) return
+      noteDeed(city.deeds, t.identity.userId, 'table:human', now)
+      if (result.winner === seat) noteDeed(city.deeds, t.identity.userId, 'table:win', now)
+    })
   return [event('realm.table', { city: city.id, game: tb.game, draw: result.winner === null, forfeit: result.forfeit !== null })]
 }
 
@@ -179,7 +187,7 @@ export const stand = (city: City, t: Trainer, now: number): RealmEffect[] => {
   if (seat >= 0) {
     if (tb.phase === 'playing') {
       tb.match?.forfeit(seat)
-      out.push(...settle(city, tb))
+      out.push(...settle(city, tb, now))
     }
     tb.seats[seat] = null
   }
@@ -196,7 +204,7 @@ export const play = (city: City, t: Trainer, move: unknown, now: number): RealmE
   const seat = tb.seats.indexOf(t.id)
   if (tb.phase !== 'playing' || !tb.match || seat < 0 || !tb.match.play(seat, move)) return [send(t.conn, { t: 'table', table: viewOf(tb, t.id, now) })]
   awaitNext(tb, now)
-  return [...settle(city, tb), ...broadcast(city, tb, now)]
+  return [...settle(city, tb, now), ...broadcast(city, tb, now)]
 }
 
 /** Ready for another match (after one). */
@@ -214,7 +222,7 @@ export const tickTables = (city: City, now: number): RealmEffect[] => {
     const late = tb.awaited[0]
     if (tb.phase !== 'playing' || late === undefined || now - tb.since < TABLE.turnMs) continue
     tb.match?.forfeit(late)
-    out.push(...settle(city, tb), ...broadcast(city, tb, now))
+    out.push(...settle(city, tb, now), ...broadcast(city, tb, now))
   }
   return out
 }

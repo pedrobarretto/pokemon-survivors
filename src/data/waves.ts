@@ -39,6 +39,13 @@ export const MYTHICALS = ['mew', 'celebi', 'jirachi'] as const satisfies readonl
 export type Mythical = (typeof MYTHICALS)[number]
 
 /**
+ * The mythicals' bad-luck protection (`game/mythicalHunt.ts`), counted in finales
+ * since one last fell: the slot's own `chance` up to `free`, `step` more for each
+ * one past it, and certain at `sure`.
+ */
+export const MYTHICAL_PITY = { free: 5, step: 0.06, sure: 20 } as const
+
+/**
  * Who a boss event brings: a fixed `enemy`, the run's trio member for `trio`
  * slot, or the run's `mythical`. `chance` (0..1) makes the boss a rare
  * appearance; omitted = always. `finale`: the climax (Mewtwo). It blasts the

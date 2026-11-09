@@ -3,6 +3,7 @@ import { MYTHICALS, TRIO_IDS, TRIOS } from '../data/waves'
 import type { PlayableId } from '../data/hatchlings'
 import { isUnlocked } from './eggs'
 import type { Save } from './meta'
+import { mythicalBeaten } from './mythicalHunt'
 import { isRecord, wholeNumber } from './parse'
 import { unlockShinyStarter } from './shinyStarters'
 
@@ -84,6 +85,7 @@ export const recordLegendWin = (save: Save, win: LegendWin): { save: Save; resul
   const next: Save = {
     ...save,
     legends: counted ? { ...save.legends, [legend]: wins } : save.legends,
+    mythicalPity: inList(MYTHICALS, legend) ? mythicalBeaten(save.mythicalPity) : save.mythicalPity,
     shinyStarters: shiny ? unlockShinyStarter(save.shinyStarters, legend) : save.shinyStarters,
   }
   return { save: next, result: { legend, outcome: owned ? 'owned' : caught ? 'caught' : 'escaped', wins: Math.min(wins, need), need, counted, shiny } }
