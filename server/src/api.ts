@@ -19,6 +19,7 @@ import { discordStore, startDiscord } from './discord'
 import { discordLink } from './discordLink'
 import { candyGoalStore } from './candyGoal'
 import { clawStore } from './claw'
+import { digStore } from './dig'
 import { festivalStore } from './festival'
 import { abacatePay } from './donations'
 import { gemStore } from './gems'
@@ -110,6 +111,7 @@ const app = createApp({
   // Realm reports go to the staff's #mod-chat when the bot is set up (stored either way).
   realm,
   claw: clawStore(sql, { closed: realm.closedIn }),
+  dig: digStore(sql, { closed: realm.closedIn }),
   arenaReportSecret: env.arenaReportSecret,
   patreon: env.patreon ? patreonOAuth(env.patreon) : null,
   webhooks: {

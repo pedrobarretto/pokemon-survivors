@@ -17,6 +17,7 @@
     "determinism": "node scripts/determinism.mjs",
     "rules:freeze": "npm run rules:freeze --prefix server",
     "soak": "node scripts/coop/soak.mjs",
+    "dig-shapes": "node scripts/dig-shapes.mjs",
     "rig": "node scripts/rig.mjs",
     "rig:migrate": "node scripts/rig-migrate.mjs",
     "fit-check": "node scripts/fit-check.mjs",

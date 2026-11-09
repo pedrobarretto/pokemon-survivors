@@ -2,6 +2,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
+import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -6040,6 +6041,7 @@ export const fr: Messages = {
     },
     doll: (legend) => `Poupée ${legend}`,
     plush: SEASON_ONE_CLAW_WORDS.fr.plush,
+    dig: SEASON_ONE_DIG_WORDS.fr.pieces,
     kinds: { floor: 'Meuble', rug: 'Tapis', top: 'Bibelot', wall: 'Mur', wallpaper: 'Papier peint', flooring: 'Sol' },
     /** The carpentry's collections (`FURNITURE_SETS`). */
     sets: { classic: 'Classique', cozy: 'Cocooning', elegant: 'Élégant', modern: 'Moderne', pop: 'Pop', garden: 'Jardin', aqua: 'Aquatique', arcade: 'Arcade', kitchen: 'Cuisine', trainer: 'Dresseur', center: 'Centre Pokémon', gallery: 'Galerie', trophies: 'Trophées' },
@@ -6327,6 +6329,7 @@ export const fr: Messages = {
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.fr,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.fr.words,
+    dig: SEASON_ONE_DIG_WORDS.fr.words,
     close: 'Quitter',
     choose: 'Quel jeu ?',
     games: {
@@ -6336,8 +6339,9 @@ export const fr: Messages = {
       fourInRow: { name: 'Puissance Quatre', blurb: 'Aligne quatre Poké Balls avant ton rival.' },
       typeDuel: { name: 'Duel de Types', blurb: 'Feu bat Plante, Plante bat Eau, Eau bat Feu.' },
       claw: SEASON_ONE_CLAW_WORDS.fr.game,
+      dig: SEASON_ONE_DIG_WORDS.fr.game,
     },
-    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', wishiwashi: 'J\'ai pêché un Wishiwashi !', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' }, claw: SEASON_ONE_CLAW_WORDS.fr.feats },
+    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', wishiwashi: 'J\'ai pêché un Wishiwashi !', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' }, claw: SEASON_ONE_CLAW_WORDS.fr.feats, dig: SEASON_ONE_DIG_WORDS.fr.feats },
     duel: {
       pick: 'Choisis une carte',
       play: 'Jouer',

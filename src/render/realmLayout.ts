@@ -84,6 +84,7 @@ export const TOWN_ART = {
   claw: 'realm/arcade/claw',
   claw2: 'realm/arcade/claw-2',
   jukebox: 'furniture/jukebox',
+  mine: 'realm/mine',
 } as const satisfies Record<string, string>
 
 export type TownArt = keyof typeof TOWN_ART
@@ -147,7 +148,11 @@ export type Host = { dex: number; x: number; y: number; facing: Dir8 }
 /** The grove's host: Sudowoodo, the Pokémon that passes for a tree, keeps the secret bases' grove. */
 export const GROVE_HOST = { dex: 185, x: 556, y: 292, facing: 7 } as const satisfies Host
 
-export type RoomLayout = { indoor: boolean; ground: readonly Surface[]; props: readonly Prop[]; hosts?: readonly Host[] }
+/** The mine's keeper: Excadrill, the Pokémon that digs for a living, stands by the Escavação's entrance. */
+export const MINE_KEEPER = { dex: 530, x: 148, y: 282, facing: 6 } as const satisfies Host
+
+/** `figures`: Pokémon standing in a room for show, with no spot of their own (the mine's keeper). */
+export type RoomLayout = { indoor: boolean; ground: readonly Surface[]; props: readonly Prop[]; hosts?: readonly Host[]; figures?: readonly Host[] }
 
 const rect = (x: number, y: number, w: number, h: number): Shape => ({ kind: 'rect', x, y, w, h })
 const oval = (x: number, y: number, rx: number, ry: number): Shape => ({ kind: 'oval', x, y, rx, ry })
@@ -305,9 +310,12 @@ const TRAIL: RoomLayout = {
     { kind: 'path', r: 12, points: [{ x: 650, y: 258 }, { x: 590, y: 254 }, { x: 520, y: 262 }, { x: 460, y: 250 }, { x: 400, y: 236 }] },
     { kind: 'path', r: 10, points: [{ x: 236, y: 230 }, { x: 190, y: 232 }, { x: 160, y: 224 }, { x: 146, y: 214 }] },
     { kind: 'path', r: 10, points: [{ x: 318, y: 260 }, { x: 330, y: 316 }, { x: 322, y: 380 }, { x: 318, y: 412 }] },
+    { kind: 'path', r: 9, points: [{ x: 198, y: 232 }, { x: 150, y: 270 }, { x: 96, y: 302 }] },
   ],
   hosts: [GROVE_HOST],
+  figures: [MINE_KEEPER],
   props: [
+    { art: 'mine', x: 84, y: 288 },
     { art: 'doorCave', x: 318, y: 178, mine: true },
     { art: 'lamp', x: 244, y: 196 },
     { art: 'lamp', x: 400, y: 196 },

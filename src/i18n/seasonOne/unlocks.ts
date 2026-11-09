@@ -9,7 +9,7 @@ type UnlockWords = {
   /** The locked card of the five fossil families. */
   fossilBlurb: string
   /** Why the family came, in the gift box. */
-  way: Record<'find' | 'research' | 'fishing', string>
+  way: Record<'find' | 'research' | 'fishing' | 'dig', string>
   find: { rotom: string; castformSighted: string; castformFound: string; castformGone: string }
   research: {
     tab: string
@@ -36,8 +36,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       rotom: 'Tem algo morando numa *TV velha*, dentro de uma casa abandonada. Quando ela chiar, fique por perto.',
       castform: 'Às vezes flutua pelo mapa quando o *tempo fecha*. Alcance antes que suma.',
     },
-    fossilBlurb: 'Choca do *Ovo Fóssil*: cave as paredes do Subterrâneo atrás de Old Amber.',
-    way: { find: 'Por um encontro no mapa', research: 'Por concluir uma Pesquisa', fishing: 'Pela sua pescaria' },
+    fossilBlurb: 'Choca do *Ovo Fóssil* (cave as paredes do Subterrâneo atrás de Old Amber) ou é restaurado na *Escavação* do Poké Realm, na Trilha. Precisa de conta.',
+    way: { find: 'Por um encontro no mapa', research: 'Por concluir uma Pesquisa', fishing: 'Pela sua pescaria', dig: 'Da Escavação' },
     find: {
       rotom: 'A TV deu um estalo e *Rotom* escapou! Ele espera na caixa de presentes.',
       castformSighted: 'Um *Castform* está flutuando por perto!',
@@ -67,8 +67,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       rotom: 'Something lives in an *old TV*, inside an abandoned cottage. When it crackles, stay close.',
       castform: 'Sometimes drifts across the map when the *weather turns*. Reach it before it’s gone.',
     },
-    fossilBlurb: 'Hatches from the *Fossil Egg*: dig the Underground’s walls for Old Amber.',
-    way: { find: 'For an encounter on the map', research: 'For finishing a Research', fishing: 'For your fishing' },
+    fossilBlurb: 'Hatches from the *Fossil Egg* (dig the Underground’s walls for Old Amber) or gets restored at the *Mine Dig* on the Poké Realm’s Trail. Needs an account.',
+    way: { find: 'For an encounter on the map', research: 'For finishing a Research', fishing: 'For your fishing', dig: 'From the Mine Dig' },
     find: {
       rotom: 'The TV crackled and *Rotom* got out! It’s waiting in your gift box.',
       castformSighted: 'A *Castform* is drifting nearby!',
@@ -98,8 +98,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       rotom: 'Algo vive en un *televisor viejo*, dentro de una casa abandonada. Cuando chisporrotee, quédate cerca.',
       castform: 'A veces flota por el mapa cuando *cambia el clima*. Alcánzalo antes de que se vaya.',
     },
-    fossilBlurb: 'Nace del *Huevo Fósil*: excava las paredes del Subsuelo en busca de Old Amber.',
-    way: { find: 'Por un encuentro en el mapa', research: 'Por completar una Investigación', fishing: 'Por tu pesca' },
+    fossilBlurb: 'Nace del *Huevo Fósil* (excava las paredes del Subsuelo en busca de Old Amber) o se restaura en la *Excavación* del Poké Realm, en el Sendero. Requiere cuenta.',
+    way: { find: 'Por un encuentro en el mapa', research: 'Por completar una Investigación', fishing: 'Por tu pesca', dig: 'De la Excavación' },
     find: {
       rotom: '¡El televisor chisporroteó y *Rotom* escapó! Te espera en la caja de regalos.',
       castformSighted: '¡Un *Castform* flota cerca!',
@@ -129,8 +129,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       rotom: 'Quelque chose vit dans une *vieille télé*, au fond d’une maison abandonnée. Quand elle grésille, reste près d’elle.',
       castform: 'Flotte parfois sur la carte quand le *temps se gâte*. Rejoins-le avant qu’il disparaisse.',
     },
-    fossilBlurb: 'Éclot de l’*Œuf Fossile* : creuse les parois du Souterrain pour trouver de l’Old Amber.',
-    way: { find: 'Pour une rencontre sur la carte', research: 'Pour avoir terminé une Recherche', fishing: 'Pour ta pêche' },
+    fossilBlurb: 'Éclot de l’*Œuf Fossile* (creuse les parois du Souterrain pour trouver de l’Old Amber) ou restauré à l’*Excavation* du Poké Realm, sur le Sentier. Compte requis.',
+    way: { find: 'Pour une rencontre sur la carte', research: 'Pour avoir terminé une Recherche', fishing: 'Pour ta pêche', dig: 'De l’Excavation' },
     find: {
       rotom: 'La télé a grésillé et *Rotom* s’est échappé ! Il t’attend dans la boîte à cadeaux.',
       castformSighted: 'Un *Castform* flotte tout près !',
@@ -160,8 +160,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       rotom: '廢棄小屋裡的*舊電視*住著什麼東西。電視發出雜音時，請待在旁邊。',
       castform: '*天氣變化*時，偶爾會飄過地圖。要在它消失前追上。',
     },
-    fossilBlurb: '由*化石蛋*孵化：在地下通道挖掘牆壁，尋找 Old Amber。',
-    way: { find: '獎勵你在地圖上的邂逅', research: '獎勵你完成研究', fishing: '獎勵你的釣魚成果' },
+    fossilBlurb: '由*化石蛋*孵化（在地下通道挖掘牆壁尋找 Old Amber），或在 Poké Realm 步道的*礦坑挖掘*復原。需要帳號。',
+    way: { find: '獎勵你在地圖上的邂逅', research: '獎勵你完成研究', fishing: '獎勵你的釣魚成果', dig: '來自礦坑挖掘' },
     find: {
       rotom: '電視一陣雜音，*Rotom* 跑出來了！牠在禮物箱等你。',
       castformSighted: '有隻 *Castform* 在附近飄著！',

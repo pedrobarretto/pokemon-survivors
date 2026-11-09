@@ -1,5 +1,6 @@
 import { LEGEND_IDS, type LegendId } from './legends'
 import { PLUSH_POOL, plushPiece, type PlushPiece } from './plushes'
+import type { DigPiece } from './digTreasures'
 import { CATALOG } from './furnitureCatalog'
 import { placedTurn, turnMode, type FurnitureDef, type TurnMode } from './furnitureDef'
 import { turnedSize } from './furnitureUse'
@@ -19,6 +20,8 @@ import { turnedSize } from './furnitureUse'
  * - `source: 'event'`: an event's reward (a gift), dated by `from`.
  * - `source: 'claw'`: a plush won at the arcade's Máquina de Pelúcias
  *   (`data/plushes.ts`, granted by the API into `furniture_owned`). Never sold.
+ * - `source: 'dig'`: a piece dug up at the Escavação (`DIG_PIECES`, granted
+ *   by the API the same way). Never sold.
  *
  * Gem-bought, trophy and claw furniture is never tradable (`tradable`); the trade
  * window comes in a later wave and only moves what `tradable` allows.
@@ -49,7 +52,15 @@ const PLUSHES = Object.fromEntries(
   PLUSH_POOL.map((family): [PlushPiece, FurnitureDef] => [plushPiece(family), { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'common', price: null, blocks: true, source: 'claw' }]),
 ) as Record<PlushPiece, FurnitureDef>
 
-export const FURNITURE: Readonly<Record<ShopFurnitureId | `doll:${LegendId}` | PlushPiece, FurnitureDef>> = { ...CATALOG, ...DOLLS, ...PLUSHES }
+/** A piece dug up at the Escavação: its own art, only the mine gives it. */
+const DUG = {
+  digFossilDisplay: { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'epic', price: null, blocks: true, source: 'dig' },
+  digGeodeLamp: { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'rare', price: null, blocks: true, source: 'dig' },
+  digCrystals: { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'rare', price: null, blocks: true, source: 'dig' },
+  digMinecart: { kind: 'floor', set: 'trophies', size: [2, 1], rarity: 'epic', price: null, blocks: true, source: 'dig' },
+} as const satisfies Record<DigPiece, FurnitureDef>
+
+export const FURNITURE: Readonly<Record<ShopFurnitureId | `doll:${LegendId}` | PlushPiece | DigPiece, FurnitureDef>> = { ...CATALOG, ...DOLLS, ...PLUSHES, ...DUG }
 
 export type FurnitureId = keyof typeof FURNITURE & string
 
@@ -62,7 +73,7 @@ export const dollOf = (legend: LegendId): FurnitureId => `doll:${legend}`
 /** Whether a piece can change hands in a trade: only what's neither bought with gems nor earned by the account itself (a trophy, a plush). */
 export const tradable = (id: FurnitureId): boolean => {
   const f = FURNITURE[id]
-  return f.source !== 'trophy' && f.source !== 'claw' && !(f.price !== null && 'gems' in f.price)
+  return f.source !== 'trophy' && f.source !== 'claw' && f.source !== 'dig' && !(f.price !== null && 'gems' in f.price)
 }
 
 /** How a piece turns (the editor's Girar, `Placed.turned`): a quarter, mirrored, or not at all (`turnMode`). */

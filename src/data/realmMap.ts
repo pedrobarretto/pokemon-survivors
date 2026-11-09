@@ -238,6 +238,8 @@ export const REALM_ROOMS = {
       rect(200, 388, 44, 14),
       rect(430, 300, 32, 10),
       rect(180, 290, 32, 10),
+      rect(32, 244, 104, 42),
+      oval(148, 278, 9, 4),
       oval(556, 289, 8, 4),
       oval(610, 324, 14, 7),
       oval(232, 466, 14, 7),
@@ -252,6 +254,8 @@ export const REALM_ROOMS = {
       { kind: 'host', at: { x: 556, y: 310 }, reach: 24 },
       { kind: 'bench', at: { x: 446, y: 324 }, reach: 20, seats: benchSeats(446, 310) },
       { kind: 'bench', at: { x: 196, y: 314 }, reach: 20, seats: benchSeats(196, 300) },
+      // The Escavação: the mine on the west side, its keeper Excadrill by the entrance.
+      { kind: 'cabinet', at: { x: 78, y: 300 }, reach: 28, games: ['dig'] },
     ],
   },
   arcade: {

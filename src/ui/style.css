@@ -27502,3 +27502,142 @@ span.arena-hub-face {
     overflow-y: auto;
   }
 }
+
+/* The Escavação's panel (realm/games/dig.ts). */
+.dig-panel {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.dig-panel h3 {
+  margin: 0;
+  font-family: var(--title);
+  font-size: 11px;
+  font-weight: normal;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.dig-panel p,
+.dig-panel ul {
+  margin: 0;
+  padding: 0;
+}
+
+.dig-panel small {
+  display: block;
+  text-align: center;
+  opacity: 0.78;
+}
+
+.dig-keeper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.dig-keeper img {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  border-radius: 4px;
+  flex: none;
+}
+
+.dig-vein {
+  text-align: center;
+}
+
+.dig-odds {
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+
+.dig-odds li {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.dig-odds li img {
+  image-rendering: pixelated;
+}
+
+.dig-odds li.golden {
+  color: #e8b830;
+  font-weight: bold;
+}
+
+.dig-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.dig-actions button {
+  flex: 1;
+  min-height: 44px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.dig-actions button.primary {
+  font-weight: bold;
+}
+
+.dig-loot {
+  list-style: none;
+  display: grid;
+  gap: 3px;
+}
+
+.dig-loot li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dig-loot img,
+.dig-buried img {
+  image-rendering: pixelated;
+}
+
+.dig-buried {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  opacity: 0.7;
+}
+
+.dig-buried span {
+  display: inline-flex;
+  gap: 3px;
+  filter: grayscale(0.8);
+}
+
+@media (orientation: landscape) {
+  .dig-panel {
+    left: auto;
+    right: max(8px, calc(50% - 320px));
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    width: min(280px, 56%);
+    max-height: calc(100% - 16px);
+  }
+}

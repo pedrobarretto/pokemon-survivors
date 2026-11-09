@@ -4306,7 +4306,7 @@ const devGifts = {
    * `why`: an inviter's handle (welcome) or a count of friends brought.
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
-    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' } }[kind]
+    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
     const content = parseGiftContent({ kind, ...raw })
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
     const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : why ? { kind: 'welcome', from: why } : null
@@ -4854,6 +4854,30 @@ if (import.meta.env.DEV) {
        * exclusive plush one miss short of sure, `ps.claw(2, 4)` 4 misses on the week's third plush, `ps.claw(2, 4, 9)` also 9 credits used today.
        */
       claw: async (index?: number, misses?: number, used?: number) => (await import('./realm/clawApi')).stageClaw(index, misses, used),
+      /**
+       * The Escavação on fakes (`realm/digApi.ts`): `ps.dig()` opens it with the faked API. `ps.dig('golden')` forces the next wall golden,
+       * `ps.dig('fossil', 'cranidos')` a fossil of that family, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
+       * today, `ps.dig('lacking', [])` the fossils lacked (all five by default), `ps.dig('crack')` the open wall one hit short of collapse, `ps.dig('peek')` where the open wall hides things, `ps.dig('partner', 'ralts')` a partner's powers for the next wall.
+       */
+      dig: async (what?: 'golden' | 'fossil' | 'dry' | 'used' | 'lacking' | 'crack' | 'peek' | 'partner', arg?: unknown) => {
+        const { stageDig, crackFakeWall, peekFakeWall } = await import('./realm/digApi')
+        const { DIG_FOSSIL_FAMILIES } = await import('./data/digTreasures')
+        if (what === 'golden') return stageDig({ golden: true })
+        if (what === 'fossil') return stageDig({ fossil: arg === null ? null : DIG_FOSSIL_FAMILIES.find((f) => f === arg) ?? DIG_FOSSIL_FAMILIES[0] })
+        if (what === 'dry') return stageDig({ dry: Number(arg ?? 10) })
+        if (what === 'used') return stageDig({ used: Number(arg ?? 0) })
+        if (what === 'lacking') return stageDig({ lacking: Array.isArray(arg) ? DIG_FOSSIL_FAMILIES.filter((f) => (arg as unknown[]).includes(f)) : DIG_FOSSIL_FAMILIES })
+        if (what === 'partner') return stageDig({ partner: typeof arg === 'string' ? arg : null })
+        if (what === 'crack') return crackFakeWall()
+        if (what === 'peek') return peekFakeWall()
+        const { fakeRealm } = await import('./realm/api')
+        fakeRealm(true, 'you')
+        const { openGame } = await import('./realm/games/registry')
+        const save = loadSave()
+        let screen: { dispose: () => void } | null = null
+        screen = await openGame(document.body, 'dig', { input, partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
+        return 'Escavação: real API off, fakes on'
+      },
       /**
        * A mini game's Placar (`realm/games/board.ts`) over whatever is on screen: `ps.realmBoard('fishing')`, `('arcade')`
        * the arcade's games in tabs, a second `'week'` on the week. `ps.realm('fake')` first fakes the boards.
