@@ -408,7 +408,7 @@ export const siteFr: SiteMessages = {
       paragraphs: (moves: number, items: number, moveLevel: number) => [
         'Les Pokémon mis K.O. lâchent des Bonbons Exp. Approche-toi pour les ramasser (le Dowsing Machine élargit la portée).',
         `À chaque montée de niveau, choisis 1 offre sur 3 : une nouvelle capacité parmi celles que ton Pokémon apprend, une amélioration de capacité, un nouvel objet tenu ou un niveau de plus pour un objet. Tu peux avoir jusqu’à ${moves} capacités et ${items} objets. Les capacités montent jusqu’au Nv ${moveLevel}.`,
-        'Les objets de type (Charcoal, Mystic Water…) n’apparaissent que si ton Pokémon apprend des capacités de ce type. Quand il n’y a plus rien à proposer, tu reçois une Oran Berry (+40 PV).',
+        'Les objets de type (Charcoal, Mystic Water…) n’apparaissent que si ton Pokémon apprend des capacités de ce type. Quand il n’y a plus rien à proposer, tu reçois une Oran Berry (+40 PV), et chacun de ces niveaux ajoute aussi +1 % de dégâts jusqu’à la fin de la partie, jusqu’à +50 %.',
         'Relancer (tirer de nouvelles offres) et Passer (sauter une montée de niveau sans rien choisir, pratique quand aucune offre ne convient) sont des charges achetées à la Boutique de Kecleon.',
       ],
       choices: (rarePercent: number, shinyOneIn: number) => [

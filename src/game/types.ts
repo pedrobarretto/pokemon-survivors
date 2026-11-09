@@ -167,6 +167,8 @@ export type Player = {
   castMods: number
   damageByMove: Partial<Record<DamageSource, number>>
   pendingLevelUps: number
+  /** Level-ups taken with nothing left to offer, up to `MAXED_OUT.cap`: each adds a little damage (`maxedBonus`). */
+  maxedLevels: number
   /** Level-ups left in which the moves the last evolution unlocked weigh double (`FRESH_LEVELUPS` in `learnsets.ts`). */
   freshMoves: number
   /** The cards of this player's pick screen (`phase`). */

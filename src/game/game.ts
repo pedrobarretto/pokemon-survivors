@@ -190,6 +190,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     castMods: 0,
     damageByMove: {},
     pendingLevelUps: 0,
+    maxedLevels: 0,
     freshMoves: 0,
     offers: [],
     evolution: null,

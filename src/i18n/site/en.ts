@@ -407,7 +407,7 @@ export const siteEn: SiteMessages = {
       paragraphs: (moves: number, items: number, moveLevel: number) => [
         'Fainted Pokémon drop Exp. Candies. Walk near them to collect them (the Dowsing Machine widens the reach).',
         `On every level up, pick 1 of 3 offers: a new move from your Pokémon's learnset, a move upgrade, a new held item or another item level. You can hold up to ${moves} moves and ${items} items. Moves go up to Lv ${moveLevel}.`,
-        'Type items (Charcoal, Mystic Water…) only show up if your Pokémon learns moves of that type. When there is nothing left to offer, you get an Oran Berry (+40 HP).',
+        'Type items (Charcoal, Mystic Water…) only show up if your Pokémon learns moves of that type. When there is nothing left to offer, you get an Oran Berry (+40 HP), and every one of those level-ups also adds +1% damage for the rest of the run, up to +50%.',
         'Reroll (draw new offers) and Skip (pass on a level up without picking anything, handy when no offer fits) are charges bought in the Kecleon Shop.',
       ],
       choices: (rarePercent: number, shinyOneIn: number) => [

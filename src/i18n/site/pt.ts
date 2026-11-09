@@ -457,7 +457,7 @@ export const sitePt = {
       paragraphs: (moves: number, items: number, moveLevel: number) => [
         'Pokémon derrotados soltam Exp. Candies. Ande perto deles para coletar (a Dowsing Machine aumenta o alcance).',
         `A cada nível, escolha 1 de 3 ofertas: um golpe novo da lista do seu Pokémon, um upgrade de golpe, um held item novo ou mais um nível de item. Você pode ter até ${moves} golpes e ${items} itens. Golpes vão até o Nv ${moveLevel}.`,
-        'Itens de tipo (Charcoal, Mystic Water…) só aparecem se o seu Pokémon aprende golpes daquele tipo. Quando não sobra nada para oferecer, vem uma Oran Berry (+40 HP).',
+        'Itens de tipo (Charcoal, Mystic Water…) só aparecem se o seu Pokémon aprende golpes daquele tipo. Quando não sobra nada para oferecer, vem uma Oran Berry (+40 HP), e cada nível desses ainda soma +1% de dano até o fim da run, no máximo +50%.',
         'Trocar (sortear outras ofertas) e Pular (dispensar a subida de nível sem escolher nada, útil quando nenhuma oferta serve) são cargas compradas na Loja do Kecleon.',
       ],
       choices: (rarePercent: number, shinyOneIn: number) => [

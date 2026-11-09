@@ -6,7 +6,8 @@ import { ITEMS } from '../data/items'
 import manifest from '../data/sprites.generated.json'
 import { REGIONS, STARTER_IDS, STARTERS } from '../data/starters'
 import { maxMoveLevel, moveStats } from './moves'
-import { MAX_MOVES, nothingToChoose, offerPool, rollOffers, starterStats } from './leveling'
+import { applyOffer, MAX_MOVES, MAXED_OUT, nothingToChoose, offerPool, rollOffers, starterStats } from './leveling'
+import { createGame } from './game'
 import { BASE_STATS } from './stats'
 import type { OwnedMove } from './types'
 
@@ -80,6 +81,18 @@ describe('level-up offers', () => {
     expect(nothingToChoose([{ kind: 'berry' }])).toBe(true)
     expect(nothingToChoose([{ kind: 'berry' }, { kind: 'move', id: 'ember', level: 2 }])).toBe(false)
     expect(nothingToChoose([])).toBe(false)
+  })
+})
+
+describe('a level-up with everything maxed', () => {
+  it('adds a little damage each time, up to the cap', () => {
+    const g = createGame('charmander', { w: 400, h: 240 }, 3)
+    const might = g.player.stats.might
+    applyOffer(g, { kind: 'berry' })
+    expect(g.player.stats.might).toBeCloseTo(might + MAXED_OUT.might)
+    for (let i = 0; i < MAXED_OUT.cap + 5; i++) applyOffer(g, { kind: 'berry' })
+    expect(g.player.maxedLevels).toBe(MAXED_OUT.cap)
+    expect(g.player.stats.might).toBeCloseTo(might + MAXED_OUT.cap * MAXED_OUT.might)
   })
 })
 

@@ -411,7 +411,7 @@ export const siteEs: SiteMessages = {
       paragraphs: (moves: number, items: number, moveLevel: number) => [
         'Los Pokémon derrotados sueltan Exp. Candies. Acércate a ellos para recogerlos (la Dowsing Machine aumenta el alcance).',
         `En cada nivel, elige 1 de 3 ofertas: un movimiento nuevo de la lista de tu Pokémon, una mejora de movimiento, un held item nuevo o un nivel más de objeto. Puedes tener hasta ${moves} movimientos y ${items} objetos. Los movimientos llegan hasta el Nv. ${moveLevel}.`,
-        'Los objetos de tipo (Charcoal, Mystic Water…) solo aparecen si tu Pokémon aprende movimientos de ese tipo. Cuando no queda nada que ofrecer, llega una Oran Berry (+40 HP).',
+        'Los objetos de tipo (Charcoal, Mystic Water…) solo aparecen si tu Pokémon aprende movimientos de ese tipo. Cuando no queda nada que ofrecer, llega una Oran Berry (+40 HP), y cada uno de esos niveles suma además +1% de daño hasta el final de la partida, con un máximo de +50%.',
         'Cambiar (sortear otras ofertas) y Saltar (renunciar a la subida de nivel sin elegir nada, útil cuando ninguna oferta sirve) son cargas que se compran en la Tienda Kecleon.',
       ],
       choices: (rarePercent: number, shinyOneIn: number) => [

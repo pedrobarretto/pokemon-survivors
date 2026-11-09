@@ -1020,7 +1020,7 @@ export const fr: Messages = {
     evolution: 'EVOLUTION!',
     evolves: (from, description) => `${from} évolue ! ${description}`,
     berry: (name) => `${name} restaure 40 PV.`,
-    autoBerry: (level, count) => `Nv ${level} ! Tout est au max : *Oran Berry*${count > 1 ? ` ×${count}` : ''}`,
+    autoBerry: (level, count, bonus) => `Nv ${level} ! Tout est au max : *Oran Berry*${count > 1 ? ` ×${count}` : ''}${bonus > 0 ? ` · *+${bonus}% dégâts*` : ''}`,
     reroll: (n) => `Relancer (${n})`,
     skip: (n) => `Passer (${n})`,
     hintKeys: '↑ ↓ choisir · ENTER confirmer · 1-3 raccourci',

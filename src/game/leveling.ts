@@ -28,12 +28,22 @@ import { rulesOf, versusStats } from './versusRules'
 import type { VersusState } from './versus'
 import { BAG_ITEMS } from '../data/shop'
 import { ownAttack, setPhase } from './players'
-import type { Game, Offer, OwnedItem, OwnedMove, PrizeSource, Rarity } from './types'
+import type { Game, Offer, OwnedItem, OwnedMove, Player, PrizeSource, Rarity } from './types'
 
 export const MAX_MOVES = 6
 export const MAX_ITEMS = 6
 /** Selection weight of a level-up for a move already owned (new moves weigh 1, new items 0.8). */
 const UPGRADE_WEIGHT = 1.3
+
+/**
+ * What a level-up with nothing left to offer adds to the Oran Berry's heal, so
+ * EXP keeps paying once a build is maxed: `might` per level, up to `cap` of
+ * them (one Muscle Band's +50%, since endless runs pass Lv 1000).
+ */
+export const MAXED_OUT = { might: 0.01, cap: 50 } as const
+
+/** Damage share a player's maxed-out level-ups add (0.12 = +12%). */
+export const maxedBonus = (p: Pick<Player, 'maxedLevels'>) => p.maxedLevels * MAXED_OUT.might
 
 /** EXP needed to go from `level` to `level + 1`. */
 export const xpFor = (level: number) =>
@@ -198,7 +208,7 @@ export const openTeamPrize = (g: Game, source: PrizeSource, shinyFirst = false) 
 /**
  * Ready move evolutions come first, then ready duo fusions, then weighted sampling without replacement,
  * then each card's rarity (one roll per card, in order, so replays agree).
- * Falls back to a healing berry when maxed out.
+ * Falls back to a healing berry (and a little damage, `MAXED_OUT`) when maxed out.
  */
 export const rollOffers = (loadout: Loadout, rng: Rng, count = 3, opts: RollOptions = {}): Offer[] => {
   const shown = opts.shown ?? []
@@ -257,7 +267,7 @@ export const starterStats = (id: PlayableId, stage: number, branch: BranchId | n
 
 /**
  * Rebuilds player stats from starter (and branch), a legend's awakenings, Poké Mart ranks, evolution stage,
- * held items, buffs, the ability, the Mega form, cursed items and the stance (Aegislash, Deoxys).
+ * held items, buffs, the ability, the Mega form, cursed items, maxed-out level-ups and the stance (Aegislash, Deoxys).
  */
 export const recomputeStats = (g: Game) => {
   const p = g.player
@@ -274,6 +284,7 @@ export const recomputeStats = (g: Game) => {
     ...(p.mega.active > 0 && p.mega.stone ? [MEGAS[p.mega.stone].stats] : []),
     ...p.curses.held.map((id) => CURSES[id].stats),
     ...bagDeltas(p.bag),
+    { might: maxedBonus(p) },
   ])
   // A held evolution (no item for any branch yet) is as strong as with an Everstone.
   const stats = boostStats(stanceStats(deltas, p.special.stance), p.boost + (p.evoHeld ? BAG_ITEMS.everstone.effect.everstone : 0))
@@ -311,6 +322,11 @@ export const applyOffer = (g: Game, offer: Offer) => {
       break
     }
     case 'berry':
+      // The Arena's matches are PvP and its kit levels on its own terms: only the heal there.
+      if (!p.versus && p.maxedLevels < MAXED_OUT.cap) {
+        p.maxedLevels++
+        recomputeStats(g)
+      }
       healPlayer(g, 40)
       g.events.push({ kind: 'heal' })
       break

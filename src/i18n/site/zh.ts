@@ -413,7 +413,7 @@ export const siteZh: SiteMessages = {
       paragraphs: (moves: number, items: number, moveLevel: number) => [
         '倒下的寶可夢會掉落 Exp. Candy。走近就能收集（Dowsing Machine 會擴大範圍）。',
         `每次升級時從 3 個選項中選 1 個：可學招式中的新招式、招式強化、新的攜帶道具，或道具再升一級。最多可帶 ${moves} 個招式與 ${items} 個道具。招式最高 Lv ${moveLevel}。`,
-        '屬性道具（Charcoal、Mystic Water…）只有在你的寶可夢會學該屬性的招式時才會出現。沒有東西可選時，你會得到一顆 Oran Berry（+40 HP）。',
+        '屬性道具（Charcoal、Mystic Water…）只有在你的寶可夢會學該屬性的招式時才會出現。沒有東西可選時，你會得到一顆 Oran Berry（+40 HP），而且每次這樣升級都會讓傷害再 +1%，持續到本局結束，最多 +50%。',
         '重抽（抽新的選項）與跳過（放棄一次升級不做選擇，沒有合適選項時很好用）是在 Kecleon商店購買的次數。',
       ],
       choices: (rarePercent: number, shinyOneIn: number) => [

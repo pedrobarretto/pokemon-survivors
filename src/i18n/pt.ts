@@ -1235,7 +1235,7 @@ export const pt = {
     evolves: (from: string, description: string) => `${from} evolui! ${description}`,
     berry: (name: string) => `${name} recupera 40 HP.`,
     /** Toast of level-ups that took the Oran Berry on their own (nothing else to pick), `count` of them at once. */
-    autoBerry: (level: number, count: number) => `Nv ${level}! Tudo no máximo: *Oran Berry*${count > 1 ? ` ×${count}` : ''}`,
+    autoBerry: (level: number, count: number, bonus: number) => `Nv ${level}! Tudo no máximo: *Oran Berry*${count > 1 ? ` ×${count}` : ''}${bonus > 0 ? ` · *+${bonus}% dano*` : ''}`,
     reroll: (n: number) => `Trocar (${n})`,
     skip: (n: number) => `Pular (${n})`,
     hintKeys: '↑ ↓ escolher · ENTER confirmar · 1-3 atalho',
