@@ -258,7 +258,7 @@ export const pt = {
     lunge: 'Bote',
     lungeTitle: (name: string) => `${name} (Shift)`,
     /** Aegislash's forme, shown on the special button (Stance Change). */
-    stances: { shield: 'Escudo', blade: 'Lâmina', normal: 'Normal', attack: 'Ataque', defense: 'Defesa', speed: 'Velocidade' } satisfies Record<Stance, string>,
+    stances: { shield: 'Escudo', blade: 'Lâmina', normal: 'Normal', attack: 'Ataque', defense: 'Defesa', speed: 'Velocidade', heat: 'Forno', wash: 'Lavadora', frost: 'Geladeira', fan: 'Ventilador', mow: 'Cortador' } satisfies Record<Stance, string>,
     /** Jumps left in a running chain dash. */
     jumps: (n: number) => `×${n}`,
   },
@@ -6013,6 +6013,7 @@ export const pt = {
     braveBird: 'Mergulha no inimigo mais próximo. Aperte de novo logo após acertar para saltar ao próximo.',
     ironHead: 'Avança com a lâmina até o inimigo mais próximo. Aperte de novo logo após acertar para saltar ao próximo.',
     stanceChange: 'Alterna entre a Forma Escudo (−30% de dano recebido, golpes ×0,7) e a Forma Lâmina (golpes ×1,3, +10% de dano recebido).',
+    applianceChange: 'Rotom troca de aparelho: Forno, Lavadora, Geladeira, Ventilador ou Cortador. Cada um muda o tipo e o jeito de Discharge.',
     formeChange: 'Alterna entre as Formas Normal, Ataque (golpes ×1,35, +25% de dano recebido), Defesa (−40% de dano recebido, golpes ×0,75) e Velocidade (+35% de velocidade).',
     dragonFlare: 'Investida longa em chamas azuis de dragão, com rastro de fogo e explosão no fim.',
     psystrike: 'Três ondas psíquicas enormes ao redor que empurram e desaceleram.',

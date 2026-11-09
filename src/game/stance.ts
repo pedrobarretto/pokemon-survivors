@@ -15,6 +15,12 @@ export const STANCES = {
   attack: { might: 1.35, damageTaken: 1.25, speed: 1, color: '#f05038' },
   defense: { might: 0.75, damageTaken: 0.6, speed: 0.9, color: '#48b898' },
   speed: { might: 0.9, damageTaken: 1.05, speed: 1.35, color: '#c878f0' },
+  // Rotom's appliances only change its signature's shape: their numbers stay close to 1.
+  heat: { might: 1.05, damageTaken: 1.05, speed: 1, color: '#f07838' },
+  wash: { might: 1, damageTaken: 0.95, speed: 1, color: '#4898e8' },
+  frost: { might: 1, damageTaken: 1, speed: 0.95, color: '#88d0e8' },
+  fan: { might: 0.95, damageTaken: 1, speed: 1.1, color: '#b8c8e0' },
+  mow: { might: 1, damageTaken: 1, speed: 1, color: '#70b858' },
 } as const satisfies Record<string, { might: number; damageTaken: number; speed: number; color: string }>
 
 export type Stance = keyof typeof STANCES
@@ -23,6 +29,7 @@ export type Stance = keyof typeof STANCES
 export const STANCE_CYCLES = {
   stanceChange: ['shield', 'blade'],
   formeChange: ['normal', 'attack', 'defense', 'speed'],
+  applianceChange: ['heat', 'wash', 'frost', 'fan', 'mow'],
 } as const satisfies Record<string, readonly Stance[]>
 
 export type StanceSpecial = keyof typeof STANCE_CYCLES

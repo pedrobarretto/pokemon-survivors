@@ -61,6 +61,8 @@ export type DexEntry = {
     | { kind: 'cameo'; by: RiftLegend }
     /** `lobby`: lives only in the lobby (Leavanny, the Boutique's tailor, `TAILOR`). */
     | { kind: 'lobby' }
+    /** `summon`: called in by a playable family's mechanic, never fought (Tatsugiri's Dondozo, `data/seasonOneKits.ts`). */
+    | { kind: 'summon' }
 }
 
 /** Last national dex number of each generation, in `REGIONS` order. */
@@ -148,6 +150,9 @@ const cameoEntries = (): DexEntry[] =>
 /** Who lives only in the lobby (Leavanny at the Boutique), as event Pokémon. */
 const lobbyEntries = (): DexEntry[] => [{ ...base(TAILOR.dex, TAILOR.name, TAILOR.types), role: 'event', source: { kind: 'lobby' } }]
 
+/** Who a family's mechanic calls in (Tatsugiri's Dondozo), as event Pokémon. */
+const summonEntries = (): DexEntry[] => [{ ...base(977, 'Dondozo', ['water']), role: 'event', source: { kind: 'summon' } }]
+
 const byDex = (a: DexEntry, b: DexEntry) => a.dex - b.dex
 
 /**
@@ -170,7 +175,7 @@ export const gameDex = (): DexEntry[] => {
  * met in a run, so never counted in game).
  */
 export const pokedex = (): DexEntry[] => {
-  return [...gameDex(), ...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries()].sort(byDex)
+  return [...gameDex(), ...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...summonEntries()].sort(byDex)
 }
 
 /* ---------------- When a wild Pokémon shows up ---------------- */

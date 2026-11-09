@@ -100,6 +100,10 @@ const visitors = (g: Game): Dex[] => {
   ]
 }
 
+/** The forms each kit family may turn into mid-run (`seasonKitForm`), and Tatsugiri's Dondozo. */
+const KIT_FORMS: Record<string, readonly string[]> = { school: ['school'], hero: ['hero'], hunger: ['hangry'], forecast: ['sunny', 'rainy', 'snowy'], zen: ['zen'], disguise: ['busted'], none: [] }
+const DONDOZO = 977
+
 /** Every stance's name: the ones that are a form of the species (Aegislash's Blade, Deoxys's formes) load, the rest (Shield, Normal) are no form. */
 const STANCE_NAMES = Object.keys(STANCES)
 
@@ -115,8 +119,8 @@ export const playerForms = (g: Game): Variant[] =>
     const mega = isFinalStage(p.starter, p.stage) ? heldMega(g) : null
     actAs(g, before)
     const legend = p.legend && p.legend.awakened >= 1 ? formAfter(p.legend.id, 2)?.key : undefined
-    const forms = [...(mega ? [mega.form] : []), ...(legend ? [legend] : []), ...(p.special.stance !== null ? STANCE_NAMES : [])]
-    return forms.map((form) => ({ dex, shiny: p.shiny, form }))
+    const forms = [...(mega ? [mega.form] : []), ...(legend ? [legend] : []), ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
+    return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : [])]
   })
 
 /**

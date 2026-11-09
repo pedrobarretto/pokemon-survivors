@@ -16,13 +16,14 @@ import { EGG_MOVE_2_IDS } from './eggMoves2'
 import { EGG_MOVE_3_IDS } from './eggMoves3'
 import { SKETCH_MOVE_IDS } from './sketch'
 import { SEASON_ONE_EGG_MOVE_IDS } from './seasonOneEggMoves'
+import { SEASON_ONE_KIT_MOVE_IDS } from './seasonOneKitMoves'
 
 /** The egg families' signature moves (the starters' are `SIGNATURE_MOVES`). */
 const EGG_SIGNATURES: readonly MoveId[] = [
   'dreamEater', 'forcePalm', 'dig', 'twister', 'sandTomb', 'meteorMash', 'zenHeadbutt', 'foulPlay', 'bodySlam', 'dynamicPunch', 'rollout',
   'iceBall', 'furyCutter', 'sacredSword', 'dragonDarts', 'snarl', 'gigaImpact', 'flail', 'boneRush', 'metronome', 'echoedVoice', 'curse',
 ]
-const SIGNATURES = new Set<MoveId>([...(Object.keys(SIGNATURE_MOVES) as MoveId[]), ...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS])
+const SIGNATURES = new Set<MoveId>([...(Object.keys(SIGNATURE_MOVES) as MoveId[]), ...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS])
 
 type Role = 'shot' | 'homing' | 'boomerang' | 'aura' | 'wave' | 'strike' | 'arc' | 'counter' | 'charge' | 'sky' | 'chain' | 'cone' | 'beam' | 'field' | 'dash' | 'roll' | 'support' | 'random'
 
@@ -44,13 +45,14 @@ const ROLE: Record<string, Role> = {
   uTurn: 'dash', dragonTail: 'arc', sheerCold: 'aura',
   powderSnow: 'field', electroweb: 'chain', corrosiveGas: 'field', magicCoat: 'support', appleAcid: 'field', icicleSpear: 'cone', headSmash: 'dash', ironDefense: 'support', dualWingbeat: 'strike', bite: 'strike', auroraVeil: 'field',
   braveBird: 'dash', weatherBall: 'shot', accelerock: 'dash', zapCannon: 'shot', aerialAce: 'strike', crossPoison: 'arc', bubbleBeam: 'beam', rockBlast: 'shot', cottonSpore: 'field', wildCharge: 'dash', playRough: 'aura', spore: 'support', waterfall: 'beam', lastResort: 'strike',
+  crossChop: 'arc', nightSlash: 'arc', dragonPulse: 'wave', waterPulse: 'shot', populationBomb: 'support', jetPunch: 'dash', auraWheel: 'shot', discharge: 'aura', forecast: 'shot', firePunch: 'strike', xScissor: 'arc', shadowClaw: 'arc', orderUp: 'wave',
   sketch: 'random', fieryDance: 'aura', overdrive: 'wave', gigatonHammer: 'strike', bitterBlade: 'arc', leechLife: 'strike', fireFang: 'strike', furySwipes: 'strike', heavySlam: 'dash', bulldoze: 'wave', perishSong: 'support', chargeBeam: 'beam', moonblast: 'shot', frostBreath: 'cone', avalanche: 'field',
 }
 /** The roles that count as a family's utility move: around it, on the ground, a dash or a heal/guard. */
 const UTILITY = new Set<Role>(['aura', 'field', 'dash', 'support'])
 
-/** The most families one shared move may appear in (about a fifth of the 95). */
-const MAX_FAMILIES = 19
+/** The most families one shared move may appear in (about a fifth of the 120). */
+const MAX_FAMILIES = 24
 
 const EVOLVED = new Set<MoveId>(EVOLUTIONS.map((e) => e.to))
 /** Every move a family may learn: all but the evolved ones and the capstones (legendary and duo moves). */
