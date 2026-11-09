@@ -11054,6 +11054,172 @@ a.btn.dex-site {
   }
 }
 
+.dialog.design-survey {
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 12px 16px 14px;
+  gap: 8px;
+}
+
+.design-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.design-head h2 {
+  margin: 0;
+  color: var(--kit-ink);
+  font-family: var(--kit-title);
+  font-size: 34px;
+  font-weight: 400;
+}
+
+.design-question,
+.design-word {
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.design-balls {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* A ball is lit up to the rating; the frame around it is the cursor's, as on a sticker. */
+.design-ball {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  background: none;
+  border: var(--kit-edge) solid transparent;
+  border-radius: 12px;
+}
+
+.design-ball img {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  filter: grayscale(1) opacity(0.5);
+}
+
+.design-ball.on img {
+  filter: none;
+}
+
+:root[data-cursor='tab'] .design-ball:focus-visible {
+  border-color: var(--kit-cursor);
+  outline: none;
+}
+
+/* On the paper of a light theme gold is faint: the cursor around a ball gets the ink's weight too. */
+:root[data-cursor='keys'] .design-ball.arc-cursor {
+  background: var(--kit-tag);
+}
+
+.design-word {
+  min-height: 22px;
+  color: var(--kit-ink);
+  opacity: 0.7;
+}
+
+.design-word.picked {
+  font-family: var(--kit-title);
+  font-size: 24px;
+  opacity: 1;
+}
+
+/* Each pair of opposites on a row; on a low screen, a column each (see below). */
+.design-aspects {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
+  padding-bottom: 4px;
+}
+
+.design-aspect {
+  padding: 4px 8px;
+  font-family: var(--kit-body);
+  font-size: 20px;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.design-aspect.on {
+  --kit-cursor: #fff;
+  color: var(--kit-tinta);
+  background: var(--kit-ouro);
+}
+
+.design-survey .buttons {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 420px) {
+  .design-ball {
+    width: 52px;
+    height: 52px;
+  }
+  .design-aspect {
+    font-size: 18px;
+  }
+}
+
+/* Short screens (phones lying down): one line of balls and word, the pairs in columns, and no hint. */
+@media (max-height: 500px) {
+  .dialog.design-survey {
+    width: min(720px, 100%);
+    padding: 6px 12px 10px;
+    gap: 4px;
+  }
+  .design-survey .hint {
+    display: none;
+  }
+  .design-head h2 {
+    font-size: 24px;
+  }
+  .design-question {
+    font-size: 17px;
+  }
+  .design-ball {
+    width: 46px;
+    height: 44px;
+  }
+  .design-ball img {
+    width: 32px;
+    height: 32px;
+  }
+  .design-word,
+  .design-word.picked {
+    min-height: 0;
+    font-size: 18px;
+  }
+  .design-aspects {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-template-rows: repeat(2, auto);
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 7px 8px;
+  }
+  .design-aspect {
+    min-height: 38px;
+    font-size: 17px;
+  }
+  .design-survey .buttons .btn {
+    min-height: 44px;
+    padding-top: 4px;
+    padding-bottom: 8px;
+  }
+}
+
 /* ---------- Desafio do dia ---------- */
 
 .dialog.challenge {

@@ -1886,6 +1886,30 @@ export const zh: Messages = {
     hintTouch: '點擊作答',
   },
 
+  designSurvey: {
+    title: '全新外觀',
+    open: '問卷：你覺得全新外觀如何？',
+    question: '你覺得遊戲的全新外觀如何？',
+    ratings: { 1: '不喜歡', 2: '普通偏差', 3: '還可以', 4: '喜歡', 5: '超喜歡' },
+    pickRating: '選一顆寶可夢球',
+    aspectsQuestion: '最讓你印象深刻的是？（最多 2 項）',
+    aspects: {
+      easyToFind: '東西很好找',
+      hardToFind: '東西很難找',
+      niceLook: '畫面好看',
+      badLook: '不喜歡這個風格',
+      readable: '文字好讀',
+      hardToRead: '文字難讀',
+    },
+    send: '送出',
+    later: '現在不要',
+    never: '不要再問',
+    close: '關閉',
+    thanks: '謝謝！你的回答能幫助遊戲變得更好。',
+    hintKeys: '← → ↑ ↓ 移動 · ENTER 選擇 · ESC 關閉',
+    hintTouch: '點選即可回答',
+  },
+
   ribbons: {
     names: { gold: '金緞帶', silver: '銀緞帶', bronze: '銅緞帶' },
     section: '挑戰緞帶',

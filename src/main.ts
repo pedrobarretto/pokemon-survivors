@@ -174,7 +174,7 @@ import { plazaVisitors, setDevCaravan, setDevStall } from './ui/visitors'
 import { missionDevTools } from './ui/missionsDev'
 import { pcBoxScreen } from './ui/pcBox'
 import { newsScreen } from './ui/news'
-import { forgetSurvey, surveyScreen } from './ui/survey'
+import { designSurveyScreen, forgetDesignSurvey, forgetSurvey, stageDesignSurveyDue, surveyScreen } from './ui/survey'
 import { halloweenScreen } from './ui/halloween'
 import { pokedexScreen } from './ui/pokedex'
 import { profileEditor, profileScreen } from './ui/profile'
@@ -763,6 +763,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       news: (focus) => newsScreen(ui, input, () => showTitle({ focus })),
       // Closed unanswered, the lobby highlights the survey's clipboard; answered, it's gone and JOGAR is.
       survey: () => surveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
+      designSurvey: () => designSurveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
       install: (offer, focus) => installNudgeScreen(ui, input, offer, () => showTitle({ focus })),
       halloween: (focus) =>
         halloweenScreen(ui, input, {
@@ -5035,10 +5036,17 @@ if (import.meta.env.DEV) {
         return hunted
       },
       pumpkin: () => withRun((g) => g.props.push({ id: g.nextId++, cell: -1 - g.nextId, kind: 'pumpkin', x: g.player.x + 40, y: g.player.y, hp: 2, hitCooldown: 0, shake: 0 })),
-      /** Opens the difficulty survey over the title, whatever the runs played; `ps.survey('reset')` forgets this device's answer. */
-      survey: (mode?: 'reset') => {
+      /**
+       * Opens the difficulty survey over the title, whatever the runs played; `ps.survey('reset')` forgets this device's answer.
+       * `ps.survey('design')` opens the one on the redesign, `('design', 'reset')` forgets its answer and first sight,
+       * `('design', 'due')` also meets its thresholds, so the next page load asks by itself.
+       */
+      survey: (mode?: 'reset' | 'design', design?: 'reset' | 'due') => {
         endRun()
         if (mode === 'reset') return (forgetSurvey(), showTitle())
+        if (mode === 'design' && design === 'reset') return (forgetDesignSurvey(), showTitle())
+        if (mode === 'design' && design === 'due') return (stageDesignSurveyDue(), showTitle())
+        if (mode === 'design') return setScreen(designSurveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
         setScreen(surveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
       },
       /**

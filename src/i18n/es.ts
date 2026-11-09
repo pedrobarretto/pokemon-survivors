@@ -1889,6 +1889,30 @@ export const es: Messages = {
     hintTouch: 'Toca para responder',
   },
 
+  designSurvey: {
+    title: 'NUEVO ESTILO',
+    open: 'Encuesta: ¿qué te parece el nuevo diseño?',
+    question: '¿Qué te parece el nuevo diseño del juego?',
+    ratings: { 1: 'No me gustó', 2: 'Flojo', 3: 'Da igual', 4: 'Me gustó', 5: 'Me encantó' },
+    pickRating: 'Elige una Poké Ball',
+    aspectsQuestion: '¿Qué es lo que más destaca? (hasta 2)',
+    aspects: {
+      easyToFind: 'Encuentro todo fácil',
+      hardToFind: 'Cuesta encontrar las cosas',
+      niceLook: 'Se ve bonito',
+      badLook: 'No me gusta cómo se ve',
+      readable: 'Fácil de leer',
+      hardToRead: 'Difícil de leer',
+    },
+    send: 'Enviar',
+    later: 'Ahora no',
+    never: 'No preguntar más',
+    close: 'Cerrar',
+    thanks: '¡Gracias! Tu respuesta ayuda a mejorar el juego.',
+    hintKeys: '← → ↑ ↓ mover · ENTER elegir · ESC cerrar',
+    hintTouch: 'Toca para responder',
+  },
+
   ribbons: {
     names: { gold: 'Cinta de Oro', silver: 'Cinta de Plata', bronze: 'Cinta de Bronce' },
     section: 'Cintas de desafío',
