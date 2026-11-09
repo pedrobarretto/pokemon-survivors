@@ -86,11 +86,13 @@ describe('the Secret Base Grove', () => {
 
   it('keeps every host standing by its spot, off the walk', () => {
     const hosts = TOWN_LAYOUT.trail.hosts ?? []
+    const talking = hosts.filter((h) => !('keeper' in h))
     const spots = trail.spots.filter((s) => s.kind === 'host')
-    expect(hosts).toHaveLength(spots.length)
-    for (const host of hosts) {
+    expect(talking).toHaveLength(spots.length)
+    for (const host of talking) {
       expect(spots.some((s) => Math.hypot(s.at.x - host.x, s.at.y - host.y) <= s.reach)).toBe(true)
       expect(blocked('trail', host.x, host.y - 2)).toBe(true)
     }
+    for (const host of hosts) expect(blocked('trail', host.x, host.y - 2)).toBe(true)
   })
 })

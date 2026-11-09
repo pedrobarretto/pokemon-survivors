@@ -3,7 +3,11 @@ import type { FurnitureCounts, FurnitureId } from '../data/furniture'
 import type { Activity } from '../game/friends'
 import type { CityId, RoomKey } from './realm'
 import type { GameOutcome, MinigameId } from '../data/minigames'
+import type { HatchlingId, PlayableId } from '../data/hatchlings'
 import type { PlushFamily } from '../data/plushes'
+import type { SafariHabitat } from '../data/safari'
+import type { Gift } from '../game/gifts'
+import type { SafariCatch, SafariTurn } from '../realm/games/safari.rules'
 
 /**
  * The Poké Realm's API (game → `server/`, Clerk-authenticated like the rest).
@@ -127,3 +131,33 @@ export type ClawInserted = { play: ClawPlay; used: number }
 
 /** What a drop came to: the plush it went for (its place in `prizes`), the grip, whether it held and every plush's misses after it. */
 export type ClawDropped = { target: number; grip: number; won: boolean; family: PlushFamily; misses: number[] }
+
+/** A silhouette: one bit per pixel, row by row (`npm run safari-shapes`). All a client gets of who's in a bush. */
+export type SafariShape = { w: number; h: number; bits: string }
+
+export type SafariBushView = { shape: SafariShape; sure: boolean; done: boolean }
+
+/** The Pokémon being faced, known once it's been approached. */
+export type SafariEncounterView = { bush: number; family: HatchlingId; shiny: boolean; calm: number; sure: boolean }
+
+/** A session as its owner sees it. `turn`: how many actions the API has answered (what the next action sends). */
+export type SafariSession = {
+  id: string
+  week: string
+  habitat: SafariHabitat
+  balls: number
+  berries: number
+  bushes: SafariBushView[]
+  encounter: SafariEncounterView | null
+  catches: SafariCatch<HatchlingId>[]
+  over: boolean
+  turn: number
+}
+
+/** The Zona Safári for this account: the habitat, the sessions used today, the sessions without a new family, whether the next one is the guarantee's, the partner the API counts and the session left open, if any. */
+export type SafariState = { week: string; habitat: SafariHabitat; used: number; dry: number; sure: boolean; partner: PlayableId | null; open: SafariSession | null }
+
+export type SafariStarted = { session: SafariSession; used: number }
+
+/** What an action came to, the session after it and, for a catch, the gift that brings the Pokémon. */
+export type SafariActed = { turn: SafariTurn<HatchlingId>; gift: Gift | null; session: SafariSession }

@@ -9,7 +9,7 @@ type UnlockWords = {
   /** The locked card of the five fossil families. */
   fossilBlurb: string
   /** Why the family came, in the gift box. */
-  way: Record<'find' | 'research' | 'fishing', string>
+  way: Record<'find' | 'research' | 'fishing' | 'safari', string>
   find: { rotom: string; castformSighted: string; castformFound: string; castformGone: string }
   research: {
     tab: string
@@ -26,9 +26,9 @@ type UnlockWords = {
 export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', UnlockWords> = {
   pt: {
     where: {
-      mimikyu: "Às vezes está na *Máquina de Pelúcias*, no Fliperama do Poké Realm. Precisa de conta.",
-      morpeko: "Às vezes está na *Máquina de Pelúcias*, no Fliperama do Poké Realm. Precisa de conta.",
-      tandemaus: "Às vezes está na *Máquina de Pelúcias*, no Fliperama do Poké Realm. Precisa de conta.",
+      mimikyu: "Só na *Zona Safári*, no Bosque das Bases do Poké Realm. Precisa de conta.",
+      morpeko: "Só na *Zona Safári*, no Bosque das Bases do Poké Realm. Precisa de conta.",
+      tandemaus: "Só na *Zona Safári*, no Bosque das Bases do Poké Realm. Precisa de conta.",
       mankey: 'Vem de uma *Pesquisa*: vença apanhando bastante. Veja em Missões, aba Pesquisa.',
       goomy: 'Vem de uma *Pesquisa*: vença com os pés molhados. Veja em Missões, aba Pesquisa.',
       tatsugiri: 'Vem de uma *Pesquisa*: vença com parceiros de Água ou Dragão. Veja em Missões, aba Pesquisa.',
@@ -37,7 +37,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castform: 'Às vezes flutua pelo mapa quando o *tempo fecha*. Alcance antes que suma.',
     },
     fossilBlurb: 'Choca do *Ovo Fóssil*: cave as paredes do Subterrâneo atrás de Old Amber.',
-    way: { find: 'Por um encontro no mapa', research: 'Por concluir uma Pesquisa', fishing: 'Pela sua pescaria' },
+    way: { find: 'Por um encontro no mapa', research: 'Por concluir uma Pesquisa', fishing: 'Pela sua pescaria', safari: 'Pela sua captura na Zona Safári' },
     find: {
       rotom: 'A TV deu um estalo e *Rotom* escapou! Ele espera na caixa de presentes.',
       castformSighted: 'Um *Castform* está flutuando por perto!',
@@ -57,9 +57,9 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
   },
   en: {
     where: {
-      mimikyu: "Sometimes in the *Plush Claw Machine*, at the Poké Realm's Arcade. Needs an account.",
-      morpeko: "Sometimes in the *Plush Claw Machine*, at the Poké Realm's Arcade. Needs an account.",
-      tandemaus: "Sometimes in the *Plush Claw Machine*, at the Poké Realm's Arcade. Needs an account.",
+      mimikyu: "Only in the *Safari Zone*, at the Poké Realm's Secret Base Grove. Needs an account.",
+      morpeko: "Only in the *Safari Zone*, at the Poké Realm's Secret Base Grove. Needs an account.",
+      tandemaus: "Only in the *Safari Zone*, at the Poké Realm's Secret Base Grove. Needs an account.",
       mankey: 'Comes from *Research*: win after taking a beating. See Missions, Research tab.',
       goomy: 'Comes from *Research*: win with your feet wet. See Missions, Research tab.',
       tatsugiri: 'Comes from *Research*: win with Water or Dragon partners. See Missions, Research tab.',
@@ -68,7 +68,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castform: 'Sometimes drifts across the map when the *weather turns*. Reach it before it’s gone.',
     },
     fossilBlurb: 'Hatches from the *Fossil Egg*: dig the Underground’s walls for Old Amber.',
-    way: { find: 'For an encounter on the map', research: 'For finishing a Research', fishing: 'For your fishing' },
+    way: { find: 'For an encounter on the map', research: 'For finishing a Research', fishing: 'For your fishing', safari: 'For your catch in the Safari Zone' },
     find: {
       rotom: 'The TV crackled and *Rotom* got out! It’s waiting in your gift box.',
       castformSighted: 'A *Castform* is drifting nearby!',
@@ -88,9 +88,9 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
   },
   es: {
     where: {
-      mimikyu: "A veces está en la *Máquina de Peluches*, en el Arcade del Poké Realm. Necesita cuenta.",
-      morpeko: "A veces está en la *Máquina de Peluches*, en el Arcade del Poké Realm. Necesita cuenta.",
-      tandemaus: "A veces está en la *Máquina de Peluches*, en el Arcade del Poké Realm. Necesita cuenta.",
+      mimikyu: "Solo en la *Zona Safari*, en el Bosque de Bases del Poké Realm. Necesita cuenta.",
+      morpeko: "Solo en la *Zona Safari*, en el Bosque de Bases del Poké Realm. Necesita cuenta.",
+      tandemaus: "Solo en la *Zona Safari*, en el Bosque de Bases del Poké Realm. Necesita cuenta.",
       mankey: 'Viene de una *Investigación*: gana después de recibir una paliza. Mira Misiones, pestaña Investigación.',
       goomy: 'Viene de una *Investigación*: gana con los pies mojados. Mira Misiones, pestaña Investigación.',
       tatsugiri: 'Viene de una *Investigación*: gana con compañeros de Agua o Dragón. Mira Misiones, pestaña Investigación.',
@@ -99,7 +99,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castform: 'A veces flota por el mapa cuando *cambia el clima*. Alcánzalo antes de que se vaya.',
     },
     fossilBlurb: 'Nace del *Huevo Fósil*: excava las paredes del Subsuelo en busca de Old Amber.',
-    way: { find: 'Por un encuentro en el mapa', research: 'Por completar una Investigación', fishing: 'Por tu pesca' },
+    way: { find: 'Por un encuentro en el mapa', research: 'Por completar una Investigación', fishing: 'Por tu pesca', safari: 'Por tu captura en la Zona Safari' },
     find: {
       rotom: '¡El televisor chisporroteó y *Rotom* escapó! Te espera en la caja de regalos.',
       castformSighted: '¡Un *Castform* flota cerca!',
@@ -119,9 +119,9 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
   },
   fr: {
     where: {
-      mimikyu: "Parfois dans la *Machine à Peluches*, à l'Arcade du Poké Realm. Compte requis.",
-      morpeko: "Parfois dans la *Machine à Peluches*, à l'Arcade du Poké Realm. Compte requis.",
-      tandemaus: "Parfois dans la *Machine à Peluches*, à l'Arcade du Poké Realm. Compte requis.",
+      mimikyu: "Uniquement au *Parc Safari*, au Bosquet des bases du Poké Realm. Compte requis.",
+      morpeko: "Uniquement au *Parc Safari*, au Bosquet des bases du Poké Realm. Compte requis.",
+      tandemaus: "Uniquement au *Parc Safari*, au Bosquet des bases du Poké Realm. Compte requis.",
       mankey: 'Vient d’une *Recherche* : gagne après avoir pris des coups. Vois Missions, onglet Recherche.',
       goomy: 'Vient d’une *Recherche* : gagne les pieds mouillés. Vois Missions, onglet Recherche.',
       tatsugiri: 'Vient d’une *Recherche* : gagne avec des partenaires Eau ou Dragon. Vois Missions, onglet Recherche.',
@@ -130,7 +130,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castform: 'Flotte parfois sur la carte quand le *temps se gâte*. Rejoins-le avant qu’il disparaisse.',
     },
     fossilBlurb: 'Éclot de l’*Œuf Fossile* : creuse les parois du Souterrain pour trouver de l’Old Amber.',
-    way: { find: 'Pour une rencontre sur la carte', research: 'Pour avoir terminé une Recherche', fishing: 'Pour ta pêche' },
+    way: { find: 'Pour une rencontre sur la carte', research: 'Pour avoir terminé une Recherche', fishing: 'Pour ta pêche', safari: 'Pour ta capture au Parc Safari' },
     find: {
       rotom: 'La télé a grésillé et *Rotom* s’est échappé ! Il t’attend dans la boîte à cadeaux.',
       castformSighted: 'Un *Castform* flotte tout près !',
@@ -150,9 +150,9 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
   },
   zh: {
     where: {
-      mimikyu: "有時會出現在 Poké Realm 電玩間的*玩偶夾娃娃機*裡。需要帳號。",
-      morpeko: "有時會出現在 Poké Realm 電玩間的*玩偶夾娃娃機*裡。需要帳號。",
-      tandemaus: "有時會出現在 Poké Realm 電玩間的*玩偶夾娃娃機*裡。需要帳號。",
+      mimikyu: "只在 Poké Realm 秘密基地樹林的*狩獵地帶*出現。需要帳號。",
+      morpeko: "只在 Poké Realm 秘密基地樹林的*狩獵地帶*出現。需要帳號。",
+      tandemaus: "只在 Poké Realm 秘密基地樹林的*狩獵地帶*出現。需要帳號。",
       mankey: '來自*研究*：挨了不少打之後獲勝。請到任務的「研究」分頁查看。',
       goomy: '來自*研究*：在潮濕的地方獲勝。請到任務的「研究」分頁查看。',
       tatsugiri: '來自*研究*：用水系或龍系夥伴獲勝。請到任務的「研究」分頁查看。',
@@ -161,7 +161,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castform: '*天氣變化*時，偶爾會飄過地圖。要在它消失前追上。',
     },
     fossilBlurb: '由*化石蛋*孵化：在地下通道挖掘牆壁，尋找 Old Amber。',
-    way: { find: '獎勵你在地圖上的邂逅', research: '獎勵你完成研究', fishing: '獎勵你的釣魚成果' },
+    way: { find: '獎勵你在地圖上的邂逅', research: '獎勵你完成研究', fishing: '獎勵你的釣魚成果', safari: '獎勵你在狩獵地帶的捕捉' },
     find: {
       rotom: '電視一陣雜音，*Rotom* 跑出來了！牠在禮物箱等你。',
       castformSighted: '有隻 *Castform* 在附近飄著！',

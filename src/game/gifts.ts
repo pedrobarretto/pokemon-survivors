@@ -89,8 +89,8 @@ export type GiftReason =
   | { kind: 'arenaSeason'; season: number; tier: TierId }
   /** Hidden zone `zone` found for the first time (`game/hiddenGifts.ts`): made by the game too. */
   | { kind: 'hiddenZone'; zone: HiddenPlaceId }
-  /** A family found outside an egg (`game/seasonOneUnlocks.ts`): an encounter or research, made by the game too, or a mini game's catch, sent by the API. */
-  | { kind: 'season'; way: 'find' | 'research' | 'fishing' }
+  /** A family found outside an egg (`game/seasonOneUnlocks.ts`): an encounter or research, made by the game too, or a mini game's catch (fishing, the Safari), sent by the API. */
+  | { kind: 'season'; way: 'find' | 'research' | 'fishing' | 'safari' }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 
@@ -179,7 +179,7 @@ const parseReason = (v: unknown): GiftReason | null => {
   if (v.kind === 'og') return { kind: 'og' }
   if (v.kind === 'arenaSeason' && isOneOf(v.tier, TIER_IDS)) return { kind: 'arenaSeason', season: wholeNumber(v.season), tier: v.tier }
   if (v.kind === 'hiddenZone' && isOneOf(v.zone, HIDDEN_PLACE_IDS)) return { kind: 'hiddenZone', zone: v.zone }
-  if (v.kind === 'season' && (v.way === 'find' || v.way === 'research' || v.way === 'fishing')) return { kind: 'season', way: v.way }
+  if (v.kind === 'season' && (v.way === 'find' || v.way === 'research' || v.way === 'fishing' || v.way === 'safari')) return { kind: 'season', way: v.way }
   return null
 }
 
