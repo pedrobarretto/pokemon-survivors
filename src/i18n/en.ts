@@ -1,3 +1,5 @@
+import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -2356,6 +2358,8 @@ export const en: Messages = {
   },
 
   abilities: {
+    ...SEASON_ONE_EGGS_WORDS.en.abilities,
+    ...SEASON_ONE_KITS_WORDS.en.abilities,
     overgrow: 'Under 1/3 HP, Grass moves deal +50%.',
     blaze: 'Under 1/3 HP, Fire moves deal +50%.',
     torrent: 'Under 1/3 HP, Water moves deal +50%.',
@@ -2492,7 +2496,7 @@ export const en: Messages = {
     },
   },
   eggs: {
-    tiers: { common: 'Common Egg', rare: 'Rare Egg', ultra: 'Ultra Rare Egg', friend: 'Friendship Egg', haunted: 'Haunted Egg', kecleon: 'Kecleon Egg', kecleonShiny: 'Shiny Kecleon Egg' },
+    tiers: { common: 'Common Egg', rare: 'Rare Egg', ultra: 'Ultra Rare Egg', friend: 'Friendship Egg', haunted: 'Haunted Egg', kecleon: 'Kecleon Egg', kecleonShiny: 'Shiny Kecleon Egg', fossil: 'Fossil Egg', found: 'Encounter' },
     found: (egg) => `You found a *${egg}*! It goes to the incubator.`,
     foundFull: (egg, coins) => `You found a *${egg}*! The incubator is full, so it will become *${coins}*.`,
     title: 'INCUBATOR',
@@ -3018,6 +3022,8 @@ export const en: Messages = {
   },
 
   moves: {
+    ...SEASON_ONE_EGGS_WORDS.en.moves,
+    ...SEASON_ONE_KITS_WORDS.en.moves,
     leechSeed: {
       description: 'Lobs seeds at the nearest foes. A seed drains HP over time and heals you; when the foe faints, it jumps to two neighbors.',
       upgrades: [
@@ -5488,6 +5494,8 @@ export const en: Messages = {
   },
 
   blurbs: {
+    ...SEASON_ONE_EGGS_WORDS.en.blurbs,
+    ...SEASON_ONE_KITS_WORDS.en.blurbs,
     bulbasaur: 'Balanced. Regenerates HP.',
     charmander: 'Offensive. More damage, less HP.',
     squirtle: 'Defensive. More HP and defense.',

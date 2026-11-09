@@ -154,7 +154,7 @@ export const VITRINE = {
     /** From this price on, the shop asks before selling one (a click buys on desktop). */
     confirmFrom: 80_000,
   },
-} as const satisfies { eggs: Record<Exclude<EggTier, 'friend' | 'haunted' | 'kecleon' | 'kecleonShiny'>, { price: number; weight: number }> } & Record<string, unknown>
+} as const satisfies { eggs: Record<Exclude<EggTier, 'friend' | 'haunted' | 'kecleon' | 'kecleonShiny' | 'fossil' | 'found'>, { price: number; weight: number }> } & Record<string, unknown>
 
 export type VitrineEgg = keyof typeof VITRINE.eggs
 

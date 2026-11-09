@@ -383,9 +383,12 @@ const EGG_PALETTES = {
   kecleon: { 1: '#2c6a30', 2: '#68c058', 3: '#c8f0a8', 4: '#d83838' },
   /** The loyalty card's Kecleon Egg, sure to hatch shiny: a golden zigzag on a deeper green shell. */
   kecleonShiny: { 1: '#1c4a20', 2: '#3c8a3c', 3: '#a8e890', 4: '#f8d030' },
+  /** The Fossil Egg: old amber with a dark fossil's spots. */
+  fossil: { 1: '#a86820', 2: '#e8a838', 3: '#f8d888', 4: '#583818' },
+  found: { 1: '#c8b890', 2: '#f8f0d8', 3: '#ffffff', 4: '#c8b890' },
 } as const satisfies Record<EggTier, Palette>
 
-const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020' } as const satisfies Record<EggTier, string>
+const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020', fossil: '#583818', found: '#584830' } as const satisfies Record<EggTier, string>
 
 /** The eggs drawn from their own rows instead of `EGG`'s spots. */
 const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG }

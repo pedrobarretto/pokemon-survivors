@@ -38,6 +38,8 @@ export type GiftContent =
   | { kind: 'style'; style: StyleRef }
   /** The family hatches shiny right away, with its scene (a family already shiny pays its egg's ₽). */
   | { kind: 'shinyHatch'; family: HatchlingId }
+  /** The family unlocked right away, with its scene: a family found outside an egg (the Realm's plush, research, an encounter). A family owned already pays its egg's ₽. */
+  | { kind: 'family'; family: HatchlingId }
   /** A Desafio do dia's ribbon (`game/ribbons.ts`), with the day and the place. */
   | { kind: 'ribbon'; ribbon: Ribbon }
   /** A shiny of the player's choice, picked later (`game/shinyPicks.ts`): the supporters' thank-you. */
@@ -137,6 +139,8 @@ export const parseGiftContent = (v: unknown): GiftContent | null => {
     }
     case 'shinyHatch':
       return isOneOf(v.family, HATCHLING_IDS) ? { kind: 'shinyHatch', family: v.family } : null
+    case 'family':
+      return isOneOf(v.family, HATCHLING_IDS) ? { kind: 'family', family: v.family } : null
     case 'ribbon': {
       const ribbon = parseRibbon(v.ribbon)
       return ribbon ? { kind: 'ribbon', ribbon } : null
@@ -209,6 +213,22 @@ const shinyHatch = (save: Save, id: HatchlingId): { save: Save; hatch: Hatch } =
   }
 }
 
+/** The family in normal colors, hatched on the spot (a family owned already pays its egg's ₽). */
+const familyHatch = (save: Save, id: HatchlingId): { save: Save; hatch: Hatch } => {
+  const tier = HATCHLINGS[id].egg
+  const duplicate = save.hatched[id] !== undefined
+  const refund = duplicate ? EGG_TIERS[tier].refund : 0
+  return {
+    save: {
+      ...save,
+      hatched: duplicate ? save.hatched : { ...save.hatched, [id]: { shiny: false } },
+      wallet: save.wallet + refund,
+      dex: markHatch(save.dex, HATCHLINGS[id].line.map((stage) => stage.dex), false),
+    },
+    hatch: { id, tier, shiny: false, duplicate, refund, guaranteed: false },
+  }
+}
+
 /** Owns and wears a style. Narrowing per slot keeps each id with its own slot for the type checker. */
 const wear = (style: StyleSave, ref: StyleRef): StyleSave => {
   const put = <S extends StyleSlot>(slot: S, id: StyleId<S>) => equipStyle(grantStyle(style, slot, id), slot, id)
@@ -233,6 +253,8 @@ const give = (save: Save, content: GiftContent, id: string): { save: Save; hatch
       return { save: { ...save, style: wear(save.style, content.style) }, hatch: null }
     case 'shinyHatch':
       return shinyHatch(save, content.family)
+    case 'family':
+      return familyHatch(save, content.family)
     case 'ribbon':
       return { save: { ...save, ribbons: mergeRibbons(save.ribbons, [content.ribbon]) }, hatch: null }
     case 'shinyPick':

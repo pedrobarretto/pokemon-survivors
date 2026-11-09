@@ -1,35 +1,9 @@
 import type { EggTier } from '../game/eggs'
-import type { StatDelta } from '../game/stats'
 import { LEGENDS, type LegendId } from './legends'
-import { STARTER_IDS, STARTERS, type EvolutionStage, type PlayableDef, type StarterId } from './starters'
-import type { PokeType } from './types'
-
-/**
- * Playable families that hatch from eggs (`game/eggs.ts`), on top of the 27
- * starters. They share the starters' shape; `egg` is the egg tier they hatch from
- * (Munchlax alone hatches from the Friendship Egg, which only invites bring;
- * the Haunted Egg's ghosts only from the egg Duskull's stall sells on the
- * Noite das Bruxas, and the Kecleon Egg's four only from the Vitrine's fixed
- * card, so both stay out of the Desafio do dia and the shiny tickets).
- */
-export type HatchlingDef = PlayableDef & { egg: EggTier }
-
-type Stage = readonly [name: string, dex: number, types: readonly PokeType[]]
-
-/** A 3-stage line that evolves at Lv 12 and Lv 28, like the starters. */
-const line3 = (a: Stage, b: Stage, c: Stage, bonuses: readonly [StatDelta, StatDelta]) =>
-  [
-    { name: a[0], dex: a[1], types: a[2], evolveAt: 12, bonus: {} },
-    { name: b[0], dex: b[1], types: b[2], evolveAt: 28, bonus: bonuses[0] },
-    { name: c[0], dex: c[1], types: c[2], bonus: bonuses[1] },
-  ] as const satisfies readonly EvolutionStage[]
-
-/** A 2-stage line evolves once, at Lv 20, and gets the whole bonus there. */
-const line2 = (a: Stage, b: Stage, bonus: StatDelta) =>
-  [
-    { name: a[0], dex: a[1], types: a[2], evolveAt: 20, bonus: {} },
-    { name: b[0], dex: b[1], types: b[2], bonus },
-  ] as const satisfies readonly EvolutionStage[]
+import { line2, line3, type HatchlingDef } from './playableLines'
+import { SEASON_ONE_EGGS } from './seasonOneEggs'
+import { SEASON_ONE_KITS } from './seasonOneKits'
+import { STARTER_IDS, STARTERS, type StarterId } from './starters'
 
 export const HATCHLINGS = {
   /* ---------- Common eggs ---------- */
@@ -738,6 +712,8 @@ export const HATCHLINGS = {
     learnset: [['sketch', 'weatherBall', 'furySwipes', 'selfDestruct', 'waterShuriken', 'torchSong', 'drumBeating', 'dragonBreath', 'disarmingVoice', 'venoshock']],
     line: [{ name: 'Smeargle', dex: 235, types: ['normal'], bonus: {} }],
   },
+  ...SEASON_ONE_EGGS,
+  ...SEASON_ONE_KITS,
 } as const satisfies Record<string, HatchlingDef>
 
 export type HatchlingId = keyof typeof HATCHLINGS
@@ -758,8 +734,8 @@ export const PLAYABLE_IDS: readonly (StarterId | HatchlingId)[] = [...STARTER_ID
 
 export const isHatchling = (id: PlayableId): id is HatchlingId => id in HATCHLINGS
 
-/** The eggs whose families come from nowhere else: the Haunted Egg (Duskull's stall) and the Kecleon Egg (the Vitrine's fixed card). */
-const EXCLUSIVE_EGGS: readonly EggTier[] = ['haunted', 'kecleon']
+/** The eggs whose families come from nowhere else: the Haunted Egg (Duskull's stall), the Kecleon Egg (the Vitrine's fixed card), the Fossil Egg (the Underground) and the families found without one. */
+const EXCLUSIVE_EGGS: readonly EggTier[] = ['haunted', 'kecleon', 'fossil', 'found']
 
 /**
  * A family only its own egg brings (the Haunted Egg's ghosts, the Kecleon

@@ -1,3 +1,5 @@
+import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -2354,6 +2356,8 @@ export const zh: Messages = {
   },
 
   abilities: {
+    ...SEASON_ONE_EGGS_WORDS.zh.abilities,
+    ...SEASON_ONE_KITS_WORDS.zh.abilities,
     overgrow: 'HP低於1/3時，草屬性招式傷害+50%。',
     blaze: 'HP低於1/3時，火屬性招式傷害+50%。',
     torrent: 'HP低於1/3時，水屬性招式傷害+50%。',
@@ -2490,7 +2494,7 @@ export const zh: Messages = {
     },
   },
   eggs: {
-    tiers: { common: '普通蛋', rare: '稀有蛋', ultra: '超稀有蛋', friend: '友情蛋', haunted: '鬧鬼蛋', kecleon: 'Kecleon蛋', kecleonShiny: '異色Kecleon蛋' },
+    tiers: { common: '普通蛋', rare: '稀有蛋', ultra: '超稀有蛋', friend: '友情蛋', haunted: '鬧鬼蛋', kecleon: 'Kecleon蛋', kecleonShiny: '異色Kecleon蛋', fossil: '化石蛋', found: '邂逅' },
     found: (egg) => `你找到了一顆*${egg}*！已放進孵化器。`,
     foundFull: (egg, coins) => `你找到了一顆*${egg}*！孵化器已滿，所以會變成*${coins}*。`,
     title: '孵化器',
@@ -3015,6 +3019,8 @@ export const zh: Messages = {
     region: (name) => `用${name}的初始寶可夢擊敗 Mewtwo`,
   },
   moves: {
+    ...SEASON_ONE_EGGS_WORDS.zh.moves,
+    ...SEASON_ONE_KITS_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
       upgrades: [
@@ -5484,6 +5490,8 @@ export const zh: Messages = {
   },
 
   blurbs: {
+    ...SEASON_ONE_EGGS_WORDS.zh.blurbs,
+    ...SEASON_ONE_KITS_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
     squirtle: '防禦型。HP與防禦較高。',

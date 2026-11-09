@@ -44,6 +44,10 @@ export const EGG_TIERS = {
   kecleon: { steps: 4000, refund: 2500, even: true },
   /** The loyalty card's 100-stamp gift (`LOYALTY`): a Kecleon Egg whose hatch is always shiny. */
   kecleonShiny: { steps: 4000, refund: 2500, even: true, families: 'kecleon', shiny: true },
+  /** The Fossil Egg: Old Amber dug up in the Underground, and only its five fossil families come out. */
+  fossil: { steps: 3000, refund: 800, even: true },
+  /** No egg at all: the families whose way in is their own (an encounter, research, the Realm). Never laid; it only names their source. */
+  found: { steps: 2000, refund: 600 },
 } as const satisfies Record<string, EggTierRule>
 
 export type EggTier = keyof typeof EGG_TIERS

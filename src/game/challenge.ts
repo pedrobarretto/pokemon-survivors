@@ -1,6 +1,8 @@
 import { createRng, seedFrom, weightedPick } from '../engine/rng'
 import type { EnemyId } from '../data/enemies'
 import { isExclusiveFamily, PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
+import { SEASON_ONE_EGGS } from '../data/seasonOneEggs'
+import { SEASON_ONE_KITS } from '../data/seasonOneKits'
 import { brasiliaDay, dayNumber, msSinceDayStart, previousDay, type DayKey } from './day'
 import type { Difficulty } from './difficulty'
 import { NO_RANKS, UPGRADE_IDS } from './meta'
@@ -43,7 +45,7 @@ export type Challenge = { day: DayKey; seed: number; starter: PlayableId; diffic
  * Egg's; they also joined after the draw began: leaving them out keeps every
  * day's Pokémon where it was).
  */
-const POOL = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id))
+const POOL = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS))
 
 /** A seeded shuffle of the pool: one cycle of days gives each one its day. */
 const cycleOrder = (cycle: number) => {

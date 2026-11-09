@@ -17,6 +17,8 @@ import { scaleStatus, type StatusSpec } from './status'
 import { SIGNATURE_MOVES } from './signatureMoves'
 import { EGG_MOVES_3 } from './eggMoves3'
 import { SKETCH_MOVES } from './sketch'
+import { SEASON_ONE_EGG_MOVES } from './seasonOneEggMoves'
+import { SEASON_ONE_KIT_MOVES } from './seasonOneKitMoves'
 import { TM_MOVES } from './tmMoves'
 import { SHOP_TM_MOVES } from './shopTmMoves'
 import { VERB_EVOLVED_MOVES } from './verbEvolutions'
@@ -2302,6 +2304,8 @@ export const MOVES = {
   ...LEGENDARY_MOVES_2,
   /* ---------- Smeargle's Sketch, the Kecleon Egg's signature (`sketch.ts`) ---------- */
   ...SKETCH_MOVES,
+  ...SEASON_ONE_EGG_MOVES,
+  ...SEASON_ONE_KIT_MOVES,
 } as const satisfies Record<string, MoveDef>
 
 export type MoveId = keyof typeof MOVES

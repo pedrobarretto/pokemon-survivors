@@ -63,6 +63,8 @@ const rewardName = (c: GiftContent): string => {
       return `${c.count}× ${BAG_ITEMS[c.item].name}`
     case 'shinyHatch':
       return m.shiny(HATCHLINGS[c.family].name)
+    case 'family':
+      return HATCHLINGS[c.family].name
     case 'legend':
       return LEGENDS[c.legend].name
     case 'title':

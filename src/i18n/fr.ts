@@ -1,3 +1,5 @@
+import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -2354,6 +2356,8 @@ export const fr: Messages = {
   },
 
   abilities: {
+    ...SEASON_ONE_EGGS_WORDS.fr.abilities,
+    ...SEASON_ONE_KITS_WORDS.fr.abilities,
     overgrow: 'Sous 1/3 des PV, les capacités Plante font +50%.',
     blaze: 'Sous 1/3 des PV, les capacités Feu font +50%.',
     torrent: 'Sous 1/3 des PV, les capacités Eau font +50%.',
@@ -2490,7 +2494,7 @@ export const fr: Messages = {
     },
   },
   eggs: {
-    tiers: { common: 'Œuf commun', rare: 'Œuf rare', ultra: 'Œuf ultra rare', friend: 'Œuf de l’Amitié', haunted: 'Œuf Hanté', kecleon: 'Œuf de Kecleon', kecleonShiny: 'Œuf de Kecleon chromatique' },
+    tiers: { common: 'Œuf commun', rare: 'Œuf rare', ultra: 'Œuf ultra rare', friend: 'Œuf de l’Amitié', haunted: 'Œuf Hanté', kecleon: 'Œuf de Kecleon', kecleonShiny: 'Œuf de Kecleon chromatique', fossil: 'Œuf Fossile', found: 'Rencontre' },
     found: (egg) => `Tu as trouvé un *${egg}* ! Il part à l’incubateur.`,
     foundFull: (egg, coins) => `Tu as trouvé un *${egg}* ! L’incubateur est plein, il deviendra donc *${coins}*.`,
     title: 'INCUBATEUR',
@@ -3015,6 +3019,8 @@ export const fr: Messages = {
     region: (name) => `Vaincs Mewtwo avec un starter de ${name}`,
   },
   moves: {
+    ...SEASON_ONE_EGGS_WORDS.fr.moves,
+    ...SEASON_ONE_KITS_WORDS.fr.moves,
     leechSeed: {
       description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
       upgrades: [
@@ -5484,6 +5490,8 @@ export const fr: Messages = {
   },
 
   blurbs: {
+    ...SEASON_ONE_EGGS_WORDS.fr.blurbs,
+    ...SEASON_ONE_KITS_WORDS.fr.blurbs,
     bulbasaur: 'Équilibré. Régénère ses PV.',
     charmander: 'Offensif. Plus de dégâts, moins de PV.',
     squirtle: 'Défensif. Plus de PV et de défense.',

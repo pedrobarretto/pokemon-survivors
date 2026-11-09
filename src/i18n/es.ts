@@ -1,3 +1,5 @@
+import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -2358,6 +2360,8 @@ export const es: Messages = {
   },
 
   abilities: {
+    ...SEASON_ONE_EGGS_WORDS.es.abilities,
+    ...SEASON_ONE_KITS_WORDS.es.abilities,
     overgrow: 'Con menos de 1/3 del HP, los movimientos de Planta hacen +50%.',
     blaze: 'Con menos de 1/3 del HP, los movimientos de Fuego hacen +50%.',
     torrent: 'Con menos de 1/3 del HP, los movimientos de Agua hacen +50%.',
@@ -2494,7 +2498,7 @@ export const es: Messages = {
     },
   },
   eggs: {
-    tiers: { common: 'Huevo Común', rare: 'Huevo Raro', ultra: 'Huevo Ultrarraro', friend: 'Huevo de la Amistad', haunted: 'Huevo Embrujado', kecleon: 'Huevo Kecleon', kecleonShiny: 'Huevo Kecleon brillante' },
+    tiers: { common: 'Huevo Común', rare: 'Huevo Raro', ultra: 'Huevo Ultrarraro', friend: 'Huevo de la Amistad', haunted: 'Huevo Embrujado', kecleon: 'Huevo Kecleon', kecleonShiny: 'Huevo Kecleon brillante', fossil: 'Huevo Fósil', found: 'Encuentro' },
     found: (egg) => `¡Encontraste un *${egg}*! Va a la incubadora.`,
     foundFull: (egg, coins) => `¡Encontraste un *${egg}*! La incubadora está llena, así que se convertirá en *${coins}*.`,
     title: 'INCUBADORA',
@@ -3020,6 +3024,8 @@ export const es: Messages = {
   },
 
   moves: {
+    ...SEASON_ONE_EGGS_WORDS.es.moves,
+    ...SEASON_ONE_KITS_WORDS.es.moves,
     leechSeed: {
       description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
       upgrades: [
@@ -5490,6 +5496,8 @@ export const es: Messages = {
   },
 
   blurbs: {
+    ...SEASON_ONE_EGGS_WORDS.es.blurbs,
+    ...SEASON_ONE_KITS_WORDS.es.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Más daño, menos vida.',
     squirtle: 'Defensivo. Más vida y defensa.',

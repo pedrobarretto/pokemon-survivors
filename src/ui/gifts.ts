@@ -45,6 +45,8 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
     }
     case 'shinyHatch':
       return { src: portraitUrl(HATCHLINGS[c.family].line[0].dex, true), text: m.shinyHatch(HATCHLINGS[c.family].name) }
+    case 'family':
+      return { src: portraitUrl(HATCHLINGS[c.family].line[0].dex, false), text: HATCHLINGS[c.family].name }
     case 'ribbon':
       return { src: ribbonIcon(c.ribbon.tier), text: m.ribbon(t().ribbons.names[c.ribbon.tier]) }
     case 'shinyPick':

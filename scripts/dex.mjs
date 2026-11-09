@@ -33,6 +33,10 @@ export const HATCHLINGS = [
   137, 233, 474, 102, 103, 559, 560, 235, // Kecleon Egg (the Vitrine's fixed card): Porygon, Exeggcute, Scraggy and Smeargle's lines
   // Branching evolutions (src/data/branches.ts): the eeveelutions, Gallade, Froslass, Politoed, Kleavor and Ceruledge
   134, 135, 136, 196, 470, 471, 700, 475, 478, 186, 900, 937,
+  // Temporada 1's families (src/data/seasonOne*.ts), whole lines; Dondozo is the one Tatsugiri pilots
+  872, 873, 595, 596, 757, 758, 856, 857, 858, 840, 841, 842, 1011, 1019, 996, 997, 998, // eggs
+  408, 409, 410, 411, 566, 567, 696, 697, 698, 699, // fossils
+  56, 57, 979, 624, 625, 983, 704, 705, 706, 746, 924, 925, 963, 964, 877, 479, 351, 554, 555, 767, 768, 778, 978, 977,
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -79,7 +83,7 @@ export const EMOTE_ANIMS = ['Hop', 'Rotate', 'Sleep', 'Charge', 'Pose']
  */
 export const FLYERS = new Set([
   16, 17, 18, 21, 22, 227, 276, 277, 333, 334, 396, 397, 398, // the sky's flock
-  6, 41, 42, 123, 130, 149, 169, 176, 373, 468, 714, 715, 722, 723, // player forms
+  6, 41, 42, 123, 130, 149, 169, 176, 373, 468, 714, 715, 722, 723, 566, 567, // player forms
 ])
 /** Species that can roll shiny: the player lines, regular enemies, rift legendaries, places' bosses, the hidden zones' Audino and the companions (Pumpkaboo for Gold supporters). */
 /** Legendaries that can also roll shiny as wave bosses (the trios, Mewtwo, the mythicals) and Arceus, for the Legend mode's captures. */
@@ -99,6 +103,14 @@ export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, .
  */
 export const FORMS = {
   681: { blade: '0001' }, // Aegislash's Blade Forme (Stance Change)
+  // Temporada 1's formes (src/data/seasonOneKits.ts)
+  351: { sunny: '0001', rainy: '0002', snowy: '0003' }, // Castform (the weather)
+  479: { heat: '0001', wash: '0002', frost: '0003', fan: '0004', mow: '0005' }, // Rotom's appliances
+  555: { zen: '0001' }, // Darmanitan's Zen Mode
+  746: { school: '0001' }, // Wishiwashi's School Forme
+  778: { busted: '0001' }, // Mimikyu's broken Disguise
+  877: { hangry: '0001' }, // Morpeko's Hunger Switch
+  964: { hero: '0001' }, // Palafin's Hero Forme
   // Mega Evolutions (src/data/megas.ts). Only these Megas have sprites on SpriteCollab so far; the
   // others wear their final stage's sprite until theirs land there (then add the form id here).
   6: { megaX: '0001' },
