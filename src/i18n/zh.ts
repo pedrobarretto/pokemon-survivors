@@ -3,6 +3,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
+import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -6041,6 +6042,7 @@ export const zh: Messages = {
     },
     doll: (legend) => `${legend}玩偶`,
     plush: SEASON_ONE_CLAW_WORDS.zh.plush,
+    dig: SEASON_ONE_DIG_WORDS.zh.pieces,
     kinds: { floor: '家具', rug: '地毯', top: '擺飾', wall: '牆面', wallpaper: '壁紙', flooring: '地板' },
     /** The carpentry's collections (`FURNITURE_SETS`). */
     sets: { classic: '經典', cozy: '溫馨', elegant: '典雅', modern: '現代', pop: '繽紛', garden: '花園', aqua: '水族', arcade: '遊樂場', kitchen: '廚房', trainer: '訓練家', center: '寶可夢中心', gallery: '畫廊', trophies: '獎盃' },
@@ -6329,6 +6331,7 @@ export const zh: Messages = {
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.zh.words,
     safari: SEASON_ONE_SAFARI_WORDS.zh.words,
+    dig: SEASON_ONE_DIG_WORDS.zh.words,
     close: '離開',
     choose: '玩哪個遊戲？',
     games: {
@@ -6339,8 +6342,9 @@ export const zh: Messages = {
       typeDuel: { name: '屬性對決', blurb: '火剋草，草剋水，水剋火。' },
       claw: SEASON_ONE_CLAW_WORDS.zh.game,
       safari: SEASON_ONE_SAFARI_WORDS.zh.game,
+      dig: SEASON_ONE_DIG_WORDS.zh.game,
     },
-    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', wishiwashi: '我釣到了 Wishiwashi！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' }, claw: SEASON_ONE_CLAW_WORDS.zh.feats, safari: SEASON_ONE_SAFARI_WORDS.zh.feats },
+    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', wishiwashi: '我釣到了 Wishiwashi！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' }, claw: SEASON_ONE_CLAW_WORDS.zh.feats, safari: SEASON_ONE_SAFARI_WORDS.zh.feats, dig: SEASON_ONE_DIG_WORDS.zh.feats },
     duel: {
       pick: '選一張牌',
       play: '出牌',

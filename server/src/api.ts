@@ -20,6 +20,7 @@ import { discordLink } from './discordLink'
 import { candyGoalStore } from './candyGoal'
 import { clawStore } from './claw'
 import { safariStore } from './safari'
+import { digStore } from './dig'
 import { festivalStore } from './festival'
 import { abacatePay } from './donations'
 import { gemStore } from './gems'
@@ -112,6 +113,7 @@ const app = createApp({
   realm,
   claw: clawStore(sql, { closed: realm.closedIn }),
   safari: safariStore(sql, { closed: realm.closedIn }),
+  dig: digStore(sql, { closed: realm.closedIn }),
   arenaReportSecret: env.arenaReportSecret,
   patreon: env.patreon ? patreonOAuth(env.patreon) : null,
   webhooks: {

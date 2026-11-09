@@ -3,6 +3,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
+import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
 import type { AchievementId, AchievementStat, GiftTitleId, TitleId } from '../data/achievements'
 import type { BiomeId } from '../data/biomes'
 import type { DigFind, HiddenPlaceId, PlaceId, WingId } from '../data/places'
@@ -6458,6 +6459,7 @@ export const pt = {
     } satisfies Record<ShopFurnitureId, string>,
     doll: (legend: string) => `Boneco de ${legend}`,
     plush: SEASON_ONE_CLAW_WORDS.pt.plush,
+    dig: SEASON_ONE_DIG_WORDS.pt.pieces,
     kinds: { floor: 'Móvel', rug: 'Tapete', top: 'Enfeite', wall: 'Parede', wallpaper: 'Papel de parede', flooring: 'Piso' } satisfies Record<FurnitureKind, string>,
     /** The carpentry's collections (`FURNITURE_SETS`). */
     sets: { classic: 'Clássico', cozy: 'Aconchego', elegant: 'Elegante', modern: 'Moderno', pop: 'Pop', garden: 'Jardim', aqua: 'Aquático', arcade: 'Fliperama', kitchen: 'Cozinha', trainer: 'Treinador', center: 'Centro Pokémon', gallery: 'Galeria', trophies: 'Troféus' } satisfies Record<FurnitureSet, string>,
@@ -6785,6 +6787,7 @@ export const pt = {
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.pt.words,
     safari: SEASON_ONE_SAFARI_WORDS.pt.words,
+    dig: SEASON_ONE_DIG_WORDS.pt.words,
     close: 'Sair',
     choose: 'Qual jogo?',
     games: {
@@ -6795,8 +6798,9 @@ export const pt = {
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fogo vence Planta, Planta vence Água, Água vence Fogo.' },
       claw: SEASON_ONE_CLAW_WORDS.pt.game,
       safari: SEASON_ONE_SAFARI_WORDS.pt.game,
+      dig: SEASON_ONE_DIG_WORDS.pt.game,
     },
-    feats: { fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', wishiwashi: 'Pesquei um Wishiwashi!', bigHaul: 'Pescaria de 300 pontos!' }, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' }, claw: SEASON_ONE_CLAW_WORDS.pt.feats, safari: SEASON_ONE_SAFARI_WORDS.pt.feats },
+    feats: { fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', wishiwashi: 'Pesquei um Wishiwashi!', bigHaul: 'Pescaria de 300 pontos!' }, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' }, claw: SEASON_ONE_CLAW_WORDS.pt.feats, safari: SEASON_ONE_SAFARI_WORDS.pt.feats, dig: SEASON_ONE_DIG_WORDS.pt.feats },
     duel: {
       pick: 'Escolha uma carta',
       play: 'Jogar',

@@ -6,8 +6,10 @@ import type { GameOutcome, MinigameId } from '../data/minigames'
 import type { HatchlingId, PlayableId } from '../data/hatchlings'
 import type { PlushFamily } from '../data/plushes'
 import type { SafariHabitat } from '../data/safari'
-import type { Gift } from '../game/gifts'
+import type { DigPrize, DigTreasureId } from '../data/digTreasures'
+import type { Gift, GiftContent, GiftReason } from '../game/gifts'
 import type { SafariCatch, SafariTurn } from '../realm/games/safari.rules'
+import type { DigCell, DigHint, DigPattern, DigPowers, DigTreasure } from '../realm/games/dig.rules'
 
 /**
  * The Poké Realm's API (game → `server/`, Clerk-authenticated like the rest).
@@ -37,6 +39,10 @@ import type { SafariCatch, SafariTurn } from '../realm/games/safari.rules'
  *   the game's stats (`GameStats`) and grants the trophies they reach (`trophiesEarned`, into
  *   `furniture_owned` with source `game`). `GameClaimed`; 400 for an outcome that doesn't fit the game,
  *   429 past the route's rate limit. The client adds `coins` to the wallet like a run's ₽.
+ * - `GET /realm/dig` (auth): `DigState`, the Escavação as the player sees it (the open wall's view, never its layout). 403 `profile` without a @handle.
+ * - `POST /realm/dig/start` (auth) `{ partner?, base? }`: a wall (`wallPrice`: free, or ₽ out of the stored save at revision `base`). `DigStarted`, with `{ save, revision }` when it spent; a wall open already comes back uncharged. 403 `cap`/`profile`/`banned`, 402 `funds`, 409 `nosave`/`stale`.
+ * - `POST /realm/dig/hit` (auth) `{ id, seq, tool, cell }`: one hit, numbered from 1: `DigHitAnswer` (only the cells it opened and the crack). A number already answered gets its stored answer back. 409 `seq`/`empty`/`over`.
+ * - `POST /realm/dig/stop` (auth) `{ id }`: leaves with what's dug out. `{ end: DigEnd }`; a wall already ended answers the same.
  * - `GET /realm/claw` (auth): `ClawState`, the Máquina de Pelúcias as the player sees it. 403 `profile` without a @handle.
  * - `POST /realm/claw/insert` (auth) `{ base? }`: a credit (`creditPrice`: free, or ₽ out of the stored save at revision
  *   `base`, like `POST /realm/furniture/buy`). `ClawInserted`, with `{ save, revision }` when it spent; an open credit
@@ -161,3 +167,37 @@ export type SafariStarted = { session: SafariSession; used: number }
 
 /** What an action came to, the session after it and, for a catch, the gift that brings the Pokémon. */
 export type SafariActed = { turn: SafariTurn<HatchlingId>; gift: Gift | null; session: SafariSession }
+
+/** The Escavação's wall as its owner sees it: the rock's look, what's dug out so far and how cracked it is. Never where anything still buried lies. */
+export type DigWallView = {
+  id: string
+  week: string
+  golden: boolean
+  pattern: DigPattern
+  cap: number
+  powers: DigPowers
+  hint: DigHint | null
+  depths: number[]
+  left: number[]
+  crack: number
+  seq: number
+  tiles: DigCell[]
+  freed: number[]
+}
+
+/** The mine for this account: the week it's on, walls used today, the dry streak toward a guaranteed fossil, the fossils it lacks and the wall left open. */
+export type DigState = { week: string; used: number; dry: number; lacking: string[]; open: DigWallView | null }
+
+export type DigStarted = { wall: DigWallView; used: number }
+
+/** A prize dug out: its treasure, what it pays, whether a fossil was a repeat and the ₽ it paid in coins. */
+export type DigReward = { id: DigTreasureId; prize: DigPrize; repeat: boolean; coins: number }
+
+/** A prize's gift as the API sends it (`parseGift` reads it). */
+export type DigGift = { id: string; content: GiftContent; reason: GiftReason | null; at: string }
+
+/** How a wall ended: what was kept, what got buried (every treasure's place, now it's over), the gifts carrying the prizes and the dry streak after. */
+export type DigEnd = { outcome: 'collapse' | 'stopped'; kept: DigReward[]; buried: DigTreasure[]; treasures: DigTreasure[]; gifts: DigGift[]; dry: number }
+
+/** One hit's answer: the cells it changed, the crack now, the treasures it finished and, if it ended the wall, how. */
+export type DigHitAnswer = { seq: number; cells: DigCell[]; crack: number; freed: number[]; end: DigEnd | null }
