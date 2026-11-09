@@ -17815,7 +17815,7 @@ button.hall-tile:hover {
 }
 
 .coop-body {
-  gap: 10px;
+  gap: 7px;
 }
 
 .coop-screen .btn.small,
@@ -18090,8 +18090,17 @@ button.hall-tile:hover {
   color: var(--dk-ink-2, #505870);
 }
 
-.coop-rules {
+.invite-tip.coop-rules {
   margin: 0;
+  font-size: 17px;
+  line-height: 1.1;
+}
+
+.coop-mode .shell-seg-option,
+.coop-challenge .shell-seg-option {
+  min-height: 38px;
+  padding: 0 10px;
+  font-size: 18px;
 }
 
 .coop-wait {
