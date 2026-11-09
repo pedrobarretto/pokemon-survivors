@@ -1,12 +1,9 @@
-import { isExclusivePlush, plushForm, plushPiece, type PlushFamily } from '../../data/plushes'
-import { openGift, stageGifts } from '../../account'
+import { plushForm, plushPiece, type PlushFamily } from '../../data/plushes'
 import { playSfx } from '../../engine/audio'
 import { formatPokeDollars, t } from '../../i18n'
 import type { ClawDropped, ClawPlay, ClawState } from '../../net/realmApi'
 import { plushArt } from '../../render/plush'
-import { hatchScene } from '../../ui/incubator'
 import { h } from '../../ui/dom'
-import type { Screen } from '../../ui/screens'
 import { loadSave } from '../../ui/save'
 import { isFailure } from '../api'
 import { dropClaw, fetchClaw, insertCredit } from '../clawApi'
@@ -45,7 +42,7 @@ const PLUSH_W = 30
 /** Seconds each step of a drop lasts. */
 const TIMES = { lower: 0.7, lift: 0.8, carry: 0.9, fall: 0.45, slip: 0.5 } as const
 
-type Phase = 'load' | 'ready' | 'busy' | 'aim' | 'lower' | 'wait' | 'lift' | 'carry' | 'fall' | 'slip' | 'result' | 'hatch'
+type Phase = 'load' | 'ready' | 'busy' | 'aim' | 'lower' | 'wait' | 'lift' | 'carry' | 'fall' | 'slip' | 'result'
 
 const FRAME_DARK = '#3a1830'
 
@@ -205,7 +202,6 @@ const start = (ctx: SoloCtx): GameRun => {
   let slipped: { index: number; from: number } | null = null
   let padHeld = { x: 0, y: 0 }
   let dropHeld = false
-  let scene: Screen | null = null
   let disposed = false
   const parts: Particle[] = []
   const pops: Popup[] = []
@@ -350,44 +346,18 @@ const start = (ctx: SoloCtx): GameRun => {
     say([h('h3', {}, m().miss(nameOf(result.target))), h('p', {}, n >= CLAW.guarantee - 1 ? m().sure : m().progress(n, CLAW.guarantee)), dayLine()], a ? [a] : [])
   }
 
-  const openHatch = (result: ClawDropped) => {
-    if (!result.gift) return
-    stageGifts([result.gift])
-    const out = openGift(result.gift.id)
-    if (out?.status !== 'applied' || !out.hatch) return
-    go('hatch')
-    say([])
-    const art = plushArt(plushForm(result.family).dex, PLUSH_W)
-    scene = hatchScene(ctx.root, ctx.input, out.hatch, {
-      look: art ? { egg: art, text: m().alive(plushForm(result.family).name), reveal: m().came(plushForm(result.family).name) } : undefined,
-      done: () => {
-        scene?.dispose()
-        scene = null
-        ready()
-      },
-    })
-  }
-
   const finishWin = () => {
     if (!result) return
-    const won = result
     playSfx('levelUp')
     ctx.brag('plush')
-    if (isExclusivePlush(won.family)) ctx.brag('exclusive')
     go('result')
-    const name = pieceName(plushPiece(won.family))
-    if (won.gift) {
-      say([h('h3', {}, m().won(name)), h('p', {}, m().alive(plushForm(won.family).name))], [{ label: m().open, run: () => openHatch(won) }])
-    } else {
-      const a = creditAction()
-      say([h('h3', {}, m().won(name)), h('p', {}, m().wonNote), dayLine()], a ? [a] : [])
-    }
+    const a = creditAction()
+    say([h('h3', {}, m().won(pieceName(plushPiece(result.family)))), h('p', {}, m().wonNote), dayLine()], a ? [a] : [])
   }
 
   const step = (dt: number, input: GameInput) => {
     clock += dt
     phaseT += dt
-    scene?.tick?.(clock)
     stepFx(parts, pops, dt)
     padHeld = { x: 0, y: 0 }
     dropHeld = false
@@ -629,7 +599,6 @@ const start = (ctx: SoloCtx): GameRun => {
     over: () => null,
     dispose: () => {
       disposed = true
-      scene?.dispose()
       panel.remove()
     },
   }

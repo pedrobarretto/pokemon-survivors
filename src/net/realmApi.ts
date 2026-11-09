@@ -4,7 +4,6 @@ import type { Activity } from '../game/friends'
 import type { CityId, RoomKey } from './realm'
 import type { GameOutcome, MinigameId } from '../data/minigames'
 import type { PlushFamily } from '../data/plushes'
-import type { Gift } from '../game/gifts'
 
 /**
  * The Poké Realm's API (game → `server/`, Clerk-authenticated like the rest).
@@ -126,5 +125,5 @@ export type ClawState = { week: string; prizes: PlushFamily[]; misses: number[];
 
 export type ClawInserted = { play: ClawPlay; used: number }
 
-/** What a drop came to: the plush it went for (its place in `prizes`), the grip, whether it held, every plush's misses after it and, for an exclusive family won, its gift. */
-export type ClawDropped = { target: number; grip: number; won: boolean; family: PlushFamily; misses: number[]; gift: Gift | null }
+/** What a drop came to: the plush it went for (its place in `prizes`), the grip, whether it held and every plush's misses after it. */
+export type ClawDropped = { target: number; grip: number; won: boolean; family: PlushFamily; misses: number[] }

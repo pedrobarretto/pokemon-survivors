@@ -38,7 +38,7 @@ export type GiftContent =
   | { kind: 'style'; style: StyleRef }
   /** The family hatches shiny right away, with its scene (a family already shiny pays its egg's ₽). */
   | { kind: 'shinyHatch'; family: HatchlingId }
-  /** The family unlocked right away, with its scene: a family found outside an egg (the Realm's plush, research, an encounter). A family owned already pays its egg's ₽. */
+  /** The family unlocked right away, with its scene: a family found outside an egg (research, an encounter, a mini game's catch). A family owned already pays its egg's ₽. */
   | { kind: 'family'; family: HatchlingId }
   /** A Desafio do dia's ribbon (`game/ribbons.ts`), with the day and the place. */
   | { kind: 'ribbon'; ribbon: Ribbon }

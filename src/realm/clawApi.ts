@@ -1,8 +1,7 @@
 import { spendFromSave } from '../account'
 import { apiCall } from '../api'
-import { PLUSH_EXCLUSIVES, PLUSH_POOL, isExclusivePlush, isPlushFamily, plushPiece, type PlushFamily } from '../data/plushes'
+import { PLUSH_POOL, isPlushFamily, plushPiece, type PlushFamily } from '../data/plushes'
 import { brasiliaDay, weekStart } from '../game/day'
-import { parseGift } from '../game/gifts'
 import { isRecord } from '../game/parse'
 import type { ClawDropped, ClawInserted, ClawPlay, ClawState } from '../net/realmApi'
 import { addFakePiece, realmFaked, type Failure } from './api'
@@ -20,15 +19,14 @@ const fake: FakeClaw = { used: 0, misses: new Map(), open: null, plays: 0 }
 
 const thisWeek = () => weekStart(brasiliaDay(new Date()))
 
-const prizesOf = (week: string) => weeklyPrizes<PlushFamily>(week, PLUSH_POOL, PLUSH_EXCLUSIVES)
+const prizesOf = (week: string) => weeklyPrizes(week, PLUSH_POOL)
 
 const fakeMisses = (prizes: readonly PlushFamily[]) => prizes.map((f) => fake.misses.get(f) ?? 0)
 
-/** Dev (`ps.claw`): sets the faked misses on the week's plush at `index` (the exclusive without one; one short of sure without `misses`) and the credits used today. */
-export const stageClaw = (index?: number, misses: number = CLAW.guarantee - 1, used?: number) => {
+/** Dev (`ps.claw`): sets the faked misses on the week's plush at `index` (one short of sure without `misses`) and the credits used today. */
+export const stageClaw = (index = 0, misses: number = CLAW.guarantee - 1, used?: number) => {
   const prizes = prizesOf(thisWeek())
-  const at = index ?? prizes.findIndex(isExclusivePlush)
-  const family = prizes[at]
+  const family = prizes[index]
   if (family) fake.misses.set(family, misses)
   if (used !== undefined) fake.used = used
   return { prizes, misses: fakeMisses(prizes), used: fake.used }
@@ -62,8 +60,7 @@ const parseDropped = (v: unknown): ClawDropped | null => {
   const target = count(v.target)
   const misses = v.misses.map(count)
   if (target === null || misses.some((m) => m === null)) return null
-  const gift = v.gift === null || v.gift === undefined ? null : parseGift(v.gift)
-  return { target, grip: v.grip, won: v.won, family: v.family, misses: misses.filter((m) => m !== null), gift }
+  return { target, grip: v.grip, won: v.won, family: v.family, misses: misses.filter((m) => m !== null) }
 }
 
 /** The machine as this account sees it. */
@@ -109,14 +106,7 @@ export const dropClaw = async (play: ClawPlay, at: PitPoint): Promise<ClawDroppe
     fake.misses.set(family, won ? 0 : (misses[target] ?? 0) + 1)
     fake.open = null
     if (won) addFakePiece(plushPiece(family))
-    return {
-      target,
-      grip,
-      won,
-      family,
-      misses: fakeMisses(prizes),
-      gift: won && isExclusivePlush(family) ? { id: `dev-claw-${play.id}`, content: { kind: 'family', family }, reason: null } : null,
-    }
+    return { target, grip, won, family, misses: fakeMisses(prizes) }
   }
   const { status, body } = await apiCall('/realm/claw/drop', { method: 'POST', body: { id: play.id, x: at.x, y: at.y }, auth: true })
   return (status === 200 ? parseDropped(body) : null) ?? failed(status, body)

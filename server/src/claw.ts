@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
-import { isExclusivePlush, PLUSH_EXCLUSIVES, PLUSH_POOL, plushPiece, type PlushFamily } from '../../src/data/plushes'
+import { PLUSH_POOL, plushPiece, type PlushFamily } from '../../src/data/plushes'
 import { brasiliaDay, weekStart, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
 import { parseSaveData, type Save } from '../../src/game/meta'
@@ -8,7 +8,6 @@ import { isRecord } from '../../src/game/parse'
 import type { ClawDropped, ClawPlay, ClawState } from '../../src/net/realmApi'
 import { CLAW, clampToPit, creditPrice, pitLayout, resolveDrop, weeklyPrizes, type PitPoint } from '../../src/realm/games/claw.rules'
 import type { Sql } from './db'
-import { sendGift } from './gifts'
 import { rateLimiter } from './rateLimit'
 
 /**
@@ -39,7 +38,7 @@ export const parseClawDrop = (v: unknown): { id: string; at: PitPoint } | null =
   return { id: v.id, at: clampToPit({ x: v.x, y: v.y }) }
 }
 
-const prizesOf = (week: DayKey) => weeklyPrizes<PlushFamily>(week, PLUSH_POOL, PLUSH_EXCLUSIVES)
+const prizesOf = (week: DayKey) => weeklyPrizes(week, PLUSH_POOL)
 
 type PlayRow = { id: string; seed: number; week: Date | string; result: unknown; dropped_at: Date | null }
 
@@ -128,9 +127,7 @@ export const clawStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pr
     /**
      * `POST /realm/claw/drop`: decides the credit from its seed and `at`. A
      * miss moves that plush one step toward the chute; a win starts it over
-     * and gives the piece (source `claw`), and an exclusive family's plush
-     * also the `family` gift, whose hatch pays the egg's refund on a family
-     * already owned (`familyHatch`).
+     * and gives the piece (source `claw`).
      */
     drop: (userId: string, id: string, at: PitPoint): Promise<ClawDrop> =>
       sql.begin(async (tx): Promise<ClawDrop> => {
@@ -146,22 +143,14 @@ export const clawStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pr
         await tx`
           insert into claw_progress (user_id, family, misses, wins) values (${userId}, ${family}, ${won ? 0 : 1}, ${won ? 1 : 0})
           on conflict (user_id, family) do update set misses = ${won ? 0 : (misses[target] ?? 0) + 1}, wins = claw_progress.wins + ${won ? 1 : 0}`
-        let gift: ClawDropped['gift'] = null
         if (won) {
           await tx`
             insert into furniture_owned (user_id, furniture, source, count) values (${userId}, ${plushPiece(family)}, 'claw', 1)
             on conflict (user_id, furniture, source) do update set count = furniture_owned.count + 1`
-          if (isExclusivePlush(family)) {
-            const content = { kind: 'family', family } as const
-            const key = `claw:${play.id}`
-            await sendGift(tx, userId, content, null, key)
-            const [row] = await tx<{ id: string }[]>`select id from gifts where user_id = ${userId} and key = ${key}`
-            gift = row ? { id: row.id, content, reason: null } : null
-          }
           console.log(`claw: ${userId} won ${family}`)
         }
         const after = misses.map((m, i) => (i !== target ? m : won ? 0 : Math.min(m + 1, CLAW.guarantee - 1)))
-        const dropped: ClawDropped = { target, grip, won, family, misses: after, gift }
+        const dropped: ClawDropped = { target, grip, won, family, misses: after }
         await tx`update claw_plays set dropped_at = now(), result = ${tx.json(dropped)} where id = ${play.id}::uuid`
         return { ok: true, dropped }
       }),

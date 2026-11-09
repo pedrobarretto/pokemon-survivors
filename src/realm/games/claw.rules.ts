@@ -82,20 +82,8 @@ const shuffled = <T>(list: readonly T[], next: () => number): T[] => {
   return out
 }
 
-/** Whole weeks since the epoch of a week's Monday (`YYYY-MM-DD`). */
-const weekNumber = (week: string) => Math.floor(Date.parse(`${week}T00:00:00Z`) / (7 * 86_400_000))
-
-/**
- * The week's plushes, in the order they stand: one of `exclusives`, taking
- * turns week by week so none waits long, and the rest drawn from `pool`.
- * The same for every player, from the Brasília week's Monday alone.
- */
-export const weeklyPrizes = <F extends string>(week: string, pool: readonly F[], exclusives: readonly F[]): F[] => {
-  const next = rngFrom(hashText(`prizes:${week}`))
-  const rest = shuffled(pool.filter((f) => !exclusives.includes(f)), next).slice(0, CLAW.prizes - 1)
-  const turn = ((weekNumber(week) % exclusives.length) + exclusives.length) % exclusives.length
-  return shuffled([exclusives[turn]!, ...rest], next)
-}
+/** The week's plushes, in the order they stand, drawn from `pool`: the same for every player, from the Brasília week's Monday alone. */
+export const weeklyPrizes = <F extends string>(week: string, pool: readonly F[]): F[] => shuffled(pool, rngFrom(hashText(`prizes:${week}`))).slice(0, CLAW.prizes)
 
 /**
  * Where each plush stands for a credit: its slot, the week's scatter, as far

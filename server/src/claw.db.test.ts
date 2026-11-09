@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { PLUSH_EXCLUSIVES, PLUSH_POOL, isExclusivePlush, type PlushFamily } from '../../src/data/plushes'
+import { PLUSH_POOL, type PlushFamily } from '../../src/data/plushes'
 import { weekStart, brasiliaDay } from '../../src/game/day'
 import { CLAW, pitLayout, weeklyPrizes } from '../../src/realm/games/claw.rules'
 import { clawStore } from './claw'
@@ -17,9 +17,8 @@ describe.skipIf(!url)('claw machine (Postgres)', () => {
   let claw: ReturnType<typeof clawStore>
   const now = () => new Date('2026-11-10T15:00:00Z')
   const week = weekStart(brasiliaDay(now()))
-  const prizes = weeklyPrizes<PlushFamily>(week, PLUSH_POOL, PLUSH_EXCLUSIVES)
-  const exclusive = prizes.findIndex(isExclusivePlush)
-  const plain = prizes.findIndex((f) => !isExclusivePlush(f))
+  const prizes = weeklyPrizes(week, PLUSH_POOL)
+  const plain = 0
 
   const inserted = async (base: number | null = null) => {
     const got = await claw.insert('u_ash', base)
@@ -96,20 +95,15 @@ describe.skipIf(!url)('claw machine (Postgres)', () => {
     expect(await claw.drop('u_nohandle', play.id, { x: 0, y: 0 })).toEqual({ ok: false, error: 'profile' })
     const { dropped } = await dropOn(plain)
     expect(dropped.won).toBe(true)
-    expect(dropped.gift).toBeNull()
     expect(await owned(prizes[plain]!)).toBe(1)
     expect(dropped.misses[plain]).toBe(0)
   })
 
-  it('wins by the tenth credit however it drops, and an exclusive brings its family gift each time', async () => {
-    await sql`insert into claw_progress (user_id, family, misses) values ('u_ash', ${prizes[exclusive]!}, ${CLAW.guarantee - 1})`
-    const { dropped } = await dropOn(exclusive, CLAW.reach * 0.9)
+  it('wins by the tenth credit however it drops, and only ever gives a plush', async () => {
+    await sql`insert into claw_progress (user_id, family, misses) values ('u_ash', ${prizes[plain]!}, ${CLAW.guarantee - 1})`
+    const { dropped } = await dropOn(plain, CLAW.reach * 0.9)
     expect(dropped.won).toBe(true)
-    expect(dropped.gift?.content).toEqual({ kind: 'family', family: prizes[exclusive] })
-    // A new day's free credit, so the second win needs no save revision.
-    await sql`update claw_plays set day = day - 1`
-    const again = await dropOn(exclusive)
-    expect(again.dropped.gift?.id).not.toBe(dropped.gift?.id)
-    expect(await owned(prizes[exclusive]!)).toBe(2)
+    expect(await owned(prizes[plain]!)).toBe(1)
+    expect((await sql<{ n: number }[]>`select count(*)::int as n from gifts where user_id = 'u_ash'`)[0]!.n).toBe(0)
   })
 })

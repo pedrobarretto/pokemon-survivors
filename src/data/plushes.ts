@@ -13,16 +13,9 @@ export type PlushFamily = StarterId | HatchlingId
 /** Every family that can stand in the machine. */
 export const PLUSH_POOL: readonly PlushFamily[] = [...STARTER_IDS, ...HATCHLING_IDS]
 
-/** Temporada 1's families that come only from the machine: one is always in it, and winning one brings the family to life (a `family` gift). */
-export const PLUSH_EXCLUSIVES = ['mimikyu', 'morpeko', 'tandemaus'] as const satisfies readonly HatchlingId[]
-
 export type PlushPiece = `plush:${PlushFamily}`
 
 export const isPlushFamily = (v: unknown): v is PlushFamily => typeof v === 'string' && (Object.hasOwn(STARTERS, v) || Object.hasOwn(HATCHLINGS, v))
-
-export type ExclusivePlush = (typeof PLUSH_EXCLUSIVES)[number]
-
-export const isExclusivePlush = (family: PlushFamily): family is ExclusivePlush => (PLUSH_EXCLUSIVES as readonly PlushFamily[]).includes(family)
 
 /** The furniture piece a family's plush is. */
 export const plushPiece = (family: PlushFamily): PlushPiece => `plush:${family}`

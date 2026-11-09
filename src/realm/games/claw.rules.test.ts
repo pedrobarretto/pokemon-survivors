@@ -2,24 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { CLAW, creditPrice, gripNeeded, gripOn, pitLayout, resolveDrop, weeklyPrizes } from './claw.rules'
 
 const WEEK = '2026-11-09'
-const EXCLUSIVES = ['mimikyu', 'morpeko', 'tandemaus']
-const POOL = [...EXCLUSIVES, ...Array.from({ length: 40 }, (_, i) => `family${i}`)]
+const POOL = Array.from({ length: 40 }, (_, i) => `family${i}`)
 const none = Array<number>(CLAW.prizes).fill(0)
 
 const missesOn = (i: number, n: number) => none.map((m, k) => (k === i ? n : m))
 
 describe('weekly rotation', () => {
-  it('is the same all week, six different plushes, exactly one exclusive', () => {
-    const prizes = weeklyPrizes(WEEK, POOL, EXCLUSIVES)
-    expect(weeklyPrizes(WEEK, POOL, EXCLUSIVES)).toEqual(prizes)
+  it('is the same all week: six different plushes', () => {
+    const prizes = weeklyPrizes(WEEK, POOL)
+    expect(weeklyPrizes(WEEK, POOL)).toEqual(prizes)
     expect(new Set(prizes).size).toBe(CLAW.prizes)
-    expect(prizes.filter((p) => EXCLUSIVES.includes(p))).toHaveLength(1)
-  })
-
-  it('brings every exclusive within three weeks', () => {
-    const weeks = ['2026-11-09', '2026-11-16', '2026-11-23']
-    const seen = weeks.map((w) => weeklyPrizes(w, POOL, EXCLUSIVES).find((p) => EXCLUSIVES.includes(p)))
-    expect(new Set(seen).size).toBe(3)
   })
 })
 

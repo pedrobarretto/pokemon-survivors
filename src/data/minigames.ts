@@ -128,8 +128,8 @@ export const MINIGAMES = {
    * The Máquina de Pelúcias at the arcade's claw machines (`realm/games/claw.ts`,
    * rules in `claw.rules.ts`): credits, not points. It pays no ₽, never claims
    * and has no Placar: the API charges each credit and decides each drop
-   * (`POST /realm/claw/insert`, `/drop`) and the prize is a plush for the base.
-   * Feats: any plush won, and one of the season's exclusive families.
+   * (`POST /realm/claw/insert`, `/drop`) and the prize is only ever a plush
+   * for the base.
    */
   claw: {
     kind: 'solo',
@@ -137,7 +137,7 @@ export const MINIGAMES = {
     pay: { perPoint: 0, perPlay: 0, daily: 0 },
     maxScore: 0,
     minMs: 0,
-    feats: ['plush', 'exclusive'],
+    feats: ['plush'],
     trophies: [],
     board: false,
   },
