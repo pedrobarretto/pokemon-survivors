@@ -41,12 +41,27 @@ export type SafariMapDef = {
 /** The plaza every preserve shares at its south end: the gate, the Ranger's booth and the notice board. */
 export const PLAZA = {
   spawn: { x: 21, y: 31.2 },
-  /** The arch you walk under into the preserve, facing the plaza. */
-  gate: { x: 21, y: 27.4 },
+  /** Where a session's walk-in stops: on the plaza side of the arch, clear of its threshold. */
+  entry: { x: 21, y: 28.5 },
+  /** The arch you walk under into the preserve, facing the plaza; `posts` is how far either side of it its posts' art stands. */
+  gate: { x: 21, y: 27.4, posts: 1.9 },
   kiosk: { x: 16.5, y: 31 },
   ranger: { x: 18.9, y: 31.9 },
   board: { x: 25.6, y: 30.6 },
 } as const
+
+/**
+ * Where the plaza's tall pieces would hide a walker whole, as `[x0, y0, x1, y1]` in
+ * vertices: behind the booth and the notice board, down to each one's base, and
+ * under the arch's thatch or tucked behind its east post and palm. It stays walkable, since the marsh's only way to its
+ * west grass runs behind the booth; the walker shows through instead (`behindPlaza`).
+ */
+export const PLAZA_BEHIND = [
+  [14.25, 25.75, 19.7, 31],
+  [24, 28.1, 27.2, 30.6],
+  [18, 21.5, 24, 25],
+  [22.7, 25, 24.3, 27.4],
+] as const
 
 /** The low fence either side of the arch, in vertices (its posts are solid). */
 export const FENCE = { y: 27.2, spans: [[12.5, 18.2], [23.8, 29.5]] } as const

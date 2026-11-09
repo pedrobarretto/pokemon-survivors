@@ -9,7 +9,7 @@ import { playSfx } from '../../engine/audio'
 import { burst, drawFx, image, stepFx, type Particle, type Popup } from './arcadeKit'
 import type { GameInput } from './frame'
 import { GRASS_CELL, GRASS_VARIANTS, bakeGrass, bakeGround, waterTiles, type SafariTheme } from './safariArt'
-import { moveWalker, tallTileAt, type Placed, type SafariWorld } from './safariWorld'
+import { behindPlaza, moveWalker, tallTileAt, type SafariWorld } from './safariWorld'
 
 /**
  * The Zona Safári's map scene: the partner walks a preserve (`safariWorld.ts`),
@@ -32,6 +32,16 @@ const COVER = 11
 const RANGER_DEX = 115
 
 const BOARD_REACH = 34
+
+/**
+ * The arch's threshold, in its art's pixels: the opening between the posts, from
+ * the dirt down. It's ground, so it's laid under the walkers (`drawThreshold`) and
+ * only the rest of the art stands at the gate's depth.
+ */
+const THRESHOLD = { x: 33, y: 80, w: 45, h: 24 } as const
+
+/** How strongly the partner shows through a tall piece of the plaza when it's behind one. */
+const SEE_THROUGH = 0.55
 
 /** Art of a prop kind, by file; null until it loaded. */
 const artOf = (habitat: SafariHabitat, kind: string): HTMLImageElement | null => image(kind === 'kiosk' || kind === 'board' ? `safari/${kind}` : kind === 'gate' ? 'realm/safari-gate' : `safari/${habitat}-${kind}`)
@@ -83,11 +93,11 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
   for (const r of residents) void loadSpecies(r.dex).catch(() => {})
 
   /** Everything that stands, back to front; the walkers are merged in as it's drawn. */
-  const standing: Placed[] = [...world.props].sort((a, b) => a.y - b.y)
-  const statics = [
-    { kind: 'kiosk', x: PLAZA.kiosk.x * TILE, y: PLAZA.kiosk.y * TILE },
-    { kind: 'board', x: PLAZA.board.x * TILE, y: PLAZA.board.y * TILE },
-    { kind: 'gate', x: PLAZA.gate.x * TILE, y: PLAZA.gate.y * TILE },
+  const standing = [
+    ...[...world.props].sort((a, b) => a.y - b.y).map((p, i) => ({ kind: p.kind, x: p.x, y: p.y, flip: (i & 1) === 1 })),
+    { kind: 'kiosk', x: PLAZA.kiosk.x * TILE, y: PLAZA.kiosk.y * TILE, flip: false },
+    { kind: 'board', x: PLAZA.board.x * TILE, y: PLAZA.board.y * TILE, flip: false },
+    { kind: 'gate', x: PLAZA.gate.x * TILE, y: PLAZA.gate.y * TILE, flip: false },
   ].sort((a, b) => a.y - b.y)
   const ranger = { x: PLAZA.ranger.x * TILE, y: PLAZA.ranger.y * TILE }
 
@@ -318,6 +328,15 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
     const sy = Math.round(y - art.height - camY + 4)
     if (sx > W || sx + art.width < 0 || sy > H || sy + art.height < 0) return
     if (kind.startsWith('tree')) blitEllipse(g, 14, 5, 'rgba(16,24,16,0.28)', Math.round(x - camX), Math.round(y - camY))
+    if (kind === 'gate') {
+      // All of it but the threshold: what's above it, and either side of the opening.
+      const { x: left, y: top, w, h } = THRESHOLD
+      const right = left + w
+      g.drawImage(art, 0, 0, art.width, top, sx, sy, art.width, top)
+      g.drawImage(art, 0, top, left, h, sx, sy + top, left, h)
+      g.drawImage(art, right, top, art.width - right, h, sx + right, sy + top, art.width - right, h)
+      return
+    }
     if (flip) {
       g.save()
       g.translate(sx + art.width, sy)
@@ -325,6 +344,14 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
       g.drawImage(art, 0, 0)
       g.restore()
     } else g.drawImage(art, sx, sy)
+  }
+
+  /** Lays the arch's threshold on the ground, under anyone walking over it. */
+  const drawThreshold = (g: CanvasRenderingContext2D, camX: number, camY: number) => {
+    const art = artOf(habitat, 'gate')
+    if (!art) return
+    const { x, y, w, h } = THRESHOLD
+    g.drawImage(art, x, y, w, h, Math.round(PLAZA.gate.x * TILE - art.width / 2 - camX) + x, Math.round(PLAZA.gate.y * TILE - art.height - camY + 4) + y, w, h)
   }
 
   /** The map at the current moment. `drawn` holds the camera, so a transition can keep drawing it. */
@@ -354,23 +381,15 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
       }
     }
 
+    drawThreshold(g, camX, camY)
     drawGrass(g, camX, camY, W, H)
 
     // Everything that stands, back to front, the walkers merged in.
     let playerDone = false
     let rangerDone = false
-    let staticI = 0
     const py = player.y
-    const staticsUpTo = (limit: number) => {
-      while (staticI < statics.length && statics[staticI]!.y <= limit) {
-        const it = statics[staticI]!
-        drawStanding(g, it.kind, it.x, it.y, camX, camY, W, H, false)
-        staticI++
-      }
-    }
     for (let s = 0; s < standing.length; s++) {
       const p = standing[s]!
-      staticsUpTo(p.y)
       if (!rangerDone && ranger.y <= p.y) {
         drawRanger(g, camX, camY)
         rangerDone = true
@@ -379,11 +398,11 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
         drawWalker(g, player.x, py, camX, camY)
         playerDone = true
       }
-      drawStanding(g, p.kind, p.x, p.y, camX, camY, W, H, (s & 1) === 1)
+      drawStanding(g, p.kind, p.x, p.y, camX, camY, W, H, p.flip)
     }
-    staticsUpTo(Infinity)
     if (!rangerDone) drawRanger(g, camX, camY)
     if (!playerDone) drawWalker(g, player.x, py, camX, camY)
+    if (behindPlaza(player.x, py)) drawPokemon(g, sprites(dex, shiny), player.moving ? 'Walk' : 'Idle', player.dir, clock, Math.round(player.x - camX), Math.round(py - camY), { alpha: SEE_THROUGH })
 
     for (const r of residents) {
       if (r.hiddenFor > 0) continue

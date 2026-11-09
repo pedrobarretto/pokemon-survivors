@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { SAFARI_HABITAT_IDS } from '../../data/safari'
 import { MAP_H, MAP_W, PLAZA, SAFARI_MAPS, TILE } from '../../data/safariMaps'
-import { buildWorld, tallTileAt, walkable, type SafariWorld } from './safariWorld'
+import { behindPlaza, buildWorld, tallTileAt, walkable, type SafariWorld } from './safariWorld'
 
 const STEP = 6
 
@@ -29,6 +29,21 @@ describe.each(SAFARI_HABITAT_IDS)('the %s preserve', (habitat) => {
 
   it('lets a walker stand at the spawn', () => {
     expect(walkable(world, PLAZA.spawn.x * TILE, PLAZA.spawn.y * TILE)).toBe(true)
+  })
+
+  it('walks in along open ground and stops in front of the arch, clear of its threshold', () => {
+    const x = PLAZA.entry.x * TILE
+    for (let y = PLAZA.spawn.y * TILE; y >= PLAZA.entry.y * TILE; y -= 2) expect(walkable(world, x, y)).toBe(true)
+    // The arch's art ends 4 px below its anchor.
+    expect(PLAZA.entry.y * TILE).toBeGreaterThan(PLAZA.gate.y * TILE + 4)
+    expect(behindPlaza(x, PLAZA.entry.y * TILE)).toBe(false)
+  })
+
+  it('reaches both sides of the arch', () => {
+    const seen = [...flood(world)].map((k) => ({ x: k % 10000, y: Math.floor(k / 10000) }))
+    const inArch = seen.filter((p) => Math.abs(p.x - PLAZA.gate.x * TILE) < PLAZA.gate.posts * TILE)
+    expect(inArch.some((p) => p.y < (PLAZA.gate.y - 3) * TILE)).toBe(true)
+    expect(inArch.some((p) => p.y > (PLAZA.gate.y + 3) * TILE)).toBe(true)
   })
 
   it('has plenty of tall grass, nearly all of it reachable', () => {
