@@ -24,6 +24,47 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-09',
+    title: { pt: 'Joystick fixo com um toque', en: 'Fix the joystick in one tap', es: 'Joystick fijo con un toque', fr: 'Joystick fixe en un geste', zh: '一鍵固定搖桿' },
+    highlights: [
+      {
+        pt: 'No celular, o novo cadeado na caixa do seu Pokémon fixa o joystick no canto, sem sair da partida.',
+        en: 'On phones, the new padlock on your Pokémon’s box fixes the joystick in its corner without leaving the run.',
+        es: 'En el celular, el nuevo candado en el recuadro de tu Pokémon fija el joystick en su esquina sin salir de la partida.',
+        fr: 'Sur téléphone, le nouveau cadenas sur l’encart de ton Pokémon fixe le joystick dans son coin sans quitter la partie.',
+        zh: '手機上，寶可夢狀態框的新鎖頭可把搖桿固定在角落，不必離開遊戲。',
+      },
+      {
+        pt: 'Toque de novo no cadeado para o joystick voltar a seguir o dedo.',
+        en: 'Tap the padlock again and the joystick follows your finger once more.',
+        es: 'Toca el candado otra vez y el joystick vuelve a seguir tu dedo.',
+        fr: 'Touche de nouveau le cadenas et le joystick suit encore ton doigt.',
+        zh: '再按一次鎖頭，搖桿就會恢復跟隨手指。',
+      },
+      {
+        pt: 'A altura e a distância da borda do joystick fixo ficam em Ajustes → Controles.',
+        en: 'The fixed joystick’s height and distance from the edge are in Settings → Controls.',
+        es: 'La altura y la distancia al borde del joystick fijo están en Ajustes → Controles.',
+        fr: 'La hauteur du joystick fixe et sa distance au bord se règlent dans Réglages → Commandes.',
+        zh: '固定搖桿的高度與離邊緣的距離可在「設定 → 操作」調整。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Cadeado do joystick na partida', en: 'Joystick padlock in the run', es: 'Candado del joystick en la partida', fr: 'Cadenas du joystick en partie', zh: '遊戲中的搖桿鎖頭' },
+        notes: [
+          {
+            pt: 'Em telas de toque, um cadeado na caixa do seu Pokémon alterna entre o joystick fixo no canto e o que segue o dedo, em qualquer modo. A escolha fica salva e é a mesma de Ajustes → Controles.',
+            en: 'On touchscreens, a padlock on your Pokémon’s box switches between the joystick fixed in its corner and the one that follows your finger, in every mode. The choice is saved and is the same one as in Settings → Controls.',
+            es: 'En pantallas táctiles, un candado en el recuadro de tu Pokémon alterna entre el joystick fijo en su esquina y el que sigue tu dedo, en todos los modos. La elección se guarda y es la misma de Ajustes → Controles.',
+            fr: 'Sur écran tactile, un cadenas sur l’encart de ton Pokémon alterne entre le joystick fixe dans son coin et celui qui suit ton doigt, dans tous les modes. Le choix est gardé et c’est le même que dans Réglages → Commandes.',
+            zh: '在觸控螢幕上，寶可夢狀態框的鎖頭可在固定於角落的搖桿與跟隨手指的搖桿之間切換，所有模式皆可使用。選擇會保存，與「設定 → 操作」中的設定相同。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-08',
     title: { pt: 'Fim da tela preta e do mundo invisível', en: 'No more black screen or invisible world', es: 'Adiós a la pantalla negra y al mundo invisible', fr: 'Fini l’écran noir et le monde invisible', zh: '修正黑畫面與世界消失問題' },
     highlights: [
