@@ -150,7 +150,9 @@ import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
 import { realmJukebox } from './realmJukebox'
-import { realmFriendsCount } from './realm/friendsCount'
+import { realmFriendsCount, realmTrainersCount } from './realm/friendsCount'
+import { forceHour, isHourKind } from './realm/hours'
+import { realmErrandsCount } from './realm/errandsCount'
 import { lazyScreen, lazyStep } from './ui/lazy'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
@@ -787,6 +789,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
           {
             supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null),
             locker: () => showBoutique('locker', () => showTitle({ focus })),
+            book: realmUrl() ? (back) => lazyScreen(ui, realmMode, (m) => m.openRealmBook(ui, input, { close: back }), back) : null,
           },
           () => showTitle({ focus }),
         ),
@@ -797,6 +800,8 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
       realm: realmUrl() ? () => enterRealm(null) : undefined,
       realmFriends: realmUrl() ? realmFriendsNow : undefined,
+      realmCrowd: realmUrl() ? realmCrowdNow : undefined,
+      realmErrands: realmUrl() ? realmErrandsNow : undefined,
       arena: () => showArena(),
       arenaHub: (tab) => showArenaHub(tab),
       dojo: () => showDojo(),
@@ -3092,6 +3097,31 @@ const realmFriendsNow = (): Promise<number> | null => {
   return realmPals.n
 }
 
+/** Trainers in the Realm now, for the lobby's way in: asked a moment after the lobby is up (the boot never waits on it) and at most once a minute. */
+let realmCrowd: { at: number; n: Promise<number | null> } | null = null
+
+const realmCrowdNow = (): Promise<number | null> => {
+  if (!realmCrowd || performance.now() - realmCrowd.at > 60_000) {
+    const faked = realmLoaded?.realmFaked() === true ? realmLoaded : null
+    const asked = new Promise<void>((done) => setTimeout(done, 2500)).then(() => (faked ? faked.fetchCities().then((got) => (got ? Object.values(got.cities).reduce((sum, n) => sum + n, 0) : null)) : realmTrainersCount()))
+    realmCrowd = { at: performance.now(), n: asked }
+  }
+  return realmCrowd.n
+}
+
+/** Today's Recados not collected yet, for the lobby's way in: asked at most once a minute, for an account with a @handle (or faked) only. */
+let realmErrands: { at: number; n: Promise<number> } | null = null
+
+const realmErrandsNow = (): Promise<number> | null => {
+  const faked = realmLoaded?.realmFaked() === true ? realmLoaded : null
+  if (!faked && (accountState().kind !== 'signedIn' || !accountHandle())) return null
+  if (!realmErrands || performance.now() - realmErrands.at > 60_000) {
+    const n = faked ? faked.fetchBook().then((b) => b?.errands.filter((e) => !e.claimed).length ?? null) : realmErrandsCount()
+    realmErrands = { at: performance.now(), n: n.then((k) => k ?? 0) }
+  }
+  return realmErrands.n
+}
+
 /** `?realm` (or `?realm=<city>`): the Poké Realm's own link; it stays on the address while a guest signs in, so the round trip comes back to it. */
 const REALM_PARAM = 'realm'
 
@@ -3104,7 +3134,7 @@ const realmLink = (on: boolean) => {
 }
 
 /**
- * Opens the Poké Realm (`ui/realm.ts`), at `city` or its picker. Like co-op
+ * Opens the Poké Realm (`ui/realm.ts`), at `city` or the first with room. Like co-op
  * it's for accounts with a @handle: a guest signs in first ("Entre para
  * entrar no Poké Realm", `realmGate`) and an account without a handle picks
  * one. The in-page realm (`ps.realm('local')`) skips the door.
@@ -3179,10 +3209,13 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * prints the state; `('room', 'arcade')` walks the open town's trainer into a room; `('friends')` opens
  * Amigos no Realm (the faked friends: the in-page realm's Misty, Brock and Dawn where they walk, May
  * in a full arcade, `realm/api.ts`); `('invite', 'misty')` has that bot invite you to its base;
- * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`).
+ * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`);
+ * `('hour', 'tide')` runs a Hora do Realm on this screen only (`null` back to the clock).
+ * `('book')` opens the Livro de Estampas, `('stamp', id)` earns a stamp (`'bot'`: a bot of the room does) and `('errands')` finishes today's Recados.
+
  */
-const devRealm = async (cmd?: string, arg?: string) => {
-  const { devRealmRoom, fakeRealm, realmDevState, realmInviteFrom, stageRealmTable, useLocalRealm } = await realmMode()
+const devRealm = async (cmd?: string, arg?: string | null) => {
+  const { devErrands, devRealmRoom, devStamp, fakeRealm, openRealmBook, realmDevState, realmInviteFrom, stageRealmTable, useLocalRealm } = await realmMode()
   switch (cmd) {
     case 'local':
       useLocalRealm(true)
@@ -3206,6 +3239,12 @@ const devRealm = async (cmd?: string, arg?: string) => {
       if (!realmShown?.el.isConnected || !Number.isFinite(x) || !Number.isFinite(y)) return 'ps.realm: walk "x,y" in the realm'
       return realmShown.walkTo(x!, y!)
     }
+    case 'hour': {
+      // `ps.realm('hour', 'tide')` runs that Hora do Realm on this screen only, `('hour', 'tide soon')` counts down to one 12 minutes away, `('hour', null)` back to the clock.
+      const [kind = '', soon] = (arg ?? '').split(' ')
+      if (kind !== '' && !isHourKind(kind)) return 'ps.realm: hour (tide, storm, tables, or null)'
+      return forceHour(kind === '' ? null : kind, soon ? 12 * 60_000 : 0)
+    }
     case 'room':
       return isTownRoomId(arg) ? devRealmRoom(arg) : `ps.realm: room (${TOWN_ROOMS.join(', ')})`
     case 'friends':
@@ -3213,6 +3252,17 @@ const devRealm = async (cmd?: string, arg?: string) => {
     case 'invite':
       // `ps.realm('invite', 'misty')`: that bot of the in-page realm invites you to its base.
       return realmInviteFrom(arg ?? 'misty') ? 'invited' : 'ps.realm: no such bot in the in-page realm'
+    case 'book':
+      // `ps.realm('book')`: the Livro de Estampas, over the town or, outside it, on its own with the faked API.
+      if (screen === realmShown && realmShown) return realmShown.book()
+      fakeRealm(true, accountHandle() ?? 'you')
+      return setScreen(openRealmBook(ui, input, { close: () => showTitle() }))
+    case 'stamp':
+      // `ps.realm('stamp', 'wetFeet')`: earns it as the relay would tell it (the next unheld one without an id; `'bot'`: a bot of the room earns one).
+      return devStamp(arg ?? undefined)
+    case 'errands':
+      // `ps.realm('errands')`: today's Recados all finish, and the town's told.
+      return devErrands()
     case 'visit':
       // `ps.realm('visit', 'ash')`: into @ash's base, as the board's Visit would.
       if (screen !== realmShown || !realmShown || !arg) return 'ps.realm: visit "handle" in the realm'

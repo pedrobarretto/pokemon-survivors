@@ -1,3 +1,4 @@
+import { realmBookEs as realmBook } from './realmStamps/es'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -690,6 +691,7 @@ export const es: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm: la ciudad en línea',
@@ -700,7 +702,11 @@ export const es: Messages = {
     off: 'El Poké Realm no está disponible en esta versión del juego.',
     cities: {
       title: 'Elige una ciudad',
-      hint: 'Cada ciudad es una copia del mismo pueblo, con hasta 40 entrenadores.',
+      hint: 'Entras en la primera con lugar. Todas son el mismo pueblo, con hasta 40 entrenadores.',
+      switch: 'Cambiar de ciudad',
+      here: 'Estás aquí',
+      lobbyLine: 'Pasea con tu compañero',
+      crowd: (n: number) => `${n} entrenadores ahora`,
       trainers: (n: number) => (n === 1 ? '1 entrenador' : `${n} entrenadores`),
       full: 'Llena',
       enter: 'Entrar',
@@ -806,6 +812,15 @@ export const es: Messages = {
     counter: 'El café todavía está armando el mostrador. ¡Vuelve pronto!',
     pool: 'Aquí nadarán los Pokémon de tipo Agua. ¡Pronto!',
     prizes: '¡Rompe récords en las máquinas y gana trofeos para tu base secreta!',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'Marea Alta', storm: 'Lluvia de Bayas', tables: 'Noche de Mesas' },
+      perks: { tide: 'Pesca doble y peces más raros', storm: 'Arcade doble', tables: 'Juegos de mesa dobles' },
+      go: 'Ir',
+      starts: (c: string) => `en ${c}`,
+      ends: (c: string) => `quedan ${c}`,
+      tideChip: '¡Marea alta!',
+    },
     grove: {
       first: [
         '¡Psst! Solo soy un árbol... Vale, soy Sudowoodo. ¡Bienvenido al Bosque de Bases!',
@@ -1511,7 +1526,7 @@ export const es: Messages = {
       wallpaper: 'Fondo de pantalla de la Caja del PC.',
     },
     styles: {
-      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna', creator: 'Creador(a)', grotto: 'Gruta Oculta' },
+      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna', creator: 'Creador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas' },
       background: { night: 'Noche estrellada', meadow: 'Ruta 1', forest: 'Bosque Verde', cave: 'Mt. Moon', snow: 'Monte Plateado', tower: 'Torre Lavanda', supporter: 'Cielo dorado', halloween: 'Noche de Brujas', friendship: 'Amistad' },
       wallpaper: { classic: 'Clásico', forest: 'Hojas', cave: 'Piedritas', snow: 'Copos de nieve', tower: 'Fantasmitas', supporter: 'Estrellas doradas', haunted: 'Casa Embrujada', secretBase: 'Base Secreta' },
     },
@@ -2884,7 +2899,7 @@ export const es: Messages = {
     noTitle: 'ninguno',
     titleTag: 'TÍTULO',
     equipped: 'EN USO',
-    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors', friendLegend: 'Ha traído 10 amigos al juego' },
+    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors', friendLegend: 'Ha traído 10 amigos al juego', stampCollector: 'Reunió 30 Estampas en el Poké Realm' },
     newMedals: 'Nuevas medallas',
     names: {
       firstRun: 'Primeros pasos',
@@ -2983,6 +2998,7 @@ export const es: Messages = {
       arenaMaster: 'Master Ball de la Arena',
       creator: 'Creador(a) de Contenido',
       friendLegend: 'Leyenda de la Amistad',
+      stampCollector: 'Coleccionista de Estampas',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Juega una partida' : `Juega ${n} partidas`),
@@ -6031,6 +6047,9 @@ export const es: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Cesta de bayas',
       goldenMallet: 'Mazo dorado',
+      stampDesk: 'Escritorio de Estampas',
+      stampCabinet: 'Archivador de Estampas',
+      goldenStampPress: 'Prensa dorada de Estampas',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Soporte de cañas',
       goldenMagikarpPlaque: 'Placa del Magikarp Dorado',

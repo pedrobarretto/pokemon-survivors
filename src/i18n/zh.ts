@@ -1,3 +1,4 @@
+import { realmBookZh as realmBook } from './realmStamps/zh'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -689,6 +690,7 @@ export const zh: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm：線上城鎮',
@@ -699,7 +701,11 @@ export const zh: Messages = {
     off: '這個版本的遊戲無法使用 Poké Realm。',
     cities: {
       title: '選擇城市',
-      hint: '每座城市都是同一個城鎮的分身，最多 40 位訓練家。',
+      hint: '你會進入第一座還有空位的城市。每座都是同一個城鎮，最多 40 位訓練家。',
+      switch: '更換城市',
+      here: '你在這裡',
+      lobbyLine: '和夥伴一起散步',
+      crowd: (n: number) => `${n} 位訓練家在線上`,
       trainers: (n: number) => `${n} 位訓練家`,
       full: '已滿',
       enter: '進入',
@@ -805,6 +811,15 @@ export const zh: Messages = {
     counter: '咖啡館還在布置櫃檯，敬請期待！',
     pool: '水屬性寶可夢之後會在這裡游泳，敬請期待！',
     prizes: '在遊戲機刷新紀錄，贏得獎盃來布置你的秘密基地！',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: '大滿潮', storm: '樹果雨', tables: '桌遊之夜' },
+      perks: { tide: '釣魚雙倍、稀有魚變多', storm: '街機雙倍', tables: '桌遊雙倍' },
+      go: '前往',
+      starts: (c: string) => `${c} 後`,
+      ends: (c: string) => `剩 ${c}`,
+      tideChip: '大滿潮！',
+    },
     grove: {
       first: [
         '噓！我只是一棵樹……好啦，我是 Sudowoodo。歡迎來到秘密基地樹林！',
@@ -1509,7 +1524,7 @@ export const zh: Messages = {
       wallpaper: '電腦箱的桌布。',
     },
     styles: {
-      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴' },
+      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊' },
       background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜', friendship: '友情' },
       wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋', secretBase: '秘密基地' },
     },
@@ -2880,7 +2895,7 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章' },
     newMedals: '新獎牌',
     names: {
       firstRun: '第一步',
@@ -2979,6 +2994,7 @@ export const zh: Messages = {
       arenaMaster: '競技場 Master Ball',
       creator: '內容創作者',
       friendLegend: '友情傳奇',
+      stampCollector: '印章收藏家',
     },
     goals: {
       runs: (n) => `玩 ${n} 局`,
@@ -6025,6 +6041,9 @@ export const zh: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: '樹果籃',
       goldenMallet: '黃金木槌',
+      stampDesk: '印章書桌',
+      stampCabinet: '印章櫃',
+      goldenStampPress: '黃金印章機',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: '釣竿架',
       goldenMagikarpPlaque: '黃金 Magikarp 獎牌',

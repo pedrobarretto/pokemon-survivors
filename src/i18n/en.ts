@@ -1,3 +1,4 @@
+import { realmBookEn as realmBook } from './realmStamps/en'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -689,6 +690,7 @@ export const en: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm: the online town',
@@ -699,7 +701,11 @@ export const en: Messages = {
     off: 'The Poké Realm isn’t available in this version of the game.',
     cities: {
       title: 'Pick a city',
-      hint: 'Each city is a copy of the same town, with up to 40 trainers.',
+      hint: "You land in the first one with room. They're all the same town, with up to 40 trainers.",
+      switch: 'Change city',
+      here: "You're here",
+      lobbyLine: 'Walk with your partner',
+      crowd: (n: number) => `${n} trainers online`,
       trainers: (n: number) => (n === 1 ? '1 trainer' : `${n} trainers`),
       full: 'Full',
       enter: 'Enter',
@@ -805,6 +811,15 @@ export const en: Messages = {
     counter: 'The café is still setting up its counter. Come back soon!',
     pool: 'Water types will swim here. Coming soon!',
     prizes: 'Beat records at the cabinets to win trophies for your secret base!',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'High Tide', storm: 'Berry Storm', tables: 'Table Night' },
+      perks: { tide: 'Double fishing pay, rarer fish', storm: 'Double arcade pay', tables: 'Double table game pay' },
+      go: 'Go',
+      starts: (c: string) => `in ${c}`,
+      ends: (c: string) => `${c} left`,
+      tideChip: 'High tide!',
+    },
     grove: {
       first: [
         'Psst! I’m just a tree... Fine, I’m Sudowoodo. Welcome to the Secret Base Grove!',
@@ -1510,7 +1525,7 @@ export const en: Messages = {
       wallpaper: 'Wallpaper of the PC Box.',
     },
     styles: {
-      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth', lantern: 'Lantern', creator: 'Creator', grotto: 'Hidden Grotto' },
+      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth', lantern: 'Lantern', creator: 'Creator', grotto: 'Hidden Grotto', stampFrame: 'Stamp Book' },
       background: { night: 'Starry night', meadow: 'Route 1', forest: 'Viridian Forest', cave: 'Mt. Moon', snow: 'Mt. Silver', tower: 'Lavender Tower', supporter: 'Golden sky', halloween: 'Halloween Night', friendship: 'Friendship' },
       wallpaper: { classic: 'Classic', forest: 'Leaves', cave: 'Pebbles', snow: 'Snowflakes', tower: 'Little ghosts', supporter: 'Golden stars', haunted: 'Haunted House', secretBase: 'Secret Base' },
     },
@@ -2882,7 +2897,7 @@ export const en: Messages = {
     noTitle: 'none',
     titleTag: 'TITLE',
     equipped: 'SHOWN',
-    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game' },
+    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game', stampCollector: 'Collected 30 Stamps in the Poké Realm' },
     newMedals: 'New medals',
     names: {
       firstRun: 'First steps',
@@ -2981,6 +2996,7 @@ export const en: Messages = {
       arenaMaster: 'Arena Master Ball',
       creator: 'Content Creator',
       friendLegend: 'Friendship Legend',
+      stampCollector: 'Stamp Collector',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Play a run' : `Play ${n} runs`),
@@ -6029,6 +6045,9 @@ export const en: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Berry Basket',
       goldenMallet: 'Golden Mallet',
+      stampDesk: 'Stamp Desk',
+      stampCabinet: 'Stamp Cabinet',
+      goldenStampPress: 'Golden Stamp Press',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Fishing Rod Rack',
       goldenMagikarpPlaque: 'Golden Magikarp Plaque',

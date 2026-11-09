@@ -26012,12 +26012,36 @@ span.arena-hub-face {
 }
 
 .realm-title {
+  position: relative;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 3px;
   min-width: 0;
-  padding: 7px 12px 5px;
+  padding: 7px 26px 5px 12px;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
   line-height: 1.3;
+  cursor: pointer;
+}
+
+/* The city's name is the way to change it: a small mark says it opens. */
+.realm-title::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  margin-top: -2px;
+  border: 5px solid transparent;
+  border-bottom: 0;
+  border-top-color: currentColor;
+  opacity: 0.55;
+}
+
+.realm-title:hover,
+.realm-title:focus-visible {
+  --frame: #e83838;
 }
 
 .realm-where {
@@ -26290,7 +26314,8 @@ span.arena-hub-face {
   font-size: 18px;
 }
 
-.screen.realm .realm-picker {
+.screen.realm .realm-picker,
+.realm-sheet-screen .realm-picker {
   width: min(640px, calc(100% - 32px));
   max-height: calc(100% - 32px - var(--safe-t) - var(--safe-b));
   overflow-y: auto;
@@ -26328,7 +26353,7 @@ span.arena-hub-face {
 
 .realm-cities {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -26362,7 +26387,7 @@ span.arena-hub-face {
   --frame: #e83838;
 }
 
-.realm-city.full {
+.realm-city:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -26517,7 +26542,59 @@ span.arena-hub-face {
   font-size: 10px;
 }
 
+/* Trainers online on the way in: on the tile and the top icon, a dot and the number (the card says it in words). */
+.lobby-realm-crowd {
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 4px 1px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-style: normal;
+  color: #fff;
+  background: #304058;
+  border: 2px solid var(--dk-surface-0, #fff);
+  border-radius: 9px;
+}
+
+.lobby-realm-crowd::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: #60d880;
+}
+
 /* The lobby's way in counts the friends walking the realm (a badge on the rail tile and the top icon; the card says it). */
+/* Recados still to do today (`ui/title.ts`): a line on the card, a count on the tile. */
+.lobby-realm-errand-line {
+  color: #b86a10;
+}
+
+/* Both sit in the same corner: what's waiting for the player beats how many are in (the two land in either order). */
+.lobby-realm-crowd:has(~ .lobby-realm-errands),
+.lobby-realm-errands ~ .lobby-realm-crowd {
+  display: none;
+}
+
+.lobby-realm-errands {
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  min-width: 18px;
+  padding: 2px 4px 1px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-style: normal;
+  text-align: center;
+  color: #fff;
+  background: #d07a18;
+  border: 2px solid var(--dk-surface-0, #fff);
+  border-radius: 9px;
+}
+
 .lobby-realm-pals {
   position: absolute;
   bottom: -6px;
@@ -26588,9 +26665,6 @@ span.arena-hub-face {
 @media (max-width: 480px) {
   .realm-line {
     font-size: 16px;
-  }
-  .realm-cities {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
   .realm-city b,
   .realm-friend b {
@@ -27483,4 +27557,109 @@ span.arena-hub-face {
 .save-inapp {
   flex-direction: column;
   gap: 4px;
+}
+
+/* The Hora do Realm: the city's banner and the lobby's countdown. */
+.realm-hour {
+  position: absolute;
+  top: max(8px, var(--safe-t));
+  right: max(8px, var(--safe-r));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(460px, calc(100% - 16px));
+  padding: 5px 8px;
+  line-height: 1.25;
+}
+
+.realm-hour.on {
+  border-color: #f0b830;
+  box-shadow: 0 0 0 2px #f0b83066;
+}
+
+.realm-hour-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.realm-hour-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.realm-hour-text b {
+  font-family: var(--title);
+  font-size: 9px;
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.realm-hour-text small {
+  font-size: 15px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.realm-hour-clock {
+  flex: none;
+  margin-left: 4px;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.realm-hour.on .realm-hour-clock {
+  color: color-mix(in srgb, #b06000 var(--dk-lift, 100%), #ffd870);
+}
+
+.realm-hour-go {
+  flex: none;
+  min-height: 34px;
+  padding: 2px 12px;
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Under the top bar where they don't fit side by side. */
+@media (max-width: 720px) {
+  .realm-hour {
+    top: calc(max(8px, var(--safe-t)) + 52px);
+    left: max(8px, var(--safe-l));
+    right: max(8px, var(--safe-r));
+    max-width: none;
+  }
+
+  .realm-hour-clock {
+    margin-left: auto;
+  }
+}
+
+.lobby-realm-hour {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  padding: 2px 4px 1px;
+  font-family: var(--title);
+  font-size: 7px;
+  font-style: normal;
+  white-space: nowrap;
+  color: #fff;
+  background: #3070c0;
+  border: 2px solid var(--dk-surface-0, #fff);
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+.lobby-realm-hour.on {
+  background: #d08018;
 }
