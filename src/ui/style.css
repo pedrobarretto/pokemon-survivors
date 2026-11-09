@@ -27603,7 +27603,6 @@ span.arena-hub-face {
   --kit-ink-2: var(--dk-ink-2, #5c6189);
   --kit-tag: var(--dk-surface-3, #ece8da);
   --kit-stage: var(--dk-surface-0, var(--kit-evento));
-  --kit-wash-mix: 100%;
   --kit-edge: 3px;
   --kit-lip: 5px;
   --kit-radius: 14px;
@@ -27829,144 +27828,182 @@ span.arena-hub-face {
   }
 }
 
-/* The Modos de jogo screen (ui/gameModes.ts). */
-:root[data-theme='dark'] {
-  --kit-wash-mix: 40%;
-}
-
+/* The Modos de jogo modal (ui/gameModes.ts): cards that are places, over the lobby's meadow. Its cards and panel look the same in both themes. */
 .arc-modes {
-  --kit-panel-w: 102px;
+  --kit-cursor: #fff;
   justify-content: safe center;
-  gap: 12px;
-  padding: max(12px, var(--safe-t)) max(8px, var(--safe-r)) 0 max(8px, var(--safe-l));
+  padding: calc(var(--safe-t) + 34px) calc(var(--safe-r) + 12px) calc(var(--safe-b) + 14px) calc(var(--safe-l) + 12px);
   overflow: hidden;
-  background: var(--kit-stage);
 }
 
-.arc-modes-top {
+.arc-modes-panel {
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: min(1360px, 100%);
-  padding: 0 6px;
+  flex-direction: column;
+  width: min(1160px, 100%);
+  min-height: 0;
+  max-height: 100%;
+  padding: 0 7px;
+  background: var(--kit-evento);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 18px;
+  box-shadow:
+    0 7px 0 var(--kit-tinta),
+    inset 0 0 0 3px #3a4384;
 }
 
 .arc-modes-title {
-  --kit-o: 2px;
+  position: absolute;
+  z-index: 1;
+  top: -24px;
+  left: 10px;
   margin: 0;
-  font-size: 42px;
+  padding: 6px 14px 7px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 30px;
   font-weight: 400;
+  line-height: 1;
+  background: var(--kit-ouro);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+  rotate: -1.5deg;
+}
+
+.arc-modes-close.arc-icon-btn {
+  position: absolute;
+  z-index: 1;
+  top: -18px;
+  right: -8px;
+  background: var(--kit-survivors);
+  border-radius: 50%;
+}
+
+.arc-modes-close img {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
 }
 
 .arc-modes-scroll {
-  flex: 0 1 auto;
-  width: min(1360px, 100%);
   min-height: 0;
-  padding: 6px 6px max(16px, var(--safe-b));
+  margin: 3px 0;
+  padding: 26px 3px 11px;
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
 }
 
+/* A phone: the double card and two columns of three. */
 .arc-modes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
-  gap: 11px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: 204px;
+  grid-auto-rows: 146px;
+  gap: 10px 9px;
 }
 
 .arc-mode-card {
   position: relative;
-  display: grid;
-  grid-template-columns: var(--kit-panel-w) minmax(0, 1fr);
-  min-height: 98px;
+  display: block;
+  min-width: 0;
   padding: 0;
   overflow: hidden;
   text-align: left;
+  background: var(--kit-tinta);
+  container-type: inline-size;
+}
+
+.arc-mode-card.hero {
+  grid-column: span 2;
+}
+
+.arc-mode-card.selected {
+  border-color: var(--kit-ouro);
 }
 
 .arc-mode-art {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--wash) var(--kit-wash-mix), var(--dk-surface-0, #fff));
-  border-right: var(--kit-edge) solid var(--kit-tinta);
-}
-
-.arc-mode-card[data-mode='arena'] .arc-mode-art {
-  --rival: color-mix(in srgb, #ffb4a8 var(--kit-wash-mix), var(--dk-surface-0, #fff));
-  background: linear-gradient(90deg, transparent 50%, var(--rival) 50%), color-mix(in srgb, var(--wash) var(--kit-wash-mix), var(--dk-surface-0, #fff));
-}
-
-.arc-mode-figures {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
+  display: block;
+  overflow: hidden;
 }
 
-.arc-mode-ribbon,
-.arc-mode-dummy,
-.arc-mode-scene {
+.arc-mode-art canvas {
   position: absolute;
-  image-rendering: pixelated;
-}
-
-.arc-mode-ribbon {
-  top: 6px;
-  left: 8px;
-  width: 40px;
-  height: 40px;
-}
-
-.arc-mode-dummy {
-  right: 8px;
-  bottom: 0;
-  width: 32px;
-  height: 60px;
-}
-
-.arc-mode-scene {
   top: 0;
-  left: 50%;
-  translate: -50% 0;
+  left: 0;
+  image-rendering: pixelated;
 }
 
 .arc-mode-text {
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  left: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  min-width: 0;
-  padding: 5px 10px 7px 12px;
+  gap: 3px;
+  color: #fff;
 }
 
 .arc-mode-name {
-  font-family: var(--kit-title);
-  font-size: 32px;
+  font-size: 29px;
+  font-size: min(38px, 17cqw);
   line-height: 1;
-  padding-right: 34px;
+  white-space: nowrap;
 }
 
 .arc-mode-blurb {
-  color: var(--kit-ink-2);
+  overflow: hidden;
   font-family: var(--kit-body);
   font-size: 18px;
-  line-height: 1.05;
-  margin-bottom: 4px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One row: the tags that don't fit wrap out of sight, whole. */
+.arc-mode-text .arc-tags {
+  gap: 4px;
+  height: 22px;
+  overflow: hidden;
+}
+
+.arc-mode-text .arc-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  color: #fff;
+  background: rgba(20, 24, 54, 0.55);
+}
+
+.arc-mode-text .arc-tag.hot {
+  color: #a8530a;
+  background: #fff;
+}
+
+.arc-tag.lock img {
+  width: 14px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+.arc-mode-check,
+.arc-mode-new {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  border: var(--kit-edge) solid var(--kit-tinta);
 }
 
 .arc-mode-check {
-  position: absolute;
-  top: 9px;
-  right: 10px;
   display: none;
   place-items: center;
   width: 30px;
   height: 30px;
   background: var(--kit-ouro);
-  border: var(--kit-edge) solid var(--kit-tinta);
   border-radius: 50%;
 }
 
@@ -27980,47 +28017,93 @@ span.arena-hub-face {
   display: grid;
 }
 
-/* A phone on its side: every row counts. */
-@media (max-height: 480px) {
-  .arc-modes-title {
-    font-size: 32px;
+.arc-mode-new {
+  padding: 1px 7px 2px;
+  color: #fff;
+  font-family: var(--kit-title);
+  font-size: 18px;
+  font-style: normal;
+  line-height: 1;
+  background: var(--kit-survivors);
+  border-radius: 7px;
+  rotate: 3deg;
+}
+
+.arc-mode-card.selected .arc-mode-new {
+  right: 44px;
+}
+
+/* A card too narrow for its line keeps the name and the tags. */
+@container (max-width: 199px) {
+  .arc-mode-blurb {
+    display: none;
   }
 }
 
-/* Three columns on a wide screen: bigger panels, and the odd seventh card centered. */
-@media (min-width: 1100px) and (min-height: 640px) {
-  .arc-modes {
-    --kit-panel-w: 153px;
+/* The wide double card: the tags beside the text, so the scene keeps its height. */
+@container (min-width: 400px) {
+  .hero .arc-mode-text {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
   }
 
+  .hero .arc-mode-name {
+    grid-column: 1 / -1;
+  }
+
+  .hero .arc-tags {
+    align-self: end;
+  }
+}
+
+/* Room for the bento: the double card, two more, then four; the rows follow the window's height. */
+@media (min-width: 720px) and (min-height: 481px) {
   .arc-modes-title {
-    font-size: 56px;
-  }
-
-  .arc-mode-card {
-    min-height: 144px;
-  }
-
-  .arc-mode-name {
+    top: -28px;
+    left: 18px;
+    padding: 7px 22px 8px;
     font-size: 40px;
   }
 
-  .arc-mode-blurb {
-    font-size: 20px;
+  .arc-modes-close.arc-icon-btn {
+    top: -20px;
+    right: -14px;
   }
 
-  .arc-mode-card:last-child:nth-child(3n + 1) {
-    grid-column: 2;
+  .arc-modes-panel {
+    padding: 0 12px;
   }
 
-  .arc-mode-scene {
-    top: auto;
-    bottom: 0;
+  .arc-modes-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: clamp(160px, calc((100vh - 170px) / 2), min(280px, 30vw));
+    grid-auto-rows: clamp(160px, calc((100dvh - 170px) / 2), min(280px, 30vw));
+    gap: 12px;
+  }
+}
+
+/* A phone on its side: one row that scrolls sideways. */
+@media (max-height: 480px) {
+  .arc-modes {
+    padding-top: calc(var(--safe-t) + 26px);
+    padding-bottom: calc(var(--safe-b) + 12px);
   }
 
-  .arc-mode-dummy {
-    width: 48px;
-    height: 90px;
+  .arc-modes-scroll {
+    padding-top: 22px;
+    overflow: auto hidden;
+    touch-action: pan-x;
+  }
+
+  .arc-modes-grid {
+    grid-template-columns: none;
+    grid-template-rows: minmax(0, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: 180px;
+    height: calc(100vh - 92px);
+    height: calc(100dvh - var(--safe-t) - var(--safe-b) - 92px);
   }
 }
 

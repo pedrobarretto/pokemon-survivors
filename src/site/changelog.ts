@@ -65,6 +65,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     ],
     changes: [
       {
+        title: { pt: 'Modos de jogo de cara nova', en: 'A new look for Game Modes', es: 'Modos de juego renovados', fr: 'Nouveau look pour les modes de jeu', zh: '遊戲模式換上新面貌' },
+        notes: [
+          {
+            pt: 'A tela de modos agora abre por cima do campo, e cada modo é um lugar: o pôr do sol da horda, a tempestade de Kyogre, a fogueira do Co-op, o Dojo, a Arena e o café do Realm.',
+            en: 'The modes screen now opens over the meadow, and each mode is a place: the horde at sunset, Kyogre\'s storm, the Co-op campfire, the Dojo, the Arena and the Realm\'s café.',
+            es: 'La pantalla de modos ahora se abre sobre el prado, y cada modo es un lugar: el atardecer de la horda, la tormenta de Kyogre, la fogata del Co-op, el Dojo, la Arena y el café del Realm.',
+          },
+        ],
+      },
+      {
         title: { pt: 'Lobby novo', en: 'A new lobby', es: 'Lobby nuevo', fr: 'Nouvel accueil', zh: '全新大廳' },
         notes: [
           {

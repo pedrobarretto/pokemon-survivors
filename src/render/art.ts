@@ -1265,6 +1265,11 @@ const KIT_CHECK = ['........11', '.......111', '......111.', '1....111..', '11..
 /** The kit's close button. One color: `.ink-icon` lights it in the dark theme. */
 const KIT_CLOSE = ['11.....11', '111...111', '.111.111.', '..11111..', '...111...', '..11111..', '.111.111.', '111...111', '11.....11']
 
+/** A mode that needs an account, on its card. White: it sits on the mode's nameplate. */
+const KIT_LOCK = ['.11111.', '11...11', '11...11', '1111111', '1111111', '111.111', '111.111', '1111111']
+
+export const lockIcon = () => toIconUrl('kit:lock', () => art(KIT_LOCK, { 1: '#ffffff' }))
+
 export const checkIcon = () => toIconUrl('kit:check', () => art(KIT_CHECK, { 1: '#1b2040' }))
 
 export const closeIcon = () => toIconUrl('kit:close', () => art(KIT_CLOSE, { 1: '#1b2040' }))
