@@ -135,7 +135,7 @@ export const es: Messages = {
     specialTitle: (name) => `${name} (Espacio)`,
     lunge: 'Embestida',
     lungeTitle: (name) => `${name} (Shift)`,
-    stances: { shield: 'Escudo', blade: 'Filo', normal: 'Normal', attack: 'Ataque', defense: 'Defensa', speed: 'Velocidad' },
+    stances: { shield: 'Escudo', blade: 'Filo', normal: 'Normal', attack: 'Ataque', defense: 'Defensa', speed: 'Velocidad', heat: 'Horno', wash: 'Lavadora', frost: 'Nevera', fan: 'Ventilador', mow: 'Cortadora' },
     jumps: (n) => `×${n}`,
   },
 
@@ -5640,6 +5640,7 @@ export const es: Messages = {
     braveBird: 'Se lanza en picada al enemigo más cercano. Presiona de nuevo justo después de golpear para saltar al siguiente.',
     ironHead: 'Avanza con la hoja hasta el enemigo más cercano. Presiona de nuevo justo después de golpear para saltar al siguiente.',
     stanceChange: 'Alterna entre la Forma Escudo (−30% de daño recibido, movimientos ×0,7) y la Forma Filo (movimientos ×1,3, +10% de daño recibido).',
+    applianceChange: 'Rotom cambia de aparato: Horno, Lavadora, Nevera, Ventilador o Cortadora. Cada uno cambia el tipo y la forma de Discharge.',
     formeChange: 'Alterna entre las Formas Normal, Ataque (movimientos ×1,35, +25% de daño recibido), Defensa (−40% de daño recibido, movimientos ×0,75) y Velocidad (+35% de velocidad).',
     dragonFlare: 'Embestida larga en llamas azules de dragón, con rastro de fuego y explosión al final.',
     psystrike: 'Tres ondas psíquicas enormes a tu alrededor que empujan y ralentizan.',

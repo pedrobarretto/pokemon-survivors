@@ -62,6 +62,7 @@ import type { LegendState } from './legend'
 import type { CoopState } from './coop'
 import type { Training } from './training'
 import type { Harm, HarmBy } from './harm'
+import type { SeasonKit } from './seasonOneKitRules'
 
 export type OwnedMove = {
   id: MoveId
@@ -228,6 +229,8 @@ export type Player = {
   hits: Harm[]
   /** Versus (`versus.ts`): their team, Energy, respawn and match stats. Absent outside Versus. */
   versus?: VersusSeat
+  /** Temporada 1's mechanic families (`seasonOneKitRules.ts`): their running state. Absent for everyone else. */
+  kit?: SeasonKit
 }
 
 /** One player's run stats (damage dealt is `damageByMove`). `tally` counts their own faints only in co-op. */
@@ -381,6 +384,8 @@ export type Visual =
   | LegendaryVisual
   /** Legendary moves, second batch (`legendaryMoves2.ts`), drawn by `render/legendaryFx2.ts`. */
   | LegendaryVisual2
+  /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
+  | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'

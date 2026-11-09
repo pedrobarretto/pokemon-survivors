@@ -135,7 +135,7 @@ export const zh: Messages = {
     specialTitle: (name) => `${name}（空白鍵）`,
     lunge: '突進',
     lungeTitle: (name) => `${name}（Shift）`,
-    stances: { shield: '盾', blade: '劍', normal: '一般', attack: '攻擊', defense: '防禦', speed: '速度' },
+    stances: { shield: '盾', blade: '劍', normal: '一般', attack: '攻擊', defense: '防禦', speed: '速度', heat: '微波爐', wash: '洗衣機', frost: '冰箱', fan: '電風扇', mow: '割草機' },
     jumps: (n) => `×${n}`,
   },
 
@@ -5634,6 +5634,7 @@ export const zh: Messages = {
     braveBird: '俯衝撞向最近的敵人。命中後立刻再按一次，可跳向下一個敵人。',
     ironHead: '以刀刃為先撲向最近的敵人。命中後立刻再按一次，可跳向下一個敵人。',
     stanceChange: '在盾牌形態（受到傷害−30%，招式×0.7）與刀劍形態（招式×1.3，受到傷害+10%）之間切換。',
+    applianceChange: 'Rotom 切換家電：微波爐、洗衣機、冰箱、電風扇或割草機，每種都會改變 Discharge 的屬性與形態。',
     formeChange: '輪流切換普通形態、攻擊形態（招式×1.35，受到傷害+25%）、防禦形態（受到傷害−40%，招式×0.75）與速度形態（速度+35%）。',
     dragonFlare: '在藍色龍焰中長距離衝刺，留下火焰軌跡，終點還會爆炸。',
     psystrike: '在你周圍放出三道巨大的超能力波動，推開並減緩敵人。',

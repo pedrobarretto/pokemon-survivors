@@ -206,6 +206,12 @@ export const SPECIALS = {
     base: { name: 'Forme Change', damage: 0, area: 1, count: 1 },
     final: { name: 'Forme Change', damage: 0, area: 1, count: 1 },
   },
+  /** Rotom only: cycles its appliances, each reshaping Discharge (`seasonOneKitMoves.ts`). */
+  applianceChange: {
+    type: 'electric', kind: 'stance', cooldown: 3, charge: 0,
+    base: { name: 'Forme Change', damage: 0, area: 1, count: 1 },
+    final: { name: 'Forme Change', damage: 0, area: 1, count: 1 },
+  },
   /* Mega forms only (`MEGAS`): one tier, stronger than any final one, on a shorter cooldown. */
   dragonFlare: {
     type: 'dragon', kind: 'dash', cooldown: 8, charge: 0.2,
@@ -442,6 +448,7 @@ const BY_SPECIES: Partial<Record<PlayableId, SpecialId | readonly SpecialId[]>> 
   swablu: ['boomburst', 'dracoMeteor'],
   pidgey: 'aeroblast',
   deoxys: 'formeChange',
+  rotom: 'applianceChange',
 }
 
 export const specialOfType = (type: PokeType): SpecialId => BY_TYPE[type]

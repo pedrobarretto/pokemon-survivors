@@ -11,6 +11,7 @@ import { leadTime } from './horde'
 import { inView } from './queries'
 import { isSpitter, spitBand, spitterStride } from './spitters'
 import { CONFUSE_BUMP, CONFUSE_CONTACT, createStatus, isFrozen, statusAttack, statusPace } from './status'
+import { miceLure } from './seasonOneKitSystem'
 import { enemyGroundPace } from './terrain'
 import { createTraitState, isAirborne, traitPace } from './traits'
 import { dungeonNav } from './dungeon'
@@ -227,6 +228,12 @@ export const updateEnemies = (g: Game, dt: number) => {
         speed = still ? 0 : pace * fightPace(e.fight)
       } else if (isSpitter(e)) {
         speed = pace * spitterStride(dm.hypot(p.x - e.x, p.y - e.y), inView(g, e.x, e.y, -TRAITS.spitter.inset), band)
+      }
+      // Tandemaus' mice draw the regular horde off the player (`miceLure`).
+      const mouse = miceLure(g, e, dt)
+      if (mouse) {
+        tx = mouse.x
+        ty = mouse.y
       }
       if (nav && cave && nav(e.x - cave.x, e.y - cave.y, waypoint)) {
         tx = cave.x + waypoint.x

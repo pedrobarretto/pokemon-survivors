@@ -3,7 +3,7 @@ import manifest from './sprites.generated.json'
 /** A sprite's opaque body on its first Walk frame, in px (`npm run bodies` measures it from the PNGs). */
 export type Body = { bodyW: number; bodyH: number; footY: number }
 
-type Entry = { body?: Body; shiny?: { body?: Body } }
+type Entry = { body?: Body; shiny?: { body?: Body }; forms?: Record<string, { body?: Body }> }
 
 const MANIFEST: Record<string, Entry> = manifest
 
@@ -19,3 +19,6 @@ export const bodyOf = (dex: number, shiny = false): Body =>
 
 /** SpriteCollab has the species' shiny colors (read from data, so the server agrees). */
 export const hasShinySprite = (dex: number) => MANIFEST[String(dex)]?.shiny !== undefined
+
+/** Body of a species' alternate form (a Wishiwashi School), from the manifest; undefined without one. Hitboxes read this, never loaded sprites. */
+export const formBodyOf = (dex: number, form: string): Body | undefined => MANIFEST[String(dex)]?.forms?.[form]?.body

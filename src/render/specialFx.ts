@@ -317,6 +317,11 @@ const STANCE_ART = {
   attack: deoxysArt(SWORD, 'attack'),
   defense: deoxysArt(SHIELD, 'defense'),
   speed: deoxysArt(CHEVRON, 'speed'),
+  heat: deoxysArt(CORE, 'heat'),
+  wash: deoxysArt(CHEVRON, 'wash'),
+  frost: deoxysArt(CORE, 'frost'),
+  fan: deoxysArt(CHEVRON, 'fan'),
+  mow: deoxysArt(SWORD, 'mow'),
 } as const satisfies Record<Stance, () => PixelSprite>
 
 export const stanceIcon = (stance: Stance) => toIconUrl(`stance:${stance}`, STANCE_ART[stance])
@@ -345,6 +350,11 @@ export const STANCE_FORMS = {
   attack: 'attack',
   defense: 'defense',
   speed: 'speed',
+  heat: 'heat',
+  wash: 'wash',
+  frost: 'frost',
+  fan: 'fan',
+  mow: 'mow',
 } as const satisfies Record<Stance, FormKey | undefined>
 
 /**
@@ -541,6 +551,7 @@ const BESPOKE_ICONS: Record<Exclude<SpecialId, FormSpecial>, () => PixelSprite> 
   ironHead: () => outlined(slashSprite('steel')),
   stanceChange: STANCE_ART.shield,
   formeChange: STANCE_ART.normal,
+  applianceChange: STANCE_ART.heat,
   dragonFlare: () =>
     outlined(fromStrings(
       ['.....1.....', '.1...21..1.', '.21.1321.2.', '..1123321..', '.112344321.', '12344443211', '.123444321.', '..1234321..', '.1.12321.1.', '.2..121..2.', '.....1.....'],
