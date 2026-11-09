@@ -100,7 +100,10 @@ const OUTCOME_COLORS = { victory: '#3878e8', fainted: '#d04848', endless: '#7048
 type Font = 'title' | 'body'
 
 /** Cubic 11 draws the Chinese text the Latin pixel fonts have no glyphs for (see `ui/style.css`). */
-const FAMILY = { title: '"Press Start 2P", "Cubic 11"', body: 'VT323, "Cubic 11"' } as const satisfies Record<Font, string>
+const FAMILY = { title: '"Jersey 10", VT323, "Cubic 11"', body: '"Jersey 15", VT323, "Cubic 11"' } as const satisfies Record<Font, string>
+
+/** The card's sizes count a title's capitals in card pixels: Jersey 10's capitals are half its em, so it's drawn at twice the size. */
+const emOf = (font: Font, size: number) => (font === 'title' ? size * 2 : size)
 
 /** Waits for the game fonts: a card drawn before them would fall back to a smooth system font. A line of the current language as the sample loads Cubic 11 only when the card is in Chinese. */
 const fontsReady = () => Promise.all([document.fonts.load(`8px ${FAMILY.title}`, t().loading), document.fonts.load(`16px ${FAMILY.body}`, t().loading)])
@@ -114,13 +117,14 @@ const textMask = (text: string, font: Font, size: number): Mask => {
   const key = `${font}|${size}|${text}`
   const cached = masks.get(key)
   if (cached) return cached
+  const em = emOf(font, size)
   const probe = context2d(createCanvas(1, 1))
-  probe.font = `${size}px ${FAMILY[font]}`
+  probe.font = `${em}px ${FAMILY[font]}`
   const width = Math.ceil(probe.measureText(text).width)
-  const baseline = Math.round(size * 1.5)
-  const canvas = createCanvas(width + 2, size * 2)
+  const baseline = Math.round(em * 1.5)
+  const canvas = createCanvas(width + 2, em * 2)
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!
-  ctx.font = `${size}px ${FAMILY[font]}`
+  ctx.font = `${em}px ${FAMILY[font]}`
   ctx.textBaseline = 'alphabetic'
   ctx.fillStyle = '#fff'
   ctx.fillText(text, 1, baseline)

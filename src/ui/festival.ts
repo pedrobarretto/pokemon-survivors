@@ -20,7 +20,6 @@ import { kecleonSpeaker } from './kecleon'
 import { profileEditor } from './profile'
 import { loadSave, today } from './save'
 import { confirmDialog, type Screen } from './screens'
-import { railTile } from './shell'
 import { nearestInDirection, type Direction } from './spatial'
 
 /**
@@ -585,30 +584,37 @@ const toNext = (f: Festival, pot: number) => {
 const daysLeft = (f: Festival, v: FestivalView) => dayNumber(festivalEnd(f)) - dayNumber(v.day) + 1
 
 /**
- * The Hoje card while a festival runs: its lantern, the pot's way to the
- * next milestone and the pot in short, with the days left. It follows the
- * pot as the API answers.
+ * Na Praça's card while a festival runs: the days left, its lantern, what a
+ * donation does, the pot's way to the next milestone and the pot and the
+ * milestone in short. It follows the pot as the API answers.
  */
 export const festivalCard = () => {
   const m = t().festival
-  const left = h('em', { class: 'lobby-badge festival-left' })
+  const days = h('em', { class: 'lobby-fest-days' })
   const fill = h('span')
   const pot = h('b')
-  const icon = img('', 'lobby-lantern')
+  const next = h('span')
+  const icon = img('', 'lobby-fest-lantern')
+  const name = h('b', { class: 'lobby-fest-name' })
   const el = h(
     'button',
-    { class: 'lobby-card box festival', type: 'button' },
-    h('small', { class: 'lobby-card-label' }, h('span', {}, m.card), left),
-    h('span', { class: 'lobby-card-row' }, icon, h('span', { class: 'lobby-progress festival-pot-bar' }, fill), pot),
-    h('span', { class: 'key-hint' }, 'F'),
+    { class: 'arc-card lobby-fest', type: 'button' },
+    h('span', { class: 'lobby-fest-top' }, days, icon),
+    name,
+    h('small', { class: 'lobby-fest-line' }, m.cardLine),
+    h('span', { class: 'lobby-fest-bar' }, fill),
+    h('span', { class: 'lobby-fest-pot' }, pot, next),
   )
   const paint = (v: FestivalView) => {
     const f = v.festival
     if (!f) return
     icon.src = festivalIcon(f.id)
-    setText(left, m.daysLeftShort(daysLeft(f, v)))
+    setText(name, m.names[f.id])
+    setText(days, m.daysLeftShort(daysLeft(f, v)))
     fill.style.width = `${Math.round(toNext(f, v.pot) * 100)}%`
     setText(pot, formatPokeDollarsShort(v.pot))
+    const goal = nextMilestone(f, v.pot)
+    setText(next, goal ? m.nextPot(formatPokeDollarsShort(goal.pot)) : '')
     el.setAttribute('aria-label', `${m.names[f.id]}: ${formatPokeDollars(v.pot)}`)
   }
   paint(festivalView())
@@ -616,18 +622,20 @@ export const festivalCard = () => {
   return el
 }
 
-/** The festival's Hoje card as a rail tile (phones held upright): its lantern, with the days left on its corner. */
-export const festivalTile = () => {
+/** The Festival as one line (phones): its lantern, its name and the days left. */
+export const festivalBanner = () => {
   const m = t().festival
-  const icon = img('', 'lobby-lantern')
-  const left = h('em', { class: 'lobby-badge rail-days' })
-  const el = railTile('festival', icon, t().home.rail.festival, m.card, left)
+  const icon = img('', 'lobby-fest-lantern')
+  const name = h('b')
+  const days = h('span', { class: 'lobby-banner-days' })
+  const el = h('button', { class: 'arc-card lobby-banner', type: 'button' }, icon, name, days, h('span', { class: 'lobby-banner-go', 'aria-hidden': 'true' }, '▸'))
   const paint = (v: FestivalView) => {
     const f = v.festival
     if (!f) return
     icon.src = festivalIcon(f.id)
-    setText(left, t().home.rail.days(daysLeft(f, v)))
-    el.setAttribute('aria-label', `${m.names[f.id]}: ${formatPokeDollars(v.pot)}`)
+    setText(name, m.names[f.id])
+    setText(days, `· ${m.daysLeftShort(daysLeft(f, v)).toLowerCase()}`)
+    el.setAttribute('aria-label', m.names[f.id])
   }
   paint(festivalView())
   const off = onFestival((v) => (el.isConnected ? paint(v) : off()))

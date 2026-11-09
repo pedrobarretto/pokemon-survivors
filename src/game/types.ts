@@ -65,6 +65,7 @@ import type { CoopState } from './coop'
 import type { Training } from './training'
 import type { Harm, HarmBy } from './harm'
 import type { SeasonKit } from './seasonOneKitRules'
+import type { MythicalHunt } from './mythicalHunt'
 
 export type OwnedMove = {
   id: MoveId
@@ -789,6 +790,8 @@ export type GameEvent =
   | { kind: 'awakened'; legend: LegendId; n: number; form: LegendForm | null }
   /** A legendary boss fell (rift, trio, mythical, Mewtwo, Arceus), once per defeat: the save counts it toward capturing it. */
   | { kind: 'legendBeaten'; legend: EnemyId; shiny: boolean }
+  /** A solo finale rolled its mythical slot: who came, or null. The save counts it (`game/mythicalHunt.ts`). */
+  | { kind: 'mythicalRoll'; enemy: EnemyId | null }
   /** A boss with phases moved on to phase `phase` (from 0), or began its ultimate (`move`, the official English name). */
   | { kind: 'bossPhase'; enemy: EnemyId; phase: number }
   | { kind: 'bossUltimate'; enemy: EnemyId; move: string }
@@ -877,6 +880,8 @@ export type Game = {
   outbreak: EnemyId | null
   /** Noite das Bruxas (`game/halloween.ts`): the run is haunted, a run input like the outbreak. */
   halloween: boolean
+  /** The mythicals' bad-luck protection this run plays (`game/mythicalHunt.ts`), null for the plain odds. */
+  mythicalHunt: MythicalHunt | null
   /** Candies collected this run (a haunted one), banked into the save's jar at the end. */
   candies: number
   /** Multiplier on wild shiny odds: Shiny Charm ranks and a Lure (`shinyBoost`). */

@@ -31,7 +31,9 @@ import {
 } from '../../src/net/realm'
 import { isFeat, isMinigameId } from '../../src/data/minigames'
 import { isTableId } from '../../src/net/realmTables'
-import { PRESENCE_EVERY_MS, type IdentityResponse, type PresenceReport, type VisitRequest, type VisitResponse } from '../../src/net/realmRelay'
+import { isDeed } from '../../src/data/realmStamps'
+import { DEEDS_EVERY_MS, PRESENCE_EVERY_MS, type DeedsAnswer, type DeedsReport, type IdentityResponse, type PresenceReport, type VisitRequest, type VisitResponse } from '../../src/net/realmRelay'
+import { createDeedLog, noteDeed, takeReport, watchDeeds, type DeedLog } from './realmDeeds'
 import { play, ready, sit, stand, tablesFor, tickTables, type Table } from './realmTables'
 
 /**
@@ -46,7 +48,9 @@ import { play, ready, sit, stand, tablesFor, tickTables, type Table } from './re
  * room's bounds and a speed budget (`MOVE`), batches the positions out per
  * room at `REALM.moveHz` (`tick`), and asks the API who a trainer is
  * (`identify` effect, batched) and whether it may enter a base (`visit`).
- * The shell answers those with `identified` and `visited`. The rooms' game
+ * The shell answers those with `identified` and `visited`. What trainers do
+ * is noted as deeds (`realmDeeds.ts`) and reported to the API every
+ * `DEEDS_EVERY_MS` (`deeds` effect, answered with `deedsAnswered`). The rooms' game
  * tables are `realmTables.ts`'s, wired in here. Furniture (`perch`, `use`):
  * a seat is held by the trainer on it (one a seat, its next step stands it
  * up), and a base room's lights and music live in `City.furniture` while
@@ -124,6 +128,8 @@ export type Trainer = {
   invitedAt: number[]
   /** The seat it's on (`seatKey`) and its spot, or null; while on one, `act` is its pose. */
   perch: { key: string; x: number; y: number } | null
+  /** Since when it's been in this room with someone, or null (`watchDeeds`). */
+  company: number | null
   /** When its last furniture uses went out (`REALM.useBurst`). */
   used: number[]
 }
@@ -143,6 +149,8 @@ export type City = {
   matches: number
   /** Each base room's lights and music, while anyone is in it. */
   furniture: Map<RoomKey, { lit: string[]; music: { piece: string; track: number } | null }>
+  /** The realm's deed log (`RealmState.deeds`), here for the tables to note theirs. */
+  deeds: DeedLog
 }
 
 /** A socket, as the realm knows it. */
@@ -175,6 +183,7 @@ export type RealmState = {
   /** When the next presence report is due, and whether a city emptied since the last. */
   presenceAt: number
   presenceDirty: boolean
+  deeds: DeedLog
 }
 
 export type RealmEffect =
@@ -187,6 +196,8 @@ export type RealmEffect =
   | { k: 'visit'; ask: number; req: VisitRequest }
   /** Post who walks each city (`POST /realm/presence`); fire and forget. */
   | { k: 'presence'; report: PresenceReport }
+  /** Report what trainers did (`POST /realm/deeds`) and hand the answer (null: failed) to `deedsAnswered`. */
+  | { k: 'deeds'; ask: number; report: DeedsReport }
   | { k: 'event'; ev: string; data: Record<string, string | number | boolean | null> }
 
 export const createRealm = (home: RealmHome, now: number): RealmState => ({
@@ -199,6 +210,7 @@ export const createRealm = (home: RealmHome, now: number): RealmState => ({
   asks: 0,
   presenceAt: now + PRESENCE_EVERY_MS,
   presenceDirty: false,
+  deeds: createDeedLog(now),
 })
 
 /* ---------------- Parsing ---------------- */
@@ -310,7 +322,7 @@ const refuse = (conn: ConnId, why: RealmRefusal): RealmEffect[] => [send(conn, {
 const cityOf = (state: RealmState, id: CityId): City => {
   let city = state.cities.get(id)
   if (!city) {
-    city = { id, next: 1, trainers: new Map(), invites: new Map(), tables: new Map(), matches: 0, furniture: new Map() }
+    city = { id, next: 1, trainers: new Map(), invites: new Map(), tables: new Map(), matches: 0, furniture: new Map(), deeds: state.deeds }
     state.cities.set(id, city)
   }
   return city
@@ -326,6 +338,7 @@ export const avatarOf = (t: Trainer): Avatar => ({
   shiny: t.identity.shiny,
   look: t.identity.look,
   supporter: t.identity.supporter,
+  stamps: t.identity.stamps,
   x: t.x,
   y: t.y,
   facing: t.facing,
@@ -457,9 +470,11 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
     invitedAt: [],
     perch: null,
     used: [],
+    company: null,
   }
   city.trainers.set(t.id, t)
   conn.avatar = t.id
+  arrived(city, t, now)
   out.push(
     send(conn.id, { t: 'welcome', you: t.id, room, avatars: inRoom(city, room).map(avatarOf) }),
     tablesFor(city, t, now),
@@ -470,6 +485,14 @@ const seat = (state: RealmState, conn: Conn, identity: RealmIdentity, asked: Roo
   if (crowded) out.push(send(conn.id, { t: 'refused', why: 'roomFull' }))
   else if (!direct) out.push(...go(state, t, asked, BASE_ROOM.spawn.x, BASE_ROOM.spawn.y, now))
   return out
+}
+
+/** The deeds of landing in a room: a town room's, or someone else's base (its owner, if home, hosts). */
+const arrived = (city: City, t: Trainer, now: number) => {
+  if (isTownRoomId(t.room)) return noteDeed(city.deeds, t.identity.userId, `room:${t.room}`, now)
+  if (baseOwner(t.room) === null || ownBase(t, t.room)) return
+  noteDeed(city.deeds, t.identity.userId, 'base:visit', now)
+  for (const o of inRoom(city, t.room)) if (ownBase(o, t.room)) noteDeed(city.deeds, o.identity.userId, 'base:host', now)
 }
 
 /** Whether `room` of `city` holds its cap already (`roomCap`; the landing has none of its own). */
@@ -543,12 +566,16 @@ export const message = (state: RealmState, connId: ConnId, msg: RealmClientMessa
       return go(state, t, msg.room, msg.x, msg.y, now)
     case 'say':
       t.active = now
-      return burst(t.said, now) ? toRoom(city, t.room, { t: 'said', id: t.id, line: msg.line }) : []
+      if (!burst(t.said, now)) return []
+      noteDeed(city.deeds, t.identity.userId, 'say', now)
+      return toRoom(city, t.room, { t: 'said', id: t.id, line: msg.line })
     case 'emote':
       t.active = now
       // The cosmetic emote plays only for a look that has one.
       if (msg.emote === 'look' && !t.identity.look.emote) return []
-      return burst(t.emoted, now) ? toRoom(city, t.room, { t: 'emoted', id: t.id, emote: msg.emote }) : []
+      if (!burst(t.emoted, now)) return []
+      noteEmote(city, t, msg.emote, now)
+      return toRoom(city, t.room, { t: 'emoted', id: t.id, emote: msg.emote })
     case 'invite':
       t.active = now
       return invite(city, t, msg.id, now)
@@ -560,7 +587,7 @@ export const message = (state: RealmState, connId: ConnId, msg: RealmClientMessa
       return leaveParty(city, t)
     case 'partyGo':
       t.active = now
-      return partyGo(city, t, msg.mode, msg.code)
+      return partyGo(city, t, msg.mode, msg.code, now)
     case 'act':
       t.active = now
       if (t.act === msg.act) return []
@@ -593,6 +620,13 @@ export const message = (state: RealmState, connId: ConnId, msg: RealmClientMessa
       t.active = now
       return baseInvite(state, t, msg.handle, now)
   }
+}
+
+/** An emote's deeds: its own, and a nap if it's the sleep emote on a town bench. */
+const noteEmote = (city: City, t: Trainer, emote: string, now: number) => {
+  const deed = `emote:${emote}`
+  if (isDeed(deed)) noteDeed(city.deeds, t.identity.userId, deed, now)
+  if (emote === 'sleep' && t.perch && isTownRoomId(t.room)) noteDeed(city.deeds, t.identity.userId, 'napBench', now)
 }
 
 /**
@@ -688,12 +722,14 @@ const enter = (state: RealmState, t: Trainer, room: RoomKey, x: number, y: numbe
   t.room = room
   vacate(city, left)
   t.perch = null
+  t.company = null
   t.x = x
   t.y = y
   t.moving = false
   t.act = null
   t.dirty = false
   t.bank = startBank()
+  arrived(city, t, now)
   out.push(send(t.conn, { t: 'room', room, avatars: inRoom(city, room).map(avatarOf) }), tablesFor(city, t, now), ...furnitureFor(city, t), ...toRoom(city, room, { t: 'join', avatar: avatarOf(t) }, t.id))
   out.push(event('realm.room', { city: city.id, room: room.startsWith(BASE_PREFIX) ? 'base' : room }))
   return out
@@ -773,6 +809,9 @@ const perch = (city: City, t: Trainer, piece: PieceRef, seat: number, now: numbe
   t.moving = false
   t.act = at.pose
   t.dirty = false
+  noteDeed(city.deeds, t.identity.userId, 'sit', now)
+  const bench = 'spot' in piece ? `bench:${t.room}:${piece.spot}` : null
+  if (isDeed(bench)) noteDeed(city.deeds, t.identity.userId, bench, now)
   return [...out, ...toRoom(city, t.room, { t: 'acted', id: t.id, act: at.pose, at: [at.x, at.y, at.facing] })]
 }
 
@@ -864,6 +903,7 @@ const answer = (city: City, t: Trainer, from: number, yes: boolean, now: number)
   party.members.push(t.id)
   inviter.party = party
   t.party = party
+  for (const m of [inviter, t]) noteDeed(city.deeds, m.identity.userId, 'party', now)
   return [...out, ...toParty(city, party, { t: 'party', party: partyView(party) })]
 }
 
@@ -886,16 +926,22 @@ const leaveParty = (city: City, t: Trainer): RealmEffect[] => {
 }
 
 /** The leader takes the party into a co-op or Arena room it made: every other member hears where. */
-const partyGo = (city: City, t: Trainer, mode: 'coop' | 'arena', code: string): RealmEffect[] =>
-  t.party && t.party.leader === t.id ? [...toParty(city, t.party, { t: 'partyGo', mode, code }, t.id), event('realm.partyGo', { city: city.id, mode, size: t.party.members.length })] : []
+const partyGo = (city: City, t: Trainer, mode: 'coop' | 'arena', code: string, now: number): RealmEffect[] => {
+  if (!t.party || t.party.leader !== t.id) return []
+  for (const id of t.party.members) {
+    const m = city.trainers.get(id)
+    if (m) noteDeed(city.deeds, m.identity.userId, 'portal', now)
+  }
+  return [...toParty(city, t.party, { t: 'partyGo', mode, code }, t.id), event('realm.partyGo', { city: city.id, mode, size: t.party.members.length })]
+}
 
 /* ---------------- Time ---------------- */
 
 /**
  * The shell's beat, at `REALM.moveHz`: each room's moves batch (to the room,
  * only the trainers who moved), idle sockets dropped, AFK trainers sent
- * away, invites expired, the tables' turn clocks, and the presence report
- * when due.
+ * away, invites expired, the tables' turn clocks, and the presence and deed
+ * reports when due.
  */
 export const tick = (state: RealmState, now: number): RealmEffect[] => {
   const out: RealmEffect[] = []
@@ -935,6 +981,35 @@ export const tick = (state: RealmState, now: number): RealmEffect[] => {
     state.presenceDirty = false
     out.push({ k: 'presence', report: presence(state, now) })
   }
+  if (now >= state.deeds.at) {
+    state.deeds.at = now + DEEDS_EVERY_MS
+    watchDeeds(state.cities.values(), state.deeds, now)
+    const report = takeReport(state.deeds, state.cities.size > 0, state.asks + 1, now)
+    if (report) out.push({ k: 'deeds', ask: ++state.asks, report })
+  }
+  return out
+}
+
+/**
+ * The API's answer to a `deeds` report (null: it failed, and nobody hears a
+ * thing): each new stamp shown to its trainer's room, each finished errand
+ * told to its trainer, for whoever still walks here.
+ */
+export const deedsAnswered = (state: RealmState, ask: number, res: DeedsAnswer | null): RealmEffect[] => {
+  if (state.deeds.ask !== ask) return []
+  state.deeds.ask = null
+  if (!res) return []
+  const out: RealmEffect[] = []
+  for (const city of state.cities.values())
+    for (const t of city.trainers.values()) {
+      const stamps = res.stamps[t.identity.userId]
+      const done = res.errands[t.identity.userId]
+      if (stamps?.length) {
+        t.identity.stamps += stamps.length
+        out.push(...toRoom(city, t.room, { t: 'stamped', id: t.id, stamps }))
+      }
+      if (done?.length) out.push(send(t.conn, { t: 'errands', done }))
+    }
   return out
 }
 

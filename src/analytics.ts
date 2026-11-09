@@ -5,7 +5,7 @@ import type { EnemyId } from './data/enemies'
 import type { PlayableId } from './data/hatchlings'
 import type { MegaId } from './data/megas'
 import type { BagItem } from './data/shop'
-import type { SurveyAnswer } from './data/survey'
+import type { DesignAspect, DesignRating, SurveyAnswer } from './data/survey'
 import type { Difficulty } from './game/difficulty'
 import type { RunMode } from './game/ranking'
 import type { RelayHome, VpsHome } from './net/protocol'
@@ -89,6 +89,9 @@ type AnalyticsEvents = {
     moves: string[]
     items: string[]
     bosses: number
+    /** The finale's mythical: who came, `none` when it rolled and missed, null when the run never got there; and the finales without one it played under (null: the plain odds). */
+    mythical: EnemyId | 'none' | null
+    mythicalDry: number | null
     /** What landed the last hit of a faint: the foe's species (null for a hazard) and the kind of hit. */
     foe: EnemyId | null
     hit: HitKind | null
@@ -214,6 +217,12 @@ type AnalyticsEvents = {
   install: { step: 'prompt' | 'accepted' | 'dismissed' | 'ios' | 'installed' }
   /** The lobby's survey (`ui/survey.ts`): how each difficulty feels, with the runs and wins the player had when answering. */
   survey_difficulty: Record<Difficulty, SurveyAnswer> & { runs: number; wins: number }
+  /**
+   * The lobby's survey on the redesign (`ui/survey.ts`): the rating (1 to 5), what stands out (at most two),
+   * the runs played, the days since this device first saw it, and whether it already had runs banked by then
+   * (`returning`, `DESIGN_SURVEY.returningRuns`). The layout is in PostHog's `$viewport_width` and `$viewport_height`.
+   */
+  survey_design: { rating: DesignRating; aspects: DesignAspect[]; runs: number; days: number; returning: boolean }
   /** A co-op client diverged and was healed from the agreed snapshot: the room, the tick it was told at, and how long until it was back in step. */
   coop_heal: { room: string; tick: number; ms: number }
   /**
@@ -274,7 +283,7 @@ type AnalyticsEvents = {
   /** A checkout came back (`?gems=`): the gems landed (`ok`, how many and after how long) or the wait ran out first (`timeout`). */
   gems_return: { outcome: 'ok' | 'timeout'; gems: number; seconds: number }
   /** A Poké Realm visit, summed as it ends (`ui/realm.ts`): one event per city entered, never per line or step. */
-  realm_session: { city: string; seconds: number; rooms: number; lines: number; emotes: number; party: 0 | 1; portal: 'coop' | 'arena' | 'none' }
+  realm_session: { city: string; seconds: number; rooms: number; peers: number; lines: number; emotes: number; party: 0 | 1; portal: 'coop' | 'arena' | 'none' }
   /** A cosmetic bought with gems (a skin's `slot` is `skin`). */
   cosmetic_buy: { id: CosmeticId; slot: CatalogSlot; rarity: Rarity; price: number }
   /** A skin bundle bought with gems (`SKIN_BUNDLES`): what it cost the buyer and how many skins it brought. */

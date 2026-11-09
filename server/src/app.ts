@@ -23,9 +23,9 @@ import { parseSaveData } from '../../src/game/meta'
 import { outbreakAt } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
 import type { LooksResponse } from '../../src/net/looks'
-import type { ClawInserted as ClawInsertedBody, ClawState, GameClaimed, RealmCities, RealmFriends, RealmMe, RealmSettings } from '../../src/net/realmApi'
+import type { ClawInserted as ClawInsertedBody, ClawState, ErrandClaimed, GameClaimed, RealmBook, RealmCities, RealmFriends, RealmMe, RealmSettings } from '../../src/net/realmApi'
 import { coinsFor, isMinigameId } from '../../src/data/minigames'
-import type { IdentityRequest } from '../../src/net/realmRelay'
+import type { DeedsAnswer, IdentityRequest } from '../../src/net/realmRelay'
 import { parseRealmModeration } from '../../src/realm/moderation'
 import { isGameBoardPeriod, type GameBoard } from '../../src/realm/boards'
 import { isBoardPeriod, isPlayable, isRunMode, parseDisplayName, parseHandle, parseRunResult } from '../../src/game/ranking'
@@ -53,6 +53,7 @@ import type { PatreonOAuth } from './patreon'
 import type { Revenue } from './revenue'
 import type { RankingStore } from './ranking'
 import { parseClawDrop, parseClawInsert, type ClawRefusal, type ClawStore } from './claw'
+import { parseDeedsReport, parseErrandClaim } from './realmDeeds'
 import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parseGameClaim, parsePresenceReport, parseRealmReport, parseRealmSettings, type BuyError, type RealmStore } from './realm'
 import { checkoutLocale, type StripeCheckout } from './stripe'
 import { rulesVerdict } from './rulesGrace'
@@ -95,7 +96,7 @@ export type AppDeps = {
   /** The Poké Realm: identities, visits and presence for the relay; bases, furniture and reports for the game; bans for the admin. */
   realm: Pick<
     RealmStore,
-    'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'settings' | 'takeFriends' | 'takeSettings' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'claim' | 'board' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy' | 'takeGame'
+    'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'settings' | 'takeFriends' | 'takeSettings' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'claim' | 'deeds' | 'book' | 'claimErrand' | 'takeErrand' | 'board' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy' | 'takeGame'
   >
   /** The Máquina de Pelúcias: charges credits and decides drops. */
   claw: Pick<ClawStore, 'state' | 'insert' | 'drop' | 'take'>
@@ -331,8 +332,8 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
  * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
  * - The Poké Realm (`src/realm.ts`): the game's routes as `src/net/realmApi.ts` lists them (`/realm/me`, `/realm/cities`,
- *   `/realm/friends`, `/realm/settings`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/claw…`, `/realm/boards/:game`, `/realm/report`), and the relay's, signed like
- *   `/looks`, as `src/net/realmRelay.ts` lists them (`/realm/identity`, `/realm/visit`, `/realm/presence`). A realm-banned
+ *   `/realm/friends`, `/realm/settings`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/claw…`, `/realm/boards/:game`, `/realm/report`, `/realm/book`, `/realm/errands/claim`), and the relay's, signed like
+ *   `/looks`, as `src/net/realmRelay.ts` lists them (`/realm/identity`, `/realm/visit`, `/realm/presence`, `/realm/deeds`). A realm-banned
  *   account's realm writes get 403 `{ error: 'banned' }`. The desk's `GET /admin/realm`: `RealmDesk` (open realm reports
  *   by trainer, bans in force); `POST /admin/realm/moderation` (`parseRealmModeration`) `{ userId, action, days?, reason? }`:
  *   `ban` (days, or for good), `unban`, `dismiss`, resolving their realm reports. `{ resolved }`, 404 for an unknown player.
@@ -1049,6 +1050,21 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     return c.json(got.dropped)
   })
 
+  app.get('/realm/book', auth, async (c) => {
+    const got = await realm.book(c.var.userId)
+    if (!got.ok) return c.json({ error: got.error }, 403)
+    return c.json(got.book satisfies RealmBook)
+  })
+
+  app.post('/realm/errands/claim', auth, smallBody, async (c) => {
+    const claim = parseErrandClaim(await json(c))
+    if (!claim) return c.json({ error: 'expected { id }' }, 400)
+    if (!realm.takeErrand(c.var.userId)) return c.json({ error: 'too many claims' }, 429)
+    const got = await realm.claimErrand(c.var.userId, claim.id)
+    if (!got.ok) return c.json({ error: got.error }, got.error === 'profile' || got.error === 'banned' ? 403 : 409)
+    return c.json({ coins: got.coins, book: got.book } satisfies ErrandClaimed)
+  })
+
   app.get('/realm/boards/:game', maybeAuth, async (c) => {
     const game = c.req.param('game')
     const period = c.req.query('period') ?? 'day'
@@ -1090,6 +1106,14 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!report) return c.json({ error: 'invalid presence' }, 400)
     realm.presence(report)
     return c.json({ ok: true })
+  })
+
+  app.post('/realm/deeds', bodyLimit({ maxSize: 128 * 1024 }), async (c) => {
+    const signed = await relayBody(c)
+    if ('error' in signed) return signed.error
+    const entries = parseDeedsReport(signed.body)
+    if (!entries) return c.json({ error: 'invalid deeds' }, 400)
+    return c.json((await realm.deeds(entries)) satisfies DeedsAnswer)
   })
 
   /** The desk's routes, all behind a valid token whose user Clerk says is admin. Everyone else gets 403, whatever they send. */
