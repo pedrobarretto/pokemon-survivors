@@ -1647,7 +1647,7 @@ const endDojo = (r: Run, dojo: DojoRun) => {
 
 /** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
 const runHud = (game: Game, onPause: () => void = () => game.phase === 'playing' && (game.phase = 'paused'), menu = false) => {
-  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, input.isHeld, menu)
+  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, () => requestAnimationFrame(syncMarkerInsets), input.isHeld, menu)
   requestAnimationFrame(syncMarkerInsets)
   return hud
 }

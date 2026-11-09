@@ -3123,6 +3123,50 @@ button {
   transform: translateY(2px);
 }
 
+/*
+ * The padlock that fixes or frees the stick mid-run (ui/stickLock.ts), on the
+ * status box's corner: that box already steps aside for the fixed stick in
+ * every layout, so the padlock stays beside it and clear of it. Touch only,
+ * the same query as `finePointer` in main.ts; the box's scale on phones shrinks
+ * it, so the `::before` keeps the tap target finger-sized.
+ */
+.stick-lock {
+  display: none;
+  position: absolute;
+  top: -40px;
+  right: -6px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.stick-lock::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+
+.stick-lock img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  background: #f8f8f8; /* the dark theme's box would swallow the dark outline */
+}
+
+@media not all and (hover: hover) and (pointer: fine) {
+  .stick-lock {
+    display: flex;
+  }
+  [data-hand='left'] .stick-lock {
+    right: auto;
+    left: -6px;
+  }
+}
+
 /* Portrait and desktop: the status box goes above the stick. */
 [data-stick='fixed'] .status {
   bottom: calc(var(--stick-bottom) + var(--stick-size) + 16px);

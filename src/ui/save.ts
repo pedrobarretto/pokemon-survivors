@@ -190,7 +190,7 @@ export type Settings = {
   runToasts: RunToasts
   /** Remapped keys and gamepad buttons. Per device, so they stay out of the synced save. */
   controls: Bindings
-  /** Touch joystick: follows the thumb (the default) or waits in the bottom-left corner. */
+  /** Touch joystick: follows the thumb (the default) or waits in its corner. Settings → Controls, or mid-run the HUD's padlock (`ui/stickLock.ts`). */
   joystick: StickMode
   /** Touch: the side of the action buttons (special, lunge, Mega); the fixed stick and the status box take the other one. */
   buttonSide: ButtonSide
