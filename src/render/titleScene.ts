@@ -215,9 +215,12 @@ const tripGoal = (s: TitleScene, place: Place) =>
   : place === 'stadium' ? judgeSpot(s.stadium)
   : s.home
 
+/** What every trip's pan takes on top of what its distance asks for (s): long enough to enjoy the hop across the map. */
+const TRIP_LINGER = 0.3
+
 /**
  * Starts a trip of the camera to `to` (the Kecleon plaza or home), eased
- * over about a second (shorter when it's close); the partner hops along to
+ * over about 1.4 s (shorter when it's close); the partner hops along to
  * its spot there. `instant` lands at once (a deep link).
  */
 export const visitPlaza = (s: TitleScene, to: Place, w: number, h: number, instant = false) => {
@@ -227,7 +230,7 @@ export const visitPlaza = (s: TitleScene, to: Place, w: number, h: number, insta
     p.state = 'trip'
   }
   const end = restCam(s, to, w, h)
-  const time = instant ? 0 : clamp(Math.hypot(end.x - s.cam.x, end.y - s.cam.y) / 450, 0.45, 1.1)
+  const time = instant ? 0 : clamp(Math.hypot(end.x - s.cam.x, end.y - s.cam.y) / 450, 0.45, 1.1) + TRIP_LINGER
   s.trip = { to, t: 0, time, cam: { ...s.cam }, from: p ? { x: p.x, y: p.y } : { ...s.cam } }
   if (instant) stepTrip(s, s.trip, 0, w, h)
 }

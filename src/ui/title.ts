@@ -599,9 +599,11 @@ const tripPlace = (mode: ShopTrip): Place =>
   mode === 'dojo' || mode === 'stadium' || mode === 'carpentry' ? mode : mode === 'boutique' || mode === 'skins' || mode === 'locker' ? 'boutique' : 'plaza'
 
 /** What the wipe between the stage and the meadow lasts, each way (s). */
-const WIPE_TIME = 0.22
+const WIPE_TIME = 0.28
 /** The wipe's circle grows in steps this big (CSS px), so it reads as pixel art. */
 const WIPE_STEP = 14
+/** The trip sound's own length and a little (ms): a leg turned back at once doesn't stack a second one on it. */
+const TRIP_SOUND_GAP = 420
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
 
 /** The press behind a mode's chip or a keyboard pick. */
@@ -1220,6 +1222,12 @@ export const titleScreen = (
     done()
   }
 
+  /** Sets the partner off on a leg of a trip, with its feet pattering away (never for an `instant` landing). */
+  function setOff(place: Place) {
+    playSfx('trip', TRIP_SOUND_GAP)
+    actions.meadow.visit(place)
+  }
+
   /**
    * Goes to a place: the cards fade, the circle closes over the stage and opens
    * on the top-down meadow, where the camera pans there and the partner hops
@@ -1243,7 +1251,7 @@ export const titleScreen = (
     runWipe(
       () => {
         surface = 'meadow'
-        actions.meadow.visit(place)
+        setOff(place)
       },
       () => {},
     )
@@ -1366,7 +1374,7 @@ export const titleScreen = (
     overScreen?.dispose()
     overScreen = null
     visit = { mode: 'boutique', phase: 'going', instant: false }
-    actions.meadow.visit('boutique')
+    setOff('boutique')
   }
 
   /** Back from the shop: the camera pans home, the partner hops back, the circle wipes to the stage and the lobby's cards return. */
@@ -1381,7 +1389,7 @@ export const titleScreen = (
     wallet = fresh
     if (candyCard) fillHalloweenCard(candyCard)
     visit.phase = 'back'
-    actions.meadow.visit('home')
+    setOff('home')
   }
 
   const landed = () => {

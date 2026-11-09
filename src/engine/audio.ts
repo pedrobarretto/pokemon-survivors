@@ -314,6 +314,12 @@ const SFX = {
     noise(0.3, 0.07)
     tone(200, 620, 0.3, 'triangle', 0.05)
   },
+  /** The lobby's trips: a short rush of air and the partner's feet pattering off (about 0.4 s; `TRIP_SOUND_GAP` in `ui/title.ts`). */
+  trip: () => {
+    noise(0.16, 0.035)
+    tone(247, 587, 0.18, 'triangle', 0.07)
+    ;[0.06, 0.15, 0.24, 0.33].forEach((at, i) => tone(196 + i * 28, 131, 0.04, 'square', 0.055, at))
+  },
   /** Sand hissing round. */
   sand: () => noise(0.45, 0.06),
   /** A fist pulling back, winding up. */
