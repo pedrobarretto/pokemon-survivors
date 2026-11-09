@@ -3545,12 +3545,12 @@ button {
 }
 
 /*
- * The lobby ("palco de modos"): the world behind it is drawn on the game's
- * canvas (`render/lobbyStage.ts`), so the page itself stays see-through. Three
+ * The lobby ("palco de modos"): the meadow behind it is drawn on the game's
+ * canvas (`render/titleScene.ts`), so the page itself stays see-through. Three
  * layouts, in sync with `LANDSCAPE` and `NARROW` in ui/title.ts: `.lobby-wide`
- * (Hoje, the stage, Na Praça, the mode bar and the dock), `.lobby-narrow` (one
+ * (Hoje, the mode, Na Praça, the mode bar and the dock), `.lobby-narrow` (one
  * column over the bottom tabs) and `.lobby-landscape` (a rail of tabs, the
- * stage and Hoje beside JOGAR). Nothing in it scrolls but Hoje's row and the
+ * mode and Hoje beside JOGAR). Nothing in it scrolls but Hoje's row and the
  * mode bar, sideways.
  */
 .title-home {
@@ -4220,7 +4220,7 @@ button {
   display: none;
 }
 
-/* The mode on stage. */
+/* The mode on show: its name, pills and cast. */
 .lobby-center {
   grid-area: center;
   min-width: 0;
@@ -4302,11 +4302,11 @@ button {
   flex: 1 1 0;
   width: 100%;
   min-height: 0;
-  /* The feet line is the slot's bottom: the platform and the horde stand below it, on the grass. */
+  /* The cast's feet stand on the slot's bottom: this margin is the grass under them. */
   margin-bottom: calc(23 * var(--px));
 }
 
-/* The clouds drift a device pixel at a time (render/lobbyStage.ts): behind the lobby's content, over the canvas. */
+/* The rest screen's clouds drift a device pixel at a time (render/lobbyStage.ts): behind the logo, over the canvas. */
 .title-home {
   isolation: isolate;
 }
@@ -4353,7 +4353,7 @@ button {
 
 .lobby-arrow {
   position: absolute;
-  /* Either side of the cast at one height in every layout: over the platform and beside the Realm's café, the widest piece on it. */
+  /* Either side of the cast at one height in every layout: beside the Realm's café, the widest cast. */
   top: 27%;
   z-index: 2;
   display: flex;
@@ -5060,7 +5060,7 @@ button {
   }
 }
 
-/* A short phone held upright: every row gives some so the stage keeps its room. */
+/* A short phone held upright: every row gives some so the cast keeps its room. */
 @media (max-height: 720px) and (max-width: 899px) and (min-height: 501px) {
   .lobby-narrow {
     gap: 5px;
@@ -5114,7 +5114,7 @@ button {
   }
 }
 
-/* A short desktop window: the title and the cards tighten so the stage keeps its room. */
+/* A short desktop window: the title and the cards tighten so the cast keeps its room. */
 @media (min-width: 900px) and (max-height: 780px) and (min-height: 501px) {
   .lobby-wide .lobby-mode-name {
     font-size: clamp(44px, 9 * var(--vh), 76px);
@@ -5166,7 +5166,7 @@ button {
   }
 }
 
-/* The wipe between the stage and the meadow (ui/title.ts). */
+/* The wipe in and out of a trip (ui/title.ts). */
 .lobby-wipe {
   position: absolute;
   inset: 0;

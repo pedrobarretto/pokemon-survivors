@@ -3,7 +3,7 @@ import { fromStrings, lazy } from '../engine/pixelart'
 import type { Dex } from './sprites'
 
 /**
- * The life around the Poké Realm's café on the lobby's platform: two friends
+ * The life around the Poké Realm's café in the lobby's meadow: two friends
  * chatting at the table, the waiter coming out of the door to them, a customer
  * reading the menu. Each is a loop of keys, played by time alone. `x` is art px
  * from the middle of the café's picture.

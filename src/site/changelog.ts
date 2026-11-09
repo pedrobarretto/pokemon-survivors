@@ -28,11 +28,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Lobby novo: escolha o modo e jogue', en: 'A new lobby: pick a mode and play', es: 'Un lobby nuevo: elige el modo y juega', fr: 'Un nouvel accueil : choisis ton mode et joue', zh: '全新大廳：選好模式就開打' },
     highlights: [
       {
-        pt: 'Lobby novo: os 7 modos à vista, cada um com seu palco, e o JOGAR faz o modo escolhido.',
-        en: 'A new lobby: all 7 modes in view, each with its own stage, and PLAY starts the one you picked.',
-        es: 'Lobby nuevo: los 7 modos a la vista, cada uno con su escenario, y JUGAR inicia el que elegiste.',
-        fr: 'Nouvel accueil : les 7 modes en vue, chacun avec sa scène, et JOUER lance celui que tu as choisi.',
-        zh: '全新大廳：7 種模式一目了然，各有專屬舞台，按下「開始」就進入選好的模式。',
+        pt: 'Lobby novo: os 7 modos à vista, cada um com sua turma no campo, e o JOGAR faz o modo escolhido.',
+        en: 'A new lobby: all 7 modes in view, each with its own cast on the meadow, and PLAY starts the one you picked.',
+        es: 'Lobby nuevo: los 7 modos a la vista, cada uno con su elenco en el prado, y JUGAR inicia el que elegiste.',
+        fr: 'Nouvel accueil : les 7 modes en vue, chacun avec sa troupe dans la prairie, et JOUER lance celui que tu as choisi.',
+        zh: '全新大廳：7 種模式一目了然，各有專屬角色站上草原，按下「開始」就進入選好的模式。',
       },
       {
         pt: 'Corrigimos a tela preta ao abrir o jogo no iPhone, iPad e Mac com Safari 26.',
@@ -68,9 +68,9 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         title: { pt: 'Lobby novo', en: 'A new lobby', es: 'Lobby nuevo', fr: 'Nouvel accueil', zh: '全新大廳' },
         notes: [
           {
-            pt: 'Os 7 modos ficam numa barra sempre à vista. Escolha um e o palco muda: a horda no Survivors, um lendário em Lendas, dois times na Arena. O JOGAR ganha a cor do modo e faz o que ele faz.',
-            en: 'The 7 modes sit on a bar that is always in view. Pick one and the stage changes: the horde in Survivors, a legend in Legends, two teams in the Arena. PLAY takes the mode\'s color and starts it.',
-            es: 'Los 7 modos están en una barra siempre a la vista. Elige uno y el escenario cambia: la horda en Survivors, un legendario en Leyendas, dos equipos en la Arena. JUGAR toma el color del modo y lo inicia.',
+            pt: 'Os 7 modos ficam numa barra sempre à vista. Escolha um e quem está no campo muda: seu parceiro no Survivors, um lendário em Lendas, dois times na Arena. O JOGAR ganha a cor do modo e faz o que ele faz.',
+            en: 'The 7 modes sit on a bar that is always in view. Pick one and who stands on the meadow changes: your partner in Survivors, a legend in Legends, two teams in the Arena. PLAY takes the mode\'s color and starts it.',
+            es: 'Los 7 modos están en una barra siempre a la vista. Elige uno y quién está en el prado cambia: tu compañero en Survivors, un legendario en Leyendas, dos equipos en la Arena. JUGAR toma el color del modo y lo inicia.',
           },
           {
             pt: 'O dia vem primeiro, em Hoje: Presentes, Desafio do dia, Ovos, Missões e Surto. Na Praça ficam o Festival, as lojas e o Hall da Fama. Discord, redes e Ideias foram para a Comunidade.',

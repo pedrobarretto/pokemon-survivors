@@ -515,14 +515,15 @@ let megaQueued = false
 let lungeQueued = false
 /** The meadow with wandering Pokémon behind every menu. Lives across screens, so it never pops. */
 const scene = createTitleScene(Date.now())
-/** The lobby's side-view stage (`render/lobbyStage.ts`). */
+/** The rest screen's side-view stage (`render/lobbyStage.ts`), and whether it's what the canvas shows now. */
 const lobbyStage = createLobbyStage()
 const stageClouds = createStageClouds()
+let stageUp = false
 
 /** Lobbies that met the partner so far: only the latest one may send it away (the next title is built before the last one goes). */
 let meetings = 0
 
-/** The lobby's handle on its world: the side-view stage, and the top-down meadow its partner hops through on a trip, with the supporter's companion. */
+/** The title's handle on its world: the side-view stage on the rest screen, and the top-down meadow the lobby stands on, its partner hopping through it on a trip with the supporter's companion. */
 const meadow: Meadow = {
   meet: (partner) => {
     const id = ++meetings
@@ -538,12 +539,16 @@ const meadow: Meadow = {
     visitPlaza(scene, to, view.w, view.h, instant)
   },
   at: () => sceneAt(scene),
-  stage: (draw, dt, w, h, at, scene) => drawLobbyStage(draw, lobbyStage, w, h, at, scene, halloweenToday(), dt, false),
+  stage: (draw, dt, w, h, at) => {
+    stageUp = true
+    drawLobbyStage(draw, lobbyStage, w, h, at, halloweenToday(), dt)
+  },
   clouds: stageClouds.el,
   tickClouds: (w, horizon) => stageClouds.tick(lobbyStage, w, horizon, cssScale, window.devicePixelRatio || 1, uiZoom(), halloweenToday()),
-  draw: (draw, dt, w, h) => {
-    stepTitleScene(scene, dt, w, h)
-    drawTitleScene(draw, scene, w, h)
+  draw: (draw, dt, w, h, covers) => {
+    stageUp = false
+    stepTitleScene(scene, dt, w, h, covers ?? undefined)
+    drawTitleScene(draw, scene, w, h, covers !== null)
   },
   scale: () => cssScale,
 }
@@ -715,11 +720,7 @@ const queueLunge = () => {
   if (run?.game.phase === 'playing') lungeQueued = true
 }
 
-/** The mode whose wild cast stands on the stage behind the menus; read on a new screen, not from storage every frame. */
-let menuMode = loadLobbyMode()
-
 const setScreen = (next: Screen | null) => {
-  menuMode = loadLobbyMode()
   screen?.dispose()
   screen = next
   coopShown = null
@@ -1235,8 +1236,8 @@ const lobbySprites = (): Variant[] => {
     ...(c && canWalkWith(save, c, knownTier(save)) ? [{ dex: companionForm(c.id).dex, shiny: c.shiny }] : []),
     { dex: outbreak, shiny: false },
     { dex: outbreak, shiny: true },
-    // The stage's mode: its wild Pokémon around the platform.
-    ...stageDex(loadLobbyMode()).map((dex) => ({ dex, shiny: false })),
+    // The rest screen's stage, while it shows: the Pokémon around its platform, on its ridge and in its sky.
+    ...(stageUp ? stageDex().map((dex) => ({ dex, shiny: false })) : []),
   ]
 }
 
@@ -3866,7 +3867,7 @@ const frame = (now: number) => {
   if (!run && menuFrame && !startingRun) {
     const mdt = Math.min(0.1, menuAcc)
     menuAcc = 0
-    // The meadow holds the plaza's trips; the Noite das Bruxas haunts it and the stage.
+    // The meadow holds the lobby and its trips; the Noite das Bruxas haunts it and the rest screen's stage.
     scene.haunted = halloweenToday()
     scene.plaza.level = plazaLevel()
     refreshVisitors(performance.now())
@@ -3874,8 +3875,9 @@ const frame = (now: number) => {
     try {
       if (screen?.scene) screen.scene(ctx, mdt, view.w, view.h)
       else {
-        // Every menu keeps the lobby's stage behind it, so leaving the lobby is no jump to another world.
-        drawLobbyStage(ctx, lobbyStage, view.w, view.h, { x: Math.round(view.w / 2), feet: Math.round(view.h * 0.72) }, menuMode, halloweenToday(), mdt)
+        // Every menu keeps the meadow behind it, so leaving the lobby is no jump to another world.
+        stepTitleScene(scene, mdt, view.w, view.h)
+        drawTitleScene(ctx, scene, view.w, view.h)
         ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
         ctx.fillRect(0, 0, view.w, view.h)
       }
@@ -4952,7 +4954,7 @@ if (import.meta.env.DEV) {
         if (rulesStanding(replay.rules) !== 'same') console.warn(`ps: the replay plays by rules ${replay.rules}, this build by ${RULES_VERSION}: it may end elsewhere`)
         return resimulate(replay)
       },
-      /** The top-down meadow a trip goes through: its wanderers, the partner and the camera. */
+      /** The top-down meadow the lobby stands on: its wanderers, the partner and the camera. */
       meadow: () => scene,
       /**
        * The Dojo: `ps.dojo('charmander')` starts a training session with that Pokémon at once (its saved build on), and
