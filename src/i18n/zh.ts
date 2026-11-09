@@ -1020,7 +1020,7 @@ export const zh: Messages = {
     evolution: '進化！',
     evolves: (from, description) => `${from} 進化了！${description}`,
     berry: (name) => `${name} 回復40 HP。`,
-    autoBerry: (level, count) => `Lv ${level}！全部已滿級：*Oran Berry*${count > 1 ? ` ×${count}` : ''}`,
+    autoBerry: (level, count, bonus) => `Lv ${level}！全部已滿級：*Oran Berry*${count > 1 ? ` ×${count}` : ''}${bonus > 0 ? ` · *+${bonus}% 傷害*` : ''}`,
     reroll: (n) => `重抽（${n}）`,
     skip: (n) => `跳過（${n}）`,
     hintKeys: '↑ ↓ 選擇 · ENTER 確認 · 1-3 快捷鍵',

@@ -24,6 +24,47 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-09',
+    title: { pt: 'EXP que vale até o fim', en: 'EXP that pays to the end', es: 'EXP que vale hasta el final', fr: 'De l’EXP utile jusqu’au bout', zh: '經驗值一路都有用' },
+    highlights: [
+      {
+        pt: 'Com golpes e itens no máximo, cada nível novo agora soma +1% de dano (até +50%), além da Oran Berry.',
+        en: 'With moves and items maxed out, every new level now adds +1% damage (up to +50%), on top of the Oran Berry.',
+        es: 'Con movimientos y objetos al máximo, cada nivel nuevo ahora suma +1% de daño (hasta +50%), además de la Oran Berry.',
+        fr: 'Avec les capacités et les objets au max, chaque nouveau niveau ajoute désormais +1 % de dégâts (jusqu’à +50 %), en plus de l’Oran Berry.',
+        zh: '招式和道具全部滿級後，每升一級除了 Oran Berry，傷害還會 +1%（最多 +50%）。',
+      },
+      {
+        pt: 'O bônus dura até o fim da run e o aviso de nível mostra quanto você já acumulou.',
+        en: 'The bonus lasts until the end of the run, and the level notice shows how much you have so far.',
+        es: 'El bono dura hasta el final de la partida y el aviso de nivel muestra cuánto llevas acumulado.',
+        fr: 'Le bonus dure jusqu’à la fin de la partie et l’annonce de niveau indique ton total.',
+        zh: '加成會持續到本局結束，升級提示也會顯示目前累積的數值。',
+      },
+      {
+        pt: 'Vale para runs solo, co-op e o modo Lenda. A Arena continua como estava.',
+        en: 'It works in solo and co-op runs and Legend mode. The Arena stays as it was.',
+        es: 'Vale para partidas en solitario, cooperativas y el modo Leyenda. La Arena sigue igual.',
+        fr: 'Valable en solo, en coop et en mode Légende. L’Arène ne change pas.',
+        zh: '單人、合作和傳說模式都適用，競技場則維持不變。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Bônus por nível depois do máximo', en: 'A bonus for levels past the max', es: 'Un bono por nivel después del máximo', fr: 'Un bonus pour les niveaux après le max', zh: '滿級後的升級獎勵' },
+        notes: [
+          {
+            pt: 'Quando não sobra nada para oferecer, cada nível soma +1% de dano até o fim da run, no máximo +50%. O aviso na tela mostra quanto você já acumulou. Vale para runs solo, co-op e o modo Lenda; a Arena continua como estava.',
+            en: 'When there is nothing left to offer, every level adds +1% damage for the rest of the run, up to +50%. The on-screen notice shows how much you have so far. It works in solo and co-op runs and Legend mode; the Arena stays as it was.',
+            es: 'Cuando no queda nada que ofrecer, cada nivel suma +1% de daño hasta el final de la partida, con un máximo de +50%. El aviso en pantalla muestra cuánto llevas acumulado. Vale para partidas en solitario, cooperativas y el modo Leyenda; la Arena sigue igual.',
+            fr: 'Quand il n’y a plus rien à proposer, chaque niveau ajoute +1 % de dégâts jusqu’à la fin de la partie, jusqu’à +50 %. L’annonce à l’écran indique ton total. Valable en solo, en coop et en mode Légende ; l’Arène ne change pas.',
+            zh: '沒有東西可選時，每升一級傷害 +1%，持續到本局結束，最多 +50%。畫面上的提示會顯示目前累積的加成。單人、合作和傳說模式都適用，競技場則維持不變。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-08',
     title: { pt: 'Fim da tela preta e do mundo invisível', en: 'No more black screen or invisible world', es: 'Adiós a la pantalla negra y al mundo invisible', fr: 'Fini l’écran noir et le monde invisible', zh: '修正黑畫面與世界消失問題' },
     highlights: [

@@ -79,7 +79,7 @@ import { ABILITIES, type AbilityEffect, type AbilityId } from './data/abilities'
 import { branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
 import { abilityStacks, grantAbility } from './game/abilities'
 import { abilityIcon } from './render/abilityArt'
-import { recomputeStats, xpFor } from './game/leveling'
+import { maxedBonus, recomputeStats, xpFor } from './game/leveling'
 import { dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
 import { REAPER } from './game/endless'
 import { continueEndless } from './game/endlessSystem'
@@ -1819,9 +1819,11 @@ const guestSaveCard = () => {
   return saveCard(formatPokeDollars(save.wallet), dexCounts(save.dex).seen, hostApp(), (provider) => void signIn(provider))
 }
 
-/** Level-ups that took the Oran Berry on their own (`takeBerryLevelUps`): the level reached and how many at once. */
-const berryToast = (g: Game, count: number) =>
-  aside(h('span', { class: 'item-toast' }, h('img', { src: berryIcon(), alt: '' }), rich(t().levelUp.autoBerry(localPlayer(g).level, count))), 2200, 'autoBerry')
+/** Level-ups that took the Oran Berry on their own (`takeBerryLevelUps`): the level reached, how many at once and the damage they've added so far. */
+const berryToast = (g: Game, count: number) => {
+  const me = localPlayer(g)
+  aside(h('span', { class: 'item-toast' }, h('img', { src: berryIcon(), alt: '' }), rich(t().levelUp.autoBerry(me.level, count, Math.round(maxedBonus(me) * 100)))), 2200, 'autoBerry')
+}
 
 /** An evolution item's toast: its icon, a line and a hint under it. One found is minor; one missing (`evoHeld`) explains a held evolution. */
 const evoItemToast = (items: readonly EvoItemId[], line: string, hint: string, key: string, show: typeof news) =>
