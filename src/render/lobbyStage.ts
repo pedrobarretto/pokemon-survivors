@@ -1,38 +1,59 @@
-import type { Dir8 } from '../engine/math'
+import { dir8, type Dir8 } from '../engine/math'
 import { context2d, createCanvas, lazy, onCanvasReset } from '../engine/pixelart'
-import { createRng, range } from '../engine/rng'
+import { createRng, range, type Rng } from '../engine/rng'
 import type { GameModeId } from '../data/gameModes'
 import { shadow } from './draw'
+import { detail } from './quality'
 import { drawPokemon, loadedSprites, loadSpecies, type Dex } from './sprites'
 
 /**
- * The lobby's stage, side on: sky and clouds, hills, grass, the raised round
- * platform and the wild Pokémon around it, drawn on the game's canvas in the
+ * The lobby's stage, side on: sky, clouds, hills, grass, the raised round
+ * platform and the Pokémon living around it, drawn on the game's canvas in the
  * meadow's place while the lobby is up. Everything hangs from `StageAnchor`
  * (the platform's middle and the line its cast stands on), so a wider or taller
  * view only shows more sky and grass at the sides, never stretched. The cast on
- * the platform and the places on the horizon are the lobby's own (`ui/title.ts`),
- * drawn a size up in whole device pixels. Presentation only.
+ * the platform and the places on the horizon are the lobby's own (`ui/title.ts`,
+ * `ui/lobbyPlaces.ts`), drawn over this canvas: so whatever walks here is either
+ * behind the terrain's crest and the places (the ridge walkers), above them (the
+ * flocks), or on a lane in front of them that never reaches their bases (the
+ * roamers), and a roamer whose lane doesn't fit a layout isn't drawn at all.
+ * Presentation only.
  */
 
-/** Where the stage stands in view px. */
-export type StageAnchor = { x: number; feet: number }
+/**
+ * Where the stage stands in view px. The lobby also says what surrounds it, so
+ * the Pokémon keep out of the way: `floor`, the top of what covers the grass
+ * below; `left` and `right`, how far from `x` the grass stays uncovered at the
+ * feet line; `half`, the slot's half width (world px), which the ridge's walkers stay inside; `top`, where the sky under the mode's title starts; `roof`, the top of
+ * the tallest place on the horizon; `standing`, the ranges (from `x`) a walker on the
+ * ridge keeps out of, so nobody peeks from behind a building or an arrow; `grounded`,
+ * the same for the arrows that stand as low as the grass lanes (roamers keep to the wider side of one). None of
+ * them on the rest screen and the menus.
+ */
+export type StageAnchor = { x: number; feet: number; floor?: number; left?: number; right?: number; half?: number; top?: number; roof?: number; standing?: readonly StageSpan[]; grounded?: readonly StageSpan[] }
 
-/** A wild Pokémon around the platform: `x` from its middle, `y` from the feet line (world px); `air` hovers over its shadow. */
-type Wild = { dex: Dex; x: number; y: number; dir: Dir8; air?: number }
+/** A stretch of the view, in view px from the stage's middle. */
+export type StageSpan = { from: number; to: number }
+
+/** What the stage shows: a mode of the lobby, or the rest screen ("press any key"). */
+export type StageScene = GameModeId | 'rest'
+
+/** A wild Pokémon around the platform and the side it keeps to; `air` hovers over its shadow. */
+type Wild = { dex: Dex; side: -1 | 1; air?: number }
 
 /** The horde around Survivors' platform; the other modes bring their own, or nobody. */
 const HORDE: readonly Wild[] = [
-  { dex: 19, x: -126, y: 17, dir: 2 },
-  { dex: 41, x: -106, y: -6, dir: 2, air: 15 },
-  { dex: 66, x: -152, y: 3, dir: 2 },
-  { dex: 92, x: 98, y: -7, dir: 6, air: 11 },
-  { dex: 19, x: 132, y: 22, dir: 6 },
-  { dex: 16, x: 156, y: 4, dir: 6 },
+  { dex: 19, side: -1 },
+  { dex: 41, side: -1, air: 15 },
+  { dex: 66, side: -1 },
+  { dex: 92, side: 1, air: 11 },
+  { dex: 19, side: 1 },
+  { dex: 16, side: 1 },
 ]
 
-/** Who waits around the platform in each mode. Arena, Dojo and Realm keep the platform to its own cast. */
-const WILD: Record<GameModeId, readonly Wild[]> = {
+/** Who roams around the platform in each scene. Arena, Dojo and Realm keep the grass to their own cast. */
+const WILD: Record<StageScene, readonly Wild[]> = {
+  rest: [...HORDE, { dex: 25, side: -1 }, { dex: 133, side: 1 }],
   survivors: HORDE,
   legends: [],
   challenge: [],
@@ -42,24 +63,60 @@ const WILD: Record<GameModeId, readonly Wild[]> = {
   realm: [],
 }
 
-/** The species `mode` draws around the platform: the menus' sprite stream keeps these. */
-export const stageDex = (mode: GameModeId): Dex[] => [...new Set(WILD[mode].map((w) => w.dex))]
+/** The small species that walk the ridge behind the grass: tiny so they read as far away. */
+const RIDGE: readonly Dex[] = [10, 13, 43, 69]
+/** The flocks that cross the sky: SpriteCollab's `Fly` sheets by day; after dark Zubat and Crobat, whose walk already flaps. */
+const FLOCK_DAY: readonly Dex[] = [16, 21, 276, 333]
+const FLOCK_NIGHT: readonly Dex[] = [41, 169]
 
-/** Starts loading what `mode` shows around the platform (the sheets it stops showing are swept like any other menu sprite). */
-export const loadStage = (mode: GameModeId) => {
-  for (const dex of stageDex(mode)) void loadSpecies(dex).catch(() => {})
+/** The species `scene` draws around the platform, on the ridge and in the sky: the menus' sprite stream keeps these. */
+export const stageDex = (scene: StageScene): Dex[] => [...new Set([...WILD[scene].map((w) => w.dex), ...RIDGE, ...FLOCK_DAY, ...FLOCK_NIGHT])]
+
+/** Starts loading what `scene` shows (the sheets it stops showing are swept like any other menu sprite). */
+export const loadStage = (scene: StageScene) => {
+  for (const dex of stageDex(scene)) void loadSpecies(dex).catch(() => {})
 }
 
-export type LobbyStage = { time: number }
+/** A roamer: `x` from the platform's middle, `y` from the feet line (world px), walking to (`tx`, `ty`) or waiting. */
+type Roamer = { wild: Wild; x: number; y: number; tx: number; ty: number; wait: number; dir: Dir8; placed: boolean; shown: boolean; phase: number }
 
-export const createLobbyStage = (): LobbyStage => ({ time: 0 })
+/** A walker on the ridge: `sink` is how far under the crest it is, so it comes up and goes down behind the hill. */
+type RidgeWalker = { dex: Dex; x: number; way: -1 | 1; sink: number; state: 'rise' | 'walk' | 'pause' | 'set' | 'away'; timer: number }
+
+/** A flock crossing the sky: `n` birds in a loose V around (`x`, `y`). */
+type Flock = { dex: Dex; x: number; y: number; way: -1 | 1; n: number; speed: number; phase: number }
+
+export type LobbyStage = {
+  time: number
+  rng: Rng
+  scene: StageScene | null
+  roamers: Roamer[]
+  ridge: RidgeWalker[]
+  flock: Flock | null
+  /** Seconds until the next flock sets off. */
+  flockIn: number
+}
+
+const ridgeWalker = (): RidgeWalker => ({ dex: RIDGE[0]!, x: 0, way: 1, sink: 0, state: 'away', timer: 0 })
+
+export const createLobbyStage = (): LobbyStage => ({
+  time: 0,
+  rng: createRng(Date.now()),
+  scene: null,
+  roamers: [],
+  ridge: [ridgeWalker(), ridgeWalker(), ridgeWalker()],
+  flock: null,
+  flockIn: 1.5,
+})
 
 /* ---------------- The backdrop ---------------- */
 
 /** How far over the feet line the horizon sits, and how far over the horizon the hills reach (world px). */
 const HORIZON_RISE = 26
 const HILLS_FAR = 38
-const HILLS_NEAR = 16
+const HILLS_NEAR = 20
+/** How much the near ridge's height moves along it (world px), so what walks on it climbs and comes down. */
+const NEAR_SWELL = 7
 
 /** The platform: half its width and its top's half height, and how deep its earth shows (world px). */
 const PLATFORM = { rx: 62, ry: 12, depth: 7 } as const
@@ -107,11 +164,14 @@ const NIGHT: Palette = {
   shade: '#223e3c',
 }
 
-/** A hill's top at `x`, as gentle overlapping waves, in steps of 3 px so it reads as pixel art. */
-const hillTop = (x: number, seed: number) => {
-  const wave = Math.sin(x / 67 + seed) * 0.55 + Math.sin(x / 29 + seed * 2.3) * 0.28 + Math.sin(x / 151 + seed * 0.7) * 0.5
-  return Math.round(wave * 3) * 3
-}
+/** Gentle overlapping waves along the hills, about -1.3 to 1.3. */
+const hillWave = (x: number, seed: number) => Math.sin(x / 67 + seed) * 0.55 + Math.sin(x / 29 + seed * 2.3) * 0.28 + Math.sin(x / 151 + seed * 0.7) * 0.5
+
+/** A hill's top at `x`, in steps of 3 px so it reads as pixel art. */
+const hillTop = (x: number, seed: number) => Math.round(hillWave(x, seed) * 3) * 3
+
+/** The near ridge's crest at `x`, over the horizon: what its walkers stand on, unstepped so they glide. */
+const nearCrest = (x: number, horizon: number) => horizon - HILLS_NEAR + hillWave(x, 4.2) * NEAR_SWELL
 
 const fillRow = (ctx: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h = 1) => {
   ctx.fillStyle = color
@@ -129,13 +189,16 @@ const paintSky = (ctx: CanvasRenderingContext2D, p: Palette, w: number, horizon:
   })
 }
 
-const paintHills = (ctx: CanvasRenderingContext2D, p: Palette, w: number, horizon: number) => {
+const paintFarHills = (ctx: CanvasRenderingContext2D, p: Palette, w: number, horizon: number) => {
   for (let x = 0; x < w; x += 3) {
     const far = horizon - HILLS_FAR + hillTop(x, 1.4)
     fillRow(ctx, p.far, x, far, 3, horizon - far)
   }
+}
+
+const paintNearHills = (ctx: CanvasRenderingContext2D, p: Palette, w: number, horizon: number) => {
   for (let x = 0; x < w; x += 3) {
-    const near = horizon - HILLS_NEAR + hillTop(x, 4.2) / 2
+    const near = Math.round(nearCrest(x + 1.5, horizon) / 3) * 3
     fillRow(ctx, p.near, x, near, 3, horizon - near)
   }
 }
@@ -188,29 +251,35 @@ const paintPlatform = (ctx: CanvasRenderingContext2D, p: Palette, x: number, y: 
 /** Where the platform's middle sits, from the feet line: the cast stands a little behind it. */
 const platformY = (feet: number) => feet - 2
 
-type Backdrop = { key: string; canvas: HTMLCanvasElement }
+/** The still picture behind everything: `sky` (sky and far hills) goes under the ridge walkers, `land` (near ridge, grass, platform) over them. */
+type Backdrop = { key: string; sky: HTMLCanvasElement; land: HTMLCanvasElement }
 
-/** One view-sized picture of everything that doesn't move, redrawn only when the view or the anchor changes. */
+/** Redrawn only when the view or the anchor changes. */
 let backdrop: Backdrop | null = null
 onCanvasReset(
   () => (backdrop = null),
-  () => backdrop?.canvas,
+  () => backdrop && [backdrop.sky, backdrop.land],
   'lobby',
 )
 
 const stageBackdrop = (w: number, h: number, at: StageAnchor, night: boolean) => {
   const key = `${w}x${h}:${at.x}:${at.feet}:${night}`
-  if (backdrop?.key === key) return backdrop.canvas
-  const canvas = backdrop && backdrop.canvas.width === w && backdrop.canvas.height === h ? backdrop.canvas : createCanvas(w, h)
-  const ctx = context2d(canvas)
+  if (backdrop?.key === key) return backdrop
+  const fits = backdrop !== null && backdrop.sky.width === w && backdrop.sky.height === h
+  const sky = fits ? backdrop!.sky : createCanvas(w, h)
+  const land = fits ? backdrop!.land : createCanvas(w, h)
+  const skyCtx = context2d(sky)
+  const landCtx = context2d(land)
+  landCtx.clearRect(0, 0, w, h)
   const p = night ? NIGHT : DAY
   const horizon = at.feet - HORIZON_RISE
-  paintSky(ctx, p, w, horizon)
-  paintHills(ctx, p, w, horizon)
-  paintGrass(ctx, p, w, h, horizon)
-  paintPlatform(ctx, p, at.x, platformY(at.feet))
-  backdrop = { key, canvas }
-  return canvas
+  paintSky(skyCtx, p, w, horizon)
+  paintFarHills(skyCtx, p, w, horizon)
+  paintNearHills(landCtx, p, w, horizon)
+  paintGrass(landCtx, p, w, h, horizon)
+  paintPlatform(landCtx, p, at.x, platformY(at.feet))
+  backdrop = { key, sky, land }
+  return backdrop
 }
 
 /* ---------------- Clouds ---------------- */
@@ -233,7 +302,7 @@ const clouds = lazy(
   'lobby',
 )
 
-/** The clouds: drifting one way forever, each wrapping around the view on its own. */
+/** The clouds: drifting one way forever, each wrapping around the view on its own. `x` and `y` are shares of the view and the sky. */
 const CLOUDS = [
   { x: 0.08, y: 0.1, shape: 0, speed: 1.4 },
   { x: 0.42, y: 0.2, shape: 1, speed: 0.9 },
@@ -241,39 +310,322 @@ const CLOUDS = [
   { x: 0.9, y: 0.28, shape: 0, speed: 0.7 },
 ] as const
 
+/** A cloud's left edge at `time` (world px, unrounded). */
+const cloudX = (c: (typeof CLOUDS)[number], time: number, w: number) => ((c.x * w + time * c.speed) % (w + 90)) - 90
+/** A cloud's top for a sky that ends at `horizon` (world px). */
+const cloudY = (c: (typeof CLOUDS)[number], horizon: number) => Math.round(c.y * Math.max(60, horizon - 30))
+
+/** How faint the clouds are after dark. */
+const NIGHT_CLOUDS = 0.18
+
+/** On the game's canvas (the menus, under their dim): whole world px are fine there. */
 const drawClouds = (ctx: CanvasRenderingContext2D, s: LobbyStage, w: number, horizon: number, night: boolean) => {
   const art = clouds()
-  const span = w + 90
-  // After dark the clouds are barely there.
-  ctx.globalAlpha = night ? 0.18 : 1
-  for (const c of CLOUDS) {
-    const x = Math.round(((c.x * w + s.time * c.speed) % span) - 90)
-    ctx.drawImage(art[c.shape]!, x, Math.round(c.y * Math.max(60, horizon - 30)))
-  }
+  ctx.globalAlpha = night ? NIGHT_CLOUDS : 1
+  for (const c of CLOUDS) ctx.drawImage(art[c.shape]!, Math.round(cloudX(c, s.time, w)), cloudY(c, horizon))
   ctx.globalAlpha = 1
+}
+
+export type StageClouds = {
+  /** Goes behind the lobby's content, over the game's canvas. */
+  el: HTMLElement
+  /** Places the clouds for this frame: `scale` CSS px per world px, `dpr` the device px per CSS px, `zoom` the UI's. */
+  tick: (s: LobbyStage, w: number, horizon: number, scale: number, dpr: number, zoom: number, night: boolean) => void
+}
+
+/**
+ * The clouds of the lobby and the rest screen as images over the canvas. The
+ * canvas can only move them a whole world pixel at a time (3 CSS px on a desktop), which
+ * reads as stepping at their slow drift; a CSS transform moves them a device pixel
+ * at a time, so they glide while the art keeps its hard edges.
+ */
+export const createStageClouds = (): StageClouds => {
+  const urls = clouds().map((canvas) => canvas.toDataURL())
+  const el = document.createElement('div')
+  el.className = 'stage-clouds'
+  el.setAttribute('aria-hidden', 'true')
+  const items = CLOUDS.map((c) => {
+    const img = document.createElement('img')
+    img.src = urls[c.shape]!
+    img.alt = ''
+    img.draggable = false
+    el.append(img)
+    return { c, img, art: clouds()[c.shape]!, x: NaN, y: NaN, width: NaN }
+  })
+  let opacity = ''
+  return {
+    el,
+    tick: (s, w, horizon, scale, dpr, zoom, night) => {
+      const shown = night ? String(NIGHT_CLOUDS) : '1'
+      if (shown !== opacity) el.style.opacity = opacity = shown
+      for (const item of items) {
+        // Whole device pixels, then into `#ui`'s zoomed px.
+        const x = Math.round(cloudX(item.c, s.time, w) * scale * dpr) / dpr / zoom
+        const y = Math.round(cloudY(item.c, horizon) * scale * dpr) / dpr / zoom
+        const width = (item.art.width * scale) / zoom
+        if (width !== item.width) {
+          item.width = width
+          item.img.style.width = `${width}px`
+          item.img.style.height = `${(item.art.height * scale) / zoom}px`
+        }
+        if (x !== item.x || y !== item.y) {
+          item.x = x
+          item.y = y
+          item.img.style.transform = `translate(${x}px, ${y}px)`
+        }
+      }
+    },
+  }
+}
+
+/* ---------------- Who lives here ---------------- */
+
+/** The platform's sides are this far from its edge; a side narrower than `ZONE_MIN` has no room to roam, and each roamer wants `ROAMER_ROOM` of it. */
+const ZONE_GAP = 18
+const ZONE_MIN = 18
+const ROAMER_ROOM = 30
+/** How fast the wild walk (world px/s). */
+const WALK_SPEED = 15
+
+/** World rows from the horizon down that the places' bases reach (`ui/lobbyPlaces.ts`): a lane starts clear of them. */
+export const PLACE_SINK = 5
+/** Where a far place's base sits over the horizon, on the near ridge (world px). */
+export const PLACE_LIFT = 6
+
+/** What `sideZone` found: the distances from the platform's middle a roamer keeps between. */
+const zone = { near: 0, far: 0 }
+
+/** The stretch of a side a roamer of half width `body` may walk: between `inner` and `reach`, on the wider side of any arrow standing on the grass. */
+const sideZone = (side: -1 | 1, inner: number, reach: number, grounded: readonly StageSpan[] | undefined, body: number) => {
+  zone.near = inner
+  zone.far = reach - body
+  if (!grounded) return
+  for (const span of grounded) {
+    const [nearEdge, farEdge] = side < 0 ? [-span.to, -span.from] : [span.from, span.to]
+    if (farEdge <= zone.near || nearEdge >= zone.far) continue
+    if (nearEdge - zone.near >= zone.far - farEdge) zone.far = nearEdge - body
+    else zone.near = farEdge + body
+  }
+}
+
+const roamerFor = (wild: Wild, i: number): Roamer => ({ wild, x: 0, y: 0, tx: 0, ty: 0, wait: 0, dir: wild.side > 0 ? 6 : 2, placed: false, shown: false, phase: i * 0.37 })
+
+/** The back rows first. */
+const byDepth = (a: Roamer, b: Roamer) => a.y - b.y
+
+/** Walks the roamers on their side of the platform; those a layout can't fit don't show. */
+const stepRoamers = (s: LobbyStage, w: number, h: number, at: StageAnchor, dt: number) => {
+  const lobby = at.floor !== undefined
+  // Counts a side's roamers, so a tight side sends the extra ones away.
+  let left = 0
+  let right = 0
+  const reachL = at.left ?? w / 2 - 10
+  const reachR = at.right ?? w / 2 - 10
+  const inner = PLATFORM.rx + ZONE_GAP
+  for (const r of s.roamers) {
+    const sprite = loadedSprites(r.wild.dex)
+    const side = r.wild.side
+    const nth = side < 0 ? left++ : right++
+    r.shown = false
+    if (!sprite) continue
+    sideZone(side, inner, side < 0 ? reachL : reachR, at.grounded, sprite.bodyW / 2 + 4)
+    const room = zone.far - zone.near
+    if (room < ZONE_MIN || nth >= Math.max(1, Math.floor(room / ROAMER_ROOM))) continue
+    const air = r.wild.air ?? 0
+    // On the lobby a lane starts where this body's head clears the places' bases; on the rest screen, on the grass.
+    const top = lobby ? PLACE_SINK - HORIZON_RISE + sprite.bodyH + air + 4 : air + 12 - HORIZON_RISE
+    const bottom = (at.floor ?? h) - at.feet - (lobby ? 3 : 10)
+    if (bottom < top) continue
+    const [lo, hi] = side < 0 ? [-zone.far, -zone.near] : [zone.near, zone.far]
+    if (!r.placed || r.x < lo - 1 || r.x > hi + 1 || r.y < top - 1 || r.y > bottom + 1) {
+      r.x = r.tx = range(s.rng, lo, hi)
+      r.y = r.ty = range(s.rng, top, bottom)
+      r.wait = range(s.rng, 0, 2.5)
+      r.placed = true
+    }
+    r.shown = true
+    if (r.wait > 0) {
+      r.wait -= dt
+      continue
+    }
+    const dx = r.tx - r.x
+    const dy = r.ty - r.y
+    const dist = Math.hypot(dx, dy)
+    if (dist < 1) {
+      r.tx = range(s.rng, lo, hi)
+      r.ty = range(s.rng, top, bottom)
+      r.wait = range(s.rng, 0.8, 4.5)
+      continue
+    }
+    const step = Math.min(dist, WALK_SPEED * dt)
+    r.x += (dx / dist) * step
+    r.y += (dy / dist) * step
+    r.dir = dir8(dx, dy)
+  }
+  s.roamers.sort(byDepth)
+}
+
+const drawRoamers = (ctx: CanvasRenderingContext2D, s: LobbyStage, at: StageAnchor) => {
+  for (const r of s.roamers) {
+    const sprite = loadedSprites(r.wild.dex)
+    if (!r.shown || !sprite) continue
+    const x = Math.round(at.x + r.x)
+    const y = Math.round(at.feet + r.y)
+    shadow(ctx, x, y, sprite.bodyW)
+    const lift = r.wild.air ? Math.round(r.wild.air + Math.sin(s.time * 2 + r.phase * 8) * 2) : 0
+    drawPokemon(ctx, sprite, r.wait > 0 ? 'Idle' : 'Walk', r.dir, s.time + r.phase, x, y - lift)
+  }
+}
+
+/** How deep under the crest a ridge walker starts and ends (it's hidden there), and how fast it comes up (world px, world px/s). */
+const RIDGE_DEEP = 30
+const RIDGE_RISE = 16
+const RIDGE_SPEED = 10
+/** How far over the horizon the heads of the ridge's walkers can reach (world px). */
+export const stageRidgeReach = 52
+/** Margin from a place's sides for a walker's body, and how far ahead it looks before going down (world px). */
+const RIDGE_CLEAR = 14
+const RIDGE_LOOK = 16
+
+/** How many walk the ridge at once: a lean frame keeps one. */
+const ridgeCount = (scene: StageScene) => (detail.lean ? 1 : scene === 'rest' ? 3 : 2)
+
+/** Comes up behind the crest, walks along it (stopping to look around) and goes down again, elsewhere next time. */
+const stepRidge = (s: LobbyStage, w: number, at: StageAnchor, count: number, dt: number) => {
+  const standing = at.standing
+  // In the lobby they keep to the stage's column: past it the side cards would cut them in half.
+  const minX = at.half !== undefined ? at.x - at.half + 10 : 8
+  const maxX = at.half !== undefined ? at.x + at.half - 10 : w - 8
+  const blocked = (x: number) => {
+    if (!standing) return false
+    for (const span of standing) if (x - at.x > span.from - RIDGE_CLEAR && x - at.x < span.to + RIDGE_CLEAR) return true
+    return false
+  }
+  for (let i = 0; i < s.ridge.length; i++) {
+    const r = s.ridge[i]!
+    if (i >= count) {
+      r.state = 'away'
+      r.timer = Math.max(r.timer, 1)
+      continue
+    }
+    r.timer -= dt
+    if (r.state === 'away') {
+      if (r.timer > 0) continue
+      r.dex = RIDGE[Math.floor(s.rng() * RIDGE.length)]!
+      r.x = range(s.rng, minX, maxX)
+      r.way = s.rng() < 0.5 ? -1 : 1
+      // Behind a building it would only peek out: try again in a moment.
+      if (blocked(r.x)) {
+        r.timer = 0.4
+        continue
+      }
+      r.sink = RIDGE_DEEP
+      r.state = 'rise'
+    } else if (r.state === 'rise') {
+      r.sink -= RIDGE_RISE * dt
+      if (r.sink <= 0) ((r.sink = 0), (r.state = 'walk'), (r.timer = range(s.rng, 1.5, 4)))
+    } else if (r.state === 'set') {
+      r.sink += RIDGE_RISE * dt
+      if (r.sink >= RIDGE_DEEP) ((r.state = 'away'), (r.timer = range(s.rng, 1, 5)))
+    } else if (r.state === 'pause') {
+      if (r.timer <= 0) {
+        // Stopped to look around: walks on, or heads back the way it came.
+        if (s.rng() < 0.3) r.state = 'set'
+        else ((r.state = 'walk'), (r.timer = range(s.rng, 1.5, 4)), s.rng() < 0.4 && (r.way = r.way < 0 ? 1 : -1))
+      }
+    } else if (r.timer <= 0) ((r.state = 'pause'), (r.timer = range(s.rng, 0.8, 2)))
+    if (r.state === 'rise' || r.state === 'walk' || r.state === 'set') {
+      r.x += r.way * RIDGE_SPEED * dt
+      // About to reach a building or the view's edge: goes down the far side instead.
+      if (r.state !== 'set' && (blocked(r.x + r.way * RIDGE_LOOK) || r.x < minX || r.x > maxX)) r.state = 'set'
+    }
+  }
+}
+
+const drawRidge = (ctx: CanvasRenderingContext2D, s: LobbyStage, horizon: number) => {
+  for (const r of s.ridge) {
+    if (r.state === 'away') continue
+    const sprite = loadedSprites(r.dex)
+    if (!sprite) continue
+    const x = Math.round(r.x)
+    const anim = r.state === 'pause' ? 'Idle' : 'Walk'
+    drawPokemon(ctx, sprite, anim, r.way > 0 ? 2 : 6, s.time + r.x / 30, x, Math.round(nearCrest(r.x, horizon) + r.sink))
+  }
+}
+
+/** The V a flock flies in (from the leader, world px, flying right; mirrored flying left). */
+/** How far under the title the flock's lowest line starts: its bodies and formation stand over it. */
+const FLOCK_HEADROOM = 30
+/** How far over the places' roofs the flock's line stays: the formation's low wing, its bob and a Fly sheet's wings, which hang past the measured body. */
+const FLOCK_CLEAR = 22
+/** The band it flies in up top when there's no sky left under the title (world px from the view's top). */
+const FLOCK_HIGH = [36, 46] as const
+
+const FORMATION = [
+  [0, 0],
+  [-20, -7],
+  [-22, 8],
+] as const
+
+const stepFlock = (s: LobbyStage, w: number, h: number, at: StageAnchor, night: boolean, dt: number) => {
+  // Under the title and over the places' roofs; on the rest screen, in the sky around the logo.
+  const horizon = at.feet - HORIZON_RISE
+  const low = at.roof !== undefined ? at.roof - FLOCK_CLEAR : horizon - 44
+  const high = at.top !== undefined ? at.top + FLOCK_HEADROOM : h * 0.12
+  // Where the roofs leave no sky under the title, the flock flies high over the title instead: never through the roofs or its see-through pills.
+  const [top, bottom] = low < high ? FLOCK_HIGH : [high, low]
+  if (s.flock) {
+    const f = s.flock
+    f.x += f.way * f.speed * dt
+    // A flock already flying when the layout changes (the rest screen into the lobby) keeps to the new band.
+    f.y = Math.min(bottom, Math.max(top, f.y))
+    if (f.x < -50 || f.x > w + 50) ((s.flock = null), (s.flockIn = range(s.rng, 3, 9)))
+    return
+  }
+  s.flockIn -= dt
+  if (s.flockIn > 0) return
+  const flock = night ? FLOCK_NIGHT : FLOCK_DAY
+  const way = s.rng() < 0.5 ? -1 : 1
+  s.flock = { dex: flock[Math.floor(s.rng() * flock.length)]!, x: way > 0 ? -40 : w + 40, y: range(s.rng, top, bottom), way, n: detail.lean ? 1 : 1 + Math.floor(s.rng() * FORMATION.length), speed: range(s.rng, 26, 40), phase: s.rng() * 6 }
+}
+
+const drawFlock = (ctx: CanvasRenderingContext2D, s: LobbyStage) => {
+  const f = s.flock
+  if (!f) return
+  const sprite = loadedSprites(f.dex)
+  if (!sprite) return
+  const anim = sprite.anims.Fly ? 'Fly' : 'Walk'
+  for (let i = 0; i < f.n; i++) {
+    const [ox, oy] = FORMATION[i]!
+    const bob = Math.round(Math.sin(s.time * 1.8 + f.phase + i) * 3)
+    drawPokemon(ctx, sprite, anim, f.way > 0 ? 2 : 6, s.time + i * 0.17, Math.round(f.x + ox * f.way), Math.round(f.y + oy + bob))
+  }
 }
 
 /* ---------------- The whole stage ---------------- */
 
-const drawWild = (ctx: CanvasRenderingContext2D, s: LobbyStage, wild: readonly Wild[], w: number, at: StageAnchor) => {
-  // On a phone the wings of the horde come in, so it stays on screen.
-  const spread = Math.min(1, (w / 2 - 14) / 165)
-  for (const wd of wild) {
-    const sprite = loadedSprites(wd.dex)
-    if (!sprite) continue
-    const x = Math.round(at.x + wd.x * spread)
-    const y = Math.round(at.feet + wd.y)
-    shadow(ctx, x, y, sprite.bodyW)
-    drawPokemon(ctx, sprite, 'Idle', wd.dir, s.time + wd.x / 40, x, y - (wd.air ?? 0))
-  }
-}
-
-/** Advances the stage by `dt` seconds and draws it for a `w`×`h` view. */
-export const drawLobbyStage = (ctx: CanvasRenderingContext2D, s: LobbyStage, w: number, h: number, at: StageAnchor, mode: GameModeId, night: boolean, dt: number) => {
+/**
+ * Advances the stage by `dt` seconds and draws it for a `w`×`h` view. `canvasClouds` off
+ * leaves the clouds to `createStageClouds` (the lobby and the rest screen); the menus' dim draws them here.
+ */
+export const drawLobbyStage = (ctx: CanvasRenderingContext2D, s: LobbyStage, w: number, h: number, at: StageAnchor, scene: StageScene, night: boolean, dt: number, canvasClouds = true) => {
   s.time += dt
-  ctx.drawImage(stageBackdrop(w, h, at, night), 0, 0)
-  drawClouds(ctx, s, w, at.feet - HORIZON_RISE, night)
-  drawWild(ctx, s, WILD[mode], w, at)
+  if (s.scene !== scene) {
+    s.scene = scene
+    s.roamers = WILD[scene].map(roamerFor)
+  }
+  const horizon = at.feet - HORIZON_RISE
+  const ridge = ridgeCount(scene)
+  stepRoamers(s, w, h, at, dt)
+  stepRidge(s, w, at, ridge, dt)
+  stepFlock(s, w, h, at, night, dt)
+  const { sky, land } = stageBackdrop(w, h, at, night)
+  ctx.drawImage(sky, 0, 0)
+  if (canvasClouds) drawClouds(ctx, s, w, horizon, night)
+  drawFlock(ctx, s)
+  drawRidge(ctx, s, horizon)
+  ctx.drawImage(land, 0, 0)
+  drawRoamers(ctx, s, at)
 }
 
 /** How far (world px) the horizon stands over the feet line: where the lobby sets the places on it. */
