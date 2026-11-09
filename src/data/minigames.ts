@@ -180,6 +180,9 @@ export const MINIGAME_DAILY = 2000
 /** A table game against the bot pays this share of the same result against a person. */
 export const BOT_PAY = 0.5
 
+/** A game played with another trainer in the room pays this much more, before the caps. The API reads the room from the relays' presence reports, never the client. */
+export const COMPANY_PAY = 1.25
+
 /** How a finished game ended, as the client claims it: a solo score, or a table result and against whom. */
 export type GameOutcome = { score: number } | { result: 'win' | 'draw' | 'loss'; vs: 'human' | 'bot' }
 

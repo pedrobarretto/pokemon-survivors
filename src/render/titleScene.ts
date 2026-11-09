@@ -51,11 +51,15 @@ import {
  * the town square around the shop, with Leavanny's Boutique on its north-west,
  * west of it the Dojo (`render/dojo.ts`), Machoke's training hall, and south of
  * it the Estádio (`render/stadium.ts`), the Arena's, Ninjask judging at its
- * gate. The lobby itself stands on the side-view stage (`render/lobbyStage.ts`);
- * a trip (`visitPlaza`) pans this camera to a place or back home, the partner
- * hopping along. Pure presentation: it only reads sprites that are already
- * loaded, and the cries it wants played wait in `cries` for the shell.
+ * gate. The lobby stands on it at home, the lobby's own cast (`ui/title.ts`) in
+ * the partner's place and the wanderers kept to the grass its cards leave free
+ * (`Cover`); a trip (`visitPlaza`) pans this camera to a place or back home, the
+ * partner hopping along. Pure presentation: it only reads sprites that are
+ * already loaded, and the cries it wants played wait in `cries` for the shell.
  */
+
+/** A stretch of the view (world px from its top-left) that the lobby covers: wanderers at home keep clear of it. */
+export type Cover = { left: number; top: number; right: number; bottom: number }
 
 type Wanderer = {
   dex: Dex
@@ -70,8 +74,13 @@ type Wanderer = {
   /** Animation offset, so neighbours don't step in lockstep. */
   phase: number
   bornAt: number
+  /** When it was caught under something covering the grass: it stands, fades and is gone. */
+  goneAt: number | null
   id: number
 }
+
+/** The spots of the view (world px from its top-left) a wanderer can stand on at home, worked out when `covers` or the view change. */
+type Room = { covers: readonly Cover[]; w: number; h: number; spots: Vec[] }
 
 /** The lobby's partner: `home` at the meadow's middle, `trip` while it hops along a camera trip (`visitPlaza`) and `shop` while it stands at a counter. */
 export type Partner = {
@@ -110,6 +119,8 @@ export type TitleScene = {
   /** The Estádio, south of home. */
   stadium: Stadium
   wanderers: Wanderer[]
+  /** The grass the lobby leaves free; null until it stands at home. */
+  room: Room | null
   nextSpawn: number
   /** Species whose shiny form is loading for the next shiny roll. */
   nextShiny: Dex | null
@@ -145,6 +156,7 @@ const SHINY_CHANCE = 1 / 40
 /** While the scene is this young, newcomers fade in on screen instead of walking in from an edge. */
 const FILL_TIME = 3
 const FADE_IN = 0.6
+const FADE_OUT = 0.4
 const SPEED = { min: 12, max: 22 }
 
 const HOP = { time: 0.3, height: 5 }
@@ -152,6 +164,36 @@ const PUFF_TIME = 0.35
 
 /** One wanderer per this many square world px, so phones get a smaller crowd. */
 const population = (w: number, h: number) => clamp(Math.round((w * h) / 9000), 5, 18)
+
+/** World px kept between a wanderer's body and what covers the grass. */
+const COVER_GAP = 4
+/** The grid the free spots are looked for on (world px), and the body it measures with. */
+const SPOT_CELL = 12
+const SPOT_BODY = { halfW: 12, tall: 30 }
+/** Free grass one wanderer wants at home (square world px): a phone's few strips hold few, or none. */
+const ROOM_EACH = 2400
+
+/** Whether a body standing at (x, y) of the view touches something that covers the grass. */
+const covered = (covers: readonly Cover[], x: number, y: number, halfW: number, tall: number) => {
+  for (const c of covers) if (x + halfW + COVER_GAP > c.left && x - halfW - COVER_GAP < c.right && y + COVER_GAP > c.top && y - tall - COVER_GAP < c.bottom) return true
+  return false
+}
+
+const roomFor = (covers: readonly Cover[], w: number, h: number): Room => {
+  const spots: Vec[] = []
+  for (let y = SPOT_BODY.tall; y <= h - 4; y += SPOT_CELL) {
+    for (let x = SPOT_BODY.halfW; x <= w - SPOT_BODY.halfW; x += SPOT_CELL) {
+      if (!covered(covers, x, y, SPOT_BODY.halfW, SPOT_BODY.tall)) spots.push({ x, y })
+    }
+  }
+  return { covers, w, h, spots }
+}
+
+/** The half width and height a wanderer takes up: its sprite's body, or a typical one while the sheet isn't there. */
+const bodyOf = (wd: Pick<Wanderer, 'dex' | 'shiny'>) => {
+  const sprite = loadedSprites(wd.dex, wd.shiny)
+  return sprite ? { halfW: sprite.bodyW / 2, tall: sprite.bodyH } : SPOT_BODY
+}
 
 export const createTitleScene = (seed: number): TitleScene => {
   const rng = createRng(seed)
@@ -169,6 +211,7 @@ export const createTitleScene = (seed: number): TitleScene => {
     dojo: createDojo(home),
     stadium: createStadium(home),
     wanderers: [],
+    room: null,
     nextSpawn: 0,
     nextShiny: null,
     spawned: 0,
@@ -215,9 +258,12 @@ const tripGoal = (s: TitleScene, place: Place) =>
   : place === 'stadium' ? judgeSpot(s.stadium)
   : s.home
 
+/** What every trip's pan takes on top of what its distance asks for (s): long enough to enjoy the hop across the map. */
+const TRIP_LINGER = 0.3
+
 /**
  * Starts a trip of the camera to `to` (the Kecleon plaza or home), eased
- * over about a second (shorter when it's close); the partner hops along to
+ * over about 1.4 s (shorter when it's close); the partner hops along to
  * its spot there. `instant` lands at once (a deep link).
  */
 export const visitPlaza = (s: TitleScene, to: Place, w: number, h: number, instant = false) => {
@@ -227,7 +273,7 @@ export const visitPlaza = (s: TitleScene, to: Place, w: number, h: number, insta
     p.state = 'trip'
   }
   const end = restCam(s, to, w, h)
-  const time = instant ? 0 : clamp(Math.hypot(end.x - s.cam.x, end.y - s.cam.y) / 450, 0.45, 1.1)
+  const time = instant ? 0 : clamp(Math.hypot(end.x - s.cam.x, end.y - s.cam.y) / 450, 0.45, 1.1) + TRIP_LINGER
   s.trip = { to, t: 0, time, cam: { ...s.cam }, from: p ? { x: p.x, y: p.y } : { ...s.cam } }
   if (instant) stepTrip(s, s.trip, 0, w, h)
 }
@@ -342,19 +388,45 @@ const pickSpecies = (s: TitleScene) => {
   return { dex: pick(s.rng, ghosts.length > 0 && chance(s.rng, HAUNTED_SHARE) ? ghosts : ready), shiny: false }
 }
 
+/** At home: a next leg that ends on free grass inside the view, or a short rest when a few tries find none. */
+const nextLegClear = (s: TitleScene, wd: Wanderer, room: Room) => {
+  const { halfW, tall } = bodyOf(wd)
+  for (let i = 0; i < 6; i++) {
+    nextLeg(s.rng, wd)
+    if (wd.vx === 0 && wd.vy === 0) return
+    const x = wd.x + wd.vx * wd.timer - s.cam.x
+    const y = wd.y + wd.vy * wd.timer - s.cam.y
+    if (x > halfW && x < room.w - halfW && y > tall && y < room.h && !covered(room.covers, x, y, halfW, tall)) return
+  }
+  wd.vx = 0
+  wd.vy = 0
+  wd.timer = range(s.rng, 0.5, 1.5)
+}
+
 /** Whether feet at (x, y) are within a `w`×`h` view at `cam`, give or take the off-screen band. */
 const near = (x: number, y: number, cam: Vec, w: number, h: number) => x > cam.x - MARGIN && x < cam.x + w + MARGIN && y > cam.y - MARGIN && y < cam.y + h + MARGIN
 
 /** Whether newcomers fade in on screen instead of walking in: while the scene is young, and on a trip (into where it's going). */
 const filling = (s: TitleScene) => s.time < FILL_TIME || s.trip !== null
 
-const spawn = (s: TitleScene, w: number, h: number) => {
+/** At home: a free spot of the view for this species, or null when a few tries find none (it isn't brought in, then). */
+const freeSpot = (s: TitleScene, room: Room, species: Pick<Wanderer, 'dex' | 'shiny'>): Vec | null => {
+  const { halfW, tall } = bodyOf(species)
+  for (let i = 0; i < 8 && room.spots.length > 0; i++) {
+    const spot = pick(s.rng, room.spots)
+    if (!covered(room.covers, spot.x, spot.y, halfW, tall)) return { x: spot.x + s.cam.x, y: spot.y + s.cam.y }
+  }
+  return null
+}
+
+const spawn = (s: TitleScene, w: number, h: number, room: Room | null) => {
   const species = pickSpecies(s)
   if (!species) return
   const { rng } = s
   // On a trip, the crowd gathers where the camera is going, so it doesn't land on an empty meadow.
   const cam = s.trip ? restCam(s, s.trip.to, w, h) : s.cam
-  const inside = { x: cam.x + range(rng, 0.15, 0.85) * w, y: cam.y + range(rng, 0.15, 0.85) * h }
+  const inside = room ? freeSpot(s, room, species) : { x: cam.x + range(rng, 0.15, 0.85) * w, y: cam.y + range(rng, 0.15, 0.85) * h }
+  if (!inside) return
   const wanderer: Wanderer = {
     ...species,
     x: inside.x,
@@ -365,9 +437,14 @@ const spawn = (s: TitleScene, w: number, h: number) => {
     timer: 0,
     phase: rng() * 10,
     bornAt: s.time,
+    goneAt: null,
     id: s.spawned++,
   }
-  if (filling(s)) {
+  if (room) {
+    // At home the edges of the view are mostly cards: it fades in on the grass instead of walking in under them.
+    wanderer.dir = pick(rng, [0, 1, 2, 6, 7] as const)
+    nextLegClear(s, wanderer, room)
+  } else if (filling(s)) {
     wanderer.dir = pick(rng, [0, 1, 2, 6, 7] as const)
     nextLeg(rng, wanderer)
   } else {
@@ -386,9 +463,29 @@ const spawn = (s: TitleScene, w: number, h: number) => {
   s.wanderers.push(wanderer)
 }
 
-/** Advances the camera, the partner and every wanderer by `dt` seconds for a `w`×`h` view. */
-export const stepTitleScene = (s: TitleScene, dt: number, w: number, h: number) => {
+/** A wanderer's step at home: stops short of what covers the grass, and one caught under it (a layout change, the way back from a trip) fades away. */
+const stepClear = (s: TitleScene, wd: Wanderer, room: Room, fromX: number, fromY: number) => {
+  const { halfW, tall } = bodyOf(wd)
+  if (!covered(room.covers, wd.x - s.cam.x, wd.y - s.cam.y, halfW, tall)) return
+  if (covered(room.covers, fromX - s.cam.x, fromY - s.cam.y, halfW, tall)) wd.goneAt = s.time
+  else {
+    wd.x = fromX
+    wd.y = fromY
+    wd.vx = 0
+    wd.vy = 0
+    wd.timer = range(s.rng, 0.3, 1.2)
+  }
+}
+
+/**
+ * Advances the camera, the partner and every wanderer by `dt` seconds for a
+ * `w`×`h` view. `covers` (the lobby at home) keeps the wanderers on the grass
+ * those boxes leave free, as many as fit; none on a trip and behind the menus.
+ */
+export const stepTitleScene = (s: TitleScene, dt: number, w: number, h: number, covers?: readonly Cover[]) => {
   s.time += dt
+  if (covers && (s.room?.covers !== covers || s.room.w !== w || s.room.h !== h)) s.room = roomFor(covers, w, h)
+  const room = covers ? s.room : null
   const p = s.partner
   if (!s.placed) {
     s.placed = true
@@ -411,18 +508,27 @@ export const stepTitleScene = (s: TitleScene, dt: number, w: number, h: number) 
   else if (c && p) stepCompanion(c, p, dt)
   const { cam, rng } = s
   for (const wd of s.wanderers) {
-    if ((wd.timer -= dt) <= 0) nextLeg(rng, wd)
+    if (wd.goneAt !== null) continue
+    if ((wd.timer -= dt) <= 0) {
+      if (room) nextLegClear(s, wd, room)
+      else nextLeg(rng, wd)
+    }
+    const fromX = wd.x
+    const fromY = wd.y
     wd.x += wd.vx * dt
     wd.y += wd.vy * dt
     pushOut(s.plaza, wd)
     pushOutDojo(s.dojo, wd)
     pushOutStadium(s.stadium, wd)
+    if (room) stepClear(s, wd, room, fromX, fromY)
   }
   const ahead = s.trip && restCam(s, s.trip.to, w, h)
-  retain(s.wanderers, (wd) => near(wd.x, wd.y, cam, w, h) || (ahead !== null && near(wd.x, wd.y, ahead, w, h)))
+  retain(s.wanderers, (wd) => (wd.goneAt === null || s.time - wd.goneAt < FADE_OUT) && (near(wd.x, wd.y, cam, w, h) || (ahead !== null && near(wd.x, wd.y, ahead, w, h))))
   retain(s.puffs, (puff) => s.time - puff.at < PUFF_TIME)
-  if (s.wanderers.length < population(w, h) && s.time >= s.nextSpawn) {
-    spawn(s, w, h)
+  // At home, as many as the free grass holds: a layout with little of it brings fewer, or none.
+  const crowd = room ? Math.min(population(w, h), Math.floor((room.spots.length * SPOT_CELL * SPOT_CELL) / ROOM_EACH)) : population(w, h)
+  if (s.wanderers.length < crowd && s.time >= s.nextSpawn) {
+    spawn(s, w, h, room)
     s.nextSpawn = s.time + (filling(s) ? 0.08 : range(rng, 0.4, 1.4))
   }
 }
@@ -444,8 +550,8 @@ const drawPuffs = (ctx: CanvasRenderingContext2D, s: TitleScene, camX: number, c
 const pending: Piece[] = []
 const byFeet = (a: { y: number }, b: { y: number }) => a.y - b.y
 
-/** Draws the meadow, its wanderers and the partner, back to front, snapped to the world pixel grid. */
-export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: number, h: number) => {
+/** Draws the meadow, its wanderers and the partner (`bare` leaves it and its companion out: at home the lobby's cast stands in), back to front, snapped to the world pixel grid. */
+export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: number, h: number, bare = false) => {
   const camX = Math.round(s.cam.x)
   const camY = Math.round(s.cam.y)
   drawGround(ctx, camX, camY, w, h)
@@ -454,7 +560,7 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
   drawStadiumGround(ctx, s.stadium, camX, camY, w, h)
   if (s.haunted) drawMeadowJacks(ctx, camX, camY, w, h, s.time)
   drawPuffs(ctx, s, camX, camY)
-  const p = s.partner
+  const p = bare ? null : s.partner
   const c = p && s.companion
   const drawPartner = () => {
     const sprite = p && loadedSprites(p.dex, p.shiny)
@@ -492,10 +598,12 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
     if (!sprite) continue
     const x = Math.round(wd.x) - camX
     const y = Math.round(wd.y) - camY
-    const alpha = Math.min(1, (s.time - wd.bornAt) / FADE_IN)
+    const alpha = Math.min(1, (s.time - wd.bornAt) / FADE_IN, wd.goneAt === null ? 1 : Math.max(0, 1 - (s.time - wd.goneAt) / FADE_OUT))
+    ctx.globalAlpha = alpha
     shadow(ctx, x, y, sprite.bodyW)
+    ctx.globalAlpha = 1
     drawPokemon(ctx, sprite, wd.vx === 0 && wd.vy === 0 ? 'Idle' : 'Walk', wd.dir, s.time + wd.phase, x, y, { alpha })
-    if (wd.shiny) drawSparkles(ctx, x, y - sprite.bodyH / 2, Math.max(sprite.bodyW, sprite.bodyH), s.time - wd.bornAt, wd.id)
+    if (wd.shiny && wd.goneAt === null) drawSparkles(ctx, x, y - sprite.bodyH / 2, Math.max(sprite.bodyW, sprite.bodyH), s.time - wd.bornAt, wd.id)
   }
   flush(Infinity)
   drawPlazaOverhead(ctx, s.plaza, camX, camY)

@@ -57,7 +57,7 @@ const jarFill = (candies: number) => {
  * the next reward is, with the days left; before the night, the countdown.
  * Once the jar paid every reward, the candies left to spend at Duskull's stall.
  */
-export const halloweenCard = () => fillHalloweenCard(h('button', { class: 'lobby-card box halloween', type: 'button' }))
+export const halloweenCard = () => fillHalloweenCard(h('button', { class: 'arc-card lobby-day halloween', type: 'button' }))
 
 /** Lays the Hoje card out again from the save, in place (the lobby keeps the same button: buying at the stall changes what it shows). */
 export const fillHalloweenCard = (el: HTMLElement) => {
@@ -66,19 +66,21 @@ export const fillHalloweenCard = (el: HTMLElement) => {
   const jar = loadSave().halloween
   const candies = jar.candies
   const next = nextHalloweenReward(candies)
-  const label = h('small', { class: 'lobby-card-label' }, h('span', {}, m.card), s.left !== null && h('em', { class: 'lobby-badge halloween-left' }, m.daysLeftShort(s.left)))
-  const row =
+  const line =
     s.countdown !== null
-      ? h('span', { class: 'lobby-card-row' }, h('img', { class: 'lobby-jack', src: jackIcon(), alt: '' }), h('b', {}, m.countdown(s.countdown)))
+      ? h('small', {}, m.countdown(s.countdown))
       : h(
           'span',
-          { class: 'lobby-card-row' },
-          h('img', { class: 'lobby-jack', src: jackIcon(), alt: '' }),
+          { class: 'lobby-day-progress' },
           h('span', { class: 'lobby-progress halloween-jar' }, h('span', { style: `width:${Math.round(jarFill(candies) * 100)}%` })),
           h('b', {}, next ? `${formatNumber(candies)}/${formatNumber(next.candies)}` : formatNumber(candiesLeft(jar))),
           h('img', { class: 'lobby-treat', src: treatIcon(), alt: '' }),
         )
-  el.replaceChildren(label, row)
+  el.replaceChildren(
+    h('span', { class: 'lobby-day-icon' }, h('img', { class: 'lobby-jack', src: jackIcon(), alt: '' })),
+    h('span', { class: 'lobby-day-text' }, h('b', {}, m.card), line),
+    ...(s.left !== null ? [h('em', { class: 'lobby-badge halloween-left' }, m.daysLeftShort(s.left))] : []),
+  )
   const count = next ? m.jarCount(formatNumber(candies)) : m.toSpend(formatNumber(candiesLeft(jar)))
   el.setAttribute('aria-label', `${m.name}: ${s.countdown !== null ? m.countdown(s.countdown) : count.replaceAll('*', '')}`)
   return el

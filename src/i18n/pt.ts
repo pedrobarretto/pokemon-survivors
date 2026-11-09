@@ -1,4 +1,5 @@
 import type { GameModeId } from '../data/gameModes'
+import { realmBookPt as realmBook } from './realmStamps/pt'
 import type { AchievementId, AchievementStat, GiftTitleId, TitleId } from '../data/achievements'
 import type { BiomeId } from '../data/biomes'
 import type { DigFind, HiddenPlaceId, PlaceId, WingId } from '../data/places'
@@ -36,7 +37,7 @@ import type { FurnitureKind, FurnitureSet } from '../data/furniture'
 import type { BaseExterior, BaseVisibility } from '../data/secretBases'
 import type { AimAssist } from '../ui/arenaAim'
 import type { MatchKind, TierId } from '../data/arenaRanked'
-import type { SurveyAnswer } from '../data/survey'
+import type { DesignAspect, DesignRating, SurveyAnswer } from '../data/survey'
 import type { BackgroundId, FrameId, StyleSlot, WallpaperId } from '../data/style'
 import type { BagItem } from '../game/bag'
 import type { ShopLevel, ShopProp } from '../data/shop'
@@ -120,7 +121,7 @@ export const pt = {
     regen: 'Regeneração',
   },
 
-  /** The title screen: the "press start" intro, then the lobby (`ui/title.ts`). Press Start 2P has no uppercase accented glyphs: its labels stay unaccented or mixed case. */
+  /** The title screen: the "press start" intro, then the lobby (`ui/title.ts`). Older capital labels stay unaccented from when the font had no accented capitals. */
   home: {
     pressKeys: 'Pressione qualquer tecla',
     pressTouch: 'Toque para começar',
@@ -139,6 +140,8 @@ export const pt = {
     missions: 'Missões',
     missionsLeft: (n: number) => (n === 1 ? '1 missão de hoje por fazer' : `${n} missões de hoje por fazer`),
     hallName: 'Hall da Fama',
+    hallNewest: 'Último:',
+    hallCount: (n: number, shown: string) => (n === 1 ? `${shown} apoiador` : `${shown} apoiadores`),
     /** The name plate under the partner: tapping it opens the Pokémon select. */
     change: 'Trocar',
     pokedex: 'Pokédex',
@@ -168,7 +171,7 @@ export const pt = {
     tabs: { home: 'Início', collection: 'Coleção', plaza: 'Praça', social: 'Social', profile: 'Perfil' },
   },
 
-  /** The menus' top bar (`ui/shell.ts`). Press Start 2P has no uppercase accented glyphs: titles stay unaccented or mixed case. */
+  /** The menus' top bar (`ui/shell.ts`). Older capital titles stay unaccented from when the font had no accented capitals. */
   shell: {
     back: 'Voltar',
     settings: 'Ajustes',
@@ -212,7 +215,7 @@ export const pt = {
     credits: 'Fan game não oficial · Sprites: PMD SpriteCollab · Cries: PokéAPI · Pokémon © Nintendo/Creatures/GAME FREAK',
   },
 
-  /** The partner select: roster tabs, the partner panel, its details sheet and the start bar. Press Start 2P labels: unaccented capitals or mixed case. */
+  /** The partner select: roster tabs, the partner panel, its details sheet and the start bar. Older capital labels stay unaccented from when the font had no accented capitals. */
   partner: {
     title: 'ESCOLHA SEU PARCEIRO',
     titleShort: 'PARCEIRO',
@@ -251,6 +254,10 @@ export const pt = {
     /** The manual lunge button (Quick Attack, Extreme Speed). */
     lunge: 'Bote',
     lungeTitle: (name: string) => `${name} (Shift)`,
+    /** The padlock on the status box (touch): the joystick fixed in its corner or following the thumb, and what it says when pressed. */
+    stickLock: 'Joystick fixo',
+    stickLocked: 'Joystick fixo! Mude o lugar em Ajustes → Controles.',
+    stickFree: 'Joystick solto: ele segue o dedo.',
     /** Aegislash's forme, shown on the special button (Stance Change). */
     stances: { shield: 'Escudo', blade: 'Lâmina', normal: 'Normal', attack: 'Ataque', defense: 'Defesa', speed: 'Velocidade' } satisfies Record<Stance, string>,
     /** Jumps left in a running chain dash. */
@@ -881,6 +888,7 @@ export const pt = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm: a cidade online',
@@ -891,7 +899,11 @@ export const pt = {
     off: 'O Poké Realm não está disponível nesta versão do jogo.',
     cities: {
       title: 'Escolha uma cidade',
-      hint: 'Cada cidade é uma cópia da mesma vila, com até 40 treinadores.',
+      hint: 'Você entra na primeira com vaga. Todas são a mesma vila, com até 40 treinadores.',
+      switch: 'Trocar de cidade',
+      here: 'Você está aqui',
+      lobbyLine: 'Passeie com seu parceiro',
+      crowd: (n: number) => `${n} treinadores agora`,
       trainers: (n: number) => (n === 1 ? '1 treinador' : `${n} treinadores`),
       full: 'Lotada',
       enter: 'Entrar',
@@ -997,6 +1009,15 @@ export const pt = {
     counter: 'O café ainda está arrumando o balcão. Volte em breve!',
     pool: 'Pokémon de Água nadam aqui. Em breve!',
     prizes: 'Bata recordes nos fliperamas e ganhe troféus para enfeitar a sua base secreta!',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'Maré Alta', storm: 'Chuva de Frutas', tables: 'Noite das Mesas' },
+      perks: { tide: 'Pesca em dobro e mais peixes raros', storm: 'Fliperama em dobro', tables: 'Jogos de mesa em dobro' },
+      go: 'Ir',
+      starts: (c: string) => `em ${c}`,
+      ends: (c: string) => `resta ${c}`,
+      tideChip: 'Maré alta!',
+    },
     grove: {
       first: [
         'Psiu! Eu sou só uma árvore... Tá bom, eu sou o Sudowoodo. Bem-vindo ao Bosque das Bases!',
@@ -1771,7 +1792,7 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta' } satisfies Record<FrameId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas' } satisfies Record<FrameId, string>,
       background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas', friendship: 'Amizade' } satisfies Record<BackgroundId, string>,
       wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada', secretBase: 'Base Secreta' } satisfies Record<WallpaperId, string>,
     },
@@ -2182,6 +2203,31 @@ export const pt = {
     later: 'Agora não',
     thanks: 'Valeu! Sua resposta ajuda a ajustar o jogo.',
     hintKeys: '↑ ↓ dificuldade · ← → resposta · ENTER confirmar · ESC fechar',
+    hintTouch: 'Toque para responder',
+  },
+
+  /** The survey on the redesign (`designSurveyScreen`). */
+  designSurvey: {
+    title: 'NOVO VISUAL',
+    open: 'Pesquisa: o que você acha do novo visual?',
+    question: 'O que você achou do novo visual do jogo?',
+    ratings: { 1: 'Não gostei', 2: 'Achei fraco', 3: 'Tanto faz', 4: 'Gostei', 5: 'Adorei' } satisfies Record<DesignRating, string>,
+    pickRating: 'Escolha uma Poké Ball',
+    aspectsQuestion: 'O que mais chamou sua atenção? (até 2)',
+    aspects: {
+      easyToFind: 'Acho tudo fácil',
+      hardToFind: 'Difícil de achar as coisas',
+      niceLook: 'Ficou bonito',
+      badLook: 'Não curti o visual',
+      readable: 'Fácil de ler',
+      hardToRead: 'Difícil de ler',
+    } satisfies Record<DesignAspect, string>,
+    send: 'Enviar',
+    later: 'Agora não',
+    never: 'Não perguntar mais',
+    close: 'Fechar',
+    thanks: 'Valeu! Sua resposta ajuda a melhorar o jogo.',
+    hintKeys: '← → ↑ ↓ mover · ENTER escolher · ESC fechar',
     hintTouch: 'Toque para responder',
   },
 
@@ -3253,7 +3299,7 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo', stampCollector: 'Juntou 30 Estampas no Poké Realm' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
       firstRun: 'Primeiros passos',
@@ -3352,6 +3398,7 @@ export const pt = {
       arenaMaster: 'Master Ball da Arena',
       creator: 'Criador(a) de Conteúdo',
       friendLegend: 'Lenda da Amizade',
+      stampCollector: 'Colecionador(a) de Estampas',
     } satisfies Record<TitleId, string>,
     goals: {
       runs: (n: string) => (n === '1' ? 'Jogue uma partida' : `Jogue ${n} partidas`),
@@ -6208,7 +6255,7 @@ export const pt = {
     saved: (name: string) => `Build de *${name}* salva! Nas partidas, as cartas dela ganham ★ BUILD.`,
     loaded: (name: string) => `A build salva de *${name}* já está equipada.`,
     cleared: (name: string) => `Build de *${name}* apagada.`,
-    /** The tag on a level-up card that follows the build (Press Start 2P: keep it short). */
+    /** The tag on a level-up card that follows the build (keep it short). */
     buildTag: 'BUILD',
     buildHint: 'Faz parte da build que você montou no Dojo',
     /** Machoke, the Dojo's sensei, before the partner select opens: the first visit, then one of these in turn. */
@@ -6427,6 +6474,9 @@ export const pt = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Cesta de frutas',
       goldenMallet: 'Marreta de ouro',
+      stampDesk: 'Escrivaninha de Estampas',
+      stampCabinet: 'Arquivo de Estampas',
+      goldenStampPress: 'Prensa Dourada de Estampas',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Suporte de varas',
       goldenMagikarpPlaque: 'Placa do Magikarp Dourado',
@@ -6616,7 +6666,7 @@ export const pt = {
     where: {
       rift: 'Espera numa _fenda lendária_: entre no portal e vença-o lá dentro.',
       trio: 'Vem como chefe com o _trio lendário_ sorteado na partida.',
-      mythical: 'Às vezes (1 partida em 10) aparece junto do *Mewtwo* no final.',
+      mythical: 'Às vezes (1 partida em 10, mais a cada final sem mítico) aparece junto do *Mewtwo* no final.',
       finale: 'É o chefe final: vença uma partida.',
       endless: 'O último troféu: depois de capturar os outros 22, vença-o no _modo sem fim_.',
       event: 'Só na _Noite das Bruxas_: vença-o na _fenda do Pesadelo_.',

@@ -7,7 +7,7 @@ import { jwksKeys, verifyClerkToken } from '../../src/auth'
 import { parseCreate } from '../../src/codes'
 import { allowedOrigin } from '../../src/origins'
 import { REALM_CITIES, REALM_LIMITS, isCityId } from '../../../src/net/realm'
-import { guestIdentity, guestUserId, askVisit, lookUpIdentities, postPresence } from '../../src/realmApi'
+import { guestIdentity, guestUserId, askVisit, lookUpIdentities, postDeeds, postPresence } from '../../src/realmApi'
 import { arenaApiOf, createOutbox, lookUpLooks, type Fetcher } from '../../src/report'
 import { RETENTION } from '../../src/store'
 import { fullWhy, type Load } from './capacity'
@@ -144,6 +144,13 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
       void postPresence(api, report, fetcher).then((status) => {
         if (status !== 200) log('realm.presence.failed', { status })
       })
+    },
+    // A failure only costs those deeds: the answer is null and the trainers walk on.
+    deeds: async (report) => {
+      if (!api) return null
+      const res = await postDeeds(api, { deeds: report.deeds.filter((d) => !guest(d.userId)) }, fetcher)
+      if (!res) log('realm.deeds.failed', { deeds: report.deeds.length })
+      return res
     },
   })
   // The last minute's load (`setLoad`, from `main.ts`'s stats): none known yet is no starvation.

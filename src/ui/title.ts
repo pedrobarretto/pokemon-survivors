@@ -1,10 +1,11 @@
+import { realmHourTag } from './realmHour'
 import { accountState, accountsEnabled, giftInbox, onInbox, onSaveSynced } from '../account'
 import { lobbyPress } from '../analytics'
 import { playSfx } from '../engine/audio'
 import { ACTIONS } from '../engine/bindings'
 import type { Input } from '../engine/input'
 import { formatTime, type Dir8 } from '../engine/math'
-import { blitPacked, context2d, ellipse } from '../engine/pixelart'
+import { blitPacked, blitCentered, context2d, ellipse } from '../engine/pixelart'
 import { ENEMIES } from '../data/enemies'
 import { GAME_MODES, type GameModeId } from '../data/gameModes'
 import { HATCHLINGS, PLAYABLE } from '../data/hatchlings'
@@ -16,10 +17,11 @@ import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/supporters'
 import { formatNumber, LOCALES, locale, t } from '../i18n'
 import { arenaIcon, bulbIcon, chevronIcon, coinIcon, coopIcon, discordIcon, eggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
-import { loadStage, stageHorizonRise, type StageAnchor } from '../render/lobbyStage'
+import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
+import { loadStage, stageHorizonRise, stageRidgeReach, type StageAnchor, type StageClouds, type StageSpan } from '../render/lobbyStage'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
-import type { Place } from '../render/titleScene'
+import type { Cover, Place } from '../render/titleScene'
 import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue } from './dialogue'
 import { carpenterSpeaker, judgeSpeaker, senseiSpeaker, tailorSpeaker } from './visitors'
@@ -37,11 +39,12 @@ import { fillHalloweenCard, halloweenCard, halloweenCardShows } from './hallowee
 import { contentLine } from './gifts'
 import { isUnread, latestUpdate } from './news'
 import { hallFace, hallPortrait, type HallOpen } from './supporters'
-import { surveyWaiting, takeSurveyOffer } from './survey'
+import { designSurveyOffered, noteDesignSeen, surveyLabel, takeSurveyOffer, waitingSurvey, type SurveyId } from './survey'
 import { takeInstallNudge } from './install'
 import type { InstallOffer } from './installOffer'
 import type { Screen } from './screens'
 import { gearButton, iconButton, shellBody, topBar, walletChip } from './shell'
+import { REALM_CROWD } from '../realm/entry'
 import { realmIconUrl } from '../render/realmScene'
 import { modeFacts, type ModeFacts } from './gameModes'
 import { lobbyModeIn, loadLobbyMode, modeBeside, saveLobbyMode, shownModes } from './lobbyMode'
@@ -49,7 +52,7 @@ import { lobbySheet, type SheetEntry } from './lobbySheet'
 import { nearestInDirection, type Direction } from './spatial'
 import { toast } from './toasts'
 import { trainerChip } from './trainer'
-import { uiDpr, uiViewport } from './uiScale'
+import { uiDpr, uiViewport, uiZoom } from './uiScale'
 
 /** What the lobby can highlight. A screen opened over it gets the one it came from, to come back to it. */
 export type LobbyFocus =
@@ -88,9 +91,10 @@ export type LobbyFocus =
   | SocialId
 
 /**
- * The lobby's world behind its cards: the side-view stage (`render/lobbyStage.ts`)
- * while the lobby is up, and the top-down meadow (`render/titleScene.ts`) under a
- * trip to the Kecleon plaza, the Boutique, the Dojo or the Estádio.
+ * The title's world: the side-view stage (`render/lobbyStage.ts`) on the rest
+ * screen, and the top-down meadow (`render/titleScene.ts`) the lobby stands on,
+ * under its cards and under a trip to the Kecleon plaza, the Boutique, the Dojo
+ * or the Estádio.
  */
 export type Meadow = {
   /**
@@ -102,11 +106,14 @@ export type Meadow = {
   visit: (to: Place, instant?: boolean) => void
   /** Where the meadow rests, or `moving` during a trip. */
   at: () => Place | 'moving'
-  /** Draws the side-view stage this frame, standing on `at` (view px), `mode`'s wild Pokémon around the platform. */
-  stage: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number, at: StageAnchor, mode: GameModeId) => void
-  /** Steps and draws the top-down meadow this frame (a trip's world). */
-  draw: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number) => void
-  /** CSS px per world px: where the stage's places line up over the canvas. */
+  /** Draws the rest screen's side-view stage this frame, standing on `at` (view px). */
+  stage: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number, at: StageAnchor) => void
+  /** The stage's clouds as images, placed each frame by `tickClouds`. */
+  clouds: StageClouds['el']
+  tickClouds: (w: number, horizon: number) => void
+  /** Steps and draws the top-down meadow this frame: `covers` is what the lobby covers at home (the wild keep clear of it and the cast stands in for the partner), null on a trip. */
+  draw: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number, covers: readonly Cover[] | null) => void
+  /** CSS px per world px: how the DOM over the canvas lines up with it. */
   scale: () => number
 }
 
@@ -141,6 +148,8 @@ export type TitleActions = {
   news: (focus: LobbyFocus) => Screen
   /** Opens the difficulty survey over the title, like `settings`; the lobby also opens it by itself once (`takeSurveyOffer`). */
   survey: (focus: LobbyFocus) => Screen
+  /** Opens the survey on the redesign over the title; the lobby opens it by itself once, like the difficulty one. */
+  designSurvey: (focus: LobbyFocus) => Screen
   /** Opens the install offer over the title, like `settings`: the lobby opens it by itself, once per device (`takeInstallNudge`). */
   install: (offer: Exclude<InstallOffer, null>, focus: LobbyFocus) => Screen
   /** Opens the Discord screen (the community server, linking a Discord account) over the title, like `settings`. */
@@ -178,10 +187,14 @@ export type TitleActions = {
   invites: (focus: LobbyFocus) => Screen
   /** Jogar junto (co-op): the hub. No action (no relay in this build), no mode. */
   coop?: () => void
-  /** The Poké Realm (`ui/realm.ts`): its city picker. No action (no realm relay in this build), no mode. */
+  /** The Poké Realm (`ui/realm.ts`), straight into a city. No action (no realm relay in this build), no mode. */
   realm?: () => void
+  /** Today's Recados not collected yet (`realm/errands.ts`), for its chip; null when nobody can be asked. */
+  realmErrands?: () => Promise<number> | null
   /** How many friends walk the Poké Realm now (`realm/friends.ts`), for its chip; null when nobody can be asked (a guest). */
   realmFriends?: () => Promise<number> | null
+  /** How many trainers walk the Poké Realm now, for its way in; resolves to null offline. */
+  realmCrowd?: () => Promise<number | null>
   /** Arena (Versus): its screen. Always there: against bots it needs no relay nor account. */
   arena: () => void
   /** The Dojo, once Machoke said hello: who trains (the partner select in its Dojo guise, `game/training.ts`). */
@@ -191,9 +204,9 @@ export type TitleActions = {
 
 /**
  * The lobby's three layouts, in sync with the media queries of the lobby's
- * section in `style.css`: phones on their side (a rail of tabs, the stage, Hoje
+ * section in `style.css`: phones on their side (a rail of tabs, the mode, Hoje
  * beside JOGAR), upright phones and tablets (one column over a tab bar) and
- * the rest (Hoje, the stage and Na Praça side by side).
+ * the rest (Hoje, the mode and Na Praça side by side).
  */
 const LANDSCAPE = '(max-height: 500px) and (orientation: landscape)'
 const NARROW = '(max-width: 899px) and (min-height: 501px), (orientation: portrait) and (max-width: 1100px)'
@@ -338,9 +351,9 @@ const newsButton = (onClick: () => void) => {
   return el
 }
 
-/** The survey in the top bar while it waits for an answer (`surveyWaiting`): a clipboard under a red "!", like unread Novidades. */
-const surveyButton = (onClick: () => void) => {
-  const el = iconButton(surveyIcon(), t().survey.open, onClick)
+/** The survey in the top bar while one waits for an answer (`waitingSurvey`): a clipboard under a red "!", like unread Novidades. */
+const surveyButton = (survey: SurveyId, onClick: () => void) => {
+  const el = iconButton(surveyIcon(), surveyLabel(survey), onClick)
   el.classList.add('lobby-survey')
   el.append(callBadge())
   return el
@@ -386,27 +399,48 @@ const hallLabel = (call: HallOpen | null) => {
   return call === null ? t().home.hallName : `${t().home.hallName} · ${call === 'pick' ? m.banner : m.voteWaiting}`
 }
 
+/** Who joined the wall last: the latest first support, whatever the API's order. */
+const newestOf = (entries: readonly WallEntry[]) => entries.reduce<WallEntry | undefined>((newest, e) => (!newest || e.since.localeCompare(newest.since) >= 0 ? e : newest), undefined)
+
+/** Faces the Hall card holds; a Poké Ball rests in each until the wall arrives, so nothing moves when it does. */
+const HALL_FACES = 4
+
 /**
- * The Hall da Fama strip: gold, the first supporters' faces and how many
- * stand on the wall. It sparkles while it calls the player to something
- * (`hallCall`). Without accounts it's a link to the support page.
+ * The Hall da Fama card: gold, its name and how many support the game (off
+ * the wall too, so the number never drops when one hides), the first
+ * supporters' faces and who joined last. Until the wall comes back, offline
+ * or with nobody on it, Poké Balls hold the faces' places and it asks for
+ * support, in the same shape. It sparkles while it calls the player to
+ * something (`hallCall`). Without accounts it's a link to the support page.
  */
 const hallStrip = (open: () => void) => {
   const m = t().home
   const call = hallCall()
-  const stack = h('span', { class: 'hall-stack' })
-  const name = h('b', {}, m.hallName)
+  const stack = h('span', { class: 'hall-stack' }, ...Array.from({ length: HALL_FACES }, () => h('span', { class: 'hall-face portrait' }, h('img', { src: pokeballIcon(), alt: '' }))))
+  const number = h('span', { class: 'hall-number' })
+  const newest = h('span', { class: 'hall-newest' }, h('img', { class: 'hall-heart', src: heartIcon(), alt: '' }), h('span', { class: 'hall-newest-text' }, m.support))
   const label = hallLabel(call)
-  const kids = [stack, name, h('img', { class: 'hall-heart', src: call ? sparkleIcon() : heartIcon(), alt: '' }), h('span', { class: 'key-hint' }, 'H')]
+  const kids = [
+    h('span', { class: 'hall-head' }, h('b', {}, m.hallName), h('span', { class: 'hall-count' }, h('img', { class: 'hall-heart', src: call ? sparkleIcon() : heartIcon(), alt: '' }), number)),
+    h('span', { class: 'hall-row' }, stack, newest),
+    h('span', { class: 'key-hint' }, 'H'),
+  ]
   const attrs = { class: call ? 'arc-card lobby-hall waiting' : 'arc-card lobby-hall', 'aria-label': label, title: label }
   const el = accountsEnabled
     ? h('button', { ...attrs, type: 'button', onclick: open }, ...kids)
     : h('a', { ...attrs, href: ROUTES.support[locale()], target: '_blank', rel: 'noopener', onclick: () => playSfx('select') }, ...kids)
   void fetchWall().then((wall) => {
-    if (!wall?.entries.length) return
-    stack.replaceChildren(...[...wall.entries].sort(byStanding).slice(0, 4).map(wallFace))
-    // Supporters off the wall count too, so the number never drops when one hides.
-    name.textContent = `${m.hallName} · ${formatNumber(supporterCount(wall))}`
+    const last = wall && newestOf(wall.entries)
+    if (!wall || !last) return
+    const count = supporterCount(wall)
+    number.textContent = formatNumber(count)
+    const others = wall.entries.filter((e) => e !== last).sort(byStanding).slice(0, HALL_FACES)
+    if (others.length > 0) stack.replaceChildren(...others.map(wallFace))
+    else stack.remove()
+    newest.replaceChildren(wallFace(last), h('span', { class: 'hall-newest-text' }, h('em', {}, m.hallNewest), ' ', h('b', {}, last.name)))
+    const full = `${label} · ${m.hallCount(count, formatNumber(count))} · ${m.hallNewest} ${last.name}`
+    el.setAttribute('aria-label', full)
+    el.title = full
   })
   return el
 }
@@ -463,18 +497,18 @@ const DOJO = seenFlag('ps:dojoSeen')
 /** Set once Ninjask first greets the player at the Estádio on this device: its long hello goes for good. */
 const STADIUM = seenFlag('ps:stadiumSeen')
 
-/* ---------------- The stage's cast ---------------- */
+/* ---------------- The mode's cast ---------------- */
 
-/** A Pokémon on the platform: `x` from the middle (art px). `team` paints its ground (the Arena's sides). */
+/** A Pokémon of the cast: `x` from the middle (art px). `team` paints its ground (the Arena's sides). */
 type Figure = { dex: Dex; shiny: boolean; x: number; dir: Dir8; team?: 'blue' | 'red' }
-/** Who stands on the platform: figures, a picture beside them (`img`: feet at `x`), the ribbon over the day's Pokémon, and how much smaller than the partner its art is drawn (`shrink`). */
-type Cast = { figures: readonly Figure[]; img?: { src: string; x: number }; ribbon?: boolean; shrink?: number }
+/** Who stands in the meadow for a mode: figures, a picture beside them (`img`: feet at `x`), the ribbon over the day's Pokémon, how much smaller than the partner its art is drawn (`shrink`), and the patrons around the Realm's café (`cafe`, `render/cafeLife.ts`). */
+type Cast = { figures: readonly Figure[]; img?: { src: string; x: number }; ribbon?: boolean; shrink?: number; cafe?: boolean }
 
 const ASSETS = `${import.meta.env.BASE_URL}assets`
 
 const figure = (dex: Dex, x: number, dir: Dir8, team?: Figure['team']): Figure => ({ dex, shiny: false, x, dir, team })
 
-/** What each mode puts on the platform. */
+/** What each mode stands in the meadow. */
 const castOf = (mode: GameModeId): Cast => {
   const save = loadSave()
   const partner = PLAYABLE[save.partner].line[0]
@@ -487,20 +521,24 @@ const castOf = (mode: GameModeId): Cast => {
   if (mode === 'coop') return { figures: [figure(1, -38, 0), figure(25, 0, 0), figure(7, 38, 0)] }
   if (mode === 'arena') return { figures: [figure(448, -58, 2, 'blue'), figure(6, -24, 2, 'blue'), figure(445, 24, 6, 'red'), figure(94, 58, 6, 'red')] }
   if (mode === 'dojo') return { figures: [figure(67, -20, 2)], img: { src: `${ASSETS}/dojo/dummy.png`, x: 20 } }
-  return { figures: [], img: { src: `${ASSETS}/realm/cafe.png`, x: 0 }, shrink: 2 }
+  return { figures: [], img: { src: `${ASSETS}/realm/cafe.png`, x: 0 }, shrink: 2, cafe: true }
 }
 
 /** How big the cast stands in each layout, in CSS px per art px; the mockups' sizes. */
 const CAST_CSS = { wide: 4, narrow: 3, landscape: 3 } as const
 
 /**
- * The mode's cast on its own canvas over the stage's slot: in whole device
- * pixels per art pixel, as big as the layout asks and as the slot has room for
- * (a big legend's wings, a two-team Arena), the feet at the slot's bottom.
+ * The mode's cast on its own canvas over its slot in the meadow: in whole
+ * device pixels per art pixel, as big as the layout asks and as the slot has
+ * room for (a big legend's wings, a two-team Arena), the feet at the slot's
+ * bottom, each with its shadow on the grass.
  */
 const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
   let cast: Cast = { figures: [] }
   let picture: HTMLImageElement | null = null
+  /** The cast's half width and height (local CSS px), which the meadow's wild keep clear of. */
+  const box = { half: 0, tall: 0 }
+  const pose = newCafePose()
   const ribbon = new Image()
   ribbon.src = ribbonIcon('gold')
   const set = (mode: GameModeId) => {
@@ -511,6 +549,7 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
       picture.src = cast.img.src
     }
     for (const f of cast.figures) void loadSpecies(f.dex, f.shiny).catch(() => {})
+    if (cast.cafe) for (const p of CAFE_PATRONS) void loadSpecies(p.dex).catch(() => {})
   }
   const tick = (time: number) => {
     const { clientWidth: slotW, clientHeight: slotH } = slot
@@ -522,6 +561,8 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
     const half = Math.max(16, picture?.complete ? (picture.naturalWidth / 2 + Math.abs(cast.img!.x)) : 0, ...sprites.map((s, i) => Math.abs(cast.figures[i]!.x) + (s ? s.bodyW / 2 + 6 : 16)))
     const tall = Math.max(40, picture?.complete ? picture.naturalHeight + 4 : 0, ...sprites.map((s) => (s ? s.bodyH + 18 : 40)))
     const k = Math.max(1, Math.min(want, Math.floor((slotW * dpr) / (half * 2)), Math.floor((slotH * dpr) / tall)))
+    box.half = Math.round((half * k) / dpr)
+    box.tall = Math.round((tall * k) / dpr)
     const w = Math.ceil((slotW * dpr) / k)
     const h = Math.ceil((slotH * dpr) / k)
     if (canvas.width !== w || canvas.height !== h) Object.assign(canvas, { width: w, height: h })
@@ -537,41 +578,40 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
       if (s) drawPokemon(ctx, s, 'Idle', f.dir, time + i * 0.4, mid + f.x, feet)
     }
     if (picture?.complete && picture.naturalWidth > 0 && cast.img) ctx.drawImage(picture, mid + cast.img.x - Math.floor(picture.naturalWidth / 2), feet + 2 - picture.naturalHeight)
+    if (cast.cafe) {
+      for (const p of CAFE_PATRONS) {
+        cafePose(p, time, pose)
+        const s = loadedSprites(p.dex)
+        if (!s || pose.gone) continue
+        const x = mid + Math.round(pose.x)
+        blitPacked(ctx, ellipse(Math.max(6, Math.round(s.bodyW * 0.45)), 2, 'rgba(16,24,16,0.3)'), x, feet)
+        drawPokemon(ctx, s, pose.anim, pose.dir, time, x, feet)
+        if (pose.bubble) blitCentered(ctx, cafeBubbles()[pose.bubble], x, feet - s.bodyH - 9 - (Math.floor(time * 2.5) % 2))
+      }
+    }
     if (cast.ribbon && ribbon.complete) {
       const top = sprites[0]?.bodyH ?? 28
       ctx.drawImage(ribbon, mid - Math.floor(ribbon.naturalWidth / 2), feet - top - ribbon.naturalHeight - 3 - (Math.floor(time * 2) % 2))
     }
   }
-  return { set, tick }
+  return { set, tick, box }
 }
 
-/* ---------------- The places on the horizon ---------------- */
+/* ---------------- What covers the meadow ---------------- */
 
-/** The places, from the stage's middle (CSS px): by the layout, so a phone's middle stays clear. `null` art is the shop, drawn at its level. */
-const PLACES = {
-  wide: { dojo: -300, stadium: -160, shop: 160, lighthouse: 290 },
-  narrow: { dojo: -330, stadium: -158, shop: 330, lighthouse: 176 },
-} as const satisfies Record<'wide' | 'narrow', Record<string, number>>
+/** What the lobby puts over the meadow, top bar included. Hoje's row scrolls sideways on a phone: its whole strip counts there. */
+const COVERING = '.shell-slot > *, .lobby-col-head, .lobby-wide .lobby-today-cards > *, .lobby-narrow .lobby-today-cards, .lobby-landscape .lobby-today-cards, .lobby-plaza > :not(header), .lobby-notice > *, .lobby-mode-title, .lobby-pills > *, .lobby-arrow, .lobby-modes, .lobby-bottom > *, .lobby-play, .lobby-tabs'
 
-const horizon = (shopLevel: number) => {
-  const file = (id: keyof typeof PLACES.wide) =>
-    id === 'dojo' ? `${ASSETS}/dojo/dojo.png` : id === 'stadium' ? `${ASSETS}/stadium/stadium.png` : id === 'lighthouse' ? `${ASSETS}/realm/lighthouse.png` : `${ASSETS}/shop/shop-lv${shopLevel}.png`
-  const places = (Object.keys(PLACES.wide) as (keyof typeof PLACES.wide)[]).map((id) => ({ id, img: h('img', { class: 'lobby-place', src: file(id), alt: '', draggable: 'false' }) }))
-  const el = h('div', { class: 'lobby-horizon', 'aria-hidden': 'true' }, ...places.map((p) => p.img))
-  const tick = (rise: number) => {
-    const spots = layout() === 'wide' ? PLACES.wide : PLACES.narrow
-    // A phone on its side has the height for little: the places stand a size down.
-    const k = Math.max(1, Math.round(uiDpr() / (layout() === 'landscape' ? 2 : 1)))
-    for (const { id, img } of places) {
-      if (!img.naturalWidth) continue
-      pixelSize(img, k, img.naturalWidth, img.naturalHeight)
-      const left = `${spots[id]}px`
-      if (img.style.left !== left) img.style.left = left
-    }
-    const bottom = `${Math.round(rise)}px`
-    if (el.style.bottom !== bottom) el.style.bottom = bottom
+/** The boxes of the lobby's blocks and of its cast (view px), for the wild in the meadow to keep clear of. */
+const lobbyCovers = (screen: HTMLElement, slot: DOMRect, cast: { half: number; tall: number }, zoom: number, scale: number): Cover[] => {
+  const covers: Cover[] = []
+  for (const block of screen.querySelectorAll(COVERING)) {
+    const r = block.getBoundingClientRect()
+    if (r.width > 0 && r.height > 0) covers.push({ left: r.left / scale, top: r.top / scale, right: r.right / scale, bottom: r.bottom / scale })
   }
-  return { el, tick }
+  const middle = slot.left + slot.width / 2
+  covers.push({ left: (middle - cast.half * zoom) / scale, top: (slot.bottom - cast.tall * zoom) / scale, right: (middle + cast.half * zoom) / scale, bottom: slot.bottom / scale })
+  return covers
 }
 
 /* ---------------- Keyboard and gamepad ---------------- */
@@ -598,10 +638,12 @@ export type ShopTrip = 'shop' | 'festival' | 'look' | 'boutique' | 'skins' | 'lo
 const tripPlace = (mode: ShopTrip): Place =>
   mode === 'dojo' || mode === 'stadium' || mode === 'carpentry' ? mode : mode === 'boutique' || mode === 'skins' || mode === 'locker' ? 'boutique' : 'plaza'
 
-/** What the wipe between the stage and the meadow lasts, each way (s). */
-const WIPE_TIME = 0.22
+/** What the wipe in and out of a trip lasts, each way (s). */
+const WIPE_TIME = 0.28
 /** The wipe's circle grows in steps this big (CSS px), so it reads as pixel art. */
 const WIPE_STEP = 14
+/** The trip sound's own length and a little (ms): a leg turned back at once doesn't stack a second one on it. */
+const TRIP_SOUND_GAP = 420
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
 
 /** The press behind a mode's chip or a keyboard pick. */
@@ -618,19 +660,19 @@ const modeIcon = (id: GameModeId) =>
 const playLine = (id: GameModeId, facts: ModeFacts) => [t().gameModes.names[id], facts.tags.at(0)?.text].filter(Boolean).join(' · ')
 
 /**
- * Title screen on the lobby's stage: the pixel logo and a blinking "press
- * start", then the lobby. The top bar holds the Trainer chip, the wallet, the
- * gems, the survey while it waits for an answer (it opens by itself once),
+ * Title screen: the pixel logo and a blinking "press start" on the side-view
+ * stage, then the lobby on the top-down meadow. The top bar holds the Trainer chip, the wallet, the
+ * gems, a survey while one waits for an answer (each opens by itself once),
  * Novidades and the gear. Hoje has the day's cards (Presentes, Desafio, Ovos,
  * Missões, Surto; events too), Na Praça the Festival, the Kecleon shop, the
  * Boutique, the carpentry and the Hall da Fama. In the middle stands the mode
- * on stage: its name, its pills, the cast and a round arrow for the mode either
+ * on show: its name, its pills, the cast and a round arrow for the mode either
  * side; the bar under it picks any of the 7, and JOGAR does the mode. The dock
  * has the collection, on a phone the bottom tabs and their sheets hold what has
  * no room. Arrows move between all of them by where they are on screen; Enter
  * presses the highlighted one, JOGAR at first. Going to the Loja, Boutique,
- * Dojo, Estádio or Festival is a trip on the top-down meadow (`visitShop`),
- * wiped in and out of the stage; `shop` starts on one once the lobby is up
+ * Dojo, Estádio or Festival is a trip across the meadow (`visitShop`), through
+ * a wipe each way; `shop` starts on one once the lobby is up
  * (`instant`: already there; `back`: leaving the shop calls it instead of
  * going home). `intro: false` opens straight on the lobby (coming back from
  * another screen, or after a language switch), highlighting `focus`.
@@ -659,7 +701,7 @@ export const titleScreen = (
   const intro = shellBody(h('h1', { class: 'sr-only' }, 'Pokémon Survivors'), logo, prompt)
   const wipeEl = h('div', { class: 'lobby-wipe hidden', 'aria-hidden': 'true' })
   // The Noite das Bruxas dresses the lobby in orange and purple (`style.css`).
-  const el = h('div', { class: halloweenToday() ? 'screen shell title-home haunted' : 'screen shell title-home' }, bar, intro, wipeEl)
+  const el = h('div', { class: halloweenToday() ? 'screen shell title-home haunted' : 'screen shell title-home' }, actions.meadow.clouds, bar, intro, wipeEl)
 
   let lobby: HTMLElement | null = null
   let tickers: ((time: number) => void)[] = []
@@ -686,18 +728,25 @@ export const titleScreen = (
   /** A sheet open over the lobby (Comunidade, a bottom tab's). */
   let sheet: Screen | null = null
 
-  /** Which world the canvas shows: the side-view stage, or the top-down meadow under a trip. */
-  let surface: 'stage' | 'meadow' = 'stage'
-  /** The slot the stage is laid out around; null while the intro shows. */
+  /** On a trip the meadow's partner hops along; at home the cast stands in for it. */
+  let onTrip = false
+  /** The slot the cast stands in; null while the intro shows. */
   let slot: HTMLElement | null = null
-  let anchor: StageAnchor | null = null
-  /** The circle wiping between the stage and the meadow: closing, `mid` swaps what's behind it, then it opens and `done` runs. */
+  /** What the wild keep clear of at home: measured a few times a second, the same array while nothing moved. */
+  let covers: readonly Cover[] = []
+  let coversKey = ''
+  let measureAge = 0
+  /** The cast's size (local CSS px), for `covers`. */
+  let castBox = { half: 0, tall: 0 }
+  /** What walkers on the rest screen's ridge keep out of: the logo. */
+  let restStanding: readonly StageSpan[] = []
+  /** The circle wiping in and out of a trip: closing, `mid` swaps what's behind it, then it opens and `done` runs. */
   let wipe: { t: number; closing: boolean; mid: () => void; done: () => void } | null = null
 
   const hiddenModes = [...(actions.coop ? [] : (['coop'] as const)), ...(actions.realm ? [] : (['realm'] as const))]
   const modes = shownModes(hiddenModes)
   let mode = lobbyModeIn(loadLobbyMode(), modes)
-  loadStage(mode)
+  if (opts.intro) loadStage()
   /** Set by `buildLobby`: repaints what follows the selected mode (its name, its pills, the cast, the arrows, the bar, JOGAR). */
   let paintMode: () => void = () => {}
 
@@ -706,7 +755,6 @@ export const titleScreen = (
     if (sound) playSfx('move')
     mode = id
     saveLobbyMode(id)
-    loadStage(id)
     paintMode()
   }
 
@@ -774,7 +822,7 @@ export const titleScreen = (
     help: () => location.assign(ROUTES.guide[lang]),
     settings: () => openOver(actions.settings),
     news: () => openOver(actions.news),
-    survey: () => openOver(actions.survey),
+    survey: () => openOver(waitingSurvey() === 'design' ? actions.designSurvey : actions.survey),
     halloween: () => openOver(actions.halloween),
     festival: () => visitShop('festival'),
     discord: () => openOver(actions.discord),
@@ -860,7 +908,7 @@ export const titleScreen = (
   }
 
   /** A sheet row that closes the sheet and presses `key` (`lobbyPress` counts it). */
-  const entry = (key: keyof typeof runs, icon: string, label: string, sub?: string): SheetEntry => ({ icon: iconImg(icon), label, sub, run: press(key) })
+  const entry = (key: keyof typeof runs, icon: string, label: string, sub?: string, cls?: string): SheetEntry => ({ icon: iconImg(icon, cls), label, sub, run: press(key) })
 
   const hallEntry = (): SheetEntry => ({
     icon: iconImg(supporterIcon('gold')),
@@ -889,7 +937,7 @@ export const titleScreen = (
     discordEntry(),
     ...SOCIAL_IDS.map(socialEntry),
     ...(ideas ? [entry('ideas', bulbIcon(), m.ideas)] : []),
-    entry('help', helpIcon(), t().shell.help),
+    entry('help', helpIcon(), t().shell.help, undefined, 'lobby-icon ink-icon'),
   ]
   const openCommunity = () => openSheet(m.community, communityEntries())
 
@@ -955,12 +1003,13 @@ export const titleScreen = (
     // Beside the ₽, the gems (a guest's chip, only the gem): the Boutique's Loja, where guests browse too. Null in a build without the API.
     const gems = gemChip(() => (lobbyPress('gems'), runs.gems()))
     const shortWallet = kind !== 'wide'
+    const survey = waitingSurvey()
     const nextBar = topBar({
       left: chip.el,
       right: [
         (wallet = walletChip(save.wallet, undefined, shortWallet)),
         ...(gems && kind !== 'narrow' ? [navigable(gems, 'gems')] : []),
-        ...(surveyWaiting() ? [navigable(surveyButton(press('survey')), 'survey')] : []),
+        ...(survey ? [navigable(surveyButton(survey, press('survey')), 'survey')] : []),
         navigable(newsButton(press('news')), 'news'),
         navigable(gearButton(press('settings')), 'settings'),
       ],
@@ -1020,7 +1069,7 @@ export const titleScreen = (
     const notice = h('div', { class: 'lobby-notice' })
     inviteBanner(notice, press('invite'), (banner) => navigable(banner, 'invite'))
 
-    /* The stage: the mode's name and pills, its cast, the arrows, the places on the horizon. */
+    /* The middle: the mode's name and pills, its cast, the arrows. */
     const names = t().gameModes.names
     const facts = modeFacts()
     const title = navigable(h('button', { class: 'lobby-mode-title', type: 'button', 'aria-label': t().gameModes.title }, h('span', { class: 'lobby-mode-name arc-outline' })), 'modes')
@@ -1037,7 +1086,6 @@ export const titleScreen = (
     slot = stageEl
     const castCanvas = h('canvas', { class: 'lobby-cast', 'aria-hidden': 'true' })
     const painter = castPainter(castCanvas, stageEl)
-    const places = horizon(save.shop.level)
     const arrow = (side: 'prev' | 'next') => {
       const label = h('span', { class: 'lobby-arrow-name' })
       const icon = iconImg(chevronIcon(side === 'prev' ? 'left' : 'right'), 'lobby-arrow-icon')
@@ -1049,7 +1097,7 @@ export const titleScreen = (
     const next = arrow('next')
     const castHit = pressable(h('button', { class: 'lobby-cast-hit', type: 'button', 'aria-label': m.change }), 'partner')
     navs = navs.filter((n) => n.el !== castHit)
-    stageEl.append(places.el, castCanvas, castHit, prev.button, next.button)
+    stageEl.append(castCanvas, castHit, prev.button, next.button)
     const center = h('section', { class: 'lobby-center' }, title, pills, stageEl)
 
     /* The modes bar and JOGAR. */
@@ -1062,10 +1110,16 @@ export const titleScreen = (
       chip.addEventListener('click', () => (setMode(id), select('play', false)))
       return { id, chip }
     })
-    if (realm) void actions.realmFriends?.()?.then((n) => {
-      const chip = chips.find((c) => c.id === 'realm')?.chip
-      if (n > 0 && chip?.isConnected) chip.append(h('em', { class: 'arc-badge lobby-mode-pals', title: t().realm.friends.lobby(n), 'aria-label': t().realm.friends.lobby(n) }, String(n)))
-    })
+    const realmChip = realm ? chips.find((c) => c.id === 'realm')?.chip : undefined
+    if (realmChip) {
+      realmHourTag(realmChip)
+      // One count on the chip: what's waiting for the player, then friends walking, then a crowd.
+      void Promise.all([actions.realmErrands?.() ?? null, actions.realmFriends?.() ?? null, actions.realmCrowd?.() ?? null]).then(([errands, friends, crowd]) => {
+        const words = t().realm
+        const count = errands ? { n: errands, text: words.errands.lobby(errands) } : friends ? { n: friends, text: words.friends.lobby(friends) } : crowd !== null && crowd >= REALM_CROWD ? { n: crowd, text: words.cities.crowd(crowd) } : null
+        if (count && realmChip.isConnected) realmChip.append(h('em', { class: 'arc-badge lobby-mode-pals', title: count.text, 'aria-label': count.text }, formatNumber(count.n)))
+      })
+    }
     const allModes = pressable(h('button', { class: 'lobby-mode-all', type: 'button', 'aria-label': t().gameModes.title, title: t().gameModes.title }, iconImg(gridIcon(), 'ink-icon')), 'modes')
     const bar_ = h('nav', { class: 'lobby-modes', 'aria-label': t().gameModes.title }, h('div', { class: 'lobby-modes-scroll' }, ...chips.map((c) => c.chip)), allModes)
     const playSub = h('small')
@@ -1110,6 +1164,7 @@ export const titleScreen = (
     paintMode = () => {
       const color = GAME_MODES[mode].color
       el.style.setProperty('--mode', color)
+      play.dataset.mode = mode
       const f = facts[mode]
       titleText.textContent = names[mode]
       blurb.textContent = f.blurb
@@ -1141,13 +1196,8 @@ export const titleScreen = (
     }
     paintMode()
 
-    tickers = [
-      outbreak.tick,
-      painter.tick,
-      () => {
-        places.tick((stageHorizonRise * actions.meadow.scale()) / (uiDpr() / (window.devicePixelRatio || 1)))
-      },
-    ]
+    tickers = [outbreak.tick, painter.tick]
+    castBox = painter.box
 
     ;(lobby ?? intro).replaceWith(lobbyEl)
     lobby = lobbyEl
@@ -1176,7 +1226,7 @@ export const titleScreen = (
 
   /* ---------------- The trip to the Kecleon's shop ---------------- */
 
-  /** Runs the wipe: closes over the stage or the meadow, `mid` swaps what's behind it, it opens, then `done`. Reduced motion just swaps. */
+  /** Runs the wipe: it closes, `mid` swaps what's behind it, it opens, then `done`. Reduced motion just swaps. */
   const runWipe = (mid: () => void, done: () => void) => {
     if (reducedMotion.matches) {
       mid()
@@ -1187,7 +1237,7 @@ export const titleScreen = (
     paintWipe()
   }
 
-  /** Paints the wipe's circle: a hole in the dark that shrinks or grows around the stage's middle. */
+  /** Paints the wipe's circle: a hole in the dark that shrinks or grows around the cast. */
   function paintWipe() {
     if (!wipe) return
     const { w, h: vh } = uiViewport()
@@ -1220,10 +1270,16 @@ export const titleScreen = (
     done()
   }
 
+  /** Sets the partner off on a leg of a trip, with its feet pattering away (never for an `instant` landing). */
+  function setOff(place: Place) {
+    playSfx('trip', TRIP_SOUND_GAP)
+    actions.meadow.visit(place)
+  }
+
   /**
-   * Goes to a place: the cards fade, the circle closes over the stage and opens
-   * on the top-down meadow, where the camera pans there and the partner hops
-   * along (`instant`: lands there at once, no wipe). There Kecleon hops, cries
+   * Goes to a place: the cards fade, the circle closes on the cast and opens on
+   * the meadow's partner, the camera panning there and the partner hopping along
+   * (`instant`: lands there at once, no wipe). There Kecleon hops, cries
    * and says hello, then the shop opens over the plaza (`TitleActions.mart`);
    * closing it comes back (`goHome`).
    */
@@ -1236,14 +1292,14 @@ export const titleScreen = (
     setAway()
     const place = tripPlace(mode_)
     if (instant) {
-      surface = 'meadow'
+      onTrip = true
       actions.meadow.visit(place, true)
       return
     }
     runWipe(
       () => {
-        surface = 'meadow'
-        actions.meadow.visit(place)
+        onTrip = true
+        setOff(place)
       },
       () => {},
     )
@@ -1366,10 +1422,10 @@ export const titleScreen = (
     overScreen?.dispose()
     overScreen = null
     visit = { mode: 'boutique', phase: 'going', instant: false }
-    actions.meadow.visit('boutique')
+    setOff('boutique')
   }
 
-  /** Back from the shop: the camera pans home, the partner hops back, the circle wipes to the stage and the lobby's cards return. */
+  /** Back from the shop: the camera pans home, the partner hops back, the circle wipes home and the lobby's cards return. */
   function goHome() {
     if (!visit || visit.phase === 'back' || visit.phase === 'landing') return
     overScreen?.dispose()
@@ -1381,7 +1437,7 @@ export const titleScreen = (
     wallet = fresh
     if (candyCard) fillHalloweenCard(candyCard)
     visit.phase = 'back'
-    actions.meadow.visit('home')
+    setOff('home')
   }
 
   const landed = () => {
@@ -1404,7 +1460,7 @@ export const titleScreen = (
       visit.phase = 'landing'
       runWipe(
         () => {
-          surface = 'stage'
+          onTrip = false
           el.classList.remove('visiting')
         },
         landed,
@@ -1420,17 +1476,21 @@ export const titleScreen = (
   }
 
   const enterLobby = () => {
+    noteDesignSeen()
     buildLobby()
     actions.ready()
     // `?loja` (and the dev's `ps.plaza()`) head for the shop once the lobby is laid out.
     const trip = opts.shop
     if (trip) requestAnimationFrame(() => visitShop(trip, opts.instant, opts.shelf))
-    // Otherwise the survey asks by itself once; closed unanswered, its clipboard in the top bar keeps asking.
-    else if (takeSurveyOffer()) openOver(actions.survey)
-    // Or the app's install, once per device, after a few runs or a second visit.
     else {
-      const offer = takeInstallNudge()
-      if (offer) openOver((focus) => actions.install(offer, focus))
+      // Otherwise a survey asks by itself, at most one per page load; closed unanswered, its clipboard in the top bar keeps asking.
+      const survey = takeSurveyOffer()
+      if (survey) openOver(survey === 'design' ? actions.designSurvey : actions.survey)
+      // Or the app's install, once per device, after a few runs or a second visit (not right after the design survey: enough asking for one visit).
+      else if (!designSurveyOffered()) {
+        const offer = takeInstallNudge()
+        if (offer) openOver((focus) => actions.install(offer, focus))
+      }
     }
   }
 
@@ -1476,11 +1536,30 @@ export const titleScreen = (
     dim: 0,
     scene: (ctx, dt, w, vh) => {
       stepWipe(dt)
-      if (surface === 'meadow') return actions.meadow.draw(ctx, dt, w, vh)
-      const scale = actions.meadow.scale()
-      const rect = slot?.getBoundingClientRect()
-      if (rect && rect.width > 0) anchor = { x: Math.round((rect.left + rect.width / 2) / scale), feet: Math.round(rect.bottom / scale) }
-      actions.meadow.stage(ctx, dt, w, vh, anchor ?? { x: Math.round(w / 2), feet: Math.round(vh * 0.72) }, mode)
+      const meadowUp = lobby !== null
+      if (actions.meadow.clouds.hidden !== meadowUp) actions.meadow.clouds.hidden = meadowUp
+      if (meadowUp) {
+        // Layout reads, and they only change with the layout or the mode: a few times a second is plenty (never while it's hidden, every box would read 0).
+        if (!onTrip && !el.classList.contains('hidden') && slot && measureAge++ % 20 === 0) {
+          const next = lobbyCovers(el, slot.getBoundingClientRect(), castBox, uiZoom(), actions.meadow.scale())
+          const key = next.map((c) => `${c.left},${c.top},${c.right},${c.bottom}`).join(' ')
+          if (key !== coversKey) {
+            coversKey = key
+            covers = next
+          }
+        }
+        return actions.meadow.draw(ctx, dt, w, vh, onTrip ? null : covers)
+      }
+      if (measureAge++ % 20 === 0) {
+        // Walkers on the ridge keep out from behind the logo where it comes down that far.
+        const scale = actions.meadow.scale()
+        const box = logo.getBoundingClientRect()
+        const reaches = box.height > 0 && box.bottom / scale > vh * 0.72 - stageHorizonRise - stageRidgeReach
+        restStanding = reaches ? [{ from: box.left / scale - w / 2, to: box.right / scale - w / 2 }] : []
+      }
+      const at: StageAnchor = { x: Math.round(w / 2), feet: Math.round(vh * 0.72), standing: restStanding }
+      actions.meadow.stage(ctx, dt, w, vh, at)
+      actions.meadow.tickClouds(w, at.feet - stageHorizonRise)
     },
     tick: (time: number) => {
       overScreen?.tick?.(time)

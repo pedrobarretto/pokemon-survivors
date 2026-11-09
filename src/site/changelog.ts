@@ -24,16 +24,196 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
-    date: '2026-11-08',
-    title: { pt: 'Lobby novo: escolha o modo e jogue', en: 'A new lobby: pick a mode and play', es: 'Un lobby nuevo: elige el modo y juega', fr: 'Un nouvel accueil : choisis ton mode et joue', zh: '全新大廳：選好模式就開打' },
+    date: '2026-11-09',
+    title: { pt: 'Lobby novo e Realm vivo', en: 'A new lobby and a livelier Realm', es: 'Lobby nuevo y un Realm con vida', fr: 'Un nouvel accueil et un Realm plein de vie', zh: '全新大廳，Realm 熱鬧起來了' },
     highlights: [
       {
-        pt: 'Lobby novo: os 7 modos à vista, cada um com seu palco, e o JOGAR faz o modo escolhido.',
-        en: 'A new lobby: all 7 modes in view, each with its own stage, and PLAY starts the one you picked.',
-        es: 'Lobby nuevo: los 7 modos a la vista, cada uno con su escenario, y JUGAR inicia el que elegiste.',
-        fr: 'Nouvel accueil : les 7 modes en vue, chacun avec sa scène, et JOUER lance celui que tu as choisi.',
-        zh: '全新大廳：7 種模式一目了然，各有專屬舞台，按下「開始」就進入選好的模式。',
+        pt: 'Lobby novo: os 7 modos à vista, cada um com sua turma no campo, e o JOGAR faz o modo escolhido.',
+        en: 'A new lobby: all 7 modes in view, each with its own cast on the meadow, and PLAY starts the one you picked.',
+        es: 'Lobby nuevo: los 7 modos a la vista, cada uno con su elenco en el prado, y JUGAR inicia el que elegiste.',
+        fr: 'Nouvel accueil : les 7 modes en vue, chacun avec sa troupe dans la prairie, et JOUER lance celui que tu as choisi.',
+        zh: '全新大廳：7 種模式一目了然，各有專屬角色站上草原，按下「開始」就進入選好的模式。',
       },
+      {
+        pt: 'O Poké Realm agora tem 4 cidades e você entra direto na primeira com vaga, para encontrar mais gente.',
+        en: 'The Poké Realm now has 4 cities and you go straight into the first with room, so you meet more people.',
+        es: 'El Poké Realm ahora tiene 4 ciudades y entras directo en la primera con lugar, para encontrar a más gente.',
+        fr: 'Le Poké Realm compte maintenant 4 villes et tu entres directement dans la première qui a de la place, pour croiser plus de monde.',
+        zh: 'Poké Realm 現在有 4 座城市，你會直接進入第一座還有空位的城市，更容易遇到其他人。',
+      },
+      {
+        pt: 'Novo Livro de Estampas: 40 para colecionar, algumas escondidas, com móveis, moldura e título de recompensa.',
+        en: 'New Stamp Book: 40 to collect, some of them hidden, with furniture, a frame and a title as rewards.',
+        es: 'Nuevo Libro de Estampas: 40 para coleccionar, algunas ocultas, con muebles, un marco y un título de recompensa.',
+        fr: 'Nouveau Livre de Timbres : 40 à collectionner, certains cachés, avec des meubles, un cadre et un titre en récompense.',
+        zh: '全新郵票冊：共 40 枚可以收集，部分是隱藏的，還能獲得家具、頭像框和稱號。',
+      },
+      {
+        pt: 'Todo dia, 3 Recados no mural da praça pagam ₽, e todos dá para fazer sozinho.',
+        en: 'Every day, 3 Errands on the plaza board pay ₽, and you can do all of them alone.',
+        es: 'Cada día, 3 Recados en el tablón de la plaza pagan ₽, y todos se pueden hacer en solitario.',
+        fr: 'Chaque jour, 3 Courses au panneau de la place rapportent des ₽, et tu peux toutes les faire seul.',
+        zh: '廣場佈告欄每天有 3 項跑腿任務可以賺 ₽，一個人也能全部完成。',
+      },
+      {
+        pt: 'No celular, o novo cadeado na caixa do seu Pokémon fixa o joystick no canto, sem sair da partida.',
+        en: 'On phones, the new padlock on your Pokémon’s box fixes the joystick in its corner without leaving the run.',
+        es: 'En el celular, el nuevo candado en el recuadro de tu Pokémon fija el joystick en su esquina sin salir de la partida.',
+        fr: 'Sur téléphone, le nouveau cadenas sur l’encart de ton Pokémon fixe le joystick dans son coin sans quitter la partie.',
+        zh: '手機上，寶可夢狀態框的新鎖頭可把搖桿固定在角落，不必離開遊戲。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Lobby novo', en: 'A new lobby', es: 'Lobby nuevo', fr: 'Nouvel accueil', zh: '全新大廳' },
+        notes: [
+          {
+            pt: 'Os 7 modos ficam numa barra sempre à vista. Escolha um e quem está no campo muda: seu parceiro no Survivors, um lendário em Lendas, dois times na Arena. O JOGAR ganha a cor do modo e faz o que ele faz.',
+            en: 'The 7 modes sit on a bar that is always in view. Pick one and who stands on the meadow changes: your partner in Survivors, a legend in Legends, two teams in the Arena. PLAY takes the mode\'s color and starts it.',
+            es: 'Los 7 modos están en una barra siempre a la vista. Elige uno y quién está en el prado cambia: tu compañero en Survivors, un legendario en Leyendas, dos equipos en la Arena. JUGAR toma el color del modo y lo inicia.',
+          },
+          {
+            pt: 'O dia vem primeiro, em Hoje: Presentes, Desafio do dia, Ovos, Missões e Surto. Na Praça ficam o Festival, as lojas e o Hall da Fama. Discord, redes e Ideias foram para a Comunidade.',
+            en: 'Your day comes first, under Today: Gifts, Daily Challenge, Eggs, Missions and Outbreak. At the Plaza you find the Festival, the shops and the Hall of Fame. Discord, socials and Ideas moved to Community.',
+            es: 'Tu día va primero, en Hoy: Regalos, Desafío del día, Huevos, Misiones y Brote. En la Plaza están el Festival, las tiendas y el Salón de la Fama. Discord, redes e Ideas pasaron a Comunidad.',
+          },
+          {
+            pt: 'O jogo inteiro ganhou o mesmo visual: letras novas, mais fáceis de ler, e cartões e botões de contorno grosso, nos menus e na partida.',
+            en: 'The whole game got the same look: new, easier-to-read lettering and bold-outlined cards and buttons, in the menus and in a run.',
+            es: 'Todo el juego tiene el mismo aspecto: letras nuevas, más fáciles de leer, y tarjetas y botones de contorno grueso, en los menús y en la partida.',
+          },
+          {
+            pt: 'O botão Passear saiu: tudo o que ele alcançava agora tem o seu botão. No celular, cinco abas embaixo guardam o resto.',
+            en: 'The Explore button is gone: everything it reached now has its own button. On phones, five tabs at the bottom hold the rest.',
+            es: 'El botón Pasear ya no está: todo lo que alcanzaba ahora tiene su botón. En el celular, cinco pestañas abajo guardan el resto.',
+          },
+          {
+            pt: 'Em alguns tamanhos de janela, a tela tremia um pouco enquanto o seu Pokémon andava. Não treme mais.',
+            en: 'At some window sizes, the screen shook a little while your Pokémon walked. It no longer does.',
+            es: 'En algunos tamaños de ventana, la pantalla temblaba un poco mientras tu Pokémon caminaba. Ya no tiembla.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Cidades mais cheias', en: 'Fuller cities', es: 'Ciudades más llenas', fr: 'Des villes plus animées', zh: '城市更熱鬧' },
+        notes: [
+          {
+            pt: 'De 10 cidades passamos para 4, e o Realm coloca todo mundo na primeira com vaga. Para escolher outra, toque no nome da cidade.',
+            en: 'We went from 10 cities to 4, and the Realm puts everyone in the first with room. To pick another, tap the city’s name.',
+            es: 'Pasamos de 10 ciudades a 4, y el Realm pone a todos en la primera con lugar. Para elegir otra, toca el nombre de la ciudad.',
+            fr: 'Nous sommes passés de 10 villes à 4, et le Realm place tout le monde dans la première qui a de la place. Pour en choisir une autre, touche le nom de la ville.',
+            zh: '城市從 10 座減少為 4 座，Realm 會讓大家進入第一座還有空位的城市。想換城市，點一下城市名稱即可。',
+          },
+          {
+            pt: 'O lobby mostra quantos treinadores estão no Realm quando há movimento.',
+            en: 'The lobby shows how many trainers are in the Realm when it’s busy.',
+            es: 'El lobby muestra cuántos entrenadores hay en el Realm cuando hay movimiento.',
+            fr: 'Le lobby indique combien de dresseurs sont dans le Realm quand il y a du monde.',
+            zh: '當 Realm 有人氣時，大廳會顯示目前的訓練家人數。',
+          },
+          {
+            pt: 'Jogar mini games com outro treinador na sala agora rende 25% a mais.',
+            en: 'Playing mini games with another trainer in the room now pays 25% more.',
+            es: 'Jugar minijuegos con otro entrenador en la sala ahora paga un 25 % más.',
+            fr: 'Jouer aux mini-jeux avec un autre dresseur dans la salle rapporte maintenant 25 % de plus.',
+            zh: '和其他訓練家在同一個房間玩小遊戲，獎勵增加 25%。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Estampas', en: 'Stamps', es: 'Estampas', fr: 'Timbres', zh: '郵票' },
+        notes: [
+          {
+            pt: 'Explore a cidade, visite bases, jogue e encontre outros treinadores para ganhar Estampas. As escondidas só revelam o que são depois de conquistadas.',
+            en: 'Explore the town, visit bases, play and meet other trainers to earn Stamps. Hidden ones only reveal themselves once earned.',
+            es: 'Explora la ciudad, visita bases, juega y encuentra a otros entrenadores para ganar Estampas. Las ocultas solo se revelan al conseguirlas.',
+            fr: 'Explore la ville, visite des bases, joue et rencontre d’autres dresseurs pour gagner des Timbres. Les timbres cachés ne se révèlent qu’une fois gagnés.',
+            zh: '探索城鎮、參觀基地、玩小遊戲和遇見其他訓練家，就能獲得郵票。隱藏郵票要到手後才會揭曉。',
+          },
+          {
+            pt: 'Com 5, 12, 20, 30 e 38 Estampas você ganha móveis exclusivos, uma moldura e um título. O total aparece no cartão do treinador.',
+            en: 'At 5, 12, 20, 30 and 38 Stamps you earn exclusive furniture, a frame and a title. Your total shows on your trainer card.',
+            es: 'Con 5, 12, 20, 30 y 38 Estampas ganas muebles exclusivos, un marco y un título. El total aparece en tu tarjeta de entrenador.',
+            fr: 'À 5, 12, 20, 30 et 38 Timbres, tu gagnes des meubles exclusifs, un cadre et un titre. Ton total s’affiche sur ta carte de dresseur.',
+            zh: '收集到 5、12、20、30 和 38 枚郵票時，可以獲得專屬家具、頭像框和稱號。總數會顯示在訓練家卡片上。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Recados do dia', en: 'Daily Errands', es: 'Recados del día', fr: 'Courses du jour', zh: '每日跑腿' },
+        notes: [
+          {
+            pt: 'São três por dia, os mesmos para todo mundo. Colete cada um no mural da praça; terminar os três dá um bônus de ₽.',
+            en: 'There are three a day, the same for everyone. Collect each one at the plaza board; finishing all three gives a ₽ bonus.',
+            es: 'Son tres por día, los mismos para todos. Cobra cada uno en el tablón de la plaza; terminar los tres da un bono de ₽.',
+            fr: 'Il y en a trois par jour, les mêmes pour tous. Récupère chacune au panneau de la place ; finir les trois donne un bonus de ₽.',
+            zh: '每天三項，大家都一樣。到廣場佈告欄領取獎勵，全部完成還有額外的 ₽。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Hora do Realm', en: 'Realm Hour', es: 'Hora del Realm', fr: 'Heure du Realm', zh: 'Realm 時刻' },
+        notes: [
+          {
+            pt: 'Às 0h, 12h e 20h (UTC), o píer, o fliperama ou o café mudam por 15 minutos: Maré Alta, Chuva de Frutas ou Noite das Mesas, sempre com Estampas próprias.',
+            en: 'At 00:00, 12:00 and 20:00 UTC, the pier, the arcade or the café change for 15 minutes: High Tide, Berry Storm or Table Night, each with its own Stamps.',
+            es: 'A las 0:00, 12:00 y 20:00 UTC, el muelle, el arcade o el café cambian por 15 minutos: Marea Alta, Lluvia de Bayas o Noche de Mesas, siempre con Estampas propias.',
+            fr: 'À 0 h, 12 h et 20 h UTC, la jetée, la salle d’arcade ou le café changent pendant 15 minutes : Marée Haute, Pluie de Baies ou Soirée Jeux, chacune avec ses Timbres.',
+            zh: '每天 UTC 0:00、12:00 和 20:00，碼頭、遊樂場或咖啡館會變身 15 分鐘：大滿潮、樹果雨或桌遊之夜，各有專屬郵票。',
+          },
+          {
+            pt: 'Na Maré Alta, peixes raros mordem mais. Uma faixa mostra a contagem regressiva e leva você até lá.',
+            en: 'During High Tide, rare fish bite more often. A banner shows the countdown and takes you there.',
+            es: 'En la Marea Alta, los peces raros pican más. Una franja muestra la cuenta regresiva y te lleva hasta allí.',
+            fr: 'Pendant la Marée Haute, les poissons rares mordent plus souvent. Une bannière affiche le compte à rebours et t’y emmène.',
+            zh: '大滿潮期間，稀有的魚更容易上鉤。橫幅會顯示倒數，並帶你前往現場。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Cadeado do joystick na partida', en: 'Joystick padlock in the run', es: 'Candado del joystick en la partida', fr: 'Cadenas du joystick en partie', zh: '遊戲中的搖桿鎖頭' },
+        notes: [
+          {
+            pt: 'Em telas de toque, um cadeado na caixa do seu Pokémon alterna entre o joystick fixo no canto e o que segue o dedo, em qualquer modo. A escolha fica salva e é a mesma de Ajustes → Controles.',
+            en: 'On touchscreens, a padlock on your Pokémon’s box switches between the joystick fixed in its corner and the one that follows your finger, in every mode. The choice is saved and is the same one as in Settings → Controls.',
+            es: 'En pantallas táctiles, un candado en el recuadro de tu Pokémon alterna entre el joystick fijo en su esquina y el que sigue tu dedo, en todos los modos. La elección se guarda y es la misma de Ajustes → Controles.',
+            fr: 'Sur écran tactile, un cadenas sur l’encart de ton Pokémon alterne entre le joystick fixe dans son coin et celui qui suit ton doigt, dans tous les modes. Le choix est gardé et c’est le même que dans Réglages → Commandes.',
+            zh: '在觸控螢幕上，寶可夢狀態框的鎖頭可在固定於角落的搖桿與跟隨手指的搖桿之間切換，所有模式皆可使用。選擇會保存，與「設定 → 操作」中的設定相同。',
+          },
+          {
+            pt: 'A altura e a distância da borda do joystick fixo ficam em Ajustes → Controles.',
+            en: 'The fixed joystick’s height and distance from the edge are in Settings → Controls.',
+            es: 'La altura y la distancia al borde del joystick fijo están en Ajustes → Controles.',
+            fr: 'La hauteur du joystick fixe et sa distance au bord se règlent dans Réglages → Commandes.',
+            zh: '固定搖桿的高度與離邊緣的距離可在「設定 → 操作」調整。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Correções visuais', en: 'Visual fixes', es: 'Correcciones visuales', fr: 'Corrections visuelles', zh: '畫面修正' },
+        notes: [
+          {
+            pt: 'A barra do X Attack e do X Speed agora enche quando você pega outro com um ainda ativo. A duração sempre esteve certa, só a barra enganava.',
+            en: 'The X Attack and X Speed bar now fills when you pick up another while one is still active. The duration was always right; only the bar was misleading.',
+            es: 'La barra de X Attack y X Speed ahora se llena cuando recoges otro con uno aún activo. La duración siempre estuvo bien, solo la barra engañaba.',
+            fr: 'La barre d’X Attack et d’X Speed se remplit maintenant quand tu en ramasses un autre alors qu’un est encore actif. La durée a toujours été bonne, seule la barre trompait.',
+            zh: '在 X Attack 或 X Speed 仍生效時再撿到一個，效果條現在會填滿。持續時間一直是正確的，只是效果條顯示有誤。',
+          },
+          {
+            pt: 'O marcador de Alfa fora da tela agora mostra um A, em vez de um símbolo que parecia um Ω.',
+            en: 'The off-screen Alpha marker now shows an A instead of a symbol that looked like an Ω.',
+            es: 'El marcador de Alfa fuera de la pantalla ahora muestra una A, en lugar de un símbolo que parecía una Ω.',
+            fr: 'Le marqueur d’Alpha hors de l’écran affiche maintenant un A, au lieu d’un symbole qui ressemblait à un Ω.',
+            zh: '畫面外的頭目標記現在顯示 A，不再是看起來像 Ω 的符號。',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-08',
+    title: { pt: 'Fim da tela preta e do mundo invisível', en: 'No more black screen or invisible world', es: 'Adiós a la pantalla negra y al mundo invisible', fr: 'Fini l’écran noir et le monde invisible', zh: '修正黑畫面與世界消失問題' },
+    highlights: [
       {
         pt: 'Corrigimos a tela preta ao abrir o jogo no iPhone, iPad e Mac com Safari 26.',
         en: 'We fixed the black screen when opening the game on iPhone, iPad and Mac with Safari 26.',
@@ -62,25 +242,24 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Sur les claviers AZERTY, le jeu affiche maintenant les bonnes touches : Z Q S D.',
         zh: '使用 AZERTY 鍵盤時，遊戲現在會顯示正確的按鍵：Z Q S D。',
       },
+      {
+        pt: 'Mew, Celebi e Jirachi agora têm garantia por azar: a chance sobe a cada final sem um mítico.',
+        en: 'Mew, Celebi and Jirachi now have bad-luck protection: the chance rises with each finale without a mythical.',
+        es: 'Mew, Celebi y Jirachi ahora tienen protección contra la mala suerte: la probabilidad sube con cada final sin un mítico.',
+        fr: 'Mew, Celebi et Jirachi ont maintenant une protection contre la malchance : les chances montent à chaque finale sans Pokémon fabuleux.',
+        zh: 'Mew、Celebi 和 Jirachi 現在有保底機制：每場沒有幻之寶可夢的決戰後，機率都會提高。',
+      },
     ],
     changes: [
       {
-        title: { pt: 'Lobby novo', en: 'A new lobby', es: 'Lobby nuevo', fr: 'Nouvel accueil', zh: '全新大廳' },
+        title: { pt: 'Garantia por azar dos míticos', en: 'Bad-luck protection for mythicals', es: 'Protección contra la mala suerte de los míticos', fr: 'Protection contre la malchance des fabuleux', zh: '幻之寶可夢保底機制' },
         notes: [
           {
-            pt: 'Os 7 modos ficam numa barra sempre à vista. Escolha um e o palco muda: a horda no Survivors, um lendário em Lendas, dois times na Arena. O JOGAR ganha a cor do modo e faz o que ele faz.',
-            en: 'The 7 modes sit on a bar that is always in view. Pick one and the stage changes: the horde in Survivors, a legend in Legends, two teams in the Arena. PLAY takes the mode\'s color and starts it.',
-            es: 'Los 7 modos están en una barra siempre a la vista. Elige uno y el escenario cambia: la horda en Survivors, un legendario en Leyendas, dos equipos en la Arena. JUGAR toma el color del modo y lo inicia.',
-          },
-          {
-            pt: 'O dia vem primeiro, em Hoje: Presentes, Desafio do dia, Ovos, Missões e Surto. Na Praça ficam o Festival, as lojas e o Hall da Fama. Discord, redes e Ideias foram para a Comunidade.',
-            en: 'Your day comes first, under Today: Gifts, Daily Challenge, Eggs, Missions and Outbreak. At the Plaza you find the Festival, the shops and the Hall of Fame. Discord, socials and Ideas moved to Community.',
-            es: 'Tu día va primero, en Hoy: Regalos, Desafío del día, Huevos, Misiones y Brote. En la Plaza están el Festival, las tiendas y el Salón de la Fama. Discord, redes e Ideas pasaron a Comunidad.',
-          },
-          {
-            pt: 'O botão Passear saiu: tudo o que ele alcançava agora tem o seu botão. No celular, cinco abas embaixo guardam o resto.',
-            en: 'The Explore button is gone: everything it reached now has its own button. On phones, five tabs at the bottom hold the rest.',
-            es: 'El botón Pasear ya no está: todo lo que alcanzaba ahora tiene su botón. En el celular, cinco pestañas abajo guardan el resto.',
+            pt: 'Depois de 5 finais sem derrotar um mítico, a chance de ele aparecer junto do Mewtwo sobe a cada final, até ser garantida na 21ª. Enquanto faltar algum, o que aparece é sempre um que você ainda não capturou.',
+            en: 'After 5 finales without beating a mythical, the chance of one joining Mewtwo rises with each finale, up to a sure thing on the 21st. While you still miss any, the one that comes is always one you have not captured.',
+            es: 'Tras 5 finales sin derrotar a un mítico, la probabilidad de que aparezca junto a Mewtwo sube con cada final, hasta ser segura en la 21.ª. Mientras te falte alguno, siempre aparece uno que aún no capturaste.',
+            fr: 'Après 5 finales sans battre de Pokémon fabuleux, les chances d’en voir un aux côtés de Mewtwo montent à chaque finale, jusqu’à être certaines à la 21e. Tant qu’il vous en manque, celui qui vient est toujours un que vous n’avez pas capturé.',
+            zh: '連續 5 場決戰沒有打倒幻之寶可夢後，牠與 Mewtwo 一同出現的機率會逐場提高，第 21 場必定出現。只要還有缺少的，出現的一定是你尚未捕捉的那一隻。',
           },
         ],
       },

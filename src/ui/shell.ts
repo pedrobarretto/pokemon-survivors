@@ -37,8 +37,8 @@ export const shellBody = (...children: Slot[]) => h('div', { class: 'shell-body'
 
 /**
  * Top bar: `left` (a `backButton` or the Trainer chip), an optional screen
- * `title` in the pixel font (screens other than the title show it instead of
- * the logo; keep it unaccented or mixed case, see `i18n/pt.ts`), and the
+ * `title` in the kit's display type (screens other than the title show it instead of
+ * the logo), and the
  * `right` slot (wallet, help, gear), right-aligned. Empty slots keep their
  * width balanced so the title stays centered.
  */
@@ -47,7 +47,7 @@ export const topBar = (opts: { left?: Slot; title?: string | Node | null; right?
     'header',
     { class: 'shell-top' },
     h('div', { class: 'shell-slot left' }, opts.left),
-    opts.title ? h('h2', { class: 'shell-title' }, opts.title) : h('span', { class: 'shell-spacer' }),
+    opts.title ? h('h2', { class: 'shell-title arc-outline' }, opts.title) : h('span', { class: 'shell-spacer' }),
     h('div', { class: 'shell-slot right' }, ...(opts.right ?? [])),
   )
 
@@ -102,8 +102,7 @@ export const walletChip = (wallet: number, open?: { label: string; onClick: () =
 export const actionBar = (...children: Slot[]) => h('footer', { class: 'shell-actions' }, ...children)
 
 /**
- * Pill tabs (Settings' Som / Jogo / Controles / Sobre). Labels in the pixel
- * font, so mixed case if accented. `onPick` runs on a tap; `set` moves the
+ * Pill tabs (Settings' Som / Jogo / Controles / Sobre). `onPick` runs on a tap; `set` moves the
  * highlight (for ← → while the strip has the keyboard focus).
  */
 export const tabStrip = (labels: readonly string[], active: number, onPick: (i: number) => void) => {
