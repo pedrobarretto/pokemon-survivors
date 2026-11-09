@@ -1,5 +1,6 @@
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -6325,6 +6326,7 @@ export const en: Messages = {
       awards: { damage: 'Top damage', kills: 'Most defeated', revives: 'Guardian angel', untouched: 'Untouchable', tank: 'Tank', comeback: 'Phoenix', survivor: 'Survivor', specialist: 'Specialist', collector: 'Collector', loyal: 'Team player' },
     },
   },
+  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.en,
   minigames: {
     close: 'Leave',
     choose: 'Which game?',
@@ -6335,7 +6337,7 @@ export const en: Messages = {
       fourInRow: { name: 'Four in a Row', blurb: 'Line up four Poké Balls before your rival.' },
       typeDuel: { name: 'Type Duel', blurb: 'Fire beats Grass, Grass beats Water, Water beats Fire.' },
     },
-    feats: { fishing: { feebas: 'I caught a Feebas!', shinyGyarados: 'I caught a shiny Gyarados!!', bigHaul: 'A 300-point catch!' }, berryCatch: { flawless: 'A flawless Berry Rain!', goldRush: 'Three golden berries in one round!', combo50: 'A 50-berry combo!' }, whackDiglett: { combo30: 'A 30-bonk combo!', dugtrio: 'Bonked 5 Dugtrio in one round!' }, fourInRow: {}, typeDuel: { perfectDuel: 'A perfect duel, not a round lost!' } },
+    feats: { fishing: { feebas: 'I caught a Feebas!', shinyGyarados: 'I caught a shiny Gyarados!!', wishiwashi: 'I caught a Wishiwashi!', bigHaul: 'A 300-point catch!' }, berryCatch: { flawless: 'A flawless Berry Rain!', goldRush: 'Three golden berries in one round!', combo50: 'A 50-berry combo!' }, whackDiglett: { combo30: 'A 30-bonk combo!', dugtrio: 'Bonked 5 Dugtrio in one round!' }, fourInRow: {}, typeDuel: { perfectDuel: 'A perfect duel, not a round lost!' } },
     duel: {
       pick: 'Pick a card',
       play: 'Play',

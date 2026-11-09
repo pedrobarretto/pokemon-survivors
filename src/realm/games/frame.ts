@@ -7,6 +7,8 @@ import { h } from '../../ui/dom'
 import { depositPokeDollars } from '../../ui/save'
 import type { Screen } from '../../ui/screens'
 import { claimGame, isFailure } from '../api'
+import { syncSave } from '../../account'
+import { HATCHLING_IDS, HATCHLINGS } from '../../data/hatchlings'
 import { openGameBoard } from './board'
 import { pieceName } from '../furniture'
 
@@ -325,6 +327,13 @@ const endSheet = async (s: Shell, headline: string, claim: Parameters<typeof cla
   paid.textContent = res.coins > 0 ? m.end.paid(res.coins) : m.end.capped
   for (const id of res.trophies) paid.after(h('p', { class: 'minigame-trophy' }, m.end.trophy(pieceName(id))))
   if (res.trophies.length > 0) playSfx('select')
+  // A family comes as a gift from the API: a sync brings it to the lobby's box.
+  const family = HATCHLING_IDS.find((id) => id === res.family)
+  if (family) {
+    paid.after(h('p', { class: 'minigame-trophy' }, t().seasonUnlocks.fishingFamily(HATCHLINGS[family].name)))
+    playSfx('unlock')
+    void syncSave()
+  }
 }
 
 /** Opens a solo game in the frame: plays rounds until closed, claiming each finished one. */

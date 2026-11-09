@@ -3,6 +3,9 @@ import { FURNITURE, isFurnitureId, type FurnitureCounts, type FurnitureId } from
 import { checkLayout, EMPTY_BASE, isBaseVisibility, parseLayout, type BaseVisibility, type LayoutError } from '../../src/data/secretBases'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
+import type { HatchlingId } from '../../src/data/hatchlings'
+import { newFeatFamily } from '../../src/game/seasonOneUnlocks'
+import { sendGift } from './gifts'
 import { parseSaveData, type Save } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
 import { parseHandle } from '../../src/game/ranking'
@@ -292,7 +295,7 @@ export type LikeOutcome = { ok: true; likes: number } | { ok: false; error: 'pri
 export type BuyError = 'profile' | 'gems' | 'funds' | 'nosave' | 'stale'
 
 /** What a mini game claim came to (`GameClaimed`), or why it was refused: no @handle, or kept out of the realm. */
-export type ClaimOutcome = { ok: true; coins: number; today: number; trophies: FurnitureId[]; furniture: FurnitureCounts | null } | { ok: false; error: 'profile' | 'banned' }
+export type ClaimOutcome = { ok: true; coins: number; today: number; trophies: FurnitureId[]; furniture: FurnitureCounts | null; family: HatchlingId | null } | { ok: false; error: 'profile' | 'banned' }
 
 export type FurnitureOutcome =
   | { ok: true; furniture: FurnitureCounts; pay: 'gems'; balance: number }
@@ -566,7 +569,7 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
      * account's row lock: the Brasília `day`'s caps (`capped`: the game's and
      * all games'), the game's stats (`statsAfter`) and the trophies they
      * reach for the first time (`trophiesEarned`, into `furniture_owned` as
-     * source `game`). The ₽ goes to the wallet on the device, like a run's.
+     * source `game`) and the family a feat brings (`newFeatFamily`, as a gift). The ₽ goes to the wallet on the device, like a run's.
      */
     claim: (userId: string, claim: GameClaim, coins: number, day: DayKey): Promise<ClaimOutcome> =>
       sql.begin(async (tx): Promise<ClaimOutcome> => {
@@ -593,6 +596,9 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
           await tx`insert into furniture_owned (user_id, furniture, source, count) values (${userId}, ${id}, 'game', 1) on conflict (user_id, furniture, source) do nothing`
         }
         if (trophies.length > 0) console.log(`realm: ${userId} earned ${trophies.join(', ')} at ${claim.game}`)
+        // A feat's family, once per account: the first claim that hits it sends the gift (the key keeps a retry from sending two).
+        const family = newFeatFamily(claim.game, was.feats, stats.feats)
+        if (family) await sendGift(tx, userId, { kind: 'family', family }, { kind: 'season', way: 'fishing' }, `feat:${claim.game}:${family}`)
         const points = boardPoints(claim.game, claim.outcome)
         if (points !== null) {
           for (const period of GAME_BOARD_PERIODS) {
@@ -613,6 +619,7 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
           today: Math.min(MINIGAME_DAILY, paidAll + paid),
           trophies,
           furniture: trophies.length > 0 ? await ownedBy(tx, userId, await slimOf(tx, userId)) : null,
+          family,
         }
       }),
 

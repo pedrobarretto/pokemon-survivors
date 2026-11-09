@@ -1,3 +1,4 @@
+import { newFeatFamily } from '../game/seasonOneUnlocks'
 import { spendFromSave } from '../account'
 import { apiCall } from '../api'
 import { CITY_IDS, isCityId } from '../net/realm'
@@ -325,7 +326,7 @@ export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure
     const before = new Set(trophiesEarned(claim.game, was))
     const trophies = trophiesEarned(claim.game, stats).filter((id): id is FurnitureId => !before.has(id) && isFurnitureId(id))
     if (trophies.length > 0) fake.me = { ...fake.me, furniture: { ...fake.me.furniture, ...Object.fromEntries(trophies.map((id) => [id, (fake?.me.furniture[id] ?? 0) + 1])) } }
-    return { coins: paid, today: Math.min(MINIGAME_DAILY, paidAll + paid), trophies, furniture: trophies.length > 0 ? fake.me.furniture : null }
+    return { coins: paid, today: Math.min(MINIGAME_DAILY, paidAll + paid), trophies, furniture: trophies.length > 0 ? fake.me.furniture : null, family: newFeatFamily(claim.game, was.feats, stats.feats) }
   }
   const { status, body } = await apiCall('/realm/game/claim', { method: 'POST', body: claim, auth: true })
   if (status !== 200 || !isRecord(body)) return failed(status, body)
@@ -337,6 +338,7 @@ export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure
     today,
     trophies: Array.isArray(body.trophies) ? body.trophies.filter(isFurnitureId) : [],
     furniture: isRecord(body.furniture) ? parseFurnitureCounts(body.furniture) : null,
+    family: typeof body.family === 'string' ? body.family : null,
   }
 }
 

@@ -17,6 +17,8 @@ import { learnTms, NO_TMS, parseTms, type TmCase } from './tmShelf'
 import { parseCaps, parseEvoItems, type Caps } from './evoItems'
 import { parseCaravan, type CaravanSave } from './caravan'
 import { parseBuilds, type Builds } from './builds'
+import type { FindId } from '../data/seasonOneUnlocks'
+import { NO_RESEARCH, parseFinds, parseResearch, recordResearch, type ResearchSave } from './seasonOneUnlocks'
 import type { EvoItemId } from '../data/shop'
 import { isRecord, wholeNumber } from './parse'
 import { parseRibbons, type Ribbon } from './ribbons'
@@ -176,6 +178,10 @@ export type Save = {
   attempt: Attempt | null
   /** Builds planned at the Dojo (`game/builds.ts`), one per family: the level-up screen marks the cards that follow one. */
   builds: Builds
+  /** Temporada 1's map encounters ever made (`game/seasonOneFinds.ts`): each brings its family as a gift. */
+  finds: readonly FindId[]
+  /** Temporada 1's research chains (`game/seasonOneUnlocks.ts`), tracked from run results. */
+  research: ResearchSave
 }
 
 /** The branch each branching family took in its latest run that got there. */
@@ -228,6 +234,8 @@ export const EMPTY_SAVE: Save = {
   caravan: { week: '', bought: [], haggled: false },
   attempt: null,
   builds: {},
+  finds: [],
+  research: NO_RESEARCH,
 }
 
 /** Brings any older save shape up to the current version. Add a case per schema bump. */
@@ -302,6 +310,8 @@ export const parseSaveData = (json: unknown): Save => {
     caravan: parseCaravan(data.caravan),
     attempt: parseAttempt(data.attempt),
     builds: parseBuilds(data.builds),
+    finds: parseFinds(data.finds),
+    research: parseResearch(data.research),
   }
 }
 
@@ -432,7 +442,7 @@ const settle = (save: Save, m: Progress, a: Medals, eggRoom: number) => {
  */
 export const recordRun = (save: Save, summary: RunSummary, before: RunSummary | null, date: Date, eggRoom: number = EGGS.perRun) => {
   const m = recordMissions(save.missions, summary, before, date)
-  const ticked = { ...save, clears: addClear(save.clears, summary), halloween: recordHunt(save.halloween, summary.nightBosses), tms: learnTms(save.tms, summary.tms) }
+  const ticked = { ...save, clears: addClear(save.clears, summary), halloween: recordHunt(save.halloween, summary.nightBosses), tms: learnTms(save.tms, summary.tms), research: recordResearch(save.research, summary, before) }
   return settle(ticked, m, recordAchievements(save.achievements, summary, before, m.completed.length, save.dex), eggRoom)
 }
 

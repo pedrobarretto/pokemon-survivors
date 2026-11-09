@@ -65,6 +65,8 @@ import { EVENTS, stageIndexAt } from './data/waves'
 import { makeShiny } from './game/shiny'
 import { MAP_EVENT_KINDS, MAP_EVENTS, spawnMapEvent, type MapEventKind } from './game/mapEvents'
 import { MEOWTH_DEX } from './game/mapEventRules'
+import { CASTFORM_FIND } from './data/seasonOneUnlocks'
+import { seasonFindDevTools, seasonFindFeedback } from './ui/seasonFinds'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -1190,11 +1192,12 @@ const prefetchRun = (day: DayKey | null = null) =>
 
 /**
  * Species a run may need outside its drawn cast, with when they can first show
- * up: the fleeing Meowth and the escort mission's Togepi. A rift's legendary,
+ * up: the fleeing Meowth, the escort mission's Togepi and the wandering Castform. A rift's legendary,
  * a place's dwellers and the reaper load when the run gets near them (`runSprites`).
  */
 const EXTRAS = [
   { dex: MEOWTH_DEX, at: MAP_EVENTS.meowth.spawn.from },
+  { dex: CASTFORM_FIND.dex, at: CASTFORM_FIND.from },
   { dex: TOGEPI_DEX, at: FIELD.first },
 ]
 
@@ -2190,6 +2193,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return placeFeedback(ui, e.place, e.notice)
     case 'landmark':
       return landmarkFeedback(ui, e.landmark, e.moment)
+    case 'seasonFind':
+      return seasonFindFeedback(ui, e.find, e.moment)
     case 'revive':
       playSfx('evolve')
       return news(h('span', { class: 'item-toast' }, h('img', { src: consumableIcon('revive'), alt: '' }), rich(t().toast.revive)), 3000)
@@ -5069,6 +5074,7 @@ if (import.meta.env.DEV) {
       ball: (n = 1) => withRun((g) => Array.from({ length: n }, (_, i) => dropPickup(g, localPlayer(g).x + 20 + i * 6, localPlayer(g).y, 'pokeball'))),
       ...riftDevTools(() => run?.game),
       ...placeDevTools(() => run?.game),
+      ...seasonFindDevTools(() => run?.game, devLandmark),
       ...levelUpDevTools(() => run?.game),
       ...kitDevTools(() => run?.game),
       ...eggMoveDevTools(() => run?.game),

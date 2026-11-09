@@ -59,6 +59,7 @@ import { withHoney, withOutbreak } from './outbreak'
 import { withHaunts } from './halloween'
 import { createTerrain, groundAt, groundPace, slidesOnIce, updateTerrain } from './terrain'
 import { createLandmarkState, createPlayerLandmarks, updateLandmarks, updateTunnel } from './landmarks'
+import { createSeasonFinds } from './seasonOneFinds'
 import { drawRoster, type Roster } from './roster'
 import { clockRuns, createRiftState } from './rift'
 import { createPlaceState } from './place'
@@ -289,6 +290,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     rift: createRiftState(),
     place: createPlaceState(seed),
     landmarks: createLandmarkState(),
+    finds: createSeasonFinds(seed),
     tutors: 0,
     endless: null,
     tally: createTally(),

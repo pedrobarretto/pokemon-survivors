@@ -21,6 +21,7 @@ import { countNotice } from './tally'
 import { openCursedChest } from './curseSystem'
 import { clearSpot } from './terrain'
 import { createFieldMissions, directMissions, FIELD_MISSIONS, type FieldMissionNotice, type FieldMissionState, type FieldMissionStates } from './fieldMissions'
+import { CASTFORM_EVENT, updateSeasonFinds, type CastformEvent } from './seasonOneFinds'
 import { openTutor } from './tms'
 import { TUTOR, tutorWeight } from './tmRules'
 import { actAs, anchorPlayer, mostHurt, nearestPlayer, phaseOf, playerWithin, standing } from './players'
@@ -47,6 +48,8 @@ export type MapEventStates = {
   meowth: { hp: number; dir: Dir8; flash: number; hitCooldown: number; seed: number }
   /** Seconds stood in its ring so far (0..`TUTOR.stand`, drains outside). */
   tutor: { stand: number }
+  /** The wandering Castform of Temporada 1 (`seasonOneFinds.ts`). */
+  castform: CastformEvent
 } & FieldMissionStates
 
 export type MapEventKind = keyof MapEventStates
@@ -360,6 +363,7 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
     },
     expire: (g) => notify(g, { kind: 'tutorLeft' }),
   },
+  castform: CASTFORM_EVENT,
   ...FIELD_MISSIONS,
 }
 
@@ -434,6 +438,7 @@ const nearSomeone = (g: Game, x: number, y: number) => {
 export const updateMapEvents = (g: Game, dt: number) => {
   direct(g)
   directMissions(g, spawnMapEvent)
+  updateSeasonFinds(g, dt, spawnMapEvent)
   for (const ev of g.mapEvents.list) {
     ev.age += dt
     if (ev.gone >= 0) ev.gone += dt
