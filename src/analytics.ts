@@ -5,7 +5,7 @@ import type { EnemyId } from './data/enemies'
 import type { PlayableId } from './data/hatchlings'
 import type { MegaId } from './data/megas'
 import type { BagItem } from './data/shop'
-import type { SurveyAnswer } from './data/survey'
+import type { DesignAspect, DesignRating, SurveyAnswer } from './data/survey'
 import type { Difficulty } from './game/difficulty'
 import type { RunMode } from './game/ranking'
 import type { RelayHome, VpsHome } from './net/protocol'
@@ -214,6 +214,12 @@ type AnalyticsEvents = {
   install: { step: 'prompt' | 'accepted' | 'dismissed' | 'ios' | 'installed' }
   /** The lobby's survey (`ui/survey.ts`): how each difficulty feels, with the runs and wins the player had when answering. */
   survey_difficulty: Record<Difficulty, SurveyAnswer> & { runs: number; wins: number }
+  /**
+   * The lobby's survey on the redesign (`ui/survey.ts`): the rating (1 to 5), what stands out (at most two),
+   * the runs played, the days since this device first saw it, and whether it already had runs banked by then
+   * (`returning`, `DESIGN_SURVEY.returningRuns`). The layout is in PostHog's `$viewport_width` and `$viewport_height`.
+   */
+  survey_design: { rating: DesignRating; aspects: DesignAspect[]; runs: number; days: number; returning: boolean }
   /** A co-op client diverged and was healed from the agreed snapshot: the room, the tick it was told at, and how long until it was back in step. */
   coop_heal: { room: string; tick: number; ms: number }
   /**

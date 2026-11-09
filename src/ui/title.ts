@@ -38,7 +38,7 @@ import { fillHalloweenCard, halloweenCard, halloweenCardShows } from './hallowee
 import { contentLine } from './gifts'
 import { isUnread, latestUpdate } from './news'
 import { hallFace, hallPortrait, type HallOpen } from './supporters'
-import { surveyWaiting, takeSurveyOffer } from './survey'
+import { designSurveyOffered, noteDesignSeen, surveyLabel, takeSurveyOffer, waitingSurvey, type SurveyId } from './survey'
 import { takeInstallNudge } from './install'
 import type { InstallOffer } from './installOffer'
 import type { Screen } from './screens'
@@ -145,6 +145,8 @@ export type TitleActions = {
   news: (focus: LobbyFocus) => Screen
   /** Opens the difficulty survey over the title, like `settings`; the lobby also opens it by itself once (`takeSurveyOffer`). */
   survey: (focus: LobbyFocus) => Screen
+  /** Opens the survey on the redesign over the title; the lobby opens it by itself once, like the difficulty one. */
+  designSurvey: (focus: LobbyFocus) => Screen
   /** Opens the install offer over the title, like `settings`: the lobby opens it by itself, once per device (`takeInstallNudge`). */
   install: (offer: Exclude<InstallOffer, null>, focus: LobbyFocus) => Screen
   /** Opens the Discord screen (the community server, linking a Discord account) over the title, like `settings`. */
@@ -342,9 +344,9 @@ const newsButton = (onClick: () => void) => {
   return el
 }
 
-/** The survey in the top bar while it waits for an answer (`surveyWaiting`): a clipboard under a red "!", like unread Novidades. */
-const surveyButton = (onClick: () => void) => {
-  const el = iconButton(surveyIcon(), t().survey.open, onClick)
+/** The survey in the top bar while one waits for an answer (`waitingSurvey`): a clipboard under a red "!", like unread Novidades. */
+const surveyButton = (survey: SurveyId, onClick: () => void) => {
+  const el = iconButton(surveyIcon(), surveyLabel(survey), onClick)
   el.classList.add('lobby-survey')
   el.append(callBadge())
   return el
@@ -663,7 +665,7 @@ const playLine = (id: GameModeId, facts: ModeFacts) => [t().gameModes.names[id],
 /**
  * Title screen on the lobby's stage: the pixel logo and a blinking "press
  * start", then the lobby. The top bar holds the Trainer chip, the wallet, the
- * gems, the survey while it waits for an answer (it opens by itself once),
+ * gems, a survey while one waits for an answer (each opens by itself once),
  * Novidades and the gear. Hoje has the day's cards (Presentes, Desafio, Ovos,
  * Missões, Surto; events too), Na Praça the Festival, the Kecleon shop, the
  * Boutique, the carpentry and the Hall da Fama. In the middle stands the mode
@@ -828,7 +830,7 @@ export const titleScreen = (
     help: () => location.assign(ROUTES.guide[lang]),
     settings: () => openOver(actions.settings),
     news: () => openOver(actions.news),
-    survey: () => openOver(actions.survey),
+    survey: () => openOver(waitingSurvey() === 'design' ? actions.designSurvey : actions.survey),
     halloween: () => openOver(actions.halloween),
     festival: () => visitShop('festival'),
     discord: () => openOver(actions.discord),
@@ -1009,12 +1011,13 @@ export const titleScreen = (
     // Beside the ₽, the gems (a guest's chip, only the gem): the Boutique's Loja, where guests browse too. Null in a build without the API.
     const gems = gemChip(() => (lobbyPress('gems'), runs.gems()))
     const shortWallet = kind !== 'wide'
+    const survey = waitingSurvey()
     const nextBar = topBar({
       left: chip.el,
       right: [
         (wallet = walletChip(save.wallet, undefined, shortWallet)),
         ...(gems && kind !== 'narrow' ? [navigable(gems, 'gems')] : []),
-        ...(surveyWaiting() ? [navigable(surveyButton(press('survey')), 'survey')] : []),
+        ...(survey ? [navigable(surveyButton(survey, press('survey')), 'survey')] : []),
         navigable(newsButton(press('news')), 'news'),
         navigable(gearButton(press('settings')), 'settings'),
       ],
@@ -1492,17 +1495,21 @@ export const titleScreen = (
   }
 
   const enterLobby = () => {
+    noteDesignSeen()
     buildLobby()
     actions.ready()
     // `?loja` (and the dev's `ps.plaza()`) head for the shop once the lobby is laid out.
     const trip = opts.shop
     if (trip) requestAnimationFrame(() => visitShop(trip, opts.instant, opts.shelf))
-    // Otherwise the survey asks by itself once; closed unanswered, its clipboard in the top bar keeps asking.
-    else if (takeSurveyOffer()) openOver(actions.survey)
-    // Or the app's install, once per device, after a few runs or a second visit.
     else {
-      const offer = takeInstallNudge()
-      if (offer) openOver((focus) => actions.install(offer, focus))
+      // Otherwise a survey asks by itself, at most one per page load; closed unanswered, its clipboard in the top bar keeps asking.
+      const survey = takeSurveyOffer()
+      if (survey) openOver(survey === 'design' ? actions.designSurvey : actions.survey)
+      // Or the app's install, once per device, after a few runs or a second visit (not right after the design survey: enough asking for one visit).
+      else if (!designSurveyOffered()) {
+        const offer = takeInstallNudge()
+        if (offer) openOver((focus) => actions.install(offer, focus))
+      }
     }
   }
 

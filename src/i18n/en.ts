@@ -1890,6 +1890,30 @@ export const en: Messages = {
     hintTouch: 'Tap to answer',
   },
 
+  designSurvey: {
+    title: 'NEW LOOK',
+    open: 'Survey: what do you think of the new look?',
+    question: "What do you think of the game's new look?",
+    ratings: { 1: "Didn't like it", 2: 'Not great', 3: "It's okay", 4: 'Like it', 5: 'Love it' },
+    pickRating: 'Pick a Poké Ball',
+    aspectsQuestion: 'What stands out most? (up to 2)',
+    aspects: {
+      easyToFind: 'Easy to find things',
+      hardToFind: 'Hard to find things',
+      niceLook: 'Looks great',
+      badLook: "Don't like the look",
+      readable: 'Easy to read',
+      hardToRead: 'Hard to read',
+    },
+    send: 'Send',
+    later: 'Not now',
+    never: "Don't ask again",
+    close: 'Close',
+    thanks: 'Thanks! Your answer helps make the game better.',
+    hintKeys: '← → ↑ ↓ move · ENTER choose · ESC close',
+    hintTouch: 'Tap to answer',
+  },
+
   ribbons: {
     names: { gold: 'Gold Ribbon', silver: 'Silver Ribbon', bronze: 'Bronze Ribbon' },
     section: 'Challenge ribbons',

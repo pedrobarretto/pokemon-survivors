@@ -1888,6 +1888,30 @@ export const fr: Messages = {
     hintTouch: 'Touche pour répondre',
   },
 
+  designSurvey: {
+    title: 'NOUVEAU LOOK',
+    open: 'Sondage : que penses-tu du nouveau look ?',
+    question: 'Que penses-tu du nouveau look du jeu ?',
+    ratings: { 1: "Je n'aime pas", 2: 'Bof', 3: 'Correct', 4: "J'aime bien", 5: "J'adore" },
+    pickRating: 'Choisis une Poké Ball',
+    aspectsQuestion: "Qu’est-ce qui ressort le plus ? (2 max)",
+    aspects: {
+      easyToFind: 'Tout se trouve vite',
+      hardToFind: 'Difficile de trouver',
+      niceLook: 'C’est beau',
+      badLook: 'Je n’aime pas le style',
+      readable: 'Facile à lire',
+      hardToRead: 'Difficile à lire',
+    },
+    send: 'Envoyer',
+    later: 'Pas maintenant',
+    never: 'Ne plus demander',
+    close: 'Fermer',
+    thanks: 'Merci ! Ta réponse aide à améliorer le jeu.',
+    hintKeys: '← → ↑ ↓ déplacer · ENTER choisir · ESC fermer',
+    hintTouch: 'Touche pour répondre',
+  },
+
   ribbons: {
     names: { gold: 'Ruban d’Or', silver: 'Ruban d’Argent', bronze: 'Ruban de Bronze' },
     section: 'Rubans des défis',

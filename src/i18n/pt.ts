@@ -36,7 +36,7 @@ import type { FurnitureKind, FurnitureSet } from '../data/furniture'
 import type { BaseExterior, BaseVisibility } from '../data/secretBases'
 import type { AimAssist } from '../ui/arenaAim'
 import type { MatchKind, TierId } from '../data/arenaRanked'
-import type { SurveyAnswer } from '../data/survey'
+import type { DesignAspect, DesignRating, SurveyAnswer } from '../data/survey'
 import type { BackgroundId, FrameId, StyleSlot, WallpaperId } from '../data/style'
 import type { BagItem } from '../game/bag'
 import type { ShopLevel, ShopProp } from '../data/shop'
@@ -2184,6 +2184,31 @@ export const pt = {
     later: 'Agora não',
     thanks: 'Valeu! Sua resposta ajuda a ajustar o jogo.',
     hintKeys: '↑ ↓ dificuldade · ← → resposta · ENTER confirmar · ESC fechar',
+    hintTouch: 'Toque para responder',
+  },
+
+  /** The survey on the redesign (`designSurveyScreen`). */
+  designSurvey: {
+    title: 'NOVO VISUAL',
+    open: 'Pesquisa: o que você acha do novo visual?',
+    question: 'O que você achou do novo visual do jogo?',
+    ratings: { 1: 'Não gostei', 2: 'Achei fraco', 3: 'Tanto faz', 4: 'Gostei', 5: 'Adorei' } satisfies Record<DesignRating, string>,
+    pickRating: 'Escolha uma Poké Ball',
+    aspectsQuestion: 'O que mais chamou sua atenção? (até 2)',
+    aspects: {
+      easyToFind: 'Acho tudo fácil',
+      hardToFind: 'Difícil de achar as coisas',
+      niceLook: 'Ficou bonito',
+      badLook: 'Não curti o visual',
+      readable: 'Fácil de ler',
+      hardToRead: 'Difícil de ler',
+    } satisfies Record<DesignAspect, string>,
+    send: 'Enviar',
+    later: 'Agora não',
+    never: 'Não perguntar mais',
+    close: 'Fechar',
+    thanks: 'Valeu! Sua resposta ajuda a melhorar o jogo.',
+    hintKeys: '← → ↑ ↓ mover · ENTER escolher · ESC fechar',
     hintTouch: 'Toque para responder',
   },
 
