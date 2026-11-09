@@ -88,6 +88,7 @@ export const siteEs: SiteMessages = {
     eventNote: 'Aparece en los eventos del mapa: huye de ti y suelta monedas con cada golpe. Derríbalo antes de que escape para ganarte el Pay Day.',
     companionNote: 'Compañero de regalo: llega a la caja de regalos de quienes apoyan durante la Noche de Brujas y camina a tu lado en la partida, dejando un rastro de dulces.',
     cameoNote: 'No es un enemigo: aparece por un instante en la grieta de Darkrai durante la Noche de Brujas y rompe la pesadilla con Lunar Wing.',
+    summonNote: 'No es un enemigo: es el Dondozo que Tatsugiri llama con Comandante, para unos segundos de ataques pesados.',
     lobbyNote: 'El sastre de la Boutique, en la plaza del lobby: cose con hojas los estilos que vende la tienda de gemas.',
     wildNote: 'Valores base. Los enemigos comunes se vuelven más fuertes cada minuto; los jefes, no.',
     appears: 'Cuándo aparece',

@@ -21,6 +21,8 @@ import { updateBiomes } from './biomes'
 import { START_BIOME } from '../data/biomes'
 import { healPlayer } from './combat'
 import { createDexLog } from './dex'
+import { createSeasonKit } from './seasonOneKitRules'
+import { updateSeasonKit } from './seasonOneKitSystem'
 import { FRESH_LEVELUPS } from './learnsets'
 import { DEFAULT_DIFFICULTY, type Difficulty } from './difficulty'
 import { updateBosses, updateHazards } from './bosses'
@@ -100,6 +102,12 @@ export const LEGEND_RADIUS = 8
 export const playerRadius = (dex: number, legend: boolean) => {
   const r = Math.max(6, dm.round(bodyOf(dex).bodyW * 0.3))
   return legend ? Math.min(LEGEND_RADIUS, r) : r
+}
+
+/** `Player.kit` for a family with a mechanic of its own; nothing at all for anyone else, so their state hashes the same (`createSeasonKit`). */
+const kitField = (starter: PlayableId) => {
+  const kit = createSeasonKit(starter)
+  return kit ? { kit } : {}
 }
 
 /** What the save brings into a run besides the Poké Mart ranks. */
@@ -218,6 +226,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     revive: 0,
     record: createRecord(),
     hits: [],
+    ...kitField(setup.starter),
   }
 }
 
@@ -862,6 +871,7 @@ export const stepPlayer = (g: Game, input: StepInput, dt: number) => {
 /** A player's moves: their kit's running state, signatures, shop TMs, legendary move, the casts and duo moves. */
 export const stepMoves = (g: Game, input: StepInput, dt: number) => {
   updateMoveKit(g, dt)
+  updateSeasonKit(g, dt)
   updateSignatures(g, dt)
   updateShopTms(g, dt)
   updateLegendary(g)

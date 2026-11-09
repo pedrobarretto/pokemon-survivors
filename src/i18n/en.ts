@@ -135,7 +135,7 @@ export const en: Messages = {
     specialTitle: (name) => `${name} (Space)`,
     lunge: 'Lunge',
     lungeTitle: (name) => `${name} (Shift)`,
-    stances: { shield: 'Shield', blade: 'Blade', normal: 'Normal', attack: 'Attack', defense: 'Defense', speed: 'Speed' },
+    stances: { shield: 'Shield', blade: 'Blade', normal: 'Normal', attack: 'Attack', defense: 'Defense', speed: 'Speed', heat: 'Oven', wash: 'Washer', frost: 'Fridge', fan: 'Fan', mow: 'Mower' },
     jumps: (n) => `×${n}`,
   },
 
@@ -5638,6 +5638,7 @@ export const en: Messages = {
     braveBird: 'Dives into the nearest foe. Press again right after a hit to jump to the next one.',
     ironHead: 'Lunges blade first into the nearest foe. Press again right after a hit to jump to the next one.',
     stanceChange: 'Swaps between Shield Forme (−30% damage taken, moves ×0.7) and Blade Forme (moves ×1.3, +10% damage taken).',
+    applianceChange: 'Rotom swaps appliance: Oven, Washer, Fridge, Fan or Mower. Each changes Discharge’s type and shape.',
     formeChange: 'Cycles Normal, Attack (moves ×1.35, +25% damage taken), Defense (−40% damage taken, moves ×0.75) and Speed Forme (+35% speed).',
     dragonFlare: 'A long dash in blue dragon flames, with a fire trail and a blast at the end.',
     psystrike: 'Three huge psychic waves around you that push and slow.',

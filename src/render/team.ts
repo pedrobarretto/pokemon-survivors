@@ -16,6 +16,8 @@ import { orbGlyph, TEAM_COLORS, TEAM_LIGHT } from './vale'
 import { concealed } from './valeGrass'
 import { drawPlateTag, plateOf } from './arenaPlates'
 import { VERSUS } from '../data/versus'
+import { seasonKitForm } from '../game/seasonOneKitRules'
+import { weatherHere } from '../game/weather'
 
 /**
  * Co-op in the world, draw-only: every teammate's Pokémon with a ring at its
@@ -117,6 +119,8 @@ export const busyWith = (p: Player): TeamIcon | null => {
 const mateSprites = (g: Game, p: Player): SpeciesSprites => {
   const dex = formAt(p.starter, p.branch, p.stage).dex
   const skin = skinFor(shownLook(g, p.slot), dex)
+  const form = seasonKitForm(p.kit, p.stage, weatherHere(g))
+  if (form) return sprites(dex, p.shiny, form)
   if (p.mega.active <= 0) return (skin && skinSprites(skin, dex, p.shiny)) || sprites(dex, p.shiny)
   const before = actAs(g, p)
   const def = heldMega(g)

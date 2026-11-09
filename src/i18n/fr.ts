@@ -135,7 +135,7 @@ export const fr: Messages = {
     specialTitle: (name) => `${name} (Espace)`,
     lunge: 'Ruée',
     lungeTitle: (name) => `${name} (Maj)`,
-    stances: { shield: 'Bouclier', blade: 'Lame', normal: 'Normal', attack: 'Attaque', defense: 'Défense', speed: 'Vitesse' },
+    stances: { shield: 'Bouclier', blade: 'Lame', normal: 'Normal', attack: 'Attaque', defense: 'Défense', speed: 'Vitesse', heat: 'Four', wash: 'Laveuse', frost: 'Frigo', fan: 'Ventilo', mow: 'Tondeuse' },
     jumps: (n) => `×${n}`,
   },
 
@@ -5634,6 +5634,7 @@ export const fr: Messages = {
     braveBird: 'Pique sur l’ennemi le plus proche. Appuie de nouveau juste après un coup pour sauter au suivant.',
     ironHead: 'Bondit lame en avant sur l’ennemi le plus proche. Appuie de nouveau juste après un coup pour sauter au suivant.',
     stanceChange: 'Alterne entre Shield Forme (−30% de dégâts subis, capacités ×0,7) et Blade Forme (capacités ×1,3, +10% de dégâts subis).',
+    applianceChange: 'Rotom change d’appareil : Four, Laveuse, Frigo, Ventilo ou Tondeuse. Chacun change le type et la forme de Discharge.',
     formeChange: 'Alterne Forme Normale, Attaque (capacités ×1,35, +25% de dégâts subis), Défense (−40% de dégâts subis, capacités ×0,75) et Vitesse (+35% de vitesse).',
     dragonFlare: 'Une longue ruée dans des flammes de dragon bleues, avec une traînée de feu et une explosion à la fin.',
     psystrike: 'Trois énormes ondes psychiques autour de toi qui repoussent et ralentissent.',

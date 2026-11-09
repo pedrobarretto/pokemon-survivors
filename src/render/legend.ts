@@ -3,6 +3,8 @@ import { hash2 } from '../engine/rng'
 import { PLAYABLE } from '../data/hatchlings'
 import { playerDex } from '../game/game'
 import { legendLook } from '../game/legend'
+import { seasonKitForm } from '../game/seasonOneKitRules'
+import { weatherHere } from '../game/weather'
 import type { Game } from '../game/types'
 import { skinFor } from '../data/cosmetics'
 import { shownLook } from './looks'
@@ -37,7 +39,7 @@ export const LEGEND_MIN_HEIGHT = 30
 export const playerSprites = (g: Game, megaForm?: FormKey): SpeciesSprites => {
   const p = g.player
   const stance = p.special.stance
-  const form = megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined)
+  const form = megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined) ?? seasonKitForm(p.kit, p.stage, weatherHere(g))
   const dex = playerDex(g)
   const skin = form === undefined ? skinFor(shownLook(g, p.slot), dex) : null
   const s = (skin && skinSprites(skin, dex, p.shiny)) || sprites(dex, p.shiny, form)
