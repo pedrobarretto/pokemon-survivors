@@ -139,8 +139,6 @@ import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from '.
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
 import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
-import { uiZoom } from './ui/uiScale'
-import { createLobbyStage, createStageClouds, drawLobbyStage, stageDex } from './render/lobbyStage'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
@@ -521,15 +519,11 @@ let megaQueued = false
 let lungeQueued = false
 /** The meadow with wandering Pokémon behind every menu. Lives across screens, so it never pops. */
 const scene = createTitleScene(Date.now())
-/** The rest screen's side-view stage (`render/lobbyStage.ts`), and whether it's what the canvas shows now. */
-const lobbyStage = createLobbyStage()
-const stageClouds = createStageClouds()
-let stageUp = false
 
 /** Lobbies that met the partner so far: only the latest one may send it away (the next title is built before the last one goes). */
 let meetings = 0
 
-/** The title's handle on its world: the side-view stage on the rest screen, and the top-down meadow the lobby stands on, its partner hopping through it on a trip with the supporter's companion. */
+/** The title's handle on its world: the top-down meadow behind the rest screen and the lobby, its partner hopping through it on a trip with the supporter's companion. */
 const meadow: Meadow = {
   meet: (partner) => {
     const id = ++meetings
@@ -545,14 +539,7 @@ const meadow: Meadow = {
     visitPlaza(scene, to, view.w, view.h, instant)
   },
   at: () => sceneAt(scene),
-  stage: (draw, dt, w, h, at) => {
-    stageUp = true
-    drawLobbyStage(draw, lobbyStage, w, h, at, halloweenToday(), dt)
-  },
-  clouds: stageClouds.el,
-  tickClouds: (w, horizon) => stageClouds.tick(lobbyStage, w, horizon, cssScale, window.devicePixelRatio || 1, uiZoom(), halloweenToday()),
   draw: (draw, dt, w, h, covers) => {
-    stageUp = false
     stepTitleScene(scene, dt, w, h, covers ?? undefined)
     drawTitleScene(draw, scene, w, h, covers !== null)
   },
@@ -1247,8 +1234,6 @@ const lobbySprites = (): Variant[] => {
     ...(c && canWalkWith(save, c, knownTier(save)) ? [{ dex: companionForm(c.id).dex, shiny: c.shiny }] : []),
     { dex: outbreak, shiny: false },
     { dex: outbreak, shiny: true },
-    // The rest screen's stage, while it shows: the Pokémon around its platform, on its ridge and in its sky.
-    ...(stageUp ? stageDex().map((dex) => ({ dex, shiny: false })) : []),
   ]
 }
 
