@@ -25,6 +25,9 @@ const px = (ctx: Ctx, x: number, y: number, color: string, w = 1, h = 1) => {
   ctx.fillRect(Math.round(x), Math.round(y), w, h)
 }
 
+/** Dazzling Gleam's three bands, outermost first. */
+const GLEAM_BANDS = ['#f8a8d8', '#c0a8f8', '#98e0f0'] as const
+
 const fadeOut = (a: Attack, window: number) => Math.max(0, Math.min(1, (a.ttl - a.age) / window))
 
 /** The way a moving hitbox goes. */
@@ -282,6 +285,35 @@ export const drawEgg3Attack = (ctx: Ctx, a: Attack, t: number) => {
       }
       dashedRing(ctx, a.x, a.y, r + 3, t * 5, ['#f8c8e0', '#ffffff'], 0.35)
       blitRotated(ctx, EGG3_FX.moon(), a.x, a.y, 0, scale)
+      return
+    }
+    case 'dazzlingGleam': {
+      // A pastel flash from the horn: a soft disc, three bands sweeping out to the hit's edge and stars blinking on the rim.
+      const e = Math.min(1, a.age / (a.ttl * 0.7))
+      const grow = r * (1 - (1 - e) * (1 - e) * 0.65)
+      const fade = Math.max(0, 1 - a.age / a.ttl)
+      ctx.globalAlpha = fade * 0.28
+      ctx.fillStyle = '#f8d8f0'
+      for (let dy = -Math.round(grow); dy <= grow; dy++) {
+        const half = Math.round(Math.sqrt(Math.max(0, grow * grow - dy * dy)))
+        ctx.fillRect(Math.round(a.x) - half, Math.round(a.y) + dy, half * 2 + 1, 1)
+      }
+      ctx.globalAlpha = fade
+      for (const [i, color] of GLEAM_BANDS.entries()) {
+        const band = Math.max(1, grow - i * 6)
+        dashedRing(ctx, a.x, a.y, band, a.id + i, [color], 1)
+        dashedRing(ctx, a.x, a.y, band - 1, a.id + i + 0.5, [i === 0 ? '#ffffff' : color], 1)
+      }
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * TAU + a.id
+        const sx = a.x + Math.cos(angle) * grow
+        const sy = a.y + Math.sin(angle) * grow
+        px(ctx, sx - 3, sy, '#ffffff', 7, 1)
+        px(ctx, sx, sy - 3, '#ffffff', 1, 7)
+        px(ctx, sx - 1, sy - 1, GLEAM_BANDS[i % GLEAM_BANDS.length]!, 3, 3)
+        px(ctx, sx, sy, '#ffffff')
+      }
+      ctx.globalAlpha = 1
       return
     }
     case 'moonBurst': {

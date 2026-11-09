@@ -39,6 +39,7 @@ import { loadSave, today, updateSave } from './save'
 import { typeBadge, type Screen } from './screens'
 import { actionBar, backButton, gearButton, segmented, shellScreen, topBar, walletChip } from './shell'
 import { detailsSheet, evoLine, shinyPicker, statBars } from './partnerDetails'
+import { nationalDex } from '../data/regionalForms'
 import { stepGrid, type Step } from './gridNav'
 
 /**
@@ -422,7 +423,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           h(
             'div',
             { class: 'partner-id' },
-            h('small', { class: 'partner-dex' }, `#${String(form.dex).padStart(3, '0')}`),
+            h('small', { class: 'partner-dex' }, `#${String(nationalDex(form.dex)).padStart(3, '0')}`),
             h('h3', { class: 'partner-name' }, form.name),
             !gift && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
             !over && !gift && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
@@ -476,7 +477,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
         h(
           'div',
           { class: 'partner-id' },
-          h('small', { class: 'partner-dex' }, `#${String(form.dex).padStart(3, '0')}`),
+          h('small', { class: 'partner-dex' }, `#${String(nationalDex(form.dex)).padStart(3, '0')}`),
           h('h3', { class: 'partner-name' }, form.name),
           h('div', { class: 'types' }, ...form.types.map(typeBadge)),
           level && h('p', { class: 'partner-clear' }, h('img', { src: trophyIcon(level), alt: '' }), m.dex.clearedOn(m.difficulty.names[level])),

@@ -759,6 +759,8 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...EGG_MOVE_2_ICONS,
   ...DUO_ICONS,
   powderSnow: () => FX.snowflake(),
+  flareBlitz: () => FX.flame()[0]!,
+  dazzlingGleam: () => art(STAR, { 1: '#b878d8', 2: '#f8b8e0', 3: '#ffffff' }, '#402060'),
   electroweb: () => art(CHAIN, { 2: '#c8e830', 3: '#ffffff' }, '#383810'),
   corrosiveGas: () => VERB_FX.glob(),
   magicCoat: () => FX.heart(),

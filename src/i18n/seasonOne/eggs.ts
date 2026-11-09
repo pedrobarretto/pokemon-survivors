@@ -9,7 +9,7 @@ import type { ContentTexts } from '../pt'
 type Words = {
   blurbs: Record<keyof typeof SEASON_ONE_EGGS, string>
   moves: Pick<ContentTexts['moves'], SeasonOneEggMoveId>
-  abilities: Record<never, string>
+  abilities: { pastelVeil: string }
 }
 
 export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
@@ -26,6 +26,8 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
       archen: 'Bate, voa para longe e volta. Rápido, mas frágil.',
       tyrunt: 'Quanto mais morde o mesmo alvo, mais forte morde.',
       amaura: 'Uma aurora larga que gela tudo em volta.',
+      ponyta: 'Quanto mais rápido galopa, mais queima. Parado, quase não arde.',
+      ponytaGalar: 'Um clarão pastel em volta, que cura um pouco a cada golpe.',
     },
     moves: {
       powderSnow: {
@@ -72,8 +74,16 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
         description: 'Um campo de aurora em volta de você que deixa lento quem toca e às vezes congela. O tamanho tem limite.',
         upgrades: ['+2 de dano', '+12% de área', { fork: [{ name: 'Aurora Explosiva', desc: 'Inimigos derrotados explodem; +2 de dano' }, { name: 'Aurora Puxante', desc: 'O campo puxa inimigos; +0,4 s de duração' }] }, '+2 de dano', '0,4 s a menos de recarga', { fork: [{ name: 'Aurora Caçadora', desc: '×1,5 em elites e chefes; +8% de congelar' }, { name: 'Arco de Aurora', desc: 'Faíscas saltam ao redor; +15% de área e +1 de dano' }] }, '+4 de dano e +0,3 s de duração'],
       },
+      flareBlitz: {
+        description: 'Queima em volta e, por alguns segundos, deixa fogo por onde pisa. Quanto mais rápido você corre, mais forte; parado, quase não arde.',
+        upgrades: ['+2 de dano', '+0,4 s de duração', { fork: [{ name: 'Crina Explosiva', desc: 'Inimigos derrotados explodem; +15% de área e +1 de dano' }, { name: 'Fagulha Solta', desc: 'As chamas saltam para inimigos próximos; 0,3 s a menos de recarga' }] }, '+3 de dano', '0,3 s a menos de recarga', { fork: [{ name: 'Galope de Caça', desc: '×1,5 em elites e chefes; +0,6 s de duração' }, { name: 'Cascos Cruéis', desc: '×1,35 em inimigos afligidos; +20% de área' }] }, '+4 de dano e +15% de área'],
+      },
+      dazzlingGleam: {
+        description: 'Um clarão pastel em volta de você confunde alguns inimigos, e parte do dano cura você.',
+        upgrades: ['+3 de dano', '+15% de área', { fork: [{ name: 'Brilho Explosivo', desc: 'Inimigos derrotados explodem; 0,3 s a menos de recarga' }, { name: 'Chifre Caçador', desc: '×1,5 em elites e chefes; +3 de dano' }] }, '+4 de dano', '+15% de área', { fork: [{ name: 'Luz Cruel', desc: '×1,35 em inimigos afligidos; 0,4 s a menos de recarga' }, { name: 'Arco-Íris', desc: 'Faíscas saltam do clarão; +20% de área' }] }, '+5 de dano e +15% de área'],
+      },
     },
-    abilities: {},
+    abilities: { pastelVeil: 'Recebe 60% menos dano de Veneno e recupera vida aos poucos.' },
   },
   en: {
     blurbs: {
@@ -88,6 +98,8 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
       archen: 'Strikes, flies off, comes back. Fast and fragile.',
       tyrunt: 'The more it bites one target, the harder it bites.',
       amaura: 'A wide aurora that chills everything around it.',
+      ponyta: 'The faster it gallops, the more it burns. Standing still, it barely smolders.',
+      ponytaGalar: 'A pastel flash all around that heals a little with every hit.',
     },
     moves: {
       powderSnow: {
@@ -134,8 +146,16 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
         description: 'An aurora field around you that slows what it touches and sometimes freezes it. Its size has a limit.',
         upgrades: ['+2 damage', '+12% area', { fork: [{ name: 'Bursting Aurora', desc: 'Defeated foes explode; +2 damage' }, { name: 'Pulling Aurora', desc: 'The field pulls foes in; +0.4s duration' }] }, '+2 damage', '0.4s faster cooldown', { fork: [{ name: 'Hunter Aurora', desc: '×1.5 on elites and bosses; +8% freeze' }, { name: 'Aurora Arc', desc: 'Sparks jump around; +15% area and +1 damage' }] }, '+4 damage and +0.3s duration'],
       },
+      flareBlitz: {
+        description: 'Burns all around you and, for a few seconds, leaves fire where you step. The faster you run, the stronger it gets; standing still, it barely smolders.',
+        upgrades: ['+2 damage', '+0.4s duration', { fork: [{ name: 'Blazing Mane', desc: 'Defeated foes explode; +15% area and +1 damage' }, { name: 'Loose Sparks', desc: 'The flames jump to nearby foes; 0.3s faster cooldown' }] }, '+3 damage', '0.3s faster cooldown', { fork: [{ name: 'Hunting Gallop', desc: '×1.5 on elites and bosses; +0.6s duration' }, { name: 'Cruel Hooves', desc: '×1.35 on afflicted foes; +20% area' }] }, '+4 damage and +15% area'],
+      },
+      dazzlingGleam: {
+        description: 'A pastel flash around you confuses some foes, and part of the damage heals you.',
+        upgrades: ['+3 damage', '+15% area', { fork: [{ name: 'Bursting Gleam', desc: 'Defeated foes explode; 0.3s faster cooldown' }, { name: 'Hunting Horn', desc: '×1.5 on elites and bosses; +3 damage' }] }, '+4 damage', '+15% area', { fork: [{ name: 'Cruel Light', desc: '×1.35 on afflicted foes; 0.4s faster cooldown' }, { name: 'Rainbow', desc: 'Sparks jump from the flash; +20% area' }] }, '+5 damage and +15% area'],
+      },
     },
-    abilities: {},
+    abilities: { pastelVeil: 'You take 60% less Poison damage and slowly regain HP.' },
   },
   es: {
     blurbs: {
@@ -150,6 +170,8 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
       archen: 'Golpea, se aleja volando y vuelve. Rápido y frágil.',
       tyrunt: 'Cuanto más muerde al mismo blanco, más fuerte muerde.',
       amaura: 'Una aurora amplia que hiela todo a su alrededor.',
+      ponyta: 'Cuanto más rápido galopa, más quema. Quieto, apenas arde.',
+      ponytaGalar: 'Un destello pastel alrededor que cura un poco con cada golpe.',
     },
     moves: {
       powderSnow: {
@@ -196,8 +218,16 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
         description: 'Un campo de aurora a tu alrededor que ralentiza lo que toca y a veces lo congela. Su tamaño tiene un límite.',
         upgrades: ['+2 de daño', '+12% de área', { fork: [{ name: 'Aurora Explosiva', desc: 'Los enemigos derrotados explotan; +2 de daño' }, { name: 'Aurora Atrayente', desc: 'El campo atrae enemigos; +0,4 s de duración' }] }, '+2 de daño', '0,4 s menos de recarga', { fork: [{ name: 'Aurora Cazadora', desc: '×1,5 contra élites y jefes; +8% de congelar' }, { name: 'Arco de Aurora', desc: 'Saltan chispas alrededor; +15% de área y +1 de daño' }] }, '+4 de daño y +0,3 s de duración'],
       },
+      flareBlitz: {
+        description: 'Quema a tu alrededor y, durante unos segundos, deja fuego donde pisas. Cuanto más rápido corres, más fuerte; quieto, apenas arde.',
+        upgrades: ['+2 de daño', '+0,4 s de duración', { fork: [{ name: 'Crin Explosiva', desc: 'Los enemigos derrotados explotan; +15% de área y +1 de daño' }, { name: 'Chispa Suelta', desc: 'Las llamas saltan a enemigos cercanos; 0,3 s menos de recarga' }] }, '+3 de daño', '0,3 s menos de recarga', { fork: [{ name: 'Galope de Caza', desc: '×1,5 contra élites y jefes; +0,6 s de duración' }, { name: 'Cascos Crueles', desc: '×1,35 contra enemigos afectados; +20% de área' }] }, '+4 de daño y +15% de área'],
+      },
+      dazzlingGleam: {
+        description: 'Un destello pastel a tu alrededor confunde a algunos enemigos, y parte del daño te cura.',
+        upgrades: ['+3 de daño', '+15% de área', { fork: [{ name: 'Brillo Explosivo', desc: 'Los enemigos derrotados explotan; 0,3 s menos de recarga' }, { name: 'Cuerno Cazador', desc: '×1,5 contra élites y jefes; +3 de daño' }] }, '+4 de daño', '+15% de área', { fork: [{ name: 'Luz Cruel', desc: '×1,35 contra enemigos afectados; 0,4 s menos de recarga' }, { name: 'Arcoíris', desc: 'Saltan chispas del destello; +20% de área' }] }, '+5 de daño y +15% de área'],
+      },
     },
-    abilities: {},
+    abilities: { pastelVeil: 'Recibes 60% menos de daño de Veneno y recuperas vida poco a poco.' },
   },
   fr: {
     blurbs: {
@@ -212,6 +242,8 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
       archen: 'Frappe, s’envole et revient. Rapide mais fragile.',
       tyrunt: 'Plus il mord la même cible, plus il mord fort.',
       amaura: 'Une large aurore qui glace tout autour.',
+      ponyta: 'Plus il galope vite, plus il brûle. À l’arrêt, il couve à peine.',
+      ponytaGalar: 'Un éclat pastel tout autour qui soigne un peu à chaque coup.',
     },
     moves: {
       powderSnow: {
@@ -258,8 +290,16 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
         description: 'Un champ d’aurore autour de vous qui ralentit ce qu’il touche et parfois le gèle. Sa taille a une limite.',
         upgrades: ['+2 dégâts', '+12 % de zone', { fork: [{ name: 'Aurore Explosive', desc: 'Les ennemis vaincus explosent ; +2 dégâts' }, { name: 'Aurore Attirante', desc: 'Le champ attire les ennemis ; +0,4 s de durée' }] }, '+2 dégâts', 'Recharge -0,4 s', { fork: [{ name: 'Aurore Chasseuse', desc: '×1,5 sur les élites et les boss ; +8 % de gel' }, { name: 'Arc d’Aurore', desc: 'Des étincelles sautent autour ; +15 % de zone et +1 dégât' }] }, '+4 dégâts et +0,3 s de durée'],
       },
+      flareBlitz: {
+        description: 'Brûle autour de vous et, pendant quelques secondes, laisse du feu sous vos pas. Plus vous courez vite, plus c’est fort ; à l’arrêt, ça couve à peine.',
+        upgrades: ['+2 dégâts', '+0,4 s de durée', { fork: [{ name: 'Crinière Explosive', desc: 'Les ennemis vaincus explosent ; +15 % de zone et +1 dégât' }, { name: 'Flammèches', desc: 'Les flammes sautent vers les ennemis proches ; recharge -0,3 s' }] }, '+3 dégâts', 'Recharge -0,3 s', { fork: [{ name: 'Galop de Chasse', desc: '×1,5 sur les élites et les boss ; +0,6 s de durée' }, { name: 'Sabots Cruels', desc: '×1,35 sur les ennemis affligés ; +20 % de zone' }] }, '+4 dégâts et +15 % de zone'],
+      },
+      dazzlingGleam: {
+        description: 'Un éclat pastel autour de vous déroute certains ennemis, et une partie des dégâts vous soigne.',
+        upgrades: ['+3 dégâts', '+15 % de zone', { fork: [{ name: 'Éclat Explosif', desc: 'Les ennemis vaincus explosent ; recharge -0,3 s' }, { name: 'Corne de Chasse', desc: '×1,5 sur les élites et les boss ; +3 dégâts' }] }, '+4 dégâts', '+15 % de zone', { fork: [{ name: 'Lumière Cruelle', desc: '×1,35 sur les ennemis affligés ; recharge -0,4 s' }, { name: 'Arc-en-Ciel', desc: 'Des étincelles jaillissent de l’éclat ; +20 % de zone' }] }, '+5 dégâts et +15 % de zone'],
+      },
     },
-    abilities: {},
+    abilities: { pastelVeil: 'Tu subis 60% de dégâts Poison en moins et récupères lentement des PV.' },
   },
   zh: {
     blurbs: {
@@ -274,6 +314,8 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
       archen: '攻擊、飛走、再回來。速度快但脆弱。',
       tyrunt: '咬同一目標越久，咬得越重。',
       amaura: '廣闊的極光讓周圍一切結凍。',
+      ponyta: '跑得越快燒得越旺，停下來幾乎不燃燒。',
+      ponytaGalar: '四周綻放柔和閃光，每次命中都恢復少許體力。',
     },
     moves: {
       powderSnow: {
@@ -320,7 +362,15 @@ export const SEASON_ONE_EGGS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Wor
         description: '在周圍展開極光場，使接觸者減速，有時使其冰凍。範圍有上限。',
         upgrades: ['傷害 +2', '範圍 +12%', { fork: [{ name: '爆裂極光', desc: '被擊敗的敵人爆炸；傷害 +2' }, { name: '牽引極光', desc: '光場吸引敵人；持續 +0.4 秒' }] }, '傷害 +2', '冷卻 -0.4 秒', { fork: [{ name: '獵殺極光', desc: '對精英與頭目 ×1.5；冰凍機率 +8%' }, { name: '極光弧', desc: '四周迸出火花；範圍 +15%、傷害 +1' }] }, '傷害 +4、持續 +0.3 秒'],
       },
+      flareBlitz: {
+        description: '灼燒周圍，並在數秒內於腳下留下火焰。跑得越快威力越強；停下來幾乎不燃燒。',
+        upgrades: ['傷害 +2', '持續 +0.4 秒', { fork: [{ name: '爆裂鬃毛', desc: '被擊敗的敵人爆炸；範圍 +15%、傷害 +1' }, { name: '飛散火花', desc: '火焰跳向附近敵人；冷卻 -0.3 秒' }] }, '傷害 +3', '冷卻 -0.3 秒', { fork: [{ name: '獵殺奔馳', desc: '對精英與頭目 ×1.5；持續 +0.6 秒' }, { name: '殘酷馬蹄', desc: '對異常狀態敵人 ×1.4；範圍 +20%' }] }, '傷害 +4、範圍 +15%'],
+      },
+      dazzlingGleam: {
+        description: '在周圍綻放柔和閃光，使部分敵人混亂，部分傷害治療自己。',
+        upgrades: ['傷害 +3', '範圍 +15%', { fork: [{ name: '爆裂光芒', desc: '被擊敗的敵人爆炸；冷卻 -0.3 秒' }, { name: '獵殺之角', desc: '對精英與頭目 ×1.5；傷害 +3' }] }, '傷害 +4', '範圍 +15%', { fork: [{ name: '殘酷之光', desc: '對異常狀態敵人 ×1.4；冷卻 -0.4 秒' }, { name: '彩虹', desc: '閃光迸出火花；範圍 +20%' }] }, '傷害 +5、範圍 +15%'],
+      },
     },
-    abilities: {},
+    abilities: { pastelVeil: '受到的毒屬性傷害減少60%，並緩慢恢復HP。' },
   },
 }

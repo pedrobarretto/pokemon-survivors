@@ -75,3 +75,12 @@ export const veilRadius = (area: number) => Math.min(VEIL.maxR, VEIL.r * area)
 
 /** The veil's freeze chance, held to `VEIL.maxFreeze` whatever items add. */
 export const veilFreeze = (chance: number) => Math.min(VEIL.maxFreeze, chance)
+
+/** Ponyta's Flare Blitz: the fire it leaves, the ring at each cast, and how speed feeds it (68 is the base walk; standing still it barely burns). */
+export const BLITZ = { every: 14, r: 12, ttl: 1.4, hitInterval: 0.4, share: 0.6, ring: 34, walk: 68, perSpeed: 0.02, max: 1.8, still: 0.5 } as const
+
+/** How hard Flare Blitz burns at this speed: never below 1 while running, `BLITZ.still` standing. */
+export const blitzPower = (speed: number, moving: boolean) => (moving ? Math.min(BLITZ.max, 1 + Math.max(0, speed - BLITZ.walk) * BLITZ.perSpeed) : BLITZ.still)
+
+/** Galarian Ponyta's Dazzling Gleam: the flash's radius and the share of its damage that heals, within the drain budget. */
+export const GLEAM = { r: 50, drain: 0.12 } as const

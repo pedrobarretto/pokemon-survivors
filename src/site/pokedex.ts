@@ -15,6 +15,7 @@ import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
 import { TAILOR } from '../data/visitors'
 import { EVENT_LEGENDS, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
+import { nationalDex, regionalGen } from '../data/regionalForms'
 
 /**
  * The site's Pokédex model: every species the game uses, derived from
@@ -69,7 +70,10 @@ export type DexEntry = {
 const LAST_DEX = [151, 251, 386, 493, 649, 721, 809, 905, 1025] as const
 
 /** Main-series region a species debuted in, from its national dex number. */
-export const regionOf = (dex: number): Region => REGIONS.find((r) => dex <= (LAST_DEX[r.gen - 1] ?? Infinity)) ?? REGIONS[REGIONS.length - 1]!
+export const regionOf = (dex: number): Region => {
+  const gen = regionalGen(dex)
+  return REGIONS.find((r) => (gen === undefined ? dex <= (LAST_DEX[r.gen - 1] ?? Infinity) : r.gen === gen)) ?? REGIONS[REGIONS.length - 1]!
+}
 
 export const slugOf = (name: string) =>
   name
@@ -153,7 +157,8 @@ const lobbyEntries = (): DexEntry[] => [{ ...base(TAILOR.dex, TAILOR.name, TAILO
 /** Who a family's mechanic calls in (Tatsugiri's Dondozo), as event Pokémon. */
 const summonEntries = (): DexEntry[] => [{ ...base(977, 'Dondozo', ['water']), role: 'event', source: { kind: 'summon' } }]
 
-const byDex = (a: DexEntry, b: DexEntry) => a.dex - b.dex
+/** National order, a regional form right after its species. */
+const byDex = (a: DexEntry, b: DexEntry) => nationalDex(a.dex) - nationalDex(b.dex) || a.dex - b.dex
 
 /**
  * The in-game Pokédex, in national dex order: every species a run can bring,
