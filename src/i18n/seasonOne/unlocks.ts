@@ -5,7 +5,7 @@
  */
 type UnlockWords = {
   /** The partner select's locked card. */
-  where: Record<'mankey' | 'goomy' | 'tatsugiri' | 'wishiwashi' | 'rotom' | 'castform', string>
+  where: Record<'mankey' | 'goomy' | 'tatsugiri' | 'wishiwashi' | 'rotom' | 'castform' | 'mimikyu' | 'morpeko' | 'tandemaus', string>
   /** The locked card of the five fossil families. */
   fossilBlurb: string
   /** Why the family came, in the gift box. */
@@ -26,6 +26,9 @@ type UnlockWords = {
 export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', UnlockWords> = {
   pt: {
     where: {
+      mimikyu: "Às vezes está na *Máquina de Pelúcias*, no Fliperama do Poké Realm. Precisa de conta.",
+      morpeko: "Às vezes está na *Máquina de Pelúcias*, no Fliperama do Poké Realm. Precisa de conta.",
+      tandemaus: "Às vezes está na *Máquina de Pelúcias*, no Fliperama do Poké Realm. Precisa de conta.",
       mankey: 'Vem de uma *Pesquisa*: vença apanhando bastante. Veja em Missões, aba Pesquisa.',
       goomy: 'Vem de uma *Pesquisa*: vença com os pés molhados. Veja em Missões, aba Pesquisa.',
       tatsugiri: 'Vem de uma *Pesquisa*: vença com parceiros de Água ou Dragão. Veja em Missões, aba Pesquisa.',
@@ -54,6 +57,9 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
   },
   en: {
     where: {
+      mimikyu: "Sometimes in the *Plush Claw Machine*, at the Poké Realm's Arcade. Needs an account.",
+      morpeko: "Sometimes in the *Plush Claw Machine*, at the Poké Realm's Arcade. Needs an account.",
+      tandemaus: "Sometimes in the *Plush Claw Machine*, at the Poké Realm's Arcade. Needs an account.",
       mankey: 'Comes from *Research*: win after taking a beating. See Missions, Research tab.',
       goomy: 'Comes from *Research*: win with your feet wet. See Missions, Research tab.',
       tatsugiri: 'Comes from *Research*: win with Water or Dragon partners. See Missions, Research tab.',
@@ -82,6 +88,9 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
   },
   es: {
     where: {
+      mimikyu: "A veces está en la *Máquina de Peluches*, en el Arcade del Poké Realm. Necesita cuenta.",
+      morpeko: "A veces está en la *Máquina de Peluches*, en el Arcade del Poké Realm. Necesita cuenta.",
+      tandemaus: "A veces está en la *Máquina de Peluches*, en el Arcade del Poké Realm. Necesita cuenta.",
       mankey: 'Viene de una *Investigación*: gana después de recibir una paliza. Mira Misiones, pestaña Investigación.',
       goomy: 'Viene de una *Investigación*: gana con los pies mojados. Mira Misiones, pestaña Investigación.',
       tatsugiri: 'Viene de una *Investigación*: gana con compañeros de Agua o Dragón. Mira Misiones, pestaña Investigación.',
@@ -110,6 +119,9 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
   },
   fr: {
     where: {
+      mimikyu: "Parfois dans la *Machine à Peluches*, à l'Arcade du Poké Realm. Compte requis.",
+      morpeko: "Parfois dans la *Machine à Peluches*, à l'Arcade du Poké Realm. Compte requis.",
+      tandemaus: "Parfois dans la *Machine à Peluches*, à l'Arcade du Poké Realm. Compte requis.",
       mankey: 'Vient d’une *Recherche* : gagne après avoir pris des coups. Vois Missions, onglet Recherche.',
       goomy: 'Vient d’une *Recherche* : gagne les pieds mouillés. Vois Missions, onglet Recherche.',
       tatsugiri: 'Vient d’une *Recherche* : gagne avec des partenaires Eau ou Dragon. Vois Missions, onglet Recherche.',
@@ -138,6 +150,9 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
   },
   zh: {
     where: {
+      mimikyu: "有時會出現在 Poké Realm 電玩間的*玩偶夾娃娃機*裡。需要帳號。",
+      morpeko: "有時會出現在 Poké Realm 電玩間的*玩偶夾娃娃機*裡。需要帳號。",
+      tandemaus: "有時會出現在 Poké Realm 電玩間的*玩偶夾娃娃機*裡。需要帳號。",
       mankey: '來自*研究*：挨了不少打之後獲勝。請到任務的「研究」分頁查看。',
       goomy: '來自*研究*：在潮濕的地方獲勝。請到任務的「研究」分頁查看。',
       tatsugiri: '來自*研究*：用水系或龍系夥伴獲勝。請到任務的「研究」分頁查看。',
