@@ -1,7 +1,7 @@
 import { spendFromSave } from '../account'
 import { apiCall } from '../api'
 import { CITY_IDS, isCityId } from '../net/realm'
-import type { BaseCard, BaseList, BaseSave, BaseView, FurnitureBought, FurnitureBuy, GameClaim, GameClaimed, RealmCities, RealmFriend, RealmFriends, RealmMe, RealmReport } from '../net/realmApi'
+import type { BaseCard, BaseList, BaseSave, BaseView, ErrandClaimed, ErrandView, FurnitureBought, FurnitureBuy, GameClaim, GameClaimed, RealmBook, RealmCities, RealmFriend, RealmFriends, RealmMe, RealmReport } from '../net/realmApi'
 import type { PresenceReport } from '../net/realmRelay'
 import { ACTIVITIES } from '../game/friends'
 import { ROOM_CAP } from '../data/realmMap'
@@ -14,7 +14,10 @@ import { isRecord } from '../game/parse'
 import { DEMO_BASES } from './demoBases'
 import { fakeGameBoard } from './boardFakes'
 import { boardKeeps, boardPoints, isGameBoardPeriod, type GameBoard, type GameBoardEntry, type GameBoardPeriod } from './boards'
-import { isDayKey } from '../game/day'
+import { brasiliaDay, isDayKey } from '../game/day'
+import { isDeed, isStampId, type StampId } from '../data/realmStamps'
+import { ERRANDS_BONUS, drawErrands } from './errands'
+import { milestonesReached, newStamps } from './stamps'
 
 /**
  * The Poké Realm's calls to the API (`net/realmApi.ts` lists the routes). The
@@ -24,7 +27,8 @@ import { isDayKey } from '../game/day'
  *
  * `ps.realm('fake')` makes every call answer made-up data from `fake` (a
  * base, owned furniture, busy cities, a few friends: `FAKE_FOLLOWED`, the
- * mini games' boards with this session's claims on them), so the realm's
+ * mini games' boards with this session's claims on them, a book of Estampas
+ * halfway through with today's Recados), so the realm's
  * screens work without an API.
  */
 
@@ -37,6 +41,8 @@ type Fake = {
   /** What the faked claims paid today and counted, and what they put on the boards (`boardPoints`, the same for the day and the week). */
   games: { day: Partial<Record<MinigameId, number>>; stats: Partial<Record<MinigameId, GameStats>>; board: Partial<Record<MinigameId, number>> }
   showWhere: boolean
+  /** The book as the API would keep it (`fakeBookStart`). */
+  book: RealmBook
 }
 
 let fake: Fake | null = null
@@ -89,10 +95,20 @@ const fakeBase = (handle: string, layout: BaseLayout = DEMO_BASES.mine, partner 
   updatedAt: Date.now(),
 })
 
+/** A book halfway through: a few stamps of each group, today's errands one done, one started, one not. */
+const fakeBookStart = (now: number): RealmBook => {
+  const earned: readonly StampId[] = ['firstSteps', 'tourist', 'errandRunner', 'catNap', 'hello', 'goodCompany', 'neighbor', 'goneFishing', 'tableTalk', 'highTide', 'stormChaser', 'ugliestFish']
+  const counts: Record<string, number> = { 'room:plaza': 3, 'room:pier': 2, 'room:cafe': 1, 'room:trail': 1, 'room:arcade': 4, 'errands:all': 3, napBench: 1, say: 12, 'emote:wave': 3, 'emote:heart': 1, 'emote:laugh': 1, company: 14, 'base:visit': 6, 'game:fishing': 9, 'table:human': 2, 'event:tide': 1, 'event:storm': 1, event: 5, 'feat:fishing:feebas': 1 }
+  const day = brasiliaDay(new Date(now))
+  const errands = drawErrands(day).map((e, i): ErrandView => ({ ...e, progress: i === 0 ? e.target : i === 1 ? Math.max(0, e.target - 1) : 0, claimed: false }))
+  const stamps = earned.map((id, i) => ({ id, at: now - (earned.length - i) * 3_600_000 }))
+  return { stamps, counts, milestones: milestonesReached(stamps.length).map((m) => m.at), errands, day }
+}
+
 /** Dev: every call answers made-up data (on), or the API again (off). */
 export const fakeRealm = (on: boolean, handle = 'ash') => {
   const bases = [fakeBase('misty', DEMO_BASES.misty, 'squirtle', 87, 24), fakeBase('brock', DEMO_BASES.brock, 'geodude', 41, 9)]
-  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])), games: { day: {}, stats: {}, board: {} }, showWhere: true } : null
+  fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])), games: { day: {}, stats: {}, board: {} }, showWhere: true, book: fakeBookStart(Date.now()) } : null
 }
 
 export const realmFaked = () => fake !== null
@@ -338,6 +354,78 @@ export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure
     trophies: Array.isArray(body.trophies) ? body.trophies.filter(isFurnitureId) : [],
     furniture: isRecord(body.furniture) ? parseFurnitureCounts(body.furniture) : null,
   }
+}
+
+/* ---------------- The book and the errands ---------------- */
+
+const parseBook = (v: unknown): RealmBook | null => {
+  if (!isRecord(v) || !Array.isArray(v.stamps) || !isRecord(v.counts) || !Array.isArray(v.milestones) || !Array.isArray(v.errands) || typeof v.day !== 'string') return null
+  const stamps = v.stamps.flatMap((s) => (isRecord(s) && isStampId(s.id) && typeof s.at === 'number' ? [{ id: s.id, at: s.at }] : []))
+  const counts = Object.fromEntries(
+    Object.entries(v.counts).flatMap(([k, n]) => {
+      const c = count(n)
+      return isDeed(k) && c !== null ? [[k, c] as const] : []
+    }),
+  )
+  const errands = v.errands.flatMap((e): ErrandView[] => {
+    if (!isRecord(e) || typeof e.id !== 'string' || typeof e.deed !== 'string') return []
+    const target = count(e.target)
+    const reward = count(e.reward)
+    const progress = count(e.progress)
+    return target !== null && reward !== null && progress !== null ? [{ id: e.id, deed: e.deed, target, reward, progress, claimed: e.claimed === true }] : []
+  })
+  return { stamps, counts, milestones: v.milestones.filter((m): m is number => typeof m === 'number'), errands, day: v.day }
+}
+
+/** The player's Estampas and today's Recados (`GET /realm/book`), or null when the API can't be reached. */
+export const fetchBook = async (): Promise<RealmBook | null> => {
+  if (fake) return fake.book
+  const { status, body } = await apiCall('/realm/book', { auth: true })
+  return status === 200 ? parseBook(body) : null
+}
+
+/** A deed counted once more on the faked book, and whatever stamps that earns (their ids), as the API would. */
+const fakeDeed = (f: Fake, deed: string, now: number): StampId[] => {
+  const counts = { ...f.book.counts, [deed]: (f.book.counts[deed] ?? 0) + 1 }
+  const earned = newStamps(counts, new Set(f.book.stamps.map((s) => s.id)))
+  const stamps = [...f.book.stamps, ...earned.map((id) => ({ id, at: now }))]
+  f.book = { ...f.book, counts, stamps, milestones: milestonesReached(stamps.length).map((m) => m.at) }
+  return earned
+}
+
+/** Collects a finished errand: the caller adds `coins` to the wallet. Faking, it pays and refuses as the API does. */
+export const claimErrand = async (id: string): Promise<ErrandClaimed | Failure> => {
+  if (fake) {
+    const errand = fake.book.errands.find((e) => e.id === id)
+    if (!errand || errand.progress < errand.target) return { error: 'unfinished', status: 409 }
+    if (errand.claimed) return { error: 'claimed', status: 409 }
+    const errands = fake.book.errands.map((e) => (e.id === id ? { ...e, claimed: true } : e))
+    fake.book = { ...fake.book, errands }
+    const last = errands.every((e) => e.claimed)
+    if (last) fakeDeed(fake, 'errands:all', Date.now())
+    return { coins: errand.reward + (last ? ERRANDS_BONUS : 0), book: fake.book }
+  }
+  const { status, body } = await apiCall('/realm/errands/claim', { method: 'POST', body: { id }, auth: true })
+  if (status !== 200 || !isRecord(body)) return failed(status, body)
+  const coins = count(body.coins)
+  const book = parseBook(body.book)
+  return coins !== null && book ? { coins, book } : failed(0, null)
+}
+
+/** Dev: gives the faked book a stamp (with whatever milestone it reaches), as if a deed earned it. Null when it was held already, or nothing's faked. */
+export const fakeStamp = (id: StampId): RealmBook | null => {
+  if (!fake || fake.book.stamps.some((s) => s.id === id)) return null
+  const stamps = [...fake.book.stamps, { id, at: Date.now() }]
+  fake.book = { ...fake.book, stamps, milestones: milestonesReached(stamps.length).map((m) => m.at) }
+  return fake.book
+}
+
+/** Dev: finishes today's faked errands, every one still open; the ids that just finished. */
+export const fakeErrandsDone = (): string[] => {
+  if (!fake) return []
+  const open = fake.book.errands.filter((e) => !e.claimed && e.progress < e.target)
+  fake.book = { ...fake.book, errands: fake.book.errands.map((e) => ({ ...e, progress: Math.max(e.progress, e.target) })) }
+  return open.map((e) => e.id)
 }
 
 export const isFailure = (v: unknown): v is Failure => typeof v === 'object' && v !== null && 'error' in v && 'status' in v

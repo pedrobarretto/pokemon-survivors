@@ -1,3 +1,4 @@
+import { realmBookPt as realmBook } from './realmStamps/pt'
 import type { AchievementId, AchievementStat, GiftTitleId, TitleId } from '../data/achievements'
 import type { BiomeId } from '../data/biomes'
 import type { DigFind, HiddenPlaceId, PlaceId, WingId } from '../data/places'
@@ -885,6 +886,7 @@ export const pt = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm: a cidade online',

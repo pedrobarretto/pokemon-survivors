@@ -1,3 +1,4 @@
+import { realmBookEs as realmBook } from './realmStamps/es'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -687,6 +688,7 @@ export const es: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm: la ciudad en línea',

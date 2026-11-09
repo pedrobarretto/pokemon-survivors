@@ -1,0 +1,905 @@
+/* O livro de Estampas e o mural de Recados (ui/realmBook.ts, ui/realmErrands.ts). */
+
+.rbook-screen,
+.rboard-screen {
+  align-items: center;
+  justify-content: center;
+  padding: calc(8px + var(--safe-t)) calc(8px + var(--safe-r)) calc(8px + var(--safe-b)) calc(8px + var(--safe-l));
+  background: rgba(16, 24, 48, 0.55);
+  overflow: hidden;
+}
+
+/* ---------------- The book ---------------- */
+
+.rbook {
+  --leather: #7c3e28;
+  --leather-d: #4c2415;
+  --gold: #f0c868;
+  --page: #f8efd8;
+  --page-d: #e4d3a8;
+  --ink2: #4a3a28;
+  --stamp: 96px;
+  --big: 144px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  grid-template-areas: 'top top' 'track track' 'tabs tabs' 'spread spread' 'hint hint';
+  width: min(940px, 100%);
+  height: min(620px, 100%);
+  padding: 10px 12px;
+  background: var(--leather);
+  border: 3px solid #2a1810;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 2px #a85f3d, inset 0 0 0 3px var(--leather-d), 0 5px 0 rgba(0, 0, 0, 0.4);
+  color: var(--ink2);
+  position: relative;
+}
+
+/* The cover's stitching. */
+.rbook::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed rgba(240, 200, 104, 0.55);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.rbook-top {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rbook-back {
+  flex: none;
+  padding: 7px 10px;
+  border: 2px solid #2a1810;
+  border-radius: 4px;
+  background: var(--page);
+  color: var(--ink2);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rbook-top h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--gold);
+  font-family: var(--title);
+  font-size: 14px;
+  font-weight: normal;
+  letter-spacing: 1px;
+  text-overflow: ellipsis;
+  text-shadow: 2px 2px 0 var(--leather-d);
+  white-space: nowrap;
+}
+
+.rbook-count {
+  flex: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  background: var(--leather-d);
+  color: var(--gold);
+  font-family: var(--title);
+  font-size: 11px;
+}
+
+.rbook-track {
+  grid-area: track;
+  position: relative;
+  height: 50px;
+  margin: 2px 22px 0;
+}
+
+.rbook-bar {
+  position: absolute;
+  top: 18px;
+  right: 0;
+  left: 0;
+  height: 12px;
+  background: var(--leather-d);
+  border: 2px solid #2a1810;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rbook-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(#ffe48c 0 40%, #e8a838 40% 100%);
+}
+
+.rbook-tick {
+  position: absolute;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  transform: translateX(-50%);
+  background: #e8dcc0;
+  border: 2px solid #2a1810;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.rbook-tick.reached {
+  background: #ffe9a8;
+  box-shadow: inset 0 0 0 2px #e8a838;
+}
+
+.rbook-tick.on {
+  outline: 3px solid #fff;
+  outline-offset: 0;
+}
+
+.rbook-tick canvas {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.rbook-tabs {
+  grid-area: tabs;
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 0 6px;
+}
+
+.rbook-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 3px 4px 2px;
+  border: 2px solid #2a1810;
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  background: var(--tab, #d8c49c);
+  color: #3a2c1c;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.rbook-tab.town { --tab: #bcd98c; }
+.rbook-tab.social { --tab: #f2b8a0; }
+.rbook-tab.bases { --tab: #cfb8e8; }
+.rbook-tab.games { --tab: #a8d4ec; }
+.rbook-tab.events { --tab: #f4dc84; }
+
+.rbook-tab.on {
+  background: var(--page);
+  position: relative;
+  z-index: 1;
+  margin-bottom: -2px;
+  padding-bottom: 4px;
+}
+
+.rbook-tab canvas {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.rbook-tab-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rbook-tab small {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.rbook-spread {
+  grid-area: spread;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  min-height: 0;
+  background: var(--page);
+  border: 2px solid #2a1810;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 3px 0 var(--page-d);
+}
+
+.rbook-page {
+  min-height: 0;
+  overflow-y: auto;
+  touch-action: pan-y;
+  padding: 12px;
+  background: repeating-linear-gradient(transparent 0 23px, rgba(164, 134, 88, 0.14) 23px 24px);
+}
+
+.rbook-left {
+  border-right: 2px dashed var(--page-d);
+  box-shadow: inset -8px 0 8px -8px rgba(90, 60, 30, 0.25);
+}
+
+.rbook-page h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: #5a3a1e;
+  font-family: var(--title);
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.rbook-page h3 small {
+  font-family: var(--body, inherit);
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.rbook-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--stamp));
+  justify-content: center;
+  gap: 10px;
+}
+
+.rbook-stamp {
+  position: relative;
+  width: var(--stamp);
+  height: var(--stamp);
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: transform 80ms steps(2);
+}
+
+.rbook-stamp:hover,
+.rbook-stamp.on {
+  transform: translateY(-2px);
+}
+
+.rbook-stamp.on::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid #d86818;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.rbook-stamp:focus-visible {
+  outline: none;
+}
+
+.rbook-stamp canvas {
+  display: block;
+  width: var(--stamp);
+  height: var(--stamp);
+  image-rendering: pixelated;
+}
+
+.rbook-new {
+  z-index: 1;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  padding: 1px 4px;
+  background: #e03838;
+  border: 1px solid #fff;
+  border-radius: 2px;
+  color: #fff;
+  font-family: var(--title);
+  font-size: 7px;
+  font-style: normal;
+}
+
+.rbook-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.rbook-big canvas {
+  display: block;
+  width: var(--big);
+  height: var(--big);
+  image-rendering: pixelated;
+}
+
+.rbook-big.reward canvas {
+  width: 120px;
+  height: 120px;
+}
+
+.rbook-right h3 {
+  justify-content: center;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.rbook-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.rbook-tier {
+  padding: 1px 7px;
+  border-radius: 3px;
+  background: #5aa848;
+  color: #fff;
+  font-size: 14px;
+}
+
+.rbook-tier.medium { background: #3f7fd8; }
+.rbook-tier.hard { background: #9858d0; }
+.rbook-tier.extreme { background: #d0961e; }
+.rbook-tier.secret { background: #6b5b48; }
+.rbook-tier.reward { background: #b06a28; }
+
+.rbook-desc {
+  max-width: 320px;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.rbook-earned {
+  margin: 0;
+  color: #2f7d32;
+  font-size: 16px;
+}
+
+.rbook-earned.todo {
+  color: #8a6a40;
+}
+
+.rbook-prog {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(220px, 100%);
+}
+
+.rbook-prog i {
+  flex: 1;
+  height: 10px;
+  background: #e0d0a8;
+  border: 2px solid #5a3a1e;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.rbook-prog i span {
+  display: block;
+  height: 100%;
+  background: #68b048;
+}
+
+.rbook-prog small {
+  font-size: 15px;
+}
+
+.rbook-pick {
+  margin: 0;
+  font-size: 18px;
+  opacity: 0.75;
+}
+
+.rbook-retry {
+  padding: 6px 14px;
+  border: 2px solid #5a3a1e;
+  border-radius: 4px;
+  background: #fff4d4;
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.rbook-hint {
+  grid-area: hint;
+  margin: 6px 0 0;
+  color: #f0dcae;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* A phone held upright: the page over the detail, tabs as icons. */
+@media (max-width: 720px) and (min-height: 501px) {
+  .rbook {
+    --stamp: 72px;
+    --big: 96px;
+    height: 100%;
+    padding: 8px;
+  }
+
+  .rbook-spread {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .rbook-left {
+    border-right: 0;
+    border-bottom: 2px dashed var(--page-d);
+    box-shadow: none;
+  }
+
+  .rbook-tab-name {
+    display: none;
+  }
+
+  .rbook-tab small {
+    display: none;
+  }
+
+  .rbook-right {
+    display: grid;
+    grid-template-columns: var(--big) minmax(0, 1fr);
+    align-content: start;
+    justify-items: start;
+    max-height: 34vh;
+    gap: 4px 12px;
+    text-align: left;
+  }
+
+  .rbook-right > .rbook-big {
+    grid-row: 1 / span 5;
+  }
+
+  .rbook-right > .rbook-pick {
+    grid-column: 1 / -1;
+  }
+
+  .rbook-big.reward canvas {
+    width: 80px;
+    height: 80px;
+  }
+
+  .rbook-right h3,
+  .rbook-tags {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .rbook-prog {
+    width: 100%;
+  }
+}
+
+/* A phone on its side: the tabs run down the book's edge. */
+@media (max-height: 500px) {
+  .rbook {
+    --stamp: 72px;
+    --big: 96px;
+    grid-template-areas: 'top top' 'track track' 'tabs spread';
+    grid-template-rows: auto auto minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    padding: 6px 8px;
+  }
+
+  .rbook-track {
+    height: 46px;
+    margin: 0 22px;
+  }
+
+  .rbook-bar {
+    top: 16px;
+  }
+
+  .rbook-tick {
+    width: 44px;
+    height: 44px;
+  }
+
+  .rbook-tabs {
+    flex-direction: column;
+    margin: 0;
+    padding: 4px 0;
+  }
+
+  .rbook-tab {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 50px;
+    padding: 0;
+    border: 2px solid #2a1810;
+    border-right: 0;
+    border-radius: 6px 0 0 6px;
+  }
+
+  .rbook-tab.on {
+    margin: 0 -2px 0 0;
+    padding: 0;
+  }
+
+  .rbook-tab-name,
+  .rbook-tab small,
+  .rbook-hint {
+    display: none;
+  }
+
+  .rbook-spread {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+
+  .rbook-page {
+    padding: 8px;
+  }
+
+  .rbook-page h3 {
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+
+  .rbook-big.reward canvas {
+    width: 80px;
+    height: 80px;
+  }
+
+  .rbook-desc {
+    font-size: 16px;
+  }
+}
+
+/* ---------------- The board ---------------- */
+
+.rboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(820px, 100%);
+  max-height: 100%;
+  padding: 10px;
+  background: #8a5a2e;
+  border: 3px solid #3a2410;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px #b07a44, 0 5px 0 rgba(0, 0, 0, 0.4);
+  color: #3a2c1c;
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+.rboard > * {
+  flex: none;
+}
+
+.rboard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rboard-head h2 {
+  margin: 0;
+  color: #fff2c8;
+  font-family: var(--title);
+  font-size: 14px;
+  font-weight: normal;
+  text-shadow: 2px 2px 0 #3a2410;
+}
+
+.rboard-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid #3a2410;
+  border-radius: 4px;
+  background: #f8efd8;
+  color: #3a2c1c;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rboard-hint {
+  margin: 0;
+  color: #f4e0b8;
+  font-size: 15px;
+}
+
+.rboard-notes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 180px;
+  padding: 12px;
+  background: var(--cork) 0 0 / 32px 32px;
+  image-rendering: pixelated;
+  border: 2px solid #3a2410;
+  border-radius: 3px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+.rboard-loading {
+  grid-column: 1 / -1;
+  margin: auto;
+  color: #3a2c1c;
+  font-size: 18px;
+}
+
+.rboard-note {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px 8px;
+  background: #fffbe8;
+  border: 2px solid #3a2c1c;
+  border-radius: 2px;
+  box-shadow: 0 3px 0 rgba(58, 36, 16, 0.5);
+  image-rendering: auto;
+}
+
+.rboard-note.ready {
+  background: #fff4a8;
+}
+
+.rboard-note.claimed {
+  background: #e4e0cc;
+  color: #7a7060;
+}
+
+.rboard-pin {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  background: #e03838;
+  border: 2px solid #3a2410;
+  border-radius: 50%;
+  box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.5);
+}
+
+.rboard-note.claimed .rboard-pin {
+  background: #8a8476;
+}
+
+.rboard-icon canvas {
+  display: block;
+  width: 80px;
+  height: 80px;
+  image-rendering: pixelated;
+}
+
+.rboard-task {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.rboard-pips {
+  display: flex;
+  gap: 3px;
+}
+
+.rboard-pips i {
+  width: 12px;
+  height: 12px;
+  background: #e0d4b0;
+  border: 2px solid #5a4630;
+  border-radius: 2px;
+}
+
+.rboard-pips i.on {
+  background: #68b048;
+}
+
+.rboard-pay {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-family: var(--title);
+  font-size: 11px;
+}
+
+.rboard-pay img {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+}
+
+.rboard-claim {
+  align-self: stretch;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 2px solid #3a2c1c;
+  border-radius: 3px;
+  background: #68b048;
+  color: #fff;
+  font: inherit;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.rboard-claim:disabled {
+  background: #d8ccae;
+  color: #6b5b48;
+  cursor: default;
+}
+
+.rboard-claim.claimed:disabled {
+  background: none;
+  color: #b03030;
+  border-color: #b03030;
+}
+
+.rboard-bonus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  color: #fff2c8;
+  font-size: 17px;
+}
+
+.rboard-bonus img {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.rboard-paper {
+  padding: 10px 12px;
+  background: #fffbe8;
+  border: 2px solid #3a2c1c;
+  border-radius: 2px;
+  font-size: 16px;
+}
+
+.rboard-paper h3 {
+  margin: 0 0 4px;
+  font-family: var(--title);
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.rboard-paper p {
+  margin: 0 0 2px;
+  line-height: 1.15;
+}
+
+@media (max-width: 720px) and (min-height: 501px) {
+  .rboard-notes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rboard-note {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr) auto;
+    grid-template-areas: 'icon task pay' 'icon pips btn';
+    align-items: center;
+  }
+
+  .rboard-icon { grid-area: icon; }
+  .rboard-task { grid-area: task; text-align: left; }
+  .rboard-pips { grid-area: pips; }
+  .rboard-pay { grid-area: pay; justify-self: end; }
+  .rboard-claim { grid-area: btn; }
+}
+
+@media (max-height: 500px) {
+  .rboard {
+    flex-direction: column;
+    max-height: 100%;
+  }
+
+  .rboard-note {
+    padding: 12px 6px 6px;
+  }
+
+  .rboard-icon canvas {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ---------------- Notices in the town ---------------- */
+
+.realm-stamped {
+  position: absolute;
+  top: calc(max(10px, var(--safe-t)) + 62px);
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  pointer-events: none;
+}
+
+.realm-stamped-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  background: #fbf3dc;
+  border: 2px solid #283040;
+  border-radius: 4px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+  color: #33280f;
+  font-size: 17px;
+  animation: realm-stamped-in 180ms steps(3);
+  pointer-events: auto;
+}
+
+.realm-stamped-note.mine {
+  border-color: #c88a20;
+  background: #fff1b8;
+  cursor: pointer;
+}
+
+.realm-stamped-note canvas {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+}
+
+@keyframes realm-stamped-in {
+  from {
+    transform: translateY(-14px);
+    opacity: 0;
+  }
+}
+
+/* Over the town: the book's button, with a dot while something's new. */
+.realm-book-open .realm-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  background: #e03838;
+  border: 2px solid #fff;
+  border-radius: 50%;
+}
+
+.realm-book-open .realm-dot.hidden {
+  display: none;
+}
+
+.realm-card-stamps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 18px;
+}
+
+.realm-card-stamps img {
+  width: 22px;
+  height: 26px;
+  image-rendering: pixelated;
+}

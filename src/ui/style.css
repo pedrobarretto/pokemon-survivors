@@ -26474,6 +26474,27 @@ span.arena-hub-face {
 }
 
 /* The lobby's way in counts the friends walking the realm (a badge on the rail tile and the top icon; the card says it). */
+/* Recados still to do today (`ui/title.ts`): a line on the card, a count on the tile. */
+.lobby-realm-errand-line {
+  color: #b86a10;
+}
+
+.lobby-realm-errands {
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  min-width: 18px;
+  padding: 2px 4px 1px;
+  font-family: var(--title);
+  font-size: 8px;
+  font-style: normal;
+  text-align: center;
+  color: #fff;
+  background: #d07a18;
+  border: 2px solid var(--dk-surface-0, #fff);
+  border-radius: 9px;
+}
+
 .lobby-realm-pals {
   position: absolute;
   bottom: -6px;

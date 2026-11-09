@@ -229,6 +229,8 @@ export type Avatar = {
   facing: Facing
   moving: boolean
   act: RealmAct | null
+  /** How many Estampas the trainer holds (`data/realmStamps.ts`), for its card; absent on a relay that doesn't send it. */
+  stamps?: number
 }
 
 /** One trainer's position in a `moves` batch: `[id, x, y, facing, moving (0/1)]`, whole px. */
