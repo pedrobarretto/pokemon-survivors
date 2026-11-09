@@ -696,7 +696,11 @@ export const en: Messages = {
     off: 'The Poké Realm isn’t available in this version of the game.',
     cities: {
       title: 'Pick a city',
-      hint: 'Each city is a copy of the same town, with up to 40 trainers.',
+      hint: "You land in the first one with room. They're all the same town, with up to 40 trainers.",
+      switch: 'Change city',
+      here: "You're here",
+      lobbyLine: 'Walk with your partner',
+      crowd: (n: number) => `${n} trainers online`,
       trainers: (n: number) => (n === 1 ? '1 trainer' : `${n} trainers`),
       full: 'Full',
       enter: 'Enter',

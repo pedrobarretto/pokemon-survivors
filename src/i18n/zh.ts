@@ -696,7 +696,11 @@ export const zh: Messages = {
     off: '這個版本的遊戲無法使用 Poké Realm。',
     cities: {
       title: '選擇城市',
-      hint: '每座城市都是同一個城鎮的分身，最多 40 位訓練家。',
+      hint: '你會進入第一座還有空位的城市。每座都是同一個城鎮，最多 40 位訓練家。',
+      switch: '更換城市',
+      here: '你在這裡',
+      lobbyLine: '和夥伴一起散步',
+      crowd: (n: number) => `${n} 位訓練家在線上`,
       trainers: (n: number) => `${n} 位訓練家`,
       full: '已滿',
       enter: '進入',

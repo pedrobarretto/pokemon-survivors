@@ -62,7 +62,7 @@ describe('hello', () => {
     connect(state, 'a', 'pallet', T0)
     expect(sent(hello(state, 'a', helloMsg({ v: 99 }), 'u1', T0), 'a')).toEqual([{ t: 'refused', why: 'version' }])
     connect(state, 'b', 'pallet', T0)
-    expect(sent(hello(state, 'b', helloMsg({ city: 'viridian' }), 'u1', T0), 'b')).toEqual([{ t: 'refused', why: 'city' }])
+    expect(sent(hello(state, 'b', helloMsg({ city: 'cerulean' }), 'u1', T0), 'b')).toEqual([{ t: 'refused', why: 'city' }])
     connect(state, 'c', 'pallet', T0)
     expect(sent(hello(state, 'c', helloMsg(), null, T0), 'c')).toEqual([{ t: 'refused', why: 'signIn' }])
   })

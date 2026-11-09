@@ -280,7 +280,8 @@ export const createRealmClient = (deps: RealmDeps): RealmClient => {
           status = { kind: 'refused', why: m.why }
           drop()
         }
-        for (const fn of listeners) fn(m)
+        // A copy: a listener may swap the screen, and the new one must not hear this message too.
+        for (const fn of [...listeners]) fn(m)
       },
       close: () => {
         if (!mine()) return
