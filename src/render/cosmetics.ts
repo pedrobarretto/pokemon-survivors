@@ -113,6 +113,8 @@ export const CARD_FRAMES = {
   creator: { edge: '#140c28', light: '#c8f8f8', main: '#e8306a', shade: '#3a0820', accent: '#25e8e8', ball: PLAY },
   /** The Hidden Grotto, found (`game/hiddenGifts.ts`): moss and canopy green, Audino's cream and pink, a dewy leaf in each corner. */
   grotto: { edge: '#0c2010', light: '#f8ecc8', main: '#3c8c34', shade: '#143c18', accent: '#f0a0b8', ball: LEAF },
+  /** 12 Estampas in the Poké Realm (`STAMP_MILESTONES`): a stamp book's indigo cover, paper light and red stamps in the corners. */
+  stampFrame: { edge: '#1c1430', light: '#f8ecc8', main: '#6a58c0', shade: '#2a2058', accent: '#e04040', ball: STAMP },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */

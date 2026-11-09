@@ -155,7 +155,9 @@ import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
 import { realmJukebox } from './realmJukebox'
-import { realmFriendsCount } from './realm/friendsCount'
+import { realmFriendsCount, realmTrainersCount } from './realm/friendsCount'
+import { forceHour, isHourKind } from './realm/hours'
+import { realmErrandsCount } from './realm/errandsCount'
 import { lazyScreen, lazyStep } from './ui/lazy'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
@@ -247,6 +249,8 @@ import { MAPS, type MapId } from './data/versusMaps'
 import { ARENA_FORMAT_IDS, ARENA_FORMATS, parseArenaFormat, type ArenaFormat } from './data/arenaFormats'
 import { formatPlays, rulesOf } from './game/versusRules'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
+import { countFinale, mythicalHunt } from './game/mythicalHunt'
+import { MYTHICAL_PITY } from './data/waves'
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
 const STEP = TICK
@@ -453,6 +457,8 @@ type Run = {
    * device keeps (`saveAttempt`). Null for any other run.
    */
   challenge: { day: DayKey; official: boolean; attempt: boolean } | null
+  /** What the finale's mythical slot rolled, for `run_end`: who came, `none`, or null before the finale. */
+  mythical: EnemyId | 'none' | null
   /** The supporter's companion walking along, drawn only (`render/companion.ts`). */
   companion: CompanionView | null
   /** Which sheets the run streams and keeps (`syncSprites`): its cast's windows, and what it keeps in every variant. */
@@ -792,6 +798,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
           {
             supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null),
             locker: () => showBoutique('locker', () => showTitle({ focus })),
+            book: realmUrl() ? (back) => lazyScreen(ui, realmMode, (m) => m.openRealmBook(ui, input, { close: back }), back) : null,
           },
           () => showTitle({ focus }),
         ),
@@ -802,6 +809,8 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
       realm: realmUrl() ? () => enterRealm(null) : undefined,
       realmFriends: realmUrl() ? realmFriendsNow : undefined,
+      realmCrowd: realmUrl() ? realmCrowdNow : undefined,
+      realmErrands: realmUrl() ? realmErrandsNow : undefined,
       arena: () => showArena(),
       dojo: () => showDojo(),
       meadow,
@@ -1094,6 +1103,8 @@ const reportRun = (r: Run, faint: Extract<GameEvent, { kind: 'gameover' }> | nul
     moves: p.moves.map((m) => `${m.id}:${m.level}`),
     items: p.items.map((i) => `${i.id}:${i.level}`),
     bosses: g.tally.bossKills,
+    mythical: r.mythical,
+    mythicalDry: g.mythicalHunt?.dry ?? null,
     foe: faint?.foe ?? null,
     hit: faint?.hit ?? null,
     coins: r.paid,
@@ -1420,6 +1431,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     tms: armedTms(save.tms, tmLimit(save.shop.level)),
     evo: [...save.evo],
     caps: capLevel(save.caps, starter),
+    mythical: mythicalHunt(save),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
@@ -1441,6 +1453,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     closeText: null,
     paid: 0,
     candies: 0,
+    mythical: null,
     reported: false,
     missionsBefore: missionStatus(save.missions, today()),
     recorded: null,
@@ -1559,6 +1572,7 @@ const startDojo = async (starter: PlayableId) => {
       closeText: null,
       paid: 0,
       candies: 0,
+      mythical: null,
       reported: true,
       missionsBefore: [],
       recorded: null,
@@ -1657,7 +1671,7 @@ const endDojo = (r: Run, dojo: DojoRun) => {
 
 /** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
 const runHud = (game: Game, onPause: () => void = () => game.phase === 'playing' && (game.phase = 'paused'), menu = false) => {
-  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, input.isHeld, menu)
+  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, () => requestAnimationFrame(syncMarkerInsets), input.isHeld, menu)
   requestAnimationFrame(syncMarkerInsets)
   return hud
 }
@@ -2111,6 +2125,11 @@ const handleEvent = (r: Run, e: GameEvent) => {
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
       return bankCapture(e.legend, e.shiny, g.endless !== null)
+    // The Desafio do dia plays the same for everyone: its finales don't count toward the protection.
+    case 'mythicalRoll':
+      r.mythical = e.enemy ?? 'none'
+      if (!r.challenge) updateSave((s) => ({ ...s, mythicalPity: countFinale(s.mythicalPity) }))
+      return
     case 'evolve': {
       playCry(cryUrl(e.from))
       r.closeText?.()
@@ -2693,6 +2712,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     shown: null,
     closeText: null,
     paid: 0,
+    mythical: null,
     reported: false,
     missionsBefore: missionStatus(save.missions, today()),
     recorded: null,
@@ -3087,6 +3107,31 @@ const realmFriendsNow = (): Promise<number> | null => {
   return realmPals.n
 }
 
+/** Trainers in the Realm now, for the lobby's way in: asked a moment after the lobby is up (the boot never waits on it) and at most once a minute. */
+let realmCrowd: { at: number; n: Promise<number | null> } | null = null
+
+const realmCrowdNow = (): Promise<number | null> => {
+  if (!realmCrowd || performance.now() - realmCrowd.at > 60_000) {
+    const faked = realmLoaded?.realmFaked() === true ? realmLoaded : null
+    const asked = new Promise<void>((done) => setTimeout(done, 2500)).then(() => (faked ? faked.fetchCities().then((got) => (got ? Object.values(got.cities).reduce((sum, n) => sum + n, 0) : null)) : realmTrainersCount()))
+    realmCrowd = { at: performance.now(), n: asked }
+  }
+  return realmCrowd.n
+}
+
+/** Today's Recados not collected yet, for the lobby's way in: asked at most once a minute, for an account with a @handle (or faked) only. */
+let realmErrands: { at: number; n: Promise<number> } | null = null
+
+const realmErrandsNow = (): Promise<number> | null => {
+  const faked = realmLoaded?.realmFaked() === true ? realmLoaded : null
+  if (!faked && (accountState().kind !== 'signedIn' || !accountHandle())) return null
+  if (!realmErrands || performance.now() - realmErrands.at > 60_000) {
+    const n = faked ? faked.fetchBook().then((b) => b?.errands.filter((e) => !e.claimed).length ?? null) : realmErrandsCount()
+    realmErrands = { at: performance.now(), n: n.then((k) => k ?? 0) }
+  }
+  return realmErrands.n
+}
+
 /** `?realm` (or `?realm=<city>`): the Poké Realm's own link; it stays on the address while a guest signs in, so the round trip comes back to it. */
 const REALM_PARAM = 'realm'
 
@@ -3099,7 +3144,7 @@ const realmLink = (on: boolean) => {
 }
 
 /**
- * Opens the Poké Realm (`ui/realm.ts`), at `city` or its picker. Like co-op
+ * Opens the Poké Realm (`ui/realm.ts`), at `city` or the first with room. Like co-op
  * it's for accounts with a @handle: a guest signs in first ("Entre para
  * entrar no Poké Realm", `realmGate`) and an account without a handle picks
  * one. The in-page realm (`ps.realm('local')`) skips the door.
@@ -3174,10 +3219,13 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * prints the state; `('room', 'arcade')` walks the open town's trainer into a room; `('friends')` opens
  * Amigos no Realm (the faked friends: the in-page realm's Misty, Brock and Dawn where they walk, May
  * in a full arcade, `realm/api.ts`); `('invite', 'misty')` has that bot invite you to its base;
- * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`).
+ * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`);
+ * `('hour', 'tide')` runs a Hora do Realm on this screen only (`null` back to the clock).
+ * `('book')` opens the Livro de Estampas, `('stamp', id)` earns a stamp (`'bot'`: a bot of the room does) and `('errands')` finishes today's Recados.
+
  */
-const devRealm = async (cmd?: string, arg?: string) => {
-  const { devRealmRoom, fakeRealm, realmDevState, realmInviteFrom, stageRealmTable, useLocalRealm } = await realmMode()
+const devRealm = async (cmd?: string, arg?: string | null) => {
+  const { devErrands, devRealmRoom, devStamp, fakeRealm, openRealmBook, realmDevState, realmInviteFrom, stageRealmTable, useLocalRealm } = await realmMode()
   switch (cmd) {
     case 'local':
       useLocalRealm(true)
@@ -3201,6 +3249,12 @@ const devRealm = async (cmd?: string, arg?: string) => {
       if (!realmShown?.el.isConnected || !Number.isFinite(x) || !Number.isFinite(y)) return 'ps.realm: walk "x,y" in the realm'
       return realmShown.walkTo(x!, y!)
     }
+    case 'hour': {
+      // `ps.realm('hour', 'tide')` runs that Hora do Realm on this screen only, `('hour', 'tide soon')` counts down to one 12 minutes away, `('hour', null)` back to the clock.
+      const [kind = '', soon] = (arg ?? '').split(' ')
+      if (kind !== '' && !isHourKind(kind)) return 'ps.realm: hour (tide, storm, tables, or null)'
+      return forceHour(kind === '' ? null : kind, soon ? 12 * 60_000 : 0)
+    }
     case 'room':
       return isTownRoomId(arg) ? devRealmRoom(arg) : `ps.realm: room (${TOWN_ROOMS.join(', ')})`
     case 'friends':
@@ -3208,6 +3262,17 @@ const devRealm = async (cmd?: string, arg?: string) => {
     case 'invite':
       // `ps.realm('invite', 'misty')`: that bot of the in-page realm invites you to its base.
       return realmInviteFrom(arg ?? 'misty') ? 'invited' : 'ps.realm: no such bot in the in-page realm'
+    case 'book':
+      // `ps.realm('book')`: the Livro de Estampas, over the town or, outside it, on its own with the faked API.
+      if (screen === realmShown && realmShown) return realmShown.book()
+      fakeRealm(true, accountHandle() ?? 'you')
+      return setScreen(openRealmBook(ui, input, { close: () => showTitle() }))
+    case 'stamp':
+      // `ps.realm('stamp', 'wetFeet')`: earns it as the relay would tell it (the next unheld one without an id; `'bot'`: a bot of the room earns one).
+      return devStamp(arg ?? undefined)
+    case 'errands':
+      // `ps.realm('errands')`: today's Recados all finish, and the town's told.
+      return devErrands()
     case 'visit':
       // `ps.realm('visit', 'ash')`: into @ash's base, as the board's Visit would.
       if (screen !== realmShown || !realmShown || !arg) return 'ps.realm: visit "handle" in the realm'
@@ -4284,6 +4349,12 @@ const devEggs = {
     const eggPity = { ...save.eggPity, [tier]: n }
     writeSave({ ...save, eggPity })
     return eggPity
+  },
+  /** Sets the finales since a mythical last fell (one short of the guarantee by default), for the next run. */
+  mythicalPity: (dry = MYTHICAL_PITY.sure - 1) => {
+    const save = loadSave()
+    writeSave({ ...save, mythicalPity: { finales: save.mythicalPity.beaten + dry, beaten: save.mythicalPity.beaten } })
+    return mythicalHunt(loadSave()) ?? 'every mythical captured: the plain odds'
   },
   /** Unlocks the shiny of a Pokémon (every one without an argument), as if its 1/64 roll hit. */
   unlockShiny: (id?: PlayableId) => {

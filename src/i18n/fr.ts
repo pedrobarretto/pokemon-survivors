@@ -1,3 +1,4 @@
+import { realmBookFr as realmBook } from './realmStamps/fr'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -137,6 +138,9 @@ export const fr: Messages = {
     specialTitle: (name) => `${name} (Espace)`,
     lunge: 'Ruée',
     lungeTitle: (name) => `${name} (Maj)`,
+    stickLock: 'Joystick fixe',
+    stickLocked: 'Joystick fixe ! Change sa place dans Réglages → Commandes.',
+    stickFree: 'Joystick libre : il suit ton doigt.',
     stances: { shield: 'Bouclier', blade: 'Lame', normal: 'Normal', attack: 'Attaque', defense: 'Défense', speed: 'Vitesse' },
     jumps: (n) => `×${n}`,
   },
@@ -690,6 +694,7 @@ export const fr: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm : la ville en ligne',
@@ -700,7 +705,11 @@ export const fr: Messages = {
     off: 'Le Poké Realm n’est pas disponible dans cette version du jeu.',
     cities: {
       title: 'Choisis une ville',
-      hint: 'Chaque ville est une copie du même village, avec jusqu’à 40 dresseurs.',
+      hint: 'Tu arrives dans la première qui a de la place. C’est partout la même ville, avec jusqu’à 40 dresseurs.',
+      switch: 'Changer de ville',
+      here: 'Tu es ici',
+      lobbyLine: 'Promène-toi avec ton partenaire',
+      crowd: (n: number) => `${n} dresseurs en ligne`,
       trainers: (n: number) => (n === 1 ? '1 dresseur' : `${n} dresseurs`),
       full: 'Pleine',
       enter: 'Entrer',
@@ -806,6 +815,15 @@ export const fr: Messages = {
     counter: 'Le café installe encore son comptoir. Reviens bientôt !',
     pool: 'Les Pokémon Eau nageront ici. Bientôt !',
     prizes: 'Battez des records aux bornes et gagnez des trophées pour votre base secrète !',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'Marée Haute', storm: 'Pluie de Baies', tables: 'Soirée Jeux' },
+      perks: { tide: 'Pêche doublée, poissons plus rares', storm: 'Arcade doublée', tables: 'Jeux de table doublés' },
+      go: 'Y aller',
+      starts: (c: string) => `dans ${c}`,
+      ends: (c: string) => `reste ${c}`,
+      tideChip: 'Marée haute !',
+    },
     grove: {
       first: [
         'Psst ! Je ne suis qu’un arbre... Bon, d’accord, je suis Sudowoodo. Bienvenue au Bosquet des bases !',
@@ -1510,7 +1528,7 @@ export const fr: Messages = {
       wallpaper: 'Fond d’écran de la Boîte PC.',
     },
     styles: {
-      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée' },
+      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes' },
       background: { night: 'Nuit étoilée', meadow: 'Route 1', forest: 'Forêt de Jade', cave: 'Mont Sélénite', snow: 'Mont Argenté', tower: 'Tour Pokémon de Lavanville', supporter: 'Ciel doré', halloween: 'Nuit des Sorcières', friendship: 'Amitié' },
       wallpaper: { classic: 'Classique', forest: 'Feuilles', cave: 'Cailloux', snow: 'Flocons', tower: 'Petits fantômes', supporter: 'Étoiles dorées', haunted: 'Maison hantée', secretBase: 'Base Secrète' },
     },
@@ -2908,7 +2926,7 @@ export const fr: Messages = {
     noTitle: 'aucun',
     titleTag: 'TITRE',
     equipped: 'AFFICHE',
-    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu' },
+    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm' },
     newMedals: 'Nouvelles médailles',
     names: {
       firstRun: 'Premiers pas',
@@ -3007,6 +3025,7 @@ export const fr: Messages = {
       arenaMaster: 'Master Ball de l’Arène',
       creator: 'Créateur de contenu',
       friendLegend: 'Légende de l’Amitié',
+      stampCollector: 'Collectionneur d’Estampes',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Joue une partie' : `Joue ${n} parties`),
@@ -6046,6 +6065,9 @@ export const fr: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Panier de baies',
       goldenMallet: 'Maillet doré',
+      stampDesk: 'Bureau à timbres',
+      stampCabinet: 'Armoire à timbres',
+      goldenStampPress: 'Presse à timbres dorée',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Râtelier à cannes',
       goldenMagikarpPlaque: 'Plaque du Magikarp doré',
@@ -6214,7 +6236,7 @@ export const fr: Messages = {
     where: {
       rift: 'Attend dans une _faille légendaire_ : franchis le portail et bats-le là-bas.',
       trio: 'Arrive comme boss avec le _trio légendaire_ de la partie.',
-      mythical: 'Parfois (1 partie sur 10), apparaît aux côtés de *Mewtwo* à la fin.',
+      mythical: 'Parfois (1 partie sur 10, plus après chaque finale sans fabuleux), apparaît aux côtés de *Mewtwo* à la fin.',
       finale: 'C’est le boss final : gagne une partie.',
       endless: 'Le dernier trophée : une fois les 22 autres capturés, bats-le en _mode sans fin_.',
       event: 'Seulement pendant la _Nuit des Sorcières_ : bats-le dans la _faille du Cauchemar_.',

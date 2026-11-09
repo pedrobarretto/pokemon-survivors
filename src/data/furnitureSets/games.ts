@@ -38,4 +38,11 @@ const ARCADE = {
   goldenMallet: { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'legendary', price: null, source: 'trophy', blocks: true },
 } as const satisfies Record<string, FurnitureDef>
 
-export const GAME_FURNITURE = { ...FISHING, ...TABLES, ...DUEL, ...ARCADE } as const satisfies Record<string, FurnitureDef>
+/** The Estampas' milestones (`STAMP_MILESTONES` in `data/realmStamps.ts`): the desk for 5, the cabinet for 20, the golden press for 38. */
+const STAMPS = {
+  stampDesk: { kind: 'floor', set: 'trophies', size: [2, 1], rarity: 'rare', price: null, source: 'trophy', blocks: true },
+  stampCabinet: { kind: 'floor', set: 'trophies', size: [2, 1], rarity: 'epic', price: null, source: 'trophy', blocks: true },
+  goldenStampPress: { kind: 'floor', set: 'trophies', size: [2, 1], rarity: 'legendary', price: null, source: 'trophy', blocks: true },
+} as const satisfies Record<string, FurnitureDef>
+
+export const GAME_FURNITURE = { ...FISHING, ...TABLES, ...DUEL, ...ARCADE, ...STAMPS } as const satisfies Record<string, FurnitureDef>

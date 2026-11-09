@@ -501,7 +501,7 @@ export const siteFr: SiteMessages = {
     },
     realm: {
       paragraphs: (m) => [
-        `Dans le lobby, le bouton Realm (touche K) ouvre le Poké Realm, la ville en ligne du jeu. Choisis l’une des ${m.cities.length} villes (${list(m.cities)}) : chacune est une copie de la même ville, avec jusqu’à ${m.cap} dresseurs. Tu te promènes avec ton partenaire, dans le look que tu portes (chapeaux, traînée, titre, skin et emote), et tu vois les autres dresseurs marcher à côté de toi. Il faut un compte avec un @pseudo.`,
+        `Dans le lobby, le bouton Realm (touche K) ouvre le Poké Realm, la ville en ligne du jeu. Tu arrives directement dans la première des ${m.cities.length} villes qui a de la place (${list(m.cities)}) et tu peux en changer sur place, ou rejoindre un ami : chacune est une copie de la même ville, avec jusqu’à ${m.cap} dresseurs. Tu te promènes avec ton partenaire, dans le look que tu portes (chapeaux, traînée, titre, skin et emote), et tu vois les autres dresseurs marcher à côté de toi. Il faut un compte avec un @pseudo.`,
         `Tout le monde arrive sur la Place, avec le portail de la Coop, celui de l’Arène, le tableau et la porte du Café, qui a deux tables de jeu. À l’est se trouve la Jetée, avec la salle d’arcade et la plateforme de pêche, et à l’ouest le Bosquet des bases. On ne parle que par phrases rapides et emotes, jamais en texte libre, et chacun les lit dans sa langue. Touche un dresseur pour l’inviter dans ton groupe (jusqu’à ${m.party}), le mettre en sourdine ou le signaler ; quand le chef entre dans un portail, tout le groupe le suit dans un salon de Coop ou de l’Arène.`,
         `Chaque compte avec un @pseudo a une base secrète, dont l’entrée est en haut du Bosquet des bases, où Sudowoodo explique tout. À l’intérieur, touche ✎ pour placer jusqu’à ${m.items} pièces dans une salle de ${m.cols}×${m.rows} cases, choisir l’entrée (grotte, arbre, buisson ou sable) et qui peut entrer : tout le monde, les amis seulement ou personne. Le Tableau des bases montre les bases publiques les plus aimées, les plus récentes et celles de tes amis : entre pour une visite et laisse un j’aime.`,
         `Les meubles viennent de la Menuiserie de Bibarel, sur la place de Kecleon (dans le lobby) et au Bosquet : ${m.sold} pièces en vente, ${m.coins} contre des ₽ et ${m.gems} contre des gemmes. D’autres se gagnent seulement : la poupée de chaque légendaire capturé, les tableaux des légendaires et les trophées des mini-jeux. Comme les looks, les meubles ne changent rien en partie.`,
@@ -531,7 +531,7 @@ export const siteFr: SiteMessages = {
       opensHead: 'Capacité légendaire',
       pressureTitle: 'Difficultés en Mode Légendaire',
       pressure: 'La Pression s’ajoute à chaque difficulté : voici les multiplicateurs du Mode Légendaire.',
-      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier', event: 'Nuit des Sorcières 2026 (événement)', festival: 'Festival des Lanternes 2026 (prix)' },
+      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10, plus après chaque finale sans fabuleux)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier', event: 'Nuit des Sorcières 2026 (événement)', festival: 'Festival des Lanternes 2026 (prix)' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Pendant la Nuit des Sorcières 2026 (du 24 octobre au 2 novembre), Darkrai arrive comme légendaire d’événement : il n’apparaît que dans la faille du Cauchemar, qui peut remplacer une faille lors d’une partie hantée, et 2 victoires le capturent. Il joue avec Dark Void, qui endort les foules, et l’inné Bad Dreams, qui blesse ceux qui dorment près de lui. Après l’événement, il retourne dans l’ombre, mais qui l’a capturé continue de le jouer. Il ne compte pas pour Arceus.',
     },
@@ -639,7 +639,7 @@ export const siteFr: SiteMessages = {
       ],
       trios: (times, trios, mythicals, percent) => [
         `À ${list(times)} arrivent les trois membres d’un trio légendaire, tiré au début de chaque partie : ${list(trios)}. Les PV, les dégâts au contact et la vitesse dépendent du créneau, pas du Pokémon, donc aucun tirage n’est plus facile qu’un autre ; ce qui change, ce sont les attaques.`,
-        `À la fin, avec ${n(percent)}% de chances, un Pokémon fabuleux rejoint Mewtwo : ${mythicals}, lui aussi tiré à chaque partie.`,
+        `À la fin, avec ${n(percent)}% de chances, un Pokémon fabuleux rejoint Mewtwo : ${mythicals}, lui aussi tiré à chaque partie. Après 5 finales sans battre de Pokémon fabuleux, les chances montent à chaque finale, jusqu’à être certaines à la 21e, et celui qui vient est un que vous n’avez pas encore.`,
       ],
       timeHead: 'Temps',
       bossHead: 'Boss',

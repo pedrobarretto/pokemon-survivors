@@ -90,7 +90,7 @@ const stage = (dex: number, name: string, types: readonly PokeType[]) => [{ dex,
 
 /** Captured after this many wins: the rift legendaries and the trios. */
 const RIFT_WINS = { wins: 3 } as const satisfies LegendUnlock
-/** The finale's mythicals show up in one run in ten: one win does it. */
+/** The finale's mythicals show up in one run in ten, more after finales without one (`MYTHICAL_PITY`): one win does it. */
 const MYTHICAL_WINS = { wins: 1 } as const satisfies LegendUnlock
 
 const chill = { kind: 'aura', radius: 56, every: 1, status: { kind: 'slow', chance: 1, duration: 1.2, power: 0.3 } } as const satisfies AbilityEffect

@@ -1,3 +1,4 @@
+import { realmHourTag } from './realmHour'
 import { accountState, accountsEnabled, giftInbox, onInbox, onSaveSynced } from '../account'
 import { lobbyPress } from '../analytics'
 import { playSfx } from '../engine/audio'
@@ -43,6 +44,7 @@ import { takeInstallNudge } from './install'
 import type { InstallOffer } from './installOffer'
 import type { Screen } from './screens'
 import { gearButton, iconButton, shellBody, topBar, walletChip } from './shell'
+import { REALM_CROWD } from '../realm/entry'
 import { realmIconUrl } from '../render/realmScene'
 import { modeFacts, type ModeFacts } from './gameModes'
 import { lobbyModeIn, loadLobbyMode, modeBeside, saveLobbyMode, shownModes } from './lobbyMode'
@@ -185,10 +187,14 @@ export type TitleActions = {
   invites: (focus: LobbyFocus) => Screen
   /** Jogar junto (co-op): the hub. No action (no relay in this build), no mode. */
   coop?: () => void
-  /** The Poké Realm (`ui/realm.ts`): its city picker. No action (no realm relay in this build), no mode. */
+  /** The Poké Realm (`ui/realm.ts`), straight into a city. No action (no realm relay in this build), no mode. */
   realm?: () => void
+  /** Today's Recados not collected yet (`realm/errands.ts`), for its chip; null when nobody can be asked. */
+  realmErrands?: () => Promise<number> | null
   /** How many friends walk the Poké Realm now (`realm/friends.ts`), for its chip; null when nobody can be asked (a guest). */
   realmFriends?: () => Promise<number> | null
+  /** How many trainers walk the Poké Realm now, for its way in; resolves to null offline. */
+  realmCrowd?: () => Promise<number | null>
   /** Arena (Versus): its screen. Always there: against bots it needs no relay nor account. */
   arena: () => void
   /** The Dojo, once Machoke said hello: who trains (the partner select in its Dojo guise, `game/training.ts`). */
@@ -1104,10 +1110,16 @@ export const titleScreen = (
       chip.addEventListener('click', () => (setMode(id), select('play', false)))
       return { id, chip }
     })
-    if (realm) void actions.realmFriends?.()?.then((n) => {
-      const chip = chips.find((c) => c.id === 'realm')?.chip
-      if (n > 0 && chip?.isConnected) chip.append(h('em', { class: 'arc-badge lobby-mode-pals', title: t().realm.friends.lobby(n), 'aria-label': t().realm.friends.lobby(n) }, String(n)))
-    })
+    const realmChip = realm ? chips.find((c) => c.id === 'realm')?.chip : undefined
+    if (realmChip) {
+      realmHourTag(realmChip)
+      // One count on the chip: what's waiting for the player, then friends walking, then a crowd.
+      void Promise.all([actions.realmErrands?.() ?? null, actions.realmFriends?.() ?? null, actions.realmCrowd?.() ?? null]).then(([errands, friends, crowd]) => {
+        const words = t().realm
+        const count = errands ? { n: errands, text: words.errands.lobby(errands) } : friends ? { n: friends, text: words.friends.lobby(friends) } : crowd !== null && crowd >= REALM_CROWD ? { n: crowd, text: words.cities.crowd(crowd) } : null
+        if (count && realmChip.isConnected) realmChip.append(h('em', { class: 'arc-badge lobby-mode-pals', title: count.text, 'aria-label': count.text }, formatNumber(count.n)))
+      })
+    }
     const allModes = pressable(h('button', { class: 'lobby-mode-all', type: 'button', 'aria-label': t().gameModes.title, title: t().gameModes.title }, iconImg(gridIcon(), 'ink-icon')), 'modes')
     const bar_ = h('nav', { class: 'lobby-modes', 'aria-label': t().gameModes.title }, h('div', { class: 'lobby-modes-scroll' }, ...chips.map((c) => c.chip)), allModes)
     const playSub = h('small')

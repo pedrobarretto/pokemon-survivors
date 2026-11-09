@@ -3134,6 +3134,50 @@ button {
   transform: translateY(2px);
 }
 
+/*
+ * The padlock that fixes or frees the stick mid-run (ui/stickLock.ts), on the
+ * status box's corner: that box already steps aside for the fixed stick in
+ * every layout, so the padlock stays beside it and clear of it. Touch only,
+ * the same query as `finePointer` in main.ts; the box's scale on phones shrinks
+ * it, so the `::before` keeps the tap target finger-sized.
+ */
+.stick-lock {
+  display: none;
+  position: absolute;
+  top: -40px;
+  right: -6px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.stick-lock::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+
+.stick-lock img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  background: #f8f8f8; /* the dark theme's box would swallow the dark outline */
+}
+
+@media not all and (hover: hover) and (pointer: fine) {
+  .stick-lock {
+    display: flex;
+  }
+  [data-hand='left'] .stick-lock {
+    right: auto;
+    left: -6px;
+  }
+}
+
 /* Portrait and desktop: the status box goes above the stick. */
 [data-stick='fixed'] .status {
   bottom: calc(var(--stick-bottom) + var(--stick-size) + 16px);
@@ -26068,12 +26112,36 @@ span.arena-hub-face {
 }
 
 .realm-title {
+  position: relative;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 3px;
   min-width: 0;
-  padding: 7px 12px 5px;
+  padding: 7px 26px 5px 12px;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
   line-height: 1.3;
+  cursor: pointer;
+}
+
+/* The city's name is the way to change it: a small mark says it opens. */
+.realm-title::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  margin-top: -2px;
+  border: 5px solid transparent;
+  border-bottom: 0;
+  border-top-color: currentColor;
+  opacity: 0.55;
+}
+
+.realm-title:hover,
+.realm-title:focus-visible {
+  --frame: #e83838;
 }
 
 .realm-where {
@@ -26346,7 +26414,8 @@ span.arena-hub-face {
   font-size: 18px;
 }
 
-.screen.realm .realm-picker {
+.screen.realm .realm-picker,
+.realm-sheet-screen .realm-picker {
   width: min(640px, calc(100% - 32px));
   max-height: calc(100% - 32px - var(--safe-t) - var(--safe-b));
   overflow-y: auto;
@@ -26384,7 +26453,7 @@ span.arena-hub-face {
 
 .realm-cities {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -26418,7 +26487,7 @@ span.arena-hub-face {
   --frame: #e83838;
 }
 
-.realm-city.full {
+.realm-city:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -26573,8 +26642,6 @@ span.arena-hub-face {
   font-size: 20px;
 }
 
-/* The lobby's way in counts the friends walking the realm (a badge on the rail tile and the top icon; the card says it). */
-
 
 @media (max-width: 480px) {
   .realm-pals {
@@ -26626,9 +26693,6 @@ span.arena-hub-face {
 @media (max-width: 480px) {
   .realm-line {
     font-size: 16px;
-  }
-  .realm-cities {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
   .realm-city b,
   .realm-friend b {
@@ -27984,4 +28048,111 @@ span.arena-hub-face {
   .lobby-landscape .lobby-pills > .lobby-pill:not(.lobby-pill-go) {
     display: none;
   }
+}
+
+/* The Hora do Realm: the city's banner and the lobby's countdown. */
+.realm-hour {
+  position: absolute;
+  top: max(8px, var(--safe-t));
+  right: max(8px, var(--safe-r));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(460px, calc(100% - 16px));
+  padding: 5px 8px;
+  line-height: 1.25;
+}
+
+.realm-hour.on {
+  border-color: #f0b830;
+  box-shadow: 0 0 0 2px #f0b83066;
+}
+
+.realm-hour-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.realm-hour-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.realm-hour-text b {
+  font-family: var(--title);
+  font-size: 9px;
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.realm-hour-text small {
+  font-size: 15px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.realm-hour-clock {
+  flex: none;
+  margin-left: 4px;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.realm-hour.on .realm-hour-clock {
+  color: color-mix(in srgb, #b06000 var(--dk-lift, 100%), #ffd870);
+}
+
+.realm-hour-go {
+  flex: none;
+  min-height: 34px;
+  padding: 2px 12px;
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Under the top bar where they don't fit side by side. */
+@media (max-width: 720px) {
+  .realm-hour {
+    top: calc(max(8px, var(--safe-t)) + 52px);
+    left: max(8px, var(--safe-l));
+    right: max(8px, var(--safe-r));
+    max-width: none;
+  }
+
+  .realm-hour-clock {
+    margin-left: auto;
+  }
+}
+
+.lobby-realm-hour {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  translate: -50% 0;
+  padding: 1px 5px;
+  font-family: var(--kit-title);
+  font-size: 15px;
+  font-style: normal;
+  line-height: 1;
+  white-space: nowrap;
+  color: #fff;
+  background: #3070c0;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+.lobby-realm-hour.on {
+  background: #d08018;
 }
