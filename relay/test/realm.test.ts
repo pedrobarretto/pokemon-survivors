@@ -7,7 +7,7 @@ import { connect, createRealm, disconnect, hello, identified, message, parseReal
 
 const T0 = 1_000_000
 
-const ident = (userId: string, over: Partial<RealmIdentity> = {}): RealmIdentity => ({ userId, handle: userId, partner: 'charmander', shiny: false, look: {}, supporter: null, ...over })
+const ident = (userId: string, over: Partial<RealmIdentity> = {}): RealmIdentity => ({ userId, handle: userId, partner: 'charmander', shiny: false, look: {}, supporter: null, stamps: 0, ...over })
 
 const sent = (effects: readonly RealmEffect[], to: string): RealmServerMessage[] => effects.flatMap((e) => (e.k === 'send' && e.to === to ? [e.msg] : []))
 

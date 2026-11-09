@@ -18,7 +18,7 @@ const join = (state: RealmState, conn: string, user: string, room = 'cafe', at =
   connect(state, conn, 'pallet', T0)
   const ask = hello(state, conn, { t: 'hello', v: REALM_PROTOCOL, city: 'pallet', token: 'tok', room }, user, T0).find((e) => e.k === 'identify')
   if (ask?.k !== 'identify') throw new Error('no identify ask')
-  const out = identified(state, ask.ask, { identities: { [user]: { userId: user, handle: user, partner: 'charmander', shiny: false, look: {}, supporter: null } }, banned: [] }, T0)
+  const out = identified(state, ask.ask, { identities: { [user]: { userId: user, handle: user, partner: 'charmander', shiny: false, look: {}, supporter: null, stamps: 0 } }, banned: [] }, T0)
   const welcome = sent(out, conn).find((m) => m.t === 'welcome')
   if (welcome?.t !== 'welcome') throw new Error('not seated')
   const t = state.cities.get('pallet')!.trainers.get(welcome.you)!
@@ -130,7 +130,7 @@ describe('the realm’s tables', () => {
     connect(late, 'n', 'pallet', T0)
     const ask = hello(late, 'n', { t: 'hello', v: REALM_PROTOCOL, city: 'pallet', token: 't', room: 'cafe' }, 'u5', T0).find((e) => e.k === 'identify')
     if (ask?.k !== 'identify') throw new Error('no ask')
-    const seated = identified(late, ask.ask, { identities: { u5: { userId: 'u5', handle: 'u5', partner: 'eevee', shiny: false, look: {}, supporter: null } }, banned: [] }, T0)
+    const seated = identified(late, ask.ask, { identities: { u5: { userId: 'u5', handle: 'u5', partner: 'eevee', shiny: false, look: {}, supporter: null, stamps: 0 } }, banned: [] }, T0)
     const listed = sent(seated, 'n').find((m) => m.t === 'tables')
     expect(listed?.t === 'tables' && listed.tables.map((t) => t.id)).toEqual(['cafe-1'])
     const gone = tableTo(say(late, 'a', { t: 'stand' }), 'n')

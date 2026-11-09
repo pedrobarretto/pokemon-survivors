@@ -1,5 +1,66 @@
 import { describe, expect, it } from 'vitest'
+import { nextHour } from '../../src/data/realmEvents'
+import { DEEDS_MAX } from '../../src/net/realmRelay'
+import { claimPay, errandsAfter, groupDeeds, hasCompany, parseDeedsReport } from './realmDeeds'
 import { furniturePrice, groupRealmReports, parseBaseSave, parseGameClaim, parsePresenceReport, parseRealmReport, parseRealmSettings, statsAfter } from './realm'
+
+describe('deed reports', () => {
+  it('reads known deeds of well-formed accounts and refuses a body too long', () => {
+    expect(parseDeedsReport({ deeds: [{ userId: 'u1', deed: 'say' }, { userId: 'u1', deed: 'made-up' }, { deed: 'say' }, 'x'] })).toEqual([{ userId: 'u1', deed: 'say' }])
+    expect(parseDeedsReport({ deeds: Array.from({ length: DEEDS_MAX + 1 }, () => ({ userId: 'u1', deed: 'say' })) })).toBeNull()
+    expect(parseDeedsReport({})).toBeNull()
+  })
+
+  it('counts per account and deed', () => {
+    const grouped = groupDeeds([{ userId: 'u1', deed: 'say' }, { userId: 'u1', deed: 'say' }, { userId: 'u2', deed: 'sit' }])
+    expect([...grouped.get('u1')!]).toEqual([['say', 2]])
+    expect([...grouped.get('u2')!]).toEqual([['sit', 1]])
+  })
+})
+
+describe('errandsAfter', () => {
+  const errands = [
+    { id: 'a:1', deed: 'say', target: 1, reward: 150 },
+    { id: 'b:2', deed: 'sit', target: 2, reward: 150 },
+    { id: 'c:1', deed: 'like', target: 1, reward: 150 },
+  ] as const
+
+  it('moves progress up to the target and names what just finished', () => {
+    expect(errandsAfter(errands, [0, 1, 0], new Map([['sit', 5]]))).toEqual({ after: [0, 2, 0], finished: ['b:2'], all: false })
+  })
+
+  it('finishes the list once: the batch that closes it, never one after', () => {
+    expect(errandsAfter(errands, [1, 2, 0], new Map([['like', 1]])).all).toBe(true)
+    expect(errandsAfter(errands, [1, 2, 1], new Map([['like', 1]]))).toEqual({ after: [1, 2, 1], finished: [], all: false })
+  })
+})
+
+describe('company and the Hora do Realm in a claim', () => {
+  const where = new Map<string, { city: 'pallet'; room: string | null }>([
+    ['ash', { city: 'pallet', room: 'pier' }],
+    ['misty', { city: 'pallet', room: 'pier' }],
+    ['brock', { city: 'pallet', room: 'cafe' }],
+    ['tracey', { city: 'pallet', room: null }],
+  ])
+
+  it('reads company from who the relays put in the same room, case aside', () => {
+    expect(hasCompany(where, 'ASH')).toBe(true)
+    expect(hasCompany(where, 'brock')).toBe(false)
+    expect(hasCompany(where, 'tracey')).toBe(false)
+    expect(hasCompany(where, 'nobody')).toBe(false)
+  })
+
+  it('stacks company and the hour, in whole ₽', () => {
+    // 05:00 UTC is no window; 12:00 UTC on 2026-11-09 is one for a game of its kind.
+    const quiet = Date.UTC(2026, 10, 9, 5)
+    expect(claimPay(101, 'fishing', false, quiet)).toBe(101)
+    expect(claimPay(101, 'fishing', true, quiet)).toBe(126)
+    const start = Date.UTC(2026, 10, 9, 12)
+    const game = nextHour(start).kind === 'tide' ? 'fishing' : nextHour(start).kind === 'storm' ? 'berryCatch' : 'fourInRow'
+    expect(claimPay(101, game, false, start)).toBe(202)
+    expect(claimPay(101, game, true, start)).toBe(252)
+  })
+})
 
 describe('presence', () => {
   it('takes a relay report of its own cities, handles cleaned', () => {
