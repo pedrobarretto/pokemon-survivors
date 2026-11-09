@@ -303,25 +303,25 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
-  47: {
+  48: {
     levelUps: '2998·45·12·78f86519',
     mega: '1892·27·1·2d1d227c',
     riftFall: '665·0·1·8722c904',
     alphaHazards: '1002·2·19·4c8862d5',
     nightBoss: '2093·36·17·04c2b2b6',
     bag: '989·11·4·ebcf7333',
-    shop: '1521·114·21·1cecb29a',
+    shop: '1526·99·21·aa50721c',
     shopTms2: '1787·49·18·57c9b8dd',
-    evoGate: '1487·55·24·5f3f7264',
+    evoGate: '1487·55·24·83509745',
     porygonGate: '2074·69·37·77df1acd',
-    sketch: '1210·22·1·d5a7050c',
+    sketch: '1210·21·1·1d792b71',
     legend: '1487·99·14·4ccd28a1',
     waveLegend: '1998·22·17·db5ba4c3',
     cave: '2188·16·12·d2d47594',
     grotto: '2782·23·18·bb75df4d',
-    underground: '3084·27·30·ddb45396',
-    magicGuard: '1188·51·20·285cf0b7',
-    endlessCeiling: '845·0·26·f8ec4480',
+    underground: '3084·28·30·bb9ad367',
+    magicGuard: '1188·47·19·824b6342',
+    endlessCeiling: '845·0·26·41a089de',
   },
 }
 
