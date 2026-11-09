@@ -99,6 +99,8 @@ export const reasonLine = (gift: Gift) => {
       return t().gifts.arenaSeason(r.season)
     case 'hiddenZone':
       return t().gifts.hiddenZone[r.zone]
+    case 'season':
+      return t().seasonUnlocks.way[r.way]
   }
 }
 

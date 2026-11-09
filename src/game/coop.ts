@@ -71,7 +71,7 @@ export const createCoopState = (players: number): CoopState => ({
  */
 export const playerDexLog = (g: Game, slot: number): DexLog => (g.coop === null ? g.dexLog : { ...g.dexLog, own: g.coop.own[slot] ?? new Map() })
 
-export const createRecord = (): PlayerRecord => ({ kills: 0, taken: 0, revives: 0, faints: 0, folded: 0, tally: createTally() })
+export const createRecord = (): PlayerRecord => ({ kills: 0, taken: 0, hits: 0, revives: 0, faints: 0, folded: 0, tally: createTally() })
 
 /** Players who count for the horde: not away and still in the run (fainted ones count, they'll be back). At least 1. */
 export const teamSize = (g: Game) => {

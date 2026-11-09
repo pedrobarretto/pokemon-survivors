@@ -1,5 +1,6 @@
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -6326,6 +6327,7 @@ export const es: Messages = {
       awards: { damage: 'Más daño', kills: 'Más derrotas', revives: 'Ángel guardián', untouched: 'Intocable', tank: 'Tanque', comeback: 'Fénix', survivor: 'Superviviente', specialist: 'Especialista', collector: 'Coleccionista', loyal: 'Compañero fiel' },
     },
   },
+  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.es,
   minigames: {
     close: 'Salir',
     choose: '¿Qué juego?',
@@ -6336,7 +6338,7 @@ export const es: Messages = {
       fourInRow: { name: 'Cuatro en Línea', blurb: 'Alinea cuatro Poké Balls antes que tu rival.' },
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fuego vence a Planta, Planta a Agua, Agua a Fuego.' },
     },
-    feats: { fishing: { feebas: '¡Pesqué un Feebas!', shinyGyarados: '¡¡Pesqué un Gyarados shiny!!', bigHaul: '¡Pesca de 300 puntos!' }, berryCatch: { flawless: '¡Lluvia de Bayas sin perder una vida!', goldRush: '¡Tres bayas doradas en una ronda!', combo50: '¡Combo de 50 bayas!' }, whackDiglett: { combo30: '¡Combo de 30 golpes!', dugtrio: '¡Golpeó a 5 Dugtrio en una ronda!' }, fourInRow: {}, typeDuel: { perfectDuel: '¡Duelo perfecto, sin perder una ronda!' } },
+    feats: { fishing: { feebas: '¡Pesqué un Feebas!', shinyGyarados: '¡¡Pesqué un Gyarados shiny!!', wishiwashi: '¡Pesqué un Wishiwashi!', bigHaul: '¡Pesca de 300 puntos!' }, berryCatch: { flawless: '¡Lluvia de Bayas sin perder una vida!', goldRush: '¡Tres bayas doradas en una ronda!', combo50: '¡Combo de 50 bayas!' }, whackDiglett: { combo30: '¡Combo de 30 golpes!', dugtrio: '¡Golpeó a 5 Dugtrio en una ronda!' }, fourInRow: {}, typeDuel: { perfectDuel: '¡Duelo perfecto, sin perder una ronda!' } },
     duel: {
       pick: 'Elige una carta',
       play: 'Jugar',

@@ -7,21 +7,22 @@ import { hiddenGiftList, hiddenGifts, isHiddenGift } from './hiddenGifts'
 import { HALLOWEEN_REWARDS, halloweenGiftId, halloweenGifts, HUNT_REWARDS, huntDone, huntGiftId, PUMPKABOO_GIFT } from './halloween'
 import { shopGiftList, shopGifts } from './loyalty'
 import type { Save } from './meta'
+import { isSeasonGift, seasonGifts } from './seasonOneUnlocks'
 
 /**
  * Gifts the game makes itself, for guests too, worked out from the save so
  * they never touch the API: the Noite das Bruxas candy jar's and Caça aos
  * Fantasmas' rewards, and the Kecleon Shop's loyalty card and Department
- * Store rewards, and the hidden zones' finds (`game/hiddenGifts.ts`). Their ids are the game's own (`isGameGift`), never claimed
+ * Store rewards, the hidden zones' finds (`game/hiddenGifts.ts`) and Temporada 1's families found outside an egg (`game/seasonOneUnlocks.ts`). Their ids are the game's own (`isGameGift`), never claimed
  * in the API. A Festival da Praça's gifts are the game's too, but follow the
  * pot the API sums (`festivalGifts` in `game/festival.ts`). Pure; shared with the API.
  */
 
 /** The game's gifts waiting to be opened on `day`. */
-export const gameGifts = (save: Save, day: DayKey): Gift[] => [...halloweenGifts(save, day), ...shopGifts(save), ...hiddenGifts(save)]
+export const gameGifts = (save: Save, day: DayKey): Gift[] => [...halloweenGifts(save, day), ...shopGifts(save), ...hiddenGifts(save), ...seasonGifts(save)]
 
 /** Whether a gift id is one of the game's own (not the API's to claim). */
-export const isGameGift = (id: string) => id.startsWith('halloween2026:') || id.startsWith('loyalty:') || id.startsWith('shop:') || isHiddenGift(id) || isFestivalGift(id)
+export const isGameGift = (id: string) => id.startsWith('halloween2026:') || id.startsWith('loyalty:') || id.startsWith('shop:') || isHiddenGift(id) || isSeasonGift(id) || isFestivalGift(id)
 
 /**
  * Every id the game gives (or vouches for) and what it brought, for `save`:

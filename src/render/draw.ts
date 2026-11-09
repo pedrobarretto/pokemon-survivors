@@ -39,6 +39,7 @@ import { drawArena, drawRiftArrow, drawRiftFallAir, drawRiftFallGround, drawRift
 import { drawEntranceAir, drawEntranceGround, drawPlaceArrow, drawPlaceDark, drawPlaceFallOut, drawPlaceFloor, drawPlaceGround, drawPlaceOver, drawWings, dropPlaceFloor, placeFallLook } from './places'
 import { roomOf } from '../game/room'
 import { drawLandmarkAir, drawTunnelDark, playerUnderground } from './landmarks'
+import { drawOldTvs } from './seasonFinds'
 import { drawPokemon, sprites, type AnimName, type SpeciesSprites } from './sprites'
 import { drawDressed } from './wearables'
 import { shownLook } from './looks'
@@ -1120,6 +1121,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   }
   drawEntranceAir(ctx, g, t)
   drawLandmarkAir(ctx, g, t, visible)
+  drawOldTvs(ctx, g, t, visible)
   drawWings(ctx, g, t)
   drawPlaceOver(ctx, g, camX, camY)
   drawSleep(ctx, g, t)

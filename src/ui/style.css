@@ -27440,3 +27440,9 @@ span.arena-hub-face {
   flex-direction: column;
   gap: 4px;
 }
+
+/* The research chains (the Missions dialog's third tab, `ui/research.ts`). */
+.research-head b { display: inline-flex; align-items: center; gap: 6px; }
+.research-head img { width: 24px; height: 24px; image-rendering: pixelated; }
+.research-later { opacity: 0.55; }
+.research-note { margin: 4px 0; font-size: 0.85em; opacity: 0.85; }

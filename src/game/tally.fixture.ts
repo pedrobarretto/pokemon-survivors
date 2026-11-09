@@ -35,5 +35,7 @@ export const summary = (over: Partial<RunSummary> = {}): RunSummary => ({
   legendWins: {},
   nightBosses: [],
   tms: [],
+  hits: 0,
+  wet: false,
   ...over,
 })
