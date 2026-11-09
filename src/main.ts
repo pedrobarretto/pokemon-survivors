@@ -1,5 +1,7 @@
 import '@fontsource/press-start-2p'
 import '@fontsource/vt323'
+import '@fontsource/jersey-10'
+import '@fontsource/jersey-15'
 import './ui/style.css'
 // First, so its error listeners catch what goes wrong while the rest loads.
 import { bugReportsEnabled, describeWith, deviceMemory, launchStep, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
@@ -7,7 +9,7 @@ import type { BugCrash } from './game/bugReport'
 
 import { playCry, playSfx, unlockAudio, type Sfx } from './engine/audio'
 import { castSound } from './ui/castSounds'
-import { createInput, type Stick } from './engine/input'
+import { createInput } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
@@ -136,12 +138,15 @@ import { consumableIcon } from './render/props'
 import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
-import { celebrateShop, createTitleScene, drawTitleScene, exploreMeadow, meetPartner, revealShopkeeper, sceneAt, steerPartner, stepTitleScene, talkSpot, tapsPlaza, visitPlaza } from './render/titleScene'
+import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
+import { uiZoom } from './ui/uiScale'
+import { createLobbyStage, createStageClouds, drawLobbyStage, stageDex } from './render/lobbyStage'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
+import { watchCursorMode } from './ui/cursorMode'
 import { detectKeyLayout } from './ui/keyLayout'
 import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
@@ -158,6 +163,8 @@ import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
+import { openGameModes } from './ui/gameModes'
+import { loadLobbyMode, saveLobbyMode } from './ui/lobbyMode'
 import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
@@ -169,7 +176,7 @@ import { plazaVisitors, setDevCaravan, setDevStall } from './ui/visitors'
 import { missionDevTools } from './ui/missionsDev'
 import { pcBoxScreen } from './ui/pcBox'
 import { newsScreen } from './ui/news'
-import { forgetSurvey, surveyScreen } from './ui/survey'
+import { designSurveyScreen, forgetDesignSurvey, forgetSurvey, stageDesignSurveyDue, surveyScreen } from './ui/survey'
 import { halloweenScreen } from './ui/halloween'
 import { pokedexScreen } from './ui/pokedex'
 import { profileEditor, profileScreen } from './ui/profile'
@@ -189,7 +196,7 @@ import { forgetInstallNudge, installNudgeScreen } from './ui/install'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
 import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
-import { knownTier, linkedPoll, patreonReturn, stageSupporterStatus, watchSupporterStatus } from './supporters'
+import { fakeWall, knownTier, linkedPoll, patreonReturn, stageSupporterStatus, watchSupporterStatus } from './supporters'
 import { suggestionsScreen } from './ui/suggestions'
 import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
@@ -271,6 +278,7 @@ const fixedStickCenter = (): Vec | null => {
   return stickCenter
 }
 const input = createInput(canvas, () => settings().controls, fixedStickCenter)
+watchCursorMode(input)
 readRunToasts(() => settings().runToasts)
 /** Internal canvas size in world px. Shared by reference with the running game. */
 const view = { w: 480, h: 270 }
@@ -513,28 +521,21 @@ let megaQueued = false
 let lungeQueued = false
 /** The meadow with wandering Pokémon behind every menu. Lives across screens, so it never pops. */
 const scene = createTitleScene(Date.now())
-/** The joystick a drag on the lobby's meadow steers the partner with, drawn over it. */
-let meadowStick: Stick | null = null
-
-/** A CSS px point on screen, in the meadow's world px (the canvas sits at the viewport's corner). */
-const meadowAt = (at: Vec): Vec => ({ x: Math.round(scene.cam.x) + at.x / cssScale, y: Math.round(scene.cam.y) + at.y / cssScale })
-
-/** A meadow point (world px) on screen, in CSS px. */
-const meadowToScreen = (at: Vec): Vec => ({ x: (at.x - Math.round(scene.cam.x)) * cssScale, y: (at.y - Math.round(scene.cam.y)) * cssScale })
+/** The rest screen's side-view stage (`render/lobbyStage.ts`), and whether it's what the canvas shows now. */
+const lobbyStage = createLobbyStage()
+const stageClouds = createStageClouds()
+let stageUp = false
 
 /** Lobbies that met the partner so far: only the latest one may send it away (the next title is built before the last one goes). */
 let meetings = 0
 
-/** The lobby's handle on the meadow: its partner walks there, with the supporter's companion, and visits the Kecleon plaza. */
+/** The title's handle on its world: the side-view stage on the rest screen, and the top-down meadow the lobby stands on, its partner hopping through it on a trip with the supporter's companion. */
 const meadow: Meadow = {
   meet: (partner) => {
     const id = ++meetings
     meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }))
     return () => void (id === meetings && meetPartner(scene, null))
   },
-  steer: (move, tap, home) => steerPartner(scene, move, tap && meadowAt(tap), meadowAt(home)),
-  out: () => scene.partner !== null && scene.partner.state !== 'home',
-  stick: (stick) => (meadowStick = stick),
   visit: (to, instant) => {
     // 1 visit in 20 from afar, the counter looks empty: Kecleon is camouflaged until talked to (`ShopPlaza.reveal`).
     const offView = Math.abs(scene.plaza.x - (scene.cam.x + view.w / 2)) > view.w / 2 + 60
@@ -544,14 +545,18 @@ const meadow: Meadow = {
     visitPlaza(scene, to, view.w, view.h, instant)
   },
   at: () => sceneAt(scene),
-  explore: (on) => exploreMeadow(scene, on, view.w, view.h),
-  talkSpot: () => {
-    const at = talkSpot(scene)
-    return at && { ...meadowToScreen(at), who: at.who }
+  stage: (draw, dt, w, h, at) => {
+    stageUp = true
+    drawLobbyStage(draw, lobbyStage, w, h, at, halloweenToday(), dt)
   },
-  tapsShop: (at) => tapsPlaza(scene, meadowAt(at)),
-  // The canvas sits at the viewport's corner: CSS px over the scale are view px.
-  stageBox: (box) => (scene.stageBox = box && { left: box.left / cssScale, top: box.top / cssScale, right: box.right / cssScale, bottom: box.bottom / cssScale }),
+  clouds: stageClouds.el,
+  tickClouds: (w, horizon) => stageClouds.tick(lobbyStage, w, horizon, cssScale, window.devicePixelRatio || 1, uiZoom(), halloweenToday()),
+  draw: (draw, dt, w, h, covers) => {
+    stageUp = false
+    stepTitleScene(scene, dt, w, h, covers ?? undefined)
+    drawTitleScene(draw, scene, w, h, covers !== null)
+  },
+  scale: () => cssScale,
 }
 
 /** Dev: the plaza's building level (`ps.plaza(n)`), over the shop's own. */
@@ -750,6 +755,9 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   setScreen(
     titleScreen(ui, input, {
       play: () => (firstStep('play'), playFromLobby()),
+      partner: () => showMenu(),
+      legends: () => showMenu(loadSave().partner, 'legends'),
+      modes: (focus, shown) => openGameModes(ui, input, { current: loadLobbyMode(), shown, onPick: (id) => (saveLobbyMode(id), showTitle({ focus: 'play' })), close: () => showTitle({ focus }) }),
       // A device that never played: "press start" goes straight into its first run.
       start: opts.intro && firstRun() ? () => ((pressedStart = true), firstStep('play'), startFirstRun()) : undefined,
       challenge: () => showChallenge(),
@@ -762,6 +770,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       news: (focus) => newsScreen(ui, input, () => showTitle({ focus })),
       // Closed unanswered, the lobby highlights the survey's clipboard; answered, it's gone and JOGAR is.
       survey: () => surveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
+      designSurvey: () => designSurveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
       install: (offer, focus) => installNudgeScreen(ui, input, offer, () => showTitle({ focus })),
       halloween: (focus) =>
         halloweenScreen(ui, input, {
@@ -803,7 +812,6 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       realmCrowd: realmUrl() ? realmCrowdNow : undefined,
       realmErrands: realmUrl() ? realmErrandsNow : undefined,
       arena: () => showArena(),
-      arenaHub: (tab) => showArenaHub(tab),
       dojo: () => showDojo(),
       meadow,
     }, opts),
@@ -851,7 +859,7 @@ const showPlayGate = () => {
 }
 
 /** The partner select; its top bar leads back to the title, to the Poké Mart (the wallet) and to Settings, which come back to it on the same Pokémon. */
-const showMenu = (initial: PlayableId = loadSave().partner) => {
+const showMenu = (initial: PlayableId = loadSave().partner, tab?: 'legends') => {
   endRun()
   firstStep('select')
   prefetchRun()
@@ -863,7 +871,7 @@ const showMenu = (initial: PlayableId = loadSave().partner) => {
     incubator: () => showIncubator(() => showMenu(select.selected())),
     // A skin not owned yet: the Boutique's Skins on it, then back here on the same Pokémon.
     boutique: (skin) => showBoutique('skins', () => showMenu(select.selected()), null, skin),
-  }, initial)
+  }, initial, tab ? { tab } : undefined)
   setScreen(select)
 }
 
@@ -1239,6 +1247,8 @@ const lobbySprites = (): Variant[] => {
     ...(c && canWalkWith(save, c, knownTier(save)) ? [{ dex: companionForm(c.id).dex, shiny: c.shiny }] : []),
     { dex: outbreak, shiny: false },
     { dex: outbreak, shiny: true },
+    // The rest screen's stage, while it shows: the Pokémon around its platform, on its ridge and in its sky.
+    ...(stageUp ? stageDex().map((dex) => ({ dex, shiny: false })) : []),
   ]
 }
 
@@ -3466,8 +3476,7 @@ const showArena = () =>
 
 /**
  * The Arena's hub (`ui/arenaHub.ts`) on `tab`: profile, season, ranking,
- * history, rules or the look worn (Visual). The Arena screen opens it, and so
- * do the lobby's Stadium boards; Voltar goes back to the Arena screen. Its
+ * history, rules or the look worn (Visual). The Arena screen opens it; Voltar goes back to the Arena screen. Its
  * Loja is the Boutique's (`showBoutique`), which comes back to the hub.
  */
 const showArenaHub = (tab: ArenaHubTab = 'profile') => {
@@ -3923,7 +3932,7 @@ const frame = (now: number) => {
   if (!run && menuFrame && !startingRun) {
     const mdt = Math.min(0.1, menuAcc)
     menuAcc = 0
-    // Attract mode: wild Pokémon stroll through the meadow behind the menus (haunted on the Noite das Bruxas).
+    // The meadow holds the lobby and its trips; the Noite das Bruxas haunts it and the rest screen's stage.
     scene.haunted = halloweenToday()
     scene.plaza.level = plazaLevel()
     refreshVisitors(performance.now())
@@ -3931,11 +3940,11 @@ const frame = (now: number) => {
     try {
       if (screen?.scene) screen.scene(ctx, mdt, view.w, view.h)
       else {
+        // Every menu keeps the meadow behind it, so leaving the lobby is no jump to another world.
         stepTitleScene(scene, mdt, view.w, view.h)
         drawTitleScene(ctx, scene, view.w, view.h)
         ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
         ctx.fillRect(0, 0, view.w, view.h)
-        if (meadowStick) drawJoystick(ctx, meadowStick, cssScale)
       }
     } catch (error) {
       // The menus share the run's canvas: what they leave on it would follow the player into the next run.
@@ -4423,6 +4432,21 @@ const devChallenge = (mode?: 'play' | 'done' | 'reset', time = 754) => {
   else if (mode === 'reset') saveAttempt(null)
   if (mode !== 'play' && !run) showChallenge()
   return c
+}
+
+/**
+ * Dev: the lobby's Hall card without the API. `ps.hall('fake', 128, 'Marina')`
+ * stages a wall of that many supporters with that name newest, `'pending'`
+ * one that never answers, `'fail'` an API that can't be reached and `'off'`
+ * the API again; the lobby rebuilds with it.
+ */
+const devHall = (cmd?: 'fake' | 'pending' | 'fail' | 'off', count = 128, newest = 'Marina') => {
+  if (!cmd) return "ps.hall('fake', count?, newestName?) · ('pending') · ('fail') · ('off')"
+  const tiers = ['diamond', 'gold', 'supporter', 'supporter'] as const
+  const entries = PLAYABLE_IDS.slice(0, Math.min(count, 12)).map((id, i, ids) => ({ handle: `fan${i}`, name: i === ids.length - 1 ? newest : `Fan ${i + 1}`, tier: tiers[i % tiers.length]!, since: new Date(Date.UTC(2026, 9, i + 1)).toISOString(), og: i === 0, title: null, pokemon: { id, shiny: i % 5 === 0 } }))
+  fakeWall(cmd === 'off' ? null : cmd === 'fake' ? Promise.resolve({ entries, hidden: { supporter: Math.max(0, count - entries.length), gold: 0, diamond: 0 } }) : cmd === 'fail' ? Promise.resolve(null) : new Promise(() => {}))
+  if (screen?.el.classList.contains('title-home')) showTitle()
+  return `Hall: ${cmd}`
 }
 
 /**
@@ -4990,6 +5014,7 @@ if (import.meta.env.DEV) {
       field: devField,
       challenge: devChallenge,
       coopBoard: devCoopBoard,
+      hall: devHall,
       otherDevice: devOtherDevice,
       dex: () => loadSave().dex,
       /** Plays an error report's `replay` (the JSON string from PostHog) again: a simulation error throws here at the same tick. */
@@ -5000,7 +5025,7 @@ if (import.meta.env.DEV) {
         if (rulesStanding(replay.rules) !== 'same') console.warn(`ps: the replay plays by rules ${replay.rules}, this build by ${RULES_VERSION}: it may end elsewhere`)
         return resimulate(replay)
       },
-      /** The lobby's meadow: its wanderers, the partner and the camera, to stage greetings (`ps.meadow().partner`). */
+      /** The top-down meadow the lobby stands on: its wanderers, the partner and the camera. */
       meadow: () => scene,
       /**
        * The Dojo: `ps.dojo('charmander')` starts a training session with that Pokémon at once (its saved build on), and
@@ -5011,9 +5036,8 @@ if (import.meta.env.DEV) {
         showTitle({ shop: 'dojo' })
       },
       /**
-       * The Estádio: `ps.stadium()` walks the lobby there, south of home, Ninjask's hello included (the first visit's long one
-       * after `localStorage.removeItem('ps:stadiumSeen')`), then the Arena's screen. Its boards (Jogar, Ranking, Temporada,
-       * Histórico, Regras) open with E or a tap while the partner strolls by them.
+       * The Estádio: `ps.stadium()` goes there, south of home, Ninjask's hello included (the first visit's long one
+       * after `localStorage.removeItem('ps:stadiumSeen')`), then the Arena's screen.
        */
       stadium: () => showTitle({ shop: 'stadium' }),
       /**
@@ -5021,6 +5045,8 @@ if (import.meta.env.DEV) {
        * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
        * `ps.boutique('open')` lands there with the sheet open at once (`'skins'` on Skins, `'locker'` on Visual).
        */
+      /** Modos de jogo (`ui/gameModes.ts`): a pick lands back on the lobby with that mode. */
+      modes: () => setScreen(openGameModes(ui, input, { current: loadLobbyMode(), onPick: (id) => (saveLobbyMode(id), showTitle()), close: () => showTitle() })),
       /** The secret bases' screens with fakes: `ps.base()` the editor, `ps.base('board')`, `ps.base('carpentry')` (`devBase`). */
       base: devBase,
       boutique: (cmd?: 'open' | 'skins' | 'locker') => (cmd ? showBoutique(cmd === 'open' ? 'shop' : cmd) : showTitle({ shop: 'boutique' })),
@@ -5060,7 +5086,7 @@ if (import.meta.env.DEV) {
       },
       /**
        * Puts a seasonal stall on the plaza (`ps.stall('halloween')`, `'christmas'`; `null` none; no argument: the calendar's) and
-       * goes there; `ps.stall('halloween', true)` opens its shelf in the shop, as a talk with Duskull does.
+       * goes there; `ps.stall('halloween', true)` opens its shelf in the shop.
        */
       stall: (id?: StallId | null, shop = false) => {
         if (id && !STALL_IDS.includes(id)) return `Stalls: ${STALL_IDS.join(', ')}`
@@ -5099,10 +5125,17 @@ if (import.meta.env.DEV) {
         return hunted
       },
       pumpkin: () => withRun((g) => g.props.push({ id: g.nextId++, cell: -1 - g.nextId, kind: 'pumpkin', x: g.player.x + 40, y: g.player.y, hp: 2, hitCooldown: 0, shake: 0 })),
-      /** Opens the difficulty survey over the title, whatever the runs played; `ps.survey('reset')` forgets this device's answer. */
-      survey: (mode?: 'reset') => {
+      /**
+       * Opens the difficulty survey over the title, whatever the runs played; `ps.survey('reset')` forgets this device's answer.
+       * `ps.survey('design')` opens the one on the redesign, `('design', 'reset')` forgets its answer and first sight,
+       * `('design', 'due')` also meets its thresholds, so the next page load asks by itself.
+       */
+      survey: (mode?: 'reset' | 'design', design?: 'reset' | 'due') => {
         endRun()
         if (mode === 'reset') return (forgetSurvey(), showTitle())
+        if (mode === 'design' && design === 'reset') return (forgetDesignSurvey(), showTitle())
+        if (mode === 'design' && design === 'due') return (stageDesignSurveyDue(), showTitle())
+        if (mode === 'design') return setScreen(designSurveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
         setScreen(surveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
       },
       /**

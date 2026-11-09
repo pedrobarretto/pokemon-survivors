@@ -55,10 +55,10 @@ const GRACE_TICKS = 5
 
 /**
  * The lobby's countdown on a way into the Realm, during an hour and in the 30
- * minutes before it: the hour's name and clock when `long` (the wide screens'
- * card), the clock alone on a tile. Stops once `el` leaves the page.
+ * minutes before it: the clock, with the hour's name on hover. Stops once `el`
+ * leaves the page.
  */
-export const realmHourTag = (el: HTMLElement, long: boolean) => {
+export const realmHourTag = (el: HTMLElement) => {
   const tag = h('em', { class: 'lobby-realm-hour hidden' })
   el.append(tag)
   let waited = 0
@@ -69,7 +69,7 @@ export const realmHourTag = (el: HTMLElement, long: boolean) => {
     tag.classList.toggle('hidden', n === null)
     tag.classList.toggle('on', n?.on ?? false)
     if (!n) return
-    const text = long ? `${nameOf(n.hour.kind)} ${clockOf(n.left)}` : clockOf(n.left)
+    const text = clockOf(n.left)
     if (tag.textContent !== text) tag.textContent = text
     tag.title = `${nameOf(n.hour.kind)} · ${clockLine(n)}`
   }

@@ -8,7 +8,7 @@ import type { PokeType } from './types'
  * weekend caravan (from the Kecleon Mart, Lv 4), the loyalty card's
  * milestones and the seasonal stalls. The rules that read it live in
  * `game/caravan.ts` and `game/loyalty.ts`; the plaza draws them
- * (`render/plaza.ts`). Lines live in `i18n` (`plaza.meowth`, `plaza.stalls`).
+ * (`render/plaza.ts`). Lines live in `i18n` (`plaza.meowth`, `plaza.duskull`).
  */
 
 /**
@@ -89,10 +89,9 @@ type StallGoods = Readonly<Record<string, { egg: EggTier; price: number; pay: 'c
 
 /**
  * Seasonal stalls: during an event's Brasília days (`from` to `to`, both
- * included) its stall stands on the plaza, its keeper (`dex`) beside it, and a
- * talk gets its lines (`plaza.stalls` in `i18n`). A stall with `goods` opens
- * its shelf in the shop after the talk (`game/stalls.ts`). A new event is a
- * new entry here, with its art in `public/assets/shop/stall-<id>.png` and its lines.
+ * included) its stall stands on the plaza, its keeper (`dex`) beside it. A
+ * stall with `goods` sells them on the shop's Barraca shelf (`game/stalls.ts`).
+ * A new event is a new entry here, with its art in `public/assets/shop/stall-<id>.png`.
  */
 export const STALLS = {
   /**

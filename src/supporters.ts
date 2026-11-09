@@ -129,6 +129,11 @@ export const fetchWall = () =>
     return { entries: parseWall(body.supporters), hidden: parseHidden(body.hidden) }
   }))
 
+/** Dev (`ps.hall`): what `fetchWall` answers from now on; null asks the API again. */
+export const fakeWall = (fake: Promise<Wall | null> | null) => {
+  wall = fake
+}
+
 const POLL_PATHS = { supporters: '/poll', diamond: '/poll/diamond' } as const satisfies Record<PollKind, string>
 
 /** The `kind` poll, or null when the API can't be reached. */

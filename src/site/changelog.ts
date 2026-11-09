@@ -25,8 +25,15 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-09',
-    title: { pt: 'O Realm ganhou vida', en: 'The Realm comes alive', es: 'El Realm cobra vida', fr: 'Le Realm prend vie', zh: 'Realm 熱鬧起來了' },
+    title: { pt: 'Lobby novo e Realm vivo', en: 'A new lobby and a livelier Realm', es: 'Lobby nuevo y un Realm con vida', fr: 'Un nouvel accueil et un Realm plein de vie', zh: '全新大廳，Realm 熱鬧起來了' },
     highlights: [
+      {
+        pt: 'Lobby novo: os 7 modos à vista, cada um com sua turma no campo, e o JOGAR faz o modo escolhido.',
+        en: 'A new lobby: all 7 modes in view, each with its own cast on the meadow, and PLAY starts the one you picked.',
+        es: 'Lobby nuevo: los 7 modos a la vista, cada uno con su elenco en el prado, y JUGAR inicia el que elegiste.',
+        fr: 'Nouvel accueil : les 7 modes en vue, chacun avec sa troupe dans la prairie, et JOUER lance celui que tu as choisi.',
+        zh: '全新大廳：7 種模式一目了然，各有專屬角色站上草原，按下「開始」就進入選好的模式。',
+      },
       {
         pt: 'O Poké Realm agora tem 4 cidades e você entra direto na primeira com vaga, para encontrar mais gente.',
         en: 'The Poké Realm now has 4 cities and you go straight into the first with room, so you meet more people.',
@@ -49,13 +56,6 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '廣場佈告欄每天有 3 項跑腿任務可以賺 ₽，一個人也能全部完成。',
       },
       {
-        pt: 'A Hora do Realm acontece três vezes ao dia: 15 minutos com mini games pagando em dobro e cenário especial.',
-        en: 'The Realm Hour happens three times a day: 15 minutes of double-pay mini games and special scenery.',
-        es: 'La Hora del Realm ocurre tres veces al día: 15 minutos con minijuegos que pagan el doble y un escenario especial.',
-        fr: 'L’Heure du Realm a lieu trois fois par jour : 15 minutes de mini-jeux qui paient double, dans un décor spécial.',
-        zh: 'Realm 時刻每天舉辦三次：15 分鐘內小遊戲獎勵加倍，還有特別場景。',
-      },
-      {
         pt: 'No celular, o novo cadeado na caixa do seu Pokémon fixa o joystick no canto, sem sair da partida.',
         en: 'On phones, the new padlock on your Pokémon’s box fixes the joystick in its corner without leaving the run.',
         es: 'En el celular, el nuevo candado en el recuadro de tu Pokémon fija el joystick en su esquina sin salir de la partida.',
@@ -64,6 +64,36 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
     ],
     changes: [
+      {
+        title: { pt: 'Lobby novo', en: 'A new lobby', es: 'Lobby nuevo', fr: 'Nouvel accueil', zh: '全新大廳' },
+        notes: [
+          {
+            pt: 'Os 7 modos ficam numa barra sempre à vista. Escolha um e quem está no campo muda: seu parceiro no Survivors, um lendário em Lendas, dois times na Arena. O JOGAR ganha a cor do modo e faz o que ele faz.',
+            en: 'The 7 modes sit on a bar that is always in view. Pick one and who stands on the meadow changes: your partner in Survivors, a legend in Legends, two teams in the Arena. PLAY takes the mode\'s color and starts it.',
+            es: 'Los 7 modos están en una barra siempre a la vista. Elige uno y quién está en el prado cambia: tu compañero en Survivors, un legendario en Leyendas, dos equipos en la Arena. JUGAR toma el color del modo y lo inicia.',
+          },
+          {
+            pt: 'O dia vem primeiro, em Hoje: Presentes, Desafio do dia, Ovos, Missões e Surto. Na Praça ficam o Festival, as lojas e o Hall da Fama. Discord, redes e Ideias foram para a Comunidade.',
+            en: 'Your day comes first, under Today: Gifts, Daily Challenge, Eggs, Missions and Outbreak. At the Plaza you find the Festival, the shops and the Hall of Fame. Discord, socials and Ideas moved to Community.',
+            es: 'Tu día va primero, en Hoy: Regalos, Desafío del día, Huevos, Misiones y Brote. En la Plaza están el Festival, las tiendas y el Salón de la Fama. Discord, redes e Ideas pasaron a Comunidad.',
+          },
+          {
+            pt: 'O jogo inteiro ganhou o mesmo visual: letras novas, mais fáceis de ler, e cartões e botões de contorno grosso, nos menus e na partida.',
+            en: 'The whole game got the same look: new, easier-to-read lettering and bold-outlined cards and buttons, in the menus and in a run.',
+            es: 'Todo el juego tiene el mismo aspecto: letras nuevas, más fáciles de leer, y tarjetas y botones de contorno grueso, en los menús y en la partida.',
+          },
+          {
+            pt: 'O botão Passear saiu: tudo o que ele alcançava agora tem o seu botão. No celular, cinco abas embaixo guardam o resto.',
+            en: 'The Explore button is gone: everything it reached now has its own button. On phones, five tabs at the bottom hold the rest.',
+            es: 'El botón Pasear ya no está: todo lo que alcanzaba ahora tiene su botón. En el celular, cinco pestañas abajo guardan el resto.',
+          },
+          {
+            pt: 'Em alguns tamanhos de janela, a tela tremia um pouco enquanto o seu Pokémon andava. Não treme mais.',
+            en: 'At some window sizes, the screen shook a little while your Pokémon walked. It no longer does.',
+            es: 'En algunos tamaños de ventana, la pantalla temblaba un poco mientras tu Pokémon caminaba. Ya no tiembla.',
+          },
+        ],
+      },
       {
         title: { pt: 'Cidades mais cheias', en: 'Fuller cities', es: 'Ciudades más llenas', fr: 'Des villes plus animées', zh: '城市更熱鬧' },
         notes: [

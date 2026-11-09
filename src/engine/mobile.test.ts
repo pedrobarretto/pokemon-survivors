@@ -72,6 +72,11 @@ describe('viewport', () => {
     expect(Number.isInteger(deviceScale(412, 915, 2.625))).toBe(true)
   })
 
+  it('keeps both sides even, so the camera rounds with the player', () => {
+    expect(fitView(1443, 903, 1)).toEqual({ w: 482, h: 302, cssScale: 3 })
+    expect(fitView(1513, 860, 2)).toMatchObject({ w: 506, h: 288 })
+  })
+
   it('never sizes a side below 1 px, whatever a laying-out webview reports', () => {
     expect(fitView(390, 0, 3)).toMatchObject({ h: 1 })
     expect(fitView(-20, Number.NaN, 2)).toMatchObject({ w: 1, h: 1 })

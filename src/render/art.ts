@@ -1045,7 +1045,7 @@ const STICK_LOCK = (fixed: boolean) => [
 export const stickLockIcon = (fixed: boolean) =>
   toIconUrl(`stickLock:${fixed}`, () => art(STICK_LOCK(fixed), { o: '#283040', b: fixed ? '#f8c030' : '#a8a8c0', n: '#5868a0', N: '#98a8d8' }))
 
-/** PlayStation's face buttons in their colors, the size of a Press Start 2P letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
+/** PlayStation's face buttons in their colors, the size of a capital letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
 const PAD_GLYPHS = {
   '✕': [['11....11', '111..111', '.111111.', '..1111..', '..1111..', '.111111.', '111..111', '11....11'], '#4a80e0'],
   '○': [['..1111..', '.111111.', '111..111', '11....11', '11....11', '111..111', '.111111.', '..1111..'], '#e04850'],
@@ -1256,6 +1256,29 @@ export const ribbonSprite = (tier: RibbonTier) => {
 export const ribbonIcon = (tier: RibbonTier) => toIconUrl(`ribbon:${tier}`, () => ribbonSprite(tier))
 
 export const medalIcon = (medal: Medal, locked = false) => toIconUrl(`medal:${locked ? 'locked' : medal}`, () => medalSprite(medal, locked))
+
+/* ---------------- The kit (ui/gameModes.ts) ---------------- */
+
+/** The tick in a selected card's gold disc. Ink on gold in both themes. */
+const KIT_CHECK = ['........11', '.......111', '......111.', '1....111..', '11..111...', '111111....', '.1111.....', '..11......']
+
+/** The kit's close button. One color: `.ink-icon` lights it in the dark theme. */
+const KIT_CLOSE = ['11.....11', '111...111', '.111.111.', '..11111..', '...111...', '..11111..', '.111.111.', '111...111', '11.....11']
+
+export const checkIcon = () => toIconUrl('kit:check', () => art(KIT_CHECK, { 1: '#1b2040' }))
+
+export const closeIcon = () => toIconUrl('kit:close', () => art(KIT_CLOSE, { 1: '#1b2040' }))
+
+/** A chunky chevron for the lobby's arrows (`dir`: which way it points): its weight sits at its middle, so centering the box centers the glyph. */
+const KIT_ARROW = ['111.....', '1111....', '.1111...', '..1111..', '...1111.', '....1111', '...1111.', '..1111..', '.1111...', '1111....', '111.....']
+
+export const chevronIcon = (dir: 'left' | 'right') =>
+  toIconUrl(`kit:chevron:${dir}`, () => art(dir === 'right' ? KIT_ARROW : KIT_ARROW.map((row) => [...row].reverse().join('')), { 1: '#1b2040' }))
+
+/** Four panels in a square: all the modes. */
+const KIT_GRID = ['111..111', '111..111', '111..111', '........', '........', '111..111', '111..111', '111..111']
+
+export const gridIcon = () => toIconUrl('kit:grid', () => art(KIT_GRID, { 1: '#1b2040' }))
 
 /* ---------------- Clears ---------------- */
 
