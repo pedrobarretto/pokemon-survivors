@@ -68,9 +68,12 @@ export type GameRun = {
 
 /**
  * A solo game: its canvas size (whole px; pick one that fits a phone held
- * either way, about 240 × 200) and how to start a round.
+ * either way, about 240 × 200) and how to start a round. `fluid` makes the
+ * canvas follow the stage instead: given the stage's CSS size it answers the
+ * size to use, asked again whenever the stage changes (a phone turned), and
+ * the game lays itself out from its canvas every frame.
  */
-export type SoloGame = { size: { w: number; h: number }; start: (ctx: SoloCtx) => GameRun }
+export type SoloGame = { size: { w: number; h: number }; fluid?: (stageW: number, stageH: number) => { w: number; h: number }; start: (ctx: SoloCtx) => GameRun }
 
 /**
  * Where a seat at a relay table stands, for the frame's word over the game
@@ -165,7 +168,7 @@ type Shell = {
 }
 
 /** The overlay, its canvas fitted to the screen by whole device pixels, and the input mapped into the game's pixels. */
-const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number }, close: () => void): Shell => {
+const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number }, close: () => void, fluid?: SoloGame['fluid']): Shell => {
   const m = t().minigames
   const canvas = h('canvas', { class: 'minigame-canvas', width: size.w, height: size.h })
   const sheet = h('div', { class: 'minigame-sheet box hidden' })
@@ -200,6 +203,12 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   const fit = () => {
     const stage = canvas.parentElement
     if (!stage) return
+    const wanted = fluid?.(stage.clientWidth, stage.clientHeight)
+    if (wanted && (wanted.w !== size.w || wanted.h !== size.h)) {
+      size.w = canvas.width = wanted.w
+      size.h = canvas.height = wanted.h
+      g.imageSmoothingEnabled = false
+    }
     // Whole device pixels per game pixel, so a phone's 1.9 is ×5/3 on a 3× screen rather than ×1.
     const s = Math.min(stage.clientWidth / size.w, stage.clientHeight / size.h)
     const dpr = window.devicePixelRatio || 1
@@ -360,7 +369,7 @@ export const openSoloGame = (root: HTMLElement, game: SoloGameId, def: SoloGame,
     s.dispose()
     opts.close()
   }
-  const s = shell(root, game, def.size, close)
+  const s = shell(root, game, { ...def.size }, close, def.fluid)
   const ctx: SoloCtx = { partner: opts.partner, shiny: opts.shiny, brag: (feat) => opts.realm?.brag(game, feat), stage: s.stage, root: s.el, input: opts.input }
   let run: GameRun | null = null
   let startedAt = 0

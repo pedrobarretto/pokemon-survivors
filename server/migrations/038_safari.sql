@@ -1,7 +1,7 @@
 -- The Zona Safári (src/realm/games/safari.rules.ts, server/src/safari.ts).
 -- Only adds, so the previous API keeps working during a rollout.
 
--- Every session entered: charged here, `state` holds who's in the bushes (never sent whole) and each turn's answer (a repeated action reads it back).
+-- Every session entered: charged here, `state` holds the encounters still to come (never sent whole) and each turn's answer (a repeated action reads it back).
 create table safari_sessions (
   id uuid primary key default gen_random_uuid(),
   user_id text not null references users (id) on delete cascade,

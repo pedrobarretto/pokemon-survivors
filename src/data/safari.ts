@@ -42,19 +42,20 @@ const rarityOf = (id: HatchlingId): SafariRarity => {
   return tier === 'ultra' ? 'ultra' : tier === 'rare' ? 'rare' : 'common'
 }
 
-const entryOf = (id: HatchlingId): SafariEntry<HatchlingId> => ({ family: id, rarity: rarityOf(id), types: typesOf(id) })
+/** A family as the Safari weighs it (the guarantee can bring one from outside the week's pool). */
+export const safariEntry = (id: HatchlingId): SafariEntry<HatchlingId> => ({ family: id, rarity: rarityOf(id), types: typesOf(id) })
 
 /** Every family a Safari can hold, in the dex's order: the regular eggs' and the Safari-only three. */
 export const SAFARI_FAMILIES: readonly HatchlingId[] = [...REGULAR, ...SAFARI_ONLY]
 
-/** Who can be in a habitat's bushes. */
+/** Who can turn up in a habitat's tall grass. */
 export const habitatPool = (habitat: SafariHabitat): SafariEntry<HatchlingId>[] => {
   const { types, only } = SAFARI_HABITATS[habitat]
-  return [...REGULAR.filter((id) => typesOf(id).some((type) => (types as readonly string[]).includes(type))), only].map(entryOf)
+  return [...REGULAR.filter((id) => typesOf(id).some((type) => (types as readonly string[]).includes(type))), only].map(safariEntry)
 }
 
 /** The Safari families an account still lacks, given what it hatched and the family gifts it already has waiting. */
-export const lackingFamilies = (hatched: Readonly<Record<string, unknown>>, gifted: readonly string[]) => SAFARI_FAMILIES.filter((id) => hatched[id] === undefined && !gifted.includes(id)).map(entryOf)
+export const lackingFamilies = (hatched: Readonly<Record<string, unknown>>, gifted: readonly string[]) => SAFARI_FAMILIES.filter((id) => hatched[id] === undefined && !gifted.includes(id)).map(safariEntry)
 
-/** A family's first form, the one that walks out of the bush. */
+/** A family's first form, the one met in the grass. */
 export const safariForm = (family: HatchlingId) => HATCHLINGS[family].line[0]

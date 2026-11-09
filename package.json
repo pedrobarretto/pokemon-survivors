@@ -12,7 +12,6 @@
     "roster": "node scripts/roster.mjs",
     "assets": "node scripts/fetch-assets.mjs && node scripts/fetch-emotes.mjs",
     "credits": "node scripts/credits.mjs",
-    "safari-shapes": "node scripts/safari-shapes.mjs",
     "creators": "node scripts/creators.mjs",
     "bodies": "node scripts/bodies.mjs",
     "determinism": "node scripts/determinism.mjs",

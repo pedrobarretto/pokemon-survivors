@@ -1,10 +1,12 @@
 /**
  * The Zona Safári's rules (`MINIGAMES.safari`): pure and import-free, shared
  * by the API, which rolls everything, and the client, which draws the answer.
- * A session is a walk through a week's habitat: a few bushes with someone in
- * each, seen only as a silhouette; approach one to meet it, then throw a ball,
- * give it a berry (a calmer Pokémon is easier to catch and flees less, but the
- * berry costs a turn in which it may still flee) or leave. Every roll comes
+ * A session is a walk through a week's habitat. Its encounters are rolled when
+ * it starts and met in order, one each time the client reports a rustle in the
+ * tall grass (`grass`), so where and how long a player walks can neither pick
+ * one nor roll it again; running from one spends it. In an encounter: throw a
+ * ball, give a berry (a calmer Pokémon is easier to catch and flees less, but
+ * the berry costs a turn in which it may still flee) or run. Every roll comes
  * through `next`, so the API's dice and the tests' sequences run the same code.
  */
 
@@ -16,14 +18,15 @@ export const SAFARI = {
   /** What a session starts with. */
   balls: 6,
   berries: 3,
-  bushes: 5,
+  /** Encounters a session holds: about 3 to 5 minutes of walking, and room to run from a family already owned. */
+  encounters: 8,
   /** Sessions in a row without a new family, after which the next one brings a sure catch. */
   guarantee: 10,
   /** Each encounter's chance of a shiny. */
   shinyOdds: 1 / 200,
   /** How much likelier a family sharing a type with the partner is. */
   partnerBoost: 1.6,
-  /** How common each rarity is, per bush (`shareOf`). */
+  /** How common each rarity is, per encounter (`shareOf`). */
   weights: { common: 10, rare: 5, ultra: 2, special: 6 },
   /** A ball's chance on a Pokémon that hasn't been calmed. */
   catchChance: { common: 0.35, rare: 0.22, ultra: 0.12, special: 0.16 },
@@ -40,29 +43,30 @@ export type SafariRarity = keyof typeof SAFARI.weights
 /** A family a habitat can hold. */
 export type SafariEntry<F extends string> = { family: F; rarity: SafariRarity; types: readonly string[] }
 
-/** A bush: who's in it, and whether its encounter is over. `sure`: the guarantee's bush. */
-export type SafariBush<F extends string> = { family: F; rarity: SafariRarity; sure: boolean; done: boolean }
+/** An encounter rolled in advance: who, whether it's shiny and whether it's the guarantee's. */
+export type SafariSlot<F extends string> = { family: F; rarity: SafariRarity; shiny: boolean; sure: boolean }
 
-/** The Pokémon being faced: its bush, how calm it is (berries given) and whether it's shiny. */
-export type SafariEncounter<F extends string> = { bush: number; family: F; rarity: SafariRarity; shiny: boolean; calm: number; sure: boolean }
+/** The Pokémon being faced, and how calm it is (berries given). */
+export type SafariEncounter<F extends string> = SafariSlot<F> & { calm: number }
 
 export type SafariCatch<F extends string> = { family: F; shiny: boolean }
 
-/** A session as the API keeps it (never sent whole: `bushes` knows who hides in them). */
+/** A session as the API keeps it (never sent whole: `queue` knows who is still to come). `met`: how many of the queue have been revealed. */
 export type SafariRun<F extends string> = {
   balls: number
   berries: number
-  bushes: readonly SafariBush<F>[]
+  queue: readonly SafariSlot<F>[]
+  met: number
   encounter: SafariEncounter<F> | null
   catches: readonly SafariCatch<F>[]
   over: boolean
 }
 
-export type SafariAction = { kind: 'approach'; bush: number } | { kind: 'ball' } | { kind: 'berry' } | { kind: 'leave' } | { kind: 'finish' }
+export type SafariAction = { kind: 'grass' } | { kind: 'ball' } | { kind: 'berry' } | { kind: 'leave' } | { kind: 'finish' }
 
 /** What an action came to, as the client animates it. `shakes`: how many a thrown ball made (3 and `caught`: it held). */
 export type SafariTurn<F extends string> =
-  | { kind: 'appear'; bush: number; family: F; shiny: boolean }
+  | { kind: 'appear'; family: F; shiny: boolean; sure: boolean }
   | { kind: 'ball'; family: F; shiny: boolean; shakes: number; caught: boolean; fled: boolean }
   | { kind: 'berry'; calm: number; fled: boolean }
   | { kind: 'left' }
@@ -81,7 +85,7 @@ export const habitatOfWeek = <H>(week: string, habitats: readonly H[]): H => hab
 const weightOf = <F extends string>(entry: SafariEntry<F>, partnerTypes: readonly string[]) =>
   SAFARI.weights[entry.rarity] * (entry.types.some((type) => partnerTypes.includes(type)) ? SAFARI.partnerBoost : 1)
 
-/** Each entry's chance of being in a given bush, as the screen shows it (they add up to 1). */
+/** Each entry's chance of being any one encounter, as the screen shows it (they add up to 1). */
 export const shareOf = <F extends string>(pool: readonly SafariEntry<F>[], partnerTypes: readonly string[]) => {
   const total = pool.reduce((sum, entry) => sum + weightOf(entry, partnerTypes), 0)
   return pool.map((entry) => ({ ...entry, share: weightOf(entry, partnerTypes) / total }))
@@ -96,20 +100,24 @@ const pickEntry = <F extends string>(pool: readonly SafariEntry<F>[], partnerTyp
   return pool[pool.length - 1]!
 }
 
-const hiding = <F extends string>({ family, rarity }: SafariEntry<F>, sure: boolean): SafariBush<F> => ({ family, rarity, sure, done: false })
+const slotOf = <F extends string>({ family, rarity }: SafariEntry<F>, next: () => number, sure: boolean): SafariSlot<F> => ({ family, rarity, shiny: next() < SAFARI.shinyOdds, sure })
 
 /**
- * A new session's bushes: each draws on its own at the odds `shareOf` shows.
- * `sure` (the guarantee's family) takes one bush, wherever `next` puts it.
+ * A new session's encounters: each draws on its own at the odds `shareOf`
+ * shows. `sure` (the guarantee's family) comes first, so spending every ball
+ * before reaching it can't lose it.
  */
-export const fillBushes = <F extends string>(pool: readonly SafariEntry<F>[], partnerTypes: readonly string[], next: () => number, sure: SafariEntry<F> | null): SafariBush<F>[] => {
-  const bushes: SafariBush<F>[] = Array.from({ length: SAFARI.bushes }, () => hiding(pickEntry(pool, partnerTypes, next), false))
-  if (sure) bushes[Math.floor(next() * SAFARI.bushes)] = hiding(sure, true)
-  return bushes
+export const rollQueue = <F extends string>(pool: readonly SafariEntry<F>[], partnerTypes: readonly string[], next: () => number, sure: SafariEntry<F> | null): SafariSlot<F>[] => {
+  const queue: SafariSlot<F>[] = Array.from({ length: SAFARI.encounters }, () => slotOf(pickEntry(pool, partnerTypes, next), next, false))
+  if (sure) queue[0] = slotOf(sure, next, true)
+  return queue
 }
 
-/** A new session, filled by `fillBushes`. */
-export const startRun = <F extends string>(bushes: readonly SafariBush<F>[]): SafariRun<F> => ({ balls: SAFARI.balls, berries: SAFARI.berries, bushes, encounter: null, catches: [], over: false })
+/** A new session, its encounters from `rollQueue`. */
+export const startRun = <F extends string>(queue: readonly SafariSlot<F>[]): SafariRun<F> => ({ balls: SAFARI.balls, berries: SAFARI.berries, queue, met: 0, encounter: null, catches: [], over: false })
+
+/** How many encounters are still to come. */
+export const encountersLeft = <F extends string>(run: SafariRun<F>) => run.queue.length - run.met
 
 /** A ball's chance on a Pokémon of `rarity` given `calm` berries. */
 export const catchChanceOf = (rarity: SafariRarity, calm: number) => Math.min(1, SAFARI.catchChance[rarity] * (1 + SAFARI.calmCatch * Math.min(calm, SAFARI.maxCalm)))
@@ -124,50 +132,41 @@ const rollShakes = (chance: number, next: () => number) => {
   return 3
 }
 
-const closeBush = <F extends string>(run: SafariRun<F>, bush: number) => run.bushes.map((b, i) => (i === bush ? { ...b, done: true } : b))
-
-/** Ends the session once nothing is left to do: no balls, or no bush still holding anyone. */
-const settle = <F extends string>(run: SafariRun<F>): SafariRun<F> => {
-  const over = run.balls === 0 || (run.encounter === null && run.bushes.every((b) => b.done))
-  return over ? { ...run, encounter: null, over } : run
-}
+/** Ends the session once nothing is left to do: no balls, or no encounter still to come and none being faced. */
+const settle = <F extends string>(run: SafariRun<F>): SafariRun<F> => (run.balls === 0 || (run.encounter === null && encountersLeft(run) === 0) ? { ...run, encounter: null, over: true } : run)
 
 /**
  * One action on a session, with every roll made through `next`. Null when it
- * can't be done now (no encounter to throw at, a bush already walked, no balls
- * left); the guarantee's encounter (`sure`) neither fails nor flees.
+ * can't be done now (no encounter to throw at, already facing one, none left,
+ * no balls); the guarantee's encounter (`sure`) neither fails nor flees.
  */
 export const applyAction = <F extends string>(run: SafariRun<F>, action: SafariAction, next: () => number): { run: SafariRun<F>; turn: SafariTurn<F> } | null => {
   if (run.over) return null
   if (action.kind === 'finish') return { run: { ...run, encounter: null, over: true }, turn: { kind: 'finished' } }
   const { encounter } = run
-  if (action.kind === 'approach') {
-    const bush = run.bushes[action.bush]
-    if (encounter || !bush || bush.done) return null
-    const shiny = next() < SAFARI.shinyOdds
-    return { run: { ...run, encounter: { bush: action.bush, family: bush.family, rarity: bush.rarity, shiny, calm: 0, sure: bush.sure } }, turn: { kind: 'appear', bush: action.bush, family: bush.family, shiny } }
+  if (action.kind === 'grass') {
+    const slot = run.queue[run.met]
+    if (encounter || !slot) return null
+    return { run: { ...run, met: run.met + 1, encounter: { ...slot, calm: 0 } }, turn: { kind: 'appear', family: slot.family, shiny: slot.shiny, sure: slot.sure } }
   }
   if (!encounter) return null
-  if (action.kind === 'leave') return { run: settle({ ...run, encounter: null, bushes: closeBush(run, encounter.bush) }), turn: { kind: 'left' } }
+  if (action.kind === 'leave') return { run: settle({ ...run, encounter: null }), turn: { kind: 'left' } }
   if (action.kind === 'berry') {
     if (run.berries === 0) return null
     const calm = Math.min(encounter.calm + 1, SAFARI.maxCalm)
     // The flee roll already feels this berry: calmer now, and still a turn in which it can run.
     const fled = !encounter.sure && next() < fleeChanceOf(encounter.rarity, calm)
     const after = { ...run, berries: run.berries - 1 }
-    return { run: fled ? settle({ ...after, encounter: null, bushes: closeBush(run, encounter.bush) }) : { ...after, encounter: { ...encounter, calm } }, turn: { kind: 'berry', calm, fled } }
+    return { run: fled ? settle({ ...after, encounter: null }) : { ...after, encounter: { ...encounter, calm } }, turn: { kind: 'berry', calm, fled } }
   }
   if (run.balls === 0) return null
   const shakes = encounter.sure ? 3 : rollShakes(catchChanceOf(encounter.rarity, encounter.calm), next)
   const caught = shakes === 3
   const fled = !caught && !encounter.sure && next() < fleeChanceOf(encounter.rarity, encounter.calm)
-  const balls = run.balls - 1
-  const done = caught || fled
   const after: SafariRun<F> = {
     ...run,
-    balls,
-    encounter: done ? null : encounter,
-    bushes: done ? closeBush(run, encounter.bush) : run.bushes,
+    balls: run.balls - 1,
+    encounter: caught || fled ? null : encounter,
     catches: caught ? [...run.catches, { family: encounter.family, shiny: encounter.shiny }] : run.catches,
   }
   return { run: settle(after), turn: { kind: 'ball', family: encounter.family, shiny: encounter.shiny, shakes, caught, fled } }

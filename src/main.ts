@@ -4857,16 +4857,24 @@ if (import.meta.env.DEV) {
        */
       claw: async (index?: number, misses?: number, used?: number) => (await import('./realm/clawApi')).stageClaw(index, misses, used),
       /**
-       * The Zona Safári with the faked API (`ps.realm('fake')` on, then its screen): `ps.safari()`. `ps.safari('sure')` puts the guarantee's bush in the next
-       * session, `ps.safari('catch')` makes every ball hold and `ps.safari('flee')` every ball break and its Pokémon run (`'real'` back to the dice), `ps.safari('dry', 3)` sets the sessions without a new family and `ps.safari('used', 2)` the sessions used today.
+       * The Zona Safári with the faked API (`ps.realm('fake')` on, then its screen): `ps.safari()`. `ps.safari('sure')` puts the guarantee in the next
+       * session, `ps.safari('catch')` makes every ball hold and `ps.safari('flee')` every ball break and its Pokémon run (`'real'` back to the dice), `ps.safari('dry', 3)` sets the sessions
+       * without a new family and `ps.safari('used', 2)` the sessions used today. `ps.safari('habitat', 'marsh')` holds a preserve, `ps.safari('meet', 'mimikyu')` makes that the next encounter
+       * (`('meet', 'mimikyu', true)` shiny), `ps.safari('grass')` sets the grass off now and `ps.safari('phase')` prints where the game is.
        */
-      safari: async (what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used', n?: number) => {
+      safari: async (what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase', arg?: number | string | null, shiny?: boolean) => {
         await devRealm('fake')
         if (what === undefined) return devMinigame('safari')
         const { stageSafari } = await import('./realm/safariApi')
+        const { safariDev } = await import('./realm/games/safari')
+        const { isSafariHabitat } = await import('./data/safari')
         if (what === 'sure') return stageSafari({ sure: true })
-        if (what === 'dry') return stageSafari({ dry: n ?? 0 })
-        if (what === 'used') return stageSafari({ used: n ?? 0 })
+        if (what === 'dry') return stageSafari({ dry: typeof arg === 'number' ? arg : 0 })
+        if (what === 'used') return stageSafari({ used: typeof arg === 'number' ? arg : 0 })
+        if (what === 'habitat') return stageSafari({ habitat: isSafariHabitat(arg) ? arg : null })
+        if (what === 'meet') return stageSafari({ next: typeof arg === 'string' && (HATCHLING_IDS as readonly string[]).includes(arg) ? (arg as HatchlingId) : null, shiny: shiny === true })
+        if (what === 'grass') return safariDev.run?.rustle()
+        if (what === 'phase') return { game: safariDev.run?.phase() ?? null, battle: safariDev.run?.battle() ?? null }
         return stageSafari({ catches: what === 'catch', flees: what === 'flee' })
       },
       /**

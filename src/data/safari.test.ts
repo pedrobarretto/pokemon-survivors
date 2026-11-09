@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { HATCHLINGS, type HatchlingId } from './hatchlings'
 import { SAFARI_FAMILIES, SAFARI_HABITAT_IDS, SAFARI_ONLY, habitatPool, lackingFamilies } from './safari'
-import shapes from './safariShapes.generated.json'
 
 const SEASON_ONE: readonly HatchlingId[] = ['snom', 'joltik', 'applin', 'hatenna', 'salandit', 'darumaka', 'wimpod', 'finizen', 'pawniard', 'frigibax']
 
@@ -26,10 +25,6 @@ describe('who the Safari holds', () => {
       expect(['common', 'rare', 'ultra']).toContain(HATCHLINGS[id].egg)
     }
     for (const promised of ['munchlax', 'togepi', 'gastly', 'noibat', 'dratini']) expect(SAFARI_FAMILIES).not.toContain(promised)
-  })
-
-  it('has a silhouette for every family, so the API never has to name one', () => {
-    for (const id of SAFARI_FAMILIES) expect(shapes).toHaveProperty(id)
   })
 
   it('leaves out what the account has hatched or has waiting as a gift', () => {

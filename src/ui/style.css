@@ -27490,156 +27490,395 @@ span.arena-hub-face {
   font-size: 13px;
 }
 
-/* The Zona Safári (`realm/games/safari.ts`): the odds' sheet over the stage, and a slim panel over the field. */
-.safari-sheet {
+/* The Zona Safári (`realm/games/safari.ts`): DOM over the canvas, sized by its scale (`--k`, set every frame). */
+.sz-hud {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  font-size: calc(var(--k, 2) * 9px);
+  line-height: 1.15;
+}
+
+.sz-hud .hidden {
+  display: none !important;
+}
+
+.sz-hud > * {
+  pointer-events: auto;
+}
+
+.sz-text {
+  position: absolute;
+  left: calc(var(--k, 2) * 4px);
+  right: calc(var(--k, 2) * 4px);
+  bottom: calc(var(--k, 2) * 44px);
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--k, 2) * 4px);
+  padding: calc(var(--k, 2) * 4px) calc(var(--k, 2) * 6px);
+  min-height: calc(var(--k, 2) * 26px);
+  text-align: left;
+}
+
+.sz-text-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sz-text p {
+  margin: 0;
+}
+
+.sz-text small {
+  display: block;
+  margin-top: 2px;
+  opacity: 0.75;
+  font-size: 0.8em;
+}
+
+.sz-face {
+  flex: none;
+  width: calc(var(--k, 2) * 20px);
+  height: calc(var(--k, 2) * 20px);
+  image-rendering: pixelated;
+  border: var(--px) solid #283040;
+  background: #dfe8c8;
+}
+
+.sz-cmds {
+  position: absolute;
+  left: calc(var(--k, 2) * 4px);
+  right: calc(var(--k, 2) * 4px);
+  bottom: calc(var(--k, 2) * 4px);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: calc(var(--k, 2) * 3px);
+}
+
+.sz-cmds button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--k, 2) * 2px);
+  min-height: max(44px, calc(var(--k, 2) * 26px));
+  padding: 4px;
+  font-size: 1em;
+  color: var(--ink);
+}
+
+.sz-cmds button img {
+  width: calc(var(--k, 2) * 11px);
+  height: calc(var(--k, 2) * 11px);
+  image-rendering: pixelated;
+}
+
+.sz-cmds button.sz-sel {
+  outline: 2px solid #f8c030;
+  outline-offset: 1px;
+}
+
+.sz-cmds button:disabled {
+  opacity: 0.45;
+}
+
+.sz-hot {
+  background: #f8e088;
+}
+
+.sz-pouch {
+  position: absolute;
+  left: calc(var(--k, 2) * 4px);
+  top: calc(var(--k, 2) * 4px);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--k, 2) * 4px);
+  padding: 2px calc(var(--k, 2) * 4px);
+  border-radius: 4px;
+  background: rgba(16, 20, 32, 0.72);
+  color: #fff;
+  pointer-events: none;
+  font-size: 0.95em;
+}
+
+.sz-pouch span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sz-pouch img {
+  width: calc(var(--k, 2) * 9px);
+  height: calc(var(--k, 2) * 9px);
+  image-rendering: pixelated;
+}
+
+.sz-pouch em {
+  font-style: normal;
+  opacity: 0.8;
+  font-size: 0.85em;
+}
+
+.sz-end {
+  position: absolute;
+  right: calc(var(--k, 2) * 4px);
+  top: calc(var(--k, 2) * 4px);
+  min-height: 34px;
+  padding: 2px calc(var(--k, 2) * 5px);
+  font-size: 0.85em;
+  color: var(--ink);
+}
+
+.sz-read {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--k, 2) * 8px);
+  transform: translateX(-50%);
+  min-height: 44px;
+  padding: 2px calc(var(--k, 2) * 8px);
+  color: var(--ink);
+}
+
+.sz-tag {
+  position: absolute;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 0 calc(var(--k, 2) * 4px);
+  padding: 1px calc(var(--k, 2) * 4px);
+  max-width: calc(var(--k, 2) * 120px);
+  border-left: calc(var(--k, 2) * 2px) solid #6c9a3c;
+  border-radius: 2px;
+  background: #fdf8e6;
+  box-shadow: 0 calc(var(--k, 2) * 1px) 0 rgba(30, 24, 16, 0.45);
+  color: #38301f;
+  pointer-events: none;
+}
+
+.sz-tag-near {
+  border-left-color: #6878a8;
+}
+
+.sz-tag b {
+  font-weight: normal;
+  font-family: var(--title);
+  font-size: 0.62em;
+}
+
+.sz-tag small {
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
+.sz-tag em {
+  font-style: normal;
+  grid-column: 2;
+  color: #c03030;
+  font-size: 0.7em;
+}
+
+.sz-hearts {
+  grid-column: 1;
+  font-style: normal;
+  color: #e04870;
+  font-size: 0.8em;
+  letter-spacing: 1px;
+}
+
+.sz-board {
   position: absolute;
   inset: 0;
   z-index: 3;
   display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-  max-width: min(680px, 100%);
-  background: var(--dk-surface, #fbf7ea);
-  color: var(--dk-text, #2a2233);
-  border-radius: 4px;
-  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--k, 2) * 4px);
+  background: rgba(16, 20, 32, 0.55);
 }
 
-.safari-sheet.hidden {
-  display: none;
-}
-
-.safari-sheet-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  text-align: center;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.safari-sheet-scroll h3 {
-  margin: 2px 0 4px;
-  font-family: var(--title);
-  font-size: 14px;
-  font-weight: normal;
-}
-
-.safari-sheet-scroll p {
-  margin: 4px 0;
-}
-
-.safari-eyebrow {
-  font-size: 11px;
-  opacity: 0.7;
-}
-
-.safari-partner {
-  font-style: italic;
-}
-
-.safari-sure {
-  font-weight: 700;
-  color: #b07a00;
-}
-
-.safari-odds {
-  list-style: none;
-  margin: 10px 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 6px;
-}
-
-.safari-odd {
-  position: relative;
+.sz-board-frame {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  padding: 6px 2px 4px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--dk-text, #2a2233) 7%, transparent);
+  gap: calc(var(--k, 2) * 2px);
+  max-height: 100%;
+  width: 100%;
+  max-width: calc(var(--k, 2) * 320px);
+  padding: calc(var(--k, 2) * 4px);
+  border: calc(var(--k, 2) * 3px) solid #6a4526;
+  border-radius: calc(var(--k, 2) * 3px);
+  background: #b98a52;
+  box-shadow: inset 0 0 0 2px #8e6236;
+  color: #2a1e10;
 }
 
-.safari-odd img {
+.sz-board-frame h3 {
+  margin: 0;
+  font-family: var(--title);
+  font-weight: normal;
+  font-size: 0.75em;
+}
+
+.sz-board-frame small {
+  font-size: 0.8em;
+}
+
+.sz-notes {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--k, 2) * 3px);
+  padding: calc(var(--k, 2) * 3px) calc(var(--k, 2) * 4px);
+  background: #f4ead0;
+  box-shadow: 0 1px 0 rgba(40, 24, 8, 0.5);
+  touch-action: pan-y;
+}
+
+.sz-notes h4 {
+  margin: 0 0 1px;
+  border-bottom: 1px dashed #b49a70;
+  font-family: var(--title);
+  font-weight: normal;
+  font-size: 0.55em;
+  color: #6a4526;
+}
+
+.sz-notes ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--k, 2) * 72px), 1fr));
+  gap: 0 calc(var(--k, 2) * 3px);
+}
+
+.sz-note {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--k, 2) * 1.5px);
+  min-width: 0;
+  font-size: 0.85em;
+}
+
+.sz-note img {
+  width: calc(var(--k, 2) * 12px);
+  height: calc(var(--k, 2) * 12px);
+  flex: none;
   image-rendering: pixelated;
 }
 
-.safari-odd-name {
-  font-size: 11px;
-  line-height: 1.2;
-}
-
-.safari-odd b {
-  font-size: 12px;
-}
-
-.safari-odd em {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  padding: 1px 3px;
-  border-radius: 2px;
-  background: #e8483a;
-  color: #fff;
-  font-size: 8px;
-  font-style: normal;
-}
-
-.safari-odd-special {
-  background: color-mix(in srgb, #f0c040 30%, transparent);
-  outline: 1px solid #d8a020;
-}
-
-.safari-odd-ultra {
-  background: color-mix(in srgb, #a070e0 24%, transparent);
-}
-
-.safari-sheet-cta {
-  padding: 8px 12px;
-  border-top: 1px solid color-mix(in srgb, var(--dk-text, #2a2233) 18%, transparent);
-  text-align: center;
-  font-size: 13px;
-}
-
-.safari-sheet-cta button {
-  width: 100%;
-  max-width: 280px;
-  min-height: 44px;
-  font-size: 14px;
-}
-
-.safari-hot {
-  background: #f8c830;
-  color: #2a2233;
-}
-
-.safari-panel.safari-slim {
-  top: auto;
-  right: 8px;
-  left: 8px;
-  bottom: 6px;
-  transform: none;
-  width: auto;
-  max-width: 420px;
-  margin: 0 auto;
-  flex-direction: row;
-  align-items: center;
-  padding: 4px 8px;
-  text-align: left;
-}
-
-.safari-panel.safari-slim p {
+.sz-note b {
   flex: 1;
-  font-size: 12px;
+  min-width: 0;
+  font-weight: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.safari-panel.safari-slim .claw-panel-actions button {
-  min-height: 34px;
-  padding: 2px 10px;
-  font-size: 12px;
+.sz-note span {
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
+.sz-note-new b::after {
+  content: '';
+  display: inline-block;
+  width: calc(var(--k, 2) * 2px);
+  height: calc(var(--k, 2) * 2px);
+  margin-left: calc(var(--k, 2) * 1.5px);
+  vertical-align: middle;
+  background: #d83838;
+}
+
+.sz-board-frame > button {
+  min-height: 40px;
+  color: var(--ink);
+}
+
+.sz-report {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--k, 2) * 3px);
+  width: min(calc(100% - 16px), calc(var(--k, 2) * 170px));
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
+  padding: calc(var(--k, 2) * 7px);
+  text-align: center;
+  color: var(--ink);
+}
+
+.sz-report h3 {
+  margin: 0;
+  font-family: var(--title);
+  font-weight: normal;
+  font-size: 0.72em;
+}
+
+.sz-report p {
+  margin: 0;
+}
+
+.sz-caught {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(var(--k, 2) * 3px);
+}
+
+.sz-caught li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.8em;
+}
+
+.sz-caught img {
+  width: calc(var(--k, 2) * 24px);
+  height: calc(var(--k, 2) * 24px);
+  image-rendering: pixelated;
+}
+
+.sz-caught b {
+  font-weight: normal;
+}
+
+.sz-report button {
+  min-height: 44px;
+}
+
+/* Sideways, the commands stand in a column to the right of the scene and the box under the scene. */
+.sz-hud.sz-wide .sz-text {
+  right: calc(var(--k, 2) * (var(--w-side, 112) + 4) * 1px);
+  bottom: calc(var(--k, 2) * 2px);
+  min-height: calc(var(--k, 2) * 34px);
+}
+
+.sz-hud.sz-wide .sz-cmds {
+  left: auto;
+  right: calc(var(--k, 2) * 3px);
+  bottom: calc(var(--k, 2) * 4px);
+  width: calc(var(--k, 2) * 104px);
+  grid-auto-flow: row;
+  grid-auto-rows: max(44px, calc(var(--k, 2) * 30px));
+}
+
+.sz-hud.sz-wide .sz-read {
+  bottom: calc(var(--k, 2) * 4px);
+}
+
+.sz-hud.sz-tall .sz-text.sz-text {
+  bottom: calc(var(--k, 2) * 46px);
 }
 
 @media (orientation: landscape) {

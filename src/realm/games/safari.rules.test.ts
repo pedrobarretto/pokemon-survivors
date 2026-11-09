@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SAFARI, applyAction, catchChanceOf, fillBushes, fleeChanceOf, guaranteedEntry, habitatOfWeek, sessionPrice, shareOf, startRun, type SafariAction, type SafariEntry } from './safari.rules'
+import { SAFARI, applyAction, catchChanceOf, encountersLeft, fleeChanceOf, guaranteedEntry, habitatOfWeek, rollQueue, sessionPrice, shareOf, startRun, type SafariAction, type SafariEntry, type SafariSlot } from './safari.rules'
 
 /** A generator that answers `rolls` in turn, then 0.5 forever. */
 const dice = (...rolls: number[]) => {
@@ -14,9 +14,10 @@ const POOL: SafariEntry<string>[] = [
   { family: 'mimikyu', rarity: 'special', types: ['ghost'] },
 ]
 
-/** A session with five bushes of `rarity`; the first one is the guarantee's when `sure`. */
-const run = (rarity: 'common' | 'ultra' = 'common', sure = false) =>
-  startRun(Array.from({ length: SAFARI.bushes }, (_, i) => ({ family: 'pidgey', rarity, sure: sure && i === 0, done: false })))
+/** A session of the usual length, all of `rarity`; the first is the guarantee's when `sure` and each is named after its place. */
+const queue = (rarity: 'common' | 'ultra' = 'common', sure = false): SafariSlot<string>[] => Array.from({ length: SAFARI.encounters }, (_, i) => ({ family: `mon${i}`, rarity, shiny: false, sure: sure && i === 0 }))
+
+const run = (rarity: 'common' | 'ultra' = 'common', sure = false) => startRun(queue(rarity, sure))
 
 const act = <R extends ReturnType<typeof run>>(state: R, action: SafariAction, ...rolls: number[]) => {
   const got = applyAction(state, action, dice(...rolls))
@@ -42,7 +43,7 @@ describe('the week', () => {
   })
 })
 
-describe('who is in the bushes', () => {
+describe('who the grass holds', () => {
   it('shows shares that add up to 1 and raises the partner’s type', () => {
     const plain = shareOf(POOL, [])
     expect(plain.reduce((sum, e) => sum + e.share, 0)).toBeCloseTo(1)
@@ -50,17 +51,26 @@ describe('who is in the bushes', () => {
     expect(withGhost.find((e) => e.family === 'mimikyu')!.share).toBeGreaterThan(plain.find((e) => e.family === 'mimikyu')!.share)
   })
 
-  it('draws at those shares', () => {
+  it('draws at those shares, shinies at their odds', () => {
     let a = 12345
     const next = () => (a = (a * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff
     const counts = new Map<string, number>()
-    for (let i = 0; i < 4000; i++) for (const b of fillBushes(POOL, [], next, null)) counts.set(b.family, (counts.get(b.family) ?? 0) + 1)
-    for (const e of shareOf(POOL, [])) expect(counts.get(e.family)! / (4000 * SAFARI.bushes)).toBeCloseTo(e.share, 1)
+    let shinies = 0
+    for (let i = 0; i < 4000; i++) {
+      for (const slot of rollQueue(POOL, [], next, null)) {
+        counts.set(slot.family, (counts.get(slot.family) ?? 0) + 1)
+        if (slot.shiny) shinies += 1
+      }
+    }
+    const total = 4000 * SAFARI.encounters
+    for (const e of shareOf(POOL, [])) expect(counts.get(e.family)! / total).toBeCloseTo(e.share, 1)
+    expect(shinies / total).toBeCloseTo(SAFARI.shinyOdds, 2)
   })
 
-  it('puts the sure family in one bush, marked', () => {
-    const bushes = fillBushes(POOL, [], dice(), POOL[3]!)
-    expect(bushes.filter((b) => b.sure)).toEqual([{ family: 'mimikyu', rarity: 'special', sure: true, done: false }])
+  it('puts the sure family first, marked', () => {
+    const slots = rollQueue(POOL, [], dice(), POOL[3]!)
+    expect(slots[0]).toMatchObject({ family: 'mimikyu', rarity: 'special', sure: true })
+    expect(slots.filter((s) => s.sure)).toHaveLength(1)
   })
 })
 
@@ -73,21 +83,31 @@ describe('the odds', () => {
 })
 
 describe('a session', () => {
-  const met = () => act(run(), { kind: 'approach', bush: 2 }, 0.5).run
+  const met = () => act(run(), { kind: 'grass' }).run
 
-  it('reveals the family on approach and only the rolled shiny', () => {
-    const shiny = act(run(), { kind: 'approach', bush: 2 }, 0)
-    expect(shiny.turn).toEqual({ kind: 'appear', bush: 2, family: 'pidgey', shiny: true })
-    expect(act(run(), { kind: 'approach', bush: 2 }, SAFARI.shinyOdds).turn).toMatchObject({ shiny: false })
+  it('reveals the encounters in their order, however often the grass is reported', () => {
+    let state = run()
+    for (let i = 0; i < 3; i++) {
+      const got = act(state, { kind: 'grass' })
+      expect(got.turn).toEqual({ kind: 'appear', family: `mon${i}`, shiny: false, sure: false })
+      state = act(got.run, { kind: 'leave' }).run
+    }
+    expect(encountersLeft(state)).toBe(SAFARI.encounters - 3)
+  })
+
+  it('takes no roll to reveal one, so walking can’t change it', () => {
+    const roll = () => {
+      throw new Error('rolled')
+    }
+    expect(applyAction(run(), { kind: 'grass' }, roll)?.turn).toMatchObject({ family: 'mon0' })
   })
 
   it('catches when every shake holds', () => {
     const { run: after, turn } = act(met(), { kind: 'ball' }, 0, 0, 0)
-    expect(turn).toEqual({ kind: 'ball', family: 'pidgey', shiny: false, shakes: 3, caught: true, fled: false })
-    expect(after.catches).toEqual([{ family: 'pidgey', shiny: false }])
+    expect(turn).toEqual({ kind: 'ball', family: 'mon0', shiny: false, shakes: 3, caught: true, fled: false })
+    expect(after.catches).toEqual([{ family: 'mon0', shiny: false }])
     expect(after.balls).toBe(SAFARI.balls - 1)
     expect(after.encounter).toBeNull()
-    expect(after.bushes[2]!.done).toBe(true)
   })
 
   it('breaks out after the shakes held, then may flee', () => {
@@ -97,7 +117,6 @@ describe('a session', () => {
     const { run: gone, turn: ran } = act(met(), { kind: 'ball' }, 0.99, 0)
     expect(ran).toMatchObject({ shakes: 0, fled: true })
     expect(gone.encounter).toBeNull()
-    expect(gone.bushes[2]!.done).toBe(true)
   })
 
   it('calms with a berry, spends a turn it can flee in, and runs out', () => {
@@ -111,20 +130,21 @@ describe('a session', () => {
 
   it('refuses what can’t be done now', () => {
     expect(applyAction(run(), { kind: 'ball' }, dice())).toBeNull()
-    expect(applyAction(met(), { kind: 'approach', bush: 0 }, dice())).toBeNull()
-    expect(applyAction(run(), { kind: 'approach', bush: 9 }, dice())).toBeNull()
+    expect(applyAction(met(), { kind: 'grass' }, dice())).toBeNull()
   })
 
-  it('ends when the last ball is spent or the last bush is walked', () => {
+  it('ends when the last ball is spent or the last encounter is over', () => {
     const lastBall = act({ ...met(), balls: 1 }, { kind: 'ball' }, 0.99, 0.99)
     expect(lastBall.run.over).toBe(true)
-    const emptied = { ...run(), bushes: run().bushes.map((b, i) => ({ ...b, done: i !== 0 })) }
-    const met0 = act(emptied, { kind: 'approach', bush: 0 }, 0.5).run
-    expect(act(met0, { kind: 'leave' }).run.over).toBe(true)
+    let state = run()
+    for (let i = 0; i < SAFARI.encounters; i++) state = act(act(state, { kind: 'grass' }).run, { kind: 'leave' }).run
+    expect(state.over).toBe(true)
+    expect(encountersLeft(state)).toBe(0)
+    expect(applyAction(state, { kind: 'grass' }, dice())).toBeNull()
   })
 
   it('never fails or flees on the guarantee', () => {
-    const met1 = act(run('ultra', true), { kind: 'approach', bush: 0 }, 0.5).run
+    const met1 = act(run('ultra', true), { kind: 'grass' }).run
     expect(act(met1, { kind: 'berry' }, 0).turn).toMatchObject({ fled: false })
     expect(act(met1, { kind: 'ball' }, 0.99, 0.99, 0.99, 0).turn).toMatchObject({ shakes: 3, caught: true, fled: false })
   })

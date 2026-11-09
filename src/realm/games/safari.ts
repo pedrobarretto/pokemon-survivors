@@ -1,730 +1,587 @@
 import { openGift, stageGifts } from '../../account'
 import { PLAYABLE, type HatchlingId } from '../../data/hatchlings'
-import { habitatPool, safariForm, type SafariHabitat } from '../../data/safari'
-import { playCry, playSfx } from '../../engine/audio'
+import { habitatPool, safariEntry, safariForm, type SafariHabitat } from '../../data/safari'
+import { PLAZA, SAFARI_MAPS, TILE } from '../../data/safariMaps'
+import { playSfx } from '../../engine/audio'
 import { formatPokeDollars, t } from '../../i18n'
-import type { SafariActed, SafariSession, SafariShape, SafariState } from '../../net/realmApi'
-import { cryUrl, drawPokemon, loadSpecies, portraitUrl, sprites } from '../../render/sprites'
-import type { Dir8 } from '../../engine/math'
+import type { SafariActed, SafariSession, SafariState } from '../../net/realmApi'
+import { loadSpecies, portraitUrl } from '../../render/sprites'
 import { h } from '../../ui/dom'
 import { loadSave } from '../../ui/save'
 import { isFailure } from '../api'
 import { actSafari, fetchSafari, startSafari } from '../safariApi'
-import { arcadeSize, burst, drawCentered, drawFx, drawIcon, drawText, image, plate, stepFx, type Particle, type Popup } from './arcadeKit'
+import { image, partnerDex } from './arcadeKit'
 import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
-import { SAFARI, sessionPrice, shareOf, type SafariAction } from './safari.rules'
+import { SAFARI, sessionPrice, shareOf, type SafariAction, type SafariRarity } from './safari.rules'
+import { THEMES, drawGrassWipe } from './safariArt'
+import { createBattle, layoutBattle, type Battle, type BattleHost } from './safariBattle'
+import { createField, type Field } from './safariField'
+import { buildWorld } from './safariWorld'
 
 /**
- * The Zona Safári (`MINIGAMES.safari`): the week's habitat, its odds shown up
- * front, then a walk through its bushes. The API charges the session and rolls
- * everything (`safariApi.ts`, `safari.rules.ts`); this only animates the
- * answer, and waits for it before any ball lands. A silhouette is all a bush
- * shows until it's approached. The moment of the feature is the catch: the
- * ball's arc, its shakes, and for a new family a capture scene right here, no
- * egg and no walking. Words live in the panel over the stage, as in the claw.
+ * The Zona Safári (`MINIGAMES.safari`): a preserve the partner walks. The
+ * Ranger's booth at the gate takes the session (the API charges it), the notice
+ * board shows who lives here, and the tall grass does the rest: a rustle asks
+ * the API for the next encounter in line and opens a battle
+ * (`safariBattle.ts`), the map being `safariField.ts`. The canvas follows the
+ * stage (`fluid`), and every word is DOM over it, sized from the canvas's scale.
  *
- * Touch: tap a bush, then the panel's buttons. Keys: arrows pick a bush, Enter
- * or Space walks up to it; in an encounter 1 throws a ball, 2 gives a berry, 3 leaves.
+ * Touch: a floating stick anywhere on the map, buttons in battle. Keys: arrows
+ * or WASD walk; 1, 2, 3 or arrows and Enter pick a command.
  */
 
-const SIZES = { tall: { w: 176, h: 184 }, wide: { w: 300, h: 160 } } as const
+type Phase = 'load' | 'lobby' | 'busy' | 'gate' | 'walk' | 'alert' | 'wipeIn' | 'battle' | 'wipeOut' | 'report' | 'trouble'
 
-/** Each backdrop is 320 × 176, the top of it the horizon. */
-const BACKDROP = { w: 320, h: 176 } as const
+const WIPE = 0.55
+const ALERT = 0.72
+const GATE_WALK = 1.05
 
-/** Where the bushes stand (the bottom middle of each), per layout. */
-const BUSHES = {
-  tall: [
-    { x: 36, y: 104 },
-    { x: 140, y: 96 },
-    { x: 88, y: 132 },
-    { x: 36, y: 168 },
-    { x: 140, y: 162 },
-  ],
-  wide: [
-    { x: 46, y: 98 },
-    { x: 150, y: 84 },
-    { x: 254, y: 98 },
-    { x: 98, y: 138 },
-    { x: 206, y: 138 },
-  ],
-} as const
+/** What the dev hooks (`ps.safari`) reach of the running game. */
+export const safariDev: { run: { phase: () => Phase; battle: () => string | null; rustle: () => void } | null } = { run: null }
 
-/** Where the Pokémon stands and a ball is thrown from. The wide layout keeps left of the panel. */
-const STAGE = {
-  tall: { mon: { x: 88, y: 132 }, hand: { x: 88, y: 180 }, floor: 184 },
-  wide: { mon: { x: 92, y: 118 }, hand: { x: 92, y: 172 }, floor: 160 },
-} as const
+const LEVEL_BASE: Record<SafariRarity, number> = { common: 7, rare: 15, ultra: 24, special: 20 }
 
-/** Seconds each beat lasts. */
-const TIMES = { walk: 0.35, reveal: 0.75, fly: 0.55, absorb: 0.3, fall: 0.28, shake: 0.6, click: 0.75, burst: 0.32, flee: 0.7, toss: 0.5, eat: 0.75, repeat: 1.4 } as const
-
-/** How far above the ground a thrown ball peaks. */
-const ARC = 58
-
-/** What a bush's reach is for a tap. */
-const BUSH_REACH = 30
-
-type Phase = 'load' | 'gate' | 'busy' | 'field' | 'walk' | 'reveal' | 'meet' | 'throw' | 'absorb' | 'fall' | 'wait' | 'shake' | 'click' | 'burst' | 'flee' | 'toss' | 'eat' | 'scene' | 'repeat' | 'over'
-
-const SIZE = () => arcadeSize(SIZES.tall, SIZES.wide)
-
-let shown: { w: number; h: number } = SIZE()
-
-const silhouettes = new Map<string, HTMLCanvasElement>()
-
-/** A shape from the API as a dark cutout, cached by its bits. */
-const silhouette = (shape: SafariShape) => {
-  const hit = silhouettes.get(shape.bits)
-  if (hit) return hit
-  const c = document.createElement('canvas')
-  c.width = shape.w + 2
-  c.height = shape.h + 2
-  const g = c.getContext('2d')!
-  const bytes = Uint8Array.from(atob(shape.bits), (ch) => ch.charCodeAt(0))
-  const on = (x: number, y: number) => {
-    const i = y * shape.w + x
-    return x >= 0 && y >= 0 && x < shape.w && y < shape.h && ((bytes[i >> 3]! >> (i & 7)) & 1) === 1
-  }
-  // A thin light rim first, so the shape reads on the dark habitats too, then the dark body.
-  g.fillStyle = 'rgba(232,240,232,0.55)'
-  for (let y = -1; y <= shape.h; y++) for (let x = -1; x <= shape.w; x++) if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) g.fillRect(x + 1, y + 1, 1, 1)
-  g.fillStyle = '#10161c'
-  for (let y = 0; y < shape.h; y++) for (let x = 0; x < shape.w; x++) if (on(x, y)) g.fillRect(x + 1, y + 1, 1, 1)
-  silhouettes.set(shape.bits, c)
-  return c
+/** The level a wild Pokémon wears: only its nameplate reads it. */
+const wildLevel = (family: HatchlingId, rarity: SafariRarity, seen: number) => {
+  let hash = seen * 31
+  for (let i = 0; i < family.length; i++) hash = (hash * 33 + family.charCodeAt(i)) | 0
+  return LEVEL_BASE[rarity] + (Math.abs(hash) % 8)
 }
 
 const start = (ctx: SoloCtx): GameRun => {
-  const size = shown
-  const layout = size.h > size.w ? 'tall' : 'wide'
-  const stage = STAGE[layout]
-  const spots = BUSHES[layout]
   const m = () => t().minigames.safari
-  const panel = h('div', { class: 'claw-panel safari-panel box hidden' })
-  const sheet = h('div', { class: 'safari-sheet hidden' })
-  ctx.stage.append(panel, sheet)
+  const dex = partnerDex(ctx.partner)
+  const partnerName = Object.hasOwn(PLAYABLE, ctx.partner) ? PLAYABLE[ctx.partner as keyof typeof PLAYABLE].line[0].name : 'Pikachu'
+
+  const textEl = h('p', {})
+  const smallEl = h('small', {})
+  const face = h('img', { class: 'sz-face hidden', src: portraitUrl(115), alt: '', width: 40, height: 40 })
+  const box = h('div', { class: 'sz-text box hidden', onclick: () => finishTyping() }, face, h('div', { class: 'sz-text-body' }, textEl, smallEl))
+  const cmds = h('div', { class: 'sz-cmds hidden' })
+  const pouch = h('div', { class: 'sz-pouch hidden' })
+  const endBtn = h('button', { class: 'sz-end box hidden', type: 'button', onclick: () => endSession() }, '')
+  const readBtn = h('button', { class: 'sz-read box hidden', type: 'button', onclick: () => openBoard() }, '')
+  const wildTag = h('div', { class: 'sz-tag hidden' })
+  const nearTag = h('div', { class: 'sz-tag sz-tag-near hidden' })
+  const board = h('div', { class: 'sz-board hidden' })
+  const report = h('div', { class: 'sz-report box hidden' })
+  const hud = h('div', { class: 'sz-hud' }, pouch, endBtn, readBtn, wildTag, nearTag, box, cmds, board, report)
+  ctx.stage.append(hud)
 
   let phase: Phase = 'load'
   let phaseT = 0
-  let clock = 0
   let view: SafariState | null = null
   let session: SafariSession | null = null
-  /** The answer to the action in flight; null while it's on its way. */
-  let reply: SafariActed | null = null
-  let family: HatchlingId | null = null
-  let shiny = false
-  let picked = 0
-  let hover: number | null = null
-  let shakesDone = 0
-  let shakeAt = 0
-  /** The bush a Pokémon just came out of, drawn parting. */
-  let parted: number | null = null
-  let confirmEnd = false
+  let field: Field | null = null
+  let battle: Battle | null = null
+  let habitat: SafariHabitat = 'meadow'
+  let said = ''
+  let shown = 0
   let disposed = false
-  const parts: Particle[] = []
-  const pops: Popup[] = []
+  let confirmEnd = false
+  let seen = 0
+  /** The answer that opens the next battle, and whether its Pokémon's sprites are in. */
+  let meeting: { acted: SafariActed; ready: boolean } | null = null
+  let canvasK = 2
+  let cursor = 0
+  let cmdActions: (() => void)[] = []
+  let hintLeft = 0
+  let lastKey = ''
+  let wildCalm = 0
 
   const go = (next: Phase) => {
     phase = next
     phaseT = 0
   }
 
-  const habitat = (): SafariHabitat => session?.habitat ?? view?.habitat ?? 'meadow'
-  const nameOf = (id: HatchlingId) => safariForm(id).name
   const lacks = (id: HatchlingId) => loadSave().hatched[id] === undefined
 
-  const say = (lines: readonly (HTMLElement | false)[], actions: readonly { label: string; run: () => void; quiet?: boolean; hot?: boolean }[] = [], slim = false) => {
-    panel.classList.toggle('hidden', lines.length === 0 && actions.length === 0)
-    panel.classList.toggle('safari-slim', slim)
-    panel.replaceChildren(
-      ...lines.flatMap((l) => (l ? [l] : [])),
-      ...(actions.length > 0 ? [h('div', { class: 'claw-panel-actions' }, ...actions.map((a) => h('button', { class: a.hot ? 'box safari-hot' : 'box', type: 'button', onclick: () => (playSfx('select'), a.run()) }, a.label)))] : []),
+  /* ---------------- Words ---------------- */
+
+  const say = (text: string, small = '') => {
+    said = text
+    shown = 0
+    textEl.textContent = ''
+    smallEl.textContent = small
+    box.classList.toggle('hidden', text === '')
+  }
+  const typed = () => shown >= said.length
+  const finishTyping = () => {
+    shown = said.length
+    textEl.textContent = said
+  }
+  const stepWords = (dt: number) => {
+    if (shown >= said.length) return
+    shown = Math.min(said.length, shown + dt * 46)
+    textEl.textContent = said.slice(0, Math.floor(shown))
+  }
+
+  /** Puts up command buttons; `actions[i]` runs on a tap or on its number key. */
+  const commands = (items: readonly { label: string; icon?: string; run: () => void; hot?: boolean; off?: boolean }[]) => {
+    cursor = 0
+    cmdActions = items.map((c) => c.run)
+    cmds.classList.toggle('hidden', items.length === 0)
+    cmds.replaceChildren(
+      ...items.map((c, i) =>
+        h(
+          'button',
+          { class: `box${c.hot ? ' sz-hot' : ''}${i === 0 ? ' sz-sel' : ''}`, type: 'button', disabled: c.off === true, onclick: () => (playSfx('select'), c.run()) },
+          c.icon ? h('img', { src: c.icon, alt: '', width: 22, height: 22 }) : false,
+          c.label,
+        ),
+      ),
     )
+  }
+
+  const moveCursor = (by: number) => {
+    const buttons = [...cmds.querySelectorAll('button')]
+    if (buttons.length === 0) return
+    buttons[cursor]?.classList.remove('sz-sel')
+    cursor = (cursor + by + buttons.length) % buttons.length
+    buttons[cursor]?.classList.add('sz-sel')
+    playSfx('move', 80)
   }
 
   const trouble = (error: string) => {
-    go('busy')
+    go('trouble')
     const w = m()
     const text = error === 'cap' ? w.cap : error === 'funds' ? w.funds : error === 'profile' ? w.profile : w.failed
-    say([h('p', {}, text)], [{ label: w.retry, run: () => void load() }])
+    face.classList.add('hidden')
+    say(text)
+    commands([{ label: w.retry, run: () => void load(), hot: true }])
   }
 
-  /* ---------------- The gate: the odds, before anything is charged ---------------- */
+  /* ---------------- The HUD ---------------- */
 
-  const sessionCost = () => (view ? sessionPrice(view.used) : null)
-
-  /** The panel of the odds: each family's share for this partner, the rarest last, those the account lacks tagged. */
-  const oddsGrid = (at: SafariHabitat, partner: SafariState['partner']) => {
-    const partnerTypes = partner ? PLAYABLE[partner].line[0].types : []
-    const rows = shareOf(habitatPool(at), partnerTypes).sort((a, b) => b.share - a.share)
-    return h(
-      'ul',
-      { class: 'safari-odds' },
-      ...rows.map((entry) => {
-        const form = safariForm(entry.family)
-        return h(
-          'li',
-          { class: `safari-odd safari-odd-${entry.rarity}` },
-          h('img', { src: portraitUrl(form.dex), alt: '', width: 40, height: 40, loading: 'lazy' }),
-          h('span', { class: 'safari-odd-name' }, form.name),
-          h('b', {}, `${(entry.share * 100).toFixed(1)}%`),
-          lacks(entry.family) && h('em', {}, m().fresh),
-        )
-      }),
+  const refreshPouch = () => {
+    if (!session) return
+    pouch.classList.remove('hidden')
+    pouch.replaceChildren(
+      h('span', {}, h('img', { src: `${import.meta.env.BASE_URL}assets/safari/ball.png`, alt: '', width: 16, height: 16 }), String(session.balls)),
+      h('span', {}, h('img', { src: `${import.meta.env.BASE_URL}assets/safari/berry.png`, alt: '', width: 14, height: 16 }), String(session.berries)),
+      h('em', {}, m().left(session.left)),
     )
+    endBtn.textContent = confirmEnd ? m().endSure : m().end
   }
 
-  const showGate = () => {
+  const showWalkHud = (on: boolean) => {
+    endBtn.classList.toggle('hidden', !on)
+    pouch.classList.toggle('hidden', !on)
+    if (on) refreshPouch()
+  }
+
+  const endSession = () => {
+    if (phase !== 'walk' || !session) return
+    if (!confirmEnd) {
+      confirmEnd = true
+      return refreshPouch()
+    }
+    confirmEnd = false
+    go('busy')
+    send({ kind: 'finish' }, () => toReport())
+  }
+
+  /* ---------------- The API ---------------- */
+
+  const send = (action: SafariAction, then: (got: SafariActed) => void) => {
+    if (!session) return
+    void actSafari(session, action).then((got) => {
+      if (disposed) return
+      if (isFailure(got)) return trouble(got.error)
+      session = got.session
+      then(got)
+    })
+  }
+
+  /* ---------------- The way in ---------------- */
+
+  const makeField = (at: SafariHabitat) => {
+    if (field && habitat === at) return field
+    field?.release()
+    habitat = at
+    const def = SAFARI_MAPS[at]
+    const theme = THEMES[at]
+    // A few of the week's residents, picked from the map's seed so a week looks the same.
+    const pool = habitatPool(at)
+    const residents = [0, 1, 2, 3].map((i) => safariForm(pool[(def.seed * (i + 2) * 7) % pool.length]!.family).dex)
+    field = createField({ habitat: at, world: buildWorld(def), theme, dex, shiny: ctx.shiny, mapSeed: def.seed, residents })
+    for (const piece of ['kiosk', 'board']) image(`safari/${piece}`)
+    image('realm/safari-gate')
+    return field
+  }
+
+  const showLobby = () => {
     if (!view) return
     const w = m()
     const at = view.habitat
-    const price = sessionCost()
+    const price = sessionPrice(view.used)
     const affordable = price !== null && price <= loadSave().wallet
-    const partner = view.partner
-    sheet.replaceChildren(
-      h(
-        'div',
-        { class: 'safari-sheet-scroll' },
-        h('p', { class: 'safari-eyebrow' }, w.thisWeek),
-        h('h3', {}, w.habitats[at].name),
-        h('p', {}, w.habitats[at].blurb),
-        partner && h('p', { class: 'safari-partner' }, w.partner(PLAYABLE[partner].line[0].name)),
-        oddsGrid(at, partner),
-        h('p', {}, w.rules(SAFARI.balls, SAFARI.berries)),
-        h('p', { class: 'safari-sure' }, view.sure ? w.sureNow : w.sureIn(Math.max(0, SAFARI.guarantee - view.dry))),
-        h('small', {}, w.today(view.used, SAFARI.dailyCap)),
-      ),
-      h(
-        'div',
-        { class: 'safari-sheet-cta' },
-        price === null
-          ? h('p', {}, w.cap)
-          : !affordable
-            ? h('p', {}, w.funds)
-            : h('button', { class: 'box safari-hot', type: 'button', onclick: () => (playSfx('select'), void enter()) }, price === 0 ? w.free : w.paid(formatPokeDollars(price))),
-      ),
-    )
-    sheet.classList.remove('hidden')
-    say([])
-    go('gate')
+    face.classList.remove('hidden')
+    go('lobby')
+    showWalkHud(false)
+    readBtn.classList.add('hidden')
+    say(`${w.welcome(w.habitats[at].name)} ${w.rules(SAFARI.balls, SAFARI.berries)}`, [view.sure ? w.sureNow : w.sureIn(Math.max(0, SAFARI.guarantee - view.dry)), w.today(view.used, SAFARI.dailyCap)].join(' · '))
+    commands([
+      ...(price === null || !affordable ? [] : [{ label: price === 0 ? w.free : w.paid(formatPokeDollars(price)), run: () => void enter(), hot: true }]),
+      { label: w.boardOpen, run: openBoard },
+    ])
+    if (price === null) say(w.cap)
+    else if (!affordable) say(w.funds)
   }
 
   const enter = async () => {
     if (!view) return
-    sheet.classList.add('hidden')
+    commands([])
+    face.classList.add('hidden')
     go('busy')
+    say('')
     const got = await startSafari(view.used)
     if (disposed) return
     if (isFailure(got)) return trouble(got.error)
     view = { ...view, used: got.used }
     session = got.session
     playSfx('coin')
-    toField()
+    seen = 0
+    go('gate')
+    showWalkHud(true)
+    hintLeft = 3.2
   }
 
   const load = async () => {
     go('load')
-    say([])
-    sheet.classList.add('hidden')
+    say('')
+    commands([])
+    report.classList.add('hidden')
     const got = await fetchSafari()
     if (disposed) return
     if (isFailure(got)) return trouble(got.error)
     view = got
     session = got.open
-    if (!session) return showGate()
-    // A session left open: pick up where it stopped.
-    if (session.encounter) meet(session.encounter.family, session.encounter.shiny)
-    else toField()
-  }
-
-  /* ---------------- The field ---------------- */
-
-  const firstOpen = () => Math.max(0, session?.bushes.findIndex((b) => !b.done) ?? 0)
-
-  const toField = () => {
-    if (session?.over) return finish()
-    family = null
-    parted = null
-    picked = firstOpen()
-    go('field')
-    fieldPanel()
-  }
-
-  const fieldPanel = () => {
-    const w = m()
-    say(
-      [h('p', {}, session?.bushes.some((b) => b.sure && !b.done) ? w.pickSure : w.pick)],
-      [{ label: confirmEnd ? w.endSure : w.end, run: () => (confirmEnd ? ((confirmEnd = false), doAct({ kind: 'finish' })) : ((confirmEnd = true), fieldPanel())) }],
-      true,
-    )
-  }
-
-  /** Sends an action; `reply` holds the answer when it lands. A failure leaves the session where it was. */
-  const send = (action: SafariAction, then?: (got: SafariActed) => void) => {
-    if (!session) return
-    reply = null
-    void actSafari(session, action).then((got) => {
-      if (disposed) return
-      if (isFailure(got)) return trouble(got.error)
-      reply = got
-      session = got.session
-      then?.(got)
-    })
-  }
-
-  /** An action with nothing to animate: answers and goes on. */
-  const doAct = (action: SafariAction) => {
-    go('busy')
-    say([])
-    send(action, () => toField())
-  }
-
-  const approach = (bush: number) => {
-    if (phase !== 'field' || !session || session.bushes[bush]?.done) return
-    confirmEnd = false
-    picked = bush
-    parted = bush
+    makeField(got.habitat)
+    field?.place(PLAZA.spawn.x * TILE, PLAZA.spawn.y * TILE, 4)
+    field?.resume()
+    if (!session) return showLobby()
+    if (session.encounter) return openBattle(session.encounter.family, session.encounter.shiny, true)
     go('walk')
-    say([])
-    playSfx('move')
-    send({ kind: 'approach', bush }, (got) => {
-      if (got.turn.kind === 'appear') {
-        family = got.turn.family
-        shiny = got.turn.shiny
-        loadForm(got.turn.family, got.turn.shiny)
-      }
-    })
+    showWalkHud(true)
   }
 
-  const loadForm = (id: HatchlingId, sh: boolean) => {
-    const { dex } = safariForm(id)
-    void loadSpecies(dex).catch(() => {})
-    if (sh) void loadSpecies(dex, true).catch(() => {})
-  }
+  /* ---------------- The notice board ---------------- */
 
-  /* ---------------- An encounter ---------------- */
-
-  const meet = (id: HatchlingId, sh: boolean) => {
-    family = id
-    shiny = sh
-    loadForm(id, sh)
-    go('meet')
-    meetPanel()
-  }
-
-  const meetPanel = () => {
-    if (!family || !session) return
+  const openBoard = () => {
+    if (!view) return
     const w = m()
-    const encounter = session.encounter
-    const calm = encounter?.calm ?? 0
-    say(
-      [
-        h('h3', {}, shiny ? w.wildShiny(nameOf(family)) : w.wild(nameOf(family))),
-        lacks(family) ? h('p', { class: 'safari-sure' }, w.isNew) : h('p', {}, w.owned),
-        calm > 0 && h('p', {}, w.calm(calm, SAFARI.maxCalm)),
-      ],
-      [
-        { label: w.ball(session.balls), run: throwBall, hot: true },
-        ...(session.berries > 0 ? [{ label: w.berry(session.berries), run: giveBerry }] : []),
-        { label: w.leave, run: leaveIt },
-      ],
+    const at = session?.habitat ?? view.habitat
+    const partner = view.partner
+    const partnerTypes = partner ? PLAYABLE[partner].line[0].types : []
+    const rows = shareOf(habitatPool(at), partnerTypes).sort((a, b) => b.share - a.share)
+    const tiers = (['common', 'rare', 'ultra', 'special'] as const).map((rarity) => ({ rarity, rows: rows.filter((r) => r.rarity === rarity) })).filter((tier) => tier.rows.length > 0)
+    board.replaceChildren(
+      h(
+        'div',
+        { class: 'sz-board-frame' },
+        h('h3', {}, w.boardTitle),
+        h('small', {}, [w.habitats[at].name, partner ? w.partner(PLAYABLE[partner].line[0].name) : w.boardHint].join(' · ')),
+        h(
+          'div',
+          { class: 'sz-notes' },
+          ...tiers.map((tier) =>
+            h(
+              'section',
+              {},
+              h('h4', {}, w.tiers[tier.rarity]),
+              h(
+                'ul',
+                {},
+                ...tier.rows.map((entry) => {
+                  const form = safariForm(entry.family)
+                  return h(
+                    'li',
+                    { class: lacks(entry.family) ? 'sz-note sz-note-new' : 'sz-note', title: lacks(entry.family) ? w.fresh : undefined },
+                    h('img', { src: portraitUrl(form.dex), alt: '', width: 40, height: 40, loading: 'lazy' }),
+                    h('b', {}, form.name),
+                    h('span', {}, `${(entry.share * 100).toFixed(1)}%`),
+                  )
+                }),
+              ),
+            ),
+          ),
+        ),
+        h('button', { class: 'box', type: 'button', onclick: closeBoard }, w.ok),
+      ),
     )
+    board.classList.remove('hidden')
+    playSfx('select')
   }
 
-  const throwBall = () => {
-    if (phase !== 'meet' || !session || session.balls === 0) return
-    go('throw')
-    say([])
-    playSfx('move')
-    send({ kind: 'ball' })
+  const closeBoard = () => {
+    board.classList.add('hidden')
+    playSfx('select')
   }
 
-  const giveBerry = () => {
-    if (phase !== 'meet' || !session || session.berries === 0) return
-    go('toss')
-    say([])
-    send({ kind: 'berry' })
-  }
+  const boardOpen = () => !board.classList.contains('hidden')
 
-  const leaveIt = () => {
-    if (phase !== 'meet') return
-    doAct({ kind: 'leave' })
-  }
+  /* ---------------- A battle ---------------- */
 
-  /** What's next once a ball broke or a berry was eaten: it runs, the session ran out, or it's the player's move again. */
-  const afterTurn = (fled: boolean) => {
-    if (fled) {
-      go('flee')
-      playSfx('denied')
-      return say([h('p', {}, m().fled(family ? nameOf(family) : ''))])
-    }
-    if (session?.over) return toField()
-    go('meet')
-    meetPanel()
-  }
-
-  const finish = () => {
-    go('over')
+  const setTags = (family: HatchlingId, shiny: boolean) => {
     const w = m()
-    const caught = session?.catches ?? []
-    sheet.classList.add('hidden')
-    say(
-      [
-        h('h3', {}, w.done),
-        h('p', {}, caught.length === 0 ? w.none : w.caughtList(caught.map((c) => nameOf(c.family)).join(', '))),
-      ],
-      [{ label: w.again, run: () => ((session = null), void load()), hot: true }],
+    const entry = safariEntry(family)
+    wildTag.replaceChildren(
+      h('b', {}, `${safariForm(family).name}${shiny ? ' ★' : ''}`),
+      h('small', {}, w.level(wildLevel(family, entry.rarity, seen))),
+      h('i', { class: 'sz-hearts' }, '♥'.repeat(wildCalm) + '♡'.repeat(Math.max(0, SAFARI.maxCalm - wildCalm))),
+      ...(lacks(family) ? [h('em', {}, w.fresh)] : []),
     )
+    nearTag.replaceChildren(h('b', {}, partnerName), h('small', {}, w.level(Math.min(100, 5 + Object.keys(loadSave().hatched).length))))
   }
 
-  /** What a catch brings: the gift lands on the save now, and a new family gets its scene. */
-  const land = (got: SafariActed) => {
-    const out = got.gift ? (stageGifts([got.gift]), openGift(got.gift.id)) : null
-    const hatch = out?.status === 'applied' ? out.hatch : null
-    if (hatch && !hatch.duplicate) {
-      ctx.brag(hatch.shiny ? 'shiny' : 'caught')
-      playCry(cryUrl(safariForm(hatch.id).dex), 0.5)
-      playSfx(hatch.shiny ? 'shiny' : 'unlock')
-      go('scene')
-      parts.length = 0
+  const battleHost = (family: HatchlingId, shiny: boolean): BattleHost => ({
+    say,
+    typed,
+    menu: (on) => {
+      if (!on || !session) return commands([])
       const w = m()
-      say(
-        [
-          h('h3', {}, hatch.shiny ? w.caughtShiny(nameOf(hatch.id)) : w.caught(nameOf(hatch.id))),
-          h('p', {}, w.joined),
-        ],
-        [{ label: w.ok, run: () => toField(), hot: true }],
-      )
-      return
-    }
-    const refund = hatch?.refund ?? 0
-    go('repeat')
-    pops.push({ x: stage.mon.x, y: stage.mon.y - 60, text: refund > 0 ? `+P${refund}` : m().repeatShort, color: '#ffe080', age: 0, big: true })
-    say([h('p', {}, refund > 0 ? m().repeat(nameOf(got.turn.kind === 'ball' ? got.turn.family : family!), formatPokeDollars(refund)) : m().repeatNone)])
+      commands([
+        { label: `${w.ballCmd} ×${session.balls}`, icon: `${import.meta.env.BASE_URL}assets/safari/ball.png`, run: () => battle?.throwBall(), hot: true, off: session.balls === 0 },
+        { label: `${w.berryCmd} ×${session.berries}`, icon: `${import.meta.env.BASE_URL}assets/safari/berry.png`, run: () => battle?.giveBerry(), off: session.berries === 0 },
+        { label: w.runCmd, run: () => battle?.run() },
+      ])
+    },
+    tags: (show) => {
+      wildTag.classList.toggle('hidden', !show)
+      nearTag.classList.toggle('hidden', !show)
+    },
+    calm: (n) => {
+      wildCalm = n
+      setTags(family, shiny)
+    },
+    send: (action, then) => send(action, then),
+    land: (got) => {
+      const out = got.gift ? (stageGifts([got.gift]), openGift(got.gift.id)) : null
+      const hatch = out?.status === 'applied' ? out.hatch : null
+      return { fresh: hatch !== null && hatch !== undefined && !hatch.duplicate, refund: hatch?.refund ?? 0, shiny: hatch?.shiny ?? false }
+    },
+    brag: ctx.brag,
+    end: () => endBattle(),
+    sceneButton: (show) => {
+      if (show) commands([{ label: m().ok, run: () => battle?.closeScene(), hot: true }])
+      else commands([])
+    },
+  })
+
+  const openBattle = (family: HatchlingId, shiny: boolean, resumed: boolean) => {
+    if (!session) return
+    const calm = session.encounter?.calm ?? 0
+    wildCalm = calm
+    seen += 1
+    setTags(family, shiny)
+    hintLeft = 0
+    battle?.release()
+    battle = createBattle({ habitat, theme: THEMES[habitat], family, shiny, session, partnerDex: dex, partnerShiny: ctx.shiny, host: battleHost(family, shiny), resumed })
+    go('battle')
+    showWalkHud(false)
+    readBtn.classList.add('hidden')
+  }
+
+  const endBattle = () => {
+    go('wipeOut')
+    wildTag.classList.add('hidden')
+    nearTag.classList.add('hidden')
+    commands([])
+  }
+
+  const toReport = () => {
+    go('report')
+    const w = m()
+    showWalkHud(false)
+    readBtn.classList.add('hidden')
+    say('')
+    commands([])
+    const caught = session?.catches ?? []
+    const outOf = session?.balls === 0 ? w.outOfBalls : session?.left === 0 ? w.outOfGrass : ''
+    report.replaceChildren(
+      h('h3', {}, w.done),
+      ...(outOf ? [h('p', {}, outOf)] : []),
+      caught.length === 0
+        ? h('p', {}, w.none)
+        : h('ul', { class: 'sz-caught' }, ...caught.map((c) => h('li', {}, h('img', { src: portraitUrl(safariForm(c.family).dex, c.shiny), alt: '', width: 40, height: 40 }), h('b', {}, `${safariForm(c.family).name}${c.shiny ? ' ★' : ''}`)))),
+      h('button', { class: 'box sz-hot', type: 'button', onclick: () => ((session = null), void load()) }, w.again),
+    )
+    report.classList.remove('hidden')
   }
 
   /* ---------------- The loop ---------------- */
 
-  const bushAt = (x: number, y: number) => {
-    let best: number | null = null
-    let bestD: number = BUSH_REACH
-    spots.forEach((s, i) => {
-      if (session?.bushes[i]?.done) return
-      const d = Math.hypot(x - s.x, y - (s.y - 12))
-      if (d < bestD) {
-        best = i
-        bestD = d
-      }
+  const startRustle = () => {
+    if (phase !== 'walk' || !session || session.left === 0) return
+    go('alert')
+    confirmEnd = false
+    field?.alert()
+    playSfx('safariAlert')
+    showWalkHud(false)
+    say('')
+    readBtn.classList.add('hidden')
+    meeting = null
+    send({ kind: 'grass' }, (got) => {
+      if (got.turn.kind !== 'appear') return
+      const entry = { acted: got, ready: false }
+      meeting = entry
+      const { dex: wildDex } = safariForm(got.turn.family)
+      void loadSpecies(wildDex, got.turn.shiny)
+        .catch(() => {})
+        .then(() => (entry.ready = true))
     })
-    return best
   }
 
   const step = (dt: number, input: GameInput) => {
-    clock += dt
     phaseT += dt
-    stepFx(parts, pops, dt)
+    stepWords(dt)
+    if (hintLeft > 0) {
+      hintLeft -= dt
+      if (hintLeft <= 0 && phase === 'walk') say('')
+    }
+    const k = canvasK
+    if (boardOpen()) {
+      if (input.pressed('Enter') || input.pressed('Space') || input.pressed('KeyE')) closeBoard()
+      field?.step(dt, input, false, k)
+      return
+    }
+    const walking = phase === 'walk'
+    const rustled = field?.step(dt, input, walking, k) ?? false
+    if (rustled && walking) startRustle()
+
+    // Keys for whatever commands are up.
+    if (input.pressed('ArrowRight') || input.pressed('ArrowDown')) if (!cmds.classList.contains('hidden')) moveCursor(1)
+    if (input.pressed('ArrowLeft') || input.pressed('ArrowUp')) if (!cmds.classList.contains('hidden')) moveCursor(-1)
+    if (!cmds.classList.contains('hidden')) {
+      const pick = input.pressed('Digit1') ? 0 : input.pressed('Digit2') ? 1 : input.pressed('Digit3') ? 2 : input.pressed('Enter') || input.pressed('Space') ? cursor : -1
+      if (pick >= 0 && cmdActions[pick]) {
+        const b = cmds.querySelectorAll('button')[pick]
+        if (b && !b.disabled) {
+          playSfx('select')
+          cmdActions[pick]!()
+        }
+      }
+    }
+
     switch (phase) {
-      case 'field': {
-        hover = bushAt(input.pointer.x, input.pointer.y)
-        if (input.pointer.pressed && hover !== null) return approach(hover)
-        const open = spots.map((_, i) => i).filter((i) => !session?.bushes[i]?.done)
-        const at = open.indexOf(picked)
-        if (input.pressed('ArrowRight') || input.pressed('KeyD')) picked = open[(at + 1) % open.length] ?? picked
-        if (input.pressed('ArrowLeft') || input.pressed('KeyA')) picked = open[(at - 1 + open.length) % open.length] ?? picked
-        if (input.pressed('Enter') || input.pressed('Space')) approach(picked)
+      case 'gate':
+        if (field) {
+          field.player.moving = true
+          field.player.dir = 4
+          field.player.y -= 62 * dt
+        }
+        if (phaseT >= GATE_WALK) {
+          go('walk')
+          say(m().walkHint)
+          field?.resume()
+        }
+        break
+      case 'walk': {
+        const near = field?.nearBoard() ?? false
+        readBtn.classList.toggle('hidden', !near)
+        readBtn.textContent = m().readBoard
+        if (near && input.pressed('KeyE')) openBoard()
         break
       }
-      case 'walk':
-        if (phaseT >= TIMES.walk && reply && family) {
-          go('reveal')
-          playCry(cryUrl(safariForm(family).dex), 0.4)
-          burst(parts, stage.mon.x, stage.mon.y - 8, ['#a8d868', '#70b040', '#e8f8a0'], 14, 60)
-        }
+      case 'alert':
+        if (phaseT >= ALERT) go('wipeIn')
         break
-      case 'reveal':
-        if (phaseT >= TIMES.reveal && family) {
-          go('meet')
-          meetPanel()
-        }
+      case 'wipeIn':
+        if (phaseT >= WIPE && meeting?.ready && meeting.acted.turn.kind === 'appear') openBattle(meeting.acted.turn.family, meeting.acted.turn.shiny, false)
         break
-      case 'meet':
-        if (input.pressed('Digit1') || input.pressed('KeyZ')) throwBall()
-        else if (input.pressed('Digit2')) giveBerry()
-        else if (input.pressed('Digit3') || input.pressed('KeyX')) leaveIt()
+      case 'battle':
+        battle?.step(dt, layoutBattle(lastW, lastH))
         break
-      case 'throw':
-        if (phaseT >= TIMES.fly) {
-          go('absorb')
-          playSfx('hit')
-          burst(parts, stage.mon.x, stage.mon.y - 20, ['#ffffff', '#ffe080', '#a0e8ff'], 22, 110)
-        }
-        break
-      case 'absorb':
-        if (phaseT >= TIMES.absorb) go('fall')
-        break
-      case 'fall':
-        if (phaseT >= TIMES.fall) {
-          go('wait')
-          playSfx('tick')
-        }
-        break
-      case 'wait':
-        // The ball sits still until the API has answered.
-        if (reply?.turn.kind === 'ball') {
-          shakesDone = 0
-          shakeAt = 0
-          go('shake')
-        }
-        break
-      case 'shake': {
-        if (reply?.turn.kind !== 'ball') break
-        const shakes = reply.turn.shakes
-        if (shakesDone < shakes && phaseT - shakeAt >= TIMES.shake) {
-          shakesDone += 1
-          shakeAt = phaseT
-          playSfx('tick')
-        }
-        if (shakesDone >= shakes && phaseT - shakeAt >= TIMES.shake) {
-          if (reply.turn.caught) {
-            go('click')
-            playSfx('unlock')
-            burst(parts, stage.mon.x, stage.mon.y - 10, ['#ffe080', '#ffffff', '#f8c030'], 26, 100)
-          } else {
-            go('burst')
-            playSfx('denied')
-            burst(parts, stage.mon.x, stage.mon.y - 10, ['#ffffff', '#ff9090', '#ffe0a0'], 22, 120)
+      case 'wipeOut':
+        if (phaseT >= WIPE) {
+          battle?.release()
+          battle = null
+          if (session?.over) toReport()
+          else {
+            go('walk')
+            field?.resume()
+            showWalkHud(true)
           }
         }
-        break
-      }
-      case 'click':
-        if (phaseT >= TIMES.click && reply) land(reply)
-        break
-      case 'burst':
-        if (phaseT >= TIMES.burst && reply?.turn.kind === 'ball') {
-          afterTurn(reply.turn.fled)
-        }
-        break
-      case 'toss':
-        if (phaseT >= TIMES.toss) {
-          if (reply?.turn.kind === 'berry') {
-            go('eat')
-            playSfx('pickup')
-            for (let i = 0; i < 4; i++) pops.push({ x: stage.mon.x - 14 + i * 9, y: stage.mon.y - 56 - i * 3, text: '+', color: '#ff90b0', age: -i * 0.12, big: false })
-          }
-        }
-        break
-      case 'eat':
-        if (phaseT >= TIMES.eat && reply?.turn.kind === 'berry') {
-          afterTurn(reply.turn.fled)
-        }
-        break
-      case 'flee':
-        if (phaseT >= TIMES.flee) {
-                toField()
-        }
-        break
-      case 'repeat':
-        if (phaseT >= TIMES.repeat) toField()
-        break
-      case 'scene':
-        if (Math.random() < dt * 22) burst(parts, stage.mon.x + (Math.random() * 60 - 30), stage.mon.y - 20 - Math.random() * 50, shiny ? ['#ffffff', '#ffe878', '#a8f0ff', '#ffa8e0'] : ['#ffe888', '#ffffff'], 2, 26, -20)
         break
       default:
     }
   }
 
-  /* ---------------- Drawing ---------------- */
+  let canvasEl: HTMLCanvasElement | null = null
+  let lastW = 200
+  let lastH = 200
 
-  const drawBackdrop = (g: CanvasRenderingContext2D) => {
-    g.fillStyle = '#20242c'
-    g.fillRect(0, 0, size.w, size.h)
-    const art = image(`safari/bg-${habitat()}`)
-    if (art) g.drawImage(art, Math.round((size.w - BACKDROP.w) / 2), layout === 'tall' ? 0 : size.h - BACKDROP.h)
-    if (layout === 'tall') {
-      g.fillStyle = '#20242c'
-      g.fillRect(0, stage.floor, size.w, size.h - stage.floor)
-    }
-  }
-
-  /** How far (px) a bush sways now: rustling a bit, more when it's the one picked. */
-  const swayOf = (i: number, active: boolean) => {
-    const beat = Math.sin(clock * 3 + i * 2) > 0.65
-    return beat || active ? Math.round(Math.sin(clock * 22 + i) * (active ? 2 : 1)) : 0
-  }
-
-  const drawBush = (g: CanvasRenderingContext2D, i: number) => {
-    const b = session?.bushes[i]
-    const p = spots[i]
-    if (!b || !p) return
-    const bush = image(`safari/bush-${habitat()}`)
-    const active = phase === 'field' && (i === picked || i === hover)
-    const sway = b.done ? 0 : swayOf(i, active)
-    const bushH = bush?.height ?? 34
-    if (!b.done) {
-      const s = silhouette(b.shape)
-      // Most of it stands above the leaves, whatever its size.
-      g.drawImage(s, Math.round(p.x - s.width / 2) + sway, Math.round(p.y - bushH - s.height * 0.72))
-    }
-    if (bush) g.drawImage(bush, Math.round(p.x - bush.width / 2) + (b.done ? 0 : sway), Math.round(p.y - bush.height))
-    if (b.done) return
-    if (b.sure) {
-      // The guarantee's bush shines: a gold ring on the ground and sparks twinkling over it.
-      g.fillStyle = 'rgba(255,214,90,0.5)'
-      for (let k = -24; k <= 24; k++) {
-        const up = Math.round(Math.sqrt(1 - (k / 25) ** 2) * 6)
-        g.fillRect(p.x + k, p.y - 3 - up, 1, 1)
-        g.fillRect(p.x + k, p.y - 3 + up, 1, 1)
-      }
-      for (let k = 0; k < 5; k++) {
-        const lit = Math.floor(clock * 5 + k * 2) % 3 !== 0
-        const x = p.x - 24 + k * 12
-        const y = p.y - bushH + (k % 2) * 10 - 2
-        g.fillStyle = lit ? '#fff0a0' : '#e8b030'
-        g.fillRect(x - 1, y, 3, 1)
-        g.fillRect(x, y - 1, 1, 3)
-      }
-    }
-    if (active) {
-      const y = p.y - bushH - 18 + (Math.floor(clock * 4) % 2)
-      g.fillStyle = '#ffffff'
-      for (let k = 0; k < 4; k++) g.fillRect(p.x - k, y + k, k * 2 + 1, 1)
-    }
-  }
-
-  const drawHud = (g: CanvasRenderingContext2D) => {
-    if (!session) return
-    plate(g, 3, 3, 66, 26)
-    const ball = image('safari/ball')
-    if (ball) g.drawImage(ball, 5, 5)
-    drawText(g, String(session.balls), 30, 12, '#ffffff')
-    const berry = image('safari/berry')
-    if (berry) g.drawImage(berry, 40, 5)
-    drawText(g, String(session.berries), 60, 12, '#ffffff')
-  }
-
-  const drawMon = (g: CanvasRenderingContext2D, x: number, y: number, opts: { flash?: number; alpha?: number; scale?: number; anim?: 'Idle' | 'Walk'; dir?: Dir8 } = {}) => {
-    if (!family) return
-    const { dex } = safariForm(family)
-    const s = shiny ? sprites(dex, true) : sprites(dex)
-    g.fillStyle = 'rgba(24,20,40,0.4)'
-    g.fillRect(Math.round(x - 20), Math.round(y - 2), 40, 5)
-    drawPokemon(g, s, opts.anim ?? 'Idle', opts.dir ?? 0, clock, Math.round(x), Math.round(y), { scale: opts.scale ?? 2, flash: opts.flash ?? 0, alpha: opts.alpha ?? 1 })
-  }
-
-  /** The thrown ball's place along its arc, at `k` 0..1. */
-  const arcAt = (k: number) => {
-    const from = stage.hand
-    const to = { x: stage.mon.x, y: stage.mon.y - 26 }
-    const lift = 4 * ARC * k * (1 - k)
-    return { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k - lift }
-  }
-
-  const drawBall = (g: CanvasRenderingContext2D, x: number, y: number, flipped = false) => {
-    const ball = image('safari/ball')
-    if (!ball) return
-    if (flipped) {
-      g.save()
-      g.translate(Math.round(x), Math.round(y))
-      g.scale(1, -1)
-      g.drawImage(ball, Math.round(-ball.width / 2), Math.round(-ball.height / 2))
-      g.restore()
-    } else drawCentered(g, ball, x, y)
-  }
-
-  const drawScene = (g: CanvasRenderingContext2D) => {
-    const { mon } = stage
-    g.fillStyle = 'rgba(12,14,28,0.7)'
-    g.fillRect(0, 0, size.w, stage.floor)
-    const grow = Math.min(1, phaseT / 0.5)
-    const beam = Math.round(18 + 34 * grow)
-    g.fillStyle = 'rgba(255,240,170,0.22)'
-    g.fillRect(mon.x - beam, 0, beam * 2, mon.y)
-    g.fillStyle = 'rgba(255,248,210,0.3)'
-    g.fillRect(mon.x - Math.round(beam * 0.55), 0, Math.round(beam * 1.1), mon.y)
-    g.fillStyle = '#f8e088'
-    for (let r = 0; r < 34; r++) {
-      const span = Math.round(Math.sqrt(1 - (r / 34) ** 2) * 10)
-      g.fillRect(mon.x - r, mon.y - span, r * 2, 1)
-      if (span > 0) g.fillRect(mon.x - r, mon.y + span, r * 2, 1)
-    }
-    const hop = phaseT < 0.5 ? Math.round(Math.sin((phaseT / 0.5) * Math.PI) * 14) : 0
-    // Small Pokémon stand bigger in the light: the moment should fill the screen.
-    const fw = family ? (shiny ? sprites(safariForm(family).dex, true) : sprites(safariForm(family).dex)).anims.Idle?.fw ?? 48 : 48
-    drawMon(g, mon.x, mon.y - hop, { flash: phaseT < 0.15 ? 1 : 0, scale: fw <= 40 ? 3 : 2 })
+  const place = (W: number, H: number) => {
+    const key = `${W}x${H}`
+    canvasEl ??= ctx.stage.querySelector('canvas')
+    const canvas = canvasEl
+    if (!canvas) return
+    const k = canvas.clientWidth / W
+    canvasK = k
+    hud.style.left = `${canvas.offsetLeft}px`
+    hud.style.top = `${canvas.offsetTop}px`
+    hud.style.width = `${canvas.clientWidth}px`
+    hud.style.height = `${canvas.clientHeight}px`
+    hud.style.setProperty('--k', String(k))
+    if (key === lastKey) return
+    lastKey = key
+    lastW = W
+    lastH = H
+    const L = layoutBattle(W, H)
+    hud.classList.toggle('sz-wide', L.wide)
+    hud.classList.toggle('sz-tall', !L.wide)
+    hud.style.setProperty('--scene-w', `${L.sceneW}`)
+    hud.style.setProperty('--scene-h', `${L.sceneH}`)
+    wildTag.style.left = `calc(var(--k) * ${Math.max(4, L.wild.x - (L.wide ? 150 : 124))}px)`
+    wildTag.style.top = `calc(var(--k) * ${Math.max(4, L.wild.y - (L.wide ? 66 : 92))}px)`
+    nearTag.style.left = `calc(var(--k) * ${L.wide ? L.near.x + 56 : L.W - 92}px)`
+    nearTag.style.top = `calc(var(--k) * ${L.wide ? L.sceneH - 34 : L.sceneH - 38}px)`
   }
 
   const draw = (g: CanvasRenderingContext2D) => {
-    drawBackdrop(g)
-    const { mon, hand } = stage
-    const inField = phase === 'field' || phase === 'walk' || phase === 'busy' || phase === 'load' || phase === 'gate'
-
-    if (session && (inField || phase === 'reveal')) for (const i of spots.map((_, k) => k).sort((a, b) => spots[a]!.y - spots[b]!.y)) drawBush(g, i)
-
-    if (phase === 'reveal') {
-      const k = Math.min(1, phaseT / TIMES.reveal)
-      const from = spots[parted ?? 0]!
-      const px = from.x + (mon.x - from.x) * k
-      const py = from.y + (mon.y - from.y) * k - Math.sin(k * Math.PI) * 30
-      drawMon(g, px, py, { flash: 1 - k, scale: 1 + Math.round(k) })
-    }
-
-    if (phase === 'meet' || phase === 'toss' || phase === 'eat') drawMon(g, mon.x, mon.y)
-
-    if (phase === 'throw') {
-      drawMon(g, mon.x, mon.y)
-      const p = arcAt(Math.min(1, phaseT / TIMES.fly))
-      drawBall(g, p.x, p.y, Math.floor(phaseT * 14) % 2 === 0)
-    }
-
-    if (phase === 'absorb') {
-      if (phaseT < TIMES.absorb * 0.55) drawMon(g, mon.x, mon.y, { flash: 1, alpha: 1 - phaseT / (TIMES.absorb * 0.55) })
-      drawBall(g, mon.x, mon.y - 26 - Math.sin((phaseT / TIMES.absorb) * Math.PI) * 6)
-    }
-
-    if (phase === 'fall') drawBall(g, mon.x, mon.y - 26 + (22 * phaseT) / TIMES.fall)
-
-    if (phase === 'wait' || phase === 'shake' || phase === 'click') {
-      const moving = phase === 'shake' && phaseT - shakeAt < TIMES.shake * 0.5
-      const wobble = moving ? Math.round(Math.sin((phaseT - shakeAt) * 26) * 3) : 0
-      g.fillStyle = 'rgba(24,20,40,0.4)'
-      g.fillRect(mon.x - 9, mon.y - 3, 18, 4)
-      drawBall(g, mon.x + wobble, mon.y - 4)
-      if (phase === 'click') {
-        g.fillStyle = '#ffe080'
-        for (let k = 0; k < 6; k++) {
-          const a = (k / 6) * Math.PI * 2 + clock * 3
-          g.fillRect(Math.round(mon.x + Math.cos(a) * 18), Math.round(mon.y - 8 + Math.sin(a) * 10), 2, 2)
+    const W = g.canvas.width
+    const H = g.canvas.height
+    place(W, H)
+    const theme = THEMES[habitat]
+    if (phase === 'battle') battle?.draw(g, layoutBattle(W, H))
+    else if (phase === 'wipeOut') {
+      const k = Math.min(1, phaseT / WIPE)
+      if (k < 0.5) {
+        battle?.draw(g, layoutBattle(W, H))
+        drawGrassWipe(g, W, H, k * 2, theme)
+      } else {
+        field?.draw(g, W, H, canvasK)
+        drawGrassWipe(g, W, H, (1 - k) * 2, theme)
+      }
+    } else {
+      if (field) field.draw(g, W, H, canvasK, phase === 'lobby' ? (W > H ? 44 : 104) : phase === 'walk' && !box.classList.contains('hidden') ? (W > H ? 40 : 56) : 0)
+      else {
+        g.fillStyle = '#20242c'
+        g.fillRect(0, 0, W, H)
+      }
+      if (phase === 'wipeIn') drawGrassWipe(g, W, H, Math.min(1, phaseT / WIPE), theme)
+      if (phase === 'alert') {
+        // Two flashes before the grass closes in.
+        const beat = Math.floor(phaseT / 0.11)
+        if ((beat === 2 || beat === 4) && phaseT > 0.2) {
+          g.fillStyle = 'rgba(255,255,255,0.75)'
+          g.fillRect(0, 0, W, H)
         }
       }
     }
-
-    if (phase === 'burst') drawMon(g, mon.x, mon.y, { flash: 1 - phaseT / TIMES.burst })
-
-    if (phase === 'flee') {
-      const k = phaseT / TIMES.flee
-      drawMon(g, mon.x + k * k * 170, mon.y - Math.abs(Math.sin(k * 18)) * 5, { anim: 'Walk', dir: 2, alpha: 1 - k * 0.3 })
-    }
-
-    if (phase === 'toss') {
-      const k = Math.min(1, phaseT / TIMES.toss)
-      const berry = image('safari/berry')
-      if (berry) drawCentered(g, berry, hand.x + (mon.x - hand.x) * k, hand.y + (mon.y - 22 - hand.y) * k - 4 * 36 * k * (1 - k))
-    }
-
-    if (phase === 'scene') drawScene(g)
-
-    // Calm shows as hearts over the Pokémon.
-    if ((phase === 'meet' || phase === 'toss' || phase === 'eat') && session?.encounter && session.encounter.calm > 0) {
-      for (let i = 0; i < session.encounter.calm; i++) drawIcon(g, 'heart', mon.x - 8 + i * 9, mon.y - 70)
-    }
-
-    drawFx(g, parts, pops)
-    if (session && phase !== 'scene' && phase !== 'gate') drawHud(g)
   }
 
   void load()
+
+  if (import.meta.env.DEV) {
+    safariDev.run = {
+      phase: () => phase,
+      battle: () => battle?.phase() ?? null,
+      rustle: startRustle,
+    }
+  }
 
   return {
     step,
@@ -733,16 +590,28 @@ const start = (ctx: SoloCtx): GameRun => {
     over: () => null,
     dispose: () => {
       disposed = true
-      panel.remove()
-      sheet.remove()
+      hud.remove()
+      field?.release()
+      battle?.release()
+      if (import.meta.env.DEV) safariDev.run = null
     },
   }
 }
 
-/** The Zona Safári (`MINIGAMES.safari`); the field fits the way the phone is held. */
+/** The widest canvas: the backdrop is 456 px and the camera leans a little. */
+const MAX_W = 440
+
+/** The canvas for a stage of this CSS size: as large a pixel as a phone held either way can spare. */
+const fluid = (stageW: number, stageH: number) => {
+  const dpr = window.devicePixelRatio || 1
+  const raw = Math.min(stageW / 190, stageH / 165, 3)
+  const k = Math.max(1, Math.floor(raw * dpr) / dpr)
+  return { w: Math.min(MAX_W, Math.floor(stageW / k)), h: Math.min(420, Math.floor(stageH / k)) }
+}
+
+/** The Zona Safári (`MINIGAMES.safari`); its canvas follows the stage. */
 export const safari: SoloGame = {
-  get size() {
-    return (shown = SIZE())
-  },
+  size: { w: 224, h: 300 },
+  fluid,
   start,
 }

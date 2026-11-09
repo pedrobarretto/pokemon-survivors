@@ -138,13 +138,8 @@ export type ClawInserted = { play: ClawPlay; used: number }
 /** What a drop came to: the plush it went for (its place in `prizes`), the grip, whether it held and every plush's misses after it. */
 export type ClawDropped = { target: number; grip: number; won: boolean; family: PlushFamily; misses: number[] }
 
-/** A silhouette: one bit per pixel, row by row (`npm run safari-shapes`). All a client gets of who's in a bush. */
-export type SafariShape = { w: number; h: number; bits: string }
-
-export type SafariBushView = { shape: SafariShape; sure: boolean; done: boolean }
-
-/** The Pokémon being faced, known once it's been approached. */
-export type SafariEncounterView = { bush: number; family: HatchlingId; shiny: boolean; calm: number; sure: boolean }
+/** The Pokémon being faced, known once the grass has given it away. */
+export type SafariEncounterView = { family: HatchlingId; shiny: boolean; calm: number; sure: boolean }
 
 /** A session as its owner sees it. `turn`: how many actions the API has answered (what the next action sends). */
 export type SafariSession = {
@@ -153,7 +148,10 @@ export type SafariSession = {
   habitat: SafariHabitat
   balls: number
   berries: number
-  bushes: SafariBushView[]
+  /** Encounters still to come; never who. */
+  left: number
+  /** Whether the next one is the guarantee's. */
+  sureNext: boolean
   encounter: SafariEncounterView | null
   catches: SafariCatch<HatchlingId>[]
   over: boolean

@@ -2,25 +2,26 @@ import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
 import { PLAYABLE } from '../../src/data/hatchlings'
 import { SAFARI_HABITAT_IDS, SAFARI_ONLY, habitatPool, isSafariHabitat, lackingFamilies, type SafariHabitat } from '../../src/data/safari'
-import shapes from '../../src/data/safariShapes.generated.json'
 import { brasiliaDay, weekStart, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
 import type { Gift, GiftContent, GiftReason } from '../../src/game/gifts'
 import { parseSaveData, type Save } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
 import type { HatchlingId } from '../../src/data/hatchlings'
-import type { SafariActed, SafariSession, SafariShape, SafariState } from '../../src/net/realmApi'
-import { SAFARI, applyAction, fillBushes, guaranteedEntry, habitatOfWeek, sessionPrice, startRun, type SafariAction, type SafariRun, type SafariTurn } from '../../src/realm/games/safari.rules'
+import type { SafariActed, SafariSession, SafariState } from '../../src/net/realmApi'
+import { SAFARI, applyAction, encountersLeft, guaranteedEntry, habitatOfWeek, rollQueue, sessionPrice, startRun, type SafariAction, type SafariRun, type SafariTurn } from '../../src/realm/games/safari.rules'
 import type { Sql } from './db'
 import { sendGift } from './gifts'
 import { rateLimiter } from './rateLimit'
 
 /**
  * The Zona Safári's API side: the server rolls everything. A session is
- * charged here (free or out of the stored save, like the claw), its bushes are
- * filled here and kept here: a client only ever gets their silhouettes, and
- * each action's answer. A session paid for and never finished stays open for
- * its owner; repeating an action (`turn`) reads the stored answer back.
+ * charged here (free or out of the stored save, like the claw), its encounters
+ * are rolled here and kept here: a client learns one only when it reports a
+ * rustle in the tall grass, and the next in line comes whatever it walked, so
+ * walking can't pick or re-roll one. A session paid for and never finished
+ * stays open for its owner; repeating an action (`turn`) reads the stored
+ * answer back.
  */
 
 type Q = Sql | TransactionSql
@@ -30,7 +31,7 @@ const LIMIT = { n: 60, ms: 60_000 } as const
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-const ACTIONS: readonly SafariAction['kind'][] = ['approach', 'ball', 'berry', 'leave', 'finish']
+const ACTIONS: readonly SafariAction['kind'][] = ['grass', 'ball', 'berry', 'leave', 'finish']
 
 /** A uniform roll from the OS's generator, the shape the rules take. */
 const roll = () => randomInt(0, 2 ** 32) / 2 ** 32
@@ -46,9 +47,7 @@ export const parseSafariStart = (v: unknown): { base: number | null } | null => 
 export const parseSafariAct = (v: unknown): { id: string; turn: number; action: SafariAction } | null => {
   if (!isRecord(v) || typeof v.id !== 'string' || !UUID.test(v.id) || typeof v.turn !== 'number' || !Number.isSafeInteger(v.turn) || v.turn < 0) return null
   const kind = ACTIONS.find((a) => a === v.action)
-  if (!kind) return null
-  if (kind !== 'approach') return { id: v.id, turn: v.turn, action: { kind } }
-  return typeof v.bush === 'number' && Number.isSafeInteger(v.bush) && v.bush >= 0 ? { id: v.id, turn: v.turn, action: { kind, bush: v.bush } } : null
+  return kind ? { id: v.id, turn: v.turn, action: { kind } } : null
 }
 
 /** What's stored of a turn: the answer as given, gift included, so a repeat reads the same. */
@@ -62,11 +61,9 @@ type SessionRow = { id: string; week: Date | string; habitat: string; state: Sto
 /** A `date` column as a day key, whichever way the driver brought it. */
 const dayOf = (v: Date | string): DayKey => (typeof v === 'string' ? v.slice(0, 10) : v.toISOString().slice(0, 10)) as DayKey
 
-const SHAPES: Readonly<Record<string, SafariShape>> = shapes
-
 const habitatFor = (row: SessionRow): SafariHabitat => (isSafariHabitat(row.habitat) ? row.habitat : SAFARI_HABITAT_IDS[0]!)
 
-/** A session as its owner sees it: the bushes' shapes, never who's in them. */
+/** A session as its owner sees it: how many encounters are left, never who. */
 const viewOf = (row: SessionRow): SafariSession => {
   const { run, log } = row.state
   return {
@@ -75,8 +72,9 @@ const viewOf = (row: SessionRow): SafariSession => {
     habitat: habitatFor(row),
     balls: run.balls,
     berries: run.berries,
-    bushes: run.bushes.map((b) => ({ shape: SHAPES[b.family]!, sure: b.sure, done: b.done })),
-    encounter: run.encounter && { bush: run.encounter.bush, family: run.encounter.family, shiny: run.encounter.shiny, calm: run.encounter.calm, sure: run.encounter.sure },
+    left: encountersLeft(run),
+    sureNext: run.queue[run.met]?.sure ?? false,
+    encounter: run.encounter && { family: run.encounter.family, shiny: run.encounter.shiny, calm: run.encounter.calm, sure: run.encounter.sure },
     catches: [...run.catches],
     over: run.over,
     turn: log.length,
@@ -161,8 +159,8 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
      * `POST /realm/safari/start`: a session. One already open comes back
      * uncharged. Otherwise the day's price is charged, a paid one out of the
      * stored save at revision `base` (moved to `spent`, so a merge never
-     * refunds it), and the bushes are filled: the partner's type weighed in
-     * from the stored save, the guarantee's bush if it's due.
+     * refunds it), and its encounters are rolled: the partner's type weighed
+     * in from the stored save, the guarantee's family first if it's due.
      */
     start: (userId: string, base: number | null): Promise<SafariStarted> =>
       sql.begin(async (tx): Promise<SafariStarted> => {
@@ -191,7 +189,7 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         const habitat = habitatOfWeek(week, SAFARI_HABITAT_IDS)
         const save = paid?.save ?? (await saveOf(tx, userId))
         const sure = await sureFor(tx, userId, await dryOf(tx, userId), save)
-        const state: Stored = { run: startRun(fillBushes(habitatPool(habitat), partnerTypes(save), dice, sure)), log: [], fresh: false }
+        const state: Stored = { run: startRun(rollQueue(habitatPool(habitat), partnerTypes(save), dice, sure)), log: [], fresh: false }
         const [session] = await tx<SessionRow[]>`
           insert into safari_sessions (user_id, day, week, habitat, price, state)
           values (${userId}, ${day}::date, ${week}::date, ${habitat}, ${price}, ${tx.json(state)})
