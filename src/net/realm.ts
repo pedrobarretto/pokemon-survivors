@@ -318,6 +318,10 @@ export type RealmServerMessage =
   | { t: 'table'; table: TableView }
   /** A mutual friend invites you to their base (`city`: where it is), answered by walking there or not. */
   | { t: 'baseInvited'; from: string; city: CityId }
+  /** A trainer of the room just earned stamps (`data/realmStamps.ts` ids), for everyone there to see. */
+  | { t: 'stamped'; id: number; stamps: readonly string[] }
+  /** Your errands now finished, waiting at the board (`realm/errands.ts` ids). */
+  | { t: 'errands'; done: readonly string[] }
   /**
    * Sent away (or never seated): why. The socket closes after it, but for a
    * `go` the relay turned down (`private`, `room`: no such base, `busy`: the

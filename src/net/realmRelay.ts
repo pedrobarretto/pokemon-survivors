@@ -38,5 +38,18 @@ export const PRESENCE_EVERY_MS = 15_000
 
 export const PRESENCE_STALE_MS = 60_000
 
+/**
+ * `POST /realm/deeds`: what the relay saw trainers do since its last report
+ * (`data/realmStamps.ts`; deeds are strings here, this file imports only the
+ * wire types), batched every `DEEDS_EVERY_MS`. Each entry is one more of that
+ * deed for that account; the API drops ones it doesn't know.
+ */
+export type DeedsReport = { deeds: readonly { userId: string; deed: string }[] }
+
+/** What those deeds earned, by user id: new stamps (the relay tells the room) and errands now finished (it tells the trainer). */
+export type DeedsAnswer = { stamps: Record<string, string[]>; errands: Record<string, string[]> }
+
+export const DEEDS_EVERY_MS = 3_000
+
 /** The relay paths on the API. */
-export const REALM_API_PATHS = { identity: '/realm/identity', visit: '/realm/visit', presence: '/realm/presence' } as const
+export const REALM_API_PATHS = { identity: '/realm/identity', visit: '/realm/visit', presence: '/realm/presence', deeds: '/realm/deeds' } as const
