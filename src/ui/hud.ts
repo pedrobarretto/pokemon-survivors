@@ -2,6 +2,7 @@ import { formatTime } from '../engine/math'
 import { canEvolve, evolutionOf, evolvedFrom } from '../data/evolutions'
 import { ENEMIES } from '../data/enemies'
 import { ABILITIES } from '../data/abilities'
+import { BUFFS } from '../data/consumables'
 import { abilityLit, abilityStacks } from '../game/abilities'
 import { playerDex } from '../game/game'
 import { playerForm } from '../game/branch'
@@ -245,7 +246,9 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     localPlayer(g).buffs.forEach((b, i) => {
       const fill = buffFills[i]
       if (!fill) return
-      setStyle(fill, 'width', `${((b.left / b.total) * 100).toFixed(1)}%`)
+      // Against the base duration, not `b.total` (which sticks at the longest stack), so any
+      // pickup reads as full; time past the base (a stack, an altar's) sits full, then drains.
+      setStyle(fill, 'width', `${(Math.min(1, b.left / BUFFS[b.id].duration) * 100).toFixed(1)}%`)
       fill.parentElement!.parentElement!.classList.toggle('ending', b.left < 3)
     })
 
