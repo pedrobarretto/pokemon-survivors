@@ -6197,7 +6197,7 @@ export const en: Messages = {
     where: {
       rift: 'Waits inside a _legendary rift_: step through the portal and beat it there.',
       trio: 'Comes as a boss with the run’s _legendary trio_.',
-      mythical: 'Sometimes (1 run in 10) shows up beside *Mewtwo* at the end.',
+      mythical: 'Sometimes (1 run in 10, more after each finale without one) shows up beside *Mewtwo* at the end.',
       finale: 'It’s the final boss: win a run.',
       endless: 'The last trophy: once the other 22 are caught, beat it in _endless mode_.',
       event: 'Only on _Halloween Night_: beat it in the _Nightmare rift_.',

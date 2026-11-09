@@ -529,7 +529,7 @@ export const siteEn: SiteMessages = {
       opensHead: 'Legendary move',
       pressureTitle: 'Difficulties in Legend Mode',
       pressure: 'Pressure stacks on every difficulty: these are Legend Mode’s multipliers.',
-      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10)', finale: 'Final boss', endless: 'Endless mode, last of all', event: 'Halloween Night 2026 (event)', festival: 'Lantern Festival 2026 (prize)' },
+      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10, rises after each finale without one)', finale: 'Final boss', endless: 'Endless mode, last of all', event: 'Halloween Night 2026 (event)', festival: 'Lantern Festival 2026 (prize)' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'On Halloween Night 2026 (October 24 to November 2), Darkrai comes as an event legend: it only shows up in the Nightmare rift, which can take a rift\'s place in a haunted run, and 2 wins catch it. It plays with Dark Void, which puts crowds to sleep, and the innate Bad Dreams, which hurts whoever sleeps near it. After the event it returns to the shadows, but whoever caught it keeps playing it. It doesn\'t count toward Arceus.',
     },
@@ -637,7 +637,7 @@ export const siteEn: SiteMessages = {
       ],
       trios: (times, trios, mythicals, percent) => [
         `At ${list(times)} come the three members of a legendary trio, drawn at the start of each run: ${list(trios)}. HP, contact damage and speed belong to the time slot, not the Pokémon, so no draw is easier than another; what changes is the attacks.`,
-        `At the end, with a ${n(percent)}% chance, a mythical Pokémon joins Mewtwo: ${mythicals}, also drawn per run.`,
+        `At the end, with a ${n(percent)}% chance, a mythical Pokémon joins Mewtwo: ${mythicals}, also drawn per run. After 5 finales without beating a mythical the chance rises with each one, up to a sure thing on the 21st, and the one that comes is one you don't have yet.`,
       ],
       timeHead: 'Time',
       bossHead: 'Boss',

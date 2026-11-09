@@ -88,6 +88,7 @@ import { createCoopState, createRecord, updateCoop } from './coop'
 import { COOP } from '../data/coop'
 import type { Game, Offer, OwnedMove, Player } from './types'
 import * as dm from '../engine/dmath'
+import { withHunt, type MythicalHunt } from './mythicalHunt'
 
 export const EVOLUTION_TIME = 4.6
 
@@ -122,6 +123,8 @@ export type RunOptions = {
   evo?: readonly EvoItemId[]
   /** The Pokémon's Bottle Cap level (`runBoost`). */
   caps?: number
+  /** The mythicals' bad-luck protection (`game/mythicalHunt.ts`); the plain odds when absent. */
+  mythical?: MythicalHunt
   /** Opens the run on the opening draft (`draftOffers`): three moves of the learnset to pick the second move from. */
   draft?: boolean
 }
@@ -259,13 +262,17 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     kills: 0,
     coins: 0,
     // A legend never meets itself among the bosses (`avoidLegend`), nor the outbreak's basic in its horde (`LEGEND_HORDE`).
-    roster: avoidLegend(
-      withHoney(
-        withOutbreak(withHaunts(roster ?? drawRoster(rng), options.halloween === true, seed, isLegend(starter)), isLegend(starter) ? null : (options.outbreak ?? null)),
-        isLegend(starter) ? null : (options.outbreak ?? null),
-        bag.includes('honey') ? BAG_ITEMS.honey.effect.outbreakWeight : 1,
+    roster: withHunt(
+      avoidLegend(
+        withHoney(
+          withOutbreak(withHaunts(roster ?? drawRoster(rng), options.halloween === true, seed, isLegend(starter)), isLegend(starter) ? null : (options.outbreak ?? null)),
+          isLegend(starter) ? null : (options.outbreak ?? null),
+          bag.includes('honey') ? BAG_ITEMS.honey.effect.outbreakWeight : 1,
+        ),
+        starter,
       ),
-      starter,
+      options.mythical,
+      seed,
     ),
     spawnBudget: 0,
     nextEvent: 0,
@@ -286,6 +293,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     eggs: { found: [], lucky: options.luckyEgg === true, boost: bag.includes('incense') ? BAG_ITEMS.incense.effect.eggOdds : 1 },
     outbreak: options.outbreak ?? null,
     halloween: options.halloween === true,
+    mythicalHunt: options.mythical ?? null,
     candies: 0,
     shinyBoost: shinyBoost(Math.max(...setups.map((s) => s.ranks.shinyCharm)), bag.includes('lure')),
     dexLog: createDexLog(),

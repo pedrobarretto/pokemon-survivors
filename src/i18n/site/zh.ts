@@ -536,7 +536,7 @@ export const siteZh: SiteMessages = {
       opensHead: '傳說招式',
       pressureTitle: '傳說模式的難度',
       pressure: '壓迫感會疊加在每種難度上：以下是傳說模式的倍率。',
-      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: 'Mewtwo 身旁（1/10）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）', festival: '2026 燈籠祭（獎勵）' },
+      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: 'Mewtwo 身旁（1/10，每場沒有幻之寶可夢的決戰後提高）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）', festival: '2026 燈籠祭（獎勵）' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: '在2026年的女巫之夜（10月24日至11月2日），Darkrai 以活動傳說的身分登場：它只出現在夢魘裂縫中，而夢魘裂縫可能在鬧鬼對局中取代一道裂縫，贏得2次即可收服。它使用能讓敵群沉睡的 Dark Void，以及能傷害在它附近睡著的敵人的固有特性 Bad Dreams。活動結束後它會回到黑暗之中，但已收服的玩家仍可繼續使用它。它不計入 Arceus 的條件。',
     },
@@ -644,7 +644,7 @@ export const siteZh: SiteMessages = {
       ],
       trios: (times, trios, mythicals, percent) => [
         `在 ${list(times)} 會出現傳說三神的三名成員，每場對局開始時抽選：${list(trios)}。HP、接觸傷害與速度取決於時段而不是寶可夢本身，所以沒有哪種抽選比較簡單；不同的是攻擊方式。`,
-        `最後有 ${n(percent)}% 機率會有幻之寶可夢加入 Mewtwo：${mythicals}，同樣每場對局抽選。`,
+        `最後有 ${n(percent)}% 機率會有幻之寶可夢加入 Mewtwo：${mythicals}，同樣每場對局抽選。連續 5 場決戰沒有打倒幻之寶可夢後，機率會逐場提高，第 21 場必定出現，而且會是你還沒有的那一隻。`,
       ],
       timeHead: '時間',
       bossHead: '首領',

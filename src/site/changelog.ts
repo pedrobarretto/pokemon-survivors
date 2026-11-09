@@ -97,14 +97,26 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '使用 AZERTY 鍵盤時，遊戲現在會顯示正確的按鍵：Z Q S D。',
       },
       {
-        pt: 'Se o jogo ainda não abrir, recarregue a página.',
-        en: 'If the game still doesn’t open, reload the page.',
-        es: 'Si el juego aún no abre, recarga la página.',
-        fr: 'Si le jeu ne s’ouvre toujours pas, recharge la page.',
-        zh: '如果遊戲仍然無法開啟，請重新載入頁面。',
+        pt: 'Mew, Celebi e Jirachi agora têm garantia por azar: a chance sobe a cada final sem um mítico.',
+        en: 'Mew, Celebi and Jirachi now have bad-luck protection: the chance rises with each finale without a mythical.',
+        es: 'Mew, Celebi y Jirachi ahora tienen protección contra la mala suerte: la probabilidad sube con cada final sin un mítico.',
+        fr: 'Mew, Celebi et Jirachi ont maintenant une protection contre la malchance : les chances montent à chaque finale sans Pokémon fabuleux.',
+        zh: 'Mew、Celebi 和 Jirachi 現在有保底機制：每場沒有幻之寶可夢的決戰後，機率都會提高。',
       },
     ],
     changes: [
+      {
+        title: { pt: 'Garantia por azar dos míticos', en: 'Bad-luck protection for mythicals', es: 'Protección contra la mala suerte de los míticos', fr: 'Protection contre la malchance des fabuleux', zh: '幻之寶可夢保底機制' },
+        notes: [
+          {
+            pt: 'Depois de 5 finais sem derrotar um mítico, a chance de ele aparecer junto do Mewtwo sobe a cada final, até ser garantida na 21ª. Enquanto faltar algum, o que aparece é sempre um que você ainda não capturou.',
+            en: 'After 5 finales without beating a mythical, the chance of one joining Mewtwo rises with each finale, up to a sure thing on the 21st. While you still miss any, the one that comes is always one you have not captured.',
+            es: 'Tras 5 finales sin derrotar a un mítico, la probabilidad de que aparezca junto a Mewtwo sube con cada final, hasta ser segura en la 21.ª. Mientras te falte alguno, siempre aparece uno que aún no capturaste.',
+            fr: 'Après 5 finales sans battre de Pokémon fabuleux, les chances d’en voir un aux côtés de Mewtwo montent à chaque finale, jusqu’à être certaines à la 21e. Tant qu’il vous en manque, celui qui vient est toujours un que vous n’avez pas capturé.',
+            zh: '連續 5 場決戰沒有打倒幻之寶可夢後，牠與 Mewtwo 一同出現的機率會逐場提高，第 21 場必定出現。只要還有缺少的，出現的一定是你尚未捕捉的那一隻。',
+          },
+        ],
+      },
       {
         title: { pt: 'Tela preta ao abrir', en: 'Black screen on opening', es: 'Pantalla negra al abrir', fr: 'Écran noir à l’ouverture', zh: '開啟時黑畫面' },
         notes: [
