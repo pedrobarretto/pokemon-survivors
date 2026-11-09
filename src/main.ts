@@ -194,7 +194,7 @@ import { forgetInstallNudge, installNudgeScreen } from './ui/install'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
 import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
-import { knownTier, linkedPoll, patreonReturn, stageSupporterStatus, watchSupporterStatus } from './supporters'
+import { fakeWall, knownTier, linkedPoll, patreonReturn, stageSupporterStatus, watchSupporterStatus } from './supporters'
 import { suggestionsScreen } from './ui/suggestions'
 import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
@@ -4361,6 +4361,21 @@ const devChallenge = (mode?: 'play' | 'done' | 'reset', time = 754) => {
 }
 
 /**
+ * Dev: the lobby's Hall card without the API. `ps.hall('fake', 128, 'Marina')`
+ * stages a wall of that many supporters with that name newest, `'pending'`
+ * one that never answers, `'fail'` an API that can't be reached and `'off'`
+ * the API again; the lobby rebuilds with it.
+ */
+const devHall = (cmd?: 'fake' | 'pending' | 'fail' | 'off', count = 128, newest = 'Marina') => {
+  if (!cmd) return "ps.hall('fake', count?, newestName?) · ('pending') · ('fail') · ('off')"
+  const tiers = ['diamond', 'gold', 'supporter', 'supporter'] as const
+  const entries = PLAYABLE_IDS.slice(0, Math.min(count, 12)).map((id, i, ids) => ({ handle: `fan${i}`, name: i === ids.length - 1 ? newest : `Fan ${i + 1}`, tier: tiers[i % tiers.length]!, since: new Date(Date.UTC(2026, 9, i + 1)).toISOString(), og: i === 0, title: null, pokemon: { id, shiny: i % 5 === 0 } }))
+  fakeWall(cmd === 'off' ? null : cmd === 'fake' ? Promise.resolve({ entries, hidden: { supporter: Math.max(0, count - entries.length), gold: 0, diamond: 0 } }) : cmd === 'fail' ? Promise.resolve(null) : new Promise(() => {}))
+  if (screen?.el.classList.contains('title-home')) showTitle()
+  return `Hall: ${cmd}`
+}
+
+/**
  * Dev: the co-op boards. `ps.coopBoard('fake')` makes their reads answer
  * made-up teams (`coopBoardFakes.ts`), `'off'` asks the API again;
  * `ps.coopBoard('open', 3, 'hard')` opens the Ranking's Co-op side at that
@@ -4925,6 +4940,7 @@ if (import.meta.env.DEV) {
       field: devField,
       challenge: devChallenge,
       coopBoard: devCoopBoard,
+      hall: devHall,
       otherDevice: devOtherDevice,
       dex: () => loadSave().dex,
       /** Plays an error report's `replay` (the JSON string from PostHog) again: a simulation error throws here at the same tick. */

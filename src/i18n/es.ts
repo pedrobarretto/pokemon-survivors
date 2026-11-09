@@ -43,6 +43,8 @@ export const es: Messages = {
     missions: 'Misiones',
     missionsLeft: (n) => (n === 1 ? 'Hoy te falta 1 misión' : `Hoy te faltan ${n} misiones`),
     hallName: 'Salón de la Fama',
+    hallNewest: 'Último:',
+    hallCount: (n, shown) => (n === 1 ? `${shown} patrocinador` : `${shown} patrocinadores`),
     change: 'Cambiar',
     pokedex: 'Pokédex',
     eggs: 'Huevos',

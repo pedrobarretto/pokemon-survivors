@@ -390,27 +390,48 @@ const hallLabel = (call: HallOpen | null) => {
   return call === null ? t().home.hallName : `${t().home.hallName} · ${call === 'pick' ? m.banner : m.voteWaiting}`
 }
 
+/** Who joined the wall last: the latest first support, whatever the API's order. */
+const newestOf = (entries: readonly WallEntry[]) => entries.reduce<WallEntry | undefined>((newest, e) => (!newest || e.since.localeCompare(newest.since) >= 0 ? e : newest), undefined)
+
+/** Faces the Hall card holds; a Poké Ball rests in each until the wall arrives, so nothing moves when it does. */
+const HALL_FACES = 4
+
 /**
- * The Hall da Fama strip: gold, the first supporters' faces and how many
- * stand on the wall. It sparkles while it calls the player to something
- * (`hallCall`). Without accounts it's a link to the support page.
+ * The Hall da Fama card: gold, its name and how many support the game (off
+ * the wall too, so the number never drops when one hides), the first
+ * supporters' faces and who joined last. Until the wall comes back, offline
+ * or with nobody on it, Poké Balls hold the faces' places and it asks for
+ * support, in the same shape. It sparkles while it calls the player to
+ * something (`hallCall`). Without accounts it's a link to the support page.
  */
 const hallStrip = (open: () => void) => {
   const m = t().home
   const call = hallCall()
-  const stack = h('span', { class: 'hall-stack' })
-  const name = h('b', {}, m.hallName)
+  const stack = h('span', { class: 'hall-stack' }, ...Array.from({ length: HALL_FACES }, () => h('span', { class: 'hall-face portrait' }, h('img', { src: pokeballIcon(), alt: '' }))))
+  const number = h('span', { class: 'hall-number' })
+  const newest = h('span', { class: 'hall-newest' }, h('img', { class: 'hall-heart', src: heartIcon(), alt: '' }), h('span', { class: 'hall-newest-text' }, m.support))
   const label = hallLabel(call)
-  const kids = [stack, name, h('img', { class: 'hall-heart', src: call ? sparkleIcon() : heartIcon(), alt: '' }), h('span', { class: 'key-hint' }, 'H')]
+  const kids = [
+    h('span', { class: 'hall-head' }, h('b', {}, m.hallName), h('span', { class: 'hall-count' }, h('img', { class: 'hall-heart', src: call ? sparkleIcon() : heartIcon(), alt: '' }), number)),
+    h('span', { class: 'hall-row' }, stack, newest),
+    h('span', { class: 'key-hint' }, 'H'),
+  ]
   const attrs = { class: call ? 'arc-card lobby-hall waiting' : 'arc-card lobby-hall', 'aria-label': label, title: label }
   const el = accountsEnabled
     ? h('button', { ...attrs, type: 'button', onclick: open }, ...kids)
     : h('a', { ...attrs, href: ROUTES.support[locale()], target: '_blank', rel: 'noopener', onclick: () => playSfx('select') }, ...kids)
   void fetchWall().then((wall) => {
-    if (!wall?.entries.length) return
-    stack.replaceChildren(...[...wall.entries].sort(byStanding).slice(0, 4).map(wallFace))
-    // Supporters off the wall count too, so the number never drops when one hides.
-    name.textContent = `${m.hallName} · ${formatNumber(supporterCount(wall))}`
+    const last = wall && newestOf(wall.entries)
+    if (!wall || !last) return
+    const count = supporterCount(wall)
+    number.textContent = formatNumber(count)
+    const others = wall.entries.filter((e) => e !== last).sort(byStanding).slice(0, HALL_FACES)
+    if (others.length > 0) stack.replaceChildren(...others.map(wallFace))
+    else stack.remove()
+    newest.replaceChildren(wallFace(last), h('span', { class: 'hall-newest-text' }, h('em', {}, m.hallNewest), ' ', h('b', {}, last.name)))
+    const full = `${label} · ${m.hallCount(count, formatNumber(count))} · ${m.hallNewest} ${last.name}`
+    el.setAttribute('aria-label', full)
+    el.title = full
   })
   return el
 }

@@ -139,6 +139,8 @@ export const pt = {
     missions: 'Missões',
     missionsLeft: (n: number) => (n === 1 ? '1 missão de hoje por fazer' : `${n} missões de hoje por fazer`),
     hallName: 'Hall da Fama',
+    hallNewest: 'Último:',
+    hallCount: (n: number, shown: string) => (n === 1 ? `${shown} apoiador` : `${shown} apoiadores`),
     /** The name plate under the partner: tapping it opens the Pokémon select. */
     change: 'Trocar',
     pokedex: 'Pokédex',

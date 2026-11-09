@@ -43,6 +43,8 @@ export const zh: Messages = {
     missions: '任務',
     missionsLeft: (n) => `今日任務還剩${n}個`,
     hallName: '名人堂',
+    hallNewest: '最新：',
+    hallCount: (_n, shown) => `${shown} 位贊助者`,
     change: '更換',
     pokedex: '寶可夢圖鑑',
     eggs: '蛋',

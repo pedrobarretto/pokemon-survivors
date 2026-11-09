@@ -4027,25 +4027,60 @@ button {
   position: relative;
   flex: none;
   display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 52px;
-  padding: 4px 12px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 10px 7px;
   color: var(--kit-tinta);
+  text-align: left;
   text-decoration: none;
   background: var(--kit-ouro);
 }
 
-.lobby-hall > b {
-  flex: 1 1 auto;
+.hall-head,
+.hall-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.hall-head {
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hall-head > b {
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   font-family: var(--kit-title);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 400;
-  line-height: 1;
+  line-height: 1.1;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* The number: the card's loudest thing. Only the heart until the wall arrives. */
+.hall-count {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 0 8px;
+  color: #fff;
+  background: var(--kit-tinta);
+  border-radius: 8px;
+}
+
+.hall-number {
+  font-family: var(--kit-title);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.hall-number:empty {
+  display: none;
 }
 
 .lobby-hall .key-hint {
@@ -4054,18 +4089,92 @@ button {
 
 .hall-heart {
   flex: none;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   image-rendering: pixelated;
+}
+
+.hall-row {
+  gap: 7px;
 }
 
 .hall-stack {
   display: flex;
   flex: none;
+  padding-right: 8px;
 }
 
-.hall-stack:empty {
-  display: none;
+/* Who joined last: an ink sticker, or the call to support before the wall. */
+.hall-newest {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 9px 0 4px;
+  color: #fff;
+  background: var(--kit-tinta);
+  border-radius: 16px;
+}
+
+.hall-newest > .hall-heart {
+  margin-left: 4px;
+}
+
+.hall-newest .hall-face {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  margin-right: 0;
+}
+
+.hall-newest .hall-face.portrait img {
+  width: 22px;
+  height: 22px;
+}
+
+.hall-newest-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--kit-body);
+  font-size: 16px;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hall-newest-text em {
+  color: var(--kit-ouro);
+  font-style: normal;
+}
+
+.hall-newest-text b {
+  font-weight: 400;
+}
+
+/* Short screens: the column has no height to spare over the mode bar. */
+@media (max-height: 800px) {
+  .arc-card.lobby-hall {
+    gap: 3px;
+    padding: 3px 9px 4px;
+  }
+
+  .hall-count {
+    min-height: 24px;
+  }
+
+  .hall-newest {
+    height: 29px;
+  }
+}
+
+/* The side column is narrow at tablet widths: two faces leave the name room. */
+@media (max-width: 1180px) {
+  .hall-stack .hall-face:nth-child(n + 3) {
+    display: none;
+  }
 }
 
 .hall-face {

@@ -43,6 +43,8 @@ export const en: Messages = {
     missions: 'Missions',
     missionsLeft: (n) => (n === 1 ? "1 of today's missions to go" : `${n} of today's missions to go`),
     hallName: 'Hall of Fame',
+    hallNewest: 'Newest:',
+    hallCount: (n, shown) => (n === 1 ? `${shown} supporter` : `${shown} supporters`),
     change: 'Change',
     pokedex: 'Pokédex',
     eggs: 'Eggs',
