@@ -26529,6 +26529,12 @@ span.arena-hub-face {
   color: #b86a10;
 }
 
+/* Both sit in the same corner: what's waiting for the player beats how many are in (the two land in either order). */
+.lobby-realm-crowd:has(~ .lobby-realm-errands),
+.lobby-realm-errands ~ .lobby-realm-crowd {
+  display: none;
+}
+
 .lobby-realm-errands {
   position: absolute;
   bottom: -6px;

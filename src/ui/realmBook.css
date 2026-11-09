@@ -839,6 +839,13 @@
   pointer-events: none;
 }
 
+/* Where the Hora do Realm's bar drops under the top bar (`style.css`), below it too. */
+@media (max-width: 720px) {
+  .realm-stamped {
+    top: calc(max(10px, var(--safe-t)) + 106px);
+  }
+}
+
 .realm-stamped-note {
   display: flex;
   align-items: center;
