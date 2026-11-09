@@ -18,6 +18,7 @@ import { modKill } from './mods'
 import { awardEgg, dropCoins, dropPickup, dropXp } from './pickups'
 import { bustDisguise, faintCandies, nightBossDown } from './halloween'
 import { applyStatus, breakOnHit, hitTakenMult, STATUS_RULES, type StatusKind } from './status'
+import { venomJump, VENOM, VENOM_MOVE } from './seasonOneEggRules'
 import { bonusMult, drainAmount, drainRefill, executes, nearestFoes, SEED_DECAY, SEED_JUMPS, SEED_MIN_TIME, SEED_REACH } from './kitRules'
 import { guardHit, moveEvent, moveHit } from './moveHooks'
 import { fallInArena } from './riftArena'
@@ -143,6 +144,17 @@ const spreadSeed = (g: Game, e: Enemy) => {
   }
 }
 
+/** A fainting foe poisoned by Corrosive Gas (`VENOM_MOVE`) passes the poison on to its nearest neighbors, a little weaker, while it's strong enough (`venomJump`). */
+const spreadVenom = (g: Game, e: Enemy) => {
+  const poison = e.status.poison
+  const spec = venomJump(poison)
+  if (!spec) return
+  for (const o of nearestFoes(g.enemies, e, VENOM.jumps, VENOM.reach, (f) => f.status.poison.time > 0)) {
+    applyStatus(o.status, spec, 1, o.boss, poison.move, poison.by)
+    burst(g, o.x, o.y - o.radius, { colors: ['#c878f0', '#f0c0ff'], count: 5, speed: 60, ttl: 0.3 })
+  }
+}
+
 /** Damage-over-time tick: no knockback or hit sound, number in the status color. */
 export const dotDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null, kind: StatusKind) => {
   if (e.behavior.kind === 'avatar') return tickAvatar(g, e, amount, move, STATUS_RULES[kind].color)
@@ -163,6 +175,7 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   // A Versus match rewards with Energy and EXP for the team, nothing else (`wildDown`).
   if (g.versus) return wildDown(g, e)
   if (e.status.seed.time > 0) spreadSeed(g, e)
+  if (e.status.poison.time > 0 && e.status.poison.move === VENOM_MOVE) spreadVenom(g, e)
   e.dying = 0
   e.hp = 0
   g.kills++

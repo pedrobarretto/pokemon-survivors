@@ -5,6 +5,7 @@ import { drainHeal } from './combat'
 import { burst, floatText, shakeScreen } from './effects'
 import { recomputeStats } from './leveling'
 import { addMoveBuff, TIRED_SLOW, TIRED_TIME } from './signatureMoves'
+import { reflectShots } from './seasonOneEggMoves'
 import { recoilFor, snipeScale } from './signatureRules'
 import { inheritMods } from './mods'
 import { spawnAttack } from './spawn'
@@ -160,6 +161,9 @@ export const updateSignatures = (g: Game, dt: number) => {
         if (a.age >= 0) a.damage = a.memo * snipeScale(a.age * dm.hypot(a.motion.vx, a.motion.vy))
         break
       }
+      case 'protect':
+        if (a.move === 'magicCoat') reflectShots(g, a)
+        break
       case 'rapidSpin': {
         if (a.shape.kind !== 'circle') break
         const r = a.shape.r + 4

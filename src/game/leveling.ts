@@ -392,6 +392,8 @@ export const pendingEvolution = (g: Game) => {
   if (p.everstone || p.stage + 1 >= PLAYABLE[p.starter].line.length) return null
   const stage = formAt(p.starter, p.branch, p.stage)
   const next = formAt(p.starter, p.branch, p.stage + 1)
+  // A branch that ends its line early (Flapple, Appletun) has nowhere further to go.
+  if (next.dex === stage.dex) return null
   // The Arena evolves at its format's own levels (`FormatRules.evolveAt`).
   const at = p.versus && g.versus ? versusEvolveAt(g.versus, p.stage) : stage.evolveAt
   return at !== undefined && p.level >= at ? { from: stage.dex, to: next.dex } : null
