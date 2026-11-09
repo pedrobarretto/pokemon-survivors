@@ -4,7 +4,7 @@ import { playSfx } from '../engine/audio'
 import { ACTIONS } from '../engine/bindings'
 import type { Input } from '../engine/input'
 import { formatTime, type Dir8 } from '../engine/math'
-import { blitPacked, context2d, ellipse } from '../engine/pixelart'
+import { blitPacked, blitCentered, context2d, ellipse } from '../engine/pixelart'
 import { ENEMIES } from '../data/enemies'
 import { GAME_MODES, type GameModeId } from '../data/gameModes'
 import { HATCHLINGS, PLAYABLE } from '../data/hatchlings'
@@ -16,7 +16,8 @@ import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/supporters'
 import { formatNumber, LOCALES, locale, t } from '../i18n'
 import { arenaIcon, bulbIcon, chevronIcon, coinIcon, coopIcon, discordIcon, eggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
-import { loadStage, stageHorizonRise, type StageAnchor } from '../render/lobbyStage'
+import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
+import { loadStage, stageHorizonRise, type StageAnchor, type StageClouds, type StageScene, type StageSpan } from '../render/lobbyStage'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
 import type { Place } from '../render/titleScene'
@@ -49,7 +50,8 @@ import { lobbySheet, type SheetEntry } from './lobbySheet'
 import { nearestInDirection, type Direction } from './spatial'
 import { toast } from './toasts'
 import { trainerChip } from './trainer'
-import { uiDpr, uiViewport } from './uiScale'
+import { lobbyPlaces, type StageBlock } from './lobbyPlaces'
+import { uiDpr, uiViewport, uiZoom } from './uiScale'
 
 /** What the lobby can highlight. A screen opened over it gets the one it came from, to come back to it. */
 export type LobbyFocus =
@@ -102,8 +104,11 @@ export type Meadow = {
   visit: (to: Place, instant?: boolean) => void
   /** Where the meadow rests, or `moving` during a trip. */
   at: () => Place | 'moving'
-  /** Draws the side-view stage this frame, standing on `at` (view px), `mode`'s wild Pokémon around the platform. */
-  stage: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number, at: StageAnchor, mode: GameModeId) => void
+  /** Draws the side-view stage this frame, standing on `at` (view px), `scene`'s Pokémon around the platform. */
+  stage: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number, at: StageAnchor, scene: StageScene) => void
+  /** The stage's clouds as images, placed each frame by `tickClouds`. */
+  clouds: StageClouds['el']
+  tickClouds: (w: number, horizon: number) => void
   /** Steps and draws the top-down meadow this frame (a trip's world). */
   draw: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number) => void
   /** CSS px per world px: where the stage's places line up over the canvas. */
@@ -467,8 +472,8 @@ const STADIUM = seenFlag('ps:stadiumSeen')
 
 /** A Pokémon on the platform: `x` from the middle (art px). `team` paints its ground (the Arena's sides). */
 type Figure = { dex: Dex; shiny: boolean; x: number; dir: Dir8; team?: 'blue' | 'red' }
-/** Who stands on the platform: figures, a picture beside them (`img`: feet at `x`), the ribbon over the day's Pokémon, and how much smaller than the partner its art is drawn (`shrink`). */
-type Cast = { figures: readonly Figure[]; img?: { src: string; x: number }; ribbon?: boolean; shrink?: number }
+/** Who stands on the platform: figures, a picture beside them (`img`: feet at `x`), the ribbon over the day's Pokémon, how much smaller than the partner its art is drawn (`shrink`), and the patrons around the Realm's café (`cafe`, `render/cafeLife.ts`). */
+type Cast = { figures: readonly Figure[]; img?: { src: string; x: number }; ribbon?: boolean; shrink?: number; cafe?: boolean }
 
 const ASSETS = `${import.meta.env.BASE_URL}assets`
 
@@ -487,7 +492,7 @@ const castOf = (mode: GameModeId): Cast => {
   if (mode === 'coop') return { figures: [figure(1, -38, 0), figure(25, 0, 0), figure(7, 38, 0)] }
   if (mode === 'arena') return { figures: [figure(448, -58, 2, 'blue'), figure(6, -24, 2, 'blue'), figure(445, 24, 6, 'red'), figure(94, 58, 6, 'red')] }
   if (mode === 'dojo') return { figures: [figure(67, -20, 2)], img: { src: `${ASSETS}/dojo/dummy.png`, x: 20 } }
-  return { figures: [], img: { src: `${ASSETS}/realm/cafe.png`, x: 0 }, shrink: 2 }
+  return { figures: [], img: { src: `${ASSETS}/realm/cafe.png`, x: 0 }, shrink: 2, cafe: true }
 }
 
 /** How big the cast stands in each layout, in CSS px per art px; the mockups' sizes. */
@@ -501,6 +506,9 @@ const CAST_CSS = { wide: 4, narrow: 3, landscape: 3 } as const
 const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
   let cast: Cast = { figures: [] }
   let picture: HTMLImageElement | null = null
+  /** The cast's half width (local CSS px), for the places around it. */
+  let halfCss = 0
+  const pose = newCafePose()
   const ribbon = new Image()
   ribbon.src = ribbonIcon('gold')
   const set = (mode: GameModeId) => {
@@ -511,6 +519,7 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
       picture.src = cast.img.src
     }
     for (const f of cast.figures) void loadSpecies(f.dex, f.shiny).catch(() => {})
+    if (cast.cafe) for (const p of CAFE_PATRONS) void loadSpecies(p.dex).catch(() => {})
   }
   const tick = (time: number) => {
     const { clientWidth: slotW, clientHeight: slotH } = slot
@@ -522,6 +531,7 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
     const half = Math.max(16, picture?.complete ? (picture.naturalWidth / 2 + Math.abs(cast.img!.x)) : 0, ...sprites.map((s, i) => Math.abs(cast.figures[i]!.x) + (s ? s.bodyW / 2 + 6 : 16)))
     const tall = Math.max(40, picture?.complete ? picture.naturalHeight + 4 : 0, ...sprites.map((s) => (s ? s.bodyH + 18 : 40)))
     const k = Math.max(1, Math.min(want, Math.floor((slotW * dpr) / (half * 2)), Math.floor((slotH * dpr) / tall)))
+    halfCss = Math.round((half * k) / dpr)
     const w = Math.ceil((slotW * dpr) / k)
     const h = Math.ceil((slotH * dpr) / k)
     if (canvas.width !== w || canvas.height !== h) Object.assign(canvas, { width: w, height: h })
@@ -537,42 +547,49 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
       if (s) drawPokemon(ctx, s, 'Idle', f.dir, time + i * 0.4, mid + f.x, feet)
     }
     if (picture?.complete && picture.naturalWidth > 0 && cast.img) ctx.drawImage(picture, mid + cast.img.x - Math.floor(picture.naturalWidth / 2), feet + 2 - picture.naturalHeight)
+    if (cast.cafe) {
+      for (const p of CAFE_PATRONS) {
+        cafePose(p, time, pose)
+        const s = loadedSprites(p.dex)
+        if (!s || pose.gone) continue
+        const x = mid + Math.round(pose.x)
+        blitPacked(ctx, ellipse(Math.max(6, Math.round(s.bodyW * 0.45)), 2, 'rgba(16,24,16,0.3)'), x, feet)
+        drawPokemon(ctx, s, pose.anim, pose.dir, time, x, feet)
+        if (pose.bubble) blitCentered(ctx, cafeBubbles()[pose.bubble], x, feet - s.bodyH - 8)
+      }
+    }
     if (cast.ribbon && ribbon.complete) {
       const top = sprites[0]?.bodyH ?? 28
       ctx.drawImage(ribbon, mid - Math.floor(ribbon.naturalWidth / 2), feet - top - ribbon.naturalHeight - 3 - (Math.floor(time * 2) % 2))
     }
   }
-  return { set, tick }
+  return { set, tick, half: () => halfCss }
 }
 
 /* ---------------- The places on the horizon ---------------- */
 
-/** The places, from the stage's middle (CSS px): by the layout, so a phone's middle stays clear. `null` art is the shop, drawn at its level. */
-const PLACES = {
-  wide: { dojo: -300, stadium: -160, shop: 160, lighthouse: 290 },
-  narrow: { dojo: -330, stadium: -158, shop: 330, lighthouse: 176 },
-} as const satisfies Record<'wide' | 'narrow', Record<string, number>>
-
-const horizon = (shopLevel: number) => {
-  const file = (id: keyof typeof PLACES.wide) =>
-    id === 'dojo' ? `${ASSETS}/dojo/dojo.png` : id === 'stadium' ? `${ASSETS}/stadium/stadium.png` : id === 'lighthouse' ? `${ASSETS}/realm/lighthouse.png` : `${ASSETS}/shop/shop-lv${shopLevel}.png`
-  const places = (Object.keys(PLACES.wide) as (keyof typeof PLACES.wide)[]).map((id) => ({ id, img: h('img', { class: 'lobby-place', src: file(id), alt: '', draggable: 'false' }) }))
-  const el = h('div', { class: 'lobby-horizon', 'aria-hidden': 'true' }, ...places.map((p) => p.img))
-  const tick = (rise: number) => {
-    const spots = layout() === 'wide' ? PLACES.wide : PLACES.narrow
-    // A phone on its side has the height for little: the places stand a size down.
-    const k = Math.max(1, Math.round(uiDpr() / (layout() === 'landscape' ? 2 : 1)))
-    for (const { id, img } of places) {
-      if (!img.naturalWidth) continue
-      pixelSize(img, k, img.naturalWidth, img.naturalHeight)
-      const left = `${spots[id]}px`
-      if (img.style.left !== left) img.style.left = left
-    }
-    const bottom = `${Math.round(rise)}px`
-    if (el.style.bottom !== bottom) el.style.bottom = bottom
+/**
+ * How far the grass stays uncovered around the stage's `slot`: what the lobby's other blocks leave free
+ * at the feet line (view px from the slot's middle) and the top of what covers it below.
+ */
+const surroundings = (lobby: HTMLElement, slot: DOMRect, scale: number, w: number, vh: number) => {
+  const middle = slot.left + slot.width / 2
+  let [left, right, floor] = [0, w * scale, vh * scale]
+  for (const block of lobby.children) {
+    const r = block.getBoundingClientRect()
+    // A grid column is taller than what it holds: its last card is where it ends.
+    const end = block.lastElementChild?.getBoundingClientRect().bottom ?? r.bottom
+    // (The block holding the slot itself covers nothing.)
+    if (r.width === 0 || Math.min(r.bottom, end) <= slot.bottom || (r.top <= slot.top && r.left <= slot.left && r.right >= slot.right)) continue
+    if (r.top >= slot.bottom && r.left < slot.right && r.right > slot.left) floor = Math.min(floor, r.top)
+    else if (r.right <= middle) left = Math.max(left, r.right)
+    else if (r.left >= middle) right = Math.min(right, r.left)
   }
-  return { el, tick }
+  return { left: Math.floor((middle - left) / scale) - 2, right: Math.floor((right - middle) / scale) - 2, floor: Math.floor(floor / scale) }
 }
+
+const horizon = (shopLevel: number) =>
+  lobbyPlaces((id) => (id === 'dojo' ? `${ASSETS}/dojo/dojo.png` : id === 'stadium' ? `${ASSETS}/stadium/stadium.png` : id === 'lighthouse' ? `${ASSETS}/realm/lighthouse.png` : `${ASSETS}/shop/shop-lv${shopLevel}.png`))
 
 /* ---------------- Keyboard and gamepad ---------------- */
 
@@ -659,7 +676,7 @@ export const titleScreen = (
   const intro = shellBody(h('h1', { class: 'sr-only' }, 'Pokémon Survivors'), logo, prompt)
   const wipeEl = h('div', { class: 'lobby-wipe hidden', 'aria-hidden': 'true' })
   // The Noite das Bruxas dresses the lobby in orange and purple (`style.css`).
-  const el = h('div', { class: halloweenToday() ? 'screen shell title-home haunted' : 'screen shell title-home' }, bar, intro, wipeEl)
+  const el = h('div', { class: halloweenToday() ? 'screen shell title-home haunted' : 'screen shell title-home' }, actions.meadow.clouds, bar, intro, wipeEl)
 
   let lobby: HTMLElement | null = null
   let tickers: ((time: number) => void)[] = []
@@ -691,13 +708,22 @@ export const titleScreen = (
   /** The slot the stage is laid out around; null while the intro shows. */
   let slot: HTMLElement | null = null
   let anchor: StageAnchor | null = null
+  /** How far over the horizon the places reach (world px), or null with none on it. */
+  let placesRoof: number | null = null
+  /** Frames since the places last looked at the layout. */
+  let placesAge = 0
+  /** What walkers on the ridge keep out of (world px from the stage's middle): the places, and the arrows that reach down that far. */
+  let standing: readonly StageSpan[] = []
+  /** How far the grass stays uncovered around the slot (view px from its middle, `floor` from the top); measured a few times a second. */
+  let around = { left: 0, right: 0, floor: 0 }
+  let aroundAge = 0
   /** The circle wiping between the stage and the meadow: closing, `mid` swaps what's behind it, then it opens and `done` runs. */
   let wipe: { t: number; closing: boolean; mid: () => void; done: () => void } | null = null
 
   const hiddenModes = [...(actions.coop ? [] : (['coop'] as const)), ...(actions.realm ? [] : (['realm'] as const))]
   const modes = shownModes(hiddenModes)
   let mode = lobbyModeIn(loadLobbyMode(), modes)
-  loadStage(mode)
+  loadStage(opts.intro ? 'rest' : mode)
   /** Set by `buildLobby`: repaints what follows the selected mode (its name, its pills, the cast, the arrows, the bar, JOGAR). */
   let paintMode: () => void = () => {}
 
@@ -1145,7 +1171,25 @@ export const titleScreen = (
       outbreak.tick,
       painter.tick,
       () => {
-        places.tick((stageHorizonRise * actions.meadow.scale()) / (uiDpr() / (window.devicePixelRatio || 1)))
+        // Layout reads, and they only change with the layout or the mode: a few times a second is plenty.
+        if (placesAge++ % 12 !== 0) return
+        const rect = stageEl.getBoundingClientRect()
+        if (rect.width === 0) return
+        const zoom = uiZoom()
+        const scale = actions.meadow.scale() / zoom
+        const dpr = uiDpr()
+        const middle = rect.left + rect.width / 2
+        const blocks: StageBlock[] = [prev.button, next.button].map((button) => {
+          const a = button.getBoundingClientRect()
+          return { left: (a.left - middle) / zoom, right: (a.right - middle) / zoom, bottom: (rect.bottom - a.bottom) / zoom, top: (rect.bottom - a.top) / zoom }
+        })
+        // A phone on its side has the height for little: the places stand a size down.
+        const full = Math.max(1, Math.round(dpr / (layout() === 'landscape' ? 2 : 1)))
+        const roof = places.tick({ rise: Math.round(stageHorizonRise * scale), world: scale, dpr, full, width: rect.width / zoom, height: rect.height / zoom, cast: painter.half(), blocks })
+        placesRoof = roof > 0 ? roof / scale : null
+        // The ridge's heads reach this high over the slot's bottom: an arrow lower than that stands in their way.
+        const ridgeTop = (stageHorizonRise + 52) * scale
+        standing = [...places.spans(), ...blocks.filter((b) => b.bottom < ridgeTop).map((b) => ({ from: b.left, to: b.right }))].map((b) => ({ from: b.from / scale, to: b.to / scale }))
       },
     ]
 
@@ -1476,11 +1520,19 @@ export const titleScreen = (
     dim: 0,
     scene: (ctx, dt, w, vh) => {
       stepWipe(dt)
+      const stageUp = surface === 'stage'
+      if (actions.meadow.clouds.hidden === stageUp) actions.meadow.clouds.hidden = !stageUp
       if (surface === 'meadow') return actions.meadow.draw(ctx, dt, w, vh)
       const scale = actions.meadow.scale()
       const rect = slot?.getBoundingClientRect()
-      if (rect && rect.width > 0) anchor = { x: Math.round((rect.left + rect.width / 2) / scale), feet: Math.round(rect.bottom / scale) }
-      actions.meadow.stage(ctx, dt, w, vh, anchor ?? { x: Math.round(w / 2), feet: Math.round(vh * 0.72) }, mode)
+      if (rect && rect.width > 0 && lobby) {
+        if (aroundAge++ % 20 === 0) around = surroundings(lobby, rect, scale, w, vh)
+        const feet = Math.round(rect.bottom / scale)
+        anchor = { x: Math.round((rect.left + rect.width / 2) / scale), feet, ...around, top: Math.round(rect.top / scale), standing, ...(placesRoof !== null && { roof: feet - stageHorizonRise - placesRoof }) }
+      }
+      const at = anchor ?? { x: Math.round(w / 2), feet: Math.round(vh * 0.72) }
+      actions.meadow.stage(ctx, dt, w, vh, at, slot ? mode : 'rest')
+      actions.meadow.tickClouds(w, at.feet - stageHorizonRise)
     },
     tick: (time: number) => {
       overScreen?.tick?.(time)

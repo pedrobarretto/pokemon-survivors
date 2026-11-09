@@ -139,7 +139,8 @@ import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from '.
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
 import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
-import { createLobbyStage, drawLobbyStage, stageDex } from './render/lobbyStage'
+import { uiZoom } from './ui/uiScale'
+import { createLobbyStage, createStageClouds, drawLobbyStage, stageDex } from './render/lobbyStage'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
@@ -514,6 +515,7 @@ let lungeQueued = false
 const scene = createTitleScene(Date.now())
 /** The lobby's side-view stage (`render/lobbyStage.ts`). */
 const lobbyStage = createLobbyStage()
+const stageClouds = createStageClouds()
 
 /** Lobbies that met the partner so far: only the latest one may send it away (the next title is built before the last one goes). */
 let meetings = 0
@@ -534,7 +536,9 @@ const meadow: Meadow = {
     visitPlaza(scene, to, view.w, view.h, instant)
   },
   at: () => sceneAt(scene),
-  stage: (draw, dt, w, h, at, mode) => drawLobbyStage(draw, lobbyStage, w, h, at, mode, halloweenToday(), dt),
+  stage: (draw, dt, w, h, at, scene) => drawLobbyStage(draw, lobbyStage, w, h, at, scene, halloweenToday(), dt, false),
+  clouds: stageClouds.el,
+  tickClouds: (w, horizon) => stageClouds.tick(lobbyStage, w, horizon, cssScale, window.devicePixelRatio || 1, uiZoom(), halloweenToday()),
   draw: (draw, dt, w, h) => {
     stepTitleScene(scene, dt, w, h)
     drawTitleScene(draw, scene, w, h)

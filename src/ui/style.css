@@ -4245,6 +4245,26 @@ button.btn:active:not(:disabled) {
   pointer-events: none;
 }
 
+/* The clouds drift a device pixel at a time (render/lobbyStage.ts): behind the lobby's content, over the canvas. */
+.title-home {
+  isolation: isolate;
+}
+
+.stage-clouds {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.stage-clouds img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  image-rendering: pixelated;
+}
+
 .lobby-place {
   position: absolute;
   bottom: 0;
