@@ -24,6 +24,8 @@ import type { ConsumableId } from './consumables'
 import type { DexLog } from './dex'
 import type { Difficulty } from './difficulty'
 import type { EggTier, RunEggs } from './eggs'
+import type { FindId } from '../data/seasonOneUnlocks'
+import type { FindMoment, SeasonFinds } from './seasonOneFinds'
 import type { EndlessState } from './endless'
 import type { MoveId } from './moves'
 import type { MapEventNotice, MapEventsState } from './mapEvents'
@@ -235,6 +237,8 @@ export type PlayerRecord = {
   kills: number
   /** HP lost to the horde, bosses and hazards. */
   taken: number
+  /** Hits that hurt (`hurtPlayer`). */
+  hits: number
   /** Fainted teammates this player got back up. */
   revives: number
   /** Times this player fainted (co-op). */
@@ -749,6 +753,8 @@ export type GameEvent =
   | { kind: 'egg'; tier: EggTier }
   /** A landmark was named, its treasure opened, or the player went into or out of a tunnel (`landmarks.ts`). */
   | { kind: 'landmark'; landmark: LandmarkId; moment: LandmarkMoment }
+  /** A Temporada 1 map encounter (`seasonOneFinds.ts`): the shell banks a `found` one. */
+  | { kind: 'seasonFind'; find: FindId; moment: FindMoment }
   /** Something happened at a place: its entrance, the way in and out, what goes on inside (`place.ts`). */
   | { kind: 'place'; place: PlaceId; notice: PlaceNotice }
   /** A foe shattered: an execute, or a frozen foe's ice broken by a hit. */
@@ -881,6 +887,8 @@ export type Game = {
   terrain: TerrainState
   /** The landmarks' treasures taken, names shown and the tunnel being walked (`game/landmarks.ts`). */
   landmarks: LandmarkState
+  /** Temporada 1's map encounters this run (`seasonOneFinds.ts`). */
+  finds: SeasonFinds
   /** Points of interest placed by the event director (`mapEvents.ts`). */
   mapEvents: MapEventsState
   /** Full-screen white flash strength (Explosion), decays to 0. */

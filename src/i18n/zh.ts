@@ -1,5 +1,6 @@
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -6320,6 +6321,7 @@ export const zh: Messages = {
       awards: { damage: '最高傷害', kills: '最多擊倒', revives: '守護天使', untouched: '毫髮無傷', tank: '坦克', comeback: '不死鳥', survivor: '倖存者', specialist: '專家', collector: '收藏家', loyal: '團隊精神' },
     },
   },
+  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.zh,
   minigames: {
     close: '離開',
     choose: '玩哪個遊戲？',
@@ -6330,7 +6332,7 @@ export const zh: Messages = {
       fourInRow: { name: '四子連線', blurb: '比對手先連成四顆精靈球。' },
       typeDuel: { name: '屬性對決', blurb: '火剋草，草剋水，水剋火。' },
     },
-    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' } },
+    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', wishiwashi: '我釣到了 Wishiwashi！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' } },
     duel: {
       pick: '選一張牌',
       play: '出牌',

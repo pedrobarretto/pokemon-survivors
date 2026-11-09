@@ -136,6 +136,7 @@ const GLYPHS = lazy(() => ({
     spikes: glyph(CROSS, { r: '#e8e8e8' }),
     bomb: glyph(DOT, { c: '#383848', w: '#f84838' }),
     meowth: glyph(COIN, { y: '#f8d030', o: '#c89018' }),
+    castform: glyph(DROP, { b: '#c8e0f8', w: '#ffffff' }),
     tutor: glyph(DISC, { b: '#78c0f8', w: '#ffffff' }),
     defense: glyph(FLAG, { g: '#58d878', k: '#e8e8e8' }),
     collect: glyph(FLAG, { g: '#58d878', k: '#e8e8e8' }),

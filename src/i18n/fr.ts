@@ -1,5 +1,6 @@
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -6320,6 +6321,7 @@ export const fr: Messages = {
       awards: { damage: 'Plus de dégâts', kills: 'Plus de vaincus', revives: 'Ange gardien', untouched: 'Intouchable', tank: 'Tank', comeback: 'Phénix', survivor: 'Survivant', specialist: 'Spécialiste', collector: 'Collectionneur', loyal: 'Esprit d’équipe' },
     },
   },
+  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.fr,
   minigames: {
     close: 'Quitter',
     choose: 'Quel jeu ?',
@@ -6330,7 +6332,7 @@ export const fr: Messages = {
       fourInRow: { name: 'Puissance Quatre', blurb: 'Aligne quatre Poké Balls avant ton rival.' },
       typeDuel: { name: 'Duel de Types', blurb: 'Feu bat Plante, Plante bat Eau, Eau bat Feu.' },
     },
-    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' } },
+    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', wishiwashi: 'J\'ai pêché un Wishiwashi !', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' } },
     duel: {
       pick: 'Choisis une carte',
       play: 'Jouer',

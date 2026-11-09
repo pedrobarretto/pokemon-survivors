@@ -77,8 +77,8 @@ export type MinigameDef = SoloDef | TableDef
 export const MINIGAMES = {
   /**
    * Fishing off the pier (`realm/games/fishing.ts`): cast, wait for the bite,
-   * reel. Feats: a Feebas, the shiny Gyarados, a round of 300 points
-   * (`BIG_HAUL`). Trophies: the rod rack after 20 rounds, the golden Magikarp
+   * reel. Feats: a Feebas, the shiny Gyarados, a Wishiwashi (`FEAT_FAMILIES`
+   * in `data/seasonOneUnlocks.ts`), a round of 300 points (`BIG_HAUL`). Trophies: the rod rack after 20 rounds, the golden Magikarp
    * plaque for a round of 400, the shiny Gyarados trophy for hooking it.
    */
   fishing: {
@@ -87,7 +87,7 @@ export const MINIGAMES = {
     pay: { perPoint: 1, perPlay: 250, daily: 800 },
     maxScore: 2000,
     minMs: 30_000,
-    feats: ['feebas', 'shinyGyarados', 'bigHaul'],
+    feats: ['feebas', 'shinyGyarados', 'wishiwashi', 'bigHaul'],
     trophies: [
       { furniture: 'fishingRodRack', after: { stat: 'plays', at: 20 } },
       { furniture: 'goldenMagikarpPlaque', after: { stat: 'best', at: 400 } },

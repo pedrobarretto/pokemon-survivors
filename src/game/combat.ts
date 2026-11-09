@@ -260,6 +260,7 @@ export const hurtPlayer = (
   const dmg = armored(taken * mods.enemyDamage * weather * domainHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
   p.hp -= dmg
   p.record.taken += dmg
+  p.record.hits++
   noteHit(p, by ?? (from ? harmBy(from) : NO_ONE), hit, dmg)
   p.iframes = mods.iframes
   noteHarm(g, dmg)

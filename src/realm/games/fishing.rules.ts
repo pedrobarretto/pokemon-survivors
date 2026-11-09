@@ -55,6 +55,7 @@ export const CATCHES = {
   staryu: { name: 'Staryu', dex: 120, value: 28, fight: 0.44, size: 1, weight: { near: 0, mid: 10, far: 12 } },
   qwilfish: { name: 'Qwilfish', dex: 211, value: 36, fight: 0.6, size: 1, weight: { near: 0, mid: 5, far: 12 } },
   wailmer: { name: 'Wailmer', dex: 320, value: 48, fight: 0.66, size: 2, weight: { near: 0, mid: 3, far: 14 } },
+  wishiwashi: { name: 'Wishiwashi', dex: 746, value: 70, fight: 0.5, size: 0, weight: { near: 0, mid: 0.3, far: 1 } },
   feebas: { name: 'Feebas', dex: 349, value: 120, fight: 0.55, size: 1, weight: { near: 0, mid: 0.8, far: 2.6 } },
   shinyGyarados: { name: 'Gyarados', dex: 130, shiny: true, value: 400, fight: 0.85, size: 2, weight: { near: 0, mid: 0, far: 0.5 } },
   boot: { dex: null, junk: 'boot', value: 2, fight: 0.04, size: 1, weight: { near: 5, mid: 2, far: 1 } },
@@ -234,11 +235,13 @@ export const BIG_HAUL = 300
 
 /**
  * The feats (`MINIGAMES.fishing.feats`) a haul hit: hooking a Feebas, the
- * shiny Gyarados, a round worth `BIG_HAUL`.
+ * shiny Gyarados, a Wishiwashi (the first one brings its family,
+ * `FEAT_FAMILIES`), a round worth `BIG_HAUL`.
  */
 export const featsOf = (haul: Haul): string[] => [
   ...(haul.includes('feebas') ? ['feebas'] : []),
   ...(haul.includes('shinyGyarados') ? ['shinyGyarados'] : []),
+  ...(haul.includes('wishiwashi') ? ['wishiwashi'] : []),
   ...(scoreOf(haul) >= BIG_HAUL ? ['bigHaul'] : []),
 ]
 

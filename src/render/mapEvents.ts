@@ -3,6 +3,7 @@ import { TAU } from '../engine/math'
 import type { BuffId } from '../data/consumables'
 import { MAP_EVENTS, type MapEvent, type MapEventKind, type MapEventOf } from '../game/mapEvents'
 import { BOMB, CHEST, FADE, FOUNTAIN, MEOWTH_DEX, SPIKES } from '../game/mapEventRules'
+import { CASTFORM_FIND } from '../data/seasonOneUnlocks'
 import type { Game } from '../game/types'
 import { art, lazy, PICKUPS, SPARKLE, toIconUrl } from './art'
 import { consumableSprite } from './props'
@@ -208,6 +209,15 @@ const drawMeowth = (ctx: Ctx, ev: MapEventOf<'meowth'>, t: number, calm: boolean
   if (ev.gone < 0 && (t + ev.id * 0.2) % 0.9 < 0.15) blitCentered(ctx, PICKUPS.coins()[0]!, ev.x + 7, ev.y - s.bodyH - 4)
 }
 
+/** Temporada 1's Castform, floating and bobbing; it blinks (or dims, Flashes: reduced) in its last seconds. */
+const drawCastform = (ctx: Ctx, ev: MapEventOf<'castform'>, t: number, calm: boolean) => {
+  const s = loadedSprites(CASTFORM_FIND.dex)
+  if (!s) return
+  const leaving = ev.gone < 0 && ev.ttl - ev.age < 3 && (calm || Math.floor(t * 10) % 2 === 0)
+  groundShadow(ctx, ev.x, ev.y, Math.max(4, Math.round(s.bodyW * 0.36)))
+  drawPokemon(ctx, s, 'Walk', ev.state.dir, ev.age * 1.6, ev.x, ev.y - 5 - Math.round(Math.sin(t * 3) * 2), { alpha: leaving ? (calm ? 0.7 : 0.5) : 1 })
+}
+
 /**
  * The Move Tutor's striped tent with the old tutor beside it, waving a TM.
  * Standing in the ring fills it; the disc above the tent spins faster as it does.
@@ -243,6 +253,7 @@ const drawEvent = (ctx: Ctx, g: Game, ev: MapEvent, t: number, calm: boolean) =>
     case 'spikes': return drawSpikes(ctx, ev, t)
     case 'bomb': return drawBomb(ctx, ev, t)
     case 'meowth': return drawMeowth(ctx, ev, t, calm)
+    case 'castform': return drawCastform(ctx, ev, t, calm)
     case 'tutor': return drawTutor(ctx, ev, t)
   }
 }
@@ -268,6 +279,7 @@ const MARKER: Partial<Record<MapEventKind, { arrow: number; icon: () => PixelSpr
   fountain: { arrow: 1, icon: () => ART().drop },
   chest: { arrow: 2, icon: () => ART().chest },
   meowth: { arrow: 3, icon: () => PICKUPS.coins()[0]! },
+  castform: { arrow: 1, icon: () => ART().drop },
   tutor: { arrow: 1, icon: () => tmDisc('#78c0f8') },
   defense: { arrow: 4, icon: () => missionIcon('defense') },
   collect: { arrow: 4, icon: () => missionIcon('collect') },

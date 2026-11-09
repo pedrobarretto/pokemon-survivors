@@ -25,6 +25,7 @@ import { armedTms, armTm, tmLimit, type ShelfTm } from '../game/tmShelf'
 import { ownsShiny, pickShinyForm, playsShiny } from '../game/shinyPicks'
 import { dieIcon, eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
 import { capPips, shopIcon } from './shopIcons'
+import { lockedWhere } from './research'
 import { cryUrl, drawPokemon, fitSprites, loadedSprites, loadSpecies, portraitUrl, skinSprites, walkSheet } from '../render/sprites'
 import { equip, shownOn, skinsOf, takeOff, wearing } from '../arena/gemShop'
 import { cosmeticPrice, skinFor } from '../data/cosmetics'
@@ -444,10 +445,11 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             'div',
             { class: 'partner-id' },
             h('h3', { class: 'partner-name' }, m.eggs.locked),
-            h('p', { class: 'partner-blurb locked-blurb' }, h('img', { src: eggIcon(tier), alt: '' }), rich(tier === 'friend' ? m.eggs.friendBlurb : tier === 'haunted' ? m.eggs.hauntedBlurb : tier === 'kecleon' ? m.eggs.kecleonBlurb : m.eggs.lockedBlurb(m.eggs.tiers[tier]))),
+            h('p', { class: 'partner-blurb locked-blurb' }, tier !== 'found' && h('img', { src: eggIcon(tier), alt: '' }), rich(lockedWhere(id) ?? (tier === 'friend' ? m.eggs.friendBlurb : tier === 'haunted' ? m.eggs.hauntedBlurb : tier === 'kecleon' ? m.eggs.kecleonBlurb : m.eggs.lockedBlurb(m.eggs.tiers[tier])))),
           ),
         ),
-        h('p', { class: 'partner-blurb partner-intro' }, m.eggs.intro),
+        // No egg to walk for a family found another way.
+        ...(tier === 'found' ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.eggs.intro)]),
       )
       return
     }

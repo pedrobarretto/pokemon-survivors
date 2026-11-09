@@ -105,6 +105,7 @@ export type GameClaim = { game: MinigameId; outcome: GameOutcome; ms: number; fe
 /**
  * What the game paid (₽ after the caps), what the account's mini games paid
  * today in all (`today`, out of `MINIGAME_DAILY`), the trophies it just
- * earned (new furniture ids) and, when it earned any, the new furniture counts.
+ * earned (new furniture ids), when it earned any, the new furniture counts,
+ * and the family it brought for the first time (a `HatchlingId`, on its way as a gift), if any.
  */
-export type GameClaimed = { coins: number; today: number; trophies: readonly FurnitureId[]; furniture: FurnitureCounts | null }
+export type GameClaimed = { coins: number; today: number; trophies: readonly FurnitureId[]; furniture: FurnitureCounts | null; family: string | null }
