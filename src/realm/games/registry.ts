@@ -1,4 +1,4 @@
-import { isSoloGame, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
+import { hasBoard, isSoloGame, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
 import { playSfx } from '../../engine/audio'
 import { t } from '../../i18n'
 import { h } from '../../ui/dom'
@@ -17,6 +17,7 @@ const SOLO: Record<SoloGameId, () => Promise<SoloGame>> = {
   fishing: () => import('./fishing').then((m) => m.fishing),
   berryCatch: () => import('./berryCatch').then((m) => m.berryCatch),
   whackDiglett: () => import('./whackDiglett').then((m) => m.whackDiglett),
+  claw: () => import('./claw').then((m) => m.claw),
 }
 
 const TABLES: Record<TableGameId, () => Promise<TableUi>> = {
@@ -87,7 +88,7 @@ export const chooseGame = (root: HTMLElement, games: readonly MinigameId[], opts
           'div',
           { class: 'minigame-choice' },
           h('button', { class: 'box', type: 'button', onclick: () => (sheet.remove(), open(g)) }, h('strong', {}, m.games[g].name), h('span', {}, m.games[g].blurb)),
-          h('button', { class: 'box minigame-choice-board', type: 'button', onclick: () => (playSfx('select'), openGameBoard(root, games, { game: g, close: () => {} })) }, m.board.open),
+          hasBoard(g) && h('button', { class: 'box minigame-choice-board', type: 'button', onclick: () => (playSfx('select'), openGameBoard(root, games.filter(hasBoard), { game: g, close: () => {} })) }, m.board.open),
         ),
       ),
       h('button', { class: 'box', type: 'button', onclick: close }, m.close),

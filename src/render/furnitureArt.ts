@@ -9,7 +9,7 @@ import type { FurnitureId } from '../data/furniture'
  * a rug's image covers its footprint from above; a wallpaper or a flooring is
  * one tile (`BASE_GRID.tile` px square) the room repeats. A turned piece
  * draws the same image, mirrored or a quarter turned (`turnOf`).
- * Dolls have no file: they're drawn from the legend's own sprite.
+ * Dolls and plushes have no file: they're drawn from the species' own sprite.
  */
 
 /** Tries a PNG gets (it may fail on a flaky network), and the wait before the next. */
@@ -19,8 +19,8 @@ const RETRY_MS = 5000
 const images = new Map<FurnitureId, HTMLImageElement>()
 const asked = new Set<FurnitureId>()
 
-/** Whether a piece has a PNG of its own (a doll doesn't). */
-export const hasFurnitureArt = (id: FurnitureId) => !id.startsWith('doll:')
+/** Whether a piece has a PNG of its own (a doll or a plush doesn't). */
+export const hasFurnitureArt = (id: FurnitureId) => !id.startsWith('doll:') && !id.startsWith('plush:')
 
 const load = (id: FurnitureId, tries: number) => {
   const img = new Image()
@@ -32,7 +32,7 @@ const load = (id: FurnitureId, tries: number) => {
   void img.decode().then(landed, landed)
 }
 
-/** A piece's image, loading it on the first ask: null until it's in (and always for a doll). */
+/** A piece's image, loading it on the first ask: null until it's in (and always for a doll or a plush). */
 export const furnitureImage = (id: FurnitureId): HTMLImageElement | null => {
   const img = images.get(id)
   if (img) return img

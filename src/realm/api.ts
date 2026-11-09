@@ -75,7 +75,7 @@ const fakeDefault = (at: number): PresenceReport => ({ home: 'sa', at, cities: {
 
 /** Two of every piece on sale, and the dolls of half the legends (the ones `DEMO_BASES.mine` sets out among them). */
 const fakeFurniture = (): FurnitureCounts =>
-  Object.fromEntries(FURNITURE_IDS.flatMap((id) => (!id.startsWith('doll:') ? [[id, 2]] : LEGEND_IDS.findIndex((l) => `doll:${l}` === id) % 2 === 0 ? [[id, 1]] : [])))
+  Object.fromEntries(FURNITURE_IDS.filter((id) => !id.startsWith('plush:')).flatMap((id) => (!id.startsWith('doll:') ? [[id, 2]] : LEGEND_IDS.findIndex((l) => `doll:${l}` === id) % 2 === 0 ? [[id, 1]] : [])))
 
 const fakeBase = (handle: string, layout: BaseLayout = DEMO_BASES.mine, partner = 'charmander', visits = 12, likes = 3): BaseView => ({
   handle,
@@ -96,6 +96,11 @@ export const fakeRealm = (on: boolean, handle = 'ash') => {
 }
 
 export const realmFaked = () => fake !== null
+
+/** Faking: one more of a piece, as a win at the claw machine brings. */
+export const addFakePiece = (id: FurnitureId) => {
+  if (fake) fake.me = { ...fake.me, furniture: { ...fake.me.furniture, [id]: (fake.me.furniture[id] ?? 0) + 1 } }
+}
 
 /* ---------------- Parsing the answers ---------------- */
 

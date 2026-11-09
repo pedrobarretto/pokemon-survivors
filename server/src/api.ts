@@ -18,6 +18,7 @@ import { createRibbons } from './challenge'
 import { discordStore, startDiscord } from './discord'
 import { discordLink } from './discordLink'
 import { candyGoalStore } from './candyGoal'
+import { clawStore } from './claw'
 import { festivalStore } from './festival'
 import { abacatePay } from './donations'
 import { gemStore } from './gems'
@@ -85,6 +86,8 @@ createArenaRewards(arena).start()
 
 const abacate = env.abacatePayKey ? abacatePay(env.abacatePayKey) : null
 
+const realm = realmStore(sql, { staff: env.discord ? discordStaffChannel(env.discord) : null })
+
 const app = createApp({
   store: saveStore(sql),
   ranking,
@@ -105,7 +108,8 @@ const app = createApp({
   arena,
   coop: coopBoardStore(sql),
   // Realm reports go to the staff's #mod-chat when the bot is set up (stored either way).
-  realm: realmStore(sql, { staff: env.discord ? discordStaffChannel(env.discord) : null }),
+  realm,
+  claw: clawStore(sql, { closed: realm.closedIn }),
   arenaReportSecret: env.arenaReportSecret,
   patreon: env.patreon ? patreonOAuth(env.patreon) : null,
   webhooks: {

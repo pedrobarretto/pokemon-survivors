@@ -4841,9 +4841,14 @@ if (import.meta.env.DEV) {
         const { openGame } = await import('./realm/games/registry')
         const save = loadSave()
         let screen: { dispose: () => void } | null = null
-        screen = await openGame(document.body, game, { partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
+        screen = await openGame(document.body, game, { input, partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
         return screen
       },
+      /**
+       * The claw machine's faked state (after `ps.realm('fake')`, open it with `ps.minigame('claw')`): `ps.claw()` puts the week's
+       * exclusive plush one miss short of sure, `ps.claw(2, 4)` 4 misses on the week's third plush, `ps.claw(2, 4, 9)` also 9 credits used today.
+       */
+      claw: async (index?: number, misses?: number, used?: number) => (await import('./realm/clawApi')).stageClaw(index, misses, used),
       /**
        * A mini game's Placar (`realm/games/board.ts`) over whatever is on screen: `ps.realmBoard('fishing')`, `('arcade')`
        * the arcade's games in tabs, a second `'week'` on the week. `ps.realm('fake')` first fakes the boards.

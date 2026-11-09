@@ -55,6 +55,8 @@ type SoloDef = {
   /** The moments a trainer can brag about (the relay broadcasts them, the game names them in i18n) and claim for trophies. */
   feats: readonly string[]
   trophies: readonly Trophy[]
+  /** `false`: a game with no score, so no Placar (the claw machine). */
+  board?: false
 }
 
 type TableDef = {
@@ -122,6 +124,23 @@ export const MINIGAMES = {
     feats: ['combo30', 'dugtrio'],
     trophies: [{ furniture: 'goldenMallet', after: { stat: 'best', at: 2500 } }],
   },
+  /**
+   * The Máquina de Pelúcias at the arcade's claw machines (`realm/games/claw.ts`,
+   * rules in `claw.rules.ts`): credits, not points. It pays no ₽, never claims
+   * and has no Placar: the API charges each credit and decides each drop
+   * (`POST /realm/claw/insert`, `/drop`) and the prize is a plush for the base.
+   * Feats: any plush won, and one of the season's exclusive families.
+   */
+  claw: {
+    kind: 'solo',
+    where: 'arcade',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['plush', 'exclusive'],
+    trophies: [],
+    board: false,
+  },
   /** Four in a row with Poké Balls and Great Balls (agent B), at the café's tables and a base's game table. */
   fourInRow: {
     kind: 'table',
@@ -173,6 +192,9 @@ export const isTableGame = (id: MinigameId): id is TableGameId => MINIGAMES[id].
 /** Whether `feat` is one of `game`'s feats (what the relay lets a trainer brag about). */
 export const isFeat = (game: unknown, feat: unknown): boolean =>
   isMinigameId(game) && typeof feat === 'string' && (MINIGAMES[game].feats as readonly string[]).includes(feat)
+
+/** Whether a game has a Placar (`board.ts`). */
+export const hasBoard = (id: MinigameId): boolean => !('board' in MINIGAMES[id])
 
 /** ₽ all mini games together pay an account in a Brasília day. */
 export const MINIGAME_DAILY = 2000
