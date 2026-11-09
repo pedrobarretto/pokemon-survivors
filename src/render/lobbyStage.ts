@@ -12,11 +12,10 @@ import { drawPokemon, loadedSprites, loadSpecies, type Dex } from './sprites'
  * meadow's place while the lobby is up. Everything hangs from `StageAnchor`
  * (the platform's middle and the line its cast stands on), so a wider or taller
  * view only shows more sky and grass at the sides, never stretched. The cast on
- * the platform and the places on the horizon are the lobby's own (`ui/title.ts`,
- * `ui/lobbyPlaces.ts`), drawn over this canvas: so whatever walks here is either
- * behind the terrain's crest and the places (the ridge walkers), above them (the
- * flocks), or on a lane in front of them that never reaches their bases (the
- * roamers), and a roamer whose lane doesn't fit a layout isn't drawn at all.
+ * the platform is the lobby's own (`ui/title.ts`), drawn over this canvas: so
+ * whatever walks here is either behind the terrain's crest (the ridge walkers),
+ * in the sky (the flocks) or on a lane in the grass (the roamers), and a roamer
+ * whose lane doesn't fit a layout isn't drawn at all.
  * Presentation only.
  */
 
@@ -24,13 +23,14 @@ import { drawPokemon, loadedSprites, loadSpecies, type Dex } from './sprites'
  * Where the stage stands in view px. The lobby also says what surrounds it, so
  * the Pokémon keep out of the way: `floor`, the top of what covers the grass
  * below; `left` and `right`, how far from `x` the grass stays uncovered at the
- * feet line; `half`, the slot's half width (world px), which the ridge's walkers stay inside; `top`, where the sky under the mode's title starts; `roof`, the top of
- * the tallest place on the horizon; `standing`, the ranges (from `x`) a walker on the
- * ridge keeps out of, so nobody peeks from behind a building or an arrow; `grounded`,
+ * feet line; `leftEave` and `rightEave`, the bottom of a side's column that ends above
+ * the feet line (roamers keep their heads under it); `half`, the slot's half width (world px), which the ridge's walkers stay inside; `top`, where the sky under the mode's title starts;
+ * `standing`, the ranges (from `x`) a walker on the ridge keeps out of, so nobody
+ * peeks from behind the cast, the Realm's café or an arrow; `grounded`,
  * the same for the arrows that stand as low as the grass lanes (roamers keep to the wider side of one). None of
  * them on the rest screen and the menus.
  */
-export type StageAnchor = { x: number; feet: number; floor?: number; left?: number; right?: number; half?: number; top?: number; roof?: number; standing?: readonly StageSpan[]; grounded?: readonly StageSpan[] }
+export type StageAnchor = { x: number; feet: number; floor?: number; left?: number; right?: number; leftEave?: number; rightEave?: number; half?: number; top?: number; standing?: readonly StageSpan[]; grounded?: readonly StageSpan[] }
 
 /** A stretch of the view, in view px from the stage's middle. */
 export type StageSpan = { from: number; to: number }
@@ -387,10 +387,10 @@ const ROAMER_ROOM = 30
 /** How fast the wild walk (world px/s). */
 const WALK_SPEED = 15
 
-/** World rows from the horizon down that the places' bases reach (`ui/lobbyPlaces.ts`): a lane starts clear of them. */
-export const PLACE_SINK = 5
-/** Where a far place's base sits over the horizon, on the near ridge (world px). */
-export const PLACE_LIFT = 6
+/** How far under the horizon a roamer's lane starts (world px): on the grass, under the near ridge's foot. */
+const LANE_START = 12
+/** How far over the feet line a roamer's head can reach (world px), from the top of its lane: an arrow lower than that stands on the lane. */
+export const stageRoamerReach = HORIZON_RISE - LANE_START + 36
 
 /** What `sideZone` found: the distances from the platform's middle a roamer keeps between. */
 const zone = { near: 0, far: 0 }
@@ -432,8 +432,8 @@ const stepRoamers = (s: LobbyStage, w: number, h: number, at: StageAnchor, dt: n
     const room = zone.far - zone.near
     if (room < ZONE_MIN || nth >= Math.max(1, Math.floor(room / ROAMER_ROOM))) continue
     const air = r.wild.air ?? 0
-    // On the lobby a lane starts where this body's head clears the places' bases; on the rest screen, on the grass.
-    const top = lobby ? PLACE_SINK - HORIZON_RISE + sprite.bodyH + air + 4 : air + 12 - HORIZON_RISE
+    // Up to the near ridge's foot, the head under what hangs over this side.
+    const top = Math.max(air + LANE_START - HORIZON_RISE, ((side < 0 ? at.leftEave : at.rightEave) ?? 0) - at.feet + sprite.bodyH + air + 4)
     const bottom = (at.floor ?? h) - at.feet - (lobby ? 3 : 10)
     if (bottom < top) continue
     const [lo, hi] = side < 0 ? [-zone.far, -zone.near] : [zone.near, zone.far]
@@ -483,7 +483,7 @@ const RIDGE_RISE = 16
 const RIDGE_SPEED = 10
 /** How far over the horizon the heads of the ridge's walkers can reach (world px). */
 export const stageRidgeReach = 52
-/** Margin from a place's sides for a walker's body, and how far ahead it looks before going down (world px). */
+/** Margin from what a walker keeps out of for its body, and how far ahead it looks before going down (world px). */
 const RIDGE_CLEAR = 14
 const RIDGE_LOOK = 16
 
@@ -514,7 +514,7 @@ const stepRidge = (s: LobbyStage, w: number, at: StageAnchor, count: number, dt:
       r.dex = RIDGE[Math.floor(s.rng() * RIDGE.length)]!
       r.x = range(s.rng, minX, maxX)
       r.way = s.rng() < 0.5 ? -1 : 1
-      // Behind a building it would only peek out: try again in a moment.
+      // Behind the cast or an arrow it would only peek out: try again in a moment.
       if (blocked(r.x)) {
         r.timer = 0.4
         continue
@@ -536,7 +536,7 @@ const stepRidge = (s: LobbyStage, w: number, at: StageAnchor, count: number, dt:
     } else if (r.timer <= 0) ((r.state = 'pause'), (r.timer = range(s.rng, 0.8, 2)))
     if (r.state === 'rise' || r.state === 'walk' || r.state === 'set') {
       r.x += r.way * RIDGE_SPEED * dt
-      // About to reach a building or the view's edge: goes down the far side instead.
+      // About to reach the cast, an arrow or the view's edge: goes down the far side instead.
       if (r.state !== 'set' && (blocked(r.x + r.way * RIDGE_LOOK) || r.x < minX || r.x > maxX)) r.state = 'set'
     }
   }
@@ -555,9 +555,6 @@ const drawRidge = (ctx: CanvasRenderingContext2D, s: LobbyStage, horizon: number
 
 /** How far under the title the flock's lowest line starts: its bodies and formation stand over it. */
 const FLOCK_HEADROOM = 30
-/** How far over the places' roofs the flock's line stays: the formation's low wing, its bob and a Fly sheet's wings, which hang past the measured body. */
-const FLOCK_CLEAR = 22
-
 /** The V a flock flies in (from the leader, world px, flying right; mirrored flying left). */
 const FORMATION = [
   [0, 0],
@@ -566,11 +563,10 @@ const FORMATION = [
 ] as const
 
 const stepFlock = (s: LobbyStage, w: number, h: number, at: StageAnchor, night: boolean, dt: number) => {
-  // Under the title and over the places' roofs; on the rest screen, in the sky around the logo.
-  const horizon = at.feet - HORIZON_RISE
-  const low = at.roof !== undefined ? at.roof - FLOCK_CLEAR : horizon - 44
+  // In the sky over the hills, and under the title and its pills (on the rest screen, around the logo).
+  const low = at.feet - HORIZON_RISE - 44
   const high = at.top !== undefined ? at.top + FLOCK_HEADROOM : h * 0.12
-  // Where the roofs leave no sky under the title there's no flock at all: it would cross the title, its pills or the roofs.
+  // Where that leaves no sky under the title there's no flock at all: it would cross the title or its pills.
   if (low < high) {
     s.flock = null
     return
@@ -629,5 +625,5 @@ export const drawLobbyStage = (ctx: CanvasRenderingContext2D, s: LobbyStage, w: 
   drawRoamers(ctx, s, at)
 }
 
-/** How far (world px) the horizon stands over the feet line: where the lobby sets the places on it. */
+/** How far (world px) the horizon stands over the feet line. */
 export const stageHorizonRise = HORIZON_RISE

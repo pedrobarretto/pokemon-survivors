@@ -4197,14 +4197,6 @@ button {
   margin-bottom: calc(23 * var(--px));
 }
 
-.lobby-horizon {
-  position: absolute;
-  left: 50%;
-  right: auto;
-  width: 0;
-  pointer-events: none;
-}
-
 /* The clouds drift a device pixel at a time (render/lobbyStage.ts): behind the lobby's content, over the canvas. */
 .title-home {
   isolation: isolate;
@@ -4223,14 +4215,6 @@ button {
   top: 0;
   left: 0;
   image-rendering: pixelated;
-}
-
-.lobby-place {
-  position: absolute;
-  bottom: 0;
-  translate: -50% 0;
-  image-rendering: pixelated;
-  user-select: none;
 }
 
 .lobby-cast {
@@ -4260,6 +4244,7 @@ button {
 
 .lobby-arrow {
   position: absolute;
+  /* Either side of the cast at one height in every layout: over the platform and beside the Realm's café, the widest piece on it. */
   top: 27%;
   z-index: 2;
   display: flex;
@@ -4299,10 +4284,14 @@ button {
   right: -6px;
 }
 
-/* Where a small or short desktop leaves the places no sky to spare, the arrows stand on the grass beside the partner. */
-@media (max-width: 1199px), (max-height: 780px) {
+/* A small, short desktop's slot is nearly all cast: the pills drop the name (it stays their label) to stay off the café. */
+@media (max-width: 1199px) and (max-height: 700px) {
   .lobby-wide .lobby-arrow {
-    top: 88%;
+    padding: 6px 16px;
+  }
+
+  .lobby-wide .lobby-arrow-name {
+    display: none;
   }
 }
 
@@ -4674,11 +4663,6 @@ button {
   border: var(--kit-edge) solid var(--kit-tinta);
   border-radius: 50%;
   box-shadow: 0 4px 0 var(--kit-tinta);
-}
-
-/* High on a phone in portrait, so the arrows and their names leave the horizon's places room on both sides. */
-.lobby-narrow .lobby-arrow {
-  top: 8%;
 }
 
 .lobby-narrow .lobby-arrow.prev,

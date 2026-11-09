@@ -17,7 +17,7 @@ import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/su
 import { formatNumber, LOCALES, locale, t } from '../i18n'
 import { arenaIcon, bulbIcon, chevronIcon, coinIcon, coopIcon, discordIcon, eggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
-import { loadStage, stageHorizonRise, stageRidgeReach, type StageAnchor, type StageClouds, type StageScene, type StageSpan } from '../render/lobbyStage'
+import { loadStage, stageHorizonRise, stageRidgeReach, stageRoamerReach, type StageAnchor, type StageClouds, type StageScene, type StageSpan } from '../render/lobbyStage'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
 import type { Place } from '../render/titleScene'
@@ -50,7 +50,6 @@ import { lobbySheet, type SheetEntry } from './lobbySheet'
 import { nearestInDirection, type Direction } from './spatial'
 import { toast } from './toasts'
 import { trainerChip } from './trainer'
-import { lobbyPlaces, type StageBlock } from './lobbyPlaces'
 import { uiDpr, uiViewport, uiZoom } from './uiScale'
 
 /** What the lobby can highlight. A screen opened over it gets the one it came from, to come back to it. */
@@ -111,7 +110,7 @@ export type Meadow = {
   tickClouds: (w: number, horizon: number) => void
   /** Steps and draws the top-down meadow this frame (a trip's world). */
   draw: (ctx: CanvasRenderingContext2D, dt: number, w: number, h: number) => void
-  /** CSS px per world px: where the stage's places line up over the canvas. */
+  /** CSS px per world px: how the DOM around the stage lines up with the canvas. */
   scale: () => number
 }
 
@@ -506,7 +505,7 @@ const CAST_CSS = { wide: 4, narrow: 3, landscape: 3 } as const
 const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
   let cast: Cast = { figures: [] }
   let picture: HTMLImageElement | null = null
-  /** The cast's half width (local CSS px), for the places around it. */
+  /** The cast's half width (local CSS px), which the ridge's walkers keep out from behind. */
   let halfCss = 0
   const pose = newCafePose()
   const ribbon = new Image()
@@ -566,30 +565,34 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
   return { set, tick, half: () => halfCss }
 }
 
-/* ---------------- The places on the horizon ---------------- */
+/* ---------------- Around the stage ---------------- */
 
 /**
  * How far the grass stays uncovered around the stage's `slot`: what the lobby's other blocks leave free
- * at the feet line (view px from the slot's middle) and the top of what covers it below.
+ * at the feet line (view px from the slot's middle), the top of what covers it below and, per side, the
+ * bottom of a column that ends above the feet line.
  */
 const surroundings = (lobby: HTMLElement, slot: DOMRect, scale: number, w: number, vh: number) => {
   const middle = slot.left + slot.width / 2
-  let [left, right, floor] = [0, w * scale, vh * scale]
+  let [left, right, floor, leftEave, rightEave] = [0, w * scale, vh * scale, 0, 0]
   for (const block of lobby.children) {
     const r = block.getBoundingClientRect()
     // A grid column is taller than what it holds: its last card is where it ends.
     const end = block.lastElementChild?.getBoundingClientRect().bottom ?? r.bottom
     // (The block holding the slot itself covers nothing.)
-    if (r.width === 0 || Math.min(r.bottom, end) <= slot.bottom || (r.top <= slot.top && r.left <= slot.left && r.right >= slot.right)) continue
+    if (r.width === 0 || (r.top <= slot.top && r.left <= slot.left && r.right >= slot.right)) continue
+    const bottom = Math.min(r.bottom, end)
+    if (bottom <= slot.bottom) {
+      if (r.right <= middle) leftEave = Math.max(leftEave, bottom)
+      else if (r.left >= middle) rightEave = Math.max(rightEave, bottom)
+      continue
+    }
     if (r.top >= slot.bottom && r.left < slot.right && r.right > slot.left) floor = Math.min(floor, r.top)
     else if (r.right <= middle) left = Math.max(left, r.right)
     else if (r.left >= middle) right = Math.min(right, r.left)
   }
-  return { left: Math.floor((middle - left) / scale) - 2, right: Math.floor((right - middle) / scale) - 2, floor: Math.floor(floor / scale) }
+  return { left: Math.floor((middle - left) / scale) - 2, right: Math.floor((right - middle) / scale) - 2, floor: Math.floor(floor / scale), leftEave: Math.ceil(leftEave / scale), rightEave: Math.ceil(rightEave / scale) }
 }
-
-const horizon = (shopLevel: number) =>
-  lobbyPlaces((id) => (id === 'dojo' ? `${ASSETS}/dojo/dojo.png` : id === 'stadium' ? `${ASSETS}/stadium/stadium.png` : id === 'lighthouse' ? `${ASSETS}/realm/lighthouse.png` : `${ASSETS}/shop/shop-lv${shopLevel}.png`))
 
 /* ---------------- Keyboard and gamepad ---------------- */
 
@@ -710,18 +713,16 @@ export const titleScreen = (
   /** The slot the stage is laid out around; null while the intro shows. */
   let slot: HTMLElement | null = null
   let anchor: StageAnchor | null = null
-  /** How far over the horizon the places reach (world px), or null with none on it. */
-  let placesRoof: number | null = null
-  /** Frames since the places last looked at the layout. */
-  let placesAge = 0
-  /** What walkers on the ridge keep out of (world px from the stage's middle): the places, and the arrows that reach down that far. */
+  /** Frames since the stage's spans last looked at the layout. */
+  let spansAge = 0
+  /** What walkers on the ridge keep out of (world px from the stage's middle): the cast, and the arrows that reach down that far. */
   let standing: readonly StageSpan[] = []
   /** The same on the rest screen: the logo. */
   let restStanding: readonly StageSpan[] = []
   /** The arrows that stand as low as the grass lanes (world px from the stage's middle). */
   let grounded: readonly StageSpan[] = []
-  /** How far the grass stays uncovered around the slot (view px from its middle, `floor` from the top); measured a few times a second. */
-  let around = { left: 0, right: 0, floor: 0 }
+  /** How far the grass stays uncovered around the slot (view px from its middle, `floor` and the eaves from the top); measured a few times a second. */
+  let around = { left: 0, right: 0, floor: 0, leftEave: 0, rightEave: 0 }
   let aroundAge = 0
   /** The circle wiping between the stage and the meadow: closing, `mid` swaps what's behind it, then it opens and `done` runs. */
   let wipe: { t: number; closing: boolean; mid: () => void; done: () => void } | null = null
@@ -1052,7 +1053,7 @@ export const titleScreen = (
     const notice = h('div', { class: 'lobby-notice' })
     inviteBanner(notice, press('invite'), (banner) => navigable(banner, 'invite'))
 
-    /* The stage: the mode's name and pills, its cast, the arrows, the places on the horizon. */
+    /* The stage: the mode's name and pills, its cast, the arrows. */
     const names = t().gameModes.names
     const facts = modeFacts()
     const title = navigable(h('button', { class: 'lobby-mode-title', type: 'button', 'aria-label': t().gameModes.title }, h('span', { class: 'lobby-mode-name arc-outline' })), 'modes')
@@ -1069,7 +1070,6 @@ export const titleScreen = (
     slot = stageEl
     const castCanvas = h('canvas', { class: 'lobby-cast', 'aria-hidden': 'true' })
     const painter = castPainter(castCanvas, stageEl)
-    const places = horizon(save.shop.level)
     const arrow = (side: 'prev' | 'next') => {
       const label = h('span', { class: 'lobby-arrow-name' })
       const icon = iconImg(chevronIcon(side === 'prev' ? 'left' : 'right'), 'lobby-arrow-icon')
@@ -1081,7 +1081,7 @@ export const titleScreen = (
     const next = arrow('next')
     const castHit = pressable(h('button', { class: 'lobby-cast-hit', type: 'button', 'aria-label': m.change }), 'partner')
     navs = navs.filter((n) => n.el !== castHit)
-    stageEl.append(places.el, castCanvas, castHit, prev.button, next.button)
+    stageEl.append(castCanvas, castHit, prev.button, next.button)
     const center = h('section', { class: 'lobby-center' }, title, pills, stageEl)
 
     /* The modes bar and JOGAR. */
@@ -1179,26 +1179,18 @@ export const titleScreen = (
       painter.tick,
       () => {
         // Layout reads, and they only change with the layout or the mode: a few times a second is plenty.
-        if (placesAge++ % 12 !== 0) return
+        if (spansAge++ % 12 !== 0) return
         const rect = stageEl.getBoundingClientRect()
         if (rect.width === 0) return
-        const zoom = uiZoom()
-        const scale = actions.meadow.scale() / zoom
-        const dpr = uiDpr()
+        const scale = actions.meadow.scale()
         const middle = rect.left + rect.width / 2
-        const blocks: StageBlock[] = [prev.button, next.button].map((button) => {
+        const arrows = [prev.button, next.button].map((button) => {
           const a = button.getBoundingClientRect()
-          return { left: (a.left - middle) / zoom, right: (a.right - middle) / zoom, bottom: (rect.bottom - a.bottom) / zoom, top: (rect.bottom - a.top) / zoom }
+          return { from: (a.left - middle) / scale, to: (a.right - middle) / scale, bottom: (rect.bottom - a.bottom) / scale }
         })
-        // A phone on its side has the height for little: the places stand a size down.
-        const full = Math.max(1, Math.round(dpr / (layout() === 'landscape' ? 2 : 1)))
-        const roof = places.tick({ rise: Math.round(stageHorizonRise * scale), world: scale, dpr, full, width: rect.width / zoom, height: rect.height / zoom, cast: painter.half(), blocks })
-        placesRoof = roof > 0 ? roof / scale : null
-        // The ridge's heads reach this high over the slot's bottom: an arrow lower than that stands in their way.
-        const ridgeTop = (stageHorizonRise + stageRidgeReach) * scale
-        // A roamer's head reaches this high: an arrow lower than that stands on its lane.
-        grounded = blocks.filter((b) => b.bottom < 40 * scale).map((b) => ({ from: b.left / scale, to: b.right / scale }))
-        standing = [...places.spans(), ...blocks.filter((b) => b.bottom < ridgeTop).map((b) => ({ from: b.left, to: b.right }))].map((b) => ({ from: b.from / scale, to: b.to / scale }))
+        grounded = arrows.filter((a) => a.bottom < stageRoamerReach)
+        const cast = (painter.half() * uiZoom()) / scale
+        standing = [{ from: -cast, to: cast }, ...arrows.filter((a) => a.bottom < stageHorizonRise + stageRidgeReach)]
       },
     ]
 
@@ -1542,8 +1534,7 @@ export const titleScreen = (
       const rect = slot?.getBoundingClientRect()
       if (rect && rect.width > 0 && lobby) {
         if (aroundAge++ % 20 === 0) around = surroundings(lobby, rect, scale, w, vh)
-        const feet = Math.round(rect.bottom / scale)
-        anchor = { x: Math.round((rect.left + rect.width / 2) / scale), feet, ...around, half: Math.floor(rect.width / 2 / scale), top: Math.round(rect.top / scale), standing, grounded, ...(placesRoof !== null && { roof: feet - stageHorizonRise - placesRoof }) }
+        anchor = { x: Math.round((rect.left + rect.width / 2) / scale), feet: Math.round(rect.bottom / scale), ...around, half: Math.floor(rect.width / 2 / scale), top: Math.round(rect.top / scale), standing, grounded }
       }
       if (!lobby && aroundAge++ % 20 === 0) {
         // On the rest screen, walkers on the ridge keep out from behind the logo where it comes down that far.
