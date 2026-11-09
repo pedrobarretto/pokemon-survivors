@@ -67,6 +67,11 @@ import type { Screen } from './screens'
 import { toast } from './toasts'
 import { uiZoom } from './uiScale'
 import { markRealmSeen } from './realmSeen'
+import { REALM_EVENTS, type RealmHour } from '../data/realmEvents'
+import { hourNotice } from '../realm/hours'
+import { routeToward } from '../realm/route'
+import { drawHourGround, drawHourOverhead } from '../render/realmHours'
+import { realmHourBar } from './realmHour'
 
 /**
  * The Poké Realm's screen (`net/realm.ts`): the city picker, then the town
@@ -284,27 +289,9 @@ type Trainer = TrainerView & {
   bubble: HTMLElement
 }
 
-/** Dev (`ps.realm('room', 'arcade')`): sends the open town's trainer walking to a room through its doors (straight lines, so it can snag on the way). */
+/** Dev (`ps.realm('room', 'arcade')`): sends the open town's trainer walking to a room through its doors. */
 let devGo: ((room: TownRoomId) => void) | null = null
-let devDest: TownRoomId | null = null
 export const devRealmRoom = (room: TownRoomId) => (devGo ? (devGo(room), room) : 'ps.realm: no town open')
-
-/** The middle of the door out of `from` that leads toward `to` (the first hop of the fewest), or null. */
-const doorToward = (from: TownRoomId, to: TownRoomId): Point | null => {
-  const queue: { room: TownRoomId; first: Door | null }[] = [{ room: from, first: null }]
-  const seen = new Set<TownRoomId>([from])
-  while (queue.length) {
-    const { room, first } = queue.shift()!
-    for (const d of REALM_ROOMS[room].doors) {
-      if (seen.has(d.to)) continue
-      const hop = first ?? d
-      if (d.to === to) return { x: hop.at.x + hop.at.w / 2, y: hop.at.y + hop.at.h / 2 }
-      seen.add(d.to)
-      queue.push({ room: d.to, first: hop })
-    }
-  }
-  return null
-}
 
 /** What a session did, summed into one `realm_session` event when it ends. */
 type Session = { city: CityId; started: number; rooms: Set<string>; peers: number; lines: number; emotes: number; party: boolean; portal: PartyMode | null }
@@ -515,10 +502,12 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       h('span', { class: 'key-hint' }, 'F'),
     )
     const leaveButton = h('button', { class: 'realm-leave box', type: 'button', onclick: () => (playSfx('select'), leave()) }, `← ${m().leave}`)
+    const hourBar = realmHourBar((to) => walkToHour(to))
     el.replaceChildren(
       signs,
       layer,
       h('div', { class: 'realm-top' }, leaveButton, h('button', { class: 'realm-title box', type: 'button', title: m().cities.switch, 'aria-label': m().cities.switch, onclick: () => (playSfx('select'), openSub((r) => citySheet(r, city))) }, where, count), decorate),
+      hourBar.el,
       status,
       partyBar,
       usePrompt,
@@ -579,6 +568,11 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     let pending: UsePiece | null = null
     let cam = { x: 0, y: 0 }
     let clock = 0
+    /** A room the trainer is walking to on its own (the Hora's banner), and the corners left to walk through in this one. */
+    let heading: TownRoomId | null = null
+    let route: Point[] = []
+    /** The Hora do Realm running now (read once a second, `syncHour`). */
+    let hour: RealmHour | null = null
 
     void fetchBase(deps.handle).then((v) => {
       if (!disposed && !isFailure(v)) exterior = v.layout.exterior
@@ -691,6 +685,27 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       // The first time in the grove, its host comes over to explain what a secret base is.
       if (key === 'trail' && !groveSeen()) later(() => !disposed && room === 'trail' && !sub && hostTalk(true))
       where.textContent = `${REALM_CITIES[city].name} · ${owner ? m().base(owner) : isTownRoomId(key) ? m().rooms[key] : key}`
+      route = []
+      syncHour()
+    }
+
+    /* The Hora do Realm */
+    function syncHour() {
+      const notice = hourNotice(Date.now())
+      hour = notice?.on ? notice.hour : null
+      hourBar.show(notice, room)
+    }
+    const hourTick = setInterval(syncHour, 1000)
+    syncHour()
+
+    /** The banner's shortcut: walks the trainer through the town's doors to `to` (out of a base, straight there as its Visit does). */
+    function walkToHour(to: TownRoomId) {
+      if (!room) return
+      playSfx('select')
+      if (perched()) standUp()
+      route = []
+      if (isTownRoomId(room)) heading = to
+      else go(to, REALM_ROOMS[to].spawn)
     }
 
     /* The relay's messages */
@@ -815,6 +830,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       // Seated, a refused `go` leaves the trainer where it stands.
       if (client.status().kind === 'open') {
         going = false
+        heading = null
         return void toast(root, m().refusals[why], 3200, 'realmRefused')
       }
       if (why === 'full' && auto) {
@@ -1205,6 +1221,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
 
       if (seated && room && !sub) {
         const move = drag?.stick?.vec ?? held()
+        if (tap || move.x !== 0 || move.y !== 0) heading = null
         if (tap) {
           const at = { x: cam.x + tap.x / scale, y: cam.y + tap.y / scale }
           const who = pickAt(at.x, at.y)
@@ -1220,9 +1237,13 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         }
         if (perched() && (move.x !== 0 || move.y !== 0)) standUp()
         if (move.x !== 0 || move.y !== 0) pending = null
-        // Dev: walking on its own toward `ps.realm('room', …)`'s room, door after door.
-        if (devDest && (devDest === room || !isTownRoomId(room))) devDest = null
-        if (devDest && !going && walker.target === null && isTownRoomId(room)) walker.target = doorToward(room, devDest)
+        // Walking on its own toward a room (the Hora's banner, `ps.realm('room', …)`), corner after corner, door after door.
+        if (heading && (heading === room || !isTownRoomId(room))) heading = null
+        if (heading && !going && walker.target === null && isTownRoomId(room)) {
+          if (route.length === 0) route = routeToward(room, heading, walker)
+          walker.target = route.shift() ?? null
+          if (walker.target === null) heading = null
+        }
         // On a seat (or waiting a beat for the relay to seat it), the trainer stays put, and says nothing a step would stand it up with.
         const still = perched() || now - perching < PERCH_WAIT_MS
         if (!going && !still) walk(walker, move, dt, ground)
@@ -1247,6 +1268,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const town = isTownRoomId(room) ? room : null
       if (town) drawTownGround(ctx, town, cam.x, cam.y, w, hgt, clock, exterior)
       else if (base) drawBaseRoom(ctx, base, cam.x, cam.y, clock)
+      const hourHere = hour && town === REALM_EVENTS[hour.kind].room ? hour : null
+      if (hourHere) drawHourGround(ctx, hourHere, cam.x, cam.y, w, hgt, clock)
       if (usable.room !== room || usable.base !== base) {
         const items = base?.layout.items ?? []
         usable = { room, base, all: usePieces(room, base?.layout ?? null, (i) => liftOf(items, i)) }
@@ -1281,6 +1304,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       pieces.sort((a, b) => a.y - b.y)
       for (const p of pieces) p.draw()
       if (town) drawTownOverhead(ctx, town, cam.x, cam.y, w, hgt, clock)
+      if (hourHere) drawHourOverhead(ctx, hourHere, cam.x, cam.y, w, hgt, clock)
       // A base's tables in use wear a bubble (a town room's say so in their labels).
       if (!town)
         for (const spot of spots) {
@@ -1354,9 +1378,10 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       }
     }
 
-    devGo = (to) => (devDest = to)
+    devGo = (to) => (heading = to)
     const dispose = () => {
       devGo = null
+      clearInterval(hourTick)
       setRealmJukebox(null)
       offMessages()
       offKeys()

@@ -806,6 +806,15 @@ export const zh: Messages = {
     counter: '咖啡館還在布置櫃檯，敬請期待！',
     pool: '水屬性寶可夢之後會在這裡游泳，敬請期待！',
     prizes: '在遊戲機刷新紀錄，贏得獎盃來布置你的秘密基地！',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: '大滿潮', storm: '樹果雨', tables: '桌遊之夜' },
+      perks: { tide: '釣魚雙倍、稀有魚變多', storm: '街機雙倍', tables: '桌遊雙倍' },
+      go: '前往',
+      starts: (c: string) => `${c} 後`,
+      ends: (c: string) => `剩 ${c}`,
+      tideChip: '大滿潮！',
+    },
     grove: {
       first: [
         '噓！我只是一棵樹……好啦，我是 Sudowoodo。歡迎來到秘密基地樹林！',
@@ -6027,6 +6036,9 @@ export const zh: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: '樹果籃',
       goldenMallet: '黃金木槌',
+      stampDesk: '印章書桌',
+      stampCabinet: '印章櫃',
+      goldenStampPress: '黃金印章機',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: '釣竿架',
       goldenMagikarpPlaque: '黃金 Magikarp 獎牌',

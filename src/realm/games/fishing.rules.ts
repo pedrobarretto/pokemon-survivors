@@ -74,12 +74,16 @@ export const CATCH_DEX: readonly { dex: number; shiny: boolean }[] = CATCH_IDS.f
   return c.dex === null ? [] : [{ dex: c.dex, shiny: c.shiny === true }]
 })
 
-/** What bites a hook that landed in `zone`, rolled from the stretch's weights. */
-export const rollCatch = (zone: Zone, rng: Rng): CatchId => {
-  const total = CATCH_IDS.reduce((sum, id) => sum + CATCHES[id].weight[zone], 0)
+/** How much likelier the rarest bite during the Hora do Realm's high tide (`realmEvents.ts`): their values, and so the pay, don't change. */
+export const TIDE_ODDS: Readonly<Partial<Record<CatchId, number>>> = { wailmer: 1.5, qwilfish: 1.5, feebas: 3, shinyGyarados: 3 }
+
+/** What bites a hook that landed in `zone`, rolled from the stretch's weights (`tide`: the high tide's, `TIDE_ODDS`). */
+export const rollCatch = (zone: Zone, rng: Rng, tide = false): CatchId => {
+  const weight = (id: CatchId) => CATCHES[id].weight[zone] * (tide ? (TIDE_ODDS[id] ?? 1) : 1)
+  const total = CATCH_IDS.reduce((sum, id) => sum + weight(id), 0)
   let roll = rng() * total
   for (const id of CATCH_IDS) {
-    roll -= CATCHES[id].weight[zone]
+    roll -= weight(id)
     if (roll < 0) return id
   }
   return 'magikarp'

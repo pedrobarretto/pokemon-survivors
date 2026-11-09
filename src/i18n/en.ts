@@ -806,6 +806,15 @@ export const en: Messages = {
     counter: 'The café is still setting up its counter. Come back soon!',
     pool: 'Water types will swim here. Coming soon!',
     prizes: 'Beat records at the cabinets to win trophies for your secret base!',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'High Tide', storm: 'Berry Storm', tables: 'Table Night' },
+      perks: { tide: 'Double fishing pay, rarer fish', storm: 'Double arcade pay', tables: 'Double table game pay' },
+      go: 'Go',
+      starts: (c: string) => `in ${c}`,
+      ends: (c: string) => `${c} left`,
+      tideChip: 'High tide!',
+    },
     grove: {
       first: [
         'Psst! I’m just a tree... Fine, I’m Sudowoodo. Welcome to the Secret Base Grove!',
@@ -6031,6 +6040,9 @@ export const en: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Berry Basket',
       goldenMallet: 'Golden Mallet',
+      stampDesk: 'Stamp Desk',
+      stampCabinet: 'Stamp Cabinet',
+      goldenStampPress: 'Golden Stamp Press',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Fishing Rod Rack',
       goldenMagikarpPlaque: 'Golden Magikarp Plaque',
