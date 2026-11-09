@@ -1004,9 +1004,12 @@ const start = (ctx: SoloCtx): GameRun => {
     g.fillRect(0, 0, size.w, size.h)
     const tunnel = image('realm/dig/tunnel')
     if (tunnel) {
-      // Doubled, so it covers the canvas either way the phone is held.
+      // Doubled, so it covers the canvas either way the phone is held; life-size beside the odds panel of a phone on its side, where doubled it was only a crop.
+      const beside = !wall && size.w > size.h
+      const k = beside ? 1 : 2
+      const cx = beside ? size.w * 0.27 : size.w / 2
       g.globalAlpha = wall ? 0.28 : 0.75
-      g.drawImage(tunnel, Math.round(size.w / 2 - tunnel.width), Math.round(size.h / 2 - tunnel.height), tunnel.width * 2, tunnel.height * 2)
+      g.drawImage(tunnel, Math.round(cx - (tunnel.width * k) / 2), Math.round(size.h / 2 - (tunnel.height * k) / 2), tunnel.width * k, tunnel.height * k)
       g.globalAlpha = 1
     }
     if (!wall && phase !== 'hold') return

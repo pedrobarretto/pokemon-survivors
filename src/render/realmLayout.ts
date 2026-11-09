@@ -153,7 +153,7 @@ export const GROVE_HOST = { dex: 185, x: 556, y: 292, facing: 7 } as const satis
 export const SAFARI_KEEPER = { dex: 115, x: 626, y: 218, facing: 0, keeper: true } as const satisfies Host
 
 /** The mine's keeper: Excadrill, the Pokémon that digs for a living, stands by the Escavação's entrance. */
-export const MINE_KEEPER = { dex: 530, x: 148, y: 282, facing: 6 } as const satisfies Host
+export const MINE_KEEPER = { dex: 530, x: 160, y: 304, facing: 6 } as const satisfies Host
 
 /** `figures`: Pokémon standing in a room for show, with no spot of their own (the mine's keeper). */
 export type RoomLayout = { indoor: boolean; ground: readonly Surface[]; props: readonly Prop[]; hosts?: readonly Host[]; figures?: readonly Host[] }

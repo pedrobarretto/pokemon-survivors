@@ -253,7 +253,7 @@ export const REALM_ROOMS = {
     spots: [
       { kind: 'myBase', at: { x: 318, y: 196 }, reach: 26 },
       { kind: 'bases', at: { x: 146, y: 222 }, reach: 26 },
-      { kind: 'cabinet', at: { x: 562, y: 228 }, reach: 28, games: ['safari'] },
+      { kind: 'cabinet', at: { x: 548, y: 228 }, reach: 32, games: ['safari'] },
       { kind: 'carpenter', at: { x: 318, y: 420 }, reach: 28 },
       { kind: 'host', at: { x: 556, y: 310 }, reach: 24 },
       { kind: 'bench', at: { x: 446, y: 324 }, reach: 20, seats: benchSeats(446, 310) },

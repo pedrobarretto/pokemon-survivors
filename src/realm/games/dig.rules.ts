@@ -83,7 +83,7 @@ export const shapeCells = (id: DigTreasureId): { col: number; row: number }[] =>
 /** The veins: what the week favors, and by how much. */
 export const DIG_VEINS = {
   goldSeam: { group: 'coins', boost: 1.5 },
-  gemSeam: { group: 'stone', boost: 2.5 },
+  gemSeam: { group: 'stone', boost: 4.5 },
   fossilBed: { group: 'fossil', boost: 2 },
   crystalHollow: { group: 'furniture', boost: 3 },
   cachedSupplies: { group: 'bag', boost: 1.5 },
