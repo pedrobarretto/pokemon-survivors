@@ -3988,12 +3988,6 @@ button {
   font-weight: 400;
 }
 
-.lobby-fest .key-hint {
-  position: absolute;
-  right: 8px;
-  bottom: 6px;
-}
-
 .arc-card.lobby-banner {
   flex: none;
   display: flex;
@@ -4289,7 +4283,7 @@ button {
 
 .lobby-arrow {
   position: absolute;
-  top: 40%;
+  top: 27%;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -4326,6 +4320,13 @@ button {
   position: absolute;
   top: -8px;
   right: -6px;
+}
+
+/* Where a small or short desktop leaves the places no sky to spare, the arrows stand on the grass beside the partner. */
+@media (max-width: 1199px), (max-height: 780px) {
+  .lobby-wide .lobby-arrow {
+    top: 80%;
+  }
 }
 
 .lobby-arrow.selected {
@@ -4808,6 +4809,13 @@ button {
   min-height: 44px;
   font-size: 18px;
   padding: 2px 8px;
+}
+
+/* The narrowest phones on their side: the Festival's name matters more than its countdown. */
+@media (max-width: 640px) {
+  .lobby-landscape .lobby-banner-days {
+    display: none;
+  }
 }
 
 .lobby-landscape .lobby-center {

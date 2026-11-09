@@ -602,7 +602,6 @@ export const festivalCard = () => {
     h('small', { class: 'lobby-fest-line' }, m.cardLine),
     h('span', { class: 'lobby-fest-bar' }, fill),
     h('span', { class: 'lobby-fest-pot' }, pot, next),
-    h('span', { class: 'key-hint' }, 'F'),
   )
   const paint = (v: FestivalView) => {
     const f = v.festival
