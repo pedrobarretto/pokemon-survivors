@@ -57,6 +57,8 @@ type SoloDef = {
   trophies: readonly Trophy[]
   /** `false`: a game with no score, so no Placar (the claw machine). */
   board?: false
+  /** `false`: the API runs it on its own routes and reports its deeds itself, so `POST /realm/game/claim` refuses it. */
+  claim?: false
 }
 
 type TableDef = {
@@ -140,6 +142,7 @@ export const MINIGAMES = {
     feats: ['plush'],
     trophies: [],
     board: false,
+    claim: false,
   },
   /**
    * The Zona Safári at the Trail's gate (`realm/games/safari.ts`, rules in
@@ -157,6 +160,7 @@ export const MINIGAMES = {
     feats: ['caught', 'shiny'],
     trophies: [],
     board: false,
+    claim: false,
   },
   /**
    * The Escavação (`realm/games/dig.ts`, `dig.rules.ts`): a wall a Brasília
@@ -173,6 +177,7 @@ export const MINIGAMES = {
     feats: ['golden', 'fossilOrStone'],
     trophies: [],
     board: false,
+    claim: false,
   },
   /** Four in a row with Poké Balls and Great Balls (agent B), at the café's tables and a base's game table. */
   fourInRow: {
@@ -228,6 +233,9 @@ export const isFeat = (game: unknown, feat: unknown): boolean =>
 
 /** Whether a game has a Placar (`board.ts`). */
 export const hasBoard = (id: MinigameId): boolean => !('board' in MINIGAMES[id])
+
+/** Whether a game pays through `POST /realm/game/claim` (the claw, the Safári and the Escavação run on their own routes). */
+export const claimable = (id: MinigameId): boolean => !('claim' in MINIGAMES[id])
 
 /** ₽ all mini games together pay an account in a Brasília day. */
 export const MINIGAME_DAILY = 2000

@@ -3,6 +3,7 @@ import { brasiliaDay, weekStart } from '../../src/game/day'
 import { DIG, shapeCells, type DigWall } from '../../src/realm/games/dig.rules'
 import { digStore } from './dig'
 import type { Sql } from './db'
+import { applyDeeds } from './realmDeeds'
 
 /**
  * The Escavação's store against a real Postgres: set `REALM_TEST_DATABASE_URL`
@@ -41,6 +42,12 @@ describe.skipIf(!url)('escavação (Postgres)', () => {
     return seq
   }
 
+  /** What reached the Estampas: the deed counts and the stamps. */
+  const book = async () => ({
+    deeds: Object.fromEntries((await sql<{ deed: string; count: number }[]>`select deed, count from realm_deeds where user_id = 'u_ash'`).map((r) => [r.deed, r.count])),
+    stamps: (await sql<{ stamp: string }[]>`select stamp from realm_stamps where user_id = 'u_ash' order by stamp`).map((r) => r.stamp),
+  })
+
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
     sql = connect(url!, 4)
@@ -49,7 +56,7 @@ describe.skipIf(!url)('escavação (Postgres)', () => {
 
   beforeEach(async () => {
     await sql`truncate dig_walls, dig_hits, dig_progress, furniture_owned, gifts, saves, users cascade`
-    dig = digStore(sql, { closed: async () => false, now })
+    dig = digStore(sql, { closed: async () => false, earn: (userId, deeds) => sql.begin((tx) => applyDeeds(tx, userId, deeds, brasiliaDay(now()))).then(() => undefined), now })
     await sql`insert into users (id, handle, name) values ('u_ash', 'ash', 'Ash')`
     await sql`insert into users (id) values ('u_nohandle')`
     await sql`insert into saves (user_id, version, revision, data) values ('u_ash', 1, 3, ${sql.json({ version: 1, partner: 'squirtle', wallet: 3000, spent: 0 })})`
@@ -129,6 +136,25 @@ describe.skipIf(!url)('escavação (Postgres)', () => {
     expect(end.end.gifts.map((g) => g.content)).toEqual([{ kind: 'family', family: 'cranidos' }])
     expect((await sql<{ n: number }[]>`select count(*)::int as n from gifts where user_id = 'u_ash' and key like ${`dig:${wall.id}:%`}`)[0]!.n).toBe(1)
     expect((await sql<{ dry: number }[]>`select dry from dig_progress where user_id = 'u_ash'`)[0]!.dry).toBe(0)
+  })
+
+  it('counts a wall for the Estampas once, by what was dug out whole, and nothing for a wall left empty', async () => {
+    const empty = await started()
+    await dig.stop('u_ash', empty.wall.id)
+    expect(await book()).toEqual({ deeds: {}, stamps: [] })
+    await sql`delete from dig_walls where user_id = 'u_ash'`
+    const { wall } = await started()
+    const built = {
+      wall: { ...(await hidden(wall.id)), golden: true, treasures: [{ id: 'skullFossil' as const, x: 0, y: 0 }, { id: 'nugget' as const, x: 8, y: 5 }], depths: new Array<number>(DIG.cols * DIG.rows).fill(1), cap: 500 },
+      powers: { bigHammer: false, hold: 0, reveal: false, deepPick: false },
+      lacking: [],
+    }
+    await sql`update dig_walls set built = ${sql.json(built)}, left_layers = ${sql.json(new Array<number>(DIG.cols * DIG.rows).fill(1))} where id = ${wall.id}::uuid`
+    await digOut(wall.id, 1, await digOut(wall.id, 0, 0))
+    const [a, b] = await Promise.all([dig.stop('u_ash', wall.id), dig.stop('u_ash', wall.id)])
+    expect(a).toEqual(b)
+    expect(a.ok && a.end.kept.length).toBe(2)
+    expect(await book()).toEqual({ deeds: { 'dig:find': 2, 'dig:fossil': 1, 'dig:golden': 1 }, stamps: ['firstFind', 'fossilHunter', 'goldenVein'] })
   })
 
   it('pays a repeat fossil in ₽ instead of a family', async () => {

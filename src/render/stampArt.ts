@@ -15,13 +15,14 @@ const ICON = 40
 /** What a milestone gives, in the sheet after the stamps. */
 export type RewardIcon = (typeof STAMP_MILESTONES)[number]['reward']['id']
 
-/** The sheet's cells in reading order, 9 to a row. Every stamp and reward has one (`stampArt.test.ts`). */
+/** The sheet's cells in reading order, 9 to a row. Every stamp and reward has one (`ui/realmBook.test.ts`). */
 export const SHEET_ORDER = [
   'firstSteps', 'tourist', 'errandRunner', 'reliable', 'dependable', 'benchWarmer', 'catNap', 'wetFeet', 'nightOwl',
   'hello', 'expressive', 'goodCompany', 'regular', 'townFixture', 'partyStarter', 'portalHopper', 'crowded', 'twins',
   'neighbor', 'wanderer', 'fanMail', 'decorator', 'host', 'openHouse', 'goneFishing', 'oldSalt', 'arcadeRat',
   'tableTalk', 'tableChampion', 'bigHaul', 'flawless', 'dugtrioDay', 'ugliestFish', 'redTide', 'perfectDuel', 'highTide',
   'stormChaser', 'tableNight', 'everyHour', 'neverMissed', 'stampDesk', 'stampFrame', 'stampCabinet', 'stampCollector', 'goldenStampPress',
+  'safariCatch', 'safariRanger', 'safariShiny', 'firstFind', 'fossilHunter', 'goldenVein', 'firstPlush', 'plushShelf', 'steadyHand',
 ] as const satisfies readonly (StampId | RewardIcon)[]
 
 const COLUMNS = 9

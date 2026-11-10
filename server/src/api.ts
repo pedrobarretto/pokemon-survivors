@@ -111,9 +111,9 @@ const app = createApp({
   coop: coopBoardStore(sql),
   // Realm reports go to the staff's #mod-chat when the bot is set up (stored either way).
   realm,
-  claw: clawStore(sql, { closed: realm.closedIn }),
-  safari: safariStore(sql, { closed: realm.closedIn }),
-  dig: digStore(sql, { closed: realm.closedIn }),
+  claw: clawStore(sql, { closed: realm.closedIn, earn: realm.earn }),
+  safari: safariStore(sql, { closed: realm.closedIn, earn: realm.earn }),
+  dig: digStore(sql, { closed: realm.closedIn, earn: realm.earn }),
   arenaReportSecret: env.arenaReportSecret,
   patreon: env.patreon ? patreonOAuth(env.patreon) : null,
   webhooks: {

@@ -8,10 +8,13 @@ import type { Gift, GiftContent, GiftReason } from '../../src/game/gifts'
 import { parseSaveData, type Save } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
 import type { HatchlingId } from '../../src/data/hatchlings'
+import type { Deed } from '../../src/data/realmStamps'
 import type { SafariActed, SafariSession, SafariState } from '../../src/net/realmApi'
+import { safariDeeds } from '../../src/realm/gameDeeds'
 import { SAFARI, applyAction, encountersLeft, guaranteedEntry, habitatOfWeek, rollQueue, sessionPrice, startRun, type SafariAction, type SafariRun, type SafariTurn } from '../../src/realm/games/safari.rules'
 import type { Sql } from './db'
 import { sendGift } from './gifts'
+import type { EarnDeeds } from './realmDeeds'
 import { rateLimiter } from './rateLimit'
 
 /**
@@ -21,7 +24,8 @@ import { rateLimiter } from './rateLimit'
  * rustle in the tall grass, and the next in line comes whatever it walked, so
  * walking can't pick or re-roll one. A session paid for and never finished
  * stays open for its owner; repeating an action (`turn`) reads the stored
- * answer back.
+ * answer back. A catch's deeds (`safariDeeds`) go to the Estampas once its
+ * turn is stored, only from the action that rolled it.
  */
 
 type Q = Sql | TransactionSql
@@ -109,7 +113,7 @@ export type SafariStarted = { ok: true; session: SafariSession; used: number; pa
 
 export type SafariActResult = { ok: true; acted: SafariActed } | { ok: false; error: 'profile' | 'banned' | 'missing' | 'stale' | 'illegal' }
 
-export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Promise<boolean>; now?: () => Date; dice?: () => number }) => {
+export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Promise<boolean>; earn: EarnDeeds; now?: () => Date; dice?: () => number }) => {
   const now = deps.now ?? (() => new Date())
   const dice = deps.dice ?? roll
   const limit = rateLimiter(LIMIT.n, LIMIT.ms)
@@ -202,10 +206,11 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
      * answers the client has seen: an action already answered reads that
      * answer back (a retry changes nothing), an action from the future is
      * refused. A catch sends its gift; when the session ends, the guarantee's
-     * count moves.
+     * count moves. Then a catch's deeds, from this action only.
      */
-    act: (userId: string, id: string, turn: number, action: SafariAction): Promise<SafariActResult> =>
-      sql.begin(async (tx): Promise<SafariActResult> => {
+    act: async (userId: string, id: string, turn: number, action: SafariAction): Promise<SafariActResult> => {
+      let deeds: ReadonlyMap<Deed, number> = new Map()
+      const acted = await sql.begin(async (tx): Promise<SafariActResult> => {
         const refused = await gate(tx, userId)
         if (refused) return { ok: false, error: refused }
         const [row] = await tx<SessionRow[]>`select id, week, habitat, state, finished_at from safari_sessions where id = ${id}::uuid and user_id = ${userId}`
@@ -222,6 +227,7 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
           const save = await saveOf(tx, userId)
           if (save?.hatched[got.turn.family] === undefined) fresh = true
           console.log(`safari: ${userId} caught ${got.turn.family}${got.turn.shiny ? ' (shiny)' : ''}`)
+          deeds = safariDeeds(true, got.turn.shiny)
         }
         const state: Stored = { run: got.run, log: [...stored.log, { turn: got.turn, gift }], fresh }
         const finished = got.run.over
@@ -235,7 +241,10 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
             on conflict (user_id) do update set dry = ${fresh ? 0 : tx`safari_progress.dry + 1`}`
         }
         return { ok: true, acted: { turn: got.turn, gift, session: viewOf(next!) } }
-      }),
+      })
+      if (deeds.size > 0) await deps.earn(userId, deeds)
+      return acted
+    },
   }
 }
 

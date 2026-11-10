@@ -2,6 +2,7 @@ import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
 import { DIG_FOSSIL_FAMILIES, DIG_FOSSIL_REPEAT, DIG_TREASURES, type DigPiece, type FossilFamily } from '../../src/data/digTreasures'
 import { PLAYABLE } from '../../src/data/hatchlings'
+import type { Deed } from '../../src/data/realmStamps'
 import { canPlay } from '../../src/game/capture'
 import { brasiliaDay, weekStart, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
@@ -10,9 +11,11 @@ import { parseSaveData, type Save } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
 import { isPlayable } from '../../src/game/ranking'
 import type { DigEnd, DigGift, DigHitAnswer, DigReward, DigState, DigWallView } from '../../src/net/realmApi'
+import { digDeeds } from '../../src/realm/gameDeeds'
 import { buildWall, DIG, digPowers, fossilStreak, hitWall, NO_POWERS, sortOut, startProgress, tileAt, treasureFree, wallPrice, type DigPowers, type DigTool, type DigWall } from '../../src/realm/games/dig.rules'
 import type { Sql } from './db'
 import { sendGift } from './gifts'
+import type { EarnDeeds } from './realmDeeds'
 import { rateLimiter } from './rateLimit'
 
 /**
@@ -23,7 +26,9 @@ import { rateLimiter } from './rateLimit'
  * shared gift path (the client applies those gifts on the spot, so sync stays
  * correct; a client that drops gets them from the gift box at the next sync).
  * A wall that was paid for and never ended stays open for its owner, and a
- * repeated hit or stop reads its stored answer back.
+ * repeated hit or stop reads its stored answer back. A wall's deeds
+ * (`digDeeds`) go to the Estampas once its end is stored, only from the
+ * request that ended it.
  */
 
 type Q = Sql | TransactionSql
@@ -109,7 +114,10 @@ export type DigHitResult = { ok: true; answer: DigHitAnswer } | { ok: false; err
 
 export type DigStopped = { ok: true; end: DigEnd } | { ok: false; error: 'profile' | 'banned' | 'missing' }
 
-export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Promise<boolean>; now?: () => Date }) => {
+/** The deeds of a wall that just ended (`digDeeds`). */
+const deedsOf = (row: WallRow, end: DigEnd) => digDeeds(row.built.wall.golden, end.kept.map((r) => r.id))
+
+export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Promise<boolean>; earn: EarnDeeds; now?: () => Date }) => {
   const now = deps.now ?? (() => new Date())
   const limit = rateLimiter(LIMIT.n, LIMIT.ms)
   const today = () => brasiliaDay(now())
@@ -229,10 +237,12 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
     /**
      * `POST /realm/dig/hit`: one hit, numbered. A number already answered gets
      * that answer back; anything but the next one is refused. The hit that
-     * fills the crack ends the wall in the same transaction.
+     * fills the crack ends the wall in the same transaction, and its deeds
+     * follow.
      */
-    hit: (userId: string, id: string, seq: number, tool: DigTool, cell: number): Promise<DigHitResult> =>
-      sql.begin(async (tx): Promise<DigHitResult> => {
+    hit: async (userId: string, id: string, seq: number, tool: DigTool, cell: number): Promise<DigHitResult> => {
+      let deeds: ReadonlyMap<Deed, number> = new Map()
+      const result = await sql.begin(async (tx): Promise<DigHitResult> => {
         const refused = await gate(tx, userId)
         if (refused) return { ok: false, error: refused }
         const [row] = await tx<WallRow[]>`select id, week, seed, built, left_layers, crack, seq, result, ended_at from dig_walls where id = ${id}::uuid and user_id = ${userId} for update`
@@ -246,22 +256,32 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
         const hit = hitWall(row.built.wall, { left: row.left_layers, crack: row.crack }, tool, cell, row.built.powers)
         if (!hit) return { ok: false, error: 'empty' }
         const end = hit.collapsed ? await finish(tx, userId, row, hit.progress.left, 'collapse') : null
+        if (end) deeds = deedsOf(row, end)
         const answer: DigHitAnswer = { seq, cells: hit.cells, crack: hit.progress.crack, freed: hit.freed, end }
         await tx`insert into dig_hits (wall_id, seq, answer) values (${id}::uuid, ${seq}, ${tx.json(answer)})`
         await tx`update dig_walls set left_layers = ${tx.json(hit.progress.left)}, crack = ${hit.progress.crack}, seq = ${seq} where id = ${id}::uuid`
         return { ok: true, answer }
-      }),
+      })
+      if (deeds.size > 0) await deps.earn(userId, deeds)
+      return result
+    },
 
-    /** `POST /realm/dig/stop`: leaves with what's dug out. A wall already ended answers its stored end. */
-    stop: (userId: string, id: string): Promise<DigStopped> =>
-      sql.begin(async (tx): Promise<DigStopped> => {
+    /** `POST /realm/dig/stop`: leaves with what's dug out, and the wall's deeds follow. A wall already ended answers its stored end and counts nothing. */
+    stop: async (userId: string, id: string): Promise<DigStopped> => {
+      let deeds: ReadonlyMap<Deed, number> = new Map()
+      const stopped = await sql.begin(async (tx): Promise<DigStopped> => {
         const refused = await gate(tx, userId)
         if (refused) return { ok: false, error: refused }
         const [row] = await tx<WallRow[]>`select id, week, seed, built, left_layers, crack, seq, result, ended_at from dig_walls where id = ${id}::uuid and user_id = ${userId} for update`
         if (!row) return { ok: false, error: 'missing' }
         if (row.ended_at && row.result) return { ok: true, end: row.result }
-        return { ok: true, end: await finish(tx, userId, row, row.left_layers, 'stopped') }
-      }),
+        const end = await finish(tx, userId, row, row.left_layers, 'stopped')
+        deeds = deedsOf(row, end)
+        return { ok: true, end }
+      })
+      if (deeds.size > 0) await deps.earn(userId, deeds)
+      return stopped
+    },
   }
 }
 
