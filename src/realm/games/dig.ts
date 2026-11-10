@@ -11,8 +11,9 @@ import { isFailure, type Failure } from '../api'
 import { fetchDig, hitDig, landDigGifts, startWall, stopDig } from '../digApi'
 import { pieceName } from '../furniture'
 import { arcadeSize, burst, drawCentered, drawFx, drawText, image, plate, shakeOffset, stepFx, textWidth, type Particle, type Popup } from './arcadeKit'
-import { DIG, digGroupOdds, digPowers, digVein, shapeOf, toolArea, toolCrack, wallPrice, type DigTool } from './dig.rules'
+import { DIG, DIG_VEINS, digGroupOdds, digPowers, digVein, shapeOf, toolArea, toolCrack, wallPrice, type DigTool } from './dig.rules'
 import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
+import { callout, gameSheet, sheetTitle, speech } from './gameSheet'
 
 /**
  * The Escavação (`MINIGAMES.dig`): one wall at a time, broken open cell by
@@ -20,7 +21,9 @@ import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
  * finished. The API builds the wall and answers every hit (`digApi.ts`,
  * `dig.rules.ts`); this only draws what it's told, a step ahead of the answer
  * so a hit always feels instant. Numbers and art are drawn on the canvas; every
- * word lives in the panel over it, since the in-world font can't write them.
+ * word lives in the kit's sheet over it (`gameSheet.ts`), since the in-world
+ * font can't write them. The entry docks beside or under the tunnel, which is
+ * drawn in the part of the canvas the sheet leaves free.
  *
  * Touch: tap a tool, then tap the wall (a finger shows where it will land and
  * lets go to hit). Keys: 1 and 2 pick a tool, arrows move the cursor, Space hits.
@@ -103,8 +106,8 @@ const start = (ctx: SoloCtx): GameRun => {
   const layout = layoutOf(size)
   const { grid } = layout
   const m = () => t().minigames.dig
-  const panel = h('div', { class: 'dig-panel box hidden' })
-  ctx.stage.append(panel)
+  // The entry keeps the tunnel's arch in view: 140 columns beside it, 120 rows above it.
+  const sheet = gameSheet(ctx.stage, size, { x: 140, y: 120 })
 
   let phase: Phase = 'load'
   let phaseT = 0
@@ -156,19 +159,16 @@ const start = (ctx: SoloCtx): GameRun => {
     phaseT = 0
   }
 
-  const say = (lines: readonly (HTMLElement | false | null)[], actions: readonly { label: string; run: () => void; primary?: true }[] = []) => {
-    panel.classList.toggle('hidden', lines.length === 0 && actions.length === 0)
-    panel.replaceChildren(
-      ...lines.flatMap((l) => (l ? [l] : [])),
-      ...(actions.length > 0 ? [h('div', { class: 'dig-actions' }, ...actions.map((a) => h('button', { class: `box${a.primary ? ' primary' : ''}`, type: 'button', onclick: () => (playSfx('select'), a.run()) }, a.label)))] : []),
-    )
-  }
+  const say = sheet.show
+  const quiet = () => sheet.hide()
 
   const trouble = (error: string) => {
     go('ready')
     const text = error === 'cap' ? m().cap : error === 'funds' ? m().funds : error === 'profile' ? m().profile : m().failed
-    say([h('p', {}, text)], [{ label: m().retry, run: load, primary: true }])
+    say('card', [h('p', { class: 'mg-lead' }, text)], [{ label: m().retry, run: load, primary: true }])
   }
+
+  const art = (id: DigTreasureId) => `${import.meta.env.BASE_URL}assets/${DIG_TREASURES[id].art}.png`
 
   /** Why a price can't be paid now, or null: the day's cap or too few ₽. */
   const blocked = (price: number | null, wallOpen: boolean) => {
@@ -186,47 +186,68 @@ const start = (ctx: SoloCtx): GameRun => {
     const form = PLAYABLE[ctx.partner as PlayableId]
     const powers = digPowers(form.line[0].types)
     const words = [powers.bigHammer && m().powers.bigHammer, powers.hold > 0 && m().powers.hold, powers.reveal && m().powers.reveal, powers.deepPick && m().powers.deepPick].filter((w): w is string => typeof w === 'string')
-    return h('small', { class: 'dig-partner' }, words.length > 0 ? m().partnerLine(form.name, words.join(', ')) : m().partnerNone(form.name))
+    return h('li', { class: 'dig-partner' }, h('img', { src: portraitUrl(form.line[0].dex), alt: '', width: 28, height: 28 }), h('span', {}, words.length > 0 ? m().partnerLine(form.name, words.join(', ')) : m().partnerNone(form.name)))
   }
 
+  /** The entry: the keeper's word, the week's vein, the partner's help, the fossil guarantee and the wall to buy; the odds a tap away. */
   const oddsPanel = () => {
     if (!view) return
     const v = view
     const week = digVein(v.week)
-    const groups = digGroupOdds(v.week)
     const price = wallPrice(v.used)
     const open = v.open !== null
     const stop = blocked(price, open)
-    const owned = (DIG_FAMILIES - v.lacking.length)
+    const owned = DIG_FAMILIES - v.lacking.length
     const due = v.lacking.length > 0 && v.dry >= DIG.fossilGuarantee
     const label = open ? m().resume : price === 0 ? m().free : m().paid(formatPokeDollars(price ?? DIG.price))
+    const fossil = v.lacking.length === 0 ? m().fossilsDone : due ? m().fossilDue : m().fossilProgress(v.dry, DIG.fossilGuarantee, owned, DIG_FAMILIES)
     say(
+      'dock',
       [
-        h('div', { class: 'dig-keeper' }, h('img', { src: portraitUrl(530), alt: '', width: 40, height: 40 }), h('p', {}, rich(open ? m().keeperOpen : m().keeper))),
-        h('h3', {}, m().veinTitle(m().veins[week.vein])),
+        speech(portraitUrl(530), rich(open ? m().keeperOpen : m().keeper)),
+        sheetTitle(m().veins[week.vein], m().veinKicker),
         h('p', { class: 'dig-vein' }, rich(m().veinNote[week.vein])),
+        h('button', { class: 'btn mg-link', type: 'button', onclick: () => (playSfx('select'), oddsSheet()) }, h('img', { src: art(groupIcon[DIG_VEINS[week.vein].group]), alt: '', width: 24, height: 24 }), m().oddsOpen),
+        h(
+          'ul',
+          { class: 'mg-facts' },
+          partnerLine(),
+          h('li', { class: due ? 'hot' : '' }, h('img', { src: art('skullFossil'), alt: '', width: 28, height: 28 }), h('span', {}, fossil)),
+        ),
+        stop ? callout(stop) : false,
+      ],
+      [
+        ...(stop ? [] : [{ label, note: open ? m().resumeNote : m().today(v.used, DIG.dailyCap), run: startWallNow, primary: true }]),
+      ],
+    )
+  }
+
+  /** The week's odds, as the sheet of the vein: a tile a group, the golden wall's chance, and what the numbers mean. */
+  const oddsSheet = () => {
+    if (!view) return
+    const week = digVein(view.week)
+    say(
+      'card',
+      [
+        sheetTitle(m().veins[week.vein], m().veinKicker),
         h(
           'ul',
           { class: 'dig-odds' },
-          ...groups.map((g) =>
-            h('li', {}, h('img', { src: `${import.meta.env.BASE_URL}assets/${DIG_TREASURES[groupIcon[g.group]].art}.png`, alt: '', width: 20, height: 20 }), h('span', {}, m().groups[g.group]), h('b', {}, m().pct(g.share))),
+          ...digGroupOdds(view.week).map((g) =>
+            h('li', { class: g.group === DIG_VEINS[week.vein].group ? 'boost' : '' }, h('img', { src: art(groupIcon[g.group]), alt: '', width: 32, height: 32 }), h('b', {}, m().pct(g.share)), h('span', {}, m().groups[g.group])),
           ),
-          h('li', { class: 'golden' }, h('span', {}), h('span', {}, m().golden), h('b', {}, m().oneIn(Math.round(1 / DIG.golden.chance)))),
+          h('li', { class: 'golden' }, h('img', { src: art('nugget'), alt: '', width: 32, height: 32 }), h('b', {}, m().oneIn(Math.round(1 / DIG.golden.chance))), h('span', {}, m().golden)),
         ),
-        h('small', { class: 'dig-note' }, m().oddsNote),
-        partnerLine(),
-        v.lacking.length === 0
-          ? h('small', {}, m().fossilsDone)
-          : h('small', {}, due ? m().fossilDue : m().fossilProgress(v.dry, DIG.fossilGuarantee, owned, DIG_FAMILIES)),
-        h('small', {}, stop ?? (open ? m().resumeNote : m().today(v.used, DIG.dailyCap))),
+        h('p', { class: 'mg-note' }, m().oddsNote),
       ],
-      stop ? [] : [{ label, run: startWallNow, primary: true }],
+      [],
+      { label: m().back, run: oddsPanel },
     )
   }
 
   const load = async () => {
     go('load')
-    say([])
+    quiet()
     const got = await fetchDig()
     if (disposed) return
     if (isFailure(got)) return trouble(got.error)
@@ -386,7 +407,7 @@ const start = (ctx: SoloCtx): GameRun => {
     fresh = new Set(e.kept.flatMap((r, i) => (r.prize.kind === 'fossil' && !r.repeat && !repeats.has(r.prize.family) ? [i] : [])))
     if (e.kept.some((r) => r.id === 'digFossilDisplay' || r.prize.kind === 'stone' || r.prize.kind === 'fossil')) ctx.brag('fossilOrStone')
     go('hold')
-    say([])
+    quiet()
     if (e.outcome === 'collapse') {
       flash = 0.18
       shake = TIMES.collapse
@@ -445,7 +466,7 @@ const start = (ctx: SoloCtx): GameRun => {
     if (fresh0.open && wall && fresh0.open.id === wall.id) {
       restore(fresh0.open)
       go('dig')
-      say([])
+      quiet()
     } else {
       wall = null
       oddsPanel()
@@ -492,7 +513,7 @@ const start = (ctx: SoloCtx): GameRun => {
   const startWallNow = async () => {
     if (!view) return
     go('busy')
-    say([])
+    quiet()
     const got = await startWall(view.used, ctx.partner, view.open !== null)
     if (disposed) return
     if (isFailure(got)) return trouble(got.error)
@@ -505,7 +526,7 @@ const start = (ctx: SoloCtx): GameRun => {
       ctx.brag('golden')
       flash = 0.22
       goldenBanner = 1.5
-      say([h('h3', {}, m().goldenStart)])
+      say('banner', [h('h3', { class: 'mg-banner-title gold' }, m().goldenStart)])
     }
   }
 
@@ -556,17 +577,17 @@ const start = (ctx: SoloCtx): GameRun => {
     if (!wall) return
     const safe = freed.length
     go('confirm')
-    say([h('h3', {}, m().stopTitle), h('p', {}, m().stopNote(safe))], [{ label: m().stopYes, run: stopNow }, { label: m().stopNo, run: resumeDig, primary: true }])
+    say('card', [sheetTitle(m().stopTitle), h('p', { class: 'mg-lead' }, m().stopNote(safe))], [{ label: m().stopYes, run: stopNow }, { label: m().stopNo, run: resumeDig, primary: true }])
   }
 
   const resumeDig = () => {
-    say([])
+    quiet()
     go('dig')
   }
 
   const stopNow = async () => {
     if (!wall) return
-    say([])
+    quiet()
     go('busy')
     while (queue.length > 0 && !disposed) await new Promise((res) => setTimeout(res, 120))
     if (disposed) return
@@ -589,11 +610,11 @@ const start = (ctx: SoloCtx): GameRun => {
     if (!r) return showSummary()
     const def = DIG_TREASURES[r.id]
     say(
+      'banner',
       [
-        h('h3', {}, treasureName(r.id)),
+        h('h3', { class: 'mg-banner-title' }, treasureName(r.id)),
         h('p', {}, r.repeat ? m().repeat(formatPokeDollars(r.coins)) : r.coins > 0 ? `+${formatPokeDollars(r.coins)}` : r.prize.kind === 'furniture' ? m().furnitureNote : r.prize.kind === 'bag' ? m().bagNote : r.prize.kind === 'stone' ? m().stoneNote : m().fossilNote),
       ],
-      [],
     )
     playSfx(r.prize.kind === 'coins' ? 'coin' : r.prize.kind === 'fossil' ? 'shiny' : def.group === 'stone' ? 'evolve' : def.group === 'furniture' ? 'unlock' : 'item')
   }
@@ -604,7 +625,7 @@ const start = (ctx: SoloCtx): GameRun => {
     if (r && r.prize.kind === 'fossil' && fresh.has(revealAt)) {
       fossilOn = r.prize.family
       go('fossil')
-      say([])
+      quiet()
       void loadSpecies(HATCHLINGS[r.prize.family].line[0].dex).catch(() => {})
       return
     }
@@ -634,16 +655,18 @@ const start = (ctx: SoloCtx): GameRun => {
     const coins = e.kept.reduce((sum, r) => sum + r.coins, 0)
     const stopReason = view ? blocked(wallPrice(view.used), false) : null
     const price = view ? wallPrice(view.used) : null
+    const headline = e.outcome === 'collapse' ? (e.kept.length > 0 ? m().collapsedKept : m().collapsedNothing) : e.kept.length > 0 ? m().leftWith : m().leftNothing
     say(
+      'card',
       [
-        h('h3', {}, e.outcome === 'collapse' ? (e.kept.length > 0 ? m().collapsedKept : m().collapsedNothing) : e.kept.length > 0 ? m().leftWith : m().leftNothing),
-        e.kept.length > 0 ? h('ul', { class: 'dig-loot' }, ...e.kept.map((r) => h('li', {}, h('img', { src: `${import.meta.env.BASE_URL}assets/${DIG_TREASURES[r.id].art}.png`, alt: '', width: 24, height: 24 }), h('span', {}, treasureName(r.id))))) : false,
-        coins > 0 ? h('p', {}, m().coinsTotal(formatPokeDollars(coins))) : false,
-        e.buried.length > 0 ? h('div', { class: 'dig-buried' }, h('small', {}, m().buried), h('span', {}, ...e.buried.map((b) => h('img', { src: `${import.meta.env.BASE_URL}assets/${DIG_TREASURES[b.id].art}.png`, alt: treasureName(b.id), title: treasureName(b.id), width: 18, height: 18 })))) : false,
-        h('small', {}, stopReason ?? m().today(view?.used ?? 0, DIG.dailyCap)),
+        sheetTitle(headline),
+        e.kept.length > 0 ? h('ul', { class: 'dig-loot' }, ...e.kept.map((r) => h('li', {}, h('img', { src: art(r.id), alt: '', width: 32, height: 32 }), h('span', {}, treasureName(r.id))))) : false,
+        coins > 0 ? h('p', { class: 'dig-coins' }, m().coinsTotal(formatPokeDollars(coins))) : false,
+        e.buried.length > 0 ? h('div', { class: 'dig-buried' }, h('span', {}, m().buried), h('span', {}, ...e.buried.map((b) => h('img', { src: art(b.id), alt: treasureName(b.id), title: treasureName(b.id), width: 24, height: 24 })))) : false,
+        stopReason ? callout(stopReason) : false,
       ],
       [
-        ...(stopReason ? [] : [{ label: price === 0 ? m().free : m().paid(formatPokeDollars(price ?? DIG.price)), run: () => oddsAgain(), primary: true as const }]),
+        ...(stopReason ? [] : [{ label: price === 0 ? m().free : m().paid(formatPokeDollars(price ?? DIG.price)), note: m().today(view?.used ?? 0, DIG.dailyCap), run: () => oddsAgain(), primary: true }]),
         { label: m().close, run: closeWall },
       ],
     )
@@ -684,7 +707,7 @@ const start = (ctx: SoloCtx): GameRun => {
     const onGrid = cellAt(px, py)
     if (goldenBanner > 0) {
       goldenBanner -= dt
-      if (goldenBanner <= 0 && phase === 'dig') say([])
+      if (goldenBanner <= 0 && phase === 'dig') quiet()
     }
     switch (phase) {
       case 'dig': {
@@ -726,7 +749,7 @@ const start = (ctx: SoloCtx): GameRun => {
           flash = 0.3
           playCry(cryUrl(HATCHLINGS[fossilOn].line[0].dex), 0.3)
           playSfx('levelUp')
-          say([h('h3', {}, m().restored(HATCHLINGS[fossilOn].name)), h('p', {}, m().restoredNote)])
+          say('banner', [h('h3', { class: 'mg-banner-title' }, m().restored(HATCHLINGS[fossilOn].name)), h('p', {}, m().restoredNote)])
         }
         if ((input.pointer.pressed && phaseT > TIMES.fossilGlow) || phaseT >= TIMES.fossil) fossilDone()
         break
@@ -1002,15 +1025,17 @@ const start = (ctx: SoloCtx): GameRun => {
   const draw = (g: CanvasRenderingContext2D) => {
     g.fillStyle = '#1a1208'
     g.fillRect(0, 0, size.w, size.h)
+    sheet.track()
     const tunnel = image('realm/dig/tunnel')
-    if (tunnel) {
-      // Doubled, so it covers the canvas either way the phone is held; life-size beside the odds panel of a phone on its side, where doubled it was only a crop.
-      const beside = !wall && size.w > size.h
-      const k = beside ? 1 : 2
-      const cx = beside ? size.w * 0.27 : size.w / 2
-      g.globalAlpha = wall ? 0.28 : 0.75
-      g.drawImage(tunnel, Math.round(cx - (tunnel.width * k) / 2), Math.round(size.h / 2 - (tunnel.height * k) / 2), tunnel.width * k, tunnel.height * k)
+    if (tunnel && wall) {
+      // Behind a wall, doubled and dim: only a hint of the mine around it.
+      g.globalAlpha = 0.28
+      g.drawImage(tunnel, Math.round(size.w / 2 - tunnel.width), Math.round(size.h / 2 - tunnel.height), tunnel.width * 2, tunnel.height * 2)
       g.globalAlpha = 1
+    } else if (tunnel) {
+      // At the entrance, life-size in whatever the sheet leaves free, so the arch shows whole and never under the words.
+      const free = sheet.free()
+      g.drawImage(tunnel, Math.round(free.x + free.w / 2 - tunnel.width / 2), Math.round(free.y + free.h / 2 - tunnel.height / 2))
     }
     if (!wall && phase !== 'hold') return
 
@@ -1095,7 +1120,7 @@ const start = (ctx: SoloCtx): GameRun => {
     over: () => null,
     dispose: () => {
       disposed = true
-      panel.remove()
+      sheet.dispose()
     },
   }
 }

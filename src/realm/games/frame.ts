@@ -12,6 +12,7 @@ import { syncSave } from '../../account'
 import { HATCHLING_IDS, HATCHLINGS } from '../../data/hatchlings'
 import { openGameBoard } from './board'
 import { pieceName } from '../furniture'
+import { closeIcon } from '../../render/art'
 
 /**
  * The Poké Realm's mini game frame: an overlay holding the game's canvas at
@@ -185,13 +186,13 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   }
   const el = h(
     'div',
-    { class: 'screen minigame-screen' },
+    { class: 'screen minigame-screen', 'data-game': game },
     h(
       'header',
       { class: 'minigame-head' },
-      h('h2', {}, m.games[game].name),
-      hasBoard(game) && h('button', { class: 'minigame-board box', type: 'button', onclick: () => board() }, m.board.open),
-      h('button', { class: 'minigame-close box', type: 'button', 'aria-label': m.close, onclick: close }, '×'),
+      h('h2', { class: 'arc-outline' }, m.games[game].name),
+      hasBoard(game) && h('button', { class: 'minigame-board arc-chip', type: 'button', onclick: () => board() }, m.board.open),
+      h('button', { class: 'minigame-close arc-icon-btn', type: 'button', 'aria-label': m.close, title: m.close, onclick: close }, h('img', { src: closeIcon(), alt: '' })),
     ),
     stage,
   )
