@@ -14,7 +14,7 @@ import { image, partnerDex } from './arcadeKit'
 import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
 import { SAFARI, sessionPrice, shareOf, type SafariAction, type SafariRarity } from './safari.rules'
 import { THEMES, drawGrassWipe } from './safariArt'
-import { createBattle, layoutBattle, type Battle, type BattleHost } from './safariBattle'
+import { bandPx, createBattle, layoutBattle, type Battle, type BattleHost } from './safariBattle'
 import { createField, type Field } from './safariField'
 import { buildWorld } from './safariWorld'
 
@@ -61,11 +61,12 @@ const start = (ctx: SoloCtx): GameRun => {
   const pouch = h('div', { class: 'sz-pouch hidden' })
   const endBtn = h('button', { class: 'sz-end box hidden', type: 'button', onclick: () => endSession() }, '')
   const readBtn = h('button', { class: 'sz-read box hidden', type: 'button', onclick: () => openBoard() }, '')
-  const wildTag = h('div', { class: 'sz-tag hidden' })
-  const nearTag = h('div', { class: 'sz-tag sz-tag-near hidden' })
+  const wildPanel = h('div', { class: 'sz-panel sz-panel-wild hidden' })
+  const nearPanel = h('div', { class: 'sz-panel sz-panel-near hidden' })
+  const band = h('div', { class: 'sz-band hidden' })
   const board = h('div', { class: 'sz-board hidden' })
   const report = h('div', { class: 'sz-report box hidden' })
-  const hud = h('div', { class: 'sz-hud' }, pouch, endBtn, readBtn, wildTag, nearTag, box, cmds, board, report)
+  const hud = h('div', { class: 'sz-hud' }, pouch, endBtn, readBtn, wildPanel, nearPanel, band, box, cmds, board, report)
   ctx.stage.append(hud)
 
   let phase: Phase = 'load'
@@ -323,16 +324,20 @@ const start = (ctx: SoloCtx): GameRun => {
 
   /* ---------------- A battle ---------------- */
 
-  const setTags = (family: HatchlingId, shiny: boolean) => {
+  /** The two info panels: name and level, then the wild one's calm and whether it's a new family, the partner's encounters left. */
+  const setPanels = (family: HatchlingId, shiny: boolean) => {
     const w = m()
     const entry = safariEntry(family)
-    wildTag.replaceChildren(
-      h('b', {}, `${safariForm(family).name}${shiny ? ' ★' : ''}`),
-      h('small', {}, w.level(wildLevel(family, entry.rarity, seen))),
-      h('i', { class: 'sz-hearts' }, '♥'.repeat(wildCalm) + '♡'.repeat(Math.max(0, SAFARI.maxCalm - wildCalm))),
-      ...(lacks(family) ? [h('em', {}, w.fresh)] : []),
+    const row = (...cells: (HTMLElement | string)[]) => h('div', { class: 'sz-panel-row' }, ...cells)
+    const pips = Array.from({ length: SAFARI.maxCalm }, (_, i) => h('i', { class: i < wildCalm ? 'sz-pip sz-pip-on' : 'sz-pip' }))
+    wildPanel.replaceChildren(
+      row(h('b', {}, safariForm(family).name, ...(shiny ? [h('span', { class: 'sz-star' }, '★')] : [])), h('span', { class: 'sz-lv' }, w.level(wildLevel(family, entry.rarity, seen)))),
+      row(h('span', { class: 'sz-readout' }, h('small', {}, w.calmLabel), ...pips), ...(lacks(family) ? [h('em', {}, w.fresh)] : [])),
     )
-    nearTag.replaceChildren(h('b', {}, partnerName), h('small', {}, w.level(Math.min(100, 5 + Object.keys(loadSave().hatched).length))))
+    nearPanel.replaceChildren(
+      row(h('b', {}, partnerName), h('span', { class: 'sz-lv' }, w.level(Math.min(100, 5 + Object.keys(loadSave().hatched).length)))),
+      row(h('small', {}, w.left(session?.left ?? 0))),
+    )
   }
 
   const battleHost = (family: HatchlingId, shiny: boolean): BattleHost => ({
@@ -347,13 +352,13 @@ const start = (ctx: SoloCtx): GameRun => {
         { label: w.runCmd, run: () => battle?.run() },
       ])
     },
-    tags: (show) => {
-      wildTag.classList.toggle('hidden', !show)
-      nearTag.classList.toggle('hidden', !show)
+    panels: (show) => {
+      wildPanel.classList.toggle('hidden', !show)
+      nearPanel.classList.toggle('hidden', !show)
     },
     calm: (n) => {
       wildCalm = n
-      setTags(family, shiny)
+      setPanels(family, shiny)
     },
     send: (action, then) => send(action, then),
     land: (got) => {
@@ -374,20 +379,29 @@ const start = (ctx: SoloCtx): GameRun => {
     const calm = session.encounter?.calm ?? 0
     wildCalm = calm
     seen += 1
-    setTags(family, shiny)
+    setPanels(family, shiny)
     hintLeft = 0
     battle?.release()
     battle = createBattle({ habitat, theme: THEMES[habitat], family, shiny, session, partnerDex: dex, partnerShiny: ctx.shiny, host: battleHost(family, shiny), resumed })
     go('battle')
+    showBand(true)
     showWalkHud(false)
     readBtn.classList.add('hidden')
   }
 
+  /** Battle's bottom band: the same box and command list, restyled by `.sz-battle`. */
+  const showBand = (on: boolean) => {
+    band.classList.toggle('hidden', !on)
+    hud.classList.toggle('sz-battle', on)
+    box.classList.toggle('box', !on)
+  }
+
   const endBattle = () => {
     go('wipeOut')
-    wildTag.classList.add('hidden')
-    nearTag.classList.add('hidden')
+    wildPanel.classList.add('hidden')
+    nearPanel.classList.add('hidden')
     commands([])
+    say('')
   }
 
   const toReport = () => {
@@ -488,12 +502,14 @@ const start = (ctx: SoloCtx): GameRun => {
         if (phaseT >= ALERT) go('wipeIn')
         break
       case 'wipeIn':
-        if (phaseT >= WIPE && meeting?.ready && meeting.acted.turn.kind === 'appear') openBattle(meeting.acted.turn.family, meeting.acted.turn.shiny, false)
+        // Its sprites should be in by now; a sheet that hangs must not hold the player behind the grass.
+        if (phaseT >= WIPE && meeting && (meeting.ready || phaseT >= WIPE + 5) && meeting.acted.turn.kind === 'appear') openBattle(meeting.acted.turn.family, meeting.acted.turn.shiny, false)
         break
       case 'battle':
-        battle?.step(dt, layoutBattle(lastW, lastH))
+        battle?.step(dt, layoutBattle(lastW, lastH, canvasK))
         break
       case 'wipeOut':
+        if (phaseT >= WIPE / 2) showBand(false)
         if (phaseT >= WIPE) {
           battle?.release()
           battle = null
@@ -529,15 +545,10 @@ const start = (ctx: SoloCtx): GameRun => {
     lastKey = key
     lastW = W
     lastH = H
-    const L = layoutBattle(W, H)
+    const L = layoutBattle(W, H, k)
     hud.classList.toggle('sz-wide', L.wide)
     hud.classList.toggle('sz-tall', !L.wide)
-    hud.style.setProperty('--scene-w', `${L.sceneW}`)
-    hud.style.setProperty('--scene-h', `${L.sceneH}`)
-    wildTag.style.left = `calc(var(--k) * ${Math.max(4, L.wild.x - (L.wide ? 150 : 124))}px)`
-    wildTag.style.top = `calc(var(--k) * ${Math.max(4, L.wild.y - (L.wide ? 66 : 92))}px)`
-    nearTag.style.left = `calc(var(--k) * ${L.wide ? L.near.x + 56 : L.W - 92}px)`
-    nearTag.style.top = `calc(var(--k) * ${L.wide ? L.sceneH - 34 : L.sceneH - 38}px)`
+    hud.style.setProperty('--band-px', `${bandPx(L.wide)}px`)
   }
 
   const draw = (g: CanvasRenderingContext2D) => {
@@ -545,11 +556,11 @@ const start = (ctx: SoloCtx): GameRun => {
     const H = g.canvas.height
     place(W, H)
     const theme = THEMES[habitat]
-    if (phase === 'battle') battle?.draw(g, layoutBattle(W, H))
+    if (phase === 'battle') battle?.draw(g, layoutBattle(W, H, canvasK))
     else if (phase === 'wipeOut') {
       const k = Math.min(1, phaseT / WIPE)
       if (k < 0.5) {
-        battle?.draw(g, layoutBattle(W, H))
+        battle?.draw(g, layoutBattle(W, H, canvasK))
         drawGrassWipe(g, W, H, k * 2, theme)
       } else {
         field?.draw(g, W, H, canvasK)

@@ -11,11 +11,20 @@ import { tileAt, vertexAt, type SafariWorld } from './safariWorld'
  * map is baked once into one canvas, so walking only blits it.
  */
 
+/** A backdrop: two sky bands, a far shape on the horizon, two ground bands, and each platform's fill and lighter rim. */
+export type SafariScene = {
+  sky: readonly [string, string]
+  far: string
+  ground: readonly [string, string]
+  platform: readonly [string, string]
+  shape: 'hills' | 'trees' | 'mesas' | 'sea'
+}
+
 /** A habitat's colors. `ground` runs dark to light; `tall` is the blades', dark to tip. */
 export type SafariTheme = {
   ground: readonly [string, string, string, string]
-  /** The mounds of the battle screen, dark to light: the backdrop's colors, not the map's. */
-  fore: readonly [string, string, string, string]
+  /** The battle screen's backdrop and platforms, flat colors only (`paintBackdrop`). */
+  scene: SafariScene
   patch: string
   shade: string
   tall: readonly [string, string, string, string]
@@ -34,7 +43,7 @@ export type SafariTheme = {
 export const THEMES: Record<SafariHabitat, SafariTheme> = {
   meadow: {
     ground: ['#8a9c3a', '#9caf42', '#afbf4c', '#c2cc5d'],
-    fore: ['#8e6a2a', '#b58b3a', '#d3a94a', '#e6c25f'],
+    scene: { sky: ['#bcdcec', '#e8f0d4'], far: '#9fbc64', ground: ['#dccd78', '#cbb763'], platform: ['#bda64f', '#ece08f'], shape: 'hills' },
     patch: '#d3cb68',
     shade: '#55702e',
     tall: ['#6a6424', '#8f7c2c', '#bd9f3a', '#e6cf63'],
@@ -48,7 +57,7 @@ export const THEMES: Record<SafariHabitat, SafariTheme> = {
   },
   marsh: {
     ground: ['#123a3c', '#184846', '#1f5850', '#2a6a5a'],
-    fore: ['#0e2c30', '#174240', '#205a4e', '#2f7059'],
+    scene: { sky: ['#4c3a78', '#6d5894'], far: '#3a2c5c', ground: ['#2a7264', '#225f55'], platform: ['#1c5048', '#46a08a'], shape: 'trees' },
     patch: '#35785f',
     shade: '#0b2a30',
     tall: ['#0f3235', '#1b5a50', '#2f8468', '#7ac08a'],
@@ -62,7 +71,7 @@ export const THEMES: Record<SafariHabitat, SafariTheme> = {
   },
   ridge: {
     ground: ['#b88a4e', '#c79a59', '#d4a866', '#dfb777'],
-    fore: ['#6e4a30', '#96683e', '#b58450', '#cc9c64'],
+    scene: { sky: ['#efc08a', '#f6dcae'], far: '#b26a48', ground: ['#d9a870', '#c8925a'], platform: ['#aa7444', '#e8c48e'], shape: 'mesas' },
     patch: '#e6c489',
     shade: '#8a5f3a',
     tall: ['#6e4a26', '#a26f30', '#cf9d3e', '#ecc862'],
@@ -76,7 +85,7 @@ export const THEMES: Record<SafariHabitat, SafariTheme> = {
   },
   cove: {
     ground: ['#5e8580', '#6f9a90', '#83ada0', '#9cc0b2'],
-    fore: ['#7fa3ad', '#a6c6cc', '#cfe3e6', '#eef7f8'],
+    scene: { sky: ['#d2e8f2', '#eef7fa'], far: '#62bec8', ground: ['#e8f3f6', '#cfe2ea'], platform: ['#a9c8d4', '#f8fdff'], shape: 'sea' },
     patch: '#d8ecea',
     shade: '#41645f',
     tall: ['#2d6470', '#3f8c94', '#74bcc0', '#cdeee8'],
@@ -290,18 +299,84 @@ export const bakeGrass = (theme: SafariTheme) => {
  * A wall of grass over the whole canvas, `k` 0..1 of the way up (1 hides all):
  * blades of two tones in jagged columns, so the wipe is the grass itself closing in.
  */
-export const drawGrassWipe = (g: CanvasRenderingContext2D, W: number, H: number, k: number, theme: SafariTheme) => {
+export const drawGrassWipe = (g: CanvasRenderingContext2D, W: number, H: number, k: number, theme: SafariTheme, column = 5) => {
   if (k <= 0) return
-  const column = 5
+  const tip = Math.max(1, Math.round((column * 3) / 5))
   for (let i = 0, x = 0; x < W; i++, x += column) {
     const wob = ((i * 7919) % 97) / 97
     const reach = Math.min(1, k * (1.28 - wob * 0.28))
-    const top = Math.round(H * (1 - reach) - 12 * (1 - k))
+    const top = Math.round(H * (1 - reach) - tip * 4 * (1 - k))
     g.fillStyle = i % 3 === 0 ? theme.tall[1] : i % 3 === 1 ? theme.tall[0] : theme.shade
     g.fillRect(x, top, column, H - top)
     g.fillStyle = theme.tall[2]
-    g.fillRect(x + 1, top - 3, 3, 3)
+    g.fillRect(x + Math.floor(column / 5), top - tip, Math.max(1, column - Math.floor(column / 5) * 2), tip)
     g.fillStyle = theme.tall[3]
-    g.fillRect(x + 2, top - 6, 1, 3)
+    g.fillRect(x + Math.floor(column / 2), top - tip * 2, 1, tip)
   }
+}
+
+/**
+ * A battle backdrop at the scene's own low resolution: flat bands of sky and
+ * ground and one quiet shape on the horizon, a hint of the habitat and no more.
+ * `w` and `h` are art pixels; the scene is drawn upscaled as one pixel grid.
+ */
+export const paintBackdrop = (w: number, h: number, scene: SafariScene) => {
+  const c = createCanvas(w, h)
+  const g = context2d(c)
+  const skyBreak = Math.round(h * 0.26)
+  const horizon = Math.round(h * 0.5)
+  const groundBreak = Math.round(h * 0.76)
+  g.fillStyle = scene.sky[0]
+  g.fillRect(0, 0, w, skyBreak)
+  g.fillStyle = scene.sky[1]
+  g.fillRect(0, skyBreak, w, horizon - skyBreak)
+  g.fillStyle = scene.far
+  if (scene.shape === 'hills') {
+    for (let x = 0; x < w; x++) {
+      const rise = Math.round(3 + Math.sin(x * 0.11 + 1) * 2 + Math.sin(x * 0.041) * 2)
+      g.fillRect(x, horizon - rise, 1, rise)
+    }
+  } else if (scene.shape === 'trees') {
+    g.fillRect(0, horizon - 3, w, 3)
+    // A few bare trunks, each with one branch: enough to say "swamp".
+    for (let x = 6; x < w; x += 25 + (x % 7)) {
+      const tall = 10 + (x % 5)
+      g.fillRect(x, horizon - tall, 2, tall)
+      g.fillRect(x - 3, horizon - tall + 3, 4, 1)
+      g.fillRect(x + 2, horizon - tall + 6, 3, 1)
+    }
+  } else if (scene.shape === 'mesas') {
+    // Blocky flat-topped steps, drawn left to right.
+    const steps = [7, 7, 11, 11, 11, 5, 5, 9, 9, 13, 13, 13, 6, 6, 10, 10]
+    for (let x = 0; x < w; x++) {
+      const rise = steps[Math.floor(x / 6) % steps.length]!
+      g.fillRect(x, horizon - rise, 1, rise)
+    }
+  } else {
+    // The sea as one band, a few glints on it, the snow beginning below.
+    g.fillRect(0, horizon - 8, w, 8)
+    g.fillStyle = scene.sky[1]
+    for (let x = 4; x < w; x += 17) g.fillRect(x, horizon - 5 + (x % 3), 4, 1)
+  }
+  g.fillStyle = scene.ground[0]
+  g.fillRect(0, horizon, w, groundBreak - horizon)
+  g.fillStyle = scene.ground[1]
+  g.fillRect(0, groundBreak, w, h - groundBreak)
+  return c
+}
+
+/** A flat platform oval with a lighter rim, in art pixels. */
+export const paintPlatform = (rx: number, ry: number, scene: SafariScene) => {
+  const c = createCanvas(rx * 2 + 2, ry * 2 + 2)
+  const g = context2d(c)
+  const oval = (r: number, q: number, color: string) => {
+    g.fillStyle = color
+    for (let y = -q; y <= q; y++) {
+      const half = Math.round(r * Math.sqrt(1 - (y / (q + 0.5)) ** 2))
+      g.fillRect(rx + 1 - half, ry + 1 + y, half * 2, 1)
+    }
+  }
+  oval(rx, ry, scene.platform[1])
+  oval(rx - 2, ry - 1, scene.platform[0])
+  return c
 }
