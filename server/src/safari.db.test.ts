@@ -35,8 +35,8 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     return got.acted
   }
 
-  /** Who the API put in a session's bushes, which only it knows. */
-  const hiding = async (id: string) => (await sql<{ family: HatchlingId; sure: boolean }[]>`select b->>'family' as family, (b->>'sure')::boolean as sure from safari_sessions, jsonb_array_elements(state->'run'->'bushes') b where id = ${id}::uuid`)
+  /** Who the API rolled for a session, in order, which only it knows. */
+  const hiding = async (id: string) => await sql<{ family: HatchlingId; sure: boolean }[]>`select b->>'family' as family, (b->>'sure')::boolean as sure from safari_sessions, jsonb_array_elements(state->'run'->'queue') b where id = ${id}::uuid`
 
   const dry = async () => (await sql<{ dry: number }[]>`select dry from safari_progress where user_id = 'u_ash'`)[0]?.dry ?? 0
 
@@ -91,20 +91,24 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     expect(await safari.start('u_ash', 3)).toEqual({ ok: false, error: 'cap' })
   })
 
-  it('never names who is in a bush before it is approached', async () => {
+  it('never names who is still to come, and reveals them in the order they were rolled', async () => {
     const { session } = await started()
     const names = await hiding(session.id)
-    const sent = JSON.stringify(session.bushes)
-    for (const { family } of names) expect(sent).not.toContain(family)
+    const sent = JSON.stringify(session)
+    for (const { family } of names) expect(sent).not.toContain(`"${family}"`)
     expect(session.encounter).toBeNull()
-    const met = await act(session, 0, { kind: 'approach', bush: 2 })
-    expect(met.turn).toMatchObject({ kind: 'appear', bush: 2, family: names[2]!.family })
-    expect(met.session.encounter?.family).toBe(names[2]!.family)
+    expect(session.left).toBe(SAFARI.encounters)
+    const met = await act(session, 0, { kind: 'grass' })
+    expect(met.turn).toMatchObject({ kind: 'appear', family: names[0]!.family })
+    expect(met.session.encounter?.family).toBe(names[0]!.family)
+    expect(met.session.left).toBe(SAFARI.encounters - 1)
+    await act(session, 1, { kind: 'leave' })
+    expect((await act(session, 2, { kind: 'grass' })).turn).toMatchObject({ family: names[1]!.family })
   })
 
   it('answers a repeated action the same, refuses one from the future and another player’s session', async () => {
     const { session } = await started()
-    const met = await act(session, 0, { kind: 'approach', bush: 0 })
+    const met = await act(session, 0, { kind: 'grass' })
     rolls = [0.99]
     const thrown = await act(session, 1, { kind: 'ball' })
     rolls = [0, 0, 0]
@@ -117,9 +121,9 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     expect(await safari.act('u_gary', session.id, 2, { kind: 'leave' })).toEqual({ ok: false, error: 'missing' })
   })
 
-  /** Approaches bush 0 and throws a ball that holds; what the turn answered. */
+  /** Meets the first encounter and throws a ball that holds; what the turn answered. */
   const catchFirst = async (session: SafariSession) => {
-    await act(session, 0, { kind: 'approach', bush: 0 })
+    await act(session, 0, { kind: 'grass' })
     rolls = [0, 0, 0]
     return act(session, 1, { kind: 'ball' })
   }
@@ -149,11 +153,10 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     await sql`insert into safari_progress (user_id, dry) values ('u_ash', ${SAFARI.guarantee})`
     expect((await safari.state('u_ash'))!.sure).toBe(true)
     const { session } = await started()
-    const bush = session.bushes.findIndex((b) => b.sure)
-    expect(bush).toBeGreaterThanOrEqual(0)
-    const family = (await hiding(session.id))[bush]!.family
+    expect(session.sureNext).toBe(true)
+    const family = (await hiding(session.id))[0]!.family
     expect(SAFARI_ONLY as readonly string[]).toContain(family)
-    await act(session, 0, { kind: 'approach', bush })
+    await act(session, 0, { kind: 'grass' })
     after = 0.999
     const caught = await act(session, 1, { kind: 'ball' })
     expect(caught.turn).toMatchObject({ caught: true, shakes: 3, fled: false, family })
@@ -166,6 +169,6 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     await sql`insert into safari_progress (user_id, dry) values ('u_ash', ${SAFARI.guarantee + 5})`
     expect((await safari.state('u_ash'))!.sure).toBe(false)
     const { session } = await started()
-    expect(session.bushes.every((b) => !b.sure)).toBe(true)
+    expect(session.sureNext).toBe(false)
   })
 })

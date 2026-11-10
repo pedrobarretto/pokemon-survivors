@@ -826,6 +826,40 @@ const SFX = {
     ;[523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.12, 'square', 0.06, 0.1 + i * 0.06))
   },
   leaves: () => [1568, 1976, 2349, 1976, 2637].forEach((f, i) => tone(f, f * 1.05, 0.05, 'triangle', 0.05, i * 0.04)),
+  /* The Zona Safári (`realm/games/safari.ts`). */
+  /** Tall grass parting around a walker. */
+  rustle: () => noise(0.07, 0.035),
+  /** Something moves in the grass: two stabs rising, then the wipe. */
+  safariAlert: () => {
+    tone(880, 880, 0.07, 'square', 0.07)
+    tone(1320, 1320, 0.14, 'square', 0.08, 0.08)
+    noise(0.28, 0.06, 0.05)
+  },
+  safariThrow: () => tone(360, 1100, 0.32, 'triangle', 0.07),
+  /** A ball snapping shut around what it caught. */
+  safariSnap: () => {
+    tone(1200, 500, 0.06, 'square', 0.09)
+    noise(0.05, 0.08)
+  },
+  /** A ball landing: low and short, softer with each bounce. */
+  safariBounce: () => tone(420, 220, 0.07, 'square', 0.05),
+  /** A wobble of the ball, its rattle held back. */
+  safariWobble: () => {
+    tone(240, 170, 0.08, 'triangle', 0.09)
+    tone(180, 140, 0.07, 'triangle', 0.06, 0.13)
+  },
+  /** The ball holding: a latch, then a little rising chime. */
+  safariClick: () => {
+    tone(1700, 1500, 0.04, 'square', 0.08)
+    ;[784, 988, 1319].forEach((f, i) => tone(f, f, 0.14, 'triangle', 0.07, 0.2 + i * 0.08))
+  },
+  /** The ball bursting open. */
+  safariBreak: () => {
+    noise(0.16, 0.12)
+    tone(700, 1500, 0.14, 'square', 0.06)
+  },
+  safariMunch: () => [0, 0.12, 0.24].forEach((d, i) => tone(260 - i * 30, 180, 0.06, 'square', 0.05, d)),
+  safariFlee: () => tone(700, 1800, 0.2, 'triangle', 0.06),
 } as const
 
 export type Sfx = keyof typeof SFX
