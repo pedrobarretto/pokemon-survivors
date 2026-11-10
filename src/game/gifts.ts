@@ -9,6 +9,7 @@ import { HATCHLING_IDS, HATCHLINGS, type HatchlingId } from '../data/hatchlings'
 import { STYLE_SLOTS, styleIds, stylePrice, type StyleId, type StyleSlot } from '../data/style'
 import { parseHandle } from './ranking'
 import { addToBag, BAG_ITEM_IDS, type BagItem } from './bag'
+import { EVO_ITEM_IDS, type EvoItemId } from '../data/shop'
 import { captureByGift, type Captures } from './capture'
 import { markHatch } from './dex'
 import { EGG_TIER_IDS, EGG_TIERS, grantEgg, incubatorFull, type EggTier, type Hatch } from './eggs'
@@ -50,6 +51,8 @@ export type GiftContent =
   | { kind: 'bag'; item: BagItem; count: number }
   /** A legend captured for the Legend mode (a festival's last prize, Cresselia). */
   | { kind: 'legend'; legend: LegendId }
+  /** An evolution item owned for good (`data/shop.ts`), found outside the shop (a stone dug up at the mine). One already owned pays `EVO_ITEM_REPEAT`. */
+  | { kind: 'evoItem'; item: EvoItemId }
 
 export type GiftKind = GiftContent['kind']
 
@@ -89,8 +92,8 @@ export type GiftReason =
   | { kind: 'arenaSeason'; season: number; tier: TierId }
   /** Hidden zone `zone` found for the first time (`game/hiddenGifts.ts`): made by the game too. */
   | { kind: 'hiddenZone'; zone: HiddenPlaceId }
-  /** A family found outside an egg (`game/seasonOneUnlocks.ts`): an encounter or research, made by the game too, or a mini game's catch (fishing, the Safari), sent by the API. */
-  | { kind: 'season'; way: 'find' | 'research' | 'fishing' | 'safari' }
+  /** A family found outside an egg (`game/seasonOneUnlocks.ts`): an encounter or research, made by the game too, or a mini game's catch (fishing, the Safari, the Escavação), sent by the API. */
+  | { kind: 'season'; way: 'find' | 'research' | 'fishing' | 'safari' | 'dig' }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 
@@ -100,6 +103,9 @@ export type Gift = { id: string; content: GiftContent; reason: GiftReason | null
  * player in the server. The Discord screen shows it before they link.
  */
 export const DISCORD_GIFT = { kind: 'shinyHatch', family: 'noibat' } as const satisfies GiftContent
+
+/** What an evolution item dug up already owned pays instead (a tenth of its shop price). */
+export const EVO_ITEM_REPEAT = 1000
 
 /** Most coins one gift may bring. */
 const MAX_COINS = 100_000
@@ -157,6 +163,8 @@ export const parseGiftContent = (v: unknown): GiftContent | null => {
     }
     case 'legend':
       return isLegend(v.legend) ? { kind: 'legend', legend: v.legend } : null
+    case 'evoItem':
+      return isOneOf(v.item, EVO_ITEM_IDS) ? { kind: 'evoItem', item: v.item } : null
     default:
       return null
   }
@@ -179,7 +187,7 @@ const parseReason = (v: unknown): GiftReason | null => {
   if (v.kind === 'og') return { kind: 'og' }
   if (v.kind === 'arenaSeason' && isOneOf(v.tier, TIER_IDS)) return { kind: 'arenaSeason', season: wholeNumber(v.season), tier: v.tier }
   if (v.kind === 'hiddenZone' && isOneOf(v.zone, HIDDEN_PLACE_IDS)) return { kind: 'hiddenZone', zone: v.zone }
-  if (v.kind === 'season' && (v.way === 'find' || v.way === 'research' || v.way === 'fishing' || v.way === 'safari')) return { kind: 'season', way: v.way }
+  if (v.kind === 'season' && (v.way === 'find' || v.way === 'research' || v.way === 'fishing' || v.way === 'safari' || v.way === 'dig')) return { kind: 'season', way: v.way }
   return null
 }
 
@@ -271,6 +279,8 @@ const give = (save: Save, content: GiftContent, id: string): { save: Save; hatch
       return { save: { ...save, bag: addToBag(save.bag, content.item, content.count) }, hatch: null }
     case 'legend':
       return { save: { ...save, legends: captureByGift(save.legends, content.legend) }, hatch: null }
+    case 'evoItem':
+      return { save: save.evo.includes(content.item) ? { ...save, wallet: save.wallet + EVO_ITEM_REPEAT } : { ...save, evo: [...save.evo, content.item] }, hatch: null }
   }
 }
 

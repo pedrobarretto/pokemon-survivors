@@ -1,5 +1,6 @@
 import { type FurnitureCounts, type FurnitureId } from '../data/furniture'
 import { LEGENDS } from '../data/legends'
+import { DIG_PIECES, type DigPiece } from '../data/digTreasures'
 import { plushFamily, plushForm } from '../data/plushes'
 import { fetchGems } from '../gems'
 import { t } from '../i18n'
@@ -17,6 +18,7 @@ export const pieceName = (id: FurnitureId): string => {
   if (legend) return t().furniture.doll(LEGENDS[legend].name)
   const family = plushFamily(id)
   if (family) return t().furniture.plush(plushForm(family).name)
+  if ((DIG_PIECES as readonly string[]).includes(id)) return t().furniture.dig[id as DigPiece]
   const names: Readonly<Record<string, string>> = t().furniture.names
   return names[id] ?? id
 }

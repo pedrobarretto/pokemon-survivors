@@ -1,6 +1,6 @@
 import { accountHandle, accountsEnabled, accountState, onAccountChange, signIn } from '../account'
 import { FESTIVAL, type Festival, type FestivalId } from '../data/festivals'
-import { BAG_ITEMS } from '../data/shop'
+import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
 import type { FrameId } from '../data/style'
 import { HATCHLINGS } from '../data/hatchlings'
 import { LEGENDS } from '../data/legends'
@@ -64,6 +64,8 @@ const rewardName = (c: GiftContent): string => {
       return m.shiny(HATCHLINGS[c.family].name)
     case 'family':
       return HATCHLINGS[c.family].name
+    case 'evoItem':
+      return EVO_ITEMS[c.item].name
     case 'legend':
       return LEGENDS[c.legend].name
     case 'title':

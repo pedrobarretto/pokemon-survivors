@@ -23,7 +23,7 @@ import { parseSaveData } from '../../src/game/meta'
 import { outbreakAt } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
 import type { LooksResponse } from '../../src/net/looks'
-import type { ClawInserted as ClawInsertedBody, ClawState, ErrandClaimed, GameClaimed, RealmBook, RealmCities, RealmFriends, RealmMe, RealmSettings, SafariActed, SafariStarted as SafariStartedBody, SafariState } from '../../src/net/realmApi'
+import type { ClawInserted as ClawInsertedBody, ClawState, DigStarted as DigStartedBody, DigState, ErrandClaimed, GameClaimed, RealmBook, RealmCities, RealmFriends, RealmMe, RealmSettings, SafariActed, SafariStarted as SafariStartedBody, SafariState } from '../../src/net/realmApi'
 import { coinsFor, isMinigameId } from '../../src/data/minigames'
 import type { DeedsAnswer, IdentityRequest } from '../../src/net/realmRelay'
 import { parseRealmModeration } from '../../src/realm/moderation'
@@ -54,6 +54,7 @@ import type { Revenue } from './revenue'
 import type { RankingStore } from './ranking'
 import { parseClawDrop, parseClawInsert, type ClawRefusal, type ClawStore } from './claw'
 import { parseSafariAct, parseSafariStart, type SafariRefusal, type SafariStore } from './safari'
+import { parseDigHit, parseDigStart, parseDigStop, type DigRefusal, type DigStore } from './dig'
 import { parseDeedsReport, parseErrandClaim } from './realmDeeds'
 import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parseGameClaim, parsePresenceReport, parseRealmReport, parseRealmSettings, type BuyError, type RealmStore } from './realm'
 import { checkoutLocale, type StripeCheckout } from './stripe'
@@ -102,6 +103,7 @@ export type AppDeps = {
   /** The Máquina de Pelúcias: charges credits and decides drops. */
   claw: Pick<ClawStore, 'state' | 'insert' | 'drop' | 'take'>
   safari: Pick<SafariStore, 'state' | 'start' | 'act' | 'take'>
+  dig: Pick<DigStore, 'state' | 'start' | 'hit' | 'stop' | 'take'>
   /** The secret the relay signs Arena and co-op reports and ticket lookups with; unset, those routes answer 503. */
   arenaReportSecret: string | undefined
   /** Linking a Patreon account (its OAuth client), null when the server has none. */
@@ -334,13 +336,13 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
  * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
  * - The Poké Realm (`src/realm.ts`): the game's routes as `src/net/realmApi.ts` lists them (`/realm/me`, `/realm/cities`,
- *   `/realm/friends`, `/realm/settings`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/claw…`, `/realm/safari…`, `/realm/boards/:game`, `/realm/report`, `/realm/book`, `/realm/errands/claim`), and the relay's, signed like
+ *   `/realm/friends`, `/realm/settings`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/claw…`, `/realm/safari…`, `/realm/dig…`, `/realm/boards/:game`, `/realm/report`, `/realm/book`, `/realm/errands/claim`), and the relay's, signed like
  *   `/looks`, as `src/net/realmRelay.ts` lists them (`/realm/identity`, `/realm/visit`, `/realm/presence`, `/realm/deeds`). A realm-banned
  *   account's realm writes get 403 `{ error: 'banned' }`. The desk's `GET /admin/realm`: `RealmDesk` (open realm reports
  *   by trainer, bans in force); `POST /admin/realm/moderation` (`parseRealmModeration`) `{ userId, action, days?, reason? }`:
  *   `ban` (days, or for good), `unban`, `dismiss`, resolving their realm reports. `{ resolved }`, 404 for an unknown player.
  */
-export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, claw, safari, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report, revenue = () => {} }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, claw, safari, dig, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report, revenue = () => {} }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
 
@@ -1075,6 +1077,40 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const got = await safari.act(c.var.userId, body.id, body.turn, body.action)
     if (!got.ok) return c.json({ error: got.error }, got.error === 'missing' ? 404 : got.error === 'stale' || got.error === 'illegal' ? 409 : 403)
     return c.json(got.acted satisfies SafariActed)
+  })
+
+  const DIG_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409 } as const satisfies Record<DigRefusal, number>
+
+  app.get('/realm/dig', auth, async (c) => {
+    const state = await dig.state(c.var.userId)
+    return state ? c.json(state satisfies DigState) : c.json({ error: 'profile' }, 403)
+  })
+
+  app.post('/realm/dig/start', auth, smallBody, async (c) => {
+    const body = parseDigStart(await json(c))
+    if (!body) return c.json({ error: 'expected { partner, base }' }, 400)
+    if (!dig.take(c.var.userId)) return c.json({ error: 'too many walls' }, 429)
+    const got = await dig.start(c.var.userId, body.base, body.partner)
+    if (!got.ok) return c.json({ error: got.error }, DIG_REFUSALS[got.error])
+    return c.json({ wall: got.wall, used: got.used, ...(got.paid ?? {}) } satisfies DigStartedBody)
+  })
+
+  app.post('/realm/dig/hit', auth, smallBody, async (c) => {
+    const body = parseDigHit(await json(c))
+    if (!body) return c.json({ error: 'expected { id, seq, tool, cell }' }, 400)
+    if (!dig.take(c.var.userId)) return c.json({ error: 'too many hits' }, 429)
+    const got = await dig.hit(c.var.userId, body.id, body.seq, body.tool, body.cell)
+    if (!got.ok) return c.json({ error: got.error }, got.error === 'missing' ? 404 : got.error === 'seq' || got.error === 'empty' || got.error === 'over' ? 409 : 403)
+    return c.json(got.answer)
+  })
+
+  app.post('/realm/dig/stop', auth, smallBody, async (c) => {
+    const body = parseDigStop(await json(c))
+    if (!body) return c.json({ error: 'expected { id }' }, 400)
+    if (!dig.take(c.var.userId)) return c.json({ error: 'too many stops' }, 429)
+    const got = await dig.stop(c.var.userId, body.id)
+    if (!got.ok) return c.json({ error: got.error }, got.error === 'missing' ? 404 : 403)
+    return c.json({ end: got.end })
   })
 
   app.get('/realm/book', auth, async (c) => {

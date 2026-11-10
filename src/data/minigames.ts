@@ -158,6 +158,22 @@ export const MINIGAMES = {
     trophies: [],
     board: false,
   },
+  /**
+   * The Escavação (`realm/games/dig.ts`, `dig.rules.ts`): a wall a Brasília
+   * day free, then ₽, its treasures dug out before the crack meter fills.
+   * Like the claw it pays only through its own routes (`server/src/dig.ts`),
+   * never `/realm/game/claim`. Feats only brag; no score, so no Placar.
+   */
+  dig: {
+    kind: 'solo',
+    where: 'trail',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['golden', 'fossilOrStone'],
+    trophies: [],
+    board: false,
+  },
   /** Four in a row with Poké Balls and Great Balls (agent B), at the café's tables and a base's game table. */
   fourInRow: {
     kind: 'table',

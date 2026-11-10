@@ -1,6 +1,6 @@
 import { HATCHLINGS } from '../data/hatchlings'
 import { LEGENDS } from '../data/legends'
-import { BAG_ITEMS } from '../data/shop'
+import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
 import { giftInbox, nextGift, openGift } from '../account'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
@@ -8,7 +8,7 @@ import type { Hatch } from '../game/eggs'
 import type { Gift, StyleRef } from '../game/gifts'
 import { companionForm } from '../game/supporters'
 import { formatDay, formatPokeDollars, formatPokeDollarsShort, t } from '../i18n'
-import { bagIcon, coinIcon, eggIcon, giftIcon, medalIcon, ribbonIcon, sparkleIcon } from '../render/art'
+import { bagIcon, coinIcon, eggIcon, giftIcon, itemArt, medalIcon, ribbonIcon, sparkleIcon } from '../render/art'
 import { styleThumb } from '../render/card'
 import { frameIcon, wallpaperUrl } from '../render/cosmetics'
 import { portraitUrl } from '../render/sprites'
@@ -59,6 +59,8 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
       return { src: bagIcon(c.item), text: m.bag(c.count, BAG_ITEMS[c.item].name) }
     case 'legend':
       return { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
+    case 'evoItem':
+      return { src: itemArt(c.item), text: EVO_ITEMS[c.item].name }
   }
 }
 

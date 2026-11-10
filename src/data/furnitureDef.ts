@@ -31,7 +31,7 @@ export type FurnitureDef = {
   surface?: true
   /** How it turns, when not its kind's way (`turnMode`): `quarter` for art seen from above (a bed), `still` for art a turn wouldn't change (symmetric, or with text). */
   turn?: 'quarter' | 'still'
-  source?: 'trophy' | 'event' | 'claw'
+  source?: 'trophy' | 'event' | 'claw' | 'dig'
   /** The day (`YYYY-MM-DD`, Brasília) it shows at the carpentry, for drops. */
   from?: string
   /** What it does in the Poké Realm when a trainer uses it (sit, light up, play music; `data/furnitureUse.ts`). */

@@ -205,6 +205,32 @@ const SFX = {
     tone(55, 40, 1.2, 'sawtooth', 0.2)
     ;[147, 175, 220, 294].forEach((f, i) => tone(f, f, 0.5, 'square', 0.1, 0.35 + i * 0.16))
   },
+  /** The Escavação's pickaxe: a tight tick of stone. */
+  digPick: () => {
+    noise(0.05, 0.14)
+    tone(1400, 500, 0.05, 'square', 0.07)
+  },
+  /** The Escavação's hammer: a heavy thud with a crack on top. */
+  digHammer: () => {
+    noise(0.18, 0.2)
+    tone(170, 60, 0.2, 'triangle', 0.28)
+    tone(900, 200, 0.07, 'square', 0.07)
+  },
+  /** First sight of a buried treasure. */
+  digGlint: () => {
+    tone(1760, 2640, 0.12, 'triangle', 0.14)
+    tone(2640, 3520, 0.1, 'triangle', 0.1, 0.09)
+  },
+  /** The wall groaning, close to its limit. */
+  digRumble: () => tone(70, 50, 0.3, 'sawtooth', 0.1),
+  /** The wall comes down. */
+  digCollapse: () => {
+    noise(1.2, 0.3)
+    tone(120, 35, 1.1, 'sawtooth', 0.32)
+    tone(240, 60, 0.5, 'square', 0.1, 0.05)
+  },
+  /** Walked away with what was dug out. */
+  digFree: () => [523, 659, 784].forEach((f, i) => tone(f, f, 0.14, 'triangle', 0.16, i * 0.08)),
   quake: () => {
     noise(0.22, 0.14)
     tone(90, 40, 0.22, 'triangle', 0.18)

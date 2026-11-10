@@ -19,6 +19,7 @@ const SOLO: Record<SoloGameId, () => Promise<SoloGame>> = {
   whackDiglett: () => import('./whackDiglett').then((m) => m.whackDiglett),
   claw: () => import('./claw').then((m) => m.claw),
   safari: () => import('./safari').then((m) => m.safari),
+  dig: () => import('./dig').then((m) => m.dig),
 }
 
 const TABLES: Record<TableGameId, () => Promise<TableUi>> = {

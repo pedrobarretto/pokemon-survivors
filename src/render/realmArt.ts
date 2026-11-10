@@ -3,8 +3,11 @@ import { hash2 } from '../engine/rng'
 import { BASE_GRID, BASE_ROOM, REALM_ROOMS, type Point, type Shape, type TownRoomId } from '../data/realmMap'
 import type { BaseExterior } from '../data/secretBases'
 import type { Piece } from './plaza'
-import { ENTRANCE_ART, TOWN_ART, TOWN_FPS, TOWN_FRAMES, TOWN_LAYOUT, type Prop, type Surface, type TownArt } from './realmLayout'
+import { ENTRANCE_ART, TOWN_ART, TOWN_FPS, TOWN_FRAMES, TOWN_LAYOUT, type Host, type Prop, type Surface, type TownArt } from './realmLayout'
 import { drawPokemon, loadSpecies, loadedSprites } from './sprites'
+
+/** Every Pokémon standing in a town room: the hosts at their spots and the ones standing for show (`figures`). */
+const townFigures = (room: TownRoomId): readonly Host[] => [...(TOWN_LAYOUT[room].hosts ?? []), ...(TOWN_LAYOUT[room].figures ?? [])]
 
 /**
  * The Poké Realm's town, drawn like the lobby: grass in the meadow's palette
@@ -570,7 +573,7 @@ export const drawTownGround = (ctx: CanvasRenderingContext2D, room: TownRoomId, 
     const mask = silhouette(art)
     ctx.drawImage(mask, Math.round(x - camX - (art.minX + art.w / 2)) + 2, Math.round(p.y - camY - mask.height) + 2)
   }
-  for (const host of TOWN_LAYOUT[room].hosts ?? []) {
+  for (const host of townFigures(room)) {
     ctx.fillStyle = 'rgba(30,40,30,0.3)'
     ctx.beginPath()
     ctx.ellipse(Math.round(host.x - camX), Math.round(host.y - camY), 8, 3, 0, 0, Math.PI * 2)
@@ -608,7 +611,7 @@ export const townPieces = (room: TownRoomId, exterior: BaseExterior = 'cave'): r
       },
     ]
   })
-  for (const host of TOWN_LAYOUT[room].hosts ?? []) {
+  for (const host of townFigures(room)) {
     void loadSpecies(host.dex).catch(() => {})
     pieces.push({
       y: host.y,
@@ -639,7 +642,7 @@ export const labelTop = (room: TownRoomId, at: Point, exterior: BaseExterior = '
     const d = Math.hypot(x - at.x, p.y - at.y)
     if (!best || d < best.d) best = { d, top: p.y - art.h - 3 }
   }
-  for (const host of TOWN_LAYOUT[room].hosts ?? []) {
+  for (const host of townFigures(room)) {
     const d = Math.hypot(host.x - at.x, host.y - at.y)
     if (d < 32 && (!best || d < best.d)) best = { d, top: host.y - 40 }
   }
