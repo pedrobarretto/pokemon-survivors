@@ -279,11 +279,12 @@ export const REALM_ROOMS = {
       { kind: 'cabinet', at: { x: 92, y: 114 }, reach: 16, games: ['berryCatch'] },
       { kind: 'cabinet', at: { x: 132, y: 114 }, reach: 16, games: ['whackDiglett'] },
       { kind: 'cabinet', at: { x: 172, y: 114 }, reach: 16, games: ['whackDiglett'] },
-      // The Máquina de Pelúcias: both claw machines by the west wall, played from their east side.
-      { kind: 'cabinet', at: { x: 52, y: 160 }, reach: 18, games: ['claw'] },
-      { kind: 'cabinet', at: { x: 52, y: 206 }, reach: 18, games: ['claw'] },
       { kind: 'prizes', at: { x: 322, y: 134 }, reach: 22 },
       { kind: 'bench', at: { x: 320, y: 214 }, reach: 20, seats: sofaSeats(320, 206) },
+      // The Máquina de Pelúcias: both claw machines by the west wall, played from their east side.
+      // Last in the list: a stamp's deed names a bench by its index here, and players already hold `bench:arcade:5`.
+      { kind: 'cabinet', at: { x: 52, y: 160 }, reach: 18, games: ['claw'] },
+      { kind: 'cabinet', at: { x: 52, y: 206 }, reach: 18, games: ['claw'] },
     ],
   },
 } as const satisfies Record<TownRoomId, TownRoom>

@@ -716,9 +716,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
         }
       })
       if (claimed.ok) {
-        // Only games the stamps track count (the claw machine never claims here, and has no deed).
-        const deeds = [`game:${claim.game}`, ...claim.feats.map((f) => `feat:${claim.game}:${f}`)].filter(isDeed)
-        await earn(userId, new Map<Deed, number>(deeds.map((d) => [d, 1])), day)
+        const feats = claim.feats.flatMap((f) => [`feat:${claim.game}:${f}`].filter(isDeed))
+        await earn(userId, new Map<Deed, number>([[`game:${claim.game}`, 1], ...feats.map((f) => [f, 1] as const)]), day)
       }
       return claimed
     },

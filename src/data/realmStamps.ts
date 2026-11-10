@@ -25,17 +25,19 @@ const ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade'] as const
 const BENCHES = ['plaza:3', 'plaza:4', 'pier:1', 'cafe:1', 'cafe:2', 'trail:4', 'trail:5', 'arcade:5'] as const
 /** `REALM_EMOTES` less `look`, which only some trainers have. */
 const EMOTES = ['wave', 'heart', 'laugh', 'music', 'sleep', 'angry', 'question', 'exclaim'] as const
-const GAMES = ['fishing', 'berryCatch', 'whackDiglett', 'fourInRow', 'typeDuel'] as const
+const GAMES = ['fishing', 'berryCatch', 'whackDiglett', 'claw', 'fourInRow', 'typeDuel'] as const
 /** `<game>:<feat>` of `MINIGAMES` (held to it by `realmStamps.test.ts`). */
 const FEATS = [
   'fishing:feebas',
   'fishing:shinyGyarados',
   'fishing:bigHaul',
+  'fishing:wishiwashi',
   'berryCatch:flawless',
   'berryCatch:goldRush',
   'berryCatch:combo50',
   'whackDiglett:combo30',
   'whackDiglett:dugtrio',
+  'claw:plush',
   'typeDuel:perfectDuel',
 ] as const
 /** The kinds of Hora do Realm (`data/realmEvents.ts`). */
