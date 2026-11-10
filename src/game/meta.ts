@@ -35,6 +35,7 @@ import type { StatDelta } from './stats'
 import type { RunSummary } from './tally'
 import type { Game } from './types'
 import * as dm from '../engine/dmath'
+import { NO_MYTHICAL_PITY, parseMythicalPity, type MythicalPity } from './mythicalHunt'
 
 /**
  * Meta progression: Poké Dollars (₽) earned across runs and the Poké Mart's
@@ -166,6 +167,8 @@ export type Save = {
   halloween: HalloweenSave
   /** Wins toward capturing each legend for the Legend mode (`game/capture.ts`); its shiny lives in `shinyStarters`. */
   legends: Captures
+  /** Finales played and how many had been when a mythical last fell (`game/mythicalHunt.ts`). */
+  mythicalPity: MythicalPity
   /** The TM case (`game/tmShelf.ts`): TMs bought at the shop, the ones armed for the next runs and the TM moves runs ever taught. */
   tms: TmCase
   /** Evolution items bought at the shop (`game/evoItems.ts`): each unlocks its branches (`evolutionOffers`). */
@@ -227,6 +230,7 @@ export const EMPTY_SAVE: Save = {
   clears: {},
   halloween: NO_HALLOWEEN,
   legends: NO_CAPTURES,
+  mythicalPity: NO_MYTHICAL_PITY,
   tms: NO_TMS,
   evo: [],
   caps: {},
@@ -304,6 +308,7 @@ export const parseSaveData = (json: unknown): Save => {
     clears: mergeClears(pastClears(achievements.lifetime), parseClears(data.clears)),
     halloween: parseHalloween(data.halloween),
     legends: parseCaptures(data.legends),
+    mythicalPity: parseMythicalPity(data.mythicalPity),
     tms: parseTms(data.tms),
     evo: parseEvoItems(data.evo),
     caps: parseCaps(data.caps),

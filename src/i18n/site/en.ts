@@ -356,7 +356,8 @@ export const siteEn: SiteMessages = {
         ['Navigate menus', 'Arrows, Enter confirms, Esc goes back', 'D-pad or left stick, A confirms, B goes back', 'Tap'],
         ['Pick an upgrade', '1 to 3, or ↑ ↓ and Enter', 'D-pad and A', 'Tap it'],
         ['Pick your partner', 'Arrows in the grid, Tab Starters/Eggs, 1 to 9 region, I details, Enter starts', 'D-pad (↓ on the last row leads to Eggs) and A', 'Tap to view, tap again (or Start) to play'],
-        ['Go to the Kecleon Shop', 'L in the lobby (or on the partner select), or walk to the plaza and press E', 'D-pad to Shop, then A', 'Tap Shop, Kecleon or the little sign pointing to the plaza'],
+        ['Change mode in the lobby', 'Q and E, or 1 to 7', 'D-pad to the mode bar, then A', 'Round arrows or the mode bar'],
+        ['Go to the Kecleon Shop', 'L in the lobby (or on the partner select)', 'D-pad to Shop, then A', 'Tap Shop, in the lobby or on the Plaza tab'],
         ['Sound on/off', 'M', 'Settings', 'Settings'],
         ['Language', 'I on the title screen, or Settings', 'Settings', 'PT | EN | ES on the title screen, or Settings'],
       ],
@@ -500,7 +501,7 @@ export const siteEn: SiteMessages = {
     },
     realm: {
       paragraphs: (m) => [
-        `In the lobby, the Realm button (K) opens the Poké Realm, the game’s online town. Pick one of the ${m.cities.length} cities (${list(m.cities)}): each is a copy of the same town, with up to ${m.cap} trainers. You walk as your partner, in the look you wear (hats, trail, title, skin and emote), and see the other trainers walking beside you. It needs an account with a @handle.`,
+        `In the lobby, the Realm button (K) opens the Poké Realm, the game’s online town. You land straight in the first of the ${m.cities.length} cities with room (${list(m.cities)}) and can change city from there, or go to a friend: each is a copy of the same town, with up to ${m.cap} trainers. You walk as your partner, in the look you wear (hats, trail, title, skin and emote), and see the other trainers walking beside you. It needs an account with a @handle.`,
         `Everyone lands on the Plaza, with the Co-op portal, the Arena’s, the board and the door of the Café, which has two game tables. East lies the Pier, with the arcade and the fishing platform, and west the Secret Base Grove. Talk is quick chat and emotes only, never free text, and everyone reads it in their own language. Tap a trainer to invite them to your party (up to ${m.party}), mute or report them; when the leader walks into a portal, the whole party goes along to a Co-op or Arena room.`,
         `Every account with a @handle has a secret base, its entrance at the head of the Secret Base Grove, where Sudowoodo explains it all. Inside, tap ✎ to arrange up to ${m.items} pieces in a room of ${m.cols}×${m.rows} tiles, pick the entrance (cave, tree, bush or sand) and who may come in: everyone, friends only or no one. The Base board lists the most liked public bases, the newest and your friends’, to walk in for a visit and leave a like.`,
         `Furniture comes from Bibarel’s Carpentry, on the Kecleon plaza (in the lobby) and in the Grove: ${m.sold} pieces for sale, ${m.coins} for ₽ and ${m.gems} for gems. Others can only be earned: a doll of each legendary you captured, the legendaries’ paintings and the mini games’ trophies. Like the looks, furniture changes nothing in a run.`,
@@ -530,7 +531,7 @@ export const siteEn: SiteMessages = {
       opensHead: 'Legendary move',
       pressureTitle: 'Difficulties in Legend Mode',
       pressure: 'Pressure stacks on every difficulty: these are Legend Mode’s multipliers.',
-      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10)', finale: 'Final boss', endless: 'Endless mode, last of all', event: 'Halloween Night 2026 (event)', festival: 'Lantern Festival 2026 (prize)' },
+      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10, rises after each finale without one)', finale: 'Final boss', endless: 'Endless mode, last of all', event: 'Halloween Night 2026 (event)', festival: 'Lantern Festival 2026 (prize)' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'On Halloween Night 2026 (October 24 to November 2), Darkrai comes as an event legend: it only shows up in the Nightmare rift, which can take a rift\'s place in a haunted run, and 2 wins catch it. It plays with Dark Void, which puts crowds to sleep, and the innate Bad Dreams, which hurts whoever sleeps near it. After the event it returns to the shadows, but whoever caught it keeps playing it. It doesn\'t count toward Arceus.',
     },
@@ -638,7 +639,7 @@ export const siteEn: SiteMessages = {
       ],
       trios: (times, trios, mythicals, percent) => [
         `At ${list(times)} come the three members of a legendary trio, drawn at the start of each run: ${list(trios)}. HP, contact damage and speed belong to the time slot, not the Pokémon, so no draw is easier than another; what changes is the attacks.`,
-        `At the end, with a ${n(percent)}% chance, a mythical Pokémon joins Mewtwo: ${mythicals}, also drawn per run.`,
+        `At the end, with a ${n(percent)}% chance, a mythical Pokémon joins Mewtwo: ${mythicals}, also drawn per run. After 5 finales without beating a mythical the chance rises with each one, up to a sure thing on the 21st, and the one that comes is one you don't have yet.`,
       ],
       timeHead: 'Time',
       bossHead: 'Boss',

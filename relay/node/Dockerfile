@@ -6,7 +6,7 @@ WORKDIR /repo
 COPY relay/node/package.json relay/node/package-lock.json relay/node/
 RUN npm ci --prefix relay/node
 COPY src/net/protocol.ts src/net/arena.ts src/net/arenaQueue.ts src/net/coopReport.ts src/net/realm.ts src/net/realmRelay.ts src/net/realmTables.ts src/net/
-COPY src/data/arenaRanked.ts src/data/arenaFormats.ts src/data/minigames.ts src/data/realmMap.ts src/data/furnitureCatalog.ts src/data/furnitureDef.ts src/data/furnitureUse.ts src/data/
+COPY src/data/arenaRanked.ts src/data/arenaFormats.ts src/data/minigames.ts src/data/realmMap.ts src/data/realmStamps.ts src/data/realmEvents.ts src/data/furnitureCatalog.ts src/data/furnitureDef.ts src/data/furnitureUse.ts src/data/
 # The furniture catalog (what a piece does in the realm, `FurnitureDef.use`); its sets import only types and `furnitureUse.ts`.
 COPY src/data/furnitureSets/shop.ts src/data/furnitureSets/home.ts src/data/furnitureSets/pokemon.ts src/data/furnitureSets/games.ts src/data/furnitureSets/
 COPY src/realm/games/tables.ts src/realm/games/fourInRow.rules.ts src/realm/games/typeDuel.rules.ts src/realm/games/

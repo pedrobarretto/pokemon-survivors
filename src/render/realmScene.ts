@@ -88,13 +88,16 @@ const DOTS = { rows: ['.......', '.......', '.......', '1.1.1..', '.......', '..
 /** Two trainers side by side: the friends panel's button. */
 const PALS = { rows: ['.1...1.', '121.121', '.1...1.', '.......', '111.111', '121.121', '111.111'], palette: { 1: '#2878c0', 2: '#88c8f8' } }
 
+/** An open book: the Livro de Estampas' button. */
+const BOOK = { rows: ['.......', '11...11', '1211121', '1211121', '1211121', '1111111', '...1...'], palette: { 1: '#a0502c', 2: '#fff0c8' } }
+
 /** The icons drawn over a bare bubble (not emotes of their own). */
-const OVERLAYS = { look: STAR, talk: DOTS, friends: PALS } as const
+const OVERLAYS = { look: STAR, talk: DOTS, friends: PALS, book: BOOK } as const
 
 const icons = new Map<string, string>()
 
 /** A bubble's art as an image URL, for the HTML's buttons: each emote's (the `look` one a star), `talk`'s dots and `friends`' pair. */
-export const realmIconUrl = (id: RealmEmote | 'talk' | 'friends'): string => {
+export const realmIconUrl = (id: RealmEmote | 'talk' | 'friends' | 'book'): string => {
   let url = icons.get(id)
   if (!url) {
     const bare = (o: { rows: readonly string[]; palette: Palette }) => {
@@ -102,7 +105,7 @@ export const realmIconUrl = (id: RealmEmote | 'talk' | 'friends'): string => {
       context2d(sprite).drawImage(fromStrings(o.rows, o.palette), 2, 2)
       return sprite
     }
-    const sprite = id === 'look' || id === 'talk' || id === 'friends' ? bare(OVERLAYS[id]) : BUBBLES()[id]
+    const sprite = id === 'look' || id === 'talk' || id === 'friends' || id === 'book' ? bare(OVERLAYS[id]) : BUBBLES()[id]
     icons.set(id, (url = sprite.toDataURL()))
   }
   return url

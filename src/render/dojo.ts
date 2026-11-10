@@ -2,7 +2,7 @@ import { dir8, type Dir8, type Vec } from '../engine/math'
 import { blitCentered, blitPacked, context2d, createCanvas, drawable, drawLoaded, ellipse, lazy } from '../engine/pixelart'
 import { EMOTES } from './art'
 import { shadow } from './draw'
-import { drawMarker, edgeSpot, markerCard, type MarkerLook, type Piece, type ViewBox } from './plaza'
+import type { Piece } from './plaza'
 import { drawPokemon, loadedSprites, loadSpecies } from './sprites'
 
 /**
@@ -76,13 +76,11 @@ export type Dojo = {
   /** Scene time Machoke last hopped (a greeting) and its facing. */
   hopAt: number
   dir: Dir8
-  /** The edge marker as last drawn (world px), for taps. */
-  marker: { x: number; y: number; shown: boolean }
 }
 
 export const createDojo = (home: Vec): Dojo => {
   loadDojoArt()
-  return { x: home.x + DOJO_OFFSET.x, y: home.y + DOJO_OFFSET.y, hopAt: -9, dir: 0, marker: { x: 0, y: 0, shown: false } }
+  return { x: home.x + DOJO_OFFSET.x, y: home.y + DOJO_OFFSET.y, hopAt: -9, dir: 0 }
 }
 
 const rgb = (hex: string) => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)] as const
@@ -213,26 +211,6 @@ export const dojoPieces = (d: Dojo): Piece[] => {
 /** Where the partner stands to talk to Machoke, world px. */
 export const senseiSpot = (d: Dojo): Vec => ({ x: d.x + SPOTS.partner.x, y: d.y + SPOTS.partner.y })
 
-/** How close (world px) the partner must stand to Machoke to talk. */
-const TALK_RANGE = 26
-
-/** Above Machoke's head when the partner (feet at `p`) stands close enough to talk, world px; null otherwise. */
-export const senseiTalk = (d: Dojo, p: Vec): Vec | null => {
-  const x = d.x + SPOTS.sensei.x
-  const y = d.y + SPOTS.sensei.y
-  return Math.hypot(p.x - x, p.y - y) < TALK_RANGE ? { x, y: y - 30 } : null
-}
-
-/** Whether a tap at `at` (world px) is for the Dojo: Machoke, the hall or its edge marker. */
-export const dojoTapped = (d: Dojo, at: Vec) => {
-  const m = d.marker
-  if (m.shown && Math.abs(at.x - m.x) <= 18 && Math.abs(at.y - m.y) <= 15) return true
-  const s = { x: d.x + SPOTS.sensei.x, y: d.y + SPOTS.sensei.y }
-  if (Math.abs(at.x - s.x) <= 12 && at.y <= s.y + 3 && at.y >= s.y - 30) return true
-  const box = hallBox(d)
-  return arts.has('hall') && at.x >= box.left && at.x <= box.right && at.y >= box.top && at.y <= box.bottom + 4
-}
-
 /** How close (world px) a walker may come to a resident's feet or a post. */
 const ROOM = 11
 
@@ -265,25 +243,4 @@ export const pushOutDojo = (d: Dojo, v: Vec) => {
 export const dojoFrame = (d: Dojo, w: number, h: number): Vec => {
   const box = hallBox(d)
   return { x: Math.round(d.x - w / 2), y: Math.round(box.top - Math.min(24, h * 0.05)) }
-}
-
-const MARKER: MarkerLook = { card: '#f8e0c8', arrow: '#e05038', headDy: 0 }
-/** How far (px) the hall must reach into the view to count as on screen. */
-const INSET = 16
-
-/**
- * A card at the edge of the view with an arrow, pointing at the Dojo
- * (Machoke's head) while the hall is off screen, like the plaza's. It
- * remembers where it was drawn (`marker`) so a tap on it leads there.
- */
-export const drawDojoMarker = (ctx: CanvasRenderingContext2D, d: Dojo, camX: number, camY: number, w: number, h: number, time: number, show: boolean, inside: ViewBox | null) => {
-  d.marker.shown = false
-  const box = hallBox(d)
-  const seen = box.right > camX + INSET && box.left < camX + w - INSET && box.bottom > camY + INSET && box.top < camY + h - INSET
-  if (!show || seen || !arts.has('hall')) return
-  const card = markerCard(SENSEI.dex, MARKER)
-  if (!card) return
-  const at = edgeSpot({ x: d.x - camX, y: d.y - 30 - camY }, w, h, Math.floor(time * 3) % 2, inside)
-  drawMarker(ctx, card, at, MARKER.arrow)
-  Object.assign(d.marker, { x: at.x + camX, y: at.y + camY, shown: true })
 }

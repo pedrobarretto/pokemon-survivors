@@ -442,6 +442,25 @@ const groundOf = (room: TownRoomId) => {
   return g
 }
 
+/**
+ * How far (px, up to `max`) each sand pixel of `room` lies from the water, 0
+ * anywhere else: what the Hora do Realm's tide floods (`render/realmHours.ts`).
+ */
+export const sandByWater = (room: TownRoomId, max: number) => {
+  const { w, h } = REALM_ROOMS[room]
+  const mat = materials(w, h, TOWN_LAYOUT[room].ground)
+  const depth = depthMap(mat, w, h, (v) => v !== M.water && v !== M.pool, max)
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x
+      // The lagoon's north bank (the sand `paintRoom` draws in its top rows) goes under first.
+      const bank = mat[i] === M.pool && [1, 2, 3].some((k) => y >= k && mat[i - k * w] !== M.pool && mat[i - k * w] !== M.water)
+      depth[i] = bank ? 1 : mat[i] === M.sand ? depth[i]! : 0
+    }
+  }
+  return { w, h, depth }
+}
+
 /* ---------------- The arcade's lights ---------------- */
 
 /**
