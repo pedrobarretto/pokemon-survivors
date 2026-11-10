@@ -18,8 +18,12 @@ export type SheetKind = 'dock' | 'card' | 'banner'
 /** A button of the sheet: the primary one is the kit's 3D button (a `note` line under its label), the others paper. */
 export type SheetAction = { label: string; run: () => void; primary?: boolean; note?: string }
 
-/** What the dock leaves in view, in the game's pixels: the columns left of `x` sideways, the rows above `y` upright. */
-export type Keep = { x: number; y: number }
+/**
+ * What the dock leaves in view, in the game's pixels: the columns left of `x`
+ * sideways, the rows above `y` upright. Upright it stands at the stage's foot,
+ * or right under those rows with `hug` (a machine whose controls it replaces).
+ */
+export type Keep = { x: number; y: number; hug?: boolean }
 
 export type Rect = { x: number; y: number; w: number; h: number }
 
@@ -50,7 +54,7 @@ export const callout = (text: string) => h('p', { class: 'mg-callout' }, text)
 export const gameSheet = (stage: HTMLElement, size: { w: number; h: number }, keep: Keep): GameSheet => {
   const body = h('div', { class: 'mg-sheet-body' })
   const foot = h('div', { class: 'mg-sheet-foot' })
-  const orient = size.h > size.w ? 'mg-tall' : 'mg-wide'
+  const orient = `${size.h > size.w ? 'mg-tall' : 'mg-wide'}${keep.hug ? ' mg-hug' : ''}`
   const corner = h('button', { class: 'arc-icon-btn mg-close hidden', type: 'button' }, h('img', { src: closeIcon(), alt: '' }))
   const el = h('div', { class: `mg-sheet ${orient} hidden` }, body, foot, corner)
   let onClose: (() => void) | null = null

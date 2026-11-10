@@ -184,7 +184,7 @@ const start = (ctx: SoloCtx): GameRun => {
   const controls = controlsOf(size)
   const m = () => t().minigames.claw
   // The sheet leaves the cabinet (176 × 160 at the canvas's corner) in view.
-  const sheet = gameSheet(ctx.stage, size, { x: 180, y: 164 })
+  const sheet = gameSheet(ctx.stage, size, { x: 180, y: 164, hug: true })
 
   let phase: Phase = 'load'
   let phaseT = 0

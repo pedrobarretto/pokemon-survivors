@@ -106,8 +106,8 @@ const start = (ctx: SoloCtx): GameRun => {
   const layout = layoutOf(size)
   const { grid } = layout
   const m = () => t().minigames.dig
-  // The entry keeps the tunnel's arch in view: 140 columns beside it, 136 rows above it.
-  const sheet = gameSheet(ctx.stage, size, { x: 140, y: 136 })
+  // The entry keeps the tunnel's arch in view: 140 columns beside it, 120 rows above it.
+  const sheet = gameSheet(ctx.stage, size, { x: 140, y: 120 })
 
   let phase: Phase = 'load'
   let phaseT = 0

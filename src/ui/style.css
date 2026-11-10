@@ -29030,13 +29030,18 @@ span.arena-hub-face {
   min-height: 48px;
 }
 
-/* Upright: right under the rows it keeps, as wide as the canvas. */
+/* Upright: at the stage's foot, as wide as the canvas, never over the rows it keeps; `mg-hug` hangs it right under them instead. */
 .mg-sheet.mg-dock.mg-tall {
-  top: calc(var(--cv-t, 0px) + var(--keep-y) * var(--cv-k, 2) * 1px);
+  bottom: 0;
   left: 50%;
   translate: -50% 0;
   width: max(var(--cv-w, 100%), min(340px, 100%));
   max-height: calc(100% - var(--cv-t, 0px) - var(--keep-y) * var(--cv-k, 2) * 1px);
+}
+
+.mg-sheet.mg-dock.mg-tall.mg-hug {
+  top: calc(var(--cv-t, 0px) + var(--keep-y) * var(--cv-k, 2) * 1px);
+  bottom: auto;
 }
 
 /* Sideways: at the stage's right, past the columns it keeps (never narrower than 220 px, never wider than 380 px). */
