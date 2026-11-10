@@ -74,6 +74,7 @@ export const TOWN_ART = {
   rocksFlat: 'realm/rocks-14',
   mural: 'realm/mural',
   groveSign: 'realm/grove-sign',
+  safariGate: 'realm/safari-gate',
   arcade: 'realm/arcade',
   cabinetBerry: 'realm/arcade/cabinet-berry',
   cabinetBerry2: 'realm/arcade/cabinet-berry-2',
@@ -142,10 +143,13 @@ export type Surface =
 export const PRIZE_CLERK = { dex: 137, x: 264, y: 112, facing: 1 } as const
 
 /** A Pokémon that stands in a room (its SpriteCollab sprite, idling) with its feet at (`x`, `y`), facing `facing`: the trail's host. */
-export type Host = { dex: number; x: number; y: number; facing: Dir8 }
+export type Host = { dex: number; x: number; y: number; facing: Dir8; keeper?: true }
 
 /** The grove's host: Sudowoodo, the Pokémon that passes for a tree, keeps the secret bases' grove. */
 export const GROVE_HOST = { dex: 185, x: 556, y: 292, facing: 7 } as const satisfies Host
+
+/** The Zona Safári's keeper, Kangaskhan, by its gate: scenery, no talk of its own (the gate's spot opens the Safari). */
+export const SAFARI_KEEPER = { dex: 115, x: 626, y: 218, facing: 0, keeper: true } as const satisfies Host
 
 export type RoomLayout = { indoor: boolean; ground: readonly Surface[]; props: readonly Prop[]; hosts?: readonly Host[] }
 
@@ -306,13 +310,14 @@ const TRAIL: RoomLayout = {
     { kind: 'path', r: 10, points: [{ x: 236, y: 230 }, { x: 190, y: 232 }, { x: 160, y: 224 }, { x: 146, y: 214 }] },
     { kind: 'path', r: 10, points: [{ x: 318, y: 260 }, { x: 330, y: 316 }, { x: 322, y: 380 }, { x: 318, y: 412 }] },
   ],
-  hosts: [GROVE_HOST],
+  hosts: [GROVE_HOST, SAFARI_KEEPER],
   props: [
     { art: 'doorCave', x: 318, y: 178, mine: true },
     { art: 'lamp', x: 244, y: 196 },
     { art: 'lamp', x: 400, y: 196 },
     { art: 'mural', x: 146, y: 206 },
     { art: 'groveSign', x: 500, y: 236 },
+    { art: 'safariGate', x: 562, y: 216 },
     { art: 'groveSign', x: 364, y: 324, flip: true },
     { art: 'carpentry', x: 318, y: 404 },
     { art: 'crates', x: 222, y: 400 },
@@ -327,7 +332,6 @@ const TRAIL: RoomLayout = {
     { art: 'tree1', x: 404, y: 72 },
     { art: 'tree0', x: 486, y: 104 },
     { art: 'tree2', x: 600, y: 120 },
-    { art: 'bush', x: 552, y: 170 },
     { art: 'bush1', x: 70, y: 170 },
     { art: 'tree1', x: 40, y: 110 },
     { art: 'tree1', x: 40, y: 380 },

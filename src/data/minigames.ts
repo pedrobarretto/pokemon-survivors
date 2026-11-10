@@ -141,6 +141,23 @@ export const MINIGAMES = {
     trophies: [],
     board: false,
   },
+  /**
+   * The Zona Safári at the Trail's gate (`realm/games/safari.ts`, rules in
+   * `safari.rules.ts`): like the claw, the API runs it (`POST
+   * /realm/safari/start`, `/act`), and it pays no ₽ of its own. A catch
+   * unlocks a family through a gift; ₽ only ever goes in. Feats: a new family
+   * caught and a shiny caught.
+   */
+  safari: {
+    kind: 'solo',
+    where: 'trail',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['caught', 'shiny'],
+    trophies: [],
+    board: false,
+  },
   /** Four in a row with Poké Balls and Great Balls (agent B), at the café's tables and a base's game table. */
   fourInRow: {
     kind: 'table',
