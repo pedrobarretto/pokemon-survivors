@@ -1,3 +1,4 @@
+import { realmBookEn as realmBook } from './realmStamps/en'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
@@ -36,41 +37,45 @@ export const en: Messages = {
     pressTouch: 'Tap to start',
     play: 'PLAY',
     today: 'TODAY',
-    outbreak: 'OUTBREAK',
-    challenge: 'DAILY CHALLENGE',
+    /** Na Praça's column head and the note beside it. */
+    plaza: 'AT THE PLAZA',
+    plazaNote: 'event + shops',
+    outbreakName: (name: string) => `Outbreak: ${name}`,
+    outbreakLine: 'easier shinies today',
+    challengeName: 'Daily Challenge',
+    challengeLine: (name: string) => `${name} · gold ribbon`,
     challengeDone: (time) => `Done: ${time}`,
     challengeOpen: 'Not played today',
     missions: 'Missions',
     missionsLeft: (n) => (n === 1 ? "1 of today's missions to go" : `${n} of today's missions to go`),
-    hall: 'HALL OF FAME',
-    hallJoined: (handle, today) => (today ? `@${handle} joined today` : `@${handle} joined the Hall`),
+    hallName: 'Hall of Fame',
+    hallNewest: 'Newest:',
+    hallCount: (n, shown) => (n === 1 ? `${shown} supporter` : `${shown} supporters`),
     change: 'Change',
-    stroll: 'take a walk',
-    strollTouch: 'Tap the grass to take a walk',
-    explore: 'Explore',
-    exploreLabel: 'Walk around the meadow and the plaza',
-    exploreTouch: 'Tap or drag to walk',
-    exploreKeys: 'walk',
     pokedex: 'Pokédex',
     eggs: 'Eggs',
     eggsReady: (n) => (n === 1 ? '1 egg ready to hatch' : `${n} eggs ready to hatch`),
+    eggsWalking: (n: number) => (n === 1 ? '1 on the way' : `${n} on the way`),
+    eggsNone: 'Incubator empty',
+    gifts: 'Gifts',
+    giftsToOpen: (n: number) => (n === 1 ? '1 to open' : `${n} to open`),
     mart: 'Shop',
-    dojo: 'Dojo',
-    dojoLabel: 'Dojo: try moves and plan builds',
     ranking: 'Ranking',
     ideas: 'Ideas',
     support: 'Support the project',
-    rail: {
-      halloween: 'Halloween',
-      festival: 'Festival',
-      outbreak: 'Outbreak',
-      challenge: 'Challenge',
-      missions: 'Missions',
-      hall: 'Hall',
-      invites: 'Invite',
-      discord: 'Discord',
-      days: (n) => `${n}d`,
-    },
+    /** Na Praça's shop rows. */
+    shopName: 'Kecleon Shop',
+    shopLine: 'Daily Showcase · Kecleon Egg',
+    boutiqueName: 'Boutique',
+    boutiqueLine: 'New hats and effects',
+    carpentryName: 'Carpentry',
+    carpentryLine: 'Furniture for your base',
+    /** Over the partner pill, before its name. */
+    partner: 'Partner',
+    community: 'Community',
+    friends: 'Friends',
+    /** The bottom tabs on a phone (and the rail on a phone on its side). */
+    tabs: { home: 'Home', collection: 'Collection', plaza: 'Plaza', social: 'Social', profile: 'Profile' },
   },
 
   shell: {
@@ -138,6 +143,9 @@ export const en: Messages = {
     specialTitle: (name) => `${name} (Space)`,
     lunge: 'Lunge',
     lungeTitle: (name) => `${name} (Shift)`,
+    stickLock: 'Fixed joystick',
+    stickLocked: 'Joystick fixed! Move it in Settings → Controls.',
+    stickFree: 'Joystick free: it follows your finger.',
     stances: { shield: 'Shield', blade: 'Blade', normal: 'Normal', attack: 'Attack', defense: 'Defense', speed: 'Speed', heat: 'Oven', wash: 'Washer', frost: 'Fridge', fan: 'Fan', mow: 'Mower' },
     jumps: (n) => `×${n}`,
   },
@@ -691,6 +699,7 @@ export const en: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm: the online town',
@@ -701,7 +710,11 @@ export const en: Messages = {
     off: 'The Poké Realm isn’t available in this version of the game.',
     cities: {
       title: 'Pick a city',
-      hint: 'Each city is a copy of the same town, with up to 40 trainers.',
+      hint: "You land in the first one with room. They're all the same town, with up to 40 trainers.",
+      switch: 'Change city',
+      here: "You're here",
+      lobbyLine: 'Walk with your partner',
+      crowd: (n: number) => `${n} trainers online`,
       trainers: (n: number) => (n === 1 ? '1 trainer' : `${n} trainers`),
       full: 'Full',
       enter: 'Enter',
@@ -807,6 +820,15 @@ export const en: Messages = {
     counter: 'The café is still setting up its counter. Come back soon!',
     pool: 'Water types will swim here. Coming soon!',
     prizes: 'Beat records at the cabinets to win trophies for your secret base!',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'High Tide', storm: 'Berry Storm', tables: 'Table Night' },
+      perks: { tide: 'Double fishing pay, rarer fish', storm: 'Double arcade pay', tables: 'Double table game pay' },
+      go: 'Go',
+      starts: (c: string) => `in ${c}`,
+      ends: (c: string) => `${c} left`,
+      tideChip: 'High tide!',
+    },
     grove: {
       first: [
         'Psst! I’m just a tree... Fine, I’m Sudowoodo. Welcome to the Secret Base Grove!',
@@ -1512,7 +1534,7 @@ export const en: Messages = {
       wallpaper: 'Wallpaper of the PC Box.',
     },
     styles: {
-      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth', lantern: 'Lantern', creator: 'Creator', grotto: 'Hidden Grotto' },
+      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth', lantern: 'Lantern', creator: 'Creator', grotto: 'Hidden Grotto', stampFrame: 'Stamp Book' },
       background: { night: 'Starry night', meadow: 'Route 1', forest: 'Viridian Forest', cave: 'Mt. Moon', snow: 'Mt. Silver', tower: 'Lavender Tower', supporter: 'Golden sky', halloween: 'Halloween Night', friendship: 'Friendship' },
       wallpaper: { classic: 'Classic', forest: 'Leaves', cave: 'Pebbles', snow: 'Snowflakes', tower: 'Little ghosts', supporter: 'Golden stars', haunted: 'Haunted House', secretBase: 'Secret Base' },
     },
@@ -1768,6 +1790,9 @@ export const en: Messages = {
       failed: "Couldn't change it now. Try again.",
     },
     card: 'FESTIVAL',
+    /** Na Praça's card: what a donation does, and the next milestone. */
+    cardLine: 'Donate ₽ and light up the plaza',
+    nextPot: (pot: string) => `next: ${pot}`,
     daysLeftShort: (days) => (days === 1 ? 'LAST DAY' : `${days} DAYS`),
     shopButton: 'Festival',
   },
@@ -1885,6 +1910,30 @@ export const en: Messages = {
     later: 'Not now',
     thanks: 'Thanks! Your answer helps tune the game.',
     hintKeys: '↑ ↓ difficulty · ← → answer · ENTER confirm · ESC close',
+    hintTouch: 'Tap to answer',
+  },
+
+  designSurvey: {
+    title: 'NEW LOOK',
+    open: 'Survey: what do you think of the new look?',
+    question: "What do you think of the game's new look?",
+    ratings: { 1: "Didn't like it", 2: 'Not great', 3: "It's okay", 4: 'Like it', 5: 'Love it' },
+    pickRating: 'Pick a Poké Ball',
+    aspectsQuestion: 'What stands out most? (up to 2)',
+    aspects: {
+      easyToFind: 'Easy to find things',
+      hardToFind: 'Hard to find things',
+      niceLook: 'Looks great',
+      badLook: "Don't like the look",
+      readable: 'Easy to read',
+      hardToRead: 'Hard to read',
+    },
+    send: 'Send',
+    later: 'Not now',
+    never: "Don't ask again",
+    close: 'Close',
+    thanks: 'Thanks! Your answer helps make the game better.',
+    hintKeys: '← → ↑ ↓ move · ENTER choose · ESC close',
     hintTouch: 'Tap to answer',
   },
 
@@ -2886,7 +2935,7 @@ export const en: Messages = {
     noTitle: 'none',
     titleTag: 'TITLE',
     equipped: 'SHOWN',
-    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game' },
+    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game', stampCollector: 'Collected 30 Stamps in the Poké Realm' },
     newMedals: 'New medals',
     names: {
       firstRun: 'First steps',
@@ -2985,6 +3034,7 @@ export const en: Messages = {
       arenaMaster: 'Arena Master Ball',
       creator: 'Content Creator',
       friendLegend: 'Friendship Legend',
+      stampCollector: 'Stamp Collector',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Play a run' : `Play ${n} runs`),
@@ -5720,7 +5770,6 @@ export const en: Messages = {
     itemHintTouch: 'Tap to choose',
   },
   plaza: {
-    talk: 'Talk',
     next: 'Continue',
     greetings: {
       morning: 'Good morning, good morning! Welcome to the Kecleon Shop! Fresh stock just came in.',
@@ -5771,11 +5820,6 @@ export const en: Messages = {
       hello: ['Haunted Eggs, for ₽ or for candies. What comes out? Ghosts that show up in no other egg.', "Boo... These eggs don't hatch from warmth. They hatch from fear. Want one?", 'Four ghosts, one egg. Which one will it be? Not even I know... hehehe.'],
       thanks: ['Boo... Good choice. Watch it at midnight.', "Hehehe... It's already looking at you.", 'Come back tomorrow. If you dare.'],
     },
-    stalls: {
-      halloween: ['Boo... Halloween Night has come to the plaza.', 'The candies from your runs go in the jar, back in the lobby. Here I sell something else...'],
-      christmas: ['Deli! Delibird Presents has come to the plaza!', "I'm still wrapping everything. Come back at Christmas, the sack will be full!"],
-    },
-    lanturn: ['Lan-turn! Every coin in the fountain lights a lantern on the plaza. Come see the pot!'],
 
   },
 
@@ -5836,7 +5880,6 @@ export const en: Messages = {
     hello: ['Ready to train? The targets don’t hit back!', 'A good trainer knows their own DPS.', 'Wobbuffet can take it all. Go all out!', 'Fire against Water? Swap the target and see the difference.'],
   },
   stadium: {
-    boards: { play: 'Play', ranking: 'Ranking', season: 'Season', history: 'History', rules: 'Rules' },
     first: [
       'Bzzz! Welcome to the Stadium! I’m the Arena’s judge: too quick to let a single play slip by.',
       'Two teams face off: four a side in the Vale or the Cove, or three in the Glade or the Reef for a quick one. Defeat wild Pokémon, gather Energy and carry it to the rival goal.',
@@ -6038,6 +6081,9 @@ export const en: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Berry Basket',
       goldenMallet: 'Golden Mallet',
+      stampDesk: 'Stamp Desk',
+      stampCabinet: 'Stamp Cabinet',
+      goldenStampPress: 'Golden Stamp Press',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Fishing Rod Rack',
       goldenMagikarpPlaque: 'Golden Magikarp Plaque',
@@ -6207,7 +6253,7 @@ export const en: Messages = {
     where: {
       rift: 'Waits inside a _legendary rift_: step through the portal and beat it there.',
       trio: 'Comes as a boss with the run’s _legendary trio_.',
-      mythical: 'Sometimes (1 run in 10) shows up beside *Mewtwo* at the end.',
+      mythical: 'Sometimes (1 run in 10, more after each finale without one) shows up beside *Mewtwo* at the end.',
       finale: 'It’s the final boss: win a run.',
       endless: 'The last trophy: once the other 22 are caught, beat it in _endless mode_.',
       event: 'Only on _Halloween Night_: beat it in the _Nightmare rift_.',
@@ -6434,6 +6480,38 @@ export const en: Messages = {
       go: 'Go!',
       log: 'Your catch',
       junk: { boot: 'Old Boot', can: 'Tin Can', seaweed: 'Seaweed' },
+    },
+  },
+  gameModes: {
+    title: 'GAME MODES',
+    close: 'Close',
+    names: { survivors: 'Survivors', legends: 'Legends', challenge: 'Daily Challenge', coop: 'Co-op', arena: 'Arena', dojo: 'Dojo', realm: 'Poké Realm' },
+    /** One team format on the Arena's card: its size and minutes. */
+    arenaFormat: (size, minutes) => `${size}v${size} (${minutes} min)`,
+    blurbs: {
+      survivors: 'Survive the hordes to the end',
+      legends: 'Play as a legendary',
+      challenge: 'The same Pokémon for everyone',
+      coop: 'Survive together with friends',
+      arena: (formats) => `Teams ${formats.join(' or ')}`,
+      dojo: 'Train builds and see your damage',
+      realm: 'Online town: bases and mini games',
+    },
+    tags: {
+      solo: 'Solo',
+      minutes: (n) => `${n} min`,
+      endless: '+ endless mode',
+      legends: (n) => `${n} legendaries`,
+      today: (name) => `today: ${name}`,
+      oneTry: '1 official attempt',
+      players: (min, max) => `${min} to ${max} players`,
+      bots: 'vs bots',
+      casual: 'casual',
+      ranked: 'ranked',
+      training: 'Free training',
+      builds: 'saves builds',
+      needsAccount: 'account required',
+      fresh: 'NEW',
     },
   },
   carpenter: {

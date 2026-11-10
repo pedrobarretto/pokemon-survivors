@@ -251,11 +251,12 @@ export const REALM_ROOMS = {
     spots: [
       { kind: 'myBase', at: { x: 318, y: 196 }, reach: 26 },
       { kind: 'bases', at: { x: 146, y: 222 }, reach: 26 },
-      { kind: 'cabinet', at: { x: 562, y: 228 }, reach: 28, games: ['safari'] },
       { kind: 'carpenter', at: { x: 318, y: 420 }, reach: 28 },
       { kind: 'host', at: { x: 556, y: 310 }, reach: 24 },
       { kind: 'bench', at: { x: 446, y: 324 }, reach: 20, seats: benchSeats(446, 310) },
       { kind: 'bench', at: { x: 196, y: 314 }, reach: 20, seats: benchSeats(196, 300) },
+      // Last in the list: a stamp's deed names a bench by its index here, and players already hold `bench:trail:4` and `:5`.
+      { kind: 'cabinet', at: { x: 562, y: 228 }, reach: 28, games: ['safari'] },
     ],
   },
   arcade: {
@@ -283,11 +284,12 @@ export const REALM_ROOMS = {
       { kind: 'cabinet', at: { x: 92, y: 114 }, reach: 16, games: ['berryCatch'] },
       { kind: 'cabinet', at: { x: 132, y: 114 }, reach: 16, games: ['whackDiglett'] },
       { kind: 'cabinet', at: { x: 172, y: 114 }, reach: 16, games: ['whackDiglett'] },
-      // The Máquina de Pelúcias: both claw machines by the west wall, played from their east side.
-      { kind: 'cabinet', at: { x: 52, y: 160 }, reach: 18, games: ['claw'] },
-      { kind: 'cabinet', at: { x: 52, y: 206 }, reach: 18, games: ['claw'] },
       { kind: 'prizes', at: { x: 322, y: 134 }, reach: 22 },
       { kind: 'bench', at: { x: 320, y: 214 }, reach: 20, seats: sofaSeats(320, 206) },
+      // The Máquina de Pelúcias: both claw machines by the west wall, played from their east side.
+      // Last in the list: a stamp's deed names a bench by its index here, and players already hold `bench:arcade:5`.
+      { kind: 'cabinet', at: { x: 52, y: 160 }, reach: 18, games: ['claw'] },
+      { kind: 'cabinet', at: { x: 52, y: 206 }, reach: 18, games: ['claw'] },
     ],
   },
 } as const satisfies Record<TownRoomId, TownRoom>

@@ -4,6 +4,7 @@ import { mergeClaimedGifts } from './gifts'
 import { mergeClears } from './clears'
 import { mergeHalloween } from './halloween'
 import { mergeCaptures } from './capture'
+import { mergeMythicalPity } from './mythicalHunt'
 import { mergeBag } from './bag'
 import { mergeShop, shopInvested } from './shop'
 import { mergeTms } from './tmShelf'
@@ -115,6 +116,7 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     clears: mergeClears(base.clears, incoming.clears),
     halloween: mergeHalloween(base.halloween, incoming.halloween),
     legends: mergeCaptures(base.legends, incoming.legends),
+    mythicalPity: mergeMythicalPity(base.mythicalPity, incoming.mythicalPity),
     tms: mergeTms(base.tms, incoming.tms),
     evo: mergeEvoItems(base.evo, incoming.evo),
     caps: mergeCaps(base.caps, incoming.caps),

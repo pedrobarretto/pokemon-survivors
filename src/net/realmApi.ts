@@ -46,7 +46,10 @@ import type { SafariCatch, SafariTurn } from '../realm/games/safari.rules'
  * - `GET /realm/boards/:game?period=day|week` (public; signed in adds the player's line): `GameBoard`
  *   (`realm/boards.ts`), the game's best of the Brasília day or week, from the claims. Cached a few seconds.
  *
- * And the relay's (signed), `net/realmRelay.ts`: `POST /realm/identity`, `POST /realm/visit`, `POST /realm/presence`.
+ * - `GET /realm/book` (auth): `RealmBook`, the player's Estampas and the day's Recados.
+ * - `POST /realm/errands/claim` (auth) `ErrandClaim`: `ErrandClaimed`.
+ *
+ * And the relay's (signed), `net/realmRelay.ts`: `POST /realm/identity`, `POST /realm/visit`, `POST /realm/presence`, `POST /realm/deeds`.
  */
 
 /** What the realm needs about the signed-in player: its handle, its furniture (bought plus earned, `trophyFurniture`) and its base (null until first saved). */
@@ -112,6 +115,29 @@ export type RealmReport = { handle: string; reason: ReportReason; city: CityId |
  * feats it hit (ids of the game's `feats`; unknown ones are ignored).
  */
 export type GameClaim = { game: MinigameId; outcome: GameOutcome; ms: number; feats: readonly string[] }
+
+/**
+ * `GET /realm/book` (auth): the player's Estampas and today's Recados. `counts`
+ * is the deed counts (`realm/stamps.ts` shows progress from them); `stamps` the
+ * earned ones with when (ms); `milestones` the `at`s already rewarded.
+ */
+export type RealmBook = {
+  stamps: readonly { id: string; at: number }[]
+  counts: Readonly<Record<string, number>>
+  milestones: readonly number[]
+  errands: readonly ErrandView[]
+  /** The Brasília day the errands belong to. */
+  day: string
+}
+
+/** One of the day's errands (`realm/errands.ts`): how far along, and whether its reward was collected. */
+export type ErrandView = { id: string; deed: string; target: number; reward: number; progress: number; claimed: boolean }
+
+/** `POST /realm/errands/claim` (auth) `{ id }`: collects a finished errand. */
+export type ErrandClaim = { id: string }
+
+/** ₽ paid (the day's bonus included when this was the last one, `ERRANDS_BONUS`), and the book as it stands. 409 `{ error: 'unfinished' | 'claimed' }`. */
+export type ErrandClaimed = { coins: number; book: RealmBook }
 
 /**
  * What the game paid (₽ after the caps), what the account's mini games paid
