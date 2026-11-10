@@ -6,7 +6,7 @@ import type { Difficulty } from '../game/difficulty'
 import { RIBBON_TIERS, type RibbonTier } from '../game/ribbons'
 import { formatDay, formatNumber, locale, LOCALES, t } from '../i18n'
 import { medalSprite, outlined, PICKUPS, ribbonSprite, SPARKLE } from './art'
-import { CARD_BACKGROUNDS, CARD_FRAMES, DEFAULT_CARD_STYLE, type CardBackground, type CardFrame, type CardStyle } from './cosmetics'
+import { CARD_BACKGROUNDS, CARD_FRAMES, DEFAULT_CARD_STYLE, type BallArt, type CardBackground, type CardFrame, type CardStyle } from './cosmetics'
 import { titleLogo } from './logo'
 import { drawPokemon, hasShiny, loadSpecies, portraitUrl, type SpeciesSprites } from './sprites'
 
@@ -25,7 +25,8 @@ export const CARD = { w: 270, h: 338, scale: 4 } as const
 export type CardMon = { dex: number; name: string; shiny: boolean }
 
 /** Who shares the card: handle and equipped title when there is one, and the game's link (with `?ref=`). */
-export type CardTrainer = { handle: string | null; title: string | null; link: string }
+/** Who made the card: handle, title (and its mark, an Era 1 title's coin or ruby, drawn in the ★'s place) and the game's link. */
+export type CardTrainer = { handle: string | null; title: string | null; mark?: BallArt | null; link: string }
 
 export type RunOutcome = 'victory' | 'fainted' | 'endless'
 
@@ -273,7 +274,10 @@ const drawBackground = (ctx: CanvasRenderingContext2D, bg: CardBackground, { w, 
 /**
  * The card's border, with rounded corners and a dot of the accent (or the
  * frame's ball) in each. A frame with a `lower` color splits its band in
- * halves with a dark line across each side, like a Poké Ball.
+ * halves with a dark line across each side, like a Poké Ball. `band` widens
+ * the main band, `inner` adds lines inside, and `studs` set rivets along the
+ * band every 12 px. The crest isn't drawn here: the header seats it
+ * (`header`), a swatch on its top edge (`styleThumb`).
  */
 const drawFrame = (ctx: CanvasRenderingContext2D, f: CardFrame, { w, h }: Size = CARD) => {
   const ring = (i: number, color: string) => {
@@ -282,7 +286,8 @@ const drawFrame = (ctx: CanvasRenderingContext2D, f: CardFrame, { w, h }: Size =
     rect(ctx, i, i, 1, h - i * 2, color)
     rect(ctx, w - 1 - i, i, 1, h - i * 2, color)
   }
-  ;[f.edge, f.light, f.main, f.main, f.edge, f.shade].forEach((color, i) => ring(i, color))
+  const band = f.band ?? 2
+  ;[f.edge, f.light, ...Array<string>(band).fill(f.main), f.edge, f.shade, ...(f.inner ?? [])].forEach((color, i) => ring(i, color))
   if (f.lower) {
     const mid = Math.floor(h / 2)
     for (const i of [2, 3]) {
@@ -300,9 +305,20 @@ const drawFrame = (ctx: CanvasRenderingContext2D, f: CardFrame, { w, h }: Size =
     ctx.clearRect(x, y === 0 ? 1 : y - 1, 1, 1)
     rect(ctx, x === 0 ? 1 : x - 1, y === 0 ? 1 : y - 1, 1, 1, f.edge)
   }
+  if (f.studs) {
+    // A plus of 5 px in the band's middle line.
+    const mid = 2 + Math.floor(band / 2)
+    const stud = (x: number, y: number) => {
+      rect(ctx, x - 1, y, 3, 1, f.studs!)
+      rect(ctx, x, y - 1, 1, 3, f.studs!)
+    }
+    for (let x = 18; x <= w - 18; x += 12) (stud(x, mid), stud(x, h - 1 - mid))
+    for (let y = 18; y <= h - 18; y += 12) (stud(mid, y), stud(w - 1 - mid, y))
+  }
   if (f.ball) {
     const ballSprite = fromStrings(f.ball[0], f.ball[1])
-    for (const [x, y] of [[1, 1], [w - 8, 1], [1, h - 8], [w - 8, h - 8]] as const) ctx.drawImage(ballSprite, x, y)
+    const far = ballSprite.width + 1
+    for (const [x, y] of [[1, 1], [w - far, 1], [1, h - far], [w - far, h - far]] as const) ctx.drawImage(ballSprite, x, y)
   } else for (const [x, y] of [[2, 2], [w - 4, 2], [2, h - 4], [w - 4, h - 4]] as const) rect(ctx, x, y, 2, 2, f.accent)
 }
 
@@ -314,7 +330,14 @@ export const styleThumb = (frame: FrameId | null, background: BackgroundId, w = 
   const canvas = createCanvas(w, h)
   const ctx = context2d(canvas)
   drawBackground(ctx, CARD_BACKGROUNDS[background], { w, h })
-  if (frame) drawFrame(ctx, CARD_FRAMES[frame], { w, h })
+  if (frame) {
+    const f: CardFrame = CARD_FRAMES[frame]
+    drawFrame(ctx, f, { w, h })
+    if (f.crest) {
+      const crest = fromStrings(f.crest[0], f.crest[1])
+      ctx.drawImage(crest, Math.floor((w - crest.width) / 2), 1)
+    }
+  }
   return canvas
 }
 
@@ -482,11 +505,18 @@ const footer = (ctx: CanvasRenderingContext2D, trainer: CardTrainer, y: number) 
 
 const FOOTER_H = 28
 
-/** The logo (top left) and a line or two on the right. */
-const header = async (ctx: CanvasRenderingContext2D, right: readonly string[]) => {
+/** The logo (top left), a line or two on the right, and between them the frame's crest when it has one and they leave it room. */
+const header = async (ctx: CanvasRenderingContext2D, right: readonly string[], frame: CardFrame) => {
   const logo = await titleLogo()
   ctx.drawImage(logo, 10, 9)
-  right.forEach((line, i) => text(ctx, line, CARD.w - 11, 20 + i * 11, { font: i === 0 ? 'body' : 'title', size: i === 0 ? 16 : 8, align: 'right', color: i === 0 ? '#a8b4e0' : GOLD_LIGHT, shadow: SHADOW }))
+  const font = (i: number) => (i === 0 ? { font: 'body' as const, size: 16 } : { font: 'title' as const, size: 8 })
+  right.forEach((line, i) => text(ctx, line, CARD.w - 11, 20 + i * 11, { ...font(i), align: 'right', color: i === 0 ? '#a8b4e0' : GOLD_LIGHT, shadow: SHADOW }))
+  if (!frame.crest) return
+  const crest = fromStrings(frame.crest[0], frame.crest[1])
+  const from = 10 + logo.width
+  const to = CARD.w - 11 - Math.max(...right.map((line, i) => textWidth(line, font(i).font, font(i).size)))
+  if (to - from < crest.width + 6) return
+  ctx.drawImage(crest, Math.round((from + to - crest.width) / 2), 9 + Math.round((logo.height - crest.height) / 2))
 }
 
 const HEADER_H = 46
@@ -551,7 +581,7 @@ export const drawRunCard = async (card: RunCardData, style: CardStyle = DEFAULT_
   const { canvas, ctx } = blank(style)
   // An official challenge attempt reads in the header: "Desafio de 15/10" over "#12 DE 340", in gold.
   const place = card.challenge
-  await header(ctx, place ? [m.challenge(formatDay(place.day)), m.challengePlace(place.rank, place.total)] : [cardDate(card.date)])
+  await header(ctx, place ? [m.challenge(formatDay(place.day)), m.challengePlace(place.rank, place.total)] : [cardDate(card.date)], CARD_FRAMES[style.frame])
   const section = runSection(card)
   const sectionH = section.kind === 'none' ? 0 : 12 + (section.kind === 'mons' ? gridHeight(Math.min(section.mons.length, CARD_SLOTS)) : movesHeight(card.moves.length))
   const [heroY, statsY, sectionY] = stack(section.kind === 'none' ? [HERO_H, STRIP_H] : [HERO_H, STRIP_H, sectionH], HEADER_H, CARD.h - 8 - FOOTER_H)
@@ -619,7 +649,7 @@ export const drawTrainerCard = async (card: TrainerCardData, style: CardStyle = 
   await fontsReady()
   const m = t().share.card
   const { canvas, ctx } = blank(style)
-  await header(ctx, [cardDate(card.date), ...m.trainerCard])
+  await header(ctx, [cardDate(card.date), ...m.trainerCard], CARD_FRAMES[style.frame])
   const gridH = 12 + gridHeight(card.showcase.length > 0 ? Math.min(card.showcase.length, CARD_SLOTS) : 1)
   const ribbons = RIBBON_TIERS.some((tier) => card.ribbons[tier] > 0)
   const idH = HERO_H + (ribbons ? RIBBON_ROW : 0)
@@ -633,7 +663,12 @@ export const drawTrainerCard = async (card: TrainerCardData, style: CardStyle = 
   text(ctx, m.idLabel, x + 9, y + 14, { color: MUTED })
   text(ctx, fit(card.name ?? m.guest, textW, 'title', 8), x + 9, y + 26, { font: 'title', size: 8 })
   if (card.trainer.handle) text(ctx, fit(`@${card.trainer.handle}`, textW), x + 9, y + 38, { color: BOX_FRAME })
-  if (card.trainer.title) text(ctx, fit(`★ ${card.trainer.title}`, textW), x + 9, y + 50, { color: '#b07800' })
+  if (card.trainer.title) {
+    const mark = card.trainer.mark ? fromStrings(card.trainer.mark[0], card.trainer.mark[1]) : null
+    if (mark) ctx.drawImage(mark, x + 9, y + 50 - mark.height + 1)
+    const tx = mark ? x + 9 + mark.width + 4 : x + 9
+    text(ctx, fit(mark ? card.trainer.title : `★ ${card.trainer.title}`, textW - (tx - x - 9)), tx, y + 50, { color: '#b07800' })
+  }
   rect(ctx, x + 9, y + 56, textW, 1, '#d8dce8')
   // Medals in a row after their label, gold first.
   const medalsX = x + 9 + text(ctx, m.medals, x + 9, y + 74, { color: MUTED }) + 6

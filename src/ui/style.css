@@ -28282,3 +28282,730 @@ span.arena-hub-face {
     overflow-y: auto;
   }
 }
+
+/*
+ * ---------- The Era 1 Hall da Fama (ui/era1Hall.ts) ----------
+ * The Ranking's Era 1 tab as a stage of its own, in the kit: a navy stage, the header on paper with the
+ * crest, the prizes as they look (frame thumbs, whole-pixel ×2), the podium as three stickers (gold,
+ * silver, bronze; the #1 taller and crowned) and the lines below as paper rows. The cursor is the
+ * sticker's border turning gold, white on the gold #1.
+ */
+.region-tab.era-tab:not(.selected) {
+  color: var(--kit-ouro);
+}
+
+.rank-list.era-hall {
+  gap: 8px;
+  padding: 10px 10px 14px;
+  background: var(--kit-evento);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+}
+
+.era-hall img {
+  image-rendering: pixelated;
+}
+
+.era-head {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 10px;
+  padding: 10px 14px 12px;
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.era-crest {
+  width: 66px;
+  height: 30px;
+}
+
+.era-kicker {
+  justify-self: start;
+  padding: 3px 10px 4px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: var(--kit-ouro);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 999px;
+}
+
+.era-name {
+  --kit-o: 3px;
+  justify-self: end;
+  margin-bottom: 4px;
+  font-size: 46px;
+  white-space: nowrap;
+}
+
+.era-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-family: var(--kit-body);
+  font-size: 17px;
+  line-height: 1.2;
+  color: var(--kit-ink-2);
+}
+
+.era-prizes {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 14px;
+  margin: 6px 0 4px;
+  padding: 12px 14px;
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.era-prizes:has(> .era-prize:only-of-type) {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.era-prize {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.era-prize-card {
+  width: 108px;
+  height: 136px;
+  image-rendering: pixelated;
+  border-radius: 6px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+}
+
+.era-prize figcaption {
+  max-width: 120px;
+  padding: 2px 8px 3px;
+  font-family: var(--kit-title);
+  font-size: 17px;
+  line-height: 1;
+  text-align: center;
+  color: var(--kit-tinta);
+  background: var(--kit-ouro);
+  border-radius: 7px;
+}
+
+.era-prize.champion figcaption {
+  color: #fff;
+  background: #c8203e;
+}
+
+.era-prize-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.era-prize-text small {
+  font-size: 16px;
+  color: var(--kit-ink-2);
+}
+
+.era-podium {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 10px;
+  padding: 46px 2px 6px;
+}
+
+.era-podium.n1 {
+  grid-template-columns: minmax(0, 240px);
+  justify-content: center;
+}
+
+.era-podium.n2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.era-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px 6px 14px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-body);
+  text-align: center;
+  background: #e4e8f4;
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.era-step.p1 {
+  order: 2;
+  padding-bottom: 34px;
+  background: var(--kit-ouro);
+}
+
+.era-step.p2 {
+  order: 1;
+}
+
+.era-step.p3 {
+  order: 3;
+  background: #f2b98c;
+}
+
+.era-podium.n1 .era-step.p1,
+.era-podium.n2 .era-step.p1 {
+  order: 0;
+}
+
+.era-step.selected,
+.era-row.selected,
+.era-member.selected {
+  border-color: var(--kit-cursor);
+}
+
+.era-step.p1.selected {
+  border-color: #fff;
+}
+
+.era-crown {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  width: 87px;
+  height: 51px;
+  transform: translateX(-50%);
+}
+
+.era-mon {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  background: var(--kit-papel);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+}
+
+.era-mon img {
+  width: 80px;
+  height: 80px;
+}
+
+.era-medal {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-top: -18px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 28px;
+  line-height: 1;
+  background: var(--kit-papel);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 50%;
+}
+
+.era-step.p1 .era-medal {
+  color: #fff;
+  background: #c8203e;
+}
+
+.era-who {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  max-width: 100%;
+  font-family: var(--kit-title);
+  font-size: 24px;
+  font-weight: normal;
+  line-height: 1;
+}
+
+.era-who > span,
+.era-row-who b > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.era-handle {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  color: color-mix(in srgb, var(--kit-tinta) 70%, transparent);
+}
+
+.era-time {
+  font-family: var(--kit-title);
+  font-size: 28px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.era-step.p1 .era-time {
+  font-size: 34px;
+}
+
+.era-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 4px 6px;
+  color: var(--kit-ouro);
+  font-family: var(--kit-title);
+  font-size: 17px;
+  line-height: 1;
+  white-space: nowrap;
+  background: var(--kit-tinta);
+  border-radius: 999px;
+}
+
+.era-tag img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.era-tag.champion {
+  color: #fff;
+  background: #c8203e;
+}
+
+.era-tag.champion img {
+  width: 22px;
+  height: 22px;
+  margin: -3px 0;
+}
+
+.era-step .era-tag {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid var(--kit-tinta);
+}
+
+.era-step.team .era-tag {
+  bottom: -14px;
+}
+
+.era-team {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+}
+
+.era-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  max-width: 64px;
+  padding: 2px;
+  color: inherit;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 8px;
+}
+
+.era-member img {
+  width: 40px;
+  height: 40px;
+  background: var(--kit-papel);
+  border: 2px solid var(--kit-tinta);
+  border-radius: 8px;
+}
+
+.era-member small {
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--kit-body);
+  font-size: 15px;
+}
+
+.era-step.team .era-medal {
+  margin-top: 4px;
+}
+
+.era-row {
+  flex: none;
+  display: grid;
+  grid-template-columns: 40px 44px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 6px 12px 6px 6px;
+  color: var(--kit-ink);
+  text-align: left;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+}
+
+.era-row.earned {
+  background: color-mix(in srgb, var(--kit-ouro) 22%, var(--kit-paper));
+}
+
+.era-row.me {
+  background: color-mix(in srgb, var(--kit-realm) 22%, var(--kit-paper));
+}
+
+.era-pos {
+  font-family: var(--kit-title);
+  font-size: 30px;
+  line-height: 1;
+  text-align: center;
+  color: var(--kit-ink);
+}
+
+.era-row > img {
+  width: 40px;
+  height: 40px;
+}
+
+.era-row-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.era-row-who b {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--kit-title);
+  font-size: 23px;
+  font-weight: normal;
+  line-height: 1.05;
+}
+
+.era-row-who small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  color: var(--kit-ink-2);
+}
+
+.era-row .era-time {
+  font-size: 26px;
+}
+
+.era-hall .rank-row.rank-team {
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+}
+
+.era-hall .rank-row.rank-team .rank-who small,
+.era-hall .rank-row.rank-team .rank-pos {
+  color: var(--kit-ink-2);
+}
+
+.era-hall .rank-gap,
+.era-hall .rank-status {
+  color: #c8d0f0;
+}
+
+@media (max-width: 520px) {
+  .era-head {
+    padding: 8px 10px 10px;
+  }
+  .era-crest {
+    display: none;
+  }
+  .era-name {
+    font-size: 40px;
+  }
+  .era-prizes {
+    grid-template-columns: auto auto;
+    justify-content: center;
+  }
+  .era-prize-text {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+  .era-podium {
+    gap: 6px;
+  }
+  .era-prizes {
+    padding: 10px;
+  }
+  .era-step {
+    padding: 10px 3px 14px;
+  }
+  .era-step.p1 {
+    padding-bottom: 30px;
+  }
+  .era-mon {
+    width: 72px;
+    height: 72px;
+  }
+  .era-mon img {
+    width: 80px;
+    height: 80px;
+    margin: -4px;
+  }
+  .era-who {
+    font-size: 20px;
+  }
+  .era-who img {
+    display: none;
+  }
+  .era-time {
+    font-size: 23px;
+  }
+  .era-step.p1 .era-time {
+    font-size: 28px;
+  }
+  .era-row {
+    grid-template-columns: 30px 40px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding-right: 10px;
+  }
+  .era-row > :is(.era-tag, .era-slot) {
+    display: none;
+  }
+  /* Teams: one under the other, the members in a row. */
+  .era-podium.teams {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding-top: 8px;
+  }
+  .era-podium.teams .era-step {
+    order: 0;
+    padding: 10px 8px 22px;
+  }
+  .era-podium.teams .era-medal {
+    position: absolute;
+    top: -12px;
+    left: -8px;
+    width: 34px;
+    height: 34px;
+    margin: 0;
+    font-size: 24px;
+  }
+  .era-podium.teams .era-time {
+    margin-top: 2px;
+  }
+  .era-team {
+    flex-wrap: nowrap;
+  }
+  .era-row .era-time {
+    font-size: 22px;
+  }
+}
+
+/* Phones in landscape: the header in one line, the crest and the prizes smaller, and the screen's title gives the Hall its room. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .dialog.rank:has(.era-hall) > .dialog-title {
+    display: none;
+  }
+  .era-head {
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+    padding: 6px 12px 8px;
+  }
+  .era-name {
+    font-size: 36px;
+  }
+  .era-note {
+    grid-column: auto;
+    font-size: 16px;
+  }
+  .era-prize-card {
+    width: 54px;
+    height: 68px;
+  }
+  .era-prize figcaption {
+    font-size: 15px;
+  }
+  /* The podium as three short stickers: the Pokémon beside the name and time. */
+  .era-podium {
+    align-items: stretch;
+    padding-top: 22px;
+  }
+  .era-step,
+  .era-step.p1 {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-items: center;
+    column-gap: 8px;
+    padding: 8px 10px 16px 8px;
+    text-align: left;
+  }
+  .era-step > .era-mon {
+    grid-row: 1 / 4;
+    width: 52px;
+    height: 52px;
+  }
+  .era-mon img {
+    width: 40px;
+    height: 40px;
+  }
+  .era-medal {
+    position: absolute;
+    top: -14px;
+    left: -10px;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    font-size: 22px;
+  }
+  .era-crown {
+    top: -24px;
+    left: auto;
+    right: 10px;
+    width: 58px;
+    height: 34px;
+    transform: none;
+  }
+  .era-who {
+    justify-content: flex-start;
+    font-size: 21px;
+  }
+  .era-step .era-time,
+  .era-step.p1 .era-time {
+    font-size: 24px;
+  }
+  .era-step .era-tag {
+    left: auto;
+    right: 8px;
+    transform: none;
+  }
+  .era-step.team {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+  }
+}
+
+/*
+ * The Trainer Card in an Era 1 frame (ui/trainer.ts): the frame's colors on the card, its seal hung on top
+ * (whole-pixel ×3), and an Era 1 title's mark beside it in a pill of its own (navy and gold, gold and ruby).
+ */
+.trainer-card.era1,
+.trainer-card.era1Champion {
+  position: relative;
+  margin-top: 30px;
+}
+
+.trainer-card.era1 {
+  background: linear-gradient(135deg, #2c44a0, #22357e 55%, #141e52);
+  border-color: #120e26;
+  box-shadow:
+    inset 0 0 0 3px #f8d878,
+    inset 0 0 0 7px #22357e,
+    inset 0 0 0 9px #c89028,
+    0 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+.trainer-card.era1Champion {
+  background: linear-gradient(135deg, #461c40, #30143a 55%, #140a24);
+  border-color: #2a1404;
+  box-shadow:
+    inset 0 0 0 3px #fff4c0,
+    inset 0 0 0 8px #e8b030,
+    inset 0 0 0 10px #2a1404,
+    inset 0 0 0 12px #f8d030,
+    0 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+.trainer-card:is(.era1, .era1Champion) {
+  padding: 22px 20px 20px;
+}
+
+.trainer-seal {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+}
+
+.trainer-card.era1 .trainer-seal {
+  width: 99px;
+  height: 45px;
+  top: -26px;
+}
+
+.trainer-card.era1Champion .trainer-seal {
+  width: 87px;
+  height: 51px;
+}
+
+.trainer-card:is(.era1, .era1Champion) .trainer-id h3 {
+  text-shadow: 2px 2px 0 #0a0a1c;
+}
+
+.trainer-card:is(.era1, .era1Champion) .trainer-id small {
+  color: #f8e8c0;
+}
+
+.trainer-title.era1Legend,
+.trainer-title.era1Champion {
+  gap: 6px;
+  padding: 4px 8px 4px 5px;
+  font-size: 18px;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 999px;
+}
+
+.trainer-title.era1Legend {
+  color: #f8d030;
+  background: #22357e;
+}
+
+.trainer-title.era1Champion {
+  color: #fff;
+  background: #c8203e;
+}
+
+.trainer-title img.mark {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+}
+
+.trainer-title.era1Champion img.mark {
+  width: 22px;
+  height: 22px;
+  margin: -3px 0;
+}
+
+.trainer-chip-sub img.mark {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+}

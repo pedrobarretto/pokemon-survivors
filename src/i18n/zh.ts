@@ -1347,6 +1347,16 @@ export const zh: Messages = {
     coopHint: '↑ ↓ 訓練家 · ← → 期間 · Q E 難度 · M 模式 · T 隊伍 · F 好友 · ENTER 檔案 · ESC 返回',
     coopChallengeHint: '↑ ↓ 訓練家 · ← → 日期 · Q E 排行榜 · M 模式 · T 隊伍 · F 好友 · ENTER 檔案 · ESC 返回',
     team: (names) => `隊伍：${names}`,
+    hall: {
+      kicker: '名人堂',
+      closed: (date) => `第一賽季開始前的紀錄。已於 ${date} 封存，永遠留在這裡。`,
+      open: (date) => `第一紀元將於 ${date} 結束，第一賽季同時開始。在那之前的紀錄都會永遠留在這裡。`,
+      reward: (top) => `每個排行榜的第 1 名獲得稱號「*第一紀元冠軍*」、專屬相框與天空。前 ${top} 名：「*第一紀元傳奇*」與其相框。`,
+      coopReward: (top) => `每個排行榜的前 ${top} 支隊伍：「*第一紀元傳奇*」與其相框。`,
+      thin: (n) => (n === 0 ? '這個排行榜不到 10 人：沒有獎勵。' : `這個排行榜人數不多：獎勵只到第 ${n} 名。`),
+      tags: { champion: '冠軍', hall: '傳奇' },
+    },
+    seasonSoon: (date) => `第一賽季將於 ${date} 開始。在那之前，紀錄都算入第一紀元。`,
   },
 
   profile: {
@@ -1532,8 +1542,8 @@ export const zh: Messages = {
       wallpaper: '電腦箱的桌布。',
     },
     styles: {
-      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊' },
-      background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜', friendship: '友情' },
+      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊', era1: '第一紀元', era1Champion: '第一紀元王冠' },
+      background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜', friendship: '友情', era1Champion: '第一紀元王座' },
       wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋', secretBase: '秘密基地' },
     },
   },
@@ -2024,6 +2034,7 @@ export const zh: Messages = {
     patron: (festival) => `感謝你成為${festival}的贊助人 ♥`,
     og: '感謝你從一開始就支持遊戲 ♥',
     arenaSeason: (season) => `獎勵你在競技場第 ${season} 賽季的最高段位`,
+    era1: (rank, board) => `第一紀元名人堂第 ${rank} 名 · ${board}`,
     hiddenZone: { grotto: '獎勵你找到隱藏洞穴', underground: '獎勵你找到地下通道' },
   },
 
@@ -2932,7 +2943,7 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一' },
     newMedals: '新獎牌',
     names: {
       firstRun: '第一步',
@@ -3032,6 +3043,8 @@ export const zh: Messages = {
       creator: '內容創作者',
       friendLegend: '友情傳奇',
       stampCollector: '印章收藏家',
+      era1Legend: '第一紀元傳奇',
+      era1Champion: '第一紀元冠軍',
     },
     goals: {
       runs: (n) => `玩 ${n} 局`,
