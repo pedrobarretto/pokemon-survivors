@@ -26866,7 +26866,8 @@ span.arena-hub-face {
   /* Stretched, so the stage's size (not the canvas's) sets the scale. */
   align-items: stretch;
   gap: 0;
-  background: rgba(16, 20, 32, 0.92);
+  /* Solid: what's behind (the realm, a menu) would only be noise around the game. */
+  background: #141a2e;
   padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
   font-size: 18px;
   touch-action: none;
@@ -26883,16 +26884,44 @@ span.arena-hub-face {
 }
 
 .minigame-head h2 {
+  --kit-o: 2px;
   margin: 0;
-  font-family: var(--title);
-  font-size: 26px;
+  font-size: 32px;
   font-weight: normal;
+  overflow: hidden;
+  padding: 2px 2px 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.minigame-close {
-  min-width: 44px;
-  min-height: 44px;
-  font-size: 22px;
+/* The kit's red round close, as the Modos de jogo modal's. */
+.minigame-close.arc-icon-btn {
+  flex: none;
+  background: var(--kit-survivors);
+  border-radius: 50%;
+}
+
+.minigame-close img {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+}
+
+/* Each game wears a color of its own (its primary buttons, the odds' highlight); the realm's otherwise. */
+.minigame-screen {
+  --mode: var(--kit-realm);
+}
+
+.minigame-screen[data-game='dig'] {
+  --mode: var(--kit-dojo);
+}
+
+.minigame-screen[data-game='claw'] {
+  --mode: #e2457a;
+}
+
+.minigame-screen[data-game='safari'] {
+  --mode: #3e9c48;
 }
 
 .minigame-stage {
@@ -27073,8 +27102,7 @@ span.arena-hub-face {
 /* Phones held upright: the header holds the name, the tag and the close button on one line. */
 @media (max-width: 480px) {
   .minigame-head h2 {
-    font-size: 20px;
-    line-height: 1;
+    font-size: 26px;
   }
   .minigame-head .minigame-tag {
     gap: 6px;
@@ -27110,7 +27138,7 @@ span.arena-hub-face {
   min-height: 44px;
   padding: 0 12px;
   font-family: var(--title);
-  font-size: 18px;
+  font-size: 20px;
   white-space: nowrap;
 }
 
@@ -28226,49 +28254,6 @@ span.arena-hub-face {
 .research-head img { width: 24px; height: 24px; image-rendering: pixelated; }
 .research-later { opacity: 0.55; }
 .research-note { margin: 4px 0; font-size: 0.85em; opacity: 0.85; }
-/* The Máquina de Pelúcias' words (`realm/games/claw.ts`): under the machine upright, beside it sideways. */
-.claw-panel {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  text-align: center;
-  font-size: 13px;
-  line-height: 1.35;
-}
-
-.claw-panel h3 {
-  margin: 0;
-  font-family: var(--title);
-  font-size: 11px;
-  font-weight: normal;
-  line-height: 1.5;
-}
-
-.claw-panel p {
-  margin: 0;
-}
-
-.claw-panel small {
-  opacity: 0.75;
-}
-
-.claw-panel-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.claw-panel-actions button {
-  flex: 1;
-  min-height: 40px;
-  padding: 6px 10px;
-  font-size: 13px;
-}
 
 /* The Zona Safári (`realm/games/safari.ts`): DOM over the canvas, sized by its scale (`--k`, set every frame). */
 .sz-hud {
@@ -28427,56 +28412,61 @@ span.arena-hub-face {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: calc(var(--k, 2) * 4px);
-  background: rgba(16, 20, 32, 0.55);
+  padding: 18px 14px 12px 8px;
+  background: rgba(16, 20, 46, 0.6);
 }
 
+/* The notice board: the kit's paper card, its residents as tiles grouped by rarity. */
 .sz-board-frame {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--k, 2) * 2px);
-  max-height: 100%;
+  gap: 10px;
   width: 100%;
-  max-width: calc(var(--k, 2) * 320px);
-  padding: calc(var(--k, 2) * 4px);
-  border: calc(var(--k, 2) * 3px) solid #6a4526;
-  border-radius: calc(var(--k, 2) * 3px);
-  background: #b98a52;
-  box-shadow: inset 0 0 0 2px #8e6236;
-  color: #2a1e10;
+  max-width: 640px;
+  max-height: 100%;
+  padding: 14px 14px 16px;
+  color: var(--kit-ink);
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.15;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
 }
 
-.sz-board-frame h3 {
-  margin: 0;
-  font-family: var(--title);
-  font-weight: normal;
-  font-size: 0.75em;
-}
-
-.sz-board-frame small {
-  font-size: 0.8em;
+.sz-board-frame > small {
+  color: var(--kit-ink-2);
+  font-size: 17px;
 }
 
 .sz-notes {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--k, 2) * 3px);
-  padding: calc(var(--k, 2) * 3px) calc(var(--k, 2) * 4px);
-  background: #f4ead0;
-  box-shadow: 0 1px 0 rgba(40, 24, 8, 0.5);
+  gap: 12px;
   touch-action: pan-y;
 }
 
 .sz-notes h4 {
-  margin: 0 0 1px;
-  border-bottom: 1px dashed #b49a70;
-  font-family: var(--title);
-  font-weight: normal;
-  font-size: 0.55em;
-  color: #6a4526;
+  align-self: flex-start;
+  margin: 0 0 6px;
+  padding: 3px 9px 4px;
+  color: #fff;
+  font-family: var(--kit-title);
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1;
+  background: var(--mode);
+  border-radius: 8px;
+}
+
+.sz-notes section {
+  display: flex;
+  flex-direction: column;
 }
 
 .sz-notes ul {
@@ -28484,54 +28474,90 @@ span.arena-hub-face {
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(calc(var(--k, 2) * 72px), 1fr));
-  gap: 0 calc(var(--k, 2) * 3px);
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
 }
 
 .sz-note {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  grid-template-areas: 'i b' 'i s';
+  column-gap: 8px;
   align-items: center;
-  gap: calc(var(--k, 2) * 1.5px);
   min-width: 0;
-  font-size: 0.85em;
+  padding: 5px 8px 5px 5px;
+  background: var(--kit-tag);
+  border-radius: 10px;
 }
 
 .sz-note img {
-  width: calc(var(--k, 2) * 12px);
-  height: calc(var(--k, 2) * 12px);
-  flex: none;
+  grid-area: i;
+  width: 40px;
+  height: 40px;
   image-rendering: pixelated;
+  border-radius: 6px;
 }
 
 .sz-note b {
-  flex: 1;
+  grid-area: b;
   min-width: 0;
-  font-weight: normal;
   overflow: hidden;
+  font-weight: 400;
+  font-size: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .sz-note span {
-  opacity: 0.7;
-  font-size: 0.85em;
+  grid-area: s;
+  font-family: var(--kit-title);
+  font-size: 20px;
+  line-height: 1;
 }
 
-.sz-note-new b::after {
-  content: '';
-  display: inline-block;
-  width: calc(var(--k, 2) * 2px);
-  height: calc(var(--k, 2) * 2px);
-  margin-left: calc(var(--k, 2) * 1.5px);
-  vertical-align: middle;
-  background: #d83838;
+/* NOVO rides the share's line, where there's room whatever the name. */
+.sz-note .arc-tag {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 1px 5px 2px;
+  font-size: 15px;
 }
 
-.sz-board-frame > button {
-  min-height: 40px;
-  color: var(--ink);
+.sz-board-frame {
+  position: relative;
 }
 
+/* The kit's round ✕ on the board's corner. */
+.sz-board-close.arc-icon-btn {
+  position: absolute;
+  top: -14px;
+  right: -10px;
+  background: var(--kit-survivors);
+  border-radius: 50%;
+}
+
+.sz-board-close img {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+}
+
+.sz-board-frame > .mg-title,
+.sz-board-frame > small {
+  padding-right: 34px;
+}
+
+/* Sideways the height is short: the place and the title share a line. */
+.sz-hud.sz-wide .sz-board-frame > .mg-title {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 10px;
+}
+
+/* The session's end: what came along, and another session. */
 .sz-report {
   position: absolute;
   z-index: 3;
@@ -28540,20 +28566,16 @@ span.arena-hub-face {
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  gap: calc(var(--k, 2) * 3px);
-  width: min(calc(100% - 16px), calc(var(--k, 2) * 170px));
-  max-height: calc(100% - 16px);
+  gap: 12px;
+  width: min(calc(100% - 16px), 420px);
+  max-height: calc(100% - 20px);
   overflow-y: auto;
-  padding: calc(var(--k, 2) * 7px);
-  text-align: center;
-  color: var(--ink);
-}
-
-.sz-report h3 {
-  margin: 0;
-  font-family: var(--title);
-  font-weight: normal;
-  font-size: 0.72em;
+  padding: 14px 14px 16px;
+  color: var(--kit-ink);
+  font-family: var(--kit-body);
+  font-size: 19px;
+  line-height: 1.15;
+  text-align: left;
 }
 
 .sz-report p {
@@ -28564,22 +28586,26 @@ span.arena-hub-face {
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: calc(var(--k, 2) * 3px);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
 }
 
 .sz-caught li {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 0.8em;
+  gap: 2px;
+  padding: 6px 4px;
+  font-size: 17px;
+  text-align: center;
+  background: var(--kit-tag);
+  border-radius: 10px;
 }
 
 .sz-caught img {
-  width: calc(var(--k, 2) * 24px);
-  height: calc(var(--k, 2) * 24px);
+  width: 48px;
+  height: 48px;
   image-rendering: pixelated;
 }
 
@@ -28587,8 +28613,100 @@ span.arena-hub-face {
   font-weight: normal;
 }
 
-.sz-report button {
-  min-height: 44px;
+.sz-report .arc-btn {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+}
+
+/* The Ranger's booth (`sz-lobby`, also its error message): the kit's card and buttons, at sizes that read on a phone. */
+.sz-hud.sz-lobby {
+  font-size: max(18px, calc(var(--k, 2) * 9px));
+}
+
+.sz-hud.sz-lobby .sz-text {
+  gap: 12px;
+  padding: 10px 12px 12px;
+  line-height: 1.15;
+  border-width: var(--kit-edge);
+  border-color: var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.sz-hud.sz-lobby .sz-text small {
+  margin-top: 6px;
+  color: var(--kit-ink-2);
+  font-size: 17px;
+  opacity: 1;
+}
+
+.sz-hud.sz-lobby .sz-face {
+  width: 52px;
+  height: 52px;
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 10px;
+  background: var(--dk-wash-green, #dff0c8);
+}
+
+.sz-hud.sz-lobby .sz-cmds {
+  gap: 10px;
+  grid-auto-columns: auto;
+  grid-template-columns: 3fr 2fr;
+}
+
+/* Upright the buttons sit under the box: the box stands clear of them and their lip. */
+.sz-hud.sz-lobby.sz-tall .sz-text.sz-text {
+  bottom: calc(var(--k, 2) * 4px + 68px);
+}
+
+/* Sideways they stack in the column beside the box. */
+.sz-hud.sz-lobby.sz-wide .sz-cmds {
+  grid-template-columns: none;
+  gap: 8px;
+}
+
+.sz-hud.sz-lobby.sz-wide .sz-cmds button,
+.sz-hud.sz-lobby.sz-wide .sz-cmds button.sz-hot {
+  font-size: 22px;
+}
+
+.sz-hud.sz-lobby .sz-cmds button {
+  min-height: 52px;
+  padding: 6px 12px 9px;
+  color: var(--kit-ink);
+  font-family: var(--kit-title);
+  font-size: 24px;
+  line-height: 1;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+  outline: none;
+}
+
+.sz-hud.sz-lobby .sz-cmds button.sz-hot {
+  color: #fff;
+  font-size: 28px;
+  text-shadow:
+    -1.5px -1.5px 0 var(--kit-tinta),
+    1.5px -1.5px 0 var(--kit-tinta),
+    -1.5px 1.5px 0 var(--kit-tinta),
+    1.5px 1.5px 0 var(--kit-tinta),
+    0 3px 0 var(--kit-tinta);
+  background: var(--mode);
+  box-shadow:
+    inset 0 2px 0 color-mix(in srgb, var(--mode) 62%, #fff),
+    inset 0 -6px 0 color-mix(in srgb, var(--mode) 74%, #000),
+    0 4px 0 var(--kit-tinta);
+}
+
+.sz-hud.sz-lobby .sz-cmds button:active:not(:disabled) {
+  translate: 0 3px;
+}
+
+:root[data-cursor='keys'] .sz-hud.sz-lobby .sz-cmds button.sz-sel {
+  border-color: var(--kit-cursor);
 }
 
 /* Sideways, the commands stand in a column to the right of the scene and the box under the scene. */
@@ -28846,124 +28964,364 @@ span.arena-hub-face {
 }
 
 
-@media (orientation: landscape) {
-  .claw-panel {
-    left: auto;
-    right: max(8px, calc(50% - 300px));
-    top: 50%;
-    bottom: auto;
-    transform: translateY(-50%);
-    width: min(240px, 42%);
-    max-height: calc(100% - 16px);
-    overflow-y: auto;
-  }
+
+/*
+ * ---------- The kit's sheet over a canvas mini game (`realm/games/gameSheet.ts`) ----------
+ * The Escavação and the Máquina de Pelúcias. A paper card with the kit's outline and hard shadow, its body scrolling
+ * when a phone can't fit it and its buttons pinned under it. The game tracks its canvas into `--cv-l`, `--cv-t`,
+ * `--cv-w`, `--cv-h` (CSS px) and `--cv-k` (CSS px per game px); `--keep-x`, `--keep-y` are the game px the dock
+ * leaves in view, beside the scene sideways and above it upright.
+ */
+.minigame-screen:is([data-game='dig'], [data-game='claw']) .minigame-canvas {
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 var(--kit-edge) var(--kit-tinta),
+    0 6px 0 var(--kit-edge) var(--kit-tinta);
 }
 
-/* The Escavação's panel (realm/games/dig.ts). */
-.dig-panel {
+.mg-sheet {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  max-height: calc(100% - 16px);
-  overflow-y: auto;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  font-size: 13px;
-  line-height: 1.35;
+  min-height: 0;
+  color: var(--kit-ink);
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.15;
+  text-align: left;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
 }
 
-.dig-panel h3 {
-  margin: 0;
-  font-family: var(--title);
-  font-size: 11px;
-  font-weight: normal;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.dig-panel p,
-.dig-panel ul {
-  margin: 0;
-  padding: 0;
-}
-
-.dig-panel small {
-  display: block;
-  text-align: center;
-  opacity: 0.78;
-}
-
-.dig-keeper {
+.mg-sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.mg-sheet-foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 2px 14px 16px;
+}
+
+.mg-sheet-foot .mg-go {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.mg-sheet-foot .mg-go small {
+  font-size: 17px;
+}
+
+.mg-sheet-foot .mg-alt {
+  flex: 1 1 0;
+  min-height: 48px;
+}
+
+/* Upright: right under the rows it keeps, as wide as the canvas. */
+.mg-sheet.mg-dock.mg-tall {
+  top: calc(var(--cv-t, 0px) + var(--keep-y) * var(--cv-k, 2) * 1px);
+  left: 50%;
+  translate: -50% 0;
+  width: max(var(--cv-w, 100%), min(340px, 100%));
+  max-height: calc(100% - var(--cv-t, 0px) - var(--keep-y) * var(--cv-k, 2) * 1px);
+}
+
+/* Sideways: at the stage's right, past the columns it keeps (never narrower than 220 px, never wider than 380 px). */
+.mg-sheet.mg-dock.mg-wide {
+  top: 50%;
+  right: 0;
+  left: min(max(calc(var(--cv-l, 0px) + var(--keep-x) * var(--cv-k, 2) * 1px + 8px), calc(100% - 380px)), calc(100% - 220px));
+  translate: 0 -50%;
+  max-height: 100%;
+}
+
+.mg-sheet.mg-card {
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: min(420px, 100%);
+  max-height: 100%;
+}
+
+/* A line while the scene plays: under it, and taps go through to the game. */
+.mg-sheet.mg-banner {
+  left: 50%;
+  bottom: 0;
+  translate: -50% 0;
+  width: min(440px, 100%);
+  pointer-events: none;
+  text-align: center;
+}
+
+.mg-sheet.mg-banner .mg-sheet-body {
+  gap: 2px;
+  padding: 8px 16px 10px;
+}
+
+.mg-sheet.mg-banner p {
+  margin: 0;
+  font-size: 19px;
+}
+
+/* The round ✕ on a card's corner, as on the Modos de jogo modal. */
+.mg-sheet .mg-close {
+  position: absolute;
+  top: -14px;
+  right: -10px;
+  background: var(--kit-survivors);
+  border-radius: 50%;
+}
+
+.mg-sheet .mg-close img {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+}
+
+.mg-sheet:has(.mg-close:not(.hidden)) .mg-sheet-body {
+  padding-right: 40px;
+}
+
+.mg-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.mg-kicker {
+  padding: 3px 9px 4px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 19px;
+  line-height: 1;
+  background: var(--kit-ouro);
+  border: 2px solid var(--kit-tinta);
+  border-radius: 8px;
+  rotate: -1.5deg;
+}
+
+.mg-title h3,
+.mg-banner-title {
+  margin: 0;
+  font-family: var(--kit-title);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.mg-banner-title.gold {
+  color: color-mix(in srgb, #b07800 var(--dk-lift, 100%), #fff);
+}
+
+.mg-lead {
+  margin: 0;
+  font-size: 20px;
+}
+
+.mg-lead.hot {
+  padding: 6px 10px;
+  background: var(--dk-wash-gold, #fff1c2);
+  border-radius: 10px;
+}
+
+.mg-note {
+  margin: 0;
+  color: var(--kit-ink-2);
+  font-size: 17px;
+}
+
+.mg-callout {
+  margin: 0;
+  padding: 8px 12px;
+  color: color-mix(in srgb, #b02414 var(--dk-lift, 100%), #fff);
+  font-family: var(--kit-title);
+  font-size: 22px;
+  line-height: 1;
+  background: var(--dk-wash-red, #ffe2dc);
+  border-radius: 10px;
+}
+
+/* Someone talking: their portrait in a sticker, the words in a bubble pointing at it. */
+.mg-speech {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.mg-speech img {
+  width: 52px;
+  height: 52px;
+  image-rendering: pixelated;
+  background: var(--dk-wash-cyan, #d8f0f8);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 10px;
+}
+
+.mg-speech p {
+  position: relative;
+  margin: 0;
+  padding: 8px 11px 9px;
+  font-size: 18px;
+  background: var(--kit-tag);
+  border-radius: 10px;
+}
+
+.mg-speech p::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: -8px;
+  border: 8px solid transparent;
+  border-left: 0;
+  border-right-color: var(--kit-tag);
+}
+
+.mg-speech b {
+  font-family: var(--kit-title);
+  font-weight: 400;
+  font-size: 1.12em;
+}
+
+/* A small paper button inside a sheet's body, for what belongs to the line above it (the vein's odds). */
+.mg-sheet .mg-link {
+  align-self: flex-start;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  text-align: left;
+  font-size: 20px;
 }
 
-.dig-keeper img {
-  width: 40px;
-  height: 40px;
+.mg-link img {
+  width: 24px;
+  height: 24px;
   image-rendering: pixelated;
-  border-radius: 4px;
-  flex: none;
 }
 
+/* Facts in rows, an icon each (the partner's help, the fossil guarantee). */
+.mg-facts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mg-facts li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 17px;
+  background: var(--kit-tag);
+  border-radius: 10px;
+}
+
+.mg-facts li.hot {
+  background: var(--dk-wash-gold, #fff1c2);
+}
+
+.mg-facts img {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+/* The Escavação (`realm/games/dig.ts`): the vein, its odds as tiles, the loot. */
 .dig-vein {
-  text-align: center;
+  margin: 0;
+  font-size: 19px;
+}
+
+.dig-vein b {
+  font-family: var(--kit-title);
+  font-weight: 400;
+  font-size: 1.12em;
 }
 
 .dig-odds {
-  list-style: none;
   display: grid;
-  gap: 2px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .dig-odds li {
   display: grid;
-  grid-template-columns: 22px 1fr auto;
-  align-items: center;
-  gap: 6px;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 4px 9px;
+  text-align: center;
+  background: var(--kit-tag);
+  border: var(--kit-edge) solid transparent;
+  border-radius: 12px;
 }
 
-.dig-odds li img {
+.dig-odds li.boost {
+  background: var(--dk-wash-gold, #fff1c2);
+  border-color: var(--mode);
+}
+
+.dig-odds img {
+  width: 32px;
+  height: 32px;
   image-rendering: pixelated;
 }
 
+.dig-odds b {
+  font-family: var(--kit-title);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.dig-odds span {
+  font-size: 16px;
+  line-height: 1.05;
+}
+
 .dig-odds li.golden {
-  color: #e8b830;
-  font-weight: bold;
-}
-
-.dig-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.dig-actions button {
-  flex: 1;
-  min-height: 44px;
-  padding: 6px 10px;
-  font-size: 13px;
-}
-
-.dig-actions button.primary {
-  font-weight: bold;
+  color: var(--kit-tinta);
+  background: var(--kit-ouro);
+  border-color: var(--kit-tinta);
 }
 
 .dig-loot {
-  list-style: none;
   display: grid;
-  gap: 3px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .dig-loot li {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 32px 1fr;
   gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 18px;
+  line-height: 1.05;
+  background: var(--kit-tag);
+  border-radius: 10px;
 }
 
 .dig-loot img,
@@ -28971,29 +29329,97 @@ span.arena-hub-face {
   image-rendering: pixelated;
 }
 
+.dig-coins {
+  margin: 0;
+  color: color-mix(in srgb, #9a6a00 var(--dk-lift, 100%), #fff);
+  font-family: var(--kit-title);
+  font-size: 28px;
+  line-height: 1;
+}
+
 .dig-buried {
   display: flex;
-  align-items: center;
-  justify-content: center;
   flex-wrap: wrap;
-  gap: 6px;
-  opacity: 0.7;
+  align-items: center;
+  gap: 8px;
+  color: var(--kit-ink-2);
+  font-size: 17px;
 }
 
-.dig-buried span {
+.dig-buried span:last-child {
   display: inline-flex;
-  gap: 3px;
-  filter: grayscale(0.8);
+  gap: 4px;
+  filter: grayscale(0.85);
+  opacity: 0.75;
 }
 
-@media (orientation: landscape) {
-  .dig-panel {
-    left: auto;
-    right: max(8px, calc(50% - 320px));
-    top: 50%;
-    bottom: auto;
-    transform: translateY(-50%);
-    width: min(280px, 56%);
-    max-height: calc(100% - 16px);
+/* Sideways, height is what's short: the buttons share a row, the headline comes before the keeper's word, the odds lie flat. */
+.mg-sheet.mg-wide .mg-sheet-foot .mg-go {
+  flex: 2 1 0;
+}
+
+.mg-sheet.mg-wide .mg-title {
+  order: -2;
+}
+
+.mg-sheet.mg-wide :is(.dig-vein, .mg-link) {
+  order: -1;
+}
+
+.mg-sheet.mg-card.mg-wide {
+  width: min(560px, 100%);
+}
+
+.mg-sheet.mg-wide .mg-title {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 10px;
+}
+
+.mg-sheet.mg-wide .dig-odds li {
+  grid-template-columns: 32px 1fr;
+  grid-template-areas: 'i b' 'i s';
+  justify-items: start;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 0;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.mg-sheet.mg-wide .dig-odds li img {
+  grid-area: i;
+}
+
+.mg-sheet.mg-wide .dig-odds li b {
+  grid-area: b;
+  font-size: 26px;
+}
+
+.mg-sheet.mg-wide .dig-odds li span {
+  grid-area: s;
+}
+
+/* A phone on its side or a small one: tighter, so more of it fits before the body scrolls. */
+@media (max-height: 520px) {
+  .mg-sheet-body {
+    gap: 8px;
+    padding: 10px 12px 8px;
+  }
+  .mg-sheet-foot {
+    padding: 2px 12px 12px;
+  }
+  .mg-title h3,
+  .mg-banner-title {
+    font-size: 28px;
+  }
+  .mg-speech {
+    grid-template-columns: 44px 1fr;
+    gap: 10px;
+  }
+  .mg-speech img {
+    width: 44px;
+    height: 44px;
   }
 }

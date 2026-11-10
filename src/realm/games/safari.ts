@@ -5,6 +5,7 @@ import { PLAZA, SAFARI_MAPS, TILE } from '../../data/safariMaps'
 import { playSfx } from '../../engine/audio'
 import { formatPokeDollars, t } from '../../i18n'
 import type { SafariActed, SafariSession, SafariState } from '../../net/realmApi'
+import { closeIcon } from '../../render/art'
 import { loadSpecies, portraitUrl } from '../../render/sprites'
 import { h } from '../../ui/dom'
 import { loadSave } from '../../ui/save'
@@ -95,6 +96,8 @@ const start = (ctx: SoloCtx): GameRun => {
   const go = (next: Phase) => {
     phase = next
     phaseT = 0
+    // The Ranger's booth and its messages wear the kit's sheet; the walk and the battle keep their own look.
+    hud.classList.toggle('sz-lobby', next === 'lobby' || next === 'trouble')
   }
 
   const lacks = (id: HatchlingId) => loadSave().hatched[id] === undefined
@@ -283,8 +286,8 @@ const start = (ctx: SoloCtx): GameRun => {
       h(
         'div',
         { class: 'sz-board-frame' },
-        h('h3', {}, w.boardTitle),
-        h('small', {}, [w.habitats[at].name, partner ? w.partner(PLAYABLE[partner].line[0].name) : w.boardHint].join(' · ')),
+        h('header', { class: 'mg-title' }, h('span', { class: 'mg-kicker' }, w.habitats[at].name), h('h3', {}, w.boardTitle)),
+        h('small', {}, partner ? w.partner(PLAYABLE[partner].line[0].name) : w.boardHint),
         h(
           'div',
           { class: 'sz-notes' },
@@ -304,13 +307,14 @@ const start = (ctx: SoloCtx): GameRun => {
                     h('img', { src: portraitUrl(form.dex), alt: '', width: 40, height: 40, loading: 'lazy' }),
                     h('b', {}, form.name),
                     h('span', {}, `${(entry.share * 100).toFixed(1)}%`),
+                    lacks(entry.family) ? h('em', { class: 'arc-tag new' }, w.fresh) : false,
                   )
                 }),
               ),
             ),
           ),
         ),
-        h('button', { class: 'box', type: 'button', onclick: closeBoard }, w.ok),
+        h('button', { class: 'arc-icon-btn sz-board-close', type: 'button', 'aria-label': w.ok, title: w.ok, onclick: closeBoard }, h('img', { src: closeIcon(), alt: '' })),
       ),
     )
     board.classList.remove('hidden')
@@ -416,12 +420,12 @@ const start = (ctx: SoloCtx): GameRun => {
     const caught = session?.catches ?? []
     const outOf = session?.balls === 0 ? w.outOfBalls : session?.left === 0 ? w.outOfGrass : ''
     report.replaceChildren(
-      h('h3', {}, w.done),
+      h('header', { class: 'mg-title' }, h('h3', {}, w.done)),
       ...(outOf ? [h('p', {}, outOf)] : []),
       caught.length === 0
         ? h('p', {}, w.none)
         : h('ul', { class: 'sz-caught' }, ...caught.map((c) => h('li', {}, h('img', { src: portraitUrl(safariForm(c.family).dex, c.shiny), alt: '', width: 40, height: 40 }), h('b', {}, `${safariForm(c.family).name}${c.shiny ? ' ★' : ''}`)))),
-      h('button', { class: 'box sz-hot', type: 'button', onclick: () => ((session = null), void load()) }, w.again),
+      h('button', { class: 'arc-btn arc-btn-small', type: 'button', onclick: () => ((session = null), void load()) }, h('span', { class: 'arc-outline' }, w.again)),
     )
     report.classList.remove('hidden')
   }

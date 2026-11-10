@@ -11,14 +11,16 @@ import { pieceName } from '../furniture'
 import { arcadeSize, burst, drawFx, drawIcon, drawText, plate, secondsLeft, stepFx, textWidth, type Particle, type Popup } from './arcadeKit'
 import { CLAW, creditPrice, gripNeeded, pitLayout, type PitPoint } from './claw.rules'
 import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
+import { callout, gameSheet, sheetTitle } from './gameSheet'
 
 /**
  * The Máquina de Pelúcias (`MINIGAMES.claw`): the week's six plushes in a
  * glass pit, a claw on two axes against the clock, one drop a credit. The API
  * charges the credit and decides the drop (`clawApi.ts`, `claw.rules.ts`);
  * this only animates the answer. Numbers and the machine are drawn on the
- * canvas, every word lives in the panel over the stage, since the in-world
- * font can't write them all.
+ * canvas, every word lives in the kit's sheet (`gameSheet.ts`), docked where
+ * the controls stand while aiming (under the machine upright, beside it
+ * sideways), since the in-world font can't write them all.
  *
  * Touch: the pad (or a finger on the pit) moves the claw, the red button
  * drops it. Keys: arrows or WASD, Space or Enter.
@@ -181,8 +183,8 @@ const start = (ctx: SoloCtx): GameRun => {
   const size = shown
   const controls = controlsOf(size)
   const m = () => t().minigames.claw
-  const panel = h('div', { class: 'claw-panel box hidden' })
-  ctx.stage.append(panel)
+  // The sheet leaves the cabinet (176 × 160 at the canvas's corner) in view.
+  const sheet = gameSheet(ctx.stage, size, { x: 180, y: 164 })
 
   let phase: Phase = 'load'
   let phaseT = 0
@@ -226,29 +228,23 @@ const start = (ctx: SoloCtx): GameRun => {
     return f ? plushForm(f).name : ''
   }
 
-  /** The panel's words and buttons; none hides it. */
-  const say = (lines: readonly (HTMLElement | false)[], actions: readonly { label: string; run: () => void }[] = []) => {
-    panel.classList.toggle('hidden', lines.length === 0 && actions.length === 0)
-    panel.replaceChildren(
-      ...lines.flatMap((l) => (l ? [l] : [])),
-      ...(actions.length > 0 ? [h('div', { class: 'claw-panel-actions' }, ...actions.map((a) => h('button', { class: 'box', type: 'button', onclick: () => (playSfx('select'), a.run()) }, a.label)))] : []),
-    )
-  }
+  const say = sheet.show
 
   const creditAction = () => {
-    if (play) return { label: m().resume, run: resume }
+    const note = m().today(view?.used ?? 0, CLAW.dailyCap)
+    if (play) return { label: m().resume, note, run: resume, primary: true }
     const price = view ? creditPrice(view.used) : null
     if (price === null) return null
     if (price > loadSave().wallet) return null
-    return { label: price === 0 ? m().free : m().paid(formatPokeDollars(price)), run: insert }
+    return { label: price === 0 ? m().free : m().paid(formatPokeDollars(price)), note, run: insert, primary: true }
   }
 
-  /** The line under a panel: the day's credits, or why there's no credit to buy. */
+  /** Why there's no credit to buy, when there isn't (the day's credits ride on the button otherwise). */
   const dayLine = () => {
     const price = view ? creditPrice(view.used) : null
-    if (price === null) return h('p', {}, m().cap)
-    if (!play && price > loadSave().wallet) return h('p', {}, m().funds)
-    return h('small', {}, m().today(view?.used ?? 0, CLAW.dailyCap))
+    if (price === null) return callout(m().cap)
+    if (!play && price > loadSave().wallet) return callout(m().funds)
+    return false
   }
 
   const ready = () => {
@@ -257,18 +253,18 @@ const start = (ctx: SoloCtx): GameRun => {
     place(false)
     go('ready')
     const a = creditAction()
-    say([h('h3', {}, m().title), h('p', {}, m().rule(CLAW.guarantee)), dayLine()], a ? [a] : [])
+    say('dock', [sheetTitle(m().title), h('p', { class: 'mg-lead' }, m().rule(CLAW.guarantee)), dayLine()], a ? [a] : [])
   }
 
   const trouble = (error: string) => {
     go('ready')
     const text = error === 'cap' ? m().cap : error === 'funds' ? m().funds : error === 'profile' ? m().profile : m().failed
-    say([h('p', {}, text)], [{ label: m().retry, run: load }])
+    say('card', [h('p', { class: 'mg-lead' }, text)], [{ label: m().retry, run: load, primary: true }])
   }
 
   const load = async () => {
     go('load')
-    say([])
+    sheet.hide()
     const got = await fetchClaw()
     if (disposed) return
     if (isFailure(got)) return trouble(got.error)
@@ -286,14 +282,14 @@ const start = (ctx: SoloCtx): GameRun => {
     held = null
     gone = null
     result = null
-    say([])
+    sheet.hide()
     go('aim')
   }
 
   const insert = async () => {
     if (!view) return
     go('busy')
-    say([])
+    sheet.hide()
     const got = await insertCredit(view.used)
     if (disposed) return
     if (isFailure(got)) return trouble(got.error)
@@ -343,7 +339,7 @@ const start = (ctx: SoloCtx): GameRun => {
     const n = result.misses[result.target] ?? 0
     go('result')
     const a = creditAction()
-    say([h('h3', {}, m().miss(nameOf(result.target))), h('p', {}, n >= CLAW.guarantee - 1 ? m().sure : m().progress(n, CLAW.guarantee)), dayLine()], a ? [a] : [])
+    say('dock', [sheetTitle(m().miss(nameOf(result.target))), h('p', { class: n >= CLAW.guarantee - 1 ? 'mg-lead hot' : 'mg-lead' }, n >= CLAW.guarantee - 1 ? m().sure : m().progress(n, CLAW.guarantee)), dayLine()], a ? [a] : [])
   }
 
   const finishWin = () => {
@@ -352,7 +348,7 @@ const start = (ctx: SoloCtx): GameRun => {
     ctx.brag('plush')
     go('result')
     const a = creditAction()
-    say([h('h3', {}, m().won(pieceName(plushPiece(result.family)))), h('p', {}, m().wonNote), dayLine()], a ? [a] : [])
+    say('dock', [sheetTitle(m().won(pieceName(plushPiece(result.family)))), h('p', { class: 'mg-lead' }, m().wonNote), dayLine()], a ? [a] : [])
   }
 
   const step = (dt: number, input: GameInput) => {
@@ -522,6 +518,7 @@ const start = (ctx: SoloCtx): GameRun => {
   }
 
   const draw = (g: CanvasRenderingContext2D) => {
+    sheet.track()
     g.fillStyle = '#1c1830'
     g.fillRect(0, 0, size.w, size.h)
     g.drawImage(body(size.w), 0, 0)
@@ -599,7 +596,7 @@ const start = (ctx: SoloCtx): GameRun => {
     over: () => null,
     dispose: () => {
       disposed = true
-      panel.remove()
+      sheet.dispose()
     },
   }
 }

@@ -10,7 +10,11 @@ type DigWords = {
   words: {
     keeper: string
     keeperOpen: string
-    veinTitle: (name: string) => string
+    /** The label above the week's vein, on the entry and the odds sheet. */
+    veinKicker: string
+    /** Opens the week's odds; `back` closes them. */
+    oddsOpen: string
+    back: string
     veins: Record<'goldSeam' | 'gemSeam' | 'fossilBed' | 'crystalHollow' | 'cachedSupplies', string>
     veinNote: Record<'goldSeam' | 'gemSeam' | 'fossilBed' | 'crystalHollow' | 'cachedSupplies', string>
     groups: Record<'coins' | 'bag' | 'stone' | 'furniture' | 'fossil', string>
@@ -64,7 +68,9 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
     words: {
       keeper: 'Bem-vindo à mina. *Picareta* abre uma pedra só, *marreta* abre em cruz e racha mais a parede. Encheu a trinca, desaba tudo!',
       keeperOpen: 'Sua parede continua lá, do jeito que você deixou.',
-      veinTitle: (name) => `Veio da semana: ${name}`,
+      veinKicker: 'Veio da semana',
+      oddsOpen: 'Ver chances',
+      back: 'Voltar',
       veins: { goldSeam: 'Filão de Ouro', gemSeam: 'Veio de Gemas', fossilBed: 'Leito de Fósseis', crystalHollow: 'Gruta de Cristal', cachedSupplies: 'Depósito Perdido' },
       veinNote: { goldSeam: 'Mais *pepitas* nas paredes desta semana.', gemSeam: 'Mais *pedras de evolução* nas paredes desta semana.', fossilBed: 'Mais *fósseis* nas paredes desta semana.', crystalHollow: 'Mais *móveis raros* nas paredes desta semana.', cachedSupplies: 'Mais *itens da Mochila* nas paredes desta semana.' },
       groups: { coins: 'Pepitas (₽)', bag: 'Itens da Mochila', stone: 'Pedras de evolução', furniture: 'Móveis raros', fossil: 'Fósseis' },
@@ -116,7 +122,9 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
     words: {
       keeper: 'Welcome to the mine. The *pickaxe* opens one stone, the *hammer* opens a cross and cracks the wall more. Fill the crack and it all comes down!',
       keeperOpen: 'Your wall is right where you left it.',
-      veinTitle: (name) => `This week’s vein: ${name}`,
+      veinKicker: 'This week’s vein',
+      oddsOpen: 'See odds',
+      back: 'Back',
       veins: { goldSeam: 'Gold Seam', gemSeam: 'Gem Seam', fossilBed: 'Fossil Bed', crystalHollow: 'Crystal Hollow', cachedSupplies: 'Lost Cache' },
       veinNote: { goldSeam: 'More *nuggets* in this week’s walls.', gemSeam: 'More *evolution stones* in this week’s walls.', fossilBed: 'More *fossils* in this week’s walls.', crystalHollow: 'More *rare furniture* in this week’s walls.', cachedSupplies: 'More *Bag items* in this week’s walls.' },
       groups: { coins: 'Nuggets (₽)', bag: 'Bag items', stone: 'Evolution stones', furniture: 'Rare furniture', fossil: 'Fossils' },
@@ -168,7 +176,9 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
     words: {
       keeper: 'Bienvenido a la mina. El *pico* abre una piedra, el *martillo* abre en cruz y agrieta más la pared. Si la grieta se llena, ¡se viene todo abajo!',
       keeperOpen: 'Tu pared sigue donde la dejaste.',
-      veinTitle: (name) => `Veta de la semana: ${name}`,
+      veinKicker: 'Veta de la semana',
+      oddsOpen: 'Ver probabilidades',
+      back: 'Volver',
       veins: { goldSeam: 'Filón de Oro', gemSeam: 'Veta de Gemas', fossilBed: 'Lecho de Fósiles', crystalHollow: 'Gruta de Cristal', cachedSupplies: 'Depósito Perdido' },
       veinNote: { goldSeam: 'Más *pepitas* en las paredes de esta semana.', gemSeam: 'Más *piedras evolutivas* en las paredes de esta semana.', fossilBed: 'Más *fósiles* en las paredes de esta semana.', crystalHollow: 'Más *muebles raros* en las paredes de esta semana.', cachedSupplies: 'Más *objetos de la Mochila* en las paredes de esta semana.' },
       groups: { coins: 'Pepitas (₽)', bag: 'Objetos de la Mochila', stone: 'Piedras evolutivas', furniture: 'Muebles raros', fossil: 'Fósiles' },
@@ -220,7 +230,9 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
     words: {
       keeper: 'Bienvenue à la mine. La *pioche* ouvre une pierre, la *masse* ouvre en croix et fissure plus la paroi. Si la fissure se remplit, tout s’écroule !',
       keeperOpen: 'Ta paroi t’attend là où tu l’as laissée.',
-      veinTitle: (name) => `Filon de la semaine : ${name}`,
+      veinKicker: 'Filon de la semaine',
+      oddsOpen: 'Voir les chances',
+      back: 'Retour',
       veins: { goldSeam: 'Filon d’Or', gemSeam: 'Filon de Gemmes', fossilBed: 'Lit de Fossiles', crystalHollow: 'Grotte de Cristal', cachedSupplies: 'Réserve Perdue' },
       veinNote: { goldSeam: 'Plus de *pépites* dans les parois de cette semaine.', gemSeam: 'Plus de *pierres d’évolution* dans les parois de cette semaine.', fossilBed: 'Plus de *fossiles* dans les parois de cette semaine.', crystalHollow: 'Plus de *meubles rares* dans les parois de cette semaine.', cachedSupplies: 'Plus d’*objets du Sac* dans les parois de cette semaine.' },
       groups: { coins: 'Pépites (₽)', bag: 'Objets du Sac', stone: 'Pierres d’évolution', furniture: 'Meubles rares', fossil: 'Fossiles' },
@@ -272,7 +284,9 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
     words: {
       keeper: '歡迎來到礦坑。*十字鎬*敲開一格，*大鎚*敲開十字範圍但更傷岩壁。裂痕滿了，整面牆就會崩塌！',
       keeperOpen: '你的岩壁還在原處等你。',
-      veinTitle: (name) => `本週礦脈：${name}`,
+      veinKicker: '本週礦脈',
+      oddsOpen: '查看機率',
+      back: '返回',
       veins: { goldSeam: '黃金礦脈', gemSeam: '寶石礦脈', fossilBed: '化石層', crystalHollow: '水晶洞', cachedSupplies: '遺失的倉庫' },
       veinNote: { goldSeam: '本週岩壁裡有更多*金塊*。', gemSeam: '本週岩壁裡有更多*進化石*。', fossilBed: '本週岩壁裡有更多*化石*。', crystalHollow: '本週岩壁裡有更多*稀有家具*。', cachedSupplies: '本週岩壁裡有更多*背包道具*。' },
       groups: { coins: '金塊（₽）', bag: '背包道具', stone: '進化石', furniture: '稀有家具', fossil: '化石' },
