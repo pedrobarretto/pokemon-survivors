@@ -11,7 +11,7 @@ import type { Look, MoveDef, MoveId, MoveStats } from './moves'
 import { ownAttack } from './players'
 import { nearestEnemy } from './queries'
 import {
-  APPLE, BITE, biteMult, COAT, GAS, reflectedVelocity, SHIELD, shieldAnswer, SMASH, SNOW, SWIPE, VEIL, veilFreeze, veilRadius, WEB, WING,
+  APPLE, BITE, biteMult, BLITZ, blitzPower, COAT, GAS, GLEAM, reflectedVelocity, SHIELD, shieldAnswer, SMASH, SNOW, SWIPE, VEIL, veilFreeze, veilRadius, WEB, WING,
 } from './seasonOneEggRules'
 import { addMoveBuff } from './signatureMoves'
 import { densestFoe } from './signatureRules'
@@ -99,6 +99,61 @@ export const SEASON_ONE_EGG_MOVES = {
       })
       burst(g, p.x, p.y - 8, { colors: ['#ffffff', '#c8e8f8'], count: 10, speed: 70, ttl: 0.4 })
       cast(g, 'powderSnow')
+    },
+  },
+
+  /* Ponyta: burns all around and leaves fire where it runs, hotter the faster it goes; standing still it barely smolders. */
+  flareBlitz: {
+    name: 'Flare Blitz',
+    type: 'fire',
+    base: stats({ damage: 9, cooldown: 2.8, duration: 2.2, knockback: 90 }),
+    status: { kind: 'burn', chance: 0.35, duration: 2.5, power: 0.3 },
+    upgrades: [
+      { damage: 2 },
+      { duration: 0.4 },
+      { fork: [{ stats: { area: 0.15, damage: 1 }, mods: ['burstOnKill'] }, { stats: { cooldown: -0.3 }, mods: ['arc'] }] },
+      { damage: 3 },
+      { cooldown: -0.3 },
+      { fork: [{ stats: { duration: 0.6 }, mods: ['hunter'] }, { stats: { area: 0.2 }, mods: ['cruel'] }] },
+      { damage: 4, area: 0.15 },
+    ],
+    fire: (g, s) => {
+      const p = g.player
+      const power = blitzPower(ownSpeed(g, 'flareBlitz'), p.moving)
+      trailer(g, { ...s, damage: s.damage * power }, look('flareBlitz', 'fire', 'flameTrail'), { every: BLITZ.every, r: BLITZ.r, ttl: BLITZ.ttl, hitInterval: BLITZ.hitInterval, share: BLITZ.share, duration: s.duration })
+      spawnAttack(g, {
+        ...look('flareBlitz', 'fire', 'flameLanding'), x: p.x, y: p.y,
+        shape: { kind: 'circle', r: BLITZ.ring * s.area }, motion: { kind: 'static' },
+        damage: s.damage * power, knockback: s.knockback, status: s.status, ttl: 0.55, activeUntil: 0.07,
+      })
+      cast(g, 'flareBlitz')
+    },
+  },
+
+  /* Galarian Ponyta: a pastel flash all around that confuses some foes and heals through the drain budget. */
+  dazzlingGleam: {
+    name: 'Dazzling Gleam',
+    type: 'fairy',
+    base: stats({ damage: 11, cooldown: 2.6, knockback: 60 }),
+    status: { kind: 'confuse', chance: 0.2, duration: 2, power: 0 },
+    upgrades: [
+      { damage: 3 },
+      { area: 0.15 },
+      { fork: [{ stats: { cooldown: -0.3 }, mods: ['burstOnKill'] }, { stats: { damage: 3 }, mods: ['hunter'] }] },
+      { damage: 4 },
+      { area: 0.15 },
+      { fork: [{ stats: { cooldown: -0.4 }, mods: ['cruel'] }, { stats: { area: 0.2 }, mods: ['arc'] }] },
+      { damage: 5, area: 0.15 },
+    ],
+    fire: (g, s) => {
+      const p = g.player
+      spawnAttack(g, {
+        ...look('dazzlingGleam', 'fairy', 'dazzlingGleam'), x: p.x, y: p.y - 6,
+        shape: { kind: 'circle', r: GLEAM.r * s.area }, motion: { kind: 'static' },
+        damage: s.damage, knockback: s.knockback, status: s.status, drain: GLEAM.drain, ttl: 0.5, activeUntil: 0.08,
+      })
+      burst(g, p.x, p.y - 12, { colors: ['#ffffff', '#f8c8e8', '#c8b0f8', '#a8e8f0'], count: 12, speed: 90, ttl: 0.4 })
+      cast(g, 'dazzlingGleam')
     },
   },
 

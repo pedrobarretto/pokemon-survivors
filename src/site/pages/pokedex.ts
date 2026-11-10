@@ -27,13 +27,14 @@ import { html, type Html } from '../html'
 import { layout } from '../layout'
 import { appearances, clock, nightBossOf, pageOf, pokedex, ROLES, slugOf, spritesOf, type Appearance, type DexEntry, type Role, type SpriteSet } from '../pokedex'
 import { absolute, dexPaths, ROUTES } from '../routes'
+import { nationalDex } from '../../data/regionalForms'
 import { createSpriteCss, spriteScale } from '../spriteCss'
 
 export type SpriteCss = ReturnType<typeof createSpriteCss>
 
 const asset = (dex: number, file: string, shiny = false) => `/assets/pokemon/${dex}/${shiny ? 'shiny/' : ''}${file}`
 
-const dexNo = (dex: number) => `#${String(dex).padStart(3, '0')}`
+const dexNo = (dex: number) => `#${String(nationalDex(dex)).padStart(3, '0')}`
 
 export const typeBadge = (type: PokeType, m: SiteMessages) =>
   html`<span class="type-badge" style="--type:${TYPE_COLORS[type]}">${m.types[type]}</span>`

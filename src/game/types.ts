@@ -426,7 +426,7 @@ export type EggMoveVisual =
 export type EggMove3Visual =
   | 'fieryDance' | 'overdrive' | 'gigatonHammer' | 'hammerTap' | 'hammerQuake' | 'bitterBlade' | 'leechLife' | 'fireFang'
   | 'furySwipes' | 'heavySlam' | 'heavyQuake' | 'bulldoze' | 'perishWave' | 'perishMark' | 'chargeBeam' | 'moonblast'
-  | 'moonBurst' | 'frostBreath' | 'avalanche'
+  | 'moonBurst' | 'dazzlingGleam' | 'frostBreath' | 'avalanche'
 /** The second batch of egg-family signature moves (`eggMoves2.ts`), drawn by `render/eggMove2Fx.ts`. */
 export type EggMove2Visual =
   | 'braveBird' | 'weatherBall' | 'accelerock' | 'zapCannon' | 'aerialAce' | 'crossPoison' | 'bubbleBeam' | 'rockBlast'

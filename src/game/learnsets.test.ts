@@ -43,7 +43,7 @@ const ROLE: Record<string, Role> = {
   flameWheel: 'field', solarBeam: 'beam', brine: 'shot', electroBall: 'shot', venoshock: 'homing', selfDestruct: 'dash', roost: 'support',
   focusPunch: 'charge', gyroBall: 'aura', suckerPunch: 'counter', futureSight: 'sky', bonemerang: 'boomerang', stealthRock: 'field',
   uTurn: 'dash', dragonTail: 'arc', sheerCold: 'aura',
-  powderSnow: 'field', electroweb: 'chain', corrosiveGas: 'field', magicCoat: 'support', appleAcid: 'field', icicleSpear: 'cone', headSmash: 'dash', ironDefense: 'support', dualWingbeat: 'strike', bite: 'strike', auroraVeil: 'field',
+  flareBlitz: 'field', dazzlingGleam: 'aura', powderSnow: 'field', electroweb: 'chain', corrosiveGas: 'field', magicCoat: 'support', appleAcid: 'field', icicleSpear: 'cone', headSmash: 'dash', ironDefense: 'support', dualWingbeat: 'strike', bite: 'strike', auroraVeil: 'field',
   braveBird: 'dash', weatherBall: 'shot', accelerock: 'dash', zapCannon: 'shot', aerialAce: 'strike', crossPoison: 'arc', bubbleBeam: 'beam', rockBlast: 'shot', cottonSpore: 'field', wildCharge: 'dash', playRough: 'aura', spore: 'support', waterfall: 'beam', lastResort: 'strike',
   crossChop: 'arc', nightSlash: 'arc', dragonPulse: 'wave', waterPulse: 'shot', populationBomb: 'support', jetPunch: 'dash', auraWheel: 'shot', discharge: 'aura', forecast: 'shot', firePunch: 'strike', xScissor: 'arc', shadowClaw: 'arc', orderUp: 'wave',
   sketch: 'random', fieryDance: 'aura', overdrive: 'wave', gigatonHammer: 'strike', bitterBlade: 'arc', leechLife: 'strike', fireFang: 'strike', furySwipes: 'strike', heavySlam: 'dash', bulldoze: 'wave', perishSong: 'support', chargeBeam: 'beam', moonblast: 'shot', frostBreath: 'cone', avalanche: 'field',

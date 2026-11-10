@@ -1,10 +1,10 @@
 // Downloads Pokémon sprites (PMD SpriteCollab), portraits and cries (PokeAPI)
 // into public/assets, and writes a typed-friendly manifest to src/data.
 // Usage: npm run assets
-import { mkdir, writeFile, access } from 'node:fs/promises'
+import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { measureBody } from './body.mjs'
-import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, SHINY, pad } from './dex.mjs'
+import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, SHINY, pad, shinyPath } from './dex.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const OUT = join(ROOT, 'public/assets/pokemon')
@@ -145,7 +145,7 @@ const fetchSpecies = async (dex) => {
   const dir = join(OUT, String(dex))
   const [normal, shiny, cry] = await Promise.all([
     fetchVariant(dex, '', dir),
-    SHINY.has(dex) ? fetchVariant(dex, '/0000/0001', join(dir, 'shiny')) : null,
+    SHINY.has(dex) ? fetchVariant(dex, shinyPath(dex), join(dir, 'shiny')) : null,
     mkdir(dir, { recursive: true }).then(() => download(`${CRIES}/${dex}.ogg`, join(dir, 'cry.ogg'))),
   ])
   if (!normal) throw new Error(`#${dex}: missing AnimData.xml`)
@@ -165,8 +165,10 @@ const fetchSpecies = async (dex) => {
   return [dex, { ...normal, cry, ...(shiny && { shiny }), ...(forms && { forms }), ...(formCries && { formCries }) }]
 }
 
-const species = []
-for (const dex of DEX) species.push(await fetchSpecies(dex))
+// `node scripts/fetch-assets.mjs 77 78`: only those, kept into the manifest as it stands.
+const only = process.argv.slice(2).map(Number)
+const species = only.length > 0 ? Object.entries(JSON.parse(await readFile(MANIFEST, 'utf8'))) : []
+for (const dex of only.length > 0 ? only : DEX) species.push(await fetchSpecies(dex))
 
 await mkdir(join(ROOT, 'src/data'), { recursive: true })
 await writeFile(MANIFEST, JSON.stringify(Object.fromEntries(species), null, 2) + '\n')

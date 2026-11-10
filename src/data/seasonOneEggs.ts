@@ -1,7 +1,7 @@
 import { line2, line3, type HatchlingDef } from './playableLines'
 
 /**
- * Temporada 1's new egg and fossil families. Their abilities are
+ * Temporada 1's new egg and fossil families. A regional form is a family of its own under PokeAPI's id for it (`data/regionalForms.ts`). Their abilities are
  * `SEASON_ONE_EGG_ABILITIES`, their moves live in `game/seasonOneEggMoves.ts`
  * and their words in `i18n/seasonOne/eggs.ts`. Applin's Dipplin, Flapple and
  * Appletun are branches (`data/branches.ts`).
@@ -37,6 +37,16 @@ export const SEASON_ONE_EGGS = {
       { maxHp: 25, might: 0.1 },
       { maxHp: 40, might: 0.22, area: 0.1 },
     ]),
+  },
+  ponyta: {
+    name: 'Ponyta', color: '#f09838', egg: 'common', stats: { speed: 6, maxHp: -5 }, signature: 'flareBlitz',
+    learnset: [['flareBlitz', 'ember', 'flameWheel', 'willOWisp'], ['fireSpin', 'pyroBall', 'wildCharge', 'solarBeam', 'machPunch']],
+    line: line2(['Ponyta', 77, ['fire']], ['Rapidash', 78, ['fire']], { maxHp: 45, speed: 4, might: 0.22 }),
+  },
+  ponytaGalar: {
+    name: 'Galarian Ponyta', color: '#e0b8f0', egg: 'rare', stats: { speed: 4, area: 0.05, maxHp: -5 }, signature: 'dazzlingGleam',
+    learnset: [['dazzlingGleam', 'psyshock', 'disarmingVoice', 'gust'], ['futureSight', 'shockWave', 'solarBeam', 'iceShard', 'venoshock']],
+    line: line2(['Galarian Ponyta', 10162, ['psychic']], ['Galarian Rapidash', 10163, ['psychic', 'fairy']], { maxHp: 45, speed: 3, might: 0.24, area: 0.08 }),
   },
   frigibax: {
     name: 'Frigibax', color: '#70a8c8', egg: 'ultra', stats: { might: 0.08, maxHp: -5 }, signature: 'icicleSpear',
@@ -85,4 +95,6 @@ export const SEASON_ONE_EGG_ABILITIES = {
   archen: ['rockHead', 'keenEye', 'unburden'],
   tyrunt: ['strongJaw', 'rockHead', 'sturdy'],
   amaura: ['snowCloak', 'iceBody', 'sandVeil'],
+  ponyta: ['flashFire', 'flameBody', 'speedBoost'],
+  ponytaGalar: ['pastelVeil', 'sereneGrace', 'cuteCharm'],
 } as const

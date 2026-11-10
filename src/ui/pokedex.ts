@@ -10,6 +10,7 @@ import { cryUrl, drawPokemon, hasShiny, loadedSprites, loadSpecies, portraitUrl 
 import { locale, t } from '../i18n'
 import { h, later } from './dom'
 import { loadSave } from './save'
+import { nationalDex } from '../data/regionalForms'
 import { hint, typeBadge, type Screen } from './screens'
 import { ROUTES } from '../site/routes'
 
@@ -27,7 +28,7 @@ const FILTER_TEST = {
 /** Species the player can knock out: wild ones, plus playable families that also roam the horde. */
 const defeatable = (e: DexEntry) => e.source.kind !== 'starter' || e.source.wild !== undefined
 
-const dexNumber = (n: number) => `#${String(n).padStart(4, '0')}`
+const dexNumber = (n: number) => `#${String(nationalDex(n)).padStart(4, '0')}`
 
 /** Focus zones: the filter tabs, the grid and the footer buttons. ↑/↓ move between them at the grid's edges. */
 type Zone = 'tabs' | 'grid' | 'footer'
