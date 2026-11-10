@@ -82,18 +82,13 @@ export type RealmHome = 'sa'
  * The cities: each is one instance of the whole town (its rooms) with up to
  * `REALM.cityCap` trainers, named after a Pokémon town (official English
  * names, every language). `home`: the relay that hosts it. A new city is an
- * entry here; order is the picker's.
+ * entry here; order is the way in's (`firstOpenCity`, the first with room) and
+ * the list's. Few on purpose: the realm feels alive when trainers land together.
  */
 export const REALM_CITIES = {
   pallet: { home: 'sa', name: 'Pallet Town' },
-  viridian: { home: 'sa', name: 'Viridian City' },
-  pewter: { home: 'sa', name: 'Pewter City' },
   cerulean: { home: 'sa', name: 'Cerulean City' },
-  vermilion: { home: 'sa', name: 'Vermilion City' },
-  celadon: { home: 'sa', name: 'Celadon City' },
   goldenrod: { home: 'sa', name: 'Goldenrod City' },
-  ecruteak: { home: 'sa', name: 'Ecruteak City' },
-  lilycove: { home: 'sa', name: 'Lilycove City' },
   jubilife: { home: 'sa', name: 'Jubilife City' },
 } as const satisfies Record<string, { home: RealmHome; name: string }>
 
@@ -205,7 +200,8 @@ export type PartyMode = 'coop' | 'arena'
  * Who a trainer is, as the API vouches for them (`POST /realm/identity`):
  * never what the client says. `look` is the cosmetic look (slot to id plus
  * `skins`, a `WireLook`; the game's `parseLook` reads it), `partner` the save's partner (a `PlayableId`)
- * and whether it's shiny, `supporter` the tier for the badge, if any.
+ * and whether it's shiny, `supporter` the tier for the badge, if any, `stamps`
+ * how many Estampas it earned (`data/realmStamps.ts`; an API from before them: 0).
  */
 export type RealmIdentity = {
   userId: string
@@ -214,6 +210,7 @@ export type RealmIdentity = {
   shiny: boolean
   look: WireLook
   supporter: string | null
+  stamps: number
 }
 
 /** A trainer as others see them: `id` is per city and connection (never the user id), the rest their identity. */
@@ -224,6 +221,8 @@ export type Avatar = {
   shiny: boolean
   look: WireLook
   supporter: string | null
+  /** How many Estampas the trainer holds (`data/realmStamps.ts`), for its card. */
+  stamps: number
   x: number
   y: number
   facing: Facing
@@ -318,6 +317,10 @@ export type RealmServerMessage =
   | { t: 'table'; table: TableView }
   /** A mutual friend invites you to their base (`city`: where it is), answered by walking there or not. */
   | { t: 'baseInvited'; from: string; city: CityId }
+  /** A trainer of the room just earned stamps (`data/realmStamps.ts` ids), for everyone there to see. */
+  | { t: 'stamped'; id: number; stamps: readonly string[] }
+  /** Your errands now finished, waiting at the board (`realm/errands.ts` ids). */
+  | { t: 'errands'; done: readonly string[] }
   /**
    * Sent away (or never seated): why. The socket closes after it, but for a
    * `go` the relay turned down (`private`, `room`: no such base, `busy`: the

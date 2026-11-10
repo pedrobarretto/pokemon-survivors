@@ -39,7 +39,8 @@ import {
   type RoomKey,
 } from '../net/realm'
 import { REPORT_REASONS, type BaseView, type ReportReason } from '../net/realmApi'
-import { fetchBase, fetchCities, fetchFriends, fetchMe, isFailure, reportTrainer } from '../realm/api'
+import { fetchBase, fetchBook, fetchCities, fetchFriends, fetchMe, isFailure, reportTrainer } from '../realm/api'
+import { firstOpenCity } from '../realm/entry'
 import type { RealmClient } from '../realm/client'
 import { blocked, createWalker, place, pushSample, report, sampleAt, snap, walk, type Ground, type Track } from '../realm/interp'
 import { nearestReachable } from '../realm/placement'
@@ -66,6 +67,16 @@ import type { Screen } from './screens'
 import { toast } from './toasts'
 import { uiZoom } from './uiScale'
 import { markRealmSeen } from './realmSeen'
+import { REALM_EVENTS, type RealmHour } from '../data/realmEvents'
+import { hourNotice } from '../realm/hours'
+import { routeToward } from '../realm/route'
+import { drawHourGround, drawHourOverhead } from '../render/realmHours'
+import { realmHourBar } from './realmHour'
+import { STAMPS, isStampId, type StampId } from '../data/realmStamps'
+import { STAMP_FX_SECONDS, drawStampFx, type StampFx } from '../render/stampFx'
+import { stampArtReady, stampCanvas } from '../render/stampArt'
+import { hasUnseenStamps, openRealmBook } from './realmBook'
+import { openErrandsBoard } from './realmErrands'
 
 /**
  * The Poké Realm's screen (`net/realm.ts`): the city picker, then the town
@@ -82,6 +93,10 @@ import { markRealmSeen } from './realmSeen'
  * to sit on a bench, a sofa or a bed (a step stands up), or, in a base,
  * switch a light or play music on a jukebox for everyone there
  * (`realmJukebox.ts` hands the shell the theme to play).
+ * The Estampas and Recados show here too: the book's button (`ui/realmBook.ts`),
+ * the plaza's board (`ui/realmErrands.ts`), a carimbo over whoever earns one
+ * (`render/stampFx.ts`) with a notice for the room, which keeps a hidden
+ * stamp's name from everyone but who earned it.
  *
  * The player's own trainer walks here (keys, the drag stick or a tap, like
  * the lobby's partner) and is reported to the relay (`realm/interp.ts`);
@@ -121,6 +136,8 @@ export type RealmScreen = Screen & {
   friends: () => void
   /** Dev (`ps.realm('visit', 'ash')`): into a base, as the board's Visit would. */
   visit: (handle: string) => void
+  /** Dev (`ps.realm('book')`): the Livro de Estampas over the town. */
+  book: () => void
 }
 
 /* ---------------- Muted trainers (this device) ---------------- */
@@ -284,36 +301,31 @@ type Trainer = TrainerView & {
   said: { at: number } | null
   plate: HTMLElement
   bubble: HTMLElement
+  /** Carimbos waiting to play over its head, the first one playing (`render/stampFx.ts`). */
+  stampFx: StampFx[]
 }
 
-/** Dev (`ps.realm('room', 'arcade')`): sends the open town's trainer walking to a room through its doors (straight lines, so it can snag on the way). */
+/** Notices of stamps showing at once, and how long each stays (ms). */
+const STAMP_NOTES = 2
+const STAMP_NOTE_MS = 3600
+
+/** Dev (`ps.realm('room', 'arcade')`): sends the open town's trainer walking to a room through its doors. */
 let devGo: ((room: TownRoomId) => void) | null = null
-let devDest: TownRoomId | null = null
 export const devRealmRoom = (room: TownRoomId) => (devGo ? (devGo(room), room) : 'ps.realm: no town open')
 
-/** The middle of the door out of `from` that leads toward `to` (the first hop of the fewest), or null. */
-const doorToward = (from: TownRoomId, to: TownRoomId): Point | null => {
-  const queue: { room: TownRoomId; first: Door | null }[] = [{ room: from, first: null }]
-  const seen = new Set<TownRoomId>([from])
-  while (queue.length) {
-    const { room, first } = queue.shift()!
-    for (const d of REALM_ROOMS[room].doors) {
-      if (seen.has(d.to)) continue
-      const hop = first ?? d
-      if (d.to === to) return { x: hop.at.x + hop.at.w / 2, y: hop.at.y + hop.at.h / 2 }
-      seen.add(d.to)
-      queue.push({ room: d.to, first: hop })
-    }
-  }
-  return null
-}
-
 /** What a session did, summed into one `realm_session` event when it ends. */
-type Session = { city: CityId; started: number; rooms: Set<string>; lines: number; emotes: number; party: boolean; portal: PartyMode | null }
+type Session = { city: CityId; started: number; rooms: Set<string>; peers: number; lines: number; emotes: number; party: boolean; portal: PartyMode | null }
+
+/** How long the way in waits for the API's counts before trying the cities in order (ms). */
+const ENTRY_WAIT_MS = 2500
+
+/** The way in while it looks for a city: the counts it read (null: no answer) and the cities that refused it as full. */
+type AutoEntry = { counts: Partial<Record<CityId, number>> | null; tried: Set<CityId> }
 
 /**
- * Opens the realm: the city picker, or `city` straight away (a link, a
- * friend's city, the dev hooks). The client connects as a city is picked.
+ * Opens the realm: `city` straight away (a link, a friend's city, the dev
+ * hooks), or the first city with room. The list of cities is for changing
+ * city, and for when the way in has nowhere to land.
  */
 export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city: CityId | null): RealmScreen => {
   markRealmSeen()
@@ -323,7 +335,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
   root.append(el)
 
   let disposed = false
-  let picker: HTMLElement | null = null
+  let auto: AutoEntry | null = null
   let town: ReturnType<typeof buildTown> | null = null
   let session: Session | null = null
   let sub: Screen | null = null
@@ -337,6 +349,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       city: s.city,
       seconds: Math.round((performance.now() - s.started) / 1000),
       rooms: s.rooms.size,
+      peers: s.peers,
       lines: s.lines,
       emotes: s.emotes,
       party: s.party ? 1 : 0,
@@ -352,22 +365,19 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
 
   /* ---------- The city picker ---------- */
 
-  const showPicker = (note: string | null = null) => {
-    town?.dispose()
-    town = null
-    endSession()
-    client.leave()
+  /** The cities and the friends walking, to pick where to go: on its own (`showPicker`) or over the town (`here`: the city the player is in). */
+  const cityPanel = (note: string | null, back: () => void, here: CityId | null) => {
     const list = h('div', { class: 'realm-cities' })
     const friends = h('div', { class: 'realm-friends' })
     const enter = (id: CityId) => (playSfx('select'), showTown(id))
     const rows = CITY_IDS.map((id) => {
-      const count = h('small', {}, '…')
+      const count = h('small', {}, id === here ? m().cities.here : '…')
       const b = h('button', { class: 'realm-city box', type: 'button', onclick: () => enter(id) }, h('b', {}, REALM_CITIES[id].name), count)
+      b.toggleAttribute('disabled', id === here)
       list.append(b)
       return { id, b, count }
     })
-    const back = h('button', { class: 'realm-back box', type: 'button', onclick: () => (playSfx('select'), leave()) }, `← ${m().cities.back}`)
-    picker = h(
+    const panel = h(
       'div',
       { class: 'realm-picker box' },
       h('h2', {}, m().name),
@@ -377,24 +387,23 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       list,
       h('h3', {}, m().cities.friends),
       friends,
-      back,
+      h('button', { class: 'realm-back box', type: 'button', onclick: () => (playSfx('select'), back()) }, `← ${m().cities.back}`),
     )
-    el.replaceChildren(picker)
-    later(() => rows[0]?.b.focus())
+    later(() => rows.find((r) => r.id !== here)?.b.focus())
     void fetchCities().then((got) => {
-      if (disposed || !picker) return
+      if (disposed || !panel.isConnected) return
       if (!got) return void list.before(h('p', { class: 'realm-note' }, m().cities.offline))
       for (const r of rows) {
+        if (r.id === here) continue
         const n = got.cities[r.id] ?? 0
         const full = n >= REALM.cityCap
         r.count.textContent = full ? m().cities.full : m().cities.trainers(n)
-        r.b.classList.toggle('full', full)
         r.b.toggleAttribute('disabled', full)
       }
     })
     const all = h('button', { class: 'realm-friend realm-friend-all box', type: 'button', onclick: () => (playSfx('select'), openFriends(null)) }, h('b', {}, m().friends.all))
     void fetchFriends().then((got) => {
-      if (disposed || !picker) return
+      if (disposed || !panel.isConnected) return
       const walking = (got?.friends ?? []).flatMap((f) => (f.state === 'realm' && f.full !== 'city' ? [f] : []))
       friends.replaceChildren(
         ...(walking.length === 0
@@ -411,14 +420,46 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         all,
       )
     })
+    return panel
   }
 
-  /** Into `id`, landing in `room` (a friend's, through "Ir até" or an invite; the relay lands a full room's in the landing). */
-  const showTown = (id: CityId, room: RoomKey = LANDING) => {
-    picker = null
+  /** The list on its own, out of any city: the way in found no room, or the relay sent the trainer away. */
+  const showPicker = (note: string | null = null) => {
+    town?.dispose()
+    town = null
+    endSession()
+    client.leave()
+    el.replaceChildren(cityPanel(note, leave, null))
+  }
+
+  /** "Trocar de cidade", over the town: the trainer stays where it is until another city is picked. */
+  const citySheet = (r: HTMLElement, here: CityId): Screen => {
+    const sheet = h('div', { class: 'screen realm-sheet-screen' }, cityPanel(null, closeSub, here))
+    r.append(sheet)
+    const off = input.onKey((key) => (key === 'Escape' ? closeSub() : undefined))
+    return { el: sheet, dispose: () => (off(), sheet.remove()) }
+  }
+
+  /** The next city to try (`firstOpenCity`), or the list once all are full. */
+  const landIn = (entry: AutoEntry) => {
+    const id = firstOpenCity(entry.counts, entry.tried)
+    if (id) showTown(id, LANDING, entry)
+    else showPicker(m().refusals.full)
+  }
+
+  /** The way in: the API's counts, never waiting long on them (a friend's city or the panel may have taken over meanwhile). */
+  const findCity = async () => {
+    el.replaceChildren(h('div', { class: 'realm-status box' }, m().status.connecting))
+    const got = await Promise.race([fetchCities(), new Promise<null>((done) => setTimeout(() => done(null), ENTRY_WAIT_MS))])
+    if (!disposed && !town) landIn({ counts: got?.cities ?? null, tried: new Set() })
+  }
+
+  /** Into `id`, landing in `room` (a friend's, through "Ir até" or an invite; the relay lands a full room's in the landing). `entry`: the way in chose it, so a full city moves on to the next. */
+  const showTown = (id: CityId, room: RoomKey = LANDING, entry: AutoEntry | null = null) => {
+    auto = entry
     closeSub()
     town?.dispose()
-    session = { city: id, started: performance.now(), rooms: new Set([LANDING]), lines: 0, emotes: 0, party: false, portal: null }
+    session = { city: id, started: performance.now(), rooms: new Set([LANDING]), peers: 0, lines: 0, emotes: 0, party: false, portal: null }
     town = buildTown(id)
     client.join(id, room)
   }
@@ -480,15 +521,27 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       h('img', { src: realmIconUrl('friends'), alt: '' }),
       h('span', { class: 'key-hint' }, 'F'),
     )
-    const leaveButton = h('button', { class: 'realm-leave box', type: 'button', onclick: () => (playSfx('select'), showPicker()) }, `← ${m().leave}`)
+    const bookDot = h('span', { class: 'realm-dot hidden', 'aria-hidden': 'true' })
+    const bookButton = h(
+      'button',
+      { class: 'realm-talk realm-book-open box', type: 'button', 'aria-label': m().stamps.title, title: m().stamps.title, onclick: () => openBook() },
+      h('img', { src: realmIconUrl('book'), alt: '' }),
+      h('span', { class: 'key-hint' }, 'B'),
+      bookDot,
+    )
+    const stampNotes = h('div', { class: 'realm-stamped' })
+    const leaveButton = h('button', { class: 'realm-leave box', type: 'button', onclick: () => (playSfx('select'), leave()) }, `← ${m().leave}`)
+    const hourBar = realmHourBar((to) => walkToHour(to))
     el.replaceChildren(
       signs,
       layer,
-      h('div', { class: 'realm-top' }, leaveButton, h('div', { class: 'realm-title box' }, where, count), decorate),
+      h('div', { class: 'realm-top' }, leaveButton, h('button', { class: 'realm-title box', type: 'button', title: m().cities.switch, 'aria-label': m().cities.switch, onclick: () => (playSfx('select'), openSub((r) => citySheet(r, city))) }, where, count), decorate),
+      hourBar.el,
       status,
       partyBar,
       usePrompt,
-      h('div', { class: 'realm-actions' }, friendsButton, talkButton, emoteButton),
+      h('div', { class: 'realm-actions' }, bookButton, friendsButton, talkButton, emoteButton),
+      stampNotes,
       wheel,
       emotes,
       card,
@@ -545,9 +598,24 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     let pending: UsePiece | null = null
     let cam = { x: 0, y: 0 }
     let clock = 0
+    /** A room the trainer is walking to on its own (the Hora's banner), and the corners left to walk through in this one. */
+    let heading: TownRoomId | null = null
+    let route: Point[] = []
+    /** The Hora do Realm running now (read once a second, `syncHour`). */
+    let hour: RealmHour | null = null
 
     void fetchBase(deps.handle).then((v) => {
       if (!disposed && !isFailure(v)) exterior = v.layout.exterior
+    })
+
+    void stampArtReady()
+
+    /** Recados finished and waiting at the board (the board's label says so), and the book's button glowing for a stamp not seen yet. */
+    let ready = new Set<string>()
+    void fetchBook().then((book) => {
+      if (disposed || !book) return
+      ready = new Set(book.errands.flatMap((e) => (!e.claimed && e.progress >= e.target ? [e.id] : [])))
+      bookDot.classList.toggle('hidden', !hasUnseenStamps(book))
     })
 
     /* Wheel and emote bar */
@@ -612,10 +680,12 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         said: null,
         plate: plateOf(av, look),
         bubble: h('div', { class: 'realm-said hidden' }),
+        stampFx: [],
       }
       pushSample(tr.track, { at: performance.now() - REALM.interpDelayMs, x: av.x, y: av.y, facing: av.facing, moving: av.moving })
       layer.append(tr.plate, tr.bubble)
       trainers.set(av.id, tr)
+      if (session) session.peers = Math.max(session.peers, trainers.size - (trainers.has(you ?? -1) ? 1 : 0))
       names.set(av.id, av.handle)
       if (av.id === you) me = av
     }
@@ -656,6 +726,27 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       // The first time in the grove, its host comes over to explain what a secret base is.
       if (key === 'trail' && !groveSeen()) later(() => !disposed && room === 'trail' && !sub && hostTalk(true))
       where.textContent = `${REALM_CITIES[city].name} · ${owner ? m().base(owner) : isTownRoomId(key) ? m().rooms[key] : key}`
+      route = []
+      syncHour()
+    }
+
+    /* The Hora do Realm */
+    function syncHour() {
+      const notice = hourNotice(Date.now())
+      hour = notice?.on ? notice.hour : null
+      hourBar.show(notice, room)
+    }
+    const hourTick = setInterval(syncHour, 1000)
+    syncHour()
+
+    /** The banner's shortcut: walks the trainer through the town's doors to `to` (out of a base, straight there as its Visit does). */
+    function walkToHour(to: TownRoomId) {
+      if (!room) return
+      playSfx('select')
+      if (perched()) standUp()
+      route = []
+      if (isTownRoomId(room)) heading = to
+      else go(to, REALM_ROOMS[to].spawn)
     }
 
     /* The relay's messages */
@@ -664,6 +755,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       switch (msg.t) {
         case 'welcome':
           you = msg.you
+          auto = null
           return enterRoom(msg.room, msg.avatars)
         case 'room':
           return enterRoom(msg.room, msg.avatars)
@@ -728,6 +820,15 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           if (msg.table.seats.every((s) => s === null)) tables.delete(msg.table.id)
           else tables.set(msg.table.id, msg.table)
           return
+        case 'stamped':
+          return stamped(msg.id, msg.stamps.filter(isStampId))
+        case 'errands': {
+          const fresh = msg.done.filter((id) => !ready.has(id))
+          for (const id of fresh) ready.add(id)
+          if (fresh.length === 0) return
+          playSfx('select')
+          return void toast(root, m().errands.toast(ready.size), 4200, 'realmErrands')
+        }
         case 'emoted': {
           const tr = trainers.get(msg.id)
           if (tr && !muted.has(tr.av.handle)) tr.emote = { id: msg.emote, at: clock }
@@ -775,16 +876,54 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     }
     const offMessages = client.onMessage(onMessage)
 
+    /** Shows a notice of a stamp for a moment; the player's own is bigger and opens the book. */
+    const stampNote = (id: StampId, text: string, mine: boolean) => {
+      while (stampNotes.childElementCount >= STAMP_NOTES) stampNotes.firstElementChild?.remove()
+      const note = h('div', { class: mine ? 'realm-stamped-note mine' : 'realm-stamped-note', ...(mine ? { onclick: () => openBook(id) } : {}) }, stampCanvas(id, mine || !('hidden' in STAMPS[id]) ? 'earned' : 'hidden'), h('span', {}, text))
+      stampNotes.append(note)
+      setTimeout(() => note.remove(), STAMP_NOTE_MS)
+    }
+
+    /**
+     * A trainer of the room earned stamps: the carimbo over its head and a
+     * notice for the room. A hidden stamp keeps its secret from everyone but
+     * who earned it. A muted trainer's show nothing.
+     */
+    function stamped(id: number, ids: readonly StampId[]) {
+      const tr = trainers.get(id)
+      if (!tr || ids.length === 0 || muted.has(tr.av.handle)) return
+      const mine = id === you
+      tr.av = { ...tr.av, stamps: (tr.av.stamps ?? 0) + ids.length }
+      if (mine) {
+        me = tr.av
+        bookDot.classList.remove('hidden')
+        playSfx('levelUp')
+      }
+      const s = m().stamps
+      const start = tr.stampFx.at(-1) ? tr.stampFx.at(-1)!.at + STAMP_FX_SECONDS : clock
+      ids.forEach((stamp, i) => {
+        const secret = 'hidden' in STAMPS[stamp]
+        tr.stampFx.push({ id: stamp, look: mine || !secret ? 'earned' : 'hidden', at: Math.max(clock, start) + i * STAMP_FX_SECONDS })
+        const name = s.list[stamp].name
+        stampNote(stamp, mine ? s.earnedNote(name) : secret ? s.roomHidden(tr.av.handle) : s.roomEarned(tr.av.handle, name), mine)
+      })
+    }
+
     const refused = (why: RealmRefusal) => {
       // Seated, a refused `go` leaves the trainer where it stands.
       if (client.status().kind === 'open') {
         going = false
+        heading = null
         return void toast(root, m().refusals[why], 3200, 'realmRefused')
+      }
+      if (why === 'full' && auto) {
+        auto.tried.add(city)
+        return landIn(auto)
       }
       if (why === 'full' || why === 'city' || why === 'afk') return showPicker(m().refusals[why])
       status.textContent = m().refusals[why]
       status.classList.remove('hidden')
-      status.append(h('button', { class: 'box', type: 'button', onclick: () => showPicker() }, m().cities.back))
+      status.append(h('button', { class: 'box', type: 'button', onclick: () => leave() }, m().cities.back))
     }
 
     /* Party */
@@ -868,9 +1007,24 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         h('b', {}, m().trainer.reportTitle(handle)),
         ...REPORT_REASONS.map((r) => h('button', { class: 'box', type: 'button', onclick: () => sendReport(handle, r) }, m().trainer.reasons[r])),
       )
+      const self = tr.av.id === you
+      const n = tr.av.stamps ?? 0
+      const stampsLine = h('p', { class: 'realm-card-stamps' }, h('img', { src: realmIconUrl('book'), alt: '' }), m().stamps.count(n))
       card.dataset.id = String(tr.av.id)
+      if (self) {
+        card.replaceChildren(
+          h('div', { class: 'realm-card-head' }, tr.plate.cloneNode(true)),
+          stampsLine,
+          h('button', { class: 'box', type: 'button', onclick: () => openBook() }, m().stamps.title),
+          h('button', { class: 'realm-card-close', type: 'button', 'aria-label': m().trainer.close, onclick: () => card.classList.add('hidden') }, '×'),
+        )
+        for (const p of [wheel, emotes]) p.classList.add('hidden')
+        card.classList.remove('hidden')
+        return playSfx('select')
+      }
       card.replaceChildren(
         h('div', { class: 'realm-card-head' }, tr.plate.cloneNode(true)),
+        stampsLine,
         ...(inParty || !leading
           ? []
           : [
@@ -970,7 +1124,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         case 'arenaPortal':
           return portal(spot.kind === 'coopPortal' ? 'coop' : 'arena')
         case 'board':
-          return openSub((r) => boardSheet(r, closeSub))
+          return openSub((r) => openErrandsBoard(r, input, { close: closeSub, claimed: errandsClaimed }))
         case 'bases':
           return openSub((r) => openBaseBoard(r, input, { visit: (owner) => (closeSub(), go(baseRoom(owner), BASE_ROOM.spawn)), close: closeSub, city }))
         case 'myBase':
@@ -1114,13 +1268,14 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       if (sub) return
       if (key === 'Escape') {
         const open = [wheel, emotes, card].find((p) => !p.classList.contains('hidden'))
-        return open ? open.classList.add('hidden') : showPicker()
+        return open ? open.classList.add('hidden') : leave()
       }
       if (key === 'KeyE' || key === 'Enter') return useSpot()
       if (key === 'KeyP') return boardAt(near)
       if (key === 'KeyT') return toggle(wheel)
       if (key === 'KeyY') return toggle(emotes)
       if (key === 'KeyF') return friendsPanel()
+      if (key === 'KeyB') return openBook()
       const n = Number(/^Digit(\d)$/.exec(key)?.[1] ?? NaN)
       if (n >= 1 && n <= 9) emote(REALM_EMOTES[n - 1]!)
     }
@@ -1135,19 +1290,20 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       return len > 0 ? { x: x / len, y: y / len } : { x: 0, y: 0 }
     }
 
-    /** The trainer under a tap (world px), the nearest body within reach. */
+    /** The trainer under a tap (world px): the nearest body within reach, the player's own only when nobody else is there. */
     const pickAt = (x: number, y: number): Trainer | null => {
       let best: Trainer | null = null
       let d = PICK
       for (const tr of trainers.values()) {
-        if (tr.av.id === you) continue
         const dd = Math.hypot(tr.x - x, tr.y - headOf(tr) / 2 - y)
-        if (dd < d) {
+        if (tr.av.id !== you && dd < d) {
           d = dd
           best = tr
         }
       }
-      return best
+      if (best || you === null) return best
+      const own = trainers.get(you)
+      return own && Math.hypot(own.x - x, own.y - headOf(own) / 2 - y) < PICK ? own : null
     }
 
     /* The frame */
@@ -1166,6 +1322,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
 
       if (seated && room && !sub) {
         const move = drag?.stick?.vec ?? held()
+        if (tap || move.x !== 0 || move.y !== 0) heading = null
         if (tap) {
           const at = { x: cam.x + tap.x / scale, y: cam.y + tap.y / scale }
           const who = pickAt(at.x, at.y)
@@ -1181,9 +1338,13 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         }
         if (perched() && (move.x !== 0 || move.y !== 0)) standUp()
         if (move.x !== 0 || move.y !== 0) pending = null
-        // Dev: walking on its own toward `ps.realm('room', …)`'s room, door after door.
-        if (devDest && (devDest === room || !isTownRoomId(room))) devDest = null
-        if (devDest && !going && walker.target === null && isTownRoomId(room)) walker.target = doorToward(room, devDest)
+        // Walking on its own toward a room (the Hora's banner, `ps.realm('room', …)`), corner after corner, door after door.
+        if (heading && (heading === room || !isTownRoomId(room))) heading = null
+        if (heading && !going && walker.target === null && isTownRoomId(room)) {
+          if (route.length === 0) route = routeToward(room, heading, walker)
+          walker.target = route.shift() ?? null
+          if (walker.target === null) heading = null
+        }
         // On a seat (or waiting a beat for the relay to seat it), the trainer stays put, and says nothing a step would stand it up with.
         const still = perched() || now - perching < PERCH_WAIT_MS
         if (!going && !still) walk(walker, move, dt, ground)
@@ -1208,6 +1369,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const town = isTownRoomId(room) ? room : null
       if (town) drawTownGround(ctx, town, cam.x, cam.y, w, hgt, clock, exterior)
       else if (base) drawBaseRoom(ctx, base, cam.x, cam.y, clock)
+      const hourHere = hour && town === REALM_EVENTS[hour.kind].room ? hour : null
+      if (hourHere) drawHourGround(ctx, hourHere, cam.x, cam.y, w, hgt, clock)
       if (usable.room !== room || usable.base !== base) {
         const items = base?.layout.items ?? []
         usable = { room, base, all: usePieces(room, base?.layout ?? null, (i) => liftOf(items, i)) }
@@ -1242,6 +1405,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       pieces.sort((a, b) => a.y - b.y)
       for (const p of pieces) p.draw()
       if (town) drawTownOverhead(ctx, town, cam.x, cam.y, w, hgt, clock)
+      if (hourHere) drawHourOverhead(ctx, hourHere, cam.x, cam.y, w, hgt, clock)
       // A base's tables in use wear a bubble (a town room's say so in their labels).
       if (!town)
         for (const spot of spots) {
@@ -1249,6 +1413,11 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           if (tb) drawTableMarker(ctx, spot, tb, false, cam.x, cam.y, clock)
         }
       for (const v of views) drawEmoteBubble(ctx, v, cam.x, cam.y, clock)
+      for (const tr of trainers.values()) {
+        const fx = tr.stampFx[0]
+        if (!fx) continue
+        if (!drawStampFx(ctx, fx, tr.x - cam.x, tr.y - headOf(tr) - cam.y, clock) && clock - fx.at > STAMP_FX_SECONDS) tr.stampFx.shift()
+      }
       if (drag?.stick) drawJoystick(ctx, drag.stick, scale)
 
       // The HTML over the canvas: plates and lines over heads, the spot's prompt.
@@ -1311,13 +1480,32 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           if (l.el.textContent !== text) l.el.textContent = text
           l.el.classList.toggle('busy', tb !== undefined)
         }
+        // The plaza's board says when Recados wait there.
+        if (shown && l.spot?.kind === 'board') {
+          const text = ready.size > 0 ? `${l.text} · ${m().errands.ready(ready.size)}` : l.text
+          if (l.el.textContent !== text) l.el.textContent = text
+        }
         if (shown) l.el.style.transform = pin(l.at, l.el)
       }
     }
 
-    devGo = (to) => (devDest = to)
+    /** The Livro de Estampas over the town, on `focus`'s page if given. */
+    function openBook(focus?: StampId) {
+      playSfx('select')
+      for (const p of [wheel, emotes, card]) p.classList.add('hidden')
+      openSub((r) => openRealmBook(r, input, { close: closeSub, ...(focus ? { focus } : {}), read: () => bookDot.classList.add('hidden') }))
+    }
+
+    /** A Recado collected at the board: the label's count, and the stamps the day's last one earned (the API tells nobody else). */
+    function errandsClaimed(left: number, earned: readonly StampId[]) {
+      ready = new Set([...ready].slice(0, left))
+      if (you !== null) stamped(you, earned)
+    }
+
+    devGo = (to) => (heading = to)
     const dispose = () => {
       devGo = null
+      clearInterval(hourTick)
       setRealmJukebox(null)
       offMessages()
       offKeys()
@@ -1327,7 +1515,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       window.removeEventListener('pointercancel', onUp)
     }
 
-    return { scene, dispose, walkTo: (x: number, y: number) => void (walker.target = { x, y }), friends: friendsPanel, visit: (handle: string) => go(baseRoom(handle), BASE_ROOM.spawn) }
+    return { scene, dispose, walkTo: (x: number, y: number) => void (walker.target = { x, y }), friends: friendsPanel, visit: (handle: string) => go(baseRoom(handle), BASE_ROOM.spawn), book: () => openBook() }
   }
 
   /* ---------- Sheets over the town ---------- */
@@ -1342,20 +1530,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     sub = null
   }
 
-  const boardSheet = (r: HTMLElement, close: () => void): Screen => {
-    const b = m().board
-    const sheet = h(
-      'div',
-      { class: 'screen realm-sheet-screen' },
-      h('div', { class: 'realm-board box' }, h('h2', {}, b.title), ...b.lines.map((line) => h('p', {}, line)), h('button', { class: 'box', type: 'button', onclick: close }, m().trainer.close)),
-    )
-    r.append(sheet)
-    const off = input.onKey((key) => (key === 'Escape' || key === 'Enter' ? close() : undefined))
-    return { el: sheet, dispose: () => (off(), sheet.remove()) }
-  }
-
   if (city) showTown(city)
-  else showPicker()
+  else void findCity()
 
   return {
     el,
@@ -1363,9 +1539,10 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     walkTo: (x, y) => town?.walkTo(x, y),
     friends: () => (town ? town.friends() : openFriends(null)),
     visit: (handle) => town?.visit(handle),
+    book: () => town?.book(),
     scene: (ctx, dt, w, hgt) => {
       if (town) return town.scene(ctx, dt, w, hgt)
-      // The picker sits over the plaza, quiet, the client not yet in a city.
+      // The list (or the way in, looking for a city) sits over the plaza, quiet, the client not yet in one.
       ctx.fillStyle = '#101820'
       ctx.fillRect(0, 0, w, hgt)
       drawTownGround(ctx, LANDING, Math.round((REALM_ROOMS[LANDING].w - w) / 2), Math.round((REALM_ROOMS[LANDING].h - hgt) / 2), w, hgt, performance.now() / 1000)

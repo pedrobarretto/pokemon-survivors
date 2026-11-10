@@ -94,12 +94,12 @@ type SelectActions = {
  * Pointer: a tap selects; only Start starts (a second tap on the selected cell started runs players only meant to pick).
  * Selecting an unlocked Pokémon makes it the lobby's partner (`save.partner`) right away, so Back shows it there.
  * `selected` reads the selected Pokémon, so a rebuilt screen (language switch, back from a sub-screen) keeps it.
- * `coop`: picking the Pokémon for a co-op room, which plays the normal mode (`COOP_LOCKS`): no
+ * `tab`: opens on that tab (the lobby's Lendas). `coop`: picking the Pokémon for a co-op room, which plays the normal mode (`COOP_LOCKS`): no
  * Lendários tab, no Bag, TMs or Bottle Caps, no Poké Mart, and the host sets the difficulty, so the
  * bar is just "Escolher". `dojo`: picking who trains at the Dojo, the same plain bar ("Treinar"),
  * the captured legends included (they train with their awakenings).
  */
-export const starterSelect = (root: HTMLElement, input: Input, actions: SelectActions, initial: PlayableId = 'charmander', opts: { coop?: boolean; dojo?: boolean } = {}): Screen & { selected: () => PlayableId } => {
+export const starterSelect = (root: HTMLElement, input: Input, actions: SelectActions, initial: PlayableId = 'charmander', opts: { coop?: boolean; dojo?: boolean; tab?: 'legends' } = {}): Screen & { selected: () => PlayableId } => {
   const m = t()
   /** Co-op and the Dojo only pick a Pokémon: no Legend mode, Bag, difficulty or Poké Mart, and the partner stays. */
   const plain = opts.coop === true || opts.dojo === true
@@ -113,7 +113,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
 
   /** Co-op leaves the Legend mode home: no Lendários tab, and a legend partner opens on the starters. */
   const tabs: readonly Tab[] = opts.coop ? TABS.filter((k) => k !== 'legends') : TABS
-  let tab: Tab = tabs.includes(tabOf(initial)) ? tabOf(initial) : 'starters'
+  let tab: Tab = opts.tab ?? (tabs.includes(tabOf(initial)) ? tabOf(initial) : 'starters')
   /** Each tab remembers its own cursor, so switching back lands where it was. */
   const firstHatched = HATCHLING_IDS.find((id) => save.hatched[id]) ?? HATCHLING_IDS[0]!
   // A festival legend stays out of the tab until its festival is announced (`legendShown`).
