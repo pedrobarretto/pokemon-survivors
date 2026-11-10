@@ -29303,6 +29303,12 @@ span.arena-hub-face {
   border-color: var(--kit-tinta);
 }
 
+/* Chinese odds ("20 分之 1") run wider than the digits: smaller, so they hold one line. */
+:lang(zh) .dig-odds b {
+  font-size: 22px;
+  white-space: nowrap;
+}
+
 .dig-loot {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
