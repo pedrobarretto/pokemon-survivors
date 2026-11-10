@@ -1,4 +1,4 @@
-import { FENCE, MAP_H, MAP_W, PLAZA, TERRAIN, TILE, type Bridge, type Paint, type PropKind, type SafariMapDef, type Terrain } from '../../data/safariMaps'
+import { FENCE, MAP_H, MAP_W, PLAZA, PLAZA_BEHIND, TERRAIN, TILE, type Bridge, type Paint, type PropKind, type SafariMapDef, type Terrain } from '../../data/safariMaps'
 
 /**
  * A preserve built from its data (`data/safariMaps.ts`): terrain on a grid of
@@ -122,7 +122,7 @@ export const buildWorld = (def: SafariMapDef): SafariWorld => {
     }
   }
   // The booth, its keeper and the notice board stand solid, as does the arch's pair of posts.
-  for (const [x, y, solid] of [[PLAZA.kiosk.x, PLAZA.kiosk.y, 26], [PLAZA.ranger.x, PLAZA.ranger.y, 9], [PLAZA.board.x, PLAZA.board.y, 12], [PLAZA.gate.x - 2.4, PLAZA.gate.y, 8], [PLAZA.gate.x + 2.4, PLAZA.gate.y, 8]] as const) props.push({ kind: 'blocker', x: x * TILE, y: y * TILE, solid })
+  for (const [x, y, solid] of [[PLAZA.kiosk.x, PLAZA.kiosk.y, 26], [PLAZA.ranger.x, PLAZA.ranger.y, 9], [PLAZA.board.x, PLAZA.board.y, 12], [PLAZA.gate.x - PLAZA.gate.posts, PLAZA.gate.y, 8], [PLAZA.gate.x + PLAZA.gate.posts, PLAZA.gate.y, 8]] as const) props.push({ kind: 'blocker', x: x * TILE, y: y * TILE, solid })
   const open = (x: number, y: number) => terrain[vertexAt(x, y)] === TERRAIN.ground && Math.hypot(x - PLAZA.spawn.x, y - PLAZA.spawn.y) > 10
   const clearOf = (x: number, y: number, gap: number) => props.every((p) => Math.hypot(p.x - x, p.y - y) >= gap)
   for (const kind of ['tree', 'tree2', 'rock', 'shrub', 'accent'] as const) {
@@ -178,6 +178,9 @@ export const walkable = (w: SafariWorld, x: number, y: number) => {
   }
   return true
 }
+
+/** Whether a walker at (world px) is where a tall piece of the plaza would hide it whole (`PLAZA_BEHIND`). */
+export const behindPlaza = (x: number, y: number) => PLAZA_BEHIND.some(([x0, y0, x1, y1]) => x >= x0 * TILE && x <= x1 * TILE && y >= y0 * TILE && y <= y1 * TILE)
 
 /** The tall tile under (world px), or -1. */
 export const tallTileAt = (w: SafariWorld, x: number, y: number) => {

@@ -34,7 +34,9 @@ type Phase = 'load' | 'lobby' | 'busy' | 'gate' | 'walk' | 'alert' | 'wipeIn' | 
 
 const WIPE = 0.55
 const ALERT = 0.72
-const GATE_WALK = 1.05
+/** The walk up to the arch that opens a session: px/s, and how long it takes from the spawn. */
+const GATE_SPEED = 62
+const GATE_WALK = ((PLAZA.spawn.y - PLAZA.entry.y) * TILE) / GATE_SPEED
 
 /** What the dev hooks (`ps.safari`) reach of the running game. */
 export const safariDev: { run: { phase: () => Phase; battle: () => string | null; rustle: () => void } | null } = { run: null }
@@ -483,7 +485,7 @@ const start = (ctx: SoloCtx): GameRun => {
         if (field) {
           field.player.moving = true
           field.player.dir = 4
-          field.player.y -= 62 * dt
+          field.player.y = Math.max(PLAZA.entry.y * TILE, field.player.y - GATE_SPEED * dt)
         }
         if (phaseT >= GATE_WALK) {
           go('walk')
