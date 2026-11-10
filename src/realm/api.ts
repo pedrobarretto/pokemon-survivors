@@ -106,8 +106,9 @@ const fakeBookStart = (now: number): RealmBook => {
   return { stamps, counts, milestones: milestonesReached(stamps.length).map((m) => m.at), errands, day }
 }
 
-/** Dev: every call answers made-up data (on), or the API again (off). */
+/** Dev: every call answers made-up data (on), or the API again (off). Already on, it keeps what was faked so far (the book a faked game just stamped). */
 export const fakeRealm = (on: boolean, handle = 'ash') => {
+  if (on && fake) return
   const bases = [fakeBase('misty', DEMO_BASES.misty, 'squirtle', 87, 24), fakeBase('brock', DEMO_BASES.brock, 'geodude', 41, 9)]
   fake = on ? { me: { handle, furniture: fakeFurniture(), base: fakeBase(handle) }, bases: new Map(bases.map((b) => [b.handle, b])), games: { day: {}, stats: {}, board: {} }, showWhere: true, book: fakeBookStart(Date.now()) } : null
 }
