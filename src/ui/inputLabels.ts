@@ -114,9 +114,9 @@ export const boundPadHint = (keys: string) => {
 /* ---------------- Glyphs ---------------- */
 
 /**
- * Label text in Press Start 2P with the glyphs it lacks: it has ↑ and ↓ but
- * no ← → (they draw as its ↑ turned, `.side-arrow` in CSS) and no ✕ ○ □ △
- * (pixel icons). The fallback font drew them as specks a player read as "-".
+ * Label text with the glyphs the UI fonts lack: VT323 has ↑ and ↓ but none
+ * has ← → (they draw as ↑ turned, `.side-arrow` in CSS) or ✕ ○ □ △ (pixel
+ * icons). The system's fallback font drew them as specks a player read as "-".
  */
 export const glyphText = (text: string) =>
   text.split(/([←→✕○□△])/).map((part, i) => {

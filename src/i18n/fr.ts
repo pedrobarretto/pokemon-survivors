@@ -1,3 +1,4 @@
+import { realmBookFr as realmBook } from './realmStamps/fr'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
@@ -36,42 +37,46 @@ export const fr: Messages = {
     pressKeys: 'Appuie sur une touche',
     pressTouch: 'Touche pour commencer',
     play: 'JOUER',
-    today: "AUJOURD'HUI",
-    outbreak: 'APPARITION MASSIVE',
-    challenge: 'DEFI DU JOUR',
+    today: 'AUJOURD’HUI',
+    /** Na Praça's column head and the note beside it. */
+    plaza: 'SUR LA PLACE',
+    plazaNote: 'événement + boutiques',
+    outbreakName: (name: string) => `Épidémie : ${name}`,
+    outbreakLine: 'chromatiques plus fréquents',
+    challengeName: 'Défi du jour',
+    challengeLine: (name: string) => `${name} · ruban d’or`,
     challengeDone: (time) => `Fait : ${time}`,
     challengeOpen: 'Pas encore joué aujourd’hui',
     missions: 'Missions',
     missionsLeft: (n) => (n <= 1 ? `Encore ${n} mission du jour` : `Encore ${n} missions du jour`),
-    hall: 'PANTHEON',
-    hallJoined: (handle, today) => (today ? `@${handle} a rejoint le Panthéon aujourd’hui` : `@${handle} a rejoint le Panthéon`),
+    hallName: 'Panthéon',
+    hallNewest: 'Dernier :',
+    hallCount: (n, shown) => (n === 1 ? `${shown} soutien` : `${shown} soutiens`),
     change: 'Changer',
-    stroll: 'se promener',
-    strollTouch: 'Touche l’herbe pour te promener',
-    explore: 'Se promener',
-    exploreLabel: 'Promène-toi dans la prairie et sur la place',
-    exploreTouch: 'Touche ou glisse pour marcher',
-    exploreKeys: 'marcher',
     pokedex: 'Pokédex',
     eggs: 'Œufs',
     eggsReady: (n) => (n <= 1 ? `${n} œuf prêt à éclore` : `${n} œufs prêts à éclore`),
+    eggsWalking: (n: number) => (n === 1 ? '1 en route' : `${n} en route`),
+    eggsNone: 'Incubateur vide',
+    gifts: 'Cadeaux',
+    giftsToOpen: (n: number) => (n === 1 ? '1 à ouvrir' : `${n} à ouvrir`),
     mart: 'Boutique',
-    dojo: 'Dojo',
-    dojoLabel: 'Dojo : essaie des capacités et monte des builds',
     ranking: 'Classement',
     ideas: 'Idées',
     support: 'Soutenir le projet',
-    rail: {
-      halloween: 'Sorcières',
-      festival: 'Festival',
-      outbreak: 'Essaim',
-      challenge: 'Défi',
-      missions: 'Missions',
-      hall: 'Panthéon',
-      invites: 'Inviter',
-      discord: 'Discord',
-      days: (n) => `${n}j`,
-    },
+    /** Na Praça's shop rows. */
+    shopName: 'Boutique de Kecleon',
+    shopLine: 'Vitrine du jour · Œuf Kecleon',
+    boutiqueName: 'Boutique',
+    boutiqueLine: 'Chapeaux et effets inédits',
+    carpentryName: 'Menuiserie',
+    carpentryLine: 'Des meubles pour votre base',
+    /** Over the partner pill, before its name. */
+    partner: 'Partenaire',
+    community: 'Communauté',
+    friends: 'Amis',
+    /** The bottom tabs on a phone (and the rail on a phone on its side). */
+    tabs: { home: 'Accueil', collection: 'Collection', plaza: 'Place', social: 'Social', profile: 'Profil' },
   },
 
   shell: {
@@ -139,6 +144,9 @@ export const fr: Messages = {
     specialTitle: (name) => `${name} (Espace)`,
     lunge: 'Ruée',
     lungeTitle: (name) => `${name} (Maj)`,
+    stickLock: 'Joystick fixe',
+    stickLocked: 'Joystick fixe ! Change sa place dans Réglages → Commandes.',
+    stickFree: 'Joystick libre : il suit ton doigt.',
     stances: { shield: 'Bouclier', blade: 'Lame', normal: 'Normal', attack: 'Attaque', defense: 'Défense', speed: 'Vitesse', heat: 'Four', wash: 'Laveuse', frost: 'Frigo', fan: 'Ventilo', mow: 'Tondeuse' },
     jumps: (n) => `×${n}`,
   },
@@ -692,6 +700,7 @@ export const fr: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm : la ville en ligne',
@@ -702,7 +711,11 @@ export const fr: Messages = {
     off: 'Le Poké Realm n’est pas disponible dans cette version du jeu.',
     cities: {
       title: 'Choisis une ville',
-      hint: 'Chaque ville est une copie du même village, avec jusqu’à 40 dresseurs.',
+      hint: 'Tu arrives dans la première qui a de la place. C’est partout la même ville, avec jusqu’à 40 dresseurs.',
+      switch: 'Changer de ville',
+      here: 'Tu es ici',
+      lobbyLine: 'Promène-toi avec ton partenaire',
+      crowd: (n: number) => `${n} dresseurs en ligne`,
       trainers: (n: number) => (n === 1 ? '1 dresseur' : `${n} dresseurs`),
       full: 'Pleine',
       enter: 'Entrer',
@@ -808,6 +821,15 @@ export const fr: Messages = {
     counter: 'Le café installe encore son comptoir. Reviens bientôt !',
     pool: 'Les Pokémon Eau nageront ici. Bientôt !',
     prizes: 'Battez des records aux bornes et gagnez des trophées pour votre base secrète !',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'Marée Haute', storm: 'Pluie de Baies', tables: 'Soirée Jeux' },
+      perks: { tide: 'Pêche doublée, poissons plus rares', storm: 'Arcade doublée', tables: 'Jeux de table doublés' },
+      go: 'Y aller',
+      starts: (c: string) => `dans ${c}`,
+      ends: (c: string) => `reste ${c}`,
+      tideChip: 'Marée haute !',
+    },
     grove: {
       first: [
         'Psst ! Je ne suis qu’un arbre... Bon, d’accord, je suis Sudowoodo. Bienvenue au Bosquet des bases !',
@@ -1512,7 +1534,7 @@ export const fr: Messages = {
       wallpaper: 'Fond d’écran de la Boîte PC.',
     },
     styles: {
-      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée' },
+      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes' },
       background: { night: 'Nuit étoilée', meadow: 'Route 1', forest: 'Forêt de Jade', cave: 'Mont Sélénite', snow: 'Mont Argenté', tower: 'Tour Pokémon de Lavanville', supporter: 'Ciel doré', halloween: 'Nuit des Sorcières', friendship: 'Amitié' },
       wallpaper: { classic: 'Classique', forest: 'Feuilles', cave: 'Cailloux', snow: 'Flocons', tower: 'Petits fantômes', supporter: 'Étoiles dorées', haunted: 'Maison hantée', secretBase: 'Base Secrète' },
     },
@@ -1768,6 +1790,9 @@ export const fr: Messages = {
       failed: 'Impossible de changer ça pour le moment. Réessaie.',
     },
     card: 'FESTIVAL',
+    /** Na Praça's card: what a donation does, and the next milestone. */
+    cardLine: 'Donnez des ₽ et illuminez la place',
+    nextPot: (pot: string) => `suivant : ${pot}`,
     daysLeftShort: (days) => (days === 1 ? 'DERNIER JOUR' : `${days} JOURS`),
     shopButton: 'Festival',
   },
@@ -1884,6 +1909,30 @@ export const fr: Messages = {
     later: 'Pas maintenant',
     thanks: 'Merci ! Ta réponse aide à régler le jeu.',
     hintKeys: '↑ ↓ difficulté · ← → réponse · ENTRÉE valider · ÉCHAP fermer',
+    hintTouch: 'Touche pour répondre',
+  },
+
+  designSurvey: {
+    title: 'NOUVEAU LOOK',
+    open: 'Sondage : que penses-tu du nouveau look ?',
+    question: 'Que penses-tu du nouveau look du jeu ?',
+    ratings: { 1: "Je n'aime pas", 2: 'Bof', 3: 'Correct', 4: "J'aime bien", 5: "J'adore" },
+    pickRating: 'Choisis une Poké Ball',
+    aspectsQuestion: "Qu’est-ce qui ressort le plus ? (2 max)",
+    aspects: {
+      easyToFind: 'Tout se trouve vite',
+      hardToFind: 'Difficile de trouver',
+      niceLook: 'C’est beau',
+      badLook: 'Je n’aime pas le style',
+      readable: 'Facile à lire',
+      hardToRead: 'Difficile à lire',
+    },
+    send: 'Envoyer',
+    later: 'Pas maintenant',
+    never: 'Ne plus demander',
+    close: 'Fermer',
+    thanks: 'Merci ! Ta réponse aide à améliorer le jeu.',
+    hintKeys: '← → ↑ ↓ déplacer · ENTER choisir · ESC fermer',
     hintTouch: 'Touche pour répondre',
   },
 
@@ -2885,7 +2934,7 @@ export const fr: Messages = {
     noTitle: 'aucun',
     titleTag: 'TITRE',
     equipped: 'AFFICHE',
-    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu' },
+    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm' },
     newMedals: 'Nouvelles médailles',
     names: {
       firstRun: 'Premiers pas',
@@ -2984,6 +3033,7 @@ export const fr: Messages = {
       arenaMaster: 'Master Ball de l’Arène',
       creator: 'Créateur de contenu',
       friendLegend: 'Légende de l’Amitié',
+      stampCollector: 'Collectionneur d’Estampes',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Joue une partie' : `Joue ${n} parties`),
@@ -5717,7 +5767,6 @@ export const fr: Messages = {
     itemHintTouch: 'Touche pour choisir',
   },
   plaza: {
-    talk: 'Parler',
     next: 'Continuer',
     greetings: {
       morning: 'Bonjour, bonjour ! Bienvenue à la Boutique de Kecleon ! Le stock frais vient d’arriver.',
@@ -5768,11 +5817,6 @@ export const fr: Messages = {
       hello: ['Des Œufs Hantés, contre des ₽ ou des bonbons. Qu’est-ce qui en sort ? Des fantômes qu’aucun autre œuf ne donne.', 'Bouh... Ces œufs n’éclosent pas à la chaleur. Ils éclosent de peur. Tu en veux un ?', 'Quatre fantômes, un œuf. Lequel sera-ce ? Même moi, je ne sais pas... héhéhé.'],
       thanks: ['Bouh... Bon choix. Surveille-le à minuit.', 'Héhéhé... Il te regarde déjà.', 'Reviens demain. Si tu l’oses.'],
     },
-    stalls: {
-      halloween: ['Bouh... La Nuit des Sorcières est arrivée sur la place.', 'Les bonbons de tes parties vont dans le bocal, à l’accueil. Ici, je vends autre chose...'],
-      christmas: ['Deli ! Delibird Presents est arrivé sur la place !', 'J’emballe encore tout. Reviens à Noël, la hotte sera pleine !'],
-    },
-    lanturn: ['Lan-turn ! Chaque pièce dans la fontaine allume une lanterne sur la place. Viens voir la cagnotte !'],
 
   },
 
@@ -5833,7 +5877,6 @@ export const fr: Messages = {
     hello: ['Prêt à t’entraîner ? Les cibles ne rendent pas les coups !', 'Un bon dresseur connaît son propre DPS.', 'Wobbuffet encaisse tout. Vas-y à fond !', 'Feu contre Eau ? Change de cible et vois la différence.'],
   },
   stadium: {
-    boards: { play: 'Jouer', ranking: 'Classement', season: 'Saison', history: 'Historique', rules: 'Règles' },
     first: [
       'Bzzz ! Bienvenue au Stade ! Je suis le juge de l’Arène : bien trop rapide pour laisser filer une seule action.',
       'Deux équipes s’affrontent : à quatre dans la Vallée ou la Crique, ou à trois dans la Clairière ou le Récif pour un match rapide. Battez des Pokémon sauvages, ramassez de l’Énergie et portez-la au but adverse.',
@@ -6035,6 +6078,9 @@ export const fr: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Panier de baies',
       goldenMallet: 'Maillet doré',
+      stampDesk: 'Bureau à timbres',
+      stampCabinet: 'Armoire à timbres',
+      goldenStampPress: 'Presse à timbres dorée',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Râtelier à cannes',
       goldenMagikarpPlaque: 'Plaque du Magikarp doré',
@@ -6205,7 +6251,7 @@ export const fr: Messages = {
     where: {
       rift: 'Attend dans une _faille légendaire_ : franchis le portail et bats-le là-bas.',
       trio: 'Arrive comme boss avec le _trio légendaire_ de la partie.',
-      mythical: 'Parfois (1 partie sur 10), apparaît aux côtés de *Mewtwo* à la fin.',
+      mythical: 'Parfois (1 partie sur 10, plus après chaque finale sans fabuleux), apparaît aux côtés de *Mewtwo* à la fin.',
       finale: 'C’est le boss final : gagne une partie.',
       endless: 'Le dernier trophée : une fois les 22 autres capturés, bats-le en _mode sans fin_.',
       event: 'Seulement pendant la _Nuit des Sorcières_ : bats-le dans la _faille du Cauchemar_.',
@@ -6434,6 +6480,38 @@ export const fr: Messages = {
       go: 'Partez !',
       log: 'Ta pêche',
       junk: { boot: 'Vieille botte', can: 'Canette', seaweed: 'Algue' },
+    },
+  },
+  gameModes: {
+    title: 'MODES DE JEU',
+    close: 'Fermer',
+    names: { survivors: 'Survivors', legends: 'Légendes', challenge: 'Défi du jour', coop: 'Coop', arena: 'Arène', dojo: 'Dojo', realm: 'Poké Realm' },
+    /** One team format on the Arena's card: its size and minutes. */
+    arenaFormat: (size, minutes) => `${size}v${size} (${minutes} min)`,
+    blurbs: {
+      survivors: 'Survis aux hordes jusqu’au bout',
+      legends: 'Joue un légendaire',
+      challenge: 'Le même Pokémon pour tous',
+      coop: 'Survis avec tes amis',
+      arena: (formats) => `Équipes ${formats.join(' ou ')}`,
+      dojo: 'Entraîne tes builds, vois tes dégâts',
+      realm: 'Ville en ligne : bases et mini-jeux',
+    },
+    tags: {
+      solo: 'Solo',
+      minutes: (n) => `${n} min`,
+      endless: '+ mode sans fin',
+      legends: (n) => `${n} légendaires`,
+      today: (name) => `aujourd’hui : ${name}`,
+      oneTry: '1 essai officiel',
+      players: (min, max) => `${min} à ${max} joueurs`,
+      bots: 'contre des bots',
+      casual: 'casual',
+      ranked: 'classé',
+      training: 'Entraînement libre',
+      builds: 'garde tes builds',
+      needsAccount: 'compte requis',
+      fresh: 'NOUVEAU',
     },
   },
   carpenter: {

@@ -1,3 +1,4 @@
+import { realmBookZh as realmBook } from './realmStamps/zh'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
@@ -37,41 +38,45 @@ export const zh: Messages = {
     pressTouch: '點擊開始',
     play: '開始遊戲',
     today: '今日',
-    outbreak: '大量出現',
-    challenge: '每日挑戰',
+    /** Na Praça's column head and the note beside it. */
+    plaza: '廣場',
+    plazaNote: '活動＋商店',
+    outbreakName: (name: string) => `大量出現：${name}`,
+    outbreakLine: '今日較易遇到色違',
+    challengeName: '每日挑戰',
+    challengeLine: (name: string) => `${name}・金緞帶`,
     challengeDone: (time) => `完成：${time}`,
     challengeOpen: '今天還沒挑戰',
     missions: '任務',
     missionsLeft: (n) => `今日任務還剩${n}個`,
-    hall: '名人堂',
-    hallJoined: (handle, today) => (today ? `@${handle} 今天加入了` : `@${handle} 加入了名人堂`),
+    hallName: '名人堂',
+    hallNewest: '最新：',
+    hallCount: (_n, shown) => `${shown} 位贊助者`,
     change: '更換',
-    stroll: '散步',
-    strollTouch: '點擊草地來散步',
-    explore: '散步',
-    exploreLabel: '在草原和廣場上走走',
-    exploreTouch: '點擊或拖曳來移動',
-    exploreKeys: '移動',
     pokedex: '寶可夢圖鑑',
     eggs: '蛋',
     eggsReady: (n) => `${n}顆蛋可以孵化了`,
+    eggsWalking: (n: number) => `${n} 個孵化中`,
+    eggsNone: '孵蛋器是空的',
+    gifts: '禮物',
+    giftsToOpen: (n: number) => `${n} 個待開`,
     mart: '商店',
-    dojo: '道場',
-    dojoLabel: '道場：試招式、組配置',
     ranking: '排行榜',
     ideas: '點子',
     support: '贊助這個專案',
-    rail: {
-      halloween: '女巫',
-      festival: '祭典',
-      outbreak: '大量出現',
-      challenge: '挑戰',
-      missions: '任務',
-      hall: '名人堂',
-      invites: '邀請',
-      discord: 'Discord',
-      days: (n) => `${n}天`,
-    },
+    /** Na Praça's shop rows. */
+    shopName: '變隱龍商店',
+    shopLine: '每日櫥窗・變隱龍蛋',
+    boutiqueName: '精品店',
+    boutiqueLine: '新帽子和特效',
+    carpentryName: '木工坊',
+    carpentryLine: '基地的家具',
+    /** Over the partner pill, before its name. */
+    partner: '夥伴',
+    community: '社群',
+    friends: '好友',
+    /** The bottom tabs on a phone (and the rail on a phone on its side). */
+    tabs: { home: '首頁', collection: '收藏', plaza: '廣場', social: '社交', profile: '個人' },
   },
 
   shell: {
@@ -139,6 +144,9 @@ export const zh: Messages = {
     specialTitle: (name) => `${name}（空白鍵）`,
     lunge: '突進',
     lungeTitle: (name) => `${name}（Shift）`,
+    stickLock: '固定搖桿',
+    stickLocked: '搖桿已固定！可在「設定 → 操作」調整位置。',
+    stickFree: '搖桿已解除固定：會跟隨手指。',
     stances: { shield: '盾', blade: '劍', normal: '一般', attack: '攻擊', defense: '防禦', speed: '速度', heat: '微波爐', wash: '洗衣機', frost: '冰箱', fan: '電風扇', mow: '割草機' },
     jumps: (n) => `×${n}`,
   },
@@ -692,6 +700,7 @@ export const zh: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm：線上城鎮',
@@ -702,7 +711,11 @@ export const zh: Messages = {
     off: '這個版本的遊戲無法使用 Poké Realm。',
     cities: {
       title: '選擇城市',
-      hint: '每座城市都是同一個城鎮的分身，最多 40 位訓練家。',
+      hint: '你會進入第一座還有空位的城市。每座都是同一個城鎮，最多 40 位訓練家。',
+      switch: '更換城市',
+      here: '你在這裡',
+      lobbyLine: '和夥伴一起散步',
+      crowd: (n: number) => `${n} 位訓練家在線上`,
       trainers: (n: number) => `${n} 位訓練家`,
       full: '已滿',
       enter: '進入',
@@ -808,6 +821,15 @@ export const zh: Messages = {
     counter: '咖啡館還在布置櫃檯，敬請期待！',
     pool: '水屬性寶可夢之後會在這裡游泳，敬請期待！',
     prizes: '在遊戲機刷新紀錄，贏得獎盃來布置你的秘密基地！',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: '大滿潮', storm: '樹果雨', tables: '桌遊之夜' },
+      perks: { tide: '釣魚雙倍、稀有魚變多', storm: '街機雙倍', tables: '桌遊雙倍' },
+      go: '前往',
+      starts: (c: string) => `${c} 後`,
+      ends: (c: string) => `剩 ${c}`,
+      tideChip: '大滿潮！',
+    },
     grove: {
       first: [
         '噓！我只是一棵樹……好啦，我是 Sudowoodo。歡迎來到秘密基地樹林！',
@@ -1512,7 +1534,7 @@ export const zh: Messages = {
       wallpaper: '電腦箱的桌布。',
     },
     styles: {
-      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴' },
+      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊' },
       background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜', friendship: '友情' },
       wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋', secretBase: '秘密基地' },
     },
@@ -1768,6 +1790,9 @@ export const zh: Messages = {
       failed: '現在無法更改。請再試一次。',
     },
     card: '祭典',
+    /** Na Praça's card: what a donation does, and the next milestone. */
+    cardLine: '捐出 ₽ 點亮廣場',
+    nextPot: (pot: string) => `下一階：${pot}`,
     daysLeftShort: (days) => (days === 1 ? '最後一天' : `剩${days}天`),
     shopButton: '祭典',
   },
@@ -1885,6 +1910,30 @@ export const zh: Messages = {
     thanks: '謝謝！你的回答能幫助我們調整遊戲。',
     hintKeys: '↑ ↓ 難度 · ← → 回答 · ENTER 確認 · ESC 關閉',
     hintTouch: '點擊作答',
+  },
+
+  designSurvey: {
+    title: '全新外觀',
+    open: '問卷：你覺得全新外觀如何？',
+    question: '你覺得遊戲的全新外觀如何？',
+    ratings: { 1: '不喜歡', 2: '普通偏差', 3: '還可以', 4: '喜歡', 5: '超喜歡' },
+    pickRating: '選一顆寶可夢球',
+    aspectsQuestion: '最讓你印象深刻的是？（最多 2 項）',
+    aspects: {
+      easyToFind: '東西很好找',
+      hardToFind: '東西很難找',
+      niceLook: '畫面好看',
+      badLook: '不喜歡這個風格',
+      readable: '文字好讀',
+      hardToRead: '文字難讀',
+    },
+    send: '送出',
+    later: '現在不要',
+    never: '不要再問',
+    close: '關閉',
+    thanks: '謝謝！你的回答能幫助遊戲變得更好。',
+    hintKeys: '← → ↑ ↓ 移動 · ENTER 選擇 · ESC 關閉',
+    hintTouch: '點選即可回答',
   },
 
   ribbons: {
@@ -2885,7 +2934,7 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章' },
     newMedals: '新獎牌',
     names: {
       firstRun: '第一步',
@@ -2984,6 +3033,7 @@ export const zh: Messages = {
       arenaMaster: '競技場 Master Ball',
       creator: '內容創作者',
       friendLegend: '友情傳奇',
+      stampCollector: '印章收藏家',
     },
     goals: {
       runs: (n) => `玩 ${n} 局`,
@@ -5717,7 +5767,6 @@ export const zh: Messages = {
     itemHintTouch: '點擊以選擇',
   },
   plaza: {
-    talk: '交談',
     next: '繼續',
     greetings: {
       morning: '早安、早安！歡迎光臨 Kecleon商店！新貨剛剛到！',
@@ -5768,11 +5817,6 @@ export const zh: Messages = {
       hello: ['鬧鬼蛋，用₽或糖果都能買。會孵出什麼？其他蛋裡都不會出現的幽靈。', '噗……這些蛋不是靠溫暖孵化的，是靠恐懼。要來一顆嗎？', '四隻幽靈，一顆蛋。會是哪一隻呢？連我都不知道……嘿嘿嘿。'],
       thanks: ['噗……好選擇。午夜時好好看著它。', '嘿嘿嘿……它已經在看著你了。', '明天再來吧。如果你敢的話。'],
     },
-    stalls: {
-      halloween: ['噗……女巫之夜降臨廣場了。', '對局中的糖果要放進大廳的糖果罐。我這裡賣的是別的東西……'],
-      christmas: ['Deli！Delibird Presents 來到廣場了！', '我還在包裝所有東西。聖誕節再來吧，袋子會裝得滿滿的！'],
-    },
-    lanturn: ['Lan-turn！每丟一枚硬幣到泉水裡，廣場上就會點亮一盞燈籠。來看看獎池吧！'],
 
   },
 
@@ -5833,7 +5877,6 @@ export const zh: Messages = {
     hello: ['準備好修行了嗎？靶子不會還手！', '好的訓練家都知道自己的 DPS。', 'Wobbuffet 什麼都扛得住。全力以赴吧！', '火打水？換個靶子看看差別。'],
   },
   stadium: {
-    boards: { play: '對戰', ranking: '排行榜', season: '賽季', history: '戰績', rules: '規則' },
     first: [
       '嗡嗡！歡迎來到競技場！我是競技場的裁判，動作快到任何一個細節都逃不過我的眼睛。',
       '兩隊對戰：在山谷或海灣各派四隻，或在林間空地或珊瑚礁各派三隻快速對決。擊倒野生寶可夢、收集能量，再送進對手的得分區。',
@@ -6035,6 +6078,9 @@ export const zh: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: '樹果籃',
       goldenMallet: '黃金木槌',
+      stampDesk: '印章書桌',
+      stampCabinet: '印章櫃',
+      goldenStampPress: '黃金印章機',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: '釣竿架',
       goldenMagikarpPlaque: '黃金 Magikarp 獎牌',
@@ -6205,7 +6251,7 @@ export const zh: Messages = {
     where: {
       rift: '在_傳說裂縫_中等待：穿過傳送門，在那裡擊敗它。',
       trio: '會以首領身分和這局的_傳說三神_一同出現。',
-      mythical: '偶爾（每10局1次）會在最後與 *Mewtwo* 一同出現。',
+      mythical: '偶爾（每10局1次，每場沒有幻之寶可夢的決戰後機率提高）會在最後與 *Mewtwo* 一同出現。',
       finale: '它是最終首領：贏下一局。',
       endless: '最後的戰利品：收服其他22隻後，在_無盡模式_中擊敗它。',
       event: '只在_女巫之夜_：在_夢魘裂縫_中擊敗它。',
@@ -6434,6 +6480,38 @@ export const zh: Messages = {
       go: '開始！',
       log: '這輪的漁獲',
       junk: { boot: '舊靴子', can: '空罐', seaweed: '海藻' },
+    },
+  },
+  gameModes: {
+    title: '遊戲模式',
+    close: '關閉',
+    names: { survivors: 'Survivors', legends: '傳說', challenge: '每日挑戰', coop: '合作', arena: '競技場', dojo: '道場', realm: 'Poké Realm' },
+    /** One team format on the Arena's card: its size and minutes. */
+    arenaFormat: (size, minutes) => `${size}v${size} (${minutes} 分鐘)`,
+    blurbs: {
+      survivors: '在怪群中存活到最後',
+      legends: '使用傳說寶可夢遊玩',
+      challenge: '所有人使用同一隻寶可夢',
+      coop: '和朋友一起存活',
+      arena: (formats) => `隊伍 ${formats.join(' 或 ')}`,
+      dojo: '訓練配置並查看傷害',
+      realm: '線上城鎮：基地與小遊戲',
+    },
+    tags: {
+      solo: '單人',
+      minutes: (n) => `${n} 分鐘`,
+      endless: '+ 無盡模式',
+      legends: (n) => `${n} 隻傳說`,
+      today: (name) => `今日：${name}`,
+      oneTry: '1 次正式挑戰',
+      players: (min, max) => `${min} 至 ${max} 名玩家`,
+      bots: '對戰機器人',
+      casual: '一般對戰',
+      ranked: '排位賽',
+      training: '自由訓練',
+      builds: '可儲存配置',
+      needsAccount: '需要帳號',
+      fresh: '新',
     },
   },
   carpenter: {

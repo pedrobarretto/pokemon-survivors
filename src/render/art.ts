@@ -1041,7 +1041,29 @@ const OG_PLATE = ['.111111111.', '12332223331', '13223232221', '13223232331', '1
 export const ogIcon = () => toIconUrl('og', () => art(OG_PLATE, { 1: '#201030', 2: '#6038a8', 3: '#ffe070', 4: '#e8a020' }))
 export const sparkleIcon = () => toIconUrl('sparkle', () => outlined(SPARKLE()[2]!, '#584010'))
 
-/** PlayStation's face buttons in their colors, the size of a Press Start 2P letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
+/** The joystick's padlock (`ui/stickLock.ts`): the stick's ring and knob with a padlock on its shoulder, gold and shut when the stick is fixed, gray and open when it follows the thumb. */
+const STICK_LOCK = (fixed: boolean) => [
+  '...........ooo..',
+  '..........o...o.',
+  `..........${fixed ? 'o' : '.'}...o.`,
+  '.........ooooooo',
+  '.........obbbbbo',
+  '...ooooo.obbobbo',
+  '.oo.....oobbobbo',
+  '.o.......obbbbbo',
+  'o...nnn..ooooooo',
+  'o..nNNNn..o.....',
+  'o..nNNNn..o.....',
+  'o..nNNNn..o.....',
+  'o...nnn...o.....',
+  '.o.......o......',
+  '.oo.....oo......',
+  '...ooooo........',
+]
+export const stickLockIcon = (fixed: boolean) =>
+  toIconUrl(`stickLock:${fixed}`, () => art(STICK_LOCK(fixed), { o: '#283040', b: fixed ? '#f8c030' : '#a8a8c0', n: '#5868a0', N: '#98a8d8' }))
+
+/** PlayStation's face buttons in their colors, the size of a capital letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
 const PAD_GLYPHS = {
   '✕': [['11....11', '111..111', '.111111.', '..1111..', '..1111..', '.111111.', '111..111', '11....11'], '#4a80e0'],
   '○': [['..1111..', '.111111.', '111..111', '11....11', '11....11', '111..111', '.111111.', '..1111..'], '#e04850'],
@@ -1252,6 +1274,34 @@ export const ribbonSprite = (tier: RibbonTier) => {
 export const ribbonIcon = (tier: RibbonTier) => toIconUrl(`ribbon:${tier}`, () => ribbonSprite(tier))
 
 export const medalIcon = (medal: Medal, locked = false) => toIconUrl(`medal:${locked ? 'locked' : medal}`, () => medalSprite(medal, locked))
+
+/* ---------------- The kit (ui/gameModes.ts) ---------------- */
+
+/** The tick in a selected card's gold disc. Ink on gold in both themes. */
+const KIT_CHECK = ['........11', '.......111', '......111.', '1....111..', '11..111...', '111111....', '.1111.....', '..11......']
+
+/** The kit's close button. One color: `.ink-icon` lights it in the dark theme. */
+const KIT_CLOSE = ['11.....11', '111...111', '.111.111.', '..11111..', '...111...', '..11111..', '.111.111.', '111...111', '11.....11']
+
+/** A mode that needs an account, on its card. White: it sits on the mode's nameplate. */
+const KIT_LOCK = ['.11111.', '11...11', '11...11', '1111111', '1111111', '111.111', '111.111', '1111111']
+
+export const lockIcon = () => toIconUrl('kit:lock', () => art(KIT_LOCK, { 1: '#ffffff' }))
+
+export const checkIcon = () => toIconUrl('kit:check', () => art(KIT_CHECK, { 1: '#1b2040' }))
+
+export const closeIcon = () => toIconUrl('kit:close', () => art(KIT_CLOSE, { 1: '#1b2040' }))
+
+/** A chunky chevron for the lobby's arrows (`dir`: which way it points): its weight sits at its middle, so centering the box centers the glyph. */
+const KIT_ARROW = ['111.....', '1111....', '.1111...', '..1111..', '...1111.', '....1111', '...1111.', '..1111..', '.1111...', '1111....', '111.....']
+
+export const chevronIcon = (dir: 'left' | 'right') =>
+  toIconUrl(`kit:chevron:${dir}`, () => art(dir === 'right' ? KIT_ARROW : KIT_ARROW.map((row) => [...row].reverse().join('')), { 1: '#1b2040' }))
+
+/** Four panels in a square: all the modes. */
+const KIT_GRID = ['111..111', '111..111', '111..111', '........', '........', '111..111', '111..111', '111..111']
+
+export const gridIcon = () => toIconUrl('kit:grid', () => art(KIT_GRID, { 1: '#1b2040' }))
 
 /* ---------------- Clears ---------------- */
 
