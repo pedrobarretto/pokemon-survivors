@@ -4,6 +4,7 @@ import { weekStart, brasiliaDay } from '../../src/game/day'
 import { CLAW, pitLayout, weeklyPrizes } from '../../src/realm/games/claw.rules'
 import { clawStore } from './claw'
 import type { Sql } from './db'
+import { applyDeeds } from './realmDeeds'
 
 /**
  * The claw machine's store against a real Postgres: set
@@ -36,6 +37,12 @@ describe.skipIf(!url)('claw machine (Postgres)', () => {
     return { play, dropped: got.dropped }
   }
 
+  /** What reached the Estampas: the deed counts and the stamps. */
+  const book = async () => ({
+    deeds: Object.fromEntries((await sql<{ deed: string; count: number }[]>`select deed, count from realm_deeds where user_id = 'u_ash'`).map((r) => [r.deed, r.count])),
+    stamps: (await sql<{ stamp: string }[]>`select stamp from realm_stamps where user_id = 'u_ash' order by stamp`).map((r) => r.stamp),
+  })
+
   const owned = async (family: PlushFamily) => (await sql<{ count: number }[]>`select count from furniture_owned where user_id = 'u_ash' and furniture = ${`plush:${family}`} and source = 'claw'`)[0]?.count ?? 0
 
   beforeAll(async () => {
@@ -46,7 +53,7 @@ describe.skipIf(!url)('claw machine (Postgres)', () => {
 
   beforeEach(async () => {
     await sql`truncate claw_plays, claw_progress, furniture_owned, gifts, saves, users cascade`
-    claw = clawStore(sql, { closed: async () => false, now })
+    claw = clawStore(sql, { closed: async () => false, earn: (userId, deeds) => sql.begin((tx) => applyDeeds(tx, userId, deeds, brasiliaDay(now()))).then(() => undefined), now })
     await sql`insert into users (id, handle, name) values ('u_ash', 'ash', 'Ash')`
     await sql`insert into users (id) values ('u_nohandle')`
     await sql`insert into saves (user_id, version, revision, data) values ('u_ash', 1, 3, ${sql.json({ version: 1, partner: 'squirtle', wallet: 3000, spent: 0 })})`
@@ -88,15 +95,24 @@ describe.skipIf(!url)('claw machine (Postgres)', () => {
     expect((await claw.state('u_ash'))!.misses[plain]).toBe(1)
     expect(await claw.drop('u_ash', play.id, { x: 1, y: 1 })).toEqual({ ok: true, dropped: JSON.parse(JSON.stringify(dropped)) })
     expect((await claw.state('u_ash'))!.misses[plain]).toBe(1)
+    // A credit spent on a miss earns nothing.
+    expect(await book()).toEqual({ deeds: {}, stamps: [] })
   })
 
   it('gives the piece on a win and starts the plush over; only the owner can drop', async () => {
     const { play } = await inserted()
     expect(await claw.drop('u_nohandle', play.id, { x: 0, y: 0 })).toEqual({ ok: false, error: 'profile' })
-    const { dropped } = await dropOn(plain)
-    expect(dropped.won).toBe(true)
+    const won = await dropOn(plain)
+    expect(won.dropped.won).toBe(true)
     expect(await owned(prizes[plain]!)).toBe(1)
-    expect(dropped.misses[plain]).toBe(0)
+    expect(won.dropped.misses[plain]).toBe(0)
+  })
+
+  it('counts a win for the Estampas once, a first try when the plush had no misses, and nothing for a repeated drop', async () => {
+    const { play } = await dropOn(plain)
+    expect(await book()).toEqual({ deeds: { 'claw:plush': 1, 'claw:firstTry': 1 }, stamps: ['firstPlush', 'steadyHand'] })
+    await Promise.all([claw.drop('u_ash', play.id, { x: 0, y: 0 }), claw.drop('u_ash', play.id, { x: 0, y: 0 })])
+    expect((await book()).deeds).toEqual({ 'claw:plush': 1, 'claw:firstTry': 1 })
   })
 
   it('wins by the tenth credit however it drops, and only ever gives a plush', async () => {
@@ -105,5 +121,6 @@ describe.skipIf(!url)('claw machine (Postgres)', () => {
     expect(dropped.won).toBe(true)
     expect(await owned(prizes[plain]!)).toBe(1)
     expect((await sql<{ n: number }[]>`select count(*)::int as n from gifts where user_id = 'u_ash'`)[0]!.n).toBe(0)
+    expect((await book()).deeds).toEqual({ 'claw:plush': 1 })
   })
 })

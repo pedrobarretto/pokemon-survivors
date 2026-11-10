@@ -3,7 +3,7 @@ import { webSocket, type SocketHandlers, type SocketLike } from './coop/client'
 import { playsShiny } from './game/shinyPicks'
 import { equippedLook } from './gems'
 import { isCityId, type CityId } from './net/realm'
-import { fakeErrandsDone, fakeFriendsFrom, fakeRealm, fakeStamp, realmFaked } from './realm/api'
+import { fakeErrandsDone, fakeFriendsFrom, fakeRealm, fakeStamp, fakeStampsTo, realmFaked } from './realm/api'
 import { STAMP_IDS, STAMPS, isStampId } from './data/realmStamps'
 import { createRealmClient, type RealmClient } from './realm/client'
 import { startLocalRealm, type LocalRealm } from './realm/localRealm'
@@ -55,8 +55,11 @@ export const realmClient = (): RealmClient | null => {
   if (!url) return null
   const inPage = isLocalRealm()
   if (inPage && !realmFaked()) fakeRealm(true, accountHandle() ?? 'you')
-  // The faked friends among the bots walk where the in-page realm has them.
-  if (inPage) fakeFriendsFrom(() => host?.realm.presence() ?? null)
+  // The faked friends among the bots walk where the in-page realm has them, and the faked games' stamps land in its room.
+  if (inPage) {
+    fakeFriendsFrom(() => host?.realm.presence() ?? null)
+    fakeStampsTo((stamps) => host?.realm.stamped(stamps))
+  }
   client ??= createRealmClient({
     url,
     socket: inPage ? localSocket : webSocket,

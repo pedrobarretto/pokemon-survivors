@@ -28,6 +28,14 @@ type Q = Sql | TransactionSql
 /** A deed entry as the API trusts it (`parseDeedsReport`): one more of a known deed for an account. */
 export type DeedEntry = { userId: string; deed: Deed }
 
+/**
+ * How a store the API runs a game from reports what it settled (`realm.earn`):
+ * after its own transaction commits, in one of the deeds' own behind the
+ * account's lock, so a failure costs only the deeds. Called once per outcome,
+ * from the request that decided it, never from a repeat reading it back.
+ */
+export type EarnDeeds = (userId: string, deeds: ReadonlyMap<Deed, number>) => Promise<void>
+
 /** What a batch of deeds earned an account. */
 export type Earned = { stamps: StampId[]; errands: string[] }
 

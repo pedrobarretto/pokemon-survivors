@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MINIGAME_IDS, MINIGAMES } from './minigames'
+import { claimable, MINIGAME_IDS, MINIGAMES } from './minigames'
 import { REALM_EVENTS } from './realmEvents'
 import { REALM_ROOMS, TOWN_ROOMS } from './realmMap'
 import { isDeed, STAMP_IDS, STAMP_MILESTONES, STAMPS, type StampCondition } from './realmStamps'
@@ -17,10 +17,11 @@ describe('the stamp book', () => {
     expect(STAMPS.expressive.when.all).toEqual(REALM_EMOTES.filter((e) => e !== 'look').map((e) => `emote:${e}`))
   })
 
-  it('knows every mini game, feat and kind of hour', () => {
+  it('knows every claimed mini game, feat and kind of hour, and nothing a claim for the others could make up', () => {
     for (const game of MINIGAME_IDS) {
-      expect(isDeed(`game:${game}`)).toBe(true)
-      for (const feat of MINIGAMES[game].feats) expect(isDeed(`feat:${game}:${feat}`)).toBe(true)
+      const claimed = claimable(game)
+      expect(isDeed(`game:${game}`)).toBe(claimed)
+      for (const feat of MINIGAMES[game].feats) expect(isDeed(`feat:${game}:${feat}`)).toBe(claimed)
     }
     for (const kind of Object.keys(REALM_EVENTS)) expect(isDeed(`event:${kind}`)).toBe(true)
   })

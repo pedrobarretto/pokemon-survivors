@@ -34,7 +34,8 @@ import type { DigCell, DigHint, DigPattern, DigPowers, DigTreasure } from '../re
  *   `furniture:<uuid>`) or ₽ (out of the stored save at revision `base`, like `POST /festival/donate`).
  *   `FurnitureBought`; 402 `{ error: 'gems' | 'funds' }`, 404 not sold, 409 `nosave`/`stale` (sync first).
  * - `POST /realm/report` (auth) `RealmReport`: reports a trainer (to the moderation queue and the staff's Discord channel).
- * - `POST /realm/game/claim` (auth) `GameClaim`: a finished mini game (`data/minigames.ts`). The API
+ * - `POST /realm/game/claim` (auth) `GameClaim`: a finished mini game (`data/minigames.ts`; 400 for one
+ *   the API runs itself, `claimable`). The API
  *   prices it (`coinsFor`), caps it for the Brasília day (`capped`, kept per account and game), updates
  *   the game's stats (`GameStats`) and grants the trophies they reach (`trophiesEarned`, into
  *   `furniture_owned` with source `game`). `GameClaimed`; 400 for an outcome that doesn't fit the game,
