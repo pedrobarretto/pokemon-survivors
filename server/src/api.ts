@@ -15,6 +15,7 @@ import { coopBeta } from './coopBeta'
 import { connect, migrate, saveStore } from './db'
 import { retrying } from './retrying'
 import { createRibbons } from './challenge'
+import { createEra1Rewards } from './era1'
 import { discordStore, startDiscord } from './discord'
 import { discordLink } from './discordLink'
 import { candyGoalStore } from './candyGoal'
@@ -84,6 +85,10 @@ void discord.settleOg().catch((err) => console.error('discord OG roles failed', 
 const arena = arenaStore(sql)
 createArenaRewards(arena).start()
 
+// The Era 1 Hall da Fama: a day after Temporada 1 opens, its boards' top get their titles and frames (keys per tier: safe on every instance).
+const coop = coopBoardStore(sql)
+createEra1Rewards(sql, [ranking, coop]).start()
+
 const abacate = env.abacatePayKey ? abacatePay(env.abacatePayKey) : null
 
 const realm = realmStore(sql, { staff: env.discord ? discordStaffChannel(env.discord) : null })
@@ -106,7 +111,7 @@ const app = createApp({
   admin: adminStore(sql, clerk, env.adminEmails),
   moderation: moderationStore(sql),
   arena,
-  coop: coopBoardStore(sql),
+  coop,
   // Realm reports go to the staff's #mod-chat when the bot is set up (stored either way).
   realm,
   claw: clawStore(sql, { closed: realm.closedIn }),

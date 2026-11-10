@@ -15,7 +15,7 @@ import { playsShiny } from '../game/shinyPicks'
 import type { Save } from '../game/meta'
 import type { DamageSource, Game } from '../game/types'
 import { CARD, cardBlob, drawRunCard, drawTrainerCard, type CardMon, type CardTrainer, type RunCardData, type TrainerCardData } from '../render/card'
-import type { CardStyle } from '../render/cosmetics'
+import { titleMark, type CardStyle } from '../render/cosmetics'
 import { logoScale } from '../render/logo'
 import { gameUrl } from '../ranking'
 import { gameDex, pokedex } from '../site/pokedex'
@@ -60,7 +60,7 @@ const wornStyle = (): CardStyle => {
 const trainerLine = (title: TitleId | null): CardTrainer & { url: string } => {
   const handle = accountHandle()
   const url = gameUrl(handle)
-  return { handle, title: title ? t().achievements.titles[title] : null, link: url.replace(/^https?:\/\/(www\.)?/, ''), url }
+  return { handle, title: title ? t().achievements.titles[title] : null, mark: titleMark(title), link: url.replace(/^https?:\/\/(www\.)?/, ''), url }
 }
 
 /** How long the card waits for the challenge's place before it's drawn without it (offline, a slow API). */
