@@ -26,6 +26,8 @@ export const ACTIONS = {
   right: { key: 'KeyD', pad: 15, code: 'ArrowRight', scope: 'both' },
   special: { key: 'Space', pad: 0, code: 'Space', scope: 'run' },
   mega: { key: 'KeyE', pad: 3, code: 'KeyE', scope: 'run' },
+  /** Terastal (`game/tera.ts`): R, and B on a pad (B only backs out of menus). */
+  tera: { key: 'KeyR', pad: 1, code: 'KeyR', scope: 'run' },
   lunge: { key: 'ShiftLeft', pad: 2, code: 'ShiftLeft', scope: 'run' },
   pause: { key: 'KeyP', pad: 9, code: 'Escape', scope: 'both' },
   confirm: { key: 'Enter', pad: 0, code: 'Enter', scope: 'menu' },

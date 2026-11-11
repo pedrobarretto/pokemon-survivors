@@ -30,8 +30,8 @@ export type PickScreen = Exclude<PlayerPhase, 'playing' | 'evolving'>
 export type TickEntry =
   /** The stick changed: `moveCode` (0 stands still, 1..224 are 32 directions × 7 speeds). It holds until the next one. */
   | { slot: number; kind: 'move'; code: number }
-  /** The special attack, the Mega button and the manual moves (Quick Attack), pressed this tick. */
-  | { slot: number; kind: 'special' | 'mega' | 'lunge' }
+  /** The special attack, the Mega button, the TERA button and the manual moves (Quick Attack), pressed this tick. */
+  | { slot: number; kind: 'special' | 'mega' | 'tera' | 'lunge' }
   /**
    * A card of the pick screen `screen`, shown as `round` (`Player.round`):
    * a level-up's card or a fork's branch, an evolution's branch, an Ability,
@@ -93,6 +93,7 @@ export const parseTickEntry = (raw: unknown, players: number): TickEntry | null 
       return isIndex(raw.code, MAX_CODE) ? { slot, kind, code: raw.code } : null
     case 'special':
     case 'mega':
+    case 'tera':
     case 'lunge':
     case 'emote':
     case 'away':
@@ -228,6 +229,7 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
       return
     case 'special':
     case 'mega':
+    case 'tera':
     case 'lunge':
       if (!p.away) input[e.kind] = true
       return
@@ -293,7 +295,7 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
 }
 
 /** A tick's input per slot, nothing pressed yet (the stick comes from `held` once the entries are in). */
-const inputsOf = (g: Game): StepInput[] => g.players.map(() => ({ move: moveOf(0), special: false, mega: false, lunge: false }))
+const inputsOf = (g: Game): StepInput[] => g.players.map(() => ({ move: moveOf(0), special: false, mega: false, tera: false, lunge: false }))
 
 /**
  * One co-op tick: applies `entries` in order (malformed or stale ones are

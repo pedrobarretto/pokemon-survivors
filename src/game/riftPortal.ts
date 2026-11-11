@@ -72,7 +72,7 @@ const releaseSky = (g: Game) => {
 /** Starts omens on schedule, opens their portals, ticks the open one and, once a player stands in it long enough, sends the team in. */
 export const updateRiftPortal = (g: Game, dt: number) => {
   // An open portal waits on the map, like the rest of the world, while the team is inside a place.
-  if (g.place.inside) return
+  if (g.place.inside || g.raid.arena) return
   const rift = g.rift
   const omen = rift.omen
   if (omen) {
@@ -86,7 +86,7 @@ export const updateRiftPortal = (g: Game, dt: number) => {
   if (!portal) {
     // The endless mode picks up its own cadence once the run's slots are used.
     if (g.endless && rift.nextAt === Infinity) rift.nextAt = g.time + RIFT.endlessFirst
-    const due = riftDue({ time: g.time, nextAt: rift.nextAt, busy: rift.arena !== null, bossAlive: g.bossId !== null, endless: g.endless !== null })
+    const due = riftDue({ time: g.time, nextAt: rift.nextAt, busy: rift.arena !== null || g.raid.den !== null, bossAlive: g.bossId !== null, endless: g.endless !== null })
     if (due) startOmen(g)
     return
   }

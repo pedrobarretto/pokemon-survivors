@@ -9,7 +9,7 @@ import type { Game } from '../game/types'
 import { skinFor } from '../data/cosmetics'
 import { shownLook } from './looks'
 import { STANCE_FORMS } from './specialFx'
-import { fitSprites, skinSprites, sprites, type FormKey, type SpeciesSprites } from './sprites'
+import { fitSprites, sheetForm, skinSprites, sprites, type FormKey, type SpeciesSprites } from './sprites'
 
 /**
  * How the Legend mode looks (`game/legend.ts`): a legend wears its form and
@@ -39,7 +39,7 @@ export const LEGEND_MIN_HEIGHT = 30
 export const playerSprites = (g: Game, megaForm?: FormKey): SpeciesSprites => {
   const p = g.player
   const stance = p.special.stance
-  const form = megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined) ?? seasonKitForm(p.kit, p.stage, weatherHere(g))
+  const form = sheetForm(megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined) ?? seasonKitForm(p.kit, p.stage, weatherHere(g)))
   const dex = playerDex(g)
   const skin = form === undefined ? skinFor(shownLook(g, p.slot), dex) : null
   const s = (skin && skinSprites(skin, dex, p.shiny)) || sprites(dex, p.shiny, form)

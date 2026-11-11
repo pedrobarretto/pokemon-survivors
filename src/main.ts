@@ -141,6 +141,7 @@ import { consumableIcon } from './render/props'
 import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
+import { denToast, dressBanner, raidBanner, shardToast, teraBanner } from './ui/teraNews'
 import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
@@ -519,6 +520,8 @@ const shownGame = (r: Run) => (r.coop ? r.coop.view.game : r.game)
 let specialQueued = false
 /** Mega Evolution press (E, the Mega button, gamepad Y), consumed like the special. */
 let megaQueued = false
+/** A TERA press waiting for the next step (`game/tera.ts`). */
+let teraQueued = false
 /** Manual lunge press (Shift, the lunge button, gamepad X) for Quick Attack, consumed like the special. */
 let lungeQueued = false
 /** The meadow with wandering Pokémon behind every menu. Lives across screens, so it never pops. */
@@ -661,6 +664,11 @@ const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | nu
 const queueMega = () => {
   unlockAudio()
   if (run?.game.phase === 'playing') megaQueued = true
+}
+
+const queueTera = () => {
+  unlockAudio()
+  if (run?.game.phase === 'playing') teraQueued = true
 }
 
 /** The player's name right now: its stage's, or its Mega form's while that lasts. */
@@ -1661,7 +1669,7 @@ const endDojo = (r: Run, dojo: DojoRun) => {
 
 /** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
 const runHud = (game: Game, onPause: () => void = () => game.phase === 'playing' && (game.phase = 'paused'), menu = false) => {
-  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, () => requestAnimationFrame(syncMarkerInsets), input.isHeld, menu)
+  const hud = createHud(ui, queueSpecial, queueMega, queueTera, queueLunge, onPause, () => requestAnimationFrame(syncMarkerInsets), input.isHeld, menu)
   requestAnimationFrame(syncMarkerInsets)
   return hud
 }
@@ -1952,6 +1960,14 @@ const CRUMB_EVENTS: Partial<Record<GameEvent['kind'], CrumbMoment>> = {
   place: 'place',
   evolved: 'evolve',
   megaStart: 'mega',
+  teraStart: 'mega',
+  raidEnter: 'rift',
+}
+
+/** A Terastal banner or a raid's title card, its box cut in the type's crystal. */
+const showTeraBanner = (content: HTMLElement, ms: number) => {
+  banner(ui, content, ms)
+  dressBanner(content)
 }
 
 /** The sounds and toasts of a simulation event, read off the game as shown (`shownGame`: this player's cries, form, special and Mega in co-op). */
@@ -2346,6 +2362,69 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const text = partner ? t().rifts.pairCleared(ENEMIES[e.enemy].name, ENEMIES[partner].name) : t().rifts.cleared(ENEMIES[e.enemy].name)
       return aside(rich(text, { class: 'toast-evo' }), 3500)
     }
+    /* Terastal (`game/tera.ts`) and the Tera Raids (`game/teraRaid.ts`). */
+    case 'teraShards':
+      playSfx('unlock')
+      return news(rich(t().tera.shardsChoice), 4200, 'tera')
+    case 'teraShard':
+      playSfx('unlock')
+      return news(shardToast(e.tera, e.from), 3600, 'tera')
+    case 'teraReady':
+      playSfx('shiny')
+      return news(rich(t().tera.readyNews), 2400, 'tera')
+    case 'teraStart':
+      playSfx('megaCharge', 0)
+      playCry(cryUrl(playerDex(g)), 0.6)
+      return aside(t().tera.start(playerName(g)), 1400, 'tera')
+    case 'tera':
+      playSfx('megaBurst', 0)
+      playSfx('break', 0)
+      playCry(playerCry(g), 0.9)
+      return showTeraBanner(teraBanner(playerName(g), e.tera), 2600)
+    case 'teraEnd':
+      playSfx('stance', 0)
+      return aside(t().tera.ended(playerName(g)), 1800, 'tera')
+    case 'stellarStrike':
+      return playSfx('superHit', 80)
+    case 'stellarPulse':
+      playSfx('shiny')
+      return aside(t().tera.stellarPulse, 1600, 'tera')
+    case 'raidOpen':
+      playSfx('shiny')
+      return news(denToast(e.raid, e.day), 4200, 'raid')
+    case 'raidClosed':
+      return aside(t().raid.closed, 2000, 'raid')
+    case 'raidEnter': {
+      playSfx('legendary')
+      playCry(cryUrl(ENEMIES[e.raid.boss].dex), 0.7)
+      flashScreen(ui)
+      return showTeraBanner(raidBanner(e.raid), 2800)
+    }
+    case 'raidShield':
+      if (e.moment === 'up') {
+        playSfx('megaCharge', 0)
+        return news(rich(t().raid.shieldUp), 3200, 'raidShield')
+      }
+      playSfx('break', 0)
+      playSfx('megaBurst', 0)
+      return news(rich(t().raid.shieldBroken), 2400, 'raidShield')
+    case 'raidStorm':
+      return playSfx('quake', 300)
+    case 'raidCleared':
+      playSfx('evolve')
+      if (e.day) news(rich(t().raid.clearedDay), 3600, 'raidDay')
+      return aside(rich(t().raid.cleared(ENEMIES[e.raid.boss].name), { class: 'toast-evo' }), 3500, 'raid')
+    case 'raidFall':
+      playSfx('riftFall')
+      playCry(playerCry(g))
+      return news(t().raid.fall, 2800, 'raid')
+    case 'raidExit':
+      if (e.outcome === 'timeout') {
+        playSfx('quake')
+        return news(t().raid.timeout, 3000, 'raid')
+      }
+      if (e.outcome === 'fallen') flashScreen(ui)
+      return
     case 'riftFall':
       playSfx('riftFall')
       playCry(playerCry(g))
@@ -2435,6 +2514,7 @@ input.onKey((key) => {
   if (g.versus) return
   if (key === 'Space') queueSpecial()
   if (key === 'KeyE') queueMega()
+  if (key === 'KeyR') queueTera()
   if (key === 'ShiftLeft' || key === 'ShiftRight') queueLunge()
 })
 // Touch only counts as a user activation on pointerup/touchend (not pointerdown).
@@ -2892,8 +2972,8 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   // The stick reads still while a menu or a screen is up (a match's pick cards wait in a tray: the Pokémon keeps moving).
   const still = c.menu || (g.versus ? g.phase !== 'playing' : phaseOf(g, me) !== 'playing')
   // A match casts its kit instead (`ui/arenaControls.ts`): its casts carry their aim.
-  c.driver.advance(g, realDt, { move: still ? { x: 0, y: 0 } : input.readMove(), special: specialQueued, mega: megaQueued, lunge: lungeQueued, casts: c.versus?.controls.take() })
-  specialQueued = megaQueued = lungeQueued = false
+  c.driver.advance(g, realDt, { move: still ? { x: 0, y: 0 } : input.readMove(), special: specialQueued, mega: megaQueued, tera: teraQueued, lunge: lungeQueued, casts: c.versus?.controls.take() })
+  specialQueued = megaQueued = teraQueued = lungeQueued = false
   const runner = c.runner
   const st = client.state()
   const drawn = predict(c.prediction, runner, st, c.driver.frac(), dt)
@@ -3876,10 +3956,12 @@ const frame = (now: number) => {
         // The simulation gets the stick as the replay stores it (`moveCode`), so a re-simulation sees the same run.
         if (specialQueued) recordEvent(r.recorder, ['special'])
         if (megaQueued) recordEvent(r.recorder, ['mega'])
+        if (teraQueued) recordEvent(r.recorder, ['tera'])
         if (lungeQueued) recordEvent(r.recorder, ['lunge'])
-        step(g, { move: recordStep(r.recorder, view, input.readMove()), special: specialQueued, mega: megaQueued, lunge: lungeQueued }, STEP)
+        step(g, { move: recordStep(r.recorder, view, input.readMove()), special: specialQueued, mega: megaQueued, tera: teraQueued, lunge: lungeQueued }, STEP)
         specialQueued = false
         megaQueued = false
+        teraQueued = false
         lungeQueued = false
         pace.acc -= STEP
         steps++
@@ -3893,6 +3975,7 @@ const frame = (now: number) => {
       resetPacer(pace)
       specialQueued = false
       megaQueued = false
+      teraQueued = false
       lungeQueued = false
     }
     // A level-up with only the Oran Berry to pick takes it without a screen, recorded like a tap.
@@ -4294,6 +4377,19 @@ const devMega = (mode: 'now' | 'ready' | 'stone' = 'now', mega?: MegaId) => {
   grantStone(g, pick)
   localPlayer(g).mega.charge = 0
   if (mode === 'now') queueMega()
+}
+
+/**
+ * Dev: Terastal and the Tera Raids (`game/tera.ts`, `game/teraRaid.ts`). `ps.tera('lab')` opens the art gallery
+ * (every crown, a few Pokémon in crystal); `ps.tera('water')` sets the run's Tera type and fills the orb,
+ * `ps.tera('now', 'fire')` Terastallizes at once, `ps.tera('shards')` drops a boss's choice of shards 40 px to the right,
+ * `ps.tera('orb', 0.9)` sets the orb. `ps.tera('raid')` opens a den next to you with the day's raid
+ * (`ps.tera('raid', 'raidGarchomp', 'ice', 6)` any), `ps.tera('enter')` steps straight in, `ps.tera('shield')` breaks
+ * the shield, `ps.tera('day', '2026-11-15')` prints a day's raid.
+ */
+const devTera = async (cmd?: string, a?: unknown, b?: unknown, c?: unknown) => {
+  const { devTera: run_ } = await import('./teraDev')
+  return run_(run?.game, () => (teraQueued = true), cmd, a, b, c)
 }
 
 /**
@@ -5100,6 +5196,7 @@ if (import.meta.env.DEV) {
       spawn: devSpawn,
       alpha: devAlpha,
       mega: devMega,
+      tera: devTera,
       evolve: devEvolve,
       ability: devAbility,
       event: devEvent,

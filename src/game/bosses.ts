@@ -703,7 +703,7 @@ export const finaleEntrance = (g: Game) => {
  * fight, `bossInFight`). In a rift the arena bounds the fight, which is
  * bigger than a phone's screen: there it attacks from anywhere.
  */
-export const bossReach = (g: Game) => (g.rift.arena ? Infinity : dm.hypot(g.view.w, g.view.h) * 0.6)
+export const bossReach = (g: Game) => (g.rift.arena || g.raid.arena ? Infinity : dm.hypot(g.view.w, g.view.h) * 0.6)
 
 /** A wave boss under half HP enrages: a red burst, a jolt and a cue for the shell (cry, flash, toast). */
 const enrage = (g: Game, e: Enemy) => {

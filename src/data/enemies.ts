@@ -45,6 +45,9 @@ const NIGHT_SLOTS = [
   { hp: 2800, damage: 24, xp: 90, mass: 30, boss: true },
 ] as const
 
+/** A Tera Raid's giant (`data/tera.ts`), before its stars and the run clock: slow, heavy and twice the size. */
+const RAID_GIANT = { hp: 6400, speed: 20, damage: 24, xp: 0, mass: 60, boss: true, scale: 2 } as const
+
 /** Stats of the rare mythical that may join Mewtwo at the end. */
 const MYTHICAL = { hp: 9000, speed: 70, damage: 30, xp: 300, mass: 40, boss: true, legendary: true } as const
 
@@ -121,6 +124,25 @@ export const ENEMIES = {
   trevenantBoss: { dex: 709, name: 'Trevenant', types: ['ghost', 'grass'], speed: 28, ...NIGHT_SLOTS[1] },
   honchkrowBoss: { dex: 430, name: 'Honchkrow', types: ['dark', 'flying'], speed: 38, ...NIGHT_SLOTS[1] },
   dusknoirBoss: { dex: 477, name: 'Dusknoir', types: ['ghost'], speed: 30, ...NIGHT_SLOTS[1] },
+  // The Tera Raids' giants (`RAID_BOSSES` in `data/tera.ts`): drawn twice the size in crystal, their Tera type set as they come
+  // out (`game/teraRaid.ts`), stats tuned for a 4★ den at 8:10 and scaled by the stars and the run clock (`raidScale`).
+  raidCharizard: { dex: 6, name: 'Charizard', types: ['fire', 'flying'], ...RAID_GIANT },
+  raidBlastoise: { dex: 9, name: 'Blastoise', types: ['water'], ...RAID_GIANT },
+  raidVenusaur: { dex: 3, name: 'Venusaur', types: ['grass', 'poison'], ...RAID_GIANT },
+  raidGengar: { dex: 94, name: 'Gengar', types: ['ghost', 'poison'], ...RAID_GIANT },
+  raidGyarados: { dex: 130, name: 'Gyarados', types: ['water', 'flying'], ...RAID_GIANT },
+  raidDragonite: { dex: 149, name: 'Dragonite', types: ['dragon', 'flying'], ...RAID_GIANT },
+  raidTyranitar: { dex: 248, name: 'Tyranitar', types: ['rock', 'dark'], ...RAID_GIANT },
+  raidGardevoir: { dex: 282, name: 'Gardevoir', types: ['psychic', 'fairy'], ...RAID_GIANT },
+  raidMetagross: { dex: 376, name: 'Metagross', types: ['steel', 'psychic'], ...RAID_GIANT },
+  raidGarchomp: { dex: 445, name: 'Garchomp', types: ['dragon', 'ground'], ...RAID_GIANT },
+  raidLucario: { dex: 448, name: 'Lucario', types: ['fighting', 'steel'], ...RAID_GIANT },
+  raidHydreigon: { dex: 635, name: 'Hydreigon', types: ['dark', 'dragon'], ...RAID_GIANT },
+  raidVolcarona: { dex: 637, name: 'Volcarona', types: ['bug', 'fire'], ...RAID_GIANT },
+  raidDragapult: { dex: 887, name: 'Dragapult', types: ['dragon', 'ghost'], ...RAID_GIANT },
+  raidTinkaton: { dex: 959, name: 'Tinkaton', types: ['fairy', 'steel'], ...RAID_GIANT },
+  // The 7★ Stellar raid's giant, captured by beating it once (`LEGENDS.terapagos`).
+  terapagos: { dex: 1024, name: 'Terapagos', types: ['normal'], ...RAID_GIANT, hp: 7600, damage: 30, legendary: true },
   // The endless mode's reaper (`game/endless.ts`): it hunts the player from 20:00.
   arceus: { dex: 493, name: 'Arceus', types: ['normal'], hp: 300000, speed: 60, damage: 90, xp: 0, mass: 999, boss: true, legendary: true, scale: 2 },
 } as const satisfies Record<string, EnemyDef>

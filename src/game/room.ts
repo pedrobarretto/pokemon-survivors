@@ -6,8 +6,8 @@ import type { Feature } from './terrain'
 import type { Enemy, Game, Hazard, Pickup } from './types'
 
 /**
- * A closed space the team steps into: a rift's arena (`riftArena.ts`) or a
- * place's interior (`placeInterior.ts`), or the map a Versus match plays on (`versus.ts`). Its floor plan is centered at (x, y)
+ * A closed space the team steps into: a rift's arena (`riftArena.ts`), a
+ * place's interior (`placeInterior.ts`), a Tera Raid's hollow (`teraRaid.ts`), or the map a Versus match plays on (`versus.ts`). Its floor plan is centered at (x, y)
  * in world px; while the team is inside, its floor and scenery take the map
  * terrain's place (`game/terrain.ts`) and the world waits outside, set aside
  * untouched (`setAside`, `bringBack`). The run clock keeps going in a place
@@ -20,7 +20,7 @@ export type Room = { x: number; y: number; layout: FloorPlan; terrain: Feature; 
 export type Stash = { enemies: Enemy[]; hazards: Hazard[]; pickups: Pickup[]; props: Prop[]; bossId: number | null }
 
 /** The room the team is in, if any: a rift's arena, a place, or a Versus match's map (the whole match is one). */
-export const roomOf = (g: Game): Room | null => g.rift.arena ?? g.place.inside ?? g.versus?.room ?? null
+export const roomOf = (g: Game): Room | null => g.rift.arena ?? g.place.inside ?? g.raid.arena ?? g.versus?.room ?? null
 
 /** Seconds of invulnerability when stepping in or out, so nobody lands on a hit. */
 export const ARRIVAL_IFRAMES = 1.5

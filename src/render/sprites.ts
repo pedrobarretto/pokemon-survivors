@@ -1147,6 +1147,9 @@ export const drawPokemon = (
   ctx.globalAlpha = 1
 }
 
+/** The sheets a form is drawn from: Terapagos's Stellar Form has none of its own and wears its Terastal Form's, in Stellar crystal (`render/teraFx.ts`). */
+export const sheetForm = (form: FormKey | undefined): FormKey | undefined => (form === 'stellar' ? 'terastal' : form)
+
 /** `key` as one of `dex`'s alternate forms (a boss phase's `form`), if the manifest has it. */
 export const formOf = (dex: Dex, key: string | undefined): Form | undefined =>
   key !== undefined && MANIFEST[String(dex)]?.forms?.[key] ? (key as Form) : undefined

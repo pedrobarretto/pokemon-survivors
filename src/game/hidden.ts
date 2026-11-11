@@ -79,7 +79,7 @@ export const openHidden = (g: Game, which?: PlaceId, at?: { x: number; y: number
 
 /** Opens the run's hidden zone once it's due and the coast is clear (`hiddenDue`). True if it opened. */
 export const updateHiddenSchedule = (g: Game) => {
-  const busy = g.place.inside !== null || g.rift.omen !== null || g.rift.portal !== null || g.rift.arena !== null
+  const busy = g.place.inside !== null || g.rift.omen !== null || g.rift.portal !== null || g.rift.arena !== null || g.raid.den !== null || g.raid.arena !== null
   if (!hiddenDue({ time: g.time, at: g.place.hiddenAt, busy, bossAlive: g.bossId !== null, riftAt: g.rift.nextAt })) return false
   return openHidden(g) !== null
 }

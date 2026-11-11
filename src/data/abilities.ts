@@ -400,6 +400,7 @@ export const FAMILY_ABILITIES = {
   arceus: ['moldBreaker', 'magicGuard', 'sturdy'],
   darkrai: ['insomnia', 'unnerve', 'infiltrator'],
   cresselia: ['naturalCure', 'magicGuard', 'synchronize'],
+  terapagos: ['sturdy', 'clearBody', 'adaptability'],
   ...SEASON_ONE_EGG_ABILITIES,
   ...SEASON_ONE_KIT_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>

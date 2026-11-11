@@ -1,5 +1,6 @@
 import { realmBookZh as realmBook } from './realmStamps/zh'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
@@ -1198,6 +1199,7 @@ export const zh: Messages = {
       right: '向右移動',
       special: '必殺技',
       mega: '超級進化',
+      tera: TERA_WORDS.zh.action,
       lunge: '突進',
       pause: '暫停',
       confirm: '確認',
@@ -2644,6 +2646,9 @@ export const zh: Messages = {
       hudEscort: (time) => `帶 Togepi 回家 ${time}`,
     },
   },
+  tera: TERA_WORDS.zh.tera,
+  raid: TERA_WORDS.zh.raid,
+
   rifts: {
     open: '*傳說裂縫*開啟了！跟著箭頭走。',
     closed: '裂縫關閉了。',
@@ -2948,6 +2953,7 @@ export const zh: Messages = {
     giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一' },
     newMedals: '新獎牌',
     names: {
+      ...TERA_WORDS.zh.achievementNames,
       firstRun: '第一步',
       regular: '常客',
       veteran: '老手',
@@ -3014,6 +3020,7 @@ export const zh: Messages = {
       reaperDown: '活傳說',
     },
     titles: {
+      ...TERA_WORDS.zh.titles,
       veteran: '老手',
       kills100k: '勢不可擋',
       coins1m: '大富翁',
@@ -3049,6 +3056,7 @@ export const zh: Messages = {
       era1Champion: '第一紀元冠軍',
     },
     goals: {
+      ...TERA_WORDS.zh.goals,
       runs: (n) => `玩 ${n} 局`,
       kills: (n) => `累計擊倒 ${n} 隻寶可夢`,
       bestMinutes: (n) => `在一局中存活 ${n} 分鐘`,
@@ -3087,6 +3095,7 @@ export const zh: Messages = {
   },
   moves: {
     ...SEASON_ONE_EGGS_WORDS.zh.moves,
+    teraStarstorm: TERA_WORDS.zh.move,
     ...SEASON_ONE_KITS_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
@@ -5674,6 +5683,7 @@ export const zh: Messages = {
     arceus: '神。屬性隨每個區域而改變。',
     darkrai: '惡夢。讓敵群沉睡，並在夢中傷害它們。',
     cresselia: '新月。會飛回的月刃與治癒的滿月。',
+    terapagos: TERA_WORDS.zh.blurb,
   },
 
   specials: {

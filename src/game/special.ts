@@ -15,6 +15,7 @@ import { firstStance, nextStance, STANCES, STANCE_CYCLES, type Stance, type Stan
 import type { StatusSpec } from './status'
 import type { PlayerStats } from './stats'
 import type { Enemy, Game } from './types'
+import { teraSpecialType } from './tera'
 import * as dm from '../engine/dmath'
 
 /**
@@ -464,11 +465,13 @@ export const specialIdFor = (species: PlayableId, types: readonly PokeType[], st
 /**
  * The special at an evolution stage; in Mega form (`mega`), the Mega's own.
  * From a branch's stage on (`branch`), the branch's: its own, or its first type's (Vaporeon's Hydro Cannon).
+ * Terastallized (`tera`), the Tera type's.
  */
-export const resolveSpecial = (starter: PlayableId, stage: number, mega: MegaId | null = null, branch: BranchId | null = null, finalTier?: boolean) => {
+export const resolveSpecial = (starter: PlayableId, stage: number, mega: MegaId | null = null, branch: BranchId | null = null, finalTier?: boolean, tera: PokeType | null = null) => {
   const species = PLAYABLE[starter]
   const b: BranchDef | null = branch && BRANCHES[branch].line === starter && stage >= BRANCHES[branch].stage ? BRANCHES[branch] : null
-  const own = mega ? MEGAS[mega].special : b ? (b.special ?? specialOfType(b.types[0] ?? 'normal')) : undefined
+  // Terastallized, the special is the Tera type's (Tera Blast's spirit: a Water Tera Charizard casts Hydro Cannon).
+  const own = tera ? specialOfType(tera) : mega ? MEGAS[mega].special : b ? (b.special ?? specialOfType(b.types[0] ?? 'normal')) : undefined
   const id: SpecialId = own ?? specialIdFor(starter, species.line[0].types, stage)
   const def: SpecialDef = SPECIALS[id]
   const final = finalTier ?? stage >= species.line.length - 1
@@ -480,7 +483,7 @@ export type ResolvedSpecial = ReturnType<typeof resolveSpecial>
 /** The special the acting player has right now: its stage's, or its Mega form's while that lasts. A legend's turns final at its second awakening. */
 export const gameSpecial = (g: Game) => {
   const p = g.player
-  return resolveSpecial(p.starter, p.stage, p.mega.active > 0 ? p.mega.stone : null, p.branch, p.legend ? p.legend.awakened >= 2 : undefined)
+  return resolveSpecial(p.starter, p.stage, p.mega.active > 0 ? p.mega.stone : null, p.branch, p.legend ? p.legend.awakened >= 2 : undefined, teraSpecialType(p))
 }
 
 /* ---------------- Timers (pure) ---------------- */

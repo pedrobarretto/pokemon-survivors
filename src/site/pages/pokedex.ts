@@ -165,6 +165,8 @@ export const appearance = (a: Appearance, m: SiteMessages) => {
       return m.pokedex.rift(clock(a.from))
     case 'eventRift':
       return m.pokedex.eventRift(clock(a.from))
+    case 'raid':
+      return a.stellar ? m.pokedex.stellarRaid(clock(a.from)) : m.pokedex.raid(clock(a.from))
     case 'reaper':
       return m.pokedex.reaper(clock(a.at))
     case 'place':

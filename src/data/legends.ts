@@ -39,8 +39,14 @@ export const EVENT_LEGENDS = ['darkrai'] as const satisfies readonly EnemyId[]
  */
 export const FESTIVAL_LEGENDS = ['cresselia'] as const
 
-/** Every playable legend: the regular ones, then the event ones, then the festival ones. */
-export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS] as const
+/**
+ * Terastal's legend: Terapagos, the 7★ Stellar Tera Raid's giant (`data/tera.ts`), captured by beating it there
+ * once. Out of `REGULAR_LEGENDS` too: Arceus never waits for it.
+ */
+export const TERA_LEGENDS = ['terapagos'] as const satisfies readonly EnemyId[]
+
+/** Every playable legend: the regular ones, then the event ones, the festival ones and Terastal's. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -48,7 +54,7 @@ export type LegendId = (typeof LEGEND_IDS)[number]
 export const AWAKEN_AT = [12, 28] as const
 
 /** Asset folder of a legend's alternate form (`<dex>/<form>/`), like the Megas'. Deoxys's formes come with its stance. */
-export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed'
+export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed' | 'terastal' | 'stellar'
 
 /**
  * The innate: an ability in play from Lv 1, on top of the one picked at the
@@ -83,6 +89,8 @@ export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
    * the legend keeps its own look and name, so a form behind it must not change the types.
    */
   form?: { key: LegendForm; name: string; types?: readonly PokeType[]; community?: true }
+  /** The form the first awakening lands in, until the second's (Terapagos's Terastal Form). */
+  early?: { key: LegendForm; name: string }
   unlock: LegendUnlock
 }
 
@@ -396,6 +404,26 @@ export const LEGENDS = {
     awakenings: [{ maxHp: 30, might: 0.12, regen: 0.2 }, { maxHp: 40, might: 0.22, area: 0.1 }],
     innate: { ability: 'levitate' },
     unlock: { wins: 1, festival: 'lanternas' },
+  },
+
+  /* ---------- Terastal's legend ---------- */
+  /**
+   * Terapagos plays Stellar from the start (`game/tera.ts`): its Tera Orb fills like anyone's and shards never
+   * change it. Its first awakening lands in its Terastal Form, its second in its Stellar Form, Terastallized for
+   * good (`stellarForm`): every move type's first hit of each 20 s lands big. Multiscale stands in for Tera Shell.
+   */
+  terapagos: {
+    name: 'Terapagos',
+    color: '#58b8e8',
+    stats: { maxHp: 45, armor: 1, might: 0.18, area: 0.05 },
+    signature: LEGENDARY_MOVE_OF.terapagos,
+    learnset: [[LEGENDARY_MOVE_OF.terapagos, 'swift', 'ancientPower', 'rockTomb', 'dazzlingGleam', 'iceShard', 'futureSight', 'flashCannon']],
+    line: stage(1024, 'Terapagos', ['normal']),
+    awakenings: [{ maxHp: 30, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.2, area: 0.1 }],
+    innate: { ability: 'multiscale' },
+    early: { key: 'terastal', name: 'Terapagos (Terastal)' },
+    form: { key: 'stellar', name: 'Terapagos (Astral)' },
+    unlock: { wins: 1 },
   },
 } as const satisfies Record<LegendId, LegendDef>
 

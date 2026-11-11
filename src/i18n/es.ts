@@ -1,5 +1,6 @@
 import { realmBookEs as realmBook } from './realmStamps/es'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
@@ -1200,6 +1201,7 @@ export const es: Messages = {
       right: 'Moverse a la derecha',
       special: 'Ataque especial',
       mega: 'Megaevolución',
+      tera: TERA_WORDS.es.action,
       lunge: 'Embestida',
       pause: 'Pausa',
       confirm: 'Confirmar',
@@ -2648,6 +2650,9 @@ export const es: Messages = {
       hudEscort: (time) => `Lleva a Togepi al nido ${time}`,
     },
   },
+  tera: TERA_WORDS.es.tera,
+  raid: TERA_WORDS.es.raid,
+
   rifts: {
     open: '¡Se abrió una *grieta legendaria*! Sigue la flecha.',
     closed: 'La grieta se cerró.',
@@ -2952,6 +2957,7 @@ export const es: Messages = {
     giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors', friendLegend: 'Ha traído 10 amigos al juego', stampCollector: 'Reunió 30 Estampas en el Poké Realm', era1Legend: 'Quedó en lo más alto de un ranking de la Era 1', era1Champion: 'Fue el n.º 1 de un ranking de la Era 1' },
     newMedals: 'Nuevas medallas',
     names: {
+      ...TERA_WORDS.es.achievementNames,
       firstRun: 'Primeros pasos',
       regular: 'Habitual',
       veteran: 'Veterano',
@@ -3018,6 +3024,7 @@ export const es: Messages = {
       reaperDown: 'Leyenda Viviente',
     },
     titles: {
+      ...TERA_WORDS.es.titles,
       veteran: 'Veterano',
       kills100k: 'Imparable',
       coins1m: 'Magnate',
@@ -3053,6 +3060,7 @@ export const es: Messages = {
       era1Champion: 'Campeón(a) de la Era 1',
     },
     goals: {
+      ...TERA_WORDS.es.goals,
       runs: (n) => (n === '1' ? 'Juega una partida' : `Juega ${n} partidas`),
       kills: (n) => `Derrota ${n} Pokémon en total`,
       bestMinutes: (n) => `Sobrevive ${n} min en una partida`,
@@ -3092,6 +3100,7 @@ export const es: Messages = {
 
   moves: {
     ...SEASON_ONE_EGGS_WORDS.es.moves,
+    teraStarstorm: TERA_WORDS.es.move,
     ...SEASON_ONE_KITS_WORDS.es.moves,
     leechSeed: {
       description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
@@ -5680,6 +5689,7 @@ export const es: Messages = {
     arceus: 'El dios. Su tipo cambia con cada bioma.',
     darkrai: 'Pesadilla. Duerme a las multitudes y las hiere en sueños.',
     cresselia: 'Luna creciente. Cuchillas que vuelven y una luna llena que cura.',
+    terapagos: TERA_WORDS.es.blurb,
   },
 
   specials: {

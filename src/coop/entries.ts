@@ -18,7 +18,7 @@ import type { Skill } from '../game/versusKit'
 export type Input =
   | { k: 'move'; code: number; sample: number }
   | { k: 'special'; sample: number }
-  | { k: 'mega' | 'lunge' }
+  | { k: 'mega' | 'tera' | 'lunge' }
   | { k: 'pick'; screen: PickScreen; round: number; index: number }
   | { k: 'reroll' | 'skip'; round: number }
   | { k: 'banish'; round: number; index: number }
@@ -53,6 +53,7 @@ export const inputValues = (i: Input, nonce = 0): Scalar[] => {
     case 'special':
       return [i.sample]
     case 'mega':
+    case 'tera':
     case 'lunge':
     case 'emote':
       return []

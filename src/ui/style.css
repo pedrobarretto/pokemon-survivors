@@ -2969,6 +2969,65 @@ button {
   }
 }
 
+/* ---------- Terastal (HUD badge + touch button, shown once the run has a Tera type; `ui/teraButton.ts`) ---------- */
+
+/* The rim takes the Tera type's crystal (`--type`, `--tera-light`, `--tera-dark` from its ramp). */
+.tera.ready {
+  animation: tera-glint 0.5s steps(1, jump-none) infinite;
+}
+
+.tera.active {
+  box-shadow: inset 0 0 0 2px var(--tera-light), 0 0 0 3px var(--tera-dark);
+}
+
+@keyframes tera-glint {
+  0% {
+    box-shadow: inset 0 0 0 2px var(--tera-light), 0 0 0 3px var(--type);
+  }
+  50% {
+    box-shadow: inset 0 0 0 2px var(--type), 0 0 0 3px var(--tera-light);
+  }
+}
+
+.tera-button {
+  display: none;
+  position: absolute;
+  right: calc(max(18px, env(safe-area-inset-right)) + 88px);
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 88px);
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tera-button img {
+  width: 34px;
+  height: 34px;
+}
+
+.tera-button::after {
+  background: conic-gradient(transparent calc(var(--fill) * 360deg), rgba(8, 8, 20, 0.62) 0);
+}
+
+.tera-button:active {
+  transform: translateY(2px);
+}
+
+.tera-button .special-tag {
+  top: auto;
+  bottom: 2px;
+  font-size: 13px;
+}
+
+@media (pointer: coarse) {
+  .tera-button {
+    display: grid;
+  }
+}
+
 /* ---------- Manual lunge (Quick Attack, Extreme Speed): HUD badge + touch button left of the special ---------- */
 
 .lunge-button {
@@ -3007,6 +3066,7 @@ button {
 /* A menu or the results screen is up: the touch buttons step aside so they never cover its buttons. */
 .hud.menu-open .special-button,
 .hud.menu-open .mega-button,
+.hud.menu-open .tera-button,
 .hud.menu-open .lunge-button {
   display: none;
 }
@@ -3216,6 +3276,10 @@ button {
     right: auto;
     left: calc(max(18px, env(safe-area-inset-left)) + 90px);
   }
+  [data-hand='left'] .tera-button {
+    right: auto;
+    left: calc(max(18px, env(safe-area-inset-left)) + 88px);
+  }
   [data-hand='left'] .status {
     left: auto;
     right: 12px;
@@ -3238,6 +3302,10 @@ button {
   [data-hand='left'] .hud.with-team .mega-button {
     left: calc(max(18px, env(safe-area-inset-left)) + 160px);
     bottom: calc(max(18px, env(safe-area-inset-bottom)) + 10px);
+  }
+  [data-hand='left'] .hud.with-team .tera-button {
+    left: calc(max(18px, env(safe-area-inset-left)) + 226px);
+    bottom: calc(max(18px, env(safe-area-inset-bottom)) + 12px);
   }
   /* The toasts' column on the right stops above the fixed stick, however high it sits. */
   [data-hand='left'][data-stick='fixed'] .toasts {
@@ -7486,6 +7554,72 @@ button {
 .banner em {
   color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
   font-style: normal;
+}
+
+/* Terastal's banner and a Tera Raid's title card (`ui/teraNews.ts`): the banner box re-cut in the type's crystal. */
+.banner.tera-box {
+  border-color: var(--tera-dark);
+  box-shadow:
+    inset 0 0 0 var(--px) var(--paper),
+    inset 0 0 0 calc(var(--px) * 2) var(--tera-mid),
+    inset 0 0 0 calc(var(--px) * 3) var(--tera-light),
+    0 calc(var(--px) * 2) 0 rgba(0, 0, 0, 0.35);
+}
+
+.tera-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.tera-crown {
+  width: calc(var(--px, 3px) * 19);
+  height: calc(var(--px, 3px) * 19);
+  min-width: 48px;
+  min-height: 48px;
+  image-rendering: pixelated;
+}
+
+.tera-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tera-kicker {
+  font-family: var(--body);
+  font-size: clamp(14px, 2.6 * var(--vw), 20px);
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--ink, #383028) var(--dk-lift, 100%), #fff);
+}
+
+.tera-type {
+  text-transform: uppercase;
+  color: var(--tera-mid);
+  text-shadow:
+    calc(var(--px) * 1) calc(var(--px) * 1) 0 var(--tera-dark),
+    0 calc(var(--px) * -1) 0 var(--tera-light);
+}
+
+/* Stellar: the seven crystals in hard bands across the letters. */
+.tera-banner.stellar .tera-type {
+  color: transparent;
+  text-shadow: none;
+  background: linear-gradient(90deg, #f85858 0 16%, #f8a838 16% 32%, #f8e858 32% 48%, #58e898 48% 64%, #58a8f8 64% 80%, #a878f8 80% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.tera-stars {
+  display: flex;
+  gap: 3px;
+}
+
+.tera-stars img {
+  width: 21px;
+  height: 21px;
+  image-rendering: pixelated;
 }
 
 /* Presente Misterioso (ui/gifts.ts): the closed box, shaking open, and what came out. */
@@ -15956,6 +16090,46 @@ button.hall-tile:hover {
   position: relative;
 }
 
+/* A Tera Raid's giant on the boss bar (`ui/hud.ts`): its crown by its name, its Tera shield in crystal under the HP. */
+.boss-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.boss-crown {
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+}
+
+.boss-shield {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  margin-top: 3px;
+  background: #181030;
+  border: 3px solid var(--kit-tinta);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.boss-shield-fill {
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--tera-light) 0 6px, var(--tera-mid) 6px 12px);
+}
+
+.boss-shield-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  line-height: 1;
+  color: #101018;
+}
+
 .boss-tick {
   position: absolute;
   top: -3px;
@@ -23373,6 +23547,7 @@ span.arena-hub-face {
 /* A match plays its kit: the run's own special, Mega and lunge controls step aside. */
 [data-arena] .special-button,
 [data-arena] .mega-button,
+[data-arena] .tera-button,
 [data-arena] .lunge-button,
 [data-arena] .special-badge:not(.kit-badge) {
   display: none !important;

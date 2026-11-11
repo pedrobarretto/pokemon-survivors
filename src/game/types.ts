@@ -33,6 +33,9 @@ import type { Team } from '../data/versus'
 import type { VersusSeat, VersusState } from './versus'
 import type { PingKind, QuickChat } from './versusSocial'
 import type { MegaState } from './mega'
+import type { TeraState } from './tera'
+import type { RaidState } from './teraRaid'
+import type { RaidPick, TeraType } from '../data/tera'
 import type { Prop } from './props'
 import type { TerrainState } from './terrain'
 import type { Roster } from './roster'
@@ -158,6 +161,8 @@ export type Player = {
   special: SpecialState
   /** Mega Stone, Mega form and its recharge (`mega.ts`). */
   mega: MegaState
+  /** Tera type, Tera Orb and Terastal form (`tera.ts`). */
+  tera: TeraState
   /** Level-up rerolls/skips left this run. */
   rerolls: number
   skips: number
@@ -370,6 +375,8 @@ export type Visual =
   | 'streak' | 'slash' | 'afterimage'
   /** The rainbow burst that ends a Mega Evolution (`mega.ts`), drawn by `render/megaFx.ts`. */
   | 'megaWave'
+  /** The shockwave as a Terastallization's crystal shatters (`tera.ts`), drawn by `render/teraFx.ts`. */
+  | 'teraWave'
   /** Lingering ground of a Trail mod, the blast of a Burst mod and the sparks of an Arc mod (`mods.ts`), drawn by `render/modFx.ts`. */
   | 'modTrail' | 'modBurst' | 'modArc'
   /** A delayed strike's warning on the ground (`moveKit.ts`), drawn by `render/kitFx.ts`. */
@@ -588,7 +595,7 @@ export type Pickup = {
   to?: number
   /** Co-op: dropped for this slot alone (their Mega Stone, legendary TM, a boss's TM or Poké Ball); unset means anyone's. */
   owner?: number
-} & ({ kind: 'xp'; value: number } | { kind: 'coin'; value: number } | { kind: 'berry' } | { kind: 'pokeball' } | { kind: 'megaStone'; mega: MegaId } | { kind: 'consumable'; item: ConsumableId } | { kind: 'tm'; move: MoveId; source: TmSource } | { kind: 'alphaPrize' } | { kind: 'treat' } | { kind: 'evoItem'; item: EvoItemId })
+} & ({ kind: 'xp'; value: number } | { kind: 'coin'; value: number } | { kind: 'berry' } | { kind: 'pokeball' } | { kind: 'megaStone'; mega: MegaId } | { kind: 'consumable'; item: ConsumableId } | { kind: 'tm'; move: MoveId; source: TmSource } | { kind: 'alphaPrize' } | { kind: 'treat' } | { kind: 'evoItem'; item: EvoItemId } | { kind: 'teraShard'; tera: TeraType; pair: number })
 
 export type Particle = {
   x: number
@@ -699,6 +706,27 @@ export type GameEvent =
   | { kind: 'mega'; name: string }
   | { kind: 'megaEnd' }
   | { kind: 'megaReady' }
+  /**
+   * Terastal (`tera.ts`): a boss left its choice of shards, a shard set the Tera type, the orb filled, the
+   * transformation started, the form landed or ran out, a Stellar type's once-only strike landed, Terapagos's Stellar Form shone anew.
+   */
+  | { kind: 'teraShards' }
+  | { kind: 'teraShard'; tera: TeraType; from: TeraType | null }
+  | { kind: 'teraReady' }
+  | { kind: 'teraStart'; tera: TeraType }
+  | { kind: 'tera'; tera: TeraType }
+  | { kind: 'teraEnd' }
+  | { kind: 'stellarStrike'; type: PokeType }
+  | { kind: 'stellarPulse' }
+  /** Tera Raids (`teraRaid.ts`): a den opened or closed unused, the team went in, the shield rose or broke, a storm came, the boss fell, a player fainted, the team came back out. */
+  | { kind: 'raidOpen'; raid: RaidPick; day: boolean }
+  | { kind: 'raidClosed' }
+  | { kind: 'raidEnter'; raid: RaidPick; day: boolean }
+  | { kind: 'raidShield'; moment: 'up' | 'broken' }
+  | { kind: 'raidStorm' }
+  | { kind: 'raidCleared'; raid: RaidPick; day: boolean }
+  | { kind: 'raidFall' }
+  | { kind: 'raidExit'; outcome: 'won' | 'timeout' | 'fallen' }
   | { kind: 'evolve'; from: number; to: number }
   /** A branching evolution waits on the player's pick. */
   | { kind: 'branchChoice' }
@@ -909,6 +937,8 @@ export type Game = {
   traits: { seen: Set<TraitId>; nextIntro: number }
   /** Legendary rifts: the portal on the map, the arena and what was met this run. */
   rift: RiftState
+  /** Tera Raids (`teraRaid.ts`): the den on the map, the hollow the team is in and the raids beaten. */
+  raid: RaidState
   /** Places (`place.ts`): the entrance on the map, the inside the player is in and the wings picked up. */
   place: PlaceState
   /** Move Tutors met this run (their tent's odds, `mapEvents.ts`). */

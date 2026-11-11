@@ -61,10 +61,10 @@ export const awakeningDeltas = (id: LegendId, awakened: number): readonly StatDe
   return def.awakenings.slice(0, awakened)
 }
 
-/** The form a legend wears after `awakened` awakenings: the second one's, where it has one. */
+/** The form a legend wears after `awakened` awakenings: the second one's, where it has one, else the first's (Terapagos's Terastal Form). */
 export const formAfter = (id: LegendId, awakened: number): LegendDef['form'] | null => {
   const def: LegendDef = LEGENDS[id]
-  return awakened >= 2 ? (def.form ?? null) : null
+  return awakened >= 2 ? (def.form ?? null) : awakened >= 1 ? (def.early ?? null) : null
 }
 
 /** The sprite form the acting player wears now: the awakened form, else Deoxys's forme (its stance). */
