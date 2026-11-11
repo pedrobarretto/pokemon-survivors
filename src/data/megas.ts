@@ -303,7 +303,18 @@ export const MEGAS = {
     stats: { might: 0.3, speed: 8, typeDamage: { fighting: 0.25 } },
     special: 'auraStorm',
   },
-  aggron: {
+  mawile: {
+    line: 'mawile',
+    name: 'Mega Mawile',
+    stone: 'Mawilite',
+    form: 'mega',
+    colors: ['#382830', '#f0a8c8', '#f8e0b0'],
+    ability: 'Huge Power',
+    effect: { kind: 'stats' },
+    // Its two jaws: Vise Grip and the Deceiver bite both ways while it lasts (`rocketKitMoves.ts`).
+    stats: { might: 0.45, armor: 1 },
+    special: 'heavySlam',
+  },  aggron: {
     line: 'aron',
     name: 'Mega Aggron',
     stone: 'Aggronite',
@@ -314,6 +325,7 @@ export const MEGAS = {
     stats: { damageTaken: -0.25, armor: 3, might: 0.15 },
     special: 'heavySlam',
   },
+
   manectric: {
     line: 'electrike',
     name: 'Mega Manectric',
@@ -336,6 +348,7 @@ export const MEGAS = {
     stats: { maxHp: 30, regen: 1, typeDamage: { normal: 0.3, fairy: 0.3, dragon: 0.2 } },
     special: 'hyperVoice',
   },
+
   banette: {
     line: 'shuppet',
     name: 'Mega Banette',
@@ -347,7 +360,17 @@ export const MEGAS = {
     stats: { cooldown: -0.2, statusChance: 0.1, might: 0.15 },
     special: 'phantomForce',
   },
-  glalie: {
+  absol: {
+    line: 'absol',
+    name: 'Mega Absol',
+    stone: 'Absolite',
+    form: 'mega',
+    colors: ['#283048', '#e8e8f8', '#c03848'],
+    ability: 'Magic Bounce',
+    effect: { kind: 'stats' },
+    stats: { might: 0.3, speed: 10, cooldown: -0.08 },
+    special: 'nightSlash',
+  },  glalie: {
     line: 'snorunt',
     name: 'Mega Glalie',
     stone: 'Glalitite',

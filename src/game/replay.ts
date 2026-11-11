@@ -32,6 +32,7 @@ import type { Game, Player } from './types'
 export { TICK } from './tick'
 import { TICK } from './tick'
 import { parseHunt, type MythicalHunt } from './mythicalHunt'
+import { isShadowVariant, type ShadowVariant } from './shadow'
 
 /**
  * Version of the rules a replay plays by. Bump it with any change that makes
@@ -79,6 +80,8 @@ export type ReplayStart = {
   caps?: number
   /** The mythicals' bad-luck protection from the save (`game/mythicalHunt.ts`). The plain odds when absent: co-op, the Desafio do dia, every mythical captured. */
   mythical?: MythicalHunt
+  /** A Shadow or Purified Pokémon (`shadow.ts`): stronger and frailer, or a little sturdier. The plain one when absent. */
+  variant?: ShadowVariant
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
@@ -240,6 +243,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
       evo,
       caps: isWhole(s.caps) ? s.caps : 0,
       ...(mythical ? { mythical } : {}),
+      ...(isShadowVariant(s.variant) ? { variant: s.variant } : {}),
       view,
     },
     moves: raw.moves,
@@ -274,6 +278,7 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     evo: start.evo ?? [],
     caps: start.caps ?? 0,
     mythical: start.mythical,
+    variant: start.variant ?? null,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {

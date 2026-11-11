@@ -13,6 +13,7 @@ import { collectEvoItem } from './evoGate'
 import { inPlay, onAnyScreen, setPhase } from './players'
 import { coopScale } from './coop'
 import { COOP } from '../data/coop'
+import { rocketCoin } from './rocketKitSystem'
 import type { Game, Offer, Pickup, Player } from './types'
 import * as dm from '../engine/dmath'
 
@@ -144,6 +145,7 @@ const collect = (g: Game, pickup: Pickup) => {
       // Co-op ₽ are worth a bit more: the team's total is split at the end (`coopPayout`).
       const amount = dm.round(pickup.value * p.stats.greed * coopScale(g, COOP.scale.coins))
       g.coins += amount
+      rocketCoin(g, amount)
       floatText(g, p.x, p.y - 30, `₽${amount}`, '#f8d030')
       g.events.push({ kind: 'coin' })
       break

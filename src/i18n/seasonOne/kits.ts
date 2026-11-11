@@ -5,10 +5,10 @@
  * steps (`step` below), so all five languages stay in step with
  * `game/seasonOneKitMoves.ts`.
  */
-type Mod = 'arc' | 'bounce' | 'burstOnKill' | 'cruel' | 'drain' | 'echo' | 'execute' | 'hunter' | 'seek' | 'split' | 'trail'
+export type Mod = 'arc' | 'bounce' | 'burstOnKill' | 'cruel' | 'drain' | 'echo' | 'execute' | 'hunter' | 'seek' | 'split' | 'trail'
 
 /** A language's wording of the plain steps and the mods the forks add. */
-type Vocab = {
+export type Vocab = {
   d: (n: number) => string
   a: (n: number) => string
   c: (n: number) => string
@@ -20,7 +20,7 @@ type Vocab = {
   and: (mod: string, stat: string) => string
 }
 
-const fork = (v: Vocab, a: readonly [Mod, string], b: readonly [Mod, string]) => ({
+export const fork = (v: Vocab, a: readonly [Mod, string], b: readonly [Mod, string]) => ({
   fork: [
     { name: v.mods[a[0]][0], desc: v.and(v.mods[a[0]][1], a[1]) },
     { name: v.mods[b[0]][0], desc: v.and(v.mods[b[0]][1], b[1]) },
@@ -66,7 +66,7 @@ const movesOf = (v: Vocab, text: Descriptions) => {
   } as const
 }
 
-const ptVocab: Vocab = {
+export const ptVocab: Vocab = {
   d: (n) => `+${n} de dano`,
   a: (n) => `+${n}% de área`,
   c: (n) => `recarga -${String(n).replace('.', ',')}s`,
@@ -89,7 +89,7 @@ const ptVocab: Vocab = {
   },
 }
 
-const enVocab: Vocab = {
+export const enVocab: Vocab = {
   d: (n) => `+${n} damage`,
   a: (n) => `+${n}% area`,
   c: (n) => `-${n}s cooldown`,
@@ -112,7 +112,7 @@ const enVocab: Vocab = {
   },
 }
 
-const esVocab: Vocab = {
+export const esVocab: Vocab = {
   d: (n) => `+${n} de daño`,
   a: (n) => `+${n}% de área`,
   c: (n) => `recarga -${String(n).replace('.', ',')}s`,
@@ -135,7 +135,7 @@ const esVocab: Vocab = {
   },
 }
 
-const frVocab: Vocab = {
+export const frVocab: Vocab = {
   d: (n) => `+${n} dégâts`,
   a: (n) => `+${n}% de zone`,
   c: (n) => `recharge -${String(n).replace('.', ',')}s`,
@@ -158,7 +158,7 @@ const frVocab: Vocab = {
   },
 }
 
-const zhVocab: Vocab = {
+export const zhVocab: Vocab = {
   d: (n) => `傷害+${n}`,
   a: (n) => `範圍+${n}%`,
   c: (n) => `冷卻-${n}秒`,

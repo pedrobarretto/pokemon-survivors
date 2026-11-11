@@ -1,6 +1,7 @@
 import { realmBookFr as realmBook } from './realmStamps/fr'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2341,6 +2342,7 @@ export const fr: Messages = {
       banette: 'recharges −20%, +10% de chance d’altération sur chaque capacité et capacités +15%. L’attaque spéciale devient Phantom Force, une ruée en chaîne qui libère un anneau d’ombres à chaque atterrissage.',
       glalie: 'capacités Normal et Glace +30% et capacités +25%. L’attaque spéciale devient Sheer Cold.',
       salamence: 'capacités Normal et Vol +30%, vitesse +12 et capacités +25%. L’attaque spéciale devient Double-Edge.',
+      ...ROCKET_FAMILY_WORDS.fr.megas,
     },
   },
 
@@ -3088,6 +3090,7 @@ export const fr: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.fr.moves,
     ...SEASON_ONE_KITS_WORDS.fr.moves,
+    ...ROCKET_FAMILY_WORDS.fr.moves,
     leechSeed: {
       description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
       upgrades: [
@@ -5559,6 +5562,7 @@ export const fr: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.fr.blurbs,
     ...SEASON_ONE_KITS_WORDS.fr.blurbs,
+    ...ROCKET_FAMILY_WORDS.fr.blurbs,
     bulbasaur: 'Équilibré. Régénère ses PV.',
     charmander: 'Offensif. Plus de dégâts, moins de PV.',
     squirtle: 'Défensif. Plus de PV et de défense.',

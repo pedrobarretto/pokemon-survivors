@@ -1,6 +1,7 @@
 import { realmBookEn as realmBook } from './realmStamps/en'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2343,6 +2344,7 @@ export const en: Messages = {
       banette: 'cooldowns −20%, +10% condition chance on every move and moves +15%. The special becomes Phantom Force, a chain dash that bursts a ring of shadows on every landing.',
       glalie: 'Normal and Ice moves +30% and moves +25%. The special becomes Sheer Cold.',
       salamence: 'Normal and Flying moves +30%, speed +12 and moves +25%. The special becomes Double-Edge.',
+      ...ROCKET_FAMILY_WORDS.en.megas,
     },
   },
 
@@ -3091,6 +3093,7 @@ export const en: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.en.moves,
     ...SEASON_ONE_KITS_WORDS.en.moves,
+    ...ROCKET_FAMILY_WORDS.en.moves,
     leechSeed: {
       description: 'Lobs seeds at the nearest foes. A seed drains HP over time and heals you; when the foe faints, it jumps to two neighbors.',
       upgrades: [
@@ -5563,6 +5566,7 @@ export const en: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.en.blurbs,
     ...SEASON_ONE_KITS_WORDS.en.blurbs,
+    ...ROCKET_FAMILY_WORDS.en.blurbs,
     bulbasaur: 'Balanced. Regenerates HP.',
     charmander: 'Offensive. More damage, less HP.',
     squirtle: 'Defensive. More HP and defense.',

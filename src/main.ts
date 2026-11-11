@@ -125,6 +125,7 @@ import { parseReplay, recordEvent, recordStep, resimulate, RULES_VERSION, rulesS
 import { gameSpecial } from './game/special'
 import { unlockShinyStarter } from './game/shinyStarters'
 import { playsShiny } from './game/shinyPicks'
+import { runVariant, type ShadowSave } from './game/shadow'
 import { canWalkWith, companionForm, OG_GIFT, SUPPORTER_TIERS, TIER_GIFTS, type CompanionId, type SupporterTier } from './game/supporters'
 import { createCompanion, stepCompanion, type CompanionView } from './render/companion'
 import { MOVES } from './game/moves'
@@ -1314,6 +1315,12 @@ const firstFrameDrawn = () => {
   firstStep('firstFrame')
 }
 
+/** The `ReplayStart` field a run with `starter` takes from the save's Shadows: nothing for the plain one, so its replay stays as it was. */
+const shadowStart = (shadows: ShadowSave, starter: PlayableId) => {
+  const variant = runVariant(shadows, starter)
+  return variant ? { variant } : {}
+}
+
 /** A player's whole family (branches included: the evolution scene can land on any of them) in the colors they play, not the normal ones as well. */
 const familySheets = (starter: PlayableId, shiny: boolean): Variant[] => familyDex(starter).map((dex) => ({ dex, shiny }))
 
@@ -1422,6 +1429,8 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     evo: [...save.evo],
     caps: capLevel(save.caps, starter),
     mythical: mythicalHunt(save),
+    // A Shadow (or Purified) Pokémon plays as one unless switched to Normal (`game/shadow.ts`).
+    ...shadowStart(save.shadows, starter),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).

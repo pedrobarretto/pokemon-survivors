@@ -1,6 +1,7 @@
 import { realmBookZh as realmBook } from './realmStamps/zh'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2341,6 +2342,7 @@ export const zh: Messages = {
       banette: '冷卻−20%、每個招式的異常狀態機率+10%、招式+15%。必殺技變為 Phantom Force，連鎖衝刺，每次落地都會爆發一圈暗影。',
       glalie: '一般與冰屬性招式+30%、招式+25%。必殺技變為 Sheer Cold。',
       salamence: '一般與飛行屬性招式+30%、速度+12、招式+25%。必殺技變為 Double-Edge。',
+      ...ROCKET_FAMILY_WORDS.zh.megas,
     },
   },
 
@@ -3088,6 +3090,7 @@ export const zh: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.zh.moves,
     ...SEASON_ONE_KITS_WORDS.zh.moves,
+    ...ROCKET_FAMILY_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
       upgrades: [
@@ -5559,6 +5562,7 @@ export const zh: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.zh.blurbs,
     ...SEASON_ONE_KITS_WORDS.zh.blurbs,
+    ...ROCKET_FAMILY_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
     squirtle: '防禦型。HP與防禦較高。',

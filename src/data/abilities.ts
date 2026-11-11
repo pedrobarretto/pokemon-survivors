@@ -6,6 +6,7 @@ import type { BranchId } from './branches'
 import type { PlayableId } from './hatchlings'
 import { SEASON_ONE_EGG_ABILITIES } from './seasonOneEggs'
 import { SEASON_ONE_KIT_ABILITIES } from './seasonOneKits'
+import { ROCKET_FAMILY_ABILITIES } from './rocketFamilies'
 import type { PokeType } from './types'
 
 /**
@@ -402,6 +403,7 @@ export const FAMILY_ABILITIES = {
   cresselia: ['naturalCure', 'magicGuard', 'synchronize'],
   ...SEASON_ONE_EGG_ABILITIES,
   ...SEASON_ONE_KIT_ABILITIES,
+  ...ROCKET_FAMILY_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>
 
 /** The abilities of a branch picked at the family's first evolution (`data/branches.ts`). */

@@ -65,6 +65,8 @@ import type { CoopState } from './coop'
 import type { Training } from './training'
 import type { Harm, HarmBy } from './harm'
 import type { SeasonKit } from './seasonOneKitRules'
+import type { RocketKit } from './rocketKitRules'
+import type { ShadowVariant } from './shadow'
 import type { MythicalHunt } from './mythicalHunt'
 
 export type OwnedMove = {
@@ -234,6 +236,10 @@ export type Player = {
   versus?: VersusSeat
   /** Temporada 1's mechanic families (`seasonOneKitRules.ts`): their running state. Absent for everyone else. */
   kit?: SeasonKit
+  /** The Rocket Game Corner's prize families (`rocketKitRules.ts`): their running state. Absent for everyone else. */
+  rocket?: RocketKit
+  /** A Shadow or Purified Pokémon (`shadow.ts`), decided as the run starts. Absent for the plain one, so its state hashes as before. */
+  variant?: ShadowVariant
 }
 
 /** One player's run stats (damage dealt is `damageByMove`). `tally` counts their own faints only in co-op. */
@@ -391,6 +397,8 @@ export type Visual =
   | LegendaryVisual2
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
+  /** The Rocket Game Corner's prize families, drawn by `render/rocketKitFx.ts`. */
+  | 'transformSplash' | 'razorWind' | 'omenFall' | 'coinRain' | 'viseGrip' | 'deceiverBite'
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'

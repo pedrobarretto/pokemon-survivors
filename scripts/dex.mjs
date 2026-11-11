@@ -70,7 +70,14 @@ export const COMPANIONS = [710]
 export const HALLOWEEN_BOSSES = [778, 354, 302, 426, 429, 229, 94, 609, 711, 709, 430, 477]
 /** The lobby's shopkeepers (render/plaza.ts): Kecleon (and its purple brother, recolored from the same sheets), Leavanny, the Boutique's tailor, and Bibarel, the carpentry's carpenter. */
 export const SHOPKEEPERS = [352, 542, 400]
-export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS])]
+/**
+ * Team Rocket's Game Corner and Hideout (src/data/rocket*.ts): the prize counter's four families, whole lines
+ * (Gimmighoul in its Roaming Form, `REGIONAL`: SpriteCollab has no Chest Form sheets), and the Hideout's cast
+ * (Giovanni's Persian, the grunts' Ekans, Arbok, Koffing and Weezing).
+ */
+export const ROCKET_FAMILIES = [132, 359, 10263, 1000, 303]
+export const ROCKET_CAST = [53, 23, 24, 109, 110]
+export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
  * animations, only for the species the Arena plays (the starters' lines) and only their front row
@@ -94,8 +101,8 @@ export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 
  * mode's 25 (the rift, event and festival legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
  * wearables `npm run rig` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
  */
-export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS])]
-export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS])
+export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS])]
+export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS])
 
 /**
  * Alternate formes the game draws, by key, mapped to their SpriteCollab form id
@@ -128,7 +135,10 @@ export const FORMS = {
   448: { mega: '0001' },
   475: { mega: '0001' },
   // Legend mode's forms: Primal Reversion, Mega Rayquaza, the Latis', Mewtwo Y's and Darkrai's Megas, Deoxys' formes.
-  150: { megaY: '0002' },
+  150: { megaY: '0002', shadow: '0003' }, // Shadow Mewtwo: the Rocket Hideout's boss and its Legend-mode variant (src/data/shadow.ts)
+  // Team Rocket's prize families' Megas (src/data/megas.ts)
+  359: { mega: '0001' },
+  303: { mega: '0001' },
   380: { mega: '0001' },
   381: { mega: '0001' },
   382: { primal: '0001' },
@@ -192,6 +202,8 @@ export const FORM_CRIES = {
   448: { mega: 'lucario-mega', megaZ: 'lucario-mega-z' },
   475: { mega: 'gallade-mega' },
   150: { megaY: 'mewtwo-mega-y' },
+  303: { mega: 'mawile-mega' },
+  359: { mega: 'absol-mega' },
   380: { mega: 'latias-mega' },
   381: { mega: 'latios-mega' },
   382: { primal: 'kyogre-primal' },
@@ -225,13 +237,15 @@ export const EMOTIONS = {
   542: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
   // Bibarel, the carpentry's carpenter (render/plaza.ts): SpriteCollab only has its Normal portrait.
   400: ['Normal'],
+  // The Game Corner's Meowth talks with the 52 row above; Giovanni speaks through his Persian (the Rocket Hideout).
+  53: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry', 'Determined', 'Shouting'],
 }
 
 /**
  * Regional forms played as species of their own (keep in sync with `src/data/regionalForms.ts`), by PokeAPI's id
  * for the form (its cry is there under that id): their SpriteCollab folder. Everything keyed by dex then just works.
  */
-export const REGIONAL = { 10162: '0077/0001', 10163: '0078/0001' }
+export const REGIONAL = { 10162: '0077/0001', 10163: '0078/0001', 10263: '0999/0001' }
 /** A species' SpriteCollab folder. */
 export const pad = (n) => REGIONAL[n] ?? String(n).padStart(4, '0')
 /** Where a species' shiny sits below its folder: a regional form's is directly under the form, like any form's. */

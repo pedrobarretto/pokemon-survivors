@@ -1,6 +1,7 @@
 import { realmBookEs as realmBook } from './realmStamps/es'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2345,6 +2346,7 @@ export const es: Messages = {
       banette: 'recargas −20%, +10% de probabilidad de estado en cada movimiento y movimientos +15%. El especial pasa a ser Phantom Force, una embestida en cadena que suelta un anillo de sombras en cada aterrizaje.',
       glalie: 'movimientos de Normal y Hielo +30% y movimientos +25%. El especial pasa a ser Sheer Cold.',
       salamence: 'movimientos de Normal y Volador +30%, velocidad +12 y movimientos +25%. El especial pasa a ser Double-Edge.',
+      ...ROCKET_FAMILY_WORDS.es.megas,
     },
   },
 
@@ -3093,6 +3095,7 @@ export const es: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.es.moves,
     ...SEASON_ONE_KITS_WORDS.es.moves,
+    ...ROCKET_FAMILY_WORDS.es.moves,
     leechSeed: {
       description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
       upgrades: [
@@ -5565,6 +5568,7 @@ export const es: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.es.blurbs,
     ...SEASON_ONE_KITS_WORDS.es.blurbs,
+    ...ROCKET_FAMILY_WORDS.es.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Más daño, menos vida.',
     squirtle: 'Defensivo. Más vida y defensa.',

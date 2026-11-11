@@ -21,6 +21,7 @@ import { mergeFinds, mergeResearch } from './seasonOneUnlocks'
 import { mergeShinyStarters } from './shinyStarters'
 import { mergeShinyPicks } from './shinyPicks'
 import { mergeCompanions } from './supporters'
+import { mergeShadows } from './shadow'
 
 /**
  * Account sync rules, shared by the game and the API (`server/`): how two
@@ -81,6 +82,7 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  *   side bought (a union) and the haggle made on either (`mergeCaravan`).
  * - The Desafio do dia attempt: the later day (`base`'s on the same day).
  * - Temporada 1's encounters: a union; its research: each chain at the side further along, the partners a union (`mergeResearch`).
+ * - Shadow Pokémon: a union, purified for good once either side purified, the further heart gauge, `incoming`'s pick (`mergeShadows`).
  */
 export const mergeSaves = (base: Save, incoming: Save): Save => {
   const ranks: Ranks = Object.fromEntries(UPGRADE_IDS.map((id) => [id, Math.max(base.ranks[id], incoming.ranks[id])])) as Record<UpgradeId, number>
@@ -126,6 +128,7 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     builds: { ...base.builds, ...incoming.builds },
     finds: mergeFinds(base.finds, incoming.finds),
     research: mergeResearch(base.research, incoming.research),
+    shadows: mergeShadows(base.shadows, incoming.shadows),
   }
 }
 

@@ -33,7 +33,7 @@ import { drawModAttack, drawModGround, flightAngle } from './modFx'
 import { drawMoveFxAttack, drawMoveFxGround } from './moveFx'
 import { drawConsumable, drawFlash, drawProps, drawSleep } from './props'
 import { drawSpecialAttack, drawSpecialAura, drawSpecialGround } from './specialFx'
-import { awakeningLook, CLONE_OUTLINE, CLONE_TINT, drawLegendAura, playerSprites } from './legend'
+import { awakeningLook, CLONE_OUTLINE, CLONE_TINT, drawLegendAura, playerSprites, wearsShadowSheets } from './legend'
 import { isClone } from '../game/legend'
 import { drawArena, drawRiftArrow, drawRiftFallAir, drawRiftFallGround, drawRiftFallOut, drawRiftPortal, dropArenas, riftFallLook, warmArena } from './rift'
 import { drawEntranceAir, drawEntranceGround, drawPlaceArrow, drawPlaceDark, drawPlaceFallOut, drawPlaceFloor, drawPlaceGround, drawPlaceOver, drawWings, dropPlaceFloor, placeFallLook } from './places'
@@ -53,6 +53,8 @@ import { drawGuard, drawKitStatus, drawTelegraph } from './kitFx'
 import { drawEggAttack, drawEggGround, drawEggPlayer, eggPlayerLook } from './eggMoveFx'
 import { drawEgg3Attack, drawEgg3Ground, drawEgg3Player, egg3PlayerLook } from './eggMove3Fx'
 import { drawSeasonKitAttack, drawSeasonKitGround, drawSeasonKitPlayer } from './seasonOneKitFx'
+import { drawRocketKitAttack, drawRocketKitPlayer } from './rocketKitFx'
+import { drawPurifiedMark, drawShadowAura } from './shadowAura'
 import { drawEgg2Attack, drawEgg2Ground } from './eggMove2Fx'
 import { drawVerbAir, drawVerbGround, drawVerbPlayerAir, drawVerbPlayerGround } from './verbFx'
 import { drawTmAir, drawTmDisc, drawTmGround, drawTmPlayer } from './tmFx'
@@ -271,6 +273,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawEggAttack(ctx, a, t)
       drawEgg3Attack(ctx, a, t)
       drawSeasonKitAttack(ctx, a, t)
+      drawRocketKitAttack(ctx, a, t)
       drawEgg2Attack(ctx, a, t)
       drawSignatureAttack(ctx, a, t)
       drawTypeEvolvedAttack(ctx, a, t)
@@ -642,8 +645,12 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // variant's own Walk, Idle and Hurt (a Mega with sheets has its own; `render/wearFit.ts` checks the sheet),
   // so the moments that swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega's transformation
   // and a move's own look (Fly, Dig, a lunge).
-  const bare = emote !== null || egg !== null || p.mega.intro > 0
+  // Ditto Transformed wears another species' sheets, which the rig never measured.
+  const copied = p.rocket?.kind === 'transform' && p.rocket.dex !== 0
+  const bare = emote !== null || egg !== null || p.mega.intro > 0 || copied
   const look = bare ? null : shownLook(g, p.slot)
+  // A Shadow Pokémon burns with its aura (`render/shadowAura.ts`), unless its sheets are SpriteCollab's own Shadow ones.
+  if (p.variant === 'shadow' && alpha >= 0.5 && !wearsShadowSheets(g)) drawShadowAura(ctx, s, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, g.now, calm || detail.lean)
   if (alpha > 0) {
     drawDressed(ctx, s, look, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, { alpha, flash, tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
   }
@@ -652,6 +659,7 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   if (p.shiny) drawSparkles(ctx, p.x, p.y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), g.now - 0.3, 0)
   drawMegaAir(ctx, g, p.y - s.bodyH, p.animTime)
   drawHpBar(ctx, g)
+  if (p.variant === 'purified') drawPurifiedMark(ctx, p.x - 18, p.y + 3)
 }
 
 /** GBA-style HP bar under the player's feet. */
@@ -909,6 +917,7 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawEggPlayer(ctx, g, t)
   drawEgg3Player(ctx, g, t)
   drawSeasonKitPlayer(ctx, g, t)
+  drawRocketKitPlayer(ctx, g, t)
   drawSignaturePlayer(ctx, g, t)
   drawTmPlayer(ctx, g, t)
   drawShopTm2Player(ctx, g, t, g.player.y - playerSprites(g).bodyH)
