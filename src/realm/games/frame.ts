@@ -80,9 +80,11 @@ export type SoloGame = { size: { w: number; h: number }; fluid?: (stageW: number
  * Where a seat at a relay table stands, for the frame's word over the game
  * (`TableSource.lobby`): waiting for an opponent (it offers the bot
  * meanwhile), playing that bot, an opponent just sat down (back to the
- * table), watching a full table, or watching one with a seat free.
+ * table), watching a full table, or watching one with a seat free. At an
+ * open table with two or more seated: gathering (Começar), or ready and
+ * waiting for the others.
  */
-export type TableLobby = 'opponent' | 'bot' | 'arrived' | 'watching' | 'seatFree'
+export type TableLobby = 'opponent' | 'bot' | 'arrived' | 'watching' | 'seatFree' | 'gather' | 'gathered'
 
 /**
  * Where a table's state comes from: the realm relay's table (sat at with
@@ -132,6 +134,8 @@ export type TableRun = {
  */
 export type TableUi = {
   size: { w: number; h: number }
+  /** Like `SoloGame.fluid`: the canvas follows the stage (a phone turned), the screen lays itself out from its canvas every frame. */
+  fluid?: SoloGame['fluid']
   start: (ctx: TableCtx) => TableRun
   outro?: number
   feats?: (table: TableView, seat: number) => readonly string[]
@@ -419,7 +423,7 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
     s.dispose()
     opts.close()
   }
-  const s = shell(root, game, ui.size, close)
+  const s = shell(root, game, { ...ui.size }, close, ui.fluid)
   const run = ui.start({ source, partner: opts.partner, shiny: opts.shiny, who: (id) => opts.realm?.who(id) ?? null })
   const lobby = lobbyBar(s, source)
   opts.realm?.act(actOf(game))
@@ -465,23 +469,33 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
  * every frame: a card over the game while the seat waits for an opponent
  * (with the bot meanwhile), and a slim tag in the header while the bot plays,
  * a trainer only watches (with a free seat to take) or an opponent just sat.
+ * At an open table with two or more seated, the card gathers them: how many
+ * sit, Começar (`ready`), then a word while the others get ready.
  */
 const lobbyBar = (shell: Shell, source: TableSource) => {
   const m = t().minigames.tables
+  const gather = t().minigames.cafe.gather
   const card = h('div', { class: 'minigame-lobby box hidden' })
   const tag = h('div', { class: 'minigame-tag hidden' })
   shell.sheet.before(card)
   shell.el.querySelector('.minigame-board')?.before(tag)
-  let shown: TableLobby | null = null
+  let shown: string | null = null
   const button = (text: string, act: (() => void) | undefined) => h('button', { class: 'box', type: 'button', onclick: () => (playSfx('select'), act?.()) }, text)
   return () => {
     const now = source.lobby?.() ?? null
-    if (now === shown) return
-    shown = now
+    const seats = source.table()?.seats ?? []
+    const sat = seats.filter((s) => s !== null).length
+    // A gathering redraws as people sit and stand.
+    const key = now === 'gather' || now === 'gathered' ? `${now}:${sat}` : now
+    if (key === shown) return
+    shown = key
     if (now === 'arrived') playSfx('select')
-    card.classList.toggle('hidden', now !== 'opponent')
-    if (now === 'opponent') card.replaceChildren(h('b', {}, m.waiting), h('small', {}, m.waitingHint), button(m.playBot, source.playBot))
-    tag.className = now && now !== 'opponent' ? `minigame-tag minigame-tag-${now} box` : 'minigame-tag hidden'
+    const carded = now === 'opponent' || now === 'gather' || now === 'gathered'
+    card.classList.toggle('hidden', !carded)
+    if (now === 'opponent') card.replaceChildren(h('b', {}, m.waiting), h('small', {}, seats.length > 2 ? gather.hint : m.waitingHint), button(m.playBot, source.playBot))
+    if (now === 'gather') card.replaceChildren(h('b', {}, gather.title(sat, seats.length)), h('small', {}, gather.hint), button(gather.start, source.ready))
+    if (now === 'gathered') card.replaceChildren(h('b', {}, gather.title(sat, seats.length)), h('small', {}, gather.ready))
+    tag.className = now && !carded ? `minigame-tag minigame-tag-${now} box` : 'minigame-tag hidden'
     tag.replaceChildren(
       ...(now === 'bot' ? [m.botMeanwhile] : now === 'arrived' ? [m.arrived] : now === 'watching' ? [m.watching] : now === 'seatFree' ? [m.watching, button(m.takeSeat, source.takeSeat)] : []),
     )

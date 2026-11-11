@@ -1,7 +1,7 @@
 import { isTableGame, isMinigameId, type TableGameId } from '../../src/data/minigames'
 import { REALM_ROOMS, isTownRoomId, type Spot } from '../../src/data/realmMap'
 import { BASE_PREFIX, type RealmServerMessage, type RoomKey } from '../../src/net/realm'
-import { TABLE, type TableMatch, type TableResult, type TableView } from '../../src/net/realmTables'
+import { TABLE, turnMsOf, type TableMatch, type TableResult, type TableView } from '../../src/net/realmTables'
 import { TABLE_GAMES } from '../../src/realm/games/tables'
 import { noteDeed } from './realmDeeds'
 import type { City, RealmEffect, Trainer } from './realm'
@@ -28,6 +28,14 @@ import type { City, RealmEffect, Trainer } from './realm'
  * the next match starts when every seat is taken and ready. Every change goes
  * to everyone in the room, each with their own view (`table`); a trainer
  * landing in a room gets the room's tables (`tables`).
+ *
+ * An open table (`TableGame.open`: Ludo, Unown) starts with the seats it has
+ * once two or more are taken and all of them are `ready` (or at once when
+ * full), and here the game's bot plays every seat nobody holds, after its
+ * think (`open.botMs`). Standing up mid-match hands the seat to the bot, and
+ * sitting down takes a bot's seat over; a seat awaited past `open.turnMs`
+ * gets the bot's move instead of forfeiting, and is stood up after
+ * `TABLE.idleStand` of those in a row.
  */
 
 export type Table = {
@@ -45,6 +53,8 @@ export type Table = {
   /** Avatar ids ready for another match. */
   ready: number[]
   result: TableResult | null
+  /** An open table's turns each seat let run out in a row (`TABLE.idleStand` stands it up). */
+  idle: number[]
 }
 
 /** A table's key in its city: its room and id. */
@@ -83,7 +93,7 @@ export const viewOf = (tb: Table, viewer: number, now: number): TableView => {
     phase: tb.phase,
     view: tb.match ? tb.match.view(seat >= 0 ? seat : null) : null,
     pending: [...pending],
-    leftMs: pending.length > 0 ? Math.max(0, TABLE.turnMs - (now - tb.since)) : null,
+    leftMs: pending.length > 0 ? Math.max(0, turnMsOf(TABLE_GAMES[tb.game]) - (now - tb.since)) : null,
     result: tb.result,
     ready: [...tb.ready],
   }
@@ -108,12 +118,15 @@ const seedOf = (city: City, now: number) => {
 
 const event = (ev: string, data: Record<string, string | number | boolean | null>): RealmEffect => ({ k: 'event', ev, data })
 
-/** Restarts the turn clock when a seat not awaited before is awaited now. */
+/** Restarts the turn clock when a seat not awaited before is awaited now (at an open table, after every move: a roll and its move are two turns). */
 const awaitNext = (tb: Table, now: number) => {
   const next = tb.match ? tb.match.pending() : []
-  if (next.some((s) => !tb.awaited.includes(s))) tb.since = now
+  if (TABLE_GAMES[tb.game].open || next.some((s) => !tb.awaited.includes(s))) tb.since = now
   tb.awaited = [...next]
 }
+
+/** The people at a table (avatar ids). */
+const people = (tb: Table) => tb.seats.filter((s): s is number => s !== null)
 
 const start = (city: City, tb: Table, now: number): RealmEffect[] => {
   tb.match = TABLE_GAMES[tb.game].start(seedOf(city, now))
@@ -121,6 +134,7 @@ const start = (city: City, tb: Table, now: number): RealmEffect[] => {
   tb.result = null
   tb.ready = []
   tb.awaited = []
+  tb.idle = tb.seats.map(() => 0)
   awaitNext(tb, now)
   tb.since = now
   return [event('realm.table', { city: city.id, game: tb.game, start: true })]
@@ -133,7 +147,8 @@ const settle = (city: City, tb: Table, now: number): RealmEffect[] => {
   tb.phase = 'over'
   tb.result = result
   tb.awaited = []
-  if (result.forfeit === null)
+  // An open table's match counts only with two people still at it (one with three bots is a bot's match).
+  if (result.forfeit === null && (!TABLE_GAMES[tb.game].open || people(tb).length >= TABLE.openMin))
     tb.seats.forEach((id, seat) => {
       const t = id === null ? undefined : city.trainers.get(id)
       if (!t) return
@@ -143,11 +158,17 @@ const settle = (city: City, tb: Table, now: number): RealmEffect[] => {
   return [event('realm.table', { city: city.id, game: tb.game, draw: result.winner === null, forfeit: result.forfeit !== null })]
 }
 
-/** Starts the next match once every seat is taken and (after a match) ready. */
+/**
+ * Starts the next match once every seat is taken and (after a match) ready;
+ * an open table also with `TABLE.openMin` or more people, all ready.
+ */
 const maybeStart = (city: City, tb: Table, now: number): RealmEffect[] => {
-  const full = tb.seats.every((s) => s !== null)
-  if (!full || tb.phase === 'playing') return []
-  if (tb.phase === 'over' && !tb.seats.every((s) => s !== null && tb.ready.includes(s))) return []
+  if (tb.phase === 'playing') return []
+  const sat = people(tb)
+  const full = sat.length === tb.seats.length
+  const allReady = sat.every((id) => tb.ready.includes(id))
+  if (TABLE_GAMES[tb.game].open && !full) return sat.length >= TABLE.openMin && allReady ? start(city, tb, now) : []
+  if (!full || (tb.phase === 'over' && !allReady)) return []
   return start(city, tb, now)
 }
 
@@ -165,27 +186,29 @@ export const sit = (city: City, t: Trainer, id: string, game: string, now: numbe
   if (!tb) {
     const g = tableGameAt(t.room, id, game, t.x, t.y)
     if (!g) return out
-    tb = { room: t.room, id, game: g, seats: Array.from({ length: TABLE_GAMES[g].seats }, () => null), match: null, phase: 'waiting', awaited: [], since: now, ready: [], result: null }
+    tb = { room: t.room, id, game: g, seats: Array.from({ length: TABLE_GAMES[g].seats }, () => null), match: null, phase: 'waiting', awaited: [], since: now, ready: [], result: null, idle: [] }
     city.tables.set(key, tb)
   } else if (!tableGameAt(t.room, id, tb.game, t.x, t.y)) return out
   const free = tb.seats.indexOf(null)
   if (free < 0) return [...out, send(t.conn, { t: 'table', table: viewOf(tb, t.id, now) })]
   tb.seats[free] = t.id
+  tb.idle[free] = 0
   t.table = key
   if (tb.phase === 'over') tb.ready.push(t.id)
   out.push(...maybeStart(city, tb, now), ...broadcast(city, tb, now))
   return out
 }
 
-/** Stands a trainer up (a match in play is forfeited); the table goes once nobody sits at it. */
+/** Stands a trainer up (a match in play is forfeited; at an open table the bot takes the seat over); the table goes once nobody sits at it. */
 export const stand = (city: City, t: Trainer, now: number): RealmEffect[] => {
   const tb = tableOf(city, t)
   t.table = null
   if (!tb) return []
   const seat = tb.seats.indexOf(t.id)
   const out: RealmEffect[] = []
+  const open = TABLE_GAMES[tb.game].open !== null
   if (seat >= 0) {
-    if (tb.phase === 'playing') {
+    if (tb.phase === 'playing' && !open) {
       tb.match?.forfeit(seat)
       out.push(...settle(city, tb, now))
     }
@@ -193,6 +216,8 @@ export const stand = (city: City, t: Trainer, now: number): RealmEffect[] => {
   }
   tb.ready = tb.ready.filter((id) => id !== t.id)
   if (tb.seats.every((s) => s === null)) city.tables.delete(keyOf(tb.room, tb.id))
+  // The ones left at an open table may all be ready now.
+  else if (open) out.push(...maybeStart(city, tb, now))
   out.push(...broadcast(city, tb, now))
   return out
 }
@@ -203,22 +228,54 @@ export const play = (city: City, t: Trainer, move: unknown, now: number): RealmE
   if (!tb) return []
   const seat = tb.seats.indexOf(t.id)
   if (tb.phase !== 'playing' || !tb.match || seat < 0 || !tb.match.play(seat, move)) return [send(t.conn, { t: 'table', table: viewOf(tb, t.id, now) })]
+  tb.idle[seat] = 0
   awaitNext(tb, now)
   return [...settle(city, tb, now), ...broadcast(city, tb, now)]
 }
 
-/** Ready for another match (after one). */
+/** Ready for another match (after one; at an open table, for the first too). */
 export const ready = (city: City, t: Trainer, now: number): RealmEffect[] => {
   const tb = tableOf(city, t)
-  if (!tb || tb.phase !== 'over' || tb.ready.includes(t.id)) return []
+  const can = tb && (tb.phase === 'over' || (tb.phase === 'waiting' && TABLE_GAMES[tb.game].open !== null))
+  if (!tb || !can || tb.ready.includes(t.id)) return []
   tb.ready.push(t.id)
   return [...maybeStart(city, tb, now), ...broadcast(city, tb, now)]
 }
 
-/** The tables' beat: a seat awaited past `TABLE.turnMs` forfeits. */
+/** A seed for a bot's move: `now` and the seat, mixed. */
+const botSeed = (now: number, seat: number) => {
+  const x = Math.imul((now ^ Math.imul(seat + 1, 0x9e3779b9)) >>> 0, 0x85ebca6b)
+  return Math.imul(x ^ (x >>> 13), 0xc2b2ae35) >>> 0
+}
+
+/**
+ * An open table's beat: the bot moves for a seat nobody holds once it has
+ * thought, and for a person whose clock ran out (standing them up after
+ * `TABLE.idleStand` of those running).
+ */
+const tickOpen = (city: City, tb: Table, now: number): RealmEffect[] => {
+  const open = TABLE_GAMES[tb.game].open
+  const seat = tb.awaited[0]
+  if (!open || !tb.match || seat === undefined) return []
+  const id = tb.seats[seat] ?? null
+  if (now - tb.since < (id === null ? open.botMs : open.turnMs)) return []
+  if (!tb.match.play(seat, tb.match.bot(seat, botSeed(now, seat)))) return []
+  awaitNext(tb, now)
+  const out = [...settle(city, tb, now)]
+  const late = id === null ? undefined : city.trainers.get(id)
+  if (late && ++tb.idle[seat]! >= TABLE.idleStand && tb.phase === 'playing') out.push(...stand(city, late, now))
+  else out.push(...broadcast(city, tb, now))
+  return out
+}
+
+/** The tables' beat: a seat awaited past `TABLE.turnMs` forfeits; an open table's bots move (`tickOpen`). */
 export const tickTables = (city: City, now: number): RealmEffect[] => {
   const out: RealmEffect[] = []
-  for (const tb of city.tables.values()) {
+  for (const tb of [...city.tables.values()]) {
+    if (tb.phase === 'playing' && TABLE_GAMES[tb.game].open) {
+      out.push(...tickOpen(city, tb, now))
+      continue
+    }
     const late = tb.awaited[0]
     if (tb.phase !== 'playing' || late === undefined || now - tb.since < TABLE.turnMs) continue
     tb.match?.forfeit(late)

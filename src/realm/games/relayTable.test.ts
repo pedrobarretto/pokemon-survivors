@@ -91,4 +91,25 @@ describe('relayTable', () => {
     t.relay({ t: 'table', table: view({ seats: [null, null] }) })
     expect(t.source.table()).toBeNull()
   })
+
+  it('gathers an open table: the bot while alone, Começar with two, back to the table as the second sits', () => {
+    const f = fakeLink()
+    const log: string[] = []
+    const source = relayTable({ link: f.link, id: 'cafe-3', game: 'ludo', you: 7, initial: null, open: true, bot: () => botTable(log) })
+    const ludo = (over: Partial<TableView>) => view({ id: 'cafe-3', game: 'ludo', seats: [7, null, null, null], ...over })
+    f.relay({ t: 'table', table: ludo({}) })
+    expect(source.lobby?.()).toBe('opponent')
+    source.playBot?.()
+    f.relay({ t: 'table', table: ludo({ seats: [7, 9, null, null] }) })
+    expect(log).toContain('bot:leave')
+    expect(source.lobby?.()).toBe('arrived')
+    source.frame(10_000)
+    expect(source.lobby?.()).toBe('gather')
+    source.ready()
+    f.relay({ t: 'table', table: ludo({ seats: [7, 9, null, null], ready: [7] }) })
+    expect(source.lobby?.()).toBe('gathered')
+    f.relay({ t: 'table', table: ludo({ seats: [7, 9, null, null], phase: 'playing', pending: [2] }) })
+    expect(source.lobby?.()).toBeNull()
+  })
 })
+
