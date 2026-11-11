@@ -83,8 +83,8 @@ export const sitePt = {
 
   pokedex: {
     title: 'Pokédex do Pokémon Survivors: iniciais, inimigos, chefes e lendários',
-    description:
-      'Todos os Pokémon do Pokémon Survivors com sprite animado e shiny: os 27 iniciais e as 63 famílias dos ovos com suas evoluções, inimigos selvagens, chefes e lendários. Tipos, status no jogo, golpes, especiais e quando cada um aparece.',
+    description: (starters: number, families: number) =>
+      `Todos os Pokémon do Pokémon Survivors com sprite animado e shiny: os ${starters} iniciais e as ${families} famílias dos ovos com suas evoluções, inimigos selvagens, chefes e lendários. Tipos, status no jogo, golpes, especiais e quando cada um aparece.`,
     h1: 'Pokédex',
     intro: (count: number) =>
       `Os ${count} Pokémon que existem no Pokémon Survivors, com os números do jogo: iniciais de todas as regiões, as famílias que saem dos ovos e suas evoluções, a horda selvagem, os chefes e os lendários. Passe o mouse (ou toque) para ver o sprite andando e use ★ para ver o shiny.`,
@@ -108,7 +108,7 @@ export const sitePt = {
     regionIntro: (region: string, count: number, total: number) => `${count} dos ${total} Pokémon de ${region} já estão no Pokémon Survivors. Passe o mouse (ou toque) para ver o sprite andando e use ★ para ver o shiny.`,
     hubPick: 'Escolha uma região:',
     regionNav: 'Regiões',
-    coverage: (inGame: number, total: number) => `${inGame} de ${total} no jogo`,
+    regionGoal: (line: string) => `Na Pokédex do jogo: ${line}.`,
     drawingCount: (count: number) => `${count} com arte a caminho`,
     drawingTag: 'Arte a caminho',
     drawingNote: 'Os artistas do PMD SpriteCollab, que desenharam todos os Pokémon do jogo, ainda estão criando este. Obrigado, artistas!',
@@ -158,7 +158,7 @@ export const sitePt = {
     reaper: (at: string) => `Ceifador do modo sem fim, a partir de ${at}`,
     attacks: 'Ataques',
     nightAttacks: 'Ataques como chefe da Noite das Bruxas',
-    shinyNote: 'Pode aparecer shiny (1 em 450): elite com 8x HP.',
+    shinyNote: (odds: number, hp: number) => `Pode aparecer shiny (1 em ${n(odds)}): elite com ${hp}x HP.`,
     /** A rift legendary's shiny odds (`RIFT.shinyOdds`); the map's bosses are never shiny. */
     riftShinyNote: (odds: number) => `Pode aparecer shiny em 1 de ${n(odds)} fendas: paga o dobro de ₽ e mais uma Poké Ball.`,
     summoned: (by: string) => `Chamado por ${by}`,
@@ -166,8 +166,8 @@ export const sitePt = {
     behavior: 'Comportamento',
     /** A legendary's card: how to capture it for the Legend mode (`game/capture.ts`). */
     legendMode: 'Modo Lendário',
-    capture: (need: number) => (need === 1 ? 'Vença-o 1 vez como chefe, em qualquer modo, e ele fica jogável no Modo Lendário (ranking próprio, horda mais forte, despertares no Nv 12 e 28).' : `Vença-o ${need} vezes como chefe, em qualquer modo, e ele fica jogável no Modo Lendário (ranking próprio, horda mais forte, despertares no Nv 12 e 28).`),
-    captureLast: 'O último troféu: só se deixa capturar no modo sem fim, depois que os outros 22 lendários forem capturados.',
+    capture: (need: number, awaken: readonly number[]) => (need === 1 ? `Vença-o 1 vez como chefe, em qualquer modo, e ele fica jogável no Modo Lendário (ranking próprio, horda mais forte, despertares no Nv ${awaken[0]} e ${awaken[1]}).` : `Vença-o ${need} vezes como chefe, em qualquer modo, e ele fica jogável no Modo Lendário (ranking próprio, horda mais forte, despertares no Nv ${awaken[0]} e ${awaken[1]}).`),
+    captureLast: (others: number) => `O último troféu: só se deixa capturar no modo sem fim, depois que os outros ${others} lendários forem capturados.`,
     captureEvent: (need: number) => `Lenda de evento: vença-o ${need} vezes na fenda do Pesadelo durante a Noite das Bruxas 2026 (24/10 a 2/11) e ele fica jogável no Modo Lendário para sempre. Ele não conta para o Arceus.`,
     captureShiny: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
     innate: (name: string) => `Inata (sempre ativa): ${name}`,

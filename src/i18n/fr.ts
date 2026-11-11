@@ -1528,8 +1528,13 @@ export const fr: Messages = {
     goal: (left: number, title: string) => `Encore *${left}* pour le titre *${title}*`,
     goalDone: (title: string) => `Région complète ! Titre *${title}* obtenu`,
     nationalGoal: (done: number, total: number, frame: string) => `${done}/${total} régions · cadre *${frame}*`,
+    counts: (inGame: number, total: number) => `${inGame} sur ${total} dans le jeu`,
+    forTitle: (goal: number) => `${goal} pour le titre`,
+    notCounted: (names: readonly string[]) => `${new Intl.ListFormat('fr').format(names)} ${names.length > 1 ? 'ne comptent pas' : 'ne compte pas'}`,
     drawing: 'Dessin en cours',
     drawingText: 'Les artistes du PMD SpriteCollab, qui ont dessiné tous les Pokémon du jeu, créent encore celui-ci. Merci, les artistes ! ♥',
+    /** `drawingText` for a phone's detail strip. */
+    drawingShort: 'Les artistes du SpriteCollab dessinent encore celui-ci. Merci, les artistes ! ♥',
     contribute: 'Aider à le dessiner ↗',
     soon: 'Pas encore dans le jeu. Restez à l’affût des nouveautés !',
     soonTag: 'Bientôt',

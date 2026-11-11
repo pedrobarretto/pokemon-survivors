@@ -4,13 +4,14 @@ import { RIFT, RIFT_LEGENDS } from '../../data/rifts'
 import { TIERS } from '../../data/roster'
 import { isSummoner, SUMMONS, TRAITS, type TraitId } from '../../data/traits'
 import { SPIT_FLAVORS } from '../../game/spitters'
-import { HATCHLINGS, isHatchling, PLAYABLE } from '../../data/hatchlings'
-import { REGIONS, type PlayableDef } from '../../data/starters'
-import { DEX_REGIONS, dexRegionOf, NATIONAL_LAST, SHEETLESS, SPRITECOLLAB_URL, type DexRegion } from '../../data/nationalDex'
+import { HATCHLING_IDS, HATCHLINGS, isHatchling, PLAYABLE } from '../../data/hatchlings'
+import { REGIONS, STARTER_IDS, type PlayableDef } from '../../data/starters'
+import { DEX_REGIONS, dexRegionOf, SHEETLESS, SPRITECOLLAB_URL, type DexRegion } from '../../data/nationalDex'
 import { PENCIL, PENCIL_PALETTE } from '../../render/pencilArt'
 import { POKE_TYPES, TYPE_COLORS, type PokeType } from '../../data/types'
 import { RUN_LENGTH } from '../../data/waves'
-import { EVENT_LEGENDS, isLegend, LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { AWAKEN_AT, EVENT_LEGENDS, isLegend, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { SHINY_BUFF, SHINY_ODDS } from '../../game/shiny'
 import { BRANCHES, branchesAt, branchStage, familyDex } from '../../data/branches'
 import { ABILITIES, isHidden, type AbilitySet } from '../../data/abilities'
 import { abilitySet } from '../../game/abilities'
@@ -27,7 +28,7 @@ import { SITE_MESSAGES, type SiteMessages } from '../../i18n/site'
 import { STAT_BARS, statRatio } from '../../ui/statBars'
 import { html, type Html } from '../html'
 import { layout } from '../layout'
-import { appearances, clock, nightBossOf, pageOf, pokedex, ROLES, slugOf, spritesOf, type Appearance, type DexEntry, type Role, type SpriteSet } from '../pokedex'
+import { appearances, clock, nightBossOf, pageOf, pokedex, regionCounts, ROLES, slugOf, spritesOf, type Appearance, type DexEntry, type Role, type SpriteSet } from '../pokedex'
 import { absolute, dexPaths, dexRegionPaths, ROUTES } from '../routes'
 import { nationalDex } from '../../data/regionalForms'
 import { createSpriteCss, spriteScale } from '../spriteCss'
@@ -271,6 +272,10 @@ export const patternText = (p: BossPattern, m: SiteMessages) => {
   return p.stance ? `${m.patterns.stance[p.stance]}: ${text}` : text
 }
 
+/** How a legend is captured for the Legend mode, its numbers from `data/legends.ts`. */
+export const captureText = (unlock: LegendUnlock, m: SiteMessages) =>
+  unlock.event ? m.pokedex.captureEvent(unlock.wins) : unlock.last ? m.pokedex.captureLast(REGULAR_LEGENDS.length - 1) : m.pokedex.capture(unlock.wins, AWAKEN_AT)
+
 /** A legendary's card: how it's captured for the Legend mode, its innate and the move it opens with (`data/legends.ts`). */
 const legendSection = (id: LegendId, m: SiteMessages) => {
   const def = LEGENDS[id]
@@ -278,7 +283,7 @@ const legendSection = (id: LegendId, m: SiteMessages) => {
   const opener = MOVES[def.learnset[0][0]!]
   return html`<h3>${m.pokedex.legendMode}</h3>
     <ul class="list">
-      <li>${unlock.event ? m.pokedex.captureEvent(unlock.wins) : unlock.last ? m.pokedex.captureLast : m.pokedex.capture(unlock.wins)}</li>
+      <li>${captureText(unlock, m)}</li>
       <li>${m.pokedex.innate(ABILITIES[def.innate.ability].name)}</li>
       <li>${m.pokedex.opens(opener.name)} ${typeBadge(opener.type, m)}</li>
     </ul>
@@ -311,7 +316,7 @@ const wildBody = (entry: DexEntry & { source: { kind: 'wild' } }, m: SiteMessage
 
 /** How a wild card's shiny shows up: a rift legendary by the rift's odds, the map's bosses never, the horde at the wild odds. */
 const shinyNote = (id: EnemyId, boss: boolean, m: SiteMessages) =>
-  ([...RIFT_LEGENDS, ...EVENT_LEGENDS] as readonly EnemyId[]).includes(id) ? m.pokedex.riftShinyNote(Math.round(1 / RIFT.shinyOdds)) : boss ? null : m.pokedex.shinyNote
+  ([...RIFT_LEGENDS, ...EVENT_LEGENDS] as readonly EnemyId[]).includes(id) ? m.pokedex.riftShinyNote(Math.round(1 / RIFT.shinyOdds)) : boss ? null : m.pokedex.shinyNote(1 / SHINY_ODDS.enemy, SHINY_BUFF.hp)
 
 /** Horde tier of a wild card, for the tier filter. */
 const tierOf = (entry: DexEntry) => {
@@ -370,11 +375,10 @@ const filters = (entries: readonly DexEntry[], m: SiteMessages, withRegion: bool
 /** The region of a card: a regional form's own (Galarian Ponyta in Galar), as in the game's Pokédex. */
 const inRegion = (region: DexRegion) => (e: DexEntry) => dexRegionOf(e.dex) === region
 
-/** National Dex numbers of a region, how many of them the game has and how many SpriteCollab is still drawing. */
-const coverage = (region: DexRegion, entries: readonly DexEntry[]) => {
-  const numbers = Array.from({ length: NATIONAL_LAST }, (_, i) => i + 1).filter((n) => dexRegionOf(n) === region)
-  const have = new Set(entries.map((e) => nationalDex(e.dex)))
-  return { total: numbers.length, inGame: numbers.filter((n) => have.has(n)).length, drawing: numbers.filter((n) => SHEETLESS.has(n)).length }
+/** What a region's title asks, and who doesn't count (`regionCounts`), in the game's own words. */
+const goalLine = (c: ReturnType<typeof regionCounts>, locale: Locale) => {
+  const d = MESSAGES[locale].dex
+  return c.left.length > 0 ? `${d.forTitle(c.goal)} · ${d.notCounted(c.left)}` : d.forTitle(c.goal)
 }
 
 /** The pencil of a species still being drawn (`render/pencilArt.ts`), as pixel-exact SVG. */
@@ -424,12 +428,13 @@ export const pokedexPage = (locale: Locale) => {
   const url = absolute(ROUTES.pokedex[locale])
   const tiles = DEX_REGIONS.map((region, i) => {
     const r = REGIONS[i]!
-    const c = coverage(region, entries)
+    const c = regionCounts(region)
     return html`<a class="dex-region-tile box" href="${dexRegionPaths(region)[locale]}">
       <span class="faces">${r.starters.map((id) => html`<img src="${asset(PLAYABLE[id].line[0].dex, 'portrait.png')}" width="40" height="40" loading="lazy" alt="" />`)}</span>
       <h2>${r.name}</h2>
       <span class="bar"><i style="width:${Math.round((c.inGame / c.total) * 100)}%"></i></span>
-      <span class="count">${m.pokedex.coverage(c.inGame, c.total)}</span>
+      <span class="count">${MESSAGES[locale].dex.counts(c.inGame, c.total)}</span>
+      <span class="goal-count">${goalLine(c, locale)}</span>
       ${c.drawing > 0 && html`<span class="drawing-count">${m.pokedex.drawingCount(c.drawing)}</span>`}
     </a>`
   })
@@ -445,7 +450,7 @@ export const pokedexPage = (locale: Locale) => {
       id: 'pokedex',
       locale,
       title: m.pokedex.title,
-      description: m.pokedex.description,
+      description: m.pokedex.description(STARTER_IDS.length, HATCHLING_IDS.length),
       schema: [
         {
           '@type': 'ItemList',
@@ -466,7 +471,7 @@ export const regionPage = (region: DexRegion, locale: Locale) => {
   const name = REGIONS[DEX_REGIONS.indexOf(region)]!.name
   const all = pokedex()
   const entries = all.filter(inRegion(region))
-  const c = coverage(region, all)
+  const c = regionCounts(region)
   const css = createSpriteCss()
   const pageUrl = (e: DexEntry) => {
     const page = pageOf(e)
@@ -481,6 +486,7 @@ export const regionPage = (region: DexRegion, locale: Locale) => {
   const main: Html = html`<div class="page-head">
     <h1>${m.pokedex.regionH1(name)}</h1>
     <p class="lead">${m.pokedex.regionIntro(name, c.inGame, c.total)}</p>
+    <p class="lead dex-goal-line">${m.pokedex.regionGoal(goalLine(c, locale))}</p>
     <p class="lead-link"><a href="${ROUTES.tierList[locale]}">★ ${m.pokedex.tierLink} →</a></p>
   </div>
   ${regionNav(locale, region)}

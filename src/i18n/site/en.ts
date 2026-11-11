@@ -49,8 +49,8 @@ export const siteEn: SiteMessages = {
 
   pokedex: {
     title: 'Pokémon Survivors Pokédex: starters, enemies, bosses and legendaries',
-    description:
-      'Every Pokémon in Pokémon Survivors with animated and shiny sprites: the 27 starters and the 63 egg families with their evolutions, wild enemies, bosses and legendaries. Types, in-game stats, moves, specials and when each one shows up.',
+    description: (starters: number, families: number) =>
+      `Every Pokémon in Pokémon Survivors with animated and shiny sprites: the ${starters} starters and the ${families} egg families with their evolutions, wild enemies, bosses and legendaries. Types, in-game stats, moves, specials and when each one shows up.`,
     h1: 'Pokédex',
     intro: (count: number) =>
       `All ${count} Pokémon in Pokémon Survivors, with the game's own numbers: starters from every region, the families that hatch from eggs and their evolutions, the wild horde, the bosses and the legendaries. Hover (or tap) to see the sprite walk, and use ★ to see the shiny.`,
@@ -74,7 +74,7 @@ export const siteEn: SiteMessages = {
     regionIntro: (region: string, count: number, total: number) => `${count} of the ${total} ${region} Pokémon are already in Pokémon Survivors. Hover (or tap) to see the sprite walk and use ★ for the shiny.`,
     hubPick: 'Pick a region:',
     regionNav: 'Regions',
-    coverage: (inGame: number, total: number) => `${inGame} of ${total} in the game`,
+    regionGoal: (line: string) => `In the game’s Pokédex: ${line}.`,
     drawingCount: (count: number) => `${count} with art on its way`,
     drawingTag: 'Art on its way',
     drawingNote: 'The PMD SpriteCollab artists, who drew every Pokémon in the game, are still creating this one. Thank you, artists!',
@@ -122,14 +122,14 @@ export const siteEn: SiteMessages = {
     reaper: (at: string) => `The endless mode's reaper, from ${at}`,
     attacks: 'Attacks',
     nightAttacks: 'Attacks as a Halloween Night boss',
-    shinyNote: 'Can show up shiny (1 in 450): an elite with 8x HP.',
+    shinyNote: (odds: number, hp: number) => `Can show up shiny (1 in ${n(odds)}): an elite with ${hp}x HP.`,
     riftShinyNote: (odds: number) => `Can show up shiny in 1 of ${n(odds)} rifts: it pays double ₽ plus another Poké Ball.`,
     summoned: (by: string) => `Called in by ${by}`,
     retinue: (by: string) => `In ${by}'s domain, behind a legendary rift`,
     behavior: 'Behavior',
     legendMode: 'Legend Mode',
-    capture: (need: number) => (need === 1 ? 'Beat it once as a boss, in any mode, and it becomes playable in Legend Mode (its own ranking, a tougher horde, awakenings at Lv 12 and 28).' : `Beat it ${need} times as a boss, in any mode, and it becomes playable in Legend Mode (its own ranking, a tougher horde, awakenings at Lv 12 and 28).`),
-    captureLast: 'The last trophy: it can only be caught in endless mode, once the other 22 legendaries are caught.',
+    capture: (need: number, awaken: readonly number[]) => (need === 1 ? `Beat it once as a boss, in any mode, and it becomes playable in Legend Mode (its own ranking, a tougher horde, awakenings at Lv ${awaken[0]} and ${awaken[1]}).` : `Beat it ${need} times as a boss, in any mode, and it becomes playable in Legend Mode (its own ranking, a tougher horde, awakenings at Lv ${awaken[0]} and ${awaken[1]}).`),
+    captureLast: (others: number) => `The last trophy: it can only be caught in endless mode, once the other ${others} legendaries are caught.`,
     captureEvent: (need: number) => `Event legend: beat it ${need} times in the Nightmare rift during Halloween Night 2026 (October 24 to November 2) and it's playable in Legend Mode for good. It doesn't count toward Arceus.`,
     captureShiny: 'Beating a shiny one on the catching win, or after, unlocks its shiny.',
     innate: (name: string) => `Innate (always on): ${name}`,

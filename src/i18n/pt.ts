@@ -1793,8 +1793,14 @@ export const pt = {
     goal: (left: number, title: string) => `Faltam *${left}* para o título *${title}*`,
     goalDone: (title: string) => `Região completa! Título *${title}* conquistado`,
     nationalGoal: (done: number, total: number, frame: string) => `${done}/${total} regiões · moldura *${frame}*`,
+    /** A region's counts, the same in the game and on the site (`regionCounts`): the species it has, how many its title asks and the ones that don't count. */
+    counts: (inGame: number, total: number) => `${inGame} de ${total} no jogo`,
+    forTitle: (goal: number) => `${goal} para o título`,
+    notCounted: (names: readonly string[]) => `${new Intl.ListFormat('pt-BR').format(names)} ${names.length > 1 ? 'não contam' : 'não conta'}`,
     drawing: 'Arte a caminho',
     drawingText: 'Os artistas do PMD SpriteCollab, que desenharam todos os Pokémon do jogo, ainda estão criando este. Obrigado, artistas! ♥',
+    /** `drawingText` for a phone's detail strip. */
+    drawingShort: 'Os artistas do SpriteCollab ainda estão desenhando este. Obrigado, artistas! ♥',
     contribute: 'Ajudar a desenhar ↗',
     soon: 'Ainda não aparece no jogo. Fique de olho nas novidades!',
     soonTag: 'Em breve',

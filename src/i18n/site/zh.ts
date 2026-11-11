@@ -52,8 +52,8 @@ export const siteZh: SiteMessages = {
 
   pokedex: {
     title: 'Pokémon Survivors 寶可夢圖鑑：初始寶可夢、敵人、首領與傳說寶可夢',
-    description:
-      'Pokémon Survivors 的所有寶可夢，附動畫與異色圖像：27 隻初始寶可夢、63 個從蛋孵化的家族及其進化、野生敵人、首領與傳說寶可夢。屬性、遊戲內能力值、招式、必殺技，以及每一隻出現的時機。',
+    description: (starters: number, families: number) =>
+      `Pokémon Survivors 的所有寶可夢，附動畫與異色圖像：${starters} 隻初始寶可夢、${families} 個從蛋孵化的家族及其進化、野生敵人、首領與傳說寶可夢。屬性、遊戲內能力值、招式、必殺技，以及每一隻出現的時機。`,
     h1: '寶可夢圖鑑',
     intro: (count: number) =>
       `Pokémon Survivors 的全部 ${count} 隻寶可夢，數據都取自遊戲本身：來自各地區的初始寶可夢、從蛋孵化的家族及其進化、野生獸群、首領與傳說寶可夢。滑鼠移上去（或點一下）就能看到圖像走動，按 ★ 可查看異色。`,
@@ -77,7 +77,7 @@ export const siteZh: SiteMessages = {
     regionIntro: (region: string, count: number, total: number) => `${region}的 ${total} 隻寶可夢中，已有 ${count} 隻登場於 Pokémon Survivors。滑過（或點擊）可看精靈圖走動，按 ★ 看異色。`,
     hubPick: '選擇地區：',
     regionNav: '地區',
-    coverage: (inGame: number, total: number) => `遊戲中 ${inGame}/${total}`,
+    regionGoal: (line: string) => `遊戲內圖鑑：${line}。`,
     drawingCount: (count: number) => `${count} 隻繪製中`,
     drawingTag: '繪製中',
     drawingNote: 'PMD SpriteCollab 的畫師們畫出了遊戲裡所有的寶可夢，這一隻還在創作中。謝謝畫師們！',
@@ -125,17 +125,17 @@ export const siteZh: SiteMessages = {
     reaper: (at: string) => `無盡模式的死神，從 ${at} 起`,
     attacks: '攻擊',
     nightAttacks: '作為女巫之夜首領的攻擊',
-    shinyNote: '可能以異色出現（1/450）：擁有 8 倍 HP 的精英。',
+    shinyNote: (odds: number, hp: number) => `可能以異色出現（1/${n(odds)}）：擁有 ${hp} 倍 HP 的精英。`,
     riftShinyNote: (odds: number) => `每 ${n(odds)} 次裂縫中有 1 次會是異色：獲得雙倍 ₽，外加一顆 Poké Ball。`,
     summoned: (by: string) => `由 ${by} 召喚`,
     retinue: (by: string) => `在 ${by} 的領域中，位於傳說裂縫後方`,
     behavior: '行為',
     legendMode: '傳說模式',
-    capture: (need: number) =>
+    capture: (need: number, awaken: readonly number[]) =>
       need === 1
-        ? '在任何模式中以首領身分擊敗牠一次，就能在傳說模式中使用牠（獨立排行榜、更強的獸群、Lv 12 與 28 覺醒）。'
-        : `在任何模式中以首領身分擊敗牠 ${need} 次，就能在傳說模式中使用牠（獨立排行榜、更強的獸群、Lv 12 與 28 覺醒）。`,
-    captureLast: '最後的戰利品：只能在無盡模式中收服，而且要先收服其他 22 隻傳說寶可夢。',
+        ? `在任何模式中以首領身分擊敗牠一次，就能在傳說模式中使用牠（獨立排行榜、更強的獸群、Lv ${awaken[0]} 與 ${awaken[1]} 覺醒）。`
+        : `在任何模式中以首領身分擊敗牠 ${need} 次，就能在傳說模式中使用牠（獨立排行榜、更強的獸群、Lv ${awaken[0]} 與 ${awaken[1]} 覺醒）。`,
+    captureLast: (others: number) => `最後的戰利品：只能在無盡模式中收服，而且要先收服其他 ${others} 隻傳說寶可夢。`,
     captureEvent: (need: number) => `活動傳說：在2026女巫之夜期間（10/24至11/2）於夢魘裂縫擊敗它${need}次，它就會永久在傳說模式中可用。它不計入 Arceus 的條件。`,
     captureShiny: '在收服的那場勝利或之後擊敗異色個體，就能解鎖牠的異色。',
     innate: (name: string) => `固有（永遠生效）：${name}`,

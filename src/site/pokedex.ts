@@ -3,7 +3,8 @@ import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BRANCHES, branchesOf, branchStage, type BranchId } from '../data/branches'
 import { HATCHLING_IDS, PLAYABLE, type HatchlingId, type PlayableId } from '../data/hatchlings'
 import { STARTER_IDS, type Region, type StarterId } from '../data/starters'
-import { regionOf } from '../data/nationalDex'
+import { dexRegionOf, NATIONAL_LAST, regionOf, SHEETLESS, type DexRegion } from '../data/nationalDex'
+import { inDexGoal } from '../game/dexRegions'
 import type { PokeType } from '../data/types'
 import { isRiftLegend, RIFT, type RiftLegend } from '../data/rifts'
 import { DOMAINS } from '../data/domains'
@@ -167,6 +168,24 @@ export const gameDex = (): DexEntry[] => {
   const listed = new Set(playable.map((e) => e.dex))
   const wild = [...wildByDex].filter(([dex]) => !listed.has(dex)).map(([, id]) => wildEntry(id))
   return [...playable, ...wild, eventEntry()].sort(byDex)
+}
+
+/**
+ * A region's numbers as the game's Pokédex and the site both show them,
+ * counted the same way as the in-game grid's cells (a regional form is its
+ * own, in its form's region): the species the game has (`inGame`) of all the
+ * region's (`total`, adding each National Dex number it still lacks), how
+ * many of them its title asks for (`goal`, `game/dexRegions.ts`), the ones
+ * that don't count (`left`: the mythicals and the event legends, by name)
+ * and how many SpriteCollab's artists are still drawing (`drawing`).
+ * `entries` is `gameDex()`, passed in when it's already at hand.
+ */
+export const regionCounts = (region: DexRegion, entries: readonly DexEntry[] = gameDex()) => {
+  const game = entries.filter((e) => dexRegionOf(e.dex) === region)
+  const have = new Set(game.map((e) => nationalDex(e.dex)))
+  const missing = Array.from({ length: NATIONAL_LAST }, (_, i) => i + 1).filter((n) => dexRegionOf(n) === region && !have.has(n))
+  const left = game.filter((e) => !inDexGoal(e.dex)).map((e) => e.name)
+  return { inGame: game.length, total: game.length + missing.length, goal: game.length - left.length, left, drawing: missing.filter((n) => SHEETLESS.has(n)).length }
 }
 
 /**

@@ -9895,78 +9895,308 @@ a.btn.dex-site {
   height: 16px;
 }
 
-/* Phones in portrait: the detail becomes a strip above the grid. */
-@media (max-width: 600px) {
+/* The region's counts and who doesn't count (`regionCounts`), the same line as the site's region tile. */
+.dex-goal-rule {
+  color: var(--dk-ink-2, #404058);
+}
+
+/* The thank-you's short form shows only on phones, where the detail is a strip. */
+.dex-tip-short {
+  display: none;
+}
+
+/* Phones in portrait: one scrolling row of counters, the detail a short strip above the grid, the grid the rest. */
+@media (max-width: 600px) and (orientation: portrait) {
   .dialog.dex {
     height: 100%;
     padding: 10px;
-    gap: 8px;
+    gap: 6px;
+  }
+  .dex-head {
+    flex-wrap: nowrap;
+    gap: 6px;
   }
   .dex-head .dialog-title {
-    font-size: 24px;
+    flex: none;
+    font-size: 20px;
+  }
+  .dex-progress {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .dex-progress::-webkit-scrollbar {
+    display: none;
   }
   .dex-progress span {
-    font-size: 16px;
+    flex: none;
+    font-size: 14px;
     padding: 3px 6px;
+  }
+  .dex-progress b {
+    font-size: 14px;
+  }
+  .dex-region {
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px 8px;
+  }
+  .dex-goal {
+    flex-direction: column;
+    gap: 3px;
+    font-size: 16px;
   }
   .dex-body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 6px;
   }
   .dex-detail {
     order: -1;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
+    gap: 6px;
     padding: 6px;
     overflow: visible;
   }
   .dex-detail .inspect-sprite {
-    width: 96px;
-    height: 96px;
+    flex: none;
+    width: 72px;
+    height: 72px;
   }
   .dex-detail .inspect-name {
-    font-size: 22px;
+    font-size: 20px;
+  }
+  .dex-facts {
+    gap: 4px;
+  }
+  .dex-fact,
+  .dex-fact b {
+    font-size: 16px;
+  }
+  .dex-detail .dex-tip {
+    font-size: 16px;
+  }
+  .dex-detail .dex-tip-long {
+    display: none;
+  }
+  .dex-detail .dex-tip-short {
+    display: block;
+  }
+  .dex-detail a.btn.dex-contribute {
+    min-height: 44px;
+    padding: 4px 12px;
+    font-size: 16px;
   }
   .dex-grid {
     grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
   }
-  .dex-goal {
-    font-size: 16px;
-  }
-  .dex-detail .dex-tip {
-    font-size: 18px;
+  .dex .buttons {
+    flex-wrap: nowrap;
+    gap: 6px;
   }
   .dex .buttons .btn {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 16px;
+    white-space: nowrap;
     justify-content: center;
+  }
+  .dex .hint {
+    display: none;
   }
 }
 
-/* Phones in landscape: everything side by side, no hint. */
+/*
+ * Phones in landscape: the grid takes the left column from the regions down;
+ * the detail, the goal and the buttons stack on the right. The bar and the
+ * body give their children to the dialog's grid.
+ */
 @media (max-height: 500px) and (orientation: landscape) {
   .dialog.dex {
     height: 100%;
-    padding: 8px 12px;
-    gap: 6px;
+    padding: 8px 10px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(200px, 34vw, 270px);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'head head'
+      'regions regions'
+      'tabs detail'
+      'list detail'
+      'list goal'
+      'list buttons';
+    gap: 6px 8px;
   }
-  .dex-body {
-    grid-template-columns: 1fr 210px;
+  .dex-head {
+    grid-area: head;
+    flex-wrap: nowrap;
+  }
+  .dex-head .dialog-title {
+    flex: none;
+    font-size: 18px;
+  }
+  .dex-progress {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .dex-progress::-webkit-scrollbar {
+    display: none;
+  }
+  .dex-progress span {
+    flex: none;
+    font-size: 14px;
+    padding: 3px 6px;
+  }
+  .dex-progress b {
+    font-size: 14px;
+  }
+  .dex-regions {
+    grid-area: regions;
+    padding: 0 2px 2px;
   }
   .dex-region {
     flex-direction: row;
     gap: 6px;
     padding: 4px 6px;
   }
+  .dex-bar,
+  .dex-body {
+    display: contents;
+  }
+  .dex-bar .dex-tabs {
+    grid-area: tabs;
+    padding: 0 2px;
+  }
+  .dex-tab {
+    font-size: 14px;
+    padding: 5px 8px;
+  }
+  .dex-goal {
+    grid-area: goal;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 3px;
+    font-size: 14px;
+  }
+  .dex-list {
+    grid-area: list;
+  }
+  /* The sprite beside the name and types, the facts under both at full width, scrolling when a species says more than fits. */
+  .dex-detail {
+    grid-area: detail;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    align-items: center;
+    padding: 6px;
+    gap: 4px 8px;
+  }
   .dex-detail .inspect-sprite {
-    width: 96px;
-    height: 96px;
+    grid-row: 1 / span 2;
+    width: 64px;
+    height: 64px;
+  }
+  .dex-detail .inspect-id {
+    display: contents;
+  }
+  .dex-detail .dex-facts {
+    grid-column: 1 / -1;
+  }
+  /* The thank-you: the tag and the link on one row, the words under them. */
+  .dex-detail.drawing .dex-facts {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .dex-detail.drawing .dex-tip-short {
+    order: 1;
+    flex-basis: 100%;
+  }
+  .dex-detail .inspect-name {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  .dex-detail .inspect-name small {
+    font-size: 14px;
+    margin-bottom: 0;
+  }
+  .dex-facts {
+    gap: 4px;
+  }
+  .dex-fact,
+  .dex-fact b,
+  .dex-detail .dex-tip {
+    font-size: 14px;
+  }
+  .dex-detail .dex-tip-long {
+    display: none;
+  }
+  .dex-detail .dex-tip-short {
+    display: block;
+  }
+  .dex-detail a.btn.dex-contribute {
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+  .dex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  }
+  /* Back and the PC side by side, where to find under them. */
+  .dex .buttons {
+    grid-area: buttons;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .dex .buttons .btn {
+    min-width: 0;
+    min-height: 36px;
+    padding: 4px 6px;
+    font-size: 14px;
+    white-space: nowrap;
+    justify-content: center;
+  }
+  .dex .buttons .btn:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
   .dex .hint {
     display: none;
   }
-  .dex .buttons .btn {
-    min-height: 36px;
-    padding: 6px 12px;
+}
+
+/* Very short landscape screens (568×320): the counters and the National Dex line give their room to the grid and the detail. */
+@media (max-height: 360px) and (orientation: landscape) {
+  .dialog.dex {
+    grid-template-areas:
+      'regions regions'
+      'tabs detail'
+      'list detail'
+      'list goal'
+      'list buttons';
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  }
+  .dex-head {
+    display: none;
+  }
+  .dex-goal-national {
+    display: none;
+  }
+  .dex-detail .inspect-sprite {
+    width: 48px;
+    height: 48px;
+  }
+  /* The pencil, the tag and the link still say it; the words wait for a taller screen. */
+  .dex-detail .dex-tip-short {
+    display: none;
   }
 }
 

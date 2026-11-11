@@ -6,7 +6,7 @@ import { dexCounts, dexStatus, type DexStatus } from '../game/dex'
 import { regionDone, regionProgress } from '../game/dexRegions'
 import { isLegend } from '../data/legends'
 import { DEX_REGIONS, dexRegionOf, NATIONAL_LAST, SHEETLESS, SPRITECOLLAB_URL, type DexRegion } from '../data/nationalDex'
-import { gameDex, type DexEntry } from '../site/pokedex'
+import { gameDex, regionCounts, type DexEntry } from '../site/pokedex'
 import { pencilIcon, pencilSprite, PICKUPS, pokeballIcon, sparkleIcon, trophyIcon } from '../render/art'
 import { cryUrl, drawPokemon, hasShiny, loadedSprites, loadSpecies, portraitUrl } from '../render/sprites'
 import { locale, t } from '../i18n'
@@ -85,6 +85,7 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
   const wild = entries.filter(defeatable)
   const counts = dexCounts(save, entries.map((e) => e.dex))
   const done = DEX_REGIONS.filter((r) => regionDone(save, r))
+  const regionNumbers = new Map(DEX_REGIONS.map((r) => [r, regionCounts(r, entries)] as const))
   /** The hardest difficulty the entry's family (or legend, in the Legend mode) beat Mewtwo on, if it did. */
   const clearOf = (e: DexEntry) => (e.source.kind === 'starter' ? clears[e.source.id] : e.source.kind === 'wild' && isLegend(e.source.id) ? clears[e.source.id] : undefined)
 
@@ -129,8 +130,12 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
     const title = titles[`${region}Dex`]
     const frame = t().mart.styles.frame.nationalDex
     goal.classList.toggle('done', done.includes(region))
+    const c = regionNumbers.get(region)
+    // The same numbers and rule as the site's region tile: what the game has, and who doesn't count.
+    const rule = c ? [m.counts(c.inGame, c.total), ...(c.left.length > 0 ? [m.notCounted(c.left)] : [])].join(' · ') : ''
     goal.replaceChildren(
       rich(done.includes(region) ? m.goalDone(title) : m.goal(total - seen, title), { class: 'dex-goal-region' }),
+      h('span', { class: 'dex-goal-rule' }, rule),
       rich(m.nationalGoal(done.length, DEX_REGIONS.length, frame), { class: 'dex-goal-national' }),
     )
   }
@@ -195,12 +200,14 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
     if (!s) return
     detail.classList.toggle('unseen', s.kind === 'game' && !s.status.seen)
     detail.classList.toggle('soon', s.kind === 'soon')
+    detail.classList.toggle('drawing', s.kind === 'drawing')
     if (s.kind === 'drawing') {
       name.replaceChildren(h('small', {}, dexNumber(s.dex)), s.name)
       types.replaceChildren()
       facts.replaceChildren(
         h('span', { class: 'tag tag-drawing' }, h('img', { src: pencilIcon(), alt: '' }), m.drawing),
-        h('p', { class: 'dex-tip' }, m.drawingText),
+        h('p', { class: 'dex-tip dex-tip-long' }, m.drawingText),
+        h('p', { class: 'dex-tip dex-tip-short' }, m.drawingShort),
         h('a', { class: 'btn dex-contribute', href: SPRITECOLLAB_URL, target: '_blank', rel: 'noopener' }, m.contribute),
       )
       return

@@ -1528,8 +1528,13 @@ export const zh: Messages = {
     goal: (left: number, title: string) => `再看 *${left}* 隻即可獲得稱號「*${title}*」`,
     goalDone: (title: string) => `地區完成！已獲得稱號「*${title}*」`,
     nationalGoal: (done: number, total: number, frame: string) => `${done}/${total} 個地區 · 外框「*${frame}*」`,
+    counts: (inGame: number, total: number) => `遊戲中 ${inGame}/${total}`,
+    forTitle: (goal: number) => `稱號需 ${goal} 隻`,
+    notCounted: (names: readonly string[]) => `${new Intl.ListFormat('zh-TW').format(names)} 不計入`,
     drawing: '繪製中',
     drawingText: 'PMD SpriteCollab 的畫師們畫出了遊戲裡所有的寶可夢，這一隻還在創作中。謝謝畫師們！♥',
+    /** `drawingText` for a phone's detail strip. */
+    drawingShort: 'SpriteCollab 的畫師們還在畫這一隻。謝謝畫師們！♥',
     contribute: '協助繪製 ↗',
     soon: '尚未登場，敬請關注最新消息！',
     soonTag: '即將登場',

@@ -1945,6 +1945,11 @@ html:not(.js) #donate-account {
   line-height: 1;
 }
 
+.dex-region-tile .goal-count {
+  font-size: 18px;
+  line-height: 1.1;
+}
+
 .dex-region-tile .drawing-count {
   font-size: 20px;
   line-height: 1;
