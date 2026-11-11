@@ -393,7 +393,7 @@ export const BAIT_ROWS = ['..ooo..', '.obyto.', 'obttbto', 'otbytbo', 'obtttbo',
 export const BAIT_COLORS = { o: '#2c1c10', b: '#a86c34', t: '#d09050', y: '#f4d878' } as const
 
 /** The anger mark that pulses by an angry Pokémon's head: four red hooks around a gap. */
-export const ANGER_ROWS = ['.rr.rr.', 'rddrddr', 'rd...dr', '.......', 'rd...dr', 'rddrddr', '.rr.rr.'] as const
+export const ANGER_ROWS = ['.r...r.', 'rd...dr', '.dr.rd.', '.......', '.dr.rd.', 'rd...dr', '.r...r.'] as const
 export const ANGER_COLORS = { r: '#f04848', d: '#a01828' } as const
 
 /** A small four-point sparkle: the chain's mark. */

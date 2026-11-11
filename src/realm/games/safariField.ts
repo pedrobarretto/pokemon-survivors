@@ -136,9 +136,19 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
   /** Screen-space motes: a fixed pool, so the sky never allocates. */
   const motes = Array.from({ length: 22 }, (_, i) => ({ x: (i * 97) % 400, y: (i * 61) % 400, p: i * 1.7 }))
 
+  /** Tall tiles clear of the forest's edge and the plaza, where someone in the open can be seen and reached. */
+  const open = (() => {
+    const inner = Array.from(world.tallList).filter((tile) => {
+      const tx = tile % (MAP_W - 1)
+      const ty = (tile - tx) / (MAP_W - 1)
+      return ty >= 6 && ty <= PLAZA.gate.y - 4 && tx >= 4 && tx <= MAP_W - 6
+    })
+    return inner.length >= 8 ? inner : Array.from(world.tallList)
+  })()
+
   /** A resident's home: a tall tile picked by its place among `n`, so a slot keeps its spot across a reload. */
   const homeOf = (i: number, n: number) => {
-    const tile = world.tallList[Math.floor((i + 0.5) * (world.tallList.length / n))]!
+    const tile = open[Math.floor((i + 0.5) * (open.length / n))]!
     const tx = tile % (MAP_W - 1)
     const ty = (tile - tx) / (MAP_W - 1)
     return { x: tx * TILE + 8, y: ty * TILE + 8 }
@@ -461,8 +471,8 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
   }
 
   const drawRanger = (g: CanvasRenderingContext2D, camX: number, camY: number) => {
-    const s = loadedSprites(RANGER_DEX)
-    if (!s) return
+    if (!loadedSprites(RANGER_DEX)) return
+    const s = sprites(RANGER_DEX)
     const px = Math.round(ranger.x - camX)
     const py = Math.round(ranger.y - camY)
     blitEllipse(g, 11, 4, 'rgba(16,24,16,0.32)', px, py)
@@ -528,6 +538,8 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
     const camX = Math.max(0, Math.min(fieldW - W, Math.round(player.x - W / 2))) + (shake > 0 ? Math.round(Math.sin(clock * 70) * 2) : 0)
     // What the box and the buttons cover counts as below the map: the partner stays in the part that shows.
     const camY = Math.max(0, Math.min(fieldH - H + bottomInset, Math.round(player.y - (H - bottomInset) * 0.58)))
+    lastCam.x = camX
+    lastCam.y = camY
     g.fillStyle = theme.shade
     g.fillRect(0, 0, W, H)
     g.drawImage(ground, camX, camY, Math.min(W, fieldW), Math.min(H, fieldH - camY), 0, 0, Math.min(W, fieldW), Math.min(H, fieldH - camY))
@@ -569,9 +581,10 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
     if (behindPlaza(player.x, py)) drawPokemon(g, sprites(dex, shiny), player.moving ? 'Walk' : 'Idle', player.dir, clock, Math.round(player.x - camX), Math.round(py - camY), { alpha: SEE_THROUGH })
 
     for (const r of residents) {
-      if (r.hiddenFor > 0) continue
-      const resident = loadedSprites(r.dex)
-      if (!resident) continue
+      // Asked every frame, on screen or not, so the sweep never drops its sheets (and asks again if it did);
+      // drawn only once they're in, never as a dust puff in the grass.
+      const resident = sprites(r.dex)
+      if (r.hiddenFor > 0 || !loadedSprites(r.dex)) continue
       const sx = Math.round(r.x - camX)
       const sy = Math.round(r.y - camY)
       if (sx < -30 || sx > W + 30 || sy < -30 || sy > H + 50) continue
@@ -580,7 +593,7 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
       if (sink > 0) {
         g.save()
         g.beginPath()
-        g.rect(sx - 40, sy - 80, 80, 80 - sink)
+        g.rect(sx - 40, sy - 80, 80, 80)
         g.clip()
       }
       drawPokemon(g, resident, (r.pause > 0 || r.mark === '?') && r.away <= 0 ? 'Idle' : 'Walk', r.dir, clock * (r.away > 0 ? 2.5 : 1), sx, sy + sink)
@@ -623,6 +636,9 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
     for (let ry = 0; ry < rows.length; ry++)
       for (let rx = 0; rx < w; rx++) if (rows[ry]![rx] === 'w') g.fillRect(x - Math.floor(w / 2) + rx, y + ry, 1, 1)
   }
+
+  /** Where the camera stood last frame (dev's `peek`). */
+  const lastCam = { x: 0, y: 0 }
 
   /** Fireflies over the grass at dusk and night: a fixed pool drifting in screen space. */
   const flies = Array.from({ length: 16 }, (_, i) => ({ x: (i * 131) % 400, y: (i * 89) % 400, p: i * 2.3 }))
@@ -715,7 +731,7 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
     },
     sneaking: () => sneaking,
     /** Dev: who's in the open and how each feels, for `ps.safari('phase')`. */
-    peek: () => residents.map((r) => ({ slot: r.slot, dex: r.dex, dir: r.dir, doubt: Math.round(r.doubt * 100) / 100, away: r.away > 0, hidden: r.hiddenFor > 0, mark: r.mark, x: Math.round(r.x), y: Math.round(r.y), px: Math.round(player.x), py: Math.round(player.y), loaded: loadedSprites(r.dex) !== null, dist: Math.round(Math.hypot(r.x - player.x, r.y - player.y)) })),
+    peek: () => residents.map((r) => ({ cam: `${lastCam.x},${lastCam.y}`, slot: r.slot, dex: r.dex, dir: r.dir, doubt: Math.round(r.doubt * 100) / 100, away: r.away > 0, hidden: r.hiddenFor > 0, mark: r.mark, x: Math.round(r.x), y: Math.round(r.y), px: Math.round(player.x), py: Math.round(player.y), loaded: loadedSprites(r.dex) !== null, dist: Math.round(Math.hypot(r.x - player.x, r.y - player.y)) })),
     /** Dev: sets the partner just behind the first wanderer (or in front of it, where it looks), facing it, and holds it still a while. */
     sneakUp: (front = false) => {
       const r = residents.find((x) => x.slot !== null && x.hiddenFor <= 0)

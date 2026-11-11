@@ -4992,10 +4992,11 @@ if (import.meta.env.DEV) {
        * (`('meet', 'mimikyu', true)` shiny), `ps.safari('grass')` sets the grass off now and `ps.safari('phase')` prints where the game is.
        * `ps.safari('hour', 'night')` holds a time of day (`dawn`, `day`, `dusk`, `night`; null back to the clock), `ps.safari('contest', true)` holds the
        * Concurso de Insetos open (false closed, null back to the calendar), `ps.safari('dex', 'marsh')` fills a habitat's Pokédex but for one (`('dex', 'marsh', 'all')`,
-       * `'half'`, `'empty'`), `ps.safari('sneakup')` sets the partner just behind the first wanderer, sneaking (`('sneakup', 'front')` where it looks), and `ps.safari('stalk')` meets it now.
+       * `'half'`, `'empty'`), `ps.safari('sneakup')` sets the partner just behind the first wanderer, sneaking (`('sneakup', 'front')` where it looks), and `ps.safari('stalk')` meets it now,
+       * `ps.safari('prize', 1)` puts that contest place's prizes in the gift box (on a field of 40).
        */
       safari: async (
-        what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase' | 'hour' | 'contest' | 'dex' | 'sneakup' | 'stalk',
+        what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase' | 'hour' | 'contest' | 'dex' | 'sneakup' | 'stalk' | 'prize',
         arg?: number | string | boolean | null,
         shiny?: boolean | string,
       ) => {
@@ -5013,6 +5014,13 @@ if (import.meta.env.DEV) {
         if (what === 'contest') return stageSafari({ contest: typeof arg === 'boolean' ? arg : null })
         if (what === 'dex') return isSafariHabitat(arg) ? stageSafari({ dex: { habitat: arg, fill: shiny === 'all' || shiny === 'empty' || shiny === 'half' ? shiny : 'almost' } }) : null
         if (what === 'sneakup') return safariDev.run?.sneakUp(arg === 'front')
+        if (what === 'prize') {
+          const { CONTEST_GIFTS } = await import('./data/safari')
+          const { contestPrize } = await import('./realm/games/safari.rules')
+          const rank = typeof arg === 'number' ? arg : 1
+          const prize = contestPrize(rank, 40)
+          return prize ? stageGifts(CONTEST_GIFTS[prize].map((content, i) => ({ id: `dev-contest-${rank}-${i}-${Date.now()}`, content, reason: { kind: 'bugContest', rank } as const }))) : null
+        }
         if (what === 'stalk') return safariDev.run?.stalk()
         if (what === 'grass') return safariDev.run?.rustle()
         if (what === 'phase') return { game: safariDev.run?.phase() ?? null, battle: safariDev.run?.battle() ?? null, wanderers: safariDev.run?.wanderers() ?? null }
