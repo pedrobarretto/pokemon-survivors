@@ -340,6 +340,31 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         ],
       },
       {
+        title: { pt: 'Pedidos da comunidade', en: 'Community requests', es: 'Pedidos de la comunidad', fr: 'Demandes de la communauté', zh: '社群許願' },
+        notes: [
+          {
+            pt: 'Largar item: no pause, toque num item para largá-lo e liberar o espaço. Com a build cheia, o item que um golpe no nível máximo precisa para evoluir aparece como carta de troca no level-up e nas Poké Balls. Um item largado só volta às ofertas 5 níveis depois.',
+            en: 'Drop items: in the pause menu, tap an item to drop it and free its slot. With a full build, the item a maxed move needs to evolve shows up as a swap card on level-ups and in Poké Balls. A dropped item only comes back to the offers 5 levels later.',
+            es: 'Soltar objetos: en la pausa, toca un objeto para soltarlo y liberar su espacio. Con la build llena, el objeto que un movimiento al máximo necesita para evolucionar aparece como carta de cambio al subir de nivel y en las Poké Balls. Un objeto soltado solo vuelve a las ofertas 5 niveles después.',
+          },
+          {
+            pt: 'Ponyta aprende High Horsepower, Low Kick, Horn Drill, Morning Sun e Bounce, cada um com a sua evolução: Headlong Rush, Axe Kick, Hyper Drill, Revival Blessing e Sky Drop. Morning Sun cura mais no sol, como nos jogos.',
+            en: 'Ponyta learns High Horsepower, Low Kick, Horn Drill, Morning Sun and Bounce, each with its own evolution: Headlong Rush, Axe Kick, Hyper Drill, Revival Blessing and Sky Drop. Morning Sun heals more in the sun, as in the games.',
+            es: 'Ponyta aprende High Horsepower, Low Kick, Horn Drill, Morning Sun y Bounce, cada uno con su evolución: Headlong Rush, Axe Kick, Hyper Drill, Revival Blessing y Sky Drop. Morning Sun cura más con sol, como en los juegos.',
+          },
+          {
+            pt: 'Duas mesas novas no café do Poké Realm, para 2 a 4 treinadores, com bots nas cadeiras vazias: Ludo e Unown, um jogo de cartas em que você descarta pelo tipo ou pela letra Unown, com Ditto e Mew de curinga. Cada um tem Placar e troféu (Dado de Ouro e Placa UNOWN).',
+            en: 'Two new tables at the Poké Realm café, for 2 to 4 trainers with bots in the empty seats: Ludo and Unown, a card game where you discard by type or by Unown letter, with Ditto and Mew as wild cards. Each has a Scoreboard and a trophy (Golden Die and UNOWN Plaque).',
+            es: 'Dos mesas nuevas en el café del Poké Realm, para 2 a 4 entrenadores con bots en las sillas vacías: Ludo y Unown, un juego de cartas en el que descartas por tipo o por letra Unown, con Ditto y Mew como comodines. Cada uno tiene Marcador y trofeo (Dado de Oro y Placa UNOWN).',
+          },
+          {
+            pt: 'Partidas longas e o modo infinito ficaram bem mais leves para celulares e computadores mais fracos, sem travadas quando golpes miram na maior multidão. Rastros como o do Fire Spin mantêm o dano todo com menos chamas na tela, e quem entra no meio de uma partida em co-op não fica mais com o jogo lento.',
+            en: 'Long runs and endless mode are much lighter on phones and weaker computers, with no stutter when moves aim at the thickest crowd. Trails like Fire Spin’s keep their full damage with fewer flames on screen, and joining a co-op run midway no longer leaves you with a slower game.',
+            es: 'Las partidas largas y el modo infinito son mucho más ligeros en celulares y computadoras más modestas, sin tirones cuando los movimientos apuntan a la mayor multitud. Los rastros como el de Fire Spin mantienen todo su daño con menos llamas en pantalla, y quien entra a mitad de una partida en co-op ya no tiene el juego más lento.',
+          },
+        ],
+      },
+      {
         title: { pt: 'Ícones da comunidade', en: 'Community icons', es: 'Íconos de la comunidad', fr: 'Icônes de la communauté', zh: '社群圖示' },
         notes: [
           {
