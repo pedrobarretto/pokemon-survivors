@@ -16,9 +16,28 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* A flex child of the sheet: without a floor of 0 it grows past the sheet instead of scrolling. */
+  min-height: 0;
   padding: 2px 2px 8px;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.path-body > * {
+  flex-shrink: 0;
+}
+
+/* The Torre: Machoke and the notes, then the trial cards; side by side on a phone held sideways (below). */
+.path-tower,
+.path-tower-info,
+.path-tower-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.path-tower-list > * {
+  flex-shrink: 0;
 }
 
 .path-npc {
@@ -297,8 +316,10 @@
 
 .path-trial-go {
   --mode: var(--kit-dojo);
-  align-self: flex-end;
-  margin-top: 4px;
+  align-self: stretch;
+  min-height: 44px;
+  /* At the card's foot, so the two towers' buttons line up. */
+  margin-top: auto;
 }
 
 .path-towers {
@@ -548,5 +569,93 @@
   .path-cube {
     width: 128px;
     height: 128px;
+  }
+}
+
+/*
+ * The Torre on a phone held sideways: a wider sheet, Machoke and the notes on
+ * the left, the cards scrolling on their own on the right, so the towers are
+ * in view at once.
+ */
+@media (max-height: 500px) and (min-width: 540px) {
+  .path-sheet-kubfu {
+    width: min(820px, 100%);
+    height: 100%;
+  }
+
+  .path-sheet-kubfu .path-body {
+    flex: 1;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+
+  .path-tower {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .path-tower-info,
+  .path-tower-list {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: 8px;
+  }
+
+  .path-trial {
+    padding: 6px 8px 8px;
+  }
+
+  .path-trial-head b {
+    font-size: 19px;
+  }
+
+  .path-trial p {
+    font-size: 15px;
+  }
+
+  .path-towers {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .path-trial .path-trial-go {
+    min-width: 0;
+    min-height: 44px;
+    padding: 2px 10px 8px;
+    font-size: 20px;
+  }
+}
+
+/* The smallest phones sideways: the sheet's head and the intro give their room to the cards. */
+@media (max-height: 360px) and (min-width: 540px) {
+  .path-sheet-kubfu {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .path-sheet-kubfu .lobby-sheet-head h2 {
+    font-size: 22px;
+  }
+
+  .path-sheet-kubfu .path-npc-face {
+    width: 40px;
+    height: 40px;
+  }
+
+  .path-sheet-kubfu .path-npc-text p,
+  .path-sheet-kubfu .path-note {
+    font-size: 14px;
+  }
+
+  .path-sheet-kubfu .path-sub {
+    font-size: 19px;
+    margin: 0;
+  }
+
+  .path-sheet-kubfu .path-trial p {
+    font-size: 14px;
   }
 }

@@ -149,7 +149,12 @@ const trialGoal = (def: TrialDef) => {
 /** The loadout line of a trial: who plays it and with which moves. */
 export const trialLoadout = (def: TrialDef) => t().paths.tower.loadout(def.starter === 'kubfu' ? 'Kubfu' : 'Machop', def.moves.map((mv) => MOVES[mv.id].name).join(' · '))
 
-const kubfuBody = (save: Save, start: ((id: TrialId) => void) | null, close: () => void) => {
+/**
+ * The Torre's body: Machoke's words and the notes beside (`info`), the trial
+ * cards in a list of their own (`list`), so a phone held sideways shows them
+ * as two columns, the cards scrolling on their own.
+ */
+const kubfuBody = (save: Save, intro: HTMLElement, start: ((id: TrialId) => void) | null, close: () => void) => {
   const m = t().paths.tower
   const trials = save.paths.trials
   const tower = towerOf(trials)
@@ -171,10 +176,12 @@ const kubfuBody = (save: Save, start: ((id: TrialId) => void) | null, close: () 
     )
   }
   const styleLine = tower ? [h('p', { class: 'path-lean' }, rich(m.urshifu(m.styles[tower])))] : []
-  const towers = [h('h3', { class: 'path-sub' }, LEGENDS.kubfu.name, ' → Urshifu'), h('p', { class: 'path-note' }, m.chooseNote), h('div', { class: 'path-towers' }, ...TOWERS.map(card)), ...styleLine]
+  const towers = [h('h3', { class: 'path-sub' }, LEGENDS.kubfu.name, ' → Urshifu'), h('div', { class: 'path-towers' }, ...TOWERS.map(card))]
+  const floors = [h('h3', { class: 'path-sub' }, m.floorsHead), ...FLOORS.map(card)]
+  const info = h('div', { class: 'path-tower-info' }, intro, h('p', { class: 'path-note' }, m.intro), h('p', { class: 'path-note' }, m.chooseNote), ...styleLine)
   // With every floor cleared, the towers come first: they're what's left.
-  const floors = FLOORS.map(card)
-  return [h('p', { class: 'path-note' }, m.intro), ...(kubfuJoined(trials) ? [...towers, ...floors] : [...floors, ...towers])]
+  const list = h('div', { class: 'path-tower-list' }, ...(kubfuJoined(trials) ? [...towers, ...floors] : [...floors, ...towers]))
+  return [h('div', { class: 'path-tower' }, info, list)]
 }
 
 const meltanBody = (save: Save) => {
@@ -235,13 +242,13 @@ export const pathSheet = (root: HTMLElement, input: Input, path: PathId, opts: {
     h('img', { class: 'path-npc-face', src: emotionUrl(npc, 'Normal'), alt: '' }),
     h('div', { class: 'path-npc-text' }, h('b', { class: 'path-npc-name' }, m.npc[path]), ...introLines(path, save).map((line) => h('p', {}, rich(line)))),
   )
-  const body = path === 'zygarde' ? zygardeBody(save) : path === 'cosmog' ? cosmogBody(save) : path === 'kubfu' ? kubfuBody(save, opts.start ?? null, dispose) : path === 'meltan' ? meltanBody(save) : regiBody(save)
+  const body = path === 'zygarde' ? [intro, ...zygardeBody(save)] : path === 'cosmog' ? [intro, ...cosmogBody(save)] : path === 'kubfu' ? kubfuBody(save, intro, opts.start ?? null, dispose) : path === 'meltan' ? [intro, ...meltanBody(save)] : [intro, ...regiBody(save)]
   const closeButton = h('button', { class: 'arc-icon-btn', type: 'button', 'aria-label': m.close, title: m.close, onclick: () => (playSfx('select'), close()) }, h('img', { class: 'ink-icon', src: closeIcon(), alt: '' }))
   const panel = h(
     'div',
     { class: `lobby-sheet-panel path-sheet path-sheet-${path}`, role: 'dialog', 'aria-label': m.names[path] },
     h('header', { class: 'lobby-sheet-head' }, h('h2', { class: 'arc-outline' }, m.names[path]), closeButton),
-    h('div', { class: 'path-body' }, intro, ...body),
+    h('div', { class: 'path-body' }, ...body),
   )
   const el = h('div', { class: 'screen lobby-sheet' }, panel)
   el.addEventListener('click', (e) => e.target === el && (playSfx('select'), close()))
