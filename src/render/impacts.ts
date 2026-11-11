@@ -1,7 +1,9 @@
 import { TAU } from '../engine/math'
-import { blitEllipse, blitRing } from '../engine/pixelart'
+import { blitEllipse, blitRing, fillPlotted } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import type { Game, Visual } from '../game/types'
+import { GALLOP } from '../game/gallopRules'
+import { screwTrail } from './gallopFx'
 import { flightAngle } from './modFx'
 import { detail } from './quality'
 
@@ -118,7 +120,20 @@ const sparkPop = (colors: readonly [string, string]): PopLook => (ctx, p, k, see
   ctx.globalAlpha = 1
 }
 
+/** Hyper Drill's lance, done: its screw trail lingers and unwinds from the back, a flare where the point stopped. */
+const lancePop: PopLook = (ctx, p, k) => {
+  screwTrail(p.x, p.y, p.angle, GALLOP.hyperDrill.lance, p.at * 40 + k * 6, 1 - k)
+  fillPlotted(ctx)
+  const s = Math.round(6 * (1 - k))
+  if (s > 0) {
+    ctx.fillStyle = k < 0.3 ? '#ffffff' : '#f8d060'
+    ctx.fillRect(Math.round(p.x) - s, Math.round(p.y), s * 2 + 1, 1)
+    ctx.fillRect(Math.round(p.x), Math.round(p.y) - s, 1, s * 2 + 1)
+  }
+}
+
 const POPS = {
+  hyperLance: lancePop,
   ember: emberPop,
   water: waterPop,
   star: starPop,

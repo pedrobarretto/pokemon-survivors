@@ -32150,7 +32150,9 @@ span.arena-hub-face {
 
 /* The pause menu's held items are buttons: a tap asks to let one go. */
 .loadout-row.drop-row {
-  width: 100%;
+  /* The padding and border hang outside the column, so the icons line up with the moves'. */
+  width: calc(100% + 16px);
+  margin: 0 -8px;
   min-height: 34px;
   padding: 2px 6px;
   font: inherit;
@@ -32162,6 +32164,31 @@ span.arena-hub-face {
   cursor: pointer;
 }
 
+/* A finger's worth: the whole row is the target (the × only marks it). */
+@media (pointer: coarse) {
+  .loadout-row.drop-row {
+    min-height: 44px;
+  }
+}
+
+/* A phone held upright: the moves and the items come first, so dropping one needs no scrolling; the ability, the map and the stats follow. */
+@media (max-width: 600px) {
+  .pause-grid {
+    display: contents;
+  }
+  .pause-column {
+    order: -1;
+  }
+}
+
+/* A phone on its side: the loadout (stats | moves and items) before the ability and the map. */
+@media (max-height: 500px) {
+  .pause-body > .pause-ability,
+  .pause-body > .pause-map {
+    order: 1;
+  }
+}
+
 .loadout-row.drop-row:hover,
 .loadout-row.drop-row:focus-visible {
   border-color: var(--dk-line, #c8d0e0);
@@ -32169,10 +32196,18 @@ span.arena-hub-face {
 }
 
 .loadout-row .drop-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
   font-family: var(--title);
   font-size: 16px;
   line-height: 1;
   color: var(--dk-ink-3, #808898);
+  border: 2px solid currentColor;
+  border-radius: 3px;
 }
 
 .loadout-row.drop-row:hover .drop-mark {

@@ -149,8 +149,8 @@ const CRACK = ['1....1.....1', '.1..1.1...1.', '..11...1.1..', '.........1..']
 const PILLAR = ['..11..', '.1231.', '.1221.', '12321.', '12221.', '123211', '122221', '111111']
 /** Low Kick's swipe, bending to the right (rotated along the sweep). */
 const SWIPE = ['11......', '.1221...', '..12221.', '...12221', '..12221.', '.1221...', '11......']
-/** A hoof seen from below, coming down (Axe Kick). */
-const HOOF = ['..1111..', '.122221.', '12233221', '12333321', '12333321', '.122221.', '.11..11.']
+/** Rapidash's foreleg coming down heel first, seen from the side: the cream leg, the dark hoof (Axe Kick). */
+const HOOF = ['.111..', '12221.', '12221.', '12221.', '12221.', '122221', '122221', '133331', '134431', '134431', '.1111.']
 /** A starburst of impact. */
 const IMPACT = ['....1....', '.1..1..1.', '..1.2.1..', '...232...', '112343211', '...232...', '..1.2.1..', '.1..1..1.', '....1....']
 /** The drill pointing right, in two turns of its spiral. */
@@ -172,7 +172,7 @@ export const GALLOP_FX = {
   crack: lazy(() => sprite(CRACK, { 1: '#3a2410' })),
   pillar: lazy(() => outline(sprite(PILLAR, { 1: '#5a4a38', 2: '#9a8468', 3: '#d8c8a0' }), '#201810')),
   swipe: lazy(() => sprite(SWIPE, { 1: '#f8f0e8', 2: '#f08840' })),
-  hoof: lazy(() => outline(sprite(HOOF, { 1: '#5a3a28', 2: '#a07050', 3: '#d8b090' }), '#200808')),
+  hoof: lazy(() => outline(sprite(HOOF, { 1: '#6a4a38', 2: '#f8ecd0', 3: '#3a2418', 4: '#7a5440' }), '#200808')),
   impact: lazy(() => sprite(IMPACT, { 1: '#f8c048', 2: '#ffffff', 3: '#f8e8a0', 4: '#ffffff' })),
   impactRed: lazy(() => sprite(IMPACT, { 1: '#e05830', 2: '#f8c048', 3: '#fff0c0', 4: '#ffffff' })),
   drill: DRILL_SIDE.map((rows) => lazy(() => outline(sprite(rows, { 1: '#283048', 2: '#7880a8', 3: '#f8f8ff' }), '#0c0c18'))),
@@ -181,4 +181,95 @@ export const GALLOP_FX = {
   sun: lazy(() => outline(sprite(SUN_DISC, { 2: '#e8a028', 3: '#f8d850', 4: '#fff8d8' }), '#a85810')),
   sunPink: lazy(() => outline(sprite(SUN_DISC, { 2: '#e87098', 3: '#f8c070', 4: '#fff8e0' }), '#a83860')),
   streak: lazy(() => outline(sprite(STREAK, { 1: '#3060a8', 2: '#88b8f0', 3: '#ffffff' }), '#081830')),
+}
+
+/* ---------- The evolutions' bigger art (Hyper Drill, Headlong Rush, Revival Blessing) ---------- */
+
+/**
+ * A drill cone pointing right, `len` px long and `half` px either side of its
+ * axis, its spiral bands shifted by `turn` (two turns make it spin): dark
+ * rim, the thread's helix in diagonal bands, lit on the upper flank.
+ * `collar` px of shaft behind it.
+ */
+const drillRows = (len: number, half: number, turn: number, collar = 0) => {
+  const rows: string[] = []
+  for (let y = -half; y <= half; y++) {
+    let row = ''
+    for (let x = 0; x < collar; x++) row += Math.abs(y) <= Math.ceil(half / 2) ? (Math.abs(y) === Math.ceil(half / 2) ? '1' : y < 0 ? '3' : '2') : '.'
+    for (let x = 0; x < len; x++) {
+      const h = half * (1 - x / len)
+      const ay = Math.abs(y)
+      const thread = Math.floor((x + y + half + turn * 2) / 3)
+      // Each turn of the thread notches the rim, so the edge reads serrated, like a drill's.
+      const notch = (x + y + half + turn * 2) % 3 === 0 && ay > 1
+      if (ay > h + 0.4 || (notch && ay > h - 0.8)) row += '.'
+      else if (ay > h - 0.8) row += '1'
+      else row += thread % 2 === 0 ? '2' : y < 0 ? '4' : '3'
+    }
+    rows.push(row)
+  }
+  return rows
+}
+
+/**
+ * A jagged rock shard `h` px tall, tilted by `seed`, a lesser spike off its side
+ * (`seed` picks which side and how tall): sharp tips, the left faces lit, the
+ * ridges mid, the right faces in shade, a crack zigzagging down the big one
+ * (`4`: magma while it erupts, dark once it cools).
+ */
+const spireRows = (h: number, seed: number) => {
+  const w = 15
+  const grid = Array.from({ length: h }, () => Array.from({ length: w }, () => '.'))
+  // Shards burst out tilted, not upright: the tip leans `tilt` px off the foot.
+  const tilt = seed === 1 ? 0 : seed === 0 ? -3 : 3
+  const spike = (foot: number, top: number, half: number, crack: boolean) => {
+    for (let r = top; r < h; r++) {
+      const f = (r - top + 1) / (h - top)
+      const hw = half * f
+      const cx = foot + Math.round(tilt * (1 - f))
+      for (let x = 0; x < w; x++) {
+        const dx = x - cx
+        // One flank kinks out a pixel now and then, so it isn't a cone.
+        const kink = (r + seed) % 5 === 0 && dx < 0 ? 1 : 0
+        if (dx < -hw - kink - 0.3 || dx > hw + 0.3) continue
+        const crackX = Math.round(cx - hw * 0.25 + ((r >> 1) % 2))
+        grid[r]![x] = crack && x === crackX && f > 0.35 && r < h - 1 ? '4' : dx < -hw * 0.15 ? '3' : dx < hw * 0.45 ? '2' : '1'
+      }
+    }
+  }
+  const side = seed % 2 === 0 ? -1 : 1
+  spike(7 + side * 4, Math.round(h * (0.4 + 0.08 * seed)), 3, false)
+  spike(7, 0, 5, true)
+  return grid.map((row) => row.join(''))
+}
+
+/** A round sun disc of radius `r`: rim, two bands, a white core. */
+const discRows = (r: number) => {
+  const rows: string[] = []
+  for (let y = -r; y <= r; y++) {
+    let row = ''
+    for (let x = -r; x <= r; x++) {
+      const d = Math.sqrt(x * x + y * y)
+      row += d > r + 0.3 ? '.' : d > r - 1.2 ? '2' : d > r * 0.62 ? '3' : '4'
+    }
+    rows.push(row)
+  }
+  return rows
+}
+
+const GOLD_DRILL = { 1: '#8a4008', 2: '#e08820', 3: '#f8d860', 4: '#fffadc' }
+const SPIRE = (hot: boolean) => ({ 1: '#544a4c', 2: '#9a9090', 3: '#ddd6cc', 4: hot ? '#f8a030' : '#3c3436' })
+
+export const GALLOP_EVO_FX = {
+  /** Hyper Drill's gold drill as it bores (twice Horn Drill's), two turns of its spiral. */
+  bigDrill: [0, 1].map((turn) => lazy(() => outline(sprite(drillRows(26, 6, turn, 4), GOLD_DRILL), '#201000'))),
+  /** The lance it becomes: a long drill on a short shaft. */
+  lance: [0, 1].map((turn) => lazy(() => outline(sprite(drillRows(30, 5, turn, 6), GOLD_DRILL), '#201000'))),
+  /** Headlong Rush's spires: three shapes, hot (erupting) and cooled. */
+  spire: [0, 1, 2].map((seed) => lazy(() => outline(sprite(spireRows(14 + seed * 3, seed), SPIRE(true)), '#1c120a'))),
+  spireCold: [0, 1, 2].map((seed) => lazy(() => outline(sprite(spireRows(14 + seed * 3, seed), SPIRE(false)), '#1c120a'))),
+  /** Revival Blessing's sun, bigger than Morning Sun's. */
+  bigSun: lazy(() => outline(sprite(discRows(8), { 2: '#e87098', 3: '#f8c070', 4: '#fffaf0' }), '#a83860')),
+  /** A burst big enough for an evolution's finishing blow. */
+  bigImpact: lazy(() => sprite(['......1......', '..1...1...1..', '...1..2..1...', '....1.2.1....', '......3......', '.....343.....', '1122334433221', '.....343.....', '......3......', '....1.2.1....', '...1..2..1...', '..1...1...1..', '......1......'], { 1: '#f8c048', 2: '#fff0a0', 3: '#ffffff', 4: '#ffffff' })),
 }

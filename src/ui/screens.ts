@@ -858,11 +858,12 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
         coop && h('p', { class: 'pause-note' }, g.versus ? t().versus.menu.note : cm.note),
         // A match has no difficulty: everyone plays the same.
         !g.versus && difficultyTag(g.difficulty),
-        abilityPanel(g),
-        !g.versus && mapPanel(g),
         h(
           'div',
           { class: 'pause-body' },
+          // In the body, so they scroll with it: a phone held upright puts the loadout first (style.css), above them.
+          abilityPanel(g),
+          !g.versus && mapPanel(g),
           // A match keeps running behind the menu: your moves and your team's builds, not the run's whole sheet.
           g.versus
             ? pauseSection(m.movesTitle, moveList(g))
