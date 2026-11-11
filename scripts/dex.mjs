@@ -97,7 +97,7 @@ export const FLYERS = new Set([
 export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 378, 379, 385, 493]
 /**
  * Every species a player can be: the starters' and the hatchlings' whole lines (branches included) and the Legend
- * mode's 25 (the rift, event and festival legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
+ * mode's legends (the rift, event, festival and quest legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
  * wearables `npm run rig` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
  */
 export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...QUEST_LEGENDS])]

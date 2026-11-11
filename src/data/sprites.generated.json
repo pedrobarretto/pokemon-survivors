@@ -510,7 +510,7 @@
           "anims": {
             "Walk": {
               "frameWidth": 48,
-              "frameHeight": 56,
+              "frameHeight": 48,
               "durations": [
                 8,
                 10,
@@ -520,7 +520,7 @@
             },
             "Idle": {
               "frameWidth": 48,
-              "frameHeight": 56,
+              "frameHeight": 48,
               "durations": [
                 15,
                 15,
@@ -539,8 +539,8 @@
           },
           "body": {
             "bodyW": 39,
-            "bodyH": 51,
-            "footY": 27
+            "bodyH": 25,
+            "footY": 5
           }
         }
       }
