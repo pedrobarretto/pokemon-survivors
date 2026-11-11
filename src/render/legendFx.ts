@@ -18,6 +18,7 @@ import { drawPokemon, formOf, sprites } from './sprites'
 import { drawCaptureScene } from './capture'
 import { drawScale } from '../game/alphas'
 import { ARRIVAL, isWaveLegend, type Arrival } from '../data/legendBosses'
+import { PHASE_SHIFT } from '../data/bosses'
 import { ENTRANCE_REVEAL, entranceBeat, LIGHT_CAPTURE } from '../game/legendScene'
 
 type Ctx = CanvasRenderingContext2D
@@ -245,10 +246,31 @@ export const drawBossMarker = (ctx: Ctx, g: Game, camX: number, camY: number, t:
   blitRotated(ctx, here || def.legendary ? ARROW() : BOSS_ARROW(), cx + dx * (k + bob), cy + dy * (k + bob), angle, 2)
 }
 
-/** The sprite form a boss wears in its phase (`BossPhase.form`), if its species has it. */
+/**
+ * How far into its opening a phase that changes the boss's form is (0..1), or
+ * -1 outside one: the old form shows until `FORM_SWAP`, under the white of the
+ * change (`bossLook`).
+ */
+export const formChangeAt = (e: Enemy) => {
+  const f = e.fight
+  const phases = f ? phasesOf(e.kind) : undefined
+  const phase = f && phases?.[f.phase]
+  if (!f || !phases || !phase || f.phase === 0 || f.shift <= 0 || phase.form === phases[f.phase - 1]?.form) return -1
+  return 1 - f.shift / (phase.shift ?? PHASE_SHIFT)
+}
+
+/** The share of a form change's opening when the new form takes the old one's place, in the white of its flash. */
+export const FORM_SWAP = 0.5
+
+/** A form change's look at `k` (`formChangeAt`): the boss whitens into a silhouette, holds white through the swap, and the white fades off it as it settles; it lifts a little meanwhile. */
+export const formFlash = (k: number) => (k < FORM_SWAP ? k / FORM_SWAP : k < FORM_SWAP + 0.12 ? 1 : Math.max(0, 1 - (k - FORM_SWAP - 0.12) / 0.3))
+export const formLift = (k: number) => Math.round(Math.sin(Math.min(1, k / 0.8) * Math.PI) * 8)
+
+/** The sprite form a boss wears in its phase (`BossPhase.form`), if its species has it; through a form change, the old one until `FORM_SWAP`. */
 export const bossForm = (e: Enemy) => {
-  const key = e.fight ? phasesOf(e.kind)?.[e.fight.phase]?.form : undefined
-  return formOf(ENEMIES[e.kind].dex, key)
+  const phases = e.fight ? phasesOf(e.kind) : undefined
+  const at = e.fight ? e.fight.phase - (formChangeAt(e) >= 0 && formChangeAt(e) < FORM_SWAP ? 1 : 0) : 0
+  return formOf(ENEMIES[e.kind].dex, phases?.[at]?.form)
 }
 
 /** How a legendary's entrance colors its rings, the tint it rises out of and the spray off its back. */

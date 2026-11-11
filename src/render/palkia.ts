@@ -1,11 +1,14 @@
-import { blitEllipse, blitRing } from '../engine/pixelart'
+import { blitEllipse, blitRing, context2d, createCanvas } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { GATES } from '../data/domains/palkia'
 import type { DomainState } from '../game/domain'
 import { foldOf, gateExit, hallEdges, MOUTH, swapOf, twistOf } from '../game/palkiaDomain'
 import type { RiftArena } from '../game/rift'
-import type { Game } from '../game/types'
+import type { Enemy, Game } from '../game/types'
+import { ENEMIES } from '../data/enemies'
+import { bossForm, formChangeAt, formFlash, formLift, FORM_SWAP } from './legendFx'
+import { drawPokemon, sprites } from './sprites'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -13,7 +16,9 @@ type Ctx = CanvasRenderingContext2D
  * Palkia's Folded Space on screen (`game/palkiaDomain.ts`): the twin portals
  * of the crossing (rose while they lead across, violet and spinning the other
  * way while space is twisted), the seams where the hall wraps, the tether of
- * a swap, and the walls of the Origin Forme's fold.
+ * a swap, the walls of the Origin Forme's fold, its transformation (space
+ * cracking round it as it changes in a white flash) and its last Spacial Rend
+ * tearing the screen in two while it charges.
  */
 
 const ROSE = '#f8b8e8'
@@ -177,8 +182,140 @@ export const drawPalkiaAir = (ctx: Ctx, g: Game, d: DomainState, t: number) => {
   if (d.act === 'battle') drawTether(ctx, g, d, t)
 }
 
-/** Over the frame: a twist warned of (rings closing on the screen's middle), then a violet cast with creases while space is twisted. */
-export const drawPalkiaScreen = (ctx: Ctx, g: Game, d: DomainState, t: number) => {
+/** Where a boss stands on screen (mid-body). */
+const onScreen = (boss: Enemy, camX: number, camY: number) => ({ x: Math.round(boss.x - camX), y: Math.round(boss.y - 18 - camY) })
+
+/**
+ * Space cracking round Palkia as it turns Origin: jagged rays of torn space
+ * running out from it to past the screen's edge as the change grows (`k`, 0..1),
+ * a shard of the void glinting along each.
+ */
+const drawCracks = (ctx: Ctx, x: number, y: number, k: number, reach: number, t: number) => {
+  const grow = Math.min(1, k / 0.45)
+  for (let i = 0; i < 7; i++) {
+    let a = (i / 7) * TAU + hash2(i, 1, 31) * 0.6
+    let px = x
+    let py = y
+    const len = reach * grow * (0.6 + hash2(i, 2, 31) * 0.4)
+    for (let s = 0; s < len; s += 2) {
+      // Each ray bends every few steps, as cracks do.
+      if (s % 16 === 0) a += (hash2(i, s, 32) - 0.5) * 0.8
+      px += Math.cos(a) * 2
+      py += Math.sin(a) * 2
+      const wide = s < len * 0.35 ? 3 : 2
+      const cx = Math.round(px)
+      const cy = Math.round(py)
+      ctx.fillStyle = PLUM
+      ctx.fillRect(cx - 1, cy - 1, wide + 1, wide + 1)
+      ctx.fillStyle = Math.floor(s / 8 - t * 12) % 5 === 0 ? PEARL : ROSE
+      ctx.fillRect(cx, cy, wide - 1, wide - 1)
+    }
+  }
+}
+
+/**
+ * Palkia turning Origin (its third phase's opening, `formChangeAt`): the hall
+ * dims violet round it, space cracks out from it, the frame whites out as the
+ * new form takes the old one's place (`bossForm`), and shock rings run out as
+ * it settles.
+ */
+const drawOrigin = (ctx: Ctx, g: Game, boss: Enemy, camX: number, camY: number, t: number) => {
+  const k = formChangeAt(boss)
+  if (k < 0) return
+  const { w, h } = g.view
+  const at = onScreen(boss, camX, camY)
+  const dim = Math.sin(Math.min(1, k / 0.9) * Math.PI)
+  ctx.fillStyle = `rgba(36,8,56,${(0.45 * dim).toFixed(2)})`
+  ctx.fillRect(0, 0, w, h)
+  if (k < FORM_SWAP + 0.15) drawCracks(ctx, at.x, at.y, k, Math.hypot(w, h), t)
+  // Palkia itself stays out of the dark, whitening as it changes.
+  drawPokemon(ctx, sprites(ENEMIES[boss.kind].dex, boss.shiny, bossForm(boss)), 'Idle', boss.dir, t, Math.round(boss.x - camX), Math.round(boss.y - camY) - formLift(k), { flash: formFlash(k) })
+  // Its rings of light, closing on it before the change and running out after.
+  if (k < FORM_SWAP) {
+    for (let i = 0; i < 3; i++) {
+      const r = Math.round(10 + (1 - ((k * 3 + i / 3) % 1)) * 90)
+      ctx.globalAlpha = 0.7
+      blitRing(ctx, r, 1, i === 0 ? PEARL : ROSE, at.x, at.y)
+    }
+  } else {
+    const q = (k - FORM_SWAP) / (1 - FORM_SWAP)
+    for (let i = 0; i < 3; i++) {
+      const r = Math.round(12 + q * Math.max(w, h) * (0.5 + i * 0.25))
+      ctx.globalAlpha = Math.max(0, 1 - q) * 0.9
+      blitRing(ctx, r, 2, i === 1 ? VIOLET : i === 2 ? PEARL : ROSE, at.x, at.y)
+    }
+  }
+  ctx.globalAlpha = 1
+  // The change itself: the frame whites out, then clears.
+  const white = Math.max(0, 1 - Math.abs(k - FORM_SWAP - 0.04) / 0.12)
+  if (white > 0) {
+    ctx.fillStyle = `rgba(255,248,255,${(0.85 * white).toFixed(2)})`
+    ctx.fillRect(0, 0, w, h)
+  }
+}
+
+/** A copy of the frame for the tear to move its halves apart from (sized to the view as it comes). */
+let frameCopy: HTMLCanvasElement | null = null
+
+/**
+ * Tears the frame in two along a jagged line through (x, y) at `slope`: each
+ * side moves `gap` px away from it (in 2 px columns, so its edges stay hard),
+ * and the void shows between them, rimmed in Palkia's pinks, a star or two in it.
+ */
+const tearFrame = (ctx: Ctx, w: number, h: number, x: number, y: number, slope: number, gap: number, t: number) => {
+  if (!frameCopy || frameCopy.width !== w || frameCopy.height !== h) frameCopy = createCanvas(w, h)
+  const copy = context2d(frameCopy)
+  copy.clearRect(0, 0, w, h)
+  copy.drawImage(ctx.canvas, 0, 0)
+  const flicker = Math.floor(t * 20) % 2
+  for (let cx = 0; cx < w; cx += 2) {
+    const jag = Math.round((hash2(Math.floor(cx / 8), 1, 33) - 0.5) * 6 + (hash2(Math.floor(cx / 3), 2, 33) - 0.5) * 2)
+    const c = Math.max(0, Math.min(h, Math.round(y + slope * (cx - x)) + jag))
+    if (gap > 0) {
+      if (c > 0) ctx.drawImage(frameCopy, cx, 0, 2, c, cx, -gap, 2, c)
+      if (c < h) ctx.drawImage(frameCopy, cx, c, 2, h - c, cx, c + gap, 2, h - c)
+      ctx.fillStyle = DEEP
+      ctx.fillRect(cx, c - gap, 2, gap * 2)
+      if (hash2(cx, 3, 33) > 0.86) {
+        ctx.fillStyle = hash2(cx, 4, 33) > 0.5 ? PEARL : ROSE
+        ctx.fillRect(cx, c - gap + Math.floor(hash2(cx, 5, 33) * gap * 2), 1, 1)
+      }
+    }
+    ctx.fillStyle = MAGENTA
+    ctx.fillRect(cx, c - gap - 2, 2, 1)
+    ctx.fillRect(cx, c + gap + 1, 2, 1)
+    ctx.fillStyle = flicker ? PEARL : ROSE
+    ctx.fillRect(cx, c - gap - 1, 2, 1)
+    ctx.fillRect(cx, c + gap, 2, 1)
+  }
+}
+
+/**
+ * The Origin Forme's Spacial Rend charging (its blast, `visual: 'space'`): a
+ * crack runs across the frame at Palkia's feet, then splits it, the void widening
+ * between the halves until the burst.
+ */
+const drawRend = (ctx: Ctx, g: Game, boss: Enemy, camX: number, camY: number, t: number) => {
+  const blast = boss.fight?.blast
+  if (!blast || blast.visual !== 'space') return
+  const k = 1 - blast.left / blast.total
+  const { w, h } = g.view
+  const gap = k < 0.2 ? 0 : Math.round(((k - 0.2) / 0.8) ** 2 * 10)
+  // Just under its feet, so Palkia stands whole over the rift it opens.
+  tearFrame(ctx, w, h, Math.round(boss.x - camX), Math.round(boss.y - camY) + 6, -0.28, gap, t)
+}
+
+/**
+ * Over the frame: a twist warned of (rings closing on the screen's middle),
+ * then a violet cast with creases while space is twisted; the Origin Forme's
+ * transformation and its Spacial Rend tearing the frame.
+ */
+export const drawPalkiaScreen = (ctx: Ctx, g: Game, d: DomainState, camX: number, camY: number, t: number) => {
+  const boss = d.act === 'battle' ? g.enemies.find((e) => e.id === d.bossId && e.dying < 0) : undefined
+  if (boss) {
+    drawRend(ctx, g, boss, camX, camY, t)
+    drawOrigin(ctx, g, boss, camX, camY, t)
+  }
   const { twisted, warning } = twistOf(d)
   const { w, h } = g.view
   if (warning > 0) {

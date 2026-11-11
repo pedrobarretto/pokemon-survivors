@@ -8,6 +8,7 @@ import { arenaPoint, domainHere } from '../game/domain'
 import { ENCOUNTER, REVEAL_AT } from '../game/domainRules'
 import { timeSkipOf } from '../game/dialgaDomain'
 import { drawPalkiaAir, drawPalkiaGround, drawPalkiaScreen } from './palkia'
+import { formChangeAt, formFlash, formLift } from './legendFx'
 import type { Enemy, Game, Hazard } from '../game/types'
 import { HAZARD_COLORS } from './hazardColors'
 import { dashedRing } from './strokes'
@@ -110,6 +111,13 @@ export const bossLook = (e: Enemy, t: number): BossLook | null => {
       LOOK.flash = 1 - q
       LOOK.lift = Math.round((1 - q) * 26)
     }
+    return LOOK
+  }
+  const change = formChangeAt(e)
+  if (change >= 0) {
+    // A form change: the new form takes the old one's place in the white (`bossForm`).
+    LOOK.flash = formFlash(change)
+    LOOK.lift = formLift(change)
     return LOOK
   }
   if (phase.steer?.kind === 'pass') {
@@ -259,7 +267,7 @@ export const drawDomainScreen = (ctx: Ctx, g: Game, camX: number, camY: number, 
       }
     }
   }
-  if (d.legend === 'palkia') drawPalkiaScreen(ctx, g, d, t)
+  if (d.legend === 'palkia') drawPalkiaScreen(ctx, g, d, camX, camY, t)
   const skip = timeSkipOf(d)
   if (!skip) return
   if (skip.warning) return closingRings(ctx, Math.round(w / 2), Math.round(h / 2), skip.k, Math.max(w, h) * 0.6, '#d0f8ff')
