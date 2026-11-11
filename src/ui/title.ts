@@ -16,7 +16,7 @@ import { missionStatus } from '../game/missions'
 import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/supporters'
 import { formatNumber, LOCALES, locale, t } from '../i18n'
-import { arenaIcon, bulbIcon, chevronIcon, coinIcon, coopIcon, discordIcon, eggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, ribbonIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
+import { arenaIcon, bulbIcon, chevronIcon, coopIcon, discordIcon, eggsIcon, friendEggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, rankingIcon, ribbonIcon, shopIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
@@ -279,7 +279,7 @@ const challengeCard = () => {
 const eggsCard = (ready: number, walking: number) => {
   const m = t().home
   const line = ready > 0 ? m.eggsReady(ready) : walking > 0 ? m.eggsWalking(walking) : m.eggsNone
-  const el = todayCard('eggs', iconImg(eggIcon('rare')), m.eggs, line, countBadge(ready), 'O')
+  const el = todayCard('eggs', iconImg(eggsIcon()), m.eggs, line, countBadge(ready), 'O')
   el.setAttribute('aria-label', `${m.eggs}: ${line}`)
   return el
 }
@@ -451,7 +451,7 @@ const inviteBanner = (slot: HTMLElement, open: () => void, ready: (el: HTMLEleme
     const el = h(
       'button',
       { class: 'invite-banner arc-card pop', type: 'button', onclick: open },
-      h('img', { src: eggIcon('friend'), alt: '' }),
+      h('img', { src: friendEggIcon(), alt: '' }),
       h('span', { class: 'invite-text' }, rich(m.banner(name), { class: 'invite-head' }), h('span', { class: 'invite-blurb' }, m.blurb)),
     )
     slot.append(el)
@@ -950,7 +950,7 @@ export const titleScreen = (
         title: m.tabs.collection,
         entries: [
           entry('pokedex', pokeballIcon(), m.pokedex),
-          { ...entry('eggs', eggIcon('rare'), m.eggs, ready > 0 ? m.eggsReady(ready) : undefined), extra: countBadge(ready) },
+          { ...entry('eggs', eggsIcon(), m.eggs, ready > 0 ? m.eggsReady(ready) : undefined), extra: countBadge(ready) },
           entry('missions', medalIcon('silver'), m.missions),
         ],
       },
@@ -958,7 +958,7 @@ export const titleScreen = (
         title: m.plaza,
         entries: [
           ...(festivalCardShows() ? [entry('festival', sparkleIcon(), t().festival.card)] : []),
-          entry('mart', coinIcon(2), m.shopName, m.shopLine),
+          entry('mart', shopIcon(), m.shopName, m.shopLine),
           entry('boutique', `${ASSETS}/shop/boutique.png`, m.boutiqueName, m.boutiqueLine),
           entry('carpentry', `${ASSETS}/shop/carpentry.png`, m.carpentryName, m.carpentryLine),
           hallEntry(),
@@ -966,13 +966,13 @@ export const titleScreen = (
       },
       social: {
         title: m.tabs.social,
-        entries: [...(accountsEnabled ? [entry('friends', eggIcon('friend'), t().invites.title)] : []), ...communityEntries()],
+        entries: [...(accountsEnabled ? [entry('friends', friendEggIcon(), t().invites.title)] : []), ...communityEntries()],
       },
       profile: {
         title: m.tabs.profile,
         entries: [
           { icon: iconImg(medalIcon('gold')), label: t().trainer.open, run: () => (lobbyPress('trainer'), openOver(actions.trainer)) },
-          ...(ranking ? [entry('ranking', medalIcon('gold'), m.ranking)] : []),
+          ...(ranking ? [entry('ranking', rankingIcon(), m.ranking)] : []),
           ...(gems ? [entry('gems', gemIconUrl(), t().gems.chipGuest)] : []),
           entry('settings', gearIcon(), t().shell.settings),
         ],
@@ -1119,19 +1119,19 @@ export const titleScreen = (
       pressable(h('button', { class: 'arc-card lobby-tile', type: 'button', 'aria-label': aria }, h('span', { class: 'lobby-tile-icon' }, icon), h('span', { class: 'lobby-tile-name' }, label), count > 0 && h('em', { class: 'arc-badge' }, formatNumber(count)), hotkey && h('span', { class: 'key-hint' }, printedKeys(hotkey))), key)
     const dockLeft = [
       tile('pokedex', iconImg(pokeballIcon()), m.pokedex, 'X'),
-      tile('eggs', iconImg(eggIcon('rare')), m.eggs, null, ready, ready > 0 ? `${m.eggs}: ${m.eggsReady(ready)}` : m.eggs),
-      tile('mart', iconImg(coinIcon(2)), m.mart, 'L'),
+      tile('eggs', iconImg(eggsIcon()), m.eggs, null, ready, ready > 0 ? `${m.eggs}: ${m.eggsReady(ready)}` : m.eggs),
+      tile('mart', iconImg(shopIcon()), m.mart, 'L'),
     ]
     const communityIcon = h('span', { class: 'lobby-tile-pair' }, iconImg(discordIcon()), iconImg(socialIcon('youtube')))
     const dockRight = [
-      ...(ranking ? [tile('ranking', iconImg(medalIcon('gold')), m.ranking, 'R')] : []),
-      ...(accountsEnabled ? [tile('friends', iconImg(eggIcon('friend')), m.friends, 'B')] : []),
+      ...(ranking ? [tile('ranking', iconImg(rankingIcon()), m.ranking, 'R')] : []),
+      ...(accountsEnabled ? [tile('friends', iconImg(friendEggIcon()), m.friends, 'B')] : []),
       tile('community', communityIcon, m.community, 'U'),
     ]
     const bottom = h('div', { class: 'lobby-bottom' }, h('div', { class: 'lobby-dock left' }, ...dockLeft), play, h('div', { class: 'lobby-dock right' }, ...dockRight))
 
     /* Phones: the bottom tabs. */
-    const tabIcons: Record<TabId, string> = { home: pokeballIcon(), collection: eggIcon('rare'), plaza: coinIcon(2), social: eggIcon('friend'), profile: medalIcon('gold') }
+    const tabIcons: Record<TabId, string> = { home: pokeballIcon(), collection: eggsIcon(), plaza: shopIcon(), social: friendEggIcon(), profile: medalIcon('gold') }
     const tabs =
       kind === 'wide'
         ? null

@@ -24,6 +24,45 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-11',
+    title: { pt: 'Ícones novos da comunidade', en: 'New icons from the community', es: 'Íconos nuevos de la comunidad', fr: 'De nouvelles icônes de la communauté', zh: '社群繪製的新圖示' },
+    highlights: [
+      {
+        pt: 'Ícones novos, desenhados pelos moderadores do nosso Discord: valeu, mods!',
+        en: 'New icons, drawn by our Discord moderators: thanks, mods!',
+        es: 'Íconos nuevos, dibujados por los moderadores de nuestro Discord: ¡gracias, mods!',
+        fr: 'De nouvelles icônes, dessinées par les modérateurs de notre Discord : merci, les modos !',
+        zh: '由 Discord 管理員繪製的新圖示：謝謝各位管理員！',
+      },
+      {
+        pt: 'Pokédex, Ovos, Loja, Ranking, Ideias, Co-op e Convites com cara nova no lobby.',
+        en: 'Pokédex, Eggs, Shop, Ranking, Ideas, Co-op and Invites get a new look in the lobby.',
+        es: 'Pokédex, Huevos, Tienda, Ranking, Ideas, Co-op e Invitaciones con cara nueva en el lobby.',
+        fr: 'Pokédex, Œufs, Boutique, Classement, Idées, Coop et Invitations font peau neuve dans l’accueil.',
+        zh: '大廳的圖鑑、蛋、商店、排行榜、點子、合作和邀請換上新面貌。',
+      },
+      {
+        pt: 'Discord, TikTok, YouTube e Instagram também ganharam ícones novos em pixel art.',
+        en: 'Discord, TikTok, YouTube and Instagram got new pixel-art icons too.',
+        es: 'Discord, TikTok, YouTube e Instagram también tienen íconos nuevos en pixel art.',
+        fr: 'Discord, TikTok, YouTube et Instagram ont aussi de nouvelles icônes en pixel art.',
+        zh: 'Discord、TikTok、YouTube 和 Instagram 也換上了新的像素圖示。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Ícones da comunidade', en: 'Community icons', es: 'Íconos de la comunidad', fr: 'Icônes de la communauté', zh: '社群圖示' },
+        notes: [
+          {
+            pt: 'Os moderadores do Discord redesenharam os ícones do lobby: a Poké Ball da Pokédex, o ovo de Ovos, a barraca da Loja, a medalha do Ranking, a lâmpada de Ideias, as duas Poké Balls do Co-op, o ovo da amizade dos Convites e os ícones do Discord, TikTok, YouTube e Instagram. Valeu, mods!',
+            en: 'Our Discord moderators redrew the lobby icons: the Pokédex Poké Ball, the Eggs egg, the Shop stall, the Ranking medal, the Ideas bulb, the two Co-op Poké Balls, the Invites friendship egg and the Discord, TikTok, YouTube and Instagram icons. Thanks, mods!',
+            es: 'Los moderadores de Discord redibujaron los íconos del lobby: la Poké Ball de la Pokédex, el huevo de Huevos, el puesto de la Tienda, la medalla del Ranking, la bombilla de Ideas, las dos Poké Balls del Co-op, el huevo de la amistad de Invitaciones y los íconos de Discord, TikTok, YouTube e Instagram. ¡Gracias, mods!',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-09',
     title: { pt: 'Lobby novo e Realm vivo', en: 'A new lobby and a livelier Realm', es: 'Lobby nuevo y un Realm con vida', fr: 'Un nouvel accueil et un Realm plein de vie', zh: '全新大廳，Realm 熱鬧起來了' },
     highlights: [
