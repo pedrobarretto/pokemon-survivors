@@ -33,9 +33,9 @@ export const ROCKET_FAMILIES = {
       ['makeItRain', 'spiritShackle', 'shadowClaw', 'venoshock'],
       ['shockWave', 'thunder', 'sludgeBomb', 'roost', 'flameWheel'],
     ],
-    // Gimmighoul never evolves by level in a run: 999 coins do it (`ROCKET_KIT.coins`). Lv 40 is only a floor for very long runs.
+    // Gimmighoul never evolves by level: 999 coins do it, at its next level-up (`rocketEvolves`). Lv 999 is the level cap, never reached first.
     line: [
-      { name: 'Gimmighoul', dex: 10263, types: ['ghost'], evolveAt: 40, bonus: {} },
+      { name: 'Gimmighoul', dex: 10263, types: ['ghost'], evolveAt: 999, bonus: {} },
       { name: 'Gholdengo', dex: 1000, types: ['steel', 'ghost'], bonus: { maxHp: 40, might: 0.24, area: 0.08 } },
     ],
   },

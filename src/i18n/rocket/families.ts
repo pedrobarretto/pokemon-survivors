@@ -41,7 +41,7 @@ export const ROCKET_FAMILY_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words
     blurbs: {
       ditto: 'Transform copia o inimigo mais forte por perto: a aparência, o tipo (seus golpes desse tipo ficam mais fortes) e um atributo, conforme o que copiou.',
       absol: 'Pressente a desgraça: marca com um Presságio o inimigo mais duro à vista, e quando ele cai leva os vizinhos junto.',
-      gimmighoul: 'Junta moedas: cada ₽ que pega na partida engorda Make It Rain e, com 999, evolui para Gholdengo. Não evolui por nível.',
+      gimmighoul: 'Junta moedas: cada ₽ que pega na partida engorda Make It Rain e, juntando 999, evolui para Gholdengo no nível seguinte. Sem as moedas, não evolui.',
       mawile: 'As mandíbulas ficam nas costas: Vise Grip e a mordida do Enganador pegam quem vem por trás.',
     },
     moves: movesOf(ptVocab, {
@@ -65,7 +65,7 @@ export const ROCKET_FAMILY_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words
     blurbs: {
       ditto: 'Transform copies the strongest foe nearby: its look, its type (your moves of that type hit harder) and a stat, depending on what it copied.',
       absol: 'It senses disaster: it marks the toughest foe in view with an Omen, and when that foe falls it takes its neighbors down with it.',
-      gimmighoul: 'It gathers coins: every ₽ it picks up in a run feeds Make It Rain and, at 999, evolves it into Gholdengo. It never evolves by level.',
+      gimmighoul: 'It gathers coins: every ₽ it picks up in a run feeds Make It Rain and, once it holds 999, it evolves into Gholdengo at its next level. Without the coins it never evolves.',
       mawile: 'Its jaws are on its back: Vise Grip and the Deceiver’s bite catch whatever comes from behind.',
     },
     moves: movesOf(enVocab, {
@@ -89,7 +89,7 @@ export const ROCKET_FAMILY_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words
     blurbs: {
       ditto: 'Transform copia al enemigo más fuerte cerca: su aspecto, su tipo (tus ataques de ese tipo pegan más) y un atributo, según lo que copió.',
       absol: 'Presiente la desgracia: marca con un Presagio al enemigo más duro a la vista, y cuando cae se lleva a sus vecinos.',
-      gimmighoul: 'Junta monedas: cada ₽ que recoge en la partida engorda Make It Rain y, con 999, evoluciona a Gholdengo. No evoluciona por nivel.',
+      gimmighoul: 'Junta monedas: cada ₽ que recoge en la partida engorda Make It Rain y, al juntar 999, evoluciona a Gholdengo en el siguiente nivel. Sin las monedas, no evoluciona.',
       mawile: 'Sus fauces están en la espalda: Vise Grip y el mordisco del Engaño atrapan a quien viene por detrás.',
     },
     moves: movesOf(esVocab, {
@@ -113,7 +113,7 @@ export const ROCKET_FAMILY_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words
     blurbs: {
       ditto: 'Transform copie l’ennemi le plus fort à proximité : son apparence, son type (vos attaques de ce type frappent plus fort) et une stat selon ce qu’il a copié.',
       absol: 'Il pressent le malheur : il marque d’un Présage l’ennemi le plus coriace en vue, et quand il tombe il emporte ses voisins.',
-      gimmighoul: 'Il amasse des pièces : chaque ₽ ramassé pendant la partie nourrit Make It Rain et, à 999, le fait évoluer en Gholdengo. Il n’évolue pas par niveau.',
+      gimmighoul: 'Il amasse des pièces : chaque ₽ ramassé pendant la partie nourrit Make It Rain et, une fois 999 amassées, il évolue en Gholdengo au niveau suivant. Sans les pièces, il n’évolue pas.',
       mawile: 'Ses mâchoires sont dans son dos : Vise Grip et la morsure de la Tromperie happent ce qui vient par derrière.',
     },
     moves: movesOf(frVocab, {
@@ -137,7 +137,7 @@ export const ROCKET_FAMILY_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words
     blurbs: {
       ditto: 'Transform 會複製附近最強的敵人：外表、屬性（你的該屬性招式更強）以及依對象而定的一項能力。',
       absol: '能感知災厄：替視野中最難纏的敵人刻上預兆，它倒下時會拖著周圍的敵人一起。',
-      gimmighoul: '收集硬幣：本局撿到的每 ₽ 都會強化 Make It Rain，集滿 999 就進化成 Gholdengo。不會因等級進化。',
+      gimmighoul: '收集硬幣：本局撿到的每 ₽ 都會強化 Make It Rain，集滿 999 後，在下一次升級時進化成 Gholdengo。沒有硬幣就不會進化。',
       mawile: '大顎長在背後：Vise Grip 與欺詐之咬會咬住從背後靠近的敵人。',
     },
     moves: movesOf(zhVocab, {
