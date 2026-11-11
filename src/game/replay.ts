@@ -32,6 +32,7 @@ import type { Game, Player } from './types'
 export { TICK } from './tick'
 import { TICK } from './tick'
 import { parseHunt, type MythicalHunt } from './mythicalHunt'
+import { parseWild, type WildStart } from './quests'
 
 /**
  * Version of the rules a replay plays by. Bump it with any change that makes
@@ -79,6 +80,8 @@ export type ReplayStart = {
   caps?: number
   /** The mythicals' bad-luck protection from the save (`game/mythicalHunt.ts`). The plain odds when absent: co-op, the Desafio do dia, every mythical captured. */
   mythical?: MythicalHunt
+  /** The legends the save still has to catch on the open map (`game/quests.ts`): none when absent (co-op, the Desafio do dia, all caught). */
+  wild?: WildStart
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
@@ -224,6 +227,8 @@ export const parseReplay = (raw: unknown): Replay | null => {
   if (s.caps !== undefined && (!isWhole(s.caps) || s.caps > MAX_CAPS)) return null
   const mythical = s.mythical === undefined ? undefined : parseHunt(s.mythical)
   if (mythical === null) return null
+  const wild = s.wild === undefined ? undefined : parseWild(s.wild)
+  if (wild === null) return null
   return {
     rules: isWhole(raw.rules) && raw.rules > 0 ? raw.rules : 1,
     start: {
@@ -240,6 +245,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
       evo,
       caps: isWhole(s.caps) ? s.caps : 0,
       ...(mythical ? { mythical } : {}),
+      ...(wild ? { wild } : {}),
       view,
     },
     moves: raw.moves,
@@ -274,6 +280,7 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     evo: start.evo ?? [],
     caps: start.caps ?? 0,
     mythical: start.mythical,
+    wild: start.wild,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {

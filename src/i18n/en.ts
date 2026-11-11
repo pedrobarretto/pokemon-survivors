@@ -6307,6 +6307,7 @@ export const en: Messages = {
       gone: (festival) => `The _${festival}_ is over. Whoever received her keeps playing her.`,
     },
   },
+  quests: QUEST_WORDS.en.ui,
   legends: {
     epithets: {
       articuno: 'Bird of Eternal Ice',

@@ -36,6 +36,7 @@ import {
   type RollOptions,
 } from './leveling'
 import { createMapEvents, updateMapEvents } from './mapEvents'
+import { createQuests, updateQuests, type WildStart } from './quests'
 import { createCurseState } from './curses'
 import { curseCast, decideCurse, updateCurses } from './curseSystem'
 import { updateDuos } from './duoMoves'
@@ -134,6 +135,8 @@ export type RunOptions = {
   caps?: number
   /** The mythicals' bad-luck protection (`game/mythicalHunt.ts`); the plain odds when absent. */
   mythical?: MythicalHunt
+  /** The legends the save still has to catch on the open map (`game/quests.ts`); none when absent. */
+  wild?: WildStart
   /** Opens the run on the opening draft (`draftOffers`): three moves of the learnset to pick the second move from. */
   draft?: boolean
 }
@@ -298,6 +301,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     place: createPlaceState(seed),
     landmarks: createLandmarkState(),
     finds: createSeasonFinds(seed),
+    quests: createQuests(seed, options.wild, coop),
     tutors: 0,
     endless: null,
     tally: createTally(),
@@ -998,6 +1002,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
     updateProps(g, dt)
     updateMapEvents(g, dt)
   }
+  updateQuests(g, dt)
   updatePickups(g, dt)
   updateConsumables(g, dt)
   updateEffects(g, dt)

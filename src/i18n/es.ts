@@ -6309,6 +6309,7 @@ export const es: Messages = {
       gone: (festival) => `El _${festival}_ terminó. Quien la recibió sigue jugando con ella.`,
     },
   },
+  quests: QUEST_WORDS.es.ui,
   legends: {
     epithets: {
       articuno: 'Ave del Hielo Eterno',

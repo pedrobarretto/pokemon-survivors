@@ -52,6 +52,9 @@ const fire = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | nul
   if (written.kind === 'blast' && fight?.blast) fight.blast.by = by
 }
 
+/** Throws one pattern of `boss` at player `p` outside any fight (a roaming Azelf standing its ground). */
+export const throwPattern = (g: Game, boss: Enemy, pattern: BossPattern, p: Player) => fire(g, boss, pattern, null, p)
+
 /** Launches a boss's attack at player `p`, pressed by its fight's difficulty (`attackCount`, `telegraph`); a rift legendary in the old arena passes no fight. */
 const launch = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | null, p: Player) => {
   // Judgment takes the plate of the biome its target stands in.

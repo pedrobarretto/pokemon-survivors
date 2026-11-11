@@ -1,4 +1,6 @@
 import { context2d, createCanvas, fromStrings, lazy, blitPacked, textSprite, type Palette, type PixelSprite } from '../engine/pixelart'
+import type { LakeId } from '../data/legends'
+import { roamerShown } from '../game/roamers'
 import { hash2 } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
 import { biomeAt } from '../game/biomeMap'
@@ -109,6 +111,8 @@ const MAZE = ['mmmmm', 'm...m', 'm.m.m', 'm.m..', 'mmmmm']
 const RUINS = ['sssss', '.s.s.', '.s.s.', 'sssss']
 const TENT = ['..o..', '.ooo.', 'oo.oo', 'oo.oo']
 const STAR = ['..y..', '.yyy.', 'yywyy', '.yyy.', '.y.y.']
+const ORB = ['.ccc.', 'cwwcc', 'cwccc', 'ccccc', '.ccc.']
+const BLADE = ['....w', '...w.', 'w.w..', '.y...', 'y.y..']
 
 const GLYPHS = lazy(() => ({
   boss: [glyph(SKULL, { w: '#f8f0e0', k: DARK }), glyph(SKULL, { w: '#f86858', k: DARK })],
@@ -150,6 +154,13 @@ const GLYPHS = lazy(() => ({
   stone: glyph(['.p.', 'pwp', '.p.'], { p: '#f070d0', w: '#ffffff' }),
   evo: glyph(['.g.', 'gwg', '.g.'], { g: '#68d858', w: '#ffffff' }),
   prize: glyph(['.c.', 'cwc', '.c.'], { c: '#e02838', w: '#f8e0b0' }),
+  /** A roaming lake legend (its gem's color) and a Sword waiting for its duel (`game/quests.ts`). */
+  roamer: {
+    uxie: glyph(ORB, { c: '#f8d048', w: '#ffffff' }),
+    mesprit: glyph(ORB, { c: '#f878b0', w: '#ffffff' }),
+    azelf: glyph(ORB, { c: '#58a0f8', w: '#ffffff' }),
+  } satisfies Record<LakeId, PixelSprite>,
+  sword: glyph(BLADE, { w: '#f0f4ff', y: '#f8d048' }),
 }))
 
 /**
@@ -573,6 +584,8 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     if (door?.open && entranceShown(door)) marker(ctx, v, shape, art.place[door.id], door.x, door.y, true)
     const portal = g.rift.portal
     if (portal) marker(ctx, v, shape, art.portal[blink]!, portal.x, portal.y, true)
+    const duel = g.quests.duel
+    if (duel?.stage === 'waiting') marker(ctx, v, shape, art.sword, duel.x, duel.y, true)
   }
 
   for (const p of g.pickups) {
@@ -581,6 +594,12 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
   }
   for (const e of g.enemies) {
     if (e.dying >= 0) continue
+    // A roaming lake legend shows as its gem, unless it just wiped the player's memory (Uxie).
+    if (e.behavior.kind === 'roam') {
+      const roam = g.quests.roam
+      if (roam && roamerShown(g)) marker(ctx, v, shape, art.roamer[roam.legend], e.x, e.y, true)
+      continue
+    }
     if (e.alpha) marker(ctx, v, shape, art.alpha[e.alpha.enraged ? blink : 0]!, e.x, e.y, true)
     else if (e.boss) marker(ctx, v, shape, art.boss[blink]!, e.x, e.y, true)
     else if (e.shiny) marker(ctx, v, shape, art.shiny[blink]!, e.x, e.y, true)

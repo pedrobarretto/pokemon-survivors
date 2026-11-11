@@ -6737,6 +6737,7 @@ export const pt = {
     },
   },
   /** Wave legendaries on the map (`data/legendBosses.ts`): the epithet on each one's title card, and a line per phase after the first. */
+  quests: QUEST_WORDS.pt.ui,
   legends: {
     epithets: {
       articuno: 'Ave do Gelo Eterno',

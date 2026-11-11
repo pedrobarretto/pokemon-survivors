@@ -25,6 +25,8 @@ import { domainTheme } from './game/domain'
 import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
 import { captureOutcome as savedCapture, isCaptured } from './game/capture'
+import { bankRoamer, wildOf } from './game/questSave'
+import { questNews } from './ui/quests'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
 import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
@@ -91,6 +93,7 @@ import { levelUpDevTools } from './game/levelUpDev'
 import { legendDevTools } from './game/legendDev'
 import { bankCapture, captureDevTools, showCapture } from './ui/capture'
 import { riftDevTools } from './game/riftDev'
+import { questDevTools } from './game/questDev'
 import { placeDevTools } from './game/placeDev'
 import { placeFeedback } from './ui/places'
 import { landmarkFeedback } from './ui/landmarks'
@@ -1016,6 +1019,12 @@ const bankHatchery = (r: Run) => {
  * Quitting keeps coins but forfeits the survival bonus, unless Mewtwo already
  * fell (victory or endless). Every species seen or defeated counts either way.
  */
+/** A roaming lake legend's HP taken this run stays taken (`bankRoamer`), whether it fled, fell or is still about as the run ends. */
+const bankRoamerHp = (g: Game) => {
+  const roam = g.quests.roam
+  if (roam && g.coop === null) updateSave((s) => ({ ...s, roamers: bankRoamer(s.roamers, roam.legend, roam.left) }))
+}
+
 const bankRun = (r: Run, withBonus: boolean) => {
   const g = r.game
   const total = withBonus ? runEarnings(g).total : g.coins
@@ -1024,6 +1033,7 @@ const bankRun = (r: Run, withBonus: boolean) => {
   if (g.candies > r.candies) updateSave((save) => addCandies(save, g.candies - r.candies))
   r.candies = Math.max(r.candies, g.candies)
   bankHatchery(r)
+  bankRoamerHp(g)
   // Merged into the stored Pokédex, which an account sync may have grown during the run.
   updateSave((save) => ({ ...save, dex: mergeDex(save.dex, recordRun(r.dexBase, g.dexLog)) }))
 }
@@ -1422,6 +1432,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     evo: [...save.evo],
     caps: capLevel(save.caps, starter),
     mythical: mythicalHunt(save),
+    wild: wildOf(save),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
@@ -1479,6 +1490,14 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
 /** A run's news that warns or asks for something (a boss, a rift's omen, a hazard): it shows unless the "Avisos na partida" setting says Nenhum. */
 const news = (content: HTMLElement | string, ms?: number, key: string | null = null) => runToast(ui, 'important', content, ms, key)
 /** A run's minor news (a drop, a berry, a shiny spotted, a milestone the screen already shows): only at Todos. */
+/** A roaming legend's or a duel's moment: its sound and cry, and its line on the news (`questNews`). */
+const showQuest = (e: Extract<GameEvent, { kind: 'roam' | 'duel' }>) => {
+  const q = questNews(e)
+  if (q.sfx) playSfx(q.sfx)
+  if (q.cry !== null) playCry(cryUrl(q.cry), 0.8)
+  return q.line ? news(rich(q.line), q.ms) : undefined
+}
+
 const aside = (content: HTMLElement | string, ms?: number, key: string | null = null, tone: ToastTone | null = null) => runToast(ui, 'minor', content, ms, key, tone)
 
 /** The run's first toasts: safe mode coming on after a crash, the challenge it plays, the day's outbreak, then each bag item it used and each TM it armed. */
@@ -2115,6 +2134,11 @@ const handleEvent = (r: Run, e: GameEvent) => {
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
       return bankCapture(e.legend, e.shiny, g.endless !== null)
+    case 'roam':
+      if (e.moment === 'fled' || e.moment === 'caught') bankRoamerHp(g)
+      return showQuest(e)
+    case 'duel':
+      return showQuest(e)
     // The Desafio do dia plays the same for everyone: its finales don't count toward the protection.
     case 'mythicalRoll':
       r.mythical = e.enemy ?? 'none'
@@ -5272,6 +5296,7 @@ if (import.meta.env.DEV) {
       /** `ps.ball(3)` drops Poké Balls 20 px to the right of the player (inside the magnet), side by side. */
       ball: (n = 1) => withRun((g) => Array.from({ length: n }, (_, i) => dropPickup(g, localPlayer(g).x + 20 + i * 6, localPlayer(g).y, 'pokeball'))),
       ...riftDevTools(() => run?.game),
+      ...questDevTools(() => run?.game),
       ...placeDevTools(() => run?.game),
       ...seasonFindDevTools(() => run?.game, devLandmark),
       ...levelUpDevTools(() => run?.game),

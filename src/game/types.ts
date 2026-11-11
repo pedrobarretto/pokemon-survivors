@@ -58,6 +58,10 @@ import type { CurseState } from './curses'
 import type { LegendaryVisual } from './legendaryMoves'
 import type { LegendaryVisual2 } from './legendaryMoves2'
 import type { LegendaryVisual3 } from './legendaryMoves3'
+import type { QuestState } from './quests'
+import type { RoamMoment } from './roamers'
+import type { DuelMoment } from './duels'
+import type { LakeId, SwordId } from '../data/legends'
 import type { TensionState } from './tension'
 import type { AlphaClock, AlphaState } from './alphas'
 import type { LegendForm, LegendId } from '../data/legends'
@@ -265,6 +269,8 @@ export type EnemyBehavior =
    * sits in its hole) until place age `until`, when it ducks away unhurt.
    */
   | { kind: 'shy'; x: number; y: number; leash: number; until: number }
+  /** A roaming lake legend (`roamers.ts`): it walks as `roamStep` says (away from players, or its quirk's way) and never bites. */
+  | { kind: 'roam' }
   /**
    * Versus: the body of the player at `slot` that the rival team's moves hit
    * (`versusCombat.ts`). It never moves or bites on its own: it stands where
@@ -793,6 +799,10 @@ export type GameEvent =
   | { kind: 'awakened'; legend: LegendId; n: number; form: LegendForm | null }
   /** A legendary boss fell (rift, trio, mythical, Mewtwo, Arceus), once per defeat: the save counts it toward capturing it. */
   | { kind: 'legendBeaten'; legend: EnemyId; shiny: boolean }
+  /** A roaming lake legend (`roamers.ts`): sighted, gone (its HP share `left` is the save's to keep), its memory wipe, or caught. */
+  | { kind: 'roam'; legend: LakeId; moment: RoamMoment; left: number }
+  /** A Sword of Justice's duel (`duels.ts`). */
+  | { kind: 'duel'; sword: SwordId; moment: DuelMoment }
   /** A solo finale rolled its mythical slot: who came, or null. The save counts it (`game/mythicalHunt.ts`). */
   | { kind: 'mythicalRoll'; enemy: EnemyId | null }
   /** A boss with phases moved on to phase `phase` (from 0), or began its ultimate (`move`, the official English name). */
@@ -902,6 +912,8 @@ export type Game = {
   landmarks: LandmarkState
   /** Temporada 1's map encounters this run (`seasonOneFinds.ts`). */
   finds: SeasonFinds
+  /** The legends met on the open map this run: a roaming lake legend and a Sword's duel (`quests.ts`). */
+  quests: QuestState
   /** Points of interest placed by the event director (`mapEvents.ts`). */
   mapEvents: MapEventsState
   /** Full-screen white flash strength (Explosion), decays to 0. */

@@ -6303,6 +6303,7 @@ export const fr: Messages = {
       gone: (festival) => `Le _${festival}_ est terminé. Qui l’a reçue continue de la jouer.`,
     },
   },
+  quests: QUEST_WORDS.fr.ui,
   legends: {
     epithets: {
       articuno: 'Oiseau de la Glace Éternelle',

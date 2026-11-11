@@ -1,6 +1,7 @@
 import type { Difficulty } from '../game/difficulty'
 import { DOMAIN_PHASES, type RetinueRole } from './domains'
 import { WAVE_LEGEND_PHASES } from './legendBosses'
+import { SWORD_PHASES } from './quests'
 import type { EnemyId } from './enemies'
 
 /** How an enemy hazard looks (and sounds when it lands). */
@@ -212,12 +213,14 @@ export const PHASE_SHIFT = 1.8
 
 /**
  * Bosses that fight in phases, each with its own patterns, ultimate and look:
- * the rift legendaries with a domain (`data/domains.ts`), and any wave boss
- * given phases here.
+ * the rift legendaries with a domain (`data/domains.ts`), the wave legendaries
+ * (`data/legendBosses.ts`), the Swords of Justice (`data/quests.ts`), and any
+ * wave boss given phases here.
  */
 export const BOSS_PHASES: Partial<Record<EnemyId, readonly BossPhase[]>> = {
   ...DOMAIN_PHASES,
   ...WAVE_LEGEND_PHASES,
+  ...SWORD_PHASES,
 }
 
 /** Every attack a boss has, across its phases (ultimates' steps included), for the guide and the Pokédex. */

@@ -6303,6 +6303,7 @@ export const zh: Messages = {
       gone: (festival) => `_${festival}_已經結束。已收到的玩家仍可繼續使用牠。`,
     },
   },
+  quests: QUEST_WORDS.zh.ui,
   legends: {
     epithets: {
       articuno: '永恆寒冰之鳥',

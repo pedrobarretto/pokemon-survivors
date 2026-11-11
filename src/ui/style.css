@@ -8579,6 +8579,11 @@ button {
   color: color-mix(in srgb, #1c6c78 var(--dk-lift, 100%), #fff);
 }
 
+/* A roaming lake legend about, or a Sword of Justice's duel (`ui/quests.ts`). */
+.rift-pill.rift-quest {
+  color: color-mix(in srgb, #2c6098 var(--dk-lift, 100%), #fff);
+}
+
 /* Mystery Dungeon's floor card: black, the dungeon's name and its floor. */
 .floor-card {
   position: absolute;

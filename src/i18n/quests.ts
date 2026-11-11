@@ -78,6 +78,31 @@ const pt = {
     swords: 'Chega como presente quando as três Espadas da Justiça (Cobalion, Terrakion e Virizion) estiverem capturadas.',
     rush: 'Vença os Anéis de Hoopa uma vez: o último anel é o próprio Hoopa.',
   },
+  /** The open map's legends on screen (`ui/quests.ts`, the HUD's pill) and Hoopa's rings (`ui/rush.ts`). */
+  ui: {
+    roam: {
+      sighted: (name: string, pct: number) => `*${name}* apareceu por perto! Ele foge quando você chega perto, mas o HP que você tirar fica guardado (${pct}%).`,
+      fled: (name: string, pct: number) => `*${name}* fugiu… Ainda tem _${pct}%_ do HP. Ele volta em outra partida.`,
+      wiped: '*Uxie* apagou sua memória: você perdeu a pista dele!',
+      hud: (name: string, pct: number) => `${name} por perto · ${pct}%`,
+    },
+    duel: {
+      waiting: (name: string, test: string) => `*${name}* espera por você. Fique no círculo para começar o duelo: _${test}_.`,
+      tests: { endure: 'Teste de Defesa', power: 'Teste de Força', speed: 'Teste de Velocidade' },
+      began: {
+        endure: (name: string, floor: number) => `Resista a *${name}* sem deixar seu HP cair abaixo de ${floor}%!`,
+        power: (name: string) => `Derrube *${name}* antes que o tempo acabe!`,
+        speed: (_name: string, marks: number) => `Pise nas ${marks} folhas antes que o tempo acabe!`,
+      },
+      passed: (name: string) => `*${name}* reconhece sua força!`,
+      failed: (name: string) => `*${name}* não se convenceu e partiu. Volte mais forte numa próxima partida!`,
+      left: (name: string) => `*${name}* cansou de esperar e partiu.`,
+      hudEndure: (name: string, time: string) => `${name}: resista ${time}`,
+      hudPower: (name: string, time: string) => `Derrube ${name}: ${time}`,
+      hudSpeed: (got: number, of: number, time: string) => `Folhas ${got}/${of} · ${time}`,
+      hudWaiting: (name: string, time: string) => `${name} espera · ${time}`,
+    },
+  },
 }
 
 const en: typeof pt = {
@@ -147,6 +172,30 @@ const en: typeof pt = {
     duel: 'Sometimes waits in a biome that suits it: take the duel and pass its test so it joins you.',
     swords: 'Comes as a gift once all three Swords of Justice (Cobalion, Terrakion and Virizion) are caught.',
     rush: 'Clear Hoopa’s Rings once: the last ring is Hoopa itself.',
+  },
+  ui: {
+    roam: {
+      sighted: (name: string, pct: number) => `*${name}* showed up nearby! It flees when you get close, but the HP you take stays taken (${pct}%).`,
+      fled: (name: string, pct: number) => `*${name}* fled… It still has _${pct}%_ of its HP. It’ll be back in another run.`,
+      wiped: '*Uxie* wiped your memory: you lost track of it!',
+      hud: (name: string, pct: number) => `${name} nearby · ${pct}%`,
+    },
+    duel: {
+      waiting: (name: string, test: string) => `*${name}* is waiting for you. Stand in the circle to start the duel: _${test}_.`,
+      tests: { endure: 'Defense Test', power: 'Power Test', speed: 'Speed Test' },
+      began: {
+        endure: (name: string, floor: number) => `Hold out against *${name}* without letting your HP drop below ${floor}%!`,
+        power: (name: string) => `Knock *${name}* out before time runs out!`,
+        speed: (_name: string, marks: number) => `Step on the ${marks} leaves before time runs out!`,
+      },
+      passed: (name: string) => `*${name}* acknowledges your strength!`,
+      failed: (name: string) => `*${name}* wasn’t convinced and left. Come back stronger in another run!`,
+      left: (name: string) => `*${name}* grew tired of waiting and left.`,
+      hudEndure: (name: string, time: string) => `${name}: hold out ${time}`,
+      hudPower: (name: string, time: string) => `Knock out ${name}: ${time}`,
+      hudSpeed: (got: number, of: number, time: string) => `Leaves ${got}/${of} · ${time}`,
+      hudWaiting: (name: string, time: string) => `${name} waits · ${time}`,
+    },
   },
 }
 
@@ -218,6 +267,30 @@ const es: typeof pt = {
     swords: 'Llega como regalo cuando las tres Espadas de la Justicia (Cobalion, Terrakion y Virizion) estén capturadas.',
     rush: 'Supera los Anillos de Hoopa una vez: el último anillo es el propio Hoopa.',
   },
+  ui: {
+    roam: {
+      sighted: (name: string, pct: number) => `¡*${name}* apareció cerca! Huye cuando te acercas, pero la vida que le quitas se queda (${pct}%).`,
+      fled: (name: string, pct: number) => `*${name}* huyó… Aún tiene _${pct}%_ de su vida. Volverá en otra partida.`,
+      wiped: '¡*Uxie* borró tu memoria: le perdiste el rastro!',
+      hud: (name: string, pct: number) => `${name} cerca · ${pct}%`,
+    },
+    duel: {
+      waiting: (name: string, test: string) => `*${name}* te espera. Quédate en el círculo para empezar el duelo: _${test}_.`,
+      tests: { endure: 'Prueba de Defensa', power: 'Prueba de Fuerza', speed: 'Prueba de Velocidad' },
+      began: {
+        endure: (name: string, floor: number) => `¡Resiste a *${name}* sin dejar que tu vida baje del ${floor}%!`,
+        power: (name: string) => `¡Derriba a *${name}* antes de que se acabe el tiempo!`,
+        speed: (_name: string, marks: number) => `¡Pisa las ${marks} hojas antes de que se acabe el tiempo!`,
+      },
+      passed: (name: string) => `¡*${name}* reconoce tu fuerza!`,
+      failed: (name: string) => `*${name}* no quedó convencido y se fue. ¡Vuelve más fuerte en otra partida!`,
+      left: (name: string) => `*${name}* se cansó de esperar y se fue.`,
+      hudEndure: (name: string, time: string) => `${name}: resiste ${time}`,
+      hudPower: (name: string, time: string) => `Derriba a ${name}: ${time}`,
+      hudSpeed: (got: number, of: number, time: string) => `Hojas ${got}/${of} · ${time}`,
+      hudWaiting: (name: string, time: string) => `${name} espera · ${time}`,
+    },
+  },
 }
 
 const fr: typeof pt = {
@@ -288,6 +361,30 @@ const fr: typeof pt = {
     swords: 'Arrive en cadeau une fois les trois Épées de la Justice (Cobalion, Terrakion et Virizion) capturées.',
     rush: 'Viens à bout des Anneaux de Hoopa une fois : le dernier anneau, c’est Hoopa lui-même.',
   },
+  ui: {
+    roam: {
+      sighted: (name: string, pct: number) => `*${name}* est apparu tout près ! Il fuit quand tu approches, mais les PV que tu lui retires restent retirés (${pct} %).`,
+      fled: (name: string, pct: number) => `*${name}* s’est enfui… Il lui reste _${pct} %_ de ses PV. Il reviendra dans une autre partie.`,
+      wiped: '*Uxie* a effacé ta mémoire : tu as perdu sa trace !',
+      hud: (name: string, pct: number) => `${name} tout près · ${pct} %`,
+    },
+    duel: {
+      waiting: (name: string, test: string) => `*${name}* t’attend. Reste dans le cercle pour lancer le duel : _${test}_.`,
+      tests: { endure: 'Épreuve de Défense', power: 'Épreuve de Force', speed: 'Épreuve de Vitesse' },
+      began: {
+        endure: (name: string, floor: number) => `Tiens bon face à *${name}* sans que tes PV passent sous ${floor} % !`,
+        power: (name: string) => `Mets *${name}* K.O. avant la fin du temps !`,
+        speed: (_name: string, marks: number) => `Marche sur les ${marks} feuilles avant la fin du temps !`,
+      },
+      passed: (name: string) => `*${name}* reconnaît ta force !`,
+      failed: (name: string) => `*${name}* n’a pas été convaincu et est parti. Reviens plus fort dans une autre partie !`,
+      left: (name: string) => `*${name}* s’est lassé d’attendre et est parti.`,
+      hudEndure: (name: string, time: string) => `${name} : tiens ${time}`,
+      hudPower: (name: string, time: string) => `K.O. ${name} : ${time}`,
+      hudSpeed: (got: number, of: number, time: string) => `Feuilles ${got}/${of} · ${time}`,
+      hudWaiting: (name: string, time: string) => `${name} attend · ${time}`,
+    },
+  },
 }
 
 const zh: typeof pt = {
@@ -357,6 +454,30 @@ const zh: typeof pt = {
     duel: '有時會在與牠相稱的生態區等待：接受決鬥並通過牠的考驗，牠就會加入你。',
     swords: '三把正義之劍（Cobalion、Terrakion、Virizion）都捕捉後，會以禮物的形式到來。',
     rush: '通關 Hoopa 的圓環一次：最後一個圓環就是 Hoopa 本身。',
+  },
+  ui: {
+    roam: {
+      sighted: (name: string, pct: number) => `*${name}* 出現在附近！你一靠近牠就逃走，但你打掉的HP會保留下來（${pct}%）。`,
+      fled: (name: string, pct: number) => `*${name}* 逃走了…還剩 _${pct}%_ 的HP。牠會在另一局再出現。`,
+      wiped: '*Uxie* 消除了你的記憶：你失去了牠的蹤跡！',
+      hud: (name: string, pct: number) => `${name} 在附近 · ${pct}%`,
+    },
+    duel: {
+      waiting: (name: string, test: string) => `*${name}* 正在等你。站進圓圈裡開始決鬥：_${test}_。`,
+      tests: { endure: '防禦考驗', power: '力量考驗', speed: '速度考驗' },
+      began: {
+        endure: (name: string, floor: number) => `撐住 *${name}* 的攻勢，別讓HP降到${floor}%以下！`,
+        power: (name: string) => `在時間結束前打倒 *${name}*！`,
+        speed: (_name: string, marks: number) => `在時間結束前踩過${marks}片葉子！`,
+      },
+      passed: (name: string) => `*${name}* 認可了你的實力！`,
+      failed: (name: string) => `*${name}* 不為所動地離開了。下一局變得更強再回來吧！`,
+      left: (name: string) => `*${name}* 等得不耐煩，離開了。`,
+      hudEndure: (name: string, time: string) => `${name}：撐住 ${time}`,
+      hudPower: (name: string, time: string) => `打倒 ${name}：${time}`,
+      hudSpeed: (got: number, of: number, time: string) => `葉子 ${got}/${of} · ${time}`,
+      hudWaiting: (name: string, time: string) => `${name} 等待中 · ${time}`,
+    },
   },
 }
 

@@ -26,6 +26,7 @@ import type { Attack, Enemy, Game, Hazard, Particle, Player } from '../game/type
 import { FX, HAZARD_FX, hostile, PICKUPS, SPARKLE, SPIT_FX } from './art'
 import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawShard } from './evolved'
 import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
+import { drawQuestAir, drawQuestGround, drawQuestMarkers } from './quests'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
 import { drawScale } from '../game/alphas'
 import { drawMegaAir, drawMegaAttack, drawMegaGround, drawMegaStone, megaLook } from './megaFx'
@@ -1023,6 +1024,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawBossGround(ctx, g, t)
   drawOmenGround(ctx, g)
   drawDomainGround(ctx, g, t)
+  if (!indoors) drawQuestGround(ctx, g, t)
   drawNightmareGround(ctx, g, t)
   // Breakables, dressed by the biome each stands in.
   drawProps(ctx, g, t)
@@ -1141,6 +1143,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawPairDown(ctx, g, t)
   drawCapture(ctx, g, t)
   drawDomainAir(ctx, g, t)
+  drawQuestAir(ctx, g, t)
   drawNightmareAir(ctx, g, t)
   drawLegendScene(ctx, g, t)
 
@@ -1228,6 +1231,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   if (!inside) drawRiftArrow(ctx, g, camX, camY, t)
   drawPlaceArrow(ctx, g, camX, camY, t)
   if (!indoors) drawMapEventMarkers(ctx, g, t)
+  if (!indoors) drawQuestMarkers(ctx, g, t)
   drawAlphaMarkers(ctx, g, t, markerInsets())
   drawBossMarker(ctx, g, camX, camY, t)
   if (g.coop) drawTeamMarkers(ctx, g, me, camX, camY, t)
