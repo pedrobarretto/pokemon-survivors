@@ -1839,7 +1839,7 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas', era1: 'Era 1', era1Champion: 'Coroa da Era 1', rocket: ROCKET_WORDS.pt.frame, nationalDex: 'Pokédex Nacional' } satisfies Record<FrameId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas', era1: 'Era 1', era1Champion: 'Coroa da Era 1', bugContest: 'Concurso de Insetos', rocket: ROCKET_WORDS.pt.frame, nationalDex: 'Pokédex Nacional' } satisfies Record<FrameId, string>,
       background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas', friendship: 'Amizade', era1Champion: 'Trono da Era 1' } satisfies Record<BackgroundId, string>,
       wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada', secretBase: 'Base Secreta' } satisfies Record<WallpaperId, string>,
     },
@@ -2380,6 +2380,9 @@ export const pt = {
     og: 'Por apoiar o jogo desde o começo ♥',
     arenaSeason: (season: number) => `Pelo seu pico na temporada ${season} da Arena`,
     era1: (rank: number, board: string) => `#${rank} no Hall da Fama da Era 1 · ${board}`,
+    bugContest: (rank: number) => `#${rank} no Concurso de Insetos da semana`,
+    safariDex: (place: string) => `Pokédex completa: ${place}`,
+    safariDexAll: 'Pokédex de todos os habitats da Zona Safári completa',
     hiddenZone: { grotto: 'Por encontrar a Gruta Oculta', underground: 'Por encontrar o Subterrâneo' } satisfies Record<HiddenPlaceId, string>,
     dex: (region: string | null) => (region ? `Por completar a Pokédex de ${region}` : 'Por completar a Pokédex Nacional: todas as regiões!'),
   },
@@ -3360,7 +3363,7 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo', stampCollector: 'Juntou 30 Estampas no Poké Realm', era1Legend: 'Ficou no topo de um quadro da Era 1', era1Champion: 'Foi o nº 1 de um quadro da Era 1', ...ROCKET_WORDS.pt.giftTitles, kantoDex: 'Viu todos os Pokémon de Kanto no Pokédex', johtoDex: 'Viu todos os Pokémon de Johto no Pokédex', hoennDex: 'Viu todos os Pokémon de Hoenn no Pokédex', sinnohDex: 'Viu todos os Pokémon de Sinnoh no Pokédex', unovaDex: 'Viu todos os Pokémon de Unova no Pokédex', kalosDex: 'Viu todos os Pokémon de Kalos no Pokédex', alolaDex: 'Viu todos os Pokémon de Alola no Pokédex', galarDex: 'Viu todos os Pokémon de Galar no Pokédex', paldeaDex: 'Viu todos os Pokémon de Paldea no Pokédex' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo', stampCollector: 'Juntou 30 Estampas no Poké Realm', era1Legend: 'Ficou no topo de um quadro da Era 1', era1Champion: 'Foi o nº 1 de um quadro da Era 1', bugChampion: 'Venceu uma semana do Concurso de Insetos', safariWarden: 'Completou a Pokédex de todos os habitats da Zona Safári', ...ROCKET_WORDS.pt.giftTitles, kantoDex: 'Viu todos os Pokémon de Kanto no Pokédex', johtoDex: 'Viu todos os Pokémon de Johto no Pokédex', hoennDex: 'Viu todos os Pokémon de Hoenn no Pokédex', sinnohDex: 'Viu todos os Pokémon de Sinnoh no Pokédex', unovaDex: 'Viu todos os Pokémon de Unova no Pokédex', kalosDex: 'Viu todos os Pokémon de Kalos no Pokédex', alolaDex: 'Viu todos os Pokémon de Alola no Pokédex', galarDex: 'Viu todos os Pokémon de Galar no Pokédex', paldeaDex: 'Viu todos os Pokémon de Paldea no Pokédex' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
       ...TERA_WORDS.pt.achievementNames,
@@ -3474,6 +3477,8 @@ export const pt = {
       galarDex: 'Pesquisador(a) de Galar',
       paldeaDex: 'Pesquisador(a) de Paldea',
       ...ROCKET_WORDS.pt.titles,
+      bugChampion: 'Campeão(ã) dos Insetos',
+      safariWarden: 'Guarda-Parque',
     } satisfies Record<TitleId, string>,
     goals: {
       ...TERA_WORDS.pt.goals,

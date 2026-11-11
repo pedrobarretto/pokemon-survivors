@@ -1,3 +1,4 @@
+import { isSafariHabitat } from '../data/safari'
 import { HATCHLINGS } from '../data/hatchlings'
 import { LEGENDS } from '../data/legends'
 import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
@@ -111,6 +112,10 @@ export const reasonLine = (gift: Gift) => {
       return t().gifts.dex(r.region === 'national' ? null : t().dex.regions[r.region])
     case 'rocket':
       return t().rocket.gifts.reason
+    case 'bugContest':
+      return t().gifts.bugContest(r.rank)
+    case 'safariDex':
+      return isSafariHabitat(r.habitat) ? t().gifts.safariDex(t().minigames.safari.habitats[r.habitat].name) : t().gifts.safariDexAll
     case 'era1': {
       const rk = t().ranking
       const side = r.side === 'standard' || r.side === 'legend' ? rk.modes[r.side] : rk.sizes[r.side]

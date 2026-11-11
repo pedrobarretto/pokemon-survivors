@@ -136,9 +136,10 @@ export type MedalTitleId = { [K in AchievementId]: (typeof ACHIEVEMENTS)[K] exte
  * the Creator's for making videos of the game (sent from the admin desk, `data/creators.ts`),
  * the Stamp Collector's for 30 Estampas in the Poké Realm (`STAMP_MILESTONES` in `data/realmStamps.ts`),
  * the Era 1 Legend's for a top place on an Era 1 board and the Era 1 Champion's for a #1 (`game/era1.ts`),
- * the Rocket Recruit's from the Rocket Game Corner's counter (`data/rocketCorner.ts`) and the Rocket Buster's for beating Giovanni in the Rocket Hideout (`data/rocketHideout.ts`).
+ * the Rocket Recruit's from the Rocket Game Corner's counter (`data/rocketCorner.ts`) and the Rocket Buster's for beating Giovanni in the Rocket Hideout (`data/rocketHideout.ts`),
+ * the Bug Champion's for winning a week's Concurso de Insetos and the Guarda-Parque's for every Safári habitat's Pokédex (`data/safari.ts`).
  */
-export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend', 'stampCollector', 'era1Legend', 'era1Champion', 'rocketRecruit', 'rocketBuster', 'kantoDex', 'johtoDex', 'hoennDex', 'sinnohDex', 'unovaDex', 'kalosDex', 'alolaDex', 'galarDex', 'paldeaDex'] as const
+export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend', 'stampCollector', 'era1Legend', 'era1Champion', 'bugChampion', 'safariWarden', 'rocketRecruit', 'rocketBuster', 'kantoDex', 'johtoDex', 'hoennDex', 'sinnohDex', 'unovaDex', 'kalosDex', 'alolaDex', 'galarDex', 'paldeaDex'] as const
 
 export type GiftTitleId = (typeof GIFT_TITLES)[number]
 

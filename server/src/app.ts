@@ -1041,7 +1041,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
 
   app.post('/realm/claw/insert', auth, smallBody, async (c) => {
     const body = parseClawInsert(await json(c))
-    if (!body) return c.json({ error: 'expected { base? }' }, 400)
+    if (!body) return c.json({ error: 'expected { base?, mode?, offset? }' }, 400)
     if (!claw.take(c.var.userId)) return c.json({ error: 'too many credits' }, 429)
     const got = await claw.insert(c.var.userId, body.base)
     if (!got.ok) return c.json({ error: got.error }, CLAW_REFUSALS[got.error])
@@ -1116,7 +1116,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     return c.json({ tokens: got.tokens, gift: got.gift } satisfies CornerRedeemed)
   })
 
-  const SAFARI_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409 } as const satisfies Record<SafariRefusal, number>
+  const SAFARI_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409, closed: 403 } as const satisfies Record<SafariRefusal, number>
 
   app.get('/realm/safari', auth, async (c) => {
     const state = await safari.state(c.var.userId)
@@ -1125,16 +1125,16 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
 
   app.post('/realm/safari/start', auth, smallBody, async (c) => {
     const body = parseSafariStart(await json(c))
-    if (!body) return c.json({ error: 'expected { base? }' }, 400)
+    if (!body) return c.json({ error: 'expected { base?, mode?, offset? }' }, 400)
     if (!safari.take(c.var.userId)) return c.json({ error: 'too many sessions' }, 429)
-    const got = await safari.start(c.var.userId, body.base)
+    const got = await safari.start(c.var.userId, body)
     if (!got.ok) return c.json({ error: got.error }, SAFARI_REFUSALS[got.error])
     return c.json({ session: got.session, used: got.used, ...(got.paid ?? {}) } satisfies SafariStartedBody)
   })
 
   app.post('/realm/safari/act', auth, smallBody, async (c) => {
     const body = parseSafariAct(await json(c))
-    if (!body) return c.json({ error: 'expected { id, turn, action, bush? }' }, 400)
+    if (!body) return c.json({ error: 'expected { id, turn, action, slot? }' }, 400)
     if (!safari.take(c.var.userId)) return c.json({ error: 'too many actions' }, 429)
     const got = await safari.act(c.var.userId, body.id, body.turn, body.action)
     if (!got.ok) return c.json({ error: got.error }, got.error === 'missing' ? 404 : got.error === 'stale' || got.error === 'illegal' ? 409 : 403)
