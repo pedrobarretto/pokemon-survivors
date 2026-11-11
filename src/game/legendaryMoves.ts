@@ -6,7 +6,7 @@ import { stacksOf } from './kitRules'
 import { returnShot, strike } from './moveKit'
 import type { Look, MoveDef, MoveId, MoveStats } from './moves'
 import { enemiesInView, nearestEnemy } from './queries'
-import { densestFoe } from './signatureRules'
+import { crowdPicks } from './crowd'
 import { addMoveBuff } from './signatureMoves'
 import { spawnAttack } from './spawn'
 import type { Enemy, Game, OwnedMove } from './types'
@@ -48,19 +48,8 @@ export const cast = (g: Game, move: MoveId) => g.events.push({ kind: 'cast', mov
 /** Whether the second branch was taken at the Lv4 fork (step index 2), like `branchAt` in `moves.ts`. */
 export const tookB = (owned: OwnedMove) => owned.level >= 4 && ((owned.path ?? 0) >> 2) & 1
 
-/** Up to `count` foes in view, densest crowds first, never two within `apart` px of each other. */
-export const crowdTargets = (g: Game, count: number, apart: number, reach: number) => {
-  const p = g.player
-  const pool = enemiesInView(g).filter((e) => dm.sq(e.x - p.x) + dm.sq(e.y - p.y) <= reach * reach)
-  const picked: Enemy[] = []
-  while (picked.length < count) {
-    const free = pool.filter((e) => picked.every((o) => dm.sq(o.x - e.x) + dm.sq(o.y - e.y) > apart * apart))
-    const best = densestFoe(free, p.x, p.y, reach, 50)
-    if (!best) break
-    picked.push(best)
-  }
-  return picked
-}
+/** Up to `count` foes in view within `reach`, densest crowds first (within 50 px), never two within `apart` px of each other (`crowdPicks`). */
+export const crowdTargets = (g: Game, count: number, apart: number, reach: number) => crowdPicks(enemiesInView(g), g.player.x, g.player.y, reach, 50, count, apart)
 
 /** The visuals of the legendary moves, drawn by `render/legendaryFx.ts`. */
 export type LegendaryVisual =

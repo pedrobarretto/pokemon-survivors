@@ -29,17 +29,19 @@ export const nearSegment = (x: number, y: number, a: Point, b: Point, r: number)
  * foes within `width` px, the nearest on a tie, then the lower id. Null when nobody is in reach.
  */
 export const bestLine = <T extends Foe>(foes: readonly T[], from: Point, reach: number, length: number, width: number): T | null => {
+  // Every foe in reach, and every one within `width` of a line of `length` from `from`, stands inside this box (a px of slack for rounding).
+  const box = Math.max(reach, length + width) + 1
+  const pool = foes.filter((o) => o.dying < 0 && Math.abs(o.x - from.x) <= box && Math.abs(o.y - from.y) <= box)
   let best: T | null = null
   let bestCount = -1
   let bestD = Infinity
-  for (const e of foes) {
-    if (e.dying >= 0) continue
+  for (const e of pool) {
     const d = dm.sq(e.x - from.x) + dm.sq(e.y - from.y)
     if (d > reach * reach) continue
     const dist = Math.max(1, dm.hypot(e.x - from.x, e.y - from.y))
     const end = { x: from.x + ((e.x - from.x) / dist) * length, y: from.y + ((e.y - from.y) / dist) * length }
     let count = 0
-    for (const o of foes) if (o.dying < 0 && nearSegment(o.x, o.y, from, end, width)) count++
+    for (const o of pool) if (nearSegment(o.x, o.y, from, end, width)) count++
     if (count < bestCount || (count === bestCount && (d > bestD || (d === bestD && best !== null && e.id > best.id)))) continue
     best = e
     bestCount = count

@@ -1,4 +1,5 @@
 import * as dm from '../engine/dmath'
+import { densestOf } from './crowd'
 import { LUNGE_CONE } from './moveRules'
 
 /**
@@ -28,20 +29,7 @@ export const densestFoe = <T extends Foe>(foes: readonly T[], x: number, y: numb
     if (ahead && d > 0 && dx * ahead.x + dy * ahead.y < LUNGE_CONE * dm.hypot(dx, dy)) continue
     near.push(e)
   }
-  let best: T | null = null
-  let bestCount = -1
-  let bestD = Infinity
-  for (const e of near) {
-    let count = 0
-    for (const o of near) if (o !== e && dm.sq(o.x - e.x) + dm.sq(o.y - e.y) <= radius * radius) count++
-    const d = dm.sq(e.x - x) + dm.sq(e.y - y)
-    if (count > bestCount || (count === bestCount && (d < bestD || (d === bestD && best !== null && e.id < best.id)))) {
-      best = e
-      bestCount = count
-      bestD = d
-    }
-  }
-  return best
+  return densestOf(near, near, x, y, radius)
 }
 
 /** Eruption's damage multiplier at an HP fraction: full power at full HP, never under `ERUPTION_FLOOR`. */
