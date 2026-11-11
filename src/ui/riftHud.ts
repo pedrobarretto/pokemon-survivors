@@ -1,3 +1,4 @@
+import { isUltraBeast } from '../data/ultraBeasts'
 import { formatTime } from '../engine/math'
 import { GRAVEYARD } from '../data/places'
 import { overtime } from '../game/endless'
@@ -53,7 +54,7 @@ const pillFor = (g: Game): Pill => {
     if (arena.loot !== null || arena.fall !== null) return null
     return { text: m.hudArena(formatTime(Math.ceil(arena.left))), kind: 'arena', urgent: arena.left < 10 }
   }
-  if (portal) return { text: m.hudPortal(formatTime(Math.ceil(portal.left))), kind: 'portal', urgent: portal.left < 8 }
+  if (portal) return { text: (isUltraBeast(portal.legend) ? t().ultra.hudPortal : m.hudPortal)(formatTime(Math.ceil(portal.left))), kind: 'portal', urgent: portal.left < 8 }
   const ent = g.place.entrance
   // A hidden zone's entrance says nothing until found.
   if (ent?.open && entranceShown(ent)) {

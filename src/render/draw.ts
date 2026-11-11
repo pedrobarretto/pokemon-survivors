@@ -4,7 +4,8 @@ import { HAZARD_COLORS } from './hazardColors'
 import { drawCapture } from './capture'
 import { drawNightmareAir, drawNightmareDark, drawNightmareGround, shadeAlpha, SLEEP_TINT } from './darkrai'
 import { isAsleep } from '../game/playerSleep'
-import { drawDomainFloor, drawTear, warmDomain } from './domain'
+import { drawDomainFloor, drawTear, drawWormhole, warmDomain } from './domain'
+import { isUltraBeast } from '../data/ultraBeasts'
 import { bossForm, drawBeamAir, drawBeamGround, drawBlasts, drawBossGround, drawBossMarker, drawEntrance, drawLegendScene, drawPairDown, drawPhantoms } from './legendFx'
 import { sceneHides } from '../game/legendScene'
 import { drawLegendSky, drawOmenGround } from './legendSky'
@@ -70,6 +71,7 @@ import { drawVerbEvolvedAir, drawVerbEvolvedGround } from './verbEvolvedFx'
 import { drawDuoAir, drawDuoGround } from './duoFx'
 import { drawAncientAura, drawLegendaryAir, drawLegendaryGround, drawStoppedFoes } from './legendaryFx'
 import { drawHeatAura, drawIronDefense, drawLegendary2Air, drawLegendary2Ground } from './legendaryFx2'
+import { drawUltraAir, drawUltraGround } from './ultraFx'
 import { drawSignatureAttack, drawSignatureGround, drawSignaturePlayer } from './signatureFx'
 import { drawTraitAir, drawTraitGround, traitLift, traitTint } from './traits'
 import { bolt, dashedRing } from './strokes'
@@ -1077,6 +1079,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawDuoGround(into, v, t)
       drawLegendaryGround(into, v, t)
       drawLegendary2Ground(into, v, t)
+      drawUltraGround(into, v, t)
     })
   }
   for (const hz of g.hazards) if (hz.kind === 'beam') drawBeamGround(ctx, hz)
@@ -1090,7 +1093,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawProps(ctx, g, t)
   // Map events wait outside with the rest of the world while the player is in a room.
   if (!indoors) drawMapEvents(ctx, g, t, calm)
-  if (g.rift.portal && !indoors) (riftDomain(g, g.rift.portal.legend) ? drawTear : drawRiftPortal)(ctx, g.rift.portal, t)
+  if (g.rift.portal && !indoors) (isUltraBeast(g.rift.portal.legend) ? drawWormhole : riftDomain(g, g.rift.portal.legend) ? drawTear : drawRiftPortal)(ctx, g.rift.portal, t)
   drawEntranceGround(ctx, g, t)
   if (g.raid.den && !indoors) drawDenGround(ctx, g.raid.den, t)
   drawPlaceGround(ctx, g, t)
@@ -1221,6 +1224,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawDuoAir(into, v, t, visible)
       drawLegendaryAir(into, v, t, visible)
       drawLegendary2Air(into, v, t, visible)
+      drawUltraAir(into, v, t, visible)
       drawDrainVines(into, v, t)
     })
   }

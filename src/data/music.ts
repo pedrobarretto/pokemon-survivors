@@ -1036,6 +1036,75 @@ const deoxys: Score = {
   },
 }
 
+/** Ultra Space (the Ultra Beasts' domains): a glittering E Lydian, the lead leaning on the raised fourth and augmented chords, as if from another world. */
+const ultraSpace: Score = {
+  bpm: 132,
+  duty: { lead: 0.25, harmony: 0.125 },
+  tracks: {
+    // | E | F# | E | D | C | D | E | B+ |  then  | Am | B | G# | C# | Am | F# | B+ | E |
+    lead: [
+      'E5:2 B5 G#5 D#6 B5:4 A#5',
+      'F#5:6 A#5:2 C#6:4 B5',
+      'G#5:2 B5 E6 D#6 A#5:8',
+      'D6:6 C#6:2 A5:8',
+      'C6:2 E6 G6 E6 D6:4 B5',
+      'A5:4 F#5 D6 C#6',
+      'B5:3 G#5:1 E5:4 G#5 B5',
+      'D#6:12 r:4',
+      'A5:4 C6:2 E6 A6:4 G6',
+      'F#6:6 D#6:2 B5:8',
+      'G#5:2 C6 D#6 G#6 F#6:4 D#6',
+      'F6:6 C#6:2 G#5:8',
+      'A5:2 r C6 E6 A6:4 G#6:2 E6',
+      'F#6:4 E6:2 C#6 A#5:8',
+      'B5:3 D#6:1 G6:4 D#6 B5',
+      'E6:12 r:4',
+    ],
+    harmony: [
+      sparkle('E4', 'G#4', 'B4', 'D#5'),
+      sparkle('F#4', 'A#4', 'C#5', 'E5'),
+      sparkle('E4', 'G#4', 'B4', 'A#4'),
+      sparkle('D4', 'F#4', 'A4', 'C#5'),
+      sparkle('C4', 'E4', 'G4', 'B4'),
+      sparkle('D4', 'F#4', 'A4', 'E5'),
+      sparkle('E4', 'G#4', 'B4', 'E5'),
+      sparkle('B3', 'D#4', 'G4', 'B4'),
+      sparkle('A3', 'C4', 'E4', 'A4'),
+      sparkle('B3', 'D#4', 'F#4', 'B4'),
+      sparkle('G#3', 'C4', 'D#4', 'G#4'),
+      sparkle('C#4', 'F4', 'G#4', 'C#5'),
+      sparkle('A3', 'C4', 'E4', 'G4'),
+      sparkle('F#3', 'A#3', 'C#4', 'E4'),
+      sparkle('B3', 'D#4', 'G4', 'D#5'),
+      sparkle('E4', 'G#4', 'B4', 'D#5'),
+    ],
+    bass: [
+      ostinato('E2', 'B2', 'E3'),
+      ostinato('F#2', 'C#3', 'F#3'),
+      ostinato('E2', 'B2', 'E3'),
+      ostinato('D2', 'A2', 'D3'),
+      ostinato('C2', 'G2', 'C3'),
+      ostinato('D2', 'A2', 'D3'),
+      ostinato('E2', 'B2', 'E3'),
+      ostinato('B1', 'G2', 'B2'),
+      ostinato('A1', 'E2', 'A2'),
+      ostinato('B1', 'F#2', 'B2'),
+      ostinato('G#1', 'D#2', 'G#2'),
+      ostinato('C#2', 'G#2', 'C#3'),
+      ostinato('A1', 'E2', 'A2'),
+      ostinato('F#1', 'C#2', 'F#2'),
+      ostinato('B1', 'G2', 'B2'),
+      ostinato('E2', 'B2', 'E3'),
+    ],
+    drums: [
+      ...times(7, 'k:4 h:2 h s:4 h:2 k'),
+      's:2 h s h k:1 s s s s:2 o',
+      ...times(7, 'k:4 h:2 h s:4 h:2 k'),
+      's:2 h s h k:1 s s s s:2 o',
+    ],
+  },
+}
+
 /* ---------------- The wave legendaries (`data/legendBosses.ts`) ---------------- */
 
 /** The Kanto birds: a soaring E minor over bouncing octaves, glittering chord arpeggios on top. */
@@ -1478,6 +1547,6 @@ const volcano: Score = {
   },
 }
 
-export const THEMES = { menu, run, boss, forest, cave, snow, tower, beach, plant, desert, volcano, kyogre, groudon, rayquaza, lugia, hoOh, dialga, latis, deoxys, birds, beasts, regis, mewtwo, arceus } as const satisfies Record<string, Score>
+export const THEMES = { menu, run, boss, forest, cave, snow, tower, beach, plant, desert, volcano, kyogre, groudon, rayquaza, lugia, hoOh, dialga, latis, deoxys, ultraSpace, birds, beasts, regis, mewtwo, arceus } as const satisfies Record<string, Score>
 
 export type ThemeId = keyof typeof THEMES

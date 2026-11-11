@@ -1,5 +1,6 @@
 import * as dm from '../engine/dmath'
 import type { RiftLegend } from './rifts'
+import { perBeast } from './ultraBeasts'
 import type { Ellipse } from './terrain'
 
 /**
@@ -16,7 +17,7 @@ export type Poly = { kind: 'poly'; pts: readonly Pt[] }
 export type ArenaShape = Circle | Poly
 
 /** Scenery standing in an arena (cover against the legendary's shots). */
-export type ArenaPiece = 'seaRock' | 'redPillar' | 'bell' | 'stalagmite' | 'basalt' | 'jadeStump' | 'column' | 'marbleStump' | 'palm' | 'meteorCrystal' | 'nightSpire'
+export type ArenaPiece = 'seaRock' | 'redPillar' | 'bell' | 'stalagmite' | 'basalt' | 'jadeStump' | 'column' | 'marbleStump' | 'palm' | 'meteorCrystal' | 'nightSpire' | 'ultraCrystal'
 
 /** What each piece stands on, around its anchor. */
 export const ARENA_FEET: Record<ArenaPiece, Ellipse> = {
@@ -31,12 +32,13 @@ export const ARENA_FEET: Record<ArenaPiece, Ellipse> = {
   palm: { x: 0, y: 0, rx: 7, ry: 4 },
   meteorCrystal: { x: 0, y: -1, rx: 9, ry: 4 },
   nightSpire: { x: 0, y: -1, rx: 9, ry: 4 },
+  ultraCrystal: { x: 0, y: -1, rx: 9, ry: 4 },
 }
 
 /** Every few seconds a rule steps the arena (the tide rises, the edge falls), with a warning before. */
 export type ArenaStepRule = { every: number; warn: number; max: number; px: number }
 
-export type FloorPattern = 'rings' | 'planks' | 'wetRock' | 'basalt' | 'jade' | 'slabs' | 'sand' | 'craters' | 'garden'
+export type FloorPattern = 'rings' | 'planks' | 'wetRock' | 'basalt' | 'jade' | 'slabs' | 'sand' | 'craters' | 'garden' | 'prism'
 
 /**
  * The ground of a closed space (a rift's arena, a place's interior): the floor
@@ -103,7 +105,22 @@ const SOUTHERN_ISLAND: ArenaLayout = {
   player: [0, 50],
 }
 
+/** An Ultra Beast without its domain (co-op): a disc of prism glass adrift in Ultra Space, crystals to hide behind. */
+const ULTRA_ARENA: ArenaLayout = {
+  floor: [circle(0, 0, R)],
+  solids: [
+    { piece: 'ultraCrystal', x: -84, y: -44 },
+    { piece: 'ultraCrystal', x: 86, y: -40 },
+    { piece: 'ultraCrystal', x: -60, y: 70 },
+    { piece: 'ultraCrystal', x: 64, y: 72 },
+  ],
+  pattern: 'prism',
+  boss: [0, -60],
+  player: [0, 50],
+}
+
 export const ARENA_LAYOUTS: Record<RiftLegend, ArenaLayout> = {
+  ...perBeast(() => ULTRA_ARENA),
   /** Whirl Islands: a sunken temple, islands of floor in shallow water that slows whoever wades. */
   lugia: {
     floor: [circle(0, 0, R)],

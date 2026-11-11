@@ -10,6 +10,7 @@ import { teamLegend } from './legend'
 import { anchorPlayer, playerWithin } from './players'
 import type { Game } from './types'
 import { setWeather } from './weather'
+import { startWormhole, wormholeDue } from './wormhole'
 import * as dm from '../engine/dmath'
 
 /**
@@ -17,7 +18,8 @@ import * as dm from '../engine/dmath'
  * domain takes the sky with its weather), then a portal opens past the screen
  * edge, waits a while and sends the team in once a player stands in it for
  * `RIFT.enterTime`: into the legendary's domain (`enterDomain`) or its old
- * arena (`enterArena`; always in co-op, `riftDomain`). Any other map system can open the same door.
+ * arena (`enterArena`; always in co-op, `riftDomain`). Any other map system can open the same door:
+ * the Ultra Wormhole does (`wormhole.ts`), on its own schedule.
  */
 
 const PORTAL_COLORS = ['#7850c8', '#c8a8f8', '#ffffff'] as const
@@ -86,8 +88,9 @@ export const updateRiftPortal = (g: Game, dt: number) => {
   if (!portal) {
     // The endless mode picks up its own cadence once the run's slots are used.
     if (g.endless && rift.nextAt === Infinity) rift.nextAt = g.time + RIFT.endlessFirst
-    const due = riftDue({ time: g.time, nextAt: rift.nextAt, busy: rift.arena !== null || g.raid.den !== null, bossAlive: g.bossId !== null, endless: g.endless !== null })
-    if (due) startOmen(g)
+    const state = { time: g.time, busy: rift.arena !== null || g.raid.den !== null, bossAlive: g.bossId !== null, endless: g.endless !== null }
+    if (riftDue({ ...state, nextAt: rift.nextAt })) startOmen(g)
+    else if (wormholeDue({ ...state, at: rift.wormholeAt })) startWormhole(g)
     return
   }
   portal.left -= dt

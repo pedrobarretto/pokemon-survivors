@@ -310,6 +310,17 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   745: { rig: { SE: { seat: [6, 0, -1], eyesAt: [[0, 6]] }, 'S:Walk': { eyesAt: [[-3, 11], [3, 11]] }, 'S:Idle': { eyesAt: [[-3, 4], [3, 4]] }, 'E:Walk': { seat: [3, -2, -8], eyesAt: [[1, 5]] }, 'E:Idle': { eyesAt: [[0, 4]], neck: [-2, 5] }, 'E:Hurt': { seat: [3, -2, -8], eyesAt: [[1, 5]] } } }, // Lycanroc: facing us its eyes are read off its mane's edges; turned, the seat and the eyes are read off its white mane, behind the head (in profile the seat spans the mane too and sits on its eye's line, and idle its mouth marker sits up on its brow)
   '745s': { rig: { S: { seat: [0, 0, -2], neck: [0, 4] }, SE: { seat: [6, 0, -1], eyesAt: [[0, 6]], neck: [1, 2] }, N: { seat: [0, 0, 4], neck: [0, 1] }, 'S:Walk': { eyesAt: [[-3, 11], [3, 11]] }, 'S:Idle': { seat: [0, 4, 4], eyesAt: [[-3, 4], [3, 4]], neck: [0, -4] }, 'S:Hurt': { eyesAt: [[-4, 14], [4, 14]] }, 'SE:Idle': { seat: [0, -2, -3] }, 'N:Idle': { seat: [0, 0, -4] }, 'E:Walk': { seat: [9, -1, 5], eyesAt: [[1, 5]], neck: [4, 4] }, 'E:Idle': { eyesAt: [[0, 4]], neck: [-2, 5] }, 'E:Hurt': { seat: [8, -3, 5], eyesAt: [[1, 5]], neck: [3, 2] } } }, // Lycanroc's shiny: as its normal colors, but its rig drifts off theirs (in profile the seat and the eye slide back onto its mane, the necks rise onto its face)
   770: { rig: { S: { seat: [0, -3, -16], eyesAt: [[-3, 5], [2, 5]] }, SE: { eyesAt: [[-1, 4], [4, 3]] } }, no: NO_BODY }, // Palossand: a sand castle; the hat goes on its middle tower, not over its walls, and its eyes are the tower's windows
+  // The Ultra Beasts (`data/ultraBeasts.ts`): built nothing like a head with a hat on it, so most go bare up top.
+  793: { no: ['head'] }, // Nihilego: its bell is its whole head, the eyes glowing in its crown; a hat sits over them
+  794: { no: ['head'] }, // Buzzwole: a tiny head between swollen arms; a hat sinks into its proboscis and is cut by its shoulders
+  795: { no: ['head:E'] }, // Pheromosa: in profile its antennae sweep back over where a brim would go
+  796: { no: ['head:SE'] }, // Xurkitree: its head is a star of wires; turned a little, a hat lands on its eyes
+  797: { no: ['head', 'back'] }, // Celesteela: its head is a rocket's nose cone, too narrow and too high for a hat, and its back its boosters
+  798: { no: ['head'] }, // Kartana: its head is a paper blade, its face a fold of it; a hat covers the face
+  799: { no: ['head:S'] }, // Guzzlord: facing us its head is its maw, and a hat sits on its teeth
+  804: { no: ['head'] }, // Naganadel: its head's crest and needle fill the seat; a hat covers its eyes
+  805: { no: ['head:E'] }, // Stakataka: in profile the top block that reads as its head is one of its stones
+  806: { no: ['head'] }, // Blacephalon: its head is the bomb it throws, its hair a flame
   810: { rig: { NE: { seat: [0, -4] }, N: { seat: [0, -4] } } }, // Grookey: from behind the seat drops onto the back of its head
   811: { rig: { S: { seat: [0, -3], eyesAt: [[-3, 5], [3, 5]] }, SE: { seat: [0, -3] }, E: { seat: [0, -4] } } }, // Thwackey: the seat drops past its forehead to its eyes' line (facing us, its ears' tufts read as the eyes)
   812: { rig: { S: { seat: [0, 0, 4] }, SE: { seat: [0, 0, -5], left: 'none' }, E: { seat: [0, 0, -8] }, NE: { seat: [0, 0, -8] }, N: { seat: [0, 0, -3] } } }, // Rillaboom: the seat spans its mane, wider turned than facing us (a hat sized to all of it swallowed the head); turned a little, a dark tuft reads as an eye

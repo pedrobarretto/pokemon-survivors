@@ -120,6 +120,7 @@ export const siteZh: SiteMessages = {
     eventRift: (from: string) => `只在2026女巫之夜：在鬧鬼對局中，夢魘裂縫可能取代一道裂縫，從 ${from} 起（可選）`,
     raid: (from: string) => `太晶團體戰的巨大頭目：從 ${from} 起出現在太晶洞窟，太晶屬性不定（可選）`,
     stellarRaid: (from: string) => `週末的 7★ 星晶太晶團體戰：在今日團體戰的洞窟中，約 ${from}。擊敗一次即可捕捉`,
+    wormhole: (at) => `從究極之洞出現，單人遊戲每局一個，約 ${at} 時（可選）；本週的究極異獸更常出現`,
     place: (name: string, from: string) => `住在${name}，從 ${from} 起（可選地點）`,
     placeBoss: (name: string, from: string) => `從${name}的 Odd Keystone 中衝出，從 ${from} 起`,
     lucky: (name: string, from: string) => `從${name}的草叢或洞裡冒出來，從 ${from} 起：很膽小、很快就跑掉，經驗值很多`,
@@ -552,7 +553,7 @@ export const siteZh: SiteMessages = {
       opensHead: '傳說招式',
       pressureTitle: '傳說模式的難度',
       pressure: '壓迫感會疊加在每種難度上：以下是傳說模式的倍率。',
-      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: 'Mewtwo 身旁（1/10，每場沒有幻之寶可夢的決戰後提高）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）', festival: '2026 燈籠祭（獎勵）' },
+      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: 'Mewtwo 身旁（1/10，每場沒有幻之寶可夢的決戰後提高）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）', festival: '2026 燈籠祭（獎勵）', ultra: '究極之洞（單人遊戲每局一個）', ultraGift: '收服10隻究極異獸的禮物' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: '在2026年的女巫之夜（10月24日至11月2日），Darkrai 以活動傳說的身分登場：它只出現在夢魘裂縫中，而夢魘裂縫可能在鬧鬼對局中取代一道裂縫，贏得2次即可收服。它使用能讓敵群沉睡的 Dark Void，以及能傷害在它附近睡著的敵人的固有特性 Bad Dreams。活動結束後它會回到黑暗之中，但已收服的玩家仍可繼續使用它。它不計入 Arceus 的條件。',
     },

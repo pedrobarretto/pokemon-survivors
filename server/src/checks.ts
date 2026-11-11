@@ -139,7 +139,7 @@ export const startChecks = (ranking: RankingStore, { paused = false } = {}) => {
     // The outbreak, the Noite das Bruxas and the raid of the day are run inputs: they must fit the day the run started (or the day before).
     if (judged.kind === 'unfit') {
       await ranking.setVerified(id, claimed.time, { ok: false }, null)
-      const why = judged.why === 'outbreak' ? 'another day\'s outbreak' : judged.why === 'raid' ? 'another day\'s Tera Raid' : 'haunted outside the event'
+      const why = judged.why === 'outbreak' ? 'another day\'s outbreak' : judged.why === 'raid' ? 'another day\'s Tera Raid' : judged.why === 'ultra' ? 'another week\'s Ultra Beast' : 'haunted outside the event'
       console.log(`check ${id}: failed, ${why} (${claimed.startedAt.toISOString()})${under}`)
       return
     }

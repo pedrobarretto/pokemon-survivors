@@ -21,6 +21,7 @@ import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
 import { MEGA_LINES, MEGAS, megasOf, type MegaId } from './data/megas'
 import { isRiftLegend } from './data/rifts'
+import { isUltraBeast } from './data/ultraBeasts'
 import { domainTheme } from './game/domain'
 import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
@@ -93,6 +94,7 @@ import { levelUpDevTools } from './game/levelUpDev'
 import { legendDevTools } from './game/legendDev'
 import { bankCapture, captureDevTools, showCapture } from './ui/capture'
 import { riftDevTools } from './game/riftDev'
+import { ultraDevTools } from './ui/ultraDev'
 import { placeDevTools } from './game/placeDev'
 import { placeFeedback } from './ui/places'
 import { landmarkFeedback } from './ui/landmarks'
@@ -175,7 +177,7 @@ import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
 import { openGameModes } from './ui/gameModes'
 import { loadLobbyMode, saveLobbyMode } from './ui/lobbyMode'
-import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
+import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, ultraToday, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
@@ -1409,6 +1411,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // And the outbreak and haunting it dealt with the ticket (the API checks them by its own clock); without one, the device's day.
   const outbreak = outbreakToday(ranked?.outbreak ?? null)
   const halloween = halloweenToday(ranked?.halloween ?? null)
+  const ultra = ultraToday(ranked?.ultra ?? null)
   const legend = !c && isLegend(starter)
   // A plan from another day (the menus stayed open past midnight) would play yesterday's outbreak (or haunting).
   const plan = c
@@ -1449,6 +1452,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     ...shadowStart(save.shadows, starter),
     // The Game Corner poster's pass brings the Rocket Hideout's hatch onto this run's map (`game/hideoutPass.ts`).
     ...(holdsPass(save.hideout) && !isLegend(starter) ? { hideout: true } : {}),
+    ultra,
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
@@ -2149,7 +2153,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const name = PLAYABLE[localPlayer(g).starter].name
       // A form still behind the community goal keeps the legend's name (`legendStage`): then it just awakened.
       const form = playerForm(g).name
-      return aside(rich(e.form && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
+      return aside(rich(form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
     }
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
@@ -2307,7 +2311,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return news(rich(t().hazards.intro), 3400)
     case 'riftOpen':
       playSfx('shiny')
-      return news(rich(t().rifts.open), 3200)
+      return news(rich(g.rift.portal && isUltraBeast(g.rift.portal.legend) ? t().ultra.open : t().rifts.open), 3200)
     case 'riftClosed':
       return aside(t().rifts.closed, 2000)
     case 'riftOmen': {
@@ -2316,6 +2320,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
       // Rayquaza's Air Lock ends what Kyogre or Groudon stirred up earlier in the run.
       const calmed = e.enemy === 'rayquaza' ? g.rift.met.find((l) => l === 'kyogre' || l === 'groudon') : undefined
       const nod = calmed ? ` ${t().rifts.calms(ENEMIES[calmed].name)}` : ''
+      // An Ultra Wormhole's omen says what's coming through, in co-op (no domain lines' sky) too.
+      if (isUltraBeast(e.enemy)) return news(rich(`${lines ? `${lines.omen} ` : ''}${t().ultra.omen(ENEMIES[e.enemy].name)}`), 4600)
       return news(rich(lines ? `${lines.omen}${nod} ${t().rifts.omen(ENEMIES[e.enemy].name)}` : t().rifts.omenFaint), 4200)
     }
     case 'riftEnter': {
@@ -5463,6 +5469,7 @@ if (import.meta.env.DEV) {
       /** `ps.ball(3)` drops Poké Balls 20 px to the right of the player (inside the magnet), side by side. */
       ball: (n = 1) => withRun((g) => Array.from({ length: n }, (_, i) => dropPickup(g, localPlayer(g).x + 20 + i * 6, localPlayer(g).y, 'pokeball'))),
       ...riftDevTools(() => run?.game),
+      ...ultraDevTools(() => run?.game, () => showMenu(loadSave().partner, 'legends')),
       ...placeDevTools(() => run?.game),
       ...seasonFindDevTools(() => run?.game, devLandmark),
       ...travelDevTools(),

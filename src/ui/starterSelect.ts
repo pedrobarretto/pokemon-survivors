@@ -8,7 +8,10 @@ import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { incubatorSlots, isReady } from '../game/eggs'
-import { isLegend, legendEvent, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
+import { giftLegend, isLegend, isUltraLegend, legendEvent, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
+import { ULTRA_BEASTS } from '../data/ultraBeasts'
+import { ultraCaptured } from '../game/ultraGifts'
+import { beastBallIcon } from '../render/ultraArt'
 import { HALLOWEEN } from '../data/halloween'
 import { brasiliaDay } from '../game/day'
 import { claimOpen, festivalById, festivalEnd, shownLegends } from '../game/festival'
@@ -35,7 +38,7 @@ import { localLook } from '../render/looks'
 import { gemAmount, itemName } from './gemBits'
 import { formatDay, formatPokeDollarsShort, t } from '../i18n'
 import { h, later, rich } from './dom'
-import { loadSave, today, updateSave } from './save'
+import { loadSave, today, ultraToday, updateSave } from './save'
 import { typeBadge, type Screen } from './screens'
 import { actionBar, backButton, gearButton, segmented, shellScreen, topBar, walletChip } from './shell'
 import { detailsSheet, evoLine, shinyPicker, statBars } from './partnerDetails'
@@ -134,6 +137,11 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const firstHatched = HATCHLING_IDS.find((id) => save.hatched[id]) ?? HATCHLING_IDS[0]!
   // A festival legend stays out of the tab until its festival is announced (`legendShown`).
   const legendIds = shownLegends(brasiliaDay(today()))
+  /** The legends' grid and, under their own heading, the Ultra Beasts' (`ULTRA_LEGENDS`). */
+  const regularLegendIds = legendIds.filter((id) => !isUltraLegend(id))
+  const ultraLegendIds = legendIds.filter(isUltraLegend)
+  /** The beast of the week (`game/ultraWeek.ts`) wears a ring of prism light on its cell. */
+  const weekBeast = ultraToday()
   const firstCaptured = legendIds.find((id) => isCaptured(save.legends, id)) ?? REGULAR_LEGENDS[0]
   const cursor: { starters: StarterId; eggs: HatchlingId; legends: LegendId } = {
     starters: isStarter(initial) ? initial : 'charmander',
@@ -257,18 +265,20 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     const open = unlocked(id)
     const name = PLAYABLE[id].name
     const wins = `${Math.min(save.legends[id] ?? 0, winsNeeded(id))}/${winsNeeded(id)}`
+    const week = id === weekBeast
     const el = h(
       'button',
       {
-        class: open ? 'partner-cell legend' : 'partner-cell legend locked',
+        class: `${open ? 'partner-cell legend' : 'partner-cell legend locked'}${week ? ' ultra-week' : ''}`,
         type: 'button',
-        title: open ? cellTitle(id, name) : legendFestival(id) ? name : `${name} · ${m.legend.wins(wins)}`,
+        title: [open ? cellTitle(id, name) : legendFestival(id) || giftLegend(id) ? name : `${name} · ${m.legend.wins(wins)}`, week ? m.ultra.week.title : null].filter((s) => s !== null).join(' · '),
         style: `--t:${open ? PLAYABLE[id].color : '#8890b0'}`,
         onclick: () => select(id),
       },
       open ? cellPortrait(id) : cellSilhouette(id),
-      !open && !legendFestival(id) && h('b', { class: 'partner-cell-count' }, wins),
+      !open && !legendFestival(id) && !giftLegend(id) && h('b', { class: 'partner-cell-count' }, wins),
       eventTag(id),
+      isUltraLegend(id) && h('img', { class: 'partner-cell-ultra', src: beastBallIcon(), alt: '' }),
       shinyOf(id) && shinyTag(),
       clearTag(id),
       capTag(id),
@@ -339,9 +349,26 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     ),
   )
 
-  /** Lendários: every legend, captured or not, and what the mode is about. ↑ ↓ read the column count from the grid. */
-  const legendGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...legendIds.map(legendCell))
-  const legendsPane = h('div', { class: 'partner-legends' }, legendGrid, h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)))
+  /**
+   * Lendários: every legend, captured or not, then the Ultra Beasts under their
+   * own heading, in one scroller, and what the mode is about. ↑ ↓ read the
+   * column count from each grid and cross between the two.
+   */
+  const legendGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...regularLegendIds.map(legendCell))
+  const ultraGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...ultraLegendIds.map(legendCell))
+  const ultraHead = h(
+    'h4',
+    { class: 'partner-legend-head' },
+    h('img', { src: beastBallIcon(), alt: '' }),
+    m.ultra.heading,
+    h('small', {}, `${capturedCount(save.legends, ultraLegendIds)}/${ultraLegendIds.length}`),
+  )
+  const legendsPane = h(
+    'div',
+    { class: 'partner-legends' },
+    h('div', { class: 'partner-legend-scroll' }, legendGrid, ultraLegendIds.length > 0 && ultraHead, ultraLegendIds.length > 0 && ultraGrid),
+    h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)),
+  )
 
   const randomButton = h(
     'button',
@@ -436,8 +463,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const need = winsNeeded(id)
       // Once its event is over, an event legend can't be caught: only the line saying it's gone stays.
       const over = eventStanding(id) === 'after'
-      // A festival legend is never fought: no wins to count, only its festival's line.
-      const gift = legendFestival(id) !== null
+      // A festival legend is never fought: no wins to count, only its festival's line. Poipole neither: its line counts the Ultra Beasts captured.
+      const gift = legendFestival(id) !== null || giftLegend(id)
       // The last legend (Arceus) names the regular ones it still waits for.
       const missing = legendSource(id) === 'endless' ? stillMissing(save.legends, id) : []
       hero.replaceChildren(
@@ -453,6 +480,9 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             !gift && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
             !over && !gift && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
             missing.length > 0 && h('p', { class: 'partner-blurb locked-blurb' }, m.legend.stillMissing(missing.map((other) => LEGENDS[other].line[0].name))),
+            giftLegend(id) && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where.ultraGift)),
+            giftLegend(id) && h('p', { class: 'partner-legend-wins' }, m.ultra.progress(ultraCaptured(save), ULTRA_BEASTS.length)),
+            id === weekBeast && h('p', { class: 'partner-legend-event' }, h('img', { class: 'ultra-ball-icon', src: beastBallIcon(), alt: '' }), h('b', {}, m.ultra.week.title)),
             eventLine(id, true),
           ),
         ),
@@ -727,10 +757,15 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       return select(EGG_ORDER[next]!)
     }
     if (tab === 'legends') {
-      const cols = getComputedStyle(legendGrid).gridTemplateColumns.split(' ').length || 1
-      const next = stepGrid(legendIds.indexOf(cursor.legends), dir, cols, legendIds.length)
-      if (next === 'above') return setTab('eggs')
-      if (next !== 'below') select(legendIds[next]!)
+      // The Ultra Beasts' grid sits under the legends': ↓ off the legends' last row goes into it, ↑ off its first comes back.
+      const ultra = ultraLegendIds.includes(cursor.legends)
+      const list = ultra ? ultraLegendIds : regularLegendIds
+      const cols = getComputedStyle(ultra ? ultraGrid : legendGrid).gridTemplateColumns.split(' ').length || 1
+      const at = list.indexOf(cursor.legends)
+      const next = stepGrid(at, dir, cols, list.length)
+      if (next === 'above') return ultra ? select(regularLegendIds[Math.min(regularLegendIds.length - 1, (Math.ceil(regularLegendIds.length / cols) - 1) * cols + (at % cols))]!) : setTab('eggs')
+      if (next === 'below') return !ultra && ultraLegendIds.length > 0 ? select(ultraLegendIds[Math.min(ultraLegendIds.length - 1, at % cols)]!) : undefined
+      select(list[next]!)
       return
     }
     const i = STARTER_IDS.indexOf(cursor.starters)

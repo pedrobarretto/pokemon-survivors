@@ -15,6 +15,7 @@ import { UPGRADE_IDS, UPGRADES, type Ranks } from './meta'
 import { LEGEND_HORDE } from './legend'
 import { isRecord, wholeNumber } from './parse'
 import { isOutbreakSpecies, withOutbreak } from './outbreak'
+import { isUltraBeast, type UltraBeast } from '../data/ultraBeasts'
 import { withHaunts } from './halloween'
 import { drawRoster } from './roster'
 import { isDayKey, type DayKey } from './day'
@@ -87,6 +88,8 @@ export type ReplayStart = {
   variant?: ShadowVariant
   /** The Game Corner poster's pass (`hideoutPass.ts`): the Rocket Hideout's hatch opens on this run's map. Absent otherwise. */
   hideout?: true
+  /** The Ultra Beast of the week (`game/ultraWeek.ts`); the server checks it against the week the run started (`ultraFits`). None when absent. */
+  ultra?: UltraBeast
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
@@ -251,6 +254,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
       ...(isDayKey(s.raid) ? { raid: s.raid } : {}),
       ...(isShadowVariant(s.variant) ? { variant: s.variant } : {}),
       ...(s.hideout === true ? { hideout: true } : {}),
+      ...(isUltraBeast(s.ultra) ? { ultra: s.ultra } : {}),
       view,
     },
     moves: raw.moves,
@@ -288,6 +292,7 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     raidDay: start.raid ?? null,
     variant: start.variant ?? null,
     hideout: start.hideout === true,
+    ultra: start.ultra ?? null,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {

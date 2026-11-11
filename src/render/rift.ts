@@ -3,6 +3,7 @@ import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { ARENA_LAYOUTS, type ArenaLayout, type FloorPattern, type FloorPlan } from '../data/arenas'
 import { ARENAS, RIFT, type ArenaTheme, type RiftLegend } from '../data/rifts'
+import { perBeast } from '../data/ultraBeasts'
 import { fits, floorAt, holesAt, lavaDepth, onBridge, stepsAt, stepWarning } from '../game/arenaFloor'
 import type { RiftArena, RiftPortal } from '../game/rift'
 import type { Game } from '../game/types'
@@ -151,7 +152,34 @@ const garden: Pattern = (x, y) => {
   return band ? '#5ca450' : '#66ae58'
 }
 
-export const PATTERNS: Record<FloorPattern, Pattern> = { rings, planks, slabs, basalt, wetRock, jade, sand, craters, garden }
+/** Ultra Space's light along a seam, cycling through the prism by where it runs. */
+export const PRISM = ['#f8a0d0', '#f8e098', '#a8f0c8', '#98d8f8', '#c8a8f8'] as const
+
+/**
+ * Ultra Space's prism glass: triangular facets in two shades (a few catching
+ * the light), seams of violet between them, and here and there a stretch of
+ * seam lit in the prism's colors.
+ */
+const prism: Pattern = (x, y, t) => {
+  const [base, alt, grout] = t.floor
+  const H = 14
+  const a = (y + 4000) / H
+  const b = (x * 0.866 + y * 0.5 + 4000) / H
+  const c = (-x * 0.866 + y * 0.5 + 4000) / H
+  const fa = Math.floor(a)
+  const fb = Math.floor(b)
+  const fc = Math.floor(c)
+  const seam = a - fa < 1 / H || b - fb < 1.1 / H || c - fc < 1.1 / H
+  if (seam) {
+    const lit = hash2(Math.floor((x + 4000) / 9), Math.floor((y + 4000) / 9), 31) < 0.14
+    return lit ? PRISM[Math.floor((x + y + 8000) / 7) % PRISM.length]! : grout
+  }
+  const id = hash2(fa * 31 + fb, fc, 17)
+  const tone = id < 0.45 ? base : id < 0.9 ? alt : mix(alt, t.wall[0], 0.4)
+  return hash2(Math.floor(x), Math.floor(y), 5) < 0.012 ? t.wall[0] : tone
+}
+
+export const PATTERNS: Record<FloorPattern, Pattern> = { rings, planks, slabs, basalt, wetRock, jade, sand, craters, garden, prism }
 
 /** Inlays drawn over the pattern: the Bell Tower's gold band and the Spear Pillar's clock. */
 const INLAYS: Partial<Record<RiftLegend, (x: number, y: number, t: ArenaTheme) => string | null>> = {
@@ -186,6 +214,9 @@ export const lavaColor = (layout: FloorPlan, x: number, y: number, color: string
   return mix(color, '#e05818', 0.45 + d * 0.1)
 }
 
+/** The side of an Ultra Space platform: violet glass going dark. */
+const ULTRA_FACE: Ramp = ['#0c0624', '#241650', '#3c2878', '#5a44a0']
+
 /** The platform's side under each floor's south edges. */
 export const FACES: Record<RiftLegend, Ramp> = {
   lugia: ['#0c1428', '#1c2c4c', '#2c3c5c', '#40547a'],
@@ -198,6 +229,7 @@ export const FACES: Record<RiftLegend, Ramp> = {
   latios: ['#2c2014', '#4a3824', '#685034', '#806444'],
   deoxys: ['#0c0814', '#1c1428', '#2c2038', '#3c3050'],
   darkrai: ['#040208', '#0c0814', '#181024', '#241a36'],
+  ...perBeast(() => ULTRA_FACE),
 }
 
 const SIZE = 380

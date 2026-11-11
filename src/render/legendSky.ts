@@ -5,6 +5,7 @@ import { RIFT } from '../data/rifts'
 import { REVEAL_AT } from '../game/domainRules'
 import type { Game } from '../game/types'
 import { riftDomain } from '../game/rift'
+import { PRISM } from './rift'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -389,6 +390,125 @@ const newMoon: Painter = (ctx, w, h, camX, camY, t, g) => {
   }
 }
 
+/**
+ * A crack's path out of the focus: `segments` straight runs, each turning
+ * sharply from the last like broken glass, fanned over the upper half of the
+ * sky (`dir` its heading), seeded by its index.
+ */
+const crackPath = (i: number, dir: number, segments: number, len: number) => {
+  const pts: { x: number; y: number }[] = [{ x: 0, y: 0 }]
+  let a = dir
+  let x = 0
+  let y = 0
+  for (let s = 0; s < segments; s++) {
+    a = dir + (hash2(i, s + 2, 43) - 0.5) * 0.8
+    const step = len * (0.7 + hash2(i, s + 2, 47) * 0.6)
+    x += Math.cos(a) * step
+    y += Math.sin(a) * step
+    pts.push({ x, y })
+  }
+  return pts
+}
+
+/**
+ * One crack of light from (fx, fy) along `pts`, the first `shown` share of
+ * it: a white core with a prism edge beneath (the light splitting through it),
+ * running through the prism's colors along its length; the run nearest the
+ * focus is a pixel thicker. `bright` (a surge) burns the edge white too.
+ */
+const drawCrack = (ctx: Ctx, fx: number, fy: number, pts: readonly { x: number; y: number }[], shown: number, t: number, bright: boolean) => {
+  const total = (pts.length - 1) * shown
+  let walked = 0
+  for (let s = 0; s < pts.length - 1 && s < total; s++) {
+    const a = pts[s]!
+    const b = pts[s + 1]!
+    const part = Math.min(1, total - s)
+    const dx = (b.x - a.x) * part
+    const dy = (b.y - a.y) * part
+    const n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy))))
+    for (let j = 0; j <= n; j++) {
+      const x = Math.round(fx + a.x + (dx * j) / n)
+      const y = Math.round(fy + a.y + (dy * j) / n)
+      walked++
+      ctx.fillStyle = bright ? '#ffffff' : PRISM[Math.floor(walked / 6 + t * 5) % PRISM.length]!
+      ctx.fillRect(x, y + 1, 1, 1)
+      if (s === 0) ctx.fillRect(x + 1, y + 1, 1, 1)
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(x, y, s === 0 ? 2 : 1, 1)
+    }
+  }
+}
+
+/** The headings of an omen's cracks: out to the sides and up across the sky, none down at the player. */
+const CRACKS = [Math.PI, -Math.PI * 0.85, -Math.PI * 0.6, -Math.PI * 0.4, -Math.PI * 0.15, 0, Math.PI * 0.9, Math.PI * 0.1] as const
+
+/**
+ * An Ultra Wormhole's omen: the sky sinks into violet and cracks open from a
+ * point high over the screen, the cracks running out across the sky through
+ * the omen with Ultra Space's prismatic light in them and shards of it
+ * drifting down; at the end their heart tears into a small hole showing Ultra
+ * Space, rimmed in light. In the domain only a little violet and the shards
+ * stay (`render/domain.ts` paints Ultra Space itself).
+ */
+const ultraSpace: Painter = (ctx, w, h, camX, camY, t, g) => {
+  const inside = g.rift.arena !== null
+  const omen = g.rift.omen
+  const k = inside ? 1 : omen ? Math.min(1, (1 - omen.left / RIFT.omenTime) * 1.25) : 1
+  // Once the wormhole is open, the sky clears a little so it shines through.
+  const open = !inside && !omen
+  ctx.fillStyle = `rgba(30,8,72,${(inside ? 0.06 : open ? 0.16 : 0.1 + 0.3 * k).toFixed(2)})`
+  ctx.fillRect(0, 0, w, h)
+  // The sky darkens most at the top, in bands that thin out downward.
+  if (!inside && !open) {
+    const band = h * 0.36
+    for (let y = 0; y < band; y += 2) {
+      ctx.fillStyle = `rgba(20,4,48,${(0.42 * k * (1 - y / band)).toFixed(2)})`
+      ctx.fillRect(0, y, w, 2)
+    }
+  }
+  // Shards of prism light drifting down through the air.
+  const shards = Math.round(((w * h) / 2600) * (inside ? 0.5 : k))
+  for (let i = 0; i < shards; i++) {
+    const speed = 10 + hash2(i, 1, 53) * 18
+    const x = Math.round(mod(hash2(i, 2, 53) * 4096 - camX * 0.3 + Math.sin(t + i) * 4, w))
+    const y = Math.round(mod(hash2(i, 3, 53) * 4096 - camY * 0.3 + t * speed, h))
+    ctx.fillStyle = PRISM[i % PRISM.length]!
+    ctx.fillRect(x, y, 1, i % 4 === 0 ? 2 : 1)
+  }
+  if (inside) return
+  const fx = Math.round(w / 2)
+  const fy = Math.round(Math.min(h * 0.2, 70))
+  // Every few seconds the light surges through them.
+  const surge = t % 3.6 < 0.12
+  const reach = Math.min(w, h * 1.6) * 0.08
+  CRACKS.forEach((dir, i) => {
+    // Each crack starts a little after the one before, then runs out.
+    const shown = Math.min(1, Math.max(0, (k - (i / CRACKS.length) * 0.4) / 0.5))
+    if (shown <= 0) return
+    const pts = crackPath(i, dir, 4, reach * (0.7 + hash2(i, 9, 41) * 0.5))
+    drawCrack(ctx, fx, fy, pts, shown, t, surge)
+    // A branch off its second bend once it's well open.
+    if (shown > 0.6) {
+      const mid = pts[2]!
+      drawCrack(ctx, fx + Math.round(mid.x), fy + Math.round(mid.y), crackPath(i + 31, dir + (i % 2 ? 0.7 : -0.7), 2, reach * 0.5), Math.min(1, (shown - 0.6) / 0.4), t, surge)
+    }
+  })
+  // The cracks' heart: from the omen's last stretch, a hole into Ultra Space, rimmed in light.
+  const tear = Math.min(1, Math.max(0, (k - 0.6) / 0.4))
+  if (tear <= 0) return
+  const rx = Math.round(4 + tear * 9)
+  const ry = Math.round(2 + tear * 5)
+  blitEllipse(ctx, rx + 2, ry + 2, PRISM[Math.floor(t * 6) % PRISM.length]!, fx, fy)
+  blitEllipse(ctx, rx + 1, ry + 1, '#ffffff', fx, fy)
+  blitEllipse(ctx, rx, ry, '#1a0838', fx, fy)
+  // Ultra Space's light glinting inside it.
+  for (let i = 0; i < 6; i++) {
+    if (Math.sin(t * 3 + i * 2.1) < 0) continue
+    ctx.fillStyle = PRISM[i % PRISM.length]!
+    ctx.fillRect(Math.round(fx + (hash2(i, 1, 57) - 0.5) * rx * 1.4), Math.round(fy + (hash2(i, 2, 57) - 0.5) * ry * 1.2), 1, 1)
+  }
+}
+
 const TINTS: Record<LegendSky, string> = {
   downpour: 'rgba(8,18,52,0.42)',
   harshSun: 'rgba(248,152,40,0.18)',
@@ -399,10 +519,11 @@ const TINTS: Record<LegendSky, string> = {
   mist: 'rgba(232,224,248,0.22)',
   meteors: 'rgba(16,8,40,0.3)',
   newMoon: 'rgba(6,2,16,0.5)',
+  ultraSpace: 'rgba(28,10,64,0.3)',
 }
 
 /** The skies painted so far; the others get their tint until theirs are written. */
-const PAINTERS: Partial<Record<LegendSky, Painter>> = { downpour, harshSun, gale, storm, embers, timeWarp, mist, meteors, newMoon }
+const PAINTERS: Partial<Record<LegendSky, Painter>> = { downpour, harshSun, gale, storm, embers, timeWarp, mist, meteors, newMoon, ultraSpace }
 
 /** The sky in play: a domain legendary's omen or open portal on the map, or its domain once it has shown itself. */
 export const skyNow = (g: Game): LegendSky | null => {

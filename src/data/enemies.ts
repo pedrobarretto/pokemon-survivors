@@ -109,6 +109,17 @@ export const ENEMIES = {
   // The Noite das Bruxas' event rift (`EVENT_RIFTS`): Darkrai, and the shadow clones of its Nightmare (`game/darkraiDomain.ts`), which vanish at a hit and give nothing.
   darkrai: { dex: 491, name: 'Darkrai', types: ['dark'], hp: 3400, speed: 58, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
   darkraiShade: { dex: 491, name: 'Darkrai', types: ['dark'], hp: 1, speed: 46, damage: 16, xp: 0, mass: 40 },
+  // The Ultra Wormholes' beasts (`data/ultraBeasts.ts`), fought in their Ultra Space domains (`data/domains/ultra.ts`).
+  nihilego: { dex: 793, name: 'Nihilego', types: ['rock', 'poison'], hp: 2000, speed: 44, damage: 26, xp: 0, mass: 40, boss: true, legendary: true },
+  buzzwole: { dex: 794, name: 'Buzzwole', types: ['bug', 'fighting'], hp: 2200, speed: 50, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
+  pheromosa: { dex: 795, name: 'Pheromosa', types: ['bug', 'fighting'], hp: 1700, speed: 76, damage: 26, xp: 0, mass: 40, boss: true, legendary: true },
+  xurkitree: { dex: 796, name: 'Xurkitree', types: ['electric'], hp: 1900, speed: 44, damage: 26, xp: 0, mass: 40, boss: true, legendary: true },
+  celesteela: { dex: 797, name: 'Celesteela', types: ['steel', 'flying'], hp: 2300, speed: 48, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
+  kartana: { dex: 798, name: 'Kartana', types: ['grass', 'steel'], hp: 1700, speed: 70, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
+  guzzlord: { dex: 799, name: 'Guzzlord', types: ['dark', 'dragon'], hp: 2600, speed: 36, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
+  stakataka: { dex: 805, name: 'Stakataka', types: ['rock', 'steel'], hp: 2400, speed: 30, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
+  blacephalon: { dex: 806, name: 'Blacephalon', types: ['fire', 'ghost'], hp: 1800, speed: 56, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
+  naganadel: { dex: 804, name: 'Naganadel', types: ['poison', 'dragon'], hp: 2000, speed: 64, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
   // Deoxys's retinue in its domain (`data/domains/deoxys.ts`), never in the horde (no tier).
   beldum: { dex: 374, name: 'Beldum', types: ['steel', 'psychic'], hp: 20, speed: 44, damage: 10, xp: 2, mass: 1.8 },
   metang: { dex: 375, name: 'Metang', types: ['steel', 'psychic'], hp: 60, speed: 40, damage: 13, xp: 5, mass: 2.6 },

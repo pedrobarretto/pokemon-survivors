@@ -21,6 +21,7 @@ import { halloweenAt } from '../../src/game/halloween'
 import { parseHandlePrefix, parsePresenceUpdate, parseRoomCode } from '../../src/game/friends'
 import { parseSaveData } from '../../src/game/meta'
 import { outbreakAt } from '../../src/game/outbreak'
+import { ultraAt } from '../../src/game/ultraWeek'
 import { isRecord } from '../../src/game/parse'
 import type { LooksResponse } from '../../src/net/looks'
 import type { ClawInserted as ClawInsertedBody, ClawState, CornerRedeemed, CornerSpun, CornerState, CornerSwept, DigStarted as DigStartedBody, DigState, ErrandClaimed, GameClaimed, RealmBook, RealmCities, RealmFriends, RealmMe, RealmSettings, SafariActed, SafariStarted as SafariStartedBody, SafariState } from '../../src/net/realmApi'
@@ -408,9 +409,9 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const challenge = isRecord(body) && body.challenge !== undefined ? body.challenge : null
     if (challenge !== null && (!isDayKey(challenge) || !challengeOpen(challenge, new Date()))) return c.json({ error: 'not an open challenge' }, 400)
     const started = await ranking.startRun(c.var.userId, challenge)
-    // The day by this clock (the one `outbreakFits` and `halloweenFits` check against): its outbreak and whether it's haunted, so a wrong device clock can't play another day's.
+    // The day by this clock (the one `outbreakFits`, `halloweenFits` and `ultraFits` check against): its outbreak, whether it's haunted and the week's Ultra Beast, so a wrong device clock can't play another day's.
     const now = new Date()
-    return started ? c.json({ ...started, outbreak: outbreakAt(now), halloween: halloweenAt(now), rules: RULES_VERSION }, 201) : c.json({ error: 'too many runs' }, 429)
+    return started ? c.json({ ...started, outbreak: outbreakAt(now), halloween: halloweenAt(now), ultra: ultraAt(now), rules: RULES_VERSION }, 201) : c.json({ error: 'too many runs' }, 429)
   })
 
   app.post('/runs/:token/start', auth, async (c) => {

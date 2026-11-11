@@ -1,5 +1,5 @@
 import type { EggTier } from '../game/eggs'
-import { LEGENDS, type LegendId } from './legends'
+import { isLegend, LEGENDS, type LegendDef, type LegendId } from './legends'
 import { line2, line3, type HatchlingDef } from './playableLines'
 import { SEASON_ONE_EGGS } from './seasonOneEggs'
 import { SEASON_ONE_KITS } from './seasonOneKits'
@@ -752,5 +752,10 @@ export const isExclusiveFamily = (id: PlayableId) => isHatchling(id) && EXCLUSIV
 /** A starter: neither a hatched family nor a legend. */
 export const isStarter = (id: PlayableId): id is StarterId => id in STARTERS
 
-/** Dex numbers of a playable Pokémon's whole evolution line. */
-export const playableDex = (id: PlayableId) => PLAYABLE[id].line.map((s) => s.dex)
+/** Dex numbers of a playable Pokémon's whole evolution line (a legend's evolution too: Poipole's Naganadel). */
+export const playableDex = (id: PlayableId) => {
+  const own = PLAYABLE[id].line.map((s) => s.dex)
+  if (!isLegend(id)) return own
+  const legend: LegendDef = LEGENDS[id]
+  return legend.evolve ? [...own, legend.evolve.dex] : own
+}

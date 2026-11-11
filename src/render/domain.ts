@@ -5,11 +5,12 @@ import { fits } from '../game/arenaFloor'
 import type { ArenaShape, Circle, FloorPlan } from '../data/arenas'
 import { domainOf, type ArenaTransform, type LegendDomain, type ThreatKind } from '../data/domains'
 import { ARENAS, RIFT, type ArenaTheme, type RiftLegend } from '../data/rifts'
+import { perBeast } from '../data/ultraBeasts'
 import { composePlan, transformStage } from '../game/domainRules'
 import type { DomainState } from '../game/domain'
 import { riftDomain, type RiftArena, type RiftPortal } from '../game/rift'
 import type { Game } from '../game/types'
-import { FACES, lavaColor, mix, PATTERNS, rgb } from './rift'
+import { FACES, lavaColor, mix, PATTERNS, PRISM, rgb } from './rift'
 import { shade } from './sculpt'
 import { dashedRing } from './strokes'
 
@@ -107,7 +108,13 @@ const lavaHole: HoleLook = (x, y, depth) => {
 }
 
 /** What a domain's holes are, by legendary; null leaves the pixel clear, so the backdrop (Rayquaza's open sky) shows through. */
-const HOLES: Partial<Record<RiftLegend, HoleLook>> = { groudon: lavaHole, rayquaza: () => null, darkrai: () => null }
+const HOLES: Partial<Record<RiftLegend, HoleLook>> = {
+  groudon: lavaHole,
+  rayquaza: () => null,
+  darkrai: () => null,
+  // Ultra Space shows through the gaps in its glass.
+  ...perBeast((): HoleLook => () => null),
+}
 
 /** Bakes chunk (cx, cy) of a domain's floor, or null when it holds no floor at all. */
 const bakeChunk = (p: Painter, cx: number, cy: number) => {
@@ -380,9 +387,67 @@ const drawSea = (ctx: Ctx, camX: number, camY: number, w: number, h: number, t: 
   }
 }
 
-/** The void around the floor: cave rock, the open sky, open sea, or open space with slow parallax motes. */
+/** Ribbons of light streaming through Ultra Space: how many, and how far apart they lie (screen px, before parallax). */
+const RIBBONS = { count: 6, apart: 96 } as const
+
+/**
+ * Ultra Space past the floor: a deep violet void with ribbons of prismatic
+ * light streaming through it, each a wavy band with a bright core, slower the
+ * farther it lies (parallax), and the beast's glints adrift.
+ */
+const drawUltraVoid = (ctx: Ctx, theme: ArenaTheme, camX: number, camY: number, w: number, h: number, t: number) => {
+  ctx.fillStyle = theme.void
+  ctx.fillRect(0, 0, w, h)
+  const span = RIBBONS.count * RIBBONS.apart
+  for (let i = 0; i < RIBBONS.count; i++) {
+    const depth = 0.15 + hash2(i, 1, 61) * 0.25
+    const base = i * RIBBONS.apart + hash2(i, 2, 61) * 40
+    const tilt = (hash2(i, 3, 61) - 0.5) * 0.5
+    const amp = 10 + hash2(i, 4, 61) * 14
+    const wave = 40 + hash2(i, 5, 61) * 50
+    const half = 2 + Math.floor(hash2(i, 6, 61) * 3)
+    for (let x = 0; x < w; x += 2) {
+      const wx = x + camX * depth
+      const y0 = (((base + wx * tilt + Math.sin(wx / wave + t * 0.4 + i) * amp - camY * depth) % span) + span) % span
+      // The band repeats every `span` px down the screen.
+      for (let y = y0 - span; y < h + half; y += span) {
+        const cy = Math.round(y)
+        if (cy < -half || cy > h + half) continue
+        const hue = PRISM[Math.floor((wx + t * 30) / 24 + i) % PRISM.length]!
+        // A dithered violet halo, the band in its hue, a white core flickering along it.
+        if ((x + cy) % 4 === 0) {
+          ctx.fillStyle = '#3c2878'
+          ctx.fillRect(x, cy - half - 2, 2, 1)
+          ctx.fillRect(x, cy + half + 1, 2, 1)
+        }
+        ctx.fillStyle = mix(hue, theme.void, 0.55)
+        ctx.fillRect(x, cy - half, 2, half * 2 + 1)
+        ctx.fillStyle = hue
+        ctx.fillRect(x, cy - 1, 2, 3)
+        if (hash2(Math.floor(wx / 2), i, Math.floor(t * 4)) < 0.3) {
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(x, cy, 2, 1)
+        }
+      }
+    }
+  }
+  ctx.fillStyle = theme.motes
+  const ox = Math.round(camX * 0.4)
+  const oy = Math.round(camY * 0.4)
+  for (let i = 0; i < MOTES; i++) {
+    if (Math.sin(t * 2 + i * 1.7) < -0.4) continue
+    const bx = Math.floor(hash2(i, 1, 79) * MOTE_TILE)
+    const by = Math.floor(hash2(i, 2, 79) * MOTE_TILE)
+    const x0 = (((bx - ox) % MOTE_TILE) + MOTE_TILE) % MOTE_TILE
+    const y0 = (((by - oy) % MOTE_TILE) + MOTE_TILE) % MOTE_TILE
+    for (let y = y0; y < h; y += MOTE_TILE) for (let x = x0; x < w; x += MOTE_TILE) ctx.fillRect(x, y, 1, 1)
+  }
+}
+
+/** The void around the floor: cave rock, the open sky, open sea, Ultra Space, or open space with slow parallax motes. */
 const drawVoid = (ctx: Ctx, p: Painter, camX: number, camY: number, w: number, h: number, t: number) => {
   const theme = p.theme
+  if (p.domain.backdrop === 'ultra') return drawUltraVoid(ctx, theme, camX, camY, w, h, t)
   if (p.domain.backdrop === 'sky') return drawSky(ctx, camX, camY, w, h, t)
   if (p.domain.backdrop === 'sea') return drawSea(ctx, camX, camY, w, h, t)
   if (p.domain.backdrop === 'cave' || p.domain.backdrop === 'magma') {
@@ -419,6 +484,7 @@ const THREATS: Record<ThreatKind, { body: string; edge: string; foam: string }> 
   magma: { body: 'rgba(176,44,8,0.9)', edge: '#f8a030', foam: '#fff0a0' },
   crumble: { body: 'rgba(44,84,152,0.94)', edge: '#2c4c34', foam: '#f8e070' },
   mist: { body: 'rgba(236,224,244,0.9)', edge: '#f8c8e0', foam: '#ffffff' },
+  ultra: { body: 'rgba(14,6,36,0.95)', edge: '#c8a8f8', foam: '#ffffff' },
 }
 
 /** What rides a threat's band besides its bubbles: crust and rubble on the magma, tiles tumbling into the sky. */
@@ -441,6 +507,22 @@ const drawThreatExtra = (ctx: Ctx, kind: ThreatKind, top: number, w: number, h: 
       ctx.fillRect(x - s, y - s, s * 2, s * 2)
       ctx.fillStyle = '#5a4030'
       ctx.fillRect(x - s, y - s, s * 2 - 1, 1)
+    }
+    return
+  }
+  if (kind === 'ultra') {
+    // The wormhole closing: the edge burns through the prism, and slivers of light are sucked down into it.
+    for (let x = 0; x < w; x += 2) {
+      const off = Math.round(Math.sin(x / 9 + t * 3) * 2 + Math.sin(x / 23 - t * 1.7) * 1.5)
+      ctx.fillStyle = PRISM[Math.floor(x / 6 + t * 10) % PRISM.length]!
+      ctx.fillRect(x, top + off + 3, 2, 1)
+    }
+    for (let i = 0; i < 16; i++) {
+      const k = (t * 0.8 + hash2(i, 1, 57)) % 1
+      const x = Math.round(hash2(i, 2, 57) * w)
+      const y = Math.round(top - 26 + k * 40)
+      ctx.fillStyle = PRISM[i % PRISM.length]!
+      ctx.fillRect(x, y, 1, 3 - Math.floor(k * 2))
     }
     return
   }
@@ -668,3 +750,79 @@ export const drawTear = (ctx: Ctx, portal: RiftPortal, t: number) => {
   }
 }
 
+/* ---------------- The Ultra Wormhole on the map ---------------- */
+
+/** One of a wormhole's rings: an ellipse `rx`×`ry` tilted `tilt`, turning `spin`; its back half (`back`) or its front half, pixel by pixel. */
+const wormRing = (ctx: Ctx, x: number, y: number, rx: number, ry: number, tilt: number, spin: number, back: boolean, t: number) => {
+  const steps = Math.ceil(rx * 7)
+  for (let i = 0; i < steps; i++) {
+    const a = (i / steps) * TAU
+    if (Math.sin(a) < 0 !== back) continue
+    const px = Math.cos(a) * rx
+    const py = Math.sin(a) * ry
+    const sx = Math.round(x + px * Math.cos(tilt) - py * Math.sin(tilt))
+    const sy = Math.round(y + px * Math.sin(tilt) + py * Math.cos(tilt))
+    // Its light runs around it: a bright stretch chasing round the front, the back dim.
+    ctx.fillStyle = back ? '#4a3490' : (((a - spin) / TAU) % 1 + 1) % 1 < 0.18 ? '#ffffff' : PRISM[Math.floor(i / 3 + t * 4) % PRISM.length]!
+    ctx.fillRect(sx, sy, 1, 1)
+  }
+}
+
+/** The tilts of a wormhole's rings, and how fast the light runs round each. */
+const WORM_RINGS = [
+  { rx: 19, ry: 6, tilt: -0.35, spin: 2.4 },
+  { rx: 22, ry: 8, tilt: 0.4, spin: -1.8 },
+] as const
+
+/**
+ * An Ultra Wormhole: a hole into Ultra Space hovering over the ground, dark
+ * violet with a white core and prism light spiraling into it, rimmed in
+ * white, wrapped in two tilted rings of light that turn, motes of light
+ * drawn in from around it, its glow pooling on the ground in the ring the
+ * player steps into (filling as they stand in it). Unlike a legendary's tear
+ * it's round and turns, so it reads apart at a glance.
+ */
+export const drawWormhole = (ctx: Ctx, portal: RiftPortal, t: number) => {
+  if (portal.left < 8 && Math.floor(t * (portal.left < 3 ? 10 : 5)) % 3 === 0) return
+  const x = Math.round(portal.x)
+  const y = Math.round(portal.y)
+  const r = RIFT.tearRadius
+  const cy = y - 24 + Math.round(Math.sin(t * 2) * 2)
+  // Its glow pooling on the ground under it, the ring the player steps into around it.
+  blitEllipse(ctx, Math.round(r * 0.75), Math.round(r * 0.3), '#4a3490', x, y)
+  blitEllipse(ctx, Math.round(r * 0.5), Math.round(r * 0.2), '#8870d0', x, y)
+  blitEllipse(ctx, Math.round(r * 0.25), Math.round(r * 0.1), '#e8e0ff', x, y)
+  dashedRing(ctx, x, y, r, t * 4, ['#ffffff', PRISM[0], PRISM[3]], 0.5, 0.4)
+  for (const ring of WORM_RINGS) wormRing(ctx, x, cy, ring.rx, ring.ry, ring.tilt, t * ring.spin, true, t)
+  // The hole: a white rim, Ultra Space's dark inside, prism light spiraling in to a white core.
+  blitEllipse(ctx, 13, 13, '#ffffff', x, cy)
+  blitEllipse(ctx, 12, 12, PRISM[Math.floor(t * 5) % PRISM.length]!, x, cy)
+  blitEllipse(ctx, 11, 11, '#1a0838', x, cy)
+  for (let arm = 0; arm < 3; arm++) {
+    for (let d = 2; d < 11; d++) {
+      const a = (arm / 3) * TAU - t * 3 + d * 0.45
+      ctx.fillStyle = PRISM[(arm * 2 + d) % PRISM.length]!
+      ctx.fillRect(Math.round(x + Math.cos(a) * d), Math.round(cy + Math.sin(a) * d), 1, 1)
+    }
+  }
+  blitEllipse(ctx, 4, 4, '#c8b8f8', x, cy)
+  blitEllipse(ctx, 2, 2, '#ffffff', x, cy)
+  for (const ring of WORM_RINGS) wormRing(ctx, x, cy, ring.rx, ring.ry, ring.tilt, t * ring.spin, false, t)
+  // Motes of light drawn in from around it.
+  for (let i = 0; i < 12; i++) {
+    const k = (t * 0.7 + hash2(i, 1, 59)) % 1
+    const a = hash2(i, 2, 59) * TAU + k * 2.4
+    const d = 40 * (1 - k) + 14
+    ctx.fillStyle = PRISM[i % PRISM.length]!
+    ctx.fillRect(Math.round(x + Math.cos(a) * d), Math.round(cy + Math.sin(a) * d * 0.7), k > 0.7 ? 1 : 2, 1)
+  }
+  if (portal.charge <= 0) return
+  const k = Math.min(1, portal.charge / RIFT.enterTime)
+  const rr = r + 3
+  const steps = Math.ceil(rr * TAU * k)
+  ctx.fillStyle = '#ffffff'
+  for (let i = 0; i < steps; i++) {
+    const a = -Math.PI / 2 + i / rr
+    ctx.fillRect(Math.round(x + Math.cos(a) * rr), Math.round(y + Math.sin(a) * rr * 0.4), 2, 1)
+  }
+}

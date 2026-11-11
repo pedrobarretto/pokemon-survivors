@@ -2,6 +2,8 @@
 import type { EnemyId } from '../../src/data/enemies'
 import { halloweenFits } from '../../src/game/halloween'
 import { outbreakFits } from '../../src/game/outbreak'
+import { ultraFits } from '../../src/game/ultraWeek'
+import type { UltraBeast } from '../../src/data/ultraBeasts'
 import { isRecord } from '../../src/game/parse'
 import { parseReplay, resimulate, RULES_VERSION, type Replay, type Resimulated } from '../../src/game/replay'
 import { raidFits } from '../../src/game/teraRaid'
@@ -18,9 +20,11 @@ export type Sim = {
   resimulate: (replay: Replay) => Resimulated
   outbreakFits: (outbreak: EnemyId | null, startedAt: Date) => boolean
   halloweenFits: (haunted: boolean, startedAt: Date) => boolean
+  /** Rules 50 on (the Ultra Beast of the week): a frozen simulator from before has none, and its replays name none. */
+  ultraFits?: (ultra: UltraBeast | null | undefined, startedAt: Date) => boolean
 }
 
-const CURRENT: Sim = { RULES_VERSION, parseReplay, resimulate, outbreakFits, halloweenFits }
+const CURRENT: Sim = { RULES_VERSION, parseReplay, resimulate, outbreakFits, halloweenFits, ultraFits }
 
 /** The rules of the frozen simulator the API ships, always the ones before its own. */
 export const FROZEN_RULES = RULES_VERSION - 1
@@ -55,11 +59,11 @@ export const simFor = async (rules: number): Promise<Sim | null> => (rules === R
 /**
  * What a check found: the run `played` again to where it ended; `unfit`, a
  * replay that played another day's outbreak (`outbreakFits`) or a haunted run
- * outside the Noite das Bruxas (`halloweenFits`), or another day's Tera Raid
- * (`raidFits`, this build's: the frozen simulator's replays carry none); or `unjudged`, a replay no
+ * outside the Noite das Bruxas (`halloweenFits`), another day's Tera Raid
+ * (`raidFits`, this build's: the frozen simulator's replays carry none) or another week's Ultra Beast (`ultraFits`); or `unjudged`, a replay no
  * simulator the API keeps can read.
  */
-export type Judged = { kind: 'played'; result: Resimulated } | { kind: 'unfit'; why: 'outbreak' | 'halloween' | 'raid' } | { kind: 'unjudged' }
+export type Judged = { kind: 'played'; result: Resimulated } | { kind: 'unfit'; why: 'outbreak' | 'halloween' | 'raid' | 'ultra' } | { kind: 'unjudged' }
 
 /** A replay to judge (`checks.ts` to its worker): its raw form, the rules it says, and when its run started (ms). */
 export type Job = { id: string; replay: unknown; rules: number; startedAt: number }
@@ -79,6 +83,8 @@ export const judge = async ({ replay, rules, startedAt }: Job): Promise<{ judged
           ? { kind: 'unfit', why: 'halloween' }
           : !raidFits(parsed.start.raid, at)
             ? { kind: 'unfit', why: 'raid' }
-            : { kind: 'played', result: sim.resimulate(parsed) }
+            : sim.ultraFits && !sim.ultraFits(parsed.start.ultra, at)
+              ? { kind: 'unfit', why: 'ultra' }
+              : { kind: 'played', result: sim.resimulate(parsed) }
   return { judged, ms: Math.round(performance.now() - t0) }
 }

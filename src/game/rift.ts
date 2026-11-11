@@ -5,6 +5,7 @@ import type { EnemyId } from '../data/enemies'
 import { domainOf, DOMAIN_PRESS } from '../data/domains'
 import { coopLocked } from '../data/coop'
 import { PLACES } from '../data/places'
+import { isUltraBeast, WORMHOLE } from '../data/ultraBeasts'
 import type { FloorPlan } from '../data/arenas'
 import type { DomainState } from './domain'
 import type { Room, Stash } from './room'
@@ -50,9 +51,11 @@ export type RiftState = {
   /** Legendaries met (portal opened) and beaten this run, in order. */
   met: RiftLegend[]
   cleared: RiftLegend[]
+  /** Run time the Ultra Wormhole's omen is due (`game/wormhole.ts`); Infinity once it came. */
+  wormholeAt: number
 }
 
-export const createRiftState = (): RiftState => ({ nextAt: RIFT.slots[0] - RIFT.omenTime, slot: 0, omen: null, portal: null, arena: null, met: [], cleared: [] })
+export const createRiftState = (): RiftState => ({ nextAt: RIFT.slots[0] - RIFT.omenTime, slot: 0, omen: null, portal: null, arena: null, met: [], cleared: [], wormholeAt: WORMHOLE.at })
 
 /**
  * When the omen of rift `slot` (0-based) is due: its slot in `RIFT.slots`
@@ -104,8 +107,8 @@ export const pickLegend = (rng: Rng, met: readonly RiftLegend[], self: string | 
  */
 export const chargePortal = (charge: number, inside: boolean, dt: number) => (inside ? charge + dt : Math.max(0, charge - dt * 0.25))
 
-/** How far a portal's step-in reaches: a domain's huge tear takes the player in from farther. */
-export const portalReach = (g: Pick<Game, 'coop'>, legend: RiftLegend) => (riftDomain(g, legend) ? RIFT.tearRadius : RIFT.portalRadius)
+/** How far a portal's step-in reaches: a domain's huge tear (and an Ultra Wormhole, in co-op too) takes the player in from farther. */
+export const portalReach = (g: Pick<Game, 'coop'>, legend: RiftLegend) => (riftDomain(g, legend) || isUltraBeast(legend) ? RIFT.tearRadius : RIFT.portalRadius)
 
 /**
  * Whether `p` stands where a portal or an open place's door is filling: a

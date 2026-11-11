@@ -7,6 +7,7 @@ import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
+import { ULTRA_WORDS } from './ultra'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2074,6 +2075,7 @@ export const es: Messages = {
     safariDexAll: 'Pokédex de todos los hábitats de la Zona Safari completa',
     hiddenZone: { grotto: 'Por encontrar la Gruta Oculta', underground: 'Por encontrar el Subsuelo' },
     dex: (region: string | null) => (region ? `Por completar la Pokédex de ${region}` : 'Por completar la Pokédex Nacional: ¡todas las regiones!'),
+    ultraBeasts: 'Por capturar a todos los Ultraentes',
   },
 
   supporters: {
@@ -2463,6 +2465,7 @@ export const es: Messages = {
     ...SEASON_ONE_EGGS_WORDS.es.abilities,
     ...REGIONAL_WORDS.es.abilities,
     ...SEASON_ONE_KITS_WORDS.es.abilities,
+    ...ULTRA_WORDS.es.abilities,
     overgrow: 'Con menos de 1/3 del HP, los movimientos de Planta hacen +50%.',
     blaze: 'Con menos de 1/3 del HP, los movimientos de Fuego hacen +50%.',
     torrent: 'Con menos de 1/3 del HP, los movimientos de Agua hacen +50%.',
@@ -2720,6 +2723,7 @@ export const es: Messages = {
     caught: (name) => `¡*${name}* fue capturado!`,
     calms: (name) => `El viento silencia lo que quedaba de la furia de *${name}*.`,
     domains: {
+      ...ULTRA_WORDS.es.domains,
       kyogre: {
         place: 'Cueva Fondo Marino',
         epithet: 'Señor de los Mares',
@@ -3156,6 +3160,7 @@ export const es: Messages = {
     ...GA_FAMILIES_B_WORDS.es.moves,
     ...GA_FAMILIES_A_WORDS.es.moves,
     ...ROCKET_FAMILY_WORDS.es.moves,
+    ...ULTRA_WORDS.es.moves,
     leechSeed: {
       description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
       upgrades: [
@@ -5632,6 +5637,7 @@ export const es: Messages = {
     ...GA_FAMILIES_B_WORDS.es.blurbs,
     ...GA_FAMILIES_A_WORDS.es.blurbs,
     ...ROCKET_FAMILY_WORDS.es.blurbs,
+    ...ULTRA_WORDS.es.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Más daño, menos vida.',
     squirtle: 'Defensivo. Más vida y defensa.',
@@ -6310,6 +6316,8 @@ export const es: Messages = {
     defeated: (name: string) => `¡Derrotaste al *${name} Alfa*! Toma el _premio_.`,
     prize: '*Premio del Alfa*: ¡cartas _raras_!',
   },
+  /** The Ultra Wormholes and the Ultra Beasts (`i18n/ultra.ts`). */
+  ultra: ULTRA_WORDS.es.ui,
   legend: {
     mode: 'Modo Legendario',
     awakening: (name: string) => `¡${name} está despertando!`,
@@ -6343,6 +6351,8 @@ export const es: Messages = {
       endless: 'El último trofeo: después de capturar a los otros 22, véncelo en el _modo infinito_.',
       event: 'Solo en la _Noche de Brujas_: véncelo en la _grieta de la Pesadilla_.',
       festival: 'Premio del _Festival de la Plaza_: llega como Regalo Misterioso, nunca se enfrenta.',
+      ultra: 'Sale de un _Ultraumbral_ (uno por partida en solitario, hacia los 8 min): véncelo dentro.',
+      ultraGift: 'Llega como Regalo Misterioso cuando captures a los 10 Ultraentes.',
     },
     rule: (need: number) => (need === 1 ? 'Para capturarlo, vence a este legendario 1 vez como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.' : `Para capturarlo, vence a este legendario ${need} veces como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.`),
     shinyRule: 'Vencer a uno shiny en la victoria de la captura, o después, desbloquea su forma shiny.',

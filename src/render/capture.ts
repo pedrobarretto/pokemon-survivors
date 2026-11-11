@@ -2,6 +2,7 @@ import { blitCentered, blitEllipse, blitRotated } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { ENEMIES, type EnemyId } from '../data/enemies'
+import { isUltraBeast } from '../data/ultraBeasts'
 import { domainHere } from '../game/domain'
 import { CAPTURE } from '../game/domainRules'
 import type { Game } from '../game/types'
@@ -12,7 +13,7 @@ type Ctx = CanvasRenderingContext2D
 
 /**
  * The capture scene after a domain's battle (`game/domain.ts`): the legendary
- * kneels, a Poké Ball flies to it, takes it in, drops and shakes; then it
+ * kneels, a Poké Ball (an Ultra Beast's Beast Ball) flies to it, takes it in, drops and shakes; then it
  * clicks shut, or bursts open and the legendary escapes. The simulation plays
  * the same either way: which one shows is the shell's to say, through
  * `setCaptureOutcome` (the save knows how many times it was beaten).
@@ -44,6 +45,22 @@ const BALL = lazy(() =>
 )
 const HALF_TOP = lazy(() => art(['..1111..', '.122221.', '12222221', '13333331'], { 1: '#181018', 2: '#e83838', 3: '#202020' }))
 const HALF_BOTTOM = lazy(() => art(['14455441', '14444441', '.144441.', '..1111..'], { 1: '#181018', 4: '#f0f0f0', 5: '#ffffff' }))
+/** The Beast Ball an Ultra Beast is caught in: blue, its top run through with yellow lines. */
+const BEAST_BALL = lazy(() =>
+  art(
+    ['..1111..', '.142241.', '12422421', '13333331', '14455441', '14444441', '.144441.', '..1111..'],
+    { 1: '#0c1430', 2: '#2c60d8', 3: '#182040', 4: '#f8d030', 5: '#ffffff' },
+  ),
+)
+const BEAST_TOP = lazy(() => art(['..1111..', '.142241.', '12422421', '13333331'], { 1: '#0c1430', 2: '#2c60d8', 3: '#182040', 4: '#f8d030' }))
+const BEAST_BOTTOM = lazy(() => art(['14455441', '14444441', '.144441.', '..1111..'], { 1: '#0c1430', 4: '#f0f0f0', 5: '#ffffff' }))
+
+/** The ball a capture throws, and the light it takes its catch in with: a Beast Ball for an Ultra Beast, a Poké Ball for the rest. */
+const ballOf = (kind: EnemyId) =>
+  isUltraBeast(kind)
+    ? { ball: BEAST_BALL(), top: BEAST_TOP(), bottom: BEAST_BOTTOM(), beam: '#58c8f8', glow: '#3878f8' }
+    : { ball: BALL(), top: HALF_TOP(), bottom: HALF_BOTTOM(), beam: '#f85050', glow: '#f83030' }
+
 const STAR = lazy(() => art(['..1..', '.121.', '12221', '.121.', '..1..'], { 1: '#f8d030', 2: '#fff8c0' }))
 
 const clamp01 = (k: number) => Math.min(1, Math.max(0, k))
@@ -77,10 +94,11 @@ export const drawCaptureScene = (ctx: Ctx, g: Game, c: { kind: EnemyId; x: numbe
   const dropEnd = absorbEnd + timing.drop
   const settle = timing.settle - timing.kneel
   const out = s >= settle ? captureOutcome(c) : null
-  // The legendary kneels until the ball takes it in: shrinking into a red glow.
+  const look = ballOf(c.kind)
+  // The legendary kneels until the ball takes it in: shrinking into its ball's glow.
   if (s < absorbEnd) {
     const k = clamp01((s - timing.throw) / timing.absorb)
-    drawPokemon(ctx, sp, 'Hurt', 0, 0.2, x, y, { loop: false, scale: 1 - k * 0.9, tint: { color: '#f83030', amount: k * 0.8 }, flash: k > 0 ? 0.3 + k * 0.6 : 0, alpha: 1 - k * 0.5 })
+    drawPokemon(ctx, sp, 'Hurt', 0, 0.2, x, y, { loop: false, scale: 1 - k * 0.9, tint: { color: look.glow, amount: k * 0.8 }, flash: k > 0 ? 0.3 + k * 0.6 : 0, alpha: 1 - k * 0.5 })
   }
   if (s < 0) {
     // Knocked out: stars circle its head before the throw.
@@ -95,16 +113,16 @@ export const drawCaptureScene = (ctx: Ctx, g: Game, c: { kind: EnemyId; x: numbe
     const k = s / timing.throw
     const bx = p.x + (x - p.x) * k
     const by = p.y - 14 + (y - 40 - (p.y - 14)) * k - Math.sin(k * Math.PI) * 50
-    blitRotated(ctx, BALL(), Math.round(bx), Math.round(by), k * TAU * 2)
+    blitRotated(ctx, look.ball, Math.round(bx), Math.round(by), k * TAU * 2)
     return
   }
   if (s < absorbEnd) {
-    // The ball hangs open over it; a red beam pulls it in.
+    // The ball hangs open over it; a beam of its light pulls it in.
     const by = y - 40
-    ctx.fillStyle = '#f85050'
+    ctx.fillStyle = look.beam
     for (let yy = by; yy < y - 6; yy += 2) ctx.fillRect(x - 1 + Math.round(Math.sin(yy + t * 30)), yy, 2, 2)
-    blitCentered(ctx, HALF_TOP(), x, by - 3)
-    blitCentered(ctx, HALF_BOTTOM(), x, by + 3)
+    blitCentered(ctx, look.top, x, by - 3)
+    blitCentered(ctx, look.bottom, x, by + 3)
     return
   }
   let bx = x
@@ -121,7 +139,7 @@ export const drawCaptureScene = (ctx: Ctx, g: Game, c: { kind: EnemyId; x: numbe
   }
   blitEllipse(ctx, 5, 2, 'rgba(16,8,32,0.4)', x, ground + 4)
   if (!out || out === 'caught') {
-    blitRotated(ctx, BALL(), bx, by, angle)
+    blitRotated(ctx, look.ball, bx, by, angle)
     if (out === 'caught') {
       // Click: stars burst out and fade.
       const k = clamp01((s - settle) / 0.8)
@@ -138,8 +156,8 @@ export const drawCaptureScene = (ctx: Ctx, g: Game, c: { kind: EnemyId; x: numbe
   }
   // Broke free: the halves fly apart and the legendary flashes back out, rising away.
   const k = clamp01((s - settle) / 1.2)
-  blitCentered(ctx, HALF_TOP(), x - Math.round(k * 16), by - 3 - Math.round(Math.sin(k * Math.PI) * 10))
-  blitCentered(ctx, HALF_BOTTOM(), x + Math.round(k * 16), by + 3 - Math.round(Math.sin(k * Math.PI) * 6))
+  blitCentered(ctx, look.top, x - Math.round(k * 16), by - 3 - Math.round(Math.sin(k * Math.PI) * 10))
+  blitCentered(ctx, look.bottom, x + Math.round(k * 16), by + 3 - Math.round(Math.sin(k * Math.PI) * 6))
   if (k < 1) {
     drawPokemon(ctx, sp, 'Idle', 0, t, x, y - Math.round(k * 40), { alpha: 1 - k, flash: 1 - k })
     ctx.fillStyle = '#ffffff'

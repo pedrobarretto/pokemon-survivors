@@ -12,6 +12,8 @@ import { pairFighter } from '../game/domainPair'
 import { encounterBeat, REVEAL_AT } from '../game/domainRules'
 import type { Enemy, Game, Hazard } from '../game/types'
 import type { RiftLegend } from '../data/rifts'
+import { perBeast } from '../data/ultraBeasts'
+import { PRISM } from './rift'
 import { art, lazy } from './art'
 import { HAZARD_COLORS } from './hazardColors'
 import { drawPokemon, formOf, sprites } from './sprites'
@@ -261,6 +263,7 @@ const ENTRANCE_LOOK: Partial<Record<RiftLegend, EntranceLook>> = {
   groudon: { ring: '#f8a040', tint: '#a02808', spray: '#f8e060' },
   rayquaza: { ring: '#f8f0a0', tint: '#3c9850', spray: '#ffffff' },
   darkrai: { ring: '#58e8f0', tint: '#140c24', spray: '#58e8f0' },
+  ...perBeast((): EntranceLook => ({ ring: '#c8a8f8', tint: '#3c2878', spray: '#f8f0ff' })),
 }
 
 /**
@@ -295,6 +298,8 @@ export const drawEntrance = (ctx: Ctx, g: Game, t: number) => {
     }
   } else if (def.entrance === 'meteor') {
     meteorIn(ctx, s, x, y, k, t)
+  } else if (def.entrance === 'wormhole') {
+    wormholeIn(ctx, s, x, y, k, t)
   } else if (def.entrance === 'rise') {
     const lift = Math.round((1 - k) * (body + 8))
     ctx.save()
@@ -376,6 +381,47 @@ const meteorIn = (ctx: Ctx, s: ReturnType<typeof sprites>, x: number, y: number,
     }
   }
   if (form > 0) drawPokemon(ctx, s, 'Idle', 0, t, x, y, { alpha: form, flash: 1 - form, tint: { color: '#f89850', amount: 0.5 * (1 - form) } })
+}
+
+/**
+ * An Ultra Beast's entrance: a small wormhole tears open over its spot, a
+ * ring of prism light around white; the beast drops out of it and lands with
+ * a flash, and the wormhole closes behind it.
+ */
+const wormholeIn = (ctx: Ctx, s: ReturnType<typeof sprites>, x: number, y: number, k: number, t: number) => {
+  const hy = y - 74
+  // Open (to 0.35), hold while the beast drops through (to 0.8), close.
+  const size = k < 0.35 ? k / 0.35 : k < 0.8 ? 1 : Math.max(0, 1 - (k - 0.8) / 0.2)
+  if (size > 0) {
+    const rx = Math.round(4 + size * 18)
+    const ry = Math.round(2 + size * 7)
+    // A hole into Ultra Space: a white rim, a band of prism light, the dark inside with light swirling to a white core.
+    blitEllipse(ctx, rx + 2, ry + 2, '#ffffff', x, hy)
+    blitEllipse(ctx, rx + 1, ry + 1, PRISM[Math.floor(t * 8) % PRISM.length]!, x, hy)
+    blitEllipse(ctx, rx, ry, '#1a0838', x, hy)
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * TAU - t * 3
+      const d = 0.35 + ((i * 0.37) % 0.6)
+      ctx.fillStyle = PRISM[i % PRISM.length]!
+      ctx.fillRect(Math.round(x + Math.cos(a) * rx * d), Math.round(hy + Math.sin(a) * ry * d), 1, 1)
+    }
+    blitEllipse(ctx, Math.max(1, Math.round(rx * 0.25)), Math.max(1, Math.round(ry * 0.3)), '#ffffff', x, hy)
+    // Sparks of light thrown off its rim.
+    for (let i = 0; i < 10; i++) {
+      const a = hash2(i, 1, 73) * TAU + t * 2
+      const r = rx + 3 + ((t * 30 + hash2(i, 2, 73) * 12) % 12)
+      ctx.fillStyle = PRISM[i % PRISM.length]!
+      ctx.fillRect(Math.round(x + Math.cos(a) * r), Math.round(hy + Math.sin(a) * r * 0.4), 1, 1)
+    }
+  }
+  if (k < 0.35) return
+  const drop = Math.min(1, (k - 0.35) / 0.35)
+  const ease = drop * drop
+  blitEllipse(ctx, Math.round(4 + ease * 12), Math.round(2 + ease * 5), 'rgba(16,8,32,0.45)', x, y)
+  drawPokemon(ctx, s, 'Idle', 0, t, x, Math.round(hy + 10 + (y - hy - 10) * ease), { flash: drop < 1 ? 0.3 : Math.max(0, 0.6 - (k - 0.7) / 0.2), tint: { color: '#8870d0', amount: 0.45 * (1 - drop) } })
+  // The landing: a ring of prism light spreading.
+  const land = (k - 0.7) / 0.2
+  if (land > 0 && land < 1) blitRing(ctx, Math.round(8 + land * 44), 1, PRISM[Math.floor(land * 5) % PRISM.length]!, x, y)
 }
 
 /** A boss's barrier (`guard`): a dotted link from each keeper to it, its dots running inward, and a shield ring blinking around it. */

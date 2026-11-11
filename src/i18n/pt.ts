@@ -8,6 +8,7 @@ import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
+import { ULTRA_WORDS } from './ultra'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2385,6 +2386,7 @@ export const pt = {
     safariDexAll: 'Pokédex de todos os habitats da Zona Safári completa',
     hiddenZone: { grotto: 'Por encontrar a Gruta Oculta', underground: 'Por encontrar o Subterrâneo' } satisfies Record<HiddenPlaceId, string>,
     dex: (region: string | null) => (region ? `Por completar a Pokédex de ${region}` : 'Por completar a Pokédex Nacional: todas as regiões!'),
+    ultraBeasts: 'Por capturar todas as Ultracriaturas',
   },
 
   /**
@@ -2797,6 +2799,7 @@ export const pt = {
     ...SEASON_ONE_EGGS_WORDS.pt.abilities,
     ...REGIONAL_WORDS.pt.abilities,
     ...SEASON_ONE_KITS_WORDS.pt.abilities,
+    ...ULTRA_WORDS.pt.abilities,
     overgrow: 'Com menos de 1/3 do HP, golpes de Planta causam +50%.',
     blaze: 'Com menos de 1/3 do HP, golpes de Fogo causam +50%.',
     torrent: 'Com menos de 1/3 do HP, golpes de Água causam +50%.',
@@ -3070,6 +3073,7 @@ export const pt = {
     calms: (name: string) => `O vento silencia o que restava da fúria de *${name}*.`,
     /** Per legendary: its domain's name, its epithet on the title card, its omen, the crossing's warning and a line per phase after the first. */
     domains: {
+      ...ULTRA_WORDS.pt.domains,
       kyogre: {
         place: 'Caverna do Fundo do Mar',
         epithet: 'Senhor dos Mares',
@@ -3527,6 +3531,7 @@ export const pt = {
     ...GA_FAMILIES_B_WORDS.pt.moves,
     ...GA_FAMILIES_A_WORDS.pt.moves,
     ...ROCKET_FAMILY_WORDS.pt.moves,
+    ...ULTRA_WORDS.pt.moves,
     leechSeed: {
       description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
       upgrades: [
@@ -6003,6 +6008,7 @@ export const pt = {
     ...GA_FAMILIES_B_WORDS.pt.blurbs,
     ...GA_FAMILIES_A_WORDS.pt.blurbs,
     ...ROCKET_FAMILY_WORDS.pt.blurbs,
+    ...ULTRA_WORDS.pt.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Mais dano, menos vida.',
     squirtle: 'Defensivo. Mais vida e defesa.',
@@ -6729,6 +6735,8 @@ export const pt = {
     intro: '*O mundo ataca!* O chão marca onde você está e cai em seguida: _não fique parado_.',
   },
   /** The Legend mode in a run (`game/legend.ts`): awakenings, the innate, the Clone. Pokémon names stay English. */
+  /** The Ultra Wormholes and the Ultra Beasts (`i18n/ultra.ts`). */
+  ultra: ULTRA_WORDS.pt.ui,
   legend: {
     mode: 'Modo Lendário',
     awakening: (name: string) => `${name} está despertando!`,
@@ -6769,6 +6777,8 @@ export const pt = {
       endless: 'O último troféu: depois de capturar os outros 22, vença-o no _modo sem fim_.',
       event: 'Só na _Noite das Bruxas_: vença-o na _fenda do Pesadelo_.',
       festival: 'Prêmio do _Festival da Praça_: chega como Presente Misterioso, nunca é enfrentada.',
+      ultra: 'Sai de uma _Ultrafenda_ (uma por partida solo, perto dos 8 min): vença-a lá dentro.',
+      ultraGift: 'Chega como Presente Misterioso quando você capturar as 10 Ultracriaturas.',
     },
     rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.' : `Para capturar, vença este lendário ${need} vezes como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.`),
     shinyRule: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
