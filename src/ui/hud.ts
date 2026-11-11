@@ -19,6 +19,9 @@ import { isDuo, readyDuos } from '../game/duoRules'
 import { consumableIcon } from '../render/props'
 import { weatherIcon } from '../render/weather'
 import { treatIcon } from '../render/halloweenArt'
+import { MELTAN } from '../data/legendPaths'
+import { nutIcon } from './pathRun'
+import { loadSave } from './save'
 import { portraitUrl } from '../render/sprites'
 import { abilityIcon } from '../render/abilityArt'
 import { abilityMark, abilityMarkKey } from './abilityMark'
@@ -67,6 +70,11 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
   const candies = h('span')
   // Noite das Bruxas: the candies of a haunted run, beside the ₽.
   const candyCounter = h('div', { class: 'kills treats hidden' }, h('img', { src: treatIcon(), alt: t().halloween.candies }), candies)
+  // Meltan's run: its Hex Nuts so far (the save's as the run began, plus the run's), toward Melmetal.
+  const nuts = h('span')
+  const nutCounter = h('div', { class: 'kills treats hidden' }, h('img', { src: nutIcon(), alt: '' }), nuts)
+  let nutRun: Game | null = null
+  let nutBase = 0
   const moveSlots = h('div', { class: 'slots' })
   const itemSlots = h('div', { class: 'slots' })
   const buffs = h('div', { class: 'buffs' })
@@ -118,6 +126,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
           h('div', { class: 'kills' }, h('img', { src: pokeballIcon(), alt: '' }), kills),
           h('div', { class: 'kills coins' }, h('img', { src: coinIcon(0), alt: '' }), coins),
           candyCounter,
+          nutCounter,
         ),
         pause,
       ),
@@ -220,6 +229,15 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     if (g.halloween) {
       candyCounter.classList.remove('hidden')
       setText(candies, String(g.candies))
+    }
+    const meltan = g.coop === null && g.player.legend?.id === 'meltan'
+    nutCounter.classList.toggle('hidden', !meltan)
+    if (meltan) {
+      if (nutRun !== g) {
+        nutRun = g
+        nutBase = loadSave().paths.nuts
+      }
+      setText(nuts, `${Math.min(MELTAN.nuts, nutBase + g.paths.nuts)}/${MELTAN.nuts}`)
     }
     movePad.update()
     stickLock.update()

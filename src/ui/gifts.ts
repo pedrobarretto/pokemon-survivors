@@ -105,6 +105,8 @@ export const reasonLine = (gift: Gift) => {
       return t().gifts.hiddenZone[r.zone]
     case 'season':
       return t().seasonUnlocks.way[r.way]
+    case 'path':
+      return t().paths.gift[r.path]
     case 'era1': {
       const rk = t().ranking
       const side = r.side === 'standard' || r.side === 'legend' ? rk.modes[r.side] : rk.sizes[r.side]

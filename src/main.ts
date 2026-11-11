@@ -24,7 +24,7 @@ import { isRiftLegend } from './data/rifts'
 import { domainTheme } from './game/domain'
 import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
-import { captureOutcome as savedCapture } from './game/capture'
+import { captureOutcome as savedCapture, isCaptured } from './game/capture'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
 import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
@@ -35,7 +35,7 @@ import { REGIONS, STARTERS } from './data/starters'
 import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
-import { isLegend } from './data/legends'
+import { isLegend, type LegendId } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
@@ -69,6 +69,9 @@ import { MAP_EVENT_KINDS, MAP_EVENTS, spawnMapEvent, type MapEventKind } from '.
 import { MEOWTH_DEX } from './game/mapEventRules'
 import { CASTFORM_FIND } from './data/seasonOneUnlocks'
 import { seasonFindDevTools, seasonFindFeedback } from './ui/seasonFinds'
+import { bankNuts, nutFeedback, pathFeedback } from './ui/pathRun'
+import { pathDevTools } from './ui/pathDev'
+import { giantAwake, openForms, templeRun } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -430,6 +433,8 @@ type Run = {
   paid: number
   /** Noite das Bruxas candies of this run already in the save's jar, banked the same way. */
   candies: number
+  /** Meltan's Hex Nuts of this run already in the save (`bankNuts`). */
+  nuts: number
   /** True once the run's end was reported to analytics. */
   reported: boolean
   /** Missions as the run started, and what the run has recorded so far (see `recordProgress`). */
@@ -1000,6 +1005,18 @@ const showGifts = () => {
   )
 }
 
+/**
+ * What the legend paths bring to a run's start (`ReplayStart`): the forms the
+ * save opened for this legend (`openForms`), and Regigigas's temple, drawn
+ * from the seed for the Regi trio's captor (never in its own run).
+ */
+const pathStart = (save: Save, starter: PlayableId, seed: number): Pick<ReplayStart, 'forms' | 'temple'> => {
+  const forms = openForms(save.paths, starter)
+  const caught = (id: LegendId) => isCaptured(save.legends, id)
+  const temple = starter !== 'regigigas' && templeRun(seed, giantAwake(caught), caught('regigigas'))
+  return { ...(forms.length > 0 ? { forms } : {}), ...(temple ? { temple } : {}) }
+}
+
 /** Moves the run's steps and new eggs into the incubator, once each (a victory banks, then endless banks again). */
 const bankHatchery = (r: Run) => {
   const g = r.game
@@ -1023,6 +1040,7 @@ const bankRun = (r: Run, withBonus: boolean) => {
   r.paid = Math.max(r.paid, total)
   if (g.candies > r.candies) updateSave((save) => addCandies(save, g.candies - r.candies))
   r.candies = Math.max(r.candies, g.candies)
+  r.nuts = bankNuts(ui, g, r.nuts)
   bankHatchery(r)
   // Merged into the stored Pokédex, which an account sync may have grown during the run.
   updateSave((save) => ({ ...save, dex: mergeDex(save.dex, recordRun(r.dexBase, g.dexLog)) }))
@@ -1422,6 +1440,8 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     evo: [...save.evo],
     caps: capLevel(save.caps, starter),
     mythical: mythicalHunt(save),
+    // The legend paths: the forms the save opened for this legend, and Regigigas's temple for the Regi trio's captor.
+    ...pathStart(save, starter, plan.seed),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
@@ -1443,6 +1463,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     closeText: null,
     paid: 0,
     candies: 0,
+    nuts: 0,
     mythical: null,
     reported: false,
     missionsBefore: missionStatus(save.missions, today()),
@@ -1540,7 +1561,7 @@ const startDojo = async (starter: PlayableId) => {
     ui.append(loading)
     const save = loadSave()
     const shiny = playsShiny(save, starter)
-    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter) })
+    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
     // The 1/64 roll is a run's luck: nothing unlocks at the Dojo, and it plays in the colors picked.
     const me = localPlayer(game)
     me.shiny = shiny
@@ -1562,6 +1583,7 @@ const startDojo = async (starter: PlayableId) => {
       closeText: null,
       paid: 0,
       candies: 0,
+      nuts: 0,
       mythical: null,
       reported: true,
       missionsBefore: [],
@@ -2110,7 +2132,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const name = PLAYABLE[localPlayer(g).starter].name
       // A form still behind the community goal keeps the legend's name (`legendStage`): then it just awakened.
       const form = playerForm(g).name
-      return aside(rich(e.form && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
+      return aside(rich(e.changed && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
     }
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
@@ -2211,6 +2233,10 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return landmarkFeedback(ui, e.landmark, e.moment)
     case 'seasonFind':
       return seasonFindFeedback(ui, e.find, e.moment)
+    case 'path':
+      return pathFeedback(ui, e.notice)
+    case 'hexNut':
+      return nutFeedback(ui, g)
     case 'revive':
       playSfx('evolve')
       return news(h('span', { class: 'item-toast' }, h('img', { src: consumableIcon('revive'), alt: '' }), rich(t().toast.revive)), 3000)
@@ -2713,6 +2739,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     rewardEggs: 0,
     rewardItems: [],
     candies: 0,
+    nuts: 0,
     hatchery: { steps: 0, eggs: 0 },
     convertedEggs: { full: [], cap: [] },
     dexBase: save.dex,
@@ -5267,6 +5294,7 @@ if (import.meta.env.DEV) {
       ...riftDevTools(() => run?.game),
       ...placeDevTools(() => run?.game),
       ...seasonFindDevTools(() => run?.game, devLandmark),
+      ...pathDevTools(() => run?.game),
       ...levelUpDevTools(() => run?.game),
       ...kitDevTools(() => run?.game),
       ...eggMoveDevTools(() => run?.game),

@@ -32,16 +32,18 @@ const sprite = (rows: readonly string[], palette: Palette, outline?: string) => 
 
 /* ---------------- Zygarde's pieces ---------------- */
 
+/** A Zygarde Cell: a little jelly blob with its hexagon nucleus, lit from the top left. */
 const CELL = [
-  '...222...',
-  '..23332..',
-  '.2344332.',
-  '2334553 2',
-  '2335553 2',
-  '.2335332.',
-  '..23332..',
-  '...222...',
-].map((r) => r.replace(' ', '3'))
+  '...22222...',
+  '..2344332..',
+  '.234433332.',
+  '.233655332.',
+  '23355555332',
+  '23355555332',
+  '23335553332',
+  '.233333332.',
+  '..2222222..',
+]
 
 const CORE = [
   '.6.......6.',
@@ -58,12 +60,12 @@ const CORE = [
 ]
 
 /** The Cell's greens (and its hex, darker), the Core's red eye. */
-const CELL_PAL = { 2: '#2f8a48', 3: '#4cc068', 4: '#b8f8c8', 5: '#1c5a30', 6: '#78e098', 7: '#e84830', 8: '#ffd0a0' } as const
+const CELL_PAL = { 2: '#2f8a48', 3: '#4cc068', 4: '#b8f8c8', 5: '#1c5a30', 6: '#3f9a58', 7: '#e84830', 8: '#ffd0a0' } as const
 
 export const PATH_ART = {
   /** The Cell: its body and a frame lit brighter (its glow's beat). */
-  cell: lazy(() => [sprite(CELL, CELL_PAL, '#0c2814'), sprite(CELL, { ...CELL_PAL, 3: '#68d888', 2: '#3aa058' }, '#0c2814')]),
-  core: lazy(() => [sprite(CORE, CELL_PAL, '#0c2814'), sprite(CORE, { ...CELL_PAL, 3: '#68d888', 7: '#f86848' }, '#0c2814')]),
+  cell: lazy(() => [sprite(CELL, CELL_PAL, '#0c2814'), sprite(CELL, { ...CELL_PAL, 3: '#68d888', 2: '#3aa058', 6: '#58c070' }, '#0c2814')]),
+  core: lazy(() => [sprite(CORE, { ...CELL_PAL, 6: '#78e098' }, '#0c2814'), sprite(CORE, { ...CELL_PAL, 6: '#78e098', 3: '#68d888', 7: '#f86848' }, '#0c2814')]),
   /** Meltan's Hex Nut: steel with its hole, a light edge on top. */
   nut: lazy(() =>
     sprite(

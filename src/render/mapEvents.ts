@@ -258,7 +258,14 @@ const drawPiece = (ctx: Ctx, ev: MapEventOf<'zygardeCell' | 'zygardeCore'>, t: n
   const leaving = ev.gone < 0 && ev.ttl - ev.age < 4 && (calm || Math.floor(t * 10) % 2 === 0)
   const bob = Math.round(Math.sin(t * 3 + ev.id) * 1.5)
   groundShadow(ctx, ev.x, ev.y, core ? 7 : 5)
-  dashedRing(ctx, ev.x, ev.y, core ? 11 : 8, t * 2 + ev.id, ['#78e098', '#2f8a48'], 0.4)
+  // A ring of green motes turning on the ground around it, so it stands out on any biome.
+  const rx = core ? 12 : 10
+  const turn = calm ? 0 : t * 1.6 + ev.id
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * TAU + turn
+    ctx.fillStyle = i % 2 === 0 ? '#b8f8c8' : '#2f8a48'
+    ctx.fillRect(Math.round(ev.x + Math.cos(a) * rx), Math.round(ev.y + Math.sin(a) * rx * 0.4), 1, 1)
+  }
   ctx.globalAlpha *= leaving ? 0.55 : 1
   const sprite = frames[beat]!
   ctx.drawImage(sprite, Math.round(ev.x - sprite.width / 2), Math.round(ev.y - sprite.height - 3 + bob))
