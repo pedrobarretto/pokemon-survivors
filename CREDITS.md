@@ -1995,6 +1995,15 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 720 | Hoopa (shiny) | [Morei](https://bsky.app/profile/murpia57.bsky.social) | programmedsleepstate |
 | 720 | Hoopa (Unbound) | Emboarger | — |
 | 720 | Hoopa (Unbound, shiny) | Emboarger | — |
+| 201 | Unown | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), Magu |
+| 201 | Unown (B) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 201 | Unown (C) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 201 | Unown (F) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 201 | Unown (J) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 201 | Unown (K) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 201 | Unown (N) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 201 | Unown (O) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 201 | Unown (U) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
 
 ## Shop art
 
