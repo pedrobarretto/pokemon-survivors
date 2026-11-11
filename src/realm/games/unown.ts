@@ -11,8 +11,8 @@ import { UNOWN, UNOWN_TYPES, cardOf, isWild, playable, unownRules, type UnownCar
  * Unown's screen (`MINIGAMES.unown`, rules in `unown.rules.ts`): the three
  * rivals along the top in the order play reaches them (arrows say which way
  * it goes), the felt in the middle with the draw pile, the pile's top card
- * and the type in play, and your hand along the bottom (two rows on a phone
- * held upright when it grows), with UNOWN!, Comprar and Passar.
+ * and the type in play, and your hand along the bottom (up to four rows on a
+ * phone held upright when it grows), with UNOWN!, Comprar and Passar.
  *
  * Press a card to lift it, slide to another, lift your finger to play it (a
  * wild asks for its type first); tap the draw pile (or Comprar) to draw.
@@ -71,6 +71,21 @@ const GLYPH: Record<string, readonly string[]> = {
 }
 
 /** A corner mark in the chunky glyphs, 2 px strokes across, outlined in ink. */
+/**
+ * The game's name spelled in Unown, 7 × 7 a letter (an eye and its limbs:
+ * U, N, O, W, N), the same glyphs as the trophy plaque's: printed on the felt.
+ */
+const GLYPHS = {
+  U: ['t.....t', 't.....t', 't.....t', 't.....t', 't.ttt.t', '.tt.tt.', '..ttt..'],
+  N: ['t.....t', 'tt....t', 't.ttt.t', 't.t.t.t', 't.ttt.t', 't....tt', 't.....t'],
+  O: ['..ttt..', '.t...t.', 't.ttt.t', 't.t.t.t', 't.ttt.t', '.t...t.', '..ttt..'],
+  W: ['t.....t', 't..t..t', 't.ttt.t', 't.t.t.t', 't.ttt.t', '.t.t.t.', '..t.t..'],
+} as const
+const glyphWord = lazy(() => {
+  const rows = Array.from({ length: 7 }, (_, r) => (['U', 'N', 'O', 'W', 'N'] as const).map((l) => GLYPHS[l][r]).join('.'))
+  return fromStrings(rows, { t: '#18482a' })
+})
+
 const marks = canvasCache<string, PixelSprite>()
 const mark = (text: string, color: string) => {
   const key = `${text}|${color}`
@@ -344,10 +359,10 @@ const layoutOf = (w: number, h: number, n: number): Layout => {
       rowStep: 0,
     }
   }
-  // Upright: as many rows as the cards need (three at most), apart when the screen has the room.
+  // Upright: as many rows as the cards need (four at most, so a big hand stays a finger wide), apart when the screen has the room.
   const statusH = 24
   const minFelt = CARD.h + 16
-  const rows = Math.min(3, Math.max(1, Math.ceil(n / perRow)))
+  const rows = Math.min(4, Math.max(1, Math.ceil(n / perRow)))
   const room = h - (panelH + 6 + statusH + minFelt + 30 + 4)
   const rowStep = rows === 1 ? 0 : Math.max(24, Math.min(CARD.h + 3, Math.floor((room - CARD.h - 6) / (rows - 1))))
   const handH = CARD.h + (rows - 1) * rowStep + 6
@@ -368,7 +383,8 @@ const layoutOf = (w: number, h: number, n: number): Layout => {
     hk: 1,
     deck: { x: mid - CARD.w * k - 14, y: cy + (k - 1) * CARD.h, w: CARD.w, h: CARD.h },
     pile: { x: mid - 4, y: cy, w: CARD.w * k, h: CARD.h * k },
-    badge: { x: mid - CARD.w * k - 14 + 6, y: cy + (k - 1) * CARD.h - 28, w: 22, h: 22 },
+    // Over the deck, or beside the pile when the felt is too short for that (a big hand).
+    badge: cy + (k - 1) * CARD.h - 28 >= felt.y + 4 ? { x: mid - CARD.w * k - 14 + 6, y: cy + (k - 1) * CARD.h - 28, w: 22, h: 22 } : { x: mid - 4 + CARD.w * k + 8, y: cy + Math.floor((CARD.h * k) / 2) - 11, w: 22, h: 22 },
     call: { x: 4, y: btnY, w: half, h: 24 },
     act: { x: 4 + half + 8, y: btnY, w: half, h: 24 },
     hand,
@@ -713,8 +729,11 @@ const start = (ctx: TableCtx): TableRun => {
 
   /* ----- Drawing ----- */
 
+  /** Whether the felt is too short for the "how to play" tab beside the deck (a big hand): it shrinks to "?" top right. */
+  const helpShort = () => !lay.wide && lay.deck.y - lay.felt.y < 18
   const helpRect = (): Rect => {
     const s = label(words().howTo)
+    if (helpShort()) return { x: lay.felt.x + lay.felt.w - 20, y: lay.felt.y + 2, w: 18, h: 15 }
     return lay.wide ? { x: lay.felt.x + 4, y: lay.felt.y + lay.felt.h - 18, w: s.width + 8, h: 15 } : { x: lay.felt.x + 2, y: lay.felt.y + 2, w: s.width + 8, h: 15 }
   }
 
@@ -825,6 +844,11 @@ const start = (ctx: TableCtx): TableRun => {
     box(g, f.x + 3, f.y + 3, f.w - 6, f.h - 6, '#24603c')
     g.fillStyle = '#205434'
     for (let y = f.y + 6; y < f.y + f.h - 4; y += 3) for (let x = f.x + 5 + (y % 2); x < f.x + f.w - 4; x += 5) g.fillRect(x, y, 1, 1)
+    // The game's name in Unown, printed on the felt under the pile when there's room.
+    const word = glyphWord()
+    const pileBottom = Math.max(lay.pile.y + lay.pile.h, lay.deck.y + lay.deck.h)
+    const wk = f.w >= word.width * 2 + 24 && f.y + f.h - pileBottom >= word.height * 2 + 14 ? 2 : 1
+    if (f.y + f.h - pileBottom >= word.height * wk + 10) g.drawImage(word, Math.round(f.x + f.w / 2 - (word.width * wk) / 2), f.y + f.h - 6 - word.height * wk, word.width * wk, word.height * wk)
     g.save()
     g.translate(sx, 0)
     // The draw pile: a few backs stacked, its count, pulsing when drawing is the move.
@@ -907,6 +931,13 @@ const start = (ctx: TableCtx): TableRun => {
         const slide = clock < due + 0.2 ? Math.max(0, Math.round((1 - (clock - due) / 0.2) * 30)) : 0
         if (clock < due) return
         card(g, id, pl.x, pl.y - lift * lay.hk + slide, lay.hk, mine && !ok)
+        // A card that can go down: a gold rim round the part of it that shows (the next card in its row may cover the rest).
+        if (ok && v.drawn !== id) {
+          const next = places[i + 1]
+          const shows = next && next.y === pl.y && held !== id ? Math.min(CARD.w * lay.hk, next.x - pl.x) : CARD.w * lay.hk
+          g.strokeStyle = held === id ? '#fff8c0' : '#f8d030'
+          g.strokeRect(pl.x - 0.5, pl.y - lift * lay.hk + slide - 0.5, shows + 1, CARD.h * lay.hk + 1)
+        }
         if (v.drawn === id) {
           g.strokeStyle = '#f8e070'
           g.strokeRect(pl.x - 0.5, pl.y - lift * lay.hk - 0.5, CARD.w * lay.hk + 1, CARD.h * lay.hk + 1)
@@ -950,7 +981,7 @@ const start = (ctx: TableCtx): TableRun => {
     // How to play.
     const hr = helpRect()
     box(g, hr.x, hr.y, hr.w, hr.h, help ? '#f8e070' : '#1c4c30')
-    centered(g, label(w.howTo, help ? INK : '#c8e8c0', help ? '#f8e070' : INK), hr.x + hr.w / 2, hr.y + hr.h / 2)
+    centered(g, label(helpShort() ? '?' : w.howTo, help ? INK : '#c8e8c0', help ? '#f8e070' : INK), hr.x + hr.w / 2, hr.y + hr.h / 2)
     if (help) {
       const lines = w.help.flatMap((l) => wrap(l, Math.min(W - 24, 280) - 10))
       const bw = Math.min(W - 16, 290)
