@@ -1,5 +1,6 @@
 import { dir8, dirTo, retain } from '../engine/math'
-import { clearGrid, insert, query } from '../engine/spatial'
+import { clearGrid, insert } from '../engine/spatial'
+import { separate } from './separation'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { scaling } from '../data/waves'
 import { STANCES } from '../data/bosses'
@@ -23,8 +24,6 @@ import { COOP } from '../data/coop'
 import type { DamageSource, Enemy, EnemyBehavior, Game } from './types'
 import { roamStep } from './roamers'
 import * as dm from '../engine/dmath'
-
-const neighbors: number[] = []
 
 /** Body radius derived from the sprite so big Pokémon take up more space. */
 export const radiusFor = (dex: number) => Math.max(5, dm.round(bodyOf(dex).bodyW * 0.32))
@@ -118,6 +117,10 @@ const LOST_PACE = 0.55
 const SHY_FEAR = 110
 /** A thrown foe stops hurting others once its knockback drops under this speed (px/s). */
 const THROWN_MIN = 90
+/** Whether a foe pushes off its neighbors and is pushed (`separate`): not while fainting, in the air or as an Arena avatar. */
+const separates = (e: Enemy) => e.dying < 0 && !isAirborne(e) && e.behavior.kind !== 'avatar'
+/** Whether a foe can be bumped into: not while fainting or in the air. */
+const bumpable = (o: Enemy) => o.dying < 0 && !isAirborne(o)
 
 /** A thrown foe crashing into `o` (once per throw, passing some of its momentum), or a confused one bumping it. */
 const bodyBlow = (g: Game, e: Enemy, o: Enemy) => {
@@ -326,31 +329,19 @@ export const updateEnemies = (g: Game, dt: number) => {
     }
   }
 
-  // Separation: overlapping enemies push each other apart so hordes form rings, not blobs.
-  // A pass over the horde as it stood (as `forEach` walks it): a foe added meanwhile waits for the next tick.
+  // Separation: overlapping enemies push each other apart so hordes form rings, not blobs (`separate`);
+  // a thrown or confused one bumping into another lands a body blow.
+  separate(g.enemies, separates, bumpable, (e, o) => {
+    if (e.thrown || e.status.confuse.time > 0) bodyBlow(g, e, o)
+  })
+
+  // Then bodies keep out of the players and deal contact damage: a pass over the horde as it stood
+  // (as `forEach` walks it), so a foe added meanwhile waits for the next tick.
   const horde = g.enemies
   const count = horde.length
   for (let i = 0; i < count; i++) {
     const e = horde[i]
-    if (e === undefined || e.dying >= 0 || isAirborne(e) || e.behavior.kind === 'avatar') continue
-    for (const j of query(g.grid, e.x, e.y, e.radius * 2, neighbors)) {
-      if (j === i) continue
-      const o = g.enemies[j]!
-      const dx = e.x - o.x
-      const dy = e.y - o.y
-      const min = (e.radius + o.radius) * 0.8
-      const d2 = dx * dx + dy * dy
-      // Most of a crowded cell is out of reach: that's settled before looking any closer.
-      if (d2 >= min * min || o.dying >= 0 || isAirborne(o)) continue
-      if (e.thrown || e.status.confuse.time > 0) bodyBlow(g, e, o)
-      if (d2 === 0) continue
-      const d = Math.sqrt(d2)
-      const push = ((min - d) / d) * (o.mass / (e.mass + o.mass)) * 0.5
-      e.x += dx * push
-      e.y += dy * push
-    }
-
-    // Keep bodies out of the players and deal contact damage.
+    if (e === undefined || !separates(e)) continue
     for (const p of g.players) {
       if (!standing(g, p)) continue
       const dx = e.x - p.x
