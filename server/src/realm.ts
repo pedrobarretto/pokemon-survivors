@@ -27,7 +27,7 @@ import {
   type ReportReason,
 } from '../../src/net/realmApi'
 import { cityCounts, friendsFrom, parseReportRoom, walking, type HeldPresence } from '../../src/realm/friends'
-import { capped, isMinigameId, MINIGAME_DAILY, MINIGAMES, trophiesEarned, type GameOutcome, type GameStats, type MinigameId } from '../../src/data/minigames'
+import { capped, claimable, isMinigameId, MINIGAME_DAILY, MINIGAMES, trophiesEarned, type GameOutcome, type GameStats, type MinigameId } from '../../src/data/minigames'
 import type { DeedsAnswer, IdentityResponse, PresenceReport, VisitResponse } from '../../src/net/realmRelay'
 import { FURNISHED, isDeed, type Deed } from '../../src/data/realmStamps'
 import type { RealmBan, RealmDesk, RealmModeration, RealmReportGroup } from '../../src/realm/moderation'
@@ -157,13 +157,14 @@ const parseOutcome = (v: unknown): GameOutcome | null => {
 }
 
 /**
- * `POST /realm/game/claim`'s body, or null: a known game, an outcome of
- * either shape, how long it took (ms) and the feats it hit (strings; the ones
- * the game doesn't declare are dropped later, `statsAfter`). Whether the
- * outcome fits the game is `coinsFor`'s call.
+ * `POST /realm/game/claim`'s body, or null: a known game that pays through
+ * claims (never one the API runs itself, `claimable`, or a claim could make up
+ * its deeds), an outcome of either shape, how long it took (ms) and the feats
+ * it hit (strings; the ones the game doesn't declare are dropped later,
+ * `statsAfter`). Whether the outcome fits the game is `coinsFor`'s call.
  */
 export const parseGameClaim = (v: unknown): GameClaim | null => {
-  if (!isRecord(v) || !isMinigameId(v.game) || typeof v.ms !== 'number' || !Number.isFinite(v.ms) || v.ms < 0 || v.ms > GAME_MAX_MS) return null
+  if (!isRecord(v) || !isMinigameId(v.game) || !claimable(v.game) || typeof v.ms !== 'number' || !Number.isFinite(v.ms) || v.ms < 0 || v.ms > GAME_MAX_MS) return null
   const outcome = parseOutcome(v.outcome)
   const feats = v.feats === undefined ? [] : v.feats
   if (!outcome || !Array.isArray(feats) || feats.length > CLAIM_FEATS.n) return null
@@ -716,8 +717,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
         }
       })
       if (claimed.ok) {
-        const feats = claim.feats.flatMap((f) => [`feat:${claim.game}:${f}`].filter(isDeed))
-        await earn(userId, new Map<Deed, number>([[`game:${claim.game}`, 1], ...feats.map((f) => [f, 1] as const)]), day)
+        const deeds = [`game:${claim.game}`, ...claim.feats.map((f) => `feat:${claim.game}:${f}`)].filter(isDeed)
+        await earn(userId, new Map(deeds.map((d) => [d, 1])), day)
       }
       return claimed
     },
@@ -824,8 +825,10 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
 
     /** Whether `userId` is kept out of the realm now (the realm's writes ask). */
     closed: (userId: string) => closed(sql, userId),
-    /** The same inside a transaction (the claw machine's). */
+    /** The same inside a transaction (the claw machine's, the Safári's and the Escavação's). */
     closedIn: closed,
+    /** The deeds those games settle, as the claim's go (`EarnDeeds`). */
+    earn,
 
     /** Counts a base save against the account's limit; false past it. */
     takeSave: (userId: string) => limits.save.take([userId], now().getTime()),

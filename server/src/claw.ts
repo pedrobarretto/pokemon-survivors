@@ -1,13 +1,16 @@
 import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
 import { PLUSH_POOL, plushPiece, type PlushFamily } from '../../src/data/plushes'
+import type { Deed } from '../../src/data/realmStamps'
 import { brasiliaDay, weekStart, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
 import { parseSaveData, type Save } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
 import type { ClawDropped, ClawPlay, ClawState } from '../../src/net/realmApi'
+import { clawDeeds } from '../../src/realm/gameDeeds'
 import { CLAW, clampToPit, creditPrice, pitLayout, resolveDrop, weeklyPrizes, type PitPoint } from '../../src/realm/games/claw.rules'
 import type { Sql } from './db'
+import type { EarnDeeds } from './realmDeeds'
 import { rateLimiter } from './rateLimit'
 
 /**
@@ -16,7 +19,9 @@ import { rateLimiter } from './rateLimit'
  * a drop is recomputed here from that seed, the player's claw position and the
  * misses this account has on each plush (`claw.rules.ts`). The client only
  * animates the answer. A credit paid and never dropped stays open for its
- * owner, and a repeated drop reads the stored result back.
+ * owner, and a repeated drop reads the stored result back. A win's deeds
+ * (`clawDeeds`) go to the Estampas once the drop is stored, only from the
+ * drop that decided it.
  */
 
 type Q = Sql | TransactionSql
@@ -62,7 +67,7 @@ export type ClawInserted = { ok: true; play: ClawPlay; used: number; paid: { sav
 
 export type ClawDrop = { ok: true; dropped: ClawDropped } | { ok: false; error: 'profile' | 'banned' | 'missing' }
 
-export const clawStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Promise<boolean>; now?: () => Date }) => {
+export const clawStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Promise<boolean>; earn: EarnDeeds; now?: () => Date }) => {
   const now = deps.now ?? (() => new Date())
   const limit = rateLimiter(LIMIT.n, LIMIT.ms)
   const today = () => brasiliaDay(now())
@@ -127,10 +132,12 @@ export const clawStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pr
     /**
      * `POST /realm/claw/drop`: decides the credit from its seed and `at`. A
      * miss moves that plush one step toward the chute; a win starts it over
-     * and gives the piece (source `claw`).
+     * and gives the piece (source `claw`). Then the win's deeds, from this
+     * drop only: a repeat reads the stored result and counts nothing.
      */
-    drop: (userId: string, id: string, at: PitPoint): Promise<ClawDrop> =>
-      sql.begin(async (tx): Promise<ClawDrop> => {
+    drop: async (userId: string, id: string, at: PitPoint): Promise<ClawDrop> => {
+      let deeds: ReadonlyMap<Deed, number> = new Map()
+      const drop = await sql.begin(async (tx): Promise<ClawDrop> => {
         const refused = await gate(tx, userId)
         if (refused) return { ok: false, error: refused }
         const [play] = await tx<PlayRow[]>`select id, seed, week, result, dropped_at from claw_plays where id = ${id}::uuid and user_id = ${userId}`
@@ -152,8 +159,12 @@ export const clawStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pr
         const after = misses.map((m, i) => (i !== target ? m : won ? 0 : Math.min(m + 1, CLAW.guarantee - 1)))
         const dropped: ClawDropped = { target, grip, won, family, misses: after }
         await tx`update claw_plays set dropped_at = now(), result = ${tx.json(dropped)} where id = ${play.id}::uuid`
+        deeds = clawDeeds(won, misses[target] ?? 0)
         return { ok: true, dropped }
-      }),
+      })
+      if (deeds.size > 0) await deps.earn(userId, deeds)
+      return drop
+    },
   }
 }
 

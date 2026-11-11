@@ -6,7 +6,8 @@ import { brasiliaDay, weekStart } from '../game/day'
 import { parseGift, type Gift, type GiftContent } from '../game/gifts'
 import { isRecord } from '../game/parse'
 import type { DigEnd, DigGift, DigHitAnswer, DigReward, DigStarted, DigState, DigWallView } from '../net/realmApi'
-import { addFakePiece, realmFaked, type Failure } from './api'
+import { addFakePiece, fakeGameDeeds, realmFaked, type Failure } from './api'
+import { digDeeds } from './gameDeeds'
 import { buildWall, DIG, digPowers, fossilStreak, hitWall, NO_POWERS, sortOut, startProgress, tileAt, treasureFree, wallPrice, type DigPowers, type DigProgress, type DigTool, type DigWall } from './games/dig.rules'
 
 /**
@@ -175,6 +176,7 @@ const fakeFinish = (w: FakeWall, outcome: DigEnd['outcome']): DigEnd => {
   fake.lacking = fake.lacking.filter((f) => still.has(f))
   fake.dry = fossilStreak(fake.dry, w.wall, w.progress.left, w.lacking)
   fake.open = null
+  fakeGameDeeds(digDeeds(w.wall.golden, sorted.kept.map((t) => t.id)))
   return { outcome, kept: rewards, buried: sorted.buried, treasures: w.wall.treasures, gifts, dry: fake.dry }
 }
 

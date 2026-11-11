@@ -4,7 +4,8 @@ import { PLUSH_POOL, isPlushFamily, plushPiece, type PlushFamily } from '../data
 import { brasiliaDay, weekStart } from '../game/day'
 import { isRecord } from '../game/parse'
 import type { ClawDropped, ClawInserted, ClawPlay, ClawState } from '../net/realmApi'
-import { addFakePiece, realmFaked, type Failure } from './api'
+import { addFakePiece, fakeGameDeeds, realmFaked, type Failure } from './api'
+import { clawDeeds } from './gameDeeds'
 import { CLAW, creditPrice, pitLayout, resolveDrop, weeklyPrizes, type PitPoint } from './games/claw.rules'
 
 /**
@@ -106,6 +107,7 @@ export const dropClaw = async (play: ClawPlay, at: PitPoint): Promise<ClawDroppe
     fake.misses.set(family, won ? 0 : (misses[target] ?? 0) + 1)
     fake.open = null
     if (won) addFakePiece(plushPiece(family))
+    fakeGameDeeds(clawDeeds(won, misses[target] ?? 0))
     return { target, grip, won, family, misses: fakeMisses(prizes) }
   }
   const { status, body } = await apiCall('/realm/claw/drop', { method: 'POST', body: { id: play.id, x: at.x, y: at.y }, auth: true })

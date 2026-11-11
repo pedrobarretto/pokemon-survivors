@@ -7,7 +7,8 @@ import { parseGift, type Gift } from '../game/gifts'
 import { isRecord } from '../game/parse'
 import type { SafariActed, SafariEncounterView, SafariSession, SafariStarted, SafariState } from '../net/realmApi'
 import { loadSave } from '../ui/save'
-import { realmFaked, type Failure } from './api'
+import { fakeGameDeeds, realmFaked, type Failure } from './api'
+import { safariDeeds } from './gameDeeds'
 import { SAFARI, applyAction, encountersLeft, guaranteedEntry, habitatOfWeek, rollQueue, sessionPrice, startRun, type SafariAction, type SafariRun, type SafariTurn } from './games/safari.rules'
 
 /**
@@ -226,6 +227,7 @@ export const actSafari = async (session: SafariSession, action: SafariAction): P
     if (got.turn.kind === 'ball' && got.turn.caught) {
       gift = devGift(fake.turn, got.turn.family, got.turn.shiny)
       if (loadSave().hatched[got.turn.family] === undefined) fake.fresh = true
+      fakeGameDeeds(safariDeeds(true, got.turn.shiny))
     }
     const view = fakeView()!
     if (got.run.over) {

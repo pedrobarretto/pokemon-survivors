@@ -5,6 +5,7 @@ import { brasiliaDay } from '../../src/game/day'
 import type { SafariSession } from '../../src/net/realmApi'
 import { SAFARI } from '../../src/realm/games/safari.rules'
 import type { Sql } from './db'
+import { applyDeeds } from './realmDeeds'
 import { safariStore } from './safari'
 
 /**
@@ -38,6 +39,12 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
   /** Who the API rolled for a session, in order, which only it knows. */
   const hiding = async (id: string) => await sql<{ family: HatchlingId; sure: boolean }[]>`select b->>'family' as family, (b->>'sure')::boolean as sure from safari_sessions, jsonb_array_elements(state->'run'->'queue') b where id = ${id}::uuid`
 
+  /** What reached the Estampas: the deed counts and the stamps. */
+  const book = async () => ({
+    deeds: Object.fromEntries((await sql<{ deed: string; count: number }[]>`select deed, count from realm_deeds where user_id = 'u_ash'`).map((r) => [r.deed, r.count])),
+    stamps: (await sql<{ stamp: string }[]>`select stamp from realm_stamps where user_id = 'u_ash' order by stamp`).map((r) => r.stamp),
+  })
+
   const dry = async () => (await sql<{ dry: number }[]>`select dry from safari_progress where user_id = 'u_ash'`)[0]?.dry ?? 0
 
   const setSave = async (data: Record<string, unknown>, revision = 3) => {
@@ -53,7 +60,7 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
 
   beforeEach(async () => {
     await sql`truncate safari_sessions, safari_progress, gifts, saves, users cascade`
-    safari = safariStore(sql, { closed: async () => false, now, dice })
+    safari = safariStore(sql, { closed: async () => false, earn: (userId, deeds) => sql.begin((tx) => applyDeeds(tx, userId, deeds, brasiliaDay(now()))).then(() => undefined), now, dice })
     rolls = []
     after = 0.5
     await sql`insert into users (id, handle, name) values ('u_ash', 'ash', 'Ash')`
@@ -138,6 +145,27 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     expect((await sql<{ n: number }[]>`select count(*)::int as n from gifts where user_id = 'u_ash' and key = ${`safari:${session.id}:1`}`)[0]!.n).toBe(1)
     await act(session, 2, { kind: 'finish' })
     expect(await dry()).toBe(0)
+  })
+
+  it('counts a catch for the Estampas once, never a ball that missed or a repeated throw', async () => {
+    const { session } = await started()
+    await act(session, 0, { kind: 'grass' })
+    rolls = [0.99, 0.99]
+    const missed = await act(session, 1, { kind: 'ball' })
+    expect(missed.turn).toMatchObject({ caught: false, fled: false })
+    expect(await book()).toEqual({ deeds: {}, stamps: [] })
+    rolls = [0, 0, 0]
+    await act(session, 2, { kind: 'ball' })
+    await Promise.all([act(session, 2, { kind: 'ball' }), act(session, 2, { kind: 'ball' })])
+    expect(await book()).toEqual({ deeds: { 'safari:catch': 1 }, stamps: ['safariCatch'] })
+  })
+
+  it('counts a shiny caught as a shiny too', async () => {
+    const { session } = await started()
+    await sql`update safari_sessions set state = jsonb_set(state, '{run,queue,0,shiny}', 'true') where id = ${session.id}::uuid`
+    const caught = await catchFirst(session)
+    expect(caught.turn).toMatchObject({ caught: true, shiny: true })
+    expect(await book()).toEqual({ deeds: { 'safari:catch': 1, 'safari:shiny': 1 }, stamps: ['safariCatch', 'safariShiny'] })
   })
 
   it('counts a session whose catch the account already had', async () => {
