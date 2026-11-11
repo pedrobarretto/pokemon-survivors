@@ -83,7 +83,8 @@ const paceNow = (g: Game) => {
 }
 
 const spawn = (g: Game, init: Pick<Hazard, 'kind' | 'visual' | 'x' | 'y' | 'r' | 'damage' | 'armAt' | 'disarmAt' | 'ttl'>) =>
-  spawnHazard(g, { ...init, world: true, by: WORLD_HARM })
+  // Its own copy of who harms: the state never holds a module's object (snapshots would share it).
+  spawnHazard(g, { ...init, world: true, by: { ...WORLD_HARM } })
 
 /** How long a landed strike keeps hurting, as a boss's does. */
 const STRIKE_WINDOW = 0.15

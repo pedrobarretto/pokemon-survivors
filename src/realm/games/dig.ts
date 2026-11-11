@@ -178,7 +178,7 @@ const start = (ctx: SoloCtx): GameRun => {
     return null
   }
 
-  const groupIcon: Record<DigGroup, DigTreasureId> = { coins: 'nugget', bag: 'luckyEgg', stone: 'fireStone', furniture: 'digCrystals', fossil: 'skullFossil' }
+  const groupIcon: Record<DigGroup, DigTreasureId> = { coins: 'nugget', bag: 'luckyEgg', stone: 'fireStone', furniture: 'digCrystals', fossil: 'skullFossil', legend: 'mysteryBox' }
 
   /** What the walking partner does for the dig, from its first form's types (the API rechecks it). */
   const partnerLine = () => {
@@ -613,10 +613,11 @@ const start = (ctx: SoloCtx): GameRun => {
       'banner',
       [
         h('h3', { class: 'mg-banner-title' }, treasureName(r.id)),
-        h('p', {}, r.repeat ? m().repeat(formatPokeDollars(r.coins)) : r.coins > 0 ? `+${formatPokeDollars(r.coins)}` : r.prize.kind === 'furniture' ? m().furnitureNote : r.prize.kind === 'bag' ? m().bagNote : r.prize.kind === 'stone' ? m().stoneNote : m().fossilNote),
+        h('p', {}, r.repeat ? m().repeat(formatPokeDollars(r.coins)) : r.coins > 0 ? `+${formatPokeDollars(r.coins)}` : r.prize.kind === 'furniture' ? m().furnitureNote : r.prize.kind === 'bag' ? m().bagNote : r.prize.kind === 'stone' ? m().stoneNote : r.prize.kind === 'legend' ? t().paths.meltan.found : m().fossilNote),
       ],
     )
-    playSfx(r.prize.kind === 'coins' ? 'coin' : r.prize.kind === 'fossil' ? 'shiny' : def.group === 'stone' ? 'evolve' : def.group === 'furniture' ? 'unlock' : 'item')
+    playSfx(r.prize.kind === 'coins' ? 'coin' : r.prize.kind === 'fossil' ? 'shiny' : r.prize.kind === 'legend' && !r.repeat ? 'legendary' : def.group === 'stone' ? 'evolve' : def.group === 'furniture' ? 'unlock' : 'item')
+    if (r.prize.kind === 'legend' && !r.repeat) playCry(cryUrl(808), 0.6)
   }
 
   const nextReveal = () => {

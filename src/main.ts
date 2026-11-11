@@ -5075,13 +5075,14 @@ if (import.meta.env.DEV) {
       },
       /**
        * The Escavação on fakes (`realm/digApi.ts`): `ps.dig()` opens it with the faked API. `ps.dig('golden')` forces the next wall golden,
-       * `ps.dig('fossil', 'cranidos')` a fossil of that family, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
+       * `ps.dig('fossil', 'cranidos')` a fossil of that family, `ps.dig('box')` Meltan's Mystery Box in it, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
        * today, `ps.dig('lacking', [])` the fossils lacked (all five by default), `ps.dig('crack')` the open wall one hit short of collapse, `ps.dig('peek')` where the open wall hides things and the layers left, `ps.dig('partner', 'ralts')` a partner's powers for the next wall, `ps.dig('soft')` a next wall one layer deep with far more crack, to stage a whole dig.
        */
-      dig: async (what?: 'golden' | 'fossil' | 'dry' | 'used' | 'lacking' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
+      dig: async (what?: 'golden' | 'fossil' | 'box' | 'dry' | 'used' | 'lacking' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
         const { stageDig, crackFakeWall, peekFakeWall } = await import('./realm/digApi')
         const { DIG_FOSSIL_FAMILIES } = await import('./data/digTreasures')
         if (what === 'golden') return stageDig({ golden: true })
+        if (what === 'box') return stageDig({ box: true })
         if (what === 'fossil') return stageDig({ fossil: arg === null ? null : DIG_FOSSIL_FAMILIES.find((f) => f === arg) ?? DIG_FOSSIL_FAMILIES[0] })
         if (what === 'dry') return stageDig({ dry: Number(arg ?? 10) })
         if (what === 'used') return stageDig({ used: Number(arg ?? 0) })

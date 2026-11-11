@@ -95,8 +95,8 @@ export const DIG_VEIN_IDS = Object.keys(DIG_VEINS) as DigVein[]
 
 /** A treasure group's base chance per treasure, and a golden wall's (richer: fewer pebbles, far more that's rare). */
 const GROUP_WEIGHTS: Record<'plain' | 'golden', Record<DigGroup, number>> = {
-  plain: { coins: 83, bag: 10.4, stone: 0.6, furniture: 2.8, fossil: 3.2 },
-  golden: { coins: 42, bag: 26, stone: 10, furniture: 10, fossil: 12 },
+  plain: { coins: 83, bag: 10.4, stone: 0.6, furniture: 2.8, fossil: 3.2, legend: 0 },
+  golden: { coins: 42, bag: 26, stone: 10, furniture: 10, fossil: 12, legend: 0 },
 }
 
 /** A golden wall skews its nuggets rare. */
@@ -147,6 +147,7 @@ const weekPool = (week: string, golden: boolean): { id: DigTreasureId; group: Di
   const boost = DIG_VEINS[vein]
   return (Object.keys(groups) as DigGroup[]).flatMap((group) => {
     const groupWeight = groups[group] * (boost.group === group ? boost.boost : 1)
+    if (groupWeight <= 0) return []
     const ids = DIG_TREASURE_IDS.filter((id) => DIG_TREASURES[id].group === group && (group === 'bag' ? bag.includes(id) : group === 'stone' ? stones.includes(id) : true))
     const rawOf = (id: DigTreasureId) => (golden && group === 'coins' ? (GOLDEN_COINS[id] ?? DIG_TREASURES[id].weight) : DIG_TREASURES[id].weight)
     const total = ids.reduce((sum, id) => sum + rawOf(id), 0)
@@ -165,9 +166,10 @@ export const digOdds = (week: string, golden = false): { id: DigTreasureId; grou
 }
 
 /** The groups' shares for the odds table, in table order. */
-export const digGroupOdds = (week: string, golden = false): { group: DigGroup; share: number }[] => {
+export const digGroupOdds = (week: string, golden = false) => {
   const odds = digOdds(week, golden)
-  const groups: DigGroup[] = ['coins', 'bag', 'stone', 'furniture', 'fossil']
+  // Meltan's Mystery Box is never in the pool, so the table leaves its group out.
+  const groups = ['coins', 'bag', 'stone', 'furniture', 'fossil'] as const satisfies readonly DigGroup[]
   return groups.map((group) => ({ group, share: odds.filter((o) => o.group === group).reduce((sum, o) => sum + o.share, 0) }))
 }
 
@@ -195,12 +197,13 @@ export type DigWall = {
   guaranteed: boolean
 }
 
-/** Who a wall is built for: the week, the partner's powers, the fossils the account lacks, whether its dry streak is due, and what dev forces. */
+/** Who a wall is built for: the week, the partner's powers, the fossils the account lacks, whether its dry streak is due, whether it holds Meltan's Mystery Box (`box`), and what dev forces. */
 export type DigWallCtx = {
   week: string
   powers: DigPowers
   lacking: readonly FossilFamily[]
   due: boolean
+  box?: boolean
   force?: { golden?: boolean; fossil?: FossilFamily } | undefined
 }
 
@@ -323,7 +326,7 @@ const place = (ids: readonly DigTreasureId[], arrangement: Arrangement, next: ()
 /**
  * The wall of seed `seed` for `ctx`. Golden is rolled on the wall's seed
  * alone. The guarantee puts a fossil the account lacks in; other fossils are
- * rolled from the five, so a repeat can come. Treasures are placed biggest
+ * rolled from the five, so a repeat can come. `box` puts Meltan's Mystery Box in too. Treasures are placed biggest
  * first so what's rare always fits.
  */
 export const buildWall = (seed: number, ctx: DigWallCtx): DigWall => {
@@ -335,8 +338,9 @@ export const buildWall = (seed: number, ctx: DigWallCtx): DigWall => {
   const count = slots.min + Math.floor(next() * (slots.extra + 1))
   const forcedFamily = ctx.force?.fossil ?? (ctx.due && ctx.lacking.length > 0 ? ctx.lacking[Math.floor(next() * ctx.lacking.length)] : undefined)
   const forced = forcedFamily === undefined ? [] : DIG_FOSSILS.filter((id) => fossilFamily(id) === forcedFamily)
-  const rolled = Array.from({ length: Math.max(0, count - forced.length) }, () => roll(pool, next))
-  const ids = [...forced, ...rolled].sort((a, b) => shapeCells(b).length - shapeCells(a).length)
+  const boxed: DigTreasureId[] = ctx.box ? ['mysteryBox'] : []
+  const rolled = Array.from({ length: Math.max(0, count - forced.length - boxed.length) }, () => roll(pool, next))
+  const ids = [...forced, ...boxed, ...rolled].sort((a, b) => shapeCells(b).length - shapeCells(a).length)
   const treasures = place(ids, ARRANGEMENTS[Math.floor(next() * ARRANGEMENTS.length)]!, next)
   const biggest = treasures[0]
   const hint = ctx.powers.reveal && biggest ? cellHint(biggest, next) : null

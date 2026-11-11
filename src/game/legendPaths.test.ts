@@ -140,3 +140,15 @@ describe('path forms', () => {
     expect([formAfter('kubfu', 1, ['urshifuSingle']), formAfter('meltan', 2, ['melmetal'])?.dex, formAfter('kyogre', 2)?.key]).toEqual([null, 809, 'primal'])
   })
 })
+
+describe('the Mystery Box', () => {
+  it('is buried only in a wall built for it, never from the week’s pool', async () => {
+    const { buildWall, digOdds, NO_POWERS } = await import('../realm/games/dig.rules')
+    const ctx = { week: '2026-11-09', powers: NO_POWERS, lacking: [], due: false }
+    expect(digOdds('2026-11-09').some((o) => o.id === 'mysteryBox')).toBe(false)
+    for (let seed = 1; seed < 40; seed++) {
+      expect(buildWall(seed, ctx).treasures.some((t) => t.id === 'mysteryBox')).toBe(false)
+      expect(buildWall(seed, { ...ctx, box: true }).treasures.some((t) => t.id === 'mysteryBox')).toBe(true)
+    }
+  })
+})

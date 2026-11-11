@@ -109,6 +109,8 @@ export type PathWords = {
     meltan: {
       box: string
       boxHint: string
+      /** The Escavação's reveal of the box. */
+      found: string
       nuts: (n: string, need: string) => string
       ready: string
       note: string
@@ -285,6 +287,7 @@ const pt: PathWords = {
     meltan: {
       box: 'Mystery Box',
       boxHint: 'Às vezes vem enterrada numa parede da Escavação, enquanto você não tem o Meltan.',
+      found: 'Tem um Meltan dentro! Ele está no Presente do lobby.',
       nuts: (n: string, need: string) => `Porcas: ${n}/${need}`,
       ready: 'O Meltan vira *Melmetal* no 2º despertar.',
       note: 'Jogando com o Meltan, os inimigos derrubam Porcas Sextavadas (os de Aço mais). Com 400, o 2º despertar o transforma em Melmetal.',
@@ -458,6 +461,7 @@ const en: PathWords = {
     meltan: {
       box: 'Mystery Box',
       boxHint: 'Sometimes it comes buried in a Mine Dig wall, while you don’t have Meltan.',
+      found: 'There’s a Meltan inside! It’s waiting in the lobby’s Gift.',
       nuts: (n: string, need: string) => `Nuts: ${n}/${need}`,
       ready: 'Meltan becomes *Melmetal* at its 2nd awakening.',
       note: 'Playing Meltan, foes drop Hex Nuts (Steel types more). With 400, its 2nd awakening turns it into Melmetal.',
@@ -631,6 +635,7 @@ const es: PathWords = {
     meltan: {
       box: 'Mystery Box',
       boxHint: 'A veces viene enterrada en una pared de la Excavación, mientras no tengas a Meltan.',
+      found: '¡Hay un Meltan dentro! Te espera en el Regalo del lobby.',
       nuts: (n: string, need: string) => `Tuercas: ${n}/${need}`,
       ready: 'Meltan se vuelve *Melmetal* en su 2.º despertar.',
       note: 'Jugando con Meltan, los enemigos sueltan Tuercas Hexagonales (los de Acero, más). Con 400, su 2.º despertar lo vuelve Melmetal.',
@@ -804,6 +809,7 @@ const fr: PathWords = {
     meltan: {
       box: 'Mystery Box',
       boxHint: 'Elle vient parfois enfouie dans un mur de l’Excavation, tant que vous n’avez pas Meltan.',
+      found: 'Il y a un Meltan dedans ! Il vous attend dans le Cadeau du lobby.',
       nuts: (n: string, need: string) => `Écrous : ${n}/${need}`,
       ready: 'Meltan devient *Melmetal* à son 2e éveil.',
       note: 'En jouant Meltan, les ennemis lâchent des Écrous Hexagonaux (les types Acier, plus souvent). Avec 400, son 2e éveil le transforme en Melmetal.',
@@ -977,6 +983,7 @@ const zh: PathWords = {
     meltan: {
       box: 'Mystery Box',
       boxHint: '你還沒有Meltan時，它有時會埋在礦坑挖掘的岩壁裡。',
+      found: '裡面有一隻 Meltan！它在大廳的禮物裡等你。',
       nuts: (n: string, need: string) => `螺帽：${n}/${need}`,
       ready: 'Meltan會在第 2 次覺醒時變成 *Melmetal*。',
       note: '用Meltan對戰時，敵人會掉落六角螺帽（鋼屬性的更常掉）。有 400 個時，第 2 次覺醒會把它變成Melmetal。',

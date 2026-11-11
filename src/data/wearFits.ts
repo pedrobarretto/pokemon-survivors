@@ -353,4 +353,11 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   746: { no: ['head'] }, // Wishiwashi
   997: { no: ['head'] }, // Arctibax
   351: { no: ['head'] }, // Castform
+  // The legend paths (data/legendPaths.ts)
+  '718:ten': { rig: { 'S:Idle': { seat: [0, 6] } } }, // Zygarde 10%: idle, it sits up and its head drops under the seat the Walk frame measured
+  718: { rig: { E: { seat: [-2, 0] } } }, // Zygarde 50%: turned, the hat's brim reached its eye
+  '718:complete': { rig: { E: { seat: [-2, -1] } } }, // Zygarde Complete: turned, the brim reached its eye
+  809: { rig: { E: { seat: [-2, -4] } } }, // Melmetal: turned, its little head's seat sat down on its face
+  486: { rig: { E: { seat: [-2, -3] }, SE: { seat: [-1, -2] } } }, // Regigigas: turned, the brim came down onto its lights
+  892: { rig: { 'SE:Idle': { seat: [0, -2] } } }, // Urshifu: idle, the brim came down to its eyes
 }

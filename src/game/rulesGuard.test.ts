@@ -323,6 +323,26 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
     magicGuard: '1188·47·19·824b6342',
     endlessCeiling: '845·0·26·41a089de',
   },
+  50: {
+    levelUps: '2998·45·12·78f86519',
+    mega: '1892·27·1·2d1d227c',
+    riftFall: '654·0·1·47ae9a79',
+    alphaHazards: '1002·6·19·b42822c1',
+    nightBoss: '2093·32·17·f88b620d',
+    bag: '839·3·3·d8f541fa',
+    shop: '1526·97·21·c866c7d6',
+    shopTms2: '1787·50·18·28b59727',
+    evoGate: '1492·51·24·0872abb4',
+    porygonGate: '2069·63·37·f28841c4',
+    sketch: '1210·12·4·eb300408',
+    legend: '1201·64·14·2e46f47f',
+    waveLegend: '1998·20·17·02fa53f5',
+    cave: '2188·16·12·d2d47594',
+    grotto: '2782·23·18·bb75df4d',
+    underground: '3084·28·30·bb9ad367',
+    magicGuard: '1188·46·20·cca8d32f',
+    endlessCeiling: '826·0·26·fa8579f0',
+  },
 }
 
 /** Phases that wait on a pick, made by the script like a player's tap. */

@@ -46,7 +46,8 @@ const fire = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | nul
   const by = harmBy(boss, move)
   for (let i = from; i < g.hazards.length; i++) {
     const h = g.hazards[i]!
-    h.by = by
+    // Each its own copy: hazards sharing one object would come back apart from a snapshot.
+    h.by = { ...by }
     if (written.sleep) h.sleep = written.sleep
   }
   if (written.kind === 'blast' && fight?.blast) fight.blast.by = by
