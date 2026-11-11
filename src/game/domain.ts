@@ -6,6 +6,7 @@ import { ENEMIES } from '../data/enemies'
 import { ARENAS, isRiftLegend, RIFT, type RiftLegend } from '../data/rifts'
 import { onFloor } from './arenaFloor'
 import { joinAs, offstage } from './bosses'
+import { phasesOf } from './bossFight'
 import { hurtPlayer, killEnemy } from './combat'
 import { harmBy } from './harm'
 import { DOMAIN_HOOKS } from './domainHooks'
@@ -405,6 +406,16 @@ const keepInDomain = (g: Game, plan: FloorPlan, arena: RiftArena) => {
 /** How far from the view's edges a player always stays while their screen frames the legendary too, px (the HUD sits on top). */
 const FRAME = { side: 44, top: 90, bottom: 44 } as const
 
+/** Through a form change (a phase opening on a new form), how far below the view's top the legendary's feet stay at least, px: whole under the HUD, even if the player goes to the edge for it. */
+const FORM_ROOM = 120
+
+/** Whether a boss is in the opening of a phase that changes its form (Palkia turning Origin, a Primal Reversion, a Mega). */
+const changingForm = (boss: Enemy) => {
+  const f = boss.fight
+  const phases = f ? phasesOf(boss.kind) : null
+  return f !== null && phases !== null && f.phase > 0 && f.shift > 0 && phases[f.phase]?.form !== phases[f.phase - 1]?.form
+}
+
 /**
  * The acting player's screen in a domain (outside its scenes): ahead of them in the
  * crossing, and in the battle on the middle of the player and the
@@ -424,6 +435,7 @@ export const domainCamera = (g: Game, dt: number) => {
   if (boss && !offstage(boss)) {
     x = Math.max(p.x - (w - FRAME.side), Math.min(p.x - FRAME.side, (p.x + boss.x) / 2 - w / 2))
     y = Math.max(p.y - (h - FRAME.bottom), Math.min(p.y - FRAME.top, (p.y + boss.y) / 2 - h / 2 - 24))
+    if (changingForm(boss)) y = Math.min(y, boss.y - FORM_ROOM)
   }
   const k = 1 - dm.exp(-5 * dt)
   const s = p.screen

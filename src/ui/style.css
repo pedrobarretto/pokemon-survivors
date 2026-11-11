@@ -8774,7 +8774,7 @@ button {
 
 @media (max-height: 500px) {
   .duel-card {
-    top: 76px;
+    top: 94px;
     width: min(300px, 40 * var(--vw));
     gap: 3px;
     padding: 4px 10px 6px;
