@@ -111,7 +111,7 @@ describe('golden runs', () => {
   it('Eevee: the opening draft, level-ups, rerolls, skips and Esquecer', () => {
     const { live, replayed, branch } = golden('eevee', 41, 180)
     expect(replayed).toBe(live)
-    expect([live, branch]).toEqual(['playing@180s L8 S0 341k 50e12000', null])
+    expect([live, branch]).toEqual(['playing@180s L10 S0 348k 9f664193', null])
   }, SLOW)
 
   it('Charmander evolves and picks its Ability', () => {
