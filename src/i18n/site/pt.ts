@@ -150,6 +150,8 @@ export const sitePt = {
     night: (at: string, percent: number) => `Chefe da Noite das Bruxas em ${at}, nas partidas assombradas do evento (${n(percent)}% de chance)`,
     rift: (from: string) => `No seu domínio, atrás de uma fenda lendária, a partir de ${from} (opcional)`,
     eventRift: (from: string) => `Só na Noite das Bruxas 2026: numa partida assombrada, a fenda do Pesadelo pode tomar o lugar de uma fenda, a partir de ${from} (opcional)`,
+    raid: (from: string) => `Gigante de uma Raide Tera: num Covil Tera a partir de ${from}, de qualquer tipo Tera (opcional)`,
+    stellarRaid: (from: string) => `Raide Tera Astral 7★ do fim de semana: no covil da Raide do dia, perto de ${from}. Vença uma vez para capturá-lo`,
     /** `name` comes with its preposition (`places`). */
     place: (name: string, from: string) => `Vive ${name}, a partir de ${from} (lugar opcional)`,
     placeBoss: (name: string, from: string) => `Desperta da Pedra Peculiar ${name}, a partir de ${from}`,

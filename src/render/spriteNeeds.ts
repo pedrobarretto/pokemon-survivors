@@ -13,7 +13,7 @@ import { actAs } from '../game/players'
 import { bossSummons, type Roster } from '../game/roster'
 import { STANCES } from '../game/stance'
 import type { Game } from '../game/types'
-import type { Dex, KeepSprites, Variant } from './sprites'
+import { sheetForm, type Dex, type KeepSprites, type Variant } from './sprites'
 
 /**
  * Which species' sheets a run holds: the shell streams the ones it needs now
@@ -91,12 +91,15 @@ const riftCameo = (g: Game): Dex[] => {
 /** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, a hidden zone's own, and the reaper as its hunt nears in the endless mode. */
 const visitors = (g: Game): Dex[] => {
   const place = g.place.inside?.id ?? g.place.entrance?.id
+  const raidBoss = g.raid.den?.raid.boss ?? g.raid.arena?.raid.boss
   return [
     ...(place ? placePool(place, g.time).map(([id]) => ENEMIES[id].dex) : []),
     ...(place === 'graveyard' ? [ENEMIES[GRAVEYARD.boss].dex] : []),
     // A hidden zone's lucky ones and rare dweller, from its entrance on (found or not: loading shows nothing).
     ...(place ? hiddenCast(place).map((id) => ENEMIES[id].dex) : []),
     ...(g.endless && g.time >= ENDLESS.reaperAt - REAPER_LEAD ? [ENEMIES[REAPER].dex] : []),
+    // A Tera Raid's giant, from its den's opening on.
+    ...(raidBoss ? [ENEMIES[raidBoss].dex] : []),
   ]
 }
 
@@ -120,8 +123,9 @@ export const playerForms = (g: Game): Variant[] =>
     const dex = playerDex(g)
     const mega = isFinalStage(p.starter, p.stage) ? heldMega(g) : null
     actAs(g, before)
-    const legend = p.legend && p.legend.awakened >= 1 ? formAfter(p.legend.id, 2)?.key : undefined
-    const forms = [...(mega ? [mega.form] : []), ...(legend ? [legend] : []), ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
+    // The awakened forms (Terapagos's Stellar Form wears its Terastal Form's sheets, `sheetForm`).
+    const legend = p.legend && p.legend.awakened >= 1 ? [formAfter(p.legend.id, 1)?.key, formAfter(p.legend.id, 2)?.key].flatMap((f) => (f ? [sheetForm(f)!] : [])) : []
+    const forms = [...(mega ? [mega.form] : []), ...legend, ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
     return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : []), ...(p.kitA?.kind === 'shell' && p.stage >= 1 ? [{ dex: SHEDINJA, shiny: p.shiny }] : [])]
   })
 

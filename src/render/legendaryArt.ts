@@ -281,4 +281,15 @@ export const LEGENDARY_ICONS: Record<LegendaryMoveId, () => PixelSprite> = {
       px(9, 8, '#ffffff')
       px(8, 1, '#f0a0d0')
     }), '#281838'),
+  teraStarstorm: () =>
+    medallion(paint(11, 11, (px) => {
+      // A star of the seven crystals, white at its heart.
+      const rays = ['#f85858', '#f8a838', '#f8e858', '#58e898', '#58a8f8', '#a878f8', '#f85858', '#58e898']
+      const dirs = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]] as const
+      dirs.forEach(([dx, dy], i) => {
+        const len = dx !== 0 && dy !== 0 ? 3 : 5
+        for (let k = 1; k <= len; k++) px(5 + dx * k, 5 + dy * k, rays[i]!)
+      })
+      px(4, 4, '#ffffff', 3, 3)
+    }), '#141038'),
 }

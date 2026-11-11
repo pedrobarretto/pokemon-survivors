@@ -423,6 +423,7 @@ export const FAMILY_ABILITIES = {
   arceus: ['moldBreaker', 'magicGuard', 'sturdy'],
   darkrai: ['insomnia', 'unnerve', 'infiltrator'],
   cresselia: ['naturalCure', 'magicGuard', 'synchronize'],
+  terapagos: ['sturdy', 'clearBody', 'adaptability'],
   ...SEASON_ONE_EGG_ABILITIES,
   ...SEASON_ONE_KIT_ABILITIES,
   ...GA_FAMILIES_B_ABILITIES,

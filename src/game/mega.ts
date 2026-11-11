@@ -12,6 +12,7 @@ import type { Game } from './types'
 import { setWeather } from './weather'
 import * as dm from '../engine/dmath'
 import { roomOf } from './room'
+import { teraBusy } from './tera'
 
 /**
  * Mega Evolution in a run. Beating a rift legendary drops the line's Mega
@@ -190,7 +191,8 @@ export const updateMega = (g: Game, pressed: boolean, dt: number) => {
   if (!def) return
   const s = g.player.mega
   const final = isFinalStage(g.player.starter, g.player.stage)
-  if (pressed && megaPhase(s, final) === 'ready') return startIntro(g)
+  // A Terastallized Pokémon can't Mega Evolve meanwhile (nor the other way round, `updateTera`).
+  if (pressed && megaPhase(s, final) === 'ready' && !teraBusy(g.player)) return startIntro(g)
   const tick = tickMega(s, dt)
   if (tick === 'end') revert(g)
   else if (tick === 'ready' && s.stone && final) g.events.push({ kind: 'megaReady' })

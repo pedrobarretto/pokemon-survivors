@@ -31,6 +31,9 @@ import { phasesOf, pooledShare } from '../game/bossFight'
 import { createFieldMissionHud } from './fieldMissionHud'
 import { createLungeControls } from './lungeButton'
 import { createMegaControls } from './megaButton'
+import { createTeraControls } from './teraButton'
+import { crownIcon, TERA_RAMPS } from '../render/teraArt'
+import { teraName } from './teraText'
 import { moveCard, withMoveCard } from './moveCard'
 import { createMovePad } from './movePad'
 import { createStickLock } from './stickLock'
@@ -42,16 +45,17 @@ const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-
 
 /**
  * In-run heads-up display. `update` is called every frame and only touches what changed.
- * `onSpecial`, `onMega` and `onLunge` fire when the touch special, Mega and lunge buttons are pressed;
+ * `onSpecial`, `onMega`, `onTera` and `onLunge` fire when the touch special, Mega, TERA and lunge buttons are pressed;
  * `onPause` backs the on-screen pause button (phones have no Esc key; `menu`: co-op's menu button); `onStickMode` runs when the padlock changes the joystick mode (the status box moves); `isHeld` (the input's)
  * lights the desktop WASD keys. Hovering or holding a move slot opens its card (`withMoveCard`). Labels are
  * read at creation: rebuild the HUD after a language switch.
  */
-export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onLunge: () => void, onPause: () => void, onStickMode: () => void, isHeld: (code: string) => boolean, menu = false) => {
+export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onTera: () => void, onLunge: () => void, onPause: () => void, onStickMode: () => void, isHeld: (code: string) => boolean, menu = false) => {
   const movePad = createMovePad(isHeld)
   const stickLock = createStickLock(root, onStickMode)
   const special = createSpecialControls(onSpecial)
   const mega = createMegaControls(onMega)
+  const tera = createTeraControls(onTera)
   const lunge = createLungeControls(onLunge)
   const rift = createRiftHud()
   const card = createPlaceCard()
@@ -76,7 +80,12 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
   // A linked pair (Latias and Latios) shares the bar; under it, each one's own HP in its color.
   const pairFills = [h('i', { class: 'boss-pair-fill' }), h('i', { class: 'boss-pair-fill' })] as const
   const pairBars = h('div', { class: 'boss-pair hidden' }, h('span', { class: 'boss-pair-bar' }, pairFills[0]), h('span', { class: 'boss-pair-bar' }, pairFills[1]))
-  const boss = h('div', { class: 'boss hidden' }, bossName, bossBar, pairBars)
+  // A Tera Raid's giant: its crown by its name, and its Tera shield's points under its HP while it's up (`game/teraRaid.ts`).
+  const bossCrown = h('img', { class: 'boss-crown hidden', alt: '' })
+  const shieldFill = h('div', { class: 'boss-shield-fill' })
+  const shieldBar = h('div', { class: 'boss-shield hidden' }, shieldFill, h('span', { class: 'boss-shield-label' }, t().raid.shield))
+  const bossClock = h('span', { class: 'boss-clock hidden' })
+  const boss = h('div', { class: 'boss hidden' }, h('div', { class: 'boss-head' }, bossCrown, bossName, bossClock), bossBar, shieldBar, pairBars)
   /** The boss whose phase ticks the bar shows (`BOSS_PHASES`), so they're laid once per boss. */
   let ticked: string | null = null
   const portrait = h('img', { class: 'status-portrait', alt: '' })
@@ -107,7 +116,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     h(
       'div',
       { class: 'hud-row' },
-      h('div', { class: 'hud-left' }, h('div', { class: 'loadout' }, moveSlots, itemSlots, buffs), special.badge, lunge.badge, mega.badge),
+      h('div', { class: 'hud-left' }, h('div', { class: 'loadout' }, moveSlots, itemSlots, buffs), special.badge, lunge.badge, mega.badge, tera.badge),
       timer,
       h(
         'div',
@@ -143,6 +152,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     movePad.el,
     special.button,
     mega.button,
+    tera.button,
     lunge.button,
   )
   const minimap = createMinimap(el)
@@ -225,6 +235,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     stickLock.update()
     special.update(g)
     mega.update(g)
+    tera.update(g)
     lunge.update(g)
     rift.update(g)
     card.update(g)
@@ -305,6 +316,21 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     } else if (b) {
       setText(bossName, isClone(g, b) ? t().legend.clone(ENEMIES[b.kind].name) : ENEMIES[b.kind].name)
       setStyle(bossFill, 'width', `${((b.hp / b.maxHp) * 100).toFixed(1)}%`)
+    }
+    const raid = b && g.raid.arena?.bossId === b.id ? g.raid.arena : null
+    bossCrown.classList.toggle('hidden', !raid)
+    bossClock.classList.toggle('hidden', !raid || raid.loot !== null)
+    bossClock.classList.toggle('urgent', raid !== null && raid.left < 15)
+    if (raid) setText(bossClock, formatTime(Math.ceil(Math.max(0, raid.left))))
+    shieldBar.classList.toggle('hidden', !raid?.shield.up)
+    if (raid) {
+      const src = crownIcon(raid.raid.tera)
+      if (bossCrown.getAttribute('src') !== src) bossCrown.setAttribute('src', src)
+      setText(bossName, `${t().raid.title(ENEMIES[raid.raid.boss].name, teraName(raid.raid.tera))} ${raid.raid.stars}★`)
+      const r = TERA_RAMPS[raid.raid.tera]
+      setStyle(shieldBar, '--tera-mid', r[2])
+      setStyle(shieldBar, '--tera-light', r[4])
+      setStyle(shieldFill, 'width', `${raid.shield.max > 0 ? ((Math.max(0, raid.shield.hp) / raid.shield.max) * 100).toFixed(1) : 0}%`)
     }
     if (b) {
       if (ticked !== b.kind) {

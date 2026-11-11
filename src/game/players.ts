@@ -44,13 +44,13 @@ export const ownerOf = (g: Game, slot: number): Player => g.players[slot] ?? g.p
 /**
  * Standing in the run: can be chased, hit and pick things up. In co-op a
  * fainted, away or gone player isn't, nor one wrapped up in something of their
- * own: their evolution, a Mega Evolution or a personal pick (`personal`),
+ * own: their evolution, a Mega Evolution, a Terastallization or a personal pick (`personal`),
  * which play without holding the team. In Versus a pick screen doesn't take
  * the Pokémon out (its cards wait while it plays on), nor does being away (a
  * bot plays it, `versusBots.ts`): only an evolution does.
  */
 export const inPlay = (p: Player) =>
-  p.hp > 0 && !p.gone && p.mega.intro <= 0 && (p.versus !== undefined ? p.phase !== 'evolving' : !p.away && p.phase === 'playing')
+  p.hp > 0 && !p.gone && p.mega.intro <= 0 && p.tera.intro <= 0 && (p.versus !== undefined ? p.phase !== 'evolving' : !p.away && p.phase === 'playing')
 
 /**
  * Co-op: phases that are one player's own and don't hold the world: the

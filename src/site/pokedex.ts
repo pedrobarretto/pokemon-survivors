@@ -1,3 +1,4 @@
+import { RAID, RAID_BOSSES } from '../data/tera'
 import manifest from '../data/sprites.generated.json'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BRANCHES, branchesOf, branchStage, type BranchId } from '../data/branches'
@@ -219,6 +220,8 @@ export type Appearance =
   | { kind: 'rift'; from: number }
   /** An event legend (`EVENT_LEGENDS`): its event's rift may take a rift's place in a haunted run, from `from`. */
   | { kind: 'eventRift'; from: number }
+  /** A Tera Raid's giant (`RAID_BOSSES`), in a den from `from`; `stellar` for Terapagos, the weekends' 7★ raid of the day. */
+  | { kind: 'raid'; from: number; stellar: boolean }
   /** Hunts the player in endless mode from `at`. */
   | { kind: 'reaper'; at: number }
   /** Lives in a place (`data/places.ts`), coming out from `from`; `boss` for the place's own boss. */
@@ -263,6 +266,7 @@ export const appearances = (id: EnemyId): Appearance[] => {
   const event = EVENT_LEGENDS.some((l) => l === id)
   const rift: Appearance[] = event ? [{ kind: 'eventRift', from: RIFT.slots[0] }] : isRiftLegend(id) ? [{ kind: 'rift', from: RIFT.slots[0] }] : []
   const reaper: Appearance[] = id === REAPER ? [{ kind: 'reaper', at: ENDLESS.reaperAt }] : []
+  const raid: Appearance[] = id === 'terapagos' ? [{ kind: 'raid', from: RAID.slots[1], stellar: true }] : RAID_BOSSES.some((b) => b === id) ? [{ kind: 'raid', from: RAID.slots[0], stellar: false }] : []
   // A place's dwellers come out once the run's stage has their tier (never before the first entrance; a hidden zone's, never before it can open).
   const placed = PLACE_IDS.flatMap((place): Appearance[] => {
     if (place === 'graveyard' && id === GRAVEYARD.boss) return [{ kind: 'place', place, from: PLACE.firstAt, boss: true }]
@@ -280,7 +284,7 @@ export const appearances = (id: EnemyId): Appearance[] => {
   const retinue = (Object.keys(DOMAINS) as RiftLegend[])
     .filter((by) => domainCast(by).includes(id))
     .map((by): Appearance => ({ kind: 'retinue', by }))
-  return [...windows, ...events, ...rift, ...reaper, ...placed, ...summoned, ...retinue]
+  return [...windows, ...events, ...rift, ...raid, ...reaper, ...placed, ...summoned, ...retinue]
 }
 
 /** Everyone a legendary's domain brings besides its legendaries: the crossing's retinue, its adds and its barrier's keepers. */

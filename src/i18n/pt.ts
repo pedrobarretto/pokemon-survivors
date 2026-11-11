@@ -2,6 +2,7 @@ import type { DexRegion } from '../data/nationalDex'
 import type { GameModeId } from '../data/gameModes'
 import { realmBookPt as realmBook } from './realmStamps/pt'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
@@ -1433,6 +1434,7 @@ export const pt = {
       right: 'Mover para a direita',
       special: 'Ataque especial',
       mega: 'Mega Evolução',
+      tera: TERA_WORDS.pt.action,
       lunge: 'Bote',
       pause: 'Pausar',
       confirm: 'Confirmar',
@@ -3021,6 +3023,9 @@ export const pt = {
     },
   },
   /** Legendary rifts and the endless mode after Mewtwo. */
+  tera: TERA_WORDS.pt.tera,
+  raid: TERA_WORDS.pt.raid,
+
   rifts: {
     open: 'Uma *fenda lendária* se abriu! Siga a seta.',
     closed: 'A fenda se fechou.',
@@ -3349,6 +3354,7 @@ export const pt = {
     giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo', stampCollector: 'Juntou 30 Estampas no Poké Realm', era1Legend: 'Ficou no topo de um quadro da Era 1', era1Champion: 'Foi o nº 1 de um quadro da Era 1', kantoDex: 'Viu todos os Pokémon de Kanto no Pokédex', johtoDex: 'Viu todos os Pokémon de Johto no Pokédex', hoennDex: 'Viu todos os Pokémon de Hoenn no Pokédex', sinnohDex: 'Viu todos os Pokémon de Sinnoh no Pokédex', unovaDex: 'Viu todos os Pokémon de Unova no Pokédex', kalosDex: 'Viu todos os Pokémon de Kalos no Pokédex', alolaDex: 'Viu todos os Pokémon de Alola no Pokédex', galarDex: 'Viu todos os Pokémon de Galar no Pokédex', paldeaDex: 'Viu todos os Pokémon de Paldea no Pokédex' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
+      ...TERA_WORDS.pt.achievementNames,
       firstRun: 'Primeiros passos',
       regular: 'Freguês',
       veteran: 'Veterano',
@@ -3415,6 +3421,7 @@ export const pt = {
       reaperDown: 'Lenda Viva',
     } satisfies Record<AchievementId, string>,
     titles: {
+      ...TERA_WORDS.pt.titles,
       veteran: 'Veterano',
       kills100k: 'Imparável',
       coins1m: 'Magnata',
@@ -3459,6 +3466,7 @@ export const pt = {
       paldeaDex: 'Pesquisador(a) de Paldea',
     } satisfies Record<TitleId, string>,
     goals: {
+      ...TERA_WORDS.pt.goals,
       runs: (n: string) => (n === '1' ? 'Jogue uma partida' : `Jogue ${n} partidas`),
       kills: (n: string) => `Derrote ${n} Pokémon no total`,
       bestMinutes: (n: string) => `Sobreviva ${n} min numa partida`,
@@ -3499,6 +3507,7 @@ export const pt = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.pt.moves,
     ...REGIONAL_WORDS.pt.moves,
+    teraStarstorm: TERA_WORDS.pt.move,
     ...SEASON_ONE_KITS_WORDS.pt.moves,
     ...GA_FAMILIES_B_WORDS.pt.moves,
     ...GA_FAMILIES_A_WORDS.pt.moves,
@@ -6092,6 +6101,7 @@ export const pt = {
     arceus: 'O deus. Seu tipo muda com cada bioma.',
     darkrai: 'Pesadelo. Adormece multidões e as fere em sonho.',
     cresselia: 'Lua crescente. Lâminas que voltam e uma lua cheia que cura.',
+    terapagos: TERA_WORDS.pt.blurb,
   },
 
   specials: {

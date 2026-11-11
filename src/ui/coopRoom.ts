@@ -253,10 +253,12 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
 
   let nav = keyNav(input, el, escape)
 
-  /** The host's Start: a challenge room set on a day gone by (left open past midnight) plays today's. */
+  /** The host's Start: a challenge room set on a day gone by (left open past midnight) plays today's, and a run room today's Tera Raid. */
   const startNow = (challenge: DayKey | null, difficulty: Difficulty) => {
     const today = brasiliaDay(new Date())
-    if (challenge && challenge !== today) client.setSettings({ difficulty, challenge: today })
+    const settings = client.state().room?.settings
+    const run = settings === undefined || settings.mode !== 'versus'
+    if ((challenge && challenge !== today) || (run && settings?.raid !== today)) client.setSettings({ ...(settings ?? { difficulty }), difficulty, ...(challenge && { challenge: today }), ...(run && { raid: today }) })
     client.start()
   }
 

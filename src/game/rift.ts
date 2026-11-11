@@ -83,8 +83,8 @@ export const riftDue = (s: { time: number; nextAt: number; busy: boolean; bossAl
 /** The domain behind `legend`'s rift, or undefined for its old arena (`data/arenas.ts`), which co-op keeps (`COOP_LOCKS`). */
 export const riftDomain = (g: Pick<Game, 'coop'>, legend: EnemyId) => (coopLocked(g, 'domains') ? undefined : domainOf(legend))
 
-/** Whether the run clock runs: it stops while the player is inside a rift. */
-export const clockRuns = (g: Pick<Game, 'rift'>) => g.rift.arena === null
+/** Whether the run clock runs: it stops while the player is inside a rift or a Tera Raid's hollow. */
+export const clockRuns = (g: Pick<Game, 'rift' | 'raid'>) => g.rift.arena === null && g.raid.arena === null
 
 /**
  * A legendary not met yet this run; once all were met, any of them. Latias

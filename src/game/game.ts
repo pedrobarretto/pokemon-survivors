@@ -45,6 +45,8 @@ import { curseCast, decideCurse, updateCurses } from './curseSystem'
 import { updateDuos } from './duoMoves'
 import { recipeOf } from './duoRules'
 import { createMegaState, updateMega, updateMegaIntro } from './mega'
+import { createTeraState, stellarForm, updateTera, updateTeraIntro } from './tera'
+import { createRaidState, raidCamera, updateRaid, updateRaidDen, updateRaidFall } from './teraRaid'
 import { NO_RANKS, runCharges, type Ranks } from './meta'
 import { afterCast as afterModCast, echoStats, hasMod, MOD } from './mods'
 import { forkAt, isManual, MOVES, moveStats, type CastStats, type MoveDef, type MoveId } from './moves'
@@ -142,6 +144,8 @@ export type RunOptions = {
   mythical?: MythicalHunt
   /** Opens the run on the opening draft (`draftOffers`): three moves of the learnset to pick the second move from. */
   draft?: boolean
+  /** The day whose Tera Raid the late den holds (`raidOfDay`); the run draws its own there when absent. */
+  raidDay?: DayKey | null
 }
 
 /**
@@ -202,6 +206,8 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     moveBuffs: [],
     special: createSpecialState(),
     mega: createMegaState(),
+    // Terapagos plays Stellar from the start: shards never change it (`tera.ts`).
+    tera: createTeraState(setup.starter === 'terapagos' ? 'stellar' : null),
     ...runCharges(setup.ranks),
     banished: new Set(),
     banishedItems: new Set(),
@@ -301,6 +307,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     weather: createWeather(),
     traits: { seen: new Set(), nextIntro: 0 },
     rift: createRiftState(),
+    raid: createRaidState(seed, options.raidDay ?? null),
     place: createPlaceState(seed),
     landmarks: createLandmarkState(),
     finds: createSeasonFinds(seed),
@@ -376,7 +383,7 @@ export type CoopLoadout = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks
  * view, a roster drawn ahead and the Desafio co-op do dia it plays (`game/coopBoard.ts`; the caller deals its seed,
  * difficulty and upgrades off).
  */
-export type CoopOptions = { difficulty?: Difficulty; draft?: boolean; view?: Game['view']; roster?: Roster; challenge?: DayKey }
+export type CoopOptions = { difficulty?: Difficulty; draft?: boolean; view?: Game['view']; roster?: Roster; challenge?: DayKey; raidDay?: DayKey }
 
 /**
  * A fresh co-op run for 1 to `COOP.maxPlayers` loadouts (by slot). Every
@@ -390,7 +397,7 @@ export const createCoopGame = (seed: number, loadouts: readonly CoopLoadout[], o
   if (loadouts.length < 1 || loadouts.length > COOP.maxPlayers) throw new RangeError(`co-op takes 1 to ${COOP.maxPlayers} players, got ${loadouts.length}`)
   const setups: PlayerSetup[] = loadouts.map(({ starter, ranks, shiny }) => ({ starter, ranks, shiny }))
   const view = { ...(options.view ?? COOP.view) }
-  const g = createRun(view, seed, setups, options.roster, { difficulty: options.difficulty, draft: options.draft ?? true }, true)
+  const g = createRun(view, seed, setups, options.roster, { difficulty: options.difficulty, draft: options.draft ?? true, raidDay: options.raidDay ?? null }, true)
   g.coop!.names = loadouts.map((l) => l.name)
   g.coop!.challenge = options.challenge ?? null
   return g
@@ -411,11 +418,11 @@ const rolling = (g: Game): RollOptions => {
 
 /**
  * Per-tick player input, as plain data so the simulation stays DOM-free. `mega`
- * presses the Mega button and `lunge` fires the manual moves (Quick Attack).
+ * presses the Mega button, `tera` the TERA button (`tera.ts`) and `lunge` fires the manual moves (Quick Attack).
  * `casts` are the Arena kit's aimed casts this tick (`versusKit.ts`), at most one per skill;
  * `locked`, a target locked or let go this tick (only Fair Play's idle count, `trackIdle`, reads it).
  */
-export type StepInput = { move: Vec; special: boolean; mega?: boolean; lunge?: boolean; casts?: Cast[]; locked?: boolean }
+export type StepInput = { move: Vec; special: boolean; mega?: boolean; tera?: boolean; lunge?: boolean; casts?: Cast[]; locked?: boolean }
 
 /** A player with no input this tick: stands still, presses nothing. */
 const STILL: StepInput = { move: { x: 0, y: 0 }, special: false }
@@ -677,6 +684,8 @@ const awaken = (g: Game, n: number): void => {
   if (!s) return advancePhase(g)
   s.awakened = n
   recomputeStats(g)
+  // Terapagos's second awakening lands it in its Stellar Form, Terastallized for good (`tera.ts`).
+  if (s.id === 'terapagos' && n >= 2) stellarForm(g)
   healPlayer(g, p.stats.maxHp * AWAKENING.heal)
   p.banishes++
   blastHorde(g, AWAKENING.push)
@@ -855,13 +864,14 @@ export const updateEvolution = (g: Game, dt: number) => {
   else advancePhase(g)
 }
 
-/** Any player's Mega Evolution holds the world while it plays. True while one still does. */
+/** Any player's Mega Evolution or Terastallization holds the world while it plays. True while one still does. */
 const updateMegaIntros = (g: Game, dt: number) => {
   const before = g.player
   let busy = false
   for (const p of g.players) {
     g.player = p
     if (updateMegaIntro(g, dt)) busy = true
+    if (updateTeraIntro(g, dt)) busy = true
   }
   g.player = before
   return busy
@@ -880,6 +890,7 @@ export const stepPlayer = (g: Game, input: StepInput, dt: number) => {
   updateCurses(g)
   if (updateLegend(g)) recomputeStats(g)
   updateMega(g, !asleep && input.mega === true, dt)
+  updateTera(g, !asleep && input.tera === true, dt)
   if (updateAbility(g, dt)) recomputeStats(g)
   updateSpecial(g, !asleep && input.special, dt)
 }
@@ -952,6 +963,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   if (updatePlaceIntro(g, dt)) return
   // So does the rift throwing a fainted player back out, or a rescue out of a place, a domain's encounter and capture scenes and a wave legendary's.
   if (updateArenaFall(g, dt)) return
+  if (updateRaidFall(g, dt)) return
   if (updateDomainScene(g, dt)) return
   if (updateLegendScene(g, dt)) return
   if (updatePlaceFall(g, dt)) return
@@ -986,6 +998,8 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   updateStatuses(g, dt)
   updateRiftPortal(g, dt)
   updateArena(g, dt)
+  updateRaidDen(g, dt)
+  updateRaid(g, dt)
   updatePlaceEntrance(g, dt)
   updatePlace(g, dt)
   eachPlayer(g, updateLandmarks, dt)
@@ -1012,7 +1026,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   if (g.coop !== null) updateCoop(g, dt)
 
   // In a legendary's domain the camera looks ahead and frames the fight (`domainCamera`); elsewhere it sits on the player.
-  followPlayers(g, dt, domainCamera)
+  followPlayers(g, dt, (g, dt) => domainCamera(g, dt) || raidCamera(g, dt))
   updateSightings(g, dt)
 
   // Level-ups earned this tick, or a held evolution whose item was just found, open everyone's next pick at once

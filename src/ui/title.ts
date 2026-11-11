@@ -19,7 +19,12 @@ import { formatNumber, LOCALES, locale, t } from '../i18n'
 import { arenaIcon, bulbIcon, chevronIcon, coopIcon, discordIcon, eggsIcon, friendEggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, rankingIcon, ribbonIcon, shopIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
 import { logoScale, titleLogo } from '../render/logo'
-import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
+import { drawPokemon, fitSprites, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
+import { drawCrystalPokemon } from '../render/teraFx'
+import { crownIcon } from '../render/teraArt'
+import { raidOfDay } from '../game/teraRaid'
+import { brasiliaDay } from '../game/day'
+import { teraName } from './teraText'
 import type { Cover, Place } from '../render/titleScene'
 import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue } from './dialogue'
@@ -64,6 +69,7 @@ export type LobbyFocus =
   | 'halloween'
   | 'festival'
   | 'outbreak'
+  | 'raid'
   | 'challenge'
   | 'missions'
   | 'hall'
@@ -321,6 +327,29 @@ const outbreakCard = () => {
   }
   const el = todayCard('outbreak', walker, m.outbreakName(def.name), m.outbreakLine, iconImg(sparkleIcon(), 'lobby-day-spark'))
   return { el, tick }
+}
+
+/**
+ * Raide do dia: the day's Tera Raid (`raidOfDay`), its giant walking in its Tera
+ * type's crystal under its crown, its stars on the line. `tick` animates it.
+ */
+const raidCard = () => {
+  const m = t().raid
+  const raid = raidOfDay(brasiliaDay(today()))
+  const def = ENEMIES[raid.boss]
+  const walker = h('canvas', { class: 'lobby-walker raid', width: 36, height: 44, 'aria-hidden': 'true' })
+  void loadSpecies(def.dex).catch(() => {})
+  const tick = (time: number) => {
+    pixelSize(walker, Math.max(1, Math.round(uiDpr())))
+    const ctx = context2d(walker)
+    ctx.clearRect(0, 0, walker.width, walker.height)
+    const s = loadedSprites(def.dex)
+    if (s) drawCrystalPokemon(ctx, fitSprites(s, 30, 0), raid.tera, 'Walk', 0, time, walker.width / 2, walker.height - 2, {}, time)
+  }
+  const line = `${m.dayLine(def.name, teraName(raid.tera))} ${'★'.repeat(raid.stars)}`
+  const el = todayCard('raid', walker, m.dayTitle, line, iconImg(crownIcon(raid.tera), 'lobby-day-spark'))
+  el.setAttribute('aria-label', `${m.dayTitle}: ${line}`)
+  return { el, tick, raid }
 }
 
 /* ---------------- Top bar ---------------- */
@@ -817,6 +846,7 @@ export const titleScreen = (
     festival: () => visitShop('festival'),
     discord: () => openOver(actions.discord),
     outbreak: () => toast(root, rich(`*${ENEMIES[outbreakToday()].name}*: ${t().outbreak.blurb}`), 3600, 'outbreak'),
+    raid: () => toast(root, raidOfDay(brasiliaDay(today())).stars === 7 ? t().raid.dayStellar : t().raid.dayWhen, 4200, 'raid'),
     challenge: actions.challenge,
     missions: actions.missions,
     gifts: actions.gifts,
@@ -1016,6 +1046,7 @@ export const titleScreen = (
     }
 
     const outbreak = outbreakCard()
+    const raid = raidCard()
     const ready = save.eggs.filter(isReady).length
     const dayCards = [
       ...(halloweenCardShows() ? [pressable((candyCard = halloweenCard()), 'halloween')] : []),
@@ -1024,6 +1055,7 @@ export const titleScreen = (
       pressable(eggsCard(ready, save.eggs.length), 'eggs'),
       pressable(missionsCard(), 'missions'),
       pressable(outbreak.el, 'outbreak'),
+      pressable(raid.el, 'raid'),
     ]
     const date = today().toLocaleDateString(LOCALES[lang].tag, { weekday: 'short', day: 'numeric', month: 'short' })
     const festival = festivalCardShows() ? pressable(kind === 'wide' ? festivalCard() : festivalBanner(), 'festival') : null
@@ -1186,7 +1218,7 @@ export const titleScreen = (
     }
     paintMode()
 
-    tickers = [outbreak.tick, painter.tick]
+    tickers = [outbreak.tick, raid.tick, painter.tick]
     castBox = painter.box
 
     ;(lobby ?? intro).replaceWith(lobbyEl)

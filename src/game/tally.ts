@@ -128,6 +128,10 @@ export type RunSummary = {
   moveEvolutions: number
   /** Times the player Mega Evolved. */
   megas: number
+  /** Times the player Terastallized, Tera Raids beaten and the most stars of one (`tera.ts`, `teraRaid.ts`). */
+  teras: number
+  raids: number
+  raidBest: number
   /** Alpha Pokémon defeated. */
   alphaKills: number
   /** Steps walked (`toSteps`). */
@@ -177,6 +181,9 @@ export const summarizeRun = (g: Game): RunSummary => {
     reaperDefeats: g.endless?.reaperDefeats ?? 0,
     moveEvolutions: g.player.moves.filter((m) => evolvedFrom(m.id)).length,
     megas: g.player.mega.count,
+    teras: g.player.tera.count,
+    raids: g.raid.cleared.length,
+    raidBest: Math.max(0, ...g.raid.cleared.map((r) => r.stars)),
     alphaKills: t.alphaKills,
     steps: toSteps(g.player.walked),
     species: g.dexLog.seen.size,

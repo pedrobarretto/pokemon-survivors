@@ -72,13 +72,13 @@ export const updatePlaceEntrance = (g: Game, dt: number) => {
   const s = g.place
   const ent = s.entrance
   if (!ent) {
-    const busy = s.inside !== null || g.rift.omen !== null || g.rift.portal !== null || g.rift.arena !== null
+    const busy = s.inside !== null || g.rift.omen !== null || g.rift.portal !== null || g.rift.arena !== null || g.raid.den !== null || g.raid.arena !== null
     if (placeDue({ time: g.time, nextAt: s.nextAt, busy, bossAlive: g.bossId !== null, endless: g.endless !== null })) openEntrance(g)
     else updateHiddenSchedule(g)
     return
   }
   // It waits on the map while the team is inside (or in a rift).
-  if (s.inside || g.rift.arena) return
+  if (s.inside || g.rift.arena || g.raid.arena) return
   if (ent.open) {
     revealHidden(g, ent)
     ent.left -= dt

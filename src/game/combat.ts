@@ -40,6 +40,9 @@ import { knockOut, strikeAvatar, tickAvatar, wildDown } from './versusCombat'
 import { seasonKitBlocks, seasonKitHolds, seasonKitHurt, seasonKitKill } from './seasonOneKitSystem'
 import { kitBBlocks, kitBHurt, kitBKill } from './gaKitBSystem'
 import { gaKitAHolds, gaKitAHurt, gaKitAKill, gaKitATaken } from './gaKitASystem'
+import { dropBossShards, stellarBurst, teraGuard, teraKill, teraPower } from './tera'
+import { fallInRaid, isRaidBoss, raidHarm, shieldTakes } from './teraRaid'
+import { TERA } from '../data/tera'
 import * as dm from '../engine/dmath'
 
 const TEXT_COLORS = { super: '#ffd830', normal: '#ffffff', weak: '#a8a8b8', warded: '#88b8f8' } as const
@@ -52,9 +55,12 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   const eff = attack.sure ? Math.max(1, effectiveness(attack.type, e.types)) : effectiveness(attack.type, e.types)
   // Conditional bonuses (Hex), a mark and a freeze multiply the hit; without them it's exactly ×1.
   const base = attack.damage * (bonusMult(attack.bonus, e) * hitTakenMult(e.status) * phaseTaken(e))
-  const raw = Math.max(1, dm.round(base * eff * playerWeatherBoost(g, attack.type) * strikeBonus(g, e) * range(g.rng, 0.9, 1.1)))
-  // A Bronzong ward soaks the hit first, unless the move or the ability (Infiltrator) goes through wards.
-  const dmg = attack.sure || attack.ignoreWards || abilityImmune(g, 'wards') ? raw : absorb(e.trait, raw)
+  // Terastallized, the Tera type's moves hit harder (Stellar: each type's first hit, big).
+  const tera = teraPower(g, attack.type)
+  if (tera === TERA.stellarFirst) stellarBurst(g, e.x, e.y - e.radius)
+  const raw = Math.max(1, dm.round(base * eff * tera * playerWeatherBoost(g, attack.type) * strikeBonus(g, e) * range(g.rng, 0.9, 1.1)))
+  // A Bronzong ward soaks the hit first, unless the move or the ability (Infiltrator) goes through wards; a raid boss's Tera shield next (`shieldTakes`).
+  const dmg = shieldTakes(g, e, attack.sure || attack.ignoreWards || abilityImmune(g, 'wards') ? raw : absorb(e.trait, raw), eff, attack.type)
   // Mimikyu's Disguise takes the first big hit whole.
   if (disguiseTakes(e, dmg)) return bustDisguise(g, e)
   e.hp -= dmg
@@ -124,7 +130,7 @@ export const drainHeal = (g: Game, damage: number, fraction: number) => {
  */
 export const bumpDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null) => {
   if (e.behavior.kind === 'avatar') return tickAvatar(g, e, amount, move, TEXT_COLORS.normal)
-  const dmg = Math.max(1, dm.round(amount))
+  const dmg = shieldTakes(g, e, Math.max(1, dm.round(amount)), 1, null)
   e.hp -= dmg
   e.flash = 0.16
   if (move) g.player.damageByMove[move] = (g.player.damageByMove[move] ?? 0) + dmg
@@ -162,7 +168,7 @@ const spreadVenom = (g: Game, e: Enemy) => {
 /** Damage-over-time tick: no knockback or hit sound, number in the status color. */
 export const dotDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null, kind: StatusKind) => {
   if (e.behavior.kind === 'avatar') return tickAvatar(g, e, amount, move, STATUS_RULES[kind].color)
-  const dmg = Math.max(1, dm.round(amount))
+  const dmg = shieldTakes(g, e, Math.max(1, dm.round(amount)), 1, null)
   e.hp -= dmg
   if (move) g.player.damageByMove[move] = (g.player.damageByMove[move] ?? 0) + dmg
   damageText(g, e, dmg, STATUS_RULES[kind].color)
@@ -184,6 +190,7 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   e.hp = 0
   g.kills++
   g.player.record.kills++
+  teraKill(g, e.boss)
   noteKill(g, e)
   if (source === 'special' || g.player.special.chaining) g.player.special.kills++
   countKill(g.tally, e, weatherHere(g), g.player.biome, g.outbreak)
@@ -224,6 +231,8 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
       g.events.push({ kind: 'legendBeaten', legend: e.kind, shiny: e.shiny })
     }
     nightBossDown(g, e)
+    // A choice of two Tera Shards for each player (`tera.ts`); a raid pays its own type's (`teraRaid.ts`).
+    if (!isRaidBoss(g, e)) dropBossShards(g, e.x, e.y, e.types[0] ?? 'normal')
     // Co-op: a Poké Ball, the TM and an evolution item for each player (`dropForEach`); the egg is everyone's.
     dropForEach(g, () => dropPickup(g, e.x, e.y, 'pokeball'))
     awardEgg(g, bossEggSource(e.kind), e.x, e.y)
@@ -278,7 +287,8 @@ export const hurtPlayer = (
   const mods = runMods(g)
   // Air Lock: the weather boosts no foe's hit.
   const weather = abilityImmune(g, 'weather') ? 1 : weatherPower(weatherHere(g), types)
-  const dmg = armored(gaKitATaken(g, taken, types) * mods.enemyDamage * weather * domainHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
+  // Terastallized, the player defends as its Tera type (`teraGuard`).
+  const dmg = armored(gaKitATaken(g, taken, types) * mods.enemyDamage * weather * teraGuard(g, types) * domainHarm(g, from !== undefined) * raidHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
   p.hp -= dmg
   p.record.taken += dmg
   p.record.hits++
@@ -307,6 +317,7 @@ export const hurtPlayer = (
   // (in co-op once the last one standing falls; until then they faint).
   if (g.rift.arena && (g.coop === null || !teammateStanding(g))) return fallInArena(g)
   if (g.place.inside && (g.coop === null || !teammateStanding(g))) return fallInPlace(g)
+  if (g.raid.arena && (g.coop === null || !teammateStanding(g))) return fallInRaid(g)
   // Sturdy holds before a Max Revive (the Bag's), which goes before a held Revive.
   if (!seasonKitHolds(g) && !gaKitAHolds(g) && !abilityHolds(g) && !tryMaxRevive(g) && !tryRevive(g)) {
     // Versus: knocked out until the respawn, by nobody (the wild, a boss's shot).

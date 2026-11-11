@@ -290,6 +290,21 @@ export const BOSS_DIFFICULTY = {
  * player who keeps away (`far`), an attack its enrage unlocks (`below: 0.5`) and
  * one more on Nightmare (`from: 'nightmare'`).
  */
+/**
+ * A Tera Raid giant's kit (`RAID_BOSSES` in `data/tera.ts`), from its own two
+ * looks: strikes along the player's path, a ring out of it, a slam at its feet,
+ * and a fan of shots or (`beam`) a sweeping beam. They fire as written (a raid
+ * boss fights in no stance); the stars and the clock scale what they do (`raidHarm`).
+ */
+const raidKit = (a: HazardVisual, b: HazardVisual, big: 'volley' | 'beam' = 'volley'): readonly BossPattern[] => [
+  { kind: 'strikes', every: 3.6, target: 'player', count: 4, spread: 54, radius: 14, delay: 1.1, damage: 18, visual: a, lead: 1 },
+  { kind: 'ring', every: 4.4, count: 12, speed: 66, radius: 5, damage: 15, visual: b, gap: 0.9 },
+  { kind: 'strikes', every: 6.5, target: 'self', count: 1, spread: 0, radius: 54, delay: 1.3, damage: 22, visual: 'slam' },
+  big === 'beam'
+    ? { kind: 'beam', every: 7.5, source: 'boss', count: 1, spread: 0, sweep: 1.1, windup: 1.1, duration: 1.4, width: 14, length: 260, damage: 18, visual: a }
+    : { kind: 'volley', every: 5.2, count: 5, arc: 0.9, speed: 120, windup: 0.9, radius: 5, damage: 15, visual: b },
+]
+
 export const BOSS_PATTERNS: Partial<Record<EnemyId, readonly BossPattern[]>> = {
   /** Onix: Rock Throw along your path, a slam up close, Dig under you from afar, Rock Tomb rings once enraged. */
   onix: [
@@ -470,4 +485,22 @@ export const BOSS_PATTERNS: Partial<Record<EnemyId, readonly BossPattern[]>> = {
     { kind: 'strikes', every: 6, target: 'self', count: 1, spread: 0, radius: 46, delay: 1.3, damage: 20, visual: 'shadow' },
   ],
   // Arceus, the reaper, fights in phases too (`data/legendBosses.ts`).
+  // The Tera Raids' giants (`data/tera.ts`): each its own pair of visuals (and typings), whatever its Tera type,
+  // which brings the crystal storm on top (`game/teraRaid.ts`). Their hits grow with the stars and the clock (`raidHarm`).
+  raidCharizard: raidKit('fire', 'aero'),
+  raidBlastoise: raidKit('water', 'water', 'beam'),
+  raidVenusaur: raidKit('grass', 'poison'),
+  raidGengar: raidKit('shadow', 'poison'),
+  raidGyarados: raidKit('water', 'dragon', 'beam'),
+  raidDragonite: raidKit('dragon', 'aero'),
+  raidTyranitar: raidKit('rock', 'shadow'),
+  raidGardevoir: raidKit('psychic', 'mist'),
+  raidMetagross: raidKit('steel', 'psychic', 'beam'),
+  raidGarchomp: raidKit('dragon', 'rock'),
+  raidLucario: raidKit('slam', 'steel'),
+  raidHydreigon: raidKit('shadow', 'dragon', 'beam'),
+  raidVolcarona: raidKit('fire', 'grass'),
+  raidDragapult: raidKit('dragon', 'shadow'),
+  raidTinkaton: raidKit('steel', 'mist'),
+  terapagos: raidKit('judgment', 'rock', 'beam'),
 }

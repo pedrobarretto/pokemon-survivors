@@ -68,6 +68,8 @@ export type LegendaryVisual =
   | 'ascentRise' | 'ascentComet' | 'ascentImpact' | 'timeClock' | 'timeRing' | 'timeSnap' | 'mistBall' | 'mistCloud'
   | 'lusterBeam' | 'boostCore' | 'boostComet' | 'boostBurst' | 'wishStar' | 'wishFall' | 'wishBurst'
   | 'ancientRock' | 'magicalLeaf' | 'voidOrb' | 'voidBurst' | 'voidPool' | 'lunarMoon' | 'lunarCrescent' | 'lunarBurst'
+  /** Terapagos's Tera Starstorm, drawn by `render/teraFx.ts`. */
+  | 'starPrism' | 'starFall' | 'starBurst'
 
 /** Whirlwind: the cyclone's pull (px/s) and the gust it ends with (× damage, × area). */
 export const WHIRL = { pull: 150, burst: 2.2, burstR: 46 } as const
@@ -103,6 +105,9 @@ export const VOID = { flight: 0.4, stagger: 0.08, start: 8, r: 44, open: 0.3, sl
  * bursts, its first and full radius (× area), how fast it opens, its share of
  * the damage and the share of max HP it heals.
  */
+/** Tera Starstorm: when the prism has gathered the light, the beat between its stars, their blast radius and how far apart they land. */
+export const STARSTORM = { prism: 0.45, gap: 0.07, r: 20, apart: 34, reach: 260 } as const
+
 export const LUNAR = { phases: 3, fullFork: 2, reach: 105, r: 7, rise: 0.35, start: 10, fullR: 78, open: 0.25, full: 2.2, heal: 0.06 } as const
 
 /** The moon's phase on a Lunar Blessing cast: the casts left before the full moon count down from `phases - 1` to 0 (the full moon). */
@@ -662,6 +667,44 @@ export const LEGENDARY_MOVES = {
         crescent.flip = i % 2 === 1
       }
       cast(g, 'lunarBlessing')
+    },
+  },
+
+  /* Terapagos (Terastal's legend, the 7★ Tera Raids') */
+  teraStarstorm: {
+    name: 'Tera Starstorm',
+    type: 'normal',
+    legendary: true,
+    base: stats({ damage: 44, cooldown: 3, amount: 4, knockback: 60 }),
+    upgrades: [
+      { amount: 1 },
+      { damage: 12 },
+      { fork: [{ stats: { amount: 3, damage: -6 } }, { stats: { area: 0.3 }, mods: ['burstOnKill'] }] },
+      { cooldown: -0.4, damage: 12 },
+    ],
+    // A prism of the seven crystals gathers over Terapagos, then a star of light falls on each of the thickest crowds.
+    fire: (g, s) => {
+      const p = g.player
+      spawnAttack(g, {
+        ...look('teraStarstorm', 'normal', 'starPrism'), x: p.x, y: p.y - 30,
+        shape: { kind: 'circle', r: 6 }, motion: { kind: 'follow', ox: 0, oy: -30 },
+        damage: 0, ttl: STARSTORM.prism + 0.2, activeFrom: Infinity,
+      })
+      const r = STARSTORM.r * s.area
+      const targets = crowdTargets(g, s.amount, STARSTORM.apart, STARSTORM.reach)
+      for (let i = 0; i < s.amount; i++) {
+        const e = targets[i]
+        const o = fromAngle(i * 2.4 + 0.5, 60 + i * 12)
+        const at = e ? { x: e.x, y: e.y } : { x: p.x + o.x, y: p.y + o.y * 0.7 }
+        const delay = STARSTORM.prism + i * STARSTORM.gap
+        spawnAttack(g, {
+          ...look('teraStarstorm', 'normal', 'starFall'), x: at.x, y: at.y,
+          shape: { kind: 'circle', r }, motion: { kind: 'static' },
+          damage: 0, ttl: delay, activeFrom: Infinity, memo: i,
+        })
+        strike(g, s, look('teraStarstorm', 'normal', 'starBurst'), at.x, at.y, r, delay, 0.35).memo = i
+      }
+      cast(g, 'teraStarstorm')
     },
   },
 } as const satisfies Record<string, MoveDef>

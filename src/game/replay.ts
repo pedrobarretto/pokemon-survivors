@@ -17,6 +17,7 @@ import { isRecord, wholeNumber } from './parse'
 import { isOutbreakSpecies, withOutbreak } from './outbreak'
 import { withHaunts } from './halloween'
 import { drawRoster } from './roster'
+import { isDayKey, type DayKey } from './day'
 import type { Game, Player } from './types'
 
 /**
@@ -79,18 +80,20 @@ export type ReplayStart = {
   caps?: number
   /** The mythicals' bad-luck protection from the save (`game/mythicalHunt.ts`). The plain odds when absent: co-op, the Desafio do dia, every mythical captured. */
   mythical?: MythicalHunt
+  /** The day whose Tera Raid the run's late den holds (`raidOfDay`); the server checks it against the day the run started. Its own raid there when absent. */
+  raid?: DayKey
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
 
 /**
  * What the shell did to the run at a tick (before that tick's step): the
- * special attack, the Mega button, a manual lunge (Quick Attack), a level-up pick (index into the offers;
+ * special attack, the Mega button, the TERA button, a manual lunge (Quick Attack), a level-up pick (index into the offers;
  * a fork's branch is a second pick), a reroll or skip, forgetting a card (Esquecer, index into the offers),
  * going on into endless mode, and a new screen size (rotation, resize).
  */
 /** The buttons a run steps with (`StepInput`). */
-type Press = 'special' | 'mega' | 'lunge'
+type Press = 'special' | 'mega' | 'tera' | 'lunge'
 
 export type ReplayEvent =
   | readonly [tick: number, kind: Press | 'reroll' | 'skip' | 'endless']
@@ -188,7 +191,7 @@ export const parseEvent = (raw: unknown): ReplayEvent | null => {
     const view = parseView(a, b)
     return view ? [tick, kind, view.w, view.h] : null
   }
-  return kind === 'special' || kind === 'mega' || kind === 'lunge' || kind === 'reroll' || kind === 'skip' || kind === 'endless' ? [tick, kind] : null
+  return kind === 'special' || kind === 'mega' || kind === 'tera' || kind === 'lunge' || kind === 'reroll' || kind === 'skip' || kind === 'endless' ? [tick, kind] : null
 }
 
 /** Whether `moves` is a run-length encoded stick (`[code, count…]`, every count above 0). */
@@ -240,6 +243,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
       evo,
       caps: isWhole(s.caps) ? s.caps : 0,
       ...(mythical ? { mythical } : {}),
+      ...(isDayKey(s.raid) ? { raid: s.raid } : {}),
       view,
     },
     moves: raw.moves,
@@ -274,6 +278,7 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     evo: start.evo ?? [],
     caps: start.caps ?? 0,
     mythical: start.mythical,
+    raidDay: start.raid ?? null,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {
@@ -281,6 +286,7 @@ const applyEvent = (g: Game, e: ReplayEvent) => {
     // Presses reach the next step as input (`resimulate`).
     case 'special':
     case 'mega':
+    case 'tera':
     case 'lunge':
       return
     case 'offer': {
@@ -325,21 +331,23 @@ export const resimulate = (replay: Replay, g: Game = startGame(replay.start)): R
   const applyDue = () => {
     let special = false
     let mega = false
+    let tera = false
     let lunge = false
     while (next < events.length && events[next]![0] === tick) {
       const e = events[next++]!
       special ||= e[1] === 'special'
       mega ||= e[1] === 'mega'
+      tera ||= e[1] === 'tera'
       lunge ||= e[1] === 'lunge'
       applyEvent(g, e)
     }
-    return { special, mega, lunge }
+    return { special, mega, tera, lunge }
   }
   for (let i = 0; i < moves.length; i += 2) {
     const move = moveOf(moves[i]!)
     for (let n = 0; n < moves[i + 1]!; n++) {
-      const { special, mega, lunge } = applyDue()
-      step(g, { move, special, mega, lunge }, TICK)
+      const { special, mega, tera, lunge } = applyDue()
+      step(g, { move, special, mega, tera, lunge }, TICK)
       g.events.length = 0
       tick++
     }

@@ -18,7 +18,7 @@ import type { CoopClient } from './client'
 export type SeatEntry = TickEntry extends infer E ? (E extends { slot: number } ? Omit<E, 'slot'> : never) : never
 
 /** The controls of one display frame; `casts` are the Arena kit's, aimed on this client (`ui/arenaControls.ts`). */
-export type DriverInput = { move: Vec; special?: boolean; mega?: boolean; lunge?: boolean; casts?: readonly Cast[] }
+export type DriverInput = { move: Vec; special?: boolean; mega?: boolean; tera?: boolean; lunge?: boolean; casts?: readonly Cast[] }
 
 export type CoopDriver = {
   /** One display frame of `dt` seconds: samples the stick (60 a second), sends the presses, runs the lockstep. Returns the ticks simulated. */
@@ -42,6 +42,7 @@ export const coopDriver = (client: CoopClient, onLobby: () => void = () => {}): 
       // A press carries the latest stick sample: prediction knows when it went out, and when the run took it.
       if (input.special) client.input({ k: 'special', sample: client.state().sample })
       if (input.mega) client.input({ k: 'mega' })
+      if (input.tera) client.input({ k: 'tera' })
       if (input.lunge) client.input({ k: 'lunge' })
       for (const c of input.casts ?? []) client.input({ k: 'cast', ...c, sample: client.state().sample })
       return client.frame(dt)
@@ -54,6 +55,7 @@ export const coopDriver = (client: CoopClient, onLobby: () => void = () => {}): 
         case 'special':
           return void client.input({ k: 'special', sample: client.state().sample })
         case 'mega':
+        case 'tera':
         case 'lunge':
         case 'emote':
           return void client.input({ k: e.kind })

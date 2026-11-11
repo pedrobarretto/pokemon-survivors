@@ -27,6 +27,7 @@ export type AchievementStat =
   | 'bossKills' | 'chests' | 'meowths' | 'altars' | 'coins' | 'moveEvolutions' | 'missions'
   | 'dexSeen' | 'starterLines' | 'hatches' | 'shinyHatches' | 'megas' | 'alphaKills'
   | 'placeClears' | 'places' | 'hiddenZones' | 'landmarks'
+  | 'teras' | 'raids' | 'raidBest'
 
 export type AchievementDef = {
   medal: Medal
@@ -82,6 +83,13 @@ export const ACHIEVEMENTS = {
   landmark50: { medal: 'silver', stat: 'landmarks', target: 50 },
   mega1: { medal: 'bronze', stat: 'megas', target: 1 },
   mega25: { medal: 'silver', stat: 'megas', target: 25 },
+  /** Terastal and the Tera Raids (`game/tera.ts`, `game/teraRaid.ts`): `raidBest` is the most stars of a raid won. */
+  tera1: { medal: 'bronze', stat: 'teras', target: 1 },
+  tera50: { medal: 'silver', stat: 'teras', target: 50 },
+  raid1: { medal: 'bronze', stat: 'raids', target: 1 },
+  raid25: { medal: 'silver', stat: 'raids', target: 25 },
+  raidStar6: { medal: 'silver', stat: 'raidBest', target: 6, title: true },
+  raidStellar: { medal: 'gold', stat: 'raidBest', target: 7, title: true },
   alpha1: { medal: 'bronze', stat: 'alphaKills', target: 1 },
   alpha25: { medal: 'silver', stat: 'alphaKills', target: 25 },
   alpha100: { medal: 'gold', stat: 'alphaKills', target: 100, title: true },

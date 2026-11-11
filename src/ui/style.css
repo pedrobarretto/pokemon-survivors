@@ -2999,6 +2999,65 @@ button {
   }
 }
 
+/* ---------- Terastal (HUD badge + touch button, shown once the run has a Tera type; `ui/teraButton.ts`) ---------- */
+
+/* The rim takes the Tera type's crystal (`--type`, `--tera-light`, `--tera-dark` from its ramp). */
+.tera.ready {
+  animation: tera-glint 0.5s steps(1, jump-none) infinite;
+}
+
+.tera.active {
+  box-shadow: inset 0 0 0 2px var(--tera-light), 0 0 0 3px var(--tera-dark);
+}
+
+@keyframes tera-glint {
+  0% {
+    box-shadow: inset 0 0 0 2px var(--tera-light), 0 0 0 3px var(--type);
+  }
+  50% {
+    box-shadow: inset 0 0 0 2px var(--type), 0 0 0 3px var(--tera-light);
+  }
+}
+
+.tera-button {
+  display: none;
+  position: absolute;
+  right: calc(max(18px, env(safe-area-inset-right)) + 88px);
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 88px);
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tera-button img {
+  width: 34px;
+  height: 34px;
+}
+
+.tera-button::after {
+  background: conic-gradient(transparent calc(var(--fill) * 360deg), rgba(8, 8, 20, 0.62) 0);
+}
+
+.tera-button:active {
+  transform: translateY(2px);
+}
+
+.tera-button .special-tag {
+  top: auto;
+  bottom: 2px;
+  font-size: 13px;
+}
+
+@media (pointer: coarse) {
+  .tera-button {
+    display: grid;
+  }
+}
+
 /* ---------- Manual lunge (Quick Attack, Extreme Speed): HUD badge + touch button left of the special ---------- */
 
 .lunge-button {
@@ -3037,6 +3096,7 @@ button {
 /* A menu or the results screen is up: the touch buttons step aside so they never cover its buttons. */
 .hud.menu-open .special-button,
 .hud.menu-open .mega-button,
+.hud.menu-open .tera-button,
 .hud.menu-open .lunge-button {
   display: none;
 }
@@ -3246,6 +3306,10 @@ button {
     right: auto;
     left: calc(max(18px, env(safe-area-inset-left)) + 90px);
   }
+  [data-hand='left'] .tera-button {
+    right: auto;
+    left: calc(max(18px, env(safe-area-inset-left)) + 88px);
+  }
   [data-hand='left'] .status {
     left: auto;
     right: 12px;
@@ -3268,6 +3332,10 @@ button {
   [data-hand='left'] .hud.with-team .mega-button {
     left: calc(max(18px, env(safe-area-inset-left)) + 160px);
     bottom: calc(max(18px, env(safe-area-inset-bottom)) + 10px);
+  }
+  [data-hand='left'] .hud.with-team .tera-button {
+    left: calc(max(18px, env(safe-area-inset-left)) + 226px);
+    bottom: calc(max(18px, env(safe-area-inset-bottom)) + 12px);
   }
   /* The toasts' column on the right stops above the fixed stick, however high it sits. */
   [data-hand='left'][data-stick='fixed'] .toasts {
@@ -7517,6 +7585,289 @@ button {
 .banner em {
   color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
   font-style: normal;
+}
+
+/*
+ * The Terastal strip (`teraStrip` in `ui/teraNews.ts`): a band across the screen under the Pokémon, cut in the type's crystal.
+ * Its colors come from the ramp: `--tera-dark` (the band), `--tera-deep` (its facets), `--tera-mid`, `--tera-light`, `--tera-glint`.
+ * It opens like a slit (steps, on the pixel grid's beat), the crown and the words slide in, a glint crosses the letters, and it closes.
+ */
+.tera-strip {
+  --strip-h: clamp(88px, 18 * var(--vh), 150px);
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  /* Under the Pokémon (the screen's middle) and its feet, clear of its crown. */
+  top: calc(50% + 6 * var(--vh) + 18px);
+  height: var(--strip-h);
+  pointer-events: none;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .tera-strip {
+    --strip-h: clamp(70px, 24 * var(--vh), 100px);
+    top: calc(50% + 34px);
+  }
+}
+
+/* A phone held upright: the words size to the width (the longest type names fit), the band to the words. */
+@media (max-aspect-ratio: 3/4) {
+  .tera-strip {
+    --strip-h: clamp(76px, 25 * var(--vw), 128px);
+  }
+
+  .tera-strip-title {
+    font-size: min(calc(var(--strip-h) * 0.62), calc(11 * var(--vw)));
+  }
+
+  .tera-strip-crown {
+    height: min(calc(var(--strip-h) * 0.62), calc(15 * var(--vw)));
+  }
+}
+
+.tera-strip-band {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2.4 * var(--vw), 26px);
+  height: 100%;
+  padding: 0 calc(5 * var(--vw));
+  overflow: hidden;
+  /* Facets: two crossing runs of hard-edged wedges in the band's own tones. */
+  background:
+    linear-gradient(180deg, transparent 0 46%, color-mix(in srgb, var(--tera-deep) 28%, transparent) 46% 100%),
+    repeating-linear-gradient(118deg, transparent 0 34px, color-mix(in srgb, var(--tera-deep) 34%, var(--tera-dark)) 34px 62px, transparent 62px 96px),
+    repeating-linear-gradient(62deg, transparent 0 48px, color-mix(in srgb, var(--tera-deep) 20%, var(--tera-dark)) 48px 70px, transparent 70px 110px),
+    var(--tera-dark);
+  border-block: 3px solid var(--kit-tinta);
+  box-shadow:
+    inset 0 3px 0 var(--tera-light),
+    inset 0 6px 0 var(--tera-mid),
+    inset 0 -3px 0 var(--tera-mid),
+    inset 0 -6px 0 var(--tera-deep),
+    0 5px 0 rgba(10, 8, 30, 0.45);
+  transform-origin: 50% 50%;
+  animation: tera-strip-slit 2.6s steps(6, jump-none) both;
+}
+
+.tera-strip-crown {
+  flex: none;
+  height: calc(var(--strip-h) * 0.62);
+  aspect-ratio: 1;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 0 rgba(10, 8, 30, 0.5));
+  animation: tera-strip-crown 2.6s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.tera-strip-words {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  animation: tera-strip-words 2.6s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.tera-strip-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-family: var(--body);
+  font-size: calc(var(--strip-h) * 0.2);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 var(--kit-tinta);
+}
+
+/* A little cut gem either side of the name, in the type's light. */
+.tera-strip-gem {
+  width: 9px;
+  height: 9px;
+  background: var(--tera-light);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+/* "TERA <TYPE>": the outline layer (the kit's ink round the type's dark) under a fill layer of the crystal's hard-stepped gradient, a glint crossing it. */
+.tera-strip-title {
+  position: relative;
+  font-family: var(--kit-title);
+  font-size: calc(var(--strip-h) * 0.62);
+  line-height: 0.92;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--tera-dark);
+  --o: max(3px, calc(var(--strip-h) * 0.03));
+  text-shadow:
+    calc(var(--o) * -1) 0 0 var(--tera-dark),
+    var(--o) 0 0 var(--tera-dark),
+    0 calc(var(--o) * -1) 0 var(--tera-dark),
+    0 var(--o) 0 var(--tera-dark),
+    calc(var(--o) * -1) calc(var(--o) * -1) 0 var(--tera-dark),
+    var(--o) calc(var(--o) * -1) 0 var(--tera-dark),
+    calc(var(--o) * -1) var(--o) 0 var(--tera-dark),
+    var(--o) var(--o) 0 var(--tera-dark),
+    0 calc(var(--o) * 2.4) 0 var(--kit-tinta);
+}
+
+.tera-strip-title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  text-shadow: none;
+  background:
+    linear-gradient(105deg, transparent 0 42%, var(--tera-glint) 42% 47%, transparent 47% 52%, var(--tera-glint) 52% 54%, transparent 54% 100%) no-repeat,
+    linear-gradient(180deg, var(--tera-glint) 0 14%, var(--tera-light) 14% 44%, var(--tera-glint) 44% 50%, var(--tera-mid) 50% 78%, var(--tera-deep) 78% 100%);
+  background-size: 300% 100%, 100% 100%;
+  background-position: 160% 0, 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: tera-strip-glint 2.6s linear both;
+}
+
+/* Stellar: the seven crystals in hard bands across the letters, white at their tops. */
+.tera-strip.stellar .tera-strip-title::after {
+  background:
+    linear-gradient(105deg, transparent 0 42%, #fff 42% 47%, transparent 47% 52%, #fff 52% 54%, transparent 54% 100%) no-repeat,
+    linear-gradient(180deg, #fff 0 14%, transparent 14% 100%),
+    linear-gradient(90deg, #f85858 0 17%, #f8a838 17% 33%, #f8e858 33% 50%, #58e898 50% 67%, #58a8f8 67% 83%, #a878f8 83% 100%);
+  background-size: 300% 100%, 100% 100%, 100% 100%;
+  background-position: 160% 0, 0 0, 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Sparkles: four-pointed pixel stars round the words, each twinkling on its own beat. */
+.tera-spark {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background:
+    linear-gradient(var(--tera-glint), var(--tera-glint)) 50% 50% / 3px 15px no-repeat,
+    linear-gradient(var(--tera-glint), var(--tera-glint)) 50% 50% / 15px 3px no-repeat,
+    linear-gradient(var(--tera-light), var(--tera-light)) 50% 50% / 9px 9px no-repeat;
+  clip-path: polygon(40% 0, 60% 0, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0 60%, 0 40%, 40% 40%);
+  animation: tera-spark 0.6s steps(1, jump-none) infinite;
+  opacity: 0;
+}
+
+.tera-spark-0 { left: 14%; top: 18%; animation-delay: 0.25s; }
+.tera-spark-1 { left: 31%; top: 70%; animation-delay: 0.45s; transform: scale(0.6); }
+.tera-spark-2 { left: 52%; top: 12%; animation-delay: 0.35s; }
+.tera-spark-3 { left: 68%; top: 74%; animation-delay: 0.55s; transform: scale(0.6); }
+.tera-spark-4 { left: 84%; top: 22%; animation-delay: 0.3s; }
+.tera-spark-5 { left: 92%; top: 64%; animation-delay: 0.5s; transform: scale(0.6); }
+
+@keyframes tera-strip-slit {
+  0% { transform: scaleY(0); }
+  6% { transform: scaleY(1); }
+  90% { transform: scaleY(1); }
+  100% { transform: scaleY(0); }
+}
+
+@keyframes tera-strip-crown {
+  0% { transform: translateX(-60vw); }
+  14% { transform: translateX(0); }
+  88% { transform: translateX(0); opacity: 1; }
+  96% { transform: translateX(-12vw); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes tera-strip-words {
+  0% { transform: translateX(70vw); }
+  16% { transform: translateX(0); }
+  88% { transform: translateX(0); opacity: 1; }
+  96% { transform: translateX(12vw); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes tera-strip-glint {
+  0%, 18% { background-position: 160% 0; }
+  44%, 100% { background-position: -60% 0; }
+}
+
+@keyframes tera-spark {
+  0% { opacity: 1; }
+  34% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tera-strip-crown,
+  .tera-strip-words {
+    animation: none;
+  }
+}
+
+/* Terastal's banner and a Tera Raid's title card (`ui/teraNews.ts`): the banner box re-cut in the type's crystal. */
+.banner.tera-box {
+  /* Higher than other banners: the crown it announces hovers over the Pokémon at the screen's middle. */
+  top: 14%;
+  border-color: var(--tera-dark);
+  box-shadow:
+    inset 0 0 0 var(--px) var(--paper),
+    inset 0 0 0 calc(var(--px) * 2) var(--tera-mid),
+    inset 0 0 0 calc(var(--px) * 3) var(--tera-light),
+    0 calc(var(--px) * 2) 0 rgba(0, 0, 0, 0.35);
+}
+
+.tera-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.tera-crown {
+  width: calc(var(--px, 3px) * 19);
+  height: calc(var(--px, 3px) * 19);
+  min-width: 48px;
+  min-height: 48px;
+  image-rendering: pixelated;
+}
+
+.tera-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tera-kicker {
+  font-family: var(--body);
+  font-size: clamp(14px, 2.6 * var(--vw), 20px);
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--ink, #383028) var(--dk-lift, 100%), #fff);
+}
+
+.tera-type {
+  text-transform: uppercase;
+  color: var(--tera-mid);
+  text-shadow:
+    calc(var(--px) * 1) calc(var(--px) * 1) 0 var(--tera-dark),
+    0 calc(var(--px) * -1) 0 var(--tera-light);
+}
+
+/* Stellar: the seven crystals in hard bands across the letters. */
+.tera-banner.stellar .tera-type {
+  color: transparent;
+  text-shadow: none;
+  background: linear-gradient(90deg, #f85858 0 16%, #f8a838 16% 32%, #f8e858 32% 48%, #58e898 48% 64%, #58a8f8 64% 80%, #a878f8 80% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.tera-stars {
+  display: flex;
+  gap: 3px;
+}
+
+.tera-stars img {
+  width: 21px;
+  height: 21px;
+  image-rendering: pixelated;
 }
 
 /* Presente Misterioso (ui/gifts.ts): the closed box, shaking open, and what came out. */
@@ -16372,6 +16723,61 @@ button.hall-tile:hover {
   position: relative;
 }
 
+/* A Tera Raid's giant on the boss bar (`ui/hud.ts`): its crown by its name, its Tera shield in crystal under the HP. */
+.boss-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.boss-crown {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+/* The hollow's clock: the den throws the team out when it runs down. */
+.boss-clock {
+  padding: 1px 6px;
+  font-size: 16px;
+  line-height: 1;
+  color: #ffffff;
+  background: #482080;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 4px;
+}
+
+.boss-clock.urgent {
+  animation: rift-pulse 0.5s steps(2) infinite;
+}
+
+.boss-shield {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  margin-top: 3px;
+  background: #181030;
+  border: 3px solid var(--kit-tinta);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.boss-shield-fill {
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--tera-light) 0 6px, var(--tera-mid) 6px 12px);
+}
+
+.boss-shield-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  line-height: 1;
+  color: #101018;
+}
+
 .boss-tick {
   position: absolute;
   top: -3px;
@@ -23789,6 +24195,7 @@ span.arena-hub-face {
 /* A match plays its kit: the run's own special, Mega and lunge controls step aside. */
 [data-arena] .special-button,
 [data-arena] .mega-button,
+[data-arena] .tera-button,
 [data-arena] .lunge-button,
 [data-arena] .special-badge:not(.kit-badge) {
   display: none !important;

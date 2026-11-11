@@ -115,6 +115,8 @@ const GLYPHS = lazy(() => ({
   alpha: [glyph(DIAMOND, { c: '#e02838', w: '#f8e0b0' }), glyph(DIAMOND, { c: '#f8a020', w: '#f8f0d0' })],
   shiny: [glyph(STAR, { y: '#f8d030', w: '#ffffff' }), glyph(STAR, { y: '#fff4a8', w: '#f8d030' })],
   portal: [glyph(PORTAL, { p: '#7850c8', l: '#c8a8f8', w: '#ffffff' }), glyph(PORTAL, { p: '#c8a8f8', l: '#7850c8', w: '#ffffff' })],
+  /** A Tera Raid's den (`game/teraRaid.ts`): the portal's shape in Tera crystal pink and cyan. */
+  den: [glyph(PORTAL, { p: '#e058c0', l: '#98f0f8', w: '#ffffff' }), glyph(PORTAL, { p: '#98f0f8', l: '#e058c0', w: '#ffffff' })],
   place: {
     cave: glyph(DOOR, { c: '#a87848', k: '#281810' }),
     graveyard: glyph(DOOR, { c: '#9888b0', k: '#201830' }),
@@ -573,6 +575,8 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     if (door?.open && entranceShown(door)) marker(ctx, v, shape, art.place[door.id], door.x, door.y, true)
     const portal = g.rift.portal
     if (portal) marker(ctx, v, shape, art.portal[blink]!, portal.x, portal.y, true)
+    const den = g.raid.den
+    if (den) marker(ctx, v, shape, art.den[blink]!, den.x, den.y, true)
   }
 
   for (const p of g.pickups) {

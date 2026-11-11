@@ -40,6 +40,7 @@ export const LEGENDARY_MOVE_OF = {
   arceus: 'judgment',
   darkrai: 'darkVoid',
   cresselia: 'lunarBlessing',
+  terapagos: 'teraStarstorm',
 } as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id>
 
 export type LegendaryId = keyof typeof LEGENDARY_MOVE_OF

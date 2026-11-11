@@ -29,6 +29,9 @@ import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
 import { drawScale } from '../game/alphas'
 import { drawMegaAir, drawMegaAttack, drawMegaGround, drawMegaStone, megaLook } from './megaFx'
+import { crystalType, drawCrystalPokemon, drawDenAir, drawDenArrow, drawStarstorm, drawDenGround, drawRaidBoss, drawRaidFloor, drawShardPickup, drawTeraAir, drawTeraAttack, drawTeraGround, drawTeraScreen } from './teraFx'
+import { TERA, TERA_TYPES } from '../data/tera'
+import type { RaidArena } from '../game/teraRaid'
 import { drawModAttack, drawModGround, flightAngle } from './modFx'
 import { drawMoveFxAttack, drawMoveFxGround } from './moveFx'
 import { drawConsumable, drawFlash, drawProps, drawSleep } from './props'
@@ -101,6 +104,7 @@ export const shadow = (ctx: Ctx, x: number, y: number, width: number) => {
 const drawGroundAttack = (ctx: Ctx, a: Attack, t: number) => {
   if (a.shape.kind !== 'circle') return
   const r = a.shape.r
+  if (a.move === 'teraStarstorm') return drawStarstorm(ctx, a, t, true)
   switch (a.visual) {
     case 'telegraph':
       return drawTelegraph(ctx, a)
@@ -189,6 +193,7 @@ const slashArc = (ctx: Ctx, x: number, y: number, r: number, dir: number, sweep:
 
 const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
   const m = a.motion
+  if (a.move === 'teraStarstorm') return drawStarstorm(ctx, a, t, false)
   switch (a.visual) {
     case 'ember':
       return drawEmber(ctx, a, t)
@@ -284,6 +289,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawTypeEvolvedAttack(ctx, a, t)
       drawModAttack(ctx, a, t)
       drawMegaAttack(ctx, a)
+      drawTeraAttack(ctx, a, TERA_TYPES[a.memo] ?? null)
       return drawSpecialAttack(ctx, a, t)
   }
 }
@@ -513,7 +519,9 @@ const drawEnemy = (ctx: Ctx, e: Enemy, time: number, t: number, calm: boolean, a
   const tint = traitTint(e) ?? (shownStatus ? statusTint(e.status, t, e.id) : undefined) ?? (calm && hit ? HURT_TINT : rage ? RAGE_TINT : clone ? CLONE_TINT : undefined)
   if (look?.alpha === 0) return
   const outline = outlineOf(e, t, calm) ?? (clone ? CLONE_OUTLINE : ringed && e.boss ? bossOutline(e, t, calm) : undefined)
-  drawPokemon(ctx, s, anim, e.dir, e.animTime, e.x, y, { flash: Math.max(look?.flash ?? 0, hit && !calm ? 0.85 : 0), tint: look?.tint ?? tint, scale, outline, outlineAlpha: outline === ELITE_OUTLINE ? eliteThrob(e, t) : 1, alpha: look?.alpha ?? shadeAlpha(e.kind, e.id, t) })
+  const opts = { flash: Math.max(look?.flash ?? 0, hit && !calm ? 0.85 : 0), tint: look?.tint ?? tint, scale, outline, outlineAlpha: outline === ELITE_OUTLINE ? eliteThrob(e, t) : 1, alpha: look?.alpha ?? shadeAlpha(e.kind, e.id, t) }
+  // A Tera Raid's giant is crystal, crowned, behind its shield (`render/teraFx.ts`).
+  if (!(raidHere?.bossId === e.id && drawRaidBoss(ctx, raidHere, e, s, anim, y, opts, t))) drawPokemon(ctx, s, anim, e.dir, e.animTime, e.x, y, opts)
   if (e.shiny) drawSparkles(ctx, e.x, y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), time - e.bornAt, e.id)
   if (rage) drawRageEmbers(ctx, e.x, y - (s.bodyH * scale) / 2, size, t, e.id)
 }
@@ -613,6 +621,10 @@ const drawAfterimages = (ctx: Ctx, g: Game, calm: boolean) => {
   }
 }
 
+/** The drawing clock for Terastal's crystal (its glint, its crown's bob) and the raid the team is in, set as each frame starts. */
+let teraClock = 0
+let raidHere: RaidArena | null = null
+
 /** `calm` (Flashes: reduced): a hit tints the player dim red, and nothing on it flickers white. */
 const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const p = localPlayer(g)
@@ -640,7 +652,9 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // Moves can lift the sprite (Body Slam's leap, Heavy Slam's hop, Fly) or hide it under the mound (Dig).
   const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g) ?? kitBPlayerLook(g)
   // Invulnerable after a hit: blinking, or a steady see-through when calm.
-  const faded = calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink
+  // The crystal that just shattered stays solid through the shatter's invulnerability: a fresh Terastal form never blinks.
+  const fresh = p.tera.active > TERA.duration - TERA.iframes
+  const faded = !fresh && (calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink)
   // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`); a Ghost type slipping through a tree or a rock (`phasingNow`) too.
   const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : phasingNow(g, p) ? 0.55 : 1) * grassAlpha(g, viewer, p)
   const feet = p.y - (egg?.lift ?? 0)
@@ -650,15 +664,22 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // variant's own Walk, Idle and Hurt (a Mega with sheets has its own; `render/wearFit.ts` checks the sheet),
   // so the moments that swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega's transformation
   // and a move's own look (Fly, Dig, a lunge).
-  const bare = emote !== null || egg !== null || p.mega.intro > 0
+  const bare = emote !== null || egg !== null || p.mega.intro > 0 || p.tera.intro > 0
   const look = bare ? null : shownLook(g, p.slot)
+  // Terastallized, the Pokémon is crystal under its Tera type's crown (`render/teraFx.ts`), bare: the crown takes a hat's place.
+  // Its last 3 seconds it flickers back to its own colors; while the crystal forms it glows white inside the shell.
+  const tera = emote === null && egg === null ? crystalType(p) : null
+  const teraFading = p.tera.active > 0 && p.tera.active < 3 && Math.floor(p.tera.active * 6) % 2 === 0
+  const teraGlow = p.tera.intro > 0 ? Math.min(1, (1 - p.tera.intro / TERA.intro) * 6) * (calm ? 0.5 : 0.9) : 0
   if (alpha > 0) {
-    drawDressed(ctx, s, look, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, { alpha, flash, tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
+    const crystal = tera !== null && !teraFading && drawCrystalPokemon(ctx, s, tera, anim, p.dir, p.animTime, p.x, feet, { alpha, flash: Math.max(flash, teraGlow * 0.4), tint, outline: mega.outline }, teraClock)
+    if (!crystal) drawDressed(ctx, s, tera ? null : look, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, { alpha, flash: Math.max(flash, teraGlow), tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
   }
   if (p.versus && g.versus) drawGrassFront(ctx, mapOf(g.versus).grass, p.x, p.y, s.bodyW, g.now, p.moving, p.slot)
   // The shiny entrance plays shortly after the run starts.
   if (p.shiny) drawSparkles(ctx, p.x, p.y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), g.now - 0.3, 0)
   drawMegaAir(ctx, g, p.y - s.bodyH, p.animTime)
+  drawTeraAir(ctx, g, s, anim, feet, teraClock)
   drawHpBar(ctx, g)
 }
 
@@ -703,6 +724,10 @@ const drawPickups = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: numbe
     }
     if (k.kind === 'megaStone') {
       drawMegaStone(ctx, k.mega, k.x, k.y + bob, t)
+      continue
+    }
+    if (k.kind === 'teraShard') {
+      drawShardPickup(ctx, k.tera, k.x, k.y + bob, t)
       continue
     }
     if (k.kind === 'tm') {
@@ -924,6 +949,7 @@ const drawPlayerGround = (ctx: Ctx, g: Game, camX: number, camY: number, t: numb
   drawSpecialAura(ctx, g, t)
   drawMegaGround(ctx, g, camX, camY, t, own)
   drawKitBGround(ctx, g, t)
+  drawTeraGround(ctx, g, camX, camY, t, own)
 }
 
 /** Over a player, from their own state (a guard, buffs, charges, stacks, a called sky): `g` is that player's copy of the game. */
@@ -996,8 +1022,11 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   stepArenaFx(g, t)
   const inside = g.place.inside
   const indoors = roomOf(g) !== null
+  teraClock = t
+  raidHere = g.raid.arena
   if (g.rift.arena?.domain) drawDomainFloor(ctx, g.rift.arena, g.rift.arena.domain, camX, camY, w, h, t)
   else if (g.rift.arena) drawArena(ctx, g.rift.arena, camX, camY, w, h, t)
+  else if (g.raid.arena) drawRaidFloor(ctx, g.raid.arena, camX, camY, w, h, t)
   else if (inside) drawPlaceFloor(ctx, inside, camX, camY, w, h, t)
   else if (g.versus) drawValeFloor(ctx, g.versus.map, camX, camY, w, h)
   else drawGround(ctx, camX, camY, w, h, groundMapOf(g))
@@ -1053,6 +1082,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   if (!indoors) drawMapEvents(ctx, g, t, calm)
   if (g.rift.portal && !indoors) (riftDomain(g, g.rift.portal.legend) ? drawTear : drawRiftPortal)(ctx, g.rift.portal, t)
   drawEntranceGround(ctx, g, t)
+  if (g.raid.den && !indoors) drawDenGround(ctx, g.raid.den, t)
   drawPlaceGround(ctx, g, t)
   drawPlayerGround(ctx, g, camX, camY, t, true)
   for (const mate of mates) if (shown(mate)) drawPlayerGround(ctx, mate, camX, camY, t, false)
@@ -1139,7 +1169,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     else if (isMate(d)) !lifted.includes(d.mate) && (showsPlain(localPlayer(d.mate)) ? drawPlayer(ctx, d.mate, calm) : drawTeammate(ctx, d.mate, localPlayer(d.mate), t, calm))
     else if (isSolid(d)) drawSolid(ctx, g, d)
     else if (isValeProp(d)) drawValeProp(ctx, g, d, t, playerSprites(g).bodyW, playerSprites(g).bodyH)
-    else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d), !g.rift.arena)
+    else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d), !g.rift.arena && !g.raid.arena)
   }
   // Badges only on bosses: on a 300-enemy horde they'd bury the sprites (tint + particles carry it there).
   for (const d of inDepth) {
@@ -1149,6 +1179,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     }
   }
   drawEntranceAir(ctx, g, t)
+  if (g.raid.den && !indoors) drawDenAir(ctx, g.raid.den, t)
   drawLandmarkAir(ctx, g, t, visible)
   drawOldTvs(ctx, g, t, visible)
   drawWings(ctx, g, t)
@@ -1249,6 +1280,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
 
   if (!inside) drawRiftArrow(ctx, g, camX, camY, t)
   drawPlaceArrow(ctx, g, camX, camY, t)
+  drawDenArrow(ctx, g, camX, camY, t)
   if (!indoors) drawMapEventMarkers(ctx, g, t)
   drawAlphaMarkers(ctx, g, t, markerInsets())
   drawBossMarker(ctx, g, camX, camY, t)
@@ -1258,6 +1290,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawPlaceFallOut(ctx, g)
   // Explosions, rift jumps, a Mega's burst: white over the whole screen, unless flashes are reduced.
   if (!calm) drawFlash(ctx, g)
+  if (!calm) drawTeraScreen(ctx, g)
   // A dungeon floor's title card holds the screen black (the shell writes the floor over it).
   if (inside && inside.intro > 0) {
     ctx.fillStyle = '#000000'
