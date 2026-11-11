@@ -1,4 +1,5 @@
 import { createRng } from '../engine/rng'
+import { circle } from '../data/arenas'
 import type { Vec } from '../engine/math'
 import type { EnemyId } from '../data/enemies'
 import { PLAYABLE } from '../data/hatchlings'
@@ -14,6 +15,7 @@ import { winRun } from './coop'
 import { MAX_MOVES, recomputeStats, xpFor } from './leveling'
 import { maxMoveLevel } from './moves'
 import { aimScreen, standing } from './players'
+import type { Room } from './room'
 import { applyBuild, setAbility, setForm, setMove, trainingMoves } from './training'
 import { setArchetype } from './terrain'
 import type { Enemy, Game } from './types'
@@ -23,7 +25,7 @@ import * as dm from '../engine/dmath'
  * Hoopa's Rings (`RUSH` in `data/rush.ts`), the Legend mode's boss rush: a
  * run with no horde and no clock to beat, where Hoopa's rings bring back the
  * legends the player has captured, one ring after another, inside a ring of
- * its golden portals; the last ring is Hoopa itself, and beating it captures
+ * its golden portals on a stage of its own (a room, `RushState.room`); the last ring is Hoopa itself, and beating it captures
  * Hoopa. The player fights at the rush's level with their Dojo build for the
  * Pokémon, or the family's own moves at max level. A rush is never ranked,
  * banked nor replayed: what each player faces follows their own captures, so
@@ -47,6 +49,8 @@ export type RushState = {
   home: Vec
   /** The ring's legend (-1 between rings). */
   bossId: number
+  /** Hoopa's stage: a room (`roomOf`) of one round floor, so the map's terrain, weather and map events wait outside. */
+  room: Room
 }
 
 /**
@@ -91,7 +95,9 @@ export const startRush = (g: Game, difficulty: Difficulty, lineup: readonly Enem
   recomputeStats(g)
   p.hp = p.stats.maxHp
   g.phase = 'playing'
-  g.rush = { difficulty, lineup: [...lineup], ring: 0, stage: 'gate', clock: RUSH.gate, home: { x: p.x, y: p.y - 30 }, bossId: -1 }
+  const home = { x: p.x, y: p.y - 30 }
+  const room: Room = { x: home.x, y: home.y, layout: { floor: [circle(0, 0, RUSH.arena)] }, terrain: { solids: [], lake: null } }
+  g.rush = { difficulty, lineup: [...lineup], ring: 0, stage: 'gate', clock: RUSH.gate, home, bossId: -1, room }
   g.events.length = 0
 }
 
@@ -174,8 +180,12 @@ export const updateRush = (g: Game, dt: number) => {
   }
 }
 
-/** How far from the view's edges the player always stays while the screen frames the ring's legend too, px (the HUD sits on top). */
-const FRAME = { side: 44, top: 96, bottom: 48 } as const
+/**
+ * How far from the view's edges the player always stays while the screen
+ * frames the ring's legend too, px (the HUD sits on top); a phone held upright
+ * keeps it higher (`tall`), over the news line (`.toasts.focus`).
+ */
+const FRAME = { side: 44, top: 96, bottom: 48, tall: 84 } as const
 
 /**
  * The rush's camera (`followPlayers`' frame): on the middle of the player and
@@ -193,7 +203,7 @@ export const rushCamera = (g: Game, dt: number) => {
   const at = boss ?? (r.stage === 'gate' ? rushGate(r) : null)
   if (at) {
     x = Math.max(p.x - (w - FRAME.side), Math.min(p.x - FRAME.side, (p.x + at.x) / 2 - w / 2))
-    y = Math.max(p.y - (h - FRAME.bottom), Math.min(p.y - FRAME.top, (p.y + at.y) / 2 - h / 2 - 24))
+    y = Math.max(p.y - (h - (h > w ? FRAME.tall : FRAME.bottom)), Math.min(p.y - FRAME.top, (p.y + at.y) / 2 - h / 2 - 24))
   }
   const k = 1 - dm.exp(-5 * dt)
   aimScreen(g, p, p.screen.x + (x - p.screen.x) * k, p.screen.y + (y - p.screen.y) * k)

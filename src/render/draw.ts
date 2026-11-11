@@ -27,7 +27,7 @@ import { FX, HAZARD_FX, hostile, PICKUPS, SPARKLE, SPIT_FX } from './art'
 import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawShard } from './evolved'
 import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
 import { drawQuestAir, drawQuestGround, drawQuestMarkers } from './quests'
-import { drawRushAir, drawRushGround } from './rush'
+import { drawRushAir, drawRushFloor, drawRushGround } from './rush'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
 import { drawScale } from '../game/alphas'
 import { drawMegaAir, drawMegaAttack, drawMegaGround, drawMegaStone, megaLook } from './megaFx'
@@ -978,6 +978,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   else if (g.rift.arena) drawArena(ctx, g.rift.arena, camX, camY, w, h, t)
   else if (inside) drawPlaceFloor(ctx, inside, camX, camY, w, h, t)
   else if (g.versus) drawValeFloor(ctx, g.versus.map, camX, camY, w, h)
+  else if (g.rush) drawRushFloor(ctx, g, camX, camY, w, h, t)
   else drawGround(ctx, camX, camY, w, h, groundMapOf(g))
   if (g.rift.arena && !g.rift.arena.domain) warmArena(g.rift.arena)
   ctx.save()
