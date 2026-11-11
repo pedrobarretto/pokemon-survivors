@@ -1,3 +1,4 @@
+import type { DexRegion } from '../data/nationalDex'
 import { realmBookZh as realmBook } from './realmStamps/zh'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
@@ -7,6 +8,9 @@ import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
 import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
+
+/** The regions as the Pokédex names them (`data/nationalDex.ts`). */
+const REGION_NAMES = { kanto: '關都', johto: '城都', hoenn: '豐緣', sinnoh: '神奧', unova: '合眾', kalos: '卡洛斯', alola: '阿羅拉', galar: '伽勒爾', paldea: '帕底亞' } satisfies Record<DexRegion, string>
 
 const typeBoost = (type: string) => `${type}屬性招式傷害+10%。`
 
@@ -1519,7 +1523,17 @@ export const zh: Messages = {
     back: '返回',
     site: '在哪裡找到 ↗',
     pc: '電腦箱',
-    hintKeys: '方向鍵 瀏覽 · Q E 篩選 · ESC 返回',
+    regions: REGION_NAMES,
+    regionsDone: '地區',
+    goal: (left: number, title: string) => `再看 *${left}* 隻即可獲得稱號「*${title}*」`,
+    goalDone: (title: string) => `地區完成！已獲得稱號「*${title}*」`,
+    nationalGoal: (done: number, total: number, frame: string) => `${done}/${total} 個地區 · 外框「*${frame}*」`,
+    drawing: '繪製中',
+    drawingText: 'PMD SpriteCollab 的畫師們畫出了遊戲裡所有的寶可夢，這一隻還在創作中。謝謝畫師們！♥',
+    contribute: '協助繪製 ↗',
+    soon: '尚未登場，敬請關注最新消息！',
+    soonTag: '即將登場',
+    hintKeys: '方向鍵 瀏覽 · Q E 地區 · ESC 返回',
     hintTouch: '點擊寶可夢查看詳情',
   },
 
@@ -1544,7 +1558,7 @@ export const zh: Messages = {
       wallpaper: '電腦箱的桌布。',
     },
     styles: {
-      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊', era1: '第一紀元', era1Champion: '第一紀元王冠' },
+      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊', era1: '第一紀元', era1Champion: '第一紀元王冠', nationalDex: '全國圖鑑' },
       background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜', friendship: '友情', era1Champion: '第一紀元王座' },
       wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋', secretBase: '秘密基地' },
     },
@@ -2038,6 +2052,7 @@ export const zh: Messages = {
     arenaSeason: (season) => `獎勵你在競技場第 ${season} 賽季的最高段位`,
     era1: (rank, board) => `第一紀元名人堂第 ${rank} 名 · ${board}`,
     hiddenZone: { grotto: '獎勵你找到隱藏洞穴', underground: '獎勵你找到地下通道' },
+    dex: (region: string | null) => (region ? `獎勵你完成${region}圖鑑` : '獎勵你完成全國圖鑑：所有地區！'),
   },
 
   supporters: {
@@ -2945,7 +2960,7 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一', kantoDex: '在圖鑑中看過關都的所有寶可夢', johtoDex: '在圖鑑中看過城都的所有寶可夢', hoennDex: '在圖鑑中看過豐緣的所有寶可夢', sinnohDex: '在圖鑑中看過神奧的所有寶可夢', unovaDex: '在圖鑑中看過合眾的所有寶可夢', kalosDex: '在圖鑑中看過卡洛斯的所有寶可夢', alolaDex: '在圖鑑中看過阿羅拉的所有寶可夢', galarDex: '在圖鑑中看過伽勒爾的所有寶可夢', paldeaDex: '在圖鑑中看過帕底亞的所有寶可夢' },
     newMedals: '新獎牌',
     names: {
       firstRun: '第一步',
@@ -3047,6 +3062,15 @@ export const zh: Messages = {
       stampCollector: '印章收藏家',
       era1Legend: '第一紀元傳奇',
       era1Champion: '第一紀元冠軍',
+      kantoDex: '關都研究員',
+      johtoDex: '城都研究員',
+      hoennDex: '豐緣研究員',
+      sinnohDex: '神奧研究員',
+      unovaDex: '合眾研究員',
+      kalosDex: '卡洛斯研究員',
+      alolaDex: '阿羅拉研究員',
+      galarDex: '伽勒爾研究員',
+      paldeaDex: '帕底亞研究員',
     },
     goals: {
       runs: (n) => `玩 ${n} 局`,

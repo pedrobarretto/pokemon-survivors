@@ -9559,6 +9559,137 @@ button {
   font-size: 16px;
 }
 
+/* The regions, Kanto to Paldea: each tab its goal seen so far, a completed one in green. */
+.dex-regions {
+  gap: 4px;
+  padding: 2px 2px 4px;
+}
+
+.dex-region {
+  font-size: 12px;
+  padding: 5px 6px 4px;
+  gap: 3px;
+  border-radius: 8px;
+}
+
+.dex-region small {
+  font-size: 12px;
+}
+
+.dex-region.done:not(.selected) {
+  background: color-mix(in srgb, #2f8a4a var(--dk-lift, 100%), #fff);
+}
+
+.dex-region.done small {
+  color: #c8f8c0;
+}
+
+.dex-region.done.selected small {
+  color: #1c6a30;
+}
+
+.dex-region.selected.focused {
+  box-shadow: 0 0 0 3px #e83838, 0 3px 0 #2a5aa8;
+}
+
+/* The filters and, beside them, what the region's goal brings (wrapping under them on narrow screens). */
+.dex-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+}
+
+.dex-bar .dex-tabs {
+  flex: 0 1 auto;
+}
+
+.dex-goal {
+  flex: 1 1 260px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px 12px;
+  flex-wrap: wrap;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--dk-ink-2, #404058);
+}
+
+.dex-goal b {
+  color: color-mix(in srgb, #c83030 var(--dk-lift, 100%), #fff);
+}
+
+.dex-goal.done .dex-goal-region b {
+  color: color-mix(in srgb, #2f8a4a var(--dk-lift, 100%), #fff);
+}
+
+.dex-goal-national {
+  color: var(--dk-ink-3, #707088);
+}
+
+/* A species SpriteCollab's artists are still drawing: a pencil on paper, a thank-you rather than a gap. */
+.dex-cell.drawing {
+  background: #e8dcc0;
+  border-style: dashed;
+  border-color: #b8a070;
+}
+
+.dex-cell.drawing > img:first-child {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.dex-cell.drawing small {
+  color: #5a4828;
+  text-shadow: none;
+}
+
+/* Not in the game yet: fainter than an unseen species, which a run can still bring. */
+.dex-cell.soon {
+  background: #1c2238;
+  border-style: dashed;
+  border-color: #283048;
+}
+
+.dex-cell.soon .dex-unknown {
+  opacity: 0.45;
+}
+
+.dex-cell.soon small {
+  opacity: 0.6;
+}
+
+.dex-detail .tag-drawing {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: color-mix(in srgb, #8a6a20 var(--dk-lift, 100%), #fff);
+}
+
+.dex-detail .tag-drawing img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+/* Nothing to draw for a species not in the game yet: its words take the panel. */
+.dex-detail.soon .dex-sprite {
+  display: none;
+}
+
+a.btn.dex-contribute {
+  align-self: stretch;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
 /* The filter row has the keyboard focus: ring the active tab. */
 .dex-tab.selected.focused {
   box-shadow: 0 0 0 3px #e83838, 0 3px 0 #2a5aa8;
@@ -9799,6 +9930,12 @@ a.btn.dex-site {
   .dex-grid {
     grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
   }
+  .dex-goal {
+    font-size: 16px;
+  }
+  .dex-detail .dex-tip {
+    font-size: 18px;
+  }
   .dex .buttons .btn {
     flex: 1;
     justify-content: center;
@@ -9814,6 +9951,11 @@ a.btn.dex-site {
   }
   .dex-body {
     grid-template-columns: 1fr 210px;
+  }
+  .dex-region {
+    flex-direction: row;
+    gap: 6px;
+    padding: 4px 6px;
   }
   .dex-detail .inspect-sprite {
     width: 96px;

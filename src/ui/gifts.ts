@@ -66,7 +66,7 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
   }
 }
 
-/** Why it came: an invite, friends brought, a donation, the admin's present, joining the Discord, the Noite das Bruxas candy jar, its Caça aos Fantasmas or its supporters' gift, the Kecleon Shop, a Festival da Praça's pot or its Mecenas, being an OG Supporter, an Arena season's peak tier, finding a hidden zone, or a day of the challenge (the place is in the ribbon). */
+/** Why it came: an invite, friends brought, a donation, the admin's present, joining the Discord, the Noite das Bruxas candy jar, its Caça aos Fantasmas or its supporters' gift, the Kecleon Shop, a Festival da Praça's pot or its Mecenas, being an OG Supporter, an Arena season's peak tier, finding a hidden zone, completing a region's Pokédex, or a day of the challenge (the place is in the ribbon). */
 export const reasonLine = (gift: Gift) => {
   const c = gift.content
   if (c.kind === 'ribbon') return t().gifts.ribbonWhy(formatDay(c.ribbon.day), c.ribbon.rank, c.ribbon.total)
@@ -105,6 +105,8 @@ export const reasonLine = (gift: Gift) => {
       return t().gifts.hiddenZone[r.zone]
     case 'season':
       return t().seasonUnlocks.way[r.way]
+    case 'dex':
+      return t().gifts.dex(r.region === 'national' ? null : t().dex.regions[r.region])
     case 'era1': {
       const rk = t().ranking
       const side = r.side === 'standard' || r.side === 'legend' ? rk.modes[r.side] : rk.sizes[r.side]

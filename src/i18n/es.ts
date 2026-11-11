@@ -1,3 +1,4 @@
+import type { DexRegion } from '../data/nationalDex'
 import { realmBookEs as realmBook } from './realmStamps/es'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
@@ -7,6 +8,9 @@ import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
 import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
+
+/** The regions as the Pokédex names them (`data/nationalDex.ts`). */
+const REGION_NAMES = { kanto: 'Kanto', johto: 'Johto', hoenn: 'Hoenn', sinnoh: 'Sinnoh', unova: 'Unova', kalos: 'Kalos', alola: 'Alola', galar: 'Galar', paldea: 'Paldea' } satisfies Record<DexRegion, string>
 
 const typeBoost = (type: string) => `+10% de daño a los movimientos de tipo ${type}.`
 
@@ -1521,7 +1525,17 @@ export const es: Messages = {
     back: 'Volver',
     site: 'Dónde encontrarlo ↗',
     pc: 'Caja del PC',
-    hintKeys: 'FLECHAS navegar · Q E filtro · ESC volver',
+    regions: REGION_NAMES,
+    regionsDone: 'Regiones',
+    goal: (left: number, title: string) => `Faltan *${left}* para el título *${title}*`,
+    goalDone: (title: string) => `¡Región completa! Título *${title}* conseguido`,
+    nationalGoal: (done: number, total: number, frame: string) => `${done}/${total} regiones · marco *${frame}*`,
+    drawing: 'Arte en camino',
+    drawingText: 'Los artistas de PMD SpriteCollab, que dibujaron todos los Pokémon del juego, todavía están creando este. ¡Gracias, artistas! ♥',
+    contribute: 'Ayudar a dibujarlo ↗',
+    soon: 'Todavía no aparece en el juego. ¡Atento a las novedades!',
+    soonTag: 'Próximamente',
+    hintKeys: 'FLECHAS navegar · Q E región · ESC volver',
     hintTouch: 'Toca un Pokémon para ver detalles',
   },
 
@@ -1546,7 +1560,7 @@ export const es: Messages = {
       wallpaper: 'Fondo de pantalla de la Caja del PC.',
     },
     styles: {
-      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna', creator: 'Creador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas', era1: 'Era 1', era1Champion: 'Corona de la Era 1' },
+      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna', creator: 'Creador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas', era1: 'Era 1', era1Champion: 'Corona de la Era 1', nationalDex: 'Pokédex Nacional' },
       background: { night: 'Noche estrellada', meadow: 'Ruta 1', forest: 'Bosque Verde', cave: 'Mt. Moon', snow: 'Monte Plateado', tower: 'Torre Lavanda', supporter: 'Cielo dorado', halloween: 'Noche de Brujas', friendship: 'Amistad', era1Champion: 'Trono de la Era 1' },
       wallpaper: { classic: 'Clásico', forest: 'Hojas', cave: 'Piedritas', snow: 'Copos de nieve', tower: 'Fantasmitas', supporter: 'Estrellas doradas', haunted: 'Casa Embrujada', secretBase: 'Base Secreta' },
     },
@@ -2041,6 +2055,7 @@ export const es: Messages = {
     arenaSeason: (season) => `Por tu mejor marca en la temporada ${season} de la Arena`,
     era1: (rank, board) => `#${rank} en el Salón de la Fama de la Era 1 · ${board}`,
     hiddenZone: { grotto: 'Por encontrar la Gruta Oculta', underground: 'Por encontrar el Subsuelo' },
+    dex: (region: string | null) => (region ? `Por completar la Pokédex de ${region}` : 'Por completar la Pokédex Nacional: ¡todas las regiones!'),
   },
 
   supporters: {
@@ -2949,7 +2964,7 @@ export const es: Messages = {
     noTitle: 'ninguno',
     titleTag: 'TÍTULO',
     equipped: 'EN USO',
-    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors', friendLegend: 'Ha traído 10 amigos al juego', stampCollector: 'Reunió 30 Estampas en el Poké Realm', era1Legend: 'Quedó en lo más alto de un ranking de la Era 1', era1Champion: 'Fue el n.º 1 de un ranking de la Era 1' },
+    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors', friendLegend: 'Ha traído 10 amigos al juego', stampCollector: 'Reunió 30 Estampas en el Poké Realm', era1Legend: 'Quedó en lo más alto de un ranking de la Era 1', era1Champion: 'Fue el n.º 1 de un ranking de la Era 1', kantoDex: 'Vio todos los Pokémon de Kanto en la Pokédex', johtoDex: 'Vio todos los Pokémon de Johto en la Pokédex', hoennDex: 'Vio todos los Pokémon de Hoenn en la Pokédex', sinnohDex: 'Vio todos los Pokémon de Sinnoh en la Pokédex', unovaDex: 'Vio todos los Pokémon de Unova en la Pokédex', kalosDex: 'Vio todos los Pokémon de Kalos en la Pokédex', alolaDex: 'Vio todos los Pokémon de Alola en la Pokédex', galarDex: 'Vio todos los Pokémon de Galar en la Pokédex', paldeaDex: 'Vio todos los Pokémon de Paldea en la Pokédex' },
     newMedals: 'Nuevas medallas',
     names: {
       firstRun: 'Primeros pasos',
@@ -3051,6 +3066,15 @@ export const es: Messages = {
       stampCollector: 'Coleccionista de Estampas',
       era1Legend: 'Leyenda de la Era 1',
       era1Champion: 'Campeón(a) de la Era 1',
+      kantoDex: 'Investigador(a) de Kanto',
+      johtoDex: 'Investigador(a) de Johto',
+      hoennDex: 'Investigador(a) de Hoenn',
+      sinnohDex: 'Investigador(a) de Sinnoh',
+      unovaDex: 'Investigador(a) de Unova',
+      kalosDex: 'Investigador(a) de Kalos',
+      alolaDex: 'Investigador(a) de Alola',
+      galarDex: 'Investigador(a) de Galar',
+      paldeaDex: 'Investigador(a) de Paldea',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Juega una partida' : `Juega ${n} partidas`),

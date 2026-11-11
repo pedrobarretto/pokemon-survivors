@@ -175,6 +175,12 @@ const CROWN: BallArt = [
   { 1: '#2a1404', 2: '#f8d030', 3: '#b87818', 4: '#fff4c0', 5: '#e02848', 7: '#ff9cb0', 8: '#f8f8f8' },
 ]
 
+/** The Pokédex's big blue lens in its red ring, for the National Dex frame's corners (1 outline, 3 the red ring, 4 the lens, 5 its light, 6 the glint). */
+const DEX_LENS: BallArt = [
+  ['..111..', '.13331.', '1365431', '1354441', '1344441', '.13331.', '..111..'],
+  { 1: '#200c10', 3: '#e03030', 4: '#2878d8', 5: '#78c8f8', 6: '#ffffff' },
+]
+
 export const CARD_FRAMES = {
   /** The game's own dialog box: dark line, paper, blue. */
   classic: { edge: '#283040', light: '#f8f8f8', main: '#6878a8', shade: '#101830', accent: '#ffcb05' },
@@ -208,6 +214,8 @@ export const CARD_FRAMES = {
   era1: { edge: '#120e26', light: '#f8d878', main: '#22357e', shade: '#c89028', accent: '#f8d030', band: 3, studs: '#f8d030', inner: ['#0a0a1c'], ball: ERA_COIN, crest: ERA_WINGS },
   /** An Era 1 board's #1: a wide gold band set with rubies and a gold line inside it, a ruby in a gold bezel in each corner and the crown for its seal. */
   era1Champion: { edge: '#2a1404', light: '#fff4c0', main: '#e8b030', shade: '#f8d030', accent: '#e02848', band: 3, studs: '#e02848', inner: ['#2a1404'], ball: RUBY, crest: CROWN },
+  /** Every region's Pokédex complete (`game/dexRegions.ts`): the Pokédex's red shell, its little lights along the band and its blue lens in each corner. */
+  nationalDex: { edge: '#200c10', light: '#ffd0c8', main: '#d82828', shade: '#7a1018', accent: '#78c8f8', band: 3, studs: '#78c8f8', inner: ['#200c10'], ball: DEX_LENS },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */

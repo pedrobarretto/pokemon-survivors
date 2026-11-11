@@ -1,15 +1,18 @@
 // Builds the wild horde roster: every species of the National Dex that can roam the wild,
 // checked against the PMD SpriteCollab tracker (normal and shiny Walk/Idle/Hurt must exist)
 // and filled with official names, types, base stats and capture rates from PokeAPI.
-// Writes src/data/roster.generated.json, which src/data/roster.ts turns into enemies.
+// Writes src/data/roster.generated.json, which src/data/roster.ts turns into enemies, and
+// src/data/nationalDex.generated.json: the species SpriteCollab hasn't drawn yet, which the
+// Pokédex shows as a thank-you to its artists (src/data/nationalDex.ts).
 // Usage: npm run roster && npm run assets
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { BOSSES, COMPANIONS, CRITTERS, HIDDEN_DWELLERS, PLACE_BOSSES, STARTERS, TRAITS, pad } from './dex.mjs'
-import { nationalSpecies } from './pokeapi.mjs'
+import { NATIONAL_LAST, nationalSpecies } from './pokeapi.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const OUT = join(ROOT, 'src/data/roster.generated.json')
+const NATIONAL = join(ROOT, 'src/data/nationalDex.generated.json')
 const TRACKER = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/tracker.json'
 const SPRITES = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/sprite'
 
@@ -49,6 +52,9 @@ const json = async (url) => {
     await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
   }
 }
+
+/** Whether SpriteCollab has every anim we draw for the species' normal form. */
+const drawn = (tracker, dex) => ANIMS.every((a) => a in (tracker[pad(dex)]?.sprite_files ?? {}))
 
 /** Every anim we draw exists in the normal and the shiny (`0000/0001`) form. */
 const brokenSprites = (tracker, dex) => {
@@ -127,3 +133,8 @@ if (lost.length > 0) console.warn(`Left the horde: ${lost.join(', ')}`)
 const entry = ({ dex, name, types, stats, capture }) => ({ dex, name, types, stats, capture })
 await writeFile(OUT, JSON.stringify(Object.fromEntries(found.map((s, i) => [ids[i], entry(s)])), null, 2) + '\n')
 console.log(`Wrote ${found.length} species to ${OUT} (${found.filter((s) => !known.has(s.dex)).length} new)`)
+
+const sheetless = [...national.values()].filter((s) => !drawn(tracker, s.dex))
+const mythical = [...national.values()].filter((s) => s.kind === 'mythical').map((s) => s.dex)
+await writeFile(NATIONAL, JSON.stringify({ last: NATIONAL_LAST, mythical, sheetless: Object.fromEntries(sheetless.map((s) => [s.dex, s.name])) }, null, 2) + '\n')
+console.log(`Wrote ${sheetless.length} species still to be drawn to ${NATIONAL}`)

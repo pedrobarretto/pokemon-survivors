@@ -2,7 +2,8 @@ import manifest from '../data/sprites.generated.json'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BRANCHES, branchesOf, branchStage, type BranchId } from '../data/branches'
 import { HATCHLING_IDS, PLAYABLE, type HatchlingId, type PlayableId } from '../data/hatchlings'
-import { REGIONS, STARTER_IDS, type Region, type StarterId } from '../data/starters'
+import { STARTER_IDS, type Region, type StarterId } from '../data/starters'
+import { regionOf } from '../data/nationalDex'
 import type { PokeType } from '../data/types'
 import { isRiftLegend, RIFT, type RiftLegend } from '../data/rifts'
 import { DOMAINS } from '../data/domains'
@@ -15,7 +16,7 @@ import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
 import { TAILOR } from '../data/visitors'
 import { EVENT_LEGENDS, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
-import { nationalDex, regionalGen } from '../data/regionalForms'
+import { nationalDex } from '../data/regionalForms'
 
 /**
  * The site's Pokédex model: every species the game uses, derived from
@@ -66,14 +67,8 @@ export type DexEntry = {
     | { kind: 'summon' }
 }
 
-/** Last national dex number of each generation, in `REGIONS` order. */
-const LAST_DEX = [151, 251, 386, 493, 649, 721, 809, 905, 1025] as const
-
-/** Main-series region a species debuted in, from its national dex number. */
-export const regionOf = (dex: number): Region => {
-  const gen = regionalGen(dex)
-  return REGIONS.find((r) => (gen === undefined ? dex <= (LAST_DEX[r.gen - 1] ?? Infinity) : r.gen === gen)) ?? REGIONS[REGIONS.length - 1]!
-}
+/** Main-series region a species debuted in, from its national dex number (`data/nationalDex.ts`). */
+export { regionOf } from '../data/nationalDex'
 
 export const slugOf = (name: string) =>
   name
