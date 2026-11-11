@@ -3564,10 +3564,11 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
   return made.code
 }
 
-const devMinigame = async (game: unknown) => {
+const devMinigame = async (game: unknown, how?: 'auto') => {
   const { isMinigameId, MINIGAME_IDS } = await import('./data/minigames')
   if (!isMinigameId(game)) return `ps.minigame: ${MINIGAME_IDS.join(', ')}`
   const { openGame } = await import('./realm/games/registry')
+  ;(await import('./realm/games/localTable')).localTableDev.autopilot = how === 'auto'
   const save = loadSave()
   let screen: { dispose: () => void } | null = null
   screen = await openGame(document.body, game, { input, partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
@@ -5359,7 +5360,8 @@ if (import.meta.env.DEV) {
         import('./ui/realmArtDev').then((m) => m.openRealmArt(view, opts)),
       /**
        * A Poké Realm mini game on its own, over whatever is on screen (`realm/games/registry.ts`): `ps.minigame('fishing')`,
-       * a table game against the bot (`'fourInRow'`, `'typeDuel'`). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
+       * a table game against the bot (`'fourInRow'`, `'typeDuel'`, the café's 4-seat `'ludo'` and `'unown'`; `ps.minigame('ludo', 'auto')`
+       * lets the bot play your seat too). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
        */
       minigame: devMinigame,
       /**
