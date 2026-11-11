@@ -1,4 +1,4 @@
-import { homeOf, type RelayHome, type Rtts, type VpsHome } from '../net/protocol'
+import { CF_PROBES, homeOf, isRelayHome, type Region, type RelayHome, type Rtts, type Site, type VpsHome } from '../net/protocol'
 
 /**
  * Which relay a room lives on. Cloudflare's everywhere (the default and the
@@ -8,7 +8,8 @@ import { homeOf, type RelayHome, type Rtts, type VpsHome } from '../net/protocol
  * 116–140 ms away). A room's code says its relay (`homeOf`),
  * so links and typed codes find it without asking anyone. The host's measure
  * picks where a room is made (`pickHome`); the group's, reported in its lobby,
- * where it moves before its first run (`groupHome`). A VPS relay never caps
+ * where it moves before its first run (`groupHome`): a VPS relay, or
+ * Cloudflare in a region between the players (`CF_PROBES`). A VPS relay never caps
  * the game: one whose `/health` says `full` gets no new room, Cloudflare does.
  */
 
@@ -81,11 +82,11 @@ export const measureRelay = async (url: string, get: (url: string) => Promise<un
 /** A room moves only when another relay's worst round trip beats its own by this much (ms): less isn't worth the hop. */
 export const MOVE_MARGIN_MS = 40
 
-/** The worst round trip of the group to `home` (ms), or null when any member didn't measure it (or it didn't answer them). */
-const worstRtt = (home: RelayHome, group: readonly Rtts[]) => {
+/** The worst round trip of the group to `site` (ms), or null when any member didn't measure it (or it didn't answer them). */
+const worstRtt = (site: Site, group: readonly Rtts[]) => {
   let worst = 0
   for (const rtts of group) {
-    const ms = rtts[home]
+    const ms = rtts[site]
     if (ms === undefined || ms === null) return null
     worst = Math.max(worst, ms)
   }
@@ -94,23 +95,33 @@ const worstRtt = (home: RelayHome, group: readonly Rtts[]) => {
 
 /**
  * Where a room in `current` should run for the group about to play in it:
- * the relay whose worst member round trip is lowest, if it beats the
- * current one's by `MOVE_MARGIN_MS`; null to stay. The candidates are the VPS
- * relays this build has (`homes`) and, for a Cloudflare room, that room
- * itself (each member's round trip to it; a Cloudflare room elsewhere can't be
- * measured). `group` holds every member's reported round trips, null for one
- * that didn't report (a client before it): then nobody can say, and it stays.
- * A relay in `full` (the host's own measure) is never a candidate.
+ * the site whose worst member round trip is lowest, if it beats the current
+ * one's by `MOVE_MARGIN_MS`; null to stay. The candidates (`sites`) are the
+ * VPS relays this build has and Cloudflare in each probed region (`cf:enam`…),
+ * so a group spread over continents meets in between; the room's own relay
+ * is measured as `current` (a Cloudflare room by its socket's pings), and a
+ * Cloudflare room's own region never beats it by the margin. `group` holds
+ * every member's reported round trips, null for one that didn't report (a
+ * client before it): then nobody can say, and it stays. A site no member
+ * measured (a client before the probes) is no candidate. A VPS relay in
+ * `full` (the host's own measure) is never one either.
  */
-export const groupHome = (current: RelayHome, homes: readonly VpsHome[], group: readonly (Rtts | null)[], full: ReadonlySet<VpsHome> = new Set()): RelayHome | null => {
+export const groupHome = (current: RelayHome, sites: readonly Site[], group: readonly (Rtts | null)[], full: ReadonlySet<VpsHome> = new Set()): Site | null => {
   const known = group.filter((r): r is Rtts => r !== null)
   if (known.length === 0 || known.length < group.length) return null
   const here = worstRtt(current, known)
   if (here === null) return null
-  let best: { home: RelayHome; worst: number } | null = null
-  for (const home of homes) {
-    const worst = home === current || full.has(home) ? null : worstRtt(home, known)
-    if (worst !== null && (!best || worst < best.worst)) best = { home, worst }
+  let best: { site: Site; worst: number } | null = null
+  for (const site of sites) {
+    const blocked = site === current || (isRelayHome(site) && site !== 'cf' && full.has(site))
+    const worst = blocked ? null : worstRtt(site, known)
+    if (worst !== null && (!best || worst < best.worst)) best = { site, worst }
   }
-  return best && best.worst + MOVE_MARGIN_MS <= here ? best.home : null
+  return best && best.worst + MOVE_MARGIN_MS <= here ? best.site : null
+}
+
+/** The relay a room at `site` is made on, and the region asked of it (`auto` but for Cloudflare in a probed region). */
+export const placeOf = (site: Site): { home: RelayHome; region: Region } => {
+  if (isRelayHome(site)) return { home: site, region: 'auto' }
+  return { home: 'cf', region: CF_PROBES.find((r) => site === `cf:${r}`) ?? 'auto' }
 }

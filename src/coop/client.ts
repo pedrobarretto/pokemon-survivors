@@ -2,14 +2,14 @@ import { worldHeld } from '../game/coop'
 import { moveCode } from '../game/replay'
 import type { Game } from '../game/types'
 import type { Vec } from '../engine/math'
-import { LIMITS, NET_REPORT_MS, PROTOCOL, REGIONS, VPS_HOMES, homeOf, isRelayHome, parseRoomCode, type BatchedMessage, type ClientMessage, type CloseReason, type CreateResponse, type Loadout, type NetReport, type Refusal, type Region, type RelayHome, type RoomView, type Rtts, type Settings, type VpsHome, type RunStart, type ServerMessage } from '../net/protocol'
+import { CF_PROBES, CF_SITES, LIMITS, NET_REPORT_MS, PROTOCOL, REGIONS, VPS_HOMES, homeOf, isRelayHome, isSite, parseRoomCode, type BatchedMessage, type ClientMessage, type CloseReason, type CreateResponse, type Loadout, type NetReport, type Refusal, type Region, type RelayHome, type RoomView, type Rtts, type Settings, type CfSite, type Site, type VpsHome, type RunStart, type ServerMessage } from '../net/protocol'
 import { addSample, createNetStats, noteArrival, noteFrame, noteHidden, quantile, resetArrivalLine, NO_WHERE, type NetStats, type NetWhere, type ReconnectReason } from './netStats'
 import type { Store } from './bank'
 import type { Input } from './entries'
 import { ack, createOutbox, due, onReconnect, onSlow, push, queued, slowed, type Outbox } from './outbox'
 import { advance, backlog, onEnded, onFrame, onSnapPart, onSync, syncProgress, createRunner, type Runner, type RunnerDeps } from './runner'
 import { createStickPace, paceStick, type StickPace } from './stickPace'
-import { groupHome, measureRelay, median, pickHome, relayFor, type RelayProbe, type VpsUrls } from './relays'
+import { groupHome, measureRelay, median, pickHome, placeOf, relayFor, type RelayProbe, type VpsUrls } from './relays'
 import { closeReason, parseServerMessage } from './wire'
 import { loadoutOf, settingsOf, type CoopPick, type CoopSettings } from './start'
 import { timeoutSignal } from '../net/timeout'
@@ -34,7 +34,8 @@ import { timeoutSignal } from '../net/timeout'
  * - The room runs where it's best for the group: in the lobby every client
  *   reports its round trips to the relays (`rtt`), and the host's Start
  *   first moves the room to the relay with the best worst round trip when it
- *   clearly beats where it is (`groupHome`): the host makes a room there, the
+ *   clearly beats where it is (`groupHome`; a VPS relay, or Cloudflare in a
+ *   region between the players, measured once the lobby has company, `CF_PROBES`): the host makes a room there, the
  *   old one tells everyone `moved`, they follow with their Pokémon and ready,
  *   and the run starts once they're in (`MOVE`). Any failure starts it where it is.
  * - Few messages up (the relay's Durable Object is billed per message it
@@ -263,6 +264,9 @@ export type ClientState = {
   /** The VPS relays as measured for this room (`vpsFor`: the room they were asked for): round trips and fullness. */
   vpsRtts: ReadonlyMap<VpsHome, RelayProbe | null> | null
   vpsFor: string | null
+  /** Cloudflare's probed regions as measured for this room (`cfFor`), once it had company. */
+  cfRtts: ReadonlyMap<CfSite, RelayProbe | null> | null
+  cfFor: string | null
   /** This socket's ping round trips in the lobby (ms, the newest `LOBBY.pings`): a Cloudflare room's own. */
   lobbyPings: number[]
   /** The round trips last reported to the room (`rtt`), and when (ms). */
@@ -315,6 +319,8 @@ export const createCoopClient = (deps: CoopDeps) => {
     moves: false,
     vpsRtts: null,
     vpsFor: null,
+    cfRtts: null,
+    cfFor: null,
     lobbyPings: [],
     reported: null,
     reportedAt: -Infinity,
@@ -624,6 +630,8 @@ export const createCoopClient = (deps: CoopDeps) => {
   const forgetRoom = () => {
     s.vpsRtts = null
     s.vpsFor = null
+    s.cfRtts = null
+    s.cfFor = null
     s.lobbyPings = []
     s.reported = null
     s.reportedAt = -Infinity
@@ -671,6 +679,21 @@ export const createCoopClient = (deps: CoopDeps) => {
       }
     }
     return measured.rtts
+  }
+
+  let probed: { at: number; rtts: Promise<Map<CfSite, RelayProbe | null>> } | null = null
+
+  /** Cloudflare's round trip to each probed region (`CF_PROBES`), measured once in a while like `measureVps`. */
+  const measureCf = () => {
+    if (!probed || deps.now() - probed.at > RTT_FRESH_MS) {
+      const get = (u: string) => deps.fetch(u, { method: 'GET', signal: timeoutSignal(3000) }).then((r) => r.json())
+      const at = (region: string) => `${relayUrl('cf')}/probe/${region}`
+      probed = {
+        at: deps.now(),
+        rtts: Promise.all(CF_PROBES.map(async (r) => [`cf:${r}` as const, await measureRelay(at(r), get, deps.now, 3)] as const)).then((pairs) => new Map(pairs)),
+      }
+    }
+    return probed.rtts
   }
 
   const reserve = async (home: RelayHome, region: Region, timeout?: number): Promise<CreateResult> => {
@@ -728,7 +751,7 @@ export const createCoopClient = (deps: CoopDeps) => {
    * The relay the room should move to before its first run, or null: only the
    * host asks, in a room whose relay takes moves, with company, never twice.
    */
-  const moveTarget = (): RelayHome | null => {
+  const moveTarget = (): Site | null => {
     const room = s.room
     const code = s.code
     if (!s.moves || s.movedIn || !room || !code || room.code !== code || room.phase !== 'lobby') return null
@@ -736,7 +759,7 @@ export const createCoopClient = (deps: CoopDeps) => {
     const online = room.members.filter((m) => m.online)
     if (online.length < 2) return null
     const full = new Set(VPS_HOMES.filter((h) => s.vpsRtts?.get(h)?.full))
-    return groupHome(homeOf(code), VPS_HOMES.filter((h) => vps[h]), online.map((m) => m.rtt ?? null), full)
+    return groupHome(homeOf(code), [...VPS_HOMES.filter((h) => vps[h]), ...CF_SITES], online.map((m) => m.rtt ?? null), full)
   }
 
   const setMoving = (next: Moving | null) => {
@@ -762,7 +785,8 @@ export const createCoopClient = (deps: CoopDeps) => {
     if (!target) return void send({ t: 'start' })
     const from = s.code
     setMoving({ host: true, code: null, claim: null, expect: s.room?.members.filter((m) => m.online).length ?? 1, at: deps.now() })
-    void reserve(target, 'auto', MOVE.create).then((made) => {
+    const { home, region } = placeOf(target)
+    void reserve(home, region, MOVE.create).then((made) => {
       const mv = s.moving
       if (!mv?.host || mv.code !== null || s.code !== from) return
       // No claim: a relay from before moves, where the host might not get the crown back.
@@ -833,15 +857,17 @@ export const createCoopClient = (deps: CoopDeps) => {
   /** Whether two reports say about the same (within `LOBBY.change` ms): not worth saying again. */
   const sameReport = (a: Rtts, b: Rtts) =>
     Object.keys(a).length === Object.keys(b).length &&
-    Object.entries(b).every(([home, ms]) => {
-      const was = isRelayHome(home) ? a[home] : undefined
+    Object.entries(b).every(([site, ms]) => {
+      const was = isSite(site) ? a[site] : undefined
       return was === ms || (typeof was === 'number' && typeof ms === 'number' && Math.abs(was - ms) < LOBBY.change)
     })
 
   /**
    * In a lobby whose relay takes moves: measures the VPS relays once and
    * reports them with the room's own pings (a Cloudflare room's round trip),
-   * again when they change, so the host's Start can pick for everyone.
+   * again when they change, so the host's Start can pick for everyone. Once
+   * someone else is in, Cloudflare's probed regions too (a solo lobby never
+   * moves, so it never pays for them).
    */
   const reportRtts = (now: number) => {
     const room = s.room
@@ -853,9 +879,15 @@ export const createCoopClient = (deps: CoopDeps) => {
         if (s.vpsFor === code) s.vpsRtts = rtts
       })
     }
+    if (s.cfFor !== code && room.members.filter((m) => m.online).length >= 2) {
+      s.cfFor = code
+      void measureCf().then((rtts) => {
+        if (s.cfFor === code) s.cfRtts = rtts
+      })
+    }
     if (!s.vpsRtts) return
-    const ms: { [H in RelayHome]?: number | null } = {}
-    for (const [home, p] of s.vpsRtts) ms[home] = p === null ? null : Math.round(p.rtt)
+    const ms: { [S in Site]?: number | null } = {}
+    for (const [site, p] of [...s.vpsRtts, ...(s.cfRtts ?? [])]) ms[site] = p === null ? null : Math.round(p.rtt)
     if (homeOf(code) === 'cf') {
       const cf = s.lobbyPings.length >= LOBBY.enough ? median(s.lobbyPings) : null
       if (cf === null) return
