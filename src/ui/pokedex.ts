@@ -10,7 +10,7 @@ import { cryUrl, drawPokemon, hasShiny, loadedSprites, loadSpecies, portraitUrl 
 import { locale, t } from '../i18n'
 import { h, later } from './dom'
 import { loadSave } from './save'
-import { nationalDex } from '../data/regionalForms'
+import { nationalDex, regionOf, REGIONS } from '../data/regionalForms'
 import { hint, typeBadge, type Screen } from './screens'
 import { ROUTES } from '../site/routes'
 
@@ -29,6 +29,12 @@ const FILTER_TEST = {
 const defeatable = (e: DexEntry) => e.source.kind !== 'starter' || e.source.wild !== undefined
 
 const dexNumber = (n: number) => `#${String(nationalDex(n)).padStart(4, '0')}`
+
+/** A regional form's mark beside its national number: the region's initial in its color (Alola's A, Galar's G…). */
+const regionTag = (dex: number) => {
+  const region = regionOf(dex)
+  return region ? h('b', { class: 'dex-region', style: `background:${REGIONS[region].color}` }, t().travel.regions[region].charAt(0)) : false
+}
 
 /** Focus zones: the filter tabs, the grid and the footer buttons. ↑/↓ move between them at the grid's edges. */
 type Zone = 'tabs' | 'grid' | 'footer'
@@ -82,7 +88,7 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
       'button',
       { class: s.seen ? 'dex-cell' : 'dex-cell unseen', 'aria-label': s.seen ? (clear ? `${e.name}, ${m.clearedOn(levels[clear])}` : e.name) : `${dexNumber(e.dex)} ???` },
       s.seen ? h('img', { src: portraitUrl(e.dex, s.shiny), alt: '', loading: 'lazy' }) : h('span', { class: 'dex-unknown' }, '?'),
-      h('small', {}, e.dex),
+      h('small', {}, String(nationalDex(e.dex)), regionTag(e.dex)),
       s.caught && h('img', { class: 'dex-mark', src: s.shiny ? sparkleIcon() : pokeballIcon(), alt: '' }),
       clear && h('img', { class: 'dex-clear', src: trophyIcon(clear), alt: '', title: m.clearedOn(levels[clear]) }),
     )

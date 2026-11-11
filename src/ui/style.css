@@ -9614,6 +9614,18 @@ button {
   color: #e8e8f8;
   text-shadow: 1px 1px 0 #101020, -1px -1px 0 #101020;
 }
+/* A regional form's region initial after its national number (`regionTag`). */
+.dex-cell .dex-region {
+  display: inline-block;
+  margin-left: 2px;
+  padding: 0 2px;
+  font-size: 11px;
+  line-height: 12px;
+  color: #101020;
+  text-shadow: none;
+  border: 1px solid #101020;
+  vertical-align: 1px;
+}
 
 .dex-cell.unseen {
   background: #1c2238;

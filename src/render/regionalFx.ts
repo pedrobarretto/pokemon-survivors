@@ -142,19 +142,21 @@ export const drawRegionalAttack = (ctx: Ctx, a: Attack, t: number) => {
       return
     }
     case 'obstructGuard': {
-      // The crossed arms held up in front, pulsing while the guard waits.
+      // Arms crossed: a small X badge over the head, pulsing, and a red-rimmed ring at the feet while the guard waits.
       const pulse = Math.floor(t * 6) % 2
-      ctx.globalAlpha = 0.85
-      blitCentered(ctx, REGIONAL_FX.xGuard(), a.x, a.y - 2 - pulse)
-      dashedRing(ctx, a.x, a.y + 8, 13 + pulse, a.id, ['#a8a0a8', '#584858'], 0.6, 0.5)
-      ctx.globalAlpha = 1
+      dashedRing(ctx, a.x, a.y + 8, 14 + pulse, a.id, ['#e83850', '#382838'], 0.7, 0.5)
+      blitCentered(ctx, REGIONAL_FX.xGuard(), a.x, a.y - 22 - pulse)
       return
     }
     case 'obstructX': {
-      // A big X flung out, red-edged, spinning a quarter as it grows.
+      // A big X flung out from the body: two thick strokes, dark with a red core, growing and fading.
       const e = Math.min(1, a.age / a.ttl)
+      const half = Math.round(r * 0.75)
       ctx.globalAlpha = 1 - e * e
-      blitRotated(ctx, REGIONAL_FX.xDark(), a.x, a.y, e * 0.6, Math.max(1, r / 7))
+      for (const [w, color] of [[5, '#181018'], [3, '#a01828'], [1, '#f86878']] as const) {
+        line(ctx, a.x - half, a.y - half, a.x + half, a.y + half, w, color)
+        line(ctx, a.x - half, a.y + half, a.x + half, a.y - half, w, color)
+      }
       ctx.globalAlpha = 1
       return
     }

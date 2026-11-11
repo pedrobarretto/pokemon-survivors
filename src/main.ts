@@ -5243,6 +5243,9 @@ if (import.meta.env.DEV) {
       },
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
+      /** The partner select on `id` (the save's partner by default), and the Pokédex: to stage the regional forms. */
+      select: (id?: PlayableId) => showMenu(id),
+      pokedex: () => (endRun(), setScreen(pokedexScreen(ui, input, () => showTitle(), showPcBox))),
       card: (partner: PlayableId = loadSave().partner) => (endRun(), setScreen(sharePreview(ui, input, trainerShare(partner), () => showTitle()))),
       ...biomeDevTools(() => run?.game),
       /** `ps.terrain('tower', 70, 'desert')` walks you to the nearest tower in a desert cell (any biome without the third argument). */

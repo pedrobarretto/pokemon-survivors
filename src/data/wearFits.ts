@@ -353,4 +353,11 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   746: { no: ['head'] }, // Wishiwashi
   997: { no: ['head'] }, // Arctibax
   351: { no: ['head'] }, // Castform
+  // The regional forms the fit check failed most (140+ failing checks each, `npm run fit-check -- --only` on REGIONAL_LINES): no hats until they're fitted by hand.
+  10168: { no: ['head'] }, // Galarian Mr. Mime
+  10166: { no: ['head'] }, // Galarian Farfetch'd: the leek's leaves read as its head
+  10176: { no: ['head'] }, // Galarian Darumaka
+  10100: { no: ['head'] }, // Alolan Raichu
+  10253: { no: ['head'] }, // Paldean Wooper
+  10103: { no: ['head'] }, // Alolan Vulpix
 }
