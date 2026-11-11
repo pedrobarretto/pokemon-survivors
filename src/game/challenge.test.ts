@@ -1,6 +1,7 @@
 import { SEASON_ONE } from '../data/seasons'
 import { SEASON_ONE_EGGS } from '../data/seasonOneEggs'
 import { SEASON_ONE_KITS } from '../data/seasonOneKits'
+import { GA_FAMILIES_A } from '../data/gaFamiliesA'
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
 import { isExclusiveFamily, PLAYABLE_IDS } from '../data/hatchlings'
@@ -23,7 +24,7 @@ describe('dailyChallenge', () => {
   })
 
   it('gives every playable Pokémon its day once per cycle, egg families included and the exclusive eggs’ families aside', () => {
-    const pool = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS))
+    const pool = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_A))
     let day = '2026-01-01'
     const days: string[] = []
     // A whole cycle starts at a multiple of its length in days since 1970.
@@ -38,7 +39,7 @@ describe('dailyChallenge', () => {
     const newFamilies = (from: string, days: number) => {
       let day = from
       const seen = Array.from({ length: days }, () => dailyChallenge((day = previousDay(day))).starter)
-      return seen.filter((s) => s in SEASON_ONE_EGGS || s in SEASON_ONE_KITS)
+      return seen.filter((s) => s in SEASON_ONE_EGGS || s in SEASON_ONE_KITS || s in GA_FAMILIES_A)
     }
     expect(newFamilies(SEASON_ONE.day, 300)).toEqual([])
     expect(newFamilies('2027-11-16', 300).length).toBeGreaterThan(0)

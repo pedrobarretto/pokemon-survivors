@@ -14,6 +14,7 @@ import { inPlay, onAnyScreen, setPhase } from './players'
 import { coopScale } from './coop'
 import { COOP } from '../data/coop'
 import type { Game, Offer, Pickup, Player } from './types'
+import { gaKitAPickup } from './gaKitASystem'
 import * as dm from '../engine/dmath'
 
 export const MAX_XP_PICKUPS = 260
@@ -177,6 +178,7 @@ const collect = (g: Game, pickup: Pickup) => {
       collectEvoItem(g, pickup.item)
       break
   }
+  gaKitAPickup(g, pickup)
 }
 
 /**

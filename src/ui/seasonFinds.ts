@@ -28,10 +28,12 @@ export const seasonFindFeedback = (root: HTMLElement, find: FindId, moment: Find
     return say(m.castformSighted, 3000)
   }
   if (moment === 'gone') return say(m.castformGone, 2200)
+  // Every graveyard win reports Spiritomb: only the first brings the family (the place's own toast tells the rest).
+  if (find === 'spiritomb' && loadSave().finds.includes('spiritomb')) return
   updateSave((save) => ({ ...save, finds: mergeFinds(save.finds, [find]) }))
   playSfx('unlock')
   playCry(cryUrl(dex))
-  return say(find === 'rotom' ? m.rotom : m.castformFound, 4200)
+  return say(find === 'rotom' ? m.rotom : find === 'spiritomb' ? m.spiritomb : m.castformFound, 4200)
 }
 
 /** How many of a chain's steps a dev helper can set. */
@@ -43,6 +45,7 @@ export const seasonFindDevTools = (game: () => Game | undefined, landmark: (g: G
   seasonFind: (find: FindId) => {
     const g = game()
     if (!g) return console.warn('ps: start a run first')
+    if (find === 'spiritomb') return console.warn('ps: Spiritomb comes from the graveyard: ps.enter("graveyard"), then ps.spirits(GRAVEYARD.spirits)')
     if (find === 'rotom') {
       g.finds.tv = true
       return landmark(g, 'cottage', -14)

@@ -6,6 +6,7 @@ import type { BranchId } from './branches'
 import type { PlayableId } from './hatchlings'
 import { SEASON_ONE_EGG_ABILITIES } from './seasonOneEggs'
 import { SEASON_ONE_KIT_ABILITIES } from './seasonOneKits'
+import { GA_BRANCHES_A_ABILITIES, GA_FAMILIES_A_ABILITIES } from './gaFamiliesA'
 import type { PokeType } from './types'
 
 /**
@@ -402,6 +403,7 @@ export const FAMILY_ABILITIES = {
   cresselia: ['naturalCure', 'magicGuard', 'synchronize'],
   ...SEASON_ONE_EGG_ABILITIES,
   ...SEASON_ONE_KIT_ABILITIES,
+  ...GA_FAMILIES_A_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>
 
 /** The abilities of a branch picked at the family's first evolution (`data/branches.ts`). */
@@ -422,6 +424,7 @@ export const BRANCH_ABILITIES = {
   ceruledge: ['flashFire', 'cursedBody', 'sharpness'],
   flapple: ['overgrow', 'hustle', 'moxie'],
   appletun: ['overgrow', 'thickFat', 'regenerator'],
+  ...GA_BRANCHES_A_ABILITIES,
 } as const satisfies Partial<Record<BranchId, AbilitySet>>
 
 /** The Hidden Ability of a set: the last of three (a lone ability is no Hidden one). */

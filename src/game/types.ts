@@ -65,6 +65,7 @@ import type { CoopState } from './coop'
 import type { Training } from './training'
 import type { Harm, HarmBy } from './harm'
 import type { SeasonKit } from './seasonOneKitRules'
+import type { GaKitA, GaKitAVisual } from './gaKitARules'
 import type { MythicalHunt } from './mythicalHunt'
 
 export type OwnedMove = {
@@ -234,6 +235,8 @@ export type Player = {
   versus?: VersusSeat
   /** Temporada 1's mechanic families (`seasonOneKitRules.ts`): their running state. Absent for everyone else. */
   kit?: SeasonKit
+  /** The big update's first 15 families (`gaKitARules.ts`): their running state. Absent for everyone else. */
+  kitA?: GaKitA
 }
 
 /** One player's run stats (damage dealt is `damageByMove`). `tally` counts their own faints only in co-op. */
@@ -391,6 +394,8 @@ export type Visual =
   | LegendaryVisual2
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
+  /** The big update's first 15 families, drawn by `render/gaKitAFx.ts`. */
+  | GaKitAVisual
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'

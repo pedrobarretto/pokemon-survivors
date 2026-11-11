@@ -9,11 +9,14 @@ import type { MinigameId } from './minigames'
  * tune from play. The words live in `i18n/seasonOne/unlocks.ts`.
  */
 
-export const FIND_IDS = ['rotom', 'castform'] as const satisfies readonly HatchlingId[]
+export const FIND_IDS = ['rotom', 'castform', 'spiritomb'] as const satisfies readonly HatchlingId[]
 export type FindId = (typeof FIND_IDS)[number]
 
-/** Odds a run brings each encounter, drawn once from its seed: the old TV flickers, or Castform comes out with the weather. */
-export const FIND_ODDS = { rotom: 0.2, castform: 0.2 } as const satisfies Record<FindId, number>
+/**
+ * Odds a run brings each encounter, drawn once from its seed: the old TV flickers, or Castform comes out with the weather.
+ * Spiritomb is no draw: the first one beaten in the graveyard brings its family (`game/graveyard.ts`).
+ */
+export const FIND_ODDS = { rotom: 0.2, castform: 0.2, spiritomb: 0 } as const satisfies Record<FindId, number>
 
 /** The old TV on a cottage's table: how close counts (px, plus the body) and the seconds to stand there before Rotom leaves it. */
 export const TV_FIND = { radius: 16, stand: 1.6 } as const

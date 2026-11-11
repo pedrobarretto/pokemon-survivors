@@ -353,4 +353,13 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   746: { no: ['head'] }, // Wishiwashi
   997: { no: ['head'] }, // Arctibax
   351: { no: ['head'] }, // Castform
+  // The big update's first families (data/gaFamiliesA.ts), the same rule: 140+ failing checks, no hats until fitted by hand.
+  859: { no: ['head'] }, // Impidimp
+  860: { no: ['head'] }, // Morgrem
+  292: { no: ['head'] }, // Shedinja: its halo floats where a hat would sit
+  922: { no: ['head'] }, // Pawmo
+  240: { no: ['head'] }, // Magby
+  215: { no: ['head'] }, // Sneasel
+  '302:mega': { no: ['head'] }, // Mega Sableye: the gem covers its face
+  823: { no: ['head'] }, // Corviknight
 }

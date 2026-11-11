@@ -143,6 +143,8 @@ const win = (g: Game, inside: GraveInside, boss: Enemy | undefined) => {
   }
   g.hazards.length = 0
   notifyPlace(g, 'graveyard', { kind: 'spiritomb', shiny: s.shiny })
+  // Beating one brings Spiritomb's family as a game-made gift (`seasonGifts`); the shell skips it once owned.
+  if (g.coop === null) g.events.push({ kind: 'seasonFind', find: 'spiritomb', moment: 'found' })
   startLoot(g, inside)
 }
 

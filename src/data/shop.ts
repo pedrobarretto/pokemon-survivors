@@ -199,6 +199,7 @@ export const TM_SHELF = {
 export const EVO_ITEM_IDS = [
   'waterStone', 'thunderStone', 'fireStone', 'sunStone', 'moonStone', 'leafStone', 'iceStone', 'shinyStone', 'dawnStone',
   'metalCoat', 'blackAugurite', 'kingsRock', 'auspiciousArmor', 'maliciousArmor', 'upgrade', 'dubiousDisc', 'tartApple', 'sweetApple',
+  'shedShell', 'crackedPot', 'chippedPot',
 ] as const
 
 export type EvoItemId = (typeof EVO_ITEM_IDS)[number]
@@ -222,6 +223,9 @@ export const EVO_ITEMS = {
   dubiousDisc: { name: 'Dubious Disc', branches: [] },
   tartApple: { name: 'Tart Apple', branches: ['flapple'] },
   sweetApple: { name: 'Sweet Apple', branches: ['appletun'] },
+  shedShell: { name: 'Shed Shell', branches: ['shedinja'] },
+  crackedPot: { name: 'Cracked Pot', branches: ['polteageist'] },
+  chippedPot: { name: 'Chipped Pot', branches: ['polteageistAntique'] },
 } as const satisfies Record<EvoItemId, { name: string; branches: readonly BranchId[] }>
 
 /** What an evolution item costs. */
