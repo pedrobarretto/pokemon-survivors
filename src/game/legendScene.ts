@@ -92,8 +92,8 @@ export const legendFell = (g: Game, e: Enemy) => {
   return true
 }
 
-/** The legends caught where they fall on the open map besides the wave legendaries: the lake trio and the Swords. */
-const capturedOnMap = (id: string) => LAKE_TRIO.some((l) => l === id) || SWORDS.some((s) => s === id)
+/** The legends caught where they fall on the open map besides the wave legendaries: the lake trio, the Swords and Hoopa at the end of its rings. */
+const capturedOnMap = (id: string) => LAKE_TRIO.some((l) => l === id) || SWORDS.some((s) => s === id) || id === 'hoopa'
 
 /** The boss a scene keeps off the field for now (drawn by the scene itself), or -1. */
 export const sceneHides = (g: Game) => {

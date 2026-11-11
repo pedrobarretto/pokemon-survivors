@@ -30240,10 +30240,11 @@ span.arena-hub-face {
 
 /* The level sheet: its line under the title, the levels tinted like the difficulty, a check on the ones cleared. */
 .rush-sheet-blurb {
-  margin: 0 4px 6px;
-  font-size: 17px;
+  margin: 0 4px 8px;
+  font-family: var(--kit-body);
+  font-size: 18px;
   line-height: 1.15;
-  color: var(--dk-ink-2, #505068);
+  color: #dce0f8;
 }
 
 .rush-level-icon.hard {

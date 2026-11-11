@@ -10,6 +10,7 @@ import type { Difficulty } from './difficulty'
 import { burst, setScreenShake, shakeScreen } from './effects'
 import { spawnEnemy } from './enemies'
 import { legendFell } from './legendScene'
+import { winRun } from './coop'
 import { MAX_MOVES, recomputeStats, xpFor } from './leveling'
 import { maxMoveLevel } from './moves'
 import { standing } from './players'
@@ -132,6 +133,7 @@ export const rushDown = (g: Game, e: Enemy) => {
     g.events.push({ kind: 'legendBeaten', legend: 'hoopa', shiny: e.shiny })
     // Its capture plays where it fell, then the rush is won.
     if (legendFell(g, e) && g.legendScene) g.legendScene.then = 'victory'
+    else winRun(g)
     return
   }
   r.stage = 'rest'

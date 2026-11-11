@@ -1086,6 +1086,7 @@ const stepRush = (g: Game, inputs: readonly StepInput[], dt: number) => {
   updateVerbEvolved(g, dt)
   updateTerrain(g, dt)
   updatePickups(g, dt)
+  updateConsumables(g, dt)
   updateEffects(g, dt)
   updateRush(g, dt)
   followPlayers(g, dt, domainCamera)

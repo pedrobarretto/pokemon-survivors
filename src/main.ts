@@ -5421,7 +5421,7 @@ if (import.meta.env.DEV) {
       ball: (n = 1) => withRun((g) => Array.from({ length: n }, (_, i) => dropPickup(g, localPlayer(g).x + 20 + i * 6, localPlayer(g).y, 'pokeball'))),
       ...riftDevTools(() => run?.game),
       ...questDevTools(() => run?.game),
-      ...rushDevTools(() => run?.game, (difficulty) => void startRushRun(loadSave().partner, difficulty)),
+      ...rushDevTools(() => run?.game, (difficulty) => void startRushRun(loadSave().partner, difficulty), () => showMenu(loadSave().partner, 'legends')),
       ...placeDevTools(() => run?.game),
       ...seasonFindDevTools(() => run?.game, devLandmark),
       ...levelUpDevTools(() => run?.game),

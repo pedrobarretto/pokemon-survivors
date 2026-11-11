@@ -30,7 +30,7 @@ export const rushBanner = (captured: number, onOpen: () => void) => {
     'button',
     { class: open ? 'arc-card rush-banner' : 'arc-card rush-banner locked', type: 'button', onclick: () => (open ? (playSfx('select'), onOpen()) : playSfx('denied')) },
     h('img', { class: 'rush-banner-icon', src: moveIcon('hyperspaceFury'), alt: '' }),
-    h('span', { class: 'rush-banner-text' }, h('b', { class: 'arc-outline' }, m.title), h('small', {}, open ? m.open : m.locked(captured, RUSH.min))),
+    h('span', { class: 'rush-banner-text' }, h('b', {}, m.title), h('small', {}, open ? m.open : m.locked(captured, RUSH.min))),
     h('img', { class: 'rush-banner-hoopa', src: portraitUrl(ENEMIES.hoopa.dex, false), alt: '' }),
   )
   return el
