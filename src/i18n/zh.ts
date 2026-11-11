@@ -1,6 +1,7 @@
 import { realmBookZh as realmBook } from './realmStamps/zh'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { ULTRA_WORDS } from './ultra'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2038,6 +2039,7 @@ export const zh: Messages = {
     arenaSeason: (season) => `獎勵你在競技場第 ${season} 賽季的最高段位`,
     era1: (rank, board) => `第一紀元名人堂第 ${rank} 名 · ${board}`,
     hiddenZone: { grotto: '獎勵你找到隱藏洞穴', underground: '獎勵你找到地下通道' },
+    ultraBeasts: '獎勵你收服所有究極異獸',
   },
 
   supporters: {
@@ -2422,6 +2424,7 @@ export const zh: Messages = {
   abilities: {
     ...SEASON_ONE_EGGS_WORDS.zh.abilities,
     ...SEASON_ONE_KITS_WORDS.zh.abilities,
+    ...ULTRA_WORDS.zh.abilities,
     overgrow: 'HP低於1/3時，草屬性招式傷害+50%。',
     blaze: 'HP低於1/3時，火屬性招式傷害+50%。',
     torrent: 'HP低於1/3時，水屬性招式傷害+50%。',
@@ -2676,6 +2679,7 @@ export const zh: Messages = {
     caught: (name) => `收服了*${name}*！`,
     calms: (name) => `風平息了*${name}*殘存的怒火。`,
     domains: {
+      ...ULTRA_WORDS.zh.domains,
       kyogre: {
         place: '海底洞窟',
         epithet: '海洋之主',
@@ -3088,6 +3092,7 @@ export const zh: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.zh.moves,
     ...SEASON_ONE_KITS_WORDS.zh.moves,
+    ...ULTRA_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
       upgrades: [
@@ -5559,6 +5564,7 @@ export const zh: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.zh.blurbs,
     ...SEASON_ONE_KITS_WORDS.zh.blurbs,
+    ...ULTRA_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
     squirtle: '防禦型。HP與防禦較高。',
@@ -6236,6 +6242,8 @@ export const zh: Messages = {
     defeated: (name: string) => `你打倒了 *頭目 ${name}*！快拿走_獎勵_。`,
     prize: '*頭目獎勵*：_稀有_卡！',
   },
+  /** The Ultra Wormholes and the Ultra Beasts (`i18n/ultra.ts`). */
+  ultra: ULTRA_WORDS.zh.ui,
   legend: {
     mode: '傳說模式',
     awakening: (name: string) => `${name} 正在覺醒！`,
@@ -6269,6 +6277,8 @@ export const zh: Messages = {
       endless: '最後的戰利品：收服其他22隻後，在_無盡模式_中擊敗它。',
       event: '只在_女巫之夜_：在_夢魘裂縫_中擊敗它。',
       festival: '_廣場祭典_的獎勵：以神秘禮物送達，從不需要對戰。',
+      ultra: '從_究極之洞_出現（單人遊戲每局一個，約8分鐘時）：進去擊敗它。',
+      ultraGift: '收服全部10隻究極異獸後，以神秘禮物送達。',
     },
     rule: (need: number) => (need === 1 ? '在任何模式的單人遊戲中以首領身分擊敗它1次，即可收服。合作模式的勝利不計。' : `在任何模式的單人遊戲中以首領身分擊敗它${need}次，即可收服。合作模式的勝利不計。`),
     shinyRule: '在收服的那場勝利或之後擊敗異色個體，即可解鎖它的異色。',

@@ -14,7 +14,8 @@ import { ENDLESS, REAPER } from '../game/endless'
 import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
 import { TAILOR } from '../data/visitors'
-import { EVENT_LEGENDS, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
+import { isUltraBeast, WORMHOLE } from '../data/ultraBeasts'
+import { EVENT_LEGENDS, giftLegend, LEGEND_IDS, LEGENDS, legendFestival, type LegendId } from '../data/legends'
 import { nationalDex, regionalGen } from '../data/regionalForms'
 
 /**
@@ -64,6 +65,8 @@ export type DexEntry = {
     | { kind: 'lobby' }
     /** `summon`: called in by a playable family's mechanic, never fought (Tatsugiri's Dondozo, `data/seasonOneKits.ts`). */
     | { kind: 'summon' }
+    /** `gift`: a legend that's never fought, only given (Poipole, for capturing the Ultra Beasts, `game/ultraGifts.ts`). */
+    | { kind: 'gift'; id: LegendId }
 }
 
 /** Last national dex number of each generation, in `REGIONS` order. */
@@ -157,6 +160,13 @@ const lobbyEntries = (): DexEntry[] => [{ ...base(TAILOR.dex, TAILOR.name, TAILO
 /** Who a family's mechanic calls in (Tatsugiri's Dondozo), as event Pokémon. */
 const summonEntries = (): DexEntry[] => [{ ...base(977, 'Dondozo', ['water']), role: 'event', source: { kind: 'summon' } }]
 
+/** The legends only ever given, never fought (Poipole): no wild entry stands for them. */
+const giftEntries = (): DexEntry[] =>
+  LEGEND_IDS.filter(giftLegend).map((id) => {
+    const own = LEGENDS[id].line[0]
+    return { ...base(own.dex, own.name, own.types), role: 'legendary', source: { kind: 'gift', id } }
+  })
+
 /** National order, a regional form right after its species. */
 const byDex = (a: DexEntry, b: DexEntry) => nationalDex(a.dex) - nationalDex(b.dex) || a.dex - b.dex
 
@@ -171,7 +181,7 @@ export const gameDex = (): DexEntry[] => {
   const playable = [...STARTER_IDS.flatMap((id) => playableEntries(id, 'starter')), ...HATCHLING_IDS.flatMap((id) => playableEntries(id, 'egg'))]
   const listed = new Set(playable.map((e) => e.dex))
   const wild = [...wildByDex].filter(([dex]) => !listed.has(dex)).map(([, id]) => wildEntry(id))
-  return [...playable, ...wild, eventEntry()].sort(byDex)
+  return [...playable, ...wild, ...giftEntries(), eventEntry()].sort(byDex)
 }
 
 /**
@@ -201,6 +211,8 @@ export type Appearance =
   | { kind: 'rift'; from: number }
   /** An event legend (`EVENT_LEGENDS`): its event's rift may take a rift's place in a haunted run, from `from`. */
   | { kind: 'eventRift'; from: number }
+  /** An Ultra Beast (`data/ultraBeasts.ts`): its Ultra Wormhole opens once a solo run, at `at`. */
+  | { kind: 'wormhole'; at: number }
   /** Hunts the player in endless mode from `at`. */
   | { kind: 'reaper'; at: number }
   /** Lives in a place (`data/places.ts`), coming out from `from`; `boss` for the place's own boss. */
@@ -243,7 +255,13 @@ export const appearances = (id: EnemyId): Appearance[] => {
     return [{ kind: e.kind, at: e.at, count: e.count }]
   })
   const event = EVENT_LEGENDS.some((l) => l === id)
-  const rift: Appearance[] = event ? [{ kind: 'eventRift', from: RIFT.slots[0] }] : isRiftLegend(id) ? [{ kind: 'rift', from: RIFT.slots[0] }] : []
+  const rift: Appearance[] = event
+    ? [{ kind: 'eventRift', from: RIFT.slots[0] }]
+    : isUltraBeast(id)
+      ? [{ kind: 'wormhole', at: WORMHOLE.at + RIFT.omenTime }]
+      : isRiftLegend(id)
+        ? [{ kind: 'rift', from: RIFT.slots[0] }]
+        : []
   const reaper: Appearance[] = id === REAPER ? [{ kind: 'reaper', at: ENDLESS.reaperAt }] : []
   // A place's dwellers come out once the run's stage has their tier (never before the first entrance; a hidden zone's, never before it can open).
   const placed = PLACE_IDS.flatMap((place): Appearance[] => {
@@ -305,7 +323,7 @@ export const dexPages = (): readonly DexPage[] => {
   })
   // A festival legend (Cresselia) is a surprise for now: its page comes with its festival's announcement.
   const legends = LEGEND_IDS.filter((id) => !legendFestival(id)).map((id): DexPage => {
-    const entry = entries.find((e) => e.source.kind === 'wild' && e.source.id === id)
+    const entry = entries.find((e) => (e.source.kind === 'wild' || e.source.kind === 'gift') && e.source.id === id)
     if (!entry) throw new Error(`No Pokédex entry for legend ${id}`)
     return { kind: 'legend', id, slug: entry.slug, entries: [entry] }
   })

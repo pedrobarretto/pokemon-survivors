@@ -1,6 +1,7 @@
 import { realmBookEn as realmBook } from './realmStamps/en'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { ULTRA_WORDS } from './ultra'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2040,6 +2041,7 @@ export const en: Messages = {
     arenaSeason: (season) => `For your peak in Arena season ${season}`,
     era1: (rank, board) => `#${rank} in the Era 1 Hall of Fame · ${board}`,
     hiddenZone: { grotto: 'For finding the Hidden Grotto', underground: 'For finding the Underground' },
+    ultraBeasts: 'For capturing every Ultra Beast',
   },
 
   supporters: {
@@ -2424,6 +2426,7 @@ export const en: Messages = {
   abilities: {
     ...SEASON_ONE_EGGS_WORDS.en.abilities,
     ...SEASON_ONE_KITS_WORDS.en.abilities,
+    ...ULTRA_WORDS.en.abilities,
     overgrow: 'Under 1/3 HP, Grass moves deal +50%.',
     blaze: 'Under 1/3 HP, Fire moves deal +50%.',
     torrent: 'Under 1/3 HP, Water moves deal +50%.',
@@ -2678,6 +2681,7 @@ export const en: Messages = {
     caught: (name) => `*${name}* was caught!`,
     calms: (name) => `The wind silences what was left of *${name}*'s fury.`,
     domains: {
+      ...ULTRA_WORDS.en.domains,
       kyogre: {
         place: 'Seafloor Cavern',
         epithet: 'Lord of the Seas',
@@ -3091,6 +3095,7 @@ export const en: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.en.moves,
     ...SEASON_ONE_KITS_WORDS.en.moves,
+    ...ULTRA_WORDS.en.moves,
     leechSeed: {
       description: 'Lobs seeds at the nearest foes. A seed drains HP over time and heals you; when the foe faints, it jumps to two neighbors.',
       upgrades: [
@@ -5563,6 +5568,7 @@ export const en: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.en.blurbs,
     ...SEASON_ONE_KITS_WORDS.en.blurbs,
+    ...ULTRA_WORDS.en.blurbs,
     bulbasaur: 'Balanced. Regenerates HP.',
     charmander: 'Offensive. More damage, less HP.',
     squirtle: 'Defensive. More HP and defense.',
@@ -6240,6 +6246,8 @@ export const en: Messages = {
     defeated: (name: string) => `You beat the *Alpha ${name}*! Grab the _prize_.`,
     prize: '*Alpha prize*: _rare_ cards!',
   },
+  /** The Ultra Wormholes and the Ultra Beasts (`i18n/ultra.ts`). */
+  ultra: ULTRA_WORDS.en.ui,
   legend: {
     mode: 'Legend Mode',
     awakening: (name: string) => `${name} is awakening!`,
@@ -6273,6 +6281,8 @@ export const en: Messages = {
       endless: 'The last trophy: once the other 22 are caught, beat it in _endless mode_.',
       event: 'Only on _Halloween Night_: beat it in the _Nightmare rift_.',
       festival: 'A _Plaza Festival_ prize: comes as a Mystery Gift, never fought.',
+      ultra: 'Comes through an _Ultra Wormhole_ (one per solo run, around 8 min): beat it inside.',
+      ultraGift: 'Comes as a Mystery Gift once you capture all 10 Ultra Beasts.',
     },
     rule: (need: number) => (need === 1 ? 'Beat it once as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.' : `Beat it ${need} times as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.`),
     shinyRule: 'Beating a shiny one on the catching win, or after, unlocks its shiny.',

@@ -765,6 +765,76 @@ button {
   text-align: center;
 }
 
+/* The legends' grid and, under their heading, the Ultra Beasts': one scroller for both (the grids keep the eggs' columns). */
+.partner-legend-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+}
+
+.partner-legend-scroll > .partner-egg-grid {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+}
+
+/* The Ultra Beasts' heading: a Beast Ball, the name and how many are captured, on a band of Ultra Space violet. */
+.partner-legend-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 6px 0;
+  padding: 4px 10px;
+  font-family: var(--title);
+  font-size: 18px;
+  font-weight: normal;
+  line-height: 1;
+  color: #f8f0ff;
+  background: #2c1c5c;
+  border: 2px solid #8870d0;
+  border-radius: 6px;
+}
+
+.partner-legend-head img {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.partner-legend-head small {
+  margin-left: auto;
+  font-size: 16px;
+  color: #c8b8f8;
+}
+
+/* An Ultra Beast's Beast Ball (10 px at 2×), in the bottom left corner like an event legend's badge. */
+.partner-cell-ultra {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.partner-legend-event img.ultra-ball-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* The Ultra Beast of the week: a ring of prism light around its cell. */
+.partner-cell.ultra-week:not(.selected) {
+  border-color: #c8a8f8;
+  box-shadow:
+    0 0 0 2px #f8a0d0,
+    0 0 0 4px #98d8f8;
+}
+
 /* An event legend's badge (13×12 px at 2×: Darkrai's Noite das Bruxas 2026), in the bottom left corner. */
 .partner-cell-event {
   position: absolute;
@@ -3871,6 +3941,27 @@ button {
 }
 
 .lobby-walker {
+  image-rendering: pixelated;
+}
+
+/* The Ultra Beast of the week's card: its portrait at 1× (cropped to the slot on the small ones) and a Beast Ball (10 px at 2×). */
+.lobby-ultra-portrait {
+  width: 40px;
+  height: 40px;
+  object-fit: none;
+  image-rendering: pixelated;
+  border-radius: 6px;
+}
+
+.lobby-landscape .lobby-ultra-portrait {
+  width: 30px;
+  height: 30px;
+}
+
+.lobby-day-ball {
+  flex: none;
+  width: 20px;
+  height: 20px;
   image-rendering: pixelated;
 }
 

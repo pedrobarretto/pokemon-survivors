@@ -104,6 +104,7 @@ export const siteFr: SiteMessages = {
     night: (at: string, percent: number) => `Boss de la Nuit des Sorcières à ${at}, dans les parties hantées de l’événement (${n(percent)}% de chances)`,
     rift: (from: string) => `Dans son domaine, derrière une faille légendaire, à partir de ${from} (facultatif)`,
     eventRift: (from: string) => `Seulement pendant la Nuit des Sorcières 2026 : lors d’une partie hantée, la faille du Cauchemar peut remplacer une faille, à partir de ${from} (facultatif)`,
+    wormhole: (at) => `Sort d’une Ultra-Brèche, une par partie en solo, vers ${at} (facultatif) ; l’Ultra-Chimère de la semaine vient plus souvent`,
     place: (name: string, from: string) => `Vit dans ${name}, à partir de ${from} (lieu facultatif)`,
     placeBoss: (name: string, from: string) => `Jaillit de la Clé de voûte étrange dans ${name}, à partir de ${from}`,
     lucky: (name: string, from: string) => `Sort des herbes ou d’un trou dans ${name}, à partir de ${from} : timide, vite reparti et riche en EXP`,
@@ -532,7 +533,7 @@ export const siteFr: SiteMessages = {
       opensHead: 'Capacité légendaire',
       pressureTitle: 'Difficultés en Mode Légendaire',
       pressure: 'La Pression s’ajoute à chaque difficulté : voici les multiplicateurs du Mode Légendaire.',
-      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10, plus après chaque finale sans fabuleux)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier', event: 'Nuit des Sorcières 2026 (événement)', festival: 'Festival des Lanternes 2026 (prix)' },
+      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10, plus après chaque finale sans fabuleux)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier', event: 'Nuit des Sorcières 2026 (événement)', festival: 'Festival des Lanternes 2026 (prix)', ultra: 'Ultra-Brèche (une par partie en solo)', ultraGift: 'Cadeau pour avoir capturé les 10 Ultra-Chimères' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Pendant la Nuit des Sorcières 2026 (du 24 octobre au 2 novembre), Darkrai arrive comme légendaire d’événement : il n’apparaît que dans la faille du Cauchemar, qui peut remplacer une faille lors d’une partie hantée, et 2 victoires le capturent. Il joue avec Dark Void, qui endort les foules, et l’inné Bad Dreams, qui blesse ceux qui dorment près de lui. Après l’événement, il retourne dans l’ombre, mais qui l’a capturé continue de le jouer. Il ne compte pas pour Arceus.',
     },

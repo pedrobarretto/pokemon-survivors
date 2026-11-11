@@ -15,11 +15,11 @@ import { DISCORD_GIFT } from '../game/gifts'
 import { missionStatus } from '../game/missions'
 import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/supporters'
-import { formatNumber, LOCALES, locale, t } from '../i18n'
+import { formatNumber, LOCALES, locale, t, formatDay } from '../i18n'
 import { arenaIcon, bulbIcon, chevronIcon, coopIcon, discordIcon, eggsIcon, friendEggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, rankingIcon, ribbonIcon, shopIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
 import { logoScale, titleLogo } from '../render/logo'
-import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
+import { drawPokemon, loadedSprites, loadSpecies, portraitUrl, type Dex } from '../render/sprites'
 import type { Cover, Place } from '../render/titleScene'
 import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue } from './dialogue'
@@ -32,7 +32,10 @@ import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
 import { fetchWall, knownStatus } from '../supporters'
 import { h, later, rich } from './dom'
 import { printedKeys } from './inputLabels'
-import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, today } from './save'
+import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, today, ultraToday } from './save'
+import { beastBallIcon } from '../render/ultraArt'
+import { ultraWeekEnd } from '../game/ultraWeek'
+import { brasiliaDay } from '../game/day'
 import { festivalBanner, festivalCard, festivalCardShows, type FestivalTab } from './festival'
 import { fillHalloweenCard, halloweenCard, halloweenCardShows } from './halloween'
 import { contentLine } from './gifts'
@@ -64,6 +67,7 @@ export type LobbyFocus =
   | 'halloween'
   | 'festival'
   | 'outbreak'
+  | 'ultra'
   | 'challenge'
   | 'missions'
   | 'hall'
@@ -321,6 +325,15 @@ const outbreakCard = () => {
   }
   const el = todayCard('outbreak', walker, m.outbreakName(def.name), m.outbreakLine, iconImg(sparkleIcon(), 'lobby-day-spark'))
   return { el, tick }
+}
+
+/** The Ultra Beast of the week (`game/ultraWeek.ts`): its portrait, its name and a Beast Ball. */
+const ultraCard = () => {
+  const def = ENEMIES[ultraToday()]
+  const w = t().ultra.week
+  const el = todayCard('ultra', h('img', { class: 'lobby-ultra-portrait', src: portraitUrl(def.dex), alt: '' }), w.card(def.name), w.cardLine, iconImg(beastBallIcon(), 'lobby-day-ball'))
+  el.setAttribute('aria-label', `${w.title}: ${def.name}`)
+  return el
 }
 
 /* ---------------- Top bar ---------------- */
@@ -817,6 +830,7 @@ export const titleScreen = (
     festival: () => visitShop('festival'),
     discord: () => openOver(actions.discord),
     outbreak: () => toast(root, rich(`*${ENEMIES[outbreakToday()].name}*: ${t().outbreak.blurb}`), 3600, 'outbreak'),
+    ultra: () => toast(root, rich(t().ultra.week.line(ENEMIES[ultraToday()].name, formatDay(ultraWeekEnd(brasiliaDay(today()))))), 4200, 'ultra'),
     challenge: actions.challenge,
     missions: actions.missions,
     gifts: actions.gifts,
@@ -1024,6 +1038,7 @@ export const titleScreen = (
       pressable(eggsCard(ready, save.eggs.length), 'eggs'),
       pressable(missionsCard(), 'missions'),
       pressable(outbreak.el, 'outbreak'),
+      pressable(ultraCard(), 'ultra'),
     ]
     const date = today().toLocaleDateString(LOCALES[lang].tag, { weekday: 'short', day: 'numeric', month: 'short' })
     const festival = festivalCardShows() ? pressable(kind === 'wide' ? festivalCard() : festivalBanner(), 'festival') : null

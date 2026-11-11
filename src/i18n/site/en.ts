@@ -103,6 +103,7 @@ export const siteEn: SiteMessages = {
     night: (at: string, percent: number) => `Halloween Night boss at ${at}, in the event's haunted runs (${n(percent)}% chance)`,
     rift: (from: string) => `In its domain, behind a legendary rift, from ${from} (optional)`,
     eventRift: (from: string) => `Only on Halloween Night 2026: in a haunted run, the Nightmare rift can take a rift's place, from ${from} (optional)`,
+    wormhole: (at) => `Comes through an Ultra Wormhole, one per solo run, around ${at} (optional); the Ultra Beast of the week comes more often`,
     place: (name: string, from: string) => `Lives in the ${name}, from ${from} (optional place)`,
     placeBoss: (name: string, from: string) => `Breaks out of the Odd Keystone in the ${name}, from ${from}`,
     lucky: (name: string, from: string) => `Pops out of the grass or a hole in the ${name}, from ${from}: shy, quick to leave and worth a lot of EXP`,
@@ -531,7 +532,7 @@ export const siteEn: SiteMessages = {
       opensHead: 'Legendary move',
       pressureTitle: 'Difficulties in Legend Mode',
       pressure: 'Pressure stacks on every difficulty: these are Legend Mode’s multipliers.',
-      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10, rises after each finale without one)', finale: 'Final boss', endless: 'Endless mode, last of all', event: 'Halloween Night 2026 (event)', festival: 'Lantern Festival 2026 (prize)' },
+      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10, rises after each finale without one)', finale: 'Final boss', endless: 'Endless mode, last of all', event: 'Halloween Night 2026 (event)', festival: 'Lantern Festival 2026 (prize)', ultra: 'Ultra Wormhole (one per solo run)', ultraGift: 'Gift for capturing the 10 Ultra Beasts' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'On Halloween Night 2026 (October 24 to November 2), Darkrai comes as an event legend: it only shows up in the Nightmare rift, which can take a rift\'s place in a haunted run, and 2 wins catch it. It plays with Dark Void, which puts crowds to sleep, and the innate Bad Dreams, which hurts whoever sleeps near it. After the event it returns to the shadows, but whoever caught it keeps playing it. It doesn\'t count toward Arceus.',
     },
