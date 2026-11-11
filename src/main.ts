@@ -207,7 +207,7 @@ import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
 import { fakeWall, knownTier, linkedPoll, patreonReturn, stageSupporterStatus, watchSupporterStatus } from './supporters'
 import { suggestionsScreen } from './ui/suggestions'
-import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
+import { banner, clearToasts, focusToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
 import { activeCoopClient, addBots, arenaClient, botsTalk, tabBotLook, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
@@ -4059,7 +4059,8 @@ const frame = (now: number) => {
     if (run === r) {
       syncOverlay(r)
       r.training?.panel.tick?.(t)
-      // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped.
+      // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped; a fight that needs its boss in view (a rift's legend, Hoopa's rings, a Sword's duel) takes them one at a time, off the top.
+      focusToasts(ui, g.rush !== null || g.quests.duel?.stage === 'dueling' || g.rift.arena?.domain?.act === 'battle')
       tickToasts(ui, dt, g.phase !== 'playing')
       // Redraw only when the simulation advanced: halves the work on 120 Hz phones and
       // idles the GPU while a menu is open over a frozen frame (but for `HELD_BACK` and `HELD_KEEP`).
