@@ -1,12 +1,13 @@
 import { dir8, dirTo, fromAngle, retain, TAU } from '../engine/math'
 import { chance, range } from '../engine/rng'
-import { query } from '../engine/spatial'
+import { bucketsNear, mayHold, reread, sealBounds, sealedFor, unseal, widen, type Bucket } from '../engine/spatial'
 import { holdsShots } from './bossFight'
 import { damageEnemy } from './combat'
 import { evolvedImpact, evolvedTick } from './evolvedMoves'
 import { inheritMods, modHit, modTick } from './mods'
 import { lungeStep, mineArmed, mineBlast, rollStep, TURRET_RANGE } from './moveRules'
 import { nearestEnemy } from './queries'
+import { movesOnItsOwn } from './enemies'
 import { inDoorway } from './rift'
 import { atCaveChest } from './cave'
 import { inStandRing } from './mapEvents'
@@ -14,10 +15,10 @@ import { spawnAttack } from './spawn'
 import { typeEvolvedTrail } from './typeEvolutions'
 import { ownerOf } from './players'
 import { isAlly } from './versusRules'
-import type { Attack, Enemy, Game, Motion, Player, Trailer, Turret } from './types'
+import type { Attack, Game, Motion, Player, Trailer, Turret } from './types'
 import * as dm from '../engine/dmath'
 
-const neighbors: number[] = []
+const cells: Bucket[] = []
 
 /**
  * Whether a move carrying the player (a lunge, Rollout) holds them where they
@@ -163,16 +164,24 @@ const PULL_BOSS = 0.25
 
 /** Draws the foes the attack touches toward its center by `pull / mass` px/s, never past it. */
 const pullFoes = (g: Game, a: Attack, dt: number) => {
-  for (const i of query(g.grid, a.x, a.y, reach(a) + 40, neighbors)) {
-    const e = g.enemies[i]
-    if (!e || e.dying >= 0 || e.behavior.kind === 'avatar' || !overlaps(a, e)) continue
-    const dx = a.x - e.x
-    const dy = a.y - (e.y - e.radius)
-    const d = dm.hypot(dx, dy)
-    if (d < 1) continue
-    const step = Math.min(d, (a.pull / e.mass) * (e.boss ? PULL_BOSS : 1) * dt)
-    e.x += (dx / d) * step
-    e.y += (dy / d) * step
+  const hx = halfW(a)
+  const hy = halfH(a)
+  for (let k = 0, n = bucketsNear(g.grid, a.x, a.y, reach(a) + 40, cells); k < n; k++) {
+    const b = cells[k]!
+    if (!b.pinned && sealedFor(g.grid, g.enemies) && !mayHold(b, a.x, a.y, hx, hy, 1, 1)) continue
+    for (const i of b.items) {
+      if (!touches(g, a, i, b.pinned)) continue
+      const e = g.enemies[i]
+      if (!e || e.dying >= 0 || e.behavior.kind === 'avatar') continue
+      const dx = a.x - e.x
+      const dy = a.y - (e.y - e.radius)
+      const d = dm.hypot(dx, dy)
+      if (d < 1) continue
+      const step = Math.min(d, (a.pull / e.mass) * (e.boss ? PULL_BOSS : 1) * dt)
+      e.x += (dx / d) * step
+      e.y += (dy / d) * step
+      widen(g.grid, b, i, e)
+    }
   }
 }
 
@@ -228,26 +237,55 @@ const shoot = (g: Game, a: Attack, t: Turret, dt: number) => {
   }
 }
 
-const overlaps = (a: Attack, e: Enemy) => {
-  const ey = e.y - e.radius // enemy body center sits above its feet
-  if (a.shape.kind === 'circle') return dm.sq(a.x - e.x) + dm.sq(a.y - ey) < dm.sq(a.shape.r + e.radius)
-  const cx = Math.max(a.x - a.shape.w / 2, Math.min(e.x, a.x + a.shape.w / 2))
+/** Whether a foe at (x, y) with radius `r` overlaps the hitbox: its body's center sits `r` above its feet. */
+const overlapsAt = (a: Attack, x: number, y: number, r: number) => {
+  const ey = y - r
+  if (a.shape.kind === 'circle') return dm.sq(a.x - x) + dm.sq(a.y - ey) < dm.sq(a.shape.r + r)
+  const cx = Math.max(a.x - a.shape.w / 2, Math.min(x, a.x + a.shape.w / 2))
   const cy = Math.max(a.y - a.shape.h / 2, Math.min(ey, a.y + a.shape.h / 2))
-  return dm.sq(cx - e.x) + dm.sq(cy - ey) < dm.sq(e.radius)
+  return dm.sq(cx - x) + dm.sq(cy - ey) < dm.sq(r)
 }
 
 const reach = (a: Attack) => (a.shape.kind === 'circle' ? a.shape.r : dm.hypot(a.shape.w, a.shape.h) / 2)
 
+/** How far across and down from its center a hitbox reaches (a foe overlaps it only within these plus its radius). */
+const halfW = (a: Attack) => (a.shape.kind === 'circle' ? a.shape.r : a.shape.w / 2)
+const halfH = (a: Attack) => (a.shape.kind === 'circle' ? a.shape.r : a.shape.h / 2)
+
+/**
+ * Whether the foe at index `i` overlaps the hitbox, from the sealed grid's
+ * copy of where it stands (`xs`, `ys`, `rs`): the horde swapped meanwhile is
+ * sealed anew, and a pinned cell's foe is read again first.
+ */
+const touches = (g: Game, a: Attack, i: number, pinned: boolean) => {
+  const grid = g.grid
+  if (!sealedFor(grid, g.enemies)) sealBounds(grid, g.enemies, movesOnItsOwn)
+  else if (pinned) reread(grid, i, g.enemies)
+  return overlapsAt(a, grid.xs[i]!, grid.ys[i]!, grid.rs[i]!)
+}
+
+/**
+ * Lands the hitbox on the foes it overlaps, in the grid's order. The cells
+ * read are `query`'s for `reach + 40`, and one whose foes all stand out of
+ * reach (`mayHold`, `updateAttacks` seals the grid) goes unread.
+ */
 const collide = (g: Game, a: Attack) => {
-  for (const i of query(g.grid, a.x, a.y, reach(a) + 40, neighbors)) {
-    const e = g.enemies[i]
-    if (!e || e.dying >= 0 || isAlly(g, e) || !overlaps(a, e)) continue
-    if ((a.hits.get(e.id) ?? -1) > g.now) continue
-    if (a.blast > 0) return detonate(g, a, false)
-    a.hits.set(e.id, g.now + a.hitInterval)
-    damageEnemy(g, e, a)
-    if (a.mod) modHit(g, a, e)
-    if (--a.pierce <= 0) return
+  const hx = halfW(a)
+  const hy = halfH(a)
+  for (let k = 0, n = bucketsNear(g.grid, a.x, a.y, reach(a) + 40, cells); k < n; k++) {
+    const b = cells[k]!
+    if (!b.pinned && sealedFor(g.grid, g.enemies) && !mayHold(b, a.x, a.y, hx, hy, 1, 1)) continue
+    for (const i of b.items) {
+      if (!touches(g, a, i, b.pinned)) continue
+      const e = g.enemies[i]
+      if (!e || e.dying >= 0 || isAlly(g, e)) continue
+      if ((a.hits.get(e.id) ?? -1) > g.now) continue
+      if (a.blast > 0) return detonate(g, a, false)
+      a.hits.set(e.id, g.now + a.hitInterval)
+      damageEnemy(g, e, a)
+      if (a.mod) modHit(g, a, e)
+      if (--a.pierce <= 0) return
+    }
   }
 }
 
@@ -319,6 +357,8 @@ export const forgetCooled = (hits: Map<number, number>, now: number) => {
 export const updateAttacks = (g: Game, dt: number) => {
   const held = shotsHeld(g)
   const actor = g.player
+  // The foes stand still through the hitboxes but for a pull (`pullFoes` widens the cells) and a boss's script (`movesOnItsOwn`).
+  sealBounds(g.grid, g.enemies, movesOnItsOwn)
   for (const a of g.attacks) {
     // Held in a time stop: it neither moves, ages nor hits until time flows again.
     if (held && a.age >= 0 && FLYING.has(a.motion.kind)) continue
@@ -340,5 +380,6 @@ export const updateAttacks = (g: Game, dt: number) => {
     if (a.blast > 0 && a.pierce > 0 && a.age >= a.ttl) detonate(g, a, true)
   }
   g.player = actor
+  unseal(g.grid)
   retain(g.attacks, (a) => a.age < a.ttl && a.pierce > 0)
 }
