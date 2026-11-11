@@ -1,6 +1,7 @@
 import { realmBookEn as realmBook } from './realmStamps/en'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2302,6 +2303,7 @@ export const en: Messages = {
     how: (stone, seconds, recharge) =>
       `Beat a rift legendary to get the ${stone}. At the final evolution, Mega Evolve for ${seconds} s (${recharge} s recharge):`,
     effects: {
+      ...GA_FAMILIES_B_WORDS.en.megas,
       venusaur: 'HP +50, armor +3 and 1 HP/s regen. The special becomes Petal Blizzard.',
       charizardX: 'moves +30%, speed +8 and armor +1. The special becomes Dragon Flare, a dash in blue dragon flames.',
       charizardY: 'turns the sunlight harsh (outside rifts), so Fire moves hit ×1.5; moves +25% and area +15%. The special becomes Heat Wave.',
@@ -3091,6 +3093,7 @@ export const en: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.en.moves,
     ...SEASON_ONE_KITS_WORDS.en.moves,
+    ...GA_FAMILIES_B_WORDS.en.moves,
     leechSeed: {
       description: 'Lobs seeds at the nearest foes. A seed drains HP over time and heals you; when the foe faints, it jumps to two neighbors.',
       upgrades: [
@@ -5563,6 +5566,7 @@ export const en: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.en.blurbs,
     ...SEASON_ONE_KITS_WORDS.en.blurbs,
+    ...GA_FAMILIES_B_WORDS.en.blurbs,
     bulbasaur: 'Balanced. Regenerates HP.',
     charmander: 'Offensive. More damage, less HP.',
     squirtle: 'Defensive. More HP and defense.',

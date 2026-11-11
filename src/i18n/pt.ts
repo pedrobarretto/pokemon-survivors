@@ -2,6 +2,7 @@ import type { GameModeId } from '../data/gameModes'
 import { realmBookPt as realmBook } from './realmStamps/pt'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2631,6 +2632,7 @@ export const pt = {
     how: (stone: string, seconds: number, recharge: number) =>
       `Vença um lendário de fenda para ganhar a ${stone}. Na evolução final, Mega Evolua por ${seconds} s (recarga de ${recharge} s):`,
     effects: {
+      ...GA_FAMILIES_B_WORDS.pt.megas,
       venusaur: 'HP +50, defesa +3 e regenera 1 HP/s. O especial vira Petal Blizzard.',
       charizardX: 'golpes +30%, velocidade +8 e defesa +1. O especial vira Dragon Flare, uma investida em chamas azuis de dragão.',
       charizardY: 'faz sol forte (fora das fendas), que deixa golpes de Fogo ×1,5; golpes +25% e área +15%. O especial vira Heat Wave.',
@@ -3463,6 +3465,7 @@ export const pt = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.pt.moves,
     ...SEASON_ONE_KITS_WORDS.pt.moves,
+    ...GA_FAMILIES_B_WORDS.pt.moves,
     leechSeed: {
       description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
       upgrades: [
@@ -5935,6 +5938,7 @@ export const pt = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.pt.blurbs,
     ...SEASON_ONE_KITS_WORDS.pt.blurbs,
+    ...GA_FAMILIES_B_WORDS.pt.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Mais dano, menos vida.',
     squirtle: 'Defensivo. Mais vida e defesa.',

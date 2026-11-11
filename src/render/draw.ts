@@ -53,6 +53,7 @@ import { drawGuard, drawKitStatus, drawTelegraph } from './kitFx'
 import { drawEggAttack, drawEggGround, drawEggPlayer, eggPlayerLook } from './eggMoveFx'
 import { drawEgg3Attack, drawEgg3Ground, drawEgg3Player, egg3PlayerLook } from './eggMove3Fx'
 import { drawSeasonKitAttack, drawSeasonKitGround, drawSeasonKitPlayer } from './seasonOneKitFx'
+import { drawKitBAir, drawKitBAttack, drawKitBGround, kitBPlayerLook } from './gaKitBFx'
 import { drawEgg2Attack, drawEgg2Ground } from './eggMove2Fx'
 import { drawVerbAir, drawVerbGround, drawVerbPlayerAir, drawVerbPlayerGround } from './verbFx'
 import { drawTmAir, drawTmDisc, drawTmGround, drawTmPlayer } from './tmFx'
@@ -271,6 +272,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawEggAttack(ctx, a, t)
       drawEgg3Attack(ctx, a, t)
       drawSeasonKitAttack(ctx, a, t)
+      drawKitBAttack(ctx, a, t)
       drawEgg2Attack(ctx, a, t)
       drawSignatureAttack(ctx, a, t)
       drawTypeEvolvedAttack(ctx, a, t)
@@ -630,7 +632,7 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const tint = calm && p.hurt > 0.2 ? HURT_TINT : isAsleep(p) ? SLEEP_TINT : undefined
   // Burrowed or out of sight (Dig): a faint ghost of the player.
   // Moves can lift the sprite (Body Slam's leap, Heavy Slam's hop, Fly) or hide it under the mound (Dig).
-  const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g)
+  const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g) ?? kitBPlayerLook(g)
   // Invulnerable after a hit: blinking, or a steady see-through when calm.
   const faded = calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink
   // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`); a Ghost type slipping through a tree or a rock (`phasingNow`) too.
@@ -721,6 +723,9 @@ const drawPickups = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: numbe
 
 /* ---------------- Evolution scene ---------------- */
 
+/** Inkay's dex: its evolution scene plays upside down. */
+const INKAY_DEX = 686
+
 /** The evolution scene. `calm` (Flashes: reduced) slows the silhouettes' swap and drops the white screen flashes. */
 const drawEvolution = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
   const evo = localPlayer(g).evolution
@@ -739,8 +744,17 @@ const drawEvolution = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
   const scale = look?.scale ?? 2
   const flashStart = 0.7
   const flashEnd = 3.7
+  // Inkay evolves upside down, as the handhelds held upside down: Malamar lands the right way up.
+  const flipped = evo.from === INKAY_DEX && k < flashEnd
+  if (flipped) {
+    ctx.save()
+    // Mirrored about Inkay's middle, so it turns over where it stands.
+    ctx.translate(0, 2 * cy - Math.round(from.bodyH * scale))
+    ctx.scale(1, -1)
+  }
   if (k < flashStart) {
     drawPokemon(ctx, from, 'Idle', 0, t, cx, cy, { scale })
+    if (flipped) ctx.restore()
   } else if (k < flashEnd) {
     // Alternating silhouettes that speed up, like the handheld games.
     const progress = (k - flashStart) / (flashEnd - flashStart)
@@ -753,6 +767,7 @@ const drawEvolution = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
       ctx.fillStyle = i % 2 ? '#ffffff' : '#a8d8f8'
       ctx.fillRect(Math.round(cx + Math.cos(a) * r), Math.round(cy - 30 + Math.sin(a) * r * 0.6), 2, 2)
     }
+    if (flipped) ctx.restore()
   } else {
     drawPokemon(ctx, to, 'Idle', 0, t, cx, cy, { scale })
     const white = 1 - (k - flashEnd) / 0.5
@@ -901,6 +916,7 @@ const drawPlayerGround = (ctx: Ctx, g: Game, camX: number, camY: number, t: numb
   drawHeatAura(ctx, g, t)
   drawSpecialAura(ctx, g, t)
   drawMegaGround(ctx, g, camX, camY, t, own)
+  drawKitBGround(ctx, g, t)
 }
 
 /** Over a player, from their own state (a guard, buffs, charges, stacks, a called sky): `g` is that player's copy of the game. */
@@ -909,6 +925,7 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawEggPlayer(ctx, g, t)
   drawEgg3Player(ctx, g, t)
   drawSeasonKitPlayer(ctx, g, t)
+  drawKitBAir(ctx, g, t)
   drawSignaturePlayer(ctx, g, t)
   drawTmPlayer(ctx, g, t)
   drawShopTm2Player(ctx, g, t, g.player.y - playerSprites(g).bodyH)

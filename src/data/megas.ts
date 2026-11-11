@@ -501,6 +501,29 @@ export const MEGAS = {
     stats: { might: 0.3, speed: 8, cooldown: -0.1 },
     special: 'nightSlash',
   },
+  /* The Grande Atualização's second batch (`data/gaFamiliesB.ts`). */
+  steelix: {
+    line: 'onix',
+    name: 'Mega Steelix',
+    stone: 'Steelixite',
+    form: 'mega',
+    colors: ['#484c58', '#b8c0d0', '#e8a038'],
+    ability: 'Sand Force',
+    effect: { kind: 'stats' },
+    stats: { armor: 3, damageTaken: -0.2, typeDamage: { steel: 0.3, ground: 0.3, rock: 0.3 } },
+    special: 'heavySlam',
+  },
+  eelektross: {
+    line: 'tynamo',
+    name: 'Mega Eelektross',
+    stone: 'Eelektrossite',
+    form: 'mega',
+    colors: ['#203858', '#6890c8', '#f8d030'],
+    ability: 'Levitate',
+    effect: { kind: 'stats' },
+    stats: { might: 0.3, speed: 8, typeDamage: { electric: 0.2 } },
+    special: 'zapCannon',
+  },
 } as const satisfies Record<string, MegaDef>
 
 export type MegaId = keyof typeof MEGAS

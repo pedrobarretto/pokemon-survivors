@@ -50,6 +50,7 @@ import type { TraitState } from './traits'
 import type { BossFight } from './bossFight'
 import type { ModState } from './mods'
 import type { DamageBonus, Ward } from './kitRules'
+import type { GaKitB } from './gaKitBRules'
 import type { MoveSound } from './moveVerbs'
 import type { TmSource } from './tmRules'
 import type { TmState } from './tms'
@@ -234,6 +235,8 @@ export type Player = {
   versus?: VersusSeat
   /** Temporada 1's mechanic families (`seasonOneKitRules.ts`): their running state. Absent for everyone else. */
   kit?: SeasonKit
+  /** The Grande Atualização's second batch of families (`gaKitBRules.ts`): their running state. Absent for everyone else. */
+  kitB?: GaKitB
 }
 
 /** One player's run stats (damage dealt is `damageByMove`). `tally` counts their own faints only in co-op. */
@@ -391,6 +394,9 @@ export type Visual =
   | LegendaryVisual2
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
+  /** The second batch's families (`gaKitBMoves.ts`, `gaKitBSystem.ts`), drawn by `render/gaKitBFx.ts`; `kitBHit` is a kit's unseen hitbox. */
+  | 'kitBHit' | 'kitBTail' | 'kitBEgg' | 'kitBSphere' | 'kitBWing' | 'kitBFist' | 'kitBSalt' | 'kitBCut' | 'kitBSpark' | 'kitBLatch'
+  | 'kitBCharge' | 'kitBShot' | 'kitBKick' | 'kitBRing' | 'kitBSlam' | 'kitBSplash'
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'

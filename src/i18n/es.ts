@@ -1,6 +1,7 @@
 import { realmBookEs as realmBook } from './realmStamps/es'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2304,6 +2305,7 @@ export const es: Messages = {
     how: (stone, seconds, recharge) =>
       `Vence a un legendario en una grieta para ganar la ${stone}. En la evolución final, megaevoluciona por ${seconds} s (recarga de ${recharge} s):`,
     effects: {
+      ...GA_FAMILIES_B_WORDS.es.megas,
       venusaur: 'HP +50, defensa +3 y regenera 1 HP/s. El especial pasa a ser Petal Blizzard.',
       charizardX: 'movimientos +30%, velocidad +8 y defensa +1. El especial pasa a ser Dragon Flare, una embestida en llamas azules de dragón.',
       charizardY: 'hace sol fuerte (fuera de las grietas), que deja los movimientos de Fuego ×1,5; movimientos +25% y área +15%. El especial pasa a ser Heat Wave.',
@@ -3093,6 +3095,7 @@ export const es: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.es.moves,
     ...SEASON_ONE_KITS_WORDS.es.moves,
+    ...GA_FAMILIES_B_WORDS.es.moves,
     leechSeed: {
       description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
       upgrades: [
@@ -5565,6 +5568,7 @@ export const es: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.es.blurbs,
     ...SEASON_ONE_KITS_WORDS.es.blurbs,
+    ...GA_FAMILIES_B_WORDS.es.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Más daño, menos vida.',
     squirtle: 'Defensivo. Más vida y defensa.',

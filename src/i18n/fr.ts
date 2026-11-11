@@ -1,6 +1,7 @@
 import { realmBookFr as realmBook } from './realmStamps/fr'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2300,6 +2301,7 @@ export const fr: Messages = {
     how: (stone, seconds, recharge) =>
       `Bats un légendaire de faille pour obtenir la ${stone}. Au stade final, méga-évolue pendant ${seconds} s (recharge de ${recharge} s) :`,
     effects: {
+      ...GA_FAMILIES_B_WORDS.fr.megas,
       venusaur: 'PV +50, armure +3 et régénère 1 PV/s. L’attaque spéciale devient Petal Blizzard.',
       charizardX: 'capacités +30%, vitesse +8 et armure +1. L’attaque spéciale devient Dragon Flare, une ruée dans des flammes de dragon bleues.',
       charizardY: 'rend le soleil intense (hors des failles), donc les capacités Feu frappent ×1,5 ; capacités +25% et zone +15%. L’attaque spéciale devient Heat Wave.',
@@ -3088,6 +3090,7 @@ export const fr: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.fr.moves,
     ...SEASON_ONE_KITS_WORDS.fr.moves,
+    ...GA_FAMILIES_B_WORDS.fr.moves,
     leechSeed: {
       description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
       upgrades: [
@@ -5559,6 +5562,7 @@ export const fr: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.fr.blurbs,
     ...SEASON_ONE_KITS_WORDS.fr.blurbs,
+    ...GA_FAMILIES_B_WORDS.fr.blurbs,
     bulbasaur: 'Équilibré. Régénère ses PV.',
     charmander: 'Offensif. Plus de dégâts, moins de PV.',
     squirtle: 'Défensif. Plus de PV et de défense.',
