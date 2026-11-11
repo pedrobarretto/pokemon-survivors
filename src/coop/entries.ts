@@ -22,6 +22,8 @@ export type Input =
   | { k: 'pick'; screen: PickScreen; round: number; index: number }
   | { k: 'reroll' | 'skip'; round: number }
   | { k: 'banish'; round: number; index: number }
+  /** Largar item: the held item at `index` goes (`game/itemDrop.ts`). */
+  | { k: 'drop'; index: number }
   | { k: 'stone'; mega: MegaId }
   | { k: 'endless'; vote: boolean }
   /** Arena: a quick chat line, a ping, an emote, a surrender vote (`game/versusSocial.ts`). */
@@ -36,14 +38,14 @@ export type Input =
 
 /**
  * Inputs that must get through (resent until seen in a frame): picks, the
- * screen buttons, a stone, a vote (a surrender's too; a resent one counts
+ * screen buttons, a dropped item, a stone, a vote (a surrender's too; a resent one counts
  * once), the Arena's lock and priority. A chat line, a ping, an emote or a cast lost on
  * a dropped link is just gone.
  */
-export type ReliableInput = Extract<Input, { k: 'pick' | 'reroll' | 'skip' | 'banish' | 'stone' | 'endless' | 'surrender' | 'lock' | 'prio' }>
+export type ReliableInput = Extract<Input, { k: 'pick' | 'reroll' | 'skip' | 'banish' | 'drop' | 'stone' | 'endless' | 'surrender' | 'lock' | 'prio' }>
 
 export const isReliable = (i: Input): i is ReliableInput =>
-  i.k === 'pick' || i.k === 'reroll' || i.k === 'skip' || i.k === 'banish' || i.k === 'stone' || i.k === 'endless' || i.k === 'surrender' || i.k === 'lock' || i.k === 'prio'
+  i.k === 'pick' || i.k === 'reroll' || i.k === 'skip' || i.k === 'banish' || i.k === 'drop' || i.k === 'stone' || i.k === 'endless' || i.k === 'surrender' || i.k === 'lock' || i.k === 'prio'
 
 /** The values of an input on the wire, a nonce last for the reliable ones (the simulation never reads it). */
 export const inputValues = (i: Input, nonce = 0): Scalar[] => {
@@ -64,6 +66,8 @@ export const inputValues = (i: Input, nonce = 0): Scalar[] => {
       return [i.round, nonce]
     case 'banish':
       return [i.round, i.index, nonce]
+    case 'drop':
+      return [i.index, nonce]
     case 'stone':
       return [i.mega, nonce]
     case 'endless':
@@ -107,6 +111,9 @@ export const toTickEntry = (e: Entry, slots: ReadonlyMap<number, number>): TickE
     case 'banish':
       raw.round = a
       raw.index = b
+      break
+    case 'drop':
+      raw.index = a
       break
     case 'stone':
       raw.mega = a

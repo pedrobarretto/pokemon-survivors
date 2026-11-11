@@ -161,7 +161,7 @@ import { castNeeds, runSprites, type SpriteNeed } from './render/spriteNeeds'
 import { setMarkerInsets } from './render/mapEvents'
 import { frameRaid, setRaidRoom } from './render/teraFx'
 import { consumableIcon } from './render/props'
-import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
+import { berryIcon, curseIcon, eggIcon, itemIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
 import { denToast, dressBanner, raidBanner, shardToast, teraStrip } from './ui/teraNews'
@@ -209,6 +209,8 @@ import { pokedexScreen } from './ui/pokedex'
 import { profileEditor, profileScreen } from './ui/profile'
 import { rankingScreen, rankPanel } from './ui/ranking'
 import { confirmDialog, flashScreen, levelUp, pauseMenu, results, textBox, type Screen } from './ui/screens'
+import { itemSwap } from './ui/itemSwap'
+import { dropItem, needsSwap } from './game/itemDrop'
 import { abilityPick, branchPick } from './ui/abilityPick'
 import { tmPick } from './ui/tmPick'
 import { isSettingsOpen, openSettings, settings, toggleMute } from './ui/settings'
@@ -1959,10 +1961,27 @@ const syncOverlay = (r: Run) => {
   r.overlay = null
   r.shown = { phase, offers: me.offers }
   r.hud.setMenuOpen(phase !== 'playing' && phase !== 'evolving')
+  // Largar item: solo it lands on the spot (into the replay; the Dojo's never is); co-op sends it as a tick entry.
+  const drop = (index: number) =>
+    c ? c.team.drop(index) : r.training ? dropItem(g, index) : (recordEvent(r.recorder, ['drop', index]), dropItem(g, index))
   // A pick: solo it plays on the spot (and goes into the replay); co-op sends it with the screen's round (`ui/teamLayer.ts`).
-  const pick = (offer: Offer) => {
+  const take = (offer: Offer) => {
     runMoment('pick')
     return c ? c.team.pick(me, offer) : (recordEvent(r.recorder, ['offer', me.offers.indexOf(offer)]), chooseOffer(g, offer))
+  }
+  // A new item's card on a full build is a swap: which item goes first, then the pick (back reopens the cards).
+  const pick = (offer: Offer) => {
+    if (!needsSwap(me, offer) || offer.kind !== 'item') return take(offer)
+    r.overlay?.dispose()
+    r.overlay = itemSwap(ui, input, g, offer.id, (index) => {
+      if (index === null) {
+        r.shown = null
+        return syncOverlay(r)
+      }
+      drop(index)
+      take(offer)
+    })
+    if (c) c.team.decorate(r.overlay, g, me, phase)
   }
   switch (phase) {
     case 'levelup':
@@ -2006,6 +2025,7 @@ const syncOverlay = (r: Run) => {
           report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
           coop: { sound: () => (toggleMute(), !settings().muted), soundOn: !settings().muted },
           surrender: g.versus ? () => c.driver.send({ kind: 'surrender', vote: true }) : undefined,
+          drop: g.versus ? undefined : drop,
         })
         break
       }
@@ -2016,6 +2036,7 @@ const syncOverlay = (r: Run) => {
         quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : r.rush ? leaveRush() : afterRun(() => showMenu())),
         settings: (back) => runSettings(r, back),
         report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
+        drop,
       })
       break
     case 'gameover':
@@ -2449,6 +2470,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'banish':
       // The level-up screen plays the toss itself.
       return
+    case 'itemDropped':
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: itemIcon(e.id), alt: '' }), rich(t().itemDrop.dropped(ITEMS[e.id].name))), 2200, 'itemDropped')
     case 'consumable': {
       const def = CONSUMABLES[e.item]
       playSfx(def.sfx)

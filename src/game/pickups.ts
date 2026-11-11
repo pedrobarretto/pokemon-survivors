@@ -1,4 +1,5 @@
 import { dirTo, retain } from '../engine/math'
+import { restTurnedDown } from './itemDrop'
 import { range } from '../engine/rng'
 import { healPlayer } from './combat'
 import { burst, floatText, shakeScreen } from './effects'
@@ -133,6 +134,7 @@ export const decidePokeball = (g: Game, picked: Offer) => {
   const [found] = g.player.offers
   if (!found || found.kind === 'pass') return
   const take = picked.kind !== 'pass'
+  if (!take) restTurnedDown(g.player, [found], picked)
   if (take) applyOffer(g, found)
   g.events.push({ kind: 'pokeball', offer: found, moment: take ? 'taken' : 'left' })
 }

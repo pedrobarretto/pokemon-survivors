@@ -1,4 +1,6 @@
 import type { DexRegion } from '../data/nationalDex'
+import { GALLOP_WORDS } from './gallop'
+import { ITEM_DROP_WORDS } from './itemDrop'
 import type { GameModeId } from '../data/gameModes'
 import { realmBookPt as realmBook } from './realmStamps/pt'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
@@ -1267,6 +1269,7 @@ export const pt = {
     inviteLater: 'Agora não',
   },
 
+  itemDrop: ITEM_DROP_WORDS.pt,
   levelUp: {
     title: (name: string, level: number) => `${name} subiu para o Nv ${level}!`,
     ready: 'PRONTO!',
@@ -3550,6 +3553,7 @@ export const pt = {
     ...GA_FAMILIES_B_WORDS.pt.moves,
     ...GA_FAMILIES_A_WORDS.pt.moves,
     ...ROCKET_FAMILY_WORDS.pt.moves,
+    ...GALLOP_WORDS.pt,
     ...ULTRA_WORDS.pt.moves,
     ...LEGEND_PATHS_WORDS.pt.moves,
     ...QUEST_WORDS.pt.moves,

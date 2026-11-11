@@ -65,6 +65,7 @@ import { updateLegendary } from './legendary'
 import { createSpecialState, specialBusy, specialSpeedFactor, updateSpecial } from './special'
 import { AWAKENING, avoidLegend, createLegendState, formAfter, legendLook, pendingAwakening, updateLegend } from './legend'
 import { decidePokeball, updatePickups } from './pickups'
+import { restTurnedDown } from './itemDrop'
 import { rollShiny, SHINY_ODDS, shinyBoost } from './shiny'
 import { updateProps } from './props'
 import { withHoney, withOutbreak } from './outbreak'
@@ -235,6 +236,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     ...runCharges(setup.ranks),
     banished: new Set(),
     banishedItems: new Set(),
+    dropped: [],
     castMods: 0,
     damageByMove: {},
     pendingLevelUps: 0,
@@ -780,6 +782,7 @@ const pickOffer = (g: Game, offer: Offer) => {
     p.offers = branchOffers(offer)
     return
   }
+  restTurnedDown(p, p.offers, offer)
   applyOffer(g, offer)
   if ('rarity' in offer && offer.rarity === 'shiny') {
     p.offers = rollOffers(loadout(g), g.rng, 3, rolling(g))

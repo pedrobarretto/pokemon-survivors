@@ -66,6 +66,8 @@ export const coopDriver = (client: CoopClient, onLobby: () => void = () => {}): 
           return void client.input({ k: e.kind, round: e.round })
         case 'banish':
           return void client.input({ k: 'banish', round: e.round, index: e.index })
+        case 'drop':
+          return void client.input({ k: 'drop', index: e.index })
         case 'stone':
           return void client.input({ k: 'stone', mega: e.mega })
         case 'endless':

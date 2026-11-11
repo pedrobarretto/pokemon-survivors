@@ -1,4 +1,6 @@
 import type { DexRegion } from '../data/nationalDex'
+import { GALLOP_WORDS } from './gallop'
+import { ITEM_DROP_WORDS } from './itemDrop'
 import { realmBookEs as realmBook } from './realmStamps/es'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
@@ -1059,6 +1061,7 @@ export const es: Messages = {
     inviteLater: 'Ahora no',
   },
 
+  itemDrop: ITEM_DROP_WORDS.es,
   levelUp: {
     title: (name, level) => `¡${name} subió al Nv ${level}!`,
     ready: '¡LISTO!',
@@ -3179,6 +3182,7 @@ export const es: Messages = {
     ...GA_FAMILIES_B_WORDS.es.moves,
     ...GA_FAMILIES_A_WORDS.es.moves,
     ...ROCKET_FAMILY_WORDS.es.moves,
+    ...GALLOP_WORDS.es,
     ...ULTRA_WORDS.es.moves,
     ...LEGEND_PATHS_WORDS.es.moves,
     ...QUEST_WORDS.es.moves,

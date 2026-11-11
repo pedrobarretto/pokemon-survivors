@@ -33,6 +33,7 @@ import { bagDeltas } from './bag'
 import { rulesOf, versusStats } from './versusRules'
 import type { VersusState } from './versus'
 import { BAG_ITEMS } from '../data/shop'
+import { needsSwap, restingItems, swapItems } from './itemDrop'
 import { ownAttack, setPhase } from './players'
 import type { Game, Offer, OwnedItem, OwnedMove, PrizeSource, Rarity } from './types'
 
@@ -64,7 +65,7 @@ export const gainXp = (g: Game, amount: number, growth = g.player.stats.growth) 
  * `banished`: moves forgotten this run (Esquecer) or fused into a duo move,
  * and `banishedItems` the items forgotten, never offered again (kept apart:
  * Metronome is a move and an item). `curses`: the cursed items held (Choice Band
- * stops new moves).
+ * stops new moves). `resting`: items dropped lately (`DROP_REST` in `itemDrop.ts`), left out for now.
  */
 export type Loadout = {
   starter: PlayableId
@@ -75,6 +76,7 @@ export type Loadout = {
   fresh?: boolean
   banished?: ReadonlySet<MoveId>
   banishedItems?: ReadonlySet<ItemId>
+  resting?: readonly ItemId[]
   curses?: readonly CurseId[]
   /** The Arena's kit (`versusPacing.ts`): it learns new moves on its own screens, so the level-up offers none, nor duo fusions. */
   kit?: boolean
@@ -89,12 +91,13 @@ export const loadout = (g: Game): Loadout => ({
   fresh: g.player.freshMoves > 0,
   banished: g.player.banished,
   banishedItems: g.player.banishedItems,
+  resting: restingItems(g.player),
   curses: g.player.curses.held,
   kit: g.player.versus !== undefined,
 })
 
 /** Every upgrade the player could pick right now, with selection weights. */
-export const offerPool = ({ starter, moves, items, stage, branch = null, fresh, banished, banishedItems, curses, kit }: Loadout): Array<readonly [Offer, number]> => {
+export const offerPool = ({ starter, moves, items, stage, branch = null, fresh, banished, banishedItems, resting, curses, kit }: Loadout): Array<readonly [Offer, number]> => {
   const ownedMoves = new Map(moves.map((m) => [m.id, m.level]))
   const ownedItems = new Map(items.map((i) => [i.id, i.level]))
   const learnset = runLearnset(starter, branch, stage)
@@ -119,12 +122,14 @@ export const offerPool = ({ starter, moves, items, stage, branch = null, fresh, 
     !learnset.includes(m.id) && !banished?.has(m.id) && m.level < maxMoveLevel(m.id) ? [[{ kind: 'move', id: m.id, level: m.level + 1 }, UPGRADE_WEIGHT]] : [],
   )
 
+  // A full build is still offered a held move's paired item, to swap in (`swapItems`): the shell asks which item goes.
+  const swaps = swapItems(moves, items)
   const itemOffers = ITEM_IDS.flatMap((id: ItemId): Array<readonly [Offer, number]> => {
-    if (banishedItems?.has(id)) return []
+    if (banishedItems?.has(id) || resting?.includes(id)) return []
     const level = ownedItems.get(id)
     const def: ItemDef = ITEMS[id]
     if (level === undefined && def.boosts && !learnsetTypes.has(def.boosts)) return []
-    if (level === undefined) return items.length < MAX_ITEMS ? [[{ kind: 'item', id, level: 1 }, 0.8]] : []
+    if (level === undefined) return items.length < MAX_ITEMS || swaps.includes(id) ? [[{ kind: 'item', id, level: 1 }, 0.8]] : []
     return level < ITEMS[id].levels.length ? [[{ kind: 'item', id, level: level + 1 }, 1]] : []
   })
 
@@ -222,6 +227,8 @@ export const rollOffers = (loadout: Loadout, rng: Rng, count = 3, opts: RollOpti
     picked.push(pool[index]![0])
     pool.splice(index, 1)
   }
+  // Swap cards alone never force a swap: the berry sits beside them.
+  if (picked.length > 0 && picked.length < count && picked.every((o) => needsSwap(loadout, o))) picked.push({ kind: 'berry' })
   const shinyOdds = opts.shiny
   const offers = shinyOdds === undefined ? picked : picked.map((o) => withRarity(o, rng(), shinyOdds, opts.rare))
   return offers.length > 0 ? offers : [{ kind: 'berry' }]
@@ -317,7 +324,8 @@ export const applyOffer = (g: Game, offer: Offer) => {
     case 'item': {
       const owned = p.items.find((i) => i.id === offer.id)
       if (owned) owned.level = offer.level
-      else p.items.push({ id: offer.id, level: offer.level })
+      // A swap card drops an item first (`dropItem`); never past the slots.
+      else if (p.items.length < MAX_ITEMS) p.items.push({ id: offer.id, level: offer.level })
       recomputeStats(g)
       break
     }

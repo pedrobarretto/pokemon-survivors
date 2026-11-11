@@ -32145,3 +32145,191 @@ span.arena-hub-face {
   font-size: 20px;
   color: #c08810;
 }
+
+/* ---------- Largar item (`ui/itemSwap.ts`) ---------- */
+
+/* The pause menu's held items are buttons: a tap asks to let one go. */
+.loadout-row.drop-row {
+  width: 100%;
+  min-height: 34px;
+  padding: 2px 6px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.loadout-row.drop-row:hover,
+.loadout-row.drop-row:focus-visible {
+  border-color: var(--dk-line, #c8d0e0);
+  background: var(--dk-surface-1, #f4f6fb);
+}
+
+.loadout-row .drop-mark {
+  font-family: var(--title);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--dk-ink-3, #808898);
+}
+
+.loadout-row.drop-row:hover .drop-mark {
+  color: color-mix(in srgb, #c03030 var(--dk-lift, 100%), #fff);
+}
+
+.drop-hint {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--dk-ink-3, #808898);
+}
+
+/* A full build's new-item card: swap it in. */
+.tag-swap {
+  color: color-mix(in srgb, #2878c8 var(--dk-lift, 100%), #fff);
+}
+
+.offer.offer-swap {
+  border-style: dashed;
+}
+
+.swap-note {
+  color: color-mix(in srgb, #2868b0 var(--dk-lift, 100%), #fff);
+}
+
+.item-swap .swap-box {
+  max-width: min(460px, 94vw);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  border-color: #2878c8;
+  box-shadow: 0 0 0 2px #10284a, 0 0 22px rgba(40, 120, 200, 0.35);
+}
+
+.swap-incoming,
+.swap-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.swap-incoming {
+  align-self: center;
+  padding: 6px 14px 6px 8px;
+  background: var(--dk-wash-blue, #e8f0ff);
+  border: 2px solid #2878c8;
+  border-radius: 3px;
+}
+
+.swap-icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.swap-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.swap-body b {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: normal;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.swap-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--dk-ink-3, #707088);
+}
+
+.swap-pair.ready {
+  color: color-mix(in srgb, #2868b0 var(--dk-lift, 100%), #fff);
+}
+
+.swap-pair img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+.swap-prompt,
+.swap-note {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.05;
+  text-align: center;
+  color: var(--dk-ink-2, #505870);
+}
+
+.item-swap .swap-note,
+.drop-confirm .swap-note {
+  font-size: 15px;
+  color: var(--dk-ink-3, #808898);
+}
+
+.swap-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.swap-row {
+  min-height: 48px;
+  padding: 6px 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--dk-surface-0, #fff);
+  border: 2px solid var(--dk-line, #c8d0e0);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.swap-row.selected,
+.swap-row:hover {
+  border-color: #c03030;
+  background: var(--dk-wash-red, #fff0f0);
+}
+
+.drop-confirm .dialog {
+  max-width: min(420px, 94vw);
+  align-items: center;
+}
+
+.drop-confirm .swap-note {
+  max-width: 34ch;
+}
+
+/* A phone held upright: one item a row. On its side: the note and the hint go so the six fit. */
+@media (max-width: 420px) {
+  .swap-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .item-swap .swap-box {
+    padding: 8px 14px;
+    gap: 5px;
+  }
+  .swap-list {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .item-swap .swap-note,
+  .item-swap .hint,
+  .swap-prompt {
+    display: none;
+  }
+}
