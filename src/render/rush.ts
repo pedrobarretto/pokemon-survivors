@@ -4,7 +4,7 @@ import { ENEMIES } from '../data/enemies'
 import { RUSH } from '../data/rush'
 import { rushGate } from '../game/rush'
 import type { Game } from '../game/types'
-import { drawPokemon, loadedSprites } from './sprites'
+import { drawPokemon, sprites } from './sprites'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -63,8 +63,7 @@ export const drawRushGround = (ctx: Ctx, g: Game, t: number) => {
 export const drawRushAir = (ctx: Ctx, g: Game, t: number) => {
   const r = g.rush
   if (!r || r.lineup[r.ring] === 'hoopa' || r.stage === 'cleared') return
-  const s = loadedSprites(ENEMIES.hoopa.dex)
-  if (!s) return
+  const s = sprites(ENEMIES.hoopa.dex)
   const gate = rushGate(r)
   const bob = Math.round(Math.sin(t * 2.4) * 2)
   drawPokemon(ctx, s, 'Idle', 0, t, Math.round(gate.x + 40), Math.round(gate.y - 44 + bob))

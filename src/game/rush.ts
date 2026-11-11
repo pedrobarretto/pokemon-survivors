@@ -13,7 +13,7 @@ import { legendFell } from './legendScene'
 import { winRun } from './coop'
 import { MAX_MOVES, recomputeStats, xpFor } from './leveling'
 import { maxMoveLevel } from './moves'
-import { standing } from './players'
+import { aimScreen, standing } from './players'
 import { applyBuild, setAbility, setForm, setMove, trainingMoves } from './training'
 import { setArchetype } from './terrain'
 import type { Enemy, Game } from './types'
@@ -172,4 +172,30 @@ export const updateRush = (g: Game, dt: number) => {
     r.stage = 'gate'
     r.clock = RUSH.gate
   }
+}
+
+/** How far from the view's edges the player always stays while the screen frames the ring's legend too, px (the HUD sits on top). */
+const FRAME = { side: 44, top: 96, bottom: 48 } as const
+
+/**
+ * The rush's camera (`followPlayers`' frame): on the middle of the player and
+ * the ring's legend, a little low so the HUD doesn't cover it, never so far
+ * the player leaves the frame, easing there as a domain's does.
+ */
+export const rushCamera = (g: Game, dt: number) => {
+  const r = g.rush
+  if (!r) return false
+  const p = g.player
+  const { w, h } = g.view
+  let x = p.x - w / 2
+  let y = p.y - 10 - h / 2
+  const boss = g.enemies.find((e) => e.id === r.bossId && e.dying < 0)
+  const at = boss ?? (r.stage === 'gate' ? rushGate(r) : null)
+  if (at) {
+    x = Math.max(p.x - (w - FRAME.side), Math.min(p.x - FRAME.side, (p.x + at.x) / 2 - w / 2))
+    y = Math.max(p.y - (h - FRAME.bottom), Math.min(p.y - FRAME.top, (p.y + at.y) / 2 - h / 2 - 24))
+  }
+  const k = 1 - dm.exp(-5 * dt)
+  aimScreen(g, p, p.screen.x + (x - p.screen.x) * k, p.screen.y + (y - p.screen.y) * k)
+  return true
 }

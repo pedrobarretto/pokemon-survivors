@@ -7,7 +7,7 @@ import { DUEL } from '../data/quests'
 import { roamerBody, roamerShown } from '../game/roamers'
 import type { Game } from '../game/types'
 import { drawEdgeMarker } from './mapEvents'
-import { drawPokemon, loadedSprites } from './sprites'
+import { drawPokemon, sprites } from './sprites'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -102,13 +102,12 @@ export const drawQuestGround = (ctx: Ctx, g: Game, t: number) => {
 export const drawQuestAir = (ctx: Ctx, g: Game, t: number) => {
   const d = g.quests.duel
   if (d?.stage === 'waiting') {
-    const s = loadedSprites(ENEMIES[d.sword].dex)
-    if (s) {
-      const sx = d.x
-      const sy = d.y - 36
-      blitEllipse(ctx, Math.max(6, Math.round(s.bodyW * 0.6)), 3, 'rgba(10,8,30,0.4)', sx, sy)
-      drawPokemon(ctx, s, 'Idle', dir8(g.player.x - sx, g.player.y - sy), t, sx, sy)
-    }
+    // Asking for them keeps them streaming in (a puff of dust until they land).
+    const s = sprites(ENEMIES[d.sword].dex)
+    const sx = d.x
+    const sy = d.y - 36
+    blitEllipse(ctx, Math.max(6, Math.round(s.bodyW * 0.6)), 3, 'rgba(10,8,30,0.4)', sx, sy)
+    drawPokemon(ctx, s, 'Idle', dir8(g.player.x - sx, g.player.y - sy), t, sx, sy)
   }
   const r = g.quests.roam
   const e = roamerBody(g)

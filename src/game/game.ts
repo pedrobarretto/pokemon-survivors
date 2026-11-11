@@ -37,7 +37,7 @@ import {
 } from './leveling'
 import { createMapEvents, updateMapEvents } from './mapEvents'
 import { createQuests, updateQuests, type WildStart } from './quests'
-import { updateRush } from './rush'
+import { rushCamera, updateRush } from './rush'
 import { createCurseState } from './curses'
 import { curseCast, decideCurse, updateCurses } from './curseSystem'
 import { updateDuos } from './duoMoves'
@@ -1089,7 +1089,7 @@ const stepRush = (g: Game, inputs: readonly StepInput[], dt: number) => {
   updateConsumables(g, dt)
   updateEffects(g, dt)
   updateRush(g, dt)
-  followPlayers(g, dt, domainCamera)
+  followPlayers(g, dt, rushCamera)
 }
 
 /**
