@@ -36,16 +36,21 @@ const REGIONAL_FORMS: Readonly<Record<number, { national: number; region: Region
   10250: paldea(128), 10251: paldea(128), 10252: paldea(128), 10253: paldea(194),
 }
 
+/** Other forms with an id of their own that aren't a region's: their species' number and generation. */
+const OTHER_FORMS: Readonly<Record<number, { national: number; gen: number }>> = {
+  10263: { national: 999, gen: 9 }, // Gimmighoul's Roaming Form (SpriteCollab has no Chest Form sheets; the Rocket Game Corner's prize)
+}
+
 /** The national dex number to show for a species (a regional form shows its species'). */
-export const nationalDex = (dex: number) => REGIONAL_FORMS[dex]?.national ?? dex
+export const nationalDex = (dex: number) => REGIONAL_FORMS[dex]?.national ?? OTHER_FORMS[dex]?.national ?? dex
 
 /** The region a regional form is of, undefined for any other species. */
 export const regionOf = (dex: number): RegionId | undefined => REGIONAL_FORMS[dex]?.region
 
-/** The generation of a regional form (its region's), undefined for any other species. */
+/** The generation of a regional form (its region's) or another form (`OTHER_FORMS`), undefined for any other species. */
 export const regionalGen = (dex: number) => {
   const region = regionOf(dex)
-  return region && REGIONS[region].gen
+  return region ? REGIONS[region].gen : OTHER_FORMS[dex]?.gen
 }
 
 /** Every regional form's dex number, in the table's order. */

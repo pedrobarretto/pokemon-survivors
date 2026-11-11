@@ -5,6 +5,8 @@ import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { ROCKET_WORDS } from './rocket/words'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -733,7 +735,7 @@ export const fr: Messages = {
       offline: 'Impossible de charger les villes. Tu peux quand même entrer.',
       back: 'Retour',
     },
-    rooms: { plaza: 'Place', pier: 'Jetée', cafe: 'Café', trail: 'Bosquet des bases', arcade: "Salle d'arcade" },
+    rooms: { plaza: 'Place', pier: 'Jetée', cafe: 'Café', trail: 'Bosquet des bases', arcade: "Salle d'arcade", gameCorner: ROCKET_WORDS.fr.corner.name },
     base: (handle: string) => `Base de @${handle}`,
     status: {
       connecting: 'Connexion…',
@@ -801,6 +803,9 @@ export const fr: Messages = {
       gameTable: 'Table de jeux',
       cabinet: 'Borne d\'arcade',
       prizes: 'Prix',
+      tokens: ROCKET_WORDS.fr.corner.spots.tokens,
+      rocketPrizes: ROCKET_WORDS.fr.corner.spots.prizes,
+      poster: ROCKET_WORDS.fr.corner.spots.poster,
     },
     use: 'Utiliser',
     pieces: {
@@ -1568,7 +1573,7 @@ export const fr: Messages = {
       wallpaper: 'Fond d’écran de la Boîte PC.',
     },
     styles: {
-      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes', era1: 'Ère 1', era1Champion: 'Couronne de l’Ère 1', nationalDex: 'Pokédex National' },
+      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes', era1: 'Ère 1', era1Champion: 'Couronne de l’Ère 1', rocket: ROCKET_WORDS.fr.frame, nationalDex: 'Pokédex National' },
       background: { night: 'Nuit étoilée', meadow: 'Route 1', forest: 'Forêt de Jade', cave: 'Mont Sélénite', snow: 'Mont Argenté', tower: 'Tour Pokémon de Lavanville', supporter: 'Ciel doré', halloween: 'Nuit des Sorcières', friendship: 'Amitié', era1Champion: 'Trône de l’Ère 1' },
       wallpaper: { classic: 'Classique', forest: 'Feuilles', cave: 'Cailloux', snow: 'Flocons', tower: 'Petits fantômes', supporter: 'Étoiles dorées', haunted: 'Maison hantée', secretBase: 'Base Secrète' },
     },
@@ -2368,6 +2373,7 @@ export const fr: Messages = {
       ...GA_FAMILIES_A_WORDS.fr.megas,
       glalie: 'capacités Normal et Glace +30% et capacités +25%. L’attaque spéciale devient Sheer Cold.',
       salamence: 'capacités Normal et Vol +30%, vitesse +12 et capacités +25%. L’attaque spéciale devient Double-Edge.',
+      ...ROCKET_FAMILY_WORDS.fr.megas,
     },
   },
 
@@ -2826,14 +2832,15 @@ export const fr: Messages = {
     noCrossing: 'Patauge dans les lacs et glisse sur la glace.',
   },
   places: {
-    names: { cave: 'Grotte Sombre', graveyard: 'Cimetière Hanté', sky: 'Au-dessus des nuages', grotto: 'Grotte Cachée', underground: 'Souterrain' },
-    hudNames: { cave: 'Grotte', graveyard: 'Cimetière', sky: 'Courant', grotto: 'Grotte', underground: 'Souterrain' },
+    names: { cave: 'Grotte Sombre', graveyard: 'Cimetière Hanté', sky: 'Au-dessus des nuages', grotto: 'Grotte Cachée', underground: 'Souterrain', hideout: 'Repaire Rocket' },
+    hudNames: { cave: 'Grotte', graveyard: 'Cimetière', sky: 'Courant', grotto: 'Grotte', underground: 'Souterrain', hideout: 'Repaire' },
     open: {
       cave: 'L’entrée d’une *grotte* est apparue ! Suis la flèche.',
       graveyard: 'Un *cimetière* surgit du brouillard ! Suis la flèche.',
       sky: 'Un *courant ascendant* monte vers le ciel ! Suis la flèche et envole-toi.',
       grotto: 'Tu as trouvé une *Grotte Cachée* dans les fourrés !',
       underground: 'Une fissure dans la roche mène au *Souterrain* !',
+      hideout: 'La trappe du *Repaire Rocket* est ouverte ! Suivez la flèche.',
     },
     sealed: {
       cave: 'Des rochers ont bouché l’entrée de la grotte.',
@@ -2841,6 +2848,7 @@ export const fr: Messages = {
       sky: 'Le courant ascendant est retombé.',
       grotto: 'Les feuilles ont recouvert l’entrée de la grotte.',
       underground: 'La fissure dans la roche s’est effondrée.',
+      hideout: 'La trappe du Repaire s’est verrouillée.',
     },
     blocked: 'Seul un Pokémon de type *Vol* peut monter sur ce courant ascendant.',
     goal: {
@@ -2849,6 +2857,7 @@ export const fr: Messages = {
       sky: 'Attrape les *plumes* que le vent apporte avant qu’il ne se calme !',
       grotto: 'Bats les *Audino* qui sortent des hautes herbes qui bougent !',
       underground: 'Reste sur les *éclats* des parois pour creuser, et frappe les *Diglett* !',
+      hideout: 'Descendez les étages et affrontez le *boss de la Team Rocket* !',
     },
     floor: (n) => `SS${n}`,
     wind: ['Quelque chose bouge…', 'Ça se rapproche !', 'C’est tout près ! Ça souffle fort !'],
@@ -2976,7 +2985,7 @@ export const fr: Messages = {
     noTitle: 'aucun',
     titleTag: 'TITRE',
     equipped: 'AFFICHE',
-    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm', era1Legend: 'A fini en haut d’un classement de l’Ère 1', era1Champion: 'A fini n° 1 d’un classement de l’Ère 1', kantoDex: 'A vu tous les Pokémon de Kanto dans le Pokédex', johtoDex: 'A vu tous les Pokémon de Johto dans le Pokédex', hoennDex: 'A vu tous les Pokémon de Hoenn dans le Pokédex', sinnohDex: 'A vu tous les Pokémon de Sinnoh dans le Pokédex', unovaDex: 'A vu tous les Pokémon de Unova dans le Pokédex', kalosDex: 'A vu tous les Pokémon de Kalos dans le Pokédex', alolaDex: 'A vu tous les Pokémon de Alola dans le Pokédex', galarDex: 'A vu tous les Pokémon de Galar dans le Pokédex', paldeaDex: 'A vu tous les Pokémon de Paldea dans le Pokédex' },
+    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm', era1Legend: 'A fini en haut d’un classement de l’Ère 1', era1Champion: 'A fini n° 1 d’un classement de l’Ère 1', ...ROCKET_WORDS.fr.giftTitles, kantoDex: 'A vu tous les Pokémon de Kanto dans le Pokédex', johtoDex: 'A vu tous les Pokémon de Johto dans le Pokédex', hoennDex: 'A vu tous les Pokémon de Hoenn dans le Pokédex', sinnohDex: 'A vu tous les Pokémon de Sinnoh dans le Pokédex', unovaDex: 'A vu tous les Pokémon de Unova dans le Pokédex', kalosDex: 'A vu tous les Pokémon de Kalos dans le Pokédex', alolaDex: 'A vu tous les Pokémon de Alola dans le Pokédex', galarDex: 'A vu tous les Pokémon de Galar dans le Pokédex', paldeaDex: 'A vu tous les Pokémon de Paldea dans le Pokédex' },
     newMedals: 'Nouvelles médailles',
     names: {
       ...TERA_WORDS.fr.achievementNames,
@@ -3089,6 +3098,7 @@ export const fr: Messages = {
       alolaDex: 'Chercheur de Alola',
       galarDex: 'Chercheur de Galar',
       paldeaDex: 'Chercheur de Paldea',
+      ...ROCKET_WORDS.fr.titles,
     },
     goals: {
       ...TERA_WORDS.fr.goals,
@@ -3135,6 +3145,7 @@ export const fr: Messages = {
     ...SEASON_ONE_KITS_WORDS.fr.moves,
     ...GA_FAMILIES_B_WORDS.fr.moves,
     ...GA_FAMILIES_A_WORDS.fr.moves,
+    ...ROCKET_FAMILY_WORDS.fr.moves,
     leechSeed: {
       description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
       upgrades: [
@@ -5609,6 +5620,7 @@ export const fr: Messages = {
     ...SEASON_ONE_KITS_WORDS.fr.blurbs,
     ...GA_FAMILIES_B_WORDS.fr.blurbs,
     ...GA_FAMILIES_A_WORDS.fr.blurbs,
+    ...ROCKET_FAMILY_WORDS.fr.blurbs,
     bulbasaur: 'Équilibré. Régénère ses PV.',
     charmander: 'Offensif. Plus de dégâts, moins de PV.',
     squirtle: 'Défensif. Plus de PV et de défense.',
@@ -6438,6 +6450,7 @@ export const fr: Messages = {
     },
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.fr,
+  rocket: ROCKET_WORDS.fr,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.fr.words,
     safari: SEASON_ONE_SAFARI_WORDS.fr.words,
@@ -6453,8 +6466,10 @@ export const fr: Messages = {
       claw: SEASON_ONE_CLAW_WORDS.fr.game,
       safari: SEASON_ONE_SAFARI_WORDS.fr.game,
       dig: SEASON_ONE_DIG_WORDS.fr.game,
+      slots: { name: ROCKET_WORDS.fr.slots.name, blurb: ROCKET_WORDS.fr.slots.blurb },
+      sweep: { name: ROCKET_WORDS.fr.sweep.name, blurb: ROCKET_WORDS.fr.sweep.blurb },
     },
-    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', wishiwashi: 'J\'ai pêché un Wishiwashi !', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' }, claw: SEASON_ONE_CLAW_WORDS.fr.feats, safari: SEASON_ONE_SAFARI_WORDS.fr.feats, dig: SEASON_ONE_DIG_WORDS.fr.feats },
+    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', wishiwashi: 'J\'ai pêché un Wishiwashi !', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' }, claw: SEASON_ONE_CLAW_WORDS.fr.feats, safari: SEASON_ONE_SAFARI_WORDS.fr.feats, dig: SEASON_ONE_DIG_WORDS.fr.feats, slots: ROCKET_WORDS.fr.feats.slots, sweep: ROCKET_WORDS.fr.feats.sweep },
     duel: {
       pick: 'Choisis une carte',
       play: 'Jouer',

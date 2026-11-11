@@ -10,6 +10,7 @@ import { NO_RANKS } from './meta'
 import { withBranch } from './moves'
 import { OUTBREAK_SPECIES } from './outbreak'
 import { moveOf, recordEvent, recordStep, resimulate, RULES_VERSION, startGame, startRecording, TICK, type Replay, type ReplayStart } from './replay'
+import { descendHideout } from './hideout'
 import { enterPlace } from './placeInterior'
 import { startEndless } from './endless'
 import { enterArena } from './riftArena'
@@ -233,6 +234,20 @@ const SCENARIOS = {
       enterPlace(g, 'cave', g.player.x, g.player.y)
     },
   },
+  /** A Shadow Mewtwo-hunting Shadow Absol in the Rocket Hideout's lair at 4:00 (`hideout.ts`, `shadow.ts`, `rocketKitSystem.ts`): its Omen, Persian, then Shadow Mewtwo's phases. */
+  hideout: {
+    start: { ...START, starter: 'absol', variant: 'shadow' },
+    seconds: 40,
+    stage: (g) => {
+      g.time = 240
+      g.nextEvent = 99
+      g.player.revives = 2
+      gainXp(g, 900)
+      enterPlace(g, 'hideout', g.player.x, g.player.y)
+      const inside = g.place.inside
+      if (inside?.id === 'hideout') while (inside.state.floor < 2) descendHideout(g, inside)
+    },
+  },
   /** The Hidden Grotto at 5:00 (`hidden.ts`, `grotto.ts`): a patch sparkling early, Audino popping out of the shaking grass, the item in the grass. */
   grotto: {
     start: { ...START, starter: 'charmander' },
@@ -317,7 +332,7 @@ type ScenarioId = keyof typeof SCENARIOS
  * under. When the version moves, replace the entry with the new digests the
  * failing test prints.
  */
-const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
+const PINNED: Partial<Record<number, Partial<Record<ScenarioId, string>>>> = {
   50: {
     levelUps: '2998·48·12·992153f5',
     mega: '1892·32·2·4007bb5c',

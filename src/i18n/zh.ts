@@ -5,6 +5,8 @@ import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { ROCKET_WORDS } from './rocket/words'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -733,7 +735,7 @@ export const zh: Messages = {
       offline: '目前無法載入城市。你仍然可以進入。',
       back: '返回',
     },
-    rooms: { plaza: '廣場', pier: '碼頭', cafe: '咖啡館', trail: '秘密基地樹林', arcade: '遊樂場' },
+    rooms: { plaza: '廣場', pier: '碼頭', cafe: '咖啡館', trail: '秘密基地樹林', arcade: '遊樂場', gameCorner: ROCKET_WORDS.zh.corner.name },
     base: (handle: string) => `@${handle} 的基地`,
     status: {
       connecting: '連線中…',
@@ -801,6 +803,9 @@ export const zh: Messages = {
       gameTable: '遊戲桌',
       cabinet: '街機',
       prizes: '獎品',
+      tokens: ROCKET_WORDS.zh.corner.spots.tokens,
+      rocketPrizes: ROCKET_WORDS.zh.corner.spots.prizes,
+      poster: ROCKET_WORDS.zh.corner.spots.poster,
     },
     use: '使用',
     pieces: {
@@ -1568,7 +1573,7 @@ export const zh: Messages = {
       wallpaper: '電腦箱的桌布。',
     },
     styles: {
-      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊', era1: '第一紀元', era1Champion: '第一紀元王冠', nationalDex: '全國圖鑑' },
+      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊', era1: '第一紀元', era1Champion: '第一紀元王冠', rocket: ROCKET_WORDS.zh.frame, nationalDex: '全國圖鑑' },
       background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜', friendship: '友情', era1Champion: '第一紀元王座' },
       wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋', secretBase: '秘密基地' },
     },
@@ -2368,6 +2373,7 @@ export const zh: Messages = {
       ...GA_FAMILIES_A_WORDS.zh.megas,
       glalie: '一般與冰屬性招式+30%、招式+25%。必殺技變為 Sheer Cold。',
       salamence: '一般與飛行屬性招式+30%、速度+12、招式+25%。必殺技變為 Double-Edge。',
+      ...ROCKET_FAMILY_WORDS.zh.megas,
     },
   },
 
@@ -2826,14 +2832,15 @@ export const zh: Messages = {
     noCrossing: '在湖裡走得慢，在冰上會打滑。',
   },
   places: {
-    names: { cave: '黑暗洞窟', graveyard: '鬧鬼墓地', sky: '雲端之上', grotto: '隱藏洞穴', underground: '地下通道' },
-    hudNames: { cave: '洞窟', graveyard: '墓地', sky: '上升氣流', grotto: '洞穴', underground: '地下通道' },
+    names: { cave: '黑暗洞窟', graveyard: '鬧鬼墓地', sky: '雲端之上', grotto: '隱藏洞穴', underground: '地下通道', hideout: '火箭隊秘密基地' },
+    hudNames: { cave: '洞窟', graveyard: '墓地', sky: '上升氣流', grotto: '洞穴', underground: '地下通道', hideout: '秘密基地' },
     open: {
       cave: '出現了一個*洞窟*的入口！跟著箭頭走。',
       graveyard: '一座*墓地*從霧中浮現！跟著箭頭走。',
       sky: '一道*上升氣流*衝上天空！跟著箭頭去飛翔吧。',
       grotto: '你在草叢裡發現了*隱藏洞穴*！',
       underground: '岩石的裂縫通往*地下通道*！',
+      hideout: '*火箭隊秘密基地*的艙門打開了！跟著箭頭走。',
     },
     sealed: {
       cave: '落石堵住了洞窟的入口。',
@@ -2841,6 +2848,7 @@ export const zh: Messages = {
       sky: '上升氣流消失了。',
       grotto: '樹葉蓋住了洞穴的入口。',
       underground: '岩石的裂縫崩塌了。',
+      hideout: '秘密基地的艙門鎖上了。',
     },
     blocked: '只有*飛行*屬性的寶可夢能乘上這道上升氣流。',
     goal: {
@@ -2849,6 +2857,7 @@ export const zh: Messages = {
       sky: '在風平息之前，抓住風帶來的*羽毛*！',
       grotto: '打倒從晃動的草叢裡跑出來的 *Audino*！',
       underground: '站在牆上的*閃光*處挖掘，並敲打 *Diglett*！',
+      hideout: '往下走到底，面對*火箭隊的首領*！',
     },
     floor: (n) => `B${n}F`,
     wind: ['有什麼東西在騷動…', '越來越近了！', '就在附近！風越颳越強！'],
@@ -2976,7 +2985,7 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一', kantoDex: '在圖鑑中看過關都的所有寶可夢', johtoDex: '在圖鑑中看過城都的所有寶可夢', hoennDex: '在圖鑑中看過豐緣的所有寶可夢', sinnohDex: '在圖鑑中看過神奧的所有寶可夢', unovaDex: '在圖鑑中看過合眾的所有寶可夢', kalosDex: '在圖鑑中看過卡洛斯的所有寶可夢', alolaDex: '在圖鑑中看過阿羅拉的所有寶可夢', galarDex: '在圖鑑中看過伽勒爾的所有寶可夢', paldeaDex: '在圖鑑中看過帕底亞的所有寶可夢' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一', ...ROCKET_WORDS.zh.giftTitles, kantoDex: '在圖鑑中看過關都的所有寶可夢', johtoDex: '在圖鑑中看過城都的所有寶可夢', hoennDex: '在圖鑑中看過豐緣的所有寶可夢', sinnohDex: '在圖鑑中看過神奧的所有寶可夢', unovaDex: '在圖鑑中看過合眾的所有寶可夢', kalosDex: '在圖鑑中看過卡洛斯的所有寶可夢', alolaDex: '在圖鑑中看過阿羅拉的所有寶可夢', galarDex: '在圖鑑中看過伽勒爾的所有寶可夢', paldeaDex: '在圖鑑中看過帕底亞的所有寶可夢' },
     newMedals: '新獎牌',
     names: {
       ...TERA_WORDS.zh.achievementNames,
@@ -3089,6 +3098,7 @@ export const zh: Messages = {
       alolaDex: '阿羅拉研究員',
       galarDex: '伽勒爾研究員',
       paldeaDex: '帕底亞研究員',
+      ...ROCKET_WORDS.zh.titles,
     },
     goals: {
       ...TERA_WORDS.zh.goals,
@@ -3135,6 +3145,7 @@ export const zh: Messages = {
     ...SEASON_ONE_KITS_WORDS.zh.moves,
     ...GA_FAMILIES_B_WORDS.zh.moves,
     ...GA_FAMILIES_A_WORDS.zh.moves,
+    ...ROCKET_FAMILY_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
       upgrades: [
@@ -5609,6 +5620,7 @@ export const zh: Messages = {
     ...SEASON_ONE_KITS_WORDS.zh.blurbs,
     ...GA_FAMILIES_B_WORDS.zh.blurbs,
     ...GA_FAMILIES_A_WORDS.zh.blurbs,
+    ...ROCKET_FAMILY_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
     squirtle: '防禦型。HP與防禦較高。',
@@ -6438,6 +6450,7 @@ export const zh: Messages = {
     },
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.zh,
+  rocket: ROCKET_WORDS.zh,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.zh.words,
     safari: SEASON_ONE_SAFARI_WORDS.zh.words,
@@ -6453,8 +6466,10 @@ export const zh: Messages = {
       claw: SEASON_ONE_CLAW_WORDS.zh.game,
       safari: SEASON_ONE_SAFARI_WORDS.zh.game,
       dig: SEASON_ONE_DIG_WORDS.zh.game,
+      slots: { name: ROCKET_WORDS.zh.slots.name, blurb: ROCKET_WORDS.zh.slots.blurb },
+      sweep: { name: ROCKET_WORDS.zh.sweep.name, blurb: ROCKET_WORDS.zh.sweep.blurb },
     },
-    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', wishiwashi: '我釣到了 Wishiwashi！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' }, claw: SEASON_ONE_CLAW_WORDS.zh.feats, safari: SEASON_ONE_SAFARI_WORDS.zh.feats, dig: SEASON_ONE_DIG_WORDS.zh.feats },
+    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', wishiwashi: '我釣到了 Wishiwashi！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' }, claw: SEASON_ONE_CLAW_WORDS.zh.feats, safari: SEASON_ONE_SAFARI_WORDS.zh.feats, dig: SEASON_ONE_DIG_WORDS.zh.feats, slots: ROCKET_WORDS.zh.feats.slots, sweep: ROCKET_WORDS.zh.feats.sweep },
     duel: {
       pick: '選一張牌',
       play: '出牌',

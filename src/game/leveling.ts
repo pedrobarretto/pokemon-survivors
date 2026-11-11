@@ -2,6 +2,9 @@ import { retain } from '../engine/math'
 import { seasonKitDeltas } from './seasonOneKitRules'
 import { kitBDeltas } from './gaKitBRules'
 import { gaKitADeltas } from './gaKitARules'
+import { rocketKitDeltas } from './rocketKitRules'
+import { rocketEvolves } from './rocketKitSystem'
+import { variantDeltas } from './shadow'
 import type { Rng } from '../engine/rng'
 import { evolvedFrom, readyEvolutions } from '../data/evolutions'
 import { ITEM_IDS, ITEMS, type ItemDef, type ItemId } from '../data/items'
@@ -280,6 +283,8 @@ export const recomputeStats = (g: Game) => {
     ...seasonKitDeltas(p.kit),
     ...kitBDeltas(p.kitB, p.stage),
     ...gaKitADeltas(p.kitA, p.stage),
+    ...rocketKitDeltas(p.rocket),
+    ...variantDeltas(p.variant),
   ])
   // A held evolution (no item for any branch yet) is as strong as with an Everstone.
   const stats = boostStats(stanceStats(deltas, p.special.stance), p.boost + (p.evoHeld ? BAG_ITEMS.everstone.effect.everstone : 0))
@@ -402,5 +407,6 @@ export const pendingEvolution = (g: Game) => {
   if (next.dex === stage.dex) return null
   // The Arena evolves at its format's own levels (`FormatRules.evolveAt`).
   const at = p.versus && g.versus ? versusEvolveAt(g.versus, p.stage) : stage.evolveAt
-  return at !== undefined && p.level >= at ? { from: stage.dex, to: next.dex } : null
+  // Gimmighoul's line evolves on its coins too (`rocketEvolves`).
+  return (at !== undefined && p.level >= at) || rocketEvolves(p) ? { from: stage.dex, to: next.dex } : null
 }

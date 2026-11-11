@@ -387,6 +387,45 @@ const crackedRock = (biome: BiomeId): Piece => {
   return piece(g, cx, ground)
 }
 
+/**
+ * The Rocket Hideout's way down: a concrete slab in the ground, a steel hatch
+ * thrown open on its back, hazard stripes round the opening and stairs going
+ * down into the dark, a red lamp on its corner. Anchored at the opening's
+ * front edge.
+ */
+const rocketHatch = (): Piece => {
+  const g = grid(48, 32)
+  const cx = 24
+  const ground = 30
+  // The slab: concrete, its top lit, its front face darker.
+  for (let y = 10; y <= ground; y++)
+    for (let x = 2; x <= 45; x++) {
+      const corner = (x < 4 || x > 43) && (y < 12 || y > ground - 2)
+      if (corner) continue
+      put(g, x, y, y >= ground - 3 ? '#5a5e68' : (x + y * 3) % 11 === 0 ? '#7a7e88' : '#8c909a')
+    }
+  // The hatch, swung open against the back: a steel plate with rivets and a red band.
+  for (let y = 0; y <= 10; y++)
+    for (let x = 12; x <= 35; x++) put(g, x, y, y === 0 || x === 12 || x === 35 ? '#2a2e38' : y >= 4 && y <= 6 ? '#c02028' : y < 2 ? '#c8ccd8' : '#9aa0ae')
+  for (const x of [15, 32]) for (const y of [2, 8]) put(g, x, y, '#ecf0f8')
+  // The opening, its rim in hazard stripes, and the stairs going down into the dark.
+  for (let y = 12; y <= ground - 4; y++)
+    for (let x = 11; x <= 36; x++) {
+      const rim = y === 12 || y === ground - 4 || x === 11 || x === 36
+      if (rim) put(g, x, y, Math.floor((x + y) / 2) % 2 === 0 ? '#f8c828' : '#181818')
+      else {
+        const step = y - 13
+        put(g, x, y, step % 3 === 0 ? '#5a606e' : step % 3 === 1 ? '#2c303a' : '#14161c')
+      }
+    }
+  for (let y = 22; y <= ground - 5; y++) for (let x = 12; x <= 35; x++) put(g, x, y, '#08080c')
+  // A red warning lamp on the front corner, and its glint.
+  for (const [x, y] of [[41, 14], [42, 14], [41, 15], [42, 15]] as const) put(g, x, y, '#e02028')
+  put(g, 41, 14, '#ffb0a8')
+  outline(g, '#101014')
+  return piece(g, cx, ground)
+}
+
 /** Every piece by kind: `variant` picks a look, and the cave's mouth wears the biome it stands in. */
 export const PLACE_PIECES: Record<PlacePiece, (variant: number, biome: BiomeId) => Piece> = {
   caveMouth: (_v, biome) => caveMouth(biome),
@@ -401,6 +440,7 @@ export const PLACE_PIECES: Record<PlacePiece, (variant: number, biome: BiomeId) 
   keystone,
   grottoHollow: (_v, biome) => grottoHollow(biome),
   crackedRock: (_v, biome) => crackedRock(biome),
+  rocketHatch: () => rocketHatch(),
 }
 
 /** Shadow width of each piece, and which ones are tall enough to go see-through. */
@@ -417,6 +457,7 @@ export const PLACE_SHADOW: Record<PlacePiece, number> = {
   keystone: 12,
   grottoHollow: 0,
   crackedRock: 20,
+  rocketHatch: 0,
 }
 
 export const PLACE_TALL: Record<PlacePiece, boolean> = {
@@ -432,4 +473,5 @@ export const PLACE_TALL: Record<PlacePiece, boolean> = {
   keystone: false,
   grottoHollow: false,
   crackedRock: false,
+  rocketHatch: false,
 }

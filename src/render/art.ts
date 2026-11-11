@@ -18,6 +18,7 @@ import { SEASON_ONE_KIT_ICONS } from './seasonOneKitArt'
 import { KIT_B_ICONS } from './gaKitBArt'
 import { GA_KIT_A_ICONS } from './gaKitAArt'
 import { REGIONAL_ICONS } from './regionalArt'
+import { ROCKET_KIT_ICONS } from './rocketKitArt'
 import { EGG_MOVE_2_ICONS } from './eggMove2Art'
 import { SIGNATURE_ICONS } from './signatureArt'
 import { TM_ICONS } from './tmArt'
@@ -780,6 +781,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...KIT_B_ICONS,
   ...GA_KIT_A_ICONS,
   ...REGIONAL_ICONS,
+  ...ROCKET_KIT_ICONS,
   jawLock: () => art([...TE.MAW_TOP, ...TE.MAW_BOTTOM], TE.MAW, '#d8c0e8'),
   superpower: () => art(TE.BIG_FIST, TE.FIST_PAL, '#281010'),
   fissure: () => art(...TE.FISSURE_ICON, '#181818'),

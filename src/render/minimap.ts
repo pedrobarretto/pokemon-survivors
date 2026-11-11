@@ -123,6 +123,7 @@ const GLYPHS = lazy(() => ({
     sky: glyph(DOOR, { c: '#a8d8f8', k: '#f8f8f8' }),
     grotto: glyph(DOOR, { c: '#68b048', k: '#102808' }),
     underground: glyph(DOOR, { c: '#b89470', k: '#281808' }),
+    hideout: glyph(DOOR, { c: '#d83030', k: '#181018' }),
   } satisfies Record<PlaceId, PixelSprite>,
   landmark: {
     cottage: glyph(HOUSE, { r: '#d05838', w: '#f0e0b8', k: '#583018' }),

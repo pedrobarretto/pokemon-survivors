@@ -369,4 +369,10 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   10100: { no: ['head'] }, // Alolan Raichu
   10253: { no: ['head'] }, // Paldean Wooper
   10103: { no: ['head'] }, // Alolan Vulpix
+  // The Rocket Game Corner's families (`data/rocketFamilies.ts`) and Shadow Mewtwo's sheets (`fit-check` 11-11):
+  132: { no: ['head:E'] }, // Ditto: turned, its one eye sits on its top edge, right where a hat's brim comes down
+  303: { no: ['head'] }, // Mawile: its great jaw grows out of the back of its head, where a hat sits, and the rig reads the jaw as the skull
+  '303:mega': { no: ['head'] }, // Mega Mawile: two jaws for a crown, and its face under them
+  10263: { no: ['head:E'] }, // Gimmighoul (Roaming): turned, its eye is its head's whole side
+  '150:shadow': { no: ['head:E'] }, // Shadow Mewtwo: turned, its sheets' crest reads as its eyes
 }

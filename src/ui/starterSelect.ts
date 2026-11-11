@@ -26,7 +26,7 @@ import { ownsShiny, pickShinyForm, playsShiny } from '../game/shinyPicks'
 import { dieIcon, eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
 import { capPips, shopIcon } from './shopIcons'
 import { lockedWhere } from './research'
-import { cryUrl, drawPokemon, fitSprites, loadedSprites, loadSpecies, portraitUrl, skinSprites, walkSheet } from '../render/sprites'
+import { cryUrl, drawPokemon, fitSprites, loadedFormSprites, loadedSprites, loadSpecies, portraitUrl, skinSprites, walkSheet } from '../render/sprites'
 import { equip, shownOn, skinsOf, takeOff, wearing } from '../arena/gemShop'
 import { cosmeticPrice, skinFor } from '../data/cosmetics'
 import { SKIN_LINES, SKINS, type SkinId, type SkinLine } from '../data/skinCatalog'
@@ -39,6 +39,9 @@ import { loadSave, today, updateSave } from './save'
 import { typeBadge, type Screen } from './screens'
 import { actionBar, backButton, gearButton, segmented, shellScreen, topBar, walletChip } from './shell'
 import { detailsSheet, evoLine, shinyPicker, statBars } from './partnerDetails'
+import { shadowRow } from './shadowPick'
+import { runVariant, SHADOW_SHEETS } from '../game/shadow'
+import { drawShadowAura } from '../render/shadowAura'
 import { isRegion, nationalDex, REGION_IDS, REGIONS as FORM_REGIONS, type RegionId } from '../data/regionalForms'
 import { stepGrid, stepSections, type Step } from './gridNav'
 
@@ -507,6 +510,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           isLegend(id) && eventLine(id, false),
           h('p', { class: 'partner-blurb' }, m.blurbs[id]),
           h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true)),
+          !opts.coop && shadowRow(id, () => renderHero()),
         ),
       ),
       ...[skinsRow(id)].filter((row) => row !== null),
@@ -837,7 +841,12 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const art = skinSprites(chipSkin, covers.includes(dex) ? dex : covers[0]!, shinyOf(id))
       if (art) drawPokemon(ctx, fitSprites(art, canvas.width - 4, 0), 'Idle', 0, time, canvas.width / 2, canvas.height - 3)
     }
-    if (s) drawPokemon(ctx, s, 'Idle', 0, locked ? 0 : time, sprite.width / 2, sprite.height - 6, { tint: locked ? { color: '#283048', amount: 1 } : undefined })
+    // A Shadow played as one burns in its aura on the pedestal too (SpriteCollab's Shadow Mewtwo wears its own sheets).
+    const variant = locked ? null : runVariant(loadSave().shadows, id)
+    const shadowSheets = variant === 'shadow' ? SHADOW_SHEETS[dex] : undefined
+    const look = (shadowSheets && loadedFormSprites(dex, shadowSheets)) || s
+    if (look && variant === 'shadow' && !shadowSheets) drawShadowAura(ctx, look, 'Idle', 0, time, sprite.width / 2, sprite.height - 6, time)
+    if (look) drawPokemon(ctx, look, 'Idle', 0, locked ? 0 : time, sprite.width / 2, sprite.height - 6, { tint: locked ? { color: '#283048', amount: 1 } : undefined })
     else blitCentered(ctx, PICKUPS.pokeball(), sprite.width / 2, sprite.height / 2 + Math.round(Math.sin(time * 6) * 2))
   }
 

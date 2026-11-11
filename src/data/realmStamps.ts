@@ -21,7 +21,7 @@
  * `realm.stamps`, keyed by these ids. A hidden stamp shows neither until earned.
  */
 
-const ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade'] as const
+const ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade', 'gameCorner'] as const
 /** Every town bench, as `<room>:<index of its spot in REALM_ROOMS>` (`realmStamps.test.ts` holds them to the map). */
 const BENCHES = ['plaza:3', 'plaza:4', 'pier:1', 'cafe:1', 'cafe:2', 'trail:4', 'trail:5', 'arcade:5'] as const
 /** `REALM_EMOTES` less `look`, which only some trainers have. */

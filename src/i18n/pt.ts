@@ -6,6 +6,8 @@ import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { ROCKET_WORDS } from './rocket/words'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -927,7 +929,7 @@ export const pt = {
       offline: 'Não deu para ver as cidades agora. Você ainda pode entrar.',
       back: 'Voltar',
     },
-    rooms: { plaza: 'Praça', pier: 'Píer', cafe: 'Café', trail: 'Bosque das Bases', arcade: 'Fliperama' },
+    rooms: { plaza: 'Praça', pier: 'Píer', cafe: 'Café', trail: 'Bosque das Bases', arcade: 'Fliperama', gameCorner: ROCKET_WORDS.pt.corner.name },
     base: (handle: string) => `Base de @${handle}`,
     status: {
       connecting: 'Conectando…',
@@ -995,6 +997,9 @@ export const pt = {
       gameTable: 'Mesa de jogos',
       cabinet: 'Fliperama',
       prizes: 'Prêmios',
+      tokens: ROCKET_WORDS.pt.corner.spots.tokens,
+      rocketPrizes: ROCKET_WORDS.pt.corner.spots.prizes,
+      poster: ROCKET_WORDS.pt.corner.spots.poster,
     } satisfies Record<SpotKind, string>,
     use: 'Usar',
     pieces: {
@@ -1834,7 +1839,7 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas', era1: 'Era 1', era1Champion: 'Coroa da Era 1', nationalDex: 'Pokédex Nacional' } satisfies Record<FrameId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas', era1: 'Era 1', era1Champion: 'Coroa da Era 1', rocket: ROCKET_WORDS.pt.frame, nationalDex: 'Pokédex Nacional' } satisfies Record<FrameId, string>,
       background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas', friendship: 'Amizade', era1Champion: 'Trono da Era 1' } satisfies Record<BackgroundId, string>,
       wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada', secretBase: 'Base Secreta' } satisfies Record<WallpaperId, string>,
     },
@@ -2700,6 +2705,7 @@ export const pt = {
       ...GA_FAMILIES_A_WORDS.pt.megas,
       glalie: 'golpes Normal e Gelo +30% e golpes +25%. O especial vira Sheer Cold.',
       salamence: 'golpes Normal e Voador +30%, velocidade +12 e golpes +25%. O especial vira Double-Edge.',
+      ...ROCKET_FAMILY_WORDS.pt.megas,
     } satisfies Record<MegaId, string>,
   },
 
@@ -3188,15 +3194,16 @@ export const pt = {
     noCrossing: 'Anda devagar nos lagos e escorrega no gelo.',
   },
   places: {
-    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
+    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo', hideout: 'Esconderijo Rocket' } satisfies Record<PlaceId, string>,
     /** Short names for the HUD's pill while an entrance is open. */
-    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente', grotto: 'Gruta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
+    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente', grotto: 'Gruta', underground: 'Subterrâneo', hideout: 'Esconderijo' } satisfies Record<PlaceId, string>,
     open: {
       cave: 'A entrada de uma *caverna* apareceu! Siga a seta.',
       graveyard: 'Um *cemitério* surgiu na névoa! Siga a seta.',
       sky: 'Uma *corrente de ar* sobe para o céu! Siga a seta e voe.',
       grotto: 'Você achou uma *Gruta Oculta* escondida no mato!',
       underground: 'Uma rachadura na pedra leva ao *Subterrâneo*!',
+      hideout: 'A escotilha do *Esconderijo Rocket* se abriu! Siga a seta.',
     } satisfies Record<PlaceId, string>,
     sealed: {
       cave: 'Pedras desabaram na entrada da caverna.',
@@ -3204,6 +3211,7 @@ export const pt = {
       sky: 'A corrente de ar se desfez.',
       grotto: 'As folhas cobriram a entrada da gruta.',
       underground: 'A rachadura na pedra desmoronou.',
+      hideout: 'A escotilha do Esconderijo se trancou.',
     } satisfies Record<PlaceId, string>,
     blocked: 'Só um Pokémon do tipo *Voador* consegue subir nessa corrente de ar.',
     /** What to do, shown on the way in. */
@@ -3213,6 +3221,7 @@ export const pt = {
       sky: 'Pegue as *asas* que o vento traz antes que ele acalme!',
       grotto: 'Derrote os *Audino* que saem da grama balançando!',
       underground: 'Fique nos *brilhos* das paredes para cavar e acerte os *Diglett*!',
+      hideout: 'Desça os andares e enfrente o *chefe da Equipe Rocket*!',
     } satisfies Record<PlaceId, string>,
     /** A dungeon floor, as Mystery Dungeon names them (B1F). */
     floor: (n: number) => `B${n}F`,
@@ -3351,7 +3360,7 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo', stampCollector: 'Juntou 30 Estampas no Poké Realm', era1Legend: 'Ficou no topo de um quadro da Era 1', era1Champion: 'Foi o nº 1 de um quadro da Era 1', kantoDex: 'Viu todos os Pokémon de Kanto no Pokédex', johtoDex: 'Viu todos os Pokémon de Johto no Pokédex', hoennDex: 'Viu todos os Pokémon de Hoenn no Pokédex', sinnohDex: 'Viu todos os Pokémon de Sinnoh no Pokédex', unovaDex: 'Viu todos os Pokémon de Unova no Pokédex', kalosDex: 'Viu todos os Pokémon de Kalos no Pokédex', alolaDex: 'Viu todos os Pokémon de Alola no Pokédex', galarDex: 'Viu todos os Pokémon de Galar no Pokédex', paldeaDex: 'Viu todos os Pokémon de Paldea no Pokédex' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo', stampCollector: 'Juntou 30 Estampas no Poké Realm', era1Legend: 'Ficou no topo de um quadro da Era 1', era1Champion: 'Foi o nº 1 de um quadro da Era 1', ...ROCKET_WORDS.pt.giftTitles, kantoDex: 'Viu todos os Pokémon de Kanto no Pokédex', johtoDex: 'Viu todos os Pokémon de Johto no Pokédex', hoennDex: 'Viu todos os Pokémon de Hoenn no Pokédex', sinnohDex: 'Viu todos os Pokémon de Sinnoh no Pokédex', unovaDex: 'Viu todos os Pokémon de Unova no Pokédex', kalosDex: 'Viu todos os Pokémon de Kalos no Pokédex', alolaDex: 'Viu todos os Pokémon de Alola no Pokédex', galarDex: 'Viu todos os Pokémon de Galar no Pokédex', paldeaDex: 'Viu todos os Pokémon de Paldea no Pokédex' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
       ...TERA_WORDS.pt.achievementNames,
@@ -3464,6 +3473,7 @@ export const pt = {
       alolaDex: 'Pesquisador(a) de Alola',
       galarDex: 'Pesquisador(a) de Galar',
       paldeaDex: 'Pesquisador(a) de Paldea',
+      ...ROCKET_WORDS.pt.titles,
     } satisfies Record<TitleId, string>,
     goals: {
       ...TERA_WORDS.pt.goals,
@@ -3511,6 +3521,7 @@ export const pt = {
     ...SEASON_ONE_KITS_WORDS.pt.moves,
     ...GA_FAMILIES_B_WORDS.pt.moves,
     ...GA_FAMILIES_A_WORDS.pt.moves,
+    ...ROCKET_FAMILY_WORDS.pt.moves,
     leechSeed: {
       description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
       upgrades: [
@@ -5986,6 +5997,7 @@ export const pt = {
     ...SEASON_ONE_KITS_WORDS.pt.blurbs,
     ...GA_FAMILIES_B_WORDS.pt.blurbs,
     ...GA_FAMILIES_A_WORDS.pt.blurbs,
+    ...ROCKET_FAMILY_WORDS.pt.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Mais dano, menos vida.',
     squirtle: 'Defensivo. Mais vida e defesa.',
@@ -6888,6 +6900,7 @@ export const pt = {
   },
   /** Bibarel, the carpentry's carpenter on the plaza's north-east, as the partner walks up: the first visit, then one of these in turn. */
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.pt,
+  rocket: ROCKET_WORDS.pt,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.pt.words,
     safari: SEASON_ONE_SAFARI_WORDS.pt.words,
@@ -6903,8 +6916,10 @@ export const pt = {
       claw: SEASON_ONE_CLAW_WORDS.pt.game,
       safari: SEASON_ONE_SAFARI_WORDS.pt.game,
       dig: SEASON_ONE_DIG_WORDS.pt.game,
+      slots: { name: ROCKET_WORDS.pt.slots.name, blurb: ROCKET_WORDS.pt.slots.blurb },
+      sweep: { name: ROCKET_WORDS.pt.sweep.name, blurb: ROCKET_WORDS.pt.sweep.blurb },
     },
-    feats: { fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', wishiwashi: 'Pesquei um Wishiwashi!', bigHaul: 'Pescaria de 300 pontos!' }, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' }, claw: SEASON_ONE_CLAW_WORDS.pt.feats, safari: SEASON_ONE_SAFARI_WORDS.pt.feats, dig: SEASON_ONE_DIG_WORDS.pt.feats },
+    feats: { fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', wishiwashi: 'Pesquei um Wishiwashi!', bigHaul: 'Pescaria de 300 pontos!' }, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' }, claw: SEASON_ONE_CLAW_WORDS.pt.feats, safari: SEASON_ONE_SAFARI_WORDS.pt.feats, dig: SEASON_ONE_DIG_WORDS.pt.feats, slots: ROCKET_WORDS.pt.feats.slots, sweep: ROCKET_WORDS.pt.feats.sweep },
     duel: {
       pick: 'Escolha uma carta',
       play: 'Jogar',

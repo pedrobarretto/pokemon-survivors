@@ -24,7 +24,8 @@ import { isRiftLegend } from './data/rifts'
 import { domainTheme } from './game/domain'
 import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
-import { captureOutcome as savedCapture } from './game/capture'
+import { captureByGift, captureOutcome as savedCapture } from './game/capture'
+import { hideoutCleared, holdsPass, usePass } from './game/hideoutPass'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
 import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
@@ -129,6 +130,7 @@ import { parseReplay, recordEvent, recordStep, resimulate, RULES_VERSION, rulesS
 import { gameSpecial } from './game/special'
 import { unlockShinyStarter } from './game/shinyStarters'
 import { playsShiny } from './game/shinyPicks'
+import { grantShadow, pickShadow, purifySteps, runVariant, type ShadowSave } from './game/shadow'
 import { canWalkWith, companionForm, OG_GIFT, SUPPORTER_TIERS, TIER_GIFTS, type CompanionId, type SupporterTier } from './game/supporters'
 import { createCompanion, stepCompanion, type CompanionView } from './render/companion'
 import { MOVES } from './game/moves'
@@ -1327,6 +1329,12 @@ const firstFrameDrawn = () => {
   firstStep('firstFrame')
 }
 
+/** The `ReplayStart` field a run with `starter` takes from the save's Shadows: nothing for the plain one, so its replay stays as it was. */
+const shadowStart = (shadows: ShadowSave, starter: PlayableId) => {
+  const variant = runVariant(shadows, starter)
+  return variant ? { variant } : {}
+}
+
 /** A player's whole family (branches included: the evolution scene can land on any of them) in the colors they play, not the normal ones as well. */
 const familySheets = (starter: PlayableId, shiny: boolean): Variant[] => familyDex(starter).map((dex) => ({ dex, shiny }))
 
@@ -1437,9 +1445,14 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     mythical: mythicalHunt(save),
     // The raid of the day's den (`raidOfDay`), from the Brasília day like the outbreak.
     raid: brasiliaDay(today()),
+    // A Shadow (or Purified) Pokémon plays as one unless switched to Normal (`game/shadow.ts`).
+    ...shadowStart(save.shadows, starter),
+    // The Game Corner poster's pass brings the Rocket Hideout's hatch onto this run's map (`game/hideoutPass.ts`).
+    ...(holdsPass(save.hideout) && !isLegend(starter) ? { hideout: true } : {}),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
+  if (start.hideout) updateSave((s) => ({ ...s, hideout: usePass(s.hideout) }))
   const game = startGame(start, view)
   if (devMap) setDevMap(game, devMap)
   const me = localPlayer(game)
@@ -2233,6 +2246,18 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return mapEventFeedback(ui, e.notice)
     case 'place':
       return placeFeedback(ui, e.place, e.notice)
+    case 'rocketCleared': {
+      // Giovanni beaten: Shadow Mewtwo joins the Legend mode (captured if it wasn't), the clear counts, the first one gives the title.
+      updateSave((s) => ({
+        ...s,
+        hideout: hideoutCleared(s.hideout),
+        legends: captureByGift(s.legends, 'mewtwo'),
+        shadows: grantShadow(s.shadows, 'mewtwo'),
+        titles: s.titles.includes('rocketBuster') ? s.titles : [...s.titles, 'rocketBuster'],
+      }))
+      playSfx('legendary')
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(150), alt: '' }), rich(`${t().rocket.hideout.reward} ${t().rocket.hideout.capture}`)), 5200, null, 'shiny')
+    }
     case 'landmark':
       return landmarkFeedback(ui, e.landmark, e.moment)
     case 'seasonFind':
@@ -4493,7 +4518,7 @@ const devGifts = {
    * `why`: an inviter's handle (welcome) or a count of friends brought.
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
-    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
+    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
     const content = parseGiftContent({ kind, ...raw })
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
     const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : why ? { kind: 'welcome', from: why } : null
@@ -5091,6 +5116,41 @@ if (import.meta.env.DEV) {
        */
       minigame: devMinigame,
       /**
+       * Shadow Pokémon (`game/shadow.ts`): `ps.shadow('charmander')` owns it as a Shadow and plays it so from the next run,
+       * `ps.shadow('charmander', 'ready')` fills its heart gauge, `('purified')` purifies it, `('off')` plays it Normal, `('drop')` forgets it.
+       */
+      /** The partner select on `id` (the save's partner by default; its Shadow row, `ui/shadowPick.ts`) and the Pokédex (its Shadow marks, the regional forms), for staging. */
+      select: (id: string = loadSave().partner) => (Object.hasOwn(PLAYABLE, id) ? showMenu(id as PlayableId) : 'ps.select: a Pokémon id'),
+      pokedex: () => (endRun(), setScreen(pokedexScreen(ui, input, () => showTitle(), showPcBox))),
+      shadow: (id: string = loadSave().partner, how: 'own' | 'ready' | 'purified' | 'off' | 'drop' = 'own') => {
+        if (!Object.hasOwn(PLAYABLE, id)) return 'ps.shadow: a Pokémon id'
+        const pid = id as PlayableId
+        updateSave((s) => {
+          const owned = grantShadow(s.shadows, pid)
+          const e = owned[pid]!
+          const next = how === 'drop' ? Object.fromEntries(Object.entries(s.shadows).filter(([k]) => k !== pid))
+            : how === 'ready' ? { ...owned, [pid]: { ...e, steps: purifySteps(pid) } }
+            : how === 'purified' ? { ...owned, [pid]: { ...e, steps: purifySteps(pid), purified: true } }
+            : how === 'off' ? pickShadow(owned, pid, false)
+            : pickShadow(owned, pid, true)
+          return { ...s, shadows: next }
+        })
+        return loadSave().shadows[pid] ?? 'dropped'
+      },
+      /**
+       * The Rocket Game Corner (faked API): `ps.corner('prizes')` or `ps.corner('tokens')` opens the counter on that page,
+       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level), `ps.minigame('slots')` and
+       * `ps.minigame('sweep')` its games; `ps.realm('room', 'gameCorner')` walks into the room.
+       */
+      corner: async (cmd: string = 'prizes', tokens?: number | string, level?: number) => {
+        const [{ fakeRealm }, { stageCorner, rigSpin }, { openCornerCounter }] = await Promise.all([realmMode(), import('./realm/cornerApi'), import('./ui/cornerCounter')])
+        fakeRealm(true, accountHandle() ?? 'you')
+        if (cmd === 'win') return rigSpin(String(tokens ?? 'seven'))
+        if (cmd === 'stage') return stageCorner(typeof tokens === 'number' ? tokens : undefined, level)
+        if (cmd !== 'prizes' && cmd !== 'tokens') return "ps.corner: 'prizes', 'tokens' or 'stage'"
+        return setScreen(openCornerCounter(ui, input, { tab: cmd, close: () => showTitle() }))
+      },
+      /**
        * The claw machine's faked state (after `ps.realm('fake')`, open it with `ps.minigame('claw')`): `ps.claw()` puts the week's
        * first plush one miss short of sure, `ps.claw(2, 4)` 4 misses on the week's third plush, `ps.claw(2, 4, 9)` also 9 credits used today.
        */
@@ -5358,9 +5418,6 @@ if (import.meta.env.DEV) {
       },
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
-      /** The partner select on `id` (the save's partner by default), and the Pokédex: to stage the regional forms. */
-      select: (id?: PlayableId) => showMenu(id),
-      pokedex: () => (endRun(), setScreen(pokedexScreen(ui, input, () => showTitle(), showPcBox))),
       card: (partner: PlayableId = loadSave().partner) => (endRun(), setScreen(sharePreview(ui, input, trainerShare(partner), () => showTitle()))),
       ...biomeDevTools(() => run?.game),
       /** `ps.terrain('tower', 70, 'desert')` walks you to the nearest tower in a desert cell (any biome without the third argument). */

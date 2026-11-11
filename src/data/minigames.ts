@@ -43,7 +43,7 @@ export type TablePay = { win: number; draw: number; loss: number; daily: number 
 export type Trophy = { furniture: string; after: { stat: 'plays' | 'wins' | 'best'; at: number } | { feat: string } }
 
 /** The town rooms a game can stand in (a `TownRoomId`, `data/realmMap.ts`, kept as a string so this file imports nothing); `null`: only in bases. */
-type Where = 'plaza' | 'pier' | 'cafe' | 'trail' | 'arcade' | null
+type Where = 'plaza' | 'pier' | 'cafe' | 'trail' | 'arcade' | 'gameCorner' | null
 
 type SoloDef = {
   kind: 'solo'
@@ -175,6 +175,35 @@ export const MINIGAMES = {
     maxScore: 0,
     minMs: 0,
     feats: ['golden', 'fossilOrStone'],
+    trophies: [],
+    board: false,
+    claim: false,
+  },
+  /**
+   * The Rocket Game Corner's slots (`realm/games/slots.ts`, rules in
+   * `corner.rules.ts`): tokens, not ₽. The API rolls every spin and pays
+   * tokens (`POST /realm/corner/spin`), never ₽, so it never claims and has no
+   * Placar. Its jackpot is a feat to brag about.
+   */
+  slots: {
+    kind: 'solo',
+    where: 'gameCorner',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['jackpot'],
+    trophies: [],
+    board: false,
+    claim: false,
+  },
+  /** Koffing Sweep at the Game Corner's tables (`realm/games/sweep.ts`): a hidden-grid puzzle the API deals and pays in tokens. */
+  sweep: {
+    kind: 'solo',
+    where: 'gameCorner',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['level5'],
     trophies: [],
     board: false,
     claim: false,

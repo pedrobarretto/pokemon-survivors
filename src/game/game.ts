@@ -27,6 +27,9 @@ import { createKitB } from './gaKitBRules'
 import { updateKitB } from './gaKitBSystem'
 import { createGaKitA } from './gaKitARules'
 import { updateGaKitA } from './gaKitASystem'
+import { createRocketKit } from './rocketKitRules'
+import { updateRocketKit } from './rocketKitSystem'
+import type { ShadowVariant } from './shadow'
 import { FRESH_LEVELUPS } from './learnsets'
 import { DEFAULT_DIFFICULTY, type Difficulty } from './difficulty'
 import { updateBosses, updateHazards } from './bosses'
@@ -117,7 +120,8 @@ const kitField = (starter: PlayableId) => {
   const kit = createSeasonKit(starter)
   const kitB = createKitB(starter)
   const kitA = createGaKitA(starter)
-  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }) }
+  const rocket = createRocketKit(starter)
+  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }), ...(rocket && { rocket }) }
 }
 
 /** What the save brings into a run besides the Poké Mart ranks. */
@@ -146,6 +150,10 @@ export type RunOptions = {
   draft?: boolean
   /** The day whose Tera Raid the late den holds (`raidOfDay`); the run draws its own there when absent. */
   raidDay?: DayKey | null
+  /** A Shadow or Purified Pokémon (`shadow.ts`); the plain one when absent. */
+  variant?: ShadowVariant | null
+  /** The Game Corner poster's pass: the Rocket Hideout's hatch opens on this run's map (`data/rocketHideout.ts`). */
+  hideout?: boolean
 }
 
 /**
@@ -161,6 +169,7 @@ export type PlayerSetup = {
   tms?: readonly MoveId[]
   evo?: readonly EvoItemId[]
   caps?: number
+  variant?: ShadowVariant | null
 }
 
 /**
@@ -243,6 +252,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     record: createRecord(),
     hits: [],
     ...kitField(setup.starter),
+    ...(setup.variant ? { variant: setup.variant } : {}),
   }
 }
 
@@ -308,7 +318,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     traits: { seen: new Set(), nextIntro: 0 },
     rift: createRiftState(),
     raid: createRaidState(seed, options.raidDay ?? null),
-    place: createPlaceState(seed),
+    place: options.hideout ? { ...createPlaceState(seed), hideout: true } : createPlaceState(seed),
     landmarks: createLandmarkState(),
     finds: createSeasonFinds(seed),
     tutors: 0,
@@ -367,7 +377,7 @@ export const createGame = (
   roster?: Roster,
   options: RunOptions = {},
 ): Game => {
-  const setup: PlayerSetup = { starter, ranks, shiny: options.shiny === true, bag: options.bag ?? [], tms: options.tms, evo: options.evo, caps: options.caps }
+  const setup: PlayerSetup = { starter, ranks, shiny: options.shiny === true, bag: options.bag ?? [], tms: options.tms, evo: options.evo, caps: options.caps, variant: options.variant }
   return createRun(view, seed, [setup], roster, options, false)
 }
 
@@ -901,6 +911,7 @@ export const stepMoves = (g: Game, input: StepInput, dt: number) => {
   updateSeasonKit(g, dt)
   updateKitB(g, dt)
   updateGaKitA(g, dt)
+  updateRocketKit(g, dt)
   updateSignatures(g, dt)
   updateShopTms(g, dt)
   updateLegendary(g)

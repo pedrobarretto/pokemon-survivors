@@ -20,7 +20,7 @@ export const createPlaceCard = () => {
     if (show) {
       const m = t().places
       setText(name, m.names[inside.id])
-      setText(floor, inside.id === 'cave' ? m.floor(inside.state.floor + 1) : m.hiddenTag)
+      setText(floor, inside.id === 'cave' ? m.floor(inside.state.floor + 1) : inside.id === 'hideout' ? (inside.state.stairs ? m.floor(inside.state.floor + 1) : t().rocket.hideout.lair) : m.hiddenTag)
     }
     if (show === shown) return
     shown = show

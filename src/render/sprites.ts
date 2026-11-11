@@ -974,6 +974,9 @@ const pendingSprites = (dex: Dex): SpeciesSprites => {
 }
 
 /** An alternate form's sprites if loaded; otherwise starts (once) loading them and returns undefined. */
+/** A species' form sheets once loaded (asking for them when the manifest has them), else undefined: menus that show a form (Shadow Mewtwo). */
+export const loadedFormSprites = (dex: Dex, form: FormKey) => formSprites(dex, false, form)
+
 const formSprites = (dex: Dex, shiny: boolean, form: FormKey) => {
   const s = cache.get(cacheKey(dex, shiny, form))
   if (!s && manifestVariant(dex, shiny, form)) ask(dex, shiny, form)
@@ -1062,6 +1065,57 @@ export const placeFrame = (s: SpeciesSprites, anim: AnimName, seconds: number, x
   out.dx = frameLeft(x, sheet.fw, scale)
   out.dy = frameTop(s, y, sheet.fh, scale)
   return true
+}
+
+/** A frame's opaque outline: each column's top opaque row (-1: none) and each row's leftmost and rightmost opaque column (-1: none). */
+export type FrameEdges = { fw: number; fh: number; top: Int16Array; left: Int16Array; right: Int16Array }
+
+const edgeCache = new WeakMap<Sheet, Map<number, FrameEdges>>()
+
+/** Reads a frame's opaque outline once (`FrameEdges`); a sheet that won't read (a broken image) gives none. */
+const edgesOf = (sheet: Sheet, frame: number, dir: number): FrameEdges | null => {
+  let byFrame = edgeCache.get(sheet)
+  if (!byFrame) edgeCache.set(sheet, (byFrame = new Map()))
+  const key = frame * 8 + dir
+  const known = byFrame.get(key)
+  if (known) return known
+  const { fw, fh } = sheet
+  const c = createCanvas(fw, fh)
+  const cx = context2d(c)
+  try {
+    cx.drawImage(sheet.img, frame * fw, dir * fh, fw, fh, 0, 0, fw, fh)
+    const data = cx.getImageData(0, 0, fw, fh).data
+    const top = new Int16Array(fw).fill(-1)
+    const left = new Int16Array(fh).fill(-1)
+    const right = new Int16Array(fh).fill(-1)
+    for (let y = 0; y < fh; y++)
+      for (let x = 0; x < fw; x++) {
+        if (data[(y * fw + x) * 4 + 3]! < 128) continue
+        if (top[x] === -1) top[x] = y
+        if (left[y] === -1) left[y] = x
+        right[y] = x
+      }
+    const edges = { fw, fh, top, left, right }
+    byFrame.set(key, edges)
+    return edges
+  } catch {
+    return null
+  } finally {
+    c.width = c.height = 0
+  }
+}
+
+/**
+ * The opaque outline of the frame `drawPokemon` would draw with the same
+ * arguments (at scale 1) and where its top-left lands, for effects that hug
+ * the silhouette pixel for pixel (the Shadow aura). Null when it would draw
+ * nothing.
+ */
+export const frameEdges = (s: SpeciesSprites, anim: AnimName, dir: Dir8, seconds: number, x: number, y: number, loop = true) => {
+  const sheet = s.anims[anim] ?? s.anims.Walk
+  if (sheet.seen === GONE) return null
+  const edges = edgesOf(sheet, frameIndex(sheet, seconds, loop), dir)
+  return edges && { edges, dx: frameLeft(x, sheet.fw, 1), dy: frameTop(s, y, sheet.fh, 1) }
 }
 
 export type DrawOpts = {

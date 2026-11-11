@@ -36,6 +36,8 @@ import type { RunSummary } from './tally'
 import type { Game } from './types'
 import * as dm from '../engine/dmath'
 import { NO_MYTHICAL_PITY, parseMythicalPity, type MythicalPity } from './mythicalHunt'
+import { NO_SHADOWS, parseShadows, type ShadowSave } from './shadow'
+import { NO_HIDEOUT, parseHideout, type HideoutSave } from './hideoutPass'
 
 /**
  * Meta progression: Poké Dollars (₽) earned across runs and the Poké Mart's
@@ -185,6 +187,10 @@ export type Save = {
   finds: readonly FindId[]
   /** Temporada 1's research chains (`game/seasonOneUnlocks.ts`), tracked from run results. */
   research: ResearchSave
+  /** Shadow Pokémon owned (`game/shadow.ts`): each one's heart gauge, purified or not, and the Normal/Shadow pick. */
+  shadows: ShadowSave
+  /** The Rocket Hideout (`game/hideoutPass.ts`): the poster's pass and Giovanni beaten. */
+  hideout: HideoutSave
 }
 
 /** The branch each branching family took in its latest run that got there. */
@@ -240,6 +246,8 @@ export const EMPTY_SAVE: Save = {
   builds: {},
   finds: [],
   research: NO_RESEARCH,
+  shadows: NO_SHADOWS,
+  hideout: NO_HIDEOUT,
 }
 
 /** Brings any older save shape up to the current version. Add a case per schema bump. */
@@ -317,6 +325,8 @@ export const parseSaveData = (json: unknown): Save => {
     builds: parseBuilds(data.builds),
     finds: parseFinds(data.finds),
     research: parseResearch(data.research),
+    shadows: parseShadows(data.shadows),
+    hideout: parseHideout(data.hideout),
   }
 }
 

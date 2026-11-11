@@ -70,6 +70,8 @@ import type { Training } from './training'
 import type { Harm, HarmBy } from './harm'
 import type { SeasonKit } from './seasonOneKitRules'
 import type { GaKitA, GaKitAVisual } from './gaKitARules'
+import type { RocketKit } from './rocketKitRules'
+import type { ShadowVariant } from './shadow'
 import type { MythicalHunt } from './mythicalHunt'
 
 export type OwnedMove = {
@@ -245,6 +247,10 @@ export type Player = {
   kitB?: GaKitB
   /** The big update's first 15 families (`gaKitARules.ts`): their running state. Absent for everyone else. */
   kitA?: GaKitA
+  /** The Rocket Game Corner's prize families (`rocketKitRules.ts`): their running state. Absent for everyone else. */
+  rocket?: RocketKit
+  /** A Shadow or Purified Pokémon (`shadow.ts`), decided as the run starts. Absent for the plain one, so its state hashes as before. */
+  variant?: ShadowVariant
 }
 
 /** One player's run stats (damage dealt is `damageByMove`). `tally` counts their own faints only in co-op. */
@@ -412,6 +418,8 @@ export type Visual =
   | GaKitAVisual
   /** The regional forms' moves (`regionalMoves.ts`), drawn by `render/regionalFx.ts`. */
   | 'metalClaw' | 'shellSlam' | 'shellShot' | 'obstructGuard' | 'obstructX' | 'leekJoust' | 'chloroblast' | 'barb' | 'toxicGlob' | 'toxicPool' | 'bullCharge' | 'bitterMalice'
+  /** The Rocket Game Corner's prize families, drawn by `render/rocketKitFx.ts`. */
+  | 'transformSplash' | 'razorWind' | 'omenFall' | 'coinRain' | 'viseGrip' | 'deceiverBite'
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'
@@ -702,6 +710,8 @@ export type GameEvent =
   | { kind: 'shinyPlayer' }
   /** First shiny of a species defeated this run; the shell toasts it only when the Pokédex didn't have it yet. */
   | { kind: 'caught'; enemy: EnemyId }
+  /** Shadow Mewtwo fell in the Rocket Hideout's lair (`game/hideout.ts`): the shell gives it to the Legend mode. */
+  | { kind: 'rocketCleared' }
   | { kind: 'thunder' }
   | { kind: 'quake' }
   /**

@@ -63,6 +63,8 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
       return { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
     case 'evoItem':
       return { src: itemArt(c.item), text: EVO_ITEMS[c.item].name }
+    case 'shadow':
+      return { src: portraitUrl(HATCHLINGS[c.family].line[0].dex), text: t().rocket.gifts.shadow(HATCHLINGS[c.family].name) }
   }
 }
 
@@ -107,6 +109,8 @@ export const reasonLine = (gift: Gift) => {
       return t().seasonUnlocks.way[r.way]
     case 'dex':
       return t().gifts.dex(r.region === 'national' ? null : t().dex.regions[r.region])
+    case 'rocket':
+      return t().rocket.gifts.reason
     case 'era1': {
       const rk = t().ranking
       const side = r.side === 'standard' || r.side === 'legend' ? rk.modes[r.side] : rk.sizes[r.side]

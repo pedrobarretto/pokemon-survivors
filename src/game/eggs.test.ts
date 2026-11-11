@@ -224,12 +224,13 @@ describe('egg families', () => {
     expect(gens.size).toBe(9)
   })
 
-  it('evolve mid-run and grow stronger (Smeargle aside, and the one-stage Temporada 1 and big update families and Galarian Farfetch\'d: their mechanics take the place of evolving)', () => {
-    expect(HATCHLING_IDS.filter((id) => PLAYABLE[id].line.length === 1)).toEqual(['smeargle', 'wishiwashi', 'morpeko', 'rotom', 'castform', 'mimikyu', 'tatsugiri', 'lapras', 'heracross', 'sableye', 'spiritomb', 'farfetchdGalar'])
+  it('evolve mid-run and grow stronger (Smeargle aside, and the one-stage Temporada 1, big update and Game Corner families and Galarian Farfetch\'d: their mechanics take the place of evolving)', () => {
+    expect(HATCHLING_IDS.filter((id) => PLAYABLE[id].line.length === 1)).toEqual(['smeargle', 'wishiwashi', 'morpeko', 'rotom', 'castform', 'mimikyu', 'tatsugiri', 'lapras', 'heracross', 'sableye', 'spiritomb', 'farfetchdGalar', 'ditto', 'absol', 'mawile'])
     for (const id of HATCHLING_IDS) {
       const line: readonly EvolutionStage[] = PLAYABLE[id].line
       if (line.length === 1) continue
-      expect(line[0]!.evolveAt).toBeLessThanOrEqual(20)
+      // Gimmighoul evolves on its coins (`rocketEvolves`); its Lv 40 is only a floor.
+      if (id !== 'gimmighoul') expect(line[0]!.evolveAt).toBeLessThanOrEqual(20)
       expect(starterStats(id, line.length - 1).maxHp).toBeGreaterThan(starterStats(id, 0).maxHp)
     }
   })

@@ -95,6 +95,8 @@ const visitors = (g: Game): Dex[] => {
   return [
     ...(place ? placePool(place, g.time).map(([id]) => ENEMIES[id].dex) : []),
     ...(place === 'graveyard' ? [ENEMIES[GRAVEYARD.boss].dex] : []),
+    // The Rocket Hideout's lair bosses: Giovanni's Persian and Mewtwo.
+    ...(place === 'hideout' ? [ENEMIES.giovanniPersian.dex, ENEMIES.shadowMewtwo.dex] : []),
     // A hidden zone's lucky ones and rare dweller, from its entrance on (found or not: loading shows nothing).
     ...(place ? hiddenCast(place).map((id) => ENEMIES[id].dex) : []),
     ...(g.endless && g.time >= ENDLESS.reaperAt - REAPER_LEAD ? [ENEMIES[REAPER].dex] : []),
@@ -148,7 +150,9 @@ export const bossForms = (g: Game): Variant[] => {
     const forms = [phases[e.fight.phase]?.form, phases[e.fight.phase + 1]?.form]
     return forms.flatMap((form) => (form ? [{ dex: ENEMIES[e.kind].dex, shiny: e.shiny, form }] : []))
   })
-  return [...rift, ...fights]
+  // Shadow Mewtwo wears SpriteCollab's Shadow sheets from the Hideout's door on (`data/rocketHideout.ts`).
+  const hideout = g.place.inside?.id === 'hideout' || g.place.entrance?.id === 'hideout' ? [{ dex: ENEMIES.shadowMewtwo.dex, shiny: false, form: 'shadow' as const }] : []
+  return [...rift, ...fights, ...hideout]
 }
 
 /**

@@ -77,6 +77,10 @@ import { STAMP_FX_SECONDS, drawStampFx, type StampFx } from '../render/stampFx'
 import { stampArtReady, stampCanvas } from '../render/stampArt'
 import { hasUnseenStamps, openRealmBook } from './realmBook'
 import { openErrandsBoard } from './realmErrands'
+import { openCornerCounter } from './cornerCounter'
+import { loadSave, today, updateSave } from './save'
+import { readPoster } from '../game/hideoutPass'
+import { brasiliaDay } from '../game/day'
 
 /**
  * The Poké Realm's screen (`net/realm.ts`): the city picker, then the town
@@ -189,6 +193,13 @@ const hostSpeaker = (): Speaker => ({
   portrait: () => h('img', { src: portraitUrl(GROVE_HOST.dex), alt: '', width: 40, height: 40 }),
 })
 
+/** Team Rocket's poster in the Game Corner, as a dialogue speaker: Persian's portrait on it. */
+const posterSpeaker = (): Speaker => ({
+  name: t().rocket.corner.spots.poster,
+  color: '#c02830',
+  portrait: () => h('img', { src: portraitUrl(53), alt: '', width: 40, height: 40 }),
+})
+
 /* ---------------- Rooms ---------------- */
 
 /** A trainer's species: its partner's first form (as the lobby's stage shows it). */
@@ -252,7 +263,7 @@ const LABEL_NEAR = 220
 const LABEL_FLOOR = 84
 
 /** A label over a spot or a door: its text, where it stands, and the spot (null for a door), which the prompt replaces when in reach. */
-type Label = { text: string; at: Point; spot: Spot | null }
+type Label = { text: string; at: Point; spot: Spot | null; members?: readonly Point[] }
 
 /** Spots of a kind standing side by side (the pier's fishing places): one label names them all. */
 const sideBySide = (a: Spot, b: Spot) => a.kind === b.kind && Math.hypot(a.at.x - b.at.x, a.at.y - b.at.y) < 40
@@ -265,12 +276,16 @@ const sideBySide = (a: Spot, b: Spot) => a.kind === b.kind && Math.hypot(a.at.x 
 const labelsOf = (room: RoomKey): Label[] => {
   const m = t().realm
   const { w, h: hgt } = isTownRoomId(room) ? REALM_ROOMS[room] : BASE_ROOM
-  // Cabinets side by side playing the same game share one label, between them.
-  const shared = (s: Spot) => spotsOf(room).filter((o) => o.kind === 'cabinet' && s.kind === 'cabinet' && String(o.games) === String(s.games) && Math.abs(o.at.y - s.at.y) < 8 && Math.abs(o.at.x - s.at.x) <= 48)
+  // Cabinets side by side playing the same game share one label, between them; a group of spots, one over the member nearest the trainer.
+  const shared = (s: Spot) =>
+    s.group !== undefined
+      ? spotsOf(room).filter((o) => o.group === s.group)
+      : spotsOf(room).filter((o) => o.kind === 'cabinet' && s.kind === 'cabinet' && String(o.games) === String(s.games) && Math.abs(o.at.y - s.at.y) < 8 && Math.abs(o.at.x - s.at.x) <= 48)
   const spots = spotsOf(room)
     .filter((s, i, all) => s.kind !== 'bench' && (s.kind !== 'cabinet' || shared(s)[0] === s) && (s.kind === 'cabinet' || !all.slice(0, i).some((o) => sideBySide(o, s))))
     .map((s) => {
       const row = shared(s)
+      if (s.group !== undefined) return { text: spotLabel(s), at: s.at, spot: s, members: row.map((o) => o.at) }
       const at = row.length > 1 ? { x: row.reduce((sum, o) => sum + o.at.x, 0) / row.length, y: s.at.y } : s.at
       return { text: spotLabel(s), at, spot: s }
     })
@@ -279,7 +294,7 @@ const labelsOf = (room: RoomKey): Label[] => {
     const cx = d.at.x + d.at.w / 2
     const cy = d.at.y + d.at.h / 2
     const text = d.at.x <= 0 ? `← ${name}` : d.at.x + d.at.w >= w ? `${name} →` : d.at.y + d.at.h >= hgt ? `↓ ${name}` : name
-    return { text, at: { x: Math.min(Math.max(cx, 32), w - 32), y: Math.min(cy, hgt - 8) }, spot: null }
+    return { text, at: d.sign ?? { x: Math.min(Math.max(cx, 32), w - 32), y: Math.min(cy, hgt - 8) }, spot: null }
   })
   return [...spots, ...doors]
 }
@@ -1137,6 +1152,11 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           return void toast(root, m().counter, 2600, 'realmSpot')
         case 'prizes':
           return boardAt(spot)
+        case 'tokens':
+        case 'rocketPrizes':
+          return openSub((r) => openCornerCounter(r, input, { tab: spot.kind === 'tokens' ? 'tokens' : 'prizes', close: closeSub }))
+        case 'poster':
+          return readTheposter()
         case 'pool':
           return void toast(root, m().pool, 2600, 'realmSpot')
         case 'bench':
@@ -1199,6 +1219,20 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       if (games.length === 0) return
       playSfx('select')
       openSub((r) => openGameBoard(r, games, { close: closeSub, ...(spot?.kind === 'prizes' ? { note: m().prizes } : {}) }))
+    }
+
+    /**
+     * Team Rocket's poster: the switch behind it opens the stairs, and the
+     * save holds a pass for the Hideout's entrance in the next run (one a
+     * Brasília day, `game/hideoutPass.ts`).
+     */
+    function readTheposter() {
+      const w = t().rocket.corner
+      const got = readPoster(loadSave().hideout, brasiliaDay(today()))
+      if (got.got === 'new') updateSave((s) => ({ ...s, hideout: got.save }))
+      const end = got.got === 'new' ? w.hideoutKey : got.got === 'held' ? w.hideoutAgain : w.hideoutTomorrow
+      const lines = [...(got.got === 'new' ? [...w.motto, ...w.poster] : [w.poster[0]!]), end]
+      openSub((r) => dialogue(r, input, { speaker: posterSpeaker(), lines: lines.map((text) => ({ text })), onDone: () => later(closeSub) }))
     }
 
     /** Sudowoodo talks: all about secret bases the first time (`first`), else a line of its hellos. */
@@ -1440,12 +1474,17 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       near = seated && !onSeat ? (spots.find((s) => s.kind !== 'bench' && Math.hypot(s.at.x - walker.x, s.at.y - walker.y) <= s.reach) ?? null) : null
       nearPiece = seated && !onSeat && !near ? pieceNear(usable.all, walker.x, walker.y) : null
       /** A label (`el`) over `at`, as a transform: floating over the piece it names, kept below the top bar and inside the screen's sides. */
-      const pin = (at: Point, el: HTMLElement) => {
+      /** Where a label over `at` stands on screen (CSS px: its bottom middle, and its half width). */
+      const place = (at: Point, el: HTMLElement) => {
         const y = town ? labelTop(town, at, exterior) : at.y - 30
         const half = el.offsetWidth / 2 + 4
         const x = Math.min(Math.max(Math.round(((at.x - cam.x) * scale) / zoom), half), (w * scale) / zoom - half)
-        return `translate(${Math.round(x)}px, ${Math.max(LABEL_FLOOR, Math.round(((y - cam.y) * scale) / zoom))}px) translate(-50%, -100%)`
+        return { x: Math.round(x), y: Math.max(LABEL_FLOOR, Math.round(((y - cam.y) * scale) / zoom)), half, h: el.offsetHeight }
       }
+      /** The screen boxes labels already took this frame: a label that would cover one (two pinned to the top edge side by side) waits its turn. */
+      const placed: { l: number; r: number; t: number; b: number }[] = []
+      const free = (p: ReturnType<typeof place>) => !placed.some((o) => p.x - p.half < o.r && p.x + p.half > o.l && p.y - p.h < o.b && p.y > o.t)
+      const claim = (p: ReturnType<typeof place>) => placed.push({ l: p.x - p.half, r: p.x + p.half, t: p.y - p.h, b: p.y })
       // One prompt for a spot, a usable piece or the seat the trainer is on; the spot's games add their Placar beside it.
       usePrompt.classList.toggle('hidden', (!near && !nearPiece && !onSeat) || sub !== null)
       boardButton.classList.toggle('hidden', !near || near.kind === 'prizes' || spotBoards(near).length === 0)
@@ -1454,7 +1493,9 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         const tb = near.kind === 'gameTable' && near.id ? tables.get(near.id) : undefined
         const label = tb && !tb.seats.includes(null) ? t().minigames.tables.watch : spotLabel(near)
         if (useLabel.textContent !== label) useLabel.textContent = label
-        usePrompt.style.transform = pin(near.at, usePrompt)
+        const p = place(near.at, usePrompt)
+        claim(p)
+        usePrompt.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -100%)`
       } else if (onSeat || nearPiece) {
         const label = onSeat || !nearPiece ? m().pieces.stand : m().pieces[actionOf(nearPiece, furniture, taken(), walker.x, walker.y)]
         if (useLabel.textContent !== label) useLabel.textContent = label
@@ -1470,8 +1511,13 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       // The labels of what's around: the near spot's is its prompt instead.
       for (const l of labels) {
         // Only what's on screen: a label pinned to the edge for something off it would pile onto the others there.
+        if (l.members) l.at = l.members.reduce((a, b) => (Math.hypot(b.x - walker.x, b.y - walker.y) < Math.hypot(a.x - walker.x, a.y - walker.y) ? b : a))
         const onScreen = l.at.x >= cam.x && l.at.x <= cam.x + w
-        const shown = seated && sub === null && !(l.spot && near && (l.spot === near || sideBySide(l.spot, near))) && onScreen && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
+        const grouped = l.spot?.group !== undefined && l.spot.group === near?.group
+        const wanted = seated && sub === null && !(l.spot && near && (l.spot === near || sideBySide(l.spot, near) || grouped)) && onScreen && Math.hypot(l.at.x - walker.x, l.at.y - walker.y) <= LABEL_NEAR
+        const at = wanted ? place(l.at, l.el) : null
+        const shown = at !== null && free(at)
+        if (at && shown) claim(at)
         l.el.classList.toggle('shown', shown)
         if (shown && l.spot?.kind === 'gameTable' && l.spot.id) {
           // A game table's label says whether a match is on there, or a seat waits for someone.
@@ -1485,7 +1531,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           const text = ready.size > 0 ? `${l.text} · ${m().errands.ready(ready.size)}` : l.text
           if (l.el.textContent !== text) l.el.textContent = text
         }
-        if (shown) l.el.style.transform = pin(l.at, l.el)
+        if (shown) l.el.style.transform = `translate(${at.x}px, ${at.y}px) translate(-50%, -100%)`
       }
     }
 

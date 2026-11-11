@@ -30991,3 +30991,285 @@ span.arena-hub-face {
   width: 64px;
   height: 64px;
 }
+
+/* ---------------- The Rocket Game Corner (`ui/cornerCounter.ts`, `realm/games/slots.ts`, `realm/games/sweep.ts`) ---------------- */
+
+/* The counter's header: the tokens beside the wallet, in Team Rocket's red. */
+.corner-tokens-chip {
+  color: #f8d030;
+  background: #2a1014;
+}
+
+.corner-rail {
+  justify-content: center;
+}
+
+.corner-tab {
+  min-width: 140px;
+  min-height: 44px;
+}
+
+/* A prize's picture on a casino plate: the family's face, a Shadow's on a purple flame, the item or the frame. */
+.corner-art {
+  background: radial-gradient(circle at 50% 60%, #6a1420 0 55%, #3a0c14 56%);
+  border-color: #1c0c10;
+}
+
+.corner-art img {
+  width: 56px;
+  height: 56px;
+  image-rendering: pixelated;
+}
+
+.corner-art canvas {
+  width: 112px;
+  height: 104px;
+  image-rendering: pixelated;
+}
+
+.carpentry-detail-art.corner-art canvas {
+  width: 168px;
+  height: 156px;
+}
+
+.corner-art.bag img,
+.corner-art.title img,
+.corner-art.pack img {
+  width: 40px;
+  height: 40px;
+}
+
+.corner-art.shadow {
+  background: radial-gradient(circle at 50% 60%, #3a1050 0 55%, #1c0828 56%);
+}
+
+.corner-kind {
+  font-family: var(--title);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  color: #fff;
+  background: #6878a8;
+  border-radius: 4px;
+}
+
+.corner-kind.family {
+  background: #2f7a3a;
+}
+
+.corner-kind.shadow {
+  background: #5a1c90;
+}
+
+.corner-kind.bag {
+  background: #b06818;
+}
+
+.corner-kind.title,
+.corner-kind.frame {
+  background: #b81c24;
+}
+
+.corner-card.owned {
+  opacity: 0.6;
+}
+
+.corner-card.short .corner-price {
+  color: color-mix(in srgb, #a83030 var(--dk-lift, 100%), #fff);
+}
+
+.corner-card.pack {
+  min-height: 150px;
+}
+
+.corner-card.pack .carpentry-name {
+  font-size: 20px;
+}
+
+.corner-only {
+  font-size: 18px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+/* The mini games' sheets: the tokens line. */
+.corner-tokens {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.corner-tokens img {
+  image-rendering: pixelated;
+}
+
+/* Giovanni's lines in the Hideout (`ui/places.ts`): off the top, where the boss and its bar stand, over the partner's card at the bottom left. */
+.giovanni-speech {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(150px + env(safe-area-inset-bottom));
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(420px, 42vw);
+  padding: 10px 14px;
+  pointer-events: none;
+  animation: toast-in 0.2s steps(4) both;
+  transition: opacity 0.4s steps(4);
+}
+
+.giovanni-speech.out {
+  opacity: 0;
+}
+
+.giovanni-speech img {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.giovanni-speech p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+@media (max-height: 520px) {
+  .giovanni-speech {
+    bottom: calc(118px + env(safe-area-inset-bottom));
+    gap: 8px;
+    width: min(320px, 38vw);
+    padding: 6px 10px;
+  }
+
+  .giovanni-speech img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .giovanni-speech p {
+    font-size: 14px;
+  }
+}
+
+@media (orientation: portrait) {
+  .giovanni-speech {
+    right: 16px;
+    width: auto;
+  }
+}
+
+/* ---------------- Shadow Pokémon (`ui/shadowPick.ts`) ---------------- */
+
+.shadow-row {
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 6px 8px;
+  color: #f0e4ff;
+  background: #2a1438;
+  border: 2px solid #1c0828;
+  border-radius: 8px;
+}
+
+.shadow-row.purified {
+  color: #3a2848;
+  background: #f4ecf8;
+  border-color: #c8b0d8;
+}
+
+.shadow-picker .shiny-option.selected {
+  color: #fff;
+  background: #7a2cc0;
+}
+
+.shadow-row.purified .shadow-picker .shiny-option.selected {
+  background: #e888b8;
+}
+
+.shadow-note {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.1;
+}
+
+.shadow-gauge {
+  position: relative;
+  height: 18px;
+  overflow: hidden;
+  background: #14081c;
+  border: 2px solid #0c0410;
+  border-radius: 4px;
+}
+
+.shadow-gauge i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: repeating-linear-gradient(90deg, #b468f0 0 6px, #9a50d8 6px 12px);
+}
+
+.shadow-gauge span {
+  position: relative;
+  display: block;
+  padding: 0 6px;
+  font-size: 15px;
+  line-height: 14px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #14081c;
+}
+
+.shadow-ready {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+}
+
+.shadow-purify {
+  min-height: 44px;
+  margin-left: auto;
+  color: #fff;
+  background: #e888b8;
+}
+
+.shadow-keep {
+  flex-basis: 100%;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+/* The PC box's and the Pokédex's marks: a Shadow's violet flame, a Purified one's lotus. */
+.shadow-mark {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+.dex-variant {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+.tag-shadow {
+  color: #fff;
+  background: #5a1c90;
+}
+
+.tag-purified {
+  color: #3a2848;
+  background: #f8d8ea;
+}
+
+.tag-shadow img,
+.tag-purified img {
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}

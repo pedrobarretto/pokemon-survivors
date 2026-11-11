@@ -7,9 +7,12 @@ import { GRAVEYARD } from '../data/places'
 import { dexStatus, type Pokedex } from '../game/dex'
 import { gameDex, type DexEntry } from '../site/pokedex'
 import { sparkleIcon } from '../render/art'
+import { PLAYABLE, type PlayableId } from '../data/hatchlings'
+import { SHADOW_SHEETS } from '../game/shadow'
+import { drawShadowAura, purifiedIcon, shadowIcon } from '../render/shadowAura'
 import type { WallpaperId } from '../data/style'
 import { wallpaperUrl } from '../render/cosmetics'
-import { cryUrl, drawPokemon, loadedSprites, loadSpecies } from '../render/sprites'
+import { cryUrl, drawPokemon, loadedFormSprites, loadedSprites, loadSpecies } from '../render/sprites'
 import { t } from '../i18n'
 import { h, later } from './dom'
 import { loadSave } from './save'
@@ -42,6 +45,17 @@ export const boxSpecies = () => gameDex().filter(shinyCatchable)
 /** The shinies a Pokédex holds, packed in dex order like a PC box. */
 export const caughtShinies = (dex: Pokedex, species: readonly DexEntry[] = boxSpecies()) => species.filter((e) => dexStatus(dex, e.dex).shiny)
 
+/** The save's Shadow Pokémon as PC slots: each one's first form, purified or not. */
+const shadowSlots = () => {
+  const owned = loadSave().shadows
+  const dex = gameDex()
+  return (Object.keys(owned) as PlayableId[]).flatMap((id) => {
+    const e = owned[id]
+    const entry = e && Object.hasOwn(PLAYABLE, id) ? dex.find((d) => d.dex === PLAYABLE[id].line[0].dex) : undefined
+    return e && entry ? [{ entry, purified: e.purified }] : []
+  }).slice(0, BOX_SLOTS)
+}
+
 /** Focus zones: the box switcher, the slots and the footer buttons. */
 type Zone = 'nav' | 'grid' | 'footer'
 
@@ -58,7 +72,11 @@ export const pcBoxScreen = (root: HTMLElement, input: Input, actions: PcActions,
   const m = t().pc
   const species = boxSpecies()
   const shinies = caughtShinies(loadSave().dex, species)
-  const boxes = Math.max(1, Math.ceil(species.length / BOX_SLOTS))
+  const shinyBoxes = Math.max(1, Math.ceil(species.length / BOX_SLOTS))
+  // The Shadow Pokémon (`game/shadow.ts`) get a box of their own after the shinies', in their aura (a Purified one with its lotus).
+  const shadows = shadowSlots()
+  const boxes = shinyBoxes + (shadows.length > 0 ? 1 : 0)
+  const shadowBox = () => box >= shinyBoxes
   let box = 0
   let slot = 0
   let zone: Zone = 'grid'
@@ -103,7 +121,9 @@ export const pcBoxScreen = (root: HTMLElement, input: Input, actions: PcActions,
   const card = h('button', { class: 'btn', onclick: openCard }, m.trainer)
   const footer = [back, card]
 
-  const at = (i: number): DexEntry | undefined => shinies[box * BOX_SLOTS + i]
+  const at = (i: number): DexEntry | undefined => (shadowBox() ? shadows[i]?.entry : shinies[box * BOX_SLOTS + i])
+  const variantAt = (i: number) => (shadowBox() ? (shadows[i]?.purified ? 'purified' : 'shadow') : 'shiny')
+  const markOf = (i: number) => (variantAt(i) === 'shiny' ? sparkleIcon() : variantAt(i) === 'purified' ? purifiedIcon() : shadowIcon())
 
   const renderDetail = () => {
     const e = at(slot)
@@ -114,18 +134,21 @@ export const pcBoxScreen = (root: HTMLElement, input: Input, actions: PcActions,
       return
     }
     name.classList.remove('empty')
-    name.replaceChildren(h('small', {}, `#${String(nationalDex(e.dex)).padStart(4, '0')}`), e.name, h('img', { src: sparkleIcon(), alt: 'Shiny' }))
+    const w = t().rocket.shadow
+    const shown = variantAt(slot) === 'shiny' ? e.name : variantAt(slot) === 'purified' ? w.purifiedName(e.name) : w.name(e.name)
+    name.replaceChildren(h('small', {}, `#${String(nationalDex(e.dex)).padStart(4, '0')}`), shown, h('img', { src: markOf(slot), alt: '' }))
     types.replaceChildren(...e.types.map(typeBadge))
   }
 
   const renderBox = () => {
-    label.textContent = m.box(box + 1, boxes)
+    label.textContent = shadowBox() ? t().rocket.shadow.pcFilter : m.box(box + 1, shinyBoxes)
     slots.forEach((el, i) => {
       const e = at(i)
       el.classList.toggle('filled', e !== undefined)
       el.setAttribute('aria-label', e ? e.name : m.empty)
       marks[i]!.classList.toggle('hidden', e === undefined)
-      if (e) void loadSpecies(e.dex, true).catch(() => {})
+      marks[i]!.src = markOf(i)
+      if (e) void loadSpecies(e.dex, !shadowBox()).catch(() => {})
       if (!e) context2d(canvases[i]!).clearRect(0, 0, 48, 48)
     })
   }
@@ -242,8 +265,11 @@ export const pcBoxScreen = (root: HTMLElement, input: Input, actions: PcActions,
       const canvas = canvases[i]!
       const ctx = context2d(canvas)
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      const s = loadedSprites(e.dex, true)
-      // Every slot breathes on its own beat, like the boxes in the games.
+      const variant = variantAt(i)
+      const form = variant === 'shadow' ? SHADOW_SHEETS[e.dex] : undefined
+      const s = (form && loadedFormSprites(e.dex, form)) || loadedSprites(e.dex, variant === 'shiny')
+      // Every slot breathes on its own beat, like the boxes in the games; a Shadow burns in its aura.
+      if (s && variant === 'shadow' && !form) drawShadowAura(ctx, s, 'Idle', 0, time + i * 0.37, canvas.width / 2, canvas.height - 6, time + i * 0.37)
       if (s) drawPokemon(ctx, s, 'Idle', 0, time + i * 0.37, canvas.width / 2, canvas.height - 6)
     }
   }

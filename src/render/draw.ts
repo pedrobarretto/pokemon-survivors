@@ -36,7 +36,7 @@ import { drawModAttack, drawModGround, flightAngle } from './modFx'
 import { drawMoveFxAttack, drawMoveFxGround } from './moveFx'
 import { drawConsumable, drawFlash, drawProps, drawSleep } from './props'
 import { drawSpecialAttack, drawSpecialAura, drawSpecialGround } from './specialFx'
-import { awakeningLook, CLONE_OUTLINE, CLONE_TINT, drawLegendAura, playerSprites } from './legend'
+import { awakeningLook, CLONE_OUTLINE, CLONE_TINT, drawLegendAura, playerSprites, wearsShadowSheets } from './legend'
 import { isClone } from '../game/legend'
 import { drawArena, drawRiftArrow, drawRiftFallAir, drawRiftFallGround, drawRiftFallOut, drawRiftPortal, dropArenas, riftFallLook, warmArena } from './rift'
 import { drawEntranceAir, drawEntranceGround, drawPlaceArrow, drawPlaceDark, drawPlaceFallOut, drawPlaceFloor, drawPlaceGround, drawPlaceOver, drawWings, dropPlaceFloor, placeFallLook } from './places'
@@ -59,6 +59,8 @@ import { drawSeasonKitAttack, drawSeasonKitGround, drawSeasonKitPlayer } from '.
 import { drawKitBAir, drawKitBAttack, drawKitBGround, kitBPlayerLook } from './gaKitBFx'
 import { drawGaKitAAttack, drawGaKitAGround, drawGaKitAPlayer, drawGaKitAPlayerGround } from './gaKitAFx'
 import { drawRegionalAttack, drawRegionalGround } from './regionalFx'
+import { drawRocketKitAttack, drawRocketKitPlayer } from './rocketKitFx'
+import { drawPurifiedMark, drawShadowAura } from './shadowAura'
 import { drawEgg2Attack, drawEgg2Ground } from './eggMove2Fx'
 import { drawVerbAir, drawVerbGround, drawVerbPlayerAir, drawVerbPlayerGround } from './verbFx'
 import { drawTmAir, drawTmDisc, drawTmGround, drawTmPlayer } from './tmFx'
@@ -284,6 +286,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawKitBAttack(ctx, a, t)
       drawGaKitAAttack(ctx, a, t)
       drawRegionalAttack(ctx, a, t)
+      drawRocketKitAttack(ctx, a, t)
       drawEgg2Attack(ctx, a, t)
       drawSignatureAttack(ctx, a, t)
       drawTypeEvolvedAttack(ctx, a, t)
@@ -488,7 +491,8 @@ const enemyAnim = (e: Enemy, s: SpeciesSprites, aloft: boolean): AnimName =>
  * (Flashes: reduced) swaps the white hit flash for a dim red tint; `aloft`
  * flies the species that can; `ringed` gives bosses their gold outline (out of a rift's arena).
  */
-const drawEnemy = (ctx: Ctx, e: Enemy, time: number, t: number, calm: boolean, aloft: boolean, clone: boolean, ringed: boolean) => {
+/** `shadow`: the Rocket Hideout's grunts' Pokémon burn with the Shadow aura (its bosses wear their own looks). */
+const drawEnemy = (ctx: Ctx, e: Enemy, time: number, t: number, calm: boolean, aloft: boolean, clone: boolean, ringed: boolean, shadow = false) => {
   const def: EnemyDef = ENEMIES[e.kind]
   const s = sprites(def.dex, e.shiny, bossForm(e))
   const scale = drawScale(e)
@@ -519,6 +523,7 @@ const drawEnemy = (ctx: Ctx, e: Enemy, time: number, t: number, calm: boolean, a
   const tint = traitTint(e) ?? (shownStatus ? statusTint(e.status, t, e.id) : undefined) ?? (calm && hit ? HURT_TINT : rage ? RAGE_TINT : clone ? CLONE_TINT : undefined)
   if (look?.alpha === 0) return
   const outline = outlineOf(e, t, calm) ?? (clone ? CLONE_OUTLINE : ringed && e.boss ? bossOutline(e, t, calm) : undefined)
+  if (shadow && !e.boss && scale === 1) drawShadowAura(ctx, s, anim, e.dir, e.animTime, e.x, y, t + e.id * 0.37, calm || detail.lean)
   const opts = { flash: Math.max(look?.flash ?? 0, hit && !calm ? 0.85 : 0), tint: look?.tint ?? tint, scale, outline, outlineAlpha: outline === ELITE_OUTLINE ? eliteThrob(e, t) : 1, alpha: look?.alpha ?? shadeAlpha(e.kind, e.id, t) }
   // A Tera Raid's giant is crystal, crowned, behind its shield (`render/teraFx.ts`).
   if (!(raidHere?.bossId === e.id && drawRaidBoss(ctx, raidHere, e, s, anim, y, opts, t))) drawPokemon(ctx, s, anim, e.dir, e.animTime, e.x, y, opts)
@@ -664,6 +669,7 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // variant's own Walk, Idle and Hurt (a Mega with sheets has its own; `render/wearFit.ts` checks the sheet),
   // so the moments that swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega's transformation
   // and a move's own look (Fly, Dig, a lunge).
+  // Ditto Transformed wears another species' sheets: dressed by that species' rig when a player can be it (`rigSheet`), bare otherwise.
   const bare = emote !== null || egg !== null || p.mega.intro > 0 || p.tera.intro > 0
   const look = bare ? null : shownLook(g, p.slot)
   // Terastallized, the Pokémon is crystal under its Tera type's crown (`render/teraFx.ts`), bare: the crown takes a hat's place.
@@ -671,6 +677,8 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const tera = emote === null && egg === null ? crystalType(p) : null
   const teraFading = p.tera.active > 0 && p.tera.active < 3 && Math.floor(p.tera.active * 6) % 2 === 0
   const teraGlow = p.tera.intro > 0 ? Math.min(1, (1 - p.tera.intro / TERA.intro) * 6) * (calm ? 0.5 : 0.9) : 0
+  // A Shadow Pokémon burns with its aura (`render/shadowAura.ts`), unless its sheets are SpriteCollab's own Shadow ones.
+  if (p.variant === 'shadow' && alpha >= 0.5 && !wearsShadowSheets(g)) drawShadowAura(ctx, s, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, g.now, calm || detail.lean)
   if (alpha > 0) {
     const crystal = tera !== null && !teraFading && drawCrystalPokemon(ctx, s, tera, anim, p.dir, p.animTime, p.x, feet, { alpha, flash: Math.max(flash, teraGlow * 0.4), tint, outline: mega.outline }, teraClock)
     if (!crystal) drawDressed(ctx, s, tera ? null : look, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, { alpha, flash: Math.max(flash, teraGlow), tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
@@ -681,6 +689,7 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   drawMegaAir(ctx, g, p.y - s.bodyH, p.animTime)
   drawTeraAir(ctx, g, s, anim, feet, teraClock)
   drawHpBar(ctx, g)
+  if (p.variant === 'purified') drawPurifiedMark(ctx, p.x - 18, p.y + 3)
 }
 
 /** GBA-style HP bar under the player's feet. */
@@ -960,6 +969,7 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawSeasonKitPlayer(ctx, g, t)
   drawKitBAir(ctx, g, t)
   drawGaKitAPlayer(ctx, g, t)
+  drawRocketKitPlayer(ctx, g, t)
   drawSignaturePlayer(ctx, g, t)
   drawTmPlayer(ctx, g, t)
   drawShopTm2Player(ctx, g, t, g.player.y - playerSprites(g).bodyH)
@@ -1169,7 +1179,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     else if (isMate(d)) !lifted.includes(d.mate) && (showsPlain(localPlayer(d.mate)) ? drawPlayer(ctx, d.mate, calm) : drawTeammate(ctx, d.mate, localPlayer(d.mate), t, calm))
     else if (isSolid(d)) drawSolid(ctx, g, d)
     else if (isValeProp(d)) drawValeProp(ctx, g, d, t, playerSprites(g).bodyW, playerSprites(g).bodyH)
-    else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d), !g.rift.arena && !g.raid.arena)
+    else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d), !g.rift.arena && !g.raid.arena, g.place.inside?.id === 'hideout')
   }
   // Badges only on bosses: on a 300-enemy horde they'd bury the sprites (tint + particles carry it there).
   for (const d of inDepth) {

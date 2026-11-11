@@ -9,6 +9,7 @@ import { inDexGoal } from '../game/dexRegions'
 import type { PokeType } from '../data/types'
 import { isRiftLegend, RIFT, type RiftLegend } from '../data/rifts'
 import { DOMAINS } from '../data/domains'
+import { HIDEOUT, HIDEOUT_BOSSES } from '../data/rocketHideout'
 import { GRAVEYARD, HIDDEN, hiddenOf, PLACE, PLACE_IDS, PLACES, type PlaceId } from '../data/places'
 import { SUMMONS } from '../data/traits'
 import { bossCandidates, EVENTS, nightCandidates, RUN_LENGTH, STAGES, TRIO_IDS, TRIOS, type TrioId } from '../data/waves'
@@ -270,6 +271,7 @@ export const appearances = (id: EnemyId): Appearance[] => {
   // A place's dwellers come out once the run's stage has their tier (never before the first entrance; a hidden zone's, never before it can open).
   const placed = PLACE_IDS.flatMap((place): Appearance[] => {
     if (place === 'graveyard' && id === GRAVEYARD.boss) return [{ kind: 'place', place, from: PLACE.firstAt, boss: true }]
+    if (place === 'hideout' && Object.hasOwn(HIDEOUT_BOSSES, id)) return [{ kind: 'place', place, from: HIDEOUT.at, boss: true }]
     const hidden = hiddenOf(place)
     const first = hidden ? HIDDEN.from : PLACE.firstAt
     const own: Appearance[] = hidden?.lucky.some(([e]) => e === id) ? [{ kind: 'hidden', place, from: first }] : []
