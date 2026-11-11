@@ -1,14 +1,18 @@
 import type { Sfx } from '../engine/audio'
 import { formatTime } from '../engine/math'
 import { ENEMIES } from '../data/enemies'
+import type { SwordId } from '../data/legends'
 import { duelTest } from '../game/duels'
 import type { Game, GameEvent } from '../game/types'
 import { t } from '../i18n'
+import { leafIcon, swordIcon } from '../render/quests'
+import { h, setText } from './dom'
 
 /**
  * The open map's legends in words (`game/roamers.ts`, `game/duels.ts`): the
  * news each of their moments brings (a roamer sighted or gone, a Sword
- * waiting, the duel's test, its end) and the HUD pill while one is about.
+ * waiting, the duel's test, its end), the HUD pill while one is about, and
+ * the duel's card while one is on (`createDuelCard`).
  */
 
 type QuestEvent = Extract<GameEvent, { kind: 'roam' | 'duel' }>
@@ -58,15 +62,73 @@ export const questNews = (e: QuestEvent): QuestNews => {
 export const questPill = (g: Pick<Game, 'quests' | 'time'>): { text: string; urgent: boolean } | null => {
   const m = t().quests
   const d = g.quests.duel
-  if (d && (d.stage === 'dueling' || d.stage === 'waiting')) {
-    const name = ENEMIES[d.sword].name
-    const time = formatTime(Math.ceil(Math.max(0, d.left)))
-    if (d.stage === 'waiting') return { text: m.duel.hudWaiting(name, time), urgent: d.left < 8 }
-    const test = duelTest(d.sword)
-    const text = test.kind === 'endure' ? m.duel.hudEndure(name, time) : test.kind === 'power' ? m.duel.hudPower(name, time) : m.duel.hudSpeed(d.marks, test.marks, time)
-    return { text, urgent: d.left < 8 }
-  }
+  // A duel on shows its own card instead.
+  if (d?.stage === 'dueling') return null
+  if (d?.stage === 'waiting') return { text: m.duel.hudWaiting(ENEMIES[d.sword].name, formatTime(Math.ceil(Math.max(0, d.left)))), urgent: d.left < 8 }
   const r = g.quests.roam
   if (r && r.body >= 0 && g.time >= r.hidden) return { text: m.roam.hud(ENEMIES[r.legend].name, pct(r.left)), urgent: false }
   return null
+}
+
+/** Seconds left under which the duel's clock turns red and pulses. */
+const URGENT = 8
+
+/**
+ * The duel's card under the boss bar while a Sword tests the player: the
+ * test's name in the Sword's color, what passes it, and its clock draining;
+ * Cobalion's adds the player's HP against the line it mustn't fall under,
+ * Virizion's the leaves stepped on so far.
+ */
+export const createDuelCard = () => {
+  const icon = h('img', { class: 'duel-icon', alt: '' })
+  const test = h('span', { class: 'duel-test' })
+  const goal = h('div', { class: 'duel-goal' })
+  const fill = h('i', { class: 'duel-fill' })
+  const clock = h('span', { class: 'duel-clock' })
+  const hpFill = h('i', { class: 'duel-hp-fill' })
+  const hpShare = h('span', { class: 'duel-clock' })
+  const hp = h('div', { class: 'duel-row' }, h('span', { class: 'duel-tag' }, 'HP'), h('div', { class: 'duel-hp' }, hpFill, h('i', { class: 'duel-floor' })), hpShare)
+  const leaves = h('div', { class: 'duel-leaves' })
+  const el = h('div', { class: 'duel-card box hidden' }, h('div', { class: 'duel-head' }, icon, test), goal, h('div', { class: 'duel-row' }, h('div', { class: 'duel-bar' }, fill), clock), hp, leaves)
+  let shown: SwordId | null = null
+  let leafKey = ''
+  const update = (g: Game) => {
+    const d = g.quests.duel
+    const on = d?.stage === 'dueling'
+    el.classList.toggle('hidden', !on)
+    if (!d || !on) return (shown = null)
+    const m = t().quests.duel
+    const spec = duelTest(d.sword)
+    if (shown !== d.sword) {
+      shown = d.sword
+      el.dataset.sword = d.sword
+      icon.src = swordIcon(d.sword)
+      setText(test, m.tests[spec.kind])
+      hp.classList.toggle('hidden', spec.kind !== 'endure')
+      leaves.classList.toggle('hidden', spec.kind !== 'speed')
+      if (spec.kind === 'endure') hp.style.setProperty('--floor', `${spec.floor * 100}%`)
+      leafKey = ''
+    }
+    const left = Math.max(0, d.left)
+    fill.style.width = `${(left / spec.time) * 100}%`
+    setText(clock, formatTime(Math.ceil(left)))
+    el.classList.toggle('urgent', left < URGENT)
+    if (spec.kind === 'endure') {
+      const p = g.player
+      const share = Math.max(0, p.hp / p.stats.maxHp)
+      hpFill.style.width = `${share * 100}%`
+      setText(hpShare, `${Math.round(share * 100)}%`)
+      hp.classList.toggle('low', share < spec.floor + 0.12)
+      setText(goal, m.goal.endure(Math.round(spec.floor * 100)))
+    } else if (spec.kind === 'power') setText(goal, m.goal.power)
+    else {
+      setText(goal, m.goal.speed(d.marks, spec.marks))
+      const key = `${d.marks}/${spec.marks}`
+      if (key !== leafKey) {
+        leafKey = key
+        leaves.replaceChildren(...Array.from({ length: spec.marks }, (_, i) => h('img', { class: i < d.marks ? 'got' : '', src: leafIcon(i < d.marks), alt: '' })))
+      }
+    }
+  }
+  return { el, update }
 }

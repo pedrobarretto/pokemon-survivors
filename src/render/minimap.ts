@@ -111,7 +111,7 @@ const MAZE = ['mmmmm', 'm...m', 'm.m.m', 'm.m..', 'mmmmm']
 const RUINS = ['sssss', '.s.s.', '.s.s.', 'sssss']
 const TENT = ['..o..', '.ooo.', 'oo.oo', 'oo.oo']
 const STAR = ['..y..', '.yyy.', 'yywyy', '.yyy.', '.y.y.']
-const ORB = ['.ccc.', 'cwwcc', 'cwccc', 'ccccc', '.ccc.']
+const ORB = ['.kkk.', 'kwcck', 'kccdk', 'kcddk', '.kkk.']
 const BLADE = ['....w', '...w.', 'w.w..', '.y...', 'y.y..']
 
 const GLYPHS = lazy(() => ({
@@ -156,9 +156,9 @@ const GLYPHS = lazy(() => ({
   prize: glyph(['.c.', 'cwc', '.c.'], { c: '#e02838', w: '#f8e0b0' }),
   /** A roaming lake legend (its gem's color) and a Sword waiting for its duel (`game/quests.ts`). */
   roamer: {
-    uxie: glyph(ORB, { c: '#f8d048', w: '#ffffff' }),
-    mesprit: glyph(ORB, { c: '#f878b0', w: '#ffffff' }),
-    azelf: glyph(ORB, { c: '#58a0f8', w: '#ffffff' }),
+    uxie: glyph(ORB, { c: '#f8d048', d: '#c09018', w: '#ffffff', k: DARK }),
+    mesprit: glyph(ORB, { c: '#f878b0', d: '#c04880', w: '#ffffff', k: DARK }),
+    azelf: glyph(ORB, { c: '#58a0f8', d: '#2860c0', w: '#ffffff', k: DARK }),
   } satisfies Record<LakeId, PixelSprite>,
   sword: glyph(BLADE, { w: '#f0f4ff', y: '#f8d048' }),
 }))

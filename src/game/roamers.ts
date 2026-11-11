@@ -1,11 +1,11 @@
-import { dirTo, TAU } from '../engine/math'
+import { dir8, dirTo, TAU } from '../engine/math'
 import { createRng, hash2, range } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
 import type { LakeId } from '../data/legends'
 import { AZELF_STRIKES, LAKE_QUIRKS, ROAM } from '../data/quests'
 import { throwPattern } from './bosses'
 import { burst, shakeScreen } from './effects'
-import { despawnEnemy, spawnEnemy } from './enemies'
+import { spawnEnemy } from './enemies'
 import { nearestPlayer, playerWithin } from './players'
 import { riftScale } from './rift'
 import { roomOf } from './room'
@@ -111,10 +111,16 @@ const appear = (g: Game, r: RoamState) => {
   notify(g, r, 'sighted')
 }
 
-/** The visit ends: it vanishes (a flash where it stood) and comes back after a gap, unless it was the last. */
+/** The visit ends: it bolts away from the nearest player, fading as it goes (a flash where it stood), and comes back after a gap, unless it was the last. */
 const leave = (g: Game, r: RoamState, e: Enemy) => {
   burst(g, e.x, e.y - 14, { colors: ['#ffffff', '#c8c8f0', '#f878b0'], count: 26, speed: 120, ttl: 0.5 })
-  despawnEnemy(e)
+  const p = nearestPlayer(g, e.x, e.y)
+  const away = dirTo(p.x, p.y, e.x, e.y)
+  e.dying = 0
+  e.fled = true
+  e.kx = away.x * 240
+  e.ky = away.y * 240
+  e.dir = dir8(away.x, away.y)
   r.body = -1
   const rng = drawOf(r)
   r.next = g.time + range(rng, ROAM.gap[0], ROAM.gap[1])
