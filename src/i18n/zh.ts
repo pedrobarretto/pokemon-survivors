@@ -8,6 +8,7 @@ import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
+import { LEGEND_PATHS_WORDS } from './legendPaths'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2462,6 +2463,7 @@ export const zh: Messages = {
     ...REGIONAL_WORDS.zh.abilities,
     ...SEASON_ONE_KITS_WORDS.zh.abilities,
     ...ULTRA_WORDS.zh.abilities,
+    ...LEGEND_PATHS_WORDS.zh.abilities,
     overgrow: 'HP低於1/3時，草屬性招式傷害+50%。',
     blaze: 'HP低於1/3時，火屬性招式傷害+50%。',
     torrent: 'HP低於1/3時，水屬性招式傷害+50%。',
@@ -3156,6 +3158,7 @@ export const zh: Messages = {
     ...GA_FAMILIES_A_WORDS.zh.moves,
     ...ROCKET_FAMILY_WORDS.zh.moves,
     ...ULTRA_WORDS.zh.moves,
+    ...LEGEND_PATHS_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
       upgrades: [
@@ -5632,6 +5635,7 @@ export const zh: Messages = {
     ...GA_FAMILIES_A_WORDS.zh.blurbs,
     ...ROCKET_FAMILY_WORDS.zh.blurbs,
     ...ULTRA_WORDS.zh.blurbs,
+    ...LEGEND_PATHS_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
     squirtle: '防禦型。HP與防禦較高。',
@@ -6347,6 +6351,8 @@ export const zh: Messages = {
       festival: '_廣場祭典_的獎勵：以神秘禮物送達，從不需要對戰。',
       ultra: '從_究極之洞_出現（單人遊戲每局一個，約8分鐘時）：進去擊敗它。',
       ultraGift: '收服全部10隻究極異獸後，以神秘禮物送達。',
+      path: LEGEND_PATHS_WORDS.zh.paths.where.zygarde,
+      temple: LEGEND_PATHS_WORDS.zh.paths.where.regigigas,
     },
     rule: (need: number) => (need === 1 ? '在任何模式的單人遊戲中以首領身分擊敗它1次，即可收服。合作模式的勝利不計。' : `在任何模式的單人遊戲中以首領身分擊敗它${need}次，即可收服。合作模式的勝利不計。`),
     shinyRule: '在收服的那場勝利或之後擊敗異色個體，即可解鎖它的異色。',
@@ -6378,6 +6384,7 @@ export const zh: Messages = {
       jirachi: '許願之星',
       mewtwo: '基因之怒',
       arceus: '創始之神',
+      regigigas: LEGEND_PATHS_WORDS.zh.epithet,
     },
     phases: {
       articuno: ['*Articuno* 起飛了！快逃離它的_影子_。', '暴風雪！在 Snowscape 之前躲進_雪之避難所_。'],
@@ -6394,6 +6401,7 @@ export const zh: Messages = {
       jirachi: ['*Jirachi* 瞬間移動到你身上：快離開_圓圈_！', 'Wish！星星如雨落下：找出_空隙_。'],
       mewtwo: ['*Mewtwo* 釋放超能力！快離開 Teleport 的_圓圈_。', 'Psystrike！從_空隙_鑽過去，再跑向_避難所_。'],
       arceus: ['*Arceus* 瞬間移動來審判你！', 'Judgment！只有_光之避難所_能救你。'],
+      regigigas: LEGEND_PATHS_WORDS.zh.phases,
     },
   },
   team: {
@@ -6466,6 +6474,7 @@ export const zh: Messages = {
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.zh,
   rocket: ROCKET_WORDS.zh,
+  paths: LEGEND_PATHS_WORDS.zh.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.zh.words,
     safari: SEASON_ONE_SAFARI_WORDS.zh.words,

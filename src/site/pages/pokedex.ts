@@ -174,6 +174,8 @@ export const appearance = (a: Appearance, m: SiteMessages) => {
       return m.pokedex.wormhole(clock(a.at))
     case 'reaper':
       return m.pokedex.reaper(clock(a.at))
+    case 'temple':
+      return m.pokedex.temple(clock(a.from), clock(a.until))
     case 'place':
       // Spiritomb wakes from the Odd Keystone; the Hideout's lair bosses just live there.
       return a.boss && a.place === 'graveyard' ? m.pokedex.placeBoss(m.pokedex.places[a.place], clock(a.from)) : m.pokedex.place(m.pokedex.places[a.place], clock(a.from))
@@ -282,20 +284,22 @@ export const captureText = (unlock: LegendUnlock, m: SiteMessages) =>
   unlock.event ? m.pokedex.captureEvent(unlock.wins) : unlock.last ? m.pokedex.captureLast(REGULAR_LEGENDS.length - 1) : m.pokedex.capture(unlock.wins, AWAKEN_AT)
 
 /** A legendary's card: how it's captured for the Legend mode, its innate and the move it opens with (`data/legends.ts`). */
-const legendSection = (id: LegendId, m: SiteMessages) => {
+const legendSection = (id: LegendId, m: SiteMessages, locale: Locale) => {
   const def = LEGENDS[id]
   const unlock: LegendUnlock = def.unlock
   const opener = MOVES[def.learnset[0][0]!]
+  // A path legend comes from its path, never from wins (`dexPage.ts` says it the same way).
+  const capture = unlock.path || unlock.after ? pathNote(id, locale) : captureText(unlock, m)
   return html`<h3>${m.pokedex.legendMode}</h3>
     <ul class="list">
-      <li>${captureText(unlock, m)}</li>
+      <li>${capture}</li>
       <li>${m.pokedex.innate(ABILITIES[def.innate.ability].name)}</li>
       <li>${m.pokedex.opens(opener.name)} ${typeBadge(opener.type, m)}</li>
     </ul>
     <p class="note">★ ${m.pokedex.captureShiny}</p>`
 }
 
-const wildBody = (entry: DexEntry & { source: { kind: 'wild' } }, m: SiteMessages) => {
+const wildBody = (entry: DexEntry & { source: { kind: 'wild' } }, m: SiteMessages, locale: Locale) => {
   const e: EnemyDef = ENEMIES[entry.source.id]
   const kit = bossKit(entry.source.id)
   // A species with a night boss (`HALLOWEEN.bosses`) shows that boss's attacks.
@@ -315,7 +319,7 @@ const wildBody = (entry: DexEntry & { source: { kind: 'wild' } }, m: SiteMessage
     <h3>${m.pokedex.appears}</h3>
     <ul class="list">${appearances(entry.source.id).map((a) => html`<li>${appearance(a, m)}</li>`)}</ul>
     ${bossKit(fights).length > 0 && html`<h3>${night ? m.pokedex.nightAttacks : m.pokedex.attacks}</h3>${bossAttacks(fights, m)}`}
-    ${isLegend(entry.source.id) && legendSection(entry.source.id, m)}
+    ${isLegend(entry.source.id) && legendSection(entry.source.id, m, locale)}
     ${shiny && html`<p class="note">★ ${shiny}</p>`}`
 }
 
@@ -331,6 +335,16 @@ const tierOf = (entry: DexEntry) => {
 }
 
 /** One species' card. `page` links its name to the Pokémon's own page: the Pokédex's cards do, that page's own cards don't. */
+/** A path legend's card line: where its path starts (the game's own words, `paths.where`), Cosmog's line how it grows. */
+export const pathNote = (legend: LegendId | null, locale: Locale) => {
+  const words = MESSAGES[locale].paths
+  const where: Partial<Record<LegendId, string>> = words.where
+  return plainText(legend ? (where[legend] ?? '') : words.cosmog.how)
+}
+
+/** The game's light markup (`*bold*`, `_em_`) as plain text. */
+const plainText = (text: string) => text.replace(/[*_]/g, '')
+
 export const card = (entry: DexEntry, locale: Locale, css: SpriteCss, page?: string) => {
   const m = SITE_MESSAGES[locale]
   const { dex, name, slug, sprites, types, role, region } = entry
@@ -349,7 +363,7 @@ export const card = (entry: DexEntry, locale: Locale, css: SpriteCss, page?: str
   </div>
   <h2>${page ? html`<a href="${page}" title="${m.dexPage.page(name)}">${name}</a>` : name}</h2>
   <div class="types">${types.map((t) => typeBadge(t, m))}</div>
-  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'lobby' ? m.pokedex.lobbyNote : entry.source.kind === 'summon' ? m.pokedex.summonNote : m.pokedex.eventNote}</p>`}
+  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m, locale) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'lobby' ? m.pokedex.lobbyNote : entry.source.kind === 'summon' ? m.pokedex.summonNote : entry.source.kind === 'path' ? pathNote(entry.source.legend, locale) : m.pokedex.eventNote}</p>`}
 </article>`
 }
 

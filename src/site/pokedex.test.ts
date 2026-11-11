@@ -60,11 +60,11 @@ describe('appearances', () => {
     }
   })
 
-  it("places every Pokémon somewhere in the run, bosses as boss events, trio slots, night boss slots, rifts (an event's too), Tera Raids, the reaper or a place's boss", () => {
+  it("places every Pokémon somewhere in the run, bosses as boss events, trio slots, night boss slots, rifts (an event's too), Tera Raids, the reaper, a place's boss or Regigigas's temple", () => {
     for (const id of ids) {
       const found = appearances(id)
       expect(found.length).toBeGreaterThan(0)
-      if ('boss' in ENEMIES[id]) expect(found.some((a) => a.kind === 'boss' || a.kind === 'trio' || a.kind === 'rift' || a.kind === 'eventRift' || a.kind === 'wormhole' || a.kind === 'raid' || a.kind === 'reaper' || (a.kind === 'place' && a.boss) || a.kind === 'night')).toBe(true)
+      if ('boss' in ENEMIES[id]) expect(found.some((a) => a.kind === 'boss' || a.kind === 'trio' || a.kind === 'rift' || a.kind === 'eventRift' || a.kind === 'wormhole' || a.kind === 'raid' || a.kind === 'reaper' || a.kind === 'temple' || (a.kind === 'place' && a.boss) || a.kind === 'night')).toBe(true)
     }
   })
 })

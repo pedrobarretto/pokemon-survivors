@@ -105,7 +105,7 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
   const done = DEX_REGIONS.filter((r) => regionDone(save, r))
   const regionNumbers = new Map(DEX_REGIONS.map((r) => [r, regionCounts(r, entries)] as const))
   /** The hardest difficulty the entry's family (or legend, in the Legend mode) beat Mewtwo on, if it did. */
-  const clearOf = (e: DexEntry) => (e.source.kind === 'starter' ? clears[e.source.id] : e.source.kind === 'wild' && isLegend(e.source.id) ? clears[e.source.id] : undefined)
+  const clearOf = (e: DexEntry) => (e.source.kind === 'starter' ? clears[e.source.id] : e.source.kind === 'wild' && isLegend(e.source.id) ? clears[e.source.id] : e.source.kind === 'path' && e.source.legend ? clears[e.source.legend] : undefined)
 
   let filter: DexFilter = 'all'
   let zone: Zone = 'grid'

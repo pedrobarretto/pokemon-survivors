@@ -1,9 +1,10 @@
 import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
-import { DIG_FOSSIL_FAMILIES, DIG_FOSSIL_REPEAT, DIG_TREASURES, type DigPiece, type FossilFamily } from '../../src/data/digTreasures'
+import { DIG_BOX_REPEAT, DIG_FOSSIL_FAMILIES, DIG_FOSSIL_REPEAT, DIG_TREASURES, type DigPiece, type FossilFamily } from '../../src/data/digTreasures'
+import { MELTAN } from '../../src/data/legendPaths'
 import { PLAYABLE } from '../../src/data/hatchlings'
 import type { Deed } from '../../src/data/realmStamps'
-import { canPlay } from '../../src/game/capture'
+import { canPlay, isCaptured } from '../../src/game/capture'
 import { brasiliaDay, weekStart, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
 import type { GiftContent, GiftReason } from '../../src/game/gifts'
@@ -99,6 +100,20 @@ const lackingOf = async (q: Q, userId: string, save: Save | null) => {
   return DIG_FOSSIL_FAMILIES.filter((family) => save?.hatched[family] === undefined && !sent.some((g) => g.family === family))
 }
 
+/** Whether the account still lacks Meltan: not captured in the stored save, and no gift bringing it sent (one on its way counts). */
+const lacksMeltan = async (q: Q, userId: string, save: Save | null) => {
+  if (save && isCaptured(save.legends, 'meltan')) return false
+  const sent = await q<{ n: number }[]>`select count(*)::int as n from gifts where user_id = ${userId} and kind = 'legend' and payload->>'legend' = 'meltan'`
+  return (sent[0]?.n ?? 0) === 0
+}
+
+/** Whether a new wall holds Meltan's Mystery Box: only while the account lacks Meltan, by chance (`MELTAN.box`), and surely every `MELTAN.boxGuarantee`th wall. */
+const boxDue = async (q: Q, userId: string, save: Save | null) => {
+  if (!(await lacksMeltan(q, userId, save))) return false
+  const walls = (await q<{ n: number }[]>`select count(*)::int as n from dig_walls where user_id = ${userId}`)[0]?.n ?? 0
+  return (walls + 1) % MELTAN.boxGuarantee === 0 || randomInt(0, 1_000_000) < MELTAN.box * 1_000_000
+}
+
 /** The partner's powers: the one the player walks with, if the stored save may play it, else the save's own. */
 const powersFor = (save: Save | null, partner: string | null): DigPowers => {
   if (!save) return NO_POWERS
@@ -132,8 +147,9 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
   /**
    * Ends a wall: every treasure dug out completely goes to its owner, in this
    * one transaction. Gifts carry a key per wall and treasure, so a retry can't
-   * pay twice; a lacked fossil is a family (the rest pay ₽), furniture goes
-   * straight in, and the dry streak moves (`fossilStreak`).
+   * pay twice; a lacked fossil is a family (the rest pay ₽), Meltan's
+   * Mystery Box is Meltan while the account lacks it, furniture goes straight
+   * in, and the dry streak moves (`fossilStreak`).
    */
   const finish = async (tx: TransactionSql, userId: string, row: WallRow, left: number[], outcome: DigEnd['outcome']): Promise<DigEnd> => {
     const { wall, lacking } = row.built
@@ -155,6 +171,15 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
           insert into furniture_owned (user_id, furniture, source, count) values (${userId}, ${prize.piece satisfies DigPiece}, 'dig', 1)
           on conflict (user_id, furniture, source) do update set count = furniture_owned.count + 1`
         kept.push({ id: t.id, prize, repeat: false, coins: 0 })
+        continue
+      }
+      if (prize.kind === 'legend') {
+        // Meltan's Mystery Box: Meltan for an account still without it, ₽ for one that has it by now.
+        const fresh = await lacksMeltan(tx, userId, stored ? parseSaveData(stored.data) : null)
+        const key = `dig:${row.id}:${i}`
+        keys.push(key)
+        await sendGift(tx, userId, fresh ? { kind: 'legend', legend: prize.legend } : { kind: 'coins', amount: DIG_BOX_REPEAT }, fresh ? { kind: 'path', path: 'meltan' } : { kind: 'season', way: 'dig' }, key)
+        kept.push({ id: t.id, prize, repeat: !fresh, coins: fresh ? 0 : DIG_BOX_REPEAT })
         continue
       }
       if (prize.kind === 'fossil') {
@@ -225,7 +250,8 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
         const lacking = await lackingOf(tx, userId, saved)
         const dry = await dryOf(tx, userId)
         const powers = powersFor(saved, partner)
-        const wall = buildWall(seed, { week, powers, lacking, due: dry >= DIG.fossilGuarantee })
+        const box = await boxDue(tx, userId, saved)
+        const wall = buildWall(seed, { week, powers, lacking, due: dry >= DIG.fossilGuarantee, box })
         const built: Built = { wall, powers, lacking }
         const [inserted] = await tx<WallRow[]>`
           insert into dig_walls (user_id, day, week, seed, price, built, left_layers)

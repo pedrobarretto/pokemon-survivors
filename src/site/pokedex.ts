@@ -19,7 +19,8 @@ import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
 import { TAILOR } from '../data/visitors'
 import { isUltraBeast, WORMHOLE } from '../data/ultraBeasts'
-import { EVENT_LEGENDS, giftLegend, LEGEND_IDS, LEGENDS, legendFestival, type LegendId } from '../data/legends'
+import { EVENT_LEGENDS, giftLegend, LEGEND_IDS, LEGENDS, legendFestival, PATH_LEGENDS, type LegendId } from '../data/legends'
+import { COSMOG_DEX, PATH_FORMS, REGIGIGAS } from '../data/legendPaths'
 import { nationalDex } from '../data/regionalForms'
 
 /**
@@ -71,6 +72,11 @@ export type DexEntry = {
     | { kind: 'summon' }
     /** `gift`: a legend that's never fought, only given (Poipole, for capturing the Ultra Beasts, `game/ultraGifts.ts`). */
     | { kind: 'gift'; id: LegendId }
+    /**
+     * `path`: a path legend (`data/legendPaths.ts`) or its form of another species (Urshifu, Melmetal), never
+     * fought; `legend` null for Cosmog's line, which lives in the lobby and grows into Solgaleo or Lunala.
+     */
+    | { kind: 'path'; legend: LegendId | null }
 }
 
 /** Main-series region a species debuted in, from its national dex number (`data/nationalDex.ts`). */
@@ -155,6 +161,21 @@ const cameoEntries = (): DexEntry[] =>
 /** Who lives only in the lobby (Leavanny at the Boutique), as event Pokémon. */
 const lobbyEntries = (): DexEntry[] => [{ ...base(TAILOR.dex, TAILOR.name, TAILOR.types), role: 'event', source: { kind: 'lobby' } }]
 
+/** The path legends that are never fought, and their forms of other species (Urshifu, Melmetal), as legendaries. */
+const pathEntries = (): DexEntry[] =>
+  PATH_LEGENDS.filter((id) => !wildByDex.has(LEGENDS[id].line[0].dex)).flatMap((id): DexEntry[] => {
+    const own = LEGENDS[id].line[0]
+    const forms = Object.values(PATH_FORMS).flatMap((f): DexEntry[] => (f.legend === id && 'dex' in f && f.dex !== own.dex ? [{ ...base(f.dex, f.name, 'types' in f ? f.types : own.types), role: 'legendary', source: { kind: 'path', legend: id } }] : []))
+    const unique = forms.filter((f, i) => forms.findIndex((o) => o.dex === f.dex) === i)
+    return [{ ...base(own.dex, own.name, own.types), role: 'legendary', source: { kind: 'path', legend: id } }, ...unique]
+  })
+
+/** Cosmog's line, which lives in the lobby (`COSMOG_DEX`), as legendaries of a path. */
+const cosmogEntries = (): DexEntry[] => [
+  { ...base(COSMOG_DEX.cosmog, 'Cosmog', ['psychic']), role: 'legendary', source: { kind: 'path', legend: null } },
+  { ...base(COSMOG_DEX.cosmoem, 'Cosmoem', ['psychic']), role: 'legendary', source: { kind: 'path', legend: null } },
+]
+
 /** Who a family's mechanic calls in (Tatsugiri's Dondozo), as event Pokémon. */
 const summonEntries = (): DexEntry[] => [{ ...base(977, 'Dondozo', ['water']), role: 'event', source: { kind: 'summon' } }]
 
@@ -179,7 +200,7 @@ export const gameDex = (): DexEntry[] => {
   const playable = [...STARTER_IDS.flatMap((id) => playableEntries(id, 'starter')), ...HATCHLING_IDS.flatMap((id) => playableEntries(id, 'egg'))]
   const listed = new Set(playable.map((e) => e.dex))
   const wild = [...wildByDex].filter(([dex]) => !listed.has(dex)).map(([, id]) => wildEntry(id))
-  return [...playable, ...wild, ...giftEntries(), eventEntry()].sort(byDex)
+  return [...playable, ...wild, ...giftEntries(), ...pathEntries(), eventEntry()].sort(byDex)
 }
 
 /**
@@ -209,7 +230,7 @@ export const pokedex = (): DexEntry[] => {
   const game = gameDex()
   const listed = new Set(game.map((e) => e.dex))
   // Leavanny roams the horde too: its wild card stands for the tailor's.
-  const extras = [...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...summonEntries()].filter((e) => !listed.has(e.dex))
+  const extras = [...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...summonEntries(), ...cosmogEntries()].filter((e) => !listed.has(e.dex))
   return [...game, ...extras].sort(byDex)
 }
 
@@ -237,6 +258,8 @@ export type Appearance =
   | { kind: 'wormhole'; at: number }
   /** Hunts the player in endless mode from `at`. */
   | { kind: 'reaper'; at: number }
+  /** Wakes in its temple (`REGIGIGAS`), which rises between `from` and `until` in the runs of the Regi trio's captor. */
+  | { kind: 'temple'; from: number; until: number }
   /** Lives in a place (`data/places.ts`), coming out from `from`; `boss` for the place's own boss. */
   | { kind: 'place'; place: PlaceId; from: number; boss: boolean }
   /** Pops out of a hidden zone's spots (its lucky ones), from `from`. */
@@ -286,6 +309,7 @@ export const appearances = (id: EnemyId): Appearance[] => {
         : []
   const reaper: Appearance[] = id === REAPER ? [{ kind: 'reaper', at: ENDLESS.reaperAt }] : []
   const raid: Appearance[] = id === 'terapagos' ? [{ kind: 'raid', from: RAID.slots[1], stellar: true }] : RAID_BOSSES.some((b) => b === id) ? [{ kind: 'raid', from: RAID.slots[0], stellar: false }] : []
+  const temple: Appearance[] = id === 'regigigas' ? [{ kind: 'temple', from: REGIGIGAS.at[0], until: REGIGIGAS.at[1] }] : []
   // A place's dwellers come out once the run's stage has their tier (never before the first entrance; a hidden zone's, never before it can open).
   const placed = PLACE_IDS.flatMap((place): Appearance[] => {
     if (place === 'graveyard' && id === GRAVEYARD.boss) return [{ kind: 'place', place, from: PLACE.firstAt, boss: true }]
@@ -304,7 +328,7 @@ export const appearances = (id: EnemyId): Appearance[] => {
   const retinue = (Object.keys(DOMAINS) as RiftLegend[])
     .filter((by) => domainCast(by).includes(id))
     .map((by): Appearance => ({ kind: 'retinue', by }))
-  return [...windows, ...events, ...rift, ...raid, ...reaper, ...placed, ...summoned, ...retinue]
+  return [...windows, ...events, ...rift, ...raid, ...reaper, ...temple, ...placed, ...summoned, ...retinue]
 }
 
 /** Everyone a legendary's domain brings besides its legendaries: the crossing's retinue, its adds and its barrier's keepers. */
@@ -347,9 +371,11 @@ export const dexPages = (): readonly DexPage[] => {
   })
   // A festival legend (Cresselia) is a surprise for now: its page comes with its festival's announcement.
   const legends = LEGEND_IDS.filter((id) => !legendFestival(id)).map((id): DexPage => {
-    const entry = entries.find((e) => (e.source.kind === 'wild' || e.source.kind === 'gift') && e.source.id === id)
+    const entry = entries.find((e) => ((e.source.kind === 'wild' || e.source.kind === 'gift') && e.source.id === id) || (e.source.kind === 'path' && e.source.legend === id && e.dex === LEGENDS[id].line[0].dex))
     if (!entry) throw new Error(`No Pokédex entry for legend ${id}`)
-    return { kind: 'legend', id, slug: entry.slug, entries: [entry] }
+    // A path legend's page shows its forms of other species too (Urshifu, Melmetal).
+    const forms = entries.filter((e) => e !== entry && e.source.kind === 'path' && e.source.legend === id)
+    return { kind: 'legend', id, slug: entry.slug, entries: [entry, ...forms] }
   })
   return (pages = [...families, ...legends])
 }

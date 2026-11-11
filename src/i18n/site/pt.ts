@@ -153,6 +153,7 @@ export const sitePt = {
     raid: (from: string) => `Gigante de uma Raide Tera: num Covil Tera a partir de ${from}, de qualquer tipo Tera (opcional)`,
     stellarRaid: (from: string) => `Raide Tera Astral 7★ do fim de semana: no covil da Raide do dia, perto de ${from}. Vença uma vez para capturá-lo`,
     wormhole: (at: string) => `Sai de uma Ultrafenda, uma por partida solo, por volta de ${at} (opcional); a Ultracriatura da semana aparece mais`,
+    temple: (from: string, until: string) => `Desperta no templo que surge entre ${from} e ${until}, só nas partidas de quem capturou Regirock, Regice e Registeel`,
     /** `name` comes with its preposition (`places`). */
     place: (name: string, from: string) => `Vive ${name}, a partir de ${from} (lugar opcional)`,
     placeBoss: (name: string, from: string) => `Desperta da Pedra Peculiar ${name}, a partir de ${from}`,
@@ -594,12 +595,17 @@ export const sitePt = {
       ],
       legendHead: 'Lendário',
       whereHead: 'Onde vencer',
-      winsHead: 'Vitórias',
+      winsHead: 'Para capturar',
+      /** A legend's capture in the guide's table: its wins, or a path legend's own way (`unlock.path`, `unlock.after`). */
+      wins: (n: number) => (n === 1 ? '1 vitória' : `${n} vitórias`),
+      /** Where a path legend's own path runs (the table's second column). */
+      pathWhere: { zygarde: 'Zygarde Cells e Cores nas partidas solo', solgaleo: 'A Pesquisa estelar da Lanturn, de dia', lunala: 'A Pesquisa estelar da Lanturn, de noite', kubfu: 'A Torre do Dojo do Machoke', meltan: 'A Escavação do Poké Realm' },
+      need: { zygarde: '10 Zygarde Cells no Cube', solgaleo: 'Criar um Cosmog (24 partidas, de dia)', lunala: 'Criar um Cosmog (24 partidas, de noite)', kubfu: 'Os 3 andares da Torre do Dojo', meltan: 'Abrir a Mystery Box da Escavação', regigigas: '1 vitória no templo, com o trio Regi' },
       innateHead: 'Inata',
       opensHead: 'Golpe lendário',
       pressureTitle: 'Dificuldades no Modo Lendário',
       pressure: 'A Pressão soma-se a cada dificuldade: os multiplicadores do Modo Lendário ficam assim.',
-      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10, sobe a cada final sem mítico)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)', ultra: 'Ultrafenda (uma por partida solo)', ultraGift: 'Presente por capturar as 10 Ultracriaturas' },
+      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10, sobe a cada final sem mítico)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)', ultra: 'Ultrafenda (uma por partida solo)', ultraGift: 'Presente por capturar as 10 Ultracriaturas', path: 'Caminho próprio (Zygarde Cells, Cosmog, Torre do Dojo, Mystery Box)', temple: 'Templo nas partidas, depois de capturar o trio Regi' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Na Noite das Bruxas de 2026 (24 de outubro a 2 de novembro), o Darkrai chega como lenda de evento: ele só aparece na fenda do Pesadelo, que pode tomar o lugar de uma fenda numa partida assombrada, e é capturado com 2 vitórias. Joga com o Dark Void, que faz as multidões dormirem, e a inata Bad Dreams, que fere quem dorme perto dele. Depois do evento ele volta para as sombras, mas quem o capturou segue jogando com ele. Ele não conta para o Arceus.',
     },

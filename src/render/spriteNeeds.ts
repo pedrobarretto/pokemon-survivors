@@ -125,10 +125,13 @@ export const playerForms = (g: Game): Variant[] =>
     const dex = playerDex(g)
     const mega = isFinalStage(p.starter, p.stage) ? heldMega(g) : null
     actAs(g, before)
-    // The awakened forms (Terapagos's Stellar Form wears its Terastal Form's sheets, `sheetForm`).
-    const legend = p.legend && p.legend.awakened >= 1 ? [formAfter(p.legend.id, 1)?.key, formAfter(p.legend.id, 2)?.key].flatMap((f) => (f ? [sheetForm(f)!] : [])) : []
-    const forms = [...(mega ? [mega.form] : []), ...legend, ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
-    return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : []), ...(p.kitA?.kind === 'shell' && p.stage >= 1 ? [{ dex: SHEDINJA, shiny: p.shiny }] : [])]
+    // A legend's looks from its first awakening on (from the start with a path's forms: Zygarde 50%, Urshifu): the one it wears and the next.
+    // Terapagos's Stellar Form wears its Terastal Form's sheets (`sheetForm`).
+    const s = p.legend
+    const looks = s && (s.awakened >= 1 || s.forms.length > 0) ? [formAfter(s.id, s.awakened, s.forms), formAfter(s.id, s.awakened + 1, s.forms) ?? formAfter(s.id, 2, s.forms)] : []
+    const legend = looks.flatMap((l) => (l ? [{ dex: l.dex, shiny: p.shiny, ...(l.key && { form: sheetForm(l.key) }) }] : []))
+    const forms = [...(mega ? [mega.form] : []), ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
+    return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...legend, ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : []), ...(p.kitA?.kind === 'shell' && p.stage >= 1 ? [{ dex: SHEDINJA, shiny: p.shiny }] : [])]
   })
 
 /**

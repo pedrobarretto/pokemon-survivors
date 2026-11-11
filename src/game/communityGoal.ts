@@ -37,7 +37,7 @@ export const setCommunityOpen = (on: boolean) => {
 export const communityOpen = () => open
 
 /** Whether a legend's awakened form still waits on the goal: until it opens, the legend keeps its own name. */
-export const formLocked = (form: LegendDef['form'] | null) => form?.community === true && !open
+export const formLocked = (form: { community?: true } | null | undefined) => form?.community === true && !open
 
 /** Whether the sheets and cry of `dex`'s `form` still wait on the goal: until it opens, they draw (and sound) as the species' own. */
 export const sheetsLocked = (dex: number, form: string) => !open && COMMUNITY_FORMS.some((f) => f.dex === dex && f.key === form)

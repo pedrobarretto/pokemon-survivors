@@ -235,8 +235,8 @@ describe('the generated rig', () => {
     for (const [n, chunk] of files) for (const key of Object.keys(chunk.species)) expect(rigChunk(parseInt(key, 10)), key).toBe(n)
   })
 
-  /** Players' variants SpriteCollab has no usable offsets for (`npm run rig` lists them): they draw bare. Sandygast's Walk offsets, Rotom's Mow form, Alolan Diglett's and Dugtrio's and Mega Absol's carry no markers. */
-  const BARE = new Set(['769', '479:mow', '10105', '10106', '359:mega'])
+  /** Players' variants SpriteCollab has no usable offsets for (`npm run rig` lists them): they draw bare. Sandygast's and Solgaleo's Walk offsets, Rotom's Mow form, Alolan Diglett's and Dugtrio's and Mega Absol's carry no markers. */
+  const BARE = new Set(['769', '479:mow', '10105', '10106', '359:mega', '791'])
 
   it("covers every Pokémon a player can be and its forms, frame for frame with the sprites' sheets", () => {
     const species = Object.assign({}, ...files.map(([, chunk]) => chunk.species)) as Record<string, RigEntry>

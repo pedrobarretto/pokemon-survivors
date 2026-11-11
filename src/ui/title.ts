@@ -40,6 +40,9 @@ import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, t
 import { beastBallIcon } from '../render/ultraArt'
 import { ultraWeekEnd } from '../game/ultraWeek'
 import { brasiliaDay } from '../game/day'
+import { cosmogStage } from '../game/legendPaths'
+import { COSMOG, COSMOG_DEX } from '../data/legendPaths'
+import { pathSheet } from './legendPaths'
 import { festivalBanner, festivalCard, festivalCardShows, type FestivalTab } from './festival'
 import { fillHalloweenCard, halloweenCard, halloweenCardShows } from './halloween'
 import { contentLine } from './gifts'
@@ -63,6 +66,7 @@ import { uiDpr, uiViewport, uiZoom } from './uiScale'
 /** What the lobby can highlight. A screen opened over it gets the one it came from, to come back to it. */
 export type LobbyFocus =
   | 'trainer'
+  | 'cosmog'
   | 'news'
   | 'survey'
   | 'discord'
@@ -362,6 +366,28 @@ const ultraCard = () => {
   el.setAttribute('aria-label', `${w.title}: ${def.name}`)
   return el
 }
+/** Cosmog (the legend paths, `game/legendPaths.ts`): floating on its canvas while it grows, its runs and how its sky leans; null while there's none. */
+const cosmogCard = () => {
+  const c = loadSave().paths.cosmog
+  const stage = cosmogStage(c)
+  if (!stage) return null
+  const dex = COSMOG_DEX[stage]
+  const m = t().paths.cosmog
+  const floater = h('canvas', { class: 'lobby-walker', width: 30, height: 32, 'aria-hidden': 'true' })
+  void loadSpecies(dex).catch(() => {})
+  const tick = (time: number) => {
+    pixelSize(floater, Math.max(1, Math.round(uiDpr())))
+    const ctx = context2d(floater)
+    ctx.clearRect(0, 0, floater.width, floater.height)
+    const s = loadedSprites(dex)
+    if (s) drawPokemon(ctx, s, 'Idle', 0, time, floater.width / 2, floater.height - 3 - Math.round((Math.sin(time * 2.4) + 1) * 1.5))
+  }
+  const line = `${m.runs(String(c.runs), String(COSMOG.evolve))} · ☀${c.sun} ☾${c.moon}`
+  const el = todayCard('cosmog', floater, stage === 'cosmog' ? 'Cosmog' : 'Cosmoem', line)
+  el.setAttribute('aria-label', `${stage === 'cosmog' ? 'Cosmog' : 'Cosmoem'}: ${line}`)
+  return { el, tick }
+}
+
 /* ---------------- Top bar ---------------- */
 
 /** Novidades in the top bar: a page of patch notes that wiggles under a red "!" while the newest update is unread. */
@@ -544,7 +570,12 @@ const figure = (dex: Dex, x: number, dir: Dir8, team?: Figure['team']): Figure =
 const castOf = (mode: GameModeId): Cast => {
   const save = loadSave()
   const partner = PLAYABLE[save.partner].line[0]
-  if (mode === 'survivors') return { figures: [{ dex: partner.dex, shiny: playsShiny(save, save.partner), x: 0, dir: 0 }] }
+  if (mode === 'survivors') {
+    // Cosmog, while one grows (`cosmogStage`), floats beside the partner.
+    const cosmog = cosmogStage(save.paths.cosmog)
+    const own = { dex: partner.dex, shiny: playsShiny(save, save.partner), x: cosmog ? -10 : 0, dir: 0 } as const satisfies Figure
+    return { figures: cosmog ? [own, figure(COSMOG_DEX[cosmog], 26, 7)] : [own] }
+  }
   if (mode === 'legends') {
     const legend = isLegend(save.partner) ? partner.dex : 382
     return { figures: [figure(legend, 0, 0)] }
@@ -858,6 +889,17 @@ export const titleScreen = (
     outbreak: () => toast(root, rich(`*${ENEMIES[outbreakToday()].name}*: ${t().outbreak.blurb}`), 3600, 'outbreak'),
     raid: () => toast(root, raidOfDay(brasiliaDay(today())).stars === 7 ? t().raid.dayStellar : t().raid.dayWhen, 4200, 'raid'),
     ultra: () => toast(root, rich(t().ultra.week.line(ENEMIES[ultraToday()].name, formatDay(ultraWeekEnd(brasiliaDay(today()))))), 4200, 'ultra'),
+    cosmog: () => {
+      if (sheet || visit) return
+      offKeys?.()
+      offKeys = null
+      sheet = pathSheet(root, input, 'cosmog', {
+        close: () => {
+          sheet = null
+          offKeys = restKeys()
+        },
+      })
+    },
     challenge: actions.challenge,
     missions: actions.missions,
     gifts: actions.gifts,
@@ -1058,10 +1100,12 @@ export const titleScreen = (
 
     const outbreak = outbreakCard()
     const raid = raidCard()
+    const cosmog = cosmogCard()
     const ready = save.eggs.filter(isReady).length
     const dayCards = [
       ...(halloweenCardShows() ? [pressable((candyCard = halloweenCard()), 'halloween')] : []),
       pressable(giftsCard(), 'gifts'),
+      ...(cosmog ? [pressable(cosmog.el, 'cosmog')] : []),
       pressable(challengeCard(), 'challenge'),
       pressable(eggsCard(ready, save.eggs.length), 'eggs'),
       pressable(missionsCard(), 'missions'),
@@ -1230,7 +1274,7 @@ export const titleScreen = (
     }
     paintMode()
 
-    tickers = [outbreak.tick, raid.tick, painter.tick]
+    tickers = [outbreak.tick, raid.tick, painter.tick, ...(cosmog ? [cosmog.tick] : [])]
     castBox = painter.box
 
     ;(lobby ?? intro).replaceWith(lobbyEl)

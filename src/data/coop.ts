@@ -77,8 +77,10 @@ export const COOP = {
  * clock): the Legend mode (`CoopLoadout.starter` is a starter or a hatched
  * family), the Poké Mart's Bag, armed TMs, owned evolution items and Bottle
  * Caps (Kecleon's shop), the day's outbreak, the Noite das Bruxas (ghosts,
- * night bosses, candies, jack-o'-lanterns) and the lucky first egg. The run's
- * roster is drawn from its own rng. Ranking, the Desafio do dia, companions
+ * night bosses, candies, jack-o'-lanterns), the lucky first egg and the legend
+ * paths' temple and forms (`ReplayStart.temple`, `.forms`). The run's
+ * roster is drawn from its own rng. Zygarde's Cells and Cores and Meltan's Hex
+ * Nuts never turn up while `g.coop !== null` (`updatePathRun`, `faintNuts`). Ranking, the Desafio do dia, companions
  * and the server's replay checks are the shell's to skip.
  *
  * Switched off in the simulation while `g.coop !== null` (`coopLocked`):

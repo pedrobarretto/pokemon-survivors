@@ -19,15 +19,20 @@ export const DIG_PIECES = ['digFossilDisplay', 'digGeodeLamp', 'digCrystals', 'd
 
 export type DigPiece = (typeof DIG_PIECES)[number]
 
-/** What a treasure brings: ₽, one Bag item, an evolution stone, a piece of furniture, or a fossil's family. */
+/** What a treasure brings: ₽, one Bag item, an evolution stone, a piece of furniture, a fossil's family, or a legend (Meltan's Mystery Box). */
 export type DigPrize =
   | { kind: 'coins'; amount: number }
   | { kind: 'bag'; item: BagItem }
   | { kind: 'stone'; item: EvoItemId }
   | { kind: 'furniture'; piece: DigPiece }
   | { kind: 'fossil'; family: FossilFamily }
+  | { kind: 'legend'; legend: 'meltan' }
 
-export type DigGroup = 'coins' | 'bag' | 'stone' | 'furniture' | 'fossil'
+/** `legend`: never in the week's pool, only put in on purpose for an account that lacks it (`DigWallCtx.box`). */
+export type DigGroup = 'coins' | 'bag' | 'stone' | 'furniture' | 'fossil' | 'legend'
+
+/** What the Mystery Box pays once its Meltan is already the account's. */
+export const DIG_BOX_REPEAT = 1500
 
 /** What a repeat fossil pays: its family's Fossil Egg refund. */
 export const DIG_FOSSIL_REPEAT = 800
@@ -76,6 +81,8 @@ export const DIG_TREASURES = {
   plumeFossil: fossil('plumeFossil', 'Plume Fossil', 'archen'),
   jawFossil: fossil('jawFossil', 'Jaw Fossil', 'tyrunt'),
   sailFossil: fossil('sailFossil', 'Sail Fossil', 'amaura'),
+  // Meltan's (the legend paths, `data/legendPaths.ts`): the API buries it for an account without Meltan.
+  mysteryBox: { group: 'legend', art: 'items/mysteryBox', scale: 3, worth: DIG_BOX_REPEAT, weight: 0, prize: { kind: 'legend', legend: 'meltan' }, name: 'Mystery Box' },
 } as const satisfies Record<string, DigDef>
 
 export type DigTreasureId = keyof typeof DIG_TREASURES

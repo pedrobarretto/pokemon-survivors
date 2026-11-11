@@ -4,7 +4,8 @@ import { isSpecialCompanion, type SpecialCompanionId } from '../data/companions'
 import { FESTIVALS, type FestivalId } from '../data/festivals'
 import { HIDDEN_PLACE_IDS, type HiddenPlaceId } from '../data/places'
 import { DEX_REGIONS, type DexRegion } from '../data/nationalDex'
-import { giftLegend, isLegend, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
+import { giftLegend, isLegend, LEGEND_IDS, legendFestival, legendPath, type LegendId } from '../data/legends'
+import { PATH_IDS, type PathId } from '../data/legendPaths'
 import { isDifficulty, type Difficulty } from './difficulty'
 import { ERA1_TIERS, isEra1Side, type Era1Side, type Era1Tier } from './era1'
 import { parseTitle } from './achievements'
@@ -115,6 +116,8 @@ export type GiftReason =
    * catches. Kept a plain id here so the simulation's modules never reach the Safári's (`coop/simBuild.ts`).
    */
   | { kind: 'safariDex'; habitat: string | null }
+  /** A legend path's legend (`game/legendPaths.ts`): made by the game, or (Meltan's Mystery Box) sent by the API. */
+  | { kind: 'path'; path: PathId }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 
@@ -210,6 +213,7 @@ const parseReason = (v: unknown): GiftReason | null => {
   if (v.kind === 'og') return { kind: 'og' }
   if (v.kind === 'arenaSeason' && isOneOf(v.tier, TIER_IDS)) return { kind: 'arenaSeason', season: wholeNumber(v.season), tier: v.tier }
   if (v.kind === 'hiddenZone' && isOneOf(v.zone, HIDDEN_PLACE_IDS)) return { kind: 'hiddenZone', zone: v.zone }
+  if (v.kind === 'path' && isOneOf(v.path, PATH_IDS)) return { kind: 'path', path: v.path }
   if (v.kind === 'season' && (v.way === 'find' || v.way === 'research' || v.way === 'fishing' || v.way === 'safari' || v.way === 'dig')) return { kind: 'season', way: v.way }
   if (v.kind === 'dex' && (v.region === 'national' || isOneOf(v.region, DEX_REGIONS))) return { kind: 'dex', region: v.region }
   if (v.kind === 'rocket') return { kind: 'rocket' }
@@ -349,7 +353,7 @@ export const mergeClaimedGifts = (a: readonly string[], b: readonly string[]): s
  * `save` with only the gift-only rewards the API really sent: `given` is
  * every gift of the player (claimed or not). Gift titles, ribbons, shiny
  * tickets, the styles never sold (a `null` price), the festival legends
- * (Cresselia) and Poipole (the Ultra Beasts' gift) can't be earned on the device, so whatever else a save lists
+ * (Cresselia), Poipole (the Ultra Beasts' gift) and the path legends (Zygarde, Kubfu, Meltan, Solgaleo, Lunala) can't be earned on the device, so whatever else a save lists
  * came from editing it. The equipped title and styles fall back when they go,
  * and so does the companion with the Supporter title. The API runs it on
  * every push.
@@ -363,7 +367,8 @@ export const keepGiven = (save: Save, given: readonly Pick<Gift, 'id' | 'content
   const kept = <S extends StyleSlot>(slot: S, ids: readonly StyleId<S>[]) =>
     ids.filter((id) => stylePrice(slot, id) !== null || styles.some((s) => s.slot === slot && s.id === id))
   const owned = { frame: kept('frame', save.style.owned.frame), background: kept('background', save.style.owned.background), wallpaper: kept('wallpaper', save.style.owned.wallpaper) }
-  const vouched = (id: LegendId) => (!legendFestival(id) && !giftLegend(id)) || contents.some((c) => c.kind === 'legend' && c.legend === id)
+  // A festival's or a path's legend comes only as a gift; one won in a fight is the save's own.
+  const vouched = (id: LegendId) => (!legendFestival(id) && !giftLegend(id) && !legendPath(id)) || contents.some((c) => c.kind === 'legend' && c.legend === id)
   const legends: Captures = Object.fromEntries(LEGEND_IDS.flatMap((id) => (save.legends[id] !== undefined && vouched(id) ? [[id, save.legends[id]]] : [])))
   return {
     ...save,

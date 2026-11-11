@@ -1,6 +1,7 @@
 import type { EnemyId } from '../data/enemies'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { isLegend } from '../data/legends'
+import { PATH_FORM_IDS, PATH_FORMS, type PathFormId } from '../data/legendPaths'
 import { createRng } from '../engine/rng'
 import * as dm from '../engine/dmath'
 import type { Vec } from '../engine/math'
@@ -90,6 +91,10 @@ export type ReplayStart = {
   hideout?: true
   /** The Ultra Beast of the week (`game/ultraWeek.ts`); the server checks it against the week the run started (`ultraFits`). None when absent. */
   ultra?: UltraBeast
+  /** The forms the legend's path opened (`openForms` in `game/legendPaths.ts`): only the starter's own, each once. None when absent. */
+  forms?: readonly PathFormId[]
+  /** The run brings Regigigas's temple (`templeRun` in `game/legendPaths.ts`). Not when absent. */
+  temple?: boolean
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
@@ -202,6 +207,14 @@ export const parseEvent = (raw: unknown): ReplayEvent | null => {
   return kind === 'special' || kind === 'mega' || kind === 'tera' || kind === 'lunge' || kind === 'reroll' || kind === 'skip' || kind === 'endless' ? [tick, kind] : null
 }
 
+/** A replay's path forms: known ones of its starter's legend, each once, in table order; null when it names any other. */
+const parseForms = (raw: unknown, starter: string): PathFormId[] | null => {
+  if (raw === undefined) return []
+  if (!Array.isArray(raw)) return null
+  const forms = PATH_FORM_IDS.filter((id) => raw.includes(id) && PATH_FORMS[id].legend === starter)
+  return forms.length === raw.length ? forms : null
+}
+
 /** Whether `moves` is a run-length encoded stick (`[code, count…]`, every count above 0). */
 export const isMoves = (moves: unknown[]): moves is number[] =>
   moves.length % 2 === 0 && moves.every((n, i) => isWhole(n) && (i % 2 === 1 ? n > 0 : n < MOVES.length))
@@ -235,6 +248,8 @@ export const parseReplay = (raw: unknown): Replay | null => {
   if (s.caps !== undefined && (!isWhole(s.caps) || s.caps > MAX_CAPS)) return null
   const mythical = s.mythical === undefined ? undefined : parseHunt(s.mythical)
   if (mythical === null) return null
+  const forms = parseForms(s.forms, s.starter)
+  if (forms === null) return null
   return {
     rules: isWhole(raw.rules) && raw.rules > 0 ? raw.rules : 1,
     start: {
@@ -255,6 +270,8 @@ export const parseReplay = (raw: unknown): Replay | null => {
       ...(isShadowVariant(s.variant) ? { variant: s.variant } : {}),
       ...(s.hideout === true ? { hideout: true } : {}),
       ...(isUltraBeast(s.ultra) ? { ultra: s.ultra } : {}),
+      ...(forms.length > 0 ? { forms } : {}),
+      ...(s.temple === true ? { temple: true } : {}),
       view,
     },
     moves: raw.moves,
@@ -293,6 +310,8 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     variant: start.variant ?? null,
     hideout: start.hideout === true,
     ultra: start.ultra ?? null,
+    forms: start.forms ?? [],
+    temple: start.temple === true,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {

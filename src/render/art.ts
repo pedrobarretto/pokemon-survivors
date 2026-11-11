@@ -31,6 +31,7 @@ import type { SocialId } from '../site/routes'
 import { LEGENDARY_ICONS } from './legendaryArt'
 import { LEGENDARY_ICONS_2 } from './legendaryArt2'
 import { ULTRA_ICONS } from './ultraArt'
+import { PATH_LEGEND_ICONS } from './pathLegendArt'
 import * as TE from './typeEvolvedArt'
 
 /**
@@ -708,6 +709,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...LEGENDARY_ICONS,
   ...LEGENDARY_ICONS_2,
   ...ULTRA_ICONS,
+  ...PATH_LEGEND_ICONS,
   ember: () => FX.ember()[0]!,
   fireSpin: () => FX.flame()[0]!,
   waterGun: () => FX.water(),

@@ -9135,6 +9135,12 @@ button {
   animation: rift-pulse 0.5s steps(2) infinite;
 }
 
+/* A wave legend's entrance or capture (`g.legendScene`) centers the camera on it: the pills leave it and its name clear. */
+.hud.legend-scene .rift-pill,
+.hud.legend-scene .mission-pill {
+  visibility: hidden;
+}
+
 @media (max-width: 600px) {
   .rift-pill {
     top: 108px;

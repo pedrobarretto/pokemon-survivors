@@ -8,6 +8,7 @@ import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
+import { LEGEND_PATHS_WORDS } from './legendPaths'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2466,6 +2467,7 @@ export const es: Messages = {
     ...REGIONAL_WORDS.es.abilities,
     ...SEASON_ONE_KITS_WORDS.es.abilities,
     ...ULTRA_WORDS.es.abilities,
+    ...LEGEND_PATHS_WORDS.es.abilities,
     overgrow: 'Con menos de 1/3 del HP, los movimientos de Planta hacen +50%.',
     blaze: 'Con menos de 1/3 del HP, los movimientos de Fuego hacen +50%.',
     torrent: 'Con menos de 1/3 del HP, los movimientos de Agua hacen +50%.',
@@ -3161,6 +3163,7 @@ export const es: Messages = {
     ...GA_FAMILIES_A_WORDS.es.moves,
     ...ROCKET_FAMILY_WORDS.es.moves,
     ...ULTRA_WORDS.es.moves,
+    ...LEGEND_PATHS_WORDS.es.moves,
     leechSeed: {
       description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
       upgrades: [
@@ -5638,6 +5641,7 @@ export const es: Messages = {
     ...GA_FAMILIES_A_WORDS.es.blurbs,
     ...ROCKET_FAMILY_WORDS.es.blurbs,
     ...ULTRA_WORDS.es.blurbs,
+    ...LEGEND_PATHS_WORDS.es.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Más daño, menos vida.',
     squirtle: 'Defensivo. Más vida y defensa.',
@@ -6353,6 +6357,8 @@ export const es: Messages = {
       festival: 'Premio del _Festival de la Plaza_: llega como Regalo Misterioso, nunca se enfrenta.',
       ultra: 'Sale de un _Ultraumbral_ (uno por partida en solitario, hacia los 8 min): véncelo dentro.',
       ultraGift: 'Llega como Regalo Misterioso cuando captures a los 10 Ultraentes.',
+      path: LEGEND_PATHS_WORDS.es.paths.where.zygarde,
+      temple: LEGEND_PATHS_WORDS.es.paths.where.regigigas,
     },
     rule: (need: number) => (need === 1 ? 'Para capturarlo, vence a este legendario 1 vez como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.' : `Para capturarlo, vence a este legendario ${need} veces como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.`),
     shinyRule: 'Vencer a uno shiny en la victoria de la captura, o después, desbloquea su forma shiny.',
@@ -6384,6 +6390,7 @@ export const es: Messages = {
       jirachi: 'Estrella de los Deseos',
       mewtwo: 'Furia Genética',
       arceus: 'El Primero de Todos',
+      regigigas: LEGEND_PATHS_WORDS.es.epithet,
     },
     phases: {
       articuno: ['¡*Articuno* alza el vuelo! Huye de su _sombra_.', '¡Una ventisca! Corre a un _refugio de nieve_ antes del Snowscape.'],
@@ -6400,6 +6407,7 @@ export const es: Messages = {
       jirachi: ['*Jirachi* se teletransporta sobre ti: ¡sal del _círculo_!', '¡Wish! Una lluvia de estrellas: busca los _huecos_.'],
       mewtwo: ['¡*Mewtwo* libera su poder psíquico! Sal del _círculo_ del Teleport.', '¡Psystrike! Pasa por los _huecos_ y corre a un _refugio_.'],
       arceus: ['¡*Arceus* se teletransporta para juzgarte!', '¡Judgment! Solo los _refugios de luz_ te salvan.'],
+      regigigas: LEGEND_PATHS_WORDS.es.phases,
     },
   },
   team: {
@@ -6472,6 +6480,7 @@ export const es: Messages = {
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.es,
   rocket: ROCKET_WORDS.es,
+  paths: LEGEND_PATHS_WORDS.es.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.es.words,
     safari: SEASON_ONE_SAFARI_WORDS.es.words,

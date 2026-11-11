@@ -9,6 +9,7 @@ import { openAlphaPrize } from './alphas'
 import { grantStone } from './mega'
 import { collectTm } from './tms'
 import { collectCandy } from './halloween'
+import { collectNut } from './hexNuts'
 import { collectEvoItem } from './evoGate'
 import { collectShard } from './tera'
 import { TERA } from '../data/tera'
@@ -42,7 +43,7 @@ const PULL_SPEED = 420
 /** How fast (1/s) a pulled pickup's velocity turns toward the player. */
 const PULL_STEER = 7
 
-type PickupKind = Exclude<Pickup['kind'], 'xp' | 'coin' | 'consumable' | 'megaStone' | 'tm' | 'treat' | 'evoItem' | 'teraShard'>
+type PickupKind = Exclude<Pickup['kind'], 'xp' | 'coin' | 'consumable' | 'megaStone' | 'tm' | 'treat' | 'evoItem' | 'teraShard' | 'hexNut'>
 
 export const dropPickup = (g: Game, x: number, y: number, kind: PickupKind) => {
   g.pickups.push({ id: g.nextId++, x, y, vx: 0, vy: 0, attracted: false, age: 0, kind })
@@ -183,6 +184,9 @@ const collect = (g: Game, pickup: Pickup) => {
       break
     case 'teraShard':
       collectShard(g, pickup.tera, pickup.pair)
+      break
+    case 'hexNut':
+      collectNut(g)
       break
   }
   gaKitAPickup(g, pickup)

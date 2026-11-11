@@ -22,6 +22,7 @@ import { openCursedChest } from './curseSystem'
 import { clearSpot } from './terrain'
 import { createFieldMissions, directMissions, FIELD_MISSIONS, type FieldMissionNotice, type FieldMissionState, type FieldMissionStates } from './fieldMissions'
 import { CASTFORM_EVENT, updateSeasonFinds, type CastformEvent } from './seasonOneFinds'
+import { REGI_TEMPLE_EVENT, updatePathRun, ZYGARDE_CELL_EVENT, ZYGARDE_CORE_EVENT, type PieceEvent, type TempleEvent } from './pathRun'
 import { openTutor } from './tms'
 import { TUTOR, tutorWeight } from './tmRules'
 import { actAs, anchorPlayer, mostHurt, nearestPlayer, phaseOf, playerWithin, standing } from './players'
@@ -50,6 +51,10 @@ export type MapEventStates = {
   tutor: { stand: number }
   /** The wandering Castform of Temporada 1 (`seasonOneFinds.ts`). */
   castform: CastformEvent
+  /** The legend paths' (`pathRun.ts`): a Zygarde Cell or Core to take, and Regigigas's temple. */
+  zygardeCell: PieceEvent
+  zygardeCore: PieceEvent
+  regiTemple: TempleEvent
 } & FieldMissionStates
 
 export type MapEventKind = keyof MapEventStates
@@ -364,6 +369,9 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
     expire: (g) => notify(g, { kind: 'tutorLeft' }),
   },
   castform: CASTFORM_EVENT,
+  zygardeCell: ZYGARDE_CELL_EVENT,
+  zygardeCore: ZYGARDE_CORE_EVENT,
+  regiTemple: REGI_TEMPLE_EVENT,
   ...FIELD_MISSIONS,
 }
 
@@ -439,6 +447,7 @@ export const updateMapEvents = (g: Game, dt: number) => {
   direct(g)
   directMissions(g, spawnMapEvent)
   updateSeasonFinds(g, dt, spawnMapEvent)
+  updatePathRun(g, spawnMapEvent)
   for (const ev of g.mapEvents.list) {
     ev.age += dt
     if (ev.gone >= 0) ev.gone += dt

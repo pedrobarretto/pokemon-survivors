@@ -287,6 +287,13 @@ export const ABILITIES = {
   angerPoint: { name: 'Anger Point', effects: [{ kind: 'onHurt', seconds: 3, max: 1, stats: { might: 0.45, speed: 6 } }] },
   // The Ultra Beasts' innate: what it raises is each beast's own best stat (`beastBoost` in `data/legends.ts`).
   beastBoost: { name: 'Beast Boost', effects: [] },
+  /* The path legends' (`data/legendPaths.ts`) */
+  /** Zygarde's: under half HP its Cells gather around it, hardening and mending it. */
+  powerConstruct: { name: 'Power Construct', effects: [{ kind: 'lowHp', stats: { damageTaken: -0.25, regen: 0.8 } }] },
+  fullMetalBody: { name: 'Full Metal Body', effects: [{ kind: 'immune', to: ['terrain'] }, stats({ damageTaken: -0.12 })] },
+  shadowShield: { name: 'Shadow Shield', effects: [{ kind: 'fullHp', stats: { damageTaken: -0.45 } }] },
+  /** Regigigas's: it starts slow and weak, and grows into its strength over the first minute or so. */
+  slowStart: { name: 'Slow Start', effects: [stats({ might: -0.3, speed: -8 }), { kind: 'timer', every: 12, max: 6, stats: { might: 0.1, speed: 2 } }] },
 } as const satisfies Record<string, AbilityDef>
 
 export type AbilityId = keyof typeof ABILITIES
@@ -438,6 +445,12 @@ export const FAMILY_ABILITIES = {
   blacephalon: ['flashFire', 'cursedBody', 'adaptability'],
   naganadel: ['poisonPoint', 'infiltrator', 'adaptability'],
   poipole: ['poisonPoint', 'quickFeet', 'adaptability'],
+  zygarde: ['sandVeil', 'moxie', 'unnerve'],
+  solgaleo: ['flashFire', 'solarPower', 'sturdy'],
+  lunala: ['infiltrator', 'cursedBody', 'levitate'],
+  kubfu: ['ironFist', 'steadfast', 'sniper'],
+  meltan: ['heavyMetal', 'pickup', 'lightMetal'],
+  regigigas: ['sturdy', 'guts', 'rockHead'],
   ...SEASON_ONE_EGG_ABILITIES,
   ...SEASON_ONE_KIT_ABILITIES,
   ...GA_FAMILIES_B_ABILITIES,

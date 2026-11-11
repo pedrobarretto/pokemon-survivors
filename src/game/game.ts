@@ -3,11 +3,12 @@ import { dir8, type Vec } from '../engine/math'
 import { createRng } from '../engine/rng'
 import { createGrid } from '../engine/spatial'
 import { bodyOf } from '../data/bodies'
-import { isLegend } from '../data/legends'
+import { isLegend, LEGENDS, type LegendDef } from '../data/legends'
 import type { EnemyId } from '../data/enemies'
 import { isHidden } from '../data/abilities'
 import { branchesAt } from '../data/branches'
 import type { EvoItemId } from '../data/shop'
+import type { PathFormId } from '../data/legendPaths'
 import type { EvolutionStage } from '../data/starters'
 import { runBoost } from './evoItems'
 import { evolutionFreed, missingEvoItems, runEvoItems, stepOpen } from './evoGate'
@@ -60,7 +61,7 @@ import { createTmState, pickTm } from './tms'
 import { updateVerbEvolved } from './verbEvolutions'
 import { updateLegendary } from './legendary'
 import { createSpecialState, specialBusy, specialSpeedFactor, updateSpecial } from './special'
-import { AWAKENING, avoidLegend, createLegendState, formAfter, pendingAwakening, updateLegend } from './legend'
+import { AWAKENING, avoidLegend, createLegendState, formAfter, legendLook, pendingAwakening, updateLegend } from './legend'
 import { decidePokeball, updatePickups } from './pickups'
 import { rollShiny, SHINY_ODDS, shinyBoost } from './shiny'
 import { updateProps } from './props'
@@ -70,6 +71,7 @@ import { withHaunts } from './halloween'
 import { createTerrain, groundAt, groundPace, slidesOnIce, updateTerrain } from './terrain'
 import { createLandmarkState, createPlayerLandmarks, updateLandmarks, updateTunnel } from './landmarks'
 import { createSeasonFinds } from './seasonOneFinds'
+import { createPathRun } from './pathRun'
 import { drawRoster, type Roster } from './roster'
 import { clockRuns, createRiftState } from './rift'
 import { createPlaceState } from './place'
@@ -157,6 +159,10 @@ export type RunOptions = {
   variant?: ShadowVariant | null
   /** The Game Corner poster's pass: the Rocket Hideout's hatch opens on this run's map (`data/rocketHideout.ts`). */
   hideout?: boolean
+  /** The forms a legend's path opened (`data/legendPaths.ts`): it wears them from their awakenings on. */
+  forms?: readonly PathFormId[]
+  /** The run brings Regigigas's temple (`game/pathRun.ts`). */
+  temple?: boolean
 }
 
 /**
@@ -173,6 +179,8 @@ export type PlayerSetup = {
   evo?: readonly EvoItemId[]
   caps?: number
   variant?: ShadowVariant | null
+  /** A legend's path forms (`RunOptions.forms`). */
+  forms?: readonly PathFormId[]
 }
 
 /**
@@ -243,7 +251,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     evoFound: [],
     evoHeld: false,
     boost: runBoost(setup.caps ?? 0, bag),
-    legend: createLegendState(setup.starter),
+    legend: createLegendState(setup.starter, setup.forms),
     wings: {},
     landmark: createPlayerLandmarks(),
     biome: START_BIOME,
@@ -324,6 +332,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     place: options.hideout ? { ...createPlaceState(seed), hideout: true } : createPlaceState(seed),
     landmarks: createLandmarkState(),
     finds: createSeasonFinds(seed),
+    paths: createPathRun(seed, options.temple === true && !coop),
     tutors: 0,
     endless: null,
     tally: createTally(),
@@ -381,7 +390,7 @@ export const createGame = (
   roster?: Roster,
   options: RunOptions = {},
 ): Game => {
-  const setup: PlayerSetup = { starter, ranks, shiny: options.shiny === true, bag: options.bag ?? [], tms: options.tms, evo: options.evo, caps: options.caps, variant: options.variant }
+  const setup: PlayerSetup = { starter, ranks, shiny: options.shiny === true, bag: options.bag ?? [], tms: options.tms, evo: options.evo, caps: options.caps, variant: options.variant, forms: options.forms }
   return createRun(view, seed, [setup], roster, options, false)
 }
 
@@ -681,8 +690,10 @@ const startAwakening = (g: Game): void => {
   const n = pendingAwakening(g)
   if (!s || n === 0) return advancePhase(g)
   const dex = playerDex(g)
-  const form = formAfter(s.id, n)?.key
-  p.evolution = { from: dex, to: dex, t: 0, awakening: n, ...(form && { form }) }
+  // It lands in the look it reaches (a path form may be another species: Urshifu, Melmetal), else keeps the one it has.
+  const next = formAfter(s.id, n, s.forms)
+  const form = next ? next.key : legendLook(g)
+  p.evolution = { from: dex, to: next?.dex ?? dex, t: 0, awakening: n, ...(form && { form }) }
   setPhase(g, 'evolving')
   g.events.push({ kind: 'awaken', legend: s.id, n })
 }
@@ -708,7 +719,9 @@ const awaken = (g: Game, n: number): void => {
   shakeScreen(g, 8)
   g.flash = Math.max(g.flash, 0.4)
   p.evolution = null
-  g.events.push({ kind: 'awakened', legend: s.id, n, form: formAfter(s.id, n)?.key ?? null })
+  const look = formAfter(s.id, n, s.forms)
+  const def: LegendDef = LEGENDS[s.id]
+  g.events.push({ kind: 'awakened', legend: s.id, n, form: look?.key ?? null, changed: (look !== null && look.name !== formAfter(s.id, n - 1, s.forms)?.name) || def.evolve?.at === n })
   if (p.ability.id === null) offerAbilities(g)
   else advancePhase(g)
 }

@@ -13,7 +13,9 @@ import { unlockShinyStarter } from './shinyStarters'
  * playable. Arceus only counts in endless mode, and only once the other 22
  * regular legends are captured (an event legend, like Darkrai, never holds it
  * back). A festival legend (Cresselia) is never fought: its festival's
- * milestone gift captures it (`captureByGift`). A shiny one beaten on its
+ * milestone gift captures it (`captureByGift`), and so does a path legend's
+ * path (`game/legendPaths.ts`), but for Regigigas, beaten once the Regi trio
+ * is captured. A shiny one beaten on its
  * capturing win, or on any win after, also unlocks its shiny (kept in
  * `shinyStarters`, like any owned shiny). Pure: the shell banks each
  * `legendBeaten` event through `recordLegendWin`.
@@ -24,8 +26,8 @@ export type Captures = Readonly<Partial<Record<LegendId, number>>>
 
 export const NO_CAPTURES: Captures = {}
 
-/** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an event's rift, an Ultra Wormhole; or the gift that brings it (a festival's, or Poipole's for the Ultra Beasts). */
-export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival' | 'ultra' | 'ultraGift'
+/** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an event's rift, an Ultra Wormhole, Regigigas's temple; or the gift that brings it (a festival's, Poipole's), or its path. */
+export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival' | 'ultra' | 'ultraGift' | 'path' | 'temple'
 
 const inList = (list: readonly string[], id: LegendId) => list.includes(id)
 
@@ -33,6 +35,8 @@ export const legendSource = (id: LegendId): LegendSource => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
   if (unlock.festival) return 'festival'
   if (unlock.ultra) return unlock.ultra === 'gift' ? 'ultraGift' : 'ultra'
+  if (unlock.path) return 'path'
+  if (unlock.after) return 'temple'
   if (unlock.event) return 'event'
   if (unlock.endless) return 'endless'
   if (id === 'mewtwo') return 'finale'
@@ -54,10 +58,17 @@ export const stillMissing = (captures: Captures, id: LegendId): LegendId[] => RE
 
 const othersCaptured = (captures: Captures, id: LegendId) => stillMissing(captures, id).length === 0
 
-/** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22; a gift legend's (a festival's, Poipole) never. */
+/** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22; Regigigas's once the Regi trio is captured; a gift legend's (a festival's, Poipole) or a path's never. */
 export const winCounts = (captures: Captures, id: LegendId, endless: boolean) => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
-  return !unlock.festival && unlock.ultra !== 'gift' && (!unlock.endless || endless) && (!unlock.last || othersCaptured(captures, id))
+  return (
+    !unlock.festival &&
+    unlock.ultra !== 'gift' &&
+    !unlock.path &&
+    (!unlock.endless || endless) &&
+    (!unlock.last || othersCaptured(captures, id)) &&
+    (unlock.after ?? []).every((other) => isCaptured(captures, other))
+  )
 }
 
 /** The captures with `id` captured, as a gift brings it (a festival legend's milestone gift). */

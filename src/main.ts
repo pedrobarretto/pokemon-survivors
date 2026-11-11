@@ -25,7 +25,7 @@ import { isUltraBeast } from './data/ultraBeasts'
 import { domainTheme } from './game/domain'
 import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
-import { captureByGift, captureOutcome as savedCapture } from './game/capture'
+import { captureByGift, captureOutcome as savedCapture, isCaptured } from './game/capture'
 import { hideoutCleared, holdsPass, usePass } from './game/hideoutPass'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
@@ -37,7 +37,7 @@ import { REGIONS, STARTERS } from './data/starters'
 import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
-import { isLegend } from './data/legends'
+import { isLegend, type LegendId } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
@@ -72,6 +72,13 @@ import { MEOWTH_DEX } from './game/mapEventRules'
 import { CASTFORM_FIND } from './data/seasonOneUnlocks'
 import { seasonFindDevTools, seasonFindFeedback } from './ui/seasonFinds'
 import { travelDevTools } from './ui/travelDev'
+import { bankNuts, nutFeedback, pathFeedback } from './ui/pathRun'
+import { pathDevTools } from './ui/pathDev'
+import { pathSheet } from './ui/legendPaths'
+import { trialHud } from './ui/towerTrial'
+import { startTrial } from './game/towerTrial'
+import { COSMOG_DEX, PATH_IDS, TRIALS, type TrialId } from './data/legendPaths'
+import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, templeRun, towerOf } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -180,6 +187,7 @@ import { loadLobbyMode, saveLobbyMode } from './ui/lobbyMode'
 import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, ultraToday, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
+import { cosmogEvolveScene } from './ui/cosmogEvolve'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
 import { martDevTools } from './ui/martDev'
 import { CARAVAN, STALL_IDS, STALLS, TAILOR, type StallId } from './data/visitors'
@@ -440,6 +448,8 @@ type Run = {
   paid: number
   /** Noite das Bruxas candies of this run already in the save's jar, banked the same way. */
   candies: number
+  /** Meltan's Hex Nuts of this run already in the save (`bankNuts`). */
+  nuts: number
   /** True once the run's end was reported to analytics. */
   reported: boolean
   /** Missions as the run started, and what the run has recorded so far (see `recordProgress`). */
@@ -482,7 +492,33 @@ type Run = {
 }
 
 /** The shell's side of a Dojo session: its panel, when it began and whether a build was saved, for its `dojo_end`. */
-type DojoRun = { panel: ReturnType<typeof trainingPanel>; startedAt: number; saved: boolean }
+/** The Dojo's panel, or a Torre trial's screen in its place. */
+type DojoPanel = Screen & { refresh?: (clear: (() => void) | null) => void }
+type DojoRun = { panel: DojoPanel; startedAt: number; saved: boolean }
+
+/** Who trains at the Dojo when no trial plays: the Torre's Voltar comes back to them. */
+let dojoPartner: PlayableId = 'charmander'
+
+/** The Torre's sheet over the Dojo, its trials startable. */
+const openTower = () => {
+  const r = run
+  if (!r?.training) return
+  r.overlay?.dispose()
+  r.overlay = pathSheet(ui, input, 'kubfu', { close: () => r.overlay === sheet && (r.overlay = null), start: (id) => void startDojo(TRIALS[id].starter, id) })
+  const sheet = r.overlay
+}
+
+/** A Torre trial won: into the save; returns a word on what it brought (Kubfu joining, Urshifu's style), or null. */
+const bankTrial = (id: TrialId): string | null => {
+  const before = loadSave().paths.trials
+  updateSave((s) => ({ ...s, paths: { ...s.paths, trials: clearTrial(s.paths.trials, id) } }))
+  void syncSave()
+  const after = loadSave().paths.trials
+  const m = t().paths.tower
+  const tower = towerOf(after)
+  if (!kubfuJoined(before) && kubfuJoined(after)) return m.kubfu
+  return tower && !towerOf(before) ? m.urshifu(m.styles[tower]) : null
+}
 
 /**
  * The shell's side of a co-op run. `r.game` is the runner's (confirmed) game;
@@ -543,7 +579,7 @@ let meetings = 0
 const meadow: Meadow = {
   meet: (partner) => {
     const id = ++meetings
-    meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }))
+    meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }), lobbyCosmog())
     return () => void (id === meetings && meetPartner(scene, null))
   },
   visit: (to, instant) => {
@@ -904,6 +940,15 @@ const takeOffLooks = () => {
   setLooksGame(null)
 }
 
+/** Cosmog or Cosmoem while one grows (the legend paths), to float beside the partner on the lobby's trips (its sprites start loading); null when none does. */
+const lobbyCosmog = (): CompanionView | null => {
+  const stage = cosmogStage(loadSave().paths.cosmog)
+  if (!stage) return null
+  const dex = COSMOG_DEX[stage]
+  void loadSpecies(dex).catch(() => {})
+  return createCompanion(dex, false, { x: 0, y: 0 })
+}
+
 /** The save's companion for a run starting now, if the account's tier still allows it (`knownTier`; its sprites start loading). */
 const runCompanion = (at: Vec): CompanionView | null => {
   const save = loadSave()
@@ -998,7 +1043,8 @@ const afterRun = (then: () => void) => {
 
 /**
  * The lobby's gift box: opens the waiting Mystery Gifts one by one. A shiny
- * hatch plays its scene (recorded in the missions and medals) and a shiny
+ * hatch plays its scene (recorded in the missions and medals), Cosmog's
+ * legend its evolution (`cosmogEvolveScene`) and a shiny
  * ticket goes to the Hall's picker, each coming back to the next gift, or
  * to the lobby once none waits.
  */
@@ -1012,9 +1058,22 @@ const showGifts = () => {
         showHatch(hatch, back, undefined, () => later(() => progressToast(ui, record)))
       },
       pick: () => setScreen(supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, 'pick')),
+      evolve: (legend) => setScreen(cosmogEvolveScene(ui, input, legend, back)),
       close: () => showTitle({ focus: 'gifts' }),
     }),
   )
+}
+
+/**
+ * What the legend paths bring to a run's start (`ReplayStart`): the forms the
+ * save opened for this legend (`openForms`), and Regigigas's temple, drawn
+ * from the seed for the Regi trio's captor (never in its own run).
+ */
+const pathStart = (save: Save, starter: PlayableId, seed: number): Pick<ReplayStart, 'forms' | 'temple'> => {
+  const forms = openForms(save.paths, starter)
+  const caught = (id: LegendId) => isCaptured(save.legends, id)
+  const temple = starter !== 'regigigas' && templeRun(seed, giantAwake(caught), caught('regigigas'))
+  return { ...(forms.length > 0 ? { forms } : {}), ...(temple ? { temple } : {}) }
 }
 
 /** Moves the run's steps and new eggs into the incubator, once each (a victory banks, then endless banks again). */
@@ -1040,6 +1099,7 @@ const bankRun = (r: Run, withBonus: boolean) => {
   r.paid = Math.max(r.paid, total)
   if (g.candies > r.candies) updateSave((save) => addCandies(save, g.candies - r.candies))
   r.candies = Math.max(r.candies, g.candies)
+  r.nuts = bankNuts(ui, g, r.nuts)
   bankHatchery(r)
   // Merged into the stored Pokédex, which an account sync may have grown during the run.
   updateSave((save) => ({ ...save, dex: mergeDex(save.dex, recordRun(r.dexBase, g.dexLog)) }))
@@ -1453,6 +1513,8 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     // The Game Corner poster's pass brings the Rocket Hideout's hatch onto this run's map (`game/hideoutPass.ts`).
     ...(holdsPass(save.hideout) && !isLegend(starter) ? { hideout: true } : {}),
     ultra,
+    // The legend paths: the forms the save opened for this legend, and Regigigas's temple for the Regi trio's captor.
+    ...pathStart(save, starter, plan.seed),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
@@ -1475,6 +1537,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     closeText: null,
     paid: 0,
     candies: 0,
+    nuts: 0,
     mythical: null,
     reported: false,
     missionsBefore: missionStatus(save.missions, today()),
@@ -1560,9 +1623,12 @@ const showDojo = (initial: PlayableId = loadSave().partner) => {
  * A Dojo session (`game/training.ts`): a run with the save's upgrades, Bottle
  * Caps and colors but no Bag, TMs or luck of its own, turned into the Dojo, in
  * the family's saved build when it has one, with its panel over it
- * (`ui/training.ts`). Nothing of it is banked, ranked or recorded.
+ * (`ui/training.ts`). Nothing of it is banked, ranked or recorded. With
+ * `trial`, it plays that Torre trial instead (`game/towerTrial.ts`): the
+ * trial's Pokémon and loadout, its screen in the panel's place, and a win
+ * banked into the save (`clearTrial`).
  */
-const startDojo = async (starter: PlayableId) => {
+const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
   if (launching) return
   launching = true
   try {
@@ -1572,15 +1638,16 @@ const startDojo = async (starter: PlayableId) => {
     ui.append(loading)
     const save = loadSave()
     const shiny = playsShiny(save, starter)
-    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter) })
+    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
     // The 1/64 roll is a run's luck: nothing unlocks at the Dojo, and it plays in the colors picked.
     const me = localPlayer(game)
     me.shiny = shiny
     me.luckyShiny = false
     // The dummies stand left of the player, near enough to share the field the panel leaves open (the camera centers the player there: the panel's `lens`).
     startTraining(game, TRAINING.target, TRAINING.counts[0], { x: -1, y: 0, reach: Math.min(TRAINING.reach, Math.round(view.w * 0.28)) })
-    const build = save.builds[starter]
+    const build = trial ? undefined : save.builds[starter]
     if (build) applyBuild(game, build)
+    if (trial) startTrial(game, trial)
     // Opens quietly: no news of the build's ability being picked.
     game.events.length = 0
     await loadRunSheets(familySheets(starter, shiny), [ENEMIES[TRAINING.target].dex])
@@ -1594,6 +1661,7 @@ const startDojo = async (starter: PlayableId) => {
       closeText: null,
       paid: 0,
       candies: 0,
+      nuts: 0,
       mythical: null,
       reported: true,
       missionsBefore: [],
@@ -1624,10 +1692,16 @@ const startDojo = async (starter: PlayableId) => {
             updateSave((s) => ({ ...s, builds: Object.fromEntries(Object.entries(s.builds).filter(([id]) => id !== starter)) }))
             void syncSave()
             aside(rich(t().training.cleared(name)), 2600, 'dojo')
-            panel.refresh(null)
+            panel.refresh?.(null)
           }
         : null
-    const panel = trainingPanel(ui, game, {
+    if (!trial) dojoPartner = starter
+    const panel: DojoPanel = trial ? trialHud(ui, game, {
+      ended: (won) => (won ? bankTrial(trial) : null),
+      retry: () => void startDojo(starter, trial),
+      back: () => void startDojo(dojoPartner, null).then(() => openTower()),
+    }) : trainingPanel(ui, game, {
+      tower: () => openTower(),
       // A species' sheets load before its dummies stand (and it stays loaded while the session lasts).
       dummies: (target, count) => {
         const dex = ENEMIES[target].dex
@@ -1637,7 +1711,7 @@ const startDojo = async (starter: PlayableId) => {
             if (run !== r) return
             if (!r.sprites.always.includes(dex)) r.sprites.always.push(dex)
             setDummies(game, target, count)
-            panel.refresh(forget())
+            panel.refresh?.(forget())
           })
       },
       save: () => {
@@ -1646,7 +1720,7 @@ const startDojo = async (starter: PlayableId) => {
         dojo.saved = true
         playSfx('buy')
         news(rich(t().training.saved(name)), 3600, 'dojo')
-        panel.refresh(forget())
+        panel.refresh?.(forget())
       },
       clear: forget(),
       leave: () => leaveDojo(),
@@ -2153,7 +2227,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const name = PLAYABLE[localPlayer(g).starter].name
       // A form still behind the community goal keeps the legend's name (`legendStage`): then it just awakened.
       const form = playerForm(g).name
-      return aside(rich(form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
+      return aside(rich(e.changed && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
     }
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
@@ -2266,6 +2340,10 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return landmarkFeedback(ui, e.landmark, e.moment)
     case 'seasonFind':
       return seasonFindFeedback(ui, e.find, e.moment)
+    case 'path':
+      return pathFeedback(ui, e.notice)
+    case 'hexNut':
+      return nutFeedback(ui, g)
     case 'revive':
       playSfx('evolve')
       return news(h('span', { class: 'item-toast' }, h('img', { src: consumableIcon('revive'), alt: '' }), rich(t().toast.revive)), 3000)
@@ -2836,6 +2914,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     rewardEggs: 0,
     rewardItems: [],
     candies: 0,
+    nuts: 0,
     hatchery: { steps: 0, eggs: 0 },
     convertedEggs: { full: [], cap: [] },
     dexBase: save.dex,
@@ -4521,13 +4600,14 @@ const devGifts = {
    * `ps.gift('title')`, `ps.gift('style', 'ambassador')` (a frame), `ps.gift('shinyHatch', 'munchlax')`,
    * `ps.gift('ribbon', 'gold')` (yesterday's challenge, #12 of 340), `ps.gift('shinyPick')` (a shiny of one's choice),
    * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend).
-   * `why`: an inviter's handle (welcome) or a count of friends brought.
+   * `why`: an inviter's handle (welcome), a count of friends brought, or a legend path (`ps.gift('legend', 'solgaleo', 'cosmog')`: Cosmog's evolution scene as it opens).
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
     const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
     const content = parseGiftContent({ kind, ...raw })
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
-    const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : why ? { kind: 'welcome', from: why } : null
+    const path = PATH_IDS.find((id) => id === why)
+    const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : path ? { kind: 'path', path } : why ? { kind: 'welcome', from: why } : null
     return stageGifts([{ id: `dev-${Date.now()}`, content, reason }])
   },
   /** Puts one invite milestone's gifts in the gift box as the API sends them (`FRIEND_MILESTONES`): `ps.friendGifts(10)` the shiny Dratini, the Friendship Legend title and background. */
@@ -5206,13 +5286,14 @@ if (import.meta.env.DEV) {
       },
       /**
        * The Escavação on fakes (`realm/digApi.ts`): `ps.dig()` opens it with the faked API. `ps.dig('golden')` forces the next wall golden,
-       * `ps.dig('fossil', 'cranidos')` a fossil of that family, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
+       * `ps.dig('fossil', 'cranidos')` a fossil of that family, `ps.dig('box')` Meltan's Mystery Box in it, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
        * today, `ps.dig('lacking', [])` the fossils lacked (all five by default), `ps.dig('crack')` the open wall one hit short of collapse, `ps.dig('peek')` where the open wall hides things and the layers left, `ps.dig('partner', 'ralts')` a partner's powers for the next wall, `ps.dig('soft')` a next wall one layer deep with far more crack, to stage a whole dig.
        */
-      dig: async (what?: 'golden' | 'fossil' | 'dry' | 'used' | 'lacking' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
+      dig: async (what?: 'golden' | 'fossil' | 'box' | 'dry' | 'used' | 'lacking' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
         const { stageDig, crackFakeWall, peekFakeWall } = await import('./realm/digApi')
         const { DIG_FOSSIL_FAMILIES } = await import('./data/digTreasures')
         if (what === 'golden') return stageDig({ golden: true })
+        if (what === 'box') return stageDig({ box: true })
         if (what === 'fossil') return stageDig({ fossil: arg === null ? null : DIG_FOSSIL_FAMILIES.find((f) => f === arg) ?? DIG_FOSSIL_FAMILIES[0] })
         if (what === 'dry') return stageDig({ dry: Number(arg ?? 10) })
         if (what === 'used') return stageDig({ used: Number(arg ?? 0) })
@@ -5473,6 +5554,7 @@ if (import.meta.env.DEV) {
       ...placeDevTools(() => run?.game),
       ...seasonFindDevTools(() => run?.game, devLandmark),
       ...travelDevTools(),
+      ...pathDevTools(() => run?.game, { menu: (id) => showMenu(id, 'legends'), sheet: (path) => void pathSheet(ui, input, path, { close: () => {} }) }),
       ...levelUpDevTools(() => run?.game),
       ...kitDevTools(() => run?.game),
       ...gaKitADevTools(() => run?.game),

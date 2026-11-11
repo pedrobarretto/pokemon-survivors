@@ -1,0 +1,661 @@
+/* The legend paths' sheets (ui/legendPaths.ts): the lobby sheet's frame, a body of rows and cards. */
+.path-sheet {
+  width: min(520px, 100%);
+  /* Its own night blue, whatever screen it opens over (the lobby lightens the kit's): the notes are light on it. */
+  background: #222a5a;
+}
+
+/* On a phone held upright it's the lobby's bottom sheet, full width. */
+@media (max-width: 899px) and (min-height: 501px), (orientation: portrait) and (max-width: 1100px) {
+  .path-sheet {
+    width: 100%;
+  }
+}
+
+.path-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* A flex child of the sheet: without a floor of 0 it grows past the sheet instead of scrolling. */
+  min-height: 0;
+  padding: 2px 2px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.path-body > * {
+  flex-shrink: 0;
+}
+
+/* The Torre: Machoke and the notes, then the trial cards; side by side on a phone held sideways (below). */
+.path-tower,
+.path-tower-info,
+.path-tower-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.path-tower-list > * {
+  flex-shrink: 0;
+}
+
+.path-npc {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px 10px;
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+}
+
+.path-npc-face {
+  flex: none;
+  width: 80px;
+  height: 80px;
+  image-rendering: pixelated;
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 8px;
+  background: var(--dk-surface-1, #f4f2ea);
+}
+
+.path-npc-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.path-npc-name {
+  font-family: var(--kit-title);
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.path-npc-text p,
+.path-note,
+.path-lean {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.path-note {
+  color: #d8dcf0;
+}
+
+.path-lean {
+  color: #fff;
+}
+
+.path-sub {
+  margin: 4px 0 0;
+  color: #fff;
+  font-family: var(--kit-title);
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.path-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 10px;
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 10px;
+  font-size: 19px;
+}
+
+.path-row img {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+.path-row-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.path-row-value {
+  flex: none;
+  font-family: var(--kit-title);
+  font-size: 20px;
+}
+
+.path-row.done {
+  background: var(--dk-wash-green, #e4f8e4);
+}
+
+.path-row.done .path-row-value {
+  color: color-mix(in srgb, #1e8a3c var(--dk-lift, 100%), #fff);
+}
+
+.path-bar {
+  display: block;
+  height: 14px;
+  background: #141832;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.path-bar i {
+  display: block;
+  height: 100%;
+  background: #4cc068;
+}
+
+.path-bar.sun i {
+  background: #f8c838;
+}
+
+.path-bar.moon i {
+  background: #a888f8;
+}
+
+.path-bar.steel i {
+  background: #b0b0c0;
+}
+
+/* The Zygarde Cube: the pixel cube big and crisp beside its numbers. */
+.path-cube-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.path-cube {
+  flex: none;
+  width: 192px;
+  height: 192px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 4px 0 var(--kit-tinta));
+}
+
+.path-cube-numbers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.path-cube-numbers > b {
+  font-size: 52px;
+  font-weight: 400;
+}
+
+/* Cosmog: its face, its runs and the Sun and the Moon. */
+.path-cosmog {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+}
+
+.path-cosmog > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.path-cosmog .path-note {
+  color: var(--kit-ink-2);
+}
+
+.path-cosmog-face {
+  width: 80px;
+  height: 80px;
+  image-rendering: pixelated;
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 8px;
+}
+
+.path-cosmog-name {
+  font-family: var(--kit-title);
+  font-size: 26px;
+  font-weight: 400;
+}
+
+.path-sky {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.path-sky-label {
+  font-family: var(--kit-title);
+  font-size: 20px;
+}
+
+.path-sky-label.sun {
+  color: #f8d048;
+}
+
+.path-sky-label.moon {
+  color: #c8b8ff;
+}
+
+/* The Torre: a card per trial, the two towers side by side when there's room. */
+.path-trial {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px 10px;
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  opacity: 0.7;
+}
+
+.path-trial.open,
+.path-trial.done {
+  opacity: 1;
+}
+
+.path-trial.open {
+  border-color: var(--kit-ouro);
+}
+
+.path-trial.done {
+  background: var(--dk-wash-green, #e4f8e4);
+}
+
+.path-trial.dark {
+  --tower: #3a2e58;
+}
+
+.path-trial.water {
+  --tower: #2860a8;
+}
+
+.path-trial:is(.dark, .water) .path-trial-head b {
+  color: color-mix(in srgb, var(--tower) var(--dk-lift, 100%), #fff);
+}
+
+.path-trial-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.path-trial-head b {
+  font-family: var(--kit-title);
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.path-trial p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.path-trial-goal {
+  font-weight: 700;
+}
+
+.path-trial-load {
+  color: var(--kit-ink-2);
+}
+
+.path-trial-go {
+  --mode: var(--kit-dojo);
+  align-self: stretch;
+  min-height: 44px;
+  /* At the card's foot, so the two towers' buttons line up. */
+  margin-top: auto;
+}
+
+.path-towers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+/* Regigigas: the three it waits for. */
+.path-trio {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.path-trio-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #fff;
+  font-size: 16px;
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.path-trio-face.on {
+  opacity: 1;
+  filter: none;
+}
+
+.path-trio-face img {
+  width: 72px;
+  height: 72px;
+  image-rendering: pixelated;
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 8px;
+  background: var(--kit-paper);
+}
+
+@media (max-width: 520px) {
+  .path-cube {
+    width: 128px;
+    height: 128px;
+  }
+
+  .path-cube-numbers > b {
+    font-size: 40px;
+  }
+
+  .path-npc-face,
+  .path-cosmog-face {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* A Torre trial's screen over the Dojo (ui/towerTrial.ts): its card at the top, the "ready" and the result in the middle. */
+.trial-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: max(64px, calc(var(--safe-t) + 56px)) 12px max(12px, var(--safe-b));
+}
+
+.trial-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(420px, 100%);
+  padding: 8px 12px 10px;
+}
+
+.trial-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.trial-name {
+  font-family: var(--kit-title);
+  font-size: 26px;
+  font-weight: 400;
+}
+
+.trial-clock {
+  font-size: 34px;
+  font-weight: 400;
+}
+
+.trial-clock.low {
+  color: #ff8a70;
+}
+
+.trial-goal,
+.trial-load {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.trial-goal {
+  font-weight: 700;
+}
+
+.trial-load {
+  color: var(--kit-ink-2);
+}
+
+.trial-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trial-progress .path-bar {
+  flex: 1 1 auto;
+}
+
+.trial-progress .path-bar i {
+  background: var(--kit-dojo);
+}
+
+.trial-count {
+  flex: none;
+  font-family: var(--kit-title);
+  font-size: 22px;
+}
+
+.trial-ready {
+  margin-top: 18vh;
+  font-size: 96px;
+}
+
+.trial-result {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14vh;
+  padding: 16px 20px 18px;
+  background: var(--kit-evento);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 16px;
+}
+
+.trial-result-title {
+  font-size: 48px;
+  font-weight: 400;
+}
+
+.trial-result-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.trial-retry,
+.trial-back {
+  --mode: var(--kit-dojo);
+}
+
+.trial-back {
+  --mode: #5c6189;
+}
+
+/* Held sideways, a phone has no room above the player: the card goes to the bottom middle, between the player's card and the special. */
+@media (max-height: 500px) {
+  .trial-hud {
+    justify-content: flex-end;
+    padding-bottom: max(10px, var(--safe-b));
+  }
+
+  .trial-card {
+    width: min(360px, 46vw);
+    padding: 6px 10px 8px;
+  }
+
+  .trial-load {
+    display: none;
+  }
+
+  .trial-name {
+    font-size: 22px;
+  }
+
+  .trial-clock {
+    font-size: 28px;
+  }
+
+  .trial-ready,
+  .trial-result {
+    order: -1;
+    margin: auto 0;
+  }
+}
+
+/* The partner select's way into a path legend's sheet (ui/starterSelect.ts). */
+.partner-path {
+  align-self: flex-start;
+  margin-top: 6px;
+  font-size: 20px;
+}
+
+.trial-result-news {
+  max-width: 340px;
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* A phone held sideways: the sheet tightens so its rows show under the intro. */
+@media (max-height: 500px) {
+  .path-sheet .lobby-sheet-head h2 {
+    font-size: 28px;
+  }
+
+  .path-npc {
+    padding: 6px 8px;
+  }
+
+  .path-npc-face,
+  .path-cosmog-face {
+    width: 48px;
+    height: 48px;
+  }
+
+  .path-npc-text p,
+  .path-note,
+  .path-lean,
+  .path-trial p {
+    font-size: 16px;
+  }
+
+  .path-npc-name,
+  .path-trial-head b {
+    font-size: 20px;
+  }
+
+  .path-cube {
+    width: 128px;
+    height: 128px;
+  }
+}
+
+/*
+ * The Torre on a phone held sideways: a wider sheet, Machoke and the notes on
+ * the left, the cards scrolling on their own on the right, so the towers are
+ * in view at once.
+ */
+@media (max-height: 500px) and (min-width: 540px) {
+  .path-sheet-kubfu {
+    width: min(820px, 100%);
+    height: 100%;
+  }
+
+  .path-sheet-kubfu .path-body {
+    flex: 1;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+
+  .path-tower {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .path-tower-info,
+  .path-tower-list {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: 8px;
+  }
+
+  .path-trial {
+    padding: 6px 8px 8px;
+  }
+
+  .path-trial-head b {
+    font-size: 19px;
+  }
+
+  .path-trial p {
+    font-size: 15px;
+  }
+
+  .path-towers {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .path-trial .path-trial-go {
+    min-width: 0;
+    min-height: 44px;
+    padding: 2px 10px 8px;
+    font-size: 20px;
+  }
+}
+
+/* The smallest phones sideways: the sheet's head and the intro give their room to the cards. */
+@media (max-height: 360px) and (min-width: 540px) {
+  .path-sheet-kubfu {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .path-sheet-kubfu .lobby-sheet-head h2 {
+    font-size: 22px;
+  }
+
+  .path-sheet-kubfu .path-npc-face {
+    width: 40px;
+    height: 40px;
+  }
+
+  .path-sheet-kubfu .path-npc-text p,
+  .path-sheet-kubfu .path-note {
+    font-size: 14px;
+  }
+
+  .path-sheet-kubfu .path-sub {
+    font-size: 19px;
+    margin: 0;
+  }
+
+  .path-sheet-kubfu .path-trial p {
+    font-size: 14px;
+  }
+}
