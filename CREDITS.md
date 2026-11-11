@@ -1947,6 +1947,54 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 805 | Stakataka (shiny) | Top_Kec | [Caitemis](https://caitemis-art.tumblr.com/) |
 | 806 | Blacephalon | Top_Kec | Emboarger |
 | 806 | Blacephalon (shiny) | Top_Kec | [Caitemis](https://caitemis-art.tumblr.com/) |
+| 718 | Zygarde | [Soulja](https://twitter.com/OlSoulja), [Deeshura](https://bsky.app/profile/deeshura.bsky.social), DeltaL | [Noo](https://artfight.net/~NooNoo_Skidoo) |
+| 718 | Zygarde (shiny) | [Emmuffin](https://twitter.com/Ernmuffin), DeltaL | baronessfaron |
+| 718 | Zygarde (10) | baronessfaron, NikolaP | — |
+| 718 | Zygarde (10, shiny) | [Morei](https://bsky.app/profile/murpia57.bsky.social) | — |
+| 718 | Zygarde (Complete) | baronessfaron | — |
+| 718 | Zygarde (Complete, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 789 | Cosmog | Emboarger, Yari | XxWindpawxX, Emboarger, [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 789 | Cosmog (shiny) | Emboarger | [Noo](https://artfight.net/~NooNoo_Skidoo) |
+| 790 | Cosmoem | baronessfaron | Emboarger |
+| 790 | Cosmoem (shiny) | ◥θ┴θ◤ | Ichor |
+| 791 | Solgaleo | [nataniel-sama](https://pokemon-reloaded.el-foro.net/) | [0palite](https://zeropalart.tumblr.com/), Emboarger, [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 791 | Solgaleo (shiny) | [Caitemis](https://caitemis-art.tumblr.com/) | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 792 | Lunala | baronessfaron | [Deeshura](https://bsky.app/profile/deeshura.bsky.social) |
+| 792 | Lunala (shiny) | baronessfaron | [Deeshura](https://bsky.app/profile/deeshura.bsky.social) |
+| 891 | Kubfu | Top_Kec | JustAGunk |
+| 891 | Kubfu (shiny) | Top_Kec | JustAGunk |
+| 892 | Urshifu | baronessfaron | [Emmuffin](https://twitter.com/Ernmuffin) |
+| 892 | Urshifu (shiny) | [Deeshura](https://bsky.app/profile/deeshura.bsky.social) | [Emmuffin](https://twitter.com/Ernmuffin) |
+| 892 | Urshifu (Rapid Strike) | baronessfaron | — |
+| 892 | Urshifu (Rapid Strike, shiny) | [Deeshura](https://bsky.app/profile/deeshura.bsky.social) | — |
+| 808 | Meltan | [FlowerSnek](https://twitter.com/EthanLac13) | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 808 | Meltan (shiny) | [FlowerSnek](https://twitter.com/EthanLac13) | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 809 | Melmetal | [Jhony-Rex](https://www.deviantart.com/jhony-rex), DeltaL, [Soulja](https://twitter.com/OlSoulja) | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 809 | Melmetal (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 486 | Regigigas | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), baronessfaron |
+| 486 | Regigigas (shiny) | [Morei](https://bsky.app/profile/murpia57.bsky.social) | [Emmuffin](https://twitter.com/Ernmuffin) |
+| 484 | Palkia | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), baronessfaron |
+| 484 | Palkia (shiny) | [Morei](https://bsky.app/profile/murpia57.bsky.social) | Emboarger |
+| 484 | Palkia (Origin) | baronessfaron | — |
+| 484 | Palkia (Origin, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 480 | Uxie | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), baronessfaron |
+| 480 | Uxie (shiny) | Tacocoa | Anonymous, baronessfaron, [bwappi](https://bsky.app/profile/bwappi.bsky.social) |
+| 481 | Mesprit | [CHUNSOFT](https://www.spike-chunsoft.com/), baronessfaron | [CHUNSOFT](https://www.spike-chunsoft.com/), baronessfaron |
+| 481 | Mesprit (shiny) | Anonymous | Anonymous, baronessfaron, [bwappi](https://bsky.app/profile/bwappi.bsky.social) |
+| 482 | Azelf | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), baronessfaron |
+| 482 | Azelf (shiny) | Anonymous | Anonymous, [Morei](https://bsky.app/profile/murpia57.bsky.social), baronessfaron |
+| 638 | Cobalion | [powercristal](https://www.deviantart.com/powercristal), [Noo](https://artfight.net/~NooNoo_Skidoo), [Deeshura](https://bsky.app/profile/deeshura.bsky.social) | [Deeshura](https://bsky.app/profile/deeshura.bsky.social) |
+| 638 | Cobalion (shiny) | [Caitemis](https://caitemis-art.tumblr.com/) | [Deeshura](https://bsky.app/profile/deeshura.bsky.social) |
+| 639 | Terrakion | [Emmuffin](https://twitter.com/Ernmuffin) | [Noo](https://artfight.net/~NooNoo_Skidoo), [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 639 | Terrakion (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Noo](https://artfight.net/~NooNoo_Skidoo) |
+| 640 | Virizion | baronessfaron | baronessfaron |
+| 640 | Virizion (shiny) | [Deeshura](https://bsky.app/profile/deeshura.bsky.social) | baronessfaron, [Deeshura](https://bsky.app/profile/deeshura.bsky.social) |
+| 647 | Keldeo | baronessfaron | Anonymous, Ichor, [Fingernails](https://www.demirramon.com/@Fingernails) |
+| 647 | Keldeo (shiny) | [Morei](https://bsky.app/profile/murpia57.bsky.social) | [Dasawkem](https://dasawkem.carrd.co/#social), Ichor |
+| 720 | Hoopa | programmedsleepstate | programmedsleepstate |
+| 720 | Hoopa (shiny) | [Morei](https://bsky.app/profile/murpia57.bsky.social) | programmedsleepstate |
+| 720 | Hoopa (Unbound) | Emboarger | — |
+| 720 | Hoopa (Unbound, shiny) | Emboarger | — |
 
 ## Shop art
 
