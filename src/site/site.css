@@ -1886,8 +1886,16 @@ html:not(.js) #donate-account {
 /* The hub's regions: each tile its starters, how much of it the game has and what SpriteCollab is still drawing. */
 .dex-regions {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+/* Nine regions: a 3 × 3 board once there's room. */
+@media (min-width: 760px) {
+  .dex-regions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
 }
 
 .dex-region-tile {
