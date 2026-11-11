@@ -111,6 +111,8 @@ const pt = wordsOf(
       dewpider: 'Water Bubble: uma bolha bloqueia um golpe e estoura num jato d’água. Golpes de Água mais fortes.',
       duraludon: 'Stamina: cada golpe recebido soma defesa e força, que somem se ninguém o acertar.',
       bounsweet: 'Queenly Majesty: um anel em volta quebra os tiros inimigos que chegam perto. Cresce a cada evolução.',
+      sandile: 'Mergulha na areia quando um inimigo chega perto, corre por baixo sem ser visto e sai explodindo embaixo da horda. Moxie: cada derrota o deixa mais forte, por pouco tempo.',
+      stufful: 'Um abraço de urso: agarra o inimigo mais forte ao alcance, carrega e arremessa na horda, esmagando quem estiver no caminho.',
     },
     moves: {
       ironTail: 'A cauda gira por trás em um arco largo de pedra e aço que empurra forte.',
@@ -126,6 +128,8 @@ const pt = wordsOf(
       lunge: 'Uma investida que enfraquece o alvo: o toque dele passa a ferir menos.',
       electroShot: 'Carrega e dispara um raio longo que atravessa tudo. Na chuva, dispara na hora e mais forte.',
       tropKick: 'Um chute em leque à frente que pode enfraquecer os inimigos.',
+      powerTrip: 'Uma mordida à frente, mais forte a cada acúmulo de Moxie das derrotas.',
+      hammerArm: 'Um golpe pesado com os dois braços logo à frente, depois de um instante de preparo, que faz o chão tremer.',
     },
     megas: {
       steelix: 'defesa +3, recebe 20% menos dano e golpes Aço, Terra e Pedra +30%. O especial vira Heavy Slam.',
@@ -171,6 +175,8 @@ const en = wordsOf(
       dewpider: 'Water Bubble: a bubble blocks one hit and bursts in a splash. Stronger Water moves.',
       duraludon: 'Stamina: every hit it takes adds defense and power, fading if nothing lands on it.',
       bounsweet: 'Queenly Majesty: a ring around it breaks enemy shots that come close. It grows with each evolution.',
+      sandile: 'Dives into the sand when a foe closes in, runs unseen beneath and bursts up under the horde. Moxie: every KO makes it stronger, for a while.',
+      stufful: 'A bear hug: grabs the toughest foe in reach, carries it and hurls it into the horde, crashing through anything in its way.',
     },
     moves: {
       ironTail: 'The tail swings round from behind in a wide arc of rock and steel that shoves hard.',
@@ -186,6 +192,8 @@ const en = wordsOf(
       lunge: 'A lunge that weakens its target: its touch hurts less.',
       electroShot: 'Charges, then fires a long beam that goes through everything. In the rain it fires at once, harder.',
       tropKick: 'A sweeping kick ahead that may weaken foes.',
+      powerTrip: 'A snap of the jaws in front, harder with every Moxie stack from KOs.',
+      hammerArm: 'A heavy two-armed smash just ahead, after a short wind-up, that shakes the ground.',
     },
     megas: {
       steelix: 'defense +3, takes 20% less damage and Steel, Ground and Rock moves +30%. The special becomes Heavy Slam.',
@@ -231,6 +239,8 @@ const es = wordsOf(
       dewpider: 'Pompa: una burbuja bloquea un golpe y revienta en un chorro de agua. Movimientos de Agua más fuertes.',
       duraludon: 'Firmeza: cada golpe recibido suma defensa y fuerza, que se pierden si nadie lo golpea.',
       bounsweet: 'Regia Presencia: un anillo a su alrededor rompe los disparos enemigos que se acercan. Crece con cada evolución.',
+      sandile: 'Se hunde en la arena cuando un enemigo se acerca, corre oculto por debajo y sale estallando bajo la horda. Autoestima: cada derrota lo hace más fuerte, por un rato.',
+      stufful: 'Un abrazo de oso: agarra al enemigo más fuerte a su alcance, lo carga y lo lanza contra la horda, aplastando a quien esté en el camino.',
     },
     moves: {
       ironTail: 'La cola gira desde atrás en un arco amplio de roca y acero que empuja fuerte.',
@@ -246,6 +256,8 @@ const es = wordsOf(
       lunge: 'Una embestida que debilita al objetivo: su toque hiere menos.',
       electroShot: 'Carga y dispara un rayo largo que lo atraviesa todo. Con lluvia dispara al instante y más fuerte.',
       tropKick: 'Una patada en abanico al frente que puede debilitar a los enemigos.',
+      powerTrip: 'Una mordida al frente, más fuerte con cada acumulación de Autoestima de las derrotas.',
+      hammerArm: 'Un golpe pesado con los dos brazos justo delante, tras un instante de preparación, que hace temblar el suelo.',
     },
     megas: {
       steelix: 'defensa +3, recibe 20% menos daño y movimientos de Acero, Tierra y Roca +30%. El especial pasa a ser Heavy Slam.',
@@ -291,6 +303,8 @@ const fr = wordsOf(
       dewpider: 'Aquabulle : une bulle bloque un coup et éclate en gerbe d’eau. Capacités Eau plus fortes.',
       duraludon: 'Endurance : chaque coup reçu ajoute défense et force, qui disparaissent si rien ne le touche.',
       bounsweet: 'Prestance Royale : un anneau autour de lui brise les tirs ennemis qui approchent. Il grandit à chaque évolution.',
+      sandile: 'Plonge dans le sable quand un ennemi approche, file sous terre sans être vu et jaillit sous la horde. Impudence : chaque K.O. le rend plus fort, un moment.',
+      stufful: 'Une étreinte d’ours : il saisit l’ennemi le plus coriace à sa portée, le porte et le lance dans la horde, écrasant tout sur son passage.',
     },
     moves: {
       ironTail: 'La queue balaie depuis l’arrière en un large arc de roche et d’acier qui repousse fort.',
@@ -306,6 +320,8 @@ const fr = wordsOf(
       lunge: 'Une charge qui affaiblit sa cible : son contact blesse moins.',
       electroShot: 'Se charge, puis tire un long rayon qui traverse tout. Sous la pluie, il tire aussitôt, plus fort.',
       tropKick: 'Un coup de pied en éventail devant qui peut affaiblir les ennemis.',
+      powerTrip: 'Un coup de mâchoires devant, plus fort à chaque cumul d’Impudence gagné par les K.O.',
+      hammerArm: 'Un lourd coup des deux bras juste devant, après un court élan, qui fait trembler le sol.',
     },
     megas: {
       steelix: 'défense +3, subit 20 % de dégâts en moins et capacités Acier, Sol et Roche +30 %. L’attaque spéciale devient Heavy Slam.',
@@ -351,6 +367,8 @@ const zh = wordsOf(
       dewpider: '水泡：一顆泡泡擋下一次攻擊並爆成水花。水屬性招式更強。',
       duraludon: '持久力：每次受到攻擊都會增加防禦與力量，一段時間沒被打中就會消失。',
       bounsweet: '女王的威嚴：身邊的光環會擊碎靠近的敵方飛彈。每次進化都會變大。',
+      sandile: '敵人靠近時潛入沙中，在地下隱身疾行，再從敵群腳下爆出。自信過度：每打倒一個敵人就短暫變強。',
+      stufful: '熊抱：抓住範圍內最強壯的敵人，扛著走，再把它甩進敵群，撞飛路上的一切。',
     },
     moves: {
       ironTail: '尾巴從後方甩出岩石與鋼鐵的寬弧，把敵人狠狠擊退。',
@@ -366,6 +384,8 @@ const zh = wordsOf(
       lunge: '削弱目標的飛撲：它的接觸傷害降低。',
       electroShot: '蓄力後射出貫穿一切的長光束。雨天時立即發射，而且更強。',
       tropKick: '向前扇形踢擊，可能削弱敵人。',
+      powerTrip: '向前猛咬一口，每層由打倒敵人累積的自信過度都讓它更強。',
+      hammerArm: '短暫蓄力後用雙臂朝前方重擊，震動地面。',
     },
     megas: {
       steelix: '防禦+3、受到的傷害減少20%，鋼、地面與岩石招式+30%。必殺技變為 Heavy Slam。',

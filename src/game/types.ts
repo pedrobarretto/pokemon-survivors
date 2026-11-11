@@ -397,6 +397,7 @@ export type Visual =
   /** The second batch's families (`gaKitBMoves.ts`, `gaKitBSystem.ts`), drawn by `render/gaKitBFx.ts`; `kitBHit` is a kit's unseen hitbox. */
   | 'kitBHit' | 'kitBTail' | 'kitBEgg' | 'kitBSphere' | 'kitBWing' | 'kitBFist' | 'kitBSalt' | 'kitBCut' | 'kitBSpark' | 'kitBLatch'
   | 'kitBCharge' | 'kitBShot' | 'kitBKick' | 'kitBRing' | 'kitBSlam' | 'kitBSplash'
+  | 'kitBJaws' | 'kitBHammer' | 'kitBErupt' | 'kitBHug'
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'

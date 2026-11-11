@@ -347,7 +347,44 @@ export const GA_KIT_B_MOVES = {
       cast(g, 'tropKick')
     },
   },
+
+  /* Sandile's line: a snap of the jaws in front, harder with every Moxie stack the KOs built. */
+  powerTrip: {
+    name: 'Power Trip',
+    type: 'dark',
+    base: stats({ damage: 10, cooldown: 1.3, knockback: 34 }),
+    tags: ['bite'],
+    upgrades: GA_KIT_B_UPGRADES.powerTrip,
+    fire: (g, s) => {
+      const kit = g.player.kitB
+      const stacks = kit?.kind === 'burrow' ? kit.stacks : 0
+      const bite = strikeAt(g, s, look('powerTrip', 'dark', 'kitBJaws'), aimAngle(g, 80), 20, 13, 0.22, s.damage * (1 + stacks * POWER_TRIP))
+      bite.tier = stacks
+      cast(g, 'powerTrip')
+    },
+  },
+
+  /* Stufful's line: a heavy two-fisted smash just ahead, after a short wind-up, that shakes the ground. */
+  hammerArm: {
+    name: 'Hammer Arm',
+    type: 'fighting',
+    base: stats({ damage: 20, cooldown: 2.2, knockback: 90 }),
+    tags: ['punch'],
+    upgrades: GA_KIT_B_UPGRADES.hammerArm,
+    fire: (g, s) => {
+      const p = g.player
+      const d = fromAngle(aimAngle(g, 90), 26)
+      strike(g, s, look('hammerArm', 'fighting', 'kitBHammer'), p.x + d.x, p.y - 4 + d.y, 22 * s.area, HAMMER_WINDUP, 0.3)
+      cast(g, 'hammerArm')
+    },
+  },
 } as const satisfies Record<string, MoveDef>
+
+/** Power Trip: what each Moxie stack adds to its bite. */
+export const POWER_TRIP = 0.08
+
+/** Hammer Arm's wind-up before the fists land, seconds. */
+const HAMMER_WINDUP = 0.18
 
 /** Psycho Cut bites deeper into afflicted foes. */
 const AFFLICTED_CUT = [{ when: 'afflicted', mult: 1.25 }] as const

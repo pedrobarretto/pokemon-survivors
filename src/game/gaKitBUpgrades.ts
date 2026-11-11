@@ -97,6 +97,20 @@ export const GA_KIT_B_UPGRADES = {
     { fork: [{ stats: { damage: 3 }, mods: ['hunter'] }, { stats: { area: 0.2 }, mods: ['burstOnKill'] }] },
     { damage: 3 },
   ],
+  powerTrip: [
+    { damage: 2 }, { cooldown: -0.1 },
+    { fork: [{ stats: { damage: 2 }, mods: ['execute'] }, { stats: { area: 0.2 }, mods: ['drain'] }] },
+    { damage: 2 }, { area: 0.15 },
+    { fork: [{ stats: { damage: 4 }, mods: ['hunter'] }, { stats: { cooldown: -0.15 }, mods: ['echo'] }] },
+    { damage: 3 },
+  ],
+  hammerArm: [
+    { damage: 3 }, { area: 0.15 },
+    { fork: [{ stats: { damage: 3 }, mods: ['burstOnKill'] }, { stats: { cooldown: -0.2 }, mods: ['echo'] }] },
+    { damage: 3 }, { cooldown: -0.15 },
+    { fork: [{ stats: { damage: 5 }, mods: ['hunter'] }, { stats: { area: 0.2 }, mods: ['trail'] }] },
+    { damage: 4 },
+  ],
 } as const satisfies Record<string, readonly UpgradeStep[]>
 
 export type GaKitBMoveId = keyof typeof GA_KIT_B_UPGRADES

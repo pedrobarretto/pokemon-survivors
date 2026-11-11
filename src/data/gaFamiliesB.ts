@@ -88,6 +88,19 @@ export const GA_FAMILIES_B = {
       { maxHp: 40, might: 0.24, speed: 3 },
     ]),
   },
+  sandile: {
+    name: 'Sandile', color: '#c89868', egg: 'rare', stats: { speed: 2, maxHp: -5, might: 0.04 }, signature: 'powerTrip',
+    learnset: [['powerTrip', 'crunch', 'bonemerang', 'stealthRock'], ['suckerPunch', 'fireSpin', 'shadowClaw'], ['focusPunch', 'dragonTail', 'shockWave']],
+    line: line3(['Sandile', 551, ['ground', 'dark']], ['Krokorok', 552, ['ground', 'dark']], ['Krookodile', 553, ['ground', 'dark']], [
+      { maxHp: 25, might: 0.1, speed: 1 },
+      { maxHp: 50, might: 0.24, speed: 2 },
+    ]),
+  },
+  stufful: {
+    name: 'Stufful', color: '#f0a0b0', egg: 'common', stats: { maxHp: 20, speed: -2, might: 0.02 }, signature: 'hammerArm',
+    learnset: [['hammerArm', 'machPunch', 'quickAttack', 'disarmingVoice'], ['swift', 'drumBeating', 'focusPunch', 'gyroBall', 'brine', 'iceShard']],
+    line: line2(['Stufful', 759, ['normal', 'fighting']], ['Bewear', 760, ['normal', 'fighting']], { maxHp: 65, armor: 1, might: 0.24 }),
+  },
 } as const satisfies Record<string, HatchlingDef>
 
 export const GA_FAMILIES_B_ABILITIES = {
@@ -104,6 +117,8 @@ export const GA_FAMILIES_B_ABILITIES = {
   dewpider: ['waterAbsorb', 'swiftSwim', 'hydration'],
   duraludon: ['lightMetal', 'heavyMetal', 'sturdy'],
   bounsweet: ['leafGuard', 'chlorophyll', 'quickFeet'],
+  sandile: ['intimidate', 'strongJaw', 'sandVeil'],
+  stufful: ['thickFat', 'cuteCharm', 'ironFist'],
 } as const
 
 /** The batch's families, for the draws that must keep their old picks (the Desafio do dia, the determinism runs). */

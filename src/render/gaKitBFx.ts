@@ -4,10 +4,12 @@ import { atStage, KIT_B } from '../game/gaKitBRules'
 import { segmentAt } from '../game/gaKitBSystem'
 import { localPlayer } from '../game/players'
 import type { Attack, Game } from '../game/types'
-import { KIT_B_FX } from './gaKitBArt'
+import { KIT_B_FX, segmentSprite, type SegmentLook } from './gaKitBArt'
 import { hash2 } from '../engine/rng'
 import { detail } from './quality'
 import { dashedRing } from './strokes'
+import { drawCrunch } from './baseMoveFx'
+import { FX } from './art'
 
 /**
  * How the second batch's families look (`game/gaKitBMoves.ts`,
@@ -117,6 +119,45 @@ export const drawKitBAttack = (ctx: Ctx, a: Attack, t: number) => {
       blitRotated(ctx, KIT_B_FX.kick(), a.x, a.y, a.motion.kind === 'orbit' ? a.motion.angle : 0)
       ctx.globalAlpha = 1
       return
+    case 'kitBJaws': {
+      drawCrunch(ctx, a, (x, y, size) => {
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(Math.round(x - size / 2), Math.round(y), size, 1)
+      })
+      // Moxie: red glints round the bite, one per stack (up to six).
+      const glints = Math.min(6, a.tier)
+      for (let i = 0; i < glints && a.age < a.ttl * 0.8; i++) {
+        const ang = (i / glints) * TAU + a.age * 9
+        ctx.fillStyle = i % 2 ? '#f83838' : '#f8a040'
+        ctx.fillRect(Math.round(a.x + Math.cos(ang) * 15), Math.round(a.y + Math.sin(ang) * 9), 2, 1)
+      }
+      return
+    }
+    case 'kitBHammer': {
+      // The great black fist comes down, then a ring of dust.
+      const k = Math.min(1, a.age / 0.08)
+      ctx.globalAlpha = fadeOut(a, 0.12)
+      blitRotated(ctx, KIT_B_FX.hammer(), a.x, a.y - 8 - Math.round((1 - k) * 14), Math.PI / 2, 2)
+      ctx.globalAlpha = 1
+      return ring(ctx, a, ['#a08048', '#d8c080', '#ffffff'], 0.5)
+    }
+    case 'kitBErupt': {
+      // A thick wave of sand rolling out, then clods thrown up out of the ground and down again.
+      const r = a.shape.kind === 'circle' ? a.shape.r : 20
+      ctx.globalAlpha = fadeOut(a, 0.2)
+      for (let w = 0; w < 3; w++) dashedRing(ctx, a.x, a.y, Math.max(2, r - w * 2), a.id + w, w === 0 ? ['#f8e8b8', '#d8b878'] : ['#b08850', '#8a6634'], 1, 0.55)
+      ctx.globalAlpha = 1
+      const clods = detail.lean ? 7 : 14
+      const k = Math.min(1, a.age / a.ttl)
+      for (let i = 0; i < clods; i++) {
+        const ang = hash2(a.id, i, 41) * TAU
+        const d = r * (0.3 + 0.7 * k) * (0.6 + 0.4 * hash2(a.id, i, 43))
+        const up = Math.sin(k * Math.PI) * (10 + 10 * hash2(a.id, i, 47))
+        blitCentered(ctx, KIT_B_FX.clod(), a.x + Math.cos(ang) * d, a.y + Math.sin(ang) * d * 0.55 - up)
+      }
+      return
+    }
+    case 'kitBHug': return ring(ctx, a, ['#f8a8b8', '#ffffff', '#a08048'], 0.55)
     case 'kitBRing': return ring(ctx, a, ['#5868c8', '#e8d878', '#c070e0'], 0.6)
     case 'kitBSlam': return ring(ctx, a, ['#685028', '#a08048', '#d8c080'], 0.5)
     case 'kitBSplash': return ring(ctx, a, ['#58a8e8', '#d8f0f8', '#ffffff'], 0.6)
@@ -130,13 +171,15 @@ export const drawKitBGround = (ctx: Ctx, g: Game, t: number) => {
   if (!kit) return
   switch (kit.kind) {
     case 'serpent': {
-      const art = p.stage >= 1 || p.mega.active > 0 ? KIT_B_FX.steel() : KIT_B_FX.boulder()
-      // Tail first, so the segments nearer the head draw over it.
-      for (let i = atStage(KIT_B.serpent.segments, p.stage); i >= 1; i--) {
+      const look: SegmentLook = p.mega.active > 0 ? 'mega' : p.stage >= 1 ? 'steelix' : 'onix'
+      const n = atStage(KIT_B.serpent.segments, p.stage)
+      // Lower on the screen draws later, so a coiled body overlaps the way it lies.
+      const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => kit.segs[a * 2 + 1]! - kit.segs[b * 2 + 1]! || b - a)
+      for (const i of order) {
         const at = segmentAt(kit, i)
         if (!at) continue
-        if (!detail.lean) blitEllipse(ctx, 5, 2, 'rgba(24,24,16,0.28)', at.x, at.y + 2)
-        blitCentered(ctx, art, at.x, at.y - 4)
+        if (!detail.lean) blitEllipse(ctx, i < 2 ? 6 : 5, 2, 'rgba(24,24,16,0.28)', at.x, at.y + 1)
+        blitCentered(ctx, segmentSprite(look, i, p.shiny), at.x, at.y - 4)
       }
       return
     }
@@ -168,6 +211,21 @@ export const drawKitBGround = (ctx: Ctx, g: Game, t: number) => {
         }
       }
       ctx.globalAlpha = 1
+      return
+    }
+    case 'burrow': {
+      if (p.hidden?.move !== 'powerTrip') return
+      // The mound of sand shuffling along over Sandile, sand spraying off behind it.
+      const bob = Math.floor(t * 12) % 2
+      if (!detail.lean) blitEllipse(ctx, 8, 2, 'rgba(24,24,16,0.25)', p.x, p.y + 1)
+      blitCentered(ctx, KIT_B_FX.mound(), p.x, p.y - 2 - bob)
+      const back = Math.atan2(-p.facing.y, -p.facing.x)
+      for (let i = 0; i < 6; i++) {
+        const k = (t * 3 + i / 6) % 1
+        const spread = (hash2(i, 3, Math.floor(t * 3 + i / 6)) - 0.5) * 1.4
+        ctx.fillStyle = i % 2 ? '#d8b878' : '#f0dca8'
+        ctx.fillRect(Math.round(p.x + Math.cos(back + spread) * (6 + k * 12)), Math.round(p.y - 3 + Math.sin(back + spread) * (3 + k * 6) - Math.sin(k * Math.PI) * 5), 1, 1)
+      }
       return
     }
     case 'majesty': {
@@ -279,6 +337,37 @@ export const drawKitBAir = (ctx: Ctx, g: Game, t: number) => {
     }
     case 'stamina':
       return drawPips(ctx, p.x, y, kit.stacks, atStage(KIT_B.stamina.cap, p.stage), '#c8d0e0')
+    case 'burrow':
+      if (kit.under) return
+      if (kit.charge > 0) drawMeter(ctx, p.x, y + (kit.stacks > 0 ? 4 : 0), 1 - kit.charge / atStage(KIT_B.burrow.cooldown, p.stage), '#d8b878')
+      return drawPips(ctx, p.x, y, kit.stacks, atStage(KIT_B.burrow.moxie.cap, p.stage), '#f84838')
+    case 'hug': {
+      const held = kit.held ?? kit.flying
+      if (!held) return
+      const e = g.enemies.find((o) => o.id === held.id)
+      if (!e) return
+      const cy = e.y - e.radius
+      if (kit.flying) {
+        // Hurled: speed lines streaming off behind it.
+        const speed = Math.hypot(e.kx, e.ky)
+        if (speed < 1) return
+        const bx = -e.kx / speed
+        const by = -e.ky / speed
+        ctx.fillStyle = '#ffffff'
+        for (let i = -1; i <= 1; i++) {
+          for (let s = 0; s < 7; s++) ctx.fillRect(Math.round(e.x + bx * (e.radius + 3 + s * 2) - by * i * 4), Math.round(cy + by * (e.radius + 3 + s * 2) + bx * i * 4), 1, 1)
+        }
+        return
+      }
+      // Hugged: squeeze marks pressing in on both sides, and a heart over it.
+      const w = e.radius + 4 - (Math.floor(t * 8) % 2)
+      ctx.fillStyle = '#ffffff'
+      for (const side of [-1, 1]) {
+        for (let k = -2; k <= 2; k++) ctx.fillRect(Math.round(e.x + side * (w - Math.abs(k) * 0.6)), Math.round(cy + k * 2), 1, 2)
+      }
+      blitCentered(ctx, FX.heart(), e.x, cy - e.radius - 6 - (Math.floor(t * 4) % 2))
+      return
+    }
     default:
   }
 }
@@ -290,8 +379,11 @@ const jetsLift = (air: number, total: number) => {
   return Math.round(Math.min(1, Math.min(k, 1 - k) * 4) * top)
 }
 
-/** Lifts the player's sprite while the arm jets carry it (`drawPlayer`'s moment look). */
+/** Lifts the player's sprite while the arm jets carry it, or hides it under Sandile's mound (`drawPlayer`'s moment look). */
 export const kitBPlayerLook = (g: Game) => {
-  const kit = localPlayer(g).kitB
+  const p = localPlayer(g)
+  // Under the sand (Sandile's dive): only the mound shows (`drawKitBGround`).
+  if (p.kitB?.kind === 'burrow' && p.hidden?.move === 'powerTrip') return { lift: 0, alpha: 0 }
+  const kit = p.kitB
   return kit?.kind === 'jets' && kit.air > 0 ? { lift: jetsLift(kit.air, kit.total), alpha: 1 } : null
 }

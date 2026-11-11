@@ -2,10 +2,10 @@ import { TAU } from '../engine/math'
 import * as dm from '../engine/dmath'
 import { healPlayer } from './combat'
 import { burst, floatText, shakeScreen } from './effects'
-import { atStage, eggHeal, eggTaken, faded, galeOn, jetsReady, KIT_B, majestyStops, stackUp, type GaKitB } from './gaKitBRules'
+import { atStage, diveReady, eggHeal, eggTaken, eruptPower, faded, galeOn, jetsReady, KIT_B, majestyStops, stackUp, stepSerpent, type GaKitB, type Held } from './gaKitBRules'
 import { wardOpens } from './kitRules'
 import { recomputeStats } from './leveling'
-import { stampWard, wardHolder } from './moveKit'
+import { burrow, stampWard, throwFoe, wardHolder } from './moveKit'
 import { inPlay } from './players'
 import { nearestEnemy } from './queries'
 import { spawnAttack } from './spawn'
@@ -30,21 +30,16 @@ const flare = (g: Game, colors: readonly string[], count = 22) => {
   g.events.push({ kind: 'guard' })
 }
 
-/** Onix's body: the path walked, newest first, as x, y pairs; enough of it for every segment. */
-const trackPath = (p: Player, kit: Kit<'serpent'>) => {
-  const S = KIT_B.serpent
-  if (kit.path.length > 0 && p.walked - kit.walked < S.step) return
+/** Onix's body: still time from the walk, then the chain steps behind the head (`stepSerpent`). */
+const moveSerpent = (p: Player, kit: Kit<'serpent'>, dt: number) => {
+  kit.still = p.walked === kit.walked ? kit.still + dt : 0
   kit.walked = p.walked
-  kit.path.unshift(p.x, p.y)
-  const keep = Math.ceil((S.lead + atStage(S.segments, 1) * S.spacing) / S.step) + 2
-  if (kit.path.length > keep * 2) kit.path.length = keep * 2
+  stepSerpent(kit, p.x, p.y, p.facing.x, p.facing.y, p.stage, dt)
 }
 
-/** Where segment `i` (1 = the one behind the head) of Onix's body lies on its path, or null while the body is still coiled. */
-export const segmentAt = (kit: Kit<'serpent'>, i: number) => {
-  const k = dm.round((KIT_B.serpent.lead + i * KIT_B.serpent.spacing) / KIT_B.serpent.step) * 2
-  return k + 1 < kit.path.length ? { x: kit.path[k]!, y: kit.path[k + 1]! } : null
-}
+/** Where segment `i` (0 = the one behind the head) of Onix's body lies. */
+export const segmentAt = (kit: Kit<'serpent'>, i: number) =>
+  i * 2 + 1 < kit.segs.length ? { x: kit.segs[i * 2]!, y: kit.segs[i * 2 + 1]! } : null
 
 /** Every `every` s each segment of the body hits what it lies on. */
 const serpentBites = (g: Game, kit: Kit<'serpent'>, dt: number) => {
@@ -54,7 +49,7 @@ const serpentBites = (g: Game, kit: Kit<'serpent'>, dt: number) => {
   if (kit.hit > 0) return
   kit.hit += S.every
   const steel = p.stage >= 1
-  for (let i = 1; i <= atStage(S.segments, p.stage); i++) {
+  for (let i = 0; i < atStage(S.segments, p.stage); i++) {
     const at = segmentAt(kit, i)
     if (!at) break
     spawnAttack(g, {
@@ -205,6 +200,148 @@ const majesty = (g: Game, kit: Kit<'majesty'>, dt: number) => {
   }
 }
 
+/** Sandile bursts up from the sand: a ring of sand under it that tosses what stands there, harder with Moxie. */
+const erupt = (g: Game, kit: Kit<'burrow'>) => {
+  const p = g.player
+  const B = KIT_B.burrow
+  const r = atStage(B.r, p.stage) * p.stats.area
+  spawnAttack(g, {
+    move: 'powerTrip', type: 'ground', visual: 'kitBErupt', x: p.x, y: p.y - 4,
+    shape: { kind: 'circle', r: 10 }, motion: { kind: 'static' }, grow: (r - 10) / 0.16,
+    damage: kitPower(p, eruptPower(p.stage, kit.stacks)), knockback: B.knockback, ttl: 0.42, activeUntil: 0.16, tier: kit.stacks, mod: null,
+  })
+  p.iframes = Math.max(p.iframes, B.iframes)
+  burst(g, p.x, p.y - 6, { colors: ['#f0dca8', '#d8b878', '#b08850'], count: 30, speed: 150, ttl: 0.5, size: 2 })
+  shakeScreen(g, p.stage >= 2 ? 5 : 3)
+  g.events.push({ kind: 'quake' })
+}
+
+/** Sand Tomb's dive: on a fixed clock, a foe closing in sends Sandile under; surfacing erupts. Moxie fades between KOs. */
+const stepBurrow = (g: Game, kit: Kit<'burrow'>, dt: number) => {
+  const p = g.player
+  const B = KIT_B.burrow
+  const moxie = faded(kit.stacks, g.now - kit.last, dt, B.moxie.hold, B.moxie.decayEvery)
+  if (moxie !== kit.stacks) {
+    kit.stacks = moxie
+    recomputeStats(g)
+  }
+  if (kit.under) {
+    if (p.hidden?.move === 'powerTrip') return
+    kit.under = false
+    kit.charge = atStage(B.cooldown, p.stage)
+    recomputeStats(g)
+    return erupt(g, kit)
+  }
+  kit.charge = Math.max(0, kit.charge - dt)
+  if (kit.charge > 0) return
+  const foe = nearestEnemy(g, p.x, p.y, B.near)
+  if (!foe || !diveReady(kit.charge, kit.under, dm.hypot(foe.x - p.x, foe.y - p.y))) return
+  // Under the sand is an immunity window: it waits while another move's is open (`burrow` asks `wardOpens`).
+  if (!burrow(g, 'powerTrip', atStage(B.under, p.stage))) return
+  kit.under = true
+  recomputeStats(g)
+  burst(g, p.x, p.y - 4, { colors: ['#f0dca8', '#d8b878', '#b08850'], count: 16, speed: 90, ttl: 0.4 })
+}
+
+const enemyById = (g: Game, id: number) => {
+  for (const e of g.enemies) if (e.id === id) return e.dying >= 0 ? null : e
+  return null
+}
+
+/** The bear hug's grab: the toughest regular foe in reach (the heaviest thing to throw), held still in the arms. */
+const hugGrab = (g: Game, kit: Kit<'hug'>) => {
+  const p = g.player
+  const H = KIT_B.hug
+  const reach = dm.sq(atStage(H.reach, p.stage))
+  let best: Enemy | null = null
+  for (const e of g.enemies) {
+    if (e.boss || e.dying >= 0 || e.thrown || e.behavior.kind === 'avatar') continue
+    if (dm.sq(e.x - p.x) + dm.sq(e.y - p.y) > reach || (best && e.hp <= best.hp)) continue
+    best = e
+  }
+  if (!best) return false
+  const carry = atStage(H.carry, p.stage)
+  applyStatus(best.status, { kind: 'paralysis', chance: 1, duration: carry + H.hurl.flight, power: 0 }, 0, false, 'hammerArm', p.slot)
+  kit.held = { id: best.id, left: carry }
+  burst(g, best.x, best.y - best.radius, { colors: ['#f8a8b8', '#ffffff'], count: 8, speed: 60, ttl: 0.3 })
+  return true
+}
+
+/** Where a held foe rides: in the arms, just ahead of the bear. */
+const armsOf = (p: Player, e: Enemy) => {
+  const len = dm.hypot(p.facing.x, p.facing.y) || 1
+  const reach = p.radius + e.radius * 0.5 + 8
+  return { x: p.x + (p.facing.x / len) * reach, y: p.y + (p.facing.y / len) * reach * 0.6 + 1 }
+}
+
+/** Hurls the held foe at the nearest other foe in range (else ahead): it flies, crashing through whoever it meets. */
+const hurl = (g: Game, kit: Kit<'hug'>, e: Enemy) => {
+  const p = g.player
+  const H = KIT_B.hug.hurl
+  const target = nearestEnemy(g, e.x, e.y, H.aim, new Set([e.id]))
+  const angle = target ? dm.atan2(target.y - e.y, target.x - e.x) : dm.atan2(p.facing.y, p.facing.x)
+  const power = kitPower(p, atStage(H.power, p.stage))
+  throwFoe(g, e, angle, atStage(H.force, p.stage) * e.mass, power, 'hammerArm')
+  spawnAttack(g, {
+    move: 'hammerArm', type: 'fighting', visual: 'kitBHit', x: e.x, y: e.y - e.radius,
+    shape: { kind: 'circle', r: e.radius + 2 }, motion: { kind: 'static' }, damage: power, ttl: 0.08, mod: null,
+  })
+  kit.flying = { id: e.id, left: H.flight }
+  g.events.push({ kind: 'cast', move: 'hammerArm' })
+}
+
+/** The thrown foe lands: a slam around it. */
+const hugLand = (g: Game, e: Enemy) => {
+  const p = g.player
+  const H = KIT_B.hug.hurl
+  const r = atStage(H.r, p.stage) * p.stats.area
+  spawnAttack(g, {
+    move: 'hammerArm', type: 'fighting', visual: 'kitBHug', x: e.x, y: e.y - 2,
+    shape: { kind: 'circle', r: 8 }, motion: { kind: 'static' }, grow: (r - 8) / 0.16,
+    damage: kitPower(p, atStage(H.slam, p.stage)), knockback: H.knockback, ttl: 0.36, activeUntil: 0.16, mod: null,
+  })
+  shakeScreen(g, p.stage >= 1 ? 5 : 3)
+  g.events.push({ kind: 'quake' })
+}
+
+/** The bear hug's cycle: grab on a clock, carry, hurl, land. */
+const stepHug = (g: Game, kit: Kit<'hug'>, dt: number) => {
+  const p = g.player
+  const H = KIT_B.hug
+  if (kit.flying) {
+    const flying: Held = kit.flying
+    flying.left -= dt
+    if (flying.left > 0) return
+    kit.flying = null
+    const e = enemyById(g, flying.id)
+    if (e) hugLand(g, e)
+    return
+  }
+  if (kit.held) {
+    const held: Held = kit.held
+    const e = enemyById(g, held.id)
+    if (!e) {
+      // It fell in the arms (another move finished it): reach for the next one at once.
+      kit.held = null
+      kit.next = 0.4
+      return
+    }
+    const at = armsOf(p, e)
+    e.x = at.x
+    e.y = at.y
+    e.kx = 0
+    e.ky = 0
+    held.left -= dt
+    if (held.left > 0) return
+    kit.held = null
+    kit.next = atStage(H.every, p.stage)
+    return hurl(g, kit, e)
+  }
+  kit.next -= dt
+  if (kit.next > 0) return
+  if (!hugGrab(g, kit)) kit.next = 0.4
+}
+
 /** Per tick, for the acting player: paths, eggs, jets, rings, grabs and the snowfall act; stacks fade and Gale Wings follows the HP. */
 export const updateKitB = (g: Game, dt: number) => {
   const p = g.player
@@ -212,7 +349,7 @@ export const updateKitB = (g: Game, dt: number) => {
   if (!kit) return
   switch (kit.kind) {
     case 'serpent':
-      trackPath(p, kit)
+      moveSerpent(p, kit, dt)
       return serpentBites(g, kit, dt)
     case 'eggs': return stepEggs(g, kit, dt)
     case 'gale': {
@@ -255,6 +392,8 @@ export const updateKitB = (g: Game, dt: number) => {
       return recomputeStats(g)
     }
     case 'majesty': return majesty(g, kit, dt)
+    case 'burrow': return stepBurrow(g, kit, dt)
+    case 'hug': return stepHug(g, kit, dt)
     default:
   }
 }
@@ -289,10 +428,17 @@ export const kitBBlocks = (g: Game) => {
   return true
 }
 
-/** A foe fell to the acting player: Salt Cure's kills lay on a salt layer. */
+/** A foe fell to the acting player: Salt Cure's kills lay on a salt layer; any KO adds a Moxie stack. */
 export const kitBKill = (g: Game, source: DamageSource | null | undefined) => {
   const p = g.player
   const kit = p.kitB
+  if (kit?.kind === 'burrow') {
+    kit.last = g.now
+    const next = stackUp(kit.stacks, atStage(KIT_B.burrow.moxie.cap, p.stage))
+    if (next === kit.stacks) return
+    kit.stacks = next
+    return recomputeStats(g)
+  }
   if (kit?.kind !== 'salt' || source !== 'saltCure') return
   kit.last = g.now
   const next = stackUp(kit.layers, atStage(KIT_B.salt.cap, p.stage))

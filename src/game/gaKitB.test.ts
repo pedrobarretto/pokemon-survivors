@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import type { PlayableId } from '../data/hatchlings'
 import { hurtPlayer } from './combat'
 import { createGame, step } from './game'
-import { createKitB, eggHeal, eggTaken, faded, galeOn, KIT_B, kitBDeltas, launcherShot, stackUp } from './gaKitBRules'
+import { createKitB, diveReady, eggHeal, eggTaken, eruptPower, faded, galeOn, KIT_B, kitBDeltas, launcherShot, stackUp, stepSerpent, type SerpentBody } from './gaKitBRules'
+import { spawnEnemy } from './enemies'
+import { kitBKill } from './gaKitBSystem'
 import { snapshot } from './snapshot'
 import type { Game } from './types'
 
@@ -53,6 +55,31 @@ describe('second batch rules', () => {
     expect(eggHeal(200, 2)).toBeCloseTo(200 * KIT_B.eggs.heal[2])
   })
 
+  it("lays Onix's body behind it, folds it after a turn and coils it, never stacked, when standing", () => {
+    const body: SerpentBody = { segs: [], still: 0, coil: 0, turn: 1 }
+    let x = 0
+    const at = (i: number) => ({ x: body.segs[i * 2]!, y: body.segs[i * 2 + 1]! })
+    for (let i = 0; i < 60; i++) stepSerpent(body, (x += 2), 0, 1, 0, 1, 1 / 60)
+    for (let i = 0; i < 5; i++) expect(at(i).x).toBeLessThan(x)
+    // Back the other way: the head passes through, and the body ends up trailing to its right.
+    for (let i = 0; i < 120; i++) stepSerpent(body, (x -= 2), 0, -1, 0, 1, 1 / 60)
+    for (let i = 0; i < 5; i++) expect(at(i).x).toBeGreaterThan(x)
+    for (let t = 0; t < 180; t++) {
+      body.still += 1 / 60
+      stepSerpent(body, x, 0, -1, 0, 1, 1 / 60)
+    }
+    for (let i = 0; i < 5; i++) for (let j = i + 1; j < 5; j++) expect(Math.hypot(at(i).x - at(j).x, at(i).y - at(j).y)).toBeGreaterThan(5)
+    for (let i = 0; i < 5; i++) expect(Math.hypot(at(i).x - x, at(i).y)).toBeLessThan(KIT_B.serpent.coil[1] + 1)
+  })
+
+  it('dives with a foe close once recharged, and erupts harder with Moxie', () => {
+    expect(diveReady(0, false, KIT_B.burrow.near)).toBe(true)
+    expect(diveReady(0.1, false, 1)).toBe(false)
+    expect(diveReady(0, true, 1)).toBe(false)
+    expect(diveReady(0, false, KIT_B.burrow.near + 1)).toBe(false)
+    expect(eruptPower(2, 10)).toBeCloseTo(KIT_B.burrow.power[2] * (1 + 10 * KIT_B.burrow.moxie.erupt))
+  })
+
   it('pays salt and Stamina in armor, capped by the cap the system holds them to', () => {
     expect(kitBDeltas({ kind: 'salt', layers: 2, last: 0 }, 0)).toEqual([{ armor: 1, damageTaken: -0.04 }])
     expect(kitBDeltas({ kind: 'gale', on: false }, 2)).toEqual([])
@@ -98,8 +125,33 @@ describe('second batch kits in a run', () => {
     expect(kit.eggs).toHaveLength(0)
   })
 
+  it('Moxie stacks on every KO up to the stage cap, and pays in might', () => {
+    const g = run('sandile')
+    const might = g.player.stats.might
+    for (let i = 0; i < 9; i++) kitBKill(g, 'crunch')
+    expect(g.player.kitB?.kind === 'burrow' && g.player.kitB.stacks).toBe(KIT_B.burrow.moxie.cap[0])
+    expect(g.player.stats.might).toBeCloseTo(might + KIT_B.burrow.moxie.cap[0] * KIT_B.burrow.moxie.might)
+  })
+
+  it("Stufful's hug grabs a foe in reach, carries it, then hurls it", () => {
+    const g = run('stufful')
+    const kit = g.player.kitB
+    if (kit?.kind !== 'hug') throw new Error('no hug')
+    kit.next = 0
+    spawnEnemy(g, 'geodude', g.player.x + 20, g.player.y)
+    const e = g.enemies[g.enemies.length - 1]!
+    // Tough enough to outlast Hammer Arm's casts meanwhile.
+    e.hp = 1e9
+    step(g, idle, 1 / 60)
+    expect(kit.held?.id).toBe(e.id)
+    for (let i = 0; i < 60 && kit.held; i++) step(g, idle, 1 / 60)
+    expect(kit.held).toBeNull()
+    expect(kit.flying?.id).toBe(e.id)
+    expect(e.thrown).not.toBeNull()
+  })
+
   it('keeps its state plain, so snapshots and co-op hashes take it', () => {
-    for (const id of ['onix', 'happiny', 'skorupi', 'golett'] as const) {
+    for (const id of ['onix', 'happiny', 'skorupi', 'golett', 'sandile', 'stufful'] as const) {
       const g = run(id)
       for (let i = 0; i < 120; i++) step(g, { move: { x: 1, y: 0 }, special: false }, 1 / 60)
       expect(() => snapshot(g)).not.toThrow()

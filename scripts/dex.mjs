@@ -16,10 +16,11 @@ export const STARTERS = [
 ]
 /**
  * A Grande Atualização's second batch of families (src/data/gaFamiliesB.ts), whole lines: Onix, Happiny,
- * Clauncher, Fletchling, Golett, Nacli, Inkay, Skorupi, Snover, Tynamo, Dewpider, Duraludon and Bounsweet's.
+ * Clauncher, Fletchling, Golett, Nacli, Inkay, Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sandile and Stufful's.
  */
 export const GA_FAMILIES_B = [
   95, 208, 440, 113, 242, 692, 693, 661, 662, 663, 622, 623, 932, 933, 934, 686, 687, 451, 452, 459, 460, 602, 603, 604, 751, 752, 884, 1018, 761, 762, 763,
+  551, 552, 553, 759, 760,
 ]
 /** Families that hatch from eggs (src/data/hatchlings.ts), whole lines. Some also roam the horde. */
 export const HATCHLINGS = [
