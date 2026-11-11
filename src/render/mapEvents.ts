@@ -15,13 +15,13 @@ import { isMission } from '../game/fieldMissions'
 import { drawFieldMission, missionIcon, missionSpot } from './fieldMissions'
 import { HURT_TINT } from './flashes'
 import { sceneryArt } from './scenery'
-import { PATH_ART, TEMPLE, TEMPLE_LIGHTS, TEMPLES } from './pathLegendArt'
-import { TEMPLE_WAKE } from '../game/pathRun'
+import { PATH_ART, TEMPLE, TEMPLE_LIGHTS, TEMPLE_MARKS, TEMPLES } from './pathLegendArt'
+import { TEMPLE_RISE, TEMPLE_WAKE } from '../game/pathRun'
 
 /** The temple shrunk to an arrow's icon: its middle, with the three lights on. */
 const templeIcon = lazy(() => {
   const canvas = createCanvas(14, 12)
-  context2d(canvas).drawImage(TEMPLES()[3]!, 15, 2, 14, 12, 0, 0, 14, 12)
+  context2d(canvas).drawImage(TEMPLES()[3]!, 25, 1, 14, 12, 0, 0, 14, 12)
   return canvas
 })
 
@@ -258,13 +258,23 @@ const drawPiece = (ctx: Ctx, ev: MapEventOf<'zygardeCell' | 'zygardeCore'>, t: n
   const leaving = ev.gone < 0 && ev.ttl - ev.age < 4 && (calm || Math.floor(t * 10) % 2 === 0)
   const bob = Math.round(Math.sin(t * 3 + ev.id) * 1.5)
   groundShadow(ctx, ev.x, ev.y, core ? 7 : 5)
-  // A ring of green motes turning on the ground around it, so it stands out on any biome.
-  const rx = core ? 12 : 10
-  const turn = calm ? 0 : t * 1.6 + ev.id
-  for (let i = 0; i < 14; i++) {
-    const a = (i / 14) * TAU + turn
-    ctx.fillStyle = i % 2 === 0 ? '#b8f8c8' : '#2f8a48'
-    ctx.fillRect(Math.round(ev.x + Math.cos(a) * rx), Math.round(ev.y + Math.sin(a) * rx * 0.4), 1, 1)
+  // Zygarde's hexagon on the ground under it, a light running round its edge: it stands out on any biome.
+  const rx = core ? 15 : 12
+  const run = calm ? -1 : Math.floor((t * 1.5 + ev.id * 0.1) % 1 * 36)
+  const corners = [0, 1, 2, 3, 4, 5, 6].map((i) => ({ x: Math.cos((i / 6) * TAU) * rx, y: Math.sin((i / 6) * TAU) * rx * 0.45 }))
+  for (let side = 0; side < 6; side++) {
+    const a = corners[side]!
+    const b = corners[side + 1]!
+    for (let k = 0; k < 6; k++) {
+      const n = side * 6 + k
+      const lit = run >= 0 && (n - run + 36) % 36 < 4
+      const x = Math.round(ev.x + a.x + ((b.x - a.x) * k) / 6)
+      const y = Math.round(ev.y + a.y + ((b.y - a.y) * k) / 6)
+      ctx.fillStyle = '#1f5a2c'
+      ctx.fillRect(x, y + 1, 2, 1)
+      ctx.fillStyle = lit ? '#ffffff' : n % 2 === 0 ? '#e8ffd8' : '#a8f090'
+      ctx.fillRect(x, y, 2, 1)
+    }
   }
   ctx.globalAlpha *= leaving ? 0.55 : 1
   const sprite = frames[beat]!
@@ -279,18 +289,67 @@ const drawPiece = (ctx: Ctx, ev: MapEventOf<'zygardeCell' | 'zygardeCore'>, t: n
   if (core && (t + ev.id * 0.37) % 1.4 < 0.14) blitCentered(ctx, SPARKLE()[1]!, ev.x + 5, ev.y - sprite.height - 2)
 }
 
-/** Regigigas's temple, its lights coming on one by one as it wakes, dust shaking off it. */
+/** A fixed scatter of `n` values in 0..1 for the temple's dust and stones, so they need no rng. */
+const scatter = (i: number, k: number) => {
+  const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5453
+  return v - Math.floor(v)
+}
+
+/** The churned earth ringing the temple's foot: a dark ring of dirt with clods, the ground it broke through. */
+const drawBrokenGround = (ctx: Ctx, x: number, y: number, spread: number) => {
+  const rx = Math.round((TEMPLE.w / 2 + 4) * spread)
+  if (rx < 2) return
+  blitEllipse(ctx, rx, Math.max(1, Math.round(rx * 0.3)), '#5c4428', x, y)
+  blitEllipse(ctx, rx - 2, Math.max(1, Math.round(rx * 0.3) - 1), '#7a5c38', x, y - 1)
+  for (let i = 0; i < 12; i++) {
+    const a = scatter(i, 1) * TAU
+    ctx.fillStyle = i % 3 === 0 ? '#9c7c50' : '#4a3620'
+    ctx.fillRect(Math.round(x + Math.cos(a) * (rx + 1)), Math.round(y + Math.sin(a) * (rx * 0.3 + 1)), 2, 1)
+  }
+}
+
+/**
+ * Regigigas's temple: it rises out of the ground over `TEMPLE_RISE` (only the part above the
+ * ground shows, the earth churning at its foot, dust rolling out and stones falling off it),
+ * then waits, a mark pulsing now and then; woken, its three Regi marks light one by one and
+ * it shakes, and once the giant is out it stands lit behind it.
+ */
 const drawTemple = (ctx: Ctx, ev: MapEventOf<'regiTemple'>, t: number, calm: boolean) => {
-  const waking = ev.state.waking
-  const lit = waking < 0 ? 0 : Math.min(3, 1 + Math.floor((waking / TEMPLE_WAKE) * 3))
-  const jolt = waking >= 0 && !calm ? Math.round(Math.sin(t * 50) * Math.min(2, 1 + waking)) : 0
+  const { waking, out } = ev.state
+  const rise = Math.min(1, ev.age / TEMPLE_RISE)
+  const up = 1 - (1 - rise) * (1 - rise)
+  const lit = out ? 3 : waking < 0 ? 0 : Math.min(3, 1 + Math.floor((waking / TEMPLE_WAKE) * 3))
   const sprite = TEMPLES()[lit]!
-  groundShadow(ctx, ev.x, ev.y + 1, 24)
-  ctx.drawImage(sprite, Math.round(ev.x - TEMPLE.w / 2 + jolt), Math.round(ev.y - TEMPLE.h + 2))
-  // Asleep, a faint pulse in its lights' place now and then: something stirs inside.
-  if (waking < 0 && (t + ev.id * 0.2) % 2.4 < 0.2) {
-    ctx.fillStyle = TEMPLE_LIGHTS[Math.floor(t / 2.4) % 3]![0]
-    ctx.fillRect(Math.round(ev.x - 9 + (Math.floor(t / 2.4) % 3) * 8), Math.round(ev.y - TEMPLE.h + 13), 2, 2)
+  const foot = Math.round(ev.y + 2)
+  const left = Math.round(ev.x - TEMPLE.w / 2)
+  const rumbling = rise < 1 || (waking >= 0 && !out)
+  const jolt = rumbling && !calm ? (Math.floor(t * 24) % 2 === 0 ? 1 : -1) * (rise < 1 ? 1 : Math.min(2, 1 + Math.floor(waking))) : 0
+  drawBrokenGround(ctx, ev.x, foot, Math.min(1, rise * 3))
+  const shown = Math.round(TEMPLE.h * up)
+  if (shown > 0) ctx.drawImage(sprite, 0, 0, TEMPLE.w, shown, left + jolt, foot - shown, TEMPLE.w, shown)
+  if (rise < 1 && !calm) {
+    // Dust rolling out from its foot, and stones knocked off its top falling back down.
+    for (let i = 0; i < 16; i++) {
+      const k = (ev.age * 1.6 + scatter(i, 2)) % 1
+      const side = i % 2 === 0 ? -1 : 1
+      const r = 2 + Math.round(k * 3)
+      ctx.fillStyle = i % 3 === 0 ? '#e0d4b8' : '#b8a888'
+      ctx.globalAlpha = 1 - k
+      ctx.fillRect(Math.round(ev.x + side * (TEMPLE.w / 2 - 6 + k * 18) * scatter(i, 3)), Math.round(foot - 2 - k * 8 - scatter(i, 4) * 4), r, r - 1)
+    }
+    ctx.globalAlpha = 1
+    for (let i = 0; i < 6; i++) {
+      const k = (ev.age * 1.1 + scatter(i, 5)) % 1
+      ctx.fillStyle = i % 2 === 0 ? '#6c5e50' : '#8e7e6a'
+      ctx.fillRect(Math.round(left + 6 + scatter(i, 6) * (TEMPLE.w - 12)), Math.round(foot - shown + k * k * shown), 2, 2)
+    }
+  }
+  // Asleep, one mark at a time breathes a faint glow: something stirs inside.
+  if (rise >= 1 && waking < 0 && !calm && (t + ev.id * 0.2) % 2.4 < 0.3) {
+    const i = Math.floor(t / 2.4) % 3
+    const spot = TEMPLE_MARKS[i]!
+    ctx.fillStyle = TEMPLE_LIGHTS[i]![0]
+    ctx.fillRect(left + spot.at[0] + 3, foot - TEMPLE.h + spot.at[1] + 3, 2, 2)
   }
 }
 
@@ -368,6 +427,8 @@ export const drawMapEventMarkers = (ctx: Ctx, g: Game, t: number) => {
   for (const ev of g.mapEvents.list) {
     const marker = MARKER[ev.kind]
     if (ev.gone >= 0 || !marker || !MAP_EVENTS[ev.kind].marker) continue
+    // The temple's giant is out: it's the boss's fight now.
+    if (ev.kind === 'regiTemple' && ev.state.out) continue
     // A mission points at where to go next (the nearest ball, Togepi's nest).
     const at = isMission(ev) ? missionSpot(g, ev) : ev
     const sx = at.x - g.camera.x

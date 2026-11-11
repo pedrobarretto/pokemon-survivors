@@ -248,6 +248,8 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     card.update(g)
     title.update(g)
     mission.update(g, !rift.el.classList.contains('hidden'))
+    // A wave legend's entrance or capture centers the camera on it: the pills step aside so they don't cover it or its name.
+    el.classList.toggle('legend-scene', g.legendScene !== null)
     minimap.update(g)
 
     const key = [...p.moves.map((m) => `${m.id}${m.level}`), ...p.items.map((i) => `${i.id}${i.level}`), abilityMarkKey(p)].join()

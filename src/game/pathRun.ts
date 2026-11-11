@@ -134,24 +134,33 @@ export const ZYGARDE_CORE_EVENT = pieceEvent(true) as MapEventDef<'zygardeCore'>
 
 /* ---------------- Regigigas's temple ---------------- */
 
-/** The temple on the map: whether it's waking (the seconds since the player stepped up), and whether it told of the boss still there. */
-export type TempleEvent = { waking: number; told: boolean }
+/** The temple on the map: whether it's waking (the seconds since the player stepped up, -1 asleep), whether it told of the boss still there, and whether the giant has stepped out of it. */
+export type TempleEvent = { waking: number; told: boolean; out: boolean }
 
-/** Seconds from the player stepping up to Regigigas rising: the temple shakes, its three lights come on one by one. */
+/** Seconds the temple takes to rise out of the ground, the ground rumbling; it can't be woken before. */
+export const TEMPLE_RISE = 2.4
+
+/** Seconds from the player stepping up to Regigigas rising: the temple shakes, the three Regi marks light up one by one. */
 export const TEMPLE_WAKE = 1.8
+
+/** Seconds the empty temple stands once the giant is out, before it settles back into the ground. */
+const TEMPLE_STAYS = 180
 
 export const REGI_TEMPLE_EVENT: MapEventDef<'regiTemple'> = {
   spawn: { from: REGIGIGAS.at[0], weight: () => 0, max: 1, lifetime: 600, distance: [REGIGIGAS.distance, REGIGIGAS.distance + 40] },
   marker: true,
-  create: () => ({ waking: -1, told: false }),
-  enter: (g, ev) => {
-    shakeScreen(g, 4, ev)
-    burst(g, ev.x, ev.y - 10, { colors: ['#c8b898', '#a89878', '#f0e8d0'], count: 40, speed: 90, ttl: 0.8, gravity: 40 })
-    notify(g, { kind: 'temple', moment: 'risen' })
-  },
+  create: () => ({ waking: -1, told: false, out: false }),
+  enter: (g) => notify(g, { kind: 'temple', moment: 'risen' }),
   update: (g, ev, dt) => {
     const s = ev.state
+    if (s.out) return
     ev.ttl = Math.max(ev.ttl, ev.age + 1)
+    // Rising: the ground rumbles under it, and it shrugs the earth off once up.
+    if (ev.age < TEMPLE_RISE) {
+      shakeScreen(g, 2, ev)
+      if (ev.age + dt >= TEMPLE_RISE) burst(g, ev.x, ev.y - 6, { colors: ['#c8b898', '#a89878', '#f0e8d0'], count: 40, speed: 90, ttl: 0.8, gravity: 40 })
+      return
+    }
     if (s.waking < 0) {
       if (playerWithin(g, ev.x, ev.y, REGIGIGAS.wake, true) === null) return
       // Another boss on the field keeps it asleep: it wakes once that fight is over.
@@ -168,7 +177,9 @@ export const REGI_TEMPLE_EVENT: MapEventDef<'regiTemple'> = {
     shakeScreen(g, 1 + s.waking * 2, ev)
     if (s.waking < TEMPLE_WAKE) return
     burst(g, ev.x, ev.y - 16, { colors: ['#f0e8d0', '#c87848', '#a8e0f8', '#9098a8'], count: 70, speed: 160, ttl: 0.9, size: 2 })
-    spawnWaveBoss(g, 'regigigas', g.time, false, { x: ev.x, y: ev.y + 6 })
-    ev.gone = 0
+    // The giant steps out of the gate; the temple stands behind it, its marks lit, then settles back in a while later.
+    spawnWaveBoss(g, 'regigigas', g.time, false, { x: ev.x, y: ev.y + 16 })
+    s.out = true
+    ev.ttl = ev.age + TEMPLE_STAYS
   },
 }

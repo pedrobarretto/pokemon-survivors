@@ -66,11 +66,11 @@ export const PATH_ART = {
   /** The Cell: its body and a frame lit brighter (its glow's beat). */
   cell: lazy(() => [sprite(CELL, CELL_PAL, '#0c2814'), sprite(CELL, { ...CELL_PAL, 3: '#68d888', 2: '#3aa058', 6: '#58c070' }, '#0c2814')]),
   core: lazy(() => [sprite(CORE, { ...CELL_PAL, 6: '#78e098' }, '#0c2814'), sprite(CORE, { ...CELL_PAL, 6: '#78e098', 3: '#68d888', 7: '#f86848' }, '#0c2814')]),
-  /** Meltan's Hex Nut: steel with its hole, a light edge on top. */
+  /** Meltan's Hex Nut: a flat-topped steel hexagon with its hole, lit on top, shaded below. */
   nut: lazy(() =>
     sprite(
-      ['..111..', '.12221.', '1233321', '1230321', '1233321', '.13331.', '..111..'],
-      { 1: '#686878', 2: '#e8e8f0', 3: '#b0b0c0', 0: '#30303c' },
+      ['..22222..', '.2333334.', '233000344', '233006344', '.4333344.', '..44444..'],
+      { 2: '#f0f0f8', 3: '#b8b8c8', 4: '#787888', 0: '#24242c', 6: '#9898a8' },
       '#141418',
     ),
   ),
@@ -78,68 +78,110 @@ export const PATH_ART = {
 
 /* ---------------- Regigigas's temple ---------------- */
 
-const STONE = { dark: '#4a4238', mid: '#7a6e5c', light: '#a89a80', top: '#c8bca0', door: '#18140f' } as const
+/** The map's meadow stone (`landmarkPieces.ts`), dark to light, its seams and outline, and the moss on it. */
+const STONE = ['#4a4038', '#6c5e50', '#8e7e6a', '#b0a088', '#d0c4a8'] as const
+const SEAM = '#3a322c'
+const RIM = '#1c1610'
+const MOSS = ['#2c6a2c', '#44903a', '#68b450'] as const
 
-/** The lights on the temple's face, for Regirock, Regice and Registeel. */
-export const TEMPLE_LIGHTS = [
-  ['#c87848', '#f8b878'],
-  ['#78c0e8', '#d8f4ff'],
-  ['#8890a0', '#e0e4ec'],
+/** The three Regi marks, carved where they wake: Regirock's on the left stone, Regice's on the right, Registeel's on the lintel. Each a 3 × 3 grid of dots. */
+export const TEMPLE_MARKS = [
+  { at: [8, 20], dots: ['1.1', '111', '1.1'] },
+  { at: [49, 28], dots: ['111', '1.1', '111'] },
+  { at: [28, 5], dots: ['.1.', '111', '.1.'] },
 ] as const
 
+/** The marks' light, for Regirock, Regice and Registeel: its glow, its core and its spark (the flare as it lights). */
+export const TEMPLE_LIGHTS = [
+  ['#e8883c', '#ffd8a0', '#fff0d8'],
+  ['#58c0f0', '#e0f8ff', '#ffffff'],
+  ['#e04848', '#ffc8c0', '#fff0f0'],
+] as const
+
+export const TEMPLE = { w: 64, h: 52 } as const
+
 /**
- * Regigigas's temple, 44 × 38 px: a stepped stone shrine with a dark door and
- * three lights set over it. `lit` lights glow (0 to 3, as it wakes). The
- * bottom middle is its foot.
+ * Regigigas's temple, 64 × 52 px, its foot at the bottom middle: a stepped
+ * plinth, a gate with a dark way down between two pillars under a heavy
+ * lintel, and two worn standing stones, moss on all of it. The three Regi
+ * marks are carved on it, and `lit` of them glow (0 to 3, as the trio's
+ * presence wakes the giant).
  */
 export const templeArt = (lit: number): PixelSprite => {
-  const w = 44
-  const h = 38
-  const canvas = createCanvas(w, h)
+  const canvas = createCanvas(TEMPLE.w, TEMPLE.h)
   const ctx = context2d(canvas)
   const px = (x: number, y: number, c: string, pw = 1, ph = 1) => {
     ctx.fillStyle = c
     ctx.fillRect(x, y, pw, ph)
   }
-  // Three steps at the foot, the shrine on top.
-  const block = (x: number, y: number, bw: number, bh: number) => {
-    px(x, y, STONE.dark, bw, bh)
-    px(x + 1, y + 1, STONE.mid, bw - 2, bh - 2)
-    px(x + 1, y + 1, STONE.top, bw - 2, 1)
-    px(x + 1, y + 2, STONE.light, 1, bh - 3)
+  // A dressed stone: outline, body, a lit top and left edge, a shaded right edge and foot.
+  const block = (x: number, y: number, w: number, h: number) => {
+    px(x, y, RIM, w, h)
+    px(x + 1, y + 1, STONE[2], w - 2, h - 2)
+    px(x + 1, y + 1, STONE[4], w - 2, 1)
+    px(x + 1, y + 2, STONE[3], 1, h - 3)
+    px(x + w - 2, y + 2, STONE[1], 1, h - 3)
+    px(x + 1, y + h - 2, STONE[1], w - 2, 1)
   }
-  block(0, 32, 44, 6)
-  block(3, 27, 38, 6)
-  block(7, 6, 30, 22)
-  // The roof: a heavy slab and its cap.
-  block(4, 3, 36, 5)
-  block(12, 0, 20, 4)
-  // Seams in the stone, a few chips off its edges.
-  for (const [x, y, sw] of [[10, 12, 6], [24, 15, 8], [12, 20, 5], [27, 22, 6], [8, 29, 9], [26, 30, 10], [6, 35, 12], [28, 34, 9]] as const) px(x, y, STONE.dark, sw, 1)
-  // Worn corners.
-  ctx.clearRect(7, 6, 1, 1)
-  ctx.clearRect(36, 6, 1, 1)
-  ctx.clearRect(0, 32, 1, 1)
-  ctx.clearRect(43, 32, 1, 1)
-  // The door, a step down into the dark.
-  px(17, 17, STONE.dark, 10, 11)
-  px(18, 18, STONE.door, 8, 10)
-  px(18, 18, '#2a241c', 8, 1)
-  // Three lights in a row over the door, dark until they wake.
-  for (const [i, [glow, core]] of TEMPLE_LIGHTS.entries()) {
-    const x = 12 + i * 8
+  // The plinth's two steps, their top faces lighter.
+  block(0, 43, 64, 9)
+  px(1, 44, STONE[3], 62, 2)
+  block(5, 37, 54, 8)
+  px(6, 38, STONE[3], 52, 2)
+  // The standing stones, the right one shorter, both broken off on top in a jagged edge.
+  const broken = (x0: number, y0: number, tops: readonly number[]) => {
+    for (const [i, top] of tops.entries()) {
+      ctx.clearRect(x0 + i, y0, 1, top - y0)
+      const edge = i === 0 || i === tops.length - 1
+      px(x0 + i, top, RIM)
+      if (!edge) px(x0 + i, top + 1, (tops[i - 1] ?? top) > top ? STONE[4] : STONE[3])
+    }
+  }
+  block(5, 14, 13, 25)
+  broken(5, 14, [17, 16, 15, 14, 14, 15, 17, 18, 17, 16, 16, 17, 19])
+  block(46, 19, 13, 20)
+  broken(46, 19, [21, 20, 19, 19, 20, 22, 21, 22, 23, 23, 24, 25, 26])
+  // The gate: two pillars under the lintel and its cap.
+  block(21, 12, 7, 27)
+  block(36, 12, 7, 27)
+  block(25, 13, 14, 26)
+  px(27, 15, '#100c08', 10, 23)
+  px(27, 15, '#241c14', 10, 2)
+  px(28, 17, '#1a140e', 8, 21)
+  // Worn steps going down into the dark.
+  px(29, 33, '#2a2219', 6, 1)
+  px(28, 35, '#3a3024', 8, 1)
+  px(27, 37, '#4a4038', 10, 1)
+  block(17, 3, 30, 11)
+  block(22, 0, 20, 4)
+  // Seams and cracks across the stone.
+  for (const [x, y, w] of [[8, 30, 6], [3, 47, 14], [24, 48, 18], [47, 46, 12], [9, 40, 10], [42, 41, 12], [22, 24, 4], [38, 30, 4], [20, 8, 6]] as const) px(x, y, SEAM, w, 1)
+  for (const [x, y] of [[14, 26], [15, 27], [15, 28], [55, 37], [54, 38], [39, 6], [40, 7], [33, 47], [34, 48]] as const) px(x, y, SEAM)
+  // Moss: a crown on the stones, a drape down the left one and the lintel, tufts at the foot.
+  for (const [x, y, w, c] of [[9, 15, 3, 1], [47, 20, 4, 1], [18, 4, 5, 1], [36, 1, 4, 1], [1, 44, 6, 2], [55, 44, 8, 1], [6, 38, 5, 0]] as const) {
+    px(x, y, MOSS[c + 1]!, w, 1)
+    px(x + 1, y + 1, MOSS[c]!, Math.max(1, w - 2), 1)
+  }
+  for (const [x, y, n] of [[6, 17, 6], [19, 5, 5], [44, 5, 3], [57, 23, 4]] as const) for (let i = 0; i < n; i++) px(x + (i % 3 === 2 ? 1 : 0), y + i, MOSS[i % 2]!)
+  // The marks: carved dots, or lit.
+  for (const [i, { at, dots }] of TEMPLE_MARKS.entries()) {
+    const [glow, core] = TEMPLE_LIGHTS[i]!
     const on = i < lit
-    px(x, 9, STONE.dark, 6, 6)
-    px(x + 1, 10, on ? glow : '#3a3430', 4, 4)
-    px(x + 2, 11, on ? core : '#4a4238', 2, 2)
-    if (on) px(x + 1, 10, '#ffffff')
+    const spots = dots.flatMap((row, r) => [...row].flatMap((d, c) => (d === '1' ? [[at[0] + c * 3, at[1] + r * 3] as const] : [])))
+    for (const [x, y] of spots) {
+      if (!on) {
+        px(x, y, SEAM, 2, 2)
+        px(x + 1, y + 2, STONE[3])
+        continue
+      }
+      px(x, y, glow, 2, 2)
+      px(x, y, core)
+    }
   }
   return canvas
 }
 
-export const TEMPLE = { w: 44, h: 38 } as const
-
-/** The temple with 0 to 3 lights on, built once. */
+/** The temple with 0 to 3 marks lit, built once. */
 export const TEMPLES = lazy(() => [0, 1, 2, 3].map(templeArt))
 
 /* ---------------- Move icons ---------------- */
