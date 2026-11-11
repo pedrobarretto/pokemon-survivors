@@ -1,7 +1,7 @@
 import { playSfx } from '../../engine/audio'
 import type { Dir8 } from '../../engine/math'
 import { canvasCache, context2d, createCanvas, fromStrings, lazy, type PixelSprite } from '../../engine/pixelart'
-import { t } from '../../i18n'
+import { locale, t } from '../../i18n'
 import type { TableView } from '../../net/realmTables'
 import { drawPokemon, sprites } from '../../render/sprites'
 import { INK, SEAT_COLORS, balls, box, burst, button, centered, clip, drawBits, wrap, fluidSize, inside, label, loadSeated, miniBalls, seatedAt, stepBits, tableTop, type Bit, type Rect, type Seated } from './cafeKit'
@@ -54,6 +54,10 @@ const BOARD = { paper: '#f4ead2', line: '#c8b48c', edge: '#8c7454', square: '#fb
 /** A 5 × 5 star for the safe start squares. */
 const STAR = ['..w..', '.www.', 'wwwww', '.www.', '.w.w.']
 const stars = lazy(() => fromStrings(STAR, { w: '#fffbe8' }))
+
+/** The rules' "?" tab's mark, 5 × 7: white, and ink on the lit tab. */
+const ASK = ['.www.', 'w...w', '....w', '..ww.', '..w..', '.....', '..w..']
+const asks = lazy(() => [fromStrings(ASK, { w: '#ffffff' }), fromStrings(ASK, { w: INK })])
 
 /** The die's pips, on a 3 × 3 grid, for each face. */
 const PIPS: Record<number, readonly (readonly [number, number])[]> = {
@@ -259,27 +263,44 @@ const start = (ctx: TableCtx): TableRun => {
 
   /* ----- The dock ----- */
 
-  /** The dock's parts: the line on top, the die (twice its size when the dock has room) and Rolar, the seats, the rules' button. */
+  /**
+   * The dock's parts, top to bottom: the line saying what to do, the die
+   * (twice or three times its size as the dock allows) and Rolar beside it,
+   * the four seats as cards laid out like their yards on the board, and the
+   * rules' short version (a tap opens the whole text) or, when it doesn't
+   * fit, the "how to play" button.
+   */
   const dockParts = () => {
     const d = lay.dock
-    const k = d.h >= 150 ? 2 : 1
+    const k = d.h >= 250 && d.w >= 180 ? 3 : d.h >= 150 ? 2 : 1
     const size = 22 * k
-    const rollW = Math.min(112, d.w - size - 24)
+    const rollW = Math.min(150, d.w - size - 20)
     const left = d.x + Math.floor((d.w - rollW - size - 8) / 2)
-    const dieY = d.y + 24
-    const rowsY = dieY + size + 8
-    const rowH = Math.max(12, Math.min(16, Math.floor((d.h - (rowsY - d.y) - 24) / LUDO.seats)))
-    const rules = helpLines(d.w - 12)
-    const rulesFit = rules.length * 10 + 8 <= d.y + d.h - (rowsY + LUDO.seats * rowH + 4)
+    const dieY = d.y + 26
+    const gridY = dieY + size + 6
+    const bottom = d.y + d.h - 4
+    const summary = words().summary.flatMap((l) => wrap(l, d.w - 14))
+    const step = locale() === 'zh' ? 14 : 10
+    const summaryH = summary.length * step + 7
+    const room = bottom - gridY - 2
+    // The short rules (and the gap their "?" tab sits in) when the seats keep 26 px each beside them, else the button.
+    const fits = room - summaryH - 10 >= 2 * 26
+    const cardH = Math.max(22, Math.min(36, Math.floor((room - (fits ? summaryH + 10 : 22)) / 2)))
+    const cardW = Math.floor((d.w - 8 - 3) / 2)
+    // What's left over (a desktop's tall dock) goes above and below, so the parts stay together.
+    const used = gridY - d.y + 2 * cardH + 2 + (fits ? 10 + summaryH : 4 + 18)
+    const off = Math.max(0, Math.floor((d.h - 4 - used) / 2))
+    const below = gridY + off + 2 * cardH + 2
     const helpW = Math.min(d.w - 12, label(words().howTo).width + 10)
     return {
       k,
-      die: { x: left, y: dieY, w: size, h: size },
-      roll: { x: left + size + 8, y: dieY, w: rollW, h: size },
-      rows: { x: d.x, y: rowsY, w: d.w, h: LUDO.seats * rowH },
-      rowH,
-      rules: rulesFit ? rules : null,
-      help: { x: d.x + Math.floor((d.w - helpW) / 2), y: d.y + d.h - 20, w: helpW, h: 16 },
+      top: d.y + off,
+      die: { x: left, y: dieY + off, w: size, h: size },
+      roll: { x: left + size + 8, y: dieY + off, w: rollW, h: size },
+      /** A seat's card: column and row as its yard sits on the board. */
+      card: (col: number, row: number): Rect => ({ x: d.x + 4 + col * (cardW + 3), y: gridY + off + row * (cardH + 2), w: cardW, h: cardH }),
+      summary: fits ? { rect: { x: d.x + 4, y: below + 10, w: d.w - 8, h: summaryH }, lines: summary, step } : null,
+      help: { x: d.x + Math.floor((d.w - helpW) / 2), y: below + 4, w: helpW, h: 18 },
     }
   }
 
@@ -462,7 +483,7 @@ const start = (ctx: TableCtx): TableRun => {
 
     const p = input.pointer
     const parts = dockParts()
-    if (!parts.rules && p.pressed && inside(parts.help, p.x, p.y)) {
+    if (p.pressed && inside(parts.summary?.rect ?? parts.help, p.x, p.y)) {
       help = !help
       playSfx('select')
       return
@@ -597,7 +618,7 @@ const start = (ctx: TableCtx): TableRun => {
     // What to do now.
     const text = statusOf(tb, v, seated)
     const ls = lines(text, d.w - 8)
-    ls.forEach((l, i) => centered(g, label(l, i === 0 && note && clock - note.at < BEAT.note ? '#f8e070' : '#f8f8f8'), d.x + d.w / 2, d.y + (ls.length === 1 ? 12 : 7 + i * 11)))
+    ls.forEach((l, i) => centered(g, label(l, i === 0 && note && clock - note.at < BEAT.note ? '#f8e070' : '#f8f8f8'), d.x + d.w / 2, parts.top + (ls.length === 1 ? 12 : 7 + i * 11)))
     // The die: tumbling while a roll plays, else the last face.
     const p = playing
     const tumbling = (p?.e.k === 'roll' && !p.done.has('land')) || rolledAt !== null
@@ -611,46 +632,99 @@ const start = (ctx: TableCtx): TableRun => {
     // Roll, when it's ours to press.
     const rollable = canRoll(tb, v)
     button(g, parts.roll, label(words().roll, rollable ? '#ffffff' : '#9098b0'), rollable ? { fill: '#e05040', light: '#f8a090', dark: '#982818', down: pressedRoll, glow: 0.4 + 0.4 * Math.sin(time * 5) } : { fill: '#40465e', light: '#545a74', dark: '#2a2e40' })
-    // The seats: ball, name, pieces home, the turn clock under the one on turn.
-    const rows = parts.rows
-    const rowH = parts.rowH
-    const order = Array.from({ length: LUDO.seats }, (_, i) => (viewSeat() + i) % LUDO.seats)
-    order.forEach((seat, i) => {
-      const who = seated[seat]
-      const y = rows.y + i * rowH
-      const on = tb?.phase === 'playing' && v.turn === seat && v.winner === null
-      if (on) {
-        box(g, rows.x + 3, y, rows.w - 6, rowH - 1, '#3c4870')
-        g.fillStyle = '#5868a0'
-        g.fillRect(rows.x + 4, y, rows.w - 8, 1)
-      }
-      centered(g, miniBalls()[seat]!, rows.x + 10, y + rowH / 2)
-      const home = v.pieces[seat]!.filter((q) => q === GOAL).length
-      const name = label(clip(who?.name ?? '...', Math.max(4, Math.floor((rows.w - 52) / 8))), who?.bot ? '#a8b0c8' : who?.you ? '#f8e070' : '#f8f8f8')
-      g.drawImage(name, rows.x + 17, Math.round(y + rowH / 2 - name.height / 2))
-      for (let k = 0; k < LUDO.pieces; k++) {
-        const x = rows.x + rows.w - 22 + k * 8
-        box(g, x, y + rowH / 2 - 3, 6, 6, INK)
-        box(g, x + 1, y + rowH / 2 - 2, 4, 4, k < home ? '#f8d030' : '#4a5070')
-      }
-      if (on && tb?.leftMs !== null && tb?.leftMs !== undefined) {
-        const share = Math.max(0, Math.min(1, tb.leftMs / (ludoRules.open?.turnMs ?? 15_000)))
-        g.fillStyle = share > 0.5 ? '#58c058' : share > 0.25 ? '#f8c830' : Math.floor(time * 6) % 2 ? '#f85838' : '#f8a088'
-        g.fillRect(rows.x + 17, y + rowH - 2, Math.round((rows.w - 21) * share), 1)
-      }
-    })
-    // The rules: written out under the seats when they fit, else behind a "?".
-    const rules = parts.rules
-    if (rules) {
-      const top = d.y + d.h - rules.length * 10 - 6
-      g.fillStyle = '#3a4260'
-      g.fillRect(d.x + 6, top - 4, d.w - 12, 1)
-      rules.forEach((l, i) => g.drawImage(label(l, '#a8b0c8'), d.x + 5, top + i * 10))
+    // The seats, each card where its yard is on the board.
+    for (let seat = 0; seat < LUDO.seats; seat++) {
+      const [c, r] = yardOf(seat + turns())
+      drawSeat(g, tb, v, seated[seat] ?? null, seat, parts.card(c > 0 ? 1 : 0, r > 0 ? 1 : 0), time)
+    }
+    // The rules' short version (a tap opens the whole text), or the button to them.
+    const sm = parts.summary
+    if (sm) {
+      const r = sm.rect
+      box(g, r.x, r.y, r.w, r.h, help ? '#f8e070' : '#3a4262')
+      box(g, r.x + 1, r.y + 1, r.w - 2, r.h - 2, '#232840')
+      sm.lines.forEach((l, i) => g.drawImage(label(l, '#c8d0e8'), r.x + 3, r.y + 3 + i * sm.step))
+      // A "?" tab on its corner says there's more.
+      box(g, r.x + r.w - 15, r.y - 8, 13, 11, INK)
+      box(g, r.x + r.w - 14, r.y - 7, 11, 9, help ? '#f8e070' : '#5a6488')
+      g.drawImage(help ? asks()[1]! : asks()[0]!, r.x + r.w - 11, r.y - 6)
       return
     }
     const hr = parts.help
     box(g, hr.x, hr.y, hr.w, hr.h, help ? '#f8e070' : '#4a5070')
     centered(g, label(words().howTo, help ? INK : '#f8f8f8', help ? '#f8e070' : INK), hr.x + hr.w / 2, hr.y + hr.h / 2)
+  }
+
+  /**
+   * A seat's card: its name (you in yellow, bots in grey) over its two
+   * pieces' way round, from the base cup on the left (pieces still in the
+   * yard) along the track (where each one is) to the two home sockets on the
+   * right, which fill with its balls as they get home. The seat on turn is
+   * lit, its clock running along the bottom.
+   */
+  const drawSeat = (g: CanvasRenderingContext2D, tb: TableView | null, v: LudoView, who: Seated | null, seat: number, r: Rect, time: number) => {
+    const col = SEAT_COLORS[seat]!
+    const on = tb?.phase === 'playing' && v.turn === seat && v.winner === null
+    const won = v.winner === seat && wonAt !== null
+    box(g, r.x, r.y, r.w, r.h, INK)
+    box(g, r.x + 1, r.y + 1, r.w - 2, r.h - 2, on || won ? '#3c4870' : '#2a3048')
+    g.fillStyle = col.mid
+    g.fillRect(r.x + 1, r.y + 2, 2, r.h - 4)
+    if (on || won) {
+      g.globalAlpha = 0.5 + 0.5 * Math.sin(time * 6)
+      g.strokeStyle = won ? '#f8e070' : '#fff8c0'
+      g.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1)
+      g.globalAlpha = 1
+    }
+    // The name, cut to the card's width as drawn (Chinese draws Latin letters wider).
+    const tint = who?.bot ? '#a8b0c8' : who?.you ? '#f8e070' : '#f8f8f8'
+    const full = who?.name ?? '...'
+    let name = label(full, tint)
+    for (let n = full.length - 1; name.width > r.w - 5 && n >= 3; n--) name = label(clip(full, n), tint)
+    g.drawImage(name, r.x + 4, r.y + (r.h >= 30 ? 2 : 0))
+    // The way round: base cup, track, home sockets.
+    const pieces = shown[seat] ?? v.pieces[seat]!
+    const ball = miniBalls()[seat]!
+    const y = r.y + r.h - (r.h >= 30 ? 14 : 12)
+    const cupX = r.x + 5
+    box(g, cupX, y, 15, 10, INK)
+    box(g, cupX + 1, y + 1, 13, 8, '#161a28')
+    const home = r.x + r.w - 24
+    const barX = cupX + 18
+    const barW = home - 3 - barX
+    box(g, barX, y + 3, barW, 4, INK)
+    g.fillStyle = '#4a5070'
+    g.fillRect(barX + 1, y + 4, barW - 2, 2)
+    for (let k = 0; k < LUDO.pieces; k++) {
+      box(g, home + k * 11, y, 10, 10, INK)
+      box(g, home + k * 11 + 1, y + 1, 8, 8, '#161a28')
+    }
+    let inYard = 0
+    let atHome = 0
+    const onTrack: number[] = []
+    for (const p of pieces) {
+      if (p === YARD) inYard++
+      else if (p === GOAL) atHome++
+      else onTrack.push(p)
+    }
+    // How far each piece on the board has gone: the bar fills to the furthest.
+    const far = onTrack.length > 0 ? Math.max(...onTrack) : -1
+    if (far >= 0) {
+      g.fillStyle = col.mid
+      g.fillRect(barX + 1, y + 4, Math.max(1, Math.round(((barW - 2) * (far + 1)) / GOAL)), 2)
+    }
+    for (let k = 0; k < inYard; k++) g.drawImage(ball, cupX + 1 + k * 5, y + 1)
+    for (const p of onTrack.sort((a, b) => a - b)) g.drawImage(ball, Math.round(barX + ((barW - 8) * p) / (GOAL - 1)), y + 1)
+    for (let k = 0; k < atHome; k++) {
+      box(g, home + k * 11, y, 10, 10, '#f8d030')
+      box(g, home + k * 11 + 1, y + 1, 8, 8, '#4a3810')
+      g.drawImage(ball, home + k * 11 + 1, y + 1)
+    }
+    if (on && tb?.leftMs !== null && tb?.leftMs !== undefined) {
+      const share = Math.max(0, Math.min(1, tb.leftMs / (ludoRules.open?.turnMs ?? 15_000)))
+      g.fillStyle = share > 0.5 ? '#58c058' : share > 0.25 ? '#f8c830' : Math.floor(time * 6) % 2 ? '#f85838' : '#f8a088'
+      g.fillRect(r.x + 4, r.y + r.h - 2, Math.round((r.w - 8) * share), 1)
+    }
   }
 
   /** The rules' lines, wrapped to `width`. */
