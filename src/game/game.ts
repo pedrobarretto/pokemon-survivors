@@ -142,6 +142,8 @@ export type RunOptions = {
   draft?: boolean
   /** A Shadow or Purified Pokémon (`shadow.ts`); the plain one when absent. */
   variant?: ShadowVariant | null
+  /** The Game Corner poster's pass: the Rocket Hideout's hatch opens on this run's map (`data/rocketHideout.ts`). */
+  hideout?: boolean
 }
 
 /**
@@ -303,7 +305,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     weather: createWeather(),
     traits: { seen: new Set(), nextIntro: 0 },
     rift: createRiftState(),
-    place: createPlaceState(seed),
+    place: options.hideout ? { ...createPlaceState(seed), hideout: true } : createPlaceState(seed),
     landmarks: createLandmarkState(),
     finds: createSeasonFinds(seed),
     tutors: 0,

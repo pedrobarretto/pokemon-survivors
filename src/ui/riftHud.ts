@@ -28,6 +28,8 @@ const insidePill = (g: Game): Pill => {
       return { text: m.hudGrotto(inside.state.dwellers.caught, time), kind: 'place', urgent }
     case 'underground':
       return { text: m.hudDig(inside.state.dug, time), kind: 'place', urgent }
+    case 'hideout':
+      return { text: t().rocket.hideout.hud(inside.state.stairs ? m.floor(inside.state.floor + 1) : t().rocket.hideout.lair, time), kind: 'place', urgent }
   }
 }
 

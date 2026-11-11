@@ -58,6 +58,13 @@ export const placeFeedback = (root: HTMLElement, place: PlaceId, notice: PlaceNo
       return runToast(root, 'minor', h('span', { class: 'item-toast' }, h('img', { src: placeIcon('underground'), alt: '' }), rich(m.finds[notice.find])), 2600, 'dig')
     case 'floor':
       return playSfx('select')
+    case 'giovanni': {
+      // Giovanni only speaks: his Persian's face beside his words, and the cry of whoever he sends.
+      const line = t().rocket.hideout.giovanni[notice.line]
+      if (notice.line === 'persian') playCry(cryUrl(53), 0.7)
+      if (notice.line === 'mewtwo') (playSfx('legendary'), playCry(cryUrl(150), 0.8), flashScreen(root))
+      return runToast(root, 'important', h('span', { class: 'item-toast giovanni-line' }, h('img', { src: portraitUrl(53), alt: '' }), h('span', {}, h('b', {}, 'Giovanni'), ` ${line}`)), notice.line === 'defeat' ? 5200 : 3800, 'giovanni')
+    }
     case 'wind':
       playSfx(notice.level >= 3 ? 'quake' : 'tick')
       return runToast(root, 'important', m.wind[notice.level - 1] ?? '', 2800, 'wind')

@@ -1,6 +1,7 @@
 import type { Difficulty } from '../game/difficulty'
 import { DOMAIN_PHASES, type RetinueRole } from './domains'
 import { WAVE_LEGEND_PHASES } from './legendBosses'
+import { PERSIAN_PATTERNS, SHADOW_MEWTWO_PHASES } from './rocketHideout'
 import type { EnemyId } from './enemies'
 
 /** How an enemy hazard looks (and sounds when it lands). */
@@ -216,6 +217,7 @@ export const PHASE_SHIFT = 1.8
 export const BOSS_PHASES: Partial<Record<EnemyId, readonly BossPhase[]>> = {
   ...DOMAIN_PHASES,
   ...WAVE_LEGEND_PHASES,
+  shadowMewtwo: SHADOW_MEWTWO_PHASES,
 }
 
 /** Every attack a boss has, across its phases (ultimates' steps included), for the guide and the Pokédex. */
@@ -469,5 +471,7 @@ export const BOSS_PATTERNS: Partial<Record<EnemyId, readonly BossPattern[]>> = {
     { kind: 'strikes', every: 4, target: 'player', count: 3, spread: 46, radius: 14, delay: 1.1, damage: 18, visual: 'shadow' },
     { kind: 'strikes', every: 6, target: 'self', count: 1, spread: 0, radius: 46, delay: 1.3, damage: 20, visual: 'shadow' },
   ],
+  /** Giovanni's Persian, the Rocket Hideout's first lair boss (`data/rocketHideout.ts`). */
+  giovanniPersian: PERSIAN_PATTERNS,
   // Arceus, the reaper, fights in phases too (`data/legendBosses.ts`).
 }

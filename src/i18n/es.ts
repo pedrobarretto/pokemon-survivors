@@ -2805,14 +2805,15 @@ export const es: Messages = {
     noCrossing: 'Avanza lento en los lagos y resbala en el hielo.',
   },
   places: {
-    names: { cave: 'Cueva Oscura', graveyard: 'Cementerio Embrujado', sky: 'Sobre las Nubes', grotto: 'Gruta Oculta', underground: 'Subsuelo' },
-    hudNames: { cave: 'Cueva', graveyard: 'Cementerio', sky: 'Corriente', grotto: 'Gruta', underground: 'Subsuelo' },
+    names: { cave: 'Cueva Oscura', graveyard: 'Cementerio Embrujado', sky: 'Sobre las Nubes', grotto: 'Gruta Oculta', underground: 'Subsuelo', hideout: 'Escondite Rocket' },
+    hudNames: { cave: 'Cueva', graveyard: 'Cementerio', sky: 'Corriente', grotto: 'Gruta', underground: 'Subsuelo', hideout: 'Escondite' },
     open: {
       cave: '¡Apareció la entrada de una *cueva*! Sigue la flecha.',
       graveyard: '¡Un *cementerio* surgió entre la niebla! Sigue la flecha.',
       sky: '¡Una *corriente de aire* sube al cielo! Sigue la flecha y vuela.',
       grotto: '¡Encontraste una *Gruta Oculta* escondida en la maleza!',
       underground: '¡Una grieta en la roca lleva al *Subsuelo*!',
+      hideout: '¡La trampilla del *Escondite Rocket* se abrió! Sigue la flecha.',
     },
     sealed: {
       cave: 'Unas rocas taparon la entrada de la cueva.',
@@ -2820,6 +2821,7 @@ export const es: Messages = {
       sky: 'La corriente de aire se deshizo.',
       grotto: 'Las hojas cubrieron la entrada de la gruta.',
       underground: 'La grieta en la roca se derrumbó.',
+      hideout: 'La trampilla del Escondite se cerró.',
     },
     blocked: 'Solo un Pokémon de tipo *Volador* puede subir con esta corriente de aire.',
     goal: {
@@ -2828,6 +2830,7 @@ export const es: Messages = {
       sky: '¡Atrapa las *plumas* que trae el viento antes de que se calme!',
       grotto: '¡Derrota a los *Audino* que salen de la hierba que se mueve!',
       underground: '¡Párate en los *destellos* de las paredes para excavar y golpea a los *Diglett*!',
+      hideout: '¡Baja los pisos y enfrenta al *jefe del Team Rocket*!',
     },
     floor: (n) => `B${n}F`,
     wind: ['Algo se está agitando…', '¡Se está acercando!', '¡Está muy cerca! ¡El viento sopla con fuerza!'],

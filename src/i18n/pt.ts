@@ -3162,15 +3162,16 @@ export const pt = {
     noCrossing: 'Anda devagar nos lagos e escorrega no gelo.',
   },
   places: {
-    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
+    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo', hideout: 'Esconderijo Rocket' } satisfies Record<PlaceId, string>,
     /** Short names for the HUD's pill while an entrance is open. */
-    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente', grotto: 'Gruta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
+    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente', grotto: 'Gruta', underground: 'Subterrâneo', hideout: 'Esconderijo' } satisfies Record<PlaceId, string>,
     open: {
       cave: 'A entrada de uma *caverna* apareceu! Siga a seta.',
       graveyard: 'Um *cemitério* surgiu na névoa! Siga a seta.',
       sky: 'Uma *corrente de ar* sobe para o céu! Siga a seta e voe.',
       grotto: 'Você achou uma *Gruta Oculta* escondida no mato!',
       underground: 'Uma rachadura na pedra leva ao *Subterrâneo*!',
+      hideout: 'A escotilha do *Esconderijo Rocket* se abriu! Siga a seta.',
     } satisfies Record<PlaceId, string>,
     sealed: {
       cave: 'Pedras desabaram na entrada da caverna.',
@@ -3178,6 +3179,7 @@ export const pt = {
       sky: 'A corrente de ar se desfez.',
       grotto: 'As folhas cobriram a entrada da gruta.',
       underground: 'A rachadura na pedra desmoronou.',
+      hideout: 'A escotilha do Esconderijo se trancou.',
     } satisfies Record<PlaceId, string>,
     blocked: 'Só um Pokémon do tipo *Voador* consegue subir nessa corrente de ar.',
     /** What to do, shown on the way in. */
@@ -3187,6 +3189,7 @@ export const pt = {
       sky: 'Pegue as *asas* que o vento traz antes que ele acalme!',
       grotto: 'Derrote os *Audino* que saem da grama balançando!',
       underground: 'Fique nos *brilhos* das paredes para cavar e acerte os *Diglett*!',
+      hideout: 'Desça os andares e enfrente o *chefe da Equipe Rocket*!',
     } satisfies Record<PlaceId, string>,
     /** A dungeon floor, as Mystery Dungeon names them (B1F). */
     floor: (n: number) => `B${n}F`,

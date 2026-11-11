@@ -2803,14 +2803,15 @@ export const en: Messages = {
     noCrossing: 'Wades slowly through lakes and slides on ice.',
   },
   places: {
-    names: { cave: 'Dark Cave', graveyard: 'Haunted Graveyard', sky: 'Above the Clouds', grotto: 'Hidden Grotto', underground: 'Underground' },
-    hudNames: { cave: 'Cave', graveyard: 'Graveyard', sky: 'Updraft', grotto: 'Grotto', underground: 'Underground' },
+    names: { cave: 'Dark Cave', graveyard: 'Haunted Graveyard', sky: 'Above the Clouds', grotto: 'Hidden Grotto', underground: 'Underground', hideout: 'Rocket Hideout' },
+    hudNames: { cave: 'Cave', graveyard: 'Graveyard', sky: 'Updraft', grotto: 'Grotto', underground: 'Underground', hideout: 'Hideout' },
     open: {
       cave: 'The mouth of a *cave* showed up! Follow the arrow.',
       graveyard: 'A *graveyard* loomed out of the fog! Follow the arrow.',
       sky: 'An *updraft* rises into the sky! Follow the arrow and fly.',
       grotto: 'You found a *Hidden Grotto* tucked in the thicket!',
       underground: 'A crack in the rock leads to the *Underground*!',
+      hideout: 'The *Rocket Hideout*’s hatch is open! Follow the arrow.',
     },
     sealed: {
       cave: 'Rocks fell over the cave’s mouth.',
@@ -2818,6 +2819,7 @@ export const en: Messages = {
       sky: 'The updraft died down.',
       grotto: 'Leaves grew over the grotto’s way in.',
       underground: 'The crack in the rock caved in.',
+      hideout: 'The Hideout’s hatch locked itself.',
     },
     blocked: 'Only a *Flying*-type Pokémon can ride this updraft.',
     goal: {
@@ -2826,6 +2828,7 @@ export const en: Messages = {
       sky: 'Grab the *wings* the wind brings before it calms!',
       grotto: 'Defeat the *Audino* popping out of the shaking grass!',
       underground: 'Stand at the *glints* in the walls to dig, and whack the *Diglett*!',
+      hideout: 'Go down the floors and face *Team Rocket’s boss*!',
     },
     floor: (n) => `B${n}F`,
     wind: ['Something’s stirring…', 'It’s getting closer!', 'It’s right nearby! It’s gusting hard!'],

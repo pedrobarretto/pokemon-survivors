@@ -2801,14 +2801,15 @@ export const fr: Messages = {
     noCrossing: 'Patauge dans les lacs et glisse sur la glace.',
   },
   places: {
-    names: { cave: 'Grotte Sombre', graveyard: 'Cimetière Hanté', sky: 'Au-dessus des nuages', grotto: 'Grotte Cachée', underground: 'Souterrain' },
-    hudNames: { cave: 'Grotte', graveyard: 'Cimetière', sky: 'Courant', grotto: 'Grotte', underground: 'Souterrain' },
+    names: { cave: 'Grotte Sombre', graveyard: 'Cimetière Hanté', sky: 'Au-dessus des nuages', grotto: 'Grotte Cachée', underground: 'Souterrain', hideout: 'Repaire Rocket' },
+    hudNames: { cave: 'Grotte', graveyard: 'Cimetière', sky: 'Courant', grotto: 'Grotte', underground: 'Souterrain', hideout: 'Repaire' },
     open: {
       cave: 'L’entrée d’une *grotte* est apparue ! Suis la flèche.',
       graveyard: 'Un *cimetière* surgit du brouillard ! Suis la flèche.',
       sky: 'Un *courant ascendant* monte vers le ciel ! Suis la flèche et envole-toi.',
       grotto: 'Tu as trouvé une *Grotte Cachée* dans les fourrés !',
       underground: 'Une fissure dans la roche mène au *Souterrain* !',
+      hideout: 'La trappe du *Repaire Rocket* est ouverte ! Suivez la flèche.',
     },
     sealed: {
       cave: 'Des rochers ont bouché l’entrée de la grotte.',
@@ -2816,6 +2817,7 @@ export const fr: Messages = {
       sky: 'Le courant ascendant est retombé.',
       grotto: 'Les feuilles ont recouvert l’entrée de la grotte.',
       underground: 'La fissure dans la roche s’est effondrée.',
+      hideout: 'La trappe du Repaire s’est verrouillée.',
     },
     blocked: 'Seul un Pokémon de type *Vol* peut monter sur ce courant ascendant.',
     goal: {
@@ -2824,6 +2826,7 @@ export const fr: Messages = {
       sky: 'Attrape les *plumes* que le vent apporte avant qu’il ne se calme !',
       grotto: 'Bats les *Audino* qui sortent des hautes herbes qui bougent !',
       underground: 'Reste sur les *éclats* des parois pour creuser, et frappe les *Diglett* !',
+      hideout: 'Descendez les étages et affrontez le *boss de la Team Rocket* !',
     },
     floor: (n) => `SS${n}`,
     wind: ['Quelque chose bouge…', 'Ça se rapproche !', 'C’est tout près ! Ça souffle fort !'],

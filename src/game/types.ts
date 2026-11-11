@@ -689,6 +689,8 @@ export type GameEvent =
   | { kind: 'shinyPlayer' }
   /** First shiny of a species defeated this run; the shell toasts it only when the Pokédex didn't have it yet. */
   | { kind: 'caught'; enemy: EnemyId }
+  /** Shadow Mewtwo fell in the Rocket Hideout's lair (`game/hideout.ts`): the shell gives it to the Legend mode. */
+  | { kind: 'rocketCleared' }
   | { kind: 'thunder' }
   | { kind: 'quake' }
   /**

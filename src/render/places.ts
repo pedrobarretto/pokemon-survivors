@@ -120,6 +120,8 @@ type CaveGround = { speck: readonly [string, string]; tones: readonly [string, s
 const CAVE_GROUND: CaveGround = { speck: ['#2a221e', '#8a7462'], tones: ['#3e342e', '#463b33', '#504438'] }
 /** The Underground's dug earth: warm, with pick marks (Diamond and Pearl's tunnels). */
 const UNDERGROUND_GROUND: CaveGround = { speck: ['#3a2a1c', '#c8a878'], tones: ['#5a4430', '#664e36', '#735a3e'] }
+/** The Rocket Hideout's floor: Team Rocket's steel plating, cold and lit. */
+const HIDEOUT_GROUND: CaveGround = { speck: ['#1a1e26', '#8a94a8'], tones: ['#363c4a', '#3e4554', '#474f60'] }
 
 const bakeCave = (floor: readonly ArenaShape[], ground: CaveGround = CAVE_GROUND): Baked => {
   const r = rasterize(floor, 40)
@@ -305,7 +307,7 @@ const bakedFloor = (inside: PlaceInterior) => {
   } else if (inside.id === 'grotto') {
     baked = { layout: inside.layout, floor: bakeGrotto(inside.layout.floor), fence: null }
   } else {
-    baked = { layout: inside.layout, floor: bakeCave(inside.layout.floor, inside.id === 'underground' ? UNDERGROUND_GROUND : CAVE_GROUND), fence: null }
+    baked = { layout: inside.layout, floor: bakeCave(inside.layout.floor, inside.id === 'underground' ? UNDERGROUND_GROUND : inside.id === 'hideout' ? HIDEOUT_GROUND : CAVE_GROUND), fence: null }
   }
   return baked
 }
@@ -446,7 +448,7 @@ const STAIRS = lazy(() =>
 export const drawPlaceGround = (ctx: Ctx, g: Game, t: number) => {
   const inside = g.place.inside
   if (!inside) return
-  if (inside.id === 'cave') {
+  if (inside.id === 'cave' || inside.id === 'hideout') {
     const s = inside.state
     if (s.stairs) {
       const x = inside.x + s.stairs[0]
@@ -460,7 +462,8 @@ export const drawPlaceGround = (ctx: Ctx, g: Game, t: number) => {
       ctx.fillStyle = '#ffffff'
       if (k < 10) ctx.fillRect(Math.round(x - 5 + k), Math.round(y - 4 + k * 0.9), 2, 1)
     }
-    const c = s.chest
+    if (inside.id === 'hideout') return
+    const c = inside.state.chest
     if (c && !c.open && c.progress > 0) chargeArc(ctx, inside.x + c.x, inside.y + c.y, 24, c.progress)
     return
   }
@@ -722,6 +725,7 @@ const ENTRANCE_COLORS: Record<PlaceId, readonly string[]> = {
   sky: ['#d8f0f8', '#78c8f0', '#ffffff'],
   grotto: ['#c8f0a0', '#58b048', '#ffffff'],
   underground: ['#f8e0a0', '#b89470', '#ffffff'],
+  hideout: ['#f86060', '#b468f0', '#ffffff'],
 }
 
 /** Rocks heaped in the cave's mouth once it closes. */
@@ -824,6 +828,7 @@ const drawUpdraft = (ctx: Ctx, ent: PlaceEntrance, t: number) => {
 export const placeIcon = (id: PlaceId) =>
   toIconUrl(`place:${id}`, () => {
     if (id === 'grotto' || id === 'underground') return hiddenIconSprite(id)
+    if (id === 'hideout') return PLACE_PIECES.rocketHatch(0, 'meadow').sprite
     return id === 'cave' ? STAIRS() : id === 'graveyard' ? PLACE_PIECES.keystone(0, 'tower').sprite : wingSprite('swiftWing')
   })
 
@@ -861,6 +866,7 @@ const ARROWS = {
   sky: lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#e8f8ff', 2: '#4898d8' }, '#0c2040')),
   grotto: lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#c8f0a0', 2: '#3c8c2c' }, '#0c2008')),
   underground: lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#f8e0a0', 2: '#8a6a48' }, '#281808')),
+  hideout: lazy(() => art(['11.....', '1221...', '122221.', '1222221', '122221.', '1221...', '11.....'], { 1: '#f87070', 2: '#a01c24' }, '#200808')),
 } satisfies Record<PlaceId, () => PixelSprite>
 
 /** Screen-space arrow on the edge pointing at an open entrance off screen. */

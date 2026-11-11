@@ -2801,14 +2801,15 @@ export const zh: Messages = {
     noCrossing: '在湖裡走得慢，在冰上會打滑。',
   },
   places: {
-    names: { cave: '黑暗洞窟', graveyard: '鬧鬼墓地', sky: '雲端之上', grotto: '隱藏洞穴', underground: '地下通道' },
-    hudNames: { cave: '洞窟', graveyard: '墓地', sky: '上升氣流', grotto: '洞穴', underground: '地下通道' },
+    names: { cave: '黑暗洞窟', graveyard: '鬧鬼墓地', sky: '雲端之上', grotto: '隱藏洞穴', underground: '地下通道', hideout: '火箭隊秘密基地' },
+    hudNames: { cave: '洞窟', graveyard: '墓地', sky: '上升氣流', grotto: '洞穴', underground: '地下通道', hideout: '秘密基地' },
     open: {
       cave: '出現了一個*洞窟*的入口！跟著箭頭走。',
       graveyard: '一座*墓地*從霧中浮現！跟著箭頭走。',
       sky: '一道*上升氣流*衝上天空！跟著箭頭去飛翔吧。',
       grotto: '你在草叢裡發現了*隱藏洞穴*！',
       underground: '岩石的裂縫通往*地下通道*！',
+      hideout: '*火箭隊秘密基地*的艙門打開了！跟著箭頭走。',
     },
     sealed: {
       cave: '落石堵住了洞窟的入口。',
@@ -2816,6 +2817,7 @@ export const zh: Messages = {
       sky: '上升氣流消失了。',
       grotto: '樹葉蓋住了洞穴的入口。',
       underground: '岩石的裂縫崩塌了。',
+      hideout: '秘密基地的艙門鎖上了。',
     },
     blocked: '只有*飛行*屬性的寶可夢能乘上這道上升氣流。',
     goal: {
@@ -2824,6 +2826,7 @@ export const zh: Messages = {
       sky: '在風平息之前，抓住風帶來的*羽毛*！',
       grotto: '打倒從晃動的草叢裡跑出來的 *Audino*！',
       underground: '站在牆上的*閃光*處挖掘，並敲打 *Diglett*！',
+      hideout: '往下走到底，面對*火箭隊的首領*！',
     },
     floor: (n) => `B${n}F`,
     wind: ['有什麼東西在騷動…', '越來越近了！', '就在附近！風越颳越強！'],

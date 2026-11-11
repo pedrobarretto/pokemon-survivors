@@ -143,6 +143,7 @@ const pt = {
     name: 'Esconderijo Rocket',
     floor: (n: number) => `Esconderijo Rocket B${n}F`,
     lair: 'Sala do Chefe',
+    hud: (where: string, time: string) => `${where} · alarme ${time}`,
     found: 'A entrada do Esconderijo Rocket está aberta!',
     grunts: [
       'Um recruta da Equipe Rocket solta seus Pokémon!',
@@ -306,6 +307,7 @@ const en: RocketWords = {
     name: 'Rocket Hideout',
     floor: (n) => `Rocket Hideout B${n}F`,
     lair: "The Boss's Room",
+    hud: (where, time) => `${where} · alarm ${time}`,
     found: 'The Rocket Hideout’s entrance is open!',
     grunts: [
       'A Team Rocket grunt sends out their Pokémon!',
@@ -464,6 +466,7 @@ const es: RocketWords = {
     name: 'Escondite Rocket',
     floor: (n) => `Escondite Rocket S${n}`,
     lair: 'Sala del Jefe',
+    hud: (where, time) => `${where} · alarma ${time}`,
     found: '¡La entrada del Escondite Rocket está abierta!',
     grunts: [
       '¡Un recluta del Team Rocket saca a sus Pokémon!',
@@ -622,6 +625,7 @@ const fr: RocketWords = {
     name: 'Repaire Rocket',
     floor: (n) => `Repaire Rocket SS${n}`,
     lair: 'Bureau du Boss',
+    hud: (where, time) => `${where} · alarme ${time}`,
     found: 'L’entrée du Repaire Rocket est ouverte !',
     grunts: [
       'Un sbire de la Team Rocket envoie ses Pokémon !',
@@ -773,6 +777,7 @@ const zh: RocketWords = {
     name: '火箭隊秘密基地',
     floor: (n) => `火箭隊秘密基地 B${n}F`,
     lair: '首領的房間',
+    hud: (where, time) => `${where} · 警報 ${time}`,
     found: '火箭隊秘密基地的入口打開了！',
     grunts: ['火箭隊手下放出了寶可夢！', '喂！沒有代幣誰都別想過去！', '他們的寶可夢燃燒著暗影的氣息……'],
     giovanni: {

@@ -24,7 +24,8 @@ import { isRiftLegend } from './data/rifts'
 import { domainTheme } from './game/domain'
 import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
-import { captureOutcome as savedCapture } from './game/capture'
+import { captureByGift, captureOutcome as savedCapture } from './game/capture'
+import { hideoutCleared, holdsPass, usePass } from './game/hideoutPass'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
 import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
@@ -1431,9 +1432,12 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     mythical: mythicalHunt(save),
     // A Shadow (or Purified) Pokémon plays as one unless switched to Normal (`game/shadow.ts`).
     ...shadowStart(save.shadows, starter),
+    // The Game Corner poster's pass brings the Rocket Hideout's hatch onto this run's map (`game/hideoutPass.ts`).
+    ...(holdsPass(save.hideout) && !isLegend(starter) ? { hideout: true } : {}),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
+  if (start.hideout) updateSave((s) => ({ ...s, hideout: usePass(s.hideout) }))
   const game = startGame(start, view)
   if (devMap) setDevMap(game, devMap)
   const me = localPlayer(game)
@@ -2216,6 +2220,18 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return mapEventFeedback(ui, e.notice)
     case 'place':
       return placeFeedback(ui, e.place, e.notice)
+    case 'rocketCleared': {
+      // Giovanni beaten: Shadow Mewtwo joins the Legend mode (captured if it wasn't), the clear counts, the first one gives the title.
+      updateSave((s) => ({
+        ...s,
+        hideout: hideoutCleared(s.hideout),
+        legends: captureByGift(s.legends, 'mewtwo'),
+        shadows: grantShadow(s.shadows, 'mewtwo'),
+        titles: s.titles.includes('rocketBuster') ? s.titles : [...s.titles, 'rocketBuster'],
+      }))
+      playSfx('legendary')
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(150), alt: '' }), rich(`${t().rocket.hideout.reward} ${t().rocket.hideout.capture}`)), 5200, null, 'shiny')
+    }
     case 'landmark':
       return landmarkFeedback(ui, e.landmark, e.moment)
     case 'seasonFind':

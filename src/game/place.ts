@@ -5,6 +5,7 @@ import { PLACE, PLACES, PRETTY_WING_COINS, REGULAR_PLACE_IDS, WINGS, WING_IDS, t
 import { RUN_LENGTH, STAGES, stageIndexAt } from '../data/waves'
 import type { CaveState } from './cave'
 import type { GraveyardState } from './graveyard'
+import type { GiovanniLine, HideoutState } from './hideout'
 import type { GrottoState } from './grotto'
 import { rollHidden } from './hiddenRules'
 import type { UndergroundState } from './underground'
@@ -49,6 +50,8 @@ export type PlaceNotice =
   | { kind: 'landed'; wings: number }
   /** The player fainted inside: a rescue brings them back out (the world waits meanwhile). */
   | { kind: 'fall' }
+  /** Giovanni speaks in the Rocket Hideout's lair (`game/hideout.ts`). */
+  | { kind: 'giovanni'; line: GiovanniLine }
   /** A player walked up to a hidden zone's entrance: found (its "!", its name). */
   | { kind: 'found' }
   /** A hidden zone's grass shakes or hole rumbles: something's about to pop out. */
@@ -77,7 +80,7 @@ export type PlaceEntrance = { id: PlaceId; x: number; y: number; left: number; c
 export const entranceShown = (ent: PlaceEntrance) => !ent.hidden || ent.foundAt !== null
 
 /** Each place's own state inside. */
-export type PlaceStates = { cave: CaveState; graveyard: GraveyardState; sky: SkyState; grotto: GrottoState; underground: UndergroundState }
+export type PlaceStates = { cave: CaveState; graveyard: GraveyardState; sky: SkyState; grotto: GrottoState; underground: UndergroundState; hideout: HideoutState }
 
 export type PlaceInteriorOf<K extends PlaceId> = Room & {
   id: K
@@ -110,6 +113,8 @@ export type PlaceState = {
   cleared: PlaceId[]
   /** Run time the run's hidden zone is due (`rollHidden`); null once it opened, or for a run without one. */
   hiddenAt: number | null
+  /** The run came with the Game Corner poster's pass (`ReplayStart.hideout`): the Rocket Hideout's hatch opens at `HIDEOUT.at`, once. Absent otherwise. */
+  hideout?: true
 }
 
 export const createPlaceState = (seed: number): PlaceState => ({

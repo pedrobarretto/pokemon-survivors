@@ -1,4 +1,5 @@
 import { ROSTER, type Tier } from './roster'
+import { HIDEOUT_BOSSES } from './rocketHideoutFoes'
 import type { TraitId } from './traits'
 import type { PokeType } from './types'
 
@@ -104,6 +105,8 @@ export const ENEMIES = {
   beldum: { dex: 374, name: 'Beldum', types: ['steel', 'psychic'], hp: 20, speed: 44, damage: 10, xp: 2, mass: 1.8 },
   metang: { dex: 375, name: 'Metang', types: ['steel', 'psychic'], hp: 60, speed: 40, damage: 13, xp: 5, mass: 2.6 },
   // A place's boss (`data/places.ts`): HP and contact damage are its 1:30 values, scaled by `placeBossScale`.
+  // The Rocket Hideout's lair (`data/rocketHideout.ts`): Giovanni's Persian and Shadow Mewtwo, place bosses scaled by `placeBossScale`.
+  ...HIDEOUT_BOSSES,
   spiritomb: { dex: 442, name: 'Spiritomb', types: ['ghost', 'dark'], hp: 1100, speed: 34, damage: 18, xp: 0, mass: 30, boss: true },
   // The hidden zones' own (`hidden` in `data/places.ts`), never in the horde (no tier): Audino out of the grotto's
   // shaking grass, shy and gone in a while. Its EXP is set as it comes out (`luckyXp`).

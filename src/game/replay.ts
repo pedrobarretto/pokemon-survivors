@@ -82,6 +82,8 @@ export type ReplayStart = {
   mythical?: MythicalHunt
   /** A Shadow or Purified Pokémon (`shadow.ts`): stronger and frailer, or a little sturdier. The plain one when absent. */
   variant?: ShadowVariant
+  /** The Game Corner poster's pass (`hideoutPass.ts`): the Rocket Hideout's hatch opens on this run's map. Absent otherwise. */
+  hideout?: true
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
@@ -244,6 +246,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
       caps: isWhole(s.caps) ? s.caps : 0,
       ...(mythical ? { mythical } : {}),
       ...(isShadowVariant(s.variant) ? { variant: s.variant } : {}),
+      ...(s.hideout === true ? { hideout: true } : {}),
       view,
     },
     moves: raw.moves,
@@ -279,6 +282,7 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     caps: start.caps ?? 0,
     mythical: start.mythical,
     variant: start.variant ?? null,
+    hideout: start.hideout === true,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {
