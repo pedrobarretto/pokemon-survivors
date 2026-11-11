@@ -4953,6 +4953,31 @@ button {
   font-size: 16px;
 }
 
+/* The Ultra Beast of the week as a square badge up front (`ultraBadge` in `ui/title.ts`): its portrait in the prism ring of its partner cell, a Beast Ball on the corner. */
+.lobby-narrow .lobby-day.ultra {
+  width: auto;
+  padding: 4px;
+  gap: 0;
+}
+
+.lobby-narrow .lobby-day.ultra .lobby-day-text {
+  display: none;
+}
+
+.lobby-narrow .lobby-day.ultra .lobby-day-icon {
+  border-color: #c8a8f8;
+  box-shadow:
+    0 0 0 2px #f8a0d0,
+    0 0 0 4px #98d8f8;
+  margin: 4px;
+}
+
+.lobby-narrow .lobby-day.ultra .lobby-day-ball {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+}
+
 .lobby-narrow .lobby-center {
   flex: 1 1 auto;
   gap: 5px;

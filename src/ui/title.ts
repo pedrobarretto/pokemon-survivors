@@ -1102,7 +1102,11 @@ export const titleScreen = (
     const raid = raidCard()
     const cosmog = cosmogCard()
     const ready = save.eggs.filter(isReady).length
+    const ultra = () => pressable(ultraCard(), 'ultra')
+    // An upright phone shows two cards before the row scrolls: there the Ultra Beast of the week is a square badge up front, so it's seen without scrolling.
+    const ultraBadge = kind === 'narrow'
     const dayCards = [
+      ...(ultraBadge ? [ultra()] : []),
       ...(halloweenCardShows() ? [pressable((candyCard = halloweenCard()), 'halloween')] : []),
       pressable(giftsCard(), 'gifts'),
       ...(cosmog ? [pressable(cosmog.el, 'cosmog')] : []),
@@ -1111,7 +1115,7 @@ export const titleScreen = (
       pressable(missionsCard(), 'missions'),
       pressable(outbreak.el, 'outbreak'),
       pressable(raid.el, 'raid'),
-      pressable(ultraCard(), 'ultra'),
+      ...(ultraBadge ? [] : [ultra()]),
     ]
     const date = today().toLocaleDateString(LOCALES[lang].tag, { weekday: 'short', day: 'numeric', month: 'short' })
     const festival = festivalCardShows() ? pressable(kind === 'wide' ? festivalCard() : festivalBanner(), 'festival') : null
