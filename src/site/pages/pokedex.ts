@@ -4,11 +4,14 @@ import { RIFT, RIFT_LEGENDS } from '../../data/rifts'
 import { TIERS } from '../../data/roster'
 import { isSummoner, SUMMONS, TRAITS, type TraitId } from '../../data/traits'
 import { SPIT_FLAVORS } from '../../game/spitters'
-import { HATCHLINGS, isHatchling, PLAYABLE } from '../../data/hatchlings'
-import { REGIONS, type PlayableDef } from '../../data/starters'
+import { HATCHLING_IDS, HATCHLINGS, isHatchling, PLAYABLE } from '../../data/hatchlings'
+import { REGIONS, STARTER_IDS, type PlayableDef } from '../../data/starters'
+import { DEX_REGIONS, dexRegionOf, SHEETLESS, SPRITECOLLAB_URL, type DexRegion } from '../../data/nationalDex'
+import { PENCIL, PENCIL_PALETTE } from '../../render/pencilArt'
 import { POKE_TYPES, TYPE_COLORS, type PokeType } from '../../data/types'
 import { RUN_LENGTH } from '../../data/waves'
-import { EVENT_LEGENDS, isLegend, LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { AWAKEN_AT, EVENT_LEGENDS, isLegend, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { SHINY_BUFF, SHINY_ODDS } from '../../game/shiny'
 import { BRANCHES, branchesAt, branchStage, familyDex } from '../../data/branches'
 import { ABILITIES, isHidden, type AbilitySet } from '../../data/abilities'
 import { abilitySet } from '../../game/abilities'
@@ -25,8 +28,8 @@ import { SITE_MESSAGES, type SiteMessages } from '../../i18n/site'
 import { STAT_BARS, statRatio } from '../../ui/statBars'
 import { html, type Html } from '../html'
 import { layout } from '../layout'
-import { appearances, clock, nightBossOf, pageOf, pokedex, ROLES, slugOf, spritesOf, type Appearance, type DexEntry, type Role, type SpriteSet } from '../pokedex'
-import { absolute, dexPaths, ROUTES } from '../routes'
+import { appearances, clock, nightBossOf, pageOf, pokedex, regionCounts, ROLES, slugOf, spritesOf, type Appearance, type DexEntry, type Role, type SpriteSet } from '../pokedex'
+import { absolute, dexPaths, dexRegionPaths, ROUTES } from '../routes'
 import { nationalDex } from '../../data/regionalForms'
 import { createSpriteCss, spriteScale } from '../spriteCss'
 
@@ -269,6 +272,10 @@ export const patternText = (p: BossPattern, m: SiteMessages) => {
   return p.stance ? `${m.patterns.stance[p.stance]}: ${text}` : text
 }
 
+/** How a legend is captured for the Legend mode, its numbers from `data/legends.ts`. */
+export const captureText = (unlock: LegendUnlock, m: SiteMessages) =>
+  unlock.event ? m.pokedex.captureEvent(unlock.wins) : unlock.last ? m.pokedex.captureLast(REGULAR_LEGENDS.length - 1) : m.pokedex.capture(unlock.wins, AWAKEN_AT)
+
 /** A legendary's card: how it's captured for the Legend mode, its innate and the move it opens with (`data/legends.ts`). */
 const legendSection = (id: LegendId, m: SiteMessages) => {
   const def = LEGENDS[id]
@@ -276,7 +283,7 @@ const legendSection = (id: LegendId, m: SiteMessages) => {
   const opener = MOVES[def.learnset[0][0]!]
   return html`<h3>${m.pokedex.legendMode}</h3>
     <ul class="list">
-      <li>${unlock.event ? m.pokedex.captureEvent(unlock.wins) : unlock.last ? m.pokedex.captureLast : m.pokedex.capture(unlock.wins)}</li>
+      <li>${captureText(unlock, m)}</li>
       <li>${m.pokedex.innate(ABILITIES[def.innate.ability].name)}</li>
       <li>${m.pokedex.opens(opener.name)} ${typeBadge(opener.type, m)}</li>
     </ul>
@@ -309,7 +316,7 @@ const wildBody = (entry: DexEntry & { source: { kind: 'wild' } }, m: SiteMessage
 
 /** How a wild card's shiny shows up: a rift legendary by the rift's odds, the map's bosses never, the horde at the wild odds. */
 const shinyNote = (id: EnemyId, boss: boolean, m: SiteMessages) =>
-  ([...RIFT_LEGENDS, ...EVENT_LEGENDS] as readonly EnemyId[]).includes(id) ? m.pokedex.riftShinyNote(Math.round(1 / RIFT.shinyOdds)) : boss ? null : m.pokedex.shinyNote
+  ([...RIFT_LEGENDS, ...EVENT_LEGENDS] as readonly EnemyId[]).includes(id) ? m.pokedex.riftShinyNote(Math.round(1 / RIFT.shinyOdds)) : boss ? null : m.pokedex.shinyNote(1 / SHINY_ODDS.enemy, SHINY_BUFF.hp)
 
 /** Horde tier of a wild card, for the tier filter. */
 const tierOf = (entry: DexEntry) => {
@@ -341,13 +348,14 @@ export const card = (entry: DexEntry, locale: Locale, css: SpriteCss, page?: str
 </article>`
 }
 
-const filters = (entries: readonly DexEntry[], m: SiteMessages) => {
+/** The filters; a region's page leaves out the region select (`withRegion`). */
+const filters = (entries: readonly DexEntry[], m: SiteMessages, withRegion: boolean) => {
   const types = POKE_TYPES.filter((t) => entries.some((e) => e.types.includes(t)))
   return html`<form class="dex-filters" id="dex-filters" role="search" aria-label="${m.pokedex.filters}">
     <label class="field field-search">${m.pokedex.search}<input type="search" name="q" placeholder="${m.pokedex.searchPlaceholder}" autocomplete="off" /></label>
-    <label class="field">${m.pokedex.region}<select name="region"><option value="">${m.pokedex.allRegions}</option>${REGIONS.map(
+    ${withRegion && html`<label class="field">${m.pokedex.region}<select name="region"><option value="">${m.pokedex.allRegions}</option>${REGIONS.map(
       (r) => html`<option value="${r.name.toLowerCase()}">${r.name}</option>`,
-    )}</select></label>
+    )}</select></label>`}
     <label class="field">${m.pokedex.type}<select name="type"><option value="">${m.pokedex.all}</option>${types.map(
       (t) => html`<option value="${t}">${m.types[t]}</option>`,
     )}</select></label>
@@ -364,38 +372,141 @@ const filters = (entries: readonly DexEntry[], m: SiteMessages) => {
   <p class="dex-empty" hidden>${m.pokedex.empty} <button type="reset" form="dex-filters">${m.pokedex.clear}</button></p>`
 }
 
-/** `/pokedex/`: every Pokémon in the game, generated from `data/*`, with CSS-animated sprites and client-side filters. */
+/** The region of a card: a regional form's own (Galarian Ponyta in Galar), as in the game's Pokédex. */
+const inRegion = (region: DexRegion) => (e: DexEntry) => dexRegionOf(e.dex) === region
+
+/** What a region's title asks, and who doesn't count (`regionCounts`), in the game's own words. */
+const goalLine = (c: ReturnType<typeof regionCounts>, locale: Locale) => {
+  const d = MESSAGES[locale].dex
+  return c.left.length > 0 ? `${d.forTitle(c.goal)} · ${d.notCounted(c.left)}` : d.forTitle(c.goal)
+}
+
+/** The pencil of a species still being drawn (`render/pencilArt.ts`), as pixel-exact SVG. */
+const pencilSvg = (label: string) => {
+  const colors: Readonly<Record<string, string>> = PENCIL_PALETTE
+  const rects = PENCIL.flatMap((row, y) => [...row].flatMap((c, x) => (colors[c] ? [html`<rect x="${x}" y="${y}" width="1" height="1" fill="${colors[c]}" />`] : [])))
+  return html`<svg class="pencil" viewBox="0 0 16 16" width="64" height="64" shape-rendering="crispEdges" role="img" aria-label="${label}">${rects}</svg>`
+}
+
+/** A species SpriteCollab's artists haven't drawn yet: a thank-you card with a link to help them. */
+const drawingCard = (dex: number, name: string, m: SiteMessages) => {
+  const slug = slugOf(name)
+  return html`<article class="dex-card box drawing" id="${slug}" data-search="${slug} ${dex} ${String(dex).padStart(3, '0')}">
+  <div class="card-top">
+    <span class="dex-no">${dexNo(dex)}</span>
+    <span class="role">${m.pokedex.drawingTag}</span>
+    <a class="anchor" href="#${slug}" aria-label="${m.pokedex.link(name)}">#</a>
+  </div>
+  <div class="card-art">${pencilSvg(m.pokedex.drawingTag)}</div>
+  <h2>${name}</h2>
+  <p class="note">${m.pokedex.drawingNote}</p>
+  <p><a class="btn-link" href="${SPRITECOLLAB_URL}" rel="noopener" target="_blank">${m.pokedex.contribute}</a></p>
+</article>`
+}
+
+/** The regions as links, the current one marked. */
+const regionNav = (locale: Locale, current: DexRegion | null) => {
+  const m = SITE_MESSAGES[locale]
+  return html`<nav class="dex-region-nav" aria-label="${m.pokedex.regionNav}">
+    ${current && html`<a href="${ROUTES.pokedex[locale]}">${m.pokedex.backToRegions}</a>`}
+    ${DEX_REGIONS.map((r, i) => html`<a href="${dexRegionPaths(r)[locale]}"${r === current ? html` aria-current="page"` : ''}>${REGIONS[i]!.name}</a>`)}
+  </nav>`
+}
+
+/** Where a species' card lives: its region's page, at its anchor. */
+export const dexHref = (locale: Locale, entry: DexEntry) => `${dexRegionPaths(dexRegionOf(entry.dex))[locale]}#${entry.slug}`
+
+/**
+ * `/pokedex/`: the National Dex's hub, one tile per region (Kanto to Paldea)
+ * with how much of it the game has and how much SpriteCollab is still drawing.
+ * The cards live on the regions' pages (`regionPage`): all of them on one page
+ * weighed 3 MB of HTML once the horde took in the National Dex.
+ */
 export const pokedexPage = (locale: Locale) => {
   const m = SITE_MESSAGES[locale]
   const entries = pokedex()
-  const css = createSpriteCss()
-  const pageUrl = (e: DexEntry) => {
-    const page = pageOf(e)
-    return page && dexPaths(page.slug)[locale]
-  }
-  const cards = entries.map((e) => card(e, locale, css, pageUrl(e)))
   const url = absolute(ROUTES.pokedex[locale])
+  const tiles = DEX_REGIONS.map((region, i) => {
+    const r = REGIONS[i]!
+    const c = regionCounts(region)
+    return html`<a class="dex-region-tile box" href="${dexRegionPaths(region)[locale]}">
+      <span class="faces">${r.starters.map((id) => html`<img src="${asset(PLAYABLE[id].line[0].dex, 'portrait.png')}" width="40" height="40" loading="lazy" alt="" />`)}</span>
+      <h2>${r.name}</h2>
+      <span class="bar"><i style="width:${Math.round((c.inGame / c.total) * 100)}%"></i></span>
+      <span class="count">${MESSAGES[locale].dex.counts(c.inGame, c.total)}</span>
+      <span class="goal-count">${goalLine(c, locale)}</span>
+      ${c.drawing > 0 && html`<span class="drawing-count">${m.pokedex.drawingCount(c.drawing)}</span>`}
+    </a>`
+  })
   const main: Html = html`<div class="page-head">
     <h1>${m.pokedex.h1}</h1>
     <p class="lead">${m.pokedex.intro(entries.length)}</p>
     <p class="lead-link"><a href="${ROUTES.tierList[locale]}">★ ${m.pokedex.tierLink} →</a></p>
   </div>
-  ${filters(entries, m)}
-  <div class="dex-grid">${cards}</div>`
+  <p class="dex-hub-pick">${m.pokedex.hubPick}</p>
+  <div class="dex-regions">${tiles}</div>`
   return layout(
     {
       id: 'pokedex',
       locale,
       title: m.pokedex.title,
-      description: m.pokedex.description,
-      css: css.css(),
+      description: m.pokedex.description(STARTER_IDS.length, HATCHLING_IDS.length),
       schema: [
         {
           '@type': 'ItemList',
           '@id': `${url}#list`,
           name: m.pokedex.h1,
+          numberOfItems: DEX_REGIONS.length,
+          itemListElement: DEX_REGIONS.map((r, i) => ({ '@type': 'ListItem', position: i + 1, name: m.pokedex.regionH1(REGIONS[i]!.name), url: absolute(dexRegionPaths(r)[locale]) })),
+        },
+      ],
+    },
+    main,
+  )
+}
+
+/** `/pokedex/<region>/`: a region's Pokémon in the game, generated from `data/*`, with CSS-animated sprites and client-side filters, and a thank-you card for each one SpriteCollab is still drawing. */
+export const regionPage = (region: DexRegion, locale: Locale) => {
+  const m = SITE_MESSAGES[locale]
+  const name = REGIONS[DEX_REGIONS.indexOf(region)]!.name
+  const all = pokedex()
+  const entries = all.filter(inRegion(region))
+  const c = regionCounts(region)
+  const css = createSpriteCss()
+  const pageUrl = (e: DexEntry) => {
+    const page = pageOf(e)
+    return page && dexPaths(page.slug)[locale]
+  }
+  const drawing = [...SHEETLESS].filter(([dex]) => dexRegionOf(dex) === region)
+  const cards = [
+    ...entries.map((e) => ({ at: nationalDex(e.dex), dex: e.dex, html: card(e, locale, css, pageUrl(e)) })),
+    ...drawing.map(([dex, species]) => ({ at: dex, dex, html: drawingCard(dex, species, m) })),
+  ].sort((a, b) => a.at - b.at || a.dex - b.dex)
+  const path = dexRegionPaths(region)[locale]
+  const main: Html = html`<div class="page-head">
+    <h1>${m.pokedex.regionH1(name)}</h1>
+    <p class="lead">${m.pokedex.regionIntro(name, c.inGame, c.total)}</p>
+    <p class="lead dex-goal-line">${m.pokedex.regionGoal(goalLine(c, locale))}</p>
+    <p class="lead-link"><a href="${ROUTES.tierList[locale]}">★ ${m.pokedex.tierLink} →</a></p>
+  </div>
+  ${regionNav(locale, region)}
+  ${filters(entries, m, false)}
+  <div class="dex-grid">${cards.map((x) => x.html)}</div>`
+  return layout(
+    {
+      id: 'pokedex',
+      locale,
+      title: m.pokedex.regionTitle(name),
+      description: m.pokedex.regionDescription(name, entries.length),
+      css: css.css(),
+      sub: { name, paths: dexRegionPaths(region) },
+      schema: [
+        {
+          '@type': 'ItemList',
+          '@id': `${absolute(path)}#list`,
+          name: m.pokedex.regionH1(name),
           numberOfItems: entries.length,
-          itemListElement: entries.map((e, i) => ({ '@type': 'ListItem', position: i + 1, name: e.name, url: absolute(`${pageUrl(e) ?? ROUTES.pokedex[locale]}#${e.slug}`) })),
+          itemListElement: entries.map((e, i) => ({ '@type': 'ListItem', position: i + 1, name: e.name, url: absolute(`${pageUrl(e) ?? path}#${e.slug}`) })),
         },
       ],
     },

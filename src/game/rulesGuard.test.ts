@@ -14,7 +14,7 @@ import { enterPlace } from './placeInterior'
 import { startEndless } from './endless'
 import { enterArena } from './riftArena'
 import { spawnWaveBoss } from './spawner'
-import { EVENTS } from '../data/waves'
+import { EVENTS, stageIndexAt } from '../data/waves'
 import type { Game } from './types'
 
 /**
@@ -293,6 +293,21 @@ const SCENARIOS = {
       gainXp(g, 3000)
     },
   },
+  /** Endless mode at 120:00, its event a swarm: only a species fit for a flyby leads it (`fitsFlyby`), never the stage's slow walker. */
+  endlessSwarm: {
+    start: { ...START, starter: 'charmander' },
+    seconds: 12,
+    stage: (g) => {
+      g.time = 120 * 60
+      g.nextEvent = 99
+      g.endless = { ...startEndless(g.time), nextEvent: g.time + 2, events: 1 }
+      // A slow walker beside a flyer: only the flyer may lead the swarm.
+      const stage = stageIndexAt(g.time)
+      g.roster = { ...g.roster, stages: g.roster.stages.map((pool, i) => (i === stage ? [['slowpoke', 4], ['pidgeotto', 1]] : pool)) }
+      g.player.revives = 3
+      gainXp(g, 3000)
+    },
+  },
 } as const satisfies Record<string, Scenario>
 
 type ScenarioId = keyof typeof SCENARIOS
@@ -303,25 +318,26 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
-  49: {
-    levelUps: '2998·45·12·78f86519',
-    mega: '1892·27·1·2d1d227c',
-    riftFall: '665·0·1·8722c904',
-    alphaHazards: '1002·2·19·4c8862d5',
-    nightBoss: '2093·36·17·04c2b2b6',
-    bag: '989·11·4·ebcf7333',
-    shop: '1526·99·21·aa50721c',
-    shopTms2: '1787·49·18·57c9b8dd',
-    evoGate: '1487·55·24·83509745',
-    porygonGate: '2074·69·37·77df1acd',
-    sketch: '1210·21·1·1d792b71',
-    legend: '1487·99·14·4ccd28a1',
-    waveLegend: '1998·22·17·db5ba4c3',
+  50: {
+    levelUps: '2998·48·12·992153f5',
+    mega: '1892·32·2·4007bb5c',
+    riftFall: '677·0·1·ae6fdef8',
+    alphaHazards: '1002·5·19·c9e4041a',
+    nightBoss: '2093·33·17·69f47627',
+    bag: '1124·31·3·794e8e99',
+    shop: '1521·90·19·6e610c72',
+    shopTms2: '1787·48·17·49635ffc',
+    evoGate: '1487·51·24·ce27401f',
+    porygonGate: '2074·65·37·8ae55e82',
+    sketch: '1210·14·1·89df727b',
+    legend: '1331·77·15·40127a08',
+    waveLegend: '1998·19·17·4d6fc931',
     cave: '2188·16·12·d2d47594',
     grotto: '2782·23·18·bb75df4d',
     underground: '3084·28·30·bb9ad367',
-    magicGuard: '1188·47·19·824b6342',
-    endlessCeiling: '845·0·26·41a089de',
+    magicGuard: '1188·37·19·33a5b975',
+    endlessCeiling: '826·0·26·b556bf61',
+    endlessSwarm: '844·9·26·eaac907f',
   },
 }
 

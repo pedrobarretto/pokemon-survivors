@@ -2,7 +2,7 @@ import { weightedPick } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
 import { ENDLESS_HORDE, stageIndexAt } from '../data/waves'
 import { burst, setScreenShake } from './effects'
-import { ENDLESS, endlessEventSize, REAPER, reaperDue, reaperHp, reaperSpeed, startEndless, type EndlessState } from './endless'
+import { ENDLESS, endlessEventSize, fitsFlyby, REAPER, reaperDue, reaperHp, reaperSpeed, startEndless, type EndlessState } from './endless'
 import { runMods } from './legend'
 import { blastHorde, spawnEnemy } from './enemies'
 import { dropCoins, dropPickup } from './pickups'
@@ -77,7 +77,10 @@ export const updateEndless = (g: Game) => {
     // Past the horde's ceiling an event comes in fewer, heavier foes, like the spawner's (`ENDLESS_HORDE`).
     const weight = endlessWeight(g)
     const count = Math.max(ENDLESS_HORDE.minEvent, dm.round(endlessEventSize(g.time) / weight))
-    if (pool.length > 0) (s.events % 2 === 0 ? spawnRing : spawnSwarm)(g, weightedPick(g.rng, pool), count, weight)
+    // A swarm only of species that fit a flyby (`fitsFlyby`); a stage with none brings a ring instead.
+    const flock = s.events % 2 === 0 ? [] : pool.filter(([id]) => fitsFlyby(id))
+    if (flock.length > 0) spawnSwarm(g, weightedPick(g.rng, flock), count, weight)
+    else if (pool.length > 0) spawnRing(g, weightedPick(g.rng, pool), count, weight)
     s.events++
     s.nextEvent = g.time + ENDLESS.eventEvery
   }

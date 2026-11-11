@@ -3,11 +3,22 @@ import manifest from '../data/sprites.generated.json'
 import { ENEMIES, type EnemyId } from '../data/enemies'
 import { GAME_SPECIES } from '../data/species'
 import { RUN_LENGTH } from '../data/waves'
-import { appearances, clock, gameDex, pokedex, regionOf } from './pokedex'
+import { DEX_REGIONS } from '../data/nationalDex'
+import { dexGoal } from '../game/dexRegions'
+import { appearances, clock, gameDex, pokedex, regionCounts, regionOf } from './pokedex'
 
 describe('pokedex', () => {
   it("keeps the in-game Pokédex to exactly the species the save may hold (`GAME_SPECIES`), gift-only companions out", () => {
     expect(new Set(gameDex().map((e) => e.dex))).toEqual(GAME_SPECIES)
+  })
+
+  it("counts each region the way its title does, so the game and the site show the same numbers (Kanto: 151 in the game, Mew left out)", () => {
+    for (const region of DEX_REGIONS) {
+      const c = regionCounts(region)
+      expect(c.goal).toBe(dexGoal(region).length)
+      expect(c.inGame).toBeLessThanOrEqual(c.total)
+    }
+    expect(regionCounts('kanto')).toMatchObject({ inGame: 151, total: 151, goal: 150, left: ['Mew'] })
   })
 
   const entries = pokedex()

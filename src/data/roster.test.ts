@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import roster from './roster.generated.json'
 import { ENEMIES } from './enemies'
-import { baseStatTotal, deriveEnemy, ROSTER, TIER_FLOORS, TIERS, tierOf, type RosterSpecies } from './roster'
+import { baseStatTotal, deriveEnemy, RAREST, rarityOf, ROSTER, TIER_FLOORS, TIERS, tierOf, type RosterSpecies } from './roster'
 import { STAGES } from './waves'
 
 const species = (stats: Partial<RosterSpecies['stats']>, types: RosterSpecies['types'] = ['normal']): RosterSpecies => ({
@@ -9,12 +9,22 @@ const species = (stats: Partial<RosterSpecies['stats']>, types: RosterSpecies['t
   name: 'Test',
   types,
   stats: { hp: 50, attack: 50, defense: 50, spAttack: 50, spDefense: 50, speed: 50, ...stats },
+  capture: 255,
 })
 
 describe('tierOf', () => {
   it('bands species by base stat total', () => {
     expect([195, 269, 270, 329, 330, 399, 400, 469, 470, 600].map(tierOf)).toEqual([1, 1, 2, 2, 3, 3, 4, 4, 5, 5])
     expect(TIER_FLOORS).toHaveLength(TIERS.length - 1)
+  })
+})
+
+describe('rarityOf', () => {
+  it('makes rarer species (lower capture rates) less likely, never below RAREST', () => {
+    expect(rarityOf(255)).toBe(1)
+    expect(rarityOf(45)).toBeCloseTo(0.35, 2)
+    expect(rarityOf(3)).toBe(RAREST)
+    expect(ROSTER.rattata.rarity).toBeGreaterThan(ROSTER.dratini.rarity ?? 1)
   })
 })
 

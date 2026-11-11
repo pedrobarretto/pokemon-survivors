@@ -12,7 +12,8 @@
       "spAttack": 20,
       "spDefense": 20,
       "speed": 45
-    }
+    },
+    "capture": 255
   },
   "metapod": {
     "dex": 11,
@@ -27,7 +28,8 @@
       "spAttack": 25,
       "spDefense": 25,
       "speed": 30
-    }
+    },
+    "capture": 120
   },
   "butterfree": {
     "dex": 12,
@@ -43,7 +45,8 @@
       "spAttack": 90,
       "spDefense": 80,
       "speed": 70
-    }
+    },
+    "capture": 45
   },
   "weedle": {
     "dex": 13,
@@ -59,7 +62,8 @@
       "spAttack": 20,
       "spDefense": 20,
       "speed": 50
-    }
+    },
+    "capture": 255
   },
   "kakuna": {
     "dex": 14,
@@ -75,7 +79,8 @@
       "spAttack": 25,
       "spDefense": 25,
       "speed": 35
-    }
+    },
+    "capture": 120
   },
   "beedrill": {
     "dex": 15,
@@ -91,7 +96,8 @@
       "spAttack": 45,
       "spDefense": 80,
       "speed": 75
-    }
+    },
+    "capture": 45
   },
   "pidgey": {
     "dex": 16,
@@ -107,7 +113,8 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 56
-    }
+    },
+    "capture": 255
   },
   "pidgeotto": {
     "dex": 17,
@@ -123,7 +130,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 71
-    }
+    },
+    "capture": 120
   },
   "pidgeot": {
     "dex": 18,
@@ -139,7 +147,8 @@
       "spAttack": 70,
       "spDefense": 70,
       "speed": 101
-    }
+    },
+    "capture": 45
   },
   "rattata": {
     "dex": 19,
@@ -154,7 +163,8 @@
       "spAttack": 25,
       "spDefense": 35,
       "speed": 72
-    }
+    },
+    "capture": 255
   },
   "raticate": {
     "dex": 20,
@@ -169,7 +179,8 @@
       "spAttack": 50,
       "spDefense": 70,
       "speed": 97
-    }
+    },
+    "capture": 127
   },
   "spearow": {
     "dex": 21,
@@ -185,7 +196,8 @@
       "spAttack": 31,
       "spDefense": 31,
       "speed": 70
-    }
+    },
+    "capture": 255
   },
   "fearow": {
     "dex": 22,
@@ -201,7 +213,8 @@
       "spAttack": 61,
       "spDefense": 61,
       "speed": 100
-    }
+    },
+    "capture": 90
   },
   "ekans": {
     "dex": 23,
@@ -216,7 +229,8 @@
       "spAttack": 40,
       "spDefense": 54,
       "speed": 55
-    }
+    },
+    "capture": 255
   },
   "arbok": {
     "dex": 24,
@@ -231,7 +245,40 @@
       "spAttack": 65,
       "spDefense": 79,
       "speed": 80
-    }
+    },
+    "capture": 90
+  },
+  "pikachu": {
+    "dex": 25,
+    "name": "Pikachu",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 35,
+      "attack": 55,
+      "defense": 40,
+      "spAttack": 50,
+      "spDefense": 50,
+      "speed": 90
+    },
+    "capture": 190
+  },
+  "raichu": {
+    "dex": 26,
+    "name": "Raichu",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 90,
+      "defense": 55,
+      "spAttack": 90,
+      "spDefense": 80,
+      "speed": 110
+    },
+    "capture": 75
   },
   "sandshrew": {
     "dex": 27,
@@ -246,7 +293,8 @@
       "spAttack": 20,
       "spDefense": 30,
       "speed": 40
-    }
+    },
+    "capture": 255
   },
   "sandslash": {
     "dex": 28,
@@ -261,7 +309,8 @@
       "spAttack": 45,
       "spDefense": 55,
       "speed": 65
-    }
+    },
+    "capture": 90
   },
   "nidorina": {
     "dex": 30,
@@ -276,7 +325,8 @@
       "spAttack": 55,
       "spDefense": 55,
       "speed": 56
-    }
+    },
+    "capture": 120
   },
   "nidorino": {
     "dex": 33,
@@ -291,7 +341,8 @@
       "spAttack": 55,
       "spDefense": 55,
       "speed": 65
-    }
+    },
+    "capture": 120
   },
   "nidoking": {
     "dex": 34,
@@ -307,7 +358,8 @@
       "spAttack": 85,
       "spDefense": 75,
       "speed": 85
-    }
+    },
+    "capture": 45
   },
   "clefairy": {
     "dex": 35,
@@ -322,7 +374,8 @@
       "spAttack": 60,
       "spDefense": 65,
       "speed": 35
-    }
+    },
+    "capture": 150
   },
   "clefable": {
     "dex": 36,
@@ -337,7 +390,8 @@
       "spAttack": 95,
       "spDefense": 90,
       "speed": 60
-    }
+    },
+    "capture": 25
   },
   "vulpix": {
     "dex": 37,
@@ -352,7 +406,8 @@
       "spAttack": 50,
       "spDefense": 65,
       "speed": 65
-    }
+    },
+    "capture": 190
   },
   "ninetales": {
     "dex": 38,
@@ -367,7 +422,8 @@
       "spAttack": 81,
       "spDefense": 100,
       "speed": 100
-    }
+    },
+    "capture": 75
   },
   "jigglypuff": {
     "dex": 39,
@@ -383,7 +439,8 @@
       "spAttack": 45,
       "spDefense": 25,
       "speed": 20
-    }
+    },
+    "capture": 170
   },
   "wigglytuff": {
     "dex": 40,
@@ -399,7 +456,8 @@
       "spAttack": 85,
       "spDefense": 50,
       "speed": 45
-    }
+    },
+    "capture": 50
   },
   "zubat": {
     "dex": 41,
@@ -415,7 +473,8 @@
       "spAttack": 30,
       "spDefense": 40,
       "speed": 55
-    }
+    },
+    "capture": 255
   },
   "golbat": {
     "dex": 42,
@@ -431,7 +490,8 @@
       "spAttack": 65,
       "spDefense": 75,
       "speed": 90
-    }
+    },
+    "capture": 90
   },
   "oddish": {
     "dex": 43,
@@ -447,7 +507,8 @@
       "spAttack": 75,
       "spDefense": 65,
       "speed": 30
-    }
+    },
+    "capture": 255
   },
   "gloom": {
     "dex": 44,
@@ -463,7 +524,8 @@
       "spAttack": 85,
       "spDefense": 75,
       "speed": 40
-    }
+    },
+    "capture": 120
   },
   "vileplume": {
     "dex": 45,
@@ -479,7 +541,8 @@
       "spAttack": 110,
       "spDefense": 90,
       "speed": 50
-    }
+    },
+    "capture": 45
   },
   "paras": {
     "dex": 46,
@@ -495,7 +558,8 @@
       "spAttack": 45,
       "spDefense": 55,
       "speed": 25
-    }
+    },
+    "capture": 190
   },
   "parasect": {
     "dex": 47,
@@ -511,7 +575,8 @@
       "spAttack": 60,
       "spDefense": 80,
       "speed": 30
-    }
+    },
+    "capture": 75
   },
   "venonat": {
     "dex": 48,
@@ -527,7 +592,8 @@
       "spAttack": 40,
       "spDefense": 55,
       "speed": 45
-    }
+    },
+    "capture": 190
   },
   "venomoth": {
     "dex": 49,
@@ -543,7 +609,8 @@
       "spAttack": 90,
       "spDefense": 75,
       "speed": 90
-    }
+    },
+    "capture": 75
   },
   "diglett": {
     "dex": 50,
@@ -558,7 +625,8 @@
       "spAttack": 35,
       "spDefense": 45,
       "speed": 95
-    }
+    },
+    "capture": 255
   },
   "dugtrio": {
     "dex": 51,
@@ -573,7 +641,8 @@
       "spAttack": 50,
       "spDefense": 70,
       "speed": 120
-    }
+    },
+    "capture": 50
   },
   "persian": {
     "dex": 53,
@@ -588,7 +657,8 @@
       "spAttack": 65,
       "spDefense": 65,
       "speed": 115
-    }
+    },
+    "capture": 90
   },
   "psyduck": {
     "dex": 54,
@@ -603,7 +673,8 @@
       "spAttack": 65,
       "spDefense": 50,
       "speed": 55
-    }
+    },
+    "capture": 190
   },
   "golduck": {
     "dex": 55,
@@ -618,7 +689,8 @@
       "spAttack": 95,
       "spDefense": 80,
       "speed": 85
-    }
+    },
+    "capture": 75
   },
   "mankey": {
     "dex": 56,
@@ -633,7 +705,8 @@
       "spAttack": 35,
       "spDefense": 45,
       "speed": 70
-    }
+    },
+    "capture": 190
   },
   "primeape": {
     "dex": 57,
@@ -648,7 +721,8 @@
       "spAttack": 60,
       "spDefense": 70,
       "speed": 95
-    }
+    },
+    "capture": 75
   },
   "growlithe": {
     "dex": 58,
@@ -663,7 +737,8 @@
       "spAttack": 70,
       "spDefense": 50,
       "speed": 60
-    }
+    },
+    "capture": 190
   },
   "arcanine": {
     "dex": 59,
@@ -678,7 +753,8 @@
       "spAttack": 100,
       "spDefense": 80,
       "speed": 95
-    }
+    },
+    "capture": 75
   },
   "poliwag": {
     "dex": 60,
@@ -693,7 +769,8 @@
       "spAttack": 40,
       "spDefense": 40,
       "speed": 90
-    }
+    },
+    "capture": 255
   },
   "poliwhirl": {
     "dex": 61,
@@ -708,7 +785,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 90
-    }
+    },
+    "capture": 120
   },
   "poliwrath": {
     "dex": 62,
@@ -724,7 +802,56 @@
       "spAttack": 70,
       "spDefense": 90,
       "speed": 70
-    }
+    },
+    "capture": 45
+  },
+  "abra": {
+    "dex": 63,
+    "name": "Abra",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 25,
+      "attack": 20,
+      "defense": 15,
+      "spAttack": 105,
+      "spDefense": 55,
+      "speed": 90
+    },
+    "capture": 200
+  },
+  "kadabra": {
+    "dex": 64,
+    "name": "Kadabra",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 35,
+      "defense": 30,
+      "spAttack": 120,
+      "spDefense": 70,
+      "speed": 105
+    },
+    "capture": 100
+  },
+  "alakazam": {
+    "dex": 65,
+    "name": "Alakazam",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 50,
+      "defense": 45,
+      "spAttack": 135,
+      "spDefense": 95,
+      "speed": 120
+    },
+    "capture": 50
   },
   "machop": {
     "dex": 66,
@@ -739,7 +866,8 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 35
-    }
+    },
+    "capture": 180
   },
   "machoke": {
     "dex": 67,
@@ -754,7 +882,8 @@
       "spAttack": 50,
       "spDefense": 60,
       "speed": 45
-    }
+    },
+    "capture": 90
   },
   "machamp": {
     "dex": 68,
@@ -769,7 +898,8 @@
       "spAttack": 65,
       "spDefense": 85,
       "speed": 55
-    }
+    },
+    "capture": 45
   },
   "bellsprout": {
     "dex": 69,
@@ -785,7 +915,8 @@
       "spAttack": 70,
       "spDefense": 30,
       "speed": 40
-    }
+    },
+    "capture": 255
   },
   "weepinbell": {
     "dex": 70,
@@ -801,7 +932,8 @@
       "spAttack": 85,
       "spDefense": 45,
       "speed": 55
-    }
+    },
+    "capture": 120
   },
   "victreebel": {
     "dex": 71,
@@ -817,7 +949,8 @@
       "spAttack": 100,
       "spDefense": 70,
       "speed": 70
-    }
+    },
+    "capture": 45
   },
   "tentacool": {
     "dex": 72,
@@ -833,7 +966,8 @@
       "spAttack": 50,
       "spDefense": 100,
       "speed": 70
-    }
+    },
+    "capture": 190
   },
   "tentacruel": {
     "dex": 73,
@@ -849,7 +983,8 @@
       "spAttack": 80,
       "spDefense": 120,
       "speed": 100
-    }
+    },
+    "capture": 60
   },
   "geodude": {
     "dex": 74,
@@ -865,7 +1000,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 20
-    }
+    },
+    "capture": 255
   },
   "graveler": {
     "dex": 75,
@@ -881,7 +1017,8 @@
       "spAttack": 45,
       "spDefense": 45,
       "speed": 35
-    }
+    },
+    "capture": 120
   },
   "golem": {
     "dex": 76,
@@ -897,7 +1034,8 @@
       "spAttack": 55,
       "spDefense": 65,
       "speed": 45
-    }
+    },
+    "capture": 45
   },
   "ponyta": {
     "dex": 77,
@@ -912,7 +1050,8 @@
       "spAttack": 65,
       "spDefense": 65,
       "speed": 90
-    }
+    },
+    "capture": 190
   },
   "rapidash": {
     "dex": 78,
@@ -927,7 +1066,8 @@
       "spAttack": 80,
       "spDefense": 80,
       "speed": 105
-    }
+    },
+    "capture": 60
   },
   "slowpoke": {
     "dex": 79,
@@ -943,7 +1083,8 @@
       "spAttack": 40,
       "spDefense": 40,
       "speed": 15
-    }
+    },
+    "capture": 190
   },
   "slowbro": {
     "dex": 80,
@@ -959,7 +1100,8 @@
       "spAttack": 100,
       "spDefense": 80,
       "speed": 30
-    }
+    },
+    "capture": 75
   },
   "magneton": {
     "dex": 82,
@@ -975,7 +1117,8 @@
       "spAttack": 120,
       "spDefense": 70,
       "speed": 70
-    }
+    },
+    "capture": 60
   },
   "farfetchd": {
     "dex": 83,
@@ -991,7 +1134,8 @@
       "spAttack": 58,
       "spDefense": 62,
       "speed": 60
-    }
+    },
+    "capture": 45
   },
   "doduo": {
     "dex": 84,
@@ -1007,7 +1151,8 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 75
-    }
+    },
+    "capture": 190
   },
   "dodrio": {
     "dex": 85,
@@ -1023,7 +1168,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 110
-    }
+    },
+    "capture": 45
   },
   "seel": {
     "dex": 86,
@@ -1038,7 +1184,8 @@
       "spAttack": 45,
       "spDefense": 70,
       "speed": 45
-    }
+    },
+    "capture": 190
   },
   "dewgong": {
     "dex": 87,
@@ -1054,7 +1201,8 @@
       "spAttack": 70,
       "spDefense": 95,
       "speed": 70
-    }
+    },
+    "capture": 75
   },
   "grimer": {
     "dex": 88,
@@ -1069,7 +1217,8 @@
       "spAttack": 40,
       "spDefense": 50,
       "speed": 25
-    }
+    },
+    "capture": 190
   },
   "muk": {
     "dex": 89,
@@ -1084,7 +1233,8 @@
       "spAttack": 65,
       "spDefense": 100,
       "speed": 50
-    }
+    },
+    "capture": 75
   },
   "shellder": {
     "dex": 90,
@@ -1099,7 +1249,8 @@
       "spAttack": 45,
       "spDefense": 25,
       "speed": 40
-    }
+    },
+    "capture": 190
   },
   "cloyster": {
     "dex": 91,
@@ -1115,7 +1266,8 @@
       "spAttack": 85,
       "spDefense": 45,
       "speed": 70
-    }
+    },
+    "capture": 60
   },
   "gastly": {
     "dex": 92,
@@ -1131,7 +1283,8 @@
       "spAttack": 100,
       "spDefense": 35,
       "speed": 80
-    }
+    },
+    "capture": 190
   },
   "haunter": {
     "dex": 93,
@@ -1147,7 +1300,8 @@
       "spAttack": 115,
       "spDefense": 55,
       "speed": 95
-    }
+    },
+    "capture": 90
   },
   "gengar": {
     "dex": 94,
@@ -1163,7 +1317,8 @@
       "spAttack": 130,
       "spDefense": 75,
       "speed": 110
-    }
+    },
+    "capture": 45
   },
   "drowzee": {
     "dex": 96,
@@ -1178,7 +1333,8 @@
       "spAttack": 43,
       "spDefense": 90,
       "speed": 42
-    }
+    },
+    "capture": 190
   },
   "hypno": {
     "dex": 97,
@@ -1193,7 +1349,8 @@
       "spAttack": 73,
       "spDefense": 115,
       "speed": 67
-    }
+    },
+    "capture": 75
   },
   "krabby": {
     "dex": 98,
@@ -1208,7 +1365,8 @@
       "spAttack": 25,
       "spDefense": 25,
       "speed": 50
-    }
+    },
+    "capture": 225
   },
   "kingler": {
     "dex": 99,
@@ -1223,7 +1381,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 75
-    }
+    },
+    "capture": 60
   },
   "exeggcute": {
     "dex": 102,
@@ -1239,7 +1398,8 @@
       "spAttack": 60,
       "spDefense": 45,
       "speed": 40
-    }
+    },
+    "capture": 90
   },
   "exeggutor": {
     "dex": 103,
@@ -1255,7 +1415,8 @@
       "spAttack": 125,
       "spDefense": 75,
       "speed": 55
-    }
+    },
+    "capture": 45
   },
   "cubone": {
     "dex": 104,
@@ -1270,7 +1431,8 @@
       "spAttack": 40,
       "spDefense": 50,
       "speed": 35
-    }
+    },
+    "capture": 190
   },
   "marowak": {
     "dex": 105,
@@ -1285,7 +1447,8 @@
       "spAttack": 50,
       "spDefense": 80,
       "speed": 45
-    }
+    },
+    "capture": 75
   },
   "hitmonchan": {
     "dex": 107,
@@ -1300,7 +1463,8 @@
       "spAttack": 35,
       "spDefense": 110,
       "speed": 76
-    }
+    },
+    "capture": 45
   },
   "lickitung": {
     "dex": 108,
@@ -1315,7 +1479,8 @@
       "spAttack": 60,
       "spDefense": 75,
       "speed": 30
-    }
+    },
+    "capture": 45
   },
   "koffing": {
     "dex": 109,
@@ -1330,7 +1495,8 @@
       "spAttack": 60,
       "spDefense": 45,
       "speed": 35
-    }
+    },
+    "capture": 190
   },
   "weezing": {
     "dex": 110,
@@ -1345,7 +1511,8 @@
       "spAttack": 85,
       "spDefense": 70,
       "speed": 60
-    }
+    },
+    "capture": 60
   },
   "rhyhorn": {
     "dex": 111,
@@ -1361,7 +1528,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 25
-    }
+    },
+    "capture": 120
   },
   "rhydon": {
     "dex": 112,
@@ -1377,7 +1545,8 @@
       "spAttack": 45,
       "spDefense": 45,
       "speed": 40
-    }
+    },
+    "capture": 60
   },
   "tangela": {
     "dex": 114,
@@ -1392,7 +1561,8 @@
       "spAttack": 100,
       "spDefense": 40,
       "speed": 60
-    }
+    },
+    "capture": 45
   },
   "kangaskhan": {
     "dex": 115,
@@ -1407,7 +1577,8 @@
       "spAttack": 40,
       "spDefense": 80,
       "speed": 90
-    }
+    },
+    "capture": 45
   },
   "horsea": {
     "dex": 116,
@@ -1422,7 +1593,8 @@
       "spAttack": 70,
       "spDefense": 25,
       "speed": 60
-    }
+    },
+    "capture": 225
   },
   "seadra": {
     "dex": 117,
@@ -1437,7 +1609,8 @@
       "spAttack": 95,
       "spDefense": 45,
       "speed": 85
-    }
+    },
+    "capture": 75
   },
   "goldeen": {
     "dex": 118,
@@ -1452,7 +1625,8 @@
       "spAttack": 35,
       "spDefense": 50,
       "speed": 63
-    }
+    },
+    "capture": 225
   },
   "seaking": {
     "dex": 119,
@@ -1467,7 +1641,8 @@
       "spAttack": 65,
       "spDefense": 80,
       "speed": 68
-    }
+    },
+    "capture": 60
   },
   "staryu": {
     "dex": 120,
@@ -1482,7 +1657,8 @@
       "spAttack": 70,
       "spDefense": 55,
       "speed": 85
-    }
+    },
+    "capture": 225
   },
   "starmie": {
     "dex": 121,
@@ -1498,7 +1674,8 @@
       "spAttack": 100,
       "spDefense": 85,
       "speed": 115
-    }
+    },
+    "capture": 60
   },
   "mrMime": {
     "dex": 122,
@@ -1514,7 +1691,8 @@
       "spAttack": 100,
       "spDefense": 120,
       "speed": 90
-    }
+    },
+    "capture": 45
   },
   "scyther": {
     "dex": 123,
@@ -1530,7 +1708,8 @@
       "spAttack": 55,
       "spDefense": 80,
       "speed": 105
-    }
+    },
+    "capture": 45
   },
   "jynx": {
     "dex": 124,
@@ -1546,7 +1725,8 @@
       "spAttack": 115,
       "spDefense": 95,
       "speed": 95
-    }
+    },
+    "capture": 45
   },
   "electabuzz": {
     "dex": 125,
@@ -1561,7 +1741,8 @@
       "spAttack": 95,
       "spDefense": 85,
       "speed": 105
-    }
+    },
+    "capture": 45
   },
   "magmar": {
     "dex": 126,
@@ -1576,7 +1757,8 @@
       "spAttack": 100,
       "spDefense": 85,
       "speed": 93
-    }
+    },
+    "capture": 45
   },
   "pinsir": {
     "dex": 127,
@@ -1591,7 +1773,8 @@
       "spAttack": 55,
       "spDefense": 70,
       "speed": 85
-    }
+    },
+    "capture": 45
   },
   "tauros": {
     "dex": 128,
@@ -1606,7 +1789,8 @@
       "spAttack": 40,
       "spDefense": 70,
       "speed": 110
-    }
+    },
+    "capture": 45
   },
   "magikarp": {
     "dex": 129,
@@ -1621,7 +1805,8 @@
       "spAttack": 15,
       "spDefense": 20,
       "speed": 80
-    }
+    },
+    "capture": 255
   },
   "gyarados": {
     "dex": 130,
@@ -1637,7 +1822,8 @@
       "spAttack": 60,
       "spDefense": 100,
       "speed": 81
-    }
+    },
+    "capture": 45
   },
   "lapras": {
     "dex": 131,
@@ -1653,7 +1839,8 @@
       "spAttack": 85,
       "spDefense": 95,
       "speed": 60
-    }
+    },
+    "capture": 45
   },
   "ditto": {
     "dex": 132,
@@ -1668,7 +1855,24 @@
       "spAttack": 48,
       "spDefense": 48,
       "speed": 48
-    }
+    },
+    "capture": 35
+  },
+  "eevee": {
+    "dex": 133,
+    "name": "Eevee",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 55,
+      "defense": 50,
+      "spAttack": 45,
+      "spDefense": 65,
+      "speed": 55
+    },
+    "capture": 45
   },
   "vaporeon": {
     "dex": 134,
@@ -1683,7 +1887,8 @@
       "spAttack": 110,
       "spDefense": 95,
       "speed": 65
-    }
+    },
+    "capture": 45
   },
   "jolteon": {
     "dex": 135,
@@ -1698,7 +1903,8 @@
       "spAttack": 110,
       "spDefense": 95,
       "speed": 130
-    }
+    },
+    "capture": 45
   },
   "flareon": {
     "dex": 136,
@@ -1713,7 +1919,8 @@
       "spAttack": 95,
       "spDefense": 110,
       "speed": 65
-    }
+    },
+    "capture": 45
   },
   "porygon": {
     "dex": 137,
@@ -1728,7 +1935,8 @@
       "spAttack": 85,
       "spDefense": 75,
       "speed": 40
-    }
+    },
+    "capture": 45
   },
   "omanyte": {
     "dex": 138,
@@ -1744,7 +1952,8 @@
       "spAttack": 90,
       "spDefense": 55,
       "speed": 35
-    }
+    },
+    "capture": 45
   },
   "omastar": {
     "dex": 139,
@@ -1760,7 +1969,8 @@
       "spAttack": 115,
       "spDefense": 70,
       "speed": 55
-    }
+    },
+    "capture": 45
   },
   "kabuto": {
     "dex": 140,
@@ -1776,7 +1986,8 @@
       "spAttack": 55,
       "spDefense": 45,
       "speed": 55
-    }
+    },
+    "capture": 45
   },
   "kabutops": {
     "dex": 141,
@@ -1792,7 +2003,8 @@
       "spAttack": 65,
       "spDefense": 70,
       "speed": 80
-    }
+    },
+    "capture": 45
   },
   "aerodactyl": {
     "dex": 142,
@@ -1808,7 +2020,8 @@
       "spAttack": 60,
       "spDefense": 75,
       "speed": 130
-    }
+    },
+    "capture": 45
   },
   "dratini": {
     "dex": 147,
@@ -1823,7 +2036,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 50
-    }
+    },
+    "capture": 45
   },
   "dragonair": {
     "dex": 148,
@@ -1838,7 +2052,25 @@
       "spAttack": 70,
       "spDefense": 70,
       "speed": 70
-    }
+    },
+    "capture": 45
+  },
+  "dragonite": {
+    "dex": 149,
+    "name": "Dragonite",
+    "types": [
+      "dragon",
+      "flying"
+    ],
+    "stats": {
+      "hp": 91,
+      "attack": 134,
+      "defense": 95,
+      "spAttack": 100,
+      "spDefense": 100,
+      "speed": 80
+    },
+    "capture": 45
   },
   "sentret": {
     "dex": 161,
@@ -1853,7 +2085,8 @@
       "spAttack": 35,
       "spDefense": 45,
       "speed": 20
-    }
+    },
+    "capture": 255
   },
   "furret": {
     "dex": 162,
@@ -1868,7 +2101,8 @@
       "spAttack": 45,
       "spDefense": 55,
       "speed": 90
-    }
+    },
+    "capture": 90
   },
   "hoothoot": {
     "dex": 163,
@@ -1884,7 +2118,8 @@
       "spAttack": 36,
       "spDefense": 56,
       "speed": 50
-    }
+    },
+    "capture": 255
   },
   "noctowl": {
     "dex": 164,
@@ -1900,7 +2135,8 @@
       "spAttack": 86,
       "spDefense": 96,
       "speed": 70
-    }
+    },
+    "capture": 90
   },
   "ledyba": {
     "dex": 165,
@@ -1916,7 +2152,8 @@
       "spAttack": 40,
       "spDefense": 80,
       "speed": 55
-    }
+    },
+    "capture": 255
   },
   "ledian": {
     "dex": 166,
@@ -1932,7 +2169,8 @@
       "spAttack": 55,
       "spDefense": 110,
       "speed": 85
-    }
+    },
+    "capture": 90
   },
   "spinarak": {
     "dex": 167,
@@ -1948,7 +2186,8 @@
       "spAttack": 40,
       "spDefense": 40,
       "speed": 30
-    }
+    },
+    "capture": 255
   },
   "ariados": {
     "dex": 168,
@@ -1964,7 +2203,8 @@
       "spAttack": 60,
       "spDefense": 70,
       "speed": 40
-    }
+    },
+    "capture": 90
   },
   "crobat": {
     "dex": 169,
@@ -1980,7 +2220,8 @@
       "spAttack": 70,
       "spDefense": 80,
       "speed": 130
-    }
+    },
+    "capture": 90
   },
   "chinchou": {
     "dex": 170,
@@ -1996,7 +2237,8 @@
       "spAttack": 56,
       "spDefense": 56,
       "speed": 67
-    }
+    },
+    "capture": 190
   },
   "lanturn": {
     "dex": 171,
@@ -2012,7 +2254,24 @@
       "spAttack": 76,
       "spDefense": 76,
       "speed": 67
-    }
+    },
+    "capture": 75
+  },
+  "pichu": {
+    "dex": 172,
+    "name": "Pichu",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 20,
+      "attack": 40,
+      "defense": 15,
+      "spAttack": 35,
+      "spDefense": 35,
+      "speed": 60
+    },
+    "capture": 190
   },
   "cleffa": {
     "dex": 173,
@@ -2027,7 +2286,8 @@
       "spAttack": 45,
       "spDefense": 55,
       "speed": 15
-    }
+    },
+    "capture": 150
   },
   "igglybuff": {
     "dex": 174,
@@ -2043,7 +2303,25 @@
       "spAttack": 40,
       "spDefense": 20,
       "speed": 15
-    }
+    },
+    "capture": 170
+  },
+  "togetic": {
+    "dex": 176,
+    "name": "Togetic",
+    "types": [
+      "fairy",
+      "flying"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 40,
+      "defense": 85,
+      "spAttack": 80,
+      "spDefense": 105,
+      "speed": 40
+    },
+    "capture": 75
   },
   "natu": {
     "dex": 177,
@@ -2059,7 +2337,8 @@
       "spAttack": 70,
       "spDefense": 45,
       "speed": 70
-    }
+    },
+    "capture": 190
   },
   "xatu": {
     "dex": 178,
@@ -2075,7 +2354,8 @@
       "spAttack": 95,
       "spDefense": 70,
       "speed": 95
-    }
+    },
+    "capture": 75
   },
   "mareep": {
     "dex": 179,
@@ -2090,7 +2370,8 @@
       "spAttack": 65,
       "spDefense": 45,
       "speed": 35
-    }
+    },
+    "capture": 235
   },
   "flaaffy": {
     "dex": 180,
@@ -2105,7 +2386,8 @@
       "spAttack": 80,
       "spDefense": 60,
       "speed": 45
-    }
+    },
+    "capture": 120
   },
   "ampharos": {
     "dex": 181,
@@ -2120,7 +2402,8 @@
       "spAttack": 115,
       "spDefense": 90,
       "speed": 55
-    }
+    },
+    "capture": 45
   },
   "bellossom": {
     "dex": 182,
@@ -2135,7 +2418,8 @@
       "spAttack": 90,
       "spDefense": 100,
       "speed": 50
-    }
+    },
+    "capture": 45
   },
   "marill": {
     "dex": 183,
@@ -2151,7 +2435,8 @@
       "spAttack": 20,
       "spDefense": 50,
       "speed": 40
-    }
+    },
+    "capture": 190
   },
   "azumarill": {
     "dex": 184,
@@ -2167,7 +2452,8 @@
       "spAttack": 60,
       "spDefense": 80,
       "speed": 50
-    }
+    },
+    "capture": 75
   },
   "sudowoodo": {
     "dex": 185,
@@ -2182,7 +2468,8 @@
       "spAttack": 30,
       "spDefense": 65,
       "speed": 30
-    }
+    },
+    "capture": 65
   },
   "politoed": {
     "dex": 186,
@@ -2197,7 +2484,8 @@
       "spAttack": 90,
       "spDefense": 100,
       "speed": 70
-    }
+    },
+    "capture": 45
   },
   "hoppip": {
     "dex": 187,
@@ -2213,7 +2501,8 @@
       "spAttack": 35,
       "spDefense": 55,
       "speed": 50
-    }
+    },
+    "capture": 255
   },
   "skiploom": {
     "dex": 188,
@@ -2229,7 +2518,8 @@
       "spAttack": 45,
       "spDefense": 65,
       "speed": 80
-    }
+    },
+    "capture": 120
   },
   "jumpluff": {
     "dex": 189,
@@ -2245,7 +2535,8 @@
       "spAttack": 55,
       "spDefense": 95,
       "speed": 110
-    }
+    },
+    "capture": 45
   },
   "aipom": {
     "dex": 190,
@@ -2260,7 +2551,8 @@
       "spAttack": 40,
       "spDefense": 55,
       "speed": 85
-    }
+    },
+    "capture": 45
   },
   "sunkern": {
     "dex": 191,
@@ -2275,7 +2567,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 30
-    }
+    },
+    "capture": 235
   },
   "sunflora": {
     "dex": 192,
@@ -2290,7 +2583,8 @@
       "spAttack": 105,
       "spDefense": 85,
       "speed": 30
-    }
+    },
+    "capture": 120
   },
   "yanma": {
     "dex": 193,
@@ -2306,7 +2600,8 @@
       "spAttack": 75,
       "spDefense": 45,
       "speed": 95
-    }
+    },
+    "capture": 75
   },
   "wooper": {
     "dex": 194,
@@ -2322,7 +2617,8 @@
       "spAttack": 25,
       "spDefense": 25,
       "speed": 15
-    }
+    },
+    "capture": 255
   },
   "quagsire": {
     "dex": 195,
@@ -2338,7 +2634,8 @@
       "spAttack": 65,
       "spDefense": 65,
       "speed": 35
-    }
+    },
+    "capture": 90
   },
   "espeon": {
     "dex": 196,
@@ -2353,7 +2650,24 @@
       "spAttack": 130,
       "spDefense": 95,
       "speed": 110
-    }
+    },
+    "capture": 45
+  },
+  "umbreon": {
+    "dex": 197,
+    "name": "Umbreon",
+    "types": [
+      "dark"
+    ],
+    "stats": {
+      "hp": 95,
+      "attack": 65,
+      "defense": 110,
+      "spAttack": 60,
+      "spDefense": 130,
+      "speed": 65
+    },
+    "capture": 45
   },
   "murkrow": {
     "dex": 198,
@@ -2369,7 +2683,8 @@
       "spAttack": 85,
       "spDefense": 42,
       "speed": 91
-    }
+    },
+    "capture": 30
   },
   "slowking": {
     "dex": 199,
@@ -2385,7 +2700,8 @@
       "spAttack": 100,
       "spDefense": 110,
       "speed": 30
-    }
+    },
+    "capture": 70
   },
   "misdreavus": {
     "dex": 200,
@@ -2400,7 +2716,8 @@
       "spAttack": 85,
       "spDefense": 85,
       "speed": 85
-    }
+    },
+    "capture": 45
   },
   "wobbuffet": {
     "dex": 202,
@@ -2415,7 +2732,8 @@
       "spAttack": 33,
       "spDefense": 58,
       "speed": 33
-    }
+    },
+    "capture": 45
   },
   "girafarig": {
     "dex": 203,
@@ -2431,7 +2749,8 @@
       "spAttack": 90,
       "spDefense": 65,
       "speed": 85
-    }
+    },
+    "capture": 60
   },
   "pineco": {
     "dex": 204,
@@ -2446,7 +2765,8 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 15
-    }
+    },
+    "capture": 190
   },
   "forretress": {
     "dex": 205,
@@ -2462,7 +2782,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 40
-    }
+    },
+    "capture": 75
   },
   "dunsparce": {
     "dex": 206,
@@ -2477,7 +2798,8 @@
       "spAttack": 65,
       "spDefense": 65,
       "speed": 45
-    }
+    },
+    "capture": 190
   },
   "gligar": {
     "dex": 207,
@@ -2493,7 +2815,8 @@
       "spAttack": 35,
       "spDefense": 65,
       "speed": 85
-    }
+    },
+    "capture": 60
   },
   "steelix": {
     "dex": 208,
@@ -2509,7 +2832,8 @@
       "spAttack": 55,
       "spDefense": 65,
       "speed": 30
-    }
+    },
+    "capture": 25
   },
   "snubbull": {
     "dex": 209,
@@ -2524,7 +2848,8 @@
       "spAttack": 40,
       "spDefense": 40,
       "speed": 30
-    }
+    },
+    "capture": 190
   },
   "granbull": {
     "dex": 210,
@@ -2539,7 +2864,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 45
-    }
+    },
+    "capture": 75
   },
   "qwilfish": {
     "dex": 211,
@@ -2555,7 +2881,8 @@
       "spAttack": 55,
       "spDefense": 55,
       "speed": 85
-    }
+    },
+    "capture": 45
   },
   "scizor": {
     "dex": 212,
@@ -2571,7 +2898,8 @@
       "spAttack": 55,
       "spDefense": 80,
       "speed": 65
-    }
+    },
+    "capture": 25
   },
   "shuckle": {
     "dex": 213,
@@ -2587,7 +2915,8 @@
       "spAttack": 10,
       "spDefense": 230,
       "speed": 5
-    }
+    },
+    "capture": 190
   },
   "heracross": {
     "dex": 214,
@@ -2603,7 +2932,8 @@
       "spAttack": 40,
       "spDefense": 95,
       "speed": 85
-    }
+    },
+    "capture": 45
   },
   "sneasel": {
     "dex": 215,
@@ -2619,7 +2949,8 @@
       "spAttack": 35,
       "spDefense": 75,
       "speed": 115
-    }
+    },
+    "capture": 60
   },
   "teddiursa": {
     "dex": 216,
@@ -2634,7 +2965,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 40
-    }
+    },
+    "capture": 120
   },
   "ursaring": {
     "dex": 217,
@@ -2649,7 +2981,8 @@
       "spAttack": 75,
       "spDefense": 75,
       "speed": 55
-    }
+    },
+    "capture": 60
   },
   "slugma": {
     "dex": 218,
@@ -2664,7 +2997,8 @@
       "spAttack": 70,
       "spDefense": 40,
       "speed": 20
-    }
+    },
+    "capture": 190
   },
   "magcargo": {
     "dex": 219,
@@ -2680,7 +3014,8 @@
       "spAttack": 90,
       "spDefense": 80,
       "speed": 30
-    }
+    },
+    "capture": 75
   },
   "swinub": {
     "dex": 220,
@@ -2696,7 +3031,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 50
-    }
+    },
+    "capture": 225
   },
   "piloswine": {
     "dex": 221,
@@ -2712,7 +3048,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 50
-    }
+    },
+    "capture": 75
   },
   "corsola": {
     "dex": 222,
@@ -2728,7 +3065,8 @@
       "spAttack": 65,
       "spDefense": 95,
       "speed": 35
-    }
+    },
+    "capture": 60
   },
   "remoraid": {
     "dex": 223,
@@ -2743,7 +3081,8 @@
       "spAttack": 65,
       "spDefense": 35,
       "speed": 65
-    }
+    },
+    "capture": 190
   },
   "octillery": {
     "dex": 224,
@@ -2758,7 +3097,8 @@
       "spAttack": 105,
       "spDefense": 75,
       "speed": 45
-    }
+    },
+    "capture": 75
   },
   "delibird": {
     "dex": 225,
@@ -2774,7 +3114,8 @@
       "spAttack": 65,
       "spDefense": 45,
       "speed": 75
-    }
+    },
+    "capture": 45
   },
   "mantine": {
     "dex": 226,
@@ -2790,7 +3131,8 @@
       "spAttack": 80,
       "spDefense": 140,
       "speed": 70
-    }
+    },
+    "capture": 25
   },
   "skarmory": {
     "dex": 227,
@@ -2806,7 +3148,8 @@
       "spAttack": 40,
       "spDefense": 70,
       "speed": 70
-    }
+    },
+    "capture": 25
   },
   "houndour": {
     "dex": 228,
@@ -2822,7 +3165,8 @@
       "spAttack": 80,
       "spDefense": 50,
       "speed": 65
-    }
+    },
+    "capture": 120
   },
   "houndoom": {
     "dex": 229,
@@ -2838,7 +3182,8 @@
       "spAttack": 110,
       "spDefense": 80,
       "speed": 95
-    }
+    },
+    "capture": 45
   },
   "kingdra": {
     "dex": 230,
@@ -2854,7 +3199,8 @@
       "spAttack": 95,
       "spDefense": 95,
       "speed": 85
-    }
+    },
+    "capture": 45
   },
   "phanpy": {
     "dex": 231,
@@ -2869,7 +3215,8 @@
       "spAttack": 40,
       "spDefense": 40,
       "speed": 40
-    }
+    },
+    "capture": 120
   },
   "donphan": {
     "dex": 232,
@@ -2884,7 +3231,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 50
-    }
+    },
+    "capture": 60
   },
   "porygon2": {
     "dex": 233,
@@ -2899,7 +3247,8 @@
       "spAttack": 105,
       "spDefense": 95,
       "speed": 60
-    }
+    },
+    "capture": 45
   },
   "stantler": {
     "dex": 234,
@@ -2914,7 +3263,8 @@
       "spAttack": 85,
       "spDefense": 65,
       "speed": 85
-    }
+    },
+    "capture": 45
   },
   "smeargle": {
     "dex": 235,
@@ -2929,7 +3279,8 @@
       "spAttack": 20,
       "spDefense": 45,
       "speed": 75
-    }
+    },
+    "capture": 45
   },
   "tyrogue": {
     "dex": 236,
@@ -2944,7 +3295,8 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 35
-    }
+    },
+    "capture": 75
   },
   "hitmontop": {
     "dex": 237,
@@ -2959,7 +3311,8 @@
       "spAttack": 35,
       "spDefense": 110,
       "speed": 70
-    }
+    },
+    "capture": 45
   },
   "smoochum": {
     "dex": 238,
@@ -2975,7 +3328,8 @@
       "spAttack": 85,
       "spDefense": 65,
       "speed": 65
-    }
+    },
+    "capture": 45
   },
   "elekid": {
     "dex": 239,
@@ -2990,7 +3344,8 @@
       "spAttack": 65,
       "spDefense": 55,
       "speed": 95
-    }
+    },
+    "capture": 45
   },
   "magby": {
     "dex": 240,
@@ -3005,7 +3360,8 @@
       "spAttack": 70,
       "spDefense": 55,
       "speed": 83
-    }
+    },
+    "capture": 45
   },
   "miltank": {
     "dex": 241,
@@ -3020,7 +3376,8 @@
       "spAttack": 40,
       "spDefense": 70,
       "speed": 100
-    }
+    },
+    "capture": 45
   },
   "blissey": {
     "dex": 242,
@@ -3035,7 +3392,59 @@
       "spAttack": 75,
       "spDefense": 135,
       "speed": 55
-    }
+    },
+    "capture": 30
+  },
+  "larvitar": {
+    "dex": 246,
+    "name": "Larvitar",
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 64,
+      "defense": 50,
+      "spAttack": 45,
+      "spDefense": 50,
+      "speed": 41
+    },
+    "capture": 45
+  },
+  "pupitar": {
+    "dex": 247,
+    "name": "Pupitar",
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 84,
+      "defense": 70,
+      "spAttack": 65,
+      "spDefense": 70,
+      "speed": 51
+    },
+    "capture": 45
+  },
+  "tyranitar": {
+    "dex": 248,
+    "name": "Tyranitar",
+    "types": [
+      "rock",
+      "dark"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 134,
+      "defense": 110,
+      "spAttack": 95,
+      "spDefense": 100,
+      "speed": 61
+    },
+    "capture": 45
   },
   "poochyena": {
     "dex": 261,
@@ -3050,7 +3459,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 35
-    }
+    },
+    "capture": 255
   },
   "mightyena": {
     "dex": 262,
@@ -3065,7 +3475,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 70
-    }
+    },
+    "capture": 127
   },
   "zigzagoon": {
     "dex": 263,
@@ -3080,7 +3491,8 @@
       "spAttack": 30,
       "spDefense": 41,
       "speed": 60
-    }
+    },
+    "capture": 255
   },
   "linoone": {
     "dex": 264,
@@ -3095,7 +3507,8 @@
       "spAttack": 50,
       "spDefense": 61,
       "speed": 100
-    }
+    },
+    "capture": 90
   },
   "wurmple": {
     "dex": 265,
@@ -3110,7 +3523,8 @@
       "spAttack": 20,
       "spDefense": 30,
       "speed": 20
-    }
+    },
+    "capture": 255
   },
   "silcoon": {
     "dex": 266,
@@ -3125,7 +3539,8 @@
       "spAttack": 25,
       "spDefense": 25,
       "speed": 15
-    }
+    },
+    "capture": 120
   },
   "beautifly": {
     "dex": 267,
@@ -3141,7 +3556,8 @@
       "spAttack": 100,
       "spDefense": 50,
       "speed": 65
-    }
+    },
+    "capture": 45
   },
   "cascoon": {
     "dex": 268,
@@ -3156,7 +3572,8 @@
       "spAttack": 25,
       "spDefense": 25,
       "speed": 15
-    }
+    },
+    "capture": 120
   },
   "dustox": {
     "dex": 269,
@@ -3172,7 +3589,8 @@
       "spAttack": 50,
       "spDefense": 90,
       "speed": 65
-    }
+    },
+    "capture": 45
   },
   "lotad": {
     "dex": 270,
@@ -3188,7 +3606,8 @@
       "spAttack": 40,
       "spDefense": 50,
       "speed": 30
-    }
+    },
+    "capture": 255
   },
   "lombre": {
     "dex": 271,
@@ -3204,7 +3623,8 @@
       "spAttack": 60,
       "spDefense": 70,
       "speed": 50
-    }
+    },
+    "capture": 120
   },
   "ludicolo": {
     "dex": 272,
@@ -3220,7 +3640,8 @@
       "spAttack": 90,
       "spDefense": 100,
       "speed": 70
-    }
+    },
+    "capture": 45
   },
   "seedot": {
     "dex": 273,
@@ -3235,7 +3656,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 30
-    }
+    },
+    "capture": 255
   },
   "nuzleaf": {
     "dex": 274,
@@ -3251,7 +3673,8 @@
       "spAttack": 60,
       "spDefense": 40,
       "speed": 60
-    }
+    },
+    "capture": 120
   },
   "shiftry": {
     "dex": 275,
@@ -3267,7 +3690,8 @@
       "spAttack": 90,
       "spDefense": 60,
       "speed": 80
-    }
+    },
+    "capture": 45
   },
   "taillow": {
     "dex": 276,
@@ -3283,7 +3707,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 85
-    }
+    },
+    "capture": 200
   },
   "swellow": {
     "dex": 277,
@@ -3299,7 +3724,8 @@
       "spAttack": 75,
       "spDefense": 50,
       "speed": 125
-    }
+    },
+    "capture": 45
   },
   "wingull": {
     "dex": 278,
@@ -3315,7 +3741,8 @@
       "spAttack": 55,
       "spDefense": 30,
       "speed": 85
-    }
+    },
+    "capture": 190
   },
   "pelipper": {
     "dex": 279,
@@ -3331,7 +3758,59 @@
       "spAttack": 95,
       "spDefense": 70,
       "speed": 65
-    }
+    },
+    "capture": 45
+  },
+  "ralts": {
+    "dex": 280,
+    "name": "Ralts",
+    "types": [
+      "psychic",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 28,
+      "attack": 25,
+      "defense": 25,
+      "spAttack": 45,
+      "spDefense": 35,
+      "speed": 40
+    },
+    "capture": 235
+  },
+  "kirlia": {
+    "dex": 281,
+    "name": "Kirlia",
+    "types": [
+      "psychic",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 38,
+      "attack": 35,
+      "defense": 35,
+      "spAttack": 65,
+      "spDefense": 55,
+      "speed": 50
+    },
+    "capture": 120
+  },
+  "gardevoir": {
+    "dex": 282,
+    "name": "Gardevoir",
+    "types": [
+      "psychic",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 68,
+      "attack": 65,
+      "defense": 65,
+      "spAttack": 125,
+      "spDefense": 115,
+      "speed": 80
+    },
+    "capture": 45
   },
   "surskit": {
     "dex": 283,
@@ -3347,7 +3826,8 @@
       "spAttack": 50,
       "spDefense": 52,
       "speed": 65
-    }
+    },
+    "capture": 200
   },
   "masquerain": {
     "dex": 284,
@@ -3363,7 +3843,8 @@
       "spAttack": 100,
       "spDefense": 82,
       "speed": 80
-    }
+    },
+    "capture": 75
   },
   "shroomish": {
     "dex": 285,
@@ -3378,7 +3859,8 @@
       "spAttack": 40,
       "spDefense": 60,
       "speed": 35
-    }
+    },
+    "capture": 255
   },
   "breloom": {
     "dex": 286,
@@ -3394,7 +3876,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 70
-    }
+    },
+    "capture": 90
   },
   "slakoth": {
     "dex": 287,
@@ -3409,7 +3892,8 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 30
-    }
+    },
+    "capture": 255
   },
   "vigoroth": {
     "dex": 288,
@@ -3424,7 +3908,8 @@
       "spAttack": 55,
       "spDefense": 55,
       "speed": 90
-    }
+    },
+    "capture": 120
   },
   "slaking": {
     "dex": 289,
@@ -3439,7 +3924,8 @@
       "spAttack": 95,
       "spDefense": 65,
       "speed": 100
-    }
+    },
+    "capture": 45
   },
   "nincada": {
     "dex": 290,
@@ -3455,7 +3941,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 40
-    }
+    },
+    "capture": 255
   },
   "ninjask": {
     "dex": 291,
@@ -3471,7 +3958,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 160
-    }
+    },
+    "capture": 120
   },
   "shedinja": {
     "dex": 292,
@@ -3487,7 +3975,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 40
-    }
+    },
+    "capture": 45
   },
   "whismur": {
     "dex": 293,
@@ -3502,7 +3991,8 @@
       "spAttack": 51,
       "spDefense": 23,
       "speed": 28
-    }
+    },
+    "capture": 190
   },
   "loudred": {
     "dex": 294,
@@ -3517,7 +4007,8 @@
       "spAttack": 71,
       "spDefense": 43,
       "speed": 48
-    }
+    },
+    "capture": 120
   },
   "exploud": {
     "dex": 295,
@@ -3532,7 +4023,8 @@
       "spAttack": 91,
       "spDefense": 73,
       "speed": 68
-    }
+    },
+    "capture": 45
   },
   "makuhita": {
     "dex": 296,
@@ -3547,7 +4039,8 @@
       "spAttack": 20,
       "spDefense": 30,
       "speed": 25
-    }
+    },
+    "capture": 180
   },
   "hariyama": {
     "dex": 297,
@@ -3562,7 +4055,8 @@
       "spAttack": 40,
       "spDefense": 60,
       "speed": 50
-    }
+    },
+    "capture": 200
   },
   "azurill": {
     "dex": 298,
@@ -3578,7 +4072,8 @@
       "spAttack": 20,
       "spDefense": 40,
       "speed": 20
-    }
+    },
+    "capture": 150
   },
   "nosepass": {
     "dex": 299,
@@ -3593,7 +4088,8 @@
       "spAttack": 45,
       "spDefense": 90,
       "speed": 30
-    }
+    },
+    "capture": 255
   },
   "skitty": {
     "dex": 300,
@@ -3608,7 +4104,8 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 50
-    }
+    },
+    "capture": 255
   },
   "delcatty": {
     "dex": 301,
@@ -3623,7 +4120,8 @@
       "spAttack": 55,
       "spDefense": 55,
       "speed": 90
-    }
+    },
+    "capture": 60
   },
   "sableye": {
     "dex": 302,
@@ -3639,7 +4137,8 @@
       "spAttack": 65,
       "spDefense": 65,
       "speed": 50
-    }
+    },
+    "capture": 45
   },
   "mawile": {
     "dex": 303,
@@ -3655,7 +4154,8 @@
       "spAttack": 55,
       "spDefense": 55,
       "speed": 50
-    }
+    },
+    "capture": 45
   },
   "aron": {
     "dex": 304,
@@ -3671,7 +4171,8 @@
       "spAttack": 40,
       "spDefense": 40,
       "speed": 30
-    }
+    },
+    "capture": 180
   },
   "lairon": {
     "dex": 305,
@@ -3687,7 +4188,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 40
-    }
+    },
+    "capture": 90
   },
   "aggron": {
     "dex": 306,
@@ -3703,7 +4205,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 50
-    }
+    },
+    "capture": 45
   },
   "meditite": {
     "dex": 307,
@@ -3719,7 +4222,8 @@
       "spAttack": 40,
       "spDefense": 55,
       "speed": 60
-    }
+    },
+    "capture": 180
   },
   "medicham": {
     "dex": 308,
@@ -3735,7 +4239,8 @@
       "spAttack": 60,
       "spDefense": 75,
       "speed": 80
-    }
+    },
+    "capture": 90
   },
   "electrike": {
     "dex": 309,
@@ -3750,7 +4255,8 @@
       "spAttack": 65,
       "spDefense": 40,
       "speed": 65
-    }
+    },
+    "capture": 120
   },
   "manectric": {
     "dex": 310,
@@ -3765,7 +4271,8 @@
       "spAttack": 105,
       "spDefense": 60,
       "speed": 105
-    }
+    },
+    "capture": 45
   },
   "plusle": {
     "dex": 311,
@@ -3780,7 +4287,8 @@
       "spAttack": 85,
       "spDefense": 75,
       "speed": 95
-    }
+    },
+    "capture": 200
   },
   "minun": {
     "dex": 312,
@@ -3795,7 +4303,8 @@
       "spAttack": 75,
       "spDefense": 85,
       "speed": 95
-    }
+    },
+    "capture": 200
   },
   "volbeat": {
     "dex": 313,
@@ -3810,7 +4319,8 @@
       "spAttack": 47,
       "spDefense": 85,
       "speed": 85
-    }
+    },
+    "capture": 150
   },
   "illumise": {
     "dex": 314,
@@ -3825,7 +4335,25 @@
       "spAttack": 73,
       "spDefense": 85,
       "speed": 85
-    }
+    },
+    "capture": 150
+  },
+  "roselia": {
+    "dex": 315,
+    "name": "Roselia",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 60,
+      "defense": 45,
+      "spAttack": 100,
+      "spDefense": 80,
+      "speed": 65
+    },
+    "capture": 150
   },
   "gulpin": {
     "dex": 316,
@@ -3840,7 +4368,8 @@
       "spAttack": 43,
       "spDefense": 53,
       "speed": 40
-    }
+    },
+    "capture": 225
   },
   "swalot": {
     "dex": 317,
@@ -3855,7 +4384,8 @@
       "spAttack": 73,
       "spDefense": 83,
       "speed": 55
-    }
+    },
+    "capture": 75
   },
   "carvanha": {
     "dex": 318,
@@ -3871,7 +4401,8 @@
       "spAttack": 65,
       "spDefense": 20,
       "speed": 65
-    }
+    },
+    "capture": 225
   },
   "sharpedo": {
     "dex": 319,
@@ -3887,7 +4418,8 @@
       "spAttack": 95,
       "spDefense": 40,
       "speed": 95
-    }
+    },
+    "capture": 60
   },
   "wailmer": {
     "dex": 320,
@@ -3902,7 +4434,8 @@
       "spAttack": 70,
       "spDefense": 35,
       "speed": 60
-    }
+    },
+    "capture": 125
   },
   "wailord": {
     "dex": 321,
@@ -3917,7 +4450,8 @@
       "spAttack": 90,
       "spDefense": 45,
       "speed": 60
-    }
+    },
+    "capture": 60
   },
   "numel": {
     "dex": 322,
@@ -3933,7 +4467,8 @@
       "spAttack": 65,
       "spDefense": 45,
       "speed": 35
-    }
+    },
+    "capture": 255
   },
   "camerupt": {
     "dex": 323,
@@ -3949,7 +4484,8 @@
       "spAttack": 105,
       "spDefense": 75,
       "speed": 40
-    }
+    },
+    "capture": 150
   },
   "torkoal": {
     "dex": 324,
@@ -3964,7 +4500,8 @@
       "spAttack": 85,
       "spDefense": 70,
       "speed": 20
-    }
+    },
+    "capture": 90
   },
   "spoink": {
     "dex": 325,
@@ -3979,7 +4516,8 @@
       "spAttack": 70,
       "spDefense": 80,
       "speed": 60
-    }
+    },
+    "capture": 255
   },
   "grumpig": {
     "dex": 326,
@@ -3994,7 +4532,8 @@
       "spAttack": 90,
       "spDefense": 110,
       "speed": 80
-    }
+    },
+    "capture": 60
   },
   "spinda": {
     "dex": 327,
@@ -4009,7 +4548,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 60
-    }
+    },
+    "capture": 255
   },
   "trapinch": {
     "dex": 328,
@@ -4024,7 +4564,8 @@
       "spAttack": 45,
       "spDefense": 45,
       "speed": 10
-    }
+    },
+    "capture": 255
   },
   "vibrava": {
     "dex": 329,
@@ -4040,7 +4581,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 70
-    }
+    },
+    "capture": 120
   },
   "flygon": {
     "dex": 330,
@@ -4056,7 +4598,8 @@
       "spAttack": 80,
       "spDefense": 80,
       "speed": 100
-    }
+    },
+    "capture": 45
   },
   "cacnea": {
     "dex": 331,
@@ -4071,7 +4614,8 @@
       "spAttack": 85,
       "spDefense": 40,
       "speed": 35
-    }
+    },
+    "capture": 190
   },
   "cacturne": {
     "dex": 332,
@@ -4087,7 +4631,8 @@
       "spAttack": 115,
       "spDefense": 60,
       "speed": 55
-    }
+    },
+    "capture": 60
   },
   "swablu": {
     "dex": 333,
@@ -4103,7 +4648,8 @@
       "spAttack": 40,
       "spDefense": 75,
       "speed": 50
-    }
+    },
+    "capture": 255
   },
   "altaria": {
     "dex": 334,
@@ -4119,7 +4665,8 @@
       "spAttack": 70,
       "spDefense": 105,
       "speed": 80
-    }
+    },
+    "capture": 45
   },
   "zangoose": {
     "dex": 335,
@@ -4134,7 +4681,8 @@
       "spAttack": 60,
       "spDefense": 60,
       "speed": 90
-    }
+    },
+    "capture": 90
   },
   "seviper": {
     "dex": 336,
@@ -4149,7 +4697,8 @@
       "spAttack": 100,
       "spDefense": 60,
       "speed": 65
-    }
+    },
+    "capture": 90
   },
   "lunatone": {
     "dex": 337,
@@ -4165,7 +4714,8 @@
       "spAttack": 95,
       "spDefense": 85,
       "speed": 70
-    }
+    },
+    "capture": 45
   },
   "solrock": {
     "dex": 338,
@@ -4181,7 +4731,8 @@
       "spAttack": 55,
       "spDefense": 65,
       "speed": 70
-    }
+    },
+    "capture": 45
   },
   "barboach": {
     "dex": 339,
@@ -4197,7 +4748,8 @@
       "spAttack": 46,
       "spDefense": 41,
       "speed": 60
-    }
+    },
+    "capture": 190
   },
   "whiscash": {
     "dex": 340,
@@ -4213,7 +4765,8 @@
       "spAttack": 76,
       "spDefense": 71,
       "speed": 60
-    }
+    },
+    "capture": 75
   },
   "corphish": {
     "dex": 341,
@@ -4228,7 +4781,8 @@
       "spAttack": 50,
       "spDefense": 35,
       "speed": 35
-    }
+    },
+    "capture": 205
   },
   "crawdaunt": {
     "dex": 342,
@@ -4244,7 +4798,8 @@
       "spAttack": 90,
       "spDefense": 55,
       "speed": 55
-    }
+    },
+    "capture": 155
   },
   "baltoy": {
     "dex": 343,
@@ -4260,7 +4815,8 @@
       "spAttack": 40,
       "spDefense": 70,
       "speed": 55
-    }
+    },
+    "capture": 255
   },
   "claydol": {
     "dex": 344,
@@ -4276,7 +4832,8 @@
       "spAttack": 70,
       "spDefense": 120,
       "speed": 75
-    }
+    },
+    "capture": 90
   },
   "lileep": {
     "dex": 345,
@@ -4292,7 +4849,8 @@
       "spAttack": 61,
       "spDefense": 87,
       "speed": 23
-    }
+    },
+    "capture": 45
   },
   "cradily": {
     "dex": 346,
@@ -4308,7 +4866,8 @@
       "spAttack": 81,
       "spDefense": 107,
       "speed": 43
-    }
+    },
+    "capture": 45
   },
   "anorith": {
     "dex": 347,
@@ -4324,7 +4883,8 @@
       "spAttack": 40,
       "spDefense": 50,
       "speed": 75
-    }
+    },
+    "capture": 45
   },
   "armaldo": {
     "dex": 348,
@@ -4340,7 +4900,8 @@
       "spAttack": 70,
       "spDefense": 80,
       "speed": 45
-    }
+    },
+    "capture": 45
   },
   "feebas": {
     "dex": 349,
@@ -4355,7 +4916,8 @@
       "spAttack": 10,
       "spDefense": 55,
       "speed": 80
-    }
+    },
+    "capture": 255
   },
   "milotic": {
     "dex": 350,
@@ -4370,7 +4932,8 @@
       "spAttack": 100,
       "spDefense": 125,
       "speed": 81
-    }
+    },
+    "capture": 60
   },
   "kecleon": {
     "dex": 352,
@@ -4385,7 +4948,8 @@
       "spAttack": 60,
       "spDefense": 120,
       "speed": 40
-    }
+    },
+    "capture": 200
   },
   "shuppet": {
     "dex": 353,
@@ -4400,7 +4964,8 @@
       "spAttack": 63,
       "spDefense": 33,
       "speed": 45
-    }
+    },
+    "capture": 225
   },
   "banette": {
     "dex": 354,
@@ -4415,7 +4980,8 @@
       "spAttack": 83,
       "spDefense": 63,
       "speed": 65
-    }
+    },
+    "capture": 45
   },
   "duskull": {
     "dex": 355,
@@ -4430,7 +4996,8 @@
       "spAttack": 30,
       "spDefense": 90,
       "speed": 25
-    }
+    },
+    "capture": 190
   },
   "dusclops": {
     "dex": 356,
@@ -4445,7 +5012,8 @@
       "spAttack": 60,
       "spDefense": 130,
       "speed": 25
-    }
+    },
+    "capture": 90
   },
   "tropius": {
     "dex": 357,
@@ -4461,7 +5029,8 @@
       "spAttack": 72,
       "spDefense": 87,
       "speed": 51
-    }
+    },
+    "capture": 200
   },
   "chimecho": {
     "dex": 358,
@@ -4476,7 +5045,8 @@
       "spAttack": 95,
       "spDefense": 90,
       "speed": 65
-    }
+    },
+    "capture": 45
   },
   "absol": {
     "dex": 359,
@@ -4491,7 +5061,8 @@
       "spAttack": 75,
       "spDefense": 60,
       "speed": 75
-    }
+    },
+    "capture": 30
   },
   "wynaut": {
     "dex": 360,
@@ -4506,7 +5077,8 @@
       "spAttack": 23,
       "spDefense": 48,
       "speed": 23
-    }
+    },
+    "capture": 125
   },
   "snorunt": {
     "dex": 361,
@@ -4521,7 +5093,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 50
-    }
+    },
+    "capture": 190
   },
   "glalie": {
     "dex": 362,
@@ -4536,7 +5109,59 @@
       "spAttack": 80,
       "spDefense": 80,
       "speed": 80
-    }
+    },
+    "capture": 75
+  },
+  "spheal": {
+    "dex": 363,
+    "name": "Spheal",
+    "types": [
+      "ice",
+      "water"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 40,
+      "defense": 50,
+      "spAttack": 55,
+      "spDefense": 50,
+      "speed": 25
+    },
+    "capture": 255
+  },
+  "sealeo": {
+    "dex": 364,
+    "name": "Sealeo",
+    "types": [
+      "ice",
+      "water"
+    ],
+    "stats": {
+      "hp": 90,
+      "attack": 60,
+      "defense": 70,
+      "spAttack": 75,
+      "spDefense": 70,
+      "speed": 45
+    },
+    "capture": 120
+  },
+  "walrein": {
+    "dex": 365,
+    "name": "Walrein",
+    "types": [
+      "ice",
+      "water"
+    ],
+    "stats": {
+      "hp": 110,
+      "attack": 80,
+      "defense": 90,
+      "spAttack": 95,
+      "spDefense": 90,
+      "speed": 65
+    },
+    "capture": 45
   },
   "clamperl": {
     "dex": 366,
@@ -4551,7 +5176,8 @@
       "spAttack": 74,
       "spDefense": 55,
       "speed": 32
-    }
+    },
+    "capture": 255
   },
   "huntail": {
     "dex": 367,
@@ -4566,7 +5192,8 @@
       "spAttack": 94,
       "spDefense": 75,
       "speed": 52
-    }
+    },
+    "capture": 60
   },
   "gorebyss": {
     "dex": 368,
@@ -4581,7 +5208,8 @@
       "spAttack": 114,
       "spDefense": 75,
       "speed": 52
-    }
+    },
+    "capture": 60
   },
   "relicanth": {
     "dex": 369,
@@ -4597,7 +5225,8 @@
       "spAttack": 45,
       "spDefense": 65,
       "speed": 55
-    }
+    },
+    "capture": 25
   },
   "luvdisc": {
     "dex": 370,
@@ -4612,7 +5241,8 @@
       "spAttack": 40,
       "spDefense": 65,
       "speed": 97
-    }
+    },
+    "capture": 225
   },
   "bagon": {
     "dex": 371,
@@ -4627,7 +5257,8 @@
       "spAttack": 40,
       "spDefense": 30,
       "speed": 50
-    }
+    },
+    "capture": 45
   },
   "shelgon": {
     "dex": 372,
@@ -4642,7 +5273,8 @@
       "spAttack": 60,
       "spDefense": 50,
       "speed": 50
-    }
+    },
+    "capture": 45
   },
   "salamence": {
     "dex": 373,
@@ -4658,7 +5290,25 @@
       "spAttack": 110,
       "spDefense": 80,
       "speed": 100
-    }
+    },
+    "capture": 45
+  },
+  "metagross": {
+    "dex": 376,
+    "name": "Metagross",
+    "types": [
+      "steel",
+      "psychic"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 135,
+      "defense": 130,
+      "spAttack": 95,
+      "spDefense": 90,
+      "speed": 70
+    },
+    "capture": 3
   },
   "starly": {
     "dex": 396,
@@ -4674,7 +5324,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 60
-    }
+    },
+    "capture": 255
   },
   "staravia": {
     "dex": 397,
@@ -4690,7 +5341,8 @@
       "spAttack": 40,
       "spDefense": 40,
       "speed": 80
-    }
+    },
+    "capture": 120
   },
   "staraptor": {
     "dex": 398,
@@ -4706,7 +5358,8 @@
       "spAttack": 50,
       "spDefense": 60,
       "speed": 100
-    }
+    },
+    "capture": 45
   },
   "bidoof": {
     "dex": 399,
@@ -4721,7 +5374,8 @@
       "spAttack": 35,
       "spDefense": 40,
       "speed": 31
-    }
+    },
+    "capture": 255
   },
   "bibarel": {
     "dex": 400,
@@ -4737,7 +5391,40 @@
       "spAttack": 55,
       "spDefense": 60,
       "speed": 71
-    }
+    },
+    "capture": 127
+  },
+  "kricketot": {
+    "dex": 401,
+    "name": "Kricketot",
+    "types": [
+      "bug"
+    ],
+    "stats": {
+      "hp": 37,
+      "attack": 25,
+      "defense": 41,
+      "spAttack": 25,
+      "spDefense": 41,
+      "speed": 25
+    },
+    "capture": 255
+  },
+  "kricketune": {
+    "dex": 402,
+    "name": "Kricketune",
+    "types": [
+      "bug"
+    ],
+    "stats": {
+      "hp": 77,
+      "attack": 85,
+      "defense": 51,
+      "spAttack": 55,
+      "spDefense": 51,
+      "speed": 65
+    },
+    "capture": 45
   },
   "shinx": {
     "dex": 403,
@@ -4752,7 +5439,8 @@
       "spAttack": 40,
       "spDefense": 34,
       "speed": 45
-    }
+    },
+    "capture": 235
   },
   "luxio": {
     "dex": 404,
@@ -4767,7 +5455,8 @@
       "spAttack": 60,
       "spDefense": 49,
       "speed": 60
-    }
+    },
+    "capture": 120
   },
   "luxray": {
     "dex": 405,
@@ -4782,7 +5471,321 @@
       "spAttack": 95,
       "spDefense": 79,
       "speed": 70
-    }
+    },
+    "capture": 45
+  },
+  "budew": {
+    "dex": 406,
+    "name": "Budew",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 30,
+      "defense": 35,
+      "spAttack": 50,
+      "spDefense": 70,
+      "speed": 55
+    },
+    "capture": 255
+  },
+  "roserade": {
+    "dex": 407,
+    "name": "Roserade",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 70,
+      "defense": 65,
+      "spAttack": 125,
+      "spDefense": 105,
+      "speed": 90
+    },
+    "capture": 75
+  },
+  "cranidos": {
+    "dex": 408,
+    "name": "Cranidos",
+    "types": [
+      "rock"
+    ],
+    "stats": {
+      "hp": 67,
+      "attack": 125,
+      "defense": 40,
+      "spAttack": 30,
+      "spDefense": 30,
+      "speed": 58
+    },
+    "capture": 45
+  },
+  "rampardos": {
+    "dex": 409,
+    "name": "Rampardos",
+    "types": [
+      "rock"
+    ],
+    "stats": {
+      "hp": 97,
+      "attack": 165,
+      "defense": 60,
+      "spAttack": 65,
+      "spDefense": 50,
+      "speed": 58
+    },
+    "capture": 45
+  },
+  "shieldon": {
+    "dex": 410,
+    "name": "Shieldon",
+    "types": [
+      "rock",
+      "steel"
+    ],
+    "stats": {
+      "hp": 30,
+      "attack": 42,
+      "defense": 118,
+      "spAttack": 42,
+      "spDefense": 88,
+      "speed": 30
+    },
+    "capture": 45
+  },
+  "bastiodon": {
+    "dex": 411,
+    "name": "Bastiodon",
+    "types": [
+      "rock",
+      "steel"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 52,
+      "defense": 168,
+      "spAttack": 47,
+      "spDefense": 138,
+      "speed": 30
+    },
+    "capture": 45
+  },
+  "burmy": {
+    "dex": 412,
+    "name": "Burmy",
+    "types": [
+      "bug"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 29,
+      "defense": 45,
+      "spAttack": 29,
+      "spDefense": 45,
+      "speed": 36
+    },
+    "capture": 120
+  },
+  "wormadam": {
+    "dex": 413,
+    "name": "Wormadam",
+    "types": [
+      "bug",
+      "grass"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 59,
+      "defense": 85,
+      "spAttack": 79,
+      "spDefense": 105,
+      "speed": 36
+    },
+    "capture": 45
+  },
+  "mothim": {
+    "dex": 414,
+    "name": "Mothim",
+    "types": [
+      "bug",
+      "flying"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 94,
+      "defense": 50,
+      "spAttack": 94,
+      "spDefense": 50,
+      "speed": 66
+    },
+    "capture": 45
+  },
+  "combee": {
+    "dex": 415,
+    "name": "Combee",
+    "types": [
+      "bug",
+      "flying"
+    ],
+    "stats": {
+      "hp": 30,
+      "attack": 30,
+      "defense": 42,
+      "spAttack": 30,
+      "spDefense": 42,
+      "speed": 70
+    },
+    "capture": 120
+  },
+  "vespiquen": {
+    "dex": 416,
+    "name": "Vespiquen",
+    "types": [
+      "bug",
+      "flying"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 80,
+      "defense": 102,
+      "spAttack": 80,
+      "spDefense": 102,
+      "speed": 40
+    },
+    "capture": 45
+  },
+  "pachirisu": {
+    "dex": 417,
+    "name": "Pachirisu",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 45,
+      "defense": 70,
+      "spAttack": 45,
+      "spDefense": 90,
+      "speed": 95
+    },
+    "capture": 200
+  },
+  "buizel": {
+    "dex": 418,
+    "name": "Buizel",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 65,
+      "defense": 35,
+      "spAttack": 60,
+      "spDefense": 30,
+      "speed": 85
+    },
+    "capture": 190
+  },
+  "floatzel": {
+    "dex": 419,
+    "name": "Floatzel",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 105,
+      "defense": 55,
+      "spAttack": 85,
+      "spDefense": 50,
+      "speed": 115
+    },
+    "capture": 75
+  },
+  "cherubi": {
+    "dex": 420,
+    "name": "Cherubi",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 35,
+      "defense": 45,
+      "spAttack": 62,
+      "spDefense": 53,
+      "speed": 35
+    },
+    "capture": 190
+  },
+  "cherrim": {
+    "dex": 421,
+    "name": "Cherrim",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 60,
+      "defense": 70,
+      "spAttack": 87,
+      "spDefense": 78,
+      "speed": 85
+    },
+    "capture": 75
+  },
+  "shellos": {
+    "dex": 422,
+    "name": "Shellos",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 76,
+      "attack": 48,
+      "defense": 48,
+      "spAttack": 57,
+      "spDefense": 62,
+      "speed": 34
+    },
+    "capture": 190
+  },
+  "gastrodon": {
+    "dex": 423,
+    "name": "Gastrodon",
+    "types": [
+      "water",
+      "ground"
+    ],
+    "stats": {
+      "hp": 111,
+      "attack": 83,
+      "defense": 68,
+      "spAttack": 92,
+      "spDefense": 82,
+      "speed": 39
+    },
+    "capture": 75
+  },
+  "ambipom": {
+    "dex": 424,
+    "name": "Ambipom",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 100,
+      "defense": 66,
+      "spAttack": 60,
+      "spDefense": 66,
+      "speed": 115
+    },
+    "capture": 45
   },
   "drifloon": {
     "dex": 425,
@@ -4798,7 +5801,8 @@
       "spAttack": 60,
       "spDefense": 44,
       "speed": 70
-    }
+    },
+    "capture": 125
   },
   "drifblim": {
     "dex": 426,
@@ -4814,7 +5818,121 @@
       "spAttack": 90,
       "spDefense": 54,
       "speed": 80
-    }
+    },
+    "capture": 60
+  },
+  "buneary": {
+    "dex": 427,
+    "name": "Buneary",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 66,
+      "defense": 44,
+      "spAttack": 44,
+      "spDefense": 56,
+      "speed": 85
+    },
+    "capture": 190
+  },
+  "lopunny": {
+    "dex": 428,
+    "name": "Lopunny",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 76,
+      "defense": 84,
+      "spAttack": 54,
+      "spDefense": 96,
+      "speed": 105
+    },
+    "capture": 60
+  },
+  "mismagius": {
+    "dex": 429,
+    "name": "Mismagius",
+    "types": [
+      "ghost"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 60,
+      "defense": 60,
+      "spAttack": 105,
+      "spDefense": 105,
+      "speed": 105
+    },
+    "capture": 45
+  },
+  "honchkrow": {
+    "dex": 430,
+    "name": "Honchkrow",
+    "types": [
+      "dark",
+      "flying"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 125,
+      "defense": 52,
+      "spAttack": 105,
+      "spDefense": 52,
+      "speed": 71
+    },
+    "capture": 30
+  },
+  "glameow": {
+    "dex": 431,
+    "name": "Glameow",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 49,
+      "attack": 55,
+      "defense": 42,
+      "spAttack": 42,
+      "spDefense": 37,
+      "speed": 85
+    },
+    "capture": 190
+  },
+  "purugly": {
+    "dex": 432,
+    "name": "Purugly",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 71,
+      "attack": 82,
+      "defense": 64,
+      "spAttack": 64,
+      "spDefense": 59,
+      "speed": 112
+    },
+    "capture": 75
+  },
+  "chingling": {
+    "dex": 433,
+    "name": "Chingling",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 30,
+      "defense": 50,
+      "spAttack": 65,
+      "spDefense": 50,
+      "speed": 45
+    },
+    "capture": 120
   },
   "stunky": {
     "dex": 434,
@@ -4830,7 +5948,25 @@
       "spAttack": 41,
       "spDefense": 41,
       "speed": 74
-    }
+    },
+    "capture": 225
+  },
+  "skuntank": {
+    "dex": 435,
+    "name": "Skuntank",
+    "types": [
+      "poison",
+      "dark"
+    ],
+    "stats": {
+      "hp": 103,
+      "attack": 93,
+      "defense": 67,
+      "spAttack": 71,
+      "spDefense": 61,
+      "speed": 84
+    },
+    "capture": 60
   },
   "bronzor": {
     "dex": 436,
@@ -4846,7 +5982,74 @@
       "spAttack": 24,
       "spDefense": 86,
       "speed": 23
-    }
+    },
+    "capture": 255
+  },
+  "bonsly": {
+    "dex": 438,
+    "name": "Bonsly",
+    "types": [
+      "rock"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 80,
+      "defense": 95,
+      "spAttack": 10,
+      "spDefense": 45,
+      "speed": 10
+    },
+    "capture": 255
+  },
+  "mimeJr": {
+    "dex": 439,
+    "name": "Mime Jr.",
+    "types": [
+      "psychic",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 20,
+      "attack": 25,
+      "defense": 45,
+      "spAttack": 70,
+      "spDefense": 90,
+      "speed": 60
+    },
+    "capture": 145
+  },
+  "happiny": {
+    "dex": 440,
+    "name": "Happiny",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 5,
+      "defense": 5,
+      "spAttack": 15,
+      "spDefense": 65,
+      "speed": 30
+    },
+    "capture": 130
+  },
+  "chatot": {
+    "dex": 441,
+    "name": "Chatot",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "stats": {
+      "hp": 76,
+      "attack": 65,
+      "defense": 45,
+      "spAttack": 92,
+      "spDefense": 42,
+      "speed": 91
+    },
+    "capture": 30
   },
   "gible": {
     "dex": 443,
@@ -4862,7 +6065,8 @@
       "spAttack": 40,
       "spDefense": 45,
       "speed": 42
-    }
+    },
+    "capture": 45
   },
   "gabite": {
     "dex": 444,
@@ -4878,7 +6082,74 @@
       "spAttack": 50,
       "spDefense": 55,
       "speed": 82
-    }
+    },
+    "capture": 45
+  },
+  "garchomp": {
+    "dex": 445,
+    "name": "Garchomp",
+    "types": [
+      "dragon",
+      "ground"
+    ],
+    "stats": {
+      "hp": 108,
+      "attack": 130,
+      "defense": 95,
+      "spAttack": 80,
+      "spDefense": 85,
+      "speed": 102
+    },
+    "capture": 45
+  },
+  "munchlax": {
+    "dex": 446,
+    "name": "Munchlax",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 135,
+      "attack": 85,
+      "defense": 40,
+      "spAttack": 40,
+      "spDefense": 85,
+      "speed": 5
+    },
+    "capture": 50
+  },
+  "riolu": {
+    "dex": 447,
+    "name": "Riolu",
+    "types": [
+      "fighting"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 70,
+      "defense": 40,
+      "spAttack": 35,
+      "spDefense": 40,
+      "speed": 60
+    },
+    "capture": 75
+  },
+  "lucario": {
+    "dex": 448,
+    "name": "Lucario",
+    "types": [
+      "fighting",
+      "steel"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 110,
+      "defense": 70,
+      "spAttack": 115,
+      "spDefense": 70,
+      "speed": 90
+    },
+    "capture": 45
   },
   "hippopotas": {
     "dex": 449,
@@ -4893,7 +6164,8 @@
       "spAttack": 38,
       "spDefense": 42,
       "speed": 32
-    }
+    },
+    "capture": 140
   },
   "hippowdon": {
     "dex": 450,
@@ -4908,7 +6180,8 @@
       "spAttack": 68,
       "spDefense": 72,
       "speed": 47
-    }
+    },
+    "capture": 60
   },
   "skorupi": {
     "dex": 451,
@@ -4924,7 +6197,8 @@
       "spAttack": 30,
       "spDefense": 55,
       "speed": 65
-    }
+    },
+    "capture": 120
   },
   "drapion": {
     "dex": 452,
@@ -4940,7 +6214,25 @@
       "spAttack": 60,
       "spDefense": 75,
       "speed": 95
-    }
+    },
+    "capture": 45
+  },
+  "croagunk": {
+    "dex": 453,
+    "name": "Croagunk",
+    "types": [
+      "poison",
+      "fighting"
+    ],
+    "stats": {
+      "hp": 48,
+      "attack": 61,
+      "defense": 40,
+      "spAttack": 61,
+      "spDefense": 40,
+      "speed": 50
+    },
+    "capture": 140
   },
   "toxicroak": {
     "dex": 454,
@@ -4956,7 +6248,422 @@
       "spAttack": 86,
       "spDefense": 65,
       "speed": 85
-    }
+    },
+    "capture": 75
+  },
+  "carnivine": {
+    "dex": 455,
+    "name": "Carnivine",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 74,
+      "attack": 100,
+      "defense": 72,
+      "spAttack": 90,
+      "spDefense": 72,
+      "speed": 46
+    },
+    "capture": 200
+  },
+  "finneon": {
+    "dex": 456,
+    "name": "Finneon",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 49,
+      "attack": 49,
+      "defense": 56,
+      "spAttack": 49,
+      "spDefense": 61,
+      "speed": 66
+    },
+    "capture": 190
+  },
+  "lumineon": {
+    "dex": 457,
+    "name": "Lumineon",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 69,
+      "attack": 69,
+      "defense": 76,
+      "spAttack": 69,
+      "spDefense": 86,
+      "speed": 91
+    },
+    "capture": 75
+  },
+  "mantyke": {
+    "dex": 458,
+    "name": "Mantyke",
+    "types": [
+      "water",
+      "flying"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 20,
+      "defense": 50,
+      "spAttack": 60,
+      "spDefense": 120,
+      "speed": 50
+    },
+    "capture": 25
+  },
+  "snover": {
+    "dex": 459,
+    "name": "Snover",
+    "types": [
+      "grass",
+      "ice"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 62,
+      "defense": 50,
+      "spAttack": 62,
+      "spDefense": 60,
+      "speed": 40
+    },
+    "capture": 120
+  },
+  "abomasnow": {
+    "dex": 460,
+    "name": "Abomasnow",
+    "types": [
+      "grass",
+      "ice"
+    ],
+    "stats": {
+      "hp": 90,
+      "attack": 92,
+      "defense": 75,
+      "spAttack": 92,
+      "spDefense": 85,
+      "speed": 60
+    },
+    "capture": 60
+  },
+  "weavile": {
+    "dex": 461,
+    "name": "Weavile",
+    "types": [
+      "dark",
+      "ice"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 120,
+      "defense": 65,
+      "spAttack": 45,
+      "spDefense": 85,
+      "speed": 125
+    },
+    "capture": 45
+  },
+  "magnezone": {
+    "dex": 462,
+    "name": "Magnezone",
+    "types": [
+      "electric",
+      "steel"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 70,
+      "defense": 115,
+      "spAttack": 130,
+      "spDefense": 90,
+      "speed": 60
+    },
+    "capture": 30
+  },
+  "lickilicky": {
+    "dex": 463,
+    "name": "Lickilicky",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 110,
+      "attack": 85,
+      "defense": 95,
+      "spAttack": 80,
+      "spDefense": 95,
+      "speed": 50
+    },
+    "capture": 30
+  },
+  "rhyperior": {
+    "dex": 464,
+    "name": "Rhyperior",
+    "types": [
+      "ground",
+      "rock"
+    ],
+    "stats": {
+      "hp": 115,
+      "attack": 140,
+      "defense": 130,
+      "spAttack": 55,
+      "spDefense": 55,
+      "speed": 40
+    },
+    "capture": 30
+  },
+  "tangrowth": {
+    "dex": 465,
+    "name": "Tangrowth",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 100,
+      "defense": 125,
+      "spAttack": 110,
+      "spDefense": 50,
+      "speed": 50
+    },
+    "capture": 30
+  },
+  "electivire": {
+    "dex": 466,
+    "name": "Electivire",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 123,
+      "defense": 67,
+      "spAttack": 95,
+      "spDefense": 85,
+      "speed": 95
+    },
+    "capture": 30
+  },
+  "magmortar": {
+    "dex": 467,
+    "name": "Magmortar",
+    "types": [
+      "fire"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 95,
+      "defense": 67,
+      "spAttack": 125,
+      "spDefense": 95,
+      "speed": 83
+    },
+    "capture": 30
+  },
+  "togekiss": {
+    "dex": 468,
+    "name": "Togekiss",
+    "types": [
+      "fairy",
+      "flying"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 50,
+      "defense": 95,
+      "spAttack": 120,
+      "spDefense": 115,
+      "speed": 80
+    },
+    "capture": 30
+  },
+  "yanmega": {
+    "dex": 469,
+    "name": "Yanmega",
+    "types": [
+      "bug",
+      "flying"
+    ],
+    "stats": {
+      "hp": 86,
+      "attack": 76,
+      "defense": 86,
+      "spAttack": 116,
+      "spDefense": 56,
+      "speed": 95
+    },
+    "capture": 30
+  },
+  "leafeon": {
+    "dex": 470,
+    "name": "Leafeon",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 110,
+      "defense": 130,
+      "spAttack": 60,
+      "spDefense": 65,
+      "speed": 95
+    },
+    "capture": 45
+  },
+  "glaceon": {
+    "dex": 471,
+    "name": "Glaceon",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 60,
+      "defense": 110,
+      "spAttack": 130,
+      "spDefense": 95,
+      "speed": 65
+    },
+    "capture": 45
+  },
+  "gliscor": {
+    "dex": 472,
+    "name": "Gliscor",
+    "types": [
+      "ground",
+      "flying"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 95,
+      "defense": 125,
+      "spAttack": 45,
+      "spDefense": 75,
+      "speed": 95
+    },
+    "capture": 30
+  },
+  "mamoswine": {
+    "dex": 473,
+    "name": "Mamoswine",
+    "types": [
+      "ice",
+      "ground"
+    ],
+    "stats": {
+      "hp": 110,
+      "attack": 130,
+      "defense": 80,
+      "spAttack": 70,
+      "spDefense": 60,
+      "speed": 80
+    },
+    "capture": 50
+  },
+  "porygonZ": {
+    "dex": 474,
+    "name": "Porygon-Z",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 80,
+      "defense": 70,
+      "spAttack": 135,
+      "spDefense": 75,
+      "speed": 90
+    },
+    "capture": 30
+  },
+  "gallade": {
+    "dex": 475,
+    "name": "Gallade",
+    "types": [
+      "psychic",
+      "fighting"
+    ],
+    "stats": {
+      "hp": 68,
+      "attack": 125,
+      "defense": 65,
+      "spAttack": 65,
+      "spDefense": 115,
+      "speed": 80
+    },
+    "capture": 45
+  },
+  "probopass": {
+    "dex": 476,
+    "name": "Probopass",
+    "types": [
+      "rock",
+      "steel"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 55,
+      "defense": 145,
+      "spAttack": 75,
+      "spDefense": 150,
+      "speed": 40
+    },
+    "capture": 60
+  },
+  "dusknoir": {
+    "dex": 477,
+    "name": "Dusknoir",
+    "types": [
+      "ghost"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 100,
+      "defense": 135,
+      "spAttack": 65,
+      "spDefense": 135,
+      "speed": 45
+    },
+    "capture": 45
+  },
+  "froslass": {
+    "dex": 478,
+    "name": "Froslass",
+    "types": [
+      "ice",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 80,
+      "defense": 70,
+      "spAttack": 80,
+      "spDefense": 70,
+      "speed": 110
+    },
+    "capture": 75
+  },
+  "rotom": {
+    "dex": 479,
+    "name": "Rotom",
+    "types": [
+      "electric",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 50,
+      "defense": 77,
+      "spAttack": 95,
+      "spDefense": 77,
+      "speed": 91
+    },
+    "capture": 45
   },
   "patrat": {
     "dex": 504,
@@ -4971,7 +6678,88 @@
       "spAttack": 35,
       "spDefense": 39,
       "speed": 42
-    }
+    },
+    "capture": 255
+  },
+  "watchog": {
+    "dex": 505,
+    "name": "Watchog",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 85,
+      "defense": 69,
+      "spAttack": 60,
+      "spDefense": 69,
+      "speed": 77
+    },
+    "capture": 255
+  },
+  "lillipup": {
+    "dex": 506,
+    "name": "Lillipup",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 60,
+      "defense": 45,
+      "spAttack": 25,
+      "spDefense": 45,
+      "speed": 55
+    },
+    "capture": 255
+  },
+  "herdier": {
+    "dex": 507,
+    "name": "Herdier",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 80,
+      "defense": 65,
+      "spAttack": 35,
+      "spDefense": 65,
+      "speed": 60
+    },
+    "capture": 120
+  },
+  "stoutland": {
+    "dex": 508,
+    "name": "Stoutland",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 110,
+      "defense": 90,
+      "spAttack": 45,
+      "spDefense": 90,
+      "speed": 80
+    },
+    "capture": 45
+  },
+  "purrloin": {
+    "dex": 509,
+    "name": "Purrloin",
+    "types": [
+      "dark"
+    ],
+    "stats": {
+      "hp": 41,
+      "attack": 50,
+      "defense": 37,
+      "spAttack": 50,
+      "spDefense": 37,
+      "speed": 66
+    },
+    "capture": 255
   },
   "liepard": {
     "dex": 510,
@@ -4986,7 +6774,104 @@
       "spAttack": 88,
       "spDefense": 50,
       "speed": 106
-    }
+    },
+    "capture": 90
+  },
+  "pansage": {
+    "dex": 511,
+    "name": "Pansage",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 53,
+      "defense": 48,
+      "spAttack": 53,
+      "spDefense": 48,
+      "speed": 64
+    },
+    "capture": 190
+  },
+  "simisage": {
+    "dex": 512,
+    "name": "Simisage",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 98,
+      "defense": 63,
+      "spAttack": 98,
+      "spDefense": 63,
+      "speed": 101
+    },
+    "capture": 75
+  },
+  "pansear": {
+    "dex": 513,
+    "name": "Pansear",
+    "types": [
+      "fire"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 53,
+      "defense": 48,
+      "spAttack": 53,
+      "spDefense": 48,
+      "speed": 64
+    },
+    "capture": 190
+  },
+  "panpour": {
+    "dex": 515,
+    "name": "Panpour",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 53,
+      "defense": 48,
+      "spAttack": 53,
+      "spDefense": 48,
+      "speed": 64
+    },
+    "capture": 190
+  },
+  "munna": {
+    "dex": 517,
+    "name": "Munna",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 76,
+      "attack": 25,
+      "defense": 45,
+      "spAttack": 67,
+      "spDefense": 55,
+      "speed": 24
+    },
+    "capture": 190
+  },
+  "musharna": {
+    "dex": 518,
+    "name": "Musharna",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 116,
+      "attack": 55,
+      "defense": 85,
+      "spAttack": 107,
+      "spDefense": 95,
+      "speed": 29
+    },
+    "capture": 75
   },
   "pidove": {
     "dex": 519,
@@ -5002,7 +6887,25 @@
       "spAttack": 36,
       "spDefense": 30,
       "speed": 43
-    }
+    },
+    "capture": 255
+  },
+  "unfezant": {
+    "dex": 521,
+    "name": "Unfezant",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 115,
+      "defense": 80,
+      "spAttack": 65,
+      "spDefense": 55,
+      "speed": 93
+    },
+    "capture": 45
   },
   "roggenrola": {
     "dex": 524,
@@ -5017,7 +6920,8 @@
       "spAttack": 25,
       "spDefense": 25,
       "speed": 15
-    }
+    },
+    "capture": 255
   },
   "boldore": {
     "dex": 525,
@@ -5032,7 +6936,41 @@
       "spAttack": 50,
       "spDefense": 40,
       "speed": 20
-    }
+    },
+    "capture": 120
+  },
+  "gigalith": {
+    "dex": 526,
+    "name": "Gigalith",
+    "types": [
+      "rock"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 135,
+      "defense": 130,
+      "spAttack": 60,
+      "spDefense": 80,
+      "speed": 25
+    },
+    "capture": 45
+  },
+  "woobat": {
+    "dex": 527,
+    "name": "Woobat",
+    "types": [
+      "psychic",
+      "flying"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 45,
+      "defense": 43,
+      "spAttack": 55,
+      "spDefense": 43,
+      "speed": 72
+    },
+    "capture": 190
   },
   "swoobat": {
     "dex": 528,
@@ -5048,7 +6986,24 @@
       "spAttack": 77,
       "spDefense": 55,
       "speed": 114
-    }
+    },
+    "capture": 45
+  },
+  "drilbur": {
+    "dex": 529,
+    "name": "Drilbur",
+    "types": [
+      "ground"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 85,
+      "defense": 40,
+      "spAttack": 30,
+      "spDefense": 45,
+      "speed": 68
+    },
+    "capture": 120
   },
   "excadrill": {
     "dex": 530,
@@ -5064,7 +7019,8 @@
       "spAttack": 50,
       "spDefense": 65,
       "speed": 88
-    }
+    },
+    "capture": 60
   },
   "timburr": {
     "dex": 532,
@@ -5079,7 +7035,8 @@
       "spAttack": 25,
       "spDefense": 35,
       "speed": 35
-    }
+    },
+    "capture": 180
   },
   "gurdurr": {
     "dex": 533,
@@ -5094,7 +7051,8 @@
       "spAttack": 40,
       "spDefense": 50,
       "speed": 40
-    }
+    },
+    "capture": 90
   },
   "conkeldurr": {
     "dex": 534,
@@ -5109,7 +7067,125 @@
       "spAttack": 55,
       "spDefense": 65,
       "speed": 45
-    }
+    },
+    "capture": 45
+  },
+  "tympole": {
+    "dex": 535,
+    "name": "Tympole",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 50,
+      "defense": 40,
+      "spAttack": 50,
+      "spDefense": 40,
+      "speed": 64
+    },
+    "capture": 255
+  },
+  "palpitoad": {
+    "dex": 536,
+    "name": "Palpitoad",
+    "types": [
+      "water",
+      "ground"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 65,
+      "defense": 55,
+      "spAttack": 65,
+      "spDefense": 55,
+      "speed": 69
+    },
+    "capture": 120
+  },
+  "seismitoad": {
+    "dex": 537,
+    "name": "Seismitoad",
+    "types": [
+      "water",
+      "ground"
+    ],
+    "stats": {
+      "hp": 105,
+      "attack": 95,
+      "defense": 75,
+      "spAttack": 85,
+      "spDefense": 75,
+      "speed": 74
+    },
+    "capture": 45
+  },
+  "sawk": {
+    "dex": 539,
+    "name": "Sawk",
+    "types": [
+      "fighting"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 125,
+      "defense": 75,
+      "spAttack": 30,
+      "spDefense": 75,
+      "speed": 85
+    },
+    "capture": 45
+  },
+  "sewaddle": {
+    "dex": 540,
+    "name": "Sewaddle",
+    "types": [
+      "bug",
+      "grass"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 53,
+      "defense": 70,
+      "spAttack": 40,
+      "spDefense": 60,
+      "speed": 42
+    },
+    "capture": 255
+  },
+  "swadloon": {
+    "dex": 541,
+    "name": "Swadloon",
+    "types": [
+      "bug",
+      "grass"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 63,
+      "defense": 90,
+      "spAttack": 50,
+      "spDefense": 80,
+      "speed": 42
+    },
+    "capture": 120
+  },
+  "leavanny": {
+    "dex": 542,
+    "name": "Leavanny",
+    "types": [
+      "bug",
+      "grass"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 103,
+      "defense": 80,
+      "spAttack": 70,
+      "spDefense": 80,
+      "speed": 92
+    },
+    "capture": 45
   },
   "venipede": {
     "dex": 543,
@@ -5125,7 +7201,25 @@
       "spAttack": 30,
       "spDefense": 39,
       "speed": 57
-    }
+    },
+    "capture": 255
+  },
+  "whirlipede": {
+    "dex": 544,
+    "name": "Whirlipede",
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 55,
+      "defense": 99,
+      "spAttack": 40,
+      "spDefense": 79,
+      "speed": 47
+    },
+    "capture": 120
   },
   "scolipede": {
     "dex": 545,
@@ -5141,7 +7235,90 @@
       "spAttack": 55,
       "spDefense": 69,
       "speed": 112
-    }
+    },
+    "capture": 45
+  },
+  "cottonee": {
+    "dex": 546,
+    "name": "Cottonee",
+    "types": [
+      "grass",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 27,
+      "defense": 60,
+      "spAttack": 37,
+      "spDefense": 50,
+      "speed": 66
+    },
+    "capture": 190
+  },
+  "whimsicott": {
+    "dex": 547,
+    "name": "Whimsicott",
+    "types": [
+      "grass",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 67,
+      "defense": 85,
+      "spAttack": 77,
+      "spDefense": 75,
+      "speed": 116
+    },
+    "capture": 75
+  },
+  "petilil": {
+    "dex": 548,
+    "name": "Petilil",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 35,
+      "defense": 50,
+      "spAttack": 70,
+      "spDefense": 50,
+      "speed": 30
+    },
+    "capture": 190
+  },
+  "lilligant": {
+    "dex": 549,
+    "name": "Lilligant",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 60,
+      "defense": 75,
+      "spAttack": 110,
+      "spDefense": 75,
+      "speed": 90
+    },
+    "capture": 75
+  },
+  "basculin": {
+    "dex": 550,
+    "name": "Basculin",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 92,
+      "defense": 65,
+      "spAttack": 80,
+      "spDefense": 55,
+      "speed": 98
+    },
+    "capture": 25
   },
   "sandile": {
     "dex": 551,
@@ -5157,7 +7334,8 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 65
-    }
+    },
+    "capture": 180
   },
   "krokorok": {
     "dex": 552,
@@ -5173,7 +7351,8 @@
       "spAttack": 45,
       "spDefense": 45,
       "speed": 74
-    }
+    },
+    "capture": 90
   },
   "krookodile": {
     "dex": 553,
@@ -5189,7 +7368,73 @@
       "spAttack": 65,
       "spDefense": 70,
       "speed": 92
-    }
+    },
+    "capture": 45
+  },
+  "darumaka": {
+    "dex": 554,
+    "name": "Darumaka",
+    "types": [
+      "fire"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 90,
+      "defense": 45,
+      "spAttack": 15,
+      "spDefense": 45,
+      "speed": 50
+    },
+    "capture": 120
+  },
+  "darmanitan": {
+    "dex": 555,
+    "name": "Darmanitan",
+    "types": [
+      "fire"
+    ],
+    "stats": {
+      "hp": 105,
+      "attack": 140,
+      "defense": 55,
+      "spAttack": 30,
+      "spDefense": 55,
+      "speed": 95
+    },
+    "capture": 60
+  },
+  "maractus": {
+    "dex": 556,
+    "name": "Maractus",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 86,
+      "defense": 67,
+      "spAttack": 106,
+      "spDefense": 67,
+      "speed": 60
+    },
+    "capture": 255
+  },
+  "dwebble": {
+    "dex": 557,
+    "name": "Dwebble",
+    "types": [
+      "bug",
+      "rock"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 65,
+      "defense": 85,
+      "spAttack": 35,
+      "spDefense": 35,
+      "speed": 55
+    },
+    "capture": 190
   },
   "scraggy": {
     "dex": 559,
@@ -5205,7 +7450,140 @@
       "spAttack": 35,
       "spDefense": 70,
       "speed": 48
-    }
+    },
+    "capture": 180
+  },
+  "scrafty": {
+    "dex": 560,
+    "name": "Scrafty",
+    "types": [
+      "dark",
+      "fighting"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 90,
+      "defense": 115,
+      "spAttack": 45,
+      "spDefense": 115,
+      "speed": 58
+    },
+    "capture": 90
+  },
+  "sigilyph": {
+    "dex": 561,
+    "name": "Sigilyph",
+    "types": [
+      "psychic",
+      "flying"
+    ],
+    "stats": {
+      "hp": 72,
+      "attack": 58,
+      "defense": 80,
+      "spAttack": 103,
+      "spDefense": 80,
+      "speed": 97
+    },
+    "capture": 45
+  },
+  "yamask": {
+    "dex": 562,
+    "name": "Yamask",
+    "types": [
+      "ghost"
+    ],
+    "stats": {
+      "hp": 38,
+      "attack": 30,
+      "defense": 85,
+      "spAttack": 55,
+      "spDefense": 65,
+      "speed": 30
+    },
+    "capture": 190
+  },
+  "cofagrigus": {
+    "dex": 563,
+    "name": "Cofagrigus",
+    "types": [
+      "ghost"
+    ],
+    "stats": {
+      "hp": 58,
+      "attack": 50,
+      "defense": 145,
+      "spAttack": 95,
+      "spDefense": 105,
+      "speed": 30
+    },
+    "capture": 90
+  },
+  "archen": {
+    "dex": 566,
+    "name": "Archen",
+    "types": [
+      "rock",
+      "flying"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 112,
+      "defense": 45,
+      "spAttack": 74,
+      "spDefense": 45,
+      "speed": 70
+    },
+    "capture": 45
+  },
+  "archeops": {
+    "dex": 567,
+    "name": "Archeops",
+    "types": [
+      "rock",
+      "flying"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 140,
+      "defense": 65,
+      "spAttack": 112,
+      "spDefense": 65,
+      "speed": 110
+    },
+    "capture": 45
+  },
+  "trubbish": {
+    "dex": 568,
+    "name": "Trubbish",
+    "types": [
+      "poison"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 50,
+      "defense": 62,
+      "spAttack": 40,
+      "spDefense": 62,
+      "speed": 65
+    },
+    "capture": 190
+  },
+  "garbodor": {
+    "dex": 569,
+    "name": "Garbodor",
+    "types": [
+      "poison"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 95,
+      "defense": 82,
+      "spAttack": 60,
+      "spDefense": 82,
+      "speed": 75
+    },
+    "capture": 60
   },
   "zorua": {
     "dex": 570,
@@ -5220,7 +7598,531 @@
       "spAttack": 80,
       "spDefense": 40,
       "speed": 65
-    }
+    },
+    "capture": 75
+  },
+  "zoroark": {
+    "dex": 571,
+    "name": "Zoroark",
+    "types": [
+      "dark"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 105,
+      "defense": 60,
+      "spAttack": 120,
+      "spDefense": 60,
+      "speed": 105
+    },
+    "capture": 45
+  },
+  "minccino": {
+    "dex": 572,
+    "name": "Minccino",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 50,
+      "defense": 40,
+      "spAttack": 40,
+      "spDefense": 40,
+      "speed": 75
+    },
+    "capture": 255
+  },
+  "cinccino": {
+    "dex": 573,
+    "name": "Cinccino",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 95,
+      "defense": 60,
+      "spAttack": 65,
+      "spDefense": 60,
+      "speed": 115
+    },
+    "capture": 60
+  },
+  "gothita": {
+    "dex": 574,
+    "name": "Gothita",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 30,
+      "defense": 50,
+      "spAttack": 55,
+      "spDefense": 65,
+      "speed": 45
+    },
+    "capture": 200
+  },
+  "gothorita": {
+    "dex": 575,
+    "name": "Gothorita",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 45,
+      "defense": 70,
+      "spAttack": 75,
+      "spDefense": 85,
+      "speed": 55
+    },
+    "capture": 100
+  },
+  "gothitelle": {
+    "dex": 576,
+    "name": "Gothitelle",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 55,
+      "defense": 95,
+      "spAttack": 95,
+      "spDefense": 110,
+      "speed": 65
+    },
+    "capture": 50
+  },
+  "solosis": {
+    "dex": 577,
+    "name": "Solosis",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 30,
+      "defense": 40,
+      "spAttack": 105,
+      "spDefense": 50,
+      "speed": 20
+    },
+    "capture": 200
+  },
+  "duosion": {
+    "dex": 578,
+    "name": "Duosion",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 40,
+      "defense": 50,
+      "spAttack": 125,
+      "spDefense": 60,
+      "speed": 30
+    },
+    "capture": 100
+  },
+  "reuniclus": {
+    "dex": 579,
+    "name": "Reuniclus",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 110,
+      "attack": 65,
+      "defense": 75,
+      "spAttack": 125,
+      "spDefense": 85,
+      "speed": 30
+    },
+    "capture": 50
+  },
+  "ducklett": {
+    "dex": 580,
+    "name": "Ducklett",
+    "types": [
+      "water",
+      "flying"
+    ],
+    "stats": {
+      "hp": 62,
+      "attack": 44,
+      "defense": 50,
+      "spAttack": 44,
+      "spDefense": 50,
+      "speed": 55
+    },
+    "capture": 190
+  },
+  "swanna": {
+    "dex": 581,
+    "name": "Swanna",
+    "types": [
+      "water",
+      "flying"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 87,
+      "defense": 63,
+      "spAttack": 87,
+      "spDefense": 63,
+      "speed": 98
+    },
+    "capture": 45
+  },
+  "vanillite": {
+    "dex": 582,
+    "name": "Vanillite",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 36,
+      "attack": 50,
+      "defense": 50,
+      "spAttack": 65,
+      "spDefense": 60,
+      "speed": 44
+    },
+    "capture": 255
+  },
+  "vanillish": {
+    "dex": 583,
+    "name": "Vanillish",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 51,
+      "attack": 65,
+      "defense": 65,
+      "spAttack": 80,
+      "spDefense": 75,
+      "speed": 59
+    },
+    "capture": 120
+  },
+  "vanilluxe": {
+    "dex": 584,
+    "name": "Vanilluxe",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 71,
+      "attack": 95,
+      "defense": 85,
+      "spAttack": 110,
+      "spDefense": 95,
+      "speed": 79
+    },
+    "capture": 45
+  },
+  "deerling": {
+    "dex": 585,
+    "name": "Deerling",
+    "types": [
+      "normal",
+      "grass"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 60,
+      "defense": 50,
+      "spAttack": 40,
+      "spDefense": 50,
+      "speed": 75
+    },
+    "capture": 190
+  },
+  "sawsbuck": {
+    "dex": 586,
+    "name": "Sawsbuck",
+    "types": [
+      "normal",
+      "grass"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 100,
+      "defense": 70,
+      "spAttack": 60,
+      "spDefense": 70,
+      "speed": 95
+    },
+    "capture": 75
+  },
+  "emolga": {
+    "dex": 587,
+    "name": "Emolga",
+    "types": [
+      "electric",
+      "flying"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 75,
+      "defense": 60,
+      "spAttack": 75,
+      "spDefense": 60,
+      "speed": 103
+    },
+    "capture": 200
+  },
+  "escavalier": {
+    "dex": 589,
+    "name": "Escavalier",
+    "types": [
+      "bug",
+      "steel"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 135,
+      "defense": 105,
+      "spAttack": 60,
+      "spDefense": 105,
+      "speed": 20
+    },
+    "capture": 75
+  },
+  "foongus": {
+    "dex": 590,
+    "name": "Foongus",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "stats": {
+      "hp": 69,
+      "attack": 55,
+      "defense": 45,
+      "spAttack": 55,
+      "spDefense": 55,
+      "speed": 15
+    },
+    "capture": 190
+  },
+  "alomomola": {
+    "dex": 594,
+    "name": "Alomomola",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 165,
+      "attack": 75,
+      "defense": 80,
+      "spAttack": 40,
+      "spDefense": 45,
+      "speed": 65
+    },
+    "capture": 75
+  },
+  "joltik": {
+    "dex": 595,
+    "name": "Joltik",
+    "types": [
+      "bug",
+      "electric"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 47,
+      "defense": 50,
+      "spAttack": 57,
+      "spDefense": 50,
+      "speed": 65
+    },
+    "capture": 190
+  },
+  "galvantula": {
+    "dex": 596,
+    "name": "Galvantula",
+    "types": [
+      "bug",
+      "electric"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 77,
+      "defense": 60,
+      "spAttack": 97,
+      "spDefense": 60,
+      "speed": 108
+    },
+    "capture": 75
+  },
+  "ferroseed": {
+    "dex": 597,
+    "name": "Ferroseed",
+    "types": [
+      "grass",
+      "steel"
+    ],
+    "stats": {
+      "hp": 44,
+      "attack": 50,
+      "defense": 91,
+      "spAttack": 24,
+      "spDefense": 86,
+      "speed": 10
+    },
+    "capture": 255
+  },
+  "ferrothorn": {
+    "dex": 598,
+    "name": "Ferrothorn",
+    "types": [
+      "grass",
+      "steel"
+    ],
+    "stats": {
+      "hp": 74,
+      "attack": 94,
+      "defense": 131,
+      "spAttack": 54,
+      "spDefense": 116,
+      "speed": 20
+    },
+    "capture": 90
+  },
+  "klink": {
+    "dex": 599,
+    "name": "Klink",
+    "types": [
+      "steel"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 55,
+      "defense": 70,
+      "spAttack": 45,
+      "spDefense": 60,
+      "speed": 30
+    },
+    "capture": 130
+  },
+  "klang": {
+    "dex": 600,
+    "name": "Klang",
+    "types": [
+      "steel"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 80,
+      "defense": 95,
+      "spAttack": 70,
+      "spDefense": 85,
+      "speed": 50
+    },
+    "capture": 60
+  },
+  "klinklang": {
+    "dex": 601,
+    "name": "Klinklang",
+    "types": [
+      "steel"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 100,
+      "defense": 115,
+      "spAttack": 70,
+      "spDefense": 85,
+      "speed": 90
+    },
+    "capture": 30
+  },
+  "tynamo": {
+    "dex": 602,
+    "name": "Tynamo",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 35,
+      "attack": 55,
+      "defense": 40,
+      "spAttack": 45,
+      "spDefense": 40,
+      "speed": 60
+    },
+    "capture": 190
+  },
+  "eelektrik": {
+    "dex": 603,
+    "name": "Eelektrik",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 85,
+      "defense": 70,
+      "spAttack": 75,
+      "spDefense": 70,
+      "speed": 40
+    },
+    "capture": 60
+  },
+  "eelektross": {
+    "dex": 604,
+    "name": "Eelektross",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 115,
+      "defense": 80,
+      "spAttack": 105,
+      "spDefense": 80,
+      "speed": 50
+    },
+    "capture": 30
+  },
+  "elgyem": {
+    "dex": 605,
+    "name": "Elgyem",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 55,
+      "defense": 55,
+      "spAttack": 85,
+      "spDefense": 55,
+      "speed": 30
+    },
+    "capture": 255
+  },
+  "beheeyem": {
+    "dex": 606,
+    "name": "Beheeyem",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 75,
+      "defense": 75,
+      "spAttack": 125,
+      "spDefense": 95,
+      "speed": 40
+    },
+    "capture": 90
   },
   "litwick": {
     "dex": 607,
@@ -5236,7 +8138,8 @@
       "spAttack": 65,
       "spDefense": 55,
       "speed": 20
-    }
+    },
+    "capture": 190
   },
   "lampent": {
     "dex": 608,
@@ -5252,7 +8155,8 @@
       "spAttack": 95,
       "spDefense": 60,
       "speed": 55
-    }
+    },
+    "capture": 90
   },
   "chandelure": {
     "dex": 609,
@@ -5268,7 +8172,8 @@
       "spAttack": 145,
       "spDefense": 90,
       "speed": 80
-    }
+    },
+    "capture": 45
   },
   "axew": {
     "dex": 610,
@@ -5283,7 +8188,321 @@
       "spAttack": 30,
       "spDefense": 40,
       "speed": 57
-    }
+    },
+    "capture": 75
+  },
+  "fraxure": {
+    "dex": 611,
+    "name": "Fraxure",
+    "types": [
+      "dragon"
+    ],
+    "stats": {
+      "hp": 66,
+      "attack": 117,
+      "defense": 70,
+      "spAttack": 40,
+      "spDefense": 50,
+      "speed": 67
+    },
+    "capture": 60
+  },
+  "haxorus": {
+    "dex": 612,
+    "name": "Haxorus",
+    "types": [
+      "dragon"
+    ],
+    "stats": {
+      "hp": 76,
+      "attack": 147,
+      "defense": 90,
+      "spAttack": 60,
+      "spDefense": 70,
+      "speed": 97
+    },
+    "capture": 45
+  },
+  "cubchoo": {
+    "dex": 613,
+    "name": "Cubchoo",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 70,
+      "defense": 40,
+      "spAttack": 60,
+      "spDefense": 40,
+      "speed": 40
+    },
+    "capture": 120
+  },
+  "beartic": {
+    "dex": 614,
+    "name": "Beartic",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 95,
+      "attack": 130,
+      "defense": 80,
+      "spAttack": 70,
+      "spDefense": 80,
+      "speed": 50
+    },
+    "capture": 60
+  },
+  "cryogonal": {
+    "dex": 615,
+    "name": "Cryogonal",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 50,
+      "defense": 50,
+      "spAttack": 95,
+      "spDefense": 135,
+      "speed": 105
+    },
+    "capture": 25
+  },
+  "accelgor": {
+    "dex": 617,
+    "name": "Accelgor",
+    "types": [
+      "bug"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 70,
+      "defense": 40,
+      "spAttack": 100,
+      "spDefense": 60,
+      "speed": 145
+    },
+    "capture": 75
+  },
+  "mienfoo": {
+    "dex": 619,
+    "name": "Mienfoo",
+    "types": [
+      "fighting"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 85,
+      "defense": 50,
+      "spAttack": 55,
+      "spDefense": 50,
+      "speed": 65
+    },
+    "capture": 180
+  },
+  "mienshao": {
+    "dex": 620,
+    "name": "Mienshao",
+    "types": [
+      "fighting"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 125,
+      "defense": 60,
+      "spAttack": 95,
+      "spDefense": 60,
+      "speed": 105
+    },
+    "capture": 45
+  },
+  "druddigon": {
+    "dex": 621,
+    "name": "Druddigon",
+    "types": [
+      "dragon"
+    ],
+    "stats": {
+      "hp": 77,
+      "attack": 120,
+      "defense": 90,
+      "spAttack": 60,
+      "spDefense": 90,
+      "speed": 48
+    },
+    "capture": 45
+  },
+  "golett": {
+    "dex": 622,
+    "name": "Golett",
+    "types": [
+      "ground",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 59,
+      "attack": 74,
+      "defense": 50,
+      "spAttack": 35,
+      "spDefense": 50,
+      "speed": 35
+    },
+    "capture": 190
+  },
+  "golurk": {
+    "dex": 623,
+    "name": "Golurk",
+    "types": [
+      "ground",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 89,
+      "attack": 124,
+      "defense": 80,
+      "spAttack": 55,
+      "spDefense": 80,
+      "speed": 55
+    },
+    "capture": 90
+  },
+  "pawniard": {
+    "dex": 624,
+    "name": "Pawniard",
+    "types": [
+      "dark",
+      "steel"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 85,
+      "defense": 70,
+      "spAttack": 40,
+      "spDefense": 40,
+      "speed": 60
+    },
+    "capture": 120
+  },
+  "bisharp": {
+    "dex": 625,
+    "name": "Bisharp",
+    "types": [
+      "dark",
+      "steel"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 125,
+      "defense": 100,
+      "spAttack": 60,
+      "spDefense": 70,
+      "speed": 70
+    },
+    "capture": 45
+  },
+  "rufflet": {
+    "dex": 627,
+    "name": "Rufflet",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 83,
+      "defense": 50,
+      "spAttack": 37,
+      "spDefense": 50,
+      "speed": 60
+    },
+    "capture": 190
+  },
+  "braviary": {
+    "dex": 628,
+    "name": "Braviary",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 123,
+      "defense": 75,
+      "spAttack": 57,
+      "spDefense": 75,
+      "speed": 80
+    },
+    "capture": 60
+  },
+  "vullaby": {
+    "dex": 629,
+    "name": "Vullaby",
+    "types": [
+      "dark",
+      "flying"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 55,
+      "defense": 75,
+      "spAttack": 45,
+      "spDefense": 65,
+      "speed": 60
+    },
+    "capture": 190
+  },
+  "mandibuzz": {
+    "dex": 630,
+    "name": "Mandibuzz",
+    "types": [
+      "dark",
+      "flying"
+    ],
+    "stats": {
+      "hp": 110,
+      "attack": 65,
+      "defense": 105,
+      "spAttack": 55,
+      "spDefense": 95,
+      "speed": 80
+    },
+    "capture": 60
+  },
+  "heatmor": {
+    "dex": 631,
+    "name": "Heatmor",
+    "types": [
+      "fire"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 97,
+      "defense": 66,
+      "spAttack": 105,
+      "spDefense": 66,
+      "speed": 65
+    },
+    "capture": 90
+  },
+  "durant": {
+    "dex": 632,
+    "name": "Durant",
+    "types": [
+      "bug",
+      "steel"
+    ],
+    "stats": {
+      "hp": 58,
+      "attack": 109,
+      "defense": 112,
+      "spAttack": 48,
+      "spDefense": 48,
+      "speed": 109
+    },
+    "capture": 90
   },
   "deino": {
     "dex": 633,
@@ -5299,7 +8518,76 @@
       "spAttack": 45,
       "spDefense": 50,
       "speed": 38
-    }
+    },
+    "capture": 45
+  },
+  "zweilous": {
+    "dex": 634,
+    "name": "Zweilous",
+    "types": [
+      "dark",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 72,
+      "attack": 85,
+      "defense": 70,
+      "spAttack": 65,
+      "spDefense": 70,
+      "speed": 58
+    },
+    "capture": 45
+  },
+  "hydreigon": {
+    "dex": 635,
+    "name": "Hydreigon",
+    "types": [
+      "dark",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 92,
+      "attack": 105,
+      "defense": 90,
+      "spAttack": 125,
+      "spDefense": 90,
+      "speed": 98
+    },
+    "capture": 45
+  },
+  "larvesta": {
+    "dex": 636,
+    "name": "Larvesta",
+    "types": [
+      "bug",
+      "fire"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 85,
+      "defense": 55,
+      "spAttack": 50,
+      "spDefense": 55,
+      "speed": 60
+    },
+    "capture": 45
+  },
+  "volcarona": {
+    "dex": 637,
+    "name": "Volcarona",
+    "types": [
+      "bug",
+      "fire"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 60,
+      "defense": 65,
+      "spAttack": 135,
+      "spDefense": 105,
+      "speed": 100
+    },
+    "capture": 15
   },
   "bunnelby": {
     "dex": 659,
@@ -5314,7 +8602,8 @@
       "spAttack": 32,
       "spDefense": 36,
       "speed": 57
-    }
+    },
+    "capture": 255
   },
   "diggersby": {
     "dex": 660,
@@ -5330,7 +8619,8 @@
       "spAttack": 50,
       "spDefense": 77,
       "speed": 78
-    }
+    },
+    "capture": 127
   },
   "fletchling": {
     "dex": 661,
@@ -5346,7 +8636,8 @@
       "spAttack": 40,
       "spDefense": 38,
       "speed": 62
-    }
+    },
+    "capture": 255
   },
   "fletchinder": {
     "dex": 662,
@@ -5362,7 +8653,8 @@
       "spAttack": 56,
       "spDefense": 52,
       "speed": 84
-    }
+    },
+    "capture": 120
   },
   "talonflame": {
     "dex": 663,
@@ -5378,7 +8670,57 @@
       "spAttack": 74,
       "spDefense": 69,
       "speed": 126
-    }
+    },
+    "capture": 45
+  },
+  "scatterbug": {
+    "dex": 664,
+    "name": "Scatterbug",
+    "types": [
+      "bug"
+    ],
+    "stats": {
+      "hp": 38,
+      "attack": 35,
+      "defense": 40,
+      "spAttack": 27,
+      "spDefense": 25,
+      "speed": 35
+    },
+    "capture": 255
+  },
+  "spewpa": {
+    "dex": 665,
+    "name": "Spewpa",
+    "types": [
+      "bug"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 22,
+      "defense": 60,
+      "spAttack": 27,
+      "spDefense": 30,
+      "speed": 29
+    },
+    "capture": 120
+  },
+  "vivillon": {
+    "dex": 666,
+    "name": "Vivillon",
+    "types": [
+      "bug",
+      "flying"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 52,
+      "defense": 50,
+      "spAttack": 90,
+      "spDefense": 50,
+      "speed": 89
+    },
+    "capture": 45
   },
   "litleo": {
     "dex": 667,
@@ -5394,7 +8736,88 @@
       "spAttack": 73,
       "spDefense": 54,
       "speed": 72
-    }
+    },
+    "capture": 220
+  },
+  "flabebe": {
+    "dex": 669,
+    "name": "Flabébé",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 44,
+      "attack": 38,
+      "defense": 39,
+      "spAttack": 61,
+      "spDefense": 79,
+      "speed": 42
+    },
+    "capture": 225
+  },
+  "floette": {
+    "dex": 670,
+    "name": "Floette",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 54,
+      "attack": 45,
+      "defense": 47,
+      "spAttack": 75,
+      "spDefense": 98,
+      "speed": 52
+    },
+    "capture": 120
+  },
+  "florges": {
+    "dex": 671,
+    "name": "Florges",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 78,
+      "attack": 65,
+      "defense": 68,
+      "spAttack": 112,
+      "spDefense": 154,
+      "speed": 75
+    },
+    "capture": 45
+  },
+  "skiddo": {
+    "dex": 672,
+    "name": "Skiddo",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 66,
+      "attack": 65,
+      "defense": 48,
+      "spAttack": 62,
+      "spDefense": 57,
+      "speed": 52
+    },
+    "capture": 200
+  },
+  "gogoat": {
+    "dex": 673,
+    "name": "Gogoat",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 123,
+      "attack": 100,
+      "defense": 62,
+      "spAttack": 97,
+      "spDefense": 81,
+      "speed": 68
+    },
+    "capture": 45
   },
   "pancham": {
     "dex": 674,
@@ -5409,7 +8832,8 @@
       "spAttack": 46,
       "spDefense": 48,
       "speed": 43
-    }
+    },
+    "capture": 220
   },
   "pangoro": {
     "dex": 675,
@@ -5425,7 +8849,24 @@
       "spAttack": 69,
       "spDefense": 71,
       "speed": 58
-    }
+    },
+    "capture": 65
+  },
+  "furfrou": {
+    "dex": 676,
+    "name": "Furfrou",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 80,
+      "defense": 60,
+      "spAttack": 65,
+      "spDefense": 90,
+      "speed": 102
+    },
+    "capture": 160
   },
   "espurr": {
     "dex": 677,
@@ -5440,7 +8881,24 @@
       "spAttack": 63,
       "spDefense": 60,
       "speed": 68
-    }
+    },
+    "capture": 190
+  },
+  "meowstic": {
+    "dex": 678,
+    "name": "Meowstic",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 74,
+      "attack": 48,
+      "defense": 76,
+      "spAttack": 83,
+      "spDefense": 81,
+      "speed": 104
+    },
+    "capture": 75
   },
   "honedge": {
     "dex": 679,
@@ -5456,7 +8914,8 @@
       "spAttack": 35,
       "spDefense": 37,
       "speed": 28
-    }
+    },
+    "capture": 180
   },
   "doublade": {
     "dex": 680,
@@ -5472,7 +8931,73 @@
       "spAttack": 45,
       "spDefense": 49,
       "speed": 35
-    }
+    },
+    "capture": 90
+  },
+  "aegislash": {
+    "dex": 681,
+    "name": "Aegislash",
+    "types": [
+      "steel",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 50,
+      "defense": 140,
+      "spAttack": 50,
+      "spDefense": 140,
+      "speed": 60
+    },
+    "capture": 45
+  },
+  "spritzee": {
+    "dex": 682,
+    "name": "Spritzee",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 78,
+      "attack": 52,
+      "defense": 60,
+      "spAttack": 63,
+      "spDefense": 65,
+      "speed": 23
+    },
+    "capture": 200
+  },
+  "swirlix": {
+    "dex": 684,
+    "name": "Swirlix",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 62,
+      "attack": 48,
+      "defense": 66,
+      "spAttack": 59,
+      "spDefense": 57,
+      "speed": 49
+    },
+    "capture": 200
+  },
+  "slurpuff": {
+    "dex": 685,
+    "name": "Slurpuff",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 82,
+      "attack": 80,
+      "defense": 86,
+      "spAttack": 85,
+      "spDefense": 75,
+      "speed": 72
+    },
+    "capture": 140
   },
   "inkay": {
     "dex": 686,
@@ -5488,7 +9013,277 @@
       "spAttack": 37,
       "spDefense": 46,
       "speed": 45
-    }
+    },
+    "capture": 190
+  },
+  "malamar": {
+    "dex": 687,
+    "name": "Malamar",
+    "types": [
+      "dark",
+      "psychic"
+    ],
+    "stats": {
+      "hp": 86,
+      "attack": 92,
+      "defense": 88,
+      "spAttack": 68,
+      "spDefense": 75,
+      "speed": 73
+    },
+    "capture": 80
+  },
+  "binacle": {
+    "dex": 688,
+    "name": "Binacle",
+    "types": [
+      "rock",
+      "water"
+    ],
+    "stats": {
+      "hp": 42,
+      "attack": 52,
+      "defense": 67,
+      "spAttack": 39,
+      "spDefense": 56,
+      "speed": 50
+    },
+    "capture": 120
+  },
+  "barbaracle": {
+    "dex": 689,
+    "name": "Barbaracle",
+    "types": [
+      "rock",
+      "water"
+    ],
+    "stats": {
+      "hp": 72,
+      "attack": 105,
+      "defense": 115,
+      "spAttack": 54,
+      "spDefense": 86,
+      "speed": 68
+    },
+    "capture": 45
+  },
+  "skrelp": {
+    "dex": 690,
+    "name": "Skrelp",
+    "types": [
+      "poison",
+      "water"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 60,
+      "defense": 60,
+      "spAttack": 60,
+      "spDefense": 60,
+      "speed": 30
+    },
+    "capture": 225
+  },
+  "dragalge": {
+    "dex": 691,
+    "name": "Dragalge",
+    "types": [
+      "poison",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 75,
+      "defense": 90,
+      "spAttack": 97,
+      "spDefense": 123,
+      "speed": 44
+    },
+    "capture": 55
+  },
+  "clauncher": {
+    "dex": 692,
+    "name": "Clauncher",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 53,
+      "defense": 62,
+      "spAttack": 58,
+      "spDefense": 63,
+      "speed": 44
+    },
+    "capture": 225
+  },
+  "clawitzer": {
+    "dex": 693,
+    "name": "Clawitzer",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 71,
+      "attack": 73,
+      "defense": 88,
+      "spAttack": 120,
+      "spDefense": 89,
+      "speed": 59
+    },
+    "capture": 55
+  },
+  "helioptile": {
+    "dex": 694,
+    "name": "Helioptile",
+    "types": [
+      "electric",
+      "normal"
+    ],
+    "stats": {
+      "hp": 44,
+      "attack": 38,
+      "defense": 33,
+      "spAttack": 61,
+      "spDefense": 43,
+      "speed": 70
+    },
+    "capture": 190
+  },
+  "heliolisk": {
+    "dex": 695,
+    "name": "Heliolisk",
+    "types": [
+      "electric",
+      "normal"
+    ],
+    "stats": {
+      "hp": 62,
+      "attack": 55,
+      "defense": 52,
+      "spAttack": 109,
+      "spDefense": 94,
+      "speed": 109
+    },
+    "capture": 75
+  },
+  "tyrunt": {
+    "dex": 696,
+    "name": "Tyrunt",
+    "types": [
+      "rock",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 58,
+      "attack": 89,
+      "defense": 77,
+      "spAttack": 45,
+      "spDefense": 45,
+      "speed": 48
+    },
+    "capture": 45
+  },
+  "tyrantrum": {
+    "dex": 697,
+    "name": "Tyrantrum",
+    "types": [
+      "rock",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 82,
+      "attack": 121,
+      "defense": 119,
+      "spAttack": 69,
+      "spDefense": 59,
+      "speed": 71
+    },
+    "capture": 45
+  },
+  "amaura": {
+    "dex": 698,
+    "name": "Amaura",
+    "types": [
+      "rock",
+      "ice"
+    ],
+    "stats": {
+      "hp": 77,
+      "attack": 59,
+      "defense": 50,
+      "spAttack": 67,
+      "spDefense": 63,
+      "speed": 46
+    },
+    "capture": 45
+  },
+  "aurorus": {
+    "dex": 699,
+    "name": "Aurorus",
+    "types": [
+      "rock",
+      "ice"
+    ],
+    "stats": {
+      "hp": 123,
+      "attack": 77,
+      "defense": 72,
+      "spAttack": 99,
+      "spDefense": 92,
+      "speed": 58
+    },
+    "capture": 45
+  },
+  "sylveon": {
+    "dex": 700,
+    "name": "Sylveon",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 95,
+      "attack": 65,
+      "defense": 65,
+      "spAttack": 110,
+      "spDefense": 130,
+      "speed": 60
+    },
+    "capture": 45
+  },
+  "hawlucha": {
+    "dex": 701,
+    "name": "Hawlucha",
+    "types": [
+      "fighting",
+      "flying"
+    ],
+    "stats": {
+      "hp": 78,
+      "attack": 92,
+      "defense": 75,
+      "spAttack": 74,
+      "spDefense": 63,
+      "speed": 118
+    },
+    "capture": 100
+  },
+  "carbink": {
+    "dex": 703,
+    "name": "Carbink",
+    "types": [
+      "rock",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 50,
+      "defense": 150,
+      "spAttack": 50,
+      "spDefense": 150,
+      "speed": 50
+    },
+    "capture": 60
   },
   "goomy": {
     "dex": 704,
@@ -5503,7 +9298,40 @@
       "spAttack": 55,
       "spDefense": 75,
       "speed": 40
-    }
+    },
+    "capture": 45
+  },
+  "sliggoo": {
+    "dex": 705,
+    "name": "Sliggoo",
+    "types": [
+      "dragon"
+    ],
+    "stats": {
+      "hp": 68,
+      "attack": 75,
+      "defense": 53,
+      "spAttack": 83,
+      "spDefense": 113,
+      "speed": 60
+    },
+    "capture": 45
+  },
+  "goodra": {
+    "dex": 706,
+    "name": "Goodra",
+    "types": [
+      "dragon"
+    ],
+    "stats": {
+      "hp": 90,
+      "attack": 100,
+      "defense": 70,
+      "spAttack": 110,
+      "spDefense": 150,
+      "speed": 80
+    },
+    "capture": 45
   },
   "klefki": {
     "dex": 707,
@@ -5519,7 +9347,8 @@
       "spAttack": 80,
       "spDefense": 87,
       "speed": 75
-    }
+    },
+    "capture": 75
   },
   "phantump": {
     "dex": 708,
@@ -5535,7 +9364,8 @@
       "spAttack": 50,
       "spDefense": 60,
       "speed": 38
-    }
+    },
+    "capture": 120
   },
   "trevenant": {
     "dex": 709,
@@ -5551,7 +9381,57 @@
       "spAttack": 65,
       "spDefense": 82,
       "speed": 56
-    }
+    },
+    "capture": 60
+  },
+  "gourgeist": {
+    "dex": 711,
+    "name": "Gourgeist",
+    "types": [
+      "ghost",
+      "grass"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 90,
+      "defense": 122,
+      "spAttack": 58,
+      "spDefense": 75,
+      "speed": 84
+    },
+    "capture": 60
+  },
+  "bergmite": {
+    "dex": 712,
+    "name": "Bergmite",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 69,
+      "defense": 85,
+      "spAttack": 32,
+      "spDefense": 35,
+      "speed": 28
+    },
+    "capture": 190
+  },
+  "avalugg": {
+    "dex": 713,
+    "name": "Avalugg",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 95,
+      "attack": 117,
+      "defense": 184,
+      "spAttack": 44,
+      "spDefense": 46,
+      "speed": 28
+    },
+    "capture": 55
   },
   "noibat": {
     "dex": 714,
@@ -5567,7 +9447,25 @@
       "spAttack": 45,
       "spDefense": 40,
       "speed": 55
-    }
+    },
+    "capture": 190
+  },
+  "noivern": {
+    "dex": 715,
+    "name": "Noivern",
+    "types": [
+      "flying",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 70,
+      "defense": 80,
+      "spAttack": 97,
+      "spDefense": 80,
+      "speed": 123
+    },
+    "capture": 45
   },
   "pikipek": {
     "dex": 731,
@@ -5583,7 +9481,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 65
-    }
+    },
+    "capture": 255
   },
   "yungoos": {
     "dex": 734,
@@ -5598,7 +9497,8 @@
       "spAttack": 30,
       "spDefense": 30,
       "speed": 45
-    }
+    },
+    "capture": 255
   },
   "grubbin": {
     "dex": 736,
@@ -5613,7 +9513,8 @@
       "spAttack": 55,
       "spDefense": 45,
       "speed": 46
-    }
+    },
+    "capture": 255
   },
   "charjabug": {
     "dex": 737,
@@ -5629,7 +9530,8 @@
       "spAttack": 55,
       "spDefense": 75,
       "speed": 36
-    }
+    },
+    "capture": 120
   },
   "vikavolt": {
     "dex": 738,
@@ -5645,7 +9547,8 @@
       "spAttack": 145,
       "spDefense": 75,
       "speed": 43
-    }
+    },
+    "capture": 45
   },
   "crabrawler": {
     "dex": 739,
@@ -5660,7 +9563,42 @@
       "spAttack": 42,
       "spDefense": 47,
       "speed": 63
-    }
+    },
+    "capture": 225
+  },
+  "crabominable": {
+    "dex": 740,
+    "name": "Crabominable",
+    "types": [
+      "fighting",
+      "ice"
+    ],
+    "stats": {
+      "hp": 97,
+      "attack": 132,
+      "defense": 77,
+      "spAttack": 62,
+      "spDefense": 67,
+      "speed": 43
+    },
+    "capture": 60
+  },
+  "oricorio": {
+    "dex": 741,
+    "name": "Oricorio",
+    "types": [
+      "fire",
+      "flying"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 70,
+      "defense": 70,
+      "spAttack": 98,
+      "spDefense": 70,
+      "speed": 93
+    },
+    "capture": 45
   },
   "cutiefly": {
     "dex": 742,
@@ -5676,7 +9614,25 @@
       "spAttack": 55,
       "spDefense": 40,
       "speed": 84
-    }
+    },
+    "capture": 190
+  },
+  "ribombee": {
+    "dex": 743,
+    "name": "Ribombee",
+    "types": [
+      "bug",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 55,
+      "defense": 60,
+      "spAttack": 95,
+      "spDefense": 70,
+      "speed": 124
+    },
+    "capture": 75
   },
   "rockruff": {
     "dex": 744,
@@ -5691,7 +9647,74 @@
       "spAttack": 30,
       "spDefense": 40,
       "speed": 60
-    }
+    },
+    "capture": 190
+  },
+  "lycanroc": {
+    "dex": 745,
+    "name": "Lycanroc",
+    "types": [
+      "rock"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 115,
+      "defense": 65,
+      "spAttack": 55,
+      "spDefense": 65,
+      "speed": 112
+    },
+    "capture": 90
+  },
+  "wishiwashi": {
+    "dex": 746,
+    "name": "Wishiwashi",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 20,
+      "defense": 20,
+      "spAttack": 25,
+      "spDefense": 25,
+      "speed": 40
+    },
+    "capture": 60
+  },
+  "mareanie": {
+    "dex": 747,
+    "name": "Mareanie",
+    "types": [
+      "poison",
+      "water"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 53,
+      "defense": 62,
+      "spAttack": 43,
+      "spDefense": 52,
+      "speed": 45
+    },
+    "capture": 190
+  },
+  "toxapex": {
+    "dex": 748,
+    "name": "Toxapex",
+    "types": [
+      "poison",
+      "water"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 63,
+      "defense": 152,
+      "spAttack": 53,
+      "spDefense": 142,
+      "speed": 35
+    },
+    "capture": 75
   },
   "mudbray": {
     "dex": 749,
@@ -5706,7 +9729,58 @@
       "spAttack": 45,
       "spDefense": 55,
       "speed": 45
-    }
+    },
+    "capture": 190
+  },
+  "mudsdale": {
+    "dex": 750,
+    "name": "Mudsdale",
+    "types": [
+      "ground"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 125,
+      "defense": 100,
+      "spAttack": 55,
+      "spDefense": 85,
+      "speed": 35
+    },
+    "capture": 60
+  },
+  "dewpider": {
+    "dex": 751,
+    "name": "Dewpider",
+    "types": [
+      "water",
+      "bug"
+    ],
+    "stats": {
+      "hp": 38,
+      "attack": 40,
+      "defense": 52,
+      "spAttack": 40,
+      "spDefense": 72,
+      "speed": 27
+    },
+    "capture": 200
+  },
+  "araquanid": {
+    "dex": 752,
+    "name": "Araquanid",
+    "types": [
+      "water",
+      "bug"
+    ],
+    "stats": {
+      "hp": 68,
+      "attack": 70,
+      "defense": 92,
+      "spAttack": 50,
+      "spDefense": 132,
+      "speed": 42
+    },
+    "capture": 100
   },
   "fomantis": {
     "dex": 753,
@@ -5721,7 +9795,58 @@
       "spAttack": 50,
       "spDefense": 35,
       "speed": 35
-    }
+    },
+    "capture": 190
+  },
+  "lurantis": {
+    "dex": 754,
+    "name": "Lurantis",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 105,
+      "defense": 90,
+      "spAttack": 80,
+      "spDefense": 90,
+      "speed": 45
+    },
+    "capture": 75
+  },
+  "morelull": {
+    "dex": 755,
+    "name": "Morelull",
+    "types": [
+      "grass",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 35,
+      "defense": 55,
+      "spAttack": 65,
+      "spDefense": 75,
+      "speed": 15
+    },
+    "capture": 190
+  },
+  "salandit": {
+    "dex": 757,
+    "name": "Salandit",
+    "types": [
+      "poison",
+      "fire"
+    ],
+    "stats": {
+      "hp": 48,
+      "attack": 44,
+      "defense": 40,
+      "spAttack": 71,
+      "spDefense": 40,
+      "speed": 77
+    },
+    "capture": 120
   },
   "salazzle": {
     "dex": 758,
@@ -5737,7 +9862,8 @@
       "spAttack": 111,
       "spDefense": 60,
       "speed": 117
-    }
+    },
+    "capture": 45
   },
   "stufful": {
     "dex": 759,
@@ -5753,7 +9879,8 @@
       "spAttack": 45,
       "spDefense": 50,
       "speed": 50
-    }
+    },
+    "capture": 140
   },
   "bewear": {
     "dex": 760,
@@ -5769,7 +9896,222 @@
       "spAttack": 55,
       "spDefense": 60,
       "speed": 60
-    }
+    },
+    "capture": 70
+  },
+  "bounsweet": {
+    "dex": 761,
+    "name": "Bounsweet",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 42,
+      "attack": 30,
+      "defense": 38,
+      "spAttack": 30,
+      "spDefense": 38,
+      "speed": 32
+    },
+    "capture": 235
+  },
+  "steenee": {
+    "dex": 762,
+    "name": "Steenee",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 52,
+      "attack": 40,
+      "defense": 48,
+      "spAttack": 40,
+      "spDefense": 48,
+      "speed": 62
+    },
+    "capture": 120
+  },
+  "tsareena": {
+    "dex": 763,
+    "name": "Tsareena",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 72,
+      "attack": 120,
+      "defense": 98,
+      "spAttack": 50,
+      "spDefense": 98,
+      "speed": 72
+    },
+    "capture": 45
+  },
+  "comfey": {
+    "dex": 764,
+    "name": "Comfey",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 51,
+      "attack": 52,
+      "defense": 90,
+      "spAttack": 82,
+      "spDefense": 110,
+      "speed": 100
+    },
+    "capture": 60
+  },
+  "passimian": {
+    "dex": 766,
+    "name": "Passimian",
+    "types": [
+      "fighting"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 120,
+      "defense": 90,
+      "spAttack": 40,
+      "spDefense": 60,
+      "speed": 80
+    },
+    "capture": 45
+  },
+  "wimpod": {
+    "dex": 767,
+    "name": "Wimpod",
+    "types": [
+      "bug",
+      "water"
+    ],
+    "stats": {
+      "hp": 25,
+      "attack": 35,
+      "defense": 40,
+      "spAttack": 20,
+      "spDefense": 30,
+      "speed": 80
+    },
+    "capture": 90
+  },
+  "golisopod": {
+    "dex": 768,
+    "name": "Golisopod",
+    "types": [
+      "bug",
+      "water"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 125,
+      "defense": 140,
+      "spAttack": 60,
+      "spDefense": 90,
+      "speed": 40
+    },
+    "capture": 45
+  },
+  "sandygast": {
+    "dex": 769,
+    "name": "Sandygast",
+    "types": [
+      "ghost",
+      "ground"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 55,
+      "defense": 80,
+      "spAttack": 70,
+      "spDefense": 45,
+      "speed": 15
+    },
+    "capture": 140
+  },
+  "palossand": {
+    "dex": 770,
+    "name": "Palossand",
+    "types": [
+      "ghost",
+      "ground"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 75,
+      "defense": 110,
+      "spAttack": 100,
+      "spDefense": 75,
+      "speed": 35
+    },
+    "capture": 60
+  },
+  "pyukumuku": {
+    "dex": 771,
+    "name": "Pyukumuku",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 60,
+      "defense": 130,
+      "spAttack": 30,
+      "spDefense": 130,
+      "speed": 5
+    },
+    "capture": 60
+  },
+  "minior": {
+    "dex": 774,
+    "name": "Minior",
+    "types": [
+      "rock",
+      "flying"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 60,
+      "defense": 100,
+      "spAttack": 60,
+      "spDefense": 100,
+      "speed": 60
+    },
+    "capture": 30
+  },
+  "komala": {
+    "dex": 775,
+    "name": "Komala",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 115,
+      "defense": 65,
+      "spAttack": 75,
+      "spDefense": 95,
+      "speed": 65
+    },
+    "capture": 45
+  },
+  "turtonator": {
+    "dex": 776,
+    "name": "Turtonator",
+    "types": [
+      "fire",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 78,
+      "defense": 135,
+      "spAttack": 91,
+      "spDefense": 85,
+      "speed": 36
+    },
+    "capture": 70
   },
   "togedemaru": {
     "dex": 777,
@@ -5785,7 +10127,8 @@
       "spAttack": 40,
       "spDefense": 73,
       "speed": 96
-    }
+    },
+    "capture": 180
   },
   "mimikyu": {
     "dex": 778,
@@ -5801,7 +10144,59 @@
       "spAttack": 50,
       "spDefense": 105,
       "speed": 96
-    }
+    },
+    "capture": 45
+  },
+  "bruxish": {
+    "dex": 779,
+    "name": "Bruxish",
+    "types": [
+      "water",
+      "psychic"
+    ],
+    "stats": {
+      "hp": 68,
+      "attack": 105,
+      "defense": 70,
+      "spAttack": 70,
+      "spDefense": 70,
+      "speed": 92
+    },
+    "capture": 80
+  },
+  "drampa": {
+    "dex": 780,
+    "name": "Drampa",
+    "types": [
+      "normal",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 78,
+      "attack": 60,
+      "defense": 85,
+      "spAttack": 135,
+      "spDefense": 91,
+      "speed": 36
+    },
+    "capture": 70
+  },
+  "dhelmise": {
+    "dex": 781,
+    "name": "Dhelmise",
+    "types": [
+      "ghost",
+      "grass"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 131,
+      "defense": 100,
+      "spAttack": 86,
+      "spDefense": 90,
+      "speed": 40
+    },
+    "capture": 25
   },
   "jangmoO": {
     "dex": 782,
@@ -5816,7 +10211,42 @@
       "spAttack": 45,
       "spDefense": 45,
       "speed": 45
-    }
+    },
+    "capture": 45
+  },
+  "hakamoO": {
+    "dex": 783,
+    "name": "Hakamo-o",
+    "types": [
+      "dragon",
+      "fighting"
+    ],
+    "stats": {
+      "hp": 55,
+      "attack": 75,
+      "defense": 90,
+      "spAttack": 65,
+      "spDefense": 70,
+      "speed": 65
+    },
+    "capture": 45
+  },
+  "kommoO": {
+    "dex": 784,
+    "name": "Kommo-o",
+    "types": [
+      "dragon",
+      "fighting"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 110,
+      "defense": 125,
+      "spAttack": 100,
+      "spDefense": 105,
+      "speed": 85
+    },
+    "capture": 45
   },
   "skwovet": {
     "dex": 819,
@@ -5831,7 +10261,8 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 25
-    }
+    },
+    "capture": 255
   },
   "rookidee": {
     "dex": 821,
@@ -5846,7 +10277,8 @@
       "spAttack": 33,
       "spDefense": 35,
       "speed": 57
-    }
+    },
+    "capture": 255
   },
   "corvisquire": {
     "dex": 822,
@@ -5861,7 +10293,8 @@
       "spAttack": 43,
       "spDefense": 55,
       "speed": 77
-    }
+    },
+    "capture": 120
   },
   "corviknight": {
     "dex": 823,
@@ -5877,7 +10310,58 @@
       "spAttack": 53,
       "spDefense": 85,
       "speed": 67
-    }
+    },
+    "capture": 45
+  },
+  "blipbug": {
+    "dex": 824,
+    "name": "Blipbug",
+    "types": [
+      "bug"
+    ],
+    "stats": {
+      "hp": 25,
+      "attack": 20,
+      "defense": 20,
+      "spAttack": 25,
+      "spDefense": 45,
+      "speed": 45
+    },
+    "capture": 255
+  },
+  "dottler": {
+    "dex": 825,
+    "name": "Dottler",
+    "types": [
+      "bug",
+      "psychic"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 35,
+      "defense": 80,
+      "spAttack": 50,
+      "spDefense": 90,
+      "speed": 30
+    },
+    "capture": 120
+  },
+  "orbeetle": {
+    "dex": 826,
+    "name": "Orbeetle",
+    "types": [
+      "bug",
+      "psychic"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 45,
+      "defense": 110,
+      "spAttack": 80,
+      "spDefense": 120,
+      "speed": 90
+    },
+    "capture": 45
   },
   "nickit": {
     "dex": 827,
@@ -5892,7 +10376,8 @@
       "spAttack": 47,
       "spDefense": 52,
       "speed": 50
-    }
+    },
+    "capture": 255
   },
   "thievul": {
     "dex": 828,
@@ -5907,7 +10392,72 @@
       "spAttack": 87,
       "spDefense": 92,
       "speed": 90
-    }
+    },
+    "capture": 127
+  },
+  "gossifleur": {
+    "dex": 829,
+    "name": "Gossifleur",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 40,
+      "defense": 60,
+      "spAttack": 40,
+      "spDefense": 60,
+      "speed": 10
+    },
+    "capture": 190
+  },
+  "eldegoss": {
+    "dex": 830,
+    "name": "Eldegoss",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 50,
+      "defense": 90,
+      "spAttack": 80,
+      "spDefense": 120,
+      "speed": 60
+    },
+    "capture": 75
+  },
+  "wooloo": {
+    "dex": 831,
+    "name": "Wooloo",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 42,
+      "attack": 40,
+      "defense": 55,
+      "spAttack": 40,
+      "spDefense": 45,
+      "speed": 48
+    },
+    "capture": 255
+  },
+  "dubwool": {
+    "dex": 832,
+    "name": "Dubwool",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 72,
+      "attack": 80,
+      "defense": 100,
+      "spAttack": 60,
+      "spDefense": 90,
+      "speed": 88
+    },
+    "capture": 127
   },
   "chewtle": {
     "dex": 833,
@@ -5922,7 +10472,8 @@
       "spAttack": 38,
       "spDefense": 38,
       "speed": 44
-    }
+    },
+    "capture": 255
   },
   "drednaw": {
     "dex": 834,
@@ -5938,7 +10489,8 @@
       "spAttack": 48,
       "spDefense": 68,
       "speed": 74
-    }
+    },
+    "capture": 75
   },
   "yamper": {
     "dex": 835,
@@ -5953,7 +10505,190 @@
       "spAttack": 40,
       "spDefense": 50,
       "speed": 26
-    }
+    },
+    "capture": 255
+  },
+  "boltund": {
+    "dex": 836,
+    "name": "Boltund",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 69,
+      "attack": 90,
+      "defense": 60,
+      "spAttack": 90,
+      "spDefense": 60,
+      "speed": 121
+    },
+    "capture": 45
+  },
+  "applin": {
+    "dex": 840,
+    "name": "Applin",
+    "types": [
+      "grass",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 40,
+      "defense": 80,
+      "spAttack": 40,
+      "spDefense": 40,
+      "speed": 20
+    },
+    "capture": 255
+  },
+  "flapple": {
+    "dex": 841,
+    "name": "Flapple",
+    "types": [
+      "grass",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 110,
+      "defense": 80,
+      "spAttack": 95,
+      "spDefense": 60,
+      "speed": 70
+    },
+    "capture": 45
+  },
+  "appletun": {
+    "dex": 842,
+    "name": "Appletun",
+    "types": [
+      "grass",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 110,
+      "attack": 85,
+      "defense": 80,
+      "spAttack": 100,
+      "spDefense": 80,
+      "speed": 30
+    },
+    "capture": 45
+  },
+  "silicobra": {
+    "dex": 843,
+    "name": "Silicobra",
+    "types": [
+      "ground"
+    ],
+    "stats": {
+      "hp": 52,
+      "attack": 57,
+      "defense": 75,
+      "spAttack": 35,
+      "spDefense": 50,
+      "speed": 46
+    },
+    "capture": 255
+  },
+  "sandaconda": {
+    "dex": 844,
+    "name": "Sandaconda",
+    "types": [
+      "ground"
+    ],
+    "stats": {
+      "hp": 72,
+      "attack": 107,
+      "defense": 125,
+      "spAttack": 65,
+      "spDefense": 70,
+      "speed": 71
+    },
+    "capture": 120
+  },
+  "cramorant": {
+    "dex": 845,
+    "name": "Cramorant",
+    "types": [
+      "flying",
+      "water"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 85,
+      "defense": 55,
+      "spAttack": 85,
+      "spDefense": 95,
+      "speed": 85
+    },
+    "capture": 45
+  },
+  "arrokuda": {
+    "dex": 846,
+    "name": "Arrokuda",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 41,
+      "attack": 63,
+      "defense": 40,
+      "spAttack": 40,
+      "spDefense": 30,
+      "speed": 66
+    },
+    "capture": 255
+  },
+  "barraskewda": {
+    "dex": 847,
+    "name": "Barraskewda",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 61,
+      "attack": 123,
+      "defense": 60,
+      "spAttack": 60,
+      "spDefense": 50,
+      "speed": 136
+    },
+    "capture": 60
+  },
+  "toxel": {
+    "dex": 848,
+    "name": "Toxel",
+    "types": [
+      "electric",
+      "poison"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 38,
+      "defense": 35,
+      "spAttack": 54,
+      "spDefense": 35,
+      "speed": 40
+    },
+    "capture": 75
+  },
+  "toxtricity": {
+    "dex": 849,
+    "name": "Toxtricity",
+    "types": [
+      "electric",
+      "poison"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 98,
+      "defense": 70,
+      "spAttack": 114,
+      "spDefense": 70,
+      "speed": 75
+    },
+    "capture": 45
   },
   "sizzlipede": {
     "dex": 850,
@@ -5969,7 +10704,8 @@
       "spAttack": 50,
       "spDefense": 50,
       "speed": 45
-    }
+    },
+    "capture": 190
   },
   "centiskorch": {
     "dex": 851,
@@ -5985,7 +10721,40 @@
       "spAttack": 90,
       "spDefense": 90,
       "speed": 65
-    }
+    },
+    "capture": 75
+  },
+  "clobbopus": {
+    "dex": 852,
+    "name": "Clobbopus",
+    "types": [
+      "fighting"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 68,
+      "defense": 60,
+      "spAttack": 50,
+      "spDefense": 50,
+      "speed": 32
+    },
+    "capture": 180
+  },
+  "grapploct": {
+    "dex": 853,
+    "name": "Grapploct",
+    "types": [
+      "fighting"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 118,
+      "defense": 90,
+      "spAttack": 70,
+      "spDefense": 80,
+      "speed": 42
+    },
+    "capture": 45
   },
   "sinistea": {
     "dex": 854,
@@ -6000,7 +10769,8 @@
       "spAttack": 74,
       "spDefense": 54,
       "speed": 50
-    }
+    },
+    "capture": 120
   },
   "polteageist": {
     "dex": 855,
@@ -6015,7 +10785,57 @@
       "spAttack": 134,
       "spDefense": 114,
       "speed": 70
-    }
+    },
+    "capture": 60
+  },
+  "hatenna": {
+    "dex": 856,
+    "name": "Hatenna",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 42,
+      "attack": 30,
+      "defense": 45,
+      "spAttack": 56,
+      "spDefense": 53,
+      "speed": 39
+    },
+    "capture": 235
+  },
+  "hattrem": {
+    "dex": 857,
+    "name": "Hattrem",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 57,
+      "attack": 40,
+      "defense": 65,
+      "spAttack": 86,
+      "spDefense": 73,
+      "speed": 49
+    },
+    "capture": 120
+  },
+  "hatterene": {
+    "dex": 858,
+    "name": "Hatterene",
+    "types": [
+      "psychic",
+      "fairy"
+    ],
+    "stats": {
+      "hp": 57,
+      "attack": 90,
+      "defense": 95,
+      "spAttack": 136,
+      "spDefense": 103,
+      "speed": 29
+    },
+    "capture": 45
   },
   "impidimp": {
     "dex": 859,
@@ -6031,7 +10851,8 @@
       "spAttack": 55,
       "spDefense": 40,
       "speed": 50
-    }
+    },
+    "capture": 255
   },
   "morgrem": {
     "dex": 860,
@@ -6047,7 +10868,8 @@
       "spAttack": 75,
       "spDefense": 55,
       "speed": 70
-    }
+    },
+    "capture": 120
   },
   "grimmsnarl": {
     "dex": 861,
@@ -6063,7 +10885,258 @@
       "spAttack": 95,
       "spDefense": 75,
       "speed": 60
-    }
+    },
+    "capture": 45
+  },
+  "obstagoon": {
+    "dex": 862,
+    "name": "Obstagoon",
+    "types": [
+      "dark",
+      "normal"
+    ],
+    "stats": {
+      "hp": 93,
+      "attack": 90,
+      "defense": 101,
+      "spAttack": 60,
+      "spDefense": 81,
+      "speed": 95
+    },
+    "capture": 45
+  },
+  "perrserker": {
+    "dex": 863,
+    "name": "Perrserker",
+    "types": [
+      "steel"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 110,
+      "defense": 100,
+      "spAttack": 50,
+      "spDefense": 60,
+      "speed": 50
+    },
+    "capture": 90
+  },
+  "cursola": {
+    "dex": 864,
+    "name": "Cursola",
+    "types": [
+      "ghost"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 95,
+      "defense": 50,
+      "spAttack": 145,
+      "spDefense": 130,
+      "speed": 30
+    },
+    "capture": 30
+  },
+  "runerigus": {
+    "dex": 867,
+    "name": "Runerigus",
+    "types": [
+      "ground",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 58,
+      "attack": 95,
+      "defense": 145,
+      "spAttack": 50,
+      "spDefense": 105,
+      "speed": 30
+    },
+    "capture": 90
+  },
+  "alcremie": {
+    "dex": 869,
+    "name": "Alcremie",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 60,
+      "defense": 75,
+      "spAttack": 110,
+      "spDefense": 121,
+      "speed": 64
+    },
+    "capture": 100
+  },
+  "pincurchin": {
+    "dex": 871,
+    "name": "Pincurchin",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 48,
+      "attack": 101,
+      "defense": 95,
+      "spAttack": 91,
+      "spDefense": 85,
+      "speed": 15
+    },
+    "capture": 75
+  },
+  "snom": {
+    "dex": 872,
+    "name": "Snom",
+    "types": [
+      "ice",
+      "bug"
+    ],
+    "stats": {
+      "hp": 30,
+      "attack": 25,
+      "defense": 35,
+      "spAttack": 45,
+      "spDefense": 30,
+      "speed": 20
+    },
+    "capture": 190
+  },
+  "frosmoth": {
+    "dex": 873,
+    "name": "Frosmoth",
+    "types": [
+      "ice",
+      "bug"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 65,
+      "defense": 60,
+      "spAttack": 125,
+      "spDefense": 90,
+      "speed": 65
+    },
+    "capture": 75
+  },
+  "eiscue": {
+    "dex": 875,
+    "name": "Eiscue",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 80,
+      "defense": 110,
+      "spAttack": 65,
+      "spDefense": 90,
+      "speed": 50
+    },
+    "capture": 60
+  },
+  "indeedee": {
+    "dex": 876,
+    "name": "Indeedee",
+    "types": [
+      "psychic",
+      "normal"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 65,
+      "defense": 55,
+      "spAttack": 105,
+      "spDefense": 95,
+      "speed": 95
+    },
+    "capture": 30
+  },
+  "morpeko": {
+    "dex": 877,
+    "name": "Morpeko",
+    "types": [
+      "electric",
+      "dark"
+    ],
+    "stats": {
+      "hp": 58,
+      "attack": 95,
+      "defense": 58,
+      "spAttack": 70,
+      "spDefense": 58,
+      "speed": 97
+    },
+    "capture": 180
+  },
+  "dracozolt": {
+    "dex": 880,
+    "name": "Dracozolt",
+    "types": [
+      "electric",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 90,
+      "attack": 100,
+      "defense": 90,
+      "spAttack": 80,
+      "spDefense": 70,
+      "speed": 75
+    },
+    "capture": 45
+  },
+  "arctozolt": {
+    "dex": 881,
+    "name": "Arctozolt",
+    "types": [
+      "electric",
+      "ice"
+    ],
+    "stats": {
+      "hp": 90,
+      "attack": 100,
+      "defense": 90,
+      "spAttack": 90,
+      "spDefense": 80,
+      "speed": 55
+    },
+    "capture": 45
+  },
+  "dracovish": {
+    "dex": 882,
+    "name": "Dracovish",
+    "types": [
+      "water",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 90,
+      "attack": 90,
+      "defense": 100,
+      "spAttack": 70,
+      "spDefense": 80,
+      "speed": 75
+    },
+    "capture": 45
+  },
+  "duraludon": {
+    "dex": 884,
+    "name": "Duraludon",
+    "types": [
+      "steel",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 95,
+      "defense": 115,
+      "spAttack": 120,
+      "spDefense": 50,
+      "speed": 85
+    },
+    "capture": 45
   },
   "dreepy": {
     "dex": 885,
@@ -6079,7 +11152,144 @@
       "spAttack": 40,
       "spDefense": 30,
       "speed": 82
-    }
+    },
+    "capture": 45
+  },
+  "drakloak": {
+    "dex": 886,
+    "name": "Drakloak",
+    "types": [
+      "dragon",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 68,
+      "attack": 80,
+      "defense": 50,
+      "spAttack": 60,
+      "spDefense": 50,
+      "speed": 102
+    },
+    "capture": 45
+  },
+  "dragapult": {
+    "dex": 887,
+    "name": "Dragapult",
+    "types": [
+      "dragon",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 88,
+      "attack": 120,
+      "defense": 75,
+      "spAttack": 100,
+      "spDefense": 75,
+      "speed": 142
+    },
+    "capture": 45
+  },
+  "wyrdeer": {
+    "dex": 899,
+    "name": "Wyrdeer",
+    "types": [
+      "normal",
+      "psychic"
+    ],
+    "stats": {
+      "hp": 103,
+      "attack": 105,
+      "defense": 72,
+      "spAttack": 105,
+      "spDefense": 75,
+      "speed": 65
+    },
+    "capture": 135
+  },
+  "kleavor": {
+    "dex": 900,
+    "name": "Kleavor",
+    "types": [
+      "bug",
+      "rock"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 135,
+      "defense": 95,
+      "spAttack": 45,
+      "spDefense": 70,
+      "speed": 85
+    },
+    "capture": 115
+  },
+  "ursaluna": {
+    "dex": 901,
+    "name": "Ursaluna",
+    "types": [
+      "ground",
+      "normal"
+    ],
+    "stats": {
+      "hp": 130,
+      "attack": 140,
+      "defense": 105,
+      "spAttack": 45,
+      "spDefense": 80,
+      "speed": 50
+    },
+    "capture": 75
+  },
+  "basculegion": {
+    "dex": 902,
+    "name": "Basculegion",
+    "types": [
+      "water",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 120,
+      "attack": 112,
+      "defense": 65,
+      "spAttack": 80,
+      "spDefense": 75,
+      "speed": 78
+    },
+    "capture": 135
+  },
+  "sneasler": {
+    "dex": 903,
+    "name": "Sneasler",
+    "types": [
+      "fighting",
+      "poison"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 130,
+      "defense": 60,
+      "spAttack": 40,
+      "spDefense": 80,
+      "speed": 120
+    },
+    "capture": 135
+  },
+  "overqwil": {
+    "dex": 904,
+    "name": "Overqwil",
+    "types": [
+      "dark",
+      "poison"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 115,
+      "defense": 95,
+      "spAttack": 65,
+      "spDefense": 65,
+      "speed": 85
+    },
+    "capture": 135
   },
   "lechonk": {
     "dex": 915,
@@ -6094,7 +11304,8 @@
       "spAttack": 35,
       "spDefense": 45,
       "speed": 35
-    }
+    },
+    "capture": 255
   },
   "tarountula": {
     "dex": 917,
@@ -6109,7 +11320,8 @@
       "spAttack": 29,
       "spDefense": 40,
       "speed": 20
-    }
+    },
+    "capture": 255
   },
   "spidops": {
     "dex": 918,
@@ -6124,7 +11336,24 @@
       "spAttack": 52,
       "spDefense": 86,
       "speed": 35
-    }
+    },
+    "capture": 120
+  },
+  "nymble": {
+    "dex": 919,
+    "name": "Nymble",
+    "types": [
+      "bug"
+    ],
+    "stats": {
+      "hp": 33,
+      "attack": 46,
+      "defense": 40,
+      "spAttack": 21,
+      "spDefense": 25,
+      "speed": 45
+    },
+    "capture": 190
   },
   "lokix": {
     "dex": 920,
@@ -6140,7 +11369,8 @@
       "spAttack": 52,
       "spDefense": 55,
       "speed": 92
-    }
+    },
+    "capture": 30
   },
   "pawmi": {
     "dex": 921,
@@ -6155,7 +11385,8 @@
       "spAttack": 40,
       "spDefense": 25,
       "speed": 60
-    }
+    },
+    "capture": 190
   },
   "pawmo": {
     "dex": 922,
@@ -6171,7 +11402,8 @@
       "spAttack": 50,
       "spDefense": 40,
       "speed": 85
-    }
+    },
+    "capture": 80
   },
   "pawmot": {
     "dex": 923,
@@ -6187,7 +11419,106 @@
       "spAttack": 70,
       "spDefense": 60,
       "speed": 105
-    }
+    },
+    "capture": 45
+  },
+  "tandemaus": {
+    "dex": 924,
+    "name": "Tandemaus",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 50,
+      "defense": 45,
+      "spAttack": 40,
+      "spDefense": 45,
+      "speed": 75
+    },
+    "capture": 150
+  },
+  "maushold": {
+    "dex": 925,
+    "name": "Maushold",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 74,
+      "attack": 75,
+      "defense": 70,
+      "spAttack": 65,
+      "spDefense": 75,
+      "speed": 111
+    },
+    "capture": 75
+  },
+  "fidough": {
+    "dex": 926,
+    "name": "Fidough",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 37,
+      "attack": 55,
+      "defense": 70,
+      "spAttack": 30,
+      "spDefense": 55,
+      "speed": 65
+    },
+    "capture": 190
+  },
+  "dachsbun": {
+    "dex": 927,
+    "name": "Dachsbun",
+    "types": [
+      "fairy"
+    ],
+    "stats": {
+      "hp": 57,
+      "attack": 80,
+      "defense": 115,
+      "spAttack": 50,
+      "spDefense": 80,
+      "speed": 95
+    },
+    "capture": 90
+  },
+  "smoliv": {
+    "dex": 928,
+    "name": "Smoliv",
+    "types": [
+      "grass",
+      "normal"
+    ],
+    "stats": {
+      "hp": 41,
+      "attack": 35,
+      "defense": 45,
+      "spAttack": 58,
+      "spDefense": 51,
+      "speed": 30
+    },
+    "capture": 255
+  },
+  "arboliva": {
+    "dex": 930,
+    "name": "Arboliva",
+    "types": [
+      "grass",
+      "normal"
+    ],
+    "stats": {
+      "hp": 78,
+      "attack": 69,
+      "defense": 90,
+      "spAttack": 125,
+      "spDefense": 109,
+      "speed": 39
+    },
+    "capture": 45
   },
   "nacli": {
     "dex": 932,
@@ -6202,7 +11533,90 @@
       "spAttack": 35,
       "spDefense": 35,
       "speed": 25
-    }
+    },
+    "capture": 255
+  },
+  "garganacl": {
+    "dex": 934,
+    "name": "Garganacl",
+    "types": [
+      "rock"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 100,
+      "defense": 130,
+      "spAttack": 45,
+      "spDefense": 90,
+      "speed": 35
+    },
+    "capture": 45
+  },
+  "charcadet": {
+    "dex": 935,
+    "name": "Charcadet",
+    "types": [
+      "fire"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 50,
+      "defense": 40,
+      "spAttack": 50,
+      "spDefense": 40,
+      "speed": 35
+    },
+    "capture": 90
+  },
+  "armarouge": {
+    "dex": 936,
+    "name": "Armarouge",
+    "types": [
+      "fire",
+      "psychic"
+    ],
+    "stats": {
+      "hp": 85,
+      "attack": 60,
+      "defense": 100,
+      "spAttack": 125,
+      "spDefense": 80,
+      "speed": 75
+    },
+    "capture": 25
+  },
+  "ceruledge": {
+    "dex": 937,
+    "name": "Ceruledge",
+    "types": [
+      "fire",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 75,
+      "attack": 125,
+      "defense": 80,
+      "spAttack": 60,
+      "spDefense": 100,
+      "speed": 85
+    },
+    "capture": 25
+  },
+  "tadbulb": {
+    "dex": 938,
+    "name": "Tadbulb",
+    "types": [
+      "electric"
+    ],
+    "stats": {
+      "hp": 61,
+      "attack": 31,
+      "defense": 41,
+      "spAttack": 59,
+      "spDefense": 35,
+      "speed": 45
+    },
+    "capture": 190
   },
   "bellibolt": {
     "dex": 939,
@@ -6217,7 +11631,8 @@
       "spAttack": 103,
       "spDefense": 83,
       "speed": 45
-    }
+    },
+    "capture": 50
   },
   "wattrel": {
     "dex": 940,
@@ -6233,7 +11648,107 @@
       "spAttack": 55,
       "spDefense": 40,
       "speed": 70
-    }
+    },
+    "capture": 180
+  },
+  "kilowattrel": {
+    "dex": 941,
+    "name": "Kilowattrel",
+    "types": [
+      "electric",
+      "flying"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 70,
+      "defense": 60,
+      "spAttack": 105,
+      "spDefense": 60,
+      "speed": 125
+    },
+    "capture": 90
+  },
+  "bramblin": {
+    "dex": 946,
+    "name": "Bramblin",
+    "types": [
+      "grass",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 65,
+      "defense": 30,
+      "spAttack": 45,
+      "spDefense": 35,
+      "speed": 60
+    },
+    "capture": 190
+  },
+  "capsakid": {
+    "dex": 951,
+    "name": "Capsakid",
+    "types": [
+      "grass"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 62,
+      "defense": 40,
+      "spAttack": 62,
+      "spDefense": 40,
+      "speed": 50
+    },
+    "capture": 190
+  },
+  "scovillain": {
+    "dex": 952,
+    "name": "Scovillain",
+    "types": [
+      "grass",
+      "fire"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 108,
+      "defense": 65,
+      "spAttack": 108,
+      "spDefense": 65,
+      "speed": 75
+    },
+    "capture": 75
+  },
+  "rellor": {
+    "dex": 953,
+    "name": "Rellor",
+    "types": [
+      "bug"
+    ],
+    "stats": {
+      "hp": 41,
+      "attack": 50,
+      "defense": 60,
+      "spAttack": 31,
+      "spDefense": 58,
+      "speed": 30
+    },
+    "capture": 190
+  },
+  "flittle": {
+    "dex": 955,
+    "name": "Flittle",
+    "types": [
+      "psychic"
+    ],
+    "stats": {
+      "hp": 30,
+      "attack": 35,
+      "defense": 30,
+      "spAttack": 55,
+      "spDefense": 30,
+      "speed": 75
+    },
+    "capture": 120
   },
   "tinkatink": {
     "dex": 957,
@@ -6249,7 +11764,25 @@
       "spAttack": 35,
       "spDefense": 64,
       "speed": 58
-    }
+    },
+    "capture": 190
+  },
+  "tinkatuff": {
+    "dex": 958,
+    "name": "Tinkatuff",
+    "types": [
+      "fairy",
+      "steel"
+    ],
+    "stats": {
+      "hp": 65,
+      "attack": 55,
+      "defense": 55,
+      "spAttack": 45,
+      "spDefense": 82,
+      "speed": 78
+    },
+    "capture": 90
   },
   "tinkaton": {
     "dex": 959,
@@ -6265,7 +11798,8 @@
       "spAttack": 70,
       "spDefense": 105,
       "speed": 94
-    }
+    },
+    "capture": 45
   },
   "wiglett": {
     "dex": 960,
@@ -6280,7 +11814,107 @@
       "spAttack": 35,
       "spDefense": 25,
       "speed": 95
-    }
+    },
+    "capture": 255
+  },
+  "wugtrio": {
+    "dex": 961,
+    "name": "Wugtrio",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 35,
+      "attack": 100,
+      "defense": 50,
+      "spAttack": 50,
+      "spDefense": 70,
+      "speed": 120
+    },
+    "capture": 50
+  },
+  "finizen": {
+    "dex": 963,
+    "name": "Finizen",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 45,
+      "defense": 40,
+      "spAttack": 45,
+      "spDefense": 40,
+      "speed": 75
+    },
+    "capture": 200
+  },
+  "palafin": {
+    "dex": 964,
+    "name": "Palafin",
+    "types": [
+      "water"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 70,
+      "defense": 72,
+      "spAttack": 53,
+      "spDefense": 62,
+      "speed": 100
+    },
+    "capture": 45
+  },
+  "varoom": {
+    "dex": 965,
+    "name": "Varoom",
+    "types": [
+      "steel",
+      "poison"
+    ],
+    "stats": {
+      "hp": 45,
+      "attack": 70,
+      "defense": 63,
+      "spAttack": 30,
+      "spDefense": 45,
+      "speed": 47
+    },
+    "capture": 190
+  },
+  "revavroom": {
+    "dex": 966,
+    "name": "Revavroom",
+    "types": [
+      "steel",
+      "poison"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 119,
+      "defense": 90,
+      "spAttack": 54,
+      "spDefense": 67,
+      "speed": 90
+    },
+    "capture": 75
+  },
+  "cyclizar": {
+    "dex": 967,
+    "name": "Cyclizar",
+    "types": [
+      "dragon",
+      "normal"
+    ],
+    "stats": {
+      "hp": 70,
+      "attack": 95,
+      "defense": 65,
+      "spAttack": 85,
+      "spDefense": 65,
+      "speed": 121
+    },
+    "capture": 190
   },
   "glimmet": {
     "dex": 969,
@@ -6296,7 +11930,41 @@
       "spAttack": 105,
       "spDefense": 60,
       "speed": 60
-    }
+    },
+    "capture": 70
+  },
+  "glimmora": {
+    "dex": 970,
+    "name": "Glimmora",
+    "types": [
+      "rock",
+      "poison"
+    ],
+    "stats": {
+      "hp": 83,
+      "attack": 55,
+      "defense": 90,
+      "spAttack": 130,
+      "spDefense": 81,
+      "speed": 86
+    },
+    "capture": 25
+  },
+  "greavard": {
+    "dex": 971,
+    "name": "Greavard",
+    "types": [
+      "ghost"
+    ],
+    "stats": {
+      "hp": 50,
+      "attack": 61,
+      "defense": 60,
+      "spAttack": 30,
+      "spDefense": 55,
+      "speed": 34
+    },
+    "capture": 120
   },
   "houndstone": {
     "dex": 972,
@@ -6311,7 +11979,158 @@
       "spAttack": 50,
       "spDefense": 97,
       "speed": 68
-    }
+    },
+    "capture": 60
+  },
+  "cetoddle": {
+    "dex": 974,
+    "name": "Cetoddle",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 108,
+      "attack": 68,
+      "defense": 45,
+      "spAttack": 30,
+      "spDefense": 40,
+      "speed": 43
+    },
+    "capture": 150
+  },
+  "cetitan": {
+    "dex": 975,
+    "name": "Cetitan",
+    "types": [
+      "ice"
+    ],
+    "stats": {
+      "hp": 170,
+      "attack": 113,
+      "defense": 65,
+      "spAttack": 45,
+      "spDefense": 55,
+      "speed": 73
+    },
+    "capture": 50
+  },
+  "veluza": {
+    "dex": 976,
+    "name": "Veluza",
+    "types": [
+      "water",
+      "psychic"
+    ],
+    "stats": {
+      "hp": 90,
+      "attack": 102,
+      "defense": 73,
+      "spAttack": 78,
+      "spDefense": 65,
+      "speed": 70
+    },
+    "capture": 100
+  },
+  "tatsugiri": {
+    "dex": 978,
+    "name": "Tatsugiri",
+    "types": [
+      "dragon",
+      "water"
+    ],
+    "stats": {
+      "hp": 68,
+      "attack": 50,
+      "defense": 60,
+      "spAttack": 120,
+      "spDefense": 95,
+      "speed": 82
+    },
+    "capture": 100
+  },
+  "annihilape": {
+    "dex": 979,
+    "name": "Annihilape",
+    "types": [
+      "fighting",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 110,
+      "attack": 115,
+      "defense": 80,
+      "spAttack": 50,
+      "spDefense": 90,
+      "speed": 90
+    },
+    "capture": 45
+  },
+  "clodsire": {
+    "dex": 980,
+    "name": "Clodsire",
+    "types": [
+      "poison",
+      "ground"
+    ],
+    "stats": {
+      "hp": 130,
+      "attack": 75,
+      "defense": 60,
+      "spAttack": 45,
+      "spDefense": 100,
+      "speed": 20
+    },
+    "capture": 90
+  },
+  "farigiraf": {
+    "dex": 981,
+    "name": "Farigiraf",
+    "types": [
+      "normal",
+      "psychic"
+    ],
+    "stats": {
+      "hp": 120,
+      "attack": 90,
+      "defense": 70,
+      "spAttack": 110,
+      "spDefense": 70,
+      "speed": 60
+    },
+    "capture": 45
+  },
+  "dudunsparce": {
+    "dex": 982,
+    "name": "Dudunsparce",
+    "types": [
+      "normal"
+    ],
+    "stats": {
+      "hp": 125,
+      "attack": 100,
+      "defense": 80,
+      "spAttack": 85,
+      "spDefense": 75,
+      "speed": 55
+    },
+    "capture": 45
+  },
+  "kingambit": {
+    "dex": 983,
+    "name": "Kingambit",
+    "types": [
+      "dark",
+      "steel"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 135,
+      "defense": 120,
+      "spAttack": 60,
+      "spDefense": 85,
+      "speed": 50
+    },
+    "capture": 25
   },
   "frigibax": {
     "dex": 996,
@@ -6327,6 +12146,143 @@
       "spAttack": 35,
       "spDefense": 45,
       "speed": 55
-    }
+    },
+    "capture": 45
+  },
+  "arctibax": {
+    "dex": 997,
+    "name": "Arctibax",
+    "types": [
+      "dragon",
+      "ice"
+    ],
+    "stats": {
+      "hp": 90,
+      "attack": 95,
+      "defense": 66,
+      "spAttack": 45,
+      "spDefense": 65,
+      "speed": 62
+    },
+    "capture": 25
+  },
+  "baxcalibur": {
+    "dex": 998,
+    "name": "Baxcalibur",
+    "types": [
+      "dragon",
+      "ice"
+    ],
+    "stats": {
+      "hp": 115,
+      "attack": 145,
+      "defense": 92,
+      "spAttack": 75,
+      "spDefense": 86,
+      "speed": 87
+    },
+    "capture": 10
+  },
+  "gholdengo": {
+    "dex": 1000,
+    "name": "Gholdengo",
+    "types": [
+      "steel",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 87,
+      "attack": 60,
+      "defense": 95,
+      "spAttack": 133,
+      "spDefense": 91,
+      "speed": 84
+    },
+    "capture": 45
+  },
+  "dipplin": {
+    "dex": 1011,
+    "name": "Dipplin",
+    "types": [
+      "grass",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 80,
+      "attack": 80,
+      "defense": 110,
+      "spAttack": 95,
+      "spDefense": 80,
+      "speed": 40
+    },
+    "capture": 45
+  },
+  "poltchageist": {
+    "dex": 1012,
+    "name": "Poltchageist",
+    "types": [
+      "grass",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 40,
+      "attack": 45,
+      "defense": 45,
+      "spAttack": 74,
+      "spDefense": 54,
+      "speed": 50
+    },
+    "capture": 120
+  },
+  "sinistcha": {
+    "dex": 1013,
+    "name": "Sinistcha",
+    "types": [
+      "grass",
+      "ghost"
+    ],
+    "stats": {
+      "hp": 71,
+      "attack": 60,
+      "defense": 106,
+      "spAttack": 121,
+      "spDefense": 80,
+      "speed": 70
+    },
+    "capture": 60
+  },
+  "archaludon": {
+    "dex": 1018,
+    "name": "Archaludon",
+    "types": [
+      "steel",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 90,
+      "attack": 105,
+      "defense": 130,
+      "spAttack": 125,
+      "spDefense": 65,
+      "speed": 85
+    },
+    "capture": 10
+  },
+  "hydrapple": {
+    "dex": 1019,
+    "name": "Hydrapple",
+    "types": [
+      "grass",
+      "dragon"
+    ],
+    "stats": {
+      "hp": 106,
+      "attack": 80,
+      "defense": 110,
+      "spAttack": 120,
+      "spDefense": 80,
+      "speed": 44
+    },
+    "capture": 10
   }
 }

@@ -9559,6 +9559,137 @@ button {
   font-size: 16px;
 }
 
+/* The regions, Kanto to Paldea: each tab its goal seen so far, a completed one in green. */
+.dex-regions {
+  gap: 4px;
+  padding: 2px 2px 4px;
+}
+
+.dex-region {
+  font-size: 12px;
+  padding: 5px 6px 4px;
+  gap: 3px;
+  border-radius: 8px;
+}
+
+.dex-region small {
+  font-size: 12px;
+}
+
+.dex-region.done:not(.selected) {
+  background: color-mix(in srgb, #2f8a4a var(--dk-lift, 100%), #fff);
+}
+
+.dex-region.done small {
+  color: #c8f8c0;
+}
+
+.dex-region.done.selected small {
+  color: #1c6a30;
+}
+
+.dex-region.selected.focused {
+  box-shadow: 0 0 0 3px #e83838, 0 3px 0 #2a5aa8;
+}
+
+/* The filters and, beside them, what the region's goal brings (wrapping under them on narrow screens). */
+.dex-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+}
+
+.dex-bar .dex-tabs {
+  flex: 0 1 auto;
+}
+
+.dex-goal {
+  flex: 1 1 260px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px 12px;
+  flex-wrap: wrap;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--dk-ink-2, #404058);
+}
+
+.dex-goal b {
+  color: color-mix(in srgb, #c83030 var(--dk-lift, 100%), #fff);
+}
+
+.dex-goal.done .dex-goal-region b {
+  color: color-mix(in srgb, #2f8a4a var(--dk-lift, 100%), #fff);
+}
+
+.dex-goal-national {
+  color: var(--dk-ink-3, #707088);
+}
+
+/* A species SpriteCollab's artists are still drawing: a pencil on paper, a thank-you rather than a gap. */
+.dex-cell.drawing {
+  background: #e8dcc0;
+  border-style: dashed;
+  border-color: #b8a070;
+}
+
+.dex-cell.drawing > img:first-child {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.dex-cell.drawing small {
+  color: #5a4828;
+  text-shadow: none;
+}
+
+/* Not in the game yet: fainter than an unseen species, which a run can still bring. */
+.dex-cell.soon {
+  background: #1c2238;
+  border-style: dashed;
+  border-color: #283048;
+}
+
+.dex-cell.soon .dex-unknown {
+  opacity: 0.45;
+}
+
+.dex-cell.soon small {
+  opacity: 0.6;
+}
+
+.dex-detail .tag-drawing {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: color-mix(in srgb, #8a6a20 var(--dk-lift, 100%), #fff);
+}
+
+.dex-detail .tag-drawing img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+/* Nothing to draw for a species not in the game yet: its words take the panel. */
+.dex-detail.soon .dex-sprite {
+  display: none;
+}
+
+a.btn.dex-contribute {
+  align-self: stretch;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
 /* The filter row has the keyboard focus: ring the active tab. */
 .dex-tab.selected.focused {
   box-shadow: 0 0 0 3px #e83838, 0 3px 0 #2a5aa8;
@@ -9764,67 +9895,309 @@ a.btn.dex-site {
   height: 16px;
 }
 
-/* Phones in portrait: the detail becomes a strip above the grid. */
-@media (max-width: 600px) {
+/* The region's counts and who doesn't count (`regionCounts`), the same line as the site's region tile. */
+.dex-goal-rule {
+  color: var(--dk-ink-2, #404058);
+}
+
+/* The thank-you's short form shows only on phones, where the detail is a strip. */
+.dex-tip-short {
+  display: none;
+}
+
+/* Phones in portrait: one scrolling row of counters, the detail a short strip above the grid, the grid the rest. */
+@media (max-width: 600px) and (orientation: portrait) {
   .dialog.dex {
     height: 100%;
     padding: 10px;
-    gap: 8px;
+    gap: 6px;
+  }
+  .dex-head {
+    flex-wrap: nowrap;
+    gap: 6px;
   }
   .dex-head .dialog-title {
-    font-size: 24px;
+    flex: none;
+    font-size: 20px;
+  }
+  .dex-progress {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .dex-progress::-webkit-scrollbar {
+    display: none;
   }
   .dex-progress span {
-    font-size: 16px;
+    flex: none;
+    font-size: 14px;
     padding: 3px 6px;
+  }
+  .dex-progress b {
+    font-size: 14px;
+  }
+  .dex-region {
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px 8px;
+  }
+  .dex-goal {
+    flex-direction: column;
+    gap: 3px;
+    font-size: 16px;
   }
   .dex-body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 6px;
   }
   .dex-detail {
     order: -1;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
+    gap: 6px;
     padding: 6px;
     overflow: visible;
   }
   .dex-detail .inspect-sprite {
-    width: 96px;
-    height: 96px;
+    flex: none;
+    width: 72px;
+    height: 72px;
   }
   .dex-detail .inspect-name {
-    font-size: 22px;
+    font-size: 20px;
+  }
+  .dex-facts {
+    gap: 4px;
+  }
+  .dex-fact,
+  .dex-fact b {
+    font-size: 16px;
+  }
+  .dex-detail .dex-tip {
+    font-size: 16px;
+  }
+  .dex-detail .dex-tip-long {
+    display: none;
+  }
+  .dex-detail .dex-tip-short {
+    display: block;
+  }
+  .dex-detail a.btn.dex-contribute {
+    min-height: 44px;
+    padding: 4px 12px;
+    font-size: 16px;
   }
   .dex-grid {
     grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
   }
-  .dex .buttons .btn {
-    flex: 1;
-    justify-content: center;
-  }
-}
-
-/* Phones in landscape: everything side by side, no hint. */
-@media (max-height: 500px) and (orientation: landscape) {
-  .dialog.dex {
-    height: 100%;
-    padding: 8px 12px;
+  .dex .buttons {
+    flex-wrap: nowrap;
     gap: 6px;
   }
-  .dex-body {
-    grid-template-columns: 1fr 210px;
-  }
-  .dex-detail .inspect-sprite {
-    width: 96px;
-    height: 96px;
+  .dex .buttons .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 4px 6px;
+    font-size: 15px;
+    line-height: 1.1;
+    text-align: center;
+    justify-content: center;
   }
   .dex .hint {
     display: none;
   }
-  .dex .buttons .btn {
+}
+
+/*
+ * Phones in landscape: the grid takes the left column from the regions down;
+ * the detail, the goal and the buttons stack on the right. The bar and the
+ * body give their children to the dialog's grid.
+ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .dialog.dex {
+    height: 100%;
+    padding: 8px 10px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(200px, 34vw, 270px);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'head head'
+      'regions regions'
+      'tabs detail'
+      'list detail'
+      'list goal'
+      'list buttons';
+    gap: 6px 8px;
+  }
+  .dex-head {
+    grid-area: head;
+    flex-wrap: nowrap;
+  }
+  .dex-head .dialog-title {
+    flex: none;
+    font-size: 18px;
+  }
+  .dex-progress {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .dex-progress::-webkit-scrollbar {
+    display: none;
+  }
+  .dex-progress span {
+    flex: none;
+    font-size: 14px;
+    padding: 3px 6px;
+  }
+  .dex-progress b {
+    font-size: 14px;
+  }
+  .dex-regions {
+    grid-area: regions;
+    padding: 0 2px 2px;
+  }
+  .dex-region {
+    flex-direction: row;
+    gap: 6px;
+    padding: 4px 6px;
+  }
+  .dex-bar,
+  .dex-body {
+    display: contents;
+  }
+  .dex-bar .dex-tabs {
+    grid-area: tabs;
+    padding: 0 2px;
+  }
+  .dex-tab {
+    font-size: 14px;
+    padding: 5px 8px;
+  }
+  .dex-goal {
+    grid-area: goal;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 3px;
+    font-size: 14px;
+  }
+  .dex-list {
+    grid-area: list;
+  }
+  /* The sprite beside the name and types, the facts under both at full width, scrolling when a species says more than fits. */
+  .dex-detail {
+    grid-area: detail;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    align-items: center;
+    padding: 6px;
+    gap: 4px 8px;
+  }
+  .dex-detail .inspect-sprite {
+    grid-row: 1 / span 2;
+    width: 64px;
+    height: 64px;
+  }
+  .dex-detail .inspect-id {
+    display: contents;
+  }
+  .dex-detail .dex-facts {
+    grid-column: 1 / -1;
+  }
+  /* The thank-you: the tag and the link on one row, the words under them. */
+  .dex-detail.drawing .dex-facts {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .dex-detail.drawing .dex-tip-short {
+    order: 1;
+    flex-basis: 100%;
+  }
+  .dex-detail .inspect-name {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  .dex-detail .inspect-name small {
+    font-size: 14px;
+    margin-bottom: 0;
+  }
+  .dex-facts {
+    gap: 4px;
+  }
+  .dex-fact,
+  .dex-fact b,
+  .dex-detail .dex-tip {
+    font-size: 14px;
+  }
+  .dex-detail .dex-tip-long {
+    display: none;
+  }
+  .dex-detail .dex-tip-short {
+    display: block;
+  }
+  .dex-detail a.btn.dex-contribute {
     min-height: 36px;
-    padding: 6px 12px;
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+  .dex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  }
+  /* Back and the PC side by side, where to find under them. */
+  .dex .buttons {
+    grid-area: buttons;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .dex .buttons .btn {
+    min-width: 0;
+    min-height: 36px;
+    padding: 4px 6px;
+    font-size: 14px;
+    white-space: nowrap;
+    justify-content: center;
+  }
+  .dex .buttons .btn:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .dex .hint {
+    display: none;
+  }
+}
+
+/* Very short landscape screens (568×320): the counters and the National Dex line give their room to the grid and the detail. */
+@media (max-height: 360px) and (orientation: landscape) {
+  .dialog.dex {
+    grid-template-areas:
+      'regions regions'
+      'tabs detail'
+      'list detail'
+      'list goal'
+      'list buttons';
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  }
+  .dex-head {
+    display: none;
+  }
+  .dex-goal-national {
+    display: none;
+  }
+  .dex-detail .inspect-sprite {
+    width: 48px;
+    height: 48px;
+  }
+  /* The pencil, the tag and the link still say it; the words wait for a taller screen. */
+  .dex-detail .dex-tip-short {
+    display: none;
   }
 }
 

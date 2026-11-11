@@ -1,4 +1,4 @@
-import type { EnemyId } from '../data/enemies'
+import { ENEMIES, type EnemyId } from '../data/enemies'
 import { RUN_LENGTH } from '../data/waves'
 import * as dm from '../engine/dmath'
 
@@ -22,8 +22,10 @@ export const ENDLESS = {
   /** Hunting speed grows from the base to `reaperMaxSpeed`× over `reaperRamp` seconds. */
   reaperRamp: 150,
   reaperMaxSpeed: 2,
-  /** A ring or swarm of the current horde every this many seconds. */
+  /** A ring or swarm of the current horde every this many seconds (a swarm only of species that fit one, `fitsFlyby`; else a ring). */
   eventEvery: 40,
+  /** Px/s a species that doesn't fly needs to lead a swarm: a slow one would crawl through the screen, lingering past the horde's ceiling. */
+  flybySpeed: 40,
   /** ₽ the run bonus pays per defeated Arceus. */
   reaperBonus: 2500,
 } as const
@@ -74,3 +76,9 @@ export const endlessPressure = (time: number) => {
 
 /** Size of the n-th endless horde event: rings and swarms that grow every minute. */
 export const endlessEventSize = (time: number) => 30 + dm.round((overtime(time) / 60) * 4)
+
+/** Whether a species fits an endless swarm (a flyby across the screen): it flies, or it's fast (`ENDLESS.flybySpeed`). */
+export const fitsFlyby = (id: EnemyId) => {
+  const def = ENEMIES[id]
+  return (def.types as readonly string[]).includes('flying') || def.speed >= ENDLESS.flybySpeed
+}

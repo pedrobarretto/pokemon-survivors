@@ -115,6 +115,8 @@ import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype, setA
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
 import { dexCounts, dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
+import { dexSee } from './ui/pokedexDev'
+import type { DexRegion } from './data/nationalDex'
 import { runEarnings, wonRun, type ConvertedEggs, type Save } from './game/meta'
 import { equipStyle } from './game/style'
 import { missionStatus, type MissionStatus } from './game/missions'
@@ -5110,6 +5112,11 @@ if (import.meta.env.DEV) {
       hall: devHall,
       otherDevice: devOtherDevice,
       dex: () => loadSave().dex,
+      dexSee: (region?: DexRegion | 'all', missing?: number) => {
+        const out = dexSee(region, missing)
+        if (screen?.el.classList.contains('title-home')) showTitle()
+        return out
+      },
       /** Plays an error report's `replay` (the JSON string from PostHog) again: a simulation error throws here at the same tick. */
       replay: (json: string) => {
         const replay = parseReplay(JSON.parse(json))
@@ -5242,6 +5249,7 @@ if (import.meta.env.DEV) {
       },
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
+      pokedex: () => (endRun(), setScreen(pokedexScreen(ui, input, () => showTitle(), showPcBox))),
       card: (partner: PlayableId = loadSave().partner) => (endRun(), setScreen(sharePreview(ui, input, trainerShare(partner), () => showTitle()))),
       ...biomeDevTools(() => run?.game),
       /** `ps.terrain('tower', 70, 'desert')` walks you to the nearest tower in a desert cell (any biome without the third argument). */

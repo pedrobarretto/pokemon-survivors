@@ -1,3 +1,4 @@
+import type { DexRegion } from '../data/nationalDex'
 import { realmBookFr as realmBook } from './realmStamps/fr'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
@@ -7,6 +8,9 @@ import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
 import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
+
+/** The regions as the Pokédex names them (`data/nationalDex.ts`). */
+const REGION_NAMES = { kanto: 'Kanto', johto: 'Johto', hoenn: 'Hoenn', sinnoh: 'Sinnoh', unova: 'Unova', kalos: 'Kalos', alola: 'Alola', galar: 'Galar', paldea: 'Paldea' } satisfies Record<DexRegion, string>
 
 const typeBoost = (type: string) => `+10% de dégâts aux capacités de type ${type}.`
 
@@ -1519,7 +1523,22 @@ export const fr: Messages = {
     back: 'Retour',
     site: 'Où le trouver ↗',
     pc: 'Boîte PC',
-    hintKeys: 'Flèches parcourir · Q E filtre · ESC retour',
+    regions: REGION_NAMES,
+    regionsDone: 'Régions',
+    goal: (left: number, title: string) => `Encore *${left}* pour le titre *${title}*`,
+    goalDone: (title: string) => `Région complète ! Titre *${title}* obtenu`,
+    nationalGoal: (done: number, total: number, frame: string) => `${done}/${total} régions · cadre *${frame}*`,
+    counts: (inGame: number, total: number) => `${inGame} sur ${total} dans le jeu`,
+    forTitle: (goal: number) => `${goal} pour le titre`,
+    notCounted: (names: readonly string[]) => `${new Intl.ListFormat('fr').format(names)} ${names.length > 1 ? 'ne comptent pas' : 'ne compte pas'}`,
+    drawing: 'Dessin en cours',
+    drawingText: 'Les artistes du PMD SpriteCollab, qui ont dessiné tous les Pokémon du jeu, créent encore celui-ci. Merci, les artistes ! ♥',
+    /** `drawingText` for a phone's detail strip. */
+    drawingShort: 'Les artistes du SpriteCollab dessinent encore celui-ci. Merci, les artistes ! ♥',
+    contribute: 'Aider à le dessiner ↗',
+    soon: 'Pas encore dans le jeu. Restez à l’affût des nouveautés !',
+    soonTag: 'Bientôt',
+    hintKeys: 'Flèches parcourir · Q E région · ESC retour',
     hintTouch: 'Touche un Pokémon pour les détails',
   },
 
@@ -1544,7 +1563,7 @@ export const fr: Messages = {
       wallpaper: 'Fond d’écran de la Boîte PC.',
     },
     styles: {
-      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes', era1: 'Ère 1', era1Champion: 'Couronne de l’Ère 1' },
+      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes', era1: 'Ère 1', era1Champion: 'Couronne de l’Ère 1', nationalDex: 'Pokédex National' },
       background: { night: 'Nuit étoilée', meadow: 'Route 1', forest: 'Forêt de Jade', cave: 'Mont Sélénite', snow: 'Mont Argenté', tower: 'Tour Pokémon de Lavanville', supporter: 'Ciel doré', halloween: 'Nuit des Sorcières', friendship: 'Amitié', era1Champion: 'Trône de l’Ère 1' },
       wallpaper: { classic: 'Classique', forest: 'Feuilles', cave: 'Cailloux', snow: 'Flocons', tower: 'Petits fantômes', supporter: 'Étoiles dorées', haunted: 'Maison hantée', secretBase: 'Base Secrète' },
     },
@@ -2038,6 +2057,7 @@ export const fr: Messages = {
     arenaSeason: (season) => `Pour ton meilleur rang de la saison ${season} de l’Arène`,
     era1: (rank, board) => `#${rank} au Panthéon de l’Ère 1 · ${board}`,
     hiddenZone: { grotto: 'Pour avoir trouvé la Grotte Cachée', underground: 'Pour avoir trouvé le Souterrain' },
+    dex: (region: string | null) => (region ? `Pour avoir complété le Pokédex de ${region}` : 'Pour avoir complété le Pokédex National : toutes les régions !'),
   },
 
   supporters: {
@@ -2945,7 +2965,7 @@ export const fr: Messages = {
     noTitle: 'aucun',
     titleTag: 'TITRE',
     equipped: 'AFFICHE',
-    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm', era1Legend: 'A fini en haut d’un classement de l’Ère 1', era1Champion: 'A fini n° 1 d’un classement de l’Ère 1' },
+    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm', era1Legend: 'A fini en haut d’un classement de l’Ère 1', era1Champion: 'A fini n° 1 d’un classement de l’Ère 1', kantoDex: 'A vu tous les Pokémon de Kanto dans le Pokédex', johtoDex: 'A vu tous les Pokémon de Johto dans le Pokédex', hoennDex: 'A vu tous les Pokémon de Hoenn dans le Pokédex', sinnohDex: 'A vu tous les Pokémon de Sinnoh dans le Pokédex', unovaDex: 'A vu tous les Pokémon de Unova dans le Pokédex', kalosDex: 'A vu tous les Pokémon de Kalos dans le Pokédex', alolaDex: 'A vu tous les Pokémon de Alola dans le Pokédex', galarDex: 'A vu tous les Pokémon de Galar dans le Pokédex', paldeaDex: 'A vu tous les Pokémon de Paldea dans le Pokédex' },
     newMedals: 'Nouvelles médailles',
     names: {
       firstRun: 'Premiers pas',
@@ -3047,6 +3067,15 @@ export const fr: Messages = {
       stampCollector: 'Collectionneur d’Estampes',
       era1Legend: 'Légende de l’Ère 1',
       era1Champion: 'Champion(ne) de l’Ère 1',
+      kantoDex: 'Chercheur de Kanto',
+      johtoDex: 'Chercheur de Johto',
+      hoennDex: 'Chercheur de Hoenn',
+      sinnohDex: 'Chercheur de Sinnoh',
+      unovaDex: 'Chercheur de Unova',
+      kalosDex: 'Chercheur de Kalos',
+      alolaDex: 'Chercheur de Alola',
+      galarDex: 'Chercheur de Galar',
+      paldeaDex: 'Chercheur de Paldea',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Joue une partie' : `Joue ${n} parties`),

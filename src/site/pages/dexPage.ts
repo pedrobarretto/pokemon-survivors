@@ -16,7 +16,7 @@ import { dexPaths, ROUTES } from '../routes'
 import { createSpriteCss } from '../spriteCss'
 import { TIER_SNAPSHOT } from '../../data/tierRuns'
 import { currentTierList, winPercent, type FamilyId } from '../tierList'
-import { appearance, card } from './pokedex'
+import { appearance, captureText, card } from './pokedex'
 
 /** A question and its answer, shown on the page and repeated in its `FAQPage` JSON-LD. */
 type Qa = { q: string; a: string }
@@ -77,7 +77,7 @@ const familyFaq = (id: FamilyId, base: DexEntry, m: SiteMessages, locale: Locale
 const legendFaq = (id: LegendId, entry: DexEntry, m: SiteMessages): Qa[] => {
   const def = LEGENDS[id]
   const rule: LegendUnlock = def.unlock
-  const unlock = rule.event ? m.pokedex.captureEvent(rule.wins) : rule.last ? m.pokedex.captureLast : m.pokedex.capture(rule.wins)
+  const unlock = captureText(rule, m)
   const form = 'form' in def ? m.dexPage.awakens(def.form.name) : ''
   const where = entry.source.kind === 'wild' ? appearances(entry.source.id).map((a) => appearance(a, m)) : []
   return [

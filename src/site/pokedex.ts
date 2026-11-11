@@ -2,7 +2,9 @@ import manifest from '../data/sprites.generated.json'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BRANCHES, branchesOf, branchStage, type BranchId } from '../data/branches'
 import { HATCHLING_IDS, PLAYABLE, type HatchlingId, type PlayableId } from '../data/hatchlings'
-import { REGIONS, STARTER_IDS, type Region, type StarterId } from '../data/starters'
+import { STARTER_IDS, type Region, type StarterId } from '../data/starters'
+import { dexRegionOf, NATIONAL_LAST, regionOf, SHEETLESS, type DexRegion } from '../data/nationalDex'
+import { inDexGoal } from '../game/dexRegions'
 import type { PokeType } from '../data/types'
 import { isRiftLegend, RIFT, type RiftLegend } from '../data/rifts'
 import { DOMAINS } from '../data/domains'
@@ -15,7 +17,7 @@ import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
 import { TAILOR } from '../data/visitors'
 import { EVENT_LEGENDS, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
-import { nationalDex, regionalGen } from '../data/regionalForms'
+import { nationalDex } from '../data/regionalForms'
 
 /**
  * The site's Pokédex model: every species the game uses, derived from
@@ -66,14 +68,8 @@ export type DexEntry = {
     | { kind: 'summon' }
 }
 
-/** Last national dex number of each generation, in `REGIONS` order. */
-const LAST_DEX = [151, 251, 386, 493, 649, 721, 809, 905, 1025] as const
-
-/** Main-series region a species debuted in, from its national dex number. */
-export const regionOf = (dex: number): Region => {
-  const gen = regionalGen(dex)
-  return REGIONS.find((r) => (gen === undefined ? dex <= (LAST_DEX[r.gen - 1] ?? Infinity) : r.gen === gen)) ?? REGIONS[REGIONS.length - 1]!
-}
+/** Main-series region a species debuted in, from its national dex number (`data/nationalDex.ts`). */
+export { regionOf } from '../data/nationalDex'
 
 export const slugOf = (name: string) =>
   name
@@ -175,12 +171,34 @@ export const gameDex = (): DexEntry[] => {
 }
 
 /**
+ * A region's numbers as the game's Pokédex and the site both show them,
+ * counted the same way as the in-game grid's cells (a regional form is its
+ * own, in its form's region): the species the game has (`inGame`) of all the
+ * region's (`total`, adding each National Dex number it still lacks), how
+ * many of them its title asks for (`goal`, `game/dexRegions.ts`), the ones
+ * that don't count (`left`: the mythicals and the event legends, by name)
+ * and how many SpriteCollab's artists are still drawing (`drawing`).
+ * `entries` is `gameDex()`, passed in when it's already at hand.
+ */
+export const regionCounts = (region: DexRegion, entries: readonly DexEntry[] = gameDex()) => {
+  const game = entries.filter((e) => dexRegionOf(e.dex) === region)
+  const have = new Set(game.map((e) => nationalDex(e.dex)))
+  const missing = Array.from({ length: NATIONAL_LAST }, (_, i) => i + 1).filter((n) => dexRegionOf(n) === region && !have.has(n))
+  const left = game.filter((e) => !inDexGoal(e.dex)).map((e) => e.name)
+  return { inGame: game.length, total: game.length + missing.length, goal: game.length - left.length, left, drawing: missing.filter((n) => SHEETLESS.has(n)).length }
+}
+
+/**
  * The site's Pokédex: every species the game loads, `gameDex()` plus the
  * gift-only companions, the domains' cameos and the lobby's Leavanny (never
  * met in a run, so never counted in game).
  */
 export const pokedex = (): DexEntry[] => {
-  return [...gameDex(), ...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...summonEntries()].sort(byDex)
+  const game = gameDex()
+  const listed = new Set(game.map((e) => e.dex))
+  // Leavanny roams the horde too: its wild card stands for the tailor's.
+  const extras = [...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...summonEntries()].filter((e) => !listed.has(e.dex))
+  return [...game, ...extras].sort(byDex)
 }
 
 /* ---------------- When a wild Pokémon shows up ---------------- */
