@@ -63,7 +63,7 @@ import { drawKitBAir, drawKitBAttack, drawKitBGround, kitBPlayerLook } from './g
 import { drawGaKitAAttack, drawGaKitAGround, drawGaKitAPlayer, drawGaKitAPlayerGround } from './gaKitAFx'
 import { drawRegionalAttack, drawRegionalGround } from './regionalFx'
 import { drawRocketKitAttack, drawRocketKitPlayer } from './rocketKitFx'
-import { drawGallopAttack, gallopLift } from './gallopFx'
+import { drawGallopAir, drawGallopAttack, gallopLift } from './gallopFx'
 import { drawPurifiedMark, drawShadowAura } from './shadowAura'
 import { drawEgg2Attack, drawEgg2Ground } from './eggMove2Fx'
 import { drawVerbAir, drawVerbGround, drawVerbPlayerAir, drawVerbPlayerGround } from './verbFx'
@@ -1237,6 +1237,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       for (const a of v.attacks) if (a.age >= 0 && visible(a.x, a.y, 200)) drawAttack(into, a, t)
       drawImpacts(into, g.now, (owner) => g.coop === null || (side.side === 'own') === (owner === me.slot))
       drawVerbAir(into, v, t, visible)
+      drawGallopAir(into, v, visible)
       drawTmAir(into, v, t, visible)
       drawShopTmAir(into, v, t, visible)
       drawShopTm2Air(into, v, t, visible)

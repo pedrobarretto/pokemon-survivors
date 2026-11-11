@@ -32241,6 +32241,7 @@ span.arena-hub-face {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  white-space: nowrap;
   font-weight: normal;
   font-size: 20px;
   line-height: 1;
@@ -32287,6 +32288,7 @@ span.arena-hub-face {
 }
 
 .swap-row {
+  min-width: 0;
   min-height: 48px;
   padding: 6px 8px;
   font: inherit;
@@ -32324,8 +32326,15 @@ span.arena-hub-face {
     padding: 8px 14px;
     gap: 5px;
   }
-  .swap-list {
-    grid-template-columns: 1fr 1fr 1fr;
+  .item-swap .swap-box {
+    max-width: min(600px, 94vw);
+  }
+  .swap-row {
+    min-height: 44px;
+    padding: 4px 8px;
+  }
+  .swap-incoming {
+    padding: 4px 12px 4px 6px;
   }
   .item-swap .swap-note,
   .item-swap .hint,

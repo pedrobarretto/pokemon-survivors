@@ -68,29 +68,40 @@ export const drawGallopAttack = (ctx: Ctx, a: Attack, t: number) => {
     }
     case 'lowKick': {
       if (a.motion.kind !== 'orbit') return
+      // The outer segment draws the swoosh: an arc from where the sweep began to where it is, thick and fading at its tail.
+      if (a.motion.radius < GALLOP.lowKick.length * 0.7) return
+      const m = a.motion
       const k = a.age / a.ttl
-      ctx.globalAlpha = Math.max(0, 1 - k * 0.6)
-      // The outer segment carries the swipe; the inner ones kick up dust.
-      if (a.motion.radius >= GALLOP.lowKick.length * 0.7) blitRotated(ctx, GALLOP_FX.swipe(), a.x, a.y + 4, a.motion.angle + Math.PI / 2 * Math.sign(a.motion.spin), 1)
-      else blitEllipse(ctx, 2, 1, '#c8a878', a.x, a.y + 6)
+      const cx = a.x - Math.cos(m.angle) * m.radius
+      const cy = a.y - Math.sin(m.angle) * m.radius
+      const swept = m.spin * a.age
+      const steps = Math.max(6, Math.round(Math.abs(swept) * m.radius * 0.7))
+      ctx.globalAlpha = Math.max(0, 1 - k * 0.5)
+      for (let i = 0; i <= steps; i++) {
+        const f = i / steps
+        const ang = m.angle - swept * (1 - f)
+        // Thin at the tail, three pixels at the head; the light core sits outside, the orange edge in.
+        const w = 1 + Math.round(f * 2)
+        for (let j = 0; j < w; j++) {
+          const r = m.radius - j
+          ctx.fillStyle = j === 0 ? '#ffffff' : j === 1 ? '#f8c880' : '#e86830'
+          ctx.fillRect(Math.round(cx + Math.cos(ang) * r), Math.round(cy + 4 + Math.sin(ang) * r * 0.6), 1, 1)
+        }
+      }
+      // Dust kicked up where the hoof is now.
+      if (!detail.lean) {
+        ctx.fillStyle = '#d8c0a0'
+        ctx.fillRect(Math.round(a.x - 2), Math.round(a.y + 6), 2, 1)
+        ctx.fillRect(Math.round(a.x + 1), Math.round(a.y + 5), 1, 1)
+      }
       ctx.globalAlpha = 1
       return
     }
     case 'axeKick': {
-      // Before it lands the hoof drops from above onto the warning ring; then the impact.
-      const delay = GALLOP.axeKick.delay
-      if (a.age < 0) {
-        const k = Math.max(0, 1 + a.age / delay)
-        const hoof = GALLOP_FX.hoof()
-        ctx.globalAlpha = 0.4 + 0.6 * k
-        ctx.drawImage(hoof, Math.round(a.x - hoof.width / 2), Math.round(a.y - hoof.height - (1 - k) * 46))
-        ctx.globalAlpha = 1
-        return
-      }
       const fade = fadeOut(a, 0.2)
       ctx.globalAlpha = fade
-      blitCentered(ctx, a.age < 0.08 ? GALLOP_FX.impact() : GALLOP_FX.impactRed(), a.x, a.y - 4)
-      blitCentered(ctx, GALLOP_FX.hoof(), a.x, a.y - 6)
+      blitRotated(ctx, a.age < 0.08 ? GALLOP_FX.impact() : GALLOP_FX.impactRed(), a.x, a.y - 4, 0, a.age < 0.12 ? 2 : 1)
+      blitRotated(ctx, GALLOP_FX.hoof(), a.x, a.y - 10 + Math.round(Math.min(1, a.age / 0.1) * 2), 0, 2)
       ctx.globalAlpha = 1
       return
     }
@@ -107,7 +118,7 @@ export const drawGallopAttack = (ctx: Ctx, a: Attack, t: number) => {
       const frame = frames[Math.floor(t * 30 + a.id) % 2]!()
       const back = Math.round(6 - Math.min(1, a.age / 0.08) * 4)
       ctx.globalAlpha = fadeOut(a, 0.08)
-      blitRotated(ctx, frame, a.x - Math.cos(ang) * (back + 5), a.y - Math.sin(ang) * (back + 5), ang)
+      blitRotated(ctx, frame, a.x - Math.cos(ang) * (back + 8), a.y - Math.sin(ang) * (back + 8), ang)
       if (!detail.lean && Math.floor(t * 20 + a.id) % 2 === 0) {
         ctx.fillStyle = '#ffffff'
         ctx.fillRect(Math.round(a.x + Math.cos(ang + 2) * 4), Math.round(a.y + Math.sin(ang + 2) * 4), 1, 1)
@@ -160,28 +171,56 @@ export const drawGallopAttack = (ctx: Ctx, a: Attack, t: number) => {
     }
     case 'bounceLand': {
       if (a.age < 0) return
-      const r = radiusOf(a)
-      ctx.globalAlpha = fadeOut(a, 0.15)
-      blitEllipse(ctx, Math.round(r * 0.5), Math.max(1, Math.round(r * 0.18)), 'rgba(24,40,72,0.35)', a.x, a.y + 2)
-      groundRing(ctx, a, r, 0.1, a.tier >= 2 ? ['#ffffff', '#88b8f0', '#f8d048'] : ['#ffffff', '#88b8f0'], 0.7)
-      if (!detail.lean) chunks(ctx, a, a.x, a.y, 4, 7 + a.tier * 2, '#c8e8f8')
+      const r = radiusOf(a) * Math.min(1, a.age / 0.1)
+      ctx.globalAlpha = fadeOut(a, 0.18)
+      blitEllipse(ctx, Math.round(radiusOf(a) * 0.35), Math.max(1, Math.round(radiusOf(a) * 0.12)), 'rgba(24,40,72,0.3)', a.x, a.y + 2)
+      // A solid shock ring with a lighter one inside it, gold once the crescendo builds.
+      dashedRing(ctx, a.x, a.y + 2, Math.max(2, r), a.id, ['#ffffff'], 1, 0.42)
+      dashedRing(ctx, a.x, a.y + 2, Math.max(1, r - 2), a.id, [a.tier >= 2 ? '#f8d048' : '#88c0f0'], 0.7, 0.42)
+      if (!detail.lean) chunks(ctx, a, a.x, a.y, 4, 6 + a.tier * 2, '#e8f4ff')
       ctx.globalAlpha = 1
       return
     }
     case 'skyDive': {
-      // The feather of fire falls onto the warning, then the crash and its ring.
-      if (a.age < 0) {
-        const fall = Math.min(1, -a.age / 0.35)
-        if (fall >= 1) return
-        blitCentered(ctx, GALLOP_FX.streak(), a.x, a.y - 6 - fall * 70)
-        return
-      }
       const r = radiusOf(a)
       ctx.globalAlpha = fadeOut(a, 0.2)
       blitRotated(ctx, a.age < 0.08 ? GALLOP_FX.impact() : GALLOP_FX.impactRed(), a.x, a.y - 4, 0, 2)
       groundRing(ctx, a, r, 0.12, ['#ffffff', '#88b8f0', '#f8d048'], 0.75)
       ctx.globalAlpha = 1
       return
+    }
+  }
+}
+
+/**
+ * What the gallop batch shows before a hit lands (the scene's attack pass
+ * skips dormant hitboxes): Axe Kick's hoof dropping onto its warning, Sky
+ * Drop's dive falling onto its own.
+ */
+export const drawGallopAir = (ctx: Ctx, g: Game, visible: (x: number, y: number, m?: number) => boolean) => {
+  for (const a of g.attacks) {
+    if (a.age >= 0 || !visible(a.x, a.y, 120)) continue
+    if (a.visual === 'axeKick') {
+      const delay = GALLOP.axeKick.delay
+      const k = Math.max(0, 1 + a.age / delay)
+      const hoof = GALLOP_FX.hoof()
+      ctx.globalAlpha = 0.35 + 0.65 * k
+      // Its shadow grows on the ground as it comes down.
+      blitEllipse(ctx, Math.max(1, Math.round(3 + k * 4)), Math.max(1, Math.round(1 + k * 1.5)), 'rgba(24,8,8,0.35)', a.x, a.y + 2)
+      const hy = Math.round(a.y - hoof.height - 4 - (1 - k) * 48)
+      // Speed lines trailing up from it, then the hoof at twice its size (a whole-number scale keeps the grid).
+      if (!detail.lean) {
+        ctx.fillStyle = '#ffffff'
+        for (const dx of [-6, 0, 6]) ctx.fillRect(Math.round(a.x + dx), hy - 16 - Math.abs(dx), 1, 8)
+      }
+      blitRotated(ctx, hoof, a.x, hy, 0, 2)
+      ctx.globalAlpha = 1
+    } else if (a.visual === 'skyDive') {
+      const fall = -a.age / 0.4
+      if (fall >= 1) continue
+      const streak = GALLOP_FX.streak()
+      blitEllipse(ctx, Math.max(1, Math.round(4 + (1 - fall) * 6)), Math.max(1, Math.round(1 + (1 - fall) * 2)), 'rgba(8,24,48,0.35)', a.x, a.y + 2)
+      blitRotated(ctx, streak, a.x, Math.round(a.y - streak.height - 6 - fall * 80), 0, 2)
     }
   }
 }

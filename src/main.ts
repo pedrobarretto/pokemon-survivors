@@ -119,6 +119,7 @@ import { kitDevTools } from './game/kitDev'
 import { gaKitADevTools } from './game/gaKitADev'
 import { eggMoveDevTools } from './game/eggMovesDev'
 import { learnDevTools } from './game/learnDev'
+import { itemDropDevTools } from './game/itemDropDev'
 import { tmDevTools } from './game/tmDev'
 import { evoGateDevTools } from './game/evoGateDev'
 import { duoDevTools } from './game/duoDev'
@@ -5746,6 +5747,7 @@ if (import.meta.env.DEV) {
       ...gaKitADevTools(() => run?.game),
       ...eggMoveDevTools(() => run?.game),
       ...learnDevTools(() => run?.game),
+      ...itemDropDevTools(() => run?.game),
       ...tmDevTools(() => run?.game),
       ...evoGateDevTools(() => run?.game),
       ...duoDevTools(() => run?.game),
