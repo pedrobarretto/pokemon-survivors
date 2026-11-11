@@ -393,7 +393,7 @@ export const BAIT_ROWS = ['..ooo..', '.obyto.', 'obttbto', 'otbytbo', 'obtttbo',
 export const BAIT_COLORS = { o: '#2c1c10', b: '#a86c34', t: '#d09050', y: '#f4d878' } as const
 
 /** The anger mark that pulses by an angry Pokémon's head: four red hooks around a gap. */
-export const ANGER_ROWS = ['.r...r.', 'rd...dr', '.dr.rd.', '.......', '.dr.rd.', 'rd...dr', '.r...r.'] as const
+export const ANGER_ROWS = ['.rr...rr.', 'rdr...rdr', 'rr.....rr', '.........', 'rr.....rr', 'rdr...rdr', '.rr...rr.'] as const
 export const ANGER_COLORS = { r: '#f04848', d: '#a01828' } as const
 
 /** A small four-point sparkle: the chain's mark. */
@@ -513,4 +513,55 @@ export const paintNightSky = (g: CanvasRenderingContext2D, w: number, h: number)
     g.fillStyle = LIGHTS.night!.sky[0]
     g.fillRect(cx - half + 3, cy + y - 1, half * 2, 1)
   }
+}
+
+const silhouettes = new Map<number, string>()
+
+/**
+ * A species' silhouette for the habitat Pokédex: the first Walk frame (facing
+ * down) filled flat, at its own pixels on a `size` square, as an image URL.
+ * Calls `done` once it's made (the sheet loads first); a species without a
+ * sheet stays blank.
+ */
+export const silhouetteUrl = (sheet: { url: string; fw: number; fh: number } | undefined, dex: number, size: number, done: (url: string) => void) => {
+  const had = silhouettes.get(dex)
+  if (had) return done(had)
+  if (!sheet) return
+  const img = new Image()
+  img.onload = () => {
+    // The frame, cut to its body and blown up by the largest whole factor that fits.
+    const frame = createCanvas(sheet.fw, sheet.fh)
+    const f = context2d(frame)
+    f.drawImage(img, 0, 0, sheet.fw, sheet.fh, 0, 0, sheet.fw, sheet.fh)
+    const px = f.getImageData(0, 0, sheet.fw, sheet.fh).data
+    let x0 = sheet.fw
+    let y0 = sheet.fh
+    let x1 = -1
+    let y1 = -1
+    for (let y = 0; y < sheet.fh; y++)
+      for (let x = 0; x < sheet.fw; x++)
+        if (px[(y * sheet.fw + x) * 4 + 3]! > 0) {
+          x0 = Math.min(x0, x)
+          y0 = Math.min(y0, y)
+          x1 = Math.max(x1, x)
+          y1 = Math.max(y1, y)
+        }
+    if (x1 < 0) return
+    const bw = x1 - x0 + 1
+    const bh = y1 - y0 + 1
+    const k = Math.max(1, Math.floor((size - 8) / Math.max(bw, bh)))
+    const c = createCanvas(size, size)
+    const g = context2d(c)
+    g.imageSmoothingEnabled = false
+    g.drawImage(frame, x0, y0, bw, bh, Math.floor((size - bw * k) / 2), Math.floor((size - bh * k) / 2), bw * k, bh * k)
+    g.globalCompositeOperation = 'source-in'
+    g.fillStyle = '#4a4458'
+    g.fillRect(0, 0, size, size)
+    const url = c.toDataURL()
+    c.width = c.height = 0
+    frame.width = frame.height = 0
+    silhouettes.set(dex, url)
+    done(url)
+  }
+  img.src = sheet.url
 }

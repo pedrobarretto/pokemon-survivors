@@ -6,7 +6,7 @@ import { playSfx } from '../../engine/audio'
 import { LOCALES, formatPokeDollars, locale, t } from '../../i18n'
 import type { SafariActed, SafariSession, SafariState } from '../../net/realmApi'
 import { closeIcon } from '../../render/art'
-import { loadSpecies, portraitUrl } from '../../render/sprites'
+import { loadSpecies, portraitUrl, walkSheet } from '../../render/sprites'
 import { h } from '../../ui/dom'
 import { loadSave } from '../../ui/save'
 import { isFailure } from '../api'
@@ -15,7 +15,7 @@ import { openGameBoard } from './board'
 import { image, partnerDex } from './arcadeKit'
 import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
 import { CONTEST, SAFARI, bestCatch, sessionPrice, shareOf, type SafariAction, type SafariDaypart, type SafariMode, type SafariMood, type SafariRarity } from './safari.rules'
-import { ICONS, THEMES, drawGrassWipe } from './safariArt'
+import { ICONS, THEMES, drawGrassWipe, silhouetteUrl } from './safariArt'
 import { bandPx, createBattle, layoutBattle, type Battle, type BattleHost } from './safariBattle'
 import { createField, type Field } from './safariField'
 import { buildWorld } from './safariWorld'
@@ -357,6 +357,14 @@ const start = (ctx: SoloCtx): GameRun => {
 
   /* ---------------- The notice board ---------------- */
 
+  /** A resident not caught yet: its shape, flat, filled in once its sheet loads. */
+  const silhouette = (dexNo: number) => {
+    const img = h('img', { class: 'sz-sil', alt: '', width: 40, height: 40 })
+    // Made at twice the tile so a small body still scales by a whole factor; shown at the portraits' size.
+    silhouetteUrl(walkSheet(dexNo), dexNo, 80, (url) => (img.src = url))
+    return img
+  }
+
   /** A resident's tile: its portrait (a silhouette while `hidden`), its name and the line under it. */
   const note = (family: HatchlingId, line: string | false, opts: { fresh?: boolean; hidden?: boolean; when?: string } = {}) => {
     const form = safariForm(family)
@@ -364,7 +372,7 @@ const start = (ctx: SoloCtx): GameRun => {
     return h(
       'li',
       { class: `sz-note${opts.fresh ? ' sz-note-new' : ''}${opts.hidden ? ' sz-note-unknown' : ''}`, title: opts.fresh ? w.fresh : undefined },
-      h('img', { src: portraitUrl(form.dex), alt: '', width: 40, height: 40, loading: 'lazy' }),
+      opts.hidden ? silhouette(form.dex) : h('img', { src: portraitUrl(form.dex), alt: '', width: 40, height: 40, loading: 'lazy' }),
       h('b', {}, opts.hidden ? w.dex.unknown : form.name),
       line ? h('span', {}, line) : h('span', { class: 'sz-note-when' }, opts.when ?? ''),
       opts.fresh ? h('em', { class: 'arc-tag new' }, w.fresh) : false,

@@ -29245,8 +29245,8 @@ span.arena-hub-face {
 }
 
 /* A resident not caught yet: its portrait as a flat silhouette. */
-.sz-note-unknown img {
-  filter: brightness(0) opacity(0.55);
+.sz-note .sz-sil {
+  background: var(--kit-paper);
 }
 
 .sz-note-unknown b {
