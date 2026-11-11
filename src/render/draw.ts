@@ -1,7 +1,7 @@
 import { drawEvoItem } from './evoItemArt'
 import { beginRects, blitCentered, blitPacked, blitEllipse, blitRing, blitRotated, context2d, createCanvas, drawThrew, fillPlotted, lazy, plot, textSprite, traceEllipseAt } from '../engine/pixelart'
 import { HAZARD_COLORS } from './hazardColors'
-import { drawCapture } from './capture'
+import { capturePlaying, drawCapture } from './capture'
 import { drawNightmareAir, drawNightmareDark, drawNightmareGround, shadeAlpha, SLEEP_TINT } from './darkrai'
 import { isAsleep } from '../game/playerSleep'
 import { drawDomainFloor, drawTear, drawWormhole, warmDomain } from './domain'
@@ -28,7 +28,7 @@ import { FX, HAZARD_FX, hostile, PICKUPS, SPARKLE, SPIT_FX } from './art'
 import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawShard } from './evolved'
 import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
 import { drawQuestAir, drawQuestGround, drawQuestMarkers } from './quests'
-import { drawRushAir, drawRushFloor, drawRushGround } from './rush'
+import { drawRushFloor, drawRushGround } from './rush'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
 import { drawScale } from '../game/alphas'
 import { drawMegaAir, drawMegaAttack, drawMegaGround, drawMegaStone, megaLook } from './megaFx'
@@ -724,6 +724,7 @@ const drawHpBar = (ctx: Ctx, g: Game) => {
 const drawPickups = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number) => boolean) => {
   const candies = PICKUPS.candy()
   const coins = PICKUPS.coins()
+  const capturing = capturePlaying(g)
   // The shadows first, all as one path: a long endless run leaves a thousand pieces of loot lying in view, and a sprite each
   // was as many draws again. Drawing lean, loot goes without its shadow, like the horde.
   if (!detail.lean) {
@@ -743,7 +744,7 @@ const drawPickups = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: numbe
       continue
     }
     if (k.kind === 'teraShard') {
-      drawShardPickup(ctx, k.tera, k.x, k.y + bob, t)
+      if (!capturing) drawShardPickup(ctx, k.tera, k.x, k.y + bob, t)
       continue
     }
     if (k.kind === 'tm') {
@@ -858,6 +859,9 @@ const isSolid = (d: Drawable): d is Solid => d !== 'player' && d !== 'companion'
 const isValeProp = (d: Drawable): d is ValeProp => typeof d === 'object' && 'prop' in d
 
 /* ---------------- Biome ---------------- */
+
+/** How far under a boss's feet its status badge's middle sits, px: below its shadow, clear of the sprite. */
+const STATUS_UNDER = 8
 
 /** How far (px) past the screen the biomes' terrain stays built and is built ahead (`biomesNear`). */
 const TERRAIN_MARGIN = 600
@@ -1199,11 +1203,9 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d), !g.rift.arena && !g.raid.arena, g.place.inside?.id === 'hideout')
   }
   // Badges only on bosses: on a 300-enemy horde they'd bury the sprites (tint + particles carry it there).
+  // Under the feet, by the shadow: a legend's sprite reaches far above its body, so over its head the badge sat on its face.
   for (const d of inDepth) {
-    if (d !== 'player' && d !== 'companion' && !isMate(d) && !isSolid(d) && !isValeProp(d) && d.boss && d.dying < 0) {
-      const def: EnemyDef = ENEMIES[d.kind]
-      drawStatusBadge(ctx, d.status, d.x, d.y - bodyOf(def.dex).bodyH * drawScale(d) - (d.alpha ? 14 : 5))
-    }
+    if (d !== 'player' && d !== 'companion' && !isMate(d) && !isSolid(d) && !isValeProp(d) && d.boss && d.dying < 0) drawStatusBadge(ctx, d.status, d.x, d.y + STATUS_UNDER)
   }
   drawEntranceAir(ctx, g, t)
   if (g.raid.den && !indoors) drawDenAir(ctx, g.raid.den, t)
@@ -1223,7 +1225,6 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawCapture(ctx, g, t)
   drawDomainAir(ctx, g, t)
   drawQuestAir(ctx, g, t)
-  drawRushAir(ctx, g, t)
   drawNightmareAir(ctx, g, t)
   drawLegendScene(ctx, g, t)
 
