@@ -29264,6 +29264,10 @@ span.arena-hub-face {
 }
 
 /* The contest's card: its day, its rules, its prizes and the way to the board. */
+.sz-contest {
+  padding-bottom: 8px;
+}
+
 .sz-contest p {
   margin: 0;
 }
