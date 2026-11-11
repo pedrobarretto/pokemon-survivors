@@ -16,7 +16,7 @@ import { image, partnerDex } from './arcadeKit'
 import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
 import { CONTEST, SAFARI, bestCatch, sessionPrice, shareOf, type SafariAction, type SafariDaypart, type SafariMode, type SafariMood, type SafariRarity } from './safari.rules'
 import { ICONS, THEMES, drawGrassWipe, silhouetteUrl } from './safariArt'
-import { bandPx, createBattle, layoutBattle, type Battle, type BattleHost } from './safariBattle'
+import { bandPx, battleUi, createBattle, layoutBattle, type Battle, type BattleHost } from './safariBattle'
 import { createField, type Field } from './safariField'
 import { buildWorld } from './safariWorld'
 
@@ -49,7 +49,7 @@ const GATE_SPEED = 62
 const GATE_WALK = ((PLAZA.spawn.y - PLAZA.entry.y) * TILE) / GATE_SPEED
 
 /** What the dev hooks (`ps.safari`) reach of the running game. */
-export const safariDev: { run: { phase: () => Phase; wanderers: () => unknown; battle: () => string | null; rustle: () => void; stalk: () => void; sneakUp: (front: boolean) => void } | null } = { run: null }
+export const safariDev: { run: { phase: () => Phase; wanderers: () => unknown; battle: () => string | null; rustle: () => void; stalk: () => void; sneakUp: (front: boolean) => void; say: (text: string) => void } | null } = { run: null }
 
 /** The board's tabs: who's about now, each habitat's Pokédex and the contest. */
 type BoardTab = 'seen' | 'dex' | 'contest'
@@ -88,8 +88,10 @@ const start = (ctx: SoloCtx): GameRun => {
   const band = h('div', { class: 'sz-band hidden' })
   const board = h('div', { class: 'sz-board hidden' })
   const report = h('div', { class: 'sz-report box hidden' })
-  const hud = h('div', { class: 'sz-hud' }, pouch, endBtn, sneakBtn, readBtn, wildPanel, nearPanel, band, box, cmds, board, report)
-  ctx.stage.append(hud)
+  const hud = h('div', { class: 'sz-hud' }, pouch, endBtn, sneakBtn, readBtn, wildPanel, nearPanel, band, box, cmds, report)
+  // The board covers the whole stage, not just the canvas, and while it's up its ✕ is the only one: the page's steps aside.
+  ctx.stage.append(hud, board)
+  const screenEl = ctx.stage.closest('.minigame-screen')
 
   let phase: Phase = 'load'
   let phaseT = 0
@@ -100,6 +102,8 @@ const start = (ctx: SoloCtx): GameRun => {
   let habitat: SafariHabitat = 'meadow'
   let said = ''
   let shown = 0
+  /** How long (s) the current line has stood fully typed. */
+  let readFor = 0
   let disposed = false
   let confirmEnd = false
   let seen = 0
@@ -137,17 +141,40 @@ const start = (ctx: SoloCtx): GameRun => {
   const say = (text: string, small = '') => {
     said = text
     shown = 0
-    textEl.textContent = ''
+    readFor = 0
     smallEl.textContent = small
     box.classList.toggle('hidden', text === '')
+    fitText()
+    textEl.textContent = ''
   }
-  const typed = () => shown >= said.length
+  /** In battle the message has the band's fixed height: a sentence too long for it steps its type down until the whole of it fits. */
+  const fitText = () => {
+    textEl.style.removeProperty('font-size')
+    if (!hud.classList.contains('sz-battle') || said === '') return
+    const typedSoFar = textEl.textContent
+    textEl.textContent = said
+    let size = parseFloat(getComputedStyle(textEl).fontSize)
+    const floor = box.getBoundingClientRect().bottom - parseFloat(getComputedStyle(box).paddingBottom) * (parseFloat(hud.style.zoom) || 1)
+    const spills = () => textEl.getBoundingClientRect().bottom > floor + 0.5
+    for (let i = 0; i < 6 && spills(); i++) {
+      size = Math.floor(size * 0.9)
+      textEl.style.fontSize = `${size}px`
+    }
+    textEl.textContent = typedSoFar
+  }
+  /** A typed line stays this long (s) before what follows replaces it, unless a tap hurried it. */
+  const READ_HOLD = 0.7
+  const typed = () => shown >= said.length && readFor >= READ_HOLD
   const finishTyping = () => {
     shown = said.length
+    readFor = READ_HOLD
     textEl.textContent = said
   }
   const stepWords = (dt: number) => {
-    if (shown >= said.length) return
+    if (shown >= said.length) {
+      readFor += dt
+      return
+    }
     shown = Math.min(said.length, shown + dt * 46)
     textEl.textContent = said.slice(0, Math.floor(shown))
   }
@@ -473,11 +500,17 @@ const start = (ctx: SoloCtx): GameRun => {
       h(
         'div',
         { class: 'sz-board-frame' },
-        h('header', { class: 'mg-title' }, h('span', { class: 'mg-kicker' }, kicker), h('h3', {}, boardTab === 'seen' ? h('img', { class: 'sz-hour', src: daypartIcon(daypart), alt: '', width: 28, height: 28 }) : false, title)),
+        // The tabs ride in the header: under the title upright, on its row sideways when there's room.
         h(
-          'nav',
-          { class: 'sz-tabs', role: 'tablist' },
-          ...tabs.map((tab) => h('button', { type: 'button', role: 'tab', class: tab === boardTab ? 'sz-on' : '', 'aria-selected': String(tab === boardTab), onclick: () => ((boardTab = tab), playSfx('select'), renderBoard()) }, w.tabs[tab])),
+          'header',
+          { class: 'mg-title' },
+          h('span', { class: 'mg-kicker' }, kicker),
+          h('h3', {}, boardTab === 'seen' ? h('img', { class: 'sz-hour', src: daypartIcon(daypart), alt: '', width: 28, height: 28 }) : false, title),
+          h(
+            'nav',
+            { class: 'sz-tabs', role: 'tablist' },
+            ...tabs.map((tab) => h('button', { type: 'button', role: 'tab', class: tab === boardTab ? 'sz-on' : '', 'aria-selected': String(tab === boardTab), onclick: () => ((boardTab = tab), playSfx('select'), renderBoard()) }, w.tabs[tab])),
+          ),
         ),
         ...(boardTab === 'seen' ? seenTab() : boardTab === 'dex' ? dexTab() : contestTab()),
         h('button', { class: 'arc-icon-btn sz-board-close', type: 'button', 'aria-label': w.ok, title: w.ok, onclick: closeBoard }, h('img', { src: closeIcon(), alt: '' })),
@@ -491,6 +524,7 @@ const start = (ctx: SoloCtx): GameRun => {
     dexHabitat = session?.habitat ?? view.habitat
     renderBoard()
     board.classList.remove('hidden')
+    screenEl?.classList.add('sz-board-up')
     playSfx('select')
   }
 
@@ -501,6 +535,7 @@ const start = (ctx: SoloCtx): GameRun => {
 
   const closeBoard = () => {
     board.classList.add('hidden')
+    screenEl?.classList.remove('sz-board-up')
     playSfx('select')
   }
 
@@ -769,11 +804,14 @@ const start = (ctx: SoloCtx): GameRun => {
     if (!canvas) return
     const k = canvas.clientWidth / W
     canvasK = k
-    hud.style.left = `${canvas.offsetLeft}px`
-    hud.style.top = `${canvas.offsetTop}px`
-    hud.style.width = `${canvas.clientWidth}px`
-    hud.style.height = `${canvas.clientHeight}px`
-    hud.style.setProperty('--k', String(k))
+    // In battle the HUD zooms by `battleUi` (1 on a phone) and lays itself out in zoomed px, so its words keep their share of a desktop's scene.
+    const u = hud.classList.contains('sz-battle') ? battleUi(canvas.clientWidth, canvas.clientHeight) : 1
+    hud.style.zoom = String(u)
+    hud.style.left = `${canvas.offsetLeft / u}px`
+    hud.style.top = `${canvas.offsetTop / u}px`
+    hud.style.width = `${canvas.clientWidth / u}px`
+    hud.style.height = `${canvas.clientHeight / u}px`
+    hud.style.setProperty('--k', String(k / u))
     if (key === lastKey) return
     lastKey = key
     lastW = W
@@ -781,7 +819,9 @@ const start = (ctx: SoloCtx): GameRun => {
     const L = layoutBattle(W, H, k)
     hud.classList.toggle('sz-wide', L.wide)
     hud.classList.toggle('sz-tall', !L.wide)
+    board.classList.toggle('sz-wide', L.wide)
     hud.style.setProperty('--band-px', `${bandPx(L.wide)}px`)
+    fitText()
   }
 
   const draw = (g: CanvasRenderingContext2D) => {
@@ -829,6 +869,7 @@ const start = (ctx: SoloCtx): GameRun => {
         const w = session?.wanderers[0]
         if (w) startRustle(w.slot)
       },
+      say: (text) => say(text),
       sneakUp: (front) => {
         sneakOn = true
         field?.setSneak(true)
@@ -846,6 +887,8 @@ const start = (ctx: SoloCtx): GameRun => {
     dispose: () => {
       disposed = true
       hud.remove()
+      board.remove()
+      screenEl?.classList.remove('sz-board-up')
       field?.release()
       battle?.release()
       if (import.meta.env.DEV) safariDev.run = null

@@ -28412,8 +28412,17 @@ span.arena-hub-face {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px 14px 12px 8px;
+  padding: 16px 12px 12px;
   background: rgba(16, 20, 46, 0.6);
+}
+
+.sz-board.hidden {
+  display: none;
+}
+
+/* While the board is up, its ✕ is the only way out: the page's close and Placar step aside. */
+.minigame-screen.sz-board-up .minigame-head button {
+  visibility: hidden;
 }
 
 /* The notice board: the kit's paper card, its residents as tiles grouped by rarity. */
@@ -28532,8 +28541,8 @@ span.arena-hub-face {
 /* The kit's round ✕ on the board's corner. */
 .sz-board-close.arc-icon-btn {
   position: absolute;
-  top: -14px;
-  right: -10px;
+  top: -12px;
+  right: -8px;
   background: var(--kit-survivors);
   border-radius: 50%;
 }
@@ -28549,12 +28558,28 @@ span.arena-hub-face {
   padding-right: 34px;
 }
 
-/* Sideways the height is short: the place and the title share a line. */
-.sz-hud.sz-wide .sz-board-frame > .mg-title {
-  flex-direction: row;
-  flex-wrap: wrap;
+/* Sideways the height is short: the place over the title on the left, the tabs beside them on the right. */
+.sz-board.sz-wide .sz-board-frame > .mg-title {
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  column-gap: 10px;
+  justify-items: start;
+  gap: 6px 12px;
+}
+
+.sz-board.sz-wide .sz-board-frame > .mg-title .sz-tabs {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  flex-wrap: nowrap;
+}
+
+.sz-board-frame > .mg-title .sz-tabs {
+  margin-top: 4px;
+}
+
+.sz-board.sz-wide .sz-board-frame > .mg-title .sz-tabs {
+  margin: 0;
 }
 
 /* The session's end: what came along, and another session. */
@@ -29016,8 +29041,8 @@ span.arena-hub-face {
   flex: none;
   margin-left: auto;
   font-family: var(--title);
-  font-size: 10px;
-  opacity: 0.7;
+  font-size: 11px;
+  opacity: 0.8;
 }
 
 /* Upright, the band holds the message on top and the commands across its whole width under it. */

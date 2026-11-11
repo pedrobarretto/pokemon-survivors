@@ -2,7 +2,7 @@ import type { SafariHabitat } from '../../data/safari'
 import { MAP_H, MAP_W, PLAZA, TILE } from '../../data/safariMaps'
 import { joystick, type Stick } from '../../engine/input'
 import { dir8, type Dir8 } from '../../engine/math'
-import { blitEllipse } from '../../engine/pixelart'
+import { blitEllipse, context2d, createCanvas } from '../../engine/pixelart'
 import { drawJoystick } from '../../render/joystick'
 import { drawPokemon, loadSpecies, loadedSprites, sprites } from '../../render/sprites'
 import { playSfx } from '../../engine/audio'
@@ -49,8 +49,16 @@ const BOARD_REACH = 34
  */
 const THRESHOLD = { x: 33, y: 80, w: 45, h: 24 } as const
 
-/** How much of a session's wanderer the grass hides. */
+/** How much of a session's wanderer the grass hides: 5 px, or a fifth of a small one's body, so a Budew's head always pokes out. */
 const WANDERER_COVER = 5
+const wandererCover = (bodyH: number) => Math.min(WANDERER_COVER, Math.max(2, Math.floor(bodyH / 5)))
+
+/** The moonlit edge a wanderer wears at night, solid so it stays on the pixel grid. */
+const MOON_RIM = '#a4b8f0'
+/** The rim's scratch canvas: a wanderer stands with its feet at (RIM_W / 2, RIM_FEET). */
+const RIM_W = 96
+const RIM_H = 96
+const RIM_FEET = 80
 
 /** How strongly the partner shows through a tall piece of the plaza when it's behind one. */
 const SEE_THROUGH = 0.55
@@ -296,6 +304,12 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
         r.pause -= dt
         // Looking about while it rests.
         if (r.slot !== null && Math.floor((clock + r.dex) / 1.6) !== Math.floor((clock + r.dex - dt) / 1.6)) r.dir = (((r.dir + (r.dex % 2 === 0 ? 2 : 6)) % 8) as Dir8)
+        // Resting, the grass tips around it still stir now and then: a small one shows where it is.
+        if (r.slot !== null && Math.floor((clock + r.dex * 0.37) / 1.3) !== Math.floor((clock + r.dex * 0.37 - dt) / 1.3))
+          for (const ox of [-TILE, 0, TILE]) {
+            const tile = tallTileAt(world, r.x + ox, r.y)
+            if (tile >= 0) rustled[tile] = clock
+          }
         continue
       }
       const hx = r.homeX + Math.sin(clock * 0.8 + r.dex) * 18
@@ -596,10 +610,14 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
         g.rect(sx - 40, sy - 80, 80, 80)
         g.clip()
       }
-      drawPokemon(g, resident, (r.pause > 0 || r.mark === '?') && r.away <= 0 ? 'Idle' : 'Walk', r.dir, clock * (r.away > 0 ? 2.5 : 1), sx, sy + sink)
+      const anim = (r.pause > 0 || r.mark === '?') && r.away <= 0 ? 'Idle' : 'Walk'
+      const time = clock * (r.away > 0 ? 2.5 : 1)
+      drawPokemon(g, resident, anim, r.dir, time, sx, sy + sink)
       if (sink > 0) g.restore()
       // A wanderer of the session stands taller in the grass than a glimpse: there to be found.
-      coverFeet(g, r.x, r.y, camX, camY, r.slot === null ? COVER : WANDERER_COVER)
+      const cover = r.slot === null ? COVER : tallTileAt(world, r.x, r.y) >= 0 ? wandererCover(resident.bodyH) : 0
+      coverFeet(g, r.x, r.y, camX, camY, r.slot === null ? COVER : cover)
+      if (r.slot !== null && sink === 0 && light?.moon) rims.push({ dex: r.dex, anim, dir: r.dir, time, sx, sy, cover })
       if (r.mark && clock - r.markAt < (r.mark === '!' ? 0.8 : 99)) drawMark(g, r.mark, sx, sy - Math.max(22, Math.round(resident.bodyH)) - 8)
     }
 
@@ -620,9 +638,43 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
     }
 
     if (light) drawLight(g, W, H, camX, camY)
+    for (const r of rims) drawRim(g, r)
+    rims.length = 0
 
     if (alertAt >= 0) drawAlert(g, Math.round(player.x - camX), Math.round(player.y - camY))
     if (stick) drawJoystick(g, stick, cssScale)
+  }
+
+  /** The wanderers to rim this frame, after the night's wash. */
+  const rims: { dex: number; anim: 'Idle' | 'Walk'; dir: Dir8; time: number; sx: number; sy: number; cover: number }[] = []
+  let rimArt: HTMLCanvasElement | null = null
+  let rimMask: HTMLCanvasElement | null = null
+
+  /**
+   * At night a wanderer wears a one-pixel moonlit edge where the moon would
+   * catch it, along its top (never below the grass line): found in the dark,
+   * the night kept. Drawn on scratch canvases: its frame as a flat silhouette,
+   * nudged up and up-sideways, minus the silhouette itself.
+   */
+  const drawRim = (g: CanvasRenderingContext2D, r: (typeof rims)[number]) => {
+    rimArt ??= createCanvas(RIM_W, RIM_H)
+    rimMask ??= createCanvas(RIM_W, RIM_H)
+    const a = context2d(rimArt)
+    const k = context2d(rimMask)
+    a.imageSmoothingEnabled = k.imageSmoothingEnabled = false
+    a.globalCompositeOperation = 'source-over'
+    a.clearRect(0, 0, RIM_W, RIM_H)
+    drawPokemon(a, sprites(r.dex), r.anim, r.dir, r.time, RIM_W / 2, RIM_FEET)
+    a.globalCompositeOperation = 'source-in'
+    a.fillStyle = MOON_RIM
+    a.fillRect(0, 0, RIM_W, RIM_H)
+    k.globalCompositeOperation = 'source-over'
+    k.clearRect(0, 0, RIM_W, RIM_H)
+    for (const [ox, oy] of [[-1, -1], [1, -1], [0, -1]] as const) k.drawImage(rimArt, ox, oy)
+    k.globalCompositeOperation = 'destination-out'
+    k.drawImage(rimArt, 0, 0)
+    const keep = RIM_FEET - r.cover - 1
+    g.drawImage(rimMask, 0, 0, RIM_W, keep, r.sx - RIM_W / 2, r.sy - RIM_FEET, RIM_W, keep)
   }
 
   /** A "?" or "!" over a wanderer, in white with a dark edge. */
@@ -762,6 +814,8 @@ export const createField = (opts: { habitat: SafariHabitat; world: SafariWorld; 
       }
       if (grass) grass.width = 0
       grass = null
+      for (const c of [rimArt, rimMask]) if (c) c.width = 0
+      rimArt = rimMask = null
     },
   }
 }

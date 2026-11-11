@@ -29,12 +29,20 @@ const PANEL_CLEAR = 74
 /** The solid bottom band's height in CSS px: the message over two rows of commands upright, beside them sideways. */
 export const bandPx = (wide: boolean) => (wide ? 112 : 176)
 
-/** How a canvas splits between the scene and the band. */
-export type BattleLayout = { W: number; H: number; wide: boolean; sceneH: number; k: number }
+/**
+ * How much the battle's words grow on a big screen: the band, the panels and the menu are laid out for a phone
+ * (`1`), and a desktop's canvas, three times a phone's, zooms them so they keep their share of the scene.
+ * `cssW`, `cssH`: the canvas in CSS px.
+ */
+export const battleUi = (cssW: number, cssH: number) => Math.max(1, Math.min(2.6, cssW / 600, cssH / 460))
+
+/** How a canvas splits between the scene and the band; `u` is `battleUi`. */
+export type BattleLayout = { W: number; H: number; wide: boolean; sceneH: number; k: number; u: number }
 
 export const layoutBattle = (W: number, H: number, k: number): BattleLayout => {
   const wide = W > H
-  return { W, H, wide, sceneH: Math.max(60, H - Math.ceil(bandPx(wide) / k)), k }
+  const u = battleUi(W * k, H * k)
+  return { W, H, wide, sceneH: Math.max(60, H - Math.ceil((bandPx(wide) * u) / k)), k, u }
 }
 
 /**
@@ -55,7 +63,7 @@ const gridOf = (L: BattleLayout, tallest: number): Grid => {
     w,
     h,
     // Sideways the partner's panel sits under the wild one: its feet stay above the panel's top edge.
-    wild: { x: Math.round(w * (wide ? 0.7 : 0.67)), y: Math.round(wide ? Math.min(h * 0.62, (L.sceneH - PANEL_CLEAR / L.k) / G) : h * 0.56) },
+    wild: { x: Math.round(w * (wide ? 0.7 : 0.67)), y: Math.round(wide ? Math.min(h * 0.62, (L.sceneH - (PANEL_CLEAR * L.u) / L.k) / G) : h * 0.56) },
     near: { x: Math.round(w * (wide ? 0.25 : 0.17)), y: h + (wide ? 5 : 4) },
     farRx: Math.min(24, Math.round(w * (wide ? 0.16 : 0.34))),
     nearRx: Math.min(36, Math.round(w * (wide ? 0.25 : 0.58))),
@@ -128,6 +136,8 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
   let thrown: Thrown = 'berry'
   /** The mood showing on the wild one: what the API's last answer left it in. */
   let mood: SafariMood | null = opts.session.encounter?.mood ?? null
+  /** The menu waits for the question to finish typing. */
+  let menuDue = false
   let sceneShiny = false
   const parts: Particle[] = []
   const pops: Popup[] = []
@@ -184,11 +194,12 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
     host.mood(now, opts.session.encounter?.moodTurns ?? 0)
     host.say(wore && was ? `${m().moodOver[was](name)} ${m().what(name)}` : m().what(name))
     host.panels(true)
-    host.menu(true)
+    menuDue = true
   }
 
   const finish = () => {
     go('done')
+    menuDue = false
     host.menu(false)
     host.end()
   }
@@ -200,6 +211,7 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
 
   const playerAct = (action: SafariAction, text: string, sfx: 'safariThrow' | 'escaped', next: Phase) => {
     reply = null
+    menuDue = false
     host.menu(false)
     host.say(text)
     playSfx(sfx)
@@ -292,6 +304,10 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
     flash = Math.max(0, flash - dt * 3.2)
     squash = Math.max(0, squash - dt * 5)
     stepFx(parts, pops, dt)
+    if (menuDue && phase === 'menu' && host.typed()) {
+      menuDue = false
+      host.menu(true)
+    }
     const A = gridFor(L)
     const target = { x: A.wild.x, y: A.wild.y - Math.max(8, Math.round(wild().bodyH * 0.55)) }
     const start = { x: A.near.x + 8, y: A.near.y - Math.max(16, Math.round(near().bodyH * 0.9)) }

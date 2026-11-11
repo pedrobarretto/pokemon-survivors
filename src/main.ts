@@ -4993,10 +4993,11 @@ if (import.meta.env.DEV) {
        * `ps.safari('hour', 'night')` holds a time of day (`dawn`, `day`, `dusk`, `night`; null back to the clock), `ps.safari('contest', true)` holds the
        * Concurso de Insetos open (false closed, null back to the calendar), `ps.safari('dex', 'marsh')` fills a habitat's Pokédex but for one (`('dex', 'marsh', 'all')`,
        * `'half'`, `'empty'`), `ps.safari('sneakup')` sets the partner just behind the first wanderer, sneaking (`('sneakup', 'front')` where it looks), and `ps.safari('stalk')` meets it now,
-       * `ps.safari('prize', 1)` puts that contest place's prizes in the gift box (on a field of 40).
+       * `ps.safari('prize', 1)` puts that contest place's prizes in the gift box (on a field of 40),
+       * and `ps.safari('say', text)` puts a line in the message box (to check that it fits).
        */
       safari: async (
-        what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase' | 'hour' | 'contest' | 'dex' | 'sneakup' | 'stalk' | 'prize',
+        what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase' | 'hour' | 'contest' | 'dex' | 'sneakup' | 'stalk' | 'prize' | 'say',
         arg?: number | string | boolean | null,
         shiny?: boolean | string,
       ) => {
@@ -5022,6 +5023,7 @@ if (import.meta.env.DEV) {
           return prize ? stageGifts(CONTEST_GIFTS[prize].map((content, i) => ({ id: `dev-contest-${rank}-${i}-${Date.now()}`, content, reason: { kind: 'bugContest', rank } as const }))) : null
         }
         if (what === 'stalk') return safariDev.run?.stalk()
+        if (what === 'say') return safariDev.run?.say(String(arg ?? ''))
         if (what === 'grass') return safariDev.run?.rustle()
         if (what === 'phase') return { game: safariDev.run?.phase() ?? null, battle: safariDev.run?.battle() ?? null, wanderers: safariDev.run?.wanderers() ?? null }
         return stageSafari({ catches: what === 'catch', flees: what === 'flee' })
