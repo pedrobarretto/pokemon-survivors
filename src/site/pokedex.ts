@@ -1,4 +1,9 @@
 import manifest from '../data/sprites.generated.json'
+import { isLakeLegend, SWORDS, type SwordId } from '../data/legends'
+import { DUEL, ROAM } from '../data/quests'
+import { RUSH_ORDER } from '../data/rush'
+
+const isSword = (id: string): id is SwordId => SWORDS.some((s) => s === id)
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BRANCHES, branchesOf, branchStage, type BranchId } from '../data/branches'
 import { HATCHLING_IDS, PLAYABLE, type HatchlingId, type PlayableId } from '../data/hatchlings'
@@ -211,6 +216,12 @@ export type Appearance =
   | { kind: 'summoned'; by: EnemyId }
   /** Comes at the player in a legendary's domain (`by`'s rift): its crossing's retinue, adds it calls in or keepers of its barrier. */
   | { kind: 'retinue'; by: EnemyId }
+  /** A roaming lake legend (`game/roamers.ts`): some runs bring it, from about `from`. */
+  | { kind: 'roam'; from: number }
+  /** A Sword of Justice waiting for its duel in its biomes (`game/duels.ts`), from `from`. */
+  | { kind: 'duel'; from: number; sword: SwordId }
+  /** Brought back by Hoopa's Rings once captured (`game/rush.ts`), or (`last`) Hoopa itself, the last ring. */
+  | { kind: 'rush'; last: boolean }
 
 /**
  * When an enemy can show up: the spawn-pool windows of the stages with a slot
@@ -262,7 +273,13 @@ export const appearances = (id: EnemyId): Appearance[] => {
   const retinue = (Object.keys(DOMAINS) as RiftLegend[])
     .filter((by) => domainCast(by).includes(id))
     .map((by): Appearance => ({ kind: 'retinue', by }))
-  return [...windows, ...events, ...rift, ...reaper, ...placed, ...summoned, ...retinue]
+  // The legends met on the open map, and the ones Hoopa's rings bring back.
+  const quest: Appearance[] = [
+    ...(isLakeLegend(id) ? [{ kind: 'roam' as const, from: ROAM.first[0] }] : []),
+    ...(isSword(id) ? [{ kind: 'duel' as const, from: DUEL.from, sword: id }] : []),
+    ...(id === 'hoopa' || RUSH_ORDER.some((l) => l === id) ? [{ kind: 'rush' as const, last: id === 'hoopa' }] : []),
+  ]
+  return [...windows, ...events, ...rift, ...reaper, ...placed, ...summoned, ...retinue, ...quest]
 }
 
 /** Everyone a legendary's domain brings besides its legendaries: the crossing's retinue, its adds and its barrier's keepers. */

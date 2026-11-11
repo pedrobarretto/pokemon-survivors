@@ -53,7 +53,7 @@ describe('appearances', () => {
     for (const id of ids) {
       const found = appearances(id)
       expect(found.length).toBeGreaterThan(0)
-      if ('boss' in ENEMIES[id]) expect(found.some((a) => a.kind === 'boss' || a.kind === 'trio' || a.kind === 'rift' || a.kind === 'eventRift' || a.kind === 'reaper' || (a.kind === 'place' && a.boss) || a.kind === 'night')).toBe(true)
+      if ('boss' in ENEMIES[id]) expect(found.some((a) => a.kind === 'boss' || a.kind === 'trio' || a.kind === 'rift' || a.kind === 'eventRift' || a.kind === 'reaper' || (a.kind === 'place' && a.boss) || a.kind === 'night' || a.kind === 'roam' || a.kind === 'duel' || a.kind === 'rush')).toBe(true)
     }
   })
 })
