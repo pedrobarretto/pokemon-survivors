@@ -24,8 +24,8 @@ export type PathLegendVisual =
 
 /** Core Enforcer: the Z's width and height (× area), how long each stroke takes to draw, the segments per stroke and their radius. */
 export const CORE = { w: 120, h: 76, stroke: 0.12, segments: 9, r: 9 } as const
-/** Sunsteel Strike: the comet's reach and radius, the burst's radius (× area) and share of the damage. */
-export const SUNSTEEL = { reach: 230, r: 13, burst: 52, share: 0.8, grow: 0.22 } as const
+/** Sunsteel Strike: the comet's reach (and how far past its crowd it stops) and radius, the burst's radius (× area) and share of the damage. */
+export const SUNSTEEL = { reach: 230, past: 26, r: 13, burst: 52, share: 0.8, grow: 0.22 } as const
 /** Moongeist Beam: the beam's length (× area), its arc and seconds, segments, and the moon orb it leaves where it ends. */
 export const MOONGEIST = { length: 190, arc: 1.7, time: 0.75, segments: 10, r: 9, orb: 26, orbTime: 1.4 } as const
 /** Wicked Blow: the strike's wind-up, radius (× area) and reach; Surging Strikes (Rapid Strike Style): its blows and their share. */
@@ -131,7 +131,9 @@ export const PATH_LEGEND_MOVES = {
     fire: (g, s) => {
       const p = g.player
       const crowd = crowdTargets(g, 1, 0, 260)[0] ?? null
-      const reach = SUNSTEEL.reach * Math.max(1, s.area * 0.9)
+      // It stops just past the crowd it aimed at, so the sun bursts among them; with none in reach, at its full length.
+      const far = SUNSTEEL.reach * Math.max(1, s.area * 0.9)
+      const reach = crowd ? Math.min(far, dm.hypot(crowd.x - p.x, crowd.y - p.y) + SUNSTEEL.past) : far
       for (const angle of fan(aimAt(g, 260, crowd), s.amount, 0.6)) {
         const v = fromAngle(angle, s.speed)
         const flight = reach / s.speed

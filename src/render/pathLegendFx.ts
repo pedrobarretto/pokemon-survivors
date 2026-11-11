@@ -168,10 +168,10 @@ const drawSurgingStrike = (ctx: Ctx, a: Attack) => {
 
 /* ---------------- Meltan and Melmetal: Double Iron Bash ---------------- */
 
-/** A hex nut spinning through the air. */
+/** A hex nut spinning through the air, in quarter turns so its pixels stay on the grid (its lit edge goes round). */
 const drawIronNut = (ctx: Ctx, a: Attack, t: number) => {
   const nut = PATH_ART.nut()
-  const turn = Math.round(t * 10 + a.memo * 2) * (Math.PI / 6)
+  const turn = (Math.floor(t * 14 + a.memo * 2) % 4) * (Math.PI / 2)
   blitRotated(ctx, nut, Math.round(a.x), Math.round(a.y), turn, Math.max(1, Math.round(radiusOf(a) / 4.5)))
 }
 
@@ -191,27 +191,50 @@ const drawIronSlam = (ctx: Ctx, a: Attack, ground: boolean) => {
 
 /* ---------------- Regigigas: Crush Grip ---------------- */
 
-/** The giant's hand closing over its foe: four fingers coming down and in, with each squeeze a jolt. */
+const HAND = { ink: '#3a3228', shade: '#a89878', skin: '#d8d0b8', light: '#f0ead8' } as const
+
+/** A rectangle with a 1 px dark outline: the hand is drawn in these. */
+const outlinedRect = (ctx: Ctx, x: number, y: number, w: number, h: number, fill: string) => {
+  px(ctx, x - 1, y - 1, HAND.ink, w + 2, h + 2)
+  px(ctx, x, y, fill, w, h)
+}
+
+/**
+ * The giant's hand closing over its foe: the palm over it with its knuckles
+ * and the Regis' three lines, four fingers curling down and in around it and
+ * the thumb across, tightening with each squeeze.
+ */
 const drawGripHand = (ctx: Ctx, a: Attack, t: number) => {
-  const r = Math.max(10, a.memo + 6)
+  const r = Math.max(14, a.memo + 9)
   const k = clamp01(a.age / 0.15)
   const squeeze = Math.sin(t * 34) > 0.6 ? 1 : 0
-  const spread = Math.round(r * (1.3 - k * 0.45) - squeeze)
-  const top = Math.round(a.y - r - 6 + k * 6)
-  // The palm over the foe, and the fingers wrapping down around it.
-  px(ctx, a.x - spread, top - 4, '#a89878', spread * 2 + 1, 5)
-  px(ctx, a.x - spread + 1, top - 4, '#d8d0b8', spread * 2 - 1, 3)
+  const spread = Math.round(r * (1.15 - k * 0.35)) - squeeze
+  const top = Math.round(a.y - r - 6 + k * 5)
+  const x0 = Math.round(a.x)
+  // Fingers first, behind the palm: each a column that bends in toward the middle at its tip.
+  const len = Math.round(r * 0.8 * k) + 3
   for (let i = 0; i < 4; i++) {
-    const fx = Math.round(a.x - spread + (i * (spread * 2)) / 3)
-    const len = Math.round(r * 0.9 * k) + 2
-    px(ctx, fx - 1, top, '#a89878', 3, len)
-    px(ctx, fx, top, '#e8e0c8', 1, len - 1)
+    const fx = x0 - spread + 1 + Math.round((i * (spread * 2 - 4)) / 3)
+    const inward = fx < x0 ? 1 : -1
+    outlinedRect(ctx, fx, top + 2, 3, len, HAND.skin)
+    px(ctx, fx, top + 2, HAND.light, 1, len - 1)
+    px(ctx, fx + 2, top + 2, HAND.shade, 1, len)
+    // The tip curls in.
+    outlinedRect(ctx, fx + inward, top + 2 + len, 3, 2, HAND.shade)
   }
-  // The three lines across its palm glow in the Regis' colors.
-  px(ctx, a.x - 4, top - 3, '#c87848', 2, 1)
-  px(ctx, a.x - 1, top - 3, '#78c0e8', 2, 1)
-  px(ctx, a.x + 2, top - 3, '#a0a8b8', 2, 1)
-  if (squeeze) twinkle(ctx, a.x, a.y, 3, '#ffffff')
+  // The thumb across the front, from the left.
+  outlinedRect(ctx, x0 - spread - 2, top + Math.round(len * 0.6), Math.round(spread * 0.9), 3, HAND.skin)
+  px(ctx, x0 - spread - 2, top + Math.round(len * 0.6), HAND.light, Math.round(spread * 0.9), 1)
+  // The palm: a broad slab with its knuckles.
+  outlinedRect(ctx, x0 - spread - 1, top - 4, spread * 2 + 3, 7, HAND.skin)
+  px(ctx, x0 - spread - 1, top - 4, HAND.light, spread * 2 + 3, 1)
+  px(ctx, x0 - spread - 1, top + 2, HAND.shade, spread * 2 + 3, 1)
+  for (let i = 0; i < 4; i++) px(ctx, x0 - spread + 1 + Math.round((i * (spread * 2 - 4)) / 3), top + 1, HAND.shade, 3, 1)
+  // The three lines across its palm, in the Regis' colors.
+  px(ctx, x0 - 5, top - 2, '#c87848', 3, 1)
+  px(ctx, x0 - 1, top - 2, '#78c0e8', 3, 1)
+  px(ctx, x0 + 3, top - 2, '#a0a8b8', 3, 1)
+  if (squeeze) twinkle(ctx, x0, a.y, 3, '#ffffff')
 }
 
 /* ---------------- Passes ---------------- */
