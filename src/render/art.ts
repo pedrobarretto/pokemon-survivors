@@ -1,4 +1,5 @@
 import { canvasCache, context2d, createCanvas, fromStrings, lazy, type Palette, type PixelSprite } from '../engine/pixelart'
+import { PENCIL, PENCIL_PALETTE } from './pencilArt'
 import type { Medal } from '../data/achievements'
 import { ITEMS, type ItemId } from '../data/items'
 import type { BagItem } from '../game/bag'
@@ -1167,27 +1168,8 @@ const OG_PLATE = ['.111111111.', '12332223331', '13223232221', '13223232331', '1
 
 /** The OG Supporters' badge (`badgesOf`), worn beside the tier's heart. 11 px wide: shown at 1.5× or 2× its size, like the hearts beside it. */
 export const ogIcon = () => toIconUrl('og', () => art(OG_PLATE, { 1: '#201030', 2: '#6038a8', 3: '#ffe070', 4: '#e8a020' }))
-/** The Pokédex's "art on its way" mark for the species SpriteCollab hasn't drawn yet (`ui/pokedex.ts`): a pencil, eraser up. 1 outline, 2 its yellow, 3 the shade, 8 the shine, 4 the wood, 5 the lead, 6 the eraser, 7 the ferrule. */
-const PENCIL = [
-  '............1...',
-  '...........161..',
-  '..........16661.',
-  '.........1666661',
-  '........1776661.',
-  '.......1827761..',
-  '......1822371...',
-  '.....1822331....',
-  '....1822331.....',
-  '...1822331......',
-  '...142331.......',
-  '..144431........',
-  '..15441.........',
-  '.1551...........',
-  '.111............',
-  '................',
-]
-
-export const pencilSprite = lazy(() => art(PENCIL, { 1: '#201828', 2: '#f8c030', 3: '#c88018', 4: '#f0c890', 5: '#403848', 6: '#f08098', 7: '#c8d0e0', 8: '#fff0a0' }))
+/** The Pokédex's "art on its way" mark for the species SpriteCollab hasn't drawn yet (`ui/pokedex.ts`), from `render/pencilArt.ts`. */
+export const pencilSprite = lazy(() => art(PENCIL, PENCIL_PALETTE))
 export const pencilIcon = () => toIconUrl('pencil', pencilSprite)
 
 export const sparkleIcon = () => toIconUrl('sparkle', () => outlined(SPARKLE()[2]!, '#584010'))

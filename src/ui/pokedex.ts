@@ -14,7 +14,7 @@ import { h, later, rich } from './dom'
 import { loadSave } from './save'
 import { nationalDex } from '../data/regionalForms'
 import { hint, typeBadge, type Screen } from './screens'
-import { ROUTES } from '../site/routes'
+import { dexRegionPaths } from '../site/routes'
 
 const DEX_FILTERS = ['all', 'seen', 'caught', 'missing'] as const
 
@@ -179,7 +179,7 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
 
   const back = h('button', { class: 'btn', onclick: close }, m.back)
   const pc = openPc ? h('button', { class: 'btn dex-pc', onclick: showPc }, h('img', { src: sparkleIcon(), alt: '' }), m.pc, h('span', { class: 'key-hint' }, 'P')) : null
-  const site = h('a', { class: 'btn dex-site', href: ROUTES.pokedex[locale()] }, m.site)
+  const site = h('a', { class: 'btn dex-site', href: dexRegionPaths(region)[locale()] }, m.site)
   const footer = [back, ...(pc ? [pc] : []), site]
 
   /** A caught shiny shows off its shiny form, when the species has one. */
@@ -258,6 +258,7 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
     if (visible.length > 0 && !shown.has(current)) current = visible.find((i) => statusOf(slots[i]!).seen) ?? visible[0]!
     if (visible.length === 0 && zone === 'grid') zone = 'tabs'
     grid.scrollTop = 0
+    site.href = dexRegionPaths(region)[locale()]
     renderGoal()
     renderDetail()
     syncFocus()
