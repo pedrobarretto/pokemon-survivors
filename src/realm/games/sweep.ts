@@ -445,7 +445,7 @@ const start = (ctx: SoloCtx): GameRun => {
     const tk = token.width * 2
     const x0 = L.pot.x - Math.round((tk + 6 + tw) / 2)
     g.drawImage(token, x0, L.pot.y + 6, tk, token.height * 2)
-    drawText(g, text, x0 + tk + 6, L.pot.y + 5, color, 'left', 3)
+    drawText(g, text, x0 + tk + 6, L.pot.y + 5, color, 'left', 3, '#3a0810')
   }
 
   /** Under the table: a coin pile for every 2 and 3 on the board, lit once turned (all lit clears it). */
@@ -470,24 +470,27 @@ const start = (ctx: SoloCtx): GameRun => {
     })
   }
 
+  /** A filled round of radius `r` at (x, y), row by row. */
+  const disc = (g: CanvasRenderingContext2D, color: string, x: number, y: number, r: number) => {
+    for (let dy = -r; dy <= r; dy++) {
+      const span = Math.round(Math.sqrt(Math.max(0, r * r - dy * dy)))
+      fill(g, color, x - span, y + dy, span * 2, 1)
+    }
+  }
+
+  /** Koffing's gas: each puff a lumpy cloud of three rounds swelling, paling and shrinking away. */
   const drawPuffs = (g: CanvasRenderingContext2D) => {
     for (const p of puffs) {
       const k = p.age / p.life
-      const r = Math.round(p.r * (1 + k * 1.6))
-      const color = k < 0.35 ? '#b8a0d0' : k < 0.7 ? '#9068b0' : '#6a5080'
-      for (let dy = -r; dy <= r; dy++) {
-        const span = Math.round(Math.sqrt(Math.max(0, r * r - dy * dy)))
-        // Thinning: every other pixel left out as it fades.
-        if (k > 0.8 && dy % 2 === 0) continue
-        fill(g, color, p.x - span, p.y + dy, span * 2, 1)
-      }
-      // Its lit side: a smaller, paler round up and to the left.
-      const hr = Math.round(r * 0.55)
-      if (k < 0.8)
-        for (let dy = -hr; dy <= hr; dy++) {
-          const span = Math.round(Math.sqrt(Math.max(0, hr * hr - dy * dy)))
-          fill(g, k < 0.35 ? '#dcd0ec' : '#b8a0d0', p.x - Math.round(r / 3) - span, p.y - Math.round(r / 3) + dy, span * 2, 1)
-        }
+      const r = Math.max(1, Math.round(p.r * (1 + k * 1.6) * (k > 0.75 ? 1 - (k - 0.75) * 3 : 1)))
+      const base = k < 0.35 ? '#9068b0' : k < 0.7 ? '#7a5898' : '#6a5080'
+      const lit = k < 0.35 ? '#c8b4e0' : '#a890c8'
+      const x = Math.round(p.x)
+      const y = Math.round(p.y)
+      disc(g, base, x - Math.round(r * 0.6), y + Math.round(r * 0.3), Math.round(r * 0.7))
+      disc(g, base, x + Math.round(r * 0.6), y + Math.round(r * 0.25), Math.round(r * 0.65))
+      disc(g, base, x, y, r)
+      disc(g, lit, x - Math.round(r / 3), y - Math.round(r / 3), Math.round(r * 0.5))
     }
   }
 
