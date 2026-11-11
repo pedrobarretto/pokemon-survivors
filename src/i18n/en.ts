@@ -1,3 +1,4 @@
+import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { realmBookEn as realmBook } from './realmStamps/en'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
@@ -6017,6 +6018,7 @@ export const en: Messages = {
   },
   furniture: {
     names: {
+      ...CAFE_TABLES_WORDS.en.furniture,
       woodChair: 'Wooden Chair',
       stool: 'Stool',
       woodTable: 'Wooden Table',
@@ -6506,7 +6508,9 @@ export const en: Messages = {
     dig: SEASON_ONE_DIG_WORDS.en.words,
     close: 'Leave',
     choose: 'Which game?',
+    cafe: CAFE_TABLES_WORDS.en,
     games: {
+      ...CAFE_TABLES_WORDS.en.games,
       fishing: { name: 'Pier Fishing', blurb: 'Cast your line and hook whatever bites.' },
       berryCatch: { name: 'Berry Rain', blurb: 'Catch the berries and dodge the Voltorb.' },
       whackDiglett: { name: 'Whack-a-Diglett', blurb: 'Bonk the Diglett before they hide.' },
@@ -6518,7 +6522,7 @@ export const en: Messages = {
       slots: { name: ROCKET_WORDS.en.slots.name, blurb: ROCKET_WORDS.en.slots.blurb },
       sweep: { name: ROCKET_WORDS.en.sweep.name, blurb: ROCKET_WORDS.en.sweep.blurb },
     },
-    feats: { fishing: { feebas: 'I caught a Feebas!', shinyGyarados: 'I caught a shiny Gyarados!!', wishiwashi: 'I caught a Wishiwashi!', bigHaul: 'A 300-point catch!' }, berryCatch: { flawless: 'A flawless Berry Rain!', goldRush: 'Three golden berries in one round!', combo50: 'A 50-berry combo!' }, whackDiglett: { combo30: 'A 30-bonk combo!', dugtrio: 'Bonked 5 Dugtrio in one round!' }, fourInRow: {}, typeDuel: { perfectDuel: 'A perfect duel, not a round lost!' }, claw: SEASON_ONE_CLAW_WORDS.en.feats, safari: SEASON_ONE_SAFARI_WORDS.en.feats, dig: SEASON_ONE_DIG_WORDS.en.feats, slots: ROCKET_WORDS.en.feats.slots, sweep: ROCKET_WORDS.en.feats.sweep },
+    feats: { ...CAFE_TABLES_WORDS.en.feats, fishing: { feebas: 'I caught a Feebas!', shinyGyarados: 'I caught a shiny Gyarados!!', wishiwashi: 'I caught a Wishiwashi!', bigHaul: 'A 300-point catch!' }, berryCatch: { flawless: 'A flawless Berry Rain!', goldRush: 'Three golden berries in one round!', combo50: 'A 50-berry combo!' }, whackDiglett: { combo30: 'A 30-bonk combo!', dugtrio: 'Bonked 5 Dugtrio in one round!' }, fourInRow: {}, typeDuel: { perfectDuel: 'A perfect duel, not a round lost!' }, claw: SEASON_ONE_CLAW_WORDS.en.feats, safari: SEASON_ONE_SAFARI_WORDS.en.feats, dig: SEASON_ONE_DIG_WORDS.en.feats, slots: ROCKET_WORDS.en.feats.slots, sweep: ROCKET_WORDS.en.feats.sweep },
     duel: {
       pick: 'Pick a card',
       play: 'Play',

@@ -105,6 +105,7 @@ export const siteZh: SiteMessages = {
     cameoNote: '不是敵人：女巫之夜期間，牠會在 Darkrai 的裂縫中短暫現身，用 Lunar Wing 打破惡夢。',
     summonNote: '不是敵人：這是 Tatsugiri 用指揮呼喚的 Dondozo，會發動幾秒重攻擊。',
     lobbyNote: '大廳廣場上精品服飾店的裁縫：用葉子縫製寶石商店販售的造型。',
+    cardsNote: '住在 Poké Realm 咖啡廳的卡牌遊戲 Unown 牌上：每個字母都是牠的一種樣子。',
     wildNote: '基礎數值。一般敵人每分鐘都會變強，首領則不會。',
     appears: '出現時機',
     horde: (from: string, until: string) => `可能加入獸群，從 ${from} 到 ${until}`,

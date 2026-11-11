@@ -102,6 +102,7 @@ export const siteEs: SiteMessages = {
     cameoNote: 'No es un enemigo: aparece por un instante en la grieta de Darkrai durante la Noche de Brujas y rompe la pesadilla con Lunar Wing.',
     summonNote: 'No es un enemigo: es el Dondozo que Tatsugiri llama con Comandante, para unos segundos de ataques pesados.',
     lobbyNote: 'El sastre de la Boutique, en la plaza del lobby: cose con hojas los estilos que vende la tienda de gemas.',
+    cardsNote: 'Vive en las cartas de Unown, el juego de cartas del café del Poké Realm: cada letra es una de sus formas.',
     wildNote: 'Valores base. Los enemigos comunes se vuelven más fuertes cada minuto; los jefes, no.',
     appears: 'Cuándo aparece',
     horde: (from: string, until: string) => `Puede entrar en la horda, de ${from} a ${until}`,

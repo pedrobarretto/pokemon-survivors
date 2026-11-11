@@ -102,6 +102,7 @@ export const siteEn: SiteMessages = {
     cameoNote: 'Not a foe: it shows up for a moment in Darkrai\'s rift during Halloween Night and breaks the nightmare with Lunar Wing.',
     summonNote: 'Not a foe: this is the Dondozo Tatsugiri calls in with Commander, for a few seconds of heavy attacks.',
     lobbyNote: "The Boutique's tailor, on the lobby's plaza: it sews from leaves the looks the gem shop sells.",
+    cardsNote: "Lives on the cards of Unown, the Poké Realm café's card game: each letter is one of its forms.",
     wildNote: 'Base values. Regular enemies get tougher every minute; bosses don\'t.',
     appears: 'When it shows up',
     horde: (from: string, until: string) => `May join the horde, from ${from} to ${until}`,

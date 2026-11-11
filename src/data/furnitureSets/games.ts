@@ -32,6 +32,12 @@ const DUEL = {
   perfectDuelPennant: { kind: 'wall', set: 'trophies', size: [2, 1], rarity: 'legendary', price: null, source: 'trophy', turn: 'still' },
 } as const satisfies Record<string, FurnitureDef>
 
+/** The café's open tables': Ludo's golden die after 10 wins, Unown's plaque (its letters spelling UNOWN) after 10. */
+const CAFE_TABLES = {
+  goldenDie: { kind: 'top', set: 'trophies', size: [1, 1], rarity: 'epic', price: null, source: 'trophy', turn: 'still' },
+  unownPlaque: { kind: 'wall', set: 'trophies', size: [2, 1], rarity: 'epic', price: null, source: 'trophy', turn: 'still' },
+} as const satisfies Record<string, FurnitureDef>
+
 /** The arcade's: a basket of berries for a 2500 at Berry Rain, a golden mallet for a 2500 at Whack-a-Diglett. */
 const ARCADE = {
   berryBasket: { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'epic', price: null, source: 'trophy', blocks: true },
@@ -45,4 +51,4 @@ const STAMPS = {
   goldenStampPress: { kind: 'floor', set: 'trophies', size: [2, 1], rarity: 'legendary', price: null, source: 'trophy', blocks: true },
 } as const satisfies Record<string, FurnitureDef>
 
-export const GAME_FURNITURE = { ...FISHING, ...TABLES, ...DUEL, ...ARCADE, ...STAMPS } as const satisfies Record<string, FurnitureDef>
+export const GAME_FURNITURE = { ...FISHING, ...TABLES, ...DUEL, ...CAFE_TABLES, ...ARCADE, ...STAMPS } as const satisfies Record<string, FurnitureDef>

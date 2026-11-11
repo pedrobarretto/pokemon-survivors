@@ -8,10 +8,12 @@
  * - `solo`: runs on the player's device alone (`realm/games/frame.ts` hosts
  *   it), opened from a spot in a town room or a piece of furniture in a base.
  *   Others only see the trainer busy at it (`RealmAct`) and its brags.
- * - `table`: turn-based, 2 seats, played at a table through the realm relay,
- *   which holds the board and checks every move with the game's pure rules
+ * - `table`: turn-based, played at a table through the realm relay, which
+ *   holds the board and checks every move with the game's pure rules
  *   (`net/realmTables.ts`, `realm/games/tables.ts`), so anyone in the room can
- *   watch. Sitting alone, the same rules play a bot on the device.
+ *   watch. Sitting alone, the same rules play bots on the device. A 2-seat
+ *   game needs both seats taken; a 4-seat one (Ludo, Unown) is an open table:
+ *   2 to 4 people, the relay's bots in the empty seats.
  *
  * Mini games never touch `src/game`: no `RULES_VERSION`, replays or hashes.
  *
@@ -64,7 +66,7 @@ type SoloDef = {
 type TableDef = {
   kind: 'table'
   where: Where
-  seats: 2
+  seats: 2 | 4
   pay: TablePay
   minMs: number
   feats: readonly string[]
@@ -240,6 +242,37 @@ export const MINIGAMES = {
       { furniture: 'perfectDuelPennant', after: { feat: 'perfectDuel' } },
     ],
   },
+  /**
+   * Ludo at the café's round tables (`realm/games/ludo.ts`, rules in
+   * `ludo.rules.ts`): 4 seats, 2 pieces each, bots in the empty seats. A
+   * match runs 5–8 minutes, so it pays a little more than the 2-seat games.
+   * `untouchable`: won without losing a piece to a capture.
+   */
+  ludo: {
+    kind: 'table',
+    where: 'cafe',
+    seats: 4,
+    pay: { win: 200, draw: 60, loss: 40, daily: 600 },
+    /** Bots alone play a match in 3½ minutes at the quickest (10th percentile of 200 bot matches, at their think). */
+    minMs: 90_000,
+    feats: ['untouchable'],
+    trophies: [{ furniture: 'goldenDie', after: { stat: 'wins', at: 10 } }],
+  },
+  /**
+   * Unown at the café's round tables (`realm/games/unown.ts`, rules in
+   * `unown.rules.ts`): a shedding card game for 4 seats, bots in the empty
+   * ones; a round runs 2–4 minutes. `mewFinish`: the last card down a Mew.
+   */
+  unown: {
+    kind: 'table',
+    where: 'cafe',
+    seats: 4,
+    pay: { win: 150, draw: 60, loss: 30, daily: 600 },
+    /** A round of 24 moves (the 10th percentile of 200 bot rounds) takes over 25 s at the bots' think. */
+    minMs: 20_000,
+    feats: ['mewFinish'],
+    trophies: [{ furniture: 'unownPlaque', after: { stat: 'wins', at: 10 } }],
+  },
 } as const satisfies Record<string, MinigameDef>
 
 export type MinigameId = keyof typeof MINIGAMES
@@ -315,5 +348,5 @@ export const trophiesEarned = (game: MinigameId, stats: GameStats): string[] =>
 export const FURNITURE_GAMES: Readonly<Record<string, readonly MinigameId[]>> = {
   arcadeCabinet: ['berryCatch', 'whackDiglett'],
   arcadeCabinetTeal: ['berryCatch', 'whackDiglett'],
-  gameTable: ['fourInRow', 'typeDuel'],
+  gameTable: ['fourInRow', 'typeDuel', 'ludo', 'unown'],
 }
